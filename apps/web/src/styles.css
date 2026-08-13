@@ -1,0 +1,30 @@
+/* Chỉ những chỗ Ant Design không lo — phần còn lại để theme của AntD quyết định. */
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Bảng nhiều cột phải cuộn ngang được trên điện thoại (NFR-1). */
+.vpp-scroll-x {
+  overflow-x: auto;
+}
+
+/* Vùng nội dung chính: giới hạn bề rộng cho dễ đọc trên màn lớn. */
+.vpp-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+@media (max-width: 575px) {
+  .vpp-page {
+    padding: 12px 8px;
+  }
+}

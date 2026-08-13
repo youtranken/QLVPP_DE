@@ -1,9 +1,9 @@
 # SDD — Software Design Document — Website Đăng ký Văn phòng phẩm (DE-VPP)
 
 > Phiên bản **v4 — khớp PRD v1.2 (PMH ID SSO)** · Quy mô: **Vừa (≤ 500 người dùng)** · Ngày: 2026-08-06
-> Trạng thái: **ĐÃ DUYỆT — đang thi công**. Xong **M0** (khung monorepo), **M1**
-> (CSDL, SSO OIDC BFF + mock-idp, danh mục) và **M2** (toàn bộ nghiệp vụ backend).
-> Đang tới **M3** (giao diện nhân viên).
+> Trạng thái: **ĐÃ DUYỆT — đang thi công**. Xong **M0**, **M1**
+> (CSDL + SSO), **M2** (nghiệp vụ backend) và **M3** (giao diện nhân viên).
+> Đang tới **M4** (giao diện quản trị).
 > Tài liệu này là **thiết kế kỹ thuật (SDD)**, đồng bộ với `docs/product/PRD.md` v1.2.
 >
 > **⚠️ Xác thực = PMH ID SSO.** Toàn bộ phần **danh tính/đăng nhập** (OIDC + Directory + Webhook + BCL, BFF, bảng `users`/`app_sessions`, map group→vai trò/phòng ban, mock IdP demo) nằm ở **`docs/architecture/SSO-INTEGRATION.md`** — tài liệu đó **ưu tiên** khi có khác biệt. Dưới đây chỉ tóm tắt phần liên quan.
@@ -216,7 +216,7 @@ _Giờ:_ container đặt `TZ=Asia/Ho_Chi_Minh`.
 | Mốc | Nội dung |
 | --- | -------- |
 
-> Tiến độ: **M0 ✅**, **M1 ✅**, **M2 ✅** — đang tới **M3**.
+> Tiến độ: **M0 ✅**, **M1 ✅**, **M2 ✅**, **M3 ✅** — đang tới **M4**.
 
 | **M0** | Khung monorepo + `packages/shared` + skeleton Docker |
 | **M1** | Backend lõi: DB (schema/migrate/seed), **SSO OIDC (BFF: login/callback/logout, verify JWT, map group→vai trò/phòng ban)** + **mock-idp**, catalog |

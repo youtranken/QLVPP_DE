@@ -1,0 +1,261 @@
+import { LockOutlined, SendOutlined } from '@ant-design/icons';
+import { checkRequestLines, type CatalogItemRule } from '@vpp/shared';
+import {
+  Alert,
+  App,
+  Button,
+  Card,
+  Col,
+  Flex,
+  Input,
+  InputNumber,
+  Result,
+  Row,
+  Skeleton,
+  Tag,
+  Tooltip,
+  Typography,
+} from 'antd';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { routes } from '../App';
+import { OtherItemsCard, type OtherLine } from './register/OtherItemsCard';
+import { ApiError } from '../lib/api';
+import { useCatalog, useCreateRequest, useMe, useRegistrationStatus } from '../lib/queries';
+
+/**
+ * Màn Đăng ký VPP (SDD §8 màn 2 · CORE-2…6).
+ * Quy tắc dùng CHUNG với backend qua `@vpp/shared` để báo lỗi sớm; backend vẫn
+ * kiểm lại khi nhận đơn nên giao diện không phải là hàng rào bảo mật.
+ */
+export function RegisterPage() {
+  const { message } = App.useApp();
+  const navigate = useNavigate();
+  const { data: me } = useMe();
+  const { data: status } = useRegistrationStatus();
+  const { data: catalog, isPending } = useCatalog();
+  const createRequest = useCreateRequest();
+
+  /** Số lượng đã chọn theo itemId; 0/không có = chưa chọn. */
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [otherLines, setOtherLines] = useState<OtherLine[]>([]);
+  const [note, setNote] = useState('');
+
+  const isAdmin = me?.role === 'admin';
+  const locked = !status?.canRegister;
+
+  const setQuantity = (itemId: string, value: number | null) =>
+    setQuantities((current) => {
+      const next = { ...current };
+      if (!value) delete next[itemId];
+      else next[itemId] = value;
+      return next;
+    });
+
+  const allItems = useMemo(() => catalog?.flatMap((group) => group.items) ?? [], [catalog]);
+
+  /** Gộp món đã chọn + dòng "Khác" thành payload gửi lên. */
+  const lines = useMemo(() => {
+    const fromCatalog = Object.entries(quantities).map(([itemId, quantity]) => ({
+      itemId,
+      name: allItems.find((item) => item.id === itemId)?.name ?? '',
+      unit: allItems.find((item) => item.id === itemId)?.unit ?? '',
+      quantity,
+    }));
+    const fromOther = otherLines.map((line) => ({
+      itemId: null,
+      name: line.name.trim(),
+      unit: line.unit.trim(),
+      quantity: line.quantity,
+      attachmentPath: line.attachmentPath,
+    }));
+    return [...fromCatalog, ...fromOther];
+  }, [quantities, otherLines, allItems]);
+
+  /** Kiểm bằng ĐÚNG hàm backend dùng — nguồn sự thật duy nhất cho quy tắc. */
+  const violations = useMemo(() => {
+    if (lines.length === 0) return [];
+    const rules = new Map<string, CatalogItemRule>(
+      allItems.map((item) => [
+        item.id,
+        { id: item.id, adminOnly: item.adminOnly, maxQty: item.maxQty, active: item.active },
+      ]),
+    );
+    const problems = checkRequestLines(lines, me?.role ?? 'member', rules);
+    const missingUnit = otherLines.some((line) => line.name.trim() && !line.unit.trim());
+    return missingUnit
+      ? [...problems, { code: 'VALIDATION', message: 'Dòng ngoài danh mục phải nhập đơn vị tính.' }]
+      : problems;
+  }, [lines, allItems, me?.role, otherLines]);
+
+  const canSubmit = lines.length > 0 && violations.length === 0 && !locked;
+
+  const submit = async () => {
+    try {
+      const created = await createRequest.mutateAsync({
+        note: note.trim() || null,
+        lines: lines.map((line) => ({
+          itemId: line.itemId,
+          name: line.name,
+          unit: line.unit,
+          quantity: line.quantity,
+          attachmentPath: 'attachmentPath' in line ? line.attachmentPath : null,
+        })),
+      });
+      message.success(`Đã gửi đơn ${created.code}`);
+      navigate(routes.myRequests);
+    } catch (error) {
+      message.error(error instanceof ApiError ? error.displayMessage : 'Gửi đơn thất bại.');
+    }
+  };
+
+  if (isPending) return <Skeleton active />;
+  if (!catalog || catalog.length === 0) {
+    return <Result status="info" title="Chưa có danh mục văn phòng phẩm" />;
+  }
+
+  return (
+    <Flex vertical gap={16}>
+      <Flex align="center" justify="space-between" wrap gap={8}>
+        <Typography.Title level={4} style={{ margin: 0 }}>
+          Đăng ký văn phòng phẩm
+        </Typography.Title>
+        {/* Dùng Tag thay Badge: badge tràn ra ngoài mép phải và bị cắt trên màn hẹp. */}
+        <Tag color={lines.length > 0 ? 'blue' : 'default'}>Đã chọn: {lines.length} món</Tag>
+      </Flex>
+
+      {locked && (
+        <Alert
+          type="warning"
+          showIcon
+          title="Đã đóng đăng ký"
+          description={`Hệ thống chỉ nhận đăng ký từ ngày ${status?.windowStartDay} đến ngày ${status?.windowEndDay} hằng tháng.`}
+        />
+      )}
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={16}>
+          <Flex vertical gap={16}>
+            {catalog
+              .filter((group) => !group.isOther)
+              .map((group) => (
+                <Card key={group.id} title={group.name} size="small">
+                  {group.items.length === 0 ? (
+                    <Typography.Text type="secondary">Nhóm này chưa có món</Typography.Text>
+                  ) : (
+                    <Flex vertical>
+                      {group.items.map((item) => {
+                        // A4 khoá với nhân viên; admin vẫn chọn được (CORE-4, CORE-16).
+                        const blocked = item.adminOnly && !isAdmin;
+                        return (
+                          <Flex
+                            key={item.id}
+                            align="center"
+                            justify="space-between"
+                            gap={12}
+                            style={{ padding: '8px 0', borderTop: '1px solid rgba(0,0,0,.06)' }}
+                          >
+                            <Flex vertical style={{ minWidth: 0 }}>
+                              <Flex gap={8} align="center" wrap>
+                                <Typography.Text>{item.name}</Typography.Text>
+                                {item.adminOnly && <Tag color="gold">chỉ admin</Tag>}
+                              </Flex>
+                              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                                Đơn vị: {item.unit} · tối đa {item.maxQty}
+                              </Typography.Text>
+                            </Flex>
+
+                            {blocked ? (
+                              <Tooltip title="Món này chỉ quản trị viên được đăng ký">
+                                <LockOutlined aria-label="chỉ quản trị viên" />
+                              </Tooltip>
+                            ) : (
+                              <InputNumber
+                                aria-label={`Số lượng ${item.name}`}
+                                min={0}
+                                max={item.maxQty}
+                                disabled={locked}
+                                value={quantities[item.id] ?? 0}
+                                onChange={(value) => setQuantity(item.id, value)}
+                                style={{ width: 88, flex: '0 0 auto' }}
+                              />
+                            )}
+                          </Flex>
+                        );
+                      })}
+                    </Flex>
+                  )}
+                </Card>
+              ))}
+
+            <OtherItemsCard lines={otherLines} onChange={setOtherLines} disabled={locked} />
+          </Flex>
+        </Col>
+
+        <Col xs={24} lg={8}>
+          <Card title="Giỏ đăng ký" style={{ position: 'sticky', top: 16 }}>
+            <Flex vertical gap={12}>
+              {lines.length === 0 ? (
+                <Typography.Text type="secondary">Chưa chọn món nào.</Typography.Text>
+              ) : (
+                <Flex vertical>
+                  {lines.map((line, index) => (
+                    <Flex
+                      key={`${line.itemId ?? 'other'}-${index}`}
+                      justify="space-between"
+                      gap={8}
+                      style={{ padding: '6px 0', borderTop: '1px solid rgba(0,0,0,.06)' }}
+                    >
+                      <Typography.Text ellipsis style={{ flex: 1 }}>
+                        {line.name || <em>(chưa đặt tên)</em>}
+                      </Typography.Text>
+                      <Typography.Text strong style={{ whiteSpace: 'nowrap' }}>
+                        {line.quantity} {line.unit}
+                      </Typography.Text>
+                    </Flex>
+                  ))}
+                </Flex>
+              )}
+
+              {violations.length > 0 && (
+                <Alert
+                  type="error"
+                  showIcon
+                  title="Cần sửa trước khi gửi"
+                  description={
+                    <ul style={{ margin: 0, paddingLeft: 18 }}>
+                      {violations.map((violation, index) => (
+                        <li key={index}>{violation.message}</li>
+                      ))}
+                    </ul>
+                  }
+                />
+              )}
+
+              <Input.TextArea
+                rows={2}
+                placeholder="Ghi chú cho quản trị viên (không bắt buộc)"
+                value={note}
+                disabled={locked}
+                maxLength={500}
+                onChange={(event) => setNote(event.target.value)}
+              />
+
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                size="large"
+                block
+                disabled={!canSubmit}
+                loading={createRequest.isPending}
+                onClick={() => void submit()}
+              >
+                Gửi đơn
+              </Button>
+            </Flex>
+          </Card>
+        </Col>
+      </Row>
+    </Flex>
+  );
+}

@@ -13,3 +13,6 @@ apps/api/uploads/*
 
 # Cấu hình Claude Code cục bộ (theo máy từng người)
 .claude/settings.local.json
+
+# Ảnh/log do Playwright MCP sinh khi kiểm thử thủ công
+.playwright-mcp/

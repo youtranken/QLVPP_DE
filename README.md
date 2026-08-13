@@ -3,9 +3,9 @@
 Website nội bộ để **nhân viên đăng ký VPP hằng tháng**; **admin duyệt → tổng hợp → xác nhận đã giao → xuất báo cáo trình ký**.
 Xác thực qua **PMH ID SSO** (OIDC). Kiến trúc **Modular Monolith** (xem `docs/`).
 
-> **Trạng thái:** **M2 xong** — toàn bộ nghiệp vụ ở phía backend đã chạy được:
-> đăng nhập SSO, danh mục, đơn đăng ký, duyệt/giao, thông báo, audit, báo cáo
-> Excel, đồng bộ danh bạ, webhook. **Chưa có giao diện** (M3/M4).
+> **Trạng thái:** **M3 xong** — backend đủ nghiệp vụ (M2) và **giao diện nhân viên**
+> đã dùng được: đăng nhập PMH ID, đăng ký VPP, đơn của tôi, chuông thông báo.
+> Còn lại: giao diện quản trị (M4) và demo Docker đầy đủ (M5).
 
 ## Cấu trúc
 
@@ -65,21 +65,25 @@ docker compose -f deploy/docker-compose.yml up -d
 pnpm --filter @vpp/api db:migrate
 pnpm --filter @vpp/api db:seed
 
-# 4) Chạy 2 tiến trình (2 cửa sổ terminal)
-pnpm --filter @vpp/mock-idp start   # IdP giả  : http://localhost:9000
-pnpm --filter @vpp/api dev          # API      : http://localhost:3000
+# 4) Chạy 3 tiến trình (3 cửa sổ terminal)
+pnpm --filter @vpp/mock-idp start   # IdP giả : http://localhost:9000
+pnpm --filter @vpp/api dev          # API     : http://localhost:3000
+pnpm --filter @vpp/web dev          # Web     : http://localhost:8090
 
 # 5) Kiểm tra chất lượng
 pnpm lint                   # ESLint
 pnpm typecheck              # TypeScript (strict) — build @vpp/shared rồi typecheck
 pnpm test                   # Unit test (Vitest) toàn monorepo
 pnpm build                  # Build tất cả package
+pnpm test:e2e               # E2E Playwright — cần 3 tiến trình trên đang chạy
 ```
 
-> **Cổng ở cách 2:** `.env.example` dùng `APP_BASE_URL=http://localhost:8080` (giống
-> demo có nginx proxy `/api` → api). Khi chạy API trực tiếp chưa có web, đặt
-> `APP_BASE_URL=http://localhost:3000` trong `.env` để redirect OIDC quay đúng về API.
-> Nếu máy đã có dịch vụ khác chiếm cổng, đổi `API_PORT` / `APP_BASE_URL` /
+Mở `http://localhost:8090` → bấm **Đăng nhập bằng PMH ID** → chọn user demo.
+
+> **Cổng ở cách 2:** `APP_BASE_URL` phải là origin của **WEB** (mặc định
+> `http://localhost:8090`), vì trình duyệt quay về đó sau khi đăng nhập và Vite
+> proxy `/api` sang backend — giống hệt nginx lúc chạy thật. Nếu máy đã có dịch vụ
+> khác chiếm cổng, đổi `API_PORT` / `WEB_PORT` / `WEB_API_PROXY` / `APP_BASE_URL` /
 > `DATABASE_URL` trong `.env` — mock-idp đọc chung `.env` nên tự khớp theo.
 
 > **URL công khai vs URL nội bộ:** trình duyệt chạy ngoài Docker nên chỉ tới được
@@ -97,15 +101,30 @@ pnpm build                  # Build tất cả package
 
 ## Scripts (thư mục gốc)
 
-| Lệnh                | Tác dụng                                  |
-| ------------------- | ----------------------------------------- |
-| `pnpm lint`         | ESLint toàn repo                          |
-| `pnpm format`       | Prettier ghi định dạng                    |
-| `pnpm format:check` | Prettier kiểm tra (không sửa)             |
-| `pnpm typecheck`    | Kiểm kiểu TypeScript (strict) mọi package |
-| `pnpm test`         | Unit test (Vitest)                        |
-| `pnpm test:e2e`     | E2E (Playwright) — cần app đang chạy (M5) |
-| `pnpm build`        | Build mọi package                         |
+| Lệnh                | Tác dụng                                            |
+| ------------------- | --------------------------------------------------- |
+| `pnpm lint`         | ESLint toàn repo                                    |
+| `pnpm format`       | Prettier ghi định dạng                              |
+| `pnpm format:check` | Prettier kiểm tra (không sửa)                       |
+| `pnpm typecheck`    | Kiểm kiểu TypeScript (strict) mọi package           |
+| `pnpm test`         | Unit test (Vitest)                                  |
+| `pnpm test:e2e`     | E2E Playwright — cần mock-idp + api + web đang chạy |
+| `pnpm build`        | Build mọi package                                   |
+| `pnpm smoke:api`    | Smoke test API qua HTTP thật (xem bên dưới)         |
+
+## Màn hình đã có (M3 — nhân viên)
+
+| Đường dẫn         | Màn hình                                                |
+| ----------------- | ------------------------------------------------------- |
+| `/dang-nhap`      | Đăng nhập PMH ID (không có ô mật khẩu)                  |
+| `/khong-co-quyen` | Trang báo chưa được cấp quyền (`access_denied`)         |
+| `/`               | Trang chủ: kỳ hiện tại, trạng thái đăng ký, tóm tắt đơn |
+| `/dang-ky`        | Đăng ký VPP: danh mục theo nhóm, giỏ, mục "Khác" + ảnh  |
+| `/don-cua-toi`    | Đơn của tôi: lịch sử theo kỳ, chi tiết, huỷ, gửi lại    |
+
+Khung app có menu, chuông thông báo (số chưa đọc), đăng xuất local/toàn hệ và banner
+trạng thái cửa sổ đăng ký. Giao diện dùng **theme trung tính đặt chỗ** — đổi màu và
+logo ở `apps/web/src/theme.ts` + `AppLayout.tsx` khi có tài sản thương hiệu.
 
 ### Scripts CSDL (`pnpm --filter @vpp/api ...`)
 
