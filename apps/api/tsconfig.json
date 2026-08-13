@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["node"]
+    // "multer" cần có mặt để dùng kiểu Express.Multer.File của FileInterceptor.
+    "types": ["node", "multer"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts"]

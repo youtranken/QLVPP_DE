@@ -36,6 +36,11 @@ const EnvSchema = z.object({
   SESSION_SECRET: z.string().min(1).default('dev-session-secret-change-me'),
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(7),
   UPLOAD_DIR: z.string().min(1).default('./uploads'),
+  /**
+   * Tên đơn vị in trên đầu báo cáo Excel trình ký (FR-41).
+   * Giá trị đặt chỗ cho tới khi có tên + logo chính thức (phụ thuộc [⏳] ở SDD §12).
+   */
+  ORG_NAME: z.string().min(1).default('CÔNG TY'),
 });
 
 export type AppConfig = z.infer<typeof EnvSchema>;
