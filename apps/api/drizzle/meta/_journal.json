@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1786590932416,
+      "tag": "0000_free_purifiers",
+      "breakpoints": true
+    }
+  ]
+}

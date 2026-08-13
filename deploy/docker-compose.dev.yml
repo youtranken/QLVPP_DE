@@ -1,0 +1,29 @@
+# Hạ tầng phục vụ PHÁT TRIỂN local (M1+): chỉ PostgreSQL.
+# API/web vẫn chạy trực tiếp trên máy để có hot-reload.
+# Compose demo đầy đủ (api, web, mock-idp) sẽ thêm ở M5.
+#
+#   docker compose -f deploy/docker-compose.dev.yml up -d
+#
+# Cổng 5433 (không phải 5432) để không đụng PostgreSQL khác đang chạy trên máy.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vpp-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vpp
+      POSTGRES_PASSWORD: vpp
+      POSTGRES_DB: vpp
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - '5433:5432'
+    volumes:
+      - vpp-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U vpp -d vpp']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  vpp-pgdata:

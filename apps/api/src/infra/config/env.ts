@@ -9,12 +9,22 @@ const EnvSchema = z.object({
   API_PORT: z.coerce.number().int().positive().default(3000),
   WEB_ORIGIN: z.string().url().default('http://localhost:8080'),
   APP_BASE_URL: z.string().url().default('http://localhost:8080'),
-  DATABASE_URL: z.string().min(1).default('postgres://vpp:vpp@localhost:5432/vpp'),
+  DATABASE_URL: z.string().min(1).default('postgres://vpp:vpp@localhost:5433/vpp'),
   OIDC_ISSUER: z.string().url().default('http://localhost:9000'),
   PMH_CLIENT_ID: z.string().min(1).default('de-vpp-dev'),
   PMH_CLIENT_SECRET: z.string().min(1).default('dev-secret-change-me'),
   PMH_WEBHOOK_SECRET: z.string().min(1).default('dev-webhook-secret-change-me'),
   VPP_ADMIN_GROUP: z.string().min(1).default('VPP-Admin'),
+  /** Danh sách group coi là phòng ban, phân tách bởi dấu phẩy; thứ tự = độ ưu tiên. */
+  VPP_DEPARTMENT_GROUPS: z
+    .string()
+    .default('')
+    .transform((raw) =>
+      raw
+        .split(',')
+        .map((group) => group.trim())
+        .filter((group) => group.length > 0),
+    ),
   SESSION_SECRET: z.string().min(1).default('dev-session-secret-change-me'),
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(7),
   UPLOAD_DIR: z.string().min(1).default('./uploads'),
