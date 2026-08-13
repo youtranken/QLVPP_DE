@@ -38,16 +38,19 @@ json() { curl -s "$@"; }
 
 # Quy tắc "1 đơn hiệu lực/người/kỳ" khiến lần chạy thứ hai không tạo được đơn nữa,
 # và đơn đã duyệt thì KHÔNG có API nào xoá được (lịch sử giữ vô thời hạn — đúng thiết kế).
-# Vì vậy dọn thẳng ở CSDL dev. Chỉ đụng bảng nghiệp vụ, giữ nguyên user và danh mục.
-echo "── Dọn dữ liệu nghiệp vụ của lần chạy trước ─────────────"
+# Vì vậy dọn thẳng ở CSDL dev, nhưng CHỈ đơn của tài khoản mà script dùng —
+# giữ nguyên dữ liệu demo của những người khác để màn quản trị vẫn có gì để xem.
+echo "── Dọn đơn của tài khoản dùng để kiểm thử ───────────────"
 if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx 'vpp-postgres'; then
-  docker exec vpp-postgres psql -U vpp -d vpp -q \
-    -c "DELETE FROM request_items; DELETE FROM requests; DELETE FROM notifications; DELETE FROM audit_log;" \
-    > /dev/null 2>&1
-  echo "  ✓ đã dọn đơn / thông báo / audit"
+  docker exec vpp-postgres psql -U vpp -d vpp -q -c "
+    DELETE FROM request_items WHERE request_id IN (
+      SELECT r.id FROM requests r JOIN users u ON u.id = r.user_id WHERE u.pmh_sub = 'usr_admin');
+    DELETE FROM requests WHERE user_id IN (SELECT id FROM users WHERE pmh_sub = 'usr_admin');
+  " > /dev/null 2>&1
+  echo "  ✓ đã dọn đơn của usr_admin (dữ liệu demo của người khác giữ nguyên)"
 else
   echo "  ⊘ không thấy container vpp-postgres — bỏ qua;"
-  echo "    nếu CSDL đã có đơn của kỳ này thì nhánh 'tạo đơn' sẽ báo hỏng."
+  echo "    nếu tài khoản admin đã có đơn của kỳ này thì nhánh 'tạo đơn' sẽ báo hỏng."
 fi
 
 echo "── Đăng nhập ────────────────────────────────────────────"
@@ -109,7 +112,12 @@ node -e "require('fs').writeFileSync('a.txt','x')"
 UP=$(json -b jar-nv.txt -F "file=@a.png;type=image/png" "$API/api/uploads")
 check "upload ảnh hợp lệ" "1" "$(node -e "process.stdout.write(/^\/api\/uploads\/[0-9a-f-]{36}\.png\$/.test(JSON.parse(process.argv[1]).path)?'1':'0')" "$UP")"
 check "upload file text bị chặn" "400" "$(code -b jar-nv.txt -F "file=@a.txt;type=text/plain" "$API/api/uploads")"
-check "path traversal bị chặn"   "404" "$(code -b jar-nv.txt "$API/api/uploads/..%2F..%2Fpackage.json")"
+# Phòng thủ thật của API: CHỈ phục vụ tên file đúng khuôn server sinh (uuid + đuôi).
+# Không kiểm chuỗi "..%2F.." vì khi có nginx đứng trước, nó chuẩn hoá đường dẫn
+# rồi mới proxy — request kiểu đó không bao giờ tới được API, nên phép kiểm ấy chỉ
+# đo hành vi của proxy chứ không đo được app.
+check "tên file lạ bị từ chối"   "404" "$(code -b jar-nv.txt "$API/api/uploads/khong-phai-uuid.png")"
+check "đuôi file lạ bị từ chối"  "404" "$(code -b jar-nv.txt "$API/api/uploads/11111111-2222-3333-4444-555555555555.exe")"
 
 echo "── Thông báo & audit ────────────────────────────────────"
 check "admin có thông báo" "1" "$(json -b jar-admin.txt "$API/api/notifications" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>process.stdout.write(JSON.parse(d).items.length>0?'1':'0'))")"

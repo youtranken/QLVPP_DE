@@ -3,9 +3,8 @@
 Website nội bộ để **nhân viên đăng ký VPP hằng tháng**; **admin duyệt → tổng hợp → xác nhận đã giao → xuất báo cáo trình ký**.
 Xác thực qua **PMH ID SSO** (OIDC). Kiến trúc **Modular Monolith** (xem `docs/`).
 
-> **Trạng thái:** **M4 xong** — đủ tính năng cho cả nhân viên và quản trị viên.
-> Còn lại: **M5** đóng gói demo Docker đầy đủ (thêm service web) + chạy thử,
-> và **M6** ghép PMH ID thật.
+> **Trạng thái:** **M5 xong — sẵn sàng demo.** Một lệnh `docker compose` là có cả
+> hệ thống kèm dữ liệu mẫu. Còn lại **M6**: ghép PMH ID thật và tài liệu vận hành prod.
 
 ## Cấu trúc
 
@@ -28,18 +27,25 @@ deploy/
 
 ## Khởi động
 
-### Cách 1 — Toàn bộ trong Docker (nhanh nhất)
+### Cách 1 — Toàn bộ trong Docker (dùng để DEMO)
 
 ```bash
 docker compose -f deploy/docker-compose.yml --profile app up -d --build
 ```
 
-Xong là có **api** `http://localhost:3100` · **mock-idp** `http://localhost:9100` ·
-**postgres** `localhost:5433`. Migration + dữ liệu mẫu tự chạy trước khi api khởi động.
+Mở **`http://localhost:8100`** → bấm _Đăng nhập bằng PMH ID_ → chọn một user demo.
+Đăng nhập `admin@pmh.com.vn` để xem phần quản trị.
 
-Thử đăng nhập: mở `http://localhost:3100/api/auth/login` → chọn một user demo
-(`admin@pmh.com.vn` là admin) → quay lại app. Sau đó `GET /api/me` trả vai trò và
-phòng ban, `GET /api/catalog` trả danh mục đã seed.
+| Dịch vụ  | Địa chỉ                 | Ghi chú                                    |
+| -------- | ----------------------- | ------------------------------------------ |
+| web      | `http://localhost:8100` | nginx: SPA + proxy `/api` → api            |
+| mock-idp | `http://localhost:9100` | IdP giả, origin riêng như PMH ID thật      |
+| postgres | `localhost:5433`        | để xem CSDL bằng công cụ ngoài             |
+| api      | _không publish_         | truy cập qua nginx, đúng như lúc chạy thật |
+
+Migration, danh mục và **dữ liệu demo** (6 người dùng, 8 đơn ở đủ trạng thái, trải 3 kỳ)
+tự nạp trước khi api khởi động, nên bảng điều khiển và báo cáo có số liệu ngay.
+Bước nạp dữ liệu demo tự bỏ qua nếu CSDL đã có đơn.
 
 ```bash
 docker compose -f deploy/docker-compose.yml --profile app ps        # trạng thái
@@ -49,7 +55,14 @@ docker compose -f deploy/docker-compose.yml --profile app down -v   # dừng + x
 ```
 
 Stack dùng project `vpp`, mạng `vpp-net`, volume `vpp_pgdata`/`vpp_uploads` và cổng
-3100/9100/5433 — **không dùng chung gì** với các stack Docker khác trên máy.
+8100/9100/5433 — **không dùng chung gì** với các stack Docker khác trên máy.
+
+Chạy lại bộ kiểm thử vào chính stack này:
+
+```bash
+API_URL=http://localhost:8100 IDP_URL=http://localhost:9100 pnpm smoke:api
+E2E_BASE_URL=http://localhost:8100 E2E_IDP_URL=http://localhost:9100 pnpm test:e2e
+```
 
 ### Cách 2 — Chạy trên máy, chỉ CSDL trong Docker (có hot-reload)
 
@@ -63,7 +76,8 @@ cp .env.example .env        # Windows: copy .env.example .env
 # 3) Chỉ dựng CSDL (không có --profile app), rồi tạo bảng + dữ liệu mẫu
 docker compose -f deploy/docker-compose.yml up -d
 pnpm --filter @vpp/api db:migrate
-pnpm --filter @vpp/api db:seed
+pnpm --filter @vpp/api db:seed        # danh mục + phòng ban
+pnpm --filter @vpp/api db:seed:demo   # user + đơn mẫu (tuỳ chọn)
 
 # 4) Chạy 3 tiến trình (3 cửa sổ terminal)
 pnpm --filter @vpp/mock-idp start   # IdP giả : http://localhost:9000
@@ -144,12 +158,13 @@ nên nhân viên không phải tải chỗ đó.
 
 ## Scripts CSDL (`pnpm --filter @vpp/api ...`)
 
-| Lệnh          | Tác dụng                             |
-| ------------- | ------------------------------------ |
-| `db:generate` | Sinh migration SQL từ schema Drizzle |
-| `db:migrate`  | Chạy migration lên CSDL              |
-| `db:seed`     | Nạp dữ liệu mẫu (chạy lại được)      |
-| `db:studio`   | Mở Drizzle Studio để xem dữ liệu     |
+| Lệnh           | Tác dụng                                          |
+| -------------- | ------------------------------------------------- |
+| `db:generate`  | Sinh migration SQL từ schema Drizzle              |
+| `db:migrate`   | Chạy migration lên CSDL                           |
+| `db:seed`      | Nạp danh mục + phòng ban (chạy lại được)          |
+| `db:seed:demo` | Nạp user + đơn mẫu để demo (bỏ qua nếu đã có đơn) |
+| `db:studio`    | Mở Drizzle Studio để xem dữ liệu                  |
 
 ## API đã có (M1 + M2)
 
