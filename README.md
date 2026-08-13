@@ -3,9 +3,9 @@
 Website nội bộ để **nhân viên đăng ký VPP hằng tháng**; **admin duyệt → tổng hợp → xác nhận đã giao → xuất báo cáo trình ký**.
 Xác thực qua **PMH ID SSO** (OIDC). Kiến trúc **Modular Monolith** (xem `docs/`).
 
-> **Trạng thái:** **M3 xong** — backend đủ nghiệp vụ (M2) và **giao diện nhân viên**
-> đã dùng được: đăng nhập PMH ID, đăng ký VPP, đơn của tôi, chuông thông báo.
-> Còn lại: giao diện quản trị (M4) và demo Docker đầy đủ (M5).
+> **Trạng thái:** **M4 xong** — đủ tính năng cho cả nhân viên và quản trị viên.
+> Còn lại: **M5** đóng gói demo Docker đầy đủ (thêm service web) + chạy thử,
+> và **M6** ghép PMH ID thật.
 
 ## Cấu trúc
 
@@ -112,7 +112,9 @@ Mở `http://localhost:8090` → bấm **Đăng nhập bằng PMH ID** → chọ
 | `pnpm build`        | Build mọi package                                   |
 | `pnpm smoke:api`    | Smoke test API qua HTTP thật (xem bên dưới)         |
 
-## Màn hình đã có (M3 — nhân viên)
+## Màn hình
+
+### Nhân viên (M3)
 
 | Đường dẫn         | Màn hình                                                |
 | ----------------- | ------------------------------------------------------- |
@@ -122,11 +124,25 @@ Mở `http://localhost:8090` → bấm **Đăng nhập bằng PMH ID** → chọ
 | `/dang-ky`        | Đăng ký VPP: danh mục theo nhóm, giỏ, mục "Khác" + ảnh  |
 | `/don-cua-toi`    | Đơn của tôi: lịch sử theo kỳ, chi tiết, huỷ, gửi lại    |
 
-Khung app có menu, chuông thông báo (số chưa đọc), đăng xuất local/toàn hệ và banner
-trạng thái cửa sổ đăng ký. Giao diện dùng **theme trung tính đặt chỗ** — đổi màu và
-logo ở `apps/web/src/theme.ts` + `AppLayout.tsx` khi có tài sản thương hiệu.
+### Quản trị viên (M4)
 
-### Scripts CSDL (`pnpm --filter @vpp/api ...`)
+| Đường dẫn            | Màn hình                                                          |
+| -------------------- | ----------------------------------------------------------------- |
+| `/quan-tri`          | Bảng điều khiển: thống kê nhiều kỳ, theo phòng ban, tỉ lệ đã giao |
+| `/quan-tri/don`      | Duyệt đơn: lọc + phân trang, duyệt/từ chối, giao, điều chỉnh      |
+| `/quan-tri/tong-hop` | Tổng hợp theo món + tải Excel trình ký                            |
+| `/quan-tri/danh-muc` | Quản lý nhóm và món (admin_only, tối đa, ngừng/bật)               |
+| `/quan-tri/danh-ba`  | Danh bạ nhân viên + nút Đồng bộ ngay                              |
+| `/quan-tri/nhat-ky`  | Nhật ký hoạt động, lọc theo hành động                             |
+
+Khung app có menu theo vai trò, chuông thông báo (số chưa đọc), đăng xuất local/toàn hệ
+và banner trạng thái cửa sổ đăng ký. Giao diện dùng **theme trung tính đặt chỗ** — đổi
+màu và logo ở `apps/web/src/theme.ts` + `AppLayout.tsx` khi có tài sản thương hiệu.
+
+Màn quản trị được **tải chậm (lazy)**: riêng ECharts đã nặng hơn phần còn lại của app,
+nên nhân viên không phải tải chỗ đó.
+
+## Scripts CSDL (`pnpm --filter @vpp/api ...`)
 
 | Lệnh          | Tác dụng                             |
 | ------------- | ------------------------------------ |

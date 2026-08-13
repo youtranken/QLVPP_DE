@@ -3,9 +3,10 @@ import {
   HomeOutlined,
   LogoutOutlined,
   PlusCircleOutlined,
+  SettingOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Alert, Dropdown, Flex, Layout, Menu, Tag, Typography } from 'antd';
+import { Alert, Dropdown, Flex, Layout, Menu, Tag, Typography, type MenuProps } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { routes } from '../App';
@@ -26,11 +27,29 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const menuItems = [
+  const menuItems: MenuProps['items'] = [
     { key: routes.home, icon: <HomeOutlined />, label: t('nav.home') },
     { key: routes.register, icon: <PlusCircleOutlined />, label: t('nav.register') },
     { key: routes.myRequests, icon: <FileTextOutlined />, label: t('nav.myRequests') },
   ];
+
+  // Menu quản trị chỉ hiện với admin. Đây là lớp trải nghiệm; backend mới thực
+  // sự chặn quyền, nên ẩn menu không phải là biện pháp bảo mật (SDD §2).
+  if (me?.role === 'admin') {
+    menuItems.push({
+      key: 'admin',
+      icon: <SettingOutlined />,
+      label: t('nav.admin'),
+      children: [
+        { key: routes.adminDashboard, label: t('nav.dashboard') },
+        { key: routes.adminRequests, label: t('nav.adminRequests') },
+        { key: routes.adminSummary, label: t('nav.summary') },
+        { key: routes.adminCatalog, label: t('nav.catalog') },
+        { key: routes.adminDirectory, label: t('nav.directory') },
+        { key: routes.adminAudit, label: t('nav.audit') },
+      ],
+    });
+  }
 
   /** Đăng xuất local: chỉ huỷ phiên app, không đụng phiên SSO (AUTH-2 AC1). */
   const signOutLocal = async () => {

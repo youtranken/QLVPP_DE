@@ -31,6 +31,13 @@ export const vi = {
     home: 'Trang chủ',
     register: 'Đăng ký VPP',
     myRequests: 'Đơn của tôi',
+    admin: 'Quản trị',
+    dashboard: 'Bảng điều khiển',
+    adminRequests: 'Duyệt đơn',
+    summary: 'Tổng hợp & báo cáo',
+    catalog: 'Danh mục VPP',
+    directory: 'Danh bạ nhân viên',
+    audit: 'Nhật ký',
   },
   period: {
     open: 'Đang mở đăng ký',

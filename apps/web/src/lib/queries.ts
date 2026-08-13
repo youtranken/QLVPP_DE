@@ -34,10 +34,15 @@ export function useRegistrationStatus() {
   });
 }
 
-export function useCatalog() {
+/**
+ * `includeInactive` chỉ có tác dụng với admin (màn quản lý danh mục cần thấy cả
+ * món đã ngừng); backend bỏ qua tham số này với nhân viên.
+ */
+export function useCatalog(includeInactive = false) {
   return useQuery({
-    queryKey: queryKeys.catalog,
-    queryFn: () => api.get<CatalogCategory[]>('/catalog'),
+    queryKey: [...queryKeys.catalog, includeInactive],
+    queryFn: () =>
+      api.get<CatalogCategory[]>(`/catalog${includeInactive ? '?includeInactive=1' : ''}`),
     staleTime: 5 * 60 * 1000,
   });
 }
