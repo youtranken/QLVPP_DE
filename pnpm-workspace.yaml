@@ -1,0 +1,6 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+# esbuild cần chạy postinstall để tải binary cho Vite/Vitest.
+allowBuilds:
+  esbuild: true

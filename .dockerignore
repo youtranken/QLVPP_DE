@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/.git
+**/playwright-report
+**/test-results
+docs
+integration
+*.md
+.env
