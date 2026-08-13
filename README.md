@@ -3,8 +3,10 @@
 Website nội bộ để **nhân viên đăng ký VPP hằng tháng**; **admin duyệt → tổng hợp → xác nhận đã giao → xuất báo cáo trình ký**.
 Xác thực qua **PMH ID SSO** (OIDC). Kiến trúc **Modular Monolith** (xem `docs/`).
 
-> **Trạng thái:** **M5 xong — sẵn sàng demo.** Một lệnh `docker compose` là có cả
-> hệ thống kèm dữ liệu mẫu. Còn lại **M6**: ghép PMH ID thật và tài liệu vận hành prod.
+> **Trạng thái:** **M6 xong về phía sản phẩm** — cấu hình production, script sao lưu
+> và tài liệu vận hành đã sẵn. Việc còn lại **không nằm ở code**: xin credential từ
+> admin PMH ID rồi điền vào `deploy/.env.prod`.
+> Xem [`docs/operations/ONBOARDING-PMH-ID.md`](docs/operations/ONBOARDING-PMH-ID.md).
 
 ## Cấu trúc
 
@@ -14,11 +16,30 @@ apps/
   web/        Frontend React + Vite                       — @vpp/web
 packages/
   shared/     Quy tắc nghiệp vụ dùng chung (TypeScript)   — @vpp/shared
-docs/         PRD, SDD, ADR, SSO-INTEGRATION, ...
+docs/         PRD, SDD, ADR, SSO-INTEGRATION, operations/
 deploy/
-  mock-idp/            IdP OIDC giả lập PMH ID (CHỈ demo/dev)  — @vpp/mock-idp
-  docker-compose.yml   Stack Docker riêng của DE-VPP
+  mock-idp/                 IdP OIDC giả lập PMH ID (CHỈ demo/dev) — @vpp/mock-idp
+  docker-compose.yml        Stack demo (kèm mock-idp + dữ liệu mẫu)
+  docker-compose.prod.yml   Stack production (không có mock-idp)
+  docker-compose.edge.yml   Overlay khi chạy sau EDGE
+scripts/      smoke test API, sao lưu / khôi phục CSDL
 ```
+
+## Triển khai production
+
+Xem **[`docs/operations/RUNBOOK.md`](docs/operations/RUNBOOK.md)** — triển khai, nâng cấp,
+sao lưu/khôi phục, xoay bí mật, gỡ lỗi. Và
+**[`docs/operations/ONBOARDING-PMH-ID.md`](docs/operations/ONBOARDING-PMH-ID.md)** —
+phiếu xin credential PMH ID kèm danh sách nghiệm thu sau khi ghép.
+
+```bash
+cp deploy/.env.prod.example deploy/.env.prod   # điền credential từ admin PMH ID
+docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.prod up -d --build
+```
+
+> api **từ chối khởi động** ở production nếu còn bí mật mặc định của dev, nếu
+> `APP_BASE_URL`/`OIDC_ISSUER` không phải https, hoặc `ORG_NAME` còn là chỗ đặt sẵn.
+> Thà không chạy còn hơn chạy mất an toàn mà không ai biết.
 
 ## Yêu cầu
 

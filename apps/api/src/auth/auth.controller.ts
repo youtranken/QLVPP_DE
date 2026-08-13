@@ -91,7 +91,12 @@ export class AuthController {
       );
       res.redirect(`${this.config.APP_BASE_URL}/`);
     } catch (error) {
-      this.logger.error('Đổi code lấy token thất bại', error as Error);
+      // Kèm message vào chính dòng log: đây là lỗi hay gặp nhất khi ghép IdP mới
+      // (sai redirect_uri, sai client_secret, không tới được token_endpoint).
+      this.logger.error(
+        `Đổi code lấy token thất bại: ${(error as Error).message}`,
+        (error as Error).stack,
+      );
       res.redirect(`${this.config.APP_BASE_URL}/dang-nhap?error=dang_nhap_that_bai`);
     }
   }

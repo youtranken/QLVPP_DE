@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { parseEnv } from './infra/config/env';
 import { loadRootEnv } from './infra/config/load-env';
+import { JsonLogger } from './infra/logging/json-logger';
 
 /** Điểm khởi động HTTP. Config sai/thiếu → fail-fast tại đây. */
 async function bootstrap(): Promise<void> {
@@ -11,7 +12,14 @@ async function bootstrap(): Promise<void> {
   const config = parseEnv();
   // `rawBody` cần cho webhook PMH ID: HMAC phải tính trên ĐÚNG byte gốc,
   // JSON.stringify lại body đã parse sẽ ra chuỗi khác và chữ ký không khớp.
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true,
+    // Log JSON ở production để gom vào hệ thống log tập trung (SDD §9).
+    logger:
+      config.NODE_ENV === 'production'
+        ? new JsonLogger()
+        : ['log', 'warn', 'error', 'debug', 'verbose'],
+  });
   app.enableCors({ origin: config.WEB_ORIGIN.split(','), credentials: true });
   // Cookie phiên BFF (`vpp_sid`) và cookie tạm của luồng OIDC được đọc qua req.cookies.
   app.use(cookieParser());

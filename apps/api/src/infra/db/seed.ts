@@ -1,7 +1,7 @@
 import { count, eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import { parseEnv } from '../config/env';
+import { parseToolEnv } from '../config/env';
 import { loadRootEnv } from '../config/load-env';
 import * as schema from './schema';
 import { categories, departments, items } from './schema';
@@ -14,7 +14,7 @@ import { SEED_CATALOG, SEED_DEPARTMENTS } from './seed-data';
  */
 async function main(): Promise<void> {
   loadRootEnv();
-  const pool = new Pool({ connectionString: parseEnv().DATABASE_URL });
+  const pool = new Pool({ connectionString: parseToolEnv().DATABASE_URL });
   const db = drizzle(pool, { schema, casing: 'snake_case' });
 
   try {

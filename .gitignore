@@ -5,6 +5,9 @@ coverage/
 *.log
 .env
 .env.local
+# Bí mật production — chỉ có .env.prod.example được commit
+deploy/.env.prod
+deploy/backups/
 .DS_Store
 playwright-report/
 test-results/

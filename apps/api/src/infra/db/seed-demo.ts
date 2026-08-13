@@ -3,7 +3,7 @@ import { count } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { mapGroups } from '../../auth/group-mapping';
-import { parseEnv } from '../config/env';
+import { parseToolEnv } from '../config/env';
 import { loadRootEnv } from '../config/load-env';
 import { DEMO_REQUESTS, DEMO_USERS, type DemoLine } from './demo-data';
 import * as schema from './schema';
@@ -26,7 +26,7 @@ function periodBefore(offset: number): string {
 
 async function main(): Promise<void> {
   loadRootEnv();
-  const config = parseEnv();
+  const config = parseToolEnv();
   const pool = new Pool({ connectionString: config.DATABASE_URL });
   const db = drizzle(pool, { schema, casing: 'snake_case' });
 

@@ -10,32 +10,59 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Không ghim `version` ở đây: pnpm/action-setup lấy đúng bản ở trường
+      # `packageManager` của package.json, nhờ vậy CI và máy dev không bao giờ lệch.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      - run: pnpm format:check
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
 
-  # e2e để riêng (chậm) — bật khi cần: dựng app rồi chạy Playwright.
+  # E2E cần cả CSDL, mock-idp, api và web nên dựng bằng chính stack Docker demo.
   e2e:
-    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
+      - name: Dựng stack demo
+        run: docker compose -f deploy/docker-compose.yml --profile app up -d --build
+
+      - name: Chờ api sẵn sàng
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8100/api/health > /dev/null; then exit 0; fi
+            sleep 3
+          done
+          echo "api không sẵn sàng sau 3 phút" >&2
+          docker compose -f deploy/docker-compose.yml --profile app logs
+          exit 1
+
+      - name: Smoke test API
+        run: API_URL=http://localhost:8100 IDP_URL=http://localhost:9100 pnpm smoke:api
+
       - run: pnpm --filter @vpp/web exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
+      - name: E2E Playwright
+        run: E2E_BASE_URL=http://localhost:8100 E2E_IDP_URL=http://localhost:9100 pnpm test:e2e
+
+      - name: Log khi thất bại
+        if: failure()
+        run: docker compose -f deploy/docker-compose.yml --profile app logs --tail 200
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/test-results/
+          retention-days: 7

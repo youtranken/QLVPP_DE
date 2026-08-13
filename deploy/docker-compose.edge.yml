@@ -1,0 +1,31 @@
+# Overlay khi DE-VPP chạy SAU EDGE của PMH — áp **LUẬT VÀNG mạng edge**
+# (edge-va-luong-hoat-dong.md §5, SSO-INTEGRATION §10).
+#
+#   docker compose -f deploy/docker-compose.prod.yml -f deploy/docker-compose.edge.yml \
+#     --env-file deploy/.env.prod up -d
+#
+# Ba điều luật vàng bắt buộc:
+#   1. CHỈ `web` được lên mạng `edge`, và phải có **alias riêng** để không đụng
+#      tên với service của dự án khác cũng nằm trên mạng đó.
+#   2. `api` KHÔNG lên mạng edge. Nó gọi PMH ID qua `host-gateway`, nên cần
+#      `extra_hosts` và `OIDC_INTERNAL_ISSUER` trỏ theo hostname đó.
+#   3. `web` KHÔNG publish cổng ra host nữa — EDGE là lối vào duy nhất.
+services:
+  web:
+    networks:
+      vpp-prod-net: {}
+      edge:
+        aliases:
+          - ${EDGE_ALIAS:?thiếu EDGE_ALIAS — đặt alias riêng cho DE-VPP trên mạng edge}
+    # Gỡ publish cổng: truy cập đi qua EDGE.
+    ports: !reset []
+
+  api:
+    # api không lên edge; muốn tới PMH ID thì đi qua host-gateway.
+    extra_hosts:
+      - '${PMH_HOST:?thiếu PMH_HOST — hostname của PMH ID, vd de-admin.pmh.com.vn}:host-gateway'
+
+networks:
+  edge:
+    external: true
+    name: ${EDGE_NETWORK:-edge}

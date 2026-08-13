@@ -1,0 +1,156 @@
+# Stack DE-VPP cho PRODUCTION.
+#
+# KHÁC compose demo ở ba điểm quan trọng:
+#   1. KHÔNG có `mock-idp` — dùng PMH ID thật.
+#   2. Bí mật đọc từ file `.env.prod` (KHÔNG commit), không hardcode trong compose.
+#   3. Postgres KHÔNG publish ra ngoài; chỉ truy cập trong mạng nội bộ của stack.
+#
+#   cp deploy/.env.prod.example deploy/.env.prod   # rồi điền
+#   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.prod up -d
+#
+# Nếu chạy sau EDGE, chồng thêm overlay (xem docs/operations/RUNBOOK.md):
+#   docker compose -f deploy/docker-compose.prod.yml -f deploy/docker-compose.edge.yml \
+#     --env-file deploy/.env.prod up -d
+#
+# TLS: web nghe HTTP ở cổng ${WEB_PORT}. Chứng chỉ do lớp đứng trước lo (EDGE, hoặc
+# reverse proxy/nginx-proxy của bạn). APP_BASE_URL vẫn PHẢI là https — api từ chối
+# khởi động nếu không, vì cookie phiên đặt `secure` ở production.
+name: vpp-prod
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vpp-prod-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?thiếu POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?thiếu POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?thiếu POSTGRES_DB}
+      TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Nơi script sao lưu ghi file dump (xem scripts/backup-db.sh).
+      - ./backups:/backups
+    networks: [vpp-prod-net]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Chạy một lần mỗi khi triển khai: cập nhật schema rồi nạp danh mục nếu chưa có.
+  # KHÔNG nạp dữ liệu demo ở production.
+  migrate:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    image: vpp-api:${IMAGE_TAG:-latest}
+    container_name: vpp-prod-migrate
+    restart: 'no'
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      TZ: Asia/Ho_Chi_Minh
+    command: sh -c "node dist/infra/db/migrate.js && node dist/infra/db/seed.js"
+    networks: [vpp-prod-net]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    image: vpp-api:${IMAGE_TAG:-latest}
+    container_name: vpp-prod-api
+    restart: always
+    environment:
+      NODE_ENV: production
+      API_PORT: 3000
+      TZ: Asia/Ho_Chi_Minh
+      # Lối thoát cho staging nội bộ chạy http — KHÔNG dùng cho hệ thống thật.
+      ALLOW_INSECURE_PRODUCTION: ${ALLOW_INSECURE_PRODUCTION:-}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+
+      # URL công khai của app — PHẢI là https, và khớp `app_url` đã khai với PMH ID.
+      APP_BASE_URL: ${APP_BASE_URL:?thiếu APP_BASE_URL}
+      WEB_ORIGIN: ${APP_BASE_URL}
+
+      # PMH ID thật (do admin PMH ID cấp).
+      OIDC_ISSUER: ${OIDC_ISSUER:?thiếu OIDC_ISSUER}
+      # Chỉ đặt khi api KHÔNG tới được OIDC_ISSUER bằng chính URL đó (xem overlay EDGE).
+      OIDC_INTERNAL_ISSUER: ${OIDC_INTERNAL_ISSUER:-}
+      PMH_CLIENT_ID: ${PMH_CLIENT_ID:?thiếu PMH_CLIENT_ID}
+      PMH_CLIENT_SECRET: ${PMH_CLIENT_SECRET:?thiếu PMH_CLIENT_SECRET}
+      PMH_WEBHOOK_SECRET: ${PMH_WEBHOOK_SECRET:?thiếu PMH_WEBHOOK_SECRET}
+      PMH_M2M_CLIENT_ID: ${PMH_M2M_CLIENT_ID:?thiếu PMH_M2M_CLIENT_ID}
+      PMH_M2M_CLIENT_SECRET: ${PMH_M2M_CLIENT_SECRET:?thiếu PMH_M2M_CLIENT_SECRET}
+      PMH_DIRECTORY_URL: ${PMH_DIRECTORY_URL:-}
+
+      SESSION_SECRET: ${SESSION_SECRET:?thiếu SESSION_SECRET}
+      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-7}
+      VPP_ADMIN_GROUP: ${VPP_ADMIN_GROUP:-VPP-Admin}
+      VPP_DEPARTMENT_GROUPS: ${VPP_DEPARTMENT_GROUPS:-}
+      DIRECTORY_SYNC_MINUTES: ${DIRECTORY_SYNC_MINUTES:-60}
+      ORG_NAME: ${ORG_NAME:?thiếu ORG_NAME}
+      UPLOAD_DIR: /app/apps/api/uploads
+    # api gọi PMH ID (ngoài stack) qua host-gateway — xem overlay EDGE cho prod thật.
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    expose:
+      - '3000'
+    volumes:
+      - uploads:/app/apps/api/uploads
+    networks: [vpp-prod-net]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '5' }
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    image: vpp-web:${IMAGE_TAG:-latest}
+    container_name: vpp-prod-web
+    restart: always
+    environment:
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - '${WEB_PORT:-8080}:80'
+    networks: [vpp-prod-net]
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://127.0.0.1/']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '5' }
+
+networks:
+  vpp-prod-net:
+    name: vpp-prod-net
+
+volumes:
+  pgdata:
+  uploads:

@@ -55,6 +55,78 @@ const EnvSchema = z.object({
 
 export type AppConfig = z.infer<typeof EnvSchema>;
 
+/**
+ * Giá trị mặc định dùng cho DEV. Lên production mà còn sót cái nào là lỗi cấu
+ * hình nghiêm trọng — bí mật nằm trong repo thì ai đọc repo cũng giả mạo được
+ * phiên đăng nhập hoặc webhook.
+ */
+const DEV_ONLY_DEFAULTS: { key: keyof AppConfig; value: string }[] = [
+  { key: 'PMH_CLIENT_SECRET', value: 'dev-secret-change-me' },
+  { key: 'PMH_WEBHOOK_SECRET', value: 'dev-webhook-secret-change-me' },
+  { key: 'PMH_M2M_CLIENT_SECRET', value: 'dev-m2m-secret-change-me' },
+  { key: 'SESSION_SECRET', value: 'dev-session-secret-change-me' },
+];
+
+/** Độ dài tối thiểu cho bí mật tự sinh ở prod (32 byte hex/base64 trở lên). */
+const MIN_SECRET_LENGTH = 24;
+
+/**
+ * Kiểm tra bổ sung CHỈ áp dụng cho production.
+ * Thà không khởi động được còn hơn chạy với cấu hình mất an toàn mà không ai biết.
+ */
+function checkProductionConfig(config: AppConfig): string[] {
+  const problems: string[] = [];
+
+  for (const { key, value } of DEV_ONLY_DEFAULTS) {
+    if (config[key] === value) {
+      problems.push(`${key} vẫn là giá trị mặc định của dev — phải đặt bí mật riêng`);
+    } else if (String(config[key]).length < MIN_SECRET_LENGTH) {
+      problems.push(`${key} quá ngắn (cần ≥ ${MIN_SECRET_LENGTH} ký tự)`);
+    }
+  }
+
+  // Cookie phiên đặt `secure` ở production; chạy trên http thì trình duyệt sẽ
+  // bỏ cookie và người dùng không bao giờ đăng nhập được.
+  if (!config.APP_BASE_URL.startsWith('https://')) {
+    problems.push(`APP_BASE_URL phải là https ở production (đang là ${config.APP_BASE_URL})`);
+  }
+  if (!config.OIDC_ISSUER.startsWith('https://')) {
+    problems.push(`OIDC_ISSUER phải là https ở production (đang là ${config.OIDC_ISSUER})`);
+  }
+
+  if (config.ORG_NAME === 'CÔNG TY') {
+    problems.push('ORG_NAME vẫn là giá trị đặt chỗ — đặt tên đơn vị thật cho báo cáo Excel');
+  }
+
+  return problems;
+}
+
+/** Tập cấu hình mà các công cụ dòng lệnh (migrate, seed) thực sự cần. */
+const ToolEnvSchema = EnvSchema.pick({
+  DATABASE_URL: true,
+  VPP_ADMIN_GROUP: true,
+  VPP_DEPARTMENT_GROUPS: true,
+});
+
+export type ToolConfig = z.infer<typeof ToolEnvSchema>;
+
+/**
+ * Cấu hình cho CÔNG CỤ DÒNG LỆNH (migrate, seed).
+ *
+ * Chúng không đăng nhập, không gọi PMH ID, nên KHÔNG áp chốt an toàn production:
+ * bắt migrate phải có `client_secret` và `APP_BASE_URL` https thì mọi lần triển
+ * khai đều hỏng ở bước migrate dù cấu hình app hoàn toàn đúng.
+ */
+export function parseToolEnv(env: NodeJS.ProcessEnv = process.env): ToolConfig {
+  const result = ToolEnvSchema.safeParse(env);
+  if (!result.success) {
+    throw new Error(
+      `Cấu hình công cụ không hợp lệ: ${result.error.issues.map((i) => i.message).join('; ')}`,
+    );
+  }
+  return result.data;
+}
+
 /** Đọc & kiểm tra cấu hình từ biến môi trường. Ném lỗi rõ ràng nếu không hợp lệ. */
 export function parseEnv(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const result = EnvSchema.safeParse(env);
@@ -64,5 +136,27 @@ export function parseEnv(env: NodeJS.ProcessEnv = process.env): AppConfig {
       .join('; ');
     throw new Error(`Cấu hình môi trường không hợp lệ: ${issues}`);
   }
+
+  if (result.data.NODE_ENV === 'production') {
+    const problems = checkProductionConfig(result.data);
+    if (problems.length > 0) {
+      const detail = `  - ${problems.join('\n  - ')}`;
+      // Lối thoát cho staging nội bộ chạy http: vẫn CHẠY nhưng kêu thật to,
+      // để không ai vô tình đưa cấu hình này ra thật mà tưởng là ổn.
+      if (env.ALLOW_INSECURE_PRODUCTION === '1') {
+        console.warn(
+          `⚠️  CẢNH BÁO: production đang chạy với cấu hình KHÔNG an toàn ` +
+            `(đã bật ALLOW_INSECURE_PRODUCTION):\n${detail}`,
+        );
+      } else {
+        throw new Error(
+          `Cấu hình production không an toàn:\n${detail}\n` +
+            'Xem docs/operations/RUNBOOK.md để biết cách sinh và đặt các bí mật này.\n' +
+            'Chỉ khi thật sự chấp nhận rủi ro (staging nội bộ) mới đặt ALLOW_INSECURE_PRODUCTION=1.',
+        );
+      }
+    }
+  }
+
   return result.data;
 }

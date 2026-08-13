@@ -6,6 +6,8 @@
   "engines": {
     "node": ">=20"
   },
+  "//packageManager": "Pin bản pnpm để máy dev, CI và Docker dùng đúng một bản. Cần pnpm 10+ vì pnpm-workspace.yaml dùng khoá `allowBuilds`.",
+  "packageManager": "pnpm@11.5.2",
   "scripts": {
     "build": "pnpm -r build",
     "typecheck": "pnpm --filter @vpp/shared build && pnpm -r typecheck",
