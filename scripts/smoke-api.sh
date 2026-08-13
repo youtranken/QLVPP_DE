@@ -7,13 +7,15 @@
 #   docker compose -f deploy/docker-compose.yml --profile app up -d
 #   pnpm smoke:api
 #
-# Chạy với cấu hình khác (vd chạy trên máy thay vì Docker):
-#   API_URL=http://localhost:3001 IDP_URL=http://localhost:9000 pnpm smoke:api
+# Chạy với cấu hình khác (vd chế độ dev trên máy — README "Cách 2"):
+#   API_URL=http://localhost:8090 IDP_URL=http://localhost:9000 pnpm smoke:api
 #
 # LƯU Ý: script GHI dữ liệu thật (tạo đơn, khoá/mở user demo) — chỉ dùng cho môi
 # trường dev/demo, không chạy vào CSDL thật.
 set -u
-API=${API_URL:-http://localhost:3100}
+# Mặc định trỏ vào stack Docker demo: app vào qua nginx của web ở cổng 8100,
+# api KHÔNG publish cổng riêng (từ M5).
+API=${API_URL:-http://localhost:8100}
 IDP=${IDP_URL:-http://localhost:9100}
 
 # Làm việc trong thư mục tạm riêng để không rác hoá repo.

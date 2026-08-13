@@ -78,11 +78,11 @@ docker compose -f deploy/docker-compose.yml --profile app down -v   # dừng + x
 Stack dùng project `vpp`, mạng `vpp-net`, volume `vpp_pgdata`/`vpp_uploads` và cổng
 8100/9100/5433 — **không dùng chung gì** với các stack Docker khác trên máy.
 
-Chạy lại bộ kiểm thử vào chính stack này:
+Chạy lại bộ kiểm thử vào chính stack này (mặc định đã trỏ sẵn vào đây):
 
 ```bash
-API_URL=http://localhost:8100 IDP_URL=http://localhost:9100 pnpm smoke:api
-E2E_BASE_URL=http://localhost:8100 E2E_IDP_URL=http://localhost:9100 pnpm test:e2e
+pnpm smoke:api      # 36 mục kiểm, qua HTTP thật
+pnpm test:e2e       # 30 test Playwright, desktop + mobile
 ```
 
 ### Cách 2 — Chạy trên máy, chỉ CSDL trong Docker (có hot-reload)
@@ -110,7 +110,8 @@ pnpm lint                   # ESLint
 pnpm typecheck              # TypeScript (strict) — build @vpp/shared rồi typecheck
 pnpm test                   # Unit test (Vitest) toàn monorepo
 pnpm build                  # Build tất cả package
-pnpm test:e2e               # E2E Playwright — cần 3 tiến trình trên đang chạy
+# E2E ở chế độ này phải chỉ rõ địa chỉ (mặc định trỏ vào stack Docker):
+E2E_BASE_URL=http://localhost:8090 E2E_IDP_URL=http://localhost:9000 pnpm test:e2e
 ```
 
 Mở `http://localhost:8090` → bấm **Đăng nhập bằng PMH ID** → chọn user demo.
@@ -136,16 +137,16 @@ Mở `http://localhost:8090` → bấm **Đăng nhập bằng PMH ID** → chọ
 
 ## Scripts (thư mục gốc)
 
-| Lệnh                | Tác dụng                                            |
-| ------------------- | --------------------------------------------------- |
-| `pnpm lint`         | ESLint toàn repo                                    |
-| `pnpm format`       | Prettier ghi định dạng                              |
-| `pnpm format:check` | Prettier kiểm tra (không sửa)                       |
-| `pnpm typecheck`    | Kiểm kiểu TypeScript (strict) mọi package           |
-| `pnpm test`         | Unit test (Vitest)                                  |
-| `pnpm test:e2e`     | E2E Playwright — cần mock-idp + api + web đang chạy |
-| `pnpm build`        | Build mọi package                                   |
-| `pnpm smoke:api`    | Smoke test API qua HTTP thật (xem bên dưới)         |
+| Lệnh                | Tác dụng                                    |
+| ------------------- | ------------------------------------------- |
+| `pnpm lint`         | ESLint toàn repo                            |
+| `pnpm format`       | Prettier ghi định dạng                      |
+| `pnpm format:check` | Prettier kiểm tra (không sửa)               |
+| `pnpm typecheck`    | Kiểm kiểu TypeScript (strict) mọi package   |
+| `pnpm test`         | Unit test (Vitest)                          |
+| `pnpm test:e2e`     | E2E Playwright — cần stack đang chạy        |
+| `pnpm build`        | Build mọi package                           |
+| `pnpm smoke:api`    | Smoke test API qua HTTP thật (xem bên dưới) |
 
 ## Màn hình
 
@@ -221,8 +222,9 @@ nên nhân viên không phải tải chỗ đó.
 (đăng nhập SSO → đăng ký → duyệt → giao → báo cáo → danh bạ → webhook), 35 mục kiểm.
 
 ```bash
-pnpm smoke:api                                                   # stack Docker
-API_URL=http://localhost:3001 IDP_URL=http://localhost:9000 pnpm smoke:api   # chạy trên máy
+pnpm smoke:api      # mặc định: stack Docker (localhost:8100)
+# Chế độ dev trên máy (Cách 2):
+API_URL=http://localhost:8090 IDP_URL=http://localhost:9000 pnpm smoke:api
 ```
 
 > Script **ghi dữ liệu thật** và dọn bảng đơn/thông báo/audit trước mỗi lần chạy

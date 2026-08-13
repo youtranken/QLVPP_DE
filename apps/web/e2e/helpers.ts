@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 
 /** Địa chỉ mock-idp — trang chọn user demo nằm ngoài origin của app. */
-export const IDP_URL = process.env.E2E_IDP_URL ?? 'http://localhost:9000';
+export const IDP_URL = process.env.E2E_IDP_URL ?? 'http://localhost:9100';
 
 /**
  * Đăng nhập qua mock-idp: bấm "Đăng nhập bằng PMH ID" rồi chọn một user demo.
