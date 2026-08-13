@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
-import { Issuer, generators, type Client, type TokenSet } from 'openid-client';
+import { Issuer, generators, type Client, type IssuerMetadata, type TokenSet } from 'openid-client';
 import { parseEnv, type AppConfig } from '../infra/config/env';
 
 /** Scope xin từ PMH ID. `offline_access` để có refresh_token; `groups` để suy vai trò/phòng ban. */
@@ -41,7 +41,7 @@ export class OidcService {
    * chưa sẵn sàng (thứ tự container), chỉ luồng đăng nhập mới cần IdP sống.
    */
   private async getClient(): Promise<Client> {
-    this.clientPromise ??= Issuer.discover(this.config.OIDC_ISSUER)
+    this.clientPromise ??= this.discoverIssuer()
       .then((issuer) => {
         this.logger.log(`Đã discovery IdP: ${issuer.issuer}`);
         return new issuer.Client({
@@ -56,6 +56,59 @@ export class OidcService {
         throw error;
       });
     return this.clientPromise;
+  }
+
+  /**
+   * Đọc discovery document rồi dựng Issuer.
+   *
+   * Khi khai `OIDC_INTERNAL_ISSUER`, các endpoint api gọi TRỰC TIẾP được đổi sang URL
+   * nội bộ, còn `issuer` và các endpoint TRÌNH DUYỆT dùng (`authorization_endpoint`,
+   * `end_session_endpoint`) giữ nguyên URL công khai — nếu đổi cả thì `iss` trong
+   * token sẽ không khớp và trình duyệt bị đẩy tới địa chỉ nó không tới được.
+   */
+  private async discoverIssuer(): Promise<Issuer> {
+    const publicIssuer = this.config.OIDC_ISSUER.replace(/\/$/, '');
+    const internalIssuer = (this.config.OIDC_INTERNAL_ISSUER || publicIssuer).replace(/\/$/, '');
+
+    if (internalIssuer === publicIssuer) return Issuer.discover(publicIssuer);
+
+    const response = await fetch(`${internalIssuer}/.well-known/openid-configuration`);
+    if (!response.ok) {
+      throw new Error(`Discovery IdP thất bại (${response.status}) tại ${internalIssuer}`);
+    }
+    const metadata = (await response.json()) as IssuerMetadata;
+
+    /** Endpoint api gọi TRỰC TIẾP (không qua trình duyệt). */
+    const SERVER_SIDE_ENDPOINTS = [
+      'token_endpoint',
+      'jwks_uri',
+      'userinfo_endpoint',
+      'introspection_endpoint',
+      'revocation_endpoint',
+    ] as const;
+
+    const swapPrefix = (value: string, from: string, to: string): string =>
+      value.startsWith(from) ? to + value.slice(from.length) : value;
+
+    // IdP sinh endpoint theo `Host` của request, nên hỏi qua URL nội bộ thì MỌI endpoint
+    // trả về đều là URL nội bộ (riêng `issuer` giữ giá trị đã cấu hình).
+    // Bước 1: đưa tất cả về URL công khai — mặc định an toàn cho trình duyệt.
+    const rewritten: IssuerMetadata = { ...metadata };
+    for (const [key, value] of Object.entries(rewritten)) {
+      if (typeof value === 'string' && key !== 'issuer') {
+        rewritten[key] = swapPrefix(value, internalIssuer, publicIssuer);
+      }
+    }
+    // Bước 2: chỉ những endpoint api tự gọi mới quay lại URL nội bộ.
+    for (const key of SERVER_SIDE_ENDPOINTS) {
+      const value = rewritten[key];
+      if (typeof value === 'string') {
+        rewritten[key] = swapPrefix(value, publicIssuer, internalIssuer);
+      }
+    }
+
+    this.logger.log(`IdP: issuer công khai ${publicIssuer}, gọi nội bộ qua ${internalIssuer}`);
+    return new Issuer(rewritten);
   }
 
   /** Sinh state/nonce/PKCE và URL `/authorize` để chuyển hướng trình duyệt sang IdP. */

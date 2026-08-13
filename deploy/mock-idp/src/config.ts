@@ -19,8 +19,15 @@ export const PORT = Number(env.MOCK_IDP_PORT ?? 9000);
 /** Issuer PHẢI khớp OIDC_ISSUER của api. Có hậu tố `/oidc` cho giống PMH ID thật. */
 export const ISSUER = env.MOCK_IDP_ISSUER ?? `http://localhost:${PORT}/oidc`;
 
-/** URL công khai của DE-VPP — nơi IdP chuyển hướng về sau khi đăng nhập. */
+/** URL CÔNG KHAI của DE-VPP — nơi IdP chuyển hướng TRÌNH DUYỆT về sau khi đăng nhập. */
 export const APP_BASE_URL = env.APP_BASE_URL ?? 'http://localhost:8080';
+
+/**
+ * URL NỘI BỘ tới api cho lệnh gọi server→server (back-channel logout).
+ * Chỉ cần khi IdP không tới được `APP_BASE_URL` bằng chính URL đó — ví dụ cả hai
+ * chạy trong Docker còn APP_BASE_URL là `http://localhost:3100` của trình duyệt.
+ */
+const APP_INTERNAL_BASE_URL = env.APP_INTERNAL_BASE_URL || APP_BASE_URL;
 
 /** Client bí mật của api (authorization_code + refresh_token). */
 export const CLIENT_ID = env.PMH_CLIENT_ID ?? 'de-vpp-dev';
@@ -30,5 +37,8 @@ export const CLIENT_SECRET = env.PMH_CLIENT_SECRET ?? 'dev-secret-change-me';
 export const M2M_CLIENT_ID = env.PMH_M2M_CLIENT_ID ?? 'de-vpp-dev-m2m';
 export const M2M_CLIENT_SECRET = env.PMH_M2M_CLIENT_SECRET ?? 'dev-m2m-secret-change-me';
 
+/** Trình duyệt đi tới địa chỉ này ⇒ phải là URL công khai. */
 export const REDIRECT_URI = `${APP_BASE_URL}/api/auth/callback`;
-export const BACKCHANNEL_LOGOUT_URI = `${APP_BASE_URL}/api/auth/backchannel-logout`;
+
+/** IdP tự gọi địa chỉ này ⇒ phải là URL nội bộ khi chạy trong Docker. */
+export const BACKCHANNEL_LOGOUT_URI = `${APP_INTERNAL_BASE_URL}/api/auth/backchannel-logout`;

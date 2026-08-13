@@ -16,8 +16,8 @@ packages/
   shared/     Quy tắc nghiệp vụ dùng chung (TypeScript)   — @vpp/shared
 docs/         PRD, SDD, ADR, SSO-INTEGRATION, ...
 deploy/
-  mock-idp/   IdP OIDC giả lập PMH ID (CHỈ demo/dev)      — @vpp/mock-idp
-  docker-compose.dev.yml   PostgreSQL cho dev
+  mock-idp/            IdP OIDC giả lập PMH ID (CHỈ demo/dev)  — @vpp/mock-idp
+  docker-compose.yml   Stack Docker riêng của DE-VPP
 ```
 
 ## Yêu cầu
@@ -25,7 +25,32 @@ deploy/
 - **Node.js ≥ 20** (khuyến nghị 20/22/24)
 - **pnpm** (bật qua Corepack: `corepack enable`)
 
-## Khởi động local
+## Khởi động
+
+### Cách 1 — Toàn bộ trong Docker (nhanh nhất)
+
+```bash
+docker compose -f deploy/docker-compose.yml --profile app up -d --build
+```
+
+Xong là có **api** `http://localhost:3100` · **mock-idp** `http://localhost:9100` ·
+**postgres** `localhost:5433`. Migration + dữ liệu mẫu tự chạy trước khi api khởi động.
+
+Thử đăng nhập: mở `http://localhost:3100/api/auth/login` → chọn một user demo
+(`admin@pmh.com.vn` là admin) → quay lại app. Sau đó `GET /api/me` trả vai trò và
+phòng ban, `GET /api/catalog` trả danh mục đã seed.
+
+```bash
+docker compose -f deploy/docker-compose.yml --profile app ps        # trạng thái
+docker compose -f deploy/docker-compose.yml --profile app logs -f   # log
+docker compose -f deploy/docker-compose.yml --profile app down      # dừng, giữ dữ liệu
+docker compose -f deploy/docker-compose.yml --profile app down -v   # dừng + xoá dữ liệu
+```
+
+Stack dùng project `vpp`, mạng `vpp-net`, volume `vpp_pgdata`/`vpp_uploads` và cổng
+3100/9100/5433 — **không dùng chung gì** với các stack Docker khác trên máy.
+
+### Cách 2 — Chạy trên máy, chỉ CSDL trong Docker (có hot-reload)
 
 ```bash
 # 1) Cài dependency (từ thư mục gốc)
@@ -34,8 +59,8 @@ pnpm install
 # 2) Cấu hình môi trường
 cp .env.example .env        # Windows: copy .env.example .env
 
-# 3) Dựng CSDL rồi tạo bảng + dữ liệu mẫu
-docker compose -f deploy/docker-compose.dev.yml up -d
+# 3) Chỉ dựng CSDL (không có --profile app), rồi tạo bảng + dữ liệu mẫu
+docker compose -f deploy/docker-compose.yml up -d
 pnpm --filter @vpp/api db:migrate
 pnpm --filter @vpp/api db:seed
 
@@ -50,15 +75,17 @@ pnpm test                   # Unit test (Vitest) toàn monorepo
 pnpm build                  # Build tất cả package
 ```
 
-Thử đăng nhập: mở `http://localhost:3000/api/auth/login` → chọn một user demo
-(`admin@pmh.com.vn` là admin) → quay lại app. Sau đó `GET /api/me` trả vai trò và
-phòng ban, `GET /api/catalog` trả danh mục đã seed.
-
-> **Cổng:** `.env.example` dùng `APP_BASE_URL=http://localhost:8080` (giống demo Docker,
-> nginx proxy `/api` → api). Khi chạy API trực tiếp chưa có web, đặt
+> **Cổng ở cách 2:** `.env.example` dùng `APP_BASE_URL=http://localhost:8080` (giống
+> demo có nginx proxy `/api` → api). Khi chạy API trực tiếp chưa có web, đặt
 > `APP_BASE_URL=http://localhost:3000` trong `.env` để redirect OIDC quay đúng về API.
-> Nếu máy đã có dịch vụ khác chiếm 3000/8080/5432, đổi `API_PORT` / `APP_BASE_URL` /
+> Nếu máy đã có dịch vụ khác chiếm cổng, đổi `API_PORT` / `APP_BASE_URL` /
 > `DATABASE_URL` trong `.env` — mock-idp đọc chung `.env` nên tự khớp theo.
+
+> **URL công khai vs URL nội bộ:** trình duyệt chạy ngoài Docker nên chỉ tới được
+> `localhost:<cổng đã publish>`, còn container không tới được `localhost` của host.
+> Vì vậy trong Docker, `OIDC_INTERNAL_ISSUER` (api → IdP) và `APP_INTERNAL_BASE_URL`
+> (IdP → api, cho back-channel logout) trỏ theo tên service, còn mọi endpoint mà
+> **trình duyệt** đi tới vẫn giữ URL công khai. Chạy trên máy thì để trống cả hai.
 
 > **Lưu ý:** `@vpp/api` và `@vpp/web` phụ thuộc `@vpp/shared`. Các script `typecheck`/`test`/`build`
 > đã tự **build `@vpp/shared` trước** nên không cần làm thủ công.

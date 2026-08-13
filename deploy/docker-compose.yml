@@ -1,0 +1,144 @@
+# Stack DE-VPP — TÁCH BIỆT hoàn toàn với các stack khác trên máy:
+# project riêng (`vpp`), mạng riêng (`vpp-net`), volume riêng, cổng riêng.
+#
+#   # Chỉ CSDL (api/mock-idp chạy trên máy để có hot-reload):
+#   docker compose -f deploy/docker-compose.yml up -d
+#
+#   # Cả stack trong Docker:
+#   docker compose -f deploy/docker-compose.yml --profile app up -d --build
+#
+# Cổng công bố ra host: api 3100 · mock-idp 9100 · postgres 5433
+# (3000/8080/5432 đang bị stack khác trên máy chiếm).
+#
+# ┌ URL công khai vs URL nội bộ ───────────────────────────────────────────────┐
+# │ Trình duyệt chạy trên HOST nên chỉ tới được `localhost:<cổng đã publish>`. │
+# │ Container lại không tới được `localhost` của host. Vì vậy mỗi bên giữ một  │
+# │ URL riêng cho cùng một dịch vụ:                                            │
+# │   • CÔNG KHAI (trình duyệt, và `iss` trong token): localhost:3100 / :9100  │
+# │   • NỘI BỘ   (server→server trong mạng vpp-net):   api:3000 / mock-idp:9000│
+# │ api dùng OIDC_INTERNAL_ISSUER cho token/jwks; mock-idp dùng                │
+# │ APP_INTERNAL_BASE_URL cho back-channel logout. Endpoint mà trình duyệt đi  │
+# │ tới (/authorize, /session/end, redirect_uri) LUÔN giữ URL công khai.       │
+# └────────────────────────────────────────────────────────────────────────────┘
+name: vpp
+
+x-app-urls: &app-urls
+  APP_BASE_URL: http://localhost:3100
+  OIDC_ISSUER: http://localhost:9100/oidc
+  PMH_CLIENT_ID: de-vpp-dev
+  PMH_CLIENT_SECRET: dev-secret-change-me
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vpp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vpp
+      POSTGRES_PASSWORD: vpp
+      POSTGRES_DB: vpp
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - '5433:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [vpp-net]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U vpp -d vpp']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Chạy một lần rồi thoát: tạo bảng + nạp dữ liệu mẫu. api chờ service này xong.
+  migrate:
+    profiles: [app]
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    image: vpp-api:latest
+    container_name: vpp-migrate
+    restart: 'no'
+    environment:
+      DATABASE_URL: postgres://vpp:vpp@postgres:5432/vpp
+      TZ: Asia/Ho_Chi_Minh
+    command: sh -c "node dist/infra/db/migrate.js && node dist/infra/db/seed.js"
+    networks: [vpp-net]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  mock-idp:
+    profiles: [app]
+    build:
+      context: ..
+      dockerfile: deploy/mock-idp/Dockerfile
+    image: vpp-mock-idp:latest
+    container_name: vpp-mock-idp
+    restart: unless-stopped
+    environment:
+      <<: *app-urls
+      MOCK_IDP_PORT: 9000
+      MOCK_IDP_ISSUER: http://localhost:9100/oidc
+      # Back-channel logout do IdP tự gọi ⇒ đi thẳng tới api trong mạng vpp-net.
+      APP_INTERNAL_BASE_URL: http://api:3000
+      PMH_M2M_CLIENT_ID: de-vpp-dev-m2m
+      PMH_M2M_CLIENT_SECRET: dev-m2m-secret-change-me
+    ports:
+      - '9100:9000'
+    networks: [vpp-net]
+
+  api:
+    profiles: [app]
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    image: vpp-api:latest
+    container_name: vpp-api
+    restart: unless-stopped
+    environment:
+      <<: *app-urls
+      NODE_ENV: production
+      API_PORT: 3000
+      TZ: Asia/Ho_Chi_Minh
+      DATABASE_URL: postgres://vpp:vpp@postgres:5432/vpp
+      # Discovery/token/jwks đi thẳng tới mock-idp trong mạng vpp-net.
+      OIDC_INTERNAL_ISSUER: http://mock-idp:9000/oidc
+      WEB_ORIGIN: http://localhost:3100
+      PMH_WEBHOOK_SECRET: dev-webhook-secret-change-me
+      SESSION_SECRET: dev-session-secret-change-me
+      SESSION_TTL_DAYS: 7
+      VPP_ADMIN_GROUP: VPP-Admin
+      VPP_DEPARTMENT_GROUPS: Hành chính,Nhân sự,Kế toán,Kỹ thuật,Kinh doanh
+      UPLOAD_DIR: /app/apps/api/uploads
+    ports:
+      - '3100:3000'
+    volumes:
+      - uploads:/app/apps/api/uploads
+    networks: [vpp-net]
+    depends_on:
+      mock-idp:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+networks:
+  vpp-net:
+    name: vpp-net
+
+volumes:
+  pgdata:
+  uploads:

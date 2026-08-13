@@ -10,7 +10,15 @@ const EnvSchema = z.object({
   WEB_ORIGIN: z.string().url().default('http://localhost:8080'),
   APP_BASE_URL: z.string().url().default('http://localhost:8080'),
   DATABASE_URL: z.string().min(1).default('postgres://vpp:vpp@localhost:5433/vpp'),
+  /** Issuer CÔNG KHAI — trình duyệt chuyển hướng tới đây và là `iss` trong token. */
   OIDC_ISSUER: z.string().url().default('http://localhost:9000'),
+  /**
+   * URL NỘI BỘ tới IdP cho các lệnh gọi server→server (token, jwks, userinfo).
+   * Chỉ cần khi api không tới được `OIDC_ISSUER` bằng chính URL đó — ví dụ api chạy
+   * trong Docker còn issuer là `http://localhost:9100/oidc` của trình duyệt.
+   * Bỏ trống ⇒ dùng luôn `OIDC_ISSUER`.
+   */
+  OIDC_INTERNAL_ISSUER: z.string().default(''),
   PMH_CLIENT_ID: z.string().min(1).default('de-vpp-dev'),
   PMH_CLIENT_SECRET: z.string().min(1).default('dev-secret-change-me'),
   PMH_WEBHOOK_SECRET: z.string().min(1).default('dev-webhook-secret-change-me'),
