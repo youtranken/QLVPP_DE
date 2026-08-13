@@ -27,7 +27,10 @@ export const APP_BASE_URL = env.APP_BASE_URL ?? 'http://localhost:8080';
  * Chỉ cần khi IdP không tới được `APP_BASE_URL` bằng chính URL đó — ví dụ cả hai
  * chạy trong Docker còn APP_BASE_URL là `http://localhost:3100` của trình duyệt.
  */
-const APP_INTERNAL_BASE_URL = env.APP_INTERNAL_BASE_URL || APP_BASE_URL;
+export const APP_INTERNAL_BASE_URL = env.APP_INTERNAL_BASE_URL || APP_BASE_URL;
+
+/** Bí mật ký webhook — PHẢI trùng `PMH_WEBHOOK_SECRET` của api. */
+export const WEBHOOK_SECRET = env.PMH_WEBHOOK_SECRET ?? 'dev-webhook-secret-change-me';
 
 /** Client bí mật của api (authorization_code + refresh_token). */
 export const CLIENT_ID = env.PMH_CLIENT_ID ?? 'de-vpp-dev';

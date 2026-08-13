@@ -3,6 +3,7 @@ import { ISSUER, PORT, REDIRECT_URI } from './config';
 import { createDirectoryRouter } from './directory';
 import { createInteractionRouter } from './interaction';
 import { createProvider } from './provider';
+import { createWebhookEmitterRouter } from './webhook-emitter';
 
 /**
  * IdP OIDC giả lập PMH ID cho demo/dev (SSO-INTEGRATION §9).
@@ -27,6 +28,7 @@ async function main(): Promise<void> {
   app.use(express.urlencoded({ extended: false }));
   app.use(createInteractionRouter(provider));
   app.use(createDirectoryRouter(provider));
+  app.use(createWebhookEmitterRouter());
 
   // Provider mount ở /oidc để issuer có cùng hình dạng với PMH ID thật (.../oidc).
   app.use('/oidc', provider.callback());

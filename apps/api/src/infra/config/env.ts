@@ -22,6 +22,16 @@ const EnvSchema = z.object({
   PMH_CLIENT_ID: z.string().min(1).default('de-vpp-dev'),
   PMH_CLIENT_SECRET: z.string().min(1).default('dev-secret-change-me'),
   PMH_WEBHOOK_SECRET: z.string().min(1).default('dev-webhook-secret-change-me'),
+  /** Client M2M cho Directory API (đồng bộ danh bạ, client_credentials). */
+  PMH_M2M_CLIENT_ID: z.string().min(1).default('de-vpp-dev-m2m'),
+  PMH_M2M_CLIENT_SECRET: z.string().min(1).default('dev-m2m-secret-change-me'),
+  /**
+   * Gốc Directory API. Bỏ trống ⇒ suy từ `OIDC_INTERNAL_ISSUER`/`OIDC_ISSUER`
+   * (mock-idp phục vụ Directory ngay cạnh endpoint OIDC).
+   */
+  PMH_DIRECTORY_URL: z.string().default(''),
+  /** Chu kỳ đồng bộ danh bạ, tính bằng phút (SSO-INTEGRATION §7 gợi ý ~60'). */
+  DIRECTORY_SYNC_MINUTES: z.coerce.number().int().min(1).default(60),
   VPP_ADMIN_GROUP: z.string().min(1).default('VPP-Admin'),
   /** Danh sách group coi là phòng ban, phân tách bởi dấu phẩy; thứ tự = độ ưu tiên. */
   VPP_DEPARTMENT_GROUPS: z

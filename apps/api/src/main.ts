@@ -9,7 +9,9 @@ import { loadRootEnv } from './infra/config/load-env';
 async function bootstrap(): Promise<void> {
   loadRootEnv();
   const config = parseEnv();
-  const app = await NestFactory.create(AppModule);
+  // `rawBody` cần cho webhook PMH ID: HMAC phải tính trên ĐÚNG byte gốc,
+  // JSON.stringify lại body đã parse sẽ ra chuỗi khác và chữ ký không khớp.
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   app.enableCors({ origin: config.WEB_ORIGIN.split(','), credentials: true });
   // Cookie phiên BFF (`vpp_sid`) và cookie tạm của luồng OIDC được đọc qua req.cookies.
   app.use(cookieParser());
