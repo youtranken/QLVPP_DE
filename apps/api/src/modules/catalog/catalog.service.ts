@@ -2,6 +2,7 @@ import { ConflictException, Inject, Injectable, NotFoundException } from '@nestj
 import { ErrorCode } from '@vpp/shared';
 import { asc, count, eq } from 'drizzle-orm';
 import { DB, type Db } from '../../infra/db/db.module';
+import { isUniqueViolation } from '../../infra/db/pg-errors';
 import { categories, items } from '../../infra/db/schema';
 import type {
   CreateCategoryDto,
@@ -9,9 +10,6 @@ import type {
   UpdateCategoryDto,
   UpdateItemDto,
 } from './catalog.dto';
-
-/** Postgres báo vi phạm unique bằng mã 23505. */
-const PG_UNIQUE_VIOLATION = '23505';
 
 export interface CatalogCategory {
   id: string;
@@ -145,15 +143,4 @@ export class CatalogService {
       throw error;
     }
   }
-}
-
-/**
- * Drizzle bọc lỗi của driver lại, nên mã lỗi Postgres nằm ở `cause` chứ không ở
- * tầng ngoài cùng — phải lần theo chuỗi `cause` mới thấy.
- */
-function isUniqueViolation(error: unknown): boolean {
-  for (let current = error; current instanceof Error; current = current.cause) {
-    if ((current as { code?: string }).code === PG_UNIQUE_VIOLATION) return true;
-  }
-  return false;
 }
