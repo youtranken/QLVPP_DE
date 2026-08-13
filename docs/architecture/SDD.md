@@ -1,7 +1,8 @@
 # SDD — Software Design Document — Website Đăng ký Văn phòng phẩm (DE-VPP)
 
 > Phiên bản **v4 — khớp PRD v1.2 (PMH ID SSO)** · Quy mô: **Vừa (≤ 500 người dùng)** · Ngày: 2026-08-06
-> Trạng thái: **CHỜ DUYỆT LẦN CUỐI** trước khi bắt đầu code (M0).
+> Trạng thái: **ĐÃ DUYỆT — đang thi công**. Xong **M0** (khung monorepo) và **M1**
+> (CSDL, SSO OIDC BFF + mock-idp, danh mục). Đang tới **M2** (nghiệp vụ đơn đăng ký).
 > Tài liệu này là **thiết kế kỹ thuật (SDD)**, đồng bộ với `docs/product/PRD.md` v1.2.
 >
 > **⚠️ Xác thực = PMH ID SSO.** Toàn bộ phần **danh tính/đăng nhập** (OIDC + Directory + Webhook + BCL, BFF, bảng `users`/`app_sessions`, map group→vai trò/phòng ban, mock IdP demo) nằm ở **`docs/architecture/SSO-INTEGRATION.md`** — tài liệu đó **ưu tiên** khi có khác biệt. Dưới đây chỉ tóm tắt phần liên quan.
@@ -211,15 +212,18 @@ _Giờ:_ container đặt `TZ=Asia/Ho_Chi_Minh`.
 
 ## 10. Kế hoạch triển khai (mỗi mốc DỪNG xin duyệt; chỉ chạy demo khi bạn đồng ý)
 
-| Mốc    | Nội dung                                                                                                                                                       |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **M0** | Khung monorepo + `packages/shared` + skeleton Docker                                                                                                           |
-| **M1** | Backend lõi: DB (schema/migrate/seed), **SSO OIDC (BFF: login/callback/logout, verify JWT, map group→vai trò/phòng ban)** + **mock-idp**, catalog              |
+| Mốc | Nội dung |
+| --- | -------- |
+
+> Tiến độ: **M0 ✅**, **M1 ✅** — đang tới **M2**.
+
+| **M0** | Khung monorepo + `packages/shared` + skeleton Docker |
+| **M1** | Backend lõi: DB (schema/migrate/seed), **SSO OIDC (BFF: login/callback/logout, verify JWT, map group→vai trò/phòng ban)** + **mock-idp**, catalog |
 | **M2** | Backend nghiệp vụ: requests (đăng ký/kỳ/validate), duyệt/từ chối, giao, điều chỉnh, upload, export, thông báo, audit, stats + **Directory sync, Webhook, BCL** |
-| **M3** | Frontend: đăng nhập (redirect PMH ID) + luồng **nhân viên** (đăng ký, đơn của tôi, chuông)                                                                     |
-| **M4** | Frontend: luồng **admin** (duyệt, giao, danh mục, danh bạ/directory, báo cáo, thống kê, audit)                                                                 |
-| **M5** | Docker Compose demo hoàn chỉnh (gồm `mock-idp`) + dữ liệu mẫu + **CHẠY THỬ**                                                                                   |
-| **M6** | (sau khi ổn) Ghép **PMH ID thật** (xin client, chốt host/EDGE, redirect/webhook/BCL URI) + tài liệu vận hành prod                                              |
+| **M3** | Frontend: đăng nhập (redirect PMH ID) + luồng **nhân viên** (đăng ký, đơn của tôi, chuông) |
+| **M4** | Frontend: luồng **admin** (duyệt, giao, danh mục, danh bạ/directory, báo cáo, thống kê, audit) |
+| **M5** | Docker Compose demo hoàn chỉnh (gồm `mock-idp`) + dữ liệu mẫu + **CHẠY THỬ** |
+| **M6** | (sau khi ổn) Ghép **PMH ID thật** (xin client, chốt host/EDGE, redirect/webhook/BCL URI) + tài liệu vận hành prod |
 
 ---
 
