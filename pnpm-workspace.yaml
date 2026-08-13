@@ -1,6 +1,8 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+  # mock-idp: IdP giả CHỈ dùng cho demo/dev, không đóng gói vào bản prod
+  - 'deploy/mock-idp'
 # esbuild cần chạy postinstall để tải binary cho Vite/Vitest.
 allowBuilds:
   esbuild: true

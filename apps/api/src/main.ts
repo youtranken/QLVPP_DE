@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { parseEnv } from './infra/config/env';
 import { loadRootEnv } from './infra/config/load-env';
@@ -10,6 +11,8 @@ async function bootstrap(): Promise<void> {
   const config = parseEnv();
   const app = await NestFactory.create(AppModule);
   app.enableCors({ origin: config.WEB_ORIGIN.split(','), credentials: true });
+  // Cookie phiên BFF (`vpp_sid`) và cookie tạm của luồng OIDC được đọc qua req.cookies.
+  app.use(cookieParser());
   // Cần cho DbModule.onApplicationShutdown đóng pool khi nhận SIGTERM/SIGINT.
   app.enableShutdownHooks();
   await app.listen(config.API_PORT);

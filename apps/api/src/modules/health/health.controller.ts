@@ -1,8 +1,10 @@
 import { Controller, Get, Inject } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
+import { Public } from '../../auth/public.decorator';
 import { DB, type Db } from '../../infra/db/db.module';
 
 /** Health endpoint cho Docker healthcheck & kiểm tra sống. */
+@Public()
 @Controller()
 export class HealthController {
   constructor(@Inject(DB) private readonly db: Db) {}

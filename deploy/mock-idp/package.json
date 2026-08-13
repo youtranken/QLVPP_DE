@@ -1,0 +1,25 @@
+{
+  "name": "@vpp/mock-idp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "IdP OIDC giả lập PMH ID — CHỈ dùng cho demo/dev",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "dev": "tsx watch src/main.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jose": "^6.1.0",
+    "oidc-provider": "^9.11.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.0",
+    "@types/oidc-provider": "^9.11.1",
+    "tsx": "^4.23.12",
+    "typescript": "^5.7.2"
+  }
+}
