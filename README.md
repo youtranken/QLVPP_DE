@@ -3,8 +3,9 @@
 Website nội bộ để **nhân viên đăng ký VPP hằng tháng**; **admin duyệt → tổng hợp → xác nhận đã giao → xuất báo cáo trình ký**.
 Xác thực qua **PMH ID SSO** (OIDC). Kiến trúc **Modular Monolith** (xem `docs/`).
 
-> **Trạng thái:** **M1 xong** — CSDL + đăng nhập PMH ID SSO + danh mục.
-> Chưa có nghiệp vụ đơn đăng ký (M2) và giao diện (M3/M4).
+> **Trạng thái:** **M2 xong** — toàn bộ nghiệp vụ ở phía backend đã chạy được:
+> đăng nhập SSO, danh mục, đơn đăng ký, duyệt/giao, thông báo, audit, báo cáo
+> Excel, đồng bộ danh bạ, webhook. **Chưa có giao diện** (M3/M4).
 
 ## Cấu trúc
 
@@ -115,21 +116,47 @@ pnpm build                  # Build tất cả package
 | `db:seed`     | Nạp dữ liệu mẫu (chạy lại được)      |
 | `db:studio`   | Mở Drizzle Studio để xem dữ liệu     |
 
-## API đã có (M1)
+## API đã có (M1 + M2)
 
-| Method            | Path                           | Quyền     |
-| ----------------- | ------------------------------ | --------- |
-| GET               | `/api/health`                  | công khai |
-| GET               | `/api/auth/login`              | công khai |
-| GET               | `/api/auth/callback`           | công khai |
-| POST              | `/api/auth/logout`             | công khai |
-| GET               | `/api/auth/logout-global`      | công khai |
-| POST              | `/api/auth/backchannel-logout` | IdP → app |
-| GET               | `/api/me`                      | đã login  |
-| GET               | `/api/registration/status`     | đã login  |
-| GET               | `/api/catalog`                 | đã login  |
-| POST/PATCH/DELETE | `/api/admin/categories[/:id]`  | admin     |
-| POST/PATCH/DELETE | `/api/admin/items[/:id]`       | admin     |
+| Method            | Path                                           | Quyền     |
+| ----------------- | ---------------------------------------------- | --------- |
+| GET               | `/api/health`                                  | công khai |
+| GET               | `/api/auth/login` · `/callback`                | công khai |
+| POST              | `/api/auth/logout`                             | công khai |
+| GET               | `/api/auth/logout-global`                      | công khai |
+| POST              | `/api/auth/backchannel-logout`                 | IdP → app |
+| POST              | `/api/webhooks/pmh-id`                         | IdP → app |
+| GET               | `/api/me` · `/api/registration/status`         | đã login  |
+| GET               | `/api/catalog` · `/api/departments`            | đã login  |
+| GET/POST          | `/api/notifications[/:id/read\|/read-all]`     | đã login  |
+| POST              | `/api/uploads` · GET `/api/uploads/:file`      | đã login  |
+| POST              | `/api/requests`                                | đã login  |
+| GET               | `/api/requests/mine` · `/api/requests/:id`     | đã login  |
+| DELETE            | `/api/requests/:id` (huỷ)                      | đã login  |
+| POST/PATCH/DELETE | `/api/admin/categories[/:id]` · `/items[/:id]` | admin     |
+| GET               | `/api/admin/requests` · `/requests/summary`    | admin     |
+| POST              | `/api/admin/requests/:id/approve` · `/reject`  | admin     |
+| POST              | `.../items/:lineId/deliver` · `/deliver-all`   | admin     |
+| POST              | `.../undeliver-all`                            | admin     |
+| PATCH             | `/api/admin/requests/:id` (điều chỉnh)         | admin     |
+| GET               | `/api/admin/users` · `/api/admin/audit`        | admin     |
+| POST              | `/api/admin/directory-sync`                    | admin     |
+| GET               | `/api/admin/stats`                             | admin     |
+| GET               | `/api/export/requests.xlsx`                    | admin     |
+
+### Smoke test API
+
+`pnpm smoke:api` chạy đúng luồng người dùng qua HTTP thật trên stack đang chạy
+(đăng nhập SSO → đăng ký → duyệt → giao → báo cáo → danh bạ → webhook), 35 mục kiểm.
+
+```bash
+pnpm smoke:api                                                   # stack Docker
+API_URL=http://localhost:3001 IDP_URL=http://localhost:9000 pnpm smoke:api   # chạy trên máy
+```
+
+> Script **ghi dữ liệu thật** và dọn bảng đơn/thông báo/audit trước mỗi lần chạy
+> (vì quy tắc 1 đơn hiệu lực/kỳ khiến lần chạy sau không tạo được đơn nữa).
+> Chỉ dùng cho môi trường dev/demo.
 
 ## Công cụ chất lượng
 
