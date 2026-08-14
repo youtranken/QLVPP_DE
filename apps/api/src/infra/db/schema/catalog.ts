@@ -23,6 +23,11 @@ export const items = pgTable(
     maxQty: integer('max_qty').notNull().default(MAX_ITEM_QTY),
     active: boolean('active').notNull().default(true),
     sortOrder: integer('sort_order').notNull().default(0),
+    /**
+     * Ảnh minh hoạ món, do admin tải lên (đường dẫn `/api/uploads/<uuid>.<ext>`).
+     * Chỉ lưu ĐƯỜNG DẪN, ảnh nằm trên đĩa như ảnh đính kèm mục "Khác" (ADR-0007).
+     */
+    imagePath: text('image_path'),
   },
   (table) => [
     index('items_category_active_idx').on(table.categoryId, table.active),

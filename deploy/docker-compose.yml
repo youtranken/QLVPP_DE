@@ -110,7 +110,10 @@ services:
     restart: unless-stopped
     environment:
       <<: *app-urls
-      NODE_ENV: production
+      # Demo chạy http với bí mật dev và IdP giả ⇒ ĐÚNG nghĩa không phải production.
+      # Image đặt sẵn NODE_ENV=production nên phải ghi đè ở đây, nếu không chốt an
+      # toàn của cấu hình prod sẽ từ chối khởi động (và đúng là nó nên từ chối).
+      NODE_ENV: development
       API_PORT: 3000
       TZ: Asia/Ho_Chi_Minh
       DATABASE_URL: postgres://vpp:vpp@postgres:5432/vpp

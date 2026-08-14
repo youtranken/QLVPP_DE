@@ -8,6 +8,7 @@ import {
   Checkbox,
   Flex,
   Form,
+  Image,
   Input,
   InputNumber,
   Modal,
@@ -19,6 +20,7 @@ import {
   Typography,
 } from 'antd';
 import { useState } from 'react';
+import { ImagePicker } from '../../components/ImagePicker';
 import { ApiError } from '../../lib/api';
 import {
   useDeleteCategory,
@@ -36,6 +38,7 @@ interface ItemFormValues {
   adminOnly: boolean;
   maxQty: number;
   active: boolean;
+  imagePath: string | null;
 }
 
 /** Quản lý danh mục VPP: nhóm và món (ADMIN-1/2). */
@@ -143,6 +146,24 @@ export function AdminCatalogPage() {
               dataSource={group.items}
               locale={{ emptyText: 'Nhóm này chưa có món' }}
               columns={[
+                {
+                  title: 'Ảnh',
+                  dataIndex: 'imagePath',
+                  width: 72,
+                  align: 'center',
+                  render: (path: string | null, item) =>
+                    path ? (
+                      <Image
+                        src={path}
+                        width={40}
+                        height={40}
+                        style={{ objectFit: 'cover', borderRadius: 4 }}
+                        alt={item.name}
+                      />
+                    ) : (
+                      <Typography.Text type="secondary">—</Typography.Text>
+                    ),
+                },
                 { title: 'Tên món', dataIndex: 'name', minWidth: 220 },
                 { title: 'ĐVT', dataIndex: 'unit', width: 100 },
                 { title: 'Tối đa', dataIndex: 'maxQty', width: 90, align: 'center' },
@@ -267,7 +288,7 @@ export function AdminCatalogPage() {
         <Form
           form={itemForm}
           layout="vertical"
-          initialValues={{ adminOnly: false, active: true, maxQty: MAX_ITEM_QTY }}
+          initialValues={{ adminOnly: false, active: true, maxQty: MAX_ITEM_QTY, imagePath: null }}
         >
           <Form.Item
             name="name"
@@ -290,6 +311,14 @@ export function AdminCatalogPage() {
           >
             <InputNumber min={1} max={MAX_ITEM_QTY} style={{ width: '100%' }} />
           </Form.Item>
+          <Form.Item
+            name="imagePath"
+            label="Ảnh minh hoạ"
+            help="Nhân viên nhìn thấy ảnh này khi chọn món lúc đăng ký."
+          >
+            <ImagePicker />
+          </Form.Item>
+
           <Form.Item name="adminOnly" valuePropName="checked">
             <Checkbox>Chỉ quản trị viên được đăng ký (như giấy A4)</Checkbox>
           </Form.Item>

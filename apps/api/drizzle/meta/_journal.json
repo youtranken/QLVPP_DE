@@ -8,6 +8,13 @@
       "when": 1786590932416,
       "tag": "0000_free_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786671232648,
+      "tag": "0001_odd_baron_strucker",
+      "breakpoints": true
     }
   ]
 }

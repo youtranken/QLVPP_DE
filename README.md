@@ -157,7 +157,7 @@ Mở `http://localhost:8090` → bấm **Đăng nhập bằng PMH ID** → chọ
 | `/dang-nhap`      | Đăng nhập PMH ID (không có ô mật khẩu)                  |
 | `/khong-co-quyen` | Trang báo chưa được cấp quyền (`access_denied`)         |
 | `/`               | Trang chủ: kỳ hiện tại, trạng thái đăng ký, tóm tắt đơn |
-| `/dang-ky`        | Đăng ký VPP: danh mục theo nhóm, giỏ, mục "Khác" + ảnh  |
+| `/dang-ky`        | Đăng ký VPP: danh mục kèm ảnh, giỏ, mục "Khác" + ảnh    |
 | `/don-cua-toi`    | Đơn của tôi: lịch sử theo kỳ, chi tiết, huỷ, gửi lại    |
 
 ### Quản trị viên (M4)
@@ -167,7 +167,7 @@ Mở `http://localhost:8090` → bấm **Đăng nhập bằng PMH ID** → chọ
 | `/quan-tri`          | Bảng điều khiển: thống kê nhiều kỳ, theo phòng ban, tỉ lệ đã giao |
 | `/quan-tri/don`      | Duyệt đơn: lọc + phân trang, duyệt/từ chối, giao, điều chỉnh      |
 | `/quan-tri/tong-hop` | Tổng hợp theo món + tải Excel trình ký                            |
-| `/quan-tri/danh-muc` | Quản lý nhóm và món (admin_only, tối đa, ngừng/bật)               |
+| `/quan-tri/danh-muc` | Quản lý nhóm và món (ảnh minh hoạ, admin_only, tối đa, ngừng/bật) |
 | `/quan-tri/danh-ba`  | Danh bạ nhân viên + nút Đồng bộ ngay                              |
 | `/quan-tri/nhat-ky`  | Nhật ký hoạt động, lọc theo hành động                             |
 

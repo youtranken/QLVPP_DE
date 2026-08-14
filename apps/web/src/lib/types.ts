@@ -29,6 +29,8 @@ export interface CatalogItem {
   maxQty: number;
   active: boolean;
   sortOrder: number;
+  /** Ảnh minh hoạ do admin tải lên; null = chưa có ảnh. */
+  imagePath: string | null;
 }
 
 export interface CatalogCategory {

@@ -38,6 +38,39 @@ describe('CreateItemSchema', () => {
   });
 });
 
+describe('ảnh minh hoạ của món', () => {
+  const base = { categoryId: CATEGORY_ID, name: 'Bút bi', unit: 'cây' };
+
+  it('nhận đường dẫn do server sinh', () => {
+    const parsed = CreateItemSchema.parse({
+      ...base,
+      imagePath: '/api/uploads/9bba19f2-f18a-42cd-ab68-e9394cb18eb9.png',
+    });
+    expect(parsed.imagePath).toBe('/api/uploads/9bba19f2-f18a-42cd-ab68-e9394cb18eb9.png');
+  });
+
+  it('null = gỡ ảnh', () => {
+    expect(CreateItemSchema.parse({ ...base, imagePath: null }).imagePath).toBeNull();
+  });
+
+  it('bỏ trống cũng hợp lệ (món không có ảnh)', () => {
+    expect(CreateItemSchema.safeParse(base).success).toBe(true);
+  });
+
+  it.each([
+    ['URL ngoài', 'https://example.com/anh.png'],
+    ['đường dẫn tuỳ ý', '/etc/passwd'],
+    ['thoát thư mục', '/api/uploads/../../secret.png'],
+    ['đuôi thực thi', '/api/uploads/9bba19f2-f18a-42cd-ab68-e9394cb18eb9.exe'],
+    ['tên không phải uuid', '/api/uploads/anh.png'],
+    ['javascript:', 'javascript:alert(1)'],
+  ])('từ chối %s', (_label, value) => {
+    // Chỉ nhận đúng khuôn server sinh: nếu không, admin có thể nhúng ảnh từ máy
+    // chủ ngoài và biến trang danh mục thành nơi rò rỉ truy cập của người xem.
+    expect(CreateItemSchema.safeParse({ ...base, imagePath: value }).success).toBe(false);
+  });
+});
+
 describe('schema cập nhật (PATCH)', () => {
   it('cho phép gửi một phần', () => {
     expect(UpdateItemSchema.parse({ active: false })).toEqual({ active: false });

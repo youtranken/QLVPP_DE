@@ -112,6 +112,7 @@ Mục tiêu: đưa toàn bộ quy trình lên web có ràng buộc nghiệp vụ
 - **FR-10** Xem danh mục theo **nhóm**; mục **"Khác"** cho nhập tự do.
 - **FR-11** Admin **thêm/sửa/ngừng (xoá)** món & nhóm.
 - **FR-12** Mỗi món có **đơn vị tính**, cờ **chỉ-admin** (A4), **giới hạn ≤ 20**.
+- **FR-13** Admin **tải lên / đổi / gỡ ảnh minh hoạ** cho từng món; nhân viên thấy ảnh khi chọn món lúc đăng ký. **[✅ bổ sung sau theo yêu cầu]**
 
 ### 6.3 Đăng ký (đơn)
 

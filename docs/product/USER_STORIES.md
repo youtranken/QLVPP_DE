@@ -244,6 +244,17 @@
 - **Edge cases:** ngừng món đang có trong đơn hiện hành (giữ nguyên đơn cũ); đổi `max_qty` chỉ áp cho đơn tương lai; đổi `admin_only` của A4.
 - **Priority:** **P1** · **Dependencies:** AUTH-1(AD).
 
+### ADMIN-1b — Ảnh minh hoạ cho món VPP `[✅ bổ sung sau, theo yêu cầu]`
+
+- **Persona:** AD · **Mục tiêu:** Tải lên / đổi / gỡ ảnh của từng món. · **Lý do:** Nhân viên nhìn ảnh để chọn đúng món, đỡ nhầm giữa các món tên gần giống nhau.
+- **AC:**
+  1. Trong màn quản lý danh mục, mỗi món có thể gắn **một** ảnh (`image/*`, ≤5MB).
+  2. Đổi ảnh và gỡ ảnh được; món không có ảnh vẫn dùng bình thường.
+  3. Ảnh hiện ở **màn Đăng ký VPP** cạnh tên món, và ở bảng quản lý danh mục.
+  4. Chỉ **admin** đổi được ảnh; nhân viên chỉ xem.
+- **Edge cases:** ảnh sai định dạng/quá 5MB → chặn; món cũ chưa có ảnh → hiện "—"; đổi ảnh thì ảnh cũ thành mồ côi trên đĩa **[🔶 cần dọn rác định kỳ]**.
+- **Priority:** **P2** · **Dependencies:** ADMIN-1, dịch vụ upload (CORE-3).
+
 ### ADMIN-2 — Quản lý nhóm VPP `[✅]`
 
 - **Persona:** AD · **Mục tiêu:** Thêm/sửa nhóm (kể cả cờ "Khác"). · **Lý do:** Tổ chức danh mục hợp lý.

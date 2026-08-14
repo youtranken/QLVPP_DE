@@ -7,6 +7,7 @@ import {
   Card,
   Col,
   Flex,
+  Image,
   Input,
   InputNumber,
   Result,
@@ -155,14 +156,27 @@ export function RegisterPage() {
                             gap={12}
                             style={{ padding: '8px 0', borderTop: '1px solid rgba(0,0,0,.06)' }}
                           >
-                            <Flex vertical style={{ minWidth: 0 }}>
-                              <Flex gap={8} align="center" wrap>
-                                <Typography.Text>{item.name}</Typography.Text>
-                                {item.adminOnly && <Tag color="gold">chỉ admin</Tag>}
+                            <Flex gap={10} align="center" style={{ minWidth: 0 }}>
+                              {/* Ảnh minh hoạ do admin tải lên, giúp nhân viên
+                                  nhận ra đúng món mình cần. */}
+                              {item.imagePath && (
+                                <Image
+                                  src={item.imagePath}
+                                  width={44}
+                                  height={44}
+                                  style={{ objectFit: 'cover', borderRadius: 6, flex: '0 0 auto' }}
+                                  alt={item.name}
+                                />
+                              )}
+                              <Flex vertical style={{ minWidth: 0 }}>
+                                <Flex gap={8} align="center" wrap>
+                                  <Typography.Text>{item.name}</Typography.Text>
+                                  {item.adminOnly && <Tag color="gold">chỉ admin</Tag>}
+                                </Flex>
+                                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                                  Đơn vị: {item.unit} · tối đa {item.maxQty}
+                                </Typography.Text>
                               </Flex>
-                              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                                Đơn vị: {item.unit} · tối đa {item.maxQty}
-                              </Typography.Text>
                             </Flex>
 
                             {blocked ? (
