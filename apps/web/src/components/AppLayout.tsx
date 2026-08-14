@@ -47,6 +47,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         { key: routes.adminCatalog, label: t('nav.catalog') },
         { key: routes.adminDirectory, label: t('nav.directory') },
         { key: routes.adminAudit, label: t('nav.audit') },
+        { key: routes.adminSettings, label: t('nav.settings') },
       ],
     });
   }
@@ -132,12 +133,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     {status.open ? t('period.open') : t('period.closed')} —{' '}
                     <strong>{periodLabel(status.period)}</strong>
                   </span>
-                  <Tag>
-                    {t('period.windowHint', {
-                      start: status.windowStartDay,
-                      end: status.windowEndDay,
-                    })}
-                  </Tag>
+                  <Tag>{t('period.windowHint', { window: status.windowLabel })}</Tag>
                 </Flex>
               }
               description={

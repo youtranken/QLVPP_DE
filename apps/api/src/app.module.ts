@@ -9,6 +9,7 @@ import { HealthModule } from './modules/health/health.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { RequestsModule } from './modules/requests/requests.module';
+import { SettingsModule } from './modules/settings/settings.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 
 /** Module ứng dụng HTTP — modular monolith, mỗi miền nghiệp vụ một module (ADR-0001). */
@@ -17,6 +18,7 @@ import { UploadsModule } from './modules/uploads/uploads.module';
     // Jobs chạy in-process, không Redis/worker riêng (ADR-0008).
     ScheduleModule.forRoot(),
     DbModule,
+    SettingsModule,
     AuthModule,
     CatalogModule,
     DirectoryModule,

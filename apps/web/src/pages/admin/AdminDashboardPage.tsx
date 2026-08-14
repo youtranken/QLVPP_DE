@@ -1,22 +1,20 @@
-import { periodForDate } from '@vpp/shared';
 import { Card, Col, Empty, Flex, Row, Skeleton, Statistic, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 import { EChart } from '../../components/EChart';
 import { useStats } from '../../lib/admin-queries';
-import { periodLabel } from '../../lib/format';
+import { useCurrentPeriod } from '../../lib/queries';
+import { periodLabel, shiftPeriod } from '../../lib/format';
 import { PeriodPicker } from './PeriodPicker';
-
-/** Lùi `months` kỳ so với kỳ hiện tại, trả về chuỗi 'YYYY-MM'. */
-function periodBefore(months: number): string {
-  const [year, month] = periodForDate().split('-').map(Number);
-  const date = new Date(year, month - 1 - months, 1);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-}
 
 /** Bảng điều khiển: thống kê nhiều kỳ bằng biểu đồ (REPORT-3). */
 export function AdminDashboardPage() {
-  const [from, setFrom] = useState<string>(periodBefore(5));
-  const [to, setTo] = useState<string>(periodForDate());
+  // Kỳ hiện tại do máy chủ tính (khung ngày admin đặt được), nên mặc định của
+  // bộ lọc chỉ có sau khi tải xong — giữ lựa chọn của người dùng đè lên mặc định.
+  const current = useCurrentPeriod();
+  const [chonFrom, setChonFrom] = useState<string>();
+  const [chonTo, setChonTo] = useState<string>();
+  const from = chonFrom ?? (current ? shiftPeriod(current, -5) : undefined);
+  const to = chonTo ?? current;
   const { data, isPending } = useStats(from, to);
 
   const byPeriodOption = useMemo(
@@ -82,9 +80,10 @@ export function AdminDashboardPage() {
       <Card size="small">
         <Flex gap={8} wrap align="center">
           <span>Từ kỳ</span>
-          <PeriodPicker value={from} onChange={(value) => setFrom(value ?? periodBefore(5))} />
+          {/* Xoá lựa chọn ⇒ quay về mặc định suy từ kỳ hiện tại của máy chủ. */}
+          <PeriodPicker value={from} onChange={setChonFrom} />
           <span>đến kỳ</span>
-          <PeriodPicker value={to} onChange={(value) => setTo(value ?? periodForDate())} />
+          <PeriodPicker value={to} onChange={setChonTo} />
         </Flex>
       </Card>
 

@@ -1,6 +1,6 @@
 import { MAX_ITEM_QTY } from './constants';
 import { ErrorCode } from './errors';
-import { isRegistrationOpen } from './period';
+import { describeWindow, isRegistrationOpen, type RegistrationWindow } from './period';
 import type { RequestStatus, Role } from './types';
 
 /**
@@ -32,14 +32,18 @@ export interface RuleViolation {
 }
 
 /**
- * Cửa sổ đăng ký ngày 1–10 khoá cứng với NHÂN VIÊN; admin bỏ qua (CORE-6, CORE-16).
+ * Cửa sổ đăng ký khoá cứng với NHÂN VIÊN; admin bỏ qua (CORE-6, CORE-16).
  * Kiểm tại THỜI ĐIỂM GỬI, không phải lúc mở form.
  */
-export function checkRegistrationWindow(role: Role, now: Date = new Date()): RuleViolation | null {
-  if (role === 'admin' || isRegistrationOpen(now)) return null;
+export function checkRegistrationWindow(
+  role: Role,
+  window: RegistrationWindow,
+  now: Date = new Date(),
+): RuleViolation | null {
+  if (role === 'admin' || isRegistrationOpen(window, now)) return null;
   return {
     code: ErrorCode.REGISTRATION_CLOSED,
-    message: 'Đã hết hạn đăng ký (chỉ nhận từ ngày 1 đến ngày 10 hằng tháng).',
+    message: `Đã hết hạn đăng ký (chỉ nhận ${describeWindow(window)} hằng tháng).`,
   };
 }
 
@@ -111,10 +115,14 @@ export function checkRequestLines(
 
 /**
  * Điều kiện huỷ đơn của NHÂN VIÊN (FR-23, CORE-8):
- * đơn còn `submitted` **và** vẫn trong cửa sổ ngày 1–10.
+ * đơn còn `submitted` **và** vẫn trong cửa sổ đăng ký.
  */
-export function canCancelRequest(status: RequestStatus, now: Date = new Date()): boolean {
-  return status === 'submitted' && isRegistrationOpen(now);
+export function canCancelRequest(
+  status: RequestStatus,
+  window: RegistrationWindow,
+  now: Date = new Date(),
+): boolean {
+  return status === 'submitted' && isRegistrationOpen(window, now);
 }
 
 /** Chỉ đơn đã duyệt (hoặc đang giao dở) mới được xác nhận giao — BR-09, CORE-14. */

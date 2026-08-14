@@ -15,6 +15,13 @@
       "when": 1786671232648,
       "tag": "0001_odd_baron_strucker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786680872802,
+      "tag": "0002_bumpy_vanisher",
+      "breakpoints": true
     }
   ]
 }

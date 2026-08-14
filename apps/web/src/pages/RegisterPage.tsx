@@ -130,7 +130,7 @@ export function RegisterPage() {
           type="warning"
           showIcon
           title="Đã đóng đăng ký"
-          description={`Hệ thống chỉ nhận đăng ký từ ngày ${status?.windowStartDay} đến ngày ${status?.windowEndDay} hằng tháng.`}
+          description={`Hệ thống chỉ nhận đăng ký ${status?.windowLabel} hằng tháng.`}
         />
       )}
 

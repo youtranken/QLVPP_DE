@@ -126,6 +126,38 @@ khác trong thư mục (kể cả `.gitkeep`) được để nguyên. Lần nào
 
 ---
 
+## 4c. Đổi khung ngày đăng ký
+
+Ngày mở/đóng đăng ký **không nằm trong cấu hình máy chủ** — admin tự đổi trên web
+tại **Quản trị → Cài đặt** (`/quan-tri/cai-dat`). Không cần sửa `.env`, không cần
+khởi động lại, có hiệu lực **ngay**.
+
+Mặc định: **từ ngày 20 đến hết tháng**, và đăng ký trong cửa sổ đó tính cho **kỳ
+tháng kế tiếp**.
+
+> Đặt ngày đóng là **31** nghĩa là "đến hết tháng": tháng 2 tự hiểu là 28 (hoặc 29
+> năm nhuận), tháng 30 ngày là 30. Ngày **mở** cũng co tương tự, nên đặt mở ngày 30
+> thì tháng 2 vẫn có cửa sổ chứ không mất trắng một kỳ.
+
+Lưu ý khi đổi: nhân viên có thể **mất hoặc có thêm** quyền gửi/huỷ đơn ngay lập
+tức. Đơn đã gửi **giữ nguyên kỳ cũ**. Mọi lần đổi đều được ghi nhật ký audit với
+hành động `settings.window.update` kèm giá trị trước/sau.
+
+Xem hoặc đổi bằng API (chỉ admin):
+
+```bash
+curl -sS https://<HOST>/api/admin/settings -b <cookie phiên>
+curl -sS -X PATCH https://<HOST>/api/admin/settings/registration-window \
+  -H 'Content-Type: application/json' -b <cookie phiên> \
+  -d '{"startDay":20,"endDay":31}'
+```
+
+Xử lý sự cố: CSDL còn ràng buộc `CHECK` (1 ≤ mở ≤ đóng ≤ 31, và bảng chỉ chứa
+**một dòng**), nên sửa tay bằng SQL sai giá trị sẽ bị từ chối chứ không âm thầm
+làm hỏng kỳ đăng ký. Bảng chưa có dòng nào thì app dùng mặc định 20 → 31.
+
+---
+
 ## 5. Xoay bí mật
 
 | Bí mật               | Cách làm                                           | Ảnh hưởng                          |

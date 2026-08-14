@@ -41,7 +41,7 @@ export class ReportsController {
     @Query(new ZodPipe(ExportQuerySchema)) query: z.infer<typeof ExportQuerySchema>,
     @Res() res: Response,
   ): Promise<void> {
-    const period = this.reports.resolvePeriod(query.period);
+    const period = await this.reports.resolvePeriod(query.period);
     const [summary, detail] = await Promise.all([
       this.reports.summaryByItem(period, query.departmentId),
       this.reports.detailByPerson(period, query.departmentId),

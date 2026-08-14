@@ -37,6 +37,7 @@ login() { # $1 = jar, $2 = sub
 
 code() { curl -s -o /dev/null -w "%{http_code}" "$@"; }
 json() { curl -s "$@"; }
+H='Content-Type: application/json'
 
 # Quy tắc "1 đơn hiệu lực/người/kỳ" khiến lần chạy thứ hai không tạo được đơn nữa,
 # và đơn đã duyệt thì KHÔNG có API nào xoá được (lịch sử giữ vô thời hạn — đúng thiết kế).
@@ -60,6 +61,37 @@ login jar-admin.txt usr_admin
 login jar-nv.txt    usr_chi
 check "admin nhận đúng vai trò" "admin" "$(json -b jar-admin.txt "$API/api/me" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>process.stdout.write(JSON.parse(d).role))")"
 check "nhân viên nhận đúng phòng ban" "Kỹ thuật" "$(json -b jar-nv.txt "$API/api/me" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>process.stdout.write(JSON.parse(d).department))")"
+
+echo "── Cài đặt khung ngày đăng ký ───────────────────────────"
+# Nhớ khung ngày đang đặt để TRẢ LẠI ở cuối script — smoke chạy trên stack demo
+# mà người khác cũng đang dùng, không được để lại cấu hình lạ.
+json -b jar-admin.txt "$API/api/admin/settings" > st0.json
+GOC=$(node -e "const s=require('./st0.json');process.stdout.write(JSON.stringify({startDay:s.startDay,endDay:s.endDay}))")
+check "NV xem cài đặt bị chặn" "403" "$(code -b jar-nv.txt "$API/api/admin/settings")"
+
+W='/api/admin/settings/registration-window'
+node -e "require('fs').writeFileSync('w-nguoc.json',JSON.stringify({startDay:20,endDay:10}))"
+node -e "require('fs').writeFileSync('w-ngoai.json',JSON.stringify({startDay:0,endDay:31}))"
+check "ngày mở sau ngày đóng bị chặn" "400" "$(code -b jar-admin.txt -X PATCH -H "$H" --data-binary @w-nguoc.json "$API$W")"
+check "ngày ngoài 1–31 bị chặn"       "400" "$(code -b jar-admin.txt -X PATCH -H "$H" --data-binary @w-ngoai.json "$API$W")"
+check "NV đổi khung ngày bị chặn"     "403" "$(code -b jar-nv.txt   -X PATCH -H "$H" --data-binary @w-nguoc.json "$API$W")"
+
+# Cửa sổ MỘT NGÀY đúng hôm nay ⇒ chắc chắn mở, không phụ thuộc ngày chạy script.
+node -e "const d=new Date().getDate();require('fs').writeFileSync('w-mo.json',JSON.stringify({startDay:d,endDay:d}))"
+curl -s -b jar-admin.txt -X PATCH -H "$H" --data-binary @w-mo.json -o /dev/null "$API$W"
+check "đặt cửa sổ chứa hôm nay ⇒ NV đăng ký được" "true" "$(json -b jar-nv.txt "$API/api/registration/status" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>process.stdout.write(String(JSON.parse(d).open)))")"
+
+# Rồi đẩy cửa sổ sang ngày KHÁC hôm nay: các phép kiểm quy tắc bên dưới cần
+# nhân viên đang ở ngoài cửa sổ, và trước đây điều đó phụ thuộc vào việc script
+# tình cờ chạy ngày nào — chạy vào ngày 5 là hỏng.
+node -e "const d=new Date().getDate(),x=d===1?2:1;require('fs').writeFileSync('w-dong.json',JSON.stringify({startDay:x,endDay:x}))"
+json -b jar-admin.txt -X PATCH -H "$H" --data-binary @w-dong.json "$API$W" > st1.json
+check "đổi khung ngày ⇒ lưu lại đúng" "1" "$(node -e "
+const g=require('./w-dong.json'), s=require('./st1.json');
+process.stdout.write(s.startDay===g.startDay && s.endDay===g.endDay ? '1':'0');")"
+check "đặt cửa sổ khác hôm nay ⇒ NV bị đóng" "false" "$(json -b jar-nv.txt "$API/api/registration/status" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>process.stdout.write(String(JSON.parse(d).open)))")"
+check "admin vẫn đăng ký được ngoài cửa sổ" "true" "$(json -b jar-admin.txt "$API/api/registration/status" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>process.stdout.write(String(JSON.parse(d).canRegister)))")"
+check "đổi khung ngày có ghi audit" "1" "$(json -b jar-admin.txt "$API/api/admin/audit?action=settings.window.update" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>process.stdout.write(JSON.parse(d).total>0?'1':'0'))")"
 
 echo "── Danh mục ─────────────────────────────────────────────"
 json -b jar-nv.txt "$API/api/catalog" > cat.json
@@ -92,9 +124,9 @@ echo "── Quy tắc chặn khi tạo đơn ───────────�
 node -e "require('fs').writeFileSync('r-a4.json', JSON.stringify({lines:[{itemId:'$A4',quantity:1}]}))"
 node -e "require('fs').writeFileSync('r-qty.json',JSON.stringify({lines:[{itemId:'$BUT',quantity:99}]}))"
 node -e "require('fs').writeFileSync('r-empty.json',JSON.stringify({lines:[]}))"
-H='Content-Type: application/json'
-# Hôm nay ngoài ngày 1–10 nên nhân viên bị chặn bởi cửa sổ trước tiên.
-check "NV gửi ngoài cửa sổ 1–10 bị chặn" "400" "$(code -b jar-nv.txt -X POST -H "$H" --data-binary @r-a4.json "$API/api/requests")"
+# Cửa sổ đã được đặt sang ngày khác hôm nay ở phần trên, nên nhân viên chắc chắn
+# bị chặn bởi cửa sổ trước cả khi chạm tới quy tắc "A4 chỉ dành cho admin".
+check "NV gửi ngoài cửa sổ bị chặn" "400" "$(code -b jar-nv.txt -X POST -H "$H" --data-binary @r-a4.json "$API/api/requests")"
 check "admin: đơn rỗng bị chặn"          "400" "$(code -b jar-admin.txt -X POST -H "$H" --data-binary @r-empty.json "$API/api/requests")"
 check "admin: SL vượt 20 bị chặn"        "400" "$(code -b jar-admin.txt -X POST -H "$H" --data-binary @r-qty.json "$API/api/requests")"
 
@@ -159,6 +191,11 @@ check "webhook chữ ký sai bị từ chối" "400" "$(code -X POST -H "$H" -H 
 
 node -e "require('fs').writeFileSync('ev2.json',JSON.stringify({event:'user.unlocked',sub:'usr_chi'}),'utf8')"
 curl -s -X POST -H "$H" --data-binary @ev2.json -o /dev/null "$IDP/admin/emit-webhook"
+
+# Trả khung ngày về đúng như lúc bắt đầu.
+node -e "require('fs').writeFileSync('w-goc.json', process.argv[1])" "$GOC"
+curl -s -b jar-admin.txt -X PATCH -H "$H" --data-binary @w-goc.json -o /dev/null "$API$W"
+check "trả khung ngày về như cũ" "1" "$(json -b jar-admin.txt "$API/api/admin/settings" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const g=JSON.parse(process.argv[1]),s=JSON.parse(d);process.stdout.write(s.startDay===g.startDay&&s.endDay===g.endDay?'1':'0')})" "$GOC")"
 
 echo
 echo "════════════════════════════════════════════════════════"

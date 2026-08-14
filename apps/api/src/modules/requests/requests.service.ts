@@ -10,6 +10,7 @@ import {
   canCancelRequest,
   checkRegistrationWindow,
   checkRequestLines,
+  describeWindow,
   ErrorCode,
   formatRequestCode,
   periodForDate,
@@ -24,6 +25,7 @@ import { isUniqueViolation } from '../../infra/db/pg-errors';
 import { departments, items, requestItems, requests } from '../../infra/db/schema';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService, NOTIFICATION_TYPES } from '../notifications/notifications.service';
+import { SettingsService } from '../settings/settings.service';
 import type { CreateRequestDto, RequestLineDto } from './requests.dto';
 
 /** Tên partial unique index thực thi "1 đơn hiệu lực/người/kỳ" (SDD §5). */
@@ -48,19 +50,23 @@ export class RequestsService {
     @Inject(DB) private readonly db: Db,
     private readonly audit: AuditService,
     private readonly notifications: NotificationsService,
+    private readonly settings: SettingsService,
   ) {}
 
   /**
    * Tạo đơn cho chính người đang đăng nhập (CORE-2).
    * Mọi quy tắc đều kiểm ở SERVER tại THỜI ĐIỂM GỬI, kể cả khi giao diện đã chặn:
-   * cửa sổ ngày 1–10, cấm A4 với nhân viên, SL ≤ max_qty, đơn không rỗng.
+   * cửa sổ đăng ký, cấm A4 với nhân viên, SL ≤ max_qty, đơn không rỗng.
    */
   async create(user: AuthenticatedUser, dto: CreateRequestDto) {
-    const windowViolation = checkRegistrationWindow(user.role);
+    // Đọc khung ngày MỘT LẦN rồi dùng cho cả kiểm tra lẫn tính kỳ: nếu đọc hai lần
+    // mà admin sửa cài đặt đúng lúc đó thì đơn qua được cửa sổ nhưng lại rơi vào kỳ khác.
+    const window = await this.settings.getWindow();
+    const windowViolation = checkRegistrationWindow(user.role, window);
     if (windowViolation) throw new BadRequestException(windowViolation);
 
     const lines = await this.resolveLines(dto.lines, user.role);
-    const period = periodForDate();
+    const period = periodForDate(window);
     const departmentId = await this.findDepartmentId(user.department);
 
     const created = await this.insertWithGeneratedCode(period, async (tx, code) => {
@@ -249,7 +255,7 @@ export class RequestsService {
   }
 
   /**
-   * Nhân viên huỷ đơn (CORE-8): chỉ khi đơn `submitted` VÀ còn trong cửa sổ 1–10.
+   * Nhân viên huỷ đơn (CORE-8): chỉ khi đơn `submitted` VÀ còn trong cửa sổ đăng ký.
    * Huỷ xong được gửi đơn mới trong kỳ vì `cancelled` nằm ngoài partial unique index.
    */
   async cancel(requestId: string, user: AuthenticatedUser) {
@@ -261,12 +267,13 @@ export class RequestsService {
     if (!request) throw new NotFoundException({ code: ErrorCode.NOT_FOUND });
     if (request.userId !== user.id) throw new ForbiddenException({ code: ErrorCode.FORBIDDEN });
 
-    if (!canCancelRequest(request.status)) {
+    const window = await this.settings.getWindow();
+    if (!canCancelRequest(request.status, window)) {
       throw new ConflictException({
         code: ErrorCode.VALIDATION,
         message:
           request.status === 'submitted'
-            ? 'Đã quá ngày 10, không huỷ được đơn. Liên hệ quản trị viên.'
+            ? `Đã hết hạn đăng ký (chỉ nhận ${describeWindow(window)} hằng tháng), không huỷ được đơn. Liên hệ quản trị viên.`
             : 'Chỉ huỷ được đơn đang ở trạng thái "đã gửi".',
       });
     }

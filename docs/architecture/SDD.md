@@ -65,7 +65,7 @@ Phân quyền enforce ở **backend** (Guard theo vai trò), không tin giao di�
 
 ```mermaid
 stateDiagram-v2
-    [*] --> submitted: Nhân viên gửi (ngày 1–10)
+    [*] --> submitted: Nhân viên gửi (trong khung ngày)
     submitted --> approved: Admin duyệt
     submitted --> rejected: Admin từ chối (kèm lý do)
     submitted --> cancelled: Nhân viên huỷ (còn hạn)
@@ -134,6 +134,7 @@ erDiagram
 | **request_items** | id, request_id (cascade), item_id (nullable=Khác), name, unit, quantity, **delivered**, delivered_qty, **attachment_path**, note                                                                                                                          |
 | **notifications** | id, user_id, type, title, body, request_id, read_at, created_at                                                                                                                                                                                           |
 | **audit_log**     | id, actor_id, actor_name, action, object_type, object_id, detail (jsonb), created_at                                                                                                                                                                      |
+| **app_settings**  | id (bool, PK, `CHECK (id)` ⇒ **đúng 1 dòng**), reg_window_start_day, reg_window_end_day, updated_at, updated_by — khung ngày đăng ký admin cấu hình (ADR-0013)                                                                                            |
 
 **Ràng buộc & Index**
 
@@ -144,18 +145,18 @@ erDiagram
 
 ## 6. Quy tắc nghiệp vụ (gom trong `packages/shared`)
 
-| Quy tắc                        | Cài đặt                                                                                           |
-| ------------------------------ | ------------------------------------------------------------------------------------------------- |
-| Cửa sổ đăng ký **1–10**        | `isRegistrationOpen(now)`; member gửi ngoài cửa sổ → `REGISTRATION_CLOSED`. Admin bỏ qua.         |
-| Kỳ theo tháng                  | `periodForDate(now)`: ≤10 → tháng này; ≥11 → tháng sau.                                           |
-| Cấm **A4** với member          | Item `admin_only=true` → member chọn bị chặn (`ITEM_ADMIN_ONLY`).                                 |
-| Mỗi món **≤ 20**               | `quantity` ∈ [1, max_qty].                                                                        |
-| Mục **"Khác" + ảnh**           | Dòng `item_id=null`, `name` tự nhập, `attachment_path`.                                           |
-| **1 đơn hiệu lực/kỳ**          | Partial unique index; từ chối/huỷ mới được gửi lại.                                               |
-| **Không sửa sau khi gửi**      | Member không sửa đơn `submitted`/`approved`; chỉ **huỷ** hoặc admin điều chỉnh.                   |
-| **Điều kiện huỷ** (FR-23)      | Member chỉ huỷ khi đơn `status='submitted'` **và** còn trong cửa sổ 1–10.                         |
-| **Chỉ giao sau duyệt** (BR-09) | Các API "giao" chỉ chấp nhận đơn `status='approved'` (hoặc đang giao dở); đơn chưa duyệt → chặn.  |
-| **Danh tính qua SSO**          | App không quản mật khẩu; đăng nhập qua PMH ID, upsert user theo `sub` (xem `SSO-INTEGRATION.md`). |
+| Quy tắc                        | Cài đặt                                                                                                                                                                               |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Khung ngày đăng ký**         | Do admin đặt, lưu ở `app_settings` (mặc định ngày 20 → hết tháng). `isRegistrationOpen(window, now)`; member gửi ngoài cửa sổ → `REGISTRATION_CLOSED`. Admin bỏ qua.                  |
+| Kỳ theo tháng                  | `periodForDate(window, now)`: cửa sổ phục vụ **tháng kế tiếp** — ngày ≥ ngày-mở → tháng sau, trước đó → tháng này. Ngày cuối **co theo tháng** (đặt 31 = hết tháng; tháng 2 → 28/29). |
+| Cấm **A4** với member          | Item `admin_only=true` → member chọn bị chặn (`ITEM_ADMIN_ONLY`).                                                                                                                     |
+| Mỗi món **≤ 20**               | `quantity` ∈ [1, max_qty].                                                                                                                                                            |
+| Mục **"Khác" + ảnh**           | Dòng `item_id=null`, `name` tự nhập, `attachment_path`.                                                                                                                               |
+| **1 đơn hiệu lực/kỳ**          | Partial unique index; từ chối/huỷ mới được gửi lại.                                                                                                                                   |
+| **Không sửa sau khi gửi**      | Member không sửa đơn `submitted`/`approved`; chỉ **huỷ** hoặc admin điều chỉnh.                                                                                                       |
+| **Điều kiện huỷ** (FR-23)      | Member chỉ huỷ khi đơn `status='submitted'` **và** còn trong khung ngày đăng ký.                                                                                                      |
+| **Chỉ giao sau duyệt** (BR-09) | Các API "giao" chỉ chấp nhận đơn `status='approved'` (hoặc đang giao dở); đơn chưa duyệt → chặn.                                                                                      |
+| **Danh tính qua SSO**          | App không quản mật khẩu; đăng nhập qua PMH ID, upsert user theo `sub` (xem `SSO-INTEGRATION.md`).                                                                                     |
 
 _Giờ:_ container đặt `TZ=Asia/Ho_Chi_Minh`.
 
@@ -168,12 +169,14 @@ _Giờ:_ container đặt `TZ=Asia/Ho_Chi_Minh`.
 
 **Danh mục:** `GET /catalog` · admin: `POST/PATCH/DELETE /admin/categories`, `/admin/items`
 
-**Đơn:** `POST /requests`, `GET /requests/mine`, `GET /requests/:id`, `DELETE /requests/:id` (huỷ — chỉ khi `submitted` & còn ngày 1–10)
+**Đơn:** `POST /requests`, `GET /requests/mine`, `GET /requests/:id`, `DELETE /requests/:id` (huỷ — chỉ khi `submitted` & còn trong khung ngày)
 · admin: `GET /requests?period=&departmentId=&status=&page=&pageSize=` (phân trang), `GET /requests/summary?period=`, `PATCH /requests/:id`
 · **duyệt:** `POST /requests/:id/approve`, `POST /requests/:id/reject {reason}`
 · **giao** (chỉ đơn đã duyệt — BR-09): `POST /requests/:id/items/:lineId/deliver`, `POST /requests/:id/deliver-all`, `POST /requests/:id/undeliver-all`
 
 **Thông báo:** `GET /notifications`, `POST /notifications/:id/read`, `POST /notifications/read-all`
+
+**Cài đặt (admin):** `GET /admin/settings`, `PATCH /admin/settings/registration-window {startDay,endDay}`
 
 **Thống kê / Audit (admin):** `GET /admin/stats?from=&to=`, `GET /admin/audit` (phân trang)
 
@@ -195,7 +198,7 @@ _Giờ:_ container đặt `TZ=Asia/Ho_Chi_Minh`.
 
 1. Trang chủ (kỳ hiện tại, trạng thái đăng ký, tóm tắt đơn, nút Đăng ký).
 2. **Đăng ký VPP** (danh mục theo nhóm, nhập SL ≤20, A4 khoá với member, mục "Khác" + upload ảnh, giỏ, gửi). Ngoài cửa sổ → khoá form.
-3. **Đơn của tôi** (lịch sử theo kỳ, chi tiết + trạng thái duyệt/giao; xem lý do từ chối & gửi lại; **huỷ khi đơn `submitted` & còn ngày 1–10**).
+3. **Đơn của tôi** (lịch sử theo kỳ, chi tiết + trạng thái duyệt/giao; xem lý do từ chối & gửi lại; **huỷ khi đơn `submitted` & còn trong khung ngày**).
 
 **Admin (thêm):** 4. **Bảng điều khiển** + **biểu đồ thống kê nhiều kỳ** (số đơn, số món theo tháng/phòng ban, tỉ lệ đã giao). 5. **Danh sách đăng ký** (lọc kỳ/phòng ban/trạng thái, phân trang). 6. **Duyệt đơn** (duyệt/từ chối kèm lý do). 7. **Tổng hợp theo món** + **Xuất Excel**. 8. **Xác nhận giao** (từng dòng / toàn bộ) + **điều chỉnh đặc biệt** (thêm A4). 9. **Quản lý danh mục VPP** (nhóm & món: admin_only, max_qty, active). 10. **Danh bạ nhân viên** (đọc từ PMH ID qua Directory: tên, phòng ban, vai trò theo group; nút "Đồng bộ ngay"). _(Không tạo/sửa/import — danh tính do PMH ID quản.)_ 11. **Nhật ký audit**. 12. Admin cũng dùng màn **Đăng ký VPP**.
 
@@ -241,7 +244,7 @@ _Giờ:_ container đặt `TZ=Asia/Ho_Chi_Minh`.
 ## 12. Rủi ro & giả định
 
 - **Giả định:** 1 công ty duy nhất; **danh tính do PMH ID quản**; báo cáo chỉ Excel để in ký tay (không chữ ký số).
-- **Rủi ro:** cửa sổ 1–10 khoá cứng → thao tác ngoài ngày 1–10 phải do admin (có quyền bỏ qua). Hôm nay ngày 6 → còn trong cửa sổ.
+- **Rủi ro:** khung ngày khoá cứng → nhân viên thao tác ngoài cửa sổ phải nhờ admin (admin bỏ qua được, và tự đổi khung ngày ở màn Cài đặt — ADR-0013).
 - **Rủi ro SSO:** demo dùng **mock-idp** (không phải PMH ID thật) → cần kiểm lại khi ghép thật (M6): tên group (`VPP-Admin`, group phòng ban), `allow_all_groups`, route BCL/redirect khớp cách mount `/api`, allowlist IP nếu on-prem.
 - **Phụ thuộc [⏳]:** (a) **tên + logo + màu** thương hiệu (M4); (b) **client_id/secret + webhook_secret + host** từ admin PMH ID (M6).
 

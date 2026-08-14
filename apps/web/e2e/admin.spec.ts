@@ -74,4 +74,40 @@ test.describe('Màn quản trị', () => {
     await expect(page.getByRole('heading', { name: 'Nhật ký hoạt động' })).toBeVisible();
     await expect(page.getByLabel('Lọc theo hành động')).toBeVisible();
   });
+
+  /**
+   * Đổi khung ngày ảnh hưởng cả công ty nên màn này phải cho xem trước hậu quả
+   * TRƯỚC khi lưu. Kiểm đúng điều đó: gõ số vào là phần xem trước đổi theo, và
+   * bấm lưu xong thì trạng thái kỳ ở thanh trên cùng cũng đổi theo ngay.
+   */
+  test('cài đặt: xem trước rồi lưu khung ngày đăng ký', async ({ page }) => {
+    await page.goto('/quan-tri/cai-dat');
+    await expect(page.getByRole('heading', { name: 'Cài đặt' })).toBeVisible();
+
+    const moTu = page.getByLabel('Ngày mở đăng ký');
+    const dongSau = page.getByLabel('Ngày đóng đăng ký');
+    const cuGiaTri = { start: await moTu.inputValue(), end: await dongSau.inputValue() };
+
+    // Cửa sổ đúng ngày hôm nay ⇒ chắc chắn đang MỞ, không phụ thuộc ngày chạy test.
+    const homNay = String(new Date().getDate());
+    await moTu.fill(homNay);
+    await dongSau.fill(homNay);
+    await expect(page.getByText(/Hôm nay cửa sổ đang/)).toContainText('MỞ');
+
+    await page.getByRole('button', { name: 'Lưu' }).click();
+    await expect(page.getByText('Đã lưu khung ngày đăng ký.')).toBeVisible();
+    await expect(page.getByText(/Đang mở đăng ký/)).toBeVisible();
+
+    // Trả lại như cũ để các lần chạy sau không thừa hưởng cấu hình của test này.
+    // Kiểm bằng cách TẢI LẠI TRANG chứ không bám vào thông báo thoáng qua: hai
+    // thông báo có thể cùng hiện một lúc, và quan trọng hơn là ta muốn biết giá
+    // trị đã thực sự lưu xuống CSDL chứ không chỉ hiện lời báo thành công.
+    await moTu.fill(cuGiaTri.start);
+    await dongSau.fill(cuGiaTri.end);
+    await page.getByRole('button', { name: 'Lưu' }).click();
+
+    await page.reload();
+    await expect(page.getByLabel('Ngày mở đăng ký')).toHaveValue(cuGiaTri.start);
+    await expect(page.getByLabel('Ngày đóng đăng ký')).toHaveValue(cuGiaTri.end);
+  });
 });

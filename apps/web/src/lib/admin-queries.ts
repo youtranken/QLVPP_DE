@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RequestStatus } from '@vpp/shared';
 import { api } from './api';
-import type { CatalogItem, VppRequest } from './types';
+import type { AppSettings, CatalogItem, VppRequest } from './types';
 
 /** Query/mutation dành riêng cho các màn quản trị (M4). */
 
@@ -119,6 +119,9 @@ export function useStats(from?: string, to?: string) {
   return useQuery({
     queryKey: adminKeys.stats(from, to),
     queryFn: () => api.get<StatsResponse>(`/admin/stats${toQuery({ from, to })}`),
+    // Kỳ hiện tại đến từ máy chủ. Chưa biết mà vẫn gọi thì server hiểu là
+    // "không lọc kỳ" và trả về toàn bộ lịch sử — biểu đồ nháy sai rồi mới đúng.
+    enabled: Boolean(from && to),
   });
 }
 
@@ -230,6 +233,29 @@ export function useDirectorySync() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       void queryClient.invalidateQueries({ queryKey: adminKeys.departments });
+    },
+  });
+}
+
+/** Cài đặt hệ thống (ADMIN-8) — hiện chỉ có khung ngày đăng ký. */
+export function useAppSettings() {
+  return useQuery({
+    queryKey: ['admin', 'settings'] as const,
+    queryFn: () => api.get<AppSettings>('/admin/settings'),
+  });
+}
+
+export function useUpdateRegistrationWindow() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (window: { startDay: number; endDay: number }) =>
+      api.patch<AppSettings>('/admin/settings/registration-window', window),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin'] });
+      // Đổi khung ngày là đổi luôn KỲ hiện tại và quyền huỷ đơn — mọi màn đang
+      // mở phải tải lại, nếu không người dùng thao tác theo thông tin đã cũ.
+      void queryClient.invalidateQueries({ queryKey: ['registration-status'] });
+      void queryClient.invalidateQueries({ queryKey: ['requests'] });
     },
   });
 }

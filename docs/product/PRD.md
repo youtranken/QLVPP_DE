@@ -34,7 +34,7 @@
 
 Quy trình hiện tại (Google Form + Google Sheet) hạn chế **[🔶 suy ra từ bối cảnh — cần xác nhận mức ưu tiên]**:
 
-- Không tự ràng buộc **quy tắc đăng ký** (cửa sổ 1–10, cấm A4 với nhân viên, giới hạn ≤ 20/món).
+- Không tự ràng buộc **quy tắc đăng ký** (khung ngày đăng ký, cấm A4 với nhân viên, giới hạn ≤ 20/món).
 - **Tổng hợp & báo cáo trình ký** làm thủ công, dễ sai.
 - Thiếu **luồng duyệt** và **theo dõi tình trạng giao**.
 - Không **phân quyền / thông báo / nhật ký**.
@@ -62,7 +62,7 @@ Mục tiêu: đưa toàn bộ quy trình lên web có ràng buộc nghiệp vụ
 ### 4.1 Nhân viên — "Chị Lan, Chuyên viên Kinh doanh" **[🔶]**
 
 - **Mục tiêu:** đăng ký nhanh vài món đầu tháng, biết khi nào được giao; thường thao tác **trên điện thoại**.
-- **Khó khăn:** hay quên hạn 1–10; muốn biết đơn đã duyệt/giao chưa.
+- **Khó khăn:** hay quên hạn đăng ký; muốn biết đơn đã duyệt/giao chưa.
 - **Kỳ vọng:** tiếng Việt, đơn giản, mượt trên mobile, có thông báo trạng thái.
 
 ### 4.2 Admin — "Anh Minh, Nhân viên Hành chính" **[🔶]**
@@ -78,9 +78,9 @@ Mục tiêu: đưa toàn bộ quy trình lên web có ràng buộc nghiệp vụ
 ### 5.1 Nhân viên đăng ký VPP **[✅]**
 
 1. **Đăng nhập qua PMH ID SSO** (bấm "Đăng nhập" → chuyển sang PMH ID → quay lại app).
-2. Thấy trạng thái kỳ hiện tại (đang mở 1–10 hay đã đóng).
+2. Thấy trạng thái kỳ hiện tại (đang mở hay đã đóng, kèm khung ngày đang áp dụng).
 3. **Đăng ký VPP**: chọn món theo nhóm → nhập số lượng (≤ 20/món). A4 **khoá** với nhân viên. Mục **"Khác"**: nhập tự do + **đính kèm ảnh**.
-4. **Gửi đơn** (mỗi kỳ 1 đơn hiệu lực; gửi rồi **không tự sửa**). Có thể **huỷ** khi _chưa duyệt_ & còn trong ngày 1–10.
+4. **Gửi đơn** (mỗi kỳ 1 đơn hiệu lực; gửi rồi **không tự sửa**). Có thể **huỷ** khi _chưa duyệt_ & còn trong khung ngày đăng ký.
 5. Nhận **thông báo (chuông)** khi admin **duyệt / từ chối / đã giao**.
 6. Nếu **bị từ chối**: xem **lý do** → **gửi lại** đơn mới trong kỳ.
 
@@ -117,9 +117,9 @@ Mục tiêu: đưa toàn bộ quy trình lên web có ràng buộc nghiệp vụ
 ### 6.3 Đăng ký (đơn)
 
 - **FR-20** Đăng ký chọn món + số lượng; mục "Khác" + **đính kèm ảnh**.
-- **FR-21** Chỉ đăng ký trong **cửa sổ 1–10**; ngoài cửa sổ tính kỳ sau.
+- **FR-21** Chỉ đăng ký trong **khung ngày** do admin đặt (mặc định **ngày 20 đến hết tháng**); cửa sổ phục vụ **kỳ tháng kế tiếp**.
 - **FR-22** **Mỗi kỳ 1 đơn hiệu lực/người**; gửi 1 lần, **không tự sửa**.
-- **FR-23** Nhân viên **huỷ** đơn khi **chưa duyệt (`submitted`)** _và_ **còn trong ngày 1–10**.
+- **FR-23** Nhân viên **huỷ** đơn khi **chưa duyệt (`submitted`)** _và_ **còn trong khung ngày đăng ký**.
 - **FR-24** Xem **đơn của mình** + trạng thái + **lịch sử theo kỳ**.
 
 ### 6.4 Duyệt & giao (Admin)
@@ -136,6 +136,7 @@ Mục tiêu: đưa toàn bộ quy trình lên web có ràng buộc nghiệp vụ
 - **FR-41** **Xuất Excel** báo cáo tháng, gồm: 2 sheet _(Tổng hợp theo món + Chi tiết theo người)_ **+ tiêu đề đơn vị/kỳ/ngày lập + ô chữ ký (Người lập / Trưởng bộ phận / Ban giám đốc) + logo công ty** _(logo:_ **[⏳]** _chờ bạn cung cấp)_.
 - **FR-42** **Thống kê nhiều kỳ** bằng **biểu đồ** (theo tháng, theo phòng ban).
 - **FR-43** **Nhật ký audit**: ai duyệt/từ chối/giao và thời điểm.
+- **FR-44** Admin **tự đổi khung ngày đăng ký** trên web (màn Cài đặt), có xem trước ảnh hưởng và ghi audit. **[✅ bổ sung sau theo yêu cầu]**
 
 ### 6.6 Thông báo
 
@@ -163,20 +164,20 @@ Mục tiêu: đưa toàn bộ quy trình lên web có ràng buộc nghiệp vụ
 
 ## 8. Business rules (Quy tắc nghiệp vụ) — tất cả **[✅]**
 
-| Mã        | Quy tắc                                                                                            |
-| --------- | -------------------------------------------------------------------------------------------------- |
-| **BR-01** | Cửa sổ đăng ký **ngày 1–10** (khoá cứng với nhân viên); từ ngày 11 tính tháng sau.                 |
-| **BR-02** | Kỳ theo **tháng** (`YYYY-MM`).                                                                     |
-| **BR-03** | Nhân viên **không đăng ký A4**; admin được.                                                        |
-| **BR-04** | **Mỗi món ≤ 20**.                                                                                  |
-| **BR-05** | Mục **"Khác"**: nhập tự do + **đính kèm ảnh**.                                                     |
-| **BR-06** | **1 đơn hiệu lực/người/kỳ**; đơn từ chối/huỷ giữ làm lịch sử, cho gửi lại.                         |
-| **BR-07** | Gửi rồi **không tự sửa** (chỉ huỷ theo FR-23, hoặc admin điều chỉnh).                              |
-| **BR-08** | Vòng đời: `submitted → approved → delivered` \| `submitted → rejected` \| `submitted → cancelled`. |
-| **BR-09** | **Chỉ giao sau khi đã duyệt** (bắt buộc).                                                          |
-| **BR-10** | Admin **bỏ qua** ràng buộc cửa sổ ngày & cấm A4 (điều chỉnh đặc biệt).                             |
-| **BR-11** | **Không giá tiền**; báo cáo chỉ số lượng.                                                          |
-| **BR-12** | **Không định mức** phòng ban/ngân sách.                                                            |
+| Mã        | Quy tắc                                                                                                                                                  |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **BR-01** | Khung ngày đăng ký do **admin cấu hình** (mặc định **ngày 20 đến hết tháng**), khoá cứng với nhân viên; đăng ký trong cửa sổ tính cho **tháng kế tiếp**. |
+| **BR-02** | Kỳ theo **tháng** (`YYYY-MM`).                                                                                                                           |
+| **BR-03** | Nhân viên **không đăng ký A4**; admin được.                                                                                                              |
+| **BR-04** | **Mỗi món ≤ 20**.                                                                                                                                        |
+| **BR-05** | Mục **"Khác"**: nhập tự do + **đính kèm ảnh**.                                                                                                           |
+| **BR-06** | **1 đơn hiệu lực/người/kỳ**; đơn từ chối/huỷ giữ làm lịch sử, cho gửi lại.                                                                               |
+| **BR-07** | Gửi rồi **không tự sửa** (chỉ huỷ theo FR-23, hoặc admin điều chỉnh).                                                                                    |
+| **BR-08** | Vòng đời: `submitted → approved → delivered` \| `submitted → rejected` \| `submitted → cancelled`.                                                       |
+| **BR-09** | **Chỉ giao sau khi đã duyệt** (bắt buộc).                                                                                                                |
+| **BR-10** | Admin **bỏ qua** ràng buộc cửa sổ ngày & cấm A4 (điều chỉnh đặc biệt).                                                                                   |
+| **BR-11** | **Không giá tiền**; báo cáo chỉ số lượng.                                                                                                                |
+| **BR-12** | **Không định mức** phòng ban/ngân sách.                                                                                                                  |
 
 ---
 
@@ -232,14 +233,14 @@ Toàn bộ chức năng đã chốt: **đăng nhập PMH ID SSO** (đầy đủ:
 
 ## 13. Risks (Rủi ro)
 
-| Rủi ro                                                           | Ảnh hưởng                                 | Giảm thiểu                                                                                            |
-| ---------------------------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| **Khoá cứng 1–10** không thao tác được ngoài ngày đó.            | Không đăng ký từ ngày 11.                 | Admin bỏ qua để xử lý đặc biệt. **[✅]** _(hôm nay ngày 6 → còn hạn)_                                 |
-| **Cao điểm đầu tháng** (số chưa rõ).                             | Có thể chậm.                              | Thiết kế dư tải. **[✅]** — không có số để test tải.                                                  |
-| **Logo/tên/màu** chưa có.                                        | Chưa hoàn thiện thương hiệu & báo cáo.    | Dùng đặt chỗ trung tính; áp khi bạn cung cấp. **[⏳]**                                                |
-| **Phụ thuộc PMH ID** (chưa có client_id/secret; host chưa chốt). | Chưa tích hợp SSO thật khi demo.          | Demo bằng **mock OIDC**; đổi sang PMH ID chỉ bằng cấu hình. Xin credential + chốt host ở M6. **[✅]** |
-| **Map group→vai trò/phòng ban** phụ thuộc cách PMH ID đặt group. | Sai vai trò/phòng ban nếu tên group lệch. | Cấu hình qua env (`VPP_ADMIN_GROUP`…); xác minh với admin PMH ID khi lên prod. **[🔶]**               |
-| **Môi trường thật chưa chốt**.                                   | Ảnh hưởng cấu hình prod & mạng EDGE.      | Chốt ở M6; demo Docker không ảnh hưởng. **[✅]**                                                      |
+| Rủi ro                                                           | Ảnh hưởng                                  | Giảm thiểu                                                                                            |
+| ---------------------------------------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| **Khoá cứng khung ngày** không thao tác được ngoài cửa sổ.       | Nhân viên không đăng ký được ngoài cửa sổ. | Admin bỏ qua để xử lý đặc biệt, và **tự đổi được khung ngày** ở màn Cài đặt (FR-44). **[✅]**         |
+| **Cao điểm đầu tháng** (số chưa rõ).                             | Có thể chậm.                               | Thiết kế dư tải. **[✅]** — không có số để test tải.                                                  |
+| **Logo/tên/màu** chưa có.                                        | Chưa hoàn thiện thương hiệu & báo cáo.     | Dùng đặt chỗ trung tính; áp khi bạn cung cấp. **[⏳]**                                                |
+| **Phụ thuộc PMH ID** (chưa có client_id/secret; host chưa chốt). | Chưa tích hợp SSO thật khi demo.           | Demo bằng **mock OIDC**; đổi sang PMH ID chỉ bằng cấu hình. Xin credential + chốt host ở M6. **[✅]** |
+| **Map group→vai trò/phòng ban** phụ thuộc cách PMH ID đặt group. | Sai vai trò/phòng ban nếu tên group lệch.  | Cấu hình qua env (`VPP_ADMIN_GROUP`…); xác minh với admin PMH ID khi lên prod. **[🔶]**               |
+| **Môi trường thật chưa chốt**.                                   | Ảnh hưởng cấu hình prod & mạng EDGE.       | Chốt ở M6; demo Docker không ảnh hưởng. **[✅]**                                                      |
 
 ---
 
@@ -250,7 +251,7 @@ Toàn bộ chức năng đã chốt: **đăng nhập PMH ID SSO** (đầy đủ:
 | 1   | Mẫu Excel trình ký         | 2 sheet + **tiêu đề đơn vị/kỳ/ngày** + **ô chữ ký** + **logo**. **[✅]** (logo **[⏳]**) |
 | 2   | Buộc đổi mật khẩu lần đầu  | **Không**. **[✅]**                                                                      |
 | 3   | Chính sách mật khẩu/phiên  | **≥ 8 ký tự, phiên 7 ngày**. **[✅]**                                                    |
-| 4   | Điều kiện huỷ đơn          | **Chưa duyệt & còn trong 1–10**. **[✅]**                                                |
+| 4   | Điều kiện huỷ đơn          | **Chưa duyệt & còn trong khung ngày đăng ký**. **[✅]**                                  |
 | 5   | Giao có bắt buộc sau duyệt | **Có, bắt buộc**. **[✅]**                                                               |
 | 6   | Hỗ trợ mobile              | **Cần dùng tốt trên điện thoại** (responsive). **[✅]**                                  |
 | 7   | Số cao điểm                | **Không rõ → thiết kế dư tải**. **[✅]**                                                 |

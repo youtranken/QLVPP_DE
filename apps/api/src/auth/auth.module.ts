@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { SettingsModule } from '../modules/settings/settings.module';
 import { AuthController } from './auth.controller';
 import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
@@ -13,6 +14,7 @@ import { RolesGuard } from './roles.decorator';
  * route công khai phải khai báo tường minh bằng `@Public()`.
  */
 @Module({
+  imports: [SettingsModule],
   controllers: [AuthController, MeController],
   providers: [
     OidcService,

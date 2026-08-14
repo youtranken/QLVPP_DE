@@ -13,11 +13,22 @@ export interface Me {
 }
 
 export interface RegistrationStatus {
+  /** Kỳ đang nhận đăng ký, do máy chủ tính — FE KHÔNG tự suy ra được nữa vì
+   *  khung ngày do admin đặt và nằm trong CSDL. */
   period: string;
   open: boolean;
   canRegister: boolean;
   windowStartDay: number;
   windowEndDay: number;
+  /** Mô tả sẵn cho người đọc, vd "từ ngày 20 đến hết tháng". */
+  windowLabel: string;
+}
+
+export interface AppSettings {
+  startDay: number;
+  endDay: number;
+  updatedAt: string | null;
+  updatedByName: string | null;
 }
 
 export interface CatalogItem {

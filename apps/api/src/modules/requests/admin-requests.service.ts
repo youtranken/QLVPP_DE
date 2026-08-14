@@ -6,6 +6,7 @@ import { DB, type Db } from '../../infra/db/db.module';
 import { departments, requestItems, requests, users } from '../../infra/db/schema';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService, NOTIFICATION_TYPES } from '../notifications/notifications.service';
+import { SettingsService } from '../settings/settings.service';
 import type { AdjustRequestDto, DeliverLineDto, ListRequestsQuery } from './requests.dto';
 import { RequestsService } from './requests.service';
 
@@ -18,6 +19,7 @@ export class AdminRequestsService {
     private readonly requests: RequestsService,
     private readonly audit: AuditService,
     private readonly notifications: NotificationsService,
+    private readonly settings: SettingsService,
   ) {}
 
   /** Danh sách mọi đơn, lọc + phân trang (CORE-10). */
@@ -71,7 +73,7 @@ export class AdminRequestsService {
    * **Loại trừ đơn `cancelled` và `rejected`** — chúng chỉ còn giá trị lịch sử.
    */
   async summary(period: string | undefined, departmentId?: string) {
-    const targetPeriod = period ?? periodForDate();
+    const targetPeriod = period ?? periodForDate(await this.settings.getWindow());
     const filters: SQL[] = [
       eq(requests.period, targetPeriod),
       sql`${requests.status} in ('submitted','approved','delivered')`,

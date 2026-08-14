@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { RegistrationWindow } from '@vpp/shared';
 import { api } from './api';
 import type {
   CatalogCategory,
@@ -32,6 +33,24 @@ export function useRegistrationStatus() {
     queryKey: queryKeys.registrationStatus,
     queryFn: () => api.get<RegistrationStatus>('/registration/status'),
   });
+}
+
+/**
+ * Khung ngày đăng ký đang áp dụng, `undefined` khi chưa tải xong.
+ *
+ * Trước đây FE tự tính bằng hằng số dùng chung; giờ admin sửa được khung ngày nên
+ * **chỉ máy chủ mới biết**. Cố ý KHÔNG lùi về một giá trị mặc định trong lúc chờ:
+ * đoán sai thì nút "Huỷ đơn" hiện rồi biến mất, hoặc tệ hơn là hiện đúng lúc
+ * người dùng không còn quyền huỷ.
+ */
+export function useRegistrationWindow(): RegistrationWindow | undefined {
+  const { data } = useRegistrationStatus();
+  return data ? { startDay: data.windowStartDay, endDay: data.windowEndDay } : undefined;
+}
+
+/** Kỳ đăng ký hiện tại theo máy chủ, `undefined` khi chưa tải xong. */
+export function useCurrentPeriod(): string | undefined {
+  return useRegistrationStatus().data?.period;
 }
 
 /**

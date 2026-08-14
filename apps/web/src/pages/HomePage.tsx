@@ -95,8 +95,7 @@ export function HomePage() {
                   </Button>
                   {!status?.canRegister && (
                     <Typography.Text type="secondary">
-                      Hiện đã đóng đăng ký. Vui lòng quay lại từ ngày {status?.windowStartDay} đến
-                      ngày {status?.windowEndDay} tháng sau.
+                      Hiện đã đóng đăng ký. Hệ thống nhận đăng ký {status?.windowLabel} hằng tháng.
                     </Typography.Text>
                   )}
                 </>

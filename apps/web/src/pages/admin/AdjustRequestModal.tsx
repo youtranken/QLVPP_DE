@@ -16,7 +16,7 @@ interface EditableLine {
 
 /**
  * Điều chỉnh đặc biệt (CORE-13): admin sửa số lượng, thêm hoặc bớt món — **kể cả
- * giấy A4** — và không bị khoá bởi cửa sổ ngày 1–10. Mọi thay đổi được ghi audit
+ * giấy A4** — và không bị khoá bởi cửa sổ đăng ký. Mọi thay đổi được ghi audit
  * kèm danh sách dòng trước/sau.
  */
 export function AdjustRequestModal({
@@ -102,7 +102,7 @@ export function AdjustRequestModal({
           type="info"
           showIcon
           title="Thao tác của quản trị viên"
-          description="Được thêm cả món chỉ dành cho admin và không bị khoá bởi khung ngày 1–10. Thay đổi sẽ được ghi vào nhật ký."
+          description="Được thêm cả món chỉ dành cho admin và không bị khoá bởi khung ngày đăng ký. Thay đổi sẽ được ghi vào nhật ký."
         />
 
         {request.status === 'delivered' && (

@@ -5,6 +5,13 @@ export function periodLabel(period: string): string {
   return formatPeriod(period);
 }
 
+/** Dịch kỳ 'YYYY-MM' đi `months` tháng (âm = lùi về trước). */
+export function shiftPeriod(period: string, months: number): string {
+  const [year, month] = period.split('-').map(Number);
+  const date = new Date(year, month - 1 + months, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
 const DATE_TIME = new Intl.DateTimeFormat('vi-VN', {
   day: '2-digit',
   month: '2-digit',

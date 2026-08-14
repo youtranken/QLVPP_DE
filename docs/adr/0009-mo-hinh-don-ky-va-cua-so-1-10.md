@@ -1,7 +1,11 @@
 # ADR-0009 — Mô hình đơn theo kỳ + cửa sổ đăng ký ngày 1–10
 
-- **Trạng thái:** Accepted
+- **Trạng thái:** Accepted — riêng phần **cửa sổ ngày 1–10** bị thay bởi [ADR-0013](./0013-khung-ngay-dang-ky-admin-cau-hinh.md)
 - **Ngày:** 2026-08-06
+
+> **Ghi chú (2026-08-14):** khung ngày nay do admin cấu hình và cửa sổ phục vụ
+> **tháng kế tiếp**. Phần "1 đơn hiệu lực/kỳ", vòng đời đơn và ràng buộc DB dưới
+> đây **vẫn còn hiệu lực**.
 
 ## Bối cảnh
 

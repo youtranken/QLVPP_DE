@@ -130,11 +130,11 @@
 - **Edge cases:** nhập chữ/thập phân/âm; món có `max_qty` khác 20; dán số lớn.
 - **Priority:** **P0** · **Dependencies:** CORE-2.
 
-### CORE-6 — Cửa sổ đăng ký ngày 1–10 `[✅]`
+### CORE-6 — Khung ngày đăng ký `[✅ đổi theo yêu cầu 2026-08-14]`
 
-- **Persona:** HT/NV · **Mục tiêu:** Chỉ nhận đăng ký NV trong ngày 1–10. · **Lý do:** Đúng chu kỳ mua sắm tháng.
-- **AC:** Ngày 1–10 form mở, gắn kỳ hiện tại; ngày 11–31 hiện "đã đóng", gửi bị chặn (`REGISTRATION_CLOSED`); AD bỏ qua.
-- **Edge cases:** đúng nửa đêm 10→11 theo giờ VN (container `TZ=Asia/Ho_Chi_Minh`); admin thao tác ngoài cửa sổ (được phép); người dùng mở form trước 24:00 ngày 10 rồi gửi sau → kiểm tại thời điểm gửi.
+- **Persona:** HT/NV · **Mục tiêu:** Chỉ nhận đăng ký NV trong khung ngày do admin đặt (mặc định **ngày 20 đến hết tháng**). · **Lý do:** Đúng chu kỳ mua sắm tháng.
+- **AC:** Trong cửa sổ form mở và gắn **kỳ tháng kế tiếp**; ngoài cửa sổ hiện "đã đóng", gửi bị chặn (`REGISTRATION_CLOSED`); AD bỏ qua. Đổi khung ngày ở màn Cài đặt có hiệu lực ngay (ADMIN-8).
+- **Edge cases:** đúng nửa đêm chuyển ngày theo giờ VN (container `TZ=Asia/Ho_Chi_Minh`); admin thao tác ngoài cửa sổ (được phép); người dùng mở form trong cửa sổ rồi gửi sau khi đóng → kiểm tại thời điểm gửi; **tháng 2 / tháng 30 ngày** → ngày cuối co lại (đặt 31 = hết tháng); admin đổi khung ngày lúc người dùng đang điền dở → kiểm lại lúc gửi.
 - **Priority:** **P0** · **Dependencies:** CORE-2, `packages/shared`.
 
 ### CORE-7 — 1 đơn hiệu lực/kỳ, không tự sửa `[✅]`
@@ -147,15 +147,15 @@
 ### CORE-8 — Huỷ đơn `[✅]`
 
 - **Persona:** NV · **Mục tiêu:** Huỷ đơn khi cần đăng ký lại. · **Lý do:** Sửa sai khi chưa được xử lý.
-- **AC:** Huỷ chỉ khi đơn `submitted` **và** còn ngày 1–10; sau `cancelled` được tạo đơn mới.
-- **Edge cases:** huỷ đơn đã `approved` → chặn; huỷ sau ngày 10 → chặn; huỷ đơn không phải của mình → chặn (403).
+- **AC:** Huỷ chỉ khi đơn `submitted` **và** còn trong khung ngày đăng ký; sau `cancelled` được tạo đơn mới.
+- **Edge cases:** huỷ đơn đã `approved` → chặn; huỷ sau khi cửa sổ đóng → chặn; huỷ đơn không phải của mình → chặn (403).
 - **Priority:** **P1** · **Dependencies:** CORE-2.
 
 ### CORE-9 — Đơn của tôi, lịch sử & gửi lại `[✅]`
 
 - **Persona:** NV · **Mục tiêu:** Xem đơn + trạng thái theo kỳ; gửi lại khi bị từ chối. · **Lý do:** Theo dõi và khắc phục.
 - **AC:** Danh sách theo kỳ + chi tiết dòng + trạng thái duyệt/giao; `rejected` hiện **lý do** + nút "Gửi lại".
-- **Edge cases:** nhiều đơn rejected trong 1 kỳ (lịch sử); "Gửi lại" khi đã hết ngày 10 → chặn theo CORE-6; đơn nhiều kỳ.
+- **Edge cases:** nhiều đơn rejected trong 1 kỳ (lịch sử); "Gửi lại" khi cửa sổ đã đóng → chặn theo CORE-6; đơn nhiều kỳ.
 - **Priority:** **P0** · **Dependencies:** CORE-2, CORE-12.
 
 ### CORE-10 — Danh sách đăng ký (admin, lọc, phân trang) `[✅]`
@@ -289,6 +289,13 @@
 - **AC:** Khi có tài sản → áp vào header + báo cáo Excel; trước đó dùng theme trung tính.
 - **Edge cases:** chưa có logo → dùng đặt chỗ; logo sai kích thước/định dạng.
 - **Priority:** **P2** · **Dependencies:** tài sản thương hiệu **[⏳]**.
+
+### ADMIN-8 — Đổi khung ngày đăng ký `[✅ bổ sung sau, theo yêu cầu]`
+
+- **Persona:** AD · **Mục tiêu:** Tự đổi ngày mở/đóng đăng ký trên web. · **Lý do:** Lịch mua sắm là quyết định hành chính, không nên phải chờ phát hành phần mềm.
+- **AC:** Màn **Cài đặt** (`/quan-tri/cai-dat`) sửa được ngày mở/đóng (1–31, mở ≤ đóng); **xem trước** kỳ tương ứng và cửa sổ đang mở/đóng trước khi lưu; lưu xong có hiệu lực **ngay**; ghi **audit** kèm giá trị cũ; NV gọi API bị chặn 403.
+- **Edge cases:** đặt ngày đóng 31 ⇒ "đến hết tháng" (tháng 2 → 28/29); đặt mở > đóng → chặn ở cả form, API và **CHECK của CSDL**; đổi khung ngày khiến NV mất quyền huỷ đơn đang mở → có cảnh báo trước khi lưu; chưa có dòng cài đặt (CSDL mới) → dùng mặc định 20→31 thay vì lỗi.
+- **Priority:** **P1** · **Dependencies:** CORE-6, ADR-0013.
 
 ---
 

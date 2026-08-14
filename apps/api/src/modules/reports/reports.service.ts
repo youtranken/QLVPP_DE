@@ -3,6 +3,7 @@ import { periodForDate } from '@vpp/shared';
 import { and, asc, eq, gte, lte, sql, type SQL } from 'drizzle-orm';
 import { DB, type Db } from '../../infra/db/db.module';
 import { departments, requestItems, requests, users } from '../../infra/db/schema';
+import { SettingsService } from '../settings/settings.service';
 
 /** Đơn `rejected`/`cancelled` chỉ còn giá trị lịch sử, không tính vào báo cáo. */
 const COUNTED_STATUSES = sql`('submitted','approved','delivered')`;
@@ -14,7 +15,10 @@ export interface StatsQuery {
 
 @Injectable()
 export class ReportsService {
-  constructor(@Inject(DB) private readonly db: Db) {}
+  constructor(
+    @Inject(DB) private readonly db: Db,
+    private readonly settings: SettingsService,
+  ) {}
 
   private periodRange(query: StatsQuery): SQL[] {
     const filters: SQL[] = [sql`${requests.status} in ${COUNTED_STATUSES}`];
@@ -134,7 +138,8 @@ export class ReportsService {
       .orderBy(sql`coalesce(${departments.name}, '')`, asc(users.name), asc(requestItems.name));
   }
 
-  resolvePeriod(period?: string): string {
-    return period ?? periodForDate();
+  /** Kỳ mặc định khi người dùng không chọn — phải hỏi khung ngày admin đang đặt. */
+  async resolvePeriod(period?: string): Promise<string> {
+    return period ?? periodForDate(await this.settings.getWindow());
   }
 }

@@ -38,11 +38,12 @@ export const vi = {
     catalog: 'Danh mục VPP',
     directory: 'Danh bạ nhân viên',
     audit: 'Nhật ký',
+    settings: 'Cài đặt',
   },
   period: {
     open: 'Đang mở đăng ký',
     closed: 'Đã đóng đăng ký',
-    windowHint: 'Nhận đăng ký từ ngày {{start}} đến ngày {{end}} hằng tháng.',
+    windowHint: 'Nhận đăng ký {{window}} hằng tháng.',
     adminOverride: 'Bạn là quản trị viên nên vẫn đăng ký được ngoài khung ngày.',
   },
   status: {

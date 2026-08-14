@@ -1,4 +1,9 @@
-import { formatRequestCode, periodForDate } from '@vpp/shared';
+import {
+  DEFAULT_REGISTRATION_WINDOW,
+  formatRequestCode,
+  periodForDate,
+  type RegistrationWindow,
+} from '@vpp/shared';
 import { count } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
@@ -7,7 +12,7 @@ import { parseToolEnv } from '../config/env';
 import { loadRootEnv } from '../config/load-env';
 import { DEMO_REQUESTS, DEMO_USERS, type DemoLine } from './demo-data';
 import * as schema from './schema';
-import { departments, items, requestItems, requests, users } from './schema';
+import { appSettings, departments, items, requestItems, requests, users } from './schema';
 
 /**
  * Nạp dữ liệu DEMO: người dùng + đơn mẫu nhiều kỳ, nhiều trạng thái (SDD §11).
@@ -18,8 +23,8 @@ import { departments, items, requestItems, requests, users } from './schema';
  */
 
 /** Lùi `offset` tháng so với kỳ hiện tại, trả về 'YYYY-MM'. */
-function periodBefore(offset: number): string {
-  const [year, month] = periodForDate().split('-').map(Number);
+function periodBefore(offset: number, window: RegistrationWindow): string {
+  const [year, month] = periodForDate(window).split('-').map(Number);
   const date = new Date(year, month - 1 - offset, 1);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
@@ -92,6 +97,14 @@ async function main(): Promise<void> {
     };
 
     // ── Đơn mẫu ───────────────────────────────────────────────────────────
+    // Kỳ của đơn demo phụ thuộc khung ngày admin đang đặt, nên phải đọc từ CSDL.
+    // Chưa có dòng cài đặt (CSDL mới) thì dùng mặc định.
+    const [windowRow] = await db
+      .select({ startDay: appSettings.regWindowStartDay, endDay: appSettings.regWindowEndDay })
+      .from(appSettings)
+      .limit(1);
+    const window: RegistrationWindow = windowRow ?? DEFAULT_REGISTRATION_WINDOW;
+
     const sequenceByPeriod = new Map<string, number>();
     let created = 0;
 
@@ -99,7 +112,7 @@ async function main(): Promise<void> {
       const user = userBySub.get(demo.user);
       if (!user) throw new Error(`Dữ liệu demo trỏ tới user không tồn tại: ${demo.user}`);
 
-      const period = periodBefore(demo.periodOffset);
+      const period = periodBefore(demo.periodOffset, window);
       const sequence = (sequenceByPeriod.get(period) ?? 0) + 1;
       sequenceByPeriod.set(period, sequence);
 

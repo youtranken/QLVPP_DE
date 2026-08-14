@@ -19,7 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { routes } from '../App';
 import { ApiError } from '../lib/api';
 import { formatDateTime, periodLabel, STATUS_META } from '../lib/format';
-import { useCancelRequest, useMyRequests } from '../lib/queries';
+import { useCancelRequest, useMyRequests, useRegistrationWindow } from '../lib/queries';
 import type { RequestLine, VppRequest } from '../lib/types';
 
 /**
@@ -79,6 +79,8 @@ export function MyRequestsPage() {
   const { message } = App.useApp();
   const navigate = useNavigate();
   const { data: requests, isPending } = useMyRequests();
+  // Khung ngày do admin đặt ⇒ chỉ máy chủ biết. Chưa có thì KHÔNG hiện nút huỷ.
+  const cuaSo = useRegistrationWindow();
   const cancelRequest = useCancelRequest();
 
   if (isPending) return <Skeleton active />;
@@ -180,7 +182,7 @@ export function MyRequestsPage() {
 
                     {/* Nút huỷ chỉ hiện khi thực sự huỷ được — dùng đúng quy tắc
                         của backend nên không hiện nút rồi mới báo lỗi (CORE-8). */}
-                    {canCancelRequest(request.status) && (
+                    {cuaSo && canCancelRequest(request.status, cuaSo) && (
                       <Popconfirm
                         title="Huỷ đơn này?"
                         description="Sau khi huỷ, bạn có thể gửi đơn mới trong kỳ."

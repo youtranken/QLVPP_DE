@@ -9,7 +9,9 @@ import {
   type CatalogItemRule,
 } from './request-rules';
 
-const TRONG_CUA_SO = new Date('2026-08-05T10:00:00+07:00'); // ngày 5
+/** Khung mặc định: mở ngày 20, đóng khi hết tháng. */
+const CUA_SO = { startDay: 20, endDay: 31 };
+const TRONG_CUA_SO = new Date('2026-08-25T10:00:00+07:00'); // ngày 25
 const NGOAI_CUA_SO = new Date('2026-08-15T10:00:00+07:00'); // ngày 15
 
 const BUT: CatalogItemRule = { id: 'but', adminOnly: false, maxQty: 20, active: true };
@@ -20,18 +22,24 @@ const CATALOG = new Map([BUT, A4, NGUNG].map((item) => [item.id, item]));
 const codes = (violations: { code: ErrorCode }[]) => violations.map((v) => v.code);
 
 describe('checkRegistrationWindow', () => {
-  it('nhân viên gửi trong ngày 1–10 → hợp lệ', () => {
-    expect(checkRegistrationWindow('member', TRONG_CUA_SO)).toBeNull();
+  it('nhân viên gửi trong cửa sổ → hợp lệ', () => {
+    expect(checkRegistrationWindow('member', CUA_SO, TRONG_CUA_SO)).toBeNull();
   });
 
   it('nhân viên gửi ngoài cửa sổ → REGISTRATION_CLOSED', () => {
-    expect(checkRegistrationWindow('member', NGOAI_CUA_SO)?.code).toBe(
+    expect(checkRegistrationWindow('member', CUA_SO, NGOAI_CUA_SO)?.code).toBe(
       ErrorCode.REGISTRATION_CLOSED,
     );
   });
 
+  it('thông báo nêu đúng khung ngày admin đang đặt', () => {
+    expect(
+      checkRegistrationWindow('member', { startDay: 5, endDay: 9 }, NGOAI_CUA_SO)?.message,
+    ).toContain('từ ngày 5 đến ngày 9');
+  });
+
   it('admin bỏ qua cửa sổ ngày', () => {
-    expect(checkRegistrationWindow('admin', NGOAI_CUA_SO)).toBeNull();
+    expect(checkRegistrationWindow('admin', CUA_SO, NGOAI_CUA_SO)).toBeNull();
   });
 });
 
@@ -107,15 +115,15 @@ describe('checkRequestLines', () => {
 
 describe('điều kiện huỷ và giao', () => {
   it('huỷ được khi đơn submitted và còn trong cửa sổ', () => {
-    expect(canCancelRequest('submitted', TRONG_CUA_SO)).toBe(true);
+    expect(canCancelRequest('submitted', CUA_SO, TRONG_CUA_SO)).toBe(true);
   });
 
-  it('không huỷ được sau ngày 10, dù đơn vẫn submitted', () => {
-    expect(canCancelRequest('submitted', NGOAI_CUA_SO)).toBe(false);
+  it('không huỷ được khi cửa sổ đã đóng, dù đơn vẫn submitted', () => {
+    expect(canCancelRequest('submitted', CUA_SO, NGOAI_CUA_SO)).toBe(false);
   });
 
   it('không huỷ được đơn đã duyệt', () => {
-    expect(canCancelRequest('approved', TRONG_CUA_SO)).toBe(false);
+    expect(canCancelRequest('approved', CUA_SO, TRONG_CUA_SO)).toBe(false);
   });
 
   it('chỉ giao đơn đã duyệt hoặc đang giao dở (BR-09)', () => {
