@@ -213,6 +213,7 @@ nên nhân viên không phải tải chỗ đó.
 | PATCH             | `/api/admin/requests/:id` (điều chỉnh)         | admin     |
 | GET               | `/api/admin/users` · `/api/admin/audit`        | admin     |
 | POST              | `/api/admin/directory-sync`                    | admin     |
+| POST              | `/api/admin/uploads/cleanup`                   | admin     |
 | GET               | `/api/admin/stats`                             | admin     |
 | GET               | `/api/export/requests.xlsx`                    | admin     |
 

@@ -96,6 +96,36 @@ Chép bản sao lưu ra **máy khác** — để cùng máy thì hỏng đĩa l�
 
 ---
 
+## 4b. Dọn ảnh mồ côi
+
+Ảnh trở thành **mồ côi** khi admin đổi/gỡ ảnh của món, hoặc khi người dùng tải ảnh
+cho mục "Khác" rồi bỏ dở không gửi đơn. Job dọn chạy **trong tiến trình api**, mặc
+định mỗi 24 giờ, và chỉ xoá ảnh đã quá **ân hạn 24 giờ** kể từ lúc ghi.
+
+> Ân hạn là điểm mấu chốt: người dùng tải ảnh xong mới điền nốt form rồi mới gửi.
+> Trong khoảng đó ảnh chưa được bản ghi nào tham chiếu nhưng **không phải rác**.
+
+Chạy ngay để kiểm chứng, không cần chờ job (chỉ admin):
+
+```bash
+curl -sS -X POST https://<HOST>/api/admin/uploads/cleanup -b <cookie phiên>
+# {"scanned":12,"removed":10,"keptInGrace":0,"failed":0}
+```
+
+Job chỉ đụng file **đúng khuôn server sinh** (`<uuid>.<jpg|png|webp|gif>`); mọi thứ
+khác trong thư mục (kể cả `.gitkeep`) được để nguyên. Lần nào có xoá đều ghi
+**nhật ký audit** với hành động `uploads.cleanup`.
+
+| Biến                        | Mặc định | Ý nghĩa                     |
+| --------------------------- | -------- | --------------------------- |
+| `UPLOAD_CLEANUP_ENABLED`    | `true`   | Tắt hẳn việc dọn            |
+| `UPLOAD_ORPHAN_GRACE_HOURS` | `24`     | Ân hạn trước khi coi là rác |
+| `UPLOAD_CLEANUP_HOURS`      | `24`     | Chu kỳ chạy job             |
+
+`failed > 0` nghĩa là có file xoá không được (quyền, đang mở) — xem log api để rõ.
+
+---
+
 ## 5. Xoay bí mật
 
 | Bí mật               | Cách làm                                           | Ảnh hưởng                          |

@@ -70,8 +70,19 @@ require('fs').writeFileSync('ids.json', JSON.stringify({
   so:  f.find(i=>i.name.startsWith('Sổ tay')).id,
   a4:  f.find(i=>i.adminOnly).id,
 }));"
-check "danh mục có 5 nhóm" "5" "$(node -e "process.stdout.write(String(require('./cat.json').length))")"
-check "danh mục có 25 món" "25" "$(node -e "process.stdout.write(String(require('./cat.json').flatMap(g=>g.items).length))")"
+# Kiểm CÓ ĐỦ danh mục mẫu, không kiểm bằng đúng con số: admin thêm/bớt món là
+# việc bình thường, khẳng định "đúng 25 món" sẽ hỏng ngay khi ai đó dùng thật.
+check "có đủ 5 nhóm mẫu" "1" "$(node -e "
+const ten = require('./cat.json').map(g => g.name);
+const can = ['Bút & Viết','Giấy & Sổ','Mực & Toner','Dụng cụ văn phòng','Khác'];
+process.stdout.write(can.every(n => ten.includes(n)) ? '1' : '0');
+")"
+check "có ít nhất 25 món" "1" "$(node -e "
+process.stdout.write(require('./cat.json').flatMap(g => g.items).length >= 25 ? '1' : '0');
+")"
+check "có nhóm \"Khác\" đánh dấu isOther" "1" "$(node -e "
+process.stdout.write(require('./cat.json').filter(g => g.isOther).length === 1 ? '1' : '0');
+")"
 
 BUT=$(node -e "process.stdout.write(require('./ids.json').but)")
 SO=$(node -e "process.stdout.write(require('./ids.json').so)")

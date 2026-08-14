@@ -113,7 +113,7 @@
 
 - **Persona:** NV · **Mục tiêu:** Nhập món ngoài danh mục kèm ảnh. · **Lý do:** Mô tả nhu cầu đặc biệt rõ ràng.
 - **AC:** Nhập tên tự do + SL (≤20) + upload ảnh (`image/*`, ≤5MB); trả về đường dẫn ảnh gắn vào dòng.
-- **Edge cases:** ảnh >5MB / sai định dạng → báo lỗi, không gửi; upload thành công nhưng gửi đơn thất bại → ảnh mồ côi cần dọn rác **[🔶]**; tên "Khác" rỗng → chặn.
+- **Edge cases:** ảnh >5MB / sai định dạng → báo lỗi, không gửi; upload thành công nhưng gửi đơn thất bại → ảnh mồ côi, **job dọn định kỳ** xoá sau ân hạn 24h (RUNBOOK §4b) **[✅]**; tên "Khác" rỗng → chặn.
 - **Priority:** **P1** · **Dependencies:** CORE-2, dịch vụ upload.
 
 ### CORE-4 — Cấm A4 với nhân viên `[✅]`
@@ -252,7 +252,7 @@
   2. Đổi ảnh và gỡ ảnh được; món không có ảnh vẫn dùng bình thường.
   3. Ảnh hiện ở **màn Đăng ký VPP** cạnh tên món, và ở bảng quản lý danh mục.
   4. Chỉ **admin** đổi được ảnh; nhân viên chỉ xem.
-- **Edge cases:** ảnh sai định dạng/quá 5MB → chặn; món cũ chưa có ảnh → hiện "—"; đổi ảnh thì ảnh cũ thành mồ côi trên đĩa **[🔶 cần dọn rác định kỳ]**.
+- **Edge cases:** ảnh sai định dạng/quá 5MB → chặn; món cũ chưa có ảnh → hiện "—"; đổi ảnh thì ảnh cũ thành mồ côi trên đĩa → **job dọn định kỳ** xoá sau ân hạn 24h (RUNBOOK §4b). **[✅]**
 - **Priority:** **P2** · **Dependencies:** ADMIN-1, dịch vụ upload (CORE-3).
 
 ### ADMIN-2 — Quản lý nhóm VPP `[✅]`

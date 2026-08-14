@@ -47,6 +47,21 @@ const EnvSchema = z.object({
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(7),
   UPLOAD_DIR: z.string().min(1).default('./uploads'),
   /**
+   * Bật/tắt việc dọn ảnh mồ côi. Tắt bằng công tắc RIÊNG chứ không bằng cách đặt
+   * ân hạn = 0 — đặt ân hạn 0 phải có nghĩa "không ân hạn", không phải "tắt".
+   */
+  UPLOAD_CLEANUP_ENABLED: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((value) => value === 'true'),
+  /**
+   * Ảnh đã tải lên nhưng chưa bản ghi nào tham chiếu chỉ bị coi là rác sau ngần
+   * này giờ. Ân hạn để không xoá ảnh của form người dùng đang mở dở.
+   */
+  UPLOAD_ORPHAN_GRACE_HOURS: z.coerce.number().int().min(0).default(24),
+  /** Chu kỳ chạy job dọn ảnh mồ côi, tính bằng giờ. */
+  UPLOAD_CLEANUP_HOURS: z.coerce.number().int().min(1).default(24),
+  /**
    * Tên đơn vị in trên đầu báo cáo Excel trình ký (FR-41).
    * Giá trị đặt chỗ cho tới khi có tên + logo chính thức (phụ thuộc [⏳] ở SDD §12).
    */

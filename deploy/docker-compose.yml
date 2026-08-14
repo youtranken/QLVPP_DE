@@ -125,6 +125,7 @@ services:
       SESSION_TTL_DAYS: 7
       VPP_ADMIN_GROUP: VPP-Admin
       VPP_DEPARTMENT_GROUPS: Hành chính,Nhân sự,Kế toán,Kỹ thuật,Kinh doanh
+      UPLOAD_ORPHAN_GRACE_HOURS: ${UPLOAD_ORPHAN_GRACE_HOURS:-24}
       UPLOAD_DIR: /app/apps/api/uploads
     # KHÔNG publish cổng: trình duyệt vào qua nginx của web, giống hệt lúc chạy thật.
     expose:
