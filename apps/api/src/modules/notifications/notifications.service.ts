@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { DB, type Db } from '../../infra/db/db.module';
 import { notifications, users } from '../../infra/db/schema';
@@ -20,19 +20,34 @@ export interface NewNotification {
   requestId?: string | null;
 }
 
-/** Thông báo TRONG APP (chuông) — không gửi email (SDD §0 mục 11). */
+/**
+ * Thông báo TRONG APP (chuông) — không gửi email (SDD §0 mục 11).
+ *
+ * **Thông báo là lớp tiện lợi, KHÔNG phải nguồn sự thật.** Nguồn sự thật là danh
+ * sách đơn ở màn quản trị. Vì vậy mọi hàm gửi ở đây **không bao giờ ném lỗi**:
+ * chuông hỏng không được phép làm nhân viên không gửi được đơn hay admin không
+ * duyệt được. Lỗi được ghi log ở mức `error` để còn biết mà xử lý.
+ */
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
+
   constructor(@Inject(DB) private readonly db: Db) {}
 
   async notify(entry: NewNotification, tx: Db | undefined = undefined): Promise<void> {
-    await (tx ?? this.db).insert(notifications).values({
-      userId: entry.userId,
-      type: entry.type,
-      title: entry.title,
-      body: entry.body ?? null,
-      requestId: entry.requestId ?? null,
-    });
+    await this.ghi(
+      tx ?? this.db,
+      [
+        {
+          userId: entry.userId,
+          type: entry.type,
+          title: entry.title,
+          body: entry.body ?? null,
+          requestId: entry.requestId ?? null,
+        },
+      ],
+      entry.type,
+    );
   }
 
   /**
@@ -45,15 +60,35 @@ export class NotificationsService {
     tx: Db | undefined = undefined,
   ): Promise<void> {
     const db = tx ?? this.db;
-    const admins = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(and(eq(users.role, 'admin'), eq(users.disabled, false)));
+
+    let admins: { id: string }[];
+    try {
+      admins = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(and(eq(users.role, 'admin'), eq(users.disabled, false)));
+    } catch (error) {
+      this.logger.error(`Không đọc được danh sách quản trị viên: ${(error as Error).message}`);
+      return;
+    }
+
+    if (admins.length === 0) {
+      // Đây gần như luôn là ánh xạ nhóm sai: tên nhóm ở PMH ID khác VPP_ADMIN_GROUP
+      // nên KHÔNG AI có vai trò admin. Trước đây chỗ này im lặng bỏ qua, nghĩa là
+      // đơn cứ vào mà không ai được báo, và không có dấu vết nào để lần ra.
+      this.logger.error(
+        `Không có quản trị viên nào để nhận thông báo "${entry.type}". ` +
+          'Kiểm tra VPP_ADMIN_GROUP có khớp tên nhóm ở PMH ID không (RUNBOOK §7).',
+      );
+      return;
+    }
 
     const recipients = admins.filter((admin) => admin.id !== options.exceptUserId);
+    // Chỉ có một admin và chính họ vừa thao tác ⇒ không cần tự báo cho mình.
     if (recipients.length === 0) return;
 
-    await db.insert(notifications).values(
+    await this.ghi(
+      db,
       recipients.map((admin) => ({
         userId: admin.id,
         type: entry.type,
@@ -61,7 +96,30 @@ export class NotificationsService {
         body: entry.body ?? null,
         requestId: entry.requestId ?? null,
       })),
+      entry.type,
     );
+  }
+
+  /** Ghi thông báo, nuốt lỗi có ghi log — xem ghi chú ở đầu lớp. */
+  private async ghi(
+    db: Db,
+    rows: {
+      userId: string;
+      type: string;
+      title: string;
+      body: string | null;
+      requestId: string | null;
+    }[],
+    loai: string,
+  ): Promise<void> {
+    try {
+      await db.insert(notifications).values(rows);
+    } catch (error) {
+      this.logger.error(
+        `Không ghi được ${rows.length} thông báo "${loai}": ${(error as Error).message}. ` +
+          'Nghiệp vụ vẫn được ghi nhận; người nhận sẽ không thấy chuông.',
+      );
+    }
   }
 
   /** Danh sách thông báo của một người, mới nhất trước, kèm số chưa đọc. */

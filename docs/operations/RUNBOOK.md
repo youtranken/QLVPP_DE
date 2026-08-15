@@ -216,6 +216,37 @@ Cookie phiên không được trình duyệt giữ. Kiểm theo thứ tự:
 
 `redirect_uris` ở PMH ID lệch với `APP_BASE_URL`. Sửa một trong hai cho khớp tuyệt đối.
 
+### Nhân viên báo đã gửi đơn nhưng admin không thấy thông báo
+
+Kiểm theo thứ tự — **danh sách đơn ở màn Duyệt đơn mới là nguồn sự thật**, chuông
+chỉ là tiện lợi. Đơn có trong danh sách nghĩa là hệ thống đã nhận, dù chuông im.
+
+1. Mở **Quản trị → Duyệt đơn**, **xoá hết bộ lọc** rồi tìm mã đơn. Có thì đơn vẫn
+   nguyên vẹn, chỉ hỏng phần báo tin.
+2. Xem log tìm nguyên nhân — cả hai trường hợp đều được ghi mức `error`:
+
+```bash
+docker logs vpp-prod-api --since 24h | grep NotificationsService
+```
+
+| Log báo                               | Nguyên nhân                                                                     |
+| ------------------------------------- | ------------------------------------------------------------------------------- |
+| `Không có quản trị viên nào để nhận…` | Không ai có vai trò admin — `VPP_ADMIN_GROUP` lệch tên nhóm ở PMH ID (mục dưới) |
+| `Không ghi được N thông báo…`         | Lỗi CSDL lúc ghi thông báo; đơn **vẫn được lưu**                                |
+
+3. Không có log nào mà chuông vẫn trống: người nhận có thể đã bấm "đọc tất cả",
+   hoặc admin đó chính là người gửi đơn (hệ thống không tự báo cho chính mình).
+
+```sql
+-- Ai đang là admin và có nhận được gì không
+SELECT name, role, disabled FROM users WHERE role = 'admin';
+SELECT created_at, title FROM notifications WHERE type = 'request.submitted'
+ORDER BY created_at DESC LIMIT 5;
+```
+
+> Chuông **không bao giờ** làm hỏng việc gửi đơn: nếu ghi thông báo lỗi, đơn vẫn
+> được lưu và nhân viên vẫn nhận được xác nhận thành công.
+
 ### Ai cũng là "nhân viên", không ai vào được quản trị
 
 Tên nhóm ở PMH ID khác `VPP_ADMIN_GROUP`. Xem `groups` thật trong `GET /api/me`

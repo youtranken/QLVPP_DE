@@ -85,17 +85,25 @@ export class RequestsService {
       await tx
         .insert(requestItems)
         .values(lines.map((line) => ({ ...line, requestId: request.id })));
+
+      // Audit ghi TRONG transaction để đơn và dấu vết của nó cùng sống chết.
+      // Ghi sau khi commit thì audit hỏng sẽ trả lỗi cho nhân viên trong khi đơn
+      // đã nằm trong CSDL — họ tưởng gửi trượt, bấm lại và nhận "đã có đơn trong kỳ".
+      await this.audit.log(
+        {
+          actor: { id: user.id, name: user.name },
+          action: 'request.create',
+          objectType: 'request',
+          objectId: request.id,
+          detail: { code: request.code, period, lineCount: lines.length },
+        },
+        tx,
+      );
       return request;
     });
 
-    await this.audit.log({
-      actor: { id: user.id, name: user.name },
-      action: 'request.create',
-      objectType: 'request',
-      objectId: created.id,
-      detail: { code: created.code, period, lineCount: lines.length },
-    });
-
+    // Thông báo nằm NGOÀI transaction và không bao giờ ném lỗi (xem
+    // NotificationsService): chuông hỏng không được phép chặn người ta gửi đơn.
     await this.notifications.notifyAdmins(
       {
         type: NOTIFICATION_TYPES.requestSubmitted,
