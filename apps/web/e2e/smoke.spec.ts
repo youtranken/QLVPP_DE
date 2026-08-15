@@ -58,7 +58,9 @@ test.describe('Quản trị viên', () => {
 
   test('được chọn món admin_only và bỏ qua khung ngày (CORE-16)', async ({ page }) => {
     await page.goto('/dang-ky');
-    await expect(page.locator('input[aria-label*="Giấy A4"]')).toBeVisible();
+    // Khớp ĐÚNG tên món trong danh mục mẫu, không khớp chuỗi con: danh mục thật
+    // có thể có nhiều món cùng chứa "Giấy A4" và khi đó phép khớp mờ sẽ hỏng.
+    await expect(page.getByLabel('Số lượng Giấy A4 (ram 500 tờ)')).toBeVisible();
   });
 
   test('giỏ cộng dồn món đã chọn', async ({ page }) => {
@@ -66,6 +68,28 @@ test.describe('Quản trị viên', () => {
     await page.locator('input[aria-label="Số lượng Bút bi xanh"]').fill('4');
     await expect(page.getByText('Đã chọn: 1 món')).toBeVisible();
     await expect(page.getByText('4 cây')).toBeVisible();
+  });
+
+  test('ô tìm lọc danh mục, gõ KHÔNG DẤU vẫn ra đúng món', async ({ page }) => {
+    await page.goto('/dang-ky');
+    await page.getByLabel('Tìm món').fill('but bi');
+
+    await expect(page.getByLabel('Số lượng Bút bi xanh')).toBeVisible();
+    // Món thuộc nhóm khác phải biến mất — nếu không thì ô tìm chỉ là trang trí.
+    await expect(page.getByLabel('Số lượng Sổ tay A5')).toHaveCount(0);
+
+    await page.getByLabel('Tìm món').fill('khong-co-mon-nao-ten-nhu-vay');
+    await expect(page.getByText(/Không có món nào khớp/)).toBeVisible();
+  });
+
+  test('dùng lại đơn gần nhất đổ sẵn nội dung vào giỏ', async ({ page }) => {
+    await page.goto('/dang-ky');
+    const nut = page.getByRole('button', { name: 'Dùng lại đơn gần nhất' });
+    await expect(nut).toBeVisible();
+    await nut.click();
+
+    await expect(page.getByText(/Đã lấy nội dung đơn VPP-/)).toBeVisible();
+    await expect(page.getByText(/Đã chọn: [1-9]\d* món/)).toBeVisible();
   });
 
   test('vượt giới hạn số lượng thì không gửi được', async ({ page }) => {

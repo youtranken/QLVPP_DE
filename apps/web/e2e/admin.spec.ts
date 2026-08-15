@@ -76,6 +76,43 @@ test.describe('Màn quản trị', () => {
   });
 
   /**
+   * Nhập danh mục phải XEM TRƯỚC rồi mới ghi. Test dừng ở bước xem trước và đóng
+   * modal — cố ý KHÔNG ghi, để lần chạy sau không thừa hưởng danh mục do test tạo.
+   */
+  test('nhập danh mục: xem trước phân loại đúng từng dòng', async ({ page }) => {
+    await page.goto('/quan-tri/danh-muc');
+    await page.getByRole('button', { name: 'Nhập từ file' }).click();
+
+    // File dùng dấu `;` như Excel bản tiếng Việt xuất ra.
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'danh-muc.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(
+        'Nhóm;Tên món;Đơn vị tính;Tối đa;Chỉ admin\n' +
+          'Nhóm Thử E2E;Món thử E2E;cái;5;\n' +
+          'Bút & Viết;Bút bi xanh;cây;20;\n' +
+          'Bút & Viết;;cây;5;\n',
+        'utf8',
+      ),
+    });
+
+    await expect(page.getByText('Thêm mới: 1')).toBeVisible();
+    await expect(page.getByText('Không đổi: 1')).toBeVisible();
+    await expect(page.getByText('Lỗi: 1')).toBeVisible();
+    await expect(page.getByText('Thiếu tên món')).toBeVisible();
+    await expect(page.getByText(/Nhóm mới: Nhóm Thử E2E/)).toBeVisible();
+
+    await page.getByRole('button', { name: 'Đóng' }).click();
+
+    // Tải lại rồi mới kiểm: modal đã đóng vẫn còn DOM, nên tìm chữ trên trang sẽ
+    // bắt phải bảng xem trước chứ không phải danh mục thật. Sau khi tải lại, còn
+    // thấy món này nghĩa là nó đã bị ghi xuống CSDL — đúng thứ cần bắt.
+    await page.reload();
+    await expect(page.getByRole('heading', { name: 'Danh mục văn phòng phẩm' })).toBeVisible();
+    await expect(page.getByText('Món thử E2E')).toHaveCount(0);
+  });
+
+  /**
    * Đổi khung ngày ảnh hưởng cả công ty nên màn này phải cho xem trước hậu quả
    * TRƯỚC khi lưu. Kiểm đúng điều đó: gõ số vào là phần xem trước đổi theo, và
    * bấm lưu xong thì trạng thái kỳ ở thanh trên cùng cũng đổi theo ngay.

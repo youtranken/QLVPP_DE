@@ -151,6 +151,13 @@
 - **Edge cases:** huỷ đơn đã `approved` → chặn; huỷ sau khi cửa sổ đóng → chặn; huỷ đơn không phải của mình → chặn (403).
 - **Priority:** **P1** · **Dependencies:** CORE-2.
 
+### CORE-2b — Tìm món & dùng lại đơn cũ `[✅ bổ sung sau, theo yêu cầu]`
+
+- **Persona:** NV · **Mục tiêu:** Tìm nhanh món trong danh mục và không phải chọn lại từ đầu mỗi kỳ. · **Lý do:** VPP hằng tháng gần như giống nhau; danh mục dài thì cuộn rất mất công.
+- **AC:** Ô tìm lọc theo tên món **và** tên nhóm, gõ **không dấu** vẫn ra; nút **Dùng lại đơn gần nhất**; nút **Sửa và gửi lại** ở đơn bị từ chối mở sẵn nội dung đơn đó.
+- **Edge cases:** món trong đơn cũ đã ngừng/bị xoá/chuyển thành chỉ-admin → **bỏ ra và nói rõ lý do**; số lượng vượt giới hạn mới → **hạ xuống** thay vì bỏ cả dòng; hai dòng cùng món → cộng dồn; dòng "Khác" giữ nguyên cả ảnh đính kèm; không tìm thấy món nào → gợi ý khai ở mục "Khác".
+- **Priority:** **P1** · **Dependencies:** CORE-2, CORE-9.
+
 ### CORE-9 — Đơn của tôi, lịch sử & gửi lại `[✅]`
 
 - **Persona:** NV · **Mục tiêu:** Xem đơn + trạng thái theo kỳ; gửi lại khi bị từ chối. · **Lý do:** Theo dõi và khắc phục.
@@ -289,6 +296,13 @@
 - **AC:** Khi có tài sản → áp vào header + báo cáo Excel; trước đó dùng theme trung tính.
 - **Edge cases:** chưa có logo → dùng đặt chỗ; logo sai kích thước/định dạng.
 - **Priority:** **P2** · **Dependencies:** tài sản thương hiệu **[⏳]**.
+
+### ADMIN-9 — Nhập danh mục từ Excel/CSV `[✅ bổ sung sau, theo yêu cầu]`
+
+- **Persona:** AD · **Mục tiêu:** Nạp/cập nhật danh mục hàng loạt từ file. · **Lý do:** Gõ tay hàng trăm món trên web vừa lâu vừa dễ sai.
+- **AC:** Nhận `.xlsx` và `.csv`; cột **Nhóm · Tên món · Đơn vị tính · Tối đa · Chỉ admin** (hai cột cuối không bắt buộc); **xem trước** từng dòng sẽ thêm/cập nhật/không đổi/lỗi rồi mới ghi; món trùng (nhóm + tên) được **cập nhật theo file**; nhóm chưa có thì tạo mới; ghi audit `catalog.import`.
+- **Edge cases:** việc nhập **KHÔNG xoá** món nào — file thiếu món thì món đó vẫn còn; tên gõ thiếu dấu vẫn khớp món cũ (không tạo bản sao); trùng dòng trong cùng file → chỉ dòng sau báo lỗi; trùng tên với nhiều món đang có → báo lỗi, không tự đoán; món đang ngừng mà file có → **bật lại**, ghi rõ ở bảng xem trước; dòng lỗi bị bỏ qua, các dòng còn lại vẫn ghi; file dùng dấu `;` (Excel bản Việt) vẫn đọc đúng; dòng chỉ có vài ô rời rạc vẫn bị kiểm chứ không nuốt im lặng.
+- **Priority:** **P1** · **Dependencies:** ADMIN-1, ADMIN-2.
 
 ### ADMIN-8 — Đổi khung ngày đăng ký `[✅ bổ sung sau, theo yêu cầu]`
 

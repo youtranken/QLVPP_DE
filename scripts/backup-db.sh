@@ -34,7 +34,10 @@ SIZE=$(du -h "$OUT" | cut -f1)
 echo "✓ Đã ghi $OUT ($SIZE)"
 
 # Dọn bản cũ, giữ $KEEP bản mới nhất.
-mapfile -t OLD < <(ls -1t "$BACKUP_DIR"/vpp-*.sql.gz 2>/dev/null | tail -n +$((KEEP + 1)) || true)
+# Sắp theo TÊN FILE (đã chứa mốc `YYYYMMDD-HHMMSS`) chứ không theo thời gian sửa
+# file: chép bản sao lưu từ máy khác về sẽ làm mtime mới tinh, và khi đó sắp theo
+# mtime sẽ xoá nhầm đúng những bản cần giữ.
+mapfile -t OLD < <(ls -1 "$BACKUP_DIR"/vpp-*.sql.gz 2>/dev/null | sort -r | tail -n +$((KEEP + 1)) || true)
 if [ ${#OLD[@]} -gt 0 ]; then
   printf '%s\n' "${OLD[@]}" | xargs rm -f
   echo "✓ Đã xoá ${#OLD[@]} bản sao lưu cũ (giữ $KEEP bản)"

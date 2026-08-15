@@ -154,9 +154,15 @@ export function MyRequestsPage() {
                         <Button
                           size="small"
                           icon={<RedoOutlined />}
-                          onClick={() => navigate(routes.register)}
+                          // Mang theo id đơn để màn đăng ký lấy sẵn nội dung —
+                          // bị từ chối vì một dòng thì không nên gõ lại cả đơn.
+                          onClick={() =>
+                            navigate(routes.register, {
+                              state: { copyFromRequestId: request.id },
+                            })
+                          }
                         >
-                          Gửi lại
+                          Sửa và gửi lại
                         </Button>
                       }
                     />

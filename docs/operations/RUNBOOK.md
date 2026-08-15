@@ -74,16 +74,24 @@ mới có migration đổi schema thì phải khôi phục CSDL từ bản sao l
 
 Đơn và nhật ký **giữ vô thời hạn** (SDD §9) nên sao lưu là bắt buộc.
 
+Stack production **tự sao lưu hằng ngày** — service `backup` chạy `pg_dump` lúc
+02:00 giờ VN, ghi vào `deploy/backups/`, giữ 14 bản gần nhất. Không phải đặt cron.
+
 ```bash
-bash scripts/backup-db.sh                 # ghi vào deploy/backups/, giữ 14 bản
+docker logs vpp-prod-backup --tail 20     # xem lần sao lưu gần nhất
+bash scripts/backup-db.sh                 # chạy tay ngay, cùng thư mục đích
 bash scripts/restore-db.sh deploy/backups/vpp-<stamp>.sql.gz
 ```
 
-Đặt lịch hằng ngày (Linux):
+| Biến          | Mặc định | Ý nghĩa                           |
+| ------------- | -------- | --------------------------------- |
+| `BACKUP_HOUR` | `2`      | Giờ chạy hằng ngày (0–23, giờ VN) |
+| `BACKUP_KEEP` | `14`     | Số bản giữ lại                    |
 
-```
-0 2 * * * cd /opt/DE-VPP && bash scripts/backup-db.sh >> /var/log/vpp-backup.log 2>&1
-```
+Service sao lưu **một lần ngay khi khởi động** rồi mới vào lịch — để sai mật khẩu
+hay sai cấu hình lộ ra ngay lúc triển khai, không phải đợi tới 2 giờ sáng.
+Bản dump được ghi ra `.partial` rồi mới đổi tên, nên đứt giữa chừng không để lại
+file trông như bản sao lưu hợp lệ nhưng thực ra cụt.
 
 **Sao lưu ảnh đính kèm** — ảnh nằm ở volume Docker, không nằm trong dump CSDL:
 

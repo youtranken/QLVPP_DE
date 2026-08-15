@@ -167,7 +167,7 @@ _Giờ:_ container đặt `TZ=Asia/Ho_Chi_Minh`.
 **Auth / hồ sơ (OIDC — chi tiết ở SSO-INTEGRATION §6):** `GET /auth/login` (→ IdP), `GET /auth/callback`, `POST /auth/logout` (local), `GET /auth/logout-global` (end_session), `POST /auth/backchannel-logout` (IdP→app), `GET /me`, `GET /registration/status`
 **Danh bạ/sự kiện:** `POST /webhooks/pmh-id` (HMAC), Directory sync job (M2M). _(Bỏ `/auth/login {email,password}` và `/me/change-password`.)_
 
-**Danh mục:** `GET /catalog` · admin: `POST/PATCH/DELETE /admin/categories`, `/admin/items`
+**Danh mục:** `GET /catalog` · admin: `POST/PATCH/DELETE /admin/categories`, `/admin/items`, `POST /admin/catalog/import/preview` (file), `POST /admin/catalog/import/apply`
 
 **Đơn:** `POST /requests`, `GET /requests/mine`, `GET /requests/:id`, `DELETE /requests/:id` (huỷ — chỉ khi `submitted` & còn trong khung ngày)
 · admin: `GET /requests?period=&departmentId=&status=&page=&pageSize=` (phân trang), `GET /requests/summary?period=`, `PATCH /requests/:id`

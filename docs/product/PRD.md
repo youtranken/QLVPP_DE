@@ -121,6 +121,7 @@ Mục tiêu: đưa toàn bộ quy trình lên web có ràng buộc nghiệp vụ
 - **FR-22** **Mỗi kỳ 1 đơn hiệu lực/người**; gửi 1 lần, **không tự sửa**.
 - **FR-23** Nhân viên **huỷ** đơn khi **chưa duyệt (`submitted`)** _và_ **còn trong khung ngày đăng ký**.
 - **FR-24** Xem **đơn của mình** + trạng thái + **lịch sử theo kỳ**.
+- **FR-25** **Tìm món** trong danh mục (gõ không dấu vẫn ra) và **dùng lại đơn cũ** khi đăng ký. **[✅ bổ sung sau theo yêu cầu]**
 
 ### 6.4 Duyệt & giao (Admin)
 
@@ -137,6 +138,7 @@ Mục tiêu: đưa toàn bộ quy trình lên web có ràng buộc nghiệp vụ
 - **FR-42** **Thống kê nhiều kỳ** bằng **biểu đồ** (theo tháng, theo phòng ban).
 - **FR-43** **Nhật ký audit**: ai duyệt/từ chối/giao và thời điểm.
 - **FR-44** Admin **tự đổi khung ngày đăng ký** trên web (màn Cài đặt), có xem trước ảnh hưởng và ghi audit. **[✅ bổ sung sau theo yêu cầu]**
+- **FR-45** Admin **nhập danh mục hàng loạt** từ Excel/CSV, có **xem trước** từng dòng trước khi ghi; không xoá món nào. **[✅ bổ sung sau theo yêu cầu]**
 
 ### 6.6 Thông báo
 

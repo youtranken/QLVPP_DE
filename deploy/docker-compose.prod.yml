@@ -147,6 +147,33 @@ services:
       driver: json-file
       options: { max-size: '10m', max-file: '5' }
 
+  # Sao lưu CSDL tự động. Tách thành service riêng thay vì nhét vào api: pg_dump là
+  # công cụ của Postgres, thêm nó vào image api chỉ để chạy mỗi ngày một lần là làm
+  # nặng thứ chạy 24/7 — mà phiên bản công cụ cũng cần khớp với server.
+  backup:
+    image: postgres:16-alpine
+    container_name: vpp-prod-backup
+    restart: always
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:?thiếu POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER:?thiếu POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB:?thiếu POSTGRES_DB}
+      # Giờ chạy hằng ngày (0–23, giờ VN) và số bản giữ lại.
+      BACKUP_HOUR: ${BACKUP_HOUR:-2}
+      BACKUP_KEEP: ${BACKUP_KEEP:-14}
+      TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - ./backups:/backups
+      - ./backup-loop.sh:/backup-loop.sh:ro
+    entrypoint: ['/bin/sh', '/backup-loop.sh']
+    networks: [vpp-prod-net]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '5' }
+
 networks:
   vpp-prod-net:
     name: vpp-prod-net

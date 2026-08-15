@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, ImportOutlined, PlusOutlined } from '@ant-design/icons';
 import { MAX_ITEM_QTY } from '@vpp/shared';
 import {
   Alert,
@@ -21,6 +21,7 @@ import {
 } from 'antd';
 import { useState } from 'react';
 import { ImagePicker } from '../../components/ImagePicker';
+import { ImportCatalogModal } from './ImportCatalogModal';
 import { ApiError } from '../../lib/api';
 import {
   useDeleteCategory,
@@ -44,6 +45,7 @@ interface ItemFormValues {
 /** Quản lý danh mục VPP: nhóm và món (ADMIN-1/2). */
 export function AdminCatalogPage() {
   const { message } = App.useApp();
+  const [importOpen, setImportOpen] = useState(false);
   const { data: catalog, isPending } = useCatalog(true);
   const saveCategory = useSaveCategory();
   const deleteCategory = useDeleteCategory();
@@ -75,13 +77,18 @@ export function AdminCatalogPage() {
         <Typography.Title level={4} style={{ margin: 0 }}>
           Danh mục văn phòng phẩm
         </Typography.Title>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setCategoryModal({ name: '' })}
-        >
-          Thêm nhóm
-        </Button>
+        <Flex gap={8} wrap>
+          <Button icon={<ImportOutlined />} onClick={() => setImportOpen(true)}>
+            Nhập từ file
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setCategoryModal({ name: '' })}
+          >
+            Thêm nhóm
+          </Button>
+        </Flex>
       </Flex>
 
       <Alert
@@ -327,6 +334,8 @@ export function AdminCatalogPage() {
           </Form.Item>
         </Form>
       </Modal>
+
+      <ImportCatalogModal open={importOpen} onClose={() => setImportOpen(false)} />
     </Flex>
   );
 }

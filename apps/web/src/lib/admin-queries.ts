@@ -259,3 +259,34 @@ export function useUpdateRegistrationWindow() {
     },
   });
 }
+
+/** Nhập danh mục từ file (ADMIN-9) — xem trước ở component, mutation chỉ lo phần GHI. */
+export interface DongXemTruoc {
+  dong: number;
+  nhom: string;
+  ten: string;
+  donVi: string;
+  toiDa: number;
+  chiAdmin: boolean;
+  hanhDong: 'them' | 'capNhat' | 'khongDoi' | 'loi';
+  ghiChu: string;
+}
+
+export interface KetQuaXemTruoc {
+  dong: DongXemTruoc[];
+  tomTat: { them: number; capNhat: number; khongDoi: number; loi: number };
+  nhomMoi: string[];
+}
+
+export function useApplyCatalogImport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (dong: DongXemTruoc[]) =>
+      api.post<{ daThem: number; daCapNhat: number; nhomDaTao: number; boQua: number }>(
+        '/admin/catalog/import/apply',
+        { dong },
+      ),
+    // Danh mục đổi thì màn đăng ký của mọi người phải thấy ngay.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['catalog'] }),
+  });
+}
