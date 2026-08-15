@@ -31,8 +31,22 @@ export const UpdateCategorySchema = CreateCategorySchema.partial().refine(
   { message: 'Không có trường nào để cập nhật' },
 );
 
+/**
+ * Mã món do admin đặt. Ô trống trên form gửi lên chuỗi rỗng — quy về `null` để
+ * CSDL chỉ có một cách biểu diễn "chưa có mã", nếu không index duy nhất sẽ coi
+ * mỗi chuỗi rỗng là một mã thật và món thứ hai không lưu được.
+ */
+const code = z
+  .string()
+  .trim()
+  .max(30, 'Mã món tối đa 30 ký tự')
+  .regex(/^[A-Za-z0-9._-]*$/, 'Mã món chỉ gồm chữ, số và các dấu . _ -')
+  .transform((value) => value || null)
+  .nullable();
+
 export const CreateItemSchema = z.object({
   categoryId: z.string().uuid(),
+  code: code.optional(),
   name,
   unit,
   /** Món chỉ admin được đăng ký (vd giấy A4). */

@@ -129,7 +129,7 @@ erDiagram
 | **users**         | id (uuid), **pmh_sub** (unique), email, name, employee_code, **groups** (text[]), **department**, role (`admin`\|`member`), disabled, source (`login`\|`directory`), last_login_at, created_at, updated_at — _KHÔNG có password (xem SSO-INTEGRATION §4)_ |
 | **app_sessions**  | id (uuid = cookie), user_id, **id_token**, **access_token**, **refresh_token**, access_expires_at, session_expires_at, created_at — _BFF giữ token OIDC; không mật khẩu_                                                                                  |
 | **categories**    | id, name, is_other, sort_order                                                                                                                                                                                                                            |
-| **items**         | id, category_id, name, unit, **admin_only** (A4), **max_qty**=20, active, sort_order, **image_path** (ảnh minh hoạ do admin tải lên)                                                                                                                      |
+| **items**         | id, category_id, **code** (mã món do admin đặt — không trùng, KHÔNG phân biệt hoa thường; để trống được), name, unit, **admin_only** (A4), **max_qty**=20, active, sort_order, **image_path** (ảnh minh hoạ do admin tải lên)                             |
 | **requests**      | id, code (unique), user_id, department_id, **period** (YYYY-MM), **status** (submitted/approved/rejected/delivered/cancelled), note, **reject_reason**, approved_by, approved_at, delivered_at, reviewed_by, created_at, updated_at                       |
 | **request_items** | id, request_id (cascade), item_id (nullable=Khác), name, unit, quantity, **delivered**, delivered_qty, **attachment_path**, note                                                                                                                          |
 | **notifications** | id, user_id, type, title, body, request_id, read_at, created_at                                                                                                                                                                                           |
@@ -170,7 +170,7 @@ _Giờ:_ container đặt `TZ=Asia/Ho_Chi_Minh`.
 **Danh mục:** `GET /catalog` · admin: `POST/PATCH/DELETE /admin/categories`, `/admin/items`, `POST /admin/catalog/import/preview` (file), `POST /admin/catalog/import/apply`
 
 **Đơn:** `POST /requests`, `GET /requests/mine`, `GET /requests/:id`, `DELETE /requests/:id` (huỷ — chỉ khi `submitted` & còn trong khung ngày)
-· admin: `GET /requests?period=&departmentId=&status=&page=&pageSize=` (phân trang), `GET /requests/summary?period=`, `PATCH /requests/:id`
+· admin: `GET /requests?period=&departmentId=&status=&page=&pageSize=` (phân trang), `GET /requests/items?…` (mỗi dòng một MÓN — bảng ở trang chủ quản trị), `GET /requests/:id` (kèm tên người/phòng ban), `GET /requests/summary?period=`, `PATCH /requests/:id`
 · **duyệt:** `POST /requests/:id/approve`, `POST /requests/:id/reject {reason}`
 · **giao** (chỉ đơn đã duyệt — BR-09): `POST /requests/:id/items/:lineId/deliver`, `POST /requests/:id/deliver-all`, `POST /requests/:id/undeliver-all`
 

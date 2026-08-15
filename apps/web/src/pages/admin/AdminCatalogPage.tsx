@@ -171,6 +171,12 @@ export function AdminCatalogPage() {
                       <Typography.Text type="secondary">—</Typography.Text>
                     ),
                 },
+                {
+                  title: 'Mã',
+                  dataIndex: 'code',
+                  width: 120,
+                  render: (value: string | null) => value || '—',
+                },
                 { title: 'Tên món', dataIndex: 'name', minWidth: 220 },
                 { title: 'ĐVT', dataIndex: 'unit', width: 100 },
                 { title: 'Tối đa', dataIndex: 'maxQty', width: 90, align: 'center' },
@@ -297,6 +303,19 @@ export function AdminCatalogPage() {
           layout="vertical"
           initialValues={{ adminOnly: false, active: true, maxQty: MAX_ITEM_QTY, imagePath: null }}
         >
+          <Form.Item
+            name="code"
+            label="Mã món"
+            // Không bắt buộc: công ty chưa có bộ mã vật tư vẫn dùng bình thường.
+            rules={[
+              {
+                pattern: /^[A-Za-z0-9._-]{0,30}$/,
+                message: 'Tối đa 30 ký tự, chỉ gồm chữ, số và các dấu . _ -',
+              },
+            ]}
+          >
+            <Input placeholder="vd BUT-001 (để trống cũng được)" />
+          </Form.Item>
           <Form.Item
             name="name"
             label="Tên món"

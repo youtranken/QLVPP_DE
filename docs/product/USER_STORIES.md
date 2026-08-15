@@ -297,6 +297,20 @@
 - **Edge cases:** chưa có logo → dùng đặt chỗ; logo sai kích thước/định dạng.
 - **Priority:** **P2** · **Dependencies:** tài sản thương hiệu **[⏳]**.
 
+### CORE-10b — Danh sách đăng ký theo từng món ở trang chủ `[✅ bổ sung sau, theo yêu cầu]`
+
+- **Persona:** AD · **Mục tiêu:** Vào trang chủ là thấy ngay phòng nào xin món gì, bao nhiêu. · **Lý do:** Bảng điều khiển cũ chỉ có số liệu tổng, muốn biết chi tiết phải mở từng đơn.
+- **AC:** Bảng ở `/quan-tri`, **mỗi dòng một món** (không phải một đơn), **không** có tiêu đề "Duyệt đơn đăng ký"; cột **STT · Mã · Tên món · ĐVT · SL · Người đăng ký · Phòng ban · Kỳ · Trạng thái**; lọc theo trạng thái; phân trang 10 dòng; **bấm vào dòng mở đúng đơn chứa món đó** để duyệt (việc duyệt vẫn theo cả đơn).
+- **Edge cases:** STT đánh số **liên tục qua các trang**, không quay về 1; dòng "Khác" và món chưa đặt mã hiện "—"; mã lấy từ **danh mục hiện hành** nên admin sửa mã thì bảng đổi theo; trang `/quan-tri/don` vẫn giữ để lọc sâu theo kỳ/phòng ban.
+- **Priority:** **P1** · **Dependencies:** CORE-10, ADMIN-10.
+
+### ADMIN-10 — Mã món trong danh mục `[✅ bổ sung sau, theo yêu cầu]`
+
+- **Persona:** AD · **Mục tiêu:** Đặt mã cho từng món VPP. · **Lý do:** Khớp với bộ mã vật tư công ty đang dùng ngoài hệ thống.
+- **AC:** Ô **Mã món** khi tạo/sửa món (**không bắt buộc**, tối đa 30 ký tự, chỉ chữ/số/`. _ -`); cột Mã ở màn danh mục; nhập được từ file qua cột **Mã**.
+- **Edge cases:** mã **không trùng** nhau, so khớp **KHÔNG phân biệt hoa thường** (`BUT-001` ≡ `but-001`) — chặn ở cả form, API và **index duy nhất của CSDL**; để trống được và nhiều món cùng để trống là bình thường; file nhập **không có cột Mã** thì mã đang có **giữ nguyên** (không bị xoá); ô Mã để trống trong file _có_ cột Mã = gỡ mã.
+- **Priority:** **P1** · **Dependencies:** ADMIN-1, ADMIN-9.
+
 ### ADMIN-9 — Nhập danh mục từ Excel/CSV `[✅ bổ sung sau, theo yêu cầu]`
 
 - **Persona:** AD · **Mục tiêu:** Nạp/cập nhật danh mục hàng loạt từ file. · **Lý do:** Gõ tay hàng trăm món trên web vừa lâu vừa dễ sai.

@@ -30,6 +30,12 @@ export class AdminRequestsController {
     return this.admin.list(query);
   }
 
+  /** Danh sách theo TỪNG MÓN — bảng ở trang chủ quản trị (CORE-10b). */
+  @Get('items')
+  listItems(@Query(new ZodPipe(ListRequestsQuerySchema)) query: ListRequestsQuery) {
+    return this.admin.listItems(query);
+  }
+
   /** Tổng hợp theo món trong kỳ — cơ sở cho báo cáo Excel (REPORT-1). */
   @Get('summary')
   summary(
@@ -37,6 +43,18 @@ export class AdminRequestsController {
     @Query('departmentId') departmentId?: string,
   ) {
     return this.admin.summary(period, departmentId);
+  }
+
+  /**
+   * Một đơn kèm tên người/phòng ban, cho ngăn kéo duyệt.
+   *
+   * PHẢI khai SAU mọi đường dẫn tĩnh (`items`, `summary`): Nest so khớp theo thứ
+   * tự khai báo, đặt trước thì `:id` nuốt luôn `/summary` và biến nó thành lỗi
+   * "id không phải UUID".
+   */
+  @Get(':id')
+  getOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.admin.getOne(id);
   }
 
   @Post(':id/approve')

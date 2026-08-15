@@ -34,6 +34,8 @@ export interface AppSettings {
 export interface CatalogItem {
   id: string;
   categoryId: string;
+  /** Mã món do admin đặt; null = chưa đặt mã. */
+  code: string | null;
   name: string;
   unit: string;
   adminOnly: boolean;

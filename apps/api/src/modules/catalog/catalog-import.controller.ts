@@ -28,6 +28,7 @@ const MAX_IMPORT_BYTES = 2 * 1024 * 1024;
 const DongSchema = z
   .object({
     dong: z.number().int(),
+    ma: z.string().max(30),
     nhom: z.string().max(120),
     ten: z.string().max(120),
     donVi: z.string().max(30),

@@ -1,4 +1,5 @@
 import { MAX_ITEM_QTY } from '@vpp/shared';
+import { sql } from 'drizzle-orm';
 import { boolean, index, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
 /** Nhóm danh mục VPP. `isOther=true` = nhóm "Khác" (cho phép tự nhập tên + đính ảnh). */
@@ -17,6 +18,11 @@ export const items = pgTable(
     categoryId: uuid('category_id')
       .notNull()
       .references(() => categories.id, { onDelete: 'restrict' }),
+    /**
+     * Mã món do admin tự đặt (vd `BUT-001`). Để trống được — công ty nào chưa có
+     * bộ mã vật tư thì vẫn dùng hệ thống bình thường.
+     */
+    code: text('code'),
     name: text('name').notNull(),
     unit: text('unit').notNull(),
     adminOnly: boolean('admin_only').notNull().default(false),
@@ -33,5 +39,13 @@ export const items = pgTable(
     index('items_category_active_idx').on(table.categoryId, table.active),
     /** Không cho trùng tên món trong cùng một nhóm (cũng giúp seed chạy lại được). */
     uniqueIndex('items_category_name_idx').on(table.categoryId, table.name),
+    /**
+     * Mã món không được trùng, và **không phân biệt hoa thường**: `BUT-001` với
+     * `but-001` phải là một, nếu không hai người nhập hai kiểu sẽ ra hai món.
+     * Index từng phần vì mã được phép để trống — nhiều món chưa có mã là bình thường.
+     */
+    uniqueIndex('items_code_idx')
+      .on(sql`upper(${table.code})`)
+      .where(sql`${table.code} IS NOT NULL`),
   ],
 );

@@ -151,6 +151,19 @@ check "giao toàn bộ ⇒ đơn delivered" "delivered" "$(node -e "process.stdo
 json -b jar-admin.txt -X POST "$API/api/admin/requests/$RID/undeliver-all" > ud.json
 check "hoàn tác ⇒ về approved" "approved" "$(node -e "process.stdout.write(require('./ud.json').status)")"
 
+echo "── Danh sách theo từng món (trang chủ quản trị) ─────────"
+json -b jar-admin.txt "$API/api/admin/requests/items?pageSize=50" > dsm.json
+check "mỗi dòng là một món của đơn vừa tạo" "3" "$(node -e "
+const d = require('./dsm.json');
+process.stdout.write(String(d.items.filter(r => r.requestId === '$RID').length));")"
+check "dòng có đủ tên người và phòng ban" "1" "$(node -e "
+const r = require('./dsm.json').items.find(x => x.requestId === '$RID');
+process.stdout.write(r && r.userName && r.departmentName ? '1' : '0');")"
+# Đường dẫn tĩnh phải được so khớp TRƯỚC ':id' — đặt sai thứ tự thì /summary và
+# /items biến thành "id không phải UUID". Đã xảy ra một lần.
+check "lấy được một đơn kèm tên người" "1" "$(json -b jar-admin.txt "$API/api/admin/requests/$RID" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const r=JSON.parse(d);process.stdout.write(r.userName && r.items.length===3 ? '1':'0')})")"
+check "NV gọi danh sách theo món bị chặn" "403" "$(code -b jar-nv.txt "$API/api/admin/requests/items")"
+
 echo "── Upload ảnh ───────────────────────────────────────────"
 node -e "require('fs').writeFileSync('a.png',Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==','base64'))"
 node -e "require('fs').writeFileSync('a.txt','x')"

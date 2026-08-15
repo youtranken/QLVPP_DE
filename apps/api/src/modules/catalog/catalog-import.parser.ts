@@ -13,6 +13,8 @@ const MAX_TOI_DA = 999;
 export type HanhDong = 'them' | 'capNhat' | 'khongDoi' | 'loi';
 
 export interface DongXemTruoc {
+  /** Mã món; chuỗi rỗng = để trống (danh mục cho phép không có mã). */
+  ma: string;
   /** Số dòng trong file (tính cả dòng tiêu đề) để người dùng còn tìm ra mà sửa. */
   dong: number;
   nhom: string;
@@ -31,6 +33,7 @@ export interface DanhMucHienCo {
     id: string;
     categoryId: string;
     name: string;
+    code: string | null;
     unit: string;
     maxQty: number;
     adminOnly: boolean;
@@ -47,6 +50,7 @@ export interface KetQuaXemTruoc {
 
 /** Tên cột chấp nhận được, so khớp sau khi bỏ dấu và hạ chữ thường. */
 const COT = {
+  ma: ['ma', 'ma mon', 'ma vpp', 'ma vat tu', 'code', 'sku'],
   nhom: ['nhom', 'nhom vpp', 'danh muc', 'loai'],
   ten: ['ten mon', 'ten', 'ten vat tu', 'ten vpp', 'mon'],
   donVi: ['don vi tinh', 'dvt', 'don vi'],
@@ -105,15 +109,27 @@ export function xemTruocNhap(luoi: string[][], hienCo: DanhMucHienCo): KetQuaXem
     else monTheoKhoa.set(khoa, [item]);
   }
 
+  // Mã của những món KHÁC đang giữ, để bắt việc gán trùng mã.
+  const maDangDung = new Map<string, string>(); // MÃ hoa → id món
+  for (const item of hienCo.items) {
+    if (item.code) maDangDung.set(item.code.toUpperCase(), item.id);
+  }
+
+  // File KHÔNG có cột Mã thì tuyệt đối không đụng tới mã đang có: nếu coi ô trống
+  // là "xoá mã", một file cũ nhập vào sẽ thổi bay toàn bộ mã của danh mục.
+  const coCotMa = cot.ma !== undefined;
+
   const ket: DongXemTruoc[] = [];
   const nhomMoi = new Set<string>();
   const daGap = new Map<string, number>();
+  const maDaGap = new Map<string, number>();
 
   for (let i = hangTieuDe + 1; i < luoi.length; i += 1) {
     const hang = luoi[i];
     const soDong = i + 1;
     const o = (index?: number) => (index === undefined ? '' : (hang[index] ?? '').trim());
 
+    const ma = o(cot.ma);
     const nhom = o(cot.nhom);
     const ten = o(cot.ten);
     const donVi = o(cot.donVi);
@@ -128,6 +144,7 @@ export function xemTruocNhap(luoi: string[][], hienCo: DanhMucHienCo): KetQuaXem
     const loi = (ghiChu: string): void => {
       ket.push({
         dong: soDong,
+        ma,
         nhom,
         ten,
         donVi,
@@ -169,6 +186,11 @@ export function xemTruocNhap(luoi: string[][], hienCo: DanhMucHienCo): KetQuaXem
       continue;
     }
 
+    if (ma && !/^[A-Za-z0-9._-]{1,30}$/.test(ma)) {
+      loi('Mã món tối đa 30 ký tự, chỉ gồm chữ, số và các dấu . _ -');
+      continue;
+    }
+
     const khoaFile = `${khongDau(nhom)}|${khongDau(ten)}`;
     const dongTruoc = daGap.get(khoaFile);
     if (dongTruoc !== undefined) {
@@ -177,11 +199,41 @@ export function xemTruocNhap(luoi: string[][], hienCo: DanhMucHienCo): KetQuaXem
     }
     daGap.set(khoaFile, soDong);
 
+    // Mã so khớp KHÔNG phân biệt hoa thường, giống ràng buộc ở CSDL — nếu chỉ
+    // kiểm y nguyên chữ thì bảng xem trước báo sạch rồi lúc ghi mới vỡ.
+    if (ma) {
+      const maHoa = ma.toUpperCase();
+      const dongTrungMa = maDaGap.get(maHoa);
+      if (dongTrungMa !== undefined) {
+        loi(`Mã "${ma}" trùng với dòng ${dongTrungMa} trong cùng file`);
+        continue;
+      }
+      maDaGap.set(maHoa, soDong);
+    }
+
     const nhomCu = nhomTheoTen.get(khongDau(nhom));
+    const trung = nhomCu ? (monTheoKhoa.get(`${nhomCu.id}|${khongDau(ten)}`) ?? []) : [];
+    if (trung.length > 1) {
+      loi('Trùng tên với nhiều món đang có — hãy sửa tay trên web trước');
+      continue;
+    }
+    const monCu = trung[0];
+
+    // Mã đang thuộc về một món KHÁC ⇒ chặn. Gán đè sẽ làm hai món cùng mã, mà
+    // CSDL cũng không cho, nên thà báo ngay ở bảng xem trước.
+    if (ma) {
+      const chuSoHuu = maDangDung.get(ma.toUpperCase());
+      if (chuSoHuu && chuSoHuu !== monCu?.id) {
+        loi(`Mã "${ma}" đang được dùng cho món khác`);
+        continue;
+      }
+    }
+
     if (!nhomCu) {
       nhomMoi.add(nhom);
       ket.push({
         dong: soDong,
+        ma,
         nhom,
         ten,
         donVi,
@@ -193,19 +245,25 @@ export function xemTruocNhap(luoi: string[][], hienCo: DanhMucHienCo): KetQuaXem
       continue;
     }
 
-    const trung = monTheoKhoa.get(`${nhomCu.id}|${khongDau(ten)}`) ?? [];
-    if (trung.length > 1) {
-      loi('Trùng tên với nhiều món đang có — hãy sửa tay trên web trước');
-      continue;
-    }
-
-    const monCu = trung[0];
     if (!monCu) {
-      ket.push({ dong: soDong, nhom, ten, donVi, toiDa, chiAdmin, hanhDong: 'them', ghiChu: '' });
+      ket.push({
+        dong: soDong,
+        ma,
+        nhom,
+        ten,
+        donVi,
+        toiDa,
+        chiAdmin,
+        hanhDong: 'them',
+        ghiChu: '',
+      });
       continue;
     }
 
     const doi: string[] = [];
+    if (coCotMa && (monCu.code ?? '') !== ma) {
+      doi.push(ma ? `mã ${monCu.code ?? '(trống)'} → ${ma}` : 'gỡ mã');
+    }
     if (monCu.unit !== donVi) doi.push(`đơn vị ${monCu.unit} → ${donVi}`);
     if (monCu.maxQty !== toiDa) doi.push(`tối đa ${monCu.maxQty} → ${toiDa}`);
     if (monCu.adminOnly !== chiAdmin) doi.push(chiAdmin ? 'thành chỉ-admin' : 'bỏ chỉ-admin');
@@ -215,6 +273,9 @@ export function xemTruocNhap(luoi: string[][], hienCo: DanhMucHienCo): KetQuaXem
 
     ket.push({
       dong: soDong,
+      // File không có cột Mã ⇒ trả lại mã ĐANG CÓ, để bước ghi không hiểu nhầm
+      // là phải xoá mã đi.
+      ma: coCotMa ? ma : (monCu.code ?? ''),
       nhom,
       ten,
       donVi,

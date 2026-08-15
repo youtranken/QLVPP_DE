@@ -81,8 +81,8 @@ Stack dùng project `vpp`, mạng `vpp-net`, volume `vpp_pgdata`/`vpp_uploads` v
 Chạy lại bộ kiểm thử vào chính stack này (mặc định đã trỏ sẵn vào đây):
 
 ```bash
-pnpm smoke:api      # 36 mục kiểm, qua HTTP thật
-pnpm test:e2e       # 30 test Playwright, desktop + mobile
+pnpm smoke:api      # 51 mục kiểm, qua HTTP thật
+pnpm test:e2e       # 40 test Playwright, desktop + mobile
 ```
 
 ### Cách 2 — Chạy trên máy, chỉ CSDL trong Docker (có hot-reload)
@@ -162,15 +162,15 @@ Mở `http://localhost:8090` → bấm **Đăng nhập bằng PMH ID** → chọ
 
 ### Quản trị viên (M4)
 
-| Đường dẫn            | Màn hình                                                                     |
-| -------------------- | ---------------------------------------------------------------------------- |
-| `/quan-tri`          | Bảng điều khiển: thống kê nhiều kỳ, theo phòng ban, tỉ lệ đã giao            |
-| `/quan-tri/don`      | Duyệt đơn: lọc + phân trang, duyệt/từ chối, giao, điều chỉnh                 |
-| `/quan-tri/tong-hop` | Tổng hợp theo món + tải Excel trình ký                                       |
-| `/quan-tri/danh-muc` | Quản lý nhóm và món (ảnh, admin_only, tối đa, ngừng/bật) + nhập từ Excel/CSV |
-| `/quan-tri/danh-ba`  | Danh bạ nhân viên + nút Đồng bộ ngay                                         |
-| `/quan-tri/nhat-ky`  | Nhật ký hoạt động, lọc theo hành động                                        |
-| `/quan-tri/cai-dat`  | Cài đặt: đổi khung ngày đăng ký, xem trước ảnh hưởng trước khi lưu           |
+| Đường dẫn            | Màn hình                                                                                                          |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `/quan-tri`          | Trang chủ quản trị: danh sách đăng ký **theo từng món** của các phòng ban (bấm dòng để duyệt) + thống kê nhiều kỳ |
+| `/quan-tri/don`      | Duyệt đơn: lọc + phân trang, duyệt/từ chối, giao, điều chỉnh                                                      |
+| `/quan-tri/tong-hop` | Tổng hợp theo món + tải Excel trình ký                                                                            |
+| `/quan-tri/danh-muc` | Quản lý nhóm và món (mã, ảnh, admin_only, tối đa, ngừng/bật) + nhập từ Excel/CSV                                  |
+| `/quan-tri/danh-ba`  | Danh bạ nhân viên + nút Đồng bộ ngay                                                                              |
+| `/quan-tri/nhat-ky`  | Nhật ký hoạt động, lọc theo hành động                                                                             |
+| `/quan-tri/cai-dat`  | Cài đặt: đổi khung ngày đăng ký, xem trước ảnh hưởng trước khi lưu                                                |
 
 Khung app có menu theo vai trò, chuông thông báo (số chưa đọc), đăng xuất local/toàn hệ
 và banner trạng thái cửa sổ đăng ký. Giao diện dùng **theme trung tính đặt chỗ** — đổi

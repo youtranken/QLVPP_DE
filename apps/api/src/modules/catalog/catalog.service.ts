@@ -134,6 +134,14 @@ export class CatalogService {
     try {
       return await action();
     } catch (error) {
+      // Nói rõ trùng CÁI GÌ: sửa một món mà bị báo "tên đã tồn tại" trong khi
+      // thật ra trùng mã thì người dùng sẽ sửa mãi cái tên vốn không sai.
+      if (isUniqueViolation(error, 'items_code_idx')) {
+        throw new ConflictException({
+          code: ErrorCode.DUPLICATE_NAME,
+          message: 'Mã món này đã được dùng cho món khác (không phân biệt hoa thường).',
+        });
+      }
       if (isUniqueViolation(error)) {
         throw new ConflictException({
           code: ErrorCode.DUPLICATE_NAME,

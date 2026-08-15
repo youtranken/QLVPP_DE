@@ -49,6 +49,28 @@ test.describe('Màn quản trị', () => {
     );
   });
 
+  test('trang chủ có danh sách đăng ký theo món, bấm dòng mở được đơn để duyệt', async ({
+    page,
+  }) => {
+    await page.goto('/quan-tri');
+
+    // Yêu cầu: KHÔNG còn tiêu đề "Duyệt đơn đăng ký" ở trang chủ.
+    await expect(page.getByRole('heading', { name: 'Duyệt đơn đăng ký' })).toHaveCount(0);
+
+    for (const cot of ['STT', 'Mã', 'Tên món', 'SL', 'Người đăng ký', 'Phòng ban']) {
+      await expect(page.getByRole('columnheader', { name: cot, exact: true })).toBeVisible();
+    }
+
+    // Dòng 0 là tiêu đề, dòng 1 là bản ghi đầu tiên — bám theo vai trò ARIA thay
+    // vì thẻ tbody/td, vì AntD dựng thêm dòng đo đạc ẩn trong thân bảng.
+    const dongDau = page.getByRole('row').nth(1);
+    await expect(dongDau.getByRole('cell').first()).toHaveText('1');
+
+    await dongDau.click();
+    // Ngăn kéo duyệt mở đúng đơn chứa món vừa bấm.
+    await expect(page.getByText(/VPP-\d{4}-\d{2}-\d{4}/).first()).toBeVisible();
+  });
+
   test('bảng điều khiển vẽ được biểu đồ', async ({ page }) => {
     await page.goto('/quan-tri');
     await expect(page.getByText('Tổng số đơn')).toBeVisible();
@@ -61,6 +83,7 @@ test.describe('Màn quản trị', () => {
     await expect(page.getByRole('heading', { name: 'Danh mục văn phòng phẩm' })).toBeVisible();
     await expect(page.getByText('Bút & Viết')).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Chỉ admin' }).first()).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Mã', exact: true }).first()).toBeVisible();
   });
 
   test('danh bạ hiện người chưa từng đăng nhập', async ({ page }) => {

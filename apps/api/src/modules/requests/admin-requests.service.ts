@@ -1,9 +1,9 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { canDeliverRequest, ErrorCode, periodForDate } from '@vpp/shared';
-import { and, desc, eq, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, sql, type SQL } from 'drizzle-orm';
 import type { AuthenticatedUser } from '../../auth/auth.service';
 import { DB, type Db } from '../../infra/db/db.module';
-import { departments, requestItems, requests, users } from '../../infra/db/schema';
+import { departments, items, requestItems, requests, users } from '../../infra/db/schema';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService, NOTIFICATION_TYPES } from '../notifications/notifications.service';
 import { SettingsService } from '../settings/settings.service';
@@ -21,6 +21,89 @@ export class AdminRequestsService {
     private readonly notifications: NotificationsService,
     private readonly settings: SettingsService,
   ) {}
+
+  /**
+   * Danh sách theo TỪNG MÓN được đăng ký — mỗi dòng một món, không phải một đơn
+   * (CORE-10b). Dùng cho bảng ở trang chủ quản trị: nhìn được ngay phòng nào xin
+   * món gì, bao nhiêu, mà không phải mở từng đơn.
+   *
+   * `requestId` trả kèm để bấm vào dòng là mở đúng đơn chứa nó mà duyệt — việc
+   * duyệt vẫn theo cả đơn.
+   */
+  async listItems(query: ListRequestsQuery) {
+    const filters: SQL[] = [];
+    if (query.period) filters.push(eq(requests.period, query.period));
+    if (query.departmentId) filters.push(eq(requests.departmentId, query.departmentId));
+    if (query.status) filters.push(eq(requests.status, query.status));
+    const where = filters.length ? and(...filters) : undefined;
+
+    const [rows, [{ total }]] = await Promise.all([
+      this.db
+        .select({
+          id: requestItems.id,
+          requestId: requests.id,
+          requestCode: requests.code,
+          period: requests.period,
+          status: requests.status,
+          createdAt: requests.createdAt,
+          // Mã lấy từ DANH MỤC chứ không chụp vào dòng đơn: admin sửa mã thì báo
+          // cáo phải hiện mã hiện hành. Dòng "Khác" không có món nên không có mã.
+          itemCode: items.code,
+          name: requestItems.name,
+          unit: requestItems.unit,
+          quantity: requestItems.quantity,
+          deliveredQty: requestItems.deliveredQty,
+          userName: users.name,
+          departmentName: departments.name,
+        })
+        .from(requestItems)
+        .innerJoin(requests, eq(requests.id, requestItems.requestId))
+        .innerJoin(users, eq(users.id, requests.userId))
+        .leftJoin(items, eq(items.id, requestItems.itemId))
+        .leftJoin(departments, eq(departments.id, requests.departmentId))
+        .where(where)
+        .orderBy(desc(requests.createdAt), asc(requestItems.name))
+        .limit(query.pageSize)
+        .offset((query.page - 1) * query.pageSize),
+      this.db
+        .select({ total: sql<number>`count(*)::int` })
+        .from(requestItems)
+        .innerJoin(requests, eq(requests.id, requestItems.requestId))
+        .where(where),
+    ]);
+
+    return { items: rows, total, page: query.page, pageSize: query.pageSize };
+  }
+
+  /**
+   * Một đơn kèm tên người đăng ký và phòng ban — đúng hình dạng mà màn quản trị
+   * cần. `GET /requests/:id` cũng trả về đơn nhưng KHÔNG có mấy trường này, nên
+   * bảng theo món ở trang chủ không dùng lại được.
+   */
+  async getOne(requestId: string) {
+    const [row] = await this.db
+      .select({
+        request: requests,
+        userName: users.name,
+        userEmail: users.email,
+        departmentName: departments.name,
+      })
+      .from(requests)
+      .innerJoin(users, eq(users.id, requests.userId))
+      .leftJoin(departments, eq(departments.id, requests.departmentId))
+      .where(eq(requests.id, requestId))
+      .limit(1);
+
+    if (!row) throw new NotFoundException({ code: ErrorCode.NOT_FOUND });
+
+    const [withLines] = await this.requests.attachLines([row.request]);
+    return {
+      ...withLines,
+      userName: row.userName,
+      userEmail: row.userEmail,
+      departmentName: row.departmentName,
+    };
+  }
 
   /** Danh sách mọi đơn, lọc + phân trang (CORE-10). */
   async list(query: ListRequestsQuery) {

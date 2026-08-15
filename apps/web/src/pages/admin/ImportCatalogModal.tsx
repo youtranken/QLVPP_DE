@@ -89,8 +89,8 @@ export function ImportCatalogModal({ open, onClose }: { open: boolean; onClose: 
         <Alert
           type="info"
           showIcon
-          title="File cần có các cột: Nhóm · Tên món · Đơn vị tính · Tối đa · Chỉ admin"
-          description="Hai cột cuối để trống cũng được (mặc định tối đa 20, không phải chỉ-admin). Nhận .xlsx và .csv. Việc nhập KHÔNG xoá món nào — file thiếu món nào thì món đó vẫn còn nguyên."
+          title="File cần có các cột: Nhóm · Tên món · Đơn vị tính · Mã · Tối đa · Chỉ admin"
+          description="Ba cột Mã · Tối đa · Chỉ admin không bắt buộc (mặc định: không mã, tối đa 20, không phải chỉ-admin). File KHÔNG có cột Mã thì mã đang có được giữ nguyên. Nhận .xlsx và .csv. Việc nhập KHÔNG xoá món nào — file thiếu món nào thì món đó vẫn còn nguyên."
         />
 
         <label>
@@ -150,6 +150,12 @@ export function ImportCatalogModal({ open, onClose }: { open: boolean; onClose: 
                   render: (value: DongXemTruoc['hanhDong']) => (
                     <Tag color={NHAN[value].color}>{NHAN[value].text}</Tag>
                   ),
+                },
+                {
+                  title: 'Mã',
+                  dataIndex: 'ma',
+                  width: 110,
+                  render: (value: string) => value || '—',
                 },
                 { title: 'Nhóm', dataIndex: 'nhom', width: 140 },
                 { title: 'Tên món', dataIndex: 'ten', minWidth: 160 },

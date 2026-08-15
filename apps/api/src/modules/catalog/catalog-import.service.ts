@@ -81,6 +81,7 @@ export class CatalogImportService {
           await db
             .update(items)
             .set({
+              code: d.ma || null,
               unit: d.donVi,
               maxQty: d.toiDa,
               adminOnly: d.chiAdmin,
@@ -92,6 +93,7 @@ export class CatalogImportService {
         } else {
           await db.insert(items).values({
             categoryId,
+            code: d.ma || null,
             name: d.ten,
             unit: d.donVi,
             maxQty: d.toiDa,
@@ -119,6 +121,7 @@ export class CatalogImportService {
           id: items.id,
           categoryId: items.categoryId,
           name: items.name,
+          code: items.code,
           unit: items.unit,
           maxQty: items.maxQty,
           adminOnly: items.adminOnly,

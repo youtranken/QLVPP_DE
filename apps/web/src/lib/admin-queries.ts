@@ -211,7 +211,7 @@ export function useDeleteCategory() {
 }
 
 export type ItemInput = Partial<
-  Pick<CatalogItem, 'name' | 'unit' | 'adminOnly' | 'maxQty' | 'active' | 'categoryId'>
+  Pick<CatalogItem, 'code' | 'name' | 'unit' | 'adminOnly' | 'maxQty' | 'active' | 'categoryId'>
 >;
 
 export function useSaveItem() {
@@ -263,6 +263,7 @@ export function useUpdateRegistrationWindow() {
 /** Nhập danh mục từ file (ADMIN-9) — xem trước ở component, mutation chỉ lo phần GHI. */
 export interface DongXemTruoc {
   dong: number;
+  ma: string;
   nhom: string;
   ten: string;
   donVi: string;
@@ -288,5 +289,40 @@ export function useApplyCatalogImport() {
       ),
     // Danh mục đổi thì màn đăng ký của mọi người phải thấy ngay.
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['catalog'] }),
+  });
+}
+
+/** Một MÓN được đăng ký — mỗi dòng ở bảng trang chủ quản trị (CORE-10b). */
+export interface RequestItemRow {
+  id: string;
+  requestId: string;
+  requestCode: string;
+  period: string;
+  status: RequestStatus;
+  createdAt: string;
+  /** Mã lấy từ danh mục; null với dòng "Khác" hoặc món chưa đặt mã. */
+  itemCode: string | null;
+  name: string;
+  unit: string;
+  quantity: number;
+  deliveredQty: number;
+  userName: string | null;
+  departmentName: string | null;
+}
+
+export function useRequestItems(filters: RequestFilters) {
+  return useQuery({
+    queryKey: ['admin', 'request-items', filters] as const,
+    queryFn: () =>
+      api.get<Paged<RequestItemRow>>(`/admin/requests/items${toQuery({ ...filters })}`),
+  });
+}
+
+/** Một đơn kèm tên người/phòng ban — cho ngăn kéo duyệt mở từ bảng theo món. */
+export function useAdminRequest(id: string | null) {
+  return useQuery({
+    queryKey: ['admin', 'request', id] as const,
+    queryFn: () => api.get<AdminRequest>(`/admin/requests/${id}`),
+    enabled: Boolean(id),
   });
 }

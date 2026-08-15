@@ -13,6 +13,7 @@ const HIEN_CO: DanhMucHienCo = {
       id: 'i1',
       categoryId: 'c1',
       name: 'Bút bi xanh',
+      code: 'BUT-001',
       unit: 'cây',
       maxQty: 20,
       adminOnly: false,
@@ -22,6 +23,7 @@ const HIEN_CO: DanhMucHienCo = {
       id: 'i2',
       categoryId: 'c2',
       name: 'Sổ tay',
+      code: null,
       unit: 'quyển',
       maxQty: 5,
       adminOnly: false,
@@ -147,6 +149,7 @@ describe('xemTruocNhap — dòng hỏng', () => {
           id: 'a',
           categoryId: 'c1',
           name: 'Bút bi',
+          code: null,
           unit: 'cây',
           maxQty: 20,
           adminOnly: false,
@@ -156,6 +159,7 @@ describe('xemTruocNhap — dòng hỏng', () => {
           id: 'b',
           categoryId: 'c1',
           name: 'But bi',
+          code: null,
           unit: 'hộp',
           maxQty: 20,
           adminOnly: false,
@@ -172,6 +176,67 @@ describe('xemTruocNhap — dòng hỏng', () => {
     const kq = chay([['Bút & Viết', 'Bút chì', 'cây', '', ''], ['', '', '', '', ''], []]);
     expect(kq.dong).toHaveLength(1);
     expect(kq.tomTat.loi).toBe(0);
+  });
+});
+
+describe('xemTruocNhap — cột Mã', () => {
+  const TIEU_DE_MA = ['Mã', 'Nhóm', 'Tên món', 'Đơn vị tính', 'Tối đa', 'Chỉ admin'];
+  const chayMa = (hang: string[][]) => xemTruocNhap([TIEU_DE_MA, ...hang], HIEN_CO);
+
+  it('gán mã cho món chưa có mã → cập nhật', () => {
+    const kq = chayMa([['SO-001', 'Giấy & Sổ', 'Sổ tay', 'quyển', '5', '']]);
+    expect(kq.dong[0].hanhDong).toBe('capNhat');
+    expect(kq.dong[0].ghiChu).toContain('mã (trống) → SO-001');
+  });
+
+  it('mã y hệt (khác hoa thường vẫn tính là khác) ', () => {
+    expect(
+      chayMa([['BUT-001', 'Bút & Viết', 'Bút bi xanh', 'cây', '20', '']])['dong'][0].hanhDong,
+    ).toBe('khongDoi');
+  });
+
+  it('gỡ mã khi ô để trống mà món đang có mã', () => {
+    const kq = chayMa([['', 'Bút & Viết', 'Bút bi xanh', 'cây', '20', '']]);
+    expect(kq.dong[0].hanhDong).toBe('capNhat');
+    expect(kq.dong[0].ghiChu).toContain('gỡ mã');
+  });
+
+  it('file KHÔNG có cột Mã thì tuyệt đối không đụng mã đang có', () => {
+    // Đây là bẫy chính: nhập một file cũ không có cột Mã mà lại xoá sạch mã.
+    const kq = chay([['Bút & Viết', 'Bút bi xanh', 'cây', '20', '']]);
+    expect(kq.dong[0].hanhDong).toBe('khongDoi');
+    expect(kq.dong[0].ma).toBe('BUT-001');
+  });
+
+  it('mã trùng nhau trong cùng file → dòng sau báo lỗi', () => {
+    const kq = chayMa([
+      ['X-1', 'Bút & Viết', 'Bút chì', 'cây', '', ''],
+      ['x-1', 'Bút & Viết', 'Bút lông', 'cây', '', ''],
+    ]);
+    expect(kq.dong[0].hanhDong).toBe('them');
+    expect(kq.dong[1].hanhDong).toBe('loi');
+    expect(kq.dong[1].ghiChu).toContain('trùng với dòng 2');
+  });
+
+  it('mã đang thuộc về món khác → báo lỗi thay vì gán đè', () => {
+    const kq = chayMa([['but-001', 'Bút & Viết', 'Bút chì', 'cây', '', '']]);
+    expect(kq.dong[0].hanhDong).toBe('loi');
+    expect(kq.dong[0].ghiChu).toContain('đang được dùng cho món khác');
+  });
+
+  it('giữ nguyên mã của chính món đó thì không coi là trùng', () => {
+    const kq = chayMa([['but-001', 'Bút & Viết', 'Bút bi xanh', 'cây', '20', '']]);
+    expect(kq.dong[0].hanhDong).toBe('capNhat');
+    expect(kq.dong[0].ghiChu).toContain('BUT-001 → but-001');
+  });
+
+  it.each([
+    ['mã có khoảng trắng', 'BUT 001'],
+    ['mã quá dài', 'A'.repeat(31)],
+  ])('%s → lỗi', (_nhan, ma) => {
+    const kq = chayMa([[ma, 'Bút & Viết', 'Bút chì', 'cây', '', '']]);
+    expect(kq.dong[0].hanhDong).toBe('loi');
+    expect(kq.dong[0].ghiChu).toContain('Mã món');
   });
 });
 
