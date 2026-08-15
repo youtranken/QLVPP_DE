@@ -300,8 +300,8 @@
 ### CORE-10b — Danh sách đăng ký theo từng món ở trang chủ `[✅ bổ sung sau, theo yêu cầu]`
 
 - **Persona:** AD · **Mục tiêu:** Vào trang chủ là thấy ngay phòng nào xin món gì, bao nhiêu. · **Lý do:** Bảng điều khiển cũ chỉ có số liệu tổng, muốn biết chi tiết phải mở từng đơn.
-- **AC:** Bảng ở **trang chủ** `/` (chỉ admin thấy), **mỗi dòng một món** (không phải một đơn), **không** có tiêu đề "Duyệt đơn đăng ký"; cột **STT · Mã · Tên món · ĐVT · SL · Người đăng ký · Phòng ban · Kỳ · Trạng thái**; lọc theo trạng thái; phân trang 10 dòng; **bấm vào dòng mở đúng đơn chứa món đó** để duyệt (việc duyệt vẫn theo cả đơn).
-- **Edge cases:** STT đánh số **liên tục qua các trang**, không quay về 1; dòng "Khác" và món chưa đặt mã hiện "—"; mã lấy từ **danh mục hiện hành** nên admin sửa mã thì bảng đổi theo; trang `/quan-tri/don` vẫn giữ để lọc sâu theo kỳ/phòng ban.
+- **AC:** Trang chủ `/` (chỉ admin thấy) mở đầu bằng **bốn thẻ số liệu bấm được** (Đơn chờ duyệt · Đơn chờ giao · Chưa đăng ký · Tổng số lượng) — bấm thẻ là lọc bảng bên dưới; bảng **mỗi dòng một món** (không phải một đơn), **không** có tiêu đề "Duyệt đơn đăng ký"; cột **STT · Mã · Tên món · ĐVT · SL · Người đăng ký · Phòng ban · Kỳ · Trạng thái**; lọc theo trạng thái; phân trang 10 dòng; **bấm vào dòng mở đúng đơn chứa món đó** để duyệt (việc duyệt vẫn theo cả đơn).
+- **Edge cases:** hai thẻ tồn đọng tính trên **mọi kỳ**, hai thẻ còn lại theo **kỳ hiện tại** — ghi rõ phạm vi trên từng thẻ để bốn con số không bị đọc nhầm là cùng phạm vi; bảng mặc định lọc **đơn chờ duyệt**; cột **Mã** tự ẩn khi chưa món nào có mã; STT đánh số **liên tục qua các trang**, không quay về 1; dòng "Khác" và món chưa đặt mã hiện "—"; mã lấy từ **danh mục hiện hành** nên admin sửa mã thì bảng đổi theo; trang `/quan-tri/don` vẫn giữ để lọc sâu theo kỳ/phòng ban.
 - **Priority:** **P1** · **Dependencies:** CORE-10, ADMIN-10.
 
 ### ADMIN-10 — Mã món trong danh mục `[✅ bổ sung sau, theo yêu cầu]`

@@ -26,10 +26,16 @@ export function formatDateTime(value: string | Date | null | undefined): string 
 }
 
 /** Nhãn + màu của trạng thái đơn, dùng chung cho Tag ở mọi màn. */
+/**
+ * Màu đi theo MỨC ĐỘ CẦN CHÚ Ý, không phải theo thứ tự bảng chữ cái:
+ * cam = đang chờ ai đó làm gì → xanh dương = đã xử lý, đang chờ giao →
+ * xanh lá = xong việc. Trước đây "Đã gửi" màu xanh dương nhạt nên trông *ít*
+ * khẩn hơn "Đã giao" — ngược hẳn với thực tế.
+ */
 export const STATUS_META: Record<RequestStatus, { label: string; color: string }> = {
-  submitted: { label: 'Đã gửi', color: 'blue' },
-  approved: { label: 'Đã duyệt', color: 'green' },
+  submitted: { label: 'Đã gửi', color: 'orange' },
+  approved: { label: 'Đã duyệt', color: 'blue' },
   rejected: { label: 'Bị từ chối', color: 'red' },
-  delivered: { label: 'Đã giao', color: 'cyan' },
+  delivered: { label: 'Đã giao', color: 'green' },
   cancelled: { label: 'Đã huỷ', color: 'default' },
 };

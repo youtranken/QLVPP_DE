@@ -1,7 +1,7 @@
 import { SaveOutlined } from '@ant-design/icons';
 import { describeWindow, isRegistrationOpen, periodForDate, REG_WINDOW_MAX_DAY } from '@vpp/shared';
 import { Alert, App, Button, Card, Flex, Form, InputNumber, Skeleton, Typography } from 'antd';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAppSettings, useUpdateRegistrationWindow } from '../../lib/admin-queries';
 import { formatDateTime, periodLabel } from '../../lib/format';
 
@@ -23,9 +23,19 @@ export function AdminSettingsPage() {
   const update = useUpdateRegistrationWindow();
   const [form] = Form.useForm<WindowForm>();
 
-  // Giá trị về sau khi tải xong / sau khi lưu ⇒ đổ lại vào form.
+  /**
+   * Đổ giá trị vào form ĐÚNG MỘT LẦN, lúc tải xong.
+   *
+   * Trước đây effect này chạy lại mỗi khi truy vấn có dữ liệu mới — kể cả lần
+   * tải nền sau khi lưu — nên nó **ghi đè ô người dùng đang gõ dở**. Lọt vào
+   * đúng khe giữa hai lần gõ thì phần đã gõ bị trộn với giá trị cũ và lưu ra
+   * một khung ngày không ai chọn (đã bắt được: 15 → 31).
+   */
+  const daDoGiaTri = useRef(false);
   useEffect(() => {
-    if (data) form.setFieldsValue({ startDay: data.startDay, endDay: data.endDay });
+    if (!data || daDoGiaTri.current) return;
+    form.setFieldsValue({ startDay: data.startDay, endDay: data.endDay });
+    daDoGiaTri.current = true;
   }, [data, form]);
 
   // Theo dõi giá trị đang gõ để xem trước, kể cả khi chưa lưu.

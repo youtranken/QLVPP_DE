@@ -57,7 +57,11 @@ test.describe('Màn quản trị', () => {
     // Yêu cầu: KHÔNG còn tiêu đề "Duyệt đơn đăng ký" ở trang chủ.
     await expect(page.getByRole('heading', { name: 'Duyệt đơn đăng ký' })).toHaveCount(0);
 
-    for (const cot of ['STT', 'Mã', 'Tên món', 'SL', 'Người đăng ký', 'Phòng ban']) {
+    // Bốn thẻ số liệu mở đầu trang, và thẻ 'Chờ duyệt' đang là bộ lọc mặc định.
+    await expect(page.getByLabel('Đơn chờ duyệt')).toBeVisible();
+    await expect(page.getByLabel('Chưa đăng ký')).toBeVisible();
+
+    for (const cot of ['STT', 'Tên món', 'Số lượng', 'Người đăng ký', 'Phòng ban']) {
       await expect(page.getByRole('columnheader', { name: cot, exact: true })).toBeVisible();
     }
 

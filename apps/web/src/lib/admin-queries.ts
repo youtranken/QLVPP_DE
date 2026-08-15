@@ -326,3 +326,21 @@ export function useAdminRequest(id: string | null) {
     enabled: Boolean(id),
   });
 }
+
+/** Số liệu tổng quan của kỳ đang nhận — hàng thẻ ở trang chủ quản trị. */
+export interface AdminOverview {
+  period: string;
+  choDuyet: number;
+  choGiao: number;
+  tongMon: number;
+  tongNguoi: number;
+  daDangKy: number;
+  chuaDangKy: number;
+}
+
+export function useAdminOverview() {
+  return useQuery({
+    queryKey: ['admin', 'overview'] as const,
+    queryFn: () => api.get<AdminOverview>('/admin/requests/overview'),
+  });
+}

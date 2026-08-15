@@ -23,6 +23,56 @@ export class AdminRequestsService {
   ) {}
 
   /**
+   * Số liệu tổng quan của KỲ ĐANG NHẬN, cho trang chủ quản trị.
+   *
+   * Bốn con số trả lời đúng câu hỏi admin hỏi khi mở trang: *có gì đang chờ tôi?*
+   * Cố ý KHÔNG kèm xu hướng nhiều kỳ — thứ đó xem mỗi tháng một lần và đã có
+   * riêng ở Bảng điều khiển.
+   */
+  async overview() {
+    const period = periodForDate(await this.settings.getWindow());
+    const trongKy = eq(requests.period, period);
+
+    const [[theoTrangThai], [mon], [nguoi], [daDangKy]] = await Promise.all([
+      // Việc tồn đọng tính trên MỌI KỲ, không chỉ kỳ hiện tại: đơn kỳ trước chưa
+      // duyệt vẫn là việc phải làm. Bó vào kỳ hiện tại sẽ ra cảnh "0 đơn chờ
+      // duyệt" nằm cạnh một bảng đầy đơn chờ duyệt — đã bắt được lúc chạy thử.
+      this.db
+        .select({
+          choDuyet: sql<number>`count(*) filter (where ${requests.status} = 'submitted')::int`,
+          // "Chờ giao" = đã duyệt nhưng chưa giao đủ; đơn `delivered` là xong việc.
+          choGiao: sql<number>`count(*) filter (where ${requests.status} = 'approved')::int`,
+        })
+        .from(requests),
+      this.db
+        .select({ tongMon: sql<number>`coalesce(sum(${requestItems.quantity}), 0)::int` })
+        .from(requestItems)
+        .innerJoin(requests, eq(requests.id, requestItems.requestId))
+        .where(and(trongKy, sql`${requests.status} in ('submitted','approved','delivered')`)),
+      // Người bị khoá ở PMH ID không còn là người "chưa đăng ký" — đừng tính vào
+      // mẫu số rồi bắt admin đi hỏi một người đã nghỉ việc.
+      this.db
+        .select({ tong: sql<number>`count(*)::int` })
+        .from(users)
+        .where(eq(users.disabled, false)),
+      this.db
+        .select({ so: sql<number>`count(distinct ${requests.userId})::int` })
+        .from(requests)
+        .where(and(trongKy, sql`${requests.status} in ('submitted','approved','delivered')`)),
+    ]);
+
+    return {
+      period,
+      choDuyet: theoTrangThai.choDuyet,
+      choGiao: theoTrangThai.choGiao,
+      tongMon: mon.tongMon,
+      tongNguoi: nguoi.tong,
+      daDangKy: daDangKy.so,
+      chuaDangKy: Math.max(0, nguoi.tong - daDangKy.so),
+    };
+  }
+
+  /**
    * Danh sách theo TỪNG MÓN được đăng ký — mỗi dòng một món, không phải một đơn
    * (CORE-10b). Dùng cho bảng ở trang chủ quản trị: nhìn được ngay phòng nào xin
    * món gì, bao nhiêu, mà không phải mở từng đơn.

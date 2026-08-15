@@ -30,6 +30,12 @@ export class AdminRequestsController {
     return this.admin.list(query);
   }
 
+  /** Số liệu tổng quan của kỳ đang nhận — hàng thẻ ở trang chủ (CORE-10c). */
+  @Get('overview')
+  overview() {
+    return this.admin.overview();
+  }
+
   /** Danh sách theo TỪNG MÓN — bảng ở trang chủ quản trị (CORE-10b). */
   @Get('items')
   listItems(@Query(new ZodPipe(ListRequestsQuerySchema)) query: ListRequestsQuery) {
