@@ -5,7 +5,6 @@ import { useStats } from '../../lib/admin-queries';
 import { useCurrentPeriod } from '../../lib/queries';
 import { periodLabel, shiftPeriod } from '../../lib/format';
 import { PeriodPicker } from './PeriodPicker';
-import { RequestItemsTable } from './RequestItemsTable';
 
 /** Bảng điều khiển: thống kê nhiều kỳ bằng biểu đồ (REPORT-3). */
 export function AdminDashboardPage() {
@@ -109,11 +108,6 @@ export function AdminDashboardPage() {
           </Card>
         </Col>
       </Row>
-
-      {/* Danh sách đăng ký của các phòng ban — đặt trên biểu đồ vì đây là thứ
-          admin cần thao tác hằng ngày, còn biểu đồ là để nhìn xu hướng.
-          Bảng có bộ lọc riêng, KHÔNG ăn theo khoảng kỳ của biểu đồ ở trên. */}
-      <RequestItemsTable />
 
       {!hasData ? (
         <Card>

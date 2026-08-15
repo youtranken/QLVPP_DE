@@ -140,7 +140,7 @@ Mục tiêu: đưa toàn bộ quy trình lên web có ràng buộc nghiệp vụ
 - **FR-44** Admin **tự đổi khung ngày đăng ký** trên web (màn Cài đặt), có xem trước ảnh hưởng và ghi audit. **[✅ bổ sung sau theo yêu cầu]**
 - **FR-45** Admin **nhập danh mục hàng loạt** từ Excel/CSV, có **xem trước** từng dòng trước khi ghi; không xoá món nào. **[✅ bổ sung sau theo yêu cầu]**
 - **FR-46** Mỗi món có **mã** do admin đặt (không bắt buộc, không trùng nhau). **[✅ bổ sung sau theo yêu cầu]**
-- **FR-47** Trang chủ quản trị hiện **danh sách đăng ký theo từng món** của các phòng ban (STT, mã món, số lượng, người đăng ký, phòng ban, trạng thái); bấm vào dòng để mở đơn và duyệt. **[✅ bổ sung sau theo yêu cầu]**
+- **FR-47** **Trang chủ** hiện (với admin) **danh sách đăng ký theo từng món** của các phòng ban (STT, mã món, số lượng, người đăng ký, phòng ban, trạng thái); bấm vào dòng để mở đơn và duyệt. **[✅ bổ sung sau theo yêu cầu]**
 
 ### 6.6 Thông báo
 

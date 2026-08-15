@@ -52,7 +52,7 @@ test.describe('Màn quản trị', () => {
   test('trang chủ có danh sách đăng ký theo món, bấm dòng mở được đơn để duyệt', async ({
     page,
   }) => {
-    await page.goto('/quan-tri');
+    await page.goto('/');
 
     // Yêu cầu: KHÔNG còn tiêu đề "Duyệt đơn đăng ký" ở trang chủ.
     await expect(page.getByRole('heading', { name: 'Duyệt đơn đăng ký' })).toHaveCount(0);
@@ -61,9 +61,15 @@ test.describe('Màn quản trị', () => {
       await expect(page.getByRole('columnheader', { name: cot, exact: true })).toBeVisible();
     }
 
+    // Thu hẹp vào ĐÚNG bảng danh sách: thẻ "Kỳ …" ở trang chủ dùng Descriptions,
+    // mà AntD cũng render bằng <table> nên tìm dòng trên cả trang sẽ bắt nhầm.
+    const bang = page
+      .locator('table')
+      .filter({ has: page.getByRole('columnheader', { name: 'STT', exact: true }) });
+
     // Dòng 0 là tiêu đề, dòng 1 là bản ghi đầu tiên — bám theo vai trò ARIA thay
     // vì thẻ tbody/td, vì AntD dựng thêm dòng đo đạc ẩn trong thân bảng.
-    const dongDau = page.getByRole('row').nth(1);
+    const dongDau = bang.getByRole('row').nth(1);
     await expect(dongDau.getByRole('cell').first()).toHaveText('1');
 
     await dongDau.click();
@@ -146,7 +152,12 @@ test.describe('Màn quản trị', () => {
 
     const moTu = page.getByLabel('Ngày mở đăng ký');
     const dongSau = page.getByLabel('Ngày đóng đăng ký');
-    const cuGiaTri = { start: await moTu.inputValue(), end: await dongSau.inputValue() };
+
+    // Trả về giá trị MẶC ĐỊNH CỐ ĐỊNH, không phải giá trị đọc được lúc bắt đầu.
+    // Test này chạy song song cho desktop và mobile trên cùng một CSDL: nếu mỗi
+    // bên khôi phục theo cái nó vừa đọc, hai bên sẽ đọc phải giá trị của nhau
+    // đang sửa dở và để lại một khung ngày lẫn lộn (đã xảy ra: 15 → 30).
+    const MAC_DINH = { start: '20', end: '31' };
 
     // Cửa sổ đúng ngày hôm nay ⇒ chắc chắn đang MỞ, không phụ thuộc ngày chạy test.
     const homNay = String(new Date().getDate());
@@ -158,16 +169,16 @@ test.describe('Màn quản trị', () => {
     await expect(page.getByText('Đã lưu khung ngày đăng ký.')).toBeVisible();
     await expect(page.getByText(/Đang mở đăng ký/)).toBeVisible();
 
-    // Trả lại như cũ để các lần chạy sau không thừa hưởng cấu hình của test này.
+    // Trả về mặc định để lần chạy sau không thừa hưởng cấu hình của test này.
     // Kiểm bằng cách TẢI LẠI TRANG chứ không bám vào thông báo thoáng qua: hai
     // thông báo có thể cùng hiện một lúc, và quan trọng hơn là ta muốn biết giá
     // trị đã thực sự lưu xuống CSDL chứ không chỉ hiện lời báo thành công.
-    await moTu.fill(cuGiaTri.start);
-    await dongSau.fill(cuGiaTri.end);
+    await moTu.fill(MAC_DINH.start);
+    await dongSau.fill(MAC_DINH.end);
     await page.getByRole('button', { name: 'Lưu' }).click();
 
     await page.reload();
-    await expect(page.getByLabel('Ngày mở đăng ký')).toHaveValue(cuGiaTri.start);
-    await expect(page.getByLabel('Ngày đóng đăng ký')).toHaveValue(cuGiaTri.end);
+    await expect(page.getByLabel('Ngày mở đăng ký')).toHaveValue(MAC_DINH.start);
+    await expect(page.getByLabel('Ngày đóng đăng ký')).toHaveValue(MAC_DINH.end);
   });
 });

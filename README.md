@@ -152,25 +152,25 @@ Mở `http://localhost:8090` → bấm **Đăng nhập bằng PMH ID** → chọ
 
 ### Nhân viên (M3)
 
-| Đường dẫn         | Màn hình                                                |
-| ----------------- | ------------------------------------------------------- |
-| `/dang-nhap`      | Đăng nhập PMH ID (không có ô mật khẩu)                  |
-| `/khong-co-quyen` | Trang báo chưa được cấp quyền (`access_denied`)         |
-| `/`               | Trang chủ: kỳ hiện tại, trạng thái đăng ký, tóm tắt đơn |
-| `/dang-ky`        | Đăng ký VPP: danh mục kèm ảnh, giỏ, mục "Khác" + ảnh    |
-| `/don-cua-toi`    | Đơn của tôi: lịch sử theo kỳ, chi tiết, huỷ, gửi lại    |
+| Đường dẫn         | Màn hình                                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `/dang-nhap`      | Đăng nhập PMH ID (không có ô mật khẩu)                                                                           |
+| `/khong-co-quyen` | Trang báo chưa được cấp quyền (`access_denied`)                                                                  |
+| `/`               | Trang chủ: kỳ hiện tại, trạng thái đăng ký, tóm tắt đơn. **Admin** thấy thêm danh sách đăng ký của các phòng ban |
+| `/dang-ky`        | Đăng ký VPP: danh mục kèm ảnh, giỏ, mục "Khác" + ảnh                                                             |
+| `/don-cua-toi`    | Đơn của tôi: lịch sử theo kỳ, chi tiết, huỷ, gửi lại                                                             |
 
 ### Quản trị viên (M4)
 
-| Đường dẫn            | Màn hình                                                                                                          |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `/quan-tri`          | Trang chủ quản trị: danh sách đăng ký **theo từng món** của các phòng ban (bấm dòng để duyệt) + thống kê nhiều kỳ |
-| `/quan-tri/don`      | Duyệt đơn: lọc + phân trang, duyệt/từ chối, giao, điều chỉnh                                                      |
-| `/quan-tri/tong-hop` | Tổng hợp theo món + tải Excel trình ký                                                                            |
-| `/quan-tri/danh-muc` | Quản lý nhóm và món (mã, ảnh, admin_only, tối đa, ngừng/bật) + nhập từ Excel/CSV                                  |
-| `/quan-tri/danh-ba`  | Danh bạ nhân viên + nút Đồng bộ ngay                                                                              |
-| `/quan-tri/nhat-ky`  | Nhật ký hoạt động, lọc theo hành động                                                                             |
-| `/quan-tri/cai-dat`  | Cài đặt: đổi khung ngày đăng ký, xem trước ảnh hưởng trước khi lưu                                                |
+| Đường dẫn            | Màn hình                                                                         |
+| -------------------- | -------------------------------------------------------------------------------- |
+| `/quan-tri`          | Bảng điều khiển: thống kê nhiều kỳ, theo phòng ban, tỉ lệ đã giao                |
+| `/quan-tri/don`      | Duyệt đơn: lọc + phân trang, duyệt/từ chối, giao, điều chỉnh                     |
+| `/quan-tri/tong-hop` | Tổng hợp theo món + tải Excel trình ký                                           |
+| `/quan-tri/danh-muc` | Quản lý nhóm và món (mã, ảnh, admin_only, tối đa, ngừng/bật) + nhập từ Excel/CSV |
+| `/quan-tri/danh-ba`  | Danh bạ nhân viên + nút Đồng bộ ngay                                             |
+| `/quan-tri/nhat-ky`  | Nhật ký hoạt động, lọc theo hành động                                            |
+| `/quan-tri/cai-dat`  | Cài đặt: đổi khung ngày đăng ký, xem trước ảnh hưởng trước khi lưu               |
 
 Khung app có menu theo vai trò, chuông thông báo (số chưa đọc), đăng xuất local/toàn hệ
 và banner trạng thái cửa sổ đăng ký. Giao diện dùng **theme trung tính đặt chỗ** — đổi

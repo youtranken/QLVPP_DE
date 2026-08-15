@@ -12,12 +12,20 @@ import {
   Tag,
   Typography,
 } from 'antd';
+import { lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { routes } from '../App';
 import { periodLabel, STATUS_META } from '../lib/format';
 import { useMe, useMyRequests, useRegistrationStatus } from '../lib/queries';
 
-/** Trang chủ nhân viên: kỳ hiện tại, trạng thái đăng ký, tóm tắt đơn (SDD §8 màn 1). */
+const RequestItemsTable = lazy(() =>
+  import('./admin/RequestItemsTable').then((m) => ({ default: m.RequestItemsTable })),
+);
+
+/**
+ * Trang chủ: kỳ hiện tại, trạng thái đăng ký, tóm tắt đơn của chính mình
+ * (SDD §8 màn 1). Riêng ADMIN thấy thêm danh sách đăng ký của các phòng ban.
+ */
 export function HomePage() {
   const navigate = useNavigate();
   const { data: me } = useMe();
@@ -104,6 +112,17 @@ export function HomePage() {
           </Card>
         </Col>
       </Row>
+
+      {/* Chỉ ADMIN thấy đăng ký của người khác. Ẩn với nhân viên không phải để
+          bảo mật (API đã chặn 403) mà để họ không nhìn thấy một bảng lỗi.
+          Không đặt tiêu đề cho bảng — bảng tự có dòng mô tả bên trong.
+          Tải chậm: nhân viên chiếm phần lớn người dùng và không bao giờ dùng tới
+          bảng này, không nên bắt họ tải kèm. */}
+      {me?.role === 'admin' && (
+        <Suspense fallback={<Skeleton active />}>
+          <RequestItemsTable />
+        </Suspense>
+      )}
     </Flex>
   );
 }
