@@ -92,6 +92,20 @@ test.describe('Quản trị viên', () => {
     await expect(page.getByText(/Đã chọn: [1-9]\d* món/)).toBeVisible();
   });
 
+  test('đơn của tôi xem được đơn đã đi qua những bước nào', async ({ page }) => {
+    await page.goto('/don-cua-toi');
+    const mo = page.getByText('Đơn này đã đi qua những bước nào?').first();
+    await expect(mo).toBeVisible();
+    await mo.click();
+    // Mốc đầu tiên của mọi đơn luôn là lúc gửi.
+    await expect(page.getByText('Gửi đơn').first()).toBeVisible();
+  });
+
+  test('admin có ô chọn người để đăng ký hộ', async ({ page }) => {
+    await page.goto('/dang-ky');
+    await expect(page.getByLabel('Đăng ký cho')).toBeVisible();
+  });
+
   test('vượt giới hạn số lượng thì không gửi được', async ({ page }) => {
     await page.goto('/dang-ky');
     // InputNumber tự kẹp về max khi rời ô ⇒ gõ rồi kiểm giá trị đã bị kẹp.

@@ -34,6 +34,14 @@ const ACTIVE_PER_PERIOD_INDEX = 'requests_active_per_period_idx';
 /** Số lần thử lại khi hai đơn cùng kỳ giành cùng một số thứ tự mã đơn. */
 const CODE_RETRY_LIMIT = 5;
 
+/** Người ĐỨNG TÊN đơn — có thể khác người đang thao tác khi admin nhập hộ. */
+export interface ChuDon {
+  id: string;
+  name: string | null;
+  email: string | null;
+  department: string | null;
+}
+
 /** Dòng đơn đã chuẩn hoá: tên/đơn vị lấy từ danh mục nếu có `itemId`. */
 export interface ResolvedLine {
   itemId: string | null;
@@ -58,7 +66,18 @@ export class RequestsService {
    * Mọi quy tắc đều kiểm ở SERVER tại THỜI ĐIỂM GỬI, kể cả khi giao diện đã chặn:
    * cửa sổ đăng ký, cấm A4 với nhân viên, SL ≤ max_qty, đơn không rỗng.
    */
-  async create(user: AuthenticatedUser, dto: CreateRequestDto) {
+  async create(user: AuthenticatedUser, dto: CreateRequestDto, thayMatCho?: ChuDon) {
+    // Người CHỊU TRÁCH NHIỆM thao tác là `user` (admin khi nhập hộ); người SỞ HỮU
+    // đơn là `chuDon`. Quy tắc (cửa sổ ngày, quyền chọn A4) áp theo NGƯỜI THAO
+    // TÁC — admin nhập hộ thì admin chịu trách nhiệm về những gì mình nhập.
+    const chuDon: ChuDon = thayMatCho ?? {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      department: user.department,
+    };
+    const nhapHo = chuDon.id !== user.id;
+
     // Đọc khung ngày MỘT LẦN rồi dùng cho cả kiểm tra lẫn tính kỳ: nếu đọc hai lần
     // mà admin sửa cài đặt đúng lúc đó thì đơn qua được cửa sổ nhưng lại rơi vào kỳ khác.
     const window = await this.settings.getWindow();
@@ -67,14 +86,14 @@ export class RequestsService {
 
     const lines = await this.resolveLines(dto.lines, user.role);
     const period = periodForDate(window);
-    const departmentId = await this.findDepartmentId(user.department);
+    const departmentId = await this.findDepartmentId(chuDon.department);
 
     const created = await this.insertWithGeneratedCode(period, async (tx, code) => {
       const [request] = await tx
         .insert(requests)
         .values({
           code,
-          userId: user.id,
+          userId: chuDon.id,
           departmentId,
           period,
           status: 'submitted',
@@ -95,7 +114,14 @@ export class RequestsService {
           action: 'request.create',
           objectType: 'request',
           objectId: request.id,
-          detail: { code: request.code, period, lineCount: lines.length },
+          detail: {
+            code: request.code,
+            period,
+            lineCount: lines.length,
+            // Ghi rõ đơn này do ai nhập hộ ai — về sau có thắc mắc "tôi đâu có
+            // đăng ký món này" thì nhật ký trả lời được.
+            ...(nhapHo ? { nhapHoCho: chuDon.name ?? chuDon.email } : {}),
+          },
         },
         tx,
       );
@@ -104,15 +130,30 @@ export class RequestsService {
 
     // Thông báo nằm NGOÀI transaction và không bao giờ ném lỗi (xem
     // NotificationsService): chuông hỏng không được phép chặn người ta gửi đơn.
+    const tenChuDon = chuDon.name ?? chuDon.email ?? 'Nhân viên';
     await this.notifications.notifyAdmins(
       {
         type: NOTIFICATION_TYPES.requestSubmitted,
         title: 'Có đơn đăng ký VPP mới',
-        body: `${user.name ?? user.email ?? 'Nhân viên'} vừa gửi đơn ${created.code}.`,
+        body: nhapHo
+          ? `${user.name ?? 'Quản trị viên'} vừa nhập hộ đơn ${created.code} cho ${tenChuDon}.`
+          : `${tenChuDon} vừa gửi đơn ${created.code}.`,
         requestId: created.id,
       },
       { exceptUserId: user.id },
     );
+
+    // Người được nhập hộ PHẢI biết có đơn đứng tên mình — nếu không, họ chỉ phát
+    // hiện khi hàng về, và không kịp nói là mình cần món khác.
+    if (nhapHo) {
+      await this.notifications.notify({
+        userId: chuDon.id,
+        type: NOTIFICATION_TYPES.requestSubmitted,
+        title: 'Có đơn VPP đứng tên bạn',
+        body: `${user.name ?? 'Quản trị viên'} đã nhập hộ đơn ${created.code} cho bạn.`,
+        requestId: created.id,
+      });
+    }
 
     return this.getById(created.id, user);
   }
@@ -260,6 +301,18 @@ export class RequestsService {
     }
     const [withLines] = await this.attachLines([request]);
     return withLines;
+  }
+
+  /**
+   * Dòng thời gian của đơn (CORE-9b).
+   *
+   * Gọi `getById` trước để **dùng lại đúng luật xem đơn** — nhân viên chỉ xem
+   * được đơn của mình, admin xem được mọi đơn. Viết lại phép kiểm ở đây là cách
+   * chắc chắn để hai chỗ lệch nhau về sau.
+   */
+  async timeline(requestId: string, user: AuthenticatedUser) {
+    await this.getById(requestId, user);
+    return this.audit.timeline(requestId);
   }
 
   /**

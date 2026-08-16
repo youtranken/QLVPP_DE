@@ -48,6 +48,8 @@ export const DeliverLineSchema = z.object({
 
 export const ListRequestsQuerySchema = z.object({
   period: PeriodSchema.optional(),
+  /** Tìm theo mã đơn HOẶC tên người đăng ký. */
+  search: z.string().trim().max(100).optional(),
   departmentId: z.string().uuid().optional(),
   status: z.enum(REQUEST_STATUSES).optional(),
   page: z.coerce.number().int().min(1).optional().default(1),
@@ -60,3 +62,18 @@ export type RejectRequestDto = z.infer<typeof RejectRequestSchema>;
 export type DeliverLineDto = z.infer<typeof DeliverLineSchema>;
 export type ListRequestsQuery = z.infer<typeof ListRequestsQuerySchema>;
 export type RequestLineDto = z.infer<typeof RequestLineSchema>;
+
+/**
+ * Duyệt hàng loạt. Giới hạn 200 đơn/lần: mỗi đơn là một lượt ghi + một thông báo,
+ * gửi 5000 id trong một request sẽ treo cả tiến trình.
+ */
+export const ApproveManySchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(200),
+});
+export type ApproveManyDto = z.infer<typeof ApproveManySchema>;
+
+/** Admin nhập đơn hộ một nhân viên: giống đơn thường, thêm người đứng tên. */
+export const CreateForSchema = CreateRequestSchema.extend({
+  userId: z.string().uuid(),
+});
+export type CreateForDto = z.infer<typeof CreateForSchema>;

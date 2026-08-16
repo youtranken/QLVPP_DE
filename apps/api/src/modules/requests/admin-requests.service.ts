@@ -1,13 +1,18 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { canDeliverRequest, ErrorCode, periodForDate } from '@vpp/shared';
-import { and, asc, desc, eq, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm';
 import type { AuthenticatedUser } from '../../auth/auth.service';
 import { DB, type Db } from '../../infra/db/db.module';
 import { departments, items, requestItems, requests, users } from '../../infra/db/schema';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService, NOTIFICATION_TYPES } from '../notifications/notifications.service';
 import { SettingsService } from '../settings/settings.service';
-import type { AdjustRequestDto, DeliverLineDto, ListRequestsQuery } from './requests.dto';
+import type {
+  AdjustRequestDto,
+  CreateRequestDto,
+  DeliverLineDto,
+  ListRequestsQuery,
+} from './requests.dto';
 import { RequestsService } from './requests.service';
 
 type RequestRow = typeof requests.$inferSelect;
@@ -21,6 +26,18 @@ export class AdminRequestsService {
     private readonly notifications: NotificationsService,
     private readonly settings: SettingsService,
   ) {}
+
+  /**
+   * Khớp mã đơn HOẶC tên người đăng ký, không phân biệt hoa thường.
+   *
+   * Đếm tổng cũng phải join `users` khi có tìm kiếm, nếu không con số phân trang
+   * sẽ lệch với số dòng thật sự hiện ra.
+   */
+  private locTimKiem(search: string | undefined): SQL | undefined {
+    if (!search) return undefined;
+    const mau = `%${search}%`;
+    return or(ilike(requests.code, mau), ilike(users.name, mau));
+  }
 
   /**
    * Số liệu tổng quan của KỲ ĐANG NHẬN, cho trang chủ quản trị.
@@ -85,6 +102,8 @@ export class AdminRequestsService {
     if (query.period) filters.push(eq(requests.period, query.period));
     if (query.departmentId) filters.push(eq(requests.departmentId, query.departmentId));
     if (query.status) filters.push(eq(requests.status, query.status));
+    const timKiem = this.locTimKiem(query.search);
+    if (timKiem) filters.push(timKiem);
     const where = filters.length ? and(...filters) : undefined;
 
     const [rows, [{ total }]] = await Promise.all([
@@ -119,6 +138,9 @@ export class AdminRequestsService {
         .select({ total: sql<number>`count(*)::int` })
         .from(requestItems)
         .innerJoin(requests, eq(requests.id, requestItems.requestId))
+        // Join cả `users` ở truy vấn ĐẾM: điều kiện tìm kiếm nhắc tới `users.name`,
+        // thiếu join thì đếm hỏng — mà đếm sai làm phân trang hiện sai số dòng.
+        .innerJoin(users, eq(users.id, requests.userId))
         .where(where),
     ]);
 
@@ -161,6 +183,8 @@ export class AdminRequestsService {
     if (query.period) filters.push(eq(requests.period, query.period));
     if (query.departmentId) filters.push(eq(requests.departmentId, query.departmentId));
     if (query.status) filters.push(eq(requests.status, query.status));
+    const timKiem = this.locTimKiem(query.search);
+    if (timKiem) filters.push(timKiem);
     const where = filters.length ? and(...filters) : undefined;
 
     const [rows, [{ total }]] = await Promise.all([
@@ -181,6 +205,8 @@ export class AdminRequestsService {
       this.db
         .select({ total: sql<number>`count(*)::int` })
         .from(requests)
+        // Cùng lý do như ở `listItems`: điều kiện tìm kiếm dùng `users.name`.
+        .innerJoin(users, eq(users.id, requests.userId))
         .where(where),
     ]);
 
@@ -263,6 +289,70 @@ export class AdminRequestsService {
     });
 
     return this.requests.getById(requestId, admin);
+  }
+
+  /**
+   * Admin nhập đơn THAY cho một nhân viên (CORE-2c).
+   *
+   * Đơn thuộc về nhân viên đó (mọi quy tắc "1 đơn/kỳ", báo cáo, phòng ban đều
+   * tính theo họ), nhưng người chịu trách nhiệm nhập là admin — nên quy tắc cửa
+   * sổ ngày và quyền chọn món chỉ-admin áp theo admin.
+   */
+  async createFor(admin: AuthenticatedUser, targetUserId: string, dto: CreateRequestDto) {
+    const [nhanVien] = await this.db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        department: users.department,
+        disabled: users.disabled,
+      })
+      .from(users)
+      .where(eq(users.id, targetUserId))
+      .limit(1);
+
+    if (!nhanVien) throw new NotFoundException({ code: ErrorCode.NOT_FOUND });
+    // Người đã bị khoá ở PMH ID thì không nên có đơn mới đứng tên — họ đã nghỉ
+    // hoặc bị thu hồi quyền, mà đơn vẫn đi tiếp tới khâu mua thì rất khó gỡ.
+    if (nhanVien.disabled) {
+      throw new ConflictException({
+        code: ErrorCode.VALIDATION,
+        message: 'Tài khoản này đang bị khoá, không nhập đơn hộ được.',
+      });
+    }
+
+    return this.requests.create(admin, dto, {
+      id: nhanVien.id,
+      name: nhanVien.name,
+      email: nhanVien.email,
+      department: nhanVien.department,
+    });
+  }
+
+  /**
+   * Duyệt nhiều đơn một lượt (CORE-11b).
+   *
+   * Cố ý duyệt TỪNG ĐƠN qua `approve` thay vì một câu UPDATE hàng loạt: mỗi đơn
+   * vẫn phải qua kiểm trạng thái, vẫn ghi audit riêng và vẫn báo cho đúng người.
+   * Nhanh hơn một chút mà mất dấu vết thì không đáng.
+   *
+   * Đơn đã đổi trạng thái trong lúc admin đang chọn (người khác vừa duyệt, hoặc
+   * nhân viên vừa huỷ) sẽ bị BỎ QUA chứ không làm hỏng cả lượt.
+   */
+  async approveMany(ids: string[], admin: AuthenticatedUser) {
+    let daDuyet = 0;
+    const boQua: string[] = [];
+
+    for (const id of ids) {
+      try {
+        await this.approve(id, admin);
+        daDuyet += 1;
+      } catch {
+        boQua.push(id);
+      }
+    }
+
+    return { daDuyet, boQua: boQua.length };
   }
 
   /** Từ chối kèm lý do BẮT BUỘC (CORE-12); nhân viên được gửi đơn mới trong kỳ. */

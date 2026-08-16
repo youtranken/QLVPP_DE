@@ -39,6 +39,46 @@ test.describe('Màn quản trị', () => {
     await expect(page.getByLabel('Trạng thái')).toBeVisible();
   });
 
+  test('tìm nhanh theo tên người lọc đúng danh sách', async ({ page }) => {
+    await page.goto('/quan-tri/don');
+    await page.getByLabel('Tìm đơn').fill('Bình');
+    await page.getByLabel('Tìm đơn').press('Enter');
+
+    const bang = page
+      .locator('table')
+      .filter({ has: page.getByRole('columnheader', { name: 'Mã đơn' }) });
+    await expect(bang.getByRole('row')).not.toHaveCount(1); // có ít nhất 1 dòng dữ liệu
+    // Mọi dòng còn lại phải là của người vừa tìm.
+    await expect(bang.getByText('Nguyễn Văn An')).toHaveCount(0);
+  });
+
+  test('chọn nhiều đơn thì hiện thanh duyệt hàng loạt', async ({ page }) => {
+    await page.goto('/quan-tri/don');
+
+    // PHẢI chờ bảng có dữ liệu trước khi đếm: `count()` không tự chờ như `expect`,
+    // gọi sớm thì luôn ra 0 và test lặng lẽ bị bỏ qua — xanh mà không kiểm gì cả.
+    await expect(page.getByText(/VPP-\d{4}-\d{2}-\d{4}/).first()).toBeVisible();
+
+    // Bám theo DÒNG có trạng thái "Đã gửi": chỉ đơn chờ duyệt mới tích được, nên
+    // cách này vừa chắc vừa nói đúng ý định. Tìm thẳng input sẽ trúng ô ẩn mà
+    // AntD dựng bên dưới hộp tích, và Playwright không bấm được.
+    const dongChoDuyet = page.getByRole('row').filter({ hasText: 'Đã gửi' });
+    const so = await dongChoDuyet.count();
+    test.skip(so === 0, 'Không còn đơn nào chờ duyệt để thử');
+
+    await dongChoDuyet.first().getByRole('checkbox').check();
+    await expect(page.getByText(/Đã chọn 1 đơn/)).toBeVisible();
+    await expect(page.getByRole('button', { name: /Duyệt 1 đơn/ })).toBeVisible();
+    // Cố ý KHÔNG bấm duyệt: test không nên đổi trạng thái dữ liệu demo.
+  });
+
+  test('phiếu phát hàng gom theo phòng ban và có cột ký nhận', async ({ page }) => {
+    await page.goto('/quan-tri/phieu-phat');
+    await expect(page.getByRole('heading', { name: 'Phiếu phát hàng' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Ký nhận' }).first()).toBeVisible();
+    await expect(page.getByText(/^Phòng: /).first()).toBeVisible();
+  });
+
   test('tổng hợp theo món có nút tải Excel trỏ đúng API', async ({ page }) => {
     await page.goto('/quan-tri/tong-hop');
     const download = page.getByRole('link', { name: /Tải Excel trình ký/ });
@@ -64,6 +104,12 @@ test.describe('Màn quản trị', () => {
     for (const cot of ['STT', 'Tên món', 'Số lượng', 'Người đăng ký', 'Phòng ban']) {
       await expect(page.getByRole('columnheader', { name: cot, exact: true })).toBeVisible();
     }
+
+    // Bảng mặc định lọc "đơn chờ duyệt". Bỏ lọc trước khi kiểm cấu trúc bảng:
+    // test này nói về bảng và thao tác bấm dòng, không nên hỏng chỉ vì lúc chạy
+    // tình cờ không còn đơn nào đang chờ.
+    const xoaLoc = page.getByRole('button', { name: 'Xoá lọc' });
+    if (await xoaLoc.isVisible().catch(() => false)) await xoaLoc.click();
 
     // Thu hẹp vào ĐÚNG bảng danh sách: thẻ "Kỳ …" ở trang chủ dùng Descriptions,
     // mà AntD cũng render bằng <table> nên tìm dòng trên cả trang sẽ bắt nhầm.

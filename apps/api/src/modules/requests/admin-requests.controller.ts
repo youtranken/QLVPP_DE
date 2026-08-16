@@ -5,6 +5,8 @@ import { ZodPipe } from '../../infra/validation/zod.pipe';
 import { AdminRequestsService } from './admin-requests.service';
 import {
   AdjustRequestSchema,
+  ApproveManySchema,
+  CreateForSchema,
   DeliverLineSchema,
   ListRequestsQuerySchema,
   PeriodSchema,
@@ -13,6 +15,8 @@ import {
   type DeliverLineDto,
   type ListRequestsQuery,
   type RejectRequestDto,
+  type ApproveManyDto,
+  type CreateForDto,
 } from './requests.dto';
 
 /**
@@ -28,6 +32,25 @@ export class AdminRequestsController {
   @Get()
   list(@Query(new ZodPipe(ListRequestsQuerySchema)) query: ListRequestsQuery) {
     return this.admin.list(query);
+  }
+
+  /** Nhập đơn HỘ một nhân viên (CORE-2c). */
+  @Post()
+  createFor(
+    @CurrentUser() admin: AuthenticatedUser,
+    @Body(new ZodPipe(CreateForSchema)) body: CreateForDto,
+  ) {
+    const { userId, ...dto } = body;
+    return this.admin.createFor(admin, userId, dto);
+  }
+
+  /** Duyệt nhiều đơn một lượt (CORE-11b). */
+  @Post('approve-many')
+  approveMany(
+    @CurrentUser() admin: AuthenticatedUser,
+    @Body(new ZodPipe(ApproveManySchema)) body: ApproveManyDto,
+  ) {
+    return this.admin.approveMany(body.ids, admin);
   }
 
   /** Số liệu tổng quan của kỳ đang nhận — hàng thẻ ở trang chủ (CORE-10c). */

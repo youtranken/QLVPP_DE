@@ -32,6 +32,19 @@ export class ReportsController {
   }
 
   /**
+   * Dữ liệu **phiếu phát hàng** (REPORT-4): từng người, từng món trong kỳ.
+   *
+   * Dùng lại đúng truy vấn của phần chi tiết trong Excel — phiếu phát và báo cáo
+   * trình ký phải khớp nhau từng dòng, nên tuyệt đối không viết truy vấn thứ hai.
+   * Chỉ trả dữ liệu; phần dựng trang in nằm ở frontend.
+   */
+  @Get('admin/handover')
+  async handover(@Query(new ZodPipe(ExportQuerySchema)) query: z.infer<typeof ExportQuerySchema>) {
+    const period = await this.reports.resolvePeriod(query.period);
+    return { period, rows: await this.reports.detailByPerson(period, query.departmentId) };
+  }
+
+  /**
    * Xuất Excel trình ký (REPORT-2).
    * Dựng trong bộ nhớ rồi gửi một lần — báo cáo một kỳ của ≤500 người là nhỏ,
    * không cần stream.

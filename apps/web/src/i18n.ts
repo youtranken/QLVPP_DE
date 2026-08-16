@@ -38,6 +38,7 @@ export const vi = {
     catalog: 'Danh mục VPP',
     directory: 'Danh bạ nhân viên',
     audit: 'Nhật ký',
+    handover: 'Phiếu phát hàng',
     settings: 'Cài đặt',
   },
   period: {

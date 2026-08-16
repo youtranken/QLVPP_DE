@@ -17,6 +17,9 @@ import { SignInPage } from './pages/SignInPage';
 const AdminAuditPage = lazy(() =>
   import('./pages/admin/AdminAuditPage').then((m) => ({ default: m.AdminAuditPage })),
 );
+const AdminHandoverPage = lazy(() =>
+  import('./pages/admin/AdminHandoverPage').then((m) => ({ default: m.AdminHandoverPage })),
+);
 const AdminSettingsPage = lazy(() =>
   import('./pages/admin/AdminSettingsPage').then((m) => ({ default: m.AdminSettingsPage })),
 );
@@ -51,6 +54,7 @@ export const routes = {
   adminDirectory: '/quan-tri/danh-ba',
   adminAudit: '/quan-tri/nhat-ky',
   adminSettings: '/quan-tri/cai-dat',
+  adminHandover: '/quan-tri/phieu-phat',
 } as const;
 
 /**
@@ -137,6 +141,7 @@ export function App() {
                 <Route path={routes.adminDirectory} element={admin(<AdminDirectoryPage />)} />
                 <Route path={routes.adminAudit} element={admin(<AdminAuditPage />)} />
                 <Route path={routes.adminSettings} element={admin(<AdminSettingsPage />)} />
+                <Route path={routes.adminHandover} element={admin(<AdminHandoverPage />)} />
 
                 <Route path="*" element={<Result status="404" title="Không tìm thấy trang" />} />
               </Routes>

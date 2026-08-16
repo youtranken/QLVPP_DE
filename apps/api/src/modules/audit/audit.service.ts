@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { desc, eq, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, sql, type SQL } from 'drizzle-orm';
 import { DB, type Db } from '../../infra/db/db.module';
 import { auditLog } from '../../infra/db/schema';
 
@@ -34,6 +34,28 @@ export class AuditService {
       objectId: entry.objectId ?? null,
       detail: entry.detail ?? null,
     });
+  }
+
+  /**
+   * Dòng thời gian của MỘT đơn, cũ trước mới sau (CORE-9b).
+   *
+   * Dựng từ nhật ký audit sẵn có thay vì thêm bảng mới — mọi mốc đã được ghi ở
+   * đó rồi. Chỉ trả về `action`, tên người và thời điểm: `detail` có thể chứa
+   * thông tin nội bộ, mà hàm này còn phục vụ cả NHÂN VIÊN xem đơn của mình.
+   */
+  async timeline(requestId: string) {
+    const rows = await this.db
+      .select({
+        id: auditLog.id,
+        action: auditLog.action,
+        actorName: auditLog.actorName,
+        createdAt: auditLog.createdAt,
+      })
+      .from(auditLog)
+      .where(and(eq(auditLog.objectType, 'request'), eq(auditLog.objectId, requestId)))
+      .orderBy(auditLog.createdAt);
+
+    return rows;
   }
 
   /** Danh sách audit, mới nhất trước, có phân trang (ADMIN-5). */

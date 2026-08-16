@@ -21,8 +21,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { routes } from '../App';
 import { OtherItemsCard, type OtherLine } from './register/OtherItemsCard';
+import { NguoiDungKy } from './register/NguoiDungKy';
 import { dungLaiDon } from './register/reuse';
 import { ApiError } from '../lib/api';
+import { useCreateRequestFor } from '../lib/admin-queries';
 import {
   useCatalog,
   useCreateRequest,
@@ -46,6 +48,7 @@ export function RegisterPage() {
   const { data: status } = useRegistrationStatus();
   const { data: catalog, isPending } = useCatalog();
   const createRequest = useCreateRequest();
+  const createFor = useCreateRequestFor();
 
   /** Số lượng đã chọn theo itemId; 0/không có = chưa chọn. */
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -54,6 +57,8 @@ export function RegisterPage() {
   const [timKiem, setTimKiem] = useState('');
   /** Những gì bị bỏ/sửa khi dùng lại đơn cũ — hiện cho người dùng đọc. */
   const [thayDoi, setThayDoi] = useState<string[]>([]);
+  /** Admin nhập hộ ai; undefined = đăng ký cho chính mình. */
+  const [dungKyCho, setDungKyCho] = useState<{ id: string; name: string } | undefined>();
 
   const isAdmin = me?.role === 'admin';
   const locked = !status?.canRegister;
@@ -157,17 +162,31 @@ export function RegisterPage() {
   const donGanNhat = myRequests?.[0];
 
   const submit = async () => {
+    const payload = {
+      note: note.trim() || null,
+      lines: lines.map((line) => ({
+        itemId: line.itemId,
+        name: line.name,
+        unit: line.unit,
+        quantity: line.quantity,
+        attachmentPath: 'attachmentPath' in line ? line.attachmentPath : null,
+      })),
+    };
+
     try {
-      const created = await createRequest.mutateAsync({
-        note: note.trim() || null,
-        lines: lines.map((line) => ({
-          itemId: line.itemId,
-          name: line.name,
-          unit: line.unit,
-          quantity: line.quantity,
-          attachmentPath: 'attachmentPath' in line ? line.attachmentPath : null,
-        })),
-      });
+      if (dungKyCho) {
+        await createFor.mutateAsync({ userId: dungKyCho.id, ...payload });
+        message.success(`Đã nhập hộ đơn cho ${dungKyCho.name}`);
+        // Ở lại trang và dọn giỏ: nhập hộ thường làm liên tiếp cho vài người,
+        // nhảy sang "Đơn của tôi" là bắt admin bấm quay lại mỗi lần.
+        setQuantities({});
+        setOtherLines([]);
+        setNote('');
+        setDungKyCho(undefined);
+        return;
+      }
+
+      const created = await createRequest.mutateAsync(payload);
       message.success(`Đã gửi đơn ${created.code}`);
       navigate(routes.myRequests);
     } catch (error) {
@@ -198,6 +217,10 @@ export function RegisterPage() {
           description={`Hệ thống chỉ nhận đăng ký ${status?.windowLabel} hằng tháng.`}
         />
       )}
+
+      {/* Nhập hộ (CORE-2c): dành cho người không rành máy tính hoặc đang nghỉ.
+          Chỉ admin thấy ô này. */}
+      {isAdmin && <NguoiDungKy value={dungKyCho} onChange={setDungKyCho} />}
 
       {thayDoi.length > 0 && (
         <Alert
@@ -368,10 +391,10 @@ export function RegisterPage() {
                 size="large"
                 block
                 disabled={!canSubmit}
-                loading={createRequest.isPending}
+                loading={createRequest.isPending || createFor.isPending}
                 onClick={() => void submit()}
               >
-                Gửi đơn
+                {dungKyCho ? `Gửi đơn hộ ${dungKyCho.name}` : 'Gửi đơn'}
               </Button>
             </Flex>
           </Card>

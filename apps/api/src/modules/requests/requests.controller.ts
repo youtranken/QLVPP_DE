@@ -31,7 +31,17 @@ export class RequestsController {
     return this.requests.getById(id, user);
   }
 
-  /** Huỷ đơn — chỉ khi đơn `submitted` và còn trong ngày 1–10 (FR-23). */
+  /**
+   * Dòng thời gian của đơn (CORE-9b). Khai TRƯỚC `DELETE :id` không quan trọng,
+   * nhưng phải sau `GET :id` — cùng phương thức GET, đường dẫn dài hơn nên Nest
+   * vẫn phân biệt được.
+   */
+  @Get(':id/timeline')
+  timeline(@CurrentUser() user: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.requests.timeline(id, user);
+  }
+
+  /** Huỷ đơn — chỉ khi đơn `submitted` và còn trong khung ngày (FR-23). */
   @Delete(':id')
   cancel(@CurrentUser() user: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.requests.cancel(id, user);

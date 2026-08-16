@@ -122,6 +122,7 @@ Mục tiêu: đưa toàn bộ quy trình lên web có ràng buộc nghiệp vụ
 - **FR-23** Nhân viên **huỷ** đơn khi **chưa duyệt (`submitted`)** _và_ **còn trong khung ngày đăng ký**.
 - **FR-24** Xem **đơn của mình** + trạng thái + **lịch sử theo kỳ**.
 - **FR-25** **Tìm món** trong danh mục (gõ không dấu vẫn ra) và **dùng lại đơn cũ** khi đăng ký. **[✅ bổ sung sau theo yêu cầu]**
+- **FR-26** Xem **dòng thời gian đơn**: gửi lúc nào, ai duyệt, giao khi nào. **[✅ bổ sung sau theo yêu cầu]**
 
 ### 6.4 Duyệt & giao (Admin)
 
@@ -130,6 +131,9 @@ Mục tiêu: đưa toàn bộ quy trình lên web có ràng buộc nghiệp vụ
 - **FR-32** **Điều chỉnh đặc biệt** (sửa SL, thêm món kể cả A4).
 - **FR-33** **Xác nhận đã giao** theo **từng dòng** / **toàn bộ** — **chỉ đơn đã duyệt**.
 - **FR-34** Admin **đăng ký VPP như nhân viên** (kể cả A4).
+- **FR-35** Admin **nhập đơn hộ** một nhân viên; đơn đứng tên người đó, nhật ký ghi ai nhập hộ và người đó được thông báo. **[✅ bổ sung sau theo yêu cầu]**
+- **FR-36** **Duyệt hàng loạt** nhiều đơn một lượt, vẫn ghi nhật ký từng đơn. **[✅ bổ sung sau theo yêu cầu]**
+- **FR-37** **Tìm nhanh** đơn theo mã đơn hoặc tên người đăng ký. **[✅ bổ sung sau theo yêu cầu]**
 
 ### 6.5 Tổng hợp, báo cáo, thống kê
 
@@ -137,6 +141,7 @@ Mục tiêu: đưa toàn bộ quy trình lên web có ràng buộc nghiệp vụ
 - **FR-41** **Xuất Excel** báo cáo tháng, gồm: 2 sheet _(Tổng hợp theo món + Chi tiết theo người)_ **+ tiêu đề đơn vị/kỳ/ngày lập + ô chữ ký (Người lập / Trưởng bộ phận / Ban giám đốc) + logo công ty** _(logo:_ **[⏳]** _chờ bạn cung cấp)_.
 - **FR-42** **Thống kê nhiều kỳ** bằng **biểu đồ** (theo tháng, theo phòng ban).
 - **FR-43** **Nhật ký audit**: ai duyệt/từ chối/giao và thời điểm.
+- **FR-48** **Phiếu phát hàng in được** theo phòng ban: từng người, từng món, cột ký nhận. **[✅ bổ sung sau theo yêu cầu]**
 - **FR-44** Admin **tự đổi khung ngày đăng ký** trên web (màn Cài đặt), có xem trước ảnh hưởng và ghi audit. **[✅ bổ sung sau theo yêu cầu]**
 - **FR-45** Admin **nhập danh mục hàng loạt** từ Excel/CSV, có **xem trước** từng dòng trước khi ghi; không xoá món nào. **[✅ bổ sung sau theo yêu cầu]**
 - **FR-46** Mỗi món có **mã** do admin đặt (không bắt buộc, không trùng nhau). **[✅ bổ sung sau theo yêu cầu]**

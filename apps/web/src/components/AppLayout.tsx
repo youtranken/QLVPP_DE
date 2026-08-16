@@ -47,6 +47,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         { key: routes.adminCatalog, label: t('nav.catalog') },
         { key: routes.adminDirectory, label: t('nav.directory') },
         { key: routes.adminAudit, label: t('nav.audit') },
+        { key: routes.adminHandover, label: t('nav.handover') },
         { key: routes.adminSettings, label: t('nav.settings') },
       ],
     });

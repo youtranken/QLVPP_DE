@@ -17,6 +17,7 @@ import {
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { routes } from '../App';
+import { RequestTimeline } from '../components/RequestTimeline';
 import { ApiError } from '../lib/api';
 import { formatDateTime, periodLabel, STATUS_META } from '../lib/format';
 import { useCancelRequest, useMyRequests, useRegistrationWindow } from '../lib/queries';
@@ -173,6 +174,20 @@ export function MyRequestsPage() {
                   )}
 
                   <LinesTable items={request.items} />
+
+                  {/* Dòng thời gian nằm CUỐI: người dùng mở đơn ra là để xem
+                      món trước, hành trình xử lý chỉ xem khi thắc mắc. */}
+                  <Collapse
+                    ghost
+                    size="small"
+                    items={[
+                      {
+                        key: 'timeline',
+                        label: 'Đơn này đã đi qua những bước nào?',
+                        children: <RequestTimeline requestId={request.id} />,
+                      },
+                    ]}
+                  />
 
                   <Flex gap={12} wrap align="center">
                     {request.approvedAt && (

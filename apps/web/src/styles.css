@@ -28,3 +28,62 @@ body {
     padding: 12px 8px;
   }
 }
+
+/* ── Phiếu phát hàng (REPORT-4) ─────────────────────────────────────────────
+   Bảng dựng bằng HTML thuần để in ra không bị cắt: bảng của AntD có vùng cuộn
+   và tiêu đề dính, trình duyệt in ra thường mất dòng. */
+.vpp-phieu-tieude {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.vpp-phieu-tieude h2 {
+  margin: 0;
+  font-size: 18px;
+  text-transform: uppercase;
+}
+.vpp-phieu-tieude p {
+  margin: 4px 0 0;
+  color: #595959;
+}
+.vpp-phieu-phong {
+  margin-bottom: 20px;
+  /* Không cắt một phòng ban làm đôi giữa hai tờ giấy. */
+  break-inside: avoid;
+}
+.vpp-phieu-phong h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.vpp-phieu table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.vpp-phieu th,
+.vpp-phieu td {
+  border: 1px solid #8c8c8c;
+  padding: 6px 8px;
+  font-size: 13px;
+  vertical-align: top;
+}
+.vpp-phieu th {
+  background: #f0f0f0;
+  text-align: left;
+}
+
+@media print {
+  /* Khi in chỉ còn tờ phiếu: menu, bộ lọc, nút bấm đều là thứ không ai cần
+     trên giấy, mà lại đẩy nội dung sang trang thứ hai. */
+  .vpp-khong-in,
+  header,
+  .ant-layout-header,
+  .ant-alert {
+    display: none !important;
+  }
+  .vpp-page {
+    max-width: none;
+    padding: 0;
+  }
+  body {
+    background: #fff;
+  }
+}

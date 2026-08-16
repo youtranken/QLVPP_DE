@@ -20,6 +20,8 @@ export interface Paged<T> {
 
 export interface RequestFilters {
   period?: string;
+  /** Tìm theo mã đơn hoặc tên người đăng ký. */
+  search?: string;
   departmentId?: string;
   status?: RequestStatus;
   page: number;
@@ -139,8 +141,14 @@ export function useAuditLog(action: string, page: number) {
   });
 }
 
-/** Sau mọi thao tác lên đơn, làm mới cả danh sách, tổng hợp, thống kê và chuông. */
-function useRequestMutation<TVariables>(mutationFn: (variables: TVariables) => Promise<unknown>) {
+/**
+ * Sau mọi thao tác lên đơn, làm mới cả danh sách, tổng hợp, thống kê và chuông.
+ * Giữ kiểu KẾT QUẢ để nơi gọi đọc được phản hồi (vd duyệt hàng loạt trả về số
+ * đơn đã duyệt / bị bỏ qua).
+ */
+function useRequestMutation<TVariables, TResult = unknown>(
+  mutationFn: (variables: TVariables) => Promise<TResult>,
+) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn,
@@ -342,5 +350,59 @@ export function useAdminOverview() {
   return useQuery({
     queryKey: ['admin', 'overview'] as const,
     queryFn: () => api.get<AdminOverview>('/admin/requests/overview'),
+  });
+}
+
+/** Duyệt nhiều đơn một lượt (CORE-11b). */
+export function useApproveMany() {
+  return useRequestMutation((ids: string[]) =>
+    api.post<{ daDuyet: number; boQua: number }>('/admin/requests/approve-many', { ids }),
+  );
+}
+
+/** Admin nhập đơn hộ một nhân viên (CORE-2c). */
+export function useCreateRequestFor() {
+  return useRequestMutation((input: { userId: string; note: string | null; lines: unknown[] }) =>
+    api.post('/admin/requests', input),
+  );
+}
+
+/** Một mốc trong dòng thời gian của đơn. */
+export interface MocThoiGian {
+  id: string;
+  action: string;
+  actorName: string | null;
+  createdAt: string;
+}
+
+export function useRequestTimeline(requestId: string | null) {
+  return useQuery({
+    queryKey: ['request-timeline', requestId] as const,
+    queryFn: () => api.get<MocThoiGian[]>(`/requests/${requestId}/timeline`),
+    enabled: Boolean(requestId),
+  });
+}
+
+/** Dữ liệu phiếu phát hàng (REPORT-4). */
+export interface DongPhieuPhat {
+  code: string;
+  status: RequestStatus;
+  userName: string | null;
+  userEmail: string | null;
+  departmentName: string;
+  itemName: string;
+  unit: string;
+  quantity: number;
+  deliveredQty: number;
+  note: string | null;
+}
+
+export function useHandover(period?: string, departmentId?: string) {
+  return useQuery({
+    queryKey: ['admin', 'handover', period, departmentId] as const,
+    queryFn: () =>
+      api.get<{ period: string; rows: DongPhieuPhat[] }>(
+        `/admin/handover${toQuery({ period, departmentId })}`,
+      ),
   });
 }

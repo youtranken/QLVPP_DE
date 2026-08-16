@@ -169,8 +169,8 @@ _Giờ:_ container đặt `TZ=Asia/Ho_Chi_Minh`.
 
 **Danh mục:** `GET /catalog` · admin: `POST/PATCH/DELETE /admin/categories`, `/admin/items`, `POST /admin/catalog/import/preview` (file), `POST /admin/catalog/import/apply`
 
-**Đơn:** `POST /requests`, `GET /requests/mine`, `GET /requests/:id`, `DELETE /requests/:id` (huỷ — chỉ khi `submitted` & còn trong khung ngày)
-· admin: `GET /requests?period=&departmentId=&status=&page=&pageSize=` (phân trang), `GET /requests/items?…` (mỗi dòng một MÓN — bảng ở trang chủ quản trị), `GET /requests/:id` (kèm tên người/phòng ban), `GET /requests/summary?period=`, `PATCH /requests/:id`
+**Đơn:** `POST /requests`, `GET /requests/mine`, `GET /requests/:id`, `DELETE /requests/:id` (huỷ — chỉ khi `submitted` & còn trong khung ngày), `GET /requests/:id/timeline` (dòng thời gian — chủ đơn hoặc admin)
+· admin: `GET /requests?period=&departmentId=&status=&page=&pageSize=` (phân trang), `GET /requests/items?…` (mỗi dòng một MÓN — bảng ở trang chủ quản trị), `GET /requests/overview` (số liệu trang chủ), `POST /requests` (nhập hộ), `POST /requests/approve-many`, `GET /requests/:id` (kèm tên người/phòng ban), `GET /admin/handover?period=` (phiếu phát hàng), `GET /requests/summary?period=`, `PATCH /requests/:id`
 · **duyệt:** `POST /requests/:id/approve`, `POST /requests/:id/reject {reason}`
 · **giao** (chỉ đơn đã duyệt — BR-09): `POST /requests/:id/items/:lineId/deliver`, `POST /requests/:id/deliver-all`, `POST /requests/:id/undeliver-all`
 

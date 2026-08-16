@@ -1,6 +1,7 @@
 import { CheckOutlined, CloseOutlined, EditOutlined, UndoOutlined } from '@ant-design/icons';
 import { canDeliverRequest } from '@vpp/shared';
 import {
+  Collapse,
   Alert,
   App,
   Button,
@@ -17,6 +18,7 @@ import {
   Typography,
 } from 'antd';
 import { useState } from 'react';
+import { RequestTimeline } from '../../components/RequestTimeline';
 import { ApiError } from '../../lib/api';
 import {
   useApproveRequest,
@@ -169,6 +171,18 @@ export function RequestDetailDrawer({
           )}
           {request.note && <Descriptions.Item label="Ghi chú">{request.note}</Descriptions.Item>}
         </Descriptions>
+
+        <Collapse
+          ghost
+          size="small"
+          items={[
+            {
+              key: 'timeline',
+              label: 'Lịch sử xử lý đơn',
+              children: <RequestTimeline requestId={request.id} />,
+            },
+          ]}
+        />
 
         <div className="vpp-scroll-x">
           <Table<RequestLine>
