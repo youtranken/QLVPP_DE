@@ -32,14 +32,19 @@ export class AuthService {
   constructor(@Inject(DB) private readonly db: Db) {}
 
   /**
-   * Tạo/cập nhật user theo `sub` PMH ID và suy vai trò + phòng ban từ `groups`.
+   * Tạo/cập nhật user theo `sub` PMH ID, suy vai trò từ `groups`.
    * `sub` là khoá tham chiếu duy nhất — email có thể đổi nên không dùng làm khoá.
+   *
+   * Phòng ban: ưu tiên claim `department` do PMH ID khai thẳng; không có thì mới
+   * suy từ `groups` theo `VPP_DEPARTMENT_GROUPS`. Trước đây chỉ suy từ groups, nên
+   * tài khoản thật có nhóm không nằm trong danh sách đó bị bỏ trống phòng ban.
    */
   async upsertUserFromClaims(claims: OidcClaims): Promise<AuthenticatedUser> {
     const identity = mapGroups(claims.groups, {
       adminGroup: this.config.VPP_ADMIN_GROUP,
       departmentGroups: this.config.VPP_DEPARTMENT_GROUPS,
     });
+    const department = this.resolveDepartment(claims) ?? identity.department;
 
     const values = {
       pmhSub: claims.sub,
@@ -47,7 +52,7 @@ export class AuthService {
       name: claims.name,
       employeeCode: claims.employeeCode,
       groups: claims.groups,
-      department: identity.department,
+      department,
       role: identity.role,
       source: 'login' as const,
       lastLoginAt: new Date(),
@@ -60,9 +65,11 @@ export class AuthService {
       .onConflictDoUpdate({ target: users.pmhSub, set: values })
       .returning();
 
-    if (identity.department) await this.ensureDepartment(identity.department);
+    if (department) await this.ensureDepartment(department);
 
-    if (identity.ambiguousDepartment) {
+    // Chỉ cảnh báo khi phòng ban thực sự được SUY từ groups. Có claim `department`
+    // thì IdP đã chốt, nhiều nhóm cũng không còn là điều mơ hồ cần đối soát.
+    if (!claims.department && identity.ambiguousDepartment) {
       // Trường hợp hiếm: user thuộc nhiều group phòng ban — ghi lại để admin đối soát (SSO §5).
       this.logger.warn(
         `User ${claims.sub} thuộc nhiều group phòng ban: ${claims.groups.join(', ')}`,
@@ -78,6 +85,18 @@ export class AuthService {
     }
 
     return this.toAuthenticatedUser(row);
+  }
+
+  /**
+   * Phòng ban lấy từ claim, sau khi áp `VPP_DEPARTMENT_ALIASES`.
+   * Trả `null` khi IdP không gửi claim, HOẶC khi alias đổi nó thành chuỗi rỗng
+   * (nghĩa là "bỏ giá trị này") — cả hai trường hợp đều nhường cho `mapGroups`.
+   */
+  private resolveDepartment(claims: OidcClaims): string | null {
+    if (!claims.department) return null;
+    const alias = this.config.VPP_DEPARTMENT_ALIASES[claims.department];
+    if (alias === undefined) return claims.department;
+    return alias || null;
   }
 
   /** Bảng `departments` chỉ là cache tên phòng ban suy từ groups — thêm khi gặp tên mới. */

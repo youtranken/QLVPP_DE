@@ -18,6 +18,12 @@ export interface OidcClaims {
   email: string | null;
   name: string | null;
   employeeCode: string | null;
+  /**
+   * Phòng ban do PMH ID khai thẳng trong token (`claims_supported` có `department`).
+   * Đáng tin hơn suy từ `groups`: không phụ thuộc việc tên nhóm ở PMH ID có khớp
+   * `VPP_DEPARTMENT_GROUPS` hay không. `null` khi IdP không phát claim này.
+   */
+  department: string | null;
   groups: string[];
 }
 
@@ -125,9 +131,13 @@ export class OidcService {
       nonce: transaction.nonce,
       code_challenge: generators.codeChallenge(transaction.codeVerifier),
       code_challenge_method: 'S256',
-      // Theo OIDC Core, `offline_access` chỉ được cấp khi có consent tường minh —
-      // thiếu tham số này IdP lặng lẽ bỏ scope đó và KHÔNG phát refresh_token.
-      prompt: 'consent',
+      // KHÔNG gửi `prompt=consent`. Theo OIDC Core thì đó là cách xin
+      // `offline_access`, nhưng PMH ID **cố ý bỏ màn consent** (mọi client là
+      // first-party nội bộ) và tự cấp Grant đủ scope trong `loadExistingGrant`
+      // — xem `apps/sso-server/src/oidc/provider.factory.ts` của PMH ID.
+      // Gửi `prompt=consent` là ép provider đòi một màn hình KHÔNG TỒN TẠI:
+      // đăng nhập đúng xong, Portal lại hiện form đăng nhập, lặp vô tận.
+      // Refresh token vẫn có vì Grant tự sinh đã gồm nguyên scope app xin.
     });
     return { url, transaction };
   }
@@ -151,12 +161,21 @@ export class OidcService {
     return client.refresh(refreshToken);
   }
 
-  /** URL đăng xuất TOÀN HỆ ở IdP (`end_session` + `id_token_hint`). */
+  /**
+   * URL đăng xuất TOÀN HỆ ở IdP (`end_session` + `id_token_hint`).
+   *
+   * `post_logout_redirect_uri` chỉ được gửi khi IdP đã đăng ký URL đó. Gửi một URL
+   * chưa đăng ký thì IdP từ chối NGUYÊN lượt đăng xuất — người dùng mắc ở trang lỗi
+   * của IdP thay vì về app. Đặt `OIDC_POST_LOGOUT_REDIRECT=off` để bỏ tham số này.
+   */
   async endSessionUrl(idToken: string | null): Promise<string> {
     const client = await this.getClient();
+    const configured = this.config.OIDC_POST_LOGOUT_REDIRECT.trim();
+    const postLogout =
+      configured === 'off' ? undefined : configured || `${this.config.APP_BASE_URL}/`;
     return client.endSessionUrl({
       id_token_hint: idToken ?? undefined,
-      post_logout_redirect_uri: `${this.config.APP_BASE_URL}/`,
+      post_logout_redirect_uri: postLogout,
     });
   }
 
@@ -201,6 +220,11 @@ export class OidcService {
         (typeof claims.full_name === 'string' ? claims.full_name : null) ??
         (typeof claims.name === 'string' ? claims.name : null),
       employeeCode: typeof claims.employee_code === 'string' ? claims.employee_code : null,
+      // Chuỗi rỗng/toàn khoảng trắng coi như không có, để không ghi đè phần suy từ groups.
+      department:
+        typeof claims.department === 'string' && claims.department.trim()
+          ? claims.department.trim()
+          : null,
       groups: Array.isArray(rawGroups)
         ? rawGroups.filter((g): g is string => typeof g === 'string')
         : [],

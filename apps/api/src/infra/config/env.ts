@@ -19,6 +19,16 @@ const EnvSchema = z.object({
    * Bỏ trống ⇒ dùng luôn `OIDC_ISSUER`.
    */
   OIDC_INTERNAL_ISSUER: z.string().default(''),
+  /**
+   * URL IdP đẩy người dùng về sau khi đăng xuất toàn hệ. PHẢI được đăng ký sẵn ở
+   * IdP, nếu không IdP từ chối cả lượt đăng xuất (PMH ID trả 400 ở
+   * `/oidc/logout/confirm`) và người dùng mắc kẹt ở trang lỗi của IdP.
+   *
+   * Đặt `off` ⇒ bỏ hẳn tham số `post_logout_redirect_uri` khi gọi `end_session`:
+   * phiên vẫn bị huỷ ở cả hai phía, chỉ là không tự quay về app. Dùng khi IdP chưa
+   * kịp khai URL. Bỏ trống ⇒ mặc định `APP_BASE_URL` + `/`.
+   */
+  OIDC_POST_LOGOUT_REDIRECT: z.string().default(''),
   PMH_CLIENT_ID: z.string().min(1).default('de-vpp-dev'),
   PMH_CLIENT_SECRET: z.string().min(1).default('dev-secret-change-me'),
   PMH_WEBHOOK_SECRET: z.string().min(1).default('dev-webhook-secret-change-me'),
@@ -43,6 +53,33 @@ const EnvSchema = z.object({
         .map((group) => group.trim())
         .filter((group) => group.length > 0),
     ),
+  /**
+   * Đổi tên phòng ban PMH ID gửi trong claim `department` sang tên dùng trong VPP.
+   * Dạng `nguồn=đích`, nhiều cặp phân tách bởi dấu phẩy:
+   *
+   *     VPP_DEPARTMENT_ALIASES=Dept_Test_VPP=Hành chính,Dept_KT=Kỹ thuật
+   *
+   * Để **đích rỗng** (`Dept_Test_VPP=`) nghĩa là BỎ giá trị đó — coi như IdP không
+   * gửi phòng ban, app quay về suy từ `groups`. Dùng khi PMH ID trả về mã nhóm thử
+   * nghiệm mà mình không muốn nó lọt vào báo cáo.
+   *
+   * Cần thiết vì claim `department` là chuỗi tự do do IdP quyết định; nó hiện thẳng
+   * cho người dùng ở màn duyệt đơn và báo cáo Excel nên phải kiểm soát được.
+   */
+  VPP_DEPARTMENT_ALIASES: z
+    .string()
+    .default('')
+    .transform((raw) => {
+      const map: Record<string, string> = {};
+      for (const pair of raw.split(',')) {
+        // Chỉ tách ở dấu `=` ĐẦU TIÊN: tên phòng ban có thể chứa dấu `=`.
+        const at = pair.indexOf('=');
+        if (at < 0) continue;
+        const from = pair.slice(0, at).trim();
+        if (from) map[from] = pair.slice(at + 1).trim();
+      }
+      return map;
+    }),
   SESSION_SECRET: z.string().min(1).default('dev-session-secret-change-me'),
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(7),
   UPLOAD_DIR: z.string().min(1).default('./uploads'),
@@ -121,6 +158,8 @@ const ToolEnvSchema = EnvSchema.pick({
   DATABASE_URL: true,
   VPP_ADMIN_GROUP: true,
   VPP_DEPARTMENT_GROUPS: true,
+  // seed chép ảnh minh hoạ của danh mục vào đúng thư mục mà api sẽ phục vụ.
+  UPLOAD_DIR: true,
 });
 
 export type ToolConfig = z.infer<typeof ToolEnvSchema>;
