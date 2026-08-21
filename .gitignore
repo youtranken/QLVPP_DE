@@ -7,6 +7,10 @@ coverage/
 .env.local
 # Bí mật production — chỉ có .env.prod.example được commit
 deploy/.env.prod
+# Credential PMH ID thật dùng để thử trên máy dev
+deploy/.env.pmhid
+# Chứng chỉ tự ký sinh tại chỗ để thử TLS — khoá riêng KHÔNG bao giờ được commit
+deploy/tls/
 deploy/backups/
 .DS_Store
 playwright-report/
@@ -19,3 +23,5 @@ apps/api/uploads/*
 
 # Ảnh/log do Playwright MCP sinh khi kiểm thử thủ công
 .playwright-mcp/
+# Đồ thị tri thức sinh bằng /graphify — tái tạo được, không commit
+graphify-out/

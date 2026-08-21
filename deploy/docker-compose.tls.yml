@@ -1,0 +1,43 @@
+# Overlay: chạy stack demo (vẫn mock-idp) nhưng phục vụ qua HTTPS ở cổng 8443.
+#
+#   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.tls.yml \
+#     --profile app up -d
+#
+# Vào app ở **https://de-vpp.pmh.com.vn:8443** — KHÔNG phải localhost:8443.
+# Cert trong `deploy/tls/` chỉ ký cho tên `de-vpp.pmh.com.vn`, và mock-idp đăng ký
+# client với đúng một `redirect_uri` dựng từ APP_BASE_URL, nên vào bằng tên khác
+# là đăng nhập hỏng dù trang vẫn hiện.
+#
+# Cần trước (máy này đã có sẵn cả hai):
+#   1. Dòng hosts:  127.0.0.1  de-vpp.pmh.com.vn
+#   2. Chứng chỉ tự ký ở `deploy/tls/de-vpp.crt` + `.key`
+#
+# Cert TỰ KÝ ⇒ trình duyệt cảnh báo ở lần vào đầu, bấm "vẫn tiếp tục" là xong.
+#
+# IdP vẫn là mock-idp ở http://localhost:9100 (http, không đổi): đây là chuyển
+# hướng cấp trang nên trình duyệt cho phép https → http bình thường, không dính
+# chốt mixed-content.
+services:
+  # Client của mock-idp được dựng từ APP_BASE_URL ⇒ phải khai lại ở ĐÂY, nếu
+  # không IdP vẫn chỉ nhận redirect_uri của localhost:8100 và trả invalid_redirect_uri.
+  mock-idp:
+    environment:
+      APP_BASE_URL: https://de-vpp.pmh.com.vn:8443
+
+  api:
+    environment:
+      APP_BASE_URL: https://de-vpp.pmh.com.vn:8443
+      WEB_ORIGIN: https://de-vpp.pmh.com.vn:8443
+
+  web:
+    # CHỈ còn 8443. Bỏ 8100 để không tồn tại hai đường vào cùng một app: đăng nhập
+    # ở 8100 chắc chắn hỏng vì redirect_uri đã chuyển sang origin https.
+    ports: !override
+      - '8443:8443'
+    volumes:
+      - ./tls:/etc/nginx/tls:ro
+      - ./de-vpp-tls.conf:/etc/nginx/conf.d/de-vpp-tls.conf:ro
+    healthcheck:
+      # Giữ phép kiểm ở cổng 80: cổng 8443 dùng cert tự ký, wget sẽ báo lỗi cert
+      # và container bị coi là hỏng dù nginx vẫn phục vụ bình thường.
+      test: ['CMD', 'wget', '--spider', '-q', 'http://127.0.0.1/']

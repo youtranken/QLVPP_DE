@@ -1,0 +1,77 @@
+# Overlay: chạy stack demo nhưng ĐĂNG NHẬP BẰNG PMH ID THẬT.
+#
+#   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.pmhid.yml \
+#     --env-file deploy/.env.pmhid --profile app up -d
+#
+# Cần trước:
+#   1. `deploy/.env.pmhid` chứa PMH_CLIENT_ID / PMH_CLIENT_SECRET (KHÔNG commit).
+#   2. Dòng hosts:  127.0.0.1  de-vpp.pmh.com.vn
+#   3. Chứng chỉ ở `deploy/tls/` (tự ký — xem README).
+#
+# Vào app ở **https://de-vpp.pmh.com.vn:8443**, KHÔNG phải localhost:8100 nữa:
+# PMH ID chỉ đẩy về đúng `redirect_uri` đã đăng ký, mà origin phải khớp thì cookie
+# phiên mới theo về. Cổng 8100 vẫn còn để so sánh nhanh, nhưng đăng nhập ở đó sẽ hỏng.
+#
+# CHƯA chạy được ở thiết lập này: back-channel logout và webhook. PMH ID gọi hai
+# thứ đó từ 172.16.6.24 tới `de-vpp.pmh.com.vn`, mà tên đó chỉ tồn tại trong file
+# hosts của MÁY NÀY. Đăng nhập/đăng xuất thường vẫn đủ để nghiệm thu.
+services:
+  # TẮT HẲN IdP giả lập: chỉ còn một đường đăng nhập duy nhất là PMH ID thật.
+  # `!override` chứ không phải gán thường — danh sách profile của hai file sẽ được
+  # gộp lại nếu không nói rõ, và `app` còn sót là mock-idp vẫn chạy.
+  mock-idp:
+    profiles: !override ['khong-dung']
+
+  api:
+    # Gỡ mock-idp khỏi điều kiện khởi động, nếu không api nằm chờ một service
+    # không bao giờ chạy. Phải khai lại đủ các phụ thuộc còn cần.
+    depends_on: !override
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      # Issuer THẬT. Để trống OIDC_INTERNAL_ISSUER: container tới thẳng được
+      # de-admin.pmh.com.vn qua DNS công ty, không cần đường vòng như với mock-idp.
+      OIDC_ISSUER: https://de-admin.pmh.com.vn:8443/oidc
+      OIDC_INTERNAL_ISSUER: ''
+      APP_BASE_URL: https://de-vpp.pmh.com.vn:8443
+      WEB_ORIGIN: https://de-vpp.pmh.com.vn:8443
+      # KHÔNG có dấu `/` cuối — và đó là toàn bộ vấn đề.
+      # PMH ID đăng ký đúng MỘT post_logout_redirect_uri, lấy nguyên trường `app_url`
+      # của client (sso-server `oidc/pg-adapter.ts:97`). app_url của client_vpp khai là
+      # `https://de-vpp.pmh.com.vn:8443`, còn app mặc định gửi `APP_BASE_URL + '/'`
+      # ⇒ lệch một ký tự ⇒ oidc-provider từ chối, trả 400 ở /oidc/logout/confirm.
+      OIDC_POST_LOGOUT_REDIRECT: ${OIDC_POST_LOGOUT_REDIRECT:-https://de-vpp.pmh.com.vn:8443}
+      PMH_CLIENT_ID: ${PMH_CLIENT_ID:?can PMH_CLIENT_ID trong deploy/.env.pmhid}
+      PMH_CLIENT_SECRET: ${PMH_CLIENT_SECRET:?can PMH_CLIENT_SECRET trong deploy/.env.pmhid}
+      # Danh bạ cần client M2M riêng; chưa có thì để nguyên giá trị dev — đồng bộ
+      # danh bạ sẽ hỏng nhưng đăng nhập không ảnh hưởng.
+      PMH_M2M_CLIENT_ID: ${PMH_M2M_CLIENT_ID:-de-vpp-dev-m2m}
+      PMH_M2M_CLIENT_SECRET: ${PMH_M2M_CLIENT_SECRET:-dev-m2m-secret-change-me}
+      PMH_WEBHOOK_SECRET: ${PMH_WEBHOOK_SECRET:-dev-webhook-secret-change-me}
+      # TẠM ĐỂ THỬ: PMH ID hiện chỉ có nhóm `Test_VPP`, chưa có `VPP-Admin`.
+      # Khai đúng tên nhóm THẬT ở đây để tài khoản trong nhóm đó thành quản trị
+      # viên — ánh xạ nhóm→vai trò là CẤU HÌNH, không phải code. Khi PMH ID lập
+      # nhóm chính thức thì đổi lại thành VPP-Admin và bỏ dòng này.
+      VPP_ADMIN_GROUP: ${VPP_ADMIN_GROUP:-Test_VPP}
+      # PMH ID trả claim `department` = `Dept_Test_VPP` (đo được 21/08/2026) — là mã
+      # nhóm thử nghiệm, không phải tên phòng ban đọc được. Đích RỖNG ⇒ bỏ giá trị
+      # đó đi, không để nó lọt vào màn duyệt đơn và báo cáo Excel.
+      # Khi PMH ID trả tên phòng ban thật thì đổi thành `Dept_Test_VPP=<tên thật>`
+      # hoặc bỏ hẳn dòng này.
+      VPP_DEPARTMENT_ALIASES: ${VPP_DEPARTMENT_ALIASES:-Dept_Test_VPP=}
+
+  web:
+    # CHỈ còn 8443. Cổng 8100 (http) bị gỡ để không tồn tại hai đường vào cùng một
+    # app: đăng nhập ở 8100 chắc chắn hỏng vì PMH ID chỉ đẩy về origin đã đăng ký,
+    # mà một origin hỏng nằm sẵn đó chỉ tổ làm người dùng tưởng app lỗi.
+    ports: !override
+      - '8443:8443'
+    volumes:
+      - ./tls:/etc/nginx/tls:ro
+      - ./de-vpp-tls.conf:/etc/nginx/conf.d/de-vpp-tls.conf:ro
+    healthcheck:
+      # Giữ phép kiểm ở cổng 80: cổng 8443 dùng cert tự ký, wget sẽ báo lỗi cert
+      # và container bị coi là hỏng dù nginx vẫn phục vụ bình thường.
+      test: ['CMD', 'wget', '--spider', '-q', 'http://127.0.0.1/']
