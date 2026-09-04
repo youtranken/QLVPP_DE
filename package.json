@@ -14,6 +14,7 @@
     "test": "pnpm --filter @vpp/shared build && pnpm -r test",
     "test:e2e": "pnpm --filter @vpp/web test:e2e",
     "smoke:api": "bash scripts/smoke-api.sh",
+    "check:pmh-id": "bash scripts/check-pmh-id.sh",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

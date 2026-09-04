@@ -1,20 +1,24 @@
 import {
   AppstoreOutlined,
   CarryOutOutlined,
+  CheckCircleOutlined,
   ClockCircleOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
 import type { RequestStatus } from '@vpp/shared';
-import { Card, Col, Flex, Row, Skeleton, Typography } from 'antd';
+import { Card, Flex, Skeleton, Typography } from 'antd';
 import { formatPeriod } from '@vpp/shared';
 import type { AdminOverview } from '../../lib/admin-queries';
 
 /**
- * Bốn con số mở đầu trang chủ quản trị.
+ * Hàng thẻ số liệu mở đầu Bảng điều khiển.
  *
- * Mỗi thẻ vừa là **số liệu** vừa là **bộ lọc**: bấm "Chờ duyệt" là bảng bên dưới
- * chỉ còn đơn chờ duyệt. Con số mà không bấm được thì admin đọc xong vẫn phải tự
- * đi tìm — đúng cái làm dashboard cũ trở nên vô dụng.
+ * Mỗi thẻ vừa là **số liệu** vừa là **bộ lọc**: bấm "Đơn chờ duyệt" là bảng duyệt
+ * đơn bên dưới chỉ còn đơn chờ duyệt. Con số mà không bấm được thì admin đọc xong
+ * vẫn phải tự đi tìm — đúng cái làm dashboard cũ trở nên vô dụng.
+ *
+ * Mỗi thẻ ghi rõ PHẠM VI ở dòng phụ, vì chúng không cùng phạm vi: việc tồn đọng
+ * tính mọi kỳ, còn việc đã xong và số người tính theo kỳ đang nhận.
  */
 export interface TheSoLieu {
   khoa: string;
@@ -30,6 +34,7 @@ export interface TheSoLieu {
 const MAU = {
   cho: '#d46b08', // cam — việc đang chờ mình
   giao: '#389e0d', // xanh lá — đã duyệt, chờ giao
+  xong: '#08979c', // xanh mòng két — đã xong, khác hẳn "chờ giao"
   nguoi: '#1d68b5', // xanh thương hiệu
   mon: '#531dab', // tím — số liệu thuần
 };
@@ -54,6 +59,15 @@ export function danhSachThe(tongQuan: AdminOverview): TheSoLieu[] {
       mau: MAU.giao,
       icon: <CarryOutOutlined />,
       loc: 'approved',
+    },
+    {
+      khoa: 'daGiao',
+      nhan: 'Đã giao',
+      gioiThieu: 'mọi kỳ · đã phát xong',
+      giaTri: tongQuan.daGiao,
+      mau: MAU.xong,
+      icon: <CheckCircleOutlined />,
+      loc: 'delivered',
     },
     {
       khoa: 'chuaDangKy',
@@ -89,51 +103,62 @@ export function OverviewCards({
   if (!tongQuan) return <Skeleton active paragraph={{ rows: 2 }} />;
 
   return (
-    <Row gutter={[12, 12]}>
+    /*
+      Năm thẻ không chia chẵn lưới 24 cột của AntD, nên dùng CSS grid.
+      `auto-fill` chứ không phải `auto-fit`: auto-fit gộp cột trống lại, khiến thẻ
+      lẻ ở dòng cuối phình ra chiếm trọn chiều ngang — nhìn như một khối lỗi.
+      Với bề ngang 1100px của trang, 200px cho ra đúng năm cột trên máy tính, rồi
+      tự giảm còn bốn / ba / hai / một khi màn hẹp dần.
+    */
+    <div
+      style={{
+        display: 'grid',
+        gap: 12,
+        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+      }}
+    >
       {danhSachThe(tongQuan).map((the) => {
         const bamDuoc = the.loc !== undefined;
         const dangChon = bamDuoc && the.loc === dangLoc;
 
         return (
-          <Col xs={12} lg={6} key={the.khoa}>
-            <Card
-              size="small"
-              hoverable={bamDuoc}
-              aria-label={the.nhan}
-              // Bấm lại thẻ đang chọn thì bỏ lọc — đỡ phải đi tìm nút "Xoá lọc".
-              onClick={bamDuoc ? () => onLoc(dangChon ? undefined : the.loc) : undefined}
-              style={{
-                cursor: bamDuoc ? 'pointer' : 'default',
-                height: '100%',
-                // Dải màu bên trái thay cho viền cả khối: đủ để nhận ra nhóm số
-                // liệu mà không biến trang thành bốn ô sặc sỡ.
-                borderLeft: `3px solid ${the.mau}`,
-                // Thẻ đang lọc phải NHÌN RA NGAY, nếu không admin quên mất mình
-                // đang xem một tập con và tưởng hệ thống mất dữ liệu.
-                background: dangChon ? `${the.mau}0f` : undefined,
-                boxShadow: dangChon ? `inset 0 0 0 1px ${the.mau}` : undefined,
-              }}
-            >
-              <Flex vertical gap={2}>
-                <Flex align="center" gap={6}>
-                  <span style={{ color: the.mau }}>{the.icon}</span>
-                  <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-                    {the.nhan}
-                  </Typography.Text>
-                </Flex>
-                <Typography.Text
-                  style={{ fontSize: 30, lineHeight: 1.15, fontWeight: 700, color: the.mau }}
-                >
-                  {the.giaTri}
-                </Typography.Text>
-                <Typography.Text type="secondary" style={{ fontSize: 12, minHeight: 18 }}>
-                  {the.gioiThieu ?? ' '}
+          <Card
+            key={the.khoa}
+            size="small"
+            hoverable={bamDuoc}
+            aria-label={the.nhan}
+            // Bấm lại thẻ đang chọn thì bỏ lọc — đỡ phải đi tìm nút "Xoá lọc".
+            onClick={bamDuoc ? () => onLoc(dangChon ? undefined : the.loc) : undefined}
+            style={{
+              cursor: bamDuoc ? 'pointer' : 'default',
+              // Dải màu bên trái thay cho viền cả khối: đủ để nhận ra nhóm số
+              // liệu mà không biến trang thành năm ô sặc sỡ.
+              borderLeft: `3px solid ${the.mau}`,
+              // Thẻ đang lọc phải NHÌN RA NGAY, nếu không admin quên mất mình
+              // đang xem một tập con và tưởng hệ thống mất dữ liệu.
+              background: dangChon ? `${the.mau}0f` : undefined,
+              boxShadow: dangChon ? `inset 0 0 0 1px ${the.mau}` : undefined,
+            }}
+          >
+            <Flex vertical gap={2}>
+              <Flex align="center" gap={6}>
+                <span style={{ color: the.mau }}>{the.icon}</span>
+                <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                  {the.nhan}
                 </Typography.Text>
               </Flex>
-            </Card>
-          </Col>
+              <Typography.Text
+                style={{ fontSize: 30, lineHeight: 1.15, fontWeight: 700, color: the.mau }}
+              >
+                {the.giaTri}
+              </Typography.Text>
+              <Typography.Text type="secondary" style={{ fontSize: 12, minHeight: 18 }}>
+                {the.gioiThieu ?? ' '}
+              </Typography.Text>
+            </Flex>
+          </Card>
         );
       })}
-    </Row>
+    </div>
   );
 }

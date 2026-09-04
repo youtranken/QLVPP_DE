@@ -27,5 +27,6 @@ ADR giúp người vào sau hiểu **vì sao** chọn như vậy (không chỉ _
 | [0011](./0011-thong-bao-trong-app.md)                 | Thông báo trong app (không email/bên thứ ba)         | Accepted                      |
 | [0012](./0012-khong-thanh-toan.md)                    | Không có mô-đun thanh toán                           | Accepted                      |
 | [0013](./0013-khung-ngay-dang-ky-admin-cau-hinh.md)   | Khung ngày đăng ký do admin cấu hình                 | Accepted                      |
+| [0014](./0014-loi-thoat-dang-nhap-tai-khoan-khac.md)  | Lối thoát "đăng nhập bằng tài khoản khác"            | Proposed                      |
 
 _Liên quan:_ `../product/PRD.md` · `../architecture/SDD.md` · `../architecture/SSO-INTEGRATION.md` · `../architecture/ARCHITECTURE-OPTIONS.md`

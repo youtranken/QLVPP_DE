@@ -40,11 +40,11 @@ export class AdminRequestsService {
   }
 
   /**
-   * Số liệu tổng quan của KỲ ĐANG NHẬN, cho trang chủ quản trị.
+   * Số liệu tổng quan cho Bảng điều khiển.
    *
-   * Bốn con số trả lời đúng câu hỏi admin hỏi khi mở trang: *có gì đang chờ tôi?*
-   * Cố ý KHÔNG kèm xu hướng nhiều kỳ — thứ đó xem mỗi tháng một lần và đã có
-   * riêng ở Bảng điều khiển.
+   * Trả lời đúng câu hỏi admin hỏi khi mở trang: *có gì đang chờ tôi?* Mỗi con số
+   * kèm phạm vi riêng và màn hình phải nói rõ phạm vi đó — xem chú thích từng
+   * truy vấn bên dưới.
    */
   async overview() {
     const period = periodForDate(await this.settings.getWindow());
@@ -59,6 +59,14 @@ export class AdminRequestsService {
           choDuyet: sql<number>`count(*) filter (where ${requests.status} = 'submitted')::int`,
           // "Chờ giao" = đã duyệt nhưng chưa giao đủ; đơn `delivered` là xong việc.
           choGiao: sql<number>`count(*) filter (where ${requests.status} = 'approved')::int`,
+          /**
+           * "Đã giao" cũng tính MỌI KỲ, cùng phạm vi với hai số trên: ba con số
+           * này là ba chặng của một dòng chảy (chờ duyệt → chờ giao → đã giao),
+           * mà bấm vào thẻ nào cũng lọc bảng bên dưới theo trạng thái đó trên mọi
+           * kỳ. Bó riêng số này vào kỳ hiện tại thì thẻ ghi một đằng, bảng nó vừa
+           * lọc ra lại hiện một nẻo.
+           */
+          daGiao: sql<number>`count(*) filter (where ${requests.status} = 'delivered')::int`,
         })
         .from(requests),
       this.db
@@ -82,6 +90,7 @@ export class AdminRequestsService {
       period,
       choDuyet: theoTrangThai.choDuyet,
       choGiao: theoTrangThai.choGiao,
+      daGiao: theoTrangThai.daGiao,
       tongMon: mon.tongMon,
       tongNguoi: nguoi.tong,
       daDangKy: daDangKy.so,

@@ -7,20 +7,7 @@ import { DB, type Db } from '../../infra/db/db.module';
 import { departments, users } from '../../infra/db/schema';
 import { AuditService } from '../audit/audit.service';
 
-/** Một bản ghi danh bạ trả về từ `GET /api/v1/users`. */
-interface DirectoryUser {
-  sub: string;
-  email?: string | null;
-  full_name?: string | null;
-  employee_code?: string | null;
-  groups?: string[] | null;
-  disabled?: boolean | null;
-}
-
-interface DirectoryPage {
-  total?: number;
-  items?: DirectoryUser[];
-}
+import { normalizeDirectoryUser, parseDirectoryPage, type DirectoryUser } from './pmh-payload';
 
 const PAGE_SIZE = 200;
 
@@ -116,15 +103,17 @@ export class DirectoryService {
           message: 'Directory API lỗi. Dữ liệu danh bạ giữ nguyên.',
         });
       }
-      const page = (await response.json()) as DirectoryPage;
-      const items = page.items ?? [];
-      fetched.push(...items);
+      // PMH ID trả mảng thuần, mock-idp bọc trong `{ items }` — nhận cả hai.
+      const items = parseDirectoryPage(await response.json());
+      for (const raw of items) {
+        const entry = normalizeDirectoryUser(raw);
+        if (entry) fetched.push(entry);
+      }
       if (items.length < PAGE_SIZE) break;
     }
 
     let upserted = 0;
     for (const entry of fetched) {
-      if (!entry.sub) continue;
       await this.upsert(entry);
       upserted += 1;
     }
@@ -145,7 +134,7 @@ export class DirectoryService {
    * tin "đã dùng app", còn Directory chỉ bổ sung người chưa từng đăng nhập.
    */
   private async upsert(entry: DirectoryUser): Promise<void> {
-    const groups = entry.groups ?? [];
+    const groups = entry.groups;
     const identity = mapGroups(groups, {
       adminGroup: this.config.VPP_ADMIN_GROUP,
       departmentGroups: this.config.VPP_DEPARTMENT_GROUPS,
@@ -153,13 +142,13 @@ export class DirectoryService {
 
     const values = {
       pmhSub: entry.sub,
-      email: entry.email ?? null,
-      name: entry.full_name ?? null,
-      employeeCode: entry.employee_code ?? null,
+      email: entry.email,
+      name: entry.full_name,
+      employeeCode: entry.employee_code,
       groups,
       department: identity.department,
       role: identity.role,
-      disabled: entry.disabled ?? false,
+      disabled: entry.disabled,
       source: 'directory' as const,
       updatedAt: new Date(),
     };

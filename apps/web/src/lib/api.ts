@@ -95,3 +95,12 @@ export function takeReturnTo(): string | null {
   sessionStorage.removeItem('vpp:returnTo');
   return target;
 }
+
+/**
+ * Xem có trang chờ quay lại hay không mà KHÔNG lấy đi.
+ * Dùng để hoãn các phép chuyển hướng mặc định ở `/`: chuyển hướng trước thì
+ * `takeReturnTo` không bao giờ chạy nữa và người dùng mất chỗ định vào.
+ */
+export function hasReturnTo(): boolean {
+  return sessionStorage.getItem('vpp:returnTo') !== null;
+}

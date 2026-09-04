@@ -1,5 +1,12 @@
 # PMH ID — Hướng dẫn tích hợp cho Developer
 
+> ⚠️ **Đính chính hostname (kiểm chứng 2026-08-17):** tài liệu này ghi
+> `admin-de.pmh.com.vn` ở mọi nơi, nhưng host thật là **`de-admin.pmh.com.vn`**
+> (phân giải ra `Website-Admin-DE.pmh.com.vn`, 172.16.6.24). `admin-de...` không
+> tồn tại trong DNS. Discovery thật:
+> `https://de-admin.pmh.com.vn:8443/oidc/.well-known/openid-configuration`
+> — đọc phần dưới thì đảo lại thứ tự hai chữ đó.
+
 > Tài liệu cho dev các project nội bộ tích hợp đăng nhập chung qua **PMH ID** (`https://admin-de.pmh.com.vn:8443`, cổng công khai **8443**).
 > Bản này bám theo Architecture Spine + PRD (2026-07-04). Có thắc mắc hoặc cần cấp client → liên hệ SSA.
 

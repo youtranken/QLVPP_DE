@@ -2,7 +2,7 @@ import { Flex, Result, Spin } from 'antd';
 import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { AppLayout } from './components/AppLayout';
-import { ApiError, takeReturnTo } from './lib/api';
+import { ApiError, hasReturnTo, takeReturnTo } from './lib/api';
 import { useMe } from './lib/queries';
 import { HomePage } from './pages/HomePage';
 import { MyRequestsPage } from './pages/MyRequestsPage';
@@ -97,6 +97,24 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Trang ở `/`.
+ *
+ * Admin không có Trang chủ nữa — Bảng điều khiển đã thay đúng vai trò đó, nên đưa
+ * thẳng họ sang đấy. Nhân viên giữ nguyên Trang chủ.
+ */
+function HomeRoute() {
+  const { data: me } = useMe();
+
+  // Còn trang người dùng định vào thì nhường cho `useReturnToRedirect` đưa đi.
+  // Chuyển hướng ở đây trước sẽ khiến hiệu ứng kia không bao giờ chạy tới nơi và
+  // người dùng mất chỗ mình định vào (AUTH-1 AC2).
+  if (hasReturnTo()) return null;
+
+  if (me?.role === 'admin') return <Navigate to={routes.adminDashboard} replace />;
+  return <HomePage />;
+}
+
 /** Sau khi PMH ID đưa về `/`, nhảy tiếp tới trang người dùng định vào lúc đầu. */
 function useReturnToRedirect(): void {
   const navigate = useNavigate();
@@ -130,7 +148,7 @@ export function App() {
           <RequireAuth>
             <AppLayout>
               <Routes>
-                <Route path={routes.home} element={<HomePage />} />
+                <Route path={routes.home} element={<HomeRoute />} />
                 <Route path={routes.register} element={<RegisterPage />} />
                 <Route path={routes.myRequests} element={<MyRequestsPage />} />
 

@@ -79,6 +79,10 @@ services:
       OIDC_ISSUER: ${OIDC_ISSUER:?thiếu OIDC_ISSUER}
       # Chỉ đặt khi api KHÔNG tới được OIDC_ISSUER bằng chính URL đó (xem overlay EDGE).
       OIDC_INTERNAL_ISSUER: ${OIDC_INTERNAL_ISSUER:-}
+      # Bỏ trống ⇒ APP_BASE_URL + '/'. PMH ID đăng ký ĐÚNG MỘT URL đăng xuất, suy
+      # từ trường `app_url` của client — lệch một ký tự (kể cả dấu `/` thừa) là nó
+      # từ chối nguyên lượt đăng xuất. Đặt `off` để bỏ hẳn tham số.
+      OIDC_POST_LOGOUT_REDIRECT: ${OIDC_POST_LOGOUT_REDIRECT:-}
       PMH_CLIENT_ID: ${PMH_CLIENT_ID:?thiếu PMH_CLIENT_ID}
       PMH_CLIENT_SECRET: ${PMH_CLIENT_SECRET:?thiếu PMH_CLIENT_SECRET}
       PMH_WEBHOOK_SECRET: ${PMH_WEBHOOK_SECRET:?thiếu PMH_WEBHOOK_SECRET}
@@ -90,6 +94,10 @@ services:
       SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-7}
       VPP_ADMIN_GROUP: ${VPP_ADMIN_GROUP:-VPP-Admin}
       VPP_DEPARTMENT_GROUPS: ${VPP_DEPARTMENT_GROUPS:-}
+      # Đổi/bỏ tên phòng ban IdP gửi trong claim `department`. Dạng `nguồn=đích`,
+      # đích rỗng ⇒ bỏ giá trị đó. Chuỗi này in thẳng lên báo cáo Excel trình ký
+      # nên phải kiểm soát được.
+      VPP_DEPARTMENT_ALIASES: ${VPP_DEPARTMENT_ALIASES:-}
       DIRECTORY_SYNC_MINUTES: ${DIRECTORY_SYNC_MINUTES:-60}
       ORG_NAME: ${ORG_NAME:?thiếu ORG_NAME}
       UPLOAD_DIR: /app/apps/api/uploads

@@ -50,10 +50,19 @@ services:
       PMH_M2M_CLIENT_ID: ${PMH_M2M_CLIENT_ID:-de-vpp-dev-m2m}
       PMH_M2M_CLIENT_SECRET: ${PMH_M2M_CLIENT_SECRET:-dev-m2m-secret-change-me}
       PMH_WEBHOOK_SECRET: ${PMH_WEBHOOK_SECRET:-dev-webhook-secret-change-me}
-      # TẠM ĐỂ THỬ: PMH ID hiện chỉ có nhóm `Test_VPP`, chưa có `VPP-Admin`.
-      # Khai đúng tên nhóm THẬT ở đây để tài khoản trong nhóm đó thành quản trị
-      # viên — ánh xạ nhóm→vai trò là CẤU HÌNH, không phải code. Khi PMH ID lập
-      # nhóm chính thức thì đổi lại thành VPP-Admin và bỏ dòng này.
+      # VẪN LÀ `Test_VPP`, dù PMH ID đã lập nhóm `VPP-Admin`.
+      #
+      # Lập nhóm KHÔNG đủ: nhóm phải được GÁN CHO CLIENT thì mới lọt vào claim
+      # `groups`. Đo bằng Directory API ngày 03/09/2026 — `GET /api/v1/groups` với
+      # token M2M của `client_vpp` trả về đúng một nhóm:
+      #     [{"id":"0fb2236f-…","name":"Test_VPP"}]
+      # và `GET /api/v1/users` cho thấy `huuthong@pmh.com.vn` vẫn chỉ có
+      # `["Test_VPP"]`. Trỏ VPP_ADMIN_GROUP sang `VPP-Admin` lúc này ⇒ claim không
+      # bao giờ chứa tên đó ⇒ KHÔNG CÒN AI LÀ QUẢN TRỊ VIÊN.
+      #
+      # Đổi sang `VPP-Admin` khi `GET /api/v1/groups` liệt kê nó (xin ở
+      # `docs/operations/YEU-CAU-PMH-ID-2026-08-21.md` §3a/§3c) — một dòng trong
+      # `deploy/.env.pmhid`, không phải sửa code.
       VPP_ADMIN_GROUP: ${VPP_ADMIN_GROUP:-Test_VPP}
       # PMH ID trả claim `department` = `Dept_Test_VPP` (đo được 21/08/2026) — là mã
       # nhóm thử nghiệm, không phải tên phòng ban đọc được. Đích RỖNG ⇒ bỏ giá trị

@@ -137,43 +137,77 @@ Mở `http://localhost:8090` → bấm **Đăng nhập bằng PMH ID** → chọ
 
 ## Scripts (thư mục gốc)
 
-| Lệnh                | Tác dụng                                    |
-| ------------------- | ------------------------------------------- |
-| `pnpm lint`         | ESLint toàn repo                            |
-| `pnpm format`       | Prettier ghi định dạng                      |
-| `pnpm format:check` | Prettier kiểm tra (không sửa)               |
-| `pnpm typecheck`    | Kiểm kiểu TypeScript (strict) mọi package   |
-| `pnpm test`         | Unit test (Vitest)                          |
-| `pnpm test:e2e`     | E2E Playwright — cần stack đang chạy        |
-| `pnpm build`        | Build mọi package                           |
-| `pnpm smoke:api`    | Smoke test API qua HTTP thật (xem bên dưới) |
+| Lệnh                | Tác dụng                                       |
+| ------------------- | ---------------------------------------------- |
+| `pnpm lint`         | ESLint toàn repo                               |
+| `pnpm format`       | Prettier ghi định dạng                         |
+| `pnpm format:check` | Prettier kiểm tra (không sửa)                  |
+| `pnpm typecheck`    | Kiểm kiểu TypeScript (strict) mọi package      |
+| `pnpm test`         | Unit test (Vitest)                             |
+| `pnpm test:e2e`     | E2E Playwright — cần stack đang chạy           |
+| `pnpm build`        | Build mọi package                              |
+| `pnpm smoke:api`    | Smoke test API qua HTTP thật (xem bên dưới)    |
+| `pnpm check:pmh-id` | Kiểm kết nối tới PMH ID thật trước khi cắm vào |
+
+## Ghép vào PMH ID thật
+
+App đang chạy bằng **mock-idp**. Chuyển sang PMH ID thật **không phải sửa code**, chỉ đổi
+cấu hình — xem khối hướng dẫn trong `.env.example` (dev) hoặc `deploy/.env.prod.example` (prod).
+
+```bash
+# 1) Điền credential admin PMH ID cấp vào .env (KHÔNG commit, KHÔNG dán vào chat/issue)
+#    OIDC_ISSUER=https://de-admin.pmh.com.vn:8443/oidc
+#    PMH_CLIENT_ID / PMH_CLIENT_SECRET / PMH_WEBHOOK_SECRET
+#    PMH_M2M_CLIENT_ID / PMH_M2M_CLIENT_SECRET
+
+# 2) Kiểm từ ngoài trước khi khởi động app — dừng ở tầng hỏng đầu tiên
+pnpm check:pmh-id            # DNS → cổng → cert → discovery → token M2M → Directory API
+
+# 3) Khởi động lại api rồi đăng nhập thử bằng tài khoản thật
+```
+
+`pnpm check:pmh-id` nói rõ hỏng ở tầng nào thay vì chỉ "đăng nhập không được", và **không in
+bí mật** nên dán log đi hỏi được. Nó cũng đối chiếu `issuer` mà PMH ID khai với `OIDC_ISSUER`
+của app — hai giá trị lệch nhau là token bị từ chối **sau khi** đăng nhập, rất khó đoán.
+
+> **Cert tự ký:** PMH ID bản dev dùng cert tự ký. Node từ chối cert đó nên api sẽ chết ngay ở
+> bước discovery, dù `curl -k` vẫn chạy. Xin file CA rồi đặt `NODE_EXTRA_CA_CERTS` trỏ vào nó.
+> Bản prod dùng cert wildcard thật thì không vướng.
+
+Danh sách đầy đủ những gì phải khai với admin PMH ID và các bước nghiệm thu sau khi ghép:
+[`docs/operations/ONBOARDING-PMH-ID.md`](docs/operations/ONBOARDING-PMH-ID.md).
 
 ## Màn hình
 
 ### Nhân viên (M3)
 
-| Đường dẫn         | Màn hình                                                                                                         |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `/dang-nhap`      | Đăng nhập PMH ID (không có ô mật khẩu)                                                                           |
-| `/khong-co-quyen` | Trang báo chưa được cấp quyền (`access_denied`)                                                                  |
-| `/`               | Trang chủ: kỳ hiện tại, trạng thái đăng ký, tóm tắt đơn. **Admin** thấy thêm danh sách đăng ký của các phòng ban |
-| `/dang-ky`        | Đăng ký VPP: danh mục kèm ảnh, giỏ, mục "Khác" + ảnh                                                             |
-| `/don-cua-toi`    | Đơn của tôi: lịch sử theo kỳ, chi tiết, huỷ, gửi lại                                                             |
+| Đường dẫn         | Màn hình                                                                                                             |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `/dang-nhap`      | Đăng nhập PMH ID (không có ô mật khẩu)                                                                               |
+| `/khong-co-quyen` | Trang báo chưa được cấp quyền (`access_denied`)                                                                      |
+| `/`               | Trang chủ nhân viên: kỳ hiện tại, trạng thái đăng ký, tóm tắt đơn. **Admin** vào đây được đưa thẳng sang `/quan-tri` |
+| `/dang-ky`        | Đăng ký VPP: danh mục kèm ảnh, giỏ, mục "Khác" + ảnh                                                                 |
+| `/don-cua-toi`    | Đơn của tôi: lịch sử theo kỳ, chi tiết, huỷ, gửi lại                                                                 |
 
 ### Quản trị viên (M4)
 
-| Đường dẫn              | Màn hình                                                                         |
-| ---------------------- | -------------------------------------------------------------------------------- |
-| `/quan-tri`            | Bảng điều khiển: thống kê nhiều kỳ, theo phòng ban, tỉ lệ đã giao                |
-| `/quan-tri/don`        | Duyệt đơn: lọc + phân trang, duyệt/từ chối, giao, điều chỉnh                     |
-| `/quan-tri/tong-hop`   | Tổng hợp theo món + tải Excel trình ký                                           |
-| `/quan-tri/danh-muc`   | Quản lý nhóm và món (mã, ảnh, admin_only, tối đa, ngừng/bật) + nhập từ Excel/CSV |
-| `/quan-tri/danh-ba`    | Danh bạ nhân viên + nút Đồng bộ ngay                                             |
-| `/quan-tri/nhat-ky`    | Nhật ký hoạt động, lọc theo hành động                                            |
-| `/quan-tri/phieu-phat` | Phiếu phát hàng in được: gom theo phòng ban, có cột ký nhận                      |
-| `/quan-tri/cai-dat`    | Cài đặt: đổi khung ngày đăng ký, xem trước ảnh hưởng trước khi lưu               |
+| Đường dẫn              | Màn hình                                                                                                                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/quan-tri`            | Bảng điều khiển (trang mặc định của admin): 5 thẻ số liệu bấm để lọc — chờ duyệt, chờ giao, đã giao, chưa đăng ký, tổng số lượng — kèm bảng duyệt đơn theo món, rồi thống kê nhiều kỳ |
+| `/quan-tri/don`        | Duyệt đơn: lọc + phân trang, duyệt/từ chối, giao, điều chỉnh, duyệt hàng loạt                                                                                                         |
+| `/quan-tri/tong-hop`   | Tổng hợp theo món + tải Excel trình ký                                                                                                                                                |
+| `/quan-tri/danh-muc`   | Quản lý nhóm và món (mã, ảnh, admin_only, tối đa, ngừng/bật) + nhập từ Excel/CSV                                                                                                      |
+| `/quan-tri/danh-ba`    | Danh bạ nhân viên + nút Đồng bộ ngay                                                                                                                                                  |
+| `/quan-tri/nhat-ky`    | Nhật ký hoạt động, lọc theo hành động                                                                                                                                                 |
+| `/quan-tri/phieu-phat` | Phiếu phát hàng in được: gom theo phòng ban, có cột ký nhận                                                                                                                           |
+| `/quan-tri/cai-dat`    | Cài đặt: đổi khung ngày đăng ký, xem trước ảnh hưởng trước khi lưu                                                                                                                    |
 
-Khung app có menu theo vai trò, chuông thông báo (số chưa đọc), đăng xuất local/toàn hệ
+Menu theo vai trò: **nhân viên** thấy Trang chủ · Đăng ký VPP · Đơn của tôi;
+**admin** thấy Bảng điều khiển · Duyệt đơn · Đăng ký VPP · Đơn của tôi · Quản trị ▾
+— hai việc làm hằng ngày nằm thẳng trên thanh menu, những việc thỉnh thoảng mới đụng
+(tổng hợp, phiếu phát, danh mục, danh bạ, nhật ký, cài đặt) nằm trong menu Quản trị.
+
+Khung app còn có chuông thông báo (số chưa đọc), đăng xuất local/toàn hệ
 và banner trạng thái cửa sổ đăng ký. Giao diện dùng **theme trung tính đặt chỗ** — đổi
 màu và logo ở `apps/web/src/theme.ts` + `AppLayout.tsx` khi có tài sản thương hiệu.
 

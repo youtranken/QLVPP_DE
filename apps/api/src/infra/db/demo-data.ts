@@ -61,7 +61,7 @@ export const DEMO_USERS: DemoUser[] = [
 ];
 
 export interface DemoLine {
-  /** Tên món phải khớp danh mục mẫu; dòng "Khác" thì đặt `custom: true`. */
+  /** Tên món phải khớp danh mục trong `seed-data.ts`; dòng "Khác" thì đặt `custom: true`. */
   item: string;
   quantity: number;
   custom?: boolean;
@@ -94,9 +94,9 @@ export const DEMO_REQUESTS: DemoRequest[] = [
     status: 'submitted',
     note: 'Cần gấp cho dự án mới',
     lines: [
-      { item: 'Bút bi xanh', quantity: 10 },
-      { item: 'Sổ tay A5', quantity: 3 },
-      { item: 'Kẹp giấy đen 25mm', quantity: 2 },
+      { item: 'Bút bi Thiên Long 027', quantity: 10 },
+      { item: 'Sổ lò xo A5', quantity: 3 },
+      { item: 'Kẹp bướm 32', quantity: 2 },
     ],
   },
   {
@@ -104,8 +104,8 @@ export const DEMO_REQUESTS: DemoRequest[] = [
     periodOffset: 0,
     status: 'submitted',
     lines: [
-      { item: 'Bút bi đỏ', quantity: 5 },
-      { item: 'Giấy note 3x3', quantity: 4 },
+      { item: 'Bút kim jellitto 0.4', quantity: 5 },
+      { item: 'Giấy ghi chú 3 x 3 (note stick)', quantity: 4 },
     ],
   },
   {
@@ -114,8 +114,8 @@ export const DEMO_REQUESTS: DemoRequest[] = [
     status: 'approved',
     deliveredLines: 1,
     lines: [
-      { item: 'Mực in HP 12A', quantity: 2 },
-      { item: 'Băng keo trong', quantity: 6 },
+      { item: 'Mực dấu Horse', quantity: 2 },
+      { item: 'Băng keo trong 5cm 70ya', quantity: 6 },
       { item: 'Giá đỡ màn hình', quantity: 1, custom: true, unit: 'cái' },
     ],
   },
@@ -124,7 +124,7 @@ export const DEMO_REQUESTS: DemoRequest[] = [
     periodOffset: 0,
     status: 'rejected',
     rejectReason: 'Số lượng bút vượt nhu cầu thực tế, vui lòng gửi lại với số ít hơn.',
-    lines: [{ item: 'Bút dạ quang', quantity: 20 }],
+    lines: [{ item: 'Bút dạ quang Thiên Long', quantity: 20 }],
   },
 
   // ── Kỳ trước: đã xử lý xong, cho biểu đồ có dữ liệu lịch sử ─────────────
@@ -133,8 +133,8 @@ export const DEMO_REQUESTS: DemoRequest[] = [
     periodOffset: 1,
     status: 'delivered',
     lines: [
-      { item: 'Bút bi xanh', quantity: 8 },
-      { item: 'Giấy A5', quantity: 2 },
+      { item: 'Bút bi Thiên Long 027', quantity: 8 },
+      { item: 'Tập 100 trang', quantity: 2 },
     ],
   },
   {
@@ -142,8 +142,8 @@ export const DEMO_REQUESTS: DemoRequest[] = [
     periodOffset: 1,
     status: 'delivered',
     lines: [
-      { item: 'Bìa còng A4', quantity: 5 },
-      { item: 'Ghim bấm số 10', quantity: 3 },
+      { item: 'Bìa còng 5 cm 2 mặt', quantity: 5 },
+      { item: 'Kim bấm 10 plus', quantity: 3 },
     ],
   },
   {
@@ -151,14 +151,14 @@ export const DEMO_REQUESTS: DemoRequest[] = [
     periodOffset: 2,
     status: 'delivered',
     lines: [
-      { item: 'Sổ lò xo A4', quantity: 4 },
-      { item: 'Bút chì 2B', quantity: 6 },
+      { item: 'Sổ lò xo A5', quantity: 4 },
+      { item: 'Bút chì cây', quantity: 6 },
     ],
   },
   {
     user: 'usr_chi',
     periodOffset: 2,
     status: 'delivered',
-    lines: [{ item: 'Mực in Canon 328', quantity: 1 }],
+    lines: [{ item: 'Máy bấm kim 10 plus', quantity: 1 }],
   },
 ];

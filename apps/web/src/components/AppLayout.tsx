@@ -1,4 +1,6 @@
 import {
+  AuditOutlined,
+  DashboardOutlined,
   FileTextOutlined,
   HomeOutlined,
   LogoutOutlined,
@@ -27,31 +29,46 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const menuItems: MenuProps['items'] = [
-    { key: routes.home, icon: <HomeOutlined />, label: t('nav.home') },
-    { key: routes.register, icon: <PlusCircleOutlined />, label: t('nav.register') },
-    { key: routes.myRequests, icon: <FileTextOutlined />, label: t('nav.myRequests') },
-  ];
+  const laAdmin = me?.role === 'admin';
 
-  // Menu quản trị chỉ hiện với admin. Đây là lớp trải nghiệm; backend mới thực
-  // sự chặn quyền, nên ẩn menu không phải là biện pháp bảo mật (SDD §2).
-  if (me?.role === 'admin') {
-    menuItems.push({
-      key: 'admin',
-      icon: <SettingOutlined />,
-      label: t('nav.admin'),
-      children: [
-        { key: routes.adminDashboard, label: t('nav.dashboard') },
-        { key: routes.adminRequests, label: t('nav.adminRequests') },
-        { key: routes.adminSummary, label: t('nav.summary') },
-        { key: routes.adminCatalog, label: t('nav.catalog') },
-        { key: routes.adminDirectory, label: t('nav.directory') },
-        { key: routes.adminAudit, label: t('nav.audit') },
-        { key: routes.adminHandover, label: t('nav.handover') },
-        { key: routes.adminSettings, label: t('nav.settings') },
-      ],
-    });
-  }
+  /**
+   * Menu theo vai trò.
+   *
+   * **Admin** mở app là để điều hành, nên Bảng điều khiển và Duyệt đơn nằm THẲNG
+   * trên thanh menu — hai việc làm hằng ngày không nên nằm sau một lần bấm mở
+   * menu con. Trang chủ bỏ khỏi menu admin vì Bảng điều khiển đã thay đúng vai trò
+   * đó. Menu "Quản trị" còn lại là những việc thỉnh thoảng mới đụng (danh mục,
+   * danh bạ, cài đặt…).
+   *
+   * **Nhân viên** giữ nguyên Trang chủ làm điểm xuất phát.
+   *
+   * Ẩn menu chỉ là lớp trải nghiệm; backend mới thực sự chặn quyền (SDD §2).
+   */
+  const menuItems: MenuProps['items'] = laAdmin
+    ? [
+        { key: routes.adminDashboard, icon: <DashboardOutlined />, label: t('nav.dashboard') },
+        { key: routes.adminRequests, icon: <AuditOutlined />, label: t('nav.adminRequests') },
+        { key: routes.register, icon: <PlusCircleOutlined />, label: t('nav.register') },
+        { key: routes.myRequests, icon: <FileTextOutlined />, label: t('nav.myRequests') },
+        {
+          key: 'admin',
+          icon: <SettingOutlined />,
+          label: t('nav.admin'),
+          children: [
+            { key: routes.adminSummary, label: t('nav.summary') },
+            { key: routes.adminHandover, label: t('nav.handover') },
+            { key: routes.adminCatalog, label: t('nav.catalog') },
+            { key: routes.adminDirectory, label: t('nav.directory') },
+            { key: routes.adminAudit, label: t('nav.audit') },
+            { key: routes.adminSettings, label: t('nav.settings') },
+          ],
+        },
+      ]
+    : [
+        { key: routes.home, icon: <HomeOutlined />, label: t('nav.home') },
+        { key: routes.register, icon: <PlusCircleOutlined />, label: t('nav.register') },
+        { key: routes.myRequests, icon: <FileTextOutlined />, label: t('nav.myRequests') },
+      ];
 
   /** Đăng xuất local: chỉ huỷ phiên app, không đụng phiên SSO (AUTH-2 AC1). */
   const signOutLocal = async () => {

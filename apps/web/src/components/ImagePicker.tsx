@@ -1,6 +1,6 @@
 import { DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import { App, Button, Flex, Image, Typography } from 'antd';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { ApiError, api } from '../lib/api';
 
 /** Ảnh đính kèm tối đa 5MB (SDD §9) — kiểm ở đây để báo lỗi sớm; server vẫn kiểm lại. */
@@ -9,6 +9,11 @@ const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 /**
  * Chọn / đổi / gỡ một ảnh. Tải lên NGAY khi chọn để lấy đường dẫn; nơi gọi chỉ
  * giữ đường dẫn đó. Dùng chung cho ảnh minh hoạ món (admin) và ảnh mục "Khác".
+ *
+ * Ô chọn tệp nằm TRONG SUỐT ĐÈ LÊN nút, nên cú bấm của người dùng rơi thẳng vào
+ * `<input type="file">` và trình duyệt tự mở hộp thoại. KHÔNG gọi `input.click()`
+ * bằng JavaScript: cú bấm gián tiếp đó bị một số trình duyệt và tiện ích mở rộng
+ * chặn im lặng — bấm nút mà không có gì xảy ra, không báo lỗi gì cả.
  *
  * `value`/`onChange` để optional theo đúng giao ước của `Form.Item` AntD — đặt
  * trong Form thì Form tự tiêm hai props này, không phải truyền tay.
@@ -27,7 +32,6 @@ export function ImagePicker({
   label?: string;
 }) {
   const { message } = App.useApp();
-  const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
   const pick = async (file: File) => {
@@ -78,32 +82,51 @@ export function ImagePicker({
         </Flex>
       )}
 
-      <input
-        type="file"
-        accept="image/*"
-        // `hidden` thôi không đủ: CSS của AntD đặt `display` cho input nên thắng
-        // thuộc tính hidden của trình duyệt, và ô chọn tệp gốc vẫn hiện ra.
-        hidden
-        style={{ display: 'none' }}
-        ref={inputRef}
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file) void pick(file);
-          // Xoá value để chọn lại đúng tệp đó vẫn kích hoạt onChange.
-          event.target.value = '';
-        }}
-      />
-
       <Flex vertical gap={4}>
-        <Button
-          size="small"
-          icon={<UploadOutlined />}
-          loading={uploading}
-          disabled={disabled}
-          onClick={() => inputRef.current?.click()}
-        >
-          {value ? 'Đổi ảnh' : label}
-        </Button>
+        <div style={{ position: 'relative', display: 'inline-flex' }}>
+          {/*
+            Nút chỉ để NHÌN: ô chọn tệp đè bên trên mới là thứ nhận cú bấm, tiêu
+            điểm bàn phím và tên gọi cho trình đọc màn hình. Không ẩn nút khỏi cây
+            trợ năng thì người dùng nghe thấy hai nút "Đổi ảnh" nằm cạnh nhau.
+          */}
+          <Button
+            size="small"
+            icon={<UploadOutlined />}
+            loading={uploading}
+            disabled={disabled}
+            tabIndex={-1}
+            aria-hidden
+            style={{ width: '100%' }}
+          >
+            {value ? 'Đổi ảnh' : label}
+          </Button>
+
+          {/*
+            Trong lúc đang tải hoặc khi bị khoá thì gỡ hẳn ô chọn tệp, để không ai
+            chọn được ảnh thứ hai đè lên ảnh đang tải dở.
+          */}
+          {!disabled && !uploading && (
+            <input
+              type="file"
+              accept="image/*"
+              aria-label={value ? 'Đổi ảnh' : label}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                opacity: 0,
+                cursor: 'pointer',
+              }}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void pick(file);
+                // Xoá value để chọn lại đúng tệp đó vẫn kích hoạt onChange.
+                event.target.value = '';
+              }}
+            />
+          )}
+        </div>
         {value && (
           <Button
             size="small"

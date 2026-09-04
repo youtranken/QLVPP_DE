@@ -64,6 +64,19 @@
 - **Priority:** **P1**
 - **Dependencies:** AUTH-1; cấu hình webhook/BCL ở IdP (external, **[⏳]** cho PMH ID thật).
 
+### AUTH-5 — Đăng nhập bằng tài khoản khác (thoát vòng lặp `access_denied`) `[⏳]`
+
+- **Persona:** NV/AD bị gỡ nhóm hoặc bị khoá
+- **Mục tiêu:** Thoát khỏi trang "chưa được cấp quyền" mà không phải xoá cookie thủ công.
+- **Lý do:** Phiên SSO ở PMH ID vẫn sống nên bấm _Đăng nhập_ chỉ lặp lại `access_denied` — người dùng tự mình không ra được. QLTS đã gặp và phải làm nút này (`integration/qlts-group-access-notes.md`).
+- **AC:**
+  1. Trang `/khong-co-quyen` có nút **"Đăng nhập bằng tài khoản khác"**.
+  2. Bấm → `end_session` + `id_token_hint` (nếu còn) → PMH ID kết thúc phiên SSO → quay về app → hiện **form đăng nhập**, không auto-SSO lại.
+  3. Người dùng bình thường **không** thấy nút này — chỉ hiện ở trang bị chặn.
+- **Edge cases:** mất `id_token` ⇒ vẫn gọi `end_session` không kèm hint, chấp nhận IdP có thể hỏi xác nhận; `post_logout_redirect_uri` chưa được IdP đăng ký ⇒ dùng cấu hình `OIDC_POST_LOGOUT_REDIRECT=off` để không gãy cả lượt đăng xuất.
+- **Priority:** **P2**
+- **Dependencies:** AUTH-2 (`end_session`), AUTH-3 (trang chặn quyền).
+
 ---
 
 ## 2. User profile

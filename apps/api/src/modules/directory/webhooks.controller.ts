@@ -15,6 +15,7 @@ import { Public } from '../../auth/public.decorator';
 import { parseEnv, type AppConfig } from '../../infra/config/env';
 import { AuditService } from '../audit/audit.service';
 import { DirectoryService } from './directory.service';
+import { webhookTimestampToMs } from './pmh-payload';
 
 /** Sự kiện cũ hơn ngần này bị từ chối — chặn tấn công phát lại (SSO-INTEGRATION §8). */
 const TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000;
@@ -108,8 +109,10 @@ export class WebhooksController {
       });
     }
 
-    const sentAt = Number(timestamp);
-    if (!Number.isFinite(sentAt) || Math.abs(Date.now() - sentAt) > TIMESTAMP_TOLERANCE_MS) {
+    // PMH ID gửi GIÂY, mock-idp gửi MILLI GIÂY — quy về một đơn vị trước khi so,
+    // nếu không mọi webhook thật đều lệch ~1,79 tỉ và bị từ chối sạch.
+    const sentAt = webhookTimestampToMs(timestamp);
+    if (sentAt === null || Math.abs(Date.now() - sentAt) > TIMESTAMP_TOLERANCE_MS) {
       throw new BadRequestException({
         code: ErrorCode.UNAUTHORIZED,
         message: 'Timestamp không hợp lệ hoặc đã quá hạn.',

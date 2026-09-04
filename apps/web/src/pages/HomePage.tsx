@@ -1,15 +1,10 @@
 import { PlusCircleOutlined, RightOutlined } from '@ant-design/icons';
 import { Alert, Button, Card, Divider, Flex, Skeleton, Tag, Typography } from 'antd';
-import { lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { routes } from '../App';
 import { formatDateTime, periodLabel, STATUS_META } from '../lib/format';
 import { useMe, useMyRequests, useRegistrationStatus } from '../lib/queries';
 import type { VppRequest } from '../lib/types';
-
-const AdminHomePanel = lazy(() =>
-  import('./admin/AdminHomePanel').then((m) => ({ default: m.AdminHomePanel })),
-);
 
 /** Vài kỳ gần nhất, gọn trong một dòng mỗi kỳ. */
 function LichSuNgan({ requests }: { requests: VppRequest[] }) {
@@ -39,11 +34,9 @@ function LichSuNgan({ requests }: { requests: VppRequest[] }) {
 }
 
 /**
- * Trang chủ.
- *
- * **Nhân viên** thấy đúng một thẻ trả lời "kỳ này tôi xong chưa" + lịch sử ngắn.
- * **Admin** thấy thêm phần điều hành: số liệu kỳ đang nhận và danh sách đăng ký
- * của các phòng ban — vì với họ, việc của người khác mới là việc chính.
+ * Trang chủ của NHÂN VIÊN: đúng một thẻ trả lời "kỳ này tôi xong chưa" + lịch sử
+ * ngắn. Admin không vào đây — `/` đưa họ thẳng sang Bảng điều khiển, nơi có số
+ * liệu điều hành và danh sách đăng ký của các phòng ban.
  */
 export function HomePage() {
   const navigate = useNavigate();
@@ -53,7 +46,6 @@ export function HomePage() {
 
   if (statusPending || requestsPending) return <Skeleton active />;
 
-  const laAdmin = me?.role === 'admin';
   const trongKy = (requests ?? []).filter((request) => request.period === status?.period);
   /** Đơn đang hiệu lực của kỳ này — đơn bị từ chối/huỷ chỉ còn là lịch sử. */
   const current = trongKy.find((request) =>
@@ -61,12 +53,7 @@ export function HomePage() {
   );
   const rejected = trongKy.filter((request) => request.status === 'rejected');
 
-  /**
-   * Thẻ đăng ký của CHÍNH MÌNH.
-   *
-   * Với admin nó co lại thành một dải mỏng: chỗ trên cùng của trang phải dành cho
-   * việc điều hành, không phải cho việc admin đã tự đăng ký hay chưa.
-   */
+  /** Thẻ đăng ký của CHÍNH MÌNH — thứ duy nhất nhân viên cần biết khi mở app. */
   const theCaNhan = (
     <Card size="small">
       <Flex justify="space-between" align="center" gap={12} wrap>
@@ -113,8 +100,7 @@ export function HomePage() {
         )}
       </Flex>
 
-      {/* Lịch sử chỉ có ích với nhân viên; admin đã có bảng đầy đủ bên dưới. */}
-      {!laAdmin && requests && requests.length > 0 && (
+      {requests && requests.length > 0 && (
         <>
           <Divider style={{ margin: '12px 0' }} />
           <LichSuNgan requests={requests} />
@@ -155,16 +141,6 @@ export function HomePage() {
       )}
 
       {theCaNhan}
-
-      {/* Chỉ ADMIN thấy đăng ký của người khác. Ẩn với nhân viên không phải để
-          bảo mật (API đã chặn 403) mà để họ không nhìn thấy một bảng lỗi.
-          Tải chậm: nhân viên chiếm phần lớn người dùng và không bao giờ dùng tới
-          phần này, không nên bắt họ tải kèm. */}
-      {laAdmin && (
-        <Suspense fallback={<Skeleton active />}>
-          <AdminHomePanel />
-        </Suspense>
-      )}
     </Flex>
   );
 }

@@ -42,11 +42,11 @@ test.describe('Nhân viên', () => {
     await page.goto('/dang-ky');
     const a4Row = page
       .locator('div')
-      .filter({ hasText: /^Giấy A4/ })
+      .filter({ hasText: /^Giấy photo A4/ })
       .first();
     await expect(page.getByText('chỉ admin').first()).toBeVisible();
     // Nhân viên không có ô nhập số lượng cho món admin_only.
-    await expect(a4Row.locator('input[aria-label*="Giấy A4"]')).toHaveCount(0);
+    await expect(a4Row.locator('input[aria-label*="Giấy photo A4"]')).toHaveCount(0);
   });
 });
 
@@ -58,14 +58,14 @@ test.describe('Quản trị viên', () => {
 
   test('được chọn món admin_only và bỏ qua khung ngày (CORE-16)', async ({ page }) => {
     await page.goto('/dang-ky');
-    // Khớp ĐÚNG tên món trong danh mục mẫu, không khớp chuỗi con: danh mục thật
+    // Khớp ĐÚNG tên món trong danh mục, không khớp chuỗi con: danh mục thật
     // có thể có nhiều món cùng chứa "Giấy A4" và khi đó phép khớp mờ sẽ hỏng.
-    await expect(page.getByLabel('Số lượng Giấy A4 (ram 500 tờ)')).toBeVisible();
+    await expect(page.getByLabel('Số lượng Giấy photo A4 trắng 70 Exell')).toBeVisible();
   });
 
   test('giỏ cộng dồn món đã chọn', async ({ page }) => {
     await page.goto('/dang-ky');
-    await page.locator('input[aria-label="Số lượng Bút bi xanh"]').fill('4');
+    await page.locator('input[aria-label="Số lượng Bút bi Thiên Long 027"]').fill('4');
     await expect(page.getByText('Đã chọn: 1 món')).toBeVisible();
     await expect(page.getByText('4 cây')).toBeVisible();
   });
@@ -74,9 +74,9 @@ test.describe('Quản trị viên', () => {
     await page.goto('/dang-ky');
     await page.getByLabel('Tìm món').fill('but bi');
 
-    await expect(page.getByLabel('Số lượng Bút bi xanh')).toBeVisible();
+    await expect(page.getByLabel('Số lượng Bút bi Thiên Long 027')).toBeVisible();
     // Món thuộc nhóm khác phải biến mất — nếu không thì ô tìm chỉ là trang trí.
-    await expect(page.getByLabel('Số lượng Sổ tay A5')).toHaveCount(0);
+    await expect(page.getByLabel('Số lượng Sổ lò xo A5')).toHaveCount(0);
 
     await page.getByLabel('Tìm món').fill('khong-co-mon-nao-ten-nhu-vay');
     await expect(page.getByText(/Không có món nào khớp/)).toBeVisible();
@@ -101,6 +101,32 @@ test.describe('Quản trị viên', () => {
     await expect(page.getByText('Gửi đơn').first()).toBeVisible();
   });
 
+  test('đính được ảnh cho món ngoài danh mục', async ({ page }) => {
+    await page.goto('/dang-ky');
+    await page.getByRole('button', { name: 'Thêm dòng' }).click();
+
+    const chonTep = page.locator('input[type="file"]');
+    /**
+     * Ô chọn tệp phải NHÌN THẤY ĐƯỢC (nó trong suốt, nằm đè lên nút) để cú bấm của
+     * người dùng rơi thẳng vào nó. Ẩn bằng `display:none` rồi nhờ JavaScript bấm hộ
+     * thì có trình duyệt/tiện ích chặn im lặng: bấm nút mà hộp thoại không mở.
+     */
+    await expect(chonTep).toBeVisible();
+
+    await chonTep.setInputFiles({
+      name: 'anh-thu.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        'base64',
+      ),
+    });
+
+    // Ảnh đã gắn vào dòng: có nút gỡ và nút đổi (chứ không còn "Ảnh").
+    await expect(page.getByRole('button', { name: 'Gỡ ảnh' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Đổi ảnh' })).toBeVisible();
+  });
+
   test('admin có ô chọn người để đăng ký hộ', async ({ page }) => {
     await page.goto('/dang-ky');
     await expect(page.getByLabel('Đăng ký cho')).toBeVisible();
@@ -109,7 +135,7 @@ test.describe('Quản trị viên', () => {
   test('vượt giới hạn số lượng thì không gửi được', async ({ page }) => {
     await page.goto('/dang-ky');
     // InputNumber tự kẹp về max khi rời ô ⇒ gõ rồi kiểm giá trị đã bị kẹp.
-    const input = page.locator('input[aria-label="Số lượng Bút bi xanh"]');
+    const input = page.locator('input[aria-label="Số lượng Bút bi Thiên Long 027"]');
     await input.fill('999');
     await input.blur();
     await expect(input).toHaveValue('20');

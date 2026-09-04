@@ -98,19 +98,19 @@ json -b jar-nv.txt "$API/api/catalog" > cat.json
 node -e "
 const c=require('./cat.json'), f=c.flatMap(g=>g.items);
 require('fs').writeFileSync('ids.json', JSON.stringify({
-  but: f.find(i=>i.name.startsWith('Bút bi xanh')).id,
-  so:  f.find(i=>i.name.startsWith('Sổ tay')).id,
+  but: f.find(i=>i.name.startsWith('Bút bi Thiên Long')).id,
+  so:  f.find(i=>i.name.startsWith('Sổ lò xo')).id,
   a4:  f.find(i=>i.adminOnly).id,
 }));"
-# Kiểm CÓ ĐỦ danh mục mẫu, không kiểm bằng đúng con số: admin thêm/bớt món là
-# việc bình thường, khẳng định "đúng 25 món" sẽ hỏng ngay khi ai đó dùng thật.
-check "có đủ 5 nhóm mẫu" "1" "$(node -e "
+# Kiểm CÓ ĐỦ danh mục, không kiểm bằng đúng con số: admin thêm/bớt món là
+# việc bình thường, khẳng định "đúng 50 món" sẽ hỏng ngay khi ai đó dùng thật.
+check "có đủ các nhóm trong danh mục" "1" "$(node -e "
 const ten = require('./cat.json').map(g => g.name);
-const can = ['Bút & Viết','Giấy & Sổ','Mực & Toner','Dụng cụ văn phòng','Khác'];
+const can = ['Băng keo & Keo dán','Bìa & File hồ sơ','Bút & Viết','Giấy & Sổ','Dụng cụ văn phòng','Thiết bị & Phụ kiện','Khác'];
 process.stdout.write(can.every(n => ten.includes(n)) ? '1' : '0');
 ")"
-check "có ít nhất 25 món" "1" "$(node -e "
-process.stdout.write(require('./cat.json').flatMap(g => g.items).length >= 25 ? '1' : '0');
+check "có ít nhất 50 món" "1" "$(node -e "
+process.stdout.write(require('./cat.json').flatMap(g => g.items).length >= 50 ? '1' : '0');
 ")"
 check "có nhóm \"Khác\" đánh dấu isOther" "1" "$(node -e "
 process.stdout.write(require('./cat.json').filter(g => g.isOther).length === 1 ? '1' : '0');

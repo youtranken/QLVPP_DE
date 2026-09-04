@@ -10,9 +10,21 @@ test.describe('Phân quyền màn quản trị', () => {
     await signIn(page, MEMBER);
 
     await expect(page.getByRole('menuitem', { name: /Quản trị/ })).toHaveCount(0);
+    // Hai mục mới nằm thẳng trên thanh menu cũng chỉ dành cho admin.
+    await expect(page.getByRole('menuitem', { name: 'Bảng điều khiển' })).toHaveCount(0);
 
     await page.goto('/quan-tri/don');
     await expect(page.getByText(/Chỉ quản trị viên mới xem được trang này/)).toBeVisible();
+  });
+
+  test('nhân viên vẫn giữ Trang chủ ở `/`', async ({ page }) => {
+    await signOutGlobal(page);
+    await signIn(page, MEMBER);
+
+    await page.goto('/');
+    // Không bị đá sang bảng điều khiển như admin.
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole('heading', { name: /Xin chào/ })).toBeVisible();
   });
 
   test('quản trị viên vào được màn quản trị', async ({ page }) => {
@@ -89,17 +101,35 @@ test.describe('Màn quản trị', () => {
     );
   });
 
-  test('trang chủ có danh sách đăng ký theo món, bấm dòng mở được đơn để duyệt', async ({
+  test('admin vào `/` là ra thẳng Bảng điều khiển, không còn Trang chủ', async ({ page }) => {
+    await page.goto('/');
+    await expect(page).toHaveURL(/\/quan-tri$/);
+    await expect(page.getByRole('heading', { name: 'Bảng điều khiển' })).toBeVisible();
+    // Trang chủ đã bỏ khỏi menu admin — còn sót lại nghĩa là còn hai lối vào cho
+    // cùng một việc, đúng thứ yêu cầu này muốn dẹp.
+    await expect(page.getByRole('menuitem', { name: 'Trang chủ' })).toHaveCount(0);
+  });
+
+  test('bảng điều khiển có danh sách đăng ký theo món, bấm dòng mở được đơn để duyệt', async ({
     page,
   }) => {
-    await page.goto('/');
+    await page.goto('/quan-tri');
 
-    // Yêu cầu: KHÔNG còn tiêu đề "Duyệt đơn đăng ký" ở trang chủ.
+    // Duyệt đơn nằm TRONG bảng điều khiển, nhưng không phải bằng cách nhét cả màn
+    // "Duyệt đơn đăng ký" vào đây — đó là một mục riêng có tiêu đề riêng.
     await expect(page.getByRole('heading', { name: 'Duyệt đơn đăng ký' })).toHaveCount(0);
+    await expect(page.getByText('Duyệt đơn', { exact: true })).toBeVisible();
 
-    // Bốn thẻ số liệu mở đầu trang, và thẻ 'Chờ duyệt' đang là bộ lọc mặc định.
-    await expect(page.getByLabel('Đơn chờ duyệt')).toBeVisible();
-    await expect(page.getByLabel('Chưa đăng ký')).toBeVisible();
+    // Năm thẻ số liệu mở đầu trang, và thẻ 'Chờ duyệt' đang là bộ lọc mặc định.
+    for (const the of [
+      'Đơn chờ duyệt',
+      'Đơn chờ giao',
+      'Đã giao',
+      'Chưa đăng ký',
+      'Tổng số lượng',
+    ]) {
+      await expect(page.getByLabel(the)).toBeVisible();
+    }
 
     for (const cot of ['STT', 'Tên món', 'Số lượng', 'Người đăng ký', 'Phòng ban']) {
       await expect(page.getByRole('columnheader', { name: cot, exact: true })).toBeVisible();
@@ -111,8 +141,8 @@ test.describe('Màn quản trị', () => {
     const xoaLoc = page.getByRole('button', { name: 'Xoá lọc' });
     if (await xoaLoc.isVisible().catch(() => false)) await xoaLoc.click();
 
-    // Thu hẹp vào ĐÚNG bảng danh sách: thẻ "Kỳ …" ở trang chủ dùng Descriptions,
-    // mà AntD cũng render bằng <table> nên tìm dòng trên cả trang sẽ bắt nhầm.
+    // Thu hẹp vào ĐÚNG bảng danh sách: trang này còn biểu đồ và vài khối khác mà
+    // AntD cũng dựng bằng <table>, tìm dòng trên cả trang sẽ bắt nhầm.
     const bang = page
       .locator('table')
       .filter({ has: page.getByRole('columnheader', { name: 'STT', exact: true }) });
@@ -129,6 +159,9 @@ test.describe('Màn quản trị', () => {
 
   test('bảng điều khiển vẽ được biểu đồ', async ({ page }) => {
     await page.goto('/quan-tri');
+    // Tên mục phải còn nguyên cả trên màn hẹp: hai nhóm số liệu của trang có phạm
+    // vi khác nhau, mất tên mục là người đọc tưởng chúng mâu thuẫn nhau.
+    await expect(page.getByText('Thống kê theo khoảng kỳ')).toBeVisible();
     await expect(page.getByText('Tổng số đơn')).toBeVisible();
     // ECharts vẽ bằng canvas ⇒ có canvas nghĩa là biểu đồ đã khởi tạo xong.
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
@@ -169,7 +202,7 @@ test.describe('Màn quản trị', () => {
       buffer: Buffer.from(
         'Nhóm;Tên món;Đơn vị tính;Tối đa;Chỉ admin\n' +
           'Nhóm Thử E2E;Món thử E2E;cái;5;\n' +
-          'Bút & Viết;Bút bi xanh;cây;20;\n' +
+          'Bút & Viết;Bút bi Thiên Long 027;cây;20;\n' +
           'Bút & Viết;;cây;5;\n',
         'utf8',
       ),

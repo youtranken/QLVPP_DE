@@ -30,7 +30,7 @@
 | 13  | **Hiệu năng**          | Thiết kế **dư tải** (index, phân trang, pool) — vẫn 1 API + 1 DB.                                                                                                   |
 | 14  | **Bảo mật**            | Xác thực **PMH ID SSO (OIDC + PKCE)**; **không lưu mật khẩu**; phiên (BFF) có hạn 7 ngày. _(MFA/khoá do PMH ID quản.)_                                              |
 | 15  | **Phạm vi demo**       | **Làm đầy đủ tất cả** tính năng đã chốt rồi mới demo.                                                                                                               |
-| 16  | **Danh mục VPP**       | Dùng **danh mục mẫu (~25 món)** cho demo.                                                                                                                           |
+| 16  | **Danh mục VPP**       | Lấy **đúng 50 món + ảnh** từ form đăng ký VPP hằng tháng công ty đang dùng; admin sửa/thêm/bớt được trong app.                                                      |
 
 ---
 
@@ -236,7 +236,7 @@ _Giờ:_ container đặt `TZ=Asia/Ho_Chi_Minh`.
 
 - **User & group ở `mock-idp`** (đăng nhập qua mock OIDC — xem SSO-INTEGRATION §9): `admin@pmh.com.vn` (groups `VPP-Admin`,`Hành chính` ⇒ admin); nhân viên `an/binh/chi/dung/em@pmh.com.vn` (group = phòng ban ⇒ member). _(Không có mật khẩu app; mock IdP cho chọn user để demo.)_
 - **Phòng ban** (suy ra từ groups): Hành chính, Nhân sự, Kế toán, Kỹ thuật, Kinh doanh.
-- **Danh mục:** ~25 món / 5 nhóm (Bút & Viết; Giấy & Sổ [A4 = admin_only]; Mực & Toner; Dụng cụ VP; Khác).
+- **Danh mục:** 50 món / 7 nhóm, lấy từ **form đăng ký VPP hằng tháng đang dùng của công ty** kèm ảnh minh hoạ (Băng keo & Keo dán; Bìa & File hồ sơ; Bút & Viết; Giấy & Sổ [giấy A4 = admin_only]; Dụng cụ văn phòng; Thiết bị & Phụ kiện; Khác). Đây là dữ liệu **thật**, dùng tiếp khi lên prod — ảnh nằm ở `apps/api/seed-assets/catalog/`.
 - Vài đơn mẫu kỳ hiện tại ở các trạng thái (đã gửi / đã duyệt / đã giao một phần) để màn admin & thống kê có dữ liệu.
 
 ---

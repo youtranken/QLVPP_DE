@@ -300,7 +300,7 @@ export function useApplyCatalogImport() {
   });
 }
 
-/** Một MÓN được đăng ký — mỗi dòng ở bảng trang chủ quản trị (CORE-10b). */
+/** Một MÓN được đăng ký — mỗi dòng ở bảng duyệt đơn trong Bảng điều khiển (CORE-10b). */
 export interface RequestItemRow {
   id: string;
   requestId: string;
@@ -335,11 +335,14 @@ export function useAdminRequest(id: string | null) {
   });
 }
 
-/** Số liệu tổng quan của kỳ đang nhận — hàng thẻ ở trang chủ quản trị. */
+/** Số liệu tổng quan — hàng thẻ mở đầu Bảng điều khiển. */
 export interface AdminOverview {
   period: string;
+  /** Ba chặng của dòng chảy đơn, đều tính trên MỌI kỳ. */
   choDuyet: number;
   choGiao: number;
+  daGiao: number;
+  /** Từ đây trở xuống chỉ tính KỲ ĐANG NHẬN. */
   tongMon: number;
   tongNguoi: number;
   daDangKy: number;

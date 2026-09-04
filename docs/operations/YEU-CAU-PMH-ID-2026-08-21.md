@@ -78,7 +78,9 @@ dùng bị bỏ lại ở trang lỗi của PMH ID thay vì được đưa về 
 
 ---
 
-## 2. Xin **bật cờ `m2m_enabled`** cho `client_vpp` (Directory API)
+## 2. Directory API và Webhook — hai thứ chưa bật được
+
+### 2a. Xin **bật cờ `m2m_enabled`** cho `client_vpp` (Directory API)
 
 Bản 1 xin "cấp thêm một cặp client id/secret M2M" — nói vậy chưa đúng cơ chế.
 `oidc/pg-adapter.ts:83` cho thấy `client_credentials` **chỉ được cấp cho client có cờ
@@ -96,28 +98,94 @@ Nên đề nghị: **bật `m2m_enabled` cho `client_vpp`** (dùng luôn client 
 cấp client M2M riêng nếu quy chế bên mình muốn tách. Kiểu nào cũng được, chỉ cần cho
 bọn em biết để điền đúng `PMH_M2M_CLIENT_ID` / `PMH_M2M_CLIENT_SECRET`.
 
-**Hiện trạng:** đang dùng giá trị dev nên bị từ chối đúng như phải thế:
+~~**Hiện trạng:** đang dùng giá trị dev nên bị từ chối đúng như phải thế:~~
 
 ```
-POST /oidc/token (client_credentials) -> 401 {"error":"invalid_client"}
-log app: Đồng bộ danh bạ định kỳ thất bại. Dữ liệu danh bạ giữ nguyên.
+POST /oidc/token (client_credentials) -> 401 {"error":"invalid_client"}   (21/08)
 ```
 
-**Hệ quả:** DE-VPP chỉ thấy người **đã từng đăng nhập**, không lên trước được danh
-sách nhân viên.
+> ✅ **XONG — đo lại 03/09/2026.** `m2m_enabled` đã được bật cho `client_vpp`:
+>
+> ```
+> POST /oidc/token (client_credentials)  -> 200, có access_token
+> GET  /api/v1/groups                    -> 200
+> GET  /api/v1/users                     -> 200
+> ```
+>
+> Cảm ơn anh/chị. Không cần làm gì thêm ở mục này.
 
-**Kèm theo — xin `PMH_WEBHOOK_SECRET` thật** để bật xác thực chữ ký HMAC-SHA256 v2
-(app **không** nhận v1).
+**Hệ quả còn lại:** danh bạ hiện chỉ trả về **một** bản ghi (`huuthong@pmh.com.vn`) —
+đúng như phải thế, vì client mới được gán một nhóm. Khi §3c xong (có nhóm truy cập
+cho nhân viên thường) thì DE-VPP mới lên trước được danh sách nhân viên.
+
+### 2b. Xin **khai `webhook_url`** cho `client_vpp` — hiện CHƯA hề được khai
+
+**Giá trị cần khai:**
+
+```
+https://de-vpp.pmh.com.vn:8443/api/webhooks/pmh-id
+```
+
+**Vì sao xin:** đối chiếu bản đăng ký client của `client_vpp` thì thấy chỉ có **ba**
+URI — `redirect_uris`, `app_url`, `backchannel_logout_uri`. **Không có `webhook_url`.**
+Mục 15 trong phiếu onboarding gốc đã khai giá trị này, nhưng nó không có mặt trong
+bản đăng ký thực tế.
+
+**Hệ quả:** dù có cấp `PMH_WEBHOOK_SECRET` thật thì webhook vẫn không chạy — PMH ID
+không biết gọi về đâu. Các sự kiện `user.locked/unlocked/deleted/groups_changed/`
+`password_changed` sẽ không tới được DE-VPP, nên người bị khoá vẫn dùng app cho tới
+khi phiên hết hạn.
+
+Phía DE-VPP endpoint đã sẵn sàng — gọi thử cho thấy đúng route, không phải 404:
+
+```
+POST https://de-vpp.pmh.com.vn:8443/api/webhooks/pmh-id
+-> 400 {"code":"VALIDATION","message":"Thiếu nội dung."}
+```
+
+### 2c. Xin `PMH_WEBHOOK_SECRET` thật
+
+Để bật xác thực chữ ký **HMAC-SHA256 v2** trên `${timestamp}.${body}` — app **không**
+nhận v1. Hiện đang dùng giá trị dev `dev-webhook-secret-change-me`.
+
+> Lưu ý thứ tự: **2b trước 2c**. Có secret mà chưa khai URL thì webhook vẫn im lặng
+> không chạy, và rất khó nhận ra vì không có lỗi nào hiện ra ở cả hai phía.
 
 ---
 
 ## 3. Xin chốt nhóm và phòng ban
 
-### 3a. Nhóm quyết định quyền quản trị
+### 3a. Nhóm quyết định quyền quản trị — 🔶 **lập rồi nhưng CHƯA GÁN CHO CLIENT**
 
-Phiếu onboarding khai `VPP-Admin`, nhưng PMH ID hiện **chỉ có nhóm `Test_VPP`**. App
-đang tạm trỏ `VPP_ADMIN_GROUP=Test_VPP`. Xin lập nhóm chính thức **`VPP-Admin`** và
-báo lại khi dùng được — bọn em đổi cấu hình, không phải sửa code.
+Anh/chị báo đã lập nhóm `VPP-Admin` — cảm ơn. Nhưng đo lại ngày **03/09/2026** thì
+DE-VPP **vẫn chưa thấy nhóm đó**, nên phần cấu hình bên bọn em phải để nguyên
+`VPP_ADMIN_GROUP=Test_VPP`.
+
+Hai lệnh dưới đây gọi bằng chính token M2M của `client_vpp`:
+
+```
+GET /api/v1/groups
+-> [{"id":"0fb2236f-4a4f-4be1-9bb0-e9cc0e1c15b1","name":"Test_VPP"}]     ← chỉ MỘT nhóm
+
+GET /api/v1/users
+-> huuthong@pmh.com.vn | active | ["Test_VPP"]                           ← chưa có VPP-Admin
+```
+
+Suy ra: nhóm đã **tồn tại trong PMH ID**, nhưng chưa được **gán cho client
+`client_vpp`** (và/hoặc `huuthong@` chưa là thành viên). Nhóm không gán cho client
+thì không lọt vào claim `groups`; app đọc không thấy tên đó ⇒ nếu bọn em cứ đổi
+sang `VPP-Admin` thì kết quả là **không còn ai là quản trị viên**.
+
+> **Nhờ anh/chị hai việc:**
+>
+> 1. **Gán nhóm `VPP-Admin` cho client `client_vpp`.**
+> 2. **Thêm `huuthong@pmh.com.vn` vào nhóm đó** (tài khoản dùng để nghiệm thu).
+>
+> Xong thì bọn em chạy lại `GET /api/v1/groups`; thấy `VPP-Admin` trong danh sách là
+> đổi một dòng cấu hình, không phải sửa code, không phải triển khai lại.
+>
+> Và cho biết nhóm `Test_VPP` nay dùng vào việc gì — nếu giữ lại làm **nhóm truy
+> cập** (được vào app, không có quyền quản trị) thì đúng ý bọn em muốn ở **§3c**.
 
 ### 3b. Phòng ban của tài khoản
 
@@ -137,6 +205,27 @@ ngay trong cổng quản trị.
 >
 > Và cho biết danh sách **tên phòng ban chuẩn** bên PMH ID, để DE-VPP dùng đúng bộ
 > tên đó thay vì tự bịa.
+
+### 3c. Xin một nhóm TRUY CẬP tách khỏi nhóm quản trị
+
+Nay đã có `VPP-Admin` (§3a), còn thiếu vế kia: nhóm cho **nhân viên thường**.
+
+Cách PMH ID gác cửa là theo nhóm được gán cho client — ai không thuộc nhóm nào của
+`client_vpp` thì bị `access_denied` ngay ở callback. Nếu nhóm duy nhất được gán cũng
+chính là nhóm quản trị, thì **thêm một nhân viên vào đó cho họ vào được app là vô
+tình cấp luôn quyền quản trị**: thấy mọi đơn của mọi người, duyệt được, sửa được
+danh mục. Không có cách nào phân biệt ở phía DE-VPP, vì cả hai vế đều đọc từ cùng
+một danh sách `groups`.
+
+> **Nhờ anh/chị:** gán cho `client_vpp` **hai** nhóm —
+>
+> - `VPP-User` (hoặc giữ luôn `Test_VPP` nếu bên mình muốn dùng lại tên đó): quyền
+>   **vào app**, không có quyền quản trị. Đây là nhóm để thêm nhân viên thường.
+> - `VPP-Admin`: quyền **quản trị**, chỉ vài người.
+>
+> Phía DE-VPP không phải sửa gì — `VPP_ADMIN_GROUP` đã trỏ `VPP-Admin`, mọi nhóm
+> khác tự động ra `role=member`. **Việc này đang chặn** bọn em thêm nhân viên thường
+> vào hệ thống, nên xin ưu tiên hơn các mục còn lại.
 
 ---
 

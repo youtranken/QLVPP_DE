@@ -106,6 +106,7 @@ Mục tiêu: đưa toàn bộ quy trình lên web có ràng buộc nghiệp vụ
 - **FR-03** **Đồng bộ danh bạ** qua **Directory API** (M2M): hiển thị cả nhân viên **chưa từng đăng nhập** để tổng hợp theo phòng ban.
 - **FR-04** **Đá user tức thì** khi bị khoá/xoá/đổi nhóm/logout toàn hệ (**Webhook** + **Back-Channel Logout**); refresh token thất bại ⇒ tự đăng xuất.
 - **FR-05** Tham chiếu user nội bộ bằng **`sub`** của PMH ID (không dùng email làm khoá). _(Không còn tạo/import tài khoản hay quản lý mật khẩu trong app.)_
+- **FR-06** **Lối thoát "Đăng nhập bằng tài khoản khác"** ở trang chặn quyền: kết thúc phiên SSO tại PMH ID rồi quay về trang đăng nhập. Không có lối này, người bị gỡ nhóm/khoá mà phiên SSO còn sống sẽ **kẹt vòng lặp** `access_denied` — bấm đăng nhập lại là lại bị chặn, vì PMH ID xác thực im lặng bằng chính phiên cũ. **[⏳ bổ sung sau khi cắm PMH ID thật]**
 
 ### 6.2 Danh mục VPP
 
