@@ -1,0 +1,33 @@
+# Overlay MÁY B — chạy VPP prod TRÊN MÁY B, xác thực qua PMH-ID ở MÁY KHÁC (máy A).
+#
+#   docker compose -f deploy/docker-compose.prod.yml -f deploy/docker-compose.machineB.yml \
+#     --env-file deploy/.env.prod up -d --build
+#
+# Khác overlay `edge.yml` ở 2 điểm cốt lõi cho tình huống "IdP ở máy khác":
+#   1. web TỰ terminate TLS ở 8443 (như tls.yml) — B không có edge chung của PMH.
+#   2. api trỏ `de-admin.pmh.com.vn` thẳng về IP LAN của MÁY A (KHÔNG host-gateway,
+#      vì host-gateway trên B = chính B, mà PMH-ID lại nằm ở A).
+#
+# Cần trước trên máy B:
+#   - hosts:  172.16.90.81  de-admin.pmh.com.vn   (IP máy A)
+#             127.0.0.1     de-vpp.pmh.com.vn      (B tự phục vụ)
+#   - cert tự ký: deploy/tls/de-vpp.crt + deploy/tls/de-vpp.key  (CN=de-vpp.pmh.com.vn)
+#   - deploy/.env.prod (OIDC_ISSUER=de-admin:8443, PMH_CLIENT_ID=project_qlvpp, secret)
+services:
+  web:
+    # Chỉ 8443 (TLS). Thay danh sách ports của prod.yml (bỏ 8080).
+    ports: !override
+      - '8443:8443'
+    volumes:
+      - ./tls:/etc/nginx/tls:ro
+      - ./de-vpp-tls.conf:/etc/nginx/conf.d/de-vpp-tls.conf:ro
+    healthcheck:
+      # Kiểm ở cổng 80 (8443 cert tự ký, wget sẽ báo lỗi cert dù nginx vẫn chạy).
+      test: ['CMD', 'wget', '--spider', '-q', 'http://127.0.0.1/']
+
+  api:
+    # ⚠️ ĐỔI 172.16.90.81 thành IP LAN THẬT của MÁY A (nơi chạy PMH-ID).
+    # Bổ sung vào extra_hosts của prod.yml (host.docker.internal:host-gateway) —
+    # compose GỘP list nên có cả hai, không xung đột (khác hostname).
+    extra_hosts:
+      - 'de-admin.pmh.com.vn:172.16.90.81'
