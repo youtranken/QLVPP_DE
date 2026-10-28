@@ -55,6 +55,16 @@ describe('GET periods/current', () => {
         AND NOT EXISTS (SELECT 1 FROM requests r WHERE r.period_ym = p.ym)`);
   }
 
+  // Kỳ 11 có thể đã có phiếu của suite khác → đặt hạn chuẩn (lastDay 10) và kiểm, không dựa DO NOTHING
+  async function seedNovemberPeriod(): Promise<void> {
+    const { rows } = await pool.query<{ deadline: Date }>(
+      `INSERT INTO periods (ym, deadline) VALUES ('2026-11-01', '2026-11-10T17:00:00Z')
+       ON CONFLICT (ym) DO UPDATE SET deadline = EXCLUDED.deadline
+       RETURNING deadline`,
+    );
+    expect(rows[0].deadline.toISOString()).toBe('2026-11-10T17:00:00.000Z');
+  }
+
   const setLastDay = (n: number) =>
     pool.query(
       "UPDATE config SET value = $1 WHERE key = 'registration_last_day'",
@@ -122,10 +132,7 @@ describe('GET periods/current', () => {
   });
 
   it('15/11 có phiếu kỳ 11 còn nợ → previous.delivering; giao đủ → false', async () => {
-    await pool.query(
-      `INSERT INTO periods (ym, deadline) VALUES ('2026-11-01', '2026-11-10T17:00:00Z')
-       ON CONFLICT DO NOTHING`,
-    );
+    await seedNovemberPeriod();
     const item = await pool.query<{ id: string }>(
       "INSERT INTO items (name, unit) VALUES ('e2e-periods-' || $1, 'cay') RETURNING id",
       [SUFFIX],
@@ -184,6 +191,17 @@ describe('GET periods/current', () => {
       deadline: '2027-01-05T17:00:00.000Z',
       is_open: true,
       days_left: 26,
+    });
+  });
+
+  it('kỳ periodFor(now) đã có mà qua hạn (config nới 10→28 sau ngày 10) → tiến sang kỳ sau với hạn mới', async () => {
+    await seedNovemberPeriod();
+    await setLastDay(28);
+    await appAt('2026-11-15T03:00:00Z');
+    expect(await current()).toMatchObject({
+      ym: '2026-12',
+      deadline: '2026-12-28T17:00:00.000Z',
+      is_open: true,
     });
   });
 });

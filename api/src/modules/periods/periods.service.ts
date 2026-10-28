@@ -45,15 +45,19 @@ export class PeriodsService {
     await tx.execute(sql`
       INSERT INTO periods (ym, deadline)
       VALUES (${ymToDate(ym)}::date, ${deadlineOf(ym, lastDay).toISOString()}::timestamptz)
-      ON CONFLICT DO NOTHING
+      ON CONFLICT (ym) DO NOTHING
     `);
+    // Đọc lại thấy dòng tx khác vừa chèn nhờ READ COMMITTED (mặc định); REPEATABLE READ sẽ không thấy
     const row = await this.find(ym, tx);
     if (!row) throw new Error(`Không đọc được kỳ ${ym} vừa tạo`);
     return row;
   }
 
-  async openPeriod(tx: Executor = this.db): Promise<Period> {
-    const now = this.clock.now();
+  // now truyền vào để một request dùng đúng một mốc (openPeriod rồi isOpen không lệch nhau ở ranh giới)
+  async openPeriod(
+    tx: Executor = this.db,
+    now: Date = this.clock.now(),
+  ): Promise<Period> {
     const { rows } = await tx.execute<{ ym: string; deadline: Date }>(sql`
       SELECT to_char(ym, 'YYYY-MM') AS ym, deadline FROM periods
       WHERE deadline > ${now.toISOString()}::timestamptz
@@ -69,13 +73,18 @@ export class PeriodsService {
     throw new Error(`Không tìm được kỳ mở sau ${ym}`);
   }
 
-  async isOpen(ym: string, tx: Executor = this.db): Promise<boolean> {
+  async isOpen(
+    ym: string,
+    tx: Executor = this.db,
+    now: Date = this.clock.now(),
+  ): Promise<boolean> {
     const row = await this.find(ym, tx);
-    return row !== null && this.clock.now() < row.deadline;
+    return row !== null && now < row.deadline;
   }
 
   async current(userSub: string): Promise<CurrentPeriod> {
-    const period = await this.openPeriod();
+    const now = this.clock.now();
+    const period = await this.openPeriod(this.db, now);
     const prevYm = addMonths(period.ym, -1);
     const { rows } = await this.db.execute<{ delivering: boolean }>(sql`
       SELECT EXISTS (
@@ -91,7 +100,7 @@ export class PeriodsService {
       ym: period.ym,
       deadline: period.deadline.toISOString(),
       is_open: true,
-      days_left: daysLeft(this.clock.now(), period.deadline),
+      days_left: daysLeft(now, period.deadline),
       previous: rows[0] ? { ym: prevYm, delivering: rows[0].delivering } : null,
     };
   }

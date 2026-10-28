@@ -23,6 +23,22 @@ describe('ClockService', () => {
     expect(
       () => new ClockService({ NODE_ENV: 'test', CLOCK_OFFSET_MS: 'Infinity' }),
     ).toThrow(/CLOCK_OFFSET_MS/);
+    expect(
+      () => new ClockService({ NODE_ENV: 'test', CLOCK_OFFSET_MS: '   ' }),
+    ).toThrow(/CLOCK_OFFSET_MS/);
+    expect(
+      () => new ClockService({ NODE_ENV: 'test', CLOCK_OFFSET_MS: '1.5' }),
+    ).toThrow(/CLOCK_OFFSET_MS/);
+  });
+
+  it('offset âm hợp lệ', () => {
+    const clock = new ClockService({
+      NODE_ENV: 'test',
+      CLOCK_OFFSET_MS: '-60000',
+    });
+    expect(
+      Math.abs(clock.now().getTime() - (Date.now() - 60_000)),
+    ).toBeLessThan(1000);
   });
 
   it('test + CLOCK_OFFSET_MS rỗng → offset 0', () => {
