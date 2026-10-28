@@ -8,9 +8,14 @@ describe('cursor phân trang keyset', () => {
   });
 
   it.each(['khong-phai-base64!', encodeCursor(['chi-mot']), 'e30'])(
-    'cursor hỏng hoặc sai số khóa (%p) → 400',
+    'cursor hỏng hoặc sai số khóa (%p) → 400 VALIDATION',
     (raw) => {
       expect(() => decodeCursor(raw, 2)).toThrow(BadRequestException);
+      expect(() => decodeCursor(raw, 2)).toThrow(
+        expect.objectContaining({
+          response: expect.objectContaining({ code: 'VALIDATION' }) as unknown,
+        }) as Error,
+      );
     },
   );
 });

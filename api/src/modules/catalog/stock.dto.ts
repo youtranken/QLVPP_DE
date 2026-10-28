@@ -4,7 +4,6 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  Matches,
   Max,
   MaxLength,
   Min,
@@ -42,9 +41,4 @@ export class PageQuery {
   limit = DEFAULT_PAGE_LIMIT;
 
   @IsOptional() @IsString() @MaxLength(1000) cursor?: string;
-}
-
-export class IssuesQuery {
-  @Matches(/^\d{4}-(0[1-9]|1[0-2])$/, { message: 'ym phải dạng YYYY-MM' })
-  ym!: string;
 }

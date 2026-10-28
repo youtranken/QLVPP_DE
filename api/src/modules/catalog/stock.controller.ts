@@ -3,7 +3,8 @@ import { CurrentIdentity } from '../auth/current-identity.decorator';
 import type { RequestIdentity } from '../auth/identity.types';
 import { Roles } from '../auth/roles.decorator';
 import { uuidParam } from './catalog.dto';
-import { IssueDto, IssuesQuery, PageQuery, StockChangeDto } from './stock.dto';
+import { YmPipe } from '../../common/ym';
+import { IssueDto, PageQuery, StockChangeDto } from './stock.dto';
 import { StockQueryService } from './stock-query.service';
 import { StockService } from './stock.service';
 
@@ -42,8 +43,8 @@ export class StockController {
 
   @Get('admin/issues')
   @Roles('admin', 'sa')
-  issues(@Query() q: IssuesQuery) {
-    return this.query.issuesInMonth(q.ym);
+  issues(@Query('ym', YmPipe) ym: string) {
+    return this.query.issuesInMonth(ym);
   }
 
   @Get('admin/stock/low')

@@ -252,7 +252,7 @@ describe('kho: nhập, điều chỉnh, xuất lẻ, sổ cái (Postgres thật)
     expect(body2.next_cursor).toBeNull();
   });
 
-  it('admin/issues?ym=tháng này có đợt xuất lẻ; ym sai dạng → 400 VALIDATION', async () => {
+  it('admin/issues?ym=tháng này có đợt xuất lẻ; ym sai dạng/thiếu → 400 INVALID_PERIOD', async () => {
     const ym = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Asia/Ho_Chi_Minh',
       year: 'numeric',
@@ -270,10 +270,10 @@ describe('kho: nhập, điều chỉnh, xuất lẻ, sổ cái (Postgres thật)
       recipient_sub: RECEIVER,
       recipient_name: 'Người nhận',
     });
-    const bad = await admin(http().get('/api/admin/issues?ym=2026-13')).expect(
-      400,
-    );
-    expect(bad.body).toMatchObject({ code: 'VALIDATION' });
+    for (const q of ['?ym=2026-13', '?ym=2026-1', '?ym=abc', '?ym=', '']) {
+      const bad = await admin(http().get(`/api/admin/issues${q}`)).expect(400);
+      expect(bad.body).toMatchObject({ code: 'INVALID_PERIOD' });
+    }
   });
 
   it('DELETE món đã có sổ cái → 409 ITEM_IN_USE; hook báo đã dùng → 409 ITEM_IN_USE', async () => {

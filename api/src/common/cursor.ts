@@ -19,7 +19,14 @@ export function decodeCursor(raw: string, size: number): string[] {
     parsed.length !== size ||
     parsed.some((k) => typeof k !== 'string')
   ) {
-    throw new BadRequestException('cursor không hợp lệ');
+    throw invalidCursor();
   }
   return parsed as string[];
+}
+
+export function invalidCursor(): BadRequestException {
+  return new BadRequestException({
+    code: 'VALIDATION',
+    message: 'cursor không hợp lệ',
+  });
 }

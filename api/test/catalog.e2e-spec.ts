@@ -269,6 +269,23 @@ describe('catalog: nhóm món, món', () => {
       expect(await auditCount('item.deleted', item.id)).toBe(1);
     });
 
+    it('cursor sổ cái rác hoặc timestamp đúng hình sai giá trị → 400 VALIDATION, không 500', async () => {
+      const cursor = (keys: string[]) =>
+        Buffer.from(JSON.stringify(keys)).toString('base64url');
+      const anyId = '00000000-0000-4000-8000-000000000000';
+      for (const raw of [
+        'rac!!',
+        cursor(['2026-99-99 00:00:00+00', anyId]),
+        cursor(['2026-02-31 00:00:00+07', anyId]),
+        cursor(['2026-10-28 10:00:00+07', 'khong-uuid']),
+      ]) {
+        const res = await admin(
+          http().get(`/api/admin/items/${anyId}/movements?cursor=${raw}`),
+        ).expect(400);
+        expect(res.body).toMatchObject({ code: 'VALIDATION' });
+      }
+    });
+
     it('member gọi admin/items → 403', async () => {
       await member(http().get('/api/admin/items')).expect(403);
       await member(http().post('/api/admin/items'))
