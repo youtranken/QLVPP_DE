@@ -6,8 +6,26 @@ import {
   resolveMigrationsDir,
   runMigrations,
 } from '../src/database/migration-runner';
+import { assertTestDatabase } from './test-database';
 
 const silent = { log: () => undefined };
+
+describe('assertTestDatabase — chặn reset nhầm DB không phải *_test', () => {
+  it('URL trỏ …/vpp → throw trước khi chạm DB', () => {
+    expect(() =>
+      assertTestDatabase('postgres://u:p@127.0.0.1:5492/vpp'),
+    ).toThrow(/_test/);
+  });
+
+  it('thiếu DATABASE_URL → throw', () => {
+    expect(() => assertTestDatabase(undefined)).toThrow(/DATABASE_URL/);
+  });
+
+  it('URL trỏ …/vpp_test → trả lại URL', () => {
+    const url = 'postgres://u:p@127.0.0.1:5492/vpp_test';
+    expect(assertTestDatabase(url)).toBe(url);
+  });
+});
 
 describe('migrations nền 0001–0013', () => {
   let pool: Pool;
@@ -24,7 +42,8 @@ describe('migrations nền 0001–0013', () => {
   }
 
   beforeAll(async () => {
-    pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const url = assertTestDatabase(process.env.DATABASE_URL);
+    pool = new Pool({ connectionString: url });
     await resetSchema();
     await runMigrations(pool, resolveMigrationsDir(), silent);
   });
@@ -111,13 +130,17 @@ describe('migrations nền 0001–0013', () => {
     ).rejects.toMatchObject({ code: '23514' });
   });
 
-  it('files nhận purpose item_image, id tự sinh', async () => {
-    const { rows } = await pool.query<{ id: string }>(
-      `INSERT INTO files (original_name, mime, size_bytes, purpose, uploaded_by_sub)
-       VALUES ('a.png', 'image/png', 10, 'item_image', 'sub-1') RETURNING id`,
-    );
-    expect(rows[0].id).toMatch(/^[0-9a-f-]{36}$/);
-  });
+  it.each([['item_image'], ['line_image']])(
+    'files nhận purpose %s, id tự sinh',
+    async (purpose) => {
+      const { rows } = await pool.query<{ id: string }>(
+        `INSERT INTO files (original_name, mime, size_bytes, purpose, uploaded_by_sub)
+         VALUES ('a.png', 'image/png', 10, $1, 'sub-1') RETURNING id`,
+        [purpose],
+      );
+      expect(rows[0].id).toMatch(/^[0-9a-f-]{36}$/);
+    },
+  );
 
   it('in_app_notifications trùng (event_id, user_sub) lần 2 → 23505', async () => {
     const insert = `INSERT INTO in_app_notifications (user_sub, event_id, topic)
