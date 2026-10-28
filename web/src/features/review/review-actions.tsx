@@ -22,7 +22,7 @@ export function ReviewStatusTag({ status, note }: { status: LineView['review_sta
   return <span className="tag tag--ok">{t(`review.status.${status}`)}</span>;
 }
 
-// onDone nhận cả request_updated_at: ngăn điều chỉnh (E3-S3) cập nhật expected_updated_at theo đó
+// onDone nhận cả request_updated_at: ngăn điều chỉnh cập nhật expected_updated_at theo đó
 export function ReviewActions({ line, onDone, onStale }: {
   line: ReviewableLine;
   onDone: (result: ReviewResult) => void;

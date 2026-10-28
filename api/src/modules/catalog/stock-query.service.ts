@@ -13,7 +13,7 @@ import type { Database } from '../../database/database.module';
 import { ITEM_COLUMNS, LOW_STOCK_SQL } from './catalog-sql';
 import type { ItemRow } from './catalog-sql';
 
-// Định nghĩa ở catalog-sql để ITEM_COLUMNS dùng chung mà không vòng import; cron Plan 3 lấy từ đây
+// Định nghĩa ở catalog-sql để ITEM_COLUMNS dùng chung mà không vòng import
 export { LOW_STOCK_SQL };
 
 export interface Page<T> {

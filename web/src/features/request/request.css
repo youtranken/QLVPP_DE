@@ -95,7 +95,7 @@
   .rq-toast-slot, .rq-notice { bottom: calc(128px + env(safe-area-inset-bottom)); }
 }
 
-/* Task 12: món ngoài danh mục, chép lại, kỳ trước đang giao */
+/* Món ngoài danh mục, chép lại, kỳ trước đang giao */
 .rq-line-link { border: 0; background: transparent; padding: 0; text-align: left; color: var(--ink); text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; font: inherit; font-weight: 700; }
 .rq-line-link:hover { color: var(--brand-ink); }
 .rq-copy { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px; border-radius: 999px; border: 0; background: #fff; color: var(--brand-ink); font-weight: 800; }

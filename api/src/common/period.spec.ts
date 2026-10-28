@@ -42,12 +42,9 @@ describe('daysLeft', () => {
   it('ngày 6 → 5', () => {
     // còn 23:59 đêm 05/11 VN (mốc 16:59Z) vẫn là ngày 5 → 6
     expect(daysLeft(at('2026-11-05T16:59:59Z'), nov)).toBe(6);
-    expect(
-      daysLeft(
-        at('2026-11-06T03:00:00Z' /* 06/11 VN 10:00; brief ghi nhầm 05T */),
-        nov,
-      ),
-    ).toBe(5);
+    expect(daysLeft(at('2026-11-06T03:00:00Z' /* 06/11 VN 10:00 */), nov)).toBe(
+      5,
+    );
   });
   it('ngày hạn → 1', () => {
     expect(daysLeft(at('2026-11-10T03:00:00Z'), nov)).toBe(1);

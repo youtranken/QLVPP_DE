@@ -9,7 +9,7 @@ import { reviewErrorKey } from './review-errors';
 const REASON_MIN = 3;
 const NOTE_MAX = 500;
 
-// Ô lý do riêng của Từ chối, không dùng chung với lý do điều chỉnh phiếu (E3-S3)
+// Ô lý do riêng của Từ chối, không dùng chung với lý do điều chỉnh phiếu
 export function RejectDialog({ name, onSubmit, onClose }: {
   name: string;
   onSubmit: (note: string) => Promise<void>;
