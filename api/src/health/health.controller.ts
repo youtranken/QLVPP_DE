@@ -1,21 +1,20 @@
 import { Controller, Get, Inject, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import type { Pool } from 'pg';
-import { PG_POOL } from '../database/database.module';
 import { Public } from '../modules/auth/public.decorator';
+import { DB_PROBE, type DbProbe } from './db-probe';
 
 // Healthcheck compose/update-vpp.sh: api sống mà mất DB vẫn phải báo hỏng
 @Public()
 @Controller('health')
 export class HealthController {
-  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+  constructor(@Inject(DB_PROBE) private readonly probe: DbProbe) {}
 
   @Get()
   async check(
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ status: string }> {
     try {
-      await this.pool.query('SELECT 1');
+      await this.probe();
       return { status: 'ok' };
     } catch {
       res.status(503);

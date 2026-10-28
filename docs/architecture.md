@@ -272,7 +272,7 @@ Theo QLTS với các chỉnh sửa: **`TRUST_PROXY_HOPS`** (env; prod sau EDGE =
 
 ## 15. Vận hành
 
-Backup hằng đêm (pg_dump + `/data/files`, mã hóa, giữ 30 ngày, fail-closed khi thiếu passphrase); log JSON qua pino; `/api/health` cho EDGE/giám sát (`SELECT 1`; mất DB → 503 `{status:'db_unavailable'}`); runbook: mất SSO → SA login; mất secret → admin PMH ID rotate, cập nhật `.env`, recreate `api`.
+Backup hằng đêm (pg_dump + `/data/files`, mã hóa, giữ 30 ngày, fail-closed khi thiếu passphrase); log JSON qua pino; `/api/health` cho EDGE/giám sát (`SELECT 1` qua client riêng hạn 3 s, không dùng pool; mất/treo DB → 503 `{status:'db_unavailable'}`); runbook: mất SSO → SA login; mất secret → admin PMH ID rotate, cập nhật `.env`, recreate `api`.
 
 ## 16. Danh sách copy-and-trim từ QLTS_DE (đã đối chiếu mã thật)
 

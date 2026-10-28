@@ -6,6 +6,7 @@ import { IP_THROTTLER } from './common/ip-throttler.guard';
 import { testOnlyControllers } from './common/client-ip.controller';
 import { httpLoggerOptions } from './common/logger.config';
 import { DatabaseModule } from './database/database.module';
+import { DB_PROBE, probeDatabase } from './health/db-probe';
 import { HealthController } from './health/health.controller';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -49,5 +50,11 @@ import { FilesModule } from './modules/files/files.module';
     CatalogModule,
   ],
   controllers: [HealthController, ...testOnlyControllers(process.env)],
+  providers: [
+    {
+      provide: DB_PROBE,
+      useValue: () => probeDatabase(process.env.DATABASE_URL),
+    },
+  ],
 })
 export class AppModule {}

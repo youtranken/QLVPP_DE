@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { PG_POOL } from '../src/database/database.module';
+import { DB_PROBE } from '../src/health/db-probe';
 import { createTestApp } from './test-app.helper';
 
 describe('Health (khung api)', () => {
@@ -25,17 +25,12 @@ describe('Health (khung api)', () => {
 
 describe('Health khi Postgres không tới được', () => {
   let app: INestApplication<App>;
-  const deadPool = {
-    query: () => Promise.reject(new Error('connect ECONNREFUSED')),
-    connect: () => Promise.reject(new Error('connect ECONNREFUSED')),
-    end: () => Promise.resolve(),
-    on: () => undefined,
-  };
+  const deadProbe = () => Promise.reject(new Error('connect ECONNREFUSED'));
 
   beforeAll(async () => {
     app = (await createTestApp(
       [],
-      [{ token: PG_POOL, useValue: deadPool }],
+      [{ token: DB_PROBE, useValue: deadProbe }],
     )) as INestApplication<App>;
   });
 

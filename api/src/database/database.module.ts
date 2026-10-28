@@ -1,7 +1,6 @@
 import { Global, Inject, Module, OnApplicationShutdown } from '@nestjs/common';
 import { NodePgDatabase, drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import { createPgPool } from './pg-pool';
 
 export const PG_POOL = 'PG_POOL';
 export const DRIZZLE_DB = 'DRIZZLE_DB';
@@ -14,7 +13,14 @@ export type Database = NodePgDatabase<Record<string, unknown>>;
   providers: [
     {
       provide: PG_POOL,
-      useFactory: (): Pool => createPgPool(process.env.DATABASE_URL),
+      useFactory: (): Pool => {
+        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        // Không có listener 'error' thì client idle rớt kết nối sẽ giết cả process.
+        pool.on('error', (error) => {
+          console.error('[pg-pool] lỗi kết nối idle:', error);
+        });
+        return pool;
+      },
     },
     {
       provide: DRIZZLE_DB,

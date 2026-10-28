@@ -39,9 +39,10 @@ cp .env.example .env
 # Dev không cần PMH ID thật: SA local và dev-identity đủ cho mọi màn đã có.
 
 # Mật khẩu SA dev: in hash, dán vào LOCAL_SA_PASSWORD_HASH trong .env (không commit .env).
-# sa:hash đọc mật khẩu từ stdin để nó không nằm trong lịch sử shell
+# sa:hash không nhận mật khẩu trên dòng lệnh (sẽ nằm trong lịch sử shell): chạy rồi gõ, chữ gõ không hiện
 cd api && npm ci
-read -rsp 'Mật khẩu SA: ' PW; echo; printf '%s' "$PW" | npm run -s sa:hash; unset PW
+npm run -s sa:hash
+# hoặc qua pipe (bash):  IFS= read -rsp 'Mật khẩu SA: ' PW; echo; printf '%s' "$PW" | npm run -s sa:hash; unset PW
 cd ..
 
 docker compose up -d --build
@@ -130,8 +131,8 @@ Checklist lần deploy đầu (và khi đổi hạ tầng):
 
 - [ ] `.env` prod: `NODE_ENV=production`, `AUTH_DEV_MODE=false`, không còn `CHANGE_ME`; `APP_BASE_URL` khớp hệt
       `app_url` đã khai với PMH ID.
-- [ ] Mật khẩu SA prod: trong `api/`, `read -rsp 'Mật khẩu SA: ' PW; echo; printf '%s' "$PW" | npm run -s sa:hash; unset PW`
-      → dán vào `LOCAL_SA_PASSWORD_HASH` (mật khẩu cất két IT, không dùng lại mật khẩu dev; không truyền mật khẩu
+- [ ] Mật khẩu SA prod: trong `api/`, `npm run -s sa:hash` rồi gõ mật khẩu (không hiện chữ gõ; hoặc bash:
+      `IFS= read -rsp 'Mật khẩu SA: ' PW; echo; printf '%s' "$PW" | npm run -s sa:hash; unset PW`) → dán vào `LOCAL_SA_PASSWORD_HASH` (mật khẩu cất két IT, không dùng lại mật khẩu dev; không truyền mật khẩu
       làm tham số dòng lệnh vì sẽ nằm trong lịch sử shell).
 - [ ] `TRUST_PROXY_HOPS` (chỉ kiểm được trên prod, sau EDGE thật): đăng nhập SA một lần từ máy trong LAN, mở
       Nhật ký → dòng `auth.sa_login` **đầu tiên** trên prod (`detail.ip`) —
