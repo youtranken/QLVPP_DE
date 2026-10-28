@@ -86,8 +86,8 @@
       "^.+\\.(t|j)s$": [
         "ts-jest",
         {
-          "isolatedModules": true,
           "tsconfig": {
+            "isolatedModules": true,
             "module": "commonjs",
             "moduleResolution": "node10",
             "resolvePackageJsonExports": false,
