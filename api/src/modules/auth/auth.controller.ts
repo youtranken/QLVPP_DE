@@ -26,6 +26,7 @@ import { LocalSaService } from './local-sa.service';
 import { OIDC_PROVIDER } from './oidc-provider';
 import type { OidcProvider } from './oidc-provider';
 import { Public } from './public.decorator';
+import { Throttle } from '@nestjs/throttler';
 import { SaLoginDto } from './sa-login.dto';
 import { SessionService } from './session.service';
 import { SESSION_COOKIE } from './identity.guard';
@@ -83,6 +84,7 @@ export class AuthController {
   ) {}
 
   @Public()
+  @Throttle({ ip: { limit: 10, ttl: 60_000 } })
   @Post('sa-login')
   @HttpCode(200)
   async saLogin(

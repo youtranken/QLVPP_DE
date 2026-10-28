@@ -35,11 +35,14 @@ export class FilesCleanupJob {
 
   // Xóa bản ghi trước, tệp sau: chết giữa chừng chỉ để lại tệp rác, không để bản ghi trỏ vào tệp đã mất
   async run(now: Date): Promise<number> {
+    const scope = this.policy.cleanupScope();
+    if (!scope) return 0;
     const deleted = await this.db.transaction(async (tx) => {
       const result = await tx.execute<DeletedFile>(sql`
         DELETE FROM files f
         WHERE f.created_at < ${now.toISOString()}::timestamptz - interval '24 hours'
-          AND NOT (${sql.raw(this.policy.referencedSql())})
+          AND f.purpose IN ${scope.purposes}
+          AND NOT (${sql.raw(scope.referencedSql)})
         RETURNING f.id, f.mime
       `);
       if (result.rows.length > 0) {

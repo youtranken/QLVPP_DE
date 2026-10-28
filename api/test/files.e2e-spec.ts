@@ -10,6 +10,9 @@ import {
   resolveMigrationsDir,
   runMigrations,
 } from '../src/database/migration-runner';
+import { DRIZZLE_DB, PG_POOL } from '../src/database/database.module';
+import type { Database } from '../src/database/database.module';
+import { AuditWriterService } from '../src/modules/audit/audit-writer.service';
 import { FileAccessPolicy } from '../src/modules/files/file-access.policy';
 import { FilesCleanupJob } from '../src/modules/files/files-cleanup.job';
 import { FilesService } from '../src/modules/files/files.service';
@@ -66,6 +69,7 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
     app = (await createTestApp()) as INestApplication<App>;
     app.get(FileAccessPolicy).registerReference({
       name: 'e2e_file_refs',
+      purpose: 'item_image',
       readCondition:
         'EXISTS (SELECT 1 FROM e2e_file_refs r WHERE r.file_id = f.id AND r.viewer_sub = $2)',
       referencedCondition:
@@ -235,6 +239,38 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
       expect(left.rows.map((r) => r.id)).toEqual([kept]);
       expect(existsSync(join(dir, `${orphan}.png`))).toBe(false);
       expect(existsSync(join(dir, `${kept}.png`))).toBe(true);
+    });
+  });
+
+  describe('FilesCleanupJob.run — fail-closed theo purpose', () => {
+    beforeEach(async () => {
+      await pool.query('DELETE FROM files');
+    });
+
+    it('purpose chưa có reference đăng ký (line_image) → giữ nguyên dù > 24 h', async () => {
+      const line = (
+        (await upload(MEMBER_A, PNG_1X1, 'line_image').expect(201)).body as {
+          id: string;
+        }
+      ).id;
+      expect(
+        await app
+          .get(FilesCleanupJob)
+          .run(new Date(Date.now() + 25 * 3600_000)),
+      ).toBe(0);
+      expect(existsSync(join(dir, `${line}.png`))).toBe(true);
+    });
+
+    it('chưa đăng ký reference nào → không xóa tệp nào', async () => {
+      const id = ((await upload(MEMBER_A).expect(201)).body as { id: string })
+        .id;
+      const bare = new FilesCleanupJob(
+        app.get<Database>(DRIZZLE_DB),
+        app.get(AuditWriterService),
+        new FileAccessPolicy(app.get<Pool>(PG_POOL)),
+      );
+      expect(await bare.run(new Date(Date.now() + 25 * 3600_000))).toBe(0);
+      expect(existsSync(join(dir, `${id}.png`))).toBe(true);
     });
   });
 

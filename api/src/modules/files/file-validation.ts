@@ -1,5 +1,8 @@
 export type ImageMime = 'image/jpeg' | 'image/png' | 'image/webp';
 
+export const FILE_PURPOSES = ['item_image', 'line_image'] as const;
+export type FilePurpose = (typeof FILE_PURPOSES)[number];
+
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 const EXTENSIONS: Record<ImageMime, string> = {

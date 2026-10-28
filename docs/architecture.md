@@ -211,7 +211,7 @@ Module `files` **viết mới** (mượn kiểm magic bytes và hash tên từ Q
 
 **Luật đọc `GET /files/:id`** (sau IdentityGuard, một truy vấn): cho phép nếu `role ∈ {admin, sa}` **hoặc** `files.uploaded_by_sub = me` **hoặc** `EXISTS (items WHERE image_file_id = :id)` **hoặc** `EXISTS (request_lines l JOIN requests r WHERE l.image_file_id = :id AND r.user_sub = me)`; khác → 404 (không lộ tồn tại). Trả `Content-Type` = mime đã kiểm, `Content-Disposition: inline`, `X-Content-Type-Options: nosniff`, `Cache-Control: private, max-age=86400`; **không** ghi audit cho GET.
 
-**Dọn mồ côi** — cron hằng ngày 03:00: xóa bản ghi + tệp có `created_at < now − 24 h` và không được tham chiếu bởi `items.image_file_id` hay `request_lines.image_file_id`.
+**Dọn mồ côi** — cron hằng ngày 03:00: xóa bản ghi + tệp có `created_at < now − 24 h` và không được tham chiếu bởi `items.image_file_id` hay `request_lines.image_file_id`. Bảng tham chiếu do module sở hữu đăng ký qua `FileAccessPolicy.registerReference({name, purpose, readCondition, referencedCondition})`; cron chỉ dọn tệp có `purpose` đã có ít nhất một reference đăng ký (fail-closed: purpose chưa đăng ký thì giữ nguyên).
 
 ## 9. Thông báo
 
@@ -257,7 +257,7 @@ Bấm Xuất/In: `POST admin/reports/:ym/snapshots {kind, order_qty: {item_id: n
 
 ## 13. Bảo mật
 
-Theo QLTS với các chỉnh sửa: **`TRUST_PROXY_HOPS`** (env; prod sau EDGE = 2: EDGE nginx → `vpp-web` nginx → api; dev = 1) thay cho `trust proxy 1` cứng — nếu sai, `req.ip` là IP EDGE và mọi giới hạn theo IP gộp thành một; `vpp.conf` ở EDGE và `web/nginx.conf` đều phải set `X-Forwarded-For` (`proxy_add_x_forwarded_for`). Cookie Strict; CSRF; throttler 300 req/phút/user (+ upload 20/phút, sa-login 10/phút/IP); redact trong log: `cookie`, `authorization`, `req.query.code`, `state`, `login_hint`, `logout_token`; không log body webhook/BCL; `AUTH_DEV_MODE` chỉ ở development/test, nginx xóa header `x-dev-*`; webhook HMAC v2 + timestamp (§4); BCL verify JWT; SA lockout theo (IP, username) + toàn cục; security headers (X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy). Ảnh: magic bytes, không thực thi, luật đọc theo tham chiếu (§8), member chỉ gắn được tệp mình tải. Audit chỉ cho mutate và tạo bản chốt, không cho GET.
+Theo QLTS với các chỉnh sửa: **`TRUST_PROXY_HOPS`** (env; prod sau EDGE = 2: EDGE nginx → `vpp-web` nginx → api; dev = 1) thay cho `trust proxy 1` cứng — nếu sai, `req.ip` là IP EDGE và mọi giới hạn theo IP gộp thành một; `vpp.conf` ở EDGE và `web/nginx.conf` đều phải set `X-Forwarded-For` (`proxy_add_x_forwarded_for`). Cookie Strict; CSRF; throttler 300 req/phút/user (+ upload 20/phút, sa-login 10/phút/IP) và 300 req/phút/IP chạy **trước** IdentityGuard (`THROTTLE_IP_PER_MIN`, chặn spam cookie/sa-login chưa xác thực); bộ đếm theo user chạy sau Roles; redact trong log: `cookie`, `authorization`, `req.query.code`, `state`, `login_hint`, `logout_token`; không log body webhook/BCL; `AUTH_DEV_MODE` chỉ ở development/test, nginx xóa header `x-dev-*`; webhook HMAC v2 + timestamp (§4); BCL verify JWT; SA lockout theo (IP, username) + toàn cục; security headers (X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy). Ảnh: magic bytes, không thực thi, luật đọc theo tham chiếu (§8), member chỉ gắn được tệp mình tải. Audit chỉ cho mutate và tạo bản chốt, không cho GET.
 
 ## 14. Kiểm thử
 

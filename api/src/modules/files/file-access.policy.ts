@@ -2,15 +2,23 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
 import type { RequestIdentity } from '../auth/identity.types';
+import type { FilePurpose } from './file-validation';
 
 // Điều kiện SQL do module sở hữu bảng tham chiếu cung cấp; alias `f` = dòng files, `$2` = sub người xem.
 // Chuỗi hằng trong code, không bao giờ ghép từ input người dùng.
 export interface FileReference {
   readonly name: string;
+  // Cron chỉ dọn purpose đã có reference đăng ký: module chưa đăng ký thì tệp của nó không bị coi là mồ côi
+  readonly purpose: FilePurpose;
   // Đúng khi người xem `$2` được đọc f nhờ tham chiếu này
   readonly readCondition: string;
   // Đúng khi f còn được tham chiếu (bất kể ai) — cron dọn mồ côi giữ lại
   readonly referencedCondition: string;
+}
+
+export interface CleanupScope {
+  purposes: FilePurpose[];
+  referencedSql: string;
 }
 
 export interface ReadableFile {
@@ -59,10 +67,13 @@ export class FileAccessPolicy {
     return result.rows[0] ?? null;
   }
 
-  referencedSql(): string {
-    if (this.references.length === 0) return 'false';
-    return this.references
-      .map((r) => `(${r.referencedCondition})`)
-      .join(' OR ');
+  cleanupScope(): CleanupScope | null {
+    if (this.references.length === 0) return null;
+    return {
+      purposes: [...new Set(this.references.map((r) => r.purpose))],
+      referencedSql: this.references
+        .map((r) => `(${r.referencedCondition})`)
+        .join(' OR '),
+    };
   }
 }

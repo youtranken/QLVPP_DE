@@ -12,11 +12,8 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { isUuid } from './file-access.policy';
-import { extensionFor, sniff } from './file-validation';
-import type { ImageMime } from './file-validation';
-
-export const FILE_PURPOSES = ['item_image', 'line_image'] as const;
-export type FilePurpose = (typeof FILE_PURPOSES)[number];
+import { FILE_PURPOSES, extensionFor, sniff } from './file-validation';
+import type { FilePurpose, ImageMime } from './file-validation';
 
 export interface UploadedFile {
   id: string;

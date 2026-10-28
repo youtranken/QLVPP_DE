@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
+import { IP_THROTTLER } from './common/ip-throttler.guard';
 import { testOnlyControllers } from './common/client-ip.controller';
 import { httpLoggerOptions } from './common/logger.config';
 import { DatabaseModule } from './database/database.module';
@@ -24,8 +25,18 @@ import { FilesModule } from './modules/files/files.module';
             : undefined,
       },
     }),
-    ThrottlerModule.forRoot({
-      throttlers: [{ ttl: 60_000, limit: 300 }],
+    // forRootAsync: đọc env lúc tạo app (test đặt THROTTLE_IP_PER_MIN nhỏ trước createTestApp)
+    ThrottlerModule.forRootAsync({
+      useFactory: () => ({
+        throttlers: [
+          { name: 'default', ttl: 60_000, limit: 300 },
+          {
+            name: IP_THROTTLER,
+            ttl: 60_000,
+            limit: Number(process.env.THROTTLE_IP_PER_MIN) || 300,
+          },
+        ],
+      }),
     }),
     ScheduleModule.forRoot(),
     DatabaseModule,
