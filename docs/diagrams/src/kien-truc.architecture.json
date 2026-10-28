@@ -1,0 +1,390 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "VPP Công trình — kiến trúc thành phần (Plan 1)",
+    "output": "docs/diagrams/vpp-kien-truc.html",
+    "locale": "vi",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/youtranken/QLVPP_DE.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "633ad8084e19a25761992ea4c12e994ea38be06d"
+    }
+  },
+  "components": [
+    {
+      "id": "browser",
+      "type": "external",
+      "label": "Trình duyệt",
+      "sublabel": "SPA React · cookie vpp_sid",
+      "pos": [
+        40,
+        200
+      ],
+      "size": [
+        150,
+        62
+      ],
+      "sources": [
+        {
+          "path": "web/src/App.tsx",
+          "line": 10,
+          "end_line": 26,
+          "label": "boot /api/auth/me"
+        }
+      ]
+    },
+    {
+      "id": "edge",
+      "type": "security",
+      "label": "EDGE nginx",
+      "sublabel": "TLS :8443 · XFF",
+      "pos": [
+        250,
+        200
+      ],
+      "size": [
+        140,
+        62
+      ],
+      "tag": "PMH_IDE",
+      "sources": [
+        {
+          "path": "docker-compose.yml",
+          "line": 41,
+          "end_line": 46,
+          "label": "mạng edge, alias vpp-web"
+        }
+      ]
+    },
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "web nginx",
+      "sublabel": "SPA tĩnh + proxy /api",
+      "pos": [
+        480,
+        200
+      ],
+      "size": [
+        150,
+        62
+      ],
+      "sources": [
+        {
+          "path": "web/nginx.conf",
+          "line": 22,
+          "end_line": 39
+        }
+      ]
+    },
+    {
+      "id": "guards",
+      "type": "security",
+      "label": "Guard toàn cục",
+      "sublabel": "IpThrottle→Identity→Csrf→Roles",
+      "pos": [
+        750,
+        200
+      ],
+      "size": [
+        184,
+        62
+      ],
+      "tag": "container api",
+      "sources": [
+        {
+          "path": "api/src/modules/auth/auth.module.ts",
+          "line": 24,
+          "end_line": 29
+        },
+        {
+          "path": "api/src/modules/auth/identity.guard.ts",
+          "line": 67,
+          "end_line": 99,
+          "label": "@Public ẩn danh khi 503"
+        }
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "backend",
+      "label": "auth · users",
+      "sublabel": "OIDC PKCE · phiên · SA · BCL",
+      "pos": [
+        1010,
+        200
+      ],
+      "size": [
+        170,
+        62
+      ],
+      "tag": "container api",
+      "sources": [
+        {
+          "path": "api/src/modules/auth/auth.controller.ts",
+          "line": 86,
+          "end_line": 136,
+          "label": "sa-login"
+        },
+        {
+          "path": "api/src/modules/auth/session-auth.service.ts",
+          "line": 95,
+          "end_line": 132,
+          "label": "refresh → 503"
+        },
+        {
+          "path": "api/src/modules/users/directory-sync.scheduler.ts",
+          "line": 40,
+          "end_line": 46
+        }
+      ]
+    },
+    {
+      "id": "pmhid",
+      "type": "external",
+      "label": "PMH ID",
+      "sublabel": "OIDC · JWKS · Directory API",
+      "pos": [
+        1010,
+        40
+      ],
+      "size": [
+        170,
+        62
+      ],
+      "sources": [
+        {
+          "path": "api/src/modules/auth/openid-client.provider.ts",
+          "line": 34,
+          "end_line": 60,
+          "label": "discovery"
+        },
+        {
+          "path": "api/src/modules/auth/jwt-verifier.service.ts",
+          "line": 22,
+          "end_line": 35,
+          "label": "JWKS"
+        },
+        {
+          "path": "api/src/modules/users/directory.client.ts",
+          "line": 49,
+          "end_line": 80
+        }
+      ]
+    },
+    {
+      "id": "business",
+      "type": "backend",
+      "label": "Nghiệp vụ + nền",
+      "sublabel": "catalog · files · audit · config",
+      "pos": [
+        750,
+        380
+      ],
+      "size": [
+        184,
+        62
+      ],
+      "tag": "container api",
+      "sources": [
+        {
+          "path": "api/src/app.module.ts",
+          "line": 43,
+          "end_line": 51
+        }
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL 18",
+      "sublabel": "volume pgdata",
+      "pos": [
+        1010,
+        380
+      ],
+      "size": [
+        170,
+        62
+      ],
+      "sources": [
+        {
+          "path": "docker-compose.yml",
+          "line": 51,
+          "end_line": 61
+        },
+        {
+          "path": "api/src/database/database.module.ts",
+          "line": 13,
+          "end_line": 23
+        }
+      ]
+    },
+    {
+      "id": "files",
+      "type": "database",
+      "label": "volume filesdata",
+      "sublabel": "/data/files/<uuid>.<ext>",
+      "pos": [
+        750,
+        540
+      ],
+      "size": [
+        184,
+        62
+      ],
+      "sources": [
+        {
+          "path": "docker-compose.yml",
+          "line": 24,
+          "end_line": 26
+        },
+        {
+          "path": "api/src/modules/files/files.service.ts",
+          "line": 59,
+          "end_line": 59,
+          "label": "writeFile"
+        }
+      ]
+    },
+    {
+      "id": "backup",
+      "type": "backend",
+      "label": "backup-cron",
+      "sublabel": "pg_dump + ảnh, BACKUP_AT",
+      "pos": [
+        1010,
+        540
+      ],
+      "size": [
+        170,
+        62
+      ],
+      "sources": [
+        {
+          "path": "docker-compose.yml",
+          "line": 68,
+          "end_line": 91
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Docker Compose · mạng default",
+      "wraps": [
+        "web",
+        "guards",
+        "auth",
+        "business",
+        "postgres",
+        "files",
+        "backup"
+      ],
+      "pad": 22
+    }
+  ],
+  "connections": [
+    {
+      "from": "browser",
+      "to": "edge",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "from": "edge",
+      "to": "web",
+      "label": "vpp-web:80",
+      "variant": "emphasis"
+    },
+    {
+      "from": "web",
+      "to": "guards",
+      "label": "/api → api:3000",
+      "variant": "emphasis"
+    },
+    {
+      "from": "guards",
+      "to": "auth",
+      "label": "auth/*",
+      "variant": "emphasis"
+    },
+    {
+      "from": "guards",
+      "to": "business",
+      "label": "route khác"
+    },
+    {
+      "from": "auth",
+      "to": "pmhid",
+      "label": "token · refresh · JWKS",
+      "variant": "security"
+    },
+    {
+      "from": "pmhid",
+      "to": "auth",
+      "label": "webhook v2 · BCL",
+      "variant": "dashed"
+    },
+    {
+      "from": "auth",
+      "to": "postgres",
+      "label": "sessions · users"
+    },
+    {
+      "from": "business",
+      "to": "postgres",
+      "label": "SQL"
+    },
+    {
+      "from": "business",
+      "to": "files",
+      "label": "ghi ảnh"
+    },
+    {
+      "from": "backup",
+      "to": "postgres",
+      "label": "pg_dump",
+      "variant": "dashed"
+    },
+    {
+      "from": "backup",
+      "to": "files",
+      "label": "đọc ro",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Ranh giới tin cậy",
+      "items": [
+        "TLS kết thúc ở EDGE (repo PMH_IDE, cấu hình không nằm trong repo này)",
+        "web chỉ join mạng edge, không publish cổng; nginx xóa header dev-identity",
+        "TRUST_PROXY_HOPS = 2 (EDGE + web nginx) để req.ip là IP máy người dùng"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "PMH ID sập",
+      "items": [
+        "Refresh lỗi mạng → route bảo vệ 503 SSO_UNAVAILABLE, phiên được giữ",
+        "Route @Public (sa-login, public-config, health) đi tiếp ẩn danh",
+        "SA local là lối vào break-glass; lockout (IP, user) 5 sai, toàn cục 50"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Gộp trong sơ đồ",
+      "items": [
+        "auth · users: AuthModule import UsersModule (directory sync 60′ gọi Directory API)",
+        "audit được mọi module gọi qua AuditWriterService",
+        "health: SELECT 1, mất DB → 503 db_unavailable"
+      ]
+    }
+  ]
+}

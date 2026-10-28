@@ -22,7 +22,7 @@
 | Tầng | Chọn |
 |---|---|
 | Runtime | Node 24 (`node:24.22.1-alpine`), `.nvmrc` = 24 |
-| API | NestJS 11, `pg` 8, drizzle-orm (schemaless), class-validator, nestjs-pino, @nestjs/throttler, @nestjs/schedule, jose 6, openid-client 6, exceljs, multer (upload) |
+| API | NestJS 11, `pg` 8, drizzle-orm (schemaless), class-validator, nestjs-pino, @nestjs/throttler, @nestjs/schedule, jose 6, openid-client 6, multer (upload); exceljs thêm ở Plan 3 (báo cáo) |
 | Web | React 19, Vite 8, TypeScript 6, TanStack Query 5, react-router 7, react-i18next, Radix Dialog, vitest + Testing Library, oxlint, Playwright (smoke) |
 | DB | PostgreSQL 18 (`postgres:18-alpine`) |
 | Serve | nginx 1.30 trong container `web` (tĩnh + proxy `/api`) |
@@ -72,7 +72,7 @@ Toàn bộ theo QLTS_DE `api/src/modules/auth` (đổi tên cookie `vpp_sid`, `v
 
 **Đăng nhập SSO** — `GET /api/auth/login` sinh `state` + PKCE verifier (cookie tx 10′, Lax, path `/api/auth`), redirect sang PMH ID; `GET /api/auth/callback`: nếu `?error=access_denied` → `/?login=forbidden`; đổi code lấy token (`ClientSecretBasic`), **verify access token offline** bằng JWKS (cache ≤ 10′); gate group `intersectsCI(claims.groups, config.authorized_groups)` với self-heal fetch `/api/v1/groups` (TTL 30 s); `users.upsertFromClaims` (cập nhật `groups`, `department`); tạo phiên `{refresh_token, access_token_exp, claims, csrf_token, id_token}`; cookie `vpp_sid` httpOnly/Secure/SameSite=Strict/30 ngày.
 
-**Phân giải phiên mỗi request** — `IdentityGuard`: token còn hạn → dùng claims trong phiên; hết hạn → refresh **single-flight**; `invalid_grant` → hủy phiên (401); PMH ID không trả lời → 503 giữ phiên. Guard toàn cục: `IdentityGuard → CsrfGuard (X-CSRF-Token cho POST/PUT/PATCH/DELETE) → RolesGuard (@Roles)`.
+**Phân giải phiên mỗi request** — `IdentityGuard`: token còn hạn → dùng claims trong phiên; hết hạn → refresh **single-flight**; `invalid_grant` → hủy phiên (401); PMH ID không trả lời → 503 `SSO_UNAVAILABLE` giữ phiên; riêng route `@Public` (sa-login, public-config, health…) thì đi tiếp ẩn danh để SA break-glass vẫn vào được. Guard toàn cục theo thứ tự: `IpThrottlerGuard → IdentityGuard → CsrfGuard (X-CSRF-Token cho POST/PUT/PATCH/DELETE) → RolesGuard (@Roles) → UserThrottlerGuard`.
 
 **Vai trò (khác QLTS)** — tính **mỗi request** trong `toIdentity`: `sa` nếu phiên SA cục bộ; `admin` nếu `users.groups` (đã đọc từ DB trong cùng lượt) giao với `config.admin_group` (không phân biệt hoa thường); còn lại `member`. Callback, webhook `user.groups_changed` và directory sync chỉ cập nhật `users.groups`; cột `users.role` không dùng cho quyền và không còn được cập nhật (chỉ giá trị mặc định lúc tạo); sẽ bỏ ở migration sau. Hệ quả: gỡ group → request kế tiếp 403, không cần đợi refresh.
 
@@ -251,7 +251,7 @@ Bấm Xuất/In: `POST admin/reports/:ym/snapshots {kind, order_qty: {item_id: n
 
 **Phía PMH_IDE (PR riêng):** `deploy/edge/conf.d/vpp.conf` (mẫu `qlts.conf`: `listen 8443 ssl`, `server_name de-vpp.pmh.com.vn`, `proxy_pass http://vpp-web:80`, `X-Forwarded-Proto https`, `client_max_body_size 6m`), alias `de-vpp.pmh.com.vn` trong `deploy/edge/docker-compose.yml`, `deploy/prod-cluster/60-vpp-up.sh` + `env-templates/vpp.env.example`, `docs/projects/project-vpp/01-nguoi-dung.md`, `02-hanh-chinh.md`.
 
-**Đăng ký client PMH ID (Phiếu 1):** tên "VPP Công trình"; `redirect_uris = https://de-vpp.pmh.com.vn:8443/api/auth/callback` (+ dev); `app_url = https://de-vpp.pmh.com.vn:8443`; group được vào: group phòng Công trình + `vpp-admin`; Directory API: có; webhook: `…/api/webhooks/pmh-id`; BCL: `…/api/backchannel-logout`; host sau EDGE → thêm dải mạng vào `WEBHOOK_ALLOWLIST_CIDR`.
+**Đăng ký client PMH ID (Phiếu 1):** tên "VPP Công trình"; `redirect_uris = https://de-vpp.pmh.com.vn:8443/api/auth/callback` (+ dev); `app_url = https://de-vpp.pmh.com.vn:8443`; group được vào: group phòng Công trình + `vpp-admin`; Directory API: có; webhook: `…/api/webhooks/pmh-id`; BCL: `…/api/backchannel-logout`; webhook xác thực bằng HMAC v2 + timestamp (§4), không có allowlist IP.
 
 **Cập nhật:** `update-vpp.sh` = `git pull --ff-only` → `docker compose -f docker-compose.yml up -d --build` → chờ `/api/health` 200 qua EDGE.
 
@@ -271,7 +271,7 @@ Theo QLTS với các chỉnh sửa: **`TRUST_PROXY_HOPS`** (env; prod sau EDGE =
 
 ## 15. Vận hành
 
-Backup hằng đêm (pg_dump + `/data/files`, mã hóa, giữ 30 ngày, fail-closed khi thiếu passphrase); log JSON qua pino; `/api/health` cho EDGE/giám sát; runbook: mất SSO → SA login; mất secret → admin PMH ID rotate, cập nhật `.env`, recreate `api`.
+Backup hằng đêm (pg_dump + `/data/files`, mã hóa, giữ 30 ngày, fail-closed khi thiếu passphrase); log JSON qua pino; `/api/health` cho EDGE/giám sát (`SELECT 1`; mất DB → 503 `{status:'db_unavailable'}`); runbook: mất SSO → SA login; mất secret → admin PMH ID rotate, cập nhật `.env`, recreate `api`.
 
 ## 16. Danh sách copy-and-trim từ QLTS_DE (đã đối chiếu mã thật)
 

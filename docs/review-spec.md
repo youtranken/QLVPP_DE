@@ -65,3 +65,4 @@ Cả ba mục đã được chốt ngày 2026-10-28 và vá vào spec; không c�
 ## E. Quyết định sau triển khai
 
 - 2026-10-28 (review toàn nhánh Plan 1): `users.role` lệch §4 ("tính lại cùng chỗ") — code không ghi cột này; chốt sửa tài liệu thay vì ghi lại: cột không dùng cho quyền, không còn cập nhật, bỏ ở migration sau.
+- 2026-10-28 (sơ đồ archify cuối Plan 1, `docs/diagrams/`): đối chiếu code → sửa `architecture.md`: §4 thứ tự guard thật có IpThrottler đầu và UserThrottler cuối, route `@Public` đi tiếp ẩn danh khi PMH ID sập; §2 exceljs chưa có tới Plan 3; §12 bỏ `WEBHOOK_ALLOWLIST_CIDR` (code không có — webhook chỉ dựa HMAC v2 + timestamp); §15 `/api/health` có `SELECT 1`.

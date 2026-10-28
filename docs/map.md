@@ -49,4 +49,7 @@
 
 ## Sơ đồ
 
-`docs/diagrams/` — vẽ lại bằng archify cuối mỗi plan (chưa có).
+`docs/diagrams/` — vẽ lại bằng archify cuối mỗi plan; nguồn JSON ở `docs/diagrams/src/` (`archify finalize <type> src/… … --repo-root .`).
+
+- `vpp-kien-truc.html` / `.png` — kiến trúc thành phần (Plan 1): Trình duyệt → EDGE → web nginx → guard toàn cục → auth·users / nghiệp vụ → Postgres, volume filesdata, backup-cron; PMH ID (OIDC, JWKS, Directory, webhook v2, BCL).
+- `vpp-dang-nhap.html` / `.png` — luồng đăng nhập SSO PKCE, token hết hạn khi PMH ID sập (503 `SSO_UNAVAILABLE`), SA break-glass qua route `@Public`.

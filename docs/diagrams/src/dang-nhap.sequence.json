@@ -1,0 +1,320 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "VPP Công trình — đăng nhập SSO PMH ID và SA break-glass",
+    "output": "docs/diagrams/vpp-dang-nhap.html",
+    "locale": "vi",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/youtranken/QLVPP_DE.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "633ad8084e19a25761992ea4c12e994ea38be06d"
+    }
+  },
+  "participants": [
+    {
+      "id": "browser",
+      "type": "frontend",
+      "label": "SPA",
+      "sublabel": "use-auth-boot",
+      "sources": [
+        {
+          "path": "web/src/shell/use-auth-boot.ts",
+          "line": 60,
+          "end_line": 82
+        },
+        {
+          "path": "web/src/shell/login-screen.tsx",
+          "line": 46,
+          "end_line": 50,
+          "label": "banner PMH ID sập"
+        }
+      ]
+    },
+    {
+      "id": "guard",
+      "type": "security",
+      "label": "IdentityGuard",
+      "sublabel": "guard toàn cục",
+      "sources": [
+        {
+          "path": "api/src/modules/auth/identity.guard.ts",
+          "line": 58,
+          "end_line": 99
+        }
+      ]
+    },
+    {
+      "id": "authctl",
+      "type": "backend",
+      "label": "AuthController",
+      "sublabel": "auth/*",
+      "sources": [
+        {
+          "path": "api/src/modules/auth/auth.controller.ts",
+          "line": 86,
+          "end_line": 136,
+          "label": "sa-login"
+        },
+        {
+          "path": "api/src/modules/auth/auth.controller.ts",
+          "line": 185,
+          "end_line": 286,
+          "label": "callback"
+        }
+      ]
+    },
+    {
+      "id": "sessauth",
+      "type": "backend",
+      "label": "SessionAuth",
+      "sublabel": "resolve · refresh",
+      "sources": [
+        {
+          "path": "api/src/modules/auth/session-auth.service.ts",
+          "line": 44,
+          "end_line": 132
+        }
+      ]
+    },
+    {
+      "id": "pmhid",
+      "type": "external",
+      "label": "PMH ID",
+      "sublabel": "OIDC · JWKS",
+      "sources": [
+        {
+          "path": "api/src/modules/auth/openid-client.provider.ts",
+          "line": 65,
+          "end_line": 103
+        }
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "sessions · users · audit",
+      "sources": [
+        {
+          "path": "api/src/modules/auth/session.service.ts",
+          "line": 25,
+          "end_line": 80
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 448,
+      "label": "1 · Đăng nhập SSO (PKCE)"
+    },
+    {
+      "from": 458,
+      "to": 668,
+      "label": "2 · Token hết hạn, PMH ID sập"
+    },
+    {
+      "from": 678,
+      "to": 928,
+      "label": "3 · SA break-glass"
+    }
+  ],
+  "messages": [
+    {
+      "id": "login",
+      "from": "browser",
+      "to": "authctl",
+      "y": 165,
+      "label": "GET /api/auth/login",
+      "variant": "emphasis",
+      "note": "@Public; verifier + state vào cookie vpp_oidc_tx"
+    },
+    {
+      "id": "authorize",
+      "from": "authctl",
+      "to": "browser",
+      "y": 222,
+      "label": "302 authorize",
+      "variant": "return"
+    },
+    {
+      "id": "sso",
+      "from": "browser",
+      "to": "pmhid",
+      "y": 252,
+      "label": "đăng nhập PMH ID",
+      "variant": "emphasis"
+    },
+    {
+      "id": "code",
+      "from": "pmhid",
+      "to": "browser",
+      "y": 282,
+      "label": "302 callback?code",
+      "variant": "return"
+    },
+    {
+      "id": "callback",
+      "from": "browser",
+      "to": "authctl",
+      "y": 312,
+      "label": "GET /api/auth/callback",
+      "variant": "emphasis"
+    },
+    {
+      "id": "exchange",
+      "from": "authctl",
+      "to": "pmhid",
+      "y": 342,
+      "label": "đổi code · verify JWKS",
+      "variant": "security",
+      "note": "gate authorized_groups; không khớp → /?login=forbidden"
+    },
+    {
+      "id": "persist",
+      "from": "authctl",
+      "to": "db",
+      "y": 412,
+      "label": "upsert users · tạo phiên",
+      "variant": "default"
+    },
+    {
+      "id": "cookie",
+      "from": "authctl",
+      "to": "browser",
+      "y": 440,
+      "label": "Set-Cookie vpp_sid · 302 /",
+      "variant": "return"
+    },
+    {
+      "id": "me",
+      "from": "browser",
+      "to": "guard",
+      "y": 479,
+      "label": "GET /api/auth/me",
+      "variant": "emphasis"
+    },
+    {
+      "id": "resolve",
+      "from": "guard",
+      "to": "sessauth",
+      "y": 509,
+      "label": "resolve(sid)",
+      "variant": "default"
+    },
+    {
+      "id": "load",
+      "from": "sessauth",
+      "to": "db",
+      "y": 539,
+      "label": "đọc phiên (token hết hạn)",
+      "variant": "default"
+    },
+    {
+      "id": "refresh",
+      "from": "sessauth",
+      "to": "pmhid",
+      "y": 569,
+      "label": "refresh_token",
+      "variant": "security",
+      "note": "lỗi mạng, không phải invalid_grant → giữ phiên"
+    },
+    {
+      "id": "unavail",
+      "from": "sessauth",
+      "to": "guard",
+      "y": 614,
+      "label": "ServiceUnavailable",
+      "variant": "return"
+    },
+    {
+      "id": "e503",
+      "from": "guard",
+      "to": "browser",
+      "y": 644,
+      "label": "503 SSO_UNAVAILABLE",
+      "variant": "return",
+      "note": "route bảo vệ; SPA hiện màn đăng nhập + banner"
+    },
+    {
+      "id": "salogin",
+      "from": "browser",
+      "to": "guard",
+      "y": 699,
+      "label": "POST /api/auth/sa-login",
+      "variant": "emphasis"
+    },
+    {
+      "id": "resolve2",
+      "from": "guard",
+      "to": "sessauth",
+      "y": 729,
+      "label": "resolve(sid)",
+      "variant": "default"
+    },
+    {
+      "id": "down2",
+      "from": "sessauth",
+      "to": "guard",
+      "y": 759,
+      "label": "503 (PMH ID sập)",
+      "variant": "return",
+      "note": "@Public: bỏ qua 503, đi tiếp ẩn danh, giữ cookie"
+    },
+    {
+      "id": "anon",
+      "from": "guard",
+      "to": "authctl",
+      "y": 818,
+      "label": "request ẩn danh",
+      "variant": "default"
+    },
+    {
+      "id": "salocal",
+      "from": "authctl",
+      "to": "db",
+      "y": 848,
+      "label": "phiên local:sa · audit",
+      "variant": "default",
+      "note": "lockout (IP, user) 5 sai, toàn cục 50 → 429"
+    },
+    {
+      "id": "saok",
+      "from": "authctl",
+      "to": "browser",
+      "y": 894,
+      "label": "200 · Set-Cookie vpp_sid",
+      "variant": "return"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "SSO",
+      "items": [
+        "Callback lỗi → /?login=failed; access_denied hoặc ngoài group → /?login=forbidden",
+        "Refresh single-flight theo phiên (nhiều tab không đốt refresh token)"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "PMH ID sập",
+      "items": [
+        "Không biến outage thành logout: phiên giữ, tự sống lại khi PMH ID về",
+        "Route bảo vệ 503; route @Public (sa-login, public-config) chạy ẩn danh"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "SA break-glass",
+      "items": [
+        "sa-login 10/phút/IP; lockout in-memory, restart api để xóa khóa toàn cục",
+        "Phiên SA không refresh; idle quá 2 h → đăng nhập lại"
+      ]
+    }
+  ]
+}
