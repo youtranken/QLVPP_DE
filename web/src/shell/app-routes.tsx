@@ -4,6 +4,7 @@ import { useMe } from '@/lib/me';
 import { ComingSoon } from '@/ui/coming-soon';
 import { NotFound } from '@/ui/load-state';
 import { ProfilePage } from '@/features/profile/profile-page';
+import { RequestPage } from '@/features/request/request-page';
 import { CatalogPage } from '@/features/catalog/catalog-page';
 import { CategoryPage } from '@/features/catalog/category-page';
 import { StockPage } from '@/features/stock/stock-page';
@@ -38,7 +39,7 @@ export function AppRoutes() {
     <Routes>
       <Route path="/forbidden" element={<ForbiddenRoute />} />
       <Route element={<MemberShell />}>
-        <Route index element={<MemberSoon titleKey="nav.register" />} />
+        <Route index element={<RequestPage />} />
         <Route path="history" element={<MemberSoon titleKey="nav.history" />} />
         <Route path="me" element={<ProfilePage />} />
       </Route>

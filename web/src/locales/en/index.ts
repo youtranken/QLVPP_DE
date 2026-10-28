@@ -8,7 +8,8 @@ import stock from './stock';
 import admin from './admin';
 import directory from './directory';
 import profile from './profile';
+import request from './request';
 
-const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile };
+const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request };
 
 export default en;

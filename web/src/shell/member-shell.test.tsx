@@ -41,9 +41,9 @@ describe('MemberShell', () => {
     expect(screen.getByRole('link', { name: 'Quản lý VPP' })).toHaveAttribute('href', '/admin');
   });
 
-  it('trang chủ Plan 1 hiện thẻ "Sắp có"', () => {
+  it('Lịch sử chưa làm hiện thẻ "Sắp có"', () => {
     mockViewport(1280);
-    renderApp(makeMe('member'), '/');
+    renderApp(makeMe('member'), '/history');
     expect(screen.getByText('Sắp có')).toBeInTheDocument();
   });
 });

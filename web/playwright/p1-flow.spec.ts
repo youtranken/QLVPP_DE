@@ -15,7 +15,7 @@ async function saLogin(page: Page) {
   const login = page.waitForResponse((r) => r.url().endsWith('/api/auth/sa-login'));
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   expect((await login).status()).toBe(200);
-  await expect(page.getByRole('heading', { level: 1, name: 'Đăng ký' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /^Phiếu tháng \d+$/ })).toBeVisible();
 }
 
 async function createCategoryAndItem(page: Page, category: string, itemName: string) {

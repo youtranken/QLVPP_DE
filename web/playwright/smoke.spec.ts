@@ -7,7 +7,7 @@ test.describe('E0-S9 khung nhân viên (dev-identity member)', () => {
 
   test('E0-S9 member: 390 px thanh dưới 3 mục, Lịch sử/Tôi trong 1 chạm; 1280 px tab trên', async ({ page }, info) => {
     await page.goto('/');
-    await expect(page.getByText('Sắp có')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /^Phiếu tháng \d+$/ })).toBeVisible();
     const bottom = page.getByRole('navigation', { name: 'Điều hướng chính' });
     if (isMobile(info)) {
       await expect(bottom.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử', 'Tôi']);

@@ -29,6 +29,10 @@ const common = {
     selectRow: 'Chọn dòng',
     comingSoon: 'Sắp có',
     comingSoonHint: 'Màn này đang được làm và sẽ có trong bản cập nhật tới.',
+    stepper: {
+      decrease: 'Bớt {{label}}',
+      increase: 'Thêm {{label}}',
+    },
     empty: '—',
     roles: {
       member: 'Nhân viên',
