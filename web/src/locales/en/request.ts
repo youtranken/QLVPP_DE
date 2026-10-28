@@ -22,6 +22,7 @@ const request: Messages<typeof vi> = {
       missingAction: 'Add it here',
       unitMax: '{{unit}} · max {{max}}/month',
       adminAdded: 'Added by Admin · {{qty}}',
+      locked: 'Ordered {{qty}}',
       empty: 'No matching items — try another word or tap “Add another item”.',
       loadItemsError: 'Could not load the catalog — try again.',
     },
@@ -57,6 +58,7 @@ const request: Messages<typeof vi> = {
       keep: 'Review my cart',
     },
     errors: {
+      notice: 'Not saved — {{name}}: {{message}}',
       PERIOD_LOCKED: 'Month {{month}} is closed — reload the page to order for month {{next}}.',
       LINES_EMPTY: 'Pick at least one item, then save.',
       DUPLICATE_ITEM: 'An item appears twice — reload the page, then save.',

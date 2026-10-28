@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
 import { useMe } from '@/lib/me';
@@ -59,7 +59,8 @@ function RequestEditor({
     [period.ym, items, me.config.default_max_qty],
   );
   const cart = useCart(server, ctx);
-  const flow = useSaveFlow(cart, period.ym, refetch);
+  const cartRef = useRef<HTMLElement>(null);
+  const flow = useSaveFlow(cart, period.ym, refetch, cartRef);
   useLeaveWarning(cart.dirtyCount > 0);
 
   const orderable = useMemo(() => items.filter((i) => i.active && !i.admin_only), [items]);
@@ -94,7 +95,7 @@ function RequestEditor({
         showSave={!narrow}
         saveLabel={saveLabel}
         canSave={dirty && !flow.saving}
-        formError={flow.formError}
+        panelRef={cartRef}
         onQty={setQty}
         onRemove={remove}
         onSave={flow.openConfirm}
@@ -114,6 +115,14 @@ function RequestEditor({
         />
       )}
       {flow.stale && <StaleDialog reloading={flow.reloading} onReload={() => void flow.reload()} onClose={flow.closeStale} />}
+      {flow.notice && (
+        <div className="rq-notice" role="alert" tabIndex={-1} ref={flow.noticeRef}>
+          <span>{flow.notice}</span>
+          <button type="button" aria-label={t('common.close')} onClick={flow.closeNotice}>
+            ✕
+          </button>
+        </div>
+      )}
       <div className="rq-toast-slot" role="status" aria-live="polite">
         {flow.toast && <span className="rq-toast">{flow.toast}</span>}
       </div>

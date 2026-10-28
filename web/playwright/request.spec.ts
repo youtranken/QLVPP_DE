@@ -1,5 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { expectNoContrastViolations, isMobile, seedActiveUser } from './helpers';
+import { devHeaders, expectNoContrastViolations, isMobile, seedActiveUser } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-11-shots';
 
@@ -31,6 +32,24 @@ async function deleteMyRequest(request: APIRequestContext, headers: Record<strin
   });
 }
 
+async function createItem(request: APIRequestContext, name: string) {
+  const headers = devHeaders('admin');
+  const file = await request.post('/api/files', {
+    headers,
+    multipart: {
+      purpose: 'item_image',
+      file: { name: 'item.png', mimeType: 'image/png', buffer: readFileSync('playwright/fixtures/item.png') },
+    },
+  });
+  expect(file.status()).toBe(201);
+  const item = await request.post('/api/admin/items', {
+    headers,
+    data: { name, unit: 'cai', image_file_id: (await file.json()).id },
+  });
+  expect(item.status()).toBe(201);
+  return (await item.json()).id as string;
+}
+
 test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
   test('E2-S5 lưu phiếu: chọn 3 món, lưu, tải lại thấy đúng; sửa nơi khác → hộp tải lại', async ({ page, request }, info) => {
     const me = memberIdentity(info);
@@ -39,7 +58,8 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
     const period = await (await request.get('/api/periods/current', { headers: me.headers })).json();
     const month = Number(String(period.ym).slice(5));
     const items: Item[] = await (await request.get('/api/items', { headers: me.headers })).json();
-    const [a, b, c] = items.filter((i) => i.active && !i.admin_only);
+    // Bỏ món "PW …" do test khác tạo (có thể bị ngừng giữa chừng ở viewport chạy song song)
+    const [a, b, c] = items.filter((i) => i.active && !i.admin_only && !i.name.startsWith('PW '));
 
     try {
       await page.goto('/');
@@ -110,6 +130,47 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await expect(cart.getByRole('spinbutton', { name: a.name, exact: true })).toHaveValue('1');
     } finally {
       await deleteMyRequest(request, me.headers, period.ym);
+    }
+  });
+
+  test('E2-S5 lỗi theo dòng: Hành chính ngừng món đang có trong phiếu → lưu → thông báo thấy ngay, focus dòng lỗi', async ({
+    page,
+    request,
+  }, info) => {
+    const me = memberIdentity(info);
+    seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
+    await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...me.headers } }));
+    const period = await (await request.get('/api/periods/current', { headers: me.headers })).json();
+    const itemName = `PW ngừng ${Date.now()}-${info.project.name}`;
+    const itemId = await createItem(request, itemName);
+
+    try {
+      await page.goto('/');
+      const grid = page.getByRole('region', { name: 'Danh mục món' });
+      await grid.getByRole('searchbox', { name: 'Tìm món' }).fill(itemName);
+      await grid.getByRole('button', { name: `Thêm ${itemName}`, exact: true }).click();
+      await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
+      await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
+
+      const off = await request.patch(`/api/admin/items/${itemId}`, { headers: devHeaders('admin'), data: { active: false } });
+      expect(off.status()).toBe(200);
+      await grid.getByRole('button', { name: `Thêm ${itemName}`, exact: true }).click();
+      await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
+
+      const msg = 'Món này đã ngừng — bỏ khỏi phiếu rồi lưu lại.';
+      const alert = page.getByRole('alert');
+      await expect(alert).toContainText(`Chưa lưu được — ${itemName}: ${msg}`);
+      await expect(alert).toBeInViewport();
+      const stepper = page.getByRole('complementary', { name: 'Phiếu của tôi' }).getByRole('spinbutton', { name: itemName, exact: true });
+      await expect(stepper).toBeFocused();
+      await expect(stepper).toBeInViewport();
+      await expect(stepper).toHaveAccessibleDescription(msg);
+      await page.screenshot({ path: `${SHOTS}/line-error-${info.project.name}.png` });
+    } finally {
+      await deleteMyRequest(request, me.headers, period.ym);
+      await request.delete(`/api/admin/items/${itemId}`, { headers: devHeaders('admin') });
     }
   });
 });

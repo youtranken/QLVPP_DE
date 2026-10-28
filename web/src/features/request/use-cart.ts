@@ -43,6 +43,10 @@ function itemLabel(i: MemberItem): CartLabel {
   return { name, name_en, unit, pack_note, image_file_id, category_id };
 }
 
+// Món đã ngừng/chỉ Hành chính: giữ được số cũ, chỉ giảm hoặc bỏ, không tăng
+const orderable = (item: MemberItem | undefined, l: LineView) =>
+  !!item && item.active && !item.admin_only && l.item?.active !== false;
+
 function fromView(l: LineView, ctx: CartContext): CartLine {
   const item = l.item_id ? ctx.items.get(l.item_id) : undefined;
   const label: CartLabel = l.item
@@ -64,7 +68,7 @@ function fromView(l: LineView, ctx: CartContext): CartLine {
     custom_note: l.custom_note,
     image_file_id: l.image_file_id,
     qty: l.qty,
-    max: l.item_id ? (item?.max_qty ?? l.qty) : ctx.defaultMax,
+    max: l.item_id ? (orderable(item, l) ? item!.max_qty : l.qty) : ctx.defaultMax,
     readonly: l.readonly_for_member,
     added_by_admin: l.added_by_admin,
     review_status: l.review_status,

@@ -114,4 +114,16 @@ describe('useCart', () => {
     ]);
     expect(cart.current.dirtyCount).toBe(1);
   });
+
+  it('món đã ngừng trên phiếu: chỉ giảm/bỏ được, không tăng quá số đang có', () => {
+    const OLD = memberItem({ id: 'i-old', name: 'Bút xóa cũ', max_qty: 10, active: false });
+    const server: RequestView = { ...SERVER, lines: [lineView({ id: 'l-old', item_id: OLD.id, item: { ...OLD }, qty: 3 })] };
+    const cart = renderHook(() =>
+      useCart(server, { ym: '2026-11', items: new Map([[OLD.id, OLD]]), defaultMax: 20 }),
+    ).result;
+    act(() => cart.current.setQty(OLD.id, 5));
+    expect(cart.current.lines[0].qty).toBe(3);
+    act(() => cart.current.setQty(OLD.id, 2));
+    expect(cart.current.lines[0].qty).toBe(2);
+  });
 });

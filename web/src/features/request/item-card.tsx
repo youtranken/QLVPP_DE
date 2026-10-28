@@ -47,7 +47,9 @@ export function ItemCard({
       </div>
       <div className="rq-card-unit">{t('request.grid.unitMax', { unit: fmt.unit(item.unit), max: item.max_qty })}</div>
       {line?.readonly ? (
-        <div className="rq-card-locked">{t('request.grid.adminAdded', { qty })}</div>
+        <div className="rq-card-locked">
+          {t(line.added_by_admin ? 'request.grid.adminAdded' : 'request.grid.locked', { qty })}
+        </div>
       ) : (
         <Stepper value={qty} max={item.max_qty} label={name} onChange={onQty} />
       )}

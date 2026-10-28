@@ -11,6 +11,8 @@ export function Stepper({
   onChange,
   label,
   className,
+  describedBy,
+  invalid = false,
 }: {
   value: number;
   min?: number;
@@ -18,6 +20,8 @@ export function Stepper({
   onChange: (value: number) => void;
   label: string;
   className?: string;
+  describedBy?: string;
+  invalid?: boolean;
 }) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState<string | null>(null);
@@ -46,6 +50,8 @@ export function Stepper({
         inputMode="numeric"
         className="num"
         aria-label={label}
+        aria-describedby={describedBy}
+        aria-invalid={invalid || undefined}
         min={min}
         max={max}
         value={draft ?? value}

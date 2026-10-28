@@ -19,6 +19,7 @@ const request = {
       missingAction: 'Thêm tại đây',
       unitMax: '{{unit}} · tối đa {{max}}/tháng',
       adminAdded: 'Hành chính thêm · {{qty}}',
+      locked: 'Đã đăng ký {{qty}}',
       empty: 'Không có món nào khớp — thử từ khác hoặc bấm “Thêm món khác”.',
       loadItemsError: 'Không tải được danh mục món — thử lại.',
     },
@@ -54,6 +55,7 @@ const request = {
       keep: 'Xem lại giỏ',
     },
     errors: {
+      notice: 'Chưa lưu được — {{name}}: {{message}}',
       PERIOD_LOCKED: 'Tháng {{month}} đã khóa sổ — tải lại trang để đăng ký tháng {{next}}.',
       LINES_EMPTY: 'Chọn ít nhất một món rồi lưu.',
       DUPLICATE_ITEM: 'Có món bị trùng trong phiếu — tải lại trang rồi lưu.',

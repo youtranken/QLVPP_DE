@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
 import { useMe } from '@/lib/me';
@@ -25,7 +25,7 @@ function CartRow({
   const errorId = useId();
   const name = fmt.name(line.label);
   return (
-    <li className={`rq-line${error ? ' is-error' : ''}`} aria-describedby={error ? errorId : undefined}>
+    <li className={`rq-line${error ? ' is-error' : ''}`} data-line-key={line.key} tabIndex={-1}>
       <ItemThumb name={name} imageId={line.label.image_file_id} tint={tint} className="rq-line-img" />
       <div className="rq-line-main">
         <span className="rq-line-name">{name}</span>
@@ -40,7 +40,16 @@ function CartRow({
         <span className="rq-line-qty num">{t('request.cart.qty', { qty: line.qty, unit: fmt.unit(line.label.unit) })}</span>
       ) : (
         <div className="rq-line-edit">
-          <Stepper className="stepper--sm" value={line.qty} min={1} max={line.max} label={name} onChange={onQty} />
+          <Stepper
+            className="stepper--sm"
+            value={line.qty}
+            min={1}
+            max={line.max}
+            label={name}
+            onChange={onQty}
+            describedBy={error ? errorId : undefined}
+            invalid={!!error}
+          />
           <button type="button" className="rq-line-x" aria-label={t('request.cart.remove', { name })} onClick={onRemove}>
             ×
           </button>
@@ -62,7 +71,7 @@ export function CartPanel({
   showSave,
   saveLabel,
   canSave,
-  formError,
+  panelRef,
   onQty,
   onRemove,
   onSave,
@@ -74,7 +83,7 @@ export function CartPanel({
   showSave: boolean;
   saveLabel: string;
   canSave: boolean;
-  formError: string | null;
+  panelRef: RefObject<HTMLElement | null>;
   onQty: (key: string, n: number) => void;
   onRemove: (key: string) => void;
   onSave: () => void;
@@ -85,7 +94,7 @@ export function CartPanel({
   const titleId = useId();
   const units = lines.reduce((sum, l) => sum + l.qty, 0);
   return (
-    <aside className="rq-cart" aria-labelledby={titleId}>
+    <aside className="rq-cart" aria-labelledby={titleId} ref={panelRef}>
       <h2 id={titleId}>{t('request.cart.title')}</h2>
       <p className="rq-who">{[me.fullName, me.department].filter(Boolean).join(' · ')}</p>
       {lines.length === 0 ? (
@@ -108,11 +117,6 @@ export function CartPanel({
       <button type="button" className="rq-ghost" onClick={onAddCustom}>
         + {t('request.cart.addOther')}
       </button>
-      {formError && (
-        <p role="alert" className="alert alert--danger">
-          {formError}
-        </p>
-      )}
       {showSave && (
         <button type="button" className="btn btn--primary btn--xl btn--block" disabled={!canSave} onClick={onSave}>
           {saveLabel}

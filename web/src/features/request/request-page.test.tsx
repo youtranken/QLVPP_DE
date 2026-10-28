@@ -185,4 +185,45 @@ describe('RequestPage', () => {
     expect(within(line).queryAllByRole('button')).toEqual([]);
     expect(within(line).getByText('2 ram')).toBeInTheDocument();
   });
+
+  it('390 px: lỗi theo dòng → thông báo role=alert thấy ngay, focus stepper của dòng lỗi (aria-describedby = câu lỗi)', async () => {
+    mockViewport(390);
+    const saved = view({
+      lines: [
+        lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 2 }),
+        lineView({ id: 'l-2', item_id: NOTE.id, item: facts(NOTE), qty: 1 }),
+      ],
+    });
+    stubApi(saved, () => jsonResponse(400, { code: 'ITEM_INACTIVE', message: 'x', line_id: 'l-2' }));
+    renderApp(makeMe('member'), '/');
+    await within(await screen.findByRole('complementary', { name: 'Phiếu của tôi' })).findByText('Giấy note vàng');
+    await userEvent.click(within(cart()).getByRole('button', { name: 'Thêm Giấy note vàng' }));
+    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
+
+    const msg = 'Món này đã ngừng — bỏ khỏi phiếu rồi lưu lại.';
+    expect(await screen.findByRole('alert')).toHaveTextContent(`Chưa lưu được — Giấy note vàng: ${msg}`);
+    const stepper = within(cart()).getByRole('spinbutton', { name: 'Giấy note vàng' });
+    await waitFor(() => expect(stepper).toHaveFocus());
+    expect(stepper).toHaveAccessibleDescription(msg);
+    expect(stepper).toHaveAttribute('aria-invalid', 'true');
+
+    await userEvent.click(within(cart()).getByRole('button', { name: 'Bớt Giấy note vàng' }));
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('390 px: lỗi mạng/không rõ → thông báo role=alert "Chưa lưu được — kiểm tra mạng rồi thử lại."', async () => {
+    mockViewport(390);
+    stubApi(null, () => jsonResponse(500, {}));
+    renderApp(makeMe('member'), '/');
+    await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh');
+    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Bút bi xanh' }));
+    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
+    // Giỏ nằm dưới lưới ở 390 → thông báo phải ở ngoài giỏ (cạnh thanh lưu), chỉ một alert
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Chưa lưu được — kiểm tra mạng rồi thử lại.');
+    expect(cart()).not.toContainElement(alert);
+    await waitFor(() => expect(alert).toHaveFocus());
+  });
 });

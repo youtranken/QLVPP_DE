@@ -49,7 +49,9 @@
 .rq-cart h2 { font-size: 18px; font-weight: 800; }
 .rq-who { margin-top: -8px; color: var(--ink-2); font-size: 14px; font-weight: 700; }
 .rq-cart-empty { color: var(--ink-2); font-size: 14px; font-weight: 600; padding: 8px 0; }
-.rq-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.rq-lines { list-style: none; margin: 0 -6px; padding: 6px; display: grid; gap: 10px; }
+/* Giỏ dính: phiếu dài cuộn trong danh sách để nút "Lưu phiếu" luôn trong màn */
+@media (min-width: 901px) { .rq-lines { max-height: calc(100vh - 430px); min-height: 120px; overflow-y: auto; } }
 .rq-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px; margin: -6px; border-radius: 12px; border: 2px solid transparent; }
 .rq-line.is-error { border-color: var(--danger); background: var(--danger-soft); }
 .rq-line-img { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; flex: none; overflow: hidden; }
@@ -74,6 +76,9 @@
 .rq-bar b { font-weight: 800; white-space: nowrap; }
 .rq-bar .btn { flex: 1; }
 
+.rq-notice { position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%); z-index: 60; width: min(560px, calc(100% - 28px)); display: flex; align-items: flex-start; gap: 10px; padding: 12px 12px 12px 16px; border-radius: 14px; background: var(--danger-soft); color: var(--danger); border: 2px solid var(--danger); font-weight: 700; box-shadow: 0 10px 30px rgba(20, 35, 28, .2); }
+.rq-notice span { flex: 1; }
+.rq-notice button { flex: none; width: 28px; height: 28px; border: 0; border-radius: 50%; background: transparent; color: var(--danger); font-weight: 800; }
 .rq-toast-slot { position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%); z-index: 60; pointer-events: none; }
 .rq-toast { display: block; padding: 12px 20px; border-radius: 999px; background: var(--side); color: #fff; font-weight: 800; box-shadow: 0 10px 30px rgba(20, 35, 28, .25); white-space: nowrap; }
 
@@ -87,5 +92,5 @@
   .rq-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .rq-card-more { min-height: 160px; }
   .rq-cart { position: static; }
-  .rq-toast-slot { bottom: calc(136px + env(safe-area-inset-bottom)); }
+  .rq-toast-slot, .rq-notice { bottom: calc(128px + env(safe-area-inset-bottom)); }
 }
