@@ -20,14 +20,16 @@ describe('createPgPool', () => {
     const { port } = server.address() as AddressInfo;
     const pool = createPgPool(`postgres://u:p@127.0.0.1:${port}/db`);
     const started = Date.now();
+    let timer: NodeJS.Timeout | undefined;
     const outcome = await Promise.race([
       pool.query('SELECT 1').then(
         () => 'resolved',
         (e: Error) => e.message,
       ),
-      new Promise((r) => setTimeout(() => r('still-hanging'), 5000)),
+      new Promise((r) => (timer = setTimeout(() => r('still-hanging'), 5000))),
     ]);
     const elapsed = Date.now() - started;
+    clearTimeout(timer);
     void pool.end().catch(() => undefined);
     expect(outcome).toMatch(/timeout/i);
     expect(elapsed).toBeGreaterThanOrEqual(2900);
