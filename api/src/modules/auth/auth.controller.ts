@@ -13,7 +13,6 @@ import {
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { createHash, randomBytes } from 'node:crypto';
 import type { Response } from 'express';
 import { AuditWriterService } from '../audit/audit-writer.service';
@@ -27,21 +26,11 @@ import { LocalSaService } from './local-sa.service';
 import { OIDC_PROVIDER } from './oidc-provider';
 import type { OidcProvider } from './oidc-provider';
 import { Public } from './public.decorator';
+import { SaLoginDto } from './sa-login.dto';
 import { SessionService } from './session.service';
 import { SESSION_COOKIE } from './identity.guard';
+import type { MeResponse } from './auth.types';
 import type { AuthedRequest } from './identity.types';
-
-class SaLoginDto {
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(200)
-  username!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(500)
-  password!: string;
-}
 
 // Dùng req.ip (trust proxy theo số hop), không tự parse XFF trái — client tự đặt được để né lockout.
 function clientIp(req: AuthedRequest): string {
@@ -76,23 +65,6 @@ function cookieSecure(): boolean {
     url.hostname === 'localhost' ||
     url.hostname === '127.0.0.1'
   );
-}
-
-export interface MeResponse {
-  sub: string;
-  role: string;
-  devMode: boolean;
-  csrfToken: string | null;
-  fullName: string | null;
-  email: string | null;
-  department: string | null;
-  employeeCode: string | null;
-  locale: string | null;
-  config: {
-    registration_last_day: number;
-    default_max_qty: number;
-    admin_contact: string;
-  };
 }
 
 @Controller('auth')

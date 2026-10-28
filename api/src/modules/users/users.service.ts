@@ -71,7 +71,7 @@ export class UsersService {
     query: UserListQuery,
   ): Promise<{ items: UserListItem[]; next_cursor: string | null }> {
     const conds = [
-      eq(usersTable.status, 'active'),
+      ne(usersTable.status, 'deleted'),
       ne(usersTable.sub, LOCAL_SA_SUB),
     ];
     if (query.search) {

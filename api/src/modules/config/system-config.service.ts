@@ -5,6 +5,7 @@ import type { Database } from '../../database/database.module';
 import { configTable } from './config.schema';
 
 const AUTHORIZED_GROUPS_KEY = 'authorized_groups';
+const DIRECTORY_SYNC_LAST_KEY = 'directory_sync_last_at';
 const CACHE_TTL_MS = 30_000;
 
 // Nguồn duy nhất đọc bảng config; module khác inject service này. Tên tránh đụng @nestjs/config.
@@ -61,6 +62,24 @@ export class SystemConfigService {
       );
     }
     return raw;
+  }
+
+  // Marker runtime (epoch ms), không phải tham số admin chỉnh; đọc thẳng không cache
+  async getDirectorySyncLastAt(): Promise<Date | null> {
+    const rows = await this.db
+      .select({ value: configTable.value })
+      .from(configTable)
+      .where(eq(configTable.key, DIRECTORY_SYNC_LAST_KEY));
+    if (rows.length === 0) return null;
+    return new Date(Number(rows[0].value));
+  }
+
+  async setDirectorySyncLastAt(at: Date): Promise<void> {
+    await this.db.execute(sql`
+      INSERT INTO config (key, value)
+      VALUES (${DIRECTORY_SYNC_LAST_KEY}, to_jsonb(${at.getTime()}::bigint))
+      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()
+    `);
   }
 
   // Đọc thẳng, không cache: gate an ninh cần tươi. Rỗng/chưa có → [] = gate tắt trước lần sync đầu.

@@ -8,6 +8,7 @@ import {
   runMigrations,
 } from '../src/database/migration-runner';
 import { SessionService } from '../src/modules/auth/session.service';
+import { DirectorySyncScheduler } from '../src/modules/users/directory-sync.scheduler';
 import { UsersService } from '../src/modules/users/users.service';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
@@ -107,6 +108,14 @@ describe('auth e2e', () => {
     }
   });
 
+  it('boot ghi marker directory_sync_last_at (sync lần đầu không chờ 60′)', async () => {
+    await app.get(DirectorySyncScheduler).tick();
+    const { rows } = await pool.query(
+      "SELECT 1 FROM config WHERE key = 'directory_sync_last_at'",
+    );
+    expect(rows).toHaveLength(1);
+  });
+
   it('POST admin/directory/sync với member → 403', async () => {
     await request(app.getHttpServer())
       .post('/api/admin/directory/sync')
@@ -116,10 +125,17 @@ describe('auth e2e', () => {
   });
 
   describe('GET admin/users', () => {
+    const lockedSub = `e2e-locked-${randomUUID()}`;
+    const deletedSub = `e2e-deleted-${randomUUID()}`;
+
     beforeAll(async () => {
       const users = app.get(UsersService);
       await users.ensureLocalSa();
       await users.upsertFromClaims({ sub: `e2e-${randomUUID()}` });
+      await users.upsertFromClaims({ sub: lockedSub });
+      await users.setStatus(lockedSub, 'locked');
+      await users.upsertFromClaims({ sub: deletedSub });
+      await users.setStatus(deletedSub, 'deleted');
     });
 
     it('member → 403 FORBIDDEN_ROLE', async () => {
@@ -131,7 +147,7 @@ describe('auth e2e', () => {
       expect(res.body.code).toBe('FORBIDDEN_ROLE');
     });
 
-    it('admin → 200, phân trang cursor, không có local:sa', async () => {
+    it('admin → 200, phân trang cursor, hiện user locked, ẩn deleted và local:sa', async () => {
       const server = app.getHttpServer();
       const subs: string[] = [];
       let cursor: string | null = null;
@@ -153,6 +169,8 @@ describe('auth e2e', () => {
       expect(subs.length).toBeGreaterThan(0);
       expect(new Set(subs).size).toBe(subs.length);
       expect(subs).not.toContain('local:sa');
+      expect(subs).toContain(lockedSub);
+      expect(subs).not.toContain(deletedSub);
     });
   });
 });
