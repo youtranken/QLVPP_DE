@@ -1,8 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
+import { useMe } from '@/lib/me';
 import type { CartLabel } from './use-cart';
 
 export const monthOf = (ym: string) => Number(ym.slice(5, 7));
+
+// Tháng 12 → tháng 1 năm sau (không ra "tháng 13")
+export function nextYm(ym: string): string {
+  const [y, m] = ym.split('-').map(Number);
+  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+}
 
 // Hạn là mốc 00:00 ngày sau ngày cuối → lùi 1 ms để ra đúng ngày cuối theo giờ VN
 export function useRequestFormat() {
@@ -21,6 +28,12 @@ export function useRequestFormat() {
     unit: (code: string | null) => (code ? t(`catalog.units.${code}`, { defaultValue: code }) : ''),
     name: (l: Pick<CartLabel, 'name' | 'name_en'>) => (i18n.language === 'en' && l.name_en ? l.name_en : l.name),
   };
+}
+
+// Tên/cách liên hệ Hành chính lấy từ Cấu hình (_SPEC), chưa đặt thì gọi chung "Hành chính"
+export function useAdminContact(): string {
+  const { t } = useTranslation();
+  return useMe().config.admin_contact.trim() || t('request.contactFallback');
 }
 
 export function matchesSearch(text: string, query: string): boolean {

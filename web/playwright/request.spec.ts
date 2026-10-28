@@ -124,7 +124,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       const stale = page.getByRole('dialog', { name: 'Phiếu vừa được cập nhật ở nơi khác' });
       await expect(stale).toBeVisible();
       await snap(page, info, 'stale');
-      await stale.getByRole('button', { name: 'Tải lại' }).click();
+      await stale.getByRole('button', { name: 'Tải bản mới nhất' }).click();
       await expect(stale).toBeHidden();
       await expect(cart.getByRole('spinbutton', { name: c.name, exact: true })).toHaveValue('3');
       await expect(cart.getByRole('spinbutton', { name: a.name, exact: true })).toHaveValue('1');

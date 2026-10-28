@@ -1,5 +1,6 @@
 import { ApiError } from '@/lib/api-client';
 import { apiErrorCode, apiErrorNumber } from '@/lib/api-error';
+import { nextYm } from './request-format';
 import type { CartLine } from './use-cart';
 
 type T = (key: string, opts?: Record<string, unknown>) => string;
@@ -7,6 +8,7 @@ type T = (key: string, opts?: Record<string, unknown>) => string;
 export type SaveFailure =
   | { kind: 'stale' }
   | { kind: 'lines'; byKey: Record<string, string> }
+  | { kind: 'locked'; nextYm: string }
   | { kind: 'form'; message: string };
 
 const LINE_CODES = new Set([
@@ -37,19 +39,21 @@ function lineKeyOf(e: unknown, lines: CartLine[]): string | undefined {
   return id ? lines.find((l) => l.id === id)?.key : undefined;
 }
 
-export function saveFailure(e: unknown, lines: CartLine[], t: T, month: number): SaveFailure {
+const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+export function saveFailure(e: unknown, lines: CartLine[], t: T, ym: string): SaveFailure {
   const code = apiErrorCode(e);
   if (code === 'STALE_UPDATE') return { kind: 'stale' };
+  if (code === 'PERIOD_LOCKED') {
+    const next = stringField(e, 'next_ym');
+    return { kind: 'locked', nextYm: next && YM.test(next) ? next : nextYm(ym) };
+  }
   const key = lineKeyOf(e, lines);
   if (key) {
     const msg = t(`request.errors.line.${code && LINE_CODES.has(code) ? code : 'OTHER'}`, {
       max: apiErrorNumber(e, 'max'),
     });
     return { kind: 'lines', byKey: { [key]: msg } };
-  }
-  if (code === 'PERIOD_LOCKED') {
-    const next = Number(stringField(e, 'next_ym')?.slice(5) ?? month + 1);
-    return { kind: 'form', message: t('request.errors.PERIOD_LOCKED', { month, next }) };
   }
   const known = code === 'LINES_EMPTY' || code === 'DUPLICATE_ITEM';
   return { kind: 'form', message: t(`request.errors.${known ? code : 'UNKNOWN'}`) };

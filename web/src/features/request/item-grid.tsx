@@ -18,7 +18,7 @@ export function ItemGrid({
   categories: Category[];
   lineByKey: Map<string, CartLine>;
   onQty: (itemId: string, n: number) => void;
-  onAddCustom?: () => void;
+  onAddCustom: () => void;
 }) {
   const { t, i18n } = useTranslation();
   const [query, setQuery] = useState('');

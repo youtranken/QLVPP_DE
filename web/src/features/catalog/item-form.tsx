@@ -15,7 +15,7 @@ import {
 import { fieldErrors, type FieldErrors } from '@/features/catalog/catalog-errors';
 import { ITEM_ERROR_FIELD, ITEM_FIELDS, draftFrom, itemPayload, type ItemDraft } from '@/features/catalog/item-draft';
 import { ImageField } from '@/features/catalog/image-field';
-import { UnitSelect } from '@/features/catalog/unit-select';
+import { UnitSelect } from '@/features/units/unit-select';
 
 export function ItemForm({
   item,

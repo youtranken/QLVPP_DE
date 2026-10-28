@@ -41,6 +41,7 @@ export function AppRoutes() {
       <Route element={<MemberShell />}>
         <Route index element={<RequestPage />} />
         <Route path="history" element={<MemberSoon titleKey="nav.history" />} />
+        <Route path="history/:ym" element={<MemberSoon titleKey="nav.history" />} />
         <Route path="me" element={<ProfilePage />} />
       </Route>
       <Route

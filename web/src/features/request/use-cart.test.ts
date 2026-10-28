@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { useCart } from '@/features/request/use-cart';
+import { carryOf, useCart } from '@/features/request/use-cart';
 import type { MemberItem, RequestView } from '@/features/request/request.api';
 import { lineView, memberItem } from '@/test/fixtures-request';
 
@@ -125,5 +125,20 @@ describe('useCart', () => {
     expect(cart.current.lines[0].qty).toBe(3);
     act(() => cart.current.setQty(OLD.id, 2));
     expect(cart.current.lines[0].qty).toBe(2);
+  });
+
+  it('carryOf: bỏ dòng Hành chính thêm và dòng bị từ chối, bỏ id; giỏ mới khởi tạo từ carry đều là dòng mới', () => {
+    const rejected = lineView({ id: 'l-r', custom_name: 'Bìa', custom_unit: 'cai', image_file_id: 'f-1', review_status: 'rejected', readonly_for_member: true });
+    const custom = lineView({ id: 'l-c', custom_name: 'Kéo', custom_unit: 'cai', image_file_id: 'f-2', qty: 2, review_status: 'pending' });
+    const old = render({ ...SERVER, lines: [...SERVER.lines, rejected, custom] });
+    const carry = carryOf(old.current.lines);
+    expect(carry).toEqual([
+      { item_id: PEN.id, qty: 2 },
+      { item_id: NOTE.id, qty: 4 },
+      { custom_name: 'Kéo', custom_unit: 'cai', custom_note: null, image_file_id: 'f-2', qty: 2 },
+    ]);
+    const next = renderHook(() => useCart(null, { ym: '2026-12', items: ITEMS, defaultMax: 20 }, carry)).result;
+    expect(next.current.toBody()).toEqual({ ym: '2026-12', lines: carry });
+    expect(next.current.dirtyCount).toBe(3);
   });
 });

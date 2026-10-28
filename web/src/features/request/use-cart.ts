@@ -109,20 +109,60 @@ export function countDirty(base: CartLine[], lines: CartLine[]): number {
   return changed + removed;
 }
 
-// Dòng cũ chỉ gửi id + qty: trường vắng mặt server giữ nguyên
+const customOf = ({ custom_name, custom_unit, custom_note, image_file_id, qty }: CartLine): CustomLineInput => ({
+  custom_name,
+  custom_unit,
+  custom_note,
+  image_file_id,
+  qty,
+});
+
+// Dòng món đã lưu chỉ gửi id + qty (trường vắng mặt server giữ nguyên); dòng ngoài DM gửi kèm trường riêng vì sửa được
 function toInput(l: CartLine): LineInputBody {
-  if (l.id) return { id: l.id, qty: l.qty };
+  if (l.id) return l.item_id ? { id: l.id, qty: l.qty } : { id: l.id, ...customOf(l) };
   if (l.item_id) return { item_id: l.item_id, qty: l.qty };
-  const { custom_name, custom_unit, custom_note, image_file_id, qty } = l;
-  return { custom_name, custom_unit, custom_note, image_file_id, qty };
+  return customOf(l);
 }
 
-export function useCart(server: RequestView | null, ctx: CartContext) {
+// Chuyển giỏ sang kỳ khác: bỏ dòng Hành chính thêm/bị từ chối (như chép lại), các dòng còn lại thành dòng mới
+export function carryOf(lines: CartLine[]): ReplaceLineInput[] {
+  return lines
+    .filter((l) => !l.added_by_admin && l.review_status !== 'rejected')
+    .map((l) => (l.item_id ? { item_id: l.item_id, qty: l.qty } : customOf(l)));
+}
+
+export function useCart(server: RequestView | null, ctx: CartContext, initial?: ReplaceLineInput[]) {
   const [saved, setSaved] = useState(server);
   const base = useMemo(() => (saved?.lines ?? []).map((l) => fromView(l, ctx)), [saved, ctx]);
-  const [lines, setLines] = useState<CartLine[]>(() => base);
   const tmpSeq = useRef(0);
   const baseByKey = useMemo(() => new Map(base.map((l) => [l.key, l])), [base]);
+
+  const customLine = (c: CustomLineInput): CartLine => {
+    tmpSeq.current += 1;
+    return {
+      key: `tmp-${tmpSeq.current}`,
+      item_id: null,
+      ...c,
+      qty: Math.min(c.qty, ctx.defaultMax),
+      max: ctx.defaultMax,
+      readonly: false,
+      added_by_admin: false,
+      review_status: 'pending',
+      label: { name: c.custom_name ?? '', name_en: null, unit: c.custom_unit, pack_note: null, image_file_id: c.image_file_id, category_id: null },
+    };
+  };
+
+  // Dòng chỉ đọc giữ nguyên; món thường gắn lại vào dòng đã lưu cùng món (giữ id) để không trùng món
+  const replaced = (prev: CartLine[], next: ReplaceLineInput[]): CartLine[] => [
+    ...prev.filter((l) => l.readonly),
+    ...next.flatMap((n) => {
+      if (!('item_id' in n)) return [customLine(n)];
+      const item = ctx.items.get(n.item_id);
+      return item ? [fromItem(item, n.qty, baseByKey.get(n.item_id))] : [];
+    }),
+  ];
+
+  const [lines, setLines] = useState<CartLine[]>(() => (initial ? replaced(base, initial) : base));
 
   const editable = (key: string) => !lines.find((l) => l.key === key)?.readonly;
 
@@ -144,32 +184,19 @@ export function useCart(server: RequestView | null, ctx: CartContext) {
     if (editable(key)) setLines((prev) => prev.filter((l) => l.key !== key));
   };
 
-  const customLine = (c: CustomLineInput): CartLine => {
-    tmpSeq.current += 1;
-    return {
-      key: `tmp-${tmpSeq.current}`,
-      item_id: null,
-      ...c,
-      qty: Math.min(c.qty, ctx.defaultMax),
-      max: ctx.defaultMax,
-      readonly: false,
-      added_by_admin: false,
-      review_status: 'pending',
-      label: { name: c.custom_name ?? '', name_en: null, unit: c.custom_unit, pack_note: null, image_file_id: c.image_file_id, category_id: null },
-    };
-  };
-
   const addCustom = (c: CustomLineInput) => setLines((prev) => [...prev, customLine(c)]);
 
-  const replaceAll = (next: ReplaceLineInput[]) =>
-    setLines((prev) => [
-      ...prev.filter((l) => l.readonly),
-      ...next.flatMap((n) => {
-        if (!('item_id' in n)) return [customLine(n)];
-        const item = ctx.items.get(n.item_id);
-        return item ? [fromItem(item, n.qty, baseByKey.get(n.item_id))] : [];
-      }),
-    ]);
+  const updateCustom = (key: string, c: CustomLineInput) => {
+    if (!editable(key)) return;
+    const label = { name: c.custom_name ?? '', unit: c.custom_unit, image_file_id: c.image_file_id };
+    setLines((prev) =>
+      prev.map((l) =>
+        l.key === key && !l.item_id ? { ...l, ...c, qty: Math.min(c.qty, l.max), label: { ...l.label, ...label } } : l,
+      ),
+    );
+  };
+
+  const replaceAll = (next: ReplaceLineInput[]) => setLines((prev) => replaced(prev, next));
 
   const toBody = (): SaveLinesBody => ({
     ym: ctx.ym,
@@ -182,7 +209,18 @@ export function useCart(server: RequestView | null, ctx: CartContext) {
     setLines((view?.lines ?? []).map((l) => fromView(l, ctx)));
   };
 
-  return { lines, dirtyCount: countDirty(base, lines), saved, setQty, remove, addCustom, replaceAll, toBody, markSaved };
+  return {
+    lines,
+    dirtyCount: countDirty(base, lines),
+    saved,
+    setQty,
+    remove,
+    addCustom,
+    updateCustom,
+    replaceAll,
+    toBody,
+    markSaved,
+  };
 }
 
 export type Cart = ReturnType<typeof useCart>;

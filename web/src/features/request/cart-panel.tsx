@@ -4,8 +4,24 @@ import type { Category } from '@/features/catalog/catalog.api';
 import { useMe } from '@/lib/me';
 import { Stepper } from '@/ui/stepper';
 import { ItemThumb } from './item-card';
-import { tintOf, useRequestFormat } from './request-format';
+import { tintOf, useAdminContact, useRequestFormat } from './request-format';
 import type { CartLine } from './use-cart';
+
+const REVIEW_TONE = { pending: 'tag--warn', accepted: 'tag--ok', rejected: 'tag--danger' } as const;
+
+// Nhãn ngoài DM luôn hiện; trạng thái xem chỉ có khi dòng đã lưu
+function CustomTags({ line }: { line: CartLine }) {
+  const { t } = useTranslation();
+  const status = line.id && line.review_status && line.review_status in REVIEW_TONE ? line.review_status : null;
+  return (
+    <>
+      <span className="tag tag--info">{t('request.cart.custom')}</span>
+      {status && (
+        <span className={`tag ${REVIEW_TONE[status as keyof typeof REVIEW_TONE]}`}>{t(`request.cart.review.${status}`)}</span>
+      )}
+    </>
+  );
+}
 
 function CartRow({
   line,
@@ -13,25 +29,34 @@ function CartRow({
   tint,
   onQty,
   onRemove,
+  onEdit,
 }: {
   line: CartLine;
   error?: string;
   tint: string;
   onQty: (n: number) => void;
   onRemove: () => void;
+  onEdit: () => void;
 }) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
+  const contact = useAdminContact();
   const errorId = useId();
   const name = fmt.name(line.label);
   return (
     <li className={`rq-line${error ? ' is-error' : ''}`} data-line-key={line.key} tabIndex={-1}>
       <ItemThumb name={name} imageId={line.label.image_file_id} tint={tint} className="rq-line-img" />
       <div className="rq-line-main">
-        <span className="rq-line-name">{name}</span>
-        {!line.item_id && <span className="tag tag--info">{t('request.cart.custom')}</span>}
+        {!line.item_id && !line.readonly ? (
+          <button type="button" className="rq-line-name rq-line-link" aria-label={t('request.cart.edit', { name })} onClick={onEdit}>
+            {name}
+          </button>
+        ) : (
+          <span className="rq-line-name">{name}</span>
+        )}
+        {!line.item_id && <CustomTags line={line} />}
         {line.added_by_admin && (
-          <span className="tag" title={t('request.cart.adminAddedHint')}>
+          <span className="tag" title={t('request.cart.adminAddedHint', { contact })}>
             {t('request.cart.adminAdded')}
           </span>
         )}
@@ -76,6 +101,7 @@ export function CartPanel({
   onRemove,
   onSave,
   onAddCustom,
+  onEdit,
 }: {
   lines: CartLine[];
   errors: Record<string, string>;
@@ -87,7 +113,8 @@ export function CartPanel({
   onQty: (key: string, n: number) => void;
   onRemove: (key: string) => void;
   onSave: () => void;
-  onAddCustom?: () => void;
+  onAddCustom: () => void;
+  onEdit: (key: string) => void;
 }) {
   const { t } = useTranslation();
   const me = useMe();
@@ -109,6 +136,7 @@ export function CartPanel({
               tint={tintOf(l.label.category_id, categories)}
               onQty={(n) => onQty(l.key, n)}
               onRemove={() => onRemove(l.key)}
+              onEdit={() => onEdit(l.key)}
             />
           ))}
         </ul>

@@ -3,15 +3,22 @@ import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { saveMyLines, useSetMyRequest, type RequestView } from './request.api';
 import { saveFailure } from './request-errors';
-import { monthOf } from './request-format';
-import type { Cart } from './use-cart';
+import { monthOf, useAdminContact } from './request-format';
+import { carryOf, type Cart, type ReplaceLineInput } from './use-cart';
 
 const TOAST_MS = 3000;
 
 // Mỗi lần lưu hỏng là một object mới → effect focus chạy lại cả khi cùng một lỗi
-interface Notice {
+export interface Notice {
   text: string;
   focusKey: string | null;
+  tone: 'danger' | 'info';
+}
+
+export interface SaveFlowOptions {
+  // Kỳ vừa khóa: trang chuyển sang kỳ mới, mang giỏ theo
+  onLocked: (nextYm: string, carry: ReplaceLineInput[]) => void;
+  initialNotice?: Notice | null;
 }
 
 // Giỏ ở 390 px nằm dưới lưới: lỗi lưu phải hiện cạnh thanh lưu và đưa focus tới chỗ cần sửa
@@ -29,21 +36,27 @@ function useFocusNotice(notice: Notice | null, cartRef: RefObject<HTMLElement | 
   }, [notice, cartRef, noticeRef]);
 }
 
+export function lockedNotice(t: (k: string, o?: Record<string, unknown>) => string, ym: string, next: string): Notice {
+  return { text: t('request.locked', { month: monthOf(ym), next: monthOf(next) }), focusKey: null, tone: 'info' };
+}
+
 export function useSaveFlow(
   cart: Cart,
   ym: string,
   refetch: () => Promise<RequestView | null | undefined>,
   cartRef: RefObject<HTMLElement | null>,
+  opts: SaveFlowOptions,
 ) {
   const { t } = useTranslation();
   const me = useMe();
+  const contact = useAdminContact();
   const setMyRequest = useSetMyRequest();
   const [confirming, setConfirming] = useState(false);
   const [saving, setSaving] = useState(false);
   const [stale, setStale] = useState(false);
   const [reloading, setReloading] = useState(false);
   const [lineErrors, setLineErrors] = useState<Record<string, string>>({});
-  const [notice, setNotice] = useState<Notice | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(opts.initialNotice ?? null);
   const noticeRef = useRef<HTMLDivElement>(null);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -55,7 +68,7 @@ export function useSaveFlow(
   const fail = (text: string, focusKey: string | null = null) => {
     clearTimeout(toastTimer.current);
     setToast(null);
-    setNotice({ text, focusKey });
+    setNotice({ text, focusKey, tone: 'danger' });
   };
 
   const showToast = (text: string) => {
@@ -74,8 +87,12 @@ export function useSaveFlow(
       setNotice(null);
       showToast(t('request.toast.saved', { month }));
     } catch (e) {
-      const failure = saveFailure(e, cart.lines, t, month);
-      if (failure.kind === 'stale') {
+      const failure = saveFailure(e, cart.lines, (k, o) => t(k, { contact, ...o }), ym);
+      if (failure.kind === 'locked') {
+        setLineErrors({});
+        setNotice(lockedNotice(t, ym, failure.nextYm));
+        opts.onLocked(failure.nextYm, carryOf(cart.lines));
+      } else if (failure.kind === 'stale') {
         setNotice(null);
         setStale(true);
       } else if (failure.kind === 'lines') {
@@ -126,14 +143,25 @@ export function useSaveFlow(
     saving,
     save,
     stale,
-    closeStale: () => setStale(false),
+    closeStale: () => {
+      setStale(false);
+      fail(t('request.stale.kept'));
+    },
     reloading,
     reload,
     lineErrors,
     notice: notice?.text ?? null,
     noticeRef,
+    noticeTone: notice?.tone ?? 'danger',
     closeNotice: () => setNotice(null),
     toast,
+    showToast,
+    showError: (text: string) => fail(text),
     touched,
+    clearErrors: () => {
+      setLineErrors({});
+      setNotice(null);
+    },
   };
 }
+export type SaveFlow = ReturnType<typeof useSaveFlow>;

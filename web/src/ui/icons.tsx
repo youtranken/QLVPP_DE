@@ -60,3 +60,9 @@ export const IconClock = (p: IconProps) => (
     <path d="M12 7v5l3 2" />
   </svg>
 );
+export const IconDocCopy = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <rect x="8" y="8" width="12" height="13" rx="2" />
+    <path d="M16 8V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h2M11 13h6M11 17h4" />
+  </svg>
+);

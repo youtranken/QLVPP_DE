@@ -56,7 +56,17 @@ export function SaveDialog({
   );
 }
 
-export function StaleDialog({ reloading, onReload, onClose }: { reloading: boolean; onReload: () => void; onClose: () => void }) {
+export function StaleDialog({
+  month,
+  reloading,
+  onReload,
+  onClose,
+}: {
+  month: number;
+  reloading: boolean;
+  onReload: () => void;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()} dismissible={!reloading} className="sheet rq-dialog" maxWidth={440}>
@@ -64,7 +74,7 @@ export function StaleDialog({ reloading, onReload, onClose }: { reloading: boole
         <DialogTitle className="sheet-title">{t('request.stale.title')}</DialogTitle>
       </div>
       <div className="sheet-body">
-        <DialogDescription>{t('request.stale.body')}</DialogDescription>
+        <DialogDescription>{t('request.stale.body', { month })}</DialogDescription>
       </div>
       <div className="sheet-footer">
         <DialogClose asChild>

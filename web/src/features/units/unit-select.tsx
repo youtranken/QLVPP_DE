@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 const UNITS = ['cai', 'hop', 'cay', 'ram', 'cuon', 'loc', 'bich', 'chai', 'bo'] as const;
 
+// Dùng chung cho form món (catalog) và dòng ngoài danh mục (request); nhãn ở catalog.units
 export function UnitSelect({
   value,
   onValueChange,

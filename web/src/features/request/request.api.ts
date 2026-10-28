@@ -136,3 +136,47 @@ export const saveMyLines = (body: SaveLinesBody, csrfToken: string | null) =>
     body: JSON.stringify(body),
     csrfToken,
   });
+
+export type SkipReason = 'INACTIVE' | 'ADMIN_ONLY' | 'ADDED_BY_ADMIN' | 'REJECTED';
+
+export type CopiedLine =
+  | { item_id: string; qty: number }
+  | {
+      custom_name: string | null;
+      custom_unit: string | null;
+      custom_note: string | null;
+      image_file_id: string | null;
+      qty: number;
+    };
+
+export interface CopyPreviousResult {
+  from_ym: string;
+  lines: CopiedLine[];
+  skipped: { name: string; reason: SkipReason }[];
+  capped: { name: string; from: number; to: number }[];
+  previously_accepted: string[];
+}
+
+// POST nhưng chỉ đọc (giỏ đề xuất); chưa có phiếu kỳ trước (404) → null = ẩn nút chép
+export function useCopyPreviousQuery(ym: string, csrfToken: string | null) {
+  return useQuery({
+    queryKey: [...REQUEST_KEY, 'copy', ym],
+    queryFn: async () => {
+      try {
+        return await apiFetch<CopyPreviousResult>('/api/me/request/copy-previous', { method: 'POST', csrfToken });
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 404) return null;
+        throw e;
+      }
+    },
+  });
+}
+
+const EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+
+export function uploadLineImage(blob: Blob, mime: string, csrfToken: string | null) {
+  const form = new FormData();
+  form.append('purpose', 'line_image');
+  form.append('file', blob, `line.${EXT[mime] ?? 'jpg'}`);
+  return apiFetch<{ id: string }>('/api/files', { method: 'POST', body: form, csrfToken });
+}
