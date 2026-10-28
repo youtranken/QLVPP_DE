@@ -27,13 +27,21 @@ function makeController(alreadyProcessed = false) {
   return { controller, sessions, users, audit, db };
 }
 
-function signedReq(body: object, secret = SECRET) {
-  const rawBody = Buffer.from(JSON.stringify(body));
-  const signature = createHmac('sha256', secret).update(rawBody).digest('hex');
-  return { rawBody, signature };
+const nowTs = () => String(Math.floor(Date.now() / 1000));
+
+function signV2(rawBody: Buffer, ts: string, secret = SECRET): string {
+  return createHmac('sha256', secret)
+    .update(`${ts}.${rawBody.toString('utf8')}`)
+    .digest('hex');
 }
 
-describe('WebhookController — HMAC + đá phiên', () => {
+function signedReq(body: object, secret = SECRET) {
+  const rawBody = Buffer.from(JSON.stringify(body));
+  const ts = nowTs();
+  return { rawBody, ts, signature: signV2(rawBody, ts, secret) };
+}
+
+describe('WebhookController — HMAC v2 + đá phiên', () => {
   beforeAll(() => {
     process.env.PMH_WEBHOOK_SECRET = SECRET;
   });
@@ -43,11 +51,11 @@ describe('WebhookController — HMAC + đá phiên', () => {
 
   it('chữ ký đúng + user.locked → hủy phiên + set status locked + audit system(webhook)', async () => {
     const { controller, sessions, users, audit } = makeController();
-    const { rawBody, signature } = signedReq({
+    const { rawBody, ts, signature } = signedReq({
       type: 'user.locked',
       user_id: 'usr_1',
     });
-    const result = await controller.handle({ rawBody } as never, signature);
+    const result = await controller.handle({ rawBody } as never, signature, ts);
     expect(result).toEqual({ ok: true });
     expect(sessions.destroyAllForUser).toHaveBeenCalledWith('usr_1');
     expect(users.setStatus).toHaveBeenCalledWith('usr_1', 'locked');
@@ -59,60 +67,117 @@ describe('WebhookController — HMAC + đá phiên', () => {
     );
   });
 
-  it('event_id đã xử (replay) → bỏ qua, KHÔNG đá phiên lần 2 (idempotent)', async () => {
-    const { controller, sessions } = makeController(true); // isProcessed → đã xử
-    const { rawBody, signature } = signedReq({
+  it('event_id đã xử → lần 2 trả {duplicate:true}, KHÔNG đá phiên lại', async () => {
+    const { controller, sessions, users } = makeController(true);
+    const { rawBody, ts, signature } = signedReq({
       type: 'user.locked',
       user_id: 'usr_1',
       event_id: 'evt-123',
     });
-    const result = await controller.handle({ rawBody } as never, signature);
-    expect(result).toEqual({ ok: true });
+    const result = await controller.handle({ rawBody } as never, signature, ts);
+    expect(result).toEqual({ ok: true, duplicate: true });
     expect(sessions.destroyAllForUser).not.toHaveBeenCalled();
+    expect(users.setStatus).not.toHaveBeenCalled();
   });
 
   it('user.deleted → set status deleted', async () => {
     const { controller, users } = makeController();
-    const { rawBody, signature } = signedReq({
+    const { rawBody, ts, signature } = signedReq({
       type: 'user.deleted',
       user_id: 'usr_9',
     });
-    await controller.handle({ rawBody } as never, signature);
+    await controller.handle({ rawBody } as never, signature, ts);
     expect(users.setStatus).toHaveBeenCalledWith('usr_9', 'deleted');
   });
 
   it('user.groups_changed → cập nhật groups, không đá phiên', async () => {
     const { controller, sessions, users } = makeController();
-    const { rawBody, signature } = signedReq({
+    const { rawBody, ts, signature } = signedReq({
       type: 'user.groups_changed',
       user_id: 'usr_1',
       groups: ['Kế toán'],
     });
-    await controller.handle({ rawBody } as never, signature);
+    await controller.handle({ rawBody } as never, signature, ts);
     expect(users.updateGroups).toHaveBeenCalledWith('usr_1', ['Kế toán']);
     expect(sessions.destroyAllForUser).not.toHaveBeenCalled();
   });
 
   it('sai chữ ký → 401, KHÔNG xử lý, audit webhook_rejected', async () => {
     const { controller, sessions, audit } = makeController();
-    const { rawBody } = signedReq({ type: 'user.locked', user_id: 'usr_1' });
-    const bad = createHmac('sha256', 'secret-khac')
-      .update(rawBody)
-      .digest('hex');
-    await expect(controller.handle({ rawBody } as never, bad)).rejects.toThrow(
-      UnauthorizedException,
-    );
+    const { rawBody, ts } = signedReq({
+      type: 'user.locked',
+      user_id: 'usr_1',
+    });
+    const bad = signV2(rawBody, ts, 'secret-khac');
+    await expect(
+      controller.handle({ rawBody } as never, bad, ts),
+    ).rejects.toThrow(UnauthorizedException);
     expect(sessions.destroyAllForUser).not.toHaveBeenCalled();
     expect(audit.append).toHaveBeenCalledWith(
-      expect.objectContaining({ action: 'auth.webhook_rejected' }),
+      expect.objectContaining({
+        action: 'auth.webhook_rejected',
+        detail: { reason: 'mismatch' },
+      }),
     );
+  });
+
+  it('chỉ có chữ ký v1 (x-pmh-signature, không V2/timestamp) → 401, không xử lý', async () => {
+    const { controller, sessions, audit } = makeController();
+    const rawBody = Buffer.from(
+      JSON.stringify({ type: 'user.locked', user_id: 'usr_1' }),
+    );
+    const v1 = createHmac('sha256', SECRET).update(rawBody).digest('hex');
+    await expect(
+      controller.handle(
+        { rawBody, headers: { 'x-pmh-signature': v1 } } as never,
+        undefined,
+        undefined,
+      ),
+    ).rejects.toThrow(UnauthorizedException);
+    expect(sessions.destroyAllForUser).not.toHaveBeenCalled();
+    expect(audit.append).toHaveBeenCalledWith(
+      expect.objectContaining({ detail: { reason: 'missing' } }),
+    );
+  });
+
+  it('timestamp cũ hơn WEBHOOK_TS_SKEW_SEC (300) → 401 skew dù chữ ký đúng', async () => {
+    const { controller, sessions, audit } = makeController();
+    const rawBody = Buffer.from(
+      JSON.stringify({ type: 'user.locked', user_id: 'usr_1' }),
+    );
+    const ts = String(Math.floor(Date.now() / 1000) - 301);
+    await expect(
+      controller.handle({ rawBody } as never, signV2(rawBody, ts), ts),
+    ).rejects.toThrow(UnauthorizedException);
+    expect(sessions.destroyAllForUser).not.toHaveBeenCalled();
+    expect(audit.append).toHaveBeenCalledWith(
+      expect.objectContaining({ detail: { reason: 'skew' } }),
+    );
+  });
+
+  it('WEBHOOK_TS_SKEW_SEC=600 → ts lệch 400 s vẫn nhận', async () => {
+    process.env.WEBHOOK_TS_SKEW_SEC = '600';
+    try {
+      const { controller, sessions } = makeController();
+      const rawBody = Buffer.from(
+        JSON.stringify({ type: 'user.locked', user_id: 'usr_1' }),
+      );
+      const ts = String(Math.floor(Date.now() / 1000) - 400);
+      await controller.handle({ rawBody } as never, signV2(rawBody, ts), ts);
+      expect(sessions.destroyAllForUser).toHaveBeenCalledWith('usr_1');
+    } finally {
+      delete process.env.WEBHOOK_TS_SKEW_SEC;
+    }
   });
 
   it('chữ ký khác ĐỘ DÀI → 401 sạch, không crash (timingSafeEqual edge)', async () => {
     const { controller } = makeController();
-    const { rawBody } = signedReq({ type: 'user.locked', user_id: 'usr_1' });
+    const { rawBody, ts } = signedReq({
+      type: 'user.locked',
+      user_id: 'usr_1',
+    });
     await expect(
-      controller.handle({ rawBody } as never, 'ngắn'),
+      controller.handle({ rawBody } as never, 'ngắn', ts),
     ).rejects.toThrow(UnauthorizedException);
   });
 
@@ -126,23 +191,21 @@ describe('WebhookController — HMAC + đá phiên', () => {
       'not-json',
     ]) {
       const rawBody = Buffer.from(bad);
-      const signature = createHmac('sha256', SECRET)
-        .update(rawBody)
-        .digest('hex');
+      const ts = nowTs();
       await expect(
-        controller.handle({ rawBody } as never, signature),
+        controller.handle({ rawBody } as never, signV2(rawBody, ts), ts),
       ).rejects.toMatchObject({ status: 400 });
     }
   });
 
-  it('thiếu chữ ký / thiếu rawBody → 401', async () => {
+  it('thiếu rawBody → 401', async () => {
     const { controller } = makeController();
-    const { rawBody } = signedReq({ type: 'user.locked', user_id: 'usr_1' });
+    const { ts, signature } = signedReq({
+      type: 'user.locked',
+      user_id: 'usr_1',
+    });
     await expect(
-      controller.handle({ rawBody } as never, undefined),
-    ).rejects.toThrow(UnauthorizedException);
-    await expect(
-      controller.handle({ rawBody: undefined } as never, 'sig'),
+      controller.handle({ rawBody: undefined } as never, signature, ts),
     ).rejects.toThrow(UnauthorizedException);
   });
 });

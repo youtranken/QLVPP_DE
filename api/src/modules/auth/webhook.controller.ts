@@ -10,7 +10,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { RawBodyRequest } from '@nestjs/common';
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import { sql } from 'drizzle-orm';
 import type { Request } from 'express';
 import { DRIZZLE_DB } from '../../database/database.module';
@@ -19,6 +18,7 @@ import { AuditWriterService } from '../audit/audit-writer.service';
 import { UsersService } from '../users/users.service';
 import { Public } from './public.decorator';
 import { SessionService } from './session.service';
+import { verifyV2 } from './webhook-signature';
 
 interface PmhWebhookEvent {
   type: string;
@@ -32,6 +32,8 @@ const KICK_EVENTS = new Set([
   'user.deleted',
   'user.password_changed',
 ]);
+const DEFAULT_TS_SKEW_SEC = 300;
+
 const STATUS_BY_EVENT: Record<string, 'locked' | 'deleted'> = {
   'user.locked': 'locked',
   'user.deleted': 'deleted',
@@ -53,14 +55,16 @@ export class WebhookController {
   @HttpCode(200)
   async handle(
     @Req() req: RawBodyRequest<Request>,
-    @Headers('x-pmh-signature') signature: string | undefined,
-  ): Promise<{ ok: boolean }> {
+    @Headers('x-pmh-signature-v2') signature: string | undefined,
+    @Headers('x-pmh-timestamp') timestamp: string | undefined,
+  ): Promise<{ ok: boolean; duplicate?: boolean }> {
     const rawBody = req.rawBody;
-    if (!rawBody || !this.verifySignature(rawBody, signature)) {
+    const rejection = this.checkSignature(rawBody, signature, timestamp);
+    if (rejection || !rawBody) {
       await this.audit.append({
         actor: 'system',
         action: 'auth.webhook_rejected',
-        detail: { reason: signature ? 'bad_signature' : 'missing_signature' },
+        detail: { reason: rejection ?? 'missing' },
       });
       throw new UnauthorizedException({
         code: 'WEBHOOK_SIGNATURE_INVALID',
@@ -73,7 +77,7 @@ export class WebhookController {
 
     // Kiểm trước, đánh dấu SAU khi xử: crash giữa chừng thì retry xử lại (mọi mutation idempotent)
     if (event.event_id && (await this.isProcessed(event.event_id))) {
-      return { ok: true };
+      return { ok: true, duplicate: true };
     }
 
     if (KICK_EVENTS.has(event.type)) {
@@ -134,25 +138,32 @@ export class WebhookController {
     return event;
   }
 
-  private verifySignature(
-    rawBody: Buffer,
+  private checkSignature(
+    rawBody: Buffer | undefined,
     signature: string | undefined,
-  ): boolean {
+    timestamp: string | undefined,
+  ): 'missing' | 'skew' | 'mismatch' | 'no_secret' | null {
     const secret = process.env.PMH_WEBHOOK_SECRET;
     if (!secret) {
       // Lỗi cấu hình chứ không phải client sai — log ERROR để vận hành thấy
       this.logger.error(
         'PMH_WEBHOOK_SECRET chưa cấu hình — TỪ CHỐI mọi webhook (thu hồi phiên sẽ không kích hoạt).',
       );
-      return false;
+      return 'no_secret';
     }
-    if (!signature) {
-      return false;
-    }
-    const expected = createHmac('sha256', secret).update(rawBody).digest('hex');
-    const sigBuf = Buffer.from(signature);
-    const expBuf = Buffer.from(expected);
-    // timingSafeEqual ném lỗi khi khác độ dài
-    return sigBuf.length === expBuf.length && timingSafeEqual(sigBuf, expBuf);
+    const result = verifyV2({
+      secret,
+      ts: timestamp,
+      rawBody,
+      signature,
+      nowSec: Math.floor(Date.now() / 1000),
+      skewSec: webhookSkewSec(),
+    });
+    return result.ok ? null : result.reason;
   }
+}
+
+function webhookSkewSec(): number {
+  const n = Number(process.env.WEBHOOK_TS_SKEW_SEC);
+  return Number.isInteger(n) && n > 0 ? n : DEFAULT_TS_SKEW_SEC;
 }

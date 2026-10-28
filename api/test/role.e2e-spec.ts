@@ -16,7 +16,7 @@ import { assertTestDatabase } from './test-database';
 const silent = { log: () => undefined };
 const WEBHOOK_SECRET = 'whsec-role-e2e';
 
-// Phiên cookie thật (không dùng x-dev-role) để đi qua toIdentity; webhook còn ký v1 tới Task 5
+// Phiên cookie thật (không dùng x-dev-role) để đi qua toIdentity
 describe('role tính mỗi request từ users.groups', () => {
   let app: INestApplication<App>;
   let pool: Pool;
@@ -76,13 +76,15 @@ describe('role tính mỗi request từ users.groups', () => {
       groups: [],
       event_id: `evt-${randomUUID()}`,
     });
+    const ts = String(Math.floor(Date.now() / 1000));
     const signature = createHmac('sha256', WEBHOOK_SECRET)
-      .update(rawBody)
+      .update(`${ts}.${rawBody}`)
       .digest('hex');
     await request(app.getHttpServer())
       .post('/api/webhooks/pmh-id')
       .set('Content-Type', 'application/json')
-      .set('x-pmh-signature', signature)
+      .set('X-PMH-Timestamp', ts)
+      .set('X-PMH-Signature-V2', signature)
       .send(rawBody)
       .expect(200);
 

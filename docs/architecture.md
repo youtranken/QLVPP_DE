@@ -80,7 +80,7 @@ Toàn bộ theo QLTS_DE `api/src/modules/auth` (đổi tên cookie `vpp_sid`, `v
 
 **Đăng xuất** — `POST /api/auth/logout` hủy phiên local, **không** gọi end_session. `GET /api/auth/switch-account` (dùng ở trang forbidden) gọi end_session kèm `id_token_hint`, `post_logout_redirect_uri = APP_BASE_URL`.
 
-**Thu hồi từ PMH ID** — `POST /api/backchannel-logout` (verify `logout_token` qua JWKS, claim `events`, không `nonce`). `POST /api/webhooks/pmh-id`: **chữ ký v2** — `X-PMH-Signature-V2 = hex(HMAC-SHA256(secret, "${X-PMH-Timestamp}.${rawBody}"))`, từ chối khi thiếu header, `|now − ts| > WEBHOOK_TS_SKEW_SEC` (300) hoặc so sánh không timing-safe khớp; **không** nhận v1 (`x-pmh-signature`) — mã QLTS hiện là v1 nên phải sửa khi copy, kèm test vector trong E0-S6 lấy từ `PMH_IDE/docs/integration`. Idempotent theo `event_id` trong bảng `processed_webhook_events`; `user.locked/deleted/password_changed` → hủy mọi phiên của `sub`, cập nhật `users.status`; `user.groups_changed` → cập nhật `users.groups`.
+**Thu hồi từ PMH ID** — `POST /api/backchannel-logout` (verify `logout_token` qua JWKS, claim `events`, không `nonce`). `POST /api/webhooks/pmh-id`: **chữ ký v2** — `X-PMH-Signature-V2 = hex(HMAC-SHA256(secret, "${X-PMH-Timestamp}.${rawBody}"))`, từ chối khi thiếu header, `|now − ts| > WEBHOOK_TS_SKEW_SEC` (300) hoặc so sánh không timing-safe khớp; **không** nhận v1 (`x-pmh-signature`). Khớp hợp đồng `PMH_IDE/docs/integration/README.md` §6 (`X-PMH-Timestamp` là unix **giây**, payload có `type`, `user_id`, `event_id`); tài liệu PMH ID không có vector mẫu nên test dùng vector tự tính (`webhook-signature.spec.ts`). Idempotent theo `event_id` trong bảng `processed_webhook_events`; `user.locked/deleted/password_changed` → hủy mọi phiên của `sub`, cập nhật `users.status`; `user.groups_changed` → cập nhật `users.groups`.
 
 **Danh bạ** — `DirectoryClient` (client_credentials, `GET /api/v1/users?include_deleted=true`, `/api/v1/groups`), `DirectorySyncService` upsert theo `sub` trong một transaction, scheduler 60′ + nút Đồng bộ ngay.
 
@@ -188,7 +188,7 @@ Vai: **M** member (mọi người đăng nhập, kể cả admin/sa) · **A** ad
 
 | Nhóm | Vai | Endpoint |
 |---|---|---|
-| Auth | — | `GET auth/login` · `GET auth/callback` · `POST auth/sa-login` · `GET auth/me` · `POST auth/logout` · `GET auth/switch-account` · `POST backchannel-logout` · `POST webhooks/pmh-id` · `GET health` |
+| Auth | — | `GET public-config` → `{admin_contact}` (không cần phiên) · `GET auth/login` · `GET auth/callback` · `POST auth/sa-login` · `GET auth/me` · `POST auth/logout` · `GET auth/switch-account` · `POST backchannel-logout` · `POST webhooks/pmh-id` · `GET health` |
 | Kỳ | M | `GET periods/current` → `{ym, deadline, is_open: true, days_left, previous: {ym, delivering: bool} \| null}` |
 | Phiếu của tôi | M | `GET me/request?ym` (404 `REQUEST_NOT_FOUND` nếu chưa có) · `PUT me/request/lines` · `POST me/request/copy-previous` · `GET me/requests` (lịch sử, phân trang) · `GET me/issues` (nhận lẻ) |
 | Danh mục | M | `GET items?include_inactive_ids=` (món active, không `admin_only` với member; ids thêm vào để hiển thị dòng cũ) · `GET item-categories` |

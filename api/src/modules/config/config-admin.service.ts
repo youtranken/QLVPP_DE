@@ -1,29 +1,21 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { inArray } from 'drizzle-orm';
+import { inArray, sql } from 'drizzle-orm';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { configTable } from './config.schema';
+import { validateConfigPatch } from './config-validation';
 import { SystemConfigService } from './system-config.service';
 
-const EDITABLE_KEYS = [
+const VISIBLE_KEYS = [
   'registration_last_day',
   'default_max_qty',
   'admin_group',
+  'authorized_groups',
   'low_stock_notify',
   'signers',
   'admin_contact',
-] as const;
-
-// authorized_groups chỉ đọc: directory-sync ghi
-const VISIBLE_KEYS = [...EDITABLE_KEYS, 'authorized_groups'];
-
-export type ConfigPatch = Partial<
-  Record<(typeof EDITABLE_KEYS)[number], unknown>
->;
-
-const INVALID = (message: string) =>
-  new BadRequestException({ code: 'CONFIG_INVALID', message });
+];
 
 @Injectable()
 export class ConfigAdminService {
@@ -42,34 +34,46 @@ export class ConfigAdminService {
   }
 
   async update(
-    patch: ConfigPatch,
+    body: unknown,
     actorSub: string,
   ): Promise<Record<string, unknown>> {
-    const entries = Object.entries(patch).filter(
-      ([k, v]) =>
-        (EDITABLE_KEYS as readonly string[]).includes(k) && v !== undefined,
-    );
-    if (entries.length === 0) {
-      throw INVALID('Không có tham số hợp lệ để cập nhật.');
+    const result = validateConfigPatch(body);
+    if (!result.ok) {
+      throw new BadRequestException({
+        code: 'CONFIG_INVALID',
+        message: `Giá trị cấu hình không hợp lệ: ${result.field}.`,
+        field: result.field,
+      });
     }
+    const keys = Object.keys(result.patch).sort();
     await this.db.transaction(async (tx) => {
-      for (const [key, value] of entries) {
-        const old = await tx
-          .select({ value: configTable.value })
-          .from(configTable)
-          .where(inArray(configTable.key, [key]));
-        await tx
-          .update(configTable)
-          .set({ value, updatedAt: new Date() })
-          .where(inArray(configTable.key, [key]));
-        await this.audit.appendWithin(tx, {
-          actor: actorSub,
-          action: 'config.update',
-          objectType: 'config',
-          objectId: key,
-          detail: { from: old[0]?.value ?? null, to: value },
-        });
+      const locked = await tx.execute<{ key: string; value: unknown }>(sql`
+        SELECT key, value FROM config WHERE key IN ${keys} ORDER BY key FOR UPDATE
+      `);
+      const before = Object.fromEntries(
+        locked.rows.map((r) => [r.key, r.value]),
+      );
+      const after: Record<string, unknown> = {};
+      for (const key of keys) {
+        const incoming = result.patch[key as keyof typeof result.patch];
+        // signers merge theo người ký: sửa một người không xóa hai người còn lại
+        after[key] =
+          key === 'signers'
+            ? { ...(before.signers as object), ...(incoming as object) }
+            : incoming;
+        await tx.execute(sql`
+          INSERT INTO config (key, value)
+          VALUES (${key}, ${JSON.stringify(after[key])}::jsonb)
+          ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()
+        `);
       }
+      await this.audit.appendWithin(tx, {
+        actor: actorSub,
+        action: 'config.updated',
+        objectType: 'config',
+        objectId: keys.join(','),
+        detail: { before, after },
+      });
     });
     this.config.clearCache();
     return this.listEditable();
