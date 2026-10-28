@@ -21,7 +21,7 @@ services:
       TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:?TRUST_PROXY_HOPS bắt buộc trong .env}
       LOCAL_SA_USERNAME: ${LOCAL_SA_USERNAME:?LOCAL_SA_USERNAME bắt buộc trong .env}
       LOCAL_SA_PASSWORD_HASH: ${LOCAL_SA_PASSWORD_HASH:?LOCAL_SA_PASSWORD_HASH bắt buộc trong .env (scrypt.saltHex.hashHex)}
-      FILE_STORAGE_DIR: /data/files
+      FILES_DIR: /data/files
     volumes:
       - filesdata:/data/files
     depends_on:

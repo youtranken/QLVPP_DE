@@ -11,6 +11,9 @@ import { assertTestDatabase } from './test-database';
 
 const silent = { log: () => undefined };
 const ADMIN_SUB = 'e2e-config-admin';
+// Marker runtime do auth e2e chạy song song xóa/ghi; không thuộc phạm vi PUT admin/config
+const EDITABLE_CONFIG_SQL =
+  "SELECT key, value FROM config WHERE key <> 'directory_sync_last_at' ORDER BY key";
 
 describe('admin/config + public-config', () => {
   let app: INestApplication<App>;
@@ -87,14 +90,10 @@ describe('admin/config + public-config', () => {
     [{ constructor: 'x' }, 'constructor'],
     [{ toString: 'x' }, 'toString'],
   ])('PUT %j → 400 CONFIG_INVALID field %s, không ghi', async (body, field) => {
-    const before = await pool.query(
-      'SELECT key, value FROM config ORDER BY key',
-    );
+    const before = await pool.query(EDITABLE_CONFIG_SQL);
     const res = await put(body).expect(400);
     expect(res.body).toMatchObject({ code: 'CONFIG_INVALID', field });
-    const after = await pool.query(
-      'SELECT key, value FROM config ORDER BY key',
-    );
+    const after = await pool.query(EDITABLE_CONFIG_SQL);
     expect(after.rows).toEqual(before.rows);
   });
 
