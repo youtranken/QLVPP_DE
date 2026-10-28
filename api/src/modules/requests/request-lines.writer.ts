@@ -3,6 +3,7 @@ import { pgViolation } from '../../common/sql';
 import type { Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
+import { LOCAL_SA_SUB } from '../auth/local-sa-env';
 import { CatalogService } from '../catalog/catalog.service';
 import { SystemConfigService } from '../config/system-config.service';
 import { FilesService } from '../files/files.service';
@@ -87,6 +88,8 @@ export class RequestLinesWriter {
   }
 
   private async write(tx: Tx, args: SaveArgs) {
+    // SA cục bộ là tài khoản IT khẩn cấp, không thuộc danh bạ → không có phiếu (tự lưu hay được tạo hộ)
+    if (args.owner_sub === LOCAL_SA_SUB) throw userNotFound();
     await this.assertPeriod(tx, args);
     const owner = await this.users.findBySub(args.owner_sub);
     if (!owner) throw userNotFound();

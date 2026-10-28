@@ -3,7 +3,6 @@ import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import type { RequestIdentity } from '../auth/identity.types';
-import { LOCAL_SA_SUB } from '../auth/local-sa-env';
 import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
 import {
@@ -66,8 +65,6 @@ export class AdminRequestService {
     body: CreateOnBehalfBody,
   ): Promise<{ request: RequestView | null }> {
     if (body.lines.length === 0) throw linesEmpty();
-    // SA cục bộ có dòng users active nhưng không thuộc danh bạ → không có phiếu
-    if (body.user_sub === LOCAL_SA_SUB) throw userNotFound();
     const owner = await this.users.findBySub(body.user_sub);
     if (!owner) throw userNotFound();
     if (owner.status !== 'active') throw userInactive();

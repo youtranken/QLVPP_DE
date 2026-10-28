@@ -19,6 +19,7 @@ describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', ()
     auditOf,
     imgA,
     pool,
+    onCleanup,
   } = meRequestFixture('main');
 
   it('GET me/request khi chưa lưu → 404 REQUEST_NOT_FOUND, không tạo phiếu', async () => {
@@ -186,5 +187,29 @@ describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', ()
       ADMIN,
       'admin',
     ).expect(204);
+  });
+
+  it('SA cục bộ (local:sa, có dòng users active) lưu phiếu qua me/request → 404 USER_NOT_FOUND, không tạo phiếu', async () => {
+    const SA = 'local:sa';
+    // ensureLocalSa tạo dòng users cho SA khi đăng nhập; có thể đã có từ suite khác
+    const seeded =
+      (
+        await pool().query(
+          `INSERT INTO users (sub, full_name, status) VALUES ($1, 'SA', 'active') ON CONFLICT (sub) DO NOTHING`,
+          [SA],
+        )
+      ).rowCount === 1;
+    onCleanup(async (p) => {
+      await p.query('DELETE FROM requests WHERE user_sub = $1', [SA]);
+      if (seeded) await p.query('DELETE FROM users WHERE sub = $1', [SA]);
+    });
+    const x = await newItem();
+    const res = await save([{ item_id: x, qty: 1 }], {}, SA).set(
+      'x-dev-role',
+      'sa',
+    );
+    expect(res.status).toBe(404);
+    expect(res.body).toMatchObject({ code: 'USER_NOT_FOUND' });
+    expect(await requestsOf(SA)).toHaveLength(0);
   });
 });
