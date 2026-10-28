@@ -19,6 +19,7 @@ export interface CartLine {
   custom_note: string | null;
   image_file_id: string | null;
   qty: number;
+  min: number;
   max: number;
   readonly: boolean;
   added_by_admin: boolean;
@@ -43,9 +44,15 @@ function itemLabel(i: MemberItem): CartLabel {
   return { name, name_en, unit, pack_note, image_file_id, category_id };
 }
 
-// Món đã ngừng/chỉ Hành chính: giữ được số cũ, chỉ giảm hoặc bỏ, không tăng
 const orderable = (item: MemberItem | undefined, l: LineView) =>
   !!item && item.active && !item.admin_only && l.item?.active !== false;
+
+// Server cho giảm dòng đã lưu bất kể max_qty hiện tại; món ngừng/chỉ Hành chính thì member chỉ được bỏ dòng
+function savedLimits(l: LineView, item: MemberItem | undefined, defaultMax: number) {
+  if (!l.item_id) return { min: 1, max: Math.max(defaultMax, l.qty) };
+  if (!orderable(item, l)) return { min: l.qty, max: l.qty };
+  return { min: 1, max: Math.max(item!.max_qty, l.qty) };
+}
 
 function fromView(l: LineView, ctx: CartContext): CartLine {
   const item = l.item_id ? ctx.items.get(l.item_id) : undefined;
@@ -68,7 +75,7 @@ function fromView(l: LineView, ctx: CartContext): CartLine {
     custom_note: l.custom_note,
     image_file_id: l.image_file_id,
     qty: l.qty,
-    max: l.item_id ? (orderable(item, l) ? item!.max_qty : l.qty) : ctx.defaultMax,
+    ...savedLimits(l, item, ctx.defaultMax),
     readonly: l.readonly_for_member,
     added_by_admin: l.added_by_admin,
     review_status: l.review_status,
@@ -81,8 +88,8 @@ const canOrder = (i: MemberItem) => i.active && !i.admin_only;
 // Dòng chỉ đọc (Hành chính thêm…) không bao giờ làm gốc: dùng lại id của nó sẽ gửi trùng id
 function fromItem(i: MemberItem, qty: number, prior?: CartLine): CartLine {
   const base = prior && !prior.readonly ? prior : undefined;
-  // Món đã ngừng/chỉ Hành chính: không tăng quá số đang có
-  const max = canOrder(i) ? i.max_qty : Math.min(i.max_qty, base?.qty ?? qty);
+  const saved = base?.qty ?? qty;
+  const [min, max] = canOrder(i) ? [1, Math.max(i.max_qty, base?.qty ?? 0)] : [saved, saved];
   return {
     key: i.id,
     id: base?.id,
@@ -91,7 +98,8 @@ function fromItem(i: MemberItem, qty: number, prior?: CartLine): CartLine {
     custom_unit: null,
     custom_note: base?.custom_note ?? null,
     image_file_id: null,
-    qty: Math.min(qty, max),
+    qty: Math.min(Math.max(qty, min), max),
+    min,
     max,
     readonly: false,
     added_by_admin: false,
@@ -156,6 +164,7 @@ export function useCart(server: RequestView | null, ctx: CartContext, initial?: 
       item_id: null,
       ...c,
       qty: Math.min(c.qty, ctx.defaultMax),
+      min: 1,
       max: ctx.defaultMax,
       readonly: false,
       added_by_admin: false,
@@ -200,7 +209,7 @@ export function useCart(server: RequestView | null, ctx: CartContext, initial?: 
         return [...prev, fromItem(item, n, baseByKey.get(key))];
       }
       if (n <= 0) return prev.filter((l) => l.key !== key);
-      return prev.map((l) => (l.key === key ? { ...l, qty: Math.min(n, l.max) } : l));
+      return prev.map((l) => (l.key === key ? { ...l, qty: Math.min(Math.max(n, l.min), l.max) } : l));
     });
   };
 

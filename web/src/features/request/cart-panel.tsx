@@ -69,7 +69,7 @@ function CartRow({
           <Stepper
             className="stepper--sm"
             value={line.qty}
-            min={1}
+            min={line.min}
             max={line.max}
             label={name}
             onChange={onQty}

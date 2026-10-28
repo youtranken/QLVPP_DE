@@ -115,16 +115,37 @@ describe('useCart', () => {
     expect(cart.current.dirtyCount).toBe(1);
   });
 
-  it('món đã ngừng trên phiếu: chỉ giảm/bỏ được, không tăng quá số đang có', () => {
+  it('món đã ngừng trên phiếu: stepper khóa min = max = số đang có, chỉ bỏ được dòng', () => {
     const OLD = memberItem({ id: 'i-old', name: 'Bút xóa cũ', max_qty: 10, active: false });
     const server: RequestView = { ...SERVER, lines: [lineView({ id: 'l-old', item_id: OLD.id, item: { ...OLD }, qty: 3 })] };
     const cart = renderHook(() =>
       useCart(server, { ym: '2026-11', items: new Map([[OLD.id, OLD]]), defaultMax: 20 }),
     ).result;
+    expect(cart.current.lines[0]).toMatchObject({ min: 3, max: 3 });
     act(() => cart.current.setQty(OLD.id, 5));
-    expect(cart.current.lines[0].qty).toBe(3);
     act(() => cart.current.setQty(OLD.id, 2));
-    expect(cart.current.lines[0].qty).toBe(2);
+    expect(cart.current.lines[0].qty).toBe(3);
+    act(() => cart.current.remove(OLD.id));
+    expect(cart.current.toBody().lines).toEqual([]);
+  });
+
+  it('món chuyển sang chỉ Hành chính sau khi lưu: stepper khóa min = max = số đang có', () => {
+    const LOCKED = memberItem({ id: 'i-lock', name: 'Mực in', max_qty: 10, admin_only: true });
+    const server: RequestView = { ...SERVER, lines: [lineView({ id: 'l-lock', item_id: LOCKED.id, item: facts(LOCKED), qty: 4 })] };
+    const cart = renderHook(() =>
+      useCart(server, { ym: '2026-11', items: new Map([[LOCKED.id, LOCKED]]), defaultMax: 20 }),
+    ).result;
+    expect(cart.current.lines[0]).toMatchObject({ min: 4, max: 4 });
+  });
+
+  it('món còn bán nhưng SL đã lưu vượt max_qty (max bị hạ): max = SL đã lưu, giảm được, không tăng quá', () => {
+    const server: RequestView = { ...SERVER, lines: [lineView({ id: 'l-pen', item_id: PEN.id, item: facts(PEN), qty: 8 })] };
+    const cart = render(server);
+    expect(cart.current.lines[0]).toMatchObject({ min: 1, max: 8 });
+    act(() => cart.current.setQty(PEN.id, 6));
+    expect(cart.current.lines[0].qty).toBe(6);
+    act(() => cart.current.setQty(PEN.id, 9));
+    expect(cart.current.lines[0].qty).toBe(8);
   });
 
   it('carryOf: bỏ dòng Hành chính thêm và dòng bị từ chối, bỏ id; giỏ mới khởi tạo từ carry đều là dòng mới', () => {

@@ -112,7 +112,7 @@ function planExisting(
   if (input.mode === 'member' && isMemberReadonly(before)) {
     throw lineError('LINE_READONLY', 'Dòng này chỉ xem được.', ref);
   }
-  validateLine(after, ref, input);
+  validateLine(after, ref, input, after.qty <= before.qty);
   if (after.qty < before.delivered_qty + before.cancelled_qty) {
     throw lineError('QTY_BELOW_DELIVERED', 'Ít hơn số đã giao.', ref, {
       delivered: before.delivered_qty,
@@ -164,7 +164,13 @@ function assertNoCustomFields(
   }
 }
 
-function validateLine(line: LineSnap, ref: LineRef, input: PlanInput): void {
+// Dòng đã có không tăng SL: bỏ kiểm max (max có thể bị hạ sau khi lưu); Hành chính còn được sửa món ngừng/admin_only
+function validateLine(
+  line: LineSnap,
+  ref: LineRef,
+  input: PlanInput,
+  notIncreased = false,
+): void {
   const qty: unknown = line.qty;
   if (typeof qty !== 'number' || !Number.isInteger(qty) || qty <= 0) {
     throw lineError('QTY_INVALID', 'Số lượng phải là số nguyên ≥ 1.', ref);
@@ -175,10 +181,8 @@ function validateLine(line: LineSnap, ref: LineRef, input: PlanInput): void {
     if (!item) {
       throw lineError('ITEM_NOT_FOUND', 'Không tìm thấy món.', ref);
     }
-    if (!item.active) throw lineError('ITEM_INACTIVE', 'Món đã ngừng.', ref);
-    if (input.mode === 'member' && item.admin_only) {
-      throw lineError('ADMIN_ONLY_ITEM', 'Món chỉ Hành chính đặt được.', ref);
-    }
+    if (!(notIncreased && input.mode === 'admin'))
+      assertOrderable(item, ref, input.mode);
     max = item.max_qty;
   } else {
     if (!line.custom_name) {
@@ -191,8 +195,15 @@ function validateLine(line: LineSnap, ref: LineRef, input: PlanInput): void {
     if (!line.image_file_id)
       throw lineError('IMAGE_REQUIRED', 'Món ngoài danh mục cần ảnh.', ref);
   }
-  if (qty > max) {
+  if (!notIncreased && qty > max) {
     throw lineError('QTY_EXCEEDS_MAX', `Tối đa ${max}/tháng.`, ref, { max });
+  }
+}
+
+function assertOrderable(item: ItemFacts, ref: LineRef, mode: WriteMode): void {
+  if (!item.active) throw lineError('ITEM_INACTIVE', 'Món đã ngừng.', ref);
+  if (mode === 'member' && item.admin_only) {
+    throw lineError('ADMIN_ONLY_ITEM', 'Món chỉ Hành chính đặt được.', ref);
   }
 }
 

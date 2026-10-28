@@ -134,7 +134,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 | BR-2 | Hạn của kỳ = hết 23:59:59 ngày `registration_last_day` của tháng đó, **chụp vào kỳ lúc kỳ được tạo**; đổi cấu hình không đổi hạn kỳ đã tồn tại. Không gia hạn, không ngoại lệ. |
 | BR-3 | Một người một phiếu mỗi kỳ. |
 | BR-4 | Member chỉ sửa phiếu của mình và chỉ khi kỳ còn mở. |
-| BR-5 | `1 ≤ qty ≤ max_qty` của món (dòng ngoài danh mục: `default_max_qty`); member không chạm món `admin_only` hay món đã ngừng; dòng `admin_only`/`converted`/đã giao trong phiếu được giữ nguyên khi member lưu. |
+| BR-5 | `1 ≤ qty ≤ max_qty` của món (dòng ngoài danh mục: `default_max_qty`) khi thêm hoặc tăng; dòng đã lưu được giảm dù `max_qty` sau đó bị hạ; member không chạm món `admin_only` hay món đã ngừng (dòng đã lưu của món đó chỉ giữ nguyên hoặc bỏ), Hành chính được giảm; dòng `admin_only`/`converted`/đã giao trong phiếu được giữ nguyên khi member lưu. |
 | BR-6 | Admin sửa phiếu đã có mọi lúc; sau hạn phải có lý do; mọi thay đổi (sửa, thêm, bớt dòng, đổi phòng ban) ghi nhật ký cũ/mới. |
 | BR-7 | Không tạo phiếu mới cho một kỳ đã khóa. |
 | BR-8 | `0 ≤ delivered_qty ≤ qty`; mỗi đợt giao là một biến động kho âm, mỗi hoàn tác là biến động dương có lý do; tồn không âm; không giảm `qty` dưới `delivered_qty`. |

@@ -52,9 +52,12 @@ function Lines({ a, view }: { a: Adjust; view: AdminRequestView }) {
   const me = useMe();
   const items = useAdminItems();
   const byId = useMemo(() => new Map((items.data ?? []).map((i) => [i.id, i])), [items.data]);
-  // Chưa tải danh mục thì chưa biết giới hạn → giữ nguyên số hiện có
-  const maxOf = (l: { item_id: string | null; qty: number }) =>
-    Math.max(l.qty, l.item_id ? (byId.get(l.item_id)?.max_qty ?? l.qty) : me.config.default_max_qty);
+  // Server cho giảm dòng đã có bất kể max/ngừng; chỉ tăng khi món còn bán và dưới max. Chưa tải danh mục → giữ số hiện có
+  const maxOf = (l: { item_id: string | null; qty: number }) => {
+    if (!l.item_id) return Math.max(l.qty, me.config.default_max_qty);
+    const item = byId.get(l.item_id);
+    return item?.active ? Math.max(l.qty, item.max_qty) : l.qty;
+  };
   const nameOf = (l: LineView) => (l.item ? fmt.name(l.item) : (l.custom_name ?? ''));
   const qtyProps = (l: LineView) => ({
     name: nameOf(l),

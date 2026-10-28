@@ -51,7 +51,7 @@ export function ItemCard({
           {t(line.added_by_admin ? 'request.grid.adminAdded' : 'request.grid.locked', { qty })}
         </div>
       ) : (
-        <Stepper value={qty} max={item.max_qty} label={name} onChange={onQty} />
+        <Stepper value={qty} max={line?.max ?? item.max_qty} label={name} onChange={onQty} />
       )}
     </article>
   );

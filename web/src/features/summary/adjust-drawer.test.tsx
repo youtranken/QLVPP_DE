@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, renderWithI18n, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { makeMe } from '@/test/fixtures-me';
+import { lineView } from '@/test/fixtures-request';
 import { MeContext } from '@/lib/me';
 import { ConfirmProvider } from '@/ui/confirm-provider';
 import { reviewResult } from '@/features/review/review-fixtures';
@@ -255,3 +256,27 @@ describe('AdjustDrawer — ngăn điều chỉnh phiếu', () => {
     expect(within(drawer).queryByText('Nhân viên vừa sửa phiếu này — dữ liệu đã được tải lại')).toBeNull();
   });
 });
+
+describe('AdjustDrawer — giới hạn số lượng dòng đã có', () => {
+  it('món đã ngừng: chỉ giảm (Thêm vô hiệu, Bớt bấm được); SL vượt max_qty: chỉ giảm', async () => {
+    const old = { name: 'Giấy cũ', name_en: null, unit: 'cai', pack_note: null, image_file_id: null, active: false, admin_only: false };
+    const clip = { ...old, name: 'Kẹp giấy 33 mm', unit: 'hop', active: true };
+    stub({
+      views: [
+        adminRequest({
+          lines: [
+            ...adminRequest().lines,
+            lineView({ id: 'l-old', item_id: 'i-old', item: old, qty: 5 }),
+            lineView({ id: 'l-clip', item_id: 'i-clip', item: clip, qty: 12 }),
+          ],
+        }),
+      ],
+    });
+    const { drawer } = await renderDrawer();
+    for (const name of ['Giấy cũ', 'Kẹp giấy 33 mm']) {
+      expect(within(drawer).getByRole('button', { name: `Thêm Số lượng ${name}` })).toBeDisabled();
+      expect(within(drawer).getByRole('button', { name: `Bớt Số lượng ${name}` })).toBeEnabled();
+    }
+  });
+});
+

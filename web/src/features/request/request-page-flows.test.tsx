@@ -231,3 +231,28 @@ describe('RequestPage — kỳ trước đang giao, rời trang', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 });
+
+describe('RequestPage — dòng món đã ngừng', () => {
+  it('món đã ngừng trên phiếu đã lưu: nút Bớt/Thêm trong giỏ vô hiệu, nút Bỏ vẫn bấm được', async () => {
+    mockViewport(1280);
+    stubRequestApi({
+      request: view({ lines: [lineView({ id: 'l-pen', item_id: PEN.id, item: { ...facts(PEN), active: false }, qty: 3 })] }),
+    });
+    renderApp(makeMe('member'), '/');
+    const line = within(await screen.findByRole('complementary', { name: 'Phiếu của tôi' }))
+      .getByText('Bút bi xanh')
+      .closest('li')!;
+    expect(within(line).getByRole('button', { name: 'Bớt Bút bi xanh' })).toBeDisabled();
+    expect(within(line).getByRole('button', { name: 'Thêm Bút bi xanh' })).toBeDisabled();
+    expect(within(line).getByRole('button', { name: 'Bỏ Bút bi xanh' })).toBeEnabled();
+  });
+
+  it('SL đã lưu vượt max_qty mới (max bị hạ): bấm Bớt trên thẻ lưới giảm 1 (12 → 11), không nhảy về max', async () => {
+    mockViewport(1280);
+    stubRequestApi({ request: view({ lines: [lineView({ id: 'l-note', item_id: NOTE.id, item: facts(NOTE), qty: 12 })] }) });
+    renderApp(makeMe('member'), '/');
+    const card = (await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Giấy note vàng')).closest('article')!;
+    await userEvent.click(within(card).getByRole('button', { name: 'Bớt Giấy note vàng' }));
+    expect(within(card).getByRole('spinbutton', { name: 'Giấy note vàng' })).toHaveValue(11);
+  });
+});
