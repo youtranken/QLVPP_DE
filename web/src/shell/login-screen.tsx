@@ -10,7 +10,9 @@ function isForbiddenEntry(): boolean {
   return pathname === '/forbidden' || new URLSearchParams(search).get('login') === 'forbidden';
 }
 
-export function LoginScreen({ sessionExpired = false }: { sessionExpired?: boolean }) {
+type Props = { sessionExpired?: boolean; ssoDown?: boolean };
+
+export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) {
   const { t } = useTranslation();
   const [hintOpen, setHintOpen] = useState(false);
   const [saOpen, setSaOpen] = useState(false);
@@ -41,6 +43,11 @@ export function LoginScreen({ sessionExpired = false }: { sessionExpired?: boole
             <h2>{t('auth.heading')}</h2>
             <LanguageSwitch className="seg--sm" />
           </div>
+          {ssoDown && (
+            <p role="alert" className="alert alert--warn">
+              {t('auth.ssoUnavailable')}
+            </p>
+          )}
           {sessionExpired && (
             <p role="alert" className="alert alert--warn">
               {t('auth.sessionExpired')}

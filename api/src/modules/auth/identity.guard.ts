@@ -3,13 +3,14 @@ import {
   ExecutionContext,
   Injectable,
   Logger,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Response } from 'express';
 import { isDevAuthActive } from './auth-env';
 import { SessionAuthService } from './session-auth.service';
-import type { AuthedRequest } from './identity.types';
+import type { AuthedRequest, RequestIdentity } from './identity.types';
 import { IS_PUBLIC_KEY } from './public.decorator';
 
 export const DEV_SUB_HEADER = 'x-dev-user-sub';
@@ -64,12 +65,13 @@ export class IdentityGuard implements CanActivate {
       response.clearCookie(SESSION_COOKIE);
     }
     if (sessionId) {
-      const identity = await this.sessionAuth.resolve(sessionId);
+      const identity = await this.resolveSession(sessionId, isPublic);
       if (identity) {
         request.user = identity;
         return true;
       }
-      response.clearCookie(SESSION_COOKIE);
+      // undefined = PMH ID không tới được: giữ cookie để phiên SSO sống lại khi IdP về
+      if (identity === null) response.clearCookie(SESSION_COOKIE);
     }
 
     if (isPublic) {
@@ -79,5 +81,20 @@ export class IdentityGuard implements CanActivate {
       code: 'UNAUTHENTICATED',
       message: 'Chưa đăng nhập hoặc phiên đã hết hạn — vui lòng đăng nhập lại.',
     });
+  }
+
+  // PMH ID sập: route @Public (sa-login, public-config) phải chạy ẩn danh — SA break-glass là lối vào duy nhất
+  private async resolveSession(
+    sessionId: string,
+    isPublic: boolean | undefined,
+  ): Promise<RequestIdentity | null | undefined> {
+    try {
+      return await this.sessionAuth.resolve(sessionId);
+    } catch (error) {
+      if (isPublic && error instanceof ServiceUnavailableException) {
+        return undefined;
+      }
+      throw error;
+    }
   }
 }

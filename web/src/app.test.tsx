@@ -4,6 +4,7 @@ import type { ComponentType } from 'react';
 import { renderWithI18n, screen, jsonResponse } from '@/test/test-utils';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
+import userEvent from '@testing-library/user-event';
 
 vi.mock('@/lib/navigate', () => ({ navigateTo: vi.fn() }));
 
@@ -108,5 +109,20 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(500, {})));
     renderWithI18n(<App />);
     expect(await screen.findByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
+  });
+
+  it('/api/auth/me 503 SSO_UNAVAILABLE → màn đăng nhập kèm báo PMH ID không liên lạc được, mở được form SA', async () => {
+    sessionStorage.setItem('vpp.auth.mode', 'sso');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(503, { code: 'SSO_UNAVAILABLE' })));
+    renderWithI18n(<App />);
+    expect(
+      await screen.findByText(
+        'PMH ID tạm thời không liên lạc được. Quản trị kỹ thuật có thể đăng nhập bằng tài khoản nội bộ.',
+      ),
+    ).toBeInTheDocument();
+    expect(navigateTo).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Dành cho IT' }));
+    expect(screen.getByLabelText('Tên tài khoản')).toBeInTheDocument();
+    expect(screen.getByLabelText('Mật khẩu')).toBeInTheDocument();
   });
 });

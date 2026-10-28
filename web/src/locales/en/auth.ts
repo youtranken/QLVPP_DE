@@ -22,6 +22,7 @@ const auth: Messages<typeof vi> = {
     saLocked: 'Temporarily locked after too many failed attempts — try again in 15 minutes.',
     saError: 'Could not sign in — try again in a few minutes.',
     loginFailed: 'Sign-in did not complete — press sign in to try again.',
+    ssoUnavailable: 'PMH ID is temporarily unreachable. Technical administrators can sign in with the internal account.',
     sessionExpired: 'Your session has expired — sign in again to continue.',
     ssoRedirecting: 'Redirecting to PMH ID…',
     ssoManual: 'Not redirected? Click here.',

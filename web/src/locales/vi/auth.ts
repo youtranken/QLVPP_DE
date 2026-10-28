@@ -19,6 +19,7 @@ const auth = {
     saLocked: 'Tạm khóa do nhập sai nhiều lần — thử lại sau 15 phút.',
     saError: 'Không đăng nhập được — thử lại sau ít phút.',
     loginFailed: 'Đăng nhập chưa thành công — bấm đăng nhập để thử lại.',
+    ssoUnavailable: 'PMH ID tạm thời không liên lạc được. Quản trị kỹ thuật có thể đăng nhập bằng tài khoản nội bộ.',
     sessionExpired: 'Phiên đã hết hạn — đăng nhập lại để tiếp tục.',
     ssoRedirecting: 'Đang chuyển sang PMH ID…',
     ssoManual: 'Không tự chuyển? Bấm vào đây.',

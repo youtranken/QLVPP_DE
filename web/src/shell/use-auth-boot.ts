@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { ApiError } from '@/lib/api-client';
+import { apiErrorCode } from '@/lib/api-error';
 import type { Me } from '@/lib/me';
 import { cameFromPortal } from '@/lib/pmh-portal';
 import { navigateTo } from '@/lib/navigate';
@@ -15,7 +17,7 @@ import {
 
 export type AuthState =
   | { kind: 'loading' }
-  | { kind: 'anonymous'; expired: boolean }
+  | { kind: 'anonymous'; expired: boolean; ssoDown?: boolean }
   | { kind: 'redirecting' }
   | { kind: 'authenticated'; me: Me }
   | { kind: 'error' };
@@ -55,6 +57,13 @@ function onUnauthenticated(): AuthState | null {
   return { kind: 'anonymous', expired };
 }
 
+// PMH ID sập mà còn phiên SSO: "Thử lại" vô ích — phải mở được lối SA break-glass
+async function isSsoUnavailable(res: Response): Promise<boolean> {
+  if (res.status !== 503) return false;
+  const body: unknown = await res.json().catch(() => null);
+  return apiErrorCode(new ApiError(res.status, body)) === 'SSO_UNAVAILABLE';
+}
+
 export function useAuthBoot(): AuthState {
   const [state, setState] = useState<AuthState>({ kind: 'loading' });
   useEffect(() => {
@@ -63,6 +72,7 @@ export function useAuthBoot(): AuthState {
       .then(async (res): Promise<AuthState | null> => {
         if (res.ok) return onAuthenticated((await res.json()) as Me);
         if (res.status === 401) return onUnauthenticated();
+        if (await isSsoUnavailable(res)) return { kind: 'anonymous', expired: false, ssoDown: true };
         return { kind: 'error' };
       })
       .catch((): AuthState => ({ kind: 'error' }))

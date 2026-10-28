@@ -13,7 +13,7 @@ export default function App() {
   if (auth.kind === 'loading') return <EntryLoading />;
   if (auth.kind === 'error') return <EntryError onRetry={() => window.location.reload()} />;
   if (auth.kind === 'redirecting') return <SsoRedirecting href={SSO_LOGIN_URL} />;
-  if (auth.kind === 'anonymous') return <LoginScreen sessionExpired={auth.expired} />;
+  if (auth.kind === 'anonymous') return <LoginScreen sessionExpired={auth.expired} ssoDown={auth.ssoDown} />;
 
   return (
     <MeContext.Provider value={auth.me}>
