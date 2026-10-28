@@ -87,7 +87,7 @@ export class RequestLinesWriter {
     const head = await this.lockHead(tx, args, owner.department);
     const existing = await repo.lockLines(tx, head.id);
     const plan = await this.plan(tx, existing, args);
-    await this.assertImagesOwned(plan, args.actor.sub);
+    await this.assertImagesOwned(tx, plan, args);
     const diff = await this.apply(tx, head.id, plan, args);
     if (!head.inserted && isEmpty(diff)) return { request_id: head.id, diff };
 
@@ -169,10 +169,21 @@ export class RequestLinesWriter {
     if (!open && !args.body.reason) throw reasonRequired();
   }
 
-  private async assertImagesOwned(plan: LinesPlan, sub: string): Promise<void> {
+  // Ảnh hợp lệ: người lưu tự tải, hoặc đã nằm trên dòng của chủ phiếu (chép lại dòng có ảnh Hành chính thay)
+  private async assertImagesOwned(
+    tx: Tx,
+    plan: LinesPlan,
+    args: SaveArgs,
+  ): Promise<void> {
+    const reusable = await repo.imagesOnOwnerLines(
+      tx,
+      [...new Set(plan.images.map((i) => i.fileId))],
+      args.owner_sub,
+    );
     for (const { fileId, ref } of plan.images) {
+      if (reusable.has(fileId)) continue;
       try {
-        await this.files.assertOwnedBy(fileId, sub, 'line_image');
+        await this.files.assertOwnedBy(fileId, args.actor.sub, 'line_image');
       } catch (error) {
         if (!(error instanceof HttpException)) throw error;
         throw lineError(

@@ -11,7 +11,7 @@ import {
 import { parseYm } from '../../common/ym';
 import { CurrentIdentity } from '../auth/current-identity.decorator';
 import type { RequestIdentity } from '../auth/identity.types';
-import { PageQuery } from '../catalog/stock.dto';
+import { PageQuery } from '../../common/page.query';
 import { CopyPreviousService } from './copy-previous.service';
 import { HistoryService } from './history.service';
 import { MeRequestService } from './me-request.service';

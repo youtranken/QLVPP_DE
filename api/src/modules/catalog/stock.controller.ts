@@ -4,7 +4,8 @@ import type { RequestIdentity } from '../auth/identity.types';
 import { Roles } from '../auth/roles.decorator';
 import { uuidParam } from './catalog.dto';
 import { YmPipe } from '../../common/ym';
-import { IssueDto, PageQuery, StockChangeDto } from './stock.dto';
+import { PageQuery } from '../../common/page.query';
+import { IssueDto, StockChangeDto } from './stock.dto';
 import { StockQueryService } from './stock-query.service';
 import { StockService } from './stock.service';
 

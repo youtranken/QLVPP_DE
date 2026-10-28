@@ -57,7 +57,7 @@ export function buildCopy(
 
   for (const line of lines) {
     const item = line.item_id ? items.get(line.item_id) : undefined;
-    const name = line.custom_name ?? item?.name ?? '';
+    const name = (line.item_id ? item?.name : line.custom_name) ?? '';
     const reason = skipReason(line, item);
     if (reason) {
       out.skipped.push({ name, reason });

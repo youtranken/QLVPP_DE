@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 import { decodeCursor, encodeCursor, invalidCursor } from '../../common/cursor';
 import { ymToDate } from '../../common/period';
 import { DRIZZLE_DB } from '../../database/database.module';
@@ -28,6 +29,9 @@ type HistoryRow = Omit<HistoryItem, 'custom'> & {
 };
 
 const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
+// Chỉ dòng hiệu lực → total = delivered + cancelled + remaining; pending/rejected đếm riêng ở custom
+const effective = (expr: SQL) =>
+  sql`coalesce(sum(${expr}) FILTER (WHERE l.review_status IN ('n/a', 'accepted', 'converted')), 0)::int`;
 const count = (status: string) =>
   sql`count(*) FILTER (WHERE l.review_status = ${status})::int`;
 
@@ -47,12 +51,10 @@ export class HistoryService {
     >(sql`
       SELECT to_char(r.period_ym, 'YYYY-MM') AS period_ym,
              count(l.id)::int AS line_count,
-             coalesce(sum(l.qty), 0)::int AS total_qty,
-             coalesce(sum(l.delivered_qty), 0)::int AS delivered_qty,
-             coalesce(sum(l.cancelled_qty), 0)::int AS cancelled_qty,
-             coalesce(sum(l.qty - l.delivered_qty - l.cancelled_qty)
-               FILTER (WHERE l.review_status IN ('n/a', 'accepted', 'converted')), 0)::int
-               AS remaining_qty,
+             ${effective(sql`l.qty`)} AS total_qty,
+             ${effective(sql`l.delivered_qty`)} AS delivered_qty,
+             ${effective(sql`l.cancelled_qty`)} AS cancelled_qty,
+             ${effective(sql`l.qty - l.delivered_qty - l.cancelled_qty`)} AS remaining_qty,
              ${count('pending')} AS pending, ${count('accepted')} AS accepted,
              ${count('converted')} AS converted, ${count('rejected')} AS rejected
       FROM requests r LEFT JOIN request_lines l ON l.request_id = r.id

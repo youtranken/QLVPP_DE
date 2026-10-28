@@ -25,8 +25,20 @@ interface SeedLine {
 }
 
 describe('me/request/copy-previous và me/requests (lịch sử)', () => {
-  const { A, B, http, as, newItem, save, view, requestsOf, pool, imgA } =
-    meRequestFixture('history');
+  const {
+    A,
+    B,
+    ADMIN,
+    http,
+    as,
+    upload,
+    newItem,
+    save,
+    view,
+    requestsOf,
+    pool,
+    imgA,
+  } = meRequestFixture('history');
 
   beforeAll(async () => {
     // Kỳ quá khứ đã khóa; ghi đè hạn chuẩn để kỳ đang mở vẫn là 2026-11
@@ -109,7 +121,17 @@ describe('me/request/copy-previous và me/requests (lịch sử)', () => {
       await pool().query('UPDATE items SET max_qty = 5 WHERE id = $1', [
         capped,
       ]);
-      const before = (await requestsOf(A)).length;
+      const footprint = async () =>
+        (
+          await pool().query<{ r: number; l: number; a: number }>(
+            `SELECT (SELECT count(*)::int FROM requests WHERE user_sub = $1) AS r,
+                    (SELECT count(*)::int FROM request_lines l JOIN requests q ON q.id = l.request_id
+                      WHERE q.user_sub = $1) AS l,
+                    (SELECT count(*)::int FROM audit_log WHERE actor = $1) AS a`,
+            [A],
+          )
+        ).rows[0];
+      const before = await footprint();
 
       const res = await copy().expect(200);
       const body = res.body as {
@@ -138,7 +160,7 @@ describe('me/request/copy-previous và me/requests (lịch sử)', () => {
       ]);
       expect(body.capped).toMatchObject([{ from: 10, to: 5 }]);
       expect(body.previously_accepted).toEqual(['Bìa còng xanh']);
-      expect(await requestsOf(A)).toHaveLength(before);
+      expect(await footprint()).toEqual(before);
 
       // Giỏ đề xuất phải lưu được nguyên trạng (ảnh cũ cùng chủ, qty đã hạ)
       const saved = view(await save(body.lines).expect(200));
@@ -147,6 +169,33 @@ describe('me/request/copy-previous và me/requests (lịch sử)', () => {
         'n/a',
         'pending',
       ]);
+    });
+
+    it('ảnh dòng do Hành chính thay (admin tải) → A chép rồi lưu nguyên giỏ 200; B dùng ảnh đó → FILE_FORBIDDEN', async () => {
+      const adminImg = await upload(ADMIN, 'line_image', 'admin');
+      await seed(A, '2026-10', [
+        { custom_name: 'Bìa admin sửa', image_file_id: adminImg, qty: 1 },
+      ]);
+      const body = (await copy().expect(200)).body as {
+        lines: Record<string, unknown>[];
+      };
+      expect(body.lines).toMatchObject([{ image_file_id: adminImg }]);
+      await save(body.lines).expect(200);
+
+      const res = await save(
+        [
+          {
+            custom_name: 'Lấy ảnh',
+            custom_unit: 'cai',
+            image_file_id: adminImg,
+            qty: 1,
+          },
+        ],
+        {},
+        B,
+      ).expect(403);
+      expect(res.body).toMatchObject({ code: 'FILE_FORBIDDEN', line_index: 0 });
+      expect(await requestsOf(B)).toHaveLength(0);
     });
 
     it('người khác có phiếu kỳ trước không ảnh hưởng: B vẫn 404', async () => {
@@ -193,10 +242,10 @@ describe('me/request/copy-previous và me/requests (lịch sử)', () => {
         {
           period_ym: '2026-10',
           line_count: 5,
-          total_qty: 27,
+          // chỉ dòng hiệu lực (n/a, accepted, converted): 10 + 3 + 2; pending/rejected nằm ở custom
+          total_qty: 15,
           delivered_qty: 6,
           cancelled_qty: 1,
-          // hiệu lực: (10-4-1) + 3 + (2-2); pending/rejected không tính nợ
           remaining_qty: 8,
           custom: { pending: 1, accepted: 1, converted: 1, rejected: 1 },
         },
@@ -210,6 +259,12 @@ describe('me/request/copy-previous và me/requests (lịch sử)', () => {
           custom: { pending: 0, accepted: 0, converted: 0, rejected: 0 },
         },
       ]);
+
+      for (const i of page.items) {
+        expect(i.total_qty).toBe(
+          i.delivered_qty + i.cancelled_qty + i.remaining_qty,
+        );
+      }
 
       const other = (await history('', B).expect(200)).body as HistoryPage;
       expect(other).toEqual({ items: [], next_cursor: null });

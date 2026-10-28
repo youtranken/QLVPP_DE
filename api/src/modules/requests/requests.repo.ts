@@ -191,3 +191,20 @@ export async function findLatestBefore(
   `);
   return rows[0] ?? null;
 }
+
+// Ảnh line_image đã gắn vào dòng nào đó của chính chủ phiếu (kể cả ảnh Hành chính thay) → chủ phiếu dùng lại được
+export async function imagesOnOwnerLines(
+  ex: Executor,
+  fileIds: string[],
+  ownerSub: string,
+): Promise<Set<string>> {
+  if (fileIds.length === 0) return new Set();
+  const { rows } = await ex.execute<{ id: string }>(sql`
+    SELECT DISTINCT f.id FROM files f
+    JOIN request_lines l ON l.image_file_id = f.id
+    JOIN requests r ON r.id = l.request_id
+    WHERE f.id = ANY(${sql.param(fileIds)}::uuid[])
+      AND f.purpose = 'line_image' AND r.user_sub = ${ownerSub}
+  `);
+  return new Set(rows.map((r) => r.id));
+}
