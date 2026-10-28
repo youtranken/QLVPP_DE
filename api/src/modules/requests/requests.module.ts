@@ -6,6 +6,8 @@ import { FileAccessPolicy } from '../files/file-access.policy';
 import { FilesModule } from '../files/files.module';
 import { PeriodsModule } from '../periods/periods.module';
 import { UsersModule } from '../users/users.module';
+import { CopyPreviousService } from './copy-previous.service';
+import { HistoryService } from './history.service';
 import { LINE_IMAGE_REFERENCE } from './line-image.reference';
 import { MeRequestController } from './me-request.controller';
 import { MeRequestService } from './me-request.service';
@@ -26,6 +28,8 @@ import { RequestViewBuilder } from './request-view';
     RequestLinesWriter,
     RequestViewBuilder,
     MeRequestService,
+    CopyPreviousService,
+    HistoryService,
     RequestItemUsageHook,
   ],
   exports: [RequestLinesWriter, RequestViewBuilder],

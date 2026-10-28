@@ -177,3 +177,17 @@ export async function hasItemLines(
   `);
   return rows.length > 0;
 }
+
+// Nguồn chép lại: phiếu gần nhất trước kỳ đang mở (bỏ qua tháng trống)
+export async function findLatestBefore(
+  ex: Executor,
+  userSub: string,
+  ym: string,
+): Promise<{ id: string; period_ym: string } | null> {
+  const { rows } = await ex.execute<{ id: string; period_ym: string }>(sql`
+    SELECT id, to_char(period_ym, 'YYYY-MM') AS period_ym FROM requests
+    WHERE user_sub = ${userSub} AND period_ym < ${ymToDate(ym)}::date
+    ORDER BY period_ym DESC LIMIT 1
+  `);
+  return rows[0] ?? null;
+}
