@@ -32,6 +32,8 @@ const review: Messages<typeof vi> = {
       accept: 'Accept',
       convert: 'Add to catalog…',
       reject: 'Reject…',
+      named: '{{action}} — {{name}}',
+      unitMismatch: 'The catalog item uses a different unit than the original line — check quantity {{qty}}.',
     },
     status: {
       accepted: 'Accepted',

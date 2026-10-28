@@ -61,18 +61,19 @@ const sentBody = (f: ReturnType<typeof stub>) => {
   return JSON.parse(String(call[1].body));
 };
 
-async function openConvert() {
+async function openConvert(line: ReviewableLine = LINE) {
   const onDone = vi.fn();
   renderWithI18n(
     <MeContext.Provider value={makeMe('admin')}>
       <ConfirmProvider>
-        <ReviewActions line={LINE} onDone={onDone} />
+        <ReviewActions line={line} onDone={onDone} />
       </ConfirmProvider>
     </MeContext.Provider>,
   );
-  await userEvent.click(screen.getByRole('button', { name: 'Thêm vào danh mục…' }));
-  const dialog = screen.getByRole('dialog', { name: 'Thêm “Băng keo 2 mặt” vào danh mục' });
-  await within(dialog).findByRole('option', { name: 'Văn phòng' });
+  await userEvent.click(screen.getByRole('button', { name: `Thêm vào danh mục… — ${line.custom_name}` }));
+  const dialog = screen.getByRole('dialog', { name: `Thêm “${line.custom_name}” vào danh mục` });
+  // Hộp đã tải xong khi ô chọn (nhóm ở món mới, món ở món có sẵn) có lựa chọn
+  await within(dialog).findByRole('option', { name: /^(Văn phòng|Bút bi)/ });
   return { dialog, onDone };
 }
 
@@ -139,5 +140,36 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
     expect(await within(dialog).findByText('Món này đã ngừng — chọn món khác.')).toBeInTheDocument();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('đoán được món đang dùng cùng tên → mặc định "Món có sẵn" đã chọn món đó', async () => {
+    const fetchMock = stub();
+    const { dialog, onDone } = await openConvert({ ...LINE, custom_name: 'bút BI' });
+    await waitFor(() => expect(within(dialog).getByRole('radio', { name: 'Món có sẵn' })).toBeChecked());
+    expect(within(dialog).getByLabelText('Món trong danh mục')).toHaveValue('i-3');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect(sentBody(fetchMock)).toEqual({ action: 'convert', item: { existing_id: 'i-3' } });
+  });
+
+  it('ITEM_NOT_FOUND ở chế độ món có sẵn → tải lại danh sách món để bỏ món vừa mất', async () => {
+    const fetchMock = stub(() => jsonResponse(400, { code: 'ITEM_NOT_FOUND' }));
+    const { dialog } = await openConvert();
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
+    await userEvent.selectOptions(within(dialog).getByLabelText('Món trong danh mục'), 'i-3');
+    const itemLoads = () => fetchMock.mock.calls.filter((c) => c[0] === '/api/admin/items').length;
+    const before = itemLoads();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    expect(await within(dialog).findByText('Món này không còn trong danh mục — chọn món khác.')).toBeInTheDocument();
+    await waitFor(() => expect(itemLoads()).toBe(before + 1));
+  });
+
+  it('server báo unit_mismatch → sau khi thêm, khối báo ĐVT đã đổi để kiểm lại số lượng', async () => {
+    stub(() => jsonResponse(200, reviewResult('converted', { item_id: 'i-2' }, { unit_mismatch: true })));
+    const { dialog } = await openConvert();
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
+    await userEvent.selectOptions(within(dialog).getByLabelText('Món trong danh mục'), 'i-2');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    expect(await screen.findByText('ĐVT của món trong danh mục khác dòng gốc — kiểm lại số lượng 2.')).toBeInTheDocument();
   });
 });

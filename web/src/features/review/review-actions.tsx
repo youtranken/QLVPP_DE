@@ -39,6 +39,8 @@ export function ReviewActions({ line, onDone, onStale }: {
   const name = line.custom_name ?? '';
   const status = result?.line.review_status ?? line.review_status;
   const note = result ? result.line.review_note : line.review_note;
+  // Nhiều dòng ngoài DM cùng ngăn: tên nút kèm tên dòng để trình đọc màn hình phân biệt
+  const named = (action: string) => t('review.actions.named', { action: t(`review.actions.${action}`), name });
 
   // Lỗi khác "dòng đã đổi" ném lại để hộp đang mở gắn vào ô
   const send = async (body: ReviewBody) => {
@@ -76,17 +78,27 @@ export function ReviewActions({ line, onDone, onStale }: {
           {notice}
         </p>
       )}
+      {result?.unit_mismatch && (
+        <p role="status" className="alert alert--warn">
+          {t('review.actions.unitMismatch', { qty: result.line.qty })}
+        </p>
+      )}
       {status !== 'pending' ? (
         <ReviewStatusTag status={status} note={note} />
       ) : (
         <div className="rv-buttons">
-          <button type="button" className="btn btn--sm" onClick={() => setOpen('accept')}>
+          <button type="button" className="btn btn--sm" aria-label={named('accept')} onClick={() => setOpen('accept')}>
             {t('review.actions.accept')}
           </button>
-          <button type="button" className="btn btn--sm" onClick={() => setOpen('convert')}>
+          <button type="button" className="btn btn--sm" aria-label={named('convert')} onClick={() => setOpen('convert')}>
             {t('review.actions.convert')}
           </button>
-          <button type="button" className="btn btn--sm btn--danger-ghost" onClick={() => setOpen('reject')}>
+          <button
+            type="button"
+            className="btn btn--sm btn--danger-ghost"
+            aria-label={named('reject')}
+            onClick={() => setOpen('reject')}
+          >
             {t('review.actions.reject')}
           </button>
         </div>

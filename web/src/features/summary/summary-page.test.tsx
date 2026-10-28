@@ -6,6 +6,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { PERIOD } from '@/test/request-api-stub';
 import { SummaryPage } from './summary-page';
+import { ADMIN_ITEMS, adminRequest } from './adjust-fixtures';
 import type { PeriodSummary, PersonRow } from './summary.api';
 
 const OPEN: PeriodSummary = {
@@ -46,6 +47,8 @@ const ITEMS = [{ key: 'i-1', item_id: 'i-1', name: 'Giấy A4', unit: 'ram', req
 function stub(personPage?: (url: string) => Promise<Response> | undefined) {
   const fetchMock = vi.fn((url: string) => {
     if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
+    if (url === '/api/admin/requests/r-2') return Promise.resolve(jsonResponse(200, adminRequest({ id: 'r-2', full_name: 'Võ Thị Lan' })));
+    if (url === '/api/admin/items') return Promise.resolve(jsonResponse(200, ADMIN_ITEMS));
     const m = /^\/api\/admin\/periods\/(\d{4}-\d{2})\/(\w+)/.exec(url);
     if (m?.[2] === 'summary') return Promise.resolve(jsonResponse(200, m[1] === '2026-11' ? OPEN : LOCKED));
     if (m?.[2] === 'requests') {
@@ -158,18 +161,25 @@ describe('SummaryPage — Tổng hợp kỳ', () => {
     expect(screen.getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
   });
 
-  it('nút "Điều chỉnh" gọi onAdjust với request_id', async () => {
+  it('nút "Điều chỉnh" mở ngăn điều chỉnh của đúng phiếu', async () => {
     mockViewport(1280);
-    stub();
-    const onAdjust = vi.fn();
-    renderWithI18n(
-      <MemoryRouter initialEntries={['/admin/summary']}>
-        <SummaryPage onAdjust={onAdjust} />
-      </MemoryRouter>,
-    );
+    const f = stub();
+    renderApp(makeMe('admin'), '/admin/summary');
     const lan = (await screen.findByText('Võ Thị Lan')).closest('tr')!;
     await userEvent.click(within(lan).getByRole('button', { name: 'Điều chỉnh' }));
-    expect(onAdjust).toHaveBeenCalledWith('r-2');
+    await waitFor(() => expect(f.mock.calls.some((c) => c[0] === '/api/admin/requests/r-2')).toBe(true));
+    expect(await screen.findByRole('dialog', { name: 'Phiếu của Võ Thị Lan' })).toHaveClass('drawer');
+  });
+
+  it('"Tạo phiếu hộ" chỉ có ở kỳ đang mở; bấm → hộp tạo hộ', async () => {
+    mockViewport(1280);
+    stub();
+    renderApp(makeMe('admin'), '/admin/summary?ym=2026-10');
+    await screen.findByText('Đã khóa');
+    expect(screen.queryByRole('button', { name: 'Tạo phiếu hộ' })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Tạo phiếu hộ' }));
+    expect(await screen.findByRole('dialog', { name: 'Tạo phiếu hộ — tháng 11/2026' })).toBeInTheDocument();
   });
 
   it.each(['2026-00', '2025-13', '2026-1'])('?ym=%s không phải tháng hợp lệ → về kỳ đang mở, không gọi API kỳ sai', async (bad) => {
@@ -197,10 +207,9 @@ describe('SummaryPage — Tổng hợp kỳ', () => {
     stub((url) =>
       url.includes('filter=pending_delivery') ? new Promise<Response>((res) => (release = res)) : undefined,
     );
-    const onAdjust = vi.fn();
     renderWithI18n(
       <MemoryRouter initialEntries={['/admin/summary']}>
-        <SummaryPage onAdjust={onAdjust} />
+        <SummaryPage />
       </MemoryRouter>,
     );
     const row = (await screen.findByText('Võ Thị Lan')).closest('tr')!;

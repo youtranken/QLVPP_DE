@@ -15,6 +15,7 @@ export function Dialog({
   dismissible = true,
   className = 'sheet',
   overlayClassName = 'modal-backdrop',
+  viewportClassName = 'dialog-viewport',
   maxWidth,
   dirty = false,
   children,
@@ -24,6 +25,7 @@ export function Dialog({
   dismissible?: boolean;
   className?: string;
   overlayClassName?: string;
+  viewportClassName?: string;
   maxWidth?: number;
   // Form đang sửa dở: đóng bằng Esc/bấm nền/✕ phải hỏi "Bỏ thay đổi?" trước
   dirty?: boolean;
@@ -52,7 +54,7 @@ export function Dialog({
     <RD.Root open={open} onOpenChange={handleOpenChange}>
       <RD.Portal>
         <RD.Overlay className={overlayClassName} />
-        <div className="dialog-viewport">
+        <div className={viewportClassName}>
           <RD.Content
             className={className}
             style={maxWidth ? { maxWidth } : undefined}

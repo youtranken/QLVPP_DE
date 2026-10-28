@@ -1,5 +1,6 @@
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import type { LineInputBody, RequestView } from '@/features/request/request.api';
 
 export type SummaryFilter = 'all' | 'pending_delivery' | 'custom_pending';
 
@@ -84,3 +85,53 @@ export function useItemRows(ym: string | undefined) {
 
 export const fetchUnregistered = (ym: string) =>
   apiFetch<{ items: UnregisteredUser[] }>(`${base(ym)}/unregistered`);
+
+export type AdminRequestView = RequestView & { user_status: string };
+
+export const adminRequestKey = (id: string) => ['admin-request', id] as const;
+
+// Ngăn giữ đúng bản đang sửa: không tự tải lại khi quay lại tab (bản mới chỉ đến qua STALE hoặc review)
+export function useAdminRequest(id: string) {
+  return useQuery({
+    queryKey: adminRequestKey(id),
+    queryFn: () => apiFetch<AdminRequestView>(`/api/admin/requests/${id}`),
+    staleTime: Infinity,
+    gcTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+}
+
+export interface AdjustBody {
+  lines: LineInputBody[];
+  expected_updated_at: string;
+  reason?: string;
+}
+
+export const saveAdjust = (id: string, body: AdjustBody, csrfToken: string | null) =>
+  apiFetch<{ request: RequestView | null }>(`/api/admin/requests/${id}/lines`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+    csrfToken,
+  });
+
+export interface CreateOnBehalfBody {
+  user_sub: string;
+  lines: { item_id: string; qty: number }[];
+}
+
+export const createOnBehalf = (body: CreateOnBehalfBody, csrfToken: string | null) =>
+  apiFetch<{ request: RequestView | null }>('/api/admin/requests', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    csrfToken,
+  });
+
+// REQUEST_EXISTS không kèm id phiếu → tìm trong danh sách theo người của kỳ đó
+export async function findRequestOf(ym: string, user: { sub: string; email: string | null; fullName: string | null }) {
+  const params = new URLSearchParams({ by: 'person', filter: 'all', limit: String(PERSON_PAGE) });
+  const q = user.email ?? user.fullName;
+  if (q) params.set('q', q);
+  const page = await apiFetch<{ items: PersonRow[] }>(`${base(ym)}/requests?${params}`);
+  return page.items.find((r) => r.user_sub === user.sub)?.request_id ?? null;
+}

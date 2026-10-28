@@ -10,6 +10,8 @@ import { KpiStrip } from './kpi-strip';
 import { ItemTable } from './item-table';
 import { PersonTable } from './person-table';
 import { UnregisteredCopy } from './unregistered-copy';
+import { AdjustDrawer } from './adjust-drawer';
+import { CreateRequestDialog } from './create-request-dialog';
 import { usePeriodSummary, type PeriodSummary, type SummaryFilter } from './summary.api';
 import '@/features/admin/admin.css';
 import './summary.css';
@@ -18,13 +20,12 @@ type View = 'person' | 'item';
 const VIEWS: View[] = ['person', 'item'];
 // Cùng mẫu với api/src/common/ym.ts: tháng 01–12, giá trị khác rơi về kỳ đang mở
 const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
-const noop = () => {};
-
-function PeriodHead({ ym, openYm, summary, onMonth }: {
+function PeriodHead({ ym, openYm, summary, onMonth, onCreate }: {
   ym: string;
   openYm: string;
   summary: PeriodSummary | undefined;
   onMonth: (ym: string) => void;
+  onCreate: () => void;
 }) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
@@ -47,12 +48,18 @@ function PeriodHead({ ym, openYm, summary, onMonth }: {
         ))}
       <span className="sp" />
       {summary && <UnregisteredCopy ym={ym} deadline={summary.deadline} count={summary.unregistered} />}
+      {/* Tạo hộ luôn vào kỳ đang mở (api) → chỉ mời khi đang xem đúng kỳ đó */}
+      {ym === openYm && (
+        <button type="button" className="btn btn--sm btn--primary" onClick={onCreate}>
+          {t('summary.create.button')}
+        </button>
+      )}
     </div>
   );
 }
 
 // Trang chủ Hành chính; ?ym= giữ tháng đang xem khi tải lại, không vượt kỳ đang mở
-export function SummaryPage({ onAdjust = noop }: { onAdjust?: (requestId: string) => void }) {
+export function SummaryPage() {
   const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const current = useCurrentPeriod();
@@ -64,6 +71,8 @@ export function SummaryPage({ onAdjust = noop }: { onAdjust?: (requestId: string
   const [filter, setFilter] = useState<SummaryFilter>('all');
   const [search, setSearch] = useState('');
   const q = useDebouncedValue(search.trim(), 300);
+  const [adjusting, setAdjusting] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   if (current.isError) return <LoadError onRetry={() => void current.refetch()} />;
   if (!ym || !openYm) return <Loading />;
@@ -75,7 +84,13 @@ export function SummaryPage({ onAdjust = noop }: { onAdjust?: (requestId: string
 
   return (
     <div className="a-stack">
-      <PeriodHead ym={ym} openYm={openYm} summary={summary.data} onMonth={(v) => setParams({ ym: v })} />
+      <PeriodHead
+        ym={ym}
+        openYm={openYm}
+        summary={summary.data}
+        onMonth={(v) => setParams({ ym: v })}
+        onCreate={() => setCreating(true)}
+      />
       {summary.isError && <LoadError onRetry={() => void summary.refetch()} />}
       {summary.data && <KpiStrip summary={summary.data} filter={filter} onFilter={pickFilter} />}
       <section className="a-panel">
@@ -107,8 +122,20 @@ export function SummaryPage({ onAdjust = noop }: { onAdjust?: (requestId: string
             </span>
           )}
         </div>
-        {view === 'person' ? <PersonTable ym={ym} filter={filter} q={q} onAdjust={onAdjust} /> : <ItemTable ym={ym} />}
+        {view === 'person' ? <PersonTable ym={ym} filter={filter} q={q} onAdjust={setAdjusting} /> : <ItemTable ym={ym} />}
       </section>
+      {adjusting && <AdjustDrawer key={adjusting} requestId={adjusting} onClose={() => setAdjusting(null)} />}
+      {creating && (
+        <CreateRequestDialog
+          ym={ym}
+          onClose={() => setCreating(false)}
+          onCreated={() => setCreating(false)}
+          onOpenExisting={(id) => {
+            setCreating(false);
+            setAdjusting(id);
+          }}
+        />
+      )}
     </div>
   );
 }

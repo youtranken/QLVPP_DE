@@ -19,3 +19,8 @@ export function apiErrorNumber(e: unknown, key: string): number | undefined {
   const value = bodyOf(e)?.[key];
   return typeof value === 'number' ? value : undefined;
 }
+
+export function apiErrorString(e: unknown, key: string): string | undefined {
+  const value = bodyOf(e)?.[key];
+  return typeof value === 'string' ? value : undefined;
+}

@@ -29,6 +29,8 @@ const review = {
       accept: 'Chấp nhận',
       convert: 'Thêm vào danh mục…',
       reject: 'Từ chối…',
+      named: '{{action}} — {{name}}',
+      unitMismatch: 'ĐVT của món trong danh mục khác dòng gốc — kiểm lại số lượng {{qty}}.',
     },
     status: {
       accepted: 'Đã chấp nhận',

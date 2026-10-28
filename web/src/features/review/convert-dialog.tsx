@@ -67,7 +67,7 @@ export function ConvertDialog({ line, onSubmit, onClose }: {
     }),
     [line, me.config.default_max_qty],
   );
-  const [mode, setMode] = useState<Mode>('new');
+  const [pickedMode, setMode] = useState<Mode | null>(null);
   const [draft, setDraft] = useState(initial);
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -78,12 +78,14 @@ export function ConvertDialog({ line, onSubmit, onClose }: {
     () => (items.data ?? []).filter((i) => i.active).sort((a, b) => a.name.localeCompare(b.name, i18n.language)),
     [items.data, i18n.language],
   );
-  // Đoán món có sẵn cùng tên; admin vẫn tự chọn lại được
-  const existingId = pickedId ?? active.find((i) => normalized(i.name) === normalized(line.custom_name))?.id ?? '';
+  // Đoán món có sẵn cùng tên → mặc định gắn vào món đó; admin vẫn tự chọn lại được
+  const guessed = active.find((i) => normalized(i.name) === normalized(line.custom_name))?.id;
+  const mode: Mode = pickedMode ?? (guessed ? 'existing' : 'new');
+  const existingId = pickedId ?? guessed ?? '';
   const chosen = active.find((i) => i.id === existingId);
   const targetUnit = mode === 'new' ? draft.unit : chosen?.unit;
   const unitMismatch = !!targetUnit && !!line.custom_unit && targetUnit !== line.custom_unit;
-  const dirty = mode !== 'new' || pickedId !== null || JSON.stringify(draft) !== JSON.stringify(initial);
+  const dirty = pickedMode !== null || pickedId !== null || JSON.stringify(draft) !== JSON.stringify(initial);
   const canSubmit = !saving && !uploading && (mode === 'existing' ? !!chosen : draft.image_file_id !== null);
 
   const set = <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => {
@@ -100,6 +102,9 @@ export function ConvertDialog({ line, onSubmit, onClose }: {
     try {
       await onSubmit(mode === 'existing' ? { existing_id: existingId } : newItemOf(draft, line.image_file_id));
     } catch (err) {
+      const code = apiErrorCode(err);
+      // Món vừa bị ngừng/xóa ở nơi khác: tải lại để ô chọn bỏ món đó đi
+      if (mode === 'existing' && (code === 'ITEM_INACTIVE' || code === 'ITEM_NOT_FOUND')) void items.refetch();
       setErrors(serverErrors(err, mode));
       setSaving(false);
     }

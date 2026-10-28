@@ -94,7 +94,7 @@ describe('ReviewPage — /admin/review', () => {
     stub();
     renderApp(makeMe('admin'), '/admin/review');
     const a = await screen.findByRole('article', { name: 'Băng keo 2 mặt' });
-    await userEvent.click(within(a).getByRole('button', { name: 'Chấp nhận' }));
+    await userEvent.click(within(a).getByRole('button', { name: /^Chấp nhận — / }));
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Chấp nhận' }));
     expect(await within(a).findByText('Đã chấp nhận')).toBeInTheDocument();
     expect(card('Băng keo 2 mặt')).toBeInTheDocument();
@@ -105,7 +105,7 @@ describe('ReviewPage — /admin/review', () => {
     const fetchMock = stub(() => jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' }));
     renderApp(makeMe('admin'), '/admin/review');
     const a = await screen.findByRole('article', { name: 'Băng keo 2 mặt' });
-    await userEvent.click(within(a).getByRole('button', { name: 'Chấp nhận' }));
+    await userEvent.click(within(a).getByRole('button', { name: /^Chấp nhận — / }));
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Chấp nhận' }));
     expect(await screen.findByText('Dòng này vừa được xử lý — danh sách đã được làm mới.')).toBeInTheDocument();
     await waitFor(() => expect(listUrls(fetchMock)).toHaveLength(2));
