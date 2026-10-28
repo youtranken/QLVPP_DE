@@ -92,14 +92,14 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 - FR-32 Admin không tạo phiếu mới cho người chưa đăng ký sau hạn (luật "không ngoại lệ"). Trước hạn, admin tạo hộ được từ danh bạ (người `active`).
 - FR-33 Xử lý món ngoài danh mục — ba nút mở hộp riêng, **áp dụng ngay**, không phụ thuộc nút "Lưu điều chỉnh": **Chấp nhận** (giao như món thường, không tính tồn) / **Thêm vào danh mục** (tạo món mới có ảnh và ĐVT, cảnh báo nếu ĐVT khác dòng gốc, gắn dòng vào món, tồn ban đầu 0) / **Từ chối** (hộp có ô lý do riêng, bắt buộc; người đăng ký thấy). Dòng chép lại từ dòng đã chấp nhận kỳ trước có gợi ý "Đã chấp nhận kỳ trước → nên Thêm vào danh mục".
 - FR-34 Nhãn "Người đã nghỉ" trên phiếu của user bị PMH ID khóa/xóa; admin bỏ dòng chưa giao hoặc giữ.
-- FR-35 **Hủy nợ**: với dòng còn nợ (người đã nghỉ, món không mua được nữa) admin hủy phần chưa giao kèm lý do bắt buộc; dòng rời Còn nợ, ghi nhật ký, số đăng ký gốc vẫn hiện trong lịch sử với nhãn "đã hủy n".
+- FR-35 **Hủy nợ** (người đăng ký nhận chuông kèm lý do; email ở GĐ2): với dòng còn nợ (người đã nghỉ, món không mua được nữa) admin hủy phần chưa giao kèm lý do bắt buộc; dòng rời Còn nợ, ghi nhật ký, số đăng ký gốc vẫn hiện trong lịch sử với nhãn "đã hủy n".
 
 ### 6.5 Giao hàng và còn nợ (Admin)
 - FR-40 Giao theo phiếu: tick từng dòng (mặc định giao đủ, sửa được số thực giao) hoặc "Giao tất cả" (giao những dòng kho đủ, báo danh sách dòng không giao được). Bấm đúp / hai admin cùng giao một dòng không giao hai lần.
 - FR-41 Giao trừ tồn kho cùng lúc; nếu tồn không đủ → từ chối với số tồn hiện có; không bao giờ âm kho. Món ngoài danh mục đã chấp nhận giao không trừ tồn. Dòng bị từ chối / chờ xem không giao được.
 - FR-42 Màn **Còn nợ**: mọi dòng chưa đủ (`delivered_qty < qty`, không tính dòng từ chối/chờ xem/đã hủy nợ) của mọi kỳ, nhóm theo món và theo người; nút giao bổ sung; nút Hủy nợ; lịch sử từng đợt giao của một dòng.
 - FR-43 Chuông cho người nhận khi phiếu giao đủ (một lần cho mỗi phiếu; nếu hoàn tác rồi giao lại đủ → một thông báo mới).
-- FR-44 **Hoàn tác đợt giao**: admin hoàn tác một đợt giao cụ thể (toàn bộ hoặc một phần) kèm lý do bắt buộc; kho cộng lại (biến động `return`), `delivered_qty` giảm, ghi nhật ký; người nhận thấy tiến độ cập nhật.
+- FR-44 ~~Hoàn tác đợt giao~~ — **bỏ khỏi GĐ1** (chủ dự án 2026-10-28: ghi giao nhầm thì Hành chính tự đưa bù ngoài hệ thống).
 
 ### 6.6 Kho (Admin)
 - FR-50 Tồn hiện tại từng món. **Sắp hết** khi đã dùng hết 80 % lượng tồn tính từ lần nhập mua gần nhất: mốc = ⌊20 % × tồn ngay sau lần nhập đó⌋ (hoặc lần điều chỉnh tồn đầu kỳ khi món chưa có mốc), sắp hết khi `0 < tồn ≤ mốc`; tồn = 0 là **Hết hàng**. Món chưa từng nhập mua không cảnh báo. Mỗi lần nhập mua tính lại mốc (ví dụ tồn 0 → nhập 30: mốc 6; còn 6 thì sắp hết; nhập thêm 20 lúc còn 6 → tồn 26, mốc 5). Không còn ô "mức tồn tối thiểu" nhập tay.
@@ -195,6 +195,7 @@ Hệ thị giác: thương hiệu xanh ngọc lục `#059669`; member kiểu app
 | 2026-10-28 | Admin = group PMH ID `vpp-admin`; SA cục bộ từ `.env` như QLTS. |
 | 2026-10-28 | Giao diện: member kiểu app, admin kiểu quản lý, màu `#059669`; khác QLTS và PMH ID. |
 | 2026-10-28 | Song ngữ vi/en từ đầu. |
+| 2026-10-28 | Plan 3: bỏ Hoàn tác đợt giao; Hủy nợ báo chuông (email GĐ2) kèm lý do; chỉ giao sau khi kỳ khóa; mỗi lần Xuất/In tạo một bản chốt mới. |
 | 2026-10-28 | "Sắp hết" = đã dùng 80 % tồn sau lần nhập mua gần nhất (mốc tự tính 20 %); bỏ mức tối thiểu nhập tay. |
 | 2026-10-28 | Có "Xuất lẻ" ngoài phiếu (người mới, dùng chung) từ tồn mua dư; cột "Đặt mua" sửa được trên báo cáo. |
 | 2026-10-28 | Sau review 3 góc nhìn (`review-spec.md`): mô hình kỳ liên tục; phiếu tồn tại khi có dòng; hạn chụp vào kỳ; nhóm theo phòng ban PMH ID (không có trường Tổ); Cần mua gồm nợ kỳ trước trừ tồn + bản chốt báo cáo; hoàn tác đợt giao; hủy nợ; ĐVT chuẩn; member giữ dòng Hành chính thêm; thanh dưới trên điện thoại. |
