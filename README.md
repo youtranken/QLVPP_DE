@@ -34,7 +34,8 @@ Yêu cầu: Docker có Compose v2, Node 24, mạng ngoài `edge` (1 lần: `dock
 
 ```bash
 cp .env.example .env
-# Sửa .env: các giá trị CHANGE_ME, NODE_ENV=development, AUTH_DEV_MODE=true, PMH_* (client SA PMH ID cấp).
+# Sửa .env: các giá trị CHANGE_ME, PMH_* (client SA PMH ID cấp). GIỮ NODE_ENV=production, AUTH_DEV_MODE=false:
+# override dev tự đặt development/true cho container api; .env dùng chung với prod.
 # Dev không cần PMH ID thật: SA local và dev-identity đủ cho mọi màn đã có.
 
 # Mật khẩu SA dev: in hash, dán vào LOCAL_SA_PASSWORD_HASH trong .env (không commit .env)
@@ -52,7 +53,8 @@ cổng ngẫu nhiên `127.0.0.1`, api ra `127.0.0.1:3000` (cho Vite dev/Playwrig
 **từ chối khởi động**. Khi bật, api nhận header dev-identity `x-dev-user-sub` + `x-dev-role` (`member|admin|sa`)
 thay cho phiên; nginx của `web` xóa các header này, nên chỉ dùng được qua api trực tiếp (Vite dev, test).
 
-Seed danh mục ban đầu (idempotent theo `code`, không ghi đè tồn kho/ảnh/trạng thái Hành chính đã đặt):
+Seed danh mục ban đầu (idempotent theo `code`: món đã có thì bỏ qua — không đè tên, tối đa, nhóm, tồn kho,
+ảnh, trạng thái Hành chính đã sửa; sửa dữ liệu seed sau này phải sửa tay qua UI):
 
 ```bash
 cd api && DATABASE_URL=postgres://<user>:<pass>@127.0.0.1:5492/<db> npm run seed:catalog   # dev
@@ -73,7 +75,7 @@ npm run test:e2e    # test/*.e2e-spec.ts — app thật + supertest, dev-identit
 npm run test:db     # test/*.db-spec.ts — Postgres thật, chạy tuần tự
 ```
 
-Không `source .env` vào shell để chạy test: `.env` đặt `NODE_ENV=development`. Spec cần DB (cả một số
+Không `source .env` vào shell để chạy test: `.env` đặt `NODE_ENV=production`. Spec cần DB (cả một số
 e2e) reset schema và từ chối chạy nếu tên database không kết thúc `_test`.
 
 ### web
