@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { ymToDate } from '../../common/period';
 import type { Executor } from '../../database/database.module';
+import { UNDELIVERED_LINE } from './line-predicates';
 import type { LineRow, LineSnap } from './request-lines.rules';
 
 export interface RequestHead extends Record<string, unknown> {
@@ -269,4 +270,20 @@ export async function bumpRequest(
     WHERE id = ${id} RETURNING ${UPDATED_AT_ISO} AS updated_at
   `);
   return rows[0].updated_at;
+}
+
+// null = không có phiếu kỳ đó; true = còn dòng hiệu lực chưa giao/hủy hết
+export async function hasUndeliveredLines(
+  ex: Executor,
+  ym: string,
+  userSub: string,
+): Promise<boolean | null> {
+  const { rows } = await ex.execute<{ delivering: boolean }>(sql`
+    SELECT EXISTS (
+      SELECT 1 FROM request_lines l WHERE l.request_id = r.id AND ${UNDELIVERED_LINE}
+    ) AS delivering
+    FROM requests r
+    WHERE r.period_ym = ${ymToDate(ym)}::date AND r.user_sub = ${userSub}
+  `);
+  return rows[0] ? rows[0].delivering : null;
 }

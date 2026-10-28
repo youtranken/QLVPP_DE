@@ -10,6 +10,7 @@ import { CatalogService } from '../catalog/catalog.service';
 import { SystemConfigService } from '../config/system-config.service';
 import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
+import { UNDELIVERED_LINE } from './line-predicates';
 import { invalidPeriod, requestNotFound } from './request-errors';
 import { RequestViewBuilder } from './request-view';
 import type { RequestView } from './request-view';
@@ -34,11 +35,6 @@ export interface UnregisteredUser extends Record<string, unknown> {
   email: string | null;
   department: string | null;
 }
-
-export const EFFECTIVE_LINE = sql.raw(
-  `l.review_status IN ('n/a', 'accepted', 'converted')`,
-);
-export const UNDELIVERED_LINE = sql`(${EFFECTIVE_LINE} AND l.delivered_qty + l.cancelled_qty < l.qty)`;
 
 const notRegistered = (ym: string) => sql`NOT EXISTS (
   SELECT 1 FROM requests r

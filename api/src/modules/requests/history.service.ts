@@ -5,6 +5,7 @@ import { decodeCursor, encodeCursor, invalidCursor } from '../../common/cursor';
 import { ymToDate } from '../../common/period';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
+import { EFFECTIVE_LINE } from './line-predicates';
 
 export interface HistoryItem {
   period_ym: string;
@@ -31,7 +32,7 @@ type HistoryRow = Omit<HistoryItem, 'custom'> & {
 const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
 // Chỉ dòng hiệu lực → total = delivered + cancelled + remaining; pending/rejected đếm riêng ở custom
 const effective = (expr: SQL) =>
-  sql`coalesce(sum(${expr}) FILTER (WHERE l.review_status IN ('n/a', 'accepted', 'converted')), 0)::int`;
+  sql`coalesce(sum(${expr}) FILTER (WHERE ${EFFECTIVE_LINE}), 0)::int`;
 const count = (status: string) =>
   sql`count(*) FILTER (WHERE l.review_status = ${status})::int`;
 

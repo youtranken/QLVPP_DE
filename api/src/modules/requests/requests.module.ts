@@ -10,6 +10,8 @@ import { FilesModule } from '../files/files.module';
 import { PeriodsModule } from '../periods/periods.module';
 import { UsersModule } from '../users/users.module';
 import { CopyPreviousService } from './copy-previous.service';
+import { CurrentPeriodController } from './current-period.controller';
+import { CurrentPeriodService } from './current-period.service';
 import { HistoryService } from './history.service';
 import { LINE_IMAGE_REFERENCE } from './line-image.reference';
 import { MeRequestController } from './me-request.controller';
@@ -31,6 +33,7 @@ import { SummaryService } from './summary.service';
     SystemConfigModule,
   ],
   controllers: [
+    CurrentPeriodController,
     MeRequestController,
     AdminSummaryController,
     AdminRequestsController,
@@ -38,6 +41,7 @@ import { SummaryService } from './summary.service';
   ],
   providers: [
     AdminRequestService,
+    CurrentPeriodService,
     RequestLinesWriter,
     RequestViewBuilder,
     MeRequestService,

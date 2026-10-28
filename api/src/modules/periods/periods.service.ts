@@ -3,7 +3,6 @@ import { sql } from 'drizzle-orm';
 import { ClockService } from '../../common/clock.service';
 import {
   addMonths,
-  daysLeft,
   deadlineOf,
   periodFor,
   ymToDate,
@@ -18,14 +17,6 @@ type Executor = Database | Tx;
 export interface Period {
   ym: string;
   deadline: Date;
-}
-
-export interface CurrentPeriod {
-  ym: string;
-  deadline: string;
-  is_open: true;
-  days_left: number;
-  previous: { ym: string; delivering: boolean } | null;
 }
 
 // Đủ xa để vượt mọi kỳ đã khóa sẵn; vòng lặp chỉ chạy khi config bị nới sau khi kỳ đã qua hạn
@@ -100,29 +91,6 @@ export class PeriodsService {
           headcount: rows[0].headcount,
         }
       : null;
-  }
-
-  async current(userSub: string): Promise<CurrentPeriod> {
-    const now = this.clock.now();
-    const period = await this.openPeriod(this.db, now);
-    const prevYm = addMonths(period.ym, -1);
-    const { rows } = await this.db.execute<{ delivering: boolean }>(sql`
-      SELECT EXISTS (
-        SELECT 1 FROM request_lines l
-        WHERE l.request_id = r.id
-          AND l.review_status IN ('n/a', 'accepted', 'converted')
-          AND l.delivered_qty + l.cancelled_qty < l.qty
-      ) AS delivering
-      FROM requests r
-      WHERE r.period_ym = ${ymToDate(prevYm)}::date AND r.user_sub = ${userSub}
-    `);
-    return {
-      ym: period.ym,
-      deadline: period.deadline.toISOString(),
-      is_open: true,
-      days_left: daysLeft(now, period.deadline),
-      previous: rows[0] ? { ym: prevYm, delivering: rows[0].delivering } : null,
-    };
   }
 
   private async find(ym: string, tx: Executor): Promise<Period | null> {

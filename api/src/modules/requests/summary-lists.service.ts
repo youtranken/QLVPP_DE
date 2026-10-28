@@ -9,7 +9,7 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { CatalogService } from '../catalog/catalog.service';
 import type { PeriodRequestsQuery, SummaryFilter } from './summary.dto';
-import { EFFECTIVE_LINE, UNDELIVERED_LINE } from './summary.service';
+import { EFFECTIVE_LINE, UNDELIVERED_LINE } from './line-predicates';
 
 export interface PersonRow {
   request_id: string;
