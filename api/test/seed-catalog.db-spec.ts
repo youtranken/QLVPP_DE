@@ -88,20 +88,29 @@ describe('seed danh mục ban đầu', () => {
     expect(orphan.rowCount).toBe(0);
   });
 
-  it('tồn kho và trạng thái ngừng do admin đặt không bị seed ghi đè', async () => {
+  it('món đã có code: seed không đè chỉnh sửa của Hành chính (tên, tối đa, admin_only, nhóm, tồn, trạng thái)', async () => {
+    const other = await pool.query<{ id: string }>(
+      'SELECT id FROM item_categories ORDER BY sort_order DESC LIMIT 1',
+    );
     await pool.query(
-      'UPDATE items SET stock_qty = 42, active = false, name = $2 WHERE code = $1',
-      [codes[0], 'Tên cũ'],
+      `UPDATE items SET stock_qty = 42, active = false, name = 'Tên Hành chính sửa',
+         max_qty = 7, admin_only = true, category_id = $2 WHERE code = $1`,
+      [codes[1], other.rows[0].id],
     );
     runSeed();
     const row = (
       await pool.query(
-        'SELECT stock_qty, active, name FROM items WHERE code = $1',
-        [codes[0]],
+        'SELECT stock_qty, active, name, max_qty, admin_only, category_id FROM items WHERE code = $1',
+        [codes[1]],
       )
     ).rows[0];
-    expect(row.stock_qty).toBe(42);
-    expect(row.active).toBe(false);
-    expect(row.name).toBe((seed.items[0] as unknown as { name: string }).name);
+    expect(row).toEqual({
+      stock_qty: 42,
+      active: false,
+      name: 'Tên Hành chính sửa',
+      max_qty: 7,
+      admin_only: true,
+      category_id: other.rows[0].id,
+    });
   });
 });

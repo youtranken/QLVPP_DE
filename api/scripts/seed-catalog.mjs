@@ -23,15 +23,12 @@ try {
     );
   }
   for (const i of seed.items) {
-    // Chỉ cập nhật trường danh mục; stock_qty, image_file_id, active là của admin
+    // Món đã có code là của Hành chính (có thể đã sửa tên/tối đa/nhóm) — seed chỉ thêm món mới
     await client.query(
       `INSERT INTO items (code, name, name_en, unit, max_qty, admin_only, sort_order, category_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7,
                (SELECT id FROM item_categories WHERE lower(name) = lower($8)))
-       ON CONFLICT (code) DO UPDATE SET
-         name = EXCLUDED.name, name_en = EXCLUDED.name_en, unit = EXCLUDED.unit,
-         max_qty = EXCLUDED.max_qty, admin_only = EXCLUDED.admin_only,
-         category_id = EXCLUDED.category_id, updated_at = now()`,
+       ON CONFLICT (code) DO NOTHING`,
       [
         i.code,
         i.name,
