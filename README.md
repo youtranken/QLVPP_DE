@@ -133,14 +133,15 @@ Checklist lần deploy đầu (và khi đổi hạ tầng):
 - [ ] Mật khẩu SA prod: trong `api/`, `read -rsp 'Mật khẩu SA: ' PW; echo; printf '%s' "$PW" | npm run -s sa:hash; unset PW`
       → dán vào `LOCAL_SA_PASSWORD_HASH` (mật khẩu cất két IT, không dùng lại mật khẩu dev; không truyền mật khẩu
       làm tham số dòng lệnh vì sẽ nằm trong lịch sử shell).
-- [ ] `TRUST_PROXY_HOPS`: đăng nhập SA một lần từ máy trong LAN, mở Nhật ký → dòng `auth.sa_login` (`detail.ip`) —
+- [ ] `TRUST_PROXY_HOPS` (chỉ kiểm được trên prod, sau EDGE thật): đăng nhập SA một lần từ máy trong LAN, mở
+      Nhật ký → dòng `auth.sa_login` **đầu tiên** trên prod (`detail.ip`) —
       IP phải là IP **máy người dùng**, không phải IP EDGE/docker. Sai thì chỉnh số hop (EDGE `vpp.conf` dùng
       `proxy_add_x_forwarded_for`, nginx `web` thêm một hop nữa) rồi `docker compose -f docker-compose.yml up -d api`.
       IP sai làm lockout/throttle SA gộp mọi người vào một IP.
 - [ ] Seed danh mục lần đầu: `docker compose -f docker-compose.yml exec api node scripts/seed-catalog.mjs`.
 - [ ] Chạy thử backup tay (mục Prod) và kiểm file `.tar.gz`/`.enc` xuất hiện trong thư mục backup.
-- [ ] Khi `@nestjs/platform-express` 12 ra: nâng cùng `multer` (cảnh báo `npm audit` GHSA-q7qp-rjg7-q26m
-      hiện nằm trong multer kèm platform-express 11).
+- [x] Lỗ hổng multer GHSA-q7qp-rjg7-q26m đã vá (NestJS 12, multer 2.5.0); trước mỗi lần deploy chạy
+      `cd api && npm audit --omit=dev` — phải 0 high/critical.
 
 Runbook sự cố:
 
