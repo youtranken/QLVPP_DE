@@ -9,6 +9,7 @@ import { DatabaseModule } from './database/database.module';
 import { HealthController } from './health/health.controller';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
 import { OidcModule } from './modules/auth/oidc.module';
 import { SystemConfigModule } from './modules/config/config.module';
 import { FilesModule } from './modules/files/files.module';
@@ -45,6 +46,7 @@ import { FilesModule } from './modules/files/files.module';
     AuthModule,
     SystemConfigModule,
     FilesModule,
+    CatalogModule,
   ],
   controllers: [HealthController, ...testOnlyControllers(process.env)],
 })

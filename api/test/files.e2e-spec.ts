@@ -26,6 +26,9 @@ const PNG_1X1 = Buffer.from(
 );
 const MEMBER_A = 'e2e-files-a';
 const MEMBER_B = 'e2e-files-b';
+// Suite khác (catalog) chạy song song cùng DB và có items tham chiếu files: chỉ dọn tệp của suite này
+const DELETE_OWN_FILES =
+  "DELETE FROM files WHERE uploaded_by_sub LIKE 'e2e-files-%'";
 
 describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
   let app: INestApplication<App>;
@@ -45,11 +48,16 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
       .attach('file', buf, { filename, contentType: 'image/png' });
   const get = (id: string, sub: string, role = 'member') =>
     as(request(app.getHttpServer()).get(`/api/files/${id}`), sub, role);
+  const backdate = (ids: string[]) =>
+    pool.query(
+      "UPDATE files SET created_at = now() - interval '25 hours' WHERE id = ANY($1)",
+      [ids],
+    );
   const filesAuditCount = async () =>
     Number(
       (
         await pool.query<{ n: string }>(
-          "SELECT count(*) AS n FROM audit_log WHERE action LIKE 'files.%'",
+          "SELECT count(*) AS n FROM audit_log WHERE action LIKE 'files.%' AND actor LIKE 'e2e-files-%'",
         )
       ).rows[0].n,
     );
@@ -58,7 +66,7 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
     const url = assertTestDatabase(process.env.DATABASE_URL);
     pool = new Pool({ connectionString: url });
     await runMigrations(pool, resolveMigrationsDir(), silent);
-    await pool.query('DELETE FROM files');
+    await pool.query(DELETE_OWN_FILES);
     await pool.query(
       'CREATE TABLE IF NOT EXISTS e2e_file_refs (file_id uuid NOT NULL, viewer_sub text NOT NULL)',
     );
@@ -80,7 +88,7 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
   afterAll(async () => {
     await app.close();
     await pool.query('DROP TABLE IF EXISTS e2e_file_refs');
-    await pool.query('DELETE FROM files');
+    await pool.query(DELETE_OWN_FILES);
     await pool.end();
     await rm(dir, { recursive: true, force: true });
     delete process.env.FILES_DIR;
@@ -219,7 +227,7 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
 
   describe('FilesCleanupJob.run', () => {
     it('xóa tệp > 24 h chưa tham chiếu (bản ghi + đĩa), giữ tệp được tham chiếu và tệp còn mới', async () => {
-      await pool.query('DELETE FROM files');
+      await pool.query(DELETE_OWN_FILES);
       const orphan = (
         (await upload(MEMBER_A).expect(201)).body as { id: string }
       ).id;
@@ -234,8 +242,12 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
       expect(await job.run(new Date())).toBe(0);
       expect(existsSync(join(dir, `${orphan}.png`))).toBe(true);
 
-      expect(await job.run(new Date(Date.now() + 25 * 3600_000))).toBe(1);
-      const left = await pool.query<{ id: string }>('SELECT id FROM files');
+      // Lùi tuổi tệp của mình thay vì tua đồng hồ: tua sẽ xóa luôn ảnh mới tải của suite song song
+      await backdate([orphan, kept]);
+      expect(await job.run(new Date())).toBe(1);
+      const left = await pool.query<{ id: string }>(
+        "SELECT id FROM files WHERE uploaded_by_sub LIKE 'e2e-files-%'",
+      );
       expect(left.rows.map((r) => r.id)).toEqual([kept]);
       expect(existsSync(join(dir, `${orphan}.png`))).toBe(false);
       expect(existsSync(join(dir, `${kept}.png`))).toBe(true);
@@ -244,7 +256,7 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
 
   describe('FilesCleanupJob.run — fail-closed theo purpose', () => {
     beforeEach(async () => {
-      await pool.query('DELETE FROM files');
+      await pool.query(DELETE_OWN_FILES);
     });
 
     it('purpose chưa có reference đăng ký (line_image) → giữ nguyên dù > 24 h', async () => {
@@ -253,11 +265,8 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
           id: string;
         }
       ).id;
-      expect(
-        await app
-          .get(FilesCleanupJob)
-          .run(new Date(Date.now() + 25 * 3600_000)),
-      ).toBe(0);
+      await backdate([line]);
+      expect(await app.get(FilesCleanupJob).run(new Date())).toBe(0);
       expect(existsSync(join(dir, `${line}.png`))).toBe(true);
     });
 

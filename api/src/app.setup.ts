@@ -1,4 +1,8 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { GlobalExceptionFilter } from './common/global-exception.filter';
 
@@ -10,7 +14,20 @@ export function configureApp(app: INestApplication): INestApplication {
   express.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS));
   app.use(cookieParser());
   app.setGlobalPrefix('api');
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      exceptionFactory: (errors) =>
+        new BadRequestException({
+          code: 'VALIDATION',
+          message: errors
+            .flatMap((e) => Object.values(e.constraints ?? {}))
+            .join('; '),
+          fields: errors.map((e) => e.property),
+        }),
+    }),
+  );
   app.useGlobalFilters(new GlobalExceptionFilter());
   return app;
 }
