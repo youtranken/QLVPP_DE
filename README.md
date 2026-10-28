@@ -137,7 +137,7 @@ PW_SA_PASSWORD='<mật-khẩu-dev>' npx playwright test
   bị xóa; món xóa được thì xóa, đã có sổ kho thì ngừng; nhóm thử bị ngừng); cấu hình được trả lại giá trị gốc.
   Còn sót (test bị ngắt giữa chừng) thì dọn một lần — chỉ xóa dòng `PW`/`pw-` không bị dữ liệu thật tham chiếu,
   in số dòng trước/sau:
-  `docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < web/playwright/cleanup-dev-data.sql`
+  `docker compose exec -T postgres sh -c 'psql -v dev_ok=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < web/playwright/cleanup-dev-data.sql` — **chỉ trên DB dev, không bao giờ trên prod**
 - Không mạng tải Chromium: đặt `PW_CHROMIUM_PATH=/đường/dẫn/chrome`.
 - Ảnh chụp màn `web/test-results/screens/`, báo cáo `web/playwright-report/` — không commit.
 - Fixture ảnh EXIF xoay 6: `python3 web/scripts/make-exif6-fixture.py web/src/test/fixtures/exif6.jpg` (Pillow).

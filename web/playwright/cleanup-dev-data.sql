@@ -1,8 +1,23 @@
--- Dọn dữ liệu Playwright còn sót trên DB dev (món/nhóm tên "PW …", người sub "pw-…").
--- Chỉ xóa dòng không còn bị dữ liệu thật tham chiếu; chạy lại bao nhiêu lần cũng được.
+-- KHÔNG CHẠY TRÊN PROD. Chỉ cho DB dev của docker compose (POSTGRES_DB=vpp trong .env.example).
+-- Prod dùng cùng tên DB nên tên chưa đủ chặn: phải gọi kèm `-v dev_ok=1` (xem README) mới chạy.
+-- Dọn dữ liệu Playwright còn sót (món/nhóm tên "PW …", người sub "pw-…"); chỉ xóa dòng không còn bị
+-- dữ liệu thật tham chiếu; chạy lại bao nhiêu lần cũng được.
 \set QUIET on
+\set ON_ERROR_STOP on
 \pset footer off
 BEGIN;
+
+\if :{?dev_ok}
+\else
+DO $$ BEGIN RAISE EXCEPTION 'Dừng: thiếu -v dev_ok=1 — script chỉ dành cho DB dev'; END $$;
+\endif
+
+DO $$
+BEGIN
+  IF current_database() <> 'vpp' THEN
+    RAISE EXCEPTION 'Dừng: DB "%" không phải DB dev "vpp"', current_database();
+  END IF;
+END $$;
 
 CREATE TEMP VIEW pw_counts AS
 SELECT
