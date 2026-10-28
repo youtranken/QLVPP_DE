@@ -95,6 +95,31 @@ describe('validateConfigPatch', () => {
     });
   });
 
+  it.each([
+    'constructor',
+    'toString',
+    'valueOf',
+    '__proto__',
+    'hasOwnProperty',
+  ])(
+    'khóa kế thừa từ Object.prototype %s → field là tên khóa, không ném lỗi',
+    (key) => {
+      // JSON.parse tạo own property kể cả __proto__, giống body thật sau express.json
+      const body: unknown = JSON.parse(`{"${key}": 1}`);
+      expect(validateConfigPatch(body)).toEqual({ ok: false, field: key });
+    },
+  );
+
+  it('signers có khóa kế thừa (constructor, __proto__) → field signers.<khóa>', () => {
+    for (const key of ['constructor', '__proto__']) {
+      const body: unknown = JSON.parse(`{"signers": {"${key}": "X"}}`);
+      expect(validateConfigPatch(body)).toEqual({
+        ok: false,
+        field: `signers.${key}`,
+      });
+    }
+  });
+
   it.each([{}, null, [], 'x'])(
     'body %p rỗng/không phải object → field body',
     (body) => {

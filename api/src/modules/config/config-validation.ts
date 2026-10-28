@@ -43,8 +43,10 @@ export function validateConfigPatch(body: unknown): ConfigPatchResult {
   }
   const patch: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(body)) {
-    const rule = RULES[key as keyof ConfigPatch] as
-      ((v: unknown) => boolean) | undefined;
+    // hasOwn: tên kế thừa (constructor, __proto__…) không được lọt whitelist
+    const rule = Object.hasOwn(RULES, key)
+      ? RULES[key as keyof ConfigPatch]
+      : undefined;
     if (!rule || !rule(value)) return { ok: false, field: key };
     if (key === 'signers') {
       const bad = invalidSignerKey(value as Record<string, unknown>);

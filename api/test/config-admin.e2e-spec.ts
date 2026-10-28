@@ -41,6 +41,10 @@ describe('admin/config + public-config', () => {
         JSON.stringify(row.value),
       ]);
     }
+    // Chỉ xóa khóa test này có thể lỡ ghi; suite khác chạy song song có marker riêng
+    await pool.query('DELETE FROM config WHERE key = ANY($1)', [
+      ['constructor', 'toString', '__proto__'],
+    ]);
     await pool.end();
     delete process.env.AUTH_DEV_MODE;
   });
@@ -80,6 +84,8 @@ describe('admin/config + public-config', () => {
     [{ default_max_qty: 0 }, 'default_max_qty'],
     [{ admin_group: '  ' }, 'admin_group'],
     [{ authorized_groups: ['IT'] }, 'authorized_groups'],
+    [{ constructor: 'x' }, 'constructor'],
+    [{ toString: 'x' }, 'toString'],
   ])('PUT %j → 400 CONFIG_INVALID field %s, không ghi', async (body, field) => {
     const before = await pool.query(
       'SELECT key, value FROM config ORDER BY key',
@@ -90,6 +96,17 @@ describe('admin/config + public-config', () => {
       'SELECT key, value FROM config ORDER BY key',
     );
     expect(after.rows).toEqual(before.rows);
+  });
+
+  it('PUT body thô {"__proto__":…} → 400 CONFIG_INVALID, không 500', async () => {
+    const res = await put('{"__proto__": {"x": 1}}')
+      .set('Content-Type', 'application/json')
+      .expect(400);
+    expect(res.body).toMatchObject({ code: 'CONFIG_INVALID' });
+    const keys = await pool.query(
+      "SELECT key FROM config WHERE key IN ('constructor', 'toString', '__proto__')",
+    );
+    expect(keys.rows).toEqual([]);
   });
 
   it('PUT hợp lệ một khóa + một khóa sai → 400, khóa hợp lệ cũng không ghi', async () => {
