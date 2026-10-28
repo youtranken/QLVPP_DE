@@ -160,14 +160,14 @@ describe('0100 catalog — ràng buộc item_categories / items / stock_movement
         ),
       ).toBe('23503');
     });
-    it('ref_line_id chưa có FK (Plan 2 sẽ thêm)', async () => {
+    it('ref_line_id có FK từ 0102 → dòng không tồn tại 23503', async () => {
       expect(
         await code(
           `INSERT INTO stock_movements (item_id, delta, reason, ref_line_id, actor_sub)
            VALUES ($1, 5, 'purchase', gen_random_uuid(), 'admin')`,
           [itemId],
         ),
-      ).toBe('OK');
+      ).toBe('23503');
     });
     it('item_id không tồn tại → 23503', async () => {
       expect(
