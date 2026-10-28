@@ -12,8 +12,10 @@ interface UnregisteredCopyProps {
 
 type Notice = { kind: 'ok' | 'error'; text: string } | null;
 
+// Văn bản dán cho nhân viên (Zalo) luôn tiếng Việt, bất kể ngôn ngữ giao diện của Hành chính
 function useCopyText(ym: string, deadline: string | null) {
-  const { t } = useTranslation();
+  const { i18n } = useTranslation();
+  const t = i18n.getFixedT('vi');
   const fmt = useRequestFormat();
   return (users: UnregisteredUser[]) => {
     const month = monthOf(ym);

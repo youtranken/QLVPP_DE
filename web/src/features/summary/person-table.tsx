@@ -1,4 +1,3 @@
-import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loading, LoadError } from '@/ui/load-state';
 import { usePersonRows, type PersonRow, type SummaryFilter } from './summary.api';
@@ -12,6 +11,8 @@ interface PersonTableProps {
 
 function DeliveryBar({ done, total }: { done: number; total: number }) {
   const { t } = useTranslation();
+  // Phiếu chỉ còn dòng chờ xem/bị từ chối: không có gì để giao
+  if (total === 0) return <span className="muted">—</span>;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   return (
     <span className="sm-delivery">
@@ -32,7 +33,7 @@ function DeliveryBar({ done, total }: { done: number; total: number }) {
   );
 }
 
-function PersonCells({ row, onAdjust }: { row: PersonRow; onAdjust: (id: string) => void }) {
+function PersonCells({ row, onAdjust, stale }: { row: PersonRow; onAdjust: (id: string) => void; stale: boolean }) {
   const { t } = useTranslation();
   const left = row.user_status !== 'active';
   return (
@@ -55,7 +56,7 @@ function PersonCells({ row, onAdjust }: { row: PersonRow; onAdjust: (id: string)
         </span>
       </td>
       <td className="r" data-label="">
-        <button type="button" className="btn btn--sm" onClick={() => onAdjust(row.request_id)}>
+        <button type="button" className="btn btn--sm" disabled={stale} onClick={() => onAdjust(row.request_id)}>
           {t('summary.person.adjust')}
         </button>
       </td>
@@ -63,19 +64,36 @@ function PersonCells({ row, onAdjust }: { row: PersonRow; onAdjust: (id: string)
   );
 }
 
-// API đã xếp phòng ban (NULL cuối) rồi tên → chèn hàng nhóm mỗi khi phòng ban đổi
+interface Group {
+  name: string;
+  rows: PersonRow[];
+}
+
+// API đã xếp phòng ban (NULL cuối) rồi tên → gom các hàng liền nhau, kể cả qua nhiều trang
+function groupRows(rows: PersonRow[], nameOf: (r: PersonRow) => string): Group[] {
+  const groups: Group[] = [];
+  for (const row of rows) {
+    const last = groups[groups.length - 1];
+    if (last && last.name === nameOf(row)) last.rows.push(row);
+    else groups.push({ name: nameOf(row), rows: [row] });
+  }
+  return groups;
+}
+
 export function PersonTable({ ym, filter, q, onAdjust }: PersonTableProps) {
   const { t } = useTranslation();
   const query = usePersonRows(ym, filter, q);
   if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
   if (query.isPending) return <Loading />;
   const rows = query.data.pages.flatMap((p) => p.items);
-  const groupOf = (r: PersonRow) => r.department ?? t('summary.person.noDepartment');
+  const groups = groupRows(rows, (r) => r.department ?? t('summary.person.noDepartment'));
+  // Đang tải trang lọc/tháng mới: hàng cũ chỉ để nhìn, không được mở điều chỉnh phiếu của tháng vừa rời
+  const stale = query.isPlaceholderData;
 
   return (
     <>
       <div className="table-wrap">
-        <table className="table table-stack sm-table">
+        <table className={`table table-stack sm-table${stale ? ' is-stale' : ''}`} aria-busy={stale}>
           <thead>
             <tr>
               <th>{t('summary.person.colPerson')}</th>
@@ -88,27 +106,27 @@ export function PersonTable({ ym, filter, q, onAdjust }: PersonTableProps) {
               </th>
             </tr>
           </thead>
-          <tbody>
-            {rows.length === 0 && (
+          {rows.length === 0 && (
+            <tbody>
               <tr>
                 <td colSpan={6} className="empty">
                   {t('summary.person.empty')}
                 </td>
               </tr>
-            )}
-            {rows.map((row, i) => (
-              <Fragment key={row.request_id}>
-                {(i === 0 || groupOf(rows[i - 1]) !== groupOf(row)) && (
-                  <tr className="sm-group">
-                    <th colSpan={6} scope="colgroup">
-                      {groupOf(row)}
-                    </th>
-                  </tr>
-                )}
-                <PersonCells row={row} onAdjust={onAdjust} />
-              </Fragment>
-            ))}
-          </tbody>
+            </tbody>
+          )}
+          {groups.map((g, i) => (
+            <tbody key={`${i}-${g.name}`}>
+              <tr className="sm-group">
+                <th colSpan={6} scope="rowgroup">
+                  {g.name}
+                </th>
+              </tr>
+              {g.rows.map((row) => (
+                <PersonCells key={row.request_id} row={row} onAdjust={onAdjust} stale={stale} />
+              ))}
+            </tbody>
+          ))}
         </table>
       </div>
       {query.hasNextPage && (

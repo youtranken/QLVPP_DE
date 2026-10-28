@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import i18n from '@/lib/i18n';
 import { jsonResponse, renderWithI18n, screen, userEvent } from '@/test/test-utils';
 import { UnregisteredCopy } from './unregistered-copy';
 
@@ -68,5 +69,20 @@ describe('UnregisteredCopy — sao chép danh sách chưa đăng ký', () => {
     stubList();
     renderCopy(0);
     expect(screen.getByRole('button', { name: 'Sao chép danh sách chưa đăng ký (0)' })).toBeDisabled();
+  });
+
+  it('giao diện tiếng Anh vẫn sao chép văn bản tiếng Việt (dán cho nhân viên qua Zalo)', async () => {
+    stubList();
+    const writeText = vi.fn(() => Promise.resolve());
+    setClipboard({ writeText });
+    await i18n.changeLanguage('en');
+    try {
+      renderCopy();
+      await userEvent.click(screen.getByRole('button', { name: 'Copy not-submitted list (2)' }));
+      expect(await screen.findByText('Copied 2 people')).toBeInTheDocument();
+      expect(writeText).toHaveBeenCalledWith(TEXT);
+    } finally {
+      await i18n.changeLanguage('vi');
+    }
   });
 });

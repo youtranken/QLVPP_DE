@@ -19,6 +19,7 @@
 .sm-delivery { display: inline-flex; align-items: center; gap: 8px; }
 .sm-bar { width: 72px; height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; flex: none; }
 .sm-bar i { display: block; height: 100%; background: var(--brand); }
+.sm-table.is-stale tbody { opacity: .55; }
 .sm-more { margin: 10px auto; display: flex; }
 .sm-copy { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .sm-copy-notice { color: var(--ok); font-weight: 500; font-size: 13px; }

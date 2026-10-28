@@ -43,12 +43,14 @@ const PEOPLE = [
 ];
 const ITEMS = [{ key: 'i-1', item_id: 'i-1', name: 'Giấy A4', unit: 'ram', requested_qty: 25, people: 9 }];
 
-function stub() {
+function stub(personPage?: (url: string) => Promise<Response> | undefined) {
   const fetchMock = vi.fn((url: string) => {
     if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
     const m = /^\/api\/admin\/periods\/(\d{4}-\d{2})\/(\w+)/.exec(url);
     if (m?.[2] === 'summary') return Promise.resolve(jsonResponse(200, m[1] === '2026-11' ? OPEN : LOCKED));
     if (m?.[2] === 'requests') {
+      const custom = personPage?.(url);
+      if (custom) return custom;
       const body = url.includes('by=item') ? { items: ITEMS } : { items: PEOPLE, next_cursor: null };
       return Promise.resolve(jsonResponse(200, body));
     }
@@ -168,5 +170,84 @@ describe('SummaryPage — Tổng hợp kỳ', () => {
     const lan = (await screen.findByText('Võ Thị Lan')).closest('tr')!;
     await userEvent.click(within(lan).getByRole('button', { name: 'Điều chỉnh' }));
     expect(onAdjust).toHaveBeenCalledWith('r-2');
+  });
+
+  it.each(['2026-00', '2025-13', '2026-1'])('?ym=%s không phải tháng hợp lệ → về kỳ đang mở, không gọi API kỳ sai', async (bad) => {
+    mockViewport(1280);
+    const f = stub();
+    renderApp(makeMe('admin'), `/admin/summary?ym=${bad}`);
+    expect(await screen.findByText('Tháng 11/2026')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Phiếu đã đăng ký/ })).toHaveTextContent('32/40');
+    expect(f.mock.calls.some((c) => String(c[0]).includes(`/periods/${bad}/`))).toBe(false);
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('lùi tháng qua năm: ?ym=2026-01 → ‹ → "Tháng 12/2025"', async () => {
+    mockViewport(1280);
+    stub();
+    renderApp(makeMe('admin'), '/admin/summary?ym=2026-01');
+    expect(await screen.findByText('Tháng 1/2026')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Tháng trước' }));
+    expect(await screen.findByText('Tháng 12/2025')).toBeInTheDocument();
+  });
+
+  it('đang tải danh sách mới (đổi lọc) → hàng cũ mờ, nút "Điều chỉnh" bị vô hiệu', async () => {
+    mockViewport(1280);
+    let release: (r: Response) => void = () => {};
+    stub((url) =>
+      url.includes('filter=pending_delivery') ? new Promise<Response>((res) => (release = res)) : undefined,
+    );
+    const onAdjust = vi.fn();
+    renderWithI18n(
+      <MemoryRouter initialEntries={['/admin/summary']}>
+        <SummaryPage onAdjust={onAdjust} />
+      </MemoryRouter>,
+    );
+    const row = (await screen.findByText('Võ Thị Lan')).closest('tr')!;
+    expect(within(row).getByRole('button', { name: 'Điều chỉnh' })).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: /Dòng chờ giao/ }));
+    await waitFor(() =>
+      expect(within(screen.getByText('Võ Thị Lan').closest('tr')!).getByRole('button', { name: 'Điều chỉnh' })).toBeDisabled(),
+    );
+    expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true');
+    release(jsonResponse(200, { items: [PEOPLE[0]], next_cursor: null }));
+    await waitFor(() => expect(screen.queryByText('Võ Thị Lan')).toBeNull());
+    const fresh = screen.getByText('Phạm Văn Đức').closest('tr')!;
+    expect(within(fresh).getByRole('button', { name: 'Điều chỉnh' })).toBeEnabled();
+  });
+
+  it('"Xem thêm" khi một phòng ban trải qua hai trang → chỉ một tiêu đề nhóm', async () => {
+    mockViewport(1280);
+    stub((url) =>
+      Promise.resolve(
+        url.includes('cursor=')
+          ? jsonResponse(200, { items: [PEOPLE[1], PEOPLE[2]], next_cursor: null })
+          : jsonResponse(200, { items: [PEOPLE[0]], next_cursor: 'c-1' }),
+      ),
+    );
+    renderApp(makeMe('admin'), '/admin/summary');
+    await screen.findByText('Phạm Văn Đức');
+    await userEvent.click(screen.getByRole('button', { name: 'Xem thêm' }));
+    await screen.findByText('Võ Thị Lan');
+    expect(screen.getAllByRole('rowheader', { name: 'Phòng Công trình' })).toHaveLength(1);
+    expect(screen.getAllByRole('rowheader', { name: 'Chưa có phòng ban' })).toHaveLength(1);
+  });
+
+  it('phiếu chỉ có dòng chờ xem (tổng 0) → cột Giao hiện "—", không có thanh tiến độ', async () => {
+    mockViewport(1280);
+    stub((url) =>
+      url.includes('by=person')
+        ? Promise.resolve(
+            jsonResponse(200, {
+              items: [person({ request_id: 'r-9', full_name: 'Đỗ Chờ', total_qty: 0, line_count: 1, custom_pending: 1 })],
+              next_cursor: null,
+            }),
+          )
+        : undefined,
+    );
+    renderApp(makeMe('admin'), '/admin/summary');
+    const row = (await screen.findByText('Đỗ Chờ')).closest('tr')!;
+    expect(within(row).queryByRole('progressbar')).toBeNull();
+    expect(within(row).getByText('—')).toBeInTheDocument();
   });
 });

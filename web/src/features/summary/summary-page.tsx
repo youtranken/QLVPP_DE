@@ -16,6 +16,8 @@ import './summary.css';
 
 type View = 'person' | 'item';
 const VIEWS: View[] = ['person', 'item'];
+// Cùng mẫu với api/src/common/ym.ts: tháng 01–12, giá trị khác rơi về kỳ đang mở
+const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
 const noop = () => {};
 
 function PeriodHead({ ym, openYm, summary, onMonth }: {
@@ -56,7 +58,7 @@ export function SummaryPage({ onAdjust = noop }: { onAdjust?: (requestId: string
   const current = useCurrentPeriod();
   const openYm = current.data?.ym;
   const asked = params.get('ym');
-  const ym = asked && openYm && /^\d{4}-\d{2}$/.test(asked) && asked <= openYm ? asked : openYm;
+  const ym = asked && openYm && YM.test(asked) && asked <= openYm ? asked : openYm;
   const summary = usePeriodSummary(ym);
   const [view, setView] = useState<View>('person');
   const [filter, setFilter] = useState<SummaryFilter>('all');
