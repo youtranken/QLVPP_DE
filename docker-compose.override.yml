@@ -1,0 +1,13 @@
+# Chỉ dev: prod chạy `-f docker-compose.yml` để không nạp file này
+services:
+  api:
+    environment:
+      AUTH_DEV_MODE: 'true'
+      NODE_ENV: development
+  web:
+    # Dev không có EDGE
+    ports:
+      - '127.0.0.1::80'
+  postgres:
+    ports:
+      - '127.0.0.1:5492:5432'

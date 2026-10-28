@@ -6,10 +6,10 @@
 
 | Module | TT | Trách nhiệm | File chính | Sở hữu | Phụ thuộc |
 |---|---|---|---|---|---|
-| compose/env | ⬜ | Dịch vụ api·web·postgres·backup-cron; env bắt buộc `:?` | `docker-compose.yml`, `.env.example`, `update-vpp.sh` | mạng `edge` alias `vpp-web` | — |
-| api bootstrap | ⬜ | Assert env fail-closed → migrate → listen; prefix `/api`; trust proxy theo `TRUST_PROXY_HOPS` | `api/src/main.ts`, `app.setup.ts`, `app.module.ts` | `GET health` | database, auth |
+| compose/env | ✅ | Dịch vụ api·web·postgres·backup-cron (+`backup` profile); env bắt buộc `:?`; override dev (AUTH_DEV_MODE, web cổng ngẫu nhiên, Postgres `127.0.0.1:5492`); backup/restore | `docker-compose.yml`, `docker-compose.override.yml`, `.env.example`, `update-vpp.sh`, `ops/backup/*` | mạng `edge` alias `vpp-web`; volume `pgdata`, `filesdata` | — |
+| api bootstrap | 🟨 | Assert env fail-closed → migrate → listen; prefix `/api`; trust proxy theo `TRUST_PROXY_HOPS` (hiện có: listen + prefix + health) | `api/src/main.ts`, `app.setup.ts`, `app.module.ts`, `health/health.controller.ts`; test `api/test/health.e2e-spec.ts`, `test-app.helper.ts` | `GET health` | database, auth |
 | database | ⬜ | Pool pg, drizzle, migration runner checksum + advisory lock | `api/src/database/*`, `api/src/migrations/NNNN_*.sql` | `_migrations` | — |
-| web serve | ⬜ | nginx tĩnh + proxy `/api` giữ `$request_uri` | `web/nginx.conf`, `web/Dockerfile` | — | api |
+| web serve | ✅ | nginx tĩnh + proxy `/api` giữ `$request_uri`; body ≤ 6m; xóa header dev-identity | `web/nginx.conf`, `web/proxy-api-headers.conf`, `web/Dockerfile`, `web/vite.config.ts` | — | api |
 
 ## API — nền (copy QLTS, đã cắt)
 

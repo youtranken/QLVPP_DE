@@ -1,0 +1,125 @@
+services:
+  api:
+    image: vpp-api:latest
+    build: ./api
+    restart: unless-stopped
+    mem_limit: ${API_MEM_LIMIT:-384m}
+    # PMH ID chạy cùng host sau EDGE
+    extra_hosts:
+      - 'de-admin.pmh.com.vn:host-gateway'
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      AUTH_DEV_MODE: ${AUTH_DEV_MODE:-false}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL bắt buộc trong .env}
+      PMH_ISSUER_URL: ${PMH_ISSUER_URL:?PMH_ISSUER_URL bắt buộc trong .env}
+      PMH_CLIENT_ID: ${PMH_CLIENT_ID:?PMH_CLIENT_ID bắt buộc trong .env}
+      PMH_CLIENT_SECRET: ${PMH_CLIENT_SECRET:?PMH_CLIENT_SECRET bắt buộc trong .env}
+      PMH_WEBHOOK_SECRET: ${PMH_WEBHOOK_SECRET:?PMH_WEBHOOK_SECRET bắt buộc trong .env}
+      WEBHOOK_TS_SKEW_SEC: ${WEBHOOK_TS_SKEW_SEC:-300}
+      APP_BASE_URL: ${APP_BASE_URL:?APP_BASE_URL bắt buộc trong .env}
+      # EDGE → web nginx = 2 hop
+      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:?TRUST_PROXY_HOPS bắt buộc trong .env}
+      LOCAL_SA_USERNAME: ${LOCAL_SA_USERNAME:?LOCAL_SA_USERNAME bắt buộc trong .env}
+      LOCAL_SA_PASSWORD_HASH: ${LOCAL_SA_PASSWORD_HASH:?LOCAL_SA_PASSWORD_HASH bắt buộc trong .env (scrypt.saltHex.hashHex)}
+      FILE_STORAGE_DIR: /data/files
+    volumes:
+      - filesdata:/data/files
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:3000/api/health || exit 1']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+  web:
+    build: ./web
+    restart: unless-stopped
+    mem_limit: ${WEB_MEM_LIMIT:-64m}
+    # Không publish cổng: EDGE giữ TLS và proxy tới vpp-web:80
+    networks:
+      default: {}
+      edge:
+        aliases:
+          - vpp-web
+    depends_on:
+      api:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    mem_limit: ${POSTGRES_MEM_LIMIT:-512m}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER bắt buộc trong .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD bắt buộc trong .env}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB bắt buộc trong .env}
+    volumes:
+      # postgres:18 đổi layout: PGDATA=/var/lib/postgresql/18/docker — mount cha, không mount /data
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backup-cron:
+    build: ./ops/backup
+    image: vpp-backup:latest
+    restart: unless-stopped
+    mem_limit: 256m
+    entrypoint: ['sh', '/cron-loop.sh']
+    environment:
+      TZ: Asia/Bangkok
+      PGHOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      BACKUP_OUT: /backups
+      FILES_DIR: /data/files
+      BACKUP_AT: ${BACKUP_AT:-02:00}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-30}
+      BACKUP_PASSPHRASE: ${BACKUP_PASSPHRASE:-}
+      BACKUP_ALLOW_PLAINTEXT: ${BACKUP_ALLOW_PLAINTEXT:-0}
+    volumes:
+      - filesdata:/data/files:ro
+      - ${BACKUP_DIR:-./data-backups}:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '5' }
+
+  backup:
+    build: ./ops/backup
+    image: vpp-backup:latest
+    profiles: ['backup']
+    environment:
+      TZ: Asia/Bangkok
+      PGHOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      BACKUP_OUT: /backups
+      FILES_DIR: /data/files
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-30}
+      BACKUP_PASSPHRASE: ${BACKUP_PASSPHRASE:-}
+      BACKUP_ALLOW_PLAINTEXT: ${BACKUP_ALLOW_PLAINTEXT:-0}
+    volumes:
+      - filesdata:/data/files:ro
+      - ${BACKUP_DIR:-./data-backups}:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  edge:
+    external: true
+  default: {}
+
+volumes:
+  pgdata:
+  filesdata:
