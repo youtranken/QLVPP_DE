@@ -3,9 +3,7 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
-import { FormField } from '@/ui/form-field';
 import {
-  categoryLabel,
   createItem,
   patchItem,
   useRefreshCatalog,
@@ -14,8 +12,7 @@ import {
 } from '@/features/catalog/catalog.api';
 import { fieldErrors, type FieldErrors } from '@/features/catalog/catalog-errors';
 import { ITEM_ERROR_FIELD, ITEM_FIELDS, draftFrom, itemPayload, type ItemDraft } from '@/features/catalog/item-draft';
-import { ImageField } from '@/features/catalog/image-field';
-import { UnitSelect } from '@/features/units/unit-select';
+import { ItemFields } from '@/features/catalog/item-fields';
 
 export function ItemForm({
   item,
@@ -26,7 +23,7 @@ export function ItemForm({
   categories: Category[];
   onClose: () => void;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const me = useMe();
   const refresh = useRefreshCatalog();
   const uid = useId();
@@ -37,7 +34,6 @@ export function ItemForm({
   const [saving, setSaving] = useState(false);
   const dirty = JSON.stringify(draft) !== JSON.stringify(initial);
   const hasImage = draft.image_file_id !== null;
-  const err = (k: string) => (errors[k] ? t(errors[k]) : undefined);
 
   const set = <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => {
     setDraft((d) => ({ ...d, [key]: value }));
@@ -59,9 +55,6 @@ export function ItemForm({
     }
   };
 
-  // Nhóm đã ngừng chỉ còn trong danh sách nếu món đang thuộc nhóm đó
-  const categoryOptions = categories.filter((c) => c.active || c.id === item?.category_id);
-
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()} dirty={dirty} dismissible={!saving} className="sheet a-form" maxWidth={600}>
       <form onSubmit={submit} noValidate>
@@ -79,65 +72,14 @@ export function ItemForm({
               {t(errors.form)}
             </p>
           )}
-          <div className="a-form-wide">
-            <ImageField
-              fileId={draft.image_file_id}
-              error={err('image_file_id')}
-              onChange={(id) => set('image_file_id', id)}
-              onBusyChange={setUploading}
-            />
-          </div>
-          <FormField label={t('catalog.form.name')} error={err('name')}>
-            {(p) => <input {...p} value={draft.name} onChange={(e) => set('name', e.target.value)} />}
-          </FormField>
-          <FormField label={t('catalog.form.nameEn')} error={err('name_en')}>
-            {(p) => <input {...p} value={draft.name_en} onChange={(e) => set('name_en', e.target.value)} />}
-          </FormField>
-          <FormField label={t('catalog.form.unit')} error={err('unit')}>
-            {(p) => <UnitSelect {...p} value={draft.unit} onValueChange={(v) => set('unit', v)} />}
-          </FormField>
-          <FormField label={t('catalog.form.packNote')} error={err('pack_note')}>
-            {(p) => (
-              <input
-                {...p}
-                value={draft.pack_note}
-                placeholder={t('catalog.form.packNoteHint')}
-                onChange={(e) => set('pack_note', e.target.value)}
-              />
-            )}
-          </FormField>
-          <FormField label={t('catalog.form.category')} error={err('category_id')} className="a-form-wide">
-            {(p) => (
-              <select {...p} value={draft.category_id} onChange={(e) => set('category_id', e.target.value)}>
-                <option value="">{t('catalog.form.noCategory')}</option>
-                {categoryOptions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.active ? categoryLabel(c, i18n.language) : t('catalog.form.inactiveCategory', { name: categoryLabel(c, i18n.language) })}
-                  </option>
-                ))}
-              </select>
-            )}
-          </FormField>
-          <NumberField label={t('catalog.form.maxQty')} value={draft.max_qty} error={err('max_qty')} onChange={(v) => set('max_qty', v)} />
-          <NumberField
-            label={t('catalog.form.sortOrder')}
-            hint={t('catalog.form.sortOrderHint')}
-            value={draft.sort_order}
-            error={err('sort_order')}
-            onChange={(v) => set('sort_order', v)}
+          <ItemFields
+            draft={draft}
+            errors={errors}
+            categories={categories}
+            keepCategoryId={item?.category_id}
+            onChange={set}
+            onUploadingChange={setUploading}
           />
-          <div className="a-check a-form-wide">
-            <label>
-              <input
-                type="checkbox"
-                checked={draft.admin_only}
-                aria-describedby={`${uid}-admin-only`}
-                onChange={(e) => set('admin_only', e.target.checked)}
-              />
-              {t('catalog.form.adminOnly')}
-            </label>
-            <small id={`${uid}-admin-only`}>{t('catalog.form.adminOnlyHint')}</small>
-          </div>
         </div>
         <div className="sheet-footer">
           {!hasImage && (
@@ -161,25 +103,5 @@ export function ItemForm({
         </div>
       </form>
     </Dialog>
-  );
-}
-
-function NumberField({
-  label,
-  hint,
-  value,
-  error,
-  onChange,
-}: {
-  label: string;
-  hint?: string;
-  value: string;
-  error?: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <FormField label={label} hint={hint} error={error}>
-      {(p) => <input {...p} type="number" inputMode="numeric" step={1} value={value} onChange={(e) => onChange(e.target.value)} />}
-    </FormField>
   );
 }

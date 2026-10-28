@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { screen, userEvent, within } from '@/test/test-utils';
+import { describe, expect, it, vi } from 'vitest';
+import { cleanup, jsonResponse, screen, userEvent, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -43,11 +43,17 @@ describe('AdminShell + RequireRole', () => {
     ]);
   });
 
-  it('mục chưa làm (Món ngoài danh mục) hiện "Sắp có"', () => {
+  it('mục chưa làm (Giao hàng) hiện "Sắp có"; Món ngoài danh mục là trang thật', () => {
     mockViewport(1280);
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { items: [] }))));
+    renderApp(makeMe('admin'), '/admin/delivery');
+    expect(screen.getByRole('heading', { level: 1, name: 'Giao hàng' })).toBeInTheDocument();
+    expect(screen.getByText('Sắp có')).toBeInTheDocument();
+    cleanup();
     renderApp(makeMe('admin'), '/admin/review');
     expect(screen.getByRole('heading', { level: 1, name: 'Món ngoài danh mục' })).toBeInTheDocument();
-    expect(screen.getByText('Sắp có')).toBeInTheDocument();
+    expect(screen.queryByText('Sắp có')).toBeNull();
+    vi.unstubAllGlobals();
   });
 
   it('390 px: sidebar ẩn sau nút "Mở menu", bấm thì hiện', async () => {

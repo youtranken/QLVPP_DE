@@ -8,7 +8,8 @@ import directory from './directory';
 import profile from './profile';
 import request from './request';
 import summary from './summary';
+import review from './review';
 
-const vi = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary };
+const vi = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review };
 
 export default vi;

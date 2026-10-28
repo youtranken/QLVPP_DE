@@ -55,6 +55,7 @@ function CartRow({
           <span className="rq-line-name">{name}</span>
         )}
         {!line.item_id && <CustomTags line={line} />}
+        {line.review_status === 'converted' && <span className="tag tag--ok">{t('request.cart.review.converted')}</span>}
         {line.added_by_admin && (
           <span className="tag" title={t('request.cart.adminAddedHint', { contact })}>
             {t('request.cart.adminAdded')}

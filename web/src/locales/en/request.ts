@@ -131,6 +131,7 @@ const request: Messages<typeof vi> = {
         pending: 'Waiting for Admin review',
         accepted: 'Accepted by Admin',
         rejected: 'Not accepted by Admin',
+        converted: 'Added to catalog',
       },
       remove: 'Remove {{name}}',
       addOther: 'Add another item',

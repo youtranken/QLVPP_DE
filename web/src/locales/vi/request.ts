@@ -128,6 +128,7 @@ const request = {
         pending: 'Chờ Hành chính xem',
         accepted: 'Hành chính đã nhận',
         rejected: 'Hành chính không nhận',
+        converted: 'Đã thêm vào danh mục',
       },
       remove: 'Bỏ {{name}}',
       addOther: 'Thêm món khác',

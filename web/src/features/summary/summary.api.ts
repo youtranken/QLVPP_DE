@@ -46,7 +46,7 @@ export interface UnregisteredUser {
   department: string | null;
 }
 
-const SUMMARY_KEY = ['admin-summary'] as const;
+export const SUMMARY_KEY = ['admin-summary'] as const;
 const PERSON_PAGE = 100;
 const base = (ym: string) => `/api/admin/periods/${ym}`;
 

@@ -85,6 +85,24 @@ describe('RequestPage — món ngoài danh mục', () => {
       { id: 'l-c', custom_name: 'Bìa còng', custom_unit: 'cai', custom_note: 'loại dày', image_file_id: 'f-1', qty: 2 },
     ]);
   });
+
+  it('dòng đã được Hành chính thêm vào danh mục (converted) → tên món mới, nhãn "Đã thêm vào danh mục"', async () => {
+    mockViewport(1280);
+    const converted = lineView({
+      id: 'l-v',
+      item_id: NOTE.id,
+      item: facts(NOTE),
+      qty: 2,
+      review_status: 'converted',
+      review_note: 'Từ: Giấy note',
+    });
+    stubRequestApi({ request: view({ lines: [converted] }) });
+    renderApp(makeMe('member'), '/');
+    const side = await screen.findByRole('complementary', { name: 'Phiếu của tôi' });
+    const line = (await within(side).findByText('Giấy note vàng')).closest('li')!;
+    expect(within(line).getByText('Đã thêm vào danh mục')).toHaveClass('tag--ok');
+    expect(within(line).queryByText('Ngoài danh mục')).toBeNull();
+  });
 });
 
 describe('RequestPage — chép lại tháng trước', () => {

@@ -10,7 +10,8 @@ import directory from './directory';
 import profile from './profile';
 import request from './request';
 import summary from './summary';
+import review from './review';
 
-const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary };
+const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review };
 
 export default en;
