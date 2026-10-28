@@ -62,3 +62,8 @@ export function daysLeft(now: Date, deadline: Date): number {
   const lastDay = vnDate(new Date(deadline.getTime() - 1));
   return Math.max(0, dayNumber(lastDay) - dayNumber(vnDate(now)) + 1);
 }
+
+// Cột periods.ym là date ngày 1; chuỗi tháng chỉ đổi sang khi chạm DB
+export function ymToDate(ym: string): string {
+  return `${ym}-01`;
+}

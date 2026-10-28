@@ -1,4 +1,11 @@
-import { addMonths, daysLeft, deadlineOf, periodFor, vnDate } from './period';
+import {
+  addMonths,
+  daysLeft,
+  deadlineOf,
+  periodFor,
+  vnDate,
+  ymToDate,
+} from './period';
 
 const at = (iso: string) => new Date(iso);
 
@@ -71,5 +78,11 @@ describe('vnDate', () => {
       m: 11,
       d: 11,
     });
+  });
+});
+
+describe('ymToDate', () => {
+  it('ngày 1 của tháng', () => {
+    expect(ymToDate('2026-11')).toBe('2026-11-01');
   });
 });
