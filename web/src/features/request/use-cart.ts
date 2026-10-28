@@ -76,7 +76,13 @@ function fromView(l: LineView, ctx: CartContext): CartLine {
   };
 }
 
-function fromItem(i: MemberItem, qty: number, base?: CartLine): CartLine {
+const canOrder = (i: MemberItem) => i.active && !i.admin_only;
+
+// Dòng chỉ đọc (Hành chính thêm…) không bao giờ làm gốc: dùng lại id của nó sẽ gửi trùng id
+function fromItem(i: MemberItem, qty: number, prior?: CartLine): CartLine {
+  const base = prior && !prior.readonly ? prior : undefined;
+  // Món đã ngừng/chỉ Hành chính: không tăng quá số đang có
+  const max = canOrder(i) ? i.max_qty : Math.min(i.max_qty, base?.qty ?? qty);
   return {
     key: i.id,
     id: base?.id,
@@ -85,8 +91,8 @@ function fromItem(i: MemberItem, qty: number, base?: CartLine): CartLine {
     custom_unit: null,
     custom_note: base?.custom_note ?? null,
     image_file_id: null,
-    qty: Math.min(qty, i.max_qty),
-    max: i.max_qty,
+    qty: Math.min(qty, max),
+    max,
     readonly: false,
     added_by_admin: false,
     review_status: base?.review_status ?? 'n/a',
@@ -131,6 +137,12 @@ export function carryOf(lines: CartLine[]): ReplaceLineInput[] {
     .map((l) => (l.item_id ? { item_id: l.item_id, qty: l.qty } : customOf(l)));
 }
 
+// Kết quả thay giỏ: món trùng dòng Hành chính đã thêm, số món không còn đặt được
+export interface ReplaceReport {
+  heldByAdmin: string[];
+  unavailable: number;
+}
+
 export function useCart(server: RequestView | null, ctx: CartContext, initial?: ReplaceLineInput[]) {
   const [saved, setSaved] = useState(server);
   const base = useMemo(() => (saved?.lines ?? []).map((l) => fromView(l, ctx)), [saved, ctx]);
@@ -152,17 +164,29 @@ export function useCart(server: RequestView | null, ctx: CartContext, initial?: 
     };
   };
 
-  // Dòng chỉ đọc giữ nguyên; món thường gắn lại vào dòng đã lưu cùng món (giữ id) để không trùng món
-  const replaced = (prev: CartLine[], next: ReplaceLineInput[]): CartLine[] => [
-    ...prev.filter((l) => l.readonly),
-    ...next.flatMap((n) => {
+  // Dòng chỉ đọc giữ nguyên (món trùng dòng đó thì bỏ và báo); món thường gắn lại vào dòng đã lưu cùng món (giữ id)
+  const replaced = (prev: CartLine[], next: ReplaceLineInput[]): { lines: CartLine[]; report: ReplaceReport } => {
+    const held = prev.filter((l) => l.readonly);
+    const heldKeys = new Set(held.map((l) => l.key));
+    const report: ReplaceReport = { heldByAdmin: [], unavailable: 0 };
+    const fresh = next.flatMap((n) => {
       if (!('item_id' in n)) return [customLine(n)];
       const item = ctx.items.get(n.item_id);
-      return item ? [fromItem(item, n.qty, baseByKey.get(n.item_id))] : [];
-    }),
-  ];
+      if (!item || !canOrder(item)) {
+        report.unavailable += 1;
+        return [];
+      }
+      if (heldKeys.has(n.item_id)) {
+        report.heldByAdmin.push(item.name);
+        return [];
+      }
+      return [fromItem(item, n.qty, baseByKey.get(n.item_id))];
+    });
+    return { lines: [...held, ...fresh], report };
+  };
 
-  const [lines, setLines] = useState<CartLine[]>(() => (initial ? replaced(base, initial) : base));
+  const [init] = useState(() => (initial ? replaced(base, initial) : { lines: base, report: null }));
+  const [lines, setLines] = useState<CartLine[]>(init.lines);
 
   const editable = (key: string) => !lines.find((l) => l.key === key)?.readonly;
 
@@ -196,7 +220,11 @@ export function useCart(server: RequestView | null, ctx: CartContext, initial?: 
     );
   };
 
-  const replaceAll = (next: ReplaceLineInput[]) => setLines((prev) => replaced(prev, next));
+  const replaceAll = (next: ReplaceLineInput[]): ReplaceReport => {
+    const out = replaced(lines, next);
+    setLines(out.lines);
+    return out.report;
+  };
 
   const toBody = (): SaveLinesBody => ({
     ym: ctx.ym,
@@ -213,6 +241,7 @@ export function useCart(server: RequestView | null, ctx: CartContext, initial?: 
     lines,
     dirtyCount: countDirty(base, lines),
     saved,
+    initialReport: init.report,
     setQty,
     remove,
     addCustom,

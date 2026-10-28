@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UnitSelect } from '@/features/units/unit-select';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
@@ -36,7 +36,13 @@ export function CustomLineDialog({
     image_file_id: imageId,
     qty,
   };
-  const ready = !!line.custom_name && !!unit && !!imageId && !uploading;
+  const hintId = useId();
+  const missing = [
+    !line.custom_name && t('request.custom.missingName'),
+    !unit && t('request.custom.missingUnit'),
+    !imageId && t('request.custom.missingImage'),
+  ].filter(Boolean);
+  const ready = missing.length === 0 && !uploading;
   const dirty =
     name !== (initial?.custom_name ?? '') ||
     unit !== (initial?.custom_unit ?? '') ||
@@ -90,13 +96,18 @@ export function CustomLineDialog({
             )}
           </FormField>
         </div>
-        <div className="sheet-footer">
+        <div className="sheet-footer rq-custom-footer">
+          {missing.length > 0 && (
+            <p id={hintId} className="ff-hint rq-custom-missing">
+              {t('request.custom.missing', { fields: missing.join(', ') })}
+            </p>
+          )}
           <DialogClose asChild>
             <button type="button" className="btn" disabled={uploading}>
               {t('request.custom.cancel')}
             </button>
           </DialogClose>
-          <button type="submit" className="btn btn--primary" disabled={!ready}>
+          <button type="submit" className="btn btn--primary" disabled={!ready} aria-describedby={missing.length ? hintId : undefined}>
             {t(initial ? 'request.custom.submitEdit' : 'request.custom.submitAdd')}
           </button>
         </div>

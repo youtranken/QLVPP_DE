@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { saveMyLines, useSetMyRequest, type RequestView } from './request.api';
 import { saveFailure } from './request-errors';
-import { monthOf, useAdminContact } from './request-format';
+import { monthOf, useAdminContact, useRequestFormat } from './request-format';
 import { carryOf, type Cart, type ReplaceLineInput } from './use-cart';
 
 const TOAST_MS = 3000;
@@ -17,7 +17,8 @@ export interface Notice {
 
 export interface SaveFlowOptions {
   // Kỳ vừa khóa: trang chuyển sang kỳ mới, mang giỏ theo
-  onLocked: (nextYm: string, carry: ReplaceLineInput[]) => void;
+  // carry = null khi kỳ cũ đã có phiếu lưu (phiếu đó giữ nguyên, không mang thay đổi chưa lưu sang)
+  onLocked: (locked: LockedInfo) => void;
   initialNotice?: Notice | null;
 }
 
@@ -36,8 +37,21 @@ function useFocusNotice(notice: Notice | null, cartRef: RefObject<HTMLElement | 
   }, [notice, cartRef, noticeRef]);
 }
 
-export function lockedNotice(t: (k: string, o?: Record<string, unknown>) => string, ym: string, next: string): Notice {
-  return { text: t('request.locked', { month: monthOf(ym), next: monthOf(next) }), focusKey: null, tone: 'info' };
+export interface LockedInfo {
+  fromYm: string;
+  nextYm: string;
+  carry: ReplaceLineInput[] | null;
+  // Giờ lưu (đã định dạng) của phiếu kỳ cũ; null = kỳ cũ chưa từng lưu
+  savedTime: string | null;
+}
+
+type T = (k: string, o?: Record<string, unknown>) => string;
+
+export function lockedNotice(t: T, info: LockedInfo, unavailable = 0): Notice {
+  const opts = { month: monthOf(info.fromYm), next: monthOf(info.nextYm), time: info.savedTime };
+  const main = t(info.savedTime ? 'request.lockedSaved' : 'request.locked', opts);
+  const extra = unavailable > 0 ? ` ${t('request.unavailable', { n: unavailable })}` : '';
+  return { text: main + extra, focusKey: null, tone: 'info' };
 }
 
 export function useSaveFlow(
@@ -50,6 +64,7 @@ export function useSaveFlow(
   const { t } = useTranslation();
   const me = useMe();
   const contact = useAdminContact();
+  const fmt = useRequestFormat();
   const setMyRequest = useSetMyRequest();
   const [confirming, setConfirming] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -90,8 +105,14 @@ export function useSaveFlow(
       const failure = saveFailure(e, cart.lines, (k, o) => t(k, { contact, ...o }), ym);
       if (failure.kind === 'locked') {
         setLineErrors({});
-        setNotice(lockedNotice(t, ym, failure.nextYm));
-        opts.onLocked(failure.nextYm, carryOf(cart.lines));
+        const info: LockedInfo = {
+          fromYm: ym,
+          nextYm: failure.nextYm,
+          carry: cart.saved ? null : carryOf(cart.lines),
+          savedTime: cart.saved ? fmt.time(cart.saved.updated_at) : null,
+        };
+        setNotice(lockedNotice(t, info));
+        opts.onLocked(info);
       } else if (failure.kind === 'stale') {
         setNotice(null);
         setStale(true);

@@ -178,7 +178,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
     }
   });
 
-  test('Kỳ khóa giữa chừng (PERIOD_LOCKED giả qua route): giỏ chuyển sang tháng sau, câu báo thấy ngay', async ({ page, request }, info) => {
+  test('Kỳ khóa giữa chừng, chưa từng lưu (PERIOD_LOCKED giả qua route): giỏ chuyển sang tháng sau, câu báo thấy ngay', async ({ page, request }, info) => {
     const me = memberIdentity(info, 'locked');
     seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
     const period = await (await request.get('/api/periods/current', { headers: me.headers })).json();
@@ -221,5 +221,59 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
     await expect(page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' })).toBeVisible();
     await expect(page.getByRole('complementary', { name: 'Phiếu của tôi' }).getByRole('spinbutton', { name: item.name, exact: true })).toHaveValue('1');
     await snap(page, info, 'period-locked');
+  });
+
+  test('Kỳ khóa giữa chừng, đã có phiếu lưu (PERIOD_LOCKED giả): không mang giỏ, báo phiếu đã lưu vẫn giữ', async ({ page, request }, info) => {
+    const me = memberIdentity(info, 'locked-saved');
+    seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
+    const period = await (await request.get('/api/periods/current', { headers: me.headers })).json();
+    const [y, m] = String(period.ym).split('-').map(Number);
+    const nextYm = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+    let puts = 0;
+    let locked = false;
+    await page.route('**/api/**', async (route) => {
+      const url = route.request().url();
+      const headers = { ...route.request().headers(), ...me.headers };
+      // Lần lưu đầu đi thật (tạo phiếu); lần sau giả kỳ vừa khóa
+      if (url.endsWith('/api/me/request/lines') && route.request().method() === 'PUT' && ++puts > 1) {
+        locked = true;
+        return route.fulfill({ status: 400, json: { statusCode: 400, code: 'PERIOD_LOCKED', message: 'x', next_ym: nextYm } });
+      }
+      if (url.endsWith('/api/periods/current') && locked) {
+        const res = await route.fetch({ headers });
+        return route.fulfill({ response: res, json: { ...(await res.json()), ym: nextYm } });
+      }
+      if (url.endsWith(`/api/me/request?ym=${nextYm}`)) {
+        return route.fulfill({ status: 404, json: { statusCode: 404, code: 'REQUEST_NOT_FOUND', message: 'x' } });
+      }
+      return route.continue({ headers });
+    });
+    const items = await (await request.get('/api/items', { headers: me.headers })).json();
+    const item = items.find((i: { name: string; active: boolean; admin_only: boolean }) => i.active && !i.admin_only && !i.name.startsWith('PW '));
+
+    try {
+      await page.goto('/');
+      const grid = page.getByRole('region', { name: 'Danh mục món' });
+      const add = grid.getByRole('button', { name: `Thêm ${item.name}`, exact: true });
+      await add.click();
+      await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
+      await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
+      await add.click();
+      await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
+
+      const next = Number(nextYm.slice(5));
+      await expect(page.getByRole('heading', { level: 1, name: `Phiếu tháng ${next}` })).toBeVisible();
+      const alert = page.getByRole('alert');
+      await expect(alert).toContainText(
+        new RegExp(`Phiếu tháng ${m} đã khóa lúc 00:00\\. Phiếu đã lưu lúc \\d{2}:\\d{2} vẫn giữ và sẽ được giao; thay đổi chưa lưu không kịp áp dụng\\. Phiếu tháng ${next} đã mở\\.`),
+      );
+      await expect(alert).toBeInViewport();
+      await expect(page.getByText('Chưa chọn món nào — bấm + trên thẻ món để thêm.')).toBeAttached();
+      await snap(page, info, 'period-locked-saved');
+    } finally {
+      psql(`DELETE FROM requests WHERE user_sub = '${me.sub}'`);
+    }
   });
 });

@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { IconDocCopy } from '@/ui/icons';
-import type { CopyPreviousResult } from './request.api';
 import { monthOf } from './request-format';
+import type { CopySummary } from './use-copy-previous';
 
 export function CopyPreviousButton({ fromYm, busy, onClick }: { fromYm: string; busy: boolean; onClick: () => void }) {
   const { t } = useTranslation();
@@ -15,7 +15,8 @@ export function CopyPreviousButton({ fromYm, busy, onClick }: { fromYm: string; 
 }
 
 // Báo bằng lời món nào không chép được và vì sao, để member không tưởng giỏ thiếu do lỗi
-export function CopySummaryDialog({ result, onClose }: { result: CopyPreviousResult; onClose: () => void }) {
+export function CopySummaryDialog({ summary, onClose }: { summary: CopySummary; onClose: () => void }) {
+  const { result, report } = summary;
   const { t } = useTranslation();
   const notes = [
     ...result.skipped.map((s) =>
@@ -23,6 +24,8 @@ export function CopySummaryDialog({ result, onClose }: { result: CopyPreviousRes
     ),
     ...result.capped.map((c) => t('request.copy.capped', c)),
     ...result.previously_accepted.map((name) => t('request.copy.accepted', { name })),
+    ...report.heldByAdmin.map((name) => t('request.copy.skipped', { name, reason: t('request.copy.reasons.HELD_BY_ADMIN') })),
+    ...(report.unavailable > 0 ? [t('request.unavailable', { n: report.unavailable })] : []),
   ];
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()} className="sheet rq-dialog" maxWidth={480}>

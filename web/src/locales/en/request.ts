@@ -17,6 +17,9 @@ const request: Messages<typeof vi> = {
     contactFallback: 'Admin',
     locked:
       'The month {{month}} order closed at 00:00. Your picks were moved to the month {{next}} order — tap Save order to keep them.',
+    lockedSaved:
+      'The month {{month}} order closed at 00:00. The order saved at {{time}} stays and will be delivered; unsaved changes came too late to apply. The month {{next}} order is now open.',
+    unavailable: '{{n}} item(s) can no longer be ordered and were left out.',
     custom: {
       addTitle: 'Add another item',
       editTitle: 'Edit other item',
@@ -35,6 +38,10 @@ const request: Messages<typeof vi> = {
       imageAlt: 'Item photo',
       imageUnsupported: 'Choose a JPG, PNG or WebP photo',
       uploadFailed: 'Could not upload the photo — try again.',
+      missing: 'Still needed: {{fields}}.',
+      missingName: 'item name',
+      missingUnit: 'unit',
+      missingImage: 'photo',
       submitAdd: 'Add to order',
       submitEdit: 'Save changes',
       cancel: 'Cancel',
@@ -51,6 +58,7 @@ const request: Messages<typeof vi> = {
         ADMIN_ONLY: 'only Admin can order it',
         ADDED_BY_ADMIN: 'added by Admin',
         REJECTED: 'not accepted by Admin',
+        HELD_BY_ADMIN: 'Admin already added this item',
       },
       capped: 'Reduced: {{name}} from {{from}} to {{to}} (monthly max)',
       accepted: '{{name}} — accepted by Admin last month, copied as an item outside the catalog for Admin to review again',
@@ -116,7 +124,7 @@ const request: Messages<typeof vi> = {
       body: 'The month {{month}} order was changed on another device or by Admin, so this cart could not be saved. To save, load the latest version — unsaved changes here will be lost. To note down your cart first, close this box, review it, then load later.',
       reload: 'Load latest version',
       keep: 'Close, view my cart',
-      kept: 'This cart was not saved because the order changed elsewhere — tap Save to load the latest version.',
+      kept: 'This cart was not saved because the order changed elsewhere — tap Save order to get the option to load the latest version again.',
     },
     errors: {
       notice: 'Not saved — {{name}}: {{message}}',

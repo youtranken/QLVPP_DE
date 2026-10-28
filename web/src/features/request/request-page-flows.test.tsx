@@ -96,9 +96,9 @@ describe('RequestPage — chép lại tháng trước', () => {
     expect(screen.queryByRole('button', { name: /Chép lại danh sách/ })).toBeNull();
   });
 
-  it('giỏ rỗng → điền thẳng (chưa lưu) + hộp tóm tắt "Đã bỏ: Giấy A4 — chỉ Hành chính đặt"', async () => {
+  it('giỏ rỗng → điền thẳng (chưa lưu) + hộp tóm tắt "Đã bỏ: Giấy A4 — chỉ Hành chính đặt"; lưu gửi dòng ngoài DM kèm ảnh cũ', async () => {
     mockViewport(1280);
-    stubRequestApi({ copy: () => jsonResponse(200, COPY) });
+    const api = stubRequestApi({ copy: () => jsonResponse(200, COPY), put: () => jsonResponse(500, {}) });
     renderApp(makeMe('member'), '/');
     await userEvent.click(await screen.findByRole('button', { name: 'Chép lại danh sách tháng 10' }));
     const summary = await screen.findByRole('dialog', { name: 'Đã chép danh sách tháng 10' });
@@ -106,7 +106,39 @@ describe('RequestPage — chép lại tháng trước', () => {
     await userEvent.click(within(summary).getByRole('button', { name: 'Đã hiểu' }));
     expect(within(cart()).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(20);
     expect(within(cart()).getByRole('button', { name: 'Sửa Bìa còng 7cm' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' })).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
+    await screen.findByRole('alert');
+    expect(api.putBody()).toEqual({
+      ym: '2026-11',
+      lines: [
+        { item_id: PEN.id, qty: 20 },
+        { custom_name: 'Bìa còng 7cm', custom_unit: 'cai', custom_note: null, image_file_id: 'f-old', qty: 2 },
+      ],
+    });
+  });
+
+  it('giỏ có dòng Hành chính thêm cùng món → chép bỏ món đó (không trùng id), tóm tắt "Hành chính đã thêm món này"', async () => {
+    mockViewport(1280);
+    const admin = lineView({ id: 'l-a', item_id: PEN.id, item: facts(PEN), qty: 1, added_by_admin: true, readonly_for_member: true });
+    const api = stubRequestApi({
+      request: view({ lines: [admin] }),
+      copy: () => jsonResponse(200, { ...COPY, skipped: [], capped: [] }),
+      put: () => jsonResponse(500, {}),
+    });
+    renderApp(makeMe('member'), '/');
+    await userEvent.click(await screen.findByRole('button', { name: 'Chép lại danh sách tháng 10' }));
+    const summary = await screen.findByRole('dialog', { name: 'Đã chép danh sách tháng 10' });
+    expect(within(summary).getByText('Đã bỏ: Bút bi xanh — Hành chính đã thêm món này')).toBeInTheDocument();
+    await userEvent.click(within(summary).getByRole('button', { name: 'Đã hiểu' }));
+    expect(within(cart()).getAllByText('Bút bi xanh')).toHaveLength(1);
+    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
+    await screen.findByRole('alert');
+    expect(api.putBody().lines).toEqual([
+      { id: 'l-a', qty: 1 },
+      { custom_name: 'Bìa còng 7cm', custom_unit: 'cai', custom_note: null, image_file_id: 'f-old', qty: 2 },
+    ]);
   });
 
   it('giỏ đang có dòng → hỏi "Thay giỏ hiện tại?"; Giữ giỏ thì không đổi, Thay giỏ thì thay', async () => {

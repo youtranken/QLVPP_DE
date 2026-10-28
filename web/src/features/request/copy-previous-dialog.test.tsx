@@ -20,7 +20,9 @@ const RESULT: CopyPreviousResult = {
 describe('CopySummaryDialog', () => {
   it('tóm tắt bằng lời: món bỏ kèm lý do, món hạ số lượng, món ngoài DM đã nhận', async () => {
     const onClose = vi.fn();
-    renderWithI18n(<CopySummaryDialog result={RESULT} onClose={onClose} />);
+    renderWithI18n(
+      <CopySummaryDialog summary={{ result: RESULT, report: { heldByAdmin: ['Kẹp giấy'], unavailable: 1 } }} onClose={onClose} />,
+    );
     const dialog = await screen.findByRole('dialog', { name: 'Đã chép danh sách tháng 10' });
     for (const text of [
       'Đã bỏ: Giấy A4 — chỉ Hành chính đặt',
@@ -28,6 +30,8 @@ describe('CopySummaryDialog', () => {
       'Đã bỏ: Kéo lớn — do Hành chính thêm',
       'Đã bỏ: Bìa lỗ — Hành chính không nhận',
       'Đã giảm: Bút bi xanh từ 30 xuống 20 (tối đa mỗi tháng)',
+      'Đã bỏ: Kẹp giấy — Hành chính đã thêm món này',
+      '1 món không còn đặt được đã bị bỏ.',
       'Bìa còng 7cm — tháng trước Hành chính đã nhận, chép lại thành món ngoài danh mục để Hành chính xem lại',
     ]) {
       expect(within(dialog).getByText(text)).toBeInTheDocument();

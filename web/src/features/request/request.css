@@ -122,3 +122,7 @@
   .rq-copy { order: 3; width: 100%; justify-content: center; }
   .rq-custom-row { grid-template-columns: 1fr; }
 }
+.rq-custom-footer { flex-wrap: wrap; }
+.rq-custom-missing { flex-basis: 100%; text-align: right; margin: 0; }
+/* Ô chọn ảnh là input sr-only trong nhãn: viền focus đặt lên nhãn trông như nút */
+.rq-img .btn:focus-within { outline: 3px solid var(--brand); outline-offset: 2px; }

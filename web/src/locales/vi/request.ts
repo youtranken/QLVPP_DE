@@ -14,6 +14,9 @@ const request = {
     contactFallback: 'Hành chính',
     locked:
       'Phiếu tháng {{month}} đã khóa lúc 00:00. Món bạn chọn đã được chuyển sang phiếu tháng {{next}} — bấm Lưu phiếu để giữ.',
+    lockedSaved:
+      'Phiếu tháng {{month}} đã khóa lúc 00:00. Phiếu đã lưu lúc {{time}} vẫn giữ và sẽ được giao; thay đổi chưa lưu không kịp áp dụng. Phiếu tháng {{next}} đã mở.',
+    unavailable: '{{n}} món không còn đặt được đã bị bỏ.',
     custom: {
       addTitle: 'Thêm món khác',
       editTitle: 'Sửa món khác',
@@ -32,6 +35,10 @@ const request = {
       imageAlt: 'Ảnh món',
       imageUnsupported: 'Chọn ảnh JPG, PNG hoặc WebP',
       uploadFailed: 'Chưa tải được ảnh — thử lại.',
+      missing: 'Cần thêm: {{fields}}.',
+      missingName: 'tên món',
+      missingUnit: 'đơn vị tính',
+      missingImage: 'ảnh',
       submitAdd: 'Thêm vào phiếu',
       submitEdit: 'Lưu thay đổi',
       cancel: 'Hủy',
@@ -48,6 +55,7 @@ const request = {
         ADMIN_ONLY: 'chỉ Hành chính đặt',
         ADDED_BY_ADMIN: 'do Hành chính thêm',
         REJECTED: 'Hành chính không nhận',
+        HELD_BY_ADMIN: 'Hành chính đã thêm món này',
       },
       capped: 'Đã giảm: {{name}} từ {{from}} xuống {{to}} (tối đa mỗi tháng)',
       accepted: '{{name}} — tháng trước Hành chính đã nhận, chép lại thành món ngoài danh mục để Hành chính xem lại',
@@ -113,7 +121,7 @@ const request = {
       body: 'Phiếu tháng {{month}} vừa được sửa trên thiết bị khác hoặc bởi Hành chính nên giỏ này chưa lưu được. Để lưu, cần tải bản mới nhất — các thay đổi chưa lưu ở đây sẽ mất. Muốn ghi lại giỏ của mình trước thì đóng hộp này, xem giỏ rồi tải sau.',
       reload: 'Tải bản mới nhất',
       keep: 'Đóng, xem giỏ của tôi',
-      kept: 'Giỏ này chưa lưu được vì phiếu đã đổi ở nơi khác — bấm Lưu để tải bản mới nhất.',
+      kept: 'Giỏ này chưa lưu được vì phiếu đã đổi ở nơi khác — bấm Lưu phiếu để mở lại lựa chọn tải bản mới nhất.',
     },
     errors: {
       notice: 'Chưa lưu được — {{name}}: {{message}}',

@@ -22,18 +22,14 @@ import {
 } from './request.api';
 import { monthOf, useRequestFormat } from './request-format';
 import { SaveDialog, StaleDialog } from './save-dialog';
-import { useCart, type ReplaceLineInput } from './use-cart';
+import { useCart } from './use-cart';
 import { useCopyPrevious } from './use-copy-previous';
 import { useLeaveGuard } from './use-leave-guard';
-import { lockedNotice, useSaveFlow } from './use-save-flow';
+import { lockedNotice, useSaveFlow, type LockedInfo } from './use-save-flow';
 import '@/features/request/request.css';
 
-// Giỏ mang sang khi kỳ đang sửa vừa khóa (PERIOD_LOCKED): áp vào editor của kỳ mới
-interface Carry {
-  fromYm: string;
-  nextYm: string;
-  lines: ReplaceLineInput[];
-}
+// Kỳ đang sửa vừa khóa (PERIOD_LOCKED): editor của kỳ mới nhận giỏ mang sang (nếu có) và câu báo
+type Carry = LockedInfo;
 
 // null = đóng; key vắng = thêm dòng mới
 type Editing = { key?: string } | null;
@@ -65,11 +61,11 @@ function RequestEditor({
     () => ({ ym: period.ym, items: new Map(items.map((i) => [i.id, i])), defaultMax: me.config.default_max_qty }),
     [period.ym, items, me.config.default_max_qty],
   );
-  const cart = useCart(server, ctx, carry?.lines);
+  const cart = useCart(server, ctx, carry?.carry ?? undefined);
   const cartRef = useRef<HTMLElement>(null);
   const flow = useSaveFlow(cart, period.ym, refetch, cartRef, {
-    initialNotice: carry ? lockedNotice(t, carry.fromYm, carry.nextYm) : null,
-    onLocked: (nextYm, lines) => onLocked({ fromYm: period.ym, nextYm, lines }),
+    initialNotice: carry ? lockedNotice(t, carry, cart.initialReport?.unavailable) : null,
+    onLocked,
   });
   const copy = useCopyPrevious(period.ym, cart, flow);
   // Giỏ mang sang đã vào state lúc mount: bỏ đi để lần mount sau (vd thử tải lại) không áp lần nữa
@@ -154,7 +150,7 @@ function RequestEditor({
       {flow.stale && (
         <StaleDialog month={monthOf(period.ym)} reloading={flow.reloading} onReload={() => void flow.reload()} onClose={flow.closeStale} />
       )}
-      {copy.summary && <CopySummaryDialog result={copy.summary} onClose={copy.closeSummary} />}
+      {copy.summary && <CopySummaryDialog summary={copy.summary} onClose={copy.closeSummary} />}
       {flow.notice && (
         <div className={`rq-notice rq-notice--${flow.noticeTone}`} role="alert" tabIndex={-1} ref={flow.noticeRef}>
           <span>{flow.notice}</span>

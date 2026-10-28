@@ -141,4 +141,38 @@ describe('useCart', () => {
     expect(next.current.toBody()).toEqual({ ym: '2026-12', lines: carry });
     expect(next.current.dirtyCount).toBe(3);
   });
+
+  it('replaceAll: món trùng dòng chỉ đọc (Hành chính thêm) bị bỏ và báo, không lấy id dòng chỉ đọc; món không còn đặt được đếm riêng', () => {
+    const OLD = memberItem({ id: 'i-old', name: 'Bút dạ cũ', active: false });
+    const items = new Map([...ITEMS, [OLD.id, OLD]]);
+    const cart = renderHook(() => useCart(SERVER, { ym: '2026-11', items, defaultMax: 20 })).result;
+    let report: ReturnType<typeof cart.current.replaceAll> | undefined;
+    act(() => {
+      report = cart.current.replaceAll([
+        { item_id: A4.id, qty: 2 },
+        { item_id: PEN.id, qty: 1 },
+        { item_id: OLD.id, qty: 1 },
+      ]);
+    });
+    expect(report).toEqual({ heldByAdmin: ['Giấy A4'], unavailable: 1 });
+    const keys = cart.current.lines.map((l) => l.key);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(cart.current.toBody().lines).toEqual([
+      { id: 'l-admin', qty: 1 },
+      { id: 'l-pen', qty: 1 },
+    ]);
+  });
+
+  it('khởi tạo từ carry: món đã ngừng bị bỏ, initialReport đếm', () => {
+    const OLD = memberItem({ id: 'i-old', name: 'Bút dạ cũ', active: false });
+    const items = new Map([...ITEMS, [OLD.id, OLD]]);
+    const cart = renderHook(() =>
+      useCart(null, { ym: '2026-12', items, defaultMax: 20 }, [
+        { item_id: PEN.id, qty: 2 },
+        { item_id: OLD.id, qty: 1 },
+      ]),
+    ).result;
+    expect(cart.current.lines.map((l) => l.key)).toEqual([PEN.id]);
+    expect(cart.current.initialReport).toEqual({ heldByAdmin: [], unavailable: 1 });
+  });
 });

@@ -41,6 +41,7 @@ describe('CustomLineDialog', () => {
     await userEvent.selectOptions(screen.getByLabelText('Đơn vị tính'), 'cai');
     expect(screen.getByText('Cần có ảnh')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Thêm vào phiếu' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Thêm vào phiếu' })).toHaveAccessibleDescription('Cần thêm: ảnh.');
     expect(screen.getByLabelText('Tên món')).toHaveAttribute('maxlength', '120');
     expect(dialog).toBeInTheDocument();
   });
@@ -48,6 +49,7 @@ describe('CustomLineDialog', () => {
   it('ảnh HEIC → "Chọn ảnh JPG, PNG hoặc WebP", không tải lên', async () => {
     const { fetchMock } = setup();
     await screen.findByRole('dialog', { name: 'Thêm món khác' });
+    expect(screen.getByText('Cần thêm: tên món, đơn vị tính, ảnh.')).toBeInTheDocument();
     await userEvent.upload(screen.getByLabelText('Chụp hoặc chọn ảnh'), new File(['x'], 'IMG_1.HEIC', { type: 'image/heic' }));
     expect(await screen.findByText('Chọn ảnh JPG, PNG hoặc WebP')).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
