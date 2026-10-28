@@ -74,4 +74,17 @@ describe('GET admin/audit', () => {
       .set('x-dev-role', 'admin')
       .expect(400);
   });
+
+  it.each([
+    ['ngày không có thật', { from: '2026-02-30' }],
+    ['to < from', { from: '2026-10-10', to: '2026-10-01' }],
+  ])('%s → 400 VALIDATION', async (_label, query) => {
+    const res = await request(app.getHttpServer())
+      .get('/api/admin/audit')
+      .query(query)
+      .set('x-dev-user-sub', 'dev-admin')
+      .set('x-dev-role', 'admin')
+      .expect(400);
+    expect(res.body.code).toBe('VALIDATION');
+  });
 });

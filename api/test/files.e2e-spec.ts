@@ -174,8 +174,12 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
       await get(id, 'e2e-files-sa', 'sa').expect(200);
     });
 
-    it('id không tồn tại hoặc không phải uuid → 404', async () => {
-      await get('00000000-0000-4000-8000-000000000000', MEMBER_A).expect(404);
+    it('id không tồn tại hoặc không phải uuid → 404 FILE_NOT_FOUND', async () => {
+      const missing = await get(
+        '00000000-0000-4000-8000-000000000000',
+        MEMBER_A,
+      ).expect(404);
+      expect(missing.body.code).toBe('FILE_NOT_FOUND');
       await get('khong-phai-uuid', MEMBER_A).expect(404);
     });
 

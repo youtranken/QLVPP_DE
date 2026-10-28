@@ -15,11 +15,19 @@ import { AuditQueryService } from './audit-query.service';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+function invalid(field: string, message: string): BadRequestException {
+  return new BadRequestException({
+    code: 'VALIDATION',
+    message,
+    fields: [field],
+  });
+}
+
 // Regex chỉ chặn định dạng; còn phải là ngày lịch thật (2026-02-30 bị loại)
-function assertValidDate(s: string): void {
+function assertValidDate(field: string, s: string): void {
   const d = new Date(`${s}T00:00:00Z`);
   if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== s) {
-    throw new BadRequestException(`Ngày không hợp lệ: ${s}`);
+    throw invalid(field, `Ngày không hợp lệ: ${s}`);
   }
 }
 
@@ -62,10 +70,10 @@ export class AuditController {
 
   @Get()
   list(@Query() q: AuditQueryDto) {
-    if (q.from) assertValidDate(q.from);
-    if (q.to) assertValidDate(q.to);
+    if (q.from) assertValidDate('from', q.from);
+    if (q.to) assertValidDate('to', q.to);
     if (q.from && q.to && q.to < q.from) {
-      throw new BadRequestException('to phải ≥ from');
+      throw invalid('to', 'to phải ≥ from');
     }
     return this.audit.listAudit({
       actor: q.actor,

@@ -90,7 +90,7 @@ export class FilesController {
     const path = file ? storedPath(file.id, file.mime) : null;
     if (!file || !path || !(await stat(path).catch(() => null))) {
       throw new NotFoundException({
-        code: 'NOT_FOUND',
+        code: 'FILE_NOT_FOUND',
         message: 'Không tìm thấy tệp.',
       });
     }
