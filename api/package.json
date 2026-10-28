@@ -35,7 +35,6 @@
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
     "drizzle-orm": "^0.45.2",
-    "exceljs": "^4.4.0",
     "jose": "^6.2.3",
     "multer": "^2.5.0",
     "nestjs-pino": "^4.6.1",
@@ -83,6 +82,9 @@
     ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
+    "setupFiles": [
+      "<rootDir>/../test/unit-logger.setup.ts"
+    ],
     "transform": {
       "^.+\\.(t|j)s$": [
         "ts-jest",
