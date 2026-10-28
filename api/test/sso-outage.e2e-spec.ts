@@ -81,5 +81,11 @@ describe('PMH ID sập, trình duyệt còn phiên SSO hết hạn', () => {
       .send({ username: USER, password: PASS })
       .expect(200);
     expect(res.body).toEqual({ ok: true });
+    const setCookie = ([] as string[]).concat(res.headers['set-cookie'] ?? []);
+    const sid = setCookie
+      .map((c) => /^vpp_sid=([^;]*)/.exec(c)?.[1])
+      .find((v) => v !== undefined);
+    expect(sid).toBeTruthy();
+    expect(sid).not.toBe(staleSid);
   });
 });
