@@ -36,6 +36,18 @@ export interface ItemRow extends Record<string, unknown> {
   sort_order: number;
 }
 
+export interface ItemFacts extends Record<string, unknown> {
+  id: string;
+  name: string;
+  name_en: string | null;
+  unit: string;
+  pack_note: string | null;
+  image_file_id: string | null;
+  active: boolean;
+  admin_only: boolean;
+  max_qty: number;
+}
+
 export interface CategoryRow extends Record<string, unknown> {
   id: string;
   name: string;
@@ -65,17 +77,4 @@ export function pick(
   keys: string[],
 ): Record<string, unknown> {
   return Object.fromEntries(keys.map((k) => [k, row[k]]));
-}
-
-// drizzle bọc lỗi pg trong DrizzleQueryError.cause
-export function pgViolation(
-  error: unknown,
-): { code: string; constraint?: string } | null {
-  for (let e = error as { code?: unknown; cause?: unknown } | undefined; e;) {
-    if (typeof e.code === 'string' && /^\d{5}$/.test(e.code)) {
-      return e as { code: string; constraint?: string };
-    }
-    e = e.cause as typeof e;
-  }
-  return null;
 }

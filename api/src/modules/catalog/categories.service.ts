@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
+import { pgViolation } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
@@ -12,7 +13,6 @@ import type { CreateCategoryDto, UpdateCategoryDto } from './catalog.dto';
 import {
   CATEGORY_COLUMNS,
   definedEntries,
-  pgViolation,
   pick,
   setClause,
 } from './catalog-sql';

@@ -13,6 +13,7 @@ import {
 import { DRIZZLE_DB, PG_POOL } from '../src/database/database.module';
 import type { Database } from '../src/database/database.module';
 import { AuditWriterService } from '../src/modules/audit/audit-writer.service';
+import { ITEM_IMAGE_REFERENCE } from '../src/modules/catalog/item-image.reference';
 import { FileAccessPolicy } from '../src/modules/files/file-access.policy';
 import { FilesCleanupJob } from '../src/modules/files/files-cleanup.job';
 import { FilesService } from '../src/modules/files/files.service';
@@ -270,8 +271,28 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
         }
       ).id;
       await backdate([line]);
-      expect(await app.get(FilesCleanupJob).run(new Date())).toBe(0);
+      const itemsOnly = new FileAccessPolicy(app.get<Pool>(PG_POOL));
+      itemsOnly.registerReference(ITEM_IMAGE_REFERENCE);
+      const job = new FilesCleanupJob(
+        app.get<Database>(DRIZZLE_DB),
+        app.get(AuditWriterService),
+        itemsOnly,
+      );
+      expect(await job.run(new Date())).toBe(0);
       expect(existsSync(join(dir, `${line}.png`))).toBe(true);
+    });
+
+    it('app đủ module (requests đã đăng ký line_image) → ảnh dòng mồ côi > 24 h bị dọn', async () => {
+      const line = (
+        (await upload(MEMBER_A, PNG_1X1, 'line_image').expect(201)).body as {
+          id: string;
+        }
+      ).id;
+      await backdate([line]);
+      expect(
+        await app.get(FilesCleanupJob).run(new Date()),
+      ).toBeGreaterThanOrEqual(1);
+      expect(existsSync(join(dir, `${line}.png`))).toBe(false);
     });
 
     it('chưa đăng ký reference nào → không xóa tệp nào', async () => {

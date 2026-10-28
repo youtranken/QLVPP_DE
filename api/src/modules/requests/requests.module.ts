@@ -1,0 +1,44 @@
+import { Module, OnModuleInit } from '@nestjs/common';
+import { CatalogModule } from '../catalog/catalog.module';
+import { ItemUsageRegistry } from '../catalog/item-usage.hook';
+import { SystemConfigModule } from '../config/config.module';
+import { FileAccessPolicy } from '../files/file-access.policy';
+import { FilesModule } from '../files/files.module';
+import { PeriodsModule } from '../periods/periods.module';
+import { UsersModule } from '../users/users.module';
+import { LINE_IMAGE_REFERENCE } from './line-image.reference';
+import { MeRequestController } from './me-request.controller';
+import { MeRequestService } from './me-request.service';
+import { RequestItemUsageHook } from './request-item-usage.hook';
+import { RequestLinesWriter } from './request-lines.writer';
+import { RequestViewBuilder } from './request-view';
+
+@Module({
+  imports: [
+    CatalogModule,
+    FilesModule,
+    PeriodsModule,
+    UsersModule,
+    SystemConfigModule,
+  ],
+  controllers: [MeRequestController],
+  providers: [
+    RequestLinesWriter,
+    RequestViewBuilder,
+    MeRequestService,
+    RequestItemUsageHook,
+  ],
+  exports: [RequestLinesWriter, RequestViewBuilder],
+})
+export class RequestsModule implements OnModuleInit {
+  constructor(
+    private readonly filePolicy: FileAccessPolicy,
+    private readonly itemUsage: ItemUsageRegistry,
+    private readonly usageHook: RequestItemUsageHook,
+  ) {}
+
+  onModuleInit(): void {
+    this.filePolicy.registerReference(LINE_IMAGE_REFERENCE);
+    this.itemUsage.register(this.usageHook);
+  }
+}

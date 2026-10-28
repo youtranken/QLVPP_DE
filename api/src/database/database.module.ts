@@ -7,6 +7,8 @@ export const DRIZZLE_DB = 'DRIZZLE_DB';
 
 // Bare NodePgDatabase mặc định schema Record<string,never> → lệch kiểu với drizzle(pool) trong db-spec.
 export type Database = NodePgDatabase<Record<string, unknown>>;
+export type Tx = Parameters<Parameters<Database['transaction']>[0]>[0];
+export type Executor = Database | Tx;
 
 @Global()
 @Module({

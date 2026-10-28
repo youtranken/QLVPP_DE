@@ -7,7 +7,7 @@ import { CatalogService } from './catalog.service';
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
 import { ITEM_IMAGE_REFERENCE } from './item-image.reference';
-import { ITEM_USAGE_HOOK, NoItemUsageHook } from './item-usage.hook';
+import { ITEM_USAGE_HOOK, ItemUsageRegistry } from './item-usage.hook';
 import { ItemsAdminController } from './items-admin.controller';
 import { ItemsController } from './items.controller';
 import { StockController } from './stock.controller';
@@ -27,9 +27,10 @@ import { StockService } from './stock.service';
     CategoriesService,
     StockService,
     StockQueryService,
-    { provide: ITEM_USAGE_HOOK, useClass: NoItemUsageHook },
+    ItemUsageRegistry,
+    { provide: ITEM_USAGE_HOOK, useExisting: ItemUsageRegistry },
   ],
-  exports: [CatalogService, StockService],
+  exports: [CatalogService, StockService, ItemUsageRegistry],
 })
 export class CatalogModule implements OnModuleInit {
   constructor(private readonly filePolicy: FileAccessPolicy) {}

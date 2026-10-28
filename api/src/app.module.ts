@@ -16,6 +16,7 @@ import { OidcModule } from './modules/auth/oidc.module';
 import { SystemConfigModule } from './modules/config/config.module';
 import { FilesModule } from './modules/files/files.module';
 import { PeriodsModule } from './modules/periods/periods.module';
+import { RequestsModule } from './modules/requests/requests.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { PeriodsModule } from './modules/periods/periods.module';
     FilesModule,
     CatalogModule,
     PeriodsModule,
+    RequestsModule,
   ],
   controllers: [HealthController, ...testOnlyControllers(process.env)],
   providers: [

@@ -368,7 +368,7 @@ describe('kho: nhập, điều chỉnh, xuất lẻ, sổ cái (Postgres thật)
       http().delete(`/api/admin/items/${fresh}`),
     ).expect(409);
     expect(hooked.body).toMatchObject({ code: 'ITEM_IN_USE' });
-    expect(usageHook.isUsed).toHaveBeenCalledWith(fresh);
+    expect(usageHook.isUsed).toHaveBeenCalledWith(fresh, expect.anything());
   });
 
   it('member gọi stock/issue → 403', async () => {

@@ -6,21 +6,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
+import { pgViolation } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
-import type { Database } from '../../database/database.module';
+import type { Database, Executor } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
 import { SystemConfigService } from '../config/system-config.service';
 import { FilesService } from '../files/files.service';
 import type { CreateItemDto, UpdateItemDto } from './catalog.dto';
-import {
-  ITEM_COLUMNS,
-  definedEntries,
-  pgViolation,
-  pick,
-  setClause,
-} from './catalog-sql';
-import type { ItemRow } from './catalog-sql';
+import { ITEM_COLUMNS, definedEntries, pick, setClause } from './catalog-sql';
+import type { ItemFacts, ItemRow } from './catalog-sql';
 import { ITEM_USAGE_HOOK } from './item-usage.hook';
 import type { ItemUsageHook } from './item-usage.hook';
 
@@ -42,6 +37,8 @@ const CONSTRAINT_ERRORS: Record<string, () => Error> = {
       message: 'Mã món đã được dùng.',
     }),
   stock_movements_item_id_fkey: () => itemInUse(),
+  // Dòng phiếu chèn sau lúc kiểm isUsed nhưng trước DELETE
+  request_lines_item_id_fkey: () => itemInUse(),
   // Ảnh bị job dọn tệp mồ côi xóa giữa lúc kiểm quyền và lúc ghi món
   items_image_file_id_fkey: () =>
     new BadRequestException({
@@ -66,6 +63,19 @@ export class CatalogService {
     private readonly config: SystemConfigService,
     @Inject(ITEM_USAGE_HOOK) private readonly usage: ItemUsageHook,
   ) {}
+
+  // Cho module phiếu kiểm luật dòng và hiển thị món, kể cả món đã ngừng
+  async itemFacts(
+    ids: string[],
+    tx: Executor = this.db,
+  ): Promise<Map<string, ItemFacts>> {
+    if (ids.length === 0) return new Map();
+    const { rows } = await tx.execute<ItemFacts>(sql`
+      SELECT id, name, name_en, unit, pack_note, image_file_id, active, admin_only, max_qty
+      FROM items WHERE id = ANY(${sql.param(ids)}::uuid[])
+    `);
+    return new Map(rows.map((r) => [r.id, r]));
+  }
 
   // missing_image: món seed chưa có ảnh để admin biết cần bổ sung
   // Id được liệt kê vẫn trả dù ngừng/admin_only: để member xem lại dòng cũ trong phiếu của mình
@@ -172,9 +182,9 @@ export class CatalogService {
   }
 
   async remove(id: string, actor: string): Promise<void> {
-    if (await this.usage.isUsed(id)) throw itemInUse();
     await this.mapConstraints(() =>
       this.db.transaction(async (tx) => {
+        if (await this.usage.isUsed(id, tx)) throw itemInUse();
         const before = (
           await tx.execute<ItemRow>(sql`
             DELETE FROM items WHERE id = ${id} RETURNING ${ITEM_COLUMNS}
