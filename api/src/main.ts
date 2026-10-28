@@ -1,11 +1,16 @@
+import './net-ipv4-first'; // phải đứng đầu: ép DNS ipv4first trước mọi kết nối
 import { NestFactory } from '@nestjs/core';
+import { Logger } from 'nestjs-pino';
 import { Pool } from 'pg';
 import { AppModule } from './app.module';
 import { configureApp } from './app.setup';
+import { assertTrustProxyHops } from './common/trust-proxy';
 import {
   resolveMigrationsDir,
   runMigrations,
 } from './database/migration-runner';
+import { assertAuthEnvSafe } from './modules/auth/auth-env';
+import { assertLocalSaConfigured } from './modules/auth/local-sa-env';
 
 function requiredPort(): number {
   const raw = process.env.PORT ?? '3000';
@@ -34,9 +39,16 @@ async function migrate(): Promise<void> {
 }
 
 async function bootstrap(): Promise<void> {
+  assertAuthEnvSafe(process.env);
+  assertLocalSaConfigured(process.env);
+  assertTrustProxyHops(process.env);
   const port = requiredPort();
   await migrate();
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+    rawBody: true,
+  });
+  app.useLogger(app.get(Logger));
   configureApp(app);
   app.enableShutdownHooks();
   await app.listen(port, '0.0.0.0');

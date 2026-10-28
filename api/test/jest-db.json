@@ -22,5 +22,5 @@
       }
     ]
   },
-  "transformIgnorePatterns": ["node_modules/(?!(jose|openid-client|oauth4webapi)/)"]
+  "transformIgnorePatterns": ["node_modules/(?!(jose|openid-client|oauth4webapi|@nestjs/schedule)/)"]
 }

@@ -101,7 +101,7 @@
       ]
     },
     "transformIgnorePatterns": [
-      "node_modules/(?!(jose|openid-client|oauth4webapi)/)"
+      "node_modules/(?!(jose|openid-client|oauth4webapi|@nestjs/schedule)/)"
     ],
     "collectCoverageFrom": [
       "**/*.(t|j)s"
