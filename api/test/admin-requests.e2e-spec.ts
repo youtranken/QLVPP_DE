@@ -10,7 +10,9 @@ describe('admin/requests: Hành chính sửa phiếu, tạo hộ', () => {
   const { A, B, ADMIN, at, http, as, newItem, save, view, auditOf, pool } = f;
   const LOCKED = `e2e-req-locked-${f.SUFFIX}`;
   const FRESH = `e2e-req-fresh-${f.SUFFIX}`;
+  const SA = 'local:sa';
   let item: string;
+  let seededSa = false;
 
   const adminPut = (id: string, body: object, role = 'admin') =>
     as(http().put(`/api/admin/requests/${id}/lines`), ADMIN, role).send(body);
@@ -30,8 +32,24 @@ describe('admin/requests: Hành chính sửa phiếu, tạo hộ', () => {
          ($3, 'Người mới', 'Phòng CT', 'active')`,
       [ADMIN, LOCKED, FRESH],
     );
+    // ensureLocalSa tạo dòng users active cho SA mỗi lần đăng nhập; có thể đã có từ suite khác
+    seededSa =
+      (
+        await pool().query(
+          `INSERT INTO users (sub, full_name, status) VALUES ($1, 'SA', 'active')
+           ON CONFLICT (sub) DO NOTHING`,
+          [SA],
+        )
+      ).rowCount === 1;
   });
 
+  f.onCleanup(async (pool) => {
+    await pool.query(
+      'DELETE FROM requests WHERE user_sub = $1 AND created_by_sub = $2',
+      [SA, ADMIN],
+    );
+    if (seededSa) await pool.query('DELETE FROM users WHERE sub = $1', [SA]);
+  });
   describe('PUT admin/requests/:id/lines', () => {
     it('member → 403', async () => {
       const r = await seed([{ item_id: item, qty: 2 }]);
@@ -230,6 +248,7 @@ describe('admin/requests: Hành chính sửa phiếu, tạo hộ', () => {
     it.each([
       ['người bị khóa', 400, 'USER_INACTIVE', () => LOCKED],
       ['sub lạ', 404, 'USER_NOT_FOUND', () => `e2e-req-ghost-${f.SUFFIX}`],
+      ['SA cục bộ (không có trong danh bạ)', 404, 'USER_NOT_FOUND', () => SA],
     ])('%s → %s %s', async (_n, status, code, sub) => {
       const res = await adminPost({
         user_sub: sub(),
@@ -246,6 +265,21 @@ describe('admin/requests: Hành chính sửa phiếu, tạo hộ', () => {
         lines: [{ item_id: item, qty: 1 }],
       }).expect(409);
       expect(res.body.code).toBe('REQUEST_EXISTS');
+    });
+
+    it('hai lần tạo hộ song song cùng người → một 201, lần kia 409 REQUEST_EXISTS (không STALE_UPDATE)', async () => {
+      for (let round = 0; round < 10; round++) {
+        await pool().query('DELETE FROM requests WHERE user_sub = $1', [B]);
+        const results = await Promise.all(
+          [1, 2].map((qty) =>
+            adminPost({ user_sub: B, lines: [{ item_id: item, qty }] }),
+          ),
+        );
+        const outcomes = results
+          .map((r) => (r.status === 201 ? '201' : `${r.status} ${r.body.code}`))
+          .sort();
+        expect(outcomes).toEqual(['201', '409 REQUEST_EXISTS']);
+      }
     });
 
     it('không dòng nào → 400 LINES_EMPTY', async () => {

@@ -1,8 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpException, Inject, Injectable } from '@nestjs/common';
 import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import type { RequestIdentity } from '../auth/identity.types';
+import { LOCAL_SA_SUB } from '../auth/local-sa-env';
 import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
 import {
@@ -65,9 +66,24 @@ export class AdminRequestService {
     body: CreateOnBehalfBody,
   ): Promise<{ request: RequestView | null }> {
     if (body.lines.length === 0) throw linesEmpty();
+    // SA cục bộ có dòng users active nhưng không thuộc danh bạ → không có phiếu
+    if (body.user_sub === LOCAL_SA_SUB) throw userNotFound();
     const owner = await this.users.findBySub(body.user_sub);
     if (!owner) throw userNotFound();
     if (owner.status !== 'active') throw userInactive();
+    try {
+      return await this.insertOnBehalf(admin, body);
+    } catch (error) {
+      // Đua với lần tạo/lưu khác: writer thấy phiếu đã có mà không có expected_updated_at
+      if (isStale(error)) throw requestExists();
+      throw error;
+    }
+  }
+
+  private insertOnBehalf(
+    admin: RequestIdentity,
+    body: CreateOnBehalfBody,
+  ): Promise<{ request: RequestView | null }> {
     const now = this.clock.now();
     return this.db.transaction(async (tx) => {
       const open = await this.periods.openPeriod(tx, now);
@@ -93,4 +109,11 @@ export class AdminRequestService {
       };
     });
   }
+}
+
+function isStale(error: unknown): boolean {
+  return (
+    error instanceof HttpException &&
+    (error.getResponse() as { code?: string }).code === 'STALE_UPDATE'
+  );
 }

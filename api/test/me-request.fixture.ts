@@ -118,6 +118,8 @@ export function meRequestFixture(tag: string) {
     ).rows.map((r) => r.detail);
   // Mọi sub của suite cùng hậu tố → suite tự seed thêm người (ADMIN, người bị khóa…) vẫn được dọn
   const MINE = `e2e-req-%-${SUFFIX}`;
+  // Dọn thêm của suite, chạy trước khi fixture xóa món/người và đóng pool
+  const cleanups: ((pool: Pool) => Promise<unknown>)[] = [];
   const resetRequests = () =>
     pool.query('DELETE FROM requests WHERE user_sub LIKE $1', [MINE]);
 
@@ -165,6 +167,7 @@ export function meRequestFixture(tag: string) {
 
   afterAll(async () => {
     await app.close();
+    for (const cleanup of cleanups) await cleanup(pool);
     await resetRequests();
     await pool.query('DELETE FROM items WHERE name LIKE $1', [
       `e2e-req-item-${SUFFIX}-%`,
@@ -197,6 +200,7 @@ export function meRequestFixture(tag: string) {
     auditOf,
     pool: () => pool,
     app: () => app,
+    onCleanup: (fn: (pool: Pool) => Promise<unknown>) => cleanups.push(fn),
     imgA: () => imgA,
     defaultMax: () => defaultMax,
   };
