@@ -96,7 +96,14 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
 
   it('đăng nhập lại thành công → về đúng trang cũ (returnTo) trong khung member', async () => {
     sessionStorage.setItem('vpp.auth.returnTo', '/history?x=1');
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, makeMe('member'))));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) =>
+        Promise.resolve(
+          url.startsWith('/api/me/requests') ? jsonResponse(200, { items: [], next_cursor: null }) : jsonResponse(200, makeMe('member')),
+        ),
+      ),
+    );
     renderWithI18n(<App />);
     await vi.waitFor(() => expect(window.location.pathname).toBe('/history'));
     expect(window.location.search).toBe('?x=1');

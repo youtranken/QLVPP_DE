@@ -1,0 +1,19 @@
+/* Lịch sử phiếu — member style (Nunito), thanh tiến độ theo _SPEC "locked view" */
+.hs-page { max-width: 760px; margin: 0 auto; }
+.hs-list, .hs-lines { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+.hs-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; background: var(--card); border-radius: 16px; padding: 14px 16px; box-shadow: 0 4px 16px rgba(20, 35, 28, .05); color: var(--ink); text-decoration: none; border: 2px solid transparent; min-height: 56px; }
+.hs-row:hover { border-color: var(--brand); }
+.hs-month { font-weight: 800; font-size: 17px; }
+.hs-sum { color: var(--ink-2); font-weight: 700; flex: 1 1 auto; }
+.hs-custom { flex: 1 1 100%; color: var(--ink-2); font-size: 14px; font-weight: 700; }
+.hs-more { margin: 14px auto 0; display: block; }
+.hs-back { display: inline-block; margin-top: 4px; font-weight: 800; color: var(--brand-ink); text-decoration: none; min-height: 32px; }
+.hs-line { background: var(--card); border-radius: 16px; padding: 14px 16px; box-shadow: 0 4px 16px rgba(20, 35, 28, .05); display: grid; gap: 8px; }
+.hs-line-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.hs-line-name { font-weight: 800; overflow-wrap: anywhere; }
+.hs-line-qty { color: var(--ink-2); font-weight: 700; }
+.hs-progress { display: flex; align-items: center; gap: 10px; }
+.hs-bar { flex: 1; height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.hs-bar i { display: block; height: 100%; background: var(--brand); border-radius: 999px; }
+.hs-count { font-weight: 800; min-width: 3.5ch; text-align: right; }
+.hs-cancelled { color: var(--warn); font-weight: 800; font-size: 14px; }

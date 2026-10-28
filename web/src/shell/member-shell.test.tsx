@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import { screen, within } from '@/test/test-utils';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { jsonResponse, screen, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 
+
+afterEach(() => vi.unstubAllGlobals());
 describe('MemberShell', () => {
   it('390 px: thanh dưới "Điều hướng chính" có đúng 3 mục Đăng ký · Lịch sử · Tôi, không có tab trên', () => {
     mockViewport(390);
@@ -26,6 +28,7 @@ describe('MemberShell', () => {
 
   it('mục đang ở được đánh dấu aria-current', () => {
     mockViewport(390);
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }))));
     renderApp(makeMe('member'), '/history');
     const nav = screen.getByRole('navigation', { name: 'Điều hướng chính' });
     expect(within(nav).getByRole('link', { name: 'Lịch sử' })).toHaveAttribute('aria-current', 'page');
@@ -41,9 +44,11 @@ describe('MemberShell', () => {
     expect(screen.getByRole('link', { name: 'Quản lý VPP' })).toHaveAttribute('href', '/admin');
   });
 
-  it('Lịch sử chưa làm hiện thẻ "Sắp có"', () => {
+  it('/history là trang Lịch sử thật, không còn "Sắp có"', async () => {
     mockViewport(1280);
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }))));
     renderApp(makeMe('member'), '/history');
-    expect(screen.getByText('Sắp có')).toBeInTheDocument();
+    expect(await screen.findByText('Chưa có phiếu nào')).toBeInTheDocument();
+    expect(screen.queryByText('Sắp có')).toBeNull();
   });
 });

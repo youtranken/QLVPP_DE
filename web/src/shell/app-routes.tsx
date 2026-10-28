@@ -5,6 +5,8 @@ import { ComingSoon } from '@/ui/coming-soon';
 import { NotFound } from '@/ui/load-state';
 import { ProfilePage } from '@/features/profile/profile-page';
 import { RequestPage } from '@/features/request/request-page';
+import { HistoryPage } from '@/features/request/history-page';
+import { HistoryDetailPage } from '@/features/request/history-detail-page';
 import { CatalogPage } from '@/features/catalog/catalog-page';
 import { CategoryPage } from '@/features/catalog/category-page';
 import { StockPage } from '@/features/stock/stock-page';
@@ -16,11 +18,6 @@ import { AdminShell } from '@/shell/admin-shell';
 import { RequireRole } from '@/shell/require-role';
 import { ForbiddenScreen } from '@/shell/forbidden-screen';
 import { ADMIN_HOME, ADMIN_PAGES } from '@/shell/admin-nav';
-
-function MemberSoon({ titleKey }: { titleKey: string }) {
-  const { t } = useTranslation();
-  return <ComingSoon title={t(titleKey)} asPageTitle />;
-}
 
 function AdminSoon({ titleKey }: { titleKey: string }) {
   const { t } = useTranslation();
@@ -40,8 +37,8 @@ export function AppRoutes() {
       <Route path="/forbidden" element={<ForbiddenRoute />} />
       <Route element={<MemberShell />}>
         <Route index element={<RequestPage />} />
-        <Route path="history" element={<MemberSoon titleKey="nav.history" />} />
-        <Route path="history/:ym" element={<MemberSoon titleKey="nav.history" />} />
+        <Route path="history" element={<HistoryPage />} />
+        <Route path="history/:ym" element={<HistoryDetailPage />} />
         <Route path="me" element={<ProfilePage />} />
       </Route>
       <Route
