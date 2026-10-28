@@ -1,0 +1,129 @@
+import { Inject, Injectable } from '@nestjs/common';
+import { sql } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
+import { ClockService } from '../../common/clock.service';
+import { ymToDate } from '../../common/period';
+import { DRIZZLE_DB } from '../../database/database.module';
+import type { Database } from '../../database/database.module';
+import { LOCAL_SA_SUB } from '../auth/local-sa-env';
+import { CatalogService } from '../catalog/catalog.service';
+import { SystemConfigService } from '../config/system-config.service';
+import { PeriodsService } from '../periods/periods.service';
+import { UsersService } from '../users/users.service';
+import { invalidPeriod, requestNotFound } from './request-errors';
+import { RequestViewBuilder } from './request-view';
+import type { RequestView } from './request-view';
+import * as repo from './requests.repo';
+
+export interface PeriodSummary {
+  ym: string;
+  deadline: string | null;
+  is_open: boolean;
+  registered: number;
+  headcount: number;
+  headcount_source: 'snapshot' | 'live';
+  lines_pending_delivery: number;
+  custom_pending: number;
+  low_stock: number;
+}
+
+export interface UnregisteredUser extends Record<string, unknown> {
+  sub: string;
+  full_name: string | null;
+  email: string | null;
+  department: string | null;
+}
+
+export const EFFECTIVE_LINE = sql.raw(
+  `l.review_status IN ('n/a', 'accepted', 'converted')`,
+);
+export const UNDELIVERED_LINE = sql`(${EFFECTIVE_LINE} AND l.delivered_qty + l.cancelled_qty < l.qty)`;
+
+// Báo cáo đọc-only: đọc thẳng users/requests/request_lines cho tổng hợp, không ghi
+@Injectable()
+export class SummaryService {
+  constructor(
+    @Inject(DRIZZLE_DB) private readonly db: Database,
+    private readonly clock: ClockService,
+    private readonly periods: PeriodsService,
+    private readonly config: SystemConfigService,
+    private readonly catalog: CatalogService,
+    private readonly users: UsersService,
+    private readonly views: RequestViewBuilder,
+  ) {}
+
+  // Kỳ quá khứ không cần có dòng periods; chỉ chặn kỳ sau kỳ đang mở
+  async assertViewable(ym: string): Promise<{ isOpen: boolean }> {
+    const open = await this.periods.openPeriod(this.db, this.clock.now());
+    if (ym > open.ym) throw invalidPeriod();
+    return { isOpen: ym === open.ym };
+  }
+
+  async summary(ym: string): Promise<PeriodSummary> {
+    const { isOpen } = await this.assertViewable(ym);
+    const period = await this.periods.findSnapshot(ym);
+    const { rows } = await this.db.execute<{
+      registered: number;
+      lines_pending_delivery: number;
+      custom_pending: number;
+    }>(sql`
+      SELECT count(DISTINCT r.id)::int AS registered,
+             count(l.id) FILTER (WHERE ${UNDELIVERED_LINE})::int AS lines_pending_delivery,
+             count(l.id) FILTER (WHERE l.review_status = 'pending')::int AS custom_pending
+      FROM requests r LEFT JOIN request_lines l ON l.request_id = r.id
+      WHERE r.period_ym = ${ymToDate(ym)}::date
+    `);
+    const snapshot = period?.headcount ?? null;
+    return {
+      ym,
+      deadline: period ? period.deadline.toISOString() : null,
+      is_open: isOpen,
+      ...rows[0],
+      headcount: snapshot ?? (await this.liveHeadcount()),
+      headcount_source: snapshot === null ? 'live' : 'snapshot',
+      low_stock: await this.catalog.countLowStock(),
+    };
+  }
+
+  async unregistered(ym: string): Promise<{ items: UnregisteredUser[] }> {
+    await this.assertViewable(ym);
+    const { rows } = await this.db.execute<UnregisteredUser>(sql`
+      SELECT u.sub, u.full_name, u.email, u.department FROM users u
+      WHERE ${await this.headcountCondition()}
+        AND NOT EXISTS (
+          SELECT 1 FROM requests r
+          WHERE r.user_sub = u.sub AND r.period_ym = ${ymToDate(ym)}::date
+        )
+      ORDER BY u.department NULLS LAST, u.full_name, u.sub
+    `);
+    return { items: rows };
+  }
+
+  async request(id: string): Promise<RequestView & { user_status: string }> {
+    const open = await this.periods.openPeriod(this.db, this.clock.now());
+    const head = await repo.findRequest(this.db, { id });
+    const view =
+      head && (await this.views.build(this.db, id, head.period_ym === open.ym));
+    if (!view) throw requestNotFound('Không tìm thấy phiếu.');
+    const owner = await this.users.findBySub(view.user_sub);
+    return { ...view, user_status: owner?.status ?? 'unknown' };
+  }
+
+  private async liveHeadcount(): Promise<number> {
+    const { rows } = await this.db.execute<{ n: number }>(sql`
+      SELECT count(*)::int AS n FROM users u WHERE ${await this.headcountCondition()}
+    `);
+    return rows[0].n;
+  }
+
+  // Mẫu số sống: người active, không phải SA cục bộ, thuộc group được cấp (gate rỗng = mọi người)
+  private async headcountCondition(): Promise<SQL> {
+    const groups = (await this.config.getAuthorizedGroups()).map((g) =>
+      g.toLowerCase(),
+    );
+    return sql`u.status = 'active' AND u.sub <> ${LOCAL_SA_SUB}
+      AND (${groups.length === 0} OR (jsonb_typeof(u.groups) = 'array' AND EXISTS (
+        SELECT 1 FROM jsonb_array_elements_text(u.groups) g
+        WHERE lower(g) = ANY(${sql.param(groups)}::text[]))))`;
+  }
+}

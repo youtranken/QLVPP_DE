@@ -82,6 +82,26 @@ export class PeriodsService {
     return row !== null && now < row.deadline;
   }
 
+  // Tổng hợp cần cả headcount đã chụp lúc khóa kỳ
+  async findSnapshot(
+    ym: string,
+    tx: Executor = this.db,
+  ): Promise<(Period & { headcount: number | null }) | null> {
+    const { rows } = await tx.execute<{
+      deadline: Date;
+      headcount: number | null;
+    }>(sql`
+      SELECT deadline, headcount FROM periods WHERE ym = ${ymToDate(ym)}::date
+    `);
+    return rows[0]
+      ? {
+          ym,
+          deadline: new Date(rows[0].deadline),
+          headcount: rows[0].headcount,
+        }
+      : null;
+  }
+
   async current(userSub: string): Promise<CurrentPeriod> {
     const now = this.clock.now();
     const period = await this.openPeriod(this.db, now);

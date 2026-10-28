@@ -22,6 +22,12 @@ export function lineError(
 export const requestNotFound = (message = 'Chưa có phiếu kỳ này.') =>
   new NotFoundException({ code: 'REQUEST_NOT_FOUND', message });
 
+export const invalidPeriod = () =>
+  new BadRequestException({
+    code: 'INVALID_PERIOD',
+    message: 'Kỳ chưa mở đăng ký.',
+  });
+
 export const staleUpdate = () =>
   new ConflictException({
     code: 'STALE_UPDATE',

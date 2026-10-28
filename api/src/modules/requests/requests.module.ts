@@ -1,4 +1,5 @@
 import { Module, OnModuleInit } from '@nestjs/common';
+import { AdminSummaryController } from './admin-summary.controller';
 import { CatalogModule } from '../catalog/catalog.module';
 import { ItemUsageRegistry } from '../catalog/item-usage.hook';
 import { SystemConfigModule } from '../config/config.module';
@@ -14,6 +15,8 @@ import { MeRequestService } from './me-request.service';
 import { RequestItemUsageHook } from './request-item-usage.hook';
 import { RequestLinesWriter } from './request-lines.writer';
 import { RequestViewBuilder } from './request-view';
+import { SummaryListsService } from './summary-lists.service';
+import { SummaryService } from './summary.service';
 
 @Module({
   imports: [
@@ -23,7 +26,7 @@ import { RequestViewBuilder } from './request-view';
     UsersModule,
     SystemConfigModule,
   ],
-  controllers: [MeRequestController],
+  controllers: [MeRequestController, AdminSummaryController],
   providers: [
     RequestLinesWriter,
     RequestViewBuilder,
@@ -31,6 +34,8 @@ import { RequestViewBuilder } from './request-view';
     CopyPreviousService,
     HistoryService,
     RequestItemUsageHook,
+    SummaryService,
+    SummaryListsService,
   ],
   exports: [RequestLinesWriter, RequestViewBuilder],
 })

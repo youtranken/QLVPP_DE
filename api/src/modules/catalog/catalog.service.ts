@@ -14,7 +14,13 @@ import type { RequestIdentity } from '../auth/identity.types';
 import { SystemConfigService } from '../config/system-config.service';
 import { FilesService } from '../files/files.service';
 import type { CreateItemDto, UpdateItemDto } from './catalog.dto';
-import { ITEM_COLUMNS, definedEntries, pick, setClause } from './catalog-sql';
+import {
+  ITEM_COLUMNS,
+  LOW_STOCK_SQL,
+  definedEntries,
+  pick,
+  setClause,
+} from './catalog-sql';
 import type { ItemFacts, ItemRow } from './catalog-sql';
 import { ITEM_USAGE_HOOK } from './item-usage.hook';
 import type { ItemUsageHook } from './item-usage.hook';
@@ -75,6 +81,13 @@ export class CatalogService {
       FROM items WHERE id = ANY(${sql.param(ids)}::uuid[])
     `);
     return new Map(rows.map((r) => [r.id, r]));
+  }
+
+  async countLowStock(): Promise<number> {
+    const { rows } = await this.db.execute<{ n: number }>(sql`
+      SELECT count(*)::int AS n FROM items WHERE active AND ${sql.raw(LOW_STOCK_SQL)}
+    `);
+    return rows[0].n;
   }
 
   // missing_image: món seed chưa có ảnh để admin biết cần bổ sung

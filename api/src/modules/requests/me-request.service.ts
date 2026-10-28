@@ -1,10 +1,10 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import type { RequestIdentity } from '../auth/identity.types';
 import { PeriodsService } from '../periods/periods.service';
-import { requestNotFound } from './request-errors';
+import { invalidPeriod, requestNotFound } from './request-errors';
 import { RequestLinesWriter } from './request-lines.writer';
 import { RequestViewBuilder } from './request-view';
 import type { RequestView } from './request-view';
@@ -25,12 +25,7 @@ export class MeRequestService {
     const open = await this.periods.openPeriod(this.db, this.clock.now());
     const target = ym ?? open.ym;
     // 'YYYY-MM' so sánh chuỗi đúng thứ tự thời gian
-    if (target > open.ym) {
-      throw new BadRequestException({
-        code: 'INVALID_PERIOD',
-        message: 'Kỳ chưa mở đăng ký.',
-      });
-    }
+    if (target > open.ym) throw invalidPeriod();
     const found = await repo.findRequest(this.db, {
       ym: target,
       user_sub: me.sub,
