@@ -7,8 +7,8 @@
 | Module | TT | Trách nhiệm | File chính | Sở hữu | Phụ thuộc |
 |---|---|---|---|---|---|
 | compose/env | ✅ | Dịch vụ api·web·postgres·backup-cron (+`backup` profile); env bắt buộc `:?`; override dev (AUTH_DEV_MODE, web cổng ngẫu nhiên, Postgres `127.0.0.1:5492`); backup/restore | `docker-compose.yml`, `docker-compose.override.yml`, `.env.example`, `update-vpp.sh`, `ops/backup/*` | mạng `edge` alias `vpp-web`; volume `pgdata`, `filesdata` | — |
-| api bootstrap | 🟨 | Assert env fail-closed → migrate → listen; prefix `/api`; trust proxy theo `TRUST_PROXY_HOPS` (hiện có: listen + prefix + health) | `api/src/main.ts`, `app.setup.ts`, `app.module.ts`, `health/health.controller.ts`; test `api/test/health.e2e-spec.ts`, `test-app.helper.ts` | `GET health` | database, auth |
-| database | ⬜ | Pool pg, drizzle, migration runner checksum + advisory lock | `api/src/database/*`, `api/src/migrations/NNNN_*.sql` | `_migrations` | — |
+| api bootstrap | 🟨 | Assert env fail-closed → migrate → listen; prefix `/api`; trust proxy theo `TRUST_PROXY_HOPS` (hiện có: assert `DATABASE_URL` → `runMigrations` → listen + prefix + health; `createTestApp` không chạy migration, pool lười nên e2e health không cần DB) | `api/src/main.ts`, `app.setup.ts`, `app.module.ts`, `health/health.controller.ts`; test `api/test/health.e2e-spec.ts`, `test-app.helper.ts` | `GET health` | database, auth |
+| database | ✅ | `DatabaseModule` global (`PG_POOL`, `DRIZZLE_DB`, kiểu `Database`); `runMigrations` checksum sha256 + advisory lock, mỗi file một transaction; migration nền 0001–0013 | `api/src/database/{database.module,migration-runner}.ts`, `api/src/migrations/0001…0013_*.sql`; test `api/test/migrations.db-spec.ts` | `_migrations`; tạo `config` (seed VPP), `users`, `sessions`, `audit_log` (append-only + chặn TRUNCATE), `processed_webhook_events`, `in_app_notifications`, `files` | — |
 | web serve | ✅ | nginx tĩnh + proxy `/api` giữ `$request_uri`; body ≤ 6m; xóa header dev-identity | `web/nginx.conf`, `web/proxy-api-headers.conf`, `web/Dockerfile`, `web/vite.config.ts` | — | api |
 
 ## API — nền (copy QLTS, đã cắt)

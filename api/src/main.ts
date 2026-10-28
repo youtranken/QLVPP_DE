@@ -1,6 +1,11 @@
 import { NestFactory } from '@nestjs/core';
+import { Pool } from 'pg';
 import { AppModule } from './app.module';
 import { configureApp } from './app.setup';
+import {
+  resolveMigrationsDir,
+  runMigrations,
+} from './database/migration-runner';
 
 function requiredPort(): number {
   const raw = process.env.PORT ?? '3000';
@@ -11,8 +16,26 @@ function requiredPort(): number {
   return port;
 }
 
+async function migrate(): Promise<void> {
+  if (!process.env.DATABASE_URL) {
+    throw new Error(
+      'Thiếu DATABASE_URL — không khởi động (tránh pg fallback localhost).',
+    );
+  }
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  pool.on('error', (error) => {
+    console.error('[migration-pool] lỗi kết nối idle:', error);
+  });
+  try {
+    await runMigrations(pool, resolveMigrationsDir());
+  } finally {
+    await pool.end();
+  }
+}
+
 async function bootstrap(): Promise<void> {
   const port = requiredPort();
+  await migrate();
   const app = await NestFactory.create(AppModule);
   configureApp(app);
   app.enableShutdownHooks();
