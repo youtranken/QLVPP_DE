@@ -4,6 +4,7 @@ import { Logger } from 'nestjs-pino';
 import { Pool } from 'pg';
 import { AppModule } from './app.module';
 import { configureApp } from './app.setup';
+import { assertClockEnv } from './common/clock.service';
 import { assertTrustProxyHops } from './common/trust-proxy';
 import {
   resolveMigrationsDir,
@@ -42,6 +43,7 @@ async function bootstrap(): Promise<void> {
   assertAuthEnvSafe(process.env);
   assertLocalSaConfigured(process.env);
   assertTrustProxyHops(process.env);
+  assertClockEnv(process.env);
   const port = requiredPort();
   await migrate();
   const app = await NestFactory.create(AppModule, {

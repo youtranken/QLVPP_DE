@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
+import { ClockModule } from './common/clock.module';
 import { IP_THROTTLER } from './common/ip-throttler.guard';
 import { testOnlyControllers } from './common/client-ip.controller';
 import { httpLoggerOptions } from './common/logger.config';
@@ -41,6 +42,7 @@ import { FilesModule } from './modules/files/files.module';
       }),
     }),
     ScheduleModule.forRoot(),
+    ClockModule,
     DatabaseModule,
     AuditModule,
     OidcModule,
