@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import { isUuid } from './uuid';
 
 export const DEFAULT_PAGE_LIMIT = 50;
 export const MAX_PAGE_LIMIT = 200;
@@ -54,4 +55,12 @@ export function assertRealTimestamp(value: string): void {
     offH <= 15 &&
     offM < 60;
   if (!ok) throw invalidCursor();
+}
+
+// Cursor keyset (created_at::text, id) của sổ kho và nhật ký
+export function decodeTimestampCursor(raw: string): [string, string] {
+  const [ts, id] = decodeCursor(raw, 2);
+  assertRealTimestamp(ts);
+  if (!isUuid(id)) throw invalidCursor();
+  return [ts, id];
 }

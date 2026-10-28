@@ -1,13 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { isUUID } from 'class-validator';
 import { sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
-import {
-  assertRealTimestamp,
-  decodeCursor,
-  encodeCursor,
-  invalidCursor,
-} from '../../common/cursor';
+import { decodeTimestampCursor, encodeCursor } from '../../common/cursor';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { ITEM_COLUMNS, LOW_STOCK_SQL } from './catalog-sql';
@@ -85,7 +79,7 @@ export class StockQueryService {
     limit: number,
     cursor?: string,
   ): Promise<Page<Record<string, unknown>>> {
-    const after = cursor ? parseCursor(cursor) : null;
+    const after = cursor ? decodeTimestampCursor(cursor) : null;
     const result = await this.db.execute<Keyed>(sql`
       SELECT * FROM (${base}) q
       WHERE ${after === null} OR (q.created_at, q.id) < (${after?.[0] ?? null}::timestamptz, ${after?.[1] ?? null}::uuid)
@@ -106,11 +100,4 @@ export class StockQueryService {
           : null,
     };
   }
-}
-
-function parseCursor(raw: string): [string, string] {
-  const [ts, id] = decodeCursor(raw, 2);
-  assertRealTimestamp(ts);
-  if (!isUUID(id)) throw invalidCursor();
-  return [ts, id];
 }

@@ -62,29 +62,22 @@ export class SummaryService {
 
   async summary(ym: string): Promise<PeriodSummary> {
     const { isOpen } = await this.assertViewable(ym);
-    const period = await this.periods.findSnapshot(ym);
-    const { rows } = await this.db.execute<{
-      registered: number;
-      lines_pending_delivery: number;
-      custom_pending: number;
-    }>(sql`
-      SELECT count(DISTINCT r.id)::int AS registered,
-             count(l.id) FILTER (WHERE ${UNDELIVERED_LINE})::int AS lines_pending_delivery,
-             count(l.id) FILTER (WHERE l.review_status = 'pending')::int AS custom_pending
-      FROM requests r LEFT JOIN request_lines l ON l.request_id = r.id
-      WHERE r.period_ym = ${ymToDate(ym)}::date
-    `);
+    const [period, counts, live, lowStock] = await Promise.all([
+      this.periods.findSnapshot(ym),
+      this.requestCounts(ym),
+      this.liveCounts(ym),
+      this.catalog.countLowStock(),
+    ]);
     const snapshot = period?.headcount ?? null;
-    const live = await this.liveCounts(ym);
     return {
       ym,
       deadline: period ? period.deadline.toISOString() : null,
       is_open: isOpen,
-      ...rows[0],
+      ...counts,
       headcount: snapshot ?? live.headcount,
       headcount_source: snapshot === null ? 'live' : 'snapshot',
       unregistered: live.unregistered,
-      low_stock: await this.catalog.countLowStock(),
+      low_stock: lowStock,
     };
   }
 
@@ -106,6 +99,21 @@ export class SummaryService {
     if (!view) throw requestNotFound('Không tìm thấy phiếu.');
     const owner = await this.users.findBySub(view.user_sub);
     return { ...view, user_status: owner?.status ?? 'unknown' };
+  }
+
+  private async requestCounts(ym: string) {
+    const { rows } = await this.db.execute<{
+      registered: number;
+      lines_pending_delivery: number;
+      custom_pending: number;
+    }>(sql`
+      SELECT count(DISTINCT r.id)::int AS registered,
+             count(l.id) FILTER (WHERE ${UNDELIVERED_LINE})::int AS lines_pending_delivery,
+             count(l.id) FILTER (WHERE l.review_status = 'pending')::int AS custom_pending
+      FROM requests r LEFT JOIN request_lines l ON l.request_id = r.id
+      WHERE r.period_ym = ${ymToDate(ym)}::date
+    `);
+    return rows[0];
   }
 
   // Cùng điều kiện với danh sách unregistered → số luôn bằng độ dài danh sách

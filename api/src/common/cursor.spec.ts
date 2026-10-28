@@ -1,5 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
-import { assertRealTimestamp, decodeCursor, encodeCursor } from './cursor';
+import {
+  assertRealTimestamp,
+  decodeCursor,
+  decodeTimestampCursor,
+  encodeCursor,
+} from './cursor';
 
 describe('cursor phân trang keyset', () => {
   it('encode rồi decode trả lại đúng các khóa', () => {
@@ -36,5 +41,19 @@ describe('cursor phân trang keyset', () => {
     'rac',
   ])('assertRealTimestamp từ chối %p → 400 VALIDATION', (ts) => {
     expect(() => assertRealTimestamp(ts)).toThrow(BadRequestException);
+  });
+
+  it('decodeTimestampCursor: (timestamptz, uuid) hợp lệ → trả lại; uuid sai hoặc ngày không có → VALIDATION', () => {
+    const ts = '2026-11-05 10:00:00.123456+07';
+    const id = '0b7e6f1a-1c2d-4e5f-8a9b-0c1d2e3f4a5b';
+    expect(decodeTimestampCursor(encodeCursor([ts, id]))).toEqual([ts, id]);
+    for (const bad of [
+      [ts, 'khong-phai-uuid'],
+      ['2026-02-31 10:00:00+07', id],
+    ]) {
+      expect(() => decodeTimestampCursor(encodeCursor(bad))).toThrow(
+        BadRequestException,
+      );
+    }
   });
 });

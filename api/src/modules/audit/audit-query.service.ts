@@ -1,12 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { isUUID } from 'class-validator';
 import { sql } from 'drizzle-orm';
-import {
-  assertRealTimestamp,
-  decodeCursor,
-  encodeCursor,
-  invalidCursor,
-} from '../../common/cursor';
+import { decodeTimestampCursor, encodeCursor } from '../../common/cursor';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 
@@ -98,9 +92,7 @@ export class AuditQueryService {
   }
 
   private afterCursor(raw: string) {
-    const [ts, id] = decodeCursor(raw, 2);
-    assertRealTimestamp(ts);
-    if (!isUUID(id)) throw invalidCursor();
+    const [ts, id] = decodeTimestampCursor(raw);
     return sql`(a.created_at, a.id) < (${ts}::timestamptz, ${id}::uuid)`;
   }
 }
