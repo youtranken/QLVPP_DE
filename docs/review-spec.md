@@ -61,3 +61,7 @@ Ký hiệu: **N** nhận và đã sửa spec · **GĐ2** hoãn sang giai đoạn
 3. ~~Ảnh món ngoài danh mục~~ — đã chốt: bắt buộc (BR-10), FE nén trước khi tải.
 
 Cả ba mục đã được chốt ngày 2026-10-28 và vá vào spec; không còn mục mở.
+
+## E. Quyết định sau triển khai
+
+- 2026-10-28 (review toàn nhánh Plan 1): `users.role` lệch §4 ("tính lại cùng chỗ") — code không ghi cột này; chốt sửa tài liệu thay vì ghi lại: cột không dùng cho quyền, không còn cập nhật, bỏ ở migration sau.

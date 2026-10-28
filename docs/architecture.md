@@ -74,7 +74,7 @@ Toàn bộ theo QLTS_DE `api/src/modules/auth` (đổi tên cookie `vpp_sid`, `v
 
 **Phân giải phiên mỗi request** — `IdentityGuard`: token còn hạn → dùng claims trong phiên; hết hạn → refresh **single-flight**; `invalid_grant` → hủy phiên (401); PMH ID không trả lời → 503 giữ phiên. Guard toàn cục: `IdentityGuard → CsrfGuard (X-CSRF-Token cho POST/PUT/PATCH/DELETE) → RolesGuard (@Roles)`.
 
-**Vai trò (khác QLTS)** — tính **mỗi request** trong `toIdentity`: `sa` nếu phiên SA cục bộ; `admin` nếu `users.groups` (đã đọc từ DB trong cùng lượt) giao với `config.admin_group` (không phân biệt hoa thường); còn lại `member`. Callback, webhook `user.groups_changed` và directory sync chỉ cập nhật `users.groups`; cột `users.role` không quyết định quyền (giữ để hiển thị, tính lại cùng chỗ). Hệ quả: gỡ group → request kế tiếp 403, không cần đợi refresh.
+**Vai trò (khác QLTS)** — tính **mỗi request** trong `toIdentity`: `sa` nếu phiên SA cục bộ; `admin` nếu `users.groups` (đã đọc từ DB trong cùng lượt) giao với `config.admin_group` (không phân biệt hoa thường); còn lại `member`. Callback, webhook `user.groups_changed` và directory sync chỉ cập nhật `users.groups`; cột `users.role` không dùng cho quyền và không còn được cập nhật (chỉ giá trị mặc định lúc tạo); sẽ bỏ ở migration sau. Hệ quả: gỡ group → request kế tiếp 403, không cần đợi refresh.
 
 **SA cục bộ** — `POST /api/auth/sa-login`; env `LOCAL_SA_USERNAME`, `LOCAL_SA_PASSWORD_HASH` = `scrypt.<salt>.<hash>` (sinh bằng `npm run sa:hash`); sub cố định `local:sa`; **khóa theo cặp (IP, username)** 5 sai/15′ + bộ đếm toàn cục 50 sai/15′ (chống dò và không bị khóa toàn cục vì một IP); idle 2 h; không hiện trong danh bạ/picker. `req.ip` đúng nhờ `TRUST_PROXY_HOPS` (xem §13).
 
