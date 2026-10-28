@@ -5,6 +5,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { AuditWriterService } from '../audit/audit-writer.service';
+import { SystemConfigService } from '../config/system-config.service';
 import { UsersService } from '../users/users.service';
 import { JwtVerifierService } from './jwt-verifier.service';
 import {
@@ -18,6 +19,7 @@ import type { OidcProvider } from './oidc-provider';
 import { SessionService } from './session.service';
 import type { SessionRecord } from './session.service';
 import type { RequestIdentity } from './identity.types';
+import { resolveRole } from './role';
 import type { PmhIdClaims } from '../users/users.service';
 
 // Refresh single-flight theo phiên: nhiều tab song song mà refresh nhiều lần sẽ đốt refresh token
@@ -36,6 +38,7 @@ export class SessionAuthService {
     @Inject(OIDC_PROVIDER) private readonly oidc: OidcProvider,
     private readonly audit: AuditWriterService,
     private readonly users: UsersService,
+    private readonly systemConfig: SystemConfigService,
   ) {}
 
   resolve(sessionId: string): Promise<RequestIdentity | null> {
@@ -144,13 +147,18 @@ export class SessionAuthService {
     );
   }
 
-  // 'sa' không bao giờ đến từ SSO — chỉ phiên local:sa ở doResolve
+  // Vai từ users.groups trong DB mỗi request (không từ claims phiên, không từ users.role):
+  // gỡ group qua webhook/sync có hiệu lực ngay. 'sa' chỉ đến từ phiên local:sa ở doResolve.
   private async toIdentity(
     sessionId: string,
     claims: PmhIdClaims,
   ): Promise<RequestIdentity> {
-    const user = await this.users.findBySub(claims.sub);
-    const role = user?.role === 'admin' ? 'admin' : 'member';
+    const [user, adminGroup] = await Promise.all([
+      this.users.findBySub(claims.sub),
+      this.systemConfig.getAdminGroup(),
+    ]);
+    const groups = Array.isArray(user?.groups) ? (user.groups as string[]) : [];
+    const role = resolveRole(groups, adminGroup);
     return {
       sub: claims.sub,
       role,

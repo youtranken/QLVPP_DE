@@ -6,6 +6,7 @@ function makeService(opts: {
   session?: Partial<SessionRecord> | null;
   refreshImpl?: jest.Mock;
   updateResult?: boolean;
+  userGroups?: unknown;
 }) {
   const session: SessionRecord | null =
     opts.session === null
@@ -40,15 +41,20 @@ function makeService(opts: {
         .mockResolvedValue({ accessToken: 'jwt-moi', refreshToken: 'rt-2' }),
   };
   const audit = { append: jest.fn().mockResolvedValue(undefined) };
-  const users = { findBySub: jest.fn().mockResolvedValue({ role: 'member' }) };
+  const userRow = { role: 'member', groups: opts.userGroups ?? [] };
+  const users = { findBySub: jest.fn().mockResolvedValue(userRow) };
+  const systemConfig = {
+    getAdminGroup: jest.fn().mockResolvedValue('vpp-admin'),
+  };
   const service = new SessionAuthService(
     sessions as never,
     jwtVerifier as never,
     oidc as never,
     audit as never,
     users as never,
+    systemConfig as never,
   );
-  return { service, sessions, oidc, audit, users };
+  return { service, sessions, oidc, audit, users, userRow };
 }
 
 describe('SessionAuthService — refresh ngầm', () => {
@@ -125,5 +131,41 @@ describe('SessionAuthService — refresh ngầm', () => {
     const result = await service.resolve('sid-1');
     expect(result?.sub).toBe('usr_1');
     expect(oidc.refresh).not.toHaveBeenCalled();
+  });
+});
+
+describe('SessionAuthService — role tính mỗi request từ users.groups', () => {
+  const fresh = { accessTokenExp: new Date(Date.now() + 60_000) };
+
+  it("users.groups=['vpp-admin'] → identity admin (users.role='member' bị bỏ qua)", async () => {
+    const { service } = makeService({
+      session: fresh,
+      userGroups: ['vpp-admin'],
+    });
+    expect((await service.resolve('sid-1'))?.role).toBe('admin');
+  });
+
+  it("UPDATE users SET groups='[]' → request kế là member, không cần refresh", async () => {
+    const { service, oidc, userRow } = makeService({
+      session: fresh,
+      userGroups: ['vpp-admin'],
+    });
+    expect((await service.resolve('sid-1'))?.role).toBe('admin');
+    userRow.groups = [];
+    expect((await service.resolve('sid-1'))?.role).toBe('member');
+    expect(oidc.refresh).not.toHaveBeenCalled();
+  });
+
+  it("users.role='admin' nhưng groups không có admin_group → member", async () => {
+    const { service, userRow } = makeService({ session: fresh });
+    userRow.role = 'admin';
+    userRow.groups = ['ke-toan'];
+    expect((await service.resolve('sid-1'))?.role).toBe('member');
+  });
+
+  it('chưa có users row → member', async () => {
+    const { service, users } = makeService({ session: fresh });
+    users.findBySub.mockResolvedValue(null);
+    expect((await service.resolve('sid-1'))?.role).toBe('member');
   });
 });

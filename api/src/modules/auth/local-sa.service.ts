@@ -5,10 +5,11 @@ import type { LocalSaConfig } from './local-sa-env';
 
 const KEYLEN = 64;
 const SALT_BYTES = 16;
-const MAX_FAILS = 5;
-const LOCK_MS = 15 * 60 * 1000;
-const IDLE_TTL_MS = LOCK_MS;
-// Trần cứng: bị bơm IP thật ồ ạt thì mất vài bộ đếm còn hơn OOM
+export const PAIR_MAX = 5;
+export const GLOBAL_MAX = 50;
+const WINDOW_MS = 15 * 60 * 1000;
+const GLOBAL_KEY = '*';
+// Trần cứng: bị bơm cặp (ip, username) ồ ạt thì mất vài bộ đếm còn hơn OOM
 const MAX_ENTRIES = 10_000;
 
 export function hashPassword(pw: string): string {
@@ -30,60 +31,78 @@ export function verifyPassword(pw: string, stored: string): boolean {
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
-type Attempt = { fails: number; lockUntil: number; touchedAt: number };
-
-// Lockout in-memory: đủ cho một instance api
+// Lockout in-memory, cửa sổ trượt 15′: cặp (ip, username) chống dò một nơi; toàn cục chống dò rải IP.
+// Đúng mật khẩu chỉ xóa bộ đếm cặp — bộ đếm toàn cục giữ nguyên để SA không tự mở khóa cho kẻ dò.
 @Injectable()
 export class LocalSaService {
   private readonly config: LocalSaConfig | null = parseLocalSa(process.env);
-  private readonly attempts = new Map<string, Attempt>();
+  private readonly failures = new Map<string, number[]>();
 
   attemptLogin(
     username: string,
     password: string,
     ip: string,
   ): 'ok' | 'bad' | 'locked' {
-    const now = Date.now();
-    this.prune(now);
-    const prev = this.attempts.get(ip);
-    if (prev && prev.lockUntil > now) {
+    if (this.isLocked(ip, username)) {
       return 'locked';
     }
-
     if (this.verifyCredentials(username, password)) {
-      this.attempts.delete(ip);
+      this.failures.delete(pairKey(ip, username));
       return 'ok';
     }
+    this.recordFailure(ip, username);
+    return this.isLocked(ip, username) ? 'locked' : 'bad';
+  }
 
-    const fails = (prev && prev.lockUntil === 0 ? prev.fails : 0) + 1;
-    if (fails >= MAX_FAILS) {
-      this.attempts.set(ip, {
-        fails: 0,
-        lockUntil: now + LOCK_MS,
-        touchedAt: now,
-      });
-      return 'locked';
+  isLocked(ip: string, username: string): boolean {
+    const now = Date.now();
+    return (
+      this.recent(pairKey(ip, username), now).length >= PAIR_MAX ||
+      this.recent(GLOBAL_KEY, now).length >= GLOBAL_MAX
+    );
+  }
+
+  recordFailure(ip: string, username: string): void {
+    const now = Date.now();
+    this.push(pairKey(ip, username), now, PAIR_MAX);
+    this.push(GLOBAL_KEY, now, GLOBAL_MAX);
+    this.prune(now);
+  }
+
+  private recent(key: string, now: number): number[] {
+    const stamps = this.failures.get(key);
+    if (!stamps) {
+      return [];
     }
-    this.attempts.set(ip, { fails, lockUntil: 0, touchedAt: now });
-    return 'bad';
+    const live = stamps.filter((t) => now - t < WINDOW_MS);
+    if (live.length === 0) {
+      this.failures.delete(key);
+    } else if (live.length !== stamps.length) {
+      this.failures.set(key, live);
+    }
+    return live;
+  }
+
+  // Chỉ giữ `max` mốc gần nhất: đủ để biết đã chạm ngưỡng trong cửa sổ
+  private push(key: string, now: number, max: number): void {
+    const live = [...this.recent(key, now), now];
+    this.failures.delete(key);
+    this.failures.set(key, live.slice(-max));
   }
 
   private prune(now: number): void {
-    for (const [ip, a] of this.attempts) {
-      if (a.lockUntil <= now && now - a.touchedAt > IDLE_TTL_MS) {
-        this.attempts.delete(ip);
-      }
-    }
-    if (this.attempts.size <= MAX_ENTRIES) {
+    if (this.failures.size <= MAX_ENTRIES) {
       return;
     }
-    for (const [ip, a] of this.attempts) {
-      if (this.attempts.size <= MAX_ENTRIES) {
+    for (const key of this.failures.keys()) {
+      if (key !== GLOBAL_KEY) this.recent(key, now);
+    }
+    // Map giữ thứ tự chèn (push chèn lại cuối) → xóa cặp cũ nhất trước
+    for (const key of this.failures.keys()) {
+      if (this.failures.size <= MAX_ENTRIES) {
         break;
       }
-      if (a.lockUntil <= now) {
-        this.attempts.delete(ip);
-      }
+      if (key !== GLOBAL_KEY) this.failures.delete(key);
     }
   }
 
@@ -96,4 +115,8 @@ export class LocalSaService {
     const passMatch = verifyPassword(password, this.config.passwordHash);
     return userMatch && passMatch;
   }
+}
+
+function pairKey(ip: string, username: string): string {
+  return `${ip}|${username}`;
 }
