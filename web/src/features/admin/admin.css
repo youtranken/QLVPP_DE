@@ -1,0 +1,31 @@
+/* Danh bạ, Nhật ký, Cấu hình: bộ lọc dạng lưới, JSON chi tiết gọn, form cấu hình chia nhóm */
+.admin-search { width: min(320px, 100%); }
+.admin-hint { color: var(--ink-2); font-size: 13px; }
+.admin-more { justify-self: center; }
+.alert--ok { background: var(--ok-soft); color: var(--ok); }
+.muted { color: var(--ink-3); }
+.nowrap { white-space: nowrap; }
+.tag-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.audit-filters { padding: 12px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.audit-filter-actions { grid-column: 1 / -1; display: flex; gap: 8px; }
+.audit-json { display: grid; gap: 2px; }
+.audit-json code { font-size: 12.5px; overflow-wrap: anywhere; }
+.table td code { font-size: 12.5px; }
+.audit-code { white-space: nowrap; }
+.table td.audit-detail { max-width: 420px; }
+.config-page { max-width: 760px; }
+.config-section { padding: 16px; display: grid; gap: 12px; }
+.config-title { font-size: 15px; font-weight: 600; }
+.config-note { color: var(--warn); font-weight: 500; font-size: 13.5px; }
+.config-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.config-readonly p { margin: 0; }
+.config-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.config-saved { color: var(--ok); font-weight: 500; }
+@media (max-width: 900px) {
+  .audit-filters { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 680px) {
+  .audit-filters, .config-fields { grid-template-columns: 1fr; }
+  .admin-hint { order: 3; width: 100%; }
+  .table td.audit-detail { max-width: none; }
+}

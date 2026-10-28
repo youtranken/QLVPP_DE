@@ -6,6 +6,7 @@ const profile = {
     email: 'Email',
     department: 'Phòng ban',
     employeeCode: 'Mã nhân viên',
+    dataFromPmhId: 'Dữ liệu từ PMH ID, không sửa trong app',
     role: 'Vai trò',
     toAdmin: 'Mở trang quản lý',
   },

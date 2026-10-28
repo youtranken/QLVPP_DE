@@ -53,4 +53,5 @@
 .kv > div { display: grid; grid-template-columns: 130px 1fr; gap: 12px; }
 .kv dt { color: var(--ink-2); font-weight: 600; font-size: 14px; }
 .kv dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.profile-source { margin: 0; color: var(--ink-3); font-size: 14px; font-weight: 600; }
 @media (max-width: 420px) { .kv > div { grid-template-columns: 1fr; gap: 0; } }

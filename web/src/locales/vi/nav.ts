@@ -4,7 +4,6 @@ const nav = {
     sections: 'Chuyển trang',
     adminMenu: 'Menu quản lý',
     openMenu: 'Mở menu',
-    closeMenu: 'Đóng menu',
     register: 'Đăng ký',
     history: 'Lịch sử',
     me: 'Tôi',

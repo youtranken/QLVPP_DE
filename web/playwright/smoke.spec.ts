@@ -29,6 +29,7 @@ test.describe('E0-S9 khung nhân viên (dev-identity member)', () => {
     }
     await expect(page.getByRole('heading', { level: 1, name: 'Tôi' })).toBeVisible();
     await expect(page.getByText('Nhân viên', { exact: true })).toBeVisible();
+    await expect(page.getByText('Dữ liệu từ PMH ID, không sửa trong app')).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'member-me');
   });

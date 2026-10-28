@@ -7,6 +7,9 @@ import { ProfilePage } from '@/features/profile/profile-page';
 import { CatalogPage } from '@/features/catalog/catalog-page';
 import { CategoryPage } from '@/features/catalog/category-page';
 import { StockPage } from '@/features/stock/stock-page';
+import { UsersPage } from '@/features/admin/users-page';
+import { AuditPage } from '@/features/admin/audit-page';
+import { ConfigPage } from '@/features/admin/config-page';
 import { MemberShell } from '@/shell/member-shell';
 import { AdminShell } from '@/shell/admin-shell';
 import { RequireRole } from '@/shell/require-role';
@@ -27,7 +30,7 @@ function ForbiddenRoute() {
   return <ForbiddenScreen email={useMe().email} />;
 }
 
-const BUILT_ADMIN_PAGES = new Set(['stock', 'catalog', 'categories']);
+const BUILT_ADMIN_PAGES = new Set(['stock', 'catalog', 'categories', 'users', 'audit', 'config']);
 
 // Màn chưa làm hiện "Sắp có"; task sau thêm route thật và tên vào BUILT_ADMIN_PAGES
 export function AppRoutes() {
@@ -51,6 +54,9 @@ export function AppRoutes() {
         <Route path="stock" element={<StockPage />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="categories" element={<CategoryPage />} />
+        <Route path="users" element={<UsersPage />} />
+        <Route path="audit" element={<AuditPage />} />
+        <Route path="config" element={<ConfigPage />} />
         {ADMIN_PAGES.filter((p) => !BUILT_ADMIN_PAGES.has(p.path)).map((p) => (
           <Route key={p.path} path={p.path} element={<AdminSoon titleKey={p.titleKey} />} />
         ))}

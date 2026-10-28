@@ -29,18 +29,20 @@ export async function saLogin(username: string, password: string): Promise<SaLog
   }
 }
 
-// Chủ động đăng xuất → tab này không bao giờ tự SSO lại; lỗi mạng vẫn về / để trang phản ánh phiên thật
-export async function logout(csrfToken: string | null): Promise<void> {
-  forgetAuth();
+// Chỉ quên trạng thái đăng nhập khi server đã hủy phiên; 401 nghĩa là phiên đã mất sẵn
+export async function logout(csrfToken: string | null): Promise<boolean> {
   try {
-    await fetch('/api/auth/logout', {
+    const res = await fetch('/api/auth/logout', {
       method: 'POST',
       headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
     });
+    if (!res.ok && res.status !== 401) return false;
   } catch {
-    // vẫn về / bên dưới
+    return false;
   }
+  forgetAuth();
   navigateTo('/');
+  return true;
 }
 
 // Bị chặn quyền: phải qua end_session của PMH ID, nếu không phiên SSO còn sống sẽ lặp lại forbidden

@@ -9,6 +9,7 @@ const profile: Messages<typeof vi> = {
     email: 'Email',
     department: 'Department',
     employeeCode: 'Employee ID',
+    dataFromPmhId: 'Data comes from PMH ID and cannot be edited in the app',
     role: 'Role',
     toAdmin: 'Open admin pages',
   },

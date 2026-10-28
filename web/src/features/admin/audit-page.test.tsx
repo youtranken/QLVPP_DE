@@ -1,0 +1,85 @@
+import { describe, expect, it, vi } from 'vitest';
+import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
+import { renderApp } from '@/test/render-app';
+import { makeMe } from '@/test/fixtures-me';
+import { mockViewport } from '@/test/viewport';
+
+const row = (id: string, over: Record<string, unknown> = {}) => ({
+  id,
+  actor: 'u-binh',
+  actorName: 'Lê Thị Bình',
+  action: 'config.updated',
+  objectType: 'config',
+  objectId: 'admin_contact',
+  detail: { before: { admin_contact: '' }, after: { admin_contact: 'chị Bình' } },
+  createdAt: '2026-10-28T03:05:00.000Z',
+  ...over,
+});
+
+function stubApi() {
+  const fetchMock = vi.fn((url: string) => {
+    const params = new URL(url, 'http://x').searchParams;
+    if (params.get('cursor') === 'c2') {
+      return Promise.resolve(jsonResponse(200, { items: [row('a3', { action: 'auth.login', actor: 'local:sa', actorName: null, detail: { ip: '10.0.0.5' } })], next_cursor: null }));
+    }
+    return Promise.resolve(jsonResponse(200, { items: [row('a1'), row('a2', { action: 'item.created' })], next_cursor: 'c2' }));
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
+const auditUrls = (m: ReturnType<typeof stubApi>) =>
+  m.mock.calls.map(([u]) => new URL(String(u), 'http://x')).filter((u) => u.pathname === '/api/admin/audit');
+
+async function openAudit() {
+  mockViewport(1280);
+  renderApp(makeMe('admin'), '/admin/audit');
+  await screen.findAllByText('config.updated');
+}
+
+describe('AuditPage', () => {
+  it('hiện thời gian, người, hành động và before/after dạng JSON gọn', async () => {
+    stubApi();
+    await openAudit();
+    const first = screen.getAllByRole('row')[1];
+    expect(within(first).getByText('10:05 28/10/26')).toBeInTheDocument();
+    expect(within(first).getByText('Lê Thị Bình')).toBeInTheDocument();
+    expect(within(first).getByText('Trước: {"admin_contact":""}')).toBeInTheDocument();
+    expect(within(first).getByText('Sau: {"admin_contact":"chị Bình"}')).toBeInTheDocument();
+  });
+
+  it('"Xem thêm" tải trang kế bằng cursor; dòng không có before/after hiện JSON chi tiết', async () => {
+    const fetchMock = stubApi();
+    await openAudit();
+    await userEvent.click(screen.getByRole('button', { name: 'Xem thêm' }));
+    expect(await screen.findByText('auth.login')).toBeInTheDocument();
+    expect(screen.getByText('local:sa')).toBeInTheDocument();
+    expect(screen.getByText('{"ip":"10.0.0.5"}')).toBeInTheDocument();
+    expect(auditUrls(fetchMock).at(-1)?.searchParams.get('cursor')).toBe('c2');
+    expect(screen.queryByRole('button', { name: 'Xem thêm' })).toBeNull();
+  });
+
+  it('lọc người/hành động/khoảng ngày → gửi actor, action, from, to', async () => {
+    const fetchMock = stubApi();
+    await openAudit();
+    await userEvent.type(screen.getByLabelText('Người thực hiện'), 'u-binh');
+    await userEvent.type(screen.getByLabelText('Hành động'), 'config.updated');
+    await userEvent.type(screen.getByLabelText('Từ ngày'), '2026-10-01');
+    await userEvent.type(screen.getByLabelText('Đến ngày'), '2026-10-28');
+    await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
+    await vi.waitFor(() => expect(auditUrls(fetchMock).at(-1)?.searchParams.get('actor')).toBe('u-binh'));
+    const last = auditUrls(fetchMock).at(-1)!.searchParams;
+    expect([last.get('action'), last.get('from'), last.get('to')]).toEqual(['config.updated', '2026-10-01', '2026-10-28']);
+  });
+
+  it('"Đến ngày" trước "Từ ngày" → lỗi gắn ô, không gọi lại server', async () => {
+    const fetchMock = stubApi();
+    await openAudit();
+    const before = auditUrls(fetchMock).length;
+    await userEvent.type(screen.getByLabelText('Từ ngày'), '2026-10-20');
+    await userEvent.type(screen.getByLabelText('Đến ngày'), '2026-10-01');
+    await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
+    expect(screen.getByLabelText('Đến ngày')).toHaveAccessibleDescription('“Đến ngày” phải bằng hoặc sau “Từ ngày”.');
+    expect(auditUrls(fetchMock)).toHaveLength(before);
+  });
+});

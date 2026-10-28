@@ -24,6 +24,8 @@ describe('Trang Tôi', () => {
     expect(screen.getByText('Phòng Công trình')).toBeInTheDocument();
     expect(screen.getByText('NV0231')).toBeInTheDocument();
     expect(screen.getByText('Nhân viên')).toBeInTheDocument();
+    expect(screen.getByText('Dữ liệu từ PMH ID, không sửa trong app')).toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).toBeNull();
   });
 
   it('đổi sang English → nhãn đổi và lưu lựa chọn', async () => {
@@ -47,6 +49,22 @@ describe('Trang Tôi', () => {
     expect(url).toBe('/api/auth/logout');
     expect(init.method).toBe('POST');
     expect((init.headers as Record<string, string>)['X-CSRF-Token']).toBe('csrf-1');
+  });
+
+  it.each([
+    ['403 CSRF_TOKEN_INVALID', () => Promise.resolve(jsonResponse(403, { code: 'CSRF_TOKEN_INVALID' }))],
+    ['500', () => Promise.resolve(jsonResponse(500, null))],
+    ['lỗi mạng', () => Promise.reject(new TypeError('Failed to fetch'))],
+  ])('Đăng xuất thất bại (%s) → báo "Chưa đăng xuất được — thử lại.", ở lại trang, bấm lại được', async (_name, respond) => {
+    mockViewport(390);
+    vi.mocked(navigateTo).mockClear();
+    vi.stubGlobal('fetch', vi.fn(respond));
+    renderApp(makeMe('member'), '/me');
+    const button = screen.getByRole('button', { name: 'Đăng xuất' });
+    await userEvent.click(button);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Chưa đăng xuất được — thử lại.');
+    expect(navigateTo).not.toHaveBeenCalled();
+    expect(button).toBeEnabled();
   });
 
   it('Hành chính thấy nút mở trang quản lý', () => {

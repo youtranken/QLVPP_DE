@@ -9,6 +9,7 @@ export function ProfilePage() {
   const { t } = useTranslation();
   const me = useMe();
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
   const rows: [string, string | null][] = [
     ['profile.fullName', me.fullName],
     ['profile.email', me.email],
@@ -30,6 +31,7 @@ export function ProfilePage() {
             </div>
           ))}
         </dl>
+        <p className="profile-source">{t('profile.dataFromPmhId')}</p>
       </section>
       <section className="card">
         <h2 className="card-title">{t('common.languages.label')}</h2>
@@ -40,13 +42,22 @@ export function ProfilePage() {
           {t('profile.toAdmin')}
         </Link>
       )}
+      {failed && (
+        <p role="alert" className="alert alert--danger">
+          {t('auth.logoutFailed')}
+        </p>
+      )}
       <button
         type="button"
         className="btn btn--lg btn--block btn--danger-ghost"
         disabled={busy}
-        onClick={() => {
+        onClick={async () => {
           setBusy(true);
-          void logout(me.csrfToken);
+          setFailed(false);
+          if (!(await logout(me.csrfToken))) {
+            setFailed(true);
+            setBusy(false);
+          }
         }}
       >
         {t('auth.logout')}

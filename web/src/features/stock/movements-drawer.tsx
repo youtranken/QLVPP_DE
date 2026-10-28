@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
 import { LoadError, Loading } from '@/ui/load-state';
+import { useFormatTime } from '@/lib/format-time';
 import type { AdminItem } from '@/features/catalog/catalog.api';
 import { useDirectoryNames, useMovements, type StockMovement } from '@/features/stock/stock.api';
 
@@ -14,16 +15,6 @@ const TAG_CLASS: Record<StockMovement['reason'], string> = {
 
 // Dấu trừ thật (U+2212) để số âm không bị đọc/nhìn như gạch nối
 const signed = (n: number) => (n > 0 ? `+${n}` : `−${Math.abs(n)}`);
-
-function useFormatTime() {
-  const { i18n } = useTranslation();
-  const fmt = new Intl.DateTimeFormat(i18n.language === 'en' ? 'en-GB' : 'vi-VN', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-    timeZone: 'Asia/Ho_Chi_Minh',
-  });
-  return (iso: string) => fmt.format(new Date(iso));
-}
 
 export function MovementsDrawer({ item, onClose }: { item: AdminItem; onClose: () => void }) {
   const { t } = useTranslation();
