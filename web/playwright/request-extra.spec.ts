@@ -1,8 +1,6 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, devHeaders, expectNoContrastViolations, isMobile, seedActiveUser } from './helpers';
+import { acquireLock, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, psql, removeTestItem, seedActiveUser } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-12-shots';
 const FIXTURE = 'playwright/fixtures/item.png';
@@ -15,15 +13,6 @@ function memberIdentity(info: TestInfo, tag: string) {
 async function snap(page: Page, info: TestInfo, name: string, fullPage = false) {
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png`, fullPage });
-}
-
-// psql trong container postgres; trả stdout (-tA) để đọc giá trị RETURNING
-function psql(sql: string): string {
-  return execFileSync(
-    'docker',
-    ['compose', 'exec', '-T', 'postgres', 'sh', '-c', 'psql -v ON_ERROR_STOP=1 -q -tA -U "$POSTGRES_USER" -d "$POSTGRES_DB"'],
-    { cwd: fileURLToPath(new URL('../..', import.meta.url)), input: sql, encoding: 'utf8' },
-  ).trim();
 }
 
 const prevYmOf = (ym: string) => {
@@ -108,7 +97,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await expect(page).toHaveURL(/\/$/);
       await expect(line.getByRole('spinbutton', { name })).toHaveValue('3');
     } finally {
-      psql(`DELETE FROM requests WHERE user_sub = '${me.sub}'`);
+      deleteTestUsers(me.sub);
     }
   });
 
@@ -171,56 +160,60 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await expect(cart.getByRole('spinbutton', { name: nameA, exact: true })).toHaveValue('5');
       await snap(page, info, 'copy-saved');
     } finally {
-      psql(`DELETE FROM requests WHERE user_sub = '${me.sub}'`);
+      deleteTestUsers(me.sub);
       if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${prevYm}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${prevYm}-01')`);
       release();
-      for (const id of [itemA, itemB]) await request.delete(`/api/admin/items/${id}`, { headers: devHeaders('admin') });
+      for (const id of [itemA, itemB]) await removeTestItem(request, id);
     }
   });
 
   test('Kỳ khóa giữa chừng, chưa từng lưu (PERIOD_LOCKED giả qua route): giỏ chuyển sang tháng sau, câu báo thấy ngay', async ({ page, request }, info) => {
     const me = memberIdentity(info, 'locked');
     seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
-    const period = await (await request.get('/api/periods/current', { headers: me.headers })).json();
-    const [y, m] = String(period.ym).split('-').map(Number);
-    const nextYm = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
-    let locked = false;
-    await page.route('**/api/**', async (route) => {
-      const url = route.request().url();
-      const headers = { ...route.request().headers(), ...me.headers };
-      if (url.endsWith('/api/me/request/lines') && route.request().method() === 'PUT') {
-        locked = true;
-        return route.fulfill({ status: 400, json: { statusCode: 400, code: 'PERIOD_LOCKED', message: 'x', next_ym: nextYm } });
-      }
-      if (url.endsWith('/api/periods/current') && locked) {
-        const res = await route.fetch({ headers });
-        return route.fulfill({ response: res, json: { ...(await res.json()), ym: nextYm } });
-      }
-      // Server thật chưa mở kỳ sau (INVALID_PERIOD) → giả "chưa có phiếu" như khi kỳ sau vừa mở
-      if (url.endsWith(`/api/me/request?ym=${nextYm}`)) {
-        return route.fulfill({ status: 404, json: { statusCode: 404, code: 'REQUEST_NOT_FOUND', message: 'x' } });
-      }
-      return route.continue({ headers });
-    });
-    const items = await (await request.get('/api/items', { headers: me.headers })).json();
-    const item = items.find((i: { name: string; active: boolean; admin_only: boolean }) => i.active && !i.admin_only && !i.name.startsWith('PW '));
+    try {
+      const period = await (await request.get('/api/periods/current', { headers: me.headers })).json();
+      const [y, m] = String(period.ym).split('-').map(Number);
+      const nextYm = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+      let locked = false;
+      await page.route('**/api/**', async (route) => {
+        const url = route.request().url();
+        const headers = { ...route.request().headers(), ...me.headers };
+        if (url.endsWith('/api/me/request/lines') && route.request().method() === 'PUT') {
+          locked = true;
+          return route.fulfill({ status: 400, json: { statusCode: 400, code: 'PERIOD_LOCKED', message: 'x', next_ym: nextYm } });
+        }
+        if (url.endsWith('/api/periods/current') && locked) {
+          const res = await route.fetch({ headers });
+          return route.fulfill({ response: res, json: { ...(await res.json()), ym: nextYm } });
+        }
+        // Server thật chưa mở kỳ sau (INVALID_PERIOD) → giả "chưa có phiếu" như khi kỳ sau vừa mở
+        if (url.endsWith(`/api/me/request?ym=${nextYm}`)) {
+          return route.fulfill({ status: 404, json: { statusCode: 404, code: 'REQUEST_NOT_FOUND', message: 'x' } });
+        }
+        return route.continue({ headers });
+      });
+      const items = await (await request.get('/api/items', { headers: me.headers })).json();
+      const item = items.find((i: { name: string; active: boolean; admin_only: boolean }) => i.active && !i.admin_only && !i.name.startsWith('PW '));
 
-    await page.goto('/');
-    const grid = page.getByRole('region', { name: 'Danh mục món' });
-    await grid.getByRole('button', { name: `Thêm ${item.name}`, exact: true }).click();
-    await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
+      await page.goto('/');
+      const grid = page.getByRole('region', { name: 'Danh mục món' });
+      await grid.getByRole('button', { name: `Thêm ${item.name}`, exact: true }).click();
+      await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
 
-    const next = Number(nextYm.slice(5));
-    await expect(page.getByRole('heading', { level: 1, name: `Phiếu tháng ${next}` })).toBeVisible();
-    const alert = page.getByRole('alert');
-    await expect(alert).toContainText(
-      `Phiếu tháng ${m} đã khóa lúc 00:00. Món bạn chọn đã được chuyển sang phiếu tháng ${next} — bấm Lưu phiếu để giữ.`,
-    );
-    await expect(alert).toBeInViewport();
-    await expect(page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' })).toBeVisible();
-    await expect(page.getByRole('complementary', { name: 'Phiếu của tôi' }).getByRole('spinbutton', { name: item.name, exact: true })).toHaveValue('1');
-    await snap(page, info, 'period-locked');
+      const next = Number(nextYm.slice(5));
+      await expect(page.getByRole('heading', { level: 1, name: `Phiếu tháng ${next}` })).toBeVisible();
+      const alert = page.getByRole('alert');
+      await expect(alert).toContainText(
+        `Phiếu tháng ${m} đã khóa lúc 00:00. Món bạn chọn đã được chuyển sang phiếu tháng ${next} — bấm Lưu phiếu để giữ.`,
+      );
+      await expect(alert).toBeInViewport();
+      await expect(page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' })).toBeVisible();
+      await expect(page.getByRole('complementary', { name: 'Phiếu của tôi' }).getByRole('spinbutton', { name: item.name, exact: true })).toHaveValue('1');
+      await snap(page, info, 'period-locked');
+    } finally {
+      deleteTestUsers(me.sub);
+    }
   });
 
   test('Kỳ khóa giữa chừng, đã có phiếu lưu (PERIOD_LOCKED giả): không mang giỏ, báo phiếu đã lưu vẫn giữ', async ({ page, request }, info) => {
@@ -273,7 +266,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await expect(page.getByText('Chưa chọn món nào — bấm + trên thẻ món để thêm.')).toBeAttached();
       await snap(page, info, 'period-locked-saved');
     } finally {
-      psql(`DELETE FROM requests WHERE user_sub = '${me.sub}'`);
+      deleteTestUsers(me.sub);
     }
   });
 });

@@ -1,7 +1,5 @@
-import { execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { asRole, expectNoContrastViolations, isMobile } from './helpers';
+import { asRole, expectNoContrastViolations, isMobile, psql } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-14-shots';
 
@@ -9,14 +7,6 @@ async function snap(page: Page, info: TestInfo, name: string) {
   await page.evaluate(() => document.fonts.ready);
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png`, fullPage: true });
-}
-
-function psql(sql: string): string {
-  return execFileSync(
-    'docker',
-    ['compose', 'exec', '-T', 'postgres', 'sh', '-c', 'psql -v ON_ERROR_STOP=1 -q -tA -U "$POSTGRES_USER" -d "$POSTGRES_DB"'],
-    { cwd: fileURLToPath(new URL('../..', import.meta.url)), input: sql, encoding: 'utf8' },
-  ).trim();
 }
 
 asRole('admin');

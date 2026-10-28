@@ -1,22 +1,12 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, expectNoContrastViolations, isMobile, seedActiveUser } from './helpers';
+import { acquireLock, deleteTestUsers, expectNoContrastViolations, isMobile, psql, seedActiveUser } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-13-shots';
 
 async function snap(page: Page, info: TestInfo, name: string) {
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png`, fullPage: true });
-}
-
-function psql(sql: string): string {
-  return execFileSync(
-    'docker',
-    ['compose', 'exec', '-T', 'postgres', 'sh', '-c', 'psql -v ON_ERROR_STOP=1 -q -tA -U "$POSTGRES_USER" -d "$POSTGRES_DB"'],
-    { cwd: fileURLToPath(new URL('../..', import.meta.url)), input: sql, encoding: 'utf8' },
-  ).trim();
 }
 
 const prevYmOf = (ym: string) => {
@@ -95,7 +85,7 @@ test.describe('E2-S6 lịch sử', () => {
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'detail');
     } finally {
-      psql(`DELETE FROM requests WHERE user_sub = '${sub}'`);
+      deleteTestUsers(sub);
       if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${prevYm}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${prevYm}-01')`);
       release();
     }

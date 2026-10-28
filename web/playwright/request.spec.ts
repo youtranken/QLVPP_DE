@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { devHeaders, expectNoContrastViolations, isMobile, seedActiveUser } from './helpers';
+import { deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, removeTestItem, seedActiveUser } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-11-shots';
 
@@ -20,16 +20,6 @@ function memberIdentity(info: TestInfo) {
 async function snap(page: Page, info: TestInfo, name: string, fullPage = false) {
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png`, fullPage });
-}
-
-async function deleteMyRequest(request: APIRequestContext, headers: Record<string, string>, ym: string) {
-  const res = await request.get(`/api/me/request?ym=${ym}`, { headers });
-  if (res.status() !== 200) return;
-  const view = await res.json();
-  await request.put('/api/me/request/lines', {
-    headers,
-    data: { ym, lines: [], expected_updated_at: view.updated_at },
-  });
 }
 
 async function createItem(request: APIRequestContext, name: string) {
@@ -129,7 +119,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await expect(cart.getByRole('spinbutton', { name: c.name, exact: true })).toHaveValue('3');
       await expect(cart.getByRole('spinbutton', { name: a.name, exact: true })).toHaveValue('1');
     } finally {
-      await deleteMyRequest(request, me.headers, period.ym);
+      deleteTestUsers(me.sub);
     }
   });
 
@@ -140,7 +130,6 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
     const me = memberIdentity(info);
     seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
     await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...me.headers } }));
-    const period = await (await request.get('/api/periods/current', { headers: me.headers })).json();
     const itemName = `PW ngừng ${Date.now()}-${info.project.name}`;
     const itemId = await createItem(request, itemName);
 
@@ -169,8 +158,8 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await expect(stepper).toHaveAccessibleDescription(msg);
       await page.screenshot({ path: `${SHOTS}/line-error-${info.project.name}.png` });
     } finally {
-      await deleteMyRequest(request, me.headers, period.ym);
-      await request.delete(`/api/admin/items/${itemId}`, { headers: devHeaders('admin') });
+      deleteTestUsers(me.sub);
+      await removeTestItem(request, itemId);
     }
   });
 });

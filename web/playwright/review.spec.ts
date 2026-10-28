@@ -1,8 +1,6 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { expect, test, type APIRequestContext, type Browser, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, devHeaders, expectNoContrastViolations, isMobile, seedActiveUser } from './helpers';
+import { acquireLock, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, psql, removeTestItem, seedActiveUser } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-16-shots';
 const FIXTURE = 'playwright/fixtures/item.png';
@@ -10,14 +8,6 @@ const FIXTURE = 'playwright/fixtures/item.png';
 async function snap(page: Page, info: TestInfo, name: string, fullPage = false) {
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png`, fullPage });
-}
-
-function psql(sql: string): string {
-  return execFileSync(
-    'docker',
-    ['compose', 'exec', '-T', 'postgres', 'sh', '-c', 'psql -v ON_ERROR_STOP=1 -q -tA -U "$POSTGRES_USER" -d "$POSTGRES_DB"'],
-    { cwd: fileURLToPath(new URL('../..', import.meta.url)), input: sql, encoding: 'utf8' },
-  ).trim();
 }
 
 const prevYmOf = (ym: string) => {
@@ -112,8 +102,8 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       await snap(mp, info, 'member-converted');
       await mp.context().close();
     } finally {
-      psql(`DELETE FROM requests WHERE user_sub = '${sub}'`);
-      if (itemId) await request.patch(`/api/admin/items/${itemId}`, { headers: admin, data: { active: false } });
+      deleteTestUsers(sub);
+      if (itemId) await removeTestItem(request, itemId);
     }
   });
 
@@ -167,7 +157,7 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       await snap(mp, info, 'member-rejected', true);
       await mp.context().close();
     } finally {
-      psql(`DELETE FROM requests WHERE user_sub = '${sub}'`);
+      deleteTestUsers(sub);
       if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${prevYm}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${prevYm}-01')`);
       release();
     }

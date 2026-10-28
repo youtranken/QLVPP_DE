@@ -1,8 +1,6 @@
-import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, asRole, expectNoContrastViolations, isMobile } from './helpers';
+import { acquireLock, asRole, expectNoContrastViolations, isMobile, psql } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-15-shots';
 
@@ -12,14 +10,6 @@ async function snap(page: Page, info: TestInfo, name: string) {
   // Ngăn trượt vào 180 ms: chụp sau khi chuyển động xong
   await page.evaluate(() => Promise.all(document.getAnimations().map((x) => x.finished)));
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png` });
-}
-
-function psql(sql: string): string {
-  return execFileSync(
-    'docker',
-    ['compose', 'exec', '-T', 'postgres', 'sh', '-c', 'psql -v ON_ERROR_STOP=1 -q -tA -U "$POSTGRES_USER" -d "$POSTGRES_DB"'],
-    { cwd: fileURLToPath(new URL('../..', import.meta.url)), input: sql, encoding: 'utf8' },
-  ).trim();
 }
 
 const prevYmOf = (ym: string) => {

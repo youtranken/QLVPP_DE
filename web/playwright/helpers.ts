@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, rmSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
 
 // Header dev-identity chỉ gắn cho /api: gắn toàn cục (extraHTTPHeaders) làm request font Google
 // thành CORS có header lạ và bị từ chối → trang rơi về font hệ thống
@@ -33,6 +33,30 @@ export async function expectNoContrastViolations(page: Page) {
 
 export const devHeaders = (role: 'member' | 'admin' | 'sa') => ({ 'x-dev-user-sub': `pw-${role}`, 'x-dev-role': role });
 
+const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
+
+// psql trong container postgres dev; trả stdout (-tA) để đọc giá trị RETURNING
+export function psql(sql: string): string {
+  return execFileSync(
+    'docker',
+    ['compose', 'exec', '-T', 'postgres', 'sh', '-c', 'psql -v ON_ERROR_STOP=1 -q -tA -U "$POSTGRES_USER" -d "$POSTGRES_DB"'],
+    { cwd: REPO_ROOT, input: sql, encoding: 'utf8' },
+  ).trim();
+}
+
+// Người thử mang hậu tố riêng: xóa phiếu rồi xóa người để không lọt vào danh bạ / "chưa đăng ký" của DB dev
+export function deleteTestUsers(...subs: string[]) {
+  const list = subs.map((s) => `'${s}'`).join(', ');
+  psql(`DELETE FROM requests WHERE user_sub IN (${list}); DELETE FROM users WHERE sub IN (${list})`);
+}
+
+// Món đã có sổ kho/dòng phiếu thì không xóa được (ITEM_IN_USE) → ngừng thay vì xóa
+export async function removeTestItem(request: APIRequestContext, id: string) {
+  const headers = devHeaders('admin');
+  const res = await request.delete(`/api/admin/items/${id}`, { headers });
+  if (!res.ok()) expect((await request.patch(`/api/admin/items/${id}`, { headers, data: { active: false } })).ok()).toBe(true);
+}
+
 // Dev-identity không tạo dòng users; người nhận xuất lẻ/danh bạ phải có sẵn trong bảng users
 export function seedActiveUser(sub: string, fullName: string, status: 'active' | 'locked' = 'active') {
   const sql = `INSERT INTO users (sub, full_name, email, status) VALUES ('${sub}', '${fullName}', '${sub}@example.test', '${status}')
@@ -40,7 +64,7 @@ export function seedActiveUser(sub: string, fullName: string, status: 'active' |
   execFileSync(
     'docker',
     ['compose', 'exec', '-T', 'postgres', 'sh', '-c', 'psql -v ON_ERROR_STOP=1 -q -U "$POSTGRES_USER" -d "$POSTGRES_DB"'],
-    { cwd: fileURLToPath(new URL('../..', import.meta.url)), input: sql, stdio: ['pipe', 'ignore', 'inherit'] },
+    { cwd: REPO_ROOT, input: sql, stdio: ['pipe', 'ignore', 'inherit'] },
   );
 }
 

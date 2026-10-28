@@ -7,7 +7,9 @@ const PORT = Number(process.env.PW_PORT ?? 5174);
 export default defineConfig({
   testDir: './playwright',
   outputDir: './test-results/artifacts',
-  fullyParallel: true,
+  // Mọi spec dùng chung DB dev (kỳ, cấu hình, danh mục): chạy tuần tự cho kết quả lặp lại được
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: !!process.env.CI,
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   use: {
