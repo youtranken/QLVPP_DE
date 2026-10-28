@@ -4,6 +4,7 @@ import type { SQL } from 'drizzle-orm';
 import { decodeCursor, encodeCursor, invalidCursor } from '../../common/cursor';
 import { ymToDate } from '../../common/period';
 import { escapeLike } from '../../common/sql';
+import { isUuid } from '../../common/uuid';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { CatalogService } from '../catalog/catalog.service';
@@ -37,7 +38,6 @@ type PersonDbRow = Omit<PersonRow, 'updated_at'> & {
   updated_at: Date | string;
 } & Record<string, unknown>;
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Khóa sắp xếp: phòng ban NULL xếp cuối (false < true), rồi tên, rồi id cho duy nhất
 const PERSON_ORDER = sql.raw(
   `(r.department IS NULL), coalesce(r.department, ''), coalesce(u.full_name, ''), r.id`,
@@ -101,7 +101,7 @@ export class SummaryListsService {
     };
   }
 
-  // Không phân trang: số món một kỳ nhỏ; dòng ngoài DM gộp theo tên chuẩn hóa + ĐVT
+  // Không phân trang: số món một kỳ nhỏ; dòng ngoài DM gộp theo (tên, ĐVT) chuẩn hóa — mảng jsonb để không ký tự phân cách nào gây trùng khóa
   async byItem(ym: string): Promise<{ items: ItemSummaryRow[] }> {
     const { rows } = await this.db.execute<
       Omit<ItemSummaryRow, 'name' | 'unit'> & {
@@ -110,9 +110,9 @@ export class SummaryListsService {
       }
     >(sql`
       SELECT coalesce(l.item_id::text,
-               'custom:' || lower(trim(l.custom_name)) || '|' || l.custom_unit) AS key,
+               'custom:' || jsonb_build_array(lower(trim(l.custom_name)), lower(trim(l.custom_unit)))::text) AS key,
              l.item_id, min(trim(l.custom_name)) AS custom_name,
-             min(l.custom_unit) AS custom_unit, sum(l.qty)::int AS requested_qty,
+             min(trim(l.custom_unit)) AS custom_unit, sum(l.qty)::int AS requested_qty,
              count(DISTINCT r.user_sub)::int AS people
       FROM requests r JOIN request_lines l ON l.request_id = r.id
       WHERE r.period_ym = ${ymToDate(ym)}::date AND ${EFFECTIVE_LINE}
@@ -134,7 +134,7 @@ export class SummaryListsService {
 
 function parsePersonCursor(raw: string): string[] {
   const keys = decodeCursor(raw, 4);
-  if (!['0', '1'].includes(keys[0]) || !UUID.test(keys[3])) {
+  if (!['0', '1'].includes(keys[0]) || !isUuid(keys[3])) {
     throw invalidCursor();
   }
   return keys;

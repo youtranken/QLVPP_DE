@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
 import { PG_POOL } from '../../database/database.module';
+import { isUuid } from '../../common/uuid';
 import type { RequestIdentity } from '../auth/identity.types';
 import type { FilePurpose } from './file-validation';
 
@@ -24,13 +25,6 @@ export interface CleanupScope {
 export interface ReadableFile {
   id: string;
   mime: string;
-}
-
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export function isUuid(value: string): boolean {
-  return UUID_PATTERN.test(value);
 }
 
 @Injectable()

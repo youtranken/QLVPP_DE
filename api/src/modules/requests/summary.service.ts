@@ -22,6 +22,7 @@ export interface PeriodSummary {
   registered: number;
   headcount: number;
   headcount_source: 'snapshot' | 'live';
+  unregistered: number;
   lines_pending_delivery: number;
   custom_pending: number;
   low_stock: number;
@@ -38,6 +39,10 @@ export const EFFECTIVE_LINE = sql.raw(
   `l.review_status IN ('n/a', 'accepted', 'converted')`,
 );
 export const UNDELIVERED_LINE = sql`(${EFFECTIVE_LINE} AND l.delivered_qty + l.cancelled_qty < l.qty)`;
+
+const notRegistered = (ym: string) => sql`NOT EXISTS (
+  SELECT 1 FROM requests r
+  WHERE r.user_sub = u.sub AND r.period_ym = ${ymToDate(ym)}::date)`;
 
 // Báo cáo đọc-only: đọc thẳng users/requests/request_lines cho tổng hợp, không ghi
 @Injectable()
@@ -74,13 +79,15 @@ export class SummaryService {
       WHERE r.period_ym = ${ymToDate(ym)}::date
     `);
     const snapshot = period?.headcount ?? null;
+    const live = await this.liveCounts(ym);
     return {
       ym,
       deadline: period ? period.deadline.toISOString() : null,
       is_open: isOpen,
       ...rows[0],
-      headcount: snapshot ?? (await this.liveHeadcount()),
+      headcount: snapshot ?? live.headcount,
       headcount_source: snapshot === null ? 'live' : 'snapshot',
+      unregistered: live.unregistered,
       low_stock: await this.catalog.countLowStock(),
     };
   }
@@ -89,11 +96,7 @@ export class SummaryService {
     await this.assertViewable(ym);
     const { rows } = await this.db.execute<UnregisteredUser>(sql`
       SELECT u.sub, u.full_name, u.email, u.department FROM users u
-      WHERE ${await this.headcountCondition()}
-        AND NOT EXISTS (
-          SELECT 1 FROM requests r
-          WHERE r.user_sub = u.sub AND r.period_ym = ${ymToDate(ym)}::date
-        )
+      WHERE ${await this.headcountCondition()} AND ${notRegistered(ym)}
       ORDER BY u.department NULLS LAST, u.full_name, u.sub
     `);
     return { items: rows };
@@ -109,11 +112,19 @@ export class SummaryService {
     return { ...view, user_status: owner?.status ?? 'unknown' };
   }
 
-  private async liveHeadcount(): Promise<number> {
-    const { rows } = await this.db.execute<{ n: number }>(sql`
-      SELECT count(*)::int AS n FROM users u WHERE ${await this.headcountCondition()}
+  // Cùng điều kiện với danh sách unregistered → số luôn bằng độ dài danh sách
+  private async liveCounts(
+    ym: string,
+  ): Promise<{ headcount: number; unregistered: number }> {
+    const { rows } = await this.db.execute<{
+      headcount: number;
+      unregistered: number;
+    }>(sql`
+      SELECT count(*)::int AS headcount,
+             count(*) FILTER (WHERE ${notRegistered(ym)})::int AS unregistered
+      FROM users u WHERE ${await this.headcountCondition()}
     `);
-    return rows[0].n;
+    return rows[0];
   }
 
   // Mẫu số sống: người active, không phải SA cục bộ, thuộc group được cấp (gate rỗng = mọi người)

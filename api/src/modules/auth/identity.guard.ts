@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Response } from 'express';
+import { isUuid } from '../../common/uuid';
 import { isDevAuthActive } from './auth-env';
 import { SessionAuthService } from './session-auth.service';
 import type { AuthedRequest, RequestIdentity } from './identity.types';
@@ -19,8 +20,6 @@ export const SESSION_COOKIE = 'vpp_sid';
 
 const DEV_ROLES = ['member', 'admin', 'sa'] as const;
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export type DevRole = (typeof DEV_ROLES)[number];
 
 @Injectable()
@@ -60,7 +59,7 @@ export class IdentityGuard implements CanActivate {
       request.cookies as Record<string, string> | undefined
     )?.[SESSION_COOKIE];
     const sessionId =
-      rawSessionId && UUID_PATTERN.test(rawSessionId) ? rawSessionId : null;
+      rawSessionId && isUuid(rawSessionId) ? rawSessionId : null;
     if (rawSessionId && !sessionId) {
       response.clearCookie(SESSION_COOKIE);
     }

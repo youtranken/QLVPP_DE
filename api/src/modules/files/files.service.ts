@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
-import { isUuid } from './file-access.policy';
+import { isUuid } from '../../common/uuid';
 import { FILE_PURPOSES, extensionFor, sniff } from './file-validation';
 import type { FilePurpose, ImageMime } from './file-validation';
 
