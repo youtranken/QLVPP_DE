@@ -38,7 +38,7 @@
       "name_en": "A5 paper",
       "unit": "ram",
       "max_qty": 5,
-      "admin_only": true,
+      "admin_only": false,
       "category": "Giấy & sổ",
       "sort_order": 1
     },
@@ -63,7 +63,7 @@
       "sort_order": 3
     },
     {
-      "code": "SO-CALO",
+      "code": "SO-TAY",
       "name": "Sổ tay",
       "name_en": "Notebook",
       "unit": "cuon",
@@ -173,7 +173,7 @@
       "sort_order": 14
     },
     {
-      "code": "BAM-KIM-MAY",
+      "code": "DAP-GHIM",
       "name": "Dập ghim",
       "name_en": "Stapler",
       "unit": "cai",

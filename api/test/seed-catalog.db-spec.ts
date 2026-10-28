@@ -14,7 +14,12 @@ const seed = JSON.parse(
   readFileSync(join(API_DIR, 'seed/catalog.json'), 'utf8'),
 ) as {
   categories: { name: string }[];
-  items: { code: string; unit: string; category: string }[];
+  items: {
+    code: string;
+    unit: string;
+    category: string;
+    admin_only: boolean;
+  }[];
 };
 const codes = seed.items.map((i) => i.code);
 
@@ -67,7 +72,10 @@ describe('seed danh mục ban đầu', () => {
     expect(withImage.rowCount).toBe(0);
   });
 
-  it('Giấy A4 là admin_only; mọi món có nhóm', async () => {
+  it('chỉ GIAY-A4 là admin_only; mọi món có nhóm', async () => {
+    expect(seed.items.filter((i) => i.admin_only).map((i) => i.code)).toEqual([
+      'GIAY-A4',
+    ]);
     const a4 = await pool.query(
       "SELECT admin_only FROM items WHERE name ILIKE 'Giấy A4%'",
     );

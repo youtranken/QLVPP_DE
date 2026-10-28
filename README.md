@@ -49,7 +49,7 @@ npm run test:db    # integration DB thật — cần DATABASE_URL trỏ database
 cd web && npm ci && npm run build
 ```
 
-Seed danh mục ban đầu (idempotent, không đụng tồn kho/ảnh/trạng thái admin đã đặt): `cd api && DATABASE_URL=postgres://... npm run seed:catalog`.
+Seed danh mục ban đầu (idempotent, không đụng tồn kho/ảnh/trạng thái admin đã đặt): `cd api && DATABASE_URL=postgres://... npm run seed:catalog`. Trên prod: `docker compose exec api node scripts/seed-catalog.mjs`.
 
 ## AUTH_DEV_MODE
 

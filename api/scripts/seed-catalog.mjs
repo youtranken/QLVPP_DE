@@ -49,7 +49,7 @@ try {
     `Seed xong: ${seed.categories.length} nhóm, ${seed.items.length} món.`,
   );
 } catch (e) {
-  await client.query('ROLLBACK');
+  await client.query('ROLLBACK').catch(() => {});
   throw e;
 } finally {
   await client.end();
