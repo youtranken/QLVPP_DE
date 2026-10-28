@@ -22,7 +22,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:db": "jest --config ./test/jest-db.json --runInBand",
-    "sa:hash": "node scripts/sa-hash.mjs"
+    "sa:hash": "node scripts/sa-hash.mjs",
+    "seed:catalog": "node scripts/seed-catalog.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.7",

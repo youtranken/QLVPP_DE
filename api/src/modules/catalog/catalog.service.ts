@@ -61,14 +61,17 @@ export class CatalogService {
     @Inject(ITEM_USAGE_HOOK) private readonly usage: ItemUsageHook,
   ) {}
 
+  // missing_image: món seed chưa có ảnh để admin biết cần bổ sung
   // Id được liệt kê vẫn trả dù ngừng/admin_only: để member xem lại dòng cũ trong phiếu của mình
   async listFor(
     identity: RequestIdentity,
     includeIds: string[] = [],
-  ): Promise<ItemRow[]> {
+  ): Promise<(ItemRow & { missing_image: boolean })[]> {
     const privileged = identity.role === 'admin' || identity.role === 'sa';
-    const result = await this.db.execute<ItemRow>(sql`
-      SELECT ${ITEM_COLUMNS} FROM items
+    const result = await this.db.execute<
+      ItemRow & { missing_image: boolean }
+    >(sql`
+      SELECT ${ITEM_COLUMNS}, (image_file_id IS NULL) AS missing_image FROM items
       WHERE ${privileged}
          OR (active AND NOT admin_only)
          OR id = ANY(${sql.param(includeIds)}::uuid[])

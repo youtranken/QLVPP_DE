@@ -28,6 +28,7 @@ interface Item {
   active: boolean;
   admin_only: boolean;
   max_qty: number;
+  image_file_id: string | null;
 }
 
 describe('catalog: nhóm món, món', () => {
@@ -258,6 +259,21 @@ describe('catalog: nhóm món, món', () => {
         .send({ max_qty: 3 })
         .expect(404);
       expect(missing.body).toMatchObject({ code: 'ITEM_NOT_FOUND' });
+    });
+
+    it('GET admin/items có cờ missing_image theo image_file_id', async () => {
+      const item = (await createItem(itemBody()).expect(201)).body as Item;
+      await pool.query('UPDATE items SET image_file_id = NULL WHERE id = $1', [
+        item.id,
+      ]);
+      const rows = (await admin(http().get('/api/admin/items')).expect(200))
+        .body as (Item & { missing_image: boolean })[];
+      expect(rows.find((r) => r.id === item.id)?.missing_image).toBe(true);
+      expect(
+        rows
+          .filter((r) => r.id !== item.id)
+          .every((r) => r.missing_image === (r.image_file_id === null)),
+      ).toBe(true);
     });
 
     it('DELETE món chưa dùng → 204, biến khỏi GET admin/items; audit item.deleted', async () => {

@@ -49,6 +49,8 @@ npm run test:db    # integration DB thật — cần DATABASE_URL trỏ database
 cd web && npm ci && npm run build
 ```
 
+Seed danh mục ban đầu (idempotent, không đụng tồn kho/ảnh/trạng thái admin đã đặt): `cd api && DATABASE_URL=postgres://... npm run seed:catalog`.
+
 ## AUTH_DEV_MODE
 
 `AUTH_DEV_MODE=true` chỉ hợp lệ khi `NODE_ENV ∈ {development, test}` — bật ở môi trường khác thì

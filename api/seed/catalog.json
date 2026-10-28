@@ -1,0 +1,286 @@
+{
+  "categories": [
+    {
+      "name": "Giấy & sổ",
+      "sort_order": 0
+    },
+    {
+      "name": "Bút & viết",
+      "sort_order": 1
+    },
+    {
+      "name": "Kẹp & dán",
+      "sort_order": 2
+    },
+    {
+      "name": "Lưu trữ",
+      "sort_order": 3
+    },
+    {
+      "name": "Khác",
+      "sort_order": 4
+    }
+  ],
+  "items": [
+    {
+      "code": "GIAY-A4",
+      "name": "Giấy A4",
+      "name_en": "A4 paper",
+      "unit": "ram",
+      "max_qty": 5,
+      "admin_only": true,
+      "category": "Giấy & sổ",
+      "sort_order": 0
+    },
+    {
+      "code": "GIAY-A5",
+      "name": "Giấy A5",
+      "name_en": "A5 paper",
+      "unit": "ram",
+      "max_qty": 5,
+      "admin_only": true,
+      "category": "Giấy & sổ",
+      "sort_order": 1
+    },
+    {
+      "code": "GIAY-NOTE",
+      "name": "Giấy ghi chú",
+      "name_en": "Sticky notes",
+      "unit": "bich",
+      "max_qty": 10,
+      "admin_only": false,
+      "category": "Giấy & sổ",
+      "sort_order": 2
+    },
+    {
+      "code": "SO-LOXO",
+      "name": "Sổ lò xo",
+      "name_en": "Spiral notebook",
+      "unit": "cuon",
+      "max_qty": 5,
+      "admin_only": false,
+      "category": "Giấy & sổ",
+      "sort_order": 3
+    },
+    {
+      "code": "SO-CALO",
+      "name": "Sổ tay",
+      "name_en": "Notebook",
+      "unit": "cuon",
+      "max_qty": 5,
+      "admin_only": false,
+      "category": "Giấy & sổ",
+      "sort_order": 4
+    },
+    {
+      "code": "BUT-BI-XANH",
+      "name": "Bút bi xanh",
+      "name_en": "Blue ballpoint pen",
+      "unit": "cay",
+      "max_qty": 20,
+      "admin_only": false,
+      "category": "Bút & viết",
+      "sort_order": 5
+    },
+    {
+      "code": "BUT-BI-DO",
+      "name": "Bút bi đỏ",
+      "name_en": "Red ballpoint pen",
+      "unit": "cay",
+      "max_qty": 20,
+      "admin_only": false,
+      "category": "Bút & viết",
+      "sort_order": 6
+    },
+    {
+      "code": "BUT-GEL",
+      "name": "Bút gel",
+      "name_en": "Gel pen",
+      "unit": "cay",
+      "max_qty": 20,
+      "admin_only": false,
+      "category": "Bút & viết",
+      "sort_order": 7
+    },
+    {
+      "code": "BUT-CHI",
+      "name": "Bút chì",
+      "name_en": "Pencil",
+      "unit": "cay",
+      "max_qty": 10,
+      "admin_only": false,
+      "category": "Bút & viết",
+      "sort_order": 8
+    },
+    {
+      "code": "BUT-DA-QUANG",
+      "name": "Bút dạ quang",
+      "name_en": "Highlighter",
+      "unit": "cay",
+      "max_qty": 10,
+      "admin_only": false,
+      "category": "Bút & viết",
+      "sort_order": 9
+    },
+    {
+      "code": "BUT-LONG",
+      "name": "Bút lông bảng",
+      "name_en": "Whiteboard marker",
+      "unit": "cay",
+      "max_qty": 10,
+      "admin_only": false,
+      "category": "Bút & viết",
+      "sort_order": 10
+    },
+    {
+      "code": "GOM-TAY",
+      "name": "Gôm tẩy",
+      "name_en": "Eraser",
+      "unit": "cai",
+      "max_qty": 5,
+      "admin_only": false,
+      "category": "Bút & viết",
+      "sort_order": 11
+    },
+    {
+      "code": "KEP-BUOM",
+      "name": "Kẹp bướm",
+      "name_en": "Binder clip",
+      "unit": "hop",
+      "max_qty": 5,
+      "admin_only": false,
+      "category": "Kẹp & dán",
+      "sort_order": 12
+    },
+    {
+      "code": "KEP-GIAY",
+      "name": "Kẹp giấy",
+      "name_en": "Paper clip",
+      "unit": "hop",
+      "max_qty": 5,
+      "admin_only": false,
+      "category": "Kẹp & dán",
+      "sort_order": 13
+    },
+    {
+      "code": "BAM-KIM",
+      "name": "Kim bấm",
+      "name_en": "Staples",
+      "unit": "hop",
+      "max_qty": 10,
+      "admin_only": false,
+      "category": "Kẹp & dán",
+      "sort_order": 14
+    },
+    {
+      "code": "BAM-KIM-MAY",
+      "name": "Dập ghim",
+      "name_en": "Stapler",
+      "unit": "cai",
+      "max_qty": 2,
+      "admin_only": false,
+      "category": "Kẹp & dán",
+      "sort_order": 15
+    },
+    {
+      "code": "BANG-KEO",
+      "name": "Băng keo trong",
+      "name_en": "Clear tape",
+      "unit": "cuon",
+      "max_qty": 10,
+      "admin_only": false,
+      "category": "Kẹp & dán",
+      "sort_order": 16
+    },
+    {
+      "code": "HO-DAN",
+      "name": "Hồ dán",
+      "name_en": "Glue stick",
+      "unit": "chai",
+      "max_qty": 5,
+      "admin_only": false,
+      "category": "Kẹp & dán",
+      "sort_order": 17
+    },
+    {
+      "code": "BIA-LA",
+      "name": "Bìa lá",
+      "name_en": "Plastic sleeve",
+      "unit": "bich",
+      "max_qty": 20,
+      "admin_only": false,
+      "category": "Lưu trữ",
+      "sort_order": 18
+    },
+    {
+      "code": "BIA-CONG",
+      "name": "Bìa còng",
+      "name_en": "Lever arch file",
+      "unit": "cai",
+      "max_qty": 10,
+      "admin_only": false,
+      "category": "Lưu trữ",
+      "sort_order": 19
+    },
+    {
+      "code": "BIA-HOP",
+      "name": "Hộp đựng hồ sơ",
+      "name_en": "Archive box",
+      "unit": "cai",
+      "max_qty": 10,
+      "admin_only": false,
+      "category": "Lưu trữ",
+      "sort_order": 20
+    },
+    {
+      "code": "FILE-TRINH-KY",
+      "name": "Bìa trình ký",
+      "name_en": "Signature folder",
+      "unit": "cai",
+      "max_qty": 5,
+      "admin_only": false,
+      "category": "Lưu trữ",
+      "sort_order": 21
+    },
+    {
+      "code": "MAY-TINH",
+      "name": "Máy tính cầm tay",
+      "name_en": "Calculator",
+      "unit": "cai",
+      "max_qty": 1,
+      "admin_only": false,
+      "category": "Khác",
+      "sort_order": 22
+    },
+    {
+      "code": "KEO-CAT",
+      "name": "Kéo văn phòng",
+      "name_en": "Scissors",
+      "unit": "cai",
+      "max_qty": 2,
+      "admin_only": false,
+      "category": "Khác",
+      "sort_order": 23
+    },
+    {
+      "code": "DAO-RACH",
+      "name": "Dao rọc giấy",
+      "name_en": "Utility knife",
+      "unit": "cai",
+      "max_qty": 2,
+      "admin_only": false,
+      "category": "Khác",
+      "sort_order": 24
+    },
+    {
+      "code": "MUC-DAU",
+      "name": "Mực dấu",
+      "name_en": "Stamp ink",
+      "unit": "chai",
+      "max_qty": 2,
+      "admin_only": false,
+      "category": "Khác",
+      "sort_order": 25
+    }
+  ]
+}
