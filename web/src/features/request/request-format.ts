@@ -5,13 +5,26 @@ import type { CartLabel } from './use-cart';
 
 export const monthOf = (ym: string) => Number(ym.slice(5, 7));
 
+const ZONE = 'Asia/Ho_Chi_Minh';
+const formatters = new Map<string, { time: Intl.DateTimeFormat; day: Intl.DateTimeFormat }>();
+
+// Hook gọi mỗi dòng giỏ/bảng: dựng Intl.DateTimeFormat một lần cho mỗi locale
+function formattersFor(locale: string) {
+  let f = formatters.get(locale);
+  if (!f) {
+    f = {
+      time: new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: ZONE }),
+      day: new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', timeZone: ZONE }),
+    };
+    formatters.set(locale, f);
+  }
+  return f;
+}
+
 // Hạn là mốc 00:00 ngày sau ngày cuối → lùi 1 ms để ra đúng ngày cuối theo giờ VN
 export function useRequestFormat() {
   const { t, i18n } = useTranslation();
-  const locale = i18n.language === 'en' ? 'en-GB' : 'vi-VN';
-  const zone = 'Asia/Ho_Chi_Minh';
-  const time = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: zone });
-  const day = new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', timeZone: zone });
+  const { time, day } = formattersFor(i18n.language === 'en' ? 'en-GB' : 'vi-VN');
   return {
     time: (iso: string) => time.format(new Date(iso)),
     lastDay: (deadline: string) => {

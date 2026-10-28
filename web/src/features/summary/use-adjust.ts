@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { apiErrorCode, apiErrorNumber, apiErrorString } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import type { LineView } from '@/features/request/request.api';
-import type { ReviewResult } from '@/features/review/review.api';
+import { REVIEW_KEY, type ReviewResult } from '@/features/review/review.api';
 import { SUMMARY_KEY, adminRequestKey, saveAdjust, useAdminRequest, type AdjustBody, type AdminRequestView } from './summary.api';
 
 export interface AddedLine {
@@ -150,6 +150,8 @@ export function useAdjust(requestId: string, onSaved: () => void) {
     try {
       await saveAdjust(requestId, body, csrfToken);
       void qc.invalidateQueries({ queryKey: SUMMARY_KEY });
+      // Bỏ/sửa dòng ngoài DM đang chờ đổi hàng chờ của trang Món ngoài danh mục
+      void qc.invalidateQueries({ queryKey: REVIEW_KEY });
       onSaved();
     } catch (e) {
       if (apiErrorCode(e) === 'STALE_UPDATE') {

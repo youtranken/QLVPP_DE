@@ -5,6 +5,7 @@ import { lineView } from '@/test/fixtures-request';
 import { MeContext } from '@/lib/me';
 import { ConfirmProvider } from '@/ui/confirm-provider';
 import { reviewResult } from '@/features/review/review-fixtures';
+import { useReviewLines } from '@/features/review/review.api';
 import { AdjustDrawer } from './adjust-drawer';
 import { ADMIN_ITEMS, adminRequest } from './adjust-fixtures';
 import type { AdminRequestView } from './summary.api';
@@ -37,12 +38,19 @@ const putBody = (f: ReturnType<typeof stub>) => {
   return JSON.parse(String(call[1].body));
 };
 
-async function renderDrawer() {
+// Trang Món ngoài DM đang mở song song: danh sách của nó phải tải lại khi phiếu đổi
+function ReviewListProbe() {
+  useReviewLines('pending', '');
+  return null;
+}
+
+async function renderDrawer({ withReviewList = false } = {}) {
   const onClose = vi.fn();
   renderWithI18n(
     <MeContext.Provider value={makeMe('admin')}>
       <ConfirmProvider>
         <AdjustDrawer requestId="r-1" onClose={onClose} />
+        {withReviewList && <ReviewListProbe />}
       </ConfirmProvider>
     </MeContext.Provider>,
   );
@@ -278,5 +286,15 @@ describe('AdjustDrawer — giới hạn số lượng dòng đã có', () => {
       expect(within(drawer).getByRole('button', { name: `Bớt Số lượng ${name}` })).toBeEnabled();
     }
   });
-});
 
+  it('lưu điều chỉnh xong → danh sách món ngoài danh mục chờ xem tải lại (dòng chờ có thể vừa bị bỏ)', async () => {
+    const f = stub();
+    const { drawer } = await renderDrawer({ withReviewList: true });
+    const reviewCalls = () => f.mock.calls.filter((c) => String(c[0]).startsWith('/api/admin/review?')).length;
+    await waitFor(() => expect(reviewCalls()).toBe(1));
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Số lượng Giấy note vàng' }));
+    await userEvent.type(reasonBox(drawer), 'Bổ sung');
+    await userEvent.click(save(drawer));
+    await waitFor(() => expect(reviewCalls()).toBe(2));
+  });
+});

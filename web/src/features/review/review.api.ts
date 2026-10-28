@@ -68,7 +68,7 @@ export interface ReviewResult {
   unit_mismatch?: boolean;
 }
 
-const REVIEW_KEY = ['admin-review'] as const;
+export const REVIEW_KEY = ['admin-review'] as const;
 
 export function useReviewLines(status: ReviewFilter, ym: string) {
   return useQuery({

@@ -175,6 +175,9 @@ export function useCopyPreviousQuery(ym: string, csrfToken: string | null) {
         throw e;
       }
     },
+    // POST có thể tạo dòng periods: gọi một lần mỗi kỳ, không tự gọi lại khi mount/focus
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
   });
 }
 
