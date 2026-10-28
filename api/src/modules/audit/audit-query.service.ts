@@ -16,6 +16,8 @@ export interface AuditQuery {
   // Ngày VN YYYY-MM-DD, cả hai đầu inclusive
   from?: string;
   to?: string;
+  // Hành chính thao tác trên phiếu của chính mình (detail.self)
+  self?: boolean;
   limit: number;
   cursor?: string;
 }
@@ -48,6 +50,7 @@ export class AuditQueryService {
       q.to
         ? sql`a.created_at < ((${q.to}::date + 1) AT TIME ZONE 'Asia/Ho_Chi_Minh')`
         : null,
+      q.self === undefined ? null : selfCondition(q.self),
       q.cursor ? this.afterCursor(q.cursor) : null,
     ].filter((c): c is NonNullable<typeof c> => c !== null);
     const where =
@@ -100,4 +103,11 @@ export class AuditQueryService {
     if (!isUUID(id)) throw invalidCursor();
     return sql`(a.created_at, a.id) < (${ts}::timestamptz, ${id}::uuid)`;
   }
+}
+
+// Dòng không có cờ self tính là không phải self
+function selfCondition(self: boolean) {
+  return self
+    ? sql`(a.detail->>'self') = 'true'`
+    : sql`(a.detail->>'self') IS DISTINCT FROM 'true'`;
 }

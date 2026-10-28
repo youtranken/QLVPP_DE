@@ -65,3 +65,15 @@ export const duplicateItem = (ref: LineRef | Record<string, never> = {}) =>
     message: 'Món này đã có trong phiếu.',
     ...ref,
   });
+
+export const requestExists = () =>
+  new ConflictException({
+    code: 'REQUEST_EXISTS',
+    message: 'Người này đã có phiếu kỳ đang mở — sửa phiếu đó.',
+  });
+
+export const userInactive = () =>
+  new BadRequestException({
+    code: 'USER_INACTIVE',
+    message: 'Người này không còn hoạt động.',
+  });

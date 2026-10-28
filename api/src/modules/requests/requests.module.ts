@@ -1,4 +1,6 @@
 import { Module, OnModuleInit } from '@nestjs/common';
+import { AdminRequestService } from './admin-request.service';
+import { AdminRequestsController } from './admin-requests.controller';
 import { AdminSummaryController } from './admin-summary.controller';
 import { CatalogModule } from '../catalog/catalog.module';
 import { ItemUsageRegistry } from '../catalog/item-usage.hook';
@@ -26,8 +28,13 @@ import { SummaryService } from './summary.service';
     UsersModule,
     SystemConfigModule,
   ],
-  controllers: [MeRequestController, AdminSummaryController],
+  controllers: [
+    MeRequestController,
+    AdminSummaryController,
+    AdminRequestsController,
+  ],
   providers: [
+    AdminRequestService,
     RequestLinesWriter,
     RequestViewBuilder,
     MeRequestService,

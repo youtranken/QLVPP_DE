@@ -107,9 +107,43 @@ describe('GET admin/audit', () => {
     expect(actors).toEqual([`${tag}-u-1`]);
   });
 
+  it('lọc self: true chỉ dòng detail.self = true; false gồm dòng self false hoặc không có cờ', async () => {
+    const tag = `e2e.self_filter.${Date.now()}`;
+    const writer = app.get(AuditWriterService);
+    await writer.append({
+      actor: 'a',
+      action: tag,
+      objectId: 'yes',
+      detail: { self: true },
+    });
+    await writer.append({
+      actor: 'a',
+      action: tag,
+      objectId: 'no',
+      detail: { self: false },
+    });
+    await writer.append({ actor: 'a', action: tag, objectId: 'none' });
+    const ids = async (self: string) =>
+      (
+        (
+          await request(app.getHttpServer())
+            .get('/api/admin/audit')
+            .query({ action: tag, self })
+            .set('x-dev-user-sub', 'dev-admin')
+            .set('x-dev-role', 'admin')
+            .expect(200)
+        ).body as { items: Array<{ objectId: string }> }
+      ).items
+        .map((r) => r.objectId)
+        .sort();
+    expect(await ids('true')).toEqual(['yes']);
+    expect(await ids('false')).toEqual(['no', 'none']);
+  });
+
   it.each([
     ['ngày không có thật', { from: '2026-02-30' }],
     ['to < from', { from: '2026-10-10', to: '2026-10-01' }],
+    ['self không phải true/false', { self: 'yes' }],
   ])('%s → 400 VALIDATION', async (_label, query) => {
     const res = await request(app.getHttpServer())
       .get('/api/admin/audit')

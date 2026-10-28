@@ -4,6 +4,7 @@ import {
   IsArray,
   IsDefined,
   IsIn,
+  IsNotEmpty,
   IsISO8601,
   IsOptional,
   IsString,
@@ -36,22 +37,33 @@ export class LineInput {
   @IsDefined() qty!: number;
 }
 
-class LinesBodyBase {
+class LinesBody {
   @IsArray()
   @ArrayMaxSize(200)
   @ValidateNested({ each: true })
   @Type(() => LineInput)
   lines!: LineInput[];
-
-  @IsOptional() @IsISO8601({ strict: true }) expected_updated_at?: string;
-  @OptionalText(NOTE_MAX) reason?: string | null;
 }
 
-export class SaveLinesBody extends LinesBodyBase {
-  @IsOptional() @Matches(YM) ym?: string;
+// Writer nhận chung cho member/Hành chính; reason chỉ Hành chính gửi được
+export interface LinesPayload {
+  lines: LineInput[];
+  expected_updated_at?: string;
+  reason?: string | null;
 }
 
 // Member phải nói rõ đang lưu kỳ nào: tab mở từ kỳ trước sau hạn sẽ bị PERIOD_LOCKED thay vì ghi nhầm kỳ mới
-export class SaveMyLinesBody extends LinesBodyBase {
+export class SaveMyLinesBody extends LinesBody {
   @Matches(YM) ym!: string;
+  @IsOptional() @IsISO8601({ strict: true }) expected_updated_at?: string;
+}
+
+// Hành chính luôn sửa phiếu đã có → bắt buộc mốc updated_at đang xem
+export class SaveLinesBody extends LinesBody {
+  @IsISO8601({ strict: true }) expected_updated_at!: string;
+  @OptionalText(NOTE_MAX) reason?: string | null;
+}
+
+export class CreateOnBehalfBody extends LinesBody {
+  @IsString() @IsNotEmpty() @MaxLength(255) user_sub!: string;
 }

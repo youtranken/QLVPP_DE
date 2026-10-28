@@ -67,7 +67,7 @@ describe('RequestLinesWriter.save: hai lần lưu đầu song song (Postgres th�
           period_ym: ym,
           actor: { sub: OWNER, role: 'member', devMode: true },
           mode: 'member',
-          body: { ym, lines: [{ item_id: itemId, qty }] },
+          body: { lines: [{ item_id: itemId, qty }] },
           now,
         }),
       );

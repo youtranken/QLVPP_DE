@@ -10,6 +10,7 @@ import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
 import {
   duplicateItem,
+  invalidPeriod,
   lineError,
   linesEmpty,
   periodLocked,
@@ -21,7 +22,7 @@ import { planLines } from './request-lines.diff';
 import type { LinesPlan } from './request-lines.diff';
 import { snapOf } from './request-lines.rules';
 import type { LineRow, LineSnap, WriteMode } from './request-lines.rules';
-import type { SaveLinesBody } from './request.dto';
+import type { LinesPayload } from './request.dto';
 import * as repo from './requests.repo';
 
 export type LineSnapWithId = LineSnap & { id: string };
@@ -38,9 +39,13 @@ export interface SaveArgs {
   period_ym: string;
   actor: RequestIdentity;
   mode: WriteMode;
-  body: SaveLinesBody;
+  body: LinesPayload;
   now: Date;
+  // Tạo hộ: dòng là đăng ký của chủ phiếu → luật dòng như member, không đánh dấu added_by_admin
+  on_behalf?: boolean;
 }
+
+const REASON_MIN = 3;
 
 // Vi phạm do tx song song lọt qua bước kiểm (ảnh bị dọn, món bị xóa, trùng món)
 const CONSTRAINT_ERRORS: Record<string, () => HttpException> = {
@@ -110,7 +115,9 @@ export class RequestLinesWriter {
         ym: args.period_ym,
         owner_sub: args.owner_sub,
         ...diff,
-        ...(args.body.reason ? { reason: args.body.reason } : {}),
+        ...(args.mode === 'admin' && reason(args)
+          ? { reason: reason(args) }
+          : {}),
         self: args.actor.sub === args.owner_sub && args.mode === 'admin',
       },
     });
@@ -153,7 +160,7 @@ export class RequestLinesWriter {
     return planLines({
       existing,
       body: args.body.lines,
-      mode: args.mode,
+      mode: lineMode(args),
       items: await this.catalog.itemFacts([...new Set(ids)], tx),
       defaultMaxQty: await this.config.getInt('default_max_qty'),
     });
@@ -165,8 +172,14 @@ export class RequestLinesWriter {
       if (args.period_ym !== open.ym) throw periodLocked(open.ym);
       return;
     }
-    const open = await this.periods.isOpen(args.period_ym, tx, args.now);
-    if (!open && !args.body.reason) throw reasonRequired();
+    const period = await this.periods.findSnapshot(args.period_ym, tx);
+    if (!period) throw invalidPeriod();
+    if (args.now < period.deadline) return;
+    // BR-7: kỳ đã khóa chỉ sửa phiếu đã có, không tạo phiếu mới
+    if (!args.request) {
+      throw periodLocked((await this.periods.openPeriod(tx, args.now)).ym);
+    }
+    if ((reason(args)?.length ?? 0) < REASON_MIN) throw reasonRequired();
   }
 
   // Ảnh hợp lệ: người lưu tự tải, hoặc đã nằm trên dòng của chủ phiếu (chép lại dòng có ảnh Hành chính thay)
@@ -216,7 +229,7 @@ export class RequestLinesWriter {
       const id = await repo.insertLine(tx, requestId, {
         snap: line.snap,
         review_status: line.review_status,
-        added_by_admin: args.mode === 'admin',
+        added_by_admin: lineMode(args) === 'admin',
         now: args.now,
       });
       added.push({ id, ...line.snap });
@@ -231,6 +244,14 @@ export class RequestLinesWriter {
       })),
     };
   }
+}
+
+function lineMode(args: SaveArgs): WriteMode {
+  return args.on_behalf ? 'member' : args.mode;
+}
+
+function reason(args: SaveArgs): string | undefined {
+  return args.body.reason?.trim() || undefined;
 }
 
 function withId(line: LineRow): LineSnapWithId {

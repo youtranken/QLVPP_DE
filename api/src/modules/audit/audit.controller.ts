@@ -1,6 +1,7 @@
 import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 import { Type } from 'class-transformer';
 import {
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -51,6 +52,10 @@ class AuditQueryDto {
   to?: string;
 
   @IsOptional()
+  @IsIn(['true', 'false'])
+  self?: 'true' | 'false';
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -80,6 +85,7 @@ export class AuditController {
       action: q.action,
       from: q.from,
       to: q.to,
+      self: q.self === undefined ? undefined : q.self === 'true',
       limit: q.limit,
       cursor: q.cursor,
     });

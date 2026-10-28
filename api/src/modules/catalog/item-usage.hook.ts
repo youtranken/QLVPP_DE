@@ -13,6 +13,9 @@ export class ItemUsageRegistry implements ItemUsageHook {
   private readonly checks: ItemUsageHook[] = [];
 
   register(check: ItemUsageHook): void {
+    if (this.checks.includes(check)) {
+      throw new Error('ItemUsageHook đã đăng ký.');
+    }
     this.checks.push(check);
   }
 

@@ -116,8 +116,10 @@ export function meRequestFixture(tag: string) {
         [action, objectId],
       )
     ).rows.map((r) => r.detail);
+  // Mọi sub của suite cùng hậu tố → suite tự seed thêm người (ADMIN, người bị khóa…) vẫn được dọn
+  const MINE = `e2e-req-%-${SUFFIX}`;
   const resetRequests = () =>
-    pool.query('DELETE FROM requests WHERE user_sub = ANY($1)', [[A, B]]);
+    pool.query('DELETE FROM requests WHERE user_sub LIKE $1', [MINE]);
 
   beforeAll(async () => {
     const url = assertTestDatabase(process.env.DATABASE_URL);
@@ -170,7 +172,7 @@ export function meRequestFixture(tag: string) {
     await pool.query('DELETE FROM files WHERE uploaded_by_sub = ANY($1)', [
       [A, B, ADMIN],
     ]);
-    await pool.query('DELETE FROM users WHERE sub = ANY($1)', [[A, B]]);
+    await pool.query('DELETE FROM users WHERE sub LIKE $1', [MINE]);
     await pool.end();
     await rm(dir, { recursive: true, force: true });
     delete process.env.FILES_DIR;
@@ -178,6 +180,7 @@ export function meRequestFixture(tag: string) {
   });
 
   return {
+    SUFFIX,
     A,
     B,
     ADMIN,
@@ -193,6 +196,7 @@ export function meRequestFixture(tag: string) {
     requestsOf,
     auditOf,
     pool: () => pool,
+    app: () => app,
     imgA: () => imgA,
     defaultMax: () => defaultMax,
   };
