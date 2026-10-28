@@ -16,6 +16,20 @@ describe('ClockService', () => {
     expect(Math.abs(clock.now().getTime() - Date.now())).toBeLessThan(1000);
   });
 
+  it('test + CLOCK_OFFSET_MS không phải số → throw lúc khởi tạo', () => {
+    expect(
+      () => new ClockService({ NODE_ENV: 'test', CLOCK_OFFSET_MS: '1d' }),
+    ).toThrow(/CLOCK_OFFSET_MS/);
+    expect(
+      () => new ClockService({ NODE_ENV: 'test', CLOCK_OFFSET_MS: 'Infinity' }),
+    ).toThrow(/CLOCK_OFFSET_MS/);
+  });
+
+  it('test + CLOCK_OFFSET_MS rỗng → offset 0', () => {
+    const clock = new ClockService({ NODE_ENV: 'test', CLOCK_OFFSET_MS: '' });
+    expect(Math.abs(clock.now().getTime() - Date.now())).toBeLessThan(1000);
+  });
+
   it('ngoài test bỏ qua offset', () => {
     const clock = new ClockService({
       NODE_ENV: 'production',

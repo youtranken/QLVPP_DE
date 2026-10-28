@@ -21,6 +21,13 @@ describe('deadlineOf', () => {
   it('lastDay 28 tháng 2 → 00:00 ngày 1/3 VN', () => {
     expect(deadlineOf('2027-02', 28)).toEqual(at('2027-02-28T17:00:00Z'));
   });
+  it('năm nhuận: lastDay 28 tháng 2/2028 → 00:00 ngày 29/2 VN', () => {
+    expect(deadlineOf('2028-02', 28)).toEqual(at('2028-02-28T17:00:00Z'));
+  });
+  it('tháng 12', () => {
+    expect(deadlineOf('2026-12', 10)).toEqual(at('2026-12-10T17:00:00Z'));
+    expect(deadlineOf('2026-12', 28)).toEqual(at('2026-12-28T17:00:00Z'));
+  });
 });
 
 describe('daysLeft', () => {
@@ -37,6 +44,7 @@ describe('daysLeft', () => {
   });
   it('ngày hạn → 1', () => {
     expect(daysLeft(at('2026-11-10T03:00:00Z'), nov)).toBe(1);
+    expect(daysLeft(at('2026-11-10T16:59:59.999Z'), nov)).toBe(1);
   });
   it('14/11 tới hạn 10/12 → 27', () => {
     expect(

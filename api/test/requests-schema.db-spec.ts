@@ -106,6 +106,21 @@ describe('0102 requests — ràng buộc periods / requests / request_lines', ()
     ).toBe('23514');
   });
 
+  it('cancelled_qty > qty (chưa giao) → 23514', async () => {
+    expect(
+      await insertLine('item_id, qty, cancelled_qty', [itemId, 2, 3]),
+    ).toBe('23514');
+  });
+
+  it('dòng ngoài DM mà cũng có item_id → 23514', async () => {
+    expect(
+      await insertLine(
+        'item_id, custom_name, custom_unit, image_file_id, qty, review_status',
+        [itemId, 'But', 'cay', fileId, 1, 'pending'],
+      ),
+    ).toBe('23514');
+  });
+
   it("item_id NULL + review 'n/a' → 23514", async () => {
     expect(
       await insertLine(

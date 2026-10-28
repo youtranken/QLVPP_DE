@@ -15,9 +15,15 @@ export class ClockService {
   private readonly offsetMs: number;
 
   constructor(env: EnvLike) {
-    const offset =
-      env.NODE_ENV === 'test' ? Number(env.CLOCK_OFFSET_MS ?? 0) : 0;
-    this.offsetMs = Number.isFinite(offset) ? offset : 0;
+    const raw = env.NODE_ENV === 'test' ? (env.CLOCK_OFFSET_MS ?? '') : '';
+    const offset = raw === '' ? 0 : Number(raw);
+    // Offset gõ sai mà lặng lẽ thành 0 thì e2e chạy với ngày thật và xanh nhầm
+    if (!Number.isFinite(offset)) {
+      throw new Error(
+        `CLOCK_OFFSET_MS phải là số mili giây (đang là ${JSON.stringify(raw)}).`,
+      );
+    }
+    this.offsetMs = offset;
   }
 
   now(): Date {
