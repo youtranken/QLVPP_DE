@@ -43,10 +43,10 @@ describe('AdminShell + RequireRole', () => {
     ]);
   });
 
-  it('mục chưa làm ở Plan 1 (Tổng hợp kỳ) hiện "Sắp có"', () => {
+  it('mục chưa làm (Món ngoài danh mục) hiện "Sắp có"', () => {
     mockViewport(1280);
-    renderApp(makeMe('admin'), '/admin/summary');
-    expect(screen.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeInTheDocument();
+    renderApp(makeMe('admin'), '/admin/review');
+    expect(screen.getByRole('heading', { level: 1, name: 'Món ngoài danh mục' })).toBeInTheDocument();
     expect(screen.getByText('Sắp có')).toBeInTheDocument();
   });
 
@@ -58,9 +58,11 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getByRole('navigation', { name: 'Menu quản lý' })).toBeInTheDocument();
   });
 
-  it('/admin chuyển tới /admin/catalog', () => {
+  it('/admin chuyển tới trang chủ Hành chính /admin/summary (Tổng hợp kỳ, không còn "Sắp có")', () => {
     mockViewport(1280);
     renderApp(makeMe('admin'), '/admin');
-    expect(screen.getByTestId('location')).toHaveTextContent('/admin/catalog');
+    expect(screen.getByTestId('location')).toHaveTextContent('/admin/summary');
+    expect(screen.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeInTheDocument();
+    expect(screen.queryByText('Sắp có')).toBeNull();
   });
 });

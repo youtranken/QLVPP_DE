@@ -74,3 +74,10 @@ body[data-shell='admin'] .sheet-body { color: var(--ink); padding: 16px 20px; }
   .row-actions { justify-content: flex-start; flex-wrap: wrap; }
   .table-stack td.r { text-align: left; }
 }
+
+/* Chọn tháng ‹ Tháng 11/2026 › (ui/month-switcher) */
+.month-switch { display: inline-flex; align-items: stretch; height: 32px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--card); overflow: hidden; }
+.month-switch button { width: 32px; border: 0; background: transparent; color: var(--ink-2); font-size: 16px; }
+.month-switch button:hover:not(:disabled) { background: var(--card-2); }
+.month-switch button:disabled { color: var(--line-2); cursor: not-allowed; }
+.month-switch span { display: inline-flex; align-items: center; padding: 0 12px; border-inline: 1px solid var(--line); font-weight: 600; white-space: nowrap; }

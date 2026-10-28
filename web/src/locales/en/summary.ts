@@ -1,0 +1,70 @@
+import type vi from '@/locales/vi/summary';
+import type { Messages } from '@/locales/messages';
+
+const summary: Messages<typeof vi> = {
+  summary: {
+    month: 'Month {{month}}/{{year}}',
+    prevMonth: 'Previous month',
+    nextMonth: 'Next month',
+    monthNav: 'Choose month',
+    open: 'Open · due {{day}}',
+    locked: 'Locked',
+    kpi: {
+      label: 'Period figures',
+      registered: 'Requests submitted',
+      headcountLive: 'current headcount',
+      headcountSnapshot: 'headcount at lock',
+      unregistered: '{{n}} not submitted',
+      pendingDelivery: 'Lines to deliver',
+      pendingDeliveryHint: 'not fully delivered',
+      customPending: 'Off-catalog items to review',
+      customPendingHint: 'decide before buying',
+      lowStock: 'Low-stock items',
+      lowStockHint: 'below minimum level',
+    },
+    filters: {
+      pending_delivery: 'Lines to deliver',
+      custom_pending: 'Off-catalog items to review',
+    },
+    filtering: 'Filtered: {{name}}',
+    clearFilter: 'Clear filter',
+    search: 'Search name, email…',
+    view: 'View',
+    byPerson: 'By person',
+    byItem: 'By item',
+    more: 'Load more',
+    person: {
+      colPerson: 'Requester',
+      colLines: 'Items',
+      colTotal: 'Total',
+      colDelivery: 'Delivery',
+      colNote: 'Notes',
+      colActions: 'Actions',
+      noDepartment: 'No department',
+      delivered: 'Delivered {{done}}/{{total}}',
+      leftCompany: 'Left the company',
+      customPending: '{{n}} off-catalog to review',
+      adjust: 'Adjust',
+      empty: 'No requests match.',
+    },
+    item: {
+      colName: 'Item',
+      colUnit: 'Unit',
+      colQty: 'Requested qty',
+      colPeople: 'People',
+      empty: 'No items requested yet.',
+    },
+    copy: {
+      button: 'Copy not-submitted list ({{n}})',
+      header: 'Not yet submitted for stationery, month {{month}} (due 23:59 on {{day}}):',
+      headerNoDeadline: 'Not yet submitted for stationery, month {{month}}:',
+      done: 'Copied {{n}} people',
+      failed: 'Could not load the list. Try again later.',
+      dialogTitle: 'Not-submitted list',
+      dialogHint: 'The browser blocked automatic copying. The text is selected — press Ctrl+C (or long-press to copy on a phone).',
+      close: 'Close',
+    },
+  },
+};
+
+export default summary;

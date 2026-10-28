@@ -46,4 +46,4 @@ export const ADMIN_PAGES: AdminPage[] = [
   ...ADMIN_HIDDEN_PAGES,
 ];
 
-export const ADMIN_HOME = 'catalog';
+export const ADMIN_HOME = 'summary';

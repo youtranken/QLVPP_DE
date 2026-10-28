@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/ui/data-table';
 import { LoadError } from '@/ui/load-state';
@@ -19,7 +20,9 @@ export function StockPage() {
   const { t } = useTranslation();
   const items = useAdminItems();
   const low = useLowStock();
-  const [onlyLow, setOnlyLow] = useState(false);
+  const [params] = useSearchParams();
+  // KPI "Món sắp hết" ở Tổng hợp kỳ mở /admin/stock?filter=low
+  const [onlyLow, setOnlyLow] = useState(params.get('filter') === 'low');
   const [open, setOpen] = useState<Open | null>(null);
   const onAction = useCallback((action: StockAction, item: AdminItem) => setOpen({ action, item }), []);
   const columns = useStockColumns(onAction);

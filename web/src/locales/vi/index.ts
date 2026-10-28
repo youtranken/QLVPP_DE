@@ -7,7 +7,8 @@ import admin from './admin';
 import directory from './directory';
 import profile from './profile';
 import request from './request';
+import summary from './summary';
 
-const vi = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request };
+const vi = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary };
 
 export default vi;

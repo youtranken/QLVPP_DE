@@ -1,0 +1,42 @@
+/* Tổng hợp kỳ — final/admin.html: KPI 4 ô bấm-để-lọc, bảng nhóm theo phòng ban, thanh giao 72 px */
+.sm-head { min-height: 36px; }
+.kpi-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.kpi { display: grid; gap: 2px; align-content: start; padding: 14px 16px; text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); text-decoration: none; font: inherit; }
+.kpi:hover { border-color: var(--line-2); }
+.kpi[aria-pressed='true'] { border: 2px solid var(--brand); padding: 13px 15px; }
+.kpi-value { font-size: 26px; font-weight: 600; line-height: 1.2; }
+.kpi-value.is-warn { color: var(--warn); }
+.kpi-value.is-danger { color: var(--danger); }
+.kpi-label { color: var(--ink-2); }
+.kpi-hint { color: var(--ink-3); font-size: 13px; }
+.sm-tools { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.sm-view { border-radius: 6px; padding: 2px; }
+.sm-view button { border-radius: 4px; font-weight: 500; }
+.sm-filtering { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 13px; }
+.sm-table tr.sm-group th { height: 32px; background: var(--card-2); color: var(--ink-2); font-weight: 600; text-align: left; }
+.sm-name { display: block; font-weight: 500; }
+.sm-sub { display: block; color: var(--ink-3); font-size: 13px; }
+.sm-delivery { display: inline-flex; align-items: center; gap: 8px; }
+.sm-bar { width: 72px; height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; flex: none; }
+.sm-bar i { display: block; height: 100%; background: var(--brand); }
+.sm-more { margin: 10px auto; display: flex; }
+.sm-copy { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sm-copy-notice { color: var(--ok); font-weight: 500; font-size: 13px; }
+.sm-copy-notice.is-error { color: var(--danger); }
+.sm-copy-text { width: 100%; padding: 8px 10px; border: 1px solid var(--line-2); border-radius: 6px; font: inherit; font-size: 13px; resize: vertical; color: var(--ink); }
+@media (max-width: 900px) {
+  .kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  .kpi { padding: 10px 12px; }
+  .kpi[aria-pressed='true'] { padding: 9px 11px; }
+  .kpi-value { font-size: 22px; }
+  .sm-tools .admin-search { width: 100%; }
+  .sm-table tr.sm-group { display: block; padding: 0; }
+  .sm-table tr.sm-group th { display: block; height: auto; padding: 6px 12px; }
+  .sm-copy { width: 100%; }
+  /* Số món · Tổng · Giao chung một hàng để thẻ người không quá dài */
+  .sm-table tr:not(.sm-group) { grid-template-columns: auto auto 1fr; column-gap: 4px; }
+  .sm-table tr:not(.sm-group) td:is(:first-child, :nth-child(5), :nth-child(6)) { grid-column: 1 / -1; }
+  .sm-table td:nth-child(5):has(.tag-list:empty) { display: none; }
+}

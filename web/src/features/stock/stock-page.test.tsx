@@ -76,6 +76,15 @@ describe('StockPage', () => {
     expect(screen.getByText('Giấy A4')).toBeInTheDocument();
   });
 
+  it('mở từ KPI Tổng hợp (/admin/stock?filter=low) → bộ lọc "Sắp hết" bật sẵn', async () => {
+    mockViewport(1280);
+    stubApi();
+    renderApp(makeMe('admin'), '/admin/stock?filter=low');
+    expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByText('Bút bi xanh')).toBeNull();
+  });
+
   it('bấm "Xuất lẻ…" trên một dòng → mở hộp "Xuất lẻ · tên món"', async () => {
     mockViewport(1280);
     stubApi();
