@@ -43,7 +43,23 @@ Tầng test theo loại code:
 - [ ] Thao tác thay đổi dữ liệu là idempotent hoặc có `expected_*`/`ON CONFLICT` như architecture §6 quy định.
 - [ ] Không lộ secret, không log `code/state/login_hint/logout_token`, không log body webhook.
 - [ ] `grep -ri qlts api web` = 0; không có `TODO` bỏ ngỏ; không có `.env` trong `git status`.
+- [ ] `docs/map.md` đã cập nhật cho module chạm tới; không file nào > 400 dòng; `madge --circular` = 0.
 - [ ] Report của task có: RED/GREEN, lệnh verify, danh sách file, điều còn băn khoăn.
+
+## Bản đồ mã nguồn (`docs/map.md`)
+
+- `docs/map.md` là bản đồ sống của repo: mỗi module/feature một dòng — trách nhiệm, file chính, endpoint/bảng nó sở hữu, phụ thuộc vào module nào. Tối đa 200 dòng; không chép code vào.
+- **Cuối mỗi task**, implementer cập nhật `docs/map.md` cho những module mình chạm (thêm/đổi/bỏ) trong cùng commit cuối của task; reviewer kiểm map khớp diff. Map lệch code = finding Important.
+- Trước khi sửa một module, đọc dòng của nó trong map thay vì lần cả repo; nếu map không đủ để biết bắt đầu từ đâu thì map đang thiếu — bổ sung.
+- Cuối mỗi plan: vẽ lại sơ đồ kiến trúc + luồng chính bằng skill `archify` từ bằng chứng trong code → `docs/diagrams/` (HTML + PNG), đối chiếu với `architecture.md`; lệch thì sửa tài liệu hoặc code, ghi vào `review-spec.md`.
+
+## Kích thước và ranh giới
+
+- **File ≤ 400 dòng** (kể cả test); chạm 350 là phải tách theo trách nhiệm trước khi thêm. Hàm/method ≤ 50 dòng; component React ≤ 250 dòng; file SQL migration không giới hạn nhưng một migration = một chủ đề.
+- Một module NestJS = một thư mục `modules/<ten>/` với `*.module.ts`, controller, service, dto, schema; module khác chỉ gọi qua service được `export`, không truy cập bảng của module khác bằng SQL trực tiếp (trừ báo cáo đọc-only).
+- Web: `features/<ten>/` chứa page, components, `<ten>.api.ts`; `ui/` chỉ chứa thành phần không biết nghiệp vụ; `lib/` không import từ `features/`.
+- Không import vòng (api: `madge --circular src` = 0; web tương tự). Không thêm dependency mới nếu chưa ghi một dòng lý do trong report; không thêm thư viện UI/CSS.
+- i18n key theo cây `<feature>.<man>.<ten>`; thêm key phải thêm cả `vi` và `en` trong cùng commit.
 
 ## Quy ước code
 
