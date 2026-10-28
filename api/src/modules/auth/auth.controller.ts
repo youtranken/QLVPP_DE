@@ -30,7 +30,6 @@ import { Throttle } from '@nestjs/throttler';
 import { SaLoginDto } from './sa-login.dto';
 import { SessionService } from './session.service';
 import { SESSION_COOKIE } from './identity.guard';
-import type { MeResponse } from './auth.types';
 import type { AuthedRequest } from './identity.types';
 
 // Dùng req.ip (trust proxy theo số hop), không tự parse XFF trái — client tự đặt được để né lockout.
@@ -283,59 +282,5 @@ export class AuthController {
       // Callback là navigation của browser — redirect để FE hiện thông báo thay vì JSON thô
       res.redirect('/?login=failed');
     }
-  }
-
-  @Get('me')
-  async me(@Req() req: AuthedRequest): Promise<MeResponse> {
-    const user = req.user;
-    if (!user) {
-      throw new UnauthorizedException({
-        code: 'UNAUTHENTICATED',
-        message: 'Chưa đăng nhập.',
-      });
-    }
-    const [session, profile, registrationLastDay, defaultMaxQty, adminContact] =
-      await Promise.all([
-        user.sessionId ? this.sessions.find(user.sessionId) : null,
-        this.users.findBySub(user.sub),
-        this.config.getInt('registration_last_day'),
-        this.config.getInt('default_max_qty'),
-        this.config.get<string>('admin_contact'),
-      ]);
-    return {
-      sub: user.sub,
-      role: user.role,
-      devMode: user.devMode,
-      csrfToken: session?.csrfToken ?? null,
-      fullName: user.fullName ?? profile?.fullName ?? null,
-      email: user.email ?? profile?.email ?? null,
-      department: profile?.department ?? null,
-      employeeCode: profile?.employeeCode ?? null,
-      // Ngôn ngữ lưu ở trình duyệt; null = server không áp đặt
-      locale: null,
-      config: {
-        registration_last_day: registrationLastDay,
-        default_max_qty: defaultMaxQty,
-        admin_contact: adminContact,
-      },
-    };
-  }
-
-  @Post('logout')
-  @HttpCode(200)
-  async logout(@Req() req: AuthedRequest, @Res() res: Response): Promise<void> {
-    const user = req.user;
-    if (user?.sessionId) {
-      await this.sessions.destroy(user.sessionId);
-      await this.audit.append({
-        actor: user.sub,
-        action: 'auth.logout',
-        objectType: 'session',
-        objectId: user.sessionId,
-      });
-    }
-    res.clearCookie(SESSION_COOKIE);
-    // Không gọi end_session: phiên SSO dùng chung với portal và các app khác
-    res.json({ ok: true });
   }
 }

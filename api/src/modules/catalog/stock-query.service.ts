@@ -2,7 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { isUUID } from 'class-validator';
 import { sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
-import { decodeCursor, encodeCursor, invalidCursor } from '../../common/cursor';
+import {
+  assertRealTimestamp,
+  decodeCursor,
+  encodeCursor,
+  invalidCursor,
+} from '../../common/cursor';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { ITEM_COLUMNS, LOW_STOCK_SQL } from './catalog-sql';
@@ -20,9 +25,6 @@ interface Keyed extends Record<string, unknown> {
   id: string;
   cursor_ts: string;
 }
-
-const PG_TIMESTAMPTZ =
-  /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\.\d{1,6})?[+-](\d{2})(:\d{2})?$/;
 
 @Injectable()
 export class StockQueryService {
@@ -108,24 +110,7 @@ export class StockQueryService {
 
 function parseCursor(raw: string): [string, string] {
   const [ts, id] = decodeCursor(raw, 2);
-  if (!isRealTimestamp(ts) || !isUUID(id)) throw invalidCursor();
+  assertRealTimestamp(ts);
+  if (!isUUID(id)) throw invalidCursor();
   return [ts, id];
-}
-
-// Date.parse nhận cả 31/02 còn Postgres thì ném lỗi → 500; kiểm từng thành phần
-function isRealTimestamp(ts: string): boolean {
-  const m = PG_TIMESTAMPTZ.exec(ts);
-  if (!m) return false;
-  const [y, mo, d, h, mi, s, , off] = m.slice(1).map(Number);
-  const daysInMonth = new Date(Date.UTC(y, mo, 0)).getUTCDate();
-  return (
-    mo >= 1 &&
-    mo <= 12 &&
-    d >= 1 &&
-    d <= daysInMonth &&
-    h < 24 &&
-    mi < 60 &&
-    s < 60 &&
-    off <= 15
-  );
 }

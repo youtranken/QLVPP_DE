@@ -1,6 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { isUUID } from 'class-validator';
 import { sql } from 'drizzle-orm';
-import { decodeCursor, encodeCursor } from '../../common/cursor';
+import {
+  assertRealTimestamp,
+  decodeCursor,
+  encodeCursor,
+  invalidCursor,
+} from '../../common/cursor';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 
@@ -34,7 +40,7 @@ export class AuditQueryService {
     q: AuditQuery,
   ): Promise<{ items: AuditRow[]; next_cursor: string | null }> {
     const conds = [
-      q.actor ? sql`a.actor ILIKE ${'%' + q.actor + '%'}` : null,
+      q.actor ? sql`a.actor = ${q.actor}` : null,
       q.action ? sql`a.action = ${q.action}` : null,
       q.from
         ? sql`a.created_at >= (${q.from}::date AT TIME ZONE 'Asia/Ho_Chi_Minh')`
@@ -90,6 +96,8 @@ export class AuditQueryService {
 
   private afterCursor(raw: string) {
     const [ts, id] = decodeCursor(raw, 2);
+    assertRealTimestamp(ts);
+    if (!isUUID(id)) throw invalidCursor();
     return sql`(a.created_at, a.id) < (${ts}::timestamptz, ${id}::uuid)`;
   }
 }

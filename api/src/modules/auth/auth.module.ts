@@ -5,6 +5,7 @@ import { UserThrottlerGuard } from '../../common/user-throttler.guard';
 import { SystemConfigModule } from '../config/config.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
+import { AuthMeController } from './auth-me.controller';
 import { BackchannelLogoutController } from './backchannel-logout.controller';
 import { CsrfGuard } from './csrf.guard';
 import { IdentityGuard } from './identity.guard';
@@ -16,7 +17,12 @@ import { WebhookController } from './webhook.controller';
 
 @Module({
   imports: [UsersModule, SystemConfigModule],
-  controllers: [AuthController, BackchannelLogoutController, WebhookController],
+  controllers: [
+    AuthController,
+    AuthMeController,
+    BackchannelLogoutController,
+    WebhookController,
+  ],
   providers: [
     SessionService,
     SessionAuthService,

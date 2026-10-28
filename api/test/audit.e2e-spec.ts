@@ -6,6 +6,7 @@ import {
   resolveMigrationsDir,
   runMigrations,
 } from '../src/database/migration-runner';
+import { encodeCursor } from '../src/common/cursor';
 import { AuditWriterService } from '../src/modules/audit/audit-writer.service';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
@@ -73,6 +74,37 @@ describe('GET admin/audit', () => {
       .set('x-dev-user-sub', 'dev-admin')
       .set('x-dev-role', 'admin')
       .expect(400);
+  });
+
+  it.each([
+    ['ngày không có thật trong cursor', '2027-02-29 00:00:00+07'],
+    ['phút offset >= 60 trong cursor', '2026-10-28 10:00:00+07:99'],
+  ])('cursor đúng hình sai giá trị (%s) → 400 VALIDATION', async (_n, ts) => {
+    const cursor = encodeCursor([ts, '00000000-0000-4000-8000-000000000000']);
+    const res = await request(app.getHttpServer())
+      .get('/api/admin/audit')
+      .query({ cursor })
+      .set('x-dev-user-sub', 'dev-admin')
+      .set('x-dev-role', 'admin')
+      .expect(400);
+    expect((res.body as { code: string }).code).toBe('VALIDATION');
+  });
+
+  it('lọc actor so khớp chính xác: u-1 không trả dòng của u-10', async () => {
+    const tag = `e2e.actor_exact.${Date.now()}`;
+    const writer = app.get(AuditWriterService);
+    await writer.append({ actor: `${tag}-u-1`, action: tag });
+    await writer.append({ actor: `${tag}-u-10`, action: tag });
+    const res = await request(app.getHttpServer())
+      .get('/api/admin/audit')
+      .query({ actor: `${tag}-u-1` })
+      .set('x-dev-user-sub', 'dev-admin')
+      .set('x-dev-role', 'admin')
+      .expect(200);
+    const actors = (res.body as { items: Array<{ actor: string }> }).items.map(
+      (r) => r.actor,
+    );
+    expect(actors).toEqual([`${tag}-u-1`]);
   });
 
   it.each([
