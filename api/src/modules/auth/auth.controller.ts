@@ -166,9 +166,8 @@ export class AuthController {
     @Req() req: AuthedRequest,
     @Res() res: Response,
   ): Promise<void> {
-    const sid = (req.cookies as Record<string, string> | undefined)?.[
-      SESSION_COOKIE
-    ];
+    // Guard đã lọc cookie không phải UUID (Postgres ném 22P02 → 500)
+    const sid = req.user?.sessionId;
     let idTokenHint: string | null = null;
     if (sid) {
       const session = await this.sessions.find(sid);
