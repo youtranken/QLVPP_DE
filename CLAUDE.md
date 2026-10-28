@@ -69,7 +69,7 @@ Tầng test theo loại code:
 - Tên: bảng/cột snake_case, TS camelCase, DTO class-validator; file một trách nhiệm; không tạo helper "utils" chung chung.
 - Copy từ QLTS_DE: copy nguyên rồi cắt, đổi `qlts → vpp`; không "cải tiến" phần auth trừ 4 điểm spec đã chốt (role mỗi request, SA lockout theo (IP,user), webhook v2, `TRUST_PROXY_HOPS`).
 - Commit theo task, tiếng Việt, tiền tố `feat/fix/chore/docs/test`; **không push**, không rebase lịch sử đã có; nhánh `feat/*` từ `main`.
-- Comment chỉ khi giải thích *tại sao* (luật nghiệp vụ, quyết định spec), không mô tả *cái gì*.
+- **Comment ít.** Chỉ comment khi giải thích *tại sao* một chỗ khác thường (luật nghiệp vụ, quyết định spec, cạm bẫy đã gặp), một dòng là đủ. Không comment mô tả *cái gì* code làm, không JSDoc cho hàm tên đã rõ, không header mô tả file, không code bị comment-out, không ghi chú kiểu nhật ký ("story 1.1", "AC 2", "review 2.8") — khi copy từ QLTS phải xóa các ghi chú đó. Tên hàm/biến rõ thay cho comment.
 
 ## Review
 
