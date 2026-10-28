@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { screen, waitFor, within } from '@/test/test-utils';
+import { jsonResponse, screen, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
-import { PEN, NOTE, facts, stubRequestApi, view } from '@/test/request-api-stub';
+import { PERIOD, PEN, NOTE, facts, stubRequestApi, view } from '@/test/request-api-stub';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -25,6 +25,8 @@ describe('HistoryDetailPage', () => {
     expect(bars[1]).toHaveAttribute('aria-valuenow', '4');
     expect(screen.getAllByText(/đã hủy/)).toHaveLength(1);
     expect(screen.getByText('đã hủy 2')).toBeInTheDocument();
+    expect(screen.getByText('còn nợ 2')).toBeInTheDocument();
+    expect(screen.getAllByText(/còn nợ/)).toHaveLength(1);
   });
 
   it('dòng ngoài DM: nhãn theo trạng thái, lý do từ chối hiển thị, không thanh tiến độ cho dòng chờ/từ chối', async () => {
@@ -52,5 +54,28 @@ describe('HistoryDetailPage', () => {
     stubRequestApi();
     renderApp(makeMe('member'), '/history/2026-09');
     expect(await screen.findByText('Không có phiếu tháng này')).toBeInTheDocument();
+  });
+
+  it('kỳ sau kỳ đang mở: báo không có phiếu, không hiện lỗi "Thử lại"', async () => {
+    stubRequestApi();
+    renderApp(makeMe('member'), '/history/2026-12');
+    expect(await screen.findByText('Không có phiếu tháng này')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('INVALID_PERIOD từ api coi như không có phiếu (không phải lỗi tải)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) =>
+        Promise.resolve(
+          url === '/api/periods/current'
+            ? jsonResponse(200, { ...PERIOD, ym: '2026-09' })
+            : jsonResponse(400, { code: 'INVALID_PERIOD' }),
+        ),
+      ),
+    );
+    renderApp(makeMe('member'), '/history/2026-08');
+    expect(await screen.findByText('Không có phiếu tháng này')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });

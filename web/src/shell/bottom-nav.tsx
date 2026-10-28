@@ -13,7 +13,7 @@ export function BottomNav() {
   return (
     <nav className="bottom-nav" aria-label={t('nav.main')}>
       {ITEMS.map(({ to, key, Icon }) => (
-        <NavLink key={to} to={to} end>
+        <NavLink key={to} to={to} end={to === '/'}>
           <Icon />
           <span>{t(key)}</span>
         </NavLink>

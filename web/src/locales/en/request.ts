@@ -28,6 +28,7 @@ const request: Messages<typeof vi> = {
       notFound: 'No order for this month',
       progress: 'Delivered {{delivered}} of {{qty}}',
       cancelled: 'cancelled {{n}}',
+      owed: '{{n}} outstanding',
       delivery: { done: 'Fully delivered', owed: '{{k}} outstanding', undelivered: 'Not delivered', cancelled: 'Cancelled' },
       customCount: {
         pending: '{{n}} awaiting Admin review',

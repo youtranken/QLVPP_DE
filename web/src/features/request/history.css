@@ -16,4 +16,5 @@
 .hs-bar { flex: 1; height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
 .hs-bar i { display: block; height: 100%; background: var(--brand); border-radius: 999px; }
 .hs-count { font-weight: 800; min-width: 3.5ch; text-align: right; }
+.hs-owed { color: var(--ink-2); font-weight: 800; font-size: 14px; }
 .hs-cancelled { color: var(--warn); font-weight: 800; font-size: 14px; }

@@ -4,8 +4,8 @@ import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 
-
 afterEach(() => vi.unstubAllGlobals());
+
 describe('MemberShell', () => {
   it('390 px: thanh dưới "Điều hướng chính" có đúng 3 mục Đăng ký · Lịch sử · Tôi, không có tab trên', () => {
     mockViewport(390);
@@ -50,5 +50,13 @@ describe('MemberShell', () => {
     renderApp(makeMe('member'), '/history');
     expect(await screen.findByText('Chưa có phiếu nào')).toBeInTheDocument();
     expect(screen.queryByText('Sắp có')).toBeNull();
+  });
+
+  it('390 px: ở /history/:ym mục "Lịch sử" vẫn sáng', () => {
+    mockViewport(390);
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})));
+    renderApp(makeMe('member'), '/history/2026-10');
+    const nav = screen.getByRole('navigation', { name: 'Điều hướng chính' });
+    expect(within(nav).getByRole('link', { name: 'Lịch sử' })).toHaveAttribute('aria-current', 'page');
   });
 });

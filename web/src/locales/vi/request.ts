@@ -25,6 +25,7 @@ const request = {
       notFound: 'Không có phiếu tháng này',
       progress: 'Đã giao {{delivered}} trên {{qty}}',
       cancelled: 'đã hủy {{n}}',
+      owed: 'còn nợ {{n}}',
       delivery: { done: 'Đã giao đủ', owed: 'Còn nợ {{k}}', undelivered: 'Chưa giao', cancelled: 'Đã hủy' },
       customCount: {
         pending: '{{n}} món chờ Hành chính xem',

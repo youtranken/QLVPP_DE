@@ -26,6 +26,7 @@ function DetailLine({ line }: { line: LineView }) {
   const name = line.item ? fmt.name(line.item) : (line.custom_name ?? '');
   const unit = fmt.unit(line.item?.unit ?? line.custom_unit);
   const effective = EFFECTIVE.includes(line.review_status);
+  const owed = line.qty - line.delivered_qty - line.cancelled_qty;
   return (
     <li className="hs-line">
       <div className="hs-line-head">
@@ -35,6 +36,7 @@ function DetailLine({ line }: { line: LineView }) {
       </div>
       <div className="hs-line-qty">{t('request.cart.qty', { qty: line.qty, unit })}</div>
       {effective && <LineProgress delivered={line.delivered_qty} qty={line.qty} />}
+      {effective && owed > 0 && <div className="hs-owed">{t('request.history.owed', { n: owed })}</div>}
       {effective && line.cancelled_qty > 0 && (
         <div className="hs-cancelled">{t('request.history.cancelled', { n: line.cancelled_qty })}</div>
       )}
@@ -51,16 +53,20 @@ export function HistoryDetailPage() {
   if (!valid) return <NotFound />;
   // Kỳ đang mở sửa được ở trang Đăng ký, không có bản chỉ đọc
   if (period.data?.is_open && period.data.ym === ym) return <Navigate to="/" replace />;
+  // Kỳ sau kỳ đang mở chưa thể có phiếu → khỏi gọi api rồi nhận INVALID_PERIOD
+  const future = !!period.data && ym > period.data.ym;
   const back = (
     <Link className="hs-back" to="/history">
-      ← {t('request.history.back')}
+      <span aria-hidden="true">←</span> {t('request.history.back')}
     </Link>
   );
   return (
     <div className="hs-page">
       {back}
       <h1 className="page-title">{t('request.history.detailTitle', { month: Number(ym.slice(5)), year: ym.slice(0, 4) })}</h1>
-      {request.isPending || period.isPending ? (
+      {future ? (
+        <EmptyState title={t('request.history.notFound')} />
+      ) : request.isPending || period.isPending ? (
         <Loading />
       ) : request.isError ? (
         <LoadError onRetry={() => void request.refetch()} />

@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { HISTORY_KEY } from './request.api';
 
 export interface HistoryItem {
   period_ym: string;
@@ -20,7 +21,7 @@ const PAGE = 12;
 
 export function useMyHistory() {
   return useInfiniteQuery({
-    queryKey: ['request', 'history'],
+    queryKey: HISTORY_KEY,
     initialPageParam: null as string | null,
     queryFn: ({ pageParam }) =>
       apiFetch<HistoryPage>(`/api/me/requests?limit=${PAGE}${pageParam ? `&cursor=${encodeURIComponent(pageParam)}` : ''}`),

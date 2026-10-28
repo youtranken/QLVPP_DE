@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, apiFetch } from '@/lib/api-client';
+import { apiErrorCode } from '@/lib/api-error';
 import type { Category } from '@/features/catalog/catalog.api';
 
 export interface CurrentPeriod {
@@ -80,6 +81,7 @@ export interface SaveLinesBody {
 }
 
 const REQUEST_KEY = ['request'] as const;
+export const HISTORY_KEY = [...REQUEST_KEY, 'history'] as const;
 export const myRequestKey = (ym: string) => [...REQUEST_KEY, 'mine', ym] as const;
 
 export function useCurrentPeriod() {
@@ -98,7 +100,7 @@ export function useMyRequest(ym: string | undefined) {
       try {
         return await apiFetch<RequestView>(`/api/me/request?ym=${ym}`);
       } catch (e) {
-        if (e instanceof ApiError && e.status === 404) return null;
+        if ((e instanceof ApiError && e.status === 404) || apiErrorCode(e) === 'INVALID_PERIOD') return null;
         throw e;
       }
     },
@@ -127,7 +129,11 @@ export function useMemberCategories() {
 
 export function useSetMyRequest() {
   const qc = useQueryClient();
-  return (ym: string, view: RequestView | null) => qc.setQueryData(myRequestKey(ym), view);
+  return (ym: string, view: RequestView | null) => {
+    qc.setQueryData(myRequestKey(ym), view);
+    // Danh sách lịch sử có kỳ này (tổng dòng/đơn vị) → phải tải lại
+    void qc.invalidateQueries({ queryKey: HISTORY_KEY });
+  };
 }
 
 export const saveMyLines = (body: SaveLinesBody, csrfToken: string | null) =>
