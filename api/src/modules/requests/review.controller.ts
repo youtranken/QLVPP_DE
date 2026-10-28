@@ -7,6 +7,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { parseYm } from '../../common/ym';
 import { CurrentIdentity } from '../auth/current-identity.decorator';
 import type { RequestIdentity } from '../auth/identity.types';
 import { Roles } from '../auth/roles.decorator';
@@ -21,7 +22,8 @@ export class ReviewController {
 
   @Get('review')
   list(@Query() query: ReviewListQuery) {
-    return this.service.list(query);
+    const ym = query.ym === undefined ? undefined : parseYm(query.ym);
+    return this.service.list({ ...query, ym });
   }
 
   // Sửa trạng thái dòng có sẵn → 200 thay vì 201 mặc định của POST

@@ -45,7 +45,7 @@ export class MeRequestController {
     @CurrentIdentity() me: RequestIdentity,
     @Body() body: SaveMyLinesBody,
   ) {
-    return this.service.saveLines(me, body);
+    return this.service.saveLines(me, { ...body, ym: parseYm(body.ym) });
   }
 
   // Không ghi DB → 200 thay vì 201 mặc định của POST

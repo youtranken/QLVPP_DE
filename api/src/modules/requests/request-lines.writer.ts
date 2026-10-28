@@ -172,6 +172,8 @@ export class RequestLinesWriter {
   private async assertPeriod(tx: Tx, args: SaveArgs): Promise<void> {
     if (args.mode === 'member') {
       const open = await this.periods.openPeriod(tx, args.now);
+      // 'YYYY-MM' so sánh chuỗi đúng thứ tự thời gian
+      if (args.period_ym > open.ym) throw invalidPeriod();
       if (args.period_ym !== open.ym) throw periodLocked(open.ym);
       return;
     }

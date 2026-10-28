@@ -5,13 +5,11 @@ import {
   IsInt,
   IsOptional,
   IsUUID,
-  Matches,
   Max,
   Min,
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
-import { YM } from '../../common/ym';
 import { Name, OptionalText, TrimToNull, UNITS } from '../catalog/catalog.dto';
 import { NOTE_MAX } from './request.dto';
 
@@ -27,7 +25,8 @@ export type ReviewAction = (typeof REVIEW_ACTIONS)[number];
 
 export class ReviewListQuery {
   @IsOptional() @IsIn(REVIEW_STATUSES) status: ReviewListStatus = 'pending';
-  @IsOptional() @Matches(YM) ym?: string;
+  // Hình dạng kiểm ở controller (parseYm) → INVALID_PERIOD
+  @IsOptional() ym?: string;
 }
 
 const isNew = (o: ReviewItemInput) => !o.existing_id;

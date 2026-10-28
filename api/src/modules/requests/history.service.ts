@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import { decodeCursor, encodeCursor, invalidCursor } from '../../common/cursor';
 import { ymToDate } from '../../common/period';
+import { YM } from '../../common/ym';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { EFFECTIVE_LINE } from './line-predicates';
@@ -29,7 +30,6 @@ type HistoryRow = Omit<HistoryItem, 'custom'> & {
   rejected: number;
 };
 
-const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
 // Chỉ dòng hiệu lực → total = delivered + cancelled + remaining; pending/rejected đếm riêng ở custom
 const effective = (expr: SQL) =>
   sql`coalesce(sum(${expr}) FILTER (WHERE ${EFFECTIVE_LINE}), 0)::int`;

@@ -9,7 +9,6 @@ import {
   IsOptional,
   IsString,
   IsUUID,
-  Matches,
   MaxLength,
   ValidateNested,
 } from 'class-validator';
@@ -17,7 +16,6 @@ import { NAME_MAX, TrimToNull, UNITS } from '../catalog/catalog.dto';
 
 export type Unit = (typeof UNITS)[number];
 export const NOTE_MAX = 500;
-const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 const OptionalText = (max: number) => (target: object, key: string) => {
   TrimToNull()(target, key);
@@ -54,7 +52,8 @@ export interface LinesPayload {
 
 // Member phải nói rõ đang lưu kỳ nào: tab mở từ kỳ trước sau hạn sẽ bị PERIOD_LOCKED thay vì ghi nhầm kỳ mới
 export class SaveMyLinesBody extends LinesBody {
-  @Matches(YM) ym!: string;
+  // Hình dạng kiểm ở controller (parseYm) để sai dạng trả INVALID_PERIOD như mọi tham số kỳ
+  @IsDefined() ym!: string;
   @IsOptional() @IsISO8601({ strict: true }) expected_updated_at?: string;
 }
 

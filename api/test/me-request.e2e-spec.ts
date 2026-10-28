@@ -134,6 +134,18 @@ describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', ()
     expect(noYm.body).toMatchObject({ code: 'VALIDATION' });
   });
 
+  it.each(['2027-01', '2026-13', '2026-1', 'abc'])(
+    'PUT me/request/lines ym=%s (sai dạng hoặc sau kỳ đang mở) → 400 INVALID_PERIOD, không tạo phiếu',
+    async (ym) => {
+      const x = await newItem();
+      const res = await put({ ym, lines: [{ item_id: x, qty: 1 }] }).expect(
+        400,
+      );
+      expect(res.body).toMatchObject({ code: 'INVALID_PERIOD' });
+      expect(await requestsOf(A)).toHaveLength(0);
+    },
+  );
+
   it.each(['2027-01', '2026-13', 'abc'])(
     'GET me/request?ym=%s → 400 INVALID_PERIOD',
     async (ym) => {
