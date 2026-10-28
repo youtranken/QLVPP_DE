@@ -75,25 +75,60 @@ describe('ConfigPage', () => {
     expect(screen.getByLabelText('Ngày hạn đăng ký hằng tháng')).not.toHaveAttribute('aria-invalid');
   });
 
-  it('lưu nhóm người ký chỉ gửi signers kèm X-CSRF-Token rồi báo "Đã lưu"', async () => {
-    const fetchMock = stubApi((body) => jsonResponse(200, { ...CONFIG, ...body }));
+  it('chỉ đổi người ký "Trưởng phòng" → body chỉ có {signers: {head}} kèm X-CSRF-Token, báo "Đã lưu"', async () => {
+    const fetchMock = stubApi(() => jsonResponse(200, { ...CONFIG, signers: { ...CONFIG.signers, head: 'Trần Văn Cường' } }));
     await openConfig();
     await userEvent.type(screen.getByLabelText('Trưởng phòng'), 'Trần Văn Cường');
     const signers = screen.getByRole('form', { name: 'Người ký báo cáo' });
     await userEvent.click(within(signers).getByRole('button', { name: 'Lưu người ký' }));
     expect(await within(signers).findByRole('status')).toHaveTextContent('Đã lưu.');
     const [[, init]] = putCalls(fetchMock) as [[string, RequestInit]];
-    expect(JSON.parse(init.body as string)).toEqual({
-      signers: { preparer: 'Lê Thị Bình', head: 'Trần Văn Cường', approver: '' },
-    });
+    expect(JSON.parse(init.body as string)).toEqual({ signers: { head: 'Trần Văn Cường' } });
     expect((init.headers as Record<string, string>)['X-CSRF-Token']).toBe('csrf-1');
+    expect(within(signers).getByRole('button', { name: 'Lưu người ký' })).toBeDisabled();
+  });
+
+  it('chỉ đổi số tối đa mặc định → body chỉ có default_max_qty', async () => {
+    const fetchMock = stubApi(() => jsonResponse(200, { ...CONFIG, default_max_qty: 25 }));
+    await openConfig();
+    const max = screen.getByLabelText('Số lượng tối đa mặc định mỗi món');
+    await userEvent.clear(max);
+    await userEvent.type(max, '25');
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
+    await vi.waitFor(() => expect(putCalls(fetchMock)).toHaveLength(1));
+    const [[, init]] = putCalls(fetchMock) as [[string, RequestInit]];
+    expect(JSON.parse(init.body as string)).toEqual({ default_max_qty: 25 });
+  });
+
+  it('chưa sửa gì → mọi nút Lưu bị vô hiệu, không gửi PUT', async () => {
+    const fetchMock = stubApi(() => jsonResponse(200, CONFIG));
+    await openConfig();
+    for (const name of ['Lưu kỳ đăng ký', 'Lưu quyền Hành chính', 'Lưu người ký', 'Lưu liên hệ']) {
+      const button = screen.getByRole('button', { name });
+      expect(button).toBeDisabled();
+      await userEvent.click(button);
+    }
+    expect(putCalls(fetchMock)).toHaveLength(0);
+  });
+
+  it('sửa lại ô đang báo lỗi → lỗi của ô đó biến mất', async () => {
+    stubApi(() => jsonResponse(200, CONFIG));
+    await openConfig();
+    const day = screen.getByLabelText('Ngày hạn đăng ký hằng tháng');
+    await userEvent.clear(day);
+    await userEvent.type(day, '29');
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
+    expect(day).toHaveAttribute('aria-invalid', 'true');
+    await userEvent.type(day, '{Backspace}');
+    expect(day).not.toHaveAttribute('aria-invalid');
   });
 
   it('CONFIG_INVALID {field: signers.head} → lỗi gắn ô Trưởng phòng', async () => {
     stubApi(() => jsonResponse(400, { code: 'CONFIG_INVALID', field: 'signers.head' }));
     await openConfig();
-    await userEvent.click(screen.getByRole('button', { name: 'Lưu người ký' }));
     const head = screen.getByLabelText('Trưởng phòng');
+    await userEvent.type(head, 'Trần Văn Cường');
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu người ký' }));
     await vi.waitFor(() => expect(head).toHaveAttribute('aria-invalid', 'true'));
     expect(head).toHaveAccessibleDescription('Tên tối đa 200 ký tự.');
   });

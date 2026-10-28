@@ -31,9 +31,9 @@ test.describe('E0-S7 Danh bạ (dev-identity admin)', () => {
 test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
   asRole('admin');
 
-  let api: APIRequestContext;
-  let original: Record<string, unknown>;
-  let release: () => void;
+  let api: APIRequestContext | undefined;
+  let original: Record<string, unknown> | undefined;
+  let release: (() => void) | undefined;
 
   // DB dev dùng chung: đọc giá trị gốc trước, trả lại sau, và giữ khóa để hai viewport không ghi đè nhau
   test.beforeAll(async ({ playwright }, info) => {
@@ -45,10 +45,15 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
   });
 
   test.afterAll(async () => {
-    const res = await api.put('/api/admin/config', { data: { admin_contact: original.admin_contact } });
-    expect(res.ok()).toBe(true);
-    await api.dispose();
-    release();
+    try {
+      if (api && original) {
+        const res = await api.put('/api/admin/config', { data: { admin_contact: original.admin_contact } });
+        expect(res.ok()).toBe(true);
+      }
+    } finally {
+      await api?.dispose();
+      release?.();
+    }
   });
 
   test('E0-S8 ngày hạn 29 bị chặn tại ô; lưu admin_contact → trang "Chưa được cấp quyền" hiện đúng tên; nhật ký ghi config.updated', async ({

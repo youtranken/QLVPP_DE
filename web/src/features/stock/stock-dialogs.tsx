@@ -5,9 +5,10 @@ import { useMe } from '@/lib/me';
 import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
 import { FormField } from '@/ui/form-field';
 import type { AdminItem } from '@/features/catalog/catalog.api';
-import { changeStock, issueStock, useRefreshStock, type DirectoryUser } from '@/features/stock/stock.api';
+import { changeStock, issueStock, useRefreshStock } from '@/features/stock/stock.api';
+import type { DirectoryUser } from '@/features/directory/directory.api';
 import { stockErrors, type StockErrors } from '@/features/stock/stock-errors';
-import { UserPicker } from '@/features/stock/user-picker';
+import { UserPicker } from '@/features/directory/user-picker';
 
 const toInt = (text: string) => (text.trim() !== '' && Number.isInteger(Number(text)) ? Number(text) : null);
 
@@ -243,6 +244,8 @@ export function IssueDialog({ item, onClose }: { item: AdminItem; onClose: () =>
       </div>
       {!shared && (
         <UserPicker
+          label={t('stock.picker.label')}
+          searchLabel={t('stock.picker.search')}
           value={recipient}
           error={errors.recipient}
           hint={recipient ? undefined : t('stock.dialog.needRecipient')}

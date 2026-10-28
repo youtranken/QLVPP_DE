@@ -7,6 +7,7 @@ export function ConfigSection({
   note,
   saveLabel,
   saving,
+  canSave,
   saved,
   formError,
   onSave,
@@ -16,6 +17,7 @@ export function ConfigSection({
   note?: string;
   saveLabel: string;
   saving: boolean;
+  canSave: boolean;
   saved: boolean;
   formError?: string;
   onSave: () => void;
@@ -45,7 +47,7 @@ export function ConfigSection({
             {t('config.saved')}
           </p>
         )}
-        <button type="submit" className="btn btn--primary" disabled={saving}>
+        <button type="submit" className="btn btn--primary" disabled={saving || !canSave}>
           {saving ? t('config.saving') : saveLabel}
         </button>
       </div>

@@ -34,7 +34,7 @@ const admin = {
     filters: {
       label: 'Lọc nhật ký',
       actor: 'Người thực hiện',
-      actorHint: 'Mã người dùng, gõ một phần.',
+      actorSearch: 'Tìm người thực hiện',
       action: 'Hành động',
       actionHint: 'VD: config.updated',
       from: 'Từ ngày',

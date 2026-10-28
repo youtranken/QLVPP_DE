@@ -37,7 +37,7 @@ const admin: Messages<typeof vi> = {
     filters: {
       label: 'Filter the audit log',
       actor: 'Actor',
-      actorHint: 'User ID, partial match.',
+      actorSearch: 'Find actor',
       action: 'Action',
       actionHint: 'e.g. config.updated',
       from: 'From',

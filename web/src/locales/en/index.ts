@@ -6,8 +6,9 @@ import nav from './nav';
 import catalog from './catalog';
 import stock from './stock';
 import admin from './admin';
+import directory from './directory';
 import profile from './profile';
 
-const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...profile };
+const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile };
 
 export default en;

@@ -44,11 +44,6 @@ const stock = {
     picker: {
       label: 'Người nhận',
       search: 'Tìm người nhận',
-      searchHint: 'Gõ tên hoặc email.',
-      results: 'Kết quả tìm người nhận',
-      empty: 'Không tìm thấy ai.',
-      locked: 'đã khóa',
-      change: 'Đổi người',
     },
     ledger: {
       title: 'Sổ cái · {{name}}',

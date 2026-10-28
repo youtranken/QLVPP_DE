@@ -59,17 +59,16 @@ export function validateGroup(group: ConfigGroup, d: ConfigDraft): ConfigErrors 
   return Object.fromEntries(GROUP_FIELDS[group].filter((f) => !VALID[f](d[f])).map((f) => [f, errorKey(f)]));
 }
 
-export function toPatch(group: ConfigGroup, d: ConfigDraft): ConfigPatch {
-  switch (group) {
-    case 'period':
-      return { registration_last_day: Number(d.registration_last_day), default_max_qty: Number(d.default_max_qty) };
-    case 'access':
-      return { admin_group: d.admin_group.trim() };
-    case 'signers':
-      return { signers: { preparer: d.preparer.trim(), head: d.head.trim(), approver: d.approver.trim() } };
-    case 'contact':
-      return { admin_contact: d.admin_contact.trim() };
-  }
+const NUMERIC = new Set<DraftField>(['registration_last_day', 'default_max_qty']);
+const normalize = (f: DraftField, v: string) => (NUMERIC.has(f) && v.trim() !== '' ? String(Number(v)) : v.trim());
+
+// Chỉ gửi ô đã đổi so với bản server: lưu không đổi gì sẽ không ghi nhật ký,
+// và không ghi đè ô người khác vừa sửa (signers được server merge theo từng tên)
+export function toPatch(group: ConfigGroup, d: ConfigDraft, base: ConfigDraft): ConfigPatch {
+  const changed = GROUP_FIELDS[group].filter((f) => normalize(f, d[f]) !== normalize(f, base[f]));
+  if (changed.length === 0) return {};
+  const values = Object.fromEntries(changed.map((f) => [f, NUMERIC.has(f) ? Number(d[f]) : d[f].trim()]));
+  return group === 'signers' ? { signers: values } : values;
 }
 
 // CONFIG_INVALID trả field kiểu "admin_group" hoặc "signers.head"

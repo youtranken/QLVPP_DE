@@ -47,11 +47,6 @@ const stock: Messages<typeof vi> = {
     picker: {
       label: 'Recipient',
       search: 'Find recipient',
-      searchHint: 'Type a name or email.',
-      results: 'Recipient search results',
-      empty: 'No one found.',
-      locked: 'locked',
-      change: 'Change person',
     },
     ledger: {
       title: 'Ledger · {{name}}',

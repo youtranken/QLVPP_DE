@@ -53,8 +53,10 @@ describe('UsersPage', () => {
     const fetchMock = stubApi(() => jsonResponse(200, {}));
     await openUsers();
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm theo tên, email hoặc mã NV' }), 'Bình');
-    await vi.waitFor(() => expect(screen.queryByText('Phạm Minh Đức')).toBeNull());
-    expect(screen.getByText('Lê Thị Bình')).toBeInTheDocument();
+    await vi.waitFor(() => {
+      expect(screen.queryByText('Phạm Minh Đức')).toBeNull();
+      expect(screen.getByText('Lê Thị Bình')).toBeInTheDocument();
+    });
     expect(fetchMock.mock.calls.some(([u]) => String(u).includes('search=B%C3%ACnh'))).toBe(true);
   });
 

@@ -1,0 +1,12 @@
+/* Ô chọn người từ danh bạ: dùng ở Xuất lẻ (Kho) và lọc Nhật ký */
+.user-picker { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 6px; }
+.user-picker.ff--error .a-input { border-color: var(--danger); }
+.user-picker-list { list-style: none; margin: 0; padding: 0; max-height: 200px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+.user-picker-list li + li { border-top: 1px solid var(--line); }
+.user-picker-list button { width: 100%; min-height: 40px; padding: 6px 10px; border: 0; background: var(--card); text-align: left; display: grid; gap: 1px; color: var(--ink); }
+.user-picker-list button:hover:not(:disabled) { background: var(--brand-soft); }
+.user-picker-list button:disabled { color: var(--ink-3); cursor: not-allowed; }
+.user-picker-list b { font-weight: 500; }
+.user-picker-list small { color: var(--ink-3); font-size: 12.5px; }
+.user-picker-empty { padding: 10px; color: var(--ink-3); }
+.user-picker-chosen { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 6px 6px 10px; border: 1px solid var(--brand); border-radius: 6px; background: var(--brand-soft); font-weight: 500; }

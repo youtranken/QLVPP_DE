@@ -38,9 +38,13 @@ function ConfigForm({ config }: { config: AdminConfig }) {
   const [formError, setFormError] = useState<ConfigGroup | null>(null);
   const [saving, setSaving] = useState<ConfigGroup | null>(null);
   const [saved, setSaved] = useState<ConfigGroup | null>(null);
+  const base = toDraft(config);
+  const patchOf = (group: ConfigGroup) => toPatch(group, draft, base);
 
   const save = async (group: ConfigGroup) => {
     const fields = GROUP_FIELDS[group];
+    const patch = patchOf(group);
+    if (Object.keys(patch).length === 0) return;
     const invalid = validateGroup(group, draft);
     setErrors((prev) => ({ ...Object.fromEntries(Object.entries(prev).filter(([k]) => !fields.includes(k as DraftField))), ...invalid }));
     setSaved(null);
@@ -48,7 +52,7 @@ function ConfigForm({ config }: { config: AdminConfig }) {
     if (Object.keys(invalid).length > 0) return;
     setSaving(group);
     try {
-      const next = await saveConfig(toPatch(group, draft), csrfToken);
+      const next = await saveConfig(patch, csrfToken);
       qc.setQueryData(CONFIG_KEY, next);
       void qc.invalidateQueries({ queryKey: ['public-config'] });
       const fresh = toDraft(next);
@@ -64,10 +68,15 @@ function ConfigForm({ config }: { config: AdminConfig }) {
     }
   };
 
+  const edit = (f: DraftField, value: string) => {
+    setDraft((d) => ({ ...d, [f]: value }));
+    setErrors(({ [f]: _cleared, ...rest }) => rest);
+  };
+
   const field = (f: DraftField, label: string, hint?: string, extra?: InputHTMLAttributes<HTMLInputElement>) => (
     <FormField label={label} hint={hint} error={errors[f] ? t(errors[f]) : undefined}>
       {(p) => (
-        <input {...p} {...extra} value={draft[f]} onChange={(e) => setDraft((d) => ({ ...d, [f]: e.target.value }))} />
+        <input {...p} {...extra} value={draft[f]} onChange={(e) => edit(f, e.target.value)} />
       )}
     </FormField>
   );
@@ -75,6 +84,7 @@ function ConfigForm({ config }: { config: AdminConfig }) {
   const section = (group: ConfigGroup) => ({
     saveLabel: t(`config.${group}.save`),
     saving: saving === group,
+    canSave: Object.keys(patchOf(group)).length > 0,
     saved: saved === group,
     formError: formError === group ? t('config.errors.UNKNOWN') : undefined,
     onSave: () => void save(group),

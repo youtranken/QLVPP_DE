@@ -3,7 +3,8 @@ import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
 import { LoadError, Loading } from '@/ui/load-state';
 import { useFormatTime } from '@/lib/format-time';
 import type { AdminItem } from '@/features/catalog/catalog.api';
-import { useDirectoryNames, useMovements, type StockMovement } from '@/features/stock/stock.api';
+import { useMovements, type StockMovement } from '@/features/stock/stock.api';
+import { useDirectoryNames } from '@/features/directory/directory.api';
 
 const TAG_CLASS: Record<StockMovement['reason'], string> = {
   purchase: 'tag tag--ok',

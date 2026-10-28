@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 
 interface Page<T> {
@@ -58,7 +58,7 @@ export interface AdminConfig {
   admin_contact: string;
 }
 
-export type ConfigPatch = Partial<Omit<AdminConfig, 'authorized_groups' | 'signers'>> & { signers?: Signers };
+export type ConfigPatch = Partial<Omit<AdminConfig, 'authorized_groups' | 'signers'>> & { signers?: Partial<Signers> };
 
 export const CONFIG_KEY = ['admin', 'config'] as const;
 const USERS_PAGE = 50;
@@ -78,6 +78,8 @@ export function useAdminUsers(search: string) {
     queryFn: ({ pageParam }) =>
       apiFetch<Page<AdminUser>>(`/api/admin/users?${pageParams(USERS_PAGE, pageParam, { search })}`),
     getNextPageParam: (last) => last.next_cursor,
+    // Giữ bảng cũ trong lúc tìm để không nháy về "Đang tải" mỗi lần gõ
+    placeholderData: keepPreviousData,
   });
 }
 

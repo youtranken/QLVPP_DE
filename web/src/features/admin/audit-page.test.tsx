@@ -16,9 +16,12 @@ const row = (id: string, over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+const BINH = { sub: 'u-binh', fullName: 'Lê Thị Bình', email: 'binh@pmh.com.vn', department: 'Hành chính', status: 'locked' };
+
 function stubApi() {
   const fetchMock = vi.fn((url: string) => {
     const params = new URL(url, 'http://x').searchParams;
+    if (url.startsWith('/api/admin/users')) return Promise.resolve(jsonResponse(200, { items: [BINH], next_cursor: null }));
     if (params.get('cursor') === 'c2') {
       return Promise.resolve(jsonResponse(200, { items: [row('a3', { action: 'auth.login', actor: 'local:sa', actorName: null, detail: { ip: '10.0.0.5' } })], next_cursor: null }));
     }
@@ -62,7 +65,8 @@ describe('AuditPage', () => {
   it('lọc người/hành động/khoảng ngày → gửi actor, action, from, to', async () => {
     const fetchMock = stubApi();
     await openAudit();
-    await userEvent.type(screen.getByLabelText('Người thực hiện'), 'u-binh');
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người thực hiện' }), 'Bình');
+    await userEvent.click(await screen.findByRole('button', { name: /Lê Thị Bình/ }));
     await userEvent.type(screen.getByLabelText('Hành động'), 'config.updated');
     await userEvent.type(screen.getByLabelText('Từ ngày'), '2026-10-01');
     await userEvent.type(screen.getByLabelText('Đến ngày'), '2026-10-28');
@@ -70,6 +74,19 @@ describe('AuditPage', () => {
     await vi.waitFor(() => expect(auditUrls(fetchMock).at(-1)?.searchParams.get('actor')).toBe('u-binh'));
     const last = auditUrls(fetchMock).at(-1)!.searchParams;
     expect([last.get('action'), last.get('from'), last.get('to')]).toEqual(['config.updated', '2026-10-01', '2026-10-28']);
+  });
+
+  it('chọn người từ danh bạ (kể cả đã khóa) → actor=<sub> chính xác; "Xóa lọc" bỏ actor', async () => {
+    const fetchMock = stubApi();
+    await openAudit();
+    expect(screen.queryByRole('list', { name: 'Kết quả tìm người' })).toBeNull();
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người thực hiện' }), 'Bình');
+    await userEvent.click(await screen.findByRole('button', { name: /Lê Thị Bình/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
+    await vi.waitFor(() => expect(auditUrls(fetchMock).at(-1)?.searchParams.get('actor')).toBe('u-binh'));
+    await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
+    await vi.waitFor(() => expect(auditUrls(fetchMock).at(-1)?.searchParams.has('actor')).toBe(false));
+    expect(screen.getByRole('searchbox', { name: 'Tìm người thực hiện' })).toHaveValue('');
   });
 
   it('"Đến ngày" trước "Từ ngày" → lỗi gắn ô, không gọi lại server', async () => {

@@ -3,11 +3,16 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormField } from '@/ui/form-field';
 import { NO_FILTERS, type AuditFilters } from '@/features/admin/admin.api';
+import { UserPicker } from '@/features/directory/user-picker';
+import type { DirectoryUser } from '@/features/directory/directory.api';
 
 // Server cũng chặn to < from (400); kiểm trước để lỗi gắn đúng ô thay vì báo tải lỗi chung
 export function AuditFilterBar({ onApply }: { onApply: (f: AuditFilters) => void }) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState<AuditFilters>(NO_FILTERS);
+  const [actor, setActor] = useState<DirectoryUser | null>(null);
+  // Đổi key để ô tìm người trống lại khi xóa lọc (ô giữ chữ đã gõ trong state riêng)
+  const [pickerKey, setPickerKey] = useState(0);
   const [rangeError, setRangeError] = useState(false);
   const set = (k: keyof AuditFilters, v: string) => setDraft((d) => ({ ...d, [k]: v }));
 
@@ -15,20 +20,28 @@ export function AuditFilterBar({ onApply }: { onApply: (f: AuditFilters) => void
     e.preventDefault();
     const invalid = draft.from !== '' && draft.to !== '' && draft.to < draft.from;
     setRangeError(invalid);
-    if (!invalid) onApply({ ...draft, actor: draft.actor.trim(), action: draft.action.trim() });
+    if (!invalid) onApply({ ...draft, actor: actor?.sub ?? '', action: draft.action.trim() });
   };
 
   const clear = () => {
     setDraft(NO_FILTERS);
+    setActor(null);
+    setPickerKey((k) => k + 1);
     setRangeError(false);
     onApply(NO_FILTERS);
   };
 
   return (
     <form className="a-panel audit-filters" aria-label={t('audit.filters.label')} onSubmit={submit} noValidate>
-      <FormField label={t('audit.filters.actor')} hint={t('audit.filters.actorHint')}>
-        {(p) => <input {...p} value={draft.actor} onChange={(e) => set('actor', e.target.value)} />}
-      </FormField>
+      <UserPicker
+        key={pickerKey}
+        label={t('audit.filters.actor')}
+        searchLabel={t('audit.filters.actorSearch')}
+        value={actor}
+        allowLocked
+        resultsWhenEmpty={false}
+        onChange={setActor}
+      />
       <FormField label={t('audit.filters.action')} hint={t('audit.filters.actionHint')}>
         {(p) => <input {...p} value={draft.action} onChange={(e) => set('action', e.target.value)} />}
       </FormField>
