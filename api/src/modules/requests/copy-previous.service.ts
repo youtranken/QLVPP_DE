@@ -38,6 +38,9 @@ export interface CopyResult {
   previously_accepted: string[];
 }
 
+type Kept =
+  { item_id: string; item: CopyItemFacts; qty: number } | { line: SourceLine };
+
 // Thuần: giỏ đề xuất từ dòng phiếu cũ theo danh mục hiện tại (architecture §6 Copy-previous)
 export function buildCopy(
   lines: SourceLine[],
@@ -50,54 +53,51 @@ export function buildCopy(
     capped: [],
     previously_accepted: [],
   };
-  // n/a và converted cùng món được phép trong phiếu cũ nhưng lưu lại sẽ DUPLICATE_ITEM → gộp
-  const byItem = new Map<string, { qty: number; item: CopyItemFacts }>();
-  const customs: { line: SourceLine; qty: number }[] = [];
-  const order: (string | number)[] = [];
+  out.lines = keepLines(lines, items, out).map((k) =>
+    'item_id' in k
+      ? {
+          item_id: k.item_id,
+          qty: cap(out, k.item.name, k.qty, k.item.max_qty),
+        }
+      : {
+          custom_name: k.line.custom_name,
+          custom_unit: k.line.custom_unit,
+          custom_note: k.line.custom_note,
+          image_file_id: k.line.image_file_id,
+          qty: cap(out, k.line.custom_name ?? '', k.line.qty, defaultMax),
+        },
+  );
+  return out;
+}
 
+// Giữ thứ tự dòng gốc; n/a và converted cùng món được phép trong phiếu cũ nhưng lưu lại sẽ DUPLICATE_ITEM → gộp
+function keepLines(
+  lines: SourceLine[],
+  items: Map<string, CopyItemFacts>,
+  out: CopyResult,
+): Kept[] {
+  const kept: Kept[] = [];
+  const byItem = new Map<string, { qty: number }>();
   for (const line of lines) {
     const item = line.item_id ? items.get(line.item_id) : undefined;
     const name = (line.item_id ? item?.name : line.custom_name) ?? '';
     const reason = skipReason(line, item);
     if (reason) {
       out.skipped.push({ name, reason });
-      continue;
-    }
-    if (line.item_id && item) {
+    } else if (line.item_id && item) {
       const prev = byItem.get(line.item_id);
       if (prev) prev.qty += line.qty;
       else {
-        byItem.set(line.item_id, { qty: line.qty, item });
-        order.push(line.item_id);
+        const entry = { item_id: line.item_id, item, qty: line.qty };
+        byItem.set(line.item_id, entry);
+        kept.push(entry);
       }
-      continue;
-    }
-    if (line.review_status === 'accepted') {
-      out.previously_accepted.push(name);
-    }
-    order.push(customs.length);
-    customs.push({ line, qty: line.qty });
-  }
-
-  for (const key of order) {
-    if (typeof key === 'string') {
-      const { qty, item } = byItem.get(key)!;
-      out.lines.push({
-        item_id: key,
-        qty: cap(out, item.name, qty, item.max_qty),
-      });
     } else {
-      const { line, qty } = customs[key];
-      out.lines.push({
-        custom_name: line.custom_name,
-        custom_unit: line.custom_unit,
-        custom_note: line.custom_note,
-        image_file_id: line.image_file_id,
-        qty: cap(out, line.custom_name ?? '', qty, defaultMax),
-      });
+      if (line.review_status === 'accepted') out.previously_accepted.push(name);
+      kept.push({ line });
     }
   }
-  return out;
+  return kept;
 }
 
 function skipReason(
