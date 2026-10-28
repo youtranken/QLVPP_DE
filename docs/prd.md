@@ -70,7 +70,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 - FR-04 Hồ sơ hiển thị tên, email, mã NV, phòng ban từ PMH ID; không sửa được trong app.
 
 ### 6.2 Danh mục món (Admin)
-- FR-10 Tạo/sửa món: tên (vi, en tùy chọn), **ĐVT chọn từ danh sách chuẩn** (cái, hộp, cây, ram, cuộn, lốc, bịch, chai, bộ) + quy cách tùy chọn ("hộp 12 cây", hiện cạnh tên ở mọi màn), nhóm, **ảnh bắt buộc**, `admin_only`, `max_qty` (mặc định 20), `min_stock`, thứ tự.
+- FR-10 Tạo/sửa món: tên (vi, en tùy chọn), **ĐVT chọn từ danh sách chuẩn** (cái, hộp, cây, ram, cuộn, lốc, bịch, chai, bộ) + quy cách tùy chọn ("hộp 12 cây", hiện cạnh tên ở mọi màn), nhóm, **ảnh bắt buộc**, `admin_only`, `max_qty` (mặc định 20), thứ tự.
 - FR-11 Ngừng món (`active=false`): ẩn khỏi màn đăng ký, giữ nguyên trong phiếu cũ với nhãn "đã ngừng". Không xóa món đã từng có trong phiếu.
 - FR-12 Quản lý nhóm món (tên, thứ tự, bật/tắt).
 - FR-13 Món seed thiếu ảnh hiện placeholder + nhãn "thiếu ảnh" trong trang Danh mục.
@@ -102,7 +102,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 - FR-44 **Hoàn tác đợt giao**: admin hoàn tác một đợt giao cụ thể (toàn bộ hoặc một phần) kèm lý do bắt buộc; kho cộng lại (biến động `return`), `delivered_qty` giảm, ghi nhật ký; người nhận thấy tiến độ cập nhật.
 
 ### 6.6 Kho (Admin)
-- FR-50 Tồn hiện tại từng món; cảnh báo khi `stock_qty ≤ min_stock`.
+- FR-50 Tồn hiện tại từng món. **Sắp hết** khi đã dùng hết 80 % lượng tồn tính từ lần nhập mua gần nhất: mốc = ⌊20 % × tồn ngay sau lần nhập đó⌋, sắp hết khi `0 < tồn ≤ mốc`; tồn = 0 là **Hết hàng**. Món chưa từng nhập mua không cảnh báo. Mỗi lần nhập mua tính lại mốc (ví dụ tồn 0 → nhập 30: mốc 6; còn 6 thì sắp hết; nhập thêm 20 lúc còn 6 → tồn 26, mốc 5). Không còn ô "mức tồn tối thiểu" nhập tay.
 - FR-51 Nhập mua: +số lượng, ghi chú (đơn hàng/nguồn).
 - FR-52 Điều chỉnh kiểm kê: ±số lượng, lý do bắt buộc (dùng cho tồn đầu kỳ).
 - FR-53 Sổ cái: mọi biến động (nhập, giao, xuất lẻ, hoàn tác, điều chỉnh) với người thực hiện, lý do và thời điểm; xem theo món.
@@ -195,5 +195,6 @@ Hệ thị giác: thương hiệu xanh ngọc lục `#059669`; member kiểu app
 | 2026-10-28 | Admin = group PMH ID `vpp-admin`; SA cục bộ từ `.env` như QLTS. |
 | 2026-10-28 | Giao diện: member kiểu app, admin kiểu quản lý, màu `#059669`; khác QLTS và PMH ID. |
 | 2026-10-28 | Song ngữ vi/en từ đầu. |
+| 2026-10-28 | "Sắp hết" = đã dùng 80 % tồn sau lần nhập mua gần nhất (mốc tự tính 20 %); bỏ mức tối thiểu nhập tay. |
 | 2026-10-28 | Có "Xuất lẻ" ngoài phiếu (người mới, dùng chung) từ tồn mua dư; cột "Đặt mua" sửa được trên báo cáo. |
 | 2026-10-28 | Sau review 3 góc nhìn (`review-spec.md`): mô hình kỳ liên tục; phiếu tồn tại khi có dòng; hạn chụp vào kỳ; nhóm theo phòng ban PMH ID (không có trường Tổ); Cần mua gồm nợ kỳ trước trừ tồn + bản chốt báo cáo; hoàn tác đợt giao; hủy nợ; ĐVT chuẩn; member giữ dòng Hành chính thêm; thanh dưới trên điện thoại. |

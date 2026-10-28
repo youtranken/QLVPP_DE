@@ -100,7 +100,8 @@ items (id uuid PK, code text UNIQUE, name text NOT NULL, name_en text,
        pack_note text,                                    -- quy cách: "hộp 12 cây"
        category_id uuid REFERENCES item_categories, image_file_id uuid REFERENCES files,
        admin_only bool NOT NULL DEFAULT false, max_qty int NOT NULL DEFAULT 20 CHECK (max_qty > 0),
-       stock_qty int NOT NULL DEFAULT 0 CHECK (stock_qty >= 0), min_stock int NOT NULL DEFAULT 0,
+       stock_qty int NOT NULL DEFAULT 0 CHECK (stock_qty >= 0), restock_level int,                                 -- tồn ngay sau lần nhập mua gần nhất; mốc sắp hết = floor(restock_level * 0.2)
+       min_stock int NOT NULL DEFAULT 0,                 -- không dùng nữa (thay bằng restock_level), bỏ ở migration sau
        low_stock_notified_at timestamptz,                 -- reset khi nhập mua
        active bool NOT NULL DEFAULT true, sort_order int NOT NULL DEFAULT 0, created_at, updated_at)
 
@@ -219,7 +220,7 @@ Bảng `in_app_notifications(id, user_sub, event_id, topic, params jsonb, link, 
 
 Công thức `event_id`: `period_open:<ym>` · `reminder:<ym>` · `period_locked:<ym>` (admin) · `request_delivered:<request_id>:<n>` · `line_review:<line_id>` · `custom_line_new:<line_id>` (admin) · `low_stock:<item_id>:<last_purchase_movement_id|0>`.
 
-Lịch (`@nestjs/schedule`, `timeZone: 'Asia/Ho_Chi_Minh'` tường minh) chạy **mỗi giờ** với logic "bảo đảm đã gửi cho hôm nay" (idempotent nhờ `event_id`, nên api khởi động lại hay trượt giờ không mất thông báo): ngày 1 → `period_open` cho mọi user `active`; ngày `lastDay − 2` → `reminder` cho user `active` chưa có phiếu; ngày `lastDay + 1` → `period_locked` cho admin (user có group admin) + ghi `periods.headcount`; mỗi giờ → `low_stock` cho admin với món `stock_qty ≤ min_stock AND low_stock_notified_at IS NULL`, rồi set `low_stock_notified_at` (reset về NULL khi có movement `purchase`). Cron ngày: xóa thông báo `created_at < now − 90 ngày`; dọn tệp mồ côi (§8). "Admin" = user `active` có group ∩ `config.admin_group` (SA không nhận chuông).
+Lịch (`@nestjs/schedule`, `timeZone: 'Asia/Ho_Chi_Minh'` tường minh) chạy **mỗi giờ** với logic "bảo đảm đã gửi cho hôm nay" (idempotent nhờ `event_id`, nên api khởi động lại hay trượt giờ không mất thông báo): ngày 1 → `period_open` cho mọi user `active`; ngày `lastDay − 2` → `reminder` cho user `active` chưa có phiếu; ngày `lastDay + 1` → `period_locked` cho admin (user có group admin) + ghi `periods.headcount`; mỗi giờ → `low_stock` cho admin với món `restock_level > 0 AND stock_qty > 0 AND stock_qty <= floor(restock_level * 0.2) AND low_stock_notified_at IS NULL`, rồi set `low_stock_notified_at` (reset về NULL khi có movement `purchase`). Cron ngày: xóa thông báo `created_at < now − 90 ngày`; dọn tệp mồ côi (§8). "Admin" = user `active` có group ∩ `config.admin_group` (SA không nhận chuông).
 
 GĐ2: bảng `email_outbox` + worker trong cùng process.
 
