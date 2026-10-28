@@ -120,3 +120,31 @@ docker compose -f docker-compose.yml up -d --build   # BẮT BUỘC -f: không n
   migration chạy lúc api boot).
 - Backup: service `backup-cron` (hằng ngày lúc `BACKUP_AT`); chạy tay
   `docker compose -f docker-compose.yml --profile backup run --rm backup`; phục hồi `bash ops/backup/restore.sh`.
+
+## Trước khi deploy
+
+Checklist lần deploy đầu (và khi đổi hạ tầng):
+
+- [ ] `.env` prod: `NODE_ENV=production`, `AUTH_DEV_MODE=false`, không còn `CHANGE_ME`; `APP_BASE_URL` khớp hệt
+      `app_url` đã khai với PMH ID.
+- [ ] Mật khẩu SA prod: `cd api && npm run sa:hash -- '<mật-khẩu-mạnh>'` → dán vào `LOCAL_SA_PASSWORD_HASH`
+      (mật khẩu cất két IT, không dùng lại mật khẩu dev).
+- [ ] `TRUST_PROXY_HOPS`: đăng nhập SA một lần từ máy trong LAN, mở Nhật ký → dòng `auth.sa_login` (`detail.ip`) —
+      IP phải là IP **máy người dùng**, không phải IP EDGE/docker. Sai thì chỉnh số hop (EDGE `vpp.conf` dùng
+      `proxy_add_x_forwarded_for`, nginx `web` thêm một hop nữa) rồi `docker compose -f docker-compose.yml up -d api`.
+      IP sai làm lockout/throttle SA gộp mọi người vào một IP.
+- [ ] Seed danh mục lần đầu: `docker compose -f docker-compose.yml exec api node scripts/seed-catalog.mjs`.
+- [ ] Chạy thử backup tay (mục Prod) và kiểm file `.tar.gz`/`.enc` xuất hiện trong thư mục backup.
+- [ ] Khi `@nestjs/platform-express` 12 ra: nâng cùng `multer` (cảnh báo `npm audit` GHSA-q7qp-rjg7-q26m
+      hiện nằm trong multer kèm platform-express 11).
+
+Runbook sự cố:
+
+- **SA bị khóa toàn cục** (50 lần sai/15′ từ mọi IP → `SA_LOGIN_LOCKED` kể cả mật khẩu đúng): bộ đếm nằm trong
+  bộ nhớ api — `docker compose -f docker-compose.yml restart api` để xóa, rồi xem Nhật ký `auth.sa_login_failed`
+  để tìm nguồn dò mật khẩu.
+- **PMH ID sập**: người đang có phiên nhận 503 `SSO_UNAVAILABLE` (phiên được giữ, tự sống lại khi PMH ID về);
+  màn đăng nhập hiện thông báo và IT vào bằng "Dành cho IT" (SA).
+- **Restore không nguyên tử**: luôn chạy backup tay ngay trước khi restore. `restore.sh` DROP database rồi nạp lại;
+  lỗi ở bước 6/6 (nạp file upload) thì DB đã phục hồi nhưng ảnh chưa — sửa nguyên nhân rồi chạy lại restore
+  với cùng bản backup.
