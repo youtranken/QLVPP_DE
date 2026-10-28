@@ -1,8 +1,16 @@
 {
-  "moduleFileExtensions": ["js", "json", "ts"],
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
+  "maxWorkers": 1,
+  "setupFiles": [
+    "<rootDir>/e2e-env.setup.ts"
+  ],
   "transform": {
     "^.+\\.(t|j)s$": [
       "ts-jest",
@@ -11,7 +19,7 @@
           "isolatedModules": true,
           "module": "commonjs",
           "moduleResolution": "node10",
-            "resolvePackageJsonExports": false,
+          "resolvePackageJsonExports": false,
           "allowJs": true,
           "esModuleInterop": true,
           "emitDecoratorMetadata": true,
