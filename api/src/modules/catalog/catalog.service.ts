@@ -42,6 +42,12 @@ const CONSTRAINT_ERRORS: Record<string, () => Error> = {
       message: 'Mã món đã được dùng.',
     }),
   stock_movements_item_id_fkey: () => itemInUse(),
+  // Ảnh bị job dọn tệp mồ côi xóa giữa lúc kiểm quyền và lúc ghi món
+  items_image_file_id_fkey: () =>
+    new BadRequestException({
+      code: 'IMAGE_REQUIRED',
+      message: 'Ảnh không còn — tải ảnh lại.',
+    }),
 };
 
 function itemInUse() {
