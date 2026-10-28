@@ -25,7 +25,7 @@
 
 | Module | TT | Trách nhiệm | File chính | Sở hữu | Phụ thuộc |
 |---|---|---|---|---|---|
-| catalog | ⬜ | Nhóm, món (ĐVT chuẩn, ảnh bắt buộc, `admin_only`), kho: nhập/điều chỉnh/xuất lẻ, sổ cái, sắp hết | `api/src/modules/catalog/*` | `item_categories`, `items`, `stock_movements`; `items`, `item-categories`, `admin/items*`, `admin/issues`, `me/issues` | files, users, config, audit |
+| catalog | 🟨 | Nhóm, món (ĐVT chuẩn, ảnh bắt buộc, `admin_only`), kho: nhập/điều chỉnh/xuất lẻ, sổ cái, sắp hết | `api/src/migrations/0100_vpp_catalog.sql` (đã có; module `api/src/modules/catalog/*` ở Task 8); test `api/test/catalog-schema.db-spec.ts` | `item_categories`, `items`, `stock_movements` (migration 0100, `ref_line_id` chưa FK tới Plan 2); `items`, `item-categories`, `admin/items*`, `admin/issues`, `me/issues` | files, users, config, audit |
 | requests (P2) | ⬜ | Kỳ (`periods.deadline`), `ClockService`, phiếu + dòng (diff theo id), chép lại, review món ngoài DM | `api/src/modules/requests/*`, `common/period.ts`, `common/clock.service.ts` | `periods`, `requests`, `request_lines`; `periods/current`, `me/request*`, `admin/requests*`, `admin/review`, `admin/lines/:id/review` | catalog, files, notifications |
 | delivery (P3) | ⬜ | Giao từng dòng/giao tất cả (idempotent), hoàn tác, hủy nợ, còn nợ | `api/src/modules/delivery/*` | `deliveries`; `admin/lines/:id/deliver`, `admin/requests/:id/deliver-all`, `admin/movements/:id/undo`, `admin/backlog` | requests, catalog, notifications |
 | reports (P3) | ⬜ | Báo cáo sống + bản chốt, Excel 2 sheet, trang in | `api/src/modules/reports/*` | `report_snapshots`; `admin/reports/*` | requests, catalog |
