@@ -8,7 +8,7 @@ import {
 import { sql } from 'drizzle-orm';
 import { pgViolation } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
-import type { Database, Executor } from '../../database/database.module';
+import type { Database, Executor, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
 import { SystemConfigService } from '../config/system-config.service';
@@ -110,16 +110,28 @@ export class CatalogService {
   }
 
   async create(dto: CreateItemDto, actor: string): Promise<ItemRow> {
+    return this.db.transaction((tx) => this.createItemWithin(tx, dto, actor));
+  }
+
+  // Cho review món ngoài DM tạo món trong tx của nó; trustedImageId = ảnh đã nằm trên dòng phiếu, không kiểm chủ
+  async createItemWithin(
+    tx: Tx,
+    dto: CreateItemDto,
+    actor: string,
+    opts: { trustedImageId?: string } = {},
+  ): Promise<ItemRow> {
     if (!dto.image_file_id) throw imageRequired();
     if (!dto.unit) throw unitRequired();
-    await this.files.assertOwnedBy(dto.image_file_id, actor, 'item_image');
+    if (dto.image_file_id !== opts.trustedImageId) {
+      await this.files.assertOwnedBy(dto.image_file_id, actor, 'item_image');
+    }
     const fields = {
       max_qty: await this.config.getInt('default_max_qty'),
       ...definedEntries(dto),
     };
-    return this.mapConstraints(() =>
-      this.db.transaction(async (tx) => {
-        const row = (
+    const row = await this.mapConstraints(
+      async () =>
+        (
           await tx.execute<ItemRow>(sql`
             INSERT INTO items (${sql.join(
               Object.keys(fields).map((k) => sql.identifier(k)),
@@ -131,17 +143,16 @@ export class CatalogService {
             )})
             RETURNING ${ITEM_COLUMNS}
           `)
-        ).rows[0];
-        await this.audit.appendWithin(tx, {
-          actor,
-          action: 'item.created',
-          objectType: 'item',
-          objectId: row.id,
-          detail: { after: row },
-        });
-        return row;
-      }),
+        ).rows[0],
     );
+    await this.audit.appendWithin(tx, {
+      actor,
+      action: 'item.created',
+      objectType: 'item',
+      objectId: row.id,
+      detail: { after: row },
+    });
+    return row;
   }
 
   async update(

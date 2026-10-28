@@ -77,3 +77,21 @@ export const userInactive = () =>
     code: 'USER_INACTIVE',
     message: 'Người này không còn hoạt động.',
   });
+
+export const lineNotFound = () =>
+  new NotFoundException({
+    code: 'LINE_NOT_FOUND',
+    message: 'Không tìm thấy dòng.',
+  });
+
+export const lineAlreadyReviewed = () =>
+  new ConflictException({
+    code: 'LINE_ALREADY_REVIEWED',
+    message: 'Dòng này đã được xử lý — tải lại để xem kết quả.',
+  });
+
+export const rejectReasonRequired = () =>
+  new BadRequestException({
+    code: 'REASON_REQUIRED',
+    message: 'Nhập lý do từ chối (ít nhất 3 ký tự).',
+  });

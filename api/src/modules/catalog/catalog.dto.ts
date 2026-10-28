@@ -44,13 +44,13 @@ export const TrimToNull = () =>
 // PATCH: vắng mặt thì bỏ qua, có mặt thì không được null
 const Present = () => ValidateIf((_, v) => v !== undefined);
 
-const Name = () => (target: object, key: string) => {
+export const Name = () => (target: object, key: string) => {
   Trim()(target, key);
   IsString()(target, key);
   IsNotEmpty()(target, key);
   MaxLength(NAME_MAX)(target, key);
 };
-const OptionalText =
+export const OptionalText =
   (max = NAME_MAX) =>
   (target: object, key: string) => {
     TrimToNull()(target, key);

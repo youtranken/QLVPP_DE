@@ -66,7 +66,10 @@ export class RequestViewBuilder {
   }
 }
 
-function toLineView(line: LineRow, items: Map<string, ItemFacts>): LineView {
+export function toLineView(
+  line: LineRow,
+  items: Map<string, ItemFacts>,
+): LineView {
   const item = line.item_id ? items.get(line.item_id) : undefined;
   return {
     id: line.id,

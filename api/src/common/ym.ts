@@ -1,6 +1,6 @@
 import { BadRequestException, PipeTransform } from '@nestjs/common';
 
-const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
+export const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 // Chỉ kiểm hình dạng; "không lớn hơn kỳ đang mở" cần ClockService nên nằm ở module kỳ
 export function parseYm(raw: unknown): string {

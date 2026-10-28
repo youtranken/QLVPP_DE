@@ -17,6 +17,8 @@ import { MeRequestService } from './me-request.service';
 import { RequestItemUsageHook } from './request-item-usage.hook';
 import { RequestLinesWriter } from './request-lines.writer';
 import { RequestViewBuilder } from './request-view';
+import { ReviewController } from './review.controller';
+import { ReviewService } from './review.service';
 import { SummaryListsService } from './summary-lists.service';
 import { SummaryService } from './summary.service';
 
@@ -32,6 +34,7 @@ import { SummaryService } from './summary.service';
     MeRequestController,
     AdminSummaryController,
     AdminRequestsController,
+    ReviewController,
   ],
   providers: [
     AdminRequestService,
@@ -43,6 +46,7 @@ import { SummaryService } from './summary.service';
     RequestItemUsageHook,
     SummaryService,
     SummaryListsService,
+    ReviewService,
   ],
   exports: [RequestLinesWriter, RequestViewBuilder],
 })

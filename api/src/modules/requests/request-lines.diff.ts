@@ -105,7 +105,8 @@ function planExisting(
       fields: ['item_id'],
     });
   }
-  if (before.item_id) assertNoCustomFields(raw, ref);
+  // Dòng converted giữ ảnh gốc: client gửi lại đúng giá trị đang lưu thì không phải "trường riêng"
+  if (before.item_id) assertNoCustomFields(raw, ref, before);
   const after = merge(before, raw);
   if (sameSnap(snapOf(before), after)) return;
   if (input.mode === 'member' && isMemberReadonly(before)) {
@@ -141,10 +142,16 @@ function merge(before: LineRow, raw: LineInput): LineSnap {
   };
 }
 
-function assertNoCustomFields(raw: LineInput, ref: LineRef): void {
+function assertNoCustomFields(
+  raw: LineInput,
+  ref: LineRef,
+  stored?: LineRow,
+): void {
   const fields = (
     ['custom_name', 'custom_unit', 'image_file_id'] as const
-  ).filter((k) => raw[k] !== undefined && raw[k] !== null);
+  ).filter(
+    (k) => raw[k] !== undefined && raw[k] !== null && raw[k] !== stored?.[k],
+  );
   if (fields.length > 0) {
     throw lineError(
       'VALIDATION',

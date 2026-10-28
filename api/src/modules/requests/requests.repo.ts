@@ -208,3 +208,64 @@ export async function imagesOnOwnerLines(
   `);
   return new Set(rows.map((r) => r.id));
 }
+
+// Review: khóa phiếu trước rồi dòng — cùng thứ tự với writer (requests → request_lines)
+export async function lockLineForReview(
+  tx: Executor,
+  lineId: string,
+): Promise<(LineRow & { request_id: string }) | null> {
+  const head = await tx.execute<{ id: string }>(sql`
+    SELECT r.id FROM requests r JOIN request_lines l ON l.request_id = r.id
+    WHERE l.id = ${lineId} FOR UPDATE OF r
+  `);
+  if (head.rows.length === 0) return null;
+  const { rows } = await tx.execute<
+    LineRow & { request_id: string } & Record<string, unknown>
+  >(sql`
+    SELECT ${LINE_COLUMNS}, request_id FROM request_lines WHERE id = ${lineId} FOR UPDATE
+  `);
+  return rows[0] ?? null;
+}
+
+// itemId có → convert: CHECK request_lines_item_review_ck đòi custom_* NULL khi có item_id, ảnh giữ lại
+export async function setReview(
+  tx: Executor,
+  lineId: string,
+  r: {
+    status: string;
+    note: string | null;
+    itemId: string | null;
+    by: string;
+    now: Date;
+  },
+): Promise<LineRow | null> {
+  const at = r.now.toISOString();
+  const { rows } = await tx.execute<LineRow & Record<string, unknown>>(sql`
+    UPDATE request_lines
+    SET review_status = ${r.status}, review_note = ${r.note},
+        item_id = coalesce(${r.itemId}::uuid, item_id),
+        custom_name = CASE WHEN ${r.itemId}::uuid IS NULL THEN custom_name END,
+        custom_unit = CASE WHEN ${r.itemId}::uuid IS NULL THEN custom_unit END,
+        custom_note = CASE WHEN ${r.itemId}::uuid IS NULL THEN custom_note END,
+        reviewed_by_sub = ${r.by}, reviewed_at = ${at}::timestamptz,
+        updated_at = ${at}::timestamptz
+    WHERE id = ${lineId} AND review_status = 'pending'
+    RETURNING ${LINE_COLUMNS}
+  `);
+  return rows[0] ?? null;
+}
+
+// Dòng đổi trạng thái = phiếu đổi: tab đang mở với mốc cũ phải nhận STALE_UPDATE
+export async function bumpRequest(
+  tx: Executor,
+  id: string,
+  now: Date,
+): Promise<string> {
+  const { rows } = await tx.execute<{ updated_at: string }>(sql`
+    UPDATE requests
+    SET updated_at = GREATEST(${now.toISOString()}::timestamptz,
+                              date_trunc('milliseconds', updated_at) + interval '1 millisecond')
+    WHERE id = ${id} RETURNING ${UPDATED_AT_ISO} AS updated_at
+  `);
+  return rows[0].updated_at;
+}
