@@ -28,13 +28,14 @@ export default defineConfig({
     },
   },
   server: {
-    // Same-origin /api như nginx prod — cookie SameSite=Strict cần
+    // Same-origin /api như nginx prod (cookie SameSite=Strict); api dev publish 127.0.0.1:3000 ở override
     proxy: {
-      '/api': { target: 'https://localhost', changeOrigin: true, secure: false },
+      '/api': { target: process.env.VITE_API_TARGET ?? 'http://127.0.0.1:3000', changeOrigin: true },
     },
   },
   test: {
     environment: 'jsdom',
+    include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: './src/test/setup.ts',
     css: false,
     restoreMocks: true,

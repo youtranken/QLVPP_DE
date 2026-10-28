@@ -1,0 +1,66 @@
+import { describe, expect, it } from 'vitest';
+import { screen, userEvent, within } from '@/test/test-utils';
+import { renderApp } from '@/test/render-app';
+import { makeMe } from '@/test/fixtures-me';
+import { mockViewport } from '@/test/viewport';
+
+describe('AdminShell + RequireRole', () => {
+  it('role member vào /admin/catalog → chuyển về /', () => {
+    mockViewport(1280);
+    renderApp(makeMe('member'), '/admin/catalog');
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
+    expect(screen.queryByRole('navigation', { name: 'Menu quản lý' })).toBeNull();
+  });
+
+  it.each(['admin', 'sa'] as const)('role %s vào /admin/catalog thấy sidebar theo nhóm + tiêu đề trang', (role) => {
+    mockViewport(1280);
+    renderApp(makeMe(role), '/admin/catalog');
+    const side = screen.getByRole('navigation', { name: 'Menu quản lý' });
+    for (const g of ['Hằng tháng', 'Kho & danh mục', 'Hệ thống', 'Cá nhân']) {
+      expect(within(side).getByText(g)).toBeInTheDocument();
+    }
+    expect(within(side).getByRole('link', { name: 'Danh mục' })).toHaveAttribute('aria-current', 'page');
+    expect(within(side).getByRole('link', { name: /Phiếu của tôi/ })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeInTheDocument();
+  });
+
+  it('sidebar đủ mục theo _SPEC.md, đúng thứ tự', () => {
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/catalog');
+    const side = screen.getByRole('navigation', { name: 'Menu quản lý' });
+    expect(within(side).getAllByRole('link').map((a) => a.textContent?.replace(' ↗', ''))).toEqual([
+      'Tổng hợp kỳ',
+      'Món ngoài danh mục',
+      'Giao hàng',
+      'Còn nợ',
+      'Báo cáo & in',
+      'Kho',
+      'Danh mục',
+      'Danh bạ',
+      'Nhật ký',
+      'Cấu hình',
+      'Phiếu của tôi',
+    ]);
+  });
+
+  it('mục chưa làm ở Plan 1 (Tổng hợp kỳ) hiện "Sắp có"', () => {
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/summary');
+    expect(screen.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeInTheDocument();
+    expect(screen.getByText('Sắp có')).toBeInTheDocument();
+  });
+
+  it('390 px: sidebar ẩn sau nút "Mở menu", bấm thì hiện', async () => {
+    mockViewport(390);
+    renderApp(makeMe('admin'), '/admin/catalog');
+    expect(screen.queryByRole('navigation', { name: 'Menu quản lý' })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Mở menu' }));
+    expect(screen.getByRole('navigation', { name: 'Menu quản lý' })).toBeInTheDocument();
+  });
+
+  it('/admin chuyển tới /admin/catalog', () => {
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin');
+    expect(screen.getByTestId('location')).toHaveTextContent('/admin/catalog');
+  });
+});

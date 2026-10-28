@@ -49,6 +49,30 @@ npm run test:db    # integration DB thật — cần DATABASE_URL trỏ database
 cd web && npm ci && npm run build
 ```
 
+### Web dev + Playwright
+
+Override dev publish api ra `127.0.0.1:3000` (chỉ dev; prod compose không publish). Vite dev proxy
+`/api` → `http://127.0.0.1:3000` (đổi bằng `VITE_API_TARGET`), giữ same-origin như nginx prod.
+
+```bash
+docker compose up -d                 # api dev: NODE_ENV=development, AUTH_DEV_MODE=true
+cd web
+npm run dev                          # http://localhost:5173 — chưa đăng nhập thì ra màn vào
+npm test && npm run lint && npm run build
+npx playwright install chromium      # lần đầu (bản khớp @playwright/test 1.64.1)
+npx playwright test                  # tự chạy Vite ở :5174 (PW_PORT), 2 project: 1280 px và 390 px
+npm run typecheck:e2e
+```
+
+- Smoke đăng nhập bằng dev-identity: spec gắn `x-dev-user-sub`/`x-dev-role` **chỉ cho request `/api/**`**
+  (`page.route`, `playwright/helpers.ts`). Cổng web nginx (`docker compose port web 80`) xóa `x-dev-*` nên
+  không dùng cho smoke; gắn header toàn cục làm request font Google bị chặn CORS.
+- Không mạng tải Chromium: đặt `PW_CHROMIUM_PATH=/đường/dẫn/chrome`.
+- Ảnh chụp màn: `web/test-results/screens/`, báo cáo HTML: `web/playwright-report/` (không commit).
+- Fixture ảnh EXIF xoay 6: `python3 web/scripts/make-exif6-fixture.py web/src/test/fixtures/exif6.jpg` (Pillow).
+- Thử SA cục bộ ở dev: tạo hash bằng `cd api && npm run sa:hash`, đặt `LOCAL_SA_PASSWORD_HASH` trong `.env`
+  (không commit) rồi `docker compose up -d api`. Smoke không gửi mật khẩu sai lên api (tránh đếm khóa SA toàn cục).
+
 Seed danh mục ban đầu (idempotent, không đụng tồn kho/ảnh/trạng thái admin đã đặt): `cd api && DATABASE_URL=postgres://... npm run seed:catalog`. Trên prod: `docker compose exec api node scripts/seed-catalog.mjs`.
 
 ## AUTH_DEV_MODE

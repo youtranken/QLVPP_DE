@@ -4,6 +4,9 @@ services:
     environment:
       AUTH_DEV_MODE: 'true'
       NODE_ENV: development
+    # Chỉ dev: Vite dev server + Playwright gọi thẳng api (nginx web xóa header x-dev-*)
+    ports:
+      - '127.0.0.1:3000:3000'
   web:
     # Dev không có EDGE
     ports:
