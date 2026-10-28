@@ -47,7 +47,7 @@ export interface ReviewRow {
 export interface ReviewResult {
   line: LineView;
   request_updated_at: string;
-  item?: ItemFacts | ItemRow;
+  item?: ItemFacts;
   unit_mismatch?: boolean;
 }
 
@@ -109,13 +109,7 @@ export class ReviewService {
     if (body.action === 'reject' && (note?.length ?? 0) < 3) {
       throw rejectReasonRequired();
     }
-    if (body.action === 'convert' && !body.item) {
-      throw new BadRequestException({
-        code: 'VALIDATION',
-        message: 'Chọn món có sẵn hoặc nhập món mới.',
-        fields: ['item'],
-      });
-    }
+    if (body.action === 'convert') assertOneTarget(body.item);
     const now = this.clock.now();
     return this.db.transaction(async (tx) => {
       const before = await repo.lockLineForReview(tx, lineId);
@@ -150,11 +144,13 @@ export class ReviewService {
       const facts = item
         ? await this.catalog.itemFacts([item.id], tx)
         : new Map<string, ItemFacts>();
+      // Món có sẵn hay món mới đều trả cùng hình ItemFacts
+      const target = item ? facts.get(item.id)! : undefined;
       return {
         line: toLineView(after, facts),
         request_updated_at: updatedAt,
-        ...(item
-          ? { item, unit_mismatch: item.unit !== before.custom_unit }
+        ...(target
+          ? { item: target, unit_mismatch: target.unit !== before.custom_unit }
           : {}),
       };
     });
@@ -192,6 +188,31 @@ export class ReviewService {
     };
     return this.catalog.createItemWithin(tx, dto, actor, {
       trustedImageId: line.image_file_id ?? undefined,
+    });
+  }
+}
+
+const NEW_ITEM_KEYS = [
+  'name',
+  'name_en',
+  'unit',
+  'pack_note',
+  'category_id',
+  'image_file_id',
+  'max_qty',
+  'admin_only',
+] as const;
+
+// Hoặc {existing_id} hoặc trường món mới — gửi cả hai là mơ hồ, không đoán ý admin
+function assertOneTarget(item: ReviewItemInput | undefined): void {
+  const mixed = item?.existing_id
+    ? NEW_ITEM_KEYS.filter((k) => item[k] !== undefined)
+    : [];
+  if (!item || mixed.length > 0) {
+    throw new BadRequestException({
+      code: 'VALIDATION',
+      message: 'Chọn món có sẵn hoặc nhập món mới (không cả hai).',
+      fields: item ? mixed : ['item'],
     });
   }
 }

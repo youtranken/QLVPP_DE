@@ -18,6 +18,18 @@ describe('admin/review: món ngoài danh mục', () => {
     f;
   const NEW_PREFIX = `e2e-req-item-${SUFFIX}-new`;
   let category: string;
+  // Hình `item` trong response review: giống nhau cho món có sẵn và món mới
+  const itemShape = {
+    id: 0,
+    name: 0,
+    name_en: 0,
+    unit: 0,
+    pack_note: 0,
+    image_file_id: 0,
+    active: 0,
+    admin_only: 0,
+    max_qty: 0,
+  };
 
   const review = (lineId: string, body: object, role = 'admin') =>
     as(http().post(`/api/admin/lines/${lineId}/review`), ADMIN, role).send(
@@ -159,6 +171,9 @@ describe('admin/review: món ngoài danh mục', () => {
       item: { id: item },
       unit_mismatch: true,
     });
+    expect(Object.keys(res.body.item as object).sort()).toEqual(
+      Object.keys(itemShape).sort(),
+    );
     expect(await lineRow(custom.id)).toMatchObject({
       item_id: item,
       custom_name: null,
@@ -193,9 +208,14 @@ describe('admin/review: món ngoài danh mục', () => {
     const created = res.body.item as {
       id: string;
       image_file_id: string;
-      stock_qty: number;
     };
-    expect(created).toMatchObject({ image_file_id: img, stock_qty: 0 });
+    expect(created).toMatchObject({ image_file_id: img, active: true });
+    expect(Object.keys(created).sort()).toEqual(Object.keys(itemShape).sort());
+    const stock = await pool().query<{ stock_qty: number }>(
+      'SELECT stock_qty FROM items WHERE id = $1',
+      [created.id],
+    );
+    expect(stock.rows[0].stock_qty).toBe(0);
     expect(res.body.unit_mismatch).toBe(false);
     expect(res.body.line).toMatchObject({
       item_id: created.id,
@@ -291,6 +311,45 @@ describe('admin/review: món ngoài danh mục', () => {
     }).expect(200);
     const after = view(res);
     expect(after.lines).toEqual(got.lines);
+  });
+
+  it('review đổi updated_at phiếu: tab member giữ mốc cũ lưu → 409 STALE_UPDATE; request_updated_at khớp DB', async () => {
+    const { line } = await customLine();
+    const got = await getMine();
+    const res = await review(line.id, { action: 'accept' }).expect(200);
+    const stamp = res.body.request_updated_at as string;
+    expect(Date.parse(stamp)).toBeGreaterThan(Date.parse(got.updated_at));
+    const db = await pool().query<{ at: string }>(
+      `SELECT to_char(date_trunc('milliseconds', updated_at) AT TIME ZONE 'UTC',
+                      'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS at
+       FROM requests WHERE id = $1`,
+      [got.id],
+    );
+    expect(stamp).toBe(db.rows[0].at);
+    const stale = await save(
+      got.lines.map((l) => ({ id: l.id, qty: l.qty })),
+      { expected_updated_at: got.updated_at },
+    );
+    expect(stale.status).toBe(409);
+    expect(stale.body.code).toBe('STALE_UPDATE');
+    await save(
+      got.lines.map((l) => ({ id: l.id, qty: l.qty })),
+      {
+        expected_updated_at: stamp,
+      },
+    ).expect(200);
+  });
+
+  it('convert có cả existing_id lẫn trường món mới → 400 VALIDATION, dòng vẫn pending', async () => {
+    const { line } = await customLine();
+    const res = await review(line.id, {
+      action: 'convert',
+      item: { existing_id: await newItem(), name: 'Món mới', unit: 'cai' },
+    });
+    expect(res.status).toBe(400);
+    expect(res.body).toMatchObject({ code: 'VALIDATION' });
+    expect(res.body.fields).toEqual(expect.arrayContaining(['name', 'unit']));
+    expect((await lineRow(line.id)).review_status).toBe('pending');
   });
 
   it('GET admin/review: lọc theo status/ym; previously_accepted theo người + tên chuẩn hóa ở kỳ trước', async () => {

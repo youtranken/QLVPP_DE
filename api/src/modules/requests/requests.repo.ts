@@ -149,6 +149,10 @@ export async function deleteLines(tx: Executor, ids: string[]): Promise<void> {
 }
 
 // GREATEST: hai lần lưu trong cùng mili giây (hoặc đồng hồ test đứng yên) vẫn đổi updated_at → STALE_UPDATE còn tác dụng
+const nextUpdatedAt = (now: Date) =>
+  sql`GREATEST(${now.toISOString()}::timestamptz,
+               date_trunc('milliseconds', updated_at) + interval '1 millisecond')`;
+
 export async function touchRequest(
   tx: Executor,
   id: string,
@@ -157,9 +161,7 @@ export async function touchRequest(
 ): Promise<void> {
   await tx.execute(sql`
     UPDATE requests
-    SET updated_at = GREATEST(${now.toISOString()}::timestamptz,
-                              date_trunc('milliseconds', updated_at) + interval '1 millisecond'),
-        department = ${department}
+    SET updated_at = ${nextUpdatedAt(now)}, department = ${department}
     WHERE id = ${id}
   `);
 }
@@ -263,8 +265,7 @@ export async function bumpRequest(
 ): Promise<string> {
   const { rows } = await tx.execute<{ updated_at: string }>(sql`
     UPDATE requests
-    SET updated_at = GREATEST(${now.toISOString()}::timestamptz,
-                              date_trunc('milliseconds', updated_at) + interval '1 millisecond')
+    SET updated_at = ${nextUpdatedAt(now)}
     WHERE id = ${id} RETURNING ${UPDATED_AT_ISO} AS updated_at
   `);
   return rows[0].updated_at;
