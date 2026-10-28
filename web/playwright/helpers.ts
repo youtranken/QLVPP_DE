@@ -15,10 +15,10 @@ export function asRole(role: 'member' | 'admin' | 'sa') {
 
 export const isMobile = (info: TestInfo) => info.project.name === 'mobile-390';
 
-export async function shot(page: Page, info: TestInfo, name: string) {
+export async function shot(page: Page, info: TestInfo, name: string, fullPage = true) {
   // Font Google hiển thị kiểu swap: chụp trước khi tải xong sẽ ra font hệ thống
   await page.evaluate(() => document.fonts.ready);
-  await page.screenshot({ path: `test-results/screens/${name}-${info.project.name}.png`, fullPage: true });
+  await page.screenshot({ path: `test-results/screens/${name}-${info.project.name}.png`, fullPage });
 }
 
 export async function expectNoContrastViolations(page: Page) {

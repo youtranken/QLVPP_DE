@@ -1,0 +1,17 @@
+/* Danh mục: ảnh thumbnail 40 px, ô ảnh trong form */
+.col-thumb { width: 64px; }
+.thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid var(--line); background: var(--card-2); display: block; }
+.item-name { display: grid; gap: 2px; }
+.item-name b { font-weight: 500; }
+.item-name small { color: var(--ink-3); font-size: 12.5px; }
+.col-order { white-space: nowrap; }
+.col-order .icon-btn + .icon-btn { margin-left: 4px; }
+.img-field { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 6px; }
+.img-field-row { display: flex; gap: 12px; align-items: center; }
+.img-field-preview { width: 96px; height: 96px; flex: none; border-radius: 8px; border: 1px dashed var(--line-2); background: var(--card-2); display: grid; place-items: center; overflow: hidden; }
+.img-field-preview img { width: 100%; height: 100%; object-fit: cover; }
+.img-field.ff--error .img-field-preview { border-color: var(--danger); }
+.img-field-actions { display: grid; gap: 6px; justify-items: start; }
+.img-field-actions label.btn { cursor: pointer; }
+.img-field-actions label.btn:focus-within { box-shadow: var(--ring); }
+.img-field-actions label.is-disabled { opacity: .6; cursor: progress; }

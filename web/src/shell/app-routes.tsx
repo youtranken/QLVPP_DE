@@ -4,6 +4,8 @@ import { useMe } from '@/lib/me';
 import { ComingSoon } from '@/ui/coming-soon';
 import { NotFound } from '@/ui/load-state';
 import { ProfilePage } from '@/features/profile/profile-page';
+import { CatalogPage } from '@/features/catalog/catalog-page';
+import { CategoryPage } from '@/features/catalog/category-page';
 import { MemberShell } from '@/shell/member-shell';
 import { AdminShell } from '@/shell/admin-shell';
 import { RequireRole } from '@/shell/require-role';
@@ -24,7 +26,9 @@ function ForbiddenRoute() {
   return <ForbiddenScreen email={useMe().email} />;
 }
 
-// Plan 1: mọi màn đều "Sắp có"; task sau thay element của từng route bằng trang thật
+const BUILT_ADMIN_PAGES = new Set(['catalog', 'categories']);
+
+// Màn chưa làm hiện "Sắp có"; task sau thêm route thật và tên vào BUILT_ADMIN_PAGES
 export function AppRoutes() {
   return (
     <Routes>
@@ -43,7 +47,9 @@ export function AppRoutes() {
         }
       >
         <Route index element={<Navigate to={ADMIN_HOME} replace />} />
-        {ADMIN_PAGES.map((p) => (
+        <Route path="catalog" element={<CatalogPage />} />
+        <Route path="categories" element={<CategoryPage />} />
+        {ADMIN_PAGES.filter((p) => !BUILT_ADMIN_PAGES.has(p.path)).map((p) => (
           <Route key={p.path} path={p.path} element={<AdminSoon titleKey={p.titleKey} />} />
         ))}
         <Route path="*" element={<NotFound />} />
