@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tổng hợp kỳ — VPP Công trình</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+  .side { position: sticky; top: 0; height: 100vh; background: var(--paper); border-right: 1px solid var(--rule); display: flex; flex-direction: column; }
+  .side .brand { height: 60px; padding: 0 18px; border-bottom: 1px solid var(--rule); }
+  .side nav { padding: 10px 10px; flex: 1; overflow: auto; }
+  .side a { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 10px; border-radius: var(--r-ctl); color: var(--ink-2); text-decoration: none; font-weight: 500; position: relative; }
+  .side a svg { width: 18px; height: 18px; flex: none; }
+  .side a:hover { background: var(--paper-2); color: var(--ink); }
+  .side a[aria-current="page"] { color: var(--ink); background: var(--paper-2); }
+  .side a[aria-current="page"]::before { content: ""; position: absolute; left: -10px; top: 8px; bottom: 8px; width: 4px; background: var(--note-deep); border-radius: 0 2px 2px 0; }
+  .side .cnt { margin-left: auto; font-size: 12px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--note); color: var(--note-ink); display: grid; place-items: center; font-weight: 600; }
+  .side__group { padding: 14px 10px 4px; font-size: 12px; color: var(--ink-3); }
+  .side__foot { padding: 10px; border-top: 1px solid var(--rule); }
+  .side__foot .me { width: 100%; justify-content: flex-start; }
+
+  .main { min-width: 0; }
+  .head { height: 60px; display: flex; align-items: center; gap: 12px; padding: 0 28px; background: var(--paper); border-bottom: 1px solid var(--rule); position: sticky; top: 0; z-index: 10; }
+  .head h1 { font-size: 18px; }
+  .ym { display: inline-flex; align-items: center; border: 1px solid var(--rule-2); border-radius: var(--r-ctl); height: 36px; overflow: hidden; }
+  .ym button { width: 34px; height: 100%; border: 0; background: transparent; }
+  .ym button:hover { background: var(--paper-2); }
+  .ym b { padding: 0 12px; font-weight: 600; border-left: 1px solid var(--rule); border-right: 1px solid var(--rule); height: 100%; display: grid; place-items: center; }
+  .page { padding: 22px 28px 60px; max-width: 1400px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .kpi { text-align: left; padding: 14px 16px; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--r-card); display: flex; flex-direction: column; gap: 2px; }
+  .kpi:hover { border-color: var(--ink-3); }
+  .kpi[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .kpi b { font-size: 28px; font-weight: 600; letter-spacing: -.02em; }
+  .kpi span { color: var(--ink-2); font-size: 13.5px; }
+  .kpi small { color: var(--ink-3); font-size: 12px; }
+  .kpi--warn b { color: var(--warn); }
+  .kpi--danger b { color: var(--danger); }
+
+  .panel { background: var(--paper); border: 1px solid var(--rule); border-radius: var(--r-card); overflow: hidden; }
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px 14px; border-bottom: 1px solid var(--rule); }
+  .toolbar .field { width: 260px; }
+  .toolbar .spacer { flex: 1; }
+  .seg { display: inline-flex; border: 1px solid var(--rule-2); border-radius: var(--r-ctl); overflow: hidden; }
+  .seg button { height: 36px; padding: 0 12px; border: 0; background: transparent; font-weight: 500; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; height: 40px; padding: 0 14px; background: var(--paper-2); color: var(--ink-2); font-weight: 600; font-size: 13px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  td { height: 54px; padding: 8px 14px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+  tr:hover td { background: #fbfaf7; }
+  td.r, th.r { text-align: right; }
+  .dept { background: var(--paper-2); }
+  .dept td { height: 34px; font-weight: 600; font-size: 13px; color: var(--ink-2); }
+  .who b { display: block; font-weight: 500; }
+  .who small { color: var(--ink-3); }
+  .bar { display: inline-flex; align-items: center; gap: 8px; }
+  .bar i { width: 72px; height: 6px; border-radius: 3px; background: var(--paper-2); border: 1px solid var(--rule); overflow: hidden; display: block; }
+  .bar i b { display: block; height: 100%; background: var(--ok); }
+  .rowacts { display: flex; gap: 6px; justify-content: flex-end; }
+  .pager { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; color: var(--ink-2); font-size: 13px; }
+
+  /* Drawer điều chỉnh phiếu */
+  .scrim { position: fixed; inset: 0; background: rgba(35,33,29,.4); display: none; z-index: 40; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 100vw); background: var(--paper); z-index: 41; transform: translateX(100%); transition: transform 180ms ease; display: flex; flex-direction: column; border-left: 1px solid var(--rule); }
+  body.is-open .scrim { display: block; } body.is-open .drawer { transform: none; }
+  .drawer__head { padding: 18px 22px; border-bottom: 1px solid var(--rule); display: flex; align-items: flex-start; gap: 12px; }
+  .drawer__head h2 { font-size: 17px; }
+  .drawer__head .iconbtn { margin-left: auto; }
+  .drawer__body { padding: 18px 22px; overflow: auto; flex: 1; }
+  .drawer__foot { padding: 14px 22px; border-top: 1px solid var(--rule); display: flex; gap: 8px; justify-content: flex-end; }
+  .lines { list-style: none; margin: 0; padding: 0; }
+  .lines li { display: grid; grid-template-columns: 1fr 120px 110px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+  .lines li.is-changed { background: var(--note); margin: 0 -22px; padding: 10px 22px; border-color: var(--note-deep); }
+  .lines .qty { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; }
+  .lines .qty input { width: 64px; text-align: right; }
+  .lines .was { font-size: 12px; color: var(--ink-3); text-decoration: line-through; }
+  .reason { margin-top: 18px; }
+  .reason label { display: block; font-weight: 500; margin-bottom: 6px; }
+  .reason textarea { width: 100%; min-height: 78px; padding: 10px 12px; border: 1px solid var(--rule-2); border-radius: var(--r-ctl); resize: vertical; }
+  .reason p { font-size: 12.5px; color: var(--ink-3); margin-top: 6px; }
+  .other { margin-top: 20px; padding: 12px 14px; border: 1px dashed var(--rule-2); border-radius: var(--r-card); display: grid; grid-template-columns: 56px 1fr; gap: 12px; }
+  .other .thumb { width: 56px; height: 56px; border-radius: 6px; background: var(--paper-2); display: grid; place-items: center; color: var(--ink-2); }
+  .other .thumb svg { width: 36px; }
+  .other .acts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .theme-switch { right: auto; left: 248px; }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .side { display: none; }
+    .head, .page { padding-left: 16px; padding-right: 16px; }
+    th:nth-child(4), td:nth-child(4) { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><span class="brand__mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11l-5 4H4z"/><path d="M15 20v-4h5"/></svg></span>VPP Công trình</div>
+    <nav aria-label="Quản trị">
+      <div class="side__group">Hằng tháng</div>
+      <a href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M4 10h16M9 5v14"/></svg>Tổng hợp kỳ</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>Món ngoài danh mục<span class="cnt">3</span></a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7h13v10H3zM16 10h4l1 3v4h-5"/><circle cx="7" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/></svg>Giao hàng</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"/></svg>Còn nợ<span class="cnt">7</span></a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 9h16v11H4zM4 9l2-5h12l2 5M10 13h4"/></svg>Báo cáo &amp; in</a>
+      <div class="side__group">Kho &amp; danh mục</div>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10l9-6 9 6v10H3z"/><path d="M9 20v-6h6v6"/></svg>Kho</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>Danh mục</a>
+      <div class="side__group">Hệ thống</div>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M17 11l2 2 4-4"/></svg>Danh bạ</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 4h14v16H5zM9 9h6M9 13h6M9 17h3"/></svg>Nhật ký</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.5 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2z"/></svg>Cấu hình</a>
+    </nav>
+    <div class="side__foot"><button class="me"><span class="avatar">TB</span><span class="small">Trần Thị Bình<br><span class="muted">Hành chính · Admin</span></span></button></div>
+  </aside>
+
+  <div class="main">
+    <header class="head">
+      <h1>Tổng hợp kỳ</h1>
+      <div class="ym"><button aria-label="Tháng trước">‹</button><b>Tháng 11/2026</b><button aria-label="Tháng sau">›</button></div>
+      <span class="tag tag--ok">Đã khóa 11/11</span>
+      <div class="top__spacer"></div>
+      <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Xuất Excel</button>
+      <button class="btn btn--act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M6 15h12v6H6z"/></svg>In trình ký</button>
+    </header>
+
+    <div class="page">
+      <div class="kpis" role="group" aria-label="Lọc nhanh">
+        <button class="kpi" aria-pressed="false"><b class="num">32</b><span>Phiếu đã đăng ký</span><small>trên 40 người · 8 người chưa</small></button>
+        <button class="kpi" aria-pressed="true"><b class="num">118</b><span>Dòng chờ giao</span><small>của 27 phiếu</small></button>
+        <button class="kpi kpi--warn" aria-pressed="false"><b class="num">3</b><span>Món ngoài danh mục chờ xem</span><small>cần quyết trước khi mua</small></button>
+        <button class="kpi kpi--danger" aria-pressed="false"><b class="num">4</b><span>Món sắp hết kho</span><small>dưới mức tối thiểu</small></button>
+      </div>
+
+      <section class="panel">
+        <div class="toolbar">
+          <input class="field" placeholder="Tìm người, email…">
+          <div class="seg" role="group" aria-label="Xem theo"><button aria-pressed="true">Theo người</button><button aria-pressed="false">Theo món</button></div>
+          <div class="spacer"></div>
+          <span class="muted small">Đang lọc: Dòng chờ giao</span>
+          <button class="btn btn--sm">Bỏ lọc</button>
+        </div>
+        <table>
+          <thead><tr><th>Người đăng ký</th><th class="r">Số món</th><th>Giao</th><th>Cập nhật</th><th>Ghi chú</th><th></th></tr></thead>
+          <tbody>
+            <tr class="dept"><td colspan="6">Tổ Giám sát · 12 phiếu</td></tr>
+            <tr><td class="who"><b>Nguyễn Văn An</b><small>NV0231</small></td><td class="r num">7</td><td><span class="bar"><i><b style="width:57%"></b></i><span class="num small">4/7</span></span></td><td class="muted small">05/11 14:20</td><td><span class="tag tag--info">1 món ngoài DM</span></td><td class="rowacts"><button class="btn btn--sm">Giao</button><button class="btn btn--sm btn--ghost" data-open>Điều chỉnh</button></td></tr>
+            <tr><td class="who"><b>Lê Minh Cường</b><small>NV0198</small></td><td class="r num">5</td><td><span class="bar"><i><b style="width:80%"></b></i><span class="num small">4/5</span></span></td><td class="muted small">10/11 23:58</td><td><span class="tag tag--warn">Còn nợ 2 giấy note</span></td><td class="rowacts"><button class="btn btn--sm">Giao</button><button class="btn btn--sm btn--ghost" data-open>Điều chỉnh</button></td></tr>
+            <tr><td class="who"><b>Phạm Thu Hà</b><small>NV0310</small></td><td class="r num">3</td><td><span class="bar"><i><b style="width:0%"></b></i><span class="num small">0/3</span></span></td><td class="muted small">02/11 09:05</td><td></td><td class="rowacts"><button class="btn btn--sm">Giao</button><button class="btn btn--sm btn--ghost" data-open>Điều chỉnh</button></td></tr>
+            <tr class="dept"><td colspan="6">Tổ Thiết kế · 9 phiếu</td></tr>
+            <tr><td class="who"><b>Đỗ Quang Dũng</b><small>NV0087</small></td><td class="r num">9</td><td><span class="bar"><i><b style="width:100%"></b></i><span class="num small">9/9</span></span></td><td class="muted small">07/11 16:41</td><td><span class="tag tag--ok">Đã giao đủ</span></td><td class="rowacts"><button class="btn btn--sm btn--ghost" data-open>Xem</button></td></tr>
+            <tr><td class="who"><b>Võ Thị Lan</b><small>NV0142 · đã nghỉ việc 15/11</small></td><td class="r num">4</td><td><span class="bar"><i><b style="width:0%"></b></i><span class="num small">0/4</span></span></td><td class="muted small">03/11 10:12</td><td><span class="tag tag--danger">Người đã nghỉ</span></td><td class="rowacts"><button class="btn btn--sm btn--ghost" data-open>Điều chỉnh</button></td></tr>
+          </tbody>
+        </table>
+        <div class="pager"><span>Hiện 5 trên 27 phiếu</span><span>‹ 1 2 3 4 5 6 ›</span></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" data-close></div>
+<aside class="drawer" aria-label="Điều chỉnh phiếu">
+  <div class="drawer__head">
+    <div><h2>Phiếu của Nguyễn Văn An</h2><p class="muted small">Tháng 11/2026 · Tổ Giám sát · lưu lần cuối 05/11 14:20</p></div>
+    <button class="iconbtn" aria-label="Đóng" data-close>✕</button>
+  </div>
+  <div class="drawer__body">
+    <ul class="lines">
+      <li><span>Bút bi xanh Thiên Long <small class="muted">· cây</small></span><span class="qty"><input class="field num" value="10"><span class="muted small">/20</span></span><span class="tag tag--ok">Đã giao 10</span></li>
+      <li class="is-changed"><span>Giấy note vàng 3×3 <small class="muted">· xếp</small><br><span class="was">3</span></span><span class="qty"><input class="field num" value="5"><span class="muted small">/20</span></span><span class="tag">Chờ giao</span></li>
+      <li><span>Kẹp giấy 33 mm <small class="muted">· hộp</small></span><span class="qty"><input class="field num" value="2"><span class="muted small">/10</span></span><span class="tag tag--warn">Giao 1/2</span></li>
+      <li><span>Giấy A4 Double A <small class="muted">· ram · chỉ Hành chính thêm</small></span><span class="qty"><input class="field num" value="2"><span class="muted small">/20</span></span><span class="tag">Chờ giao</span></li>
+    </ul>
+    <button class="btn btn--sm" style="margin-top:10px">+ Thêm món vào phiếu</button>
+
+    <div class="other">
+      <span class="thumb"><svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="30" cy="24" r="16"/><circle cx="30" cy="24" r="6"/><path d="M46 24h10v8H40"/></svg></span>
+      <div>
+        <b>Băng keo 2 mặt</b> <span class="tag tag--info">Ngoài danh mục · 2 cái</span>
+        <p class="small muted">“Loại 2 cm, dán bản vẽ” · có ảnh đính kèm</p>
+        <div class="acts"><button class="btn btn--sm">Chấp nhận</button><button class="btn btn--sm">Thêm vào danh mục</button><button class="btn btn--sm btn--ghost" style="color:var(--danger)">Từ chối…</button></div>
+      </div>
+    </div>
+
+    <div class="reason">
+      <label for="why">Lý do điều chỉnh</label>
+      <textarea id="why" class="field" placeholder="Ví dụ: An báo đăng ký nhầm số lượng giấy note"></textarea>
+      <p>Bắt buộc khi phiếu đã khóa. Lý do được ghi vào nhật ký cùng giá trị cũ và mới.</p>
+    </div>
+  </div>
+  <div class="drawer__foot"><button class="btn" data-close>Hủy</button><button class="btn btn--act">Lưu điều chỉnh</button></div>
+</aside>
+
+<div class="theme-switch" role="group" aria-label="Bảng màu (mockup)">
+  <button data-theme="" aria-pressed="true">Giấy note</button>
+  <button data-theme="terracotta" aria-pressed="false">Đất nung</button>
+</div>
+<script>
+document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => document.body.classList.add('is-open')));
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => document.body.classList.remove('is-open')));
+document.querySelectorAll('.kpi').forEach(k => k.addEventListener('click', () => { const on = k.getAttribute('aria-pressed') === 'true'; document.querySelectorAll('.kpi').forEach(x => x.setAttribute('aria-pressed', 'false')); k.setAttribute('aria-pressed', String(!on)); }));
+document.querySelectorAll('.theme-switch button').forEach(b => b.addEventListener('click', () => { document.documentElement.dataset.theme = b.dataset.theme; document.querySelectorAll('.theme-switch button').forEach(x => x.setAttribute('aria-pressed', x === b)); }));
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phong cách C — Tối giản sáng</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+  :root { --bg: #fff; --bg-2: #fafafa; --ink: #0f0f0f; --ink-2: #6b6b6b; --ink-3: #a3a3a3; --line: #ececec; --line-2: #dcdcdc;
+    --accent: #2f6f4e; --accent-soft: #eaf3ee; --accent-ink: #1f5a3c; --r: 8px; }
+  * { box-sizing: border-box; } body { margin: 0; font-family: Manrope, system-ui, sans-serif; background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  h1, h2, p { margin: 0; } button, input { font: inherit; } button { cursor: pointer; }
+  .top { height: 56px; display: flex; align-items: center; gap: 28px; padding: 0 40px; border-bottom: 1px solid var(--line); }
+  .wordmark { font-weight: 700; letter-spacing: -.01em; }
+  .wordmark span { color: var(--ink-3); font-weight: 500; }
+  .nav a { color: var(--ink-2); text-decoration: none; margin-right: 18px; font-weight: 500; } .nav a.on { color: var(--ink); }
+  .sp { flex: 1; }
+  .av { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line-2); display: grid; place-items: center; font-size: 12px; font-weight: 600; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 48px 40px 140px; }
+  .title { display: flex; align-items: flex-end; gap: 24px; flex-wrap: wrap; margin-bottom: 8px; }
+  .title h1 { font-size: 34px; font-weight: 700; letter-spacing: -.025em; line-height: 1.1; }
+  .title .meta { color: var(--ink-2); padding-bottom: 6px; }
+  .title .meta b { color: var(--ink); font-weight: 600; }
+  .sub { color: var(--ink-2); max-width: 60ch; }
+  .tools { display: flex; align-items: center; gap: 18px; margin: 36px 0 8px; padding-bottom: 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .tools input { border: 0; outline: 0; width: 260px; padding: 6px 0; font-size: 15px; }
+  .tools input::placeholder { color: var(--ink-3); }
+  .tools .f { color: var(--ink-2); font-weight: 500; } .tools .f.on { color: var(--ink); text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px; }
+  .tools .link { margin-left: auto; color: var(--accent-ink); font-weight: 600; background: none; border: 0; }
+  .list { display: grid; }
+  .row { display: grid; grid-template-columns: 52px minmax(0,1fr) auto; gap: 16px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .row .ic { width: 52px; height: 52px; border-radius: 10px; background: var(--bg-2); display: grid; place-items: center; color: var(--ink-2); }
+  .row .ic svg { width: 32px; }
+  .row .nm { font-weight: 600; } .row .un { color: var(--ink-3); font-size: 13px; }
+  .step { display: inline-grid; grid-template-columns: 34px 40px 34px; height: 34px; align-items: center; }
+  .step button { height: 34px; border: 1px solid var(--line-2); background: #fff; border-radius: 50%; width: 34px; color: var(--ink-2); font-size: 18px; line-height: 1; }
+  .step button:hover { border-color: var(--ink); color: var(--ink); }
+  .step output { text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink-3); }
+  .row.is-picked .step output { color: var(--ink); }
+  .row.is-picked .nm::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 8px; vertical-align: middle; }
+  .other { margin-top: 10px; padding: 14px 0; color: var(--ink-2); display: flex; gap: 12px; align-items: center; }
+  .other button { background: none; border: 1px dashed var(--line-2); border-radius: 999px; height: 34px; padding: 0 14px; font-weight: 600; color: var(--ink); }
+  .other .chip { background: var(--accent-soft); color: var(--accent-ink); border-radius: 999px; padding: 4px 10px; font-size: 13px; font-weight: 600; }
+  .summary { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.92); backdrop-filter: blur(6px); border-top: 1px solid var(--line); }
+  .summary .in { max-width: 1040px; margin: 0 auto; padding: 14px 40px calc(14px + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .summary .sel { color: var(--ink-2); } .summary .sel b { color: var(--ink); font-weight: 700; }
+  .summary .names { color: var(--ink-2); font-size: 13.5px; flex: 1 1 320px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .save { height: 44px; padding: 0 22px; border-radius: 999px; border: 0; background: var(--ink); color: #fff; font-weight: 700; }
+  .save:hover { background: #000; }
+  @media (max-width: 760px) { .top, .wrap { padding-left: 20px; padding-right: 20px; } .wrap { padding-top: 28px; } .title h1 { font-size: 28px; } .nav { display: none; } .summary .in { padding-left: 20px; padding-right: 20px; } .summary .names { display: none; } .tools input { width: 100%; } }
+</style></head>
+<body>
+<header class="top"><div class="wordmark">VPP <span>· Công trình</span></div><nav class="nav"><a class="on" href="#">Tháng này</a><a href="#">Lịch sử</a></nav><div class="sp"></div><span class="av">AN</span></header>
+<main class="wrap">
+  <div class="title"><h1>Tháng 11</h1><div class="meta">Còn <b>4 ngày</b> để đăng ký · Nguyễn Văn An, Công trình</div></div>
+  <p class="sub">Ghi số lượng cạnh món bạn cần. Lưu bao nhiêu lần cũng được, đến hết ngày 10/11.</p>
+  <div class="tools"><input placeholder="Tìm món…"><span class="f on">Tất cả</span><span class="f">Giấy &amp; sổ</span><span class="f">Bút viết</span><span class="f">Kẹp, ghim, keo</span><span class="f">Dụng cụ</span><button class="link">Lấy lại tháng 10</button></div>
+  <div class="list" id="list"></div>
+  <div class="other"><button>+ Món ngoài danh mục</button><span class="chip">Băng keo 2 mặt · 2</span><span style="font-size:13px">đang chờ Hành chính xem</span></div>
+</main>
+<div class="summary"><div class="in"><span class="sel"><b id="count">4</b> món đã chọn</span><span class="names">Bút bi xanh Thiên Long 10, Giấy note vàng 3, Kẹp giấy 2, Băng keo 2 mặt 2</span><button class="save">Lưu đăng ký</button></div></div>
+<script src="_icons.js"></script>
+<script>
+document.getElementById('list').innerHTML = ITEMS.map(i=>`<div class="row ${i.qty?'is-picked':''}" data-item><div class="ic">${ICONS[i.icon]}</div><div><div class="nm">${i.name}</div><div class="un">${i.unit} · tối đa ${i.max}</div></div><div class="step"><button data-d="-1" aria-label="Bớt">−</button><output data-max="${i.max}">${i.qty}</output><button data-d="1" aria-label="Thêm">+</button></div></div>`).join('');
+wireSteppers(document.getElementById('list'));
+</script>
+</body></html>

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đăng ký VPP — tháng 11</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  body { font-family: var(--font-app); font-size: 15px; }
+  .top { height: 64px; display: flex; align-items: center; gap: 16px; padding: 0 24px; background: var(--card); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; }
+  .logo i { width: 34px; height: 34px; border-radius: 11px; background: var(--brand); color: #fff; display: grid; place-items: center; font-style: normal; font-weight: 800; }
+  .tabs { display: flex; gap: 4px; margin-left: 12px; }
+  .tabs a { padding: 8px 14px; border-radius: 999px; color: var(--ink-2); text-decoration: none; font-weight: 700; }
+  .tabs a.on { background: var(--brand-soft); color: var(--brand-ink); }
+  .sp { flex: 1; }
+  .bell { width: 38px; height: 38px; border-radius: 50%; border: 0; background: transparent; display: grid; place-items: center; position: relative; color: var(--ink-2); }
+  .bell svg { width: 20px; } .bell .dot { position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); border: 2px solid var(--card); }
+  .av { width: 36px; height: 36px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-ink); display: grid; place-items: center; font-weight: 800; font-size: 13px; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 20px 24px 120px; display: grid; grid-template-columns: minmax(0,1fr) 360px; gap: 24px; align-items: start; }
+  .hero { background: var(--brand); color: #fff; border-radius: 18px; padding: 22px 24px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; position: relative; overflow: hidden; }
+  .hero::after { content: ""; position: absolute; right: -50px; top: -50px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,.12); }
+  .hero h1 { font-size: 24px; font-weight: 800; } .hero p { opacity: .92; margin-top: 2px; }
+  .hero .days { margin-left: auto; background: #fff; color: var(--brand-ink); border-radius: 14px; padding: 10px 16px; text-align: center; min-width: 110px; }
+  .hero .days b { display: block; font-size: 30px; line-height: 1; font-weight: 800; } .hero .days span { font-size: 12px; font-weight: 700; }
+  .hero .btn-w { background: #fff; color: var(--brand-ink); border: 0; border-radius: 999px; height: 40px; padding: 0 16px; font-weight: 800; position: relative; }
+  .is-locked .hero { background: var(--side); }
+  .cats { display: flex; gap: 10px; overflow-x: auto; padding: 18px 0 14px; scrollbar-width: none; }
+  .cat { flex: none; height: 42px; padding: 0 16px; border-radius: 999px; background: var(--card); border: 2px solid var(--line); font-weight: 700; color: var(--ink-2); }
+  .cat.on { border-color: var(--brand); color: var(--brand-ink); background: var(--brand-soft); }
+  .search { flex: none; display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 14px; border-radius: 999px; background: var(--card); border: 2px solid var(--line); color: var(--ink-3); min-width: 220px; }
+  .search input { border: 0; outline: 0; background: transparent; width: 100%; font-weight: 700; color: var(--ink); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .item { background: var(--card); border-radius: 18px; padding: 12px; border: 2px solid transparent; box-shadow: 0 4px 16px rgba(20,35,28,.05); display: flex; flex-direction: column; gap: 10px; transition: border-color 140ms; }
+  .item.is-picked { border-color: var(--brand); }
+  .img { aspect-ratio: 1; border-radius: 12px; display: grid; place-items: center; position: relative; }
+  .img svg { width: 56%; }
+  .t1 { background: var(--t1); color: var(--t1-ink); } .t2 { background: var(--t2); color: var(--t2-ink); } .t3 { background: var(--t3); color: var(--t3-ink); } .t4 { background: var(--t4); color: var(--t4-ink); }
+  .img .tag { position: absolute; top: 8px; left: 8px; }
+  .name { font-weight: 800; line-height: 1.25; } .unit { color: var(--ink-3); font-size: 13px; font-weight: 700; }
+  .step { display: grid; grid-template-columns: 40px 1fr 40px; height: 40px; border-radius: 999px; background: var(--bg); overflow: hidden; }
+  .step button { border: 0; background: transparent; font-size: 20px; font-weight: 800; color: var(--brand); }
+  .step output { display: grid; place-items: center; font-weight: 800; }
+  .is-picked .step { background: var(--brand-soft); }
+  .is-locked .step { display: none; }
+  .lock-row { display: none; justify-content: space-between; align-items: center; font-weight: 700; font-size: 13.5px; color: var(--ink-2); }
+  .is-locked .lock-row { display: flex; }
+  .cart { position: sticky; top: 84px; background: var(--card); border-radius: 18px; box-shadow: 0 4px 16px rgba(20,35,28,.05); padding: 20px; }
+  .cart h2 { font-size: 18px; font-weight: 800; } .cart .who { color: var(--ink-2); font-size: 13.5px; font-weight: 700; margin-top: 2px; }
+  .cart ul { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
+  .cart li { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .cart li > i { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; flex: none; } .cart li > i svg { width: 24px; }
+  .cart li b { flex: 1; font-weight: 700; min-width: 0; }
+  .cart li .q { font-weight: 800; color: var(--brand-ink); background: var(--brand-soft); border-radius: 999px; padding: 4px 10px; }
+  .cart li .x { width: 26px; height: 26px; border: 0; border-radius: 50%; background: transparent; color: var(--ink-3); font-size: 16px; }
+  .cart li .x:hover { background: var(--bg); color: var(--ink); }
+  .is-locked .x { display: none; }
+  .prog { display: none; flex-basis: 100%; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; color: var(--ink-2); padding-left: 52px; }
+  .prog i { flex: 1; width: auto; height: 6px; border-radius: 3px; background: var(--bg); overflow: hidden; display: block; } .prog i b { display: block; height: 100%; background: var(--brand); flex: none; }
+  .is-locked .prog { display: flex; }
+  .custom { margin-top: 12px; background: var(--bg); border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; font-size: 13.5px; flex-wrap: wrap; }
+  .sum { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-top: 2px dashed var(--line); margin-top: 14px; font-weight: 800; }
+  .cta { width: 100%; height: 52px; border: 0; border-radius: 999px; background: var(--brand); color: #fff; font-weight: 800; font-size: 16px; }
+  .cta:hover { background: var(--brand-deep); }
+  .ghost { width: 100%; height: 44px; border: 2px dashed var(--line-2); border-radius: 999px; background: transparent; font-weight: 800; color: var(--ink-2); margin-bottom: 10px; }
+  .locked-note { display: none; margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--brand-soft); color: var(--brand-ink); font-size: 13.5px; font-weight: 700; line-height: 1.45; }
+  .is-locked .locked-note { display: block; } .is-locked .ghost, .is-locked .cta { display: none; }
+  .bar { display: none; }
+  dialog { border: 0; border-radius: 18px; padding: 0; width: min(440px, 92vw); } dialog::backdrop { background: rgba(20,35,28,.45); }
+  .dlg { padding: 22px; } .dlg h2 { font-size: 18px; font-weight: 800; } .dlg p { color: var(--ink-2); font-size: 13.5px; font-weight: 700; margin-top: 2px; }
+  .dlg table { width: 100%; border-collapse: collapse; margin: 14px 0 18px; } .dlg td { padding: 8px 0; border-bottom: 1px solid var(--line); font-weight: 700; } .dlg td:last-child { text-align: right; font-weight: 800; }
+  .dlg .acts { display: flex; gap: 8px; justify-content: flex-end; } .dlg .acts button { height: 42px; padding: 0 16px; border-radius: 999px; border: 2px solid var(--line); background: var(--card); font-weight: 800; } .dlg .acts .p { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .mock { position: fixed; right: 16px; bottom: 16px; z-index: 50; } .mock button { height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--card); font-weight: 700; font-size: 13px; }
+  @media (max-width: 900px) {
+    html, body { overflow-x: hidden; }
+    .wrap { grid-template-columns: minmax(0,1fr); padding: 14px 14px 140px; } .tabs { display: none; } .top { padding: 0 14px; }
+    .hero { padding: 18px; } .hero p { flex-basis: 100%; } .hero .days { margin-left: 0; }
+    .grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; } .cart { position: static; }
+    .bar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: var(--card); box-shadow: 0 -6px 20px rgba(20,35,28,.08); align-items: center; gap: 12px; }
+    .bar .cta { flex: 1; height: 48px; } .bar b { font-weight: 800; } .is-locked .bar { display: none; } .mock { bottom: 84px; }
+  }
+</style></head>
+<body>
+<header class="top"><div class="logo"><i>V</i>VPP Công trình</div><nav class="tabs"><a class="on" href="#">Đăng ký</a><a href="#">Lịch sử</a></nav><div class="sp"></div><button class="bell" aria-label="Thông báo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg><span class="dot"></span></button><span class="av">AN</span></header>
+<main class="wrap">
+  <section>
+    <div class="hero">
+      <div><h1 id="h-title">Tháng 11 đang mở đăng ký</h1><p id="h-sub">Chọn thoải mái, sửa đến hết ngày 10/11. Hành chính giao sau khi tổng hợp.</p></div>
+      <div class="days" id="h-days"><b>4</b><span>ngày còn lại</span></div>
+      <button class="btn-w" id="copy">↺ Lấy lại tháng 10</button>
+    </div>
+    <div class="cats"><label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input placeholder="Tìm món…"></label><button class="cat on">Tất cả</button><button class="cat">Giấy &amp; sổ</button><button class="cat">Bút viết</button><button class="cat">Kẹp, ghim, keo</button><button class="cat">Dụng cụ</button></div>
+    <div class="grid" id="grid"></div>
+  </section>
+  <aside class="cart">
+    <h2 id="c-title">Giỏ đăng ký</h2><div class="who">Nguyễn Văn An · Phòng Công trình</div>
+    <ul id="lines"></ul>
+    <div class="custom"><span class="tag tag--info">Ngoài danh mục</span><b>Băng keo 2 mặt</b><span class="num" style="margin-left:auto;font-weight:800">×2</span><span class="prog" style="padding-left:0"><span class="tag tag--warn">Chờ Hành chính xem</span></span></div>
+    <div class="sum"><span>Tổng cộng</span><span><span id="count">4</span> món</span></div>
+    <button class="ghost">+ Thêm món ngoài danh mục</button>
+    <button class="cta" id="save">Lưu đăng ký</button>
+    <div class="locked-note">Phiếu đã khóa lúc 00:00 ngày 11/11. Cần điều chỉnh? Liên hệ Hành chính (chị Bình). Tiến độ giao cập nhật theo từng món ở trên.</div>
+  </aside>
+</main>
+<div class="bar"><b><span id="count-m">4</span> món</b><button class="cta" id="save-m">Lưu đăng ký</button></div>
+<dialog id="confirm"><form method="dialog" class="dlg"><h2>Lưu phiếu tháng 11?</h2><p>Bạn vẫn sửa được đến hết ngày 10/11.</p><table id="rows"></table><div class="acts"><button value="cancel">Xem lại</button><button class="p" value="ok">Lưu phiếu</button></div></form></dialog>
+<div class="mock"><button id="lock">Xem khi đã khóa</button></div>
+<script src="_icons.js"></script>
+<script>
+const tints = ['t1','t2','t3','t4']; const delivered = [10, 3, 1]; let locked = false;
+function render() {
+  document.getElementById('grid').innerHTML = ITEMS.map((i,k)=>`<article class="item ${i.qty?'is-picked':''}" data-item><div class="img ${tints[k%4]}">${ICONS[i.icon]}${k===1?'<span class="tag tag--ok">Còn nhiều</span>':''}</div><div class="name">${i.name}</div><div class="unit">${i.unit} · tối đa ${i.max}</div><div class="step"><button data-d="-1" aria-label="Bớt">−</button><output data-max="${i.max}" class="num">${i.qty}</output><button data-d="1" aria-label="Thêm">+</button></div><div class="lock-row"><span>Đã đăng ký</span><b class="num">${i.qty}</b></div></article>`).join('');
+  const picked = ITEMS.filter(i=>i.qty);
+  document.getElementById('lines').innerHTML = picked.map((i,k)=>{const d=delivered[k]??0,p=Math.round(d/i.qty*100);return `<li><i class="${tints[ITEMS.indexOf(i)%4]}">${ICONS[i.icon]}</i><b>${i.name}</b><span class="q num">${i.qty} ${i.unit}</span><button class="x" data-k="${ITEMS.indexOf(i)}" aria-label="Bỏ">×</button><span class="prog"><i><b style="width:${p}%"></b></i><span class="num">${d}/${i.qty}${d<i.qty?' · còn nợ '+(i.qty-d):' · đã giao'}</span></span></li>`}).join('');
+  document.getElementById('rows').innerHTML = picked.map(i=>`<tr><td>${i.name}</td><td class="num">${i.qty} ${i.unit}</td></tr>`).join('')+'<tr><td>Băng keo 2 mặt (ngoài danh mục)</td><td class="num">2</td></tr>';
+  document.getElementById('count').textContent = picked.length+1; document.getElementById('count-m').textContent = picked.length+1;
+}
+wireSteppers(document.getElementById('grid'), () => { document.querySelectorAll('#grid [data-item]').forEach((el,k)=>ITEMS[k].qty=Number(el.querySelector('output').textContent)); render(); });
+document.getElementById('lines').addEventListener('click', e => { const b=e.target.closest('.x'); if(!b) return; ITEMS[b.dataset.k].qty=0; render(); });
+['save','save-m'].forEach(id=>document.getElementById(id).addEventListener('click',()=>document.getElementById('confirm').showModal()));
+document.getElementById('lock').addEventListener('click', e => { locked=!locked; document.body.classList.toggle('is-locked',locked); e.target.textContent=locked?'Xem khi đang mở':'Xem khi đã khóa';
+  document.getElementById('h-title').textContent = locked?'Phiếu tháng 11 đã khóa':'Tháng 11 đang mở đăng ký';
+  document.getElementById('h-sub').textContent = locked?'Hành chính đang tổng hợp và giao. Bạn sẽ nhận thông báo khi giao xong.':'Chọn thoải mái, sửa đến hết ngày 10/11. Hành chính giao sau khi tổng hợp.';
+  document.getElementById('h-days').innerHTML = locked?'<b class="num">2/4</b><span>món đã giao</span>':'<b>4</b><span>ngày còn lại</span>';
+  document.getElementById('copy').hidden = locked; document.getElementById('c-title').textContent = locked?'Phiếu tháng 11':'Giỏ đăng ký'; });
+render();
+</script>
+</body></html>

@@ -1,0 +1,21 @@
+# secrets
+.env
+
+# deps & build
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+
+# misc
+*.log
+.DS_Store
+
+# knowledge graph (sinh tự động)
+graphify-out/
+
+# backup dữ liệu — KHÔNG commit
+data-backups/
+backups/
+vpp-backup-*.tar.gz*

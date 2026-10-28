@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phong cách A — App tiêu dùng</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap">
+<style>
+  :root { --bg: #f5f6fa; --card: #fff; --ink: #1b1d29; --ink-2: #5d6072; --ink-3: #9094a6; --line: #e6e8f0;
+    --brand: #ff6a3d; --brand-deep: #e4552a; --brand-soft: #fff0ea; --brand-ink: #9a3412;
+    --mint: #12b981; --mint-soft: #e7f9f1; --sky: #3b82f6; --sky-soft: #e9f1ff; --sun: #f59e0b; --sun-soft: #fff5e0; --grape: #8b5cf6; --grape-soft: #f1ebff;
+    --r: 18px; --r-s: 12px; --shadow: 0 6px 20px rgba(27,29,41,.07); }
+  * { box-sizing: border-box; } body { margin: 0; font-family: Nunito, system-ui, sans-serif; background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.45; }
+  h1, h2, p { margin: 0; } button { font: inherit; cursor: pointer; }
+  .top { height: 64px; display: flex; align-items: center; gap: 16px; padding: 0 24px; background: var(--card); position: sticky; top: 0; z-index: 10; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; }
+  .logo i { width: 34px; height: 34px; border-radius: 11px; background: var(--brand); color: #fff; display: grid; place-items: center; font-style: normal; font-weight: 800; }
+  .tabs { display: flex; gap: 4px; margin-left: 12px; }
+  .tabs a { padding: 8px 14px; border-radius: 999px; color: var(--ink-2); text-decoration: none; font-weight: 700; }
+  .tabs a.on { background: var(--brand-soft); color: var(--brand-ink); }
+  .sp { flex: 1; }
+  .av { width: 36px; height: 36px; border-radius: 50%; background: var(--grape-soft); color: var(--grape); display: grid; place-items: center; font-weight: 800; font-size: 13px; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 20px 24px 120px; display: grid; grid-template-columns: minmax(0,1fr) 360px; gap: 24px; align-items: start; }
+  .hero { background: var(--brand); color: #fff; border-radius: var(--r); padding: 22px 24px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; position: relative; overflow: hidden; }
+  .hero::after { content: ""; position: absolute; right: -40px; top: -40px; width: 180px; height: 180px; border-radius: 50%; background: rgba(255,255,255,.14); }
+  .hero h1 { font-size: 24px; font-weight: 800; }
+  .hero p { opacity: .92; margin-top: 2px; }
+  .hero .days { margin-left: auto; background: #fff; color: var(--brand-ink); border-radius: 14px; padding: 10px 16px; text-align: center; min-width: 110px; }
+  .hero .days b { display: block; font-size: 30px; line-height: 1; font-weight: 800; }
+  .hero .days span { font-size: 12px; font-weight: 700; }
+  .hero .btn-w { background: #fff; color: var(--brand-ink); border: 0; border-radius: 999px; height: 40px; padding: 0 16px; font-weight: 800; }
+  .cats { display: flex; gap: 10px; overflow-x: auto; padding: 18px 0 14px; scrollbar-width: none; }
+  .cat { flex: none; display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 14px 0 8px; border-radius: 999px; background: var(--card); border: 2px solid transparent; font-weight: 700; color: var(--ink-2); box-shadow: var(--shadow); }
+  .cat i { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-style: normal; }
+  .cat.on { border-color: var(--brand); color: var(--ink); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .item { background: var(--card); border-radius: var(--r); padding: 12px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; border: 2px solid transparent; }
+  .item.is-picked { border-color: var(--brand); }
+  .img { aspect-ratio: 1; border-radius: var(--r-s); display: grid; place-items: center; }
+  .img svg { width: 56%; }
+  .c1 { background: var(--sky-soft); color: var(--sky); } .c2 { background: var(--sun-soft); color: var(--sun); } .c3 { background: var(--mint-soft); color: var(--mint); } .c4 { background: var(--grape-soft); color: var(--grape); }
+  .name { font-weight: 800; line-height: 1.25; }
+  .unit { color: var(--ink-3); font-size: 13px; font-weight: 700; }
+  .step { display: grid; grid-template-columns: 40px 1fr 40px; height: 40px; border-radius: 999px; background: var(--bg); overflow: hidden; }
+  .step button { border: 0; background: transparent; font-size: 20px; font-weight: 800; color: var(--brand); }
+  .step output { display: grid; place-items: center; font-weight: 800; }
+  .is-picked .step { background: var(--brand-soft); }
+  .cart { position: sticky; top: 84px; background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); padding: 20px; }
+  .cart h2 { font-size: 18px; font-weight: 800; }
+  .cart .who { color: var(--ink-2); font-size: 13.5px; font-weight: 700; margin-top: 2px; }
+  .cart ul { list-style: none; margin: 16px 0; padding: 0; display: grid; gap: 10px; }
+  .cart li { display: flex; align-items: center; gap: 12px; }
+  .cart li i { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+  .cart li i svg { width: 24px; }
+  .cart li b { flex: 1; font-weight: 700; }
+  .cart li .q { font-weight: 800; color: var(--brand-ink); background: var(--brand-soft); border-radius: 999px; padding: 4px 10px; }
+  .custom { background: var(--bg); border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; font-size: 13.5px; }
+  .custom span.tag { background: var(--sky-soft); color: var(--sky); border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 800; }
+  .sum { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-top: 2px dashed var(--line); margin-top: 14px; font-weight: 800; }
+  .cta { width: 100%; height: 52px; border: 0; border-radius: 999px; background: var(--brand); color: #fff; font-weight: 800; font-size: 16px; }
+  .cta:hover { background: var(--brand-deep); }
+  .ghost { width: 100%; height: 44px; border: 2px dashed var(--line); border-radius: 999px; background: transparent; font-weight: 800; color: var(--ink-2); margin-bottom: 10px; }
+  .bar { display: none; }
+  @media (max-width: 900px) {
+    html, body { overflow-x: hidden; } .wrap { grid-template-columns: minmax(0,1fr); padding: 14px 14px 140px; } .hero p { flex-basis: 100%; }
+    .tabs { display: none; } .top { padding: 0 14px; }
+    .hero { padding: 18px; } .hero .days { margin-left: 0; }
+    .grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+    .cart { position: static; }
+    .bar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: var(--card); box-shadow: 0 -6px 20px rgba(27,29,41,.08); align-items: center; gap: 12px; }
+    .bar .cta { height: 48px; flex: 1; }
+    .bar b { font-weight: 800; }
+  }
+</style></head>
+<body>
+<header class="top"><div class="logo"><i>V</i>VPP Công trình</div><nav class="tabs"><a class="on" href="#">Đăng ký</a><a href="#">Lịch sử</a></nav><div class="sp"></div><span class="av">AN</span></header>
+<main class="wrap">
+  <section>
+    <div class="hero">
+      <div><h1>Tháng 11 đang mở đăng ký</h1><p>Chọn thoải mái, sửa đến hết ngày 10/11. Hành chính giao sau ngày 15.</p></div>
+      <div class="days"><b>4</b><span>ngày còn lại</span></div>
+      <button class="btn-w">↺ Lấy lại tháng 10</button>
+    </div>
+    <div class="cats">
+      <button class="cat on"><i class="c1">✦</i>Tất cả</button><button class="cat"><i class="c2">▤</i>Giấy &amp; sổ</button><button class="cat"><i class="c3">✎</i>Bút viết</button><button class="cat"><i class="c4">⌘</i>Kẹp, ghim, keo</button><button class="cat"><i class="c1">⚙</i>Dụng cụ</button>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+  <aside class="cart">
+    <h2>Giỏ đăng ký</h2><div class="who">Nguyễn Văn An · Phòng Công trình</div>
+    <ul id="lines"></ul>
+    <div class="custom"><span class="tag">Ngoài danh mục</span><b>Băng keo 2 mặt</b><span style="margin-left:auto;font-weight:800">×2</span></div>
+    <div class="sum"><span>Tổng cộng</span><span><span id="count">4</span> món</span></div>
+    <button class="ghost">+ Thêm món ngoài danh mục</button>
+    <button class="cta">Lưu đăng ký</button>
+  </aside>
+</main>
+<div class="bar"><b><span id="count-m">4</span> món</b><button class="cta">Lưu đăng ký</button></div>
+<script src="_icons.js"></script>
+<script>
+const cls = ['c1','c2','c3','c4'];
+document.getElementById('grid').innerHTML = ITEMS.map((i,k) => `<article class="item ${i.qty?'is-picked':''}" data-item><div class="img ${cls[k%4]}">${ICONS[i.icon]}</div><div class="name">${i.name}</div><div class="unit">${i.unit} · tối đa ${i.max}</div><div class="step"><button data-d="-1">−</button><output data-max="${i.max}">${i.qty}</output><button data-d="1">+</button></div></article>`).join('');
+document.getElementById('lines').innerHTML = ITEMS.filter(i=>i.qty).map((i,k)=>`<li><i class="${cls[k%4]}">${ICONS[i.icon]}</i><b>${i.name}</b><span class="q">${i.qty} ${i.unit}</span></li>`).join('');
+wireSteppers(document.getElementById('grid'));
+</script>
+</body></html>

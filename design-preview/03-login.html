@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đăng nhập — VPP Công trình</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  body { display: grid; place-items: center; padding: 24px; }
+  .desk { width: min(960px, 100%); display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; }
+  .intro h1 { font-size: 34px; line-height: 1.15; letter-spacing: -.02em; max-width: 14ch; }
+  .intro p { margin-top: 14px; color: var(--ink-2); max-width: 44ch; font-size: 16px; }
+  .intro .pmh { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; color: var(--ink-2); font-size: 13.5px; }
+  .intro .pmh i { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--ink); display: grid; place-items: center; font-style: normal; font-weight: 600; font-size: 11px; }
+  .shelf { margin-top: 30px; display: flex; gap: 10px; }
+  .shelf span { width: 54px; height: 54px; border-radius: 8px; background: var(--paper); border: 1px solid var(--rule); display: grid; place-items: center; color: var(--ink-2); }
+  .shelf span svg { width: 32px; }
+  .shelf span:nth-child(2) { background: var(--note); color: var(--note-ink); border-color: var(--note-deep); }
+
+  .card { position: relative; background: var(--note); color: var(--note-ink); border-radius: var(--r-note); padding: 34px 28px 26px; box-shadow: 0 1px 0 var(--note-deep); }
+  .card::before { content: ""; position: absolute; top: -12px; left: 50%; width: 110px; height: 26px; transform: translateX(-50%) rotate(-1.2deg); background: rgba(255,255,255,.55); border: 1px solid rgba(0,0,0,.06); }
+  .card h2 { font-size: 19px; }
+  .card p { font-size: 14px; opacity: .85; margin-top: 4px; }
+  .card label { display: block; font-weight: 500; margin: 20px 0 6px; font-size: 14px; }
+  .card .field { height: 46px; font-size: 16px; border-color: rgba(74,63,0,.35); }
+  .card .field:focus-visible { box-shadow: 0 0 0 3px rgba(35,33,29,.35); }
+  .card .btn--act { width: 100%; margin-top: 14px; }
+  .card .hint { margin-top: 14px; font-size: 13px; opacity: .8; }
+  .card .hint b { font-weight: 600; }
+  .alt { margin-top: 22px; padding-top: 14px; border-top: 1px dashed rgba(74,63,0,.35); font-size: 13px; opacity: .85; }
+  .foot { grid-column: 1 / -1; display: flex; justify-content: space-between; color: var(--ink-3); font-size: 12.5px; padding-top: 10px; }
+
+  @media (max-width: 760px) {
+    body { padding: 16px; align-items: start; }
+    .desk { grid-template-columns: 1fr; gap: 24px; }
+    .intro h1 { font-size: 28px; }
+    .shelf { display: none; }
+  }
+</style>
+</head>
+<body>
+<main class="desk">
+  <section class="intro">
+    <div class="pmh"><i>PMH</i>Phú Mỹ Hưng · nội bộ phòng Công trình</div>
+    <h1>Đăng ký văn phòng phẩm từ ngày 1 đến 10 hằng tháng.</h1>
+    <p>Chọn món từ kệ, ghi số lượng, lưu phiếu. Hành chính tổng hợp, mua và giao tận bàn. Mọi thứ còn lại — nhớ hạn, theo dõi giao — để hệ thống lo.</p>
+    <div class="shelf" aria-hidden="true">
+      <span><svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 38 40 8l8 8-30 30H10z"/><path d="M36 12l8 8"/></svg></span>
+      <span><svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 8h36v26l-8 8H14z"/><path d="M42 42v-8h8"/><path d="M22 20h20M22 28h12"/></svg></span>
+      <span><svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M40 14 22 32a6 6 0 0 0 8 8l20-20a10 10 0 0 0-14-14L16 26a14 14 0 0 0 20 20l12-12"/></svg></span>
+      <span><svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="30" cy="24" r="16"/><circle cx="30" cy="24" r="6"/><path d="M46 24h10v8H40"/></svg></span>
+      <span><svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M18 6h22l8 8v28H18z"/><path d="M40 6v8h8"/><path d="M24 24h16M24 32h16"/></svg></span>
+    </div>
+  </section>
+
+  <form class="card" onsubmit="return false">
+    <h2>Vào bằng tài khoản PMH</h2>
+    <p>Dùng email công ty. Bạn sẽ được chuyển sang PMH ID để đăng nhập.</p>
+    <label for="email">Email công ty</label>
+    <input id="email" class="field" type="email" placeholder="ten.ho@pmh.com.vn" autocomplete="username">
+    <button class="btn btn--act btn--lg" type="submit">Tiếp tục với PMH ID</button>
+    <p class="hint">Đã đăng nhập PMH ID ở ứng dụng khác? Bạn sẽ vào thẳng, không cần gõ mật khẩu.</p>
+    <div class="alt">Chưa được cấp quyền vào VPP Công trình? Liên hệ Hành chính để được thêm vào nhóm.</div>
+  </form>
+
+  <div class="foot"><span>Quản trị kỹ thuật: nhập tên tài khoản nội bộ thay cho email.</span><span>© 2026 Phú Mỹ Hưng</span></div>
+</main>
+
+<div class="theme-switch" role="group" aria-label="Bảng màu (mockup)">
+  <button data-theme="" aria-pressed="true">Giấy note</button>
+  <button data-theme="terracotta" aria-pressed="false">Đất nung</button>
+</div>
+<script>
+document.querySelectorAll('.theme-switch button').forEach(b => b.addEventListener('click', () => { document.documentElement.dataset.theme = b.dataset.theme; document.querySelectorAll('.theme-switch button').forEach(x => x.setAttribute('aria-pressed', x === b)); }));
+</script>
+</body>
+</html>

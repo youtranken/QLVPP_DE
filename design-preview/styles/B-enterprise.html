@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phong cách B — Phần mềm quản lý</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root { --bg: #f4f5f7; --card: #fff; --ink: #1f2328; --ink-2: #57606a; --ink-3: #8b949e; --line: #d0d7de; --line-2: #e6eaef;
+    --brand: #7a1f4b; --brand-deep: #5c1538; --brand-soft: #f7e9f0; --brand-ink: #5c1538;
+    --side: #2b1f27; --side-ink: #cfc4ca; --ok: #1a7f37; --ok-soft: #dafbe1; --warn: #9a6700; --warn-soft: #fff8c5; --info: #0969da; --info-soft: #ddf4ff; --r: 6px; }
+  * { box-sizing: border-box; } body { margin: 0; font-family: "IBM Plex Sans", system-ui, sans-serif; background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.45; }
+  h1, h2, p { margin: 0; } button, input { font: inherit; } button { cursor: pointer; }
+  .shell { display: grid; grid-template-columns: 220px minmax(0,1fr); min-height: 100vh; }
+  .side { background: var(--side); color: var(--side-ink); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+  .side .brand { height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 16px; color: #fff; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .side .brand i { width: 26px; height: 26px; border-radius: 4px; background: var(--brand); display: grid; place-items: center; font-style: normal; font-size: 12px; }
+  .side nav { padding: 10px 8px; display: grid; gap: 2px; }
+  .side .g { padding: 12px 10px 4px; font-size: 11px; letter-spacing: .04em; color: rgba(255,255,255,.45); }
+  .side a { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 4px; color: inherit; text-decoration: none; }
+  .side a.on { background: rgba(255,255,255,.1); color: #fff; box-shadow: inset 3px 0 0 var(--brand); }
+  .side a .n { margin-left: auto; font-size: 11px; background: var(--brand); color: #fff; border-radius: 10px; padding: 1px 7px; }
+  .side .foot { margin-top: auto; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,.08); font-size: 12.5px; }
+  .side .foot b { color: #fff; display: block; }
+  .head { height: 52px; background: var(--card); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; padding: 0 20px; position: sticky; top: 0; z-index: 10; }
+  .head h1 { font-size: 16px; font-weight: 600; }
+  .crumb { color: var(--ink-3); } .sp { flex: 1; }
+  .pill { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: var(--ok-soft); color: var(--ok); font-weight: 500; }
+  .btn { height: 32px; padding: 0 12px; border-radius: var(--r); border: 1px solid var(--line); background: var(--card); font-weight: 500; }
+  .btn.p { background: var(--brand); color: #fff; border-color: var(--brand); } .btn.p:hover { background: var(--brand-deep); }
+  .page { padding: 16px 20px 40px; display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 16px; align-items: start; }
+  .notice { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; padding: 10px 14px; background: var(--brand-soft); border: 1px solid #ecd3df; border-radius: var(--r); color: var(--brand-ink); }
+  .notice b { font-weight: 600; } .notice .sp { flex: 1; } .notice small { color: var(--ink-2); }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); }
+  .bar { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line-2); flex-wrap: wrap; }
+  .bar input { height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--r); width: 240px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  .seg button { height: 32px; padding: 0 10px; border: 0; background: var(--card); color: var(--ink-2); border-right: 1px solid var(--line); }
+  .seg button:last-child { border-right: 0; } .seg button.on { background: var(--brand-soft); color: var(--brand-ink); font-weight: 500; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-weight: 500; color: var(--ink-2); font-size: 12.5px; height: 36px; padding: 0 12px; background: #f6f8fa; border-bottom: 1px solid var(--line); }
+  td { height: 48px; padding: 6px 12px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
+  tr.is-picked td { background: #fdf7fa; }
+  td.r, th.r { text-align: right; }
+  .thumb { width: 36px; height: 36px; border-radius: 4px; background: #f0f2f5; display: inline-grid; place-items: center; color: var(--ink-2); vertical-align: middle; margin-right: 10px; }
+  .thumb svg { width: 24px; }
+  .grp td { height: 30px; background: #fafbfc; color: var(--ink-2); font-size: 12.5px; font-weight: 500; }
+  .step { display: inline-grid; grid-template-columns: 28px 44px 28px; height: 30px; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  .step button { border: 0; background: var(--card); color: var(--ink-2); }
+  .step output { display: grid; place-items: center; border-left: 1px solid var(--line); border-right: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  tr.is-picked .step output { background: var(--brand-soft); color: var(--brand-ink); font-weight: 600; }
+  .side-card h2 { font-size: 14px; font-weight: 600; padding: 12px 14px; border-bottom: 1px solid var(--line-2); }
+  .kv { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; padding: 12px 14px; font-size: 13px; border-bottom: 1px solid var(--line-2); }
+  .kv span { color: var(--ink-2); }
+  .lines { padding: 6px 14px; }
+  .lines div { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px dotted var(--line-2); }
+  .lines div:last-child { border: 0; }
+  .lines .q { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .tag { font-size: 11.5px; padding: 1px 6px; border-radius: 3px; background: var(--info-soft); color: var(--info); margin-left: 6px; }
+  .foot { padding: 12px 14px; display: grid; gap: 8px; border-top: 1px solid var(--line-2); }
+  .foot .btn { width: 100%; height: 36px; }
+  @media (max-width: 900px) { .shell { grid-template-columns: 1fr; } .side { display: none; } .page { grid-template-columns: 1fr; padding: 12px; } th:nth-child(3), td:nth-child(3) { display: none; } }
+</style></head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><i>V</i>VPP Công trình</div>
+    <nav>
+      <div class="g">CÁ NHÂN</div>
+      <a class="on" href="#">Đăng ký tháng này</a><a href="#">Lịch sử đăng ký</a><a href="#">Thông báo<span class="n">1</span></a>
+      <div class="g">QUẢN TRỊ</div>
+      <a href="#">Tổng hợp kỳ</a><a href="#">Món ngoài danh mục<span class="n">3</span></a><a href="#">Giao hàng</a><a href="#">Còn nợ</a><a href="#">Kho</a><a href="#">Danh mục</a><a href="#">Báo cáo</a>
+    </nav>
+    <div class="foot"><b>Nguyễn Văn An</b>Phòng Công trình</div>
+  </aside>
+  <div>
+    <header class="head"><h1>Đăng ký tháng này</h1><span class="crumb">/ Kỳ 11/2026</span><span class="pill">Đang mở · còn 4 ngày</span><div class="sp"></div><button class="btn">Lấy lại tháng 10</button><button class="btn p">Lưu đăng ký</button></header>
+    <main class="page">
+      <div class="notice"><b>Hạn đăng ký: hết ngày 10/11/2026.</b><small>Sau hạn, phiếu khóa; cần sửa thì liên hệ Hành chính.</small><div class="sp"></div><small>Lần lưu cuối: 05/11 14:20</small></div>
+      <section class="panel">
+        <div class="bar"><input placeholder="Tìm món…"><div class="seg"><button class="on">Tất cả</button><button>Giấy &amp; sổ</button><button>Bút viết</button><button>Kẹp, ghim, keo</button><button>Dụng cụ</button></div><div class="sp"></div><label style="font-size:13px;color:var(--ink-2)"><input type="checkbox" style="width:auto;height:auto;vertical-align:middle"> Chỉ món đã chọn</label></div>
+        <table><thead><tr><th>Món</th><th>Đơn vị</th><th class="r">Tối đa</th><th class="r">Số lượng</th></tr></thead><tbody id="rows"></tbody></table>
+      </section>
+      <aside class="panel side-card">
+        <h2>Phiếu tháng 11/2026</h2>
+        <div class="kv"><span>Người đăng ký</span><b>Nguyễn Văn An</b><span>Phòng ban</span><b>Công trình</b><span>Mã NV</span><b>NV0231</b></div>
+        <div class="lines" id="lines"></div>
+        <div class="lines"><div><span>Băng keo 2 mặt<span class="tag">Ngoài danh mục</span></span><span class="q">2</span></div></div>
+        <div class="kv"><span>Tổng</span><b><span id="count">4</span> món</b></div>
+        <div class="foot"><button class="btn">+ Thêm món ngoài danh mục</button><button class="btn p">Lưu đăng ký</button></div>
+      </aside>
+    </main>
+  </div>
+</div>
+<script src="_icons.js"></script>
+<script>
+const groups = [['Bút viết',[0,6]],['Giấy & sổ',[1,4,7]],['Kẹp, ghim, keo',[2,3]],['Dụng cụ',[5]]];
+document.getElementById('rows').innerHTML = groups.map(([g,idx]) => `<tr class="grp"><td colspan="4">${g}</td></tr>` + idx.map(k=>{const i=ITEMS[k];return `<tr data-item class="${i.qty?'is-picked':''}"><td><span class="thumb">${ICONS[i.icon]}</span>${i.name}</td><td>${i.unit}</td><td class="r">${i.max}</td><td class="r"><span class="step"><button data-d="-1">−</button><output data-max="${i.max}">${i.qty}</output><button data-d="1">+</button></span></td></tr>`}).join('')).join('');
+document.getElementById('lines').innerHTML = ITEMS.filter(i=>i.qty).map(i=>`<div><span>${i.name}</span><span class="q">${i.qty} ${i.unit}</span></div>`).join('');
+wireSteppers(document.getElementById('rows'));
+</script>
+</body></html>

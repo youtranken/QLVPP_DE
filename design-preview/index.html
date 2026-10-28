@@ -1,0 +1,92 @@
+<title>Mockup VPP Công trình</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&display=swap">
+<style>
+  /* Bố cục: một cột, mỗi màn hình = ảnh chụp lớn + nút mở bản tương tác; nền "mặt bàn" như chính mockup */
+  :root {
+    --bg: #eeede8; --paper: #ffffff; --paper-2: #f6f5f1; --fg: #23211d; --fg-2: #5b574f; --fg-3: #8a857b;
+    --rule: #d9d5cc; --note: #ffe86b; --note-deep: #f2d53a; --note-ink: #4a3f00; --act: #23211d; --on-act: #ffffff;
+    --font: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #1c1b18; --paper: #26241f; --paper-2: #2e2b25; --fg: #f1efe8; --fg-2: #c4bfb3; --fg-3: #8f897c;
+    --rule: #3a362e; --note: #e8d15a; --note-deep: #c9b23f; --note-ink: #2a2300; --act: #f1efe8; --on-act: #1c1b18; color-scheme: dark } }
+  :root[data-theme="dark"] {
+    --bg: #1c1b18; --paper: #26241f; --paper-2: #2e2b25; --fg: #f1efe8; --fg-2: #c4bfb3; --fg-3: #8f897c;
+    --rule: #3a362e; --note: #e8d15a; --note-deep: #c9b23f; --note-ink: #2a2300; --act: #f1efe8; --on-act: #1c1b18; color-scheme: dark }
+
+  body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.5;
+    padding-block: 28px 60px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 28px; }
+  h1, h2, h3, p { margin: 0; }
+  h1 { font-size: 26px; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; }
+  h2 { font-size: 18px; font-weight: 600; }
+  .lead { color: var(--fg-2); max-width: 62ch; margin-top: 6px; }
+
+  .note { position: relative; background: var(--note); color: var(--note-ink); border-radius: 4px; padding: 22px 22px 18px; box-shadow: 0 1px 0 var(--note-deep); max-width: 560px; }
+  .note::before { content: ""; position: absolute; top: -10px; left: 50%; width: 92px; height: 22px; transform: translateX(-50%) rotate(-1.5deg); background: rgba(255,255,255,.55); border: 1px solid rgba(0,0,0,.06); }
+  .note h2 { font-size: 16px; margin-bottom: 8px; }
+  .note ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
+
+  .screen { background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  .screen__head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 16px 18px; border-bottom: 1px solid var(--rule); }
+  .screen__head p { color: var(--fg-2); font-size: 14px; flex: 1 1 280px; min-width: 0; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 6px; border: 1px solid var(--rule); background: var(--paper); color: var(--fg); font-weight: 500; text-decoration: none; white-space: nowrap; }
+  .btn--act { background: var(--act); border-color: var(--act); color: var(--on-act); }
+  .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(242,213,58,.85); }
+  .shots { display: grid; gap: 1px; background: var(--rule); grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  figure { margin: 0; background: var(--paper-2); display: flex; flex-direction: column; min-width: 0; }
+  figure img { display: block; width: 100%; max-width: 100%; height: auto; border-bottom: 1px solid var(--rule); }
+  figcaption { padding: 10px 14px; font-size: 13px; color: var(--fg-2); }
+  figure.mobile { align-items: center; }
+  figure.mobile img { width: min(100%, 320px); }
+  .tips { color: var(--fg-3); font-size: 13px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Mockup VPP Công trình</h1>
+    <p class="lead">Bản chốt: hai phần giao diện, một màu thương hiệu xanh ngọc lục. <b>Nhân viên</b> dùng trang đặt món kiểu app (thẻ ảnh, giỏ bên phải). <b>Hành chính</b> dùng phần mềm quản lý (sidebar, bảng). Mỗi màn hình có ảnh và nút mở bản tương tác.</p>
+  </header>
+  <section class="note" aria-label="Cách xem">
+    <h2>Xem và chốt</h2>
+    <ol>
+      <li>Trang nhân viên: bấm −/+ được; nút “Xem khi đã khóa” ở góc dưới phải để xem sau ngày 10.</li>
+      <li>Trang Hành chính: bấm “Điều chỉnh” để mở ngăn sửa phiếu; bấm ô KPI để lọc.</li>
+      <li>Thu nhỏ cửa sổ để xem bản điện thoại.</li>
+    </ol>
+  </section>
+  <section class="screen">
+    <div class="screen__head"><div style="flex:1 1 280px;min-width:0"><h2>Nhân viên · Đăng ký tháng này</h2><p>Hero xanh với số ngày còn lại, nhóm món dạng chip, thẻ ảnh với nút −/+, giỏ đăng ký bên phải. Sau khi khóa: chỉ đọc, hiện tiến độ giao từng món.</p></div><a class="btn btn--act" href="final/member.html">Mở bản tương tác</a></div>
+    <div class="shots">
+      <figure><img src="shots/final-member-desktop.png" alt="Trang đăng ký của nhân viên, đang mở"><figcaption>Máy tính · đang mở</figcaption></figure>
+      <figure><img src="shots/final-member-locked.png" alt="Trang đăng ký khi đã khóa"><figcaption>Máy tính · đã khóa, đang giao</figcaption></figure>
+      <figure><img src="shots/final-member-confirm.png" alt="Hộp xác nhận lưu phiếu"><figcaption>Xác nhận khi bấm Lưu đăng ký</figcaption></figure>
+      <figure class="mobile"><img src="shots/final-member-mobile.png" alt="Trang đăng ký trên điện thoại"><figcaption>Điện thoại</figcaption></figure>
+    </div>
+  </section>
+  <section class="screen">
+    <div class="screen__head"><div style="flex:1 1 280px;min-width:0"><h2>Hành chính · Tổng hợp kỳ</h2><p>Sidebar xanh đậm, KPI bấm để lọc, bảng theo tổ với thanh tiến độ giao. Ngăn điều chỉnh: dòng đã sửa tô xanh nhạt kèm giá trị cũ, món ngoài danh mục có 3 nút, lý do bắt buộc.</p></div><a class="btn btn--act" href="final/admin.html">Mở bản tương tác</a></div>
+    <div class="shots">
+      <figure><img src="shots/final-admin-desktop.png" alt="Trang Tổng hợp kỳ"><figcaption>Tổng hợp kỳ 11/2026</figcaption></figure>
+      <figure><img src="shots/final-admin-drawer.png" alt="Ngăn điều chỉnh phiếu"><figcaption>Điều chỉnh phiếu · xử lý món ngoài danh mục</figcaption></figure>
+    </div>
+  </section>
+  <section class="screen">
+    <div class="screen__head"><div style="flex:1 1 280px;min-width:0"><h2>Đăng nhập</h2><p>Email công ty → PMH ID. Quản trị kỹ thuật gõ tên tài khoản nội bộ (SA local).</p></div><a class="btn btn--act" href="final/login.html">Mở bản tương tác</a></div>
+    <div class="shots">
+      <figure><img src="shots/final-login-desktop.png" alt="Trang đăng nhập"><figcaption>Máy tính</figcaption></figure>
+      <figure class="mobile"><img src="shots/final-login-mobile.png" alt="Trang đăng nhập trên điện thoại"><figcaption>Điện thoại</figcaption></figure>
+    </div>
+  </section>
+  <section class="screen">
+    <div class="screen__head"><div style="flex:1 1 280px;min-width:0"><h2>Các phương án đã xem trước đó</h2><p>Giữ lại để đối chiếu: ba phong cách A/B/C và bản giấy note.</p></div></div>
+    <div class="shots">
+      <figure><a href="styles/A-app.html"><img src="shots/style-A-desktop.png" alt="Phong cách A"></a><figcaption>A · App tiêu dùng (cam)</figcaption></figure>
+      <figure><a href="styles/B-enterprise.html"><img src="shots/style-B-desktop.png" alt="Phong cách B"></a><figcaption>B · Phần mềm quản lý (mận)</figcaption></figure>
+      <figure><a href="styles/C-minimal.html"><img src="shots/style-C-desktop.png" alt="Phong cách C"></a><figcaption>C · Tối giản sáng</figcaption></figure>
+      <figure><a href="01-member-phieu.html"><img src="shots/member-desktop.png" alt="Bản giấy note"></a><figcaption>Bản đầu · giấy note</figcaption></figure>
+    </div>
+  </section>
+  <p class="tips">Ảnh món là hình minh hoạ; bản thật dùng ảnh do Hành chính chụp. Số liệu là ví dụ.</p>
+</div>

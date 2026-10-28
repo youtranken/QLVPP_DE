@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phiếu tháng này — VPP Công trình</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; padding: 24px 28px 120px; max-width: 1320px; margin: 0 auto; align-items: start; }
+
+  /* Dải kỳ */
+  .period { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 16px 20px; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--r-card); margin-bottom: 18px; }
+  .period__cal { width: 48px; height: 52px; border: 1.5px solid var(--ink); border-radius: 6px; overflow: hidden; text-align: center; flex: none; }
+  .period__cal b { display: block; font-size: 10px; letter-spacing: .04em; background: var(--ink); color: #fff; padding: 2px 0; }
+  .period__cal span { display: block; font-size: 22px; font-weight: 600; line-height: 1.3; }
+  .period__text h1 { font-size: 20px; }
+  .period__text p { color: var(--ink-2); margin-top: 2px; }
+  .period__days { margin-left: auto; display: flex; align-items: baseline; gap: 8px; }
+  .period__days b { font-size: 34px; font-weight: 600; letter-spacing: -.02em; }
+  .period .btn { margin-left: 8px; }
+  .is-locked .period { border-color: var(--rule-2); background: var(--paper-2); }
+
+  /* Bộ lọc */
+  .tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .search { position: relative; flex: 1 1 240px; max-width: 360px; }
+  .search svg { position: absolute; left: 11px; top: 10px; width: 18px; height: 18px; color: var(--ink-3); }
+  .search .field { padding-left: 36px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { height: 34px; padding: 0 13px; border-radius: 999px; border: 1px solid var(--rule-2); background: var(--paper); font-weight: 500; font-size: 13.5px; }
+  .chip[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  /* Lưới món */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+  .item { background: var(--paper); border: 1px solid var(--rule); border-radius: var(--r-card); padding: 10px; display: flex; flex-direction: column; gap: 10px; transition: border-color var(--t); }
+  .item.is-picked { border-color: var(--ink); }
+  .item__img { aspect-ratio: 4/3; border-radius: 6px; background: var(--paper-2); display: grid; place-items: center; color: var(--ink-2); position: relative; overflow: hidden; }
+  .item__img svg { width: 64%; height: 64%; }
+  .item__img .tag { position: absolute; top: 8px; left: 8px; }
+  .item__name { font-weight: 500; line-height: 1.3; }
+  .item__unit { color: var(--ink-3); font-size: 13px; }
+  .step { display: grid; grid-template-columns: 36px 1fr 36px; height: 36px; border: 1px solid var(--rule-2); border-radius: var(--r-ctl); overflow: hidden; background: var(--paper); }
+  .step button { border: 0; background: transparent; font-size: 18px; color: var(--ink-2); }
+  .step button:hover { background: var(--paper-2); color: var(--ink); }
+  .step output { display: grid; place-items: center; font-weight: 600; border-left: 1px solid var(--rule); border-right: 1px solid var(--rule); }
+  .item.is-picked .step { border-color: var(--ink); }
+  .item.is-picked .step output { background: var(--note); color: var(--note-ink); }
+  .item__hint { font-size: 12px; color: var(--warn); min-height: 1em; }
+  .is-locked .step, .is-locked .chips, .is-locked .search { display: none; }
+  .is-locked .item__name::after { content: ""; }
+  .lockline { display: none; justify-content: space-between; font-size: 13.5px; }
+  .is-locked .lockline { display: flex; }
+
+  /* Giỏ = tờ giấy note */
+  .note { position: sticky; top: 84px; background: var(--note); color: var(--note-ink); border-radius: var(--r-note); padding: 26px 20px 20px; box-shadow: 0 1px 0 var(--note-deep); }
+  .note::before { content: ""; position: absolute; top: -10px; left: 50%; width: 92px; height: 22px; transform: translateX(-50%) rotate(-1.5deg); background: rgba(255,255,255,.55); border: 1px solid rgba(0,0,0,.06); }
+  .note__who { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding-bottom: 12px; border-bottom: 1px dashed rgba(74,63,0,.35); }
+  .note__who h2 { font-size: 17px; }
+  .note__who p { font-size: 13px; opacity: .8; }
+  .note__lines { list-style: none; margin: 0; padding: 8px 0; min-height: 60px; }
+  .note__lines li { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px dotted rgba(74,63,0,.25); }
+  .note__lines li:last-child { border-bottom: 0; }
+  .note__lines .q { font-weight: 600; }
+  .note__lines .x { width: 24px; height: 24px; border: 0; border-radius: 50%; background: transparent; color: inherit; opacity: .6; }
+  .note__lines .x:hover { opacity: 1; background: rgba(0,0,0,.08); }
+  .note__lines .custom { grid-column: 1 / -1; display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; }
+  .note__lines .custom .thumb { width: 44px; height: 44px; border-radius: 4px; background: #fff; border: 1px solid var(--note-deep); display: grid; place-items: center; }
+  .note__lines .custom small { display: block; opacity: .75; }
+  .note__sum { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0 14px; border-top: 1px dashed rgba(74,63,0,.35); }
+  .note__sum b { font-size: 18px; }
+  .note__acts { display: grid; gap: 8px; }
+  .note .btn { border-color: rgba(74,63,0,.35); background: rgba(255,255,255,.5); color: var(--note-ink); }
+  .note .btn--act { background: var(--act); border-color: var(--act); color: var(--on-act); }
+  .note__empty { padding: 18px 0; font-size: 14px; opacity: .8; }
+  .is-locked .note__acts, .is-locked .x { display: none; }
+  .note__locked { display: none; margin-top: 10px; font-size: 13.5px; line-height: 1.5; padding: 10px 12px; background: rgba(255,255,255,.55); border-radius: 4px; }
+  .is-locked .note__locked { display: block; }
+  .prog { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+  .prog i { flex: 1; height: 6px; border-radius: 3px; background: rgba(0,0,0,.1); overflow: hidden; display: block; }
+  .prog i b { display: block; height: 100%; background: var(--ok); }
+  .prog { display: none; } .is-locked .prog { display: flex; }
+
+  /* Thanh dính dưới (mobile) */
+  .bar { display: none; }
+
+  /* Hộp xác nhận */
+  dialog { border: 0; border-radius: var(--r-card); padding: 0; width: min(440px, 92vw); color: var(--ink); }
+  dialog::backdrop { background: rgba(35,33,29,.45); }
+  .dlg { padding: 22px 22px 18px; }
+  .dlg h2 { font-size: 18px; margin-bottom: 4px; }
+  .dlg table { width: 100%; border-collapse: collapse; margin: 14px 0 18px; font-size: 14px; }
+  .dlg td { padding: 7px 0; border-bottom: 1px solid var(--rule); }
+  .dlg td:last-child { text-align: right; font-weight: 600; }
+  .dlg__acts { display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* Mockup controls */
+  .mock { position: fixed; right: 16px; bottom: 60px; z-index: 50; display: flex; gap: 6px; }
+
+  @media (max-width: 900px) {
+    .wrap { grid-template-columns: 1fr; padding: 16px 16px 110px; gap: 16px; }
+    .top { padding: 0 16px; gap: 12px; }
+    .nav { display: none; }
+    .period { padding: 14px; gap: 12px; }
+    .period__days { margin-left: 0; width: 100%; }
+    .period .btn { margin-left: 0; width: 100%; }
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .item { padding: 8px; }
+    .note { position: static; order: 2; }
+    .bar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; align-items: center; gap: 12px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--note); color: var(--note-ink); border-top: 1px solid var(--note-deep); }
+    .bar b { font-size: 16px; }
+    .bar .btn--act { margin-left: auto; }
+    .is-locked .bar { display: none; }
+    .theme-switch { bottom: 86px; } .mock { bottom: 130px; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="brand__mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11l-5 4H4z"/><path d="M15 20v-4h5"/></svg></span>VPP Công trình</div>
+  <nav class="nav" aria-label="Chính">
+    <a href="#" aria-current="page">Phiếu tháng này</a>
+    <a href="#">Lịch sử</a>
+  </nav>
+  <div class="top__spacer"></div>
+  <button class="iconbtn" aria-label="Thông báo, 1 mới"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg><span class="dot"></span></button>
+  <button class="me"><span class="avatar">AN</span><span class="small">Nguyễn Văn An</span></button>
+</header>
+
+<main class="wrap" id="page">
+  <section>
+    <div class="period">
+      <div class="period__cal" aria-hidden="true"><b>THG</b><span>11</span></div>
+      <div class="period__text">
+        <h1>Phiếu tháng 11/2026</h1>
+        <p id="period-sub">Nhận đăng ký đến hết ngày 10/11. Bạn có thể sửa lại bất cứ lúc nào trước đó.</p>
+      </div>
+      <div class="period__days" id="period-days"><b class="num">4</b><span class="muted">ngày còn lại</span></div>
+      <button class="btn" id="copy-prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Lấy lại phiếu tháng 10</button>
+    </div>
+
+    <div class="tools">
+      <label class="search"><span class="sr">Tìm món</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="field" placeholder="Tìm món, ví dụ: bút, kẹp…"></label>
+      <div class="chips" role="group" aria-label="Nhóm">
+        <button class="chip" aria-pressed="true">Tất cả</button>
+        <button class="chip" aria-pressed="false">Giấy &amp; sổ</button>
+        <button class="chip" aria-pressed="false">Bút viết</button>
+        <button class="chip" aria-pressed="false">Kẹp, ghim, keo</button>
+        <button class="chip" aria-pressed="false">Dụng cụ</button>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <aside class="note" aria-label="Phiếu của tôi">
+    <div class="note__who">
+      <div><h2>Phiếu của An</h2><p>Phòng Công trình · an.nguyen@pmh.com.vn</p></div>
+      <span class="tag tag--note" id="note-state">Đang mở</span>
+    </div>
+    <ul class="note__lines" id="lines"></ul>
+    <div class="note__sum"><span>Tổng cộng</span><b><span id="count" class="num">0</span> món</b></div>
+    <div class="note__acts">
+      <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Thêm món ngoài danh mục</button>
+      <button class="btn btn--act btn--lg" id="save">Lưu đăng ký</button>
+    </div>
+    <div class="note__locked">Phiếu đã khóa lúc 00:00 ngày 11/11. Cần điều chỉnh? Liên hệ chị Bình (Hành chính). Tiến độ giao hiển thị theo từng món bên dưới.</div>
+  </aside>
+</main>
+
+<div class="bar"><span><b><span id="count-m" class="num">0</span> món</b> đã chọn</span><button class="btn btn--act" id="save-m">Lưu đăng ký</button></div>
+
+<dialog id="confirm">
+  <form method="dialog" class="dlg">
+    <h2>Lưu phiếu tháng 11?</h2>
+    <p class="muted small">Bạn vẫn sửa được đến hết ngày 10/11.</p>
+    <table id="confirm-rows"></table>
+    <div class="dlg__acts"><button class="btn" value="cancel">Xem lại</button><button class="btn btn--act" value="ok">Lưu phiếu</button></div>
+  </form>
+</dialog>
+
+<div class="theme-switch" role="group" aria-label="Bảng màu (mockup)">
+  <button data-theme="" aria-pressed="true">Giấy note</button>
+  <button data-theme="terracotta" aria-pressed="false">Đất nung</button>
+</div>
+<div class="mock"><button class="btn btn--sm" id="lock">Xem khi đã khóa</button></div>
+
+<script>
+const ICONS = {
+  pen: '<svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 38 40 8l8 8-30 30H10z"/><path d="M36 12l8 8"/><path d="M10 38l4 4"/></svg>',
+  note: '<svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 8h36v26l-8 8H14z"/><path d="M42 42v-8h8"/><path d="M22 20h20M22 28h12"/></svg>',
+  clip: '<svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M40 14 22 32a6 6 0 0 0 8 8l20-20a10 10 0 0 0-14-14L16 26a14 14 0 0 0 20 20l12-12"/></svg>',
+  tape: '<svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="30" cy="24" r="16"/><circle cx="30" cy="24" r="6"/><path d="M46 24h10v8H40"/></svg>',
+  paper: '<svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M18 6h22l8 8v28H18z"/><path d="M40 6v8h8"/><path d="M24 24h16M24 32h16M24 16h8"/></svg>',
+  book: '<svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 8h26a6 6 0 0 1 6 6v28H20a6 6 0 0 1-6-6z"/><path d="M14 36a6 6 0 0 1 6-6h26"/><path d="M22 16h16"/></svg>',
+  stapler: '<svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M10 34h44v6H10z"/><path d="M12 34 46 14l6 6-24 14"/><path d="M12 26h20"/></svg>',
+  marker: '<svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M14 30h26l10-6v-8H14z"/><path d="M14 30v6h26v-6"/><path d="M40 22h10"/></svg>',
+  binder: '<svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M16 6h30v36H16z"/><path d="M22 14h6M22 24h6M22 34h6"/><path d="M16 14h-4M16 24h-4M16 34h-4"/></svg>',
+};
+const items = [
+  { id: 1, name: 'Bút bi xanh Thiên Long', unit: 'cây', icon: 'pen', qty: 10, max: 20 },
+  { id: 2, name: 'Giấy note vàng 3×3', unit: 'xếp', icon: 'note', qty: 3, max: 20 },
+  { id: 3, name: 'Kẹp giấy 33 mm', unit: 'hộp', icon: 'clip', qty: 2, max: 10 },
+  { id: 4, name: 'Băng keo trong 5 cm', unit: 'cuộn', icon: 'tape', qty: 0, max: 20 },
+  { id: 5, name: 'Sổ lò xo A5', unit: 'cuốn', icon: 'book', qty: 0, max: 5 },
+  { id: 6, name: 'Bấm kim số 10', unit: 'cái', icon: 'stapler', qty: 0, max: 2 },
+  { id: 7, name: 'Bút dạ quang', unit: 'cây', icon: 'marker', qty: 0, max: 20 },
+  { id: 8, name: 'Bìa còng 7 cm', unit: 'cái', icon: 'binder', qty: 0, max: 10 },
+  { id: 9, name: 'Giấy A4 Double A', unit: 'ram', icon: 'paper', qty: 0, max: 20, adminOnly: true },
+];
+const custom = { name: 'Băng keo 2 mặt', note: 'Loại 2 cm, dán bản vẽ', qty: 2 };
+const delivered = { 1: 10, 2: 3, 3: 1 };
+let locked = false;
+
+function render() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = items.filter(i => !i.adminOnly).map(i => `
+    <article class="item ${i.qty ? 'is-picked' : ''}" data-id="${i.id}">
+      <div class="item__img">${ICONS[i.icon]}${i.id === 2 ? '<span class="tag tag--ok">Còn nhiều</span>' : ''}</div>
+      <div><div class="item__name">${i.name}</div><div class="item__unit">Đơn vị: ${i.unit} · tối đa ${i.max}</div></div>
+      <div class="step"><button data-d="-1" aria-label="Bớt">−</button><output class="num">${i.qty}</output><button data-d="1" aria-label="Thêm">+</button></div>
+      <div class="lockline"><span class="muted">Đã đăng ký</span><b class="num">${i.qty}</b></div>
+      <div class="item__hint">${i.qty >= i.max ? 'Đã tới mức tối đa' : ''}</div>
+    </article>`).join('');
+  const picked = items.filter(i => i.qty > 0);
+  const lines = document.getElementById('lines');
+  lines.innerHTML = picked.map(i => {
+    const d = delivered[i.id] ?? 0, pct = Math.round(d / i.qty * 100);
+    return `<li><span>${i.name}</span><span class="q num">${i.qty} ${i.unit}</span><button class="x" data-id="${i.id}" aria-label="Bỏ ${i.name}">×</button>
+      <span class="prog"><i><b style="width:${pct}%"></b></i><span class="num">${d}/${i.qty}${d < i.qty ? ' · còn nợ ' + (i.qty - d) : ' · đã giao'}</span></span></li>`;
+  }).join('') + `<li><div class="custom"><span class="thumb" aria-hidden="true">${ICONS.tape}</span><span><b>${custom.name}</b> <span class="tag" style="height:20px;font-size:11.5px">Ngoài danh mục</span><small>${custom.note}</small></span><span class="q num">${custom.qty}</span></div>
+      <span class="prog"><span class="tag tag--info" style="height:20px;font-size:11.5px">Chờ Hành chính xem</span></span></li>`
+    + (picked.length === 0 ? '<li class="note__empty">Chưa chọn món nào. Bấm + trên món bạn cần.</li>' : '');
+  const n = picked.length + 1;
+  document.getElementById('count').textContent = n;
+  document.getElementById('count-m').textContent = n;
+  document.getElementById('confirm-rows').innerHTML = picked.map(i => `<tr><td>${i.name}</td><td class="num">${i.qty} ${i.unit}</td></tr>`).join('') + `<tr><td>${custom.name} (ngoài danh mục)</td><td class="num">${custom.qty}</td></tr>`;
+}
+document.getElementById('grid').addEventListener('click', e => {
+  const b = e.target.closest('button[data-d]'); if (!b || locked) return;
+  const it = items.find(i => i.id == b.closest('.item').dataset.id);
+  it.qty = Math.min(it.max, Math.max(0, it.qty + Number(b.dataset.d))); render();
+});
+document.getElementById('lines').addEventListener('click', e => {
+  const b = e.target.closest('.x'); if (!b) return;
+  items.find(i => i.id == b.dataset.id).qty = 0; render();
+});
+['save', 'save-m'].forEach(id => document.getElementById(id).addEventListener('click', () => document.getElementById('confirm').showModal()));
+document.getElementById('lock').addEventListener('click', e => {
+  locked = !locked; document.body.classList.toggle('is-locked', locked);
+  e.target.textContent = locked ? 'Xem khi đang mở' : 'Xem khi đã khóa';
+  document.getElementById('note-state').textContent = locked ? 'Đã khóa · đang giao' : 'Đang mở';
+  document.getElementById('note-state').className = 'tag ' + (locked ? 'tag--ok' : 'tag--note');
+  document.getElementById('period-sub').textContent = locked ? 'Đã khóa lúc 00:00 ngày 11/11. Hành chính đang tổng hợp và giao.' : 'Nhận đăng ký đến hết ngày 10/11. Bạn có thể sửa lại bất cứ lúc nào trước đó.';
+  document.getElementById('period-days').innerHTML = locked ? '<span class="tag tag--ok">Đã giao 2/4 món</span>' : '<b class="num">4</b><span class="muted">ngày còn lại</span>';
+  document.getElementById('copy-prev').hidden = locked;
+});
+document.querySelectorAll('.theme-switch button').forEach(b => b.addEventListener('click', () => {
+  document.documentElement.dataset.theme = b.dataset.theme;
+  document.querySelectorAll('.theme-switch button').forEach(x => x.setAttribute('aria-pressed', x === b));
+}));
+render();
+</script>
+</body>
+</html>
