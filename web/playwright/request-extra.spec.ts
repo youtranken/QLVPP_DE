@@ -180,7 +180,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
         const headers = { ...route.request().headers(), ...me.headers };
         if (url.endsWith('/api/me/request/lines') && route.request().method() === 'PUT') {
           locked = true;
-          return route.fulfill({ status: 400, json: { statusCode: 400, code: 'PERIOD_LOCKED', message: 'x', next_ym: nextYm } });
+          return route.fulfill({ status: 409, json: { statusCode: 409, code: 'PERIOD_LOCKED', message: 'x', next_ym: nextYm } });
         }
         if (url.endsWith('/api/periods/current') && locked) {
           const res = await route.fetch({ headers });
@@ -230,7 +230,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       // Lần lưu đầu đi thật (tạo phiếu); lần sau giả kỳ vừa khóa
       if (url.endsWith('/api/me/request/lines') && route.request().method() === 'PUT' && ++puts > 1) {
         locked = true;
-        return route.fulfill({ status: 400, json: { statusCode: 400, code: 'PERIOD_LOCKED', message: 'x', next_ym: nextYm } });
+        return route.fulfill({ status: 409, json: { statusCode: 409, code: 'PERIOD_LOCKED', message: 'x', next_ym: nextYm } });
       }
       if (url.endsWith('/api/periods/current') && locked) {
         const res = await route.fetch({ headers });

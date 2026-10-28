@@ -108,6 +108,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
     const custom = `PW kẹp giấy P2 ${tag}`;
     psql(`INSERT INTO users (sub, full_name, email, department, status) VALUES
       ${[a, b, c].map((p) => `('${p.sub}', '${p.name}', '${p.sub}@example.test', '${dept}', 'active')`).join(',\n')}`);
+    let admin: Page | undefined;
     try {
       const period = await (await request.get('/api/periods/current', { headers: memberHeaders(a.sub) })).json();
       const month = Number(String(period.ym).slice(5));
@@ -123,7 +124,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       });
       expect(savedB.status()).toBe(200);
 
-      const admin = await adminPage(browser, info);
+      admin = await adminPage(browser, info);
       await admin.goto('/admin/summary');
       await expect(admin.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
       await expect(admin.getByRole('button', { name: /Phiếu đã đăng ký/ })).toContainText(`${before.registered + 2}/${before.headcount}`);
@@ -136,6 +137,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       await snap(admin, info, 'admin-summary');
       await adminAdjusts(admin, info, tag, a, custom);
       await admin.context().close();
+      admin = undefined;
 
       await page.reload();
       const cart = page.getByRole('complementary', { name: 'Phiếu của tôi' });
@@ -153,6 +155,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       await expect(current.getByText('Đang mở')).toBeVisible();
       await snap(page, info, 'member-a-history');
     } finally {
+      await admin?.context().close();
       deleteTestUsers(a.sub, b.sub, c.sub);
       const all: Item[] = await (await request.get('/api/admin/items', { headers: devHeaders('admin') })).json();
       const converted = all.find((i) => i.name === custom);
