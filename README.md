@@ -65,6 +65,30 @@ cd api && DATABASE_URL=postgres://<user>:<pass>@127.0.0.1:5492/<db> npm run seed
 docker compose exec api node scripts/seed-catalog.mjs                                         # prod, lần deploy đầu
 ```
 
+### Luồng tháng trên dev
+
+1. Nhân viên mở `/` (Đăng ký): chọn món, "+ Thêm món khác" cho món ngoài danh mục (bắt buộc ảnh), **Lưu phiếu**.
+   Sửa tiếp được đến 23:59 ngày hạn (mặc định ngày 10, giờ VN); sau đó kỳ khóa, phiếu mới vào tháng sau.
+2. Hành chính mở `/admin/summary` (Tổng hợp kỳ): KPI "đã đăng ký x/y", lọc dòng chờ giao, sao chép danh sách
+   chưa đăng ký để nhắc; **Điều chỉnh** mở ngăn sửa phiếu (sau hạn phải ghi lý do), **Tạo phiếu hộ** cho kỳ đang mở.
+3. `/admin/review` (Món ngoài danh mục): Chấp nhận / Thêm vào danh mục… / Từ chối… (lý do hiện cho nhân viên).
+4. Nhân viên xem lại ở **Lịch sử** (`/history`, kỳ cũ chỉ đọc, tiến độ giao theo dòng).
+
+Giả lập kỳ:
+- api e2e: đặt `CLOCK_OFFSET_MS` (chỉ nhận khi `NODE_ENV=test`, api từ chối khởi động nếu đặt ở môi trường khác);
+  cần mốc chính xác tới giây (ranh giới hạn) thì override `ClockService` trong `createTestApp`.
+- dev UI: không chỉnh đồng hồ api dev; muốn có "kỳ trước" (Lịch sử, Chép lại, Điều chỉnh sau hạn) thì seed
+  phiếu kỳ trước bằng SQL, ví dụ (đổi `2026-10`, `<sub>`, `<item_id>`):
+
+```bash
+docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <<'SQL'
+INSERT INTO periods (ym, deadline) VALUES ('2026-10-01', '2026-10-10T17:00:00Z') ON CONFLICT DO NOTHING;
+WITH r AS (INSERT INTO requests (period_ym, user_sub, created_by_sub)
+           VALUES ('2026-10-01', '<sub>', '<sub>') RETURNING id)
+INSERT INTO request_lines (request_id, item_id, qty, delivered_qty) SELECT id, '<item_id>', 4, 2 FROM r;
+SQL
+```
+
 ## Test
 
 ### api
@@ -101,13 +125,19 @@ PW_SA_PASSWORD='<mật-khẩu-dev>' npx playwright test
 ```
 
 - Tự chạy Vite ở `:5174` (`PW_PORT`); 2 project `desktop-1280` và `mobile-390`; axe `color-contrast` ở 390 px.
+- Chạy tuần tự (`workers: 1`): mọi spec ghi vào cùng DB dev (kỳ, cấu hình, danh mục), song song thì đua nhau.
 - `p1-flow.spec.ts` (smoke Plan 1) đăng nhập SA thật qua form "Dành cho IT": cần `PW_SA_PASSWORD` khớp
   `LOCAL_SA_PASSWORD_HASH` (tên tài khoản `PW_SA_USERNAME`, mặc định `sa`); thiếu thì test bị skip.
-  Mỗi lần chạy đăng nhập SA đúng 2 lần (mỗi viewport 1) — `sa-login` giới hạn 10/phút/IP, đừng chạy dồn.
+  `p2-flow.spec.ts` (smoke Plan 2: đăng ký → Tổng hợp → Điều chỉnh → Thêm vào danh mục → Lịch sử) dùng SA thật
+  khi có `PW_SA_PASSWORD`, không thì dev admin. Mỗi lần chạy đủ bộ đăng nhập SA 4 lần (mỗi smoke × mỗi viewport) —
+  `sa-login` giới hạn 10/phút/IP, đừng chạy dồn.
 - Các spec còn lại dùng dev-identity: header `x-dev-*` gắn **chỉ cho `/api/**`** qua `page.route`
   (`playwright/helpers.ts`); gắn toàn cục làm request font Google bị chặn CORS.
-- Spec ghi vào DB dev dùng chung: dữ liệu thử có tiền tố `PW`, được ngừng sau khi chạy; người nhận thử được
-  seed bằng psql trong container `postgres`; cấu hình được trả lại giá trị gốc (khóa `acquireLock`).
+- Spec ghi vào DB dev dùng chung: dữ liệu thử có tên `PW …` / sub `pw-…`, dọn trong `finally` (phiếu và người thử
+  bị xóa; món xóa được thì xóa, đã có sổ kho thì ngừng; nhóm thử bị ngừng); cấu hình được trả lại giá trị gốc.
+  Còn sót (test bị ngắt giữa chừng) thì dọn một lần — chỉ xóa dòng `PW`/`pw-` không bị dữ liệu thật tham chiếu,
+  in số dòng trước/sau:
+  `docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < web/playwright/cleanup-dev-data.sql`
 - Không mạng tải Chromium: đặt `PW_CHROMIUM_PATH=/đường/dẫn/chrome`.
 - Ảnh chụp màn `web/test-results/screens/`, báo cáo `web/playwright-report/` — không commit.
 - Fixture ảnh EXIF xoay 6: `python3 web/scripts/make-exif6-fixture.py web/src/test/fixtures/exif6.jpg` (Pillow).
