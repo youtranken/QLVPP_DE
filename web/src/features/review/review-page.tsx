@@ -8,9 +8,9 @@ import { REVIEW_FILTERS, useReviewCache, useReviewLines, type ReviewFilter, type
 import { ReviewCard } from './review-card';
 import '@/features/admin/admin.css';
 import './review.css';
+import { YM } from '@/lib/ym';
 
 // Cùng mẫu với api/src/common/ym.ts
-const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
 const MONTHS_BACK = 12;
 
 function recentMonths(openYm: string | undefined): string[] {

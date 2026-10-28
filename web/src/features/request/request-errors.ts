@@ -1,6 +1,6 @@
 import { ApiError } from '@/lib/api-client';
 import { apiErrorCode, apiErrorNumber } from '@/lib/api-error';
-import { nextYm } from './request-format';
+import { YM, shiftYm } from '@/lib/ym';
 import type { CartLine } from './use-cart';
 
 type T = (key: string, opts?: Record<string, unknown>) => string;
@@ -39,14 +39,13 @@ function lineKeyOf(e: unknown, lines: CartLine[]): string | undefined {
   return id ? lines.find((l) => l.id === id)?.key : undefined;
 }
 
-const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 export function saveFailure(e: unknown, lines: CartLine[], t: T, ym: string): SaveFailure {
   const code = apiErrorCode(e);
   if (code === 'STALE_UPDATE') return { kind: 'stale' };
   if (code === 'PERIOD_LOCKED') {
     const next = stringField(e, 'next_ym');
-    return { kind: 'locked', nextYm: next && YM.test(next) ? next : nextYm(ym) };
+    return { kind: 'locked', nextYm: next && YM.test(next) ? next : shiftYm(ym, 1) };
   }
   const key = lineKeyOf(e, lines);
   if (key) {

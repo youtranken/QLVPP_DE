@@ -15,11 +15,11 @@ import { CreateRequestDialog } from './create-request-dialog';
 import { usePeriodSummary, type PeriodSummary, type SummaryFilter } from './summary.api';
 import '@/features/admin/admin.css';
 import './summary.css';
+import { YM } from '@/lib/ym';
 
 type View = 'person' | 'item';
 const VIEWS: View[] = ['person', 'item'];
 // Cùng mẫu với api/src/common/ym.ts: tháng 01–12, giá trị khác rơi về kỳ đang mở
-const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
 function PeriodHead({ ym, openYm, summary, onMonth, onCreate }: {
   ym: string;
   openYm: string;

@@ -1,8 +1,4 @@
-function shiftYm(ym: string, delta: number): string {
-  const [y, m] = ym.split('-').map(Number);
-  const at = y * 12 + (m - 1) + delta;
-  return `${Math.floor(at / 12)}-${String((at % 12) + 1).padStart(2, '0')}`;
-}
+import { shiftYm } from '@/lib/ym';
 
 interface MonthSwitcherProps {
   value: string;

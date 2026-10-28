@@ -5,12 +5,6 @@ import type { CartLabel } from './use-cart';
 
 export const monthOf = (ym: string) => Number(ym.slice(5, 7));
 
-// Tháng 12 → tháng 1 năm sau (không ra "tháng 13")
-export function nextYm(ym: string): string {
-  const [y, m] = ym.split('-').map(Number);
-  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
-}
-
 // Hạn là mốc 00:00 ngày sau ngày cuối → lùi 1 ms để ra đúng ngày cuối theo giờ VN
 export function useRequestFormat() {
   const { t, i18n } = useTranslation();

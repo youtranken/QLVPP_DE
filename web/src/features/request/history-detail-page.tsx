@@ -5,8 +5,8 @@ import { useCurrentPeriod, useMyRequest, type LineView } from './request.api';
 import { useRequestFormat } from './request-format';
 import { LineProgress } from './line-progress';
 import './history.css';
+import { YM } from '@/lib/ym';
 
-const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
 const EFFECTIVE = ['n/a', 'accepted', 'converted'];
 
 function ReviewTag({ line }: { line: LineView }) {
