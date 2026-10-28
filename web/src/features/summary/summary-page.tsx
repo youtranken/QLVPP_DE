@@ -29,6 +29,8 @@ function PeriodHead({ ym, openYm, summary, onMonth, onCreate }: {
 }) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
+  // Tạo hộ luôn vào kỳ đang mở (api) → chỉ mời khi đang xem đúng kỳ đó
+  const canCreate = ym === openYm;
   return (
     <div className="a-toolbar sm-head">
       <MonthSwitcher
@@ -48,8 +50,7 @@ function PeriodHead({ ym, openYm, summary, onMonth, onCreate }: {
         ))}
       <span className="sp" />
       {summary && <UnregisteredCopy ym={ym} deadline={summary.deadline} count={summary.unregistered} />}
-      {/* Tạo hộ luôn vào kỳ đang mở (api) → chỉ mời khi đang xem đúng kỳ đó */}
-      {ym === openYm && (
+      {canCreate && (
         <button type="button" className="btn btn--sm btn--primary" onClick={onCreate}>
           {t('summary.create.button')}
         </button>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormField } from '@/ui/form-field';
@@ -14,6 +14,7 @@ export function AuditFilterBar({ onApply }: { onApply: (f: AuditFilters) => void
   // Đổi key để ô tìm người trống lại khi xóa lọc (ô giữ chữ đã gõ trong state riêng)
   const [pickerKey, setPickerKey] = useState(0);
   const [rangeError, setRangeError] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const set = (k: keyof AuditFilters, v: string) => setDraft((d) => ({ ...d, [k]: v }));
 
   const submit = (e: FormEvent) => {
@@ -32,7 +33,7 @@ export function AuditFilterBar({ onApply }: { onApply: (f: AuditFilters) => void
   };
 
   return (
-    <form className="a-panel audit-filters" aria-label={t('audit.filters.label')} onSubmit={submit} noValidate>
+    <form ref={formRef} className="a-panel audit-filters" aria-label={t('audit.filters.label')} onSubmit={submit} noValidate>
       <UserPicker
         key={pickerKey}
         label={t('audit.filters.actor')}
@@ -41,6 +42,7 @@ export function AuditFilterBar({ onApply }: { onApply: (f: AuditFilters) => void
         allowLocked
         resultsWhenEmpty={false}
         onChange={setActor}
+        onEnter={() => formRef.current?.requestSubmit()}
       />
       <FormField label={t('audit.filters.action')} hint={t('audit.filters.actionHint')}>
         {(p) => <input {...p} value={draft.action} onChange={(e) => set('action', e.target.value)} />}

@@ -17,6 +17,7 @@ export function UserPicker({
   allowLocked = false,
   resultsWhenEmpty = true,
   onChange,
+  onEnter,
 }: {
   label: string;
   searchLabel: string;
@@ -26,6 +27,7 @@ export function UserPicker({
   allowLocked?: boolean;
   resultsWhenEmpty?: boolean;
   onChange: (u: DirectoryUser | null) => void;
+  onEnter?: () => void;
 }) {
   const { t } = useTranslation();
   const id = useId();
@@ -61,8 +63,12 @@ export function UserPicker({
             aria-invalid={error ? true : undefined}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            // Ô tìm hay nằm trong form khác (tạo hộ, xuất lẻ): Enter không được gửi form đó
-            onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+            // Ô tìm hay nằm trong form khác (tạo hộ, xuất lẻ): Enter không tự gửi form, chỉ form nào muốn mới nhận qua onEnter
+            onKeyDown={(e) => {
+              if (e.key !== 'Enter') return;
+              e.preventDefault();
+              onEnter?.();
+            }}
           />
           {(resultsWhenEmpty || search.trim() !== '') && (
             <ul className="user-picker-list" aria-label={t('directory.picker.results')} aria-busy={users.isFetching}>

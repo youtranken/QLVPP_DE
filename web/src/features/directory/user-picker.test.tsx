@@ -17,4 +17,18 @@ describe('UserPicker', () => {
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người nhận' }), 'lan{Enter}');
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  it('Enter trong ô tìm gọi onEnter nếu có, vẫn không tự submit form', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }))));
+    const onSubmit = vi.fn((e: { preventDefault: () => void }) => e.preventDefault());
+    const onEnter = vi.fn();
+    renderWithI18n(
+      <form onSubmit={onSubmit}>
+        <UserPicker label="Người thực hiện" searchLabel="Tìm người" value={null} onChange={vi.fn()} onEnter={onEnter} />
+      </form>,
+    );
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người' }), 'lan{Enter}');
+    expect(onEnter).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });

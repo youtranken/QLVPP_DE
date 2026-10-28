@@ -125,6 +125,7 @@ export function CustomBlock({ line, base, onReviewed, onStale, ...qty }: QtyProp
   const fmt = useRequestFormat();
   const unit = fmt.unit(line.item?.unit ?? line.custom_unit);
   const changed = !qty.removed && qty.qty !== base;
+  // ReviewActions có key theo dòng: hộp review giữ trạng thái riêng, không lẫn sang dòng khác khi danh sách đổi
   return (
     <li className={cls('aj-custom', changed && 'is-changed', qty.removed && 'is-removed')}>
       <span className="aj-thumb">
@@ -142,7 +143,6 @@ export function CustomBlock({ line, base, onReviewed, onStale, ...qty }: QtyProp
           )}
         </div>
         {line.custom_note && <p className="aj-custom-note">{t('summary.adjust.customNote', { note: line.custom_note })}</p>}
-        {/* key theo dòng: hộp review giữ trạng thái riêng, không lẫn sang dòng khác khi danh sách đổi */}
         <ReviewActions key={line.id} line={{ ...line, custom_name: qty.name }} onDone={onReviewed} onStale={onStale} />
         <QtyCell {...qty} />
       </div>

@@ -76,6 +76,14 @@ describe('AuditPage', () => {
     expect([last.get('action'), last.get('from'), last.get('to')]).toEqual(['config.updated', '2026-10-01', '2026-10-28']);
   });
 
+  it('Enter trong ô tìm người thực hiện áp dụng bộ lọc đang nhập', async () => {
+    const fetchMock = stubApi();
+    await openAudit();
+    await userEvent.type(screen.getByLabelText('Hành động'), 'item.created');
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người thực hiện' }), 'Bình{Enter}');
+    await vi.waitFor(() => expect(auditUrls(fetchMock).at(-1)?.searchParams.get('action')).toBe('item.created'));
+  });
+
   it('chọn người từ danh bạ (kể cả đã khóa) → actor=<sub> chính xác; "Xóa lọc" bỏ actor', async () => {
     const fetchMock = stubApi();
     await openAudit();
