@@ -64,8 +64,9 @@ cat "$WORK/db.sql" | "${C[@]}" exec -T -e PGPASSWORD="$PGPW" postgres \
 
 if [ -d "$WORK/files" ]; then
   echo "==> [6/6] Nạp lại file upload vào volume filesdata…"
-  "${C[@]}" run --rm --no-deps -v "$WORK/files:/src:ro" --entrypoint sh api \
-    -c 'set -e; find /data/files -mindepth 1 -delete; cp -r /src/. /data/files/' \
+  # root để đọc được $WORK (0700, owner bất kỳ) không cần nới quyền bản giải nén; chown trả về node cho api ghi
+  "${C[@]}" run --rm --no-deps --user root -v "$WORK/files:/src:ro" --entrypoint sh api \
+    -c 'set -e; find /data/files -mindepth 1 -delete; cp -r /src/. /data/files/; chown -R node:node /data/files' \
     || { echo "!! Nạp lại file upload THẤT BẠI — DB đã phục hồi nhưng ảnh chưa; xử lý tay trước khi mở lại app." >&2; exit 1; }
 else
   echo "==> [6/6] (backup không có thư mục files — bỏ qua)"
