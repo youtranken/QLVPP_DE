@@ -15,6 +15,7 @@ import {
   linesEmpty,
   periodLocked,
   reasonRequired,
+  requestExists,
   staleUpdate,
   userNotFound,
 } from './request-errors';
@@ -140,6 +141,8 @@ export class RequestLinesWriter {
           now: args.now,
           expected,
         });
+    // Tạo hộ thua đua (phiếu vừa được tạo/lưu ở tx khác): báo phiếu đã có để mở Điều chỉnh
+    if (args.on_behalf && head && !head.inserted) throw requestExists(head.id);
     // Phiếu đã có mà client không gửi đúng updated_at mới nhất → đang xem bản cũ
     const stale =
       !head || (head.inserted ? expected !== undefined : head.fresh !== true);

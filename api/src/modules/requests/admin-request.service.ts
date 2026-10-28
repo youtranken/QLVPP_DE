@@ -1,4 +1,4 @@
-import { HttpException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
@@ -71,19 +71,7 @@ export class AdminRequestService {
     const owner = await this.users.findBySub(body.user_sub);
     if (!owner) throw userNotFound();
     if (owner.status !== 'active') throw userInactive();
-    try {
-      return await this.insertOnBehalf(admin, body);
-    } catch (error) {
-      // Đua với lần tạo/lưu khác: writer thấy phiếu đã có mà không có expected_updated_at
-      if (!isStale(error)) throw error;
-      const now = this.clock.now();
-      const open = await this.periods.openPeriod(this.db, now);
-      const winner = await repo.findRequest(this.db, {
-        ym: open.ym,
-        user_sub: body.user_sub,
-      });
-      throw winner ? requestExists(winner.id) : error;
-    }
+    return this.insertOnBehalf(admin, body);
   }
 
   private insertOnBehalf(
@@ -115,11 +103,4 @@ export class AdminRequestService {
       };
     });
   }
-}
-
-function isStale(error: unknown): boolean {
-  return (
-    error instanceof HttpException &&
-    (error.getResponse() as { code?: string }).code === 'STALE_UPDATE'
-  );
 }
