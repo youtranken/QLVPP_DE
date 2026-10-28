@@ -1,8 +1,17 @@
 import { sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
+// FR-50: đã dùng hết 80 % tồn sau lần nhập mua gần nhất; tồn 0 là "Hết hàng", không tính vào đây
+export const LOW_STOCK_SQL =
+  'restock_level > 0 AND stock_qty > 0 AND stock_qty <= floor(restock_level * 0.2)';
+
+export type StockState = 'ok' | 'low' | 'out' | 'untracked';
+
 export const ITEM_COLUMNS = sql.raw(
-  'id, code, name, name_en, unit, pack_note, category_id, image_file_id, admin_only, max_qty, stock_qty, min_stock, active, sort_order',
+  `id, code, name, name_en, unit, pack_note, category_id, image_file_id, admin_only, max_qty, stock_qty, restock_level,
+   CASE WHEN restock_level IS NULL THEN 'untracked' WHEN stock_qty = 0 THEN 'out'
+        WHEN ${LOW_STOCK_SQL} THEN 'low' ELSE 'ok' END AS stock_state,
+   active, sort_order`,
 );
 
 export const CATEGORY_COLUMNS = sql.raw(
@@ -21,7 +30,8 @@ export interface ItemRow extends Record<string, unknown> {
   admin_only: boolean;
   max_qty: number;
   stock_qty: number;
-  min_stock: number;
+  restock_level: number | null;
+  stock_state: StockState;
   active: boolean;
   sort_order: number;
 }

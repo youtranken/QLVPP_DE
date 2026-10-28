@@ -204,9 +204,12 @@ describe('catalog: nhóm món, món', () => {
         image_file_id: image,
         admin_only: false,
         stock_qty: 0,
-        min_stock: 5,
+        restock_level: null,
+        stock_state: 'untracked',
         active: true,
       });
+      // Mức tối thiểu nhập tay đã bỏ (FR-50): whitelist lọc khóa thừa
+      expect(item).not.toHaveProperty('min_stock');
       expect(item.max_qty).toBeGreaterThan(0);
       await member(http().get(`/api/files/${image}`)).expect(200);
       expect(await auditCount('item.created', item.id)).toBe(1);

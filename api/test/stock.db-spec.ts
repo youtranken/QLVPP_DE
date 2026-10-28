@@ -211,20 +211,72 @@ describe('kho: nhập, điều chỉnh, xuất lẻ, sổ cái (Postgres thật)
     expect((await movements(one)).items).toHaveLength(1);
   });
 
-  it('min_stock=97 → món xuất hiện ở admin/stock/low; ngừng món → biến mất', async () => {
+  it('sắp hết = đã dùng 80 % tồn sau lần nhập gần nhất; adjust không đổi mốc', async () => {
     const low = async () =>
       (
         (await admin(http().get('/api/admin/stock/low')).expect(200))
           .body as Array<{ id: string }>
       ).map((i) => i.id);
-    expect(await low()).not.toContain(itemId);
-    await admin(http().patch(`/api/admin/items/${itemId}`))
-      .send({ min_stock: 97 })
-      .expect(200);
-    expect(await low()).toContain(itemId);
-    await pool.query('UPDATE items SET active = false WHERE id = $1', [itemId]);
-    expect(await low()).not.toContain(itemId);
-    await pool.query('UPDATE items SET active = true WHERE id = $1', [itemId]);
+    const row = async (id: string) =>
+      (
+        (await admin(http().get('/api/admin/items')).expect(200))
+          .body as Array<{
+          id: string;
+          stock_qty: number;
+          restock_level: number | null;
+          stock_state: string;
+        }>
+      ).find((i) => i.id === id)!;
+    const issueTo = async (id: string, target: number) => {
+      const qty = (await qtyOf(id)).stock_qty - target;
+      await issue(id, { qty, reason: 'dùng' }).expect(201);
+    };
+    const id = await newItem();
+    expect(await row(id)).toMatchObject({
+      restock_level: null,
+      stock_state: 'untracked',
+    });
+    expect(await low()).not.toContain(id);
+
+    await stock(id, { delta: 30, reason: 'purchase' }).expect(201);
+    expect(await row(id)).toMatchObject({
+      restock_level: 30,
+      stock_state: 'ok',
+    });
+    await issueTo(id, 7);
+    expect(await low()).not.toContain(id);
+    await issueTo(id, 6);
+    expect(await low()).toContain(id);
+    expect((await row(id)).stock_state).toBe('low');
+
+    await stock(id, { delta: 20, reason: 'purchase' }).expect(201);
+    expect(await row(id)).toMatchObject({
+      stock_qty: 26,
+      restock_level: 26,
+      stock_state: 'ok',
+    });
+    expect(await low()).not.toContain(id);
+    await issueTo(id, 5);
+    expect(await low()).toContain(id);
+
+    await stock(id, { delta: 10, reason: 'adjust', note: 'kiểm kê' }).expect(
+      201,
+    );
+    expect((await row(id)).restock_level).toBe(26);
+    await stock(id, { delta: -5, reason: 'adjust', note: 'kiểm kê' }).expect(
+      201,
+    );
+    expect((await row(id)).restock_level).toBe(26);
+
+    await issueTo(id, 0);
+    expect(await row(id)).toMatchObject({ stock_qty: 0, stock_state: 'out' });
+    expect(await low()).not.toContain(id);
+
+    await stock(id, { delta: 30, reason: 'purchase' }).expect(201);
+    await issueTo(id, 6);
+    expect(await low()).toContain(id);
+    await pool.query('UPDATE items SET active = false WHERE id = $1', [id]);
+    expect(await low()).not.toContain(id);
   });
 
   it('purchase sau khi low_stock_notified_at đã set → về NULL', async () => {

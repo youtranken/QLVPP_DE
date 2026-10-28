@@ -47,7 +47,6 @@ const catalog = {
       noCategory: 'Chưa xếp nhóm',
       inactiveCategory: '{{name}} (đã ngừng)',
       maxQty: 'Tối đa mỗi tháng',
-      minStock: 'Mức tồn tối thiểu',
       sortOrder: 'Thứ tự hiển thị',
       sortOrderHint: 'Số nhỏ đứng trước.',
       adminOnly: 'Chỉ Hành chính được đặt',

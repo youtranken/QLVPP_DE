@@ -119,7 +119,6 @@ export function ItemForm({
             )}
           </FormField>
           <NumberField label={t('catalog.form.maxQty')} value={draft.max_qty} error={err('max_qty')} onChange={(v) => set('max_qty', v)} />
-          <NumberField label={t('catalog.form.minStock')} value={draft.min_stock} error={err('min_stock')} onChange={(v) => set('min_stock', v)} />
           <NumberField
             label={t('catalog.form.sortOrder')}
             hint={t('catalog.form.sortOrderHint')}

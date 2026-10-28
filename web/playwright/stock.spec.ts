@@ -19,7 +19,7 @@ async function createItem(request: APIRequestContext, name: string) {
   expect(file.status()).toBe(201);
   const item = await request.post('/api/admin/items', {
     headers,
-    data: { name, unit: 'cai', image_file_id: (await file.json()).id, min_stock: 5 },
+    data: { name, unit: 'cai', image_file_id: (await file.json()).id },
   });
   expect(item.status()).toBe(201);
   return (await item.json()).id as string;
@@ -28,7 +28,7 @@ async function createItem(request: APIRequestContext, name: string) {
 test.describe('E1-S4 Kho: nhập, điều chỉnh, xuất lẻ, sổ cái (dev-identity admin)', () => {
   asRole('admin');
 
-  test('E1-S4 nhập 10 → tồn 10; xuất lẻ 3 cho người trong danh bạ → tồn 7; sổ cái hiện 2 dòng', async ({
+  test('E1-S4 nhập 10 → tồn 10; xuất lẻ 3 cho người trong danh bạ → tồn 7; sổ cái hiện 2 dòng; còn 2 → Sắp hết, 0 → Hết hàng', async ({
     page,
     request,
   }, info) => {
@@ -40,7 +40,9 @@ test.describe('E1-S4 Kho: nhập, điều chỉnh, xuất lẻ, sổ cái (dev-i
     await expect(page.getByRole('heading', { level: 1, name: 'Kho' })).toBeVisible();
     await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
     const row = page.getByRole('row').filter({ hasText: itemName });
-    await expect(row.getByText('Sắp hết')).toBeVisible();
+    // Chưa nhập mua lần nào → không cảnh báo dù tồn 0 (FR-50)
+    await expect(stockCell(row, 0)).toBeVisible();
+    await expect(row.getByText('Hết hàng')).toHaveCount(0);
 
     await row.getByRole('button', { name: 'Nhập mua…' }).click();
     const purchase = page.getByRole('dialog', { name: `Nhập mua · ${itemName}` });
@@ -80,6 +82,24 @@ test.describe('E1-S4 Kho: nhập, điều chỉnh, xuất lẻ, sổ cái (dev-i
     await expect(ledger.getByText('Nhập mua', { exact: true })).toBeVisible();
     await expect(ledger.getByText('Đơn PW')).toBeVisible();
     await shot(page, info, 'stock-ledger', false);
+    await page.keyboard.press('Escape');
+    await expect(ledger).toBeHidden();
+
+    // Mốc = floor(20 % × 10) = 2: còn 2 → Sắp hết; còn 0 → Hết hàng
+    const issueApi = (qty: number) =>
+      request.post(`/api/admin/items/${itemId}/issue`, { headers: devHeaders('admin'), data: { qty, reason: 'PW mốc' } });
+    expect((await issueApi(5)).status()).toBe(201);
+    await page.reload();
+    await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
+    await expect(row.getByText('Sắp hết')).toBeVisible();
+    await shot(page, info, 'stock-low', false);
+    expect((await issueApi(2)).status()).toBe(201);
+    await page.reload();
+    await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
+    await expect(row.getByText('Hết hàng')).toBeVisible();
+    await expect(row.getByText('Sắp hết')).toHaveCount(0);
+    if (info.project.name === 'mobile-390') await expectNoContrastViolations(page);
+    await shot(page, info, 'stock-out', false);
 
     // Dọn: ngừng món thử để không lẫn vào trang đăng ký của nhân viên trên DB dev
     const off = await request.patch(`/api/admin/items/${itemId}`, { headers: devHeaders('admin'), data: { active: false } });

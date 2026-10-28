@@ -5,8 +5,11 @@ import type { SQL } from 'drizzle-orm';
 import { decodeCursor, encodeCursor, invalidCursor } from '../../common/cursor';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
-import { ITEM_COLUMNS } from './catalog-sql';
+import { ITEM_COLUMNS, LOW_STOCK_SQL } from './catalog-sql';
 import type { ItemRow } from './catalog-sql';
+
+// Định nghĩa ở catalog-sql để ITEM_COLUMNS dùng chung mà không vòng import; cron Plan 3 lấy từ đây
+export { LOW_STOCK_SQL };
 
 export interface Page<T> {
   items: T[];
@@ -68,7 +71,7 @@ export class StockQueryService {
   async lowStock(): Promise<ItemRow[]> {
     const result = await this.db.execute<ItemRow>(sql`
       SELECT ${ITEM_COLUMNS} FROM items
-      WHERE active AND stock_qty <= min_stock
+      WHERE active AND ${sql.raw(LOW_STOCK_SQL)}
       ORDER BY sort_order, lower(name)
     `);
     return result.rows;

@@ -1,5 +1,7 @@
 /* Kho: số tồn thấp đỏ, nút lọc dạng bật/tắt, chọn người nhận, ngăn sổ cái bên phải */
 .stock-low { color: var(--danger); }
+/* Hết hàng nặng hơn Sắp hết: nền đỏ đặc */
+.tag--out { background: var(--danger); color: #fff; }
 .filter-btn { gap: 6px; }
 .filter-btn[aria-pressed='true'] { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-ink); }
 .filter-btn .count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--danger-soft); color: var(--danger); font-size: 12px; font-weight: 700; display: inline-grid; place-items: center; }

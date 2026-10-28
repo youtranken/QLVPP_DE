@@ -28,7 +28,8 @@ const ITEM: AdminItem = {
   admin_only: false,
   max_qty: 20,
   stock_qty: 5,
-  min_stock: 0,
+  restock_level: null,
+  stock_state: 'untracked',
   active: true,
   sort_order: 0,
   missing_image: false,
@@ -78,6 +79,11 @@ describe('ItemForm', () => {
     await userEvent.type(screen.getByLabelText('Tên món'), 'Bút chì');
     expect(screen.getByRole('button', { name: 'Thêm món' })).toBeDisabled();
     expect(screen.getByText('Cần có ảnh')).toBeInTheDocument();
+  });
+
+  it('không còn ô "Mức tồn tối thiểu" (sắp hết tính theo lần nhập mua gần nhất)', () => {
+    renderForm(ITEM);
+    expect(screen.queryByLabelText('Mức tồn tối thiểu')).toBeNull();
   });
 
   it('chọn ảnh HEIC → "Chọn ảnh JPG, PNG hoặc WebP", không tải lên', async () => {
@@ -142,6 +148,7 @@ describe('ItemForm', () => {
       admin_only: true,
       max_qty: 20,
     });
+    expect(body).not.toHaveProperty('min_stock');
   });
 
   it('sửa món: hiện ảnh hiện có, PATCH chỉ gửi trường đã đổi', async () => {

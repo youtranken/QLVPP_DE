@@ -88,7 +88,7 @@ Toàn bộ theo QLTS_DE `api/src/modules/auth` (đổi tên cookie `vpp_sid`, `v
 
 Nền (copy QLTS, tên giữ nguyên): `users(sub PK, email, employee_code, full_name, department, groups jsonb, status, role, first_login_at, last_login_at, …)` `sessions`, `audit_log` (append-only bằng trigger, chặn TRUNCATE), `config(key, value jsonb)`, `processed_webhook_events`, `in_app_notifications` (có `event_id`, `UNIQUE (event_id, user_sub)`), `_migrations`. Bảng `files` **viết mới**: `files(id uuid PK, original_name, mime, size_bytes, purpose text CHECK (purpose IN ('item_image','line_image')), uploaded_by_sub, created_at)`; đường dẫn vật lý = `/data/files/<id>.<ext>` suy từ `mime`, không lưu cột `path`.
 
-Riêng VPP: `0100_vpp_catalog.sql` (nhóm, món, kho), `0101_vpp_requests.sql` (kỳ, phiếu, dòng), `0102_vpp_reports.sql` (bản chốt). PG18 có sẵn `gen_random_uuid()`; không cần `pgcrypto`/`btree_gist`.
+Riêng VPP: `0100_vpp_catalog.sql` (nhóm, món, kho), `0101_items_restock_level.sql` (mốc sắp hết), `0102_vpp_requests.sql` (kỳ, phiếu, dòng), `0103_vpp_reports.sql` (bản chốt). PG18 có sẵn `gen_random_uuid()`; không cần `pgcrypto`/`btree_gist`.
 
 ```sql
 item_categories (id uuid PK, name text NOT NULL, name_en text, sort_order int NOT NULL DEFAULT 0,
@@ -100,7 +100,8 @@ items (id uuid PK, code text UNIQUE, name text NOT NULL, name_en text,
        pack_note text,                                    -- quy cách: "hộp 12 cây"
        category_id uuid REFERENCES item_categories, image_file_id uuid REFERENCES files,
        admin_only bool NOT NULL DEFAULT false, max_qty int NOT NULL DEFAULT 20 CHECK (max_qty > 0),
-       stock_qty int NOT NULL DEFAULT 0 CHECK (stock_qty >= 0), restock_level int,                                 -- tồn ngay sau lần nhập mua gần nhất; mốc sắp hết = floor(restock_level * 0.2)
+       stock_qty int NOT NULL DEFAULT 0 CHECK (stock_qty >= 0),
+       restock_level int CHECK (restock_level IS NULL OR restock_level > 0), -- tồn ngay sau lần nhập mua gần nhất; mốc sắp hết = floor(restock_level * 0.2)
        min_stock int NOT NULL DEFAULT 0,                 -- không dùng nữa (thay bằng restock_level), bỏ ở migration sau
        low_stock_notified_at timestamptz,                 -- reset khi nhập mua
        active bool NOT NULL DEFAULT true, sort_order int NOT NULL DEFAULT 0, created_at, updated_at)
@@ -278,7 +279,7 @@ Backup hằng đêm (pg_dump + `/data/files`, mã hóa, giữ 30 ngày, fail-clo
 
 **api:** `src/main.ts`, `app.setup.ts` (đổi `trust proxy` → `TRUST_PROXY_HOPS`), `net-ipv4-first.ts`, `database/*`, `common/global-exception.filter.ts`, `common/user-throttler.guard.ts`, `common/sql.ts`, `modules/auth/*` (toàn bộ; đổi tên cookie; **sửa webhook sang v2**; `toIdentity` tính role từ groups; local-sa lockout theo (IP, user)), `modules/users/*` (bỏ permissions mượn), `modules/audit/*`, `modules/config/*` (bỏ SMTP/mail-settings ở GĐ1), `scripts/sa-hash.mjs`, `test/test-app.helper.ts`, `test/jest-*.json`. **Không** copy `modules/files` (viết mới, §8).
 
-**migrations** (đánh số lại liên tục, nội dung chỉ được sửa trước lần apply đầu vì checksum): `0001_config.sql` **viết lại** với seed VPP (§5) · `0002_users.sql` · `0003_audit_log.sql` · `0004_sessions.sql` · `0005_audit_append_only.sql` · `0006_audit_no_truncate.sql` · `0007_users_role_check.sql` · `0008` = phần `processed_webhook_events` của `0026_offboarding.sql` · `0009` = `0028_session_id_token.sql` · `0010` = `0032_sessions_local_sa.sql` · `0011` = `0050_users_department.sql` · `0012` = `0053_in_app_notifications.sql` (+ cột `event_id` nếu bản gốc thiếu) · `0013_files.sql` (mới) · `0100_vpp_catalog.sql` · `0101_vpp_requests.sql` · `0102_vpp_reports.sql`. Bỏ `0000_btree_gist`, `0015_files_inventory`.
+**migrations** (đánh số lại liên tục, nội dung chỉ được sửa trước lần apply đầu vì checksum): `0001_config.sql` **viết lại** với seed VPP (§5) · `0002_users.sql` · `0003_audit_log.sql` · `0004_sessions.sql` · `0005_audit_append_only.sql` · `0006_audit_no_truncate.sql` · `0007_users_role_check.sql` · `0008` = phần `processed_webhook_events` của `0026_offboarding.sql` · `0009` = `0028_session_id_token.sql` · `0010` = `0032_sessions_local_sa.sql` · `0011` = `0050_users_department.sql` · `0012` = `0053_in_app_notifications.sql` (+ cột `event_id` nếu bản gốc thiếu) · `0013_files.sql` (mới) · `0100_vpp_catalog.sql` · `0101_items_restock_level.sql` · `0102_vpp_requests.sql` · `0103_vpp_reports.sql`. Bỏ `0000_btree_gist`, `0015_files_inventory`.
 
 **web:** `src/lib/{api-client,session-relogin,me,i18n}.ts`, `shell/login-screen.tsx` (logic), `ui/{dialog,confirm-*,load-state,chunk-error-boundary}.tsx`, `test/*`; `web/nginx.conf`, `web/proxy-api-headers.conf`, cả hai `Dockerfile`, `docker-compose.yml` (bỏ redis/worker), `.env.example` (+ `TRUST_PROXY_HOPS`, `WEBHOOK_TS_SKEW_SEC`), `ops/backup/*`, `update-qlts.sh → update-vpp.sh`, `.gitignore`.
 

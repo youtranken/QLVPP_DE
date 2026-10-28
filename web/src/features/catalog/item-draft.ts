@@ -9,7 +9,6 @@ export interface ItemDraft {
   image_file_id: string | null;
   admin_only: boolean;
   max_qty: string;
-  min_stock: string;
   sort_order: string;
 }
 
@@ -22,7 +21,6 @@ export const ITEM_FIELDS: (keyof ItemDraft)[] = [
   'image_file_id',
   'admin_only',
   'max_qty',
-  'min_stock',
   'sort_order',
 ];
 
@@ -44,7 +42,6 @@ export function draftFrom(item: AdminItem | null, defaultMaxQty: number): ItemDr
     image_file_id: item?.image_file_id ?? null,
     admin_only: item?.admin_only ?? false,
     max_qty: String(item?.max_qty ?? defaultMaxQty),
-    min_stock: String(item?.min_stock ?? 0),
     sort_order: String(item?.sort_order ?? 0),
   };
 }
@@ -63,7 +60,6 @@ function toPayload(d: ItemDraft): ItemPayload {
     image_file_id: d.image_file_id,
     admin_only: d.admin_only,
     max_qty: intOrNull(d.max_qty) as number,
-    min_stock: intOrNull(d.min_stock) as number,
     sort_order: intOrNull(d.sort_order) as number,
   };
 }

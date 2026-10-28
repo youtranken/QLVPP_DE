@@ -50,7 +50,6 @@ const catalog: Messages<typeof vi> = {
       noCategory: 'Uncategorized',
       inactiveCategory: '{{name}} (retired)',
       maxQty: 'Max per month',
-      minStock: 'Minimum stock',
       sortOrder: 'Display order',
       sortOrderHint: 'Lower numbers come first.',
       adminOnly: 'Only Admin can order',

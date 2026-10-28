@@ -65,6 +65,9 @@ describe('0100 catalog — ràng buộc item_categories / items / stock_movement
     it('max_qty = 0 → 23514', async () => {
       expect(await insertItem('max_qty|$2', [0])).toBe('23514');
     });
+    it('restock_level = 0 → 23514 (mốc là tồn sau nhập mua, luôn > 0)', async () => {
+      expect(await insertItem('restock_level|$2', [0])).toBe('23514');
+    });
     it("unit = 'thung' → 23514", async () => {
       expect(
         await code("INSERT INTO items (name, unit) VALUES ('x', 'thung')"),
@@ -92,15 +95,15 @@ describe('0100 catalog — ràng buộc item_categories / items / stock_movement
         ),
       ).toBe('23503');
     });
-    it('mặc định: max_qty 20, stock_qty 0, active true, admin_only false', async () => {
+    it('mặc định: max_qty 20, stock_qty 0, restock_level NULL, active true, admin_only false', async () => {
       const { rows } = await pool.query(
-        'SELECT max_qty, stock_qty, min_stock, active, admin_only, low_stock_notified_at FROM items WHERE id = $1',
+        'SELECT max_qty, stock_qty, restock_level, active, admin_only, low_stock_notified_at FROM items WHERE id = $1',
         [itemId],
       );
       expect(rows[0]).toEqual({
         max_qty: 20,
         stock_qty: 0,
-        min_stock: 0,
+        restock_level: null,
         active: true,
         admin_only: false,
         low_stock_notified_at: null,

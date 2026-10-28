@@ -49,10 +49,13 @@ export class StockService {
     }
     if (dto.reason === 'adjust' && !dto.note) throw reasonRequired();
     return this.db.transaction(async (tx) => {
-      // Nhập mua đã bổ sung tồn nên cho phép cảnh báo "sắp hết" gửi lại lần sau
+      // Nhập mua đặt lại mốc sắp hết (FR-50) và cho phép cảnh báo gửi lại; điều chỉnh giữ mốc
+      const purchase = dto.reason === 'purchase';
       const updated = await tx.execute<{ stock_qty: number }>(sql`
         UPDATE items SET stock_qty = stock_qty + ${dto.delta},
-          low_stock_notified_at = CASE WHEN ${dto.reason === 'purchase'} THEN NULL
+          restock_level = CASE WHEN ${purchase} THEN stock_qty + ${dto.delta}
+                               ELSE restock_level END,
+          low_stock_notified_at = CASE WHEN ${purchase} THEN NULL
                                        ELSE low_stock_notified_at END,
           updated_at = now()
         WHERE id = ${itemId} AND stock_qty + ${dto.delta} >= 0

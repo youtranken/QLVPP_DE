@@ -92,7 +92,6 @@ class ItemFields {
   @IsOptional() @IsUUID() image_file_id?: string | null;
   @Present() @IsBoolean() admin_only?: boolean;
   @Present() @IsInt() @Min(1) @Max(999) max_qty?: number;
-  @Present() @IsInt() @Min(0) @Max(1_000_000) min_stock?: number;
   @Present() @SortOrder() sort_order?: number;
 }
 

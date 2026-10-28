@@ -9,6 +9,8 @@ export interface Category {
   active: boolean;
 }
 
+export type StockState = 'ok' | 'low' | 'out' | 'untracked';
+
 export interface AdminItem {
   id: string;
   code: string | null;
@@ -21,7 +23,9 @@ export interface AdminItem {
   admin_only: boolean;
   max_qty: number;
   stock_qty: number;
-  min_stock: number;
+  // Tồn ngay sau lần nhập mua gần nhất; null = chưa nhập lần nào (FR-50)
+  restock_level: number | null;
+  stock_state: StockState;
   active: boolean;
   sort_order: number;
   missing_image: boolean;
@@ -38,7 +42,6 @@ export type ItemPayload = Partial<
     | 'image_file_id'
     | 'admin_only'
     | 'max_qty'
-    | 'min_stock'
     | 'sort_order'
     | 'active'
   >

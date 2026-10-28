@@ -4,7 +4,7 @@
 **AC:** unit: 10/11 23:59:59 VN → kỳ 11; 11/11 00:00:00 → kỳ 12; `deadlineOf` với lastDay 28 tháng 2; `daysLeft` ngày 6 → 5, ngày 10 → 1; test với mốc UTC lệch ngày. E2E với `CLOCK_OFFSET_MS`: 15/11 10:00 → `{ym: 2026-12-01, is_open: true, days_left: 26, previous: {ym: 2026-11-01, delivering: true}}`; `CLOCK_OFFSET_MS` ngoài `NODE_ENV=test` → app từ chối khởi động. Kỳ tạo lần đầu chụp `deadline` từ config.
 
 ## E2-S2 Bảng periods, requests, request_lines
-Migration `0101_vpp_requests.sql`.
+Migration `0102_vpp_requests.sql`.
 **AC:** UNIQUE (period, user); CHECK qty/delivered/cancelled; CHECK cặp (`item_id`, `review_status`) từ chối `item_id NULL + 'n/a'` và dòng ngoài DM không ảnh và `item_id NOT NULL + 'pending'`; partial unique cho phép dòng `converted` trùng món với dòng `n/a`; `ref_line_id` RESTRICT: xóa dòng đã có movement bị từ chối; CASCADE dòng khi xóa phiếu (chỉ test).
 
 ## E2-S3 Phiếu của tôi: đọc và lưu
