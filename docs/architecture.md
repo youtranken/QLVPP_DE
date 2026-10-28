@@ -7,7 +7,7 @@
 | AD | Quyết định | Lý do |
 |---|---|---|
 | AD-1 | Hai gói npm riêng `api/` + `web/`, Docker Compose, không monorepo pnpm | Giống QLTS_DE; một kiểu vận hành cho cả cụm |
-| AD-2 | api NestJS 11 + `pg` + drizzle-orm (schemaless), migration **SQL thuần** có checksum | Đã chạy prod ở QLTS; không ORM nặng; schema drift bị chặn lúc boot |
+| AD-2 | api NestJS 12 + `pg` + drizzle-orm (schemaless), migration **SQL thuần** có checksum | Đã chạy prod ở QLTS; không ORM nặng; schema drift bị chặn lúc boot |
 | AD-3 | Xác thực kiểu **BFF**: api là OIDC client, phiên server-side, cookie httpOnly; trình duyệt không cầm token | Chuẩn QLTS; an toàn với SPA |
 | AD-4 | Copy-and-trim module auth/users/audit/config từ QLTS_DE; module `files` viết lại (QLTS chỉ cho admin tải đính kèm) | Code đã kiểm chứng, có test; giảm rủi ro SSO |
 | AD-5 | Không Redis/BullMQ/worker ở GĐ1 | Không có job nền nặng; thông báo ghi thẳng vào bảng trong cùng transaction; email GĐ2 dùng `@nestjs/schedule` + bảng outbox |
@@ -22,7 +22,7 @@
 | Tầng | Chọn |
 |---|---|
 | Runtime | Node 24 (`node:24.22.1-alpine`), `.nvmrc` = 24 |
-| API | NestJS 11, `pg` 8, drizzle-orm (schemaless), class-validator, nestjs-pino, @nestjs/throttler, @nestjs/schedule, jose 6, openid-client 6, multer (upload); exceljs thêm ở Plan 3 (báo cáo) |
+| API | NestJS 12, `pg` 8, drizzle-orm (schemaless), class-validator, nestjs-pino, @nestjs/throttler, @nestjs/schedule, jose 6, openid-client 6, multer (upload); exceljs thêm ở Plan 3 (báo cáo) |
 | Web | React 19, Vite 8, TypeScript 6, TanStack Query 5, react-router 7, react-i18next, Radix Dialog, vitest + Testing Library, oxlint, Playwright (smoke) |
 | DB | PostgreSQL 18 (`postgres:18-alpine`) |
 | Serve | nginx 1.30 trong container `web` (tĩnh + proxy `/api`) |

@@ -1,6 +1,6 @@
 # VPP Công trình — Văn phòng phẩm khối Công trình (PMH)
 
-Monorepo: `api/` (NestJS 11, Node 24) + `web/` (React 19 / Vite 8, serve qua nginx) + PostgreSQL 18,
+Monorepo: `api/` (NestJS 12, Node 24) + `web/` (React 19 / Vite 8, serve qua nginx) + PostgreSQL 18,
 chạy bằng Docker Compose. Đăng nhập bằng PMH ID (OIDC); tài khoản SA local chỉ để IT xử lý sự cố.
 Cùng stack và quy ước vận hành với QLTS_DE.
 

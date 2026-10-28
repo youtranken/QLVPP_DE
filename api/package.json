@@ -16,28 +16,28 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:db": "jest --config ./test/jest-db.json --runInBand",
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules --disable-warning=ExperimentalWarning\" jest",
+    "test:watch": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules --disable-warning=ExperimentalWarning\" jest --watch",
+    "test:cov": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules --disable-warning=ExperimentalWarning\" jest --coverage",
+    "test:debug": "node --experimental-vm-modules --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules --disable-warning=ExperimentalWarning\" jest --config ./test/jest-e2e.json",
+    "test:db": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules --disable-warning=ExperimentalWarning\" jest --config ./test/jest-db.json --runInBand",
     "sa:hash": "node scripts/sa-hash.mjs",
     "seed:catalog": "node scripts/seed-catalog.mjs"
   },
   "dependencies": {
-    "@nestjs/common": "^11.2.7",
-    "@nestjs/core": "^11.2.7",
-    "@nestjs/platform-express": "^11.2.7",
+    "@nestjs/common": "^12.3.2",
+    "@nestjs/core": "^12.3.2",
+    "@nestjs/platform-express": "^12.3.2",
     "@nestjs/schedule": "^12.0.2",
-    "@nestjs/throttler": "^6.5.0",
+    "@nestjs/throttler": "^6.7.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
     "drizzle-orm": "^0.45.2",
     "jose": "^6.2.3",
     "multer": "^2.5.0",
-    "nestjs-pino": "^4.6.1",
+    "nestjs-pino": "^5.3.1",
     "openid-client": "^6.8.4",
     "pg": "^8.22.0",
     "pino": "^10.3.1",
@@ -51,7 +51,7 @@
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.0.1",
+    "@nestjs/testing": "^12.3.2",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
@@ -103,9 +103,6 @@
         }
       ]
     },
-    "transformIgnorePatterns": [
-      "node_modules/(?!(jose|openid-client|oauth4webapi|@nestjs/schedule)/)"
-    ],
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
