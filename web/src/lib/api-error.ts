@@ -14,3 +14,8 @@ export function apiErrorFields(e: unknown): string[] {
   const fields = bodyOf(e)?.fields;
   return Array.isArray(fields) ? fields.filter((f): f is string => typeof f === 'string') : [];
 }
+
+export function apiErrorNumber(e: unknown, key: string): number | undefined {
+  const value = bodyOf(e)?.[key];
+  return typeof value === 'number' ? value : undefined;
+}

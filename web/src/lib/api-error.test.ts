@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ApiError } from '@/lib/api-client';
-import { apiErrorCode, apiErrorFields } from '@/lib/api-error';
+import { apiErrorCode, apiErrorFields, apiErrorNumber } from '@/lib/api-error';
 
 describe('apiErrorCode / apiErrorFields', () => {
   it('đọc code từ body ApiError {code, message}', () => {
@@ -20,5 +20,12 @@ describe('apiErrorCode / apiErrorFields', () => {
     ]);
     expect(apiErrorFields(new ApiError(400, { code: 'VALIDATION' }))).toEqual([]);
     expect(apiErrorFields(new Error('x'))).toEqual([]);
+  });
+
+  it('apiErrorNumber đọc số kèm lỗi (STOCK_INSUFFICIENT {available: 2}); thiếu/không phải số → undefined', () => {
+    const e = new ApiError(409, { code: 'STOCK_INSUFFICIENT', available: 2 });
+    expect(apiErrorNumber(e, 'available')).toBe(2);
+    expect(apiErrorNumber(new ApiError(409, { available: '2' }), 'available')).toBeUndefined();
+    expect(apiErrorNumber(new Error('x'), 'available')).toBeUndefined();
   });
 });
