@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { apiErrorCode, apiErrorNumber } from '@/lib/api-error';
+import { apiErrorCode, apiErrorNumber, apiErrorString } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
 import { useAdminItems } from '@/features/catalog/catalog.api';
@@ -11,7 +11,7 @@ import { UserPicker } from '@/features/directory/user-picker';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import { AddLinePicker } from './add-line-picker';
 import { LineRow } from './adjust-lines';
-import { SUMMARY_KEY, createOnBehalf, findRequestOf } from './summary.api';
+import { SUMMARY_KEY, createOnBehalf } from './summary.api';
 
 interface Line {
   item_id: string;
@@ -22,7 +22,7 @@ interface Errors {
   user?: string;
   form?: string;
   lines?: Record<string, string>;
-  exists?: boolean;
+  exists?: { requestId?: string };
 }
 
 const USER_CODES = new Set(['USER_NOT_FOUND', 'USER_INACTIVE']);
@@ -44,7 +44,6 @@ export function CreateRequestDialog({ ym, onClose, onCreated, onOpenExisting }: 
   const [lines, setLines] = useState<Line[]>([]);
   const [errors, setErrors] = useState<Errors>({});
   const [saving, setSaving] = useState(false);
-  const [finding, setFinding] = useState(false);
   const byId = useMemo(() => new Map((items.data ?? []).map((i) => [i.id, i])), [items.data]);
   const taken = new Set(lines.map((l) => l.item_id));
   const candidates = (items.data ?? []).filter((i) => i.active && !i.admin_only && !taken.has(i.id));
@@ -66,7 +65,7 @@ export function CreateRequestDialog({ ym, onClose, onCreated, onOpenExisting }: 
     } catch (err) {
       const code = apiErrorCode(err) ?? '';
       const index = apiErrorNumber(err, 'line_index');
-      if (code === 'REQUEST_EXISTS') setErrors({ exists: true });
+      if (code === 'REQUEST_EXISTS') setErrors({ exists: { requestId: apiErrorString(err, 'request_id') } });
       else if (USER_CODES.has(code)) setErrors({ user: t(`summary.create.errors.${code}`) });
       else if (index !== undefined && lines[index]) {
         const key = LINE_CODES.has(code) ? code : 'OTHER';
@@ -77,20 +76,6 @@ export function CreateRequestDialog({ ym, onClose, onCreated, onOpenExisting }: 
       }
     } finally {
       setSaving(false);
-    }
-  };
-
-  const openExisting = async () => {
-    if (!user) return;
-    setFinding(true);
-    try {
-      const id = await findRequestOf(ym, user);
-      if (id) return onOpenExisting(id);
-      setErrors({ form: t('summary.create.existsMissing') });
-    } catch {
-      setErrors({ form: t('summary.create.existsMissing') });
-    } finally {
-      setFinding(false);
     }
   };
 
@@ -119,9 +104,11 @@ export function CreateRequestDialog({ ym, onClose, onCreated, onOpenExisting }: 
           {errors.exists && (
             <div role="alert" className="alert alert--warn aj-exists">
               <span>{t('summary.create.exists')}</span>
-              <button type="button" className="btn btn--sm" disabled={finding} onClick={() => void openExisting()}>
-                {t('summary.create.openAdjust')}
-              </button>
+              {errors.exists.requestId && (
+                <button type="button" className="btn btn--sm" onClick={() => onOpenExisting(errors.exists!.requestId!)}>
+                  {t('summary.create.openAdjust')}
+                </button>
+              )}
             </div>
           )}
           {errors.form && (

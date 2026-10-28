@@ -258,13 +258,14 @@ describe('admin/requests: Hành chính sửa phiếu, tạo hộ', () => {
       expect(await owners(sub())).toEqual([]);
     });
 
-    it('đã có phiếu kỳ đang mở → 409 REQUEST_EXISTS', async () => {
-      await seed([{ item_id: item, qty: 2 }]);
+    it('đã có phiếu kỳ đang mở → 409 REQUEST_EXISTS kèm request_id để mở Điều chỉnh', async () => {
+      const existing = await seed([{ item_id: item, qty: 2 }]);
       const res = await adminPost({
         user_sub: A,
         lines: [{ item_id: item, qty: 1 }],
       }).expect(409);
       expect(res.body.code).toBe('REQUEST_EXISTS');
+      expect(res.body.request_id).toBe(existing.id);
     });
 
     it('hai lần tạo hộ song song cùng người → một 201, lần kia 409 REQUEST_EXISTS (không STALE_UPDATE)', async () => {
@@ -279,6 +280,9 @@ describe('admin/requests: Hành chính sửa phiếu, tạo hộ', () => {
           .map((r) => (r.status === 201 ? '201' : `${r.status} ${r.body.code}`))
           .sort();
         expect(outcomes).toEqual(['201', '409 REQUEST_EXISTS']);
+        const created = results.find((r) => r.status === 201)!;
+        const lost = results.find((r) => r.status === 409)!;
+        expect(lost.body.request_id).toBe(view(created).id);
       }
     });
 

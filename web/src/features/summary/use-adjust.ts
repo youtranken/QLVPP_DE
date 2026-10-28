@@ -58,6 +58,15 @@ function failureOf(e: unknown, keys: string[], t: T): AdjustErrors {
   return { form: t(`summary.adjust.errors.${known ? code : 'UNKNOWN'}`) };
 }
 
+const FACTS = ['qty', 'delivered_qty', 'cancelled_qty', 'review_status', 'item_id'] as const;
+
+function othersChanged(before: LineView[], after: LineView[], skip: string): boolean {
+  const others = (ls: LineView[]) => ls.filter((l) => l.id !== skip);
+  const prev = new Map(others(before).map((l) => [l.id, l]));
+  const next = others(after);
+  return next.length !== prev.size || next.some((l) => !prev.has(l.id) || FACTS.some((k) => prev.get(l.id)![k] !== l[k]));
+}
+
 let addedSeq = 0;
 
 export function useAdjust(requestId: string, onSaved: () => void) {
@@ -114,6 +123,15 @@ export function useAdjust(requestId: string, onSaved: () => void) {
       },
     );
 
+  // Review thua đua: nếu nhân viên đã đổi dòng khác thì nháp không còn đúng chỗ → xử như STALE
+  const reviewStale = async (lineId: string) => {
+    const before = view?.lines ?? [];
+    const { data } = await query.refetch();
+    if (!data || !othersChanged(before, data.lines, lineId)) return;
+    resetDraft();
+    setNotice(t('summary.adjust.stale'));
+  };
+
   const save = async () => {
     if (!view || !changed || !reasonOk || saving) return;
     const kept = view.lines.filter((l) => !removed.includes(l.id));
@@ -168,6 +186,7 @@ export function useAdjust(requestId: string, onSaved: () => void) {
     dirty: changed || reason.trim() !== '',
     reviewed,
     reload: () => void query.refetch(),
+    reviewStale: (lineId: string) => void reviewStale(lineId),
     save,
   };
 }

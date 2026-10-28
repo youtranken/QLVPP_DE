@@ -126,12 +126,3 @@ export const createOnBehalf = (body: CreateOnBehalfBody, csrfToken: string | nul
     body: JSON.stringify(body),
     csrfToken,
   });
-
-// REQUEST_EXISTS không kèm id phiếu → tìm trong danh sách theo người của kỳ đó
-export async function findRequestOf(ym: string, user: { sub: string; email: string | null; fullName: string | null }) {
-  const params = new URLSearchParams({ by: 'person', filter: 'all', limit: String(PERSON_PAGE) });
-  const q = user.email ?? user.fullName;
-  if (q) params.set('q', q);
-  const page = await apiFetch<{ items: PersonRow[] }>(`${base(ym)}/requests?${params}`);
-  return page.items.find((r) => r.user_sub === user.sub)?.request_id ?? null;
-}

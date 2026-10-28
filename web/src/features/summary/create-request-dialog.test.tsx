@@ -17,10 +17,6 @@ function stub(post: () => Response) {
     if (url.startsWith('/api/admin/users?')) return Promise.resolve(jsonResponse(200, { items: USERS, next_cursor: null }));
     if (url === '/api/admin/items') return Promise.resolve(jsonResponse(200, ADMIN_ITEMS));
     if (url === '/api/admin/requests') return Promise.resolve(post());
-    if (url.startsWith('/api/admin/periods/2026-11/requests?')) {
-      const row = { request_id: 'r-lan', user_sub: 'u-lan', full_name: 'Võ Thị Lan' };
-      return Promise.resolve(jsonResponse(200, { items: [{ ...row, request_id: 'r-other', user_sub: 'u-x' }, row], next_cursor: null }));
-    }
     return Promise.resolve(jsonResponse(404, {}));
   });
   vi.stubGlobal('fetch', fetchMock);
@@ -71,14 +67,16 @@ describe('CreateRequestDialog — tạo phiếu hộ', () => {
   });
 
   it('REQUEST_EXISTS → "Người này đã có phiếu — mở Điều chỉnh" + nút mở ngăn của đúng người', async () => {
-    stub(() => jsonResponse(409, { code: 'REQUEST_EXISTS' }));
+    const fetchMock = stub(() => jsonResponse(409, { code: 'REQUEST_EXISTS', request_id: 'r-lan' }));
     const { dialog, onOpenExisting, onCreated } = await renderDialog();
     await fill(dialog);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Tạo phiếu' }));
     expect(await within(dialog).findByRole('alert')).toHaveTextContent('Người này đã có phiếu — mở Điều chỉnh');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Mở Điều chỉnh' }));
-    await waitFor(() => expect(onOpenExisting).toHaveBeenCalledWith('r-lan'));
+    expect(onOpenExisting).toHaveBeenCalledWith('r-lan');
     expect(onCreated).not.toHaveBeenCalled();
+    // id có sẵn trong lỗi: không phải tìm lại qua danh sách người
+    expect(fetchMock.mock.calls.some((c) => String(c[0]).includes('/requests?'))).toBe(false);
   });
 
   it('USER_INACTIVE → lỗi tại ô người đăng ký', async () => {
@@ -87,5 +85,14 @@ describe('CreateRequestDialog — tạo phiếu hộ', () => {
     await fill(dialog);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Tạo phiếu' }));
     expect(await within(dialog).findByText('Người này không còn hoạt động — chọn người khác.')).toBeInTheDocument();
+  });
+
+  it('Enter trong ô tìm món không tạo phiếu sớm', async () => {
+    const fetchMock = stub(() => jsonResponse(201, { request: { id: 'r-new' } }));
+    const { dialog, onCreated } = await renderDialog();
+    await fill(dialog);
+    await userEvent.type(within(dialog).getByRole('searchbox', { name: 'Tìm món trong danh mục' }), 'zzz{Enter}');
+    expect(fetchMock.mock.calls.some((c) => c[0] === '/api/admin/requests')).toBe(false);
+    expect(onCreated).not.toHaveBeenCalled();
   });
 });

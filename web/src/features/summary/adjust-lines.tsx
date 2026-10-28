@@ -18,6 +18,7 @@ export interface QtyProps {
   cancelled?: number;
   error?: string;
   removed?: boolean;
+  readOnly?: boolean;
   onQty: (n: number) => void;
   onRemove?: () => void;
   onRestore?: () => void;
@@ -25,7 +26,7 @@ export interface QtyProps {
 
 const cls = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
-function QtyCell({ name, qty, min, max, delivered = 0, cancelled = 0, error, removed, onQty, onRemove, onRestore }: QtyProps) {
+function QtyCell({ name, qty, min, max, delivered = 0, cancelled = 0, error, removed, readOnly, onQty, onRemove, onRestore }: QtyProps) {
   const { t } = useTranslation();
   const id = useId();
   const notes = [
@@ -36,8 +37,8 @@ function QtyCell({ name, qty, min, max, delivered = 0, cancelled = 0, error, rem
   return (
     <div className="aj-qty-cell">
       <div className="aj-qty">
-        {removed ? (
-          <span className="num aj-removed-qty">{qty}</span>
+        {removed || readOnly ? (
+          <span className={removed ? 'num aj-removed-qty' : 'num aj-readonly-qty'}>{qty}</span>
         ) : (
           <Stepper
             className="stepper--sm"

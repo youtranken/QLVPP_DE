@@ -65,6 +65,8 @@ function Lines({ a, view }: { a: Adjust; view: AdminRequestView }) {
     cancelled: l.cancelled_qty,
     error: a.errors.lines?.[l.id] || undefined,
     removed: a.removed.includes(l.id),
+    // Dòng bị từ chối không mua/giao nên sửa số lượng vô nghĩa
+    readOnly: l.review_status === 'rejected',
     onQty: (n: number) => a.edit.setQty(l.id, n),
     onRemove: canRemove(l) ? () => a.edit.remove(l.id) : undefined,
     onRestore: () => a.edit.restore(l.id),
@@ -72,8 +74,9 @@ function Lines({ a, view }: { a: Adjust; view: AdminRequestView }) {
   // Dòng từng là món ngoài DM (kể cả đã duyệt) vẫn nằm ở khối viền đứt để thấy kết quả review
   const catalog = view.lines.filter((l) => l.review_status === 'n/a');
   const custom = view.lines.filter((l) => l.review_status !== 'n/a');
+  // Mọi dòng còn giữ có món (kể cả converted) chặn trùng như api (DUPLICATE_ITEM)
   const taken = new Set([
-    ...catalog.filter((l) => !a.removed.includes(l.id)).map((l) => l.item_id),
+    ...view.lines.filter((l) => l.item_id && !a.removed.includes(l.id)).map((l) => l.item_id),
     ...a.added.map((x) => x.item_id),
   ]);
   const candidates = (items.data ?? []).filter((i) => i.active && !taken.has(i.id));
@@ -119,7 +122,7 @@ function Lines({ a, view }: { a: Adjust; view: AdminRequestView }) {
       {custom.length > 0 && (
         <ul className="aj-lines aj-customs" aria-label={t('summary.adjust.custom')}>
           {custom.map((l) => (
-            <CustomBlock key={l.id} {...qtyProps(l)} line={l} base={l.qty} onReviewed={a.reviewed} onStale={a.reload} />
+            <CustomBlock key={l.id} {...qtyProps(l)} line={l} base={l.qty} onReviewed={a.reviewed} onStale={() => a.reviewStale(l.id)} />
           ))}
         </ul>
       )}

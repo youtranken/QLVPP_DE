@@ -127,7 +127,6 @@ const summary = {
       saving: 'Đang tạo…',
       exists: 'Người này đã có phiếu — mở Điều chỉnh',
       openAdjust: 'Mở Điều chỉnh',
-      existsMissing: 'Chưa tìm thấy phiếu của người này — tải lại trang rồi thử lại.',
       errors: {
         USER_NOT_FOUND: 'Không tìm thấy người này trong danh bạ — chọn người khác.',
         USER_INACTIVE: 'Người này không còn hoạt động — chọn người khác.',

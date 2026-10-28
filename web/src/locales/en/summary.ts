@@ -130,7 +130,6 @@ const summary: Messages<typeof vi> = {
       saving: 'Creating…',
       exists: 'This person already has a request — open Adjust',
       openAdjust: 'Open Adjust',
-      existsMissing: 'Could not find this person’s request — reload the page and try again.',
       errors: {
         USER_NOT_FOUND: 'This person is not in the directory — choose someone else.',
         USER_INACTIVE: 'This person is no longer active — choose someone else.',

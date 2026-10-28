@@ -66,10 +66,12 @@ export const duplicateItem = (ref: LineRef | Record<string, never> = {}) =>
     ...ref,
   });
 
-export const requestExists = () =>
+// Kèm id để Hành chính mở thẳng ngăn Điều chỉnh phiếu đó
+export const requestExists = (requestId: string) =>
   new ConflictException({
     code: 'REQUEST_EXISTS',
     message: 'Người này đã có phiếu kỳ đang mở — sửa phiếu đó.',
+    request_id: requestId,
   });
 
 export const userInactive = () =>

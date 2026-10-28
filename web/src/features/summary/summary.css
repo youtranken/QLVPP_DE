@@ -87,3 +87,4 @@
   .aj-status { grid-column: 1 / -1; justify-self: start; }
   .aj-status:empty { display: none; }
 }
+.aj-readonly-qty { width: 100px; text-align: center; font-weight: 600; }

@@ -10,16 +10,21 @@ import type { AdminRequestView } from './summary.api';
 
 type Put = (body: Record<string, unknown>) => Response;
 
-function stub({ views = [adminRequest()], put = () => jsonResponse(200, { request: adminRequest() }) }: {
+function stub({
+  views = [adminRequest()],
+  put = () => jsonResponse(200, { request: adminRequest() }),
+  review = () => jsonResponse(200, reviewResult('accepted', { id: 'l-tape' })),
+}: {
   views?: AdminRequestView[];
   put?: Put;
+  review?: () => Response;
 } = {}) {
   let loads = 0;
   const fetchMock = vi.fn((url: string, init?: RequestInit) => {
     if (url === '/api/admin/requests/r-1') return Promise.resolve(jsonResponse(200, views[Math.min(loads++, views.length - 1)]));
     if (url === '/api/admin/requests/r-1/lines') return Promise.resolve(put(JSON.parse(String(init?.body))));
     if (url === '/api/admin/items') return Promise.resolve(jsonResponse(200, ADMIN_ITEMS));
-    if (url === '/api/admin/lines/l-tape/review') return Promise.resolve(jsonResponse(200, reviewResult('accepted', { id: 'l-tape' })));
+    if (url === '/api/admin/lines/l-tape/review') return Promise.resolve(review());
     return Promise.resolve(jsonResponse(200, []));
   });
   vi.stubGlobal('fetch', fetchMock);
@@ -180,5 +185,73 @@ describe('AdjustDrawer — ngăn điều chỉnh phiếu', () => {
         expected_updated_at: '2026-10-05T07:20:00.000Z',
       }),
     );
+  });
+
+  it('Enter trong ô tìm món không lưu ngăn: khớp món → thêm món đầu, không khớp → không làm gì', async () => {
+    const fetchMock = stub({ views: [adminRequest({ is_open: true })] });
+    const { drawer, onClose } = await renderDrawer();
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Số lượng Giấy note vàng' }));
+    await userEvent.click(within(drawer).getByRole('button', { name: '+ Thêm món vào phiếu' }));
+    const search = within(drawer).getByRole('searchbox', { name: 'Tìm món trong danh mục' });
+    await userEvent.type(search, 'zzz{Enter}');
+    await userEvent.clear(search);
+    await userEvent.type(search, 'a4{Enter}');
+    expect(row(drawer, 'Giấy A4 Double A')).toHaveTextContent('Mới thêm');
+    expect(fetchMock.mock.calls.some((c) => c[0] === '/api/admin/requests/r-1/lines')).toBe(false);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('món đã có trên dòng converted không được gợi ý lại trong "Thêm món" (tránh DUPLICATE_ITEM)', async () => {
+    const view = adminRequest();
+    view.lines[2] = { ...view.lines[2], item_id: 'i-clip', review_status: 'converted', custom_name: null, custom_unit: null };
+    view.lines[2].item = { name: 'Kẹp giấy 33 mm', name_en: null, unit: 'hop', pack_note: null, image_file_id: null, active: true, admin_only: false };
+    stub({ views: [view] });
+    const { drawer } = await renderDrawer();
+    await userEvent.click(within(drawer).getByRole('button', { name: '+ Thêm món vào phiếu' }));
+    await userEvent.type(within(drawer).getByRole('searchbox', { name: 'Tìm món trong danh mục' }), 'giấy');
+    const results = within(drawer).getByRole('list', { name: 'Món tìm thấy' });
+    expect(within(results).getByRole('button', { name: /Giấy A4 Double A/ })).toBeInTheDocument();
+    expect(within(results).queryByRole('button', { name: /Kẹp giấy 33 mm/ })).toBeNull();
+  });
+
+  it('dòng ngoài DM đã bị từ chối → số lượng chỉ đọc, không có stepper', async () => {
+    const view = adminRequest();
+    view.lines[2] = { ...view.lines[2], review_status: 'rejected', review_note: 'Kho còn' };
+    stub({ views: [view] });
+    const { drawer } = await renderDrawer();
+    const tape = row(drawer, 'Băng keo 2 mặt');
+    expect(within(tape).getByText('Từ chối: Kho còn')).toBeInTheDocument();
+    expect(within(tape).queryByRole('spinbutton')).toBeNull();
+    expect(within(tape).queryByRole('button', { name: /Số lượng/ })).toBeNull();
+  });
+
+  it('review báo dòng đã xử lý → tải lại; dòng khác cũng đổi → bỏ nháp, báo STALE, giữ lý do', async () => {
+    const fresh = adminRequest({ updated_at: '2026-10-06T01:00:00.000Z' });
+    fresh.lines[1] = { ...fresh.lines[1], qty: 4 };
+    fresh.lines[2] = { ...fresh.lines[2], review_status: 'accepted' };
+    stub({ views: [adminRequest(), fresh], review: () => jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' }) });
+    const { drawer } = await renderDrawer();
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Số lượng Bút bi xanh' }));
+    await userEvent.type(reasonBox(drawer), 'An báo nhầm');
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Chấp nhận — Băng keo 2 mặt' }));
+    await userEvent.click(within(screen.getByRole('dialog', { name: /Chấp nhận “Băng keo 2 mặt”/ })).getByRole('button', { name: 'Chấp nhận' }));
+    expect(await within(drawer).findByText('Nhân viên vừa sửa phiếu này — dữ liệu đã được tải lại')).toBeInTheDocument();
+    await waitFor(() => expect(within(row(drawer, 'Giấy note vàng')).getByRole('spinbutton')).toHaveValue(4));
+    expect(within(row(drawer, 'Bút bi xanh')).getByRole('spinbutton')).toHaveValue(10);
+    expect(reasonBox(drawer)).toHaveValue('An báo nhầm');
+  });
+
+  it('review báo dòng đã xử lý nhưng chỉ dòng đó đổi → giữ nháp, không báo STALE', async () => {
+    const fresh = adminRequest({ updated_at: '2026-10-06T01:00:00.000Z' });
+    fresh.lines[2] = { ...fresh.lines[2], review_status: 'accepted' };
+    const fetchMock = stub({ views: [adminRequest(), fresh], review: () => jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' }) });
+    const { drawer } = await renderDrawer();
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Số lượng Bút bi xanh' }));
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Chấp nhận — Băng keo 2 mặt' }));
+    await userEvent.click(within(screen.getByRole('dialog', { name: /Chấp nhận “Băng keo 2 mặt”/ })).getByRole('button', { name: 'Chấp nhận' }));
+    await waitFor(() => expect(fetchMock.mock.calls.filter((c) => c[0] === '/api/admin/requests/r-1')).toHaveLength(2));
+    await waitFor(() => expect(within(drawer).getByText('Đã chấp nhận')).toBeInTheDocument());
+    expect(within(row(drawer, 'Bút bi xanh')).getByRole('spinbutton')).toHaveValue(11);
+    expect(within(drawer).queryByText('Nhân viên vừa sửa phiếu này — dữ liệu đã được tải lại')).toBeNull();
   });
 });

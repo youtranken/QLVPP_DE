@@ -21,6 +21,10 @@ export function AddLinePicker({ items, onPick }: { items: AdminItem[]; onPick: (
     );
   }
 
+  const pick = (i: AdminItem) => {
+    onPick(i);
+    setQ('');
+  };
   const found = items.filter((i) => !q.trim() || matchesSearch(`${i.name} ${i.name_en ?? ''}`, q)).slice(0, LIMIT);
   return (
     <div className="aj-picker">
@@ -34,6 +38,12 @@ export function AddLinePicker({ items, onPick }: { items: AdminItem[]; onPick: (
           placeholder={t('summary.picker.search')}
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          // Nằm trong form của ngăn/hộp: Enter chọn món đầu thay vì lưu sớm
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            if (q.trim() && found[0]) pick(found[0]);
+          }}
         />
         <button type="button" className="btn btn--sm" onClick={() => setOpen(false)}>
           {t('summary.picker.done')}
@@ -45,10 +55,7 @@ export function AddLinePicker({ items, onPick }: { items: AdminItem[]; onPick: (
           <li key={i.id}>
             <button
               type="button"
-              onClick={() => {
-                onPick(i);
-                setQ('');
-              }}
+              onClick={() => pick(i)}
             >
               <span>{t('summary.picker.option', { name: fmt.name(i), unit: fmt.unit(i.unit) })}</span>
               {i.admin_only && <span className="tag">{t('summary.adjust.adminOnly')}</span>}

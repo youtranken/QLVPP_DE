@@ -75,8 +75,14 @@ export class AdminRequestService {
       return await this.insertOnBehalf(admin, body);
     } catch (error) {
       // Đua với lần tạo/lưu khác: writer thấy phiếu đã có mà không có expected_updated_at
-      if (isStale(error)) throw requestExists();
-      throw error;
+      if (!isStale(error)) throw error;
+      const now = this.clock.now();
+      const open = await this.periods.openPeriod(this.db, now);
+      const winner = await repo.findRequest(this.db, {
+        ym: open.ym,
+        user_sub: body.user_sub,
+      });
+      throw winner ? requestExists(winner.id) : error;
     }
   }
 
@@ -91,7 +97,7 @@ export class AdminRequestService {
         ym: open.ym,
         user_sub: body.user_sub,
       });
-      if (existing) throw requestExists();
+      if (existing) throw requestExists(existing.id);
       const { request_id } = await this.writer.save(tx, {
         request: null,
         owner_sub: body.user_sub,
