@@ -18,7 +18,15 @@ function setup(lastAt: Date | null) {
 }
 
 describe('DirectorySyncScheduler — nhịp 60′ theo marker directory_sync_last_at', () => {
-  it('chưa có marker → bootstrap gọi sync và ghi marker', async () => {
+  beforeEach(() => {
+    jest.useFakeTimers({ now: new Date('2026-10-28T08:00:00Z') });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('chưa có marker → bootstrap gọi sync, thành công thì ghi marker', async () => {
     const { scheduler, config, directorySync } = setup(null);
     scheduler.onApplicationBootstrap();
     await scheduler.onModuleDestroy();
@@ -42,9 +50,23 @@ describe('DirectorySyncScheduler — nhịp 60′ theo marker directory_sync_las
     expect(directorySync.sync).toHaveBeenCalledTimes(1);
   });
 
-  it('sync lỗi → nuốt lỗi (log), không ném ra ngoài', async () => {
-    const { scheduler, directorySync } = setup(null);
+  it('sync lỗi → không ghi marker, không ném ra ngoài', async () => {
+    const { scheduler, config, directorySync } = setup(null);
     directorySync.sync.mockRejectedValue(new Error('PMH ID sập'));
     await expect(scheduler.runIfDue()).resolves.toBeUndefined();
+    expect(config.setDirectorySyncLastAt).not.toHaveBeenCalled();
+  });
+
+  it('sync lỗi → trong 5′ không dội PMH ID, tick 5′ sau thử lại và ghi marker khi thành công', async () => {
+    const { scheduler, config, directorySync } = setup(null);
+    directorySync.sync.mockRejectedValueOnce(new Error('PMH ID sập'));
+    await scheduler.tick();
+    jest.setSystemTime(Date.now() + 1 * MINUTE);
+    await scheduler.tick();
+    expect(directorySync.sync).toHaveBeenCalledTimes(1);
+    jest.setSystemTime(Date.now() + 4 * MINUTE);
+    await scheduler.tick();
+    expect(directorySync.sync).toHaveBeenCalledTimes(2);
+    expect(config.setDirectorySyncLastAt).toHaveBeenCalledTimes(1);
   });
 });

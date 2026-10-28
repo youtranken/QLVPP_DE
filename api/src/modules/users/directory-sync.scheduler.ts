@@ -10,6 +10,8 @@ import { DirectorySyncService } from './directory-sync.service';
 
 export const DIRECTORY_SYNC_INTERVAL_MS = 60 * 60_000;
 const CHECK_TICK_MS = 5 * 60_000;
+// Ngắn hơn tick một chút: timer lệch vài ms vẫn để tick kế tiếp thử lại
+const RETRY_AFTER_FAILURE_MS = CHECK_TICK_MS - 30_000;
 
 // Nhịp lấy từ marker trong DB, không từ đồng hồ process: cài mới sync ngay (authorized_groups rỗng = gate mở),
 // restart/deploy liên tục không đẩy lùi lần sync kế.
@@ -19,6 +21,7 @@ export class DirectorySyncScheduler
 {
   private readonly logger = new Logger(DirectorySyncScheduler.name);
   private running: Promise<void> | null = null;
+  private lastFailureAt: number | null = null;
 
   constructor(
     private readonly config: SystemConfigService,
@@ -47,13 +50,20 @@ export class DirectorySyncScheduler
       const lastAt = await this.config.getDirectorySyncLastAt();
       if (lastAt && Date.now() - lastAt.getTime() < DIRECTORY_SYNC_INTERVAL_MS)
         return;
-      // Ghi mốc trước khi chạy: lỗi thì đợi chu kỳ sau thay vì dội PMH ID mỗi tick
-      await this.config.setDirectorySyncLastAt(new Date());
+      if (
+        this.lastFailureAt !== null &&
+        Date.now() - this.lastFailureAt < RETRY_AFTER_FAILURE_MS
+      )
+        return;
       const r = await this.directorySync.sync('system');
+      // Marker chỉ ghi khi thành công: lỗi lúc cài mới mà đẩy mốc thì gate group mở suốt 60′
+      await this.config.setDirectorySyncLastAt(new Date());
+      this.lastFailureAt = null;
       this.logger.log(
         `sync định kỳ: total=${r.total} +${r.created} ~${r.updated}`,
       );
     } catch (e) {
+      this.lastFailureAt = Date.now();
       this.logger.error(`sync định kỳ lỗi: ${(e as Error).message}`);
     }
   }

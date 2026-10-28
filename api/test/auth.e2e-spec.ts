@@ -9,6 +9,7 @@ import {
 } from '../src/database/migration-runner';
 import { SessionService } from '../src/modules/auth/session.service';
 import { DirectorySyncScheduler } from '../src/modules/users/directory-sync.scheduler';
+import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
 import { UsersService } from '../src/modules/users/users.service';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
@@ -24,7 +25,15 @@ describe('auth e2e', () => {
     pool = new Pool({ connectionString: url });
     await runMigrations(pool, resolveMigrationsDir(), silent);
     process.env.AUTH_DEV_MODE = 'true';
-    app = (await createTestApp()) as INestApplication<App>;
+    // Directory giả: sync thành công mà không cần PMH ID thật
+    const directory = {
+      fetchUsers: () => Promise.resolve([]),
+      fetchGroups: () => Promise.resolve([]),
+    };
+    app = (await createTestApp(
+      [],
+      [{ token: DIRECTORY_CLIENT, useValue: directory }],
+    )) as INestApplication<App>;
   });
 
   afterAll(async () => {
@@ -108,12 +117,17 @@ describe('auth e2e', () => {
     }
   });
 
-  it('boot ghi marker directory_sync_last_at (sync lần đầu không chờ 60′)', async () => {
-    await app.get(DirectorySyncScheduler).tick();
-    const { rows } = await pool.query(
-      "SELECT 1 FROM config WHERE key = 'directory_sync_last_at'",
+  it('chưa có marker → tick sync ngay và ghi marker sau khi thành công', async () => {
+    const scheduler = app.get(DirectorySyncScheduler);
+    await scheduler.tick();
+    await pool.query("DELETE FROM config WHERE key = 'directory_sync_last_at'");
+    const before = Date.now();
+    await scheduler.tick();
+    const { rows } = await pool.query<{ value: string }>(
+      "SELECT value FROM config WHERE key = 'directory_sync_last_at'",
     );
     expect(rows).toHaveLength(1);
+    expect(Number(rows[0].value)).toBeGreaterThanOrEqual(before);
   });
 
   it('POST admin/directory/sync với member → 403', async () => {
