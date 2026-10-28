@@ -279,6 +279,35 @@ describe('kho: nhập, điều chỉnh, xuất lẻ, sổ cái (Postgres thật)
     expect(await low()).not.toContain(id);
   });
 
+  it('tồn đầu kỳ qua adjust: đặt mốc khi chưa có; giữ mốc đã có; adjust âm không đặt mốc', async () => {
+    const level = async (id: string) =>
+      (
+        await pool.query<{ restock_level: number | null }>(
+          'SELECT restock_level FROM items WHERE id = $1',
+          [id],
+        )
+      ).rows[0].restock_level;
+    const id = await newItem();
+    await stock(id, { delta: 10, reason: 'adjust', note: 'tồn đầu' }).expect(
+      201,
+    );
+    expect(await level(id)).toBe(10);
+    await stock(id, { delta: -3, reason: 'adjust', note: 'kiểm kê' }).expect(
+      201,
+    );
+    expect(await level(id)).toBe(10);
+    await stock(id, { delta: 5, reason: 'purchase' }).expect(201);
+    expect(await level(id)).toBe(12);
+
+    const stocked = await newItem(50);
+    await stock(stocked, {
+      delta: -20,
+      reason: 'adjust',
+      note: 'hao hụt',
+    }).expect(201);
+    expect(await level(stocked)).toBeNull();
+  });
+
   it('purchase sau khi low_stock_notified_at đã set → về NULL', async () => {
     await pool.query(
       'UPDATE items SET low_stock_notified_at = now() WHERE id = $1',

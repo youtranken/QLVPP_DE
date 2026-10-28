@@ -102,7 +102,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 - FR-44 **Hoàn tác đợt giao**: admin hoàn tác một đợt giao cụ thể (toàn bộ hoặc một phần) kèm lý do bắt buộc; kho cộng lại (biến động `return`), `delivered_qty` giảm, ghi nhật ký; người nhận thấy tiến độ cập nhật.
 
 ### 6.6 Kho (Admin)
-- FR-50 Tồn hiện tại từng món. **Sắp hết** khi đã dùng hết 80 % lượng tồn tính từ lần nhập mua gần nhất: mốc = ⌊20 % × tồn ngay sau lần nhập đó⌋, sắp hết khi `0 < tồn ≤ mốc`; tồn = 0 là **Hết hàng**. Món chưa từng nhập mua không cảnh báo. Mỗi lần nhập mua tính lại mốc (ví dụ tồn 0 → nhập 30: mốc 6; còn 6 thì sắp hết; nhập thêm 20 lúc còn 6 → tồn 26, mốc 5). Không còn ô "mức tồn tối thiểu" nhập tay.
+- FR-50 Tồn hiện tại từng món. **Sắp hết** khi đã dùng hết 80 % lượng tồn tính từ lần nhập mua gần nhất: mốc = ⌊20 % × tồn ngay sau lần nhập đó⌋ (hoặc lần điều chỉnh tồn đầu kỳ khi món chưa có mốc), sắp hết khi `0 < tồn ≤ mốc`; tồn = 0 là **Hết hàng**. Món chưa từng nhập mua không cảnh báo. Mỗi lần nhập mua tính lại mốc (ví dụ tồn 0 → nhập 30: mốc 6; còn 6 thì sắp hết; nhập thêm 20 lúc còn 6 → tồn 26, mốc 5). Không còn ô "mức tồn tối thiểu" nhập tay.
 - FR-51 Nhập mua: +số lượng, ghi chú (đơn hàng/nguồn).
 - FR-52 Điều chỉnh kiểm kê: ±số lượng, lý do bắt buộc (dùng cho tồn đầu kỳ).
 - FR-53 Sổ cái: mọi biến động (nhập, giao, xuất lẻ, hoàn tác, điều chỉnh) với người thực hiện, lý do và thời điểm; xem theo món.

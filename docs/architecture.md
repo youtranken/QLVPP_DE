@@ -101,7 +101,7 @@ items (id uuid PK, code text UNIQUE, name text NOT NULL, name_en text,
        category_id uuid REFERENCES item_categories, image_file_id uuid REFERENCES files,
        admin_only bool NOT NULL DEFAULT false, max_qty int NOT NULL DEFAULT 20 CHECK (max_qty > 0),
        stock_qty int NOT NULL DEFAULT 0 CHECK (stock_qty >= 0),
-       restock_level int CHECK (restock_level IS NULL OR restock_level > 0), -- tồn ngay sau lần nhập mua gần nhất; mốc sắp hết = floor(restock_level * 0.2)
+       restock_level int CHECK (restock_level IS NULL OR restock_level > 0), -- tồn ngay sau lần nhập mua gần nhất, hoặc sau lần adjust dương đầu tiên khi còn NULL (tồn đầu kỳ); mốc sắp hết = floor(restock_level * 0.2)
        min_stock int NOT NULL DEFAULT 0,                 -- không dùng nữa (thay bằng restock_level), bỏ ở migration sau
        low_stock_notified_at timestamptz,                 -- reset khi nhập mua
        active bool NOT NULL DEFAULT true, sort_order int NOT NULL DEFAULT 0, created_at, updated_at)
