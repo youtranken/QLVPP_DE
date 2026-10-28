@@ -1,0 +1,39 @@
+const auth = {
+  auth: {
+    brand: 'Phú Mỹ Hưng · Phòng Công trình',
+    brandBadge: 'PMH',
+    heroTitle: 'Đăng ký văn phòng phẩm hằng tháng',
+    heroBody: 'Chọn món, ghi số lượng, lưu phiếu. Hành chính tổng hợp, mua và giao tận bàn.',
+    heading: 'Đăng nhập',
+    primary: 'Đăng nhập bằng tài khoản công ty (PMH ID)',
+    primaryHint: 'Bạn sẽ được đưa sang trang đăng nhập chung của công ty rồi quay lại đây.',
+    hintToggle: 'Gợi ý tài khoản (tùy chọn)',
+    hintLabel: 'Email công ty',
+    hintPlaceholder: 'ten.ho@pmh.com.vn',
+    hintSubmit: 'Tiếp tục với PMH ID',
+    itToggle: 'Dành cho IT',
+    saUsername: 'Tên tài khoản',
+    saPassword: 'Mật khẩu',
+    saSubmit: 'Đăng nhập',
+    saInvalid: 'Sai tên tài khoản hoặc mật khẩu.',
+    saLocked: 'Tạm khóa do nhập sai nhiều lần — thử lại sau 15 phút.',
+    saError: 'Không đăng nhập được — thử lại sau ít phút.',
+    loginFailed: 'Đăng nhập chưa thành công — bấm đăng nhập để thử lại.',
+    sessionExpired: 'Phiên đã hết hạn — đăng nhập lại để tiếp tục.',
+    ssoRedirecting: 'Đang chuyển sang PMH ID…',
+    ssoManual: 'Không tự chuyển? Bấm vào đây.',
+    logout: 'Đăng xuất',
+    logoutFailed: 'Chưa đăng xuất được — thử lại.',
+    forbidden: {
+      title: 'Tài khoản chưa được cấp quyền dùng VPP Công trình',
+      body: 'Bạn đã đăng nhập PMH ID bằng {{email}}, nhưng tài khoản chưa thuộc nhóm được dùng ứng dụng này. Liên hệ {{admin_contact}} để được thêm vào nhóm.',
+      bodyNoEmail:
+        'Bạn đã đăng nhập PMH ID, nhưng tài khoản chưa thuộc nhóm được dùng ứng dụng này. Liên hệ {{admin_contact}} để được thêm vào nhóm.',
+      defaultContact: 'Hành chính phòng Công trình',
+      switchAccount: 'Đăng nhập bằng tài khoản khác',
+      portal: 'Về trang PMH ID',
+    },
+  },
+};
+
+export default auth;

@@ -1,0 +1,46 @@
+const common = {
+  app: {
+    title: 'VPP Công trình',
+    adminTitle: 'Quản lý VPP',
+    logoLetter: 'V',
+  },
+  common: {
+    loading: 'Đang tải…',
+    checkingSession: 'Đang kiểm tra phiên đăng nhập…',
+    systemError: 'Không kết nối được máy chủ — thử lại sau ít phút.',
+    retry: 'Thử lại',
+    reload: 'Tải lại trang',
+    loadError: 'Không tải được dữ liệu — thử lại.',
+    chunkError: 'Ứng dụng vừa được cập nhật — tải lại trang để dùng bản mới.',
+    notFoundTitle: 'Không tìm thấy trang',
+    notFoundHint: 'Trang bạn tìm không tồn tại hoặc đã được chuyển.',
+    backHome: 'Về trang chủ',
+    noPermission: 'Trang này dành cho Hành chính.',
+    skipToContent: 'Tới nội dung',
+    confirmTitle: 'Xác nhận',
+    confirmOk: 'Đồng ý',
+    cancel: 'Hủy',
+    close: 'Đóng',
+    discardTitle: 'Bỏ thay đổi chưa lưu?',
+    discardBody: 'Những gì bạn vừa nhập sẽ mất.',
+    discardOk: 'Bỏ thay đổi',
+    discardKeep: 'Tiếp tục sửa',
+    selectAll: 'Chọn tất cả',
+    selectRow: 'Chọn dòng',
+    comingSoon: 'Sắp có',
+    comingSoonHint: 'Màn này đang được làm và sẽ có trong bản cập nhật tới.',
+    empty: '—',
+    roles: {
+      member: 'Nhân viên',
+      admin: 'Hành chính',
+      sa: 'Quản trị kỹ thuật',
+    },
+    languages: {
+      label: 'Ngôn ngữ',
+      vi: 'Tiếng Việt',
+      en: 'English',
+    },
+  },
+};
+
+export default common;
