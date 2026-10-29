@@ -37,6 +37,20 @@ describe('POST admin/lines/:id/deliver: giao một dòng', () => {
     ]);
   });
 
+  it('giờ của movement giao = giờ ClockService (như line_deliveries, last_delivered_at), không phải now() DB', async () => {
+    const { line } = await lockedLine(10);
+    freeze('2026-11-12T03:00:00Z');
+    await deliver(line.id, { qty: 3, expected_delivered_qty: 0 }).expect(200);
+    const { rows } = await f.pool().query<{ m: Date; d: Date }>(
+      `SELECT m.created_at AS m, d.created_at AS d FROM stock_movements m
+       JOIN line_deliveries d ON d.movement_id = m.id WHERE m.ref_line_id = $1`,
+      [line.id],
+    );
+    expect(rows.map((r) => [r.m.toISOString(), r.d.toISOString()])).toEqual([
+      ['2026-11-12T03:00:00.000Z', '2026-11-12T03:00:00.000Z'],
+    ]);
+  });
+
   it('gửi lại cùng body → 409 STALE_UPDATE {delivered_qty: 3}, tồn vẫn 7', async () => {
     const { item, line } = await lockedLine(10);
     const body = { qty: 3, expected_delivered_qty: 0 };

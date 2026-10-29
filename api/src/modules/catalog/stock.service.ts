@@ -26,6 +26,8 @@ interface MovementInput {
   note: string | null;
   recipientSub?: string | null;
   refLineId?: string | null;
+  // Giao hàng ghi theo ClockService như line_deliveries; biến động tay giữ now() của DB
+  at?: Date;
 }
 
 export interface LowStockClaim extends Record<string, unknown> {
@@ -141,6 +143,7 @@ export class StockService {
       reason: 'delivery',
       note: null,
       refLineId: take.lineId,
+      at: take.now,
     });
     return { stock_qty: updated.stock_qty, movement_id: movement.id };
   }
@@ -169,9 +172,9 @@ export class StockService {
     m: MovementInput,
   ): Promise<{ id: string }> {
     const { rows } = await tx.execute<{ id: string }>(sql`
-      INSERT INTO stock_movements (item_id, delta, reason, note, recipient_sub, ref_line_id, actor_sub)
+      INSERT INTO stock_movements (item_id, delta, reason, note, recipient_sub, ref_line_id, actor_sub, created_at)
       VALUES (${m.itemId}, ${m.delta}, ${m.reason}, ${m.note}, ${m.recipientSub ?? null},
-              ${m.refLineId ?? null}, ${actor})
+              ${m.refLineId ?? null}, ${actor}, coalesce(${m.at?.toISOString() ?? null}::timestamptz, now()))
       RETURNING id
     `);
     return rows[0];
