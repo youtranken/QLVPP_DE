@@ -270,7 +270,7 @@ describe('me/request/copy-previous và me/requests (lịch sử)', () => {
       expect(other).toEqual({ items: [], next_cursor: null });
     });
 
-    it('phân trang keyset: limit=1 → 2 trang; cursor hỏng → 400 VALIDATION; limit > 200 → 400', async () => {
+    it('phân trang keyset: limit=1 → 2 trang; cursor hỏng → 400 VALIDATION; limit 0 và 201 → 400, 200 → 200', async () => {
       const x = await newItem();
       await seed(A, '2026-09', [{ item_id: x, qty: 1 }]);
       await seed(A, '2026-10', [{ item_id: x, qty: 1 }]);
@@ -285,7 +285,16 @@ describe('me/request/copy-previous và me/requests (lịch sử)', () => {
 
       const bad = await history('?cursor=abc').expect(400);
       expect(bad.body).toMatchObject({ code: 'VALIDATION' });
-      await history('?limit=201').expect(400);
+      for (const limit of [0, 201]) {
+        const res = await history(`?limit=${limit}`).expect(400);
+        expect(res.body).toMatchObject({
+          code: 'VALIDATION',
+          fields: ['limit'],
+        });
+      }
+      const all = (await history('?limit=200').expect(200)).body as HistoryPage;
+      expect(all.items).toHaveLength(2);
+      expect(all.next_cursor).toBeNull();
     });
   });
 

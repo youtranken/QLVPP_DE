@@ -67,6 +67,31 @@ describe('GET admin/audit', () => {
     expect(ids).toEqual(['4', '3', '2', '1', '0']);
   });
 
+  it('limit mặc định 50: 51 bản ghi → trang 1 có 50 + next_cursor, trang 2 có 1; limit 0 → 400, 200 → 51 bản ghi một trang', async () => {
+    const many = `e2e.audit_limit.${Date.now()}`;
+    const writer = app.get(AuditWriterService);
+    for (let i = 0; i < 51; i += 1) {
+      await writer.append({ actor: 'system', action: many, objectId: `${i}` });
+    }
+    const get = (query: object) =>
+      request(app.getHttpServer())
+        .get('/api/admin/audit')
+        .query({ action: many, ...query })
+        .set('x-dev-user-sub', 'dev-admin')
+        .set('x-dev-role', 'admin');
+    const p1 = (await get({}).expect(200)).body;
+    expect(p1.items).toHaveLength(50);
+    expect(p1.next_cursor).toEqual(expect.any(String));
+    const p2 = (await get({ cursor: p1.next_cursor }).expect(200)).body;
+    expect(p2.items).toHaveLength(1);
+    expect(p2.next_cursor).toBeNull();
+    const zero = await get({ limit: 0 }).expect(400);
+    expect(zero.body).toMatchObject({ code: 'VALIDATION', fields: ['limit'] });
+    const full = (await get({ limit: 200 }).expect(200)).body;
+    expect(full.items).toHaveLength(51);
+    expect(full.next_cursor).toBeNull();
+  });
+
   it('cursor hỏng → 400', async () => {
     await request(app.getHttpServer())
       .get('/api/admin/audit')
