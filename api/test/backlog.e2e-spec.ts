@@ -169,14 +169,14 @@ describe('GET admin/backlog, GET admin/lines/:id/deliveries', () => {
     expect((await groupOf('item', item))?.remaining_qty).toBe(2);
   });
 
-  it('dòng ngoài DM gom theo lower(trim(tên)) + ĐVT; khác ĐVT là nhóm khác; stock_qty null', async () => {
+  it('dòng ngoài DM gom theo lower(trim(tên)) + lower(trim(ĐVT)) (CUSTOM_ITEM_KEY); khác ĐVT là nhóm khác; stock_qty null', async () => {
     const name = `Bìa ${f.SUFFIX}`;
     const x = await seedLine('2026-10', A, {
       ...customCols(`  ${name.toUpperCase()} `, 'cai'),
       qty: 2,
     });
     const y = await seedLine('2026-11', B, {
-      ...customCols(name, 'cai'),
+      ...customCols(name, ' Cai '),
       qty: 1,
     });
     const z = await seedLine('2026-11', A, {
@@ -275,6 +275,20 @@ describe('GET admin/backlog, GET admin/lines/:id/deliveries', () => {
         created_at: '2026-11-12T04:00:00.000Z',
       }),
     ]);
+  });
+
+  it('lịch sử: 4 đợt cùng mili-giây giữ thứ tự chèn (1, 2, 3, 4)', async () => {
+    const item = await stockItem(20);
+    const { line } = await seedLine('2026-10', A, { item_id: item, qty: 10 });
+    let delivered = 0;
+    for (const qty of [1, 2, 3, 4]) {
+      await deliver(line, { qty, expected_delivered_qty: delivered }).expect(
+        200,
+      );
+      delivered += qty;
+    }
+    const body = (await deliveries(line).expect(200)).body as DeliveriesView;
+    expect(body.items.map((d) => d.qty)).toEqual([1, 2, 3, 4]);
   });
 
   it('dòng accepted giao 1 → lịch sử có đợt movement_id null; dòng chưa giao → items []', async () => {

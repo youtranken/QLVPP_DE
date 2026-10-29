@@ -140,6 +140,26 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
     });
   });
 
+  it('reason 501 ký tự (NOTE_MAX + 1) → 400 VALIDATION {fields: [reason]}, dòng không đổi, không chuông; 500 ký tự → 200, cancel_note dài 500', async () => {
+    const { line } = await lockedLine(10);
+    const over = await cancel(line.id, {
+      reason: 'x'.repeat(501),
+      expected_delivered_qty: 0,
+    }).expect(400);
+    expect(over.body).toMatchObject({ code: 'VALIDATION', fields: ['reason'] });
+    expect(await f.lineRow(line.id)).toMatchObject({
+      cancelled_qty: 0,
+      cancel_note: null,
+    });
+    expect(await lineCancelled()).toEqual([]);
+    const ok = await cancel(line.id, {
+      reason: 'x'.repeat(500),
+      expected_delivered_qty: 0,
+    }).expect(200);
+    expect((ok.body as CancelResult).line.cancel_note).toHaveLength(500);
+    expect(await lineCancelled()).toHaveLength(1);
+  });
+
   it('gọi lại khi phần còn lại 0 → 200 cancelled_now 0, không chuông thứ hai, không audit thứ hai, updated_at phiếu không đổi', async () => {
     const { request, line } = await lockedLine(10);
     const body = { reason: 'Người đã nghỉ', expected_delivered_qty: 0 };

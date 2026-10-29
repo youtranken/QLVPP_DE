@@ -9,7 +9,11 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { CatalogService } from '../catalog/catalog.service';
 import type { PeriodRequestsQuery, SummaryFilter } from './summary.dto';
-import { EFFECTIVE_LINE, UNDELIVERED_LINE } from './line-predicates';
+import {
+  CUSTOM_ITEM_KEY,
+  EFFECTIVE_LINE,
+  UNDELIVERED_LINE,
+} from './line-predicates';
 
 export interface PersonRow {
   request_id: string;
@@ -103,7 +107,7 @@ export class SummaryListsService {
     };
   }
 
-  // Không phân trang: số món một kỳ nhỏ; dòng ngoài DM gộp theo (tên, ĐVT) chuẩn hóa — mảng jsonb để không ký tự phân cách nào gây trùng khóa
+  // Không phân trang: số món một kỳ nhỏ; dòng ngoài DM gộp theo CUSTOM_ITEM_KEY
   async byItem(ym: string): Promise<{ items: ItemSummaryRow[] }> {
     const { rows } = await this.db.execute<
       Omit<ItemSummaryRow, 'name' | 'unit'> & {
@@ -111,8 +115,7 @@ export class SummaryListsService {
         custom_unit: string | null;
       }
     >(sql`
-      SELECT coalesce(l.item_id::text,
-               'custom:' || jsonb_build_array(lower(trim(l.custom_name)), lower(trim(l.custom_unit)))::text) AS key,
+      SELECT coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) AS key,
              l.item_id, min(trim(l.custom_name)) AS custom_name,
              min(trim(l.custom_unit)) AS custom_unit, sum(l.qty)::int AS requested_qty,
              count(DISTINCT r.user_sub)::int AS people

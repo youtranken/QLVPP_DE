@@ -3,7 +3,11 @@ import { sql } from 'drizzle-orm';
 import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
-import { REMAINING_QTY, UNDELIVERED_LINE } from '../requests/line-predicates';
+import {
+  CUSTOM_ITEM_KEY,
+  REMAINING_QTY,
+  UNDELIVERED_LINE,
+} from '../requests/line-predicates';
 import { lineNotFound } from '../requests/request-errors';
 import type {
   BacklogBy,
@@ -56,8 +60,7 @@ export class BacklogService {
              coalesce(i.unit, trim(l.custom_unit)) AS unit,
              l.qty, l.delivered_qty, l.cancelled_qty, ${REMAINING_QTY} AS remaining_qty,
              i.stock_qty,
-             coalesce(l.item_id::text,
-               'custom:' || jsonb_build_array(lower(trim(l.custom_name)), l.custom_unit)::text) AS item_key
+             coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) AS item_key
       FROM request_lines l
       JOIN requests r ON r.id = l.request_id
       JOIN periods p ON p.ym = r.period_ym
@@ -85,7 +88,7 @@ export class BacklogService {
       SELECT d.id, d.qty, d.movement_id, d.actor_sub, u.full_name AS actor_name, d.created_at
       FROM line_deliveries d LEFT JOIN users u ON u.sub = d.actor_sub
       WHERE d.line_id = ${lineId}
-      ORDER BY d.created_at, d.id
+      ORDER BY d.created_at, d.seq
     `);
     return {
       line: head.rows[0],
