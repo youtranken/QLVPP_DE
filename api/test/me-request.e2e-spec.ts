@@ -147,8 +147,8 @@ describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', ()
     },
   );
 
-  it.each(['2027-01', '2026-13', 'abc'])(
-    'GET me/request?ym=%s → 400 INVALID_PERIOD',
+  it.each(['2027-01', '2026-13', 'abc', '0000-01', '1999-12'])(
+    'GET me/request?ym=%s → 400 INVALID_PERIOD, không 500',
     async (ym) => {
       const res = await as(http().get(`/api/me/request?ym=${ym}`), A).expect(
         400,

@@ -2,11 +2,13 @@ import { BadRequestException } from '@nestjs/common';
 import { parseYm } from './ym';
 
 describe('parseYm', () => {
-  it.each(['2026-10', '1999-01', '2026-12'])('%p hợp lệ → trả nguyên', (ym) => {
+  it.each(['2026-10', '2000-01', '2026-12', '9999-12'])('%p hợp lệ → trả nguyên', (ym) => {
     expect(parseYm(ym)).toBe(ym);
   });
 
   it.each([
+    '0000-01',
+    '1999-12',
     '2026-13',
     '2026-00',
     '2026-1',

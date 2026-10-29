@@ -133,6 +133,8 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
   it.each([
     ['2026-13', 'tháng sai dạng'],
     ['2026-12', 'kỳ sau kỳ đang mở'],
+    ['0000-01', 'năm 0'],
+    ['1999-12', 'trước năm 2000'],
   ])('ym=%s (%s) → 400 INVALID_PERIOD', async (ym) => {
     for (const path of [
       `/periods/${ym}/summary`,
