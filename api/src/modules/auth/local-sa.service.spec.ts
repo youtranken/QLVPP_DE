@@ -135,6 +135,18 @@ describe('LocalSaService — khóa theo cặp (ip, username) 5/15′ và toàn c
     expect(svc.isLocked('B', 'X')).toBe(false);
   });
 
+  it('cửa sổ trượt 15′ tính từ lần sai: 15′ − 1 ms sau lần sai thứ 5 vẫn khóa; đúng 15′ → mở, mật khẩu đúng → ok', () => {
+    jest.useFakeTimers();
+    const svc = makeService();
+    for (let i = 0; i < 5; i += 1) svc.recordFailure('A', USER);
+    jest.advanceTimersByTime(WINDOW_MS - 1);
+    expect(svc.isLocked('A', USER)).toBe(true);
+    expect(svc.attemptLogin(USER, PASS, 'A')).toBe('locked');
+    jest.advanceTimersByTime(1);
+    expect(svc.isLocked('A', USER)).toBe(false);
+    expect(svc.attemptLogin(USER, PASS, 'A')).toBe('ok');
+  });
+
   it('đăng nhập đúng KHÔNG reset bộ đếm toàn cục', () => {
     const svc = makeService();
     for (let i = 0; i < 49; i += 1) svc.recordFailure(`ip${i}`, 'u');
