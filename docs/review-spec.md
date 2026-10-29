@@ -89,6 +89,8 @@ Mâu thuẫn đã phát hiện khi lập Plan 3; mỗi mục đã sửa tài li�
 - F9: §9 "ngày 1 → `period_open` cho mọi user `active`" ≠ mẫu số Tổng hợp → dùng mẫu số Tổng hợp (active, khác `local:sa`, giao `authorized_groups` nếu không rỗng).
 - F10: DoD "mutate có audit" vs ghi của cron chuông → `periods.headcount` (mẫu số chụp vĩnh viễn, nguồn y của Tổng hợp/báo cáo) audit `period.headcount_recorded {before: null, after}` actor `system`; `items.low_stock_notified_at` (trạng thái chống gửi đôi, tự reset khi nhập mua, không phải dữ liệu nghiệp vụ) và xóa thông báo > 90 ngày (trạng thái cá nhân, như F6) không audit.
 - F11 (review toàn nhánh 2026-10-29): cột Phần 1 FR-60 "Đăng ký kỳ này" nhưng §10 tính `requested = Σ remaining` (phần chưa giao) → Phần 1 và Phần 2 ("SL sau điều chỉnh" = `qty`) của tờ trình ký lệch nhau khi đã giao một phần. Giữ cách tính (Cần mua đúng BR-15), đổi nhãn thành "Chưa giao kỳ này"/"Undelivered this period" ở web, trang in, Excel; nhãn nằm ở code nên bản chốt cũ render lại cũng ra nhãn mới. **Chờ chủ dự án**: nếu muốn thấy cả số đăng ký thật thì thêm cột `registered` (Σ `qty` hiệu lực của kỳ) cạnh cột này.
+- F12 (review toàn nhánh M7): `POST admin/reports/:ym/snapshots` cho tháng quá khứ chưa có dòng `periods` (vd 2000-01) tạo kỳ qua `ensurePeriod` (FK của bản chốt) → trình ghi phiếu admin trả `PERIOD_LOCKED` thay vì `INVALID_PERIOD` cho tháng đó. Giữ nguyên: cả hai mã đều chặn sửa, kỳ tạo ra có `deadline` đã qua; ghi vào §10.
+- F13 (code review CR4): hủy nợ chỉ so `expected_delivered_qty` → Hành chính tăng qty sau khi mở hộp thì hủy nhiều hơn số hộp hiện. Thêm `expected_qty` bắt buộc; lệch → `STALE_UPDATE {qty, delivered_qty}`; §6/§7 sửa.
 
 Giả định Plan 3:
 
