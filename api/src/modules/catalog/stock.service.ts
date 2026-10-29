@@ -112,12 +112,12 @@ export class StockService {
     });
   }
 
-  // Khóa trước mọi món của phiếu theo id tăng: hai phiếu có món chéo thứ tự không deadlock
+  // Khóa theo id tăng chống deadlock chéo món; NO KEY để không chặn FK KEY SHARE khi lưu phiếu chèn dòng
   async lockItemsWithin(tx: Tx, itemIds: string[]): Promise<void> {
     if (itemIds.length === 0) return;
     await tx.execute(sql`
       SELECT id FROM items WHERE id = ANY(${sql.param(itemIds)}::uuid[])
-      ORDER BY id FOR UPDATE
+      ORDER BY id FOR NO KEY UPDATE
     `);
   }
 
@@ -145,11 +145,16 @@ export class StockService {
     return { stock_qty: updated.stock_qty, movement_id: movement.id };
   }
 
-  // UPDATE có điều kiện = đòi quyền báo: cron chạy song song thì bên sau chờ khóa dòng rồi thấy đã báo
+  // Khóa theo id tăng như giao hàng (UPDATE trơn khóa theo thứ tự quét → deadlock với deliver-all); bên sau thấy đã báo
   async claimLowStockWithin(tx: Tx, now: Date): Promise<LowStockClaim[]> {
     const { rows } = await tx.execute<LowStockClaim>(sql`
+      WITH due AS (
+        SELECT id FROM items
+        WHERE active AND ${sql.raw(LOW_STOCK_SQL)} AND low_stock_notified_at IS NULL
+        ORDER BY id FOR NO KEY UPDATE
+      )
       UPDATE items i SET low_stock_notified_at = ${now.toISOString()}::timestamptz
-      WHERE i.active AND ${sql.raw(LOW_STOCK_SQL)} AND i.low_stock_notified_at IS NULL
+      FROM due WHERE i.id = due.id
       RETURNING i.id, i.name, i.name_en, i.stock_qty,
         (SELECT m.id FROM stock_movements m
          WHERE m.item_id = i.id AND m.reason = 'purchase'
