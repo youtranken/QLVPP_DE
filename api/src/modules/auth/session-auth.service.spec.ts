@@ -26,6 +26,7 @@ function makeService(opts: {
     find: jest.fn().mockResolvedValue(session),
     updateTokens: jest.fn().mockResolvedValue(opts.updateResult ?? true),
     destroy: jest.fn().mockResolvedValue(undefined),
+    touchLastSeen: jest.fn().mockResolvedValue(undefined),
   };
   const jwtVerifier = {
     verify: jest.fn().mockResolvedValue({
@@ -167,5 +168,54 @@ describe('SessionAuthService — role tính mỗi request từ users.groups', ()
     const { service, users } = makeService({ session: fresh });
     users.findBySub.mockResolvedValue(null);
     expect((await service.resolve('sid-1'))?.role).toBe('member');
+  });
+});
+
+describe('SessionAuthService — SA cục bộ idle 2 giờ', () => {
+  const NOW = Date.parse('2026-11-05T03:00:00.000Z');
+  const TWO_HOURS = 2 * 60 * 60 * 1000;
+
+  beforeEach(() => jest.spyOn(Date, 'now').mockReturnValue(NOW));
+  afterEach(() => jest.restoreAllMocks());
+
+  function saSession(idleMs: number) {
+    return makeService({
+      session: {
+        userSub: 'local:sa',
+        claims: null,
+        refreshToken: null,
+        accessTokenExp: null,
+        lastSeenAt: new Date(NOW - idleMs),
+      },
+    });
+  }
+
+  it.each([
+    ['1:59:59.999', TWO_HOURS - 1],
+    ['đúng 2:00:00.000', TWO_HOURS],
+  ])(
+    'phiên SA idle %s vẫn hợp lệ, vai sa và chạm last_seen',
+    async (_label, idle) => {
+      const { service, sessions, audit } = saSession(idle);
+      const result = await service.resolve('sid-1');
+      expect(result).toMatchObject({ sub: 'local:sa', role: 'sa' });
+      expect(sessions.touchLastSeen).toHaveBeenCalledWith('sid-1');
+      expect(sessions.destroy).not.toHaveBeenCalled();
+      expect(audit.append).not.toHaveBeenCalled();
+    },
+  );
+
+  it('phiên SA idle 2 giờ + 1 ms → null, hủy phiên, audit session_expired lý do local_sa_idle', async () => {
+    const { service, sessions, audit } = saSession(TWO_HOURS + 1);
+    expect(await service.resolve('sid-1')).toBeNull();
+    expect(sessions.destroy).toHaveBeenCalledWith('sid-1');
+    expect(sessions.touchLastSeen).not.toHaveBeenCalled();
+    expect(audit.append).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actor: 'local:sa',
+        action: 'auth.session_expired',
+        detail: { reason: 'local_sa_idle' },
+      }),
+    );
   });
 });
