@@ -3,6 +3,8 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Pool } from 'pg';
+import request from 'supertest';
+import { App } from 'supertest/types';
 import { DRIZZLE_DB } from '../src/database/database.module';
 import type { Database } from '../src/database/database.module';
 import {
@@ -41,6 +43,7 @@ describe('RequestLinesWriter.save: hai lần lưu đầu song song (Postgres th�
     ).rows[0].id;
     dir = await mkdtemp(join(tmpdir(), 'vpp-req-conc-'));
     process.env.FILES_DIR = dir;
+    process.env.AUTH_DEV_MODE = 'true';
     app = await createTestApp();
   });
 
@@ -52,6 +55,7 @@ describe('RequestLinesWriter.save: hai lần lưu đầu song song (Postgres th�
     await pool.end();
     await rm(dir, { recursive: true, force: true });
     delete process.env.FILES_DIR;
+    delete process.env.AUTH_DEV_MODE;
   });
 
   it(`${ROUNDS} vòng Promise.all: đúng 1 phiếu, không lọt 23505 — mỗi lần lưu thành công hoặc STALE_UPDATE`, async () => {
@@ -96,6 +100,32 @@ describe('RequestLinesWriter.save: hai lần lưu đầu song song (Postgres th�
         ).rows,
       ).toHaveLength(1);
       expect(Number(rows[0].n)).toBe(1);
+    }
+  });
+
+  it(`${ROUNDS} vòng hai PUT me/request/lines thật song song lần đầu → một phiếu, mỗi phản hồi 200 hoặc 409 STALE_UPDATE, không 500`, async () => {
+    const { ym } = await app.get(PeriodsService).openPeriod();
+    const server = (app as INestApplication<App>).getHttpServer();
+    const put = (qty: number) =>
+      request(server)
+        .put('/api/me/request/lines')
+        .set('x-dev-user-sub', OWNER)
+        .set('x-dev-role', 'member')
+        .send({ ym, lines: [{ item_id: itemId, qty }] });
+    for (let round = 0; round < ROUNDS; round++) {
+      await pool.query('DELETE FROM requests WHERE user_sub = $1', [OWNER]);
+      const results = await Promise.all([put(1), put(2)]);
+      const outcomes = results.map((r) =>
+        r.status === 200 ? '200' : `${r.status} ${r.body.code}`,
+      );
+      expect(outcomes).toContain('200');
+      for (const o of outcomes)
+        expect(['200', '409 STALE_UPDATE']).toContain(o);
+      const { rows } = await pool.query(
+        'SELECT id FROM requests WHERE user_sub = $1',
+        [OWNER],
+      );
+      expect(rows).toHaveLength(1);
     }
   });
 });
