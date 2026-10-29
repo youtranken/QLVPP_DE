@@ -20,8 +20,8 @@ describe('HistoryDetailPage', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Phiếu tháng 10/2026' })).toBeInTheDocument();
     const bars = await screen.findAllByRole('progressbar');
     expect(bars[0]).toHaveAttribute('aria-valuenow', '6');
-    expect(bars[0]).toHaveAttribute('aria-valuemax', '10');
-    expect(within(bars[0]).getByText('6/10')).toBeInTheDocument();
+    expect(bars[0]).toHaveAttribute('aria-valuemax', '8');
+    expect(within(bars[0]).getByText('6/8')).toBeInTheDocument();
     expect(bars[1]).toHaveAttribute('aria-valuenow', '4');
     expect(screen.getAllByText(/đã hủy/)).toHaveLength(1);
     expect(screen.getByText('đã hủy 2')).toBeInTheDocument();
@@ -77,5 +77,47 @@ describe('HistoryDetailPage', () => {
     renderApp(makeMe('member'), '/history/2026-08');
     expect(await screen.findByText('Không có phiếu tháng này')).toBeInTheDocument();
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('dòng 5 giao 3 hủy 2: thanh trên 3 (aria-valuenow 3, max 3) và "đã hủy 2 — lý do"', async () => {
+    past([lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 5, delivered_qty: 3, cancelled_qty: 2, cancel_note: 'Người đã nghỉ' })]);
+    renderApp(makeMe('member'), '/history/2026-10');
+    const bar = await screen.findByRole('progressbar');
+    expect(bar).toHaveAttribute('aria-valuenow', '3');
+    expect(bar).toHaveAttribute('aria-valuemax', '3');
+    expect(within(bar).getByText('3/3')).toBeInTheDocument();
+    expect(screen.getByText('đã hủy 2 — Người đã nghỉ')).toBeInTheDocument();
+    expect(screen.queryByText(/còn nợ/)).toBeNull();
+  });
+
+  it('hủy hết 5: không progressbar, chỉ "Đã hủy 5 — lý do"', async () => {
+    past([lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 5, cancelled_qty: 5, cancel_note: 'Hết hàng' })]);
+    renderApp(makeMe('member'), '/history/2026-10');
+    expect(await screen.findByText('Đã hủy 5 — Hết hàng')).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).toBeNull();
+  });
+
+  it('hủy qty−1: thanh trên 1; hủy 0: thanh trên qty', async () => {
+    past([
+      lineView({ id: 'a', item_id: PEN.id, item: facts(PEN), qty: 5, delivered_qty: 0, cancelled_qty: 4, cancel_note: 'x' }),
+      lineView({ id: 'b', item_id: NOTE.id, item: facts(NOTE), qty: 5, delivered_qty: 2 }),
+    ]);
+    renderApp(makeMe('member'), '/history/2026-10');
+    const bars = await screen.findAllByRole('progressbar');
+    expect(bars[0]).toHaveAttribute('aria-valuemax', '1');
+    expect(bars[0]).toHaveAttribute('aria-valuenow', '0');
+    expect(bars[1]).toHaveAttribute('aria-valuemax', '5');
+    expect(bars[1]).toHaveAttribute('aria-valuenow', '2');
+  });
+
+  it('lý do hủy rỗng/khoảng trắng → "đã hủy n" không có dấu gạch; hủy hết cũng vậy', async () => {
+    past([
+      lineView({ id: 'a', item_id: PEN.id, item: facts(PEN), qty: 5, delivered_qty: 1, cancelled_qty: 2, cancel_note: '  ' }),
+      lineView({ id: 'b', item_id: NOTE.id, item: facts(NOTE), qty: 3, cancelled_qty: 3, cancel_note: null }),
+    ]);
+    renderApp(makeMe('member'), '/history/2026-10');
+    expect(await screen.findByText('đã hủy 2')).toBeInTheDocument();
+    expect(screen.getByText('Đã hủy 3')).toBeInTheDocument();
+    expect(screen.queryByText(/—/)).toBeNull();
   });
 });

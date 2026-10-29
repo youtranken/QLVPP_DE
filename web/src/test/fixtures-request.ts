@@ -28,6 +28,7 @@ export function lineView(over: Partial<LineView>): LineView {
     qty: 1,
     delivered_qty: 0,
     cancelled_qty: 0,
+    cancel_note: null,
     review_status: 'n/a',
     review_note: null,
     added_by_admin: false,

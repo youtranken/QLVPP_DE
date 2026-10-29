@@ -18,3 +18,5 @@
 .hs-count { font-weight: 800; min-width: 3.5ch; text-align: right; }
 .hs-owed { color: var(--ink-2); font-weight: 800; font-size: 14px; }
 .hs-cancelled { color: var(--warn); font-weight: 800; font-size: 14px; }
+.hs-issues { margin-top: 28px; }
+.hs-issues-title { font-size: 18px; font-weight: 800; margin: 0; }

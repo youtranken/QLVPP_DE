@@ -28,6 +28,10 @@ const request: Messages<typeof vi> = {
       notFound: 'No order for this month',
       progress: 'Delivered {{delivered}} of {{qty}}',
       cancelled: 'cancelled {{n}}',
+      cancelledWhy: 'cancelled {{n}} — {{reason}}',
+      cancelledAll: 'Cancelled {{n}}',
+      cancelledAllWhy: 'Cancelled {{n}} — {{reason}}',
+      issues: { title: 'Ad hoc pickups' },
       owed: '{{n}} outstanding',
       delivery: { done: 'Fully delivered', owed: '{{k}} outstanding', undelivered: 'Not delivered', cancelled: 'Cancelled' },
       customCount: {

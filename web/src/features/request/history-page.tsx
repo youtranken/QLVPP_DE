@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { useCurrentPeriod } from './request.api';
 import { deliveryState, useMyHistory, type HistoryItem } from './history.api';
+import { IssuesSection } from './issues-section';
 import './history.css';
 
 const TONE = { done: 'tag--ok', owed: 'tag--warn', undelivered: '', cancelled: 'tag--danger', none: '' } as const;
@@ -73,6 +74,7 @@ export function HistoryPage() {
           )}
         </>
       )}
+      <IssuesSection />
     </div>
   );
 }

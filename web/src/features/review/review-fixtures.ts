@@ -36,6 +36,7 @@ export function reviewResult(status: LineView['review_status'], over: Partial<Li
       qty: 2,
       delivered_qty: 0,
       cancelled_qty: 0,
+      cancel_note: null,
       review_status: status,
       review_note: null,
       added_by_admin: false,

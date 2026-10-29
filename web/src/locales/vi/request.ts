@@ -25,6 +25,10 @@ const request = {
       notFound: 'Không có phiếu tháng này',
       progress: 'Đã giao {{delivered}} trên {{qty}}',
       cancelled: 'đã hủy {{n}}',
+      cancelledWhy: 'đã hủy {{n}} — {{reason}}',
+      cancelledAll: 'Đã hủy {{n}}',
+      cancelledAllWhy: 'Đã hủy {{n}} — {{reason}}',
+      issues: { title: 'Nhận lẻ' },
       owed: 'còn nợ {{n}}',
       delivery: { done: 'Đã giao đủ', owed: 'Còn nợ {{k}}', undelivered: 'Chưa giao', cancelled: 'Đã hủy' },
       customCount: {

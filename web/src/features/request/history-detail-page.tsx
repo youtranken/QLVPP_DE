@@ -27,6 +27,11 @@ function DetailLine({ line }: { line: LineView }) {
   const unit = fmt.unit(line.item?.unit ?? line.custom_unit);
   const effective = EFFECTIVE.includes(line.review_status);
   const owed = line.qty - line.delivered_qty - line.cancelled_qty;
+  const reason = line.cancel_note?.trim();
+  const base = line.cancelled_qty >= line.qty ? 'cancelledAll' : 'cancelled';
+  const cancelText = reason
+    ? t(`request.history.${base}Why`, { n: line.cancelled_qty, reason })
+    : t(`request.history.${base}`, { n: line.cancelled_qty });
   return (
     <li className="hs-line">
       <div className="hs-line-head">
@@ -35,10 +40,10 @@ function DetailLine({ line }: { line: LineView }) {
         <ReviewTag line={line} />
       </div>
       <div className="hs-line-qty">{t('request.cart.qty', { qty: line.qty, unit })}</div>
-      {effective && <LineProgress delivered={line.delivered_qty} qty={line.qty} />}
+      {effective && <LineProgress delivered={line.delivered_qty} qty={line.qty} cancelled={line.cancelled_qty} />}
       {effective && owed > 0 && <div className="hs-owed">{t('request.history.owed', { n: owed })}</div>}
       {effective && line.cancelled_qty > 0 && (
-        <div className="hs-cancelled">{t('request.history.cancelled', { n: line.cancelled_qty })}</div>
+        <div className="hs-cancelled">{cancelText}</div>
       )}
     </li>
   );

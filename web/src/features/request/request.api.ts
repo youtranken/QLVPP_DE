@@ -34,6 +34,7 @@ export interface LineView {
   qty: number;
   delivered_qty: number;
   cancelled_qty: number;
+  cancel_note: string | null;
   review_status: ReviewStatus;
   review_note: string | null;
   added_by_admin: boolean;

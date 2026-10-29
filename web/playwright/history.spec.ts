@@ -78,7 +78,7 @@ test.describe('E2-S6 lịch sử', () => {
       await expect(page.getByRole('heading', { level: 1, name: `Phiếu tháng ${prevMonth}/${prevYm.slice(0, 4)}` })).toBeVisible();
       const bars = page.getByRole('progressbar');
       await expect(bars).toHaveCount(2);
-      await expect(page.getByRole('progressbar', { name: 'Đã giao 5 trên 8' })).toBeVisible();
+      await expect(page.getByRole('progressbar', { name: 'Đã giao 5 trên 7' })).toBeVisible();
       await expect(page.getByText('đã hủy 1')).toBeVisible();
       await expect(page.getByText('Chờ Hành chính xem')).toBeVisible();
       await expect(page.getByText('Từ chối: Đã có trong kho')).toBeVisible();
@@ -86,6 +86,58 @@ test.describe('E2-S6 lịch sử', () => {
       await snap(page, info, 'detail');
     } finally {
       deleteTestUsers(sub);
+      if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${prevYm}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${prevYm}-01')`);
+      release();
+    }
+  });
+
+  test('E6 nhận lẻ: Lịch sử có mục Nhận lẻ trong ≤ 2 chạm và "đã hủy 2 — lý do" ở phiếu kỳ khóa', async ({ page, request }, info) => {
+    const run = `${Date.now()}-${info.project.name}`;
+    const sub = `pw-issue-${run}`;
+    const headers = { 'x-dev-user-sub': sub, 'x-dev-role': 'member' };
+    seedActiveUser(sub, `PW Nhận lẻ ${info.project.name}`);
+    await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...headers } }));
+    const period = await (await request.get('/api/periods/current', { headers })).json();
+    const prevYm = prevYmOf(period.ym);
+    const prevMonth = Number(prevYm.slice(5));
+    const itemName = `PW Nhận lẻ ${run}`;
+    const note = `PW cấp cho người mới ${run}`;
+    const itemId = psql(`INSERT INTO items (name, unit, stock_qty) VALUES ('${itemName}', 'cay', 50) RETURNING id`).split('\n')[0];
+    psql(`INSERT INTO stock_movements (item_id, delta, reason, note, recipient_sub, actor_sub)
+      VALUES ('${itemId}', -3, 'issue', '${note}', '${sub}', 'pw-admin')`);
+
+    const release = await acquireLock('prev-period');
+    const createdPeriod = psql(
+      `INSERT INTO periods (ym, deadline) VALUES ('${prevYm}-01', '${prevYm}-10T17:00:00Z') ON CONFLICT DO NOTHING RETURNING ym`,
+    );
+    psql(`WITH r AS (
+        INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('${prevYm}-01', '${sub}', '${sub}') RETURNING id
+      )
+      INSERT INTO request_lines (request_id, item_id, qty, delivered_qty, cancelled_qty, cancel_note)
+      SELECT r.id, '${itemId}', 5, 3, 2, 'Người đã nghỉ' FROM r`);
+
+    try {
+      await page.goto('/');
+      const nav = page.getByRole('navigation', { name: isMobile(info) ? 'Điều hướng chính' : 'Chuyển trang' });
+      if (isMobile(info)) await nav.getByRole('link', { name: 'Lịch sử' }).tap();
+      else await nav.getByRole('link', { name: 'Lịch sử' }).click();
+      const section = page.getByRole('region', { name: 'Nhận lẻ' });
+      await expect(section).toBeVisible();
+      await expect(section.getByText(itemName)).toBeVisible();
+      await expect(section.getByText('3 cây')).toBeVisible();
+      await expect(section.getByText(note)).toBeVisible();
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await snap(page, info, 'issues');
+
+      await page.getByRole('link', { name: new RegExp(`Tháng ${prevMonth}/`) }).click();
+      await expect(page.getByText('đã hủy 2 — Người đã nghỉ')).toBeVisible();
+      const bar = page.getByRole('progressbar', { name: 'Đã giao 3 trên 3' });
+      await expect(bar).toHaveAttribute('aria-valuemax', '3');
+      if (isMobile(info)) await expectNoContrastViolations(page);
+    } finally {
+      psql(`DELETE FROM stock_movements WHERE item_id = '${itemId}'`);
+      deleteTestUsers(sub);
+      psql(`DELETE FROM items WHERE id = '${itemId}'`);
       if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${prevYm}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${prevYm}-01')`);
       release();
     }

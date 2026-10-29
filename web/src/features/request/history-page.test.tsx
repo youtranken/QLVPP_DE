@@ -3,7 +3,7 @@ import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { PERIOD } from '@/test/request-api-stub';
-import { deliveryState, type HistoryItem } from './history.api';
+import { deliveryState, type HistoryItem, type MyIssue } from './history.api';
 
 const item = (over: Partial<HistoryItem>): HistoryItem => ({
   period_ym: '2026-10',
@@ -16,10 +16,28 @@ const item = (over: Partial<HistoryItem>): HistoryItem => ({
   ...over,
 });
 
-function stub(pages: { items: HistoryItem[]; next_cursor: string | null }[]) {
+const issue = (over: Partial<MyIssue>): MyIssue => ({
+  id: 'm-1',
+  item_id: 'i-1',
+  item_name: 'Bút bi',
+  item_name_en: 'Ballpoint pen',
+  unit: 'cai',
+  pack_note: null,
+  qty: 2,
+  note: 'Người mới vào',
+  created_at: '2026-10-20T03:30:00Z',
+  ...over,
+});
+
+function stub(
+  pages: { items: HistoryItem[]; next_cursor: string | null }[],
+  issuePages: { items: MyIssue[]; next_cursor: string | null }[] = [],
+) {
   let at = 0;
+  let issueAt = 0;
   const fetchMock = vi.fn((url: string) => {
     if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
+    if (url.startsWith('/api/me/issues')) return Promise.resolve(jsonResponse(200, issuePages[issueAt++] ?? { items: [], next_cursor: null }));
     if (url.startsWith('/api/me/requests')) return Promise.resolve(jsonResponse(200, pages[at++] ?? { items: [], next_cursor: null }));
     return Promise.resolve(jsonResponse(500, {}));
   });
@@ -93,5 +111,56 @@ describe('HistoryPage', () => {
     renderApp(makeMe('member'), '/history');
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     expect(screen.queryByText('Chưa có phiếu nào')).toBeNull();
+  });
+
+  describe('Nhận lẻ', () => {
+    it('có 1 mục → hiện tiêu đề, món, số lượng, ngày giờ VN và lý do', async () => {
+      stub([{ items: [item({})], next_cursor: null }], [{ items: [issue({})], next_cursor: null }]);
+      renderApp(makeMe('member'), '/history');
+      const section = (await screen.findByRole('heading', { level: 2, name: 'Nhận lẻ' })).closest('section')!;
+      expect(within(section).getByText('Bút bi')).toBeInTheDocument();
+      expect(within(section).getByText('2 cái')).toBeInTheDocument();
+      expect(within(section).getByText('10:30 20/10/2026')).toBeInTheDocument();
+      expect(within(section).getByText('Người mới vào')).toBeInTheDocument();
+    });
+
+    it('rỗng → không có mục Nhận lẻ', async () => {
+      stub([{ items: [item({})], next_cursor: null }], [{ items: [], next_cursor: null }]);
+      renderApp(makeMe('member'), '/history');
+      await screen.findByText('Tháng 10/2026');
+      expect(screen.queryByRole('heading', { name: 'Nhận lẻ' })).toBeNull();
+    });
+
+    it('chưa có phiếu nào nhưng có nhận lẻ → vẫn hiện Nhận lẻ', async () => {
+      stub([{ items: [], next_cursor: null }], [{ items: [issue({})], next_cursor: null }]);
+      renderApp(makeMe('member'), '/history');
+      expect(await screen.findByRole('heading', { name: 'Nhận lẻ' })).toBeInTheDocument();
+      expect(screen.getByText('Chưa có phiếu nào')).toBeInTheDocument();
+    });
+
+    it('"Xem thêm" của Nhận lẻ chỉ có khi còn next_cursor; bấm tải trang kế theo cursor', async () => {
+      const fetchMock = stub(
+        [{ items: [item({})], next_cursor: null }],
+        [
+          { items: [issue({ id: 'm-1' })], next_cursor: 'ic1' },
+          { items: [issue({ id: 'm-2', item_name: 'Kẹp giấy', item_name_en: null })], next_cursor: null },
+        ],
+      );
+      renderApp(makeMe('member'), '/history');
+      const section = (await screen.findByRole('heading', { name: 'Nhận lẻ' })).closest('section')!;
+      await userEvent.click(within(section).getByRole('button', { name: 'Xem thêm' }));
+      expect(await within(section).findByText('Kẹp giấy')).toBeInTheDocument();
+      expect(fetchMock).toHaveBeenCalledWith('/api/me/issues?limit=10&cursor=ic1', expect.anything());
+      expect(within(section).queryByRole('button', { name: 'Xem thêm' })).toBeNull();
+    });
+
+    it('đủ một trang mà next_cursor rỗng → không có nút Xem thêm', async () => {
+      const full = Array.from({ length: 10 }, (_, i) => issue({ id: `m-${i}` }));
+      stub([{ items: [item({})], next_cursor: null }], [{ items: full, next_cursor: null }]);
+      renderApp(makeMe('member'), '/history');
+      const section = (await screen.findByRole('heading', { name: 'Nhận lẻ' })).closest('section')!;
+      expect(within(section).getAllByText('Bút bi')).toHaveLength(10);
+      expect(within(section).queryByRole('button', { name: 'Xem thêm' })).toBeNull();
+    });
   });
 });

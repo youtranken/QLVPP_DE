@@ -29,6 +29,33 @@ export function useMyHistory() {
   });
 }
 
+export interface MyIssue {
+  id: string;
+  item_id: string;
+  item_name: string;
+  item_name_en: string | null;
+  unit: string;
+  pack_note: string | null;
+  qty: number;
+  note: string;
+  created_at: string;
+}
+
+export const ISSUES_KEY = ['request', 'my-issues'] as const;
+export const ISSUE_PAGE = 10;
+
+export function useMyIssues() {
+  return useInfiniteQuery({
+    queryKey: ISSUES_KEY,
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam }) =>
+      apiFetch<{ items: MyIssue[]; next_cursor: string | null }>(
+        `/api/me/issues?limit=${ISSUE_PAGE}${pageParam ? `&cursor=${encodeURIComponent(pageParam)}` : ''}`,
+      ),
+    getNextPageParam: (last) => last.next_cursor,
+  });
+}
+
 export type DeliveryState = 'none' | 'cancelled' | 'done' | 'owed' | 'undelivered';
 
 // Chỉ hủy hết (không giao gì) là "Đã hủy", không phải "Đã giao đủ"; kỳ chỉ có món chờ/từ chối (total 0) không có trạng thái giao
