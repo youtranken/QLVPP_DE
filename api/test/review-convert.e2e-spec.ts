@@ -181,7 +181,7 @@ describe('admin/review: thêm vào danh mục (convert)', () => {
     expect(after.lines).toEqual(got.lines);
   });
 
-  it('convert có cả existing_id lẫn trường món mới → 400 VALIDATION, dòng vẫn pending', async () => {
+  it('convert có cả existing_id lẫn trường món mới → 400 VALIDATION {fields: [item.name, item.unit]}, dòng vẫn pending', async () => {
     const { line } = await customLine();
     const res = await review(line.id, {
       action: 'convert',
@@ -189,7 +189,9 @@ describe('admin/review: thêm vào danh mục (convert)', () => {
     });
     expect(res.status).toBe(400);
     expect(res.body).toMatchObject({ code: 'VALIDATION' });
-    expect(res.body.fields).toEqual(expect.arrayContaining(['name', 'unit']));
+    expect(res.body.fields).toEqual(
+      expect.arrayContaining(['item.name', 'item.unit']),
+    );
     expect((await lineRow(line.id)).review_status).toBe('pending');
   });
 });

@@ -212,7 +212,7 @@ function assertOneTarget(item: ReviewItemInput | undefined): void {
     throw new BadRequestException({
       code: 'VALIDATION',
       message: 'Chọn món có sẵn hoặc nhập món mới (không cả hai).',
-      fields: item ? mixed : ['item'],
+      fields: item ? mixed.map((k) => `item.${k}`) : ['item'],
     });
   }
 }

@@ -10,6 +10,7 @@ describe('admin/review: hàng chờ, nhận, từ chối', () => {
     customLine,
     getMine,
     http,
+    lineRow,
     list,
     newItem,
     pool,
@@ -95,6 +96,7 @@ describe('admin/review: hàng chờ, nhận, từ chối', () => {
       note: 'n'.repeat(501),
     }).expect(400);
     expect(long.body).toMatchObject({ code: 'VALIDATION', fields: ['note'] });
+    expect((await lineRow(line.id)).review_status).toBe('pending');
     const res = await review(line.id, {
       action: 'reject',
       note: 'n'.repeat(500),

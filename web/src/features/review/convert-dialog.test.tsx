@@ -108,6 +108,16 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     expect(fetchMock.mock.calls.some((c) => c[0] === '/api/admin/lines/l-1/review')).toBe(false);
   });
 
+  it('server VALIDATION {fields:[item.max_qty]} → lỗi gắn ô "Tối đa mỗi tháng", không báo chung ở đầu hộp', async () => {
+    stub(() => jsonResponse(400, { code: 'VALIDATION', message: 'max_qty', fields: ['item.max_qty'] }));
+    const { dialog } = await openConvert();
+    await userEvent.selectOptions(within(dialog).getByLabelText('Nhóm'), 'c-1');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    await waitFor(() => expect(within(dialog).getByLabelText('Tối đa mỗi tháng')).toHaveAttribute('aria-invalid', 'true'));
+    expect(within(dialog).getByText('Kiểm tra lại giá trị này.')).toBeInTheDocument();
+    expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('đổi ĐVT khác dòng gốc → cảnh báo vàng; đổi lại → mất cảnh báo', async () => {
     stub();
     const { dialog } = await openConvert();

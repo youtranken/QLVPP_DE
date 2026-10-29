@@ -21,10 +21,13 @@ export function catalogErrorKey(e: unknown): string {
 // Giá trị là khóa i18n; 'form' = lỗi không thuộc ô nào
 export type FieldErrors = Partial<Record<string, string>>;
 
-export function fieldErrors(e: unknown, fieldOfCode: Record<string, string>, knownFields: string[]): FieldErrors {
+// prefix: form món lồng trong body khác (review gửi {item: {...}} → server báo 'item.max_qty')
+export function fieldErrors(e: unknown, fieldOfCode: Record<string, string>, knownFields: string[], prefix = ''): FieldErrors {
   const code = apiErrorCode(e);
   if (code === 'VALIDATION') {
-    const fields = apiErrorFields(e).filter((f) => knownFields.includes(f));
+    const fields = apiErrorFields(e)
+      .flatMap((f) => (f.startsWith(prefix) ? [f.slice(prefix.length)] : []))
+      .filter((f) => knownFields.includes(f));
     if (fields.length > 0) return Object.fromEntries(fields.map((f) => [f, 'catalog.errors.FIELD_INVALID']));
   }
   const field = code ? fieldOfCode[code] : undefined;

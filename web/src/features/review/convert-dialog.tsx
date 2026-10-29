@@ -29,7 +29,7 @@ function localErrors(d: ItemDraft): FieldErrors {
 function serverErrors(e: unknown, mode: Mode): FieldErrors {
   const code = apiErrorCode(e);
   if (code === 'ITEM_NOT_FOUND' || code === 'ITEM_INACTIVE') return { [mode === 'existing' ? 'existing' : 'form']: reviewErrorKey(e) };
-  if (mode === 'new') return fieldErrors(e, ITEM_ERROR_FIELD, ITEM_FIELDS);
+  if (mode === 'new') return fieldErrors(e, ITEM_ERROR_FIELD, ITEM_FIELDS, 'item.');
   return { form: reviewErrorKey(e) ?? 'review.errors.UNKNOWN' };
 }
 

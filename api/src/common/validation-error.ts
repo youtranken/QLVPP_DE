@@ -6,36 +6,45 @@ interface Leaf {
   lineIndex?: number;
 }
 
-// Lỗi lồng (lines[i].custom_name) báo trường lá + line_index như lỗi dòng của writer
-function leaves(error: ValidationError, lineIndex?: number): Leaf[] {
+const isLineElement = (parent: string[], error: ValidationError) =>
+  parent.length === 1 && parent[0] === 'lines' && /^\d+$/.test(error.property);
+
+// Trong lines[i] chỉ báo tên trường lá + line_index như lỗi dòng của writer; phần tử không phải object báo 'lines'.
+// Trường lồng khác giữ đường dẫn có chấm (item.max_qty) để không trùng tên với trường cấp trên
+function leaves(
+  error: ValidationError,
+  parent: string[],
+  lineIndex?: number,
+): Leaf[] {
+  const atLine = isLineElement(parent, error);
+  const index = atLine ? Number(error.property) : lineIndex;
+  const path = atLine ? [] : [...parent, error.property];
   const own = Object.values(error.constraints ?? {});
   const here = own.length
-    ? [{ field: error.property, messages: own, lineIndex }]
+    ? [{ field: path.join('.') || 'lines', messages: own, lineIndex: index }]
     : [];
   const children = (error.children ?? []).flatMap((child) =>
-    leaves(child, lineIndexOf(error, child) ?? lineIndex),
+    leaves(child, path, index),
   );
   return [...here, ...children];
 }
 
-function lineIndexOf(
-  parent: ValidationError,
-  child: ValidationError,
-): number | undefined {
-  return parent.property === 'lines' && /^\d+$/.test(child.property)
-    ? Number(child.property)
-    : undefined;
-}
-
+// Nhiều dòng lỗi → body chỉ mô tả dòng lỗi đầu tiên (web gắn một lỗi vào một dòng); lỗi ngoài lines luôn giữ
 export function validationException(
   errors: ValidationError[],
 ): BadRequestException {
-  const all = errors.flatMap((e) => leaves(e));
-  const lineIndex = all.find((l) => l.lineIndex !== undefined)?.lineIndex;
+  const all = errors.flatMap((e) => leaves(e, []));
+  const indexes = all.flatMap((l) =>
+    l.lineIndex === undefined ? [] : [l.lineIndex],
+  );
+  const lineIndex = indexes.length ? Math.min(...indexes) : undefined;
+  const shown = all.filter(
+    (l) => l.lineIndex === undefined || l.lineIndex === lineIndex,
+  );
   return new BadRequestException({
     code: 'VALIDATION',
-    message: all.flatMap((l) => l.messages).join('; '),
-    fields: [...new Set(all.map((l) => l.field))],
+    message: shown.flatMap((l) => l.messages).join('; '),
+    fields: [...new Set(shown.map((l) => l.field))],
     ...(lineIndex === undefined ? {} : { line_index: lineIndex }),
   });
 }
