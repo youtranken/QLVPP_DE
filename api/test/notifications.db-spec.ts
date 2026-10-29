@@ -24,7 +24,13 @@ describe('NotificationsService — ghi trong savepoint, người nhận admin (P
   let db: Database;
   let users: UsersService;
   let service: NotificationsService;
-  let saGroups: unknown = null;
+  // Chỉ khôi phục local:sa khi test đã đụng tới; dòng có sẵn thì trả lại groups + status, không xóa
+  let sa:
+    | { state: 'untouched' }
+    | { state: 'absent' }
+    | { state: 'existed'; groups: unknown; status: string } = {
+    state: 'untouched',
+  };
 
   const input = (over: Partial<NotifyInput> = {}): NotifyInput => ({
     eventId: `db:${SUFFIX}:${Math.random().toString(36).slice(2)}`,
@@ -71,35 +77,41 @@ describe('NotificationsService — ghi trong savepoint, người nhận admin (P
         JSON.stringify(['Staff', `VPP-ADMIN-${SUFFIX}`]),
       ],
     );
-    const sa = await pool.query<{ groups: unknown }>(
-      'SELECT groups FROM users WHERE sub = $1',
+    const existing = await pool.query<{ groups: unknown; status: string }>(
+      'SELECT groups, status FROM users WHERE sub = $1',
       [LOCAL_SA_SUB],
     );
-    saGroups = sa.rows[0]?.groups ?? null;
+    const row = existing.rows[0];
+    sa = row
+      ? { state: 'existed', groups: row.groups, status: row.status }
+      : { state: 'absent' };
     await pool.query(
       `INSERT INTO users (sub, status, groups) VALUES ($1, 'active', $2)
-       ON CONFLICT (sub) DO UPDATE SET groups = EXCLUDED.groups`,
+       ON CONFLICT (sub) DO UPDATE SET groups = EXCLUDED.groups, status = 'active'`,
       [LOCAL_SA_SUB, JSON.stringify([`vpp-admin-${SUFFIX}`])],
     );
   });
 
   afterAll(async () => {
-    await pool.query(
-      `DELETE FROM in_app_notifications WHERE user_sub LIKE $1 OR event_id LIKE $2`,
-      [`db-noti-%-${SUFFIX}`, `db:${SUFFIX}:%`],
-    );
-    await pool.query('DELETE FROM users WHERE sub LIKE $1', [
-      `db-noti-%-${SUFFIX}`,
-    ]);
-    if (saGroups === null) {
-      await pool.query('DELETE FROM users WHERE sub = $1', [LOCAL_SA_SUB]);
-    } else {
-      await pool.query('UPDATE users SET groups = $2 WHERE sub = $1', [
-        LOCAL_SA_SUB,
-        JSON.stringify(saGroups),
+    try {
+      await pool.query(
+        `DELETE FROM in_app_notifications WHERE user_sub LIKE $1 OR event_id LIKE $2`,
+        [`db-noti-%-${SUFFIX}`, `db:${SUFFIX}:%`],
+      );
+      await pool.query('DELETE FROM users WHERE sub LIKE $1', [
+        `db-noti-%-${SUFFIX}`,
       ]);
+      if (sa.state === 'absent') {
+        await pool.query('DELETE FROM users WHERE sub = $1', [LOCAL_SA_SUB]);
+      } else if (sa.state === 'existed') {
+        await pool.query(
+          'UPDATE users SET groups = $2, status = $3 WHERE sub = $1',
+          [LOCAL_SA_SUB, JSON.stringify(sa.groups), sa.status],
+        );
+      }
+    } finally {
+      await pool.end();
     }
-    await pool.end();
   });
 
   it('notifyWithin 2 lần cùng event_id cho [A, B] → 2 bản ghi (lần 2 trả 0); created_at = now truyền vào', async () => {
@@ -110,6 +122,16 @@ describe('NotificationsService — ghi trong savepoint, người nhận admin (P
     expect(rows.map((r) => r.user_sub)).toEqual([sub('a'), sub('b')]);
     expect(rows[0].created_at.toISOString()).toBe('2026-11-05T03:00:00.123Z');
     expect(rows[0].params).toEqual({ name: 'Bút' });
+  });
+
+  it('2 tx thật song song cùng event_id cho [A, B] → tổng trả về 2, đúng 1 bản ghi mỗi người nhận', async () => {
+    const n = input();
+    const counts = await Promise.all([notify(n), notify(n)]);
+    expect(counts[0] + counts[1]).toBe(2);
+    expect((await rowsOf(n.eventId)).map((r) => r.user_sub)).toEqual([
+      sub('a'),
+      sub('b'),
+    ]);
   });
 
   it('cùng event_id, người nhận mới → chỉ ghi thêm người mới; trùng sub trong danh sách → 1 bản ghi', async () => {

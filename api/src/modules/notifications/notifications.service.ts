@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { decodeTimestampCursor, encodeCursor } from '../../common/cursor';
+import { pgSqlState } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor, Tx } from '../../database/database.module';
 import { SystemConfigService } from '../config/system-config.service';
@@ -37,15 +38,6 @@ const iso = (column: string) =>
   sql.raw(
     `to_char(${column} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`,
   );
-
-// pgViolation chỉ nhận mã toàn số; RAISE/lỗi khác có mã chữ (P0001, XX000) vẫn cần log
-function sqlState(error: unknown): string | null {
-  for (let e = error as { code?: unknown; cause?: unknown } | undefined; e;) {
-    if (typeof e.code === 'string') return e.code;
-    e = e.cause as typeof e;
-  }
-  return null;
-}
 
 interface Row extends NotificationView, Record<string, unknown> {
   cursor_ts: string;
@@ -90,7 +82,7 @@ export class NotificationsService {
         msg: 'notification_write_failed',
         event_id: n.eventId,
         topic: n.topic,
-        code: sqlState(error),
+        code: pgSqlState(error) ?? null,
       });
       return 0;
     }
