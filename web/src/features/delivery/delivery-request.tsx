@@ -116,8 +116,14 @@ export function DeliveryRequest({ requestId, name }: { requestId: string; name: 
       {outcome && <OutcomeBox outcome={outcome} />}
       <ul className="dl-lines" aria-label={t('delivery.lines', { name })}>
         {view.lines.map((l) => (
-          // Key theo số đã giao/hủy: bản phiếu mới đặt lại ô "Thực giao" về phần còn lại mới
-          <DeliverLineRow key={`${l.id}:${l.delivered_qty}:${l.cancelled_qty}`} line={l} onNotice={onNotice} onReload={afterLine} />
+          // Key theo qty/đã giao/đã hủy: phần còn lại đổi thì ô "Thực giao" đặt lại về phần còn lại mới
+          <DeliverLineRow
+            key={`${l.id}:${l.qty}:${l.delivered_qty}:${l.cancelled_qty}`}
+            line={l}
+            version={query.dataUpdatedAt}
+            onNotice={onNotice}
+            onReload={afterLine}
+          />
         ))}
       </ul>
       <div className="dl-request-foot">

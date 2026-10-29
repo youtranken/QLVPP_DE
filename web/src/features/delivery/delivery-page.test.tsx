@@ -16,7 +16,7 @@ const ROWS: PersonRow[] = [
 interface Stub {
   views?: AdminRequestView[];
   deliverAll?: () => Response | Promise<Response>;
-  deliver?: () => Response;
+  deliver?: (url: string) => Response;
 }
 
 function stub({ views = [deliveryRequest()], deliverAll, deliver }: Stub = {}) {
@@ -28,7 +28,7 @@ function stub({ views = [deliveryRequest()], deliverAll, deliver }: Stub = {}) {
     if (url === '/api/admin/requests/r-1') return res(jsonResponse(200, views[Math.min(loads++, views.length - 1)]));
     if (url === '/api/admin/requests/r-2') return res(jsonResponse(200, deliveryRequest({ id: 'r-2', full_name: 'Võ Thị Lan', lines: [] })));
     if (url === '/api/admin/requests/r-1/deliver-all' && deliverAll) return res(deliverAll());
-    if (url === '/api/admin/lines/l-pen/deliver' && deliver) return res(deliver());
+    if (url.endsWith('/deliver') && deliver) return res(deliver(url));
     return res(jsonResponse(200, { items: [] }));
   });
   vi.stubGlobal('fetch', fetchMock);
@@ -172,5 +172,31 @@ describe('DeliveryPage — trang Giao hàng', () => {
     stub({ views: [deliveryRequest({ lines: [{ ...PEN_LINE, delivered_qty: 5 }] })] });
     await openPage();
     expect(screen.getByRole('button', { name: 'Giao tất cả' })).toBeDisabled();
+  });
+
+  it('Hành chính tăng qty Bút bi 5→7 ở nơi khác, giao dòng khác xong tải lại → ô "Thực giao" Bút bi đặt lại 4 (còn lại mới)', async () => {
+    const fresh = deliveryRequest({ lines: [{ ...PEN_LINE, qty: 7 }, { ...NOTE_LINE, delivered_qty: 3 }] });
+    stub({ views: [deliveryRequest(), fresh], deliver: () => jsonResponse(200, { line: {} }) });
+    const lines = await openPage();
+    expect(within(lines).getByLabelText(/^Thực giao Bút bi xanh/)).toHaveValue(2);
+    await userEvent.click(within(lines).getByRole('button', { name: 'Giao Giấy note vàng' }));
+    expect(await within(lines).findByText('đã giao 3/7')).toBeInTheDocument();
+    expect(within(lines).getByLabelText(/^Thực giao Bút bi xanh/)).toHaveValue(4);
+  });
+
+  it('409 STOCK_INSUFFICIENT {available: 1} → "Chỉ còn 1"; phiếu tải lại sau đó (giao dòng khác) → bỏ mức trần cũ, Giao 2 bật lại', async () => {
+    const fresh = deliveryRequest({ lines: [PEN_LINE, { ...NOTE_LINE, delivered_qty: 3 }] });
+    stub({
+      views: [deliveryRequest(), fresh],
+      deliver: (url) => (url.includes('l-pen') ? jsonResponse(409, { code: 'STOCK_INSUFFICIENT', message: 'x', available: 1 }) : jsonResponse(200, { line: {} })),
+    });
+    const lines = await openPage();
+    await userEvent.click(within(lines).getByRole('button', { name: 'Giao Bút bi xanh' }));
+    expect(await within(lines).findByText('Chỉ còn 1')).toBeInTheDocument();
+    expect(within(lines).getByRole('button', { name: 'Giao Bút bi xanh' })).toBeDisabled();
+    await userEvent.click(within(lines).getByRole('button', { name: 'Giao Giấy note vàng' }));
+    await waitFor(() => expect(within(lines).queryByText('Chỉ còn 1')).toBeNull());
+    expect(within(lines).getByLabelText(/^Thực giao Bút bi xanh/)).toHaveValue(2);
+    expect(within(lines).getByRole('button', { name: 'Giao Bút bi xanh' })).toBeEnabled();
   });
 });

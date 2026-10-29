@@ -112,6 +112,9 @@ export const createSnapshot = (ym: string, body: { kind: SnapshotKind; order_qty
 
 export const printPath = (id: string) => `/admin/reports/snapshots/${id}/print`;
 
+// Firefox/Safari đọc blob sau click một lúc: thu hồi sớm làm hỏng tải
+const REVOKE_AFTER_MS = 10_000;
+
 // Tải qua fetch để 401 tự đăng nhập lại và lỗi không thành tệp rác; tên tệp theo server, thiếu thì dự phòng theo tháng
 export async function downloadSnapshot(id: string, lang: string, ym: string) {
   const { blob, fileName } = await apiFetchBlob(`/api/admin/reports/snapshots/${id}/export.xlsx?lang=${lang === 'en' ? 'en' : 'vi'}`);
@@ -122,7 +125,7 @@ export async function downloadSnapshot(id: string, lang: string, ym: string) {
   document.body.append(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(href), 0);
+  setTimeout(() => URL.revokeObjectURL(href), REVOKE_AFTER_MS);
 }
 
 export const pickName = (lang: string, name: string, nameEn: string | null) => (lang === 'en' && nameEn ? nameEn : name);

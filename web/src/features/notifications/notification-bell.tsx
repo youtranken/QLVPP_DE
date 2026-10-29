@@ -66,13 +66,14 @@ export function NotificationBell() {
     mark.mutate(undefined, { onError: () => setMarkFailed(true) });
   };
 
+  // Đánh dấu lỗi thì ở lại bảng với câu lỗi (bấm lại để thử), không để bảng mở đè lên trang mới
   const pick = async (n: NotificationView) => {
     setMarkFailed(false);
     if (!n.read_at) {
       const ok = await mark.mutateAsync([n.id]).then(() => true, () => false);
-      if (!ok) setMarkFailed(true);
-      else setOpen(false);
-    } else setOpen(false);
+      if (!ok) return setMarkFailed(true);
+    }
+    setOpen(false);
     if (isInternalLink(n.link)) navigate(n.link);
   };
 

@@ -20,13 +20,12 @@ function stub(respond: () => Response | Promise<Response> = () => jsonResponse(2
 
 const posts = (f: ReturnType<typeof stub>) => f.mock.calls.filter((c) => c[0] === DELIVER_URL) as unknown as [string, RequestInit][];
 
-function renderRow(line: LineView = PEN_LINE) {
+function renderRow(line: LineView = PEN_LINE, onReload = vi.fn(() => Promise.resolve())) {
   const onNotice = vi.fn();
-  const onReload = vi.fn(() => Promise.resolve());
   renderWithI18n(
     <MeContext.Provider value={makeMe('admin')}>
       <ul>
-        <DeliverLineRow line={line} onNotice={onNotice} onReload={onReload} />
+        <DeliverLineRow line={line} version={1} onNotice={onNotice} onReload={onReload} />
       </ul>
     </MeContext.Provider>,
   );
@@ -161,5 +160,15 @@ describe('DeliverLineRow — một dòng ở trang Giao hàng', () => {
     renderRow(lineView({ ...PEN_LINE, delivered_qty: 5 }));
     expect(screen.getByText('Đã giao đủ')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Giao/ })).toBeNull();
+  });
+
+  it('giao thành công nhưng tải lại phiếu lỗi → ô không báo lỗi giao, không gọi onNotice', async () => {
+    stub();
+    const { onNotice } = renderRow(PEN_LINE, vi.fn(() => Promise.reject(new Error('mạng'))));
+    await userEvent.click(giao());
+    await waitFor(() => expect(giao()).toBeEnabled());
+    expect(qtyBox()).not.toHaveAttribute('aria-invalid');
+    expect(screen.queryByText('Không giao được — thử lại.')).toBeNull();
+    expect(onNotice).not.toHaveBeenCalled();
   });
 });

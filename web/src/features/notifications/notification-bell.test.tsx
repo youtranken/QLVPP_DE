@@ -159,14 +159,15 @@ describe('NotificationBell bảng', () => {
     expect(server.csrf).toEqual(['csrf-1']);
   });
 
-  it('POST read bị 403: báo lỗi trong bảng (không im lặng), bảng giữ mở, vẫn điều hướng', async () => {
+  it('POST read bị 403: báo lỗi trong bảng (không im lặng), bảng giữ mở, KHÔNG điều hướng (bấm lại để thử)', async () => {
     const server: Server = { items: [note('h1')], unread: 1, posts: [], postStatus: 403 };
     stubServer(server);
     renderBell();
     await userEvent.click(await screen.findByRole('button', { name: 'Thông báo, 1 chưa đọc' }));
     await userEvent.click(await screen.findByRole('button', { name: /giao đủ/ }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Chưa đánh dấu đã đọc được — thử lại.');
-    expect(screen.getByTestId('where')).toHaveTextContent('/history/2026-11');
+    expect(screen.getByRole('dialog', { name: 'Thông báo' })).toBeInTheDocument();
+    expect(screen.getByTestId('where')).toHaveTextContent('/start');
   });
 
   it('"Đánh dấu đã đọc tất cả" bị 403: báo lỗi', async () => {

@@ -15,9 +15,11 @@ function StatusTag({ line }: { line: LineView }) {
   return <span className="tag tag--ok">{t('delivery.line.done')}</span>;
 }
 
-function DeliverForm({ line, name, onNotice, onReload }: {
+// Mức trần STOCK_INSUFFICIENT chỉ đúng với bản phiếu lúc nhận lỗi; tải lại phiếu (version mới) thì bỏ
+function DeliverForm({ line, name, version, onNotice, onReload }: {
   line: LineView;
   name: string;
+  version: number;
   onNotice: (code: string) => void;
   onReload: () => Promise<unknown>;
 }) {
@@ -26,10 +28,10 @@ function DeliverForm({ line, name, onNotice, onReload }: {
   const id = useId();
   const remaining = remainingOf(line);
   const [text, setText] = useState(String(remaining));
-  const [cap, setCap] = useState<Cap | null>(null);
+  const [cap, setCap] = useState<(Cap & { version: number }) | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
   const flight = useSingleFlight();
-  const check = useQtyCheck(text, remaining, cap);
+  const check = useQtyCheck(text, remaining, cap?.version === version ? cap : null);
   const error = failed ?? check.error;
 
   const send = () =>
@@ -37,14 +39,16 @@ function DeliverForm({ line, name, onNotice, onReload }: {
       setFailed(null);
       try {
         await deliverLine(line.id, { qty: check.n!, expected_delivered_qty: line.delivered_qty }, csrfToken);
-        await onReload();
       } catch (e) {
         const failure = lineFailure(e, t);
         if (failure.kind === 'request') onNotice(failure.code);
-        else if (failure.limit !== undefined) setCap({ limit: failure.limit, message: failure.message });
+        else if (failure.limit !== undefined) setCap({ limit: failure.limit, message: failure.message, version });
         else setFailed(failure.message);
         if (failure.kind === 'field' && failure.stale) void onReload();
+        return;
       }
+      // Đã giao xong: tải lại lỗi thì phiếu tự hiện lỗi tải, không báo nhầm là giao thất bại
+      await onReload().catch(() => undefined);
     });
 
   return (
@@ -89,8 +93,9 @@ function DeliverForm({ line, name, onNotice, onReload }: {
   );
 }
 
-export function DeliverLineRow({ line, onNotice, onReload }: {
+export function DeliverLineRow({ line, version, onNotice, onReload }: {
   line: LineView;
+  version: number;
   onNotice: (code: string) => void;
   onReload: () => Promise<unknown>;
 }) {
@@ -111,7 +116,7 @@ export function DeliverLineRow({ line, onNotice, onReload }: {
           </small>
         )}
       </div>
-      {open ? <DeliverForm line={line} name={name} onNotice={onNotice} onReload={onReload} /> : <StatusTag line={line} />}
+      {open ? <DeliverForm line={line} name={name} version={version} onNotice={onNotice} onReload={onReload} /> : <StatusTag line={line} />}
     </li>
   );
 }
