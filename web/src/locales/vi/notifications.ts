@@ -5,6 +5,7 @@ const notifications = {
     markAllRead: 'Đánh dấu đã đọc tất cả',
     empty: 'Chưa có thông báo',
     loadMore: 'Xem thêm',
+    markError: 'Chưa đánh dấu đã đọc được — thử lại.',
     loadError: 'Không tải được thông báo — thử lại.',
     someone: 'Một người',
     unreadMark: 'Chưa đọc',

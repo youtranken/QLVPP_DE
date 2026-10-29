@@ -52,6 +52,7 @@ export function NotificationBell() {
   const unread = useUnreadCount();
   const list = useNotifications(open);
   const mark = useMarkRead();
+  const [markFailed, setMarkFailed] = useState(false);
   const items = list.data?.pages.flatMap((p) => p.items) ?? [];
 
   const close = () => {
@@ -60,9 +61,18 @@ export function NotificationBell() {
   };
   useDismiss(open, close, box);
 
+  const markAll = () => {
+    setMarkFailed(false);
+    mark.mutate(undefined, { onError: () => setMarkFailed(true) });
+  };
+
   const pick = async (n: NotificationView) => {
-    if (!n.read_at) await mark.mutateAsync([n.id]).catch(() => undefined);
-    setOpen(false);
+    setMarkFailed(false);
+    if (!n.read_at) {
+      const ok = await mark.mutateAsync([n.id]).then(() => true, () => false);
+      if (!ok) setMarkFailed(true);
+      else setOpen(false);
+    } else setOpen(false);
     if (isInternalLink(n.link)) navigate(n.link);
   };
 
@@ -89,11 +99,16 @@ export function NotificationBell() {
           <div className="notif-head">
             <strong>{t('notifications.title')}</strong>
             {unread > 0 && (
-              <button type="button" className="notif-all" onClick={() => mark.mutate(undefined)}>
+              <button type="button" className="notif-all" onClick={() => markAll()}>
                 {t('notifications.markAllRead')}
               </button>
             )}
           </div>
+          {markFailed && (
+            <p className="notif-empty" role="alert">
+              {t('notifications.markError')}
+            </p>
+          )}
           {list.isError && <p className="notif-empty">{t('notifications.loadError')}</p>}
           {!list.isError && list.isSuccess && items.length === 0 && <p className="notif-empty">{t('notifications.empty')}</p>}
           {items.length > 0 && (

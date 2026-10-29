@@ -8,6 +8,7 @@ const notifications: Messages<typeof vi> = {
     markAllRead: 'Mark all as read',
     empty: 'No notifications yet',
     loadMore: 'Show more',
+    markError: 'Could not mark as read — try again.',
     loadError: 'Could not load notifications — try again.',
     someone: 'Someone',
     unreadMark: 'Unread',

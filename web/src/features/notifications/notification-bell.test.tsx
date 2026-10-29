@@ -25,13 +25,16 @@ interface Server {
   items: NotificationView[];
   unread: number;
   posts: unknown[];
+  csrf?: (string | undefined)[];
+  postStatus?: number;
 }
 
 function stubServer(s: Server) {
   const fetchMock = vi.fn((url: string, init?: RequestInit) => {
     if (init?.method === 'POST') {
       s.posts.push(init.body ? JSON.parse(String(init.body)) : undefined);
-      return Promise.resolve(jsonResponse(200, { updated: 1 }));
+      (s.csrf ??= []).push((init.headers as Record<string, string>)['X-CSRF-Token']);
+      return Promise.resolve(jsonResponse(s.postStatus ?? 200, s.postStatus ? { code: 'CSRF_TOKEN_INVALID' } : { updated: 1 }));
     }
     const q = new URL(url, 'http://x').searchParams;
     const items = q.get('unread') === 'true' ? s.items.filter((i) => !i.read_at) : s.items;
@@ -122,6 +125,7 @@ describe('NotificationBell bảng', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Phiếu tháng 11 của bạn đã được giao đủ/ }));
     await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/history/2026-11'));
     expect(server.posts).toEqual([{ ids: ['a1'] }]);
+    expect(server.csrf).toEqual(['csrf-1']);
     expect(screen.queryByRole('dialog', { name: 'Thông báo' })).toBeNull();
   });
 
@@ -152,6 +156,25 @@ describe('NotificationBell bảng', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Thông báo, 2 chưa đọc' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Đánh dấu đã đọc tất cả' }));
     await waitFor(() => expect(server.posts).toEqual([{}]));
+    expect(server.csrf).toEqual(['csrf-1']);
+  });
+
+  it('POST read bị 403: báo lỗi trong bảng (không im lặng), bảng giữ mở, vẫn điều hướng', async () => {
+    const server: Server = { items: [note('h1')], unread: 1, posts: [], postStatus: 403 };
+    stubServer(server);
+    renderBell();
+    await userEvent.click(await screen.findByRole('button', { name: 'Thông báo, 1 chưa đọc' }));
+    await userEvent.click(await screen.findByRole('button', { name: /giao đủ/ }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Chưa đánh dấu đã đọc được — thử lại.');
+    expect(screen.getByTestId('where')).toHaveTextContent('/history/2026-11');
+  });
+
+  it('"Đánh dấu đã đọc tất cả" bị 403: báo lỗi', async () => {
+    stubServer({ items: [note('i1')], unread: 1, posts: [], postStatus: 403 });
+    renderBell();
+    await userEvent.click(await screen.findByRole('button', { name: 'Thông báo, 1 chưa đọc' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Đánh dấu đã đọc tất cả' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Chưa đánh dấu đã đọc được');
   });
 
   it('Esc đóng bảng và trả focus về nút chuông', async () => {
