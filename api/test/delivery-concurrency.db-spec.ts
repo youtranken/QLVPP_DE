@@ -21,6 +21,7 @@ describe('Giao song song (Postgres thật, hai request HTTP thật)', () => {
   let app: INestApplication<App>;
   let pool: Pool;
   let itemId: string;
+  let createdPeriod = false;
 
   const deliver = (lineId: string, qty: number, expected: number) =>
     request(app.getHttpServer())
@@ -81,11 +82,14 @@ describe('Giao song song (Postgres thật, hai request HTTP thật)', () => {
     const url = assertTestDatabase(process.env.DATABASE_URL);
     pool = new Pool({ connectionString: url });
     await runMigrations(pool, resolveMigrationsDir(), silent);
-    await pool.query(
-      `INSERT INTO periods (ym, deadline) VALUES ($1, '2024-06-10T17:00:00Z')
-       ON CONFLICT (ym) DO NOTHING`,
-      [YM],
-    );
+    createdPeriod =
+      (
+        await pool.query(
+          `INSERT INTO periods (ym, deadline) VALUES ($1, '2024-06-10T17:00:00Z')
+           ON CONFLICT (ym) DO NOTHING`,
+          [YM],
+        )
+      ).rowCount === 1;
     await pool.query(
       `INSERT INTO users (sub, status) SELECT s, 'active' FROM unnest($1::text[]) AS s`,
       [OWNERS],
@@ -105,10 +109,15 @@ describe('Giao song song (Postgres thật, hai request HTTP thật)', () => {
     await reset(0);
     await pool.query('DELETE FROM items WHERE id = $1', [itemId]);
     await pool.query('DELETE FROM users WHERE sub = ANY($1)', [OWNERS]);
-    await pool.query(
-      'DELETE FROM periods WHERE ym = $1 AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = $1)',
-      [YM],
-    );
+    // Chỉ xóa kỳ suite này tạo; bảng khác (bản chốt…) có thể đã trỏ tới kỳ → giữ lại thay vì làm hỏng afterAll
+    if (createdPeriod) {
+      await pool
+        .query(
+          'DELETE FROM periods WHERE ym = $1 AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = $1)',
+          [YM],
+        )
+        .catch(() => undefined);
+    }
     await pool.end();
     delete process.env.AUTH_DEV_MODE;
   });

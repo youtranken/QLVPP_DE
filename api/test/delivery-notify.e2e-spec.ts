@@ -1,4 +1,5 @@
 import { SessionService } from '../src/modules/auth/session.service';
+import { SystemConfigService } from '../src/modules/config/system-config.service';
 import { UsersService } from '../src/modules/users/users.service';
 import { deliveryFixture } from './delivery.fixture';
 import type { RequestView } from './me-request.fixture';
@@ -57,6 +58,27 @@ describe('POST admin/lines/:id/deliver: chuông giao đủ, audit, updated_at', 
     }).expect(200);
     expect(res.body.request_complete).toBe(false);
     expect(await notificationsOf()).toEqual([]);
+  });
+
+  it('phiếu có dòng rejected + dòng danh mục giao đủ → request_complete true, đúng 1 chuông', async () => {
+    const item = await stockItem(10);
+    const request = view(
+      await save([{ item_id: item, qty: 2 }, custom()]).expect(200),
+    );
+    const customLine = request.lines.find((l) => l.item_id === null)!;
+    await f
+      .review(customLine.id, { action: 'reject', note: 'Không mua' })
+      .expect(200);
+    freeze('2026-11-12T03:00:00Z');
+    const catalogLine = request.lines.find((l) => l.item_id === item)!;
+    const res = await deliver(catalogLine.id, {
+      qty: 2,
+      expected_delivered_qty: 0,
+    }).expect(200);
+    expect(res.body.request_complete).toBe(true);
+    expect((await notificationsOf()).map((n) => n.event_id)).toEqual([
+      `request_delivered:${request.id}:1`,
+    ]);
   });
 
   it('giao đủ → Hành chính tăng qty 5→6 qua PUT admin lines (lý do) → giao 1 → thông báo thứ 2 với event_id khác', async () => {
@@ -122,10 +144,12 @@ describe('POST admin/lines/:id/deliver: chuông giao đủ, audit, updated_at', 
     expect(stale.body.code).toBe('STALE_UPDATE');
   });
 
-  it('có phiên cookie mà thiếu X-CSRF-Token → 403 CSRF_TOKEN_INVALID, không giao', async () => {
+  it('phiên admin thật thiếu X-CSRF-Token → 403 CSRF_TOKEN_INVALID, không giao; có token → 200', async () => {
     const { line } = await lockedLine(10);
     const sub = `e2e-req-csrf-${SUFFIX}`;
-    await f.app().get(UsersService).upsertFromClaims({ sub, full_name: 'E2E' });
+    const groups = [await f.app().get(SystemConfigService).getAdminGroup()];
+    const claims = { sub, full_name: 'E2E Hành chính', groups };
+    await f.app().get(UsersService).upsertFromClaims(claims);
     const session = await f
       .app()
       .get(SessionService)
@@ -133,15 +157,21 @@ describe('POST admin/lines/:id/deliver: chuông giao đủ, audit, updated_at', 
         userSub: sub,
         refreshToken: null,
         accessTokenExp: new Date(Date.now() + 10 * 60_000),
-        claims: { sub, full_name: 'E2E' },
+        claims,
         idToken: null,
       });
-    const res = await http()
-      .post(`/api/admin/lines/${line.id}/deliver`)
-      .set('Cookie', `vpp_sid=${session.id}`)
+    const post = () =>
+      http()
+        .post(`/api/admin/lines/${line.id}/deliver`)
+        .set('Cookie', `vpp_sid=${session.id}`);
+    const res = await post()
       .send({ qty: 1, expected_delivered_qty: 0 })
       .expect(403);
     expect(res.body.code).toBe('CSRF_TOKEN_INVALID');
     expect(await f.deliveriesOf(line.id)).toHaveLength(0);
+    await post()
+      .set('X-CSRF-Token', session.csrfToken)
+      .send({ qty: 1, expected_delivered_qty: 0 })
+      .expect(200);
   });
 });

@@ -4,13 +4,13 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { StockService } from '../catalog/stock.service';
+import type { StockResult } from '../catalog/stock.service';
 import { eventIds } from '../notifications/notification-events';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PeriodsService } from '../periods/periods.service';
 import { LineDeliveryStore } from '../requests/line-delivery.store';
 import type { LockedLine } from '../requests/line-delivery.store';
 import { lineNotFound } from '../requests/request-errors';
-import * as requestsRepo from '../requests/requests.repo';
 import {
   deliverExceedsQty,
   lineNotReviewed,
@@ -48,7 +48,7 @@ export class DeliveryService {
         throw staleDelivery(line.delivered_qty);
       }
       const result = await this.deliverWithin(tx, line, body.qty, actor, now);
-      await requestsRepo.bumpRequest(tx, line.request_id, now);
+      await this.lines.touchRequest(tx, line.request_id, now);
       const complete = await this.notifyIfComplete(tx, line, now);
       return { ...result, request_complete: complete };
     });
@@ -71,6 +71,7 @@ export class DeliveryService {
           qty,
           lineId: line.id,
           actor,
+          now,
         })
       : null;
     const moved = await this.lines.addDelivered(
@@ -90,7 +91,17 @@ export class DeliveryService {
       actor,
       now,
     });
-    const deliveredQty = line.delivered_qty + qty;
+    await this.auditDelivered(tx, line, qty, movementId, actor);
+    return toResult(line, qty, taken);
+  }
+
+  private async auditDelivered(
+    tx: Tx,
+    line: LockedLine,
+    qty: number,
+    movementId: string | null,
+    actor: string,
+  ): Promise<void> {
     await this.audit.appendWithin(tx, {
       actor,
       action: 'line.delivered',
@@ -99,21 +110,11 @@ export class DeliveryService {
       detail: {
         request_id: line.request_id,
         before: { delivered_qty: line.delivered_qty },
-        after: { delivered_qty: deliveredQty },
+        after: { delivered_qty: line.delivered_qty + qty },
         qty,
         movement_id: movementId,
       },
     });
-    return {
-      line: {
-        id: line.id,
-        qty: line.qty,
-        delivered_qty: deliveredQty,
-        cancelled_qty: line.cancelled_qty,
-      },
-      movement_id: movementId,
-      stock_qty: taken?.stock_qty ?? null,
-    };
   }
 
   // Chỉ gọi sau một đợt giao thật: hủy nợ làm phiếu đủ thì không báo "đã giao đủ"
@@ -139,6 +140,23 @@ export class DeliveryService {
     const period = await this.periods.findSnapshot(ym, tx);
     if (!period || now < period.deadline) throw periodNotLocked();
   }
+}
+
+function toResult(
+  line: LockedLine,
+  qty: number,
+  taken: StockResult | null,
+): Omit<DeliverResult, 'request_complete'> {
+  return {
+    line: {
+      id: line.id,
+      qty: line.qty,
+      delivered_qty: line.delivered_qty + qty,
+      cancelled_qty: line.cancelled_qty,
+    },
+    movement_id: taken?.movement_id ?? null,
+    stock_qty: taken?.stock_qty ?? null,
+  };
 }
 
 function assertDeliverable(line: LockedLine): void {

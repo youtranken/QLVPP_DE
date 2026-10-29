@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import type { Tx } from '../../database/database.module';
 import { EFFECTIVE_LINE } from './line-predicates';
+import { bumpRequest } from './requests.repo';
 
 export interface LockedLine {
   id: string;
@@ -45,13 +46,17 @@ export class LineDeliveryStore {
   ): Promise<boolean> {
     const at = now.toISOString();
     const result = await tx.execute(sql`
-      UPDATE request_lines
-      SET delivered_qty = delivered_qty + ${qty},
+      UPDATE request_lines l
+      SET delivered_qty = l.delivered_qty + ${qty},
           last_delivered_at = ${at}::timestamptz, updated_at = ${at}::timestamptz
-      WHERE id = ${lineId} AND delivered_qty = ${expected}
-        AND review_status IN ('n/a', 'accepted', 'converted')
+      WHERE l.id = ${lineId} AND l.delivered_qty = ${expected} AND ${EFFECTIVE_LINE}
     `);
     return (result.rowCount ?? 0) > 0;
+  }
+
+  // Dòng đổi số đã giao = phiếu đổi: tab Điều chỉnh mở với mốc cũ phải nhận STALE_UPDATE
+  async touchRequest(tx: Tx, requestId: string, now: Date): Promise<string> {
+    return bumpRequest(tx, requestId, now);
   }
 
   // Đủ = có dòng hiệu lực, mọi dòng hiệu lực đã giao + hủy hết, không còn dòng chờ duyệt

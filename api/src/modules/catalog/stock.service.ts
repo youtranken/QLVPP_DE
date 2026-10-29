@@ -32,6 +32,7 @@ export interface DeliveryTake {
   qty: number;
   lineId: string;
   actor: string;
+  now: Date;
 }
 
 @Injectable()
@@ -109,7 +110,8 @@ export class StockService {
   ): Promise<StockResult> {
     const updated = (
       await tx.execute<{ stock_qty: number }>(sql`
-        UPDATE items SET stock_qty = stock_qty - ${take.qty}, updated_at = now()
+        UPDATE items SET stock_qty = stock_qty - ${take.qty},
+          updated_at = ${take.now.toISOString()}::timestamptz
         WHERE id = ${take.itemId} AND stock_qty >= ${take.qty}
         RETURNING stock_qty
       `)
