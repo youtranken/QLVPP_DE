@@ -18,3 +18,14 @@ export interface DeliverResult {
   stock_qty: number | null;
   request_complete: boolean;
 }
+
+export interface DeliverAllFailure {
+  line_id: string;
+  code: string;
+  available?: number;
+}
+
+export interface DeliverAllResult {
+  delivered: { line_id: string; qty: number }[];
+  failed: DeliverAllFailure[];
+}

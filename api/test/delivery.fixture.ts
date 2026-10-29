@@ -41,6 +41,8 @@ export function deliveryFixture(tag: string) {
 
   const deliver = (lineId: string, body: object, sub = ADMIN, role = 'admin') =>
     as(http().post(`/api/admin/lines/${lineId}/deliver`), sub, role).send(body);
+  const deliverAll = (requestId: string, sub = ADMIN, role = 'admin') =>
+    as(http().post(`/api/admin/requests/${requestId}/deliver-all`), sub, role);
   const stockItem = async (stock: number, maxQty = 10) => {
     const id = await newItem({ max_qty: maxQty });
     await pool().query('UPDATE items SET stock_qty = $2 WHERE id = $1', [
@@ -94,6 +96,7 @@ export function deliveryFixture(tag: string) {
   return {
     ...f,
     deliver,
+    deliverAll,
     stockItem,
     stockOf,
     movementsOf,

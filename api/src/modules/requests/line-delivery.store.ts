@@ -17,6 +17,18 @@ export interface LockedLine {
   review_status: string;
 }
 
+export interface LockedRequest {
+  request_id: string;
+  period_ym: string;
+  user_sub: string;
+  lines: LockedLine[];
+}
+
+const LINE_COLUMNS = sql`
+  l.id, l.request_id, to_char(r.period_ym, 'YYYY-MM') AS period_ym, r.user_sub,
+  l.item_id, l.custom_name, l.qty, l.delivered_qty, l.cancelled_qty, l.review_status
+`;
+
 // Ghi request_lines cho giao/hủy nợ ở lại module requests; delivery chỉ gọi qua đây
 @Injectable()
 export class LineDeliveryStore {
@@ -28,13 +40,28 @@ export class LineDeliveryStore {
     `);
     if (head.rows.length === 0) return null;
     const { rows } = await tx.execute<LockedLine & Record<string, unknown>>(sql`
-      SELECT l.id, l.request_id, to_char(r.period_ym, 'YYYY-MM') AS period_ym, r.user_sub,
-             l.item_id, l.custom_name, l.qty, l.delivered_qty, l.cancelled_qty,
-             l.review_status
+      SELECT ${LINE_COLUMNS}
       FROM request_lines l JOIN requests r ON r.id = l.request_id
       WHERE l.id = ${lineId} FOR UPDATE OF l
     `);
     return rows[0] ?? null;
+  }
+
+  async lockRequestLines(
+    tx: Tx,
+    requestId: string,
+  ): Promise<LockedRequest | null> {
+    const head = await tx.execute<Omit<LockedRequest, 'lines'>>(sql`
+      SELECT r.id AS request_id, to_char(r.period_ym, 'YYYY-MM') AS period_ym, r.user_sub
+      FROM requests r WHERE r.id = ${requestId} FOR UPDATE
+    `);
+    if (head.rows.length === 0) return null;
+    const { rows } = await tx.execute<LockedLine & Record<string, unknown>>(sql`
+      SELECT ${LINE_COLUMNS}
+      FROM request_lines l JOIN requests r ON r.id = l.request_id
+      WHERE l.request_id = ${requestId} ORDER BY l.id FOR UPDATE OF l
+    `);
+    return { ...head.rows[0], lines: rows };
   }
 
   async addDelivered(

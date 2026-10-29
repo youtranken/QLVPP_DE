@@ -103,6 +103,15 @@ export class StockService {
     });
   }
 
+  // Khóa trước mọi món của phiếu theo id tăng: hai phiếu có món chéo thứ tự không deadlock
+  async lockItemsWithin(tx: Tx, itemIds: string[]): Promise<void> {
+    if (itemIds.length === 0) return;
+    await tx.execute(sql`
+      SELECT id FROM items WHERE id = ANY(${sql.param(itemIds)}::uuid[])
+      ORDER BY id FOR UPDATE
+    `);
+  }
+
   // Không audit riêng: audit line.delivered của giao hàng đã ghi movement_id
   async takeForDeliveryWithin(
     tx: Tx,

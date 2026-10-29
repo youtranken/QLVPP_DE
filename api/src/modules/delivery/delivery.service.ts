@@ -63,7 +63,7 @@ export class DeliveryService {
     now: Date,
   ): Promise<Omit<DeliverResult, 'request_complete'>> {
     assertDeliverable(line);
-    const remaining = line.qty - line.delivered_qty - line.cancelled_qty;
+    const remaining = remainingOf(line);
     if (qty > remaining) throw deliverExceedsQty(remaining);
     const taken = line.item_id
       ? await this.stock.takeForDeliveryWithin(tx, {
@@ -157,6 +157,10 @@ function toResult(
     movement_id: taken?.movement_id ?? null,
     stock_qty: taken?.stock_qty ?? null,
   };
+}
+
+export function remainingOf(line: LockedLine): number {
+  return line.qty - line.delivered_qty - line.cancelled_qty;
 }
 
 function assertDeliverable(line: LockedLine): void {
