@@ -43,7 +43,7 @@ describe('SA lockout theo cặp (IP, username)', () => {
       .set('X-Forwarded-For', ip)
       .send({ username, password });
 
-  it('5 sai (IP A, X) → 429 SA_LOGIN_LOCKED kể cả mật khẩu đúng; (A, Y) vẫn 401; (B, X) đăng nhập được', async () => {
+  it('sai 1–4 (IP A, X) → 401; sai thứ 5 → 429 SA_LOGIN_LOCKED kể cả mật khẩu đúng sau đó; (A, Y) vẫn 401; (B, X) đăng nhập được', async () => {
     for (let i = 0; i < 4; i += 1) {
       await login('203.0.113.1', 'sai').expect(401);
     }

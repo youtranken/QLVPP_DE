@@ -21,6 +21,26 @@ describe('SystemConfigService.getAdminGroup', () => {
     expect(where).toHaveBeenCalledTimes(1);
   });
 
+  it('đổi admin_group trong DB: 29 999 ms sau lần đọc vẫn giá trị cũ; đúng 30 000 ms → đọc lại giá trị mới', async () => {
+    const where = jest
+      .fn()
+      .mockResolvedValueOnce([{ value: 'vpp-admin' }])
+      .mockResolvedValueOnce([{ value: 'nhom-moi' }]);
+    const db = { select: jest.fn(() => ({ from: () => ({ where }) })) };
+    const service = new SystemConfigService(db as never);
+    const now = jest.spyOn(Date, 'now').mockReturnValue(1_000_000);
+    try {
+      await expect(service.getAdminGroup()).resolves.toBe('vpp-admin');
+      now.mockReturnValue(1_029_999);
+      await expect(service.getAdminGroup()).resolves.toBe('vpp-admin');
+      now.mockReturnValue(1_030_000);
+      await expect(service.getAdminGroup()).resolves.toBe('nhom-moi');
+      expect(where).toHaveBeenCalledTimes(2);
+    } finally {
+      now.mockRestore();
+    }
+  });
+
   it.each([42, '', '   ', null])(
     'giá trị %p không phải chuỗi khác rỗng → throw',
     async (value) => {
