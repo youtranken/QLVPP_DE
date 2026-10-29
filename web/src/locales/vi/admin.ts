@@ -52,7 +52,7 @@ const admin = {
       period: { headcount_recorded: 'Chốt số người của kỳ' },
       report: { snapshot_created: 'Chốt báo cáo' },
       request: { created: 'Tạo phiếu', updated: 'Sửa phiếu', deleted: 'Xóa phiếu' },
-      stock: { adjust: 'Điều chỉnh kho', delivery: 'Xuất kho khi giao', issue: 'Xuất lẻ', purchase: 'Nhập kho' },
+      stock: { adjust: 'Điều chỉnh kho', issue: 'Xuất lẻ', purchase: 'Nhập kho' },
       users: { directory_sync: 'Đồng bộ danh bạ' },
     },
     filters: {

@@ -13,7 +13,9 @@ describe('AUDIT_ACTIONS', () => {
     expect(unresolved.map((u) => `${u.where} ${u.text}`)).toEqual([]);
     expect([...actions].filter((a) => !AUDIT_ACTIONS.includes(a)).sort()).toEqual([]);
     expect(AUDIT_ACTIONS.filter((a) => !actions.has(a)).sort()).toEqual([]);
-    for (const a of ['line.cancel_remaining', 'report.snapshot_created', 'line.delivered', 'stock.delivery']) expect(actions.has(a)).toBe(true);
+    for (const a of ['line.cancel_remaining', 'report.snapshot_created', 'line.delivered']) expect(actions.has(a)).toBe(true);
+    // Giao trừ kho không audit riêng (line.delivered mang movement_id): bộ lọc Nhật ký không được có mục luôn rỗng
+    expect(actions.has('stock.delivery')).toBe(false);
   });
 
   it('trích xuất không phụ thuộc tiền tố: nhóm mới, ba ngôi, biến const, template reason; dạng lạ -> báo file:dòng', () => {

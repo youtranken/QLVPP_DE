@@ -19,15 +19,22 @@ export interface StockResult {
   movement_id: string;
 }
 
+type MovementReason = AuditedMovement['reason'] | 'delivery';
+
 interface MovementInput {
   itemId: string;
   delta: number;
-  reason: 'purchase' | 'adjust' | 'issue' | 'delivery';
+  reason: MovementReason;
   note: string | null;
   recipientSub?: string | null;
   refLineId?: string | null;
   // Giao hàng ghi theo ClockService như line_deliveries; biến động tay giữ now() của DB
   at?: Date;
+}
+
+// Chỉ biến động tay qua record() mới audit stock.<reason>; giao hàng audit ở line.delivered
+interface AuditedMovement extends Omit<MovementInput, 'reason'> {
+  reason: 'purchase' | 'adjust' | 'issue';
 }
 
 export interface LowStockClaim extends Record<string, unknown> {
@@ -184,7 +191,7 @@ export class StockService {
     tx: Tx,
     updated: { stock_qty: number } | undefined,
     actor: string,
-    m: MovementInput,
+    m: AuditedMovement,
   ): Promise<StockResult> {
     if (!updated) throw await this.rejection(tx, m.itemId);
     const movement = await this.insertMovement(tx, actor, m);
