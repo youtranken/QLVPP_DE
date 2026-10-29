@@ -58,7 +58,12 @@ import { SummaryService } from './summary.service';
     LineDeliveryStore,
     LineNotifier,
   ],
-  exports: [RequestLinesWriter, RequestViewBuilder, LineDeliveryStore],
+  exports: [
+    RequestLinesWriter,
+    RequestViewBuilder,
+    LineDeliveryStore,
+    SummaryService,
+  ],
 })
 export class RequestsModule implements OnModuleInit {
   constructor(

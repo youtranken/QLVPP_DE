@@ -10,6 +10,7 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { UsersService } from '../users/users.service';
+import { LOW_STOCK_SQL } from './catalog-sql';
 import { itemNotFound } from './catalog.service';
 import type { IssueDto, StockChangeDto } from './stock.dto';
 
@@ -25,6 +26,14 @@ interface MovementInput {
   note: string | null;
   recipientSub?: string | null;
   refLineId?: string | null;
+}
+
+export interface LowStockClaim extends Record<string, unknown> {
+  id: string;
+  name: string;
+  name_en: string | null;
+  stock_qty: number;
+  last_purchase_id: string | null;
 }
 
 export interface DeliveryTake {
@@ -134,6 +143,19 @@ export class StockService {
       refLineId: take.lineId,
     });
     return { stock_qty: updated.stock_qty, movement_id: movement.id };
+  }
+
+  // UPDATE có điều kiện = đòi quyền báo: cron chạy song song thì bên sau chờ khóa dòng rồi thấy đã báo
+  async claimLowStockWithin(tx: Tx, now: Date): Promise<LowStockClaim[]> {
+    const { rows } = await tx.execute<LowStockClaim>(sql`
+      UPDATE items i SET low_stock_notified_at = ${now.toISOString()}::timestamptz
+      WHERE i.active AND ${sql.raw(LOW_STOCK_SQL)} AND i.low_stock_notified_at IS NULL
+      RETURNING i.id, i.name, i.name_en, i.stock_qty,
+        (SELECT m.id FROM stock_movements m
+         WHERE m.item_id = i.id AND m.reason = 'purchase'
+         ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_purchase_id
+    `);
+    return rows;
   }
 
   private async insertMovement(

@@ -84,6 +84,37 @@ export class PeriodsService {
       : null;
   }
 
+  async latestLocked(
+    now: Date,
+    tx: Executor = this.db,
+  ): Promise<(Period & { headcount: number | null }) | null> {
+    const { rows } = await tx.execute<{
+      ym: string;
+      deadline: Date;
+      headcount: number | null;
+    }>(sql`
+      SELECT to_char(ym, 'YYYY-MM') AS ym, deadline, headcount FROM periods
+      WHERE deadline <= ${now.toISOString()}::timestamptz
+      ORDER BY ym DESC LIMIT 1
+    `);
+    return rows[0]
+      ? { ...toPeriod(rows[0]), headcount: rows[0].headcount }
+      : null;
+  }
+
+  // Chỉ ghi lần đầu: mẫu số chụp lúc khóa, chạy lại/đua không ghi đè
+  async recordHeadcount(
+    ym: string,
+    n: number,
+    tx: Executor = this.db,
+  ): Promise<boolean> {
+    const result = await tx.execute(sql`
+      UPDATE periods SET headcount = ${n}
+      WHERE ym = ${ymToDate(ym)}::date AND headcount IS NULL
+    `);
+    return (result.rowCount ?? 0) > 0;
+  }
+
   private async find(ym: string, tx: Executor): Promise<Period | null> {
     const { rows } = await tx.execute<{ ym: string; deadline: Date }>(sql`
       SELECT to_char(ym, 'YYYY-MM') AS ym, deadline FROM periods

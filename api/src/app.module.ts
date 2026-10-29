@@ -19,6 +19,7 @@ import { SystemConfigModule } from './modules/config/config.module';
 import { FilesModule } from './modules/files/files.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PeriodsModule } from './modules/periods/periods.module';
+import { RemindersModule } from './modules/reminders/reminders.module';
 import { RequestsModule } from './modules/requests/requests.module';
 
 @Module({
@@ -63,6 +64,7 @@ import { RequestsModule } from './modules/requests/requests.module';
     RequestsModule,
     NotificationsModule,
     DeliveryModule,
+    RemindersModule,
   ],
   controllers: [HealthController, ...testOnlyControllers(process.env)],
   providers: [

@@ -83,12 +83,20 @@ export class SummaryService {
 
   async unregistered(ym: string): Promise<{ items: UnregisteredUser[] }> {
     await this.assertViewable(ym);
-    const { rows } = await this.db.execute<UnregisteredUser>(sql`
-      SELECT u.sub, u.full_name, u.email, u.department FROM users u
-      WHERE ${await this.headcountCondition()} AND ${notRegistered(ym)}
-      ORDER BY u.department NULLS LAST, u.full_name, u.sub
+    return { items: await this.unregisteredRows(ym) };
+  }
+
+  // Người nhận nhắc: cùng tập với danh sách chưa đăng ký, không kiểm kỳ theo đồng hồ (cron truyền now riêng)
+  async unregisteredSubs(ym: string): Promise<string[]> {
+    return (await this.unregisteredRows(ym)).map((u) => u.sub);
+  }
+
+  // "Mọi người" của chuông kỳ mở = mẫu số Tổng hợp (F9)
+  async audienceSubs(): Promise<string[]> {
+    const { rows } = await this.db.execute<{ sub: string }>(sql`
+      SELECT u.sub FROM users u WHERE ${await this.headcountCondition()} ORDER BY u.sub
     `);
-    return { items: rows };
+    return rows.map((r) => r.sub);
   }
 
   async request(id: string): Promise<RequestView & { user_status: string }> {
@@ -101,7 +109,7 @@ export class SummaryService {
     return { ...view, user_status: owner?.status ?? 'unknown' };
   }
 
-  private async requestCounts(ym: string) {
+  async requestCounts(ym: string) {
     const { rows } = await this.db.execute<{
       registered: number;
       lines_pending_delivery: number;
@@ -117,7 +125,7 @@ export class SummaryService {
   }
 
   // Cùng điều kiện với danh sách unregistered → số luôn bằng độ dài danh sách
-  private async liveCounts(
+  async liveCounts(
     ym: string,
   ): Promise<{ headcount: number; unregistered: number }> {
     const { rows } = await this.db.execute<{
@@ -129,6 +137,15 @@ export class SummaryService {
       FROM users u WHERE ${await this.headcountCondition()}
     `);
     return rows[0];
+  }
+
+  private async unregisteredRows(ym: string): Promise<UnregisteredUser[]> {
+    const { rows } = await this.db.execute<UnregisteredUser>(sql`
+      SELECT u.sub, u.full_name, u.email, u.department FROM users u
+      WHERE ${await this.headcountCondition()} AND ${notRegistered(ym)}
+      ORDER BY u.department NULLS LAST, u.full_name, u.sub
+    `);
+    return rows;
   }
 
   // Mẫu số sống: người active, không phải SA cục bộ, thuộc group được cấp (gate rỗng = mọi người)
