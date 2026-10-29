@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, asRole, expectNoContrastViolations, isMobile, psql, searchSummaryPeople, settled } from './helpers';
+import { acquireLock, asRole, deleteTestUsers, expectNoContrastViolations, isMobile, psql, searchSummaryPeople, settled } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-15-shots';
 
@@ -121,7 +121,7 @@ test.describe('E3-S3/E3-S4 điều chỉnh và tạo hộ', () => {
         WHERE object_type = 'request' AND object_id = '${requestId}' AND action = 'request.updated'`);
       expect(logged).toBe(reason);
     } finally {
-      psql(`DELETE FROM requests WHERE user_sub = '${sub}'; DELETE FROM users WHERE sub = '${sub}'`);
+      deleteTestUsers(sub);
       if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${prevYm}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${prevYm}-01')`);
       release();
     }
@@ -172,7 +172,7 @@ test.describe('E3-S3/E3-S4 điều chỉnh và tạo hộ', () => {
       await expect(drawer.getByRole('listitem').filter({ hasText: item.name }).getByRole('spinbutton')).toHaveValue('2');
       await snap(page, info, 'create-open-adjust');
     } finally {
-      psql(`DELETE FROM requests WHERE user_sub = '${sub}'; DELETE FROM users WHERE sub = '${sub}'`);
+      deleteTestUsers(sub);
     }
   });
 });

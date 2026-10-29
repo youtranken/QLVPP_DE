@@ -1,0 +1,284 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "VPP Công trình — vòng đời một tháng (kỳ → giao → còn nợ → bản chốt)",
+    "output": "docs/diagrams/vpp-vong-thang.html",
+    "locale": "vi",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/youtranken/QLVPP_DE.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "e706b4e7539c5345bc55cf37dc40ea017107f628"
+    }
+  },
+  "mainPath": [
+    "open",
+    "remind",
+    "locked",
+    "delivering",
+    "done"
+  ],
+  "states": [
+    {
+      "id": "open",
+      "type": "start",
+      "label": "Kỳ đang mở",
+      "sublabel": "ngày 1: period_open",
+      "tag": "lưu phiếu",
+      "step": "01",
+      "sources": [
+        {
+          "path": "api/src/modules/periods/periods.service.ts",
+          "line": 50,
+          "end_line": 67,
+          "label": "openPeriod"
+        },
+        {
+          "path": "api/src/modules/reminders/notification-scheduler.ts",
+          "line": 92,
+          "end_line": 102,
+          "label": "period_open"
+        }
+      ]
+    },
+    {
+      "id": "remind",
+      "type": "waiting",
+      "label": "Còn 3 ngày",
+      "sublabel": "lastDay − 2",
+      "tag": "reminder",
+      "step": "02",
+      "sources": [
+        {
+          "path": "api/src/modules/reminders/schedule-days.ts",
+          "line": 3,
+          "end_line": 9
+        },
+        {
+          "path": "api/src/modules/reminders/notification-scheduler.ts",
+          "line": 104,
+          "end_line": 114,
+          "label": "reminder"
+        }
+      ]
+    },
+    {
+      "id": "locked",
+      "type": "decision",
+      "label": "Kỳ đã khóa",
+      "sublabel": "now ≥ deadline",
+      "tag": "lastDay + 1 · 00:00 VN",
+      "step": "03",
+      "sources": [
+        {
+          "path": "api/src/modules/reminders/notification-scheduler.ts",
+          "line": 116,
+          "end_line": 137,
+          "label": "headcount + period_locked"
+        },
+        {
+          "path": "api/src/modules/reminders/schedule-days.ts",
+          "line": 11,
+          "end_line": 14,
+          "label": "isLockDay"
+        },
+        {
+          "path": "api/src/modules/delivery/delivery.service.ts",
+          "line": 139,
+          "end_line": 142,
+          "label": "PERIOD_NOT_LOCKED"
+        }
+      ]
+    },
+    {
+      "id": "delivering",
+      "type": "active",
+      "label": "Đang giao",
+      "sublabel": "dòng · Giao tất cả",
+      "tag": "trừ kho",
+      "step": "04",
+      "sources": [
+        {
+          "path": "api/src/modules/delivery/delivery.service.ts",
+          "line": 36,
+          "end_line": 55,
+          "label": "deliverLine"
+        },
+        {
+          "path": "api/src/modules/delivery/deliver-all.service.ts",
+          "line": 30,
+          "end_line": 48,
+          "label": "deliverAll"
+        }
+      ]
+    },
+    {
+      "id": "done",
+      "type": "success",
+      "label": "Phiếu giao đủ",
+      "sublabel": "request_delivered",
+      "tag": "đã giao + hủy = qty",
+      "step": "05",
+      "sources": [
+        {
+          "path": "api/src/modules/delivery/delivery.service.ts",
+          "line": 120,
+          "end_line": 137,
+          "label": "notifyIfComplete"
+        },
+        {
+          "path": "api/src/modules/requests/line-delivery.store.ts",
+          "line": 132,
+          "end_line": 140,
+          "label": "isComplete"
+        }
+      ]
+    },
+    {
+      "id": "owed",
+      "type": "waiting",
+      "label": "Còn nợ",
+      "sublabel": "kỳ đã khóa, chưa giao",
+      "tag": "Nợ kỳ trước",
+      "sources": [
+        {
+          "path": "api/src/modules/delivery/backlog.service.ts",
+          "line": 54,
+          "end_line": 72,
+          "label": "backlogRows"
+        },
+        {
+          "path": "api/src/modules/reports/report-queries.ts",
+          "line": 44,
+          "end_line": 50,
+          "label": "backlog_prev"
+        }
+      ]
+    },
+    {
+      "id": "cancelled",
+      "type": "neutral",
+      "label": "Hủy nợ",
+      "sublabel": "lý do ≥ 3 ký tự",
+      "tag": "line_cancelled",
+      "sources": [
+        {
+          "path": "api/src/modules/delivery/cancel-remaining.service.ts",
+          "line": 30,
+          "end_line": 92
+        }
+      ]
+    },
+    {
+      "id": "snapshot",
+      "type": "external",
+      "label": "Bản chốt báo cáo",
+      "sublabel": "Excel / In trình ký",
+      "tag": "số cố định",
+      "sources": [
+        {
+          "path": "api/src/modules/reports/snapshots.service.ts",
+          "line": 40,
+          "end_line": 70,
+          "label": "REPEATABLE READ"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "open-remind",
+      "from": "open",
+      "to": "remind",
+      "label": "còn 3 ngày"
+    },
+    {
+      "id": "remind-locked",
+      "from": "remind",
+      "to": "locked",
+      "label": "qua hạn",
+      "variant": "security"
+    },
+    {
+      "id": "locked-delivering",
+      "from": "locked",
+      "to": "delivering",
+      "label": "giao",
+      "variant": "emphasis"
+    },
+    {
+      "id": "delivering-done",
+      "from": "delivering",
+      "to": "done",
+      "label": "đủ",
+      "variant": "emphasis"
+    },
+    {
+      "id": "delivering-owed",
+      "from": "delivering",
+      "to": "owed",
+      "label": "giao thiếu"
+    },
+    {
+      "id": "owed-delivering",
+      "from": "owed",
+      "to": "delivering",
+      "label": "Giao bổ sung"
+    },
+    {
+      "id": "owed-cancelled",
+      "from": "owed",
+      "to": "cancelled",
+      "label": "Hủy nợ…",
+      "variant": "security"
+    },
+    {
+      "id": "cancelled-done",
+      "from": "cancelled",
+      "to": "done",
+      "label": "hết nợ",
+      "variant": "dashed"
+    },
+    {
+      "id": "locked-snapshot",
+      "from": "locked",
+      "to": "snapshot",
+      "label": "chốt",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Lịch chuông (cron mỗi giờ, phút 5 giờ VN)",
+      "items": [
+        "Ngày 1: period_open cho mẫu số Tổng hợp",
+        "lastDay − 2 (còn 3 ngày): reminder cho người chưa có phiếu",
+        "Ngày khóa (= lastDay + 1): period_locked cho Hành chính; headcount ghi bù nếu trượt",
+        "Mỗi lần chạy: sắp hết kho (đòi quyền một lần), xóa chuông > 90 ngày"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Còn nợ và báo cáo",
+      "items": [
+        "Chỉ giao/hủy nợ khi kỳ của phiếu đã khóa",
+        "Phần còn lại = qty − đã giao − đã hủy; vào báo cáo kỳ sau dưới cột Nợ kỳ trước",
+        "Cần mua = phần còn lại kỳ này + nợ kỳ trước − tồn (BR-15)",
+        "Giao tất cả thiếu kho: dòng đó vào Còn nợ (STOCK_INSUFFICIENT), dòng khác vẫn giao",
+        "Hủy nợ làm hết nợ nhưng không gửi chuông giao đủ",
+        "Bản chốt chốt được cả kỳ đang mở; mỗi lần bấm Xuất/In một bản mới, In lại/Tải lại ra số cũ"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Không có",
+      "items": [
+        "Hoàn tác đợt giao (FR-44 bỏ khỏi GĐ1)",
+        "Gửi bù chuông khi cron trượt cả ngày (giả định 3)"
+      ]
+    }
+  ]
+}

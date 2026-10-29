@@ -1,5 +1,5 @@
 import { mkdirSync } from 'node:fs';
-import { expect, test, type APIRequestContext, type Browser, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
 import {
   deleteTestUsers,
   devHeaders,
@@ -10,11 +10,10 @@ import {
   searchSummaryPeople,
   settled,
 } from './helpers';
+import { adminPage } from './sessions';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-17-shots';
 const FIXTURE = 'playwright/fixtures/item.png';
-const SA_USERNAME = process.env.PW_SA_USERNAME ?? 'sa';
-const SA_PASSWORD = process.env.PW_SA_PASSWORD;
 
 type Person = { sub: string; name: string };
 type Item = { id: string; name: string; active: boolean; admin_only: boolean };
@@ -27,29 +26,6 @@ async function snap(page: Page, info: TestInfo, name: string) {
 }
 
 const memberHeaders = (sub: string) => ({ 'x-dev-user-sub': sub, 'x-dev-role': 'member' });
-
-async function newPage(browser: Browser, info: TestInfo, headers?: Record<string, string>) {
-  const { viewport, hasTouch, isMobile: mobile, baseURL } = info.project.use;
-  const ctx = await browser.newContext({ baseURL, viewport, hasTouch, isMobile: mobile });
-  const page = await ctx.newPage();
-  if (headers) await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...headers } }));
-  return page;
-}
-
-// SA thật khi có mật khẩu (SA giới hạn 10 lần/phút/IP: mỗi viewport đăng nhập đúng một lần); không thì dev admin
-async function adminPage(browser: Browser, info: TestInfo) {
-  const page = await newPage(browser, info, SA_PASSWORD ? undefined : devHeaders('admin'));
-  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
-  if (!SA_PASSWORD) return page;
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Dành cho IT' }).click();
-  await page.getByLabel('Tên tài khoản').fill(SA_USERNAME);
-  await page.getByLabel('Mật khẩu').fill(SA_PASSWORD);
-  const login = page.waitForResponse((r) => r.url().endsWith('/api/auth/sa-login'));
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  expect((await login).status()).toBe(200);
-  return page;
-}
 
 async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom: string) {
   await page.goto('/');

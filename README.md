@@ -73,6 +73,13 @@ docker compose exec api node scripts/seed-catalog.mjs                           
    chưa đăng ký để nhắc; **Điều chỉnh** mở ngăn sửa phiếu (sau hạn phải ghi lý do), **Tạo phiếu hộ** cho kỳ đang mở.
 3. `/admin/review` (Món ngoài danh mục): Chấp nhận / Thêm vào danh mục… / Từ chối… (lý do hiện cho nhân viên).
 4. Nhân viên xem lại ở **Lịch sử** (`/history`, kỳ cũ chỉ đọc, tiến độ giao theo dòng).
+5. Sau hạn (kỳ đã khóa) Hành chính mở `/admin/delivery` (Giao hàng): giao từng dòng hoặc **Giao tất cả**; giao trừ kho
+   ngay, thiếu kho thì báo "Không giao được: … — chỉ còn n trong kho"; không có hoàn tác đợt giao (GĐ1).
+6. `/admin/backlog` (Còn nợ, theo món/theo người): **Giao bổ sung…** sau khi nhập mua ở Kho, **Hủy nợ…** có lý do.
+7. `/admin/reports` (Báo cáo & in): Cần mua = phần chưa giao kỳ này + nợ kỳ trước − tồn; sửa Đặt mua, **Xuất Excel**
+   (2 sheet) hoặc **In trình ký** (3 ô ký lấy từ Cấu hình) — mỗi lần tạo một bản chốt, "In lại"/"Tải lại" ra số cũ.
+8. Chuông: giao đủ phiếu, hủy nợ, xử lý món ngoài danh mục báo cho nhân viên; kỳ mở (ngày 1), nhắc còn 3 ngày
+   (`lastDay − 2`), kỳ khóa, sắp hết kho do cron mỗi giờ (`NotificationScheduler`, phút 5, giờ VN; chạy cả lúc boot).
 
 Giả lập kỳ:
 - api e2e: đặt `CLOCK_OFFSET_MS` (chỉ nhận khi `NODE_ENV=test`, api từ chối khởi động nếu đặt ở môi trường khác);
@@ -85,9 +92,24 @@ docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB
 INSERT INTO periods (ym, deadline) VALUES ('2026-10-01', '2026-10-10T17:00:00Z') ON CONFLICT DO NOTHING;
 WITH r AS (INSERT INTO requests (period_ym, user_sub, created_by_sub)
            VALUES ('2026-10-01', '<sub>', '<sub>') RETURNING id)
-INSERT INTO request_lines (request_id, item_id, qty, delivered_qty) SELECT id, '<item_id>', 4, 2 FROM r;
+INSERT INTO request_lines (request_id, item_id, qty) SELECT id, '<item_id>', 4 FROM r;
 SQL
 ```
+
+  Kỳ `2026-10` hạn đã qua nên là kỳ đã khóa: Giao hàng, Còn nợ, Báo cáo dùng được ngay. Đã giao phải đi qua
+  Giao hàng (ghi `line_deliveries` + sổ kho), đừng đặt `delivered_qty` bằng SQL.
+- Chuông trên dev: cron không chạy bù ngày đã qua, muốn xem bảng chuông thì seed thẳng bản ghi
+  (`topic` theo `docs/architecture.md` §9, `params` khớp `notifications.topics.*`):
+
+```bash
+docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <<'SQL'
+INSERT INTO in_app_notifications (user_sub, event_id, topic, params, link)
+VALUES ('<sub>', 'dev:<sub>:1', 'request_delivered', '{"ym":"2026-10"}', '/history/2026-10');
+SQL
+```
+
+- Cron trong api e2e: không đợi lịch, gọi thẳng `app.get(NotificationScheduler).runHourly(new Date('…Z'))` với mốc
+  muốn thử (mẫu `api/test/reminders.fixture.ts`); cron tự chạy và chạy-lúc-boot đều tắt khi `NODE_ENV=test`.
 
 ## Test
 
@@ -129,12 +151,14 @@ PW_SA_PASSWORD='<mật-khẩu-dev>' npx playwright test
 - `p1-flow.spec.ts` (smoke Plan 1) đăng nhập SA thật qua form "Dành cho IT": cần `PW_SA_PASSWORD` khớp
   `LOCAL_SA_PASSWORD_HASH` (tên tài khoản `PW_SA_USERNAME`, mặc định `sa`); thiếu thì test bị skip.
   `p2-flow.spec.ts` (smoke Plan 2: đăng ký → Tổng hợp → Điều chỉnh → Thêm vào danh mục → Lịch sử) dùng SA thật
-  khi có `PW_SA_PASSWORD`, không thì dev admin. Mỗi lần chạy đủ bộ đăng nhập SA 4 lần (mỗi smoke × mỗi viewport) —
+  khi có `PW_SA_PASSWORD`, không thì dev admin; `p3-flow.spec.ts` (smoke Plan 3: giao → Còn nợ → Báo cáo/Excel/in →
+  nhập mua, giao bổ sung → bản chốt cũ → hủy nợ, chuông) cũng vậy. Mỗi lần chạy đủ bộ đăng nhập SA 6 lần (mỗi smoke × mỗi viewport) —
   `sa-login` giới hạn 10/phút/IP, đừng chạy dồn.
 - Các spec còn lại dùng dev-identity: header `x-dev-*` gắn **chỉ cho `/api/**`** qua `page.route`
   (`playwright/helpers.ts`); gắn toàn cục làm request font Google bị chặn CORS.
 - Spec ghi vào DB dev dùng chung: dữ liệu thử có tên `PW …` / sub `pw-…`, dọn trong `finally` (phiếu và người thử
-  bị xóa; món xóa được thì xóa, đã có sổ kho thì ngừng; nhóm thử bị ngừng); cấu hình được trả lại giá trị gốc.
+  bị xóa kèm ảnh họ tải; món xóa được thì xóa kèm ảnh, đã có sổ kho thì ngừng; nhóm thử bị ngừng; đợt giao, bản chốt,
+  chuông của dữ liệu thử bị xóa); cấu hình được trả lại giá trị gốc.
   Còn sót (test bị ngắt giữa chừng) thì dọn một lần — chỉ xóa dòng `PW`/`pw-` không bị dữ liệu thật tham chiếu,
   in số dòng trước/sau:
   `docker compose exec -T postgres sh -c 'psql -v dev_ok=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < web/playwright/cleanup-dev-data.sql` — **chỉ trên DB dev, không bao giờ trên prod**

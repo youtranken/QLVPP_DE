@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "VPP Công trình — kiến trúc thành phần (Plan 1)",
+    "title": "VPP Công trình — kiến trúc thành phần (hết Plan 3)",
     "output": "docs/diagrams/vpp-kien-truc.html",
     "locale": "vi",
     "quality_profile": "showcase",
@@ -10,7 +10,7 @@
       "url": "https://github.com/youtranken/QLVPP_DE.git",
       "provider": "github",
       "link_mode": "local-only",
-      "revision": "633ad8084e19a25761992ea4c12e994ea38be06d"
+      "revision": "e706b4e7539c5345bc55cf37dc40ea017107f628"
     }
   },
   "components": [
@@ -21,7 +21,7 @@
       "sublabel": "SPA React · cookie vpp_sid",
       "pos": [
         40,
-        200
+        40
       ],
       "size": [
         150,
@@ -42,8 +42,8 @@
       "label": "EDGE nginx",
       "sublabel": "TLS :8443 · XFF",
       "pos": [
-        250,
-        200
+        240,
+        40
       ],
       "size": [
         140,
@@ -65,7 +65,7 @@
       "label": "web nginx",
       "sublabel": "SPA tĩnh + proxy /api",
       "pos": [
-        480,
+        420,
         200
       ],
       "size": [
@@ -84,26 +84,26 @@
       "id": "guards",
       "type": "security",
       "label": "Guard toàn cục",
-      "sublabel": "IpThrottle→Identity→Csrf→Roles",
+      "sublabel": "IpThrottle→Identity→Csrf→Roles→UserThrottle",
       "pos": [
-        750,
+        640,
         200
       ],
       "size": [
-        184,
+        220,
         62
       ],
       "tag": "container api",
       "sources": [
         {
           "path": "api/src/modules/auth/auth.module.ts",
-          "line": 24,
-          "end_line": 29
+          "line": 30,
+          "end_line": 35
         },
         {
           "path": "api/src/modules/auth/identity.guard.ts",
-          "line": 67,
-          "end_line": 99,
+          "line": 85,
+          "end_line": 98,
           "label": "@Public ẩn danh khi 503"
         }
       ]
@@ -114,7 +114,7 @@
       "label": "auth · users",
       "sublabel": "OIDC PKCE · phiên · SA · BCL",
       "pos": [
-        1010,
+        960,
         200
       ],
       "size": [
@@ -125,8 +125,8 @@
       "sources": [
         {
           "path": "api/src/modules/auth/auth.controller.ts",
-          "line": 86,
-          "end_line": 136,
+          "line": 87,
+          "end_line": 135,
           "label": "sa-login"
         },
         {
@@ -148,7 +148,7 @@
       "label": "PMH ID",
       "sublabel": "OIDC · JWKS · Directory API",
       "pos": [
-        1010,
+        960,
         40
       ],
       "size": [
@@ -176,24 +176,164 @@
       ]
     },
     {
-      "id": "business",
+      "id": "core",
       "type": "backend",
-      "label": "Nghiệp vụ + nền",
-      "sublabel": "catalog · files · audit · config",
+      "label": "catalog · periods · requests",
+      "sublabel": "danh mục · kho · kỳ · phiếu · review",
       "pos": [
-        750,
+        640,
         380
       ],
       "size": [
-        184,
+        220,
         62
       ],
       "tag": "container api",
       "sources": [
         {
           "path": "api/src/app.module.ts",
-          "line": 43,
-          "end_line": 51
+          "line": 55,
+          "end_line": 70,
+          "label": "ScheduleModule + module nghiệp vụ"
+        },
+        {
+          "path": "api/src/modules/requests/line-delivery.store.ts",
+          "line": 50,
+          "end_line": 66,
+          "label": "LineDeliveryStore"
+        },
+        {
+          "path": "api/src/modules/catalog/stock.service.ts",
+          "line": 115,
+          "end_line": 146,
+          "label": "StockService"
+        }
+      ]
+    },
+    {
+      "id": "delivery",
+      "type": "backend",
+      "label": "delivery",
+      "sublabel": "giao · giao tất cả · còn nợ · hủy nợ",
+      "pos": [
+        340,
+        380
+      ],
+      "size": [
+        210,
+        62
+      ],
+      "tag": "container api",
+      "sources": [
+        {
+          "path": "api/src/modules/delivery/delivery.service.ts",
+          "line": 36,
+          "end_line": 55,
+          "label": "deliverLine"
+        },
+        {
+          "path": "api/src/modules/delivery/deliver-all.service.ts",
+          "line": 30,
+          "end_line": 48,
+          "label": "deliverAll"
+        },
+        {
+          "path": "api/src/modules/delivery/backlog.service.ts",
+          "line": 54,
+          "end_line": 72,
+          "label": "còn nợ kỳ đã khóa"
+        }
+      ]
+    },
+    {
+      "id": "reports",
+      "type": "backend",
+      "label": "reports",
+      "sublabel": "báo cáo sống · bản chốt · exceljs",
+      "pos": [
+        960,
+        380
+      ],
+      "size": [
+        200,
+        62
+      ],
+      "tag": "container api",
+      "sources": [
+        {
+          "path": "api/src/modules/reports/reports.service.ts",
+          "line": 33,
+          "end_line": 50,
+          "label": "build"
+        },
+        {
+          "path": "api/src/modules/reports/snapshots.service.ts",
+          "line": 40,
+          "end_line": 70,
+          "label": "REPEATABLE READ"
+        },
+        {
+          "path": "api/src/modules/reports/xlsx-report.ts",
+          "line": 1,
+          "end_line": 25,
+          "label": "exceljs"
+        }
+      ]
+    },
+    {
+      "id": "notifications",
+      "type": "backend",
+      "label": "notifications",
+      "sublabel": "notifyWithin trong SAVEPOINT",
+      "pos": [
+        340,
+        560
+      ],
+      "size": [
+        210,
+        62
+      ],
+      "tag": "container api",
+      "sources": [
+        {
+          "path": "api/src/modules/notifications/notifications.service.ts",
+          "line": 65,
+          "end_line": 89
+        },
+        {
+          "path": "api/src/modules/notifications/notification-events.ts",
+          "line": 1,
+          "end_line": 24,
+          "label": "event_id"
+        }
+      ]
+    },
+    {
+      "id": "reminders",
+      "type": "backend",
+      "label": "reminders (cron)",
+      "sublabel": "@Cron '5 * * * *' VN + lúc boot",
+      "pos": [
+        40,
+        560
+      ],
+      "size": [
+        210,
+        62
+      ],
+      "tag": "container api",
+      "sources": [
+        {
+          "path": "api/src/modules/reminders/notification-scheduler.ts",
+          "line": 53,
+          "end_line": 90,
+          "label": "runHourly"
+        },
+        {
+          "path": "api/src/modules/reminders/schedule-days.ts",
+          "line": 1,
+          "end_line": 14,
+          "label": "ngày 1 · còn 3 ngày · ngày khóa"
         }
       ]
     },
@@ -203,11 +343,11 @@
       "label": "PostgreSQL 18",
       "sublabel": "volume pgdata",
       "pos": [
-        1010,
-        380
+        640,
+        560
       ],
       "size": [
-        170,
+        220,
         62
       ],
       "sources": [
@@ -219,7 +359,7 @@
         {
           "path": "api/src/database/database.module.ts",
           "line": 13,
-          "end_line": 23
+          "end_line": 28
         }
       ]
     },
@@ -229,11 +369,11 @@
       "label": "volume filesdata",
       "sublabel": "/data/files/<uuid>.<ext>",
       "pos": [
-        750,
-        540
+        960,
+        560
       ],
       "size": [
-        184,
+        200,
         62
       ],
       "sources": [
@@ -256,11 +396,11 @@
       "label": "backup-cron",
       "sublabel": "pg_dump + ảnh, BACKUP_AT",
       "pos": [
-        1010,
-        540
+        960,
+        740
       ],
       "size": [
-        170,
+        200,
         62
       ],
       "sources": [
@@ -280,7 +420,11 @@
         "web",
         "guards",
         "auth",
-        "business",
+        "core",
+        "delivery",
+        "reports",
+        "notifications",
+        "reminders",
         "postgres",
         "files",
         "backup"
@@ -314,11 +458,6 @@
       "variant": "emphasis"
     },
     {
-      "from": "guards",
-      "to": "business",
-      "label": "route khác"
-    },
-    {
       "from": "auth",
       "to": "pmhid",
       "label": "token · refresh · JWKS",
@@ -331,17 +470,62 @@
       "variant": "dashed"
     },
     {
+      "from": "guards",
+      "to": "core",
+      "label": "phiếu · kho · danh mục"
+    },
+    {
+      "from": "guards",
+      "to": "delivery",
+      "label": "admin/lines · backlog"
+    },
+    {
+      "from": "guards",
+      "to": "reports",
+      "label": "admin/reports"
+    },
+    {
+      "from": "delivery",
+      "to": "core",
+      "label": "khóa dòng · trừ kho"
+    },
+    {
+      "from": "delivery",
+      "to": "notifications",
+      "label": "giao đủ · hủy nợ"
+    },
+    {
+      "from": "core",
+      "to": "notifications",
+      "label": "xử lý món ngoài DM"
+    },
+    {
+      "from": "reminders",
+      "to": "notifications",
+      "label": "kỳ mở · nhắc · khóa · sắp hết"
+    },
+    {
+      "from": "notifications",
+      "to": "postgres",
+      "label": "in_app_notifications"
+    },
+    {
+      "from": "core",
+      "to": "postgres",
+      "label": "SQL"
+    },
+    {
+      "from": "reports",
+      "to": "postgres",
+      "label": "đọc · report_snapshots"
+    },
+    {
       "from": "auth",
       "to": "postgres",
       "label": "sessions · users"
     },
     {
-      "from": "business",
-      "to": "postgres",
-      "label": "SQL"
-    },
-    {
-      "from": "business",
+      "from": "core",
       "to": "files",
       "label": "ghi ảnh"
     },
@@ -382,8 +566,9 @@
       "title": "Gộp trong sơ đồ",
       "items": [
         "auth · users: AuthModule import UsersModule (directory sync 60′ gọi Directory API)",
-        "audit được mọi module gọi qua AuditWriterService",
-        "health: SELECT 1, mất DB → 503 db_unavailable"
+        "delivery ghi request_lines qua LineDeliveryStore, trừ kho qua StockService; tự ghi line_deliveries",
+        "reminders đọc SummaryService/PeriodsService, đòi quyền sắp hết bằng StockService.claimLowStockWithin",
+        "Cron khác: dọn tệp mồ côi 03:00 VN (files); audit được mọi module gọi qua AuditWriterService"
       ]
     }
   ]

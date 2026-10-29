@@ -1,10 +1,11 @@
 import { mkdirSync } from 'node:fs';
-import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type Browser, type Page, type TestInfo } from '@playwright/test';
 import { acquireLock, deleteTestUsers, expectNoContrastViolations, isMobile, psql, seedActiveUser, settled } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
+import { newPage } from './sessions';
 
 const SHOTS = '../.superpowers/sdd/2026-10-29-vpp-gd1-p3-giao-bao-cao/task-16-shots';
-const VIETNAMESE = /[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]/i;
+const VIETNAMESE = /[àáãăâđèéêìíòóõôơùúưýạảấầẩẫậắằẳẵặẹẻẽếềểễệỉĩịọỏốồổỗộớờởỡợụủũứừửữựỳỵỷỹ]/i;
 
 type Lang = 'vi' | 'en';
 
@@ -89,6 +90,83 @@ test.describe('E6-S4 song ngữ các màn Hành chính của Plan 3', () => {
       deleteTestUsers(admin);
       seed?.cleanup();
       release();
+    }
+  });
+});
+
+// Chữ người dùng nhập (tên món/nhóm/người/phòng ban, ghi chú, lý do) giữ nguyên ngôn ngữ gốc ở mọi giao diện
+function userDataTexts(): string[] {
+  const rows = psql(`SELECT DISTINCT x FROM (
+      SELECT name AS x FROM items UNION ALL SELECT pack_note FROM items UNION ALL SELECT name FROM item_categories
+      UNION ALL SELECT full_name FROM users UNION ALL SELECT department FROM users UNION ALL SELECT department FROM requests
+      UNION ALL SELECT custom_name FROM request_lines UNION ALL SELECT custom_note FROM request_lines
+      UNION ALL SELECT review_note FROM request_lines UNION ALL SELECT cancel_note FROM request_lines
+      UNION ALL SELECT note FROM stock_movements) t
+    WHERE x IS NOT NULL AND x <> ''`);
+  // Chỉ chuỗi có dấu tiếng Việt mới ảnh hưởng kết quả; bỏ chuỗi ngắn để không xóa nhầm chữ giao diện
+  const vietnamese = rows.split('\n').filter((x) => x.length >= 3 && VIETNAMESE.test(x));
+  return [...vietnamese, 'Tiếng Việt'].sort((a, b) => b.length - a.length);
+}
+
+// Quét mọi chữ thấy được (không chỉ tiêu đề/nút): bỏ ô dữ liệu bảng, bỏ chữ người dùng nhập, còn chữ Việt là chuỗi chưa dịch
+async function vietnameseLeftovers(page: Page, data: string[]) {
+  await settled(page);
+  const text = await page.evaluate(() => {
+    const out: string[] = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const el = n.parentElement;
+      if (!el || el.closest('td, [role=cell], script, style, [hidden], [aria-hidden=true]')) continue;
+      if (el.checkVisibility && !el.checkVisibility()) continue;
+      out.push(n.textContent ?? '');
+    }
+    return out.join(' | ');
+  });
+  const stripped = data.reduce((t, d) => t.split(d).join(' '), text);
+  return stripped.match(new RegExp(`\\S*${VIETNAMESE.source}\\S*`, 'gi')) ?? [];
+}
+
+const ADMIN_SCREENS = ['/admin/summary', '/admin/review', '/admin/delivery', '/admin/backlog', '/admin/reports', '/admin/stock', '/admin/catalog', '/admin/categories', '/admin/users', '/admin/audit', '/admin/config'];
+const MEMBER_SCREENS = ['/', '/history', '/me'];
+
+async function englishPage(browser: Browser, info: TestInfo, headers?: Record<string, string>) {
+  const page = await newPage(browser, info, headers);
+  await page.addInitScript(() => localStorage.setItem('vpp_lang', 'en'));
+  return page;
+}
+
+test.describe('E6-S4 song ngữ mọi màn PRD §8', () => {
+  test('E6-S4 en: Đăng nhập, Chưa được cấp quyền, mọi màn member và Hành chính không còn chữ Việt ngoài dữ liệu người dùng', async ({ browser }, info) => {
+    test.setTimeout(120_000);
+    const sub = `pw-i18n-all-${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}`;
+    seedActiveUser(sub, `PW i18n ${sub}`);
+    const data = userDataTexts();
+    const found: Record<string, string[]> = {};
+    const check = async (page: Page, path: string, ready: () => Promise<void>) => {
+      await page.goto(path);
+      await ready();
+      const words = await vietnameseLeftovers(page, data);
+      if (words.length) found[path] = words;
+      if (isMobile(info)) await expectNoContrastViolations(page);
+    };
+    const pages: Page[] = [];
+    try {
+      const guest = await englishPage(browser, info);
+      pages.push(guest);
+      await check(guest, '/', () => expect(guest.getByRole('button', { name: 'Sign in with your company account (PMH ID)' })).toBeVisible());
+      await check(guest, '/?login=forbidden', () => expect(guest.getByRole('button', { name: 'Sign in with another account' })).toBeVisible());
+
+      const member = await englishPage(browser, info, { 'x-dev-user-sub': sub, 'x-dev-role': 'member' });
+      pages.push(member);
+      for (const path of MEMBER_SCREENS) await check(member, path, () => expect(member.getByRole('heading', { level: 1 })).toBeVisible());
+
+      const admin = await englishPage(browser, info, { 'x-dev-user-sub': sub, 'x-dev-role': 'admin' });
+      pages.push(admin);
+      for (const path of ADMIN_SCREENS) await check(admin, path, () => expect(admin.getByRole('heading', { level: 1 })).toBeVisible());
+      expect(found).toEqual({});
+    } finally {
+      for (const p of pages) await p.context().close();
+      deleteTestUsers(sub);
     }
   });
 });

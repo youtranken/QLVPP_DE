@@ -22,7 +22,7 @@
 | Tầng | Chọn |
 |---|---|
 | Runtime | Node 24 (`node:24.22.1-alpine`), `.nvmrc` = 24 |
-| API | NestJS 12, `pg` 8, drizzle-orm (schemaless), class-validator, nestjs-pino, @nestjs/throttler, @nestjs/schedule, jose 6, openid-client 6, multer (upload); exceljs thêm ở Plan 3 (báo cáo) |
+| API | NestJS 12, `pg` 8, drizzle-orm (schemaless), class-validator, nestjs-pino, @nestjs/throttler, @nestjs/schedule, jose 6, openid-client 6, multer (upload), exceljs (báo cáo Excel) |
 | Web | React 19, Vite 8, TypeScript 6, TanStack Query 5, react-router 7, react-i18next, Radix Dialog, vitest + Testing Library, oxlint, Playwright (smoke) |
 | DB | PostgreSQL 18 (`postgres:18-alpine`) |
 | Serve | nginx 1.30 trong container `web` (tĩnh + proxy `/api`) |
@@ -41,26 +41,30 @@ api/
     modules/
       auth/                 copy QLTS: identity/csrf/roles guard, session, session-auth, local-sa, oidc, bcl, webhook
       users/                copy QLTS: directory client/sync, authorized-groups, users.service
-      audit/  config/  files/  notifications/
-      catalog/              items, item_categories, stock
-      requests/             periods, requests, request_lines, review (món ngoài DM), copy-previous
-      delivery/             deliver, deliver-all, backlog (còn nợ)
-      reports/              tổng hợp, export.xlsx
+      audit/  config/  files/
+      catalog/              items, item_categories, stock (StockService: trừ kho giao, sắp hết)
+      periods/              kỳ, hạn, headcount (PeriodsService)
+      requests/             requests, request_lines, review (món ngoài DM), copy-previous, tổng hợp, LineDeliveryStore
+      notifications/        in_app_notifications, notifyWithin (SAVEPOINT), me/notifications
+      delivery/             deliver, deliver-all, backlog (còn nợ), cancel-remaining (hủy nợ)
+      reports/              báo cáo sống, bản chốt (report_snapshots), export.xlsx (exceljs)
+      reminders/            NotificationScheduler: cron chuông mỗi giờ (tách khỏi requests để không vòng import)
   test/                     *.e2e-spec.ts, *.db-spec.ts, test-app.helper.ts
   scripts/sa-hash.mjs
 web/
   src/
     main.tsx  App.tsx
     lib/        api-client, session-relogin, me, i18n, period (hiển thị kỳ), format
-    locales/    vi.ts  en.ts
-    shell/      login-screen, member-shell (top nav), admin-shell (sidebar), notification-bell
+    locales/    {vi,en}/<feature>.ts + index.ts
+    shell/      login-screen, member-shell (top nav), admin-shell (sidebar)
     ui/         button, dialog, drawer, stepper, kpi-strip, data-table, load-state, confirm
     features/
       request/      member: trang đăng ký, lịch sử
       summary/      admin: tổng hợp kỳ, drawer điều chỉnh
       review/       admin: món ngoài danh mục
       delivery/     admin: giao hàng, còn nợ
-      stock/  catalog/  reports/  admin/ (danh bạ, nhật ký, cấu hình)
+      notifications/ chuông (notification-bell) ở cả hai shell
+      stock/  catalog/  reports/ (báo cáo, trang in)  admin/ (danh bạ, nhật ký, cấu hình)
     css/        tokens.css (từ design-preview/final), member.css, admin.css, print.css
   nginx.conf  proxy-api-headers.conf  Dockerfile  playwright/
 ops/backup/   docker-compose.yml  .env.example  update-vpp.sh  docs/  design-preview/

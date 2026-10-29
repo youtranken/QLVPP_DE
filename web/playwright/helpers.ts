@@ -66,17 +66,40 @@ export function psql(sql: string): string {
   ).trim();
 }
 
-// Người thử mang hậu tố riêng: xóa phiếu rồi xóa người để không lọt vào danh bạ / "chưa đăng ký" của DB dev
-export function deleteTestUsers(...subs: string[]) {
-  const list = subs.map((s) => `'${s}'`).join(', ');
-  psql(`DELETE FROM requests WHERE user_sub IN (${list}); DELETE FROM users WHERE sub IN (${list})`);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+// Bản ghi trước, tệp sau (như job dọn tệp của api); ảnh còn được món/dòng phiếu trỏ tới thì giữ
+export function deleteTestFiles(ids: string[]) {
+  const list = ids.filter((id) => UUID.test(id));
+  if (list.length === 0) return;
+  const deleted = psql(`DELETE FROM files f WHERE f.id IN (${list.map((id) => `'${id}'`).join(', ')})
+      AND NOT EXISTS (SELECT 1 FROM items i WHERE i.image_file_id = f.id)
+      AND NOT EXISTS (SELECT 1 FROM request_lines l WHERE l.image_file_id = f.id)
+    RETURNING f.id`)
+    .split('\n')
+    .filter((id) => UUID.test(id));
+  if (deleted.length === 0) return;
+  execFileSync('docker', ['compose', 'exec', '-T', 'api', 'sh', '-c', `rm -f ${deleted.map((id) => `/data/files/${id}.*`).join(' ')}`], {
+    cwd: REPO_ROOT,
+  });
 }
 
-// Món đã có sổ kho/dòng phiếu thì không xóa được (ITEM_IN_USE) → ngừng thay vì xóa
+// Người thử mang hậu tố riêng: xóa phiếu rồi xóa người để không lọt vào danh bạ / "chưa đăng ký" của DB dev;
+// ảnh họ đã tải (dòng ngoài danh mục) xóa theo để kho tệp dev không đầy tệp mồ côi
+export function deleteTestUsers(...subs: string[]) {
+  const list = subs.map((s) => `'${s}'`).join(', ');
+  const files = psql(`SELECT id FROM files WHERE uploaded_by_sub IN (${list})`).split('\n');
+  psql(`DELETE FROM requests WHERE user_sub IN (${list}); DELETE FROM users WHERE sub IN (${list})`);
+  deleteTestFiles(files);
+}
+
+// Món đã có sổ kho/dòng phiếu thì không xóa được (ITEM_IN_USE) → ngừng thay vì xóa, ảnh giữ theo món
 export async function removeTestItem(request: APIRequestContext, id: string) {
   const headers = devHeaders('admin');
+  const image = psql(`SELECT image_file_id FROM items WHERE id = '${id}'`);
   const res = await request.delete(`/api/admin/items/${id}`, { headers });
-  if (!res.ok()) expect((await request.patch(`/api/admin/items/${id}`, { headers, data: { active: false } })).ok()).toBe(true);
+  if (res.ok()) deleteTestFiles([image]);
+  else expect((await request.patch(`/api/admin/items/${id}`, { headers, data: { active: false } })).ok()).toBe(true);
 }
 
 // Dev-identity không tạo dòng users; người nhận xuất lẻ/danh bạ phải có sẵn trong bảng users
