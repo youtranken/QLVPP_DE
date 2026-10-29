@@ -1,0 +1,80 @@
+import type vi from '@/locales/vi/reports';
+import type { Messages } from '@/locales/messages';
+
+const reports: Messages<typeof vi> = {
+  reports: {
+    month: '{{month}}/{{year}}',
+    monthNav: 'Choose report month',
+    prevMonth: 'Previous month',
+    nextMonth: 'Next month',
+    exportXlsx: 'Export Excel',
+    print: 'Print for signing',
+    leaveConfirm: {
+      title: 'Discard edited order quantities?',
+      message: 'Edited order quantities for this month will go back to the amount needed.',
+      ok: 'Discard edits',
+      cancel: 'Stay',
+    },
+    pendingConfirm: {
+      title: 'Unreviewed off-catalogue items',
+      message: '{{count}} items not reviewed yet — the snapshot will leave them out',
+      ok: 'Snapshot anyway',
+      cancel: 'Go back',
+    },
+    error: {
+      INVALID_PERIOD: 'This month has not started yet, no report can be made.',
+      VALIDATION: 'Some order quantities are invalid, see the cells marked in red.',
+      UNKNOWN: 'Could not create the snapshot, please try again later.',
+    },
+    items: {
+      title: 'Part 1 · Summary by item',
+      colName: 'Item',
+      colUnit: 'Unit',
+      colRequested: 'Requested this period',
+      colBacklog: 'Owed from last period',
+      colStock: 'In stock',
+      colNeed: 'To buy',
+      colOrder: 'Order',
+      orderLabel: 'Order {{name}}',
+      orderInvalid: 'Enter a whole number 0–99999',
+      resetNeed: 'Back to To buy',
+      resetNeedLabel: 'Back to To buy {{name}}',
+      custom: 'Off-catalogue',
+      people: '{{count}} people',
+      empty: 'No items requested this month.',
+    },
+    issues: {
+      title: 'Ad-hoc issues this period',
+      colName: 'Item',
+      colUnit: 'Unit',
+      colRecipient: 'Recipient',
+      colQty: 'Qty',
+      colReason: 'Reason',
+      colAt: 'At',
+      shared: 'Shared',
+    },
+    detail: {
+      title: 'Part 2 · Detail by department',
+      noDepartment: 'No department',
+      colPerson: 'Person',
+      colName: 'Item',
+      colUnit: 'Unit',
+      colQty: 'Qty',
+      empty: 'No requests this month.',
+    },
+    snapshots: {
+      title: 'Snapshots',
+      colAt: 'Created at',
+      colBy: 'Created by',
+      colKind: 'Type',
+      kind: { xlsx: 'Excel', print: 'Print' },
+      download: 'Download again',
+      downloadLabel: 'Download again the snapshot of {{at}}',
+      reprint: 'Print again',
+      reprintLabel: 'Print again the snapshot of {{at}}',
+      empty: 'No snapshots for this month yet.',
+    },
+  },
+};
+
+export default reports;

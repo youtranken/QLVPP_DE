@@ -1,7 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
-import { ComingSoon } from '@/ui/coming-soon';
 import { NotFound } from '@/ui/load-state';
 import { ProfilePage } from '@/features/profile/profile-page';
 import { RequestPage } from '@/features/request/request-page';
@@ -17,24 +15,17 @@ import { SummaryPage } from '@/features/summary/summary-page';
 import { ReviewPage } from '@/features/review/review-page';
 import { DeliveryPage } from '@/features/delivery/delivery-page';
 import { BacklogPage } from '@/features/delivery/backlog-page';
+import { ReportsPage } from '@/features/reports/reports-page';
 import { MemberShell } from '@/shell/member-shell';
 import { AdminShell } from '@/shell/admin-shell';
 import { RequireRole } from '@/shell/require-role';
 import { ForbiddenScreen } from '@/shell/forbidden-screen';
-import { ADMIN_HOME, ADMIN_PAGES } from '@/shell/admin-nav';
-
-function AdminSoon({ titleKey }: { titleKey: string }) {
-  const { t } = useTranslation();
-  return <ComingSoon title={t(titleKey)} />;
-}
+import { ADMIN_HOME } from '@/shell/admin-nav';
 
 function ForbiddenRoute() {
   return <ForbiddenScreen email={useMe().email} />;
 }
 
-const BUILT_ADMIN_PAGES = new Set(['summary', 'review', 'delivery', 'backlog', 'stock', 'catalog', 'categories', 'users', 'audit', 'config']);
-
-// Màn chưa làm hiện "Sắp có"; task sau thêm route thật và tên vào BUILT_ADMIN_PAGES
 export function AppRoutes() {
   return (
     <Routes>
@@ -58,15 +49,13 @@ export function AppRoutes() {
         <Route path="review" element={<ReviewPage />} />
         <Route path="delivery" element={<DeliveryPage />} />
         <Route path="backlog" element={<BacklogPage />} />
+        <Route path="reports" element={<ReportsPage />} />
         <Route path="stock" element={<StockPage />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="categories" element={<CategoryPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="config" element={<ConfigPage />} />
-        {ADMIN_PAGES.filter((p) => !BUILT_ADMIN_PAGES.has(p.path)).map((p) => (
-          <Route key={p.path} path={p.path} element={<AdminSoon titleKey={p.titleKey} />} />
-        ))}
         <Route path="*" element={<NotFound />} />
       </Route>
       <Route path="*" element={<NotFound />} />

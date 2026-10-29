@@ -30,8 +30,6 @@
 .a-drawer .a-side { height: 100%; position: static; }
 
 body[data-shell='admin'] .btn { height: 32px; padding: 0 12px; border-radius: 6px; border-width: 1px; font-weight: 500; }
-body[data-shell='admin'] .soon { border-radius: 8px; }
-body[data-shell='admin'] .soon-title { font-size: 18px; font-weight: 600; }
 body[data-shell='admin'] .sheet { border-radius: 8px; }
 
 /* Trang quản lý: thanh công cụ + khung bảng + form gọn (bo 6/8) */

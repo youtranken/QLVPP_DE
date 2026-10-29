@@ -30,8 +30,6 @@ const common: Messages<typeof vi> = {
     discardKeep: 'Keep editing',
     selectAll: 'Select all',
     selectRow: 'Select row',
-    comingSoon: 'Coming soon',
-    comingSoonHint: 'This screen is being built and will arrive in the next update.',
     stepper: {
       decrease: 'Decrease {{label}}',
       increase: 'Increase {{label}}',

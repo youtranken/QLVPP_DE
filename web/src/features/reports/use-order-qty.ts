@@ -1,0 +1,58 @@
+import { useMemo, useState } from 'react';
+import { ORDER_QTY_MAX, type MonthReport } from './reports.api';
+
+const DIGITS = /^\d+$/;
+
+export function parseOrderQty(text: string): number | null {
+  const s = text.trim();
+  if (!DIGITS.test(s)) return null;
+  const n = Number(s);
+  return n <= ORDER_QTY_MAX ? n : null;
+}
+
+// Chỉ gửi ô đã sửa: ô để nguyên thì server lấy need tại lúc chốt; luật thật kiểm lại ở server
+export type OrderQty = ReturnType<typeof useOrderQty>;
+
+export function useOrderQty(report: MonthReport) {
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [rejected, setRejected] = useState<Set<string>>(() => new Set());
+  const needs = useMemo(
+    () => new Map([...report.byItem, ...report.custom].map((r) => [r.key, r.need])),
+    [report],
+  );
+
+  const edited: Record<string, number> = {};
+  let invalid = rejected.size > 0;
+  for (const [key, text] of Object.entries(drafts)) {
+    const n = parseOrderQty(text);
+    if (n === null) invalid = true;
+    else if (n !== needs.get(key)) edited[key] = n;
+  }
+  const draftInvalid = (key: string) => key in drafts && parseOrderQty(drafts[key]) === null;
+  const clearRejected = (key: string) =>
+    setRejected((s) => {
+      if (!s.has(key)) return s;
+      const next = new Set(s);
+      next.delete(key);
+      return next;
+    });
+
+  return {
+    value: (key: string) => drafts[key] ?? String(needs.get(key) ?? 0),
+    set: (key: string, text: string) => {
+      setDrafts((d) => ({ ...d, [key]: text }));
+      clearRejected(key);
+    },
+    reset: (key: string) => {
+      setDrafts((d) => Object.fromEntries(Object.entries(d).filter(([k]) => k !== key)));
+      clearRejected(key);
+    },
+    reject: (fields: string[]) =>
+      setRejected(new Set(fields.filter((f) => f.startsWith('order_qty.')).map((f) => f.slice('order_qty.'.length)))),
+    isEdited: (key: string) => key in edited || draftInvalid(key),
+    hasError: (key: string) => rejected.has(key) || draftInvalid(key),
+    edited,
+    invalid,
+    dirty: Object.keys(drafts).length > 0,
+  };
+}

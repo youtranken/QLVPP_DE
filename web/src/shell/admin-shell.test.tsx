@@ -43,13 +43,11 @@ describe('AdminShell + RequireRole', () => {
     ]);
   });
 
-  it('mục chưa làm (Báo cáo & in) hiện "Sắp có"; Còn nợ, Giao hàng và Món ngoài danh mục là trang thật', () => {
+  it('mọi mục sidebar là trang thật, không còn "Sắp có" (Báo cáo & in, Còn nợ, Giao hàng, Món ngoài danh mục)', () => {
     mockViewport(1280);
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { items: [], groups: [] }))));
-    renderApp(makeMe('admin'), '/admin/reports');
-    expect(screen.getByRole('heading', { level: 1, name: 'Báo cáo & in' })).toBeInTheDocument();
-    expect(screen.getByText('Sắp có')).toBeInTheDocument();
     for (const [path, title] of [
+      ['/admin/reports', 'Báo cáo & in'],
       ['/admin/backlog', 'Còn nợ'],
       ['/admin/delivery', 'Giao hàng'],
       ['/admin/review', 'Món ngoài danh mục'],

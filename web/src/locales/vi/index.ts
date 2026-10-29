@@ -11,7 +11,8 @@ import summary from './summary';
 import review from './review';
 import notifications from './notifications';
 import delivery from './delivery';
+import reports from './reports';
 
-const vi = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review, ...notifications, ...delivery };
+const vi = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review, ...notifications, ...delivery, ...reports };
 
 export default vi;
