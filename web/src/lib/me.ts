@@ -23,7 +23,7 @@ export const MeContext = createContext<Me | null>(null);
 
 export function useMe(): Me {
   const me = useContext(MeContext);
-  if (!me) throw new Error('useMe() ngoài MeContext');
+  if (!me) throw new Error('useMe() called outside MeContext');
   return me;
 }
 

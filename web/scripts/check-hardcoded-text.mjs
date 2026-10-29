@@ -1,27 +1,56 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { readdirSync, readFileSync, realpathSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
-const VISIBLE_ATTRS = new Set(['aria-label', 'aria-description', 'aria-placeholder', 'title', 'placeholder', 'alt', 'label']);
+// Prop nhận định danh/giá trị kỹ thuật, không phải câu chữ; alt và mọi prop khác phải qua t()
+const TECHNICAL_ATTRS = new Set([
+  'className', 'id', 'key', 'type', 'name', 'role', 'href', 'to', 'path', 'variant', 'size', 'tone', 'mode',
+  'htmlFor', 'autoComplete', 'autoCapitalize', 'inputMode', 'method', 'rel', 'target', 'src', 'accept', 'capture',
+  'loading', 'scope', 'lang', 'dir', 'd', 'viewBox', 'fill', 'stroke', 'xmlns',
+]);
+const TOKEN_ARIA = new Set([
+  'aria-hidden', 'aria-live', 'aria-current', 'aria-haspopup', 'aria-expanded', 'aria-controls', 'aria-labelledby',
+  'aria-describedby', 'aria-busy', 'aria-modal', 'aria-invalid', 'aria-pressed', 'aria-selected', 'aria-checked',
+  'aria-disabled', 'aria-orientation', 'aria-sort', 'aria-autocomplete', 'aria-atomic', 'aria-relevant',
+  'aria-owns', 'aria-errormessage', 'aria-required', 'aria-readonly',
+]);
+const CSS_UNITS = new Set(['px', 'rem', 'em', 'vh', 'vw', 'vmin', 'vmax', 'ms', 's', 'fr', 'ch', 'deg']);
 const HAS_LETTER = /\p{L}/u;
+const NON_ASCII_LETTER = /(?![a-zA-Z])\p{L}/u;
 // &times; &nbsp; &#215; là ký hiệu, không phải chữ cần dịch
 const HTML_ENTITY = /&[a-z]+;|&#\d+;|&#x[0-9a-f]+;/gi;
+const PLACEHOLDER = '${…}';
 
 const hasText = (text) => HAS_LETTER.test(text.replace(HTML_ENTITY, ''));
+const isUnitsOnly = (text) =>
+  (text.split(PLACEHOLDER).join(' ').match(/\p{L}+/gu) ?? []).every((w) => CSS_UNITS.has(w));
+const isTextAttr = (name) =>
+  name.startsWith('aria-')
+    ? !TOKEN_ARIA.has(name)
+    : !name.startsWith('data-') && !name.endsWith('ClassName') && !TECHNICAL_ATTRS.has(name);
+const isToastCall = (node) => {
+  const callee = node.expression;
+  const name = ts.isIdentifier(callee) ? callee.text : ts.isPropertyAccessExpression(callee) ? callee.name.text : '';
+  return /toast/i.test(name);
+};
 
 export function isChecked(path) {
-  return path.endsWith('.tsx') && !path.endsWith('.test.tsx');
+  const parts = path.split(sep);
+  if (parts.includes('locales') || (parts[0] === 'src' && parts[1] === 'test')) return false;
+  // Dữ liệu mẫu chỉ test import (review-fixtures.ts, fixtures-me.ts)
+  if (/(^|-)fixtures(-|\.)/.test(parts.at(-1))) return false;
+  return /\.tsx?$/.test(path) && !/\.(test|d)\.tsx?$/.test(path);
 }
 
-// Chuỗi người dùng thấy trong một biểu thức JSX: literal, template, nhánh của ba ngôi/&&/||
+function templateText(expr) {
+  return [expr.head.text, ...expr.templateSpans.map((s) => s.literal.text)].join(PLACEHOLDER);
+}
+
 function literalTexts(expr) {
   if (ts.isParenthesizedExpression(expr)) return literalTexts(expr.expression);
   if (ts.isStringLiteral(expr) || ts.isNoSubstitutionTemplateLiteral(expr)) return [{ node: expr, text: expr.text }];
-  if (ts.isTemplateExpression(expr)) {
-    const text = [expr.head.text, ...expr.templateSpans.map((s) => s.literal.text)].join('${…}');
-    return [{ node: expr, text }];
-  }
+  if (ts.isTemplateExpression(expr)) return isUnitsOnly(templateText(expr)) ? [] : [{ node: expr, text: templateText(expr) }];
   if (ts.isConditionalExpression(expr)) return [...literalTexts(expr.whenTrue), ...literalTexts(expr.whenFalse)];
   if (ts.isBinaryExpression(expr)) {
     const op = expr.operatorToken.kind;
@@ -33,30 +62,45 @@ function literalTexts(expr) {
   return [];
 }
 
+function stringText(node) {
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
+  if (ts.isTemplateExpression(node)) return templateText(node);
+  return null;
+}
+
 const isChild = (node) => ts.isJsxElement(node.parent) || ts.isJsxFragment(node.parent);
 
 export function findHardcodedText(file, source) {
-  const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const kind = file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, kind);
   const findings = [];
+  const reported = new Set();
   const report = (node, text) => {
+    if (reported.has(node)) return;
+    reported.add(node);
     const { line } = sf.getLineAndCharacterOfPosition(node.getStart(sf));
     findings.push({ file, line: line + 1, text: text.trim() });
   };
   const reportExpr = (expr) => {
     for (const { node, text } of literalTexts(expr)) if (hasText(text)) report(node, text);
   };
+  const visitAttr = (node) => {
+    const init = node.initializer;
+    if (!init || !isTextAttr(node.name.getText(sf))) return;
+    if (ts.isStringLiteral(init) && hasText(init.text)) report(init, init.text);
+    if (ts.isJsxExpression(init) && init.expression) reportExpr(init.expression);
+  };
   const visit = (node) => {
     if (ts.isJsxText(node) && hasText(node.text)) report(node, node.text);
-    if (ts.isJsxAttribute(node) && VISIBLE_ATTRS.has(node.name.getText(sf)) && node.initializer) {
-      const init = node.initializer;
-      if (ts.isStringLiteral(init) && hasText(init.text)) report(init, init.text);
-      if (ts.isJsxExpression(init) && init.expression) reportExpr(init.expression);
-    }
+    if (ts.isJsxAttribute(node)) visitAttr(node);
     if (ts.isJsxExpression(node) && node.expression && isChild(node)) reportExpr(node.expression);
+    if (ts.isCallExpression(node) && isToastCall(node)) node.arguments.forEach(reportExpr);
+    const text = stringText(node);
+    if (text !== null && NON_ASCII_LETTER.test(text)) report(node, text);
     ts.forEachChild(node, visit);
   };
   visit(sf);
-  return findings;
+  return findings.sort((a, b) => a.line - b.line);
 }
 
 function listFiles(dir) {
@@ -78,10 +122,14 @@ export function formatFinding(f) {
   return `${f.file}:${f.line} chuỗi cứng "${f.text}" — dùng t()`;
 }
 
-function main() {
-  const findings = scanProject(fileURLToPath(new URL('..', import.meta.url)));
+function main(root) {
+  const findings = scanProject(root);
   for (const f of findings) console.error(formatFinding(f));
   if (findings.length > 0) process.exit(1);
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) main();
+// argv[1] giữ đường dẫn symlink còn import.meta.url đã là đường dẫn thật → so sau realpath
+const entry = process.argv[1] && realpathSync(process.argv[1]);
+if (entry === realpathSync(fileURLToPath(import.meta.url))) {
+  main(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)));
+}
