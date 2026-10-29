@@ -28,6 +28,14 @@ const reports = {
       UNKNOWN: 'Chưa chốt được, thử lại sau.',
       DOWNLOAD_FAILED: 'Đã chốt nhưng chưa tải được tệp — bấm Tải lại ở danh sách bản chốt.',
     },
+    printPage: {
+      title: 'Báo cáo văn phòng phẩm tháng {{month}}/{{year}}',
+      preparedAt: 'Lập lúc {{at}} bởi {{by}}',
+      back: 'Quay lại Báo cáo',
+      print: 'In',
+      signGroup: 'Chữ ký',
+      signer: { preparer: 'Người lập', head: 'Trưởng phòng', approver: 'Duyệt' },
+    },
     items: {
       title: 'Phần 1 · Tổng hợp theo món',
       colName: 'Món',

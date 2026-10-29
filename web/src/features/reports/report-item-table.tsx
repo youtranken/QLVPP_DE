@@ -40,7 +40,7 @@ function OrderCell({ row, name, qty, label }: { row: Row; name: string; qty: Ord
   );
 }
 
-function ItemRow({ row, name, sub, qty }: { row: Row; name: string; sub?: string; qty: OrderQty }) {
+function ItemRow({ row, name, sub, qty, frozen }: { row: Row; name: string; sub?: string; qty?: OrderQty; frozen?: Record<string, number> }) {
   const { t } = useTranslation();
   const cols = {
     unit: t('reports.items.colUnit'),
@@ -48,6 +48,7 @@ function ItemRow({ row, name, sub, qty }: { row: Row; name: string; sub?: string
     backlog: t('reports.items.colBacklog'),
     stock: t('reports.items.colStock'),
     need: t('reports.items.colNeed'),
+    order: t('reports.items.colOrder'),
   };
   return (
     <tr>
@@ -60,12 +61,17 @@ function ItemRow({ row, name, sub, qty }: { row: Row; name: string; sub?: string
       <td className="r num" data-label={cols.backlog}>{row.backlog_prev}</td>
       <td className="r num" data-label={cols.stock}>{row.stock ?? '—'}</td>
       <td className="r num" data-label={cols.need}>{row.need}</td>
-      <OrderCell row={row} name={name} qty={qty} label={t('reports.items.colOrder')} />
+      {qty ? (
+        <OrderCell row={row} name={name} qty={qty} label={t('reports.items.colOrder')} />
+      ) : (
+        <td className="r num" data-label={cols.order}>{frozen?.[row.key] ?? 0}</td>
+      )}
     </tr>
   );
 }
 
-export function ReportItemTable({ report, qty }: { report: MonthReport; qty: OrderQty }) {
+// qty = bản sống có ô nhập; frozen = số Đặt mua đã chốt trong bản chốt, chỉ đọc
+export function ReportItemTable({ report, qty, frozen }: { report: MonthReport; qty?: OrderQty; frozen?: Record<string, number> }) {
   const { t, i18n } = useTranslation();
   const empty = report.byItem.length === 0 && report.custom.length === 0;
   return (
@@ -91,7 +97,7 @@ export function ReportItemTable({ report, qty }: { report: MonthReport; qty: Ord
             </tr>
           )}
           {report.byItem.map((r) => (
-            <ItemRow key={r.key} row={r} name={pickName(i18n.language, r.name, r.name_en)} qty={qty} />
+            <ItemRow key={r.key} row={r} name={pickName(i18n.language, r.name, r.name_en)} qty={qty} frozen={frozen} />
           ))}
           {report.custom.length > 0 && (
             <tr className="rp-group">
@@ -101,7 +107,7 @@ export function ReportItemTable({ report, qty }: { report: MonthReport; qty: Ord
             </tr>
           )}
           {report.custom.map((r) => (
-            <ItemRow key={r.key} row={r} name={r.name} sub={t('reports.items.people', { count: r.people })} qty={qty} />
+            <ItemRow key={r.key} row={r} name={r.name} sub={t('reports.items.people', { count: r.people })} qty={qty} frozen={frozen} />
           ))}
         </tbody>
       </table>

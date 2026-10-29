@@ -31,6 +31,14 @@ const reports: Messages<typeof vi> = {
       UNKNOWN: 'Could not create the snapshot, please try again later.',
       DOWNLOAD_FAILED: 'Snapshot created but the file could not be downloaded — use Download again in the snapshot list.',
     },
+    printPage: {
+      title: 'Stationery report for {{month}}/{{year}}',
+      preparedAt: 'Prepared at {{at}} by {{by}}',
+      back: 'Back to Reports',
+      print: 'Print',
+      signGroup: 'Signatures',
+      signer: { preparer: 'Prepared by', head: 'Head of department', approver: 'Approved by' },
+    },
     items: {
       title: 'Part 1 · Summary by item',
       colName: 'Item',

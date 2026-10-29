@@ -1,4 +1,4 @@
-import type { MonthReport, ReportIssue, SnapshotRow } from './reports.api';
+import type { MonthReport, ReportIssue, SnapshotData, SnapshotRow } from './reports.api';
 
 export const PEN_KEY = 'item-pen';
 export const TAPE_KEY = 'custom:["Băng keo 2 mặt","cuon"]';
@@ -48,3 +48,17 @@ export const snapshotRow = (over: Partial<SnapshotRow> = {}): SnapshotRow => ({
 });
 
 export const NEW_SNAPSHOT_BY = 'Nguyễn Văn An';
+
+export const SNAPSHOT_ID = '5f0c1c1e-9a53-4b1c-8f55-3d2b1b6f0a11';
+
+export const snapshotDataFixture = (over: Partial<SnapshotData> = {}): SnapshotData => ({
+  ...reportFixture(),
+  id: SNAPSHOT_ID,
+  kind: 'print',
+  period_ym: '2026-10',
+  order_qty: { [PEN_KEY]: 14, 'item-glue': 0, [TAPE_KEY]: 5 },
+  signers: { preparer: 'Lê Thị Hoa', head: 'Ngô Văn Bảo', approver: 'Đỗ Minh Châu' },
+  created_by: { sub: 'u-admin', name: 'Trần Thị Bình' },
+  created_at: '2026-10-28T02:30:00Z',
+  ...over,
+});

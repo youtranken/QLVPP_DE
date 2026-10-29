@@ -1,0 +1,24 @@
+/* Trang in bản chốt: màn hình hiện như tờ giấy, khi in chỉ còn nội dung A4 dọc */
+.pr-page { max-width: 900px; margin: 0 auto; padding: 16px; background: var(--bg); }
+.pr-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.pr-sheet { background: #fff; color: #000; padding: 24px; border: 1px solid var(--line); border-radius: 8px; }
+.pr-title { font-size: 20px; text-align: center; margin: 0 0 4px; }
+.pr-meta { text-align: center; font-size: 13px; margin: 0 0 16px; }
+.pr-h2 { font-size: 15px; font-weight: 600; margin: 16px 0 8px; break-after: avoid; }
+.pr-sheet .table th { background: #f2f2f2; color: #000; }
+.pr-signs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px; break-inside: avoid; }
+.pr-sign { display: flex; flex-direction: column; align-items: center; min-height: 120px; border-top: 1px solid #000; padding-top: 6px; }
+.pr-sign-name { margin-top: auto; min-height: 1.4em; }
+
+@page { size: A4 portrait; margin: 14mm; }
+@media print {
+  body { background: #fff; }
+  .pr-toolbar { display: none; }
+  .pr-page { max-width: none; padding: 0; background: #fff; }
+  .pr-sheet { border: 0; padding: 0; border-radius: 0; }
+  .pr-sheet .table-wrap { overflow: visible; }
+  .pr-sheet .table { font-size: 12px; }
+  .pr-sheet thead { display: table-header-group; }
+  .pr-sheet tr { break-inside: avoid; }
+  .pr-sheet tbody tr.rp-group { break-after: avoid; }
+}

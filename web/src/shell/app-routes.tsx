@@ -16,6 +16,7 @@ import { ReviewPage } from '@/features/review/review-page';
 import { DeliveryPage } from '@/features/delivery/delivery-page';
 import { BacklogPage } from '@/features/delivery/backlog-page';
 import { ReportsPage } from '@/features/reports/reports-page';
+import { PrintPage } from '@/features/reports/print-page';
 import { MemberShell } from '@/shell/member-shell';
 import { AdminShell } from '@/shell/admin-shell';
 import { RequireRole } from '@/shell/require-role';
@@ -36,6 +37,14 @@ export function AppRoutes() {
         <Route path="history/:ym" element={<HistoryDetailPage />} />
         <Route path="me" element={<ProfilePage />} />
       </Route>
+      <Route
+        path="/admin/reports/snapshots/:id/print"
+        element={
+          <RequireRole roles={['admin', 'sa']}>
+            <PrintPage />
+          </RequireRole>
+        }
+      />
       <Route
         path="/admin"
         element={

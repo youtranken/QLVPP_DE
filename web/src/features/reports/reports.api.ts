@@ -55,6 +55,16 @@ export interface MonthReport {
   pending_custom_count: number;
 }
 
+export interface SnapshotData extends MonthReport {
+  id: string;
+  kind: SnapshotKind;
+  period_ym: string;
+  order_qty: Record<string, number>;
+  signers: { preparer: string; head: string; approver: string };
+  created_by: { sub: string; name: string | null };
+  created_at: string;
+}
+
 export type SnapshotKind = 'xlsx' | 'print';
 
 export interface SnapshotRow {
@@ -72,6 +82,16 @@ export function useMonthReport(ym: string) {
   return useQuery({
     queryKey: [...REPORTS_KEY, ym],
     queryFn: () => apiFetch<MonthReport>(`/api/admin/reports/${ym}`),
+  });
+}
+
+export function useSnapshot(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...REPORTS_KEY, 'snapshot', id],
+    queryFn: () => apiFetch<SnapshotData>(`/api/admin/reports/snapshots/${id}`),
+    enabled,
+    retry: false,
+    staleTime: Infinity,
   });
 }
 
