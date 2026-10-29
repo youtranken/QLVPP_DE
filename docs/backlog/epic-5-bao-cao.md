@@ -1,8 +1,8 @@
 # E5 — Báo cáo tháng
 
 ## E5-S1 Dịch vụ báo cáo
-`GET /admin/reports/:ym` → byItem (total, stock, need) + byPerson.
-**AC:** BR-15: đăng ký 5, tồn 2, đã giao 2 → `need = 1`; nợ 2 kỳ trước + đăng ký 3 kỳ này, tồn 0 → `need = 5`; tồn 10, đăng ký 3 → `need = 0`; dòng đã hủy nợ không tính; món ngoài DM `accepted` nhóm riêng `stock=null`, `need = requested`; dòng `rejected`/`pending` không tính, `pending_custom_count` đúng; phần chi tiết nhóm theo `requests.department`.
+`GET /admin/reports/:ym` → `MonthReport` (byItem, custom, byDepartment, issues, pending_custom_count) theo architecture §10.
+**AC:** BR-15: đăng ký 5, tồn 2, đã giao 2 → `need = 1`; nợ 2 kỳ trước + đăng ký 3 kỳ này, tồn 0 → `need = 5`; tồn 10, đăng ký 3 → `need = 0`; dòng đã hủy nợ không tính; món ngoài DM `accepted` nhóm riêng `stock=null`, `need = requested + backlog_prev` (F3); dòng `rejected`/`pending` không tính, `pending_custom_count` đúng; phần chi tiết nhóm theo `requests.department`.
 
 ## E5-S2 Xuất Excel
 `GET /admin/reports/snapshots/:id/export.xlsx` (Excel luôn từ bản chốt; exceljs, 2 sheet, tiêu đề theo locale).

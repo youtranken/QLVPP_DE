@@ -238,7 +238,7 @@ GĐ2: bảng `email_outbox` + worker trong cùng process.
 - phần chi tiết liệt kê `qty` (số đăng ký sau điều chỉnh) của dòng hiệu lực kỳ `ym` theo `requests.department` (null cuối) → người → món;
 - `issues` = xuất lẻ trong tháng dương lịch `ym` giờ VN (`StockQueryService.issuesInMonth`, như `GET admin/issues?ym`); `pending_custom_count` = số dòng `pending` kỳ `ym` (không vào số).
 
-Bấm Xuất/In: `POST admin/reports/:ym/snapshots {kind, order_qty: {item_id: n}}` lưu `data` (kết quả `build` + cột `order_qty` do admin sửa, mặc định `need` + `config.signers` + `created_by`) → FE tải `export.xlsx` hoặc mở `/admin/reports/snapshots/:id/print` từ bản chốt. Nếu `pending_custom_count > 0` FE hỏi trước. Excel: exceljs, 2 sheet, tiêu đề cột theo `?lang`. In: `print.css` (A4 dọc, lặp header bảng, chân trang 3 ô ký kèm tên từ `signers`, dòng "Lập lúc … bởi …").
+Bấm Xuất/In: `POST admin/reports/:ym/snapshots {kind, order_qty: {key: n}}` (`key` = `key` của hàng báo cáo: `item_id` hoặc `CUSTOM_ITEM_KEY` dạng `custom:["<tên>","<đvt>"]`, chuỗi mờ) lưu `data` (kết quả `build` + cột `order_qty` do admin sửa, mặc định `need` + `config.signers` + `created_by`) → FE tải `export.xlsx` hoặc mở `/admin/reports/snapshots/:id/print` từ bản chốt. Nếu `pending_custom_count > 0` FE hỏi trước. Excel: exceljs, 2 sheet, tiêu đề cột theo `?lang`. In: `print.css` (A4 dọc, lặp header bảng, chân trang 3 ô ký kèm tên từ `signers`, dòng "Lập lúc … bởi …").
 
 ## 11. Frontend
 

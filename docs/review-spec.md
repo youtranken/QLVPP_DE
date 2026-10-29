@@ -79,7 +79,7 @@ Mâu thuẫn đã phát hiện khi lập Plan 3; mỗi mục đã sửa tài li�
 
 - F1: Hoàn tác đợt giao đã bỏ (FR-44) nhưng còn ở PRD §5/§10/FR-43, architecture §6/§7/§14, backlog E4-S3, `_SPEC.md` → gạch khỏi các chỗ đó; giữ `reason='return'` trong CHECK kho (không đổi migration đã áp).
 - F2: E5-S2 `GET /admin/reports/:ym/export.xlsx` ≠ §7 `GET admin/reports/snapshots/:id/export.xlsx` → theo §7 (Excel luôn từ bản chốt); backlog sửa.
-- F3: §10/E5-S1 nhóm Ngoài danh mục `need = requested` ≠ BR-15 → theo PRD: `need = requested + backlog_prev`, `stock = null`; §10 sửa.
+- F3: §10/E5-S1 nhóm Ngoài danh mục `need = requested` ≠ BR-15 → theo PRD: `need = requested + backlog_prev`, `stock = null`; §10 và E5-S1 sửa.
 - F4: §9 `request_delivered:<id>:<n>` "n đếm từ audit" nhưng delivery không đọc `audit_log` của module khác → `n` = số đợt giao (`line_deliveries`) của phiếu tại lúc đủ; §9 sửa.
 - F5: §9 thiếu `event_id` cho chuông Hủy nợ → thêm `line_cancelled:<line_id>:<cancelled_qty sau hủy>`.
 - F6: DoD "mutate có audit" vs `POST me/notifications/read` (trạng thái cá nhân) → không audit đánh dấu đã đọc; §13 ghi rõ.
