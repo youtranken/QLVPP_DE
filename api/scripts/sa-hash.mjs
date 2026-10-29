@@ -7,10 +7,10 @@ async function readPiped() {
   return data.replace(/\r?\n$/, '');
 }
 
-// Gõ tay trên terminal: tắt echo (raw mode) để mật khẩu không hiện ra màn hình
+// Gõ tay trên terminal: tắt echo (raw mode) TRƯỚC khi nhắc — gõ ngay khi thấy lời nhắc mà echo còn bật thì lộ mật khẩu
 function readHiddenFromTty() {
-  process.stderr.write('Mật khẩu SA (không hiện chữ gõ, Enter để xong): ');
   process.stdin.setRawMode(true);
+  process.stderr.write('Mật khẩu SA (không hiện chữ gõ, Enter để xong): ');
   process.stdin.setEncoding('utf8');
   return new Promise((resolve) => {
     let pw = '';
