@@ -85,6 +85,7 @@ describe('admin/config + public-config', () => {
     [{ registration_last_day: 2 }, 'registration_last_day'],
     [{ registration_last_day: '10' }, 'registration_last_day'],
     [{ default_max_qty: 0 }, 'default_max_qty'],
+    [{ default_max_qty: 1000 }, 'default_max_qty'],
     [{ admin_group: '  ' }, 'admin_group'],
     [{ authorized_groups: ['IT'] }, 'authorized_groups'],
     [{ constructor: 'x' }, 'constructor'],
@@ -96,6 +97,23 @@ describe('admin/config + public-config', () => {
     const after = await pool.query(EDITABLE_CONFIG_SQL);
     expect(after.rows).toEqual(before.rows);
   });
+
+  it.each([
+    ['registration_last_day', 3],
+    ['registration_last_day', 28],
+    ['default_max_qty', 1],
+    ['default_max_qty', 999],
+  ])(
+    'PUT %s = %d (biên trong) → 200, GET trả đúng giá trị',
+    async (key, value) => {
+      const res = await put({ [key]: value }).expect(200);
+      expect(res.body[key]).toBe(value);
+      const got = await asAdmin(
+        request(app.getHttpServer()).get('/api/admin/config'),
+      ).expect(200);
+      expect(got.body[key]).toBe(value);
+    },
+  );
 
   it('PUT body thô {"__proto__":…} → 400 CONFIG_INVALID, không 500', async () => {
     const res = await put('{"__proto__": {"x": 1}}')
