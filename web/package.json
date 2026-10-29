@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "oxlint",
+    "lint": "oxlint && node scripts/check-hardcoded-text.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview",
