@@ -5,6 +5,7 @@ import { Pool } from 'pg';
 import { AppModule } from './app.module';
 import { configureApp } from './app.setup';
 import { assertClockEnv } from './common/clock.service';
+import { throttlePerMin } from './common/throttle-limits';
 import { assertTrustProxyHops } from './common/trust-proxy';
 import {
   resolveMigrationsDir,
@@ -43,6 +44,8 @@ async function bootstrap(): Promise<void> {
   assertAuthEnvSafe(process.env);
   assertLocalSaConfigured(process.env);
   assertTrustProxyHops(process.env);
+  throttlePerMin(process.env, 'THROTTLE_USER_PER_MIN');
+  throttlePerMin(process.env, 'THROTTLE_IP_PER_MIN');
   assertClockEnv(process.env);
   const port = requiredPort();
   await migrate();

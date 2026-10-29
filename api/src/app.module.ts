@@ -6,6 +6,7 @@ import { ClockModule } from './common/clock.module';
 import { IP_THROTTLER } from './common/ip-throttler.guard';
 import { testOnlyControllers } from './common/client-ip.controller';
 import { httpLoggerOptions } from './common/logger.config';
+import { throttlePerMin } from './common/throttle-limits';
 import { DatabaseModule } from './database/database.module';
 import { DB_PROBE, probeDatabase } from './health/db-probe';
 import { HealthController } from './health/health.controller';
@@ -37,12 +38,12 @@ import { RequestsModule } from './modules/requests/requests.module';
           {
             name: 'default',
             ttl: 60_000,
-            limit: Number(process.env.THROTTLE_USER_PER_MIN) || 300,
+            limit: throttlePerMin(process.env, 'THROTTLE_USER_PER_MIN'),
           },
           {
             name: IP_THROTTLER,
             ttl: 60_000,
-            limit: Number(process.env.THROTTLE_IP_PER_MIN) || 300,
+            limit: throttlePerMin(process.env, 'THROTTLE_IP_PER_MIN'),
           },
         ],
       }),

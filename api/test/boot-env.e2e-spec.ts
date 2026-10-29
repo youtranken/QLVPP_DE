@@ -11,7 +11,9 @@ function boot(extra: Record<string, string>) {
       ['-r', 'ts-node/register', 'src/main.ts'],
       {
         cwd: API_ROOT,
-        timeout: 60_000,
+        // Ngắn hơn timeout jest để tiến trình con treo bị giết (code null) thay vì sống sót sau suite
+        timeout: 20_000,
+        killSignal: 'SIGKILL',
         env: {
           PATH: process.env.PATH ?? '',
           TS_NODE_TRANSPILE_ONLY: 'true',
@@ -42,5 +44,15 @@ describe('khởi động thật: CLOCK_OFFSET_MS ngoài NODE_ENV=test', () => {
     expect(res.code).toBe(1);
     expect(res.stderr).not.toMatch(/CLOCK_OFFSET_MS/);
     expect(res.stderr).toMatch(/Thiếu DATABASE_URL/);
+  }, 60_000);
+});
+
+describe('khởi động thật: THROTTLE_*_PER_MIN sai', () => {
+  it('production + THROTTLE_USER_PER_MIN=0 → thoát mã 1, từ chối khởi động nêu tên biến', async () => {
+    const res = await boot({ THROTTLE_USER_PER_MIN: '0' });
+    expect(res.code).toBe(1);
+    expect(res.stderr).toMatch(
+      /THROTTLE_USER_PER_MIN phải là số nguyên 1–100000/,
+    );
   }, 60_000);
 });
