@@ -54,12 +54,6 @@ export const IconMenu = (p: IconProps) => (
     <path d="M4 6h16M4 12h16M4 18h16" />
   </svg>
 );
-export const IconClock = (p: IconProps) => (
-  <svg {...base} {...p}>
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 7v5l3 2" />
-  </svg>
-);
 export const IconDocCopy = (p: IconProps) => (
   <svg {...base} {...p}>
     <rect x="8" y="8" width="12" height="13" rx="2" />

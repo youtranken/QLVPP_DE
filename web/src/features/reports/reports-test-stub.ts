@@ -9,7 +9,16 @@ interface Options {
   reports?: Record<string, MonthReport>;
   snapshots?: SnapshotRow[];
   post?: (body: { kind: string; order_qty: Record<string, number> }) => Response | Promise<Response>;
+  exportFile?: (id: string) => Response;
 }
+
+const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+export const fileResponse = (ym: string) =>
+  new Response('xlsx-bytes', { status: 200, headers: { 'Content-Type': XLSX_TYPE, 'Content-Disposition': `attachment; filename="vpp-bao-cao-${ym}.xlsx"` } });
+
+export const errorResponse = (status: number, code: string) =>
+  new Response(JSON.stringify({ code, message: 'x' }), { status, headers: { 'Content-Type': 'application/json' } });
 
 // Server giả giữ danh sách bản chốt: POST thành công thì lần tải lại danh sách có thêm bản mới
 export function stubReports(opts: Options = {}) {
@@ -18,6 +27,10 @@ export function stubReports(opts: Options = {}) {
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET';
     if (url === '/api/periods/current') return jsonResponse(200, { ym: OPEN_YM, deadline: '2026-11-10T17:00:00Z', is_open: true, days_left: 5, previous: null });
+    if (/^\/api\/admin\/reports\/snapshots\/[^/]+\/export\.xlsx\?lang=(vi|en)$/.test(url)) {
+      const id = url.split('/')[4];
+      return opts.exportFile ? opts.exportFile(id) : fileResponse('2026-10');
+    }
     const m = /^\/api\/admin\/reports\/(\d{4}-\d{2})(\/snapshots)?$/.exec(url);
     if (m && !m[2]) return jsonResponse(200, opts.reports?.[m[1]] ?? reportFixture({ ym: m[1] }));
     if (m && method === 'GET') return jsonResponse(200, { items: snapshots });
@@ -42,11 +55,21 @@ export const postsOf = (f: ReturnType<typeof stubReports>) =>
     .filter((c) => (c[1] as RequestInit | undefined)?.method === 'POST')
     .map((c) => ({ url: String(c[0]), body: JSON.parse(String((c[1] as RequestInit).body)) }));
 
-// jsdom không tải tệp: ghi lại href của thẻ <a> được bấm thay cho trình duyệt
+export const exportsOf = (f: ReturnType<typeof stubReports>) => f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes('/export.xlsx'));
+
+// jsdom không lưu tệp: ghi lại tên tệp + nội dung blob của thẻ <a download> được bấm
 export function captureDownloads() {
-  const hrefs: string[] = [];
+  const saved: { name: string; blob: Blob }[] = [];
+  const blobs = new Map<string, Blob>();
+  // jsdom không có createObjectURL: gán mới mỗi test
+  URL.createObjectURL = (b: Blob) => {
+    const href = `blob:t/${blobs.size}`;
+    blobs.set(href, b);
+    return href;
+  };
+  URL.revokeObjectURL = () => undefined;
   vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
-    hrefs.push(this.getAttribute('href') ?? '');
+    saved.push({ name: this.download, blob: blobs.get(this.href)! });
   });
-  return hrefs;
+  return saved;
 }

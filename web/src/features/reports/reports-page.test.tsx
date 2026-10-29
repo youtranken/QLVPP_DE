@@ -4,7 +4,7 @@ import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { PEN_KEY, TAPE_KEY, reportFixture } from './reports-fixtures';
-import { captureDownloads, postsOf, stubReports } from './reports-test-stub';
+import { captureDownloads, errorResponse, exportsOf, postsOf, stubReports } from './reports-test-stub';
 
 function openPage(path = '/admin/reports') {
   mockViewport(1280);
@@ -53,7 +53,9 @@ describe('ReportsPage — cột Đặt mua và chốt', () => {
     expect(pen.closest('td')).toHaveClass('is-edited');
     expect(screen.getByRole('button', { name: 'Về Cần mua Bút bi xanh' })).toBeInTheDocument();
     await userEvent.click(exportBtn());
-    await waitFor(() => expect(downloads).toEqual(['/api/admin/reports/snapshots/snap-1/export.xlsx?lang=vi']));
+    await waitFor(() => expect(downloads.map((d) => d.name)).toEqual(['vpp-bao-cao-2026-10.xlsx']));
+    expect(await downloads[0].blob.text()).toBe('xlsx-bytes');
+    expect(exportsOf(f)).toEqual(['/api/admin/reports/snapshots/snap-1/export.xlsx?lang=vi']);
     expect(postsOf(f)).toEqual([{ url: '/api/admin/reports/2026-10/snapshots', body: { kind: 'xlsx', order_qty: { [PEN_KEY]: 7 } } }]);
   });
 
@@ -110,6 +112,18 @@ describe('ReportsPage — cột Đặt mua và chốt', () => {
     expect(await orderCell('Bút bi xanh')).not.toHaveAttribute('aria-invalid');
     expect(screen.getByRole('alert')).toHaveTextContent('Có ô Đặt mua chưa hợp lệ, xem ô báo đỏ.');
     expect(downloads).toEqual([]);
+  });
+
+  it('POST chốt xong nhưng tải export 500 → báo "Đã chốt nhưng chưa tải được tệp…", không lưu tệp, bản mới vẫn vào danh sách', async () => {
+    const f = stubReports({ exportFile: () => errorResponse(500, 'INTERNAL') });
+    const downloads = captureDownloads();
+    openPage();
+    await orderCell('Bút bi xanh');
+    await userEvent.click(exportBtn());
+    expect(await screen.findByRole('alert')).toHaveTextContent('Đã chốt nhưng chưa tải được tệp — bấm Tải lại ở danh sách bản chốt.');
+    expect(postsOf(f)).toHaveLength(1);
+    expect(downloads).toEqual([]);
+    expect(await within(screen.getByRole('region', { name: 'Bản chốt' })).findByRole('row', { name: /Nguyễn Văn An/ })).toBeInTheDocument();
   });
 
   it('pending_custom_count 0 → bấm Xuất không hỏi', async () => {

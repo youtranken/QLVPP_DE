@@ -6,6 +6,10 @@ const reports = {
     nextMonth: 'Tháng sau',
     exportXlsx: 'Xuất Excel',
     print: 'In trình ký',
+    status: {
+      open: 'Đang mở · hạn {{day}}',
+      locked: 'Đã khóa',
+    },
     leaveConfirm: {
       title: 'Bỏ số Đặt mua đã sửa?',
       message: 'Các ô Đặt mua đã sửa của tháng này sẽ về lại số Cần mua.',
@@ -22,6 +26,7 @@ const reports = {
       INVALID_PERIOD: 'Tháng này chưa tới, chưa lập báo cáo được.',
       VALIDATION: 'Có ô Đặt mua chưa hợp lệ, xem ô báo đỏ.',
       UNKNOWN: 'Chưa chốt được, thử lại sau.',
+      DOWNLOAD_FAILED: 'Đã chốt nhưng chưa tải được tệp — bấm Tải lại ở danh sách bản chốt.',
     },
     items: {
       title: 'Phần 1 · Tổng hợp theo món',
@@ -70,6 +75,10 @@ const reports = {
       reprint: 'In lại',
       reprintLabel: 'In lại bản chốt lúc {{at}}',
       empty: 'Chưa có bản chốt nào cho tháng này.',
+      error: {
+        SNAPSHOT_NOT_FOUND: 'Không tìm thấy bản chốt này, tải lại trang để xem danh sách mới.',
+        UNKNOWN: 'Chưa tải được tệp, thử lại sau.',
+      },
     },
   },
 };

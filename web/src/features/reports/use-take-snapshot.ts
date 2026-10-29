@@ -35,8 +35,9 @@ export function useTakeSnapshot(report: MonthReport, qty: OrderQty) {
       try {
         const { id } = await createSnapshot(report.ym, { kind, order_qty: qty.edited }, csrfToken);
         void refresh();
-        if (kind === 'xlsx') downloadSnapshot(id, i18n.language);
-        else navigate(printPath(id));
+        if (kind === 'print') return navigate(printPath(id));
+        // Bản chốt đã có: lỗi tải chỉ cần "Tải lại" ở danh sách, không chốt thêm bản nữa
+        await downloadSnapshot(id, i18n.language, report.ym).catch(() => setNotice('DOWNLOAD_FAILED'));
       } catch (e) {
         const code = apiErrorCode(e);
         if (code === 'VALIDATION') qty.reject(apiErrorFields(e));

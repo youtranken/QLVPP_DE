@@ -5,8 +5,8 @@ import { YM, shiftYm } from '@/lib/ym';
 import { useConfirm } from '@/ui/confirm-context';
 import { Loading, LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
-import { useCurrentPeriod } from '@/features/request/request.api';
-import { monthOf } from '@/features/request/request-format';
+import { useCurrentPeriod, type CurrentPeriod } from '@/features/request/request.api';
+import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import { useMonthReport, type MonthReport, type SnapshotKind } from './reports.api';
 import { ReportItemTable } from './report-item-table';
 import { IssuesTable } from './issues-table';
@@ -29,9 +29,17 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function ReportHead({ ym, openYm, disabled, onMonth, onTake }: {
+function PeriodTag({ ym, period }: { ym: string; period: CurrentPeriod }) {
+  const { t } = useTranslation();
+  const fmt = useRequestFormat();
+  // Kỳ đang mở thì số còn đổi tới hạn; kỳ trước đó đã khóa
+  if (ym === period.ym) return <span className="tag tag--brand">{t('reports.status.open', { day: fmt.lastDay(period.deadline) })}</span>;
+  return <span className="tag">{t('reports.status.locked')}</span>;
+}
+
+function ReportHead({ ym, period, disabled, onMonth, onTake }: {
   ym: string;
-  openYm: string;
+  period: CurrentPeriod;
   disabled: boolean;
   onMonth: (ym: string) => void;
   onTake: (kind: SnapshotKind) => void;
@@ -41,11 +49,12 @@ function ReportHead({ ym, openYm, disabled, onMonth, onTake }: {
     <div className="a-toolbar rp-head">
       <MonthSwitcher
         value={ym}
-        max={openYm}
+        max={period.ym}
         onChange={onMonth}
         formatLabel={(v) => t('reports.month', { month: monthOf(v), year: v.slice(0, 4) })}
         labels={{ group: t('reports.monthNav'), prev: t('reports.prevMonth'), next: t('reports.nextMonth') }}
       />
+      <PeriodTag ym={ym} period={period} />
       <span className="sp" />
       <button type="button" className="btn btn--sm" disabled={disabled} onClick={() => onTake('xlsx')}>
         {t('reports.exportXlsx')}
@@ -57,7 +66,7 @@ function ReportHead({ ym, openYm, disabled, onMonth, onTake }: {
   );
 }
 
-function ReportBody({ report, openYm, onMonth }: { report: MonthReport; openYm: string; onMonth: (ym: string) => void }) {
+function ReportBody({ report, period, onMonth }: { report: MonthReport; period: CurrentPeriod; onMonth: (ym: string) => void }) {
   const { t } = useTranslation();
   const confirm = useConfirm();
   const qty = useOrderQty(report);
@@ -78,7 +87,7 @@ function ReportBody({ report, openYm, onMonth }: { report: MonthReport; openYm: 
   };
   return (
     <div className="a-stack">
-      <ReportHead ym={report.ym} openYm={openYm} disabled={busy} onMonth={(v) => void changeMonth(v)} onTake={(kind) => void snap.take(kind)} />
+      <ReportHead ym={report.ym} period={period} disabled={busy} onMonth={(v) => void changeMonth(v)} onTake={(kind) => void snap.take(kind)} />
       {snap.notice && (
         <p role="alert" className="alert alert--warn">
           {t(`reports.error.${snap.notice}`)}
@@ -96,11 +105,11 @@ function ReportBody({ report, openYm, onMonth }: { report: MonthReport; openYm: 
   );
 }
 
-function ReportForMonth({ ym, openYm, onMonth }: { ym: string; openYm: string; onMonth: (ym: string) => void }) {
+function ReportForMonth({ ym, period, onMonth }: { ym: string; period: CurrentPeriod; onMonth: (ym: string) => void }) {
   const query = useMonthReport(ym);
   if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
   if (!query.data) return <Loading />;
-  return <ReportBody report={query.data} openYm={openYm} onMonth={onMonth} />;
+  return <ReportBody report={query.data} period={period} onMonth={onMonth} />;
 }
 
 // Mặc định kỳ khóa gần nhất (tháng trước kỳ đang mở); xem được tới kỳ đang mở
@@ -112,6 +121,6 @@ export function ReportsPage() {
   const ym = asked && openYm && YM.test(asked) && asked <= openYm ? asked : openYm && shiftYm(openYm, -1);
 
   if (current.isError) return <LoadError onRetry={() => void current.refetch()} />;
-  if (!ym || !openYm) return <Loading />;
-  return <ReportForMonth key={ym} ym={ym} openYm={openYm} onMonth={(v) => setParams({ ym: v })} />;
+  if (!ym || !current.data) return <Loading />;
+  return <ReportForMonth key={ym} ym={ym} period={current.data} onMonth={(v) => setParams({ ym: v })} />;
 }

@@ -9,6 +9,10 @@ const reports: Messages<typeof vi> = {
     nextMonth: 'Next month',
     exportXlsx: 'Export Excel',
     print: 'Print for signing',
+    status: {
+      open: 'Open · due {{day}}',
+      locked: 'Locked',
+    },
     leaveConfirm: {
       title: 'Discard edited order quantities?',
       message: 'Edited order quantities for this month will go back to the amount needed.',
@@ -25,6 +29,7 @@ const reports: Messages<typeof vi> = {
       INVALID_PERIOD: 'This month has not started yet, no report can be made.',
       VALIDATION: 'Some order quantities are invalid, see the cells marked in red.',
       UNKNOWN: 'Could not create the snapshot, please try again later.',
+      DOWNLOAD_FAILED: 'Snapshot created but the file could not be downloaded — use Download again in the snapshot list.',
     },
     items: {
       title: 'Part 1 · Summary by item',
@@ -73,6 +78,10 @@ const reports: Messages<typeof vi> = {
       reprint: 'Print again',
       reprintLabel: 'Print again the snapshot of {{at}}',
       empty: 'No snapshots for this month yet.',
+      error: {
+        SNAPSHOT_NOT_FOUND: 'This snapshot no longer exists, reload the page to see the current list.',
+        UNKNOWN: 'Could not download the file, please try again later.',
+      },
     },
   },
 };

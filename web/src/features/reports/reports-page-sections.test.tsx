@@ -3,9 +3,8 @@ import { screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
-import i18n from '@/lib/i18n';
-import { ISSUE, reportFixture, snapshotRow } from './reports-fixtures';
-import { captureDownloads, postsOf, stubReports } from './reports-test-stub';
+import { ISSUE, reportFixture } from './reports-fixtures';
+import { captureDownloads, stubReports } from './reports-test-stub';
 
 function openPage(path = '/admin/reports') {
   mockViewport(1280);
@@ -15,10 +14,9 @@ function openPage(path = '/admin/reports') {
 const region = (name: string) => screen.findByRole('region', { name });
 const orderCell = (name: string) => screen.findByRole('spinbutton', { name: `Đặt mua ${name}` });
 
-afterEach(async () => {
+afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
-  await i18n.changeLanguage('vi');
 });
 
 describe('ReportsPage — tháng, chi tiết, xuất lẻ, bản chốt', () => {
@@ -29,6 +27,27 @@ describe('ReportsPage — tháng, chi tiết, xuất lẻ, bản chốt', () => 
     await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
     expect(screen.getByTestId('location-search')).toHaveTextContent('?ym=2026-11');
     expect(screen.getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
+  });
+
+  it.each(['abc', '2026-13', '1999-12', '2026-1'])('?ym=%s sai định dạng → hiện kỳ khóa gần nhất (tháng 10/2026), không gọi báo cáo của giá trị lạ', async (bad) => {
+    const f = stubReports();
+    openPage(`/admin/reports?ym=${bad}`);
+    await orderCell('Bút bi xanh');
+    expect(screen.getByText('Tháng 10/2026')).toBeInTheDocument();
+    expect(f.mock.calls.map((c) => String(c[0])).filter((u) => u.startsWith('/api/admin/reports/') && !u.includes('2026-10'))).toEqual([]);
+  });
+
+  it('nhãn trạng thái kỳ ở đầu trang: tháng 10 "Đã khóa"; kỳ đang mở 11 "Đang mở · hạn 10/11"', async () => {
+    stubReports();
+    openPage();
+    await orderCell('Bút bi xanh');
+    const head = screen.getByRole('group', { name: 'Chọn tháng báo cáo' }).parentElement!;
+    expect(within(head).getByText('Đã khóa')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
+    await screen.findByText('Tháng 11/2026');
+    const head2 = screen.getByRole('group', { name: 'Chọn tháng báo cáo' }).parentElement!;
+    expect(await within(head2).findByText('Đang mở · hạn 10/11')).toBeInTheDocument();
+    expect(within(head2).queryByText('Đã khóa')).toBeNull();
   });
 
   it('?ym=2026-12 (vượt kỳ mở) → hiện tháng 10/2026', async () => {
@@ -97,28 +116,6 @@ describe('ReportsPage — tháng, chi tiết, xuất lẻ, bản chốt', () => 
     expect(within(within(issues).getByRole('row', { name: /Thay bút hỏng/ })).getByText('Phạm Văn Đức')).toBeInTheDocument();
   });
 
-  it('danh sách bản chốt: giờ, người lập, loại; "Tải lại" tải đúng bản, không gọi POST', async () => {
-    const f = stubReports({ snapshots: [snapshotRow()] });
-    const downloads = captureDownloads();
-    openPage();
-    const list = await region('Bản chốt');
-    const row = await within(list).findByRole('row', { name: /Trần Thị Bình/ });
-    expect(within(row).getByText('Excel')).toBeInTheDocument();
-    expect(within(row).getByText('09:30 28/10/26')).toBeInTheDocument();
-    await userEvent.click(within(row).getByRole('button', { name: /^Tải lại/ }));
-    expect(downloads).toEqual(['/api/admin/reports/snapshots/snap-old/export.xlsx?lang=vi']);
-    expect(postsOf(f)).toEqual([]);
-  });
-
-  it('"In lại" mở trang in của bản cũ, không gọi POST', async () => {
-    const f = stubReports({ snapshots: [snapshotRow({ id: 'snap-p', kind: 'print' })] });
-    openPage();
-    const row = await within(await region('Bản chốt')).findByRole('row', { name: /Trần Thị Bình/ });
-    await userEvent.click(within(row).getByRole('button', { name: /^In lại/ }));
-    expect(screen.getByTestId('location')).toHaveTextContent('/admin/reports/snapshots/snap-p/print');
-    expect(postsOf(f)).toEqual([]);
-  });
-
   it('chưa có bản chốt → "Chưa có bản chốt nào cho tháng này."; Xuất xong → bản mới hiện trong danh sách', async () => {
     stubReports();
     captureDownloads();
@@ -129,13 +126,4 @@ describe('ReportsPage — tháng, chi tiết, xuất lẻ, bản chốt', () => 
     expect(await within(list).findByRole('row', { name: /Nguyễn Văn An/ })).toBeInTheDocument();
   });
 
-  it('giao diện tiếng Anh → tải export.xlsx?lang=en', async () => {
-    stubReports({ snapshots: [snapshotRow()] });
-    const downloads = captureDownloads();
-    await i18n.changeLanguage('en');
-    openPage();
-    const row = await within(await region('Snapshots')).findByRole('row', { name: /Trần Thị Bình/ });
-    await userEvent.click(within(row).getByRole('button', { name: /^Download again/ }));
-    await waitFor(() => expect(downloads).toEqual(['/api/admin/reports/snapshots/snap-old/export.xlsx?lang=en']));
-  });
 });

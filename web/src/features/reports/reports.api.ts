@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, apiFetchBlob } from '@/lib/api-client';
 
 export const ORDER_QTY_MAX = 99999;
 
@@ -92,14 +92,17 @@ export const createSnapshot = (ym: string, body: { kind: SnapshotKind; order_qty
 
 export const printPath = (id: string) => `/admin/reports/snapshots/${id}/print`;
 
-// Tệp tải qua cookie phiên của trình duyệt; Content-Disposition attachment nên trang không rời đi
-export function downloadSnapshot(id: string, lang: string) {
+// Tải qua fetch để 401 tự đăng nhập lại và lỗi không thành tệp rác; tên tệp theo server, thiếu thì dự phòng theo tháng
+export async function downloadSnapshot(id: string, lang: string, ym: string) {
+  const { blob, fileName } = await apiFetchBlob(`/api/admin/reports/snapshots/${id}/export.xlsx?lang=${lang === 'en' ? 'en' : 'vi'}`);
+  const href = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = `/api/admin/reports/snapshots/${id}/export.xlsx?lang=${lang === 'en' ? 'en' : 'vi'}`;
-  a.download = '';
+  a.href = href;
+  a.download = fileName ?? `vpp-bao-cao-${ym}.xlsx`;
   document.body.append(a);
   a.click();
   a.remove();
+  setTimeout(() => URL.revokeObjectURL(href), 0);
 }
 
 export const pickName = (lang: string, name: string, nameEn: string | null) => (lang === 'en' && nameEn ? nameEn : name);

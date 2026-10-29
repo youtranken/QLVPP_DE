@@ -1,6 +1,6 @@
 import { mkdirSync, rmSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { expect, test, type APIRequestContext, type Browser, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
 import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, settled } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
 
@@ -11,8 +11,6 @@ const ExcelJS = createRequire(new URL('../../api/package.json', import.meta.url)
 
 const SHOTS = '../.superpowers/sdd/2026-10-29-vpp-gd1-p3-giao-bao-cao/task-13-shots';
 const DOWNLOADS = 'test-results/downloads';
-const SA_USERNAME = process.env.PW_SA_USERNAME ?? 'sa';
-const SA_PASSWORD = process.env.PW_SA_PASSWORD;
 
 async function snap(page: Page, info: TestInfo, name: string) {
   mkdirSync(SHOTS, { recursive: true });
@@ -26,22 +24,7 @@ const monthLabel = (ym: string) => `Tháng ${Number(ym.slice(5, 7))}/${ym.slice(
 
 // Bản chốt tạo trong lần chạy này; xóa trước kỳ seed vì report_snapshots có FK tới periods
 const dropSnapshots = (ym: string, since: string) =>
-  psql(`DELETE FROM report_snapshots WHERE period_ym = '${ym}-01' AND created_by_sub IN ('pw-admin', 'local:sa') AND created_at >= '${since}'`);
-
-// Tệp tải về đi thẳng từ trình quản lý tải xuống, không qua page.route → header dev-identity không tới; cần phiên cookie thật của SA
-async function saPage(browser: Browser, info: TestInfo) {
-  expect(SA_PASSWORD, 'Đặt PW_SA_PASSWORD (mật khẩu SA dev) để chạy E5-S2').toBeTruthy();
-  const { viewport, hasTouch, isMobile: mobile, baseURL } = info.project.use;
-  const page = await (await browser.newContext({ baseURL, viewport, hasTouch, isMobile: mobile, acceptDownloads: true })).newPage();
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Dành cho IT' }).click();
-  await page.getByLabel('Tên tài khoản').fill(SA_USERNAME);
-  await page.getByLabel('Mật khẩu').fill(SA_PASSWORD!);
-  const login = page.waitForResponse((r) => r.url().endsWith('/api/auth/sa-login'));
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  expect((await login).status()).toBe(200);
-  return page;
-}
+  psql(`DELETE FROM report_snapshots WHERE period_ym = '${ym}-01' AND created_by_sub = 'pw-admin' AND created_at >= '${since}'`);
 
 async function confirmPendingIfAny(page: Page, request: APIRequestContext, ym: string) {
   const report = await (await request.get(`/api/admin/reports/${ym}`, { headers: devHeaders('admin') })).json();
@@ -54,112 +37,101 @@ async function confirmPendingIfAny(page: Page, request: APIRequestContext, ym: s
 asRole('admin');
 
 test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () => {
-  test('E5-S4 trang Báo cáo: 2 bảng + bảng phụ Xuất lẻ trong kỳ + danh sách bản chốt', async ({ page, request }, info) => {
-    const release = await acquireLock('prev-period');
-    const since = new Date().toISOString();
-    let seed: Seed | undefined;
-    try {
-      seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }]);
-      const [a] = seed.items;
-      // Phòng ban của Phần 2 lấy từ phiếu (chốt lúc tạo phiếu), seed chung không đặt
-      psql(`UPDATE requests SET department = 'PW Phòng giao' WHERE id = '${seed.requestId}'`);
-      const reason = `PW họp ${seed.tag}`;
-      psql(`INSERT INTO stock_movements (item_id, delta, reason, recipient_sub, note, actor_sub, created_at)
-        VALUES ('${a.id}', -1, 'issue', '${seed.sub}', '${reason}', 'pw-admin', '${seed.prevYm}-15T03:00:00Z')`);
-      const made = await request.post(`/api/admin/reports/${seed.prevYm}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print' } });
-      expect(made.ok()).toBe(true);
-
-      await page.goto('/admin/reports');
-      await expect(page.getByRole('heading', { level: 1, name: 'Báo cáo & in' })).toBeVisible();
-      await expect(page.getByRole('group', { name: 'Chọn tháng báo cáo' }).getByText(monthLabel(seed.prevYm))).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Xuất Excel' })).toBeEnabled();
-      await expect(page.getByRole('button', { name: 'In trình ký' })).toBeEnabled();
-
-      const part1 = page.getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' });
-      const row = part1.getByRole('row').filter({ has: page.getByRole('spinbutton', { name: `Đặt mua ${a.name}` }) });
-      await expect(row.getByRole('spinbutton')).toHaveValue('3');
-      const issues = page.getByRole('region', { name: 'Xuất lẻ trong kỳ' });
-      const issue = issues.getByRole('row').filter({ hasText: reason });
-      await expect(issue.getByText(seed.name)).toBeVisible();
-      const part2 = page.getByRole('region', { name: 'Phần 2 · Chi tiết theo phòng ban' });
-      await expect(part2.getByRole('rowheader', { name: 'PW Phòng giao' })).toBeVisible();
-      await expect(part2.getByRole('row').filter({ hasText: seed.name }).getByText(a.name)).toBeVisible();
-      const list = page.getByRole('region', { name: 'Bản chốt' });
-      await expect(list.getByRole('row').filter({ hasText: 'Bản in' }).first()).toBeVisible();
-
-      await expect(page.getByRole('group', { name: 'Chọn tháng báo cáo' }).getByRole('button', { name: 'Tháng sau' })).toBeEnabled();
-      if (isMobile(info)) await expectNoContrastViolations(page);
-      await snap(page, info, 'reports');
-    } finally {
-      if (seed) dropSnapshots(seed.prevYm, since);
-      seed?.cleanup();
-      release();
-    }
+  // Dọn ở afterEach thay vì finally: afterEach vẫn chạy khi test hết giờ
+  let run: { release: () => void; since: string; seed?: Seed; files: string[] };
+  test.beforeEach(async () => {
+    run = { release: await acquireLock('prev-period'), since: new Date().toISOString(), files: [] };
+  });
+  test.afterEach(() => {
+    for (const f of run.files) rmSync(f, { force: true });
+    if (run.seed) dropSnapshots(run.seed.prevYm, run.since);
+    run.seed?.cleanup();
+    run.release();
   });
 
-  test('E5-S2 xuất Excel: sửa Đặt mua → tải .xlsx 2 sheet → bản chốt vào danh sách → "Tải lại" không tạo bản mới', async ({ browser, request }, info) => {
-    const release = await acquireLock('prev-period');
-    const since = new Date().toISOString();
-    let seed: Seed | undefined;
-    let page: Page | undefined;
-    const files: string[] = [];
-    try {
-      seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }]);
-      const [a] = seed.items;
-      const before = snapshotCount(seed.prevYm);
-      page = await saPage(browser, info);
-      await page.goto('/admin/reports');
-      const order = page.getByRole('spinbutton', { name: `Đặt mua ${a.name}` });
-      const exportBtn = page.getByRole('button', { name: 'Xuất Excel' });
-      await expect(order).toHaveValue('3');
-      await order.fill('100000');
-      await expect(page.getByText('Nhập số nguyên 0–99999')).toBeVisible();
-      await expect(exportBtn).toBeDisabled();
-      await order.fill('9');
-      await expect(page.getByRole('button', { name: `Về Cần mua ${a.name}` })).toBeVisible();
-      await expect(exportBtn).toBeEnabled();
+  test('E5-S4 trang Báo cáo: 2 bảng + bảng phụ Xuất lẻ trong kỳ + danh sách bản chốt', async ({ page, request }, info) => {
+    const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }]));
+    const [a] = seed.items;
+    // Phòng ban của Phần 2 lấy từ phiếu (chốt lúc tạo phiếu), seed chung không đặt
+    psql(`UPDATE requests SET department = 'PW Phòng giao' WHERE id = '${seed.requestId}'`);
+    const reason = `PW họp ${seed.tag}`;
+    psql(`INSERT INTO stock_movements (item_id, delta, reason, recipient_sub, note, actor_sub, created_at)
+      VALUES ('${a.id}', -1, 'issue', '${seed.sub}', '${reason}', 'pw-admin', '${seed.prevYm}-15T03:00:00Z')`);
+    const made = await request.post(`/api/admin/reports/${seed.prevYm}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print' } });
+    expect(made.ok()).toBe(true);
 
-      const downloading = page.waitForEvent('download');
-      await exportBtn.click();
-      await confirmPendingIfAny(page, request, seed.prevYm);
-      const download = await downloading;
-      expect(download.suggestedFilename()).toBe(`vpp-bao-cao-${seed.prevYm}.xlsx`);
-      const file = `${DOWNLOADS}/${seed.tag}.xlsx`;
-      mkdirSync(DOWNLOADS, { recursive: true });
-      files.push(file);
-      await download.saveAs(file);
-      expect(statSync(file).size).toBeGreaterThan(0);
-      const wb = new ExcelJS.Workbook();
-      await wb.xlsx.readFile(file);
-      expect(wb.worksheets.map((ws) => ws.name)).toEqual(['Tổng theo món', 'Chi tiết']);
-      const sheetRow = wb.worksheets[0].getRows(1, wb.worksheets[0].rowCount)!.find((r) => r.getCell(1).value === a.name)!;
-      expect(sheetRow.getCell(6).value).toBe(3);
-      expect(sheetRow.getCell(7).value).toBe(9);
+    await page.goto('/admin/reports');
+    await expect(page.getByRole('heading', { level: 1, name: 'Báo cáo & in' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Chọn tháng báo cáo' }).getByText(monthLabel(seed.prevYm))).toBeVisible();
+    await expect(page.getByRole('main').getByText('Đã khóa', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Xuất Excel' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'In trình ký' })).toBeEnabled();
 
-      expect(snapshotCount(seed.prevYm)).toBe(before + 1);
-      const list = page.getByRole('region', { name: 'Bản chốt' });
-      await expect(list.getByRole('row').filter({ hasText: 'Excel' })).toHaveCount(
-        Number(psql(`SELECT count(*) FROM report_snapshots WHERE period_ym = '${seed.prevYm}-01' AND kind = 'xlsx'`)),
-      );
-      if (isMobile(info)) await expectNoContrastViolations(page);
-      await snap(page, info, 'reports-exported');
+    const part1 = page.getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' });
+    const row = part1.getByRole('row').filter({ has: page.getByRole('spinbutton', { name: `Đặt mua ${a.name}` }) });
+    await expect(row.getByRole('spinbutton')).toHaveValue('3');
+    const issues = page.getByRole('region', { name: 'Xuất lẻ trong kỳ' });
+    const issue = issues.getByRole('row').filter({ hasText: reason });
+    await expect(issue.getByText(seed.name)).toBeVisible();
+    const part2 = page.getByRole('region', { name: 'Phần 2 · Chi tiết theo phòng ban' });
+    await expect(part2.getByRole('rowheader', { name: 'PW Phòng giao' })).toBeVisible();
+    await expect(part2.getByRole('row').filter({ hasText: seed.name }).getByText(a.name)).toBeVisible();
+    const list = page.getByRole('region', { name: 'Bản chốt' });
+    await expect(list.getByRole('row').filter({ hasText: 'Bản in' }).first()).toBeVisible();
 
-      const again = page.waitForEvent('download');
-      await list.getByRole('button', { name: /^Tải lại bản chốt/ }).first().click();
-      const second = await again;
-      expect(second.suggestedFilename()).toBe(`vpp-bao-cao-${seed.prevYm}.xlsx`);
-      const file2 = `${DOWNLOADS}/${seed.tag}-again.xlsx`;
-      files.push(file2);
-      await second.saveAs(file2);
-      expect(statSync(file2).size).toBeGreaterThan(0);
-      expect(snapshotCount(seed.prevYm)).toBe(before + 1);
-    } finally {
-      for (const f of files) rmSync(f, { force: true });
-      if (seed) dropSnapshots(seed.prevYm, since);
-      seed?.cleanup();
-      release();
-      // Đóng ngữ cảnh sau cùng: khi test hết giờ lệnh này ném lỗi và không được chặn phần dọn dữ liệu
-      await page?.context().close().catch(() => undefined);
-    }
+    await expect(page.getByRole('group', { name: 'Chọn tháng báo cáo' }).getByRole('button', { name: 'Tháng sau' })).toBeEnabled();
+    if (isMobile(info)) await expectNoContrastViolations(page);
+    await snap(page, info, 'reports');
+  });
+
+  test('E5-S2 xuất Excel: sửa Đặt mua → tải .xlsx 2 sheet → bản chốt vào danh sách → "Tải lại" không tạo bản mới', async ({ page, request }, info) => {
+    const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }]));
+    const [a] = seed.items;
+    const before = snapshotCount(seed.prevYm);
+    await page.goto('/admin/reports');
+    const order = page.getByRole('spinbutton', { name: `Đặt mua ${a.name}` });
+    const exportBtn = page.getByRole('button', { name: 'Xuất Excel' });
+    await expect(order).toHaveValue('3');
+    await order.fill('100000');
+    await expect(page.getByText('Nhập số nguyên 0–99999')).toBeVisible();
+    await expect(exportBtn).toBeDisabled();
+    await order.fill('9');
+    await expect(page.getByRole('button', { name: `Về Cần mua ${a.name}` })).toBeVisible();
+    await expect(exportBtn).toBeEnabled();
+
+    const downloading = page.waitForEvent('download');
+    await exportBtn.click();
+    await confirmPendingIfAny(page, request, seed.prevYm);
+    const download = await downloading;
+    expect(download.suggestedFilename()).toBe(`vpp-bao-cao-${seed.prevYm}.xlsx`);
+    const file = `${DOWNLOADS}/${seed.tag}.xlsx`;
+    mkdirSync(DOWNLOADS, { recursive: true });
+    run.files.push(file);
+    await download.saveAs(file);
+    expect(statSync(file).size).toBeGreaterThan(0);
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.readFile(file);
+    expect(wb.worksheets.map((ws) => ws.name)).toEqual(['Tổng theo món', 'Chi tiết']);
+    const sheetRow = wb.worksheets[0].getRows(1, wb.worksheets[0].rowCount)!.find((r) => r.getCell(1).value === a.name)!;
+    expect(sheetRow.getCell(6).value).toBe(3);
+    expect(sheetRow.getCell(7).value).toBe(9);
+
+    expect(snapshotCount(seed.prevYm)).toBe(before + 1);
+    const list = page.getByRole('region', { name: 'Bản chốt' });
+    await expect(list.getByRole('row').filter({ hasText: 'Excel' })).toHaveCount(
+      Number(psql(`SELECT count(*) FROM report_snapshots WHERE period_ym = '${seed.prevYm}-01' AND kind = 'xlsx'`)),
+    );
+    if (isMobile(info)) await expectNoContrastViolations(page);
+    await snap(page, info, 'reports-exported');
+
+    const again = page.waitForEvent('download');
+    await list.getByRole('button', { name: /^Tải lại bản chốt/ }).first().click();
+    const second = await again;
+    expect(second.suggestedFilename()).toBe(`vpp-bao-cao-${seed.prevYm}.xlsx`);
+    const file2 = `${DOWNLOADS}/${seed.tag}-again.xlsx`;
+    run.files.push(file2);
+    await second.saveAs(file2);
+    expect(statSync(file2).size).toBeGreaterThan(0);
+    expect(snapshotCount(seed.prevYm)).toBe(before + 1);
   });
 });
