@@ -3,8 +3,11 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormField } from '@/ui/form-field';
 import { NO_FILTERS, type AuditFilters } from '@/features/admin/admin.api';
+import { AUDIT_ACTIONS, auditActionLabel } from '@/features/admin/audit-actions';
 import { UserPicker } from '@/features/directory/user-picker';
 import type { DirectoryUser } from '@/features/directory/directory.api';
+
+const ACTIONS_LIST_ID = 'audit-action-options';
 
 // Server cũng chặn to < from (400); kiểm trước để lỗi gắn đúng ô thay vì báo tải lỗi chung
 export function AuditFilterBar({ onApply }: { onApply: (f: AuditFilters) => void }) {
@@ -45,7 +48,16 @@ export function AuditFilterBar({ onApply }: { onApply: (f: AuditFilters) => void
         onEnter={() => formRef.current?.requestSubmit()}
       />
       <FormField label={t('audit.filters.action')} hint={t('audit.filters.actionHint')}>
-        {(p) => <input {...p} value={draft.action} onChange={(e) => set('action', e.target.value)} />}
+        {(p) => (
+          <>
+            <input {...p} list={ACTIONS_LIST_ID} value={draft.action} onChange={(e) => set('action', e.target.value)} />
+            <datalist id={ACTIONS_LIST_ID}>
+              {AUDIT_ACTIONS.map((a) => (
+                <option key={a} value={a} label={auditActionLabel(t, a)} />
+              ))}
+            </datalist>
+          </>
+        )}
       </FormField>
       <FormField label={t('audit.filters.from')}>
         {(p) => <input {...p} type="date" value={draft.from} onChange={(e) => set('from', e.target.value)} />}

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useFormatTime } from '@/lib/format-time';
 import type { AuditEntry } from '@/features/admin/admin.api';
+import { auditActionLabel } from '@/features/admin/audit-actions';
 
 type Translate = (key: string, opts?: Record<string, unknown>) => string;
 
@@ -39,7 +40,7 @@ export function useAuditColumns(): ColumnDef<AuditEntry, unknown>[] {
         id: 'action',
         header: t('audit.page.colAction'),
         enableSorting: false,
-        cell: ({ row }) => <code className="audit-code">{row.original.action}</code>,
+        cell: ({ row }) => <span title={row.original.action}>{auditActionLabel(t, row.original.action)}</span>,
       },
       {
         id: 'object',

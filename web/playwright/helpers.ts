@@ -41,6 +41,7 @@ export async function searchSummaryPeople(page: Page, text: string) {
 
 // Spinner quay vô hạn: finished không bao giờ xong → evaluate treo tới hết giờ test ("browserContext.close: Test ended")
 export async function settled(page: Page) {
+  // aria-busy là trạng thái ARIA người dùng trợ năng thấy, không phải class; getByRole không lọc theo aria-busy nên giữ selector này
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   await page.evaluate(() =>
     Promise.all(

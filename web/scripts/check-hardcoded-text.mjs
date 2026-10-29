@@ -8,6 +8,7 @@ const TECHNICAL_ATTRS = new Set([
   'className', 'id', 'key', 'type', 'name', 'role', 'href', 'to', 'path', 'variant', 'size', 'tone', 'mode',
   'htmlFor', 'autoComplete', 'autoCapitalize', 'inputMode', 'method', 'rel', 'target', 'src', 'accept', 'capture',
   'loading', 'scope', 'lang', 'dir', 'd', 'viewBox', 'fill', 'stroke', 'xmlns',
+  'side', 'align', 'orientation', 'enterKeyHint', 'form', 'i18nKey',
 ]);
 const TOKEN_ARIA = new Set([
   'aria-hidden', 'aria-live', 'aria-current', 'aria-haspopup', 'aria-expanded', 'aria-controls', 'aria-labelledby',
@@ -22,7 +23,10 @@ const NON_ASCII_LETTER = /(?![a-zA-Z])\p{L}/u;
 const HTML_ENTITY = /&[a-z]+;|&#\d+;|&#x[0-9a-f]+;/gi;
 const PLACEHOLDER = '${…}';
 
-const hasText = (text) => HAS_LETTER.test(text.replace(HTML_ENTITY, ''));
+// 'đ'/'₫' là ký hiệu tiền tệ, không phải câu chữ cần dịch
+const CURRENCY_SYMBOLS = new Set(['đ', '₫']);
+const hasText = (text) => !CURRENCY_SYMBOLS.has(text.trim()) && HAS_LETTER.test(text.replace(HTML_ENTITY, ''));
+const isToken = (node) => ts.isStringLiteral(node) && /^[a-z][a-z-]*$/.test(node.text);
 const isUnitsOnly = (text) =>
   (text.split(PLACEHOLDER).join(' ').match(/\p{L}+/gu) ?? []).every((w) => CSS_UNITS.has(w));
 const isTextAttr = (name) =>
@@ -94,9 +98,14 @@ export function findHardcodedText(file, source) {
     if (ts.isJsxText(node) && hasText(node.text)) report(node, node.text);
     if (ts.isJsxAttribute(node)) visitAttr(node);
     if (ts.isJsxExpression(node) && node.expression && isChild(node)) reportExpr(node.expression);
-    if (ts.isCallExpression(node) && isToastCall(node)) node.arguments.forEach(reportExpr);
+    if (ts.isCallExpression(node) && isToastCall(node)) {
+      node.arguments.forEach((arg, i) => {
+        // toast('success', …): đối số đầu là loại thông báo, không phải câu chữ
+        if (!(i === 0 && node.arguments.length > 1 && isToken(arg))) reportExpr(arg);
+      });
+    }
     const text = stringText(node);
-    if (text !== null && NON_ASCII_LETTER.test(text)) report(node, text);
+    if (text !== null && !CURRENCY_SYMBOLS.has(text.trim()) && NON_ASCII_LETTER.test(text)) report(node, text);
     ts.forEachChild(node, visit);
   };
   visit(sf);

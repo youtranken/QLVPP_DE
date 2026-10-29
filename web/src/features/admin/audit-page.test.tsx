@@ -37,7 +37,7 @@ const auditUrls = (m: ReturnType<typeof stubApi>) =>
 async function openAudit() {
   mockViewport(1280);
   renderApp(makeMe('admin'), '/admin/audit');
-  await screen.findAllByText('config.updated');
+  await screen.findAllByText('Sửa cấu hình');
 }
 
 describe('AuditPage', () => {
@@ -55,7 +55,7 @@ describe('AuditPage', () => {
     const fetchMock = stubApi();
     await openAudit();
     await userEvent.click(screen.getByRole('button', { name: 'Xem thêm' }));
-    expect(await screen.findByText('auth.login')).toBeInTheDocument();
+    expect(await screen.findByText('Đăng nhập')).toBeInTheDocument();
     expect(screen.getByText('local:sa')).toBeInTheDocument();
     expect(screen.getByText('{"ip":"10.0.0.5"}')).toBeInTheDocument();
     expect(auditUrls(fetchMock).at(-1)?.searchParams.get('cursor')).toBe('c2');
@@ -106,5 +106,17 @@ describe('AuditPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
     expect(screen.getByLabelText('Đến ngày')).toHaveAccessibleDescription('“Đến ngày” phải bằng hoặc sau “Từ ngày”.');
     expect(auditUrls(fetchMock)).toHaveLength(before);
+  });
+
+  it('mã hành động api mới hơn web hiện mã thô; nhãn đã biết có mã gốc trong title; gợi ý bộ lọc có nhãn', async () => {
+    const fetchMock = vi.fn((url: string) =>
+      Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items: [row('a1', { action: 'future.thing' }), row('a2', { action: 'line.delivered' })], next_cursor: null } : { items: [], next_cursor: null })),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/audit');
+    expect(await screen.findByText('future.thing')).toBeInTheDocument();
+    expect(within(screen.getByRole('table')).getByText('Giao hàng')).toHaveAttribute('title', 'line.delivered');
+    expect(document.querySelector('datalist option[value="line.cancel_remaining"]')).toHaveAttribute('label', 'Hủy nợ');
   });
 });

@@ -155,4 +155,24 @@ describe('check-hardcoded-text', () => {
       },
     );
   });
+
+  it('prop kỹ thuật side/align/orientation/enterKeyHint/form/i18nKey → sạch; prop người dùng thấy cùng dòng vẫn báo', () => {
+    expect(
+      scan(
+        `export const A = () => (<Popover side="top" align="end" orientation="horizontal" enterKeyHint="search" form="f1" label="Mở rộng"><Trans i18nKey="a.b" /></Popover>);`,
+      ),
+    ).toEqual(['Mở rộng']);
+  });
+
+  it("đối số đầu dạng token toast('success', t('x')) → sạch; toast('Đã lưu') và toast('success', 'Đã lưu') vẫn báo", () => {
+    expect(
+      scan("toast('success', t('x'));\ntoast('error', `${n}`);\ntoast('Đã lưu');\ntoast('success', 'Đã lưu');\n", 'src/features/x.ts'),
+    ).toEqual(['Đã lưu', 'Đã lưu']);
+  });
+
+  it("chuỗi chỉ gồm ký hiệu tiền tệ 'đ'/'₫' → sạch; 'đồng' hay 'Giá đ' vẫn báo", () => {
+    expect(
+      scan("const unit = 'đ';\nconst sym = '₫';\nconst a = 'đồng';\nconst b = 'Giá đ';\n", 'src/lib/money.ts'),
+    ).toEqual(['đồng', 'Giá đ']);
+  });
 });
