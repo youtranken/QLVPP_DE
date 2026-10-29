@@ -140,6 +140,18 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
       expect(res.body).toMatchObject({ code: 'FILE_TYPE_INVALID' });
     });
 
+    it('đúng 5 242 880 byte (5 MB) PNG → 201', async () => {
+      const exact = Buffer.alloc(5 * 1024 * 1024);
+      PNG_1X1.copy(exact);
+      const res = await upload(MEMBER_A, exact).expect(201);
+      expect(res.body).toMatchObject({ mime: 'image/png' });
+      const { rows } = await pool.query<{ size_bytes: number }>(
+        'SELECT size_bytes FROM files WHERE id = $1',
+        [res.body.id],
+      );
+      expect(rows[0].size_bytes).toBe(5_242_880);
+    });
+
     it('5 MB + 1 byte → 413 FILE_TOO_LARGE', async () => {
       const big = Buffer.alloc(5 * 1024 * 1024 + 1);
       PNG_1X1.copy(big);

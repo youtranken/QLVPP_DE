@@ -26,6 +26,12 @@ describe('me/request: lỗi theo dòng, dòng chỉ đọc', () => {
         400,
         async () => ({ item_id: await newItem(), qty: 1.5 }),
       ],
+      ['QTY_INVALID', 400, async () => ({ item_id: await newItem(), qty: -1 })],
+      [
+        'QTY_INVALID',
+        400,
+        async () => ({ item_id: await newItem(), qty: '2' }),
+      ],
       [
         'QTY_EXCEEDS_MAX',
         400,
@@ -74,6 +80,31 @@ describe('me/request: lỗi theo dòng, dòng chỉ đọc', () => {
       expect(await requestsOf(A)).toHaveLength(0);
     });
 
+    it.each([
+      ['thiếu tên', undefined],
+      ['tên chỉ khoảng trắng', '   '],
+    ])(
+      'dòng ngoài DM %s → 400 VALIDATION {fields: [custom_name], line_index: 1}',
+      async (_label, name) => {
+        const ok = { item_id: await newItem(), qty: 1 };
+        const res = await save([ok, custom({ custom_name: name })]).expect(400);
+        expect(res.body).toMatchObject({
+          code: 'VALIDATION',
+          fields: ['custom_name'],
+          line_index: 1,
+        });
+        expect(await requestsOf(A)).toHaveLength(0);
+      },
+    );
+
+    it('dòng ngoài DM tên 121 ký tự → 400 VALIDATION (lỗi DTO lồng: fields [lines]), không tạo phiếu', async () => {
+      const res = await save([custom({ custom_name: 'x'.repeat(121) })]).expect(
+        400,
+      );
+      expect(res.body).toMatchObject({ code: 'VALIDATION', fields: ['lines'] });
+      expect(await requestsOf(A)).toHaveLength(0);
+    });
+
     it('cùng món 2 lần → 400 DUPLICATE_ITEM {line_index: 1}', async () => {
       const x = await newItem();
       const res = await save([
@@ -94,6 +125,21 @@ describe('me/request: lỗi theo dòng, dòng chỉ đọc', () => {
         { expected_updated_at: v1.updated_at },
       ).expect(400);
       expect(res.body).toMatchObject({ code: 'LINE_NOT_FOUND', line_index: 1 });
+    });
+  });
+
+  it('biên được nhận: qty = max_qty 5, dòng ngoài DM qty = default_max_qty và tên đúng 120 ký tự → 200', async () => {
+    const x = await newItem({ max_qty: 5 });
+    const name = 'x'.repeat(120);
+    const res = await save([
+      { item_id: x, qty: 5 },
+      custom({ qty: defaultMax(), custom_name: name }),
+    ]).expect(200);
+    const lines = view(res).lines;
+    expect(lines.find((l) => l.item_id === x)?.qty).toBe(5);
+    expect(lines.find((l) => l.item_id === null)).toMatchObject({
+      qty: defaultMax(),
+      custom_name: name,
     });
   });
 
