@@ -11,7 +11,7 @@ import { assertTestDatabase } from './test-database';
 
 const GROUP = `e2e-grp-${randomUUID().slice(0, 8)}`;
 
-// Phiên cookie thật cho người bị đổi vai; Hành chính đổi config bằng dev-identity
+// Người bị đổi vai dùng phiên cookie thật: dev-identity mang vai cố định trong header nên không thấy vai tính lại
 describe('đổi config.admin_group qua PUT admin/config', () => {
   let app: INestApplication<App>;
   let pool: Pool;

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 const API_ROOT = join(__dirname, '..');
 
-// Khởi động main.ts thật trong tiến trình con (ts-node transpile-only), env sạch như container prod
+// Assert env chạy trước NestFactory nên chỉ kiểm được bằng tiến trình thật, env sạch như container prod
 function boot(extra: Record<string, string>) {
   return new Promise<{ code: number | null; stderr: string }>((resolve) => {
     execFile(

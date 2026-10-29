@@ -9,8 +9,7 @@ interface Leaf {
 const isLineElement = (parent: string[], error: ValidationError) =>
   parent.length === 1 && parent[0] === 'lines' && /^\d+$/.test(error.property);
 
-// Trong lines[i] chỉ báo tên trường lá + line_index như lỗi dòng của writer; phần tử không phải object báo 'lines'.
-// Trường lồng khác giữ đường dẫn có chấm (item.max_qty) để không trùng tên với trường cấp trên
+// lines[i] báo trường lá + line_index như lỗi dòng của writer; lồng khác giữ đường dẫn để không trùng tên cấp trên
 function leaves(
   error: ValidationError,
   parent: string[],
