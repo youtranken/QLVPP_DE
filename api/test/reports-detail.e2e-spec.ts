@@ -67,6 +67,7 @@ describe('GET admin/reports/:ym — chi tiết phòng ban, xuất lẻ, kỳ h�
     expect(issues).toEqual([
       {
         item_name: name,
+        item_name_en: null,
         unit: 'cay',
         recipient_sub: null,
         recipient_name: null,

@@ -102,4 +102,26 @@ describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
       fields: ['lang'],
     });
   });
+
+  it('export.xlsx?lang=en: bảng Xuất lẻ dùng name_en; món không có name_en dùng name', async () => {
+    const [withEn, plain] = await Promise.all([
+      f.stockItem(10),
+      f.stockItem(10),
+    ]);
+    const enName = `Pen ${withEn.slice(0, 8)}`;
+    await f
+      .pool()
+      .query('UPDATE items SET name_en = $2 WHERE id = $1', [withEn, enName]);
+    await f.issueAt(withEn, 2, '2026-11-05T03:00:00Z', null);
+    await f.issueAt(plain, 1, '2026-11-06T03:00:00Z', null);
+    const { id } = await createOk('2026-11');
+    const issues = (await snapshot(id)).issues;
+    expect(issues.find((i) => i.item_name_en === enName)).toBeDefined();
+    const ws = (await workbook(await exportXlsx(id, '?lang=en').expect(200)))
+      .worksheets[0];
+    const names = ws.getColumn(1).values;
+    expect(names).toContain(enName);
+    expect(names).toContain(await itemName(plain));
+    expect(names).not.toContain(await itemName(withEn));
+  });
 });

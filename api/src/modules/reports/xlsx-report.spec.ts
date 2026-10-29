@@ -73,6 +73,7 @@ const data: SnapshotData = {
   issues: [
     {
       item_name: 'Bút bi',
+      item_name_en: 'Ballpoint pen',
       unit: 'cây',
       recipient_sub: null,
       recipient_name: null,
@@ -82,6 +83,7 @@ const data: SnapshotData = {
     },
     {
       item_name: 'Kẹp giấy',
+      item_name_en: null,
       unit: 'hộp',
       recipient_sub: 'u1',
       recipient_name: 'Nhân viên A',
@@ -183,7 +185,13 @@ describe('buildWorkbook', () => {
     expect(items.getRow(2).getCell(1).value).toBe('Ballpoint pen');
     expect(items.getRow(3).getCell(1).value).toBe('Kẹp giấy');
     expect(values(items, 4)).toEqual(['Off-catalog']);
-    expect(items.getRow(9).getCell(2).value).toBe('Shared');
+    expect(values(items, 9)).toEqual([
+      'Ballpoint pen',
+      'Shared',
+      2,
+      'dùng cho hội nghị',
+    ]);
+    expect(items.getRow(10).getCell(1).value).toBe('Kẹp giấy');
     expect(values(detail, 1)).toEqual(['Department', 'Person', 'Item', 'Qty']);
     expect(values(detail, 2)).toEqual([
       'Phòng CT',

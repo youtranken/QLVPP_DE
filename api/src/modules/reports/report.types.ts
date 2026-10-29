@@ -41,6 +41,7 @@ export interface ReportDepartment {
 
 export interface ReportIssue {
   item_name: string;
+  item_name_en: string | null;
   unit: string;
   recipient_sub: string | null;
   recipient_name: string | null;

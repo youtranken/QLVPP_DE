@@ -50,7 +50,8 @@ export class StockQueryService {
   async issuesInMonth(ym: string, db: Executor = this.db) {
     const start = sql`(${ym} || '-01')::timestamp`;
     const result = await db.execute(sql`
-      SELECT m.id, m.item_id, i.name AS item_name, i.unit, -m.delta AS qty,
+      SELECT m.id, m.item_id, i.name AS item_name, i.name_en AS item_name_en,
+             i.unit, -m.delta AS qty,
              m.recipient_sub, u.full_name AS recipient_name, m.note, m.actor_sub,
              m.created_at
       FROM stock_movements m

@@ -71,7 +71,12 @@ function fillByItem(
   bold(ws.addRow([l.issuesTitle]));
   bold(ws.addRow([l.item, l.recipient, l.qty, l.reason]));
   for (const i of data.issues) {
-    ws.addRow([i.item_name, i.recipient_name ?? l.shared, i.qty, i.reason]);
+    ws.addRow([
+      localName({ name: i.item_name, name_en: i.item_name_en }, lang),
+      i.recipient_name ?? l.shared,
+      i.qty,
+      i.reason,
+    ]);
   }
   ws.getColumn(1).width = 40;
   ws.getColumn(2).width = 12;

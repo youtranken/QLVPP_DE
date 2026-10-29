@@ -97,6 +97,7 @@ function groupDetail(lines: DetailLine[]): ReportDepartment[] {
 function toIssue(row: Record<string, unknown>): ReportIssue {
   return {
     item_name: row.item_name as string,
+    item_name_en: row.item_name_en as string | null,
     unit: row.unit as string,
     recipient_sub: row.recipient_sub as string | null,
     recipient_name: row.recipient_name as string | null,
