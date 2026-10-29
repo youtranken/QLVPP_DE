@@ -5,10 +5,35 @@ import ts from 'typescript';
 
 const VISIBLE_ATTRS = new Set(['aria-label', 'aria-description', 'aria-placeholder', 'title', 'placeholder', 'alt', 'label']);
 const HAS_LETTER = /\p{L}/u;
+// &times; &nbsp; &#215; là ký hiệu, không phải chữ cần dịch
+const HTML_ENTITY = /&[a-z]+;|&#\d+;|&#x[0-9a-f]+;/gi;
+
+const hasText = (text) => HAS_LETTER.test(text.replace(HTML_ENTITY, ''));
 
 export function isChecked(path) {
   return path.endsWith('.tsx') && !path.endsWith('.test.tsx');
 }
+
+// Chuỗi người dùng thấy trong một biểu thức JSX: literal, template, nhánh của ba ngôi/&&/||
+function literalTexts(expr) {
+  if (ts.isParenthesizedExpression(expr)) return literalTexts(expr.expression);
+  if (ts.isStringLiteral(expr) || ts.isNoSubstitutionTemplateLiteral(expr)) return [{ node: expr, text: expr.text }];
+  if (ts.isTemplateExpression(expr)) {
+    const text = [expr.head.text, ...expr.templateSpans.map((s) => s.literal.text)].join('${…}');
+    return [{ node: expr, text }];
+  }
+  if (ts.isConditionalExpression(expr)) return [...literalTexts(expr.whenTrue), ...literalTexts(expr.whenFalse)];
+  if (ts.isBinaryExpression(expr)) {
+    const op = expr.operatorToken.kind;
+    if (op === ts.SyntaxKind.AmpersandAmpersandToken) return literalTexts(expr.right);
+    if (op === ts.SyntaxKind.BarBarToken || op === ts.SyntaxKind.QuestionQuestionToken) {
+      return [...literalTexts(expr.left), ...literalTexts(expr.right)];
+    }
+  }
+  return [];
+}
+
+const isChild = (node) => ts.isJsxElement(node.parent) || ts.isJsxFragment(node.parent);
 
 export function findHardcodedText(file, source) {
   const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
@@ -17,18 +42,17 @@ export function findHardcodedText(file, source) {
     const { line } = sf.getLineAndCharacterOfPosition(node.getStart(sf));
     findings.push({ file, line: line + 1, text: text.trim() });
   };
+  const reportExpr = (expr) => {
+    for (const { node, text } of literalTexts(expr)) if (hasText(text)) report(node, text);
+  };
   const visit = (node) => {
-    if (ts.isJsxText(node) && HAS_LETTER.test(node.text)) report(node, node.text);
-    if (ts.isJsxAttribute(node) && VISIBLE_ATTRS.has(node.name.getText(sf))) {
+    if (ts.isJsxText(node) && hasText(node.text)) report(node, node.text);
+    if (ts.isJsxAttribute(node) && VISIBLE_ATTRS.has(node.name.getText(sf)) && node.initializer) {
       const init = node.initializer;
-      if (init && ts.isStringLiteral(init) && HAS_LETTER.test(init.text)) report(init, init.text);
+      if (ts.isStringLiteral(init) && hasText(init.text)) report(init, init.text);
+      if (ts.isJsxExpression(init) && init.expression) reportExpr(init.expression);
     }
-    if (ts.isJsxExpression(node) && ts.isJsxElement(node.parent) && node.expression) {
-      const expr = node.expression;
-      if ((ts.isStringLiteral(expr) || ts.isNoSubstitutionTemplateLiteral(expr)) && HAS_LETTER.test(expr.text)) {
-        report(expr, expr.text);
-      }
-    }
+    if (ts.isJsxExpression(node) && node.expression && isChild(node)) reportExpr(node.expression);
     ts.forEachChild(node, visit);
   };
   visit(sf);
@@ -42,13 +66,21 @@ function listFiles(dir) {
   });
 }
 
-function main() {
-  const root = fileURLToPath(new URL('..', import.meta.url));
-  const findings = listFiles(join(root, 'src'))
+export function scanProject(root) {
+  return listFiles(join(root, 'src'))
     .map((path) => relative(root, path))
     .filter(isChecked)
+    .sort()
     .flatMap((path) => findHardcodedText(path, readFileSync(join(root, path), 'utf8')));
-  for (const f of findings) console.error(`${f.file}:${f.line} chuỗi cứng "${f.text}" — dùng t()`);
+}
+
+export function formatFinding(f) {
+  return `${f.file}:${f.line} chuỗi cứng "${f.text}" — dùng t()`;
+}
+
+function main() {
+  const findings = scanProject(fileURLToPath(new URL('..', import.meta.url)));
+  for (const f of findings) console.error(formatFinding(f));
   if (findings.length > 0) process.exit(1);
 }
 
