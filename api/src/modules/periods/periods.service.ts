@@ -9,6 +9,7 @@ import {
 } from '../../common/period';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
+import { AuditWriterService } from '../audit/audit-writer.service';
 import { SystemConfigService } from '../config/system-config.service';
 
 type Tx = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -28,6 +29,7 @@ export class PeriodsService {
     @Inject(DRIZZLE_DB) private readonly db: Database,
     private readonly clock: ClockService,
     private readonly config: SystemConfigService,
+    private readonly audit: AuditWriterService,
   ) {}
 
   async ensurePeriod(ym: string, tx: Executor = this.db): Promise<Period> {
@@ -102,17 +104,25 @@ export class PeriodsService {
       : null;
   }
 
-  // Chỉ ghi lần đầu: mẫu số chụp lúc khóa, chạy lại/đua không ghi đè
-  async recordHeadcount(
-    ym: string,
-    n: number,
-    tx: Executor = this.db,
-  ): Promise<boolean> {
-    const result = await tx.execute(sql`
+  // Chỉ ghi lần đầu: mẫu số chụp lúc khóa, chạy lại/đua không ghi đè; trả số đã lưu (bên thua đua nhận số của bên thắng)
+  async recordHeadcount(ym: string, n: number, tx: Tx): Promise<number> {
+    const updated = await tx.execute<{ headcount: number }>(sql`
       UPDATE periods SET headcount = ${n}
       WHERE ym = ${ymToDate(ym)}::date AND headcount IS NULL
+      RETURNING headcount
     `);
-    return (result.rowCount ?? 0) > 0;
+    if (updated.rows[0]) {
+      await this.audit.appendWithin(tx, {
+        actor: 'system',
+        action: 'period.headcount_recorded',
+        objectType: 'period',
+        objectId: ym,
+        detail: { before: null, after: n },
+      });
+      return n;
+    }
+    const persisted = await this.findSnapshot(ym, tx);
+    return persisted?.headcount ?? n;
   }
 
   private async find(ym: string, tx: Executor): Promise<Period | null> {

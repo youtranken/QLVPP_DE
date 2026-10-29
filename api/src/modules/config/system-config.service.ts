@@ -54,6 +54,16 @@ export class SystemConfigService {
     return n;
   }
 
+  async getBool(key: string): Promise<boolean> {
+    const raw = await this.get<unknown>(key);
+    if (typeof raw !== 'boolean') {
+      throw new Error(
+        `Tham số cấu hình '${key}' phải là boolean (đang là ${JSON.stringify(raw)}).`,
+      );
+    }
+    return raw;
+  }
+
   async getAdminGroup(): Promise<string> {
     const raw = await this.get<unknown>('admin_group');
     if (typeof raw !== 'string' || raw.trim() === '') {

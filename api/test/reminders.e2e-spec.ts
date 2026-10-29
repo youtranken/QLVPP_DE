@@ -1,3 +1,6 @@
+import { DRIZZLE_DB } from '../src/database/database.module';
+import type { Database } from '../src/database/database.module';
+import { PeriodsService } from '../src/modules/periods/periods.service';
 import { remindersFixture } from './reminders.fixture';
 
 describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, dọn', () => {
@@ -106,11 +109,27 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
       link: '/admin/summary?ym=2026-12',
     });
     expect(await f.headcount('2026-12')).toBe(3);
+    expect(await f.auditsSince('period.headcount_recorded', '2026-12')).toEqual(
+      [{ detail: { before: null, after: 3 } }],
+    );
     // Kỳ 2027-01 tạo sau khi đổi config → hạn theo 15 (BR-2)
     expect(await f.deadline('2027-01')).toBe('2027-01-15T17:00:00.000Z');
 
     expect((await f.run('2026-12-11T16:59:59.999Z')).period_locked).toBe(0);
     expect(await f.recipients('period_locked:2026-12')).toEqual([ADMIN]);
+  });
+
+  it('headcount chụp một lần: chạy lại cùng ngày không thêm audit; ghi lần hai (thua đua) trả số đã lưu 3, không đè, không audit', async () => {
+    await f.run('2026-12-11T05:00:00Z');
+    const db = f.app().get<Database>(DRIZZLE_DB);
+    const persisted = await db.transaction((tx) =>
+      f.app().get(PeriodsService).recordHeadcount('2026-12', 99, tx),
+    );
+    expect(persisted).toBe(3);
+    expect(await f.headcount('2026-12')).toBe(3);
+    expect(
+      await f.auditsSince('period.headcount_recorded', '2026-12'),
+    ).toHaveLength(1);
   });
 
   it('kỳ khóa có headcount null, lần chạy đầu tiên đã qua ngày khóa (00:00 12/12 VN) → ghi headcount bù, không gửi chuông', async () => {

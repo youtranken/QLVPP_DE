@@ -2,7 +2,10 @@ import { NotificationScheduler } from './notification-scheduler';
 
 type Ctor = ConstructorParameters<typeof NotificationScheduler>;
 
-function scheduler(openPeriod: () => Promise<unknown>) {
+function scheduler(
+  openPeriod: () => Promise<unknown>,
+  summary: Record<string, unknown> = {},
+) {
   const tx = { execute: jest.fn() };
   const db = { transaction: (fn: (t: unknown) => unknown) => fn(tx) };
   const periods = {
@@ -29,9 +32,10 @@ function scheduler(openPeriod: () => Promise<unknown>) {
     db as unknown as Ctor[0],
     { now: () => new Date('2026-12-05T03:00:00Z') } as Ctor[1],
     periods as unknown as Ctor[2],
-    {} as Ctor[3],
+    summary as unknown as Ctor[3],
     notifications as unknown as Ctor[4],
     stock as unknown as Ctor[5],
+    { getBool: () => Promise.resolve(true) } as unknown as Ctor[6],
   );
   return { s, periods, notifications };
 }
@@ -61,5 +65,22 @@ describe('NotificationScheduler', () => {
     s.onApplicationBootstrap();
     await s.tick();
     expect(periods.openPeriod).not.toHaveBeenCalled();
+  });
+
+  it('period_open lỗi (đọc mẫu số hỏng) không làm mất reminder cùng ngày (lastDay 3: ngày 1 vừa mở vừa nhắc)', async () => {
+    const { s } = scheduler(
+      () =>
+        Promise.resolve({
+          ym: '2027-03',
+          deadline: new Date('2027-03-03T17:00:00Z'),
+        }),
+      {
+        audienceSubs: () => Promise.reject(new Error('db down')),
+        unregisteredSubs: () => Promise.resolve(['u']),
+      },
+    );
+    await expect(
+      s.runHourly(new Date('2027-02-28T17:00:00Z')), // 00:00 1/3 VN
+    ).resolves.toMatchObject({ period_open: 0, reminder: 1 });
   });
 });

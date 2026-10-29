@@ -10,10 +10,12 @@ import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { StockService } from '../catalog/stock.service';
+import { SystemConfigService } from '../config/system-config.service';
 import { eventIds } from '../notifications/notification-events';
 import { NotificationsService } from '../notifications/notifications.service';
 import type { NotifyInput } from '../notifications/notifications.service';
 import { PeriodsService } from '../periods/periods.service';
+import type { Period } from '../periods/periods.service';
 import { SummaryService } from '../requests/summary.service';
 import { isLockDay, isPeriodOpenDay, isReminderDay } from './schedule-days';
 
@@ -45,6 +47,7 @@ export class NotificationScheduler
     private readonly summary: SummaryService,
     private readonly notifications: NotificationsService,
     private readonly stock: StockService,
+    private readonly config: SystemConfigService,
   ) {}
 
   onApplicationBootstrap(): void {
@@ -68,12 +71,16 @@ export class NotificationScheduler
   }
 
   async runHourly(now: Date): Promise<HourlyResult> {
-    const [period_open, reminder] = await this.step('open', [0, 0], () =>
-      this.openAndRemind(now),
+    const open = await this.step('open_period', null, () =>
+      this.periods.openPeriod(this.db, now),
     );
     return {
-      period_open,
-      reminder,
+      period_open: open
+        ? await this.step('period_open', 0, () => this.announce(open, now))
+        : 0,
+      reminder: open
+        ? await this.step('reminder', 0, () => this.remind(open, now))
+        : 0,
       period_locked: await this.step('locked', 0, () => this.locked(now)),
       low_stock: await this.step('low_stock', 0, () => this.lowStock(now)),
       purged: await this.step('purge', 0, () =>
@@ -82,30 +89,28 @@ export class NotificationScheduler
     };
   }
 
-  private async openAndRemind(now: Date): Promise<[number, number]> {
-    const open = await this.periods.openPeriod(this.db, now);
-    const params = { ym: open.ym, deadline: open.deadline.toISOString() };
-    const opened = isPeriodOpenDay(now)
-      ? await this.notify({
-          eventId: eventIds.periodOpen(open.ym),
-          recipients: await this.summary.audienceSubs(),
-          topic: 'period_open',
-          params,
-          link: '/',
-          now,
-        })
-      : 0;
-    const reminded = isReminderDay(now, open.deadline)
-      ? await this.notify({
-          eventId: eventIds.reminder(open.ym),
-          recipients: await this.summary.unregisteredSubs(open.ym),
-          topic: 'reminder',
-          params,
-          link: '/',
-          now,
-        })
-      : 0;
-    return [opened, reminded];
+  private async announce(open: Period, now: Date): Promise<number> {
+    if (!isPeriodOpenDay(now)) return 0;
+    return this.notify({
+      eventId: eventIds.periodOpen(open.ym),
+      recipients: await this.summary.audienceSubs(),
+      topic: 'period_open',
+      params: { ym: open.ym, deadline: open.deadline.toISOString() },
+      link: '/',
+      now,
+    });
+  }
+
+  private async remind(open: Period, now: Date): Promise<number> {
+    if (!isReminderDay(now, open.deadline)) return 0;
+    return this.notify({
+      eventId: eventIds.reminder(open.ym),
+      recipients: await this.summary.unregisteredSubs(open.ym),
+      topic: 'reminder',
+      params: { ym: open.ym, deadline: open.deadline.toISOString() },
+      link: '/',
+      now,
+    });
   }
 
   // Headcount ghi bù kể cả khi trượt ngày khóa; chuông chỉ gửi đúng ngày khóa (giả định 3, review-spec F)
@@ -114,8 +119,10 @@ export class NotificationScheduler
     if (!period) return 0;
     let headcount = period.headcount;
     if (headcount === null) {
-      headcount = (await this.summary.liveCounts(period.ym)).headcount;
-      await this.periods.recordHeadcount(period.ym, headcount);
+      const live = (await this.summary.liveCounts(period.ym)).headcount;
+      headcount = await this.db.transaction((tx) =>
+        this.periods.recordHeadcount(period.ym, live, tx),
+      );
     }
     if (!isLockDay(now, period.deadline)) return 0;
     const { registered } = await this.summary.requestCounts(period.ym);
@@ -129,11 +136,13 @@ export class NotificationScheduler
     });
   }
 
-  private lowStock(now: Date): Promise<number> {
+  // Tắt cờ hoặc chưa có admin thì không đòi quyền: món giữ chưa đánh dấu để được báo khi bật lại/có admin
+  private async lowStock(now: Date): Promise<number> {
+    if (!(await this.config.getBool('low_stock_notify'))) return 0;
+    const recipients = await this.notifications.adminRecipients();
+    if (recipients.length === 0) return 0;
     return this.db.transaction(async (tx) => {
       const items = await this.stock.claimLowStockWithin(tx, now);
-      if (items.length === 0) return 0;
-      const recipients = await this.notifications.adminRecipients(tx);
       let sent = 0;
       for (const item of items) {
         sent += await this.notifications.notifyWithin(tx, {

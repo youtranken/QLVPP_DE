@@ -1,3 +1,4 @@
+import { NotificationsService } from '../src/modules/notifications/notifications.service';
 import { remindersFixture } from './reminders.fixture';
 
 // 12:00 5/11 VN: không phải ngày 1 / nhắc / khóa → chỉ bước sắp hết và dọn có việc
@@ -128,15 +129,57 @@ describe('NotificationScheduler.runHourly — sắp hết báo một lần tới
     }
   });
 
-  it('hai runHourly song song (Promise.all) → mỗi admin đúng 1 bản ghi', async () => {
+  it('hai runHourly song song (Promise.all) → món chỉ được đòi một lần: notifyWithin gọi đúng 1 lần, mỗi admin 1 bản ghi', async () => {
     const id = await newItem('Băng keo');
     const buy = await purchase(id, 10);
     await issueTo(id, 8);
-    const [a, b] = await Promise.all([f.run(NOW), f.run(NOW)]);
+    const ev = `low_stock:${id}:${buy}`;
+    const spy = jest.spyOn(f.app().get(NotificationsService), 'notifyWithin');
+    try {
+      await Promise.all([f.run(NOW), f.run(NOW)]);
+      expect(spy.mock.calls.filter(([, n]) => n.eventId === ev)).toHaveLength(
+        1,
+      );
+    } finally {
+      spy.mockRestore();
+    }
+    expect(await lowEvents(id)).toEqual([
+      { user_sub: A1, event_id: ev },
+      { user_sub: A2, event_id: ev },
+    ]);
+  });
+
+  it('low_stock_notify = false → không chuông, món không bị đánh dấu; bật lại true → đúng 1 bản ghi mỗi admin', async () => {
+    const id = await newItem('Thước kẻ');
+    const buy = await purchase(id, 10);
+    await issueTo(id, 8);
+    await f.setConfig({ low_stock_notify: false });
+    try {
+      expect((await f.run(NOW)).low_stock).toBe(0);
+      expect(await lowEvents(id)).toEqual([]);
+      expect(await notifiedAt(id)).toBeNull();
+    } finally {
+      await f.setConfig({ low_stock_notify: true });
+    }
+    await f.run(NOW);
     expect(await lowEvents(id)).toEqual([
       { user_sub: A1, event_id: `low_stock:${id}:${buy}` },
       { user_sub: A2, event_id: `low_stock:${id}:${buy}` },
     ]);
-    expect(a.low_stock + b.low_stock).toBeGreaterThanOrEqual(2);
+  });
+
+  it('không có admin nhận (admin_group không ai thuộc) → món không bị đánh dấu, có admin lại thì báo', async () => {
+    const id = await newItem('Gôm');
+    await purchase(id, 10);
+    await issueTo(id, 8);
+    await f.setConfig({ admin_group: `nobody-${f.SUFFIX}` });
+    try {
+      await f.run(NOW);
+      expect(await notifiedAt(id)).toBeNull();
+    } finally {
+      await f.setConfig({ admin_group: f.adminGroup() });
+    }
+    await f.run(NOW);
+    expect(await lowEvents(id)).toHaveLength(2);
   });
 });

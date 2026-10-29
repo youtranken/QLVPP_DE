@@ -11,7 +11,12 @@ import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
 
 const silent = { log: () => undefined };
-const SAVED_KEYS = ['authorized_groups', 'registration_last_day'];
+const SAVED_KEYS = [
+  'authorized_groups',
+  'registration_last_day',
+  'low_stock_notify',
+  'admin_group',
+];
 
 export interface NoteRow {
   user_sub: string;
@@ -76,23 +81,36 @@ async function isolateCalendar(pool: Pool, group: string): Promise<void> {
   );
 }
 
-// App + lịch riêng của suite; kỳ/config toàn cục được chụp trước và trả lại sau
-export function remindersFixture(tag: string) {
-  const SUFFIX = `${tag}-${process.pid}-${Date.now().toString(36)}`;
-  const GROUP = `e2e-rem-group-${SUFFIX}`;
-  const sub = (n: string) => `e2e-rem-${n}-${SUFFIX}`;
-  const mine = `e2e-rem-%-${SUFFIX}`;
-  let app: INestApplication<App>;
-  let pool: Pool;
-  let adminGroup = '';
-  let saved: Globals;
-  // afterAll của fixture chạy trước afterAll của suite → dọn riêng của suite đăng ký vào đây, chạy trước pool.end
-  const cleanups: Array<() => Promise<unknown>> = [];
+async function setupSuite(pool: Pool, group: string) {
+  await runMigrations(pool, resolveMigrationsDir(), silent);
+  const startedAt = (await pool.query<{ now: Date }>('SELECT now() AS now'))
+    .rows[0].now;
+  const saved = await snapshotGlobals(pool);
+  const adminGroup = (
+    await pool.query<{ value: string }>(
+      "SELECT value FROM config WHERE key = 'admin_group'",
+    )
+  ).rows[0].value;
+  await isolateCalendar(pool, group);
+  return { saved, startedAt, adminGroup };
+}
 
-  const q = <T extends object>(text: string, values: unknown[] = []) =>
-    pool.query<T>(text, values);
-  const run = (iso: string) =>
-    app.get(NotificationScheduler).runHourly(new Date(iso));
+async function teardownSuite(pool: Pool, mine: string, saved: Globals) {
+  for (const table of ['in_app_notifications', 'requests']) {
+    await pool.query(`DELETE FROM ${table} WHERE user_sub LIKE $1`, [mine]);
+  }
+  await pool.query('DELETE FROM users WHERE sub LIKE $1', [mine]);
+  await restoreGlobals(pool, saved);
+  await pool.end();
+}
+
+type Query = <T extends object>(
+  text: string,
+  values?: unknown[],
+) => Promise<{ rows: T[] }>;
+
+// Đọc dữ liệu suite: chỉ thông báo của user mang hậu tố suite (`mine` là mẫu LIKE)
+function suiteQueries(q: Query, mine: string) {
   const notes = async (eventId: string) =>
     (
       await q<NoteRow>(
@@ -101,54 +119,82 @@ export function remindersFixture(tag: string) {
         [eventId, mine],
       )
     ).rows;
-  const recipients = async (eventId: string) =>
-    (await notes(eventId)).map((n) => n.user_sub);
-  const addUser = (s: string, groups: string[]) =>
-    q(
-      `INSERT INTO users (sub, full_name, status, groups) VALUES ($1, $1, 'active', $2::jsonb)`,
-      [s, JSON.stringify(groups)],
-    );
-  const periodCol = async <K extends 'headcount' | 'deadline'>(
-    ym: string,
-    col: K,
-  ) =>
+  const periodCol = async (ym: string, col: 'headcount' | 'deadline') =>
     (
-      await q<Record<K, unknown>>(
+      await q<Record<string, unknown>>(
         `SELECT ${col} FROM periods WHERE ym = $1::date`,
         [`${ym}-01`],
       )
     ).rows[0]?.[col];
-  const headcount = (ym: string) => periodCol(ym, 'headcount');
-  const deadline = async (ym: string) =>
-    ((await periodCol(ym, 'deadline')) as Date | undefined)?.toISOString();
-  // PUT config xóa cache của app → hiệu lực ngay như Hành chính đổi trên màn Cấu hình
-  const setLastDay = (n: number) =>
-    request(app.getHttpServer())
+  return {
+    notes,
+    recipients: async (eventId: string) =>
+      (await notes(eventId)).map((n) => n.user_sub),
+    addUser: (s: string, groups: string[]) =>
+      q(
+        `INSERT INTO users (sub, full_name, status, groups) VALUES ($1, $1, 'active', $2::jsonb)`,
+        [s, JSON.stringify(groups)],
+      ),
+    headcount: (ym: string) => periodCol(ym, 'headcount'),
+    deadline: async (ym: string) =>
+      ((await periodCol(ym, 'deadline')) as Date | undefined)?.toISOString(),
+  };
+}
+
+// PUT config xóa cache của app → hiệu lực ngay như Hành chính đổi trên màn Cấu hình
+function suiteActions(
+  app: () => INestApplication<App>,
+  q: Query,
+  adminSub: string,
+  startedAt: () => Date,
+) {
+  const setConfig = (patch: Record<string, unknown>) =>
+    request(app().getHttpServer())
       .put('/api/admin/config')
-      .set('x-dev-user-sub', sub('admin'))
+      .set('x-dev-user-sub', adminSub)
       .set('x-dev-role', 'admin')
-      .send({ registration_last_day: n })
+      .send(patch)
       .expect(200);
+  return {
+    http: () => request(app().getHttpServer()),
+    run: (iso: string) =>
+      app().get(NotificationScheduler).runHourly(new Date(iso)),
+    setConfig,
+    setLastDay: (n: number) => setConfig({ registration_last_day: n }),
+    // audit_log append-only, created_at theo đồng hồ DB thật → chỉ đếm dòng từ lúc suite bắt đầu
+    auditsSince: async (action: string, objectId: string) =>
+      (
+        await q<{ detail: unknown }>(
+          `SELECT detail FROM audit_log
+           WHERE action = $1 AND object_id = $2 AND created_at >= $3 ORDER BY created_at`,
+          [action, objectId, startedAt()],
+        )
+      ).rows,
+  };
+}
+
+// App + lịch riêng của suite; kỳ/config toàn cục được chụp trước và trả lại sau
+export function remindersFixture(tag: string) {
+  const SUFFIX = `${tag}-${process.pid}-${Date.now().toString(36)}`;
+  const GROUP = `e2e-rem-group-${SUFFIX}`;
+  const sub = (n: string) => `e2e-rem-${n}-${SUFFIX}`;
+  const mine = `e2e-rem-%-${SUFFIX}`;
+  let app: INestApplication<App>;
+  let pool: Pool;
+  let ctx: Awaited<ReturnType<typeof setupSuite>>;
+  // afterAll của fixture chạy trước afterAll của suite → dọn riêng của suite đăng ký vào đây, chạy trước pool.end
+  const cleanups: Array<() => Promise<unknown>> = [];
+
+  const q: Query = (text, values = []) => pool.query(text, values);
   const startApp = async () => {
     app = (await createTestApp()) as INestApplication<App>;
-  };
-  const restart = async () => {
-    await app.close();
-    await startApp();
   };
 
   beforeAll(async () => {
     pool = new Pool({
       connectionString: assertTestDatabase(process.env.DATABASE_URL),
     });
-    await runMigrations(pool, resolveMigrationsDir(), silent);
-    saved = await snapshotGlobals(pool);
-    adminGroup = (
-      await q<{ value: string }>(
-        "SELECT value FROM config WHERE key = 'admin_group'",
-      )
-    ).rows[0].value;
-    await isolateCalendar(pool, GROUP);
+    ctx = await setupSuite(pool, GROUP);
     process.env.AUTH_DEV_MODE = 'true';
     await startApp();
   });
@@ -156,11 +202,7 @@ export function remindersFixture(tag: string) {
   afterAll(async () => {
     await app.close();
     for (const fn of cleanups) await fn();
-    await q('DELETE FROM in_app_notifications WHERE user_sub LIKE $1', [mine]);
-    await q('DELETE FROM requests WHERE user_sub LIKE $1', [mine]);
-    await q('DELETE FROM users WHERE sub LIKE $1', [mine]);
-    await restoreGlobals(pool, saved);
-    await pool.end();
+    await teardownSuite(pool, mine, ctx.saved);
     delete process.env.AUTH_DEV_MODE;
   });
 
@@ -168,17 +210,17 @@ export function remindersFixture(tag: string) {
     SUFFIX,
     GROUP,
     sub,
-    adminGroup: () => adminGroup,
-    http: () => request(app.getHttpServer()),
+    adminGroup: () => ctx.adminGroup,
+    app: () => app,
     q,
-    run,
-    notes,
-    recipients,
-    addUser,
-    headcount,
-    deadline,
-    setLastDay,
-    restart,
+    ...suiteQueries(q, mine),
+    ...suiteActions(
+      () => app,
+      q,
+      sub('admin'),
+      () => ctx.startedAt,
+    ),
+    restart: () => app.close().then(startApp),
     onCleanup: (fn: () => Promise<unknown>) => cleanups.push(fn),
   };
 }

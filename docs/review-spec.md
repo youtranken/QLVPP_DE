@@ -86,10 +86,11 @@ Mâu thuẫn đã phát hiện khi lập Plan 3; mỗi mục đã sửa tài li�
 - F7: §7 `read {ids?}` "rỗng = tất cả" mơ hồ → thiếu `ids` = tất cả; `ids: []` → 400 `VALIDATION`.
 - F8: §5/§12 `0103_vpp_reports.sql` gộp nhiều chủ đề, trái "một migration = một chủ đề" → tách 0103–0107; §5 sửa.
 - F9: §9 "ngày 1 → `period_open` cho mọi user `active`" ≠ mẫu số Tổng hợp → dùng mẫu số Tổng hợp (active, khác `local:sa`, giao `authorized_groups` nếu không rỗng).
+- F10: DoD "mutate có audit" vs ghi của cron chuông → `periods.headcount` (mẫu số chụp vĩnh viễn, nguồn y của Tổng hợp/báo cáo) audit `period.headcount_recorded {before: null, after}` actor `system`; `items.low_stock_notified_at` (trạng thái chống gửi đôi, tự reset khi nhập mua, không phải dữ liệu nghiệp vụ) và xóa thông báo > 90 ngày (trạng thái cá nhân, như F6) không audit.
 
 Giả định Plan 3:
 
 1. Chủ dự án chốt 2026-10-29: luật kỳ/cron/chuông theo giờ kiểm ở e2e api với `ClockService` cố định; Playwright chỉ kiểm hiển thị (kỳ khóa và thông báo seed bằng SQL).
 2. Chủ dự án chốt 2026-10-29: "Xuất lẻ trong kỳ" của báo cáo = xuất lẻ trong tháng dương lịch `ym` (giờ VN), dùng lại `StockQueryService.issuesInMonth(ym)` như `GET admin/issues?ym`.
-3. Giả định chờ xác nhận: cron gửi đúng ngày theo §9 (ngày 1 / `lastDay−2` / `lastDay+1` giờ VN, `lastDay` suy từ `periods.deadline`); bỏ lỡ cả ngày thì không gửi bù thông báo, nhưng `headcount` của kỳ khóa gần nhất vẫn được ghi bù ở lần chạy sau.
+3. Giả định chờ xác nhận: cron gửi đúng ngày theo §9 (ngày 1 / `lastDay−2` / `lastDay+1` giờ VN, `lastDay` suy từ `periods.deadline`); bỏ lỡ cả ngày thì không gửi bù thông báo, nhưng `headcount` của kỳ khóa gần nhất vẫn được ghi bù ở lần chạy sau. Chỉ kỳ khóa **gần nhất**: cron ngừng quá một kỳ thì kỳ cũ hơn giữ `headcount` NULL và Tổng hợp của kỳ đó hiện số sống (`headcount_source: 'live'`).
 4. Giả định chờ xác nhận: Còn nợ chỉ gồm dòng thuộc kỳ đã khóa (kỳ đang mở chưa giao được).

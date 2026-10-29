@@ -19,7 +19,12 @@ describe('CurrentPeriodService.current', () => {
       .mockResolvedValueOnce({ rows: [] });
     const config = { getInt: jest.fn().mockResolvedValue(10) };
     const db = { execute } as never;
-    const periods = new PeriodsService(db, clock as never, config as never);
+    const periods = new PeriodsService(
+      db,
+      clock as never,
+      config as never,
+      {} as never,
+    );
     const service = new CurrentPeriodService(db, clock as never, periods);
 
     await expect(service.current('u1')).resolves.toEqual({
