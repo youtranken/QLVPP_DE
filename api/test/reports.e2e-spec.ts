@@ -153,6 +153,29 @@ describe('GET admin/reports/:ym — Tổng theo món (BR-15)', () => {
     });
   });
 
+  it('ngoài DM: dòng giao 1 + hủy 2 của qty 3 (còn 0) → không có hàng; qty 5 giao 1 hủy 2 (còn 2) → backlog_prev 2, need 2', async () => {
+    const gone = customName('Het no');
+    const partial = customName('Con no');
+    await seedLine('2026-10', A, {
+      ...customCols(gone, 3),
+      delivered_qty: 1,
+      cancelled_qty: 2,
+    });
+    await seedLine('2026-10', B, {
+      ...customCols(partial, 5),
+      delivered_qty: 1,
+      cancelled_qty: 2,
+    });
+    const r = await build('2026-11');
+    expect(customRow(r, 'Het no')).toBeUndefined();
+    expect(customRow(r, 'Con no')).toMatchObject({
+      requested: 0,
+      backlog_prev: 2,
+      stock: null,
+      need: 2,
+    });
+  });
+
   it('E5-S1 rejected/pending không vào số; pending kỳ ym tăng pending_custom_count đúng 1', async () => {
     const before = (await build('2026-11')).pending_custom_count;
     await seedLine(
