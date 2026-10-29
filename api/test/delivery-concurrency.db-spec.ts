@@ -42,7 +42,11 @@ describe('Giao song song (Postgres thật, hai request HTTP thật)', () => {
       .post(`/api/admin/lines/${lineId}/cancel-remaining`)
       .set('x-dev-user-sub', ADMIN)
       .set('x-dev-role', 'admin')
-      .send({ reason: 'Người đã nghỉ', expected_delivered_qty: expected });
+      .send({
+        reason: 'Người đã nghỉ',
+        expected_delivered_qty: expected,
+        expected_qty: 5,
+      });
   const deliveredCount = (r: request.Response) =>
     (r.body as { delivered: unknown[] }).delivered.length;
   const outcome = (r: request.Response) =>

@@ -9,7 +9,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { LineDeliveryStore } from '../requests/line-delivery.store';
 import type { LockedLine } from '../requests/line-delivery.store';
 import { lineNotFound } from '../requests/request-errors';
-import { cancelReasonRequired, staleDelivery } from './delivery-errors';
+import { cancelReasonRequired, staleCancel } from './delivery-errors';
 import type { CancelBody, CancelResult } from './delivery.dto';
 import { DeliveryService, assertDeliverable } from './delivery.service';
 
@@ -40,8 +40,11 @@ export class CancelRemainingService {
       if (!line) throw lineNotFound();
       await this.delivery.assertPeriodLocked(tx, line.period_ym, now);
       assertDeliverable(line);
-      if (line.delivered_qty !== body.expected_delivered_qty) {
-        throw staleDelivery(line.delivered_qty);
+      if (
+        line.delivered_qty !== body.expected_delivered_qty ||
+        line.qty !== body.expected_qty
+      ) {
+        throw staleCancel(line);
       }
       const result = await this.lines.cancelRemaining(tx, lineId, reason, now);
       if (result.cancelled_now === 0) return result;

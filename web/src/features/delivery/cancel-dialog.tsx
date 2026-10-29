@@ -44,7 +44,7 @@ export function CancelDialog({ line, onDone, onNotice, onClose }: Props) {
     void flight.run(async () => {
       setFailed(null);
       try {
-        await cancelRemaining(line.line_id, { reason: note, expected_delivered_qty: line.delivered_qty }, csrfToken);
+        await cancelRemaining(line.line_id, { reason: note, expected_delivered_qty: line.delivered_qty, expected_qty: line.qty }, csrfToken);
         await onDone();
       } catch (err) {
         const failure = failureOf(err);

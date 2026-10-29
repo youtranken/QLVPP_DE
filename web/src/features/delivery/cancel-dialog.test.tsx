@@ -45,7 +45,7 @@ describe('CancelDialog — hủy phần còn nợ của một dòng', () => {
     expect(screen.getByText('Bút bi xanh · Tháng 10/2026')).toBeInTheDocument();
   });
 
-  it('biên lý do: "  ab  " (trim 2) → nút "Hủy nợ" vô hiệu; "  abc  " (trim 3) → bật, gửi {reason: "abc", expected_delivered_qty: 2}', async () => {
+  it('biên lý do: "  ab  " (trim 2) → nút "Hủy nợ" vô hiệu; "  abc  " (trim 3) → bật, gửi {reason: "abc", expected_delivered_qty: 2, expected_qty: 5}', async () => {
     const f = stub();
     const { onDone } = renderDialog();
     expect(submit()).toBeDisabled();
@@ -56,7 +56,7 @@ describe('CancelDialog — hủy phần còn nợ của một dòng', () => {
     await userEvent.click(submit());
     await waitFor(() => expect(onDone).toHaveBeenCalledOnce());
     expect(posts(f)).toHaveLength(1);
-    expect(JSON.parse(String(posts(f)[0][1].body))).toEqual({ reason: 'abc', expected_delivered_qty: 2 });
+    expect(JSON.parse(String(posts(f)[0][1].body))).toEqual({ reason: 'abc', expected_delivered_qty: 2, expected_qty: 5 });
     expect((posts(f)[0][1].headers as Record<string, string>)['X-CSRF-Token']).toBe('csrf-1');
   });
 

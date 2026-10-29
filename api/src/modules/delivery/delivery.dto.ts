@@ -21,6 +21,8 @@ export class DeliverBody {
 export class CancelBody {
   @IsOptional() @IsString() @MaxLength(NOTE_MAX) reason?: string;
   @IsInt() @Min(0) expected_delivered_qty!: number;
+  // qty đổi sau khi mở hộp thì phần hủy khác số hộp đang hiện
+  @IsInt() @Min(1) expected_qty!: number;
 }
 
 export const BACKLOG_BY = ['item', 'person'] as const;

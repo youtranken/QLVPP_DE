@@ -26,6 +26,14 @@ export const staleDelivery = (deliveredQty: number) =>
     delivered_qty: deliveredQty,
   });
 
+export const staleCancel = (line: { qty: number; delivered_qty: number }) =>
+  new ConflictException({
+    code: 'STALE_UPDATE',
+    message: 'Dòng vừa đổi ở nơi khác — tải lại để xem phần còn nợ.',
+    qty: line.qty,
+    delivered_qty: line.delivered_qty,
+  });
+
 export const deliverExceedsQty = (remaining: number) =>
   new BadRequestException({
     code: 'DELIVER_EXCEEDS_QTY',

@@ -55,6 +55,7 @@ export interface LineDeliveries {
 export interface CancelBody {
   reason: string;
   expected_delivered_qty: number;
+  expected_qty: number;
 }
 
 export const REASON_MIN = 3;
