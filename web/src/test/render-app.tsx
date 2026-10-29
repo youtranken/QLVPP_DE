@@ -5,8 +5,13 @@ import { renderWithI18n } from '@/test/test-utils';
 import { ConfirmProvider } from '@/ui/confirm-provider';
 
 function LocationProbe() {
-  const { pathname } = useLocation();
-  return <output data-testid="location">{pathname}</output>;
+  const { pathname, search } = useLocation();
+  return (
+    <>
+      <output data-testid="location">{pathname}</output>
+      <output data-testid="location-search">{search}</output>
+    </>
+  );
 }
 
 export function renderApp(me: Me, path: string) {

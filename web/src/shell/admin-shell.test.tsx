@@ -43,20 +43,22 @@ describe('AdminShell + RequireRole', () => {
     ]);
   });
 
-  it('mục chưa làm (Còn nợ) hiện "Sắp có"; Giao hàng và Món ngoài danh mục là trang thật', () => {
+  it('mục chưa làm (Báo cáo & in) hiện "Sắp có"; Còn nợ, Giao hàng và Món ngoài danh mục là trang thật', () => {
     mockViewport(1280);
-    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { items: [] }))));
-    renderApp(makeMe('admin'), '/admin/backlog');
-    expect(screen.getByRole('heading', { level: 1, name: 'Còn nợ' })).toBeInTheDocument();
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { items: [], groups: [] }))));
+    renderApp(makeMe('admin'), '/admin/reports');
+    expect(screen.getByRole('heading', { level: 1, name: 'Báo cáo & in' })).toBeInTheDocument();
     expect(screen.getByText('Sắp có')).toBeInTheDocument();
-    cleanup();
-    renderApp(makeMe('admin'), '/admin/delivery');
-    expect(screen.getByRole('heading', { level: 1, name: 'Giao hàng' })).toBeInTheDocument();
-    expect(screen.queryByText('Sắp có')).toBeNull();
-    cleanup();
-    renderApp(makeMe('admin'), '/admin/review');
-    expect(screen.getByRole('heading', { level: 1, name: 'Món ngoài danh mục' })).toBeInTheDocument();
-    expect(screen.queryByText('Sắp có')).toBeNull();
+    for (const [path, title] of [
+      ['/admin/backlog', 'Còn nợ'],
+      ['/admin/delivery', 'Giao hàng'],
+      ['/admin/review', 'Món ngoài danh mục'],
+    ]) {
+      cleanup();
+      renderApp(makeMe('admin'), path);
+      expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument();
+      expect(screen.queryByText('Sắp có')).toBeNull();
+    }
     vi.unstubAllGlobals();
   });
 

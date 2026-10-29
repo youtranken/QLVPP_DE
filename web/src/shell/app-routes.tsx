@@ -16,6 +16,7 @@ import { ConfigPage } from '@/features/admin/config-page';
 import { SummaryPage } from '@/features/summary/summary-page';
 import { ReviewPage } from '@/features/review/review-page';
 import { DeliveryPage } from '@/features/delivery/delivery-page';
+import { BacklogPage } from '@/features/delivery/backlog-page';
 import { MemberShell } from '@/shell/member-shell';
 import { AdminShell } from '@/shell/admin-shell';
 import { RequireRole } from '@/shell/require-role';
@@ -31,7 +32,7 @@ function ForbiddenRoute() {
   return <ForbiddenScreen email={useMe().email} />;
 }
 
-const BUILT_ADMIN_PAGES = new Set(['summary', 'review', 'delivery', 'stock', 'catalog', 'categories', 'users', 'audit', 'config']);
+const BUILT_ADMIN_PAGES = new Set(['summary', 'review', 'delivery', 'backlog', 'stock', 'catalog', 'categories', 'users', 'audit', 'config']);
 
 // Màn chưa làm hiện "Sắp có"; task sau thêm route thật và tên vào BUILT_ADMIN_PAGES
 export function AppRoutes() {
@@ -56,6 +57,7 @@ export function AppRoutes() {
         <Route path="summary" element={<SummaryPage />} />
         <Route path="review" element={<ReviewPage />} />
         <Route path="delivery" element={<DeliveryPage />} />
+        <Route path="backlog" element={<BacklogPage />} />
         <Route path="stock" element={<StockPage />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="categories" element={<CategoryPage />} />
