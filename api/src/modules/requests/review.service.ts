@@ -9,6 +9,7 @@ import type { RequestIdentity } from '../auth/identity.types';
 import type { CreateItemDto } from '../catalog/catalog.dto';
 import type { ItemFacts, ItemRow } from '../catalog/catalog-sql';
 import { CatalogService, itemNotFound } from '../catalog/catalog.service';
+import { LineNotifier } from './line-notifier';
 import {
   lineAlreadyReviewed,
   lineNotFound,
@@ -44,6 +45,8 @@ export interface ReviewRow {
   created_at: string;
 }
 
+type ReviewedAction = 'accepted' | 'converted' | 'rejected';
+
 export interface ReviewResult {
   line: LineView;
   request_updated_at: string;
@@ -72,6 +75,7 @@ export class ReviewService {
     private readonly clock: ClockService,
     private readonly catalog: CatalogService,
     private readonly audit: AuditWriterService,
+    private readonly notifier: LineNotifier,
   ) {}
 
   // previously_accepted: cùng người đã có dòng accepted cùng tên (chuẩn hóa) ở kỳ nào đó trước kỳ này
@@ -146,6 +150,15 @@ export class ReviewService {
         : new Map<string, ItemFacts>();
       // Món có sẵn hay món mới đều trả cùng hình ItemFacts
       const target = item ? facts.get(item.id)! : undefined;
+      await this.notifier.reviewed(tx, {
+        lineId,
+        requestId: before.request_id,
+        customName: before.custom_name,
+        action: after.review_status as ReviewedAction,
+        note,
+        item: target,
+        now,
+      });
       return {
         line: toLineView(after, facts),
         request_updated_at: updatedAt,

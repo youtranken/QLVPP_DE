@@ -19,6 +19,7 @@ import {
   staleUpdate,
   userNotFound,
 } from './request-errors';
+import { LineNotifier } from './line-notifier';
 import { planLines } from './request-lines.diff';
 import type { LinesPlan } from './request-lines.diff';
 import { snapOf } from './request-lines.rules';
@@ -57,6 +58,7 @@ export class RequestLinesWriter {
     private readonly files: FilesService,
     private readonly config: SystemConfigService,
     private readonly audit: AuditWriterService,
+    private readonly notifier: LineNotifier,
   ) {}
 
   async save(
@@ -107,6 +109,12 @@ export class RequestLinesWriter {
           : {}),
         self: args.actor.sub === args.owner_sub && args.mode === 'admin',
       },
+    });
+    await this.notifier.customLinesAdded(tx, {
+      requestId: head.id,
+      actorSub: args.actor.sub,
+      lines: newCustomLines(plan, diff),
+      now: args.now,
     });
     return { request_id: remaining === 0 ? null : head.id, diff };
   }
@@ -243,6 +251,13 @@ function lineMode(args: SaveArgs): WriteMode {
 
 function reason(args: SaveArgs): string | undefined {
   return args.body.reason?.trim() || undefined;
+}
+
+// diff.added theo đúng thứ tự plan.inserts; chỉ dòng ngoài DM đang chờ duyệt mới báo Hành chính
+function newCustomLines(plan: LinesPlan, diff: LinesDiff) {
+  return diff.added
+    .filter((_, i) => plan.inserts[i].review_status === 'pending')
+    .map((l) => ({ id: l.id, name: l.custom_name! }));
 }
 
 function withId(line: LineRow): LineSnapWithId {
