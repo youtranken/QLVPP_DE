@@ -72,3 +72,24 @@ Cả ba mục đã được chốt ngày 2026-10-28 và vá vào spec; không c�
 - 2026-10-29 — **chủ dự án chọn (a) ngày 2026-10-29, đã sửa CLAUDE.md**: CLAUDE.md ghi "luật kỳ (Playwright) kiểm bằng `CLOCK_OFFSET_MS` phía server", nhưng `CLOCK_OFFSET_MS` chỉ nhận khi `NODE_ENV=test`, còn Playwright chạy trên compose dev (`NODE_ENV=development`) → hiện Playwright giả phản hồi `PERIOD_LOCKED` qua `page.route` và seed kỳ trước bằng SQL; luật kỳ ở ranh giới giây được kiểm ở e2e api (đồng hồ cố định). Không tự sửa CLAUDE.md. Lựa chọn: (a) chấp nhận và sửa câu trong CLAUDE.md; (b) cho `CLOCK_OFFSET_MS` hoạt động khi `AUTH_DEV_MODE=true` ở dev (đổi luật an toàn của env).
 - 2026-10-29: `ITEM_IN_USE` (xóa món) chỉ xét dòng phiếu **hiện có** trỏ tới món, không xét món từng nằm trong phiếu đã bị bỏ (spec: "chưa từng có trong phiếu") — chấp nhận: `audit_log` vẫn giữ dấu vết các dòng đã bỏ; catalog không đọc `audit_log`.
 - 2026-10-29 (đợt test biên B): `PeriodsService.isOpen(ym, tx?, now?)` ở §6 không có chỗ gọi (writer tự so `now < period.deadline`, member đi qua `openPeriod`, `GET periods/current` tự tính) → bỏ method, §6 chỉ giữ luật `now < deadline`. Lỗi DTO lồng (`lines[i].*`) trả `VALIDATION` có `message`, `fields` là tên trường lá và `line_index` — §7 cập nhật.
+
+## F. Plan 3 — mâu thuẫn spec và giả định (2026-10-29)
+
+Mâu thuẫn đã phát hiện khi lập Plan 3; mỗi mục đã sửa tài liệu liên quan trong commit Task 1.
+
+- F1: Hoàn tác đợt giao đã bỏ (FR-44) nhưng còn ở PRD §5/§10/FR-43, architecture §6/§7/§14, backlog E4-S3, `_SPEC.md` → gạch khỏi các chỗ đó; giữ `reason='return'` trong CHECK kho (không đổi migration đã áp).
+- F2: E5-S2 `GET /admin/reports/:ym/export.xlsx` ≠ §7 `GET admin/reports/snapshots/:id/export.xlsx` → theo §7 (Excel luôn từ bản chốt); backlog sửa.
+- F3: §10/E5-S1 nhóm Ngoài danh mục `need = requested` ≠ BR-15 → theo PRD: `need = requested + backlog_prev`, `stock = null`; §10 sửa.
+- F4: §9 `request_delivered:<id>:<n>` "n đếm từ audit" nhưng delivery không đọc `audit_log` của module khác → `n` = số đợt giao (`line_deliveries`) của phiếu tại lúc đủ; §9 sửa.
+- F5: §9 thiếu `event_id` cho chuông Hủy nợ → thêm `line_cancelled:<line_id>:<cancelled_qty sau hủy>`.
+- F6: DoD "mutate có audit" vs `POST me/notifications/read` (trạng thái cá nhân) → không audit đánh dấu đã đọc; §13 ghi rõ.
+- F7: §7 `read {ids?}` "rỗng = tất cả" mơ hồ → thiếu `ids` = tất cả; `ids: []` → 400 `VALIDATION`.
+- F8: §5/§12 `0103_vpp_reports.sql` gộp nhiều chủ đề, trái "một migration = một chủ đề" → tách 0103–0107; §5 sửa.
+- F9: §9 "ngày 1 → `period_open` cho mọi user `active`" ≠ mẫu số Tổng hợp → dùng mẫu số Tổng hợp (active, khác `local:sa`, giao `authorized_groups` nếu không rỗng).
+
+Giả định Plan 3:
+
+1. Chủ dự án chốt 2026-10-29: luật kỳ/cron/chuông theo giờ kiểm ở e2e api với `ClockService` cố định; Playwright chỉ kiểm hiển thị (kỳ khóa và thông báo seed bằng SQL).
+2. Chủ dự án chốt 2026-10-29: "Xuất lẻ trong kỳ" của báo cáo = xuất lẻ trong tháng dương lịch `ym` (giờ VN), dùng lại `StockQueryService.issuesInMonth(ym)` như `GET admin/issues?ym`.
+3. Giả định chờ xác nhận: cron gửi đúng ngày theo §9 (ngày 1 / `lastDay−2` / `lastDay+1` giờ VN, `lastDay` suy từ `periods.deadline`); bỏ lỡ cả ngày thì không gửi bù thông báo, nhưng `headcount` của kỳ khóa gần nhất vẫn được ghi bù ở lần chạy sau.
+4. Giả định chờ xác nhận: Còn nợ chỉ gồm dòng thuộc kỳ đã khóa (kỳ đang mở chưa giao được).

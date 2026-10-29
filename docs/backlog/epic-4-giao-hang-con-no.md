@@ -10,7 +10,7 @@
 
 ## E4-S3 Còn nợ
 `GET /admin/backlog?by=item|person`, lịch sử đợt giao, trang Còn nợ với nút giao bổ sung.
-**AC:** liệt kê dòng hiệu lực có `delivered_qty + cancelled_qty < qty` của mọi kỳ (không có dòng `rejected`/`pending`); giao bổ sung tới đủ → biến mất; lịch sử hiện 2 đợt và đợt hoàn tác; **Hoàn tác** đợt 2 với lý do → `delivered_qty` giảm, movement `return` +n trỏ `ref_movement_id`, nợ xuất hiện lại; hoàn tác quá số đã giao → lỗi; **Hủy nợ** với lý do → `cancelled_qty` = phần còn lại, rời Còn nợ, lịch sử member hiện "đã hủy n"; thiếu lý do → `REASON_REQUIRED`.
+**AC:** liệt kê dòng hiệu lực có `delivered_qty + cancelled_qty < qty` của mọi kỳ (không có dòng `rejected`/`pending`); giao bổ sung tới đủ → biến mất; lịch sử hiện 2 đợt (không có Hoàn tác — FR-44); **Hủy nợ** với lý do → `cancelled_qty` = phần còn lại, rời Còn nợ, lịch sử member hiện "đã hủy n"; thiếu lý do → `REASON_REQUIRED`.
 
 ## E4-S4 Trang Giao hàng
 Danh sách phiếu kỳ, tick dòng / Giao tất cả, nhập số thực giao.

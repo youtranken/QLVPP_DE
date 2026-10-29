@@ -1,5 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { pgViolation } from '../../common/sql';
+import { HttpException, Injectable } from '@nestjs/common';
 import type { Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
@@ -10,7 +9,7 @@ import { FilesService } from '../files/files.service';
 import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
 import {
-  duplicateItem,
+  constraintError,
   invalidPeriod,
   lineError,
   linesEmpty,
@@ -49,21 +48,6 @@ export interface SaveArgs {
 
 const REASON_MIN = 3;
 
-// Vi phạm do tx song song lọt qua bước kiểm (ảnh bị dọn, món bị xóa, trùng món)
-const CONSTRAINT_ERRORS: Record<string, () => HttpException> = {
-  request_lines_item_uq: () => duplicateItem(),
-  request_lines_image_file_id_fkey: () =>
-    new HttpException(
-      { code: 'IMAGE_REQUIRED', message: 'Ảnh không còn — tải ảnh lại.' },
-      HttpStatus.BAD_REQUEST,
-    ),
-  request_lines_item_id_fkey: () =>
-    new HttpException(
-      { code: 'ITEM_NOT_FOUND', message: 'Không tìm thấy món.' },
-      HttpStatus.BAD_REQUEST,
-    ),
-};
-
 @Injectable()
 export class RequestLinesWriter {
   constructor(
@@ -82,8 +66,7 @@ export class RequestLinesWriter {
     try {
       return await this.write(tx, args);
     } catch (error) {
-      const mapped = CONSTRAINT_ERRORS[pgViolation(error)?.constraint ?? ''];
-      throw mapped ? mapped() : error;
+      throw constraintError(error) ?? error;
     }
   }
 

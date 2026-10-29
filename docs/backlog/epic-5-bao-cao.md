@@ -5,7 +5,7 @@
 **AC:** BR-15: đăng ký 5, tồn 2, đã giao 2 → `need = 1`; nợ 2 kỳ trước + đăng ký 3 kỳ này, tồn 0 → `need = 5`; tồn 10, đăng ký 3 → `need = 0`; dòng đã hủy nợ không tính; món ngoài DM `accepted` nhóm riêng `stock=null`, `need = requested`; dòng `rejected`/`pending` không tính, `pending_custom_count` đúng; phần chi tiết nhóm theo `requests.department`.
 
 ## E5-S2 Xuất Excel
-`GET /admin/reports/:ym/export.xlsx` (exceljs, 2 sheet, tiêu đề theo locale).
+`GET /admin/reports/snapshots/:id/export.xlsx` (Excel luôn từ bản chốt; exceljs, 2 sheet, tiêu đề theo locale).
 **AC:** `POST …/snapshots {kind: xlsx, order_qty}` tạo bản chốt (cột Đặt mua = giá trị admin sửa, mặc định Cần mua; bảng phụ Xuất lẻ trong kỳ) rồi `export.xlsx?lang=en` tải được, mở bằng LibreOffice đọc đúng 2 sheet, tiêu đề tiếng Anh; giao thêm hàng rồi tải lại cùng snapshot → số cũ; danh sách bản chốt của kỳ hiện giờ và người lập; còn dòng `pending` → FE hỏi trước khi chốt.
 
 ## E5-S3 Trang in

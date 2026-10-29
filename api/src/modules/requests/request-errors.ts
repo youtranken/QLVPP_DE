@@ -5,6 +5,7 @@ import {
   HttpStatus,
   NotFoundException,
 } from '@nestjs/common';
+import { pgViolation } from '../../common/sql';
 
 // Dòng mới chưa có id → chỉ trỏ được bằng vị trí trong body
 export type LineRef = { line_index: number } | { line_id: string };
@@ -97,3 +98,31 @@ export const rejectReasonRequired = () =>
     code: 'REASON_REQUIRED',
     message: 'Nhập lý do từ chối (ít nhất 3 ký tự).',
   });
+
+const readonlyLine = () =>
+  new BadRequestException({
+    code: 'LINE_READONLY',
+    message: 'Dòng đã có đợt giao — không xóa được.',
+  });
+
+// Vi phạm do tx song song lọt qua bước kiểm (ảnh bị dọn, món bị xóa, trùng món); RESTRICT trả 23001 chứ không phải 23503
+const CONSTRAINT_ERRORS: Record<string, () => HttpException> = {
+  request_lines_item_uq: () => duplicateItem(),
+  request_lines_image_file_id_fkey: () =>
+    new BadRequestException({
+      code: 'IMAGE_REQUIRED',
+      message: 'Ảnh không còn — tải ảnh lại.',
+    }),
+  request_lines_item_id_fkey: () =>
+    new BadRequestException({
+      code: 'ITEM_NOT_FOUND',
+      message: 'Không tìm thấy món.',
+    }),
+  stock_movements_ref_line_id_fkey: readonlyLine,
+  line_deliveries_line_id_fkey: readonlyLine,
+};
+
+export function constraintError(error: unknown): HttpException | null {
+  const mapped = CONSTRAINT_ERRORS[pgViolation(error)?.constraint ?? ''];
+  return mapped ? mapped() : null;
+}

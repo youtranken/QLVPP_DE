@@ -58,7 +58,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 - **Ngày 11** — Phiếu kỳ 11 khóa với nhân viên (hiện dạng thẻ "Tháng 11 đang giao" dưới phiếu kỳ 12). Chuông cho Hành chính: "Kỳ 11 đã khóa: 32/40 phiếu". Người quên → tháng sau, không ngoại lệ. Hành chính xem tổng hợp, xử lý từng món ngoài danh mục (chấp nhận / thêm vào danh mục / từ chối), điều chỉnh trường hợp đặc biệt (ghi lý do).
 - **Ngày 12** — Hành chính mở Báo cáo: tổng theo món (Cần mua = nhu cầu chưa giao, kể cả nợ kỳ trước − tồn) và chi tiết theo phòng ban → người. Bấm Xuất Excel / In tạo **bản chốt** có giờ lập và người lập; nếu còn món ngoài danh mục chưa xem, hệ thống cảnh báo trước khi chốt. Bản chốt xem lại được bất cứ lúc nào.
 - **Hàng về** — Nhập kho (+số lượng, ghi nguồn).
-- **Giao** — Theo từng người: tick dòng hoặc "Giao tất cả"; thiếu thì nhập số thực giao → dòng vào **Còn nợ**. Kho trừ đúng số đã giao. Giao nhầm → "Hoàn tác đợt giao" (lý do), kho cộng lại. Chuông cho người nhận: "Phiếu tháng 11 đã giao đủ".
+- **Giao** — Theo từng người: tick dòng hoặc "Giao tất cả"; thiếu thì nhập số thực giao → dòng vào **Còn nợ**. Kho trừ đúng số đã giao. Giao nhầm thì Hành chính tự đưa bù ngoài hệ thống (không có Hoàn tác trong GĐ1, FR-44). Chuông cho người nhận: "Phiếu tháng 11 đã giao đủ".
 - **Về sau** — Màn Còn nợ liệt kê mọi dòng chưa đủ (xuyên kỳ); giao bổ sung tới khi hết.
 
 ## 6. Yêu cầu chức năng
@@ -98,14 +98,14 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 - FR-40 Giao theo phiếu: tick từng dòng (mặc định giao đủ, sửa được số thực giao) hoặc "Giao tất cả" (giao những dòng kho đủ, báo danh sách dòng không giao được). Bấm đúp / hai admin cùng giao một dòng không giao hai lần.
 - FR-41 Giao trừ tồn kho cùng lúc; nếu tồn không đủ → từ chối với số tồn hiện có; không bao giờ âm kho. Món ngoài danh mục đã chấp nhận giao không trừ tồn. Dòng bị từ chối / chờ xem không giao được.
 - FR-42 Màn **Còn nợ**: mọi dòng chưa đủ (`delivered_qty < qty`, không tính dòng từ chối/chờ xem/đã hủy nợ) của mọi kỳ, nhóm theo món và theo người; nút giao bổ sung; nút Hủy nợ; lịch sử từng đợt giao của một dòng.
-- FR-43 Chuông cho người nhận khi phiếu giao đủ (một lần cho mỗi phiếu; nếu hoàn tác rồi giao lại đủ → một thông báo mới).
+- FR-43 Chuông cho người nhận khi phiếu giao đủ (một lần khi phiếu giao đủ).
 - FR-44 ~~Hoàn tác đợt giao~~ — **bỏ khỏi GĐ1** (chủ dự án 2026-10-28: ghi giao nhầm thì Hành chính tự đưa bù ngoài hệ thống).
 
 ### 6.6 Kho (Admin)
 - FR-50 Tồn hiện tại từng món. **Sắp hết** khi đã dùng hết 80 % lượng tồn tính từ lần nhập mua gần nhất: mốc = ⌊20 % × tồn ngay sau lần nhập đó⌋ (hoặc lần điều chỉnh tồn đầu kỳ khi món chưa có mốc), sắp hết khi `0 < tồn ≤ mốc`; tồn = 0 là **Hết hàng**. Món chưa từng nhập mua không cảnh báo. Mỗi lần nhập mua tính lại mốc (ví dụ tồn 0 → nhập 30: mốc 6; còn 6 thì sắp hết; nhập thêm 20 lúc còn 6 → tồn 26, mốc 5). Không còn ô "mức tồn tối thiểu" nhập tay.
 - FR-51 Nhập mua: +số lượng, ghi chú (đơn hàng/nguồn).
 - FR-52 Điều chỉnh kiểm kê: ±số lượng, lý do bắt buộc (dùng cho tồn đầu kỳ).
-- FR-53 Sổ cái: mọi biến động (nhập, giao, xuất lẻ, hoàn tác, điều chỉnh) với người thực hiện, lý do và thời điểm; xem theo món.
+- FR-53 Sổ cái: mọi biến động (nhập, giao, xuất lẻ, điều chỉnh) với người thực hiện, lý do và thời điểm; xem theo món.
 - FR-54 **Xuất lẻ** (ngoài phiếu): admin xuất kho cho một người (chọn từ danh bạ — ví dụ người mới vào giữa kỳ) hoặc "Dùng chung" (A4, mực in…), lý do bắt buộc; trừ tồn như giao hàng, không tạo phiếu, không ảnh hưởng hạn đăng ký; nếu tồn không đủ → từ chối, người đó chờ kỳ sau. Người nhận thấy mục "Nhận lẻ" trong Lịch sử. Thực tế: Hành chính chủ động mua dư để có tồn cho các trường hợp này.
 
 ### 6.7 Báo cáo (Admin)
@@ -137,7 +137,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 | BR-5 | `1 ≤ qty ≤ max_qty` của món (dòng ngoài danh mục: `default_max_qty`) khi thêm hoặc tăng; dòng đã lưu được giảm dù `max_qty` sau đó bị hạ; member không chạm món `admin_only` hay món đã ngừng (dòng đã lưu của món đó chỉ giữ nguyên hoặc bỏ), Hành chính được giảm; dòng `admin_only`/`converted`/đã giao trong phiếu được giữ nguyên khi member lưu. |
 | BR-6 | Admin sửa phiếu đã có mọi lúc; sau hạn phải có lý do; mọi thay đổi (sửa, thêm, bớt dòng, đổi phòng ban) ghi nhật ký cũ/mới. |
 | BR-7 | Không tạo phiếu mới cho một kỳ đã khóa. |
-| BR-8 | `0 ≤ delivered_qty ≤ qty`; mỗi đợt giao là một biến động kho âm, mỗi hoàn tác là biến động dương có lý do; tồn không âm; không giảm `qty` dưới `delivered_qty`. |
+| BR-8 | `0 ≤ delivered_qty ≤ qty`; mỗi đợt giao là một biến động kho âm; tồn không âm; không giảm `qty` dưới `delivered_qty`. |
 | BR-9 | Món ngoài danh mục phải được xử lý (chấp nhận/thêm/từ chối) trước khi giao; dòng từ chối không vào Còn nợ, không vào báo cáo. |
 | BR-10 | Ảnh bắt buộc khi tạo món mới qua giao diện **và** trên mỗi dòng món ngoài danh mục (`IMAGE_REQUIRED`). |
 | BR-11 | Phòng ban trên phiếu = phòng ban PMH ID của người đó tại lần lưu cuối (của member hoặc admin); tổng hợp và báo cáo cùng dùng giá trị này. |
@@ -172,7 +172,7 @@ Hệ thị giác: thương hiệu xanh ngọc lục `#059669`; member kiểu app
 2. Với đồng hồ test đặt 23:59:59 ngày 10 lưu được vào kỳ 11; đặt 00:00:00 ngày 11: `GET /periods/current` trả `{ym: 2026-12-01, is_open: true}`, lưu rơi vào kỳ 12, phiếu kỳ 11 chỉ đọc; `days_left` ngày 6 = 5, ngày 10 = 1.
 3. Admin sửa số lượng một phiếu sau hạn → bắt buộc lý do; nhật ký hiện giá trị cũ/mới. Admin thêm dòng `admin_only` trước hạn, member lưu lại → dòng vẫn còn. Giảm dưới số đã giao → `QTY_BELOW_DELIVERED`.
 4. Admin chuyển một món ngoài danh mục thành món mới (có ảnh, ĐVT) → món xuất hiện trong lưới của mọi người ngay (kỳ đang mở); dòng gốc gắn vào món (giữ nguyên bản ghi, không gộp), tồn 0.
-5. Giao 3/5 → dòng xuất hiện ở Còn nợ; bấm giao 2 hai lần liên tiếp → chỉ một lần có hiệu lực; giao thêm 2 → hết nợ; tồn kho trừ đúng 5; cố giao vượt tồn bị chặn; hoàn tác đợt 2 (lý do) → nợ 2, tồn +2.
+5. Giao 3/5 → dòng xuất hiện ở Còn nợ; bấm giao 2 hai lần liên tiếp → chỉ một lần có hiệu lực; giao thêm 2 → hết nợ; tồn kho trừ đúng 5; cố giao vượt tồn bị chặn.
 6. Đăng ký 5, tồn 2, đã giao 2 → Cần mua = 1; nợ 2 kỳ trước + đăng ký 3 kỳ này, tồn 0 → Cần mua = 5. Xuất Excel 2 sheet và in trang có 3 ô ký (có tên) tạo bản chốt; mở lại bản chốt sau khi giao thêm vẫn ra số cũ.
 7. Khóa user trên PMH ID → phiên app bị hủy trong ≤ 10 s (webhook v2 đúng chữ ký; chữ ký v1 hoặc `ts` lệch > 300 s bị 401); gỡ group `vpp-admin` → request kế tiếp 403.
 8. SA cục bộ đăng nhập được khi tắt kết nối tới PMH ID; 5 lần sai từ IP A với tên X không khóa IP B; `req.ip` qua 2 hop proxy là IP máy người dùng.
