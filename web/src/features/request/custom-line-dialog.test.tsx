@@ -78,6 +78,19 @@ describe('CustomLineDialog', () => {
     });
   });
 
+  it('số lượng khóa ở default_max_qty 20: 19 → "Thêm" lên 20 rồi vô hiệu, có gợi ý tối đa 20', async () => {
+    const { onSubmit } = setup({ custom_name: 'Bìa còng', custom_unit: 'cai', custom_note: null, image_file_id: 'f-9', qty: 19 });
+    await screen.findByRole('dialog', { name: 'Sửa món khác' });
+    const plus = screen.getByRole('button', { name: 'Thêm Số lượng' });
+    expect(plus).toBeEnabled();
+    await userEvent.click(plus);
+    expect(screen.getByRole('spinbutton', { name: 'Số lượng' })).toHaveValue(20);
+    expect(plus).toBeDisabled();
+    expect(screen.getByText(/tối đa 20/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ qty: 20 }));
+  });
+
   it('sửa dòng có sẵn: điền sẵn, nút "Lưu thay đổi", ghi chú rỗng → null', async () => {
     const { onSubmit } = setup({ custom_name: 'Bìa còng', custom_unit: 'cai', custom_note: null, image_file_id: 'f-9', qty: 3 });
     await screen.findByRole('dialog', { name: 'Sửa món khác' });

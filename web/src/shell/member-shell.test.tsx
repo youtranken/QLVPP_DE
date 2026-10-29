@@ -26,6 +26,16 @@ describe('MemberShell', () => {
     expect(screen.getByRole('link', { name: 'Tôi' })).toHaveAttribute('href', '/me');
   });
 
+  it.each([
+    [900, true],
+    [901, false],
+  ])('mốc %i px: thanh dưới = %s, tab trên ngược lại', (width, bottom) => {
+    mockViewport(width);
+    renderApp(makeMe('member'), '/');
+    expect(screen.queryByRole('navigation', { name: 'Điều hướng chính' }) !== null).toBe(bottom);
+    expect(screen.queryByRole('navigation', { name: 'Chuyển trang' }) !== null).toBe(!bottom);
+  });
+
   it('mục đang ở được đánh dấu aria-current', () => {
     mockViewport(390);
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }))));

@@ -34,6 +34,18 @@ test.describe('E0-S9 khung nhân viên (dev-identity member)', () => {
     await shot(page, info, 'member-me');
   });
 
+  test('E0-S9 member: mốc 900 px thanh dưới, 901 px tab trên', async ({ page }) => {
+    const bottom = page.getByRole('navigation', { name: 'Điều hướng chính' });
+    const tabs = page.getByRole('navigation', { name: 'Chuyển trang' });
+    await page.setViewportSize({ width: 900, height: 800 });
+    await page.goto('/');
+    await expect(bottom.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử', 'Tôi']);
+    await expect(tabs).toHaveCount(0);
+    await page.setViewportSize({ width: 901, height: 800 });
+    await expect(tabs.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử']);
+    await expect(bottom).toHaveCount(0);
+  });
+
   test('E0-S9 member: đổi ngôn ngữ ở trang Tôi đổi toàn bộ nhãn', async ({ page }) => {
     await page.goto('/me');
     await page.getByRole('radio', { name: 'English' }).click();
