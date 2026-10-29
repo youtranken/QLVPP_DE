@@ -64,6 +64,18 @@ describe('buildCopy', () => {
     expect(r.capped).toEqual([{ name: 'Giấy A4', from: 15, to: 10 }]);
   });
 
+  it('qty 10 đúng bằng max_qty 10 → giữ 10, không có trong capped', () => {
+    const r = buildCopy([line({ item_id: 'cap', qty: 10 })], items, 20);
+    expect(r.lines).toEqual([{ item_id: 'cap', qty: 10 }]);
+    expect(r.capped).toEqual([]);
+  });
+
+  it('dòng ngoài DM qty 20 đúng bằng default_max_qty 20 → giữ 20, không capped', () => {
+    const r = buildCopy([custom({ qty: 20 })], items, 20);
+    expect(r.lines[0].qty).toBe(20);
+    expect(r.capped).toEqual([]);
+  });
+
   it('dòng ngoài DM vượt default_max_qty → hạ về default', () => {
     const r = buildCopy([custom({ qty: 30 })], items, 20);
     expect(r.lines[0].qty).toBe(20);

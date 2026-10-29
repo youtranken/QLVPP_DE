@@ -79,6 +79,29 @@ describe('JwtVerifierService — verify offline RS256', () => {
     await expect(verifier.verify(token)).resolves.toBeDefined();
   });
 
+  describe('mép clockTolerance 60 s (đồng hồ đứng yên ở giây tròn)', () => {
+    beforeEach(() => {
+      jest.useFakeTimers({
+        now: new Date('2026-11-01T00:00:00.000Z'),
+        doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'],
+      });
+    });
+    afterEach(() => jest.useRealTimers());
+
+    // jose coi exp <= now − tolerance là hết hạn → đúng 60 s đã fail
+    it('exp lệch 59 s → pass; lệch đúng 60 s → fail; 61 s → fail', async () => {
+      await expect(
+        verifier.verify(await sign({}, { expOffsetSec: -59 })),
+      ).resolves.toBeDefined();
+      await expect(
+        verifier.verify(await sign({}, { expOffsetSec: -60 })),
+      ).rejects.toThrow();
+      await expect(
+        verifier.verify(await sign({}, { expOffsetSec: -61 })),
+      ).rejects.toThrow();
+    });
+  });
+
   it('token thiếu claim exp → fail (không được refresh-mỗi-request)', async () => {
     const token = await new jose.SignJWT({})
       .setProtectedHeader({ alg: 'RS256' })

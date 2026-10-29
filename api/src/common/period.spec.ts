@@ -19,6 +19,14 @@ describe('periodFor', () => {
   it('qua năm', () => {
     expect(periodFor(at('2026-12-10T17:00:00Z'), 10)).toBe('2027-01');
   });
+  it('00:00:00 ngày 1/12 VN (30/11 17:00Z) → kỳ 2026-12; 23:59:59.999 ngày 30/11 VN → vẫn 2026-12', () => {
+    expect(periodFor(at('2026-11-30T17:00:00Z'), 10)).toBe('2026-12');
+    expect(periodFor(at('2026-11-30T16:59:59.999Z'), 10)).toBe('2026-12');
+  });
+  it('lastDay 28: ngày 28 VN → tháng này, ngày 29 VN → tháng sau', () => {
+    expect(periodFor(at('2026-11-28T16:59:59.999Z'), 28)).toBe('2026-11');
+    expect(periodFor(at('2026-11-28T17:00:00Z'), 28)).toBe('2026-12');
+  });
 });
 
 describe('deadlineOf', () => {
