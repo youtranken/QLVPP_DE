@@ -175,4 +175,7 @@ describe('check-hardcoded-text', () => {
       scan("const unit = 'đ';\nconst sym = '₫';\nconst a = 'đồng';\nconst b = 'Giá đ';\n", 'src/lib/money.ts'),
     ).toEqual(['đồng', 'Giá đ']);
   });
+  it("ký hiệu tiền tệ trong chữ JSX và prop (<b>₫</b>, <span> đ </span>, unit=\"đ\") → sạch; <span>đồng</span> và unit=\"đồng\" vẫn báo", () => {
+    expect(scan('export const A = () => (<p><b>₫</b><span> đ </span><Price unit="đ" /><span>đồng</span><Price unit="đồng" /></p>);')).toEqual(['đồng', 'đồng']);
+  });
 });

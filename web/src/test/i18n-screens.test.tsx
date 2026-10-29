@@ -171,4 +171,22 @@ describe('Song ngữ các màn Plan 3', () => {
     expect(await screen.findByText('Ballpoint pen')).toBeInTheDocument();
     noVietnamese();
   });
+
+  it('Nhật ký: en hiện nhãn hành động, gợi ý bộ lọc có nhãn en và không còn chữ Việt', async () => {
+    const row = (id: string, action: string) => ({ id, actor: 'u-an', actorName: 'An Nguyen', action, objectType: 'line', objectId: 'l-1', detail: { ip: '10.0.0.5' }, createdAt: '2026-10-28T03:05:00.000Z' });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) =>
+        Promise.resolve(jsonResponse(200, { items: url.startsWith('/api/admin/audit') ? [row('a1', 'line.delivered'), row('a2', 'line.cancel_remaining')] : [], next_cursor: null })),
+      ),
+    );
+    renderApp(ADMIN, '/admin/audit');
+    expect(await screen.findByText('Giao hàng')).toBeInTheDocument();
+    await english();
+    const table = await screen.findByRole('table');
+    expect(within(table).getByText('Delivered')).toHaveAttribute('title', 'line.delivered');
+    expect(within(table).getByText('Backlog cancelled')).toBeInTheDocument();
+    expect(document.querySelector('datalist option[value="line.cancel_remaining"]')).toHaveAttribute('label', 'Backlog cancelled');
+    noVietnamese();
+  });
 });
