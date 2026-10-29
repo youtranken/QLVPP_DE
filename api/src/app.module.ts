@@ -16,6 +16,7 @@ import { CatalogModule } from './modules/catalog/catalog.module';
 import { OidcModule } from './modules/auth/oidc.module';
 import { SystemConfigModule } from './modules/config/config.module';
 import { FilesModule } from './modules/files/files.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PeriodsModule } from './modules/periods/periods.module';
 import { RequestsModule } from './modules/requests/requests.module';
 
@@ -59,6 +60,7 @@ import { RequestsModule } from './modules/requests/requests.module';
     CatalogModule,
     PeriodsModule,
     RequestsModule,
+    NotificationsModule,
   ],
   controllers: [HealthController, ...testOnlyControllers(process.env)],
   providers: [

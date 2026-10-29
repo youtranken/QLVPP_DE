@@ -3,7 +3,7 @@ import { and, eq, ilike, ne, or, sql } from 'drizzle-orm';
 import { decodeCursor, encodeCursor } from '../../common/cursor';
 import { escapeLike } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
-import type { Database } from '../../database/database.module';
+import type { Database, Executor } from '../../database/database.module';
 import {
   LOCAL_SA_EMAIL,
   LOCAL_SA_FULL_NAME,
@@ -172,5 +172,21 @@ export class UsersService {
       .update(usersTable)
       .set({ status, updatedAt: new Date() })
       .where(eq(usersTable.sub, sub));
+  }
+
+  // Người nhận chuông admin: SA cục bộ không nhận; so group không phân biệt hoa thường như resolveRole
+  async activeAdminSubs(
+    adminGroup: string,
+    ex: Executor = this.db,
+  ): Promise<string[]> {
+    const result = await ex.execute<{ sub: string }>(sql`
+      SELECT u.sub FROM users u
+      WHERE u.status = 'active' AND u.sub <> ${LOCAL_SA_SUB}
+        AND jsonb_typeof(u.groups) = 'array'
+        AND EXISTS (SELECT 1 FROM jsonb_array_elements_text(u.groups) g
+                    WHERE lower(g) = lower(${adminGroup}))
+      ORDER BY u.sub
+    `);
+    return result.rows.map((r) => r.sub);
   }
 }
