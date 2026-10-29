@@ -16,6 +16,7 @@ App quản lý văn phòng phẩm phòng Công trình, đăng nhập bằng PMH 
 3. Viết code tối thiểu để pass (GREEN). Không viết code chưa có test đòi.
 4. Chạy lại test liên quan; trước khi commit chạy toàn bộ bộ test của gói đang sửa.
 5. Refactor nếu cần, test vẫn xanh.
+6. **Kiểm biên theo phễu:** mỗi giới hạn trong spec (mốc giờ, số lượng, độ dài, kích thước tệp, phân trang, ngưỡng khóa/throttle, năm/tháng) có test ở **cả hai phía mốc** (vd 23:59:59.999 ngày 10 được / 00:00:00 ngày 11 `PERIOD_LOCKED`; `max_qty` được / `max_qty+1` bị từ chối; 5 MB được / 5 MB + 1 byte 413), đặt ở tầng rẻ nhất chứng minh được rồi thu hẹp dần: unit (luật thuần) → db-spec (CHECK/đồng thời) → e2e (mã lỗi, vai) → Playwright (người dùng thấy). Test chỉ ở giá trị giữa hoặc một phía = chưa kiểm biên.
 Báo cáo/commit phải có bằng chứng RED và GREEN (lệnh + output). Test không assert gì, test chỉ kiểm mock, test bị `skip` = chưa làm.
 
 Tầng test theo loại code:
@@ -36,6 +37,7 @@ Tầng test theo loại code:
 ## Definition of Done (một task/story chỉ "xong" khi đủ)
 
 - [ ] Mọi AC của story trong `docs/backlog/` có test tương ứng và xanh; mã lỗi đúng tên trong `architecture.md` §7.
+- [ ] Mọi giới hạn mà task chạm tới có test biên hai phía theo phễu (TDD mục 6); report liệt kê bảng biên → tầng test.
 - [ ] `npm test`, `npm run test:e2e`, `npm run test:db` (api) và `npm test`, `npm run lint`, `npm run build` (web) đều pass, output sạch (không warning lạ, không `console.error` rơi vãi).
 - [ ] Luật nghiệp vụ ép ở server/CSDL, UI chỉ hỗ trợ; không có luật chỉ tồn tại trên FE.
 - [ ] Mọi chuỗi UI qua i18n (`vi` + `en`), không chuỗi cứng trong component; câu chữ theo `_SPEC.md` mục "Câu chữ" (gọi admin là **Hành chính**, "Chép lại danh sách tháng X", "Lưu phiếu", "Quay lại sửa").
@@ -73,4 +75,6 @@ Tầng test theo loại code:
 
 ## Review
 
-Mỗi task qua reviewer độc lập: (1) đúng spec — không thiếu, không thừa; (2) chất lượng — test thật, tách trách nhiệm, không trùng lặp. Finding Critical/Important phải sửa trước khi sang task kế; Minor ghi ledger. Cuối mỗi plan review toàn nhánh trước khi gộp về `main`.
+Mỗi task qua reviewer độc lập: (1) đúng spec — không thiếu, không thừa; (2) chất lượng — test thật, tách trách nhiệm, không trùng lặp. Reviewer kiểm thêm: mỗi giới hạn task chạm tới có test biên hai phía ở đúng tầng; thiếu = finding Important. Finding Critical/Important phải sửa trước khi sang task kế; Minor ghi ledger.
+
+Cuối mỗi plan, theo thứ tự: chạy đủ `npm run test:e2e`/`test:db`/unit → Playwright cả bộ một vòng (1280 + 390) → review toàn nhánh + code review mức high → một đợt sửa + re-review → báo chủ dự án; chỉ gộp `main` khi chủ dự án đồng ý, không push nếu chưa được bảo.
