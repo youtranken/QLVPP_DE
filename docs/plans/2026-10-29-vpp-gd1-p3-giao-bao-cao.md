@@ -61,7 +61,7 @@ Thứ tự bắt buộc: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → (
 3. Cron gửi đúng **ngày** theo §9 (ngày 1 / `lastDay−2` / `lastDay+1` giờ VN, `lastDay` suy từ `periods.deadline` của kỳ — BR-2); bỏ lỡ cả ngày (api tắt từ trước 00:05 tới hết ngày) thì không gửi bù thông báo, nhưng `headcount` của kỳ khóa gần nhất vẫn được ghi bù ở lần chạy sau.
 4. Còn nợ chỉ gồm dòng thuộc **kỳ đã khóa** (kỳ đang mở chưa giao được).
 
-## Chờ chủ dự án (plan không tự quyết)
+## Chờ chủ dự án — đã chốt 2026-10-29: mục 1 chọn (a) (CLAUDE.md đã sửa), mục 2 chọn tháng dương lịch
 
 1. **`CLOCK_OFFSET_MS` và Playwright** (đã ghi `docs/review-spec.md` mục E, 2026-10-29): CLAUDE.md nói Playwright kiểm luật kỳ bằng `CLOCK_OFFSET_MS` phía server, nhưng biến chỉ nhận khi `NODE_ENV=test` còn Playwright chạy compose dev. Plan 3 giả định (a) — cron/chuông/ranh giới kỳ kiểm ở api e2e với đồng hồ cố định; nếu chủ dự án chọn (b) thì thêm test Playwright sau, không đổi code nghiệp vụ.
 2. Cửa sổ "Xuất lẻ trong kỳ" trên báo cáo: tháng dương lịch (giả định, khớp `GET admin/issues?ym`) hay khung kỳ 11/M−1 → 10/M.
