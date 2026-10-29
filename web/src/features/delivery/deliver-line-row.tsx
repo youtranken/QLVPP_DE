@@ -34,11 +34,11 @@ function useQtyCheck(text: string, remaining: number, cap: Cap | null) {
   return { n, max, error: null, ok: true };
 }
 
-function DeliverForm({ line, name, onNotice, onDelivered }: {
+function DeliverForm({ line, name, onNotice, onReload }: {
   line: LineView;
   name: string;
   onNotice: (code: string) => void;
-  onDelivered: () => Promise<unknown>;
+  onReload: () => Promise<unknown>;
 }) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
@@ -56,12 +56,13 @@ function DeliverForm({ line, name, onNotice, onDelivered }: {
       setFailed(null);
       try {
         await deliverLine(line.id, { qty: check.n!, expected_delivered_qty: line.delivered_qty }, csrfToken);
-        await onDelivered();
+        await onReload();
       } catch (e) {
         const failure = lineFailure(e, t);
         if (failure.kind === 'request') onNotice(failure.code);
         else if (failure.limit !== undefined) setCap({ limit: failure.limit, message: failure.message });
         else setFailed(failure.message);
+        if (failure.kind === 'field' && failure.stale) void onReload();
       }
     });
 
@@ -107,10 +108,10 @@ function DeliverForm({ line, name, onNotice, onDelivered }: {
   );
 }
 
-export function DeliverLineRow({ line, onNotice, onDelivered }: {
+export function DeliverLineRow({ line, onNotice, onReload }: {
   line: LineView;
   onNotice: (code: string) => void;
-  onDelivered: () => Promise<unknown>;
+  onReload: () => Promise<unknown>;
 }) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
@@ -129,7 +130,7 @@ export function DeliverLineRow({ line, onNotice, onDelivered }: {
           </small>
         )}
       </div>
-      {open ? <DeliverForm line={line} name={name} onNotice={onNotice} onDelivered={onDelivered} /> : <StatusTag line={line} />}
+      {open ? <DeliverForm line={line} name={name} onNotice={onNotice} onReload={onReload} /> : <StatusTag line={line} />}
     </li>
   );
 }

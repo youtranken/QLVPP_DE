@@ -22,15 +22,15 @@ const posts = (f: ReturnType<typeof stub>) => f.mock.calls.filter((c) => c[0] ==
 
 function renderRow(line: LineView = PEN_LINE) {
   const onNotice = vi.fn();
-  const onDelivered = vi.fn(() => Promise.resolve());
+  const onReload = vi.fn(() => Promise.resolve());
   renderWithI18n(
     <MeContext.Provider value={makeMe('admin')}>
       <ul>
-        <DeliverLineRow line={line} onNotice={onNotice} onDelivered={onDelivered} />
+        <DeliverLineRow line={line} onNotice={onNotice} onReload={onReload} />
       </ul>
     </MeContext.Provider>,
   );
-  return { onNotice, onDelivered };
+  return { onNotice, onReload };
 }
 
 const qtyBox = () => screen.getByLabelText(/^Thực giao/);
@@ -87,14 +87,14 @@ describe('DeliverLineRow — một dòng ở trang Giao hàng', () => {
 
   it('bấm Giao gửi {qty: 2, expected_delivered_qty: 3} kèm CSRF, xong báo phiếu tải lại', async () => {
     const f = stub();
-    const { onDelivered } = renderRow();
+    const { onReload } = renderRow();
     await userEvent.click(giao());
     await waitFor(() => expect(posts(f)).toHaveLength(1));
     const [, init] = posts(f)[0];
     expect(init.method).toBe('POST');
     expect(JSON.parse(String(init.body))).toEqual({ qty: 2, expected_delivered_qty: 3 });
     expect((init.headers as Record<string, string>)['X-CSRF-Token']).toBe('csrf-1');
-    await waitFor(() => expect(onDelivered).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(onReload).toHaveBeenCalledTimes(1));
   });
 
   it('đang gửi → nút vô hiệu; hai cú bấm trước khi giao diện kịp vẽ lại → chỉ một POST', async () => {
@@ -123,12 +123,13 @@ describe('DeliverLineRow — một dòng ở trang Giao hàng', () => {
     expect(giao()).toBeEnabled();
   });
 
-  it('400 DELIVER_EXCEEDS_QTY {remaining: 1} → "Chỉ còn 1 cần giao" gắn ô', async () => {
+  it('400 DELIVER_EXCEEDS_QTY {remaining: 1} → "Chỉ còn 1 cần giao" gắn ô, báo phiếu tải lại', async () => {
     stub(() => jsonResponse(400, { code: 'DELIVER_EXCEEDS_QTY', message: 'x', remaining: 1 }));
-    renderRow();
+    const { onReload } = renderRow();
     await userEvent.click(giao());
     await waitFor(() => expect(noteOf(qtyBox())).toBe('Chỉ còn 1 cần giao'));
     expect(giao()).toBeDisabled();
+    expect(onReload).toHaveBeenCalledTimes(1);
   });
 
   it.each(['STALE_UPDATE', 'PERIOD_NOT_LOCKED', 'LINE_NOT_REVIEWED'])('409 %s → báo lên phiếu (onNotice), không gắn lỗi vào ô', async (code) => {

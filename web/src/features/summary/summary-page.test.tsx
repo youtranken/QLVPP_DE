@@ -323,4 +323,23 @@ describe('SummaryPage — Tổng hợp kỳ', () => {
     expect(within(duc).getByRole('button', { name: 'Điều chỉnh' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Giao' })).toBeNull();
   });
+  it('kỳ đã khóa, phiếu hủy nợ toàn bộ (tổng 5, đã giao 0, đã hủy 5) → cột Giao "—", không thanh tiến độ, không nút "Giao"', async () => {
+    mockViewport(1280);
+    stub((url) =>
+      url.includes('by=person')
+        ? Promise.resolve(
+            jsonResponse(200, {
+              items: [person({ request_id: 'r-6', full_name: 'Hồ Hủy Hết', total_qty: 5, delivered_qty: 0, cancelled_qty: 5 })],
+              next_cursor: null,
+            }),
+          )
+        : undefined,
+    );
+    renderApp(makeMe('admin'), '/admin/summary?ym=2026-10');
+    const row = (await screen.findByText('Hồ Hủy Hết')).closest('tr')!;
+    expect(within(row).queryByRole('progressbar')).toBeNull();
+    expect(within(row).getByText('—')).toBeInTheDocument();
+    expect(within(row).queryByRole('link', { name: 'Giao' })).toBeNull();
+    expect(row).not.toHaveTextContent('NaN');
+  });
 });

@@ -14,7 +14,7 @@ const REQUEST_CODES = new Set([
 
 export type LineFailure =
   | { kind: 'request'; code: string }
-  | { kind: 'field'; limit?: number; message: string };
+  | { kind: 'field'; limit?: number; message: string; stale?: boolean };
 
 export function lineFailure(e: unknown, t: T): LineFailure {
   const code = apiErrorCode(e) ?? '';
@@ -25,7 +25,8 @@ export function lineFailure(e: unknown, t: T): LineFailure {
   }
   if (code === 'DELIVER_EXCEEDS_QTY') {
     const remaining = apiErrorNumber(e, 'remaining') ?? 0;
-    return { kind: 'field', limit: remaining, message: t('delivery.line.exceeds', { remaining }) };
+    // Phần còn lại đổi mà số đã giao không đổi (hủy nợ ở nơi khác): bản phiếu đang xem đã cũ
+    return { kind: 'field', limit: remaining, message: t('delivery.line.exceeds', { remaining }), stale: true };
   }
   if (code === 'VALIDATION') return { kind: 'field', message: t('delivery.line.invalid') };
   return { kind: 'field', message: t('delivery.line.failed') };

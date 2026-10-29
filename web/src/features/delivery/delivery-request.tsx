@@ -98,6 +98,7 @@ export function DeliveryRequest({ requestId, name }: { requestId: string; name: 
         await reload();
       } catch (e) {
         setNotice(noticeOf(apiErrorCode(e) ?? '', t));
+        void reload();
       }
     });
 
@@ -116,7 +117,7 @@ export function DeliveryRequest({ requestId, name }: { requestId: string; name: 
       <ul className="dl-lines" aria-label={t('delivery.lines', { name })}>
         {view.lines.map((l) => (
           // Key theo số đã giao/hủy: bản phiếu mới đặt lại ô "Thực giao" về phần còn lại mới
-          <DeliverLineRow key={`${l.id}:${l.delivered_qty}:${l.cancelled_qty}`} line={l} onNotice={onNotice} onDelivered={afterLine} />
+          <DeliverLineRow key={`${l.id}:${l.delivered_qty}:${l.cancelled_qty}`} line={l} onNotice={onNotice} onReload={afterLine} />
         ))}
       </ul>
       <div className="dl-request-foot">

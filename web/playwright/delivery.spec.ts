@@ -46,12 +46,14 @@ async function seedLockedRequest(request: APIRequestContext, info: TestInfo, lin
   const createdPeriod = psql(
     `INSERT INTO periods (ym, deadline) VALUES ('${prevYm}-01', '${prevYm}-10T17:00:00Z') ON CONFLICT DO NOTHING RETURNING ym`,
   );
-  const values = lines.map((l, i) => `('${items[i].id}', ${l.qty})`).join(', ');
+  // created_at tăng dần theo thứ tự seed: listLines xếp theo created_at, id → thứ tự dòng và ảnh chụp tất định
+  const values = lines.map((l, i) => `('${items[i].id}', ${l.qty}, ${i})`).join(', ');
   const requestId = psql(`WITH r AS (
       INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('${prevYm}-01', '${sub}', '${sub}') RETURNING id
     ), l AS (
-      INSERT INTO request_lines (request_id, item_id, qty)
-      SELECT r.id, x.item_id::uuid, x.qty FROM r, (VALUES ${values}) AS x(item_id, qty)
+      INSERT INTO request_lines (request_id, item_id, qty, created_at)
+      SELECT r.id, x.item_id::uuid, x.qty, now() + x.pos * interval '1 second'
+      FROM r, (VALUES ${values}) AS x(item_id, qty, pos)
     )
     SELECT id FROM r`);
   const ids = items.map((i) => `'${i.id}'`).join(', ');

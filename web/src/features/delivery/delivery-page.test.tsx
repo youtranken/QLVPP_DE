@@ -143,6 +143,24 @@ describe('DeliveryPage — trang Giao hàng', () => {
     expect(within(lines).getByLabelText(/^Thực giao Bút bi xanh/)).toHaveValue(1);
   });
 
+  it('400 DELIVER_EXCEEDS_QTY (vừa hủy nợ ở nơi khác) → tải lại phiếu, ô đặt lại theo phần còn lại mới', async () => {
+    const fresh = deliveryRequest({ lines: [{ ...PEN_LINE, cancelled_qty: 1 }, NOTE_LINE] });
+    const f = stub({ views: [deliveryRequest(), fresh], deliver: () => jsonResponse(400, { code: 'DELIVER_EXCEEDS_QTY', message: 'x', remaining: 1 }) });
+    const lines = await openPage();
+    await userEvent.click(within(lines).getByRole('button', { name: 'Giao Bút bi xanh' }));
+    await waitFor(() => expect(count(f, '/api/admin/requests/r-1')).toBe(2));
+    expect(await within(lines).findByText('đã hủy 1')).toBeInTheDocument();
+    expect(within(lines).getByLabelText(/^Thực giao Bút bi xanh/)).toHaveValue(1);
+  });
+
+  it('Giao tất cả lỗi cả phiếu (PERIOD_NOT_LOCKED) → vẫn tải lại phiếu', async () => {
+    const f = stub({ deliverAll: () => jsonResponse(409, { code: 'PERIOD_NOT_LOCKED', message: 'x' }) });
+    await openPage();
+    await userEvent.click(screen.getByRole('button', { name: 'Giao tất cả' }));
+    await screen.findByRole('alert');
+    await waitFor(() => expect(count(f, '/api/admin/requests/r-1')).toBe(2));
+  });
+
   it('409 PERIOD_NOT_LOCKED → "Kỳ chưa khóa — giao sau 00:00 ngày 11"', async () => {
     stub({ deliverAll: () => jsonResponse(409, { code: 'PERIOD_NOT_LOCKED', message: 'x' }) });
     await openPage();
