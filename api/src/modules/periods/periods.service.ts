@@ -44,7 +44,7 @@ export class PeriodsService {
     return row;
   }
 
-  // now truyền vào để một request dùng đúng một mốc (openPeriod rồi isOpen không lệch nhau ở ranh giới)
+  // now truyền vào để một request dùng đúng một mốc với các luật kỳ khác ở ranh giới
   async openPeriod(
     tx: Executor = this.db,
     now: Date = this.clock.now(),
@@ -62,15 +62,6 @@ export class PeriodsService {
       if (period.deadline > now) return period;
     }
     throw new Error(`Không tìm được kỳ mở sau ${ym}`);
-  }
-
-  async isOpen(
-    ym: string,
-    tx: Executor = this.db,
-    now: Date = this.clock.now(),
-  ): Promise<boolean> {
-    const row = await this.find(ym, tx);
-    return row !== null && now < row.deadline;
   }
 
   // Tổng hợp cần cả headcount đã chụp lúc khóa kỳ
