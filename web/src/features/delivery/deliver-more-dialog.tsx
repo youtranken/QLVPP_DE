@@ -15,11 +15,12 @@ interface Props {
   line: BacklogLine;
   onDone: () => Promise<unknown>;
   onNotice: (code: string) => void;
+  onStale: () => void;
   onClose: () => void;
 }
 
 // Dòng ngoài danh mục không có tồn kho (stock_qty null) nên chỉ giới hạn bởi phần còn lại
-export function DeliverMoreDialog({ line, onDone, onNotice, onClose }: Props) {
+export function DeliverMoreDialog({ line, onDone, onNotice, onStale, onClose }: Props) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const f = useBacklogFormat();
@@ -42,8 +43,11 @@ export function DeliverMoreDialog({ line, onDone, onNotice, onClose }: Props) {
         await onDone();
       } catch (err) {
         const failure = lineFailure(err, t);
-        if (failure.kind === 'request') onNotice(failure.code);
-        else if (failure.limit !== undefined) setCap({ limit: failure.limit, message: failure.message });
+        if (failure.kind === 'request') return onNotice(failure.code);
+        // Server kiểm expected_delivered_qty trước: DELIVER_EXCEEDS_QTY nghĩa là phần còn lại đổi ở nơi khác
+        if (failure.stale && failure.limit === 0) return onNotice('NOTHING_LEFT');
+        if (failure.stale) onStale();
+        if (failure.limit !== undefined) setCap({ limit: failure.limit, message: failure.message });
         else setFailed(failure.message);
       }
     });

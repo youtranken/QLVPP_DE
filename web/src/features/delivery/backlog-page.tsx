@@ -7,10 +7,11 @@ import { BacklogGroup, type LineAction } from './backlog-group';
 import { CancelDialog } from './cancel-dialog';
 import { DeliverMoreDialog } from './deliver-more-dialog';
 import { DeliveriesDrawer } from './deliveries-drawer';
-import { noticeOf } from './delivery-errors';
 import { useRefreshAfterDelivery } from './delivery.api';
 import '@/features/admin/admin.css';
 import './delivery.css';
+
+const NOTICES = new Set(['STALE_UPDATE', 'PERIOD_NOT_LOCKED', 'LINE_NOT_REVIEWED', 'LINE_REJECTED', 'LINE_NOT_FOUND', 'REQUEST_NOT_FOUND', 'NOTHING_LEFT']);
 
 const BY_LABEL: Record<BacklogBy, string> = { item: 'delivery.backlog.byItem', person: 'delivery.backlog.byPerson' };
 
@@ -43,8 +44,11 @@ export function BacklogPage() {
   // Lỗi trạng thái (vừa giao/hủy ở nơi khác, kỳ chưa khóa…): bản đang xem đã cũ → tải lại cả danh sách
   const onNotice = (code: string) => {
     setNotice(code);
-    if (open) void refresh(open.line.request_id);
+    reloadOpen();
     close();
+  };
+  const reloadOpen = () => {
+    if (open) void refresh(open.line.request_id);
   };
   const act = (action: LineAction, line: BacklogLine) => {
     setNotice(null);
@@ -59,7 +63,7 @@ export function BacklogPage() {
       </div>
       {notice && (
         <p role="alert" className="alert alert--warn">
-          {noticeOf(notice, t)}
+          {t(`delivery.backlog.notice.${NOTICES.has(notice) ? notice : 'UNKNOWN'}`)}
         </p>
       )}
       {query.isError && <LoadError onRetry={() => void query.refetch()} />}
@@ -72,7 +76,7 @@ export function BacklogPage() {
       {groups.map((g) => (
         <BacklogGroup key={g.key} group={g} by={by} onAction={act} />
       ))}
-      {open?.action === 'deliver' && <DeliverMoreDialog line={open.line} onDone={done} onNotice={onNotice} onClose={close} />}
+      {open?.action === 'deliver' && <DeliverMoreDialog line={open.line} onDone={done} onNotice={onNotice} onStale={reloadOpen} onClose={close} />}
       {open?.action === 'cancel' && <CancelDialog line={open.line} onDone={done} onNotice={onNotice} onClose={close} />}
       {open?.action === 'history' && <DeliveriesDrawer line={open.line} onClose={close} />}
     </div>

@@ -52,6 +52,12 @@ describe('DeliveriesDrawer — lịch sử đợt giao của một dòng (chỉ 
     expect(screen.queryByText(/^Đã hủy/)).toBeNull();
   });
 
+  it('đã hủy mà không có ghi chú → "Đã hủy 2", không có gạch nối thừa', async () => {
+    stub(deliveriesOf({ cancelled_qty: 2, cancel_note: null }));
+    renderWithI18n(<DeliveriesDrawer line={backlogLine()} onClose={() => {}} />);
+    expect(await screen.findByText('Đã hủy 2')).toBeInTheDocument();
+  });
+
   it('tải lỗi → báo lỗi có nút thử lại, không nuốt thành rỗng', async () => {
     stub(() => jsonResponse(500, {}));
     renderWithI18n(<DeliveriesDrawer line={backlogLine()} onClose={() => {}} />);

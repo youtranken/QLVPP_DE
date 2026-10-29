@@ -60,6 +60,16 @@ const delivery: Messages<typeof vi> = {
       outOfStock: 'Out of stock',
       history: 'History',
       cancel: 'Cancel rest…',
+      notice: {
+        STALE_UPDATE: 'This line was just delivered elsewhere — the list has been reloaded.',
+        PERIOD_NOT_LOCKED: 'The period is not locked yet — deliver after 00:00 on the 11th.',
+        LINE_NOT_REVIEWED: 'This line has not been reviewed — the list has been reloaded.',
+        LINE_REJECTED: 'This line was just rejected — the list has been reloaded.',
+        LINE_NOT_FOUND: 'This line is no longer on the request — the list has been reloaded.',
+        REQUEST_NOT_FOUND: 'Request not found — the list has been reloaded.',
+        NOTHING_LEFT: 'Nothing is owed on this line any more (cancelled or changed elsewhere) — the list has been reloaded.',
+        UNKNOWN: 'Could not complete — the list has been reloaded, try again.',
+      },
       deliver: {
         title: 'Deliver more {{name}} to {{person}}',
         meta: '{{month}} · {{n}} owed',
@@ -84,6 +94,7 @@ const delivery: Messages<typeof vi> = {
         round: '{{time}} · {{qty}} · {{actor}}',
         empty: 'No deliveries yet',
         cancelled: 'Cancelled {{n}} — {{reason}}',
+        cancelledNoReason: 'Cancelled {{n}}',
       },
     },
     notice: {

@@ -36,7 +36,6 @@
   .dl-form { justify-items: start; }
   .dl-request-foot .btn { width: 100%; }
 }
-/* Còn nợ — mỗi nhóm (món/người) một khung, dòng có ba nút giao bổ sung / lịch sử / hủy nợ */
 .bl-switch { display: inline-flex; gap: 6px; }
 .bl-by[aria-pressed='true'] { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-ink); }
 .bl-group { padding: 0 16px; }

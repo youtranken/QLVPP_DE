@@ -60,10 +60,20 @@ describe('BacklogPage — trang Còn nợ', () => {
     expect(screen.getByTestId('location-search')).toHaveTextContent('?by=item');
   });
 
-  it('mở thẳng ?by=person → nhóm theo người; ?by=lạ → theo món', async () => {
+  it('mở thẳng ?by=person → nhóm theo người, "Theo người" aria-pressed', async () => {
+    const f = stubBacklog([PEN_DUC]);
+    openPage('/admin/backlog?by=person');
+    await groupOf('Phạm Văn Đức');
+    expect(screen.getByRole('button', { name: 'Theo người' })).toHaveAttribute('aria-pressed', 'true');
+    expect(callsTo(f, '/api/admin/backlog?by=person')).toHaveLength(1);
+    expect(callsTo(f, '/api/admin/backlog?by=item')).toHaveLength(0);
+  });
+
+  it('mở thẳng ?by=lạ → theo món', async () => {
     const f = stubBacklog([PEN_DUC]);
     openPage('/admin/backlog?by=xyz');
     await groupOf('Bút bi xanh');
+    expect(screen.getByRole('button', { name: 'Theo món' })).toHaveAttribute('aria-pressed', 'true');
     expect(callsTo(f, '/api/admin/backlog?by=item')).toHaveLength(1);
   });
 
@@ -130,9 +140,51 @@ describe('BacklogPage — trang Còn nợ', () => {
     await userEvent.click(within(await rowOf('Bút bi xanh', 'Phạm Văn Đức')).getByRole('button', { name: 'Hủy nợ…' }));
     await userEvent.type(screen.getByLabelText('Lý do hủy nợ'), 'Hết mẫu');
     await userEvent.click(screen.getByRole('button', { name: 'Hủy nợ' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Dòng vừa được giao ở nơi khác — số đã cập nhật');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Dòng vừa được giao ở nơi khác — đã tải lại danh sách.');
     expect(screen.queryByRole('dialog')).toBeNull();
     await waitFor(() => expect(callsTo(f, '/api/admin/backlog?by=item').length).toBeGreaterThan(1));
+  });
+
+  it('giao bổ sung bị DELIVER_EXCEEDS_QTY {remaining: 0} (vừa hủy nợ ở nơi khác) → hộp đóng, báo ở đầu trang, tải lại → dòng biến mất', async () => {
+    const f = stubBacklog([PEN_DUC], {
+      deliver: () => jsonResponse(400, { code: 'DELIVER_EXCEEDS_QTY', remaining: 0 }),
+      elsewhere: (l) => ({ ...l, cancelled_qty: l.remaining_qty, remaining_qty: 0 }),
+    });
+    openPage();
+    await userEvent.click(within(await rowOf('Bút bi xanh', 'Phạm Văn Đức')).getByRole('button', { name: 'Giao bổ sung…' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Giao' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Dòng không còn nợ (vừa hủy hoặc sửa ở nơi khác) — đã tải lại danh sách.');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Bút bi xanh' })).toBeNull());
+    expect(callsTo(f, '/api/admin/backlog?by=item').length).toBeGreaterThan(1);
+  });
+
+  it('giao bổ sung bị DELIVER_EXCEEDS_QTY {remaining: 1} → hộp ở lại, "Chỉ còn 1 cần giao" gắn ô, danh sách tải lại hiện "còn 1"', async () => {
+    const f = stubBacklog([PEN_DUC], {
+      deliver: (_l, qty) => (qty > 1 ? jsonResponse(400, { code: 'DELIVER_EXCEEDS_QTY', remaining: 1 }) : jsonResponse(200, {})),
+      elsewhere: (l) => ({ ...l, qty: 3, remaining_qty: 1 }),
+    });
+    openPage();
+    const row = await rowOf('Bút bi xanh', 'Phạm Văn Đức');
+    await userEvent.click(within(row).getByRole('button', { name: 'Giao bổ sung…' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Giao' }));
+    const dialog = screen.getByRole('dialog', { name: 'Giao bổ sung Bút bi xanh cho Phạm Văn Đức' });
+    await waitFor(() => expect(within(dialog).getByText('Chỉ còn 1 cần giao')).toBeInTheDocument());
+    await waitFor(() => expect(callsTo(f, '/api/admin/backlog?by=item').length).toBeGreaterThan(1));
+    await waitFor(() => expect(within(row).getByText('còn 1')).toBeInTheDocument());
+    expect(screen.queryByRole('alert')).toBeNull();
+    fireEvent.change(within(dialog).getByLabelText('Số lượng giao'), { target: { value: '1' } });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Giao' }));
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Bút bi xanh' })).toBeNull());
+  });
+
+  it('báo lỗi trạng thái theo câu của trang danh sách: LINE_REJECTED → "… — đã tải lại danh sách."', async () => {
+    stubBacklog([PEN_DUC], { cancel: () => jsonResponse(409, { code: 'LINE_REJECTED' }) });
+    openPage();
+    await userEvent.click(within(await rowOf('Bút bi xanh', 'Phạm Văn Đức')).getByRole('button', { name: 'Hủy nợ…' }));
+    await userEvent.type(screen.getByLabelText('Lý do hủy nợ'), 'Hết mẫu');
+    await userEvent.click(screen.getByRole('button', { name: 'Hủy nợ' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Dòng vừa bị từ chối — đã tải lại danh sách.');
   });
 
   it('"Lịch sử" mở ngăn lịch sử đợt giao của dòng', async () => {

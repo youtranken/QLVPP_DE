@@ -57,6 +57,16 @@ const delivery = {
       outOfStock: 'Hết hàng',
       history: 'Lịch sử',
       cancel: 'Hủy nợ…',
+      notice: {
+        STALE_UPDATE: 'Dòng vừa được giao ở nơi khác — đã tải lại danh sách.',
+        PERIOD_NOT_LOCKED: 'Kỳ chưa khóa — giao sau 00:00 ngày 11.',
+        LINE_NOT_REVIEWED: 'Dòng chưa được duyệt — đã tải lại danh sách.',
+        LINE_REJECTED: 'Dòng vừa bị từ chối — đã tải lại danh sách.',
+        LINE_NOT_FOUND: 'Dòng không còn trong phiếu — đã tải lại danh sách.',
+        REQUEST_NOT_FOUND: 'Không tìm thấy phiếu — đã tải lại danh sách.',
+        NOTHING_LEFT: 'Dòng không còn nợ (vừa hủy hoặc sửa ở nơi khác) — đã tải lại danh sách.',
+        UNKNOWN: 'Không thực hiện được — đã tải lại danh sách, thử lại.',
+      },
       deliver: {
         title: 'Giao bổ sung {{name}} cho {{person}}',
         meta: '{{month}} · còn {{n}}',
@@ -81,6 +91,7 @@ const delivery = {
         round: '{{time}} · {{qty}} · {{actor}}',
         empty: 'Chưa giao đợt nào',
         cancelled: 'Đã hủy {{n}} — {{reason}}',
+        cancelledNoReason: 'Đã hủy {{n}}',
       },
     },
     notice: {

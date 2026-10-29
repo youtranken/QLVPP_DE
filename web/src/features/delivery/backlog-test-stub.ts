@@ -6,6 +6,8 @@ import { itemGroup, personGroup } from './backlog-fixtures';
 interface Handlers {
   deliver?: (line: BacklogLine, qty: number) => Response | Promise<Response>;
   cancel?: (line: BacklogLine) => Response | Promise<Response>;
+  // Đổi ở nơi khác (hủy nợ/sửa qty) xảy ra trước khi request bị từ chối
+  elsewhere?: (line: BacklogLine) => BacklogLine;
 }
 
 // Server giả giữ trạng thái: giao/hủy đổi phần còn lại, lần tải lại bỏ dòng hết nợ như GET admin/backlog
@@ -31,6 +33,7 @@ export function stubBacklog(initial: BacklogLine[], handlers: Handlers = {}) {
       const qty = JSON.parse(String(init?.body)).qty as number;
       const res = handlers.deliver ? await handlers.deliver(line, qty) : jsonResponse(200, {});
       if (res.ok) update(line.line_id, (l) => ({ ...l, delivered_qty: l.delivered_qty + qty, remaining_qty: l.remaining_qty - qty }));
+      else if (handlers.elsewhere) update(line.line_id, handlers.elsewhere);
       return res;
     }
     if (u.pathname.endsWith('/cancel-remaining') && line) {

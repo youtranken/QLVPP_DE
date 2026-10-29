@@ -22,12 +22,13 @@ const posts = (f: ReturnType<typeof stub>) => f.mock.calls.filter((c) => c[0] ==
 function renderDialog(line: BacklogLine = backlogLine()) {
   const onDone = vi.fn(() => Promise.resolve());
   const onNotice = vi.fn();
+  const onStale = vi.fn();
   renderWithI18n(
     <MeContext.Provider value={makeMe('admin')}>
-      <DeliverMoreDialog line={line} onDone={onDone} onNotice={onNotice} onClose={() => {}} />
+      <DeliverMoreDialog line={line} onDone={onDone} onNotice={onNotice} onStale={onStale} onClose={() => {}} />
     </MeContext.Provider>,
   );
-  return { onDone, onNotice };
+  return { onDone, onNotice, onStale };
 }
 
 const qtyBox = () => screen.getByLabelText('Số lượng giao');
@@ -88,7 +89,7 @@ describe('DeliverMoreDialog — giao bổ sung một dòng còn nợ', () => {
   });
 
   it('server DELIVER_EXCEEDS_QTY {remaining: 1} → "Chỉ còn 1 cần giao" gắn ô, nút vô hiệu tới khi sửa về 1', async () => {
-    const { onDone, onNotice } = renderDialog();
+    const { onDone, onNotice, onStale } = renderDialog();
     stub(() => jsonResponse(400, { code: 'DELIVER_EXCEEDS_QTY', remaining: 1 }));
     await userEvent.click(giao());
     await waitFor(() => expect(noteOf(qtyBox())).toBe('Chỉ còn 1 cần giao'));
@@ -97,6 +98,7 @@ describe('DeliverMoreDialog — giao bổ sung một dòng còn nợ', () => {
     expect(giao()).toBeEnabled();
     expect(onDone).not.toHaveBeenCalled();
     expect(onNotice).not.toHaveBeenCalled();
+    expect(onStale).toHaveBeenCalledOnce();
   });
 
   it('server STOCK_INSUFFICIENT {available: 1} → "Chỉ còn 1" gắn ô', async () => {

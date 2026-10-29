@@ -55,7 +55,11 @@ export function DeliveriesDrawer({ line, onClose }: { line: BacklogLine; onClose
           </ol>
         )}
         {head && head.cancelled_qty > 0 && (
-          <p className="bl-cancelled">{t('delivery.backlog.deliveries.cancelled', { n: head.cancelled_qty, reason: head.cancel_note ?? '' })}</p>
+          <p className="bl-cancelled">
+            {head.cancel_note
+              ? t('delivery.backlog.deliveries.cancelled', { n: head.cancelled_qty, reason: head.cancel_note })
+              : t('delivery.backlog.deliveries.cancelledNoReason', { n: head.cancelled_qty })}
+          </p>
         )}
       </div>
     </Drawer>
