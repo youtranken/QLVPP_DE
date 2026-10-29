@@ -11,7 +11,8 @@ import profile from './profile';
 import request from './request';
 import summary from './summary';
 import review from './review';
+import notifications from './notifications';
 
-const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review };
+const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review, ...notifications };
 
 export default en;

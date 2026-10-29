@@ -69,4 +69,15 @@ describe('MemberShell', () => {
     const nav = screen.getByRole('navigation', { name: 'Điều hướng chính' });
     expect(within(nav).getByRole('link', { name: 'Lịch sử' })).toHaveAttribute('aria-current', 'page');
   });
+
+  it.each([390, 1280])('%i px: chuông thông báo nằm ở thanh trên, thanh dưới vẫn 3 mục', (width) => {
+    mockViewport(width);
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { items: [], next_cursor: null, unread_count: 3 }))));
+    renderApp(makeMe('member'), '/history');
+    expect(screen.getByRole('banner')).toContainElement(screen.getByRole('button', { name: /^Thông báo, \d+ chưa đọc$/ }));
+    if (width === 390) {
+      const nav = screen.getByRole('navigation', { name: 'Điều hướng chính' });
+      expect(within(nav).getAllByRole('link')).toHaveLength(3);
+    }
+  });
 });

@@ -45,7 +45,7 @@ describe('Trang Tôi', () => {
     renderApp(makeMe('member'), '/me');
     await userEvent.click(screen.getByRole('button', { name: 'Đăng xuất' }));
     await vi.waitFor(() => expect(navigateTo).toHaveBeenCalledWith('/'));
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const [url, init] = fetchMock.mock.calls.find(([u]) => u === '/api/auth/logout') as [string, RequestInit];
     expect(url).toBe('/api/auth/logout');
     expect(init.method).toBe('POST');
     expect((init.headers as Record<string, string>)['X-CSRF-Token']).toBe('csrf-1');

@@ -71,4 +71,11 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeInTheDocument();
     expect(screen.queryByText('Sắp có')).toBeNull();
   });
+
+  it('Hành chính thấy chuông thông báo ở đầu trang quản lý', () => {
+    mockViewport(1280);
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { items: [], next_cursor: null, unread_count: 2 }))));
+    renderApp(makeMe('admin'), '/admin/summary');
+    expect(screen.getByRole('banner')).toContainElement(screen.getByRole('button', { name: /^Thông báo, \d+ chưa đọc$/ }));
+  });
 });

@@ -39,7 +39,7 @@ const rowOf = (name: string) => screen.getByText(name).closest('tr') as HTMLElem
 describe('Trang Nhóm món', () => {
   it('liệt kê cả nhóm đã ngừng (?all=1) kèm nhãn "đã ngừng"', async () => {
     const fetchMock = await openCategories();
-    expect(fetchMock.mock.calls[0][0]).toBe('/api/item-categories?all=1');
+    expect(fetchMock.mock.calls.map((c) => c[0])).toContain('/api/item-categories?all=1');
     expect(within(rowOf('Cũ')).getByText('đã ngừng')).toBeInTheDocument();
   });
 

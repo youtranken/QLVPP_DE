@@ -66,3 +66,8 @@ export const IconDocCopy = (p: IconProps) => (
     <path d="M16 8V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h2M11 13h6M11 17h4" />
   </svg>
 );
+export const IconBell = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7M10 20a2 2 0 0 0 4 0" />
+  </svg>
+);

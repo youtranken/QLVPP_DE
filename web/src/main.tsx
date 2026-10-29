@@ -5,6 +5,7 @@ import '@/css/tokens.css';
 import '@/css/base.css';
 import '@/css/member.css';
 import '@/css/admin.css';
+import '@/features/notifications/notifications.css';
 import '@/lib/i18n';
 import App from '@/App.tsx';
 import { queryClient } from '@/lib/api-client';

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
+import { NotificationBell } from '@/features/notifications/notification-bell';
 import { Dialog, DialogTitle } from '@/ui/dialog';
 import { IconMenu } from '@/ui/icons';
 import { ADMIN_PAGES } from '@/shell/admin-nav';
@@ -46,6 +47,8 @@ export function AdminShell() {
             </button>
           )}
           <h1>{t(titleKey)}</h1>
+          <span className="sp" />
+          <NotificationBell />
         </header>
         <main id="main" className="a-page">
           <Outlet />
