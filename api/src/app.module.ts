@@ -30,11 +30,15 @@ import { RequestsModule } from './modules/requests/requests.module';
             : undefined,
       },
     }),
-    // forRootAsync: đọc env lúc tạo app (test đặt THROTTLE_IP_PER_MIN nhỏ trước createTestApp)
+    // forRootAsync: đọc env lúc tạo app (test đặt THROTTLE_*_PER_MIN nhỏ trước createTestApp)
     ThrottlerModule.forRootAsync({
       useFactory: () => ({
         throttlers: [
-          { name: 'default', ttl: 60_000, limit: 300 },
+          {
+            name: 'default',
+            ttl: 60_000,
+            limit: Number(process.env.THROTTLE_USER_PER_MIN) || 300,
+          },
           {
             name: IP_THROTTLER,
             ttl: 60_000,
