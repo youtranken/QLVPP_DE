@@ -51,6 +51,24 @@ export function stockFixture() {
         [stockQty],
       )
     ).rows[0].id;
+  const itemRow = async (id: string) =>
+    (
+      (await admin(http().get('/api/admin/items')).expect(200)).body as Array<{
+        id: string;
+        stock_qty: number;
+        restock_level: number | null;
+        stock_state: string;
+      }>
+    ).find((i) => i.id === id)!;
+  const lowIds = async () =>
+    (
+      (await admin(http().get('/api/admin/stock/low')).expect(200))
+        .body as Array<{ id: string }>
+    ).map((i) => i.id);
+  const issueTo = async (id: string, target: number) => {
+    const qty = (await qtyOf(id)).stock_qty - target;
+    await issue(id, { qty, reason: 'dùng' }).expect(201);
+  };
   const movements = async (id: string) =>
     (await admin(http().get(`/api/admin/items/${id}/movements`)).expect(200))
       .body as { items: Movement[]; next_cursor: string | null };
@@ -86,6 +104,9 @@ export function stockFixture() {
     qtyOf,
     newItem,
     movements,
+    itemRow,
+    lowIds,
+    issueTo,
     usageHook,
     pool: () => pool,
   };

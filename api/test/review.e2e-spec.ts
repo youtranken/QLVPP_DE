@@ -88,6 +88,23 @@ describe('admin/review: hàng chờ, nhận, từ chối', () => {
     });
   });
 
+  it('note 501 ký tự → 400 VALIDATION {fields: [note]}, dòng vẫn pending; 500 ký tự → 200 rejected, lưu đủ 500', async () => {
+    const { line } = await customLine();
+    const long = await review(line.id, {
+      action: 'reject',
+      note: 'n'.repeat(501),
+    }).expect(400);
+    expect(long.body).toMatchObject({ code: 'VALIDATION', fields: ['note'] });
+    const res = await review(line.id, {
+      action: 'reject',
+      note: 'n'.repeat(500),
+    }).expect(200);
+    expect(res.body.line).toMatchObject({
+      review_status: 'rejected',
+      review_note: 'n'.repeat(500),
+    });
+  });
+
   it('review đổi updated_at phiếu: tab member giữ mốc cũ lưu → 409 STALE_UPDATE; request_updated_at khớp DB', async () => {
     const { line } = await customLine();
     const got = await getMine();

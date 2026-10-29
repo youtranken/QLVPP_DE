@@ -40,6 +40,40 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
       });
     });
 
+    it("expected_updated_at 'hôm qua' / ngày không có thật → 400 VALIDATION {fields: [expected_updated_at]}", async () => {
+      const r = await seed([{ item_id: item, qty: 2 }]);
+      for (const stamp of ['hôm qua', '2026-02-30T00:00:00Z']) {
+        const res = await adminPut(r.id, {
+          lines: keep(r),
+          expected_updated_at: stamp,
+        }).expect(400);
+        expect(res.body).toMatchObject({
+          code: 'VALIDATION',
+          fields: ['expected_updated_at'],
+        });
+      }
+    });
+
+    it('reason 501 ký tự → 400 VALIDATION {fields: [reason]}; 500 ký tự → 200, audit lưu đủ 500', async () => {
+      const r = await seed([{ item_id: item, qty: 2 }]);
+      at(AFTER_DEADLINE);
+      const body = {
+        lines: [{ id: r.lines[0].id, qty: 3 }],
+        expected_updated_at: r.updated_at,
+      };
+      const long = await adminPut(r.id, {
+        ...body,
+        reason: 'r'.repeat(501),
+      }).expect(400);
+      expect(long.body).toMatchObject({
+        code: 'VALIDATION',
+        fields: ['reason'],
+      });
+      await adminPut(r.id, { ...body, reason: 'r'.repeat(500) }).expect(200);
+      const [detail] = await auditOf('request.updated', r.id);
+      expect(detail).toMatchObject({ reason: 'r'.repeat(500) });
+    });
+
     it('phiếu không có → 404 REQUEST_NOT_FOUND', async () => {
       const res = await adminPut('00000000-0000-4000-8000-000000000000', {
         lines: [],

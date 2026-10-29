@@ -2,28 +2,9 @@ import { stockFixture } from './stock.fixture';
 
 describe('kho: mốc sắp hết và tồn đầu kỳ (Postgres thật)', () => {
   const f = stockFixture();
-  const { http, admin, stock, issue, qtyOf, newItem } = f;
+  const { stock, newItem, itemRow: row, lowIds: low, issueTo } = f;
 
   it('sắp hết = đã dùng 80 % tồn sau lần nhập gần nhất; adjust không đổi mốc', async () => {
-    const low = async () =>
-      (
-        (await admin(http().get('/api/admin/stock/low')).expect(200))
-          .body as Array<{ id: string }>
-      ).map((i) => i.id);
-    const row = async (id: string) =>
-      (
-        (await admin(http().get('/api/admin/items')).expect(200))
-          .body as Array<{
-          id: string;
-          stock_qty: number;
-          restock_level: number | null;
-          stock_state: string;
-        }>
-      ).find((i) => i.id === id)!;
-    const issueTo = async (id: string, target: number) => {
-      const qty = (await qtyOf(id)).stock_qty - target;
-      await issue(id, { qty, reason: 'dùng' }).expect(201);
-    };
     const id = await newItem();
     expect(await row(id)).toMatchObject({
       restock_level: null,
@@ -49,6 +30,8 @@ describe('kho: mốc sắp hết và tồn đầu kỳ (Postgres thật)', () =>
       stock_state: 'ok',
     });
     expect(await low()).not.toContain(id);
+    await issueTo(id, 6);
+    expect(await low()).not.toContain(id);
     await issueTo(id, 5);
     expect(await low()).toContain(id);
 
@@ -70,6 +53,31 @@ describe('kho: mốc sắp hết và tồn đầu kỳ (Postgres thật)', () =>
     expect(await low()).toContain(id);
     await f.pool().query('UPDATE items SET active = false WHERE id = $1', [id]);
     expect(await low()).not.toContain(id);
+  });
+
+  it('restock_level 4 → mốc floor(0,8) = 0: tồn 1 vẫn ok, không bao giờ sắp hết; tồn 0 = out', async () => {
+    const id = await newItem();
+    await stock(id, { delta: 4, reason: 'purchase' }).expect(201);
+    await issueTo(id, 1);
+    expect(await row(id)).toMatchObject({
+      stock_qty: 1,
+      restock_level: 4,
+      stock_state: 'ok',
+    });
+    expect(await low()).not.toContain(id);
+    await issueTo(id, 0);
+    expect((await row(id)).stock_state).toBe('out');
+    expect(await low()).not.toContain(id);
+  });
+
+  it('restock_level 5 → mốc 1: tồn 2 ok, tồn 1 sắp hết', async () => {
+    const id = await newItem();
+    await stock(id, { delta: 5, reason: 'purchase' }).expect(201);
+    await issueTo(id, 2);
+    expect(await low()).not.toContain(id);
+    await issueTo(id, 1);
+    expect(await low()).toContain(id);
+    expect((await row(id)).stock_state).toBe('low');
   });
 
   it('tồn đầu kỳ qua adjust: đặt mốc khi chưa có; giữ mốc đã có; adjust âm không đặt mốc', async () => {

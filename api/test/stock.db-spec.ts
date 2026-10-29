@@ -3,7 +3,17 @@ import type { Movement } from './stock.fixture';
 
 describe('kho: nhập, điều chỉnh, xuất lẻ, sổ cái (Postgres thật)', () => {
   const f = stockFixture();
-  const { http, admin, stock, issue, qtyOf, newItem, movements, usageHook } = f;
+  const {
+    http,
+    admin,
+    stock,
+    issue,
+    qtyOf,
+    newItem,
+    movements,
+    itemRow,
+    usageHook,
+  } = f;
   let itemId: string;
 
   beforeAll(async () => {
@@ -56,19 +66,7 @@ describe('kho: nhập, điều chỉnh, xuất lẻ, sổ cái (Postgres thật)
     expect((await qtyOf(itemId)).stock_qty).toBe(100);
   });
 
-  it('adjust âm quá tồn → 409 STOCK_INSUFFICIENT {available: 100}', async () => {
-    const res = await stock(itemId, {
-      delta: -101,
-      reason: 'adjust',
-      note: 'kiểm kê',
-    }).expect(409);
-    expect(res.body).toMatchObject({
-      code: 'STOCK_INSUFFICIENT',
-      available: 100,
-    });
-  });
-
-  it('adjust về đúng 0: tồn 100, −101 → 409 STOCK_INSUFFICIENT {available: 100}; −100 → 201 tồn 0', async () => {
+  it('adjust về đúng 0: tồn 100, −101 → 409 STOCK_INSUFFICIENT {available: 100}; −100 → 201 tồn 0, stock_state out', async () => {
     const id = await newItem();
     await stock(id, { delta: 100, reason: 'purchase' }).expect(201);
     const over = await stock(id, {
@@ -86,7 +84,59 @@ describe('kho: nhập, điều chỉnh, xuất lẻ, sổ cái (Postgres thật)
       note: 'kiểm kê',
     }).expect(201);
     expect(res.body).toMatchObject({ stock_qty: 0 });
-    expect((await qtyOf(id)).stock_qty).toBe(0);
+    expect(await itemRow(id)).toMatchObject({
+      stock_qty: 0,
+      restock_level: 100,
+      stock_state: 'out',
+    });
+  });
+
+  it('note điều chỉnh 501 ký tự → 400 VALIDATION {fields: [note]}; 500 ký tự → 201, sổ cái lưu đủ', async () => {
+    const id = await newItem(10);
+    const long = await stock(id, {
+      delta: -1,
+      reason: 'adjust',
+      note: 'n'.repeat(501),
+    }).expect(400);
+    expect(long.body).toMatchObject({ code: 'VALIDATION', fields: ['note'] });
+    await stock(id, {
+      delta: -1,
+      reason: 'adjust',
+      note: 'n'.repeat(500),
+    }).expect(201);
+    expect((await movements(id)).items[0].note).toBe('n'.repeat(500));
+  });
+
+  it('xuất lẻ: reason chỉ khoảng trắng → 400 REASON_REQUIRED; reason 501 → VALIDATION {fields: [reason]}; 500 → 201', async () => {
+    const id = await newItem(10);
+    const blank = await issue(id, { qty: 1, reason: '   ' }).expect(400);
+    expect(blank.body).toMatchObject({ code: 'REASON_REQUIRED' });
+    const long = await issue(id, { qty: 1, reason: 'r'.repeat(501) }).expect(
+      400,
+    );
+    expect(long.body).toMatchObject({ code: 'VALIDATION', fields: ['reason'] });
+    await issue(id, { qty: 1, reason: 'r'.repeat(500) }).expect(201);
+    expect((await qtyOf(id)).stock_qty).toBe(9);
+  });
+
+  it('xuất lẻ: recipient_sub 201 ký tự → 400 VALIDATION {fields: [recipient_sub]}; 200 ký tự sub lạ → 404 USER_NOT_FOUND (qua DTO)', async () => {
+    const id = await newItem(10);
+    const long = await issue(id, {
+      qty: 1,
+      recipient_sub: 's'.repeat(201),
+      reason: 'x',
+    }).expect(400);
+    expect(long.body).toMatchObject({
+      code: 'VALIDATION',
+      fields: ['recipient_sub'],
+    });
+    const atMax = await issue(id, {
+      qty: 1,
+      recipient_sub: 's'.repeat(200),
+      reason: 'x',
+    }).expect(404);
+    expect(atMax.body).toMatchObject({ code: 'USER_NOT_FOUND' });
+    expect((await qtyOf(id)).stock_qty).toBe(10);
   });
 
   it('issue 3 cho user active → tồn 97, movement issue có recipient_sub; người nhận thấy ở me/issues', async () => {

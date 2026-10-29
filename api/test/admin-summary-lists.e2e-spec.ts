@@ -100,6 +100,28 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
     expect(res.body).toMatchObject({ code: 'VALIDATION' });
   });
 
+  it('cursor 1000 ký tự qua DTO (giải mã hỏng → VALIDATION "cursor không hợp lệ"); 1001 ký tự → VALIDATION {fields: [cursor]}', async () => {
+    const atMax = await asAdmin(
+      `/periods/${YM}/requests?by=person&cursor=${'c'.repeat(1000)}`,
+    ).expect(400);
+    expect(atMax.body).toMatchObject({
+      code: 'VALIDATION',
+      message: 'cursor không hợp lệ',
+    });
+    const over = await asAdmin(
+      `/periods/${YM}/requests?by=person&cursor=${'c'.repeat(1001)}`,
+    ).expect(400);
+    expect(over.body).toMatchObject({ code: 'VALIDATION', fields: ['cursor'] });
+  });
+
+  it('q 100 ký tự → 200 (không khớp ai); 101 ký tự → 400 VALIDATION {fields: [q]}', async () => {
+    expect(await requestIds(`q=${'q'.repeat(100)}`)).toEqual([]);
+    const res = await asAdmin(
+      `/periods/${YM}/requests?by=person&q=${'q'.repeat(101)}`,
+    ).expect(400);
+    expect(res.body).toMatchObject({ code: 'VALIDATION', fields: ['q'] });
+  });
+
   it('filter=custom_pending chỉ phiếu có dòng chờ xem; pending_delivery bỏ dòng pending/rejected/đã hủy nợ', async () => {
     expect(await requestIds('filter=custom_pending')).toEqual([ids.r1]);
     expect(await requestIds('filter=pending_delivery')).toEqual([ids.r2]);
