@@ -1,10 +1,7 @@
-import {
-  BadRequestException,
-  INestApplication,
-  ValidationPipe,
-} from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { GlobalExceptionFilter } from './common/global-exception.filter';
+import { validationException } from './common/validation-error';
 
 // Dùng chung main.ts và test e2e để e2e không trôi khỏi production; rawBody đặt lúc tạo app (webhook HMAC)
 export function configureApp(app: INestApplication): INestApplication {
@@ -18,14 +15,7 @@ export function configureApp(app: INestApplication): INestApplication {
     new ValidationPipe({
       whitelist: true,
       transform: true,
-      exceptionFactory: (errors) =>
-        new BadRequestException({
-          code: 'VALIDATION',
-          message: errors
-            .flatMap((e) => Object.values(e.constraints ?? {}))
-            .join('; '),
-          fields: errors.map((e) => e.property),
-        }),
+      exceptionFactory: validationException,
     }),
   );
   app.useGlobalFilters(new GlobalExceptionFilter());

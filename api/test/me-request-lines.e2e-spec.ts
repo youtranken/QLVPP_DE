@@ -97,12 +97,48 @@ describe('me/request: lỗi theo dòng, dòng chỉ đọc', () => {
       },
     );
 
-    it('dòng ngoài DM tên 121 ký tự → 400 VALIDATION (lỗi DTO lồng: fields [lines]), không tạo phiếu', async () => {
-      const res = await save([custom({ custom_name: 'x'.repeat(121) })]).expect(
-        400,
-      );
-      expect(res.body).toMatchObject({ code: 'VALIDATION', fields: ['lines'] });
+    it('dòng ngoài DM tên 121 ký tự → 400 VALIDATION {fields: [custom_name], line_index: 1, message}, không tạo phiếu', async () => {
+      const ok = { item_id: await newItem(), qty: 1 };
+      const res = await save([
+        ok,
+        custom({ custom_name: 'x'.repeat(121) }),
+      ]).expect(400);
+      expect(res.body).toMatchObject({
+        code: 'VALIDATION',
+        fields: ['custom_name'],
+        line_index: 1,
+        message: expect.stringContaining('custom_name'),
+      });
       expect(await requestsOf(A)).toHaveLength(0);
+    });
+
+    it('custom_note 501 ký tự → 400 VALIDATION {fields: [custom_note], line_index: 0}; 500 ký tự → 200', async () => {
+      const long = await save([custom({ custom_note: 'n'.repeat(501) })]);
+      expect(long.status).toBe(400);
+      expect(long.body).toMatchObject({
+        code: 'VALIDATION',
+        fields: ['custom_note'],
+        line_index: 0,
+      });
+      const res = await save([custom({ custom_note: 'n'.repeat(500) })]);
+      expect(res.status).toBe(200);
+      expect(view(res).lines[0]).toMatchObject({
+        custom_note: 'n'.repeat(500),
+      });
+    });
+
+    it('lines 200 dòng qua DTO (tới writer → DUPLICATE_ITEM); 201 dòng → 400 VALIDATION {fields: [lines]}', async () => {
+      const x = await newItem();
+      const many = (n: number) =>
+        Array.from({ length: n }, () => ({ item_id: x, qty: 1 }));
+      const atMax = await save(many(200)).expect(400);
+      expect(atMax.body).toMatchObject({ code: 'DUPLICATE_ITEM' });
+      const over = await save(many(201)).expect(400);
+      expect(over.body).toMatchObject({
+        code: 'VALIDATION',
+        fields: ['lines'],
+      });
+      expect(over.body).not.toHaveProperty('line_index');
     });
 
     it('cùng món 2 lần → 400 DUPLICATE_ITEM {line_index: 1}', async () => {
