@@ -7,6 +7,8 @@ export const OPEN_YM = '2026-11';
 
 interface Options {
   reports?: Record<string, MonthReport>;
+  // Báo cáo trả theo lượt GET (lượt cuối lặp lại): mô phỏng dữ liệu đổi giữa lúc tải và lúc chốt
+  reportLoads?: MonthReport[];
   snapshots?: SnapshotRow[];
   post?: (body: { kind: string; order_qty: Record<string, number> }) => Response | Promise<Response>;
   exportFile?: (id: string) => Response;
@@ -24,6 +26,7 @@ export const errorResponse = (status: number, code: string) =>
 export function stubReports(opts: Options = {}) {
   const snapshots = [...(opts.snapshots ?? [])];
   let seq = 0;
+  let loads = 0;
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET';
     if (url === '/api/periods/current') return jsonResponse(200, { ym: OPEN_YM, deadline: '2026-11-10T17:00:00Z', is_open: true, days_left: 5, previous: null });
@@ -32,6 +35,7 @@ export function stubReports(opts: Options = {}) {
       return opts.exportFile ? opts.exportFile(id) : fileResponse('2026-10');
     }
     const m = /^\/api\/admin\/reports\/(\d{4}-\d{2})(\/snapshots)?$/.exec(url);
+    if (m && !m[2] && opts.reportLoads) return jsonResponse(200, opts.reportLoads[Math.min(loads++, opts.reportLoads.length - 1)]);
     if (m && !m[2]) return jsonResponse(200, opts.reports?.[m[1]] ?? reportFixture({ ym: m[1] }));
     if (m && method === 'GET') return jsonResponse(200, { items: snapshots });
     if (m && method === 'POST') {

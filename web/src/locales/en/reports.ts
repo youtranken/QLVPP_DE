@@ -28,6 +28,7 @@ const reports: Messages<typeof vi> = {
     error: {
       INVALID_PERIOD: 'This month has not started yet, no report can be made.',
       VALIDATION: 'Some order quantities are invalid, see the cells marked in red.',
+      REPORT_CHANGED: 'The report changed and was reloaded — check the order quantities, then finalize again.',
       UNKNOWN: 'Could not create the snapshot, please try again later.',
       DOWNLOAD_FAILED: 'Snapshot created but the file could not be downloaded — use Download again in the snapshot list.',
     },

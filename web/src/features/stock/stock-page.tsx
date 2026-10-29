@@ -20,9 +20,19 @@ export function StockPage() {
   const { t } = useTranslation();
   const items = useAdminItems();
   const low = useLowStock();
-  const [params] = useSearchParams();
-  // KPI "Món sắp hết" ở Tổng hợp kỳ mở /admin/stock?filter=low
-  const [onlyLow, setOnlyLow] = useState(params.get('filter') === 'low');
+  const [params, setParams] = useSearchParams();
+  // Lọc nằm ở URL: KPI Tổng hợp và chuông sắp hết dẫn tới ?filter=low kể cả khi đang ở trang này
+  const onlyLow = params.get('filter') === 'low';
+  const toggleLow = () =>
+    setParams(
+      (p) => {
+        const next = new URLSearchParams(p);
+        if (onlyLow) next.delete('filter');
+        else next.set('filter', 'low');
+        return next;
+      },
+      { replace: true },
+    );
   const [open, setOpen] = useState<Open | null>(null);
   const onAction = useCallback((action: StockAction, item: AdminItem) => setOpen({ action, item }), []);
   const columns = useStockColumns(onAction);
@@ -45,7 +55,7 @@ export function StockPage() {
   return (
     <div className="a-stack">
       <div className="a-toolbar">
-        <button type="button" className="btn filter-btn" aria-pressed={onlyLow} onClick={() => setOnlyLow((v) => !v)}>
+        <button type="button" className="btn filter-btn" aria-pressed={onlyLow} onClick={toggleLow}>
           {t('stock.page.lowFilter')}
           <span className="count">{low.data?.length ?? 0}</span>
         </button>

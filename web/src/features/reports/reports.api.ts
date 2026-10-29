@@ -85,6 +85,16 @@ export function useMonthReport(ym: string) {
   });
 }
 
+// Tải lại báo cáo và trả bản mới (để biết dòng nào đã biến mất)
+export function useReloadReport(ym: string) {
+  const qc = useQueryClient();
+  const key = [...REPORTS_KEY, ym];
+  return async () => {
+    await qc.refetchQueries({ queryKey: key, exact: true });
+    return qc.getQueryData<MonthReport>(key);
+  };
+}
+
 export function useSnapshot(id: string, enabled: boolean) {
   return useQuery({
     queryKey: [...REPORTS_KEY, 'snapshot', id],

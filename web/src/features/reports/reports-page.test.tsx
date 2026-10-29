@@ -114,6 +114,26 @@ describe('ReportsPage — cột Đặt mua và chốt', () => {
     expect(downloads).toEqual([]);
   });
 
+  it('dòng ngoài DM biến mất giữa lúc tải và chốt (VALIDATION order_qty.<khóa đó>) → "Báo cáo đã đổi, đã tải lại", ô biến mất, không báo "Nhập số nguyên"; chốt lại không gửi khóa cũ', async () => {
+    const f = stubReports({
+      reportLoads: [reportFixture(), reportFixture({ custom: [] })],
+      post: (body) =>
+        TAPE_KEY in body.order_qty ? jsonResponse(400, { code: 'VALIDATION', message: 'x', fields: [`order_qty.${TAPE_KEY}`] }) : jsonResponse(201, { id: 'snap-9' }),
+    });
+    captureDownloads();
+    openPage();
+    const tape = await orderCell('Băng keo 2 mặt');
+    await userEvent.clear(tape);
+    await userEvent.type(tape, '8');
+    await userEvent.click(exportBtn());
+    expect(await screen.findByRole('alert')).toHaveTextContent('Báo cáo đã đổi, đã tải lại — xem lại số Đặt mua rồi chốt lại.');
+    await waitFor(() => expect(screen.queryByRole('spinbutton', { name: 'Đặt mua Băng keo 2 mặt' })).toBeNull());
+    expect(screen.queryByText('Nhập số nguyên 0–99999')).toBeNull();
+    await userEvent.click(exportBtn());
+    await waitFor(() => expect(postsOf(f)).toHaveLength(2));
+    expect(postsOf(f)[1].body.order_qty).toEqual({});
+  });
+
   it('POST chốt xong nhưng tải export 500 → báo "Đã chốt nhưng chưa tải được tệp…", không lưu tệp, bản mới vẫn vào danh sách', async () => {
     const f = stubReports({ exportFile: () => errorResponse(500, 'INTERNAL') });
     const downloads = captureDownloads();

@@ -78,6 +78,7 @@ const summary = {
         done: 'Đã giao {{n}}',
         partial: 'Giao {{done}}/{{total}}',
         waiting: 'Chờ giao',
+        cancelled: 'đã hủy {{n}}',
       },
       customTag: 'Ngoài danh mục · {{qty}} {{unit}}',
       customNote: '“{{note}}”',

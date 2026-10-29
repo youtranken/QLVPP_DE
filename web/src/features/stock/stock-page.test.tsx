@@ -38,12 +38,23 @@ const ITEMS = [
   NEVER,
 ];
 
+// Chuông có sẵn một thông báo low_stock đã đọc (bấm chỉ điều hướng, không POST)
+const LOW_BELL = {
+  id: 'n-low',
+  topic: 'low_stock',
+  params: { name: 'Giấy A4', name_en: null, stock_qty: 6 },
+  link: '/admin/stock?filter=low',
+  created_at: '2026-11-12T03:00:00.000Z',
+  read_at: '2026-11-12T04:00:00.000Z',
+};
+
 function stubApi() {
   vi.stubGlobal(
     'fetch',
     vi.fn((url: string) => {
       if (url === '/api/admin/items') return Promise.resolve(jsonResponse(200, ITEMS));
       if (url === '/api/admin/stock/low') return Promise.resolve(jsonResponse(200, [LOW]));
+      if (url.startsWith('/api/me/notifications')) return Promise.resolve(jsonResponse(200, { items: [LOW_BELL], next_cursor: null, unread_count: 0 }));
       return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }));
     }),
   );
@@ -81,6 +92,19 @@ describe('StockPage', () => {
     stubApi();
     renderApp(makeMe('admin'), '/admin/stock?filter=low');
     expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByText('Bút bi xanh')).toBeNull();
+  });
+
+  it('đang ở /admin/stock (lọc tắt), bấm thông báo sắp hết trên chuông → URL ?filter=low và bộ lọc "Sắp hết" bật', async () => {
+    mockViewport(1280);
+    stubApi();
+    renderApp(makeMe('admin'), '/admin/stock');
+    expect(await screen.findByText('Bút bi xanh')).toBeInTheDocument();
+    const filter = screen.getByRole('button', { name: /Sắp hết/ });
+    expect(filter).toHaveAttribute('aria-pressed', 'false');
+    await userEvent.click(screen.getByRole('button', { name: /^Thông báo/ }));
+    await userEvent.click(await screen.findByRole('button', { name: /Giấy A4 sắp hết kho/ }));
     expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.queryByText('Bút bi xanh')).toBeNull();
   });

@@ -24,6 +24,8 @@ export function useOrderQty(report: MonthReport) {
   const edited: Record<string, number> = {};
   let invalid = rejected.size > 0;
   for (const [key, text] of Object.entries(drafts)) {
+    // Dòng đã rời báo cáo sau khi tải lại: nháp của nó không còn ô để hiện, không gửi
+    if (!needs.has(key)) continue;
     const n = parseOrderQty(text);
     if (n === null) invalid = true;
     else if (n !== needs.get(key)) edited[key] = n;

@@ -78,13 +78,24 @@ function QtyCell({ name, qty, min, max, delivered = 0, cancelled = 0, error, rem
   );
 }
 
-function DeliveryTag({ line }: { line: Pick<LineView, 'qty' | 'delivered_qty'> }) {
+function DeliveryTag({ line }: { line: Pick<LineView, 'qty' | 'delivered_qty' | 'cancelled_qty'> }) {
   const { t } = useTranslation();
-  if (line.delivered_qty >= line.qty) return <span className="tag tag--ok">{t('summary.adjust.status.done', { n: line.delivered_qty })}</span>;
-  if (line.delivered_qty > 0) {
-    return <span className="tag tag--warn">{t('summary.adjust.status.partial', { done: line.delivered_qty, total: line.qty })}</span>;
-  }
-  return <span className="tag">{t('summary.adjust.status.waiting')}</span>;
+  const total = line.qty - line.cancelled_qty;
+  const cancelled = line.cancelled_qty > 0 && <span className="tag">{t('summary.adjust.status.cancelled', { n: line.cancelled_qty })}</span>;
+  const state =
+    line.delivered_qty >= total ? (
+      line.delivered_qty > 0 && <span className="tag tag--ok">{t('summary.adjust.status.done', { n: line.delivered_qty })}</span>
+    ) : line.delivered_qty > 0 ? (
+      <span className="tag tag--warn">{t('summary.adjust.status.partial', { done: line.delivered_qty, total })}</span>
+    ) : (
+      <span className="tag">{t('summary.adjust.status.waiting')}</span>
+    );
+  return (
+    <>
+      {state}
+      {cancelled}
+    </>
+  );
 }
 
 // Dòng danh mục (đã lưu hoặc mới thêm): đã sửa → nền xanh nhạt + số cũ gạch ngang

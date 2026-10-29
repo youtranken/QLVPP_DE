@@ -81,6 +81,7 @@ const summary: Messages<typeof vi> = {
         done: 'Delivered {{n}}',
         partial: 'Delivered {{done}}/{{total}}',
         waiting: 'Awaiting delivery',
+        cancelled: 'cancelled {{n}}',
       },
       customTag: 'Off-catalog · {{qty}} {{unit}}',
       customNote: '“{{note}}”',

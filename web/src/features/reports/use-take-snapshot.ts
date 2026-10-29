@@ -5,7 +5,7 @@ import { apiErrorCode, apiErrorFields } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { useConfirm } from '@/ui/confirm-context';
-import { createSnapshot, downloadSnapshot, printPath, useRefreshSnapshots, type MonthReport, type SnapshotKind } from './reports.api';
+import { createSnapshot, downloadSnapshot, printPath, useRefreshSnapshots, useReloadReport, type MonthReport, type SnapshotKind } from './reports.api';
 import type { OrderQty } from './use-order-qty';
 
 const NOTICES = new Set(['INVALID_PERIOD', 'VALIDATION']);
@@ -17,6 +17,7 @@ export function useTakeSnapshot(report: MonthReport, qty: OrderQty) {
   const confirm = useConfirm();
   const navigate = useNavigate();
   const refresh = useRefreshSnapshots(report.ym);
+  const reloadReport = useReloadReport(report.ym);
   const flight = useSingleFlight();
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -40,10 +41,19 @@ export function useTakeSnapshot(report: MonthReport, qty: OrderQty) {
         await downloadSnapshot(id, i18n.language, report.ym).catch(() => setNotice('DOWNLOAD_FAILED'));
       } catch (e) {
         const code = apiErrorCode(e);
-        if (code === 'VALIDATION') qty.reject(apiErrorFields(e));
+        if (code === 'VALIDATION') return setNotice(await rejectedOrChanged(apiErrorFields(e)));
         setNotice(code && NOTICES.has(code) ? code : 'UNKNOWN');
       }
     });
+
+  // Ô gửi đi luôn hợp lệ phía trình duyệt: khóa bị từ chối mà không còn trong báo cáo mới = dòng đã biến mất
+  const rejectedOrChanged = async (fields: string[]) => {
+    const fresh = await reloadReport();
+    const keys = new Set([...(fresh?.byItem ?? []), ...(fresh?.custom ?? [])].map((r) => r.key));
+    const still = fields.filter((f) => !f.startsWith('order_qty.') || keys.has(f.slice('order_qty.'.length)));
+    qty.reject(still);
+    return still.length < fields.length ? 'REPORT_CHANGED' : 'VALIDATION';
+  };
 
   return { take, pending: flight.pending, notice };
 }

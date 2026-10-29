@@ -312,4 +312,26 @@ describe('AdjustDrawer — giới hạn số lượng dòng đã có', () => {
     await userEvent.click(save(drawer));
     await waitFor(() => expect(reviewCalls()).toBe(2));
   });
+
+  it('nhãn giao tính phần hủy: qty 5 giao 3 hủy 2 → "Đã giao 3" + "đã hủy 2" (không "Giao 3/5"); qty 6 giao 3 hủy 1 → "Giao 3/5" + "đã hủy 1"', async () => {
+    const base = adminRequest().lines;
+    stub({
+      views: [
+        adminRequest({
+          lines: [
+            { ...base[0], qty: 5, delivered_qty: 3, cancelled_qty: 2 },
+            { ...base[1], qty: 6, delivered_qty: 3, cancelled_qty: 1 },
+          ],
+        }),
+      ],
+    });
+    const { drawer } = await renderDrawer();
+    const pen = row(drawer, 'Bút bi xanh');
+    expect(within(pen).getByText('Đã giao 3')).toBeInTheDocument();
+    expect(within(pen).getByText('đã hủy 2')).toBeInTheDocument();
+    expect(within(pen).queryByText('Giao 3/5')).toBeNull();
+    const note = row(drawer, 'Giấy note vàng');
+    expect(within(note).getByText('Giao 3/5')).toBeInTheDocument();
+    expect(within(note).getByText('đã hủy 1')).toBeInTheDocument();
+  });
 });

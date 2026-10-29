@@ -25,6 +25,7 @@ const reports = {
     error: {
       INVALID_PERIOD: 'Tháng này chưa tới, chưa lập báo cáo được.',
       VALIDATION: 'Có ô Đặt mua chưa hợp lệ, xem ô báo đỏ.',
+      REPORT_CHANGED: 'Báo cáo đã đổi, đã tải lại — xem lại số Đặt mua rồi chốt lại.',
       UNKNOWN: 'Chưa chốt được, thử lại sau.',
       DOWNLOAD_FAILED: 'Đã chốt nhưng chưa tải được tệp — bấm Tải lại ở danh sách bản chốt.',
     },
