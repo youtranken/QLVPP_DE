@@ -100,7 +100,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
       'fetch',
       vi.fn((url: string) =>
         Promise.resolve(
-          url.startsWith('/api/me/requests') ? jsonResponse(200, { items: [], next_cursor: null }) : jsonResponse(200, makeMe('member')),
+          url.startsWith('/api/me/requests') || url.startsWith('/api/me/issues') ? jsonResponse(200, { items: [], next_cursor: null }) : jsonResponse(200, makeMe('member')),
         ),
       ),
     );

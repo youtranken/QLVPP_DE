@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { LoadError } from '@/ui/load-state';
 import { formatVnStamp } from '@/lib/format-time';
 import { useMyIssues } from './history.api';
 import { useRequestFormat } from './request-format';
@@ -8,12 +9,14 @@ export function IssuesSection() {
   const fmt = useRequestFormat();
   const issues = useMyIssues();
   const items = issues.data?.pages.flatMap((p) => p.items) ?? [];
-  if (items.length === 0) return null;
+  const initialFailed = issues.isError && !issues.data;
+  if (items.length === 0 && !initialFailed) return null;
   return (
     <section className="hs-issues" aria-labelledby="hs-issues-title">
       <h2 id="hs-issues-title" className="hs-issues-title">
         {t('request.history.issues.title')}
       </h2>
+      {initialFailed && <LoadError onRetry={() => void issues.refetch()} />}
       <ul className="hs-list">
         {items.map((i) => (
           <li key={i.id} className="hs-line">
@@ -26,7 +29,8 @@ export function IssuesSection() {
           </li>
         ))}
       </ul>
-      {issues.hasNextPage && (
+      {issues.isFetchNextPageError && <LoadError onRetry={() => void issues.fetchNextPage()} />}
+      {issues.hasNextPage && !issues.isFetchNextPageError && (
         <button type="button" className="btn hs-more" disabled={issues.isFetchingNextPage} onClick={() => void issues.fetchNextPage()}>
           {t('request.history.more')}
         </button>

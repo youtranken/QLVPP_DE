@@ -35,7 +35,6 @@ export interface MyIssue {
   item_name: string;
   item_name_en: string | null;
   unit: string;
-  pack_note: string | null;
   qty: number;
   note: string;
   created_at: string;

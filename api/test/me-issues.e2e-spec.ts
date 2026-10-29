@@ -100,8 +100,10 @@ describe('GET me/issues: chỉ xuất lẻ của chính người gọi', () => {
   });
 
   it('limit 0 và 201 → VALIDATION; 200 hợp lệ', async () => {
-    await mine(A, '?limit=0').expect(400);
-    await mine(A, '?limit=201').expect(400);
+    for (const bad of ['0', '201']) {
+      const res = await mine(A, `?limit=${bad}`).expect(400);
+      expect(res.body).toMatchObject({ code: 'VALIDATION', fields: ['limit'] });
+    }
     await mine(A, '?limit=200').expect(200);
   });
 });

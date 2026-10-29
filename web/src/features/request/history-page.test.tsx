@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { PERIOD } from '@/test/request-api-stub';
@@ -22,7 +22,6 @@ const issue = (over: Partial<MyIssue>): MyIssue => ({
   item_name: 'Bút bi',
   item_name_en: 'Ballpoint pen',
   unit: 'cai',
-  pack_note: null,
   qty: 2,
   note: 'Người mới vào',
   created_at: '2026-10-20T03:30:00Z',
@@ -109,7 +108,7 @@ describe('HistoryPage', () => {
   it('lỗi tải: báo lỗi có nút thử lại, không giả làm trống', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(500, {}))));
     renderApp(makeMe('member'), '/history');
-    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect((await screen.findAllByRole('alert')).length).toBeGreaterThan(0);
     expect(screen.queryByText('Chưa có phiếu nào')).toBeNull();
   });
 
@@ -125,9 +124,11 @@ describe('HistoryPage', () => {
     });
 
     it('rỗng → không có mục Nhận lẻ', async () => {
-      stub([{ items: [item({})], next_cursor: null }], [{ items: [], next_cursor: null }]);
+      const fetchMock = stub([{ items: [item({})], next_cursor: null }], [{ items: [], next_cursor: null }]);
       renderApp(makeMe('member'), '/history');
       await screen.findByText('Tháng 10/2026');
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/me/issues?limit=10', expect.anything()));
+      await new Promise((r) => setTimeout(r, 0));
       expect(screen.queryByRole('heading', { name: 'Nhận lẻ' })).toBeNull();
     });
 
@@ -161,6 +162,51 @@ describe('HistoryPage', () => {
       const section = (await screen.findByRole('heading', { name: 'Nhận lẻ' })).closest('section')!;
       expect(within(section).getAllByText('Bút bi')).toHaveLength(10);
       expect(within(section).queryByRole('button', { name: 'Xem thêm' })).toBeNull();
+    });
+
+    it('me/issues lỗi 500: vẫn có tiêu đề Nhận lẻ + thông báo lỗi; Thử lại tải được', async () => {
+      let calls = 0;
+      vi.stubGlobal(
+        'fetch',
+        vi.fn((url: string) => {
+          if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
+          if (url.startsWith('/api/me/issues')) {
+            return Promise.resolve(calls++ === 0 ? jsonResponse(500, {}) : jsonResponse(200, { items: [issue({})], next_cursor: null }));
+          }
+          return Promise.resolve(jsonResponse(200, { items: [item({})], next_cursor: null }));
+        }),
+      );
+      renderApp(makeMe('member'), '/history');
+      const section = (await screen.findByRole('heading', { name: 'Nhận lẻ' })).closest('section')!;
+      expect(await within(section).findByRole('alert')).toBeInTheDocument();
+      await userEvent.click(within(section).getByRole('button', { name: 'Thử lại' }));
+      expect(await within(section).findByText('Bút bi')).toBeInTheDocument();
+      expect(within(section).queryByRole('alert')).toBeNull();
+    });
+
+    it('"Xem thêm" lỗi: giữ các mục đã có, báo lỗi ngay trong mục và thử lại được', async () => {
+      let calls = 0;
+      vi.stubGlobal(
+        'fetch',
+        vi.fn((url: string) => {
+          if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
+          if (url.startsWith('/api/me/issues')) {
+            const n = calls++;
+            if (n === 0) return Promise.resolve(jsonResponse(200, { items: [issue({})], next_cursor: 'ic1' }));
+            if (n === 1) return Promise.resolve(jsonResponse(500, {}));
+            return Promise.resolve(jsonResponse(200, { items: [issue({ id: 'm-2', item_name: 'Kẹp giấy', item_name_en: null })], next_cursor: null }));
+          }
+          return Promise.resolve(jsonResponse(200, { items: [item({})], next_cursor: null }));
+        }),
+      );
+      renderApp(makeMe('member'), '/history');
+      const section = (await screen.findByRole('heading', { name: 'Nhận lẻ' })).closest('section')!;
+      await userEvent.click(await within(section).findByRole('button', { name: 'Xem thêm' }));
+      expect(await within(section).findByRole('alert')).toBeInTheDocument();
+      expect(within(section).getByText('Bút bi')).toBeInTheDocument();
+      await userEvent.click(within(section).getByRole('button', { name: 'Thử lại' }));
+      expect(await within(section).findByText('Kẹp giấy')).toBeInTheDocument();
+      expect(within(section).queryByRole('alert')).toBeNull();
     });
   });
 });
