@@ -108,6 +108,11 @@ describe('admin/lines/:id/review: chuông line_review cho chủ phiếu', () => 
       await repairNotifications();
     }
     expect((await lineRow(line.id)).review_status).toBe('rejected');
+    const audit = await pool().query(
+      "SELECT 1 FROM audit_log WHERE action = 'line.review' AND object_id = $1",
+      [line.id],
+    );
+    expect(audit.rowCount).toBe(1);
     expect(
       (await bells('line_review', A)).filter(
         (r) => r.event_id === `line_review:${line.id}`,

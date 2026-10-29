@@ -20,6 +20,7 @@ import {
   userNotFound,
 } from './request-errors';
 import { LineNotifier } from './line-notifier';
+import type { NewCustomLine } from './line-notifier';
 import { planLines } from './request-lines.diff';
 import type { LinesPlan } from './request-lines.diff';
 import { snapOf } from './request-lines.rules';
@@ -82,7 +83,7 @@ export class RequestLinesWriter {
     const existing = await repo.lockLines(tx, head.id);
     const plan = await this.plan(tx, existing, args);
     await this.assertImagesOwned(tx, plan, args);
-    const diff = await this.apply(tx, head.id, plan, args);
+    const { diff, newCustom } = await this.apply(tx, head.id, plan, args);
     if (!head.inserted && isEmpty(diff)) return { request_id: head.id, diff };
 
     const remaining =
@@ -111,9 +112,10 @@ export class RequestLinesWriter {
       },
     });
     await this.notifier.customLinesAdded(tx, {
-      requestId: head.id,
+      ym: args.period_ym,
+      person: owner.fullName,
       actorSub: args.actor.sub,
-      lines: newCustomLines(plan, diff),
+      lines: newCustom,
       now: args.now,
     });
     return { request_id: remaining === 0 ? null : head.id, diff };
@@ -215,7 +217,7 @@ export class RequestLinesWriter {
     requestId: string,
     plan: LinesPlan,
     args: SaveArgs,
-  ): Promise<LinesDiff> {
+  ): Promise<{ diff: LinesDiff; newCustom: NewCustomLine[] }> {
     await repo.deleteLines(
       tx,
       plan.deletes.map((l) => l.id),
@@ -224,6 +226,7 @@ export class RequestLinesWriter {
       await repo.updateLine(tx, before.id, after, args.now);
     }
     const added: LineSnapWithId[] = [];
+    const newCustom: NewCustomLine[] = [];
     for (const line of plan.inserts) {
       const id = await repo.insertLine(tx, requestId, {
         snap: line.snap,
@@ -232,8 +235,11 @@ export class RequestLinesWriter {
         now: args.now,
       });
       added.push({ id, ...line.snap });
+      if (line.review_status === 'pending') {
+        newCustom.push({ id, name: line.snap.custom_name! });
+      }
     }
-    return {
+    const diff = {
       added,
       removed: plan.deletes.map(withId),
       changed: plan.updates.map(({ before, after }) => ({
@@ -242,6 +248,7 @@ export class RequestLinesWriter {
         after,
       })),
     };
+    return { diff, newCustom };
   }
 }
 
@@ -251,13 +258,6 @@ function lineMode(args: SaveArgs): WriteMode {
 
 function reason(args: SaveArgs): string | undefined {
   return args.body.reason?.trim() || undefined;
-}
-
-// diff.added theo đúng thứ tự plan.inserts; chỉ dòng ngoài DM đang chờ duyệt mới báo Hành chính
-function newCustomLines(plan: LinesPlan, diff: LinesDiff) {
-  return diff.added
-    .filter((_, i) => plan.inserts[i].review_status === 'pending')
-    .map((l) => ({ id: l.id, name: l.custom_name! }));
 }
 
 function withId(line: LineRow): LineSnapWithId {

@@ -287,3 +287,13 @@ export async function hasUndeliveredLines(
   `);
   return rows[0] ? rows[0].delivering : null;
 }
+
+export async function requestOwner(
+  tx: Executor,
+  requestId: string,
+): Promise<{ user_sub: string; ym: string }> {
+  const { rows } = await tx.execute<{ user_sub: string; ym: string }>(sql`
+    SELECT user_sub, to_char(period_ym, 'YYYY-MM') AS ym FROM requests WHERE id = ${requestId}
+  `);
+  return rows[0];
+}

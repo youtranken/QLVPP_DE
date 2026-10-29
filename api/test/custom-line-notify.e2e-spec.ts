@@ -21,6 +21,23 @@ describe('PUT me/request/lines: chuông custom_line_new cho Hành chính', () =>
     view,
   } = f;
 
+  const SA = 'local:sa';
+  let seededSa = false;
+  beforeAll(async () => {
+    seededSa =
+      (
+        await f.pool().query(
+          `INSERT INTO users (sub, full_name, status, groups)
+           VALUES ($1, 'SA', 'active', '["vpp-admin"]'::jsonb) ON CONFLICT (sub) DO NOTHING`,
+          [SA],
+        )
+      ).rowCount === 1;
+  });
+  f.onCleanup(async (p) => {
+    await p.query('DELETE FROM in_app_notifications WHERE user_sub = $1', [SA]);
+    if (seededSa) await p.query('DELETE FROM users WHERE sub = $1', [SA]);
+  });
+
   it('member lưu phiếu có 1 dòng ngoài DM → mỗi admin active 1 chuông (đúng params/link); admin khóa, SA, chủ phiếu không', async () => {
     const r = await seed([custom({ custom_name: 'Kẹp bướm đặc biệt' })]);
     const lineId = r.lines[0].id;
@@ -39,7 +56,7 @@ describe('PUT me/request/lines: chuông custom_line_new cho Hành chính', () =>
     }
     expect(await bells('custom_line_new', LOCKED_ADMIN)).toEqual([]);
     expect(await bells('custom_line_new', A)).toEqual([]);
-    expect(await bells('custom_line_new', 'local:sa')).toEqual([]);
+    expect(await bells('custom_line_new', SA)).toEqual([]);
   });
 
   it('dòng DM thường không chuông; lưu lại đổi qty dòng ngoài DM → không thêm; thêm dòng ngoài DM thứ hai → đúng 1 chuông mới mỗi admin', async () => {
@@ -92,6 +109,48 @@ describe('PUT me/request/lines: chuông custom_line_new cho Hành chính', () =>
       rows.map((r) => r.params.name).filter((n) => /^Món lạ B/.test(String(n))),
     ).toEqual(['Món lạ B1', 'Món lạ B2']);
     expect(await bells('custom_line_new', ADMIN2)).toHaveLength(base + 2);
+  });
+
+  it('2 dòng DM + 2 dòng ngoài DM thêm xen kẽ → đúng 2 chuông, mỗi chuông đúng tên dòng ngoài DM', async () => {
+    const C = `e2e-req-c-mix-${f.SUFFIX}`;
+    await f.pool().query(
+      `INSERT INTO users (sub, full_name, department, status)
+       VALUES ($1, 'Nhân viên M', 'Phòng CT', 'active')`,
+      [C],
+    );
+    const [i1, i2] = [await newItem(), await newItem()];
+    const [g1, g2] = [await upload(C), await upload(C)];
+    const res = await save(
+      [
+        {
+          custom_name: 'Xen kẽ 1',
+          custom_unit: 'cai',
+          image_file_id: g1,
+          qty: 1,
+        },
+        { item_id: i1, qty: 1 },
+        {
+          custom_name: 'Xen kẽ 2',
+          custom_unit: 'cai',
+          image_file_id: g2,
+          qty: 1,
+        },
+        { item_id: i2, qty: 1 },
+      ],
+      {},
+      C,
+    ).expect(200);
+    const lines = view(res).lines;
+    const rows = (await bells('custom_line_new', ADMIN)).filter((r) =>
+      /^Xen kẽ/.test(String(r.params.name)),
+    );
+    expect(rows.map((r) => [r.event_id, r.params.name]).sort()).toEqual(
+      lines
+        .filter((l) => l.item_id === null)
+        .map((l) => [`custom_line_new:${l.id}`, l.custom_name])
+        .sort(),
+    );
+    expect(rows).toHaveLength(2);
   });
 
   it('save lỗi (STALE_UPDATE) → không chuông', async () => {
