@@ -181,7 +181,7 @@ describe('me/notifications — chuông của tôi', () => {
     expect((await list(A)).unread_count).toBe(2);
   });
 
-  it('không audit việc đánh dấu đã đọc (F6)', async () => {
+  it('không audit việc đánh dấu đã đọc', async () => {
     await read(A, { ids: [ids.A2] }).expect(200);
     const { rows } = await pool.query(
       'SELECT 1 FROM audit_log WHERE actor = $1',

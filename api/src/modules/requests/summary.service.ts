@@ -91,7 +91,7 @@ export class SummaryService {
     return (await this.unregisteredRows(ym)).map((u) => u.sub);
   }
 
-  // "Mọi người" của chuông kỳ mở = mẫu số Tổng hợp (F9)
+  // "Mọi người" của chuông kỳ mở = mẫu số Tổng hợp
   async audienceSubs(): Promise<string[]> {
     const { rows } = await this.db.execute<{ sub: string }>(sql`
       SELECT u.sub FROM users u WHERE ${await this.headcountCondition()} ORDER BY u.sub

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { ClockService } from '../../common/clock.service';
+import { pgSqlState } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { StockService } from '../catalog/stock.service';
@@ -113,7 +114,7 @@ export class NotificationScheduler
     });
   }
 
-  // Headcount ghi bù kể cả khi trượt ngày khóa; chuông chỉ gửi đúng ngày khóa (giả định 3, review-spec F)
+  // Headcount ghi bù kể cả khi trượt ngày khóa; chuông chỉ gửi đúng ngày khóa
   private async locked(now: Date): Promise<number> {
     const period = await this.periods.latestLocked(now);
     if (!period) return 0;
@@ -176,10 +177,11 @@ export class NotificationScheduler
     try {
       return await fn();
     } catch (error) {
+      // message của DrizzleQueryError chứa cả SQL và params: chỉ log mã
       this.logger.error({
         msg: 'notification_cron_step_failed',
         step: name,
-        error: (error as Error).message,
+        code: pgSqlState(error) ?? (error as Error).name,
       });
       return fallback;
     }

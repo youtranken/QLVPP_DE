@@ -15,7 +15,7 @@ export class NotificationsQuery extends PageQuery {
   @IsOptional() @IsIn(['true', 'false']) unread?: 'true' | 'false';
 }
 
-// Vắng `ids` = đánh dấu tất cả (F7); `null`/`[]` là lỗi để không đọc hết vì nhầm
+// Vắng `ids` = đánh dấu tất cả; `null`/`[]` là lỗi để không đọc hết vì nhầm
 export class MarkReadBody {
   @ValidateIf((_, v) => v !== undefined)
   @IsArray()

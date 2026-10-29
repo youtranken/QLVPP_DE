@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { NotificationScheduler } from './notification-scheduler';
 
 type Ctor = ConstructorParameters<typeof NotificationScheduler>;
@@ -41,6 +42,8 @@ function scheduler(
 }
 
 describe('NotificationScheduler', () => {
+  afterEach(() => jest.restoreAllMocks());
+
   it('một bước lỗi (đọc kỳ mở hỏng) không làm sập cron: các bước sau vẫn chạy, bước lỗi trả 0', async () => {
     const { s, notifications } = scheduler(() =>
       Promise.reject(new Error('db down')),
@@ -82,5 +85,37 @@ describe('NotificationScheduler', () => {
     await expect(
       s.runHourly(new Date('2027-02-28T17:00:00Z')), // 00:00 1/3 VN
     ).resolves.toMatchObject({ period_open: 0, reminder: 1 });
+  });
+
+  it('bước lỗi do câu SQL (DrizzleQueryError có SQL + params trong message) → log chỉ {msg, step, code}, không có SQL/params', async () => {
+    const spy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    const pg = Object.assign(new Error('deadlock detected'), {
+      code: '40P01',
+      severity: 'ERROR',
+    });
+    const drizzle = Object.assign(
+      new Error('Failed query: select … where sub = $1\nparams: nguyen.van.a'),
+      { name: 'DrizzleQueryError', cause: pg },
+    );
+    const { s } = scheduler(() => Promise.reject(drizzle));
+    await s.runHourly(new Date('2026-12-05T03:00:00Z'));
+    const logged = spy.mock.calls.map((c) => c[0] as Record<string, unknown>);
+    expect(logged).toContainEqual({
+      msg: 'notification_cron_step_failed',
+      step: 'open_period',
+      code: '40P01',
+    });
+    expect(JSON.stringify(logged)).not.toMatch(/params|nguyen|select/);
+  });
+
+  it('bước lỗi không phải lỗi Postgres → code = tên lỗi (TypeError), không message', async () => {
+    const spy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    const { s } = scheduler(() => Promise.reject(new TypeError('x is secret')));
+    await s.runHourly(new Date('2026-12-05T03:00:00Z'));
+    expect(spy.mock.calls.map((c) => c[0] as unknown)).toContainEqual({
+      msg: 'notification_cron_step_failed',
+      step: 'open_period',
+      code: 'TypeError',
+    });
   });
 });
