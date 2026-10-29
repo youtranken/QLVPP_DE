@@ -12,7 +12,7 @@ import * as repo from './requests.repo';
 
 export type SourceLine = Omit<
   LineRow,
-  'id' | 'delivered_qty' | 'cancelled_qty' | 'review_note'
+  'id' | 'delivered_qty' | 'cancelled_qty' | 'cancel_note' | 'review_note'
 >;
 export interface CopyItemFacts {
   name: string;

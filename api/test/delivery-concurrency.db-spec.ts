@@ -37,6 +37,12 @@ describe('Giao song song (Postgres thật, hai request HTTP thật)', () => {
       .post(`/api/admin/requests/${requestId}/deliver-all`)
       .set('x-dev-user-sub', ADMIN)
       .set('x-dev-role', 'admin');
+  const cancel = (lineId: string, expected: number) =>
+    request(app.getHttpServer())
+      .post(`/api/admin/lines/${lineId}/cancel-remaining`)
+      .set('x-dev-user-sub', ADMIN)
+      .set('x-dev-role', 'admin')
+      .send({ reason: 'Người đã nghỉ', expected_delivered_qty: expected });
   const deliveredCount = (r: request.Response) =>
     (r.body as { delivered: unknown[] }).delivered.length;
   const outcome = (r: request.Response) =>
@@ -232,6 +238,33 @@ describe('Giao song song (Postgres thật, hai request HTTP thật)', () => {
       expect(loser.body.failed).toHaveLength(2);
       expect([await stock(p), await stock(q)]).toEqual([1, 1]);
       expect(await movementCount()).toBe(2);
+    }
+  });
+
+  it(`${ROUNDS} vòng hủy nợ và giao 2 song song cùng dòng qty 5 (expected 0) → một 200 + một 409 STALE_UPDATE hoặc 400 DELIVER_EXCEEDS_QTY {remaining: 0}; delivered + cancelled = 5 hoặc 2 + 0, không vượt qty`, async () => {
+    for (let round = 0; round < ROUNDS; round++) {
+      await reset(10);
+      const line = await seedLine(OWNERS[0], 5);
+      const [delivered, cancelled] = await Promise.all([
+        deliver(line, 2, 0),
+        cancel(line, 0),
+      ]);
+      const { rows } = await pool.query<{ d: number; c: number }>(
+        'SELECT delivered_qty AS d, cancelled_qty AS c FROM request_lines WHERE id = $1',
+        [line],
+      );
+      const pair = `${outcome(delivered)} | ${outcome(cancelled)}`;
+      if (delivered.status === 200) {
+        expect(pair).toBe('200 | 409 STALE_UPDATE');
+        expect(rows[0]).toEqual({ d: 2, c: 0 });
+        expect(await stock()).toBe(8);
+      } else {
+        expect(pair).toBe('400 DELIVER_EXCEEDS_QTY | 200');
+        expect(delivered.body.remaining).toBe(0);
+        expect(rows[0]).toEqual({ d: 0, c: 5 });
+        expect(await stock()).toBe(10);
+      }
+      expect(rows[0].d + rows[0].c).toBeLessThanOrEqual(5);
     }
   });
 });

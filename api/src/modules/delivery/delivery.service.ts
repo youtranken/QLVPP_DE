@@ -163,7 +163,7 @@ export function remainingOf(line: LockedLine): number {
   return line.qty - line.delivered_qty - line.cancelled_qty;
 }
 
-function assertDeliverable(line: LockedLine): void {
+export function assertDeliverable(line: LockedLine): void {
   if (line.review_status === 'pending') throw lineNotReviewed();
   if (line.review_status === 'rejected') throw lineRejected();
 }

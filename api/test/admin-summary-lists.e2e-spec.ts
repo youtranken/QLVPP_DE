@@ -13,6 +13,7 @@ interface PersonRow {
   line_count: number;
   total_qty: number;
   delivered_qty: number;
+  cancelled_qty: number;
   custom_pending: number;
   updated_at: string;
 }
@@ -66,6 +67,7 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
       line_count: 3,
       total_qty: 5,
       delivered_qty: 3,
+      cancelled_qty: 2,
       custom_pending: 1,
       updated_at: expect.any(String) as string,
     });
@@ -75,6 +77,7 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
       line_count: 3,
       total_qty: 6,
       delivered_qty: 0,
+      cancelled_qty: 0,
       custom_pending: 0,
     });
   });
@@ -160,5 +163,32 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
         },
       ]),
     );
+  });
+
+  it('phiếu 1 dòng qty 5 giao 3 hủy 2 → PersonRow {total_qty: 5, delivered_qty: 3, cancelled_qty: 2}', async () => {
+    const solo = f.sub('solo');
+    await f.addUser(
+      solo,
+      `Solo ${SUFFIX}`,
+      `solo.${SUFFIX}@pmh.test`,
+      'Phòng S',
+    );
+    const id = await f.newRequest(solo, 'Phòng S');
+    try {
+      await f.addLine(id, {
+        item_id: ids.item,
+        qty: 5,
+        delivered_qty: 3,
+        cancelled_qty: 2,
+      });
+      const row = (await people('')).items.find((i) => i.request_id === id);
+      expect(row).toMatchObject({
+        total_qty: 5,
+        delivered_qty: 3,
+        cancelled_qty: 2,
+      });
+    } finally {
+      await f.pool().query('DELETE FROM requests WHERE id = $1', [id]);
+    }
   });
 });

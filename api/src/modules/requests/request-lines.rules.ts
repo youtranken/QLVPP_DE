@@ -20,6 +20,7 @@ export interface LineSnap {
 export interface LineRow extends LineSnap, LineState {
   id: string;
   cancelled_qty: number;
+  cancel_note: string | null;
   review_note: string | null;
 }
 

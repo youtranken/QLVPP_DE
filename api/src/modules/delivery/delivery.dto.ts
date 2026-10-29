@@ -1,10 +1,83 @@
-import { IsInt, Max, Min } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import { NOTE_MAX } from '../requests/request.dto';
+import type { CancelledLine } from '../requests/line-delivery.store';
 
 export const DELIVER_QTY_MAX = 9999;
 
 export class DeliverBody {
   @IsInt() @Min(1) @Max(DELIVER_QTY_MAX) qty!: number;
   @IsInt() @Min(0) expected_delivered_qty!: number;
+}
+
+// Thiếu/ngắn đều là REASON_REQUIRED (luật trim ≥ 3 ở service), không phải VALIDATION
+export class CancelBody {
+  @IsOptional() @IsString() @MaxLength(NOTE_MAX) reason?: string;
+  @IsInt() @Min(0) expected_delivered_qty!: number;
+}
+
+export const BACKLOG_BY = ['item', 'person'] as const;
+export type BacklogBy = (typeof BACKLOG_BY)[number];
+
+export class BacklogQuery {
+  @IsOptional() @IsIn(BACKLOG_BY) by: BacklogBy = 'item';
+}
+
+export interface CancelResult {
+  line: CancelledLine;
+  cancelled_now: number;
+}
+
+export interface BacklogLine {
+  line_id: string;
+  request_id: string;
+  period_ym: string;
+  user_sub: string;
+  full_name: string | null;
+  department: string | null;
+  user_status: string;
+  item_id: string | null;
+  name: string;
+  name_en: string | null;
+  unit: string;
+  qty: number;
+  delivered_qty: number;
+  cancelled_qty: number;
+  remaining_qty: number;
+  stock_qty: number | null;
+}
+
+export interface BacklogGroup {
+  key: string;
+  label: {
+    item_id?: string | null;
+    name?: string;
+    unit?: string;
+    user_sub?: string;
+    full_name?: string | null;
+    department?: string | null;
+  };
+  remaining_qty: number;
+  lines: BacklogLine[];
+}
+
+export interface LineDeliveries {
+  line: CancelledLine;
+  items: {
+    id: string;
+    qty: number;
+    movement_id: string | null;
+    actor_sub: string;
+    actor_name: string | null;
+    created_at: string;
+  }[];
 }
 
 export interface DeliverResult {

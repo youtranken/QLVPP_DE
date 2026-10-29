@@ -6,7 +6,7 @@ import { ymToDate } from '../../common/period';
 import { YM } from '../../common/ym';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
-import { EFFECTIVE_LINE } from './line-predicates';
+import { EFFECTIVE_LINE, REMAINING_QTY } from './line-predicates';
 
 export interface HistoryItem {
   period_ym: string;
@@ -55,7 +55,7 @@ export class HistoryService {
              ${effective(sql`l.qty`)} AS total_qty,
              ${effective(sql`l.delivered_qty`)} AS delivered_qty,
              ${effective(sql`l.cancelled_qty`)} AS cancelled_qty,
-             ${effective(sql`l.qty - l.delivered_qty - l.cancelled_qty`)} AS remaining_qty,
+             ${effective(REMAINING_QTY)} AS remaining_qty,
              ${count('pending')} AS pending, ${count('accepted')} AS accepted,
              ${count('converted')} AS converted, ${count('rejected')} AS rejected
       FROM requests r LEFT JOIN request_lines l ON l.request_id = r.id

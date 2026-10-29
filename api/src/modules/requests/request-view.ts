@@ -18,6 +18,7 @@ export interface LineView {
   qty: number;
   delivered_qty: number;
   cancelled_qty: number;
+  cancel_note: string | null;
   review_status: ReviewStatus;
   review_note: string | null;
   added_by_admin: boolean;
@@ -92,6 +93,7 @@ export function toLineView(
     qty: line.qty,
     delivered_qty: line.delivered_qty,
     cancelled_qty: line.cancelled_qty,
+    cancel_note: line.cancel_note,
     review_status: line.review_status,
     review_note: line.review_note,
     added_by_admin: line.added_by_admin,

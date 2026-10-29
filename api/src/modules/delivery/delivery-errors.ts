@@ -32,3 +32,9 @@ export const deliverExceedsQty = (remaining: number) =>
     message: `Chỉ còn ${remaining} cần giao.`,
     remaining,
   });
+
+export const cancelReasonRequired = () =>
+  new BadRequestException({
+    code: 'REASON_REQUIRED',
+    message: 'Nhập lý do hủy nợ (ít nhất 3 ký tự).',
+  });

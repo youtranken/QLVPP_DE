@@ -3,14 +3,22 @@ import { CatalogModule } from '../catalog/catalog.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { PeriodsModule } from '../periods/periods.module';
 import { RequestsModule } from '../requests/requests.module';
+import { BacklogController } from './backlog.controller';
+import { BacklogService } from './backlog.service';
+import { CancelRemainingService } from './cancel-remaining.service';
 import { DeliverAllService } from './deliver-all.service';
 import { DeliveryController } from './delivery.controller';
 import { DeliveryService } from './delivery.service';
 
 @Module({
   imports: [RequestsModule, CatalogModule, PeriodsModule, NotificationsModule],
-  controllers: [DeliveryController],
-  providers: [DeliveryService, DeliverAllService],
+  controllers: [DeliveryController, BacklogController],
+  providers: [
+    DeliveryService,
+    DeliverAllService,
+    CancelRemainingService,
+    BacklogService,
+  ],
   exports: [DeliveryService],
 })
 export class DeliveryModule {}

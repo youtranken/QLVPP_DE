@@ -21,7 +21,7 @@ export interface RequestRow extends Record<string, unknown> {
 
 const LINE_COLUMNS = sql.raw(
   `id, item_id, custom_name, custom_unit, custom_note, image_file_id, qty, delivered_qty,
-   cancelled_qty, review_status, review_note, added_by_admin`,
+   cancelled_qty, cancel_note, review_status, review_note, added_by_admin`,
 );
 // Mốc so expected_updated_at và trả cho client cùng độ chính xác mili giây
 const UPDATED_AT_ISO = sql.raw(

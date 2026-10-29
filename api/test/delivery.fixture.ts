@@ -14,6 +14,32 @@ export interface DeliverResult {
   request_complete: boolean;
 }
 
+export interface BacklogLine {
+  line_id: string;
+  request_id: string;
+  period_ym: string;
+  user_sub: string;
+  full_name: string | null;
+  department: string | null;
+  user_status: string;
+  item_id: string | null;
+  name: string;
+  name_en: string | null;
+  unit: string;
+  qty: number;
+  delivered_qty: number;
+  cancelled_qty: number;
+  remaining_qty: number;
+  stock_qty: number | null;
+}
+
+export interface BacklogGroup {
+  key: string;
+  label: Record<string, string | null>;
+  remaining_qty: number;
+  lines: BacklogLine[];
+}
+
 // Đợt giao/biến động kho chặn xóa phiếu và món (RESTRICT) → dọn trước hook dọn của reviewFixture
 async function clearDeliveries(pool: Pool, suffix: string): Promise<void> {
   const mine = `e2e-req-%-${suffix}`;
@@ -43,6 +69,31 @@ export function deliveryFixture(tag: string) {
     as(http().post(`/api/admin/lines/${lineId}/deliver`), sub, role).send(body);
   const deliverAll = (requestId: string, sub = ADMIN, role = 'admin') =>
     as(http().post(`/api/admin/requests/${requestId}/deliver-all`), sub, role);
+  const cancel = (lineId: string, body: object, sub = ADMIN, role = 'admin') =>
+    as(
+      http().post(`/api/admin/lines/${lineId}/cancel-remaining`),
+      sub,
+      role,
+    ).send(body);
+  const backlog = async (by: 'item' | 'person') => {
+    const res = await as(
+      http().get(`/api/admin/backlog?by=${by}`),
+      ADMIN,
+      'admin',
+    ).expect(200);
+    return (res.body as { groups: BacklogGroup[] }).groups;
+  };
+  const bellsOf = async (topic: string, sub = A) =>
+    (
+      await pool().query<{
+        event_id: string;
+        params: Record<string, unknown>;
+        link: string | null;
+      }>(
+        'SELECT event_id, params, link FROM in_app_notifications WHERE user_sub = $1 AND topic = $2 ORDER BY created_at, event_id',
+        [sub, topic],
+      )
+    ).rows;
   const stockItem = async (stock: number, maxQty = 10) => {
     const id = await newItem({ max_qty: maxQty });
     await pool().query('UPDATE items SET stock_qty = $2 WHERE id = $1', [
@@ -97,6 +148,9 @@ export function deliveryFixture(tag: string) {
     ...f,
     deliver,
     deliverAll,
+    cancel,
+    backlog,
+    bellsOf,
     stockItem,
     stockOf,
     movementsOf,

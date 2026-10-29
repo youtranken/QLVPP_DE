@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import type { Tx } from '../../database/database.module';
-import { EFFECTIVE_LINE } from './line-predicates';
+import { EFFECTIVE_LINE, REMAINING_QTY } from './line-predicates';
 import { bumpRequest } from './requests.repo';
 
 export interface LockedLine {
@@ -11,6 +11,7 @@ export interface LockedLine {
   user_sub: string;
   item_id: string | null;
   custom_name: string | null;
+  custom_unit: string | null;
   qty: number;
   delivered_qty: number;
   cancelled_qty: number;
@@ -24,9 +25,26 @@ export interface LockedRequest {
   lines: LockedLine[];
 }
 
+export interface CancelledLine {
+  id: string;
+  qty: number;
+  delivered_qty: number;
+  cancelled_qty: number;
+  cancel_note: string | null;
+}
+
+type CancelledRow = CancelledLine & { cancelled_now: number } & Record<
+    string,
+    unknown
+  >;
+
+const CANCELLED_COLUMNS = sql.raw(
+  'l.id, l.qty, l.delivered_qty, l.cancelled_qty, l.cancel_note',
+);
+
 const LINE_COLUMNS = sql`
   l.id, l.request_id, to_char(r.period_ym, 'YYYY-MM') AS period_ym, r.user_sub,
-  l.item_id, l.custom_name, l.qty, l.delivered_qty, l.cancelled_qty, l.review_status
+  l.item_id, l.custom_name, l.custom_unit, l.qty, l.delivered_qty, l.cancelled_qty, l.review_status
 `;
 
 // Ghi request_lines cho giao/hủy nợ ở lại module requests; delivery chỉ gọi qua đây
@@ -81,6 +99,31 @@ export class LineDeliveryStore {
     return (result.rowCount ?? 0) > 0;
   }
 
+  // Người gọi đã khóa dòng; `o` là bản trước UPDATE nên cancelled_now = đúng phần vừa hủy
+  async cancelRemaining(
+    tx: Tx,
+    lineId: string,
+    reason: string,
+    now: Date,
+  ): Promise<{ cancelled_now: number; line: CancelledLine }> {
+    const { rows } = await tx.execute<CancelledRow>(sql`
+      UPDATE request_lines l
+      SET cancelled_qty = l.qty - l.delivered_qty, cancel_note = ${reason},
+          updated_at = ${now.toISOString()}::timestamptz
+      FROM request_lines o
+      WHERE l.id = ${lineId} AND o.id = l.id AND ${EFFECTIVE_LINE} AND ${REMAINING_QTY} > 0
+      RETURNING ${CANCELLED_COLUMNS}, l.cancelled_qty - o.cancelled_qty AS cancelled_now
+    `);
+    if (rows.length > 0) {
+      const { cancelled_now, ...line } = rows[0];
+      return { cancelled_now, line };
+    }
+    const current = await tx.execute<CancelledLine & Record<string, unknown>>(
+      sql`SELECT ${CANCELLED_COLUMNS} FROM request_lines l WHERE l.id = ${lineId}`,
+    );
+    return { cancelled_now: 0, line: current.rows[0] };
+  }
+
   // Dòng đổi số đã giao = phiếu đổi: tab Điều chỉnh mở với mốc cũ phải nhận STALE_UPDATE
   async touchRequest(tx: Tx, requestId: string, now: Date): Promise<string> {
     return bumpRequest(tx, requestId, now);
@@ -91,7 +134,7 @@ export class LineDeliveryStore {
     const { rows } = await tx.execute<{ complete: boolean }>(sql`
       SELECT coalesce(
                bool_or(${EFFECTIVE_LINE})
-               AND bool_and(NOT ${EFFECTIVE_LINE} OR l.delivered_qty + l.cancelled_qty = l.qty)
+               AND bool_and(NOT ${EFFECTIVE_LINE} OR ${REMAINING_QTY} = 0)
                AND NOT bool_or(l.review_status = 'pending'),
              false) AS complete
       FROM request_lines l WHERE l.request_id = ${requestId}

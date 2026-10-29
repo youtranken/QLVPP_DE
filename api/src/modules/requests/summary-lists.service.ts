@@ -21,6 +21,7 @@ export interface PersonRow {
   line_count: number;
   total_qty: number;
   delivered_qty: number;
+  cancelled_qty: number;
   custom_pending: number;
   updated_at: string;
 }
@@ -68,6 +69,7 @@ export class SummaryListsService {
              u.status AS user_status, count(l.id)::int AS line_count,
              ${effectiveSum('l.qty')} AS total_qty,
              ${effectiveSum('l.delivered_qty')} AS delivered_qty,
+             ${effectiveSum('l.cancelled_qty')} AS cancelled_qty,
              count(l.id) FILTER (WHERE l.review_status = 'pending')::int AS custom_pending,
              r.updated_at
       FROM requests r
