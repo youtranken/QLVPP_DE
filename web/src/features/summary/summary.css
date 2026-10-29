@@ -88,3 +88,5 @@
   .aj-status:empty { display: none; }
 }
 .aj-readonly-qty { width: 100px; text-align: center; font-weight: 600; }
+.sm-acts { white-space: nowrap; }
+.sm-acts .btn + .btn { margin-left: 6px; }

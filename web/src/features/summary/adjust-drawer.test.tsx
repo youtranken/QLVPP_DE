@@ -178,6 +178,21 @@ describe('AdjustDrawer — ngăn điều chỉnh phiếu', () => {
     await waitFor(() => expect(putBody(fetchMock).expected_updated_at).toBe('2026-11-05T08:00:00.000Z'));
   });
 
+  it('Thêm vào danh mục (món có sẵn) xong → khối dòng bỏ nhãn "Ngoài danh mục" ngay, không cần mở lại ngăn', async () => {
+    const clip = { name: 'Kẹp giấy 33 mm', name_en: null, unit: 'hop', pack_note: null, image_file_id: null, active: true, admin_only: false };
+    const f = stub({ review: () => jsonResponse(200, reviewResult('converted', { id: 'l-tape', item_id: 'i-clip', item: clip })) });
+    const { drawer } = await renderDrawer();
+    expect(within(drawer).getByText('Ngoài danh mục · 2 cái')).toBeInTheDocument();
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm vào danh mục… — Băng keo 2 mặt' }));
+    const dialog = screen.getByRole('dialog', { name: 'Thêm “Băng keo 2 mặt” vào danh mục' });
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
+    await userEvent.selectOptions(await within(dialog).findByLabelText('Món trong danh mục'), 'i-clip');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    expect(await within(drawer).findByText('Đã thêm vào danh mục')).toBeInTheDocument();
+    expect(within(drawer).queryByText(/^Ngoài danh mục ·/)).toBeNull();
+    expect(f.mock.calls.filter((c) => c[0] === '/api/admin/requests/r-1')).toHaveLength(1);
+  });
+
   it('kỳ đang mở: lý do không bắt buộc; bỏ dòng → body không còn dòng đó', async () => {
     const fetchMock = stub({ views: [adminRequest({ is_open: true, period_ym: '2026-11' })] });
     const { drawer } = await renderDrawer();

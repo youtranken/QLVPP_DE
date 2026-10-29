@@ -42,6 +42,7 @@ const summary = {
       leftCompany: 'Người đã nghỉ',
       customPending: '{{n}} món ngoài DM chờ xem',
       adjust: 'Điều chỉnh',
+      deliver: 'Giao',
       empty: 'Chưa có phiếu nào khớp.',
     },
     item: {

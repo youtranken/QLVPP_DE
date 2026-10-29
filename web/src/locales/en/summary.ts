@@ -45,6 +45,7 @@ const summary: Messages<typeof vi> = {
       leftCompany: 'Left the company',
       customPending: '{{n}} off-catalog to review',
       adjust: 'Adjust',
+      deliver: 'Deliver',
       empty: 'No requests match.',
     },
     item: {

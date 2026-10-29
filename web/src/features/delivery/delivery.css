@@ -1,0 +1,38 @@
+/* Giao hàng — mỗi phiếu một hàng mở ra từng dòng; cùng nhịp bảng Tổng hợp (thanh giao 72 px) */
+.dl-tools { min-height: 36px; }
+.dl-switch { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 14px; min-height: 36px; }
+.dl-list { list-style: none; margin: 0; padding: 0; }
+.dl-list[aria-busy='true'] { opacity: .55; }
+.dl-item { border-bottom: 1px solid var(--line); }
+.dl-item:last-child { border-bottom: 0; }
+.dl-head { display: flex; align-items: center; gap: 12px; padding: 0 16px 0 4px; }
+.dl-toggle { flex: 1; min-width: 0; min-height: 52px; display: flex; align-items: center; gap: 8px; padding: 8px; border: 0; background: transparent; color: var(--ink); font: inherit; text-align: left; }
+.dl-toggle:hover .dl-who b { color: var(--brand); }
+.dl-chev { width: 16px; color: var(--ink-2); transition: transform .15s; }
+.dl-item.is-open .dl-chev { transform: rotate(90deg); }
+.dl-who { display: grid; min-width: 0; }
+.dl-who b { font-weight: 500; }
+.dl-who small { color: var(--ink-2); font-size: 13px; }
+.dl-panel { padding: 0 16px 14px 36px; }
+.dl-request { display: grid; gap: 10px; }
+.dl-lines { list-style: none; margin: 0; padding: 0; }
+.dl-line { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.dl-line-main { min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+.dl-unit { color: var(--ink-2); font-size: 14px; }
+.dl-progress { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 0 10px; color: var(--ink-2); font-size: 13px; }
+.dl-form { display: grid; justify-items: end; gap: 2px; }
+.dl-act { display: flex; align-items: center; gap: 8px; }
+.dl-qty-label { color: var(--ink-2); font-size: 13px; }
+.dl-qty { width: 72px; text-align: right; }
+.dl-request-foot { display: flex; justify-content: flex-end; }
+.dl-result p { margin: 0; }
+.dl-result ul { margin: 4px 0 0; padding-left: 18px; }
+.dl-skipped { color: var(--ink-2); font-weight: 400; }
+@media (max-width: 680px) {
+  .dl-head { flex-wrap: wrap; padding: 0 12px 8px 0; gap: 4px 12px; }
+  .dl-head .sm-delivery { margin-left: 32px; }
+  .dl-panel { padding: 0 12px 12px; }
+  .dl-line { grid-template-columns: minmax(0, 1fr); }
+  .dl-form { justify-items: start; }
+  .dl-request-foot .btn { width: 100%; }
+}

@@ -43,12 +43,16 @@ describe('AdminShell + RequireRole', () => {
     ]);
   });
 
-  it('mục chưa làm (Giao hàng) hiện "Sắp có"; Món ngoài danh mục là trang thật', () => {
+  it('mục chưa làm (Còn nợ) hiện "Sắp có"; Giao hàng và Món ngoài danh mục là trang thật', () => {
     mockViewport(1280);
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { items: [] }))));
+    renderApp(makeMe('admin'), '/admin/backlog');
+    expect(screen.getByRole('heading', { level: 1, name: 'Còn nợ' })).toBeInTheDocument();
+    expect(screen.getByText('Sắp có')).toBeInTheDocument();
+    cleanup();
     renderApp(makeMe('admin'), '/admin/delivery');
     expect(screen.getByRole('heading', { level: 1, name: 'Giao hàng' })).toBeInTheDocument();
-    expect(screen.getByText('Sắp có')).toBeInTheDocument();
+    expect(screen.queryByText('Sắp có')).toBeNull();
     cleanup();
     renderApp(makeMe('admin'), '/admin/review');
     expect(screen.getByRole('heading', { level: 1, name: 'Món ngoài danh mục' })).toBeInTheDocument();

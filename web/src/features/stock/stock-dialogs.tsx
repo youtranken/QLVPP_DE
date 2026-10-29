@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
+import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
 import { FormField } from '@/ui/form-field';
 import type { AdminItem } from '@/features/catalog/catalog.api';
@@ -16,20 +17,19 @@ function useSubmit(onClose: () => void) {
   const { t } = useTranslation();
   const refresh = useRefreshStock();
   const [errors, setErrors] = useState<StockErrors>({});
-  const [saving, setSaving] = useState(false);
-  const run = async (send: () => Promise<unknown>) => {
-    setSaving(true);
-    try {
-      await send();
-      void refresh();
-      onClose();
-    } catch (e) {
-      setErrors(stockErrors(e, t));
-      setSaving(false);
-    }
-  };
+  const flight = useSingleFlight();
+  const run = (send: () => Promise<unknown>) =>
+    flight.run(async () => {
+      try {
+        await send();
+        void refresh();
+        onClose();
+      } catch (e) {
+        setErrors(stockErrors(e, t));
+      }
+    });
   const clear = (field: keyof StockErrors) => setErrors((e) => ({ ...e, [field]: undefined, form: undefined }));
-  return { errors, saving, run, clear };
+  return { errors, saving: flight.pending, run, clear };
 }
 
 function StockDialogShell({

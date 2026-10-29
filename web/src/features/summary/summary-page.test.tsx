@@ -33,6 +33,7 @@ const person = (over: Partial<PersonRow>): PersonRow => ({
   line_count: 3,
   total_qty: 7,
   delivered_qty: 0,
+  cancelled_qty: 0,
   custom_pending: 0,
   updated_at: '2026-11-05T07:20:00.000Z',
   ...over,
@@ -258,5 +259,68 @@ describe('SummaryPage — Tổng hợp kỳ', () => {
     const row = (await screen.findByText('Đỗ Chờ')).closest('tr')!;
     expect(within(row).queryByRole('progressbar')).toBeNull();
     expect(within(row).getByText('—')).toBeInTheDocument();
+  });
+  it('thanh tiến độ tính phần đã hủy nợ: tổng 5, đã giao 3, đã hủy 2 → aria-valuenow 3, aria-valuemax 3 (đầy), "3/3"', async () => {
+    mockViewport(1280);
+    stub((url) =>
+      url.includes('by=person')
+        ? Promise.resolve(
+            jsonResponse(200, {
+              items: [person({ request_id: 'r-7', full_name: 'Lê Hủy', total_qty: 5, delivered_qty: 3, cancelled_qty: 2 })],
+              next_cursor: null,
+            }),
+          )
+        : undefined,
+    );
+    renderApp(makeMe('admin'), '/admin/summary');
+    const row = (await screen.findByText('Lê Hủy')).closest('tr')!;
+    const bar = within(row).getByRole('progressbar');
+    expect(bar).toHaveAttribute('aria-valuenow', '3');
+    expect(bar).toHaveAttribute('aria-valuemax', '3');
+    expect(bar.querySelector('i')).toHaveStyle({ width: '100%' });
+    expect(row).toHaveTextContent('3/3');
+  });
+
+  it('kỳ đã khóa: phiếu còn cần giao có nút "Giao" → /admin/delivery?ym=2026-10&request=r-1', async () => {
+    mockViewport(1280);
+    stub((url) =>
+      url.includes('by=person')
+        ? Promise.resolve(
+            jsonResponse(200, {
+              items: [PEOPLE[0]],
+              next_cursor: null,
+            }),
+          )
+        : undefined,
+    );
+    renderApp(makeMe('admin'), '/admin/summary?ym=2026-10');
+    const duc = (await screen.findByText('Phạm Văn Đức')).closest('tr')!;
+    expect(within(duc).getByRole('link', { name: 'Giao' })).toHaveAttribute('href', '/admin/delivery?ym=2026-10&request=r-1');
+  });
+
+  it('kỳ đã khóa: phiếu đã giao đủ (kể cả phần hủy) không có nút "Giao"', async () => {
+    mockViewport(1280);
+    stub((url) =>
+      url.includes('by=person')
+        ? Promise.resolve(
+            jsonResponse(200, {
+              items: [person({ request_id: 'r-8', full_name: 'Đỗ Đủ', total_qty: 4, delivered_qty: 3, cancelled_qty: 1 })],
+              next_cursor: null,
+            }),
+          )
+        : undefined,
+    );
+    renderApp(makeMe('admin'), '/admin/summary?ym=2026-10');
+    const row = (await screen.findByText('Đỗ Đủ')).closest('tr')!;
+    expect(within(row).queryByRole('link', { name: 'Giao' })).toBeNull();
+  });
+
+  it('kỳ đang mở: không có nút "Giao" (chưa giao được trước khi khóa)', async () => {
+    mockViewport(1280);
+    stub();
+    renderApp(makeMe('admin'), '/admin/summary');
+    const duc = (await screen.findByText('Phạm Văn Đức')).closest('tr')!;
+    expect(within(duc).getByRole('button', { name: 'Điều chỉnh' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Giao' })).toBeNull();
   });
 });

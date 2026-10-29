@@ -1,3 +1,4 @@
+import { act } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { jsonResponse, renderWithI18n, screen, userEvent } from '@/test/test-utils';
 import { makeMe } from '@/test/fixtures-me';
@@ -76,6 +77,21 @@ describe('StockChangeDialog', () => {
     const { init, body } = mutationCall(fetchMock, '/api/admin/items/i-1/stock');
     expect((init.headers as Record<string, string>)['X-CSRF-Token']).toBe('csrf-1');
     expect(body).toEqual({ delta: 10, reason: 'purchase', note: 'Đơn T11' });
+  });
+
+  it('Nhập kho bấm hai lần trước khi giao diện vẽ lại → chỉ một POST stock', async () => {
+    let release: (r: Response) => void = () => {};
+    const fetchMock = vi.fn((_url: string, _init?: RequestInit) => new Promise<Response>((res) => (release = res)));
+    vi.stubGlobal('fetch', fetchMock);
+    wrap(<StockChangeDialog item={ITEM} mode="purchase" onClose={vi.fn()} />);
+    await userEvent.type(screen.getByLabelText('Số lượng'), '10');
+    const submit = screen.getByRole('button', { name: 'Nhập kho' });
+    act(() => {
+      submit.click();
+      submit.click();
+    });
+    expect(fetchMock.mock.calls.filter((c) => c[0] === '/api/admin/items/i-1/stock')).toHaveLength(1);
+    await act(async () => release(jsonResponse(200, { stock_qty: 15 })));
   });
 
   it('điều chỉnh giảm quá tồn: server STOCK_INSUFFICIENT {available: 5} → "Chỉ còn 5" gắn vào ô số lượng', async () => {

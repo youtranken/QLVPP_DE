@@ -134,7 +134,10 @@ export function CustomBlock({ line, base, onReviewed, onStale, ...qty }: QtyProp
       <div className="aj-custom-main">
         <div>
           <b className="aj-name">{qty.name}</b>{' '}
-          <span className="tag tag--info">{t('summary.adjust.customTag', { qty: line.qty, unit })}</span>
+          {/* Đã thêm vào danh mục thì dòng là món danh mục: bỏ nhãn ngay khi review trả về */}
+          {line.review_status !== 'converted' && (
+            <span className="tag tag--info">{t('summary.adjust.customTag', { qty: line.qty, unit })}</span>
+          )}
           {changed && (
             <span className="aj-was-wrap">
               <span className="sr-only">{t('summary.adjust.was')}: </span>

@@ -123,7 +123,7 @@ export function SummaryPage() {
             </span>
           )}
         </div>
-        {view === 'person' ? <PersonTable ym={ym} filter={filter} q={q} onAdjust={setAdjusting} /> : <ItemTable ym={ym} />}
+        {view === 'person' ? <PersonTable ym={ym} filter={filter} q={q} locked={summary.data?.is_open === false} onAdjust={setAdjusting} /> : <ItemTable ym={ym} />}
       </section>
       {adjusting && <AdjustDrawer key={adjusting} requestId={adjusting} onClose={() => setAdjusting(null)} />}
       {creating && (

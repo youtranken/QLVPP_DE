@@ -1,41 +1,31 @@
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Loading, LoadError } from '@/ui/load-state';
+import { DeliveryBar } from './delivery-bar';
 import { usePersonRows, type PersonRow, type SummaryFilter } from './summary.api';
 
 interface PersonTableProps {
   ym: string;
   filter: SummaryFilter;
   q: string;
+  locked: boolean;
   onAdjust: (requestId: string) => void;
 }
 
-function DeliveryBar({ done, total }: { done: number; total: number }) {
-  const { t } = useTranslation();
-  // Phiếu chỉ còn dòng chờ xem/bị từ chối: không có gì để giao
-  if (total === 0) return <span className="muted">—</span>;
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-  return (
-    <span className="sm-delivery">
-      <span
-        className="sm-bar"
-        role="progressbar"
-        aria-label={t('summary.person.delivered', { done, total })}
-        aria-valuemin={0}
-        aria-valuemax={total}
-        aria-valuenow={done}
-      >
-        <i style={{ width: `${pct}%` }} />
-      </span>
-      <span className="num">
-        {done}/{total}
-      </span>
-    </span>
-  );
+interface CellsProps {
+  row: PersonRow;
+  ym: string;
+  locked: boolean;
+  stale: boolean;
+  onAdjust: (id: string) => void;
 }
 
-function PersonCells({ row, onAdjust, stale }: { row: PersonRow; onAdjust: (id: string) => void; stale: boolean }) {
+function PersonCells({ row, ym, locked, stale, onAdjust }: CellsProps) {
   const { t } = useTranslation();
   const left = row.user_status !== 'active';
+  const due = row.total_qty - row.cancelled_qty;
+  // Chỉ giao được sau khi kỳ khóa (PERIOD_NOT_LOCKED); phiếu đã đủ không cần nút
+  const canDeliver = locked && row.delivered_qty < due;
   return (
     <tr className={left ? 'is-inactive' : undefined}>
       <td data-label="">
@@ -45,7 +35,7 @@ function PersonCells({ row, onAdjust, stale }: { row: PersonRow; onAdjust: (id: 
       <td className="r num" data-label={t('summary.person.colLines')}>{row.line_count}</td>
       <td className="r num" data-label={t('summary.person.colTotal')}>{row.total_qty}</td>
       <td data-label={t('summary.person.colDelivery')}>
-        <DeliveryBar done={row.delivered_qty} total={row.total_qty} />
+        <DeliveryBar done={row.delivered_qty} total={due} />
       </td>
       <td data-label="">
         <span className="tag-list">
@@ -55,7 +45,12 @@ function PersonCells({ row, onAdjust, stale }: { row: PersonRow; onAdjust: (id: 
           )}
         </span>
       </td>
-      <td className="r" data-label="">
+      <td className="r sm-acts" data-label="">
+        {canDeliver && !stale && (
+          <Link className="btn btn--sm" to={`/admin/delivery?ym=${ym}&request=${row.request_id}`}>
+            {t('summary.person.deliver')}
+          </Link>
+        )}
         <button type="button" className="btn btn--sm" disabled={stale} onClick={() => onAdjust(row.request_id)}>
           {t('summary.person.adjust')}
         </button>
@@ -80,7 +75,7 @@ function groupRows(rows: PersonRow[], nameOf: (r: PersonRow) => string): Group[]
   return groups;
 }
 
-export function PersonTable({ ym, filter, q, onAdjust }: PersonTableProps) {
+export function PersonTable({ ym, filter, q, locked, onAdjust }: PersonTableProps) {
   const { t } = useTranslation();
   const query = usePersonRows(ym, filter, q);
   if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
@@ -123,7 +118,7 @@ export function PersonTable({ ym, filter, q, onAdjust }: PersonTableProps) {
                 </th>
               </tr>
               {g.rows.map((row) => (
-                <PersonCells key={row.request_id} row={row} onAdjust={onAdjust} stale={stale} />
+                <PersonCells key={row.request_id} row={row} ym={ym} locked={locked} stale={stale} onAdjust={onAdjust} />
               ))}
             </tbody>
           ))}

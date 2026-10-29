@@ -27,6 +27,7 @@ export interface PersonRow {
   line_count: number;
   total_qty: number;
   delivered_qty: number;
+  cancelled_qty: number;
   custom_pending: number;
   updated_at: string;
 }
@@ -91,9 +92,10 @@ export type AdminRequestView = RequestView & { user_status: string };
 export const adminRequestKey = (id: string) => ['admin-request', id] as const;
 
 // Ngăn giữ đúng bản đang sửa: không tự tải lại khi quay lại tab (bản mới chỉ đến qua STALE hoặc review)
-export function useAdminRequest(id: string) {
+export function useAdminRequest(id: string, enabled = true) {
   return useQuery({
     queryKey: adminRequestKey(id),
+    enabled,
     queryFn: () => apiFetch<AdminRequestView>(`/api/admin/requests/${id}`),
     staleTime: Infinity,
     gcTime: 0,
