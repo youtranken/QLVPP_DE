@@ -88,6 +88,7 @@ Mâu thuẫn đã phát hiện khi lập Plan 3; mỗi mục đã sửa tài li�
 - F8: §5/§12 `0103_vpp_reports.sql` gộp nhiều chủ đề, trái "một migration = một chủ đề" → tách 0103–0107; §5 sửa.
 - F9: §9 "ngày 1 → `period_open` cho mọi user `active`" ≠ mẫu số Tổng hợp → dùng mẫu số Tổng hợp (active, khác `local:sa`, giao `authorized_groups` nếu không rỗng).
 - F10: DoD "mutate có audit" vs ghi của cron chuông → `periods.headcount` (mẫu số chụp vĩnh viễn, nguồn y của Tổng hợp/báo cáo) audit `period.headcount_recorded {before: null, after}` actor `system`; `items.low_stock_notified_at` (trạng thái chống gửi đôi, tự reset khi nhập mua, không phải dữ liệu nghiệp vụ) và xóa thông báo > 90 ngày (trạng thái cá nhân, như F6) không audit.
+- F11 (review toàn nhánh 2026-10-29): cột Phần 1 FR-60 "Đăng ký kỳ này" nhưng §10 tính `requested = Σ remaining` (phần chưa giao) → Phần 1 và Phần 2 ("SL sau điều chỉnh" = `qty`) của tờ trình ký lệch nhau khi đã giao một phần. Giữ cách tính (Cần mua đúng BR-15), đổi nhãn thành "Chưa giao kỳ này"/"Undelivered this period" ở web, trang in, Excel; nhãn nằm ở code nên bản chốt cũ render lại cũng ra nhãn mới. **Chờ chủ dự án**: nếu muốn thấy cả số đăng ký thật thì thêm cột `registered` (Σ `qty` hiệu lực của kỳ) cạnh cột này.
 
 Giả định Plan 3:
 

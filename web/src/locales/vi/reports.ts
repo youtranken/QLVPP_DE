@@ -40,7 +40,7 @@ const reports = {
       title: 'Phần 1 · Tổng hợp theo món',
       colName: 'Món',
       colUnit: 'ĐVT',
-      colRequested: 'Đăng ký kỳ này',
+      colRequested: 'Chưa giao kỳ này',
       colBacklog: 'Nợ kỳ trước',
       colStock: 'Tồn',
       colNeed: 'Cần mua',

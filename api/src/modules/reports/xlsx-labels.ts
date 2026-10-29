@@ -1,4 +1,9 @@
+import type { UNITS } from '../catalog/catalog.dto';
+
 export type XlsxLang = 'vi' | 'en';
+
+// Cùng chữ với catalog.units của web
+type UnitLabels = Record<(typeof UNITS)[number], string>;
 
 export interface XlsxLabels {
   byItemSheet: string;
@@ -19,6 +24,8 @@ export interface XlsxLabels {
   department: string;
   person: string;
   noDepartment: string;
+  workbookTitle: string;
+  units: UnitLabels;
 }
 
 export const XLSX_LABELS: Record<XlsxLang, XlsxLabels> = {
@@ -27,7 +34,7 @@ export const XLSX_LABELS: Record<XlsxLang, XlsxLabels> = {
     detailSheet: 'Chi tiết',
     item: 'Món',
     unit: 'ĐVT',
-    requested: 'Đăng ký kỳ này',
+    requested: 'Chưa giao kỳ này',
     backlogPrev: 'Nợ kỳ trước',
     stock: 'Tồn',
     need: 'Cần mua',
@@ -41,13 +48,25 @@ export const XLSX_LABELS: Record<XlsxLang, XlsxLabels> = {
     department: 'Phòng ban',
     person: 'Người',
     noDepartment: 'Chưa có phòng ban',
+    workbookTitle: 'Tổng hợp đặt mua',
+    units: {
+      cai: 'cái',
+      hop: 'hộp',
+      cay: 'cây',
+      ram: 'ram',
+      cuon: 'cuộn',
+      loc: 'lốc',
+      bich: 'bịch',
+      chai: 'chai',
+      bo: 'bộ',
+    },
   },
   en: {
     byItemSheet: 'By item',
     detailSheet: 'Detail',
     item: 'Item',
     unit: 'Unit',
-    requested: 'Requested this period',
+    requested: 'Undelivered this period',
     backlogPrev: 'Carried over',
     stock: 'Stock',
     need: 'To buy',
@@ -61,5 +80,17 @@ export const XLSX_LABELS: Record<XlsxLang, XlsxLabels> = {
     department: 'Department',
     person: 'Person',
     noDepartment: 'No department',
+    workbookTitle: 'Purchase summary',
+    units: {
+      cai: 'piece',
+      hop: 'box',
+      cay: 'stick',
+      ram: 'ream',
+      cuon: 'roll',
+      loc: 'pack',
+      bich: 'bag',
+      chai: 'bottle',
+      bo: 'set',
+    },
   },
 };

@@ -41,6 +41,7 @@ describe('Trang in từ bản chốt', () => {
     const cells = within(pen).getAllByRole('cell').map((c) => c.textContent);
     expect(cells.at(-2)).toBe('10');
     expect(cells.at(-1)).toBe('14');
+    expect(within(part1).getAllByRole('columnheader')[2]).toHaveTextContent('Chưa giao kỳ này');
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
   });
 

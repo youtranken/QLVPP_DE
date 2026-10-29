@@ -18,10 +18,16 @@ export async function buildWorkbook(
 ): Promise<Buffer> {
   const labels = XLSX_LABELS[lang];
   const wb = new ExcelJS.Workbook();
+  wb.title = `${labels.workbookTitle} ${data.ym}`;
+  wb.creator = data.created_by.name ?? data.created_by.sub;
+  wb.created = new Date(data.created_at);
   fillByItem(wb.addWorksheet(labels.byItemSheet), data, labels, lang);
   fillDetail(wb.addWorksheet(labels.detailSheet), data, labels, lang);
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
+
+const unitLabel = (unit: string, l: XlsxLabels) =>
+  (l.units as Record<string, string>)[unit] ?? unit;
 
 function fillByItem(
   ws: ExcelJS.Worksheet,
@@ -45,7 +51,7 @@ function fillByItem(
   for (const r of data.byItem) {
     ws.addRow([
       localName(r, lang),
-      r.unit,
+      unitLabel(r.unit, l),
       r.requested,
       r.backlog_prev,
       r.stock,
@@ -58,7 +64,7 @@ function fillByItem(
     for (const r of data.custom) {
       ws.addRow([
         r.name,
-        r.unit,
+        unitLabel(r.unit, l),
         r.requested,
         r.backlog_prev,
         null,

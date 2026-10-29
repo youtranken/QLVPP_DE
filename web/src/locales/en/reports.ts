@@ -43,7 +43,7 @@ const reports: Messages<typeof vi> = {
       title: 'Part 1 · Summary by item',
       colName: 'Item',
       colUnit: 'Unit',
-      colRequested: 'Requested this period',
+      colRequested: 'Undelivered this period',
       colBacklog: 'Owed from last period',
       colStock: 'In stock',
       colNeed: 'To buy',

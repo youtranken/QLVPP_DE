@@ -27,7 +27,7 @@ const month = (ym: string) => Number(ym.slice(5, 7));
 const lineOf = (lines: Locator, name: string) => lines.getByRole('listitem').filter({ hasText: name });
 const reportRow = (page: Page, name: string) =>
   page.getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row').filter({ has: page.getByRole('spinbutton', { name: `Đặt mua ${name}` }) });
-// Cột: Món · ĐVT · Đăng ký kỳ này · Nợ kỳ trước · Tồn · Cần mua · Đặt mua
+// Cột: Món · ĐVT · Chưa giao kỳ này · Nợ kỳ trước · Tồn · Cần mua · Đặt mua
 const needCell = (row: Locator) => row.getByRole('cell').nth(5);
 
 // DB dev có thể còn món ngoài danh mục chờ xem của kỳ đó (dữ liệu khác) → hộp nhắc trước khi chốt

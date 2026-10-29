@@ -64,4 +64,13 @@ describe('Tên món theo ngôn ngữ giao diện (name_en khi en và khác rỗn
     const detail = screen.getByRole('region', { name: 'Phần 2 · Chi tiết theo phòng ban' });
     expect(within(detail).getByRole('row', { name: /Phạm Văn Đức/ })).toHaveTextContent('Bút bi xanh');
   });
+
+  it('cột 3 Phần 1 là phần chưa giao: vi "Chưa giao kỳ này", en "Undelivered this period"', async () => {
+    await openIn('vi');
+    const vi = await screen.findByRole('region', { name: 'Phần 1 · Tổng hợp theo món' });
+    expect(within(vi).getAllByRole('columnheader')[2]).toHaveTextContent('Chưa giao kỳ này');
+    await i18n.changeLanguage('en');
+    const en = await screen.findByRole('region', { name: 'Part 1 · Summary by item' });
+    expect(within(en).getAllByRole('columnheader')[2]).toHaveTextContent('Undelivered this period');
+  });
 });

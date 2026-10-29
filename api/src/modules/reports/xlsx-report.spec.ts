@@ -4,14 +4,14 @@ import { buildWorkbook } from './xlsx-report';
 
 const ITEM = '11111111-1111-4111-8111-111111111111';
 const PLAIN = '22222222-2222-4222-8222-222222222222';
-const CUSTOM = 'custom:["bìa còng","cái"]';
+const CUSTOM = 'custom:["bìa còng","cai"]';
 
 const row = (over: object) => ({
   key: ITEM,
   item_id: ITEM,
   name: 'Bút bi',
   name_en: 'Ballpoint pen',
-  unit: 'cây',
+  unit: 'cay',
   pack_note: null,
   active: true,
   requested: 5,
@@ -31,6 +31,7 @@ const data: SnapshotData = {
       item_id: PLAIN,
       name: 'Kẹp giấy',
       name_en: null,
+      unit: 'hop',
       need: 1,
     }),
   ],
@@ -38,7 +39,7 @@ const data: SnapshotData = {
     {
       key: CUSTOM,
       name: 'Bìa còng',
-      unit: 'cái',
+      unit: 'cai',
       requested: 2,
       backlog_prev: 1,
       stock: null,
@@ -54,7 +55,7 @@ const data: SnapshotData = {
           user_sub: 'u1',
           full_name: 'Nhân viên A',
           lines: [
-            { name: 'Bút bi', name_en: 'Ballpoint pen', unit: 'cây', qty: 5 },
+            { name: 'Bút bi', name_en: 'Ballpoint pen', unit: 'cay', qty: 5 },
           ],
         },
       ],
@@ -65,7 +66,7 @@ const data: SnapshotData = {
         {
           user_sub: 'u2',
           full_name: null,
-          lines: [{ name: 'Bìa còng', name_en: null, unit: 'cái', qty: 2 }],
+          lines: [{ name: 'Bìa còng', name_en: null, unit: 'cai', qty: 2 }],
         },
       ],
     },
@@ -74,7 +75,7 @@ const data: SnapshotData = {
     {
       item_name: 'Bút bi',
       item_name_en: 'Ballpoint pen',
-      unit: 'cây',
+      unit: 'cay',
       recipient_sub: null,
       recipient_name: null,
       qty: 2,
@@ -84,7 +85,7 @@ const data: SnapshotData = {
     {
       item_name: 'Kẹp giấy',
       item_name_en: null,
-      unit: 'hộp',
+      unit: 'hop',
       recipient_sub: 'u1',
       recipient_name: 'Nhân viên A',
       qty: 1,
@@ -122,14 +123,41 @@ describe('buildWorkbook', () => {
     expect(values(ws, 1)).toEqual([
       'Món',
       'ĐVT',
-      'Đăng ký kỳ này',
+      'Chưa giao kỳ này',
       'Nợ kỳ trước',
       'Tồn',
       'Cần mua',
       'Đặt mua',
     ]);
     expect(values(ws, 2)).toEqual(['Bút bi', 'cây', 5, 2, 3, 4, 7]);
-    expect(values(ws, 3)).toEqual(['Kẹp giấy', 'cây', 5, 2, 3, 1, 1]);
+    expect(values(ws, 3)).toEqual(['Kẹp giấy', 'hộp', 5, 2, 3, 1, 1]);
+  });
+
+  it('ĐVT dịch từ mã: vi "cây"/"hộp"/"cái", en "stick"/"box"/"piece"; mã lạ hiện mã thô', async () => {
+    const vi = (await open('vi')).worksheets[0];
+    expect(vi.getRow(5).getCell(2).value).toBe('cái');
+    const en = (await open('en')).worksheets[0];
+    expect([2, 3, 5].map((n) => en.getRow(n).getCell(2).value)).toEqual([
+      'stick',
+      'box',
+      'piece',
+    ]);
+    const odd = { ...data, byItem: [row({ unit: 'thung' })] };
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(new Uint8Array(await buildWorkbook(odd, 'en')).buffer);
+    expect(wb.worksheets[0].getRow(2).getCell(2).value).toBe('thung');
+  });
+
+  it('cột 3 en "Undelivered this period"', async () => {
+    const ws = (await open('en')).worksheets[0];
+    expect(ws.getRow(1).getCell(3).value).toBe('Undelivered this period');
+  });
+
+  it('thuộc tính tệp: tiêu đề có kỳ, người lập, giờ lập của bản chốt', async () => {
+    const wb = await open('vi');
+    expect(wb.title).toBe('Tổng hợp đặt mua 2026-11');
+    expect(wb.creator).toBe('Hành chính');
+    expect(wb.created.toISOString()).toBe('2026-11-12T03:00:00.000Z');
   });
 
   it('nhóm "Ngoài danh mục" có tiêu đề nhóm, Tồn để trống', async () => {
