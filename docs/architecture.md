@@ -201,7 +201,7 @@ Vai: **M** member (mọi người đăng nhập, kể cả admin/sa) · **A** ad
 | Giao | A | `POST admin/lines/:id/deliver {qty, expected_delivered_qty}` · `POST admin/requests/:id/deliver-all` → `{delivered[], failed[{line_id, code}]}` · `POST admin/movements/:id/undo {qty, reason}` · `POST admin/lines/:id/cancel-remaining {reason}` · `GET admin/backlog?by=item\|person` · `GET admin/lines/:id/deliveries` |
 | Kho / DM | A | `GET\|POST\|PATCH admin/items` · `DELETE admin/items/:id` (chỉ khi chưa từng có trong phiếu, khác → `ITEM_IN_USE`) · `POST admin/items/:id/stock {delta, reason: purchase\|adjust, note}` · `POST admin/items/:id/issue {qty, recipient_sub?, reason}` · `GET admin/items/:id/movements` · `GET admin/issues?ym=` · `GET admin/stock/low` · `POST\|PATCH admin/item-categories` (`GET item-categories?all=1` cho admin xem cả nhóm đã tắt) |
 | Báo cáo | A | `GET admin/reports/:ym` (sống) · `POST admin/reports/:ym/snapshots {kind}` → bản chốt · `GET admin/reports/:ym/snapshots` · `GET admin/reports/snapshots/:id/export.xlsx?lang=vi\|en` · `GET admin/reports/snapshots/:id` (dữ liệu cho trang in) |
-| Quản trị | A | `POST admin/directory/sync` · `GET admin/users` · `GET admin/audit?actor=&action=&from=&to=&self=true\|false` (`self=false` gồm dòng không có cờ) · `GET\|PUT admin/config` |
+| Quản trị | A | `POST admin/directory/sync` · `GET admin/users` · `GET admin/audit?actor=&action=&from=&to=&self=true\|false` (`self=false` gồm dòng không có cờ; `from`/`to` là ngày lịch thật năm ≥ 2000 như mọi input ngày — kỳ, `expected_updated_at`, cursor — sai → 400 `VALIDATION`) · `GET\|PUT admin/config` |
 
 `ym` phải là `YYYY-MM` hợp lệ (năm ≥ 2000), không lớn hơn kỳ đang mở → `INVALID_PERIOD`.
 

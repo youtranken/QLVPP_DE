@@ -11,10 +11,9 @@ import {
   Min,
 } from 'class-validator';
 import { DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../../common/cursor';
+import { DATE_FROM_2000 } from '../../common/ym';
 import { Roles } from '../auth/roles.decorator';
 import { AuditQueryService } from './audit-query.service';
-
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function invalid(field: string, message: string): BadRequestException {
   return new BadRequestException({
@@ -44,11 +43,11 @@ class AuditQueryDto {
   action?: string;
 
   @IsOptional()
-  @Matches(DATE_RE, { message: 'from phải dạng YYYY-MM-DD' })
+  @Matches(DATE_FROM_2000, { message: 'from phải dạng YYYY-MM-DD, năm ≥ 2000' })
   from?: string;
 
   @IsOptional()
-  @Matches(DATE_RE, { message: 'to phải dạng YYYY-MM-DD' })
+  @Matches(DATE_FROM_2000, { message: 'to phải dạng YYYY-MM-DD, năm ≥ 2000' })
   to?: string;
 
   @IsOptional()

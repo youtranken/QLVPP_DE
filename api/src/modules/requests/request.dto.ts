@@ -9,9 +9,11 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
   MaxLength,
   ValidateNested,
 } from 'class-validator';
+import { STAMP_FROM_2000 } from '../../common/ym';
 import { NAME_MAX, TrimToNull, UNITS } from '../catalog/catalog.dto';
 
 export type Unit = (typeof UNITS)[number];
@@ -22,6 +24,11 @@ const OptionalText = (max: number) => (target: object, key: string) => {
   IsOptional()(target, key);
   IsString()(target, key);
   MaxLength(max)(target, key);
+};
+
+const UpdatedAtStamp = () => (target: object, key: string) => {
+  IsISO8601({ strict: true })(target, key);
+  Matches(STAMP_FROM_2000, { message: `${key} phải có năm ≥ 2000` })(target, key);
 };
 
 export class LineInput {
@@ -54,12 +61,12 @@ export interface LinesPayload {
 export class SaveMyLinesBody extends LinesBody {
   // Hình dạng kiểm ở controller (parseYm) để sai dạng trả INVALID_PERIOD như mọi tham số kỳ
   @IsDefined() ym!: string;
-  @IsOptional() @IsISO8601({ strict: true }) expected_updated_at?: string;
+  @IsOptional() @UpdatedAtStamp() expected_updated_at?: string;
 }
 
 // Hành chính luôn sửa phiếu đã có → bắt buộc mốc updated_at đang xem
 export class SaveLinesBody extends LinesBody {
-  @IsISO8601({ strict: true }) expected_updated_at!: string;
+  @UpdatedAtStamp() expected_updated_at!: string;
   @OptionalText(NOTE_MAX) reason?: string | null;
 }
 

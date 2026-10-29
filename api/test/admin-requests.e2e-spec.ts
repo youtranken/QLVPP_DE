@@ -40,9 +40,14 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
       });
     });
 
-    it("expected_updated_at 'hôm qua' / ngày không có thật → 400 VALIDATION {fields: [expected_updated_at]}", async () => {
+    it("expected_updated_at 'hôm qua' / ngày không có thật / năm 0000, 1999 → 400 VALIDATION {fields: [expected_updated_at]}", async () => {
       const r = await seed([{ item_id: item, qty: 2 }]);
-      for (const stamp of ['hôm qua', '2026-02-30T00:00:00Z']) {
+      for (const stamp of [
+        'hôm qua',
+        '2026-02-30T00:00:00Z',
+        '0000-01-01T00:00:00Z',
+        '1999-12-31T23:59:59Z',
+      ]) {
         const res = await adminPut(r.id, {
           lines: keep(r),
           expected_updated_at: stamp,

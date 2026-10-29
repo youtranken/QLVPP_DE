@@ -178,4 +178,27 @@ describe('GET admin/audit', () => {
       .expect(400);
     expect(res.body.code).toBe('VALIDATION');
   });
+
+  it.each([
+    ['from=0000-01-01', { from: '0000-01-01' }, 'from'],
+    ['from=1999-12-31', { from: '1999-12-31' }, 'from'],
+    ['to=0001-01-01', { to: '0001-01-01' }, 'to'],
+  ])('%s → 400 VALIDATION (năm < 2000), không 500', async (_l, query, field) => {
+    const res = await request(app.getHttpServer())
+      .get('/api/admin/audit')
+      .query(query)
+      .set('x-dev-user-sub', 'dev-admin')
+      .set('x-dev-role', 'admin')
+      .expect(400);
+    expect(res.body).toMatchObject({ code: 'VALIDATION', fields: [field] });
+  });
+
+  it('from=2000-01-01 → 200', async () => {
+    await request(app.getHttpServer())
+      .get('/api/admin/audit')
+      .query({ from: '2000-01-01', action })
+      .set('x-dev-user-sub', 'dev-admin')
+      .set('x-dev-role', 'admin')
+      .expect(200);
+  });
 });

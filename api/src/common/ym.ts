@@ -1,7 +1,11 @@
 import { BadRequestException, PipeTransform } from '@nestjs/common';
 
-// Năm < 2000 không có kỳ thật; năm 0000 làm Postgres ném lỗi ngày → 500, Date.UTC đổi năm 0–99 thành 19xx
+// Năm < 2000 không có kỳ thật; năm 0000 làm Postgres ném lỗi ngày → 500, Date.UTC đổi năm 0–99 thành 19xx.
+// Cùng luật cho mọi input ngày (kỳ, ngày lọc, mốc updated_at, cursor)
+export const MIN_YEAR = 2000;
 export const YM = /^([2-9]\d{3})-(0[1-9]|1[0-2])$/;
+export const DATE_FROM_2000 = /^[2-9]\d{3}-\d{2}-\d{2}$/;
+export const STAMP_FROM_2000 = /^[2-9]\d{3}-/;
 
 // Chỉ kiểm hình dạng; "không lớn hơn kỳ đang mở" cần ClockService nên nằm ở module kỳ
 export function parseYm(raw: unknown): string {

@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { isUuid } from './uuid';
+import { MIN_YEAR } from './ym';
 
 export const DEFAULT_PAGE_LIMIT = 50;
 export const MAX_PAGE_LIMIT = 200;
@@ -44,7 +45,7 @@ export function assertRealTimestamp(value: string): void {
   );
   const daysInMonth = new Date(Date.UTC(y, mo, 0)).getUTCDate();
   const ok =
-    y >= 1000 &&
+    y >= MIN_YEAR &&
     mo >= 1 &&
     mo <= 12 &&
     d >= 1 &&
