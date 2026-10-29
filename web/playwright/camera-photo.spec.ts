@@ -13,7 +13,7 @@ function chunk(type: string, data: Buffer): Buffer {
   return Buffer.concat([head, data, crc]);
 }
 
-// Ảnh "camera" ~4 MB: PNG nhiễu không nén (deflate level 0) — không cần thư viện ảnh
+// Nhiễu + deflate 0 để PNG thật sự ~4 MB như ảnh camera mà không thêm thư viện ảnh
 function noisyPng(width: number, height: number): Buffer {
   const raw = Buffer.alloc((width * 3 + 1) * height);
   let seed = 7;

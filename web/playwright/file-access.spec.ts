@@ -5,11 +5,12 @@ import { deleteTestUsers, devHeaders, removeTestItem, seedActiveUser } from './h
 const PNG = readFileSync('playwright/fixtures/item.png');
 
 test.describe('PRD §10.10 quyền đọc ảnh', () => {
-  test('member A mở ảnh dòng của B → 404; B và Hành chính → 200; ảnh món đang bán → A 200', async ({ request }, info) => {
+  test('member A mở ảnh dòng của B → 404 FILE_NOT_FOUND; A mở ảnh dòng của chính mình, B và Hành chính → 200; ảnh món đang bán → A 200', async ({ request }, info) => {
     const suffix = `${Date.now()}-${info.project.name}`;
     const a = { 'x-dev-user-sub': `pw-fa-a-${suffix}`, 'x-dev-role': 'member' };
     const b = { 'x-dev-user-sub': `pw-fa-b-${suffix}`, 'x-dev-role': 'member' };
     const admin = devHeaders('admin');
+    seedActiveUser(a['x-dev-user-sub'], `PW Ảnh A ${info.project.name}`);
     seedActiveUser(b['x-dev-user-sub'], `PW Ảnh B ${info.project.name}`);
     const upload = async (headers: Record<string, string>, purpose: string) => {
       const res = await request.post('/api/files', {
@@ -19,20 +20,25 @@ test.describe('PRD §10.10 quyền đọc ảnh', () => {
       expect(res.status()).toBe(201);
       return (await res.json()).id as string;
     };
+    const saveLineWithImage = async (headers: Record<string, string>, ym: string) => {
+      const image = await upload(headers, 'line_image');
+      const saved = await request.put('/api/me/request/lines', {
+        headers,
+        data: { ym, lines: [{ custom_name: 'PW Bìa riêng', custom_unit: 'cai', image_file_id: image, qty: 1 }] },
+      });
+      expect(saved.status()).toBe(200);
+      return image;
+    };
     let itemId: string | undefined;
     try {
       const period = await (await request.get('/api/periods/current', { headers: b })).json();
-      const lineImg = await upload(b, 'line_image');
-      const saved = await request.put('/api/me/request/lines', {
-        headers: b,
-        data: {
-          ym: period.ym,
-          lines: [{ custom_name: 'PW Bìa riêng', custom_unit: 'cai', image_file_id: lineImg, qty: 1 }],
-        },
-      });
-      expect(saved.status()).toBe(200);
+      const lineImg = await saveLineWithImage(b, period.ym);
+      const ownImg = await saveLineWithImage(a, period.ym);
 
-      expect((await request.get(`/api/files/${lineImg}`, { headers: a })).status()).toBe(404);
+      const denied = await request.get(`/api/files/${lineImg}`, { headers: a });
+      expect(denied.status()).toBe(404);
+      expect(await denied.json()).toMatchObject({ code: 'FILE_NOT_FOUND' });
+      expect((await request.get(`/api/files/${ownImg}`, { headers: a })).status()).toBe(200);
       expect((await request.get(`/api/files/${lineImg}`, { headers: b })).status()).toBe(200);
       expect((await request.get(`/api/files/${lineImg}`, { headers: admin })).status()).toBe(200);
 
@@ -48,7 +54,7 @@ test.describe('PRD §10.10 quyền đọc ảnh', () => {
       expect(shown.headers()['content-type']).toContain('image/png');
     } finally {
       if (itemId) await removeTestItem(request, itemId);
-      deleteTestUsers(b['x-dev-user-sub']);
+      deleteTestUsers(a['x-dev-user-sub'], b['x-dev-user-sub']);
     }
   });
 });
