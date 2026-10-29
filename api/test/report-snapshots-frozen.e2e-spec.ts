@@ -38,7 +38,7 @@ describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
     const row = ws.getColumn(1).values.indexOf(name);
     expect((ws.getRow(row).values as unknown[]).slice(1)).toEqual([
       name,
-      'cay',
+      'cây',
       5,
       0,
       4,
