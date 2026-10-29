@@ -1,0 +1,104 @@
+import type { Pool } from 'pg';
+import { AFTER_DEADLINE, BEFORE_DEADLINE } from './me-request.fixture';
+import { reviewFixture } from './review.fixture';
+
+export interface DeliverResult {
+  line: {
+    id: string;
+    qty: number;
+    delivered_qty: number;
+    cancelled_qty: number;
+  };
+  movement_id: string | null;
+  stock_qty: number | null;
+  request_complete: boolean;
+}
+
+// Đợt giao/biến động kho chặn xóa phiếu và món (RESTRICT) → dọn trước hook dọn của reviewFixture
+async function clearDeliveries(pool: Pool, suffix: string): Promise<void> {
+  const mine = `e2e-req-%-${suffix}`;
+  const lines = `SELECT l.id FROM request_lines l JOIN requests r ON r.id = l.request_id
+                 WHERE r.user_sub LIKE $1`;
+  await pool.query(`DELETE FROM line_deliveries WHERE line_id IN (${lines})`, [
+    mine,
+  ]);
+  await pool.query(
+    `DELETE FROM stock_movements WHERE ref_line_id IN (${lines})
+       OR item_id IN (SELECT id FROM items WHERE name LIKE $2)`,
+    [mine, `e2e-req-item-${suffix}-%`],
+  );
+  await pool.query('DELETE FROM in_app_notifications WHERE user_sub LIKE $1', [
+    mine,
+  ]);
+}
+
+export function deliveryFixture(tag: string) {
+  // Đăng ký trước reviewFixture: jest chạy beforeEach/afterAll theo thứ tự khai báo
+  beforeEach(() => clearDeliveries(f.pool(), f.SUFFIX));
+  afterAll(() => clearDeliveries(f.pool(), f.SUFFIX));
+  const f = reviewFixture(tag);
+  const { ADMIN, A, as, at, http, newItem, pool, seed, freeze } = f;
+
+  const deliver = (lineId: string, body: object, sub = ADMIN, role = 'admin') =>
+    as(http().post(`/api/admin/lines/${lineId}/deliver`), sub, role).send(body);
+  const stockItem = async (stock: number, maxQty = 10) => {
+    const id = await newItem({ max_qty: maxQty });
+    await pool().query('UPDATE items SET stock_qty = $2 WHERE id = $1', [
+      id,
+      stock,
+    ]);
+    return id;
+  };
+  const stockOf = async (itemId: string) =>
+    (
+      await pool().query<{ stock_qty: number }>(
+        'SELECT stock_qty FROM items WHERE id = $1',
+        [itemId],
+      )
+    ).rows[0].stock_qty;
+  const movementsOf = async (lineId: string) =>
+    (
+      await pool().query<{ id: string; delta: number; reason: string }>(
+        'SELECT id, delta, reason FROM stock_movements WHERE ref_line_id = $1',
+        [lineId],
+      )
+    ).rows;
+  const deliveriesOf = async (lineId: string) =>
+    (
+      await pool().query<{ qty: number; movement_id: string | null }>(
+        'SELECT qty, movement_id FROM line_deliveries WHERE line_id = $1 ORDER BY created_at',
+        [lineId],
+      )
+    ).rows;
+  const notificationsOf = async (sub = A) =>
+    (
+      await pool().query<{
+        event_id: string;
+        topic: string;
+        params: Record<string, unknown>;
+        link: string | null;
+      }>(
+        "SELECT event_id, topic, params, link FROM in_app_notifications WHERE user_sub = $1 AND topic = 'request_delivered' ORDER BY created_at, event_id",
+        [sub],
+      )
+    ).rows;
+  // Phiếu một dòng món danh mục, tạo trước hạn rồi đứng đồng hồ sau hạn (kỳ đã khóa)
+  const lockedLine = async (stock: number, qty = 5, sub = A) => {
+    const item = await stockItem(stock);
+    at(BEFORE_DEADLINE);
+    const request = await seed([{ item_id: item, qty }], sub);
+    freeze(AFTER_DEADLINE);
+    return { item, request, line: request.lines[0] };
+  };
+
+  return {
+    ...f,
+    deliver,
+    stockItem,
+    stockOf,
+    movementsOf,
+    deliveriesOf,
+    notificationsOf,
+    lockedLine,
+  };
+}

@@ -13,6 +13,7 @@ import { HealthController } from './health/health.controller';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
+import { DeliveryModule } from './modules/delivery/delivery.module';
 import { OidcModule } from './modules/auth/oidc.module';
 import { SystemConfigModule } from './modules/config/config.module';
 import { FilesModule } from './modules/files/files.module';
@@ -61,6 +62,7 @@ import { RequestsModule } from './modules/requests/requests.module';
     PeriodsModule,
     RequestsModule,
     NotificationsModule,
+    DeliveryModule,
   ],
   controllers: [HealthController, ...testOnlyControllers(process.env)],
   providers: [

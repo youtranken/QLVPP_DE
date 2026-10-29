@@ -7,13 +7,11 @@ import {
 } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { DRIZZLE_DB } from '../../database/database.module';
-import type { Database } from '../../database/database.module';
+import type { Database, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { UsersService } from '../users/users.service';
 import { itemNotFound } from './catalog.service';
 import type { IssueDto, StockChangeDto } from './stock.dto';
-
-type Tx = Parameters<Parameters<Database['transaction']>[0]>[0];
 
 export interface StockResult {
   stock_qty: number;
@@ -23,9 +21,17 @@ export interface StockResult {
 interface MovementInput {
   itemId: string;
   delta: number;
-  reason: 'purchase' | 'adjust' | 'issue';
+  reason: 'purchase' | 'adjust' | 'issue' | 'delivery';
   note: string | null;
   recipientSub?: string | null;
+  refLineId?: string | null;
+}
+
+export interface DeliveryTake {
+  itemId: string;
+  qty: number;
+  lineId: string;
+  actor: string;
 }
 
 @Injectable()
@@ -96,6 +102,43 @@ export class StockService {
     });
   }
 
+  // Không audit riêng: audit line.delivered của giao hàng đã ghi movement_id
+  async takeForDeliveryWithin(
+    tx: Tx,
+    take: DeliveryTake,
+  ): Promise<StockResult> {
+    const updated = (
+      await tx.execute<{ stock_qty: number }>(sql`
+        UPDATE items SET stock_qty = stock_qty - ${take.qty}, updated_at = now()
+        WHERE id = ${take.itemId} AND stock_qty >= ${take.qty}
+        RETURNING stock_qty
+      `)
+    ).rows[0];
+    if (!updated) throw await this.rejection(tx, take.itemId);
+    const movement = await this.insertMovement(tx, take.actor, {
+      itemId: take.itemId,
+      delta: -take.qty,
+      reason: 'delivery',
+      note: null,
+      refLineId: take.lineId,
+    });
+    return { stock_qty: updated.stock_qty, movement_id: movement.id };
+  }
+
+  private async insertMovement(
+    tx: Tx,
+    actor: string,
+    m: MovementInput,
+  ): Promise<{ id: string }> {
+    const { rows } = await tx.execute<{ id: string }>(sql`
+      INSERT INTO stock_movements (item_id, delta, reason, note, recipient_sub, ref_line_id, actor_sub)
+      VALUES (${m.itemId}, ${m.delta}, ${m.reason}, ${m.note}, ${m.recipientSub ?? null},
+              ${m.refLineId ?? null}, ${actor})
+      RETURNING id
+    `);
+    return rows[0];
+  }
+
   private async record(
     tx: Tx,
     updated: { stock_qty: number } | undefined,
@@ -103,13 +146,7 @@ export class StockService {
     m: MovementInput,
   ): Promise<StockResult> {
     if (!updated) throw await this.rejection(tx, m.itemId);
-    const movement = (
-      await tx.execute<{ id: string }>(sql`
-        INSERT INTO stock_movements (item_id, delta, reason, note, recipient_sub, actor_sub)
-        VALUES (${m.itemId}, ${m.delta}, ${m.reason}, ${m.note}, ${m.recipientSub ?? null}, ${actor})
-        RETURNING id
-      `)
-    ).rows[0];
+    const movement = await this.insertMovement(tx, actor, m);
     await this.audit.appendWithin(tx, {
       actor,
       action: `stock.${m.reason}`,

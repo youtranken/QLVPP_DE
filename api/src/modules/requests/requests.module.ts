@@ -13,6 +13,7 @@ import { CopyPreviousService } from './copy-previous.service';
 import { CurrentPeriodController } from './current-period.controller';
 import { CurrentPeriodService } from './current-period.service';
 import { HistoryService } from './history.service';
+import { LineDeliveryStore } from './line-delivery.store';
 import { LINE_IMAGE_REFERENCE } from './line-image.reference';
 import { MeRequestController } from './me-request.controller';
 import { MeRequestService } from './me-request.service';
@@ -51,8 +52,9 @@ import { SummaryService } from './summary.service';
     SummaryService,
     SummaryListsService,
     ReviewService,
+    LineDeliveryStore,
   ],
-  exports: [RequestLinesWriter, RequestViewBuilder],
+  exports: [RequestLinesWriter, RequestViewBuilder, LineDeliveryStore],
 })
 export class RequestsModule implements OnModuleInit {
   constructor(
