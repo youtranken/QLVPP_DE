@@ -74,6 +74,31 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
       });
     });
 
+    it('mốc hạn: 23:59:59.999 ngày 10 không cần lý do → 200; 00:00:00.000 ngày 11 thiếu lý do → REASON_REQUIRED, lý do "  abc  " (đúng 3 ký tự sau trim) → 200', async () => {
+      const r = await seed([{ item_id: item, qty: 2 }]);
+      f.freeze('2026-11-10T16:59:59.999Z');
+      const open = view(
+        await adminPut(r.id, {
+          lines: [{ id: r.lines[0].id, qty: 3 }],
+          expected_updated_at: r.updated_at,
+        }).expect(200),
+      );
+      expect(open.is_open).toBe(true);
+      f.freeze('2026-11-10T17:00:00.000Z');
+      const body = {
+        lines: [{ id: r.lines[0].id, qty: 4 }],
+        expected_updated_at: open.updated_at,
+      };
+      const missing = await adminPut(r.id, body).expect(400);
+      expect(missing.body.code).toBe('REASON_REQUIRED');
+      const res = await adminPut(r.id, { ...body, reason: '  abc  ' }).expect(
+        200,
+      );
+      expect(view(res)).toMatchObject({ is_open: false });
+      const [, detail] = await auditOf('request.updated', r.id);
+      expect(detail).toMatchObject({ reason: 'abc' });
+    });
+
     it('trong hạn không cần lý do', async () => {
       const r = await seed([{ item_id: item, qty: 2 }]);
       await adminPut(r.id, {

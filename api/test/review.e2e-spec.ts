@@ -78,6 +78,16 @@ describe('admin/review: hàng chờ, nhận, từ chối', () => {
     });
   });
 
+  it('reject note "  abc  " (đúng 3 ký tự sau trim) → 200 rejected, lưu note đã trim', async () => {
+    const { line } = await customLine();
+    const res = await review(line.id, { action: 'reject', note: '  abc  ' });
+    expect(res.status).toBe(200);
+    expect(res.body.line).toMatchObject({
+      review_status: 'rejected',
+      review_note: 'abc',
+    });
+  });
+
   it('review đổi updated_at phiếu: tab member giữ mốc cũ lưu → 409 STALE_UPDATE; request_updated_at khớp DB', async () => {
     const { line } = await customLine();
     const got = await getMine();

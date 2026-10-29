@@ -91,6 +91,19 @@ describe('admin/requests: Hành chính tạo phiếu hộ', () => {
     });
 
     it.each([
+      ['23:59:59.999 ngày 10', '2026-11-10T16:59:59.999Z', '2026-11'],
+      ['00:00:00.000 ngày 11', '2026-11-10T17:00:00.000Z', '2026-12'],
+    ])('tạo hộ lúc %s → 201 vào kỳ %s', async (_label, now, ym) => {
+      f.freeze(now);
+      const res = await adminPost({
+        user_sub: B,
+        lines: [{ item_id: item, qty: 1 }],
+      }).expect(201);
+      expect(view(res).period_ym).toBe(ym);
+      await pool().query('DELETE FROM requests WHERE user_sub = $1', [B]);
+    });
+
+    it.each([
       ['người bị khóa', 400, 'USER_INACTIVE', () => LOCKED],
       ['sub lạ', 404, 'USER_NOT_FOUND', () => `e2e-req-ghost-${f.SUFFIX}`],
       ['SA cục bộ (không có trong danh bạ)', 404, 'USER_NOT_FOUND', () => SA],
@@ -180,6 +193,17 @@ describe('admin/requests: Hành chính tạo phiếu hộ', () => {
       expect(await codeOf(write('2001-01', AFTER_DEADLINE))).toBe(
         'INVALID_PERIOD',
       );
+    });
+
+    it('kỳ 11 chưa có phiếu: 23:59:59.999 ngày 10 → tạo được; 00:00:00.000 ngày 11 → PERIOD_LOCKED', async () => {
+      expect(await codeOf(write('2026-11', '2026-11-10T16:59:59.999Z'))).toBe(
+        'OK',
+      );
+      await pool().query('DELETE FROM requests WHERE user_sub = $1', [B]);
+      expect(await codeOf(write('2026-11', '2026-11-10T17:00:00.000Z'))).toBe(
+        'PERIOD_LOCKED',
+      );
+      expect(await f.requestsOf(B)).toEqual([]);
     });
 
     it('kỳ đã khóa → PERIOD_LOCKED: không tạo phiếu mới cho kỳ đã khóa dù có lý do', async () => {

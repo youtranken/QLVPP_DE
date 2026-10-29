@@ -53,11 +53,17 @@ export function meRequestFixture(tag: string) {
   let pool: Pool;
   let dir: string;
   let offsetMs = 0;
+  let frozen: Date | null = null;
   let imgA: string;
   let defaultMax: number;
 
   const at = (iso: string) => {
+    frozen = null;
     offsetMs = Date.parse(iso) - Date.now();
+  };
+  // Mốc chính xác tới ms (ranh giới hạn): đồng hồ đứng yên, không trôi theo thời gian chạy test
+  const freeze = (iso: string) => {
+    frozen = new Date(iso);
   };
   const http = () => request(app.getHttpServer());
   const as = (req: request.Test, sub: string, role = 'member') =>
@@ -153,7 +159,9 @@ export function meRequestFixture(tag: string) {
       [
         {
           token: ClockService,
-          useValue: { now: () => new Date(Date.now() + offsetMs) },
+          useValue: {
+            now: () => frozen ?? new Date(Date.now() + offsetMs),
+          },
         },
       ],
     )) as INestApplication<App>;
@@ -188,6 +196,7 @@ export function meRequestFixture(tag: string) {
     B,
     ADMIN,
     at,
+    freeze,
     http,
     as,
     upload,

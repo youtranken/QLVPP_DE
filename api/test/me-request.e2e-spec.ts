@@ -7,6 +7,7 @@ describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', ()
     B,
     ADMIN,
     at,
+    freeze,
     http,
     as,
     upload,
@@ -133,6 +134,27 @@ describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', ()
     expect(dec.id).not.toBe(nov.id);
     const noYm = await put({ lines: [{ item_id: x, qty: 2 }] }).expect(400);
     expect(noYm.body).toMatchObject({ code: 'VALIDATION' });
+  });
+
+  it('mốc khóa: lưu kỳ 2026-11 lúc 23:59:59.999 ngày 10 → 200 is_open; lúc 00:00:00.000 ngày 11 → 409 PERIOD_LOCKED {next_ym: 2026-12}, cả khi chưa có phiếu', async () => {
+    const x = await newItem();
+    freeze('2026-11-10T16:59:59.999Z');
+    const nov = view(await save([{ item_id: x, qty: 1 }]).expect(200));
+    expect(nov).toMatchObject({ period_ym: '2026-11', is_open: true });
+    freeze('2026-11-10T17:00:00.000Z');
+    const locked = await save([{ id: nov.lines[0].id, item_id: x, qty: 2 }], {
+      expected_updated_at: nov.updated_at,
+    }).expect(409);
+    expect(locked.body).toMatchObject({
+      code: 'PERIOD_LOCKED',
+      next_ym: '2026-12',
+    });
+    const fresh = await save([{ item_id: x, qty: 1 }], {}, B).expect(409);
+    expect(fresh.body).toMatchObject({
+      code: 'PERIOD_LOCKED',
+      next_ym: '2026-12',
+    });
+    expect(await requestsOf(B)).toHaveLength(0);
   });
 
   it.each(['2027-01', '2026-13', '2026-1', 'abc'])(
