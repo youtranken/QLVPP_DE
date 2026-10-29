@@ -44,6 +44,13 @@ describe('Trang in từ bản chốt', () => {
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
   });
 
+  it('bản chốt thiếu khóa order_qty của một dòng → Đặt mua rơi về Cần mua (như xlsx)', async () => {
+    open(snapshotDataFixture({ order_qty: {} }));
+    const part1 = await screen.findByRole('region', { name: 'Phần 1 · Tổng hợp theo món' });
+    const pen = within(part1).getByRole('row', { name: /Bút bi xanh/ });
+    expect(within(pen).getAllByRole('cell').at(-1)).toHaveTextContent('10');
+  });
+
   it('3 ô ký có tên từ bản chốt; ký rỗng vẫn có ô, không in "undefined"', async () => {
     open(snapshotDataFixture({ signers: { preparer: 'Lê Thị Hoa', head: '', approver: 'Đỗ Minh Châu' } }));
     const sign = await screen.findByRole('group', { name: 'Chữ ký' });

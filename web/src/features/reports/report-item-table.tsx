@@ -64,13 +64,12 @@ function ItemRow({ row, name, sub, qty, frozen }: { row: Row; name: string; sub?
       {qty ? (
         <OrderCell row={row} name={name} qty={qty} label={t('reports.items.colOrder')} />
       ) : (
-        <td className="r num" data-label={cols.order}>{frozen?.[row.key] ?? 0}</td>
+        <td className="r num" data-label={cols.order}>{frozen?.[row.key] ?? row.need}</td>
       )}
     </tr>
   );
 }
 
-// qty = bản sống có ô nhập; frozen = số Đặt mua đã chốt trong bản chốt, chỉ đọc
 export function ReportItemTable({ report, qty, frozen }: { report: MonthReport; qty?: OrderQty; frozen?: Record<string, number> }) {
   const { t, i18n } = useTranslation();
   const empty = report.byItem.length === 0 && report.custom.length === 0;

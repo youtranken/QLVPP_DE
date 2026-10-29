@@ -10,3 +10,14 @@ export function useFormatTime() {
   });
   return (iso: string) => fmt.format(new Date(iso));
 }
+
+const STAMP_PARTS = { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Ho_Chi_Minh' } as const;
+const STAMP = new Intl.DateTimeFormat('en-GB', STAMP_PARTS);
+const STAMP_YEAR = new Intl.DateTimeFormat('en-GB', { ...STAMP_PARTS, year: 'numeric' });
+
+// Ghép từng phần để thứ tự "hh:mm dd/mm" cố định, không theo locale người xem
+export function formatVnStamp(iso: string, withYear = false): string {
+  const parts = (withYear ? STAMP_YEAR : STAMP).formatToParts(new Date(iso));
+  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  return `${part('hour')}:${part('minute')} ${part('day')}/${part('month')}${withYear ? `/${part('year')}` : ''}`;
+}

@@ -1,24 +1,9 @@
 import { useTranslation } from 'react-i18next';
+import { formatVnStamp } from '@/lib/format-time';
 import { Drawer, DrawerClose, DrawerDescription, DrawerTitle } from '@/ui/drawer';
 import { LoadError, Loading } from '@/ui/load-state';
 import { useLineDeliveries, type BacklogLine } from './backlog.api';
 import { useBacklogFormat } from './backlog-format';
-
-const STAMP = new Intl.DateTimeFormat('en-GB', {
-  hour: '2-digit',
-  minute: '2-digit',
-  day: '2-digit',
-  month: '2-digit',
-  hourCycle: 'h23',
-  timeZone: 'Asia/Ho_Chi_Minh',
-});
-
-// "hh:mm dd/mm" theo giờ VN, không phụ thuộc thứ tự phần của locale người xem
-function stampOf(iso: string): string {
-  const parts = STAMP.formatToParts(new Date(iso));
-  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
-  return `${part('hour')}:${part('minute')} ${part('day')}/${part('month')}`;
-}
 
 // Chỉ xem: GĐ1 không có hoàn tác đợt giao (FR-44)
 export function DeliveriesDrawer({ line, onClose }: { line: BacklogLine; onClose: () => void }) {
@@ -49,7 +34,7 @@ export function DeliveriesDrawer({ line, onClose }: { line: BacklogLine; onClose
           <ol className="bl-rounds" aria-label={t('delivery.backlog.deliveries.list')}>
             {rounds.map((r) => (
               <li key={r.id}>
-                {t('delivery.backlog.deliveries.round', { time: stampOf(r.created_at), qty: r.qty, actor: r.actor_name ?? r.actor_sub })}
+                {t('delivery.backlog.deliveries.round', { time: formatVnStamp(r.created_at), qty: r.qty, actor: r.actor_name ?? r.actor_sub })}
               </li>
             ))}
           </ol>

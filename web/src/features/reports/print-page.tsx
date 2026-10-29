@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/lib/api-client';
+import { formatVnStamp } from '@/lib/format-time';
 import { apiErrorCode } from '@/lib/api-error';
 import { LoadError, Loading, NotFound } from '@/ui/load-state';
 import { monthOf } from '@/features/request/request-format';
@@ -14,15 +15,6 @@ import '@/css/print.css';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SIGNERS = ['preparer', 'head', 'approver'] as const;
-
-// Giờ nghiệp vụ theo Việt Nam: "hh:mm dd/mm/yyyy" cố định, không phụ thuộc ngôn ngữ giao diện
-function stampOf(iso: string) {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric', hourCycle: 'h23', timeZone: 'Asia/Ho_Chi_Minh',
-  }).formatToParts(new Date(iso));
-  const p = (type: string) => parts.find((x) => x.type === type)?.value ?? '';
-  return `${p('hour')}:${p('minute')} ${p('day')}/${p('month')}/${p('year')}`;
-}
 
 function SignBoxes({ signers }: { signers: SnapshotData['signers'] }) {
   const { t } = useTranslation();
@@ -62,7 +54,7 @@ function PrintSheet({ snap }: { snap: SnapshotData }) {
       <Toolbar ym={snap.period_ym} />
       <article className="pr-sheet">
         <h1 className="pr-title">{t('reports.printPage.title', { month: monthOf(snap.period_ym), year })}</h1>
-        <p className="pr-meta">{t('reports.printPage.preparedAt', { at: stampOf(snap.created_at), by: snap.created_by.name ?? snap.created_by.sub })}</p>
+        <p className="pr-meta">{t('reports.printPage.preparedAt', { at: formatVnStamp(snap.created_at, true), by: snap.created_by.name ?? snap.created_by.sub })}</p>
         <section aria-labelledby={ids[0]}>
           <h2 id={ids[0]} className="pr-h2">{t('reports.items.title')}</h2>
           <ReportItemTable report={snap} frozen={snap.order_qty} />
@@ -78,7 +70,6 @@ function PrintSheet({ snap }: { snap: SnapshotData }) {
   );
 }
 
-// Dữ liệu in lấy hoàn toàn từ bản chốt đã đóng băng, không tính lại từ số sống
 export function PrintPage() {
   const { id = '' } = useParams();
   const valid = UUID.test(id);
