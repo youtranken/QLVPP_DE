@@ -95,6 +95,21 @@ describe('0102 requests — ràng buộc periods / requests / request_lines', ()
     ).toBe('23514');
   });
 
+  it('delivered_qty = qty và delivered + cancelled = qty → OK (biên CHECK)', async () => {
+    const r = await newRequest('u-delivered-eq');
+    expect(
+      await insertLine('item_id, qty, delivered_qty', [itemId, 2, 2], r),
+    ).toBe('OK');
+    const r2 = await newRequest('u-delivered-cancel-eq');
+    expect(
+      await insertLine(
+        'item_id, qty, delivered_qty, cancelled_qty',
+        [itemId, 3, 2, 1],
+        r2,
+      ),
+    ).toBe('OK');
+  });
+
   it('delivered + cancelled > qty → 23514', async () => {
     expect(
       await insertLine('item_id, qty, delivered_qty, cancelled_qty', [

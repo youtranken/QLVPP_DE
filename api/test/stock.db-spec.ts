@@ -68,6 +68,27 @@ describe('kho: nhập, điều chỉnh, xuất lẻ, sổ cái (Postgres thật)
     });
   });
 
+  it('adjust về đúng 0: tồn 100, −101 → 409 STOCK_INSUFFICIENT {available: 100}; −100 → 201 tồn 0', async () => {
+    const id = await newItem();
+    await stock(id, { delta: 100, reason: 'purchase' }).expect(201);
+    const over = await stock(id, {
+      delta: -101,
+      reason: 'adjust',
+      note: 'kiểm kê',
+    }).expect(409);
+    expect(over.body).toMatchObject({
+      code: 'STOCK_INSUFFICIENT',
+      available: 100,
+    });
+    const res = await stock(id, {
+      delta: -100,
+      reason: 'adjust',
+      note: 'kiểm kê',
+    }).expect(201);
+    expect(res.body).toMatchObject({ stock_qty: 0 });
+    expect((await qtyOf(id)).stock_qty).toBe(0);
+  });
+
   it('issue 3 cho user active → tồn 97, movement issue có recipient_sub; người nhận thấy ở me/issues', async () => {
     const res = await issue(itemId, {
       qty: 3,

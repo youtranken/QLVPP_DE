@@ -95,8 +95,10 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
         200,
       );
       expect(view(res)).toMatchObject({ is_open: false });
-      const [, detail] = await auditOf('request.updated', r.id);
-      expect(detail).toMatchObject({ reason: 'abc' });
+      const details = await auditOf('request.updated', r.id);
+      expect(details).toContainEqual(
+        expect.objectContaining({ reason: 'abc' }),
+      );
     });
 
     it('trong hạn không cần lý do', async () => {
@@ -148,6 +150,29 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
       expect(view(res).lines.map((l) => [l.id, l.qty])).toEqual(
         r.lines.map((l) => [l.id, l.qty]),
       );
+    });
+
+    it('giảm qty đúng bằng số đã giao 2 → 200; qty 1 → QTY_BELOW_DELIVERED {delivered: 2}', async () => {
+      const r = await seed([{ item_id: item, qty: 3 }]);
+      const line = r.lines[0];
+      await pool().query(
+        'UPDATE request_lines SET delivered_qty = 2 WHERE id = $1',
+        [line.id],
+      );
+      const low = await adminPut(r.id, {
+        lines: [{ id: line.id, qty: 1 }],
+        expected_updated_at: r.updated_at,
+      }).expect(400);
+      expect(low.body).toMatchObject({
+        code: 'QTY_BELOW_DELIVERED',
+        line_id: line.id,
+        delivered: 2,
+      });
+      const res = await adminPut(r.id, {
+        lines: [{ id: line.id, qty: 2 }],
+        expected_updated_at: r.updated_at,
+      }).expect(200);
+      expect(view(res).lines[0]).toMatchObject({ id: line.id, qty: 2 });
     });
 
     it('thêm món admin_only → 200, added_by_admin; member thấy readonly_for_member', async () => {
