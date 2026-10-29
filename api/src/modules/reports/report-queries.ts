@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { ymToDate } from '../../common/period';
-import type { Database } from '../../database/database.module';
+import type { Executor } from '../../database/database.module';
 import {
   CUSTOM_ITEM_KEY,
   EFFECTIVE_LINE,
@@ -50,7 +50,7 @@ const splitByPeriod = (ym: string) => sql`
   coalesce(sum(${REMAINING_QTY}) FILTER (WHERE r.period_ym < ${ymToDate(ym)}::date), 0)::int AS backlog_prev`;
 
 export async function itemDemand(
-  db: Database,
+  db: Executor,
   ym: string,
 ): Promise<ItemDemand[]> {
   const { rows } = await db.execute<Row<ItemDemand>>(sql`
@@ -66,7 +66,7 @@ export async function itemDemand(
 
 // Tên hiển thị lấy theo dòng mới nhất (kỳ gần nhất) của nhóm
 export async function customDemand(
-  db: Database,
+  db: Executor,
   ym: string,
 ): Promise<CustomDemand[]> {
   const { rows } = await db.execute<Row<CustomDemand>>(sql`
@@ -81,7 +81,7 @@ export async function customDemand(
 }
 
 export async function detailLines(
-  db: Database,
+  db: Executor,
   ym: string,
 ): Promise<DetailLine[]> {
   const { rows } = await db.execute<Row<DetailLine>>(sql`
@@ -100,7 +100,7 @@ export async function detailLines(
 }
 
 export async function pendingCustomCount(
-  db: Database,
+  db: Executor,
   ym: string,
 ): Promise<number> {
   const { rows } = await db.execute<Row<{ n: number }>>(sql`

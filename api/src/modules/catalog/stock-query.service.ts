@@ -3,7 +3,7 @@ import { sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import { decodeTimestampCursor, encodeCursor } from '../../common/cursor';
 import { DRIZZLE_DB } from '../../database/database.module';
-import type { Database } from '../../database/database.module';
+import type { Database, Executor } from '../../database/database.module';
 import { ITEM_COLUMNS, LOW_STOCK_SQL } from './catalog-sql';
 import type { ItemRow } from './catalog-sql';
 
@@ -47,9 +47,9 @@ export class StockQueryService {
   }
 
   // Báo cáo đọc-only: được join users để hiện tên người nhận
-  async issuesInMonth(ym: string) {
+  async issuesInMonth(ym: string, db: Executor = this.db) {
     const start = sql`(${ym} || '-01')::timestamp`;
-    const result = await this.db.execute(sql`
+    const result = await db.execute(sql`
       SELECT m.id, m.item_id, i.name AS item_name, i.unit, -m.delta AS qty,
              m.recipient_sub, u.full_name AS recipient_name, m.note, m.actor_sub,
              m.created_at

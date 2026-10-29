@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE_DB } from '../../database/database.module';
-import type { Database } from '../../database/database.module';
+import type { Database, Executor } from '../../database/database.module';
 import { StockQueryService } from '../catalog/stock-query.service';
 import { PeriodsService } from '../periods/periods.service';
 import { invalidPeriod } from '../requests/request-errors';
@@ -29,16 +29,20 @@ export class ReportsService {
     private readonly stockQuery: StockQueryService,
   ) {}
 
-  async build(ym: string, now: Date): Promise<MonthReport> {
-    const open = await this.periods.openPeriod(this.db, now);
+  // Bản chốt truyền tx REPEATABLE READ để mọi phần đọc cùng một ảnh dữ liệu
+  async build(
+    ym: string,
+    now: Date,
+    db: Executor = this.db,
+  ): Promise<MonthReport> {
+    const open = await this.periods.openPeriod(db, now);
     if (ym > open.ym) throw invalidPeriod();
-    const [items, custom, detail, pending, issues] = await Promise.all([
-      itemDemand(this.db, ym),
-      customDemand(this.db, ym),
-      detailLines(this.db, ym),
-      pendingCustomCount(this.db, ym),
-      this.stockQuery.issuesInMonth(ym),
-    ]);
+    // Tuần tự: tx chỉ có một client, pg không cho chồng truy vấn trên cùng client
+    const items = await itemDemand(db, ym);
+    const custom = await customDemand(db, ym);
+    const detail = await detailLines(db, ym);
+    const pending = await pendingCustomCount(db, ym);
+    const issues = await this.stockQuery.issuesInMonth(ym, db);
     return {
       ym,
       generated_at: now.toISOString(),

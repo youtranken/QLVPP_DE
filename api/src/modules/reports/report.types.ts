@@ -58,3 +58,16 @@ export interface MonthReport {
   issues: ReportIssue[];
   pending_custom_count: number;
 }
+
+export interface ReportSigners {
+  preparer: string;
+  head: string;
+  approver: string;
+}
+
+export interface SnapshotData extends MonthReport {
+  order_qty: Record<string, number>;
+  signers: ReportSigners;
+  created_by: { sub: string; name: string | null };
+  created_at: string;
+}
