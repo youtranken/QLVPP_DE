@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, asRole, expectNoContrastViolations, isMobile, psql } from './helpers';
+import { acquireLock, asRole, expectNoContrastViolations, isMobile, psql, searchSummaryPeople, settled } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-15-shots';
 
@@ -8,7 +8,7 @@ async function snap(page: Page, info: TestInfo, name: string) {
   mkdirSync(SHOTS, { recursive: true });
   await page.evaluate(() => document.fonts.ready);
   // Ngăn trượt vào 180 ms: chụp sau khi chuyển động xong
-  await page.evaluate(() => Promise.all(document.getAnimations().map((x) => x.finished)));
+  await settled(page);
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png` });
 }
 
@@ -81,7 +81,7 @@ test.describe('E3-S3/E3-S4 điều chỉnh và tạo hộ', () => {
       SELECT id FROM r`);
     try {
       await page.goto(`/admin/summary?ym=${prevYm}`);
-      await page.getByRole('searchbox', { name: 'Tìm người, email…' }).fill(tag);
+      await searchSummaryPeople(page, tag);
       const row = page.getByRole('row').filter({ hasText: name });
       await row.getByRole('button', { name: 'Điều chỉnh' }).click();
 

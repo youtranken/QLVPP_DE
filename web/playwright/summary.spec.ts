@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { asRole, expectNoContrastViolations, isMobile, psql } from './helpers';
+import { asRole, expectNoContrastViolations, isMobile, psql, searchSummaryPeople } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-14-shots';
 
@@ -55,7 +55,7 @@ test.describe('E3-S2 tổng hợp', () => {
       await expect(registered).toContainText(`${summary.registered}/${summary.headcount}`);
       await expect(registered).toContainText(`${summary.unregistered} chưa đăng ký`);
 
-      await page.getByRole('searchbox', { name: 'Tìm người, email…' }).fill(tag);
+      await searchSummaryPeople(page, tag);
       const rowA = page.getByRole('row').filter({ hasText: names.a });
       const rowB = page.getByRole('row').filter({ hasText: names.b });
       await expect(rowA).toBeVisible();
@@ -72,6 +72,7 @@ test.describe('E3-S2 tổng hợp', () => {
       const pending = page.getByRole('button', { name: /Dòng chờ giao/ });
       await pending.click();
       await expect(pending).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.getByRole('table')).toHaveAttribute('aria-busy', 'false');
       await expect(page.getByText('Đang lọc: Dòng chờ giao')).toBeVisible();
       await expect(rowA).toHaveCount(0);
       await expect(rowB).toBeVisible();

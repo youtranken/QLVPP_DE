@@ -31,6 +31,27 @@ export async function expectNoContrastViolations(page: Page) {
   expect(result.violations.flatMap((v) => v.nodes.map((n) => n.target.join(' ')))).toEqual([]);
 }
 
+// Bảng Tổng hợp giữ hàng cũ (mờ, aria-busy) trong lúc tải kết quả tìm: assert/axe trên hàng cũ là sai
+export async function searchSummaryPeople(page: Page, text: string) {
+  const res = page.waitForResponse((r) => r.url().includes('/requests?') && new URL(r.url()).searchParams.get('q') === text);
+  await page.getByRole('searchbox', { name: 'Tìm người, email…' }).fill(text);
+  expect((await res).ok()).toBe(true);
+  await expect(page.getByRole('table')).toHaveAttribute('aria-busy', 'false');
+}
+
+// Spinner quay vô hạn: finished không bao giờ xong → evaluate treo tới hết giờ test ("browserContext.close: Test ended")
+export async function settled(page: Page) {
+  await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished),
+    ),
+  );
+}
+
 export const devHeaders = (role: 'member' | 'admin' | 'sa') => ({ 'x-dev-user-sub': `pw-${role}`, 'x-dev-role': role });
 
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));

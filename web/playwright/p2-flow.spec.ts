@@ -1,6 +1,15 @@
 import { mkdirSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Browser, type Page, type TestInfo } from '@playwright/test';
-import { deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, psql, removeTestItem } from './helpers';
+import {
+  deleteTestUsers,
+  devHeaders,
+  expectNoContrastViolations,
+  isMobile,
+  psql,
+  removeTestItem,
+  searchSummaryPeople,
+  settled,
+} from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-17-shots';
 const FIXTURE = 'playwright/fixtures/item.png';
@@ -13,7 +22,7 @@ type Item = { id: string; name: string; active: boolean; admin_only: boolean };
 async function snap(page: Page, info: TestInfo, name: string) {
   mkdirSync(SHOTS, { recursive: true });
   await page.evaluate(() => document.fonts.ready);
-  await page.evaluate(() => Promise.all(document.getAnimations().map((x) => x.finished)));
+  await settled(page);
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png` });
 }
 
@@ -60,8 +69,7 @@ async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom
   await snap(page, info, 'member-a-saved');
 }
 
-async function openDrawer(admin: Page, tag: string, person: Person) {
-  await admin.getByRole('searchbox', { name: 'Tìm người, email…' }).fill(tag);
+async function openDrawer(admin: Page, person: Person) {
   await admin.getByRole('row').filter({ hasText: person.name }).getByRole('button', { name: 'Điều chỉnh' }).click();
   const drawer = admin.getByRole('dialog', { name: `Phiếu của ${person.name}` });
   await expect(drawer.getByText('Đang mở', { exact: true })).toBeVisible();
@@ -69,7 +77,8 @@ async function openDrawer(admin: Page, tag: string, person: Person) {
 }
 
 async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person, custom: string) {
-  let drawer = await openDrawer(admin, tag, a);
+  await searchSummaryPeople(admin, tag);
+  let drawer = await openDrawer(admin, a);
   await drawer.getByRole('button', { name: '+ Thêm món vào phiếu' }).click();
   await drawer.getByRole('searchbox', { name: 'Tìm món trong danh mục' }).fill('Giấy A4');
   await drawer.getByRole('list', { name: 'Món tìm thấy' }).getByRole('button').first().click();
@@ -78,7 +87,7 @@ async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person,
   await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();
   await expect(drawer).toBeHidden();
 
-  drawer = await openDrawer(admin, tag, a);
+  drawer = await openDrawer(admin, a);
   await drawer.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button', { name: `Thêm vào danh mục… — ${custom}` }).click();
   const convert = admin.getByRole('dialog', { name: `Thêm “${custom}” vào danh mục` });
   await convert.getByLabel('Nhóm').selectOption({ index: 1 });
