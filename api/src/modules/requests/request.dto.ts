@@ -14,21 +14,22 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { STAMP_FROM_2000 } from '../../common/ym';
-import { NAME_MAX, TrimToNull, UNITS } from '../catalog/catalog.dto';
+import {
+  NAME_MAX,
+  OptionalText,
+  TrimToNull,
+  UNITS,
+} from '../catalog/catalog.dto';
 
 export type Unit = (typeof UNITS)[number];
 export const NOTE_MAX = 500;
 
-const OptionalText = (max: number) => (target: object, key: string) => {
-  TrimToNull()(target, key);
-  IsOptional()(target, key);
-  IsString()(target, key);
-  MaxLength(max)(target, key);
-};
-
 const UpdatedAtStamp = () => (target: object, key: string) => {
   IsISO8601({ strict: true })(target, key);
-  Matches(STAMP_FROM_2000, { message: `${key} phải có năm ≥ 2000` })(target, key);
+  Matches(STAMP_FROM_2000, { message: `${key} phải có năm ≥ 2000` })(
+    target,
+    key,
+  );
 };
 
 export class LineInput {

@@ -53,7 +53,10 @@ describe('validationException', () => {
       action: 'accept',
       item: { name: 'Bút', category_id: CATEGORY, max_qty: 0 },
     });
-    expect(body).toMatchObject({ code: 'VALIDATION', fields: ['item.max_qty'] });
+    expect(body).toMatchObject({
+      code: 'VALIDATION',
+      fields: ['item.max_qty'],
+    });
     expect(body).not.toHaveProperty('line_index');
   });
 
