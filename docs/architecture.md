@@ -231,10 +231,12 @@ GĐ2: bảng `email_outbox` + worker trong cùng process.
 
 ## 10. Báo cáo
 
-`ReportsService.build(ym, now)` trả `{byItem: [{item, unit, pack_note, requested, backlog_prev, stock, need}], custom: [{name, unit, requested, people}], byDepartment: [{department, people: [{user, lines}]}], issues: [{item, recipient, qty, reason, at}], pending_custom_count}` với:
-- dòng hiệu lực = `review_status IN ('n/a','accepted','converted')`; `remaining = qty − delivered_qty − cancelled_qty`;
-- `requested` = Σ `remaining` của dòng thuộc kỳ `ym`; `backlog_prev` = Σ `remaining` của dòng thuộc kỳ `< ym`; `need = max(0, requested + backlog_prev − stock)` (BR-15); nhóm "Ngoài danh mục" (`accepted`) có `backlog_prev`, `stock = null`, `need = requested + backlog_prev`;
-- phần chi tiết liệt kê `qty` (số đăng ký sau điều chỉnh) theo `requests.department` → người → món.
+`ReportsService.build(ym, now)` → `MonthReport {ym, generated_at, byItem: ReportItemRow[], custom: ReportCustomRow[], byDepartment: [{department, people: [{user_sub, full_name, lines: [{name, name_en, unit, qty}]}]}], issues: [{item_name, unit, recipient_sub, recipient_name, qty, reason, at}], pending_custom_count}`; `ReportItemRow {key = item_id, item_id, name, name_en, unit, pack_note, active, requested, backlog_prev, stock, need}`; `ReportCustomRow {key = CUSTOM_ITEM_KEY, name, unit, requested, backlog_prev, stock: null, need, people (số người)}`. `GET admin/reports/:ym` (A): `ym` sai dạng hoặc sau kỳ đang mở → `INVALID_PERIOD`. Luật:
+- dòng hiệu lực = `review_status IN ('n/a','accepted','converted')` (`converted` tính vào món đích); `remaining = qty − delivered_qty − cancelled_qty`;
+- `requested` = Σ `remaining` của dòng thuộc kỳ `ym`; `backlog_prev` = Σ `remaining` của dòng thuộc kỳ `< ym`; chỉ hàng có `requested + backlog_prev > 0` (món đã ngừng vẫn hiện, `active: false`); `stock` = tồn hiện tại; `need = max(0, requested + backlog_prev − stock)` (BR-15);
+- nhóm "Ngoài danh mục" (`accepted`, gộp theo `CUSTOM_ITEM_KEY` — tên + ĐVT trim, không phân biệt hoa thường) có `backlog_prev`, `stock = null`, `need = requested + backlog_prev` (F3);
+- phần chi tiết liệt kê `qty` (số đăng ký sau điều chỉnh) của dòng hiệu lực kỳ `ym` theo `requests.department` (null cuối) → người → món;
+- `issues` = xuất lẻ trong tháng dương lịch `ym` giờ VN (`StockQueryService.issuesInMonth`, như `GET admin/issues?ym`); `pending_custom_count` = số dòng `pending` kỳ `ym` (không vào số).
 
 Bấm Xuất/In: `POST admin/reports/:ym/snapshots {kind, order_qty: {item_id: n}}` lưu `data` (kết quả `build` + cột `order_qty` do admin sửa, mặc định `need` + `config.signers` + `created_by`) → FE tải `export.xlsx` hoặc mở `/admin/reports/snapshots/:id/print` từ bản chốt. Nếu `pending_custom_count > 0` FE hỏi trước. Excel: exceljs, 2 sheet, tiêu đề cột theo `?lang`. In: `print.css` (A4 dọc, lặp header bảng, chân trang 3 ô ký kèm tên từ `signers`, dòng "Lập lúc … bởi …").
 

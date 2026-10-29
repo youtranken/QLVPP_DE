@@ -20,6 +20,7 @@ import { FilesModule } from './modules/files/files.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PeriodsModule } from './modules/periods/periods.module';
 import { RemindersModule } from './modules/reminders/reminders.module';
+import { ReportsModule } from './modules/reports/reports.module';
 import { RequestsModule } from './modules/requests/requests.module';
 
 @Module({
@@ -65,6 +66,7 @@ import { RequestsModule } from './modules/requests/requests.module';
     NotificationsModule,
     DeliveryModule,
     RemindersModule,
+    ReportsModule,
   ],
   controllers: [HealthController, ...testOnlyControllers(process.env)],
   providers: [

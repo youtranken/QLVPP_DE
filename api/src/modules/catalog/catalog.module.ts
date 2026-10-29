@@ -30,7 +30,7 @@ import { StockService } from './stock.service';
     ItemUsageRegistry,
     { provide: ITEM_USAGE_HOOK, useExisting: ItemUsageRegistry },
   ],
-  exports: [CatalogService, StockService, ItemUsageRegistry],
+  exports: [CatalogService, StockService, StockQueryService, ItemUsageRegistry],
 })
 export class CatalogModule implements OnModuleInit {
   constructor(private readonly filePolicy: FileAccessPolicy) {}
