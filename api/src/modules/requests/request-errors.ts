@@ -107,22 +107,24 @@ const readonlyLine = () =>
 
 // Vi phạm do tx song song lọt qua bước kiểm (ảnh bị dọn, món bị xóa, trùng món); RESTRICT trả 23001 chứ không phải 23503
 const CONSTRAINT_ERRORS: Record<string, () => HttpException> = {
-  request_lines_item_uq: () => duplicateItem(),
-  request_lines_image_file_id_fkey: () =>
+  '23505:request_lines_item_uq': () => duplicateItem(),
+  '23503:request_lines_image_file_id_fkey': () =>
     new BadRequestException({
       code: 'IMAGE_REQUIRED',
       message: 'Ảnh không còn — tải ảnh lại.',
     }),
-  request_lines_item_id_fkey: () =>
+  '23503:request_lines_item_id_fkey': () =>
     new BadRequestException({
       code: 'ITEM_NOT_FOUND',
       message: 'Không tìm thấy món.',
     }),
-  stock_movements_ref_line_id_fkey: readonlyLine,
-  line_deliveries_line_id_fkey: readonlyLine,
+  '23001:stock_movements_ref_line_id_fkey': readonlyLine,
+  '23001:line_deliveries_line_id_fkey': readonlyLine,
 };
 
 export function constraintError(error: unknown): HttpException | null {
-  const mapped = CONSTRAINT_ERRORS[pgViolation(error)?.constraint ?? ''];
+  const violation = pgViolation(error);
+  const mapped =
+    violation && CONSTRAINT_ERRORS[`${violation.code}:${violation.constraint}`];
   return mapped ? mapped() : null;
 }

@@ -19,6 +19,12 @@ describe('constraintError', () => {
     expect(err?.getResponse()).toMatchObject({ code: 'DUPLICATE_ITEM' });
   });
 
+  it('23503 trên constraint RESTRICT không bị báo LINE_READONLY', () => {
+    expect(
+      constraintError(pgError('23503', 'stock_movements_ref_line_id_fkey')),
+    ).toBeNull();
+  });
+
   it('constraint lạ → null', () => {
     expect(constraintError(pgError('23505', 'khong_biet'))).toBeNull();
     expect(constraintError(new Error('x'))).toBeNull();
