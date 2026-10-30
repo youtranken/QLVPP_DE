@@ -16,6 +16,7 @@ export function UserPicker({
   hint,
   allowLocked = false,
   resultsWhenEmpty = true,
+  excludeAdmin = false,
   onChange,
   onEnter,
 }: {
@@ -26,6 +27,7 @@ export function UserPicker({
   hint?: string;
   allowLocked?: boolean;
   resultsWhenEmpty?: boolean;
+  excludeAdmin?: boolean;
   onChange: (u: DirectoryUser | null) => void;
   onEnter?: () => void;
 }) {
@@ -35,7 +37,7 @@ export function UserPicker({
   const note = error ?? hint;
   const [text, setText] = useState('');
   const [search, setSearch] = useState('');
-  const users = useUserSearch(search.trim());
+  const users = useUserSearch(search.trim(), { excludeAdmin });
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(text), SEARCH_DEBOUNCE_MS);

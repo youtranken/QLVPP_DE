@@ -51,6 +51,14 @@ async function fill(dialog: HTMLElement) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('CreateRequestDialog — tạo phiếu hộ', () => {
+  it('ô Người đăng ký tìm với exclude_admin=true (Hành chính không hiện để chọn)', async () => {
+    const fetchMock = stub(() => jsonResponse(201, { request: { id: 'r-new' } }));
+    await renderDialog();
+    await waitFor(() =>
+      expect((fetchMock.mock.calls as unknown as [string][]).some(([u]) => u.startsWith('/api/admin/users?') && u.includes('exclude_admin=true'))).toBe(true),
+    );
+  });
+
   it('chưa chọn người/món → Tạo phiếu vô hiệu; người đã khóa không chọn được; gửi {user_sub, lines}', async () => {
     const fetchMock = stub(() => jsonResponse(201, { request: { id: 'r-new' } }));
     const { dialog, onCreated } = await renderDialog();

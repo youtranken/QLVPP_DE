@@ -120,6 +120,7 @@ export function CreateRequestDialog({ ym, onClose, onCreated, onOpenExisting }: 
             label={t('summary.create.person')}
             searchLabel={t('summary.create.personSearch')}
             value={user}
+            excludeAdmin
             error={errors.user}
             onChange={(u) => {
               setUser(u);

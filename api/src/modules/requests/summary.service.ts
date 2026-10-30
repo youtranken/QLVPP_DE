@@ -10,6 +10,7 @@ import { CatalogService } from '../catalog/catalog.service';
 import { SystemConfigService } from '../config/system-config.service';
 import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
+import { inAdminGroup } from '../users/admin-group.sql';
 import { UNDELIVERED_LINE } from './line-predicates';
 import { invalidPeriod, requestNotFound } from './request-errors';
 import { RequestViewBuilder } from './request-view';
@@ -159,8 +160,6 @@ export class SummaryService {
       AND (${groups.length === 0} OR (jsonb_typeof(u.groups) = 'array' AND EXISTS (
         SELECT 1 FROM jsonb_array_elements_text(u.groups) g
         WHERE lower(g) = ANY(${sql.param(groups)}::text[]))))
-      AND NOT (jsonb_typeof(u.groups) = 'array' AND EXISTS (
-        SELECT 1 FROM jsonb_array_elements_text(u.groups) g
-        WHERE lower(g) = lower(${adminGroup})))`;
+      AND NOT ${inAdminGroup(sql`u.groups`, adminGroup)}`;
   }
 }

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, renderWithI18n, screen, userEvent } from '@/test/test-utils';
+import { jsonResponse, renderWithI18n, screen, userEvent, waitFor } from '@/test/test-utils';
 import { UserPicker } from './user-picker';
 
 afterEach(() => vi.unstubAllGlobals());
@@ -30,5 +30,20 @@ describe('UserPicker', () => {
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người' }), 'lan{Enter}');
     expect(onEnter).toHaveBeenCalledTimes(1);
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('excludeAdmin gửi exclude_admin=true; mặc định không gửi cờ', async () => {
+    const fetchMock = vi.fn(() => Promise.resolve(jsonResponse(200, { items: [], next_cursor: null })));
+    vi.stubGlobal('fetch', fetchMock);
+    const urls = () => (fetchMock.mock.calls as unknown as [string][]).map(([u]) => u);
+    const { unmount } = renderWithI18n(
+      <UserPicker label="A" searchLabel="Tìm A" value={null} onChange={vi.fn()} excludeAdmin />,
+    );
+    await waitFor(() => expect(urls().some((u) => u.includes('exclude_admin=true'))).toBe(true));
+    unmount();
+    fetchMock.mockClear();
+    renderWithI18n(<UserPicker label="B" searchLabel="Tìm B" value={null} onChange={vi.fn()} />);
+    await waitFor(() => expect(urls().length).toBeGreaterThan(0));
+    expect(urls().some((u) => u.includes('exclude_admin'))).toBe(false);
   });
 });

@@ -20,13 +20,15 @@ const DIRECTORY_PAGE = 200;
 
 export const userLabel = (u: Pick<DirectoryUser, 'sub' | 'fullName'>) => u.fullName || u.sub;
 
-export function useUserSearch(search: string) {
+export function useUserSearch(search: string, opts: { excludeAdmin?: boolean } = {}) {
+  const excludeAdmin = opts.excludeAdmin ?? false;
   return useQuery({
-    queryKey: [...USERS_KEY, 'search', search],
-    queryFn: () =>
-      apiFetch<Page<DirectoryUser>>(
-        `/api/admin/users?${new URLSearchParams({ search, limit: String(PICKER_LIMIT) })}`,
-      ),
+    queryKey: [...USERS_KEY, 'search', search, excludeAdmin],
+    queryFn: () => {
+      const params = new URLSearchParams({ search, limit: String(PICKER_LIMIT) });
+      if (excludeAdmin) params.set('exclude_admin', 'true');
+      return apiFetch<Page<DirectoryUser>>(`/api/admin/users?${params}`);
+    },
   });
 }
 

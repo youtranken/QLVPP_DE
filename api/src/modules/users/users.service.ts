@@ -9,6 +9,7 @@ import {
   LOCAL_SA_FULL_NAME,
   LOCAL_SA_SUB,
 } from '../auth/local-sa-env';
+import { inAdminGroup } from './admin-group.sql';
 import { usersTable } from './users.schema';
 
 export interface PmhIdClaims {
@@ -22,6 +23,7 @@ export interface PmhIdClaims {
 
 export interface UserListQuery {
   search?: string;
+  excludeAdminGroup?: string;
   limit: number;
   cursor?: string;
 }
@@ -81,6 +83,11 @@ export class UsersService {
           ilike(usersTable.fullName, pattern),
           ilike(usersTable.email, pattern),
         )!,
+      );
+    }
+    if (query.excludeAdminGroup) {
+      conds.push(
+        sql`NOT ${inAdminGroup(sql`${usersTable.groups}`, query.excludeAdminGroup)}`,
       );
     }
     if (query.cursor) {
@@ -182,9 +189,7 @@ export class UsersService {
     const result = await ex.execute<{ sub: string }>(sql`
       SELECT u.sub FROM users u
       WHERE u.status = 'active' AND u.sub <> ${LOCAL_SA_SUB}
-        AND jsonb_typeof(u.groups) = 'array'
-        AND EXISTS (SELECT 1 FROM jsonb_array_elements_text(u.groups) g
-                    WHERE lower(g) = lower(${adminGroup}))
+        AND ${inAdminGroup(sql`u.groups`, adminGroup)}
       ORDER BY u.sub
     `);
     return result.rows.map((r) => r.sub);
