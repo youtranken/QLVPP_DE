@@ -17,6 +17,15 @@ describe('Icon', () => {
   });
 });
 
+describe('Icon nét', () => {
+  it('svg tự mang fill none và stroke currentColor (use không kế thừa từ sprite)', () => {
+    const { container } = render(<Icon name="truck" />);
+    const svg = container.querySelector('svg')!;
+    expect(svg.getAttribute('fill')).toBe('none');
+    expect(svg.getAttribute('stroke')).toBe('currentColor');
+  });
+});
+
 describe('IconSprite', () => {
   it('có đủ 45 symbol u-* và ẩn', () => {
     const { container } = render(<IconSprite />);

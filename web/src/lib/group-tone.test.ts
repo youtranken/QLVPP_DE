@@ -31,8 +31,9 @@ describe('groupTone', () => {
   it('danh sách rỗng → g0', () => {
     expect(groupTone([], 'c0')).toBe('g0');
   });
-  it('nhóm đã ngừng vẫn giữ hạng vì danh sách chứa mọi nhóm', () => {
-    const c = cats(3);
+  it('nhóm đã ngừng (active:false) vẫn giữ hạng', () => {
+    const c = [...cats(2), { id: 'c2', sort_order: 20, active: false }, { id: 'c3', sort_order: 30 }];
     expect(groupTone(c, 'c2')).toBe('g3');
+    expect(groupTone(c, 'c3')).toBe('g4');
   });
 });

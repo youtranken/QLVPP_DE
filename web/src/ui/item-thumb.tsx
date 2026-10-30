@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import type { Tone } from '@/lib/group-tone';
 import { Icon } from './icon';
 
@@ -8,7 +8,7 @@ export function ItemThumb({ fileId, alt, tone, size }: { fileId: string | null; 
   const [failedId, setFailedId] = useState<string | null>(null);
   const showImg = fileId != null && failedId !== fileId;
   const px = size === 'card' ? undefined : size;
-  const box: React.CSSProperties = {
+  const box: CSSProperties = {
     display: 'grid',
     placeItems: 'center',
     flex: 'none',
