@@ -78,7 +78,7 @@ Toàn bộ theo QLTS_DE `api/src/modules/auth` (đổi tên cookie `vpp_sid`, `v
 
 **Phân giải phiên mỗi request** — `IdentityGuard`: token còn hạn → dùng claims trong phiên; hết hạn → refresh **single-flight**; `invalid_grant` → hủy phiên (401); PMH ID không trả lời → 503 `SSO_UNAVAILABLE` giữ phiên; riêng route `@Public` (sa-login, public-config, health…) thì đi tiếp ẩn danh để SA break-glass vẫn vào được. Guard toàn cục theo thứ tự: `IpThrottlerGuard → IdentityGuard → CsrfGuard (X-CSRF-Token cho POST/PUT/PATCH/DELETE) → RolesGuard (@Roles) → UserThrottlerGuard`.
 
-**Vai trò (khác QLTS)** — tính **mỗi request** trong `toIdentity`: `sa` nếu phiên SA cục bộ; `admin` nếu `users.groups` (đã đọc từ DB trong cùng lượt) giao với `config.admin_group` (không phân biệt hoa thường); còn lại `member`. Callback, webhook `user.groups_changed` và directory sync chỉ cập nhật `users.groups`; cột `users.role` không dùng cho quyền và không còn được cập nhật (chỉ giá trị mặc định lúc tạo); sẽ bỏ ở migration sau. Hệ quả: gỡ group → request kế tiếp 403, không cần đợi refresh.
+**Vai trò (khác QLTS)** — tính **mỗi request** trong `toIdentity`: `sa` nếu phiên SA cục bộ; `admin` nếu `users.groups` (đã đọc từ DB trong cùng lượt) giao với `config.admin_group` (không phân biệt hoa thường); còn lại `member`. Callback, webhook `user.groups_changed` và directory sync chỉ cập nhật `users.groups`; cột `users.role` không dùng cho quyền và không còn được cập nhật (chỉ giá trị mặc định lúc tạo); sẽ bỏ ở migration sau. Hệ quả: gỡ group → request kế tiếp 403, không cần đợi refresh. `admin`/`sa` không có phiếu cá nhân: `me/request*` và `me/issues` chỉ cho `member` (403 `FORBIDDEN_ROLE`); người nhóm Hành chính nằm ngoài mẫu số Tổng hợp và người nhận chuông kỳ.
 
 **SA cục bộ** — `POST /api/auth/sa-login`; env `LOCAL_SA_USERNAME`, `LOCAL_SA_PASSWORD_HASH` = `scrypt.<salt>.<hash>` (sinh bằng `npm run sa:hash`); sub cố định `local:sa`; **khóa theo cặp (IP, username)** 5 sai/15′ + bộ đếm toàn cục 50 sai/15′ (chống dò và không bị khóa toàn cục vì một IP); idle 2 h; không hiện trong danh bạ/picker. `req.ip` đúng nhờ `TRUST_PROXY_HOPS` (xem §13).
 
@@ -248,7 +248,7 @@ Bấm Xuất/In: `POST admin/reports/:ym/snapshots {kind, order_qty: {key: n}}` 
 
 - `api-client.ts` (copy QLTS): `apiFetch` gắn `X-CSRF-Token`, 401 → `handleSessionExpired` (tự SSO lại một lần/60 s).
 - Bootstrap: `GET /api/auth/me` → `{sub, role, csrfToken, fullName, department, locale, config: {registration_last_day, default_max_qty}}`. Chưa đăng nhập → màn vào (email → `/api/auth/login?login_hint=`, khác → SA).
-- Hai shell: `MemberShell` (thanh trên) cho `/`, `/history`; `AdminShell` (sidebar) cho `/admin/*`; admin có mục "Phiếu của tôi" trỏ `/`. `RequireRole` chỉ là ẩn menu; server luôn 403 độc lập.
+- Hai shell: `MemberShell` (thanh trên) cho `/`, `/history`; `AdminShell` (sidebar) cho `/admin/*`; admin/sa vào thẳng `/admin` (không có mục "Phiếu của tôi"); `RequireMember` chuyển admin/sa từ `/`, `/history`, `/history/:ym`, `/me` về `/admin`. `RequireRole` chỉ là ẩn menu; server luôn 403 độc lập.
 - Trạng thái kỳ: FE nhận `deadline` ISO từ server và tự đếm ngược; mọi hành động vẫn do server quyết. Giỏ theo dõi `dirty`; `beforeunload` khi có thay đổi; sau PUT thành công hiển thị `updated_at` của server.
 - Ảnh: nén bằng canvas trước `POST files` (≤ 1600 px, ≤ 1 MB, áp EXIF); dòng ngoài danh mục giữ `file_id` cục bộ để lưu lại được khi mất mạng giữa chừng.
 - i18n: `react-i18next`, locale lưu `localStorage`, tên món dùng `name_en` khi có.

@@ -34,4 +34,4 @@ Directory client + sync (60′ + nút), màn Danh bạ.
 
 ## E0-S9 Khung web
 Vite + React 19, i18n vi/en, `api-client`, `session-relogin`, màn vào (email → SSO, khác → SA), `MemberShell`, `AdminShell`, token CSS từ `design-preview/final`.
-**AC:** vào `/` chưa đăng nhập → màn vào; sau SSO quay về đúng trang; chuyển ngôn ngữ đổi toàn bộ nhãn; admin thấy sidebar, member thấy thanh trên; Playwright mở được cả hai shell với dev-identity.
+**AC:** vào `/` chưa đăng nhập → màn vào; sau SSO quay về đúng trang; chuyển ngôn ngữ đổi toàn bộ nhãn; admin thấy sidebar, member thấy thanh trên; admin/sa mở `/`, `/history`, `/history/:ym`, `/me` đều về `/admin/summary` và sidebar không có "Phiếu của tôi" (E9-S0); Playwright mở được cả hai shell với dev-identity.

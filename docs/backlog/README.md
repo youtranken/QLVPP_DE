@@ -13,5 +13,6 @@ Epic → story. Mỗi story có tiêu chí nghiệm thu (AC) để làm theo TDD
 | E6 | Chuông thông báo, lịch sử, hồ sơ, song ngữ | E2 |
 | E7 | Triển khai sau EDGE và tích hợp PMH ID prod | E0 |
 | E8 | Giai đoạn 2: email, phiếu giao nhận, import Excel, thống kê | E4, E5 |
+| E9 | Giao diện mới Hành chính (M1 · P3), S0 Hành chính không có phiếu | E3–E6 |
 
 Phiên bản 1.1 (2026-10-28): AC đã cập nhật theo `../review-spec.md`; mục cần chủ dự án chốt (Xuất lẻ, ảnh món ngoài danh mục) sẽ bổ sung story khi có quyết định.

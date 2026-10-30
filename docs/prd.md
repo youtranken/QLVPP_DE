@@ -19,7 +19,7 @@ Thành công sau 2 tháng vận hành: ≥ 90 % nhân viên phòng đăng ký đ
 | Vai | Ai | Vào bằng | Làm gì |
 |---|---|---|---|
 | **Member** (nhân viên) | Toàn bộ nhân viên phòng Công trình (~40 người) | PMH ID, thuộc group phòng Công trình | Đăng ký món hằng tháng, xem lịch sử, nhận thông báo |
-| **Admin** (Hành chính) | 1–3 người Hành chính của phòng | PMH ID, thuộc group `vpp_admin` | Mọi quyền member + tổng hợp, điều chỉnh, duyệt món ngoài danh mục, giao, kho, danh mục, báo cáo, cấu hình |
+| **Admin** (Hành chính) | 1–3 người Hành chính của phòng | PMH ID, thuộc group `vpp_admin` | Quản lý VPP: tổng hợp, điều chỉnh, duyệt món ngoài danh mục, giao, kho, danh mục, báo cáo, cấu hình; **không đăng ký VPP cho bản thân** (chốt 2026-10-30) |
 | **SA** (quản trị kỹ thuật) | IT | Tài khoản cục bộ trong `.env` (không qua SSO) | Mọi quyền admin; dùng khi SSO lỗi hoặc cần can thiệp. Vô hình trong danh sách người dùng |
 
 Quyền do app tự suy từ claim `groups` của PMH ID. PMH ID chỉ quyết "ai được vào app"; app quyết "ai là admin".
@@ -87,7 +87,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 - FR-28 Điện thoại (≤ 900 px): thanh điều hướng dưới 3 mục (Đăng ký · Lịch sử · Tôi); Lịch sử và Hồ sơ cách tối đa 2 chạm; thanh dính "N món · Lưu đăng ký".
 
 ### 6.4 Tổng hợp và điều chỉnh (Admin)
-- FR-30 Tổng hợp kỳ: chọn tháng; KPI bấm-để-lọc (*Phiếu đã đăng ký x/y · Dòng chờ giao · Món ngoài danh mục chờ xem · Món sắp hết kho*); y = số user `active` thuộc group được cấp tại lúc kỳ khóa (kỳ đang mở: tại thời điểm xem); bảng theo người (nhóm theo **phòng ban** đã chụp trên phiếu, lấy từ PMH ID — BR-11) hoặc theo món; tìm theo tên/email; nút "Sao chép danh sách chưa đăng ký" (tên, phòng ban) để dán Zalo.
+- FR-30 Tổng hợp kỳ: chọn tháng; KPI bấm-để-lọc (*Phiếu đã đăng ký x/y · Dòng chờ giao · Món ngoài danh mục chờ xem · Món sắp hết kho*); y = số user `active` thuộc group được cấp, **trừ người thuộc group Hành chính**, tại lúc kỳ khóa (kỳ đang mở: tại thời điểm xem); bảng theo người (nhóm theo **phòng ban** đã chụp trên phiếu, lấy từ PMH ID — BR-11) hoặc theo món; tìm theo tên/email; nút "Sao chép danh sách chưa đăng ký" (tên, phòng ban) để dán Zalo.
 - FR-31 Điều chỉnh phiếu đã có (kể cả sau hạn): sửa số lượng, thêm/bớt dòng, thêm món `admin_only`; **lý do bắt buộc khi kỳ đã khóa**; không giảm số lượng xuống dưới số đã giao (`QTY_BELOW_DELIVERED`); không bớt dòng đã giao một phần; ghi nhật ký giá trị cũ/mới. Admin sửa phiếu của chính mình được phép, nhật ký đánh dấu `self`.
 - FR-32 Admin không tạo phiếu mới cho người chưa đăng ký sau hạn (luật "không ngoại lệ"). Trước hạn, admin tạo hộ được từ danh bạ (người `active`).
 - FR-33 Xử lý món ngoài danh mục — ba nút mở hộp riêng, **áp dụng ngay**, không phụ thuộc nút "Lưu điều chỉnh": **Chấp nhận** (giao như món thường, không tính tồn) / **Thêm vào danh mục** (tạo món mới có ảnh và ĐVT, cảnh báo nếu ĐVT khác dòng gốc, gắn dòng vào món, tồn ban đầu 0) / **Từ chối** (hộp có ô lý do riêng, bắt buộc; người đăng ký thấy). Dòng chép lại từ dòng đã chấp nhận kỳ trước có gợi ý "Đã chấp nhận kỳ trước → nên Thêm vào danh mục".
@@ -149,7 +149,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 ## 8. Màn hình (theo mockup `design-preview/final/`)
 
 **Member (thanh trên; điện thoại: thanh dưới 3 mục):** Đăng ký tháng này · Lịch sử · Chuông · Tôi (hồ sơ, ngôn ngữ, đăng xuất).
-**Admin (sidebar):** Tổng hợp kỳ · Món ngoài danh mục · Giao hàng · Còn nợ · Báo cáo & in · Kho · Danh mục · Danh bạ · Nhật ký · Cấu hình · *Phiếu của tôi* (mở giao diện member).
+**Admin (sidebar):** Tổng hợp kỳ · Món ngoài danh mục · Giao hàng · Còn nợ · Báo cáo & in · Kho · Danh mục · Danh bạ · Nhật ký · Cấu hình. Hành chính đăng nhập vào thẳng Tổng hợp; không có *Phiếu của tôi*.
 **Đăng nhập:** nút "Đăng nhập bằng tài khoản công ty (PMH ID)"; liên kết nhỏ "Dành cho IT" → SA cục bộ. **Chưa được cấp quyền:** trang riêng (tiêu đề, lý do, liên hệ Hành chính, nút đổi tài khoản).
 Mockup hiện tại (`final/*.html`) chưa phản ánh các thay đổi sau review (thanh dưới, nhãn đã lưu, vị trí nút thêm món, hộp review riêng, trang từ chối); `_SPEC.md` mục "Thay đổi sau review" là nguồn đúng khi làm FE.
 
@@ -193,6 +193,7 @@ Hệ thị giác: thương hiệu xanh ngọc lục `#059669`; member kiểu app
 | 2026-10-28 | Báo cáo 2 phần + 3 ô ký; Excel + In. |
 | 2026-10-28 | Chuông in-app GĐ1, email GĐ2. Member chỉ thấy phiếu mình. |
 | 2026-10-28 | Admin = group PMH ID `vpp_admin`; SA cục bộ từ `.env` như QLTS. |
+| 2026-10-30 | Hành chính chỉ quản lý VPP, không đăng ký cho bản thân: `/`, `/history`, `/me` chuyển về `/admin`; `me/request*` và `me/issues` trả 403 `FORBIDDEN_ROLE`; mẫu số, danh sách chưa đăng ký và chuông kỳ loại Hành chính; tạo hộ cho Hành chính → `USER_IS_ADMIN`; phiếu cũ giữ nguyên. |
 | 2026-10-28 | Giao diện: member kiểu app, admin kiểu quản lý, màu `#059669`; khác QLTS và PMH ID. |
 | 2026-10-28 | Song ngữ vi/en từ đầu. |
 | 2026-10-28 | Plan 3: bỏ Hoàn tác đợt giao; Hủy nợ báo chuông (email GĐ2) kèm lý do; chỉ giao sau khi kỳ khóa; mỗi lần Xuất/In tạo một bản chốt mới. |
