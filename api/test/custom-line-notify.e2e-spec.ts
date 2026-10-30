@@ -28,7 +28,7 @@ describe('PUT me/request/lines: chuông custom_line_new cho Hành chính', () =>
       (
         await f.pool().query(
           `INSERT INTO users (sub, full_name, status, groups)
-           VALUES ($1, 'SA', 'active', '["vpp-admin"]'::jsonb) ON CONFLICT (sub) DO NOTHING`,
+           VALUES ($1, 'SA', 'active', '["vpp_admin"]'::jsonb) ON CONFLICT (sub) DO NOTHING`,
           [SA],
         )
       ).rowCount === 1;

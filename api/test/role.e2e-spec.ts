@@ -39,12 +39,12 @@ describe('role tính mỗi request từ users.groups', () => {
     )) as INestApplication<App>;
     await app
       .get(UsersService)
-      .upsertFromClaims({ sub, full_name: 'Role E2E', groups: ['vpp-admin'] });
+      .upsertFromClaims({ sub, full_name: 'Role E2E', groups: ['vpp_admin'] });
     const session = await app.get(SessionService).create({
       userSub: sub,
       refreshToken: null,
       accessTokenExp: new Date(Date.now() + 10 * 60_000),
-      claims: { sub, full_name: 'Role E2E', groups: ['vpp-admin'] },
+      claims: { sub, full_name: 'Role E2E', groups: ['vpp_admin'] },
       idToken: null,
     });
     sessionId = session.id;
@@ -57,7 +57,7 @@ describe('role tính mỗi request từ users.groups', () => {
     else process.env.PMH_WEBHOOK_SECRET = originalSecret;
   });
 
-  it("groups=['vpp-admin'] → GET auth/me.role = admin, admin/audit 200", async () => {
+  it("groups=['vpp_admin'] → GET auth/me.role = admin, admin/audit 200", async () => {
     const me = await request(app.getHttpServer())
       .get('/api/auth/me')
       .set('Cookie', `vpp_sid=${sessionId}`)

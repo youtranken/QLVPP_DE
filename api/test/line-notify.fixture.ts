@@ -9,13 +9,13 @@ export function lineNotifyFixture(tag: string) {
 
   beforeAll(async () => {
     await pool().query(
-      `UPDATE users SET groups = '["VPP-Admin"]'::jsonb WHERE sub = $1`,
+      `UPDATE users SET groups = '["VPP_Admin"]'::jsonb WHERE sub = $1`,
       [f.ADMIN],
     );
     await pool().query(
       `INSERT INTO users (sub, full_name, department, status, groups) VALUES
-         ($1, 'Hành chính 2', 'Phòng HC', 'active', '["vpp-admin"]'::jsonb),
-         ($2, 'Hành chính nghỉ', 'Phòng HC', 'locked', '["vpp-admin"]'::jsonb)`,
+         ($1, 'Hành chính 2', 'Phòng HC', 'active', '["vpp_admin"]'::jsonb),
+         ($2, 'Hành chính nghỉ', 'Phòng HC', 'locked', '["vpp_admin"]'::jsonb)`,
       [ADMIN2, LOCKED_ADMIN],
     );
   });

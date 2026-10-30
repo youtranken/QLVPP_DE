@@ -139,7 +139,7 @@ describe('admin/config + public-config', () => {
       signers: { preparer: 'P0', head: 'Trưởng phòng', approver: 'GĐ' },
     }).expect(200);
     const res = await put({ signers: { preparer: 'A' } }).expect(200);
-    expect(res.body.admin_group).toBe('vpp-admin');
+    expect(res.body.admin_group).toBe('vpp_admin');
     expect(res.body.signers).toEqual({
       preparer: 'A',
       head: 'Trưởng phòng',
@@ -148,7 +148,7 @@ describe('admin/config + public-config', () => {
     const got = await asAdmin(
       request(app.getHttpServer()).get('/api/admin/config'),
     ).expect(200);
-    expect(got.body.admin_group).toBe('vpp-admin');
+    expect(got.body.admin_group).toBe('vpp_admin');
     expect(got.body.signers.preparer).toBe('A');
 
     const audit = await pool.query(
