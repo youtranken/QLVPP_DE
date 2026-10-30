@@ -13,6 +13,7 @@ describe('GET admin/users?exclude_admin', () => {
   const plain = `e2e-xa-plain-${tag}`;
   const hc = `e2e-xa-hc-${tag}`;
   const name = `Xa${tag}`;
+  const savedDev = process.env.AUTH_DEV_MODE;
 
   const subs = async (query: Record<string, string>) => {
     const res = await request(app.getHttpServer())
@@ -25,6 +26,7 @@ describe('GET admin/users?exclude_admin', () => {
   };
 
   beforeAll(async () => {
+    process.env.AUTH_DEV_MODE = 'true';
     pool = new Pool({
       connectionString: assertTestDatabase(process.env.DATABASE_URL),
     });
@@ -41,6 +43,8 @@ describe('GET admin/users?exclude_admin', () => {
     await pool.query('DELETE FROM users WHERE sub = ANY($1)', [[plain, hc]]);
     await pool.end();
     await app.close();
+    if (savedDev === undefined) delete process.env.AUTH_DEV_MODE;
+    else process.env.AUTH_DEV_MODE = savedDev;
   });
 
   it('exclude_admin=true loại người thuộc admin_group (VPP_ADMIN khác hoa thường), giữ người thường', async () => {
