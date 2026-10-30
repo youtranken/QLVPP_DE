@@ -49,7 +49,7 @@ Hành chính (vai `admin`) và SA cục bộ (`sa`) **không đăng ký VPP cho 
 | L1 | `_SPEC.md` (xanh ngọc, Nunito/IBM Plex, sidebar tối 224) | Bị thay cho phần Hành chính; vẫn đúng cho Nhân viên tới spec riêng | Chủ dự án duyệt M1+P3 |
 | L2 | `_SPEC.md` "Thay đổi sau review": Tổng hợp nhóm theo phòng ban; bản mẫu B1 là danh sách phẳng | Giữ nhóm theo phòng ban (tiêu đề nhóm dính kiểu M1, "Chưa có phòng ban" cuối) | Quyết định chủ dự án đã ghi trong memory/PRD |
 | L3 | PRD FR-33: ngăn Điều chỉnh có 3 nút review; bản mẫu B1a chỉ có liên kết "Xem ở Món ngoài danh mục" | Giữ 3 nút (dùng lại `ReviewActions`) + thêm liên kết | PRD thắng bản mẫu |
-| L4 | Bản mẫu B5 vô hiệu "Xuất Excel/In trình ký" khi kỳ đang mở; API cho chốt mọi `ym ≤ kỳ mở` | Theo API (cho chốt), hiện cảnh báo "tạm tính"; câu hỏi Q2 | Không có luật chỉ ở FE |
+| L4 | Bản mẫu B5 vô hiệu "Xuất Excel/In trình ký" khi kỳ đang mở; API cho chốt mọi `ym ≤ kỳ mở` | Theo API (cho chốt), hiện cảnh báo "tạm tính" (Q2 đã chốt) | Không có luật chỉ ở FE |
 | L5 | Bản mẫu: "Tên món ít nhất 2 ký tự", "Tên nhóm ít nhất 2 ký tự"; API: khác rỗng sau trim, ≤ 120 | Theo API | Không có luật chỉ ở FE |
 | L6 | Bản mẫu: ĐVT gõ tự do ("viên", "vỉ 2"); API: 9 mã `UNITS` | `UnitSelect` 9 mã | FR-10, FR-22 |
 | L7 | Bản mẫu desktop không có chuông | Giữ chuông (E6-S1) ở hàng thương hiệu sidebar (1280) và thanh trên (390) | Tính năng đã có test |
@@ -593,13 +593,13 @@ Không mục nào bắt buộc thêm API; ba đề xuất API đọc-only tùy c
 | Google Fonts bị chặn ở mạng nội bộ | Fallback `system-ui` trong `--font`; giống hiện trạng Nunito/IBM Plex |
 | File vượt 400 dòng / component vượt 250 khi port màn lớn (Tổng hợp, Danh mục) | Tách sẵn theo bảng §5 (hàng, ngăn kéo, hộp thoại, thanh công cụ mỗi tệp một trách nhiệm) |
 
-## 9. Câu hỏi cho chủ dự án (5)
+## 9. Câu hỏi cho chủ dự án (5, đã chốt hết)
 
 | # | Câu hỏi | Khuyến nghị |
 |---|---|---|
 | Q1 | Món ngoài danh mục có **bắt buộc ảnh** không? | **Đã chốt 2026-10-30: không.** Nhân viên chỉ ghi tên + ghi chú, không tải ảnh (luật R7, lát S0). Chuyển thành món mới thì Hành chính tải ảnh món (giữ luật "món mới phải có ảnh"). |
-| Q2 | Cho **chốt báo cáo (Excel/In) khi kỳ còn mở** không? API cho; bản mẫu khóa nút. | **Cho chốt**, kèm cảnh báo "tạm tính" như §5.4 (không đổi API). Nếu muốn khóa: thêm luật server `PERIOD_NOT_LOCKED` cho `POST …/snapshots` ở một lát API riêng. |
-| Q3 | Có thêm **3 trường API đọc-only** để giữ các chi tiết bản mẫu không? (`created_by_admin` ở Tổng hợp theo người — G1; `people` + `category_name` ở hàng báo cáo/bản chốt — G12; `directory_sync_last_at` ở `GET admin/config` — G22) | **Chưa thêm**; port với bản bỏ bớt. Nếu chủ dự án muốn, gom thành một lát API nhỏ sau S4 (thêm cột trong SELECT, không đổi luật). |
+| Q2 | Cho **chốt báo cáo (Excel/In) khi kỳ còn mở** không? API cho; bản mẫu khóa nút. | **Đã chốt 2026-10-30: cho.** In/Excel bản tạm khi kỳ còn mở, kèm cảnh báo "tạm tính" như §5.4 (không đổi API). |
+| Q3 | Có thêm **3 trường API đọc-only** để giữ các chi tiết bản mẫu không? (`created_by_admin` ở Tổng hợp theo người — G1; `people` + `category_name` ở hàng báo cáo/bản chốt — G12; `directory_sync_last_at` ở `GET admin/config` — G22) | **Đã chốt 2026-10-30: bỏ.** Port với bản bỏ bớt; cần thì làm một lát API nhỏ sau. |
 | Q4 | Phiếu **kỳ đang mở** của người nay là Hành chính (nếu có) xử lý thế nào? | **Đã chốt 2026-10-30: giữ nguyên.** |
 | Q5 | Thao tác **hàng loạt** ở Danh mục (đổi tối đa, chuyển nhóm, ngừng) và "Giao dòng đã chọn" chạy bằng nhiều lệnh riêng lẻ có chấp nhận được không (có thể thành công một phần)? | **Đã chốt 2026-10-30: chấp nhận.** |
 
