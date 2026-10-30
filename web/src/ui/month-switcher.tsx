@@ -7,10 +7,11 @@ interface MonthSwitcherProps {
   labels: { group: string; prev: string; next: string };
   min?: string;
   max?: string;
+  status?: { tone: 'ok' | 'dark'; label: string };
 }
 
 // ym dạng 'YYYY-MM' so sánh chuỗi được trực tiếp
-export function MonthSwitcher({ value, onChange, formatLabel, labels, min, max }: MonthSwitcherProps) {
+export function MonthSwitcher({ value, onChange, formatLabel, labels, min, max, status }: MonthSwitcherProps) {
   return (
     <div className="month-switch" role="group" aria-label={labels.group}>
       <button
@@ -30,6 +31,7 @@ export function MonthSwitcher({ value, onChange, formatLabel, labels, min, max }
       >
         ›
       </button>
+      {status && <span className={`month-switch__status month-switch__status--${status.tone}`}>{status.label}</span>}
     </div>
   );
 }

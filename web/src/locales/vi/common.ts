@@ -27,6 +27,14 @@ const common = {
     discardKeep: 'Tiếp tục sửa',
     selectAll: 'Chọn tất cả',
     selectRow: 'Chọn dòng',
+    inline: {
+      saveFailed: 'Không lưu được — thử lại.',
+      invalid: 'Nhập một số hợp lệ.',
+      hint: 'Enter lưu · Esc bỏ',
+    },
+    toast: {
+      saved: 'Đã lưu',
+    },
     stepper: {
       decrease: 'Bớt {{label}}',
       increase: 'Thêm {{label}}',

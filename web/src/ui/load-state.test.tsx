@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { LoadError } from '@/ui/load-state';
+import { EmptyState, LoadError } from '@/ui/load-state';
 import { renderWithI18n, screen, userEvent } from '@/test/test-utils';
 
 describe('LoadError', () => {
@@ -18,5 +18,18 @@ describe('LoadError', () => {
     renderWithI18n(<LoadError onRetry={onRetry} />);
     await userEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
     expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('EmptyState', () => {
+  it('có art thì vẽ minh họa ẩn khỏi trình đọc màn hình', () => {
+    const { container } = renderWithI18n(<EmptyState title="Chưa có món" art="no-match" />);
+    expect(screen.getByText('Chưa có món')).toBeInTheDocument();
+    expect(container.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+  });
+
+  it('không có art thì không có hình', () => {
+    const { container } = renderWithI18n(<EmptyState title="Chưa có món" />);
+    expect(container.querySelector('svg')).toBeNull();
   });
 });

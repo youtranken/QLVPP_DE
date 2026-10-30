@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { EmptyArt } from '@/ui/empty-art';
+import type { EmptyArtKind } from '@/ui/empty-art';
 import { IconAlert, IconLock, IconSearch } from '@/ui/icons';
 
 // Mọi màn fetch phải phân biệt "đang tải" ≠ "rỗng" ≠ "lỗi" — không nuốt lỗi thành rỗng
@@ -9,13 +11,16 @@ export function EmptyState({
   title,
   hint,
   action,
+  art,
 }: {
   title: string;
   hint?: string;
   action?: ReactNode;
+  art?: EmptyArtKind;
 }) {
   return (
     <div className="empty">
+      {art && <EmptyArt kind={art} />}
       <span className="empty-title">{title}</span>
       {hint && <span className="empty-hint">{hint}</span>}
       {action && <span className="empty-action">{action}</span>}

@@ -7,7 +7,7 @@ const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(mi
 export function Stepper({
   value,
   min = 0,
-  max,
+  max = Infinity,
   onChange,
   label,
   className,
@@ -16,7 +16,7 @@ export function Stepper({
 }: {
   value: number;
   min?: number;
-  max: number;
+  max?: number;
   onChange: (value: number) => void;
   label: string;
   className?: string;
@@ -53,7 +53,7 @@ export function Stepper({
         aria-describedby={describedBy}
         aria-invalid={invalid || undefined}
         min={min}
-        max={max}
+        max={Number.isFinite(max) ? max : undefined}
         value={draft ?? value}
         onChange={(e) => type(e.target.value)}
         onBlur={() => setDraft(null)}

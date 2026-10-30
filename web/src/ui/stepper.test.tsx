@@ -56,3 +56,32 @@ describe('Stepper', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 });
+
+describe('Stepper min/max', () => {
+  function Bounded({ start, min, max }: { start: number; min?: number; max?: number }) {
+    const [value, setValue] = useState(start);
+    return <Stepper value={value} min={min} max={max} label="Bút bi" onChange={setValue} />;
+  }
+
+  it('max=5: tại 5 nút Thêm vô hiệu, tại 4 thì bật', () => {
+    const { unmount } = renderWithI18n(<Bounded start={5} max={5} />);
+    expect(screen.getByRole('button', { name: 'Thêm Bút bi' })).toBeDisabled();
+    unmount();
+    renderWithI18n(<Bounded start={4} max={5} />);
+    expect(screen.getByRole('button', { name: 'Thêm Bút bi' })).toBeEnabled();
+  });
+
+  it('min=3: tại 3 nút Bớt vô hiệu, tại 4 thì bật', () => {
+    const { unmount } = renderWithI18n(<Bounded start={3} min={3} max={9} />);
+    expect(screen.getByRole('button', { name: 'Bớt Bút bi' })).toBeDisabled();
+    unmount();
+    renderWithI18n(<Bounded start={4} min={3} max={9} />);
+    expect(screen.getByRole('button', { name: 'Bớt Bút bi' })).toBeEnabled();
+  });
+
+  it('không truyền max thì không có trần', async () => {
+    renderWithI18n(<Bounded start={999} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Thêm Bút bi' }));
+    expect(screen.getByRole('spinbutton', { name: 'Bút bi' })).toHaveValue(1000);
+  });
+});

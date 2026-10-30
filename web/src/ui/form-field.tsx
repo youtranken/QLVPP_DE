@@ -12,12 +12,14 @@ export function FormField({
   label,
   error,
   hint,
+  counter,
   className,
   children,
 }: {
   label: string;
   error?: string;
   hint?: string;
+  counter?: { value: number; max: number };
   className?: string;
   children: (control: FieldControlProps) => ReactNode;
 }) {
@@ -38,6 +40,11 @@ export function FormField({
         <p id={noteId} className={error ? 'ff-error' : 'ff-hint'}>
           {note}
         </p>
+      )}
+      {counter && (
+        <span className="ff-counter num" aria-hidden="true">
+          {counter.value}/{counter.max}
+        </span>
       )}
     </div>
   );
