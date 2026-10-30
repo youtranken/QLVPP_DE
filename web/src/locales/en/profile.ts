@@ -11,7 +11,6 @@ const profile: Messages<typeof vi> = {
     employeeCode: 'Employee ID',
     dataFromPmhId: 'Data comes from PMH ID and cannot be edited in the app',
     role: 'Role',
-    toAdmin: 'Open admin pages',
   },
 };
 

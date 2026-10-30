@@ -10,19 +10,16 @@ const nav: Messages<typeof vi> = {
     register: 'Order',
     history: 'History',
     me: 'Me',
-    toAdmin: 'VPP Admin',
     groups: {
       monthly: 'Monthly',
       stock: 'Stock & catalog',
       system: 'System',
-      personal: 'Personal',
     },
     summary: 'Period summary',
     review: 'Off-catalog items',
     delivery: 'Delivery',
     backlog: 'Outstanding',
     reports: 'Reports & print',
-    myRequest: 'My request',
   },
 };
 

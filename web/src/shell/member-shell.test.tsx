@@ -45,13 +45,10 @@ describe('MemberShell', () => {
     expect(within(nav).getByRole('link', { name: 'Đăng ký' })).not.toHaveAttribute('aria-current');
   });
 
-  it('member không thấy lối vào trang quản lý; Hành chính thấy "Quản lý VPP"', () => {
+  it('member không thấy lối vào trang quản lý', () => {
     mockViewport(1280);
-    const { unmount } = renderApp(makeMe('member'), '/');
+    renderApp(makeMe('member'), '/');
     expect(screen.queryByRole('link', { name: 'Quản lý VPP' })).toBeNull();
-    unmount();
-    renderApp(makeMe('admin'), '/');
-    expect(screen.getByRole('link', { name: 'Quản lý VPP' })).toHaveAttribute('href', '/admin');
   });
 
   it('/history là trang Lịch sử thật, không còn "Sắp có"', async () => {

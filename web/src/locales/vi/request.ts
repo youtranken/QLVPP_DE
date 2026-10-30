@@ -171,7 +171,7 @@ const request = {
         DUPLICATE_ITEM: 'Món này đã có trong phiếu.',
         LINE_READONLY: 'Dòng này chỉ xem được — cần sửa thì liên hệ {{contact}}.',
         LINE_NOT_FOUND: 'Dòng này không còn — tải lại trang.',
-        IMAGE_REQUIRED: 'Món ngoài danh mục cần ảnh.',
+        IMAGE_REQUIRED: 'Ảnh không còn — tải ảnh lại.',
         UNIT_REQUIRED: 'Chọn đơn vị tính.',
         FILE_FORBIDDEN: 'Ảnh không dùng được — chụp lại ảnh khác.',
         OTHER: 'Dòng này chưa hợp lệ — kiểm tra lại.',

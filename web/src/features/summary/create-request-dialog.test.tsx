@@ -87,6 +87,15 @@ describe('CreateRequestDialog — tạo phiếu hộ', () => {
     expect(await within(dialog).findByText('Người này không còn hoạt động — chọn người khác.')).toBeInTheDocument();
   });
 
+  it('USER_IS_ADMIN → lỗi tại ô người đăng ký, không ở đầu form', async () => {
+    stub(() => jsonResponse(400, { code: 'USER_IS_ADMIN' }));
+    const { dialog } = await renderDialog();
+    await fill(dialog);
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Tạo phiếu' }));
+    expect(await within(dialog).findByText('Người này là Hành chính — Hành chính không đăng ký VPP.')).toBeInTheDocument();
+    expect(within(dialog).queryByText('Không tạo được phiếu — thử lại.')).toBeNull();
+  });
+
   it('Enter trong ô tìm món không tạo phiếu sớm', async () => {
     const fetchMock = stub(() => jsonResponse(201, { request: { id: 'r-new' } }));
     const { dialog, onCreated } = await renderDialog();

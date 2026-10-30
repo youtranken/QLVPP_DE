@@ -16,11 +16,11 @@ describe('AdminShell + RequireRole', () => {
     mockViewport(1280);
     renderApp(makeMe(role), '/admin/catalog');
     const side = screen.getByRole('navigation', { name: 'Menu quản lý' });
-    for (const g of ['Hằng tháng', 'Kho & danh mục', 'Hệ thống', 'Cá nhân']) {
+    for (const g of ['Hằng tháng', 'Kho & danh mục', 'Hệ thống']) {
       expect(within(side).getByText(g)).toBeInTheDocument();
     }
     expect(within(side).getByRole('link', { name: 'Danh mục' })).toHaveAttribute('aria-current', 'page');
-    expect(within(side).getByRole('link', { name: /Phiếu của tôi/ })).toHaveAttribute('href', '/');
+    expect(within(side).queryByRole('link', { name: /Phiếu của tôi/ })).toBeNull();
     expect(screen.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeInTheDocument();
   });
 
@@ -39,7 +39,6 @@ describe('AdminShell + RequireRole', () => {
       'Danh bạ',
       'Nhật ký',
       'Cấu hình',
-      'Phiếu của tôi',
     ]);
   });
 

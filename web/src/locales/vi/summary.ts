@@ -132,6 +132,7 @@ const summary = {
       errors: {
         USER_NOT_FOUND: 'Không tìm thấy người này trong danh bạ — chọn người khác.',
         USER_INACTIVE: 'Người này không còn hoạt động — chọn người khác.',
+        USER_IS_ADMIN: 'Người này là Hành chính — Hành chính không đăng ký VPP.',
         LINES_EMPTY: 'Chọn ít nhất một món.',
         PERIOD_LOCKED: 'Kỳ vừa khóa — tải lại trang để tạo phiếu ở kỳ mới.',
       },

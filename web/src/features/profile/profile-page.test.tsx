@@ -66,11 +66,4 @@ describe('Trang Tôi', () => {
     expect(navigateTo).not.toHaveBeenCalled();
     expect(button).toBeEnabled();
   });
-
-  it('Hành chính thấy nút mở trang quản lý', () => {
-    mockViewport(390);
-    renderApp(makeMe('admin'), '/me');
-    expect(screen.getByRole('link', { name: 'Mở trang quản lý' })).toHaveAttribute('href', '/admin');
-    expect(screen.getByText('Hành chính')).toBeInTheDocument();
-  });
 });

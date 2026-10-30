@@ -19,7 +19,7 @@ import { ReportsPage } from '@/features/reports/reports-page';
 import { PrintPage } from '@/features/reports/print-page';
 import { MemberShell } from '@/shell/member-shell';
 import { AdminShell } from '@/shell/admin-shell';
-import { RequireRole } from '@/shell/require-role';
+import { RequireMember, RequireRole } from '@/shell/require-role';
 import { ForbiddenScreen } from '@/shell/forbidden-screen';
 import { ADMIN_HOME } from '@/shell/admin-nav';
 
@@ -31,7 +31,13 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/forbidden" element={<ForbiddenRoute />} />
-      <Route element={<MemberShell />}>
+      <Route
+        element={
+          <RequireMember>
+            <MemberShell />
+          </RequireMember>
+        }
+      >
         <Route index element={<RequestPage />} />
         <Route path="history" element={<HistoryPage />} />
         <Route path="history/:ym" element={<HistoryDetailPage />} />

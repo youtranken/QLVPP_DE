@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { isAdminRole, useMe } from '@/lib/me';
+import { useMe } from '@/lib/me';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { BottomNav } from '@/shell/bottom-nav';
@@ -39,11 +39,6 @@ export function MemberShell() {
         )}
         <span className="sp" />
         <NotificationBell />
-        {isAdminRole(me.role) && (
-          <Link to="/admin" className="m-admin-link">
-            {t('nav.toAdmin')}
-          </Link>
-        )}
         {!narrow && (
           <NavLink to="/me" className="m-avatar" aria-label={t('nav.me')} title={me.fullName ?? undefined}>
             <span aria-hidden="true">{initials(me.fullName, me.sub)}</span>

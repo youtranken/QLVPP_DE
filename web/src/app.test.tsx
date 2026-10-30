@@ -5,6 +5,7 @@ import { renderWithI18n, screen, jsonResponse } from '@/test/test-utils';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import userEvent from '@testing-library/user-event';
+import { renderApp } from '@/test/render-app';
 
 vi.mock('@/lib/navigate', () => ({ navigateTo: vi.fn() }));
 
@@ -131,5 +132,42 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     await userEvent.click(screen.getByRole('button', { name: 'Dành cho IT' }));
     expect(screen.getByLabelText('Tên tài khoản')).toBeInTheDocument();
     expect(screen.getByLabelText('Mật khẩu')).toBeInTheDocument();
+  });
+});
+
+describe('Hành chính không có phiếu — route nhân viên chuyển về /admin', () => {
+  beforeEach(() => {
+    mockViewport(1280);
+    vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})));
+  });
+
+  it.each(['admin', 'sa'] as const)('%s vào /, /history, /history/2026-10, /me → /admin/summary', (role) => {
+    for (const path of ['/', '/history', '/history/2026-10', '/me']) {
+      const { unmount } = renderApp(makeMe(role), path);
+      expect(screen.getByTestId('location')).toHaveTextContent('/admin/summary');
+      unmount();
+    }
+  });
+
+  it('member vào / ở lại /', () => {
+    renderApp(makeMe('member'), '/');
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
+  });
+
+  it('sidebar Hành chính không có "Phiếu của tôi"', () => {
+    renderApp(makeMe('admin'), '/admin/summary');
+    expect(screen.getByRole('navigation', { name: 'Menu quản lý' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Phiếu của tôi/ })).toBeNull();
+  });
+
+  it('đăng nhập lại về returnTo là route nhân viên mà người là Hành chính → /admin', async () => {
+    vi.resetModules();
+    sessionStorage.clear();
+    sessionStorage.setItem('vpp.auth.returnTo', '/history?x=1');
+    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(url === '/api/auth/me' ? jsonResponse(200, makeMe('admin')) : new Promise<Response>(() => {}))));
+    const Fresh = (await import('@/App')).default;
+    renderWithI18n(<Fresh />);
+    await vi.waitFor(() => expect(window.location.pathname).toBe('/admin/summary'));
+    window.history.replaceState(null, '', '/');
   });
 });

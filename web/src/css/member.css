@@ -29,8 +29,6 @@
 .m-tabs a { padding: 8px 14px; border-radius: 999px; color: var(--ink-2); text-decoration: none; font-weight: 700; }
 .m-tabs a:hover { background: var(--card-2); }
 .m-tabs a.active { background: var(--brand-soft); color: var(--brand-ink); }
-.m-admin-link { height: 36px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 999px; border: 2px solid var(--line); color: var(--ink-2); font-weight: 700; font-size: 14px; text-decoration: none; }
-.m-admin-link:hover { border-color: var(--brand-line); color: var(--brand-ink); }
 .m-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-ink); display: grid; place-items: center; font-weight: 800; font-size: 13px; text-decoration: none; }
 .m-avatar.active { box-shadow: 0 0 0 2px var(--brand); }
 .m-main { max-width: 1240px; margin: 0 auto; padding: 20px 24px 48px; }

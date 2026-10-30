@@ -135,6 +135,7 @@ const summary: Messages<typeof vi> = {
       errors: {
         USER_NOT_FOUND: 'This person is not in the directory — choose someone else.',
         USER_INACTIVE: 'This person is no longer active — choose someone else.',
+        USER_IS_ADMIN: 'This person is in Admin — Admin does not order supplies.',
         LINES_EMPTY: 'Choose at least one item.',
         PERIOD_LOCKED: 'The period just locked — reload the page to create in the new period.',
       },

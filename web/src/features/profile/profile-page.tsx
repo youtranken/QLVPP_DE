@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { isAdminRole, useMe } from '@/lib/me';
+import { useMe } from '@/lib/me';
 import { logout } from '@/lib/auth-actions';
 import { LanguageSwitch } from '@/ui/language-switch';
 
@@ -37,11 +36,6 @@ export function ProfilePage() {
         <h2 className="card-title">{t('common.languages.label')}</h2>
         <LanguageSwitch className="seg--block" />
       </section>
-      {isAdminRole(me.role) && (
-        <Link to="/admin" className="btn btn--lg btn--block">
-          {t('profile.toAdmin')}
-        </Link>
-      )}
       {failed && (
         <p role="alert" className="alert alert--danger">
           {t('auth.logoutFailed')}

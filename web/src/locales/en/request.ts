@@ -174,7 +174,7 @@ const request: Messages<typeof vi> = {
         DUPLICATE_ITEM: 'This item is already in your order.',
         LINE_READONLY: 'This line is read-only — contact {{contact}} to change it.',
         LINE_NOT_FOUND: 'This line no longer exists — reload the page.',
-        IMAGE_REQUIRED: 'Items outside the catalog need a photo.',
+        IMAGE_REQUIRED: 'The photo is no longer available — upload it again.',
         UNIT_REQUIRED: 'Choose a unit.',
         FILE_FORBIDDEN: 'This photo cannot be used — take another one.',
         OTHER: 'This line is not valid — please check it.',

@@ -83,7 +83,7 @@ export interface SaveLinesBody {
 
 const REQUEST_KEY = ['request'] as const;
 export const HISTORY_KEY = [...REQUEST_KEY, 'history'] as const;
-export const myRequestKey = (ym: string) => [...REQUEST_KEY, 'mine', ym] as const;
+export const ownRequestKey = (ym: string) => [...REQUEST_KEY, 'mine', ym] as const;
 
 export function useCurrentPeriod() {
   return useQuery({
@@ -95,7 +95,7 @@ export function useCurrentPeriod() {
 // Chưa có phiếu là trạng thái bình thường (phiếu chỉ tồn tại khi có dòng) → null, không phải lỗi
 export function useMyRequest(ym: string | undefined) {
   return useQuery({
-    queryKey: myRequestKey(ym ?? ''),
+    queryKey: ownRequestKey(ym ?? ''),
     enabled: !!ym,
     queryFn: async () => {
       try {
@@ -131,7 +131,7 @@ export function useMemberCategories() {
 export function useSetMyRequest() {
   const qc = useQueryClient();
   return (ym: string, view: RequestView | null) => {
-    qc.setQueryData(myRequestKey(ym), view);
+    qc.setQueryData(ownRequestKey(ym), view);
     // Danh sách lịch sử có kỳ này (tổng dòng/đơn vị) → phải tải lại
     void qc.invalidateQueries({ queryKey: HISTORY_KEY });
   };

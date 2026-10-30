@@ -25,7 +25,7 @@ interface Errors {
   exists?: { requestId?: string };
 }
 
-const USER_CODES = new Set(['USER_NOT_FOUND', 'USER_INACTIVE']);
+const USER_CODES = new Set(['USER_NOT_FOUND', 'USER_INACTIVE', 'USER_IS_ADMIN']);
 const LINE_CODES = new Set(['QTY_INVALID', 'QTY_EXCEEDS_MAX', 'ITEM_INACTIVE', 'ITEM_NOT_FOUND', 'ADMIN_ONLY_ITEM', 'DUPLICATE_ITEM']);
 
 // Tạo hộ theo luật member (api on_behalf): món chỉ Hành chính không chọn được ở đây

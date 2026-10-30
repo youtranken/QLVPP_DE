@@ -26,15 +26,6 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
             ))}
           </div>
         ))}
-        <div className="a-group" role="group" aria-labelledby="g-personal">
-          <div className="a-group-label" id="g-personal">
-            {t('nav.groups.personal')}
-          </div>
-          <NavLink to="/" end onClick={onNavigate}>
-            {t('nav.myRequest')}
-            <span aria-hidden="true"> ↗</span>
-          </NavLink>
-        </div>
       </nav>
       <div className="a-foot">
         <b>{me.fullName ?? me.sub}</b>
