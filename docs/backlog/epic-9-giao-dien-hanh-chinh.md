@@ -4,6 +4,7 @@ Nguồn: `docs/specs/2026-10-30-giao-dien-moi-hanh-chinh.md` (SPEC thắng nếu
 
 ## E9-S0 Hành chính không có phiếu
 Chốt chủ dự án 2026-10-30: Hành chính (`admin`, `sa`) chỉ quản lý VPP, không đăng ký cho bản thân. SPEC §1.4, §5.0.
+**AC:**
 1. admin/sa mở `/`, `/history`, `/history/:ym` hoặc `/me` → kết thúc ở `/admin/summary`; đăng nhập vào thẳng Tổng hợp; sidebar không có "Phiếu của tôi"; member vào `/` ở lại `/`.
 2. `GET me/request`, `PUT me/request/lines`, `POST me/request/copy-previous`, `GET me/requests`, `GET me/issues` với admin/sa → 403 `FORBIDDEN_ROLE`; member như cũ.
 3. Đổi `users.groups` (thêm/gỡ `admin_group`, khác hoa thường) có hiệu lực từ request kế tiếp, không cần đăng nhập lại; `GET periods/current` của admin/sa trả `previous: null`.
