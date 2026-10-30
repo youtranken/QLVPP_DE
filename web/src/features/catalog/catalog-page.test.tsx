@@ -110,7 +110,7 @@ describe('Trang Danh mục', () => {
 
   it('nút "Thêm món" mở form; liên kết "Nhóm món" tới /admin/categories', async () => {
     await openCatalog();
-    expect(screen.getByRole('link', { name: 'Nhóm món' })).toHaveAttribute('href', '/admin/categories');
+    expect(within(screen.getByRole('main')).getByRole('link', { name: 'Nhóm món' })).toHaveAttribute('href', '/admin/categories');
     await userEvent.click(screen.getByRole('button', { name: 'Thêm món' }));
     expect(await screen.findByRole('dialog', { name: 'Thêm món' })).toBeInTheDocument();
   });

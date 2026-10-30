@@ -16,10 +16,13 @@ async function snap(page: Page, info: TestInfo, name: string) {
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png`, fullPage: true });
 }
 
-async function switchLanguage(page: Page, lang: Lang) {
-  await page.goto('/me');
+// Hành chính không có /me (E9-S0): đổi ngôn ngữ ở đáy sidebar, điện thoại thì trong menu quản lý
+async function switchLanguage(page: Page, info: TestInfo, lang: Lang) {
+  await page.goto('/admin/summary');
+  if (isMobile(info)) await page.getByRole('button', { name: /^(Mở menu quản lý|Open admin menu)$/ }).click();
   await page.getByRole('radio', { name: lang === 'en' ? 'English' : 'Tiếng Việt' }).click();
-  await expect(page.getByRole('heading', { level: 1, name: lang === 'en' ? 'Me' : 'Tôi' })).toBeVisible();
+  if (isMobile(info)) await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { level: 1, name: lang === 'en' ? 'Period summary' : 'Tổng hợp kỳ' })).toBeVisible();
 }
 
 // Vỏ app có tên người đăng nhập và tên ngôn ngữ "Tiếng Việt"; ô dữ liệu (ghi chú xuất lẻ, tên món) là chữ người dùng nhập
@@ -27,13 +30,17 @@ async function switchLanguage(page: Page, lang: Lang) {
 async function expectContentLanguage(page: Page, lang: Lang) {
   await settled(page);
   const ui = await page.getByRole('main').locator('h1, h2, h3, button, th, label, legend').allInnerTexts();
-  const words = ui.join(' ').match(/\S*[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]\S*/gi) ?? [];
+  // Nút chọn phiếu mang tên người/phòng ban (dữ liệu, có thể là người demo trong DB dev) — không phải chữ giao diện
+  const text = userDataTexts().reduce((t, d) => t.split(d).join(' '), ui.join(' '));
+  const words = text.match(/\S*[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]\S*/gi) ?? [];
   if (lang === 'en') expect(words).toEqual([]);
   else expect(words.length).toBeGreaterThan(0);
 }
 
 test.describe('E6-S4 song ngữ các màn Hành chính của Plan 3', () => {
-  test('E6-S4 Giao hàng, Còn nợ, Báo cáo, Lịch sử, chuông: en không còn chữ Việt trong nội dung, axe 390 sạch ở cả vi và en', async ({ page }, info) => {
+  test('E6-S4 Giao hàng, Còn nợ, Báo cáo, Lịch sử, chuông: en không còn chữ Việt trong nội dung, axe 390 sạch ở cả vi và en', async ({ page, browser }, info) => {
+    // 5 màn × 2 ngôn ngữ + trang Nhân viên riêng cho Lịch sử
+    test.setTimeout(90_000);
     const release = await acquireLock('prev-period');
     let seed: Seed | undefined;
     const admin = `pw-i18n-${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}`;
@@ -48,7 +55,7 @@ test.describe('E6-S4 song ngữ các màn Hành chính của Plan 3', () => {
       );
 
       for (const lang of ['vi', 'en'] as const) {
-        await switchLanguage(page, lang);
+        await switchLanguage(page, info, lang);
         const t = lang === 'vi' ? { delivery: 'Giao tất cả', backlog: 'Còn nợ', reports: 'In trình ký', bell: 'Thông báo' } : { delivery: 'Deliver all', backlog: 'Outstanding', reports: 'Print for signing', bell: 'Notifications' };
 
         await page.goto('/admin/delivery');
@@ -70,11 +77,19 @@ test.describe('E6-S4 song ngữ các màn Hành chính của Plan 3', () => {
         if (isMobile(info)) await expectNoContrastViolations(page);
         await snap(page, info, `reports-${lang}`);
 
-        await page.goto('/history');
-        await expect(page.getByRole('heading', { level: 1, name: lang === 'vi' ? 'Lịch sử' : 'History' })).toBeVisible();
-        await expectContentLanguage(page, lang);
-        if (isMobile(info)) await expectNoContrastViolations(page);
-        await snap(page, info, `history-${lang}`);
+        // Lịch sử chỉ dành cho Nhân viên (E9-S0): xem bằng chính người có phiếu đã khóa
+        const member = await newPage(browser, info, { 'x-dev-user-sub': seed.sub, 'x-dev-role': 'member' });
+        try {
+          await member.goto('/');
+          await member.evaluate((l) => localStorage.setItem('vpp_lang', l), lang);
+          await member.goto('/history');
+          await expect(member.getByRole('heading', { level: 1, name: lang === 'vi' ? 'Lịch sử' : 'History' })).toBeVisible();
+          await expectContentLanguage(member, lang);
+          if (isMobile(info)) await expectNoContrastViolations(member);
+          await snap(member, info, `history-${lang}`);
+        } finally {
+          await member.context().close();
+        }
 
         await page.getByRole('button', { name: new RegExp(`^${t.bell}, \\d+ ${lang === 'vi' ? 'chưa đọc' : 'unread'}$`) }).click();
         const panel = page.getByRole('dialog', { name: t.bell });

@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, apiFetch } from '@/lib/api-client';
 import { apiErrorCode } from '@/lib/api-error';
 import type { Category } from '@/features/catalog/catalog.api';
@@ -85,11 +85,14 @@ const REQUEST_KEY = ['request'] as const;
 export const HISTORY_KEY = [...REQUEST_KEY, 'history'] as const;
 export const ownRequestKey = (ym: string) => [...REQUEST_KEY, 'mine', ym] as const;
 
-export function useCurrentPeriod() {
-  return useQuery({
+export const currentPeriodQuery = () =>
+  queryOptions({
     queryKey: [...REQUEST_KEY, 'period'],
     queryFn: () => apiFetch<CurrentPeriod>('/api/periods/current'),
   });
+
+export function useCurrentPeriod() {
+  return useQuery(currentPeriodQuery());
 }
 
 // Chưa có phiếu là trạng thái bình thường (phiếu chỉ tồn tại khi có dòng) → null, không phải lỗi

@@ -1,0 +1,95 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import i18n from '@/lib/i18n';
+import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { renderApp } from '@/test/render-app';
+import { makeMe } from '@/test/fixtures-me';
+import { mockViewport } from '@/test/viewport';
+import { stubShellApi } from '@/test/admin-shell-stub';
+
+const rows = (n: number) => ({ items: Array.from({ length: n }, (_, i) => ({ id: `l${i}` })) });
+const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
+const navLink = (title: string) => within(sideNav()).getByTitle(title);
+
+afterEach(() => vi.unstubAllGlobals());
+
+describe('AdminSidebar: đếm', () => {
+  it('review trả 3 dòng → "Món ngoài danh mục" hiện 3; giao 6 dòng, kho 4 món kèm nhãn đọc màn hình', async () => {
+    mockViewport(1280);
+    stubShellApi({
+      '/api/admin/review?status=pending': () => jsonResponse(200, rows(3)),
+      '/api/admin/periods/2026-10/summary': () => jsonResponse(200, { lines_pending_delivery: 6 }),
+      '/api/admin/stock/low': () => jsonResponse(200, rows(4).items),
+    });
+    renderApp(makeMe('admin'), '/admin/catalog');
+    await waitFor(() => expect(navLink('Món ngoài danh mục')).toHaveTextContent('3'));
+    expect(navLink('Món ngoài danh mục')).toHaveAccessibleName('Món ngoài danh mục, 3 món chờ xem');
+    await waitFor(() => expect(navLink('Giao hàng')).toHaveAccessibleName('Giao hàng, 6 dòng chờ giao'));
+    await waitFor(() => expect(navLink('Kho')).toHaveAccessibleName('Kho, 4 món sắp hết'));
+  });
+
+  it.each([
+    [0, false],
+    [1, true],
+  ])('biên 0/1: review trả %i dòng → hiện đếm: %s', async (n, shown) => {
+    mockViewport(1280);
+    stubShellApi({
+      '/api/admin/review?status=pending': () => jsonResponse(200, rows(n)),
+      '/api/admin/periods/2026-10/summary': () => jsonResponse(200, { lines_pending_delivery: 2 }),
+    });
+    renderApp(makeMe('admin'), '/admin/catalog');
+    // Đếm giao hàng phụ thuộc kỳ hiện tại → khi nó hiện thì đếm review (độc lập) cũng đã về
+    await waitFor(() => expect(navLink('Giao hàng')).toHaveTextContent('2'));
+    if (shown) expect(navLink('Món ngoài danh mục')).toHaveAccessibleName('Món ngoài danh mục, 1 món chờ xem');
+    else expect(navLink('Món ngoài danh mục')).toHaveAccessibleName('Món ngoài danh mục');
+    expect(navLink('Món ngoài danh mục')).toHaveTextContent(shown ? /1/ : /^Món ngoài danh mục$/);
+  });
+
+  it('lỗi tải đếm → không có số, sidebar vẫn đủ 11 mục', async () => {
+    mockViewport(1280);
+    const f = stubShellApi({
+      '/api/admin/review?status=pending': () => jsonResponse(500, null),
+      '/api/admin/periods/2026-10/summary': () => jsonResponse(500, null),
+      '/api/admin/stock/low': () => jsonResponse(500, null),
+    });
+    renderApp(makeMe('admin'), '/admin/catalog');
+    await waitFor(() => expect(f.mock.calls.some(([u]) => u === '/api/admin/periods/2026-10/summary')).toBe(true));
+    await new Promise((r) => setTimeout(r, 0));
+    const links = within(sideNav()).getAllByRole('link');
+    expect(links).toHaveLength(11);
+    for (const a of links) expect(a.textContent).not.toMatch(/\d/);
+  });
+});
+
+describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
+  it('đáy sidebar: thẻ kỳ, họ tên + vai, nút Đăng xuất', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    expect(await screen.findByRole('link', { name: /Kỳ tháng 11 đang mở/ })).toHaveTextContent('còn 4 ngày');
+    expect(screen.getByText('Nguyễn Văn An')).toBeInTheDocument();
+    expect(screen.getAllByText('Hành chính').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Đăng xuất' })).toBeInTheDocument();
+  });
+
+  it('đăng xuất lỗi → câu "Chưa đăng xuất được — thử lại." dưới nút', async () => {
+    mockViewport(1280);
+    stubShellApi({ '/api/auth/logout': () => jsonResponse(500, null) });
+    renderApp(makeMe('admin'), '/admin/catalog');
+    await userEvent.click(screen.getByRole('button', { name: 'Đăng xuất' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Chưa đăng xuất được — thử lại.');
+  });
+
+  it('đổi English → nhãn nhóm và mục sidebar đổi', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    try {
+      await userEvent.click(screen.getByRole('radio', { name: 'English' }));
+      const side = screen.getByRole('navigation', { name: 'Admin menu' });
+      expect(within(side).getByRole('group', { name: 'Monthly' })).toBeInTheDocument();
+      expect(within(side).getByTitle('Categories')).toBeInTheDocument();
+    } finally {
+      await i18n.changeLanguage('vi');
+    }
+  });
+});

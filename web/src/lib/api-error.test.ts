@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ApiError } from '@/lib/api-client';
-import { apiErrorCode, apiErrorFields, apiErrorNumber, apiErrorString } from '@/lib/api-error';
+import { apiErrorCode, apiErrorFields, apiErrorNumber, apiErrorString, isForbiddenRole } from '@/lib/api-error';
 
 describe('apiErrorCode / apiErrorFields', () => {
   it('đọc code từ body ApiError {code, message}', () => {
@@ -33,5 +33,15 @@ describe('apiErrorCode / apiErrorFields', () => {
     expect(apiErrorString(new ApiError(400, { code: 'QTY_BELOW_DELIVERED', line_id: 'l-1' }), 'line_id')).toBe('l-1');
     expect(apiErrorString(new ApiError(400, { line_id: 3 }), 'line_id')).toBeUndefined();
     expect(apiErrorString(new Error('x'), 'line_id')).toBeUndefined();
+  });
+});
+
+describe('isForbiddenRole', () => {
+  it('chỉ 403 kèm code FORBIDDEN_ROLE là mất vai', () => {
+    expect(isForbiddenRole(new ApiError(403, { code: 'FORBIDDEN_ROLE' }))).toBe(true);
+    expect(isForbiddenRole(new ApiError(403, { code: 'CSRF_INVALID' }))).toBe(false);
+    expect(isForbiddenRole(new ApiError(400, { code: 'FORBIDDEN_ROLE' }))).toBe(false);
+    expect(isForbiddenRole(new ApiError(403, null))).toBe(false);
+    expect(isForbiddenRole(new Error('x'))).toBe(false);
   });
 });

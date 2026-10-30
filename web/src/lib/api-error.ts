@@ -24,3 +24,7 @@ export function apiErrorString(e: unknown, key: string): string | undefined {
   const value = bodyOf(e)?.[key];
   return typeof value === 'string' ? value : undefined;
 }
+
+export function isForbiddenRole(e: unknown): boolean {
+  return e instanceof ApiError && e.status === 403 && apiErrorCode(e) === 'FORBIDDEN_ROLE';
+}

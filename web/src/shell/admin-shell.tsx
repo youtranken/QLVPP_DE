@@ -1,59 +1,49 @@
-import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
-import { NotificationBell } from '@/features/notifications/notification-bell';
-import { Dialog, DialogTitle } from '@/ui/dialog';
-import { IconMenu } from '@/ui/icons';
-import { ADMIN_PAGES } from '@/shell/admin-nav';
+import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
+import { IconSprite } from '@/ui/icon-sprite';
+import { NoPermission } from '@/ui/load-state';
+import { PageHeader } from '@/ui/page-header';
+import { ToastProvider } from '@/ui/toast-provider';
+import { adminPageOf } from '@/shell/admin-nav';
 import { AdminSidebar } from '@/shell/admin-sidebar';
+import { AdminTopbar } from '@/shell/admin-topbar';
+import { useForbiddenRole } from '@/shell/use-forbidden-role';
 import { useShellFont } from '@/shell/use-shell-font';
 
-function usePageTitleKey(): string {
-  const { pathname } = useLocation();
-  const seg = pathname.split('/')[2] ?? '';
-  return ADMIN_PAGES.find((p) => p.path === seg)?.titleKey ?? 'app.adminTitle';
+// Trang chưa port (S2–S6) chưa tự dựng PageHeader: shell dựng tạm tiêu đề theo mục sidebar
+function ShellPageHeader() {
+  const { t } = useTranslation();
+  const current = adminPageOf(useLocation().pathname);
+  if (!current) return null;
+  return <PageHeader crumbs={[]} title={t(current.page.titleKey)} />;
 }
 
 export function AdminShell() {
   const { t } = useTranslation();
-  const narrow = useMediaQuery(NARROW_QUERY);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const titleKey = usePageTitleKey();
+  const phone = useMediaQuery(ADMIN_PHONE_QUERY);
+  const forbidden = useForbiddenRole();
   useShellFont('admin');
 
   return (
-    <div className={`a-shell${narrow ? ' is-narrow' : ''}`}>
-      <a className="skip-link" href="#main">
-        {t('common.skipToContent')}
-      </a>
-      {!narrow && <AdminSidebar />}
-      {narrow && (
-        <Dialog open={menuOpen} onOpenChange={setMenuOpen} className="a-drawer" overlayClassName="a-scrim">
-          <DialogTitle className="sr-only">{t('nav.adminMenu')}</DialogTitle>
-          <AdminSidebar onNavigate={() => setMenuOpen(false)} />
-        </Dialog>
-      )}
-      <div className="a-content">
-        <header className="a-head">
-          {narrow && (
-            <button
-              type="button"
-              className="a-menu-btn"
-              aria-label={t('nav.openMenu')}
-              onClick={() => setMenuOpen(true)}
-            >
-              <IconMenu />
-            </button>
+    <ToastProvider>
+      <IconSprite />
+      <div className="shell">
+        <a className="skip-link" href="#main">
+          {t('common.skipToContent')}
+        </a>
+        {phone ? <AdminTopbar /> : <AdminSidebar />}
+        <main id="main" className="shell__main" tabIndex={-1}>
+          {forbidden ? (
+            <NoPermission />
+          ) : (
+            <>
+              <ShellPageHeader />
+              <Outlet />
+            </>
           )}
-          <h1>{t(titleKey)}</h1>
-          <span className="sp" />
-          <NotificationBell />
-        </header>
-        <main id="main" className="a-page">
-          <Outlet />
         </main>
       </div>
-    </div>
+    </ToastProvider>
   );
 }

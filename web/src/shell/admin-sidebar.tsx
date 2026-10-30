@@ -1,37 +1,66 @@
 import { NavLink } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useMe } from '@/lib/me';
-import { LanguageSwitch } from '@/ui/language-switch';
-import { ADMIN_NAV } from '@/shell/admin-nav';
+import { Icon } from '@/ui/icon';
+import { NotificationBell } from '@/features/notifications/notification-bell';
+import { currentPeriodQuery } from '@/features/request/request.api';
+import { ADMIN_NAV, type AdminPage } from '@/shell/admin-nav';
+import { AdminPeriodCard } from '@/shell/admin-period-card';
+import { AdminSidebarUser } from '@/shell/admin-sidebar-user';
+import { useAdminBadges } from '@/shell/use-admin-badges';
 
-export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
+function SideLink({ page, count, onNavigate }: { page: AdminPage; count?: number; onNavigate?: () => void }) {
   const { t } = useTranslation();
-  const me = useMe();
+  const label = t(page.titleKey);
   return (
-    <div className="a-side">
-      <div className="a-brand">
-        <i aria-hidden="true">{t('app.logoLetter')}</i>
-        {t('app.adminTitle')}
-      </div>
-      <nav className="a-nav" aria-label={t('nav.adminMenu')}>
+    <NavLink to={`/admin/${page.path}`} title={label} className="side__link" onClick={onNavigate}>
+      <Icon name={page.icon} />
+      <span className="side__label">{label}</span>
+      {!!count && page.badge && (
+        <>
+          <span className="side__cnt" data-badge={page.badge} aria-hidden="true">
+            {count}
+          </span>
+          <span className="sr-only">{`, ${t(`nav.badge.${page.badge}`, { n: count })}`}</span>
+        </>
+      )}
+    </NavLink>
+  );
+}
+
+// 'side': cột trái ≥ 768 (hàng thương hiệu là banner, có chuông); 'sheet': trong hộp thoại menu điện thoại
+export function AdminSidebar({ variant = 'side', onNavigate }: { variant?: 'side' | 'sheet'; onNavigate?: () => void }) {
+  const { t } = useTranslation();
+  const badges = useAdminBadges();
+  const period = useQuery(currentPeriodQuery());
+  const Brand = variant === 'side' ? 'header' : 'div';
+  const hasPeriod = typeof period.data?.ym === 'string' && typeof period.data.deadline === 'string';
+  return (
+    <div className="side" data-variant={variant}>
+      <Brand className="side__brand">
+        <span className="side__logo" aria-hidden="true">
+          <Icon name="pkg" />
+        </span>
+        <span className="side__brand-text">
+          {t('app.title')}
+          <small>{t('common.roles.admin')}</small>
+        </span>
+        {variant === 'side' && <NotificationBell />}
+      </Brand>
+      <nav className="side__nav" aria-label={t('nav.adminMenu')}>
         {ADMIN_NAV.map((g) => (
-          <div key={g.labelKey} className="a-group" role="group" aria-labelledby={`g-${g.labelKey}`}>
-            <div className="a-group-label" id={`g-${g.labelKey}`}>
+          <div key={g.labelKey} className="side__group" role="group" aria-label={t(g.labelKey)}>
+            <span className="side__group-label" aria-hidden="true">
               {t(g.labelKey)}
-            </div>
+            </span>
             {g.pages.map((p) => (
-              <NavLink key={p.path} to={`/admin/${p.path}`} onClick={onNavigate}>
-                {t(p.titleKey)}
-              </NavLink>
+              <SideLink key={p.path} page={p} count={p.badge ? badges[p.badge] : undefined} onNavigate={onNavigate} />
             ))}
           </div>
         ))}
       </nav>
-      <div className="a-foot">
-        <b>{me.fullName ?? me.sub}</b>
-        <span>{t(`common.roles.${me.role}`)}</span>
-        <LanguageSwitch className="seg--dark" />
-      </div>
+      {hasPeriod && <AdminPeriodCard period={period.data!} />}
+      <AdminSidebarUser />
     </div>
   );
 }

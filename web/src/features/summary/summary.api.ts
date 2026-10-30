@@ -1,4 +1,4 @@
-import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, queryOptions, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import type { LineInputBody, RequestView } from '@/features/request/request.api';
 
@@ -52,12 +52,15 @@ export const SUMMARY_KEY = ['admin-summary'] as const;
 const PERSON_PAGE = 100;
 const base = (ym: string) => `/api/admin/periods/${ym}`;
 
-export function usePeriodSummary(ym: string | undefined) {
-  return useQuery({
+export const periodSummaryQuery = (ym: string | undefined) =>
+  queryOptions({
     queryKey: [...SUMMARY_KEY, ym, 'kpi'],
     enabled: !!ym,
     queryFn: () => apiFetch<PeriodSummary>(`${base(ym!)}/summary`),
   });
+
+export function usePeriodSummary(ym: string | undefined) {
+  return useQuery(periodSummaryQuery(ym));
 }
 
 export function usePersonRows(ym: string | undefined, filter: SummaryFilter, q: string) {

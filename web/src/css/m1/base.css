@@ -122,12 +122,12 @@
 [data-shell='admin'] .a-stack > * { min-width: 0; }
 [data-shell='admin'] .a-input { max-width: 100%; min-width: 0; height: 36px; padding: 0 12px; border: 1px solid var(--c-line-input); border-radius: var(--r-md); background: var(--c-surface); color: var(--c-ink); font: var(--t-body); }
 
-[data-shell='admin'] .seg:not(.seg--dark) { display: inline-grid; max-width: 100%; overflow-x: auto; grid-auto-flow: column; gap: 4px; padding: 4px; border: 0; border-radius: var(--r-md); background: var(--c-surface-2); }
-[data-shell='admin'] .seg:not(.seg--dark) button { display: flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 12px; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--c-muted); font: var(--t-label); font-size: 13px; white-space: nowrap; }
-[data-shell='admin'] .seg:not(.seg--dark) button[aria-checked='true'] { background: var(--c-surface); color: var(--c-ink); box-shadow: 0 1px 3px rgb(var(--sh-ink) / 0.14); }
-[data-shell='admin'] .seg:not(.seg--dark) button:focus-visible { box-shadow: var(--focus); }
-[data-shell='admin'] .seg--sm:not(.seg--dark) button { height: 28px; padding: 0 10px; }
-[data-shell='admin'] .seg--block:not(.seg--dark) { display: grid; grid-auto-columns: 1fr; }
+[data-shell='admin'] .seg { display: inline-grid; max-width: 100%; overflow-x: auto; grid-auto-flow: column; gap: 4px; padding: 4px; border: 0; border-radius: var(--r-md); background: var(--c-surface-2); }
+[data-shell='admin'] .seg button { display: flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 12px; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--c-muted); font: var(--t-label); font-size: 13px; white-space: nowrap; }
+[data-shell='admin'] .seg button[aria-checked='true'] { background: var(--c-surface); color: var(--c-ink); box-shadow: 0 1px 3px rgb(var(--sh-ink) / 0.14); }
+[data-shell='admin'] .seg button:focus-visible { box-shadow: var(--focus); }
+[data-shell='admin'] .seg--sm button { height: 28px; padding: 0 10px; }
+[data-shell='admin'] .seg--block { display: grid; grid-auto-columns: 1fr; }
 @media (max-width: 767px) {
   [data-shell='admin'] .field input, [data-shell='admin'] .a-input { height: 48px; font-size: 16px; }
 }

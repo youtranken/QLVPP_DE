@@ -1,6 +1,12 @@
+import type { IconName } from '@/ui/icon';
+
+export type AdminBadgeKey = 'review' | 'delivery' | 'stock';
+
 export interface AdminPage {
   path: string;
   titleKey: string;
+  icon: IconName;
+  badge?: AdminBadgeKey;
 }
 
 export interface AdminNavGroup {
@@ -12,38 +18,38 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     labelKey: 'nav.groups.monthly',
     pages: [
-      { path: 'summary', titleKey: 'nav.summary' },
-      { path: 'review', titleKey: 'nav.review' },
-      { path: 'delivery', titleKey: 'nav.delivery' },
-      { path: 'backlog', titleKey: 'nav.backlog' },
-      { path: 'reports', titleKey: 'nav.reports' },
+      { path: 'summary', titleKey: 'nav.summary', icon: 'dash' },
+      { path: 'review', titleKey: 'nav.review', icon: 'pkgplus', badge: 'review' },
+      { path: 'delivery', titleKey: 'nav.delivery', icon: 'truck', badge: 'delivery' },
+      { path: 'backlog', titleKey: 'nav.backlog', icon: 'receipt' },
+      { path: 'reports', titleKey: 'nav.reports', icon: 'printer' },
     ],
   },
   {
     labelKey: 'nav.groups.stock',
     pages: [
-      { path: 'stock', titleKey: 'stock.title' },
-      { path: 'catalog', titleKey: 'catalog.title' },
+      { path: 'stock', titleKey: 'stock.title', icon: 'warehouse', badge: 'stock' },
+      { path: 'catalog', titleKey: 'catalog.title', icon: 'layers' },
+      { path: 'categories', titleKey: 'nav.categories', icon: 'filter' },
     ],
   },
   {
     labelKey: 'nav.groups.system',
     pages: [
-      { path: 'users', titleKey: 'users.title' },
-      { path: 'audit', titleKey: 'audit.title' },
-      { path: 'config', titleKey: 'config.title' },
+      { path: 'users', titleKey: 'users.title', icon: 'users' },
+      { path: 'audit', titleKey: 'audit.title', icon: 'scroll' },
+      { path: 'config', titleKey: 'config.title', icon: 'sliders' },
     ],
   },
 ];
 
-// Nhóm món mở từ trang Danh mục, không có mục riêng trong sidebar (_SPEC.md)
-export const ADMIN_HIDDEN_PAGES: AdminPage[] = [
-  { path: 'categories', titleKey: 'catalog.categoriesTitle' },
-];
-
-export const ADMIN_PAGES: AdminPage[] = [
-  ...ADMIN_NAV.flatMap((g) => g.pages),
-  ...ADMIN_HIDDEN_PAGES,
-];
+export function adminPageOf(pathname: string): { page: AdminPage; group: AdminNavGroup } | undefined {
+  const seg = pathname.split('/')[2] ?? '';
+  for (const group of ADMIN_NAV) {
+    const page = group.pages.find((p) => p.path === seg);
+    if (page) return { page, group };
+  }
+  return undefined;
+}
 
 export const ADMIN_HOME = 'summary';

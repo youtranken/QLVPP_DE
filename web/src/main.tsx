@@ -8,6 +8,7 @@ import '@/css/member.css';
 import '@/css/admin.css';
 import '@/features/notifications/notifications.css';
 import '@/css/m1/base.css';
+import '@/css/m1/shell.css';
 import '@/css/m1/states.css';
 import '@/css/m1/table.css';
 import '@/css/m1/overlay.css';

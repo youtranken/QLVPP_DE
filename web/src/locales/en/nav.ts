@@ -6,7 +6,8 @@ const nav: Messages<typeof vi> = {
     main: 'Main navigation',
     sections: 'Sections',
     adminMenu: 'Admin menu',
-    openMenu: 'Open menu',
+    openMenu: 'Open admin menu',
+    userMenu: 'Account and language',
     register: 'Order',
     history: 'History',
     me: 'Me',
@@ -20,6 +21,17 @@ const nav: Messages<typeof vi> = {
     delivery: 'Delivery',
     backlog: 'Outstanding',
     reports: 'Reports & print',
+    categories: 'Categories',
+    badge: {
+      review: '{{n}} items to review',
+      delivery: '{{n}} lines to deliver',
+      stock: '{{n}} items running low',
+    },
+    periodCard: {
+      title: 'Period {{month}} is open',
+      daysLeft: '{{n}} days left · locks 00:00 on {{date}}',
+      lastDay: 'Today is the last day · locks 00:00 on {{date}}',
+    },
   },
 };
 

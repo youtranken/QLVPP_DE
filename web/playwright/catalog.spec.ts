@@ -83,7 +83,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await expect(itemRow.getByText('đã ngừng', { exact: true })).toBeVisible();
       await expect(itemRow.getByRole('button', { name: 'Mở lại' })).toBeVisible();
 
-      await page.getByRole('link', { name: 'Nhóm món' }).click();
+      await page.getByRole('main').getByRole('link', { name: 'Nhóm món' }).click();
       const row = page.getByRole('row').filter({ hasText: category });
       await row.getByRole('button', { name: 'Ngừng nhóm' }).click();
       await page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` }).getByRole('button', { name: 'Ngừng nhóm' }).click();

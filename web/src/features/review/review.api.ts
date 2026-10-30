@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import type { LineView, ReviewStatus } from '@/features/request/request.api';
 import { useRefreshCatalog } from '@/features/catalog/catalog.api';
@@ -70,8 +70,8 @@ export interface ReviewResult {
 
 export const REVIEW_KEY = ['admin-review'] as const;
 
-export function useReviewLines(status: ReviewFilter, ym: string) {
-  return useQuery({
+export const reviewLinesQuery = (status: ReviewFilter, ym: string) =>
+  queryOptions({
     queryKey: [...REVIEW_KEY, status, ym],
     queryFn: () => {
       const params = new URLSearchParams({ status });
@@ -79,6 +79,9 @@ export function useReviewLines(status: ReviewFilter, ym: string) {
       return apiFetch<{ items: ReviewRow[] }>(`/api/admin/review?${params}`);
     },
   });
+
+export function useReviewLines(status: ReviewFilter, ym: string) {
+  return useQuery(reviewLinesQuery(status, ym));
 }
 
 export const reviewLine = (lineId: string, body: ReviewBody, csrfToken: string | null) =>
