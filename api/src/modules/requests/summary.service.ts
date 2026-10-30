@@ -148,14 +148,19 @@ export class SummaryService {
     return rows;
   }
 
-  // Mẫu số sống: người active, không phải SA cục bộ, thuộc group được cấp (gate rỗng = mọi người)
+  // Mẫu số sống: người active, không phải SA cục bộ, thuộc group được cấp (gate rỗng = mọi người), trừ Hành chính
   private async headcountCondition(): Promise<SQL> {
-    const groups = (await this.config.getAuthorizedGroups()).map((g) =>
-      g.toLowerCase(),
-    );
+    const [authorized, adminGroup] = await Promise.all([
+      this.config.getAuthorizedGroups(),
+      this.config.getAdminGroup(),
+    ]);
+    const groups = authorized.map((g) => g.toLowerCase());
     return sql`u.status = 'active' AND u.sub <> ${LOCAL_SA_SUB}
       AND (${groups.length === 0} OR (jsonb_typeof(u.groups) = 'array' AND EXISTS (
         SELECT 1 FROM jsonb_array_elements_text(u.groups) g
-        WHERE lower(g) = ANY(${sql.param(groups)}::text[]))))`;
+        WHERE lower(g) = ANY(${sql.param(groups)}::text[]))))
+      AND NOT (jsonb_typeof(u.groups) = 'array' AND EXISTS (
+        SELECT 1 FROM jsonb_array_elements_text(u.groups) g
+        WHERE lower(g) = lower(${adminGroup})))`;
   }
 }

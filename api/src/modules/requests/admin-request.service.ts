@@ -3,6 +3,8 @@ import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import type { RequestIdentity } from '../auth/identity.types';
+import { resolveRole } from '../auth/role';
+import { SystemConfigService } from '../config/system-config.service';
 import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
 import {
@@ -10,6 +12,7 @@ import {
   requestExists,
   requestNotFound,
   userInactive,
+  userIsAdmin,
   userNotFound,
 } from './request-errors';
 import { RequestLinesWriter } from './request-lines.writer';
@@ -25,6 +28,7 @@ export class AdminRequestService {
     private readonly clock: ClockService,
     private readonly periods: PeriodsService,
     private readonly users: UsersService,
+    private readonly config: SystemConfigService,
     private readonly writer: RequestLinesWriter,
     private readonly views: RequestViewBuilder,
   ) {}
@@ -68,6 +72,12 @@ export class AdminRequestService {
     const owner = await this.users.findBySub(body.user_sub);
     if (!owner) throw userNotFound();
     if (owner.status !== 'active') throw userInactive();
+    const groups = Array.isArray(owner.groups)
+      ? owner.groups.filter((g): g is string => typeof g === 'string')
+      : [];
+    if (resolveRole(groups, await this.config.getAdminGroup()) === 'admin') {
+      throw userIsAdmin();
+    }
     return this.insertOnBehalf(admin, body);
   }
 

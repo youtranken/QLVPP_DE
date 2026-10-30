@@ -81,6 +81,12 @@ export const userInactive = () =>
     message: 'Người này không còn hoạt động.',
   });
 
+export const userIsAdmin = () =>
+  new BadRequestException({
+    code: 'USER_IS_ADMIN',
+    message: 'Người này là Hành chính — Hành chính không đăng ký VPP.',
+  });
+
 export const lineNotFound = () =>
   new NotFoundException({
     code: 'LINE_NOT_FOUND',

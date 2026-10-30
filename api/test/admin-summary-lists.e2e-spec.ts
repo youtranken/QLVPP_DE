@@ -191,4 +191,40 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
       await f.pool().query('DELETE FROM requests WHERE id = $1', [id]);
     }
   });
+
+  it('Hành chính (cùng gate, thêm "VPP_ADMIN") không vào unregistered/headcount; phiếu cũ seed SQL vẫn vào registered', async () => {
+    const hc = f.sub('hc');
+    const summary = async () =>
+      (await asAdmin(`/periods/${YM}/summary`).expect(200)).body as {
+        registered: number;
+        headcount: number;
+        unregistered: number;
+      };
+    const unregisteredSubs = async () =>
+      (
+        (await asAdmin(`/periods/${YM}/unregistered`).expect(200)).body as {
+          items: Array<{ sub: string }>;
+        }
+      ).items.map((u) => u.sub);
+    const before = { summary: await summary(), list: await unregisteredSubs() };
+    await f.addUser(hc, `Hà ${SUFFIX}`, null, 'Phòng HC');
+    await f
+      .pool()
+      .query(
+        `UPDATE users SET groups = groups || '["VPP_ADMIN"]'::jsonb WHERE sub = $1`,
+        [hc],
+      );
+    try {
+      expect(await unregisteredSubs()).toEqual(before.list);
+      expect(await summary()).toEqual(before.summary);
+      await f.newRequest(hc, 'Phòng HC');
+      expect(await summary()).toEqual({
+        ...before.summary,
+        registered: before.summary.registered + 1,
+      });
+    } finally {
+      await f.pool().query('DELETE FROM requests WHERE user_sub = $1', [hc]);
+      await f.pool().query('DELETE FROM users WHERE sub = $1', [hc]);
+    }
+  });
 });

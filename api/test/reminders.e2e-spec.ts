@@ -18,7 +18,8 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
   beforeAll(async () => {
     for (const u of AUDIENCE) await f.addUser(u, ['Khác', f.GROUP]);
     await f.addUser(OUT, ['Khác']);
-    await f.addUser(ADMIN, [f.adminGroup()]);
+    // Hành chính cùng nhóm được cấp: nhóm admin khác hoa thường vẫn bị loại khỏi mẫu số/chuông kỳ
+    await f.addUser(ADMIN, [f.GROUP, f.adminGroup().toUpperCase()]);
     // U1 đã có phiếu kỳ 2026-12 → không nằm trong danh sách nhắc
     await f.q(
       `INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('2026-12-01', $1, $1)`,
@@ -26,7 +27,7 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
     );
   });
 
-  it('period_open: 23:59:59.999 30/11 VN không gửi; 00:00 1/12 VN gửi period_open:2026-12 cho 3 người mẫu số, người ngoài group và admin không', async () => {
+  it('period_open: 23:59:59.999 30/11 VN không gửi; 00:00 1/12 VN gửi period_open:2026-12 cho 3 người mẫu số, người ngoài group và Hành chính (dù cùng group) không', async () => {
     expect((await f.run('2026-11-30T16:59:59.999Z')).period_open).toBe(0);
     expect(await f.recipients('period_open:2026-12')).toEqual([]);
 
@@ -77,7 +78,7 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
     }
   });
 
-  it('đổi registration_last_day 10 → 15 lúc 5/12; reminder: 23:59:59.999 7/12 VN không; 00:00 8/12 VN reminder:2026-12 chỉ 2 người chưa có phiếu; ngày 9 không thêm', async () => {
+  it('đổi registration_last_day 10 → 15 lúc 5/12; reminder: 23:59:59.999 7/12 VN không; 00:00 8/12 VN reminder:2026-12 chỉ 2 người chưa có phiếu (không Hành chính); ngày 9 không thêm', async () => {
     await f.setLastDay(15);
     expect((await f.run('2026-12-07T16:59:59.999Z')).reminder).toBe(0);
     expect(await f.recipients('reminder:2026-12')).toEqual([]);
@@ -95,7 +96,7 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
     expect(await f.recipients('reminder:2026-12')).toEqual([U2, U3]);
   });
 
-  it('period_locked: hạn − 1 ms (23:59:59.999 10/12 VN) không gửi, headcount null; đúng hạn 00:00 11/12 VN → admin nhận registered 1, headcount 3; periods.headcount = 3', async () => {
+  it('period_locked: hạn − 1 ms (23:59:59.999 10/12 VN) không gửi, headcount null; đúng hạn 00:00 11/12 VN → admin nhận registered 1, headcount 3 (không đếm Hành chính); periods.headcount = 3', async () => {
     expect((await f.run('2026-12-10T16:59:59.999Z')).period_locked).toBe(0);
     expect(await f.recipients('period_locked:2026-12')).toEqual([]);
     expect(await f.headcount('2026-12')).toBeNull();

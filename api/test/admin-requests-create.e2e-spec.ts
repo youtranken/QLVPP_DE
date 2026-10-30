@@ -116,6 +116,40 @@ describe('admin/requests: Hành chính tạo phiếu hộ', () => {
       expect(await owners(sub())).toEqual([]);
     });
 
+    it('người thuộc admin_group ("VPP_Admin") → 400 USER_IS_ADMIN, không mở phiếu; bỏ nhóm đó → 201', async () => {
+      const hc = `e2e-req-hc-${f.SUFFIX}`;
+      await pool().query(
+        `INSERT INTO users (sub, full_name, status, groups)
+         VALUES ($1, 'Hà HC', 'active', '["Khác", "VPP_Admin"]'::jsonb)`,
+        [hc],
+      );
+      const body = { user_sub: hc, lines: [{ item_id: item, qty: 1 }] };
+      const res = await adminPost(body).expect(400);
+      expect(res.body).toMatchObject({
+        code: 'USER_IS_ADMIN',
+        message: 'Người này là Hành chính — Hành chính không đăng ký VPP.',
+      });
+      expect(await owners(hc)).toEqual([]);
+
+      await pool().query(
+        `UPDATE users SET groups = '["Khác"]'::jsonb WHERE sub = $1`,
+        [hc],
+      );
+      expect(view(await adminPost(body).expect(201)).user_sub).toBe(hc);
+    });
+
+    it('Hành chính bị khóa → USER_INACTIVE (kiểm trạng thái trước nhóm)', async () => {
+      await pool().query(
+        `UPDATE users SET groups = '["VPP_Admin"]'::jsonb WHERE sub = $1`,
+        [LOCKED],
+      );
+      const res = await adminPost({
+        user_sub: LOCKED,
+        lines: [{ item_id: item, qty: 1 }],
+      }).expect(400);
+      expect(res.body.code).toBe('USER_INACTIVE');
+    });
+
     it('đã có phiếu kỳ đang mở → 409 REQUEST_EXISTS kèm request_id để mở Điều chỉnh', async () => {
       const existing = await seed([{ item_id: item, qty: 2 }]);
       const res = await adminPost({
