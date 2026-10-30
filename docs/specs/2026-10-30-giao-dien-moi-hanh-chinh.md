@@ -206,6 +206,7 @@ Mỗi lát: một nhánh `feat/ui-h-sN` từ `main`, TDD theo CLAUDE.md, cập n
 | R4. Tạo hộ không nhắm Hành chính | `POST admin/requests` (`api/src/modules/requests/admin-request.service.ts`): người được chọn có group ∩ `admin_group` → 400 `USER_IS_ADMIN` (mã **mới**), kiểm sau `USER_NOT_FOUND`/`USER_INACTIVE`, trước khi mở phiếu. |
 | R5. `registered` (tử số) giữ FR-34: đếm mọi phiếu của kỳ | không đổi `requestCounts`; phiếu cũ của người nay là Hành chính vẫn được đếm — vì vậy `registered` có thể > `headcount` ở kỳ cũ; UI hiện đúng số server trả, không kẹp. |
 | R6. Điều chỉnh/giao/hủy nợ/review phiếu cũ của người nay là Hành chính vẫn làm được | không đổi `PUT admin/requests/:id/lines`, `deliver*`, `cancel-remaining`, `review` (cờ audit `self` giữ nguyên ý nghĩa cho phiếu cũ). |
+| R7. Dòng ngoài danh mục **không cần ảnh** (chốt 2026-10-30, đảo FR-22) | Migration mới bỏ CHECK bắt buộc `image_file_id` cho dòng ngoài DM (giữ cột, ảnh thành tùy chọn); `request-lines.diff.ts`/`line-image.reference.ts` bỏ `IMAGE_REQUIRED` ở `me/request` và `admin/requests/:id/lines` (ảnh gửi kèm vẫn kiểm `FILE_FORBIDDEN` như cũ). Review `convert` sang món **mới**: không có ảnh dòng thì `item.image_file_id` (admin tải, purpose `item_image`) bắt buộc → thiếu = 400 `IMAGE_REQUIRED` (BR-9 giữ nguyên ý); convert sang món có sẵn không cần ảnh. Test biên: lưu dòng ngoài DM không ảnh → 200 (trước là 400); có ảnh hợp lệ → 200; ảnh của người khác → `FILE_FORBIDDEN`; convert món mới không ảnh dòng + không ảnh món → `IMAGE_REQUIRED`, có ảnh món → 200. B2 hiện ảnh nếu có, không thì ô minh họa "Không có ảnh"; giao diện nhân viên bỏ ô tải ảnh ở spec phần nhân viên. Tài liệu: PRD FR-22, architecture §6 bước 4 + review convert + §BR-9, backlog E2/E3. |
 
 Vai tính mỗi request (`toIdentity` → `resolveRole`) nên người đổi nhóm có hiệu lực từ request kế tiếp, không cần đăng nhập lại.
 
@@ -596,11 +597,11 @@ Không mục nào bắt buộc thêm API; ba đề xuất API đọc-only tùy c
 
 | # | Câu hỏi | Khuyến nghị |
 |---|---|---|
-| Q1 | Món ngoài danh mục có **bắt buộc ảnh** không? Hiện bắt buộc (FR-22, CHECK CSDL, convert dùng ảnh dòng làm ảnh món). | **Giữ bắt buộc.** Màn B2 dựa vào ảnh để quyết; bỏ bắt buộc cần migration + đổi luật convert (ngoài phạm vi "không đổi API"). Nếu bỏ, làm thành spec riêng. |
+| Q1 | Món ngoài danh mục có **bắt buộc ảnh** không? | **Đã chốt 2026-10-30: không.** Nhân viên chỉ ghi tên + ghi chú, không tải ảnh (luật R7, lát S0). Chuyển thành món mới thì Hành chính tải ảnh món (giữ luật "món mới phải có ảnh"). |
 | Q2 | Cho **chốt báo cáo (Excel/In) khi kỳ còn mở** không? API cho; bản mẫu khóa nút. | **Cho chốt**, kèm cảnh báo "tạm tính" như §5.4 (không đổi API). Nếu muốn khóa: thêm luật server `PERIOD_NOT_LOCKED` cho `POST …/snapshots` ở một lát API riêng. |
 | Q3 | Có thêm **3 trường API đọc-only** để giữ các chi tiết bản mẫu không? (`created_by_admin` ở Tổng hợp theo người — G1; `people` + `category_name` ở hàng báo cáo/bản chốt — G12; `directory_sync_last_at` ở `GET admin/config` — G22) | **Chưa thêm**; port với bản bỏ bớt. Nếu chủ dự án muốn, gom thành một lát API nhỏ sau S4 (thêm cột trong SELECT, không đổi luật). |
-| Q4 | Phiếu **kỳ đang mở** của người nay là Hành chính (nếu có) xử lý thế nào? | **Giữ nguyên** như phiếu thường (giao sau khóa, vào báo cáo); Hành chính tự bỏ qua ngăn Điều chỉnh nếu muốn. Không viết script dọn. |
-| Q5 | Thao tác **hàng loạt** ở Danh mục (đổi tối đa, chuyển nhóm, ngừng) và "Giao dòng đã chọn" chạy bằng nhiều lệnh riêng lẻ có chấp nhận được không (có thể thành công một phần)? | **Chấp nhận** — mỗi món/dòng có audit riêng, UI báo phần lỗi rõ. Không thêm endpoint hàng loạt ở giai đoạn này. |
+| Q4 | Phiếu **kỳ đang mở** của người nay là Hành chính (nếu có) xử lý thế nào? | **Đã chốt 2026-10-30: giữ nguyên.** |
+| Q5 | Thao tác **hàng loạt** ở Danh mục (đổi tối đa, chuyển nhóm, ngừng) và "Giao dòng đã chọn" chạy bằng nhiều lệnh riêng lẻ có chấp nhận được không (có thể thành công một phần)? | **Đã chốt 2026-10-30: chấp nhận.** |
 
 ## 10. Tài liệu cập nhật theo lát
 
