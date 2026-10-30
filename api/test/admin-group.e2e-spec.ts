@@ -85,3 +85,95 @@ describe('đổi config.admin_group qua PUT admin/config', () => {
     expect(await role()).toBe('member');
   });
 });
+
+// Phiên cookie thật: vai tính lại từ users.groups mỗi request, so admin_group không phân biệt hoa thường
+describe('Hành chính không có phiếu: vai đổi theo users.groups ở request kế tiếp', () => {
+  let app: INestApplication<App>;
+  let pool: Pool;
+  let sessionId: string;
+  let csrfToken: string;
+  let itemId: string;
+  const sub = `e2e-admgrp-req-${randomUUID()}`;
+  const savedDev = process.env.AUTH_DEV_MODE;
+
+  const http = () => request(app.getHttpServer());
+  const setGroups = (groups: string[]) =>
+    pool.query('UPDATE users SET groups = $1::jsonb WHERE sub = $2', [
+      JSON.stringify(groups),
+      sub,
+    ]);
+  // Mỗi lần lưu từ phiếu trống: ca này kiểm vai, không kiểm expected_updated_at
+  const saveLines = async () => {
+    await pool.query('DELETE FROM requests WHERE user_sub = $1', [sub]);
+    const ym = (
+      await http()
+        .get('/api/periods/current')
+        .set('Cookie', `vpp_sid=${sessionId}`)
+        .expect(200)
+    ).body.ym as string;
+    return http()
+      .put('/api/me/request/lines')
+      .set('Cookie', `vpp_sid=${sessionId}`)
+      .set('X-CSRF-Token', csrfToken)
+      .send({ ym, lines: [{ item_id: itemId, qty: 1 }] });
+  };
+
+  beforeAll(async () => {
+    pool = new Pool({
+      connectionString: assertTestDatabase(process.env.DATABASE_URL),
+    });
+    const adminGroup = (
+      await pool.query("SELECT value FROM config WHERE key = 'admin_group'")
+    ).rows[0].value;
+    expect(adminGroup).toBe('vpp_admin');
+    process.env.AUTH_DEV_MODE = 'true';
+    const directory = {
+      fetchUsers: () => Promise.resolve([]),
+      fetchGroups: () => Promise.resolve([]),
+    };
+    app = (await createTestApp(
+      [],
+      [{ token: DIRECTORY_CLIENT, useValue: directory }],
+    )) as INestApplication<App>;
+    const claims = { sub, full_name: 'Đổi nhóm phiếu', groups: ['Test_VPP'] };
+    await app.get(UsersService).upsertFromClaims(claims);
+    const session = await app.get(SessionService).create({
+      userSub: sub,
+      refreshToken: null,
+      accessTokenExp: new Date(Date.now() + 10 * 60_000),
+      claims,
+      idToken: null,
+    });
+    sessionId = session.id;
+    csrfToken = session.csrfToken;
+    itemId = (
+      await pool.query<{ id: string }>(
+        `INSERT INTO items (name, unit) VALUES ($1, 'cay') RETURNING id`,
+        [`e2e-admgrp-item-${sub}`],
+      )
+    ).rows[0].id;
+  });
+
+  afterAll(async () => {
+    await app.close();
+    await pool.query('DELETE FROM requests WHERE user_sub = $1', [sub]);
+    await pool.query('DELETE FROM items WHERE id = $1', [itemId]);
+    await pool.query('DELETE FROM sessions WHERE user_sub = $1', [sub]);
+    await pool.query('DELETE FROM users WHERE sub = $1', [sub]);
+    await pool.end();
+    if (savedDev === undefined) delete process.env.AUTH_DEV_MODE;
+    else process.env.AUTH_DEV_MODE = savedDev;
+  });
+
+  it('nhóm thường lưu phiếu 200; thêm VPP_ADMIN (admin_group vpp_admin) → 403 FORBIDDEN_ROLE; gỡ → 200', async () => {
+    expect((await saveLines()).status).toBe(200);
+
+    await setGroups(['Test_VPP', 'VPP_ADMIN']);
+    const blocked = await saveLines();
+    expect(blocked.status).toBe(403);
+    expect(blocked.body).toMatchObject({ code: 'FORBIDDEN_ROLE' });
+
+    await setGroups(['Test_VPP']);
+    expect((await saveLines()).status).toBe(200);
+  });
+});

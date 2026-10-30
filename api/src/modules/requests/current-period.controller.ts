@@ -9,6 +9,6 @@ export class CurrentPeriodController {
 
   @Get('current')
   current(@CurrentIdentity() identity: RequestIdentity) {
-    return this.service.current(identity.sub);
+    return this.service.get(identity.sub, identity.role);
   }
 }

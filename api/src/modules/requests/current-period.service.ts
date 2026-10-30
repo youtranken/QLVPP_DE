@@ -23,17 +23,25 @@ export class CurrentPeriodService {
     private readonly periods: PeriodsService,
   ) {}
 
-  async current(userSub: string): Promise<CurrentPeriod> {
+  async get(userSub: string, role: string): Promise<CurrentPeriod> {
     const now = this.clock.now();
     const period = await this.periods.openPeriod(this.db, now);
-    const prevYm = addMonths(period.ym, -1);
-    const delivering = await repo.hasUndeliveredLines(this.db, prevYm, userSub);
     return {
       ym: period.ym,
       deadline: period.deadline.toISOString(),
       is_open: true,
       days_left: daysLeft(now, period.deadline),
-      previous: delivering === null ? null : { ym: prevYm, delivering },
+      previous:
+        role === 'member' ? await this.previous(period.ym, userSub) : null,
     };
+  }
+
+  private async previous(
+    ym: string,
+    userSub: string,
+  ): Promise<CurrentPeriod['previous']> {
+    const prevYm = addMonths(ym, -1);
+    const delivering = await repo.hasUndeliveredLines(this.db, prevYm, userSub);
+    return delivering === null ? null : { ym: prevYm, delivering };
   }
 }

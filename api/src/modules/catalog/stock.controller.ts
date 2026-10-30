@@ -55,6 +55,7 @@ export class StockController {
   }
 
   @Get('me/issues')
+  @Roles('member')
   myIssues(
     @Query() page: PageQuery,
     @CurrentIdentity() identity: RequestIdentity,

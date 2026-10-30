@@ -11,6 +11,7 @@ import {
 import { parseYm } from '../../common/ym';
 import { CurrentIdentity } from '../auth/current-identity.decorator';
 import type { RequestIdentity } from '../auth/identity.types';
+import { Roles } from '../auth/roles.decorator';
 import { PageQuery } from '../../common/page.query';
 import { CopyPreviousService } from './copy-previous.service';
 import { HistoryService } from './history.service';
@@ -24,7 +25,9 @@ class OptionalYmPipe implements PipeTransform<unknown, string | undefined> {
   }
 }
 
+// Hành chính/SA không đăng ký VPP cho bản thân
 @Controller('me')
+@Roles('member')
 export class MeRequestController {
   constructor(
     private readonly service: MeRequestService,

@@ -1,3 +1,4 @@
+import type request from 'supertest';
 import { AFTER_DEADLINE, meRequestFixture } from './me-request.fixture';
 import type { RequestView } from './me-request.fixture';
 
@@ -211,7 +212,7 @@ describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', ()
     ).expect(204);
   });
 
-  it('SA cục bộ (local:sa, có dòng users active) lưu phiếu qua me/request → 404 USER_NOT_FOUND, không tạo phiếu', async () => {
+  it('SA cục bộ (local:sa, có dòng users active) lưu phiếu qua me/request → 403 FORBIDDEN_ROLE, không tạo phiếu', async () => {
     const SA = 'local:sa';
     // ensureLocalSa tạo dòng users cho SA khi đăng nhập; có thể đã có từ suite khác
     const seeded =
@@ -230,8 +231,20 @@ describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', ()
       'x-dev-role',
       'sa',
     );
-    expect(res.status).toBe(404);
-    expect(res.body).toMatchObject({ code: 'USER_NOT_FOUND' });
+    expect(res.status).toBe(403);
+    expect(res.body).toMatchObject({ code: 'FORBIDDEN_ROLE' });
     expect(await requestsOf(SA)).toHaveLength(0);
+  });
+
+  it('Hành chính GET me/request và POST me/request/copy-previous → 403 FORBIDDEN_ROLE; member → 404 như cũ (chưa có phiếu)', async () => {
+    const cases: [() => request.Test, number][] = [
+      [() => http().get('/api/me/request'), 404],
+      [() => http().post('/api/me/request/copy-previous'), 404],
+    ];
+    for (const [req, memberStatus] of cases) {
+      const res = await as(req(), ADMIN, 'admin').expect(403);
+      expect(res.body).toMatchObject({ code: 'FORBIDDEN_ROLE' });
+      await as(req(), A).expect(memberStatus);
+    }
   });
 });

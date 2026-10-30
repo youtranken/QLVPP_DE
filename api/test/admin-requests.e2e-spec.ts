@@ -10,6 +10,25 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
     as(http().put(`/api/admin/requests/${id}/lines`), ADMIN, role).send(body);
   const seed = async (lines: Line[], sub = A) =>
     view(await save(lines, {}, sub).expect(200));
+  // Hành chính không lưu được me/request → phiếu của Hành chính là dữ liệu cũ, dựng bằng SQL
+  const seedLegacy = async (sub: string, qty: number) => {
+    const id = (
+      await pool().query<{ id: string }>(
+        `INSERT INTO requests (period_ym, user_sub, created_by_sub)
+         VALUES ('2026-11-01', $1, $1) RETURNING id`,
+        [sub],
+      )
+    ).rows[0].id;
+    await pool().query(
+      'INSERT INTO request_lines (request_id, item_id, qty) VALUES ($1, $2, $3)',
+      [id, item, qty],
+    );
+    return (
+      await as(http().get(`/api/admin/requests/${id}`), ADMIN, 'admin').expect(
+        200,
+      )
+    ).body as RequestView;
+  };
   const keep = (r: RequestView): Line[] =>
     r.lines.map((l) => ({ id: l.id, qty: l.qty }));
 
@@ -235,7 +254,7 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
     });
 
     it('Hành chính sửa phiếu của chính mình → audit self:true, lọc GET admin/audit?self=true thấy', async () => {
-      const r = await seed([{ item_id: item, qty: 2 }], ADMIN);
+      const r = await seedLegacy(ADMIN, 2);
       await adminPut(r.id, {
         lines: [{ id: r.lines[0].id, qty: 1 }],
         expected_updated_at: r.updated_at,

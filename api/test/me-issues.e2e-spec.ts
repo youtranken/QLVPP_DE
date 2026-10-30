@@ -106,4 +106,12 @@ describe('GET me/issues: chỉ xuất lẻ của chính người gọi', () => {
     }
     await mine(A, '?limit=200').expect(200);
   });
+
+  it.each(['admin', 'sa'])(
+    'vai %s GET me/issues → 403 FORBIDDEN_ROLE',
+    async (role) => {
+      const res = await mine(A).set('x-dev-role', role).expect(403);
+      expect(res.body).toMatchObject({ code: 'FORBIDDEN_ROLE' });
+    },
+  );
 });

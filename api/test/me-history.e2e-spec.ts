@@ -311,4 +311,10 @@ describe('me/request/copy-previous và me/requests (lịch sử)', () => {
     );
     expect(rows).toEqual([{ qty: 2, request_id: vb.id }]);
   });
+
+  it('Hành chính GET me/requests → 403 FORBIDDEN_ROLE; member → 200', async () => {
+    const res = await history('', ADMIN).set('x-dev-role', 'admin').expect(403);
+    expect(res.body).toMatchObject({ code: 'FORBIDDEN_ROLE' });
+    await history().expect(200);
+  });
 });

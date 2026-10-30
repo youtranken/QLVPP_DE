@@ -35,17 +35,22 @@ describe('GET periods/current', () => {
     return app;
   }
 
-  const current = async (sub = MEMBER_SUB): Promise<CurrentPeriod> => {
+  const current = async (
+    sub = MEMBER_SUB,
+    role = 'member',
+  ): Promise<CurrentPeriod> => {
     const res = await request(app!.getHttpServer())
       .get('/api/periods/current')
       .set('x-dev-user-sub', sub)
-      .set('x-dev-role', 'member')
+      .set('x-dev-role', role)
       .expect(200);
     return res.body as CurrentPeriod;
   };
 
   async function cleanup(): Promise<void> {
-    await pool.query('DELETE FROM requests WHERE user_sub = $1', [MEMBER_SUB]);
+    await pool.query('DELETE FROM requests WHERE user_sub = ANY($1)', [
+      [MEMBER_SUB, ADMIN_SUB],
+    ]);
     await pool.query("DELETE FROM items WHERE name = 'e2e-periods-' || $1", [
       SUFFIX,
     ]);
@@ -80,7 +85,10 @@ describe('GET periods/current', () => {
         "SELECT value FROM config WHERE key = 'registration_last_day'",
       )
     ).rows[0].value;
-    await pool.query('INSERT INTO users (sub) VALUES ($1)', [MEMBER_SUB]);
+    await pool.query('INSERT INTO users (sub) VALUES ($1), ($2)', [
+      MEMBER_SUB,
+      ADMIN_SUB,
+    ]);
     process.env.AUTH_DEV_MODE = 'true';
   });
 
@@ -97,7 +105,9 @@ describe('GET periods/current', () => {
 
   afterAll(async () => {
     await cleanup();
-    await pool.query('DELETE FROM users WHERE sub = $1', [MEMBER_SUB]);
+    await pool.query('DELETE FROM users WHERE sub = ANY($1)', [
+      [MEMBER_SUB, ADMIN_SUB],
+    ]);
     await setLastDay(lastDaySnapshot as number);
     await pool.end();
     delete process.env.AUTH_DEV_MODE;
@@ -165,6 +175,36 @@ describe('GET periods/current', () => {
     // Người khác không có phiếu kỳ 11 → null
     expect((await current(`${MEMBER_SUB}-other`)).previous).toBeNull();
   });
+
+  it.each(['admin', 'sa'])(
+    'vai %s có phiếu kỳ 11 còn nợ (dữ liệu cũ seed SQL) → 200, previous null',
+    async (role) => {
+      await seedNovemberPeriod();
+      const item = await pool.query<{ id: string }>(
+        "INSERT INTO items (name, unit) VALUES ('e2e-periods-' || $1, 'cay') RETURNING id",
+        [SUFFIX],
+      );
+      const req = await pool.query<{ id: string }>(
+        `INSERT INTO requests (period_ym, user_sub, created_by_sub)
+         VALUES ('2026-11-01', $1, $1) RETURNING id`,
+        [ADMIN_SUB],
+      );
+      await pool.query(
+        'INSERT INTO request_lines (request_id, item_id, qty) VALUES ($1, $2, 2)',
+        [req.rows[0].id, item.rows[0].id],
+      );
+
+      await appAt('2026-11-15T03:00:00Z');
+      expect(await current(ADMIN_SUB, 'member')).toMatchObject({
+        previous: { ym: '2026-11', delivering: true },
+      });
+      expect(await current(ADMIN_SUB, role)).toMatchObject({
+        ym: '2026-12',
+        is_open: true,
+        previous: null,
+      });
+    },
+  );
 
   it('đổi registration_last_day 10→5 giữa kỳ: kỳ 12 giữ hạn cũ, kỳ 2027-01 tạo sau dùng hạn 5', async () => {
     await appAt('2026-11-15T03:00:00Z');

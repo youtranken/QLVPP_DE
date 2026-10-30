@@ -253,4 +253,32 @@ describe('me/request: lỗi theo dòng, dòng chỉ đọc', () => {
     );
     expect(kept.lines.map((l) => l.id)).toEqual([adminLine]);
   });
+
+  it.each([
+    ['admin', 403],
+    ['sa', 403],
+    ['member', 200],
+  ])(
+    'Hành chính không có phiếu: cùng body, vai %s → %d',
+    async (role, status) => {
+      await pool().query(
+        `INSERT INTO users (sub, full_name, status) VALUES ($1, 'Hành chính', 'active')
+         ON CONFLICT (sub) DO NOTHING`,
+        [ADMIN],
+      );
+      const body = {
+        ym: '2026-11',
+        lines: [{ item_id: await newItem(), qty: 1 }],
+      };
+      const res = await as(http().put('/api/me/request/lines'), ADMIN, role)
+        .send(body)
+        .expect(status);
+      if (status === 403) {
+        expect(res.body).toMatchObject({ code: 'FORBIDDEN_ROLE' });
+        expect(await requestsOf(ADMIN)).toHaveLength(0);
+      } else {
+        expect(await requestsOf(ADMIN)).toHaveLength(1);
+      }
+    },
+  );
 });
