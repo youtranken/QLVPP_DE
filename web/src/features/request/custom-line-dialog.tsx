@@ -40,7 +40,6 @@ export function CustomLineDialog({
   const missing = [
     !line.custom_name && t('request.custom.missingName'),
     !unit && t('request.custom.missingUnit'),
-    !imageId && t('request.custom.missingImage'),
   ].filter(Boolean);
   const ready = missing.length === 0 && !uploading;
   const dirty =

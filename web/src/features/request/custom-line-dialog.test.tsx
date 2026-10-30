@@ -34,22 +34,32 @@ afterEach(() => {
 });
 
 describe('CustomLineDialog', () => {
-  it('chưa có ảnh → nút "Thêm vào phiếu" vô hiệu và ghi "Cần có ảnh"; tên tối đa 120 ký tự', async () => {
-    setup();
+  it('không chọn ảnh → ô ảnh ghi "không bắt buộc", không báo lỗi ảnh, gửi được với image_file_id null; tên tối đa 120 ký tự', async () => {
+    const { onSubmit, fetchMock } = setup();
     const dialog = await screen.findByRole('dialog', { name: 'Thêm món khác' });
+    expect(screen.getByText('Ảnh (không bắt buộc)')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Thêm vào phiếu' })).toBeDisabled();
     await userEvent.type(screen.getByLabelText('Tên món'), 'Bìa còng 7cm');
     await userEvent.selectOptions(screen.getByLabelText('Đơn vị tính'), 'cai');
-    expect(screen.getByText('Cần có ảnh')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Thêm vào phiếu' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Thêm vào phiếu' })).toHaveAccessibleDescription('Cần thêm: ảnh.');
+    expect(screen.queryByText('Cần có ảnh')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Cần thêm/)).not.toBeInTheDocument();
     expect(screen.getByLabelText('Tên món')).toHaveAttribute('maxlength', '120');
     expect(dialog).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Thêm vào phiếu' }));
+    expect(onSubmit).toHaveBeenCalledWith({
+      custom_name: 'Bìa còng 7cm',
+      custom_unit: 'cai',
+      custom_note: null,
+      image_file_id: null,
+      qty: 1,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('ảnh HEIC → "Chọn ảnh JPG, PNG hoặc WebP", không tải lên', async () => {
     const { fetchMock } = setup();
     await screen.findByRole('dialog', { name: 'Thêm món khác' });
-    expect(screen.getByText('Cần thêm: tên món, đơn vị tính, ảnh.')).toBeInTheDocument();
+    expect(screen.getByText('Cần thêm: tên món, đơn vị tính.')).toBeInTheDocument();
     await userEvent.upload(screen.getByLabelText('Chụp hoặc chọn ảnh'), new File(['x'], 'IMG_1.HEIC', { type: 'image/heic' }));
     expect(await screen.findByText('Chọn ảnh JPG, PNG hoặc WebP')).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();

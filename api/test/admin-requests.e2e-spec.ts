@@ -50,6 +50,43 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
       ).expect(403);
     });
 
+    it('thêm dòng ngoài DM không ảnh → 200; ảnh Hành chính tải → 200; ảnh của người khác → 403 FILE_FORBIDDEN', async () => {
+      const r = await seed([{ item_id: item, qty: 2 }]);
+      const base = { custom_name: 'Kẹp lạ', custom_unit: 'cai', qty: 1 };
+      const none = await adminPut(r.id, {
+        lines: [...keep(r), base],
+        expected_updated_at: r.updated_at,
+      }).expect(200);
+      const added = (none.body as { request: RequestView }).request;
+      expect(added.lines.find((l) => l.custom_name === 'Kẹp lạ')).toMatchObject(
+        { image_file_id: null },
+      );
+      const own = await adminPut(r.id, {
+        lines: [
+          ...keep(added),
+          {
+            ...base,
+            custom_name: 'Kẹp có ảnh',
+            image_file_id: await f.upload(ADMIN, 'line_image', 'admin'),
+          },
+        ],
+        expected_updated_at: added.updated_at,
+      }).expect(200);
+      const next = (own.body as { request: RequestView }).request;
+      const bad = await adminPut(r.id, {
+        lines: [
+          ...keep(next),
+          {
+            ...base,
+            custom_name: 'Kẹp ảnh lạ',
+            image_file_id: await f.upload(f.B),
+          },
+        ],
+        expected_updated_at: next.updated_at,
+      }).expect(403);
+      expect(bad.body).toMatchObject({ code: 'FILE_FORBIDDEN' });
+    });
+
     it('thiếu expected_updated_at → 400 VALIDATION', async () => {
       const r = await seed([{ item_id: item, qty: 2 }]);
       const res = await adminPut(r.id, { lines: keep(r) }).expect(400);

@@ -57,8 +57,9 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
       await dialog.getByLabel('Tên món').fill(name);
       await dialog.getByLabel('Đơn vị tính').selectOption('hop');
-      await expect(dialog.getByText('Cần có ảnh')).toBeVisible();
-      await expect(dialog.getByRole('button', { name: 'Thêm vào phiếu' })).toBeDisabled();
+      await expect(dialog.getByText('Ảnh (không bắt buộc)')).toBeVisible();
+      await expect(dialog.getByText('Cần có ảnh')).toHaveCount(0);
+      await expect(dialog.getByRole('button', { name: 'Thêm vào phiếu' })).toBeEnabled();
       await dialog.getByLabel('Chụp hoặc chọn ảnh').setInputFiles(FIXTURE);
       await expect(dialog.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
       await dialog.getByRole('button', { name: 'Thêm Số lượng' }).click();

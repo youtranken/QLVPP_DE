@@ -5,7 +5,7 @@ import { compressImage } from '@/lib/image-compress';
 import { useMe } from '@/lib/me';
 import { uploadLineImage } from './request.api';
 
-// Ảnh bắt buộc của dòng ngoài danh mục: nén ở máy trước khi tải (ảnh điện thoại vài MB)
+// Ảnh tùy chọn của dòng ngoài danh mục: nén ở máy trước khi tải (ảnh điện thoại vài MB)
 export function LineImageField({
   fileId,
   onChange,
@@ -20,7 +20,6 @@ export function LineImageField({
   const noteId = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const shownError = error ?? (fileId ? null : t('request.custom.imageRequired'));
 
   const setBusyBoth = (b: boolean) => {
     setBusy(b);
@@ -47,7 +46,7 @@ export function LineImageField({
   };
 
   return (
-    <fieldset className={`rq-img${shownError ? ' ff--error' : ''}`} aria-describedby={noteId}>
+    <fieldset className={`rq-img${error ? ' ff--error' : ''}`} aria-describedby={noteId}>
       <legend className="ff-label">{t('request.custom.image')}</legend>
       <div className="rq-img-row">
         <div className="rq-img-preview">
@@ -68,8 +67,8 @@ export function LineImageField({
               }}
             />
           </label>
-          <p id={noteId} className={shownError ? 'ff-error' : 'ff-hint'} role={error ? 'alert' : undefined}>
-            {shownError}
+          <p id={noteId} className={error ? 'ff-error' : 'ff-hint'} role={error ? 'alert' : undefined}>
+            {error}
           </p>
         </div>
       </div>

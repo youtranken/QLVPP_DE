@@ -119,6 +119,36 @@ describe('admin/review: thêm vào danh mục (convert)', () => {
     expect(res.body.unit_mismatch).toBe(true);
   });
 
+  it('convert món mới: dòng không ảnh + không item.image_file_id → 400 IMAGE_REQUIRED; có ảnh item_image do admin tải → 200; món có sẵn → 200', async () => {
+    const noImg = async () =>
+      (await seed([{ custom_name: 'Kẹp lạ', custom_unit: 'cai', qty: 1 }]))
+        .lines[0];
+    const first = await noImg();
+    const bad = await review(first.id, {
+      action: 'convert',
+      item: newItemBody(),
+    }).expect(400);
+    expect(bad.body.code).toBe('IMAGE_REQUIRED');
+    expect((await lineRow(first.id)).review_status).toBe('pending');
+    const img = await upload(ADMIN, 'item_image', 'admin');
+    const ok = await review(first.id, {
+      action: 'convert',
+      item: newItemBody({ image_file_id: img }),
+    }).expect(200);
+    expect(ok.body.item.image_file_id).toBe(img);
+  });
+
+  it('convert sang món có sẵn khi dòng không ảnh → 200', async () => {
+    const existing = await newItem({ max_qty: 10 });
+    const r = await seed([
+      { custom_name: 'Kẹp lạ 2', custom_unit: 'cai', qty: 1 },
+    ]);
+    await review(r.lines[0].id, {
+      action: 'convert',
+      item: { existing_id: existing },
+    }).expect(200);
+  });
+
   it('convert món mới thiếu unit → 400 UNIT_REQUIRED, không tạo món', async () => {
     const { line } = await customLine();
     const body = newItemBody({ unit: undefined });

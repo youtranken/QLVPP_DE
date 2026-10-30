@@ -53,11 +53,6 @@ describe('me/request: lỗi theo dòng, dòng chỉ đọc', () => {
         async () => ({ item_id: await newItem({ admin_only: true }), qty: 1 }),
       ],
       [
-        'IMAGE_REQUIRED',
-        400,
-        () => Promise.resolve(custom({ image_file_id: undefined })),
-      ],
-      [
         'UNIT_REQUIRED',
         400,
         () => Promise.resolve(custom({ custom_unit: undefined })),
@@ -78,6 +73,22 @@ describe('me/request: lỗi theo dòng, dòng chỉ đọc', () => {
       const res = await save([ok, await build()]).expect(status);
       expect(res.body).toMatchObject({ code, line_index: 1 });
       expect(await requestsOf(A)).toHaveLength(0);
+    });
+
+    it('dòng ngoài DM không ảnh → 200, lưu image_file_id null; ảnh của mình → 200; ảnh của B → 403 FILE_FORBIDDEN', async () => {
+      const none = await save([custom({ image_file_id: undefined })]).expect(
+        200,
+      );
+      expect(view(none).lines[0]).toMatchObject({ image_file_id: null });
+      const mine = await upload(A);
+      const withImg = await save([custom({ image_file_id: mine })], {
+        expected_updated_at: view(none).updated_at,
+      }).expect(200);
+      expect(view(withImg).lines[0]).toMatchObject({ image_file_id: mine });
+      const theirs = await save([custom({ image_file_id: await upload(B) })], {
+        expected_updated_at: view(withImg).updated_at,
+      }).expect(403);
+      expect(theirs.body).toMatchObject({ code: 'FILE_FORBIDDEN' });
     });
 
     it.each([

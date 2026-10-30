@@ -78,7 +78,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 ### 6.3 Phiếu đăng ký (Member)
 - FR-20 Trang chủ = phiếu của **kỳ đang mở** (xem §5); phiếu chỉ tồn tại khi đã lưu ≥ 1 dòng. Dải kỳ hiện `days_left` = số ngày lịch còn lại tính cả hôm nay ("Còn 5 ngày", ngày 10 là "Hôm nay là ngày cuối"). Danh mục dạng thẻ ảnh có nút −/+, lọc theo nhóm và tìm tên, giỏ bên phải; nút "Thêm món khác" đặt cạnh ô tìm và là thẻ cuối lưới. Nếu phiếu kỳ trước đang giao, hiện thẻ "Tháng M đang giao · 2/4 món" dẫn tới Lịch sử.
 - FR-21 Giới hạn số lượng mỗi món theo `max_qty` ("tối đa 20/tháng"); món `admin_only` không hiện trong lưới của member; dòng `admin_only` do Hành chính thêm vào phiếu hiện **chỉ đọc** trong giỏ với nhãn "Hành chính thêm" và không bị mất khi member lưu lại.
-- FR-22 Thêm món ngoài danh mục: tên (bắt buộc), **ĐVT (bắt buộc, chọn từ danh sách)**, ghi chú, **ảnh (bắt buộc**, jpg/png/webp; FE nén về ≤ 1600 px / ≤ 1 MB và áp EXIF trước khi tải; server nhận tối đa 5 MB), số lượng ≤ `default_max_qty`. Dòng sửa/xóa được trong giỏ trước khi lưu.
+- FR-22 Thêm món ngoài danh mục: tên (bắt buộc), **ĐVT (bắt buộc, chọn từ danh sách)**, ghi chú, **ảnh (tùy chọn**, chốt 2026-10-30; jpg/png/webp; FE nén về ≤ 1600 px / ≤ 1 MB và áp EXIF trước khi tải; server nhận tối đa 5 MB), số lượng ≤ `default_max_qty`. Dòng sửa/xóa được trong giỏ trước khi lưu.
 - FR-23 **Lưu đăng ký** → hộp xác nhận liệt kê món ("Quay lại sửa" / "Lưu phiếu") → lưu. Sau lưu: toast "Đã lưu phiếu tháng N" và nhãn trên hero "Đã lưu 14:20 · sửa tiếp đến hết 10/11". Khi có thay đổi chưa lưu: nút đổi thành "2 thay đổi chưa lưu · Lưu"; rời trang có cảnh báo. Lưu danh sách rỗng = xóa phiếu (nếu không dòng nào đã giao/đã duyệt). Nếu phiếu vừa bị Hành chính sửa ở nơi khác → báo "Phiếu vừa được Hành chính cập nhật, tải lại" (không ghi đè âm thầm).
 - FR-24 "Chép lại danh sách tháng X" (X = kỳ gần nhất có phiếu, hiện đúng tên tháng): chép vào giỏ (chưa lưu); nếu giỏ đang có dòng → hỏi "Thay giỏ hiện tại?". Bỏ: món đã ngừng, món nay `admin_only`, dòng ngoài danh mục bị từ chối; dòng ngoài danh mục đã chấp nhận/đã thêm danh mục chép thành dòng mới (`pending` / món tương ứng); số lượng vượt `max_qty` mới bị hạ xuống `max_qty`. Báo từng dòng bị bỏ kèm lý do.
 - FR-25 Sau hạn: phiếu chỉ đọc, hiện tiến độ giao từng dòng (đã giao / còn nợ), trạng thái món ngoài danh mục (chờ xem / chấp nhận / đã thêm danh mục / từ chối + lý do).
@@ -138,8 +138,8 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 | BR-6 | Admin sửa phiếu đã có mọi lúc; sau hạn phải có lý do; mọi thay đổi (sửa, thêm, bớt dòng, đổi phòng ban) ghi nhật ký cũ/mới. |
 | BR-7 | Không tạo phiếu mới cho một kỳ đã khóa. |
 | BR-8 | `0 ≤ delivered_qty ≤ qty`; mỗi đợt giao là một biến động kho âm; tồn không âm; không giảm `qty` dưới `delivered_qty`. |
-| BR-9 | Món ngoài danh mục phải được xử lý (chấp nhận/thêm/từ chối) trước khi giao; dòng từ chối không vào Còn nợ, không vào báo cáo. |
-| BR-10 | Ảnh bắt buộc khi tạo món mới qua giao diện **và** trên mỗi dòng món ngoài danh mục (`IMAGE_REQUIRED`). |
+| BR-9 | Món ngoài danh mục phải được xử lý (chấp nhận/thêm/từ chối) trước khi giao; dòng từ chối không vào Còn nợ, không vào báo cáo. Thêm vào danh mục thành món **mới** mà dòng không có ảnh: Hành chính phải tải ảnh món (`IMAGE_REQUIRED`). |
+| BR-10 | Ảnh bắt buộc khi tạo món mới qua giao diện (`IMAGE_REQUIRED`); dòng món ngoài danh mục không cần ảnh (chốt 2026-10-30). |
 | BR-11 | Phòng ban trên phiếu = phòng ban PMH ID của người đó tại lần lưu cuối (của member hoặc admin); tổng hợp và báo cáo cùng dùng giá trị này. |
 | BR-12 | Phiếu tồn tại khi và chỉ khi có ≥ 1 dòng đã lưu; mở trang không tạo phiếu. |
 | BR-13 | Giao hàng và review là thao tác **một lần**: lặp lại cùng yêu cầu không tạo thêm hiệu ứng (idempotent theo `expected_delivered_qty` / `LINE_ALREADY_REVIEWED`). |

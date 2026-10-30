@@ -192,8 +192,6 @@ function validateLine(
     }
     if (!line.custom_unit)
       throw lineError('UNIT_REQUIRED', 'Chọn đơn vị tính.', ref);
-    if (!line.image_file_id)
-      throw lineError('IMAGE_REQUIRED', 'Món ngoài danh mục cần ảnh.', ref);
   }
   if (!notIncreased && qty > max) {
     throw lineError('QTY_EXCEEDS_MAX', `Tối đa ${max}/tháng.`, ref, { max });

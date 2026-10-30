@@ -151,7 +151,7 @@ describe('0102 requests — ràng buộc periods / requests / request_lines', ()
     ).toBe('23514');
   });
 
-  it('dòng ngoài DM thiếu ảnh → 23514', async () => {
+  it('request_lines cho dòng ngoài DM không ảnh → OK; có item_id kèm custom_name vẫn 23514', async () => {
     expect(
       await insertLine('custom_name, custom_unit, qty, review_status', [
         'But',
@@ -159,6 +159,12 @@ describe('0102 requests — ràng buộc periods / requests / request_lines', ()
         1,
         'pending',
       ]),
+    ).toBe('OK');
+    expect(
+      await insertLine(
+        'item_id, custom_name, custom_unit, qty, review_status',
+        [itemId, 'But', 'cay', 1, 'pending'],
+      ),
     ).toBe('23514');
   });
 
