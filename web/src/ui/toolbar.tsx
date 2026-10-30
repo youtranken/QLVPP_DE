@@ -21,7 +21,7 @@ export function Toolbar({ search, children }: { search?: SearchProps; children?:
   useEffect(() => {
     if (!has) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || isTyping(document.activeElement)) return;
+      if (e.key !== '/' || e.defaultPrevented || e.isComposing || e.ctrlKey || e.metaKey || e.altKey || isTyping(document.activeElement) || document.activeElement?.closest('[role="dialog"]')) return;
       e.preventDefault();
       ref.current?.focus();
     };

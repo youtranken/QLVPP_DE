@@ -40,6 +40,17 @@ describe('Toolbar', () => {
     fireEvent.change(box, { target: { value: 'bút' } });
     expect(onChange).toHaveBeenCalledWith('bút');
   });
+  it('"/" khi focus nằm trong hộp thoại → focus không rời hộp thoại', async () => {
+    renderWithI18n(
+      <>
+        <Toolbar search={search()} />
+        <div role="dialog" aria-label="Hộp"><button>Trong</button></div>
+      </>,
+    );
+    screen.getByRole('button', { name: 'Trong' }).focus();
+    await userEvent.keyboard('/');
+    expect(screen.getByRole('button', { name: 'Trong' })).toHaveFocus();
+  });
   it('không search → không ô tìm; children hiện', () => {
     renderWithI18n(<Toolbar><button>Lọc</button></Toolbar>);
     expect(screen.queryByRole('searchbox')).toBeNull();

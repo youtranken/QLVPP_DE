@@ -16,7 +16,7 @@ export function PageHeader({ crumbs, title, description, actions }: { crumbs: st
           </nav>
         )}
         <h1>{title}</h1>
-        {description && <p>{description}</p>}
+        {description && <p className="page-head__desc">{description}</p>}
       </div>
       {actions && <div className="page-head__actions">{actions}</div>}
     </header>
