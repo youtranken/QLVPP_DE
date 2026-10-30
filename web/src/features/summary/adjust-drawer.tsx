@@ -145,7 +145,7 @@ export function AdjustDrawer({ requestId, onClose }: { requestId: string; onClos
   };
 
   return (
-    <Drawer open onOpenChange={(o) => !o && onClose()} dirty={a.dirty} dismissible={!a.saving}>
+    <Drawer open onOpenChange={(o) => !o && onClose()} dirty={a.dirty} dismissible={!a.saving} width={520}>
       <Header view={view} />
       <form className="aj-form" onSubmit={submit} noValidate>
         <div className="drawer-body">

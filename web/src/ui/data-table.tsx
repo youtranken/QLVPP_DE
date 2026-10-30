@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   flexRender,
@@ -8,10 +9,14 @@ import {
   useReactTable,
   type ColumnDef,
   type OnChangeFn,
+  type Row,
   type RowData,
   type SortingState,
 } from '@tanstack/react-table';
-import { Loading } from '@/ui/load-state';
+import { EmptyState, Loading } from '@/ui/load-state';
+import type { EmptyArtKind } from '@/ui/empty-art';
+import { GroupHeaderRow, type GroupBy, type RowGroup } from '@/ui/data-table-group';
+import { BodyRow, SelectBox, type Selection } from '@/ui/data-table-row';
 
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -24,6 +29,7 @@ interface DataTableProps<T> {
   data: T[];
   columns: ColumnDef<T, unknown>[];
   emptyText: string;
+  empty?: { art?: EmptyArtKind; hint?: string; action?: ReactNode };
   loading?: boolean;
   searchPlaceholder?: string;
   initialSort?: SortingState;
@@ -34,17 +40,17 @@ interface DataTableProps<T> {
   onSortingChange?: OnChangeFn<SortingState>;
   onRowClick?: (row: T) => void;
   stackOnMobile?: boolean;
-  selection?: {
-    selected: Set<string>;
-    onToggle: (id: string) => void;
-    onToggleAll: (ids: string[], checked: boolean) => void;
-  };
+  selection?: Selection;
+  groupBy?: GroupBy<T>;
+  activeRowId?: string;
+  density?: 'compact';
 }
 
 export function DataTable<T>({
   data,
   columns,
   emptyText,
+  empty,
   loading,
   searchPlaceholder,
   initialSort = [],
@@ -56,8 +62,12 @@ export function DataTable<T>({
   onRowClick,
   stackOnMobile,
   selection,
+  groupBy,
+  activeRowId,
+  density,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [internalSort, setInternalSort] = useState<SortingState>(initialSort);
   const [globalFilter, setGlobalFilter] = useState('');
   const sorting = controlledSorting ?? internalSort;
@@ -84,6 +94,24 @@ export function DataTable<T>({
 
   const rows = table.getRowModel().rows;
   const colSpan = table.getAllLeafColumns().length + (selection ? 1 : 0);
+  const picked = selection ? rows.filter((r) => selection.selected.has(r.id)).length : 0;
+  const toggleGroup = (key: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  const bodyRow = (row: Row<T>) => (
+    <BodyRow
+      key={row.id}
+      row={row}
+      active={row.id === activeRowId}
+      selection={selection}
+      onRowClick={onRowClick}
+      className={rowClassName?.(row.original)}
+    />
+  );
 
   return (
     <>
@@ -95,20 +123,21 @@ export function DataTable<T>({
           className={['table', tableClassName, stackOnMobile ? 'table-stack' : '']
             .filter(Boolean)
             .join(' ')}
+          data-density={density}
         >
           <thead>
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
                 {selection && (
                   <th className="sel">
-                    <input
-                      type="checkbox"
-                      aria-label={t('common.selectAll')}
-                      checked={rows.length > 0 && rows.every((r) => selection.selected.has(r.id))}
-                      onChange={(e) =>
+                    <SelectBox
+                      label={t('common.selectAll')}
+                      checked={rows.length > 0 && picked === rows.length}
+                      indeterminate={picked > 0 && picked < rows.length}
+                      onChange={(checked) =>
                         selection.onToggleAll(
                           rows.map((r) => r.id),
-                          e.target.checked,
+                          checked,
                         )
                       }
                     />
@@ -150,51 +179,42 @@ export function DataTable<T>({
             {rows.length === 0 ? (
               <tr>
                 <td colSpan={colSpan}>
-                  {loading ? <Loading /> : <div className="empty">{emptyText}</div>}
+                  {loading ? <Loading /> : <EmptyState title={emptyText} {...empty} />}
                 </td>
               </tr>
-            ) : (
-              rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className={
-                    [onRowClick ? 'clickable' : '', rowClassName?.(row.original) || '']
-                      .filter(Boolean)
-                      .join(' ') || undefined
-                  }
-                  // Bấm dòng chỉ là tiện ích chuột; không role=button vì dòng chứa nút (nested-interactive)
-                  onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-                >
-                  {selection && (
-                    <td className="sel" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        aria-label={t('common.selectRow')}
-                        checked={selection.selected.has(row.id)}
-                        onChange={() => selection.onToggle(row.id)}
-                      />
-                    </td>
-                  )}
-                  {row.getVisibleCells().map((cell) => {
-                    const h = cell.column.columnDef.header;
-                    return (
-                      <td
-                        key={cell.id}
-                        className={cell.column.columnDef.meta?.className}
-                        data-label={typeof h === 'string' ? h : ''}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    );
-                  })}
-                </tr>
+            ) : groupBy ? (
+              groupRows(rows, groupBy.key).map((g) => (
+                <Fragment key={g.key}>
+                  <GroupHeaderRow
+                    group={g}
+                    groupBy={groupBy}
+                    colSpan={colSpan}
+                    expanded={!collapsed.has(g.key)}
+                    onToggleExpanded={() => toggleGroup(g.key)}
+                    selection={selection}
+                  />
+                  {!collapsed.has(g.key) && g.rows.map(bodyRow)}
+                </Fragment>
               ))
+            ) : (
+              rows.map(bodyRow)
             )}
           </tbody>
         </table>
       </div>
     </>
   );
+}
+
+function groupRows<T>(rows: Row<T>[], keyOf: (row: T) => string): RowGroup<T>[] {
+  const groups = new Map<string, Row<T>[]>();
+  for (const row of rows) {
+    const k = keyOf(row.original);
+    const list = groups.get(k);
+    if (list) list.push(row);
+    else groups.set(k, [row]);
+  }
+  return [...groups].map(([key, list]) => ({ key, rows: list }));
 }
 
 // Debounce 200 ms để không lọc lại mỗi phím trên bảng lớn

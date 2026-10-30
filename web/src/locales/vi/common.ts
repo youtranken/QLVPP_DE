@@ -46,6 +46,8 @@ const common = {
       bulkLabel: 'Hành động trên các dòng đã chọn',
       selected: '{{count}} {{label}} đã chọn',
       clearSelection: 'Bỏ chọn',
+      selectGroup: 'Chọn nhóm',
+      toggleGroup: 'Thu/mở nhóm',
     },
     empty: '—',
     roles: {

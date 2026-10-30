@@ -50,12 +50,12 @@ export function ConfirmDialog({
         <DialogDescription>{message}</DialogDescription>
       </div>
       <div className="sheet-footer">
-        <button type="button" className="btn" disabled={busy} onClick={onCancel}>
+        <button type="button" className="btn btn--ghost" disabled={busy} onClick={onCancel}>
           {cancelLabel ?? t('common.cancel')}
         </button>
         <button
           type="button"
-          className={danger ? 'btn btn--danger' : 'btn btn--primary'}
+          className={danger ? 'btn btn--danger btn--solid' : 'btn btn--primary'}
           disabled={busy}
           onClick={onConfirm}
         >

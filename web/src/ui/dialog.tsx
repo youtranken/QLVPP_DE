@@ -1,6 +1,6 @@
 import * as RD from '@radix-ui/react-dialog';
-import { useState } from 'react';
-import type { ReactNode } from 'react';
+import { useRef, useState } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOptionalConfirm } from '@/ui/confirm-context';
 import { DialogPortalContext } from '@/ui/dialog-portal';
@@ -18,6 +18,8 @@ export function Dialog({
   viewportClassName = 'dialog-viewport',
   maxWidth,
   dirty = false,
+  onKeyDown,
+  returnFocus = false,
   children,
 }: {
   open: boolean;
@@ -29,12 +31,16 @@ export function Dialog({
   maxWidth?: number;
   // Form đang sửa dở: đóng bằng Esc/bấm nền/✕ phải hỏi "Bỏ thay đổi?" trước
   dirty?: boolean;
+  onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
+  // Mở không qua Trigger nên Radix không biết trả focus về đâu; nơi tự quản focus sau khi đóng thì để false
+  returnFocus?: boolean;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
   const askConfirm = useOptionalConfirm();
   const block = dismissible ? undefined : (e: Event) => e.preventDefault();
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
+  const opener = useRef<HTMLElement | null>(null);
   const handleOpenChange = (next: boolean) => {
     if (next || !dirty || !askConfirm) {
       onOpenChange(next);
@@ -61,6 +67,15 @@ export function Dialog({
             onEscapeKeyDown={block}
             onPointerDownOutside={block}
             onInteractOutside={block}
+            onKeyDown={onKeyDown}
+            onOpenAutoFocus={() => {
+              opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            }}
+            onCloseAutoFocus={(e) => {
+              if (!returnFocus || !opener.current?.isConnected) return;
+              e.preventDefault();
+              opener.current.focus();
+            }}
           >
             <DialogPortalContext.Provider value={portalEl}>
               {children}

@@ -29,8 +29,6 @@
 .a-drawer { position: fixed; top: 0; left: 0; bottom: 0; width: min(280px, 85vw); z-index: 51; pointer-events: auto; }
 .a-drawer .a-side { height: 100%; position: static; }
 
-body[data-shell='admin'] .btn { height: 32px; padding: 0 12px; border-radius: 6px; border-width: 1px; font-weight: 500; }
-body[data-shell='admin'] .sheet { border-radius: 8px; }
 
 /* Trang quản lý: thanh công cụ + khung bảng + form gọn (bo 6/8) */
 .a-stack { display: grid; gap: 12px; }
@@ -47,11 +45,6 @@ body[data-shell='admin'] .sheet { border-radius: 8px; }
 .table th.col-actions { text-align: right; }
 .icon-btn { width: 28px; height: 28px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--card); color: var(--ink-2); }
 .icon-btn:disabled { opacity: .4; cursor: not-allowed; }
-body[data-shell='admin'] .alert { border-radius: 6px; font-weight: 500; }
-body[data-shell='admin'] .sheet-title { font-size: 16px; font-weight: 600; }
-body[data-shell='admin'] .sheet-header { border-bottom: 1px solid var(--line); padding: 14px 20px; }
-body[data-shell='admin'] .sheet-footer { border-top: 1px solid var(--line); align-items: center; }
-body[data-shell='admin'] .sheet-body { color: var(--ink); padding: 16px 20px; }
 
 .ff { display: grid; gap: 4px; align-content: start; }
 .ff-label { font-weight: 500; font-size: 13px; color: var(--ink-2); padding: 0; }
