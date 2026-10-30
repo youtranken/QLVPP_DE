@@ -1,6 +1,8 @@
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { apiErrorString } from '@/lib/api-error';
+import { ApiError } from '@/lib/api-client';
 import { Icon } from '@/ui/icon';
 
 export function InlineNumber({
@@ -24,8 +26,24 @@ export function InlineNumber({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const committing = useRef(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const refocusTrigger = useRef(false);
+
+  useEffect(() => {
+    if (draft === null && refocusTrigger.current) {
+      refocusTrigger.current = false;
+      trigger.current?.focus();
+    }
+  }, [draft]);
+
+  const defaultMessage = (e: unknown) => {
+    const text = e instanceof ApiError ? apiErrorString(e, 'message') : e instanceof Error ? e.message : undefined;
+    return text || t('common.inline.saveFailed');
+  };
 
   const close = () => {
+    refocusTrigger.current = true;
     setDraft(null);
     setError(null);
   };
@@ -41,7 +59,8 @@ export function InlineNumber({
       await onCommit(n);
       close();
     } catch (e) {
-      setError(formatError ? formatError(e) : e instanceof Error ? e.message : t('common.inline.saveFailed'));
+      setError(formatError ? formatError(e) : defaultMessage(e));
+      input.current?.focus();
     } finally {
       committing.current = false;
       setBusy(false);
@@ -60,7 +79,7 @@ export function InlineNumber({
 
   if (draft === null) {
     return (
-      <button type="button" className="inline-number num" aria-label={label} onClick={() => setDraft(String(value))}>
+      <button ref={trigger} type="button" className="inline-number num" aria-label={label} onClick={() => setDraft(String(value))}>
         {value}
       </button>
     );
@@ -68,6 +87,7 @@ export function InlineNumber({
   return (
     <span className="inline-number-edit">
       <input
+        ref={input}
         autoFocus
         type="number"
         inputMode="numeric"
@@ -78,7 +98,9 @@ export function InlineNumber({
         min={min}
         max={max}
         value={draft}
-        disabled={busy}
+        readOnly={busy}
+        aria-busy={busy || undefined}
+        onBlur={() => Number(draft) === value && !busy && close()}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={onKeyDown}
       />

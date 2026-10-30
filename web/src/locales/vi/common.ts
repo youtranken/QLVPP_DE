@@ -32,9 +32,6 @@ const common = {
       invalid: 'Nhập một số hợp lệ.',
       hint: 'Enter lưu · Esc bỏ',
     },
-    toast: {
-      saved: 'Đã lưu',
-    },
     stepper: {
       decrease: 'Bớt {{label}}',
       increase: 'Thêm {{label}}',

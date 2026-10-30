@@ -9,12 +9,16 @@
 
 [data-shell='admin'] .skeleton-group { display: grid; gap: var(--s-2); }
 [data-shell='admin'] .skeleton-group--stat { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 767px) {
+  [data-shell='admin'] .skeleton-group--stat { display: flex; overflow-x: auto; }
+  [data-shell='admin'] .skeleton-group--stat > * { flex: 0 0 160px; }
+}
 [data-shell='admin'] .skeleton-group--card { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s-4); }
 [data-shell='admin'] .skeleton { position: relative; overflow: hidden; border-radius: var(--r-sm); background: var(--c-surface-sunk); }
 [data-shell='admin'] .skeleton--row { height: 52px; }
 [data-shell='admin'] .skeleton--stat { height: 76px; border-radius: var(--r-lg); }
 [data-shell='admin'] .skeleton--card { height: 160px; border-radius: var(--r-lg); }
-[data-shell='admin'] .skeleton::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.6), transparent); animation: m1-shimmer 1.4s infinite; }
+[data-shell='admin'] .skeleton::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, var(--c-shimmer), transparent); animation: m1-shimmer 1.4s infinite; }
 @keyframes m1-shimmer { to { transform: translateX(100%); } }
 @media (prefers-reduced-motion: reduce) { [data-shell='admin'] .skeleton::after { animation: none; } }
 

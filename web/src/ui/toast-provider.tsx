@@ -25,7 +25,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <div className="toast-host">
+      <div className="toast-host" role="status">
         {toast && (
           <Toast
             toast={toast}

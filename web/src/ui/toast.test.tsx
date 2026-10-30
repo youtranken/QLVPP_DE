@@ -35,7 +35,7 @@ describe('Toast', () => {
     mount();
     act(() => show({ text: 'Đã lưu phiếu tháng 11' }));
     act(() => void vi.advanceTimersByTime(4000));
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 
   it('toast thứ hai thay toast đầu và tính lại 4 s', () => {
@@ -48,7 +48,7 @@ describe('Toast', () => {
     act(() => void vi.advanceTimersByTime(3999));
     expect(screen.getByRole('status')).toHaveTextContent('Hai');
     act(() => void vi.advanceTimersByTime(1));
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 
   it('nút hành động bấm được, gọi onClick rồi đóng toast', () => {
@@ -57,6 +57,12 @@ describe('Toast', () => {
     act(() => show({ text: 'Đã xóa', tone: 'info', action: { label: 'Hoàn tác', onClick } }));
     fireEvent.click(screen.getByRole('button', { name: 'Hoàn tác' }));
     expect(onClick).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+
+  it('vùng status luôn có mặt, kể cả khi chưa có toast', () => {
+    mount();
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 });

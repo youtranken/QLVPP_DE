@@ -6,7 +6,7 @@ const TONE_ICON = { ok: 'check', info: 'info', warn: 'alert' } as const;
 export function Toast({ toast, onAction }: { toast: ToastSpec; onAction: () => void }) {
   const tone = toast.tone ?? 'ok';
   return (
-    <div className={`toast toast--${tone}`} role="status">
+    <div className={`toast toast--${tone}`}>
       <span className="toast__ic">
         <Icon name={TONE_ICON[tone]} size={18} />
       </span>

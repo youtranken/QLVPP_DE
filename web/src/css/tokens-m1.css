@@ -28,7 +28,7 @@
   --g7: #E8E6D3; --g7-strong: #D3D0B5; --g7-ink: #4F4B1F;   /* ô liu     — nhóm thứ 7  */
   --g0: #ECE9E4; --g0-strong: #DAD5CC; --g0-ink: #4A4740;   /* đá        — Chưa xếp nhóm */
   /* bóng & phủ (bộ ba RGB để dùng trong rgb(… / α)) */
-  --sh-ink: 22 33 58;  --sh-acc: 31 58 107;  --c-scrim: rgb(22 33 58 / .45);
+  --c-shimmer: rgb(255 255 255 / .6);  --sh-ink: 22 33 58;  --sh-acc: 31 58 107;  --c-scrim: rgb(22 33 58 / .45);
   /* minh họa: nét, giấy, kim loại… + màu từng loại món (xem illustrations.html) */
   --ill-line: #1A2233; --ill-paper: #FFFFFF; --ill-rule: #ABA79F; --ill-metal: #E2E8F0; --ill-metal-2: #CBD5E1;
   --ill-graphite: #334155; --ill-wood: #F2D3A2; --ill-pink: #F472B6; --ill-shine: #FFFFFF;

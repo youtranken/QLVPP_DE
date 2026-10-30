@@ -31,12 +31,9 @@ const common: Messages<typeof vi> = {
     selectAll: 'Select all',
     selectRow: 'Select row',
     inline: {
-      saveFailed: 'Could not save — try again.',
+      saveFailed: "Couldn't save — try again.",
       invalid: 'Enter a valid number.',
       hint: 'Enter to save · Esc to cancel',
-    },
-    toast: {
-      saved: 'Saved',
     },
     stepper: {
       decrease: 'Decrease {{label}}',
