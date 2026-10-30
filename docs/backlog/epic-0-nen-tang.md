@@ -18,7 +18,7 @@ login/callback/me/logout/switch-account, session + refresh single-flight, CSRF, 
 
 ## E0-S5 Vai trò theo group
 Role `admin` khi `claims.groups` chứa `config.admin_group`; `member` mặc định; gate `authorized_groups` + self-heal.
-**AC:** user có group `vpp-admin` → `me.role = admin`; role tính mỗi request từ `users.groups`: cập nhật `users.groups` bỏ group → request kế tiếp 403 không cần refresh; đổi `config.admin_group` → hiệu lực trong ≤ 30 s (cache config); `authorized_groups` rỗng → cảnh báo log, không chặn.
+**AC:** user có group `vpp_admin` → `me.role = admin`; role tính mỗi request từ `users.groups`: cập nhật `users.groups` bỏ group → request kế tiếp 403 không cần refresh; đổi `config.admin_group` → hiệu lực trong ≤ 30 s (cache config); `authorized_groups` rỗng → cảnh báo log, không chặn.
 
 ## E0-S6 BCL + webhook
 `POST /api/backchannel-logout`, `POST /api/webhooks/pmh-id` (HMAC v2, idempotent).

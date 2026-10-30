@@ -159,7 +159,7 @@ deliveries (id uuid PK, period_ym date, department text, delivered_by_sub text, 
           note text, created_at)                          -- chỗ để sẵn cho phiếu giao nhận (GĐ2)
 ```
 
-Seed `config`: `registration_last_day=10`, `default_max_qty=20`, `admin_group="vpp-admin"`, `authorized_groups=[]`, `low_stock_notify=true`, `signers={preparer:"",head:"",approver:""}`, `admin_contact=""`. Ràng buộc khi `PUT admin/config`: `registration_last_day ∈ [3,28]`, `default_max_qty ∈ [1,999]`, `admin_group` không rỗng → sai → `CONFIG_INVALID`.
+Seed `config`: `registration_last_day=10`, `default_max_qty=20`, `admin_group="vpp_admin"`, `authorized_groups=[]`, `low_stock_notify=true`, `signers={preparer:"",head:"",approver:""}`, `admin_contact=""`. Ràng buộc khi `PUT admin/config`: `registration_last_day ∈ [3,28]`, `default_max_qty ∈ [1,999]`, `admin_group` không rỗng → sai → `CONFIG_INVALID`.
 
 Chỉ mục: `request_lines(request_id)`, `request_lines(item_id)`, partial `request_lines(item_id) WHERE review_status IN ('n/a','accepted','converted') AND delivered_qty + cancelled_qty < qty` (còn nợ), `requests(period_ym)`, `stock_movements(item_id, created_at)`, `in_app_notifications(user_sub, read_at)`, `files(created_at)` (dọn mồ côi).
 
@@ -257,13 +257,13 @@ Bấm Xuất/In: `POST admin/reports/:ym/snapshots {kind, order_qty: {key: n}}` 
 
 ## 12. Triển khai
 
-**Compose** (`docker-compose.yml`): `api` (3000, chỉ mạng default, `extra_hosts: ["de-admin.pmh.com.vn:host-gateway"]`, volume `filesdata:/data/files`, healthcheck `/api/health`), `web` (nginx 80, mạng `default` + `edge` alias **`vpp-web`**), `postgres` (18, volume `pgdata`, không publish), `backup-cron`. `docker-compose.override.yml` cho dev publish Postgres `127.0.0.1:5492`.
+**Compose** (`docker-compose.yml`): `api` (3000, chỉ mạng default, `extra_hosts: ["de-admin.pmh.com.vn:host-gateway"]`, volume `filesdata:/data/files`, healthcheck `/api/health`), `web` (nginx 80, mạng `default` + `edge` alias **`vpp-web`**), `postgres` (18, volume `pgdata`, không publish), `backup-cron`. `docker-compose.override.yml` cho dev publish Postgres `127.0.0.1:5492` và ghi đè `extra_hosts` của api sang IP LAN PMH ID (`PMH_ID_DEV_IP`, mặc định `172.16.6.24`) vì máy dev không chung máy với PMH ID.
 
 **Env** (`.env.example`, biến bắt buộc dùng `:?`): `COMPOSE_PROJECT_NAME=vpp`, `POSTGRES_*`, `APP_BASE_URL=https://de-vpp.pmh.com.vn:8443`, `PMH_ISSUER_URL=https://de-admin.pmh.com.vn:8443/oidc`, `PMH_CLIENT_ID=project-vpp`, `PMH_CLIENT_SECRET`, `PMH_WEBHOOK_SECRET`, `LOCAL_SA_USERNAME`, `LOCAL_SA_PASSWORD_HASH`, `TRUST_PROXY_HOPS=2`, `WEBHOOK_TS_SKEW_SEC=300`, `AUTH_DEV_MODE=false`, `BACKUP_*`, `*_MEM_LIMIT`.
 
 **Phía PMH_IDE (PR riêng):** `deploy/edge/conf.d/vpp.conf` (mẫu `qlts.conf`: `listen 8443 ssl`, `server_name de-vpp.pmh.com.vn`, `proxy_pass http://vpp-web:80`, `X-Forwarded-Proto https`, `client_max_body_size 6m`), alias `de-vpp.pmh.com.vn` trong `deploy/edge/docker-compose.yml`, `deploy/prod-cluster/60-vpp-up.sh` + `env-templates/vpp.env.example`, `docs/projects/project-vpp/01-nguoi-dung.md`, `02-hanh-chinh.md`.
 
-**Đăng ký client PMH ID (Phiếu 1):** tên "VPP Công trình"; `redirect_uris = https://de-vpp.pmh.com.vn:8443/api/auth/callback` (+ dev); `app_url = https://de-vpp.pmh.com.vn:8443`; group được vào: group phòng Công trình + `vpp-admin`; Directory API: có; webhook: `…/api/webhooks/pmh-id`; BCL: `…/api/backchannel-logout`; webhook xác thực bằng HMAC v2 + timestamp (§4), không có allowlist IP.
+**Đăng ký client PMH ID (Phiếu 1):** tên "VPP Công trình"; `redirect_uris = https://de-vpp.pmh.com.vn:8443/api/auth/callback` (+ dev); `app_url = https://de-vpp.pmh.com.vn:8443`; group được vào: group phòng Công trình + `vpp_admin`; Directory API: có; webhook: `…/api/webhooks/pmh-id`; BCL: `…/api/backchannel-logout`; webhook xác thực bằng HMAC v2 + timestamp (§4), không có allowlist IP.
 
 **Cập nhật:** `update-vpp.sh` = `git pull --ff-only` → `docker compose -f docker-compose.yml up -d --build` → chờ `/api/health` 200 qua EDGE.
 

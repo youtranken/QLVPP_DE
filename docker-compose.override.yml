@@ -4,6 +4,9 @@ services:
     environment:
       AUTH_DEV_MODE: 'true'
       NODE_ENV: development
+    # Máy dev không chung máy với PMH ID: gọi thẳng IP LAN của de-admin thay vì host-gateway
+    extra_hosts: !override
+      - 'de-admin.pmh.com.vn:${PMH_ID_DEV_IP:-172.16.6.24}'
     # Chỉ dev: Vite dev server + Playwright gọi thẳng api (nginx web xóa header x-dev-*)
     ports:
       - '127.0.0.1:3000:3000'

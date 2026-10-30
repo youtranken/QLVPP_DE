@@ -98,3 +98,7 @@ Giả định Plan 3:
 2. Chủ dự án chốt 2026-10-29: "Xuất lẻ trong kỳ" của báo cáo = xuất lẻ trong tháng dương lịch `ym` (giờ VN), dùng lại `StockQueryService.issuesInMonth(ym)` như `GET admin/issues?ym`.
 3. Giả định chờ xác nhận: cron gửi đúng ngày theo §9 (ngày 1 / `lastDay−2` / `lastDay+1` giờ VN, `lastDay` suy từ `periods.deadline`); bỏ lỡ cả ngày thì không gửi bù thông báo, nhưng `headcount` của kỳ khóa gần nhất vẫn được ghi bù ở lần chạy sau. Chỉ kỳ khóa **gần nhất**: cron ngừng quá một kỳ thì kỳ cũ hơn giữ `headcount` NULL và Tổng hợp của kỳ đó hiện số sống (`headcount_source: 'live'`).
 4. Giả định chờ xác nhận: Còn nợ chỉ gồm dòng thuộc kỳ đã khóa (kỳ đang mở chưa giao được).
+
+Sau Plan 3:
+
+- G1 (2026-10-30, nối PMH ID thật): PMH ID không cho tạo nhóm có dấu `-` → nhóm Hành chính đổi `vpp-admin` → `vpp_admin` (PRD, architecture, backlog E0); migration `0109` chỉ đổi khi `config.admin_group` còn giá trị mặc định cũ.

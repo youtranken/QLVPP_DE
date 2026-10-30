@@ -19,7 +19,7 @@ Thành công sau 2 tháng vận hành: ≥ 90 % nhân viên phòng đăng ký đ
 | Vai | Ai | Vào bằng | Làm gì |
 |---|---|---|---|
 | **Member** (nhân viên) | Toàn bộ nhân viên phòng Công trình (~40 người) | PMH ID, thuộc group phòng Công trình | Đăng ký món hằng tháng, xem lịch sử, nhận thông báo |
-| **Admin** (Hành chính) | 1–3 người Hành chính của phòng | PMH ID, thuộc group `vpp-admin` | Mọi quyền member + tổng hợp, điều chỉnh, duyệt món ngoài danh mục, giao, kho, danh mục, báo cáo, cấu hình |
+| **Admin** (Hành chính) | 1–3 người Hành chính của phòng | PMH ID, thuộc group `vpp_admin` | Mọi quyền member + tổng hợp, điều chỉnh, duyệt món ngoài danh mục, giao, kho, danh mục, báo cáo, cấu hình |
 | **SA** (quản trị kỹ thuật) | IT | Tài khoản cục bộ trong `.env` (không qua SSO) | Mọi quyền admin; dùng khi SSO lỗi hoặc cần can thiệp. Vô hình trong danh sách người dùng |
 
 Quyền do app tự suy từ claim `groups` của PMH ID. PMH ID chỉ quyết "ai được vào app"; app quyết "ai là admin".
@@ -174,7 +174,7 @@ Hệ thị giác: thương hiệu xanh ngọc lục `#059669`; member kiểu app
 4. Admin chuyển một món ngoài danh mục thành món mới (có ảnh, ĐVT) → món xuất hiện trong lưới của mọi người ngay (kỳ đang mở); dòng gốc gắn vào món (giữ nguyên bản ghi, không gộp), tồn 0.
 5. Giao 3/5 → dòng xuất hiện ở Còn nợ; bấm giao 2 hai lần liên tiếp → chỉ một lần có hiệu lực; giao thêm 2 → hết nợ; tồn kho trừ đúng 5; cố giao vượt tồn bị chặn.
 6. Đăng ký 5, tồn 2, đã giao 2 → Cần mua = 1; nợ 2 kỳ trước + đăng ký 3 kỳ này, tồn 0 → Cần mua = 5. Xuất Excel 2 sheet và in trang có 3 ô ký (có tên) tạo bản chốt; mở lại bản chốt sau khi giao thêm vẫn ra số cũ.
-7. Khóa user trên PMH ID → phiên app bị hủy trong ≤ 10 s (webhook v2 đúng chữ ký; chữ ký v1 hoặc `ts` lệch > 300 s bị 401); gỡ group `vpp-admin` → request kế tiếp 403.
+7. Khóa user trên PMH ID → phiên app bị hủy trong ≤ 10 s (webhook v2 đúng chữ ký; chữ ký v1 hoặc `ts` lệch > 300 s bị 401); gỡ group `vpp_admin` → request kế tiếp 403.
 8. SA cục bộ đăng nhập được khi tắt kết nối tới PMH ID; 5 lần sai từ IP A với tên X không khóa IP B; `req.ip` qua 2 hop proxy là IP máy người dùng.
 9. Danh sách màn hình trong §8 chuyển được vi ↔ en; lint không còn chuỗi cứng; axe không báo lỗi tương phản ở 390 px.
 10. Playwright 390 px: member vào được Lịch sử và Tôi trong ≤ 2 chạm; thấy nút "Thêm món khác" không cần cuộn hết lưới; sau khi lưu thấy nhãn "Đã lưu hh:mm"; member A không tải được ảnh dòng ngoài danh mục của B (403) nhưng tải được ảnh món (200).
@@ -192,7 +192,7 @@ Hệ thị giác: thương hiệu xanh ngọc lục `#059669`; member kiểu app
 | 2026-10-28 | Món ngoài danh mục: chấp nhận / thêm vào danh mục / từ chối; ảnh bắt buộc khi tạo món. |
 | 2026-10-28 | Báo cáo 2 phần + 3 ô ký; Excel + In. |
 | 2026-10-28 | Chuông in-app GĐ1, email GĐ2. Member chỉ thấy phiếu mình. |
-| 2026-10-28 | Admin = group PMH ID `vpp-admin`; SA cục bộ từ `.env` như QLTS. |
+| 2026-10-28 | Admin = group PMH ID `vpp_admin`; SA cục bộ từ `.env` như QLTS. |
 | 2026-10-28 | Giao diện: member kiểu app, admin kiểu quản lý, màu `#059669`; khác QLTS và PMH ID. |
 | 2026-10-28 | Song ngữ vi/en từ đầu. |
 | 2026-10-28 | Plan 3: bỏ Hoàn tác đợt giao; Hủy nợ báo chuông (email GĐ2) kèm lý do; chỉ giao sau khi kỳ khóa; mỗi lần Xuất/In tạo một bản chốt mới. |
