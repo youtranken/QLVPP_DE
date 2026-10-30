@@ -34,6 +34,17 @@ const common: Messages<typeof vi> = {
       decrease: 'Decrease {{label}}',
       increase: 'Increase {{label}}',
     },
+    filter: {
+      hint: 'Filter',
+      active: 'Filtering: {{label}} · {{count}}',
+      clear: 'Clear filter',
+    },
+    table: {
+      breadcrumb: 'Breadcrumb',
+      bulkLabel: 'Actions for selected rows',
+      selected: '{{count}} {{label}} selected',
+      clearSelection: 'Clear selection',
+    },
     empty: '—',
     roles: {
       member: 'Staff',

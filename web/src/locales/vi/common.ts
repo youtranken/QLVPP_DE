@@ -31,6 +31,17 @@ const common = {
       decrease: 'Bớt {{label}}',
       increase: 'Thêm {{label}}',
     },
+    filter: {
+      hint: 'Lọc',
+      active: 'Đang lọc: {{label}} · {{count}}',
+      clear: 'Bỏ lọc',
+    },
+    table: {
+      breadcrumb: 'Vị trí',
+      bulkLabel: 'Hành động trên các dòng đã chọn',
+      selected: '{{count}} {{label}} đã chọn',
+      clearSelection: 'Bỏ chọn',
+    },
     empty: '—',
     roles: {
       member: 'Nhân viên',
