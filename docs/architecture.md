@@ -248,11 +248,11 @@ Bấm Xuất/In: `POST admin/reports/:ym/snapshots {kind, order_qty: {key: n}}` 
 
 - `api-client.ts` (copy QLTS): `apiFetch` gắn `X-CSRF-Token`, 401 → `handleSessionExpired` (tự SSO lại một lần/60 s).
 - Bootstrap: `GET /api/auth/me` → `{sub, role, csrfToken, fullName, department, locale, config: {registration_last_day, default_max_qty}}`. Chưa đăng nhập → màn vào (email → `/api/auth/login?login_hint=`, khác → SA).
-- Hai shell: `MemberShell` (thanh trên) cho `/`, `/history`; `AdminShell` (sidebar) cho `/admin/*`; admin/sa vào thẳng `/admin` (không có mục "Phiếu của tôi"); `RequireMember` chuyển admin/sa từ `/`, `/history`, `/history/:ym`, `/me` về `/admin`. `RequireRole` chỉ là ẩn menu; server luôn 403 độc lập.
+- Hai shell: `MemberShell` (thanh trên) cho `/`, `/history`; `AdminShell` (sidebar M1) cho `/admin/*`; admin/sa vào thẳng `/admin` (không có mục "Phiếu của tôi"); `RequireMember` chuyển admin/sa từ `/`, `/history`, `/history/:ym`, `/me` về `/admin`. `RequireRole` chỉ là ẩn menu; server luôn 403 độc lập.
 - Trạng thái kỳ: FE nhận `deadline` ISO từ server và tự đếm ngược; mọi hành động vẫn do server quyết. Giỏ theo dõi `dirty`; `beforeunload` khi có thay đổi; sau PUT thành công hiển thị `updated_at` của server.
 - Ảnh: nén bằng canvas trước `POST files` (≤ 1600 px, ≤ 1 MB, áp EXIF); dòng ngoài danh mục giữ `file_id` cục bộ để lưu lại được khi mất mạng giữa chừng.
 - i18n: `react-i18next`, locale lưu `localStorage`, tên món dùng `name_en` khi có.
-- Token CSS: `web/src/css/tokens.css` lấy từ `design-preview/final/tokens.css`.
+- Token CSS: Nhân viên dùng `web/src/css/tokens.css` (từ `design-preview/final/tokens.css`); Hành chính dùng M1/P3 "Navy & cát" `web/src/css/tokens-m1.css` (mã màu chỉ ở tệp này) + `css/m1/*.css`, mọi luật mở đầu `[data-shell='admin']` (`body[data-shell]` do shell đặt), nên trang Nhân viên không đổi. Shell Hành chính: sidebar 232 (≥ 1280), cột icon 72 (768–1279), thanh trên + menu (< 768); 403 `FORBIDDEN_ROLE` khi đang ở `/admin/*` → `NoPermission`. Spec: `docs/specs/2026-10-30-giao-dien-moi-hanh-chinh.md`.
 - Test: vitest cho stepper/giỏ/luật hiển thị; Playwright smoke chạy trên `docker compose` dev với `AUTH_DEV_MODE=true`.
 
 ## 12. Triển khai

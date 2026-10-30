@@ -1,3 +1,5 @@
+> Phần Hành chính thay bởi `docs/specs/2026-10-30-giao-dien-moi-hanh-chinh.md` (M1/P3, từ 2026-10-30); tệp này còn hiệu lực cho phần Nhân viên và màn vào.
+
 # VPP Công trình — hệ thị giác đã chốt (2026-10-28)
 
 > Bản chốt nằm trong `final/`: `member.html`, `admin.html`, `login.html`, `tokens.css`. Các thư mục/tệp khác (`01-…html`, `styles/`) là phương án đã xem, giữ để đối chiếu.

@@ -153,7 +153,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 **Đăng nhập:** nút "Đăng nhập bằng tài khoản công ty (PMH ID)"; liên kết nhỏ "Dành cho IT" → SA cục bộ. **Chưa được cấp quyền:** trang riêng (tiêu đề, lý do, liên hệ Hành chính, nút đổi tài khoản).
 Mockup hiện tại (`final/*.html`) chưa phản ánh các thay đổi sau review (thanh dưới, nhãn đã lưu, vị trí nút thêm món, hộp review riêng, trang từ chối); `_SPEC.md` mục "Thay đổi sau review" là nguồn đúng khi làm FE.
 
-Hệ thị giác: thương hiệu xanh ngọc lục `#059669`; member kiểu app (Nunito, bo tròn, thẻ ảnh); admin kiểu phần mềm quản lý (IBM Plex Sans, sidebar tối, bảng). Chi tiết: `design-preview/_SPEC.md`.
+Hệ thị giác: member kiểu app (Nunito, bo tròn, thẻ ảnh, thương hiệu xanh ngọc lục `#059669`; chi tiết `design-preview/_SPEC.md`); Hành chính theo M1/P3 "Navy & cát" (Be Vietnam Pro, sidebar sáng 3 nhóm, bảng nhóm dính, ngăn kéo; chi tiết `docs/specs/2026-10-30-giao-dien-moi-hanh-chinh.md`).
 
 ## 9. Yêu cầu phi chức năng
 
