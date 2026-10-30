@@ -6,10 +6,6 @@ import { lineView } from '@/test/fixtures-request';
 import { NOTE, PEN, PERIOD, facts, stubRequestApi, view } from '@/test/request-api-stub';
 import { mockViewport } from '@/test/viewport';
 
-vi.mock('@/lib/image-compress', () => ({
-  compressImage: vi.fn(async (file: File) => ({ blob: file, mime: 'image/png', width: 10, height: 10 })),
-}));
-
 const grid = () => screen.getByRole('region', { name: 'Danh mục món' });
 const cart = () => screen.getByRole('complementary', { name: 'Phiếu của tôi' });
 const location = () => screen.getByTestId('location').textContent;
@@ -33,7 +29,6 @@ describe('RequestPage — món ngoài danh mục', () => {
   it('390 px: "Thêm món khác" → hộp → dòng vào giỏ nhãn info "Ngoài danh mục" → lưu gửi đủ trường; bấm tên để sửa', async () => {
     mockViewport(390);
     const api = stubRequestApi({
-      upload: () => jsonResponse(201, { id: 'f-1' }),
       put: () => jsonResponse(500, {}),
     });
     renderApp(makeMe('member'), '/');
@@ -42,8 +37,7 @@ describe('RequestPage — món ngoài danh mục', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Thêm món khác' });
     await userEvent.type(within(dialog).getByLabelText('Tên món'), 'Bìa còng 7cm');
     await userEvent.selectOptions(within(dialog).getByLabelText('Đơn vị tính'), 'cai');
-    await userEvent.upload(within(dialog).getByLabelText('Chụp hoặc chọn ảnh'), new File(['x'], 'a.png', { type: 'image/png' }));
-    await within(dialog).findByRole('img', { name: 'Ảnh món' });
+    expect(within(dialog).queryByLabelText(/ảnh/i)).toBeNull();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào phiếu' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
@@ -63,7 +57,7 @@ describe('RequestPage — món ngoài danh mục', () => {
     await screen.findByRole('alert');
     expect(api.putBody()).toEqual({
       ym: '2026-11',
-      lines: [{ custom_name: 'Bìa còng 5cm', custom_unit: 'cai', custom_note: null, image_file_id: 'f-1', qty: 2 }],
+      lines: [{ custom_name: 'Bìa còng 5cm', custom_unit: 'cai', custom_note: null, image_file_id: null, qty: 2 }],
     });
   });
 

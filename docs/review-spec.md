@@ -104,3 +104,4 @@ Sau Plan 3:
 
 - G1 (2026-10-30, nối PMH ID thật): PMH ID không cho tạo nhóm có dấu `-` → nhóm Hành chính đổi `vpp-admin` → `vpp_admin` (PRD, architecture, backlog E0); migration `0109` chỉ đổi khi `config.admin_group` còn giá trị mặc định cũ.
 - 2026-10-30 (góp ý chủ dự án sau Mốc kiểm S0): picker "Người đăng ký" của Tạo phiếu hộ loại người thuộc `admin_group` qua `GET admin/users?exclude_admin=true`; luật server `USER_IS_ADMIN` giữ làm lưới an toàn, SPEC không đổi.
+- 2026-10-30 (góp ý chủ dự án sau Mốc kiểm S1): "Món khác" của nhân viên bỏ hẳn ô ảnh (SPEC R7/Q1 "nhân viên không tải ảnh"; đảo mục "ảnh tùy chọn" của Task 3) — chỉ tên, ĐVT, số lượng, ghi chú; API/CSDL giữ nhận ảnh tùy chọn, dòng cũ có ảnh vẫn hiện; xóa `LineImageField`, `uploadLineImage`.

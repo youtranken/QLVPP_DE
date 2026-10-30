@@ -40,7 +40,7 @@ async function routeAs(page: Page, headers: Record<string, string>) {
 }
 
 test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => {
-  test('E2-S5 món ngoài danh mục: chọn ảnh → lưu → tải lại thấy "Chờ Hành chính xem"; rời trang khi chưa lưu thì hỏi', async ({
+  test('E2-S5 món ngoài danh mục: ghi tên, ĐVT, số lượng (không có ô ảnh) → lưu → tải lại thấy "Chờ Hành chính xem"; rời trang khi chưa lưu thì hỏi', async ({
     page,
   }, info) => {
     const me = memberIdentity(info, 'custom');
@@ -57,11 +57,9 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
       await dialog.getByLabel('Tên món').fill(name);
       await dialog.getByLabel('Đơn vị tính').selectOption('hop');
-      await expect(dialog.getByText('Ảnh (không bắt buộc)')).toBeVisible();
-      await expect(dialog.getByText('Cần có ảnh')).toHaveCount(0);
+      await expect(dialog.getByText(/ảnh/i)).toHaveCount(0);
+      await expect(dialog.locator('input[type=file]')).toHaveCount(0);
       await expect(dialog.getByRole('button', { name: 'Thêm vào phiếu' })).toBeEnabled();
-      await dialog.getByLabel('Chụp hoặc chọn ảnh').setInputFiles(FIXTURE);
-      await expect(dialog.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
       await dialog.getByRole('button', { name: 'Thêm Số lượng' }).click();
       await snap(page, info, 'custom-dialog');
       await dialog.getByRole('button', { name: 'Thêm vào phiếu' }).click();
@@ -77,11 +75,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
 
       await page.reload();
       await expect(line.getByText('Chờ Hành chính xem')).toBeVisible();
-      // Ảnh dòng (trang trí, alt rỗng, lazy → cuộn tới trước) phải tải được cho chính chủ phiếu
-      await line.scrollIntoViewIfNeeded();
-      const thumb = line.locator('img');
-      await expect(thumb).toBeVisible();
-      await expect.poll(() => thumb.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+      await expect(line.locator('img')).toHaveCount(0);
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'custom-saved');
 

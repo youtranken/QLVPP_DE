@@ -43,7 +43,7 @@ Duyệt theo cấp trưởng phòng · quản lý giá mua / ngân sách · đa 
 | **Hạn đăng ký** | Hết 23:59:59 ngày 10 của tháng, giờ Việt Nam. |
 | **Phiếu** | Danh sách món một người đăng ký cho một kỳ. Mỗi người một phiếu mỗi kỳ. |
 | **Dòng** | Một món + số lượng trong phiếu. |
-| **Món ngoài danh mục** | Dòng do người dùng tự ghi tên (kèm ảnh), chờ Hành chính xem. |
+| **Món ngoài danh mục** | Dòng do người dùng tự ghi tên, chờ Hành chính xem. |
 | **Giao thiếu / còn nợ** | Giao ít hơn số đăng ký; phần thiếu theo dõi riêng cho tới khi giao đủ. |
 | **Tồn** | Số lượng hiện có trong kho của một món. |
 
@@ -51,7 +51,7 @@ Duyệt theo cấp trưởng phòng · quản lý giá mua / ngân sách · đa 
 
 Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 ngày 11 tháng M−1 đến hết 23:59:59 ngày 10 tháng M. Nói cách khác, bất kỳ lúc nào cũng có đúng một kỳ đang mở; trang chủ nhân viên luôn là phiếu của kỳ đó.
 
-- **Ngày 11 tháng trước → ngày 10** — Kỳ tháng 11 đang mở. Nhân viên vào thấy phiếu kỳ 11 (trống hoặc đã lưu), tên/phòng ban hiện sẵn, có thể "Chép lại danh sách tháng 10". Chọn món, bấm −/+, thêm món ngoài danh mục (tên + ĐVT + ảnh + ghi chú), **Lưu đăng ký** → hộp xác nhận → nhãn "Đã lưu 14:20 · sửa tiếp đến hết 10/11". Sửa bao nhiêu lần cũng được.
+- **Ngày 11 tháng trước → ngày 10** — Kỳ tháng 11 đang mở. Nhân viên vào thấy phiếu kỳ 11 (trống hoặc đã lưu), tên/phòng ban hiện sẵn, có thể "Chép lại danh sách tháng 10". Chọn món, bấm −/+, thêm món ngoài danh mục (tên + ĐVT + số lượng + ghi chú), **Lưu đăng ký** → hộp xác nhận → nhãn "Đã lưu 14:20 · sửa tiếp đến hết 10/11". Sửa bao nhiêu lần cũng được.
 - **Ngày 1, 00:05** — Chuông: "Kỳ tháng 11 — hết hạn đăng ký 23:59 ngày 10/11".
 - **Ngày 8, 00:05** — Chuông cho ai chưa có phiếu: "Bạn chưa đăng ký tháng 11 — hết hạn 23:59 ngày 10". Hành chính mở Tổng hợp, bấm "Sao chép danh sách chưa đăng ký" để nhắc qua Zalo.
 - **Ngày 10, 23:59:59** — Hết hạn. Người bấm Lưu sau mốc này nhận thông báo kỳ 11 đã khóa; nội dung đang chọn được giữ lại trong giỏ của kỳ 12 (vừa mở).
@@ -78,7 +78,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 ### 6.3 Phiếu đăng ký (Member)
 - FR-20 Trang chủ = phiếu của **kỳ đang mở** (xem §5); phiếu chỉ tồn tại khi đã lưu ≥ 1 dòng. Dải kỳ hiện `days_left` = số ngày lịch còn lại tính cả hôm nay ("Còn 5 ngày", ngày 10 là "Hôm nay là ngày cuối"). Danh mục dạng thẻ ảnh có nút −/+, lọc theo nhóm và tìm tên, giỏ bên phải; nút "Thêm món khác" đặt cạnh ô tìm và là thẻ cuối lưới. Nếu phiếu kỳ trước đang giao, hiện thẻ "Tháng M đang giao · 2/4 món" dẫn tới Lịch sử.
 - FR-21 Giới hạn số lượng mỗi món theo `max_qty` ("tối đa 20/tháng"); món `admin_only` không hiện trong lưới của member; dòng `admin_only` do Hành chính thêm vào phiếu hiện **chỉ đọc** trong giỏ với nhãn "Hành chính thêm" và không bị mất khi member lưu lại.
-- FR-22 Thêm món ngoài danh mục: tên (bắt buộc), **ĐVT (bắt buộc, chọn từ danh sách)**, ghi chú, **ảnh (tùy chọn**, chốt 2026-10-30; jpg/png/webp; FE nén về ≤ 1600 px / ≤ 1 MB và áp EXIF trước khi tải; server nhận tối đa 5 MB), số lượng ≤ `default_max_qty`. Dòng sửa/xóa được trong giỏ trước khi lưu.
+- FR-22 Thêm món ngoài danh mục: tên (bắt buộc), **ĐVT (bắt buộc, chọn từ danh sách)**, ghi chú, **nhân viên không tải ảnh** (chốt 2026-10-30; server vẫn nhận ảnh tùy chọn ≤ 5 MB, Hành chính tải ảnh khi chuyển thành món mới), số lượng ≤ `default_max_qty`. Dòng sửa/xóa được trong giỏ trước khi lưu.
 - FR-23 **Lưu đăng ký** → hộp xác nhận liệt kê món ("Quay lại sửa" / "Lưu phiếu") → lưu. Sau lưu: toast "Đã lưu phiếu tháng N" và nhãn trên hero "Đã lưu 14:20 · sửa tiếp đến hết 10/11". Khi có thay đổi chưa lưu: nút đổi thành "2 thay đổi chưa lưu · Lưu"; rời trang có cảnh báo. Lưu danh sách rỗng = xóa phiếu (nếu không dòng nào đã giao/đã duyệt). Nếu phiếu vừa bị Hành chính sửa ở nơi khác → báo "Phiếu vừa được Hành chính cập nhật, tải lại" (không ghi đè âm thầm).
 - FR-24 "Chép lại danh sách tháng X" (X = kỳ gần nhất có phiếu, hiện đúng tên tháng): chép vào giỏ (chưa lưu); nếu giỏ đang có dòng → hỏi "Thay giỏ hiện tại?". Bỏ: món đã ngừng, món nay `admin_only`, dòng ngoài danh mục bị từ chối; dòng ngoài danh mục đã chấp nhận/đã thêm danh mục chép thành dòng mới (`pending` / món tương ứng); số lượng vượt `max_qty` mới bị hạ xuống `max_qty`. Báo từng dòng bị bỏ kèm lý do.
 - FR-25 Sau hạn: phiếu chỉ đọc, hiện tiến độ giao từng dòng (đã giao / còn nợ), trạng thái món ngoài danh mục (chờ xem / chấp nhận / đã thêm danh mục / từ chối + lý do).

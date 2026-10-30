@@ -111,12 +111,6 @@
 .rq-custom-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
 .rq-custom-qty { display: grid; gap: 6px; }
 .rq-custom-form textarea { min-height: 72px; resize: vertical; }
-.rq-img { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 6px; }
-.rq-img-row { display: flex; gap: 12px; align-items: center; }
-.rq-img-preview { width: 96px; height: 96px; flex: none; border-radius: 12px; border: 2px dashed var(--line-2); background: var(--card-2); display: grid; place-items: center; overflow: hidden; color: var(--ink-2); font-size: 28px; font-weight: 800; }
-.rq-img-preview img { width: 100%; height: 100%; object-fit: cover; }
-.rq-img.ff--error .rq-img-preview { border-color: var(--danger); }
-.rq-img-actions { display: grid; gap: 6px; justify-items: start; }
 .rq-copy-list { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 6px; color: var(--ink); font-weight: 600; }
 @media (max-width: 900px) {
   .rq-copy { order: 3; width: 100%; justify-content: center; }
@@ -124,5 +118,3 @@
 }
 .rq-custom-footer { flex-wrap: wrap; }
 .rq-custom-missing { flex-basis: 100%; text-align: right; margin: 0; }
-/* Ô chọn ảnh là input sr-only trong nhãn: viền focus đặt lên nhãn trông như nút */
-.rq-img .btn:focus-within { outline: 3px solid var(--brand); outline-offset: 2px; }

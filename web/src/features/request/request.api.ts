@@ -184,12 +184,3 @@ export function useCopyPreviousQuery(ym: string, csrfToken: string | null) {
     refetchOnWindowFocus: false,
   });
 }
-
-const EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
-
-export function uploadLineImage(blob: Blob, mime: string, csrfToken: string | null) {
-  const form = new FormData();
-  form.append('purpose', 'line_image');
-  form.append('file', blob, `line.${EXT[mime] ?? 'jpg'}`);
-  return apiFetch<{ id: string }>('/api/files', { method: 'POST', body: form, csrfToken });
-}

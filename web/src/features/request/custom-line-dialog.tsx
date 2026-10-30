@@ -4,7 +4,6 @@ import { UnitSelect } from '@/features/units/unit-select';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { FormField } from '@/ui/form-field';
 import { Stepper } from '@/ui/stepper';
-import { LineImageField } from './line-image-field';
 import type { CustomLineInput } from './use-cart';
 
 const NAME_MAX = 120;
@@ -26,14 +25,12 @@ export function CustomLineDialog({
   const [unit, setUnit] = useState(initial?.custom_unit ?? '');
   const [qty, setQty] = useState(initial?.qty ?? 1);
   const [note, setNote] = useState(initial?.custom_note ?? '');
-  const [imageId, setImageId] = useState(initial?.image_file_id ?? null);
-  const [uploading, setUploading] = useState(false);
 
   const line: CustomLineInput = {
     custom_name: name.trim(),
     custom_unit: unit,
     custom_note: note.trim() || null,
-    image_file_id: imageId,
+    image_file_id: initial?.image_file_id ?? null,
     qty,
   };
   const hintId = useId();
@@ -41,12 +38,11 @@ export function CustomLineDialog({
     !line.custom_name && t('request.custom.missingName'),
     !unit && t('request.custom.missingUnit'),
   ].filter(Boolean);
-  const ready = missing.length === 0 && !uploading;
+  const ready = missing.length === 0;
   const dirty =
     name !== (initial?.custom_name ?? '') ||
     unit !== (initial?.custom_unit ?? '') ||
     note !== (initial?.custom_note ?? '') ||
-    imageId !== (initial?.image_file_id ?? null) ||
     qty !== (initial?.qty ?? 1);
 
   const submit = (e: FormEvent) => {
@@ -55,19 +51,18 @@ export function CustomLineDialog({
   };
 
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()} dirty={dirty} dismissible={!uploading} className="sheet" maxWidth={520}>
+    <Dialog open onOpenChange={(o) => !o && onClose()} dirty={dirty} className="sheet" maxWidth={520}>
       <form onSubmit={submit} noValidate>
         <div className="sheet-header">
           <DialogTitle className="sheet-title">{t(initial ? 'request.custom.editTitle' : 'request.custom.addTitle')}</DialogTitle>
           <DialogClose asChild>
-            <button type="button" className="sheet-close" aria-label={t('common.close')} disabled={uploading}>
+            <button type="button" className="sheet-close" aria-label={t('common.close')}>
               ✕
             </button>
           </DialogClose>
         </div>
         <div className="sheet-body rq-custom-form">
           <DialogDescription className="rq-custom-intro">{t('request.custom.intro')}</DialogDescription>
-          <LineImageField fileId={imageId} onChange={setImageId} onBusyChange={setUploading} />
           <FormField label={t('request.custom.name')}>
             {(p) => <input {...p} value={name} maxLength={NAME_MAX} autoComplete="off" onChange={(e) => setName(e.target.value)} />}
           </FormField>
@@ -102,7 +97,7 @@ export function CustomLineDialog({
             </p>
           )}
           <DialogClose asChild>
-            <button type="button" className="btn" disabled={uploading}>
+            <button type="button" className="btn">
               {t('request.custom.cancel')}
             </button>
           </DialogClose>

@@ -44,7 +44,6 @@ export interface StubOptions {
   period?: CurrentPeriod;
   put?: Handler;
   copy?: Handler;
-  upload?: Handler;
 }
 
 // fetch giả cho trang Đăng ký: mỗi URL một câu trả lời, còn lại 500
@@ -66,7 +65,6 @@ export function stubRequestApi(opts: StubOptions = {}) {
     if (url === '/api/me/request/copy-previous' && method === 'POST') {
       return res(opts.copy ? opts.copy(init) : jsonResponse(404, { code: 'REQUEST_NOT_FOUND' }));
     }
-    if (url === '/api/files' && method === 'POST' && opts.upload) return res(opts.upload(init));
     return res(jsonResponse(500, {}));
   });
   vi.stubGlobal('fetch', fetchMock);
