@@ -1,0 +1,12 @@
+[data-shell='admin'] { color-scheme: light; font-family: var(--font); background: var(--c-page); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-shell='admin'] *,
+  [data-shell='admin'] *::before,
+  [data-shell='admin'] *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

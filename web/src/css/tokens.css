@@ -1,5 +1,5 @@
 /* VPP Công trình — token chung (thương hiệu xanh ngọc lục). Member: Nunito, bo tròn, thẻ ảnh. Admin: IBM Plex Sans, gọn, bảng. */
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&family=Nunito:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 :root {
   --brand: #059669; --brand-deep: #047857; --brand-soft: #e6f6ef; --brand-ink: #065f46; --brand-line: #a7e3c8;
   --bg: #f4f7f5; --card: #ffffff; --card-2: #f7faf8; --ink: #14231c; --ink-2: #51645b; --ink-3: #667a70; --line: #dfe7e2; --line-2: #c9d5ce;

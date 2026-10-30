@@ -1,0 +1,29 @@
+import { fireEvent, render } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { ItemThumb } from './item-thumb';
+
+describe('ItemThumb', () => {
+  it('có fileId → img /api/files/:id với alt đúng', () => {
+    const { container } = render(<ItemThumb fileId="f1" alt="Bút bi" tone="g1" size={48} />);
+    const img = container.querySelector('img[src="/api/files/f1"]')!;
+    expect(img.getAttribute('alt')).toBe('Bút bi');
+    expect(img.getAttribute('loading')).toBe('lazy');
+  });
+  it('ảnh lỗi → bỏ img, hiện placeholder', () => {
+    const { container } = render(<ItemThumb fileId="f1" alt="Bút bi" tone="g1" size={48} />);
+    fireEvent.error(container.querySelector('img')!);
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.querySelector('[data-thumb="placeholder"]')).not.toBeNull();
+  });
+  it('fileId null → placeholder, không img', () => {
+    const { container } = render(<ItemThumb fileId={null} alt="" tone="g0" size={34} />);
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.querySelector('[data-thumb="placeholder"] use')!.getAttribute('href')).toBe('#u-image');
+  });
+  it('đổi fileId sau khi lỗi thì thử lại ảnh mới', () => {
+    const { container, rerender } = render(<ItemThumb fileId="f1" alt="a" tone="g1" size={48} />);
+    fireEvent.error(container.querySelector('img')!);
+    rerender(<ItemThumb fileId="f2" alt="a" tone="g1" size={48} />);
+    expect(container.querySelector('img[src="/api/files/f2"]')).not.toBeNull();
+  });
+});
