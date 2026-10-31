@@ -639,7 +639,7 @@ Chủ dự án chốt 4 việc sau để Hành chính tự mở rộng mà khôn
 - Giới hạn: `name` trim 1–40 ký tự, `name_en` ≤ 40, `sort_order` nguyên.
 
 **API**
-- `GET units`: mọi vai đã đăng nhập, trả ĐVT đang dùng sắp theo `sort_order, name`. Thêm `?all=1` thì có cả ĐVT đã ngừng (chỉ admin/sa, member gọi → 403 `FORBIDDEN_ROLE`). Mỗi phần tử: `{code, name, name_en, sort_order, active, in_use}`; `in_use` chỉ có khi `all=1`.
+- `GET units`: mọi vai đã đăng nhập, trả **mọi** ĐVT (kể cả đã ngừng, để nhân viên vẫn thấy tên ĐVT trên dòng cũ), sắp theo `sort_order, name`. Mỗi phần tử: `{code, name, name_en, sort_order, active}`. Ô chọn chỉ hiện ĐVT `active`. Thêm `?all=1` (chỉ admin/sa, member gọi → 403 `FORBIDDEN_ROLE`) thì mỗi phần tử có thêm `in_use` (có món hoặc dòng phiếu dùng) và `item_count` (số món đang dùng, cho cột "Số món đang dùng").
 - `POST admin/units {name, name_en?, sort_order?}` → 201, trả ĐVT.
 - `PATCH admin/units/:code {name?, name_en?, sort_order?, active?}`.
 - `DELETE admin/units/:code` → 204.
