@@ -69,3 +69,4 @@
 [data-shell='admin'] .ff-error { font: var(--t-sm); color: var(--c-danger); }
 [data-shell='admin'] .ff-counter { justify-self: end; font: var(--t-micro); color: var(--c-muted); }
 @media (max-width: 767px) { [data-shell='admin'] .ff input, [data-shell='admin'] .ff select, [data-shell='admin'] .ff textarea { min-height: 48px; font-size: 16px; } }
+[data-shell='admin'] .ff-req { color: var(--c-danger); }

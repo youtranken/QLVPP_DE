@@ -22,3 +22,11 @@ const NO_CONFIRM: ConfirmFn = () => Promise.resolve(false);
 export function useConfirm(): ConfirmFn {
   return useContext(ConfirmCtx) ?? NO_CONFIRM;
 }
+
+export const discardOptions = (t: (key: string) => string): ConfirmOptions => ({
+  title: t('common.discardTitle'),
+  message: t('common.discardBody'),
+  confirmLabel: t('common.discardOk'),
+  cancelLabel: t('common.discardKeep'),
+  danger: true,
+});

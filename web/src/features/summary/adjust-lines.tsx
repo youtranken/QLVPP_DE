@@ -1,165 +1,159 @@
-import { useId } from 'react';
-import type { ReactNode } from 'react';
+import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Stepper } from '@/ui/stepper';
-import { fileUrl } from '@/features/catalog/catalog.api';
+import { groupTone } from '@/lib/group-tone';
+import { useMe } from '@/lib/me';
+import { ItemThumb } from '@/ui/item-thumb';
+import { useAdminItems, useAllCategories, type AdminItem } from '@/features/catalog/catalog.api';
 import type { LineView } from '@/features/request/request.api';
 import { useRequestFormat } from '@/features/request/request-format';
 import { ReviewActions } from '@/features/review/review-actions';
 import '@/features/review/review.css';
-import type { ReviewResult } from '@/features/review/review.api';
+import { AddLinePicker } from './add-line-picker';
+import { LineRow } from './adjust-line-row';
+import { canRemove, floorOf, type Adjust } from './use-adjust';
+import type { AdminRequestView } from './summary.api';
 
-export interface QtyProps {
-  name: string;
-  qty: number;
-  min: number;
-  max: number;
-  delivered?: number;
-  cancelled?: number;
-  error?: string;
-  removed?: boolean;
-  readOnly?: boolean;
-  onQty: (n: number) => void;
-  onRemove?: () => void;
-  onRestore?: () => void;
+// Server cho giảm dòng đã có bất kể max/ngừng; chỉ tăng khi món còn bán và dưới max; món chỉ Hành chính không có trần UI
+function maxOf(l: LineView, item: AdminItem | undefined): number {
+  if (!item?.active) return l.qty;
+  return item.admin_only ? Infinity : Math.max(l.qty, item.max_qty);
 }
 
-const cls = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
-
-function QtyCell({ name, qty, min, max, delivered = 0, cancelled = 0, error, removed, readOnly, onQty, onRemove, onRestore }: QtyProps) {
+function useLineFacts() {
   const { t } = useTranslation();
-  const id = useId();
-  const notes = [
-    delivered > 0 && t('summary.adjust.delivered', { n: delivered }),
-    cancelled > 0 && t('summary.adjust.cancelled', { n: cancelled }),
-  ].filter(Boolean);
-  const describedBy = cls(notes.length > 0 && `${id}-note`, error && `${id}-err`) || undefined;
-  return (
-    <div className="aj-qty-cell">
-      <div className="aj-qty">
-        {removed || readOnly ? (
-          <span className={removed ? 'num aj-removed-qty' : 'num aj-readonly-qty'}>{qty}</span>
-        ) : (
-          <Stepper
-            className="stepper--sm"
-            value={qty}
-            min={min}
-            max={max}
-            label={t('summary.adjust.qty', { name })}
-            describedBy={describedBy}
-            invalid={!!error}
-            onChange={onQty}
-          />
-        )}
-        <small className="aj-max">{t('summary.adjust.max', { max })}</small>
-        {removed ? (
-          <button type="button" className="btn btn--sm" aria-label={t('summary.adjust.restoreLabel', { name })} onClick={onRestore}>
-            {t('summary.adjust.restore')}
-          </button>
-        ) : (
-          onRemove && (
-            <button type="button" className="aj-x" aria-label={t('summary.adjust.remove', { name })} onClick={onRemove}>
-              ✕
-            </button>
-          )
-        )}
-      </div>
-      {notes.length > 0 && (
-        <small id={`${id}-note`} className="aj-note">
-          {notes.join(' · ')}
-        </small>
-      )}
-      {error && (
-        <p id={`${id}-err`} className="ff-error">
-          {error}
-        </p>
-      )}
-    </div>
-  );
+  const fmt = useRequestFormat();
+  const items = useAdminItems();
+  const cats = useAllCategories();
+  const byId = useMemo(() => new Map((items.data ?? []).map((i) => [i.id, i])), [items.data]);
+  const toneOf = (item: AdminItem | undefined) => groupTone(cats.data ?? [], item?.category_id ?? null);
+  const metaOf = (unit: string | null, item: AdminItem | undefined) => {
+    const u = fmt.unit(unit);
+    if (item?.admin_only) return t('summary.adjust.metaAdminOnly', { unit: u });
+    return item ? t('summary.adjust.meta', { unit: u, max: item.max_qty }) : u;
+  };
+  return { items: items.data ?? [], byId, toneOf, metaOf, fmt };
 }
 
-function DeliveryTag({ line }: { line: Pick<LineView, 'qty' | 'delivered_qty' | 'cancelled_qty'> }) {
+function LineTags({ line, adminOnly }: { line: LineView; adminOnly: boolean }) {
   const { t } = useTranslation();
-  const total = line.qty - line.cancelled_qty;
-  const cancelled = line.cancelled_qty > 0 && <span className="tag">{t('summary.adjust.status.cancelled', { n: line.cancelled_qty })}</span>;
-  const state =
-    line.delivered_qty >= total ? (
-      line.delivered_qty > 0 && <span className="tag tag--ok">{t('summary.adjust.status.done', { n: line.delivered_qty })}</span>
-    ) : line.delivered_qty > 0 ? (
-      <span className="tag tag--warn">{t('summary.adjust.status.partial', { done: line.delivered_qty, total })}</span>
-    ) : (
-      <span className="tag">{t('summary.adjust.status.waiting')}</span>
-    );
   return (
     <>
-      {state}
-      {cancelled}
+      {line.added_by_admin && <span className="tag">{t('summary.adjust.addedByAdmin')}</span>}
+      {adminOnly && <span className="tag tag--dark">{t('summary.adjust.adminOnly')}</span>}
+      {line.delivered_qty > 0 && <span className="tag tag--ok">{t('summary.adjust.delivered', { n: line.delivered_qty })}</span>}
+      {line.cancelled_qty > 0 && <span className="tag">{t('summary.adjust.cancelled', { n: line.cancelled_qty })}</span>}
     </>
   );
 }
 
-// Dòng danh mục (đã lưu hoặc mới thêm): đã sửa → nền xanh nhạt + số cũ gạch ngang
-export function LineRow({ unit, base, tags, line, ...qty }: QtyProps & {
-  unit: string;
-  base?: number;
-  tags?: ReactNode;
-  line?: LineView;
-}) {
+function qtyProps(a: Adjust, l: LineView) {
+  return {
+    qty: a.qtyOf(l),
+    base: l.qty,
+    min: floorOf(l),
+    error: a.errors.lines?.[l.id] || undefined,
+    removed: a.removed.includes(l.id),
+    onQty: (n: number) => a.edit.setQty(l.id, n),
+    onRemove: canRemove(l) ? () => a.edit.remove(l.id) : undefined,
+    onRestore: () => a.edit.restore(l.id),
+  };
+}
+
+// Dòng ngoài danh mục: review áp dụng ngay (tách khỏi Lưu), số lượng vẫn sửa cùng Lưu
+function CustomLine({ a, line, ym }: { a: Adjust; line: LineView; ym: string }) {
   const { t } = useTranslation();
-  const changed = base !== undefined && !qty.removed && qty.qty !== base;
+  const me = useMe();
+  const fmt = useRequestFormat();
+  const name = line.item ? fmt.name(line.item) : (line.custom_name ?? '');
+  const unit = fmt.unit(line.item?.unit ?? line.custom_unit);
   return (
-    <li className={cls('aj-line', changed && 'is-changed', qty.removed && 'is-removed')}>
-      <div className="aj-line-main">
-        <span className="aj-name">{qty.name}</span> {unit && <small className="aj-unit">· {unit}</small>} {tags}
-        {changed && (
-          <span className="aj-was-wrap">
-            <span className="sr-only">{t('summary.adjust.was')}: </span>
-            <del className="aj-was">{base}</del>
-          </span>
-        )}
-        {qty.removed && <span className="tag tag--danger">{t('summary.adjust.willRemove')}</span>}
-      </div>
-      <QtyCell {...qty} />
-      <div className="aj-status">{line && <DeliveryTag line={line} />}</div>
-    </li>
+    <LineRow
+      {...qtyProps(a, line)}
+      name={name}
+      meta={line.review_status === 'converted' ? unit : t('summary.adjust.customMeta', { qty: line.qty, unit })}
+      thumb={<ItemThumb fileId={line.image_file_id} alt={t('summary.adjust.imageAlt', { name })} tone="g0" size={48} />}
+      max={Math.max(line.qty, me.config.default_max_qty)}
+      // Dòng bị từ chối không mua/giao nên sửa số lượng vô nghĩa
+      readOnly={line.review_status === 'rejected'}
+    >
+      {line.custom_note && <p className="aj-line__note">{t('summary.adjust.customNote', { note: line.custom_note })}</p>}
+      <ReviewActions key={line.id} line={{ ...line, custom_name: name }} onDone={a.reviewed} onStale={() => a.reviewStale(line.id)} />
+      {line.review_status === 'pending' && (
+        <Link className="aj-line__link" to={`/admin/review?status=pending&ym=${ym}`}>
+          {t('summary.adjust.toReview')}
+        </Link>
+      )}
+    </LineRow>
   );
 }
 
-// Khối món ngoài danh mục: review áp dụng ngay (tách khỏi Lưu), số lượng vẫn sửa cùng Lưu
-export function CustomBlock({ line, base, onReviewed, onStale, ...qty }: QtyProps & {
-  line: LineView;
-  base: number;
-  onReviewed: (r: ReviewResult) => void;
-  onStale: () => void;
-}) {
+export function AdjustLines({ a, view }: { a: Adjust; view: AdminRequestView }) {
   const { t } = useTranslation();
-  const fmt = useRequestFormat();
-  const unit = fmt.unit(line.item?.unit ?? line.custom_unit);
-  const changed = !qty.removed && qty.qty !== base;
-  // ReviewActions có key theo dòng: hộp review giữ trạng thái riêng, không lẫn sang dòng khác khi danh sách đổi
+  const f = useLineFacts();
+  // Dòng từng là món ngoài DM (kể cả đã duyệt) vẫn ở danh sách riêng để thấy kết quả review
+  const catalog = view.lines.filter((l) => l.review_status === 'n/a');
+  const custom = view.lines.filter((l) => l.review_status !== 'n/a');
+  const kept = view.lines.filter((l) => !a.removed.includes(l.id));
+  const units = kept.reduce((s, l) => s + a.qtyOf(l), 0) + a.added.reduce((s, x) => s + x.qty, 0);
+  // Mọi dòng còn giữ có món (kể cả converted) chặn trùng như api (DUPLICATE_ITEM)
+  const taken = new Set([...kept.filter((l) => l.item_id).map((l) => l.item_id), ...a.added.map((x) => x.item_id)]);
+  const candidates = f.items.filter((i) => i.active && !taken.has(i.id));
+
   return (
-    <li className={cls('aj-custom', changed && 'is-changed', qty.removed && 'is-removed')}>
-      <span className="aj-thumb">
-        {line.image_file_id && <img src={fileUrl(line.image_file_id)} alt={t('summary.adjust.imageAlt', { name: qty.name })} />}
-      </span>
-      <div className="aj-custom-main">
-        <div>
-          <b className="aj-name">{qty.name}</b>{' '}
-          {/* Đã thêm vào danh mục thì dòng là món danh mục: bỏ nhãn ngay khi review trả về */}
-          {line.review_status !== 'converted' && (
-            <span className="tag tag--info">{t('summary.adjust.customTag', { qty: line.qty, unit })}</span>
-          )}
-          {changed && (
-            <span className="aj-was-wrap">
-              <span className="sr-only">{t('summary.adjust.was')}: </span>
-              <del className="aj-was">{base}</del>
-            </span>
-          )}
-        </div>
-        {line.custom_note && <p className="aj-custom-note">{t('summary.adjust.customNote', { note: line.custom_note })}</p>}
-        <ReviewActions key={line.id} line={{ ...line, custom_name: qty.name }} onDone={onReviewed} onStale={onStale} />
-        <QtyCell {...qty} />
+    <section className="aj-section">
+      <div className="aj-section__head">
+        <h3>{t('summary.adjust.heading', { n: kept.length + a.added.length })}</h3>
+        <span className="num">{t('summary.adjust.units', { n: units })}</span>
       </div>
-    </li>
+      <ul className="aj-lines" aria-label={t('summary.adjust.lines')}>
+        {catalog.map((l) => {
+          const item = l.item_id ? f.byId.get(l.item_id) : undefined;
+          const name = l.item ? f.fmt.name(l.item) : '';
+          return (
+            <LineRow
+              key={l.id}
+              {...qtyProps(a, l)}
+              name={name}
+              meta={f.metaOf(l.item?.unit ?? null, item)}
+              thumb={<ItemThumb fileId={l.item?.image_file_id ?? null} alt="" tone={f.toneOf(item)} size={48} />}
+              max={maxOf(l, item)}
+              tags={<LineTags line={l} adminOnly={item?.admin_only ?? l.item?.admin_only ?? false} />}
+            />
+          );
+        })}
+        {a.added.map((x) => {
+          const item = f.byId.get(x.item_id);
+          return (
+            <LineRow
+              key={x.key}
+              name={item ? f.fmt.name(item) : x.item_id}
+              meta={f.metaOf(item?.unit ?? null, item)}
+              thumb={<ItemThumb fileId={item?.image_file_id ?? null} alt="" tone={f.toneOf(item)} size={48} />}
+              qty={x.qty}
+              min={1}
+              max={item?.admin_only ? Infinity : (item?.max_qty ?? x.qty)}
+              error={a.errors.lines?.[x.key] || undefined}
+              tags={
+                <>
+                  <span className="tag tag--info">{t('summary.adjust.isNew')}</span>
+                  {item?.admin_only && <span className="tag tag--dark">{t('summary.adjust.adminOnly')}</span>}
+                </>
+              }
+              onQty={(n) => a.edit.setAddedQty(x.key, n)}
+              onRemove={() => a.edit.dropAdded(x.key)}
+            />
+          );
+        })}
+      </ul>
+      <AddLinePicker items={candidates} onPick={(i) => a.edit.add(i.id)} />
+      {custom.length > 0 && (
+        <ul className="aj-lines" aria-label={t('summary.adjust.custom')}>
+          {custom.map((l) => (
+            <CustomLine key={l.id} a={a} line={l} ym={view.period_ym} />
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

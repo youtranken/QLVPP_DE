@@ -31,11 +31,11 @@ export async function expectNoContrastViolations(page: Page) {
   expect(result.violations.flatMap((v) => v.nodes.map((n) => n.target.join(' ')))).toEqual([]);
 }
 
-// Bảng Tổng hợp giữ hàng cũ (mờ, aria-busy) trong lúc tải kết quả tìm: assert/axe trên hàng cũ là sai
+// Bảng giữ hàng cũ (mờ, aria-busy) lúc tải kết quả tìm; chờ theo thứ người dùng thấy thay vì bắt một response (từng treo ở 390)
 export async function searchSummaryPeople(page: Page, text: string) {
-  const res = page.waitForResponse((r) => r.url().includes('/requests?') && new URL(r.url()).searchParams.get('q') === text);
   await page.getByRole('searchbox', { name: 'Tìm người, email…' }).fill(text);
-  expect((await res).ok()).toBe(true);
+  await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe(text);
+  await expect(page.getByRole('row').filter({ hasText: text }).first()).toBeVisible();
   await expect(page.getByRole('table')).toHaveAttribute('aria-busy', 'false');
 }
 

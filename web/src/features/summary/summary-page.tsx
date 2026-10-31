@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDebouncedValue } from '@/lib/use-debounced-value';
-import { vnDeadlineDay } from '@/lib/format-time';
+import { vnDeadlineDay, vnLockDate } from '@/lib/format-time';
 import { Loading, LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
 import { PageHeader } from '@/ui/page-header';
@@ -20,9 +20,9 @@ import { SummaryStats } from './summary-stats';
 import { UnregisteredCopy } from './unregistered-copy';
 import { UnregisteredTable } from './unregistered-table';
 import { usePeriodSummary, type PeriodSummary } from './summary.api';
+import { useAdjacentRequests } from './use-person-table-rows';
 import { useSummaryParams, type SummaryView } from './use-summary-params';
 import '@/features/admin/admin.css';
-import './summary.css';
 import './summary.m1.css';
 
 const MAX_SEARCH = 100;
@@ -77,6 +77,9 @@ export function SummaryPage() {
   const items = useAdminItems();
   const [search, setSearch] = useSearchBox(p.q, p.setQ);
   const [creating, setCreating] = useState<{ user: DirectoryUser | null } | null>(null);
+  const personFilter = p.filter === 'low' || p.filter === 'unregistered' ? null : p.filter;
+  const listed = p.view === 'person' && p.filter !== 'unregistered';
+  const adjacent = useAdjacentRequests(p.ym, personFilter, p.q, listed ? p.requestId : null);
   const title = t('summary.page.title');
   const header = (actions?: ReactNode) => (
     <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('summary.page.description')} actions={actions} />
@@ -111,7 +114,7 @@ export function SummaryPage() {
         <Segmented label={t('summary.page.view')} value={p.view} options={views} onChange={p.setView} />
         <span className="sm-spacer" />
         {data && <UnregisteredCopy ym={ym} deadline={data.deadline} count={data.unregistered} />}
-        {canCreate && (
+        {data && (
           <button type="button" className="btn btn--primary" onClick={() => setCreating({ user: null })}>
             {t('summary.create.button')}
           </button>
@@ -125,17 +128,25 @@ export function SummaryPage() {
         <SummaryPersonTable
           ym={ym}
           locked={data?.is_open === false}
-          filter={p.filter === 'low' ? null : p.filter}
+          filter={personFilter}
           q={p.q}
           activeId={p.requestId ?? undefined}
           onOpen={p.openAdjust}
           onClearFilter={p.clearFilter}
         />
       )}
-      {p.requestId && <AdjustDrawer key={p.requestId} requestId={p.requestId} onClose={p.closeAdjust} />}
+      {p.requestId && (
+        <AdjustDrawer
+          requestId={p.requestId}
+          onClose={p.closeAdjust}
+          onPrev={adjacent.prev ? () => p.openAdjust(adjacent.prev!) : undefined}
+          onNext={adjacent.next ? () => p.openAdjust(adjacent.next!) : undefined}
+        />
+      )}
       {creating && (
         <CreateRequestDialog
           ym={ym}
+          lockedOn={canCreate ? undefined : data?.deadline ? vnLockDate(data.deadline) : ''}
           initialUser={creating.user}
           onClose={() => setCreating(null)}
           onCreated={() => setCreating(null)}

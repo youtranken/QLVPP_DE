@@ -1,121 +1,118 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { apiErrorCode, apiErrorNumber, apiErrorString } from '@/lib/api-error';
+import { vnDeadlineDay } from '@/lib/format-time';
 import { useMe } from '@/lib/me';
-import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
+import { useSingleFlight } from '@/lib/use-single-flight';
+import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { Icon } from '@/ui/icon';
-import { useAdminItems } from '@/features/catalog/catalog.api';
-import type { DirectoryUser } from '@/features/directory/directory.api';
+import { useToast } from '@/ui/toast-context';
+import { userLabel, type DirectoryUser } from '@/features/directory/directory.api';
 import { UserPicker } from '@/features/directory/user-picker';
-import { monthOf, useRequestFormat } from '@/features/request/request-format';
-import { AddLinePicker } from './add-line-picker';
-import { LineRow } from './adjust-lines';
-import { SUMMARY_KEY, createOnBehalf } from './summary.api';
+import { useCurrentPeriod } from '@/features/request/request.api';
+import { monthOf } from '@/features/request/request-format';
+import { CreateRequestLines, type CreateLine } from './create-request-lines';
+import { createFailure, type CreateErrors } from './summary-errors';
+import { SUMMARY_KEY, createOnBehalf, useUnregistered } from './summary.api';
 
-interface Line {
-  item_id: string;
-  qty: number;
+// Badge dẫn xuất từ danh sách chưa đăng ký của kỳ mở; server vẫn là nơi chặn trùng (REQUEST_EXISTS)
+function useRegistrationBadge(enabled: boolean) {
+  const { t } = useTranslation();
+  const current = useCurrentPeriod();
+  const unregistered = useUnregistered(enabled ? current.data?.ym : undefined);
+  const subs = unregistered.data && new Set(unregistered.data.items.map((u) => u.sub));
+  const badge = subs
+    ? (u: DirectoryUser) =>
+        subs.has(u.sub) ? (
+          <span className="tag tag--warn">{t('summary.create.unregistered')}</span>
+        ) : (
+          <span className="tag">{t('summary.create.hasRequest')}</span>
+        )
+    : undefined;
+  const deadline = current.data && `${vnDeadlineDay(current.data.deadline)}/${monthOf(current.data.ym)}`;
+  return { badge, deadline };
 }
 
-interface Errors {
-  user?: string;
-  form?: string;
-  lines?: Record<string, string>;
-  exists?: { requestId?: string };
+function ExistsBlock({ name, month, requestId, onOpen }: { name: string; month: number; requestId?: string; onOpen: (id: string) => void }) {
+  const { t } = useTranslation();
+  return (
+    <div role="alert" className="alert alert--warn aj-block">
+      <span>{t('summary.create.exists', { name, month })}</span>
+      {requestId && (
+        <button type="button" className="btn btn--sm" onClick={() => onOpen(requestId)}>
+          {t('summary.create.openAdjust')}
+        </button>
+      )}
+    </div>
+  );
 }
-
-const USER_CODES = new Set(['USER_NOT_FOUND', 'USER_INACTIVE', 'USER_IS_ADMIN']);
-const LINE_CODES = new Set(['QTY_INVALID', 'QTY_EXCEEDS_MAX', 'ITEM_INACTIVE', 'ITEM_NOT_FOUND', 'ADMIN_ONLY_ITEM', 'DUPLICATE_ITEM']);
 
 // Tạo hộ theo luật member (api on_behalf): món chỉ Hành chính không chọn được ở đây
-export function CreateRequestDialog({ ym, initialUser = null, onClose, onCreated, onOpenExisting }: {
+export function CreateRequestDialog({ ym, lockedOn, initialUser = null, onClose, onCreated, onOpenExisting }: {
   ym: string;
+  lockedOn?: string;
   initialUser?: DirectoryUser | null;
   onClose: () => void;
   onCreated: () => void;
   onOpenExisting: (requestId: string) => void;
 }) {
   const { t } = useTranslation();
-  const fmt = useRequestFormat();
   const { csrfToken } = useMe();
   const qc = useQueryClient();
-  const items = useAdminItems();
+  const toast = useToast();
+  const flight = useSingleFlight();
   const [user, setUser] = useState<DirectoryUser | null>(initialUser);
-  const [lines, setLines] = useState<Line[]>([]);
-  const [errors, setErrors] = useState<Errors>({});
-  const [saving, setSaving] = useState(false);
-  const byId = useMemo(() => new Map((items.data ?? []).map((i) => [i.id, i])), [items.data]);
-  const taken = new Set(lines.map((l) => l.item_id));
-  const candidates = (items.data ?? []).filter((i) => i.active && !i.admin_only && !taken.has(i.id));
+  const [lines, setLines] = useState<CreateLine[]>([]);
+  const [errors, setErrors] = useState<CreateErrors>({});
+  const locked = lockedOn !== undefined;
+  const { badge, deadline } = useRegistrationBadge(!locked);
+  const month = monthOf(ym);
 
-  const setQty = (itemId: string, qty: number) => {
-    setLines((ls) => ls.map((l) => (l.item_id === itemId ? { ...l, qty } : l)));
-    setErrors((e) => ({ ...e, lines: undefined }));
-  };
-
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!user || lines.length === 0 || saving) return;
-    setSaving(true);
+  const send = async (who: DirectoryUser) => {
     setErrors({});
     try {
-      await createOnBehalf({ user_sub: user.sub, lines }, csrfToken);
+      await createOnBehalf({ user_sub: who.sub, lines }, csrfToken);
       void qc.invalidateQueries({ queryKey: SUMMARY_KEY });
+      toast.show({ text: t('summary.create.created', { name: userLabel(who) }), tone: 'ok' });
       onCreated();
     } catch (err) {
-      const code = apiErrorCode(err) ?? '';
-      const index = apiErrorNumber(err, 'line_index');
-      if (code === 'REQUEST_EXISTS') setErrors({ exists: { requestId: apiErrorString(err, 'request_id') } });
-      else if (USER_CODES.has(code)) setErrors({ user: t(`summary.create.errors.${code}`) });
-      else if (index !== undefined && lines[index]) {
-        const key = LINE_CODES.has(code) ? code : 'OTHER';
-        setErrors({ lines: { [lines[index].item_id]: t(`summary.adjust.errors.line.${key}`, { max: apiErrorNumber(err, 'max') }) } });
-      } else {
-        const known = code === 'LINES_EMPTY' || code === 'PERIOD_LOCKED';
-        setErrors({ form: known ? t(`summary.create.errors.${code}`) : t('summary.adjust.errors.UNKNOWN') });
-      }
-    } finally {
-      setSaving(false);
+      setErrors(createFailure(err, lines.map((l) => l.item_id), t));
     }
   };
 
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    if (locked) return;
+    // Báo sớm cái còn thiếu; server vẫn chặn bằng LINES_EMPTY/VALIDATION
+    if (!user || lines.length === 0) {
+      setErrors({
+        user: user ? undefined : t('summary.create.needUser'),
+        linesMissing: lines.length ? undefined : t('summary.create.needLines'),
+      });
+      return;
+    }
+    void flight.run(() => send(user));
+  };
+
   return (
-    <Dialog
-      open
-      onOpenChange={(o) => !o && onClose()}
-      dirty={!!user || lines.length > 0}
-      dismissible={!saving}
-      className="sheet a-form"
-      maxWidth={560}
-    >
+    <Dialog open onOpenChange={(o) => !o && onClose()} dirty={!!user || lines.length > 0} dismissible={!flight.pending} maxWidth={520}>
       <form onSubmit={submit} noValidate>
         <div className="sheet-header">
-          <DialogTitle className="sheet-title">
-            {t('summary.create.title', { month: monthOf(ym), year: ym.slice(0, 4) })}
-          </DialogTitle>
+          <DialogTitle className="sheet-title">{t('summary.create.title', { month, year: ym.slice(0, 4) })}</DialogTitle>
           <DialogClose asChild>
-            <button type="button" className="sheet-close" aria-label={t('common.close')} disabled={saving}>
+            <button type="button" className="sheet-close" aria-label={t('common.close')} disabled={flight.pending}>
               <Icon name="x" />
             </button>
           </DialogClose>
         </div>
         <div className="sheet-body">
-          <p className="ff-hint">{t('summary.create.hint')}</p>
-          {errors.exists && (
-            <div role="alert" className="alert alert--warn aj-exists">
-              <span>{t('summary.create.exists')}</span>
-              {errors.exists.requestId && (
-                <button type="button" className="btn btn--sm" onClick={() => onOpenExisting(errors.exists!.requestId!)}>
-                  {t('summary.create.openAdjust')}
-                </button>
-              )}
-            </div>
-          )}
-          {errors.form && (
+          <DialogDescription className="sm-note">{t('summary.create.description')}</DialogDescription>
+          {locked && <p className="alert alert--warn">{t('summary.create.locked', { month, date: lockedOn })}</p>}
+          {errors.exists && user && <ExistsBlock name={userLabel(user)} month={month} requestId={errors.exists.requestId} onOpen={onOpenExisting} />}
+          {errors.block && (
             <p role="alert" className="alert alert--danger">
-              {errors.form}
+              {errors.block}
             </p>
           )}
           <UserPicker
@@ -123,47 +120,33 @@ export function CreateRequestDialog({ ym, initialUser = null, onClose, onCreated
             searchLabel={t('summary.create.personSearch')}
             value={user}
             excludeAdmin
+            required
+            badge={badge}
             error={errors.user}
             onChange={(u) => {
               setUser(u);
               setErrors({});
             }}
           />
-          <fieldset className="aj-create-lines">
-            <legend className="ff-label">{t('summary.create.lines')}</legend>
-            {lines.length === 0 ? (
-              <p className="ff-hint">{t('summary.create.empty')}</p>
-            ) : (
-              <ul className="aj-lines">
-                {lines.map((l) => {
-                  const item = byId.get(l.item_id);
-                  return (
-                    <LineRow
-                      key={l.item_id}
-                      name={item ? fmt.name(item) : l.item_id}
-                      unit={fmt.unit(item?.unit ?? null)}
-                      qty={l.qty}
-                      min={1}
-                      max={item?.max_qty ?? l.qty}
-                      error={errors.lines?.[l.item_id]}
-                      onQty={(n) => setQty(l.item_id, n)}
-                      onRemove={() => setLines((ls) => ls.filter((x) => x.item_id !== l.item_id))}
-                    />
-                  );
-                })}
-              </ul>
-            )}
-            <AddLinePicker items={candidates} onPick={(i) => setLines((ls) => [...ls, { item_id: i.id, qty: 1 }])} />
-          </fieldset>
+          <CreateRequestLines
+            lines={lines}
+            errors={errors.lines}
+            missing={errors.linesMissing}
+            onChange={(next) => {
+              setLines(next);
+              setErrors((x) => ({ ...x, lines: undefined, linesMissing: undefined }));
+            }}
+          />
+          {user && deadline && !locked && <p className="sm-note">{t('summary.create.rule', { name: userLabel(user), date: deadline })}</p>}
         </div>
         <div className="sheet-footer">
           <DialogClose asChild>
-            <button type="button" className="btn" disabled={saving}>
+            <button type="button" className="btn btn--ghost" disabled={flight.pending}>
               {t('common.cancel')}
             </button>
           </DialogClose>
-          <button type="submit" className="btn btn--primary" disabled={!user || lines.length === 0 || saving}>
-            {saving ? t('summary.create.saving') : t('summary.create.submit')}
+          <button type="submit" className="btn btn--primary" disabled={locked || flight.pending}>
+            {flight.pending ? t('summary.create.saving') : t('summary.create.submit')}
           </button>
         </div>
       </form>

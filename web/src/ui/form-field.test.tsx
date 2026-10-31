@@ -24,4 +24,14 @@ describe('FormField counter', () => {
     expect(field).toHaveAttribute('aria-invalid', 'true');
     expect(document.getElementById(field.getAttribute('aria-describedby') ?? '')).toHaveTextContent('Nhập ít nhất 3 ký tự');
   });
+
+  it('required: nhãn có "*" và ô mang aria-required; không required thì không có "*"', () => {
+    const { unmount } = renderWithI18n(<FormField label="Lý do" required>{input}</FormField>);
+    const field = screen.getByLabelText(/^Lý do/);
+    expect(field).toHaveAttribute('aria-required', 'true');
+    expect(document.querySelector('label')).toHaveTextContent('Lý do *');
+    unmount();
+    renderWithI18n(<FormField label="Lý do">{input}</FormField>);
+    expect(screen.getByLabelText('Lý do')).not.toHaveAttribute('aria-required');
+  });
 });

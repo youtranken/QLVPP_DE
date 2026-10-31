@@ -5,6 +5,7 @@ export interface FieldControlProps {
   id: string;
   'aria-describedby'?: string;
   'aria-invalid'?: true;
+  'aria-required'?: true;
 }
 
 // Lỗi thay chỗ gợi ý trong mô tả để trình đọc màn hình đọc đúng điều cần sửa
@@ -13,6 +14,7 @@ export function FormField({
   error,
   hint,
   counter,
+  required = false,
   className,
   children,
 }: {
@@ -20,6 +22,7 @@ export function FormField({
   error?: string;
   hint?: string;
   counter?: { value: number; max: number };
+  required?: boolean;
   className?: string;
   children: (control: FieldControlProps) => ReactNode;
 }) {
@@ -30,11 +33,13 @@ export function FormField({
     <div className={['ff', error ? 'ff--error' : '', className].filter(Boolean).join(' ')}>
       <label className="ff-label" htmlFor={id}>
         {label}
+        {required && <span className="ff-req" aria-hidden="true"> *</span>}
       </label>
       {children({
         id,
         'aria-describedby': note ? noteId : undefined,
         'aria-invalid': error ? true : undefined,
+        'aria-required': required ? true : undefined,
       })}
       {note && (
         <p id={noteId} className={error ? 'ff-error' : 'ff-hint'}>

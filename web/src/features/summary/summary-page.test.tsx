@@ -3,6 +3,7 @@ import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-ut
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
+import { adminRequest } from './adjust-fixtures';
 import { PEOPLE, calledUrls, stubSummaryApi } from './summary-fixtures';
 
 const search = () => screen.getByTestId('location-search').textContent ?? '';
@@ -187,14 +188,33 @@ describe('SummaryPage — thanh công cụ, bảng, ngăn kéo', () => {
     expect(search()).toContain('request=r-2');
   });
 
-  it('"Tạo phiếu hộ" chỉ ở kỳ đang mở; bấm → hộp tạo hộ', async () => {
+  it('"Tạo phiếu hộ" ở kỳ đang mở mở hộp tạo hộ; ở kỳ đã khóa hộp cảnh báo và "Tạo phiếu" vô hiệu', async () => {
     stubSummaryApi();
     open('/admin/summary?ym=2026-10');
     await screen.findByText('Đã khóa');
-    expect(screen.queryByRole('button', { name: 'Tạo phiếu hộ' })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Tạo phiếu hộ' }));
+    const locked = await screen.findByRole('dialog', { name: 'Tạo phiếu hộ — Tháng 10/2026' });
+    expect(within(locked).getByText(/^Kỳ tháng 10 đã khóa lúc 00:00 ngày 11\/10/)).toBeInTheDocument();
+    expect(within(locked).getByRole('button', { name: 'Tạo phiếu' })).toBeDisabled();
+    await userEvent.click(within(locked).getByRole('button', { name: 'Hủy' }));
     await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Tạo phiếu hộ' }));
-    expect(await screen.findByRole('dialog', { name: 'Tạo phiếu hộ — tháng 11/2026' })).toBeInTheDocument();
+    const open11 = await screen.findByRole('dialog', { name: 'Tạo phiếu hộ — Tháng 11/2026' });
+    expect(within(open11).getByRole('button', { name: 'Tạo phiếu' })).toBeEnabled();
+  });
+
+  it('ngăn kéo mở: ↓ sang người kế trong bảng (theo thứ tự hiển thị, nhóm "Chưa có phòng ban" cuối), ↑ về người trước', async () => {
+    stubSummaryApi((url) => (url === '/api/admin/requests/r-3' ? jsonResponse(200, adminRequest({ id: 'r-3', full_name: 'Trần Bình' })) : undefined));
+    open('/admin/summary?request=r-2');
+    const drawer = await screen.findByRole('dialog', { name: 'Phiếu của Võ Thị Lan' });
+    await screen.findByText('Phạm Văn Đức');
+    within(drawer).getByRole('button', { name: 'Hủy' }).focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(search()).toContain('request=r-3'));
+    expect(await screen.findByRole('dialog', { name: 'Phiếu của Trần Bình' })).toBeInTheDocument();
+    screen.getByRole('button', { name: 'Hủy' }).focus();
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(search()).toContain('request=r-2'));
   });
 
   it('lọc không khớp ai → "Không có phiếu nào khớp" + "Bỏ lọc"', async () => {

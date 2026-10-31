@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { AdminItem } from '@/features/catalog/catalog.api';
 import { matchesSearch, useRequestFormat } from '@/features/request/request-format';
 
-const LIMIT = 8;
+const LIMIT = 6;
 
 // Tìm ngay trong ngăn/hộp (không popover) để khỏi vướng bẫy focus của dialog
 export function AddLinePicker({ items, onPick }: { items: AdminItem[]; onPick: (item: AdminItem) => void }) {
@@ -58,7 +58,7 @@ export function AddLinePicker({ items, onPick }: { items: AdminItem[]; onPick: (
               onClick={() => pick(i)}
             >
               <span>{t('summary.picker.option', { name: fmt.name(i), unit: fmt.unit(i.unit) })}</span>
-              {i.admin_only && <span className="tag">{t('summary.adjust.adminOnly')}</span>}
+              {i.admin_only && <span className="tag tag--dark">{t('summary.adjust.adminOnly')}</span>}
             </button>
           </li>
         ))}

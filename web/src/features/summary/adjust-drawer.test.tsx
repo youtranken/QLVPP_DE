@@ -1,109 +1,137 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, renderWithI18n, screen, userEvent, waitFor, within } from '@/test/test-utils';
-import { makeMe } from '@/test/fixtures-me';
+import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { lineView } from '@/test/fixtures-request';
-import { MeContext } from '@/lib/me';
-import { ConfirmProvider } from '@/ui/confirm-provider';
 import { reviewResult } from '@/features/review/review-fixtures';
-import { useReviewLines } from '@/features/review/review.api';
-import { AdjustDrawer } from './adjust-drawer';
-import { ADMIN_ITEMS, adminRequest } from './adjust-fixtures';
-import type { AdminRequestView } from './summary.api';
-
-type Put = (body: Record<string, unknown>) => Response;
-
-function stub({
-  views = [adminRequest()],
-  put = () => jsonResponse(200, { request: adminRequest() }),
-  review = () => jsonResponse(200, reviewResult('accepted', { id: 'l-tape' })),
-}: {
-  views?: AdminRequestView[];
-  put?: Put;
-  review?: () => Response;
-} = {}) {
-  let loads = 0;
-  const fetchMock = vi.fn((url: string, init?: RequestInit) => {
-    if (url === '/api/admin/requests/r-1') return Promise.resolve(jsonResponse(200, views[Math.min(loads++, views.length - 1)]));
-    if (url === '/api/admin/requests/r-1/lines') return Promise.resolve(put(JSON.parse(String(init?.body))));
-    if (url === '/api/admin/items') return Promise.resolve(jsonResponse(200, ADMIN_ITEMS));
-    if (url === '/api/admin/lines/l-tape/review') return Promise.resolve(review());
-    return Promise.resolve(jsonResponse(200, []));
-  });
-  vi.stubGlobal('fetch', fetchMock);
-  return fetchMock;
-}
-
-const putBody = (f: ReturnType<typeof stub>) => {
-  const call = f.mock.calls.find((c) => c[0] === '/api/admin/requests/r-1/lines') as unknown as [string, RequestInit];
-  return JSON.parse(String(call[1].body));
-};
-
-// Trang Món ngoài DM đang mở song song: danh sách của nó phải tải lại khi phiếu đổi
-function ReviewListProbe() {
-  useReviewLines('pending', '');
-  return null;
-}
-
-async function renderDrawer({ withReviewList = false } = {}) {
-  const onClose = vi.fn();
-  renderWithI18n(
-    <MeContext.Provider value={makeMe('admin')}>
-      <ConfirmProvider>
-        <AdjustDrawer requestId="r-1" onClose={onClose} />
-        {withReviewList && <ReviewListProbe />}
-      </ConfirmProvider>
-    </MeContext.Provider>,
-  );
-  const drawer = await screen.findByRole('dialog', { name: 'Phiếu của Nguyễn Văn An' });
-  // Giới hạn số lượng lấy từ danh mục Hành chính: chờ tải xong mới bấm được +
-  await waitFor(() => expect(within(drawer).getByRole('button', { name: 'Thêm Số lượng Giấy note vàng' })).toBeEnabled());
-  return { drawer, onClose };
-}
-
-const row = (drawer: HTMLElement, name: string) => within(drawer).getByText(name).closest('li')!;
-const save = (drawer: HTMLElement) => within(drawer).getByRole('button', { name: 'Lưu điều chỉnh' });
-const reasonBox = (drawer: HTMLElement) => within(drawer).getByLabelText('Lý do điều chỉnh');
+import { ADMIN_ITEMS, adminItem, adminRequest } from './adjust-fixtures';
+import { loadCalls, reasonBox, renderDrawer, row, saveButton, stubAdjust } from './adjust-render-fixtures';
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('AdjustDrawer — ngăn điều chỉnh phiếu', () => {
-  it('kỳ đã khóa: tiêu đề + nhãn "Đã khóa"; Lưu vô hiệu khi chưa sửa và khi lý do trống/ngắn', async () => {
-    stub();
+const facts = (name: string, unit: string, over: { active?: boolean; admin_only?: boolean } = {}) => ({
+  name,
+  name_en: null,
+  unit,
+  pack_note: null,
+  image_file_id: null,
+  active: over.active ?? true,
+  admin_only: over.admin_only ?? false,
+});
+
+describe('AdjustDrawer — đầu ngăn và kỳ', () => {
+  it('kỳ khóa: eyebrow tháng · phòng ban, badge "Đã khóa", cảnh báo warn, ô lý do có "*", "Món trong phiếu · 3 dòng" + "15 đơn vị"', async () => {
+    stubAdjust();
     const { drawer } = await renderDrawer();
+    expect(within(drawer).getByText('Tháng 10/2026 · Tổ Giám sát')).toBeInTheDocument();
     expect(within(drawer).getByText('Đã khóa')).toBeInTheDocument();
-    expect(within(drawer).getByText(/Tháng 10\/2026 · Tổ Giám sát · lưu lần cuối/)).toBeInTheDocument();
-    expect(save(drawer)).toBeDisabled();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Số lượng Giấy note vàng' }));
-    const note = row(drawer, 'Giấy note vàng');
-    expect(note).toHaveClass('is-changed');
-    expect(within(note).getByText('3')).toHaveClass('aj-was');
-    expect(save(drawer)).toBeDisabled();
-    await userEvent.type(reasonBox(drawer), ' ab ');
-    expect(save(drawer)).toBeDisabled();
-    await userEvent.type(reasonBox(drawer), 'c');
-    expect(save(drawer)).toBeEnabled();
+    expect(within(drawer).getByText('Kỳ đã khóa. Chỉ Hành chính sửa được, phải ghi lý do; không giảm dưới số đã giao.')).toBeInTheDocument();
+    expect(reasonBox(drawer)).toHaveAttribute('aria-required', 'true');
+    expect(within(drawer).getByText('*')).toBeInTheDocument();
+    expect(within(drawer).getByText('Món trong phiếu · 3 dòng')).toBeInTheDocument();
+    expect(within(drawer).getByText('15 đơn vị')).toBeInTheDocument();
+    expect(within(drawer).getByText(/^Lưu lần cuối /)).toBeInTheDocument();
   });
 
-  it('stepper không xuống dưới số đã giao: cận dưới 3, chú thích "đã giao 3", không có nút ×', async () => {
-    stub();
+  it('kỳ mở: không cảnh báo, lý do không "*", gợi ý "Không bắt buộc…"; maxLength 500 và đếm ký tự', async () => {
+    stubAdjust({ views: [adminRequest({ is_open: true, period_ym: '2026-11' })] });
+    const { drawer } = await renderDrawer();
+    expect(within(drawer).getByText('Đang mở')).toBeInTheDocument();
+    expect(within(drawer).queryByText(/^Kỳ đã khóa\./)).toBeNull();
+    expect(reasonBox(drawer)).not.toHaveAttribute('aria-required');
+    expect(reasonBox(drawer)).toHaveAccessibleDescription('Không bắt buộc khi kỳ đang mở — nhân viên thấy lý do trong Lịch sử.');
+    expect(reasonBox(drawer)).toHaveAttribute('maxLength', '500');
+    expect(within(drawer).getByText('0/500')).toBeInTheDocument();
+    await userEvent.type(reasonBox(drawer), 'abc');
+    expect(within(drawer).getByText('3/500')).toBeInTheDocument();
+  });
+});
+
+describe('AdjustDrawer — biên lý do 500/501', () => {
+  it('dán 499 ký tự rồi gõ thêm 2 → ô giữ 500 ký tự (ký tự 501 không vào), đếm "500/500"', async () => {
+    stubAdjust();
+    const { drawer } = await renderDrawer();
+    await userEvent.click(reasonBox(drawer));
+    await userEvent.paste('a'.repeat(499));
+    expect(within(drawer).getByText('499/500')).toBeInTheDocument();
+    await userEvent.type(reasonBox(drawer), 'bc');
+    expect((reasonBox(drawer) as HTMLTextAreaElement).value).toHaveLength(500);
+    expect(within(drawer).getByText('500/500')).toBeInTheDocument();
+  });
+});
+
+describe('AdjustDrawer — dòng và stepper', () => {
+  it('dòng max_qty=5: ở 4 nút Thêm bấm được, lên 5 thì vô hiệu', async () => {
+    const items = [...ADMIN_ITEMS.filter((i) => i.id !== 'i-note'), adminItem({ id: 'i-note', name: 'Giấy note vàng', unit: 'bich', max_qty: 5 })];
+    const view = adminRequest();
+    view.lines[1] = { ...view.lines[1], qty: 4 };
+    stubAdjust({ views: [view], items });
+    const { drawer } = await renderDrawer();
+    const more = within(drawer).getByRole('button', { name: 'Thêm Giấy note vàng' });
+    expect(more).toBeEnabled();
+    await userEvent.click(more);
+    expect(within(drawer).getByRole('spinbutton', { name: 'Giấy note vàng' })).toHaveValue(5);
+    expect(more).toBeDisabled();
+    expect(within(row(drawer, 'Giấy note vàng')).getByText('bịch · tối đa 5/tháng')).toBeInTheDocument();
+  });
+
+  it('dòng đã giao 3: ở 4 nút Bớt bấm được, xuống 3 thì vô hiệu; badge "đã giao 3", không có nút bỏ', async () => {
+    const view = adminRequest();
+    view.lines[0] = { ...view.lines[0], qty: 4 };
+    stubAdjust({ views: [view] });
     const { drawer } = await renderDrawer();
     const pen = row(drawer, 'Bút bi xanh');
-    const input = within(pen).getByRole('spinbutton', { name: 'Số lượng Bút bi xanh' });
-    expect(input).toHaveAccessibleDescription('đã giao 3');
-    await userEvent.clear(input);
-    await userEvent.type(input, '1');
-    await userEvent.tab();
-    expect(input).toHaveValue(3);
-    expect(within(pen).getByRole('button', { name: 'Bớt Số lượng Bút bi xanh' })).toBeDisabled();
+    const less = within(pen).getByRole('button', { name: 'Bớt Bút bi xanh' });
+    expect(less).toBeEnabled();
+    await userEvent.click(less);
+    expect(within(pen).getByRole('spinbutton')).toHaveValue(3);
+    expect(less).toBeDisabled();
+    expect(within(pen).getByText('đã giao 3')).toBeInTheDocument();
+    expect(within(pen).getByText('Trước khi sửa: 4')).toBeInTheDocument();
     expect(within(pen).queryByRole('button', { name: /^Bỏ / })).toBeNull();
-    expect(within(row(drawer, 'Giấy note vàng')).getByRole('button', { name: 'Bỏ Giấy note vàng khỏi phiếu' })).toBeInTheDocument();
   });
 
-  it('Hủy sau khi sửa → hỏi "Bỏ thay đổi chưa lưu?"; Tiếp tục sửa giữ ngăn, Bỏ thay đổi đóng', async () => {
-    stub();
+  it('bỏ dòng → "Sẽ bỏ khỏi phiếu" + "Giữ lại" (bấm thì trở lại); dòng đã hủy nợ có badge "đã hủy nợ 2"', async () => {
+    const view = adminRequest();
+    view.lines[0] = { ...view.lines[0], qty: 5, delivered_qty: 3, cancelled_qty: 2 };
+    stubAdjust({ views: [view] });
+    const { drawer } = await renderDrawer();
+    expect(within(row(drawer, 'Bút bi xanh')).getByText('đã hủy nợ 2')).toBeInTheDocument();
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Bỏ Giấy note vàng khỏi phiếu' }));
+    const note = row(drawer, 'Giấy note vàng');
+    expect(within(note).getByText('Sẽ bỏ khỏi phiếu')).toBeInTheDocument();
+    await userEvent.click(within(note).getByRole('button', { name: 'Giữ lại Giấy note vàng' }));
+    expect(within(row(drawer, 'Giấy note vàng')).queryByText('Sẽ bỏ khỏi phiếu')).toBeNull();
+  });
+
+  it('món đã ngừng hoặc SL vượt max_qty: chỉ giảm; món chỉ Hành chính: "Chỉ Hành chính", "ram · Hành chính đặt", không trần UI', async () => {
+    stubAdjust({
+      views: [
+        adminRequest({
+          lines: [
+            ...adminRequest().lines,
+            lineView({ id: 'l-old', item_id: 'i-old', item: facts('Giấy cũ', 'cai', { active: false }), qty: 5 }),
+            lineView({ id: 'l-clip', item_id: 'i-clip', item: facts('Kẹp giấy 33 mm', 'hop'), qty: 12 }),
+            lineView({ id: 'l-a4', item_id: 'i-a4', item: facts('Giấy A4 Double A', 'ram', { admin_only: true }), qty: 40 }),
+          ],
+        }),
+      ],
+    });
+    const { drawer } = await renderDrawer();
+    for (const name of ['Giấy cũ', 'Kẹp giấy 33 mm']) {
+      expect(within(drawer).getByRole('button', { name: `Thêm ${name}` })).toBeDisabled();
+      expect(within(drawer).getByRole('button', { name: `Bớt ${name}` })).toBeEnabled();
+    }
+    const a4 = row(drawer, 'Giấy A4 Double A');
+    expect(within(a4).getByText('Chỉ Hành chính')).toBeInTheDocument();
+    expect(within(a4).getByText('ram · Hành chính đặt')).toBeInTheDocument();
+    expect(within(a4).getByRole('button', { name: 'Thêm Giấy A4 Double A' })).toBeEnabled();
+  });
+
+  it('Hủy sau khi sửa → hỏi "Bỏ thay đổi chưa lưu?"; Tiếp tục sửa giữ ngăn, Bỏ thay đổi đóng; chân ngăn đếm thay đổi', async () => {
+    stubAdjust();
     const { drawer, onClose } = await renderDrawer();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Bỏ Giấy note vàng khỏi phiếu' }));
-    expect(row(drawer, 'Giấy note vàng')).toHaveClass('is-removed');
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Bút bi xanh' }));
+    expect(within(drawer).getByText('2 thay đổi chưa lưu')).toBeInTheDocument();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Hủy' }));
     expect(await screen.findByText('Bỏ thay đổi chưa lưu?')).toBeInTheDocument();
     await userEvent.click(screen.getByText('Tiếp tục sửa'));
@@ -112,124 +140,47 @@ describe('AdjustDrawer — ngăn điều chỉnh phiếu', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Bỏ thay đổi' }));
     expect(onClose).toHaveBeenCalled();
   });
+});
 
-  it('409 STALE_UPDATE → tải lại dữ liệu ngăn, giữ lý do đã gõ, báo "Nhân viên vừa sửa phiếu này"', async () => {
-    const fresh = adminRequest({ updated_at: '2026-10-06T01:00:00.000Z' });
-    fresh.lines[1] = { ...fresh.lines[1], qty: 4 };
-    const fetchMock = stub({ views: [adminRequest(), fresh], put: () => jsonResponse(409, { code: 'STALE_UPDATE' }) });
+describe('AdjustDrawer — thêm món', () => {
+  const many = [
+    ...ADMIN_ITEMS,
+    ...['Giấy than', 'Giấy bìa', 'Giấy dán', 'Giấy kraft', 'Giấy decal'].map((name, k) => adminItem({ id: `i-g${k}`, name })),
+  ];
+
+  it('tìm "giấy" → tối đa 6 kết quả, gồm món chỉ Hành chính, không món đã có/ngừng; chọn → "Mới thêm"', async () => {
+    stubAdjust({ items: many });
     const { drawer } = await renderDrawer();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Số lượng Giấy note vàng' }));
-    await userEvent.type(reasonBox(drawer), 'An báo nhầm');
-    await userEvent.click(save(drawer));
-    expect(await within(drawer).findByRole('alert')).toHaveTextContent('Nhân viên vừa sửa phiếu này — dữ liệu đã được tải lại');
-    await waitFor(() => expect(within(row(drawer, 'Giấy note vàng')).getByRole('spinbutton')).toHaveValue(4));
-    expect(row(drawer, 'Giấy note vàng')).not.toHaveClass('is-changed');
-    expect(reasonBox(drawer)).toHaveValue('An báo nhầm');
-    expect(save(drawer)).toBeDisabled();
-    expect(fetchMock.mock.calls.filter((c) => c[0] === '/api/admin/requests/r-1')).toHaveLength(2);
-  });
-
-  it('thêm món chỉ Hành chính → body gửi đủ dòng cũ + {item_id, qty}, lý do, expected_updated_at; xong thì đóng', async () => {
-    const fetchMock = stub();
-    const { drawer, onClose } = await renderDrawer();
     await userEvent.click(within(drawer).getByRole('button', { name: '+ Thêm món vào phiếu' }));
-    await userEvent.type(within(drawer).getByRole('searchbox', { name: 'Tìm món trong danh mục' }), 'a4');
-    const pick = within(drawer).getByRole('button', { name: /Giấy A4 Double A/ });
-    expect(pick).toHaveTextContent('Chỉ Hành chính');
-    expect(within(drawer).queryByRole('button', { name: /Giấy cũ/ })).toBeNull();
-    await userEvent.click(pick);
-    expect(row(drawer, 'Giấy A4 Double A')).toHaveTextContent('Mới thêm');
-    await userEvent.type(reasonBox(drawer), 'Bổ sung giấy in bản vẽ');
-    await userEvent.click(save(drawer));
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
-    expect(putBody(fetchMock)).toEqual({
-      lines: [
-        { id: 'l-pen', qty: 10 },
-        { id: 'l-note', qty: 3 },
-        { id: 'l-tape', qty: 2 },
-        { item_id: 'i-a4', qty: 1 },
-      ],
-      expected_updated_at: '2026-10-05T07:20:00.000Z',
-      reason: 'Bổ sung giấy in bản vẽ',
-    });
-  });
-
-  it('QTY_BELOW_DELIVERED {line_id} → lỗi tại đúng dòng, ngăn vẫn mở', async () => {
-    stub({ put: () => jsonResponse(400, { code: 'QTY_BELOW_DELIVERED', line_id: 'l-pen', delivered: 3 }) });
-    const { drawer, onClose } = await renderDrawer();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Số lượng Bút bi xanh' }));
-    await userEvent.type(reasonBox(drawer), 'Sửa số');
-    await userEvent.click(save(drawer));
-    expect(await within(row(drawer, 'Bút bi xanh')).findByText('Không ít hơn số đã giao (3).')).toBeInTheDocument();
-    expect(onClose).not.toHaveBeenCalled();
-  });
-
-  it('dòng ngoài DM có ReviewActions áp dụng ngay; lần Lưu sau dùng request_updated_at của review', async () => {
-    const fetchMock = stub();
-    const { drawer } = await renderDrawer();
-    const tape = within(drawer).getByRole('group', { name: 'Xử lý Băng keo 2 mặt' });
-    await userEvent.click(within(tape).getByRole('button', { name: 'Chấp nhận — Băng keo 2 mặt' }));
-    await userEvent.click(within(screen.getByRole('dialog', { name: /Chấp nhận “Băng keo 2 mặt”/ })).getByRole('button', { name: 'Chấp nhận' }));
-    expect(await within(drawer).findByText('Đã chấp nhận')).toBeInTheDocument();
-    expect(save(drawer)).toBeDisabled();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Số lượng Giấy note vàng' }));
-    await userEvent.type(reasonBox(drawer), 'Sửa số');
-    await userEvent.click(save(drawer));
-    await waitFor(() => expect(putBody(fetchMock).expected_updated_at).toBe('2026-11-05T08:00:00.000Z'));
-  });
-
-  it('Thêm vào danh mục (món có sẵn) xong → khối dòng bỏ nhãn "Ngoài danh mục" ngay, không cần mở lại ngăn', async () => {
-    const clip = { name: 'Kẹp giấy 33 mm', name_en: null, unit: 'hop', pack_note: null, image_file_id: null, active: true, admin_only: false };
-    const f = stub({ review: () => jsonResponse(200, reviewResult('converted', { id: 'l-tape', item_id: 'i-clip', item: clip })) });
-    const { drawer } = await renderDrawer();
-    expect(within(drawer).getByText('Ngoài danh mục · 2 cái')).toBeInTheDocument();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm vào danh mục… — Băng keo 2 mặt' }));
-    const dialog = screen.getByRole('dialog', { name: 'Thêm “Băng keo 2 mặt” vào danh mục' });
-    await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
-    await userEvent.selectOptions(await within(dialog).findByLabelText('Món trong danh mục'), 'i-clip');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
-    expect(await within(drawer).findByText('Đã thêm vào danh mục')).toBeInTheDocument();
-    expect(within(drawer).queryByText(/^Ngoài danh mục ·/)).toBeNull();
-    expect(f.mock.calls.filter((c) => c[0] === '/api/admin/requests/r-1')).toHaveLength(1);
-  });
-
-  it('kỳ đang mở: lý do không bắt buộc; bỏ dòng → body không còn dòng đó', async () => {
-    const fetchMock = stub({ views: [adminRequest({ is_open: true, period_ym: '2026-11' })] });
-    const { drawer } = await renderDrawer();
-    expect(within(drawer).getByText('Đang mở')).toBeInTheDocument();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Bỏ Giấy note vàng khỏi phiếu' }));
-    expect(save(drawer)).toBeEnabled();
-    await userEvent.click(save(drawer));
-    await waitFor(() =>
-      expect(putBody(fetchMock)).toEqual({
-        lines: [
-          { id: 'l-pen', qty: 10 },
-          { id: 'l-tape', qty: 2 },
-        ],
-        expected_updated_at: '2026-10-05T07:20:00.000Z',
-      }),
-    );
+    await userEvent.type(within(drawer).getByRole('searchbox', { name: 'Tìm món trong danh mục' }), 'giấy');
+    const results = within(drawer).getByRole('list', { name: 'Món tìm thấy' });
+    expect(within(results).getAllByRole('button')).toHaveLength(6);
+    const a4 = within(results).getByRole('button', { name: /Giấy A4 Double A/ });
+    expect(a4).toHaveTextContent('Chỉ Hành chính');
+    expect(within(results).queryByRole('button', { name: /Giấy note vàng/ })).toBeNull();
+    expect(within(results).queryByRole('button', { name: /Giấy cũ/ })).toBeNull();
+    await userEvent.click(a4);
+    expect(within(row(drawer, 'Giấy A4 Double A')).getByText('Mới thêm')).toBeInTheDocument();
   });
 
   it('Enter trong ô tìm món không lưu ngăn: khớp món → thêm món đầu, không khớp → không làm gì', async () => {
-    const fetchMock = stub({ views: [adminRequest({ is_open: true })] });
+    const f = stubAdjust({ views: [adminRequest({ is_open: true })] });
     const { drawer, onClose } = await renderDrawer();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Số lượng Giấy note vàng' }));
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Giấy note vàng' }));
     await userEvent.click(within(drawer).getByRole('button', { name: '+ Thêm món vào phiếu' }));
     const search = within(drawer).getByRole('searchbox', { name: 'Tìm món trong danh mục' });
     await userEvent.type(search, 'zzz{Enter}');
     await userEvent.clear(search);
     await userEvent.type(search, 'a4{Enter}');
-    expect(row(drawer, 'Giấy A4 Double A')).toHaveTextContent('Mới thêm');
-    expect(fetchMock.mock.calls.some((c) => c[0] === '/api/admin/requests/r-1/lines')).toBe(false);
+    expect(within(row(drawer, 'Giấy A4 Double A')).getByText('Mới thêm')).toBeInTheDocument();
+    expect(f.mock.calls.some((c) => c[0] === '/api/admin/requests/r-1/lines')).toBe(false);
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('món đã có trên dòng converted không được gợi ý lại trong "Thêm món" (tránh DUPLICATE_ITEM)', async () => {
+  it('món đã có trên dòng converted không được gợi ý lại (tránh DUPLICATE_ITEM)', async () => {
     const view = adminRequest();
-    view.lines[2] = { ...view.lines[2], item_id: 'i-clip', review_status: 'converted', custom_name: null, custom_unit: null };
-    view.lines[2].item = { name: 'Kẹp giấy 33 mm', name_en: null, unit: 'hop', pack_note: null, image_file_id: null, active: true, admin_only: false };
-    stub({ views: [view] });
+    view.lines[2] = { ...view.lines[2], item_id: 'i-clip', review_status: 'converted', custom_name: null, custom_unit: null, item: facts('Kẹp giấy 33 mm', 'hop') };
+    stubAdjust({ views: [view] });
     const { drawer } = await renderDrawer();
     await userEvent.click(within(drawer).getByRole('button', { name: '+ Thêm món vào phiếu' }));
     await userEvent.type(within(drawer).getByRole('searchbox', { name: 'Tìm món trong danh mục' }), 'giấy');
@@ -237,101 +188,86 @@ describe('AdjustDrawer — ngăn điều chỉnh phiếu', () => {
     expect(within(results).getByRole('button', { name: /Giấy A4 Double A/ })).toBeInTheDocument();
     expect(within(results).queryByRole('button', { name: /Kẹp giấy 33 mm/ })).toBeNull();
   });
+});
 
-  it('dòng ngoài DM đã bị từ chối → số lượng chỉ đọc, không có stepper', async () => {
+describe('AdjustDrawer — món ngoài danh mục', () => {
+  it('dòng pending: "2 cái · ngoài danh mục", ghi chú, 3 nút review và liên kết "Xem ở Món ngoài danh mục"', async () => {
+    stubAdjust();
+    const { drawer } = await renderDrawer();
+    const tape = row(drawer, 'Băng keo 2 mặt');
+    expect(within(tape).getByText('2 cái · ngoài danh mục')).toBeInTheDocument();
+    expect(within(tape).getByText('“Loại 2 cm”')).toBeInTheDocument();
+    expect(within(within(tape).getByRole('group', { name: 'Xử lý Băng keo 2 mặt' })).getAllByRole('button')).toHaveLength(3);
+    expect(within(tape).getByRole('link', { name: 'Xem ở Món ngoài danh mục' })).toHaveAttribute('href', '/admin/review?status=pending&ym=2026-10');
+  });
+
+  it('dòng đã bị từ chối → số lượng chỉ đọc, không stepper, không liên kết review', async () => {
     const view = adminRequest();
     view.lines[2] = { ...view.lines[2], review_status: 'rejected', review_note: 'Kho còn' };
-    stub({ views: [view] });
+    stubAdjust({ views: [view] });
     const { drawer } = await renderDrawer();
     const tape = row(drawer, 'Băng keo 2 mặt');
     expect(within(tape).getByText('Từ chối: Kho còn')).toBeInTheDocument();
     expect(within(tape).queryByRole('spinbutton')).toBeNull();
-    expect(within(tape).queryByRole('button', { name: /Số lượng/ })).toBeNull();
+    expect(within(tape).queryByRole('link')).toBeNull();
   });
 
-  it('review báo dòng đã xử lý → tải lại; dòng khác cũng đổi → bỏ nháp, báo STALE, giữ lý do', async () => {
+  it('Chấp nhận áp dụng ngay; lần Lưu sau dùng request_updated_at của review', async () => {
+    const f = stubAdjust();
+    const { drawer } = await renderDrawer();
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Chấp nhận — Băng keo 2 mặt' }));
+    await userEvent.click(within(screen.getByRole('dialog', { name: /Chấp nhận “Băng keo 2 mặt”/ })).getByRole('button', { name: 'Chấp nhận' }));
+    expect(await within(drawer).findByText('Đã chấp nhận')).toBeInTheDocument();
+    expect(saveButton(drawer)).toBeDisabled();
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Giấy note vàng' }));
+    await userEvent.type(reasonBox(drawer), 'Sửa số');
+    await userEvent.click(saveButton(drawer));
+    await waitFor(() => expect(f.mock.calls.some((c) => c[0] === '/api/admin/requests/r-1/lines')).toBe(true));
+    const call = f.mock.calls.find((c) => c[0] === '/api/admin/requests/r-1/lines') as unknown as [string, RequestInit];
+    expect(JSON.parse(String(call[1].body)).expected_updated_at).toBe('2026-11-05T08:00:00.000Z');
+  });
+
+  it('Thêm vào danh mục (món có sẵn) → dòng bỏ nhãn "ngoài danh mục" ngay, không tải lại phiếu', async () => {
+    const clip = facts('Kẹp giấy 33 mm', 'hop');
+    const f = stubAdjust({ review: () => jsonResponse(200, reviewResult('converted', { id: 'l-tape', item_id: 'i-clip', item: clip })) });
+    const { drawer } = await renderDrawer();
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm vào danh mục… — Băng keo 2 mặt' }));
+    const dialog = screen.getByRole('dialog', { name: 'Thêm “Băng keo 2 mặt” vào danh mục' });
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
+    await userEvent.selectOptions(await within(dialog).findByLabelText('Món trong danh mục'), 'i-clip');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    expect(await within(drawer).findByText('Đã thêm vào danh mục')).toBeInTheDocument();
+    expect(within(drawer).queryByText(/ngoài danh mục$/)).toBeNull();
+    expect(loadCalls(f)).toHaveLength(1);
+  });
+
+  it('review thua đua, dòng khác cũng đổi → bỏ nháp, khối STALE, giữ lý do', async () => {
     const fresh = adminRequest({ updated_at: '2026-10-06T01:00:00.000Z' });
     fresh.lines[1] = { ...fresh.lines[1], qty: 4 };
     fresh.lines[2] = { ...fresh.lines[2], review_status: 'accepted' };
-    stub({ views: [adminRequest(), fresh], review: () => jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' }) });
+    stubAdjust({ views: [adminRequest(), fresh], review: () => jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' }) });
     const { drawer } = await renderDrawer();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Số lượng Bút bi xanh' }));
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Bút bi xanh' }));
     await userEvent.type(reasonBox(drawer), 'An báo nhầm');
     await userEvent.click(within(drawer).getByRole('button', { name: 'Chấp nhận — Băng keo 2 mặt' }));
     await userEvent.click(within(screen.getByRole('dialog', { name: /Chấp nhận “Băng keo 2 mặt”/ })).getByRole('button', { name: 'Chấp nhận' }));
-    expect(await within(drawer).findByText('Nhân viên vừa sửa phiếu này — dữ liệu đã được tải lại')).toBeInTheDocument();
-    await waitFor(() => expect(within(row(drawer, 'Giấy note vàng')).getByRole('spinbutton')).toHaveValue(4));
-    expect(within(row(drawer, 'Bút bi xanh')).getByRole('spinbutton')).toHaveValue(10);
+    expect(await within(drawer).findByText('Nhân viên vừa sửa phiếu này — tải bản mới nhất rồi sửa lại.')).toBeInTheDocument();
+    await waitFor(() => expect(within(drawer).getByRole('spinbutton', { name: 'Giấy note vàng' })).toHaveValue(4));
+    expect(within(drawer).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(10);
     expect(reasonBox(drawer)).toHaveValue('An báo nhầm');
   });
 
-  it('review báo dòng đã xử lý nhưng chỉ dòng đó đổi → giữ nháp, không báo STALE', async () => {
+  it('review thua đua nhưng chỉ dòng đó đổi → giữ nháp, không khối STALE', async () => {
     const fresh = adminRequest({ updated_at: '2026-10-06T01:00:00.000Z' });
     fresh.lines[2] = { ...fresh.lines[2], review_status: 'accepted' };
-    const fetchMock = stub({ views: [adminRequest(), fresh], review: () => jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' }) });
+    const f = stubAdjust({ views: [adminRequest(), fresh], review: () => jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' }) });
     const { drawer } = await renderDrawer();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Số lượng Bút bi xanh' }));
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Bút bi xanh' }));
     await userEvent.click(within(drawer).getByRole('button', { name: 'Chấp nhận — Băng keo 2 mặt' }));
     await userEvent.click(within(screen.getByRole('dialog', { name: /Chấp nhận “Băng keo 2 mặt”/ })).getByRole('button', { name: 'Chấp nhận' }));
-    await waitFor(() => expect(fetchMock.mock.calls.filter((c) => c[0] === '/api/admin/requests/r-1')).toHaveLength(2));
+    await waitFor(() => expect(loadCalls(f)).toHaveLength(2));
     await waitFor(() => expect(within(drawer).getByText('Đã chấp nhận')).toBeInTheDocument());
-    expect(within(row(drawer, 'Bút bi xanh')).getByRole('spinbutton')).toHaveValue(11);
-    expect(within(drawer).queryByText('Nhân viên vừa sửa phiếu này — dữ liệu đã được tải lại')).toBeNull();
-  });
-});
-
-describe('AdjustDrawer — giới hạn số lượng dòng đã có', () => {
-  it('món đã ngừng: chỉ giảm (Thêm vô hiệu, Bớt bấm được); SL vượt max_qty: chỉ giảm', async () => {
-    const old = { name: 'Giấy cũ', name_en: null, unit: 'cai', pack_note: null, image_file_id: null, active: false, admin_only: false };
-    const clip = { ...old, name: 'Kẹp giấy 33 mm', unit: 'hop', active: true };
-    stub({
-      views: [
-        adminRequest({
-          lines: [
-            ...adminRequest().lines,
-            lineView({ id: 'l-old', item_id: 'i-old', item: old, qty: 5 }),
-            lineView({ id: 'l-clip', item_id: 'i-clip', item: clip, qty: 12 }),
-          ],
-        }),
-      ],
-    });
-    const { drawer } = await renderDrawer();
-    for (const name of ['Giấy cũ', 'Kẹp giấy 33 mm']) {
-      expect(within(drawer).getByRole('button', { name: `Thêm Số lượng ${name}` })).toBeDisabled();
-      expect(within(drawer).getByRole('button', { name: `Bớt Số lượng ${name}` })).toBeEnabled();
-    }
-  });
-
-  it('lưu điều chỉnh xong → danh sách món ngoài danh mục chờ xem tải lại (dòng chờ có thể vừa bị bỏ)', async () => {
-    const f = stub();
-    const { drawer } = await renderDrawer({ withReviewList: true });
-    const reviewCalls = () => f.mock.calls.filter((c) => String(c[0]).startsWith('/api/admin/review?')).length;
-    await waitFor(() => expect(reviewCalls()).toBe(1));
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Số lượng Giấy note vàng' }));
-    await userEvent.type(reasonBox(drawer), 'Bổ sung');
-    await userEvent.click(save(drawer));
-    await waitFor(() => expect(reviewCalls()).toBe(2));
-  });
-
-  it('nhãn giao tính phần hủy: qty 5 giao 3 hủy 2 → "Đã giao 3" + "đã hủy 2" (không "Giao 3/5"); qty 6 giao 3 hủy 1 → "Giao 3/5" + "đã hủy 1"', async () => {
-    const base = adminRequest().lines;
-    stub({
-      views: [
-        adminRequest({
-          lines: [
-            { ...base[0], qty: 5, delivered_qty: 3, cancelled_qty: 2 },
-            { ...base[1], qty: 6, delivered_qty: 3, cancelled_qty: 1 },
-          ],
-        }),
-      ],
-    });
-    const { drawer } = await renderDrawer();
-    const pen = row(drawer, 'Bút bi xanh');
-    expect(within(pen).getByText('Đã giao 3')).toBeInTheDocument();
-    expect(within(pen).getByText('đã hủy 2')).toBeInTheDocument();
-    expect(within(pen).queryByText('Giao 3/5')).toBeNull();
-    const note = row(drawer, 'Giấy note vàng');
-    expect(within(note).getByText('Giao 3/5')).toBeInTheDocument();
-    expect(within(note).getByText('đã hủy 1')).toBeInTheDocument();
+    expect(within(drawer).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(11);
+    expect(within(drawer).queryByText(/^Nhân viên vừa sửa phiếu này/)).toBeNull();
   });
 });

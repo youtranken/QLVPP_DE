@@ -8,15 +8,13 @@ import { FilterNotice } from '@/ui/filter-notice';
 import { Icon } from '@/ui/icon';
 import { LoadError } from '@/ui/load-state';
 import { Progress } from '@/ui/progress';
-import { usePersonRows, type PersonRow } from './summary.api';
-import type { PersonFilter } from './use-summary-params';
-
-type Row = PersonRow & { id: string };
+import type { PersonRow } from './summary.api';
+import { usePersonTableRows, type PersonTableFilter, type PersonTableRow as Row } from './use-person-table-rows';
 
 interface Props {
   ym: string;
   locked: boolean;
-  filter: Exclude<PersonFilter, 'unregistered'> | null;
+  filter: PersonTableFilter;
   q: string;
   activeId?: string;
   onOpen: (requestId: string) => void;
@@ -110,16 +108,11 @@ function useColumns(ym: string, locked: boolean, stale: boolean, onOpen: (id: st
   }, [t, ym, locked, stale, onOpen]);
 }
 
-// API xếp phòng ban rồi tên; gom "Chưa có phòng ban" xuống cuối cả khi nó tới trước
 export function SummaryPersonTable({ ym, locked, filter, q, activeId, onOpen, onClearFilter }: Props) {
   const { t } = useTranslation();
-  const query = usePersonRows(ym, filter ?? 'all', q);
+  const { query, rows } = usePersonTableRows(ym, filter, q);
   const stale = query.isPlaceholderData;
   const columns = useColumns(ym, locked, stale, onOpen);
-  const rows = useMemo<Row[]>(() => {
-    const all = (query.data?.pages ?? []).flatMap((p) => p.items).map((r) => ({ ...r, id: r.request_id }));
-    return [...all.filter((r) => r.department), ...all.filter((r) => !r.department)];
-  }, [query.data]);
 
   if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
   const count = t('summary.filters.people', { n: `${rows.length}${query.hasNextPage ? '+' : ''}` });

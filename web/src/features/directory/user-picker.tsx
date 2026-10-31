@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { userLabel, useUserSearch, type DirectoryUser } from '@/features/directory/directory.api';
 import '@/features/directory/user-picker.css';
@@ -17,6 +18,8 @@ export function UserPicker({
   allowLocked = false,
   resultsWhenEmpty = true,
   excludeAdmin = false,
+  required = false,
+  badge,
   onChange,
   onEnter,
 }: {
@@ -28,6 +31,8 @@ export function UserPicker({
   allowLocked?: boolean;
   resultsWhenEmpty?: boolean;
   excludeAdmin?: boolean;
+  required?: boolean;
+  badge?: (u: DirectoryUser) => ReactNode;
   onChange: (u: DirectoryUser | null) => void;
   onEnter?: () => void;
 }) {
@@ -46,7 +51,10 @@ export function UserPicker({
 
   return (
     <fieldset className={['user-picker', error ? 'ff--error' : ''].filter(Boolean).join(' ')}>
-      <legend className="ff-label">{label}</legend>
+      <legend className="ff-label">
+        {label}
+        {required && <span className="ff-req" aria-hidden="true"> *</span>}
+      </legend>
       {value ? (
         <div className="user-picker-chosen">
           <span>{describe(value)}</span>
@@ -63,6 +71,7 @@ export function UserPicker({
             placeholder={t('directory.picker.searchHint')}
             aria-describedby={note ? noteId : undefined}
             aria-invalid={error ? true : undefined}
+            aria-required={required || undefined}
             value={text}
             onChange={(e) => setText(e.target.value)}
             // Ô tìm hay nằm trong form khác (tạo hộ, xuất lẻ): Enter không tự gửi form, chỉ form nào muốn mới nhận qua onEnter
@@ -79,6 +88,7 @@ export function UserPicker({
                 <li key={u.sub}>
                   <button type="button" disabled={!allowLocked && u.status !== 'active'} onClick={() => onChange(u)}>
                     <b>{userLabel(u)}</b>
+                    {u.status === 'active' && badge?.(u)}
                     <small>
                       {u.status === 'active' ? (u.department ?? u.email ?? '') : t('directory.picker.locked')}
                     </small>

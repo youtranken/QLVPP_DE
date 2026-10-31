@@ -112,6 +112,20 @@ describe('Drawer — ↑/↓ đổi nội dung tại chỗ', () => {
     expect(onPrev).not.toHaveBeenCalled();
   });
 
+  it('đang sửa dở: ↓ hỏi "Bỏ thay đổi chưa lưu?" — Tiếp tục sửa không chuyển, Bỏ thay đổi mới gọi onNext', async () => {
+    const onNext = vi.fn();
+    renderWithI18n(<Harness dirty onOpenChange={vi.fn()} onNext={onNext} />);
+    screen.getByRole('button', { name: 'Lưu nháp' }).focus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(await screen.findByText('Bỏ thay đổi chưa lưu?')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('Tiếp tục sửa'));
+    expect(onNext).not.toHaveBeenCalled();
+    screen.getByRole('button', { name: 'Lưu nháp' }).focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await userEvent.click(await screen.findByRole('button', { name: 'Bỏ thay đổi' }));
+    expect(onNext).toHaveBeenCalledTimes(1);
+  });
+
   it('phím kèm Ctrl/Alt/Meta không bị nuốt', async () => {
     const onNext = vi.fn();
     renderWithI18n(<Harness onOpenChange={vi.fn()} onNext={onNext} />);

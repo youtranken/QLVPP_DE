@@ -2,7 +2,7 @@ import * as RD from '@radix-ui/react-dialog';
 import { useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useOptionalConfirm } from '@/ui/confirm-context';
+import { discardOptions, useOptionalConfirm } from '@/ui/confirm-context';
 import { DialogPortalContext } from '@/ui/dialog-portal';
 
 export const DialogTitle = RD.Title;
@@ -46,13 +46,7 @@ export function Dialog({
       onOpenChange(next);
       return;
     }
-    void askConfirm({
-      title: t('common.discardTitle'),
-      message: t('common.discardBody'),
-      confirmLabel: t('common.discardOk'),
-      cancelLabel: t('common.discardKeep'),
-      danger: true,
-    }).then((ok) => {
+    void askConfirm(discardOptions(t)).then((ok) => {
       if (ok) onOpenChange(false);
     });
   };
