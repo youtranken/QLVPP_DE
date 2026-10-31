@@ -1,5 +1,6 @@
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useUrlPatch } from '@/lib/use-url-patch';
 import { ApiError } from '@/lib/api-client';
 import { apiErrorCode } from '@/lib/api-error';
 import { LoadError, Loading, NotFound } from '@/ui/load-state';
@@ -40,9 +41,9 @@ function Toolbar({ snap, appendix, onAppendix }: { snap: SnapshotData; appendix:
 }
 
 function PrintScreen({ snap }: { snap: SnapshotData }) {
-  const [params, setParams] = useSearchParams();
+  const [params, update] = useUrlPatch();
   const appendix = params.get('appendix') === '1';
-  const onAppendix = (on: boolean) => setParams(on ? { appendix: '1' } : {}, { replace: true });
+  const onAppendix = (on: boolean) => update({ appendix: on ? '1' : null }, true);
   return (
     <div className="pp-page">
       <Toolbar snap={snap} appendix={appendix} onAppendix={onAppendix} />

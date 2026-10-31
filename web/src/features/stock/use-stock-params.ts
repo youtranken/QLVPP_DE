@@ -1,31 +1,14 @@
-import { useCallback, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useMemo } from 'react';
 import { STOCK_FILTERS, type StockFilter, type StockView } from './stock-rows';
-
-type Patch = Record<string, string | null>;
+import { useUrlPatch } from '@/lib/use-url-patch';
 
 const parseFilter = (raw: string | null): StockFilter | null => (STOCK_FILTERS.includes(raw as StockFilter) ? (raw as StockFilter) : null);
 
 export function useStockParams() {
-  const [params, setParams] = useSearchParams();
+  const [params, update] = useUrlPatch();
   const filter = parseFilter(params.get('filter'));
   const q = params.get('q') ?? '';
   const view = useMemo<StockView>(() => ({ filter, q }), [filter, q]);
-  const update = useCallback(
-    (patch: Patch, replace = false) =>
-      setParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          for (const [k, v] of Object.entries(patch)) {
-            if (v === null) next.delete(k);
-            else next.set(k, v);
-          }
-          return next;
-        },
-        { replace },
-      ),
-    [setParams],
-  );
   return {
     view,
     setQ: (next: string) => update({ q: next || null }, true),

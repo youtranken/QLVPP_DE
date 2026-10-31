@@ -1,30 +1,13 @@
-import { useCallback, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useMemo } from 'react';
 import { parseUsersFilter, type UsersFilter, type UsersView } from './users-rows';
-
-type Patch = Record<string, string | null>;
+import { useUrlPatch } from '@/lib/use-url-patch';
 
 export function useUsersParams() {
-  const [params, setParams] = useSearchParams();
+  const [params, update] = useUrlPatch();
   const filter = parseUsersFilter(params.get('status'));
   const dept = params.get('dept') ?? '';
   const q = params.get('q') ?? '';
   const view = useMemo<UsersView>(() => ({ filter, dept, q }), [filter, dept, q]);
-  const update = useCallback(
-    (patch: Patch, replace = false) =>
-      setParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          for (const [k, v] of Object.entries(patch)) {
-            if (v === null) next.delete(k);
-            else next.set(k, v);
-          }
-          return next;
-        },
-        { replace },
-      ),
-    [setParams],
-  );
   return {
     view,
     setQ: (next: string) => update({ q: next || null }, true),
