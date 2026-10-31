@@ -8,7 +8,6 @@ import { useAdminItems, useAllCategories, type AdminItem } from '@/features/cata
 import type { LineView } from '@/features/request/request.api';
 import { useRequestFormat } from '@/features/request/request-format';
 import { ReviewActions } from '@/features/review/review-actions';
-import '@/features/review/review.css';
 import { AddLinePicker } from './add-line-picker';
 import { LineRow } from './adjust-line-row';
 import { canRemove, floorOf, type Adjust } from './use-adjust';

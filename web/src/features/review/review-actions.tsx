@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { ConfirmDialog } from '@/ui/confirm-dialog';
@@ -9,6 +9,7 @@ export type { ReviewableLine };
 import { isStaleReview, reviewErrorKey } from './review-errors';
 import { ConvertDialog } from './convert-dialog';
 import { RejectDialog } from './reject-dialog';
+import './review.m1.css';
 
 type Open = 'accept' | 'convert' | 'reject' | null;
 
@@ -23,9 +24,16 @@ export function ReviewStatusTag({ status, note }: { status: LineView['review_sta
 }
 
 // onDone nhận cả request_updated_at: ngăn điều chỉnh cập nhật expected_updated_at theo đó
-export function ReviewActions({ line, onDone, onStale }: {
+export interface ReviewContext {
+  who: string;
+  month: number;
+}
+
+export function ReviewActions({ line, context, hideStatus = false, onDone, onStale }: {
   line: ReviewableLine;
-  onDone: (result: ReviewResult) => void;
+  context?: ReviewContext;
+  hideStatus?: boolean;
+  onDone: (result: ReviewResult, body: ReviewBody) => void;
   onStale?: () => void;
 }) {
   const { t } = useTranslation();
@@ -36,7 +44,9 @@ export function ReviewActions({ line, onDone, onStale }: {
   const [notice, setNotice] = useState<string | null>(null);
   const [acceptError, setAcceptError] = useState<string | null>(null);
   const [accepting, setAccepting] = useState(false);
+  const acceptingRef = useRef(false);
   const name = line.custom_name ?? '';
+  const unitName = line.custom_unit ? t(`catalog.units.${line.custom_unit}`) : '';
   const status = result?.line.review_status ?? line.review_status;
   const note = result ? result.line.review_note : line.review_note;
   // Nhiều dòng ngoài DM cùng ngăn: tên nút kèm tên dòng để trình đọc màn hình phân biệt
@@ -49,7 +59,7 @@ export function ReviewActions({ line, onDone, onStale }: {
       setResult(done);
       setOpen(null);
       void cache.reviewed();
-      onDone(done);
+      onDone(done, body);
     } catch (e) {
       if (!isStaleReview(e)) throw e;
       setOpen(null);
@@ -60,6 +70,8 @@ export function ReviewActions({ line, onDone, onStale }: {
   };
 
   const accept = async () => {
+    if (acceptingRef.current) return;
+    acceptingRef.current = true;
     setAccepting(true);
     setAcceptError(null);
     try {
@@ -67,6 +79,7 @@ export function ReviewActions({ line, onDone, onStale }: {
     } catch (e) {
       setAcceptError(t(reviewErrorKey(e) ?? 'review.errors.UNKNOWN'));
     } finally {
+      acceptingRef.current = false;
       setAccepting(false);
     }
   };
@@ -78,13 +91,13 @@ export function ReviewActions({ line, onDone, onStale }: {
           {notice}
         </p>
       )}
-      {result?.unit_mismatch && (
+      {!hideStatus && result?.unit_mismatch && (
         <p role="status" className="alert alert--warn">
           {t('review.actions.unitMismatch', { qty: result.line.qty })}
         </p>
       )}
       {status !== 'pending' ? (
-        <ReviewStatusTag status={status} note={note} />
+        hideStatus ? null : <ReviewStatusTag status={status} note={note} />
       ) : (
         <div className="rv-buttons">
           <button type="button" className="btn btn--sm" aria-label={named('accept')} onClick={() => setOpen('accept')}>
@@ -106,7 +119,11 @@ export function ReviewActions({ line, onDone, onStale }: {
       {open === 'accept' && (
         <ConfirmDialog
           title={t('review.accept.title', { name })}
-          message={t('review.accept.body')}
+          message={
+            context
+              ? t('review.accept.bodyFor', { qty: line.qty, unit: unitName, month: context.month, who: context.who })
+              : t('review.accept.body')
+          }
           confirmLabel={t('review.accept.ok')}
           busy={accepting}
           error={acceptError}
@@ -118,7 +135,7 @@ export function ReviewActions({ line, onDone, onStale }: {
         />
       )}
       {open === 'convert' && (
-        <ConvertDialog line={line} onSubmit={(item) => send({ action: 'convert', item })} onClose={() => setOpen(null)} />
+        <ConvertDialog line={line} who={context?.who} onSubmit={(item) => send({ action: 'convert', item })} onClose={() => setOpen(null)} />
       )}
       {open === 'reject' && (
         <RejectDialog name={name} onSubmit={(n) => send({ action: 'reject', note: n })} onClose={() => setOpen(null)} />

@@ -8,11 +8,13 @@ import { catalogErrorKey } from '@/features/catalog/catalog-errors';
 export function ImageField({
   fileId,
   error,
+  required = false,
   onChange,
   onBusyChange,
 }: {
   fileId: string | null;
   error?: string;
+  required?: boolean;
   onChange: (fileId: string) => void;
   onBusyChange: (busy: boolean) => void;
 }) {
@@ -50,7 +52,10 @@ export function ImageField({
 
   return (
     <fieldset className={`img-field${shownError ? ' ff--error' : ''}`} aria-describedby={noteId}>
-      <legend className="ff-label">{t('catalog.form.image')}</legend>
+      <legend className="ff-label">
+        {t('catalog.form.image')}
+        {required && <span className="ff-req" aria-hidden="true"> *</span>}
+      </legend>
       <div className="img-field-row">
         <div className="img-field-preview">
           {fileId ? (

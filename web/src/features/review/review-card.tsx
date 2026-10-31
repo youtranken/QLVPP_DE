@@ -1,44 +1,74 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { fileUrl } from '@/features/catalog/catalog.api';
-import type { ReviewResult, ReviewRow } from './review.api';
+import { useFormatTime } from '@/lib/format-time';
+import { Icon } from '@/ui/icon';
+import { ItemThumb } from '@/ui/item-thumb';
+import type { ReviewBody, ReviewResult, ReviewRow } from './review.api';
 import { ReviewActions } from './review-actions';
+
+const BADGE_TONE = { accepted: 'ok', converted: 'info', rejected: 'danger' } as const;
 
 export function ReviewCard({ row, name, onDone, onStale }: {
   row: ReviewRow;
   name: string;
-  onDone: (result: ReviewResult) => void;
+  onDone: (result: ReviewResult, body: ReviewBody) => void;
   onStale: () => void;
 }) {
   const { t } = useTranslation();
+  const formatTime = useFormatTime();
+  const [done, setDone] = useState<ReviewResult | null>(null);
   const titleId = `rv-${row.line_id}`;
   const unit = row.custom_unit ? t(`catalog.units.${row.custom_unit}`) : '';
+  const status = done?.line.review_status ?? row.review_status;
+  const note = done ? done.line.review_note : row.review_note;
+  const who = row.full_name ?? t('review.card.unknownUser');
+  const month = Number(row.period_ym.slice(5));
+
   return (
     <article className="rv-card" aria-labelledby={titleId}>
-      <div className="rv-img">
+      <div className="rv-card__img">
         {row.image_file_id ? (
-          <img src={fileUrl(row.image_file_id)} alt={t('review.card.imageAlt', { name })} loading="lazy" />
+          <ItemThumb fileId={row.image_file_id} alt={t('review.card.imageAlt', { name })} tone="g0" size={120} />
         ) : (
-          <span>{t('review.card.noImage')}</span>
+          <span className="rv-card__noimg">
+            <Icon name="image" size={32} />
+            {t('review.card.noImage')}
+          </span>
         )}
       </div>
-      <div className="rv-main">
-        <h2 id={titleId} className="rv-name">
+      <div className="rv-card__main">
+        <h2 id={titleId} className="rv-card__name">
           {name}
         </h2>
-        {row.previously_accepted && <span className="tag tag--brand rv-hint">{t('review.card.previouslyAccepted')}</span>}
-        <p className="rv-qty">{t('review.card.qty', { qty: row.qty, unit })}</p>
-        {row.custom_note && <p className="rv-note">{t('review.card.note', { note: row.custom_note })}</p>}
-        <p className="rv-meta">
-          {t('review.card.who', {
-            name: row.full_name ?? t('review.card.unknownUser'),
-            department: row.department ?? t('review.card.noDepartment'),
-          })}
-          <span aria-hidden="true"> · </span>
-          {t('review.card.period', { month: Number(row.period_ym.slice(5)), year: row.period_ym.slice(0, 4) })}
+        <p className="rv-card__qty">
+          {t('review.card.qtyPeriod', { qty: row.qty, unit, month, year: row.period_ym.slice(0, 4) })}
         </p>
+        {row.custom_note && <p className="rv-card__note">{t('review.card.note', { note: row.custom_note })}</p>}
+        <p className="rv-card__meta">
+          {t('review.card.who', {
+            name: who,
+            department: row.department ?? t('review.card.noDepartment'),
+            at: formatTime(row.created_at),
+          })}
+        </p>
+        {row.previously_accepted && status === 'pending' && (
+          <p className="rv-card__hint">{t('review.card.previouslyAccepted')}</p>
+        )}
+        {(status === 'accepted' || status === 'converted' || status === 'rejected') && (
+          <div className="rv-card__decision">
+            <span className={`tag tag--${BADGE_TONE[status]}`}>{t(`review.card.badge.${status}`)}</span>
+            <span>{t(`review.card.decision.${status}`, { reason: note?.trim() ?? '' })}</span>
+            {done && <em className="rv-card__when">{t('review.card.justNow')}</em>}
+          </div>
+        )}
         <ReviewActions
-          line={{ ...row, id: row.line_id, custom_name: name }}
-          onDone={onDone}
+          line={{ ...row, id: row.line_id, custom_name: name, review_status: status }}
+          context={{ who, month }}
+          hideStatus
+          onDone={(result, body) => {
+            setDone(result);
+            onDone(result, body);
+          }}
           onStale={onStale}
         />
       </div>

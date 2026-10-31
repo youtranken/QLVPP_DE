@@ -1,4 +1,4 @@
-import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import type { LineView, ReviewStatus } from '@/features/request/request.api';
 import { useRefreshCatalog } from '@/features/catalog/catalog.api';
@@ -84,6 +84,12 @@ export function useReviewLines(status: ReviewFilter, ym: string) {
   return useQuery(reviewLinesQuery(status, ym));
 }
 
+// Đếm từng tab = chính danh sách của tab đó (D9), cùng khóa nên tab đang xem dùng lại kết quả
+export function useReviewCounts(ym: string): Record<ReviewFilter, number | undefined> {
+  const results = useQueries({ queries: REVIEW_FILTERS.map((f) => reviewLinesQuery(f, ym)) });
+  return Object.fromEntries(REVIEW_FILTERS.map((f, i) => [f, results[i]?.data?.items.length])) as Record<ReviewFilter, number | undefined>;
+}
+
 export const reviewLine = (lineId: string, body: ReviewBody, csrfToken: string | null) =>
   apiFetch<ReviewResult>(`/api/admin/lines/${lineId}/review`, { method: 'POST', body: JSON.stringify(body), csrfToken });
 
@@ -96,6 +102,9 @@ export function useReviewCache() {
       Promise.all([refreshCatalog(), qc.invalidateQueries({ queryKey: SUMMARY_KEY })]),
     refetchList: () => qc.invalidateQueries({ queryKey: REVIEW_KEY }),
     // Thẻ vừa xử lý ở lại với nhãn trạng thái; danh sách tải lại ở lần xem sau
+    // Đếm các tab khác đổi theo ngay; tab đang xem giữ nguyên thẻ vừa xử lý
+    refreshOtherTabs: (current: ReviewFilter) =>
+      qc.invalidateQueries({ queryKey: REVIEW_KEY, predicate: (q) => q.queryKey[1] !== current }),
     markListStale: () => qc.invalidateQueries({ queryKey: REVIEW_KEY, refetchType: 'none' }),
   };
 }

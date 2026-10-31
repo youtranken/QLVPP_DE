@@ -21,6 +21,7 @@ const normalized = (s: string | null) => (s ?? '').trim().toLowerCase();
 function localErrors(d: ItemDraft): FieldErrors {
   const errors: FieldErrors = {};
   if (!d.name.trim()) errors.name = 'review.errors.NAME_REQUIRED';
+  if (!d.image_file_id) errors.image_file_id = 'catalog.errors.IMAGE_REQUIRED';
   if (!d.unit) errors.unit = 'catalog.errors.UNIT_REQUIRED';
   if (!d.category_id) errors.category_id = 'review.errors.CATEGORY_REQUIRED';
   return errors;
@@ -48,8 +49,9 @@ function newItemOf(d: ItemDraft, lineImage: string | null): ConvertItem {
   };
 }
 
-export function ConvertDialog({ line, onSubmit, onClose }: {
+export function ConvertDialog({ line, who, onSubmit, onClose }: {
   line: ReviewableLine;
+  who?: string;
   onSubmit: (item: ConvertItem) => Promise<void>;
   onClose: () => void;
 }) {
@@ -86,7 +88,7 @@ export function ConvertDialog({ line, onSubmit, onClose }: {
   const targetUnit = mode === 'new' ? draft.unit : chosen?.unit;
   const unitMismatch = !!targetUnit && !!line.custom_unit && targetUnit !== line.custom_unit;
   const dirty = pickedMode !== null || pickedId !== null || JSON.stringify(draft) !== JSON.stringify(initial);
-  const canSubmit = !saving && !uploading && (mode === 'existing' ? !!chosen : draft.image_file_id !== null);
+  const canSubmit = !saving && !uploading && (mode === 'existing' ? !!chosen : true);
 
   const set = <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => {
     setDraft((d) => ({ ...d, [key]: value }));
@@ -149,14 +151,26 @@ export function ConvertDialog({ line, onSubmit, onClose }: {
           </fieldset>
           {unitMismatch && (
             <p role="status" className="alert alert--warn a-form-wide">
-              {t('review.convert.unitMismatch', { unit: t(`catalog.units.${line.custom_unit}`), qty: line.qty })}
+              {mode === 'existing' && chosen
+                ? t('review.convert.unitMismatchExisting', {
+                    from: t(`catalog.units.${line.custom_unit}`),
+                    item: chosen.name,
+                    to: t(`catalog.units.${chosen.unit}`),
+                    qty: line.qty,
+                    who: who ?? t('review.convert.whoFallback'),
+                  })
+                : t('review.convert.unitMismatch', { unit: t(`catalog.units.${line.custom_unit}`), qty: line.qty })}
             </p>
+          )}
+          {mode === 'new' && line.image_file_id && draft.image_file_id === line.image_file_id && !errors.image_file_id && (
+            <p className="ff-hint a-form-wide">{t('review.convert.imageFromStaff')}</p>
           )}
           {mode === 'new' ? (
             <ItemFields
               draft={draft}
               errors={errors}
               categories={categories.data ?? []}
+              imageRequired
               withSortOrder={false}
               onChange={set}
               onUploadingChange={setUploading}

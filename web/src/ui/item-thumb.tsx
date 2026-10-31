@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from 'react';
 import type { Tone } from '@/lib/group-tone';
 import { Icon } from './icon';
 
-export type ThumbSize = 34 | 36 | 48 | 96 | 'card';
+export type ThumbSize = 34 | 36 | 48 | 96 | 120 | 'card';
 
 export function ItemThumb({ fileId, alt, tone, size }: { fileId: string | null; alt: string; tone: Tone; size: ThumbSize }) {
   const [failedId, setFailedId] = useState<string | null>(null);

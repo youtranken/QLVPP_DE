@@ -136,7 +136,7 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     expect(within(pick).queryByRole('option', { name: /Băng keo cũ/ })).toBeNull();
     expect(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' })).toBeDisabled();
     await userEvent.selectOptions(pick, 'i-2');
-    expect(within(dialog).getByText('ĐVT khác dòng gốc (cái) — số lượng 2 sẽ tính theo ĐVT mới.')).toBeInTheDocument();
+    expect(within(dialog).getByText('Nhân viên đặt theo «cái», Băng keo trong tính theo «cuộn». Số lượng giữ nguyên 2 — kiểm tra lại với người đăng ký.')).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(sentBody(fetchMock)).toEqual({ action: 'convert', item: { existing_id: 'i-2' } });

@@ -13,6 +13,7 @@ export function ItemFields({
   errors,
   categories,
   keepCategoryId,
+  imageRequired = false,
   withSortOrder = true,
   onChange,
   onUploadingChange,
@@ -21,6 +22,7 @@ export function ItemFields({
   errors: FieldErrors;
   categories: Category[];
   keepCategoryId?: string | null;
+  imageRequired?: boolean;
   withSortOrder?: boolean;
   onChange: <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => void;
   onUploadingChange: (busy: boolean) => void;
@@ -36,6 +38,7 @@ export function ItemFields({
         <ImageField
           fileId={draft.image_file_id}
           error={err('image_file_id')}
+          required={imageRequired}
           onChange={(id) => onChange('image_file_id', id)}
           onBusyChange={onUploadingChange}
         />

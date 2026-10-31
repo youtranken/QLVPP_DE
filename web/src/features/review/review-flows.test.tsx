@@ -1,0 +1,162 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { renderApp } from '@/test/render-app';
+import { makeMe } from '@/test/fixtures-me';
+import { mockViewport } from '@/test/viewport';
+import { PERIOD } from '@/test/request-api-stub';
+import type { AdminItem, Category } from '@/features/catalog/catalog.api';
+import { reviewResult, reviewRow } from './review-fixtures';
+
+const ROWS = [
+  reviewRow(),
+  reviewRow({ line_id: 'l-2', custom_name: 'Bìa còng', image_file_id: null, full_name: 'Võ Thị Lan' }),
+];
+const CATEGORIES: Category[] = [{ id: 'c-1', name: 'Văn phòng', name_en: null, sort_order: 0, active: true }];
+const ITEM = {
+  id: 'i-2', code: null, name: 'Băng keo trong', name_en: null, unit: 'cuon', pack_note: null, category_id: 'c-1',
+  image_file_id: 'f-x', admin_only: false, max_qty: 20, stock_qty: 0, restock_level: null, stock_state: 'untracked',
+  active: true, sort_order: 0, missing_image: false,
+} as AdminItem;
+
+function stub(review: (id: string) => Response) {
+  const fetchMock = vi.fn((url: string) => {
+    if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
+    if (url.startsWith('/api/admin/review')) return Promise.resolve(jsonResponse(200, { items: url.includes('status=pending') ? ROWS : [] }));
+    const m = /^\/api\/admin\/lines\/(.+)\/review$/.exec(url);
+    if (m) return Promise.resolve(review(m[1]!));
+    if (url === '/api/admin/items') return Promise.resolve(jsonResponse(200, [ITEM]));
+    if (url.startsWith('/api/item-categories')) return Promise.resolve(jsonResponse(200, CATEGORIES));
+    return Promise.resolve(jsonResponse(200, []));
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
+const posts = (f: ReturnType<typeof stub>) => f.mock.calls.filter((c) => /\/review$/.test(String(c[0])) && !String(c[0]).startsWith('/api/admin/review'));
+const card = (name: string) => screen.findByRole('article', { name });
+
+async function open(name: string, action: RegExp) {
+  const a = await card(name);
+  await userEvent.click(within(a).getByRole('button', { name: action }));
+  return a;
+}
+
+afterEach(() => vi.unstubAllGlobals());
+
+describe('ReviewPage — xử lý dòng', () => {
+  it('Từ chối: server REASON_REQUIRED → lỗi gắn ô lý do, hộp vẫn mở', async () => {
+    mockViewport(1280);
+    stub(() => jsonResponse(400, { code: 'REASON_REQUIRED' }));
+    renderApp(makeMe('admin'), '/admin/review');
+    await open('Băng keo 2 mặt', /^Từ chối… —/);
+    const dialog = screen.getByRole('dialog');
+    await userEvent.type(within(dialog).getByLabelText('Lý do từ chối'), 'abc');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
+    await waitFor(() => expect(within(dialog).getByLabelText('Lý do từ chối')).toHaveAttribute('aria-invalid', 'true'));
+    expect(within(dialog).getByText('Nhập lý do từ chối (ít nhất 3 ký tự).')).toBeInTheDocument();
+  });
+
+  it('Từ chối thành công: thẻ ở lại với badge "Đã từ chối", câu lý do, "vừa xong" và toast', async () => {
+    mockViewport(1280);
+    stub(() => jsonResponse(200, reviewResult('rejected', { review_note: 'Kho còn' })));
+    renderApp(makeMe('admin'), '/admin/review');
+    const a = await open('Băng keo 2 mặt', /^Từ chối… —/);
+    const dialog = screen.getByRole('dialog');
+    await userEvent.type(within(dialog).getByLabelText('Lý do từ chối'), 'Kho còn');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
+    expect(await within(a).findByText('Đã từ chối')).toBeInTheDocument();
+    expect(within(a).getByText('Lý do: Kho còn')).toBeInTheDocument();
+    expect(within(a).getByText('vừa xong')).toBeInTheDocument();
+    expect(within(a).queryByRole('button', { name: /^Chấp nhận/ })).toBeNull();
+    expect(screen.getByText('Đã từ chối Băng keo 2 mặt')).toBeInTheDocument();
+  });
+
+  it('Chấp nhận: hộp nêu số lượng, tháng, người; bấm đúp "Chấp nhận" chỉ gửi 1 POST; badge "Đã chấp nhận"', async () => {
+    mockViewport(1280);
+    const fetchMock = stub(() => jsonResponse(200, reviewResult('accepted')));
+    renderApp(makeMe('admin'), '/admin/review');
+    const a = await open('Băng keo 2 mặt', /^Chấp nhận —/);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveTextContent('Hành chính sẽ mua 2 cái cho phiếu tháng 11 của Phạm Văn Đức.');
+    await userEvent.dblClick(within(dialog).getByRole('button', { name: 'Chấp nhận' }));
+    expect(await within(a).findByText('Đã chấp nhận')).toBeInTheDocument();
+    expect(posts(fetchMock)).toHaveLength(1);
+    expect(screen.getByText('Đã chấp nhận Băng keo 2 mặt')).toBeInTheDocument();
+  });
+
+  it('LINE_ALREADY_REVIEWED → khối "Dòng này vừa được xử lý ở nơi khác." và làm mới danh sách', async () => {
+    mockViewport(1280);
+    const fetchMock = stub(() => jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' }));
+    renderApp(makeMe('admin'), '/admin/review');
+    await open('Băng keo 2 mặt', /^Chấp nhận —/);
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Chấp nhận' }));
+    expect(await screen.findByText('Dòng này vừa được xử lý ở nơi khác.')).toBeInTheDocument();
+    const pendingLoads = () => fetchMock.mock.calls.filter((c) => c[0] === '/api/admin/review?status=pending').length;
+    await waitFor(() => expect(pendingLoads()).toBe(2));
+  });
+});
+
+describe('ReviewPage — Thêm vào danh mục', () => {
+  async function openConvert(name = 'Băng keo 2 mặt') {
+    await open(name, /^Thêm vào danh mục… —/);
+    const dialog = screen.getByRole('dialog');
+    await within(dialog).findByRole('option', { name: 'Văn phòng' });
+    return dialog;
+  }
+  const submit = (d: HTMLElement) => userEvent.click(within(d).getByRole('button', { name: 'Thêm vào danh mục' }));
+
+  it('dòng không ảnh: ô "Ảnh món *" bắt buộc; bấm Thêm mà chưa tải → lỗi ở ô ảnh, không gửi', async () => {
+    mockViewport(1280);
+    const fetchMock = stub(() => jsonResponse(200, reviewResult('converted')));
+    renderApp(makeMe('admin'), '/admin/review');
+    const dialog = await openConvert('Bìa còng');
+    expect(within(dialog).getByRole('group', { name: 'Ảnh món' })).toHaveTextContent('Ảnh món *');
+    expect(within(dialog).queryByText(/Dùng ảnh nhân viên đã gửi/)).toBeNull();
+    await userEvent.selectOptions(within(dialog).getByLabelText('Nhóm'), 'c-1');
+    await submit(dialog);
+    expect(within(dialog).getByText('Món phải có ảnh — chọn hoặc chụp một ảnh.')).toBeInTheDocument();
+    expect(posts(fetchMock)).toHaveLength(0);
+  });
+
+  it('dòng có ảnh: chú thích dùng ảnh nhân viên đã gửi; server IMAGE_REQUIRED → lỗi ở ô ảnh', async () => {
+    mockViewport(1280);
+    stub(() => jsonResponse(400, { code: 'IMAGE_REQUIRED' }));
+    renderApp(makeMe('admin'), '/admin/review');
+    const dialog = await openConvert();
+    expect(within(dialog).getByText('Dùng ảnh nhân viên đã gửi làm ảnh món; đổi được ở Danh mục.')).toBeInTheDocument();
+    await userEvent.selectOptions(within(dialog).getByLabelText('Nhóm'), 'c-1');
+    await submit(dialog);
+    expect(await within(dialog).findByText('Món phải có ảnh — chọn hoặc chụp một ảnh.')).toBeInTheDocument();
+    expect(within(dialog).queryByText(/Dùng ảnh nhân viên đã gửi/)).toBeNull();
+  });
+
+  it.each([
+    ['item.name', 'Tên món'],
+    ['item.max_qty', 'Tối đa mỗi tháng'],
+  ])('VALIDATION {fields:[%s]} → lỗi gắn đúng ô "%s"', async (field, label) => {
+    mockViewport(1280);
+    stub(() => jsonResponse(400, { code: 'VALIDATION', fields: [field] }));
+    renderApp(makeMe('admin'), '/admin/review');
+    const dialog = await openConvert();
+    await userEvent.selectOptions(within(dialog).getByLabelText('Nhóm'), 'c-1');
+    await submit(dialog);
+    await waitFor(() => expect(within(dialog).getByLabelText(label)).toHaveAttribute('aria-invalid', 'true'));
+    expect(within(dialog).queryByRole('alert')).toBeNull();
+  });
+
+  it('món có sẵn khác ĐVT → cảnh báo đúng câu; thành công → thẻ "Đã thêm vào danh mục" + toast', async () => {
+    mockViewport(1280);
+    stub(() => jsonResponse(200, reviewResult('converted', { item_id: 'i-2' }, { unit_mismatch: true })));
+    renderApp(makeMe('admin'), '/admin/review');
+    const dialog = await openConvert();
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
+    await userEvent.selectOptions(within(dialog).getByLabelText('Món trong danh mục'), 'i-2');
+    expect(
+      within(dialog).getByText('Nhân viên đặt theo «cái», Băng keo trong tính theo «cuộn». Số lượng giữ nguyên 2 — kiểm tra lại với Phạm Văn Đức.'),
+    ).toBeInTheDocument();
+    await submit(dialog);
+    const a = await card('Băng keo 2 mặt');
+    expect(await within(a).findByText('Đã thêm vào danh mục')).toBeInTheDocument();
+    expect(screen.getByText(/^Đã gắn Băng keo 2 mặt vào Băng keo trong/)).toBeInTheDocument();
+  });
+});

@@ -1,18 +1,20 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
+import { PageHeader } from '@/ui/page-header';
+import { Segmented } from '@/ui/segmented';
+import { useToast } from '@/ui/toast-context';
 import { useAdminItems } from '@/features/catalog/catalog.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
-import { REVIEW_FILTERS, useReviewCache, useReviewLines, type ReviewFilter, type ReviewRow } from './review.api';
+import { REVIEW_FILTERS, useReviewCache, useReviewCounts, useReviewLines, type ReviewBody, type ReviewResult, type ReviewRow } from './review.api';
 import { ReviewCard } from './review-card';
+import { useReviewParams } from './use-review-params';
 import '@/features/admin/admin.css';
-import './review.css';
-import { YM } from '@/lib/ym';
+import './review.m1.css';
 
-// Cùng mẫu với api/src/common/ym.ts
 const MONTHS_BACK = 12;
 
+// Cùng mẫu với api/src/common/ym.ts
 function recentMonths(openYm: string | undefined): string[] {
   if (!openYm) return [];
   const [y, m] = openYm.split('-').map(Number);
@@ -22,58 +24,72 @@ function recentMonths(openYm: string | undefined): string[] {
   });
 }
 
-const isFilter = (s: string | null): s is ReviewFilter => REVIEW_FILTERS.includes(s as ReviewFilter);
-
 // Dòng đã thêm vào danh mục không còn custom_name: lấy tên món đích
-function useRowName() {
+function useItemNames() {
   const items = useAdminItems();
-  const names = useMemo(() => new Map((items.data ?? []).map((i) => [i.id, i.name])), [items.data]);
-  return (row: ReviewRow) => row.custom_name ?? (row.item_id ? names.get(row.item_id) : undefined) ?? '';
+  return useMemo(() => new Map((items.data ?? []).map((i) => [i.id, i.name])), [items.data]);
 }
 
 export function ReviewPage() {
   const { t } = useTranslation();
-  const [params, setParams] = useSearchParams();
-  const askedStatus = params.get('status');
-  const status: ReviewFilter = isFilter(askedStatus) ? askedStatus : 'pending';
-  const askedYm = params.get('ym') ?? '';
-  const ym = YM.test(askedYm) ? askedYm : '';
+  const p = useReviewParams();
   const current = useCurrentPeriod();
   const months = recentMonths(current.data?.ym);
-  const list = useReviewLines(status, ym);
+  const list = useReviewLines(p.status, p.ym);
+  const counts = useReviewCounts(p.ym);
   const cache = useReviewCache();
-  const rowName = useRowName();
+  const toast = useToast();
+  const itemNames = useItemNames();
   const [staleNotice, setStaleNotice] = useState(false);
+  const rowName = (row: ReviewRow) => row.custom_name ?? (row.item_id ? itemNames.get(row.item_id) : undefined) ?? '';
 
-  const update = (next: { status?: ReviewFilter; ym?: string }) => {
-    const s = next.status ?? status;
-    const y = next.ym ?? ym;
+  const change = (next: () => void) => {
     setStaleNotice(false);
-    setParams({ ...(s !== 'pending' ? { status: s } : {}), ...(y ? { ym: y } : {}) });
+    next();
   };
 
+  const done = (name: string, result: ReviewResult, body: ReviewBody) => {
+    void cache.markListStale();
+    void cache.refreshOtherTabs(p.status);
+    const status = result.line.review_status;
+    const text =
+      body.action === 'convert' && 'existing_id' in body.item
+        ? t('review.toast.linked', { name, item: itemNames.get(body.item.existing_id) ?? '' })
+        : t(`review.toast.${status === 'converted' ? 'converted' : status}`, { name });
+    // Toast hiện một cái một lúc: cảnh báo ĐVT đi chung câu kết quả
+    toast.show(
+      result.unit_mismatch
+        ? { tone: 'warn', text: `${text} ${t('review.actions.unitMismatch', { qty: result.line.qty })}` }
+        : { text },
+    );
+  };
+
+  const tabs = REVIEW_FILTERS.map((f) => ({ value: f, label: t(`review.filters.${f}`), count: counts[f] }));
+
   return (
-    <div className="a-stack">
-      <div className="a-toolbar rv-tools">
-        <div role="radiogroup" aria-label={t('review.filters.label')} className="seg seg--sm rv-filter">
-          {REVIEW_FILTERS.map((f) => (
-            <button key={f} type="button" role="radio" aria-checked={status === f} onClick={() => update({ status: f })}>
-              {t(`review.filters.${f}`)}
-            </button>
-          ))}
-        </div>
-        <label className="rv-period">
-          <span>{t('review.period')}</span>
-          <select className="a-input" value={ym} onChange={(e) => update({ ym: e.target.value })}>
-            <option value="">{t('review.allPeriods')}</option>
-            {months.map((m) => (
-              <option key={m} value={m}>
-                {t('review.month', { month: Number(m.slice(5)), year: m.slice(0, 4) })}
-              </option>
-            ))}
-          </select>
-        </label>
+    <div className="rv-page">
+      <PageHeader
+        crumbs={[t('nav.groups.monthly'), t('nav.review')]}
+        title={t('nav.review')}
+        description={t('review.page.description')}
+        actions={
+          <label className="rv-period">
+            <span>{t('review.period')}</span>
+            <select className="a-input" value={p.ym} onChange={(e) => change(() => p.setMonth(e.target.value))}>
+              <option value="">{t('review.allPeriods')}</option>
+              {months.map((m) => (
+                <option key={m} value={m}>
+                  {t('review.month', { month: Number(m.slice(5)), year: m.slice(0, 4) })}
+                </option>
+              ))}
+            </select>
+          </label>
+        }
+      />
+      <div className="rv-tabs">
+        <Segmented label={t('review.filters.label')} value={p.status} options={tabs} onChange={(s) => change(() => p.setStatus(s))} />
       </div>
+      <p className="rv-note">{t('review.page.note')}</p>
       {staleNotice && (
         <p role="status" className="alert alert--warn">
           {t('review.staleNotice')}
@@ -84,15 +100,25 @@ export function ReviewPage() {
       ) : list.isPending ? (
         <Loading />
       ) : list.data.items.length === 0 ? (
-        <EmptyState title={t(status === 'pending' ? 'review.emptyPending' : 'review.empty')} />
+        <EmptyState
+          art="no-match"
+          title={t(`review.empty.${p.status}`)}
+          action={
+            p.status === 'pending' ? (
+              <button type="button" className="btn" onClick={() => change(() => p.setStatus('accepted'))}>
+                {t('review.empty.pendingAction')}
+              </button>
+            ) : undefined
+          }
+        />
       ) : (
-        <div className="rv-list">
+        <div className="rv-grid">
           {list.data.items.map((row) => (
             <ReviewCard
               key={row.line_id}
               row={row}
               name={rowName(row)}
-              onDone={() => void cache.markListStale()}
+              onDone={(result, body) => done(rowName(row), result, body)}
               onStale={() => setStaleNotice(true)}
             />
           ))}

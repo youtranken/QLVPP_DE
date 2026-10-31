@@ -63,7 +63,7 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       await expect(page.getByRole('heading', { level: 1, name: 'Món ngoài danh mục' })).toBeVisible();
       await expect(page.getByRole('radio', { name: 'Chờ xem' })).toHaveAttribute('aria-checked', 'true');
       const card = page.getByRole('article', { name });
-      await expect(card.getByText('2 cái')).toBeVisible();
+      await expect(card.getByText('2 cái · Phiếu tháng')).toBeVisible();
       await expect(card.getByText('“Loại 2 cm”')).toBeVisible();
       await card.scrollIntoViewIfNeeded();
       const photo = card.getByRole('img', { name: `Ảnh ${name}` });
@@ -133,8 +133,9 @@ test.describe('E3-S5 món ngoài danh mục', () => {
     try {
       await routeAs(page, devHeaders('admin'));
       await page.goto(`/admin/review?ym=${prevYm}`);
-      await expect(page.getByLabel('Kỳ')).toHaveValue(prevYm);
       const card = page.getByRole('article', { name });
+      await expect(card).toBeVisible();
+      await expect(page.getByLabel('Kỳ')).toHaveValue(prevYm);
       await card.getByRole('button', { name: 'Từ chối…' }).click();
       const dialog = page.getByRole('dialog', { name: `Từ chối “${name}”` });
       const submit = dialog.getByRole('button', { name: 'Từ chối', exact: true });
@@ -143,11 +144,12 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       await snap(page, info, 'reject-dialog');
       await submit.click();
       await expect(dialog).toBeHidden();
-      await expect(card.getByText(`Từ chối: ${reason}`)).toBeVisible();
+      await expect(card.getByText('Đã từ chối')).toBeVisible();
+      await expect(card.getByText(`Lý do: ${reason}`)).toBeVisible();
 
-      await page.getByRole('radio', { name: 'Từ chối' }).click();
+      await page.getByRole('radio', { name: /^Từ chối/ }).click();
       await expect(page).toHaveURL(/status=rejected/);
-      await expect(page.getByRole('article', { name }).getByText(`Từ chối: ${reason}`)).toBeVisible();
+      await expect(page.getByRole('article', { name }).getByText(`Lý do: ${reason}`)).toBeVisible();
       await snap(page, info, 'rejected-list');
 
       const mp = await pageAs(browser, info, member);
@@ -161,5 +163,101 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${prevYm}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${prevYm}-01')`);
       release();
     }
+  });
+});
+
+const longName = (stamp: string, len: number) => `PW ${stamp} `.padEnd(len, 'x');
+
+test.describe('E9-S2 món ngoài danh mục', () => {
+  test('E9-S2 Món ngoài danh mục: chấp nhận, từ chối có lý do, thêm vào danh mục món mới', async ({ page, request }, info) => {
+    test.setTimeout(120_000);
+    const stamp = `${Date.now()}-${info.project.name}`;
+    const sub = `pw-rvs-${stamp}`;
+    const member = { 'x-dev-user-sub': sub, 'x-dev-role': 'member' };
+    const names = { accept: `PW chấp nhận ${stamp}`, reject: `PW từ chối ${stamp}`, big: `PW món lớn ${stamp}`, one: `PW món một ${stamp}` };
+    seedActiveUser(sub, `PW Review ${info.project.name}`);
+    const created: string[] = [];
+    try {
+      const period = await (await request.get('/api/periods/current', { headers: member })).json();
+      const saved = await request.put('/api/me/request/lines', {
+        headers: member,
+        data: { ym: period.ym, lines: Object.values(names).map((n) => ({ custom_name: n, custom_unit: 'cai', qty: 1 })) },
+      });
+      expect(saved.status()).toBe(200);
+      const pendingCount = ((await (await request.get(`/api/admin/review?status=pending&ym=${period.ym}`, { headers: devHeaders('admin') })).json()) as { items: unknown[] }).items.length;
+
+      await routeAs(page, devHeaders('admin'));
+      await page.goto(`/admin/review?ym=${period.ym}`);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+      await expect(page.getByRole('radio', { name: new RegExp(`^Chờ xem\\s*${pendingCount}$`) })).toBeVisible();
+      const cardOf = (n: string) => page.getByRole('article', { name: n });
+      await expect(cardOf(names.accept).getByText('Không có ảnh')).toBeVisible();
+      if (isMobile(info)) await expectNoContrastViolations(page);
+
+      const accept = cardOf(names.accept);
+      await accept.getByRole('button', { name: /^Chấp nhận —/ }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Chấp nhận', exact: true }).click();
+      await expect(accept.getByText('Đã chấp nhận', { exact: true })).toBeVisible();
+
+      const reject = cardOf(names.reject);
+      await reject.getByRole('button', { name: 'Từ chối…' }).click();
+      const rejectDialog = page.getByRole('dialog', { name: `Từ chối “${names.reject}”` });
+      await rejectDialog.getByLabel('Lý do từ chối').fill('ab');
+      await expect(rejectDialog.getByRole('button', { name: 'Từ chối', exact: true })).toBeDisabled();
+      await rejectDialog.getByLabel('Lý do từ chối').fill('abc');
+      await rejectDialog.getByRole('button', { name: 'Từ chối', exact: true }).click();
+      await expect(reject.getByText('Đã từ chối')).toBeVisible();
+
+      const convert = async (n: string) => {
+        await cardOf(n).getByRole('button', { name: 'Thêm vào danh mục…' }).click();
+        const dialog = page.getByRole('dialog', { name: `Thêm “${n}” vào danh mục` });
+        await dialog.getByLabel('Nhóm').selectOption({ index: 1 });
+        await expect(dialog.getByRole('group', { name: 'Ảnh món' })).toContainText('*');
+        await dialog.getByRole('button', { name: 'Thêm vào danh mục', exact: true }).click();
+        await expect(dialog.getByText('Món phải có ảnh — chọn hoặc chụp một ảnh.')).toBeVisible();
+        await dialog.getByLabel('Chọn hoặc chụp ảnh').setInputFiles(FIXTURE);
+        await expect(dialog.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
+        return { dialog, submit: () => dialog.getByRole('button', { name: 'Thêm vào danh mục', exact: true }).click() };
+      };
+
+      const big = await convert(names.big);
+      const finalName = longName(stamp, 120);
+      await big.dialog.getByLabel('Tên món').fill(longName(stamp, 121));
+      await big.submit();
+      await expect(big.dialog.getByLabel('Tên món')).toHaveAttribute('aria-invalid', 'true');
+      await big.dialog.getByLabel('Tên món').fill(finalName);
+      for (const bad of ['0', '1000']) {
+        await big.dialog.getByLabel('Tối đa mỗi tháng').fill(bad);
+        await big.submit();
+        await expect(big.dialog.getByLabel('Tối đa mỗi tháng')).toHaveAttribute('aria-invalid', 'true');
+      }
+      await big.dialog.getByLabel('Tối đa mỗi tháng').fill('999');
+      await big.submit();
+      await expect(big.dialog).toBeHidden();
+      await expect(cardOf(names.big).getByText('Đã thêm vào danh mục', { exact: true })).toBeVisible();
+
+      const one = await convert(names.one);
+      await one.dialog.getByLabel('Tối đa mỗi tháng').fill('1');
+      await one.submit();
+      await expect(one.dialog).toBeHidden();
+      await expect(cardOf(names.one).getByText('Đã thêm vào danh mục', { exact: true })).toBeVisible();
+
+      const items: { id: string; name: string }[] = await (await request.get('/api/admin/items', { headers: devHeaders('admin') })).json();
+      created.push(...items.filter((i) => i.name === finalName || i.name === names.one).map((i) => i.id));
+      expect(created).toHaveLength(2);
+      await page.getByRole('radio', { name: /^Đã chấp nhận/ }).click();
+      await expect(cardOf(names.accept)).toBeVisible();
+    } finally {
+      deleteTestUsers(sub);
+      for (const id of created) await removeTestItem(request, id);
+    }
+  });
+
+  test('E9-S2 Món ngoài danh mục: lỗi tải danh sách → "Không tải được dữ liệu — thử lại." + "Thử lại"', async ({ page }) => {
+    await routeAs(page, devHeaders('admin'));
+    await page.route('**/api/admin/review*', (route) => route.fulfill({ status: 500, json: { code: 'INTERNAL' } }));
+    await page.goto('/admin/review');
+    await expect(page.getByRole('main').getByText('Không tải được dữ liệu — thử lại.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Thử lại' })).toBeVisible();
   });
 });

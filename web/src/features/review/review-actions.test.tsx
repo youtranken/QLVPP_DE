@@ -70,7 +70,7 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Chấp nhận — Băng keo 2 mặt' }));
     const dialog = screen.getByRole('dialog', { name: 'Chấp nhận “Băng keo 2 mặt”?' });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Chấp nhận' }));
-    await waitFor(() => expect(onDone).toHaveBeenCalledWith(result));
+    await waitFor(() => expect(onDone).toHaveBeenCalledWith(result, expect.objectContaining({ action: expect.any(String) })));
     expect(onDone.mock.calls[0][0].request_updated_at).toBe('2026-11-05T08:00:00.000Z');
     const call = fetchMock.mock.calls.find((c) => c[0] === '/api/admin/lines/l-1/review')!;
     expect(call[1]?.method).toBe('POST');
@@ -94,7 +94,7 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
     await userEvent.type(within(dialog).getByLabelText('Lý do từ chối'), 'Đã có trong kho');
     expect(submit).toBeEnabled();
     await userEvent.click(submit);
-    await waitFor(() => expect(onDone).toHaveBeenCalledWith(result));
+    await waitFor(() => expect(onDone).toHaveBeenCalledWith(result, expect.objectContaining({ action: expect.any(String) })));
     const call = fetchMock.mock.calls.find((c) => c[0] === '/api/admin/lines/l-1/review')!;
     expect(JSON.parse(String(call[1]?.body))).toEqual({ action: 'reject', note: 'Đã có trong kho' });
     expect(screen.getByText('Từ chối: Đã có trong kho')).toBeInTheDocument();
