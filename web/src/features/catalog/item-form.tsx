@@ -17,17 +17,22 @@ import { ItemFields } from '@/features/catalog/item-fields';
 export function ItemForm({
   item,
   categories,
+  categoryId,
   onClose,
 }: {
   item: AdminItem | null;
   categories: Category[];
+  categoryId?: string | null;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
   const me = useMe();
   const refresh = useRefreshCatalog();
   const uid = useId();
-  const initial = useMemo(() => draftFrom(item, me.config.default_max_qty), [item, me.config.default_max_qty]);
+  const initial = useMemo(() => {
+    const draft = draftFrom(item, me.config.default_max_qty);
+    return !item && categoryId ? { ...draft, category_id: categoryId } : draft;
+  }, [item, categoryId, me.config.default_max_qty]);
   const [draft, setDraft] = useState(initial);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [uploading, setUploading] = useState(false);

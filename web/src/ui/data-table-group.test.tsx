@@ -73,7 +73,7 @@ describe('DataTable — nhóm dính', () => {
 
   it('chọn 1/2 hàng của nhóm → checkbox nhóm lửng; chọn đủ 2/2 → checked', async () => {
     renderWithI18n(<Selectable />);
-    const groupBox = screen.getByRole('checkbox', { name: 'Chọn nhóm Bút & viết · 2 món' }) as HTMLInputElement;
+    const groupBox = screen.getByRole('checkbox', { name: 'Chọn cả nhóm Bút & viết · 2 món' }) as HTMLInputElement;
     expect(groupBox).not.toBeChecked();
     expect(groupBox.indeterminate).toBe(false);
     await userEvent.click(within(rowOf('Bút bi xanh')).getByRole('checkbox'));
@@ -86,11 +86,42 @@ describe('DataTable — nhóm dính', () => {
 
   it('bấm checkbox nhóm chọn đúng các hàng của nhóm; ô chọn tất cả thành lửng', async () => {
     renderWithI18n(<Selectable />);
-    await userEvent.click(screen.getByRole('checkbox', { name: 'Chọn nhóm Bút & viết · 2 món' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Chọn cả nhóm Bút & viết · 2 món' }));
     expect(within(rowOf('Bút bi xanh')).getByRole('checkbox')).toBeChecked();
     expect(within(rowOf('Bút chì 2B')).getByRole('checkbox')).toBeChecked();
     expect(within(rowOf('Giấy A4')).getByRole('checkbox')).not.toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'Chọn tất cả' })).toBePartiallyChecked();
+  });
+});
+
+describe('DataTable — nhóm điều khiển từ ngoài, khe phụ', () => {
+  function Controlled() {
+    const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+    return (
+      <>
+        <button type="button" onClick={() => setCollapsed(new Set(['Bút & viết', 'Giấy & sổ']))}>
+          Thu hết
+        </button>
+        <DataTable data={ITEMS} columns={COLUMNS} emptyText="Trống" groupBy={GROUP_BY} collapsed={collapsed} onCollapsedChange={setCollapsed} />
+      </>
+    );
+  }
+
+  it('collapsed + onCollapsedChange: thu từ ngoài ẩn mọi nhóm; chevron vẫn mở lại từng nhóm', async () => {
+    renderWithI18n(<Controlled />);
+    await userEvent.click(screen.getByRole('button', { name: 'Thu hết' }));
+    expect(screen.queryByText('Bút bi xanh')).not.toBeInTheDocument();
+    expect(screen.queryByText('Giấy A4')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Thu/mở nhóm Giấy & sổ · 1 món' }));
+    expect(screen.getByText('Giấy A4')).toBeInTheDocument();
+    expect(screen.queryByText('Bút bi xanh')).not.toBeInTheDocument();
+  });
+
+  it('groupBy.aside dựng ngoài tiêu đề: không lẫn vào tên checkbox nhóm', () => {
+    const aside = (key: string) => <button type="button">Thêm vào {key}</button>;
+    renderWithI18n(<DataTable data={ITEMS} columns={COLUMNS} emptyText="Trống" groupBy={{ ...GROUP_BY, aside }} selection={{ selected: new Set(), onToggle: () => {}, onToggleAll: () => {} }} />);
+    expect(screen.getByRole('button', { name: 'Thêm vào Bút & viết' })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Chọn cả nhóm Bút & viết · 2 món' })).toBeInTheDocument();
   });
 });
 

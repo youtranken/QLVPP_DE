@@ -45,6 +45,8 @@ interface DataTableProps<T> {
   activeRowId?: string;
   density?: 'compact';
   busy?: boolean;
+  collapsed?: ReadonlySet<string>;
+  onCollapsedChange?: (next: ReadonlySet<string>) => void;
 }
 
 export function DataTable<T>({
@@ -67,9 +69,13 @@ export function DataTable<T>({
   activeRowId,
   density,
   busy,
+  collapsed: controlledCollapsed,
+  onCollapsedChange,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const [internalCollapsed, setInternalCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const collapsed = controlledCollapsed ?? internalCollapsed;
+  const setCollapsed = onCollapsedChange ?? setInternalCollapsed;
   const [internalSort, setInternalSort] = useState<SortingState>(initialSort);
   const [globalFilter, setGlobalFilter] = useState('');
   const sorting = controlledSorting ?? internalSort;
@@ -97,13 +103,12 @@ export function DataTable<T>({
   const rows = table.getRowModel().rows;
   const colSpan = table.getAllLeafColumns().length + (selection ? 1 : 0);
   const picked = selection ? rows.filter((r) => selection.selected.has(r.id)).length : 0;
-  const toggleGroup = (key: string) =>
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+  const toggleGroup = (key: string) => {
+    const next = new Set(collapsed);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    setCollapsed(next);
+  };
   const bodyRow = (row: Row<T>) => (
     <BodyRow
       key={row.id}

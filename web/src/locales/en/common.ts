@@ -49,7 +49,7 @@ const common: Messages<typeof vi> = {
       bulkLabel: 'Actions for selected rows',
       selected: '{{count}} {{label}} selected',
       clearSelection: 'Clear selection',
-      selectGroup: 'Select group',
+      selectGroup: 'Select whole group',
       toggleGroup: 'Collapse/expand group',
     },
     empty: '—',

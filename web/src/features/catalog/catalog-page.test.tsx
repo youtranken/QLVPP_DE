@@ -1,117 +1,163 @@
-import { describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
-import { renderApp } from '@/test/render-app';
-import { makeMe } from '@/test/fixtures-me';
-import { mockViewport } from '@/test/viewport';
-import type { AdminItem, Category } from '@/features/catalog/catalog.api';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { screen, userEvent, within } from '@/test/test-utils';
+import { CATEGORIES, OLD, PAPER, PEN, PENCIL, STRAY, adminItem } from './catalog-fixtures';
+import { inRow, openCatalog, rowOf } from './catalog-fixtures-api';
 
-const CATEGORIES: Category[] = [
-  { id: 'c-1', name: 'Giấy & sổ', name_en: 'Paper', sort_order: 0, active: true },
-  { id: 'c-2', name: 'Bút & viết', name_en: 'Pens', sort_order: 1, active: true },
-];
+const ITEMS = [PAPER, PEN, PENCIL, OLD];
+const location = () => screen.getByTestId('location-search').textContent;
+const card = (name: RegExp) => screen.getByRole('button', { name });
+const chips = () => within(screen.getByRole('group', { name: 'Lọc theo nhóm' }));
+const groupHead = (name: string) => screen.getByRole('button', { name: `Thêm món vào nhóm ${name}` }).closest('tr') as HTMLElement;
 
-function item(over: Partial<AdminItem>): AdminItem {
-  return {
-    id: 'i-x',
-    code: null,
-    name: 'Món',
-    name_en: null,
-    unit: 'cai',
-    pack_note: null,
-    category_id: 'c-1',
-    image_file_id: 'f-1',
-    admin_only: false,
-    max_qty: 20,
-    stock_qty: 0,
-    restock_level: null,
-    stock_state: 'untracked',
-    active: true,
-    sort_order: 0,
-    missing_image: false,
-    ...over,
-  };
-}
+afterEach(() => vi.unstubAllGlobals());
 
-const ITEMS: AdminItem[] = [
-  item({ id: 'i-1', name: 'Giấy A4', unit: 'ram', admin_only: true, image_file_id: null, missing_image: true }),
-  item({ id: 'i-2', name: 'Bút bi xanh', unit: 'cay', pack_note: 'hộp 20 cây', category_id: 'c-2', image_file_id: 'f-2' }),
-  item({ id: 'i-3', name: 'Bút xóa cũ', category_id: 'c-2', active: false }),
-];
-
-function stubApi() {
-  const fetchMock = vi.fn((url: string, init?: RequestInit) => {
-    if (url === '/api/admin/items') return Promise.resolve(jsonResponse(200, ITEMS));
-    if (url === '/api/item-categories?all=1') return Promise.resolve(jsonResponse(200, CATEGORIES));
-    if (url.startsWith('/api/admin/items/') && init?.method === 'PATCH') {
-      return Promise.resolve(jsonResponse(200, { ...ITEMS[1], active: false }));
-    }
-    return Promise.resolve(jsonResponse(404, { code: 'NOT_FOUND' }));
-  });
-  vi.stubGlobal('fetch', fetchMock);
-  return fetchMock;
-}
-
-async function openCatalog() {
-  mockViewport(1280);
-  const fetchMock = stubApi();
-  renderApp(makeMe('admin'), '/admin/catalog');
-  await screen.findByText('Bút bi xanh');
-  return fetchMock;
-}
-
-const rowOf = (name: string) => screen.getByText(name).closest('tr') as HTMLElement;
-
-describe('Trang Danh mục', () => {
-  it('món missing_image hiện nhãn "thiếu ảnh"; món có ảnh hiện thumbnail /api/files/:id', async () => {
-    await openCatalog();
-    expect(within(rowOf('Giấy A4')).getByText('thiếu ảnh')).toBeInTheDocument();
-    expect(within(rowOf('Bút bi xanh')).getByRole('img', { name: 'Bút bi xanh' })).toHaveAttribute(
-      'src',
-      '/api/files/f-2',
-    );
-  });
-
-  it('dòng hiện quy cách cạnh tên, ĐVT, nhóm và cờ Hành chính', async () => {
-    await openCatalog();
-    const row = within(rowOf('Bút bi xanh'));
-    expect(row.getByText('hộp 20 cây')).toBeInTheDocument();
-    expect(row.getByText('cây')).toBeInTheDocument();
-    expect(row.getByText('Bút & viết')).toBeInTheDocument();
-    expect(within(rowOf('Giấy A4')).getByText('Chỉ Hành chính')).toBeInTheDocument();
-  });
-
-  it('nhóm lấy cả nhóm đã ngừng (?all=1); mặc định ẩn món đã ngừng, bật "Hiện món đã ngừng" thì hiện kèm nhãn', async () => {
-    const fetchMock = await openCatalog();
-    expect(fetchMock.mock.calls.map((c) => c[0])).toContain('/api/item-categories?all=1');
-    expect(screen.queryByText('Bút xóa cũ')).toBeNull();
-    await userEvent.click(screen.getByLabelText('Hiện món đã ngừng'));
-    expect(within(rowOf('Bút xóa cũ')).getByText('đã ngừng')).toBeInTheDocument();
-  });
-
-  it('lọc theo nhóm chỉ còn món của nhóm đó', async () => {
-    await openCatalog();
-    await userEvent.selectOptions(screen.getByLabelText('Lọc theo nhóm'), 'c-1');
-    expect(screen.getByText('Giấy A4')).toBeInTheDocument();
-    expect(screen.queryByText('Bút bi xanh')).toBeNull();
-  });
-
-  it('"Ngừng món" hỏi xác nhận rồi PATCH {active:false}', async () => {
-    const fetchMock = await openCatalog();
-    await userEvent.click(within(rowOf('Bút bi xanh')).getByRole('button', { name: 'Ngừng món' }));
-    const dialog = await screen.findByRole('dialog');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Ngừng món' }));
-    await vi.waitFor(() =>
-      expect(fetchMock.mock.calls.some((c) => c[0] === '/api/admin/items/i-2')).toBe(true),
-    );
-    const [, init] = fetchMock.mock.calls.find((c) => c[0] === '/api/admin/items/i-2') as [string, RequestInit];
-    expect(init.method).toBe('PATCH');
-    expect(JSON.parse(String(init.body))).toEqual({ active: false });
-  });
-
-  it('nút "Thêm món" mở form; liên kết "Nhóm món" tới /admin/categories', async () => {
-    await openCatalog();
+describe('Danh mục — đầu trang, thẻ, lọc', () => {
+  it('đúng một h1 "Danh mục" + mô tả; "Nhóm món" tới /admin/categories; nhóm lấy cả nhóm đã ngừng (?all=1)', async () => {
+    const f = await openCatalog({ items: ITEMS });
+    expect(f.mock.calls.map((c) => c[0])).toContain('/api/item-categories?all=1');
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Danh mục');
+    expect(screen.getByText(/^Nhân viên thấy món theo đúng thứ tự nhóm dưới đây/)).toBeInTheDocument();
     expect(within(screen.getByRole('main')).getByRole('link', { name: 'Nhóm món' })).toHaveAttribute('href', '/admin/categories');
-    await userEvent.click(screen.getByRole('button', { name: 'Thêm món' }));
+  });
+
+  it('thẻ chỉ đếm món đang dùng: Đang dùng 3 món · 2 nhóm, Sắp hết 1, Hết hàng 1, Thiếu ảnh 1', async () => {
+    await openCatalog({ items: ITEMS });
+    expect(card(/^Đang dùng/)).toHaveTextContent('3');
+    expect(card(/^Đang dùng/)).toHaveTextContent('2 nhóm');
+    expect(card(/^Sắp hết/)).toHaveTextContent('1');
+    expect(card(/^Hết hàng/)).toHaveTextContent('1');
+    expect(card(/^Thiếu ảnh/)).toHaveTextContent('nhân viên không chọn được');
+  });
+
+  it('thẻ "Thiếu ảnh" → ?filter=noimage, chỉ món thiếu ảnh, "Đang lọc: Thiếu ảnh · 1"; bấm lại bỏ lọc', async () => {
+    await openCatalog({ items: ITEMS });
+    await userEvent.click(card(/^Thiếu ảnh/));
+    expect(location()).toBe('?filter=noimage');
+    expect(card(/^Thiếu ảnh/)).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('Đang lọc: Thiếu ảnh · 1')).toBeInTheDocument();
+    expect(screen.queryByText('Bút bi xanh')).toBeNull();
+    expect(inRow('Giấy A4').getByText('Thiếu ảnh')).toBeInTheDocument();
+    await userEvent.click(card(/^Thiếu ảnh/));
+    expect(location()).toBe('');
+    expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
+  });
+
+  it('thẻ "Đang dùng" bỏ mọi lọc (filter, nhóm)', async () => {
+    await openCatalog({ items: ITEMS }, '/admin/catalog?filter=out&cat=c-pen');
+    expect(screen.queryByText('Giấy A4')).toBeNull();
+    await userEvent.click(card(/^Đang dùng/));
+    expect(location()).toBe('');
+    expect(screen.getByText('Giấy A4')).toBeInTheDocument();
+  });
+
+  it('chip nhóm aria-pressed; chọn "Bút & viết" → ?cat=c-pen chỉ còn món nhóm đó; "Tất cả nhóm" trả lại', async () => {
+    await openCatalog({ items: ITEMS });
+    expect(chips().getByRole('button', { name: /^Tất cả nhóm/ })).toHaveAttribute('aria-pressed', 'true');
+    const pens = chips().getByRole('button', { name: /^Bút & viết/ });
+    expect(pens).toHaveTextContent('2');
+    await userEvent.click(pens);
+    expect(location()).toBe('?cat=c-pen');
+    expect(pens).toHaveAttribute('aria-pressed', 'true');
+    expect(chips().getByRole('button', { name: /^Tất cả nhóm/ })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.queryByText('Giấy A4')).toBeNull();
+    await userEvent.click(chips().getByRole('button', { name: /^Tất cả nhóm/ }));
+    expect(screen.getByText('Giấy A4')).toBeInTheDocument();
+  });
+
+  it('công tắc "Hiện món đã ngừng (1)" → ?inactive=1, món ngừng hiện kèm badge "Ngừng"', async () => {
+    await openCatalog({ items: ITEMS });
+    expect(screen.queryByText('Bút xóa cũ')).toBeNull();
+    const toggle = screen.getByRole('switch', { name: 'Hiện món đã ngừng (1)' });
+    await userEvent.click(toggle);
+    expect(location()).toBe('?inactive=1');
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+    expect(inRow('Bút xóa cũ').getByText('Ngừng')).toBeInTheDocument();
+  });
+
+  it('ô tìm "Tìm trong 3 món" lọc qua ?q=', async () => {
+    await openCatalog({ items: ITEMS });
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm trong 3 món' }), 'but chi');
+    await vi.waitFor(() => expect(location()).toBe('?q=but+chi'));
+    expect(screen.queryByText('Bút bi xanh')).toBeNull();
+    expect(screen.getByText('Bút chì 2B')).toBeInTheDocument();
+  });
+
+  it('không món nào khớp → "Không có món nào khớp" + "Bỏ lọc" trả lại bảng', async () => {
+    await openCatalog({ items: ITEMS }, '/admin/catalog?q=khongco');
+    expect(await screen.findByText('Không có món nào khớp')).toBeInTheDocument();
+    await userEvent.click(within(screen.getByRole('table')).getByRole('button', { name: 'Bỏ lọc' }));
+    expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
+  });
+});
+
+describe('Danh mục — bảng nhóm', () => {
+  it('nhóm theo thứ tự nhóm, tiêu đề "{n} món · {k} sắp hết · {h} hết hàng"', async () => {
+    await openCatalog({ items: ITEMS });
+    const heads = screen.getAllByRole('button', { name: /^Thêm món vào nhóm / }).map((b) => b.getAttribute('aria-label'));
+    expect(heads).toEqual(['Thêm món vào nhóm Giấy & sổ', 'Thêm món vào nhóm Bút & viết']);
+    expect(groupHead('Giấy & sổ')).toHaveTextContent('1 món · 1 sắp hết');
+    expect(groupHead('Bút & viết')).toHaveTextContent('2 món · 1 hết hàng');
+  });
+
+  it('món có category_id lạ → nhóm "Chưa xếp nhóm" ở cuối, không lỗi (Review Focus 5)', async () => {
+    await openCatalog({ items: [PEN, STRAY] });
+    expect(within(screen.getByRole('table')).getByText('Chưa xếp nhóm')).toBeInTheDocument();
+    expect(rowOf('Kẹp lạ')).toBeInTheDocument();
+  });
+
+  it('danh sách nhóm rỗng → mọi món dưới "Chưa xếp nhóm"', async () => {
+    await openCatalog({ items: [PEN, PAPER], categories: [] });
+    expect(within(screen.getByRole('table')).getByText('Chưa xếp nhóm')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /^Chọn cả nhóm Chưa xếp nhóm/ })).toBeInTheDocument();
+  });
+
+  it('hàng: mã, quy cách, ĐVT, tồn + nhãn trạng thái, badge "Chỉ Hành chính"/"Thiếu ảnh"; mã trống hiện "—"', async () => {
+    await openCatalog({ items: ITEMS });
+    expect(screen.getByRole('columnheader', { name: 'Mã' })).toBeInTheDocument();
+    expect(inRow('Bút bi xanh').getByText('VPP-010')).toBeInTheDocument();
+    expect(inRow('Bút bi xanh').getByText('hộp 20 cây')).toBeInTheDocument();
+    expect(inRow('Bút bi xanh').getByText('cây')).toBeInTheDocument();
+    expect(inRow('Bút chì 2B').getByText('—')).toBeInTheDocument();
+    expect(inRow('Bút chì 2B').getByText('Hết hàng')).toBeInTheDocument();
+    expect(inRow('Giấy A4').getByText('Sắp hết')).toBeInTheDocument();
+    expect(inRow('Giấy A4').getByText('Chỉ Hành chính')).toBeInTheDocument();
+    expect(inRow('Bút bi xanh').getByRole('img', { name: 'Bút bi xanh' })).toHaveAttribute('src', '/api/files/f-2');
+  });
+
+  it('"Thu tất cả" ẩn mọi hàng món, nút thành "Mở tất cả"', async () => {
+    await openCatalog({ items: ITEMS });
+    await userEvent.click(screen.getByRole('button', { name: 'Thu tất cả' }));
+    expect(screen.queryByText('Bút bi xanh')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Mở tất cả' }));
+    expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
+  });
+
+  it('"Thêm món" mở form ?item=new; "Thêm món vào nhóm" chọn sẵn nhóm; bấm hàng mở form sửa ?item=id', async () => {
+    await openCatalog({ items: ITEMS });
+    await userEvent.click(within(screen.getByRole('main')).getAllByRole('button', { name: 'Thêm món' })[0]);
+    expect(location()).toBe('?item=new');
     expect(await screen.findByRole('dialog', { name: 'Thêm món' })).toBeInTheDocument();
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Hủy' }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Thêm món vào nhóm Bút & viết' }));
+    expect(location()).toBe('?item=new&itemCat=c-pen');
+    const dialog = await screen.findByRole('dialog', { name: 'Thêm món' });
+    expect(within(dialog).getByLabelText('Nhóm')).toHaveValue('c-pen');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Hủy' }));
+
+    await userEvent.click(screen.getByText('hộp 20 cây'));
+    expect(location()).toBe('?item=i-pen');
+    expect(await screen.findByRole('dialog', { name: 'Sửa món' })).toBeInTheDocument();
+  });
+
+  it('145 món nhập không ảnh, không nhóm: một nhóm "Chưa xếp nhóm", thẻ Thiếu ảnh 145', async () => {
+    const many = Array.from({ length: 145 }, (_, i) =>
+      adminItem({ id: `i-${i}`, name: `Món nhập ${i}`, category_id: null, image_file_id: null, missing_image: true }),
+    );
+    await openCatalog({ items: many, categories: CATEGORIES });
+    expect(card(/^Thiếu ảnh/)).toHaveTextContent('145');
+    expect(screen.queryAllByRole('button', { name: /^Thêm món vào nhóm / })).toHaveLength(0);
+    expect(screen.getAllByText(/^Món nhập \d+$/)).toHaveLength(145);
   });
 });

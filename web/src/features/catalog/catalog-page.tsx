@@ -1,126 +1,152 @@
-import { useCallback, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useMe } from '@/lib/me';
-import { useConfirm } from '@/ui/confirm-context';
-import { DataTable } from '@/ui/data-table';
+import { useUrlSearchBox } from '@/lib/use-url-search-box';
+import { FilterNotice } from '@/ui/filter-notice';
 import { LoadError } from '@/ui/load-state';
-import {
-  categoryLabel,
-  patchItem,
-  useAdminItems,
-  useAllCategories,
-  useRefreshCatalog,
-  type AdminItem,
-} from '@/features/catalog/catalog.api';
-import { catalogErrorKey } from '@/features/catalog/catalog-errors';
-import { useCatalogColumns } from '@/features/catalog/catalog-columns';
-import { ItemForm } from '@/features/catalog/item-form';
-import '@/features/catalog/catalog.css';
+import { PageHeader } from '@/ui/page-header';
+import { categoryLabel, useAdminItems, useAllCategories, useRefreshCatalog } from './catalog.api';
+import { applyView, byActive, catalogStats, groupCounts, indexCategories, toRows } from './catalog-rows';
+import { CatalogStats } from './catalog-stats';
+import { CatalogTable } from './catalog-table';
+import { CatalogToolbar } from './catalog-toolbar';
+import { CategoryChips } from './category-chips';
+import { BulkMaxDialog, BulkMoveDialog } from './bulk-dialogs';
+import { ItemForm } from './item-form';
+import { useBulkItems } from './use-bulk-items';
+import { useCatalogActions } from './use-catalog-actions';
+import { useCatalogParams } from './use-catalog-params';
+import '@/features/admin/admin.css';
+import './catalog.css';
+import './catalog.m1.css';
 
-// undefined = form đóng, null = thêm món mới
-type Editing = AdminItem | null | undefined;
+type BulkDialog = 'max' | 'move' | null;
+
+function useCatalogData(view: ReturnType<typeof useCatalogParams>['view']) {
+  const items = useAdminItems();
+  const categories = useAllCategories();
+  const index = useMemo(() => indexCategories(categories.data ?? []), [categories.data]);
+  const all = useMemo(() => toRows(items.data ?? [], index), [items.data, index]);
+  const base = useMemo(() => byActive(all, view.inactive), [all, view.inactive]);
+  const rows = useMemo(() => applyView(all, view), [all, view]);
+  const stats = useMemo(() => catalogStats(items.data ?? [], categories.data ?? []), [items.data, categories.data]);
+  const counts = useMemo(() => groupCounts(base), [base]);
+  return { items, categories, index, all, base, rows, stats, counts };
+}
 
 export function CatalogPage() {
   const { t, i18n } = useTranslation();
-  const { csrfToken } = useMe();
-  const confirm = useConfirm();
+  const p = useCatalogParams();
+  const d = useCatalogData(p.view);
   const refresh = useRefreshCatalog();
-  const items = useAdminItems();
-  const categories = useAllCategories();
-  const [categoryId, setCategoryId] = useState('');
-  const [showInactive, setShowInactive] = useState(false);
-  const [editing, setEditing] = useState<Editing>(undefined);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const bulk = useBulkItems(refresh);
+  const actions = useCatalogActions(refresh, bulk.setRowError);
+  const [search, setSearch] = useUrlSearchBox(p.view.q, p.setQ);
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const [dialog, setDialog] = useState<BulkDialog>(null);
+  const title = t('catalog.title');
+  const orderedIds = d.all.map((r) => r.id);
+  const groupKeys = [...d.counts.keys()];
+  const allCollapsed = groupKeys.length > 0 && groupKeys.every((k) => collapsed.has(k));
+  const editing = p.itemId && p.itemId !== 'new' ? d.items.data?.find((i) => i.id === p.itemId) : undefined;
 
-  const toggleActive = useCallback(
-    async (item: AdminItem) => {
-      const verb = item.active ? 'deactivate' : 'reactivate';
-      const ok = await confirm({
-        title: t(`catalog.page.${verb}Title`, { name: item.name }),
-        message: t(`catalog.page.${verb}Body`),
-        confirmLabel: t(`catalog.page.${verb}`),
-        danger: item.active,
-      });
-      if (!ok) return;
-      setActionError(null);
-      try {
-        await patchItem(item.id, { active: !item.active }, csrfToken);
-        void refresh();
-      } catch (e) {
-        setActionError(t(catalogErrorKey(e)));
+  const runBulk = async (body: Parameters<typeof bulk.run>[1], doneText: (n: number) => string) => {
+    await bulk.run(orderedIds, body, doneText);
+    setDialog(null);
+  };
+  const deactivateSelected = async () => {
+    if (await actions.confirmDeactivateMany(bulk.count)) await bulk.run(orderedIds, { active: false }, (n) => t('catalog.bulk.deactivated', { n }));
+  };
+
+  const header = (
+    <PageHeader
+      crumbs={[t('nav.groups.stock'), title]}
+      title={title}
+      description={t('catalog.list.description')}
+      actions={
+        <>
+          <Link className="btn" to="/admin/categories">
+            {t('catalog.page.categoriesLink')}
+          </Link>
+          <button type="button" className="btn btn--primary" onClick={() => p.openItemDrawer('new')}>
+            {t('catalog.page.add')}
+          </button>
+        </>
       }
-    },
-    [confirm, csrfToken, refresh, t],
+    />
   );
 
-  const columns = useCatalogColumns({
-    categories: categories.data ?? [],
-    onEdit: setEditing,
-    onToggleActive: toggleActive,
-  });
-
-  if (items.isError || categories.isError) {
+  if (d.items.isError || d.categories.isError) {
     return (
-      <LoadError
-        onRetry={() => {
-          void items.refetch();
-          void categories.refetch();
-        }}
-      />
+      <div className="ct-page">
+        {header}
+        <LoadError
+          onRetry={() => {
+            void d.items.refetch();
+            void d.categories.refetch();
+          }}
+        />
+      </div>
     );
   }
 
-  const rows = (items.data ?? []).filter(
-    (i) => (showInactive || i.active) && (!categoryId || i.category_id === categoryId),
-  );
-
+  const loaded = d.items.isSuccess && d.categories.isSuccess;
   return (
-    <div className="a-stack">
-      <div className="a-toolbar">
-        <select
-          className="a-input"
-          aria-label={t('catalog.page.categoryFilter')}
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-        >
-          <option value="">{t('catalog.page.allCategories')}</option>
-          {(categories.data ?? []).map((c) => (
-            <option key={c.id} value={c.id}>
-              {categoryLabel(c, i18n.language)}
-            </option>
-          ))}
-        </select>
-        <label className="a-check-inline">
-          <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} />
-          {t('catalog.page.showInactive')}
-        </label>
-        <span className="sp" />
-        <Link className="btn" to="/admin/categories">
-          {t('catalog.page.categoriesLink')}
-        </Link>
-        <button type="button" className="btn btn--primary" onClick={() => setEditing(null)}>
-          {t('catalog.page.add')}
-        </button>
-      </div>
-      {actionError && (
-        <p role="alert" className="alert alert--danger">
-          {actionError}
-        </p>
+    <div className="ct-page">
+      {header}
+      {loaded && <CatalogStats stats={d.stats} filter={p.view.filter} onFilter={p.toggleFilter} onClear={p.clearAll} />}
+      <CatalogToolbar
+        search={search}
+        onSearch={setSearch}
+        searchable={d.base.length}
+        inactiveCount={d.stats.inactive}
+        showInactive={p.view.inactive}
+        onToggleInactive={p.toggleInactive}
+        allCollapsed={allCollapsed}
+        onToggleCollapse={() => setCollapsed(allCollapsed ? new Set() : new Set(groupKeys))}
+        bulk={{ count: bulk.count, pending: bulk.pending, onMax: () => setDialog('max'), onMove: () => setDialog('move'), onDeactivate: () => void deactivateSelected(), onClear: bulk.clear }}
+      />
+      {loaded && <CategoryChips index={d.index} counts={d.counts} total={d.base.length} value={p.view.cat} onChange={p.setCat} />}
+      {p.view.filter && <FilterNotice label={t(`catalog.stats.${p.view.filter === 'noimage' ? 'noImage' : p.view.filter}`)} count={d.rows.length} onClear={p.clearFilter} />}
+      <CatalogTable
+        rows={d.rows}
+        index={d.index}
+        loading={!loaded}
+        selection={bulk.selection}
+        rowErrors={bulk.rowErrors}
+        collapsed={collapsed}
+        onCollapsedChange={setCollapsed}
+        onOpen={(id) => p.openItemDrawer(id)}
+        onAddToGroup={(cat) => p.openItemDrawer('new', cat)}
+        onSaveMax={actions.saveMax}
+        onToggleActive={(row) => void actions.toggleActive(row)}
+        empty={{
+          hint: t('catalog.list.emptyHint'),
+          action: (
+            <span className="ct-empty-actions">
+              <button type="button" className="btn" onClick={p.clearAll}>
+                {t('common.filter.clear')}
+              </button>
+              <button type="button" className="btn" onClick={() => p.openItemDrawer('new')}>
+                {t('catalog.page.add')}
+              </button>
+            </span>
+          ),
+        }}
+      />
+      {dialog === 'max' && (
+        <BulkMaxDialog count={bulk.count} onClose={() => setDialog(null)} onSubmit={(n) => runBulk({ max_qty: n }, (k) => t('catalog.bulk.maxDone', { n: k }))} />
       )}
-      <section className="a-panel">
-        <DataTable
-          data={rows}
-          columns={columns}
-          loading={items.isPending || categories.isPending}
-          emptyText={t('catalog.page.empty')}
-          searchPlaceholder={t('catalog.page.search')}
-          rowClassName={(r) => (r.active ? '' : 'is-inactive')}
-          stackOnMobile
+      {dialog === 'move' && (
+        <BulkMoveDialog
+          count={bulk.count}
+          categories={d.index.ordered}
+          onClose={() => setDialog(null)}
+          onSubmit={(cat) => runBulk({ category_id: cat.id }, (k) => t('catalog.bulk.moveDone', { n: k, name: categoryLabel(cat, i18n.language) }))}
         />
-      </section>
-      {editing !== undefined && (
-        <ItemForm item={editing} categories={categories.data ?? []} onClose={() => setEditing(undefined)} />
+      )}
+      {loaded && (p.itemId === 'new' || editing) && (
+        <ItemForm item={editing ?? null} categories={d.categories.data ?? []} categoryId={p.itemCategoryId} onClose={p.closeItemDrawer} />
       )}
     </div>
   );

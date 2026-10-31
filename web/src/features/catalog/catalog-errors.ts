@@ -34,3 +34,9 @@ export function fieldErrors(e: unknown, fieldOfCode: Record<string, string>, kno
   const field = code ? fieldOfCode[code] : undefined;
   return { [field ?? 'form']: catalogErrorKey(e) };
 }
+
+// Lỗi một món trong bảng (sửa tại chỗ, công tắc, hàng loạt): hiện tại hàng, không toast
+export function rowErrorText(e: unknown, t: (key: string) => string): string {
+  if (apiErrorCode(e) === 'VALIDATION' && apiErrorFields(e).includes('max_qty')) return t('catalog.list.maxRange');
+  return t(catalogErrorKey(e));
+}

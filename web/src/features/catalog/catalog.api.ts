@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 
@@ -72,7 +73,7 @@ export function useAllCategories() {
 
 export function useRefreshCatalog() {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: CATALOG_KEY });
+  return useCallback(() => qc.invalidateQueries({ queryKey: CATALOG_KEY }), [qc]);
 }
 
 function send<T>(method: 'POST' | 'PATCH', path: string, body: unknown, csrfToken: string | null) {

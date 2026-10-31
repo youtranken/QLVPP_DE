@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDebouncedValue } from '@/lib/use-debounced-value';
+import { useUrlSearchBox } from '@/lib/use-url-search-box';
 import { vnDeadlineDay, vnLockDate } from '@/lib/format-time';
 import { Loading, LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
@@ -26,28 +26,6 @@ import '@/features/admin/admin.css';
 import './summary.m1.css';
 
 const MAX_SEARCH = 100;
-
-// Gõ → đẩy q (debounce) lên URL; q đổi từ ngoài (Back, liên kết) → đồng bộ lại ô
-function useSearchBox(q: string, setQ: (v: string) => void) {
-  const [text, setText] = useState(q);
-  const debounced = useDebouncedValue(text.trim(), 300);
-  const pushed = useRef(q);
-  const push = useRef(setQ);
-  useEffect(() => {
-    push.current = setQ;
-  });
-  useEffect(() => {
-    if (debounced === pushed.current) return;
-    pushed.current = debounced;
-    push.current(debounced);
-  }, [debounced]);
-  useEffect(() => {
-    if (q === pushed.current) return;
-    pushed.current = q;
-    setText(q);
-  }, [q]);
-  return [text, setText] as const;
-}
 
 function MonthControl({ ym, openYm, summary, onChange }: { ym: string; openYm: string; summary?: PeriodSummary; onChange: (v: string) => void }) {
   const { t } = useTranslation();
@@ -75,7 +53,7 @@ export function SummaryPage() {
   const p = useSummaryParams(openYm);
   const summary = usePeriodSummary(p.ym);
   const items = useAdminItems();
-  const [search, setSearch] = useSearchBox(p.q, p.setQ);
+  const [search, setSearch] = useUrlSearchBox(p.q, p.setQ);
   const [creating, setCreating] = useState<{ user: DirectoryUser | null } | null>(null);
   const personFilter = p.filter === 'low' || p.filter === 'unregistered' ? null : p.filter;
   const listed = p.view === 'person' && p.filter !== 'unregistered';

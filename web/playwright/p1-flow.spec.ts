@@ -28,7 +28,7 @@ async function createCategoryAndItem(page: Page, category: string, itemName: str
   await expect(page.getByText(category, { exact: true })).toBeVisible();
 
   await page.getByRole('link', { name: 'Về Danh mục' }).click();
-  await page.getByRole('button', { name: 'Thêm món' }).click();
+  await page.getByRole('button', { name: 'Thêm món', exact: true }).click();
   const form = page.getByRole('dialog', { name: 'Thêm món' });
   await form.getByLabel('Tên món').fill(itemName);
   await form.getByLabel('Đơn vị tính').selectOption({ label: 'cái' });

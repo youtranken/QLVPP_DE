@@ -49,7 +49,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await shot(page, info, 'categories');
 
       await page.getByRole('link', { name: 'Về Danh mục' }).click();
-      await page.getByRole('button', { name: 'Thêm món' }).click();
+      await page.getByRole('button', { name: 'Thêm món', exact: true }).click();
       const form = page.getByRole('dialog', { name: 'Thêm món' });
       await expect(form.getByText('Cần có ảnh')).toBeVisible();
       await expect(form.getByRole('button', { name: 'Thêm món' })).toBeDisabled();
@@ -67,21 +67,21 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await form.getByRole('button', { name: 'Thêm món' }).click();
       await expect(form).toBeHidden();
 
-      await page.getByLabel('Lọc theo nhóm').selectOption({ label: category });
+      await page.getByRole('group', { name: 'Lọc theo nhóm' }).getByRole('button', { name: category }).click();
       await expect(page.getByText(itemName, { exact: true })).toBeVisible();
       await expect(page.getByText('hộp 10 cây')).toBeVisible();
       await expectImageServed(page, page.getByRole('img', { name: itemName }));
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'catalog');
 
-      await page.getByRole('button', { name: 'Ngừng món' }).click();
-      const confirm = page.getByRole('dialog', { name: `Ngừng món “${itemName}”?` });
-      await confirm.getByRole('button', { name: 'Ngừng món' }).click();
+      await page.getByRole('switch', { name: `Ngừng ${itemName}` }).click();
+      const confirm = page.getByRole('dialog', { name: `Ngừng ${itemName}?` });
+      await confirm.getByRole('button', { name: 'Ngừng', exact: true }).click();
       await expect(page.getByText(itemName, { exact: true })).toBeHidden();
-      await page.getByLabel('Hiện món đã ngừng').check();
+      await page.getByRole('switch', { name: /^Hiện món đã ngừng/ }).click();
       const itemRow = page.getByRole('row').filter({ hasText: itemName });
-      await expect(itemRow.getByText('đã ngừng', { exact: true })).toBeVisible();
-      await expect(itemRow.getByRole('button', { name: 'Mở lại' })).toBeVisible();
+      await expect(itemRow.getByText('Ngừng', { exact: true })).toBeVisible();
+      await expect(itemRow.getByRole('switch', { name: `Mở lại ${itemName}` })).toBeVisible();
 
       await page.getByRole('main').getByRole('link', { name: 'Nhóm món' }).click();
       const row = page.getByRole('row').filter({ hasText: category });
@@ -93,13 +93,14 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
     }
   });
 
-  test('E1-S5 trang Danh mục hiện nhãn "thiếu ảnh" cho món seed', async ({ page }, info) => {
+  test('E1-S5 trang Danh mục hiện nhãn "Thiếu ảnh" cho món seed', async ({ page }, info) => {
     await page.goto('/admin/catalog');
-    await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill('Giấy A4');
+    const search = page.getByRole('searchbox', { name: /^Tìm trong \d+ món$/ });
+    await search.fill('Giấy A4');
     const row = page.getByRole('row').filter({ hasText: 'Giấy A4' });
-    await expect(row.getByText('thiếu ảnh')).toBeVisible();
+    await expect(row.getByText('Thiếu ảnh', { exact: true })).toBeVisible();
     await expect(row.getByText('Chỉ Hành chính')).toBeVisible();
-    await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill('');
+    await search.fill('');
     await expect(page.getByText('Bút bi xanh')).toBeVisible();
     await shot(page, info, 'catalog-seed', false);
   });

@@ -8,6 +8,7 @@ import { SelectBox } from '@/ui/data-table-row';
 export interface GroupBy<T> {
   key: (row: T) => string;
   header: (groupKey: string, rows: T[]) => ReactNode;
+  aside?: (groupKey: string, rows: T[]) => ReactNode;
 }
 
 export interface RowGroup<T> {
@@ -56,6 +57,7 @@ export function GroupHeaderRow<T>({
           <span id={`${id}-title`} className="dt-group__title">
             {groupBy.header(group.key, group.rows.map((r) => r.original))}
           </span>
+          {groupBy.aside?.(group.key, group.rows.map((r) => r.original))}
           <button
             type="button"
             id={`${id}-btn`}
