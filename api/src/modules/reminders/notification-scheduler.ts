@@ -103,7 +103,8 @@ export class NotificationScheduler
   }
 
   private async remind(open: Period, now: Date): Promise<number> {
-    if (!isReminderDay(now, open.deadline)) return 0;
+    const daysLeft = await this.config.getInt('reminder_days_left');
+    if (!isReminderDay(now, open.deadline, daysLeft)) return 0;
     return this.notify({
       eventId: eventIds.reminder(open.ym),
       recipients: await this.summary.unregisteredSubs(open.ym),

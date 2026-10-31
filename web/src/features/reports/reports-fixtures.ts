@@ -57,7 +57,10 @@ export const snapshotDataFixture = (over: Partial<SnapshotData> = {}): SnapshotD
   kind: 'print',
   period_ym: '2026-10',
   order_qty: { [PEN_KEY]: 14, 'item-glue': 0, [TAPE_KEY]: 5 },
-  signers: { preparer: 'Lê Thị Hoa', head: 'Ngô Văn Bảo', approver: 'Đỗ Minh Châu' },
+  signature_boxes: [
+    { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: 'Ngô Văn Bảo' },
+    { title: 'Người yêu cầu', title_en: 'Applicant', name: 'Lê Thị Hoa' },
+  ],
   created_by: { sub: 'u-admin', name: 'Trần Thị Bình' },
   created_at: '2026-10-28T02:30:00Z',
   ...over,

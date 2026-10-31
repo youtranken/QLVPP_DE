@@ -116,6 +116,7 @@ describe('Song ngữ các màn Plan 3', () => {
         issues: [{ ...ISSUE, reason: 'Weekly meeting' }],
       }),
       order_qty: { 'item-pen': 14, 'custom:tape': 5 },
+      signature_boxes: undefined,
       signers: { preparer: 'Le Thi Hoa', head: 'Ngo Van Bao', approver: 'Do Minh Chau' },
       created_by: { sub: 'u-admin', name: 'Tran Thi Binh' },
     });

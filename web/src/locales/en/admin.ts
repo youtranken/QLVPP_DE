@@ -106,9 +106,6 @@ const admin: Messages<typeof vi> = {
     signers: {
       title: 'Report signers',
       hint: 'Names printed in the report footer.',
-      preparer: 'Prepared by',
-      head: 'Head of department',
-      approver: 'Approved by',
       save: 'Save signers',
     },
     contact: {

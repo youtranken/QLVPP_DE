@@ -102,7 +102,9 @@ const data: SnapshotData = {
   ],
   pending_custom_count: 0,
   order_qty: { [ITEM]: 7, [PLAIN]: 1, [CUSTOM]: 3 },
-  signers: { preparer: 'A', head: 'B', approver: 'C' },
+  signature_boxes: [
+    { title: 'Người yêu cầu', title_en: 'Applicant', name: 'A' },
+  ],
   created_by: { sub: 'admin', name: 'Hành chính' },
   created_at: '2026-11-12T03:00:00.000Z',
 };

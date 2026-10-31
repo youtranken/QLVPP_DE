@@ -10,6 +10,7 @@ import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
 
 const silent = { log: () => undefined };
+const BOX = { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: '' };
 const ADMIN_SUB = 'e2e-config-admin';
 // Marker runtime do auth e2e chạy song song xóa/ghi; không thuộc phạm vi PUT admin/config
 const EDITABLE_CONFIG_SQL =
@@ -76,7 +77,8 @@ describe('admin/config + public-config', () => {
       'default_max_qty',
       'low_stock_notify',
       'registration_last_day',
-      'signers',
+      'reminder_days_left',
+      'signature_boxes',
     ]);
   });
 
@@ -84,6 +86,19 @@ describe('admin/config + public-config', () => {
     [{ registration_last_day: 29 }, 'registration_last_day'],
     [{ registration_last_day: 2 }, 'registration_last_day'],
     [{ registration_last_day: '10' }, 'registration_last_day'],
+    [{ reminder_days_left: 0 }, 'reminder_days_left'],
+    [{ reminder_days_left: 8 }, 'reminder_days_left'],
+    [{ signature_boxes: [] }, 'signature_boxes'],
+    [{ signature_boxes: [BOX, BOX, BOX, BOX] }, 'signature_boxes'],
+    [
+      { signature_boxes: [BOX, { ...BOX, title: 'x'.repeat(61) }] },
+      'signature_boxes.1.title',
+    ],
+    [
+      { signature_boxes: [{ ...BOX, name: 'x'.repeat(201) }] },
+      'signature_boxes.0.name',
+    ],
+    [{ signers: { head: 'A' } }, 'signers'],
     [{ default_max_qty: 0 }, 'default_max_qty'],
     [{ default_max_qty: 1000 }, 'default_max_qty'],
     [{ admin_group: '  ' }, 'admin_group'],
@@ -99,7 +114,6 @@ describe('admin/config + public-config', () => {
   });
 
   it.each([
-    ['registration_last_day', 3],
     ['registration_last_day', 28],
     ['default_max_qty', 1],
     ['default_max_qty', 999],
@@ -134,41 +148,77 @@ describe('admin/config + public-config', () => {
     expect(res.body.default_max_qty).not.toBe(30);
   });
 
-  it('PUT {signers: {preparer}} → merge: admin_group và các người ký khác giữ nguyên, audit config.updated before/after', async () => {
-    await put({
-      signers: { preparer: 'P0', head: 'Trưởng phòng', approver: 'GĐ' },
+  it.each([1, 3])(
+    'PUT signature_boxes %d ô → 200, thay cả mảng (không gộp), audit config.updated before/after',
+    async (n) => {
+      const first = [
+        { ...BOX, name: 'Cũ' },
+        { ...BOX, title: 'Người yêu cầu' },
+      ];
+      await put({ signature_boxes: first }).expect(200);
+      const next = Array.from({ length: n }, (_, i) => ({
+        title: `Ô ${i} ${'t'.repeat(50)}`.slice(0, 60),
+        title_en: '',
+        name: 'n'.repeat(200),
+      }));
+      const res = await put({ signature_boxes: next }).expect(200);
+      expect(res.body.signature_boxes).toEqual(next);
+      expect(res.body.admin_group).toBe('vpp_admin');
+      const audit = await pool.query(
+        `SELECT object_id, detail FROM audit_log
+         WHERE action = 'config.updated' AND actor = $1
+         ORDER BY created_at DESC LIMIT 1`,
+        [ADMIN_SUB],
+      );
+      expect(audit.rows[0]).toEqual({
+        object_id: 'signature_boxes',
+        detail: {
+          before: { signature_boxes: first },
+          after: { signature_boxes: next },
+        },
+      });
+    },
+  );
+
+  it('PUT title dài đúng 60 → 200', async () => {
+    const res = await put({
+      signature_boxes: [{ ...BOX, title: 'x'.repeat(60) }],
     }).expect(200);
-    const res = await put({ signers: { preparer: 'A' } }).expect(200);
-    expect(res.body.admin_group).toBe('vpp_admin');
-    expect(res.body.signers).toEqual({
-      preparer: 'A',
-      head: 'Trưởng phòng',
-      approver: 'GĐ',
+    expect(res.body.signature_boxes[0].title).toBe('x'.repeat(60));
+  });
+
+  it.each([1, 7])(
+    'PUT reminder_days_left %d (registration_last_day 10) → 200',
+    async (n) => {
+      await put({ registration_last_day: 10 }).expect(200);
+      const res = await put({ reminder_days_left: n }).expect(200);
+      expect(res.body.reminder_days_left).toBe(n);
+    },
+  );
+
+  it('registration_last_day 3: reminder 2 → 200; reminder 3 → 400 field reminder_days_left', async () => {
+    await put({ registration_last_day: 3, reminder_days_left: 2 }).expect(200);
+    const res = await put({ reminder_days_left: 3 }).expect(400);
+    expect(res.body).toMatchObject({
+      code: 'CONFIG_INVALID',
+      field: 'reminder_days_left',
+    });
+    await put({ registration_last_day: 10 }).expect(200);
+  });
+
+  it('reminder hiện 7: chỉ vá registration_last_day 8 → 200; 7 → 400 field registration_last_day, không ghi', async () => {
+    await put({ registration_last_day: 10, reminder_days_left: 7 }).expect(200);
+    await put({ registration_last_day: 8 }).expect(200);
+    const res = await put({ registration_last_day: 7 }).expect(400);
+    expect(res.body).toMatchObject({
+      code: 'CONFIG_INVALID',
+      field: 'registration_last_day',
     });
     const got = await asAdmin(
       request(app.getHttpServer()).get('/api/admin/config'),
     ).expect(200);
-    expect(got.body.admin_group).toBe('vpp_admin');
-    expect(got.body.signers.preparer).toBe('A');
-
-    const audit = await pool.query(
-      `SELECT actor, object_type, object_id, detail FROM audit_log
-       WHERE action = 'config.updated' AND actor = $1
-       ORDER BY created_at DESC LIMIT 1`,
-      [ADMIN_SUB],
-    );
-    expect(audit.rows[0]).toMatchObject({
-      object_type: 'config',
-      object_id: 'signers',
-      detail: {
-        before: {
-          signers: { preparer: 'P0', head: 'Trưởng phòng', approver: 'GĐ' },
-        },
-        after: {
-          signers: { preparer: 'A', head: 'Trưởng phòng', approver: 'GĐ' },
-        },
-      },
-    });
+    expect(got.body.registration_last_day).toBe(8);
+    await put({ registration_last_day: 10, reminder_days_left: 3 }).expect(200);
   });
 
   it('PUT registration_last_day=12 → GET trả số 12 (hiệu lực ngay, không chờ cache)', async () => {

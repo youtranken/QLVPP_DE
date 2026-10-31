@@ -10,7 +10,7 @@ import { PeriodsService } from '../periods/periods.service';
 import { invalidPeriod } from '../requests/request-errors';
 import { UsersService } from '../users/users.service';
 import { resolveOrderQty } from './order-qty';
-import type { ReportSigners, SnapshotData } from './report.types';
+import type { SignatureBox, SnapshotData } from './report.types';
 import { ReportsService } from './reports.service';
 import type { SnapshotBody } from './snapshot.dto';
 
@@ -41,7 +41,8 @@ export class SnapshotsService {
     const open = await this.periods.openPeriod(this.db, now);
     if (ym > open.ym) throw invalidPeriod();
     await this.periods.ensurePeriod(ym);
-    const signers = await this.config.get<ReportSigners>('signers');
+    const signature_boxes =
+      await this.config.get<SignatureBox[]>('signature_boxes');
     const user = await this.users.findBySub(actor.sub);
     const created_by = {
       sub: actor.sub,
@@ -54,7 +55,7 @@ export class SnapshotsService {
         const data: SnapshotData = {
           ...report,
           order_qty: resolveOrderQty(report, body.order_qty),
-          signers,
+          signature_boxes,
           created_by,
           created_at,
         };

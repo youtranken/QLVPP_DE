@@ -1,12 +1,13 @@
 import { daysLeft, vnDate } from '../../common/period';
 
-// Ngày lastDay − 2 (§9) = còn 3 ngày tính cả hôm nay; so cả ngày lịch nên kỳ hạn tháng sau không nhắc sớm
-const REMINDER_DAYS_LEFT = 3;
-
 export const isPeriodOpenDay = (now: Date): boolean => vnDate(now).d === 1;
 
-export const isReminderDay = (now: Date, deadline: Date): boolean =>
-  daysLeft(now, deadline) === REMINDER_DAYS_LEFT;
+// So cả ngày lịch, tính cả hôm nay: kỳ hạn tháng sau không nhắc sớm
+export const isReminderDay = (
+  now: Date,
+  deadline: Date,
+  reminderDaysLeft: number,
+): boolean => daysLeft(now, deadline) === reminderDaysLeft;
 
 export function isLockDay(now: Date, deadline: Date): boolean {
   const [a, b] = [vnDate(now), vnDate(deadline)];

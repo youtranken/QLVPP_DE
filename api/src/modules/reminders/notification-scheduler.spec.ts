@@ -36,7 +36,10 @@ function scheduler(
     summary as unknown as Ctor[3],
     notifications as unknown as Ctor[4],
     stock as unknown as Ctor[5],
-    { getBool: () => Promise.resolve(true) } as unknown as Ctor[6],
+    {
+      getBool: () => Promise.resolve(true),
+      getInt: () => Promise.resolve(3),
+    } as unknown as Ctor[6],
   );
   return { s, periods, notifications };
 }

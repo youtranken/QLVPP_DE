@@ -20,15 +20,17 @@ async function confirmPendingIfAny(page: Page, request: APIRequestContext, ym: s
   await page.getByRole('dialog', { name: 'Còn món ngoài danh mục chưa xem' }).getByRole('button', { name: 'Vẫn chốt' }).click();
 }
 
+type SignBox = { title: string; title_en: string; name: string };
+
 asRole('admin');
 
 test.describe('E5-S3 trang in từ bản chốt (kỳ trước đã khóa, dev-identity admin)', () => {
-  let run: { releases: (() => void)[]; since: string; seed?: Seed; signers?: Record<string, string> };
+  let run: { releases: (() => void)[]; since: string; seed?: Seed; boxes?: SignBox[] };
   test.beforeEach(async () => {
     run = { releases: [await acquireLock('prev-period'), await acquireLock('admin-config')], since: new Date().toISOString() };
   });
   test.afterEach(async ({ request }) => {
-    if (run.signers) await request.put('/api/admin/config', { headers: devHeaders('admin'), data: { signers: run.signers } });
+    if (run.boxes) await request.put('/api/admin/config', { headers: devHeaders('admin'), data: { signature_boxes: run.boxes } });
     if (run.seed) {
       psql(`DELETE FROM report_snapshots WHERE period_ym = '${run.seed.prevYm}-01' AND created_by_sub = 'pw-admin' AND created_at >= '${run.since}'`);
       run.seed.cleanup();
@@ -41,11 +43,14 @@ test.describe('E5-S3 trang in từ bản chốt (kỳ trước đã khóa, dev-i
     const [a] = seed.items;
     const lineId = psql(`SELECT id FROM request_lines WHERE request_id = '${seed.requestId}'`);
     const before = snapshotCount(seed.prevYm);
-    const setSigners = async (signers: Record<string, string>) =>
-      expect((await request.put('/api/admin/config', { headers: devHeaders('admin'), data: { signers } })).ok()).toBe(true);
-    run.signers = (await (await request.get('/api/admin/config', { headers: devHeaders('admin') })).json()).signers;
-    const names = { preparer: `PW Lập ${seed.tag}`, head: `PW Trưởng ${seed.tag}`, approver: '' };
-    await setSigners(names);
+    const setBoxes = async (signature_boxes: SignBox[]) =>
+      expect((await request.put('/api/admin/config', { headers: devHeaders('admin'), data: { signature_boxes } })).ok()).toBe(true);
+    run.boxes = (await (await request.get('/api/admin/config', { headers: devHeaders('admin') })).json()).signature_boxes;
+    const head = `PW Chủ quản ${seed.tag}`;
+    await setBoxes([
+      { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: head },
+      { title: 'Người yêu cầu', title_en: 'Applicant', name: '' },
+    ]);
 
     await page.goto('/admin/reports');
     await page.getByRole('spinbutton', { name: `Đặt mua ${a.name}` }).fill('9');
@@ -70,12 +75,11 @@ test.describe('E5-S3 trang in từ bản chốt (kỳ trước đã khóa, dev-i
     await expect(page.getByRole('button', { name: 'In', exact: true })).toBeHidden();
     await expect(page.getByRole('link', { name: 'Quay lại Báo cáo' })).toBeHidden();
     const signs = page.getByRole('group', { name: 'Chữ ký' });
-    for (const label of ['Người lập', 'Trưởng phòng', 'Duyệt']) await expect(signs.getByRole('group', { name: label })).toBeVisible();
+    await expect(signs.getByRole('group')).toHaveCount(2);
     await expect(page.getByRole('navigation')).toHaveCount(0);
     const box = (label: string) => signs.getByRole('group', { name: label });
-    await expect(box('Người lập')).toHaveText(`Người lập${names.preparer}`);
-    await expect(box('Trưởng phòng')).toHaveText(`Trưởng phòng${names.head}`);
-    await expect(box('Duyệt')).toHaveText('Duyệt');
+    await expect(box('Chủ quản đơn vị')).toHaveText(`Chủ quản đơn vịHead of Dept.${head}`);
+    await expect(box('Người yêu cầu')).toHaveText('Người yêu cầuApplicant');
     const clipped = await page
       .locator('.pr-sheet th, .pr-sheet td, .pr-sheet .pr-sign-name')
       .evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth).map((e) => e.textContent?.slice(0, 40)));
@@ -97,15 +101,15 @@ test.describe('E5-S3 trang in từ bản chốt (kỳ trước đã khóa, dev-i
 
     const delivered = await request.post(`/api/admin/lines/${lineId}/deliver`, { headers: devHeaders('admin'), data: { qty: 2, expected_delivered_qty: 0 } });
     expect(delivered.ok()).toBe(true);
-    await setSigners({ preparer: 'PW Đổi sau', head: '', approver: 'PW Đổi sau' });
+    await setBoxes([{ title: 'PW Đổi sau', title_en: '', name: 'PW Đổi sau' }]);
     await page.goto(`/admin/reports?ym=${seed.prevYm}`);
     const list = page.getByRole('region', { name: 'Bản chốt' });
     await list.getByRole('button', { name: /^In lại bản chốt/ }).first().click();
     await expect(page).toHaveURL(new RegExp(`/snapshots/${snapshotId}/print$`));
     await expect(frozenRow()).toBeVisible();
     expect(await numbers()).toEqual(frozen);
-    await expect(page.getByRole('group', { name: 'Người lập' })).toHaveText(`Người lập${names.preparer}`);
-    await expect(page.getByRole('group', { name: 'Duyệt' })).toHaveText('Duyệt');
+    await expect(page.getByRole('group', { name: 'Chủ quản đơn vị' })).toHaveText(`Chủ quản đơn vịHead of Dept.${head}`);
+    await expect(page.getByRole('group', { name: 'Người yêu cầu' })).toHaveText('Người yêu cầuApplicant');
     expect(snapshotCount(seed.prevYm)).toBe(before + 1);
     await snap(page, info, 'print-reopened');
   });

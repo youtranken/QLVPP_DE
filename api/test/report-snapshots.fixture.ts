@@ -84,9 +84,9 @@ export function snapshotsFixture(tag: string) {
         [objectId],
       )
     ).rows[0].n;
-  const putSigners = (signers: object) =>
+  const putSignatureBoxes = (signature_boxes: object[]) =>
     as(http().put('/api/admin/config'), ADMIN, 'admin')
-      .send({ signers })
+      .send({ signature_boxes })
       .expect(200);
 
   return {
@@ -100,6 +100,6 @@ export function snapshotsFixture(tag: string) {
     workbook,
     binaryError,
     auditCount,
-    putSigners,
+    putSignatureBoxes,
   };
 }

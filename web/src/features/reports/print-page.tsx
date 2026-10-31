@@ -14,16 +14,30 @@ import './reports.css';
 import '@/css/print.css';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SIGNERS = ['preparer', 'head', 'approver'] as const;
+const OLD_SIGNERS = ['preparer', 'head', 'approver'] as const;
 
-function SignBoxes({ signers }: { signers: SnapshotData['signers'] }) {
+interface SignBox {
+  title: string;
+  title_en: string;
+  name: string;
+}
+
+// Bản chốt trước 0112 chỉ có signers: in 3 ô với chức danh cũ
+function signBoxesOf(snap: SnapshotData, oldTitle: (role: string) => string): SignBox[] {
+  if (snap.signature_boxes) return snap.signature_boxes;
+  return OLD_SIGNERS.map((role) => ({ title: oldTitle(role), title_en: '', name: snap.signers?.[role] ?? '' }));
+}
+
+function SignBoxes({ snap }: { snap: SnapshotData }) {
   const { t } = useTranslation();
+  const boxes = signBoxesOf(snap, (role) => t(`reports.printPage.signer.${role}`));
   return (
     <div role="group" aria-label={t('reports.printPage.signGroup')} className="pr-signs">
-      {SIGNERS.map((role) => (
-        <div key={role} role="group" aria-label={t(`reports.printPage.signer.${role}`)} className="pr-sign">
-          <b>{t(`reports.printPage.signer.${role}`)}</b>
-          <span className="pr-sign-name">{signers[role]}</span>
+      {boxes.map((box, i) => (
+        <div key={i} role="group" aria-label={box.title} className="pr-sign">
+          <b>{box.title}</b>
+          {box.title_en && <span className="pr-sign-en">{box.title_en}</span>}
+          <span className="pr-sign-name">{box.name}</span>
         </div>
       ))}
     </div>
@@ -64,7 +78,7 @@ function PrintSheet({ snap }: { snap: SnapshotData }) {
           <h2 id={ids[1]} className="pr-h2">{t('reports.detail.title')}</h2>
           <ReportDetailTable departments={snap.byDepartment} />
         </section>
-        <SignBoxes signers={snap.signers} />
+        <SignBoxes snap={snap} />
       </article>
     </div>
   );

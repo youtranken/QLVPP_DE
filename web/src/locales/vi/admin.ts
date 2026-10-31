@@ -103,9 +103,6 @@ const admin = {
     signers: {
       title: 'Người ký báo cáo',
       hint: 'Tên in sẵn ở chân trang báo cáo.',
-      preparer: 'Người lập',
-      head: 'Trưởng phòng',
-      approver: 'Người duyệt',
       save: 'Lưu người ký',
     },
     contact: {

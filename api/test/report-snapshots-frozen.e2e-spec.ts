@@ -10,7 +10,7 @@ describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
     itemName,
     itemRow,
     lockedLine,
-    putSigners,
+    putSignatureBoxes,
     snapshot,
     workbook,
   } = f;
@@ -47,25 +47,26 @@ describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
     ]);
   });
 
-  it('signers lấy từ cấu hình lúc chốt; đổi cấu hình sau không đổi bản chốt', async () => {
+  it('bản chốt mới lưu signature_boxes của cấu hình lúc chốt (không còn signers); đổi cấu hình sau không đổi bản chốt', async () => {
     const original = (
-      await f.pool().query("SELECT value FROM config WHERE key = 'signers'")
-    ).rows[0].value as object;
+      await f
+        .pool()
+        .query("SELECT value FROM config WHERE key = 'signature_boxes'")
+    ).rows[0].value as object[];
+    const boxes = [
+      { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: 'Trưởng B' },
+      { title: 'Người yêu cầu', title_en: 'Applicant', name: '' },
+      { title: 'Duyệt', title_en: '', name: 'Duyệt C' },
+    ];
     try {
-      await putSigners({
-        preparer: 'Lập A',
-        head: 'Trưởng B',
-        approver: 'Duyệt C',
-      });
+      await putSignatureBoxes(boxes);
       const { id } = await createOk('2026-11', { kind: 'print' });
-      await putSigners({ preparer: 'Người khác' });
-      expect((await snapshot(id)).signers).toEqual({
-        preparer: 'Lập A',
-        head: 'Trưởng B',
-        approver: 'Duyệt C',
-      });
+      await putSignatureBoxes([{ title: 'Khác', title_en: '', name: '' }]);
+      const s = await snapshot(id);
+      expect(s.signature_boxes).toEqual(boxes);
+      expect(s).not.toHaveProperty('signers');
     } finally {
-      await putSigners(original);
+      await putSignatureBoxes(original);
     }
   });
 

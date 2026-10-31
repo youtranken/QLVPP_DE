@@ -52,8 +52,8 @@ describe('Trang in từ bản chốt', () => {
     expect(within(pen).getAllByRole('cell').at(-1)).toHaveTextContent('10');
   });
 
-  it('3 ô ký có tên từ bản chốt; ký rỗng vẫn có ô, không in "undefined"', async () => {
-    open(snapshotDataFixture({ signers: { preparer: 'Lê Thị Hoa', head: '', approver: 'Đỗ Minh Châu' } }));
+  it('bản chốt cũ chỉ có signers → 3 ô ký chức danh cũ, tên từ bản chốt; ký rỗng vẫn có ô, không in "undefined"', async () => {
+    open(snapshotDataFixture({ signature_boxes: undefined, signers: { preparer: 'Lê Thị Hoa', head: '', approver: 'Đỗ Minh Châu' } }));
     const sign = await screen.findByRole('group', { name: 'Chữ ký' });
     const boxes = within(sign).getAllByRole('group');
     expect(boxes.map((b) => b.getAttribute('aria-label'))).toEqual(['Người lập', 'Trưởng phòng', 'Duyệt']);
@@ -61,6 +61,24 @@ describe('Trang in từ bản chốt', () => {
     expect(boxes[1].textContent).toBe('Trưởng phòng');
     expect(within(boxes[2]).getByText('Đỗ Minh Châu')).toBeInTheDocument();
     expect(document.body.textContent).not.toContain('undefined');
+  });
+
+  it('bản chốt mới: ô ký theo signature_boxes (chức danh, chức danh tiếng Anh, tên); 1 ô thì chỉ 1 ô', async () => {
+    open(snapshotDataFixture());
+    const sign = await screen.findByRole('group', { name: 'Chữ ký' });
+    const boxes = within(sign).getAllByRole('group');
+    expect(boxes.map((b) => b.getAttribute('aria-label'))).toEqual(['Chủ quản đơn vị', 'Người yêu cầu']);
+    expect(within(boxes[0]).getByText('Head of Dept.')).toBeInTheDocument();
+    expect(within(boxes[0]).getByText('Ngô Văn Bảo')).toBeInTheDocument();
+    expect(within(boxes[1]).getByText('Lê Thị Hoa')).toBeInTheDocument();
+  });
+
+  it('bản chốt mới 1 ô, chức danh tiếng Anh và tên trống → đúng 1 ô chỉ có chức danh', async () => {
+    open(snapshotDataFixture({ signature_boxes: [{ title: 'Duyệt', title_en: '', name: '' }] }));
+    const sign = await screen.findByRole('group', { name: 'Chữ ký' });
+    const boxes = within(sign).getAllByRole('group');
+    expect(boxes).toHaveLength(1);
+    expect(boxes[0].textContent).toBe('Duyệt');
   });
 
   it('"Lập lúc hh:mm dd/mm/yyyy bởi <tên>" theo giờ VN', async () => {

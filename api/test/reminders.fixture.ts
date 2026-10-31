@@ -14,6 +14,7 @@ const silent = { log: () => undefined };
 const SAVED_KEYS = [
   'authorized_groups',
   'registration_last_day',
+  'reminder_days_left',
   'low_stock_notify',
   'admin_group',
 ];
@@ -71,6 +72,9 @@ async function isolateCalendar(pool: Pool, group: string): Promise<void> {
   );
   await pool.query(
     "UPDATE config SET value = '10' WHERE key = 'registration_last_day'",
+  );
+  await pool.query(
+    "UPDATE config SET value = '3' WHERE key = 'reminder_days_left'",
   );
   // Kỳ sau 2026-12 do suite tự tạo theo config lúc chạy; kỳ suite khác còn phiếu thì giữ
   await pool.query(`DELETE FROM periods p WHERE p.ym > '2026-12-01'

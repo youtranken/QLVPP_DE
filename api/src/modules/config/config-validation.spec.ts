@@ -1,4 +1,11 @@
-import { validateConfigPatch } from './config-validation';
+import { reminderConflict, validateConfigPatch } from './config-validation';
+
+const box = (over: Record<string, unknown> = {}) => ({
+  title: 'Chủ quản đơn vị',
+  title_en: 'Head of Dept.',
+  name: '',
+  ...over,
+});
 
 describe('validateConfigPatch', () => {
   it('patch hợp lệ đủ khóa → giữ nguyên giá trị, admin_group được trim', () => {
@@ -8,7 +15,8 @@ describe('validateConfigPatch', () => {
         default_max_qty: 999,
         admin_group: '  vpp-admin ',
         low_stock_notify: false,
-        signers: { preparer: 'A', head: 'B', approver: 'C' },
+        signature_boxes: [box({ name: 'B' })],
+        reminder_days_left: 2,
         admin_contact: 'Chị Lan — 0901',
       }),
     ).toEqual({
@@ -18,7 +26,8 @@ describe('validateConfigPatch', () => {
         default_max_qty: 999,
         admin_group: 'vpp-admin',
         low_stock_notify: false,
-        signers: { preparer: 'A', head: 'B', approver: 'C' },
+        signature_boxes: [box({ name: 'B' })],
+        reminder_days_left: 2,
         admin_contact: 'Chị Lan — 0901',
       },
     });
@@ -65,25 +74,6 @@ describe('validateConfigPatch', () => {
     });
   });
 
-  it('signers một phần hợp lệ; khóa con lạ hoặc không phải chuỗi → field signers.<khóa>', () => {
-    expect(validateConfigPatch({ signers: { preparer: 'A' } })).toEqual({
-      ok: true,
-      patch: { signers: { preparer: 'A' } },
-    });
-    expect(validateConfigPatch({ signers: { head: 1 } })).toEqual({
-      ok: false,
-      field: 'signers.head',
-    });
-    expect(validateConfigPatch({ signers: { boss: 'X' } })).toEqual({
-      ok: false,
-      field: 'signers.boss',
-    });
-    expect(validateConfigPatch({ signers: 'A' })).toEqual({
-      ok: false,
-      field: 'signers',
-    });
-  });
-
   it('authorized_groups chỉ đọc, khóa lạ → field là tên khóa', () => {
     expect(validateConfigPatch({ authorized_groups: ['IT'] })).toEqual({
       ok: false,
@@ -110,14 +100,156 @@ describe('validateConfigPatch', () => {
     },
   );
 
-  it('signers có khóa kế thừa (constructor, __proto__) → field signers.<khóa>', () => {
-    for (const key of ['constructor', '__proto__']) {
-      const body: unknown = JSON.parse(`{"signers": {"${key}": "X"}}`);
-      expect(validateConfigPatch(body)).toEqual({
+  it.each([1, 7])('reminder_days_left=%p (biên trong [1,7]) → hợp lệ', (v) => {
+    expect(validateConfigPatch({ reminder_days_left: v })).toEqual({
+      ok: true,
+      patch: { reminder_days_left: v },
+    });
+  });
+
+  it.each([0, 8, 2.5, '3', null])(
+    'reminder_days_left=%p (ngoài [1,7] hoặc không phải số nguyên) → field reminder_days_left',
+    (v) => {
+      expect(validateConfigPatch({ reminder_days_left: v })).toEqual({
         ok: false,
-        field: `signers.${key}`,
+        field: 'reminder_days_left',
       });
-    }
+    },
+  );
+
+  it.each([1, 3])('signature_boxes %d ô → hợp lệ, PUT giữ cả mảng', (n) => {
+    const boxes = Array.from({ length: n }, (_, i) => box({ name: `N${i}` }));
+    expect(validateConfigPatch({ signature_boxes: boxes })).toEqual({
+      ok: true,
+      patch: { signature_boxes: boxes },
+    });
+  });
+
+  it.each([0, 4])('signature_boxes %d ô → field signature_boxes', (n) => {
+    const boxes = Array.from({ length: n }, () => box());
+    expect(validateConfigPatch({ signature_boxes: boxes })).toEqual({
+      ok: false,
+      field: 'signature_boxes',
+    });
+  });
+
+  it.each([{ head: 'A' }, 'A', null])(
+    'signature_boxes không phải mảng (%p) → field signature_boxes',
+    (v) => {
+      expect(validateConfigPatch({ signature_boxes: v })).toEqual({
+        ok: false,
+        field: 'signature_boxes',
+      });
+    },
+  );
+
+  it.each([
+    ['title', 60, 'x'],
+    ['title_en', 60, 'x'],
+    ['name', 200, 'x'],
+  ])('signature_boxes ô 2: %s dài %d → hợp lệ', (key, max, ch) => {
+    const boxes = [box(), box({ [key]: ch.repeat(max) })];
+    expect(validateConfigPatch({ signature_boxes: boxes })).toMatchObject({
+      ok: true,
+    });
+  });
+
+  it.each([
+    ['title', 61],
+    ['title_en', 61],
+    ['name', 201],
+  ])(
+    'signature_boxes ô 2: %s dài %d → field signature_boxes.1.<trường>',
+    (key, len) => {
+      const boxes = [box(), box({ [key]: 'x'.repeat(len) })];
+      expect(validateConfigPatch({ signature_boxes: boxes })).toEqual({
+        ok: false,
+        field: `signature_boxes.1.${key}`,
+      });
+    },
+  );
+
+  it('signature_boxes: title trim; title rỗng sau trim → field .title; title_en/name rỗng hợp lệ', () => {
+    expect(
+      validateConfigPatch({
+        signature_boxes: [{ title: '  Duyệt ', title_en: '', name: '' }],
+      }),
+    ).toEqual({
+      ok: true,
+      patch: { signature_boxes: [{ title: 'Duyệt', title_en: '', name: '' }] },
+    });
+    expect(
+      validateConfigPatch({ signature_boxes: [box({ title: '   ' })] }),
+    ).toEqual({ ok: false, field: 'signature_boxes.0.title' });
+  });
+
+  it('signature_boxes: ô không phải object → .<i>; khóa lạ/kế thừa hoặc thiếu trường → .<i>.<trường>', () => {
+    expect(validateConfigPatch({ signature_boxes: [box(), 'x'] })).toEqual({
+      ok: false,
+      field: 'signature_boxes.1',
+    });
+    expect(
+      validateConfigPatch({ signature_boxes: [box({ boss: 'X' })] }),
+    ).toEqual({ ok: false, field: 'signature_boxes.0.boss' });
+    const proto: unknown = JSON.parse(
+      '{"signature_boxes": [{"title": "A", "title_en": "", "name": "", "__proto__": "X"}]}',
+    );
+    expect(validateConfigPatch(proto)).toEqual({
+      ok: false,
+      field: 'signature_boxes.0.__proto__',
+    });
+    expect(
+      validateConfigPatch({ signature_boxes: [{ title: 'A', name: '' }] }),
+    ).toEqual({ ok: false, field: 'signature_boxes.0.title_en' });
+    expect(
+      validateConfigPatch({ signature_boxes: [box({ name: 5 })] }),
+    ).toEqual({ ok: false, field: 'signature_boxes.0.name' });
+  });
+
+  it('signers (khóa cũ) không còn ghi được → field signers', () => {
+    expect(validateConfigPatch({ signers: { head: 'A' } })).toEqual({
+      ok: false,
+      field: 'signers',
+    });
+  });
+
+  describe('reminderConflict — reminder_days_left ≤ registration_last_day − 1 sau khi gộp', () => {
+    const current = { registration_last_day: 10, reminder_days_left: 3 };
+
+    it('registration_last_day=3 trong bản vá + reminder 2 → hợp lệ; + reminder 3 → field reminder_days_left', () => {
+      expect(
+        reminderConflict(
+          { registration_last_day: 3, reminder_days_left: 2 },
+          current,
+        ),
+      ).toBeNull();
+      expect(
+        reminderConflict(
+          { registration_last_day: 3, reminder_days_left: 3 },
+          current,
+        ),
+      ).toBe('reminder_days_left');
+    });
+
+    it('chỉ vá reminder: gộp với last_day hiện có 3 → 2 hợp lệ, 3 lỗi field reminder_days_left', () => {
+      const lastDay3 = { registration_last_day: 3, reminder_days_left: 2 };
+      expect(reminderConflict({ reminder_days_left: 2 }, lastDay3)).toBeNull();
+      expect(reminderConflict({ reminder_days_left: 3 }, lastDay3)).toBe(
+        'reminder_days_left',
+      );
+    });
+
+    it('chỉ vá last_day: reminder hiện có 7 → last_day 8 hợp lệ, 7 lỗi field registration_last_day', () => {
+      const r7 = { registration_last_day: 10, reminder_days_left: 7 };
+      expect(reminderConflict({ registration_last_day: 8 }, r7)).toBeNull();
+      expect(reminderConflict({ registration_last_day: 7 }, r7)).toBe(
+        'registration_last_day',
+      );
+    });
+
+    it('bản vá không chạm hai khóa → null', () => {
+      expect(reminderConflict({ default_max_qty: 5 }, current)).toBeNull();
+    });
   });
 
   it.each([{}, null, [], 'x'])(

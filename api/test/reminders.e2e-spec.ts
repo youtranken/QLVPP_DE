@@ -179,17 +179,19 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
     expect(await f.recipients('reminder:2027-02')).toEqual(AUDIENCE);
   });
 
-  it('registration_last_day 3: 00:00 1/3 VN cùng lúc khóa kỳ 2027-02, mở kỳ 2027-03 và nhắc ngày 1 (= 3 − 2); 1 ms trước thì chưa gì', async () => {
-    await f.setLastDay(3);
+  it('registration_last_day 3 + nhắc 2 ngày: 00:00 1/3 VN cùng lúc khóa kỳ 2027-02 và mở kỳ 2027-03, chưa nhắc; 1 ms trước thì chưa gì; 00:00 2/3 VN nhắc', async () => {
+    await f.setConfig({ registration_last_day: 3, reminder_days_left: 2 });
     const before = await f.run('2027-02-28T16:59:59.999Z');
     expect(before).toMatchObject({ period_open: 0, reminder: 0 });
     expect(await f.recipients('period_locked:2027-02')).toEqual([]);
 
-    await f.run('2027-02-28T17:00:00Z');
+    expect((await f.run('2027-02-28T17:00:00Z')).reminder).toBe(0);
     expect(await f.recipients('period_locked:2027-02')).toEqual([ADMIN]);
     expect(await f.headcount('2027-02')).toBe(3);
     expect(await f.deadline('2027-03')).toBe('2027-03-03T17:00:00.000Z');
     expect(await f.recipients('period_open:2027-03')).toEqual(AUDIENCE);
+    expect((await f.run('2027-03-01T16:59:59.999Z')).reminder).toBe(0);
+    expect((await f.run('2027-03-01T17:00:00Z')).reminder).toBe(3);
     expect(await f.recipients('reminder:2027-03')).toEqual(AUDIENCE);
   });
 

@@ -107,9 +107,7 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   await expectFrozenPaper(admin, s);
   await expect(admin.getByText(/^Lập lúc \d{2}:\d{2} \d{2}\/\d{2}\/\d{4} bởi .+/)).toBeVisible();
   const signs = admin.getByRole('group', { name: 'Chữ ký' });
-  await expect(signs.getByRole('group', { name: 'Người lập' })).toHaveText(`Người lập${s.signers.preparer}`);
-  await expect(signs.getByRole('group', { name: 'Trưởng phòng' })).toHaveText(`Trưởng phòng${s.signers.head}`);
-  await expect(signs.getByRole('group', { name: 'Duyệt' })).toHaveText(`Duyệt${s.signers.approver}`);
+  for (const b of s.signatureBoxes) await expect(signs.getByRole('group', { name: b.title })).toHaveText(`${b.title}${b.title_en}${b.name}`);
   await snap(admin, info, 'p3-print');
   return snapshotId;
 }

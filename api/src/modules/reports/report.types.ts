@@ -1,3 +1,7 @@
+import type { SignatureBox } from '../config/config-validation';
+
+export type { SignatureBox };
+
 export interface ReportItemRow {
   key: string;
   item_id: string;
@@ -66,9 +70,11 @@ export interface ReportSigners {
   approver: string;
 }
 
+// Bản chốt trước 0112 chỉ có signers; bản mới chỉ có signature_boxes
 export interface SnapshotData extends MonthReport {
   order_qty: Record<string, number>;
-  signers: ReportSigners;
+  signature_boxes?: SignatureBox[];
+  signers?: ReportSigners;
   created_by: { sub: string; name: string | null };
   created_at: string;
 }

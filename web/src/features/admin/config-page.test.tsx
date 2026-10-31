@@ -10,7 +10,11 @@ const CONFIG = {
   admin_group: 'vpp-admin',
   authorized_groups: ['vpp-users', 'cong-trinh'],
   low_stock_notify: true,
-  signers: { preparer: 'Lê Thị Bình', head: '', approver: '' },
+  reminder_days_left: 3,
+  signature_boxes: [
+    { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: '' },
+    { title: 'Người yêu cầu', title_en: 'Applicant', name: 'Lê Thị Bình' },
+  ],
   admin_contact: 'chị Bình — Hành chính',
 };
 
@@ -42,7 +46,7 @@ describe('ConfigPage', () => {
     expect(screen.getByLabelText('Ngày hạn đăng ký hằng tháng')).toHaveValue(10);
     expect(screen.getByLabelText('Số lượng tối đa mặc định mỗi món')).toHaveValue(20);
     expect(screen.getByText('Chỉ áp dụng cho kỳ tạo sau; kỳ đang mở giữ hạn cũ')).toBeInTheDocument();
-    expect(screen.getByLabelText('Người lập')).toHaveValue('Lê Thị Bình');
+    expect(screen.getByLabelText('Người yêu cầu')).toHaveValue('Lê Thị Bình');
     expect(screen.getByLabelText('Tên và cách liên hệ Hành chính')).toHaveValue('chị Bình — Hành chính');
     const groups = screen.getByRole('list', { name: 'Nhóm PMH ID được dùng app' });
     expect(within(groups).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['vpp-users', 'cong-trinh']);
@@ -75,17 +79,19 @@ describe('ConfigPage', () => {
     expect(screen.getByLabelText('Ngày hạn đăng ký hằng tháng')).not.toHaveAttribute('aria-invalid');
   });
 
-  it('chỉ đổi người ký "Trưởng phòng" → body chỉ có {signers: {head}} kèm X-CSRF-Token, báo "Đã lưu"', async () => {
-    const fetchMock = stubApi(() => jsonResponse(200, { ...CONFIG, signers: { ...CONFIG.signers, head: 'Trần Văn Cường' } }));
+  it('đổi tên ô ký "Chủ quản đơn vị" → body gửi cả mảng signature_boxes (giữ chức danh), kèm X-CSRF-Token, báo "Đã lưu"', async () => {
+    const boxes = [{ ...CONFIG.signature_boxes[0], name: 'Trần Văn Cường' }, CONFIG.signature_boxes[1]];
+    const fetchMock = stubApi(() => jsonResponse(200, { ...CONFIG, signature_boxes: boxes }));
     await openConfig();
-    await userEvent.type(screen.getByLabelText('Trưởng phòng'), 'Trần Văn Cường');
+    await userEvent.type(screen.getByLabelText('Chủ quản đơn vị'), 'Trần Văn Cường');
     const signers = screen.getByRole('form', { name: 'Người ký báo cáo' });
     await userEvent.click(within(signers).getByRole('button', { name: 'Lưu người ký' }));
     expect(await within(signers).findByRole('status')).toHaveTextContent('Đã lưu.');
     const [[, init]] = putCalls(fetchMock) as [[string, RequestInit]];
-    expect(JSON.parse(init.body as string)).toEqual({ signers: { head: 'Trần Văn Cường' } });
+    expect(JSON.parse(init.body as string)).toEqual({ signature_boxes: boxes });
     expect((init.headers as Record<string, string>)['X-CSRF-Token']).toBe('csrf-1');
     expect(within(signers).getByRole('button', { name: 'Lưu người ký' })).toBeDisabled();
+    expect(screen.getByLabelText('Người yêu cầu')).toHaveValue('Lê Thị Bình');
   });
 
   it('chỉ đổi số tối đa mặc định → body chỉ có default_max_qty', async () => {
@@ -123,10 +129,10 @@ describe('ConfigPage', () => {
     expect(day).not.toHaveAttribute('aria-invalid');
   });
 
-  it('CONFIG_INVALID {field: signers.head} → lỗi gắn ô Trưởng phòng', async () => {
-    stubApi(() => jsonResponse(400, { code: 'CONFIG_INVALID', field: 'signers.head' }));
+  it('CONFIG_INVALID {field: signature_boxes.0.name} → lỗi gắn ô Chủ quản đơn vị', async () => {
+    stubApi(() => jsonResponse(400, { code: 'CONFIG_INVALID', field: 'signature_boxes.0.name' }));
     await openConfig();
-    const head = screen.getByLabelText('Trưởng phòng');
+    const head = screen.getByLabelText('Chủ quản đơn vị');
     await userEvent.type(head, 'Trần Văn Cường');
     await userEvent.click(screen.getByRole('button', { name: 'Lưu người ký' }));
     await vi.waitFor(() => expect(head).toHaveAttribute('aria-invalid', 'true'));

@@ -16,7 +16,7 @@ export interface MonthSeed {
   pen: Item;
   clip: Item;
   custom: string;
-  signers: Record<string, string>;
+  signatureBoxes: { title: string; title_en: string; name: string }[];
   cleanup: (since: string) => Promise<void>;
 }
 
@@ -63,15 +63,19 @@ function insertRequest(owner: Person, ym: string, lines: string) {
     FROM r, (VALUES ${lines}) AS x(item_id, custom_name, custom_unit, image, qty, status, pos)`);
 }
 
-async function swapSigners(request: APIRequestContext, tag: string) {
+async function swapSignatureBoxes(request: APIRequestContext, tag: string) {
   const headers = devHeaders('admin');
-  const original = (await (await request.get('/api/admin/config', { headers })).json()).signers as Record<string, string>;
-  const signers = { preparer: `PW Lập ${tag}`, head: `PW Trưởng ${tag}`, approver: `PW Duyệt ${tag}` };
-  expect((await request.put('/api/admin/config', { headers, data: { signers } })).ok()).toBe(true);
-  return { signers, restore: async () => void (await request.put('/api/admin/config', { headers, data: { signers: original } })) };
+  const original = (await (await request.get('/api/admin/config', { headers })).json()).signature_boxes as MonthSeed['signatureBoxes'];
+  const signatureBoxes = [
+    { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: `PW Chủ quản ${tag}` },
+    { title: 'Người yêu cầu', title_en: 'Applicant', name: `PW Yêu cầu ${tag}` },
+    { title: 'Duyệt', title_en: 'Approved by', name: `PW Duyệt ${tag}` },
+  ];
+  expect((await request.put('/api/admin/config', { headers, data: { signature_boxes: signatureBoxes } })).ok()).toBe(true);
+  return { signatureBoxes, restore: async () => void (await request.put('/api/admin/config', { headers, data: { signature_boxes: original } })) };
 }
 
-function removeSeed(s: Omit<MonthSeed, 'cleanup' | 'signers'>, createdPeriod: boolean, since: string) {
+function removeSeed(s: Omit<MonthSeed, 'cleanup' | 'signatureBoxes'>, createdPeriod: boolean, since: string) {
   const items = sqlList([s.paper, s.pen, s.clip].map((i) => i.id));
   const subs = sqlList([s.a.sub, s.b.sub]);
   psql(`DELETE FROM report_snapshots WHERE period_ym IN ('${s.prevYm}-01', '${s.ym}-01') AND created_at >= '${since}'
@@ -103,12 +107,12 @@ export async function seedMonth(request: APIRequestContext, info: TestInfo): Pro
       (NULL, '${custom}', 'cai', '${imageId}', 1, 'accepted', 2)`);
     insertRequest(b, prevYm, `('${clip.id}', NULL, NULL, NULL, 3, 'n/a', 0)`);
     insertRequest(a, ym, `('${paper.id}', NULL, NULL, NULL, 3, 'n/a', 0)`);
-    const { signers, restore } = await swapSigners(request, tag);
+    const { signatureBoxes, restore } = await swapSignatureBoxes(request, tag);
     const cleanup = async (since: string) => {
       await restore();
       removeSeed(base, createdPeriod, since);
     };
-    return { ...base, signers, cleanup };
+    return { ...base, signatureBoxes, cleanup };
   } catch (error) {
     removeSeed(base, createdPeriod, new Date().toISOString());
     throw error;

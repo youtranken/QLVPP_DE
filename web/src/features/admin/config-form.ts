@@ -1,12 +1,12 @@
-import type { AdminConfig, ConfigPatch } from '@/features/admin/admin.api';
+import type { AdminConfig, ConfigPatch, SignatureBox } from '@/features/admin/admin.api';
 
 export interface ConfigDraft {
   registration_last_day: string;
   default_max_qty: string;
   admin_group: string;
-  preparer: string;
-  head: string;
-  approver: string;
+  sign0: string;
+  sign1: string;
+  sign2: string;
   admin_contact: string;
 }
 
@@ -18,11 +18,12 @@ export type ConfigErrors = Partial<Record<DraftField | 'form', string>>;
 export const GROUP_FIELDS: Record<ConfigGroup, DraftField[]> = {
   period: ['registration_last_day', 'default_max_qty'],
   access: ['admin_group'],
-  signers: ['preparer', 'head', 'approver'],
+  signers: ['sign0', 'sign1', 'sign2'],
   contact: ['admin_contact'],
 };
 
-const SIGNER_FIELDS = new Set<DraftField>(['preparer', 'head', 'approver']);
+export const SIGN_FIELDS = ['sign0', 'sign1', 'sign2'] as const;
+const SIGNER_FIELDS = new Set<DraftField>(SIGN_FIELDS);
 const NAME_MAX = 200;
 const CONTACT_MAX = 500;
 
@@ -31,9 +32,9 @@ export function toDraft(c: AdminConfig): ConfigDraft {
     registration_last_day: String(c.registration_last_day),
     default_max_qty: String(c.default_max_qty),
     admin_group: c.admin_group,
-    preparer: c.signers.preparer,
-    head: c.signers.head,
-    approver: c.signers.approver,
+    sign0: c.signature_boxes[0]?.name ?? '',
+    sign1: c.signature_boxes[1]?.name ?? '',
+    sign2: c.signature_boxes[2]?.name ?? '',
     admin_contact: c.admin_contact,
   };
 }
@@ -47,9 +48,9 @@ const VALID: Record<DraftField, (v: string) => boolean> = {
   registration_last_day: (v) => intIn(v, 3, 28),
   default_max_qty: (v) => intIn(v, 1, 999),
   admin_group: (v) => v.trim() !== '' && v.trim().length <= NAME_MAX,
-  preparer: (v) => v.trim().length <= NAME_MAX,
-  head: (v) => v.trim().length <= NAME_MAX,
-  approver: (v) => v.trim().length <= NAME_MAX,
+  sign0: (v) => v.trim().length <= NAME_MAX,
+  sign1: (v) => v.trim().length <= NAME_MAX,
+  sign2: (v) => v.trim().length <= NAME_MAX,
   admin_contact: (v) => v.trim().length <= CONTACT_MAX,
 };
 
@@ -63,17 +64,20 @@ const NUMERIC = new Set<DraftField>(['registration_last_day', 'default_max_qty']
 const normalize = (f: DraftField, v: string) => (NUMERIC.has(f) && v.trim() !== '' ? String(Number(v)) : v.trim());
 
 // Chỉ gửi ô đã đổi so với bản server: lưu không đổi gì sẽ không ghi nhật ký,
-// và không ghi đè ô người khác vừa sửa (signers được server merge theo từng tên)
-export function toPatch(group: ConfigGroup, d: ConfigDraft, base: ConfigDraft): ConfigPatch {
+// và không ghi đè ô người khác vừa sửa. Ô ký: server thay cả mảng nên gửi đủ các ô hiện có.
+export function toPatch(group: ConfigGroup, d: ConfigDraft, base: ConfigDraft, boxes: SignatureBox[]): ConfigPatch {
   const changed = GROUP_FIELDS[group].filter((f) => normalize(f, d[f]) !== normalize(f, base[f]));
   if (changed.length === 0) return {};
-  const values = Object.fromEntries(changed.map((f) => [f, NUMERIC.has(f) ? Number(d[f]) : d[f].trim()]));
-  return group === 'signers' ? { signers: values } : values;
+  if (group === 'signers') return { signature_boxes: boxes.map((b, i) => ({ ...b, name: d[SIGN_FIELDS[i]].trim() })) };
+  return Object.fromEntries(changed.map((f) => [f, NUMERIC.has(f) ? Number(d[f]) : d[f].trim()]));
 }
 
-// CONFIG_INVALID trả field kiểu "admin_group" hoặc "signers.head"
+const SIGN_NAME_FIELD = /^signature_boxes\.([0-2])\.name$/;
+
+// CONFIG_INVALID trả field kiểu "admin_group" hoặc "signature_boxes.0.name"
 export function errorsFromApiField(field: string | null): ConfigErrors {
-  const key = field?.startsWith('signers.') ? field.slice('signers.'.length) : field;
+  const sign = field ? SIGN_NAME_FIELD.exec(field) : null;
+  const key = sign ? SIGN_FIELDS[Number(sign[1])] : field;
   if (key && Object.hasOwn(VALID, key)) return { [key]: errorKey(key as DraftField) };
   return { form: 'config.errors.UNKNOWN' };
 }

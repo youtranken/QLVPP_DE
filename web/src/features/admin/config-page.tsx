@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { Fragment, useId, useState } from 'react';
 import type { InputHTMLAttributes } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,7 @@ import { CONFIG_KEY, saveConfig, useAdminConfig, type AdminConfig } from '@/feat
 import { configErrorField } from '@/features/admin/admin-errors';
 import {
   GROUP_FIELDS,
+  SIGN_FIELDS,
   errorsFromApiField,
   toDraft,
   toPatch,
@@ -39,7 +40,7 @@ function ConfigForm({ config }: { config: AdminConfig }) {
   const [saving, setSaving] = useState<ConfigGroup | null>(null);
   const [saved, setSaved] = useState<ConfigGroup | null>(null);
   const base = toDraft(config);
-  const patchOf = (group: ConfigGroup) => toPatch(group, draft, base);
+  const patchOf = (group: ConfigGroup) => toPatch(group, draft, base, config.signature_boxes);
 
   const save = async (group: ConfigGroup) => {
     const fields = GROUP_FIELDS[group];
@@ -101,9 +102,9 @@ function ConfigForm({ config }: { config: AdminConfig }) {
         <AuthorizedGroups groups={config.authorized_groups} />
       </ConfigSection>
       <ConfigSection title={t('config.signers.title')} note={t('config.signers.hint')} {...section('signers')}>
-        {field('preparer', t('config.signers.preparer'), undefined, { maxLength: 200 })}
-        {field('head', t('config.signers.head'), undefined, { maxLength: 200 })}
-        {field('approver', t('config.signers.approver'), undefined, { maxLength: 200 })}
+        {config.signature_boxes.map((box, i) => (
+          <Fragment key={SIGN_FIELDS[i]}>{field(SIGN_FIELDS[i], box.title, undefined, { maxLength: 200 })}</Fragment>
+        ))}
       </ConfigSection>
       <ConfigSection title={t('config.contact.title')} {...section('contact')}>
         {field('admin_contact', t('config.contact.adminContact'), t('config.contact.adminContactHint'), { maxLength: 500 })}

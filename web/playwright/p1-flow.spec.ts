@@ -5,7 +5,7 @@ const SA_USERNAME = process.env.PW_SA_USERNAME ?? 'sa';
 const SA_PASSWORD = process.env.PW_SA_PASSWORD;
 const RECIPIENT = { sub: 'pw-recipient', name: 'PW Người nhận' };
 
-type Signers = { preparer?: string; head?: string; approver?: string };
+type SignBox = { title: string; title_en: string; name: string };
 
 async function saLogin(page: Page) {
   await page.goto('/');
@@ -75,11 +75,11 @@ async function stockFlow(page: Page, itemName: string) {
 async function saveSigner(page: Page, preparer: string) {
   await page.goto('/admin/config');
   const form = page.getByRole('form', { name: 'Người ký báo cáo' });
-  await form.getByLabel('Người lập').fill(preparer);
+  await form.getByLabel('Người yêu cầu').fill(preparer);
   await form.getByRole('button', { name: 'Lưu người ký' }).click();
   await expect(form.getByRole('status')).toHaveText('Đã lưu.');
   await page.reload();
-  await expect(page.getByRole('form', { name: 'Người ký báo cáo' }).getByLabel('Người lập')).toHaveValue(preparer);
+  await expect(page.getByRole('form', { name: 'Người ký báo cáo' }).getByLabel('Người yêu cầu')).toHaveValue(preparer);
 }
 
 async function logout(page: Page) {
@@ -127,8 +127,8 @@ async function memberChecks(page: Page, info: TestInfo, itemName: string, imageI
   await expect(page.getByRole('navigation', { name: 'Admin menu' })).toHaveCount(0);
 }
 
-async function cleanup(admin: APIRequestContext, t: { itemName: string; category: string; signers?: Signers }) {
-  if (t.signers) await admin.put('/api/admin/config', { data: { signers: t.signers } });
+async function cleanup(admin: APIRequestContext, t: { itemName: string; category: string; boxes?: SignBox[] }) {
+  if (t.boxes) await admin.put('/api/admin/config', { data: { signature_boxes: t.boxes } });
   // Dọn: ngừng nhóm/món thử để không lẫn vào trang đăng ký của nhân viên trên DB dev
   const items = (await (await admin.get('/api/admin/items')).json()) as { id: string; name: string }[];
   const item = items.find((i) => i.name === t.itemName);
@@ -152,7 +152,7 @@ test.describe('Smoke Plan 1 toàn luồng', () => {
 
     let admin: APIRequestContext | undefined;
     let release: (() => void) | undefined;
-    let originalSigners: Signers | undefined;
+    let originalBoxes: SignBox[] | undefined;
     try {
       admin = await playwright.request.newContext({
         baseURL: info.project.use.baseURL,
@@ -165,14 +165,14 @@ test.describe('Smoke Plan 1 toàn luồng', () => {
 
       // DB dev dùng chung với admin.spec: giữ khóa cấu hình, lưu bản gốc để trả lại
       release = await acquireLock('admin-config');
-      originalSigners = ((await (await admin.get('/api/admin/config')).json()) as { signers: Signers }).signers;
-      await saveSigner(page, `PW người lập ${stamp}`);
+      originalBoxes = ((await (await admin.get('/api/admin/config')).json()) as { signature_boxes: SignBox[] }).signature_boxes;
+      await saveSigner(page, `PW người yêu cầu ${stamp}`);
       await shot(page, info, 'p1-sa-config');
       await logout(page);
 
       await memberChecks(page, info, itemName, imageId);
     } finally {
-      if (admin) await cleanup(admin, { itemName, category, signers: originalSigners });
+      if (admin) await cleanup(admin, { itemName, category, boxes: originalBoxes });
       release?.();
     }
   });

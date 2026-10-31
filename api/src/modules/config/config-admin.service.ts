@@ -4,18 +4,28 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { configTable } from './config.schema';
-import { validateConfigPatch } from './config-validation';
+import { reminderConflict, validateConfigPatch } from './config-validation';
+import type { ConfigPatch, ReminderWindow } from './config-validation';
 import { SystemConfigService } from './system-config.service';
 
 const VISIBLE_KEYS = [
   'registration_last_day',
+  'reminder_days_left',
   'default_max_qty',
   'admin_group',
   'authorized_groups',
   'low_stock_notify',
-  'signers',
+  'signature_boxes',
   'admin_contact',
 ];
+const REMINDER_KEYS = ['registration_last_day', 'reminder_days_left'];
+
+const invalid = (field: string) =>
+  new BadRequestException({
+    code: 'CONFIG_INVALID',
+    message: `Giá trị cấu hình không hợp lệ: ${field}.`,
+    field,
+  });
 
 @Injectable()
 export class ConfigAdminService {
@@ -38,29 +48,29 @@ export class ConfigAdminService {
     actorSub: string,
   ): Promise<Record<string, unknown>> {
     const result = validateConfigPatch(body);
-    if (!result.ok) {
-      throw new BadRequestException({
-        code: 'CONFIG_INVALID',
-        message: `Giá trị cấu hình không hợp lệ: ${result.field}.`,
-        field: result.field,
-      });
-    }
-    const keys = Object.keys(result.patch).sort();
+    if (!result.ok) throw invalid(result.field);
+    const patch = result.patch;
+    const keys = Object.keys(patch).sort();
+    // Khóa cả cặp hạn/ngày nhắc để luật chéo không bị hai PUT đồng thời lách
+    const lockKeys = keys.some((k) => REMINDER_KEYS.includes(k))
+      ? [...new Set([...keys, ...REMINDER_KEYS])].sort()
+      : keys;
     await this.db.transaction(async (tx) => {
       const locked = await tx.execute<{ key: string; value: unknown }>(sql`
-        SELECT key, value FROM config WHERE key IN ${keys} ORDER BY key FOR UPDATE
+        SELECT key, value FROM config WHERE key IN ${lockKeys} ORDER BY key FOR UPDATE
       `);
-      const before = Object.fromEntries(
+      const current = Object.fromEntries(
         locked.rows.map((r) => [r.key, r.value]),
       );
+      const conflict = reminderConflict(
+        patch,
+        current as unknown as ReminderWindow,
+      );
+      if (conflict) throw invalid(conflict);
+      const before = Object.fromEntries(keys.map((k) => [k, current[k]]));
       const after: Record<string, unknown> = {};
       for (const key of keys) {
-        const incoming = result.patch[key as keyof typeof result.patch];
-        // signers merge theo người ký: sửa một người không xóa hai người còn lại
-        after[key] =
-          key === 'signers'
-            ? { ...(before.signers as object), ...(incoming as object) }
-            : incoming;
+        after[key] = patch[key as keyof ConfigPatch];
         await tx.execute(sql`
           INSERT INTO config (key, value)
           VALUES (${key}, ${JSON.stringify(after[key])}::jsonb)

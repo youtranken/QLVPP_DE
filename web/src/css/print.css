@@ -5,7 +5,7 @@
 .pr-meta { text-align: center; font-size: 13px; margin: 0 0 16px; }
 .pr-h2 { font-size: 15px; font-weight: 600; margin: 16px 0 8px; break-after: avoid; }
 .pr-sheet .table th { background: #f2f2f2; color: #000; }
-.pr-signs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px; break-inside: avoid; }
+.pr-signs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 16px; margin-top: 32px; break-inside: avoid; }
 .pr-sign { display: flex; flex-direction: column; align-items: center; min-height: 120px; border-top: 1px solid #000; padding-top: 6px; }
 .pr-sign-name { margin-top: auto; min-height: 1.4em; }
 

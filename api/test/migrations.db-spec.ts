@@ -27,7 +27,7 @@ describe('assertTestDatabase — chặn reset nhầm DB không phải *_test', (
   });
 });
 
-describe('migrations nền 0001–0013 + 0100–0111', () => {
+describe('migrations nền 0001–0013 + 0100–0112', () => {
   let pool: Pool;
 
   async function resetSchema(): Promise<void> {
@@ -52,11 +52,11 @@ describe('migrations nền 0001–0013 + 0100–0111', () => {
     await pool.end();
   });
 
-  it('áp đủ 25 migration; chạy lại không áp thêm file nào', async () => {
-    expect(await migrationCount()).toBe(25);
+  it('áp đủ 26 migration; chạy lại không áp thêm file nào', async () => {
+    expect(await migrationCount()).toBe(26);
     const again = await runMigrations(pool, resolveMigrationsDir(), silent);
     expect(again).toEqual([]);
-    expect(await migrationCount()).toBe(25);
+    expect(await migrationCount()).toBe(26);
   });
 
   it('file 0003 đã apply bị sửa nội dung → reject với thông báo checksum', async () => {
@@ -91,7 +91,7 @@ describe('migrations nền 0001–0013 + 0100–0111', () => {
     });
   });
 
-  it('config có seed VPP: registration_last_day=10, admin_group="vpp_admin" và đủ 7 khóa', async () => {
+  it('config có seed VPP: registration_last_day=10, admin_group="vpp_admin" và đủ 8 khóa', async () => {
     const { rows } = await pool.query<{ key: string; value: string }>(
       'SELECT key, value::text AS value FROM config',
     );
@@ -103,7 +103,8 @@ describe('migrations nền 0001–0013 + 0100–0111', () => {
         'admin_group',
         'authorized_groups',
         'low_stock_notify',
-        'signers',
+        'signature_boxes',
+        'reminder_days_left',
         'admin_contact',
       ]),
     );
@@ -112,11 +113,8 @@ describe('migrations nền 0001–0013 + 0100–0111', () => {
     expect(byKey.get('default_max_qty')).toBe('20');
     expect(byKey.get('authorized_groups')).toBe('[]');
     expect(byKey.get('low_stock_notify')).toBe('true');
-    expect(JSON.parse(byKey.get('signers') ?? 'null')).toEqual({
-      preparer: '',
-      head: '',
-      approver: '',
-    });
+    expect(byKey.has('signers')).toBe(false);
+    expect(byKey.get('reminder_days_left')).toBe('3');
     expect(byKey.get('admin_contact')).toBe('""');
     expect(byKey.has('booking_window_days')).toBe(false);
   });

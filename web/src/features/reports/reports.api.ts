@@ -60,7 +60,8 @@ export interface SnapshotData extends MonthReport {
   kind: SnapshotKind;
   period_ym: string;
   order_qty: Record<string, number>;
-  signers: { preparer: string; head: string; approver: string };
+  signature_boxes?: { title: string; title_en: string; name: string }[];
+  signers?: { preparer: string; head: string; approver: string };
   created_by: { sub: string; name: string | null };
   created_at: string;
 }
