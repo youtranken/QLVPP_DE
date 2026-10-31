@@ -2,9 +2,16 @@ import type { SignatureBox } from '../config/config-validation';
 
 export type { SignatureBox };
 
-export interface ReportItemRow {
+// Tên ĐVT chụp lúc chốt để bản in/Excel đứng yên khi ĐVT đổi tên; báo cáo sống và bản chốt cũ không có
+export interface FrozenUnitName {
+  unit_name?: string;
+  unit_name_en?: string | null;
+}
+
+export interface ReportItemRow extends FrozenUnitName {
   key: string;
   item_id: string;
+  code: string | null;
   name: string;
   name_en: string | null;
   unit: string;
@@ -16,7 +23,7 @@ export interface ReportItemRow {
   need: number;
 }
 
-export interface ReportCustomRow {
+export interface ReportCustomRow extends FrozenUnitName {
   key: string;
   name: string;
   unit: string;
@@ -27,7 +34,7 @@ export interface ReportCustomRow {
   people: number;
 }
 
-export interface ReportDetailLine {
+export interface ReportDetailLine extends FrozenUnitName {
   name: string;
   name_en: string | null;
   unit: string;
@@ -43,7 +50,7 @@ export interface ReportDepartment {
   }[];
 }
 
-export interface ReportIssue {
+export interface ReportIssue extends FrozenUnitName {
   item_name: string;
   item_name_en: string | null;
   unit: string;

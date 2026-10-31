@@ -33,7 +33,7 @@ describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
     expect(itemRow(s, item)).toMatchObject({ requested: 5, stock: 4, need: 1 });
     expect(s.order_qty[item]).toBe(6);
 
-    const ws = (await workbook(await exportXlsx(id).expect(200))).worksheets[0];
+    const ws = (await workbook(await exportXlsx(id).expect(200))).worksheets[1];
     const name = await itemName(item);
     const row = ws.getColumn(1).values.indexOf(name);
     expect((ws.getRow(row).values as unknown[]).slice(1)).toEqual([
@@ -70,7 +70,7 @@ describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
     }
   });
 
-  it('export.xlsx mặc định vi: 2 sheet, tên tệp theo kỳ, content-type xlsx', async () => {
+  it('export.xlsx mặc định vi: 2 sheet "Phiếu đề xuất"/"Phụ lục", tên tệp theo kỳ, content-type xlsx', async () => {
     await lockedLine(4, 5);
     const { id } = await createOk('2026-11');
     const res = await exportXlsx(id).expect(200);
@@ -82,21 +82,30 @@ describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
     );
     const wb = await workbook(res);
     expect(wb.worksheets.map((w) => w.name)).toEqual([
-      'Tổng theo món',
-      'Chi tiết',
+      'Phiếu đề xuất',
+      'Phụ lục',
     ]);
-    expect(wb.worksheets[0].getCell('A1').value).toBe('Món');
+    expect(wb.worksheets[0].getCell('A1').value).toBe(
+      'Phiếu đề xuất văn phòng phẩm',
+    );
+    expect(wb.worksheets[1].getCell('A1').value).toBe('Món');
   });
 
-  it('export.xlsx?lang=en → tiêu đề tiếng Anh; ?lang=vi → tiếng Việt; ?lang=fr → 400 VALIDATION', async () => {
+  it('export.xlsx?lang=en → Phụ lục tiếng Anh, Phiếu đề xuất giữ song ngữ; ?lang=vi → tiếng Việt; ?lang=fr → 400 VALIDATION', async () => {
     await lockedLine(4, 5);
     const { id } = await createOk('2026-11');
     const en = await workbook(await exportXlsx(id, '?lang=en').expect(200));
-    expect(en.worksheets.map((w) => w.name)).toEqual(['By item', 'Detail']);
-    expect(en.worksheets[0].getCell('A1').value).toBe('Item');
-    expect(en.worksheets[1].getCell('A1').value).toBe('Department');
+    expect(en.worksheets.map((w) => w.name)).toEqual([
+      'Phiếu đề xuất',
+      'Appendix',
+    ]);
+    expect(en.worksheets[0].getCell('A1').value).toBe(
+      'Phiếu đề xuất văn phòng phẩm',
+    );
+    expect(en.worksheets[1].getCell('A1').value).toBe('Item');
+    expect(en.worksheets[1].getColumn(1).values).toContain('Department');
     const vi = await workbook(await exportXlsx(id, '?lang=vi').expect(200));
-    expect(vi.worksheets[0].getCell('A1').value).toBe('Món');
+    expect(vi.worksheets[1].getCell('A1').value).toBe('Món');
     const fr = await exportXlsx(id, '?lang=fr').expect(400);
     expect(f.binaryError(fr)).toMatchObject({
       code: 'VALIDATION',
@@ -119,7 +128,7 @@ describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
     const issues = (await snapshot(id)).issues;
     expect(issues.find((i) => i.item_name_en === enName)).toBeDefined();
     const ws = (await workbook(await exportXlsx(id, '?lang=en').expect(200)))
-      .worksheets[0];
+      .worksheets[1];
     const names = ws.getColumn(1).values;
     expect(names).toContain(enName);
     expect(names).toContain(await itemName(plain));

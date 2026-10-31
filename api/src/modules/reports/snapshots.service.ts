@@ -8,11 +8,13 @@ import type { RequestIdentity } from '../auth/identity.types';
 import { SystemConfigService } from '../config/system-config.service';
 import { PeriodsService } from '../periods/periods.service';
 import { invalidPeriod } from '../requests/request-errors';
+import { UnitsService } from '../units/units.service';
 import { UsersService } from '../users/users.service';
 import { resolveOrderQty } from './order-qty';
 import type { SignatureBox, SnapshotData } from './report.types';
 import { ReportsService } from './reports.service';
 import type { SnapshotBody } from './snapshot.dto';
+import { withUnitNames } from './snapshot-unit-names';
 
 export type StoredSnapshot = SnapshotData & {
   id: string;
@@ -28,6 +30,7 @@ export class SnapshotsService {
     private readonly periods: PeriodsService,
     private readonly config: SystemConfigService,
     private readonly users: UsersService,
+    private readonly units: UnitsService,
     private readonly audit: AuditWriterService,
   ) {}
 
@@ -51,7 +54,10 @@ export class SnapshotsService {
     const created_at = now.toISOString();
     const id = await this.db.transaction(
       async (tx) => {
-        const report = await this.reports.build(ym, now, tx);
+        const report = withUnitNames(
+          await this.reports.build(ym, now, tx),
+          await this.units.namesByCode(tx),
+        );
         const data: SnapshotData = {
           ...report,
           order_qty: resolveOrderQty(report, body.order_qty),

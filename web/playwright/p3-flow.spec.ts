@@ -93,8 +93,8 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   await download.saveAs(file);
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(file);
-  expect(wb.worksheets.map((ws) => ws.name)).toEqual(['Tổng theo món', 'Chi tiết']);
-  const sheet = wb.worksheets[0];
+  expect(wb.worksheets.map((ws) => ws.name)).toEqual(['Phiếu đề xuất', 'Phụ lục']);
+  const sheet = wb.worksheets[1];
   const row = sheet.getRows(1, sheet.rowCount)!.find((r) => r.getCell(1).value === s.paper.name)!;
   expect([row.getCell(6).value, row.getCell(7).value]).toEqual([2, 4]);
   const detail = wb.worksheets[1];
@@ -105,8 +105,9 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   await confirmPendingIfAny(admin, request, s.prevYm);
   await admin.goto(await urlOfNewTab(admin, PRINT_URL, () => admin.getByRole('button', { name: 'Mở bản in' }).click(), SA_PASSWORD ? undefined : devHeaders('admin')));
   const snapshotId = admin.url().split('/').at(-2)!;
+  await admin.getByRole('checkbox', { name: 'In kèm phụ lục' }).check();
   await expectFrozenPaper(admin, s);
-  await expect(admin.getByText(/^Lập lúc \d{2}:\d{2} \d{2}\/\d{2}\/\d{4} bởi .+/)).toBeVisible();
+  await expect(admin.getByText(/^Lập lúc \d{2}:\d{2} ngày \d{2}\/\d{2}\/\d{4} bởi .+/)).toBeVisible();
   const signs = admin.getByRole('group', { name: 'Chữ ký' });
   for (const b of s.signatureBoxes) await expect(signs.getByRole('group', { name: b.title })).toHaveText(`${b.title}${b.title_en}${b.name}`);
   await snap(admin, info, 'p3-print');
@@ -117,7 +118,7 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
 async function expectFrozenPaper(admin: Page, s: MonthSeed) {
   const row = admin.getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row', { name: new RegExp(s.paper.name) });
   await expect(row).toBeVisible();
-  expect((await row.getByRole('cell').allTextContents()).slice(2)).toEqual(['2', '0', '0', '2', '4']);
+  expect((await row.getByRole('cell').allTextContents()).slice(3, 8)).toEqual(['2', '0', '0', '2', '4']);
 }
 
 async function purchaseAndDeliverMore(admin: Page, info: TestInfo, s: MonthSeed) {
@@ -168,7 +169,7 @@ async function reopenSnapshot(admin: Page, s: MonthSeed, snapshotId: string) {
   const printed = admin.getByRole('region', { name: 'Bản chốt' }).getByRole('listitem').filter({ hasText: 'Bản in' }).first();
   const reprint = printed.getByRole('link', { name: /^In lại bản lập/ });
   await expect(reprint).toHaveAttribute('href', `/admin/reports/snapshots/${snapshotId}/print`);
-  await admin.goto(await urlOfNewTab(admin, PRINT_URL, () => reprint.click(), SA_PASSWORD ? undefined : devHeaders('admin')));
+  await admin.goto(`${await urlOfNewTab(admin, PRINT_URL, () => reprint.click(), SA_PASSWORD ? undefined : devHeaders('admin'))}?appendix=1`);
   await expectFrozenPaper(admin, s);
 }
 

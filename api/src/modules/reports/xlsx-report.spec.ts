@@ -1,249 +1,192 @@
-import ExcelJS from 'exceljs';
-import type { SnapshotData } from './report.types';
-import { buildWorkbook } from './xlsx-report';
+import type ExcelJS from 'exceljs';
+import {
+  CUSTOM,
+  ITEM,
+  PLAIN,
+  itemRow,
+  openWorkbook,
+  rowValues as values,
+  snapshotData,
+} from './xlsx-snapshot.fixture-spec';
 
-const ITEM = '11111111-1111-4111-8111-111111111111';
-const PLAIN = '22222222-2222-4222-8222-222222222222';
-const CUSTOM = 'custom:["bìa còng","cai"]';
+const HEADER = [
+  'STT\nNo.',
+  'Mã\nCode',
+  'Tên vật dụng',
+  'Item name',
+  'ĐVT\nUnit',
+  'SL\nQty',
+];
+const FIRST_ROW = 6;
 
-const UNIT_NAMES = new Map([
-  ['cai', { name: 'cái', name_en: 'piece', active: true }],
-  ['hop', { name: 'hộp', name_en: 'box', active: true }],
-  ['cay', { name: 'cây', name_en: 'stick', active: true }],
-  ['thung', { name: 'thùng', name_en: null, active: false }],
-]);
+const form = async (
+  data = snapshotData(),
+  lang: 'vi' | 'en' = 'vi',
+): Promise<ExcelJS.Worksheet> => (await openWorkbook(lang, data)).worksheets[0];
 
-const row = (over: object) => ({
-  key: ITEM,
-  item_id: ITEM,
-  name: 'Bút bi',
-  name_en: 'Ballpoint pen',
-  unit: 'cay',
-  pack_note: null,
-  active: true,
-  requested: 5,
-  backlog_prev: 2,
-  stock: 3,
-  need: 4,
-  ...over,
-});
-
-const data: SnapshotData = {
-  ym: '2026-11',
-  generated_at: '2026-11-12T03:00:00.000Z',
-  byItem: [
-    row({}),
-    row({
-      key: PLAIN,
-      item_id: PLAIN,
-      name: 'Kẹp giấy',
-      name_en: null,
-      unit: 'hop',
-      need: 1,
-    }),
-  ],
-  custom: [
-    {
-      key: CUSTOM,
-      name: 'Bìa còng',
-      unit: 'cai',
-      requested: 2,
-      backlog_prev: 1,
-      stock: null,
-      need: 3,
-      people: 1,
-    },
-  ],
-  byDepartment: [
-    {
-      department: 'Phòng CT',
-      people: [
-        {
-          user_sub: 'u1',
-          full_name: 'Nhân viên A',
-          lines: [
-            { name: 'Bút bi', name_en: 'Ballpoint pen', unit: 'cay', qty: 5 },
-          ],
-        },
-      ],
-    },
-    {
-      department: null,
-      people: [
-        {
-          user_sub: 'u2',
-          full_name: null,
-          lines: [{ name: 'Bìa còng', name_en: null, unit: 'cai', qty: 2 }],
-        },
-      ],
-    },
-  ],
-  issues: [
-    {
-      item_name: 'Bút bi',
-      item_name_en: 'Ballpoint pen',
-      unit: 'cay',
-      recipient_sub: null,
-      recipient_name: null,
-      qty: 2,
-      reason: 'dùng cho hội nghị',
-      at: '2026-11-03T03:00:00.000Z',
-    },
-    {
-      item_name: 'Kẹp giấy',
-      item_name_en: null,
-      unit: 'hop',
-      recipient_sub: 'u1',
-      recipient_name: 'Nhân viên A',
-      qty: 1,
-      reason: 'thay hộp hỏng',
-      at: '2026-11-04T03:00:00.000Z',
-    },
-  ],
-  pending_custom_count: 0,
-  order_qty: { [ITEM]: 7, [PLAIN]: 1, [CUSTOM]: 3 },
-  signature_boxes: [
-    { title: 'Người yêu cầu', title_en: 'Applicant', name: 'A' },
-  ],
-  created_by: { sub: 'admin', name: 'Hành chính' },
-  created_at: '2026-11-12T03:00:00.000Z',
+const rowsAfterHeader = (ws: ExcelJS.Worksheet) => {
+  const out: unknown[][] = [];
+  for (let n = FIRST_ROW; values(ws, n).length > 0; n++)
+    out.push(values(ws, n));
+  return out;
 };
 
-async function open(lang: 'vi' | 'en') {
-  const wb = new ExcelJS.Workbook();
-  await wb.xlsx.load(
-    new Uint8Array(await buildWorkbook(data, lang, UNIT_NAMES)).buffer,
-  );
-  return wb;
-}
+const findRow = (ws: ExcelJS.Worksheet, text: string) => {
+  let found = 0;
+  ws.eachRow((r, n) => {
+    if (!found && r.values && (r.values as unknown[]).includes(text)) found = n;
+  });
+  return found;
+};
 
-const values = (ws: ExcelJS.Worksheet, n: number) =>
-  (ws.getRow(n).values as unknown[]).slice(1);
-
-describe('buildWorkbook', () => {
-  it('đúng 2 sheet tên vi "Tổng theo món", "Chi tiết"', async () => {
-    const wb = await open('vi');
-    expect(wb.worksheets.map((w) => w.name)).toEqual([
-      'Tổng theo món',
-      'Chi tiết',
-    ]);
+describe('buildWorkbook · sheet 1 Phiếu đề xuất (mẫu D&E)', () => {
+  it('sheet 1 tên "Phiếu đề xuất"; A1 gộp A1:F1 là "Phiếu đề xuất văn phòng phẩm"; dòng 2 "STATIONERY REQUEST FORM"', async () => {
+    const wb = await openWorkbook('vi');
+    const ws = wb.worksheets[0];
+    expect(ws.name).toBe('Phiếu đề xuất');
+    expect(ws.getCell('A1').value).toBe('Phiếu đề xuất văn phòng phẩm');
+    expect(ws.getCell('F1').isMerged).toBe(true);
+    expect(ws.getCell('F1').master.address).toBe('A1');
+    expect(ws.getCell('A1').font.bold).toBe(true);
+    expect(ws.getCell('A2').value).toBe('STATIONERY REQUEST FORM');
   });
 
-  it('sheet 1 vi: tiêu đề 7 cột, món theo thứ tự, Đặt mua = order_qty', async () => {
-    const ws = (await open('vi')).worksheets[0];
-    expect(values(ws, 1)).toEqual([
-      'Món',
-      'ĐVT',
-      'Chưa giao kỳ này',
-      'Nợ kỳ trước',
-      'Tồn',
-      'Cần mua',
-      'Đặt mua',
-    ]);
-    expect(values(ws, 2)).toEqual(['Bút bi', 'cây', 5, 2, 3, 4, 7]);
-    expect(values(ws, 3)).toEqual(['Kẹp giấy', 'hộp', 5, 2, 3, 1, 1]);
-  });
-
-  it('ĐVT lấy tên từ bảng units: vi "cây"/"hộp"/"cái", en "stick"/"box"/"piece"; en thiếu name_en dùng tên vi; mã không có hiện mã thô', async () => {
-    const vi = (await open('vi')).worksheets[0];
-    expect(vi.getRow(5).getCell(2).value).toBe('cái');
-    const en = (await open('en')).worksheets[0];
-    expect([2, 3, 5].map((n) => en.getRow(n).getCell(2).value)).toEqual([
-      'stick',
-      'box',
-      'piece',
-    ]);
-    const odd = {
-      ...data,
-      byItem: [row({ unit: 'thung' }), row({ key: PLAIN, unit: 'kg' })],
-    };
-    const wb = new ExcelJS.Workbook();
-    await wb.xlsx.load(
-      new Uint8Array(await buildWorkbook(odd, 'en', UNIT_NAMES)).buffer,
+  it('"Date :" + ngày lập bản chốt theo giờ VN: 16:59:59.999Z ngày 11 → 11/11/2026, 17:00:00.000Z → 12/11/2026', async () => {
+    const ws = await form(
+      snapshotData({ created_at: '2026-11-11T17:00:00.000Z' }),
     );
-    expect(wb.worksheets[0].getRow(2).getCell(2).value).toBe('thùng');
-    expect(wb.worksheets[0].getRow(3).getCell(2).value).toBe('kg');
-  });
-
-  it('cột 3 en "Undelivered this period"', async () => {
-    const ws = (await open('en')).worksheets[0];
-    expect(ws.getRow(1).getCell(3).value).toBe('Undelivered this period');
-  });
-
-  it('thuộc tính tệp: tiêu đề có kỳ, người lập, giờ lập của bản chốt', async () => {
-    const wb = await open('vi');
-    expect(wb.title).toBe('Tổng hợp đặt mua 2026-11');
-    expect(wb.creator).toBe('Hành chính');
-    expect(wb.created.toISOString()).toBe('2026-11-12T03:00:00.000Z');
-  });
-
-  it('nhóm "Ngoài danh mục" có tiêu đề nhóm, Tồn để trống', async () => {
-    const ws = (await open('vi')).worksheets[0];
-    expect(values(ws, 4)).toEqual(['Ngoài danh mục']);
-    const custom = ws.getRow(5);
-    expect(custom.getCell(1).value).toBe('Bìa còng');
-    expect(custom.getCell(5).value).toBeNull();
-    expect(custom.getCell(6).value).toBe(3);
-    expect(custom.getCell(7).value).toBe(3);
-  });
-
-  it('tổng cột Đặt mua trong sheet = tổng order_qty', async () => {
-    const ws = (await open('vi')).worksheets[0];
-    const sum = [2, 3, 5].reduce(
-      (s, n) => s + Number(ws.getRow(n).getCell(7).value),
-      0,
+    expect(values(ws, 3)).toEqual([
+      undefined,
+      undefined,
+      'Date :',
+      '12/11/2026',
+    ]);
+    const before = await form(
+      snapshotData({ created_at: '2026-11-11T16:59:59.999Z' }),
     );
-    expect(sum).toBe(7 + 1 + 3);
+    expect(before.getCell('D3').value).toBe('11/11/2026');
   });
 
-  it('một dòng trống rồi bảng "Xuất lẻ trong kỳ"; không người nhận → "Dùng chung"', async () => {
-    const ws = (await open('vi')).worksheets[0];
-    expect(values(ws, 6)).toEqual([]);
-    expect(values(ws, 7)).toEqual(['Xuất lẻ trong kỳ']);
-    expect(values(ws, 8)).toEqual(['Món', 'Người nhận', 'SL', 'Lý do']);
-    expect(values(ws, 9)).toEqual([
-      'Bút bi',
-      'Dùng chung',
-      2,
-      'dùng cho hội nghị',
+  it('tiêu đề bảng đúng 6 cột song ngữ, độ rộng cột theo mẫu D&E A 7 · B 8 · C 33 · D 25 · E 10 · F 8', async () => {
+    const ws = await form();
+    expect(values(ws, FIRST_ROW - 1)).toEqual(HEADER);
+    expect([1, 2, 3, 4, 5, 6].map((c) => ws.getColumn(c).width)).toEqual([
+      7, 8, 33, 25, 10, 8,
     ]);
-    expect(values(ws, 10)).toEqual([
-      'Kẹp giấy',
-      'Nhân viên A',
-      1,
-      'thay hộp hỏng',
+    expect(ws.getCell('C5').border.top?.style).toBe('thin');
+  });
+
+  it('hàng: STT 1…n, Mã (trống → "—"), tên vi, Item name (trống → rỗng), ĐVT tên vi, SL = order_qty; ngoài DM cuối với Mã "—"', async () => {
+    const ws = await form();
+    expect(rowsAfterHeader(ws)).toEqual([
+      [1, 'B31', 'Bút bi', 'Ballpoint pen', 'cây', 7],
+      [2, '—', 'Kẹp giấy', '', 'hộp', 1],
+      [3, '—', 'Bìa còng', '', 'cái', 3],
     ]);
   });
 
-  it('sheet 2 vi: Phòng ban · Người · Món · SL; phòng ban null → "Chưa có phòng ban", tên null → sub', async () => {
-    const ws = (await open('vi')).worksheets[1];
-    expect(values(ws, 1)).toEqual(['Phòng ban', 'Người', 'Món', 'SL']);
-    expect(values(ws, 2)).toEqual(['Phòng CT', 'Nhân viên A', 'Bút bi', 5]);
-    expect(values(ws, 3)).toEqual(['Chưa có phòng ban', 'u2', 'Bìa còng', 2]);
+  it('order_qty = 0 không có hàng, order_qty = 1 có hàng; thiếu khóa thì lấy need', async () => {
+    const ws = await form(
+      snapshotData({ order_qty: { [ITEM]: 0, [PLAIN]: 1 } }),
+    );
+    expect(rowsAfterHeader(ws).map((r) => [r[2], r[5]])).toEqual([
+      ['Kẹp giấy', 1],
+      ['Bìa còng', 3],
+    ]);
   });
 
-  it('lang=en: "By item"/"Detail", A1 "Item", tên món dùng name_en, thiếu name_en dùng name', async () => {
-    const wb = await open('en');
-    expect(wb.worksheets.map((w) => w.name)).toEqual(['By item', 'Detail']);
-    const [items, detail] = wb.worksheets;
-    expect(items.getCell('A1').value).toBe('Item');
-    expect(items.getRow(2).getCell(1).value).toBe('Ballpoint pen');
-    expect(items.getRow(3).getCell(1).value).toBe('Kẹp giấy');
-    expect(values(items, 4)).toEqual(['Off-catalog']);
-    expect(values(items, 9)).toEqual([
-      'Ballpoint pen',
-      'Shared',
-      2,
-      'dùng cho hội nghị',
+  it('không món nào order_qty > 0 → một hàng "Không có món cần đặt mua."', async () => {
+    const ws = await form(
+      snapshotData({ order_qty: { [ITEM]: 0, [PLAIN]: 0, [CUSTOM]: 0 } }),
+    );
+    expect(ws.getCell(`A${FIRST_ROW}`).value).toBe('Không có món cần đặt mua.');
+    expect(ws.getCell(`F${FIRST_ROW}`).master.address).toBe(`A${FIRST_ROW}`);
+    expect(values(ws, FIRST_ROW + 1)).toEqual([]);
+  });
+
+  it('ĐVT dùng tên vi đã lưu trong bản chốt; bản chốt cũ chưa lưu → tên từ bảng units; sheet 1 không đổi theo lang=en', async () => {
+    const data = snapshotData({
+      byItem: [itemRow({ unit_name: 'cây (cũ)', unit_name_en: 'stick' })],
+    });
+    for (const lang of ['vi', 'en'] as const) {
+      const ws = await form(data, lang);
+      expect(values(ws, FIRST_ROW)).toEqual([
+        1,
+        'B31',
+        'Bút bi',
+        'Ballpoint pen',
+        'cây (cũ)',
+        7,
+      ]);
+      expect(values(ws, FIRST_ROW - 1)).toEqual(HEADER);
+    }
+  });
+
+  it('bản chốt cũ không có code → Mã "—"', async () => {
+    const old: Partial<ReturnType<typeof itemRow>> = itemRow({});
+    delete old.code;
+    const ws = await form(snapshotData({ byItem: [old as never], custom: [] }));
+    expect(values(ws, FIRST_ROW)[1]).toBe('—');
+  });
+
+  it('1 ô ký → chỉ cột C: chức danh (đậm), chức danh en, tên', async () => {
+    const ws = await form();
+    const title = findRow(ws, 'Người yêu cầu');
+    expect(title).toBeGreaterThan(FIRST_ROW + 3);
+    expect(ws.getRow(title).getCell(3).value).toBe('Người yêu cầu');
+    expect(ws.getRow(title).getCell(3).font.bold).toBe(true);
+    expect(values(ws, title).filter(Boolean)).toHaveLength(1);
+    expect(ws.getRow(title + 1).getCell(3).value).toBe('Applicant');
+    expect(findRow(ws, 'A')).toBeGreaterThan(title + 1);
+  });
+
+  it('3 ô ký → cột C, E, F; tên trống in dòng chấm', async () => {
+    const ws = await form(
+      snapshotData({
+        signature_boxes: [
+          { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: 'B' },
+          { title: 'Người yêu cầu', title_en: 'Applicant', name: '' },
+          { title: 'Duyệt', title_en: '', name: 'C' },
+        ],
+      }),
+    );
+    const title = findRow(ws, 'Chủ quản đơn vị');
+    const row = ws.getRow(title);
+    expect([3, 5, 6].map((c) => row.getCell(c).value)).toEqual([
+      'Chủ quản đơn vị',
+      'Người yêu cầu',
+      'Duyệt',
     ]);
-    expect(items.getRow(10).getCell(1).value).toBe('Kẹp giấy');
-    expect(values(detail, 1)).toEqual(['Department', 'Person', 'Item', 'Qty']);
-    expect(values(detail, 2)).toEqual([
-      'Phòng CT',
-      'Nhân viên A',
-      'Ballpoint pen',
-      5,
+    expect([3, 5].map((c) => ws.getRow(title + 1).getCell(c).value)).toEqual([
+      'Head of Dept.',
+      'Applicant',
     ]);
-    expect(detail.getRow(3).getCell(1).value).toBe('No department');
+    const names = ws.getRow(findRow(ws, 'B'));
+    expect([3, 5, 6].map((c) => names.getCell(c).value)).toEqual([
+      'B',
+      '……………………',
+      'C',
+    ]);
+  });
+
+  it('bản chốt cũ chỉ có signers → 3 ô "Người lập / Trưởng phòng / Duyệt" với tên cũ', async () => {
+    const ws = await form(
+      snapshotData({
+        signature_boxes: undefined,
+        signers: { preparer: 'Lập X', head: '', approver: 'Duyệt Y' },
+      }),
+    );
+    const row = ws.getRow(findRow(ws, 'Người lập'));
+    expect([3, 5, 6].map((c) => row.getCell(c).value)).toEqual([
+      'Người lập',
+      'Trưởng phòng',
+      'Duyệt',
+    ]);
+    const names = ws.getRow(findRow(ws, 'Lập X'));
+    expect([3, 5, 6].map((c) => names.getCell(c).value)).toEqual([
+      'Lập X',
+      '……………………',
+      'Duyệt Y',
+    ]);
   });
 });

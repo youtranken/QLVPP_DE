@@ -56,14 +56,20 @@ Playwright: `E9-S3 Giao hàng: thực giao kẹp theo tồn và còn lại, giao
 
 ## E9-S4 Báo cáo + Bản in A4 + Excel
 SPEC §5.4.
-Trạng thái: AC 1, 2, 3, 5 + Playwright "E5-S2 E9-S4 Báo cáo: Đặt mua biên…" xong (T15); AC 4 + Bản in → T16.
+Trạng thái: xong. AC 1, 2, 3, 5 + Playwright "E5-S2 E9-S4 Báo cáo: Đặt mua biên…" (T15); AC 4 + Playwright "E5-S3 E9-S4 Bản in A4…" (T16); AC bổ sung §11.3 1–5 + Playwright "E9-S4 Phiếu đề xuất D&E…" (T16b).
 **AC:**
 1. Ô Đặt mua: 0 và 99999 hợp lệ; −1, 100000, 1.5, chữ → lỗi tại ô "Từ 0 đến 99 999.", nút chốt báo "Sửa {n} ô…" và không gửi; e2e api đã có biên `order_qty` 99999/100000 (giữ).
 2. `pending_custom_count = 1` → hộp thoại trước khi chốt; "Xem món chờ" không tạo bản chốt; "Vẫn chốt" tạo một bản.
 3. Xuất Excel → tệp `vpp-bao-cao-<ym>.xlsx` tải về, danh sách bản chốt thêm 1; "Tải lại" không thêm bản (đếm `GET …/snapshots` không đổi).
 4. Trang in hiện đúng tên người ký từ bản chốt; giao thêm sau chốt → số trên trang in không đổi; "Bản chốt số 2 của kỳ" khi là bản thứ hai.
 5. Đổi tháng khi có ô sửa → hỏi; "Tiếp tục sửa" giữ tháng và số.
-Playwright: `E9-S4 Báo cáo: Đặt mua biên 0/99999/100000, chốt hỏi món chưa xem, Excel tải về và tải lại không tạo bản mới` · `E9-S4 Bản in A4: ô ký, số chốt không đổi sau giao thêm, in lại không tạo bản mới` (giữ E5-S2/E5-S3).
+AC bổ sung (SPEC §11.3, trang 1 Phiếu đề xuất D&E, phụ lục `?appendix=1`, Excel "Phiếu đề xuất"/"Phụ lục"):
+6. Trang 1 chỉ có món `order_qty > 0` (0 không in, 1 in).
+7. Mã và Item name đúng từ danh mục lúc chốt; đổi tên món sau khi chốt thì trang in không đổi.
+8. Ô ký đúng số lượng và chức danh của config lúc chốt (1 ô / 3 ô).
+9. `?appendix=1` thì có phụ lục, không có thì không.
+10. Excel sheet 1 "Phiếu đề xuất", A1 "Phiếu đề xuất văn phòng phẩm", tiêu đề bảng 6 cột.
+Playwright: `E9-S4 Báo cáo: Đặt mua biên 0/99999/100000, chốt hỏi món chưa xem, Excel tải về và tải lại không tạo bản mới` · `E9-S4 Bản in A4: ô ký, số chốt không đổi sau giao thêm, in lại không tạo bản mới` · `E9-S4 Phiếu đề xuất D&E: chỉ món đặt mua, ô ký theo cấu hình, bật phụ lục` (giữ E5-S2/E5-S3).
 
 ## E9-S5 Danh mục + Nhóm món + Kho
 SPEC §5.5.

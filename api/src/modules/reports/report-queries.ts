@@ -12,6 +12,7 @@ type Row<T> = T & Record<string, unknown>;
 
 export interface ItemDemand {
   item_id: string;
+  code: string | null;
   name: string;
   name_en: string | null;
   unit: string;
@@ -49,17 +50,19 @@ const splitByPeriod = (ym: string) => sql`
   coalesce(sum(${REMAINING_QTY}) FILTER (WHERE r.period_ym = ${ymToDate(ym)}::date), 0)::int AS requested,
   coalesce(sum(${REMAINING_QTY}) FILTER (WHERE r.period_ym < ${ymToDate(ym)}::date), 0)::int AS backlog_prev`;
 
+// Thứ tự danh mục (nhóm → món → tên), món chưa xếp nhóm sau cùng; bản chốt giữ thứ tự này cho phiếu đề xuất
 export async function itemDemand(
   db: Executor,
   ym: string,
 ): Promise<ItemDemand[]> {
   const { rows } = await db.execute<Row<ItemDemand>>(sql`
-    SELECT i.id AS item_id, i.name, i.name_en, i.unit, i.pack_note, i.active,
+    SELECT i.id AS item_id, i.code, i.name, i.name_en, i.unit, i.pack_note, i.active,
            i.stock_qty AS stock, d.requested, d.backlog_prev
     FROM (SELECT l.item_id, ${splitByPeriod(ym)} ${demandSource(ym)}
             AND l.item_id IS NOT NULL GROUP BY l.item_id) d
     JOIN items i ON i.id = d.item_id
-    ORDER BY i.sort_order, lower(i.name), i.id
+    LEFT JOIN item_categories c ON c.id = i.category_id
+    ORDER BY c.sort_order NULLS LAST, lower(c.name), c.id, i.sort_order, lower(i.name), i.id
   `);
   return rows;
 }

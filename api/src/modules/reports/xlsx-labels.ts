@@ -1,8 +1,8 @@
 export type XlsxLang = 'vi' | 'en';
 
 export interface XlsxLabels {
-  byItemSheet: string;
-  detailSheet: string;
+  appendixSheet: string;
+  detailTitle: string;
   item: string;
   unit: string;
   requested: string;
@@ -24,8 +24,8 @@ export interface XlsxLabels {
 
 export const XLSX_LABELS: Record<XlsxLang, XlsxLabels> = {
   vi: {
-    byItemSheet: 'Tổng theo món',
-    detailSheet: 'Chi tiết',
+    appendixSheet: 'Phụ lục',
+    detailTitle: 'Chi tiết',
     item: 'Món',
     unit: 'ĐVT',
     requested: 'Chưa giao kỳ này',
@@ -45,8 +45,8 @@ export const XLSX_LABELS: Record<XlsxLang, XlsxLabels> = {
     workbookTitle: 'Tổng hợp đặt mua',
   },
   en: {
-    byItemSheet: 'By item',
-    detailSheet: 'Detail',
+    appendixSheet: 'Appendix',
+    detailTitle: 'Detail',
     item: 'Item',
     unit: 'Unit',
     requested: 'Undelivered this period',

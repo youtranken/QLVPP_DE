@@ -125,8 +125,11 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     await saveDownload(download, file);
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.readFile(file);
-    expect(wb.worksheets.map((ws) => ws.name)).toEqual(['Tổng theo món', 'Chi tiết']);
-    const sheetRow = wb.worksheets[0].getRows(1, wb.worksheets[0].rowCount)!.find((r) => r.getCell(1).value === a.name)!;
+    expect(wb.worksheets.map((ws) => ws.name)).toEqual(['Phiếu đề xuất', 'Phụ lục']);
+    expect(wb.worksheets[0].getCell('A1').value).toBe('Phiếu đề xuất văn phòng phẩm');
+    const formRow = wb.worksheets[0].getRows(1, wb.worksheets[0].rowCount)!.find((r) => r.getCell(3).value === a.name)!;
+    expect(formRow.getCell(6).value).toBe(9);
+    const sheetRow = wb.worksheets[1].getRows(1, wb.worksheets[1].rowCount)!.find((r) => r.getCell(1).value === a.name)!;
     expect([sheetRow.getCell(6).value, sheetRow.getCell(7).value]).toEqual([3, 9]);
     expect(await snapshotsOf(request, seed.prevYm)).toBe(before + 1);
 

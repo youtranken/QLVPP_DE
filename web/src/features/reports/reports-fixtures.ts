@@ -1,5 +1,6 @@
 import type { AdminItem, Category } from '@/features/catalog/catalog.api';
 import { adminItem } from '@/features/summary/adjust-fixtures';
+import type { Unit } from '@/features/units/units.api';
 import type { MonthReport, ReportIssue, SnapshotData, SnapshotRow } from './reports.api';
 
 export const PEN_KEY = 'item-pen';
@@ -65,8 +66,20 @@ export const REPORT_ITEMS: AdminItem[] = [
 
 export const SNAPSHOT_ID = '5f0c1c1e-9a53-4b1c-8f55-3d2b1b6f0a11';
 
+const frozenReport = () => {
+  const report = reportFixture();
+  return {
+    ...report,
+    byItem: [
+      { ...report.byItem[0], code: 'B31', unit_name: 'cây', unit_name_en: 'stick' },
+      { ...report.byItem[1], code: null, unit_name: 'lọ', unit_name_en: null },
+    ],
+    custom: [{ ...report.custom[0], unit_name: 'cuộn', unit_name_en: 'roll' }],
+  };
+};
+
 export const snapshotDataFixture = (over: Partial<SnapshotData> = {}): SnapshotData => ({
-  ...reportFixture(),
+  ...frozenReport(),
   id: SNAPSHOT_ID,
   kind: 'print',
   period_ym: '2026-10',
@@ -79,3 +92,10 @@ export const snapshotDataFixture = (over: Partial<SnapshotData> = {}): SnapshotD
   created_at: '2026-10-28T02:30:00Z',
   ...over,
 });
+
+export const PRINT_UNITS: Unit[] = [
+  { code: 'cay', name: 'cây', name_en: 'stick', sort_order: 1, active: true },
+  { code: 'lo', name: 'lọ', name_en: 'jar', sort_order: 2, active: true },
+  { code: 'cuon', name: 'cuộn', name_en: 'roll', sort_order: 3, active: true },
+  { code: 'ram', name: 'ram', name_en: 'ream', sort_order: 4, active: true },
+];

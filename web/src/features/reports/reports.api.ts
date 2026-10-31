@@ -3,9 +3,16 @@ import { apiFetch, apiFetchBlob } from '@/lib/api-client';
 
 export const ORDER_QTY_MAX = 99999;
 
-export interface ReportItemRow {
+// Tên ĐVT chụp lúc chốt; báo cáo sống và bản chốt cũ không có
+export interface FrozenUnitName {
+  unit_name?: string;
+  unit_name_en?: string | null;
+}
+
+export interface ReportItemRow extends FrozenUnitName {
   key: string;
   item_id: string;
+  code?: string | null;
   name: string;
   name_en: string | null;
   unit: string;
@@ -15,7 +22,7 @@ export interface ReportItemRow {
   need: number;
 }
 
-export interface ReportCustomRow {
+export interface ReportCustomRow extends FrozenUnitName {
   key: string;
   name: string;
   unit: string;
@@ -31,11 +38,11 @@ export interface ReportDepartment {
   people: {
     user_sub: string;
     full_name: string | null;
-    lines: { name: string; name_en: string | null; unit: string; qty: number }[];
+    lines: ({ name: string; name_en: string | null; unit: string; qty: number } & FrozenUnitName)[];
   }[];
 }
 
-export interface ReportIssue {
+export interface ReportIssue extends FrozenUnitName {
   item_name: string;
   item_name_en: string | null;
   unit: string;
