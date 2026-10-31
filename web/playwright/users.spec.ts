@@ -3,7 +3,7 @@ import { asRole, expectNoContrastViolations, isMobile, seedActiveUser, shot } fr
 
 const ACTIVE = { sub: 'pw-dir-active', name: 'PW Danh bạ An' };
 const LOCKED = { sub: 'pw-dir-locked', name: 'PW Danh bạ Bình' };
-const SEARCH = 'Tìm theo tên, email hoặc mã NV';
+const SEARCH = 'Tìm người';
 
 const rowOf = (page: Page, name: string) => page.getByRole('row').filter({ hasText: name });
 

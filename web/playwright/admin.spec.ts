@@ -13,11 +13,11 @@ test.describe('E0-S7 Danh bạ (dev-identity admin)', () => {
     seedActiveUser(ACTIVE.sub, ACTIVE.name);
     seedActiveUser(LOCKED.sub, LOCKED.name, 'locked');
     await page.route('**/api/admin/directory/sync', (route) =>
-      route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ code: 'SSO_UNAVAILABLE', message: 'x' }) }),
+      route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ code: 'DIRECTORY_UNAVAILABLE', message: 'x' }) }),
     );
     await page.goto('/admin/users');
     await expect(page.getByRole('heading', { level: 1, name: 'Danh bạ' })).toBeVisible();
-    await page.getByRole('searchbox', { name: 'Tìm theo tên, email hoặc mã NV' }).fill('PW Danh bạ');
+    await page.getByRole('searchbox', { name: 'Tìm người' }).fill('PW Danh bạ');
     await expect(page.getByRole('row').filter({ hasText: LOCKED.name }).getByText('Đã khóa', { exact: true })).toBeVisible();
     await expect(page.getByRole('row').filter({ hasText: ACTIVE.name }).getByText('Đang dùng', { exact: true })).toBeVisible();
 

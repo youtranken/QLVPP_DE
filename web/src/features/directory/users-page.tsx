@@ -82,7 +82,7 @@ export function UsersPage() {
       <SyncNotice state={sync.state} onRetry={sync.run} onClose={sync.close} />
       {!dir.loading && !dir.overflow && <UsersStats stats={usersStats(dir.users)} filter={filter} onFilter={p.toggleFilter} />}
       {dir.overflow && <p role="note" className="alert">{t('users.page.overflow')}</p>}
-      <Toolbar search={{ value: search, onChange: setSearch, label: t('users.page.search'), placeholder: t('users.page.search'), maxLength: MAX_SEARCH }}>
+      <Toolbar search={{ value: search, onChange: setSearch, label: t('users.page.searchLabel'), placeholder: t('users.page.search'), maxLength: MAX_SEARCH }}>
         <label className="dr-dept">
           <span className="sr-only">{t('users.page.dept')}</span>
           <select value={p.view.dept} onChange={(e) => p.setDept(e.target.value)} aria-label={t('users.page.dept')}>

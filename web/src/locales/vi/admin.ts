@@ -3,6 +3,7 @@ const admin = {
     title: 'Danh bạ',
     page: {
       description: 'Người dùng đồng bộ từ PMH ID. Thông tin cá nhân sửa ở PMH ID, không sửa trong app.',
+      searchLabel: 'Tìm người',
       search: 'Tìm theo tên, email hoặc mã NV',
       hint: 'Tự đồng bộ từ PMH ID mỗi 60 phút.',
       sync: 'Đồng bộ ngay',

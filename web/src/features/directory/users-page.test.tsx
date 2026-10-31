@@ -109,7 +109,7 @@ describe('UsersPage B10', () => {
   it('ô tìm giới hạn 200 ký tự; gõ lọc không dấu theo tên/mã NV; rỗng → "Bỏ lọc"', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
-    const box = screen.getByRole('searchbox', { name: 'Tìm theo tên, email hoặc mã NV' });
+    const box = screen.getByRole('searchbox', { name: 'Tìm người' });
     expect(box).toHaveAttribute('maxlength', '200');
     await userEvent.type(box, 'nv0007');
     await waitFor(() => expect(bodyRows()).toHaveLength(1));
@@ -167,8 +167,27 @@ describe('UsersPage B10', () => {
     expect(within(drawer).getByRole('button', { name: 'Người kế tiếp' })).toBeEnabled();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Người kế tiếp' }));
     expect(within(drawer).getByRole('button', { name: 'Người kế tiếp' })).toBeDisabled();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Đóng' }));
+    const [x, footer] = within(drawer).getAllByRole('button', { name: 'Đóng' });
+    expect(x).toHaveClass('sheet-close');
+    await userEvent.click(x);
     expect(screen.queryByRole('dialog', { name: 'Thông tin người dùng' })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Phạm Minh Đức' }));
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Thông tin người dùng' })).getAllByRole('button', { name: 'Đóng' })[1]);
+    expect(screen.queryByRole('dialog', { name: 'Thông tin người dùng' })).toBeNull();
+    expect(footer).toBeTruthy();
+  });
+
+  it.each([
+    [503, { code: 'DIRECTORY_UNAVAILABLE' }, 'Không liên lạc được PMH ID — thử lại sau ít phút.'],
+    [502, { code: 'DIRECTORY_AUTH_FAILED' }, 'PMH ID từ chối quyền đọc danh bạ — báo IT kiểm tra cấu hình.'],
+    [500, { code: 'DIRECTORY_SYNC_FAILED' }, 'Đồng bộ chưa xong — thử lại sau ít phút.'],
+    [500, { code: 'SOMETHING_ELSE' }, 'Không liên lạc được PMH ID — thử lại sau ít phút.'],
+    [400, { code: 'SOMETHING_ELSE' }, 'Chưa đồng bộ được — thử lại sau ít phút.'],
+  ])('đồng bộ lỗi %i %j → câu đúng', async (status, body, text) => {
+    stubUsers([AN], () => jsonResponse(status, { ...body, message: 'x' }));
+    await openUsers();
+    await userEvent.click(screen.getByRole('button', { name: 'Đồng bộ ngay' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(text);
   });
 
   it('lỗi tải → "Không tải được dữ liệu — thử lại." + "Thử lại"', async () => {
@@ -186,7 +205,7 @@ describe('UsersPage B10', () => {
     renderApp(makeMe('admin'), '/admin/users');
     expect(await screen.findByText(/Danh bạ có hơn 2000 người/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Đang dùng/ })).toBeNull();
-    await userEvent.click(screen.getByRole('searchbox', { name: 'Tìm theo tên, email hoặc mã NV' }));
+    await userEvent.click(screen.getByRole('searchbox', { name: 'Tìm người' }));
     await userEvent.paste('0042');
     await waitFor(() => expect(f.mock.calls.some(([u]) => String(u).includes('search=0042'))).toBe(true));
     await waitFor(() => expect(bodyRows()).toHaveLength(1));

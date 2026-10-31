@@ -38,6 +38,11 @@ export function UserDrawer({ user, position, onPrev, onNext, onClose }: Props) {
         <button type="button" className="btn btn--ghost btn--sm dr-icon-btn" aria-label={t('users.drawer.next')} disabled={!onNext} onClick={onNext}>
           <Icon name="chev" size={18} />
         </button>
+        <DrawerClose asChild>
+          <button type="button" className="sheet-close" aria-label={t('common.close')}>
+            <Icon name="x" />
+          </button>
+        </DrawerClose>
       </div>
       <div className="drawer-body">
         <div className="dr-who">
