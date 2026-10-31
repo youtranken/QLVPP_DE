@@ -23,4 +23,15 @@ describe('StatCard', () => {
     expect(screen.getByText('món')).toBeInTheDocument();
     expect(screen.getByText('tháng 11')).toBeInTheDocument();
   });
+  it('meter kẹp trong 0–100%: 1.25 → 100%, 0.5 → 50%, −1 → 0%; không meter thì không có thanh', () => {
+    const width = () => (document.querySelector('[data-meter] > span') as HTMLElement).style.width;
+    const { rerender } = renderWithI18n(<StatCard label="A" value={1} meter={1.25} />);
+    expect(width()).toBe('100%');
+    rerender(<StatCard label="A" value={1} meter={0.5} />);
+    expect(width()).toBe('50%');
+    rerender(<StatCard label="A" value={1} meter={-1} />);
+    expect(width()).toBe('0%');
+    rerender(<StatCard label="A" value={1} />);
+    expect(document.querySelector('[data-meter]')).toBeNull();
+  });
 });

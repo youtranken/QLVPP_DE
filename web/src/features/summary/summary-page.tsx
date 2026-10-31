@@ -1,139 +1,139 @@
-import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDebouncedValue } from '@/lib/use-debounced-value';
+import { vnDeadlineDay } from '@/lib/format-time';
 import { Loading, LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
+import { PageHeader } from '@/ui/page-header';
+import { Segmented } from '@/ui/segmented';
+import { Toolbar } from '@/ui/toolbar';
+import { useAdminItems } from '@/features/catalog/catalog.api';
+import type { DirectoryUser } from '@/features/directory/directory.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
-import { monthOf, useRequestFormat } from '@/features/request/request-format';
-import { KpiStrip } from './kpi-strip';
-import { ItemTable } from './item-table';
-import { PersonTable } from './person-table';
-import { UnregisteredCopy } from './unregistered-copy';
+import { monthOf } from '@/features/request/request-format';
 import { AdjustDrawer } from './adjust-drawer';
 import { CreateRequestDialog } from './create-request-dialog';
-import { usePeriodSummary, type PeriodSummary, type SummaryFilter } from './summary.api';
+import { SummaryItemTable } from './summary-item-table';
+import { SummaryPersonTable } from './summary-person-table';
+import { SummaryStats } from './summary-stats';
+import { UnregisteredCopy } from './unregistered-copy';
+import { UnregisteredTable } from './unregistered-table';
+import { usePeriodSummary, type PeriodSummary } from './summary.api';
+import { useSummaryParams, type SummaryView } from './use-summary-params';
 import '@/features/admin/admin.css';
 import './summary.css';
-import { YM } from '@/lib/ym';
+import './summary.m1.css';
 
-type View = 'person' | 'item';
-const VIEWS: View[] = ['person', 'item'];
-// Cùng mẫu với api/src/common/ym.ts: tháng 01–12, giá trị khác rơi về kỳ đang mở
-function PeriodHead({ ym, openYm, summary, onMonth, onCreate }: {
-  ym: string;
-  openYm: string;
-  summary: PeriodSummary | undefined;
-  onMonth: (ym: string) => void;
-  onCreate: () => void;
-}) {
+const MAX_SEARCH = 100;
+
+function useSearchBox(q: string, setQ: (v: string) => void) {
+  const [text, setText] = useState(q);
+  const debounced = useDebouncedValue(text.trim(), 300);
+  const latest = useRef({ q, setQ });
+  useEffect(() => {
+    latest.current = { q, setQ };
+  });
+  // Chỉ đẩy giá trị vừa gõ lên URL; render lại vì lý do khác không ghi đè q
+  useEffect(() => {
+    if (debounced !== latest.current.q) latest.current.setQ(debounced);
+  }, [debounced]);
+  return [text, setText] as const;
+}
+
+function MonthControl({ ym, openYm, summary, onChange }: { ym: string; openYm: string; summary?: PeriodSummary; onChange: (v: string) => void }) {
   const { t } = useTranslation();
-  const fmt = useRequestFormat();
-  // Tạo hộ luôn vào kỳ đang mở (api) → chỉ mời khi đang xem đúng kỳ đó
-  const canCreate = ym === openYm;
+  const status = summary
+    ? summary.is_open
+      ? { tone: 'ok' as const, label: t('summary.page.open', { day: summary.deadline ? vnDeadlineDay(summary.deadline) : '' }) }
+      : { tone: 'dark' as const, label: t('summary.page.locked') }
+    : undefined;
   return (
-    <div className="a-toolbar sm-head">
-      <MonthSwitcher
-        value={ym}
-        max={openYm}
-        onChange={onMonth}
-        formatLabel={(v) => t('summary.month', { month: monthOf(v), year: v.slice(0, 4) })}
-        labels={{ group: t('summary.monthNav'), prev: t('summary.prevMonth'), next: t('summary.nextMonth') }}
-      />
-      {summary &&
-        (summary.is_open ? (
-          <span className="tag tag--brand">
-            {t('summary.open', { day: summary.deadline ? fmt.lastDay(summary.deadline) : '' })}
-          </span>
-        ) : (
-          <span className="tag">{t('summary.locked')}</span>
-        ))}
-      <span className="sp" />
-      {summary && <UnregisteredCopy ym={ym} deadline={summary.deadline} count={summary.unregistered} />}
-      {canCreate && (
-        <button type="button" className="btn btn--sm btn--primary" onClick={onCreate}>
-          {t('summary.create.button')}
-        </button>
-      )}
-    </div>
+    <MonthSwitcher
+      value={ym}
+      max={openYm}
+      onChange={onChange}
+      status={status}
+      formatLabel={(v) => t('summary.page.month', { month: monthOf(v), year: v.slice(0, 4) })}
+      labels={{ group: t('summary.page.monthNav'), prev: t('summary.page.prevMonth'), next: t('summary.page.nextMonth') }}
+    />
   );
 }
 
-// Trang chủ Hành chính; ?ym= giữ tháng đang xem khi tải lại, không vượt kỳ đang mở
 export function SummaryPage() {
   const { t } = useTranslation();
-  const [params, setParams] = useSearchParams();
   const current = useCurrentPeriod();
   const openYm = current.data?.ym;
-  const asked = params.get('ym');
-  const ym = asked && openYm && YM.test(asked) && asked <= openYm ? asked : openYm;
-  const summary = usePeriodSummary(ym);
-  const [view, setView] = useState<View>('person');
-  const [filter, setFilter] = useState<SummaryFilter>('all');
-  const [search, setSearch] = useState('');
-  const q = useDebouncedValue(search.trim(), 300);
-  const [adjusting, setAdjusting] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
+  const p = useSummaryParams(openYm);
+  const summary = usePeriodSummary(p.ym);
+  const items = useAdminItems();
+  const [search, setSearch] = useSearchBox(p.q, p.setQ);
+  const [creating, setCreating] = useState<{ user: DirectoryUser | null } | null>(null);
+  const title = t('summary.page.title');
+  const header = (actions?: ReactNode) => (
+    <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('summary.page.description')} actions={actions} />
+  );
 
-  if (current.isError) return <LoadError onRetry={() => void current.refetch()} />;
-  if (!ym || !openYm) return <Loading />;
+  if (current.isError) return <>{header()}<LoadError onRetry={() => void current.refetch()} /></>;
+  if (!p.ym || !openYm) return <>{header()}<Loading /></>;
 
-  const pickFilter = (next: SummaryFilter) => {
-    setFilter(next);
-    setView('person');
-  };
+  const ym = p.ym;
+  const data = summary.data;
+  const canCreate = ym === openYm;
+  const outCount = (items.data ?? []).filter((i) => i.active && i.stock_state === 'out').length;
+  const views = [
+    { value: 'person' as SummaryView, label: t('summary.page.byPerson') },
+    { value: 'item' as SummaryView, label: t('summary.page.byItem') },
+  ];
 
   return (
-    <div className="a-stack">
-      <PeriodHead
-        ym={ym}
-        openYm={openYm}
-        summary={summary.data}
-        onMonth={(v) => setParams({ ym: v })}
-        onCreate={() => setCreating(true)}
-      />
+    <div className="sm-page">
+      {header(<MonthControl ym={ym} openYm={openYm} summary={data} onChange={p.setMonth} />)}
       {summary.isError && <LoadError onRetry={() => void summary.refetch()} />}
-      {summary.data && <KpiStrip summary={summary.data} filter={filter} onFilter={pickFilter} />}
-      <section className="a-panel">
-        <div className="a-toolbar sm-tools">
-          {view === 'person' && (
-            <input
-              className="a-input admin-search"
-              type="search"
-              value={search}
-              placeholder={t('summary.search')}
-              aria-label={t('summary.search')}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          )}
-          <div role="radiogroup" aria-label={t('summary.view')} className="seg seg--sm sm-view">
-            {VIEWS.map((v) => (
-              <button key={v} type="button" role="radio" aria-checked={view === v} onClick={() => setView(v)}>
-                {t(v === 'person' ? 'summary.byPerson' : 'summary.byItem')}
-              </button>
-            ))}
-          </div>
-          <span className="sp" />
-          {view === 'person' && filter !== 'all' && (
-            <span className="sm-filtering">
-              {t('summary.filtering', { name: t(`summary.filters.${filter}`) })}
-              <button type="button" className="btn btn--sm" onClick={() => setFilter('all')}>
-                {t('summary.clearFilter')}
-              </button>
-            </span>
-          )}
-        </div>
-        {view === 'person' ? <PersonTable ym={ym} filter={filter} q={q} locked={summary.data?.is_open === false} onAdjust={setAdjusting} /> : <ItemTable ym={ym} />}
-      </section>
-      {adjusting && <AdjustDrawer key={adjusting} requestId={adjusting} onClose={() => setAdjusting(null)} />}
+      {data && <SummaryStats summary={data} outCount={outCount} filter={p.filter} onFilter={p.toggleFilter} />}
+      <Toolbar
+        search={{
+          value: search,
+          onChange: setSearch,
+          label: t(p.view === 'item' ? 'summary.page.searchItem' : 'summary.page.search'),
+          placeholder: t(p.view === 'item' ? 'summary.page.searchItem' : 'summary.page.search'),
+          maxLength: MAX_SEARCH,
+        }}
+      >
+        <Segmented label={t('summary.page.view')} value={p.view} options={views} onChange={p.setView} />
+        <span className="sm-spacer" />
+        {data && <UnregisteredCopy ym={ym} deadline={data.deadline} count={data.unregistered} />}
+        {canCreate && (
+          <button type="button" className="btn btn--primary" onClick={() => setCreating({ user: null })}>
+            {t('summary.create.button')}
+          </button>
+        )}
+      </Toolbar>
+      {p.filter === 'unregistered' ? (
+        <UnregisteredTable ym={ym} canCreate={canCreate} onCreate={(user) => setCreating({ user })} onClearFilter={p.clearFilter} />
+      ) : p.view === 'item' ? (
+        <SummaryItemTable ym={ym} q={p.q} lowOnly={p.filter === 'low'} />
+      ) : (
+        <SummaryPersonTable
+          ym={ym}
+          locked={data?.is_open === false}
+          filter={p.filter === 'low' ? null : p.filter}
+          q={p.q}
+          activeId={p.requestId ?? undefined}
+          onOpen={p.openAdjust}
+          onClearFilter={p.clearFilter}
+        />
+      )}
+      {p.requestId && <AdjustDrawer key={p.requestId} requestId={p.requestId} onClose={p.closeAdjust} />}
       {creating && (
         <CreateRequestDialog
           ym={ym}
-          onClose={() => setCreating(false)}
-          onCreated={() => setCreating(false)}
+          initialUser={creating.user}
+          onClose={() => setCreating(null)}
+          onCreated={() => setCreating(null)}
           onOpenExisting={(id) => {
-            setCreating(false);
-            setAdjusting(id);
+            setCreating(null);
+            p.openAdjust(id);
           }}
         />
       )}

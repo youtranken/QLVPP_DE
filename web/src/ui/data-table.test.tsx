@@ -152,4 +152,12 @@ describe('DataTable', () => {
     );
     expect(container.querySelector('table')).toHaveClass('table', 'board-table');
   });
+  it('busy → table aria-busy "true"/"false"; không truyền thì không có thuộc tính', () => {
+    const { rerender } = renderWithI18n(<DataTable data={DATA} columns={COLUMNS} emptyText="Trống" busy />);
+    expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true');
+    rerender(<DataTable data={DATA} columns={COLUMNS} emptyText="Trống" busy={false} />);
+    expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'false');
+    rerender(<DataTable data={DATA} columns={COLUMNS} emptyText="Trống" />);
+    expect(screen.getByRole('table')).not.toHaveAttribute('aria-busy');
+  });
 });

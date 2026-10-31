@@ -23,14 +23,14 @@ function stub(post: () => Response) {
   return fetchMock;
 }
 
-async function renderDialog() {
+async function renderDialog(initialUser: DirectoryUser | null = null) {
   const onClose = vi.fn();
   const onCreated = vi.fn();
   const onOpenExisting = vi.fn();
   renderWithI18n(
     <MeContext.Provider value={makeMe('admin')}>
       <ConfirmProvider>
-        <CreateRequestDialog ym="2026-11" onClose={onClose} onCreated={onCreated} onOpenExisting={onOpenExisting} />
+        <CreateRequestDialog ym="2026-11" initialUser={initialUser} onClose={onClose} onCreated={onCreated} onOpenExisting={onOpenExisting} />
       </ConfirmProvider>
     </MeContext.Provider>,
   );
@@ -72,6 +72,18 @@ describe('CreateRequestDialog — tạo phiếu hộ', () => {
     const call = fetchMock.mock.calls.find((c) => c[0] === '/api/admin/requests') as unknown as [string, RequestInit];
     expect(call[1].method).toBe('POST');
     expect(JSON.parse(String(call[1].body))).toEqual({ user_sub: 'u-lan', lines: [{ item_id: 'i-note', qty: 2 }] });
+  });
+
+  it('mở từ hàng "chưa đăng ký" (initialUser) → người đã chọn sẵn, chỉ cần thêm món rồi gửi đúng user_sub', async () => {
+    const fetchMock = stub(() => jsonResponse(201, { request: { id: 'r-new' } }));
+    const { dialog, onCreated } = await renderDialog(USERS[0]);
+    expect(within(dialog).getByText(/Võ Thị Lan/)).toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole('button', { name: '+ Thêm món vào phiếu' }));
+    await userEvent.click(await within(dialog).findByRole('button', { name: /Giấy note vàng/ }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Tạo phiếu' }));
+    await waitFor(() => expect(onCreated).toHaveBeenCalled());
+    const call = fetchMock.mock.calls.find((c) => c[0] === '/api/admin/requests') as unknown as [string, RequestInit];
+    expect(JSON.parse(String(call[1].body))).toEqual({ user_sub: 'u-lan', lines: [{ item_id: 'i-note', qty: 1 }] });
   });
 
   it('REQUEST_EXISTS → "Người này đã có phiếu — mở Điều chỉnh" + nút mở ngăn của đúng người', async () => {

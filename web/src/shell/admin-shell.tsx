@@ -11,11 +11,11 @@ import { AdminTopbar } from '@/shell/admin-topbar';
 import { useForbiddenRole } from '@/shell/use-forbidden-role';
 import { useShellFont } from '@/shell/use-shell-font';
 
-// Trang chưa port (S2–S6) chưa tự dựng PageHeader: shell dựng tạm tiêu đề theo mục sidebar
+// Trang chưa có PageHeader riêng: shell dựng tạm tiêu đề theo mục sidebar
 function ShellPageHeader() {
   const { t } = useTranslation();
   const current = adminPageOf(useLocation().pathname);
-  if (!current) return null;
+  if (!current || current.page.ownHeader) return null;
   return <PageHeader crumbs={[]} title={t(current.page.titleKey)} />;
 }
 

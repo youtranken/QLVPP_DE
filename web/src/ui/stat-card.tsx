@@ -12,11 +12,13 @@ interface Props {
   sub?: string;
   tone?: StatTone;
   pressed?: boolean;
+  meter?: number;
   onClick?: () => void;
 }
 
-export function StatCard({ label, icon, value, unit, sub, tone = 'neutral', pressed, onClick }: Props) {
+export function StatCard({ label, icon, value, unit, sub, tone = 'neutral', pressed, meter, onClick }: Props) {
   const { t } = useTranslation();
+  const fill = meter === undefined ? undefined : Math.min(Math.max(meter, 0), 1) * 100;
   const body = (
     <>
       <span className="stat-card__k">
@@ -28,6 +30,11 @@ export function StatCard({ label, icon, value, unit, sub, tone = 'neutral', pres
         {unit && <small>{unit}</small>}
       </span>
       {sub && <span className="stat-card__sub">{sub}</span>}
+      {fill !== undefined && (
+        <span className="stat-card__meter" data-meter aria-hidden="true">
+          <span style={{ width: `${fill}%` }} />
+        </span>
+      )}
       {onClick && <span className="stat-card__hint" aria-hidden="true">{t('common.filter.hint')}</span>}
     </>
   );

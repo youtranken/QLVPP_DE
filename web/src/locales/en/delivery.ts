@@ -12,6 +12,7 @@ const delivery: Messages<typeof vi> = {
     empty: 'No requests left to deliver this month.',
     emptyAll: 'No requests this month.',
     noDepartment: 'No department',
+    bar: 'Delivered {{done}}/{{total}}',
     more: 'Show more',
     lines: 'Lines of {{name}}’s request',
     line: {

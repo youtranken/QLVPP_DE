@@ -90,6 +90,10 @@ export function useItemRows(ym: string | undefined) {
 export const fetchUnregistered = (ym: string) =>
   apiFetch<{ items: UnregisteredUser[] }>(`${base(ym)}/unregistered`);
 
+export function useUnregistered(ym: string) {
+  return useQuery({ queryKey: [...SUMMARY_KEY, ym, 'unregistered'], queryFn: () => fetchUnregistered(ym) });
+}
+
 export type AdminRequestView = RequestView & { user_status: string };
 
 export const adminRequestKey = (id: string) => ['admin-request', id] as const;

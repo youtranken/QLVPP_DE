@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { apiErrorCode, apiErrorNumber, apiErrorString } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
+import { Icon } from '@/ui/icon';
 import { useAdminItems } from '@/features/catalog/catalog.api';
 import type { DirectoryUser } from '@/features/directory/directory.api';
 import { UserPicker } from '@/features/directory/user-picker';
@@ -29,8 +30,9 @@ const USER_CODES = new Set(['USER_NOT_FOUND', 'USER_INACTIVE', 'USER_IS_ADMIN'])
 const LINE_CODES = new Set(['QTY_INVALID', 'QTY_EXCEEDS_MAX', 'ITEM_INACTIVE', 'ITEM_NOT_FOUND', 'ADMIN_ONLY_ITEM', 'DUPLICATE_ITEM']);
 
 // Tạo hộ theo luật member (api on_behalf): món chỉ Hành chính không chọn được ở đây
-export function CreateRequestDialog({ ym, onClose, onCreated, onOpenExisting }: {
+export function CreateRequestDialog({ ym, initialUser = null, onClose, onCreated, onOpenExisting }: {
   ym: string;
+  initialUser?: DirectoryUser | null;
   onClose: () => void;
   onCreated: () => void;
   onOpenExisting: (requestId: string) => void;
@@ -40,7 +42,7 @@ export function CreateRequestDialog({ ym, onClose, onCreated, onOpenExisting }: 
   const { csrfToken } = useMe();
   const qc = useQueryClient();
   const items = useAdminItems();
-  const [user, setUser] = useState<DirectoryUser | null>(null);
+  const [user, setUser] = useState<DirectoryUser | null>(initialUser);
   const [lines, setLines] = useState<Line[]>([]);
   const [errors, setErrors] = useState<Errors>({});
   const [saving, setSaving] = useState(false);
@@ -95,7 +97,7 @@ export function CreateRequestDialog({ ym, onClose, onCreated, onOpenExisting }: 
           </DialogTitle>
           <DialogClose asChild>
             <button type="button" className="sheet-close" aria-label={t('common.close')} disabled={saving}>
-              ✕
+              <Icon name="x" />
             </button>
           </DialogClose>
         </div>

@@ -41,8 +41,11 @@
 [data-shell='admin'] .stat-card__v { font: var(--t-stat); letter-spacing: -0.02em; }
 [data-shell='admin'] .stat-card__v small { margin-left: 4px; font: var(--t-sm); font-weight: 600; color: var(--c-muted); }
 [data-shell='admin'] .stat-card__sub { font: var(--t-sm); color: var(--c-muted); }
+[data-shell='admin'] .stat-card__meter { display: block; height: 6px; margin-top: var(--s-2); border-radius: var(--r-pill); background: rgb(var(--sh-ink) / .08); overflow: hidden; }
+[data-shell='admin'] .stat-card__meter > span { display: block; height: 100%; border-radius: inherit; background: var(--c-acc); }
 [data-shell='admin'] .stat-card__hint { position: absolute; top: 12px; right: 12px; font: var(--t-micro); color: var(--c-acc); opacity: 0; transition: opacity var(--d-1) var(--ease-out); }
 [data-shell='admin'] button.stat-card:hover .stat-card__hint { opacity: 1; }
+@media (hover: none) { [data-shell='admin'] .stat-card__hint { display: none; } }
 
 [data-shell='admin'] .filter-notice { display: flex; align-items: center; gap: var(--s-3); font: var(--t-sm); color: var(--c-ink-2); }
 

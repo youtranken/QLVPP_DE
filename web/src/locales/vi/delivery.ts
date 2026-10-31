@@ -9,6 +9,7 @@ const delivery = {
     empty: 'Không còn phiếu nào cần giao trong tháng này.',
     emptyAll: 'Tháng này chưa có phiếu nào.',
     noDepartment: 'Chưa có phòng ban',
+    bar: 'Đã giao {{done}}/{{total}}',
     more: 'Xem thêm',
     lines: 'Các dòng của phiếu {{name}}',
     line: {

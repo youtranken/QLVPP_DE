@@ -8,7 +8,7 @@ const TECHNICAL_ATTRS = new Set([
   'className', 'id', 'key', 'type', 'name', 'role', 'href', 'to', 'path', 'variant', 'size', 'tone', 'mode',
   'htmlFor', 'autoComplete', 'autoCapitalize', 'inputMode', 'method', 'rel', 'target', 'src', 'accept', 'capture',
   'loading', 'scope', 'lang', 'dir', 'd', 'viewBox', 'fill', 'stroke', 'xmlns',
-  'side', 'align', 'orientation', 'enterKeyHint', 'form', 'i18nKey',
+  'side', 'align', 'orientation', 'enterKeyHint', 'form', 'i18nKey', 'icon',
 ]);
 const TOKEN_ARIA = new Set([
   'aria-hidden', 'aria-live', 'aria-current', 'aria-haspopup', 'aria-expanded', 'aria-controls', 'aria-labelledby',

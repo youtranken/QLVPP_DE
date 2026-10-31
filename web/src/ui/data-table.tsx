@@ -44,6 +44,7 @@ interface DataTableProps<T> {
   groupBy?: GroupBy<T>;
   activeRowId?: string;
   density?: 'compact';
+  busy?: boolean;
 }
 
 export function DataTable<T>({
@@ -65,6 +66,7 @@ export function DataTable<T>({
   groupBy,
   activeRowId,
   density,
+  busy,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
@@ -124,6 +126,7 @@ export function DataTable<T>({
             .filter(Boolean)
             .join(' ')}
           data-density={density}
+          aria-busy={busy}
         >
           <thead>
             {table.getHeaderGroups().map((hg) => (

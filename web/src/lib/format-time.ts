@@ -21,3 +21,30 @@ export function formatVnStamp(iso: string, withYear = false): string {
   const part = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
   return `${part('hour')}:${part('minute')} ${part('day')}/${part('month')}${withYear ? `/${part('year')}` : ''}`;
 }
+
+const ZONE = 'Asia/Ho_Chi_Minh';
+const DAY_MONTH = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'numeric', timeZone: ZONE });
+const DAY_KEY = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: ZONE });
+
+function dayMonthOf(ms: number): { day: number; month: number } {
+  const parts = DAY_MONTH.formatToParts(new Date(ms));
+  const part = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+  return { day: part('day'), month: part('month') };
+}
+
+// Hạn là mốc 00:00 ngày khóa theo giờ VN: "d/M" của chính mốc đó
+export function vnLockDate(deadline: string): string {
+  const { day, month } = dayMonthOf(new Date(deadline).getTime());
+  return `${day}/${month}`;
+}
+
+// Ngày cuối được sửa = ngày trước mốc khóa → lùi 1 ms
+export function vnDeadlineDay(deadline: string): number {
+  return dayMonthOf(new Date(deadline).getTime() - 1).day;
+}
+
+export function vnSavedAt(iso: string, now: Date = new Date()): { today: boolean; time: string; date: string } {
+  const at = new Date(iso);
+  const [hm, dm] = formatVnStamp(iso).split(' ');
+  return { today: DAY_KEY.format(at) === DAY_KEY.format(now), time: hm, date: dm };
+}

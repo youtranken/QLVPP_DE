@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-export function FilterNotice({ label, count, onClear }: { label: string; count: number; onClear: () => void }) {
+export function FilterNotice({ label, count, onClear }: { label: string; count: number | string; onClear: () => void }) {
   const { t } = useTranslation();
   return (
     <div className="filter-notice">

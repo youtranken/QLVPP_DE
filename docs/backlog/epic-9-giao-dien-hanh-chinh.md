@@ -29,6 +29,7 @@ Playwright: `E9-S1 shell Hành chính: sidebar 3 nhóm 11 mục, thẻ kỳ, chu
 
 ## E9-S2 Tổng hợp kỳ + Món ngoài danh mục
 SPEC §5.2.
+Trạng thái: AC 1–2 + Playwright "E9-S2 Tổng hợp…" xong (T10); AC 3–8 ở T11/T12.
 **AC:**
 1. Bấm thẻ "Dòng chờ giao" (kỳ khóa) → URL có `filter=pending_delivery`, `aria-pressed="true"`, nhãn "Đang lọc: Còn dòng chờ giao · {n} người", bảng chỉ gồm phiếu còn dòng chờ giao; bấm lại → bỏ lọc. Kỳ mở: thẻ không có role button.
 2. Bấm "Phiếu đã đăng ký" → bảng = danh sách chưa đăng ký, không chứa Hành chính (sau S0).

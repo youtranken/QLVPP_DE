@@ -13,4 +13,8 @@ describe('FilterNotice', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Bỏ lọc' }));
     expect(onClear).toHaveBeenCalledTimes(1);
   });
+  it('count là chuỗi có đơn vị: "Đang lọc: Còn dòng chờ giao · 3 người"', () => {
+    renderWithI18n(<FilterNotice label="Còn dòng chờ giao" count="3 người" onClear={() => {}} />);
+    expect(screen.getByText('Đang lọc: Còn dòng chờ giao · 3 người')).toBeInTheDocument();
+  });
 });

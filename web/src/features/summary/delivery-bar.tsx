@@ -11,7 +11,7 @@ export function DeliveryBar({ done, total }: { done: number; total: number }) {
       <span
         className="sm-bar"
         role="progressbar"
-        aria-label={t('summary.person.delivered', { done, total })}
+        aria-label={t('delivery.bar', { done, total })}
         aria-valuemin={0}
         aria-valuemax={total}
         aria-valuenow={done}
