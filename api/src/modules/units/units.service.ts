@@ -4,7 +4,7 @@ import { pgViolation } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
-import { definedEntries, pick, setClause } from '../catalog/catalog-sql';
+import { definedEntries, pick, setClause } from '../../common/sql-patch';
 import { unitCodeFrom } from './unit-code';
 import {
   unitExists,
@@ -41,16 +41,23 @@ export class UnitsService {
     private readonly audit: AuditWriterService,
   ) {}
 
-  async listActive(): Promise<UnitRow[]> {
+  // Gồm cả ĐVT đã ngừng: nhân viên vẫn thấy đúng tên ĐVT trên dòng cũ
+  async list(): Promise<UnitRow[]> {
     const { rows } = await this.db.execute<UnitRow>(sql`
-      SELECT ${COLUMNS} FROM units WHERE active ${ORDER}
+      SELECT ${COLUMNS} FROM units ${ORDER}
     `);
     return rows;
   }
 
-  async listAll(): Promise<(UnitRow & { in_use: boolean })[]> {
-    const { rows } = await this.db.execute<UnitRow & { in_use: boolean }>(sql`
-      SELECT ${COLUMNS}, ${IN_USE} AS in_use FROM units ${ORDER}
+  async listWithUsage(): Promise<
+    (UnitRow & { in_use: boolean; item_count: number })[]
+  > {
+    const { rows } = await this.db.execute<
+      UnitRow & { in_use: boolean; item_count: number }
+    >(sql`
+      SELECT ${COLUMNS}, ${IN_USE} AS in_use,
+             (SELECT count(*)::int FROM items i WHERE i.unit = units.code) AS item_count
+      FROM units ${ORDER}
     `);
     return rows;
   }

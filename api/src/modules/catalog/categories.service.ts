@@ -10,12 +10,8 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import type { CreateCategoryDto, UpdateCategoryDto } from './catalog.dto';
-import {
-  CATEGORY_COLUMNS,
-  definedEntries,
-  pick,
-  setClause,
-} from './catalog-sql';
+import { definedEntries, pick, setClause } from '../../common/sql-patch';
+import { CATEGORY_COLUMNS } from './catalog-sql';
 import type { CategoryRow } from './catalog-sql';
 
 @Injectable()

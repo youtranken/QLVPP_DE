@@ -28,6 +28,7 @@ interface Unit {
   sort_order: number;
   active: boolean;
   in_use?: boolean;
+  item_count?: number;
 }
 
 describe('units: GET units, admin/units', () => {
@@ -95,12 +96,18 @@ describe('units: GET units, admin/units', () => {
   });
 
   describe('GET units', () => {
-    it('member chỉ thấy ĐVT đang dùng, theo sort_order rồi tên, không có in_use', async () => {
+    it('member thấy mọi ĐVT kể cả đã ngừng (active=false), theo sort_order rồi tên, không có in_use/item_count', async () => {
       const off = await newUnit('Ngừng', { sort_order: -5 });
       await patchUnit(off.code, { active: false }).expect(200);
       const res = await member(http().get('/api/units')).expect(200);
       const units = res.body as Unit[];
-      expect(units.map((u) => u.code)).not.toContain(off.code);
+      expect(units.find((u) => u.code === off.code)).toEqual({
+        code: off.code,
+        name: off.name,
+        name_en: null,
+        sort_order: -5,
+        active: false,
+      });
       const seeded = ['cai', 'hop', 'cay', 'ram', 'cuon', 'loc', 'bich'];
       expect(
         units.map((u) => u.code).filter((c) => seeded.includes(c)),
@@ -116,22 +123,25 @@ describe('units: GET units, admin/units', () => {
       });
     });
 
-    it('?all=1 member → 403 FORBIDDEN_ROLE; admin thấy cả ĐVT ngừng kèm in_use', async () => {
+    it('?all=1 member → 403 FORBIDDEN_ROLE; admin có thêm in_use và item_count (0 / 2 món)', async () => {
       const res = await member(http().get('/api/units?all=1')).expect(403);
       expect(res.body).toMatchObject({ code: 'FORBIDDEN_ROLE' });
       const off = await newUnit('Ngừng2');
       await patchUnit(off.code, { active: false }).expect(200);
       const used = await newUnit('Dùng');
       await createItem(used.code).expect(201);
+      await createItem(used.code).expect(201);
       const all = (await admin(http().get('/api/units?all=1')).expect(200))
         .body as Unit[];
       expect(all.find((u) => u.code === off.code)).toMatchObject({
         active: false,
         in_use: false,
+        item_count: 0,
       });
       expect(all.find((u) => u.code === used.code)).toMatchObject({
         active: true,
         in_use: true,
+        item_count: 2,
       });
     });
   });
@@ -192,6 +202,20 @@ describe('units: GET units, admin/units', () => {
   });
 
   describe('PATCH admin/units/:code', () => {
+    it('sort_order ±1 000 000 → 200; ±1 000 001 hoặc số lẻ → 400 VALIDATION {fields:[sort_order]}', async () => {
+      const u = await newUnit('Thứ tự');
+      for (const sort_order of [1_000_000, -1_000_000]) {
+        await patchUnit(u.code, { sort_order }).expect(200);
+      }
+      for (const sort_order of [1_000_001, -1_000_001, 1.5]) {
+        const res = await patchUnit(u.code, { sort_order }).expect(400);
+        expect(res.body).toMatchObject({
+          code: 'VALIDATION',
+          fields: ['sort_order'],
+        });
+      }
+    });
+
     it('đổi tên/name_en/sort_order → 200, audit unit.updated có before/after; mã không có → 404 UNIT_NOT_FOUND; trùng tên → 409 UNIT_EXISTS', async () => {
       const u = await newUnit('Xấp');
       const other = await newUnit('Tập');

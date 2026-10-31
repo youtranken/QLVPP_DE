@@ -50,13 +50,22 @@ describe('UnitSelect', () => {
     ]);
   });
 
-  it('dòng/món cũ đang giữ ĐVT đã ngừng: ô chọn vẫn giữ lựa chọn đó ở cuối, không chọn thêm được ĐVT ngừng khác', async () => {
-    const { wrapper } = withServer([unit('cai', 'cái')]);
+  it('dòng/món cũ đang giữ ĐVT đã ngừng: ô chọn vẫn giữ lựa chọn đó (hiện tên) ở cuối, không có ĐVT ngừng khác', async () => {
+    const { wrapper } = withServer([unit('cai', 'cái'), unit('thung', 'thùng', { active: false }), unit('bao', 'bao', { active: false })]);
     render(<UnitSelect aria-label="ĐVT" value="thung" onValueChange={() => undefined} />, { wrapper });
     const select = screen.getByRole('combobox', { name: 'ĐVT' });
     await waitFor(() => expect(within(select).getAllByRole('option')).toHaveLength(3));
     expect(within(select).getAllByRole('option').map((o) => o.getAttribute('value'))).toEqual(['', 'cai', 'thung']);
     expect(select).toHaveValue('thung');
+    expect(within(select).getAllByRole('option')[2]).toHaveTextContent('thùng');
+  });
+
+  it('ĐVT đã ngừng (active=false) server vẫn trả nhưng không có trong ô chọn', async () => {
+    const { wrapper } = withServer([unit('cai', 'cái'), unit('thung', 'thùng', { active: false })]);
+    render(<UnitSelect aria-label="ĐVT" value="" onValueChange={() => undefined} />, { wrapper });
+    const select = screen.getByRole('combobox', { name: 'ĐVT' });
+    await waitFor(() => expect(within(select).getAllByRole('option')).toHaveLength(2));
+    expect(within(select).queryByRole('option', { name: 'thùng' })).toBeNull();
   });
 
   it('UI tiếng Anh: nhãn là name_en, thiếu name_en thì dùng tên vi', async () => {
@@ -71,6 +80,13 @@ describe('UnitSelect', () => {
 
 describe('useUnitName', () => {
   const units = [unit('cai', 'cái', { name_en: 'piece' }), unit('goi', 'gói')];
+
+  it('member vẫn thấy tên ĐVT đã ngừng; chỉ gọi /api/units một lần, không gọi ?all=1', async () => {
+    const { wrapper, fetchMock } = withServer([unit('thung', 'thùng', { active: false })]);
+    const { result } = renderHook(() => useUnitName('thung'), { wrapper });
+    await waitFor(() => expect(result.current).toBe('thùng'));
+    expect(fetchMock.mock.calls.map(([u]) => u)).toEqual(['/api/units']);
+  });
 
   it('vi: tên vi; mã không có trong danh sách → hiện thô mã; null → chuỗi rỗng', async () => {
     const { wrapper } = withServer(units);

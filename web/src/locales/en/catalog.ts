@@ -99,6 +99,7 @@ const catalog: Messages<typeof vi> = {
       FILE_TOO_LARGE: 'The photo is over 5 MB — choose a smaller one.',
       FILE_FORBIDDEN: 'This photo cannot be used — upload another one.',
       UNIT_REQUIRED: 'Choose a unit.',
+      UNIT_INACTIVE: 'This unit is no longer used — choose another unit.',
       ITEM_CODE_EXISTS: 'This item code is already used by another item.',
       ITEM_NOT_FOUND: 'This item no longer exists — reload the page.',
       CATEGORY_EXISTS: 'A category with this name already exists.',

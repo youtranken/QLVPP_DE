@@ -13,7 +13,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { STAMP_FROM_2000 } from '../../common/ym';
-import { NAME_MAX, OptionalText, UnitCode } from '../catalog/catalog.dto';
+import { NAME_MAX, OptionalText } from '../../common/dto-fields';
+import { UnitCode } from '../units/units.dto';
 
 export const NOTE_MAX = 500;
 

@@ -1,4 +1,3 @@
-import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsIn,
@@ -6,21 +5,32 @@ import {
   IsOptional,
   IsString,
   MaxLength,
-  ValidateIf,
 } from 'class-validator';
-import { OptionalText, SortOrder } from '../catalog/catalog.dto';
+import {
+  OptionalText,
+  Present,
+  SortOrder,
+  Trim,
+  TrimToNull,
+} from '../../common/dto-fields';
+import { UNIT_CODE_MAX } from './unit-code';
 
 export const UNIT_NAME_MAX = 40;
 
 const UnitName = () => (target: object, key: string) => {
-  Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )(target, key);
+  Trim()(target, key);
   IsString()(target, key);
   IsNotEmpty()(target, key);
   MaxLength(UNIT_NAME_MAX)(target, key);
 };
-const Present = () => ValidateIf((_, v) => v !== undefined);
+
+// Mã ĐVT kiểm tồn tại/active ở UnitsService; vắng/null do service báo UNIT_REQUIRED
+export const UnitCode = () => (target: object, key: string) => {
+  TrimToNull()(target, key);
+  IsOptional()(target, key);
+  IsString()(target, key);
+  MaxLength(UNIT_CODE_MAX)(target, key);
+};
 
 export class CreateUnitDto {
   @UnitName() name!: string;

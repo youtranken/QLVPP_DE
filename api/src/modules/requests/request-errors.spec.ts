@@ -25,6 +25,17 @@ describe('constraintError', () => {
     ).toBeNull();
   });
 
+  it('23503 request_lines_custom_unit_fkey (ĐVT bị xóa giữa lúc kiểm và lúc ghi) → 400 VALIDATION {fields:[custom_unit]}', () => {
+    const err = constraintError(
+      pgError('23503', 'request_lines_custom_unit_fkey'),
+    );
+    expect(err?.getStatus()).toBe(400);
+    expect(err?.getResponse()).toMatchObject({
+      code: 'VALIDATION',
+      fields: ['custom_unit'],
+    });
+  });
+
   it('constraint lạ → null', () => {
     expect(constraintError(pgError('23505', 'khong_biet'))).toBeNull();
     expect(constraintError(new Error('x'))).toBeNull();

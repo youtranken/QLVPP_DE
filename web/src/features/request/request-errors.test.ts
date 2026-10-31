@@ -24,4 +24,16 @@ describe('saveFailure', () => {
       message: 'Chưa lưu được — kiểm tra mạng rồi thử lại.',
     });
   });
+
+  it('UNIT_INACTIVE có line_index 0 → câu ĐVT đã ngừng gắn vào dòng đầu (vi và en)', () => {
+    const e = new ApiError(400, { code: 'UNIT_INACTIVE', message: 'x', line_index: 0 });
+    expect(saveFailure(e, lines, t, '2026-11')).toEqual({
+      kind: 'lines',
+      byKey: { a: 'Đơn vị tính này đã ngừng — chọn đơn vị khác.' },
+    });
+    expect(saveFailure(e, lines, i18n.getFixedT('en'), '2026-11')).toEqual({
+      kind: 'lines',
+      byKey: { a: 'This unit is no longer used — choose another unit.' },
+    });
+  });
 });

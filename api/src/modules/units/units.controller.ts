@@ -13,13 +13,13 @@ export class UnitsController {
     @Query() query: ListUnitsQuery,
     @CurrentIdentity() identity: RequestIdentity,
   ) {
-    if (query.all === undefined) return this.units.listActive();
+    if (query.all === undefined) return this.units.list();
     if (identity.role !== 'admin' && identity.role !== 'sa') {
       throw new ForbiddenException({
         code: 'FORBIDDEN_ROLE',
-        message: 'Chỉ Hành chính xem được ĐVT đã ngừng.',
+        message: 'Chỉ Hành chính xem được mức sử dụng ĐVT.',
       });
     }
-    return this.units.listAll();
+    return this.units.listWithUsage();
   }
 }

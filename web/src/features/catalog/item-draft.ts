@@ -29,6 +29,7 @@ export const ITEM_ERROR_FIELD: Record<string, string> = {
   IMAGE_REQUIRED: 'image_file_id',
   FILE_FORBIDDEN: 'image_file_id',
   UNIT_REQUIRED: 'unit',
+  UNIT_INACTIVE: 'unit',
   CATEGORY_NOT_FOUND: 'category_id',
 };
 

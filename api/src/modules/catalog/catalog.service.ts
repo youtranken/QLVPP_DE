@@ -16,13 +16,8 @@ import { FilesService } from '../files/files.service';
 import { unknownUnit } from '../units/unit-errors';
 import { UnitsService } from '../units/units.service';
 import type { CreateItemDto, UpdateItemDto } from './catalog.dto';
-import {
-  ITEM_COLUMNS,
-  LOW_STOCK_SQL,
-  definedEntries,
-  pick,
-  setClause,
-} from './catalog-sql';
+import { definedEntries, pick, setClause } from '../../common/sql-patch';
+import { ITEM_COLUMNS, LOW_STOCK_SQL } from './catalog-sql';
 import type { ItemFacts, ItemRow } from './catalog-sql';
 import { ITEM_USAGE_HOOK } from './item-usage.hook';
 import type { ItemUsageHook } from './item-usage.hook';
@@ -56,6 +51,11 @@ const CONSTRAINT_ERRORS: Record<string, () => Error> = {
       message: 'Ảnh không còn — tải ảnh lại.',
     }),
 };
+
+export function itemConstraintError(error: unknown): unknown {
+  const mapped = CONSTRAINT_ERRORS[pgViolation(error)?.constraint ?? ''];
+  return mapped ? mapped() : error;
+}
 
 function itemInUse() {
   return new ConflictException({
@@ -240,8 +240,7 @@ export class CatalogService {
     try {
       return await run();
     } catch (error) {
-      const mapped = CONSTRAINT_ERRORS[pgViolation(error)?.constraint ?? ''];
-      throw mapped ? mapped() : error;
+      throw itemConstraintError(error);
     }
   }
 }

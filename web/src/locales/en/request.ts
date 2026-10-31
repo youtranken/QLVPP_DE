@@ -169,6 +169,7 @@ const request: Messages<typeof vi> = {
         LINE_NOT_FOUND: 'This line no longer exists — reload the page.',
         IMAGE_REQUIRED: 'The photo is no longer available — upload it again.',
         UNIT_REQUIRED: 'Choose a unit.',
+        UNIT_INACTIVE: 'This unit is no longer used — choose another unit.',
         FILE_FORBIDDEN: 'This photo cannot be used — take another one.',
         OTHER: 'This line is not valid — please check it.',
       },

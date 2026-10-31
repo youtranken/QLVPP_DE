@@ -10,7 +10,8 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
-import { Name, OptionalText, UnitCode } from '../catalog/catalog.dto';
+import { Name, OptionalText } from '../../common/dto-fields';
+import { UnitCode } from '../units/units.dto';
 import { NOTE_MAX } from './request.dto';
 
 export const REVIEW_STATUSES = [

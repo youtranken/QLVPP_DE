@@ -166,6 +166,7 @@ const request = {
         LINE_NOT_FOUND: 'Dòng này không còn — tải lại trang.',
         IMAGE_REQUIRED: 'Ảnh không còn — tải ảnh lại.',
         UNIT_REQUIRED: 'Chọn đơn vị tính.',
+        UNIT_INACTIVE: 'Đơn vị tính này đã ngừng — chọn đơn vị khác.',
         FILE_FORBIDDEN: 'Ảnh không dùng được — chụp lại ảnh khác.',
         OTHER: 'Dòng này chưa hợp lệ — kiểm tra lại.',
       },

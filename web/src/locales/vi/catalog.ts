@@ -96,6 +96,7 @@ const catalog = {
       FILE_TOO_LARGE: 'Ảnh lớn hơn 5 MB — chọn ảnh nhỏ hơn.',
       FILE_FORBIDDEN: 'Không dùng được ảnh này — tải ảnh khác lên.',
       UNIT_REQUIRED: 'Chọn đơn vị tính.',
+      UNIT_INACTIVE: 'Đơn vị tính này đã ngừng — chọn đơn vị khác.',
       ITEM_CODE_EXISTS: 'Mã món đã được dùng cho món khác.',
       ITEM_NOT_FOUND: 'Món này không còn — tải lại trang.',
       CATEGORY_EXISTS: 'Đã có nhóm cùng tên.',

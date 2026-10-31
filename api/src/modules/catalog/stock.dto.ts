@@ -8,7 +8,7 @@ import {
   Min,
   NotEquals,
 } from 'class-validator';
-import { TrimToNull } from './catalog.dto';
+import { TrimToNull } from '../../common/dto-fields';
 
 const QTY_MAX = 1_000_000;
 

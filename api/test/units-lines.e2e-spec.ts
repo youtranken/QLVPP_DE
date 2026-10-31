@@ -1,7 +1,8 @@
 import { meRequestFixture } from './me-request.fixture';
 
 describe('me/request: "Món khác" với ĐVT ngừng', () => {
-  const { SUFFIX, A, save, view, pool, onCleanup } = meRequestFixture('units');
+  const { SUFFIX, A, ADMIN, http, as, save, view, pool, onCleanup } =
+    meRequestFixture('units');
   const ON = `on-${SUFFIX}`.slice(0, 32);
   const OFF = `off-${SUFFIX}`.slice(0, 32);
   const LATER = `later-${SUFFIX}`.slice(0, 32);
@@ -70,5 +71,14 @@ describe('me/request: "Món khác" với ĐVT ngừng', () => {
       code: 'UNIT_INACTIVE',
       line_id: line.id,
     });
+  });
+
+  it('ĐVT chỉ có dòng phiếu dùng (không món) → ?all=1 in_use true, item_count 0', async () => {
+    await save([customLine(ON)]).expect(200);
+    const res = await as(http().get('/api/units?all=1'), ADMIN, 'admin').expect(
+      200,
+    );
+    const unit = (res.body as { code: string }[]).find((u) => u.code === ON);
+    expect(unit).toMatchObject({ in_use: true, item_count: 0 });
   });
 });

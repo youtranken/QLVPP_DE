@@ -23,6 +23,7 @@ const LINE_CODES = new Set([
   'LINE_NOT_FOUND',
   'IMAGE_REQUIRED',
   'UNIT_REQUIRED',
+  'UNIT_INACTIVE',
   'FILE_FORBIDDEN',
 ]);
 

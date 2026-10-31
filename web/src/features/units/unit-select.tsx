@@ -11,18 +11,18 @@ export function UnitSelect({
   value: string;
   onValueChange: (unit: string) => void;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { data = [] } = useQuery(unitsQuery);
   const unitName = useUnitNames();
-  const en = i18n.language === 'en';
+  const active = data.filter((u) => u.active);
   // Món/dòng cũ giữ ĐVT đã ngừng: vẫn hiện lựa chọn đang có, server cho lưu lại khi không đổi
-  const kept = value && !data.some((u) => u.code === value) ? value : null;
+  const kept = value && !active.some((u) => u.code === value) ? value : null;
   return (
     <select {...rest} value={value} onChange={(e) => onValueChange(e.target.value)}>
       <option value="">{t('catalog.form.unitPlaceholder')}</option>
-      {data.map((u) => (
+      {active.map((u) => (
         <option key={u.code} value={u.code}>
-          {en && u.name_en ? u.name_en : u.name}
+          {unitName(u.code)}
         </option>
       ))}
       {kept && <option value={kept}>{unitName(kept)}</option>}

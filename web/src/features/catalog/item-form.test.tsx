@@ -123,6 +123,20 @@ describe('ItemForm', () => {
     expect(unit).toHaveAttribute('aria-invalid', 'true');
   });
 
+  it('server trả UNIT_INACTIVE → câu "ĐVT đã ngừng" gắn vào ô Đơn vị tính', async () => {
+    stubApi(jsonResponse(400, { code: 'UNIT_INACTIVE', message: 'x' }));
+    renderForm();
+    await userEvent.type(screen.getByLabelText('Tên món'), 'Bút chì');
+    await userEvent.upload(screen.getByLabelText('Chọn hoặc chụp ảnh'), png());
+    await screen.findByRole('img', { name: 'Ảnh món' });
+    await userEvent.click(screen.getByRole('button', { name: 'Thêm món' }));
+    const unit = screen.getByLabelText('Đơn vị tính');
+    await vi.waitFor(() =>
+      expect(unit).toHaveAccessibleDescription('Đơn vị tính này đã ngừng — chọn đơn vị khác.'),
+    );
+    expect(unit).toHaveAttribute('aria-invalid', 'true');
+  });
+
   it('tạo món: POST /api/admin/items kèm CSRF, image_file_id, max_qty mặc định 20, rồi đóng', async () => {
     const fetchMock = stubApi(jsonResponse(201, { ...ITEM, id: 'i-new' }));
     const onClose = renderForm();
