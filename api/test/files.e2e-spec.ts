@@ -256,12 +256,14 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
       );
       const job = app.get(FilesCleanupJob);
 
-      expect(await job.run(new Date())).toBe(0);
+      // Chỉ kiểm tệp của suite này: số đếm toàn cục lệch khi suite song song để lại tệp mồ côi cũ
+      await job.run(new Date());
       expect(existsSync(join(dir, `${orphan}.png`))).toBe(true);
+      expect(existsSync(join(dir, `${kept}.png`))).toBe(true);
 
       // Lùi tuổi tệp của mình thay vì tua đồng hồ: tua sẽ xóa luôn ảnh mới tải của suite song song
       await backdate([orphan, kept]);
-      expect(await job.run(new Date())).toBe(1);
+      expect(await job.run(new Date())).toBeGreaterThanOrEqual(1);
       const left = await pool.query<{ id: string }>(
         "SELECT id FROM files WHERE uploaded_by_sub LIKE 'e2e-files-%'",
       );
