@@ -35,8 +35,6 @@ async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom
   const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
   await dialog.getByLabel('Tên món').fill(custom);
   await dialog.getByLabel('Đơn vị tính').selectOption('cai');
-  await dialog.getByLabel('Chụp hoặc chọn ảnh').setInputFiles(FIXTURE);
-  await expect(dialog.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
   await dialog.getByRole('button', { name: 'Thêm vào phiếu' }).click();
   await expect(dialog).toBeHidden();
   await page.getByRole('button', { name: '3 thay đổi chưa lưu · Lưu' }).click();
@@ -67,6 +65,9 @@ async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person,
   await drawer.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button', { name: `Thêm vào danh mục… — ${custom}` }).click();
   const convert = admin.getByRole('dialog', { name: `Thêm “${custom}” vào danh mục` });
   await convert.getByLabel('Nhóm').selectOption({ index: 1 });
+  // Dòng Món khác không có ảnh (T3b) → món mới phải có ảnh mới chọn ở đây
+  await convert.getByLabel('Chọn hoặc chụp ảnh').setInputFiles(FIXTURE);
+  await expect(convert.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
   await convert.getByRole('button', { name: 'Thêm vào danh mục', exact: true }).click();
   await expect(convert).toBeHidden();
   await expect(drawer.getByText('Đã thêm vào danh mục')).toBeVisible();
@@ -82,7 +83,7 @@ async function summaryKpi(request: APIRequestContext, ym: string) {
 }
 
 test.describe('Smoke Plan 2 toàn luồng', () => {
-  test('Plan 2: A đăng ký 2 món + 1 món ngoài DM có ảnh, B lưu 1 món → Hành chính Tổng hợp, sao chép chưa đăng ký có C, thêm Giấy A4 vào phiếu A, Thêm vào danh mục → A thấy "Hành chính thêm" chỉ đọc, "Đã thêm vào danh mục", Lịch sử có kỳ hiện tại', async ({
+  test('Plan 2: A đăng ký 2 món + 1 món ngoài DM, B lưu 1 món → Hành chính Tổng hợp, sao chép chưa đăng ký có C, thêm Giấy A4 vào phiếu A, Thêm vào danh mục → A thấy "Hành chính thêm" chỉ đọc, "Đã thêm vào danh mục", Lịch sử có kỳ hiện tại', async ({
     page,
     browser,
     request,
@@ -91,8 +92,9 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
     const dept = `PW Phòng P2 ${tag}`;
     const [a, b, c]: Person[] = ['a', 'b', 'c'].map((k) => ({ sub: `pw-p2-${k}-${tag}`, name: `PW P2 ${k.toUpperCase()} ${tag}` }));
     const custom = `PW kẹp giấy P2 ${tag}`;
-    psql(`INSERT INTO users (sub, full_name, email, department, status) VALUES
-      ${[a, b, c].map((p) => `('${p.sub}', '${p.name}', '${p.sub}@example.test', '${dept}', 'active')`).join(',\n')}`);
+    // Dev DB có authorized_groups: người seed phải thuộc nhóm được dùng app mới vào danh sách chưa đăng ký
+    psql(`INSERT INTO users (sub, full_name, email, department, status, groups) VALUES
+      ${[a, b, c].map((p) => `('${p.sub}', '${p.name}', '${p.sub}@example.test', '${dept}', 'active', '["Test_VPP"]'::jsonb)`).join(',\n')}`);
     let admin: Page | undefined;
     try {
       const period = await (await request.get('/api/periods/current', { headers: memberHeaders(a.sub) })).json();

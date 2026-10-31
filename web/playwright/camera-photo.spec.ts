@@ -1,6 +1,6 @@
 import { crc32, deflateSync } from 'node:zlib';
 import { expect, test } from '@playwright/test';
-import { deleteTestUsers, seedActiveUser } from './helpers';
+import { asRole, deleteTestFiles } from './helpers';
 
 const MAX_UPLOAD = 1_048_576;
 
@@ -33,24 +33,24 @@ function noisyPng(width: number, height: number): Buffer {
   ]);
 }
 
+asRole('admin');
+
+// Món khác của nhân viên không còn ô ảnh (T3b): kiểm nén ảnh ở ô ảnh món trong Danh mục của Hành chính
 test.describe('E2-S5 ảnh từ camera', () => {
-  test('E2-S5 ảnh 4 MB 2400 px từ ô "Chụp hoặc chọn ảnh" → nén trước khi tải: ≤ 1 MB, cạnh dài ≤ 1600 px', async ({ page }, info) => {
-    const sub = `pw-camera-${Date.now()}-${info.project.name}`;
-    seedActiveUser(sub, `PW Camera ${info.project.name}`);
-    await page.route('**/api/**', (route) =>
-      route.continue({ headers: { ...route.request().headers(), 'x-dev-user-sub': sub, 'x-dev-role': 'member' } }),
-    );
+  test('E2-S5 ảnh 4 MB 2400 px từ ô "Chọn hoặc chụp ảnh" → nén trước khi tải: ≤ 1 MB, cạnh dài ≤ 1600 px', async ({ page }) => {
     const photo = noisyPng(2400, 560);
     expect(photo.length).toBeGreaterThan(4_000_000);
+    let fileId = '';
     try {
-      await page.goto('/');
-      await page.getByRole('region', { name: 'Danh mục món' }).getByRole('button', { name: '+ Thêm món khác' }).click();
-      const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
+      await page.goto('/admin/catalog');
+      await page.getByRole('main').getByRole('button', { name: 'Thêm món' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Thêm món' });
       const uploaded = page.waitForResponse((r) => r.url().endsWith('/api/files') && r.request().method() === 'POST');
-      await dialog.getByLabel('Chụp hoặc chọn ảnh').setInputFiles({ name: 'camera.png', mimeType: 'image/png', buffer: photo });
+      await dialog.getByLabel('Chọn hoặc chụp ảnh').setInputFiles({ name: 'camera.png', mimeType: 'image/png', buffer: photo });
       const res = await uploaded;
       expect(res.status()).toBe(201);
-      const body = (await res.json()) as { size_bytes: number; mime: string };
+      const body = (await res.json()) as { id: string; size_bytes: number; mime: string };
+      fileId = body.id;
       expect(body.size_bytes).toBeLessThanOrEqual(MAX_UPLOAD);
       expect(body.mime).toBe('image/jpeg');
       const preview = dialog.getByRole('img', { name: 'Ảnh món' });
@@ -59,7 +59,7 @@ test.describe('E2-S5 ảnh từ camera', () => {
       await expect.poll(longEdge).toBeGreaterThan(0);
       expect(await longEdge()).toBeLessThanOrEqual(1600);
     } finally {
-      deleteTestUsers(sub);
+      deleteTestFiles([fileId]);
     }
   });
 });
