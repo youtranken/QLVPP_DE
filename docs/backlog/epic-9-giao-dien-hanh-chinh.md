@@ -43,7 +43,7 @@ Playwright: `E9-S2 Tổng hợp: thẻ lọc dòng chờ giao, chưa đăng ký 
 
 ## E9-S3 Giao hàng + Còn nợ
 SPEC §5.3.
-Trạng thái: AC 1–5 + Playwright "E9-S3 Giao hàng: thực giao kẹp…", "E9-S3 Giao hàng bấm đúp…" xong (T13); AC 6–7 + Playwright "E9-S3 Còn nợ…" ở T14.
+Trạng thái: AC 1–5 + Playwright "E9-S3 Giao hàng: thực giao kẹp…", "E4-S1 E9-S3 Giao hàng bấm đúp…", "E4-S4 E9-S3 Giao hàng giao thiếu…" xong (T13); AC 6–7 + Playwright "E9-S3 Còn nợ…" ở T14.
 **AC:**
 1. Stepper Thực giao: dòng còn 5, tồn 3 → max 3, ở 3 nút + vô hiệu; Playwright giả tồn giảm còn 2 giữa chừng (nhập điều chỉnh qua API) → bấm Giao 3 → server `STOCK_INSUFFICIENT {available: 2}` → câu "Chỉ còn 2" ở dòng. Dòng còn 2, tồn 10 → max 2; e2e api đã có `DELIVER_EXCEEDS_QTY` ở remaining+1.
 2. Bấm Giao hai lần nhanh → một movement (single-flight); request thứ hai lọt tới server → dòng hiện câu `STALE_UPDATE` (giữ E4-S1).

@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql } from './helpers';
+import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, searchSummaryPeople } from './helpers';
 import { seedLockedRequest, stockOf, type Seed } from './locked-request';
 
 asRole('admin');
@@ -41,16 +41,18 @@ test.describe('E9-S3 Giao hàng (kỳ trước đã khóa, dev-identity admin)',
 
       await row(a.name).getByRole('checkbox', { name: `Chọn ${a.name}` }).check();
       await row(b.name).getByRole('checkbox', { name: `Chọn ${b.name}` }).check();
+      expect((await changeStock(request, a.id, -2)).ok()).toBe(true);
       await page.getByRole('button', { name: 'Giao dòng đã chọn (2)' }).click();
-      await expect(page.getByRole('status', { name: 'Kết quả giao' })).toHaveText('Đã giao 2 dòng');
-      await expect(row(a.name).getByText('Hết hàng — còn nợ 3')).toBeVisible();
+      await expect(page.getByRole('status', { name: 'Kết quả giao' })).toHaveText(`Đã giao 1 dòng · Không giao được 1: ${a.name} — chỉ còn 0`);
+      await expect(row(a.name).getByText('Chỉ còn 0 cái.')).toBeVisible();
+      await expect(row(a.name).getByText('Hết hàng — còn nợ 5')).toBeVisible();
       await expect(row(b.name).getByText('Đã giao đủ')).toBeVisible();
       expect(stockOf(a.id)).toBe(0);
       expect(stockOf(b.id)).toBe(8);
 
-      expect((await changeStock(request, a.id, 3)).ok()).toBe(true);
+      expect((await changeStock(request, a.id, 5)).ok()).toBe(true);
       await page.reload();
-      await expect(linesOf(page, seed.name).getByLabel(`Thực giao ${a.name}`)).toHaveValue('3');
+      await expect(linesOf(page, seed.name).getByLabel(`Thực giao ${a.name}`)).toHaveValue('5');
       await page.route('**/api/admin/requests/*/deliver-all', (route) =>
         route.fulfill({ status: 409, json: { code: 'PERIOD_NOT_LOCKED', message: 'x' } }),
       );
@@ -68,7 +70,7 @@ test.describe('E9-S3 Giao hàng (kỳ trước đã khóa, dev-identity admin)',
     }
   });
 
-  test('E9-S3 Giao hàng bấm đúp: tồn trừ một lần', async ({ page, request }, info) => {
+  test('E4-S1 E9-S3 Giao hàng bấm đúp: tồn trừ một lần', async ({ page, request }, info) => {
     const release = await acquireLock('prev-period');
     let seed: Seed | undefined;
     try {
@@ -87,6 +89,37 @@ test.describe('E9-S3 Giao hàng (kỳ trước đã khóa, dev-identity admin)',
       expect(again.status()).toBe(409);
       expect((await again.json()).code).toBe('STALE_UPDATE');
       expect(stockOf(a.id)).toBe(5);
+    } finally {
+      seed?.cleanup();
+      release();
+    }
+  });
+
+  test('E4-S4 E9-S3 Giao hàng giao thiếu: Còn nợ hiện phần còn lại, Tổng hợp cập nhật thanh tiến độ', async ({ page, request }, info) => {
+    const release = await acquireLock('prev-period');
+    let seed: Seed | undefined;
+    try {
+      seed = await seedLockedRequest(request, info, [
+        { stock: 10, qty: 5 },
+        { stock: 1, qty: 2 },
+      ]);
+      const [a, b] = seed.items;
+      await page.goto(`/admin/delivery?request=${seed.requestId}`);
+      const line = linesOf(page, seed.name).getByRole('row').filter({ hasText: a.name });
+      await line.getByLabel(`Thực giao ${a.name}`).fill('3');
+      await line.getByRole('button', { name: `Giao ${a.name}` }).click();
+      await expect(page.getByText(`Đã giao 3 cái ${a.name}`)).toBeVisible();
+      await expect(line.getByLabel(`Thực giao ${a.name}`)).toHaveValue('2');
+      expect(stockOf(a.id)).toBe(7);
+
+      await page.goto('/admin/backlog?by=person');
+      const owed = page.getByRole('region', { name: seed.name });
+      await expect(owed.getByRole('listitem').filter({ hasText: a.name }).getByText('còn 2', { exact: true })).toBeVisible();
+      await expect(owed.getByRole('listitem').filter({ hasText: b.name }).getByText('còn 2', { exact: true })).toBeVisible();
+
+      await page.goto(`/admin/summary?ym=${seed.prevYm}`);
+      await searchSummaryPeople(page, seed.tag);
+      await expect(page.getByRole('row').filter({ hasText: seed.name }).getByRole('progressbar', { name: 'đã giao 3/7' })).toBeVisible();
     } finally {
       seed?.cleanup();
       release();
