@@ -89,32 +89,56 @@ export class UnitsService {
 
   async create(dto: CreateUnitDto, actor: string): Promise<UnitRow> {
     return this.mapViolations(() =>
-      this.db.transaction(async (tx) => {
-        const code = await this.newCode(tx, dto.name);
-        const fields = { ...definedEntries(dto), code };
-        const row = (
-          await tx.execute<UnitRow>(sql`
-            INSERT INTO units (${sql.join(
-              Object.keys(fields).map((k) => sql.identifier(k)),
-              sql`, `,
-            )})
-            VALUES (${sql.join(
-              Object.values(fields).map((v) => sql`${v}`),
-              sql`, `,
-            )})
-            RETURNING ${COLUMNS}
-          `)
-        ).rows[0];
-        await this.audit.appendWithin(tx, {
-          actor,
-          action: 'unit.created',
-          objectType: 'unit',
-          objectId: code,
-          detail: { after: row },
-        });
-        return row;
-      }),
+      this.db.transaction((tx) => this.insertWithin(tx, dto, actor)),
     );
+  }
+
+  // Nạp danh mục: khớp tên không phân biệt hoa thường (không theo slug — cuốn ≠ cuộn), chưa có thì tạo
+  async findOrCreateWithin(
+    tx: Tx,
+    name: string,
+    actor: string,
+  ): Promise<{ unit: UnitRow; created: boolean }> {
+    const { rows } = await tx.execute<UnitRow>(sql`
+      SELECT ${COLUMNS} FROM units WHERE lower(name) = lower(${name})
+    `);
+    if (rows[0]) return { unit: rows[0], created: false };
+    const { rows: last } = await tx.execute<{ max: number | null }>(
+      sql`SELECT max(sort_order) AS max FROM units`,
+    );
+    const sort_order = (last[0]?.max ?? 0) + 10;
+    const unit = await this.insertWithin(tx, { name, sort_order }, actor);
+    return { unit, created: true };
+  }
+
+  private async insertWithin(
+    tx: Tx,
+    dto: CreateUnitDto,
+    actor: string,
+  ): Promise<UnitRow> {
+    const code = await this.newCode(tx, dto.name);
+    const fields = { ...definedEntries(dto), code };
+    const row = (
+      await tx.execute<UnitRow>(sql`
+        INSERT INTO units (${sql.join(
+          Object.keys(fields).map((k) => sql.identifier(k)),
+          sql`, `,
+        )})
+        VALUES (${sql.join(
+          Object.values(fields).map((v) => sql`${v}`),
+          sql`, `,
+        )})
+        RETURNING ${COLUMNS}
+      `)
+    ).rows[0];
+    await this.audit.appendWithin(tx, {
+      actor,
+      action: 'unit.created',
+      objectType: 'unit',
+      objectId: code,
+      detail: { after: row },
+    });
+    return row;
   }
 
   async update(

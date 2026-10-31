@@ -166,6 +166,27 @@ PW_SA_PASSWORD='<mật-khẩu-dev>' npx playwright test
 - Ảnh chụp màn `web/test-results/screens/`, báo cáo `web/playwright-report/` — không commit.
 - Fixture ảnh EXIF xoay 6: `python3 web/scripts/make-exif6-fixture.py web/src/test/fixtures/exif6.jpg` (Pillow).
 
+## Nạp danh mục Booking
+
+Nạp một lần danh mục từ sheet `Booking` của file Excel chủ dự án (SPEC giao diện Hành chính §11.4). Món đã có
+(trùng mã, hoặc trùng tên khi hàng không mã) được bỏ qua, không ghi đè — chạy lại không nhân bản. File Excel
+**không commit**. Prod chỉ chạy khi chủ dự án đồng ý (chủ dự án tự chạy).
+
+```bash
+# Dev bỏ "-f docker-compose.yml"; prod BẮT BUỘC có -f
+docker compose -f docker-compose.yml cp "VPPham.xlsx" api:/tmp/booking.xlsx
+# 1. Chạy thử: in báo cáo (món tạo, bỏ qua + lý do, ĐVT tạo mới, "Cần đặt mã"), không ghi gì
+docker compose -f docker-compose.yml exec api node scripts/import-booking.mjs /tmp/booking.xlsx
+# 2. Đọc báo cáo, đúng thì ghi (một transaction, audit catalog.imported, actor system:import)
+docker compose -f docker-compose.yml exec api node scripts/import-booking.mjs /tmp/booking.xlsx --apply
+# 3. Xóa file khỏi container
+docker compose -f docker-compose.yml exec -u root api rm /tmp/booking.xlsx
+```
+
+- Món mới: chưa xếp nhóm, chưa có ảnh, tối đa = `default_max_qty`, tồn 0, đang dùng. Hành chính bổ sung nhóm,
+  ảnh và mã cho các hàng trong mục "Cần đặt mã" ở trang Danh mục.
+- Lỗi giữa chừng (vd tên quá 120 ký tự) thì không ghi gì; sửa file rồi chạy lại.
+
 ## Prod
 
 ```bash
