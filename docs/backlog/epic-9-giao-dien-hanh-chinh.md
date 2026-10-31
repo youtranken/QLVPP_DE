@@ -56,6 +56,7 @@ Playwright: `E9-S3 Giao hàng: thực giao kẹp theo tồn và còn lại, giao
 
 ## E9-S4 Báo cáo + Bản in A4 + Excel
 SPEC §5.4.
+Trạng thái: AC 1, 2, 3, 5 + Playwright "E5-S2 E9-S4 Báo cáo: Đặt mua biên…" xong (T15); AC 4 + Bản in → T16.
 **AC:**
 1. Ô Đặt mua: 0 và 99999 hợp lệ; −1, 100000, 1.5, chữ → lỗi tại ô "Từ 0 đến 99 999.", nút chốt báo "Sửa {n} ô…" và không gửi; e2e api đã có biên `order_qty` 99999/100000 (giữ).
 2. `pending_custom_count = 1` → hộp thoại trước khi chốt; "Xem món chờ" không tạo bản chốt; "Vẫn chốt" tạo một bản.

@@ -1,24 +1,14 @@
-/* Báo cáo — 2 phần + bảng phụ Xuất lẻ + danh sách bản chốt; ô Đặt mua đã sửa nền vàng nhạt (_SPEC.md) */
-.rp-section { display: grid; }
 .rp-h2 { font-size: 15px; font-weight: 600; padding: 12px 16px; border-bottom: 1px solid var(--line); }
 .rp-h3 { font-size: 14px; font-weight: 600; padding: 12px 16px 6px; color: var(--ink-2); }
 .rp-sub-section { border-top: 1px solid var(--line); }
 .rp-name { font-weight: 500; }
 .rp-sub { display: block; color: var(--ink-2); font-size: 13px; }
 .rp-group th { background: var(--card-2); color: var(--ink-2); font-weight: 600; text-align: left; padding: 6px 12px; }
-.rp-order-box { display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end; }
-.rp-qty { width: 84px; text-align: right; }
-.rp-order.is-edited { background: var(--warn-soft); }
-.rp-order .ff-error { margin-top: 2px; }
 @media (min-width: 681px) {
   .rp-person-first td { border-top: 1px solid var(--line-2); }
 }
 @media (max-width: 680px) {
   .rp-table.table-stack tr.rp-group { padding: 0; }
-  .rp-order-box { justify-content: flex-start; flex-wrap: wrap; }
-  .rp-head .btn { flex: 1; }
   .rp-group th { display: block; }
   .rp-table.table-stack tr:not(.rp-group) { grid-template-columns: 1fr 1fr; }
-  .rp-table.table-stack td[data-label=''], .rp-table.table-stack td.rp-order { grid-column: 1 / -1; }
 }
-.rp-alert { margin: 12px 16px 0; }

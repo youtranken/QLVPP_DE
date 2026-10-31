@@ -119,7 +119,7 @@ export function useRefreshSnapshots(ym: string) {
 }
 
 export const createSnapshot = (ym: string, body: { kind: SnapshotKind; order_qty: Record<string, number> }, csrfToken: string | null) =>
-  apiFetch<{ id: string }>(`/api/admin/reports/${ym}/snapshots`, { method: 'POST', body: JSON.stringify(body), csrfToken });
+  apiFetch<{ id: string; created_at: string }>(`/api/admin/reports/${ym}/snapshots`, { method: 'POST', body: JSON.stringify(body), csrfToken });
 
 export const printPath = (id: string) => `/admin/reports/snapshots/${id}/print`;
 

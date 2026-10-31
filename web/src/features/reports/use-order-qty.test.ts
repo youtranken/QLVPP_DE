@@ -71,4 +71,19 @@ describe('useOrderQty — ô Đặt mua', () => {
     expect(result.current.hasError(TAPE)).toBe(false);
     expect(result.current.invalid).toBe(false);
   });
+
+  it('đếm ô: errorCount gồm ô gõ sai + ô server từ chối; editedCount gồm ô khác Cần mua và ô sai; resetAll về Cần mua hết', () => {
+    const { result } = setup();
+    act(() => result.current.set(PEN, '100000'));
+    act(() => result.current.set(TAPE, '7'));
+    expect(result.current.errorCount).toBe(1);
+    expect(result.current.editedCount).toBe(2);
+    act(() => result.current.reject([`order_qty.${TAPE}`]));
+    expect(result.current.errorCount).toBe(2);
+    act(() => result.current.resetAll());
+    expect(result.current.errorCount).toBe(0);
+    expect(result.current.editedCount).toBe(0);
+    expect(result.current.dirty).toBe(false);
+    expect(result.current.value(TAPE)).toBe(String(report.custom[0].need));
+  });
 });

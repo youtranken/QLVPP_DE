@@ -100,10 +100,10 @@ describe('Song ngữ các màn Plan 3', () => {
     stubReports({ reports: { '2026-10': report }, snapshots: [snapshotRow({ created_by_name: 'Tran Thi Binh' })] });
     renderApp(ADMIN, '/admin/reports');
     expect(await screen.findByRole('button', { name: 'In trình ký' })).toBeInTheDocument();
-    expect(await screen.findByRole('spinbutton', { name: 'Đặt mua Bút bi xanh' })).toBeInTheDocument();
+    expect(await screen.findByRole('textbox', { name: 'Đặt mua Bút bi xanh' })).toBeInTheDocument();
     await english();
-    expect(await screen.findByRole('spinbutton', { name: 'Order Blue pen' })).toBeInTheDocument();
-    expect(await screen.findByText('Tran Thi Binh')).toBeInTheDocument();
+    expect(await screen.findByRole('textbox', { name: 'Order Blue pen' })).toBeInTheDocument();
+    expect(await screen.findByText(/Tran Thi Binh/)).toBeInTheDocument();
     noVietnamese();
   });
 

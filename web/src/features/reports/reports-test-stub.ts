@@ -1,7 +1,8 @@
 import { vi } from 'vitest';
 import { jsonResponse } from '@/test/test-utils';
+import type { AdminItem, Category } from '@/features/catalog/catalog.api';
 import type { MonthReport, SnapshotRow } from './reports.api';
-import { NEW_SNAPSHOT_BY, reportFixture, snapshotRow } from './reports-fixtures';
+import { NEW_SNAPSHOT_AT, NEW_SNAPSHOT_BY, REPORT_CATEGORIES, REPORT_ITEMS, reportFixture, snapshotRow } from './reports-fixtures';
 
 export const OPEN_YM = '2026-11';
 
@@ -12,6 +13,9 @@ interface Options {
   snapshots?: SnapshotRow[];
   post?: (body: { kind: string; order_qty: Record<string, number> }) => Response | Promise<Response>;
   exportFile?: (id: string) => Response;
+  items?: AdminItem[];
+  categories?: Category[];
+  currentYm?: string;
 }
 
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -29,7 +33,9 @@ export function stubReports(opts: Options = {}) {
   let loads = 0;
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET';
-    if (url === '/api/periods/current') return jsonResponse(200, { ym: OPEN_YM, deadline: '2026-11-10T17:00:00Z', is_open: true, days_left: 5, previous: null });
+    if (url === '/api/periods/current') return jsonResponse(200, { ym: opts.currentYm ?? OPEN_YM, deadline: '2026-11-10T17:00:00Z', is_open: true, days_left: 5, previous: null });
+    if (url === '/api/admin/items') return jsonResponse(200, opts.items ?? REPORT_ITEMS);
+    if (url === '/api/item-categories?all=1') return jsonResponse(200, opts.categories ?? REPORT_CATEGORIES);
     if (/^\/api\/admin\/reports\/snapshots\/[^/]+\/export\.xlsx\?lang=(vi|en)$/.test(url)) {
       const id = url.split('/')[4];
       return opts.exportFile ? opts.exportFile(id) : fileResponse('2026-10');
@@ -43,8 +49,8 @@ export function stubReports(opts: Options = {}) {
       const res = opts.post ? await opts.post(body) : jsonResponse(201, { id: `snap-${++seq}` });
       if (res.ok) {
         const { id } = (await res.json()) as { id: string };
-        snapshots.unshift(snapshotRow({ id, kind: body.kind, created_at: '2026-10-29T03:00:00Z', created_by_name: NEW_SNAPSHOT_BY }));
-        return jsonResponse(201, { id });
+        snapshots.unshift(snapshotRow({ id, kind: body.kind, created_at: NEW_SNAPSHOT_AT, created_by_name: NEW_SNAPSHOT_BY }));
+        return jsonResponse(201, { id, kind: body.kind, created_at: NEW_SNAPSHOT_AT, created_by: { sub: 'u-an', name: NEW_SNAPSHOT_BY } });
       }
       return res;
     }

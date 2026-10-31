@@ -1,9 +1,9 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { expect, test, type APIRequestContext, type Locator, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, devHeaders, expectNoContrastViolations, isMobile, psql, settled } from './helpers';
+import { acquireLock, devHeaders, expectNoContrastViolations, isMobile, psql, settled, urlOfNewTab } from './helpers';
 import { deliveryMovements, seedMonth, type MonthSeed, type Person } from './p3-seed';
-import { adminPage, newPage } from './sessions';
+import { adminPage, newPage, SA_PASSWORD } from './sessions';
 
 type Sheet = { name: string; rowCount: number; getRows: (start: number, count: number) => { getCell: (n: number) => { value: unknown } }[] | undefined };
 type Workbook = { xlsx: { readFile: (path: string) => Promise<unknown> }; worksheets: Sheet[] };
@@ -23,10 +23,11 @@ async function axe390(page: Page, info: TestInfo) {
   if (isMobile(info)) await expectNoContrastViolations(page);
 }
 
+const PRINT_URL = /\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print$/;
 const month = (ym: string) => Number(ym.slice(5, 7));
 const rowOf = (lines: Locator, name: string) => lines.getByRole('row').filter({ hasText: name });
 const reportRow = (page: Page, name: string) =>
-  page.getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row').filter({ has: page.getByRole('spinbutton', { name: `Đặt mua ${name}` }) });
+  page.getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row').filter({ has: page.getByRole('textbox', { name: `Đặt mua ${name}` }) });
 // Cột: Món · ĐVT · Chưa giao kỳ này · Nợ kỳ trước · Tồn · Cần mua · Đặt mua
 const needCell = (row: Locator) => row.getByRole('cell').nth(5);
 
@@ -34,7 +35,7 @@ const needCell = (row: Locator) => row.getByRole('cell').nth(5);
 async function confirmPendingIfAny(page: Page, request: APIRequestContext, ym: string) {
   const report = await (await request.get(`/api/admin/reports/${ym}`, { headers: devHeaders('admin') })).json();
   if (report.pending_custom_count === 0) return;
-  await page.getByRole('dialog', { name: 'Còn món ngoài danh mục chưa xem' }).getByRole('button', { name: 'Vẫn chốt' }).click();
+  await page.getByRole('dialog', { name: /^Còn \d+ món ngoài danh mục chưa xem$/ }).getByRole('button', { name: 'Vẫn chốt' }).click();
 }
 
 async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
@@ -80,7 +81,7 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   await expect(needCell(reportRow(admin, s.paper.name))).toHaveText('2');
   await expect(needCell(reportRow(admin, s.clip.name))).toHaveText('3');
   await expect(reportRow(admin, s.pen.name)).toHaveCount(0);
-  await admin.getByRole('spinbutton', { name: `Đặt mua ${s.paper.name}` }).fill('4');
+  await admin.getByRole('textbox', { name: `Đặt mua ${s.paper.name}` }).fill('4');
   await axe390(admin, info);
   await snap(admin, info, 'p3-report');
 
@@ -102,7 +103,7 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
 
   await admin.getByRole('button', { name: 'In trình ký' }).click();
   await confirmPendingIfAny(admin, request, s.prevYm);
-  await expect(admin).toHaveURL(/\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print$/);
+  await admin.goto(await urlOfNewTab(admin, PRINT_URL, () => admin.getByRole('button', { name: 'Mở bản in' }).click(), SA_PASSWORD ? undefined : devHeaders('admin')));
   const snapshotId = admin.url().split('/').at(-2)!;
   await expectFrozenPaper(admin, s);
   await expect(admin.getByText(/^Lập lúc \d{2}:\d{2} \d{2}\/\d{2}\/\d{4} bởi .+/)).toBeVisible();
@@ -164,9 +165,10 @@ async function reopenSnapshot(admin: Page, s: MonthSeed, snapshotId: string) {
   // Kỳ trước đã giao đủ A4 → không còn dòng A4 (Cần mua 0) trong báo cáo sống
   await expect(reportRow(admin, s.paper.name)).toHaveCount(0);
   await expect(needCell(reportRow(admin, s.clip.name))).toHaveText('3');
-  const printed = admin.getByRole('region', { name: 'Bản chốt' }).getByRole('row').filter({ hasText: 'Bản in' }).first();
-  await printed.getByRole('button', { name: /^In lại bản chốt/ }).click();
-  await expect(admin).toHaveURL(new RegExp(`/snapshots/${snapshotId}/print$`));
+  const printed = admin.getByRole('region', { name: 'Bản chốt' }).getByRole('listitem').filter({ hasText: 'Bản in' }).first();
+  const reprint = printed.getByRole('link', { name: /^In lại bản lập/ });
+  await expect(reprint).toHaveAttribute('href', `/admin/reports/snapshots/${snapshotId}/print`);
+  await admin.goto(await urlOfNewTab(admin, PRINT_URL, () => reprint.click(), SA_PASSWORD ? undefined : devHeaders('admin')));
   await expectFrozenPaper(admin, s);
 }
 

@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, settled } from './helpers';
+import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, settled, urlOfNewTab } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
 
 const SHOTS = '../.superpowers/sdd/2026-10-29-vpp-gd1-p3-giao-bao-cao/task-14-shots';
@@ -17,8 +17,10 @@ const snapshotCount = (ym: string) => Number(psql(`SELECT count(*) FROM report_s
 async function confirmPendingIfAny(page: Page, request: APIRequestContext, ym: string) {
   const report = await (await request.get(`/api/admin/reports/${ym}`, { headers: devHeaders('admin') })).json();
   if (report.pending_custom_count === 0) return;
-  await page.getByRole('dialog', { name: 'Còn món ngoài danh mục chưa xem' }).getByRole('button', { name: 'Vẫn chốt' }).click();
+  await page.getByRole('dialog', { name: /^Còn \d+ món ngoài danh mục chưa xem$/ }).getByRole('button', { name: 'Vẫn chốt' }).click();
 }
+
+const PRINT_URL = /\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print$/;
 
 type SignBox = { title: string; title_en: string; name: string };
 
@@ -53,10 +55,10 @@ test.describe('E5-S3 trang in từ bản chốt (kỳ trước đã khóa, dev-i
     ]);
 
     await page.goto('/admin/reports');
-    await page.getByRole('spinbutton', { name: `Đặt mua ${a.name}` }).fill('9');
+    await page.getByRole('textbox', { name: `Đặt mua ${a.name}` }).fill('9');
     await page.getByRole('button', { name: 'In trình ký' }).click();
     await confirmPendingIfAny(page, request, seed.prevYm);
-    await expect(page).toHaveURL(/\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print$/);
+    await page.goto(await urlOfNewTab(page, PRINT_URL, () => page.getByRole('button', { name: 'Mở bản in' }).click(), devHeaders('admin')));
     const snapshotId = page.url().split('/').at(-2)!;
     expect(snapshotCount(seed.prevYm)).toBe(before + 1);
 
@@ -104,8 +106,9 @@ test.describe('E5-S3 trang in từ bản chốt (kỳ trước đã khóa, dev-i
     await setBoxes([{ title: 'PW Đổi sau', title_en: '', name: 'PW Đổi sau' }]);
     await page.goto(`/admin/reports?ym=${seed.prevYm}`);
     const list = page.getByRole('region', { name: 'Bản chốt' });
-    await list.getByRole('button', { name: /^In lại bản chốt/ }).first().click();
-    await expect(page).toHaveURL(new RegExp(`/snapshots/${snapshotId}/print$`));
+    const reprint = list.getByRole('link', { name: /^In lại bản lập/ }).first();
+    await expect(reprint).toHaveAttribute('href', `/admin/reports/snapshots/${snapshotId}/print`);
+    await page.goto(await urlOfNewTab(page, PRINT_URL, () => reprint.click(), devHeaders('admin')));
     await expect(frozenRow()).toBeVisible();
     expect(await numbers()).toEqual(frozen);
     await expect(page.getByRole('group', { name: 'Chủ quản đơn vị' })).toHaveText(`Chủ quản đơn vịHead of Dept.${head}`);

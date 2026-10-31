@@ -1,47 +1,10 @@
-import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUnitName } from '@/features/units/units.api';
-import { pickName, ORDER_QTY_MAX, type MonthReport, type ReportCustomRow, type ReportItemRow } from './reports.api';
-import type { OrderQty } from './use-order-qty';
+import { pickName, type MonthReport, type ReportCustomRow, type ReportItemRow } from './reports.api';
 
 type Row = ReportItemRow | ReportCustomRow;
 
-function OrderCell({ row, name, qty, label }: { row: Row; name: string; qty: OrderQty; label: string }) {
-  const { t } = useTranslation();
-  const errId = useId();
-  const error = qty.hasError(row.key);
-  return (
-    <td className={qty.isEdited(row.key) ? 'r rp-order is-edited' : 'r rp-order'} data-label={label}>
-      <div className="rp-order-box">
-        <input
-          className="a-input rp-qty num"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          max={ORDER_QTY_MAX}
-          step={1}
-          value={qty.value(row.key)}
-          aria-label={t('reports.items.orderLabel', { name })}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? errId : undefined}
-          onChange={(e) => qty.set(row.key, e.target.value)}
-        />
-        {qty.isEdited(row.key) && (
-          <button type="button" className="btn btn--sm rp-reset" aria-label={t('reports.items.resetNeedLabel', { name })} onClick={() => qty.reset(row.key)}>
-            {t('reports.items.resetNeed')}
-          </button>
-        )}
-      </div>
-      {error && (
-        <p id={errId} className="ff-error">
-          {t('reports.items.orderInvalid')}
-        </p>
-      )}
-    </td>
-  );
-}
-
-function ItemRow({ row, name, sub, qty, frozen }: { row: Row; name: string; sub?: string; qty?: OrderQty; frozen?: Record<string, number> }) {
+function ItemRow({ row, name, sub, frozen }: { row: Row; name: string; sub?: string; frozen: Record<string, number> }) {
   const { t } = useTranslation();
   const unitName = useUnitName(row.unit);
   const cols = {
@@ -63,16 +26,13 @@ function ItemRow({ row, name, sub, qty, frozen }: { row: Row; name: string; sub?
       <td className="r num" data-label={cols.backlog}>{row.backlog_prev}</td>
       <td className="r num" data-label={cols.stock}>{row.stock ?? '—'}</td>
       <td className="r num" data-label={cols.need}>{row.need}</td>
-      {qty ? (
-        <OrderCell row={row} name={name} qty={qty} label={t('reports.items.colOrder')} />
-      ) : (
-        <td className="r num" data-label={cols.order}>{frozen?.[row.key] ?? row.need}</td>
-      )}
+      <td className="r num" data-label={cols.order}>{frozen[row.key] ?? row.need}</td>
     </tr>
   );
 }
 
-export function ReportItemTable({ report, qty, frozen }: { report: MonthReport; qty?: OrderQty; frozen?: Record<string, number> }) {
+// Bảng phẳng của bản in: số Đặt mua lấy đúng từ bản chốt
+export function ReportItemTable({ report, frozen }: { report: MonthReport; frozen: Record<string, number> }) {
   const { t, i18n } = useTranslation();
   const empty = report.byItem.length === 0 && report.custom.length === 0;
   return (
@@ -98,7 +58,7 @@ export function ReportItemTable({ report, qty, frozen }: { report: MonthReport; 
             </tr>
           )}
           {report.byItem.map((r) => (
-            <ItemRow key={r.key} row={r} name={pickName(i18n.language, r.name, r.name_en)} qty={qty} frozen={frozen} />
+            <ItemRow key={r.key} row={r} name={pickName(i18n.language, r.name, r.name_en)} frozen={frozen} />
           ))}
           {report.custom.length > 0 && (
             <tr className="rp-group">
@@ -108,7 +68,7 @@ export function ReportItemTable({ report, qty, frozen }: { report: MonthReport; 
             </tr>
           )}
           {report.custom.map((r) => (
-            <ItemRow key={r.key} row={r} name={r.name} sub={t('reports.items.people', { count: r.people })} qty={qty} frozen={frozen} />
+            <ItemRow key={r.key} row={r} name={r.name} sub={t('reports.items.people', { count: r.people })} frozen={frozen} />
           ))}
         </tbody>
       </table>

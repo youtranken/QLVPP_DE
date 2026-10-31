@@ -31,10 +31,10 @@ describe('Tên món theo ngôn ngữ giao diện (name_en khi en và khác rỗn
   it('en: Phần 1 "Blue pen"; name_en null/"" → giữ tên Việt; ô "Order Blue pen"', async () => {
     await openIn('en');
     const part1 = await screen.findByRole('region', { name: 'Part 1 · Summary by item' });
-    expect(within(part1).getByRole('spinbutton', { name: 'Order Blue pen' })).toBeInTheDocument();
+    expect(await within(part1).findByRole('textbox', { name: 'Order Blue pen' })).toBeInTheDocument();
     expect(within(part1).queryByText('Bút bi xanh')).toBeNull();
-    expect(within(part1).getByRole('spinbutton', { name: 'Order Hồ dán' })).toBeInTheDocument();
-    expect(within(part1).getByRole('spinbutton', { name: 'Order Kẹp giấy' })).toBeInTheDocument();
+    expect(await within(part1).findByRole('textbox', { name: 'Order Hồ dán' })).toBeInTheDocument();
+    expect(await within(part1).findByRole('textbox', { name: 'Order Kẹp giấy' })).toBeInTheDocument();
   });
 
   it('en: bảng Xuất lẻ "A4 paper"; item_name_en null/"" → tên Việt', async () => {
@@ -56,7 +56,7 @@ describe('Tên món theo ngôn ngữ giao diện (name_en khi en và khác rỗn
   it('vi: cả ba bảng dùng tên Việt dù có name_en', async () => {
     await openIn('vi');
     const part1 = await screen.findByRole('region', { name: 'Phần 1 · Tổng hợp theo món' });
-    expect(within(part1).getByRole('spinbutton', { name: 'Đặt mua Bút bi xanh' })).toBeInTheDocument();
+    expect(await within(part1).findByRole('textbox', { name: 'Đặt mua Bút bi xanh' })).toBeInTheDocument();
     expect(within(part1).queryByText('Blue pen')).toBeNull();
     const issues = screen.getByRole('region', { name: 'Xuất lẻ trong kỳ' });
     expect(within(issues).getByText('Giấy A4')).toBeInTheDocument();

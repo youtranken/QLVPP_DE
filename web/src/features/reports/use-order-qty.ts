@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { createContext, useMemo, useState } from 'react';
 import { ORDER_QTY_MAX, type MonthReport } from './reports.api';
 
 const DIGITS = /^\d+$/;
@@ -31,6 +31,9 @@ export function useOrderQty(report: MonthReport) {
     else if (n !== needs.get(key)) edited[key] = n;
   }
   const draftInvalid = (key: string) => key in drafts && parseOrderQty(drafts[key]) === null;
+  const isEdited = (key: string) => key in edited || draftInvalid(key);
+  const hasError = (key: string) => rejected.has(key) || draftInvalid(key);
+  const keys = [...needs.keys()];
   const clearRejected = (key: string) =>
     setRejected((s) => {
       if (!s.has(key)) return s;
@@ -51,10 +54,18 @@ export function useOrderQty(report: MonthReport) {
     },
     reject: (fields: string[]) =>
       setRejected(new Set(fields.filter((f) => f.startsWith('order_qty.')).map((f) => f.slice('order_qty.'.length)))),
-    isEdited: (key: string) => key in edited || draftInvalid(key),
-    hasError: (key: string) => rejected.has(key) || draftInvalid(key),
+    resetAll: () => {
+      setDrafts({});
+      setRejected(new Set());
+    },
+    isEdited,
+    hasError,
+    editedCount: keys.filter(isEdited).length,
+    errorCount: keys.filter(hasError).length,
     edited,
     invalid,
     dirty: Object.keys(drafts).length > 0,
   };
 }
+
+export const OrderQtyContext = createContext<OrderQty | null>(null);

@@ -55,6 +55,18 @@ export async function settled(page: Page) {
 
 export const devHeaders = (role: 'member' | 'admin' | 'sa') => ({ 'x-dev-user-sub': `pw-${role}`, 'x-dev-role': role });
 
+// Tab mới không có route dev-identity của page (phiên SA thì cookie đã đủ): thêm ở mức context, chờ tab tới đúng trang rồi trả URL để mở lại trên trang đang kiểm
+export async function urlOfNewTab(page: Page, expected: RegExp, open: () => Promise<void>, headers?: Record<string, string>): Promise<string> {
+  if (headers) await page.context().route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...headers } }));
+  const next = page.context().waitForEvent('page');
+  await open();
+  const tab = await next;
+  await tab.waitForURL(expected);
+  const url = tab.url();
+  await tab.close();
+  return url;
+}
+
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
 // psql trong container postgres dev; trả stdout (-tA) để đọc giá trị RETURNING

@@ -1,3 +1,5 @@
+import type { AdminItem, Category } from '@/features/catalog/catalog.api';
+import { adminItem } from '@/features/summary/adjust-fixtures';
 import type { MonthReport, ReportIssue, SnapshotData, SnapshotRow } from './reports.api';
 
 export const PEN_KEY = 'item-pen';
@@ -48,6 +50,18 @@ export const snapshotRow = (over: Partial<SnapshotRow> = {}): SnapshotRow => ({
 });
 
 export const NEW_SNAPSHOT_BY = 'Nguyễn Văn An';
+// 10:00 giờ VN
+export const NEW_SNAPSHOT_AT = '2026-10-29T03:00:00Z';
+
+export const REPORT_CATEGORIES: Category[] = [
+  { id: 'c-write', name: 'Bút viết', name_en: 'Writing', sort_order: 1, active: true },
+  { id: 'c-glue', name: 'Keo dán', name_en: 'Glue', sort_order: 2, active: true },
+];
+
+export const REPORT_ITEMS: AdminItem[] = [
+  adminItem({ id: PEN_KEY, name: 'Bút bi xanh', unit: 'cay', category_id: 'c-write', pack_note: 'Box of 20' }),
+  adminItem({ id: 'item-glue', name: 'Hồ dán', unit: 'lo', category_id: 'c-glue' }),
+];
 
 export const SNAPSHOT_ID = '5f0c1c1e-9a53-4b1c-8f55-3d2b1b6f0a11';
 
