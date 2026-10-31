@@ -64,7 +64,7 @@ async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person,
   drawer = await openDrawer(admin, a);
   await drawer.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button', { name: `Thêm vào danh mục… — ${custom}` }).click();
   const convert = admin.getByRole('dialog', { name: `Thêm “${custom}” vào danh mục` });
-  await convert.getByLabel('Nhóm').selectOption({ index: 1 });
+  await convert.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
   // Dòng Món khác không có ảnh (T3b) → món mới phải có ảnh mới chọn ở đây
   await convert.getByLabel('Chọn hoặc chụp ảnh').setInputFiles(FIXTURE);
   await expect(convert.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
