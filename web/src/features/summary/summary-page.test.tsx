@@ -82,6 +82,24 @@ describe('SummaryPage — thẻ lọc', () => {
     expect(screen.getByText('giao sau khi khóa 00:00 ngày 11/11').closest('.stat-card')).toHaveTextContent('—');
   });
 
+  it('kỳ mở mở thẳng ?filter=pending_delivery → bỏ filter khỏi URL, không gọi API với filter đó', async () => {
+    const f = stubSummaryApi();
+    open('/admin/summary?filter=pending_delivery');
+    await screen.findByText('giao sau khi khóa 00:00 ngày 11/11');
+    await waitFor(() => expect(search()).not.toContain('filter='));
+    expect(calledUrls(f).some((u) => u.includes('filter=pending_delivery'))).toBe(false);
+    expect(screen.queryByText(/Đang lọc:/)).toBeNull();
+  });
+
+  it('kỳ khóa đang lọc chờ giao → › sang kỳ đang mở thì bỏ lọc', async () => {
+    stubSummaryApi();
+    open('/admin/summary?ym=2026-10&filter=pending_delivery');
+    expect(await screen.findByRole('button', { name: /Dòng chờ giao/ })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
+    await screen.findByText('Tháng 11/2026');
+    expect(search()).not.toContain('filter=');
+  });
+
   it('"Phiếu đã đăng ký" → filter=unregistered: bảng chưa đăng ký + "Đang lọc: Chưa đăng ký · 2 người"; "Bỏ lọc" trả bảng theo người', async () => {
     stubSummaryApi();
     open();
@@ -124,6 +142,19 @@ describe('SummaryPage — thanh công cụ, bảng, ngăn kéo', () => {
     await userEvent.type(box, 'lan');
     await waitFor(() => expect(calledUrls(f).some((u) => u.includes('q=lan'))).toBe(true));
     expect(search()).toContain('q=lan');
+  });
+
+  it('q đổi từ ngoài (bấm "Tổng hợp kỳ" ở sidebar) → ô tìm đồng bộ về rỗng', async () => {
+    stubSummaryApi();
+    open();
+    const box = await screen.findByRole('searchbox', { name: 'Tìm người, email…' });
+    await userEvent.type(box, 'lan');
+    await waitFor(() => expect(search()).toContain('q=lan'));
+    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Tổng hợp kỳ' }));
+    await waitFor(() => expect(search()).not.toContain('q='));
+    expect(screen.getByRole('searchbox', { name: 'Tìm người, email…' })).toHaveValue('');
+    await new Promise((r) => setTimeout(r, 350));
+    expect(search()).not.toContain('q=');
   });
 
   it('"Theo món" → view=item, bảng món; về "Theo người" bỏ view', async () => {

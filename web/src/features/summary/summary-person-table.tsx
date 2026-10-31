@@ -40,72 +40,74 @@ function SavedAt({ iso }: { iso: string }) {
   return <span className="sm-muted num">{at.today ? t('summary.table.savedToday', at) : t('summary.table.savedOn', at)}</span>;
 }
 
+function PersonCell({ row }: { row: PersonRow }) {
+  const { t } = useTranslation();
+  return (
+    <span className="sm-person">
+      <span className="sm-avatar" aria-hidden="true">{nameOf(row).trim().charAt(0).toUpperCase()}</span>
+      <span className="sm-person__name">{nameOf(row)}</span>
+      {row.user_status !== 'active' && <span className="tag tag--outline">{t('summary.table.leftCompany')}</span>}
+    </span>
+  );
+}
+
+function PersonActions({ row, ym, locked, stale, onOpen }: { row: PersonRow; ym: string; locked: boolean; stale: boolean; onOpen: (id: string) => void }) {
+  const { t } = useTranslation();
+  const canDeliver = locked && row.delivered_qty + row.cancelled_qty < row.total_qty;
+  const deliverLabel = t('summary.table.deliverLabel', { name: nameOf(row) });
+  return (
+    <>
+      <button
+        type="button"
+        className="btn btn--sm"
+        aria-label={t('summary.table.adjustLabel', { name: nameOf(row) })}
+        disabled={stale}
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpen(row.request_id);
+        }}
+      >
+        {t('summary.table.adjust')}
+      </button>
+      {canDeliver && !stale && (
+        <Link
+          className="btn btn--ghost btn--sm sm-icon-btn"
+          to={`/admin/delivery?ym=${ym}&request=${row.request_id}`}
+          aria-label={deliverLabel}
+          title={deliverLabel}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Icon name="truck" size={18} />
+        </Link>
+      )}
+    </>
+  );
+}
+
 function useColumns(ym: string, locked: boolean, stale: boolean, onOpen: (id: string) => void) {
   const { t } = useTranslation();
-  return useMemo<ColumnDef<Row, unknown>[]>(
-    () => {
-      const columns: ColumnDef<Row, unknown>[] = [
-        {
-          id: 'person',
-          header: t('summary.table.person'),
-          cell: ({ row: { original: r } }) => (
-            <span className="sm-person">
-              <span className="sm-avatar" aria-hidden="true">{nameOf(r).trim().charAt(0).toUpperCase()}</span>
-              <span className="sm-person__name">{nameOf(r)}</span>
-              {r.user_status !== 'active' && <span className="tag tag--outline">{t('summary.table.leftCompany')}</span>}
-            </span>
-          ),
-        },
-        { accessorKey: 'line_count', header: t('summary.table.lines'), meta: { className: 'num r' } },
-        { accessorKey: 'total_qty', header: t('summary.table.total'), meta: { className: 'num r' } },
-        { id: 'delivery', header: t('summary.table.delivery'), cell: ({ row }) => <DeliveryCell row={row.original} locked={locked} /> },
-        {
-          id: 'note',
-          header: t('summary.table.note'),
-          cell: ({ row: { original: r } }) =>
-            r.custom_pending > 0 ? <span className="tag tag--warn">{t('summary.table.customPending', { n: r.custom_pending })}</span> : null,
-        },
-        { id: 'saved', header: t('summary.table.savedAt'), cell: ({ row }) => <SavedAt iso={row.original.updated_at} /> },
-        {
-          id: 'actions',
-          header: () => <span className="sr-only">{t('summary.table.actions')}</span>,
-          meta: { className: 'r sm-acts' },
-          cell: ({ row: { original: r } }) => {
-            const canDeliver = locked && r.delivered_qty + r.cancelled_qty < r.total_qty;
-            return (
-              <>
-                <button
-                  type="button"
-                  className="btn btn--sm"
-                  aria-label={t('summary.table.adjustLabel', { name: nameOf(r) })}
-                  disabled={stale}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpen(r.request_id);
-                  }}
-                >
-                  {t('summary.table.adjust')}
-                </button>
-                {canDeliver && !stale && (
-                  <Link
-                    className="btn btn--ghost btn--sm sm-icon-btn"
-                    to={`/admin/delivery?ym=${ym}&request=${r.request_id}`}
-                    aria-label={t('summary.table.deliverLabel', { name: nameOf(r) })}
-                    title={t('summary.table.deliverLabel', { name: nameOf(r) })}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Icon name="truck" size={18} />
-                  </Link>
-                )}
-              </>
-            );
-          },
-        },
-      ];
-      return columns.map((c) => ({ ...c, enableSorting: false }));
-    },
-    [t, ym, locked, stale, onOpen],
-  );
+  return useMemo<ColumnDef<Row, unknown>[]>(() => {
+    const columns: ColumnDef<Row, unknown>[] = [
+      { id: 'person', header: t('summary.table.person'), cell: ({ row }) => <PersonCell row={row.original} /> },
+      { accessorKey: 'line_count', header: t('summary.table.lines'), meta: { className: 'num r' } },
+      { accessorKey: 'total_qty', header: t('summary.table.total'), meta: { className: 'num r' } },
+      { id: 'delivery', header: t('summary.table.delivery'), cell: ({ row }) => <DeliveryCell row={row.original} locked={locked} /> },
+      {
+        id: 'note',
+        header: t('summary.table.note'),
+        cell: ({ row: { original: r } }) =>
+          r.custom_pending > 0 ? <span className="tag tag--warn">{t('summary.table.customPending', { n: r.custom_pending })}</span> : null,
+      },
+      { id: 'saved', header: t('summary.table.savedAt'), cell: ({ row }) => <SavedAt iso={row.original.updated_at} /> },
+      {
+        id: 'actions',
+        header: () => <span className="sr-only">{t('summary.table.actions')}</span>,
+        meta: { className: 'r sm-acts' },
+        cell: ({ row }) => <PersonActions row={row.original} ym={ym} locked={locked} stale={stale} onOpen={onOpen} />,
+      },
+    ];
+    return columns.map((c) => ({ ...c, enableSorting: false }));
+  }, [t, ym, locked, stale, onOpen]);
 }
 
 // API xếp phòng ban rồi tên; gom "Chưa có phòng ban" xuống cuối cả khi nó tới trước

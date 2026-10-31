@@ -21,7 +21,6 @@ function groupOf(item: AdminItem | undefined, row: ItemSummaryRow, cats: Categor
   return item?.category_id && cats.some((c) => c.id === item.category_id) ? item.category_id : NONE;
 }
 
-// Nhóm theo thứ tự danh mục (sort_order), rồi "Chưa xếp nhóm", "Ngoài danh mục" cuối
 function useRows(ym: string, q: string, lowOnly: boolean) {
   const rows = useItemRows(ym);
   const items = useAdminItems();

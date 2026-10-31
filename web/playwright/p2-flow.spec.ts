@@ -116,7 +116,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       await admin.getByRole('button', { name: /Sao chép danh sách chưa đăng ký/ }).click();
       await expect(admin.getByText(/^Đã sao chép \d+ người$/)).toBeVisible();
       const copied = await admin.evaluate(() => navigator.clipboard.readText());
-      expect(copied.split('\n')).toContain(`- ${c.name} — ${dept}`);
+      expect(copied.split('\n')).toContain(`- ${c.name} (${dept})`);
       expect(copied).not.toContain(a.name);
       if (isMobile(info)) await expectNoContrastViolations(admin);
       await snap(admin, info, 'admin-summary');

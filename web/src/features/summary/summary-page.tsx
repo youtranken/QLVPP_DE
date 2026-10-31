@@ -27,17 +27,25 @@ import './summary.m1.css';
 
 const MAX_SEARCH = 100;
 
+// Gõ → đẩy q (debounce) lên URL; q đổi từ ngoài (Back, liên kết) → đồng bộ lại ô
 function useSearchBox(q: string, setQ: (v: string) => void) {
   const [text, setText] = useState(q);
   const debounced = useDebouncedValue(text.trim(), 300);
-  const latest = useRef({ q, setQ });
+  const pushed = useRef(q);
+  const push = useRef(setQ);
   useEffect(() => {
-    latest.current = { q, setQ };
+    push.current = setQ;
   });
-  // Chỉ đẩy giá trị vừa gõ lên URL; render lại vì lý do khác không ghi đè q
   useEffect(() => {
-    if (debounced !== latest.current.q) latest.current.setQ(debounced);
+    if (debounced === pushed.current) return;
+    pushed.current = debounced;
+    push.current(debounced);
   }, [debounced]);
+  useEffect(() => {
+    if (q === pushed.current) return;
+    pushed.current = q;
+    setText(q);
+  }, [q]);
   return [text, setText] as const;
 }
 

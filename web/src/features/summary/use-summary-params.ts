@@ -17,7 +17,10 @@ export function useSummaryParams(openYm: string | undefined) {
   const ym = asked && openYm && YM.test(asked) && asked <= openYm ? asked : openYm;
   const view: SummaryView = params.get('view') === 'item' ? 'item' : 'person';
   const raw = params.get('filter') ?? '';
-  const filter: PageFilter | null = view === 'item' ? (raw === 'low' ? 'low' : null) : PERSON_FILTERS.includes(raw) ? (raw as PersonFilter) : null;
+  // Kỳ đang mở chưa giao được (PERIOD_NOT_LOCKED) → lọc "còn dòng chờ giao" vô nghĩa, bỏ đi
+  const pendingInOpen = raw === 'pending_delivery' && !!ym && ym === openYm;
+  const filter: PageFilter | null =
+    view === 'item' ? (raw === 'low' ? 'low' : null) : PERSON_FILTERS.includes(raw) && !pendingInOpen ? (raw as PersonFilter) : null;
 
   const update = useCallback(
     (patch: Patch, replace = false) =>
@@ -36,8 +39,11 @@ export function useSummaryParams(openYm: string | undefined) {
   );
 
   useEffect(() => {
-    if (openYm && ym && asked !== null && asked !== ym) update({ ym }, true);
-  }, [openYm, ym, asked, update]);
+    const patch: Patch = {};
+    if (openYm && ym && asked !== null && asked !== ym) patch.ym = ym;
+    if (pendingInOpen) patch.filter = null;
+    if (Object.keys(patch).length) update(patch, true);
+  }, [openYm, ym, asked, pendingInOpen, update]);
 
   return {
     ym,
@@ -45,7 +51,8 @@ export function useSummaryParams(openYm: string | undefined) {
     filter,
     q: params.get('q') ?? '',
     requestId: params.get('request'),
-    setMonth: (next: string) => update({ ym: next, request: null }),
+    setMonth: (next: string) =>
+      update({ ym: next, request: null, ...(next === openYm && raw === 'pending_delivery' ? { filter: null } : {}) }),
     setView: (next: SummaryView) => update({ view: next === 'item' ? 'item' : null, filter: null }),
     toggleFilter: (next: PageFilter) =>
       update({ view: next === 'low' ? 'item' : null, filter: filter === next ? null : next }),
