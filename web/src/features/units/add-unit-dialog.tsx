@@ -8,7 +8,7 @@ import { FormField } from '@/ui/form-field';
 import { Icon } from '@/ui/icon';
 import { useToast } from '@/ui/toast-context';
 import { isFieldError, unitErrorKey } from './unit-errors';
-import { nextSortOrder } from './unit-order';
+import { nextSortOrder } from '@/lib/local-order';
 import { createUnit, useRefreshUnits, type AdminUnit } from './units.api';
 
 const NAME_MAX = 40;

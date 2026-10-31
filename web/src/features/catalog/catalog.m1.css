@@ -1,7 +1,3 @@
-[data-shell='admin'] .ct-page { display: grid; gap: var(--s-4); min-width: 0; }
-[data-shell='admin'] .ct-page > * { min-width: 0; }
-[data-shell='admin'] .ct-page .page-head { flex-wrap: wrap; margin-bottom: 0; }
-[data-shell='admin'] .ct-page .page-head__actions { display: flex; gap: var(--s-2); }
 [data-shell='admin'] .ct-chips { display: flex; flex-wrap: wrap; gap: var(--s-2); }
 [data-shell='admin'] .ct-chip { display: inline-flex; align-items: center; gap: var(--s-2); height: 36px; padding: 0 14px; border: 0; border-radius: var(--r-pill); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-ink); font: var(--t-label); cursor: pointer; white-space: nowrap; }
 [data-shell='admin'] .ct-chip[aria-pressed='true'], [data-shell='admin'] .ct-chip[aria-checked='true'] { background: var(--c-acc-soft); box-shadow: inset 0 0 0 2px var(--c-acc); color: var(--c-acc); }
@@ -17,7 +13,6 @@
 [data-shell='admin'] .ct-item__error { color: var(--c-danger); font: var(--t-sm); font-weight: 600; }
 [data-shell='admin'] .ct-stock { display: inline-flex; align-items: center; justify-content: flex-end; gap: var(--s-2); }
 [data-shell='admin'] .ct-edit { width: 52px; }
-[data-shell='admin'] .ct-icon-btn { width: 36px; padding: 0; }
 [data-shell='admin'] .ct-empty-actions { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: var(--s-2); }
 [data-shell='admin'] .table tr.is-inactive .ct-item__name, [data-shell='admin'] .table tr.is-inactive td { color: var(--c-muted); }
 [data-shell='admin'] .table tr.is-inactive [data-thumb], [data-shell='admin'] .table tr.is-inactive .ct-item img { filter: grayscale(1); opacity: .6; }

@@ -26,7 +26,10 @@ type Mutate = (url: string, method: string, body: Record<string, unknown>) => Re
 function stub(mutate: Mutate = () => undefined, units = UNITS) {
   let list = units.map((u) => ({ ...u }));
   const f = vi.fn(async (url: string, init?: RequestInit) => {
-    if (!init?.method) return jsonResponse(200, list);
+    if (!init?.method) {
+      if (url === '/api/admin/items' || url.startsWith('/api/item-categories')) return jsonResponse(200, []);
+      return jsonResponse(200, url === '/api/units' ? list.map(({ in_use: _a, item_count: _b, ...unit }) => unit) : list);
+    }
     const body = init.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : {};
     const custom = mutate(url, init.method, body);
     if (custom) return custom;
@@ -94,16 +97,46 @@ describe('Trang Đơn vị tính', () => {
     expect(document.querySelector('.toast--danger')).not.toBeNull();
   });
 
-  it('công tắc "Ngừng cái" gửi PATCH {active:false}; "Mở lại Cũ" gửi {active:true}', async () => {
+  it('công tắc "Ngừng cái" hỏi xác nhận rồi PATCH {active:false}; "Mở lại Cũ" xác nhận rồi {active:true}; Hủy thì không gọi API', async () => {
     const f = await open();
     await userEvent.click(screen.getByRole('switch', { name: 'Ngừng cái' }));
-    await userEvent.click(screen.getByRole('switch', { name: 'Mở lại Cũ' }));
-    await waitFor(() =>
-      expect(mutations(f)).toEqual([
-        ['/api/admin/units/cai', 'PATCH', { active: false }],
-        ['/api/admin/units/cu', 'PATCH', { active: true }],
-      ]),
-    );
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Hủy' }));
+    expect(mutations(f)).toHaveLength(0);
+    await userEvent.click(screen.getByRole('switch', { name: 'Ngừng cái' }));
+    expect(screen.getByRole('dialog', { name: 'Ngừng đơn vị “cái”?' })).toBeInTheDocument();
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Ngừng' }));
+    await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/units/cai', 'PATCH', { active: false }]]));
+    await userEvent.click(await screen.findByRole('switch', { name: 'Mở lại Cũ' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Mở lại' }));
+    await waitFor(() => expect(mutations(f).at(-1)).toEqual(['/api/admin/units/cu', 'PATCH', { active: true }]));
+  });
+
+  it('lỗi khác UNIT_IN_USE khi ngừng/xóa → khối role=alert (không toast danger); UNIT_NOT_FOUND còn tải lại danh sách', async () => {
+    const f = await open((_u, method) => (method === 'PATCH' ? jsonResponse(404, { code: 'UNIT_NOT_FOUND', message: 'x' }) : undefined));
+    await userEvent.click(screen.getByRole('switch', { name: 'Ngừng cái' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Ngừng' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Đơn vị này không còn — tải lại trang.');
+    expect(document.querySelector('.toast--danger')).toBeNull();
+    await waitFor(() => expect(f.mock.calls.filter((c) => c[0] === '/api/units?all=1').length).toBeGreaterThan(1));
+  });
+
+  it('xóa mà server 500 → khối role=alert "Chưa lưu được"', async () => {
+    await open((_u, method) => (method === 'DELETE' ? jsonResponse(500, { code: 'X', message: 'x' }) : undefined));
+    await userEvent.click(screen.getByRole('button', { name: 'Xóa hộp' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Xóa đơn vị' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Chưa lưu được — thử lại sau ít phút.');
+  });
+
+  it('ngừng ĐVT xong, mở Danh mục > Thêm món trong cùng phiên: ô Đơn vị tính không còn ĐVT đó', async () => {
+    await open();
+    await userEvent.click(screen.getByRole('switch', { name: 'Ngừng hộp' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Ngừng' }));
+    await screen.findByRole('switch', { name: 'Mở lại hộp' });
+    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Danh mục' }));
+    await userEvent.click((await screen.findAllByRole('button', { name: 'Thêm món' }))[0]);
+    const select = await screen.findByLabelText(/Đơn vị tính/);
+    await waitFor(() => expect(within(select).getByRole('option', { name: 'cái' })).toBeInTheDocument());
+    expect(within(select).queryByRole('option', { name: 'hộp' })).toBeNull();
   });
 
   it('sửa tên tại chỗ: Enter gửi PATCH {name}; UNIT_EXISTS hiện "Đã có đơn vị tính tên này." tại ô', async () => {
@@ -175,6 +208,17 @@ describe('Trang Đơn vị tính', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm đơn vị tính' }));
     await waitFor(() => expect(mutations(f).at(-1)).toEqual(['/api/admin/units', 'POST', { name: 'bộ', name_en: 'set', sort_order: 40 }]));
     expect(await screen.findByText('Đã thêm đơn vị tính bộ')).toBeInTheDocument();
+  });
+
+  it('thêm ĐVT: VALIDATION fields [name_en] → lỗi gắn ô Tên tiếng Anh, ô tên không bị đánh dấu', async () => {
+    await open((_u, method) => (method === 'POST' ? jsonResponse(400, { code: 'VALIDATION', message: 'x', fields: ['name_en'] }) : undefined));
+    await userEvent.click(screen.getByRole('button', { name: 'Thêm đơn vị tính' }));
+    const dialog = screen.getByRole('dialog', { name: 'Thêm đơn vị tính' });
+    await userEvent.type(within(dialog).getByLabelText(/Tên đơn vị/), 'bộ');
+    await userEvent.type(within(dialog).getByLabelText('Tên tiếng Anh'), 'set');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm đơn vị tính' }));
+    await waitFor(() => expect(within(dialog).getByLabelText('Tên tiếng Anh')).toHaveAttribute('aria-invalid', 'true'));
+    expect(within(dialog).getByLabelText(/Tên đơn vị/)).not.toHaveAttribute('aria-invalid', 'true');
   });
 
   it('chưa có ĐVT nào → "Chưa có đơn vị tính nào" kèm nút thêm', async () => {

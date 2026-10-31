@@ -1,0 +1,5 @@
+[data-shell='admin'] .ct-page { display: grid; gap: var(--s-4); min-width: 0; }
+[data-shell='admin'] .ct-page > * { min-width: 0; }
+[data-shell='admin'] .ct-page .page-head { flex-wrap: wrap; margin-bottom: 0; }
+[data-shell='admin'] .ct-page .page-head__actions { display: flex; gap: var(--s-2); }
+[data-shell='admin'] .ct-icon-btn { width: 36px; padding: 0; }

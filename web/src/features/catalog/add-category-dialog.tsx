@@ -9,7 +9,7 @@ import { Icon } from '@/ui/icon';
 import { useToast } from '@/ui/toast-context';
 import { createCategory, useRefreshCatalog, type Category } from './catalog.api';
 import { fieldErrors, type FieldErrors } from './catalog-errors';
-import { nextSortOrder } from './category-order';
+import { nextSortOrder } from '@/lib/local-order';
 
 const NAME_MAX = 120;
 const ERROR_FIELD: Record<string, string> = { CATEGORY_EXISTS: 'name' };

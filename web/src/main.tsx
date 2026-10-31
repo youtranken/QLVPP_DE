@@ -11,6 +11,7 @@ import '@/css/m1/base.css';
 import '@/css/m1/shell.css';
 import '@/css/m1/states.css';
 import '@/css/m1/table.css';
+import '@/css/m1/list-page.css';
 import '@/css/m1/overlay.css';
 import '@/lib/i18n';
 import App from '@/App.tsx';

@@ -81,6 +81,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
       expect(await memberOtherItemUnits(browser, info, sub, name)).toBe(1);
 
       await page.getByRole('switch', { name: `Ngừng ${name}` }).click();
+      await page.getByRole('dialog', { name: `Ngừng đơn vị “${name}”?` }).getByRole('button', { name: 'Ngừng', exact: true }).click();
       await expect(page.getByRole('switch', { name: `Mở lại ${name}` })).toBeVisible();
       await expect(rowOf(page, name).getByText('Ngừng', { exact: true })).toBeVisible();
       expect(await memberOtherItemUnits(browser, info, sub, name)).toBe(0);

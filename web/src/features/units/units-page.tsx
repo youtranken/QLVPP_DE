@@ -11,7 +11,6 @@ import { unitErrorKey } from './unit-errors';
 import { UnitTable } from './unit-table';
 import { useUnitOrder } from './use-unit-order';
 import { deleteUnit, patchUnit, useAdminUnits, useRefreshUnits, type AdminUnit, type UnitPayload } from './units.api';
-import '@/features/catalog/catalog.m1.css';
 import './units.m1.css';
 
 export function UnitsPage() {
@@ -24,6 +23,7 @@ export function UnitsPage() {
   const order = useUnitOrder(units.data ?? []);
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const patch = async (u: AdminUnit, body: UnitPayload) => {
     const saved = await patchUnit(u.code, body, csrfToken);
@@ -33,17 +33,29 @@ export function UnitsPage() {
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true);
+    setActionError(null);
     try {
       await action();
     } catch (e) {
-      toast.show({ text: t(unitErrorKey(e)), tone: apiErrorCode(e) === 'UNIT_IN_USE' ? 'danger' : 'warn' });
-      if (apiErrorCode(e) === 'UNIT_IN_USE' || apiErrorCode(e) === 'UNIT_NOT_FOUND') await refresh();
+      const code = apiErrorCode(e);
+      if (code === 'UNIT_IN_USE') toast.show({ text: t(unitErrorKey(e)), tone: 'danger' });
+      else setActionError(t(unitErrorKey(e)));
+      if (code === 'UNIT_IN_USE' || code === 'UNIT_NOT_FOUND') await refresh();
     } finally {
       setBusy(false);
     }
   };
 
-  const toggleActive = (u: AdminUnit) => run(() => patch(u, { active: !u.active }));
+  const toggleActive = async (u: AdminUnit) => {
+    const verb = u.active ? 'deactivate' : 'reactivate';
+    const ok = await confirm({
+      title: t(`units.page.${verb}Title`, { name: u.name }),
+      message: t(`units.page.${verb}Body`),
+      confirmLabel: t(`units.page.${verb}`),
+      danger: u.active,
+    });
+    if (ok) await run(() => patch(u, { active: !u.active }));
+  };
 
   const remove = async (u: AdminUnit) => {
     const ok = await confirm({
@@ -70,6 +82,11 @@ export function UnitsPage() {
   return (
     <div className="ct-page">
       <PageHeader crumbs={[t('nav.groups.stock'), title]} title={title} description={t('units.page.description')} actions={add} />
+      {actionError && (
+        <p role="alert" className="alert alert--danger">
+          {actionError}
+        </p>
+      )}
       {order.dirty && (
         <div className="un-dirty">
           <span className="un-dirty__text">{t('units.page.dirty', { n: order.moved })}</span>
