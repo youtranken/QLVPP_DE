@@ -20,7 +20,7 @@ export interface BookingItem {
 }
 
 export type BookingSkipReason =
-  'empty_name' | 'empty_unit' | 'exists_code' | 'exists_name';
+  'empty_name' | 'empty_unit' | 'exists_code' | 'exists_name' | 'unit_inactive';
 
 export interface BookingSkip {
   row: number;

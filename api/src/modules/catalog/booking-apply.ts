@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import type { Database, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { SystemConfigService } from '../config/system-config.service';
-import { UnitsService } from '../units/units.service';
+import { UnitsService, type UnitRow } from '../units/units.service';
 import {
   bookingItemProblem,
   type BookingItem,
@@ -24,7 +24,7 @@ export interface BookingImportResult {
 class BookingImporter {
   private readonly audit: AuditWriterService;
   private readonly units: UnitsService;
-  private readonly unitCodes = new Map<string, string>();
+  private readonly unitsByName = new Map<string, UnitRow>();
 
   constructor(
     private readonly db: Database,
@@ -48,10 +48,15 @@ class BookingImporter {
         this.result.skipped.push(skip(item, existing));
         continue;
       }
-      const unit = await this.unitCode(tx, item.unitName);
+      const unit = await this.unit(tx, item.unitName);
+      // SPEC §11.1: món mới không được dùng ĐVT đã ngừng — bỏ hàng, báo để Hành chính sửa file
+      if (!unit.active) {
+        this.result.skipped.push(skip(item, 'unit_inactive'));
+        continue;
+      }
       await tx.execute(sql`
         INSERT INTO items (code, name, name_en, unit, pack_note, max_qty, sort_order)
-        VALUES (${item.code}, ${item.name}, ${item.nameEn}, ${unit},
+        VALUES (${item.code}, ${item.name}, ${item.nameEn}, ${unit.code},
                 ${item.packNote}, ${maxQty}, ${item.sortOrder})
       `);
       this.result.created.push(item);
@@ -86,8 +91,8 @@ class BookingImporter {
     return item.code ? 'exists_code' : 'exists_name';
   }
 
-  private async unitCode(tx: Tx, name: string): Promise<string> {
-    const known = this.unitCodes.get(name);
+  private async unit(tx: Tx, name: string): Promise<UnitRow> {
+    const known = this.unitsByName.get(name);
     if (known) return known;
     const { unit, created } = await this.units.findOrCreateWithin(
       tx,
@@ -95,8 +100,8 @@ class BookingImporter {
       IMPORT_ACTOR,
     );
     if (created) this.result.unitsCreated.push({ code: unit.code, name });
-    this.unitCodes.set(name, unit.code);
-    return unit.code;
+    this.unitsByName.set(name, unit);
+    return unit;
   }
 }
 

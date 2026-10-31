@@ -6,6 +6,7 @@ const REASONS: Record<BookingSkip['reason'], string> = {
   empty_unit: 'ĐVT trống',
   exists_code: 'đã có món cùng mã',
   exists_name: 'đã có món cùng tên',
+  unit_inactive: 'ĐVT đã ngừng — mở lại ĐVT hoặc sửa file',
 };
 
 const section = (title: string, lines: string[]) => [

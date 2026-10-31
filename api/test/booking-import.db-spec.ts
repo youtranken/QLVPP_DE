@@ -178,6 +178,23 @@ describe('nạp danh mục Booking — applyBookingImport', () => {
     ]);
   });
 
+  it('ĐVT đã ngừng (cái): hàng dùng cái bị bỏ với lý do unit_inactive, các hàng khác vẫn nạp', async () => {
+    await pool.query("UPDATE units SET active = false WHERE code = 'cai'");
+    const r = await applyBookingImport(db, parseBookingRows(rows), {
+      apply: true,
+    });
+    expect(r.skipped).toContainEqual({
+      row: 14,
+      code: 'K01',
+      name: 'Kẹp',
+      reason: 'unit_inactive',
+    });
+    expect(r.created).toHaveLength(7);
+    expect(r.created.map((i) => i.row)).not.toContain(14);
+    expect(await count('items', "unit = 'cai'")).toBe(0);
+    expect(await count('items')).toBe(7);
+  });
+
   it('chạy thử (không --apply): báo cáo đủ nhưng không ghi gì', async () => {
     const r = await applyBookingImport(db, parseBookingRows(rows), {
       apply: false,

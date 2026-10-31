@@ -174,17 +174,26 @@ Nạp một lần danh mục từ sheet `Booking` của file Excel chủ dự á
 
 ```bash
 # Dev bỏ "-f docker-compose.yml"; prod BẮT BUỘC có -f
+# cp giữ quyền và chủ của file máy chủ: cho mọi người đọc để user node trong container đọc được
+chmod 644 "VPPham.xlsx"
 docker compose -f docker-compose.yml cp "VPPham.xlsx" api:/tmp/booking.xlsx
 # 1. Chạy thử: in báo cáo (món tạo, bỏ qua + lý do, ĐVT tạo mới, "Cần đặt mã"), không ghi gì
 docker compose -f docker-compose.yml exec api node scripts/import-booking.mjs /tmp/booking.xlsx
-# 2. Đọc báo cáo, đúng thì ghi (một transaction, audit catalog.imported, actor system:import)
+# 2. Prod: backup tay ngay trước khi ghi (cùng lệnh mục Prod), kiểm file backup mới xuất hiện
+docker compose -f docker-compose.yml --profile backup run --rm backup
+# 3. Đọc báo cáo, đúng thì ghi (một transaction, audit catalog.imported, actor system:import)
 docker compose -f docker-compose.yml exec api node scripts/import-booking.mjs /tmp/booking.xlsx --apply
-# 3. Xóa file khỏi container
+# 4. Xóa file khỏi container
 docker compose -f docker-compose.yml exec -u root api rm /tmp/booking.xlsx
 ```
 
+- Mã ĐVT mới trong báo cáo chạy thử chỉ là dự kiến: nếu Hành chính thêm ĐVT giữa lúc chạy thử và `--apply`,
+  mã thật có thể khác (vd `cuon-3`). Hàng dùng ĐVT đã ngừng bị bỏ (`ĐVT đã ngừng`) — mở lại ĐVT rồi chạy lại.
 - Món mới: chưa xếp nhóm, chưa có ảnh, tối đa = `default_max_qty`, tồn 0, đang dùng. Hành chính bổ sung nhóm,
   ảnh và mã cho các hàng trong mục "Cần đặt mã" ở trang Danh mục.
+- **Không chạy lại** sau khi Hành chính đã đổi tên món thuộc "Cần đặt mã" (kể cả khi đã đặt mã cho món): trong
+  file hàng đó không có mã (hoặc mã trùng đã bị bỏ) nên được khớp theo tên — tên đã đổi thì bị nạp thêm bản trùng.
+  Bắt buộc chạy lại thì chạy thử trước và chỉ `--apply` khi "Món tạo" đúng như mong đợi.
 - Lỗi giữa chừng (vd tên quá 120 ký tự) thì không ghi gì; sửa file rồi chạy lại.
 
 ## Prod
