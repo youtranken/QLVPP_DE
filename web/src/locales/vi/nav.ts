@@ -19,6 +19,7 @@ const nav = {
     backlog: 'Còn nợ',
     reports: 'Báo cáo & in',
     categories: 'Nhóm món',
+    units: 'Đơn vị tính',
     badge: {
       review: '{{n}} món chờ xem',
       delivery: '{{n}} dòng chờ giao',

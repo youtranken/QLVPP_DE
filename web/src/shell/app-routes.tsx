@@ -7,6 +7,7 @@ import { HistoryPage } from '@/features/request/history-page';
 import { HistoryDetailPage } from '@/features/request/history-detail-page';
 import { CatalogPage } from '@/features/catalog/catalog-page';
 import { CategoriesPage } from '@/features/catalog/categories-page';
+import { UnitsPage } from '@/features/units/units-page';
 import { StockPage } from '@/features/stock/stock-page';
 import { UsersPage } from '@/features/admin/users-page';
 import { AuditPage } from '@/features/admin/audit-page';
@@ -68,6 +69,7 @@ export function AppRoutes() {
         <Route path="stock" element={<StockPage />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="categories" element={<CategoriesPage />} />
+        <Route path="units" element={<UnitsPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="config" element={<ConfigPage />} />

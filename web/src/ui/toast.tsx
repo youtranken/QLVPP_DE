@@ -1,7 +1,7 @@
 import { Icon } from '@/ui/icon';
 import type { ToastSpec } from '@/ui/toast-context';
 
-const TONE_ICON = { ok: 'check', info: 'info', warn: 'alert' } as const;
+const TONE_ICON = { ok: 'check', info: 'info', warn: 'alert', danger: 'alert' } as const;
 
 export function Toast({ toast, onAction }: { toast: ToastSpec; onAction: () => void }) {
   const tone = toast.tone ?? 'ok';

@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 
 export interface ToastSpec {
   text: string;
-  tone?: 'ok' | 'info' | 'warn';
+  tone?: 'ok' | 'info' | 'warn' | 'danger';
   action?: { label: string; onClick: () => void };
 }
 

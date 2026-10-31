@@ -22,6 +22,7 @@ const nav: Messages<typeof vi> = {
     backlog: 'Outstanding',
     reports: 'Reports & print',
     categories: 'Categories',
+    units: 'Units',
     badge: {
       review: '{{n}} items to review',
       delivery: '{{n}} lines to deliver',

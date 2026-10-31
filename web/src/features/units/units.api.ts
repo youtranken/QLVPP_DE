@@ -1,4 +1,4 @@
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '@/lib/api-client';
@@ -38,3 +38,32 @@ export function useUnitNames(): (code: string | null | undefined) => string {
 export function useUnitName(code: string | null | undefined): string {
   return useUnitNames()(code);
 }
+
+export interface AdminUnit extends Unit {
+  in_use: boolean;
+  item_count: number;
+}
+
+export type UnitPayload = Partial<Pick<Unit, 'name' | 'name_en' | 'sort_order' | 'active'>>;
+
+// Khóa con của ['units']: một lần invalidate ['units'] làm mới cả ô chọn lẫn trang quản lý
+export function useAdminUnits() {
+  return useQuery({
+    queryKey: [...unitsQuery.queryKey, 'all'] as const,
+    queryFn: () => apiFetch<AdminUnit[]>('/api/units?all=1'),
+  });
+}
+
+export function useRefreshUnits() {
+  const qc = useQueryClient();
+  return useCallback(() => qc.invalidateQueries({ queryKey: unitsQuery.queryKey }), [qc]);
+}
+
+export const createUnit = (body: UnitPayload, csrfToken: string | null) =>
+  apiFetch<Unit>('/api/admin/units', { method: 'POST', body: JSON.stringify(body), csrfToken });
+
+export const patchUnit = (code: string, body: UnitPayload, csrfToken: string | null) =>
+  apiFetch<Unit>(`/api/admin/units/${code}`, { method: 'PATCH', body: JSON.stringify(body), csrfToken });
+
+export const deleteUnit = (code: string, csrfToken: string | null) =>
+  apiFetch<void>(`/api/admin/units/${code}`, { method: 'DELETE', csrfToken });

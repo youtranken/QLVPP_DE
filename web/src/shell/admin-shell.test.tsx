@@ -14,6 +14,7 @@ const NAV_ORDER = [
   'Kho',
   'Danh mục',
   'Nhóm món',
+  'Đơn vị tính',
   'Danh bạ',
   'Nhật ký',
   'Cấu hình',
@@ -36,7 +37,7 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.queryByRole('navigation', { name: 'Menu quản lý' })).toBeNull();
   });
 
-  it.each(['admin', 'sa'] as const)('role %s: sidebar 3 nhóm, đúng 11 mục theo thứ tự SPEC §4.1, mục đang chọn aria-current, không "Phiếu của tôi"', (role) => {
+  it.each(['admin', 'sa'] as const)('role %s: sidebar 3 nhóm, đúng 12 mục theo thứ tự SPEC §4.1, mục đang chọn aria-current, không "Phiếu của tôi"', (role) => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe(role), '/admin/catalog');
@@ -97,7 +98,7 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
   });
 
-  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 11 mục', async () => {
+  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 12 mục', async () => {
     mockViewport(767);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');

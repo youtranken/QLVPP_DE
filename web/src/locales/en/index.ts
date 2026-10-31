@@ -14,7 +14,8 @@ import review from './review';
 import notifications from './notifications';
 import delivery from './delivery';
 import reports from './reports';
+import units from './units';
 
-const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review, ...notifications, ...delivery, ...reports };
+const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review, ...notifications, ...delivery, ...reports, ...units };
 
 export default en;

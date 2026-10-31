@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { asRole, devHeaders, expectNoContrastViolations, isMobile } from './helpers';
 
-const NAV_ORDER = ['Tổng hợp kỳ', 'Món ngoài danh mục', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Kho', 'Danh mục', 'Nhóm món', 'Danh bạ', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Tổng hợp kỳ', 'Món ngoài danh mục', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Kho', 'Danh mục', 'Nhóm món', 'Đơn vị tính', 'Danh bạ', 'Nhật ký', 'Cấu hình'];
 const OPEN_MENU = /^(Mở menu quản lý|Open admin menu)$/;
 
 const sidebarWidth = (page: Page) =>
@@ -10,7 +10,7 @@ const sidebarWidth = (page: Page) =>
 test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
   asRole('admin');
 
-  test('E9-S1 shell Hành chính: sidebar 3 nhóm 11 mục, thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
+  test('E9-S1 shell Hành chính: sidebar 3 nhóm 12 mục, thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
     await page.goto('/admin/catalog');
     await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
     await expect(page.getByRole('banner').getByRole('button', { name: /^Thông báo, \d+ chưa đọc$/ })).toBeVisible();

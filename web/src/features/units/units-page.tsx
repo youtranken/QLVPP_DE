@@ -1,0 +1,96 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { apiErrorCode } from '@/lib/api-error';
+import { useMe } from '@/lib/me';
+import { useConfirm } from '@/ui/confirm-context';
+import { EmptyState, LoadError, Loading } from '@/ui/load-state';
+import { PageHeader } from '@/ui/page-header';
+import { useToast } from '@/ui/toast-context';
+import { AddUnitDialog } from './add-unit-dialog';
+import { unitErrorKey } from './unit-errors';
+import { UnitTable } from './unit-table';
+import { useUnitOrder } from './use-unit-order';
+import { deleteUnit, patchUnit, useAdminUnits, useRefreshUnits, type AdminUnit, type UnitPayload } from './units.api';
+import '@/features/catalog/catalog.m1.css';
+import './units.m1.css';
+
+export function UnitsPage() {
+  const { t } = useTranslation();
+  const { csrfToken } = useMe();
+  const confirm = useConfirm();
+  const toast = useToast();
+  const refresh = useRefreshUnits();
+  const units = useAdminUnits();
+  const order = useUnitOrder(units.data ?? []);
+  const [adding, setAdding] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const patch = async (u: AdminUnit, body: UnitPayload) => {
+    const saved = await patchUnit(u.code, body, csrfToken);
+    toast.show({ text: t('units.page.saved', { name: saved?.name ?? u.name }), tone: 'ok' });
+    await refresh();
+  };
+
+  const run = async (action: () => Promise<void>) => {
+    setBusy(true);
+    try {
+      await action();
+    } catch (e) {
+      toast.show({ text: t(unitErrorKey(e)), tone: apiErrorCode(e) === 'UNIT_IN_USE' ? 'danger' : 'warn' });
+      if (apiErrorCode(e) === 'UNIT_IN_USE' || apiErrorCode(e) === 'UNIT_NOT_FOUND') await refresh();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggleActive = (u: AdminUnit) => run(() => patch(u, { active: !u.active }));
+
+  const remove = async (u: AdminUnit) => {
+    const ok = await confirm({
+      title: t('units.page.deleteTitle', { name: u.name }),
+      message: t('units.page.deleteBody'),
+      confirmLabel: t('units.page.deleteConfirm'),
+      danger: true,
+    });
+    if (!ok) return;
+    await run(async () => {
+      await deleteUnit(u.code, csrfToken);
+      toast.show({ text: t('units.page.deleted', { name: u.name }), tone: 'ok' });
+      await refresh();
+    });
+  };
+
+  const add = (
+    <button type="button" className={order.dirty ? 'btn' : 'btn btn--primary'} onClick={() => setAdding(true)}>
+      {t('units.page.add')}
+    </button>
+  );
+  const title = t('nav.units');
+  const list = order.ordered;
+  return (
+    <div className="ct-page">
+      <PageHeader crumbs={[t('nav.groups.stock'), title]} title={title} description={t('units.page.description')} actions={add} />
+      {order.dirty && (
+        <div className="un-dirty">
+          <span className="un-dirty__text">{t('units.page.dirty', { n: order.moved })}</span>
+          <button type="button" className="btn btn--ghost" disabled={order.saving} onClick={order.revert}>
+            {t('units.page.revert')}
+          </button>
+          <button type="button" className="btn btn--primary" disabled={order.saving} aria-busy={order.saving} onClick={() => void order.save()}>
+            {order.saving ? t('units.page.saving') : t('units.page.saveOrder')}
+          </button>
+        </div>
+      )}
+      {units.isError ? (
+        <LoadError onRetry={() => void units.refetch()} />
+      ) : units.isPending ? (
+        <Loading />
+      ) : list.length === 0 ? (
+        <EmptyState title={t('units.page.empty')} hint={t('units.page.emptyHint')} action={add} />
+      ) : (
+        <UnitTable ordered={list} busy={busy || order.saving} onMove={order.move} onPatch={patch} onToggleActive={(u) => void toggleActive(u)} onDelete={(u) => void remove(u)} />
+      )}
+      {adding && <AddUnitDialog units={list} onClose={() => setAdding(false)} />}
+    </div>
+  );
+}

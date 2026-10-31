@@ -1,0 +1,7 @@
+[data-shell='admin'] .un-dirty { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); padding: 10px 14px; border-radius: var(--r-md); background: var(--c-acc-soft); color: var(--c-acc); }
+[data-shell='admin'] .un-dirty__text { margin-right: auto; font: var(--t-label); }
+[data-shell='admin'] .un-order { display: flex; align-items: center; gap: var(--s-1); white-space: nowrap; }
+[data-shell='admin'] .un-order__n { min-width: 24px; color: var(--c-muted); font: var(--t-label); text-align: center; }
+@media (max-width: 767px) {
+  [data-shell='admin'] .ct-page .table-wrap { overflow-x: auto; }
+}
