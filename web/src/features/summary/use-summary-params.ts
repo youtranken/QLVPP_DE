@@ -59,6 +59,8 @@ export function useSummaryParams(openYm: string | undefined) {
     clearFilter: () => update({ filter: null }),
     setQ: (next: string) => update({ q: next || null }, true),
     openAdjust: (id: string) => update({ request: id }),
+    // ↑/↓ trong ngăn kéo thay mục lịch sử: Back về trang trước khi mở, không đi lùi qua từng người
+    stepAdjust: (id: string) => update({ request: id }, true),
     closeAdjust: () => update({ request: null }),
   };
 }

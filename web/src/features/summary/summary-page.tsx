@@ -139,14 +139,14 @@ export function SummaryPage() {
         <AdjustDrawer
           requestId={p.requestId}
           onClose={p.closeAdjust}
-          onPrev={adjacent.prev ? () => p.openAdjust(adjacent.prev!) : undefined}
-          onNext={adjacent.next ? () => p.openAdjust(adjacent.next!) : undefined}
+          onPrev={adjacent.prev ? () => p.stepAdjust(adjacent.prev!) : undefined}
+          onNext={adjacent.next ? () => p.stepAdjust(adjacent.next!) : undefined}
         />
       )}
       {creating && (
         <CreateRequestDialog
           ym={ym}
-          lockedOn={canCreate ? undefined : data?.deadline ? vnLockDate(data.deadline) : ''}
+          lockedOn={canCreate ? undefined : data?.deadline ? vnLockDate(data.deadline) : null}
           initialUser={creating.user}
           onClose={() => setCreating(null)}
           onCreated={() => setCreating(null)}

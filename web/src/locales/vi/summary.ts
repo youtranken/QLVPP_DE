@@ -135,6 +135,7 @@ const summary = {
       saving: 'Đang lưu…',
       stale: 'Nhân viên vừa sửa phiếu này — tải bản mới nhất rồi sửa lại.',
       reload: 'Tải bản mới nhất',
+      reloaded: 'Nhân viên vừa sửa phiếu này — đã tải bản mới nhất, sửa lại rồi lưu.',
       saved: 'Đã lưu điều chỉnh phiếu của {{name}}',
       dropped: 'Đã bỏ phiếu của {{name}}',
       errors: {
@@ -168,6 +169,7 @@ const summary = {
       button: 'Tạo phiếu hộ',
       title: 'Tạo phiếu hộ — Tháng {{month}}/{{year}}',
       description: 'Đăng ký thay người không tự lưu được phiếu (đi công trường, nghỉ phép).',
+      lockedNoDate: 'Kỳ tháng {{month}} đã khóa — không tạo phiếu mới được. Dùng Điều chỉnh phiếu hoặc Xuất lẻ ở Kho.',
       locked: 'Kỳ tháng {{month}} đã khóa lúc 00:00 ngày {{date}} — không tạo phiếu mới được. Dùng Điều chỉnh phiếu hoặc Xuất lẻ ở Kho.',
       person: 'Người đăng ký',
       personSearch: 'Tìm người đăng ký',

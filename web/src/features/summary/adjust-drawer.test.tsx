@@ -241,20 +241,24 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
     expect(loadCalls(f)).toHaveLength(1);
   });
 
-  it('review thua đua, dòng khác cũng đổi → bỏ nháp, khối STALE, giữ lý do', async () => {
+  it('review thua đua, dòng khác cũng đổi → đã tải bản mới, bỏ nháp, báo không chặn (không cần bấm tải lại), giữ lý do, Lưu được sau khi sửa', async () => {
     const fresh = adminRequest({ updated_at: '2026-10-06T01:00:00.000Z' });
     fresh.lines[1] = { ...fresh.lines[1], qty: 4 };
     fresh.lines[2] = { ...fresh.lines[2], review_status: 'accepted' };
-    stubAdjust({ views: [adminRequest(), fresh], review: () => jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' }) });
+    const f = stubAdjust({ views: [adminRequest(), fresh], review: () => jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' }) });
     const { drawer } = await renderDrawer();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Bút bi xanh' }));
     await userEvent.type(reasonBox(drawer), 'An báo nhầm');
     await userEvent.click(within(drawer).getByRole('button', { name: 'Chấp nhận — Băng keo 2 mặt' }));
     await userEvent.click(within(screen.getByRole('dialog', { name: /Chấp nhận “Băng keo 2 mặt”/ })).getByRole('button', { name: 'Chấp nhận' }));
-    expect(await within(drawer).findByText('Nhân viên vừa sửa phiếu này — tải bản mới nhất rồi sửa lại.')).toBeInTheDocument();
+    expect(await within(drawer).findByText('Nhân viên vừa sửa phiếu này — đã tải bản mới nhất, sửa lại rồi lưu.')).toBeInTheDocument();
     await waitFor(() => expect(within(drawer).getByRole('spinbutton', { name: 'Giấy note vàng' })).toHaveValue(4));
     expect(within(drawer).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(10);
+    expect(within(drawer).queryByRole('button', { name: 'Tải bản mới nhất' })).toBeNull();
     expect(reasonBox(drawer)).toHaveValue('An báo nhầm');
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Bút bi xanh' }));
+    expect(saveButton(drawer)).toBeEnabled();
+    expect(loadCalls(f)).toHaveLength(2);
   });
 
   it('review thua đua nhưng chỉ dòng đó đổi → giữ nháp, không khối STALE', async () => {

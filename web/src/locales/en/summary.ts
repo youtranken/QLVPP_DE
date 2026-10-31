@@ -138,6 +138,7 @@ const summary: Messages<typeof vi> = {
       saving: 'Saving…',
       stale: 'The employee just edited this request — load the latest version and edit again.',
       reload: 'Load latest version',
+      reloaded: 'The employee just edited this request — the latest version is loaded, edit again and save.',
       saved: 'Saved adjustment to the request of {{name}}',
       dropped: 'Removed the request of {{name}}',
       errors: {
@@ -171,6 +172,7 @@ const summary: Messages<typeof vi> = {
       button: 'Create on behalf',
       title: 'Create on behalf — Month {{month}}/{{year}}',
       description: 'Register for someone who cannot save their own request (on site, on leave).',
+      lockedNoDate: 'The month {{month}} period is locked — no new requests can be created. Use Adjust request or Issue in Stock.',
       locked: 'The month {{month}} period locked at 00:00 on {{date}} — no new requests can be created. Use Adjust request or Issue in Stock.',
       person: 'Employee',
       personSearch: 'Search employee',

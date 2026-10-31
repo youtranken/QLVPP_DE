@@ -59,6 +59,11 @@ function Blocks({ a }: { a: Adjust }) {
           </button>
         </div>
       )}
+      {a.reloaded && (
+        <p role="status" className="alert alert--warn">
+          {t('summary.adjust.reloaded')}
+        </p>
+      )}
       {a.errors.block && (
         <p role="alert" className="alert alert--danger">
           {a.errors.block}

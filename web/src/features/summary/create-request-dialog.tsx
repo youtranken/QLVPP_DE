@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -51,7 +51,7 @@ function ExistsBlock({ name, month, requestId, onOpen }: { name: string; month: 
 // Tạo hộ theo luật member (api on_behalf): món chỉ Hành chính không chọn được ở đây
 export function CreateRequestDialog({ ym, lockedOn, initialUser = null, onClose, onCreated, onOpenExisting }: {
   ym: string;
-  lockedOn?: string;
+  lockedOn?: string | null;
   initialUser?: DirectoryUser | null;
   onClose: () => void;
   onCreated: () => void;
@@ -68,6 +68,14 @@ export function CreateRequestDialog({ ym, lockedOn, initialUser = null, onClose,
   const locked = lockedOn !== undefined;
   const { badge, deadline } = useRegistrationBadge(!locked);
   const month = monthOf(ym);
+  const form = useRef<HTMLFormElement>(null);
+  const [missingTick, setMissingTick] = useState(0);
+  // Gửi thiếu → đưa focus vào ô thiếu đầu tiên (ô tìm người, không thì ô món)
+  useEffect(() => {
+    if (!missingTick) return;
+    const target = form.current?.querySelector<HTMLElement>('.user-picker [aria-invalid="true"], .aj-create-lines input, .aj-create-lines button');
+    target?.focus();
+  }, [missingTick]);
 
   const send = async (who: DirectoryUser) => {
     setErrors({});
@@ -90,6 +98,7 @@ export function CreateRequestDialog({ ym, lockedOn, initialUser = null, onClose,
         user: user ? undefined : t('summary.create.needUser'),
         linesMissing: lines.length ? undefined : t('summary.create.needLines'),
       });
+      setMissingTick((n) => n + 1);
       return;
     }
     void flight.run(() => send(user));
@@ -97,7 +106,7 @@ export function CreateRequestDialog({ ym, lockedOn, initialUser = null, onClose,
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()} dirty={!!user || lines.length > 0} dismissible={!flight.pending} maxWidth={520}>
-      <form onSubmit={submit} noValidate>
+      <form ref={form} onSubmit={submit} noValidate>
         <div className="sheet-header">
           <DialogTitle className="sheet-title">{t('summary.create.title', { month, year: ym.slice(0, 4) })}</DialogTitle>
           <DialogClose asChild>
@@ -108,7 +117,7 @@ export function CreateRequestDialog({ ym, lockedOn, initialUser = null, onClose,
         </div>
         <div className="sheet-body">
           <DialogDescription className="sm-note">{t('summary.create.description')}</DialogDescription>
-          {locked && <p className="alert alert--warn">{t('summary.create.locked', { month, date: lockedOn })}</p>}
+          {locked && <p className="alert alert--warn">{lockedOn ? t('summary.create.locked', { month, date: lockedOn }) : t('summary.create.lockedNoDate', { month })}</p>}
           {errors.exists && user && <ExistsBlock name={userLabel(user)} month={month} requestId={errors.exists.requestId} onOpen={onOpenExisting} />}
           {errors.block && (
             <p role="alert" className="alert alert--danger">

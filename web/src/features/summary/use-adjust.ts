@@ -22,9 +22,10 @@ interface Draft {
   reason: string;
   errors: AdjustErrors;
   stale: boolean;
+  reloaded: boolean;
 }
 
-const EMPTY: Draft = { qty: {}, removed: [], added: [], reason: '', errors: {}, stale: false };
+const EMPTY: Draft = { qty: {}, removed: [], added: [], reason: '', errors: {}, stale: false, reloaded: false };
 
 // Cùng luật isDeletable của api ở chế độ Hành chính: chưa giao, chưa duyệt
 export const canRemove = (l: LineView) =>
@@ -62,7 +63,7 @@ function useDraft(requestId: string) {
     dropAdded: (key: string) => patch((d) => ({ ...d, added: d.added.filter((x) => x.key !== key) })),
   };
   // Bản mới thay bản cũ nên số đã sửa không còn đúng chỗ; lý do vẫn dùng lại được
-  const restart = (stale: boolean) => patch((d) => ({ ...EMPTY, reason: d.reason, stale }));
+  const restart = (mark: Partial<Pick<Draft, 'stale' | 'reloaded'>> = {}) => patch((d) => ({ ...EMPTY, reason: d.reason, ...mark }));
   return { draft, patch, edit, restart };
 }
 
@@ -103,7 +104,7 @@ function useSendAdjust(requestId: string, patch: Patch, onDone: () => void) {
   };
 }
 
-function useReviewSync(requestId: string, restart: (stale: boolean) => void) {
+function useReviewSync(requestId: string, restart: (mark?: Partial<Pick<Draft, 'stale' | 'reloaded'>>) => void) {
   const qc = useQueryClient();
   const query = useAdminRequest(requestId);
   // Review đổi updated_at của phiếu: vá bản đang xem để lần Lưu sau không bị STALE oan
@@ -111,15 +112,15 @@ function useReviewSync(requestId: string, restart: (stale: boolean) => void) {
     qc.setQueryData<AdminRequestView>(adminRequestKey(requestId), (v) =>
       v && { ...v, updated_at: r.request_updated_at, lines: v.lines.map((l) => (l.id === r.line.id ? r.line : l)) },
     );
-  // Review thua đua: nếu nhân viên đã đổi dòng khác thì nháp không còn đúng chỗ → xử như STALE
+  // Review thua đua: đã tải bản mới; nhân viên đổi dòng khác thì nháp không còn đúng chỗ → bỏ nháp, chỉ báo (không chặn Lưu)
   const reviewStale = async (lineId: string) => {
     const before = query.data?.lines ?? [];
     const { data } = await query.refetch();
-    if (data && othersChanged(before, data.lines, lineId)) restart(true);
+    if (data && othersChanged(before, data.lines, lineId)) restart({ reloaded: true });
   };
   const reloadLatest = async () => {
     await query.refetch();
-    restart(false);
+    restart();
   };
   return { query, reviewed, reviewStale, reloadLatest };
 }
@@ -145,6 +146,7 @@ export function useAdjust(requestId: string, onDone: () => void) {
     setReason: (v: string) => patch((x) => ({ ...x, reason: v, errors: { ...x.errors, reason: undefined } })),
     errors: d.errors,
     stale: d.stale,
+    reloaded: d.reloaded,
     saving: flight.pending,
     locked: view ? !view.is_open : false,
     changes,

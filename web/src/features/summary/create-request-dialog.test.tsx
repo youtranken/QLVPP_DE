@@ -32,7 +32,7 @@ function stub(post: () => Response | Promise<Response>) {
 
 const created = () => jsonResponse(201, { request: { id: 'r-new' } });
 
-async function renderDialog({ initialUser = null, lockedOn }: { initialUser?: DirectoryUser | null; lockedOn?: string } = {}) {
+async function renderDialog({ initialUser = null, lockedOn }: { initialUser?: DirectoryUser | null; lockedOn?: string | null } = {}) {
   const onClose = vi.fn();
   const onCreated = vi.fn();
   const onOpenExisting = vi.fn();
@@ -41,7 +41,7 @@ async function renderDialog({ initialUser = null, lockedOn }: { initialUser?: Di
       <ToastProvider>
         <ConfirmProvider>
           <CreateRequestDialog
-            ym={lockedOn ? '2026-10' : '2026-11'}
+            ym={lockedOn !== undefined ? '2026-10' : '2026-11'}
             lockedOn={lockedOn}
             initialUser={initialUser}
             onClose={onClose}
@@ -52,7 +52,7 @@ async function renderDialog({ initialUser = null, lockedOn }: { initialUser?: Di
       </ToastProvider>
     </MeContext.Provider>,
   );
-  const dialog = await screen.findByRole('dialog', { name: lockedOn ? 'Tạo phiếu hộ — Tháng 10/2026' : 'Tạo phiếu hộ — Tháng 11/2026' });
+  const dialog = await screen.findByRole('dialog', { name: lockedOn !== undefined ? 'Tạo phiếu hộ — Tháng 10/2026' : 'Tạo phiếu hộ — Tháng 11/2026' });
   return { dialog, onClose, onCreated, onOpenExisting };
 }
 
@@ -95,10 +95,13 @@ describe('CreateRequestDialog — tạo phiếu hộ', () => {
     const { dialog } = await renderDialog();
     expect(submit(dialog)).toBeEnabled();
     await userEvent.click(submit(dialog));
-    expect(within(dialog).getByRole('searchbox', { name: 'Tìm người đăng ký' })).toHaveAccessibleDescription('Cần thêm: người đăng ký.');
+    const person = within(dialog).getByRole('searchbox', { name: 'Tìm người đăng ký' });
+    expect(person).toHaveAccessibleDescription('Cần thêm: người đăng ký.');
+    expect(person).toHaveFocus();
     await pickUser(dialog);
     await userEvent.click(submit(dialog));
     expect(within(dialog).getByText('Cần thêm: ít nhất một món.')).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: '+ Thêm món vào phiếu' })).toHaveFocus();
     expect(f.mock.calls.some((c) => c[0] === '/api/admin/requests')).toBe(false);
   });
 
@@ -190,6 +193,13 @@ describe('CreateRequestDialog — tạo phiếu hộ', () => {
     expect(
       within(dialog).getByText('Kỳ tháng 10 đã khóa lúc 00:00 ngày 11/10 — không tạo phiếu mới được. Dùng Điều chỉnh phiếu hoặc Xuất lẻ ở Kho.'),
     ).toBeInTheDocument();
+    expect(submit(dialog)).toBeDisabled();
+  });
+
+  it('kỳ khóa nhưng thiếu hạn (deadline null) → câu cảnh báo bỏ mệnh đề giờ khóa, không có "ngày " trống', async () => {
+    stub(created);
+    const { dialog } = await renderDialog({ lockedOn: null });
+    expect(within(dialog).getByText('Kỳ tháng 10 đã khóa — không tạo phiếu mới được. Dùng Điều chỉnh phiếu hoặc Xuất lẻ ở Kho.')).toBeInTheDocument();
     expect(submit(dialog)).toBeDisabled();
   });
 
