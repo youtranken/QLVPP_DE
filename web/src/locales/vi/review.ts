@@ -70,7 +70,7 @@ const review = {
     reject: {
       title: 'Từ chối “{{name}}”',
       reason: 'Lý do từ chối',
-      hint: 'Người đăng ký sẽ thấy lý do này (ít nhất 3 ký tự).',
+      hint: 'Ít nhất 3 ký tự. Viết cho người đăng ký đọc.',
       submit: 'Từ chối',
     },
     convert: {
@@ -79,6 +79,10 @@ const review = {
       modeNew: 'Món mới',
       modeExisting: 'Món có sẵn',
       existing: 'Món trong danh mục',
+      search: 'Tìm món trong danh mục',
+      noMatch: 'Không có món khớp',
+      countsIn: 'tính theo {{unit}} · {{category}}',
+      noCategory: 'chưa có nhóm',
       existingPlaceholder: 'Chọn món…',
       existingOption: '{{name}} ({{unit}})',
       unitMismatch: 'ĐVT khác dòng gốc ({{unit}}) — số lượng {{qty}} sẽ tính theo ĐVT mới.',
@@ -88,6 +92,7 @@ const review = {
       imageFromStaff: 'Dùng ảnh nhân viên đã gửi làm ảnh món; đổi được ở Danh mục.',
       submit: 'Thêm vào danh mục',
     },
+    back: 'Quay lại',
     saving: 'Đang lưu…',
     errors: {
       LINE_ALREADY_REVIEWED: 'Dòng này vừa được xử lý ở nơi khác.',

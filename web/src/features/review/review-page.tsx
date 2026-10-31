@@ -6,7 +6,7 @@ import { Segmented } from '@/ui/segmented';
 import { useToast } from '@/ui/toast-context';
 import { useAdminItems } from '@/features/catalog/catalog.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
-import { REVIEW_FILTERS, useReviewCache, useReviewCounts, useReviewLines, type ReviewBody, type ReviewResult, type ReviewRow } from './review.api';
+import { REVIEW_FILTERS, useReviewCache, useReviewCounts, useReviewLines, type ReviewBody, type ReviewFilter, type ReviewResult, type ReviewRow } from './review.api';
 import { ReviewCard } from './review-card';
 import { useReviewParams } from './use-review-params';
 import '@/features/admin/admin.css';
@@ -41,14 +41,17 @@ export function ReviewPage() {
   const toast = useToast();
   const itemNames = useItemNames();
   const [staleNotice, setStaleNotice] = useState(false);
+  const [handled, setHandled] = useState<string[]>([]);
   const rowName = (row: ReviewRow) => row.custom_name ?? (row.item_id ? itemNames.get(row.item_id) : undefined) ?? '';
 
   const change = (next: () => void) => {
     setStaleNotice(false);
+    setHandled([]);
     next();
   };
 
-  const done = (name: string, result: ReviewResult, body: ReviewBody) => {
+  const done = (row: ReviewRow, name: string, result: ReviewResult, body: ReviewBody) => {
+    setHandled((ids) => [...ids, row.line_id]);
     void cache.markListStale();
     void cache.refreshOtherTabs(p.status);
     const status = result.line.review_status;
@@ -64,7 +67,13 @@ export function ReviewPage() {
     );
   };
 
-  const tabs = REVIEW_FILTERS.map((f) => ({ value: f, label: t(`review.filters.${f}`), count: counts[f] }));
+  // Thẻ vừa xử lý ở lại trong tab Chờ xem nhưng không còn là "chờ xem" nữa
+  const stillListed = handled.filter((id) => list.data?.items.some((r) => r.line_id === id)).length;
+  const countOf = (f: ReviewFilter) => {
+    const n = counts[f];
+    return f === 'pending' && p.status === 'pending' && n !== undefined ? n - stillListed : n;
+  };
+  const tabs = REVIEW_FILTERS.map((f) => ({ value: f, label: t(`review.filters.${f}`), count: countOf(f) }));
 
   return (
     <div className="rv-page">
@@ -118,7 +127,7 @@ export function ReviewPage() {
               key={row.line_id}
               row={row}
               name={rowName(row)}
-              onDone={(result, body) => done(rowName(row), result, body)}
+              onDone={(result, body) => done(row, rowName(row), result, body)}
               onStale={() => setStaleNotice(true)}
             />
           ))}

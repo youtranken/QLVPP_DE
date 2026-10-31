@@ -16,6 +16,10 @@ describe('Segmented', () => {
     expect(screen.getByRole('radio', { name: /Một/ })).toHaveAttribute('aria-checked', 'false');
     expect(screen.getByText('6')).toBeInTheDocument();
   });
+  it('đếm tách khỏi nhãn trong tên truy cập: "Một, 6"', () => {
+    renderWithI18n(<Segmented label="Chế độ" value="b" options={opts} onChange={() => {}} />);
+    expect(screen.getByRole('radio', { name: 'Một, 6' })).toBeInTheDocument();
+  });
   it('ArrowRight từ mục cuối quay về mục đầu và gọi onChange', async () => {
     const onChange = vi.fn();
     renderWithI18n(<Segmented label="x" value="c" options={opts} onChange={onChange} />);

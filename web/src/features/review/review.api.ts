@@ -69,6 +69,8 @@ export interface ReviewResult {
 }
 
 export const REVIEW_KEY = ['admin-review'] as const;
+// Huy hiệu sidebar có khóa riêng để làm mới ngay sau khi xử lý mà không đụng danh sách đang hiện thẻ vừa xử lý
+export const REVIEW_BADGE_KEY = [...REVIEW_KEY, 'badge'] as const;
 
 export const reviewLinesQuery = (status: ReviewFilter, ym: string) =>
   queryOptions({
@@ -102,7 +104,7 @@ export function useReviewCache() {
       Promise.all([refreshCatalog(), qc.invalidateQueries({ queryKey: SUMMARY_KEY })]),
     refetchList: () => qc.invalidateQueries({ queryKey: REVIEW_KEY }),
     // Thẻ vừa xử lý ở lại với nhãn trạng thái; danh sách tải lại ở lần xem sau
-    // Đếm các tab khác đổi theo ngay; tab đang xem giữ nguyên thẻ vừa xử lý
+    // Đếm các tab khác và huy hiệu sidebar đổi theo ngay; tab đang xem giữ nguyên thẻ vừa xử lý
     refreshOtherTabs: (current: ReviewFilter) =>
       qc.invalidateQueries({ queryKey: REVIEW_KEY, predicate: (q) => q.queryKey[1] !== current }),
     markListStale: () => qc.invalidateQueries({ queryKey: REVIEW_KEY, refetchType: 'none' }),

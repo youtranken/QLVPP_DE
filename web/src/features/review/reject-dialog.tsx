@@ -58,6 +58,7 @@ export function RejectDialog({ name, onSubmit, onClose }: {
           )}
           <FormField
             label={t('review.reject.reason')}
+            required
             hint={t('review.reject.hint')}
             error={error?.field === 'reason' ? t(error.key) : undefined}
           >
@@ -77,11 +78,11 @@ export function RejectDialog({ name, onSubmit, onClose }: {
         </div>
         <div className="sheet-footer">
           <DialogClose asChild>
-            <button type="button" className="btn" disabled={saving}>
-              {t('common.cancel')}
+            <button type="button" className="btn btn--ghost" disabled={saving}>
+              {t('review.back')}
             </button>
           </DialogClose>
-          <button type="submit" className="btn btn--danger" disabled={!canSubmit}>
+          <button type="submit" className="btn btn--danger btn--solid" disabled={!canSubmit}>
             {saving ? t('review.saving') : t('review.reject.submit')}
           </button>
         </div>

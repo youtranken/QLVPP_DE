@@ -88,10 +88,10 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
     const dialog = screen.getByRole('dialog', { name: 'Từ chối “Băng keo 2 mặt”' });
     const submit = within(dialog).getByRole('button', { name: 'Từ chối' });
     expect(submit).toBeDisabled();
-    await userEvent.type(within(dialog).getByLabelText('Lý do từ chối'), '  ab ');
+    await userEvent.type(within(dialog).getByLabelText(/^Lý do từ chối/), '  ab ');
     expect(submit).toBeDisabled();
-    await userEvent.clear(within(dialog).getByLabelText('Lý do từ chối'));
-    await userEvent.type(within(dialog).getByLabelText('Lý do từ chối'), 'Đã có trong kho');
+    await userEvent.clear(within(dialog).getByLabelText(/^Lý do từ chối/));
+    await userEvent.type(within(dialog).getByLabelText(/^Lý do từ chối/), 'Đã có trong kho');
     expect(submit).toBeEnabled();
     await userEvent.click(submit);
     await waitFor(() => expect(onDone).toHaveBeenCalledWith(result, expect.objectContaining({ action: expect.any(String) })));
@@ -105,19 +105,21 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
     const { onDone } = renderActions();
     await userEvent.click(screen.getByRole('button', { name: 'Từ chối… — Băng keo 2 mặt' }));
     const dialog = screen.getByRole('dialog', { name: 'Từ chối “Băng keo 2 mặt”' });
-    await userEvent.type(within(dialog).getByLabelText('Lý do từ chối'), 'abc');
+    await userEvent.type(within(dialog).getByLabelText(/^Lý do từ chối/), 'abc');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
     expect(await within(dialog).findByText('Nhập lý do từ chối (ít nhất 3 ký tự).')).toBeInTheDocument();
-    expect(within(dialog).getByLabelText('Lý do từ chối')).toHaveAttribute('aria-invalid', 'true');
+    expect(within(dialog).getByLabelText(/^Lý do từ chối/)).toHaveAttribute('aria-invalid', 'true');
     expect(onDone).not.toHaveBeenCalled();
   });
 
-  it('409 LINE_ALREADY_REVIEWED → đóng hộp, báo "Dòng này vừa được xử lý", gọi onStale để làm mới', async () => {
+  it('409 LINE_ALREADY_REVIEWED → khối trong hộp (hộp mở); đóng hộp mới gọi onStale để làm mới', async () => {
     stub(() => jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' }));
     const { onDone, onStale } = renderActions();
     await userEvent.click(screen.getByRole('button', { name: 'Chấp nhận — Băng keo 2 mặt' }));
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Chấp nhận' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Dòng này vừa được xử lý');
+    expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent('Dòng này vừa được xử lý ở nơi khác.');
+    expect(onStale).not.toHaveBeenCalled();
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Quay lại' }));
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(onStale).toHaveBeenCalledTimes(1);
     expect(onDone).not.toHaveBeenCalled();

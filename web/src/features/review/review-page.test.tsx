@@ -59,10 +59,10 @@ describe('ReviewPage — /admin/review', () => {
     mockViewport(1280);
     const fetchMock = stub();
     renderApp(makeMe('admin'), '/admin/review');
-    expect(await screen.findByRole('radio', { name: /^Chờ xem\s*2$/ })).toHaveAttribute('aria-checked', 'true');
-    expect(await screen.findByRole('radio', { name: /^Đã chấp nhận\s*1$/ })).toBeInTheDocument();
-    expect(await screen.findByRole('radio', { name: /^Đã thêm vào danh mục\s*0$/ })).toBeInTheDocument();
-    expect(await screen.findByRole('radio', { name: /^Từ chối\s*0$/ })).toBeInTheDocument();
+    expect(await screen.findByRole('radio', { name: /^Chờ xem,\s*2$/ })).toHaveAttribute('aria-checked', 'true');
+    expect(await screen.findByRole('radio', { name: /^Đã chấp nhận,\s*1$/ })).toBeInTheDocument();
+    expect(await screen.findByRole('radio', { name: /^Đã thêm vào danh mục,\s*0$/ })).toBeInTheDocument();
+    expect(await screen.findByRole('radio', { name: /^Từ chối,\s*0$/ })).toBeInTheDocument();
     expect([...new Set(listUrls(fetchMock))].sort()).toEqual([
       '/api/admin/review?status=accepted',
       '/api/admin/review?status=converted',

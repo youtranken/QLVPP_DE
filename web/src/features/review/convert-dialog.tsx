@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { apiErrorCode } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
-import { FormField } from '@/ui/form-field';
 import { useAdminItems, useAllCategories } from '@/features/catalog/catalog.api';
 import { fieldErrors, type FieldErrors } from '@/features/catalog/catalog-errors';
 import { ITEM_ERROR_FIELD, ITEM_FIELDS, draftFrom, itemPayload, type ItemDraft } from '@/features/catalog/item-draft';
-import { ItemFields } from '@/features/catalog/item-fields';
+import { ConvertExisting } from './convert-existing';
+import { ConvertNewFields } from './convert-new-fields';
 import type { ReviewBody, ReviewableLine } from './review.api';
 import { reviewErrorKey } from './review-errors';
 import '@/features/catalog/catalog.css';
@@ -88,7 +88,7 @@ export function ConvertDialog({ line, who, onSubmit, onClose }: {
   const targetUnit = mode === 'new' ? draft.unit : chosen?.unit;
   const unitMismatch = !!targetUnit && !!line.custom_unit && targetUnit !== line.custom_unit;
   const dirty = pickedMode !== null || pickedId !== null || JSON.stringify(draft) !== JSON.stringify(initial);
-  const canSubmit = !saving && !uploading && (mode === 'existing' ? !!chosen : true);
+  const canSubmit = !saving && !uploading && (mode !== 'existing' || !!chosen);
 
   const set = <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => {
     setDraft((d) => ({ ...d, [key]: value }));
@@ -116,7 +116,7 @@ export function ConvertDialog({ line, who, onSubmit, onClose }: {
   const name = line.custom_name ?? '';
 
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()} dirty={dirty} dismissible={!saving} className="sheet a-form" maxWidth={600}>
+    <Dialog open onOpenChange={(o) => !o && onClose()} dirty={dirty} dismissible={!saving} className="sheet a-form" maxWidth={520}>
       <form onSubmit={submit} noValidate>
         <div className="sheet-header">
           <DialogTitle className="sheet-title">{t('review.convert.title', { name })}</DialogTitle>
@@ -166,41 +166,30 @@ export function ConvertDialog({ line, who, onSubmit, onClose }: {
             <p className="ff-hint a-form-wide">{t('review.convert.imageFromStaff')}</p>
           )}
           {mode === 'new' ? (
-            <ItemFields
+            <ConvertNewFields
               draft={draft}
               errors={errors}
               categories={categories.data ?? []}
-              imageRequired
-              withSortOrder={false}
               onChange={set}
               onUploadingChange={setUploading}
             />
           ) : (
-            <FormField label={t('review.convert.existing')} error={err('existing')} className="a-form-wide">
-              {(p) => (
-                <select
-                  {...p}
-                  value={existingId}
-                  onChange={(e) => {
-                    setPickedId(e.target.value);
-                    setErrors({});
-                  }}
-                >
-                  <option value="">{t('review.convert.existingPlaceholder')}</option>
-                  {active.map((i) => (
-                    <option key={i.id} value={i.id}>
-                      {t('review.convert.existingOption', { name: i.name, unit: t(`catalog.units.${i.unit}`) })}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </FormField>
+            <ConvertExisting
+              items={active}
+              categories={categories.data ?? []}
+              selectedId={existingId}
+              error={err('existing')}
+              onPick={(id) => {
+                setPickedId(id);
+                setErrors({});
+              }}
+            />
           )}
         </div>
         <div className="sheet-footer">
           <DialogClose asChild>
-            <button type="button" className="btn" disabled={saving}>
-              {t('common.cancel')}
+            <button type="button" className="btn btn--ghost" disabled={saving}>
+              {t('review.back')}
             </button>
           </DialogClose>
           <button type="submit" className="btn btn--primary" disabled={!canSubmit}>

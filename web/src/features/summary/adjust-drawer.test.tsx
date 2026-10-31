@@ -234,7 +234,7 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
     await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm vào danh mục… — Băng keo 2 mặt' }));
     const dialog = screen.getByRole('dialog', { name: 'Thêm “Băng keo 2 mặt” vào danh mục' });
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
-    await userEvent.selectOptions(await within(dialog).findByLabelText('Món trong danh mục'), 'i-clip');
+    await userEvent.click(await within(dialog).findByRole('button', { name: /Kẹp giấy 33 mm/ }));
     await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
     expect(await within(drawer).findByText('Đã thêm vào danh mục')).toBeInTheDocument();
     expect(within(drawer).queryByText(/ngoài danh mục$/)).toBeNull();
@@ -250,7 +250,9 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
     await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Bút bi xanh' }));
     await userEvent.type(reasonBox(drawer), 'An báo nhầm');
     await userEvent.click(within(drawer).getByRole('button', { name: 'Chấp nhận — Băng keo 2 mặt' }));
-    await userEvent.click(within(screen.getByRole('dialog', { name: /Chấp nhận “Băng keo 2 mặt”/ })).getByRole('button', { name: 'Chấp nhận' }));
+    const confirm = screen.getByRole('dialog', { name: /Chấp nhận “Băng keo 2 mặt”/ });
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Chấp nhận' }));
+    await userEvent.click(await within(confirm).findByRole('button', { name: 'Quay lại' }));
     expect(await within(drawer).findByText('Nhân viên vừa sửa phiếu này — đã tải bản mới nhất, sửa lại rồi lưu.')).toBeInTheDocument();
     await waitFor(() => expect(within(drawer).getByRole('spinbutton', { name: 'Giấy note vàng' })).toHaveValue(4));
     expect(within(drawer).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(10);
@@ -268,7 +270,9 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
     const { drawer } = await renderDrawer();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Bút bi xanh' }));
     await userEvent.click(within(drawer).getByRole('button', { name: 'Chấp nhận — Băng keo 2 mặt' }));
-    await userEvent.click(within(screen.getByRole('dialog', { name: /Chấp nhận “Băng keo 2 mặt”/ })).getByRole('button', { name: 'Chấp nhận' }));
+    const confirm = screen.getByRole('dialog', { name: /Chấp nhận “Băng keo 2 mặt”/ });
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Chấp nhận' }));
+    await userEvent.click(await within(confirm).findByRole('button', { name: 'Quay lại' }));
     await waitFor(() => expect(loadCalls(f)).toHaveLength(2));
     await waitFor(() => expect(within(drawer).getByText('Đã chấp nhận')).toBeInTheDocument());
     expect(within(drawer).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(11);

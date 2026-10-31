@@ -75,8 +75,7 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       const dialog = page.getByRole('dialog', { name: `Thêm “${name}” vào danh mục` });
       await expect(dialog.getByLabel('Tên món')).toHaveValue(name);
       await expect(dialog.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
-      const category = dialog.getByLabel('Nhóm');
-      await category.selectOption({ index: 1 });
+      await dialog.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
       await dialog.getByLabel('Đơn vị tính').selectOption('hop');
       await expect(dialog.getByText('ĐVT khác dòng gốc (cái) — số lượng 2 sẽ tính theo ĐVT mới.')).toBeVisible();
       await snap(page, info, 'convert-dialog');
@@ -189,7 +188,7 @@ test.describe('E9-S2 món ngoài danh mục', () => {
       await routeAs(page, devHeaders('admin'));
       await page.goto(`/admin/review?ym=${period.ym}`);
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
-      await expect(page.getByRole('radio', { name: new RegExp(`^Chờ xem\\s*${pendingCount}$`) })).toBeVisible();
+      await expect(page.getByRole('radio', { name: new RegExp(`^Chờ xem,\\s*${pendingCount}$`) })).toBeVisible();
       const cardOf = (n: string) => page.getByRole('article', { name: n });
       await expect(cardOf(names.accept).getByText('Không có ảnh')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
@@ -211,7 +210,7 @@ test.describe('E9-S2 món ngoài danh mục', () => {
       const convert = async (n: string) => {
         await cardOf(n).getByRole('button', { name: 'Thêm vào danh mục…' }).click();
         const dialog = page.getByRole('dialog', { name: `Thêm “${n}” vào danh mục` });
-        await dialog.getByLabel('Nhóm').selectOption({ index: 1 });
+        await dialog.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
         await expect(dialog.getByRole('group', { name: 'Ảnh món' })).toContainText('*');
         await dialog.getByRole('button', { name: 'Thêm vào danh mục', exact: true }).click();
         await expect(dialog.getByText('Món phải có ảnh — chọn hoặc chụp một ảnh.')).toBeVisible();

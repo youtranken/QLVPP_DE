@@ -73,7 +73,7 @@ const review: Messages<typeof vi> = {
     reject: {
       title: 'Reject “{{name}}”',
       reason: 'Reason',
-      hint: 'The requester will see this reason (at least 3 characters).',
+      hint: 'At least 3 characters. Write it for the requester to read.',
       submit: 'Reject',
     },
     convert: {
@@ -82,6 +82,10 @@ const review: Messages<typeof vi> = {
       modeNew: 'New item',
       modeExisting: 'Existing item',
       existing: 'Catalog item',
+      search: 'Search catalog items',
+      noMatch: 'No matching item',
+      countsIn: 'counted in {{unit}} · {{category}}',
+      noCategory: 'no category',
       existingPlaceholder: 'Choose an item…',
       existingOption: '{{name}} ({{unit}})',
       unitMismatch: 'Unit differs from the original line ({{unit}}) — quantity {{qty}} will count in the new unit.',
@@ -91,6 +95,7 @@ const review: Messages<typeof vi> = {
       imageFromStaff: 'The photo staff sent is used as the item photo; change it later in Catalog.',
       submit: 'Add to catalog',
     },
+    back: 'Back',
     saving: 'Saving…',
     errors: {
       LINE_ALREADY_REVIEWED: 'This line was just handled elsewhere.',

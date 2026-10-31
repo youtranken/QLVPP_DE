@@ -41,10 +41,10 @@ export function ReviewActions({ line, context, hideStatus = false, onDone, onSta
   const cache = useReviewCache();
   const [open, setOpen] = useState<Open>(null);
   const [result, setResult] = useState<ReviewResult | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [acceptError, setAcceptError] = useState<string | null>(null);
   const [accepting, setAccepting] = useState(false);
   const acceptingRef = useRef(false);
+  const staleSeen = useRef(false);
   const name = line.custom_name ?? '';
   const unitName = line.custom_unit ? t(`catalog.units.${line.custom_unit}`) : '';
   const status = result?.line.review_status ?? line.review_status;
@@ -52,7 +52,7 @@ export function ReviewActions({ line, context, hideStatus = false, onDone, onSta
   // Nhiều dòng ngoài DM cùng ngăn: tên nút kèm tên dòng để trình đọc màn hình phân biệt
   const named = (action: string) => t('review.actions.named', { action: t(`review.actions.${action}`), name });
 
-  // Lỗi khác "dòng đã đổi" ném lại để hộp đang mở gắn vào ô
+  // Mọi lỗi ném lại để hộp đang mở gắn vào ô/khối; dòng đã đổi thì nhớ để đóng hộp xong tải lại
   const send = async (body: ReviewBody) => {
     try {
       const done = await reviewLine(line.id, body, csrfToken);
@@ -61,12 +61,18 @@ export function ReviewActions({ line, context, hideStatus = false, onDone, onSta
       void cache.reviewed();
       onDone(done, body);
     } catch (e) {
-      if (!isStaleReview(e)) throw e;
-      setOpen(null);
-      setNotice(t(reviewErrorKey(e)!));
-      void cache.refetchList();
-      onStale?.();
+      if (isStaleReview(e)) staleSeen.current = true;
+      throw e;
     }
+  };
+
+  const close = () => {
+    setOpen(null);
+    setAcceptError(null);
+    if (!staleSeen.current) return;
+    staleSeen.current = false;
+    void cache.refetchList();
+    onStale?.();
   };
 
   const accept = async () => {
@@ -86,11 +92,6 @@ export function ReviewActions({ line, context, hideStatus = false, onDone, onSta
 
   return (
     <div className="rv-actions" role="group" aria-label={t('review.actions.label', { name })}>
-      {notice && (
-        <p role="alert" className="alert alert--warn">
-          {notice}
-        </p>
-      )}
       {!hideStatus && result?.unit_mismatch && (
         <p role="status" className="alert alert--warn">
           {t('review.actions.unitMismatch', { qty: result.line.qty })}
@@ -125,20 +126,18 @@ export function ReviewActions({ line, context, hideStatus = false, onDone, onSta
               : t('review.accept.body')
           }
           confirmLabel={t('review.accept.ok')}
+          cancelLabel={t('review.back')}
           busy={accepting}
           error={acceptError}
           onConfirm={() => void accept()}
-          onCancel={() => {
-            setOpen(null);
-            setAcceptError(null);
-          }}
+          onCancel={close}
         />
       )}
       {open === 'convert' && (
-        <ConvertDialog line={line} who={context?.who} onSubmit={(item) => send({ action: 'convert', item })} onClose={() => setOpen(null)} />
+        <ConvertDialog line={line} who={context?.who} onSubmit={(item) => send({ action: 'convert', item })} onClose={close} />
       )}
       {open === 'reject' && (
-        <RejectDialog name={name} onSubmit={(n) => send({ action: 'reject', note: n })} onClose={() => setOpen(null)} />
+        <RejectDialog name={name} onSubmit={(n) => send({ action: 'reject', note: n })} onClose={close} />
       )}
     </div>
   );
