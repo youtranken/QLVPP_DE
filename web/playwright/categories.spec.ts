@@ -8,6 +8,20 @@ async function createCategory(request: APIRequestContext, name: string, sortOrde
   expect(res.status()).toBe(201);
 }
 
+// "Lưu thứ tự" đánh số lại mọi nhóm lệch vị trí*10: chụp sort_order nhóm thật để trả lại sau test
+function snapshotOrder(): string {
+  return psql(`SELECT string_agg(format('(%L::uuid, %s)', id, sort_order), ', ') FROM item_categories WHERE name NOT LIKE 'PW nhóm %'`);
+}
+
+function restoreOrder(values: string) {
+  if (values) psql(`UPDATE item_categories c SET sort_order = v.s FROM (VALUES ${values}) AS v(id, s) WHERE c.id = v.id AND c.sort_order <> v.s`);
+}
+
+// Nhóm thử còn sót từ các lần chạy trước (không có món) làm lệch vị trí/màu của test
+function deleteTestCategories() {
+  psql(`DELETE FROM item_categories c WHERE c.name LIKE 'PW nhóm %' AND NOT EXISTS (SELECT 1 FROM items i WHERE i.category_id = c.id)`);
+}
+
 const nameButtons = (page: Page) => page.getByRole('table').getByRole('button', { name: /^Sửa tên nhóm / });
 const toneOf = (page: Page, name: string) =>
   page.getByRole('row').filter({ has: page.getByRole('button', { name: `Sửa tên nhóm ${name}`, exact: true }) }).locator('[title]').first();
@@ -19,6 +33,8 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
     const stamp = `${Date.now()}-${info.project.name}`;
     const first = `PW nhóm ${stamp} A`;
     const second = `PW nhóm ${stamp} B`;
+    deleteTestCategories();
+    const original = snapshotOrder();
     try {
       await createCategory(request, first, 900_000);
       await createCategory(request, second, 900_010);
@@ -58,7 +74,8 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect(dialog).toBeHidden();
       if (isMobile(info)) await expectNoContrastViolations(page);
     } finally {
-      psql(`DELETE FROM item_categories c WHERE c.name IN ('${first}', '${second}') AND NOT EXISTS (SELECT 1 FROM items i WHERE i.category_id = c.id)`);
+      deleteTestCategories();
+      restoreOrder(original);
     }
   });
 

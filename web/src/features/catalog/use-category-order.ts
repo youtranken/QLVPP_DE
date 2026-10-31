@@ -27,6 +27,7 @@ export function useCategoryOrder(server: Category[]) {
 
   const save = async () => {
     const patches = orderPatches(ordered);
+    const changed = moved;
     setSaving(true);
     let done = 0;
     try {
@@ -34,7 +35,7 @@ export function useCategoryOrder(server: Category[]) {
         await patchCategory(p.id, { sort_order: p.sort_order }, csrfToken);
         done += 1;
       }
-      toast.show({ text: t('catalog.categories.orderSaved', { n: patches.length }), tone: 'ok' });
+      toast.show({ text: t('catalog.categories.orderSaved', { n: changed }), tone: 'ok' });
     } catch {
       toast.show({ text: t('catalog.categories.orderPartial', { a: done, n: patches.length }), tone: 'warn' });
     } finally {

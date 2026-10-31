@@ -1,9 +1,10 @@
+import { compareCategories } from '@/lib/group-tone';
 import type { Category } from '@/features/catalog/catalog.api';
 
 export const ORDER_STEP = 10;
 
 export function sortCategories(list: Category[]): Category[] {
-  return [...list].sort((a, b) => a.sort_order - b.sort_order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return [...list].sort(compareCategories);
 }
 
 export function moveCategory(list: Category[], index: number, dir: -1 | 1): Category[] {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { useConfirm } from '@/ui/confirm-context';
@@ -44,7 +44,7 @@ function useItemDraft(item: AdminItem | null, defaultCategoryId: string | null |
     setAttempt((n) => n + 1);
   };
   const changes = ITEM_FIELDS.filter((k) => draft[k] !== initial[k]).length;
-  return { draft, errors, missing, attempt, changes, set, fail };
+  return { draft, initial, errors, missing, attempt, changes, set, fail };
 }
 
 export function useItemForm({ item, defaultCategoryId, onDone }: { item: AdminItem | null; defaultCategoryId?: string | null; onDone: () => void }) {
@@ -56,6 +56,7 @@ export function useItemForm({ item, defaultCategoryId, onDone }: { item: AdminIt
   const d = useItemDraft(item, defaultCategoryId);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const inFlight = useRef(false);
 
   const finish = (text: string) => {
     toast.show({ text, tone: 'ok' });
@@ -64,10 +65,12 @@ export function useItemForm({ item, defaultCategoryId, onDone }: { item: AdminIt
   };
 
   const submit = async () => {
-    const miss = missingFields(d.draft);
+    if (inFlight.current) return;
+    const miss = missingFields(d.draft, item ? d.initial : null);
     if (miss.length > 0) return d.fail(Object.fromEntries(miss.map((f) => [f, REQUIRED_ERROR[f]])), miss);
     const payload = itemPayload(d.draft, item);
     if (item && Object.keys(payload).length === 0) return onDone();
+    inFlight.current = true;
     setSaving(true);
     try {
       await (item ? patchItem(item.id, payload, csrfToken) : createItem(payload, csrfToken));
@@ -75,13 +78,16 @@ export function useItemForm({ item, defaultCategoryId, onDone }: { item: AdminIt
     } catch (error) {
       d.fail(fieldErrors(error, ITEM_ERROR_FIELD, ITEM_FIELDS));
       setSaving(false);
+    } finally {
+      inFlight.current = false;
     }
   };
 
   const remove = async () => {
     if (!item) return;
     const ok = await confirm({ title: t('catalog.drawer.deleteTitle', { name: item.name }), message: t('catalog.drawer.deleteBody'), confirmLabel: t('catalog.drawer.delete'), danger: true });
-    if (!ok) return;
+    if (!ok || inFlight.current) return;
+    inFlight.current = true;
     setSaving(true);
     try {
       await deleteItem(item.id, csrfToken);
@@ -89,6 +95,8 @@ export function useItemForm({ item, defaultCategoryId, onDone }: { item: AdminIt
     } catch (error) {
       d.fail({ form: catalogErrorKey(error) });
       setSaving(false);
+    } finally {
+      inFlight.current = false;
     }
   };
 

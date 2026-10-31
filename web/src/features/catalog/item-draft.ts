@@ -75,15 +75,15 @@ function toPayload(d: ItemDraft): ItemPayload {
 export const REQUIRED_FIELDS = ['image_file_id', 'name', 'unit', 'max_qty'] as const;
 export type RequiredField = (typeof REQUIRED_FIELDS)[number];
 
-// Chỉ để báo sớm "Cần thêm: …"; server vẫn chặn bằng IMAGE_REQUIRED/UNIT_REQUIRED/VALIDATION
-export function missingFields(d: ItemDraft): RequiredField[] {
-  const empty: Record<RequiredField, boolean> = {
-    image_file_id: d.image_file_id === null,
-    name: d.name.trim() === '',
-    unit: d.unit === '',
-    max_qty: d.max_qty.trim() === '',
+// Giống server: món mới phải đủ cả bốn; sửa món chỉ báo ô bị xóa trống (món nhập chưa có ảnh vẫn sửa được ô khác)
+export function missingFields(d: ItemDraft, saved: ItemDraft | null): RequiredField[] {
+  const empty: Record<RequiredField, (x: ItemDraft) => boolean> = {
+    image_file_id: (x) => x.image_file_id === null,
+    name: (x) => x.name.trim() === '',
+    unit: (x) => x.unit === '',
+    max_qty: (x) => x.max_qty.trim() === '',
   };
-  return REQUIRED_FIELDS.filter((f) => empty[f]);
+  return REQUIRED_FIELDS.filter((f) => empty[f](d) && (saved === null || !empty[f](saved)));
 }
 
 // Sửa chỉ gửi trường đã đổi: audit before/after gọn, không ghi đè thay đổi của người khác

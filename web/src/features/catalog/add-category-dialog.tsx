@@ -25,7 +25,7 @@ export function AddCategoryDialog({ categories, onClose }: { categories: Categor
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
   const sortOrder = nextSortOrder(categories);
-  const tone = groupTone([...categories, { id: NEW_ID, sort_order: sortOrder }], NEW_ID);
+  const tone = groupTone([...categories, { id: NEW_ID, name: '', sort_order: sortOrder }], NEW_ID);
   const err = (k: string) => (errors[k] ? t(errors[k]) : undefined);
 
   const submit = async (e: FormEvent) => {

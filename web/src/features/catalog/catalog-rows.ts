@@ -1,4 +1,4 @@
-import { groupTone, type Tone } from '@/lib/group-tone';
+import { compareCategories, groupTone, type Tone } from '@/lib/group-tone';
 import { matchesSearch } from '@/features/request/request-format';
 import type { AdminItem, Category } from './catalog.api';
 
@@ -23,7 +23,7 @@ export interface CatalogView {
 }
 
 export function indexCategories(categories: Category[]): CategoryIndex {
-  const ordered = [...categories].sort((a, b) => a.sort_order - b.sort_order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const ordered = [...categories].sort(compareCategories);
   return {
     ordered,
     rank: new Map(ordered.map((c, i) => [c.id, i])),

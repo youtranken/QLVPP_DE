@@ -106,6 +106,15 @@ describe('Trang Nhóm món', () => {
     expect(names()).toEqual(['Bút & viết', 'Giấy & sổ', 'Cũ']);
   });
 
+  it('dữ liệu cũ sort_order 1,2,3: lưu gửi cả nhóm được đánh số lại nhưng toast đếm nhóm đổi vị trí (2)', async () => {
+    const legacy = CATS.map((c, i) => ({ ...c, sort_order: i + 1 }));
+    const f = await open(undefined, legacy);
+    await userEvent.click(screen.getByRole('button', { name: 'Đưa Bút & viết lên' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu thứ tự' }));
+    expect(await screen.findByText('Đã lưu thứ tự 2 nhóm')).toBeInTheDocument();
+    expect(mutations(f)).toHaveLength(3);
+  });
+
   it('lỗi giữa chừng → toast warn "Chưa lưu hết thứ tự (1/2 nhóm) — đã tải lại thứ tự hiện có." và tải lại danh sách', async () => {
     const f = await open((url) => (url.endsWith('/c-1') ? jsonResponse(500, { code: 'X', message: 'x' }) : undefined));
     const loads = () => f.mock.calls.filter((c) => c[0] === '/api/item-categories?all=1').length;
