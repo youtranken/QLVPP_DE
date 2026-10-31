@@ -103,7 +103,6 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await expect(submit).toBeDisabled();
       await reason.fill('  abc  ');
       await expect(submit).toBeEnabled();
-      await expect(submit).toBeEnabled();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'backlog-cancel');
       await submit.click();
