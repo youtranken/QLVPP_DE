@@ -30,6 +30,7 @@ const reports = {
         ok: 'Vẫn chốt',
       },
       error: {
+        INVALID_PERIOD: 'Tháng này chưa tới, chưa lập báo cáo được.',
         REPORT_CHANGED: 'Báo cáo đã đổi, đã tải lại — xem lại số Đặt mua rồi chốt lại.',
         UNKNOWN: 'Chưa chốt được, thử lại sau.',
       },
@@ -60,6 +61,8 @@ const reports = {
       orderInvalid: 'Từ 0 đến 99 999.',
       resetNeed: 'Về Cần mua ({{need}})',
       resetNeedLabel: 'Về Cần mua ({{need}}) {{name}}',
+      groupsFailed: 'Chưa tải được nhóm món — các món tạm nằm ở "Chưa xếp nhóm".',
+      retry: 'Thử lại',
       uncategorized: 'Chưa xếp nhóm',
       custom: 'Ngoài danh mục (đã chấp nhận)',
       groupItems: '{{count}} món',

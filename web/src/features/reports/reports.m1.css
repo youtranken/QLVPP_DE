@@ -53,3 +53,4 @@
   [data-shell='admin'] .bc-order { justify-content: start; }
   [data-shell='admin'] .bc-order__error { text-align: left; }
 }
+[data-shell='admin'] .bc-inline-notice { align-items: center; justify-content: space-between; flex-wrap: wrap; }

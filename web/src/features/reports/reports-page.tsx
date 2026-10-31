@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Icon } from '@/ui/icon';
 import { Loading, LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
 import { PageHeader } from '@/ui/page-header';
 import { useConfirm } from '@/ui/confirm-context';
-import { useCurrentPeriod, type CurrentPeriod } from '@/features/request/request.api';
+import { currentPeriodQuery, useCurrentPeriod, type CurrentPeriod } from '@/features/request/request.api';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import { useMonthReport, type MonthReport, type SnapshotKind } from './reports.api';
 import { ReportPart1 } from './report-part1';
@@ -75,26 +76,30 @@ function HowToNeed() {
   );
 }
 
-function ReportBody({ report, period, onMonth, onInvalidPeriod }: { report: MonthReport; period: CurrentPeriod; onMonth: (ym: string) => void; onInvalidPeriod: () => void }) {
+function ReportBody({ report, period, onMonth, onInvalidPeriod }: { report: MonthReport; period: CurrentPeriod; onMonth: (ym: string) => void; onInvalidPeriod: () => boolean }) {
   const { t } = useTranslation();
   const confirm = useConfirm();
+  const navigate = useNavigate();
   const qty = useOrderQty(report);
   const files = useSnapshotDownload(report.ym);
   const snap = useTakeSnapshot(report, qty, files, onInvalidPeriod);
   const month = monthOf(report.ym);
-  // Nháp Đặt mua thuộc về một kỳ: rời kỳ thì hỏi rồi bỏ (component dựng lại theo ym)
+  // Nháp Đặt mua thuộc về một kỳ: rời kỳ hoặc rời trang thì hỏi rồi bỏ (component dựng lại theo ym)
+  const canLeave = () =>
+    qty.editedCount === 0 ||
+    confirm({
+      title: t('reports.page.leaveConfirm.title'),
+      message: t('reports.page.leaveConfirm.message', { count: qty.editedCount, month }),
+      confirmLabel: t('reports.page.leaveConfirm.ok'),
+      cancelLabel: t('reports.page.leaveConfirm.cancel'),
+      danger: true,
+    });
   const changeMonth = async (ym: string) => {
-    if (qty.editedCount > 0) {
-      const ok = await confirm({
-        title: t('reports.page.leaveConfirm.title'),
-        message: t('reports.page.leaveConfirm.message', { count: qty.editedCount, month }),
-        confirmLabel: t('reports.page.leaveConfirm.ok'),
-        cancelLabel: t('reports.page.leaveConfirm.cancel'),
-        danger: true,
-      });
-      if (!ok) return;
-    }
-    onMonth(ym);
+    if (await canLeave()) onMonth(ym);
+  };
+  const review = async () => {
+    snap.cancel();
+    if (await canLeave()) navigate(`/admin/review?ym=${report.ym}`);
   };
   return (
     <div className="bc-page">
@@ -114,12 +119,12 @@ function ReportBody({ report, period, onMonth, onInvalidPeriod }: { report: Mont
       <ReportPart2 departments={report.byDepartment} />
       <ReportSnapshots ym={report.ym} fresh={snap.fresh} files={files} />
       <HowToNeed />
-      {snap.asking && <PendingDialog count={report.pending_custom_count} onReview={snap.review} onConfirm={snap.confirm} onCancel={snap.cancel} />}
+      {snap.asking && <PendingDialog count={report.pending_custom_count} onReview={() => void review()} onConfirm={snap.confirm} onCancel={snap.cancel} />}
     </div>
   );
 }
 
-function ReportForMonth({ ym, period, onMonth, onInvalidPeriod }: { ym: string; period: CurrentPeriod; onMonth: (ym: string) => void; onInvalidPeriod: () => void }) {
+function ReportForMonth({ ym, period, onMonth, onInvalidPeriod }: { ym: string; period: CurrentPeriod; onMonth: (ym: string) => void; onInvalidPeriod: () => boolean }) {
   const query = useMonthReport(ym);
   if (query.data) return <ReportBody report={query.data} period={period} onMonth={onMonth} onInvalidPeriod={onInvalidPeriod} />;
   return (
@@ -132,7 +137,13 @@ function ReportForMonth({ ym, period, onMonth, onInvalidPeriod }: { ym: string; 
 
 export function ReportsPage() {
   const current = useCurrentPeriod();
+  const qc = useQueryClient();
   const p = useReportsParams(current.data?.ym);
+  // Server nói tháng chưa tới: kỳ mở trên trang đã cũ → tải lại kỳ rồi về tháng mặc định
+  const invalidPeriod = () => {
+    void qc.invalidateQueries({ queryKey: currentPeriodQuery().queryKey });
+    return p.resetMonth();
+  };
   if (!p.ym || !current.data) {
     return (
       <div className="bc-page">
@@ -141,5 +152,5 @@ export function ReportsPage() {
       </div>
     );
   }
-  return <ReportForMonth key={p.ym} ym={p.ym} period={current.data} onMonth={p.setMonth} onInvalidPeriod={p.resetMonth} />;
+  return <ReportForMonth key={p.ym} ym={p.ym} period={current.data} onMonth={p.setMonth} onInvalidPeriod={invalidPeriod} />;
 }

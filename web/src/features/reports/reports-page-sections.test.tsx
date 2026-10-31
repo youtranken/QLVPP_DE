@@ -29,8 +29,8 @@ describe('ReportsPage — tháng', () => {
     const month = screen.getByRole('group', { name: 'Chọn tháng báo cáo' });
     expect(within(month).getByText('Đã khóa')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
-    expect(screen.getByTestId('location-search')).toHaveTextContent('?ym=2026-11');
-    expect(screen.getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
+    await waitFor(() => expect(screen.getByTestId('location-search')).toHaveTextContent('?ym=2026-11'));
+    expect(await screen.findByRole('button', { name: 'Tháng sau' })).toBeDisabled();
     expect(await within(screen.getByRole('group', { name: 'Chọn tháng báo cáo' })).findByText('Đang mở · hạn 10/11')).toBeInTheDocument();
   });
 

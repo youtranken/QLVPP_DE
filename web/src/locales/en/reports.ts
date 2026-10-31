@@ -33,6 +33,7 @@ const reports: Messages<typeof vi> = {
         ok: 'Snapshot anyway',
       },
       error: {
+        INVALID_PERIOD: 'This month has not started yet, no report can be made.',
         REPORT_CHANGED: 'The report changed and was reloaded — check the order quantities, then create the snapshot again.',
         UNKNOWN: 'Could not create the snapshot, please try again later.',
       },
@@ -63,6 +64,8 @@ const reports: Messages<typeof vi> = {
       orderInvalid: 'From 0 to 99,999.',
       resetNeed: 'Back to To buy ({{need}})',
       resetNeedLabel: 'Back to To buy ({{need}}) {{name}}',
+      groupsFailed: 'Could not load item groups — items are shown under "Uncategorized" for now.',
+      retry: 'Try again',
       uncategorized: 'Uncategorized',
       custom: 'Off-catalogue (accepted)',
       groupItems: '{{count}} items',

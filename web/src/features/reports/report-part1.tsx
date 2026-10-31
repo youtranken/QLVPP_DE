@@ -64,7 +64,13 @@ export function ReportPart1({ report, qty }: { report: MonthReport; qty: OrderQt
   // Chờ nhóm và món tải xong (lỗi thì về "Chưa xếp nhóm") để hàng không đổi nhóm, ô đang gõ không bị dựng lại
   const settled = !items.isPending && !cats.isPending;
   const all = useMemo(() => (settled ? part1Rows(report, items.data, cats.data) : []), [settled, report, items.data, cats.data]);
-  const rows = onlyNeed ? all.filter((r) => r.row.need > 0) : all;
+  // Hàng đã sửa hoặc đang lỗi luôn hiện để người dùng thấy số mình gõ
+  const rows = onlyNeed ? all.filter((r) => r.row.need > 0 || qty.isEdited(r.id) || qty.hasError(r.id)) : all;
+  const groupsFailed = items.isError || cats.isError;
+  const retryGroups = () => {
+    if (items.isError) void items.refetch();
+    if (cats.isError) void cats.refetch();
+  };
   const tools = (
     <>
       <label className="bc-switch">
@@ -80,6 +86,14 @@ export function ReportPart1({ report, qty }: { report: MonthReport; qty: OrderQt
   );
   return (
     <ReportSection title={t('reports.part1.title')} tools={tools}>
+      {groupsFailed && (
+        <p className="alert alert--warn bc-inline-notice">
+          {t('reports.part1.groupsFailed')}
+          <button type="button" className="btn btn--sm" onClick={retryGroups}>
+            {t('reports.part1.retry')}
+          </button>
+        </p>
+      )}
       <OrderQtyContext.Provider value={qty}>
         <DataTable
           data={rows}

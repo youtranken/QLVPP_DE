@@ -147,7 +147,7 @@ describe('ReportsPage — chốt', () => {
     expect(within(dialog).getByText('Các món này chưa được tính vào báo cáo. Chốt bây giờ thì bản chốt không có chúng.')).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Xem món chờ' }));
     expect(postsOf(f)).toEqual([]);
-    expect(screen.getByTestId('location')).toHaveTextContent('/admin/review');
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/admin/review'));
     expect(screen.getByTestId('location-search')).toHaveTextContent('?ym=2026-10');
   });
 

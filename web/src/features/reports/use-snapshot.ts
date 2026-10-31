@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatVnStamp } from '@/lib/format-time';
 import { useMe } from '@/lib/me';
@@ -64,13 +63,13 @@ function useRejectFields(ym: string, qty: OrderQty) {
   };
 }
 
-function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => void) {
+function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => boolean) {
   const { csrfToken } = useMe();
   const refresh = useRefreshSnapshots(report.ym);
   const announce = useAnnounce(report.ym, files);
   const rejectFields = useRejectFields(report.ym, qty);
   const flight = useSingleFlight();
-  const [notice, setNotice] = useState<'REPORT_CHANGED' | 'UNKNOWN' | null>(null);
+  const [notice, setNotice] = useState<'REPORT_CHANGED' | 'UNKNOWN' | 'INVALID_PERIOD' | null>(null);
   const [rejected, setRejected] = useState(false);
   const [taking, setTaking] = useState<SnapshotKind | null>(null);
   const [fresh, setFresh] = useState<ReadonlySet<string>>(new Set());
@@ -85,7 +84,8 @@ function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDown
         await announce(kind, id, created_at);
       } catch (e) {
         const failure = takeFailure(e);
-        if (failure.kind === 'invalid-period') return onInvalidPeriod();
+        // Đã ở tháng mặc định mà vẫn chưa tới (đồng hồ máy chủ lệch) → không có chỗ để về, báo ở đầu trang
+        if (failure.kind === 'invalid-period') return void (onInvalidPeriod() || setNotice('INVALID_PERIOD'));
         if (failure.kind === 'block') return setNotice(failure.code);
         setRejected(true);
         setNotice(await rejectFields(failure.fields));
@@ -97,8 +97,7 @@ function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDown
 }
 
 // Mỗi lần Xuất/In là một bản chốt mới (quyết định chủ sản phẩm); chỉ gửi ô khác Cần mua, server vẫn kiểm 0–99 999
-export function useTakeSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => void) {
-  const navigate = useNavigate();
+export function useTakeSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => boolean) {
   const sender = usePostSnapshot(report, qty, files, onInvalidPeriod);
   const [tried, setTried] = useState(false);
   const [asking, setAsking] = useState<SnapshotKind | null>(null);
@@ -125,6 +124,5 @@ export function useTakeSnapshot(report: MonthReport, qty: OrderQty, files: Snaps
       if (kind) void sender.post(kind);
     },
     cancel: () => setAsking(null),
-    review: () => navigate(`/admin/review?ym=${report.ym}`),
   };
 }

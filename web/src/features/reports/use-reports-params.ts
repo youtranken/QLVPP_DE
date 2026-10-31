@@ -18,6 +18,10 @@ export function useReportsParams(openYm: string | undefined) {
   return {
     ym: ym || undefined,
     setMonth: (next: string) => setMonth(next),
-    resetMonth: () => fallback && setMonth(fallback, true),
+    resetMonth: () => {
+      if (!fallback || ym === fallback) return false;
+      setMonth(fallback, true);
+      return true;
+    },
   };
 }
