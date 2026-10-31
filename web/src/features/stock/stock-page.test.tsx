@@ -1,44 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
+import { describe, expect, it } from 'vitest';
+import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
-import type { AdminItem } from '@/features/catalog/catalog.api';
+import { callsTo, stubStockApi } from './stock-fixtures';
 
-function item(over: Partial<AdminItem>): AdminItem {
-  return {
-    id: 'i-x',
-    code: null,
-    name: 'Món',
-    name_en: null,
-    unit: 'cai',
-    pack_note: null,
-    category_id: null,
-    image_file_id: 'f-1',
-    admin_only: false,
-    max_qty: 20,
-    stock_qty: 10,
-    restock_level: 30,
-    stock_state: 'ok',
-    active: true,
-    sort_order: 0,
-    missing_image: false,
-    ...over,
-  };
-}
-
-const LOW = item({ id: 'i-1', name: 'Giấy A4', unit: 'ram', stock_qty: 6, restock_level: 30, stock_state: 'low' });
-const OUT = item({ id: 'i-4', name: 'Kẹp giấy', stock_qty: 0, restock_level: 30, stock_state: 'out' });
-const NEVER = item({ id: 'i-5', name: 'Ghim bấm', stock_qty: 0, restock_level: null, stock_state: 'untracked' });
-const ITEMS = [
-  LOW,
-  item({ id: 'i-2', name: 'Bút bi xanh' }),
-  item({ id: 'i-3', name: 'Bút xóa cũ', active: false }),
-  OUT,
-  NEVER,
-];
-
-// Chuông có sẵn một thông báo low_stock đã đọc (bấm chỉ điều hướng, không POST)
 const LOW_BELL = {
   id: 'n-low',
   topic: 'low_stock',
@@ -48,73 +14,122 @@ const LOW_BELL = {
   read_at: '2026-11-12T04:00:00.000Z',
 };
 
-function stubApi() {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn((url: string) => {
-      if (url === '/api/admin/items') return Promise.resolve(jsonResponse(200, ITEMS));
-      if (url === '/api/admin/stock/low') return Promise.resolve(jsonResponse(200, [LOW]));
-      if (url.startsWith('/api/me/notifications')) return Promise.resolve(jsonResponse(200, { items: [LOW_BELL], next_cursor: null, unread_count: 0 }));
-      return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }));
-    }),
+async function open(path = '/admin/stock', ready = 'Giấy A4') {
+  mockViewport(1280);
+  const f = stubStockApi((url) =>
+    url.startsWith('/api/me/notifications') ? jsonResponse(200, { items: [LOW_BELL], next_cursor: null, unread_count: 0 }) : undefined,
   );
+  renderApp(makeMe('admin'), path);
+  await screen.findByText(ready);
+  return f;
 }
 
-describe('StockPage', () => {
-  it('"Sắp hết" khi tồn 6/30, "Hết hàng" khi 0 sau nhập, không nhãn khi chưa nhập; ẩn món đã ngừng; lọc "Sắp hết"', async () => {
-    mockViewport(1280);
-    stubApi();
-    renderApp(makeMe('admin'), '/admin/stock');
-    const rowOf = async (name: string) => (await screen.findByText(name)).closest('tr')!;
-    expect(within(await rowOf('Giấy A4')).getByText('Sắp hết')).toBeInTheDocument();
-    const outRow = await rowOf('Kẹp giấy');
-    expect(within(outRow).getByText('Hết hàng')).toBeInTheDocument();
-    expect(within(outRow).queryByText('Sắp hết')).toBeNull();
-    const neverRow = await rowOf('Ghim bấm');
-    expect(within(neverRow).queryByText('Sắp hết')).toBeNull();
-    expect(within(neverRow).queryByText('Hết hàng')).toBeNull();
-    expect(within(await rowOf('Bút bi xanh')).queryByText('Sắp hết')).toBeNull();
-    expect(screen.queryByText('Bút xóa cũ')).toBeNull();
-    expect(screen.queryByRole('columnheader', { name: 'Tối thiểu' })).toBeNull();
+const rowOf = (name: string) => screen.getByText(name).closest('tr')!;
 
-    const filter = screen.getByRole('button', { name: /Sắp hết/ });
-    expect(filter).toHaveTextContent('1');
-    expect(filter).toHaveAttribute('aria-pressed', 'false');
-    await userEvent.click(filter);
-    expect(filter).toHaveAttribute('aria-pressed', 'true');
+describe('StockPage', () => {
+  it('đúng một h1 "Kho" + mô tả + liên kết "Danh mục"', async () => {
+    await open();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 1, name: 'Kho' })).toBeInTheDocument();
+    expect(screen.getByText(/Giao hàng tự trừ tồn/)).toBeInTheDocument();
+    expect(within(screen.getByRole('main')).getByRole('link', { name: 'Danh mục' })).toHaveAttribute('href', '/admin/catalog');
+  });
+
+  it('thẻ: Đang theo dõi 4 món (ẩn món ngừng), Sắp hết 1, Hết hàng 1, Còn nợ "7 đơn vị · 2 món" (bỏ dòng ngoài danh mục), thẻ Còn nợ không bấm được', async () => {
+    await open();
+    expect(screen.getByRole('button', { name: /Đang theo dõi/ })).toHaveTextContent('4');
+    expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveTextContent('1');
+    expect(screen.getByRole('button', { name: /Hết hàng/ })).toHaveTextContent('1');
+    const owed = screen.getByText('Còn nợ', { selector: '.stat-card__k' }).closest('.stat-card')!;
+    expect(owed).toHaveTextContent(/^Còn nợ7đơn vị2 món$/);
+    expect(screen.queryByRole('button', { name: /Còn nợ/ })).toBeNull();
+    expect(screen.queryByText('Bút xóa cũ')).toBeNull();
+  });
+
+  it('badge: Hết hàng / Sắp hết / Đủ dùng; không nhãn khi chưa theo dõi (untracked)', async () => {
+    await open();
+    expect(within(rowOf('Giấy A4')).getByText('Sắp hết')).toBeInTheDocument();
+    expect(within(rowOf('Kẹp giấy')).getByText('Hết hàng')).toBeInTheDocument();
+    expect(within(rowOf('Bút bi xanh')).getByText('Đủ dùng')).toBeInTheDocument();
+    const never = rowOf('Ghim bấm');
+    for (const label of ['Sắp hết', 'Hết hàng', 'Đủ dùng']) expect(within(never).queryByText(label)).toBeNull();
+  });
+
+  it('cột Còn nợ: số khi > 0, "—" khi 0', async () => {
+    await open();
+    expect(within(rowOf('Giấy A4')).getByText('4')).toBeInTheDocument();
+    expect(within(rowOf('Giấy A4')).queryByText('—')).toBeNull();
+    expect(within(rowOf('Kẹp giấy')).getByText('—')).toBeInTheDocument();
+  });
+
+  it('?filter=low chỉ còn món Sắp hết, hiện "Đang lọc", thẻ bật; bấm "Bỏ lọc" trả đủ món', async () => {
+    await open('/admin/stock?filter=low');
     expect(screen.queryByText('Bút bi xanh')).toBeNull();
     expect(screen.queryByText('Kẹp giấy')).toBeNull();
-    expect(screen.getByText('Giấy A4')).toBeInTheDocument();
-  });
-
-  it('mở từ KPI Tổng hợp (/admin/stock?filter=low) → bộ lọc "Sắp hết" bật sẵn', async () => {
-    mockViewport(1280);
-    stubApi();
-    renderApp(makeMe('admin'), '/admin/stock?filter=low');
-    expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.queryByText('Bút bi xanh')).toBeNull();
+    expect(screen.getByText(/Đang lọc: Sắp hết · 1/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Bỏ lọc' }));
+    expect(await screen.findByText('Bút bi xanh')).toBeInTheDocument();
+    expect(screen.getByTestId('location-search')).toHaveTextContent('');
   });
 
-  it('đang ở /admin/stock (lọc tắt), bấm thông báo sắp hết trên chuông → URL ?filter=low và bộ lọc "Sắp hết" bật', async () => {
-    mockViewport(1280);
-    stubApi();
-    renderApp(makeMe('admin'), '/admin/stock');
-    expect(await screen.findByText('Bút bi xanh')).toBeInTheDocument();
-    const filter = screen.getByRole('button', { name: /Sắp hết/ });
-    expect(filter).toHaveAttribute('aria-pressed', 'false');
+  it('?filter=out chỉ còn món Hết hàng (không lấy món untracked tồn 0)', async () => {
+    await open('/admin/stock?filter=out', 'Kẹp giấy');
+    expect(screen.getByText('Kẹp giấy')).toBeInTheDocument();
+    expect(screen.queryByText('Ghim bấm')).toBeNull();
+  });
+
+  it('bấm thẻ Hết hàng đặt URL ?filter=out; bấm "Đang theo dõi" bỏ lọc', async () => {
+    await open();
+    await userEvent.click(screen.getByRole('button', { name: /Hết hàng/ }));
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?filter=out');
+    await userEvent.click(screen.getByRole('button', { name: /Đang theo dõi/ }));
+    expect(screen.getByTestId('location-search')).toHaveTextContent('');
+  });
+
+  it('bấm thông báo sắp hết trên chuông khi đang ở /admin/stock → ?filter=low', async () => {
+    await open();
     await userEvent.click(screen.getByRole('button', { name: /^Thông báo/ }));
     await userEvent.click(await screen.findByRole('button', { name: /Giấy A4 sắp hết kho/ }));
     expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.queryByText('Bút bi xanh')).toBeNull();
   });
 
-  it('bấm "Xuất lẻ…" trên một dòng → mở hộp "Xuất lẻ · tên món"', async () => {
+  it('tìm theo tên món ghi lên URL ?q=; không khớp → trạng thái rỗng kèm "Xem tất cả món"', async () => {
+    await open();
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm theo tên món' }), 'zzz');
+    expect(await screen.findByText('Không có món nào khớp')).toBeInTheDocument();
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?q=zzz');
+    await userEvent.click(screen.getByRole('button', { name: 'Xem tất cả món' }));
+    expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
+  });
+
+  it('"Xuất lẻ…" vô hiệu khi tồn 0 (title "Hết hàng — nhập mua trước"), bật khi tồn 6', async () => {
+    await open();
+    const out = within(rowOf('Kẹp giấy')).getByRole('button', { name: 'Xuất lẻ…' });
+    expect(out).toBeDisabled();
+    expect(out).toHaveAttribute('title', 'Hết hàng — nhập mua trước');
+    expect(within(rowOf('Giấy A4')).getByRole('button', { name: 'Xuất lẻ…' })).toBeEnabled();
+  });
+
+  it('bấm "Xuất lẻ…" mở hộp "Xuất lẻ Bút bi xanh"; bấm tên món mở sổ cái', async () => {
+    await open();
+    await userEvent.click(within(rowOf('Bút bi xanh')).getByRole('button', { name: 'Xuất lẻ…' }));
+    expect(await screen.findByRole('dialog', { name: 'Xuất lẻ Bút bi xanh' })).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(screen.getByRole('button', { name: 'Mở sổ cái Giấy A4' }));
+    expect(await screen.findByRole('dialog', { name: 'Sổ cái · Giấy A4' })).toBeInTheDocument();
+  });
+
+  it('lỗi tải → "Thử lại" gọi lại items; thành công thì hiện bảng', async () => {
     mockViewport(1280);
-    stubApi();
+    let fail = true;
+    const f = stubStockApi((url) => (fail && url === '/api/admin/items' ? jsonResponse(500, { code: 'X' }) : undefined));
     renderApp(makeMe('admin'), '/admin/stock');
-    const row = (await screen.findByText('Bút bi xanh')).closest('tr')!;
-    await userEvent.click(within(row).getByRole('button', { name: 'Xuất lẻ…' }));
-    expect(await screen.findByRole('dialog', { name: 'Xuất lẻ · Bút bi xanh' })).toBeInTheDocument();
+    expect(await screen.findByText('Không tải được dữ liệu — thử lại.')).toBeInTheDocument();
+    fail = false;
+    await userEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
+    expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
+    await waitFor(() => expect(callsTo(f, '/api/admin/items').length).toBeGreaterThan(1));
   });
 });

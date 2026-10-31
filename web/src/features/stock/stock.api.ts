@@ -1,6 +1,6 @@
 import { queryOptions, useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import type { AdminItem, StockState } from '@/features/catalog/catalog.api';
+import type { AdminItem } from '@/features/catalog/catalog.api';
 
 export type MovementReason = 'purchase' | 'adjust' | 'issue' | 'delivery' | 'return';
 
@@ -33,9 +33,6 @@ export interface IssueBody {
 
 const STOCK_KEY = ['stock'] as const;
 const MOVEMENTS_PAGE = 20;
-
-// Server tính theo FR-50 (cùng điều kiện với GET admin/stock/low) để nhãn và bộ lọc không lệch nhau
-export const stockState = (i: Pick<AdminItem, 'stock_state'>): StockState => i.stock_state;
 
 export const lowStockQuery = () =>
   queryOptions({

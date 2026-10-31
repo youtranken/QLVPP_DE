@@ -49,23 +49,23 @@ async function stockFlow(page: Page, itemName: string) {
   const row = page.getByRole('row').filter({ hasText: itemName });
 
   await row.getByRole('button', { name: 'Nhập mua…' }).click();
-  const purchase = page.getByRole('dialog', { name: `Nhập mua · ${itemName}` });
-  await purchase.getByLabel('Số lượng').fill('10');
-  await purchase.getByRole('button', { name: 'Nhập kho' }).click();
+  const purchase = page.getByRole('dialog', { name: `Nhập mua ${itemName}` });
+  await purchase.getByLabel('Số lượng nhập').fill('10');
+  await purchase.getByRole('button', { name: 'Lưu nhập mua' }).click();
   await expect(purchase).toBeHidden();
-  await expect(row.getByRole('cell', { name: /^(Tồn )?10$/ })).toBeVisible();
+  await expect(row.getByRole('cell', { name: /^(Tồn kho )?10$/ })).toBeVisible();
 
   await row.getByRole('button', { name: 'Xuất lẻ…' }).click();
-  const issue = page.getByRole('dialog', { name: `Xuất lẻ · ${itemName}` });
+  const issue = page.getByRole('dialog', { name: `Xuất lẻ ${itemName}` });
   await issue.getByLabel('Số lượng').fill('3');
   await issue.getByRole('searchbox', { name: 'Tìm người nhận' }).fill(RECIPIENT.name);
   await issue.getByRole('button', { name: new RegExp(RECIPIENT.name) }).click();
   await issue.getByLabel('Lý do').fill('Smoke Plan 1');
-  await issue.getByRole('button', { name: 'Xuất kho' }).click();
+  await issue.getByRole('button', { name: 'Xuất lẻ', exact: true }).click();
   await expect(issue).toBeHidden();
-  await expect(row.getByRole('cell', { name: /^(Tồn )?7$/ })).toBeVisible();
+  await expect(row.getByRole('cell', { name: /^(Tồn kho )?7$/ })).toBeVisible();
 
-  await row.getByRole('button', { name: 'Sổ cái' }).click();
+  await row.getByRole('button', { name: `Sổ cái ${itemName}`, exact: true }).click();
   const ledger = page.getByRole('dialog', { name: `Sổ cái · ${itemName}` });
   await expect(ledger.getByRole('listitem')).toHaveCount(2);
   await expect(ledger.getByText(`Xuất lẻ · ${RECIPIENT.name}`)).toBeVisible();

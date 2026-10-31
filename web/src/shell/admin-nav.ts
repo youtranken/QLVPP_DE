@@ -29,7 +29,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     labelKey: 'nav.groups.stock',
     pages: [
-      { path: 'stock', titleKey: 'stock.title', icon: 'warehouse', badge: 'stock' },
+      { path: 'stock', titleKey: 'stock.title', icon: 'warehouse', badge: 'stock', ownHeader: true },
       { path: 'catalog', titleKey: 'catalog.title', icon: 'layers', ownHeader: true },
       { path: 'categories', titleKey: 'nav.categories', icon: 'filter', ownHeader: true },
       { path: 'units', titleKey: 'nav.units', icon: 'sheet', ownHeader: true },

@@ -1,79 +1,119 @@
-import { useCallback, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useCallback, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { DataTable } from '@/ui/data-table';
+import { useUrlSearchBox } from '@/lib/use-url-search-box';
+import { FilterNotice } from '@/ui/filter-notice';
 import { LoadError } from '@/ui/load-state';
-import { useAdminItems, type AdminItem } from '@/features/catalog/catalog.api';
-import { useLowStock } from '@/features/stock/stock.api';
-import { useStockColumns, type StockAction } from '@/features/stock/stock-columns';
-import { IssueDialog, StockChangeDialog } from '@/features/stock/stock-dialogs';
-import { MovementsDrawer } from '@/features/stock/movements-drawer';
-import '@/features/catalog/catalog.css';
-import '@/features/stock/stock.css';
+import { PageHeader } from '@/ui/page-header';
+import { Toolbar } from '@/ui/toolbar';
+import { categoryLabel, useAdminItems, useAllCategories } from '@/features/catalog/catalog.api';
+import { indexCategories, toRows } from '@/features/catalog/catalog-rows';
+import { useBacklog } from '@/features/delivery/backlog.api';
+import { AdjustStockDialog } from './adjust-stock-dialog';
+import { IssueDialog } from './issue-dialog';
+import { MovementsDrawer } from './movements-drawer';
+import { PurchaseDialog } from './purchase-dialog';
+import { StockStats } from './stock-stats';
+import { StockTable, type StockAction } from './stock-table';
+import { applyStockView, owedByItem, stockStats, toStockRows, type StockRow } from './stock-rows';
+import { useStockParams } from './use-stock-params';
+import './stock.m1.css';
+
+const MAX_SEARCH = 100;
 
 interface Open {
   action: StockAction;
-  item: AdminItem;
+  id: string;
+}
+
+function useStockData() {
+  const items = useAdminItems();
+  const categories = useAllCategories();
+  const backlog = useBacklog('item');
+  const index = useMemo(() => indexCategories(categories.data ?? []), [categories.data]);
+  const rows = useMemo(
+    () => toStockRows(toRows(items.data ?? [], index), owedByItem(backlog.data?.groups ?? [])),
+    [items.data, index, backlog.data],
+  );
+  const loaded = items.isSuccess && categories.isSuccess && backlog.isSuccess;
+  const failed = items.isError || categories.isError || backlog.isError;
+  const retry = () => {
+    void items.refetch();
+    void categories.refetch();
+    void backlog.refetch();
+  };
+  return { index, rows, loaded, failed, retry };
 }
 
 export function StockPage() {
-  const { t } = useTranslation();
-  const items = useAdminItems();
-  const low = useLowStock();
-  const [params, setParams] = useSearchParams();
-  // Lọc nằm ở URL: KPI Tổng hợp và chuông sắp hết dẫn tới ?filter=low kể cả khi đang ở trang này
-  const onlyLow = params.get('filter') === 'low';
-  const toggleLow = () =>
-    setParams(
-      (p) => {
-        const next = new URLSearchParams(p);
-        if (onlyLow) next.delete('filter');
-        else next.set('filter', 'low');
-        return next;
-      },
-      { replace: true },
-    );
+  const { t, i18n } = useTranslation();
+  const p = useStockParams();
+  const d = useStockData();
+  const [search, setSearch] = useUrlSearchBox(p.view.q, p.setQ);
   const [open, setOpen] = useState<Open | null>(null);
-  const onAction = useCallback((action: StockAction, item: AdminItem) => setOpen({ action, item }), []);
-  const columns = useStockColumns(onAction);
-  const close = () => setOpen(null);
-
-  if (items.isError || low.isError) {
+  const onAction = useCallback((action: StockAction, r: StockRow) => setOpen({ action, id: r.id }), []);
+  const groupName = useCallback(
+    (r: StockRow) => {
+      const cat = d.index.byId.get(r.group);
+      return cat ? categoryLabel(cat, i18n.language) : t('stock.page.noCategory');
+    },
+    [d.index, i18n.language, t],
+  );
+  const title = t('stock.title');
+  const header = (
+    <PageHeader
+      crumbs={[t('nav.groups.stock'), title]}
+      title={title}
+      description={t('stock.page.description')}
+      actions={
+        <Link className="btn" to="/admin/catalog">
+          {t('stock.page.catalogLink')}
+        </Link>
+      }
+    />
+  );
+  if (d.failed) {
     return (
-      <LoadError
-        onRetry={() => {
-          void items.refetch();
-          void low.refetch();
-        }}
-      />
+      <div className="ct-page">
+        {header}
+        <LoadError onRetry={d.retry} />
+      </div>
     );
   }
 
-  // Kho chỉ quản món đang dùng; "Sắp hết" lấy từ server để khớp KPI và cảnh báo
-  const rows = onlyLow ? (low.data ?? []) : (items.data ?? []).filter((i) => i.active);
-
+  const { filter } = p.view;
+  const shown = applyStockView(d.rows, p.view);
+  const target = open ? d.rows.find((r) => r.id === open.id) : undefined;
+  const close = () => setOpen(null);
+  const emptyKey = filter === 'low' ? 'emptyLow' : filter === 'out' ? 'emptyOut' : 'emptyTitle';
   return (
-    <div className="a-stack">
-      <div className="a-toolbar">
-        <button type="button" className="btn filter-btn" aria-pressed={onlyLow} onClick={toggleLow}>
-          {t('stock.page.lowFilter')}
-          <span className="count">{low.data?.length ?? 0}</span>
-        </button>
-      </div>
-      <section className="a-panel">
-        <DataTable
-          data={rows}
-          columns={columns}
-          loading={items.isPending || low.isPending}
-          emptyText={t(onlyLow ? 'stock.page.emptyLow' : 'stock.page.empty')}
-          searchPlaceholder={t('stock.page.search')}
-          stackOnMobile
-        />
-      </section>
-      {open?.action === 'purchase' && <StockChangeDialog item={open.item} mode="purchase" onClose={close} />}
-      {open?.action === 'adjust' && <StockChangeDialog item={open.item} mode="adjust" onClose={close} />}
-      {open?.action === 'issue' && <IssueDialog item={open.item} onClose={close} />}
-      {open?.action === 'ledger' && <MovementsDrawer item={open.item} onClose={close} />}
+    <div className="ct-page">
+      {header}
+      {d.loaded && <StockStats stats={stockStats(d.rows)} filter={filter} narrowed={filter !== null || p.view.q !== ''} onFilter={p.toggleFilter} onClear={p.clearAll} />}
+      <Toolbar search={{ value: search, onChange: setSearch, label: t('stock.page.search'), placeholder: t('stock.page.search'), maxLength: MAX_SEARCH }} />
+      {filter && <FilterNotice label={t(`stock.stats.${filter}`)} count={shown.length} onClear={p.clearFilter} />}
+      <StockTable
+        rows={shown}
+        loading={!d.loaded}
+        activeRowId={open?.action === 'ledger' ? open.id : undefined}
+        groupName={groupName}
+        onAction={onAction}
+        empty={{
+          title: t(`stock.page.${emptyKey}`),
+          hint: filter ? undefined : t('stock.page.emptyHint'),
+          action: (
+            <button type="button" className="btn" onClick={p.clearAll}>
+              {t('stock.page.showAll')}
+            </button>
+          ),
+        }}
+      />
+      {target && open?.action === 'purchase' && <PurchaseDialog item={target} onClose={close} />}
+      {target && open?.action === 'adjust' && <AdjustStockDialog item={target} onClose={close} />}
+      {target && open?.action === 'issue' && <IssueDialog item={target} onClose={close} />}
+      {target && open?.action === 'ledger' && (
+        <MovementsDrawer item={target} groupName={groupName(target)} onAction={(action) => setOpen({ action, id: target.id })} onClose={close} />
+      )}
     </div>
   );
 }

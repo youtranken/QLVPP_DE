@@ -73,7 +73,7 @@ Playwright: `E9-S4 Báo cáo: Đặt mua biên 0/99999/100000, chốt hỏi món
 
 ## E9-S5 Danh mục + Nhóm món + Kho
 SPEC §5.5.
-Trạng thái: đang làm. AC 1–4 xong (vitest T17/T18; Playwright `E9-S5 Danh mục…`, `E9-S5 Nhóm món…` — T18); còn Kho AC 5–7 và Playwright `E9-S5 Kho…` (T19).
+Trạng thái: xong (chờ mốc kiểm S5 của chủ dự án). AC 1–4 (vitest T17/T18; Playwright `E9-S5 Danh mục…`, `E9-S5 Nhóm món…`), AC 5–7 Kho (vitest T19 — `stock-*.test`, `*-dialog.test`, `movements-drawer.test`; Playwright `E9-S5 Kho…`).
 **AC:**
 1. Tối đa/tháng sửa tại chỗ: 1 và 999 lưu; 0 và 1000 → câu lỗi trong hàng từ `VALIDATION`; Esc trả giá trị cũ, không gọi API.
 2. Tên món 120 ký tự lưu; 121 → lỗi ô `name`. Ảnh 5 MB sau nén vẫn qua (e2e api đã có 5 MB / 5 MB + 1 → 413 `FILE_TOO_LARGE`); thiếu ảnh → "Cần thêm: ảnh." và ô ảnh `aria-invalid`.

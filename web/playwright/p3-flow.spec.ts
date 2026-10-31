@@ -126,9 +126,9 @@ async function purchaseAndDeliverMore(admin: Page, info: TestInfo, s: MonthSeed)
   await admin.goto('/admin/stock');
   await admin.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(s.paper.name);
   await admin.getByRole('row').filter({ hasText: s.paper.name }).getByRole('button', { name: 'Nhập mua…' }).click();
-  const purchase = admin.getByRole('dialog', { name: `Nhập mua · ${s.paper.name}` });
-  await purchase.getByLabel('Số lượng').fill('2');
-  await purchase.getByRole('button', { name: 'Nhập kho' }).click();
+  const purchase = admin.getByRole('dialog', { name: `Nhập mua ${s.paper.name}` });
+  await purchase.getByLabel('Số lượng nhập').fill('2');
+  await purchase.getByRole('button', { name: 'Lưu nhập mua' }).click();
   await expect(purchase).toBeHidden();
 
   await admin.goto('/admin/backlog');

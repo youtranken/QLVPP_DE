@@ -3,7 +3,7 @@ import { expect, test, type APIRequestContext, type Locator } from '@playwright/
 import { asRole, devHeaders, expectNoContrastViolations, removeTestItem, seedActiveUser, shot } from './helpers';
 
 // Ở 390 px bảng xếp dọc, ô có nhãn cột phía trước ("Tồn 10")
-const stockCell = (row: Locator, qty: number) => row.getByRole('cell', { name: new RegExp(`^(Tồn )?${qty}$`) });
+const stockCell = (row: Locator, qty: number) => row.getByRole('cell', { name: new RegExp(`^(Tồn kho )?${qty}$`) });
 
 const RECIPIENT = { sub: 'pw-recipient', name: 'PW Người nhận' };
 
@@ -46,10 +46,10 @@ test.describe('E1-S4 Kho: nhập, điều chỉnh, xuất lẻ, sổ cái (dev-i
       await expect(row.getByText('Hết hàng')).toHaveCount(0);
 
       await row.getByRole('button', { name: 'Nhập mua…' }).click();
-      const purchase = page.getByRole('dialog', { name: `Nhập mua · ${itemName}` });
-      await purchase.getByLabel('Số lượng').fill('10');
+      const purchase = page.getByRole('dialog', { name: `Nhập mua ${itemName}` });
+      await purchase.getByLabel('Số lượng nhập').fill('10');
       await purchase.getByLabel('Ghi chú').fill('Đơn PW');
-      await purchase.getByRole('button', { name: 'Nhập kho' }).click();
+      await purchase.getByRole('button', { name: 'Lưu nhập mua' }).click();
       await expect(purchase).toBeHidden();
       await expect(stockCell(row, 10)).toBeVisible();
       await expect(row.getByText('Sắp hết')).toHaveCount(0);
@@ -57,25 +57,25 @@ test.describe('E1-S4 Kho: nhập, điều chỉnh, xuất lẻ, sổ cái (dev-i
       await shot(page, info, 'stock-table', false);
 
       await row.getByRole('button', { name: 'Xuất lẻ…' }).click();
-      const issue = page.getByRole('dialog', { name: `Xuất lẻ · ${itemName}` });
+      const issue = page.getByRole('dialog', { name: `Xuất lẻ ${itemName}` });
       await issue.getByLabel('Số lượng').fill('30');
       await issue.getByLabel('Dùng chung').check();
       await issue.getByLabel('Lý do').fill('Thử quá tồn');
-      await issue.getByRole('button', { name: 'Xuất kho' }).click();
-      await expect(issue.getByText('Chỉ còn 10')).toBeVisible();
+      await issue.getByRole('button', { name: 'Xuất lẻ', exact: true }).click();
+      await expect(issue.getByText(/Chỉ còn 10 /)).toBeVisible();
 
       await issue.getByLabel('Số lượng').fill('3');
       await issue.getByLabel('Dùng chung').uncheck();
       await issue.getByRole('searchbox', { name: 'Tìm người nhận' }).fill(RECIPIENT.name);
       await issue.getByRole('button', { name: new RegExp(RECIPIENT.name) }).click();
       await issue.getByLabel('Lý do').fill('Người mới vào giữa kỳ');
-      await expect(issue.getByText('Tồn sau khi lưu: 7')).toBeVisible();
+      await expect(issue.getByText('Tồn sau khi lưu 7')).toBeVisible();
       await shot(page, info, 'stock-issue-dialog', false);
-      await issue.getByRole('button', { name: 'Xuất kho' }).click();
+      await issue.getByRole('button', { name: 'Xuất lẻ', exact: true }).click();
       await expect(issue).toBeHidden();
       await expect(stockCell(row, 7)).toBeVisible();
 
-      await row.getByRole('button', { name: 'Sổ cái' }).click();
+      await row.getByRole('button', { name: `Sổ cái ${itemName}`, exact: true }).click();
       const ledger = page.getByRole('dialog', { name: `Sổ cái · ${itemName}` });
       await expect(ledger.getByRole('listitem')).toHaveCount(2);
       await expect(ledger.getByText(`Xuất lẻ · ${RECIPIENT.name}`)).toBeVisible();
@@ -104,5 +104,85 @@ test.describe('E1-S4 Kho: nhập, điều chỉnh, xuất lẻ, sổ cái (dev-i
     } finally {
       await removeTestItem(request, itemId);
     }
+  });
+});
+
+test.describe('E9-S5 Kho M1 (dev-identity admin)', () => {
+  asRole('admin');
+
+  test('E9-S5 Kho: nhập 10, xuất lẻ 3 rồi 4 bị chặn, sổ cái tồn sau từng dòng', async ({ page, request }, info) => {
+    const itemName = `PW kho M1 ${Date.now()}-${info.project.name}`;
+    const itemId = await createItem(request, itemName);
+    try {
+      await page.goto('/admin/stock');
+      await expect(page.getByRole('heading', { level: 1, name: 'Kho' })).toBeVisible();
+      await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
+      const row = page.getByRole('row').filter({ hasText: itemName });
+
+      await row.getByRole('button', { name: 'Nhập mua…' }).click();
+      const purchase = page.getByRole('dialog', { name: `Nhập mua ${itemName}` });
+      await purchase.getByLabel('Số lượng nhập').fill('10');
+      await expect(purchase.getByText('Tồn sau khi lưu 10')).toBeVisible();
+      await purchase.getByRole('button', { name: 'Lưu nhập mua' }).click();
+      await expect(purchase).toBeHidden();
+      await expect(stockCell(row, 10)).toBeVisible();
+
+      await row.getByRole('button', { name: 'Xuất lẻ…' }).click();
+      const first = page.getByRole('dialog', { name: `Xuất lẻ ${itemName}` });
+      await first.getByLabel('Số lượng', { exact: false }).first().fill('3');
+      await first.getByLabel('Dùng chung').check();
+      await first.getByLabel('Lý do').fill('PW xuất 3');
+      await first.getByRole('button', { name: 'Xuất lẻ', exact: true }).click();
+      await expect(first).toBeHidden();
+      await expect(stockCell(row, 7)).toBeVisible();
+
+      const ledgerOf = async () => {
+        await row.getByRole('button', { name: `Sổ cái ${itemName}`, exact: true }).click();
+        return page.getByRole('dialog', { name: `Sổ cái · ${itemName}` });
+      };
+      const ledger = await ledgerOf();
+      await expect(ledger.getByRole('listitem')).toHaveCount(2);
+      await expect(ledger.getByRole('listitem').nth(0).getByText('tồn 7')).toBeVisible();
+      await expect(ledger.getByRole('listitem').nth(1).getByText('tồn 10')).toBeVisible();
+      if (info.project.name === 'mobile-390') await expectNoContrastViolations(page);
+      await page.keyboard.press('Escape');
+      await expect(ledger).toBeHidden();
+
+      // Còn 3: xuất 4 bị server chặn tại ô số, xuất 3 qua và về "Hết hàng"
+      expect((await request.post(`/api/admin/items/${itemId}/issue`, { headers: devHeaders('admin'), data: { qty: 4, reason: 'PW còn 3' } })).status()).toBe(201);
+      await page.reload();
+      await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
+      await expect(stockCell(row, 3)).toBeVisible();
+      await row.getByRole('button', { name: 'Xuất lẻ…' }).click();
+      const again = page.getByRole('dialog', { name: `Xuất lẻ ${itemName}` });
+      await again.getByLabel('Dùng chung').check();
+      await again.getByLabel('Lý do').fill('PW biên');
+      await again.getByLabel('Số lượng', { exact: false }).first().fill('4');
+      await again.getByRole('button', { name: 'Xuất lẻ', exact: true }).click();
+      await expect(again.getByText(/^Chỉ còn 3 /)).toBeVisible();
+      await expect(again.getByLabel('Số lượng', { exact: false }).first()).toHaveAttribute('aria-invalid', 'true');
+      await again.getByLabel('Số lượng', { exact: false }).first().fill('3');
+      await again.getByRole('button', { name: 'Xuất lẻ', exact: true }).click();
+      await expect(again).toBeHidden();
+      await expect(stockCell(row, 0)).toBeVisible();
+      await expect(row.getByText('Hết hàng')).toBeVisible();
+    } finally {
+      await removeTestItem(request, itemId);
+    }
+  });
+
+  test('E9-S5 Kho: ?filter=low chỉ còn món Sắp hết và bỏ lọc được', async ({ page }) => {
+    await page.goto('/admin/stock?filter=low');
+    await expect(page.getByRole('button', { name: /^Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByText(/^Đang lọc: Sắp hết/)).toBeVisible();
+    await page.getByRole('button', { name: 'Bỏ lọc' }).click();
+    await expect(page).not.toHaveURL(/filter=/);
+  });
+
+  test('E9-S5 Kho: lỗi tải → "Không tải được dữ liệu — thử lại." + "Thử lại"', async ({ page }) => {
+    await page.route('**/api/admin/items', (route) => route.fulfill({ status: 500, json: { code: 'INTERNAL', message: 'x' } }));
+    await page.goto('/admin/stock');
+    await expect(page.getByRole('main').getByText('Không tải được dữ liệu — thử lại.')).toBeVisible();
+    await expect(page.getByRole('main').getByRole('button', { name: 'Thử lại' })).toBeVisible();
   });
 });
