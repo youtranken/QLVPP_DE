@@ -60,12 +60,28 @@ describe('IssueDialog', () => {
     expect(f.mock.calls.filter((c) => c[0] === URL)).toHaveLength(0);
   });
 
-  it('lý do rỗng → server REASON_REQUIRED gắn ô Lý do; USER_INACTIVE gắn ô Người nhận', async () => {
+  it('lý do rỗng → server REASON_REQUIRED gắn ô Lý do', async () => {
     stubMutation(jsonResponse(400, { code: 'REASON_REQUIRED', message: 'x' }));
     wrap(<IssueDialog item={makeRow(5)} onClose={vi.fn()} />);
     await userEvent.type(screen.getByLabelText(/^Số lượng/), '1');
     await userEvent.click(screen.getByLabelText('Dùng chung'));
     await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ' }));
     await vi.waitFor(() => expect(screen.getByLabelText(/^Lý do/)).toHaveAccessibleDescription('Cần ghi lý do.'));
+  });
+
+  it.each([
+    ['USER_INACTIVE', 'Người này không còn hoạt động — chọn người khác.'],
+    ['USER_NOT_FOUND', 'Không tìm thấy người nhận — chọn lại.'],
+  ])('server %s → gắn ô Người nhận (aria-invalid + câu lỗi), không gắn ô Lý do', async (code, message) => {
+    stubMutation(jsonResponse(400, { code, message: 'x' }));
+    wrap(<IssueDialog item={makeRow(5)} onClose={vi.fn()} />);
+    await userEvent.type(screen.getByLabelText(/^Số lượng/), '1');
+    await userEvent.type(screen.getByLabelText(/^Lý do/), 'x');
+    await userEvent.click(await screen.findByRole('button', { name: /Trần Thị Bình/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ' }));
+    const picker = await screen.findByRole('searchbox', { name: /Tìm người nhận/ });
+    await vi.waitFor(() => expect(picker).toHaveAccessibleDescription(message));
+    expect(picker).toBeInvalid();
+    expect(screen.getByLabelText(/^Lý do/)).not.toBeInvalid();
   });
 });

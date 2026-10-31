@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { useUnitName } from '@/features/units/units.api';
@@ -20,6 +20,10 @@ export function IssueDialog({ item, onClose }: { item: StockRow; onClose: () => 
   const [recipient, setRecipient] = useState<DirectoryUser | null>(null);
   const [reason, setReason] = useState('');
   const n = toInt(qty);
+  // Người nhận bị server từ chối: mở lại ô tìm để lỗi gắn đúng ô và chọn người khác
+  useEffect(() => {
+    if (errors.recipient) setRecipient(null);
+  }, [errors.recipient]);
   const submit = () => {
     if (n === null) return fail('qty', t('stock.errors.FIELD_INVALID'));
     // Thiếu recipient_sub = "Dùng chung" ở server, nên không cho gửi khi chưa chọn gì
