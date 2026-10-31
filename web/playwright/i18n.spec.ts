@@ -112,15 +112,17 @@ test.describe('E6-S4 song ngữ các màn Hành chính của Plan 3', () => {
 // Chữ người dùng nhập (tên món/nhóm/người/phòng ban, ghi chú, lý do) giữ nguyên ngôn ngữ gốc ở mọi giao diện
 function userDataTexts(): string[] {
   const rows = psql(`SELECT DISTINCT x FROM (
-      SELECT name AS x FROM items UNION ALL SELECT pack_note FROM items UNION ALL SELECT name FROM item_categories
+      SELECT name AS x FROM items UNION ALL SELECT name_en FROM items UNION ALL SELECT pack_note FROM items UNION ALL SELECT name FROM item_categories
       UNION ALL SELECT full_name FROM users UNION ALL SELECT department FROM users UNION ALL SELECT department FROM requests
       UNION ALL SELECT custom_name FROM request_lines UNION ALL SELECT custom_note FROM request_lines
       UNION ALL SELECT review_note FROM request_lines UNION ALL SELECT cancel_note FROM request_lines
-      UNION ALL SELECT note FROM stock_movements) t
+      UNION ALL SELECT note FROM stock_movements UNION ALL SELECT name_en FROM units) t
     WHERE x IS NOT NULL AND x <> ''`);
   // Chỉ chuỗi có dấu tiếng Việt mới ảnh hưởng kết quả; bỏ chuỗi ngắn để không xóa nhầm chữ giao diện
   const vietnamese = rows.split('\n').filter((x) => x.length >= 3 && VIETNAMESE.test(x));
-  return [...vietnamese, 'Tiếng Việt'].sort((a, b) => b.length - a.length);
+  // Tên ĐVT do Hành chính tự đặt, có tên chỉ 2 chữ (vd "vỉ") nên không qua bộ lọc độ dài
+  const units = psql('SELECT name FROM units').split('\n').filter((x) => VIETNAMESE.test(x));
+  return [...vietnamese, ...units, 'Tiếng Việt'].sort((a, b) => b.length - a.length);
 }
 
 // Quét mọi chữ thấy được (không chỉ tiêu đề/nút): bỏ ô dữ liệu bảng, bỏ chữ người dùng nhập, còn chữ Việt là chuỗi chưa dịch

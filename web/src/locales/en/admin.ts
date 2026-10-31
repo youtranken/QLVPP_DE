@@ -47,6 +47,7 @@ const admin: Messages<typeof vi> = {
         session_revoked: 'Session revoked',
         webhook_rejected: 'Webhook rejected',
       },
+      catalog: { imported: 'Catalog imported from Excel' },
       category: { created: 'Category added', updated: 'Category edited' },
       config: { updated: 'Settings changed' },
       files: { orphans_deleted: 'Orphan images cleaned', uploaded: 'Image uploaded' },

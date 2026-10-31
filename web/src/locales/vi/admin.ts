@@ -44,6 +44,7 @@ const admin = {
         session_revoked: 'Phiên bị thu hồi',
         webhook_rejected: 'Webhook bị từ chối',
       },
+      catalog: { imported: 'Nạp danh mục từ Excel' },
       category: { created: 'Thêm nhóm hàng', updated: 'Sửa nhóm hàng' },
       config: { updated: 'Sửa cấu hình' },
       files: { orphans_deleted: 'Dọn ảnh mồ côi', uploaded: 'Tải ảnh lên' },
