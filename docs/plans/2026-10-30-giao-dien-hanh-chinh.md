@@ -70,10 +70,19 @@ Luật chủ dự án: chỉ Opus/Sonnet, không Haiku, Fable không viết code
 | 22 | S6 | B12 Cấu hình | Sonnet | Opus |
 | 23 | S7 | 390 px: thanh trên, menu sheet, bảng → thẻ, sheet, Giao hàng 390 | Opus | Opus |
 | 24 | S7 | Chốt plan: axe 390 cả bộ, chạm 44, sơ đồ archify, tài liệu | Sonnet | Opus (review toàn nhánh) |
+| 14a | S3→S4 | API + web nền: bảng `units`, endpoint ĐVT, `UnitSelect`/`useUnitName` từ API (SPEC §11.1) | Opus | Opus |
+| 14b | S3→S4 | API config `signature_boxes` + `reminder_days_left` (SPEC §11.2 phần server) | Opus | Opus |
+| 16b | S4 | Phiếu đề xuất D&E: trang 1, phụ lục, Excel sheet 1, bản chốt lưu mã/ĐVT/ô ký (SPEC §11.3) | Opus | Opus |
+| 18b | S5 | Trang Đơn vị tính `/admin/units` + sidebar 12 mục + mã món ở B8 (SPEC §11.1, §11.3) | Sonnet | Opus |
+| 18c | S5 | Script nạp danh mục Booking + chạy trên dev (SPEC §11.4) | Opus | Opus |
+
+Thứ tự chạy: 10, 11, 12, 13, 14, **14a, 14b**, 15, 16, **16b**, 17, 18, **18b, 18c**, 19, 20, 21, 22 (gồm phần web §11.2), 23, 24.
 
 ## Mốc kiểm của chủ dự án (sau T4, T9, T12, T14, T16, T19, T22, T24)
 
-Chủ dự án yêu cầu: "tới đâu báo tôi kiểm tra tới đó". Mỗi mốc là một **điểm dừng bắt buộc** (luật chủ dự án thắng "chạy liên tục" của SDD). Các bước:
+**Đổi 2026-10-31:** chủ dự án duyệt S1 rồi bảo "port hết các lát lun … rồi báo lại tôi". Từ S2, các mốc S2–S6 **không dừng**: vẫn chạy bước 1–2 bên dưới (bộ test + dựng lại de-vpp) rồi ghi vào ledger, sau đó đi tiếp. Chỉ dừng ở mốc cuối (T24), lúc đó báo gộp mọi việc cần thử của S2–S7 và §11.
+
+Chủ dự án yêu cầu (S0–S1): "tới đâu báo tôi kiểm tra tới đó". Mỗi mốc là một **điểm dừng bắt buộc** (luật chủ dự án thắng "chạy liên tục" của SDD). Các bước:
 
 1. Chạy đủ bộ test: `cd api && npm test && npm run test:e2e && npm run test:db`; `cd web && npm test && npm run lint && npm run build`. Chạy Playwright các spec của lát.
 2. Dựng lại máy dev phục vụ de-vpp: `docker compose up -d --build api web`. Kiểm `curl -sk https://de-vpp.pmh.com.vn:8443/api/health` → `{"status":"ok"…}`.
@@ -384,6 +393,8 @@ Chung cho T10–T22, mỗi màn đều có:
 
 ### Task 10: B1 Tổng hợp kỳ
 
+Ghi chú từ T9 (ledger): shell đang render `ShellPageHeader` h1 tạm cho trang chưa port — T10 thêm cờ tắt cho trang đã port và test "đúng một h1" trên `/admin/summary`.
+
 **Files:** `web/src/features/summary/`:
 - `summary-page.tsx` (vỏ trang, URL state `ym/view/filter/q`)
 - `summary-stats.tsx` (4 thẻ)
@@ -549,6 +560,30 @@ Chung cho T10–T22, mỗi màn đều có:
 
 ## Lát S4 — Báo cáo + Bản in (SPEC §5.4)
 
+### Task 14a: Đơn vị tính thành bảng (SPEC §11.1 phần nền)
+
+**Files:** api `src/migrations/0111_units.sql`; module mới `modules/units/` (`units.module.ts`, `units.controller.ts` cho `GET units`, `units-admin.controller.ts`, `units.service.ts` export `assertActive(code, tx)` + `namesByCode()`, `units.dto.ts`, `unit-code.ts` hàm thuần `unitCodeFrom(name, taken)`); bỏ `UNITS` ở `catalog.dto.ts`/`request.dto.ts`, kiểm bằng `UnitsService`; `xlsx-labels.ts` bỏ nhãn ĐVT cứng, lấy từ DB; architecture §7 thêm 4 mã. Web: `features/units/units.api.ts` (`unitsQuery`, `useUnitName`), `unit-select.tsx` lấy từ API; thay mọi `t('catalog.units.*')` (14 tệp đã liệt kê ở grep) bằng `useUnitName`; xóa key `catalog.units.*`.
+
+- [ ] **Step 1: Test RED.**
+  - unit `unit-code.spec.ts`: "Cuộn" → `cuon`; "Cuốn" khi `cuon` đã có → `cuon-2`; 40 ký tự có dấu → ≤ 32; ký tự lạ → `-`, không `-` ở đầu/cuối.
+  - db-spec `units.db-spec.ts`: seed 9 mã đủ; FK chặn `items.unit` không tồn tại; `DELETE` ĐVT đang dùng bị FK chặn; `UNIQUE lower(name)`.
+  - e2e `units.e2e-spec.ts`: `GET units` member chỉ thấy active; `?all=1` member → 403, admin thấy cả ngừng + `in_use`; POST tên 40 → 201, 41 → `VALIDATION {fields:['name']}`; trùng khác hoa thường → `UNIT_EXISTS`; DELETE đang dùng → `UNIT_IN_USE`, chưa dùng → 204; PATCH `active:false` rồi tạo món với mã đó → `UNIT_INACTIVE`; member lưu "Món khác" với ĐVT ngừng → `UNIT_INACTIVE`, lưu lại dòng cũ không đổi ĐVT → được; audit `unit.*` có before/after.
+  - web vitest: `UnitSelect` chỉ hiện ĐVT active theo thứ tự API; `useUnitName` en/vi/thiếu mã.
+- [ ] **Step 2:** FAIL đúng lý do. **Step 3:** Cài đặt. **Step 4:** chạy đủ api (unit/e2e/db) + web; Playwright member Món khác vẫn xanh.
+- [ ] **Step 5:** Commit `feat: đơn vị tính thành bảng units — API, FK, ô chọn lấy từ server`.
+
+### Task 14b: Config ô ký + ngày nhắc (SPEC §11.2 phần server)
+
+**Files:** `src/migrations/0112_config_signature_boxes.sql` (chuyển `signers` → `signature_boxes`, seed `reminder_days_left=3`); `modules/config/config-validation.ts` (+ spec), `config-admin.service.ts` (bỏ merge `signers`, `PUT` thay cả mảng); `modules/reminders/schedule-days.ts` nhận `daysLeft` tham số, `notification-scheduler.ts` đọc config; `modules/reports/snapshots.service.ts` lưu `signature_boxes` (thay `signers` cho bản mới), `report.types.ts`; architecture §5 seed config; web chỉ đổi kiểu `config-form.ts` để build xanh (UI ở T22).
+
+- [ ] **Step 1: Test RED.**
+  - unit validate: `reminder_days_left` 1 và 7 qua, 0 và 8 → field; `registration_last_day=3` + 2 qua, 3 lỗi (gộp với config hiện có); `signature_boxes` 1 và 3 qua, 0 và 4 lỗi; `title` 60/61, `title_en` 60/61, `name` 200/201 → `signature_boxes.<i>.<trường>`.
+  - unit `isReminderDay(now, deadline, 5)` đúng ngày còn 5, không đúng còn 4/6.
+  - db-spec migration: config có `signers{head:'A',preparer:'B',approver:'C'}` → sau 0112 thành 2 ô đúng tên, `signers` bị xóa.
+  - e2e: `PUT admin/config {reminder_days_left: 8}` → `CONFIG_INVALID`; scheduler với `ClockService` cố định và `reminder_days_left=5` nhắc đúng ngày; bản chốt mới chứa `signature_boxes`.
+- [ ] **Step 2–4:** FAIL → cài → chạy đủ api + web build.
+- [ ] **Step 5:** Commit `feat(api): cấu hình ô ký phiếu đề xuất và số ngày nhắc trước hạn`.
+
 ### Task 15: B5 Báo cáo & in
 
 **Files:** `web/src/features/reports/`:
@@ -596,6 +631,19 @@ Chung cho T10–T22, mỗi màn đều có:
   - Xuất Excel rồi mở tệp;
   - In trình ký → xem trang in (in thử ra PDF);
   - kỳ đang mở có dòng "tạm tính".
+
+### Task 16b: Phiếu đề xuất theo mẫu D&E (SPEC §11.3)
+
+**Files:** api `modules/reports/` (`snapshots.service.ts` lưu `code`, `unit_name`, `unit_name_en`, `signature_boxes`; `xlsx-report.ts` tách `xlsx-request-form.ts` cho sheet 1, sheet cũ thành "Phụ lục"); web `features/reports/print-page.tsx` + `print-request-form.tsx` (trang 1) + `print-appendix.tsx` (B6 cũ), công tắc `?appendix=1`; i18n `reports.print.form.*`.
+
+**Interfaces:** Consumes T14a (`units` lúc chốt), T14b (`signature_boxes` config). Bản chốt cũ: thiếu `code` → "—", chỉ có `signers` → 3 ô chức danh cũ.
+
+- [ ] **Step 1: Test RED.**
+  - api unit `xlsx-report.spec.ts`: sheet 1 tên "Phiếu đề xuất", tiêu đề, 6 cột; chỉ hàng `order_qty > 0` (0 không có, 1 có); ô ký theo `signature_boxes` (1 và 3 ô); sheet 2 "Phụ lục".
+  - api e2e: bản chốt mới chứa `code`/`unit_name`/`signature_boxes`; đổi tên món sau chốt → `GET` bản chốt không đổi.
+  - web vitest: trang 1 đúng 6 cột song ngữ; "Không có món cần đặt mua." khi rỗng; không `?appendix` → không có phụ lục; có → có; bản chốt cũ → 3 ô chức danh cũ.
+- [ ] **Step 2:** Chạy → FAIL. **Step 3:** Cài đặt. **Step 4:** Playwright `E9-S4 Phiếu đề xuất D&E: chỉ món đặt mua, ô ký theo cấu hình, bật phụ lục`; chạy đủ api + web.
+- [ ] **Step 5:** Commit `feat: phiếu đề xuất theo mẫu D&E — trang 1, phụ lục, Excel`. Cập nhật architecture (bản chốt), map.
 
 ---
 
@@ -655,6 +703,24 @@ Chung cho T10–T22, mỗi màn đều có:
 
   Chạy đủ bộ web.
 - [ ] **Step 5:** Commit `feat(web): ngăn kéo thêm/sửa món và trang Nhóm món M1`.
+
+### Task 18b: Trang Đơn vị tính + mã món (SPEC §11.1 web, §11.3 "Mã món trên UI")
+
+**Files:** `web/src/features/units/units-page.tsx`, `unit-row.tsx`, `add-unit-dialog.tsx`, `units.m1.css`, test; `shell/admin-nav.ts` thêm mục `units` (icon có sẵn phù hợp, vd `ruler` hoặc `tag` — chọn trong 45 icon, không vẽ mới nếu có), route; `features/catalog/` cột "Mã" + ô "Mã món" trong ngăn kéo; i18n `units.page.*`, `nav.units`; Playwright `units.spec.ts`; sửa `admin-shell.spec.ts` NAV_ORDER thành 12 mục.
+
+- [ ] **Step 1: Test RED** theo AC E9-S5b 1–6 (vitest + e2e đã có ở 14a) và mã món: 40 ký tự lưu, 41 → lỗi ô; `ITEM_CODE_EXISTS` → ô mã.
+- [ ] **Step 2–3:** FAIL → cài theo SPEC §11.1 Web.
+- [ ] **Step 4:** Playwright `E9-S5b Đơn vị tính: thêm, trùng tên, ngừng thì mất khỏi ô chọn Món khác, xóa đang dùng bị chặn`; chạy đủ web.
+- [ ] **Step 5:** Commit `feat(web): trang Đơn vị tính và mã món ở Danh mục`.
+
+### Task 18c: Nạp danh mục Booking (SPEC §11.4)
+
+**Files:** `api/scripts/import-booking.mjs` (CLI mỏng) + `api/src/modules/catalog/booking-import.ts` (hàm thuần `normalizeUnit`, `parseBookingRows`; hàm `applyBookingImport(db, rows, opts)` một transaction) + spec; `README.md` mục "Nạp danh mục Booking"; map.
+
+- [ ] **Step 1: Test RED.** unit: mã trùng giữ hàng đầu, hàng sau `code=null` vào "Cần đặt mã"; "04 viên/vĩ" → `vỉ` + "4 viên/vỉ"; "Cái" NFD = "cái"; "Ream" → `ram`; tên trống bỏ. db-spec: apply 2 lần → lần 2 tạo 0; món sẵn cùng mã bỏ qua; lỗi giữa chừng (ép lỗi bằng tên > 120) → không ghi gì; audit `catalog.imported`.
+- [ ] **Step 2–4:** FAIL → cài → chạy đủ api.
+- [ ] **Step 5:** Commit `feat(api): script nạp danh mục từ sheet Booking`.
+- [ ] **Step 6 (controller):** chạy thử trên dev (`docker compose cp` file vào container api, chạy không `--apply`, đọc báo cáo), rồi `--apply` trên dev. Ghi số liệu vào ledger. Không chạy trên prod.
 
 ### Task 19: B7 Kho
 
@@ -739,7 +805,9 @@ Chung cho T10–T22, mỗi màn đều có:
 - giữ `config-form.ts`
 - test; Playwright mới `config.spec.ts`
 
-- [ ] **Step 1: Test RED** (AC E9-S6 1–3):
+- Gồm phần web SPEC §11.2: ô "Nhắc người chưa có phiếu trước hạn" (1–7, `CONFIG_INVALID {field:'reminder_days_left'}` → ô) + ngày nhắc trên lịch xem trước; khối "Ô ký trên phiếu đề xuất" (`signature-boxes-block.tsx` thay `signers-block.tsx`) thêm/xóa ô 1–3, chức danh vi/en, người ký.
+- [ ] **Step 1: Test RED** (AC E9-S6 1–3 + §11.2):
+  - Ô nhắc: lỗi server tại ô; lịch tô ngày nhắc. Ô ký: "Thêm ô ký" ẩn khi đủ 3, "Xóa ô ký" ẩn khi còn 1; `maxLength` 60/60/200; lỗi `signature_boxes.1.title` → đúng ô hàng 2.
   - Nút ± dừng ở 3 và 28; gõ tay 2 vẫn gửi → server `CONFIG_INVALID {field:'registration_last_day'}` → lỗi ô "Nhập số từ 3 đến 28.".
   - Lịch xem trước: số ngoài 3–28 → "Nhập ngày hạn hợp lệ để xem trước".
   - Mỗi khối chỉ gửi khóa của khối.

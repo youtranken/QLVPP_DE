@@ -609,3 +609,158 @@ Không mục nào bắt buộc thêm API; ba đề xuất API đọc-only tùy c
 - S1: `docs/architecture.md` §11 (token: `tokens-m1.css` cho Hành chính, `tokens.css` cũ cho Nhân viên; phạm vi `data-shell`); `design-preview/_SPEC.md` thêm dòng đầu "Phần Hành chính thay bởi `docs/specs/2026-10-30-giao-dien-moi-hanh-chinh.md`"; PRD §7 dòng 156 (hệ thị giác) ghi M1/P3 cho Hành chính; `docs/map.md` dòng `shell`, `ui`.
 - S2–S7: `docs/map.md` dòng feature tương ứng (file chính mới, endpoint gọi thêm như `admin/reports/:ym` ở Giao hàng, `admin/backlog` ở Kho); `docs/backlog/epic-9-giao-dien-hanh-chinh.md` đánh dấu story.
 - Cuối plan: vẽ lại sơ đồ bằng `archify` (luồng Hành chính mới) vào `docs/diagrams/`, ghi lệch vào `docs/review-spec.md`.
+
+## 11. Bổ sung 2026-10-31 — 4 việc chủ dự án chốt (giữa S0–S1)
+
+Chủ dự án chốt 4 việc sau để Hành chính tự mở rộng mà không cần sửa hệ thống. Ngày 2026-10-31 chủ dự án bảo làm liền S2–S7 kèm 4 việc này rồi báo một lần cuối. Mục này thắng các đoạn §5.4 (B5/B6), §5.5 (B8) và §5.6 (B12) khi mâu thuẫn.
+
+### 11.1 Đơn vị tính do Hành chính quản lý (lát S5)
+
+**Luật**
+- ĐVT là bảng `units`, không còn tập cứng 9 giá trị (bỏ `UNITS` ở DTO api, web và CHECK `items.unit` trong 0100).
+- Hành chính thêm ĐVT, sửa tên vi/en, đổi thứ tự và ngừng/mở lại ĐVT.
+- Xóa ĐVT chỉ được khi chưa món nào và chưa dòng phiếu nào dùng. Đang dùng thì chỉ ngừng được (409 `UNIT_IN_USE`).
+- ĐVT đã ngừng:
+  - không hiện trong ô chọn khi thêm món hay khi nhân viên ghi "Món khác";
+  - món và dòng phiếu cũ vẫn hiện đúng tên ĐVT;
+  - chọn ĐVT đã ngừng cho món mới, sửa món hay dòng ngoài danh mục → 400 `UNIT_INACTIVE`;
+  - lưu lại một dòng ngoài danh mục cũ mà không đổi ĐVT thì vẫn được.
+- Nhân viên ghi "Món khác" chọn từ cùng danh sách ĐVT đang dùng.
+
+**Dữ liệu** (migration `0111_units.sql`)
+- Bảng: `units(code text PK, name text NOT NULL, name_en text, sort_order int NOT NULL DEFAULT 0, active bool NOT NULL DEFAULT true, created_at, updated_at)`.
+- Chỉ mục: `UNIQUE (lower(name))`.
+- Seed 9 mã cũ với đúng nhãn vi/en đang có ở `catalog.units` của web. Bỏ CHECK `items.unit IN (...)`. Thêm FK `items.unit → units(code)` và `request_lines.custom_unit → units(code)`, cả hai `ON UPDATE RESTRICT ON DELETE RESTRICT`.
+- `code` do server sinh khi tạo, theo các bước:
+  1. bỏ dấu tên vi, chữ thường, ký tự khác `[a-z0-9]` → `-`;
+  2. cắt còn tối đa 32 ký tự;
+  3. trùng thì thêm `-2`, `-3`…
+- `code` không đổi về sau và không hiện trên UI.
+- Giới hạn: `name` trim 1–40 ký tự, `name_en` ≤ 40, `sort_order` nguyên.
+
+**API**
+- `GET units`: mọi vai đã đăng nhập, trả ĐVT đang dùng sắp theo `sort_order, name`. Thêm `?all=1` thì có cả ĐVT đã ngừng (chỉ admin/sa, member gọi → 403 `FORBIDDEN_ROLE`). Mỗi phần tử: `{code, name, name_en, sort_order, active, in_use}`; `in_use` chỉ có khi `all=1`.
+- `POST admin/units {name, name_en?, sort_order?}` → 201, trả ĐVT.
+- `PATCH admin/units/:code {name?, name_en?, sort_order?, active?}`.
+- `DELETE admin/units/:code` → 204.
+- Mã lỗi mới, thêm vào architecture §7:
+  - `UNIT_EXISTS` 409: tên trùng, không phân biệt hoa thường;
+  - `UNIT_NOT_FOUND` 404;
+  - `UNIT_IN_USE` 409;
+  - `UNIT_INACTIVE` 400.
+- Mọi lệnh ghi có audit `unit.created|updated|deleted` kèm before/after.
+- Báo cáo, bản chốt và Excel lấy tên ĐVT từ bảng `units` lúc chốt. Bản chốt lưu luôn tên vi/en của ĐVT để đứng yên, kể cả khi ĐVT bị đổi tên sau đó.
+
+**Web**
+- Trang mới **Đơn vị tính** `/admin/units`, nằm trong nhóm sidebar "Kho & danh mục" sau "Nhóm món". Sidebar thành 12 mục.
+- Bố cục như B9 Nhóm món:
+  - bảng: Thứ tự (lên/xuống, bấm "Lưu thứ tự" thì gán `sort_order = vị trí*10`) · Tên (sửa tại chỗ) · Tên tiếng Anh (sửa tại chỗ) · Số món đang dùng · Trạng thái · công tắc "Ngừng {tên}"/"Mở lại {tên}";
+  - nút "Xóa {tên}" chỉ hiện khi `in_use = false`, bấm thì hỏi xác nhận.
+- Hộp thoại "Thêm đơn vị tính": Tên * (≤ 40), Tên tiếng Anh (≤ 40).
+- Lỗi:
+  - `UNIT_EXISTS` → ô tên, câu "Đã có đơn vị tính tên này.";
+  - `UNIT_IN_USE` → toast danger "Đơn vị đang được dùng — chỉ ngừng được.".
+- `UnitSelect` lấy dữ liệu từ `GET units` (TanStack Query, key `['units']`). Nhãn ĐVT ở mọi bảng hiển thị qua hook `useUnitName(code)`: ưu tiên `name_en` khi UI tiếng Anh, thiếu thì dùng `name`, không có mã thì hiện thô `code`. Bỏ cây i18n `catalog.units.*`.
+- AC E9-S5b:
+  1. Tên 40 ký tự lưu được; 41 → lỗi ô.
+  2. Trùng khác hoa thường → `UNIT_EXISTS`.
+  3. Xóa ĐVT đang dùng → `UNIT_IN_USE`; ĐVT chưa dùng thì xóa được.
+  4. ĐVT ngừng không còn trong ô chọn của form món và "Món khác"; món cũ vẫn hiện tên.
+  5. Gửi ĐVT ngừng cho món mới → `UNIT_INACTIVE`.
+  6. Đổi thứ tự → ô chọn đổi thứ tự theo.
+- Playwright: `E9-S5b Đơn vị tính: thêm, trùng tên, ngừng thì mất khỏi ô chọn Món khác, xóa đang dùng bị chặn`.
+
+### 11.2 Cấu hình: số ngày nhắc trước hạn + ô ký sửa được (lát S6)
+
+**Nhắc trước hạn**
+- Khóa config mới `reminder_days_left` (seed `3`, đúng hành vi hiện tại của `REMINDER_DAYS_LEFT`). Nhắc vào ngày `daysLeft(now, deadline) === reminder_days_left`, đọc từ config mỗi lần cron chạy. `schedule-days.ts` nhận số này làm tham số.
+- Ràng buộc: số nguyên 1–7 và `≤ registration_last_day − 1` (tính theo giá trị sau khi gộp bản vá với config hiện có). Sai → `CONFIG_INVALID {field: 'reminder_days_left'}`.
+- Web: khối "Kỳ đăng ký" thêm ô "Nhắc người chưa có phiếu trước hạn" (số + "ngày, tính cả hôm nay", gợi ý "Từ 1 đến 7 ngày, nhỏ hơn ngày hạn."). Lịch xem trước tô ngày nhắc với nhãn "Nhắc người chưa có phiếu".
+- Biên: 1 và 7 qua; 0 và 8 lỗi. Với `registration_last_day = 3` thì 2 qua, 3 lỗi. Test tầng unit (validate + `isReminderDay`), e2e (`PUT admin/config`), db-spec không cần.
+
+**Ô ký sửa được**
+- Thay `signers {preparer, head, approver}` bằng `signature_boxes`: mảng 1–3 phần tử `{title, title_en, name}`, theo các ràng buộc:
+  - `title` trim 1–60;
+  - `title_en` ≤ 60, có thể rỗng;
+  - `name` ≤ 200, có thể rỗng.
+- Seed và migration `0112_config_signature_boxes.sql` theo mẫu D&E. Tên người ký cũ chuyển sang như sau, `approver` bỏ (ghi vào `docs/review-spec.md`):
+  - `[{title:"Chủ quản đơn vị", title_en:"Head of Dept.", name: <signers.head>}`
+  - `{title:"Người yêu cầu", title_en:"Applicant", name: <signers.preparer>}]`
+- Sai → `CONFIG_INVALID {field: 'signature_boxes'}` hoặc `'signature_boxes.<i>.<trường>'`. `PUT` thay cả mảng, không gộp.
+- Bản chốt mới lưu `signature_boxes`. Bản chốt cũ chỉ có `signers` thì in 3 ô với chức danh cũ "Người lập / Trưởng phòng / Duyệt".
+- Web: khối "Người ký báo cáo" đổi tên thành "Ô ký trên phiếu đề xuất".
+  - Mỗi hàng: Chức danh *, Chức danh tiếng Anh, Người ký (để trống thì in dòng chấm), cùng nút "Xóa ô ký" (ẩn khi chỉ còn 1).
+  - Nút "Thêm ô ký" (ẩn khi đủ 3).
+  - Có khối xem trước như bản in.
+- Biên:
+  - 1 ô và 3 ô qua, 0 ô và 4 ô lỗi (unit + e2e);
+  - `title` 60 qua, 61 lỗi;
+  - `name` 200 qua, 201 lỗi.
+
+### 11.3 Bản in và Excel theo mẫu "D&E" (lát S4, thay phần tờ in của B6)
+
+**Trang 1 · Phiếu đề xuất** (luôn in)
+- Đầu tờ: "Phiếu đề xuất văn phòng phẩm" (đậm, giữa), dòng dưới "STATIONERY REQUEST FORM", rồi "Date : {dd/MM/yyyy}" (ngày lập bản chốt, giờ VN).
+- Bảng 6 cột, tiêu đề hai dòng vi/en: "STT / No." · "Mã / Code" · "Tên vật dụng" · "Item name" · "ĐVT / Unit" · "SL / Qty".
+  - Hàng: mỗi món có `order_qty > 0` theo thứ tự danh mục lúc chốt (`sort_order` nhóm → `sort_order` món → tên). Sau đó là món ngoài danh mục đã chấp nhận, với Mã "—" và Item name trống.
+  - STT 1…n. Mã là `items.code`, trống thì "—". Item name là `name_en`, trống thì để trống. ĐVT là tên vi lúc chốt. SL là `order_qty`.
+- Chân: các ô ký trong `signature_boxes` của bản chốt, xếp ngang đều nhau. Mỗi ô có chức danh vi (đậm), chức danh en ở dòng dưới, khoảng ký 22 mm, rồi tên (trống thì dòng chấm).
+- Không còn tiêu đề công ty, công thức "Cần mua" hay 3 ô ký cũ trên trang 1.
+- Không có món nào `order_qty > 0` thì bảng có một hàng "Không có món cần đặt mua."
+
+**Phụ lục** (tùy chọn)
+- Thanh công cụ màn hình có công tắc "In kèm phụ lục", mặc định **tắt**, chỉ giữ trong URL `?appendix=1`.
+- Bật thì sau trang 1 có ngắt trang (`break-before: page`), rồi in lại Phần 1, Xuất lẻ và Phần 2 như B6 cũ (tiêu đề "Phụ lục · Chi tiết tháng {M}/{Y}").
+
+**Excel**
+- Tên tệp giữ `vpp-bao-cao-<ym>.xlsx`.
+- Sheet 1 "Phiếu đề xuất": đúng bố cục trang 1. Tiêu đề gộp ô; độ rộng cột theo sheet D&E: A 7, B 8, C 33, D 25, E 10, F 8. Viền mảnh cho bảng. Ô ký ở các cột C và E (ô thứ 3, nếu có, ở cột F).
+- Sheet 2 "Phụ lục": hai bảng cũ (Tổng theo món, Chi tiết) như hiện nay. `?lang=` chỉ đổi ngôn ngữ của sheet 2; sheet 1 luôn song ngữ như mẫu.
+
+**Mã món trên UI:** vì trang 1 cần mã, B8 hiện lại mã — cột "Mã" (hẹp, trước cột Món) và ô "Mã món" trong ngăn kéo (≤ 40, tùy chọn, `ITEM_CODE_EXISTS` → ô mã "Mã này đã có món khác dùng."). Biên 40/41 ở e2e (DTO sẵn có `OptionalText(40)`).
+
+**Dữ liệu**
+- Bản chốt mới lưu thêm `code` và `unit_name`/`unit_name_en` cho mỗi hàng, cùng `signature_boxes`. Bản chốt cũ thiếu `code` thì in "—".
+- Không đổi luật `order_qty` (0–99 999).
+
+**AC E9-S4 bổ sung**
+1. Trang 1 chỉ có món `order_qty > 0`. Món `order_qty = 0` không in, `= 1` thì in.
+2. Mã và Item name đúng từ danh mục lúc chốt; đổi tên món sau khi chốt thì trang in không đổi.
+3. Ô ký đúng số lượng và chức danh của config lúc chốt (1 ô / 3 ô).
+4. `?appendix=1` thì có phụ lục, không có thì không.
+5. Excel sheet 1 tên "Phiếu đề xuất", ô A1-vùng tiêu đề là "Phiếu đề xuất văn phòng phẩm", tiêu đề bảng đúng 6 cột (test unit `xlsx-report.spec.ts` đọc lại bằng exceljs).
+
+Playwright: `E9-S4 Phiếu đề xuất D&E: chỉ món đặt mua, ô ký theo cấu hình, bật phụ lục`.
+
+### 11.4 Nạp danh mục từ sheet "Booking" (một lần, lát S5 sau 11.1)
+
+**Công cụ**
+- Script `api/scripts/import-booking.mjs`, chạy trong container api: `node scripts/import-booking.mjs <file.xlsx> [--apply]`.
+- Đọc sheet `Booking`, từ hàng 8 tới hàng cuối có Mã hoặc Tên. Cột B Mã, C Tên vi, D Tên en, E ĐVT.
+- Mặc định chỉ **chạy thử**: in báo cáo, không ghi. Có `--apply` thì ghi trong **một transaction**, kèm audit `catalog.imported {created, skipped, units_created}`, actor `system:import`.
+
+**Quy tắc**
+- Trim mọi ô và chuẩn Unicode NFC.
+- Tên trống thì bỏ hàng, có ghi vào báo cáo.
+- Bỏ qua món đã có, ghi vào báo cáo, không ghi đè: đã có `code` trùng, hoặc (khi hàng không có mã) đã có món trùng `lower(name)`. Nhờ vậy chạy lại không nhân bản.
+- Mã trùng trong file (file thật có 12 mã trùng, ví dụ D01, G01 ×3, K01–K05): hàng **đầu tiên** giữ mã, khớp với sheet D&E (K04 = Keo khô Staedler). Các hàng sau vẫn nạp nhưng `code = NULL` và được liệt kê trong mục "Cần đặt mã" của báo cáo.
+- ĐVT: so sánh không phân biệt hoa thường sau NFC.
+  - Ánh xạ về mã có sẵn: cái→`cai`, hộp→`hop`, cây→`cay`, ream/ram→`ram`, cuộn→`cuon`, bịch→`bich`, chai→`chai`, bộ→`bo`.
+  - Dạng "NN viên/vĩ" → ĐVT "vỉ", `pack_note = "{NN bỏ số 0 đầu} viên/vỉ"`. "vĩ" viết thành "vỉ".
+  - ĐVT chưa có thì tạo mới theo quy tắc 11.1, tên viết thường như trong file: xấp, cặp, cục, viên, vỉ, ống, cuốn, bao.
+- Món mới:
+  - `name_en` trống → NULL;
+  - `category_id = NULL` (hiện ở nhóm "Chưa xếp nhóm");
+  - `image_file_id = NULL` (badge "Thiếu ảnh");
+  - `max_qty = config.default_max_qty`, `stock_qty = 0`, `active = true`, `admin_only = false`;
+  - `sort_order = (số thứ tự hàng)*10`.
+- Báo cáo in ra: số món tạo, số bỏ qua (kèm lý do), ĐVT tạo mới, danh sách "Cần đặt mã".
+
+**Chạy**
+- Chỉ chạy trên dev (de-vpp) sau khi test xanh.
+- Prod chạy khi chủ dự án đồng ý, chủ dự án tự chạy theo hướng dẫn ghi trong `README.md` mục "Nạp danh mục Booking" (Claude không chạy lệnh trên prod).
+- File Excel không commit.
+
+**Test**
+- Unit: hàm thuần `parseBookingRows(rows)` và `normalizeUnit(raw)` với các ca: mã trùng giữ hàng đầu; "04 viên/vĩ" → vỉ + "4 viên/vỉ"; "Cái" (NFD) = "cái"; tên trống bỏ.
+- db-spec: `--apply` hai lần → lần hai tạo 0; có món sẵn cùng mã → bỏ qua; lỗi giữa chừng → không ghi gì (rollback).
