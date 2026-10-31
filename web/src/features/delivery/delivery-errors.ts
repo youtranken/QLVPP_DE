@@ -32,4 +32,37 @@ export function lineFailure(e: unknown, t: T): LineFailure {
   return { kind: 'field', message: t('delivery.line.failed') };
 }
 
-export const noticeOf = (code: string, t: T) => t(`delivery.notice.${REQUEST_CODES.has(code) ? code : 'UNKNOWN'}`);
+export interface DeliveryFailure {
+  code: string;
+  available?: number;
+  remaining?: number;
+}
+
+// Trang Giao hàng (B3): lỗi khối ở đầu chi tiết, còn lại gắn vào dòng; mã làm bản phiếu cũ thì tải lại phiếu
+const BLOCK_CODES = new Set(['PERIOD_NOT_LOCKED', 'REQUEST_NOT_FOUND', 'LINE_NOT_FOUND']);
+const LINE_CODES = new Set(['STOCK_INSUFFICIENT', 'DELIVER_EXCEEDS_QTY', 'STALE_UPDATE', 'LINE_NOT_REVIEWED', 'LINE_REJECTED']);
+const STALE_CODES = new Set(['DELIVER_EXCEEDS_QTY', 'STALE_UPDATE', 'LINE_NOT_REVIEWED', 'LINE_REJECTED']);
+
+export const isBlockCode = (code: string) => BLOCK_CODES.has(code);
+export const makesViewStale = (code: string) => STALE_CODES.has(code) || BLOCK_CODES.has(code);
+
+export function blockText(code: string, month: number, t: T): string {
+  return t(`delivery.detail.block.${BLOCK_CODES.has(code) ? code : 'UNKNOWN'}`, { month });
+}
+
+export function lineErrorText(f: DeliveryFailure, unit: string, t: T): string {
+  return t(`delivery.detail.errors.${LINE_CODES.has(f.code) ? f.code : 'UNKNOWN'}`, {
+    available: f.available ?? 0,
+    remaining: f.remaining ?? 0,
+    unit,
+  });
+}
+
+const REASON_CODES = new Set([...LINE_CODES, 'PERIOD_NOT_LOCKED']);
+
+export function reasonText(f: DeliveryFailure, t: T): string {
+  return t(`delivery.result.reasons.${REASON_CODES.has(f.code) ? f.code : 'UNKNOWN'}`, {
+    available: f.available ?? 0,
+    remaining: f.remaining ?? 0,
+  });
+}

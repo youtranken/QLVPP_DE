@@ -84,4 +84,11 @@ describe('Stepper min/max', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Thêm Bút bi' }));
     expect(screen.getByRole('spinbutton', { name: 'Bút bi' })).toHaveValue(1000);
   });
+
+  it('inputLabel đặt nhãn riêng cho ô số, nút vẫn theo label; disabled khóa cả ô và hai nút', () => {
+    renderWithI18n(<Stepper value={2} min={1} max={5} label="Bút bi" inputLabel="Thực giao Bút bi" disabled onChange={() => {}} />);
+    expect(screen.getByRole('spinbutton', { name: 'Thực giao Bút bi' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Thêm Bút bi' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Bớt Bút bi' })).toBeDisabled();
+  });
 });

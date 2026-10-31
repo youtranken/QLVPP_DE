@@ -24,7 +24,7 @@ async function axe390(page: Page, info: TestInfo) {
 }
 
 const month = (ym: string) => Number(ym.slice(5, 7));
-const lineOf = (lines: Locator, name: string) => lines.getByRole('listitem').filter({ hasText: name });
+const rowOf = (lines: Locator, name: string) => lines.getByRole('row').filter({ hasText: name });
 const reportRow = (page: Page, name: string) =>
   page.getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row').filter({ has: page.getByRole('spinbutton', { name: `Đặt mua ${name}` }) });
 // Cột: Món · ĐVT · Chưa giao kỳ này · Nợ kỳ trước · Tồn · Cần mua · Đặt mua
@@ -39,27 +39,25 @@ async function confirmPendingIfAny(page: Page, request: APIRequestContext, ym: s
 
 async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/delivery');
-  await expect(admin.getByText(`Tháng ${month(s.prevYm)}/${s.prevYm.slice(0, 4)}`)).toBeVisible();
-  const toggle = admin.getByRole('button', { name: new RegExp(`^${s.a.name}`) });
-  await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  const lines = admin.getByRole('list', { name: `Các dòng của phiếu ${s.a.name}` });
-  const paper = lineOf(lines, s.paper.name);
+  await expect(admin.getByText(`Tháng ${month(s.prevYm)}/${s.prevYm.slice(0, 4)}`, { exact: true })).toBeVisible();
+  const pick = admin.getByRole('button', { name: new RegExp(`^${s.a.name}`) });
+  await pick.click();
+  await expect(pick).toHaveAttribute('aria-pressed', 'true');
+  const lines = admin.getByRole('table', { name: `Các dòng của phiếu ${s.a.name}` });
+  const paper = rowOf(lines, s.paper.name);
   await paper.getByLabel(`Thực giao ${s.paper.name}`).fill('3');
   await paper.getByRole('button', { name: `Giao ${s.paper.name}` }).dblclick();
-  await expect(paper.getByText('đã giao 3/5')).toBeVisible();
-  await expect(paper.getByText('còn 2')).toBeVisible();
-  await expect(paper.getByLabel(`Thực giao ${s.paper.name}`)).toHaveValue('2');
+  await expect(admin.getByText(`Đã giao 3 cái ${s.paper.name}`)).toBeVisible();
+  await expect(paper.getByText('Hết hàng — còn nợ 2')).toBeVisible();
   expect(deliveryMovements(s.paper.id)).toBe('-3');
   await axe390(admin, info);
   await snap(admin, info, 'p3-delivered-paper');
 
   await admin.getByRole('button', { name: 'Giao tất cả' }).click();
-  const result = admin.getByRole('status').filter({ hasText: 'Đã giao 2 dòng' });
-  await expect(result).toBeVisible();
-  await expect(result.getByRole('list', { name: 'Không giao được' })).toContainText(`Không giao được: ${s.paper.name} — chỉ còn 0 trong kho`);
-  await expect(lineOf(lines, s.pen.name).getByText('Đã giao đủ')).toBeVisible();
-  await expect(lineOf(lines, s.custom).getByText('Đã giao đủ')).toBeVisible();
+  const result = admin.getByRole('status', { name: 'Kết quả giao' });
+  await expect(result).toHaveText(`Đã giao 2 dòng · Không giao được: ${s.paper.name} (chỉ còn 0)`);
+  await expect(rowOf(lines, s.pen.name).getByText('Đã giao đủ')).toBeVisible();
+  await expect(rowOf(lines, s.custom).getByText('Đã giao đủ')).toBeVisible();
   expect(deliveryMovements(s.pen.id)).toBe('-2');
   await snap(admin, info, 'p3-delivered-all');
 }

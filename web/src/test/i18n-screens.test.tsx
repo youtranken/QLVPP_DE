@@ -11,7 +11,7 @@ import { MeContext } from '@/lib/me';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { backlogLine } from '@/features/delivery/backlog-fixtures';
 import { stubBacklog } from '@/features/delivery/backlog-test-stub';
-import { personRow } from '@/features/delivery/delivery-fixtures';
+import { LOCKED_SUMMARY, personRow } from '@/features/delivery/delivery-fixtures';
 import { reportFixture, snapshotDataFixture, snapshotRow, ISSUE } from '@/features/reports/reports-fixtures';
 import { stubReports } from '@/features/reports/reports-test-stub';
 import type { AdminRequestView } from '@/features/summary/summary.api';
@@ -47,6 +47,8 @@ function stubDelivery() {
     'fetch',
     vi.fn((url: string) => {
       if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
+      if (url === '/api/admin/items' || url.startsWith('/api/item-categories')) return Promise.resolve(jsonResponse(200, []));
+      if (url.endsWith('/summary')) return Promise.resolve(jsonResponse(200, LOCKED_SUMMARY));
       if (url.startsWith('/api/admin/periods/')) return Promise.resolve(jsonResponse(200, { items: [personRow({ ...PERSON })], next_cursor: null }));
       if (url === '/api/admin/requests/r-1') return Promise.resolve(jsonResponse(200, deliveryView()));
       return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null, unread_count: 0 }));

@@ -10,18 +10,22 @@ export function Stepper({
   max = Infinity,
   onChange,
   label,
+  inputLabel,
   className,
   describedBy,
   invalid = false,
+  disabled = false,
 }: {
   value: number;
   min?: number;
   max?: number;
   onChange: (value: number) => void;
   label: string;
+  inputLabel?: string;
   className?: string;
   describedBy?: string;
   invalid?: boolean;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState<string | null>(null);
@@ -40,7 +44,7 @@ export function Stepper({
       <button
         type="button"
         aria-label={t('common.stepper.decrease', { label })}
-        disabled={value <= min}
+        disabled={disabled || value <= min}
         onClick={() => set(value - 1)}
       >
         −
@@ -49,11 +53,12 @@ export function Stepper({
         type="number"
         inputMode="numeric"
         className="num"
-        aria-label={label}
+        aria-label={inputLabel ?? label}
         aria-describedby={describedBy}
         aria-invalid={invalid || undefined}
         min={min}
         max={Number.isFinite(max) ? max : undefined}
+        disabled={disabled}
         value={draft ?? value}
         onChange={(e) => type(e.target.value)}
         onBlur={() => setDraft(null)}
@@ -61,7 +66,7 @@ export function Stepper({
       <button
         type="button"
         aria-label={t('common.stepper.increase', { label })}
-        disabled={value >= max}
+        disabled={disabled || value >= max}
         onClick={() => set(value + 1)}
       >
         +

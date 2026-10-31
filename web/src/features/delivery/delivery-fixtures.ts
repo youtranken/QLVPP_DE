@@ -1,5 +1,7 @@
 import { lineView } from '@/test/fixtures-request';
-import type { AdminRequestView, PersonRow } from '@/features/summary/summary.api';
+import type { AdminItem } from '@/features/catalog/catalog.api';
+import { adminItem } from '@/features/summary/adjust-fixtures';
+import type { AdminRequestView, PeriodSummary, PersonRow } from '@/features/summary/summary.api';
 
 const item = (name: string, unit: string) => ({
   name,
@@ -48,3 +50,21 @@ export function personRow(over: Partial<PersonRow> = {}): PersonRow {
     ...over,
   };
 }
+
+export const deliveryItems = (stock: Record<string, number> = {}): AdminItem[] => [
+  adminItem({ id: 'i-pen', name: 'Bút bi xanh', unit: 'cay', stock_qty: stock['i-pen'] ?? 10, stock_state: 'ok' }),
+  adminItem({ id: 'i-note', name: 'Giấy note vàng', unit: 'bich', stock_qty: stock['i-note'] ?? 10, stock_state: 'ok' }),
+];
+
+export const LOCKED_SUMMARY: PeriodSummary = {
+  ym: '2026-10',
+  deadline: '2026-10-10T17:00:00.000Z',
+  is_open: false,
+  registered: 18,
+  headcount: 20,
+  headcount_source: 'snapshot',
+  unregistered: 2,
+  lines_pending_delivery: 5,
+  custom_pending: 1,
+  low_stock: 0,
+};

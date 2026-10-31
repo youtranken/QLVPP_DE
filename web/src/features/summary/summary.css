@@ -1,5 +1,0 @@
-/* Còn dùng ở Giao hàng (DeliveryBar, "Xem thêm") tới khi Giao hàng port sang M1 */
-.sm-delivery { display: inline-flex; align-items: center; gap: 8px; }
-.sm-bar { width: 72px; height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; flex: none; }
-.sm-bar i { display: block; height: 100%; background: var(--brand); }
-.sm-more { margin: 10px auto; display: flex; }

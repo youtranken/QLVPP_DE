@@ -9,6 +9,10 @@ export interface DeliverBody {
   expected_delivered_qty: number;
 }
 
+export interface DeliverResult {
+  request_complete?: boolean;
+}
+
 export interface DeliverAllFailure {
   line_id: string;
   code: string;
@@ -25,9 +29,15 @@ export const BACKLOG_KEY = ['backlog'] as const;
 // Cùng luật EFFECTIVE_LINE/REMAINING_QTY của api: chờ xem/từ chối không giao
 export const isDeliverable = (l: LineView) => ['n/a', 'accepted', 'converted'].includes(l.review_status);
 export const remainingOf = (l: LineView) => l.qty - l.delivered_qty - l.cancelled_qty;
+export const isComplete = (lines: LineView[]) => lines.filter(isDeliverable).every((l) => remainingOf(l) <= 0);
+
+// Chỉ để kẹp nút (D4): server STOCK_INSUFFICIENT/DELIVER_EXCEEDS_QTY mới là chuẩn; món ngoài DM không có tồn
+export function deliverMax(remaining: number, stock: number | null, cap?: number): number {
+  return Math.max(0, Math.min(remaining, stock ?? remaining, cap ?? remaining));
+}
 
 export const deliverLine = (lineId: string, body: DeliverBody, csrfToken: string | null) =>
-  apiFetch<unknown>(`/api/admin/lines/${lineId}/deliver`, { method: 'POST', body: JSON.stringify(body), csrfToken });
+  apiFetch<DeliverResult>(`/api/admin/lines/${lineId}/deliver`, { method: 'POST', body: JSON.stringify(body), csrfToken });
 
 export const deliverAll = (requestId: string, csrfToken: string | null) =>
   apiFetch<DeliverAllResult>(`/api/admin/requests/${requestId}/deliver-all`, { method: 'POST', csrfToken });

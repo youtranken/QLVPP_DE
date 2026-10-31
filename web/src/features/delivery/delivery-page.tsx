@@ -1,121 +1,100 @@
-import { useId, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { YM, shiftYm } from '@/lib/ym';
+import { shiftYm } from '@/lib/ym';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
+import { PageHeader } from '@/ui/page-header';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
-import { DeliveryBar } from '@/features/summary/delivery-bar';
-import { useAdminRequest, usePersonRows, type PersonRow } from '@/features/summary/summary.api';
-import { isDeliverable } from './delivery.api';
-import { DeliveryRequest } from './delivery-request';
-import '@/features/admin/admin.css';
-import '@/features/summary/summary.css';
-import './delivery.css';
+import { DeliveryDetail } from './delivery-detail';
+import { DeliveryList } from './delivery-list';
+import { DeliveryStrip } from './delivery-strip';
+import { useDeliveryBoard } from './use-delivery-board';
+import { useDeliveryParams } from './use-delivery-params';
+import './delivery.m1.css';
 
-// Phiếu đang mở mà vừa giao đủ thì rời bộ lọc "còn cần giao": giữ lại hàng để Hành chính thấy kết quả
-function useStickyRows(rows: PersonRow[], opened: Set<string>): PersonRow[] {
-  const seen = useRef(new Map<string, PersonRow>());
-  for (const r of rows) seen.current.set(r.request_id, r);
-  const ids = new Set(rows.map((r) => r.request_id));
-  const kept = [...opened].filter((id) => !ids.has(id)).flatMap((id) => seen.current.get(id) ?? []);
-  return [...rows, ...kept];
-}
-
-function RequestRow({ row, open, onToggle }: { row: PersonRow; open: boolean; onToggle: () => void }) {
+function NothingToDeliver({ month, showAll }: { month: number; showAll: boolean }) {
   const { t } = useTranslation();
-  const panelId = useId();
-  const view = useAdminRequest(row.request_id, open).data;
-  const name = row.full_name ?? row.email ?? row.user_sub;
-  const effective = view?.lines.filter(isDeliverable);
-  const done = effective ? effective.reduce((s, l) => s + l.delivered_qty, 0) : row.delivered_qty;
-  const total = effective ? effective.reduce((s, l) => s + l.qty - l.cancelled_qty, 0) : row.total_qty - row.cancelled_qty;
+  if (showAll) return <EmptyState title={t('delivery.page.emptyAll')} />;
   return (
-    <li className={open ? 'dl-item is-open' : 'dl-item'}>
-      <div className="dl-head">
-        <button type="button" className="dl-toggle" aria-expanded={open} aria-controls={open ? panelId : undefined} onClick={onToggle}>
-          <span className="dl-chev" aria-hidden="true">
-            ›
-          </span>
-          <span className="dl-who">
-            <b>{name}</b>
-            <small>{row.department ?? t('delivery.noDepartment')}</small>
-          </span>
-        </button>
-        <DeliveryBar done={done} total={total} />
-      </div>
-      {open && (
-        <div id={panelId} className="dl-panel">
-          <DeliveryRequest requestId={row.request_id} name={name} />
-        </div>
-      )}
-    </li>
+    <EmptyState
+      art="nothing-deliver"
+      title={t('delivery.page.emptyTitle')}
+      hint={t('delivery.page.emptyHint', { month })}
+      action={
+        <Link className="btn" to="/admin/backlog">
+          {t('delivery.page.toBacklog')}
+        </Link>
+      }
+    />
   );
 }
 
-function RequestList({ ym, showAll, initialOpen }: { ym: string; showAll: boolean; initialOpen: string | null }) {
+function DeliveryBoard({ ym, p }: { ym: string; p: ReturnType<typeof useDeliveryParams> }) {
   const { t } = useTranslation();
-  const query = usePersonRows(ym, showAll ? 'all' : 'pending_delivery', '');
-  const [opened, setOpened] = useState(() => new Set(initialOpen ? [initialOpen] : []));
-  const rows = useStickyRows(query.data?.pages.flatMap((p) => p.items) ?? [], opened);
-  const toggle = (id: string) =>
-    setOpened((s) => {
-      const next = new Set(s);
-      if (!next.delete(id)) next.add(id);
-      return next;
-    });
-
-  if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
-  if (query.isPending) return <Loading />;
-  if (rows.length === 0) return <EmptyState title={t(showAll ? 'delivery.emptyAll' : 'delivery.empty')} />;
+  const b = useDeliveryBoard(ym, p);
+  const month = monthOf(ym);
+  const { source } = b;
+  if (source.isError) return <LoadError onRetry={() => void source.refetch()} />;
+  if (source.isPending) return <Loading />;
+  const serverCount = source.data.pages.reduce((n, pg) => n + pg.items.length, 0);
   return (
     <>
-      <ul className="dl-list" aria-label={t('delivery.requests')} aria-busy={query.isPlaceholderData}>
-        {rows.map((r) => (
-          <RequestRow key={r.request_id} row={r} open={opened.has(r.request_id)} onToggle={() => toggle(r.request_id)} />
-        ))}
-      </ul>
-      {query.hasNextPage && (
-        <button type="button" className="btn admin-more sm-more" disabled={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
-          {t('delivery.more')}
-        </button>
+      <DeliveryStrip ym={ym} pendingCount={b.pendingCount} />
+      {b.rows.length === 0 ? (
+        <NothingToDeliver month={month} showAll={p.showAll} />
+      ) : (
+        <div className="dv-split">
+          <DeliveryList
+            month={month}
+            rows={b.rows}
+            count={serverCount}
+            showAll={p.showAll}
+            selectedId={p.requestId}
+            leaving={b.leaving}
+            busy={source.isPlaceholderData}
+            more={source.hasNextPage ? { loading: source.isFetchingNextPage, onMore: () => void source.fetchNextPage() } : undefined}
+            onShowAll={p.setShowAll}
+            onSelect={(id) => p.select(id)}
+          />
+          {p.requestId ? (
+            <DeliveryDetail key={p.requestId} requestId={p.requestId} onCompleted={b.onCompleted} />
+          ) : (
+            <p className="dv-pick">{t('delivery.page.pick')}</p>
+          )}
+        </div>
       )}
     </>
   );
 }
 
-// Chỉ kỳ đã khóa mới giao được: mặc định và trần là tháng ngay trước kỳ đang mở
 export function DeliveryPage() {
   const { t } = useTranslation();
-  const [params, setParams] = useSearchParams();
   const current = useCurrentPeriod();
-  const [showAll, setShowAll] = useState(false);
-  const maxYm = current.data ? shiftYm(current.data.ym, -1) : undefined;
-  const asked = params.get('ym');
-  const ym = asked && maxYm && YM.test(asked) && asked <= maxYm ? asked : maxYm;
+  const lockedYm = current.data ? shiftYm(current.data.ym, -1) : undefined;
+  const p = useDeliveryParams(lockedYm);
+  const title = t('delivery.page.title');
+  const header = (actions?: ReactNode) => (
+    <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('delivery.page.description')} actions={actions} />
+  );
 
-  if (current.isError) return <LoadError onRetry={() => void current.refetch()} />;
-  if (!ym || !maxYm) return <Loading />;
+  if (current.isError) return <>{header()}<LoadError onRetry={() => void current.refetch()} /></>;
+  if (!p.ym || !lockedYm) return <>{header()}<Loading /></>;
+  const ym = p.ym;
   return (
-    <div className="a-stack">
-      <div className="a-toolbar dl-tools">
+    <div className="dv-page">
+      {header(
         <MonthSwitcher
           value={ym}
-          max={maxYm}
-          onChange={(v) => setParams({ ym: v })}
+          max={lockedYm}
+          onChange={p.setMonth}
+          status={{ tone: 'dark', label: t('delivery.page.locked') }}
           formatLabel={(v) => t('delivery.month', { month: monthOf(v), year: v.slice(0, 4) })}
-          labels={{ group: t('delivery.monthNav'), prev: t('delivery.prevMonth'), next: t('delivery.nextMonth') }}
-        />
-        <span className="sp" />
-        <label className="dl-switch">
-          <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
-          {t('delivery.showAll')}
-        </label>
-      </div>
-      <section className="a-panel">
-        <RequestList key={ym} ym={ym} showAll={showAll} initialOpen={params.get('request')} />
-      </section>
+          labels={{ group: t('delivery.page.monthNav'), prev: t('delivery.page.prevMonth'), next: t('delivery.page.nextMonth') }}
+        />,
+      )}
+      <DeliveryBoard key={ym} ym={ym} p={p} />
     </div>
   );
 }

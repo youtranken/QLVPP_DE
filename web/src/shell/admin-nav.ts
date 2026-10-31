@@ -21,7 +21,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     pages: [
       { path: 'summary', titleKey: 'nav.summary', icon: 'dash', ownHeader: true },
       { path: 'review', titleKey: 'nav.review', icon: 'pkgplus', badge: 'review', ownHeader: true },
-      { path: 'delivery', titleKey: 'nav.delivery', icon: 'truck', badge: 'delivery' },
+      { path: 'delivery', titleKey: 'nav.delivery', icon: 'truck', badge: 'delivery', ownHeader: true },
       { path: 'backlog', titleKey: 'nav.backlog', icon: 'receipt' },
       { path: 'reports', titleKey: 'nav.reports', icon: 'printer' },
     ],
