@@ -42,6 +42,7 @@ export function stubBacklog(initial: BacklogLine[], handlers: Handlers = {}) {
       return res;
     }
     if (u.pathname.endsWith('/deliveries')) return jsonResponse(200, { line: { id: lineId, qty: 5, delivered_qty: 2, cancelled_qty: 0, cancel_note: null }, items: [] });
+    if (u.pathname === '/api/admin/items' || u.pathname === '/api/item-categories') return jsonResponse(200, []);
     return jsonResponse(200, { items: [] });
   });
   vi.stubGlobal('fetch', fetchMock);

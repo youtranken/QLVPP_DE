@@ -1,4 +1,5 @@
 import { Icon } from '@/ui/icon';
+import './delivery.m1.css';
 
 // Bỏ từ không bắt đầu bằng chữ (vd "(demo)") để không ra "B("
 function initialsOf(name: string): string {

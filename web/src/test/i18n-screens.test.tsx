@@ -85,7 +85,7 @@ describe('Song ngữ các màn Plan 3', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Outstanding' })).toBeInTheDocument();
     expect(await screen.findAllByText('Blue pen')).not.toHaveLength(0);
     noVietnamese();
-    await userEvent.click(screen.getAllByRole('button', { name: /^Cancel rest/ })[0]);
+    await userEvent.click(screen.getAllByRole('button', { name: /^Cancel debt/ })[0]);
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
     noVietnamese();
   });

@@ -64,10 +64,10 @@ async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
 
 async function backlogByItem(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/backlog');
-  await expect(admin.getByRole('button', { name: 'Theo món' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(admin.getByRole('region', { name: s.paper.name }).getByText('còn 2 cái')).toBeVisible();
-  await expect(admin.getByRole('region', { name: s.clip.name }).getByText('còn 3 cái')).toBeVisible();
-  await expect(admin.getByRole('region', { name: s.pen.name })).toHaveCount(0);
+  await expect(admin.getByRole('radio', { name: 'Theo món' })).toBeChecked();
+  await expect(admin.getByRole('rowheader', { name: new RegExp(s.paper.name) })).toContainText('còn 2 cái');
+  await expect(admin.getByRole('rowheader', { name: new RegExp(s.clip.name) })).toContainText('còn 3 cái');
+  await expect(admin.getByRole('rowheader', { name: new RegExp(s.pen.name) })).toHaveCount(0);
   await axe390(admin, info);
   await snap(admin, info, 'p3-backlog');
 }
@@ -131,8 +131,8 @@ async function purchaseAndDeliverMore(admin: Page, info: TestInfo, s: MonthSeed)
   await expect(purchase).toBeHidden();
 
   await admin.goto('/admin/backlog');
-  const group = admin.getByRole('region', { name: s.paper.name });
-  await group.getByRole('listitem').filter({ hasText: s.a.name }).getByRole('button', { name: 'Giao bổ sung…' }).click();
+  const group = admin.getByRole('rowheader', { name: new RegExp(s.paper.name) });
+  await admin.getByRole('row').filter({ hasText: s.a.name }).getByRole('button', { name: 'Giao bổ sung…' }).click();
   const dialog = admin.getByRole('dialog', { name: `Giao bổ sung ${s.paper.name} cho ${s.a.name}` });
   await expect(dialog.getByLabel('Số lượng giao')).toHaveValue('2');
   await dialog.getByRole('button', { name: 'Giao', exact: true }).click();
@@ -174,10 +174,10 @@ async function reopenSnapshot(admin: Page, s: MonthSeed, snapshotId: string) {
 
 async function cancelClip(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/backlog');
-  const group = admin.getByRole('region', { name: s.clip.name });
-  await group.getByRole('listitem').filter({ hasText: s.b.name }).getByRole('button', { name: 'Hủy nợ…' }).click();
+  const group = admin.getByRole('rowheader', { name: new RegExp(s.clip.name) });
+  await admin.getByRole('row').filter({ hasText: s.b.name }).getByRole('button', { name: 'Hủy nợ…' }).click();
   const dialog = admin.getByRole('dialog', { name: `Hủy 3 cái còn lại của ${s.b.name}?` });
-  await dialog.getByLabel('Lý do hủy nợ').fill('Không mua được');
+  await dialog.getByRole('textbox', { name: /^Lý do hủy nợ/ }).fill('Không mua được');
   await axe390(admin, info);
   await dialog.getByRole('button', { name: 'Hủy nợ', exact: true }).click();
   await expect(dialog).toHaveCount(0);

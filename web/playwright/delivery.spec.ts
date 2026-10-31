@@ -113,9 +113,10 @@ test.describe('E9-S3 Giao hàng (kỳ trước đã khóa, dev-identity admin)',
       expect(stockOf(a.id)).toBe(7);
 
       await page.goto('/admin/backlog?by=person');
-      const owed = page.getByRole('region', { name: seed.name });
-      await expect(owed.getByRole('listitem').filter({ hasText: a.name }).getByText('còn 2', { exact: true })).toBeVisible();
-      await expect(owed.getByRole('listitem').filter({ hasText: b.name }).getByText('còn 2', { exact: true })).toBeVisible();
+      await expect(page.getByRole('rowheader', { name: new RegExp(seed.name) })).toBeVisible();
+      const owed = (name: string) => page.getByRole('row').filter({ hasText: name }).filter({ has: page.getByRole('button', { name: 'Hủy nợ…' }) });
+      await expect(owed(a.name).getByText('còn 2 cái')).toBeVisible();
+      await expect(owed(b.name).getByText('còn 2 cái')).toBeVisible();
 
       await page.goto(`/admin/summary?ym=${seed.prevYm}`);
       await searchSummaryPeople(page, seed.tag);

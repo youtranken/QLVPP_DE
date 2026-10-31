@@ -35,14 +35,26 @@ describe('DeliveriesDrawer — lịch sử đợt giao của một dòng (chỉ 
       ]),
     );
     renderWithI18n(<DeliveriesDrawer line={backlogLine()} onClose={() => {}} />);
-    const dialog = screen.getByRole('dialog', { name: 'Lịch sử giao Bút bi xanh' });
+    const dialog = screen.getByRole('dialog', { name: 'Lịch sử giao Phạm Văn Đức' });
     const list = await within(dialog).findByRole('list', { name: 'Các đợt giao' });
     expect(within(list).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
-      '09:05 11/11 · 2 · Nguyễn Văn An',
-      '23:30 11/11 · 1 · local:sa',
+      'Giao 2 cây09:05 11/11 · Nguyễn Văn An',
+      'Giao 1 cây23:30 11/11 · local:sa',
     ]);
+    expect(within(dialog).getByText('Bút bi xanh · Tháng 10')).toBeInTheDocument();
+    expect(within(dialog).getByText('Đăng ký').nextSibling).toHaveTextContent('5');
+    expect(within(dialog).getByText('Đã giao').nextSibling).toHaveTextContent('3');
+    expect(within(dialog).getByText('Đã hủy').nextSibling).toHaveTextContent('2');
     expect(within(dialog).getByText('Đã hủy 2 — Hết mẫu, đổi loại khác')).toBeInTheDocument();
     expect(within(dialog).queryByRole('button', { name: /Hoàn tác/ })).toBeNull();
+  });
+
+  it('chưa hủy → thẻ thứ ba là "Còn nợ" = đăng ký − đã giao', async () => {
+    stub(deliveriesOf({ delivered_qty: 2 }, [round('d1', 2, '2026-11-11T02:05:00.000Z', 'An')]));
+    renderWithI18n(<DeliveriesDrawer line={backlogLine()} onClose={() => {}} />);
+    const owed = await screen.findByText('Còn nợ');
+    expect(owed.nextSibling).toHaveTextContent('3');
+    expect(screen.queryByText('Đã hủy')).toBeNull();
   });
 
   it('chưa có đợt nào, chưa hủy → "Chưa giao đợt nào", không có dòng hủy', async () => {

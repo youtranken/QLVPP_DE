@@ -1,84 +1,67 @@
-import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { EmptyState, Loading, LoadError } from '@/ui/load-state';
-import { BACKLOG_BY, parseBy, useBacklog, type BacklogBy, type BacklogLine } from './backlog.api';
-import { BacklogGroup, type LineAction } from './backlog-group';
+import { FilterNotice } from '@/ui/filter-notice';
+import { LoadError } from '@/ui/load-state';
+import { PageHeader } from '@/ui/page-header';
+import { Segmented } from '@/ui/segmented';
+import { useBacklog, type BacklogBy } from './backlog.api';
+import { BacklogStats } from './backlog-stats';
+import { BacklogTable, type LineAction } from './backlog-table';
+import { applyFilter, backlogStats, flatten, type BacklogRow } from './backlog-rows';
 import { CancelDialog } from './cancel-dialog';
 import { DeliverMoreDialog } from './deliver-more-dialog';
 import { DeliveriesDrawer } from './deliveries-drawer';
 import { useRefreshAfterDelivery } from './delivery.api';
+import { useBacklogParams } from './use-backlog-params';
 import '@/features/admin/admin.css';
-import './delivery.css';
+import './backlog.m1.css';
 
-const NOTICES = new Set(['STALE_UPDATE', 'PERIOD_NOT_LOCKED', 'LINE_NOT_REVIEWED', 'LINE_REJECTED', 'LINE_NOT_FOUND', 'REQUEST_NOT_FOUND', 'NOTHING_LEFT']);
-
-const BY_LABEL: Record<BacklogBy, string> = { item: 'delivery.backlog.byItem', person: 'delivery.backlog.byPerson' };
-
-function BySwitch({ by, onChange }: { by: BacklogBy; onChange: (by: BacklogBy) => void }) {
-  const { t } = useTranslation();
-  return (
-    <div className="bl-switch" role="group" aria-label={t('delivery.backlog.by')}>
-      {BACKLOG_BY.map((b) => (
-        <button key={b} type="button" className="btn bl-by" aria-pressed={by === b} onClick={() => onChange(b)}>
-          {t(BY_LABEL[b])}
-        </button>
-      ))}
-    </div>
-  );
+// Dòng đang thao tác lấy theo dữ liệu mới nhất; dòng hết nợ (rời danh sách) giữ bản lúc mở để hộp thoại không vỡ
+function useOpenLine(rows: BacklogRow[]) {
+  const [open, setOpen] = useState<{ action: LineAction; line: BacklogRow } | null>(null);
+  const line = open ? (rows.find((r) => r.id === open.line.id) ?? open.line) : null;
+  return {
+    action: open?.action,
+    line,
+    start: (action: LineAction, row: BacklogRow) => setOpen({ action, line: row }),
+    close: () => setOpen(null),
+  };
 }
 
 export function BacklogPage() {
   const { t } = useTranslation();
-  const [params, setParams] = useSearchParams();
-  const by = parseBy(params.get('by'));
-  const query = useBacklog(by);
+  const p = useBacklogParams();
+  const query = useBacklog(p.by);
   const refresh = useRefreshAfterDelivery();
-  const [open, setOpen] = useState<{ action: LineAction; line: BacklogLine } | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const close = () => setOpen(null);
+  const all = useMemo(() => flatten(query.data?.groups ?? []), [query.data]);
+  const rows = useMemo(() => applyFilter(all, p.filter), [all, p.filter]);
+  const open = useOpenLine(all);
+  const title = t('delivery.backlog.title');
+  const reload = () => open.line && void refresh(open.line.request_id);
   const done = async () => {
-    if (open) await refresh(open.line.request_id);
-    close();
+    if (open.line) await refresh(open.line.request_id);
+    open.close();
   };
-  // Lỗi trạng thái (vừa giao/hủy ở nơi khác, kỳ chưa khóa…): bản đang xem đã cũ → tải lại cả danh sách
-  const onNotice = (code: string) => {
-    setNotice(code);
-    reloadOpen();
-    close();
-  };
-  const reloadOpen = () => {
-    if (open) void refresh(open.line.request_id);
-  };
-  const act = (action: LineAction, line: BacklogLine) => {
-    setNotice(null);
-    setOpen({ action, line });
-  };
-  const groups = query.data?.groups ?? [];
+  const views = [
+    { value: 'item' as BacklogBy, label: t('delivery.backlog.byItem') },
+    { value: 'person' as BacklogBy, label: t('delivery.backlog.byPerson') },
+  ];
 
   return (
-    <div className="a-stack">
-      <div className="a-toolbar">
-        <BySwitch by={by} onChange={(b) => setParams({ by: b })} />
-      </div>
-      {notice && (
-        <p role="alert" className="alert alert--warn">
-          {t(`delivery.backlog.notice.${NOTICES.has(notice) ? notice : 'UNKNOWN'}`)}
-        </p>
-      )}
+    <div className="bl-page">
+      <PageHeader
+        crumbs={[t('nav.groups.monthly'), title]}
+        title={title}
+        description={t('delivery.backlog.description')}
+        actions={<Segmented label={t('delivery.backlog.by')} value={p.by} options={views} onChange={p.setBy} />}
+      />
       {query.isError && <LoadError onRetry={() => void query.refetch()} />}
-      {query.isPending && <Loading />}
-      {query.isSuccess && groups.length === 0 && (
-        <section className="a-panel">
-          <EmptyState title={t('delivery.backlog.empty')} hint={t('delivery.backlog.emptyHint')} />
-        </section>
-      )}
-      {groups.map((g) => (
-        <BacklogGroup key={g.key} group={g} by={by} onAction={act} />
-      ))}
-      {open?.action === 'deliver' && <DeliverMoreDialog line={open.line} onDone={done} onNotice={onNotice} onStale={reloadOpen} onClose={close} />}
-      {open?.action === 'cancel' && <CancelDialog line={open.line} onDone={done} onNotice={onNotice} onClose={close} />}
-      {open?.action === 'history' && <DeliveriesDrawer line={open.line} onClose={close} />}
+      {query.isSuccess && <BacklogStats stats={backlogStats(all)} filter={p.filter} onFilter={p.toggleFilter} />}
+      {p.filter && <FilterNotice label={t(`delivery.backlog.filters.${p.filter}`)} count={rows.length} onClear={p.clearFilter} />}
+      {!query.isError && <BacklogTable rows={rows} by={p.by} loading={query.isPending} filtered={p.filter !== null} onAction={open.start} />}
+      {open.line && open.action === 'deliver' && <DeliverMoreDialog line={open.line} onDone={done} onStale={reload} onClose={open.close} />}
+      {open.line && open.action === 'cancel' && <CancelDialog line={open.line} onDone={done} onStale={reload} onClose={open.close} />}
+      {open.line && open.action === 'history' && <DeliveriesDrawer line={open.line} onClose={open.close} />}
     </div>
   );
 }
