@@ -38,11 +38,12 @@ export class AuditQueryService {
     const conds = [
       q.actor ? sql`a.actor = ${q.actor}` : null,
       q.action ? sql`a.action = ${q.action}` : null,
+      // ::timestamp bắt buộc: date AT TIME ZONE ngầm đổi sang timestamptz theo UTC → lệch 7 giờ
       q.from
-        ? sql`a.created_at >= (${q.from}::date AT TIME ZONE 'Asia/Ho_Chi_Minh')`
+        ? sql`a.created_at >= (${q.from}::date::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh')`
         : null,
       q.to
-        ? sql`a.created_at < ((${q.to}::date + 1) AT TIME ZONE 'Asia/Ho_Chi_Minh')`
+        ? sql`a.created_at < ((${q.to}::date + 1)::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh')`
         : null,
       q.self === undefined ? null : selfCondition(q.self),
       q.cursor ? this.afterCursor(q.cursor) : null,

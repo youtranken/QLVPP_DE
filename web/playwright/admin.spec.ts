@@ -87,11 +87,10 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     await expect(forbidden.getByText(`Liên hệ ${contact} để được thêm vào nhóm.`)).toBeVisible();
     await guest.close();
 
-    await page.goto('/admin/audit');
+    await page.goto('/admin/audit?action=config.updated');
     await expect(page.getByRole('heading', { level: 1, name: 'Nhật ký' })).toBeVisible();
-    await page.getByLabel('Hành động').fill('config.updated');
-    await page.getByRole('button', { name: 'Lọc', exact: true }).click();
-    const entry = page.getByRole('row').filter({ hasText: contact }).first();
+    const entry = page.getByRole('row').filter({ has: page.getByRole('button', { name: /^(Xem|Thu)$/ }) }).first();
+    await entry.getByRole('button', { name: 'Xem', exact: true }).click();
     await expect(entry.getByText(`Sau: {"admin_contact":"${contact}"}`)).toBeVisible();
     await expect(entry.getByText('Trước: {"admin_contact":')).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);

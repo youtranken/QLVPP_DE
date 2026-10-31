@@ -39,7 +39,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     labelKey: 'nav.groups.system',
     pages: [
       { path: 'users', titleKey: 'users.title', icon: 'users', ownHeader: true },
-      { path: 'audit', titleKey: 'audit.title', icon: 'scroll' },
+      { path: 'audit', titleKey: 'audit.title', icon: 'scroll', ownHeader: true },
       { path: 'config', titleKey: 'config.title', icon: 'sliders' },
     ],
   },

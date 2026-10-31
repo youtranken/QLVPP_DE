@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
@@ -17,6 +17,7 @@ const row = (id: string, over: Record<string, unknown> = {}) => ({
 });
 
 const BINH = { sub: 'u-binh', fullName: 'Lê Thị Bình', email: 'binh@pmh.com.vn', department: 'Hành chính', status: 'locked' };
+const audit400 = (fields: string[]) => jsonResponse(400, { statusCode: 400, code: 'VALIDATION', message: 'x', fields });
 
 function stubApi() {
   const fetchMock = vi.fn((url: string) => {
@@ -34,89 +35,194 @@ function stubApi() {
 const auditUrls = (m: ReturnType<typeof stubApi>) =>
   m.mock.calls.map(([u]) => new URL(String(u), 'http://x')).filter((u) => u.pathname === '/api/admin/audit');
 
-async function openAudit() {
+async function openAudit(path = '/admin/audit') {
   mockViewport(1280);
-  renderApp(makeMe('admin'), '/admin/audit');
-  await screen.findAllByText('Sửa cấu hình');
+  renderApp(makeMe('admin'), path);
+  await within(await screen.findByRole('table')).findAllByText('Sửa cấu hình');
 }
 
-describe('AuditPage', () => {
-  it('hiện thời gian, người, hành động và before/after dạng JSON gọn', async () => {
+const lastAudit = (m: ReturnType<typeof stubApi>) => auditUrls(m).at(-1)!.searchParams;
+const bodyRows = () => within(screen.getByRole('table')).getAllByRole('row');
+
+afterEach(() => vi.useRealTimers());
+
+describe('AuditPage B11', () => {
+  it('tự dựng đầu trang: đúng một h1, mô tả "Chỉ xem", giờ hh:mm:ss theo VN, số dòng', async () => {
     stubApi();
     await openAudit();
-    const first = screen.getAllByRole('row')[1];
-    expect(within(first).getByText('10:05 28/10/26')).toBeInTheDocument();
-    expect(within(first).getByText('Lê Thị Bình')).toBeInTheDocument();
-    expect(within(first).getByText('Trước: {"admin_contact":""}')).toBeInTheDocument();
-    expect(within(first).getByText('Sau: {"admin_contact":"chị Bình"}')).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { level: 1, name: 'Nhật ký' })).toHaveLength(1);
+    expect(screen.getByText(/Chỉ xem — không sửa hay xóa được/)).toBeInTheDocument();
+    expect(screen.getAllByText('10:05:00')).toHaveLength(2);
+    expect(screen.getByText('2+ dòng nhật ký')).toBeInTheDocument();
   });
 
-  it('"Xem thêm" tải trang kế bằng cursor; dòng không có before/after hiện JSON chi tiết', async () => {
+  it('nhóm theo ngày VN: 16:59:59.999 UTC cùng ngày, 17:00:00.000 UTC sang nhóm ngày mới', async () => {
+    const rows = [
+      row('n3', { createdAt: '2026-10-28T17:00:00.000Z' }),
+      row('n2', { createdAt: '2026-10-28T16:59:59.999Z' }),
+      row('n1', { createdAt: '2026-10-28T03:00:00.000Z' }),
+    ];
+    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items: rows, next_cursor: null } : { items: [], next_cursor: null }))));
+    await openAudit();
+    const groups = [...document.querySelectorAll('th[scope=rowgroup]')];
+    expect(groups).toHaveLength(2);
+    expect(groups[0]).toHaveTextContent('29/10/2026');
+    expect(groups[0]).toHaveTextContent('1 dòng');
+    expect(groups[1]).toHaveTextContent('28/10/2026');
+    expect(groups[1]).toHaveTextContent('2 dòng');
+  });
+
+  it('"Xem" mở Trước/Sau chỉ khóa khác nhau + JSON gọn + mã sự kiện; "Thu" đóng lại (aria-expanded)', async () => {
+    const detail = { before: { name: 'A', qty: 1, same: 'x' }, after: { name: 'B', qty: 1, same: 'x' }, self: true };
+    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items: [row('evt-1', { detail })], next_cursor: null } : { items: [], next_cursor: null }))));
+    await openAudit();
+    const btn = screen.getByRole('button', { name: 'Xem' });
+    expect(btn).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(btn);
+    expect(btn).toHaveAttribute('aria-expanded', 'true');
+    const diff = within(screen.getAllByRole('table')[1]);
+    expect(diff.getByRole('rowheader', { name: 'name' })).toBeInTheDocument();
+    expect(diff.queryByRole('rowheader', { name: 'qty' })).toBeNull();
+    expect(diff.queryByRole('rowheader', { name: 'same' })).toBeNull();
+    expect(diff.getByText('"A"')).toBeInTheDocument();
+    expect(diff.getByText('"B"')).toBeInTheDocument();
+    expect(screen.getByText('Mã sự kiện #evt-1')).toBeInTheDocument();
+    expect(screen.getByText('Trước: {"name":"A","qty":1,"same":"x"}')).toBeInTheDocument();
+    await userEvent.click(btn);
+    expect(btn).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByText('Mã sự kiện #evt-1')).toBeNull();
+  });
+
+  it('"Xem thêm" tải trang kế bằng cursor; hết trang → thông báo "Đã hiện hết…" và không còn nút', async () => {
     const fetchMock = stubApi();
     await openAudit();
+    expect(screen.queryByText('Đã hiện hết nhật ký trong khoảng lọc.')).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Xem thêm' }));
-    expect(await screen.findByText('Đăng nhập')).toBeInTheDocument();
+    expect(await within(screen.getByRole('table')).findByText('Đăng nhập')).toBeInTheDocument();
     expect(screen.getByText('local:sa')).toBeInTheDocument();
-    expect(screen.getByText('{"ip":"10.0.0.5"}')).toBeInTheDocument();
-    expect(auditUrls(fetchMock).at(-1)?.searchParams.get('cursor')).toBe('c2');
+    expect(lastAudit(fetchMock).get('cursor')).toBe('c2');
     expect(screen.queryByRole('button', { name: 'Xem thêm' })).toBeNull();
+    expect(screen.getByText('Đã hiện hết nhật ký trong khoảng lọc.')).toBeInTheDocument();
   });
 
-  it('lọc người/hành động/khoảng ngày → gửi actor, action, from, to', async () => {
+  it('lọc người/hành động/khoảng ngày → gửi actor, action, from, to và ghi vào URL', async () => {
     const fetchMock = stubApi();
     await openAudit();
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người thực hiện' }), 'Bình');
     await userEvent.click(await screen.findByRole('button', { name: /Lê Thị Bình/ }));
-    await userEvent.type(screen.getByLabelText('Hành động'), 'config.updated');
+    await userEvent.selectOptions(screen.getByLabelText('Hành động'), 'Sửa cấu hình');
     await userEvent.type(screen.getByLabelText('Từ ngày'), '2026-10-01');
     await userEvent.type(screen.getByLabelText('Đến ngày'), '2026-10-28');
     await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
-    await vi.waitFor(() => expect(auditUrls(fetchMock).at(-1)?.searchParams.get('actor')).toBe('u-binh'));
-    const last = auditUrls(fetchMock).at(-1)!.searchParams;
+    await vi.waitFor(() => expect(lastAudit(fetchMock).get('actor')).toBe('u-binh'));
+    const last = lastAudit(fetchMock);
     expect([last.get('action'), last.get('from'), last.get('to')]).toEqual(['config.updated', '2026-10-01', '2026-10-28']);
+    expect(screen.getByTestId('location-search')).toHaveTextContent('actor=u-binh&action=config.updated&from=2026-10-01&to=2026-10-28');
+    expect(screen.getByText(/Đang lọc: Bộ lọc nhật ký/)).toBeInTheDocument();
   });
 
-  it('Enter trong ô tìm người thực hiện áp dụng bộ lọc đang nhập', async () => {
+  it('Danh bạ dẫn tới ?actor=<sub>: gọi api với actor đó ngay khi vào và hiện tên người', async () => {
     const fetchMock = stubApi();
-    await openAudit();
-    await userEvent.type(screen.getByLabelText('Hành động'), 'item.created');
-    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người thực hiện' }), 'Bình{Enter}');
-    await vi.waitFor(() => expect(auditUrls(fetchMock).at(-1)?.searchParams.get('action')).toBe('item.created'));
+    await openAudit('/admin/audit?actor=u-binh');
+    expect(lastAudit(fetchMock).get('actor')).toBe('u-binh');
+    expect(await within(screen.getByRole('group', { name: 'Người thực hiện' })).findByText('Lê Thị Bình')).toBeInTheDocument();
   });
 
-  it('chọn người từ danh bạ (kể cả đã khóa) → actor=<sub> chính xác; "Xóa lọc" bỏ actor', async () => {
+  it('"Hệ thống (tự động)" lọc actor=system; "Xóa lọc" bỏ mọi khóa khỏi URL', async () => {
     const fetchMock = stubApi();
     await openAudit();
-    expect(screen.queryByRole('list', { name: 'Kết quả tìm người' })).toBeNull();
-    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người thực hiện' }), 'Bình');
-    await userEvent.click(await screen.findByRole('button', { name: /Lê Thị Bình/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Hệ thống (tự động)' }));
     await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
-    await vi.waitFor(() => expect(auditUrls(fetchMock).at(-1)?.searchParams.get('actor')).toBe('u-binh'));
-    await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
-    await vi.waitFor(() => expect(auditUrls(fetchMock).at(-1)?.searchParams.has('actor')).toBe(false));
-    expect(screen.getByRole('searchbox', { name: 'Tìm người thực hiện' })).toHaveValue('');
+    await vi.waitFor(() => expect(lastAudit(fetchMock).get('actor')).toBe('system'));
+    await userEvent.click(screen.getAllByRole('button', { name: 'Xóa lọc' })[0]);
+    await vi.waitFor(() => expect(lastAudit(fetchMock).has('actor')).toBe(false));
+    expect(screen.getByTestId('location-search')).not.toHaveTextContent('actor=');
   });
 
-  it('"Đến ngày" trước "Từ ngày" → lỗi gắn ô, không gọi lại server', async () => {
+  it('Enter trong ô tìm người áp dụng bộ lọc đang nhập', async () => {
+    const fetchMock = stubApi();
+    await openAudit();
+    await userEvent.selectOptions(screen.getByLabelText('Hành động'), 'Thêm món');
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người thực hiện' }), 'Bình{Enter}');
+    await vi.waitFor(() => expect(lastAudit(fetchMock).get('action')).toBe('item.created'));
+  });
+
+  it('"Đến ngày" sớm hơn "Từ ngày" 1 ngày → lỗi gắn ô, không gọi lại api; bằng nhau → gọi api', async () => {
     const fetchMock = stubApi();
     await openAudit();
     const before = auditUrls(fetchMock).length;
     await userEvent.type(screen.getByLabelText('Từ ngày'), '2026-10-20');
-    await userEvent.type(screen.getByLabelText('Đến ngày'), '2026-10-01');
+    await userEvent.type(screen.getByLabelText('Đến ngày'), '2026-10-19');
     await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
     expect(screen.getByLabelText('Đến ngày')).toHaveAccessibleDescription('“Đến ngày” phải bằng hoặc sau “Từ ngày”.');
     expect(auditUrls(fetchMock)).toHaveLength(before);
+    await userEvent.clear(screen.getByLabelText('Đến ngày'));
+    await userEvent.type(screen.getByLabelText('Đến ngày'), '2026-10-20');
+    await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
+    await vi.waitFor(() => expect(lastAudit(fetchMock).get('to')).toBe('2026-10-20'));
+    expect(lastAudit(fetchMock).get('from')).toBe('2026-10-20');
   });
 
-  it('mã hành động api mới hơn web hiện mã thô; nhãn đã biết có mã gốc trong title; gợi ý bộ lọc có nhãn', async () => {
-    const fetchMock = vi.fn((url: string) =>
-      Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items: [row('a1', { action: 'future.thing' }), row('a2', { action: 'line.delivered' })], next_cursor: null } : { items: [], next_cursor: null })),
-    );
-    vi.stubGlobal('fetch', fetchMock);
+  it('chip "Hôm nay" lúc 23:30 UTC gửi from = to = ngày kế tiếp theo giờ VN', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-28T23:30:00.000Z'));
+    const fetchMock = stubApi();
+    await openAudit();
+    await userEvent.click(screen.getByRole('button', { name: 'Hôm nay' }));
+    await vi.waitFor(() => expect(lastAudit(fetchMock).get('from')).toBe('2026-10-29'));
+    expect(lastAudit(fetchMock).get('to')).toBe('2026-10-29');
+    expect(screen.getByRole('button', { name: 'Hôm nay' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('chip tháng ghi "Tháng 10/2026" và gửi cả tháng; chip "Đăng nhập bị từ chối" lọc ngay theo hành động', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-28T05:00:00.000Z'));
+    const fetchMock = stubApi();
+    await openAudit();
+    await userEvent.click(screen.getByRole('button', { name: 'Tháng 10/2026' }));
+    await vi.waitFor(() => expect(lastAudit(fetchMock).get('from')).toBe('2026-10-01'));
+    expect(lastAudit(fetchMock).get('to')).toBe('2026-10-31');
+    await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập bị từ chối' }));
+    await vi.waitFor(() => expect(lastAudit(fetchMock).get('action')).toBe('auth.login_denied_group'));
+    expect(lastAudit(fetchMock).get('from')).toBe('2026-10-01');
+  });
+
+  it('api trả VALIDATION fields [to] → lỗi gắn ô "Đến ngày", không hiện lỗi tải chung', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(url.startsWith('/api/admin/audit') ? audit400(['to']) : jsonResponse(200, { items: [], next_cursor: null }))));
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/audit?to=2026-02-30');
+    await vi.waitFor(() => expect(screen.getByLabelText('Đến ngày')).toHaveAccessibleDescription('Ngày không hợp lệ.'));
+    expect(screen.queryByText('Không tải được dữ liệu — thử lại.')).toBeNull();
+  });
+
+  it('lỗi tải khác → "Không tải được dữ liệu — thử lại." + Thử lại', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(url.startsWith('/api/admin/audit') ? jsonResponse(500, { code: 'X' }) : jsonResponse(200, { items: [], next_cursor: null }))));
     mockViewport(1280);
     renderApp(makeMe('admin'), '/admin/audit');
+    expect(await screen.findByText('Không tải được dữ liệu — thử lại.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
+  });
+
+  it('rỗng có lọc: tiêu đề + gợi ý + "Xóa lọc"; hành động lạ trong URL vẫn là một lựa chọn', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }))));
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/audit?action=future.thing');
+    expect(await screen.findByText('Không có dòng nhật ký nào khớp bộ lọc.')).toBeInTheDocument();
+    expect(screen.getByText(/Nới khoảng ngày/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Hành động')).toHaveValue('future.thing');
+    expect(screen.queryByText('Đã hiện hết nhật ký trong khoảng lọc.')).toBeNull();
+  });
+
+  it('mã hành động api mới hơn web hiện mã thô; nhãn đã biết kèm mã gốc; không có before/after → cặp khóa–giá trị', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string) =>
+      Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items: [row('a1', { action: 'future.thing' }), row('a2', { action: 'line.delivered', detail: { ip: '10.0.0.5' } })], next_cursor: null } : { items: [], next_cursor: null })),
+    ));
+    await openAudit().catch(() => undefined);
     expect(await screen.findByText('future.thing')).toBeInTheDocument();
-    expect(within(screen.getByRole('table')).getByText('Giao hàng')).toHaveAttribute('title', 'line.delivered');
-    expect(document.querySelector('datalist option[value="line.cancel_remaining"]')).toHaveAttribute('label', 'Hủy nợ');
+    expect(within(screen.getAllByRole('table')[0]).getByText('Giao hàng')).toBeInTheDocument();
+    expect(within(screen.getAllByRole('table')[0]).getByText('line.delivered')).toBeInTheDocument();
+    await userEvent.click(screen.getAllByRole('button', { name: 'Xem' })[1]);
+    expect(screen.getByText('"10.0.0.5"')).toBeInTheDocument();
+    expect(bodyRows().length).toBeGreaterThan(2);
   });
 });

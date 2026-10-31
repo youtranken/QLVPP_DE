@@ -187,12 +187,13 @@ describe('Song ngữ các màn Plan 3', () => {
       ),
     );
     renderApp(ADMIN, '/admin/audit');
-    expect(await screen.findByText('Giao hàng')).toBeInTheDocument();
+    expect(await within(await screen.findByRole('table')).findByText('Giao hàng')).toBeInTheDocument();
     await english();
     const table = await screen.findByRole('table');
-    expect(within(table).getByText('Delivered')).toHaveAttribute('title', 'line.delivered');
+    expect(within(table).getByText('Delivered')).toBeInTheDocument();
+    expect(within(table).getByText('line.delivered')).toBeInTheDocument();
     expect(within(table).getByText('Backlog cancelled')).toBeInTheDocument();
-    expect(document.querySelector('datalist option[value="line.cancel_remaining"]')).toHaveAttribute('label', 'Backlog cancelled');
+    expect(document.querySelector('select option[value="line.cancel_remaining"]')).toHaveTextContent('Backlog cancelled');
     noVietnamese();
   });
 });

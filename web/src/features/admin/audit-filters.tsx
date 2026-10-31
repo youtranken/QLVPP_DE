@@ -1,78 +1,95 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormField } from '@/ui/form-field';
-import { NO_FILTERS, type AuditFilters } from '@/features/admin/admin.api';
-import { AUDIT_ACTIONS, auditActionLabel } from '@/features/admin/audit-actions';
+import { useDirectoryNames, type DirectoryUser } from '@/features/directory/directory.api';
 import { UserPicker } from '@/features/directory/user-picker';
-import type { DirectoryUser } from '@/features/directory/directory.api';
+import type { AuditFilters } from './admin.api';
+import { AUDIT_ACTIONS, auditActionLabel } from './audit-actions';
+import { dateRangeInvalid } from './audit-quick-ranges';
 
-const ACTIONS_LIST_ID = 'audit-action-options';
+const SYSTEM_ACTOR = 'system';
 
-// Server cũng chặn to < from (400); kiểm trước để lỗi gắn đúng ô thay vì báo tải lỗi chung
-export function AuditFilterBar({ onApply }: { onApply: (f: AuditFilters) => void }) {
+interface Props {
+  applied: AuditFilters;
+  serverError: { from: boolean; to: boolean };
+  onApply: (f: AuditFilters) => void;
+  onClear: () => void;
+}
+
+function useActorUser(sub: string): DirectoryUser | null {
   const { t } = useTranslation();
-  const [draft, setDraft] = useState<AuditFilters>(NO_FILTERS);
-  const [actor, setActor] = useState<DirectoryUser | null>(null);
-  // Đổi key để ô tìm người trống lại khi xóa lọc (ô giữ chữ đã gõ trong state riêng)
-  const [pickerKey, setPickerKey] = useState(0);
+  const names = useDirectoryNames().data;
+  return useMemo(() => {
+    if (!sub) return null;
+    const fullName = sub === SYSTEM_ACTOR ? t('audit.filters.system') : (names?.get(sub) ?? null);
+    return { sub, fullName, email: null, department: null, status: 'active' };
+  }, [sub, names, t]);
+}
+
+// Đổi key của form khi URL đổi để bản nháp luôn khớp bộ lọc đang áp dụng
+export function AuditFilterBar({ applied, serverError, onApply, onClear }: Props) {
+  const { t } = useTranslation();
+  const [draft, setDraft] = useState(applied);
   const [rangeError, setRangeError] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const actor = useActorUser(draft.actor);
   const set = (k: keyof AuditFilters, v: string) => setDraft((d) => ({ ...d, [k]: v }));
+  const known = AUDIT_ACTIONS.includes(draft.action);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const invalid = draft.from !== '' && draft.to !== '' && draft.to < draft.from;
+    const invalid = dateRangeInvalid(draft.from, draft.to);
     setRangeError(invalid);
-    if (!invalid) onApply({ ...draft, actor: actor?.sub ?? '', action: draft.action.trim() });
-  };
-
-  const clear = () => {
-    setDraft(NO_FILTERS);
-    setActor(null);
-    setPickerKey((k) => k + 1);
-    setRangeError(false);
-    onApply(NO_FILTERS);
+    if (!invalid) onApply(draft);
   };
 
   return (
-    <form ref={formRef} className="a-panel audit-filters" aria-label={t('audit.filters.label')} onSubmit={submit} noValidate>
-      <UserPicker
-        key={pickerKey}
-        label={t('audit.filters.actor')}
-        searchLabel={t('audit.filters.actorSearch')}
-        value={actor}
-        allowLocked
-        resultsWhenEmpty={false}
-        onChange={setActor}
-        onEnter={() => formRef.current?.requestSubmit()}
-      />
-      <FormField label={t('audit.filters.action')} hint={t('audit.filters.actionHint')}>
+    <form ref={formRef} className="au-filters" aria-label={t('audit.filters.label')} onSubmit={submit} noValidate>
+      <div className="au-actor">
+        <UserPicker
+          label={t('audit.filters.actor')}
+          searchLabel={t('audit.filters.actorSearch')}
+          value={actor}
+          allowLocked
+          resultsWhenEmpty={false}
+          onChange={(u) => set('actor', u?.sub ?? '')}
+          onEnter={() => formRef.current?.requestSubmit()}
+        />
+        {!draft.actor && (
+          <button type="button" className="btn btn--sm au-system" onClick={() => set('actor', SYSTEM_ACTOR)}>
+            {t('audit.filters.system')}
+          </button>
+        )}
+      </div>
+      <FormField label={t('audit.filters.action')}>
         {(p) => (
-          <>
-            <input {...p} list={ACTIONS_LIST_ID} value={draft.action} onChange={(e) => set('action', e.target.value)} />
-            <datalist id={ACTIONS_LIST_ID}>
-              {AUDIT_ACTIONS.map((a) => (
-                <option key={a} value={a} label={auditActionLabel(t, a)} />
-              ))}
-            </datalist>
-          </>
+          <select {...p} value={draft.action} onChange={(e) => set('action', e.target.value)}>
+            <option value="">{t('audit.filters.anyAction')}</option>
+            {draft.action !== '' && !known && <option value={draft.action}>{draft.action}</option>}
+            {AUDIT_ACTIONS.map((a) => (
+              <option key={a} value={a}>
+                {auditActionLabel(t, a)}
+              </option>
+            ))}
+          </select>
         )}
       </FormField>
-      <FormField label={t('audit.filters.from')}>
+      <FormField label={t('audit.filters.from')} error={serverError.from ? t('audit.filters.dateInvalid') : undefined}>
         {(p) => <input {...p} type="date" value={draft.from} onChange={(e) => set('from', e.target.value)} />}
       </FormField>
-      <FormField label={t('audit.filters.to')} error={rangeError ? t('audit.filters.rangeInvalid') : undefined}>
+      <FormField label={t('audit.filters.to')} error={rangeError ? t('audit.filters.rangeInvalid') : serverError.to ? t('audit.filters.dateInvalid') : undefined}>
         {(p) => <input {...p} type="date" value={draft.to} onChange={(e) => set('to', e.target.value)} />}
       </FormField>
-      <div className="audit-filter-actions">
+      <div className="au-filter-actions">
         <button type="submit" className="btn btn--primary">
           {t('audit.filters.apply')}
         </button>
-        <button type="button" className="btn" onClick={clear}>
+        <button type="button" className="btn btn--ghost" onClick={onClear}>
           {t('audit.filters.clear')}
         </button>
       </div>
     </form>
   );
 }
+
