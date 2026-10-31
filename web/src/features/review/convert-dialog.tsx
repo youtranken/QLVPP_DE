@@ -12,7 +12,6 @@ import { ConvertExisting } from './convert-existing';
 import { ConvertNewFields } from './convert-new-fields';
 import type { ReviewBody, ReviewableLine } from './review.api';
 import { reviewErrorKey } from './review-errors';
-import '@/features/catalog/catalog.css';
 
 type Mode = 'new' | 'existing';
 type ConvertItem = Extract<ReviewBody, { action: 'convert' }>['item'];

@@ -12,7 +12,7 @@ import { CatalogTable } from './catalog-table';
 import { CatalogToolbar } from './catalog-toolbar';
 import { CategoryChips } from './category-chips';
 import { BulkMaxDialog, BulkMoveDialog } from './bulk-dialogs';
-import { ItemForm } from './item-form';
+import { ItemDrawer } from './item-drawer';
 import { useBulkItems } from './use-bulk-items';
 import { useCatalogActions } from './use-catalog-actions';
 import { useCatalogParams } from './use-catalog-params';
@@ -50,6 +50,9 @@ export function CatalogPage() {
   const groupKeys = [...d.counts.keys()];
   const allCollapsed = groupKeys.length > 0 && groupKeys.every((k) => collapsed.has(k));
   const editing = p.itemId && p.itemId !== 'new' ? d.items.data?.find((i) => i.id === p.itemId) : undefined;
+  const visible = d.rows.filter((r) => !collapsed.has(r.group));
+  const at = editing ? visible.findIndex((r) => r.id === editing.id) : -1;
+  const stepTo = (k: number) => (at >= 0 && visible[k] ? () => p.openItemDrawer(visible[k].id) : undefined);
 
   const runBulk = async (body: Parameters<typeof bulk.run>[1], doneText: (n: number) => string) => {
     await bulk.run(orderedIds, body, doneText);
@@ -115,6 +118,7 @@ export function CatalogPage() {
         loading={!loaded}
         selection={bulk.selection}
         rowErrors={bulk.rowErrors}
+        activeRowId={editing?.id}
         collapsed={collapsed}
         onCollapsedChange={setCollapsed}
         onOpen={(id) => p.openItemDrawer(id)}
@@ -147,7 +151,15 @@ export function CatalogPage() {
         />
       )}
       {loaded && (p.itemId === 'new' || editing) && (
-        <ItemForm item={editing ?? null} categories={d.categories.data ?? []} categoryId={p.itemCategoryId} onClose={p.closeItemDrawer} />
+        <ItemDrawer
+          item={editing ?? null}
+          categories={d.categories.data ?? []}
+          rows={d.all}
+          defaultCategoryId={p.itemCategoryId}
+          onClose={p.closeItemDrawer}
+          onPrev={stepTo(at - 1)}
+          onNext={stepTo(at + 1)}
+        />
       )}
     </div>
   );

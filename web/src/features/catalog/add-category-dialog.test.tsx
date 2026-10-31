@@ -1,0 +1,80 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { jsonResponse, renderWithI18n, screen, userEvent, within } from '@/test/test-utils';
+import { makeMe } from '@/test/fixtures-me';
+import { MeContext } from '@/lib/me';
+import { ConfirmProvider } from '@/ui/confirm-provider';
+import { ToastProvider } from '@/ui/toast-provider';
+import type { Category } from './catalog.api';
+import { AddCategoryDialog } from './add-category-dialog';
+
+const cat = (id: string, sort_order: number, active = true): Category => ({ id, name: `Nhóm ${id}`, name_en: null, sort_order, active });
+
+function render(categories: Category[], reply: Response = jsonResponse(201, cat('new', 0))) {
+  const f = vi.fn(async () => reply);
+  vi.stubGlobal('fetch', f);
+  const onClose = vi.fn();
+  renderWithI18n(
+    <MeContext.Provider value={makeMe('admin')}>
+      <ToastProvider>
+        <ConfirmProvider>
+          <AddCategoryDialog categories={categories} onClose={onClose} />
+        </ConfirmProvider>
+      </ToastProvider>
+    </MeContext.Provider>,
+  );
+  return { f, onClose, dialog: within(screen.getByRole('dialog', { name: 'Thêm nhóm' })) };
+}
+
+afterEach(() => vi.unstubAllGlobals());
+
+describe('Hộp thoại Thêm nhóm', () => {
+  it('2 nhóm (1 đã ngừng) → "Nhóm mới đứng thứ 3 và nhận màu cát mật."', () => {
+    const { dialog } = render([cat('a', 10), cat('b', 20, false)]);
+    expect(dialog.getByText('Nhóm mới đứng thứ 3 và nhận màu cát mật.')).toBeInTheDocument();
+  });
+
+  it.each([
+    [6, 7, 'ô liu'],
+    [7, 8, 'xanh đá'],
+  ])('%d nhóm → đứng thứ %d, màu %s (từ nhóm thứ 8 lặp lại)', (n, k, tone) => {
+    const { dialog } = render(Array.from({ length: n }, (_, i) => cat(`c${i}`, (i + 1) * 10)));
+    expect(dialog.getByText(`Nhóm mới đứng thứ ${k} và nhận màu ${tone}.`)).toBeInTheDocument();
+  });
+
+  it('POST {name, name_en, sort_order: max+10} rồi đóng, toast "Đã thêm nhóm {tên}"', async () => {
+    const { f, onClose, dialog } = render([cat('a', 10), cat('b', 35, false)]);
+    expect(dialog.getByLabelText(/^Tên nhóm/)).toHaveAttribute('maxLength', '120');
+    await userEvent.type(dialog.getByLabelText(/^Tên nhóm/), ' Mực in ');
+    await userEvent.type(dialog.getByLabelText('Tên tiếng Anh'), 'Ink');
+    await userEvent.click(dialog.getByRole('button', { name: 'Thêm nhóm' }));
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
+    const call = f.mock.calls[0] as unknown as [string, RequestInit];
+    expect(call[0]).toBe('/api/admin/item-categories');
+    expect(JSON.parse(String(call[1].body))).toEqual({ name: 'Mực in', name_en: 'Ink', sort_order: 45 });
+    expect(await screen.findByText('Đã thêm nhóm Mực in')).toBeInTheDocument();
+  });
+
+  it('chưa có nhóm nào → sort_order 10', async () => {
+    const { f, dialog } = render([]);
+    await userEvent.type(dialog.getByLabelText(/^Tên nhóm/), 'Đầu tiên');
+    await userEvent.click(dialog.getByRole('button', { name: 'Thêm nhóm' }));
+    await vi.waitFor(() => expect(f).toHaveBeenCalled());
+    expect(JSON.parse(String((f.mock.calls[0] as unknown as [string, RequestInit])[1].body))).toMatchObject({ sort_order: 10 });
+  });
+
+  it('CATEGORY_EXISTS (trùng khác hoa thường) → "Đã có nhóm tên này." tại ô Tên nhóm', async () => {
+    const { dialog } = render([cat('a', 10)], jsonResponse(409, { code: 'CATEGORY_EXISTS', message: 'x' }));
+    await userEvent.type(dialog.getByLabelText(/^Tên nhóm/), 'nhóm A');
+    await userEvent.click(dialog.getByRole('button', { name: 'Thêm nhóm' }));
+    const input = dialog.getByLabelText(/^Tên nhóm/);
+    await vi.waitFor(() => expect(input).toHaveAccessibleDescription('Đã có nhóm tên này.'));
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('VALIDATION [name] → lỗi ô Tên nhóm', async () => {
+    const { dialog } = render([], jsonResponse(400, { code: 'VALIDATION', message: 'x', fields: ['name'] }));
+    await userEvent.type(dialog.getByLabelText(/^Tên nhóm/), 'x');
+    await userEvent.click(dialog.getByRole('button', { name: 'Thêm nhóm' }));
+    await vi.waitFor(() => expect(dialog.getByLabelText(/^Tên nhóm/)).toHaveAccessibleDescription('Kiểm tra lại giá trị này.'));
+  });
+});

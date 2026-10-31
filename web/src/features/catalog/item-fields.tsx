@@ -1,118 +1,81 @@
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormField } from '@/ui/form-field';
-import { categoryLabel, type Category } from '@/features/catalog/catalog.api';
-import type { FieldErrors } from '@/features/catalog/catalog-errors';
-import type { ItemDraft } from '@/features/catalog/item-draft';
-import { ImageField } from '@/features/catalog/image-field';
+import { Switch } from '@/ui/switch';
 import { UnitSelect } from '@/features/units/unit-select';
+import type { FieldErrors } from './catalog-errors';
+import type { CategoryIndex } from './catalog-rows';
+import { CategoryRadio } from './category-radio';
+import { ImageField } from './image-field';
+import type { ItemDraft } from './item-draft';
 
-// Trường món dùng chung cho form Danh mục và hộp "Thêm vào danh mục" của trang review
+const TEXT_MAX = 120;
+const CODE_MAX = 40;
+
+type OnChange = <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => void;
+
 export function ItemFields({
   draft,
   errors,
-  categories,
+  index,
   keepCategoryId,
-  withSortOrder = true,
   onChange,
   onUploadingChange,
 }: {
   draft: ItemDraft;
   errors: FieldErrors;
-  categories: Category[];
+  index: CategoryIndex;
   keepCategoryId?: string | null;
-  withSortOrder?: boolean;
-  onChange: <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => void;
+  onChange: OnChange;
   onUploadingChange: (busy: boolean) => void;
 }) {
-  const { t, i18n } = useTranslation();
-  const uid = useId();
-  const err = (k: string) => (errors[k] ? t(errors[k]) : undefined);
-  // Nhóm đã ngừng chỉ còn trong danh sách nếu món đang thuộc nhóm đó
-  const categoryOptions = categories.filter((c) => c.active || c.id === keepCategoryId);
+  const { t } = useTranslation();
+  const hintId = useId();
+  const err = (k: keyof ItemDraft) => (errors[k] ? t(errors[k]) : undefined);
+  const text = (key: 'code' | 'name' | 'name_en' | 'pack_note', label: string, opts: { max?: number; required?: boolean; hint?: string; placeholder?: string } = {}) => (
+    <FormField label={label} required={opts.required} hint={opts.hint} error={err(key)}>
+      {(p) => <input {...p} value={draft[key]} maxLength={opts.max ?? TEXT_MAX} placeholder={opts.placeholder} onChange={(e) => onChange(key, e.target.value)} />}
+    </FormField>
+  );
+  const number = (key: 'max_qty' | 'sort_order', label: string, opts: { required?: boolean; hint?: string; min?: number; max?: number } = {}) => (
+    <FormField label={label} required={opts.required} hint={opts.hint} error={err(key)}>
+      {(p) => (
+        <input {...p} type="number" inputMode="numeric" step={1} min={opts.min} max={opts.max} value={draft[key]} onChange={(e) => onChange(key, e.target.value)} />
+      )}
+    </FormField>
+  );
   return (
     <>
-      <div className="a-form-wide">
-        <ImageField
-          fileId={draft.image_file_id}
-          error={err('image_file_id')}
-          onChange={(id) => onChange('image_file_id', id)}
-          onBusyChange={onUploadingChange}
-        />
-      </div>
-      <FormField label={t('catalog.form.name')} error={err('name')}>
-        {(p) => <input {...p} value={draft.name} onChange={(e) => onChange('name', e.target.value)} />}
-      </FormField>
-      <FormField label={t('catalog.form.nameEn')} error={err('name_en')}>
-        {(p) => <input {...p} value={draft.name_en} onChange={(e) => onChange('name_en', e.target.value)} />}
-      </FormField>
-      <FormField label={t('catalog.form.unit')} error={err('unit')}>
+      <ImageField
+        fileId={draft.image_file_id}
+        error={err('image_file_id')}
+        required
+        tone={index.tone.get(draft.category_id) ?? 'g0'}
+        onChange={(id) => onChange('image_file_id', id)}
+        onBusyChange={onUploadingChange}
+      />
+      {text('code', t('catalog.form.code'), { max: CODE_MAX, hint: t('catalog.form.codeHint') })}
+      {text('name', t('catalog.form.name'), { required: true })}
+      {text('name_en', t('catalog.form.nameEn'))}
+      <FormField label={t('catalog.form.unit')} required error={err('unit')}>
         {(p) => <UnitSelect {...p} value={draft.unit} onValueChange={(v) => onChange('unit', v)} />}
       </FormField>
-      <FormField label={t('catalog.form.packNote')} error={err('pack_note')}>
-        {(p) => (
-          <input
-            {...p}
-            value={draft.pack_note}
-            placeholder={t('catalog.form.packNoteHint')}
-            onChange={(e) => onChange('pack_note', e.target.value)}
-          />
-        )}
-      </FormField>
-      <FormField label={t('catalog.form.category')} error={err('category_id')} className="a-form-wide">
-        {(p) => (
-          <select {...p} value={draft.category_id} onChange={(e) => onChange('category_id', e.target.value)}>
-            <option value="">{t('catalog.form.noCategory')}</option>
-            {categoryOptions.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.active ? categoryLabel(c, i18n.language) : t('catalog.form.inactiveCategory', { name: categoryLabel(c, i18n.language) })}
-              </option>
-            ))}
-          </select>
-        )}
-      </FormField>
-      <NumberField label={t('catalog.form.maxQty')} value={draft.max_qty} error={err('max_qty')} onChange={(v) => onChange('max_qty', v)} />
-      {withSortOrder && (
-        <NumberField
-          label={t('catalog.form.sortOrder')}
-          hint={t('catalog.form.sortOrderHint')}
-          value={draft.sort_order}
-          error={err('sort_order')}
-          onChange={(v) => onChange('sort_order', v)}
+      {text('pack_note', t('catalog.form.packNote'), { placeholder: t('catalog.form.packNoteHint') })}
+      <CategoryRadio index={index} value={draft.category_id} keepId={keepCategoryId} error={err('category_id')} onChange={(id) => onChange('category_id', id)} />
+      {number('max_qty', t('catalog.form.maxQty'), { required: true, min: 1, max: 999 })}
+      {number('sort_order', t('catalog.form.sortOrder'), { hint: t('catalog.form.sortOrderHint') })}
+      <div className="ct-switch-row">
+        <Switch
+          checked={draft.admin_only}
+          label={t('catalog.form.adminOnly')}
+          text={t('catalog.form.adminOnly')}
+          describedBy={hintId}
+          onChange={(v) => onChange('admin_only', v)}
         />
-      )}
-      <div className="a-check a-form-wide">
-        <label>
-          <input
-            type="checkbox"
-            checked={draft.admin_only}
-            aria-describedby={`${uid}-admin-only`}
-            onChange={(e) => onChange('admin_only', e.target.checked)}
-          />
-          {t('catalog.form.adminOnly')}
-        </label>
-        <small id={`${uid}-admin-only`}>{t('catalog.form.adminOnlyHint')}</small>
+        <small id={hintId} className="ff-hint">
+          {t('catalog.form.adminOnlyHint')}
+        </small>
       </div>
     </>
-  );
-}
-
-function NumberField({
-  label,
-  hint,
-  value,
-  error,
-  onChange,
-}: {
-  label: string;
-  hint?: string;
-  value: string;
-  error?: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <FormField label={label} hint={hint} error={error}>
-      {(p) => <input {...p} type="number" inputMode="numeric" step={1} value={value} onChange={(e) => onChange(e.target.value)} />}
-    </FormField>
   );
 }

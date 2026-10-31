@@ -1,22 +1,27 @@
 import { useId, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { compressImage } from '@/lib/image-compress';
+import type { Tone } from '@/lib/group-tone';
 import { useMe } from '@/lib/me';
+import { Icon } from '@/ui/icon';
 import { fileUrl, uploadItemImage } from '@/features/catalog/catalog.api';
 import { catalogErrorKey } from '@/features/catalog/catalog-errors';
-import '@/features/catalog/catalog.css';
+import '@/features/catalog/catalog.m1.css';
 
 export function ImageField({
   fileId,
   error,
   required = false,
+  tone = 'g0',
   onChange,
   onBusyChange,
 }: {
   fileId: string | null;
   error?: string;
   required?: boolean;
-  onChange: (fileId: string) => void;
+  tone?: Tone;
+  onChange: (fileId: string | null) => void;
   onBusyChange: (busy: boolean) => void;
 }) {
   const { t } = useTranslation();
@@ -51,40 +56,53 @@ export function ImageField({
     }
   };
 
+  const fileInput = (label: string) => (
+    <input
+      type="file"
+      className="sr-only"
+      accept="image/*"
+      aria-label={label}
+      aria-invalid={shownError ? true : undefined}
+      aria-describedby={noteId}
+      disabled={busy}
+      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+        void pick(e.target.files?.[0]);
+        e.target.value = '';
+      }}
+    />
+  );
+
   return (
-    <fieldset className={`img-field${shownError ? ' ff--error' : ''}`} aria-describedby={noteId}>
+    <fieldset className={`ct-img${shownError ? ' ff--error' : ''}`}>
       <legend className="ff-label">
         {t('catalog.form.image')}
         {required && <span className="ff-req" aria-hidden="true"> *</span>}
       </legend>
-      <div className="img-field-row">
-        <div className="img-field-preview">
-          {fileId ? (
+      {fileId ? (
+        <div className="ct-img__row">
+          <span className="ct-img__frame" style={{ background: `var(--${tone})` }}>
             <img src={fileUrl(fileId)} alt={t('catalog.form.imageAlt')} />
-          ) : (
-            <span className="tag tag--warn">{t('catalog.page.missingImage')}</span>
-          )}
+          </span>
+          <span className="ct-img__actions">
+            <label className={`btn btn--sm${busy ? ' is-disabled' : ''}`}>
+              {busy ? t('catalog.form.imageUploading') : t('catalog.form.imageChange')}
+              {fileInput(t('catalog.form.imageChange'))}
+            </label>
+            <button type="button" className="btn btn--ghost btn--sm" disabled={busy} onClick={() => onChange(null)}>
+              {t('catalog.form.imageRemove')}
+            </button>
+          </span>
         </div>
-        <div className="img-field-actions">
-          <label className={`btn btn--sm${busy ? ' is-disabled' : ''}`}>
-            {busy ? t('catalog.form.imageUploading') : fileId ? t('catalog.form.imageChange') : t('catalog.form.imagePick')}
-            <input
-              type="file"
-              className="sr-only"
-              accept="image/*"
-              aria-label={t('catalog.form.imagePick')}
-              disabled={busy}
-              onChange={(e) => {
-                void pick(e.target.files?.[0]);
-                e.target.value = '';
-              }}
-            />
-          </label>
-          <p id={noteId} className={shownError ? 'ff-error' : 'ff-hint'} role={shownError ? 'alert' : undefined}>
-            {shownError ?? t('catalog.form.imageHint')}
-          </p>
-        </div>
-      </div>
+      ) : (
+        <label className={`ct-img__frame ct-img__pick${busy ? ' is-disabled' : ''}`}>
+          <Icon name="image" size={24} />
+          <span>{busy ? t('catalog.form.imageUploading') : t('catalog.form.imagePick')}</span>
+          {fileInput(t('catalog.form.imagePick'))}
+        </label>
+      )}
+      <p id={noteId} className={shownError ? 'ff-error' : 'ff-hint'}>
+        {shownError ?? t('catalog.form.imageHint')}
+      </p>
     </fieldset>
   );
 }

@@ -214,7 +214,7 @@ test.describe('E9-S2 món ngoài danh mục', () => {
         await expect(dialog.getByRole('group', { name: 'Ảnh món' })).toContainText('*');
         await dialog.getByRole('button', { name: 'Thêm vào danh mục', exact: true }).click();
         await expect(dialog.getByText('Món phải có ảnh — chọn hoặc chụp một ảnh.')).toBeVisible();
-        await dialog.getByLabel('Chọn hoặc chụp ảnh').setInputFiles(FIXTURE);
+        await dialog.getByLabel('Chụp hoặc chọn ảnh').setInputFiles(FIXTURE);
         await expect(dialog.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
         return { dialog, submit: () => dialog.getByRole('button', { name: 'Thêm vào danh mục', exact: true }).click() };
       };

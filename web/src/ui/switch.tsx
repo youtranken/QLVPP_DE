@@ -3,12 +3,14 @@ export function Switch({
   label,
   text,
   disabled,
+  describedBy,
   onChange,
 }: {
   checked: boolean;
   label?: string;
   text?: string;
   disabled?: boolean;
+  describedBy?: string;
   onChange: (next: boolean) => void;
 }) {
   return (
@@ -18,6 +20,7 @@ export function Switch({
       className="switch"
       aria-checked={checked}
       aria-label={label}
+      aria-describedby={describedBy}
       disabled={disabled}
       onClick={() => onChange(!checked)}
     >

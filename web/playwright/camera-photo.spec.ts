@@ -46,7 +46,7 @@ test.describe('E2-S5 ảnh từ camera', () => {
       await page.getByRole('main').getByRole('button', { name: 'Thêm món', exact: true }).click();
       const dialog = page.getByRole('dialog', { name: 'Thêm món' });
       const uploaded = page.waitForResponse((r) => r.url().endsWith('/api/files') && r.request().method() === 'POST');
-      await dialog.getByLabel('Chọn hoặc chụp ảnh').setInputFiles({ name: 'camera.png', mimeType: 'image/png', buffer: photo });
+      await dialog.getByLabel('Chụp hoặc chọn ảnh').setInputFiles({ name: 'camera.png', mimeType: 'image/png', buffer: photo });
       const res = await uploaded;
       expect(res.status()).toBe(201);
       const body = (await res.json()) as { id: string; size_bytes: number; mime: string };

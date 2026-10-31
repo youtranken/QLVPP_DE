@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -26,19 +26,25 @@ interface Props extends CatalogTableActions {
   loading: boolean;
   selection: Selection;
   rowErrors: Record<string, string>;
+  activeRowId?: string;
   collapsed: ReadonlySet<string>;
   onCollapsedChange: (next: ReadonlySet<string>) => void;
   empty: { hint: string; action: ReactNode };
 }
 
+// flexRender coi hàm cell là component: cột đổi danh tính thì mọi ô bị dựng lại, ô đang sửa mất số đang gõ
 function useColumns(rowErrors: Record<string, string>, actions: CatalogTableActions) {
   const { t } = useTranslation();
   const unitName = useUnitNames();
-  const { onOpen, onSaveMax, onToggleActive } = actions;
+  const latest = useRef({ rowErrors, actions });
+  latest.current = { rowErrors, actions };
   return useMemo<ColumnDef<CatalogRow, unknown>[]>(() => {
+    const onOpen = (id: string) => latest.current.actions.onOpen(id);
+    const onSaveMax = (row: CatalogRow, n: number) => latest.current.actions.onSaveMax(row, n);
+    const onToggleActive = (row: CatalogRow) => latest.current.actions.onToggleActive(row);
     const columns: ColumnDef<CatalogRow, unknown>[] = [
       { id: 'code', header: t('catalog.list.colCode'), meta: { className: 'ct-code' }, cell: ({ row }) => row.original.code ?? t('common.empty') },
-      { id: 'item', header: t('catalog.list.colItem'), cell: ({ row }) => <ItemCell row={row.original} error={rowErrors[row.original.id]} /> },
+      { id: 'item', header: t('catalog.list.colItem'), cell: ({ row }) => <ItemCell row={row.original} error={latest.current.rowErrors[row.original.id]} /> },
       { id: 'unit', header: t('catalog.page.colUnit'), cell: ({ row }) => unitName(row.original.unit) },
       {
         id: 'max',
@@ -81,10 +87,10 @@ function useColumns(rowErrors: Record<string, string>, actions: CatalogTableActi
       },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
-  }, [t, unitName, rowErrors, onOpen, onSaveMax, onToggleActive]);
+  }, [t, unitName]);
 }
 
-export function CatalogTable({ rows, index, loading, selection, rowErrors, collapsed, onCollapsedChange, empty, ...actions }: Props) {
+export function CatalogTable({ rows, index, loading, selection, rowErrors, activeRowId, collapsed, onCollapsedChange, empty, ...actions }: Props) {
   const { t, i18n } = useTranslation();
   const columns = useColumns(rowErrors, actions);
   const groupName = (key: string) => {
@@ -98,6 +104,7 @@ export function CatalogTable({ rows, index, loading, selection, rowErrors, colla
       stackOnMobile
       loading={loading}
       selection={selection}
+      activeRowId={activeRowId}
       collapsed={collapsed}
       onCollapsedChange={onCollapsedChange}
       onRowClick={(r) => actions.onOpen(r.id)}

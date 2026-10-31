@@ -25,16 +25,16 @@ async function createCategoryAndItem(page: Page, category: string, itemName: str
   await catDialog.getByLabel('Tên nhóm').fill(category);
   await catDialog.getByRole('button', { name: 'Thêm nhóm' }).click();
   await expect(catDialog).toBeHidden();
-  await expect(page.getByText(category, { exact: true })).toBeVisible();
+  await expect(page.getByRole('table').getByRole('button', { name: `Sửa tên nhóm ${category}` })).toBeVisible();
 
   await page.getByRole('link', { name: 'Về Danh mục' }).click();
-  await page.getByRole('button', { name: 'Thêm món', exact: true }).click();
+  await page.getByRole('main').getByRole('button', { name: 'Thêm món', exact: true }).click();
   const form = page.getByRole('dialog', { name: 'Thêm món' });
   await form.getByLabel('Tên món').fill(itemName);
   await form.getByLabel('Đơn vị tính').selectOption({ label: 'cái' });
-  await form.getByLabel('Nhóm').selectOption({ label: category });
+  await form.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio', { name: category }).click();
   const uploaded = page.waitForResponse((r) => r.url().endsWith('/api/files') && r.request().method() === 'POST');
-  await form.getByLabel('Chọn hoặc chụp ảnh').setInputFiles('playwright/fixtures/item.png');
+  await form.getByLabel('Chụp hoặc chọn ảnh').setInputFiles('playwright/fixtures/item.png');
   const upload = await uploaded;
   expect(upload.status()).toBe(201);
   await expect(form.getByRole('img', { name: 'Ảnh món' })).toBeVisible();

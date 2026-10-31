@@ -145,7 +145,7 @@ describe('Danh mục — bảng nhóm', () => {
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
   });
 
-  it('"Thêm món" mở form ?item=new; "Thêm món vào nhóm" chọn sẵn nhóm; bấm hàng mở form sửa ?item=id', async () => {
+  it('"Thêm món" mở ngăn kéo ?item=new; "Thêm món vào nhóm" chọn sẵn nhóm; bấm hàng mở ngăn kéo sửa ?item=id', async () => {
     await openCatalog({ items: ITEMS });
     await userEvent.click(within(screen.getByRole('main')).getAllByRole('button', { name: 'Thêm món' })[0]);
     expect(location()).toBe('?item=new');
@@ -155,12 +155,12 @@ describe('Danh mục — bảng nhóm', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Thêm món vào nhóm Bút & viết' }));
     expect(location()).toBe('?item=new&itemCat=c-pen');
     const dialog = await screen.findByRole('dialog', { name: 'Thêm món' });
-    expect(within(dialog).getByLabelText('Nhóm')).toHaveValue('c-pen');
+    expect(within(dialog).getByRole('radio', { name: 'Bút & viết' })).toHaveAttribute('aria-checked', 'true');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Hủy' }));
 
     await userEvent.click(screen.getByText('hộp 20 cây'));
     expect(location()).toBe('?item=i-pen');
-    expect(await screen.findByRole('dialog', { name: 'Sửa món' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Bút bi xanh' })).toBeInTheDocument();
   });
 
   it('145 món nhập không ảnh, không nhóm: một nhóm "Chưa xếp nhóm", thẻ Thiếu ảnh 145', async () => {

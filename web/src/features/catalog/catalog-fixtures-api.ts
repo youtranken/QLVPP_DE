@@ -44,7 +44,7 @@ export async function openCatalog(opts: Options, path = '/admin/catalog') {
   mockViewport(1280);
   const fetchMock = stubCatalog(opts);
   renderApp(makeMe('admin'), path);
-  await screen.findByRole('group', { name: 'Lọc theo nhóm' });
+  await screen.findByRole('group', { name: 'Lọc theo nhóm', hidden: true });
   return fetchMock;
 }
 

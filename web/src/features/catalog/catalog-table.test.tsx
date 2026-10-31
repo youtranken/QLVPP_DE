@@ -52,7 +52,17 @@ describe('Danh mục — sửa tối đa/tháng tại chỗ (biên 1/999 vs 0/10
     expect(patchCalls(f)).toEqual([]);
   });
 
-  it('bấm ô số không mở form sửa món', async () => {
+  it('trang vẽ lại khi đang sửa (đổi chip nhóm vẫn thấy món) → ô vẫn mở, giữ số đang gõ', async () => {
+    await openCatalog({ items: ITEMS });
+    await userEvent.click(maxCell());
+    const label = 'Sửa tối đa/tháng của Bút bi xanh, đang là 10';
+    await userEvent.clear(screen.getByRole('spinbutton', { name: label }));
+    await userEvent.type(screen.getByRole('spinbutton', { name: label }), '0');
+    await userEvent.click(within(screen.getByRole('group', { name: 'Lọc theo nhóm' })).getByRole('button', { name: /^Bút & viết/ }));
+    expect(screen.getByRole('spinbutton', { name: label })).toHaveValue(0);
+  });
+
+  it('bấm ô số không mở ngăn kéo sửa món', async () => {
     await openCatalog({ items: ITEMS });
     await userEvent.click(maxCell());
     expect(screen.getByTestId('location-search').textContent).toBe('');
@@ -92,9 +102,9 @@ describe('Danh mục — công tắc Dùng', () => {
     expect(screen.queryByText('Đã ngừng Bút bi xanh')).toBeNull();
   });
 
-  it('icon "Sửa Bút bi xanh" mở form sửa', async () => {
+  it('icon "Sửa Bút bi xanh" mở ngăn kéo sửa món', async () => {
     await openCatalog({ items: ITEMS });
     await userEvent.click(screen.getByRole('button', { name: 'Sửa Bút bi xanh' }));
-    expect(await screen.findByRole('dialog', { name: 'Sửa món' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Bút bi xanh' })).toBeInTheDocument();
   });
 });

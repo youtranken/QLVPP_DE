@@ -6,7 +6,7 @@ import { RequestPage } from '@/features/request/request-page';
 import { HistoryPage } from '@/features/request/history-page';
 import { HistoryDetailPage } from '@/features/request/history-detail-page';
 import { CatalogPage } from '@/features/catalog/catalog-page';
-import { CategoryPage } from '@/features/catalog/category-page';
+import { CategoriesPage } from '@/features/catalog/categories-page';
 import { StockPage } from '@/features/stock/stock-page';
 import { UsersPage } from '@/features/admin/users-page';
 import { AuditPage } from '@/features/admin/audit-page';
@@ -67,7 +67,7 @@ export function AppRoutes() {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="stock" element={<StockPage />} />
         <Route path="catalog" element={<CatalogPage />} />
-        <Route path="categories" element={<CategoryPage />} />
+        <Route path="categories" element={<CategoriesPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="config" element={<ConfigPage />} />

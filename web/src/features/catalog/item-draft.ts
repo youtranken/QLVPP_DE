@@ -1,6 +1,7 @@
 import type { AdminItem, ItemPayload } from '@/features/catalog/catalog.api';
 
 export interface ItemDraft {
+  code: string;
   name: string;
   name_en: string;
   unit: string;
@@ -13,6 +14,7 @@ export interface ItemDraft {
 }
 
 export const ITEM_FIELDS: (keyof ItemDraft)[] = [
+  'code',
   'name',
   'name_en',
   'unit',
@@ -28,6 +30,9 @@ export const ITEM_FIELDS: (keyof ItemDraft)[] = [
 export const ITEM_ERROR_FIELD: Record<string, string> = {
   IMAGE_REQUIRED: 'image_file_id',
   FILE_FORBIDDEN: 'image_file_id',
+  FILE_TOO_LARGE: 'image_file_id',
+  FILE_TYPE_INVALID: 'image_file_id',
+  ITEM_CODE_EXISTS: 'code',
   UNIT_REQUIRED: 'unit',
   UNIT_INACTIVE: 'unit',
   CATEGORY_NOT_FOUND: 'category_id',
@@ -35,6 +40,7 @@ export const ITEM_ERROR_FIELD: Record<string, string> = {
 
 export function draftFrom(item: AdminItem | null, defaultMaxQty: number): ItemDraft {
   return {
+    code: item?.code ?? '',
     name: item?.name ?? '',
     name_en: item?.name_en ?? '',
     unit: item?.unit ?? '',
@@ -53,6 +59,7 @@ const intOrNull = (v: string) => (v.trim() === '' ? null : Number(v));
 
 function toPayload(d: ItemDraft): ItemPayload {
   return {
+    code: textOrNull(d.code),
     name: d.name.trim(),
     name_en: textOrNull(d.name_en),
     unit: d.unit,
@@ -63,6 +70,20 @@ function toPayload(d: ItemDraft): ItemPayload {
     max_qty: intOrNull(d.max_qty) as number,
     sort_order: intOrNull(d.sort_order) as number,
   };
+}
+
+export const REQUIRED_FIELDS = ['image_file_id', 'name', 'unit', 'max_qty'] as const;
+export type RequiredField = (typeof REQUIRED_FIELDS)[number];
+
+// Chỉ để báo sớm "Cần thêm: …"; server vẫn chặn bằng IMAGE_REQUIRED/UNIT_REQUIRED/VALIDATION
+export function missingFields(d: ItemDraft): RequiredField[] {
+  const empty: Record<RequiredField, boolean> = {
+    image_file_id: d.image_file_id === null,
+    name: d.name.trim() === '',
+    unit: d.unit === '',
+    max_qty: d.max_qty.trim() === '',
+  };
+  return REQUIRED_FIELDS.filter((f) => empty[f]);
 }
 
 // Sửa chỉ gửi trường đã đổi: audit before/after gọn, không ghi đè thay đổi của người khác

@@ -1,0 +1,22 @@
+[data-shell='admin'] .cg-dirty { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); padding: 10px 14px; border-radius: var(--r-md); background: var(--c-acc-soft); color: var(--c-acc); }
+[data-shell='admin'] .cg-dirty__text { margin-right: auto; font: var(--t-label); }
+[data-shell='admin'] .cg-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--s-4); align-items: start; }
+[data-shell='admin'] .cg-order { display: flex; align-items: center; gap: var(--s-1); white-space: nowrap; }
+[data-shell='admin'] .cg-order__n { min-width: 24px; color: var(--c-muted); font: var(--t-label); text-align: center; }
+[data-shell='admin'] .cg-dot { display: inline-block; width: 14px; height: 14px; }
+[data-shell='admin'] .cg-preview { display: grid; gap: var(--s-3); position: sticky; top: var(--s-4); }
+[data-shell='admin'] .cg-preview__card { display: grid; gap: var(--s-2); padding: 16px; border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
+[data-shell='admin'] .cg-preview__title { margin: 0; color: var(--c-ink); font: var(--t-label); }
+[data-shell='admin'] .cg-preview__chips { margin: 0; padding: 0; list-style: none; }
+[data-shell='admin'] .cg-preview__chip { cursor: default; }
+[data-shell='admin'] .cg-tones { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 0; padding: 0; list-style: none; }
+[data-shell='admin'] .cg-tone { display: grid; place-items: center; height: 36px; border-radius: var(--r-sm); font: var(--t-cap); font-weight: 700; }
+[data-shell='admin'] .cg-preview__note { margin: 0; color: var(--c-muted); font: var(--t-sm); }
+[data-shell='admin'] .cg-new-tone { display: flex; align-items: center; gap: var(--s-2); margin: 0; color: var(--c-ink-2); font: var(--t-sm); font-weight: 600; }
+@media (max-width: 1023px) {
+  [data-shell='admin'] .cg-layout { grid-template-columns: minmax(0, 1fr); }
+  [data-shell='admin'] .cg-preview { position: static; }
+}
+@media (max-width: 767px) {
+  [data-shell='admin'] .cg-layout .table-wrap { overflow-x: auto; }
+}
