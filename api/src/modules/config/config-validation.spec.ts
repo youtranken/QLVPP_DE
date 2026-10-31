@@ -247,8 +247,9 @@ describe('validateConfigPatch', () => {
       );
     });
 
-    it('bản vá không chạm hai khóa → null', () => {
-      expect(reminderConflict({ default_max_qty: 5 }, current)).toBeNull();
+    it('bản vá không chạm hai khóa → null kể cả khi config hiện có đã lệch luật', () => {
+      const broken = { registration_last_day: 3, reminder_days_left: 7 };
+      expect(reminderConflict({ default_max_qty: 5 }, broken)).toBeNull();
     });
   });
 

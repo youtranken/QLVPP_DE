@@ -118,6 +118,8 @@ const admin = {
       default_max_qty: 'Nhập số nguyên từ 1 đến 999.',
       admin_group: 'Nhập tên nhóm PMH ID (không để trống, tối đa 200 ký tự).',
       signer: 'Tên tối đa 200 ký tự.',
+      lastDayBelowReminder: 'Ngày hạn phải lớn hơn số ngày nhắc người chưa có phiếu.',
+      signBoxTitle: 'Chức danh ô ký không hợp lệ (1–60 ký tự).',
       admin_contact: 'Tối đa 500 ký tự.',
       UNKNOWN: 'Chưa lưu được — thử lại sau ít phút.',
     },

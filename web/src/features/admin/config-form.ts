@@ -73,11 +73,24 @@ export function toPatch(group: ConfigGroup, d: ConfigDraft, base: ConfigDraft, b
 }
 
 const SIGN_NAME_FIELD = /^signature_boxes\.([0-2])\.name$/;
+const SIGN_TITLE_FIELD = /^signature_boxes\.[0-2]\.title(_en)?$/;
+
+// Ô ngày hạn đã qua kiểm 3–28 ở client nên server từ chối nó chỉ có thể là luật "lớn hơn ngày nhắc"
+const SERVER_ERROR_KEYS: Partial<Record<DraftField, string>> = {
+  registration_last_day: 'config.errors.lastDayBelowReminder',
+};
 
 // CONFIG_INVALID trả field kiểu "admin_group" hoặc "signature_boxes.0.name"
 export function errorsFromApiField(field: string | null): ConfigErrors {
+  if (field && SIGN_TITLE_FIELD.test(field)) return { form: 'config.errors.signBoxTitle' };
   const sign = field ? SIGN_NAME_FIELD.exec(field) : null;
   const key = sign ? SIGN_FIELDS[Number(sign[1])] : field;
-  if (key && Object.hasOwn(VALID, key)) return { [key]: errorKey(key as DraftField) };
+  if (key && Object.hasOwn(VALID, key)) {
+    const f = key as DraftField;
+    return { [f]: SERVER_ERROR_KEYS[f] ?? errorKey(f) };
+  }
   return { form: 'config.errors.UNKNOWN' };
 }
+
+export const boxLabel = (box: SignatureBox, language: string) =>
+  language.startsWith('en') && box.title_en ? box.title_en : box.title;

@@ -10,6 +10,7 @@ import { configErrorField } from '@/features/admin/admin-errors';
 import {
   GROUP_FIELDS,
   SIGN_FIELDS,
+  boxLabel,
   errorsFromApiField,
   toDraft,
   toPatch,
@@ -31,12 +32,12 @@ export function ConfigPage() {
 }
 
 function ConfigForm({ config }: { config: AdminConfig }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { csrfToken } = useMe();
   const qc = useQueryClient();
   const [draft, setDraft] = useState(() => toDraft(config));
   const [errors, setErrors] = useState<ConfigErrors>({});
-  const [formError, setFormError] = useState<ConfigGroup | null>(null);
+  const [formError, setFormError] = useState<{ group: ConfigGroup; key: string } | null>(null);
   const [saving, setSaving] = useState<ConfigGroup | null>(null);
   const [saved, setSaved] = useState<ConfigGroup | null>(null);
   const base = toDraft(config);
@@ -62,7 +63,7 @@ function ConfigForm({ config }: { config: AdminConfig }) {
       setSaved(group);
     } catch (e) {
       const apiErrors = errorsFromApiField(configErrorField(e));
-      if (apiErrors.form) setFormError(group);
+      if (apiErrors.form) setFormError({ group, key: apiErrors.form });
       else setErrors((prev) => ({ ...prev, ...apiErrors }));
     } finally {
       setSaving(null);
@@ -87,7 +88,7 @@ function ConfigForm({ config }: { config: AdminConfig }) {
     saving: saving === group,
     canSave: Object.keys(patchOf(group)).length > 0,
     saved: saved === group,
-    formError: formError === group ? t('config.errors.UNKNOWN') : undefined,
+    formError: formError?.group === group ? t(formError.key) : undefined,
     onSave: () => void save(group),
   });
 
@@ -103,7 +104,7 @@ function ConfigForm({ config }: { config: AdminConfig }) {
       </ConfigSection>
       <ConfigSection title={t('config.signers.title')} note={t('config.signers.hint')} {...section('signers')}>
         {config.signature_boxes.map((box, i) => (
-          <Fragment key={SIGN_FIELDS[i]}>{field(SIGN_FIELDS[i], box.title, undefined, { maxLength: 200 })}</Fragment>
+          <Fragment key={SIGN_FIELDS[i]}>{field(SIGN_FIELDS[i], boxLabel(box, i18n.language), undefined, { maxLength: 200 })}</Fragment>
         ))}
       </ConfigSection>
       <ConfigSection title={t('config.contact.title')} {...section('contact')}>

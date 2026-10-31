@@ -27,6 +27,15 @@ const invalid = (field: string) =>
     field,
   });
 
+// Thiếu khóa (DB chưa seed) thì dùng giá trị seed của 0001/0112
+function reminderWindowOf(current: Record<string, unknown>): ReminderWindow {
+  const num = (v: unknown, seed: number) => (typeof v === 'number' ? v : seed);
+  return {
+    registration_last_day: num(current.registration_last_day, 10),
+    reminder_days_left: num(current.reminder_days_left, 3),
+  };
+}
+
 @Injectable()
 export class ConfigAdminService {
   constructor(
@@ -59,13 +68,10 @@ export class ConfigAdminService {
       const locked = await tx.execute<{ key: string; value: unknown }>(sql`
         SELECT key, value FROM config WHERE key IN ${lockKeys} ORDER BY key FOR UPDATE
       `);
-      const current = Object.fromEntries(
+      const current: Record<string, unknown> = Object.fromEntries(
         locked.rows.map((r) => [r.key, r.value]),
       );
-      const conflict = reminderConflict(
-        patch,
-        current as unknown as ReminderWindow,
-      );
+      const conflict = reminderConflict(patch, reminderWindowOf(current));
       if (conflict) throw invalid(conflict);
       const before = Object.fromEntries(keys.map((k) => [k, current[k]]));
       const after: Record<string, unknown> = {};

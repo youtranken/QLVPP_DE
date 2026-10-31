@@ -121,6 +121,8 @@ const admin: Messages<typeof vi> = {
       default_max_qty: 'Enter a whole number from 1 to 999.',
       admin_group: 'Enter a PMH ID group name (not empty, up to 200 characters).',
       signer: 'Names are limited to 200 characters.',
+      lastDayBelowReminder: 'The deadline day must be greater than the reminder lead time.',
+      signBoxTitle: 'A signature box title is invalid (1–60 characters).',
       admin_contact: 'Up to 500 characters.',
       UNKNOWN: 'Could not save — try again in a few minutes.',
     },

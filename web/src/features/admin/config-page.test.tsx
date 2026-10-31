@@ -3,6 +3,7 @@ import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
+import i18n from '@/lib/i18n';
 
 const CONFIG = {
   registration_last_day: 10,
@@ -137,5 +138,38 @@ describe('ConfigPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Lưu người ký' }));
     await vi.waitFor(() => expect(head).toHaveAttribute('aria-invalid', 'true'));
     expect(head).toHaveAccessibleDescription('Tên tối đa 200 ký tự.');
+  });
+
+  it('server từ chối registration_last_day hợp lệ (đụng ngày nhắc) → ô ngày hạn báo lỗi ngày nhắc, không báo "Nhập số từ 3 đến 28."', async () => {
+    stubApi(() => jsonResponse(400, { code: 'CONFIG_INVALID', field: 'registration_last_day' }));
+    await openConfig();
+    const day = screen.getByLabelText('Ngày hạn đăng ký hằng tháng');
+    await userEvent.clear(day);
+    await userEvent.type(day, '3');
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
+    await vi.waitFor(() => expect(day).toHaveAttribute('aria-invalid', 'true'));
+    expect(day).toHaveAccessibleDescription('Ngày hạn phải lớn hơn số ngày nhắc người chưa có phiếu.');
+  });
+
+  it('CONFIG_INVALID {field: signature_boxes.1.title} → báo lỗi chức danh ô ký ở khối người ký', async () => {
+    stubApi(() => jsonResponse(400, { code: 'CONFIG_INVALID', field: 'signature_boxes.1.title' }));
+    await openConfig();
+    await userEvent.type(screen.getByLabelText('Chủ quản đơn vị'), 'A');
+    const signers = screen.getByRole('form', { name: 'Người ký báo cáo' });
+    await userEvent.click(within(signers).getByRole('button', { name: 'Lưu người ký' }));
+    expect(await within(signers).findByRole('alert')).toHaveTextContent('Chức danh ô ký không hợp lệ (1–60 ký tự).');
+  });
+
+  it('giao diện en: nhãn ô ký dùng title_en, ô thiếu title_en dùng title', async () => {
+    const boxes = [CONFIG.signature_boxes[0], { ...CONFIG.signature_boxes[1], title_en: '' }];
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { ...CONFIG, signature_boxes: boxes }))));
+    await i18n.changeLanguage('en');
+    try {
+      await openConfig();
+      expect(screen.getByLabelText('Head of Dept.')).toHaveValue('');
+      expect(screen.getByLabelText('Người yêu cầu')).toHaveValue('Lê Thị Bình');
+    } finally {
+      await i18n.changeLanguage('vi');
+    }
   });
 });
