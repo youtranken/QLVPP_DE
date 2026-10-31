@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useFormatTime } from '@/lib/format-time';
+import { useUnitNames } from '@/features/units/units.api';
 import { IconBell } from '@/ui/icons';
 import { notificationText } from './notification-text';
 import { useMarkRead, useNotifications, useUnreadCount } from './notifications.api';
@@ -30,11 +31,12 @@ function useDismiss(open: boolean, close: () => void, box: React.RefObject<HTMLE
 function NotificationRow({ n, onPick }: { n: NotificationView; onPick: (n: NotificationView) => void }) {
   const { t, i18n } = useTranslation();
   const formatTime = useFormatTime();
+  const unitName = useUnitNames();
   return (
     <li className={n.read_at ? 'notif-item' : 'notif-item is-unread'}>
       <button type="button" onClick={() => onPick(n)}>
         {!n.read_at && <span className="sr-only">{t('notifications.unreadMark')}. </span>}
-        <span className="notif-text">{notificationText(n, t, i18n.language)}</span>
+        <span className="notif-text">{notificationText(n, t, i18n.language, unitName)}</span>
         <time className="notif-time" dateTime={n.created_at}>
           {formatTime(n.created_at)}
         </time>

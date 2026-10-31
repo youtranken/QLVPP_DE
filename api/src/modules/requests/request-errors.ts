@@ -124,6 +124,13 @@ const CONSTRAINT_ERRORS: Record<string, () => HttpException> = {
       code: 'ITEM_NOT_FOUND',
       message: 'Không tìm thấy món.',
     }),
+  // ĐVT chưa dùng bị xóa giữa lúc lập kế hoạch dòng và lúc ghi
+  '23503:request_lines_custom_unit_fkey': () =>
+    new BadRequestException({
+      code: 'VALIDATION',
+      message: 'Đơn vị tính không có.',
+      fields: ['custom_unit'],
+    }),
   '23001:stock_movements_ref_line_id_fkey': readonlyLine,
   '23001:line_deliveries_line_id_fkey': readonlyLine,
 };

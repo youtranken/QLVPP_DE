@@ -6,6 +6,7 @@ import { LOCAL_SA_SUB } from '../auth/local-sa-env';
 import { CatalogService } from '../catalog/catalog.service';
 import { SystemConfigService } from '../config/system-config.service';
 import { FilesService } from '../files/files.service';
+import { UnitsService } from '../units/units.service';
 import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
 import {
@@ -60,6 +61,7 @@ export class RequestLinesWriter {
     private readonly config: SystemConfigService,
     private readonly audit: AuditWriterService,
     private readonly notifier: LineNotifier,
+    private readonly units: UnitsService,
   ) {}
 
   async save(
@@ -161,6 +163,7 @@ export class RequestLinesWriter {
       body: args.body.lines,
       mode: lineMode(args),
       items: await this.catalog.itemFacts([...new Set(ids)], tx),
+      units: await this.units.namesByCode(tx),
       defaultMaxQty: await this.config.getInt('default_max_qty'),
     });
   }

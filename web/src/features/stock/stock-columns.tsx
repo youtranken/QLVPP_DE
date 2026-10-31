@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useUnitNames } from '@/features/units/units.api';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { AdminItem } from '@/features/catalog/catalog.api';
 import { stockState } from '@/features/stock/stock.api';
@@ -13,6 +14,7 @@ const STATE_RANK = { out: 0, low: 1, ok: 2, untracked: 3 } as const;
 
 export function useStockColumns(onAction: (action: StockAction, item: AdminItem) => void): ColumnDef<AdminItem, unknown>[] {
   const { t } = useTranslation();
+  const unitName = useUnitNames();
   return useMemo(
     () => [
       {
@@ -27,7 +29,7 @@ export function useStockColumns(onAction: (action: StockAction, item: AdminItem)
       },
       {
         id: 'unit',
-        accessorFn: (r) => t(`catalog.units.${r.unit}`),
+        accessorFn: (r) => unitName(r.unit),
         header: t('stock.page.colUnit'),
       },
       {
@@ -64,6 +66,6 @@ export function useStockColumns(onAction: (action: StockAction, item: AdminItem)
         ),
       },
     ],
-    [onAction, t],
+    [onAction, t, unitName],
   );
 }

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useUnitNames } from '@/features/units/units.api';
 import { groupTone } from '@/lib/group-tone';
 import { ItemThumb } from '@/ui/item-thumb';
 import { categoryLabel, type AdminItem, type Category } from '@/features/catalog/catalog.api';
@@ -12,6 +13,7 @@ export function ConvertExisting({ items, categories, selectedId, error, onPick }
   onPick: (id: string) => void;
 }) {
   const { t, i18n } = useTranslation();
+  const unitName = useUnitNames();
   const [query, setQuery] = useState('');
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -47,7 +49,7 @@ export function ConvertExisting({ items, categories, selectedId, error, onPick }
                     <span className="rv-pick__name">{i.name}</span>
                     <span className="rv-pick__meta">
                       {t('review.convert.countsIn', {
-                        unit: t(`catalog.units.${i.unit}`),
+                        unit: unitName(i.unit),
                         category: cat ? categoryLabel(cat, i18n.language) : t('review.convert.noCategory'),
                       })}
                     </span>

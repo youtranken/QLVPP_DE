@@ -31,7 +31,12 @@ function lastDay(deadline: string): string {
 
 const pick = (lang: string, vi: unknown, en: unknown): string => str(lang === 'en' && en ? en : vi);
 
-export function notificationText(n: NotificationView, t: TFunction, lang: string): string {
+export function notificationText(
+  n: NotificationView,
+  t: TFunction,
+  lang: string,
+  unitName: (code: string) => string,
+): string {
   if (!TOPICS.has(n.topic) && n.topic !== 'line_review') return t('notifications.topics.unknown');
   const p = n.params;
   const base = {
@@ -42,7 +47,7 @@ export function notificationText(n: NotificationView, t: TFunction, lang: string
     name: n.topic === 'line_review' || n.topic === 'custom_line_new' ? str(p.name) : pick(lang, p.name, p.name_en),
     stock_qty: str(p.stock_qty),
     qty: str(p.qty),
-    unit: p.unit ? t(`catalog.units.${str(p.unit)}`, { defaultValue: str(p.unit) }) : '',
+    unit: p.unit ? unitName(str(p.unit)) : '',
     reason: str(p.reason),
     person: str(p.person) || t('notifications.someone'),
     item: pick(lang, p.item_name, p.item_name_en),

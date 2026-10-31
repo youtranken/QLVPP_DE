@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useUnitName } from '@/features/units/units.api';
 import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
@@ -58,6 +59,7 @@ function StockDialogShell({
   children: ReactNode;
 }) {
   const { t } = useTranslation();
+  const unitName = useUnitName(item.unit);
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (canSubmit && !saving) onSubmit();
@@ -75,7 +77,7 @@ function StockDialogShell({
         </div>
         <div className="sheet-body">
           <p className="stock-now">
-            {t('stock.dialog.current', { qty: item.stock_qty, unit: t(`catalog.units.${item.unit}`) })}
+            {t('stock.dialog.current', { qty: item.stock_qty, unit: unitName })}
             {after !== null && <span>{t('stock.dialog.after', { qty: after })}</span>}
           </p>
           {formError && (

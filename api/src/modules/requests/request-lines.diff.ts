@@ -1,4 +1,6 @@
 import type { ItemFacts } from '../catalog/catalog-sql';
+import { UNIT_INACTIVE_MESSAGE } from '../units/unit-errors';
+import type { UnitFacts } from '../units/units.service';
 import { duplicateItem, lineError } from './request-errors';
 import type { LineRef } from './request-errors';
 import {
@@ -15,6 +17,7 @@ export interface PlanInput {
   body: LineInput[];
   mode: WriteMode;
   items: Map<string, ItemFacts>;
+  units: Map<string, UnitFacts>;
   defaultMaxQty: number;
 }
 
@@ -83,6 +86,7 @@ function planNew(
         qty: raw.qty,
       };
   validateLine(snap, ref, input);
+  assertUnitChoosable(snap, ref, input);
   if (snap.image_file_id) {
     plan.images.push({ fileId: snap.image_file_id, ref });
   }
@@ -113,6 +117,7 @@ function planExisting(
     throw lineError('LINE_READONLY', 'Dòng này chỉ xem được.', ref);
   }
   validateLine(after, ref, input, after.qty <= before.qty);
+  assertUnitChoosable(after, ref, input, before.custom_unit);
   if (after.qty < before.delivered_qty + before.cancelled_qty) {
     throw lineError('QTY_BELOW_DELIVERED', 'Ít hơn số đã giao.', ref, {
       delivered: before.delivered_qty,
@@ -196,6 +201,24 @@ function validateLine(
   if (!notIncreased && qty > max) {
     throw lineError('QTY_EXCEEDS_MAX', `Tối đa ${max}/tháng.`, ref, { max });
   }
+}
+
+// Dòng cũ giữ nguyên ĐVT đã ngừng vẫn lưu lại được; chỉ lựa chọn mới phải là ĐVT đang dùng
+function assertUnitChoosable(
+  line: LineSnap,
+  ref: LineRef,
+  input: PlanInput,
+  storedUnit: string | null = null,
+): void {
+  if (!line.custom_unit || line.custom_unit === storedUnit) return;
+  const unit = input.units.get(line.custom_unit);
+  if (!unit) {
+    throw lineError('VALIDATION', 'Đơn vị tính không có.', ref, {
+      fields: ['custom_unit'],
+    });
+  }
+  if (!unit.active)
+    throw lineError('UNIT_INACTIVE', UNIT_INACTIVE_MESSAGE, ref);
 }
 
 function assertOrderable(item: ItemFacts, ref: LineRef, mode: WriteMode): void {

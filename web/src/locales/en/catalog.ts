@@ -92,17 +92,6 @@ const catalog: Messages<typeof vi> = {
       active: 'in use',
       inactive: 'retired',
     },
-    units: {
-      cai: 'piece',
-      hop: 'box',
-      cay: 'stick',
-      ram: 'ream',
-      cuon: 'roll',
-      loc: 'pack',
-      bich: 'bag',
-      chai: 'bottle',
-      bo: 'set',
-    },
     errors: {
       IMAGE_REQUIRED: 'The item needs a photo — choose or take one.',
       IMAGE_UNSUPPORTED: 'Choose a JPG, PNG or WebP photo',

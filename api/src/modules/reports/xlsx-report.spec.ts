@@ -6,6 +6,13 @@ const ITEM = '11111111-1111-4111-8111-111111111111';
 const PLAIN = '22222222-2222-4222-8222-222222222222';
 const CUSTOM = 'custom:["bìa còng","cai"]';
 
+const UNIT_NAMES = new Map([
+  ['cai', { name: 'cái', name_en: 'piece', active: true }],
+  ['hop', { name: 'hộp', name_en: 'box', active: true }],
+  ['cay', { name: 'cây', name_en: 'stick', active: true }],
+  ['thung', { name: 'thùng', name_en: null, active: false }],
+]);
+
 const row = (over: object) => ({
   key: ITEM,
   item_id: ITEM,
@@ -102,7 +109,9 @@ const data: SnapshotData = {
 
 async function open(lang: 'vi' | 'en') {
   const wb = new ExcelJS.Workbook();
-  await wb.xlsx.load(new Uint8Array(await buildWorkbook(data, lang)).buffer);
+  await wb.xlsx.load(
+    new Uint8Array(await buildWorkbook(data, lang, UNIT_NAMES)).buffer,
+  );
   return wb;
 }
 
@@ -133,7 +142,7 @@ describe('buildWorkbook', () => {
     expect(values(ws, 3)).toEqual(['Kẹp giấy', 'hộp', 5, 2, 3, 1, 1]);
   });
 
-  it('ĐVT dịch từ mã: vi "cây"/"hộp"/"cái", en "stick"/"box"/"piece"; mã lạ hiện mã thô', async () => {
+  it('ĐVT lấy tên từ bảng units: vi "cây"/"hộp"/"cái", en "stick"/"box"/"piece"; en thiếu name_en dùng tên vi; mã không có hiện mã thô', async () => {
     const vi = (await open('vi')).worksheets[0];
     expect(vi.getRow(5).getCell(2).value).toBe('cái');
     const en = (await open('en')).worksheets[0];
@@ -142,10 +151,16 @@ describe('buildWorkbook', () => {
       'box',
       'piece',
     ]);
-    const odd = { ...data, byItem: [row({ unit: 'thung' })] };
+    const odd = {
+      ...data,
+      byItem: [row({ unit: 'thung' }), row({ key: PLAIN, unit: 'kg' })],
+    };
     const wb = new ExcelJS.Workbook();
-    await wb.xlsx.load(new Uint8Array(await buildWorkbook(odd, 'en')).buffer);
-    expect(wb.worksheets[0].getRow(2).getCell(2).value).toBe('thung');
+    await wb.xlsx.load(
+      new Uint8Array(await buildWorkbook(odd, 'en', UNIT_NAMES)).buffer,
+    );
+    expect(wb.worksheets[0].getRow(2).getCell(2).value).toBe('thùng');
+    expect(wb.worksheets[0].getRow(3).getCell(2).value).toBe('kg');
   });
 
   it('cột 3 en "Undelivered this period"', async () => {

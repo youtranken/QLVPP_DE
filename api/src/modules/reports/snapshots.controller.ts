@@ -15,6 +15,7 @@ import { CurrentIdentity } from '../auth/current-identity.decorator';
 import type { RequestIdentity } from '../auth/identity.types';
 import { Roles } from '../auth/roles.decorator';
 import { uuidParam } from '../catalog/catalog.dto';
+import { UnitsService } from '../units/units.service';
 import { ExportQuery, SnapshotBody } from './snapshot.dto';
 import { SnapshotsService } from './snapshots.service';
 import { buildWorkbook } from './xlsx-report';
@@ -28,6 +29,7 @@ export class SnapshotsController {
   constructor(
     private readonly snapshots: SnapshotsService,
     private readonly clock: ClockService,
+    private readonly units: UnitsService,
   ) {}
 
   @Post(':ym/snapshots')
@@ -56,7 +58,11 @@ export class SnapshotsController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
     const snapshot = await this.snapshots.get(id);
-    const file = await buildWorkbook(snapshot, query.lang);
+    const file = await buildWorkbook(
+      snapshot,
+      query.lang,
+      await this.units.namesByCode(),
+    );
     res.set({
       'Content-Type': XLSX_TYPE,
       'Content-Disposition': `attachment; filename="vpp-bao-cao-${snapshot.period_ym}.xlsx"`,

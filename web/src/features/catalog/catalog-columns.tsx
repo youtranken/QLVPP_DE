@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useUnitNames } from '@/features/units/units.api';
 import type { ColumnDef } from '@tanstack/react-table';
 import { categoryLabel, fileUrl, type AdminItem, type Category } from '@/features/catalog/catalog.api';
 
@@ -13,6 +14,7 @@ export function useCatalogColumns({
   onToggleActive: (item: AdminItem) => void;
 }): ColumnDef<AdminItem, unknown>[] {
   const { t, i18n } = useTranslation();
+  const unitName = useUnitNames();
   return useMemo(() => {
     const categoryName = (id: string | null) => {
       const c = categories.find((x) => x.id === id);
@@ -43,7 +45,7 @@ export function useCatalogColumns({
       },
       {
         id: 'unit',
-        accessorFn: (r) => t(`catalog.units.${r.unit}`),
+        accessorFn: (r) => unitName(r.unit),
         header: t('catalog.page.colUnit'),
       },
       {
@@ -102,5 +104,5 @@ export function useCatalogColumns({
         ),
       },
     ];
-  }, [categories, onEdit, onToggleActive, t, i18n.language]);
+  }, [categories, onEdit, onToggleActive, t, i18n.language, unitName]);
 }

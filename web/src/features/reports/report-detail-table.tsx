@@ -1,8 +1,10 @@
 import { useTranslation } from 'react-i18next';
+import { useUnitNames } from '@/features/units/units.api';
 import { pickName, type ReportDepartment } from './reports.api';
 
 export function ReportDetailTable({ departments }: { departments: ReportDepartment[] }) {
   const { t, i18n } = useTranslation();
+  const unitName = useUnitNames();
   const col = (k: string) => t(`reports.detail.${k}`);
   if (departments.length === 0) return <div className="empty">{col('empty')}</div>;
   return (
@@ -28,7 +30,7 @@ export function ReportDetailTable({ departments }: { departments: ReportDepartme
                 <tr key={`${p.user_sub}-${i}`} className={i === 0 ? 'rp-person-first' : undefined}>
                   <td data-label="">{i === 0 ? <b>{p.full_name ?? p.user_sub}</b> : <span className="sr-only">{p.full_name ?? p.user_sub}</span>}</td>
                   <td data-label="">{pickName(i18n.language, l.name, l.name_en)}</td>
-                  <td data-label={col('colUnit')}>{t(`catalog.units.${l.unit}`, { defaultValue: l.unit })}</td>
+                  <td data-label={col('colUnit')}>{unitName(l.unit)}</td>
                   <td className="r num" data-label={col('colQty')}>{l.qty}</td>
                 </tr>
               )),

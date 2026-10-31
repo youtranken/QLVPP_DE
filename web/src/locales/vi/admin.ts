@@ -53,6 +53,7 @@ const admin = {
       report: { snapshot_created: 'Chốt báo cáo' },
       request: { created: 'Tạo phiếu', updated: 'Sửa phiếu', deleted: 'Xóa phiếu' },
       stock: { adjust: 'Điều chỉnh kho', issue: 'Xuất lẻ', purchase: 'Nhập kho' },
+      unit: { created: 'Thêm đơn vị tính', updated: 'Sửa đơn vị tính', deleted: 'Xóa đơn vị tính' },
       users: { directory_sync: 'Đồng bộ danh bạ' },
     },
     filters: {

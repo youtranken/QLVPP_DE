@@ -139,7 +139,7 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
     expect(await requestIds('q=%25')).toEqual([]);
   });
 
-  it('by=item: gộp món theo item_id, dòng ngoài DM theo tên + ĐVT đã trim/không phân biệt hoa thường', async () => {
+  it('by=item: gộp món theo item_id, dòng ngoài DM theo tên đã trim/không phân biệt hoa thường + mã ĐVT', async () => {
     const res = await asAdmin(`/periods/${YM}/requests?by=item`).expect(200);
     const items = (res.body as { items: ItemRow[] }).items;
     expect(items).toHaveLength(2);
@@ -157,7 +157,7 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
           key: expect.any(String) as string,
           item_id: null,
           name: expect.stringMatching(/^bìa còng x$/i) as string,
-          unit: expect.stringMatching(/^cai$/i) as string,
+          unit: 'cai',
           requested_qty: 6,
           people: 2,
         },

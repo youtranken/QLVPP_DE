@@ -1,9 +1,4 @@
-import type { UNITS } from '../catalog/catalog.dto';
-
 export type XlsxLang = 'vi' | 'en';
-
-// Cùng chữ với catalog.units của web
-type UnitLabels = Record<(typeof UNITS)[number], string>;
 
 export interface XlsxLabels {
   byItemSheet: string;
@@ -25,7 +20,6 @@ export interface XlsxLabels {
   person: string;
   noDepartment: string;
   workbookTitle: string;
-  units: UnitLabels;
 }
 
 export const XLSX_LABELS: Record<XlsxLang, XlsxLabels> = {
@@ -49,17 +43,6 @@ export const XLSX_LABELS: Record<XlsxLang, XlsxLabels> = {
     person: 'Người',
     noDepartment: 'Chưa có phòng ban',
     workbookTitle: 'Tổng hợp đặt mua',
-    units: {
-      cai: 'cái',
-      hop: 'hộp',
-      cay: 'cây',
-      ram: 'ram',
-      cuon: 'cuộn',
-      loc: 'lốc',
-      bich: 'bịch',
-      chai: 'chai',
-      bo: 'bộ',
-    },
   },
   en: {
     byItemSheet: 'By item',
@@ -81,16 +64,5 @@ export const XLSX_LABELS: Record<XlsxLang, XlsxLabels> = {
     person: 'Person',
     noDepartment: 'No department',
     workbookTitle: 'Purchase summary',
-    units: {
-      cai: 'piece',
-      hop: 'box',
-      cay: 'stick',
-      ram: 'ream',
-      cuon: 'roll',
-      loc: 'pack',
-      bich: 'bag',
-      chai: 'bottle',
-      bo: 'set',
-    },
   },
 };

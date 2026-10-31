@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import i18n from '@/lib/i18n';
-import { notificationText } from './notification-text';
+import { SEED_UNITS } from '@/test/fixtures-units';
+import { notificationText as render } from './notification-text';
 import type { NotificationView } from './notifications.api';
 
 const n = (topic: string, params: Record<string, unknown>): NotificationView => ({
@@ -24,6 +25,12 @@ const SAMPLES: NotificationView[] = [
   n('line_review', { ym: '2026-11', action: 'rejected', name: 'Bìa còng', note: 'Đã có trong kho' }),
   n('line_review', { ym: '2026-11', action: 'converted', name: 'Bìa còng', item_name: 'Bìa còng A4', item_name_en: 'A4 ring binder' }),
 ];
+
+const unitNameIn = (lang: string) => (code: string) => {
+  const u = SEED_UNITS.find((x) => x.code === code);
+  return !u ? code : lang === 'en' && u.name_en ? u.name_en : u.name;
+};
+const notificationText = (n: NotificationView, t: typeof i18n.t, lang: string) => render(n, t, lang, unitNameIn(lang));
 
 describe('notificationText', () => {
   const vi = i18n.getFixedT('vi');

@@ -68,10 +68,10 @@ describe('0100 catalog — ràng buộc item_categories / items / stock_movement
     it('restock_level = 0 → 23514 (mốc là tồn sau nhập mua, luôn > 0)', async () => {
       expect(await insertItem('restock_level|$2', [0])).toBe('23514');
     });
-    it("unit = 'thung' → 23514", async () => {
+    it("unit = 'kg' (không có trong units, 0111) → 23503", async () => {
       expect(
-        await code("INSERT INTO items (name, unit) VALUES ('x', 'thung')"),
-      ).toBe('23514');
+        await code("INSERT INTO items (name, unit) VALUES ('x', 'kg')"),
+      ).toBe('23503');
     });
     it('code trùng → 23505; code NULL nhiều dòng vẫn được', async () => {
       const ins =

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useUnitName } from '@/features/units/units.api';
 import { useMe } from '@/lib/me';
 import { ConfirmDialog } from '@/ui/confirm-dialog';
 import type { LineView } from '@/features/request/request.api';
@@ -46,7 +47,7 @@ export function ReviewActions({ line, context, hideStatus = false, onDone, onSta
   const acceptingRef = useRef(false);
   const staleSeen = useRef(false);
   const name = line.custom_name ?? '';
-  const unitName = line.custom_unit ? t(`catalog.units.${line.custom_unit}`) : '';
+  const unitName = useUnitName(line.custom_unit);
   const status = result?.line.review_status ?? line.review_status;
   const note = result ? result.line.review_note : line.review_note;
   // Nhiều dòng ngoài DM cùng ngăn: tên nút kèm tên dòng để trình đọc màn hình phân biệt

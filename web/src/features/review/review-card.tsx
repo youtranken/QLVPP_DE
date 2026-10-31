@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useUnitName } from '@/features/units/units.api';
 import { useFormatTime } from '@/lib/format-time';
 import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
@@ -18,7 +19,7 @@ export function ReviewCard({ row, name, onDone, onStale }: {
   const formatTime = useFormatTime();
   const [done, setDone] = useState<ReviewResult | null>(null);
   const titleId = `rv-${row.line_id}`;
-  const unit = row.custom_unit ? t(`catalog.units.${row.custom_unit}`) : '';
+  const unit = useUnitName(row.custom_unit);
   const status = done?.line.review_status ?? row.review_status;
   const note = done ? done.line.review_note : row.review_note;
   const who = row.full_name ?? t('review.card.unknownUser');

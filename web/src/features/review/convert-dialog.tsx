@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useUnitNames } from '@/features/units/units.api';
 import { apiErrorCode } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
@@ -56,6 +57,7 @@ export function ConvertDialog({ line, who, onSubmit, onClose }: {
   onClose: () => void;
 }) {
   const { t, i18n } = useTranslation();
+  const unitName = useUnitNames();
   const me = useMe();
   const uid = useId();
   const items = useAdminItems();
@@ -153,13 +155,13 @@ export function ConvertDialog({ line, who, onSubmit, onClose }: {
             <p role="status" className="alert alert--warn a-form-wide">
               {mode === 'existing' && chosen
                 ? t('review.convert.unitMismatchExisting', {
-                    from: t(`catalog.units.${line.custom_unit}`),
+                    from: unitName(line.custom_unit),
                     item: chosen.name,
-                    to: t(`catalog.units.${chosen.unit}`),
+                    to: unitName(chosen.unit),
                     qty: line.qty,
                     who: who ?? t('review.convert.whoFallback'),
                   })
-                : t('review.convert.unitMismatch', { unit: t(`catalog.units.${line.custom_unit}`), qty: line.qty })}
+                : t('review.convert.unitMismatch', { unit: unitName(line.custom_unit), qty: line.qty })}
             </p>
           )}
           {mode === 'new' && line.image_file_id && draft.image_file_id === line.image_file_id && !errors.image_file_id && (

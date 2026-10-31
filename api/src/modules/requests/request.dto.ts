@@ -3,7 +3,6 @@ import {
   ArrayMaxSize,
   IsArray,
   IsDefined,
-  IsIn,
   IsNotEmpty,
   IsISO8601,
   IsOptional,
@@ -14,14 +13,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { STAMP_FROM_2000 } from '../../common/ym';
-import {
-  NAME_MAX,
-  OptionalText,
-  TrimToNull,
-  UNITS,
-} from '../catalog/catalog.dto';
+import { NAME_MAX, OptionalText, UnitCode } from '../catalog/catalog.dto';
 
-export type Unit = (typeof UNITS)[number];
 export const NOTE_MAX = 500;
 
 const UpdatedAtStamp = () => (target: object, key: string) => {
@@ -36,7 +29,7 @@ export class LineInput {
   @IsOptional() @IsUUID() id?: string;
   @IsOptional() @IsUUID() item_id?: string;
   @OptionalText(NAME_MAX) custom_name?: string | null;
-  @TrimToNull() @IsOptional() @IsIn(UNITS) custom_unit?: Unit | null;
+  @UnitCode() custom_unit?: string | null;
   @OptionalText(NOTE_MAX) custom_note?: string | null;
   @IsOptional() @IsUUID() image_file_id?: string | null;
   // Không kiểm kiểu ở DTO: writer trả QTY_INVALID kèm line_index thay vì VALIDATION chung

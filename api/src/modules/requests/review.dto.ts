@@ -10,7 +10,7 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
-import { Name, OptionalText, TrimToNull, UNITS } from '../catalog/catalog.dto';
+import { Name, OptionalText, UnitCode } from '../catalog/catalog.dto';
 import { NOTE_MAX } from './request.dto';
 
 export const REVIEW_STATUSES = [
@@ -36,8 +36,7 @@ export class ReviewItemInput {
   @IsOptional() @IsUUID() existing_id?: string;
   @ValidateIf(isNew) @Name() name?: string;
   @OptionalText() name_en?: string | null;
-  // Vắng → service báo UNIT_REQUIRED thay vì VALIDATION chung
-  @TrimToNull() @IsOptional() @IsIn(UNITS) unit?: string | null;
+  @UnitCode() unit?: string | null;
   @OptionalText() pack_note?: string | null;
   @ValidateIf(isNew) @IsUUID() category_id?: string;
   @IsOptional() @IsUUID() image_file_id?: string | null;

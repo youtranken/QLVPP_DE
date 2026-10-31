@@ -56,6 +56,7 @@ const admin: Messages<typeof vi> = {
       report: { snapshot_created: 'Report snapshot taken' },
       request: { created: 'Request created', updated: 'Request edited', deleted: 'Request deleted' },
       stock: { adjust: 'Stock adjusted', issue: 'Ad-hoc issue', purchase: 'Stock received' },
+      unit: { created: 'Unit added', updated: 'Unit edited', deleted: 'Unit deleted' },
       users: { directory_sync: 'Directory synced' },
     },
     filters: {

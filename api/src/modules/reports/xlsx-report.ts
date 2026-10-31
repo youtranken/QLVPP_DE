@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs';
+import type { UnitFacts } from '../units/units.service';
 import type {
   ReportCustomRow,
   ReportItemRow,
@@ -6,6 +7,8 @@ import type {
 } from './report.types';
 import { XLSX_LABELS } from './xlsx-labels';
 import type { XlsxLabels, XlsxLang } from './xlsx-labels';
+
+type UnitNames = ReadonlyMap<string, Pick<UnitFacts, 'name' | 'name_en'>>;
 
 const localName = (
   row: { name: string; name_en: string | null },
@@ -15,25 +18,30 @@ const localName = (
 export async function buildWorkbook(
   data: SnapshotData,
   lang: XlsxLang,
+  unitNames: UnitNames,
 ): Promise<Buffer> {
   const labels = XLSX_LABELS[lang];
+  const unitLabel = (code: string) => {
+    const unit = unitNames.get(code);
+    return unit ? localName(unit, lang) : code;
+  };
   const wb = new ExcelJS.Workbook();
   wb.title = `${labels.workbookTitle} ${data.ym}`;
   wb.creator = data.created_by.name ?? data.created_by.sub;
   wb.created = new Date(data.created_at);
-  fillByItem(wb.addWorksheet(labels.byItemSheet), data, labels, lang);
+  fillByItem(wb.addWorksheet(labels.byItemSheet), data, labels, {
+    lang,
+    unitLabel,
+  });
   fillDetail(wb.addWorksheet(labels.detailSheet), data, labels, lang);
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
-
-const unitLabel = (unit: string, l: XlsxLabels) =>
-  (l.units as Record<string, string>)[unit] ?? unit;
 
 function fillByItem(
   ws: ExcelJS.Worksheet,
   data: SnapshotData,
   l: XlsxLabels,
-  lang: XlsxLang,
+  { lang, unitLabel }: { lang: XlsxLang; unitLabel: (code: string) => string },
 ): void {
   const order = (r: ReportItemRow | ReportCustomRow) =>
     data.order_qty[r.key] ?? r.need;
@@ -51,7 +59,7 @@ function fillByItem(
   for (const r of data.byItem) {
     ws.addRow([
       localName(r, lang),
-      unitLabel(r.unit, l),
+      unitLabel(r.unit),
       r.requested,
       r.backlog_prev,
       r.stock,
@@ -64,7 +72,7 @@ function fillByItem(
     for (const r of data.custom) {
       ws.addRow([
         r.name,
-        unitLabel(r.unit, l),
+        unitLabel(r.unit),
         r.requested,
         r.backlog_prev,
         null,

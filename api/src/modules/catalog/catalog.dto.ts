@@ -14,18 +14,8 @@ import {
   Min,
   ValidateIf,
 } from 'class-validator';
+import { UNIT_CODE_MAX } from '../units/unit-code';
 
-export const UNITS = [
-  'cai',
-  'hop',
-  'cay',
-  'ram',
-  'cuon',
-  'loc',
-  'bich',
-  'chai',
-  'bo',
-] as const;
 export const NAME_MAX = 120;
 
 export const uuidParam = new ParseUUIDPipe({
@@ -50,6 +40,13 @@ export const Name = () => (target: object, key: string) => {
   IsNotEmpty()(target, key);
   MaxLength(NAME_MAX)(target, key);
 };
+// Mã ĐVT kiểm tồn tại/active ở UnitsService; vắng/null do service báo UNIT_REQUIRED
+export const UnitCode = () => (target: object, key: string) => {
+  TrimToNull()(target, key);
+  IsOptional()(target, key);
+  IsString()(target, key);
+  MaxLength(UNIT_CODE_MAX)(target, key);
+};
 export const OptionalText =
   (max = NAME_MAX) =>
   (target: object, key: string) => {
@@ -58,7 +55,7 @@ export const OptionalText =
     IsString()(target, key);
     MaxLength(max)(target, key);
   };
-const SortOrder = () => (target: object, key: string) => {
+export const SortOrder = () => (target: object, key: string) => {
   IsInt()(target, key);
   Min(-1_000_000)(target, key);
   Max(1_000_000)(target, key);
@@ -85,8 +82,7 @@ export class ListCategoriesQuery {
 class ItemFields {
   @OptionalText(40) code?: string | null;
   @OptionalText() name_en?: string | null;
-  // Vắng/null do service báo UNIT_REQUIRED/IMAGE_REQUIRED thay vì VALIDATION chung
-  @TrimToNull() @IsOptional() @IsIn(UNITS) unit?: string | null;
+  @UnitCode() unit?: string | null;
   @OptionalText() pack_note?: string | null;
   @IsOptional() @IsUUID() category_id?: string | null;
   @IsOptional() @IsUUID() image_file_id?: string | null;

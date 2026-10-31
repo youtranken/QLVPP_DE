@@ -142,7 +142,7 @@ export function adminSummaryFixture(ym: string) {
     ids.r2 = await newRequest(U2, null);
     await addLine(ids.r2, { item_id: ids.item, qty: 2 });
     await addLine(ids.r2, {
-      ...custom('  bìa CÒNG x ', 'accepted', ' Cai'),
+      ...custom('  bìa CÒNG x ', 'accepted', 'cai'),
       qty: 4,
     });
     await addLine(ids.r2, { ...custom('Rác', 'rejected'), qty: 1 });

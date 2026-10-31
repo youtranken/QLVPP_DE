@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
+import { useUnitNames } from '@/features/units/units.api';
 import { useMe } from '@/lib/me';
 import type { CartLabel } from './use-cart';
 
@@ -23,7 +24,8 @@ function formattersFor(locale: string) {
 
 // Hạn là mốc 00:00 ngày sau ngày cuối → lùi 1 ms để ra đúng ngày cuối theo giờ VN
 export function useRequestFormat() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
+  const unitName = useUnitNames();
   const { time, day } = formattersFor(i18n.language === 'en' ? 'en-GB' : 'vi-VN');
   return {
     time: (iso: string) => time.format(new Date(iso)),
@@ -32,7 +34,7 @@ export function useRequestFormat() {
       const part = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
       return `${part('day')}/${part('month')}`;
     },
-    unit: (code: string | null) => (code ? t(`catalog.units.${code}`, { defaultValue: code }) : ''),
+    unit: (code: string | null) => unitName(code),
     name: (l: Pick<CartLabel, 'name' | 'name_en'>) => (i18n.language === 'en' && l.name_en ? l.name_en : l.name),
   };
 }

@@ -13,6 +13,8 @@ import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
 import { SystemConfigService } from '../config/system-config.service';
 import { FilesService } from '../files/files.service';
+import { unknownUnit } from '../units/unit-errors';
+import { UnitsService } from '../units/units.service';
 import type { CreateItemDto, UpdateItemDto } from './catalog.dto';
 import {
   ITEM_COLUMNS,
@@ -37,6 +39,8 @@ const CONSTRAINT_ERRORS: Record<string, () => Error> = {
       code: 'CATEGORY_NOT_FOUND',
       message: 'Nhóm món không tồn tại.',
     }),
+  // ĐVT bị xóa giữa lúc kiểm active và lúc ghi món
+  items_unit_fkey: () => unknownUnit('unit'),
   items_code_key: () =>
     new ConflictException({
       code: 'ITEM_CODE_EXISTS',
@@ -67,6 +71,7 @@ export class CatalogService {
     private readonly audit: AuditWriterService,
     private readonly files: FilesService,
     private readonly config: SystemConfigService,
+    private readonly units: UnitsService,
     @Inject(ITEM_USAGE_HOOK) private readonly usage: ItemUsageHook,
   ) {}
 
@@ -122,6 +127,7 @@ export class CatalogService {
   ): Promise<ItemRow> {
     if (!dto.image_file_id) throw imageRequired();
     if (!dto.unit) throw unitRequired();
+    await this.units.assertActive(dto.unit, tx);
     if (dto.image_file_id !== opts.trustedImageId) {
       await this.files.assertOwnedBy(dto.image_file_id, actor, 'item_image');
     }
@@ -172,6 +178,10 @@ export class CatalogService {
         ).rows[0];
         if (!before) throw itemNotFound();
         if (Object.keys(patch).length === 0) return before;
+        // Giữ nguyên ĐVT đã ngừng của món cũ vẫn lưu được; chỉ chọn mới mới phải active
+        if (patch.unit && patch.unit !== before.unit) {
+          await this.units.assertActive(patch.unit as string, tx);
+        }
         // Ảnh cũ do admin khác tải vẫn giữ được; chỉ ảnh mới phải là của người sửa
         if (
           patch.image_file_id &&

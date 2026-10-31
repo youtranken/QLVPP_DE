@@ -169,14 +169,14 @@ describe('GET admin/backlog, GET admin/lines/:id/deliveries', () => {
     expect((await groupOf('item', item))?.remaining_qty).toBe(2);
   });
 
-  it('dòng ngoài DM gom theo lower(trim(tên)) + lower(trim(ĐVT)) (CUSTOM_ITEM_KEY); khác ĐVT là nhóm khác; stock_qty null', async () => {
+  it('dòng ngoài DM gom theo lower(trim(tên)) + mã ĐVT (CUSTOM_ITEM_KEY; FK units giữ mã chuẩn); khác ĐVT là nhóm khác; stock_qty null', async () => {
     const name = `Bìa ${f.SUFFIX}`;
     const x = await seedLine('2026-10', A, {
       ...customCols(`  ${name.toUpperCase()} `, 'cai'),
       qty: 2,
     });
     const y = await seedLine('2026-11', B, {
-      ...customCols(name, ' Cai '),
+      ...customCols(name, 'cai'),
       qty: 1,
     });
     const z = await seedLine('2026-11', A, {

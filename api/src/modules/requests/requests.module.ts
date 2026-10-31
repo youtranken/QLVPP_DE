@@ -22,6 +22,7 @@ import { MeRequestService } from './me-request.service';
 import { RequestItemUsageHook } from './request-item-usage.hook';
 import { RequestLinesWriter } from './request-lines.writer';
 import { RequestViewBuilder } from './request-view';
+import { UnitsModule } from '../units/units.module';
 import { ReviewController } from './review.controller';
 import { ReviewService } from './review.service';
 import { SummaryListsService } from './summary-lists.service';
@@ -35,6 +36,7 @@ import { SummaryService } from './summary.service';
     UsersModule,
     SystemConfigModule,
     NotificationsModule,
+    UnitsModule,
   ],
   controllers: [
     CurrentPeriodController,

@@ -22,6 +22,7 @@ import { PeriodsModule } from './modules/periods/periods.module';
 import { RemindersModule } from './modules/reminders/reminders.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { RequestsModule } from './modules/requests/requests.module';
+import { UnitsModule } from './modules/units/units.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { RequestsModule } from './modules/requests/requests.module';
     AuthModule,
     SystemConfigModule,
     FilesModule,
+    UnitsModule,
     CatalogModule,
     PeriodsModule,
     RequestsModule,

@@ -2,6 +2,7 @@ import { Module, OnModuleInit } from '@nestjs/common';
 import { SystemConfigModule } from '../config/config.module';
 import { FileAccessPolicy } from '../files/file-access.policy';
 import { FilesModule } from '../files/files.module';
+import { UnitsModule } from '../units/units.module';
 import { UsersModule } from '../users/users.module';
 import { CatalogService } from './catalog.service';
 import { CategoriesController } from './categories.controller';
@@ -15,7 +16,7 @@ import { StockQueryService } from './stock-query.service';
 import { StockService } from './stock.service';
 
 @Module({
-  imports: [FilesModule, UsersModule, SystemConfigModule],
+  imports: [FilesModule, UsersModule, SystemConfigModule, UnitsModule],
   controllers: [
     CategoriesController,
     ItemsController,

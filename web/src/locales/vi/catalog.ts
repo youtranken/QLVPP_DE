@@ -89,17 +89,6 @@ const catalog = {
       active: 'đang dùng',
       inactive: 'đã ngừng',
     },
-    units: {
-      cai: 'cái',
-      hop: 'hộp',
-      cay: 'cây',
-      ram: 'ram',
-      cuon: 'cuộn',
-      loc: 'lốc',
-      bich: 'bịch',
-      chai: 'chai',
-      bo: 'bộ',
-    },
     errors: {
       IMAGE_REQUIRED: 'Món phải có ảnh — chọn hoặc chụp một ảnh.',
       IMAGE_UNSUPPORTED: 'Chọn ảnh JPG, PNG hoặc WebP',

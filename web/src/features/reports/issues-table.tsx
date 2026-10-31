@@ -1,10 +1,12 @@
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useUnitNames } from '@/features/units/units.api';
 import { useFormatTime } from '@/lib/format-time';
 import { pickName, type ReportIssue } from './reports.api';
 
 export function IssuesTable({ issues }: { issues: ReportIssue[] }) {
   const { t, i18n } = useTranslation();
+  const unitName = useUnitNames();
   const fmt = useFormatTime();
   const titleId = useId();
   if (issues.length === 0) return null;
@@ -32,7 +34,7 @@ export function IssuesTable({ issues }: { issues: ReportIssue[] }) {
                 <td data-label="">
                   <b className="rp-name">{pickName(i18n.language, r.item_name, r.item_name_en)}</b>
                 </td>
-                <td data-label={col('colUnit')}>{t(`catalog.units.${r.unit}`, { defaultValue: r.unit })}</td>
+                <td data-label={col('colUnit')}>{unitName(r.unit)}</td>
                 <td data-label={col('colRecipient')}>{r.recipient_sub ? (r.recipient_name ?? r.recipient_sub) : col('shared')}</td>
                 <td className="r num" data-label={col('colQty')}>{r.qty}</td>
                 <td data-label={col('colReason')}>{r.reason}</td>

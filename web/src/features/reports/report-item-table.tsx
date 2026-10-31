@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useUnitName } from '@/features/units/units.api';
 import { pickName, ORDER_QTY_MAX, type MonthReport, type ReportCustomRow, type ReportItemRow } from './reports.api';
 import type { OrderQty } from './use-order-qty';
 
@@ -42,6 +43,7 @@ function OrderCell({ row, name, qty, label }: { row: Row; name: string; qty: Ord
 
 function ItemRow({ row, name, sub, qty, frozen }: { row: Row; name: string; sub?: string; qty?: OrderQty; frozen?: Record<string, number> }) {
   const { t } = useTranslation();
+  const unitName = useUnitName(row.unit);
   const cols = {
     unit: t('reports.items.colUnit'),
     requested: t('reports.items.colRequested'),
@@ -56,7 +58,7 @@ function ItemRow({ row, name, sub, qty, frozen }: { row: Row; name: string; sub?
         <b className="rp-name">{name}</b>
         {sub && <small className="rp-sub">{sub}</small>}
       </td>
-      <td data-label={cols.unit}>{t(`catalog.units.${row.unit}`, { defaultValue: row.unit })}</td>
+      <td data-label={cols.unit}>{unitName}</td>
       <td className="r num" data-label={cols.requested}>{row.requested}</td>
       <td className="r num" data-label={cols.backlog}>{row.backlog_prev}</td>
       <td className="r num" data-label={cols.stock}>{row.stock ?? '—'}</td>
