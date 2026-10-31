@@ -32,7 +32,7 @@ export function AuditPage() {
       <AuditQuick now={new Date()} applied={filters} onPatch={p.patch} />
       {!audit.isPending && !audit.isError && <p className="au-count">{count}</p>}
       {narrowed && !audit.isError && <FilterNotice label={t('audit.page.filterLabel')} count={rows.length} onClear={p.clear} />}
-      {audit.isError && !fieldError ? (
+      {fieldError ? null : audit.isError ? (
         <LoadError onRetry={() => void audit.refetch()} />
       ) : (
         <AuditTable

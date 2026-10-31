@@ -16,5 +16,6 @@
 .config-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
 .config-saved { color: var(--ok); font-weight: 500; }
 @media (max-width: 680px) {
+  .config-fields { grid-template-columns: 1fr; }
   .admin-hint { order: 3; width: 100%; }
 }

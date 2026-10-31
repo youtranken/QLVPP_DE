@@ -1,3 +1,4 @@
+-- audit_log append-only: dòng `pw-audit-*` (ngày 2001) và `pw-audit-51/50` gieo nhầm không xóa được, chỉ có ở DB dev, lọc theo actor nên vô hại.
 -- KHÔNG CHẠY TRÊN PROD. Chỉ cho DB dev của docker compose (POSTGRES_DB=vpp trong .env.example).
 -- Prod dùng cùng tên DB nên tên chưa đủ chặn: phải gọi kèm `-v dev_ok=1` (xem README) mới chạy.
 -- Dọn dữ liệu Playwright còn sót (món/nhóm tên "PW …", người sub "pw-…", đợt giao, bản chốt, chuông); chỉ xóa dòng không còn bị

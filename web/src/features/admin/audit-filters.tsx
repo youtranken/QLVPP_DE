@@ -92,4 +92,3 @@ export function AuditFilterBar({ applied, serverError, onApply, onClear }: Props
     </form>
   );
 }
-

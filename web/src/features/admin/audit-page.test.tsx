@@ -64,7 +64,7 @@ describe('AuditPage B11', () => {
     ];
     vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items: rows, next_cursor: null } : { items: [], next_cursor: null }))));
     await openAudit();
-    const groups = [...document.querySelectorAll('th[scope=rowgroup]')];
+    const groups = screen.getAllByRole('rowheader');
     expect(groups).toHaveLength(2);
     expect(groups[0]).toHaveTextContent('29/10/2026');
     expect(groups[0]).toHaveTextContent('1 dòng');
@@ -217,7 +217,8 @@ describe('AuditPage B11', () => {
     vi.stubGlobal('fetch', vi.fn((url: string) =>
       Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items: [row('a1', { action: 'future.thing' }), row('a2', { action: 'line.delivered', detail: { ip: '10.0.0.5' } })], next_cursor: null } : { items: [], next_cursor: null })),
     ));
-    await openAudit().catch(() => undefined);
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/audit');
     expect(await screen.findByText('future.thing')).toBeInTheDocument();
     expect(within(screen.getAllByRole('table')[0]).getByText('Giao hàng')).toBeInTheDocument();
     expect(within(screen.getAllByRole('table')[0]).getByText('line.delivered')).toBeInTheDocument();
