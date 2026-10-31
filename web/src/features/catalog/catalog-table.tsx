@@ -108,6 +108,9 @@ export function CatalogTable({ rows, index, loading, selection, rowErrors, colla
         key: (r) => r.group,
         header: (key, list) => (
           <span className="ct-group" data-tone={list[0]?.tone ?? 'g0'}>
+            <span className="ct-group__thumb" aria-hidden="true">
+              <Icon name="pkg" size={16} />
+            </span>
             {groupName(key)}
           </span>
         ),

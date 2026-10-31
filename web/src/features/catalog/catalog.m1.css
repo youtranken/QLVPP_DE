@@ -22,6 +22,8 @@
 [data-shell='admin'] .table tr.is-inactive .ct-item__name, [data-shell='admin'] .table tr.is-inactive td { color: var(--c-muted); }
 [data-shell='admin'] .table tr.is-inactive [data-thumb], [data-shell='admin'] .table tr.is-inactive .ct-item img { filter: grayscale(1); opacity: .6; }
 [data-shell='admin'] .table tr.has-error td { background: var(--c-danger-tint); }
+[data-shell='admin'] .ct-group { display: inline-flex; align-items: center; gap: 10px; }
+[data-shell='admin'] .ct-group__thumb { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: var(--r-sm); background: var(--c-on-tone); color: inherit; }
 [data-shell='admin'] .ct-group-meta { color: inherit; opacity: .8; font: var(--t-sm); font-weight: 600; white-space: nowrap; }
 [data-shell='admin'] .ct-group-add { color: inherit; white-space: nowrap; }
 [data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g0']) th { background: var(--g0); color: var(--g0-ink); }

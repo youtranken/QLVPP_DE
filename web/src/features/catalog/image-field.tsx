@@ -4,6 +4,7 @@ import { compressImage } from '@/lib/image-compress';
 import { useMe } from '@/lib/me';
 import { fileUrl, uploadItemImage } from '@/features/catalog/catalog.api';
 import { catalogErrorKey } from '@/features/catalog/catalog-errors';
+import '@/features/catalog/catalog.css';
 
 export function ImageField({
   fileId,

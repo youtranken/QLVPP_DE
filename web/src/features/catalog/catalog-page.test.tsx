@@ -43,6 +43,18 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
   });
 
+  it('thẻ "Đang dùng" chỉ aria-pressed khi không có lọc nhóm/tìm/thẻ', async () => {
+    await openCatalog({ items: ITEMS });
+    expect(card(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(chips().getByRole('button', { name: /^Bút & viết/ }));
+    expect(card(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it.each(['?q=but', '?cat=c-pen', '?filter=low'])('mở với %s → "Đang dùng" không pressed', async (search) => {
+    await openCatalog({ items: ITEMS }, `/admin/catalog${search}`);
+    expect(card(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'false');
+  });
+
   it('thẻ "Đang dùng" bỏ mọi lọc (filter, nhóm)', async () => {
     await openCatalog({ items: ITEMS }, '/admin/catalog?filter=out&cat=c-pen');
     expect(screen.queryByText('Giấy A4')).toBeNull();

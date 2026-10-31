@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
@@ -17,7 +17,6 @@ import { useBulkItems } from './use-bulk-items';
 import { useCatalogActions } from './use-catalog-actions';
 import { useCatalogParams } from './use-catalog-params';
 import '@/features/admin/admin.css';
-import './catalog.css';
 import './catalog.m1.css';
 
 type BulkDialog = 'max' | 'move' | null;
@@ -44,8 +43,10 @@ export function CatalogPage() {
   const [search, setSearch] = useUrlSearchBox(p.view.q, p.setQ);
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [dialog, setDialog] = useState<BulkDialog>(null);
+  const { keepOnly } = bulk;
+  useEffect(() => keepOnly(new Set(d.rows.map((r) => r.id))), [d.rows, keepOnly]);
   const title = t('catalog.title');
-  const orderedIds = d.all.map((r) => r.id);
+  const orderedIds = d.rows.map((r) => r.id);
   const groupKeys = [...d.counts.keys()];
   const allCollapsed = groupKeys.length > 0 && groupKeys.every((k) => collapsed.has(k));
   const editing = p.itemId && p.itemId !== 'new' ? d.items.data?.find((i) => i.id === p.itemId) : undefined;
@@ -94,7 +95,7 @@ export function CatalogPage() {
   return (
     <div className="ct-page">
       {header}
-      {loaded && <CatalogStats stats={d.stats} filter={p.view.filter} onFilter={p.toggleFilter} onClear={p.clearAll} />}
+      {loaded && <CatalogStats stats={d.stats} filter={p.view.filter} narrowed={p.view.filter !== null || p.view.cat !== null || p.view.q !== ''} onFilter={p.toggleFilter} onClear={p.clearAll} />}
       <CatalogToolbar
         search={search}
         onSearch={setSearch}

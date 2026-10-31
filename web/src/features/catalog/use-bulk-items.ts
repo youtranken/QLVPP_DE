@@ -63,6 +63,14 @@ export function useBulkItems(refresh: () => Promise<unknown>) {
     });
   }, []);
 
+  // Món đã chọn mà lọc/tìm làm ẩn đi thì bỏ chọn: thanh hàng loạt chỉ đếm và chỉ sửa món đang thấy
+  const keepOnly = useCallback((visible: ReadonlySet<string>) => {
+    setSelected((prev) => {
+      const next = new Set([...prev].filter((id) => visible.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, []);
+
   // orderedIds: thứ tự hàng trên bảng, để PATCH đi đúng thứ tự người dùng thấy
   const run = (orderedIds: string[], body: ItemPayload, doneText: (n: number) => string) =>
     flight.run(async () => {
@@ -81,6 +89,7 @@ export function useBulkItems(refresh: () => Promise<unknown>) {
     rowErrors,
     pending: flight.pending,
     setRowError,
+    keepOnly,
     run,
     clear: () => {
       setSelected(new Set());

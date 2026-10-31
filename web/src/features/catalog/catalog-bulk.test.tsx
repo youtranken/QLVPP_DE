@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
 import { PAPER, PEN, PENCIL } from './catalog-fixtures';
-import { inRow, openCatalog, patchCalls } from './catalog-fixtures-api';
+import { inRow, openCatalog, patchCalls, validationError } from './catalog-fixtures-api';
 
 const ITEMS = [PAPER, PEN, PENCIL];
 const bulkBar = () => within(screen.getByRole('toolbar', { name: 'Hành động trên các dòng đã chọn' }));
@@ -91,6 +91,26 @@ describe('Danh mục — hàng loạt', () => {
     expect(inRow('Bút chì 2B').getByRole('checkbox', { name: 'Chọn dòng' })).toBeChecked();
     expect(inRow('Bút bi xanh').getByRole('checkbox', { name: 'Chọn dòng' })).not.toBeChecked();
     expect(bulkBar().getByText('1 món đã chọn')).toBeInTheDocument();
+  });
+
+  it('1 món lỗi VALIDATION max_qty → câu "Tối đa từ 1 đến 999." ở hàng đó, món đó còn chọn', async () => {
+    await openCatalog({ items: ITEMS, patch: (id) => (id === 'i-pencil' ? validationError('max_qty') : jsonResponse(200, {})) });
+    await submitMax('5');
+    expect(await screen.findByText('Đã đổi 1/2 món — xem dòng lỗi.')).toBeInTheDocument();
+    expect(inRow('Bút chì 2B').getByText('Tối đa từ 1 đến 999.')).toBeInTheDocument();
+    expect(inRow('Bút chì 2B').getByRole('checkbox', { name: 'Chọn dòng' })).toBeChecked();
+  });
+
+  it('đổi lọc làm 1 món đã chọn bị ẩn → bỏ chọn món đó, "Ngừng" chỉ PATCH món còn thấy', async () => {
+    const f = await openCatalog({ items: ITEMS });
+    await pickPens();
+    expect(bulkBar().getByText('2 món đã chọn')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /^Hết hàng/ }));
+    expect(bulkBar().getByText('1 món đã chọn')).toBeInTheDocument();
+    await userEvent.click(bulkBar().getByRole('button', { name: 'Ngừng' }));
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Ngừng 1 món?' })).getByRole('button', { name: 'Ngừng' }));
+    expect(await screen.findByText('Đã ngừng 1 món')).toBeInTheDocument();
+    expect(patchCalls(f)).toEqual([{ id: 'i-pencil', body: { active: false } }]);
   });
 
   it('"Chuyển nhóm" sang Giấy & sổ → PATCH {category_id} từng món, toast', async () => {
