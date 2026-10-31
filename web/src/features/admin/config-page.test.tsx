@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, jsonResponse, screen, userEvent, within } from '@/test/test-utils';
 import { makeMe } from '@/test/fixtures-me';
+import { renderApp } from '@/test/render-app';
+import { mockViewport } from '@/test/viewport';
 import { CONFIG, block, configInvalid, openConfig, putBodies, stubConfigApi } from './config-fixtures';
 
 afterEach(() => vi.unstubAllGlobals());
@@ -23,6 +25,14 @@ describe('Cấu hình · trang', () => {
     expect(screen.getByText('Tham số chung của app. Mỗi khối lưu riêng; mọi lần lưu được ghi vào Nhật ký.')).toBeInTheDocument();
     for (const name of ['Kỳ đăng ký', 'Quyền Hành chính', 'Ô ký trên phiếu đề xuất', 'Liên hệ & thông báo']) expect(block(name)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Lưu thế nào' })).toBeInTheDocument();
+  });
+
+  it('đang tải cấu hình vẫn có đầu trang: đúng một h1 "Cấu hình"', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => undefined)));
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/config');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Cấu hình' })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
 
   it('lỗi tải cấu hình → "Không tải được dữ liệu — thử lại." + Thử lại', async () => {
@@ -110,6 +120,15 @@ describe('Cấu hình · khối Quyền Hành chính', () => {
     await openConfig(makeMe('sa', { sub: 'sa-local' }));
     await retype(group(), 'nhom-moi');
     expect(await screen.findByText('0 người trong danh bạ thuộc nhóm này')).toBeInTheDocument();
+    expect(screen.queryByText(/sẽ mất quyền vào trang quản lý/)).toBeNull();
+  });
+
+  it('không tải được danh bạ → nhắc "Không kiểm được số người trong nhóm — kiểm kỹ trước khi lưu.", không cảnh báo tự mất quyền', async () => {
+    stubConfigApi(undefined, (url) => (url.startsWith('/api/admin/users?') ? jsonResponse(500, { code: 'INTERNAL' }) : undefined));
+    await openConfig();
+    await retype(group(), 'nhom-moi');
+    expect(await screen.findByText('Không kiểm được số người trong nhóm — kiểm kỹ trước khi lưu.')).toBeInTheDocument();
+    expect(screen.queryByText(/người trong danh bạ thuộc nhóm này/)).toBeNull();
     expect(screen.queryByText(/sẽ mất quyền vào trang quản lý/)).toBeNull();
   });
 

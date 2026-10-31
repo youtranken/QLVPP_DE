@@ -21,8 +21,7 @@ export function AccessBlock({ state, authorizedGroups }: { state: ConfigBlockSta
   const directory = useDirectoryUsers('');
   const ready = !directory.loading && !directory.failed && !directory.overflow;
   const members = ready ? membersOf(directory.users, state.draft.admin_group) : null;
-  const meInGroup = members?.some((u) => u.sub === me.sub) ?? true;
-  const lockout = members !== null && members.length === 0 && me.role === 'admin' && !meInGroup && state.draft.admin_group.trim() !== '';
+  const lockout = members?.length === 0 && me.role === 'admin' && state.draft.admin_group.trim() !== '';
 
   return (
     <ConfigSection title={t('config.access.title')} saveLabel={t('config.access.save')} state={state}>
@@ -37,6 +36,7 @@ export function AccessBlock({ state, authorizedGroups }: { state: ConfigBlockSta
         )}
       </FormField>
       {members !== null && <p className="cf-count">{t('config.access.members', { count: members.length })}</p>}
+      {!directory.loading && members === null && <p className="ff-hint">{t('config.access.membersUnknown')}</p>}
       {lockout && <p className="alert alert--warn">{t('config.access.selfLockout', { name: me.fullName || t('config.access.you') })}</p>}
       <AuthorizedGroups groups={authorizedGroups} users={ready ? directory.users : null} />
     </ConfigSection>

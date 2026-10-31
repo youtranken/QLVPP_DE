@@ -27,7 +27,14 @@ export function ConfigPage() {
       </div>
     );
   }
-  if (!config.data) return <Loading />;
+  if (!config.data) {
+    return (
+      <div className="ct-page">
+        {header}
+        <Loading />
+      </div>
+    );
+  }
   return <ConfigForm config={config.data} />;
 }
 

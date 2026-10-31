@@ -51,6 +51,7 @@ const config = {
       adminGroup: 'Nhóm PMH ID của Hành chính',
       adminGroupHint: 'Người thuộc nhóm này vào được trang quản lý.',
       members: '{{count}} người trong danh bạ thuộc nhóm này',
+      membersUnknown: 'Không kiểm được số người trong nhóm — kiểm kỹ trước khi lưu.',
       selfLockout: 'Nhóm này chưa có người trong danh bạ. Sau khi lưu, {{name}} sẽ mất quyền vào trang quản lý từ lần bấm kế tiếp.',
       you: 'bạn',
       authorizedGroups: 'Nhóm PMH ID được dùng app',

@@ -111,6 +111,25 @@ describe('Cấu hình · khối Kỳ đăng ký', () => {
     expect(putBodies(fetchMock)).toEqual([{ reminder_days_left: 8 }]);
   });
 
+  it('ngày nhắc gõ tay 0 vẫn gửi; CONFIG_INVALID {field: reminder_days_left} → lỗi tại ô', async () => {
+    const fetchMock = stubConfigApi(() => configInvalid('reminder_days_left'));
+    await openConfig();
+    await typeInto(reminder(), '0');
+    await savePeriod();
+    await vi.waitFor(() => expect(reminder()).toHaveAttribute('aria-invalid', 'true'));
+    expect(reminder()).toHaveAccessibleDescription('Nhập số từ 1 đến 7, nhỏ hơn ngày hạn.');
+    expect(putBodies(fetchMock)).toEqual([{ reminder_days_left: 0 }]);
+  });
+
+  it.each([1, 7])('ngày nhắc %i gửi đi và báo "Đã lưu."', async (days) => {
+    const fetchMock = stubConfigApi((body) => jsonResponse(200, { ...CONFIG, ...body }));
+    await openConfig();
+    await typeInto(reminder(), String(days));
+    await savePeriod();
+    expect(await within(block('Kỳ đăng ký')).findByText('Đã lưu.')).toBeInTheDocument();
+    expect(putBodies(fetchMock)).toEqual([{ reminder_days_left: days }]);
+  });
+
   it.each([
     ['1', 1],
     ['999', 999],
