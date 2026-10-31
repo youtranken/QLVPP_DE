@@ -74,7 +74,8 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await expect(page.getByRole('heading', { level: 1, name: FORM })).toBeVisible();
     await expect(formTable(page).getByRole('row', { name: new RegExp(a.name) }).getByRole('cell').last()).toHaveText('9');
 
-    await page.getByRole('checkbox', { name: 'In kèm phụ lục' }).check();
+    await page.getByRole('checkbox', { name: 'In kèm phụ lục' }).click();
+    await expect(page.getByRole('checkbox', { name: 'In kèm phụ lục' })).toBeChecked();
     await expect(page).toHaveURL(/\?appendix=1$/);
     const frozenRow = () => appendix(page).getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row', { name: new RegExp(a.name) });
     const numbers = async () => (await frozenRow().getByRole('cell').allTextContents()).slice(3, 8);
@@ -157,7 +158,8 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await expect(rowA.getByRole('cell').nth(1)).toHaveText(code);
     await expect(rowA.getByRole('cell').nth(2)).toHaveText(a.name);
 
-    await page.getByRole('checkbox', { name: 'In kèm phụ lục' }).check();
+    await page.getByRole('checkbox', { name: 'In kèm phụ lục' }).click();
+    await expect(page.getByRole('checkbox', { name: 'In kèm phụ lục' })).toBeChecked();
     await expect(page).toHaveURL(/\?appendix=1$/);
     await expect(appendix(page).getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row', { name: new RegExp(b.name) })).toBeVisible();
     await page.reload();
@@ -165,7 +167,8 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await expect(appendix(page)).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
     await snap(page, info, 'print-form-appendix');
-    await page.getByRole('checkbox', { name: 'In kèm phụ lục' }).uncheck();
+    await page.getByRole('checkbox', { name: 'In kèm phụ lục' }).click();
+    await expect(page.getByRole('checkbox', { name: 'In kèm phụ lục' })).not.toBeChecked();
     await expect(appendix(page)).toHaveCount(0);
     await snap(page, info, 'print-form');
   });

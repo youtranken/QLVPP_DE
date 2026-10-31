@@ -18,6 +18,8 @@
   --c-danger: #A7312B; --c-danger-soft: #F4E0DC; --c-danger-line: #E1B4B0; --c-danger-tint: #FBF3F1;
   --c-info: #1F3A6B;   --c-info-soft: #E4E9F2;
   --c-dot: #CF4340;   /* chấm chưa đọc trên chuông */
+  /* tờ in (bản in A4): đen trắng tuyệt đối */
+  --c-print-ink: #000000;  --c-print-paper: #FFFFFF;  --c-print-muted: #333333;
   /* tông nhóm: nền / nền đậm (hover, viền) / chữ trên nền. Thang sáng L* ≈ 96·93·90·87·84 để phân biệt cả khi mù màu */
   --g1: #DCE3EF; --g1-strong: #C4CDDE; --g1-ink: #2E4675;   /* xanh đá   — Bút & viết */
   --g2: #E7EDE1; --g2-strong: #CFD8C8; --g2-ink: #3D5A2E;   /* rêu       — Giấy & sổ  */

@@ -110,7 +110,11 @@ const reports = {
         empty: 'Không có món cần đặt mua.',
         noCode: '—',
         signGroup: 'Chữ ký',
-        oldSigner: { preparer: 'Người lập', head: 'Trưởng phòng', approver: 'Duyệt' },
+        oldSigner: {
+          preparer: { title: 'Người lập', titleEn: 'Prepared by' },
+          head: { title: 'Trưởng phòng', titleEn: 'Head of Dept.' },
+          approver: { title: 'Duyệt', titleEn: 'Approved by' },
+        },
       },
       appendix: {
         org: 'Công ty Phú Mỹ Hưng',

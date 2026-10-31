@@ -50,6 +50,12 @@ describe('Trang in · phụ lục (B6 cũ)', () => {
     expect(await within(app).findByText('Bản chốt số 1 của kỳ · Đặt mua mặc định')).toBeInTheDocument();
   });
 
+  it('bản chốt 0 hàng → chỉ "Bản chốt số 1 của kỳ", không "Đặt mua mặc định"', async () => {
+    const app = await openAppendix(snapshotDataFixture({ byItem: [], custom: [], byDepartment: [], order_qty: {} }));
+    expect(await within(app).findByText('Bản chốt số 1 của kỳ')).toBeInTheDocument();
+    expect(within(app).queryByText(/Đặt mua mặc định/)).not.toBeInTheDocument();
+  });
+
   it('một ô Đặt mua khác Cần mua → không có "Đặt mua mặc định"', async () => {
     const app = await openAppendix();
     expect(await within(app).findByText('Bản chốt số 1 của kỳ')).toBeInTheDocument();

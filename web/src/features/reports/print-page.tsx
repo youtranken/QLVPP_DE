@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/lib/api-client';
@@ -42,12 +41,8 @@ function Toolbar({ snap, appendix, onAppendix }: { snap: SnapshotData; appendix:
 
 function PrintScreen({ snap }: { snap: SnapshotData }) {
   const [params, setParams] = useSearchParams();
-  // Điều hướng của router chạy trong transition → giữ trạng thái tại chỗ để công tắc đổi ngay khi bấm
-  const [appendix, setAppendix] = useState(params.get('appendix') === '1');
-  const onAppendix = (on: boolean) => {
-    setAppendix(on);
-    setParams(on ? { appendix: '1' } : {}, { replace: true });
-  };
+  const appendix = params.get('appendix') === '1';
+  const onAppendix = (on: boolean) => setParams(on ? { appendix: '1' } : {}, { replace: true });
   return (
     <div className="pp-page">
       <Toolbar snap={snap} appendix={appendix} onAppendix={onAppendix} />

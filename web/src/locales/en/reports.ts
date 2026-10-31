@@ -113,7 +113,11 @@ const reports: Messages<typeof vi> = {
         empty: 'Không có món cần đặt mua.',
         noCode: '—',
         signGroup: 'Signatures',
-        oldSigner: { preparer: 'Prepared by', head: 'Head of department', approver: 'Approved by' },
+        oldSigner: {
+          preparer: { title: 'Người lập', titleEn: 'Prepared by' },
+          head: { title: 'Trưởng phòng', titleEn: 'Head of Dept.' },
+          approver: { title: 'Duyệt', titleEn: 'Approved by' },
+        },
       },
       appendix: {
         org: 'Phu My Hung Corporation',

@@ -80,11 +80,13 @@ describe('Trang in · trang 1 Phiếu đề xuất (mẫu D&E)', () => {
     expect(within(await screen.findByRole('group', { name: 'Chữ ký' })).getAllByRole('group')).toHaveLength(n);
   });
 
-  it('bản chốt cũ chỉ có signers → 3 ô "Người lập / Trưởng phòng / Duyệt", tên từ bản chốt, không in "undefined"', async () => {
+  it.each(['vi', 'en'])('bản chốt cũ chỉ có signers, giao diện %s → 3 ô song ngữ như mẫu (vi + dòng en), tên từ bản chốt, không in "undefined"', async (lang) => {
+    await i18n.changeLanguage(lang);
     openPrint(snapshotDataFixture({ signature_boxes: undefined, signers: { preparer: 'Lê Thị Hoa', head: '', approver: 'Đỗ Minh Châu' } }));
-    const boxes = within(await screen.findByRole('group', { name: 'Chữ ký' })).getAllByRole('group');
+    const sign = await screen.findByRole('group', { name: lang === 'en' ? 'Signatures' : 'Chữ ký' });
+    const boxes = within(sign).getAllByRole('group');
     expect(boxes.map((b) => b.getAttribute('aria-label'))).toEqual(['Người lập', 'Trưởng phòng', 'Duyệt']);
-    expect(boxes.map((b) => b.textContent)).toEqual(['Người lậpLê Thị Hoa', 'Trưởng phòng', 'DuyệtĐỗ Minh Châu']);
+    expect(boxes.map((b) => b.textContent)).toEqual(['Người lậpPrepared byLê Thị Hoa', 'Trưởng phòngHead of Dept.', 'DuyệtApproved byĐỗ Minh Châu']);
     expect(document.body.textContent).not.toContain('undefined');
   });
 });

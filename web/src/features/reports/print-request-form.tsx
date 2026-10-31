@@ -57,7 +57,11 @@ export function PrintRequestForm({ snap }: { snap: SnapshotData }) {
   const { t } = useTranslation();
   const titleId = useId();
   const rows = useFormRows(snap, t('reports.print.form.noCode'));
-  const boxes = signBoxesOf(snap, (role) => t(`reports.print.form.oldSigner.${role}`));
+  // Trang 1 theo mẫu D&E nên chức danh ô cũ luôn song ngữ cố định, không theo ngôn ngữ giao diện
+  const boxes = signBoxesOf(snap, (role) => ({
+    title: t(`reports.print.form.oldSigner.${role}.title`, { lng: FORM_LANG }),
+    title_en: t(`reports.print.form.oldSigner.${role}.titleEn`, { lng: FORM_LANG }),
+  }));
   return (
     <section className="pp-sheet pp-form" aria-labelledby={titleId}>
       <header className="pp-form__head">

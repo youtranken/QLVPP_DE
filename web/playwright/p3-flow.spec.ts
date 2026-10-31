@@ -105,7 +105,8 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   await confirmPendingIfAny(admin, request, s.prevYm);
   await admin.goto(await urlOfNewTab(admin, PRINT_URL, () => admin.getByRole('button', { name: 'Mở bản in' }).click(), SA_PASSWORD ? undefined : devHeaders('admin')));
   const snapshotId = admin.url().split('/').at(-2)!;
-  await admin.getByRole('checkbox', { name: 'In kèm phụ lục' }).check();
+  await admin.getByRole('checkbox', { name: 'In kèm phụ lục' }).click();
+  await expect(admin.getByRole('checkbox', { name: 'In kèm phụ lục' })).toBeChecked();
   await expectFrozenPaper(admin, s);
   await expect(admin.getByText(/^Lập lúc \d{2}:\d{2} ngày \d{2}\/\d{2}\/\d{4} bởi .+/)).toBeVisible();
   const signs = admin.getByRole('group', { name: 'Chữ ký' });

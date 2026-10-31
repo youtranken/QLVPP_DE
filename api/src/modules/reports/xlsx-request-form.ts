@@ -21,7 +21,6 @@ const FORM = {
   empty: 'Không có món cần đặt mua.',
   noCode: '—',
   blankName: '……………………',
-  oldTitles: { preparer: 'Người lập', head: 'Trưởng phòng', approver: 'Duyệt' },
 } as const;
 
 const WIDTHS = [7, 8, 33, 25, 10, 8];
@@ -31,6 +30,13 @@ const THIN = { style: 'thin' } as const;
 const BORDER = { top: THIN, left: THIN, bottom: THIN, right: THIN };
 
 export const REQUEST_FORM_SHEET = FORM.sheet;
+
+// Chức danh 3 ô của bản chốt trước 0112; trùng với web (reports.print.form.oldSigner)
+const OLD_SIGNER_TITLES = {
+  preparer: { title: 'Người lập', title_en: 'Prepared by' },
+  head: { title: 'Trưởng phòng', title_en: 'Head of Dept.' },
+  approver: { title: 'Duyệt', title_en: 'Approved by' },
+} as const;
 
 export interface RequestFormRow {
   code: string;
@@ -71,8 +77,7 @@ export function requestFormRows(
 export function signatureBoxesOf(data: SnapshotData): SignatureBox[] {
   if (data.signature_boxes) return data.signature_boxes;
   return (['preparer', 'head', 'approver'] as const).map((role) => ({
-    title: FORM.oldTitles[role],
-    title_en: '',
+    ...OLD_SIGNER_TITLES[role],
     name: data.signers?.[role] ?? '',
   }));
 }

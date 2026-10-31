@@ -169,7 +169,7 @@ describe('buildWorkbook · sheet 1 Phiếu đề xuất (mẫu D&E)', () => {
     ]);
   });
 
-  it('bản chốt cũ chỉ có signers → 3 ô "Người lập / Trưởng phòng / Duyệt" với tên cũ', async () => {
+  it('bản chốt cũ chỉ có signers → 3 ô song ngữ "Người lập / Trưởng phòng / Duyệt" + "Prepared by / Head of Dept. / Approved by" với tên cũ', async () => {
     const ws = await form(
       snapshotData({
         signature_boxes: undefined,
@@ -181,6 +181,12 @@ describe('buildWorkbook · sheet 1 Phiếu đề xuất (mẫu D&E)', () => {
       'Người lập',
       'Trưởng phòng',
       'Duyệt',
+    ]);
+    const en = ws.getRow(row.number + 1);
+    expect([3, 5, 6].map((c) => en.getCell(c).value)).toEqual([
+      'Prepared by',
+      'Head of Dept.',
+      'Approved by',
     ]);
     const names = ws.getRow(findRow(ws, 'Lập X'));
     expect([3, 5, 6].map((c) => names.getCell(c).value)).toEqual([

@@ -4,7 +4,7 @@
 [data-shell='admin'] .pp-switch { display: inline-flex; align-items: center; gap: var(--s-2); min-height: var(--hit); font: var(--t-sm); font-weight: 600; color: var(--c-ink-2); cursor: pointer; }
 [data-shell='admin'] .pp-switch input { width: 20px; height: 20px; margin: 0; accent-color: var(--c-acc); }
 
-[data-shell='admin'] .pp-sheet { display: grid; gap: var(--s-3); padding: var(--s-7) var(--s-6); background: var(--c-surface); color: var(--c-ink); box-shadow: var(--e-1); font: var(--t-sm); overflow-wrap: anywhere; }
+[data-shell='admin'] .pp-sheet { display: grid; gap: var(--s-3); padding: var(--s-7) var(--s-6); background: var(--c-print-paper); color: var(--c-print-ink); box-shadow: var(--e-1); font: var(--t-sm); overflow-wrap: anywhere; }
 [data-shell='admin'] .pp-sheet p { margin: 0; }
 [data-shell='admin'] .pp-form__head { display: grid; gap: var(--s-1); text-align: center; }
 [data-shell='admin'] .pp-form__title { margin: 0; font: var(--t-h3); }
@@ -13,7 +13,7 @@
 
 [data-shell='admin'] .pp-table { width: 100%; border-collapse: collapse; font: var(--t-sm); }
 [data-shell='admin'] .pp-table th,
-[data-shell='admin'] .pp-table td { padding: 4px 6px; border: 1px solid var(--c-ink); text-align: left; vertical-align: top; }
+[data-shell='admin'] .pp-table td { padding: 4px 6px; border: 1px solid var(--c-print-ink); text-align: left; vertical-align: top; }
 [data-shell='admin'] .pp-table thead th { font-weight: 700; text-align: center; vertical-align: middle; overflow-wrap: normal; }
 [data-shell='admin'] .pp-table .pp-c { text-align: center; }
 [data-shell='admin'] .pp-table .pp-r { text-align: right; font-variant-numeric: tabular-nums; }
@@ -29,7 +29,7 @@
 [data-shell='admin'] .pp-sign { display: flex; flex-direction: column; align-items: center; text-align: center; }
 [data-shell='admin'] .pp-sign__space { height: 22mm; }
 [data-shell='admin'] .pp-sign__name { min-height: 1.4em; }
-[data-shell='admin'] .pp-sign__name--blank { width: 70%; border-bottom: 1px dotted var(--c-ink); }
+[data-shell='admin'] .pp-sign__name--blank { width: 70%; border-bottom: 1px dotted var(--c-print-ink); }
 
 [data-shell='admin'] .pp-app__head { display: flex; justify-content: space-between; gap: var(--s-4); flex-wrap: wrap; }
 [data-shell='admin'] .pp-app__org { font-weight: 700; }
@@ -39,11 +39,11 @@
 [data-shell='admin'] .pp-part { display: grid; gap: var(--s-2); }
 [data-shell='admin'] .pp-h3 { margin: var(--s-2) 0 0; font: var(--t-label); break-after: avoid; }
 [data-shell='admin'] .pp-note { font-style: italic; }
-[data-shell='admin'] .pp-app__foot { margin-top: var(--s-4); text-align: center; color: var(--c-muted); }
+[data-shell='admin'] .pp-app__foot { margin-top: var(--s-4); text-align: center; color: var(--c-print-muted); }
 
 @page { size: A4 portrait; margin: 14mm; }
 @media print {
-  [data-shell='admin'] { background: var(--c-surface); }
+  [data-shell='admin'] { background: var(--c-print-paper); }
   [data-shell='admin'] .pp-toolbar { display: none; }
   [data-shell='admin'] .pp-page { display: block; max-width: none; padding: 0; }
   [data-shell='admin'] .pp-sheet { padding: 0; box-shadow: none; }
