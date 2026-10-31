@@ -1,25 +1,9 @@
-import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 
 interface Page<T> {
   items: T[];
   next_cursor: string | null;
-}
-
-export interface AdminUser {
-  sub: string;
-  email: string | null;
-  employeeCode: string | null;
-  fullName: string | null;
-  department: string | null;
-  groups: string[];
-  status: 'active' | 'locked';
-  lastLoginAt: string | null;
-}
-
-export interface SyncResult {
-  created: number;
-  updated: number;
 }
 
 export interface AuditEntry {
@@ -62,7 +46,6 @@ export interface AdminConfig {
 export type ConfigPatch = Partial<Omit<AdminConfig, 'authorized_groups'>>;
 
 export const CONFIG_KEY = ['admin', 'config'] as const;
-const USERS_PAGE = 50;
 const AUDIT_PAGE = 50;
 
 function pageParams(limit: number, cursor: string | null, extra: Record<string, string>) {
@@ -71,21 +54,6 @@ function pageParams(limit: number, cursor: string | null, extra: Record<string, 
   if (cursor) params.set('cursor', cursor);
   return params;
 }
-
-export function useAdminUsers(search: string) {
-  return useInfiniteQuery({
-    queryKey: ['users', 'admin-list', search],
-    initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      apiFetch<Page<AdminUser>>(`/api/admin/users?${pageParams(USERS_PAGE, pageParam, { search })}`),
-    getNextPageParam: (last) => last.next_cursor,
-    // Giữ bảng cũ trong lúc tìm để không nháy về "Đang tải" mỗi lần gõ
-    placeholderData: keepPreviousData,
-  });
-}
-
-export const syncDirectory = (csrfToken: string | null) =>
-  apiFetch<SyncResult>('/api/admin/directory/sync', { method: 'POST', csrfToken });
 
 export function useAuditLog(filters: AuditFilters) {
   return useInfiniteQuery({

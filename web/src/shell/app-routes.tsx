@@ -9,7 +9,7 @@ import { CatalogPage } from '@/features/catalog/catalog-page';
 import { CategoriesPage } from '@/features/catalog/categories-page';
 import { UnitsPage } from '@/features/units/units-page';
 import { StockPage } from '@/features/stock/stock-page';
-import { UsersPage } from '@/features/admin/users-page';
+import { UsersPage } from '@/features/directory/users-page';
 import { AuditPage } from '@/features/admin/audit-page';
 import { ConfigPage } from '@/features/admin/config-page';
 import { SummaryPage } from '@/features/summary/summary-page';

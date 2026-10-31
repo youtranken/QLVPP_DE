@@ -51,3 +51,26 @@ export function useDirectoryNames() {
     staleTime: 5 * 60_000,
   });
 }
+
+export interface AdminUser extends DirectoryUser {
+  employeeCode: string | null;
+  groups: string[];
+  lastLoginAt: string | null;
+}
+
+export interface SyncResult {
+  created: number;
+  updated: number;
+}
+
+export const USERS_PAGE = 200;
+
+export function fetchUsersPage(search: string, cursor: string | null): Promise<Page<AdminUser>> {
+  const params = new URLSearchParams({ limit: String(USERS_PAGE) });
+  if (search) params.set('search', search);
+  if (cursor) params.set('cursor', cursor);
+  return apiFetch(`/api/admin/users?${params}`);
+}
+
+export const syncDirectory = (csrfToken: string | null) =>
+  apiFetch<SyncResult>('/api/admin/directory/sync', { method: 'POST', csrfToken });

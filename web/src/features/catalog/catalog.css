@@ -1,4 +1,0 @@
-/* Tên + quy cách trong bảng cũ (Kho, Danh bạ) */
-.item-name { display: grid; gap: 2px; }
-.item-name b { font-weight: 500; }
-.item-name small { color: var(--ink-3); font-size: 12.5px; }

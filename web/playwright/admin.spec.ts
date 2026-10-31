@@ -12,13 +12,16 @@ test.describe('E0-S7 Danh bạ (dev-identity admin)', () => {
   }, info) => {
     seedActiveUser(ACTIVE.sub, ACTIVE.name);
     seedActiveUser(LOCKED.sub, LOCKED.name, 'locked');
+    await page.route('**/api/admin/directory/sync', (route) =>
+      route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ code: 'SSO_UNAVAILABLE', message: 'x' }) }),
+    );
     await page.goto('/admin/users');
     await expect(page.getByRole('heading', { level: 1, name: 'Danh bạ' })).toBeVisible();
     await page.getByRole('searchbox', { name: 'Tìm theo tên, email hoặc mã NV' }).fill('PW Danh bạ');
     await expect(page.getByRole('row').filter({ hasText: LOCKED.name }).getByText('Đã khóa', { exact: true })).toBeVisible();
     await expect(page.getByRole('row').filter({ hasText: ACTIVE.name }).getByText('Đang dùng', { exact: true })).toBeVisible();
 
-    // Dev không có PMH ID thật: đồng bộ phải báo lỗi rõ ràng chứ không làm hỏng trang
+    // Dev không có PMH ID thật: chặn POST để lỗi xác định; trang phải báo rõ ràng chứ không làm hỏng
     await page.getByRole('button', { name: 'Đồng bộ ngay' }).click();
     await expect(page.getByRole('alert')).toContainText('PMH ID');
     await expect(page.getByRole('row').filter({ hasText: ACTIVE.name })).toBeVisible();

@@ -86,6 +86,7 @@ Playwright: `E9-S5 Danh mục: sửa tại chỗ tối đa 0/1/999/1000, thêm m
 
 ## E9-S6 Danh bạ + Nhật ký + Cấu hình
 SPEC §5.6.
+Trạng thái: AC 5 + Playwright "E9-S6 Danh bạ…" xong (T20); AC 1–4 chờ T21/T22.
 **AC:**
 1. Ngày hạn 3 và 28 lưu được; 2 và 29 → lỗi tại ô từ `CONFIG_INVALID` (nút ± dừng ở 3/28 nhưng gõ tay vẫn gửi được để server quyết); tối đa mặc định 1/999 qua, 0/1000 lỗi.
 2. Người ký 200 ký tự lưu; 201 → lỗi ô; liên hệ 500 lưu, ô không nhận ký tự 501, đếm "500/500".
