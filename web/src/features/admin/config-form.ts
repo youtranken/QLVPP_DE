@@ -1,96 +1,128 @@
 import type { AdminConfig, ConfigPatch, SignatureBox } from '@/features/admin/admin.api';
 
-export interface ConfigDraft {
-  registration_last_day: string;
-  default_max_qty: string;
-  admin_group: string;
-  sign0: string;
-  sign1: string;
-  sign2: string;
-  admin_contact: string;
+export type ConfigBlock = 'period' | 'access' | 'signers' | 'contact';
+// Khóa = đường dẫn field của CONFIG_INVALID (vd "signature_boxes.1.title"), giá trị = khóa i18n; 'form' = lỗi cả khối
+export type FieldErrors = Record<string, string>;
+
+export interface BlockSpec<D> {
+  block: ConfigBlock;
+  fromConfig: (c: AdminConfig) => D;
+  patchOf: (d: D, c: AdminConfig) => ConfigPatch;
+  validate: (d: D) => FieldErrors;
+  errorOf: (field: string | null, d: D) => FieldErrors;
 }
 
-export type DraftField = keyof ConfigDraft;
-export type ConfigGroup = 'period' | 'access' | 'signers' | 'contact';
-// Giá trị là khóa i18n; 'form' = lỗi không gắn được vào ô nào
-export type ConfigErrors = Partial<Record<DraftField | 'form', string>>;
-
-export const GROUP_FIELDS: Record<ConfigGroup, DraftField[]> = {
-  period: ['registration_last_day', 'default_max_qty'],
-  access: ['admin_group'],
-  signers: ['sign0', 'sign1', 'sign2'],
-  contact: ['admin_contact'],
-};
-
-export const SIGN_FIELDS = ['sign0', 'sign1', 'sign2'] as const;
-const SIGNER_FIELDS = new Set<DraftField>(SIGN_FIELDS);
+const UNKNOWN: FieldErrors = { form: 'config.errors.UNKNOWN' };
 const NAME_MAX = 200;
 const CONTACT_MAX = 500;
+const TITLE_MAX = 60;
 
-export function toDraft(c: AdminConfig): ConfigDraft {
-  return {
+export const isWhole = (v: string) => /^\d+$/.test(v.trim());
+export const wholeIn = (v: string, min: number, max: number) => isWhole(v) && Number(v) >= min && Number(v) <= max;
+
+export type PeriodDraft = Record<'registration_last_day' | 'reminder_days_left' | 'default_max_qty', string>;
+const PERIOD_KEYS = ['registration_last_day', 'reminder_days_left', 'default_max_qty'] as const;
+
+// Ngày hạn và ngày nhắc gõ tay số nào cũng gửi để server quyết (AC E9-S6 1); chỉ chặn ô không phải số
+export const periodSpec: BlockSpec<PeriodDraft> = {
+  block: 'period',
+  fromConfig: (c) => ({
     registration_last_day: String(c.registration_last_day),
+    reminder_days_left: String(c.reminder_days_left),
     default_max_qty: String(c.default_max_qty),
-    admin_group: c.admin_group,
-    sign0: c.signature_boxes[0]?.name ?? '',
-    sign1: c.signature_boxes[1]?.name ?? '',
-    sign2: c.signature_boxes[2]?.name ?? '',
-    admin_contact: c.admin_contact,
-  };
-}
-
-const intIn = (v: string, min: number, max: number) => {
-  const n = Number(v);
-  return v.trim() !== '' && Number.isInteger(n) && n >= min && n <= max;
+  }),
+  patchOf: (d, c) =>
+    Object.fromEntries(
+      PERIOD_KEYS.filter((k) => !(isWhole(d[k]) && Number(d[k]) === c[k])).map((k) => [k, isWhole(d[k]) ? Number(d[k]) : d[k]]),
+    ),
+  validate: (d) => {
+    const errors: FieldErrors = {};
+    if (!isWhole(d.registration_last_day)) errors.registration_last_day = 'config.errors.registration_last_day';
+    if (!isWhole(d.reminder_days_left)) errors.reminder_days_left = 'config.errors.reminder_days_left';
+    if (!wholeIn(d.default_max_qty, 1, 999)) errors.default_max_qty = 'config.errors.default_max_qty';
+    return errors;
+  },
+  errorOf: (field, d) => {
+    // Ngày hạn trong 3–28 mà server vẫn từ chối thì chỉ có thể do luật "lớn hơn ngày nhắc"
+    if (field === 'registration_last_day') {
+      return { [field]: wholeIn(d.registration_last_day, 3, 28) ? 'config.errors.lastDayBelowReminder' : 'config.errors.registration_last_day' };
+    }
+    if (field === 'reminder_days_left' || field === 'default_max_qty') return { [field]: `config.errors.${field}` };
+    return UNKNOWN;
+  },
 };
 
-const VALID: Record<DraftField, (v: string) => boolean> = {
-  registration_last_day: (v) => intIn(v, 3, 28),
-  default_max_qty: (v) => intIn(v, 1, 999),
-  admin_group: (v) => v.trim() !== '' && v.trim().length <= NAME_MAX,
-  sign0: (v) => v.trim().length <= NAME_MAX,
-  sign1: (v) => v.trim().length <= NAME_MAX,
-  sign2: (v) => v.trim().length <= NAME_MAX,
-  admin_contact: (v) => v.trim().length <= CONTACT_MAX,
+export interface AccessDraft {
+  admin_group: string;
+}
+
+export const accessSpec: BlockSpec<AccessDraft> = {
+  block: 'access',
+  fromConfig: (c) => ({ admin_group: c.admin_group }),
+  patchOf: (d, c) => (d.admin_group.trim() === c.admin_group ? {} : { admin_group: d.admin_group.trim() }),
+  validate: (d): FieldErrors => {
+    const v = d.admin_group.trim();
+    return v === '' || v.length > NAME_MAX ? { admin_group: 'config.errors.admin_group' } : {};
+  },
+  errorOf: (field) => (field === 'admin_group' ? { admin_group: 'config.errors.admin_group' } : UNKNOWN),
 };
 
-const errorKey = (f: DraftField) => (SIGNER_FIELDS.has(f) ? 'config.errors.signer' : `config.errors.${f}`);
-
-export function validateGroup(group: ConfigGroup, d: ConfigDraft): ConfigErrors {
-  return Object.fromEntries(GROUP_FIELDS[group].filter((f) => !VALID[f](d[f])).map((f) => [f, errorKey(f)]));
+export interface BoxDraft extends SignatureBox {
+  id: number;
 }
 
-const NUMERIC = new Set<DraftField>(['registration_last_day', 'default_max_qty']);
-const normalize = (f: DraftField, v: string) => (NUMERIC.has(f) && v.trim() !== '' ? String(Number(v)) : v.trim());
+export const BOXES_MAX = 3;
+let nextBoxId = 0;
+export const newBox = (box: SignatureBox = { title: '', title_en: '', name: '' }): BoxDraft => ({ ...box, id: ++nextBoxId });
+const trimBox = (b: SignatureBox): SignatureBox => ({ title: b.title.trim(), title_en: b.title_en.trim(), name: b.name.trim() });
 
-// Chỉ gửi ô đã đổi so với bản server: lưu không đổi gì sẽ không ghi nhật ký,
-// và không ghi đè ô người khác vừa sửa. Ô ký: server thay cả mảng nên gửi đủ các ô hiện có.
-export function toPatch(group: ConfigGroup, d: ConfigDraft, base: ConfigDraft, boxes: SignatureBox[]): ConfigPatch {
-  const changed = GROUP_FIELDS[group].filter((f) => normalize(f, d[f]) !== normalize(f, base[f]));
-  if (changed.length === 0) return {};
-  if (group === 'signers') return { signature_boxes: boxes.map((b, i) => ({ ...b, name: d[SIGN_FIELDS[i]].trim() })) };
-  return Object.fromEntries(changed.map((f) => [f, NUMERIC.has(f) ? Number(d[f]) : d[f].trim()]));
-}
+const BOX_ERRORS: Record<keyof SignatureBox, string> = {
+  title: 'config.errors.boxTitle',
+  title_en: 'config.errors.boxTitleEn',
+  name: 'config.errors.signer',
+};
+const BOX_FIELD = /^signature_boxes\.(\d)\.(title|title_en|name)$/;
 
-const SIGN_NAME_FIELD = /^signature_boxes\.([0-2])\.name$/;
-const SIGN_TITLE_FIELD = /^signature_boxes\.[0-2]\.title(_en)?$/;
-
-// Ô ngày hạn đã qua kiểm 3–28 ở client nên server từ chối nó chỉ có thể là luật "lớn hơn ngày nhắc"
-const SERVER_ERROR_KEYS: Partial<Record<DraftField, string>> = {
-  registration_last_day: 'config.errors.lastDayBelowReminder',
+// Server thay cả mảng, nên đổi một ô cũng gửi đủ các ô
+export const signersSpec: BlockSpec<BoxDraft[]> = {
+  block: 'signers',
+  fromConfig: (c) => c.signature_boxes.map((b) => newBox(b)),
+  patchOf: (d, c) => {
+    const boxes = d.map(trimBox);
+    return JSON.stringify(boxes) === JSON.stringify(c.signature_boxes.map(trimBox)) ? {} : { signature_boxes: boxes };
+  },
+  validate: (d) => {
+    const errors: FieldErrors = {};
+    d.map(trimBox).forEach((b, i) => {
+      if (b.title === '' || b.title.length > TITLE_MAX) errors[`signature_boxes.${i}.title`] = BOX_ERRORS.title;
+      if (b.title_en.length > TITLE_MAX) errors[`signature_boxes.${i}.title_en`] = BOX_ERRORS.title_en;
+      if (b.name.length > NAME_MAX) errors[`signature_boxes.${i}.name`] = BOX_ERRORS.name;
+    });
+    return errors;
+  },
+  errorOf: (field) => {
+    const m = field ? BOX_FIELD.exec(field) : null;
+    if (m && field) return { [field]: BOX_ERRORS[m[2] as keyof SignatureBox] };
+    if (field?.startsWith('signature_boxes')) return { form: 'config.errors.boxes' };
+    return UNKNOWN;
+  },
 };
 
-// CONFIG_INVALID trả field kiểu "admin_group" hoặc "signature_boxes.0.name"
-export function errorsFromApiField(field: string | null): ConfigErrors {
-  if (field && SIGN_TITLE_FIELD.test(field)) return { form: 'config.errors.signBoxTitle' };
-  const sign = field ? SIGN_NAME_FIELD.exec(field) : null;
-  const key = sign ? SIGN_FIELDS[Number(sign[1])] : field;
-  if (key && Object.hasOwn(VALID, key)) {
-    const f = key as DraftField;
-    return { [f]: SERVER_ERROR_KEYS[f] ?? errorKey(f) };
-  }
-  return { form: 'config.errors.UNKNOWN' };
+export interface ContactDraft {
+  admin_contact: string;
+  low_stock_notify: boolean;
 }
+
+export const contactSpec: BlockSpec<ContactDraft> = {
+  block: 'contact',
+  fromConfig: (c) => ({ admin_contact: c.admin_contact, low_stock_notify: c.low_stock_notify }),
+  patchOf: (d, c) => ({
+    ...(d.admin_contact.trim() === c.admin_contact ? {} : { admin_contact: d.admin_contact.trim() }),
+    ...(d.low_stock_notify === c.low_stock_notify ? {} : { low_stock_notify: d.low_stock_notify }),
+  }),
+  validate: (d): FieldErrors => (d.admin_contact.trim().length > CONTACT_MAX ? { admin_contact: 'config.errors.admin_contact' } : {}),
+  errorOf: (field) => (field === 'admin_contact' ? { admin_contact: 'config.errors.admin_contact' } : UNKNOWN),
+};
 
 export const boxLabel = (box: SignatureBox, language: string) =>
-  language.startsWith('en') && box.title_en ? box.title_en : box.title;
+  language.startsWith('en') && box.title_en.trim() ? box.title_en : box.title;

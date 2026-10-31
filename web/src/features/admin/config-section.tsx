@@ -1,56 +1,54 @@
 import { useId } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { ConfigBlockState } from './use-config-block';
 
 export function ConfigSection({
   title,
-  note,
+  description,
   saveLabel,
-  saving,
-  canSave,
-  saved,
-  formError,
-  onSave,
+  state,
   children,
 }: {
   title: string;
-  note?: string;
+  description?: string;
   saveLabel: string;
-  saving: boolean;
-  canSave: boolean;
-  saved: boolean;
-  formError?: string;
-  onSave: () => void;
+  state: Pick<ConfigBlockState<unknown>, 'errors' | 'status' | 'dirty' | 'save' | 'cancel'>;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
   const titleId = useId();
-  const submit = (e: FormEvent) => {
+  const saving = state.status === 'saving';
+  const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSave();
+    const form = e.currentTarget;
+    void state.save().then(() => form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
   };
   return (
-    <form className="a-panel config-section" aria-labelledby={titleId} onSubmit={submit} noValidate>
-      <h2 id={titleId} className="config-title">
-        {title}
-      </h2>
-      {note && <p className="config-note">{note}</p>}
-      {formError && (
+    <form className="cf-block" data-dirty={state.dirty || undefined} aria-labelledby={titleId} onSubmit={submit} noValidate>
+      <header className="cf-block__head">
+        <h2 id={titleId}>{title}</h2>
+        {description && <p>{description}</p>}
+      </header>
+      {state.errors.form && (
         <p role="alert" className="alert alert--danger">
-          {formError}
+          {t(state.errors.form)}
         </p>
       )}
-      <div className="config-fields">{children}</div>
-      <div className="config-actions">
-        {saved && (
-          <p role="status" className="config-saved">
-            {t('config.saved')}
-          </p>
+      <div className="cf-block__body">{children}</div>
+      <footer className="cf-block__foot">
+        <span role="status" className="cf-block__status">
+          {saving ? t('config.saving') : state.status === 'saved' ? t('config.saved') : null}
+        </span>
+        {state.dirty && !saving && (
+          <button type="button" className="btn btn--ghost" onClick={state.cancel}>
+            {t('config.cancel')}
+          </button>
         )}
-        <button type="submit" className="btn btn--primary" disabled={saving || !canSave}>
+        <button type="submit" className={state.dirty ? 'btn btn--primary' : 'btn'} disabled={saving || !state.dirty}>
           {saving ? t('config.saving') : saveLabel}
         </button>
-      </div>
+      </footer>
     </form>
   );
 }

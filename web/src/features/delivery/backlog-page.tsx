@@ -13,7 +13,6 @@ import { DeliverMoreDialog } from './deliver-more-dialog';
 import { DeliveriesDrawer } from './deliveries-drawer';
 import { useRefreshAfterDelivery } from './delivery.api';
 import { useBacklogParams } from './use-backlog-params';
-import '@/features/admin/admin.css';
 import './backlog.m1.css';
 
 // Dòng đang thao tác lấy theo dữ liệu mới nhất; dòng hết nợ (rời danh sách) giữ bản lúc mở để hộp thoại không vỡ

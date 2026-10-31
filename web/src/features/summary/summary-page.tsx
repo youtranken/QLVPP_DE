@@ -22,7 +22,6 @@ import { UnregisteredTable } from './unregistered-table';
 import { usePeriodSummary, type PeriodSummary } from './summary.api';
 import { useAdjacentRequests } from './use-person-table-rows';
 import { useSummaryParams, type SummaryView } from './use-summary-params';
-import '@/features/admin/admin.css';
 import './summary.m1.css';
 
 const MAX_SEARCH = 100;

@@ -9,7 +9,6 @@ import { useCurrentPeriod } from '@/features/request/request.api';
 import { REVIEW_FILTERS, useReviewCache, useReviewCounts, useReviewLines, type ReviewBody, type ReviewFilter, type ReviewResult, type ReviewRow } from './review.api';
 import { ReviewCard } from './review-card';
 import { useReviewParams } from './use-review-params';
-import '@/features/admin/admin.css';
 import './review.m1.css';
 
 const MONTHS_BACK = 12;

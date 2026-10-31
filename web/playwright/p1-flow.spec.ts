@@ -74,12 +74,12 @@ async function stockFlow(page: Page, itemName: string) {
 
 async function saveSigner(page: Page, preparer: string) {
   await page.goto('/admin/config');
-  const form = page.getByRole('form', { name: 'Người ký báo cáo' });
-  await form.getByLabel('Người yêu cầu').fill(preparer);
-  await form.getByRole('button', { name: 'Lưu người ký' }).click();
+  const form = page.getByRole('form', { name: 'Ô ký trên phiếu đề xuất' });
+  await form.getByRole('group', { name: /Người yêu cầu$/ }).getByLabel('Người ký').fill(preparer);
+  await form.getByRole('button', { name: 'Lưu ô ký' }).click();
   await expect(form.getByRole('status')).toHaveText('Đã lưu.');
   await page.reload();
-  await expect(page.getByRole('form', { name: 'Người ký báo cáo' }).getByLabel('Người yêu cầu')).toHaveValue(preparer);
+  await expect(page.getByRole('form', { name: 'Ô ký trên phiếu đề xuất' }).getByRole('group', { name: /Người yêu cầu$/ }).getByLabel('Người ký')).toHaveValue(preparer);
 }
 
 async function logout(page: Page) {

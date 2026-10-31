@@ -66,15 +66,12 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeInTheDocument();
   });
 
-  it('trang đã port (/admin/summary) tự dựng đầu trang: đúng một h1; trang chưa port (/admin/config) vẫn có h1 tạm của shell', async () => {
+  it.each(['/admin/summary', '/admin/config'])('%s tự dựng đầu trang: đúng một h1, shell không dựng h1 riêng', async (path) => {
     mockViewport(1280);
-    stubShellApi();
-    const { unmount } = renderApp(makeMe('admin'), '/admin/summary');
-    await screen.findByText('Tháng 11/2026');
+    stubShellApi({ '/api/admin/config': () => jsonResponse(500, { code: 'INTERNAL' }) });
+    renderApp(makeMe('admin'), path);
+    await screen.findByRole('heading', { level: 1 });
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    unmount();
-    renderApp(makeMe('admin'), '/admin/config');
-    expect(screen.getAllByRole('heading', { level: 1, name: 'Cấu hình' }).length).toBeGreaterThanOrEqual(1);
   });
 
   it('chuông nằm ở hàng thương hiệu (banner) của sidebar, cạnh "VPP Công trình" / "Hành chính"', async () => {

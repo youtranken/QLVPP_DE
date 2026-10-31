@@ -74,7 +74,7 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     await expect(day).toHaveAttribute('aria-invalid', 'true');
     await expect(page.getByText('Nhập số từ 3 đến 28.')).toBeVisible();
 
-    const contactForm = page.getByRole('form', { name: 'Liên hệ Hành chính' });
+    const contactForm = page.getByRole('form', { name: 'Liên hệ & thông báo' });
     await page.getByLabel('Tên và cách liên hệ Hành chính').fill(contact);
     await contactForm.getByRole('button', { name: 'Lưu liên hệ' }).click();
     await expect(contactForm.getByRole('status')).toHaveText('Đã lưu.');

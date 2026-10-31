@@ -16,7 +16,6 @@ import { ItemDrawer } from './item-drawer';
 import { useBulkItems } from './use-bulk-items';
 import { useCatalogActions } from './use-catalog-actions';
 import { useCatalogParams } from './use-catalog-params';
-import '@/features/admin/admin.css';
 import './catalog.m1.css';
 
 type BulkDialog = 'max' | 'move' | null;

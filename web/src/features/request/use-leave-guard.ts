@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useConfirm } from '@/ui/confirm-context';
+import { useConfirm, type ConfirmOptions } from '@/ui/confirm-context';
 
 // App dùng <BrowserRouter> (không phải data router) nên không có useBlocker:
 // chặn click link nội bộ ở pha capture, trước handler của <Link>, rồi tự điều hướng khi người dùng đồng ý
-export function useLeaveGuard(dirtyCount: number) {
+export function useLeaveGuard(dirtyCount: number, prompt?: ConfirmOptions) {
   const { t } = useTranslation();
   const ask = useConfirm();
   const navigate = useNavigate();
@@ -33,17 +33,19 @@ export function useLeaveGuard(dirtyCount: number) {
       if (url.origin !== window.location.origin || url.pathname + url.search === pathname + search) return;
       e.preventDefault();
       e.stopPropagation();
-      void ask({
-        title: t('request.leave.title'),
-        message: t('request.leave.body', { n: dirtyCount }),
-        confirmLabel: t('request.leave.leave'),
-        cancelLabel: t('request.leave.stay'),
-        danger: true,
-      }).then((ok) => {
+      void ask(
+        prompt ?? {
+          title: t('request.leave.title'),
+          message: t('request.leave.body', { n: dirtyCount }),
+          confirmLabel: t('request.leave.leave'),
+          cancelLabel: t('request.leave.stay'),
+          danger: true,
+        },
+      ).then((ok) => {
         if (ok) navigate(url.pathname + url.search + url.hash);
       });
     };
     document.addEventListener('click', onClick, true);
     return () => document.removeEventListener('click', onClick, true);
-  }, [active, dirtyCount, pathname, search, ask, navigate, t]);
+  }, [active, dirtyCount, prompt, pathname, search, ask, navigate, t]);
 }

@@ -1,140 +1,87 @@
-import { Fragment, useId, useState } from 'react';
-import type { InputHTMLAttributes } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useId, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useMe } from '@/lib/me';
-import { FormField } from '@/ui/form-field';
 import { LoadError, Loading } from '@/ui/load-state';
-import { CONFIG_KEY, saveConfig, useAdminConfig, type AdminConfig } from '@/features/admin/admin.api';
-import { configErrorField } from '@/features/admin/admin-errors';
-import {
-  GROUP_FIELDS,
-  SIGN_FIELDS,
-  boxLabel,
-  errorsFromApiField,
-  toDraft,
-  toPatch,
-  validateGroup,
-  type ConfigErrors,
-  type ConfigGroup,
-  type DraftField,
-} from '@/features/admin/config-form';
-import { ConfigSection } from '@/features/admin/config-section';
-import '@/features/admin/admin.css';
-
-const NUMBER_INPUT: InputHTMLAttributes<HTMLInputElement> = { type: 'number', inputMode: 'numeric', step: 1 };
+import { PageHeader } from '@/ui/page-header';
+import { discardOptions, useConfirm } from '@/ui/confirm-context';
+import { useLeaveGuard } from '@/features/request/use-leave-guard';
+import { useAdminConfig, type AdminConfig } from './admin.api';
+import { AccessBlock } from './access-block';
+import { accessSpec, contactSpec, periodSpec, signersSpec } from './config-form';
+import { ContactBlock } from './contact-block';
+import { PeriodBlock } from './period-block';
+import { RecentChanges } from './recent-changes';
+import { SignatureBoxesBlock } from './signature-boxes-block';
+import { useConfigBlock } from './use-config-block';
+import './config.m1.css';
 
 export function ConfigPage() {
+  const { t } = useTranslation();
   const config = useAdminConfig();
-  if (config.isError) return <LoadError onRetry={() => void config.refetch()} />;
+  const title = t('config.title');
+  const header = <PageHeader crumbs={[t('nav.groups.system'), title]} title={title} description={t('config.page.description')} />;
+  if (config.isError) {
+    return (
+      <div className="ct-page">
+        {header}
+        <LoadError onRetry={() => void config.refetch()} />
+      </div>
+    );
+  }
   if (!config.data) return <Loading />;
   return <ConfigForm config={config.data} />;
 }
 
 function ConfigForm({ config }: { config: AdminConfig }) {
-  const { t, i18n } = useTranslation();
-  const { csrfToken } = useMe();
-  const qc = useQueryClient();
-  const [draft, setDraft] = useState(() => toDraft(config));
-  const [errors, setErrors] = useState<ConfigErrors>({});
-  const [formError, setFormError] = useState<{ group: ConfigGroup; key: string } | null>(null);
-  const [saving, setSaving] = useState<ConfigGroup | null>(null);
-  const [saved, setSaved] = useState<ConfigGroup | null>(null);
-  const base = toDraft(config);
-  const patchOf = (group: ConfigGroup) => toPatch(group, draft, base, config.signature_boxes);
-
-  const save = async (group: ConfigGroup) => {
-    const fields = GROUP_FIELDS[group];
-    const patch = patchOf(group);
-    if (Object.keys(patch).length === 0) return;
-    const invalid = validateGroup(group, draft);
-    setErrors((prev) => ({ ...Object.fromEntries(Object.entries(prev).filter(([k]) => !fields.includes(k as DraftField))), ...invalid }));
-    setSaved(null);
-    setFormError(null);
-    if (Object.keys(invalid).length > 0) return;
-    setSaving(group);
-    try {
-      const next = await saveConfig(patch, csrfToken);
-      qc.setQueryData(CONFIG_KEY, next);
-      void qc.invalidateQueries({ queryKey: ['public-config'] });
-      const fresh = toDraft(next);
-      // Chỉ nạp lại ô của nhóm vừa lưu để không xóa phần đang sửa ở nhóm khác
-      setDraft((d) => ({ ...d, ...Object.fromEntries(fields.map((f) => [f, fresh[f]])) }));
-      setSaved(group);
-    } catch (e) {
-      const apiErrors = errorsFromApiField(configErrorField(e));
-      if (apiErrors.form) setFormError({ group, key: apiErrors.form });
-      else setErrors((prev) => ({ ...prev, ...apiErrors }));
-    } finally {
-      setSaving(null);
-    }
-  };
-
-  const edit = (f: DraftField, value: string) => {
-    setDraft((d) => ({ ...d, [f]: value }));
-    setErrors(({ [f]: _cleared, ...rest }) => rest);
-  };
-
-  const field = (f: DraftField, label: string, hint?: string, extra?: InputHTMLAttributes<HTMLInputElement>) => (
-    <FormField label={label} hint={hint} error={errors[f] ? t(errors[f]) : undefined}>
-      {(p) => (
-        <input {...p} {...extra} value={draft[f]} onChange={(e) => edit(f, e.target.value)} />
-      )}
-    </FormField>
-  );
-
-  const section = (group: ConfigGroup) => ({
-    saveLabel: t(`config.${group}.save`),
-    saving: saving === group,
-    canSave: Object.keys(patchOf(group)).length > 0,
-    saved: saved === group,
-    formError: formError?.group === group ? t(formError.key) : undefined,
-    onSave: () => void save(group),
-  });
-
-  return (
-    <div className="a-stack config-page">
-      <ConfigSection title={t('config.period.title')} note={t('config.period.note')} {...section('period')}>
-        {field('registration_last_day', t('config.period.lastDay'), t('config.period.lastDayHint'), { ...NUMBER_INPUT, min: 3, max: 28 })}
-        {field('default_max_qty', t('config.period.defaultMax'), t('config.period.defaultMaxHint'), { ...NUMBER_INPUT, min: 1, max: 999 })}
-      </ConfigSection>
-      <ConfigSection title={t('config.access.title')} {...section('access')}>
-        {field('admin_group', t('config.access.adminGroup'), t('config.access.adminGroupHint'), { maxLength: 200 })}
-        <AuthorizedGroups groups={config.authorized_groups} />
-      </ConfigSection>
-      <ConfigSection title={t('config.signers.title')} note={t('config.signers.hint')} {...section('signers')}>
-        {config.signature_boxes.map((box, i) => (
-          <Fragment key={SIGN_FIELDS[i]}>{field(SIGN_FIELDS[i], boxLabel(box, i18n.language), undefined, { maxLength: 200 })}</Fragment>
-        ))}
-      </ConfigSection>
-      <ConfigSection title={t('config.contact.title')} {...section('contact')}>
-        {field('admin_contact', t('config.contact.adminContact'), t('config.contact.adminContactHint'), { maxLength: 500 })}
-      </ConfigSection>
-    </div>
-  );
-}
-
-// Chỉ đồng bộ danh bạ ghi được khóa này (server từ chối khi PUT), nên chỉ hiện để đọc
-function AuthorizedGroups({ groups }: { groups: string[] }) {
   const { t } = useTranslation();
-  const labelId = useId();
+  const ask = useConfirm();
+  const period = useConfigBlock(periodSpec, config);
+  const confirmGroup = (): Promise<boolean> =>
+    ask({
+      title: t('config.access.confirmTitle'),
+      message: t('config.access.confirmBody', { group: access.draft.admin_group.trim() }),
+      confirmLabel: t('config.access.confirmOk'),
+      cancelLabel: t('config.cancel'),
+      danger: true,
+    });
+  const access = useConfigBlock(accessSpec, config, confirmGroup);
+  const signers = useConfigBlock(signersSpec, config);
+  const contact = useConfigBlock(contactSpec, config);
+
+  const blocks = { period, access, signers, contact };
+  const dirtyNames = (Object.keys(blocks) as (keyof typeof blocks)[]).filter((k) => blocks[k].dirty).map((k) => t(`config.${k}.title`));
+  const dirtyList = dirtyNames.join(', ');
+  const prompt = useMemo(() => ({ ...discardOptions(t), message: t('config.page.leaveBody', { blocks: dirtyList }) }), [t, dirtyList]);
+  useLeaveGuard(dirtyNames.length, prompt);
+  const title = t('config.title');
+  const howId = useId();
+
   return (
-    <div className="ff config-readonly">
-      <span id={labelId} className="ff-label">
-        {t('config.access.authorizedGroups')}
-      </span>
-      {groups.length > 0 ? (
-        <ul className="tag-list" aria-labelledby={labelId}>
-          {groups.map((g) => (
-            <li key={g} className="tag">
-              {g}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>{t('config.access.noGroups')}</p>
-      )}
-      <p className="ff-hint">{t('config.access.authorizedGroupsHint')}</p>
+    <div className="ct-page">
+      <PageHeader
+        crumbs={[t('nav.groups.system'), title]}
+        title={title}
+        description={t('config.page.description')}
+        actions={dirtyNames.length > 0 ? <span className="tag tag--warn">{t('config.page.dirty', { count: dirtyNames.length })}</span> : undefined}
+      />
+      <div className="cf-layout">
+        <div className="cf-blocks">
+          <PeriodBlock state={period} />
+          <AccessBlock state={access} authorizedGroups={config.authorized_groups} />
+          <SignatureBoxesBlock state={signers} />
+          <ContactBlock state={contact} />
+        </div>
+        <aside className="cf-aside">
+          <section className="cf-aside__card" aria-labelledby={howId}>
+            <h2 id={howId}>{t('config.page.howTitle')}</h2>
+            <ul>
+              <li>{t('config.page.how1')}</li>
+              <li>{t('config.page.how2')}</li>
+              <li>{t('config.page.how3')}</li>
+            </ul>
+          </section>
+          <RecentChanges />
+        </aside>
+      </div>
     </div>
   );
 }

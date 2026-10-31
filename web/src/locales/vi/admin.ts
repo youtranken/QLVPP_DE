@@ -138,50 +138,6 @@ const admin = {
       eventId: 'Mã sự kiện #{{id}}',
     },
   },
-  config: {
-    title: 'Cấu hình',
-    period: {
-      title: 'Kỳ đăng ký',
-      note: 'Chỉ áp dụng cho kỳ tạo sau; kỳ đang mở giữ hạn cũ',
-      lastDay: 'Ngày hạn đăng ký hằng tháng',
-      lastDayHint: 'Từ ngày 3 đến ngày 28.',
-      defaultMax: 'Số lượng tối đa mặc định mỗi món',
-      defaultMaxHint: 'Gợi ý sẵn khi thêm món mới, từ 1 đến 999.',
-      save: 'Lưu kỳ đăng ký',
-    },
-    access: {
-      title: 'Quyền Hành chính',
-      adminGroup: 'Nhóm PMH ID của Hành chính',
-      adminGroupHint: 'Người thuộc nhóm này vào được trang quản lý.',
-      authorizedGroups: 'Nhóm PMH ID được dùng app',
-      authorizedGroupsHint: 'Lấy từ PMH ID khi đồng bộ danh bạ — không sửa ở đây.',
-      noGroups: 'Chưa có nhóm nào — chạy “Đồng bộ ngay” ở Danh bạ.',
-      save: 'Lưu quyền Hành chính',
-    },
-    signers: {
-      title: 'Người ký báo cáo',
-      hint: 'Tên in sẵn ở chân trang báo cáo.',
-      save: 'Lưu người ký',
-    },
-    contact: {
-      title: 'Liên hệ Hành chính',
-      adminContact: 'Tên và cách liên hệ Hành chính',
-      adminContactHint: 'Hiện ở trang nhân viên và trang “Chưa được cấp quyền”. VD: chị Bình — Hành chính, máy lẻ 123.',
-      save: 'Lưu liên hệ',
-    },
-    saving: 'Đang lưu…',
-    saved: 'Đã lưu.',
-    errors: {
-      registration_last_day: 'Nhập số từ 3 đến 28.',
-      default_max_qty: 'Nhập số nguyên từ 1 đến 999.',
-      admin_group: 'Nhập tên nhóm PMH ID (không để trống, tối đa 200 ký tự).',
-      signer: 'Tên tối đa 200 ký tự.',
-      lastDayBelowReminder: 'Ngày hạn phải lớn hơn số ngày nhắc người chưa có phiếu.',
-      signBoxTitle: 'Chức danh ô ký không hợp lệ (1–60 ký tự).',
-      admin_contact: 'Tối đa 500 ký tự.',
-      UNKNOWN: 'Chưa lưu được — thử lại sau ít phút.',
-    },
-  },
 };
 
 export default admin;

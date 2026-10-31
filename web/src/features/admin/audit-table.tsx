@@ -34,7 +34,7 @@ function useColumns() {
   const { t } = useTranslation();
   return useMemo<ColumnDef<AuditEntry, unknown>[]>(() => {
     const columns: ColumnDef<AuditEntry, unknown>[] = [
-      { id: 'time', header: t('audit.page.colTime'), meta: { className: 'nowrap' }, cell: ({ row }) => timeFmt.format(new Date(row.original.createdAt)) },
+      { id: 'time', header: t('audit.page.colTime'), meta: { className: 'au-nowrap' }, cell: ({ row }) => timeFmt.format(new Date(row.original.createdAt)) },
       {
         id: 'actor',
         header: t('audit.page.colActor'),
@@ -66,7 +66,7 @@ function useColumns() {
         header: t('audit.page.colObject'),
         cell: ({ row: { original: e } }) =>
           e.objectType || e.objectId ? (
-            <span title={e.objectId ?? undefined}>{[e.objectType, e.objectId && shortId(e.objectId)].filter(Boolean).join(' · ')}</span>
+            <span className="au-object" title={e.objectId ?? undefined}>{[e.objectType, e.objectId && shortId(e.objectId)].filter(Boolean).join(' · ')}</span>
           ) : (
             t('common.empty')
           ),

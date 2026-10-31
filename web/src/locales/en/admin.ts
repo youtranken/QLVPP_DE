@@ -141,50 +141,6 @@ const admin: Messages<typeof vi> = {
       eventId: 'Event #{{id}}',
     },
   },
-  config: {
-    title: 'Settings',
-    period: {
-      title: 'Registration period',
-      note: 'Applies only to periods created later; the open period keeps its deadline',
-      lastDay: 'Monthly registration deadline (day)',
-      lastDayHint: 'From day 3 to day 28.',
-      defaultMax: 'Default monthly maximum per item',
-      defaultMaxHint: 'Pre-filled when adding a new item, 1 to 999.',
-      save: 'Save registration period',
-    },
-    access: {
-      title: 'Admin access',
-      adminGroup: 'PMH ID group of the Admin team',
-      adminGroupHint: 'Members of this group can open the admin pages.',
-      authorizedGroups: 'PMH ID groups allowed to use the app',
-      authorizedGroupsHint: 'Taken from PMH ID during directory sync — not editable here.',
-      noGroups: 'No groups yet — run “Sync now” in the Directory.',
-      save: 'Save admin access',
-    },
-    signers: {
-      title: 'Report signers',
-      hint: 'Names printed in the report footer.',
-      save: 'Save signers',
-    },
-    contact: {
-      title: 'Admin contact',
-      adminContact: 'Admin team name and contact',
-      adminContactHint: 'Shown to staff and on the “not authorized” page. e.g. Ms Binh — Admin, ext. 123.',
-      save: 'Save contact',
-    },
-    saving: 'Saving…',
-    saved: 'Saved.',
-    errors: {
-      registration_last_day: 'Enter a number from 3 to 28.',
-      default_max_qty: 'Enter a whole number from 1 to 999.',
-      admin_group: 'Enter a PMH ID group name (not empty, up to 200 characters).',
-      signer: 'Names are limited to 200 characters.',
-      lastDayBelowReminder: 'The deadline day must be greater than the reminder lead time.',
-      signBoxTitle: 'A signature box title is invalid (1–60 characters).',
-      admin_contact: 'Up to 500 characters.',
-      UNKNOWN: 'Could not save — try again in a few minutes.',
-    },
-  },
 };
 
 export default admin;

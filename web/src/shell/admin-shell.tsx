@@ -1,23 +1,13 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { IconSprite } from '@/ui/icon-sprite';
 import { NoPermission } from '@/ui/load-state';
-import { PageHeader } from '@/ui/page-header';
 import { ToastProvider } from '@/ui/toast-provider';
-import { adminPageOf } from '@/shell/admin-nav';
 import { AdminSidebar } from '@/shell/admin-sidebar';
 import { AdminTopbar } from '@/shell/admin-topbar';
 import { useForbiddenRole } from '@/shell/use-forbidden-role';
 import { useShellFont } from '@/shell/use-shell-font';
-
-// Trang chưa có PageHeader riêng: shell dựng tạm tiêu đề theo mục sidebar
-function ShellPageHeader() {
-  const { t } = useTranslation();
-  const current = adminPageOf(useLocation().pathname);
-  if (!current || current.page.ownHeader) return null;
-  return <PageHeader crumbs={[]} title={t(current.page.titleKey)} />;
-}
 
 export function AdminShell() {
   const { t } = useTranslation();
@@ -37,10 +27,7 @@ export function AdminShell() {
           {forbidden ? (
             <NoPermission />
           ) : (
-            <>
-              <ShellPageHeader />
-              <Outlet />
-            </>
+            <Outlet />
           )}
         </main>
       </div>
