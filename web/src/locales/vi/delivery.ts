@@ -140,6 +140,7 @@ const delivery = {
       deliverMore: 'Giao bổ sung…',
       outOfStock: 'Hết hàng',
       history: 'Lịch sử giao',
+      historyOf: 'Lịch sử giao {{name}} — {{person}}',
       cancel: 'Hủy nợ…',
       deliver: {
         title: 'Giao bổ sung {{name}} cho {{person}}',

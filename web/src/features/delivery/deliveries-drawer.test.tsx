@@ -6,7 +6,7 @@ import { backlogLine, deliveriesOf } from './backlog-fixtures';
 
 const URL = '/api/admin/lines/l-pen/deliveries';
 
-function stub(body: LineDeliveries | (() => Response)) {
+function stub(body: LineDeliveries | (() => Response | Promise<Response>)) {
   const fetchMock = vi.fn((url: string) =>
     Promise.resolve(url === URL ? (typeof body === 'function' ? body() : jsonResponse(200, body)) : jsonResponse(404, {})),
   );
@@ -68,6 +68,13 @@ describe('DeliveriesDrawer — lịch sử đợt giao của một dòng (chỉ 
     stub(deliveriesOf({ cancelled_qty: 2, cancel_note: null }));
     renderWithI18n(<DeliveriesDrawer line={backlogLine()} onClose={() => {}} />);
     expect(await screen.findByText('Đã hủy 2')).toBeInTheDocument();
+  });
+
+  it('đang tải → khung xương (role status), không phải chữ "Đang tải"; ngăn rộng 384', async () => {
+    stub(() => new Promise<Response>(() => {}));
+    renderWithI18n(<DeliveriesDrawer line={backlogLine()} onClose={() => {}} />);
+    expect(await screen.findByRole('status')).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('dialog', { name: 'Lịch sử giao Phạm Văn Đức' })).toHaveStyle({ maxWidth: '384px' });
   });
 
   it('tải lỗi → báo lỗi có nút thử lại, không nuốt thành rỗng', async () => {

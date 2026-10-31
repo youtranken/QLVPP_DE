@@ -143,6 +143,7 @@ const delivery: Messages<typeof vi> = {
       deliverMore: 'Deliver more…',
       outOfStock: 'Out of stock',
       history: 'Delivery history',
+      historyOf: 'Delivery history {{name}} — {{person}}',
       cancel: 'Cancel debt…',
       deliver: {
         title: 'Deliver more {{name}} to {{person}}',

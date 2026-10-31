@@ -48,6 +48,8 @@ function WhoCell({ row, by }: { row: BacklogRow; by: BacklogBy }) {
 
 function Actions({ row, onAction }: { row: BacklogRow; onAction: Props['onAction'] }) {
   const { t } = useTranslation();
+  const f = useBacklogFormat();
+  const label = t('delivery.backlog.historyOf', { name: f.name(row), person: f.person(row) });
   const out = row.stock_qty === 0;
   return (
     <span className="bl-acts">
@@ -61,8 +63,8 @@ function Actions({ row, onAction }: { row: BacklogRow; onAction: Props['onAction
       <button
         type="button"
         className="btn btn--sm btn--ghost bl-icon-btn"
-        aria-label={t('delivery.backlog.history')}
-        title={t('delivery.backlog.history')}
+        aria-label={label}
+        title={label}
         onClick={() => onAction('history', row)}
       >
         <Icon name="history" size={18} />
@@ -119,12 +121,11 @@ function useGroupHead(by: BacklogBy) {
     }
     const item = first.item_id ? (items.data ?? []).find((i) => i.id === first.item_id) : undefined;
     const tone = groupTone(cats.data ?? [], item?.category_id ?? null);
-    const owed = list.reduce((n, l) => n + l.remaining_qty, 0);
     return (
       <span className="bl-head" data-tone={tone}>
         <ItemThumb fileId={item?.image_file_id ?? null} alt="" tone={tone} size={36} />
         <b>{f.name(first)}</b>
-        <small>{t('delivery.backlog.groupRemaining', { n: owed, unit: f.unit(first.unit) })}</small>
+        <small>{t('delivery.backlog.groupRemaining', { n: first.groupRemaining, unit: f.unit(first.unit) })}</small>
         {first.stock_qty === 0 && <span className="tag tag--danger">{t('delivery.backlog.outOfStock')}</span>}
         {first.stock_qty !== null && first.stock_qty > 0 && <small>{t('delivery.backlog.stock', { n: first.stock_qty })}</small>}
       </span>

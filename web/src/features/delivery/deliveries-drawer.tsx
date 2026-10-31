@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { formatVnStamp } from '@/lib/format-time';
 import { Drawer, DrawerClose, DrawerTitle } from '@/ui/drawer';
 import { Icon } from '@/ui/icon';
-import { LoadError, Loading } from '@/ui/load-state';
+import { LoadError } from '@/ui/load-state';
+import { Skeleton } from '@/ui/skeleton';
 import { useLineDeliveries, type BacklogLine } from './backlog.api';
 import { useBacklogFormat } from './backlog-format';
 
@@ -15,6 +16,8 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
+const ROWS = { shape: 'row', count: 3 } as const;
+
 // Chỉ xem: GĐ1 không có hoàn tác đợt giao (FR-44)
 export function DeliveriesDrawer({ line, onClose }: { line: BacklogLine; onClose: () => void }) {
   const { t } = useTranslation();
@@ -25,7 +28,7 @@ export function DeliveriesDrawer({ line, onClose }: { line: BacklogLine; onClose
   const unit = f.unit(line.unit);
 
   return (
-    <Drawer open onOpenChange={(o) => !o && onClose()} width={420}>
+    <Drawer open onOpenChange={(o) => !o && onClose()} width={384}>
       <div className="drawer-header">
         <div className="bl-drawer-title">
           <small className="drawer-eyebrow">{t('delivery.backlog.deliveries.eyebrow', { name: f.name(line), month: f.monthShort(line.period_ym) })}</small>
@@ -38,7 +41,7 @@ export function DeliveriesDrawer({ line, onClose }: { line: BacklogLine; onClose
         </DrawerClose>
       </div>
       <div className="sheet-body">
-        {query.isPending && <Loading />}
+        {query.isPending && <Skeleton {...ROWS} />}
         {query.isError && <LoadError onRetry={() => void query.refetch()} />}
         {head && (
           <div className="bl-stats">

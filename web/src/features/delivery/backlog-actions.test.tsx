@@ -15,7 +15,7 @@ function openPage() {
   renderApp(makeMe('admin'), '/admin/backlog');
 }
 
-const bodyRows = () => screen.getAllByRole('row').filter((r) => within(r).queryByRole('button', { name: 'Lịch sử giao' }));
+const bodyRows = () => screen.getAllByRole('row').filter((r) => within(r).queryByRole('button', { name: /^Lịch sử giao/ }));
 const rowOf = async (text: string) => {
   await screen.findByText('Bút bi xanh');
   return bodyRows().find((r) => r.textContent?.includes(text))!;
@@ -91,7 +91,7 @@ describe('BacklogPage — thao tác trên dòng', () => {
   it('"Lịch sử giao" mở ngăn lịch sử của dòng', async () => {
     stubBacklog([PEN_DUC]);
     openPage();
-    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Lịch sử giao' }));
+    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: /^Lịch sử giao/ }));
     expect(screen.getByRole('dialog', { name: 'Lịch sử giao Phạm Văn Đức' })).toBeInTheDocument();
     expect(await screen.findByText('Chưa giao đợt nào')).toBeInTheDocument();
   });

@@ -7,6 +7,8 @@ export interface BacklogRow extends BacklogLine {
   group: string;
   // Tiêu đề nhóm theo người dùng phòng ban hiện tại của người đó, không phải phòng ban chụp trên phiếu
   groupDepartment: string | null;
+  // Tổng nợ của cả nhóm theo API, không đổi khi lọc
+  groupRemaining: number;
 }
 
 export const parseFilter = (v: string | null): BacklogFilter | null => (v === 'available' || v === 'left' ? v : null);
@@ -19,7 +21,7 @@ export const hasStock = (l: Pick<BacklogLine, 'stock_qty'>) => l.stock_qty !== 0
 const MATCH: Record<BacklogFilter, (l: BacklogLine) => boolean> = { available: hasStock, left: isLeft };
 
 export const flatten = (groups: BacklogGroup[]): BacklogRow[] =>
-  groups.flatMap((g) => g.lines.map((l) => ({ ...l, id: l.line_id, group: g.key, groupDepartment: g.label.department ?? null })));
+  groups.flatMap((g) => g.lines.map((l) => ({ ...l, id: l.line_id, group: g.key, groupDepartment: g.label.department ?? null, groupRemaining: g.remaining_qty })));
 
 export const applyFilter = (rows: BacklogRow[], filter: BacklogFilter | null) => (filter ? rows.filter(MATCH[filter]) : rows);
 

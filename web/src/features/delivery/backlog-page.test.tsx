@@ -16,7 +16,7 @@ function openPage(path = '/admin/backlog') {
   renderApp(makeMe('admin'), path);
 }
 
-const bodyRows = () => screen.getAllByRole('row').filter((r) => within(r).queryByRole('button', { name: 'Lịch sử giao' }));
+const bodyRows = () => screen.getAllByRole('row').filter((r) => within(r).queryByRole('button', { name: /^Lịch sử giao/ }));
 const rowOf = (text: string) => bodyRows().find((r) => r.textContent?.includes(text))!;
 const heads = () => screen.getAllByRole('row').filter((r) => r.classList.contains('dt-group'));
 const headOf = (text: string) => heads().find((r) => r.textContent?.includes(text))!;
@@ -141,6 +141,15 @@ describe('BacklogPage — nhóm và dòng', () => {
     expect(headOf('Phạm Văn Đức')).toHaveTextContent('Tổ Giám sát');
     expect(headOf('Phạm Văn Đức')).not.toHaveTextContent('Người đã nghỉ');
     expect(rowOf('Bút bi xanh')).toHaveTextContent('Tháng 10/2026');
+  });
+
+  it('lọc "Của người đã nghỉ": tiêu đề nhóm món vẫn ghi tổng nợ của API (còn 4), dòng chỉ còn người đã nghỉ; nút lịch sử nêu món và người', async () => {
+    stubBacklog([PEN_DUC, PEN_LAN]);
+    openPage('/admin/backlog?filter=left');
+    await screen.findByText('Bút bi xanh');
+    expect(headOf('Bút bi xanh')).toHaveTextContent('còn 4 cây');
+    expect(bodyRows()).toHaveLength(1);
+    expect(within(bodyRows()[0]).getByRole('button', { name: 'Lịch sử giao Bút bi xanh — Võ Thị Lan' })).toBeInTheDocument();
   });
 
   it('đổi Theo người giữ bộ lọc đang bật', async () => {

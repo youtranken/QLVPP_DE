@@ -120,7 +120,7 @@ export function CancelDialog({ line, onDone, onStale, onClose }: Props) {
               {t('common.cancel')}
             </button>
           </DialogClose>
-          <button type="submit" className="btn btn--danger" disabled={!canSubmit} aria-busy={flight.pending}>
+          <button type="submit" className="btn btn--danger btn--solid" disabled={!canSubmit} aria-busy={flight.pending}>
             {t('delivery.backlog.cancelDialog.submit')}
           </button>
         </div>

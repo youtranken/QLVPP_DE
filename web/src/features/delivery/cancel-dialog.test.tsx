@@ -48,6 +48,12 @@ describe('CancelDialog — hủy phần còn nợ của một dòng', () => {
     expect(noteOf(reasonBox())).toBe('Bắt buộc, ít nhất 3 ký tự. Ghi vào Nhật ký.');
   });
 
+  it('nút "Hủy nợ" là nút nguy hiểm đặc (btn--danger btn--solid)', () => {
+    stub();
+    renderDialog();
+    expect(submit()).toHaveClass('btn--danger', 'btn--solid');
+  });
+
   it('biên lý do: "  ab  " (trim 2) → nút vô hiệu; "  abc  " (trim 3) → bật, gửi {reason: "abc", expected_delivered_qty: 2, expected_qty: 5}', async () => {
     const f = stub();
     const { onDone } = renderDialog();

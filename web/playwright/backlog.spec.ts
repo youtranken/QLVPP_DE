@@ -47,6 +47,15 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await expect(itemGroup).toHaveCount(0);
       await page.getByRole('button', { name: 'Bỏ lọc' }).click();
       await expect(itemGroup).toBeVisible();
+      psql(`UPDATE users SET status = 'locked' WHERE sub = '${seed.sub}'`);
+      try {
+        await page.goto('/admin/backlog?filter=left');
+        const leftRow = page.getByRole('row').filter({ hasText: seed.name }).filter({ has: page.getByRole('button', { name: 'Hủy nợ…' }) });
+        await expect(leftRow.getByText('Người đã nghỉ')).toBeVisible();
+      } finally {
+        psql(`UPDATE users SET status = 'active' WHERE sub = '${seed.sub}'`);
+      }
+      await page.goto('/admin/backlog');
 
       await page.getByRole('radio', { name: 'Theo người' }).click();
       await expect(page).toHaveURL(/\/admin\/backlog\?by=person$/);
@@ -76,7 +85,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await expect(page.getByText(`Đã giao bổ sung 1 cái ${a.name} cho ${seed.name}`)).toBeVisible();
       expect(stockOf(a.id)).toBe(8);
 
-      await row.getByRole('button', { name: 'Lịch sử giao' }).click();
+      await row.getByRole('button', { name: `Lịch sử giao ${a.name} — ${seed.name}` }).click();
       const drawer = page.getByRole('dialog', { name: `Lịch sử giao ${seed.name}` });
       const rounds = drawer.getByRole('list', { name: 'Các đợt giao' }).getByRole('listitem');
       await expect(rounds).toHaveCount(2);
@@ -92,7 +101,8 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await expect(reason).toHaveAttribute('maxlength', '500');
       await reason.fill('  ab  ');
       await expect(submit).toBeDisabled();
-      await reason.fill('Hết mẫu, đổi loại khác');
+      await reason.fill('  abc  ');
+      await expect(submit).toBeEnabled();
       await expect(submit).toBeEnabled();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'backlog-cancel');
@@ -100,7 +110,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await expect(cancel).toHaveCount(0);
       await expect(page.getByText(`Đã hủy nợ 1 cái ${a.name} của ${seed.name}`)).toBeVisible();
       await expect(group).toHaveCount(0);
-      expect(psql(`SELECT cancelled_qty || '|' || cancel_note FROM request_lines WHERE id = '${lineId}'`)).toBe('1|Hết mẫu, đổi loại khác');
+      expect(psql(`SELECT cancelled_qty || '|' || cancel_note FROM request_lines WHERE id = '${lineId}'`)).toBe('1|abc');
 
       const member = await browser.newPage();
       try {
@@ -111,7 +121,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
         await bell.click();
         const month = Number(seed.prevYm.slice(5, 7));
         await expect(
-          member.getByRole('dialog', { name: 'Thông báo' }).getByText(`Hành chính hủy phần còn nợ 1 cái ${a.name} (tháng ${month}): Hết mẫu, đổi loại khác`),
+          member.getByRole('dialog', { name: 'Thông báo' }).getByText(`Hành chính hủy phần còn nợ 1 cái ${a.name} (tháng ${month}): abc`),
         ).toBeVisible();
       } finally {
         await member.close();
