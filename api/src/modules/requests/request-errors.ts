@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { pgViolation } from '../../common/sql';
+import { unknownUnit } from '../units/unit-errors';
 
 // Dòng mới chưa có id → chỉ trỏ được bằng vị trí trong body
 export type LineRef = { line_index: number } | { line_id: string };
@@ -18,6 +19,13 @@ export function lineError(
   status: HttpStatus = HttpStatus.BAD_REQUEST,
 ): HttpException {
   return new HttpException({ code, message, ...ref, ...extra }, status);
+}
+
+export function withLineRef(error: HttpException, ref: LineRef): HttpException {
+  return new HttpException(
+    { ...(error.getResponse() as object), ...ref },
+    error.getStatus(),
+  );
 }
 
 export const requestNotFound = (message = 'Chưa có phiếu kỳ này.') =>
@@ -125,12 +133,7 @@ const CONSTRAINT_ERRORS: Record<string, () => HttpException> = {
       message: 'Không tìm thấy món.',
     }),
   // ĐVT chưa dùng bị xóa giữa lúc lập kế hoạch dòng và lúc ghi
-  '23503:request_lines_custom_unit_fkey': () =>
-    new BadRequestException({
-      code: 'VALIDATION',
-      message: 'Đơn vị tính không có.',
-      fields: ['custom_unit'],
-    }),
+  '23503:request_lines_custom_unit_fkey': () => unknownUnit('custom_unit'),
   '23001:stock_movements_ref_line_id_fkey': readonlyLine,
   '23001:line_deliveries_line_id_fkey': readonlyLine,
 };

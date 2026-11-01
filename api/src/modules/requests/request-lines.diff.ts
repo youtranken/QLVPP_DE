@@ -1,7 +1,7 @@
 import type { ItemFacts } from '../catalog/catalog-sql';
-import { UNIT_INACTIVE_MESSAGE } from '../units/unit-errors';
+import { unitChoiceError } from '../units/unit-errors';
 import type { UnitFacts } from '../units/units.service';
-import { duplicateItem, lineError } from './request-errors';
+import { duplicateItem, lineError, withLineRef } from './request-errors';
 import type { LineRef } from './request-errors';
 import {
   isDeletable,
@@ -211,14 +211,11 @@ function assertUnitChoosable(
   storedUnit: string | null = null,
 ): void {
   if (!line.custom_unit || line.custom_unit === storedUnit) return;
-  const unit = input.units.get(line.custom_unit);
-  if (!unit) {
-    throw lineError('VALIDATION', 'Đơn vị tính không có.', ref, {
-      fields: ['custom_unit'],
-    });
-  }
-  if (!unit.active)
-    throw lineError('UNIT_INACTIVE', UNIT_INACTIVE_MESSAGE, ref);
+  const error = unitChoiceError(
+    input.units.get(line.custom_unit),
+    'custom_unit',
+  );
+  if (error) throw withLineRef(error, ref);
 }
 
 function assertOrderable(item: ItemFacts, ref: LineRef, mode: WriteMode): void {

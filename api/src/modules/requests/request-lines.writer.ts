@@ -163,7 +163,16 @@ export class RequestLinesWriter {
       body: args.body.lines,
       mode: lineMode(args),
       items: await this.catalog.itemFacts([...new Set(ids)], tx),
-      units: await this.units.namesByCode(tx),
+      units: await this.units.lockFacts(
+        [
+          ...new Set(
+            args.body.lines
+              .map((l) => l.custom_unit)
+              .filter((u): u is string => !!u),
+          ),
+        ],
+        tx,
+      ),
       defaultMaxQty: await this.config.getInt('default_max_qty'),
     });
   }

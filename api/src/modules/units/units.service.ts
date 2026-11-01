@@ -7,11 +7,10 @@ import { AuditWriterService } from '../audit/audit-writer.service';
 import { definedEntries, pick, setClause } from '../../common/sql-patch';
 import { unitCodeFrom } from './unit-code';
 import {
+  unitChoiceError,
   unitExists,
-  unitInactive,
   unitInUse,
   unitNotFound,
-  unknownUnit,
 } from './unit-errors';
 import type { CreateUnitDto, UpdateUnitDto } from './units.dto';
 
@@ -33,6 +32,14 @@ const IN_USE = sql.raw(
     OR EXISTS (SELECT 1 FROM request_lines l WHERE l.custom_unit = units.code))`,
 );
 const CODE_LOCK = sql.raw("hashtext('units.code')");
+
+const factsByCode = (rows: UnitRow[]): Map<string, UnitFacts> =>
+  new Map(
+    rows.map((r) => [
+      r.code,
+      { name: r.name, name_en: r.name_en, active: r.active },
+    ]),
+  );
 
 @Injectable()
 export class UnitsService {
@@ -67,12 +74,7 @@ export class UnitsService {
     const { rows } = await tx.execute<UnitRow>(
       sql`SELECT ${COLUMNS} FROM units`,
     );
-    return new Map(
-      rows.map((r) => [
-        r.code,
-        { name: r.name, name_en: r.name_en, active: r.active },
-      ]),
-    );
+    return factsByCode(rows);
   }
 
   async inactiveCodes(tx: Executor = this.db): Promise<Set<string>> {
@@ -82,16 +84,30 @@ export class UnitsService {
     return new Set(rows.map((r) => r.code));
   }
 
+  // FOR SHARE: ngừng/xóa ĐVT phải chờ tx đang chọn ĐVT này commit (và ngược lại)
+  async lockFacts(
+    codes: string[],
+    tx: Executor,
+  ): Promise<Map<string, UnitFacts>> {
+    if (codes.length === 0) return new Map();
+    const { rows } = await tx.execute<UnitRow>(sql`
+      SELECT ${COLUMNS} FROM units
+      WHERE code = ANY(${sql.param(codes)}::text[])
+      ORDER BY code FOR SHARE
+    `);
+    return factsByCode(rows);
+  }
+
   async assertActive(
     code: string,
-    tx: Executor = this.db,
+    tx: Executor,
     field = 'unit',
   ): Promise<void> {
-    const { rows } = await tx.execute<{ active: boolean }>(sql`
-      SELECT active FROM units WHERE code = ${code}
-    `);
-    if (!rows[0]) throw unknownUnit(field);
-    if (!rows[0].active) throw unitInactive();
+    const error = unitChoiceError(
+      (await this.lockFacts([code], tx)).get(code),
+      field,
+    );
+    if (error) throw error;
   }
 
   async create(dto: CreateUnitDto, actor: string): Promise<UnitRow> {

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
   NotFoundException,
 } from '@nestjs/common';
 
@@ -36,3 +37,11 @@ export const unknownUnit = (field: string) =>
     message: 'Đơn vị tính không có.',
     fields: [field],
   });
+
+export function unitChoiceError(
+  unit: { active: boolean } | undefined,
+  field: string,
+): HttpException | null {
+  if (!unit) return unknownUnit(field);
+  return unit.active ? null : unitInactive();
+}
