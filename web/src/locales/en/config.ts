@@ -56,6 +56,7 @@ const config: Messages<typeof vi> = {
       members: 'People in the directory in this group: {{count}}',
       membersUnknown: 'Could not count the people in this group — double-check before saving.',
       selfLockout: 'Nobody in the directory belongs to this group. After saving, {{name}} will lose access to the admin pages from the next click.',
+      selfLockoutNotMember: 'You are not in this group. After saving, {{name}} will lose access to the admin pages from the next click.',
       you: 'you',
       authorizedGroups: 'PMH ID groups allowed to use the app',
       authorizedGroupsHint: 'Taken from PMH ID during directory sync — not editable here.',

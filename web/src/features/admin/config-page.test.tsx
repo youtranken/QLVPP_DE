@@ -115,6 +115,19 @@ describe('Cấu hình · khối Quyền Hành chính', () => {
     expect(screen.queryByText(/sẽ mất quyền vào trang quản lý/)).toBeNull();
   });
 
+  it('nhóm mới có người nhưng không có người đang đăng nhập → vẫn cảnh báo tự mất quyền; nhóm có mình → không', async () => {
+    stubConfigApi();
+    await openConfig();
+    await retype(group(), 'cong-trinh');
+    expect(await screen.findByText('1 người trong danh bạ thuộc nhóm này')).toBeInTheDocument();
+    expect(
+      screen.getByText('Bạn không thuộc nhóm này. Sau khi lưu, Nguyễn Văn An sẽ mất quyền vào trang quản lý từ lần bấm kế tiếp.'),
+    ).toBeInTheDocument();
+    await retype(group(), 'vpp-users');
+    expect(await screen.findByText('3 người trong danh bạ thuộc nhóm này')).toBeInTheDocument();
+    expect(screen.queryByText(/sẽ mất quyền vào trang quản lý/)).toBeNull();
+  });
+
   it('SA (không phụ thuộc nhóm) không thấy cảnh báo tự mất quyền', async () => {
     stubConfigApi();
     await openConfig(makeMe('sa', { sub: 'sa-local' }));
