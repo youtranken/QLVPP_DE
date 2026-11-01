@@ -51,6 +51,7 @@ const stock: Messages<typeof vi> = {
       purchaseQty: 'Quantity purchased',
       countQty: 'Actual counted quantity',
       countPreview: 'Stock {{from}} → {{to}} ({{delta}})',
+      countMatches: 'The count matches current stock — nothing to save.',
       issueQty: 'Quantity',
       note: 'Note',
       noteHint: 'E.g. order number, supplier (optional).',

@@ -48,6 +48,7 @@ const stock = {
       purchaseQty: 'Số lượng nhập',
       countQty: 'Số đếm thực tế',
       countPreview: 'Tồn {{from}} → {{to}} ({{delta}})',
+      countMatches: 'Số đếm khớp tồn hiện tại — không cần lưu.',
       issueQty: 'Số lượng',
       note: 'Ghi chú',
       noteHint: 'VD: số đơn hàng, nơi mua (không bắt buộc).',

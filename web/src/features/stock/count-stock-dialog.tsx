@@ -17,6 +17,7 @@ export function CountStockDialog({ item, onClose }: { item: StockRow; onClose: (
   const [stock, setStock] = useState(item.stock_qty);
   const [qty, setQty] = useState('');
   const [note, setNote] = useState('');
+  const [staleSeen, setStaleSeen] = useState(false);
   const n = toInt(qty);
   const valid = n !== null && n >= 0 && n <= COUNT_MAX;
   const preview = valid && n !== stock ? t('stock.dialog.countPreview', { from: stock, to: n, delta: signed(n - stock) }) : null;
@@ -25,7 +26,8 @@ export function CountStockDialog({ item, onClose }: { item: StockRow; onClose: (
     const current = apiErrorCode(e) === 'STALE_UPDATE' ? apiErrorNumber(e, 'stock_qty') : undefined;
     if (current === undefined) return false;
     setStock(current);
-    fail('form', t('stock.errors.STALE_COUNT', { qty: current, unit }));
+    setStaleSeen(true);
+    if (current !== n) fail('form', t('stock.errors.STALE_COUNT', { qty: current, unit }));
     void refresh();
     return true;
   };
@@ -49,6 +51,11 @@ export function CountStockDialog({ item, onClose }: { item: StockRow; onClose: (
       onSubmit={submit}
       onClose={onClose}
     >
+      {staleSeen && valid && n === stock && (
+        <p role="status" className="alert alert--ok">
+          {t('stock.dialog.countMatches')}
+        </p>
+      )}
       <QtyField label={t('stock.dialog.countQty')} min={0} max={COUNT_MAX} value={qty} error={errors.qty} autoFocus onChange={(v) => { setQty(v); clear('qty'); }} />
       <TextField label={t('stock.dialog.reason')} hint={t('stock.dialog.countReasonHint')} required value={note} error={errors.reason} onChange={(v) => { setNote(v); clear('reason'); }} />
     </StockDialogShell>

@@ -99,6 +99,17 @@ describe('CountStockDialog', () => {
     expect(JSON.parse(String((f.mock.calls.filter((c) => c[0] === URL)[1][1] as RequestInit).body)).expected_stock_qty).toBe(7);
   });
 
+  it('STALE_UPDATE mà tồn mới đúng bằng số đã đếm (5): gợi ý "Số đếm khớp tồn hiện tại — không cần lưu.", không báo lỗi đếm lại', async () => {
+    stubMutation(jsonResponse(409, { code: 'STALE_UPDATE', message: 'x', stock_qty: 5 }));
+    wrap(<CountStockDialog item={makeRow(3)} onClose={vi.fn()} />);
+    await fill('5');
+    await userEvent.click(submit());
+    expect(await screen.findByRole('status')).toHaveTextContent('Số đếm khớp tồn hiện tại — không cần lưu.');
+    expect(screen.getByText('Tồn hiện tại 5 ram')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(submit()).toBeDisabled();
+  });
+
   it('REASON_REQUIRED gắn ô Lý do (aria-invalid), không gắn ô Số đếm', async () => {
     stubMutation(jsonResponse(400, { code: 'REASON_REQUIRED', message: 'x' }));
     wrap(<CountStockDialog item={makeRow(3)} onClose={vi.fn()} />);
