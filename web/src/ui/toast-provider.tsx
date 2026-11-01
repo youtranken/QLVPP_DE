@@ -14,11 +14,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     clearTimeout(timer.current);
     setToast(null);
   }, []);
-  const show = useCallback((next: ToastSpec) => {
+  const startTimer = useCallback(() => {
     clearTimeout(timer.current);
-    setToast(next);
     timer.current = setTimeout(() => setToast(null), TOAST_MS);
   }, []);
+  const pause = useCallback(() => clearTimeout(timer.current), []);
+  const show = useCallback(
+    (next: ToastSpec) => {
+      setToast(next);
+      startTimer();
+    },
+    [startTimer],
+  );
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const api = useMemo(() => ({ show }), [show]);
@@ -29,6 +36,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toast && (
           <Toast
             toast={toast}
+            onPause={pause}
+            onResume={startTimer}
             onAction={() => {
               toast.action?.onClick();
               dismiss();

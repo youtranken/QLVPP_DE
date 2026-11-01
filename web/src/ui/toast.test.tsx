@@ -60,6 +60,35 @@ describe('Toast', () => {
     expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 
+  it('toast có hành động: rê chuột vào thì dừng đếm (còn hiện sau 10 s), rời chuột thì đếm lại đủ 4 s', () => {
+    mount();
+    act(() => show({ text: 'Đã chốt', action: { label: 'Mở bản in', onClick: vi.fn() } }));
+    act(() => void vi.advanceTimersByTime(3000));
+    const toast = screen.getByText('Đã chốt');
+    fireEvent.mouseEnter(toast.parentElement!);
+    act(() => void vi.advanceTimersByTime(10000));
+    expect(screen.getByRole('status')).toHaveTextContent('Đã chốt');
+    fireEvent.mouseLeave(toast.parentElement!);
+    act(() => void vi.advanceTimersByTime(3999));
+    expect(screen.getByRole('status')).toHaveTextContent('Đã chốt');
+    act(() => void vi.advanceTimersByTime(1));
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+
+  it('toast có hành động: nút hành động được focus thì không tự mất; rời focus thì mất sau 4 s', () => {
+    mount();
+    act(() => show({ text: 'Đã chốt', action: { label: 'Mở bản in', onClick: vi.fn() } }));
+    const button = screen.getByRole('button', { name: 'Mở bản in' });
+    act(() => button.focus());
+    act(() => void vi.advanceTimersByTime(10000));
+    expect(screen.getByRole('button', { name: 'Mở bản in' })).toBeInTheDocument();
+    act(() => button.blur());
+    act(() => void vi.advanceTimersByTime(3999));
+    expect(screen.getByRole('status')).toHaveTextContent('Đã chốt');
+    act(() => void vi.advanceTimersByTime(1));
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+
   it('vùng status luôn có mặt, kể cả khi chưa có toast', () => {
     mount();
     expect(screen.getAllByRole('status')).toHaveLength(1);
