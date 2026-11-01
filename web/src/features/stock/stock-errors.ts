@@ -15,6 +15,7 @@ const FIELD_OF_CODE: Record<string, StockField> = {
 
 const FIELD_OF_API: Record<string, StockField> = {
   delta: 'qty',
+  counted_qty: 'qty',
   qty: 'qty',
   note: 'reason',
   reason: 'reason',

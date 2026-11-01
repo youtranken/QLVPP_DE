@@ -7,6 +7,11 @@ const stockCell = (row: Locator, qty: number) => row.getByRole('cell', { name: n
 
 const RECIPIENT = { sub: 'pw-recipient', name: 'PW Người nhận' };
 
+async function rowAction(row: Locator, itemName: string, action: 'Kiểm kê' | 'Xuất lẻ' | 'Sổ cái') {
+  await row.getByRole('button', { name: `Thao tác khác cho ${itemName}` }).click();
+  await row.page().getByRole('menuitem', { name: action }).click();
+}
+
 async function createItem(request: APIRequestContext, name: string) {
   const headers = devHeaders('admin');
   const file = await request.post('/api/files', {
@@ -25,7 +30,7 @@ async function createItem(request: APIRequestContext, name: string) {
   return (await item.json()).id as string;
 }
 
-test.describe('E1-S4 Kho: nhập, điều chỉnh, xuất lẻ, sổ cái (dev-identity admin)', () => {
+test.describe('E1-S4 Kho: nhập, kiểm kê, xuất lẻ, sổ cái (dev-identity admin)', () => {
   asRole('admin');
 
   test('E1-S4 nhập 10 → tồn 10; xuất lẻ 3 cho người trong danh bạ → tồn 7; sổ cái hiện 2 dòng; còn 2 → Sắp hết, 0 → Hết hàng', async ({
@@ -45,7 +50,7 @@ test.describe('E1-S4 Kho: nhập, điều chỉnh, xuất lẻ, sổ cái (dev-i
       await expect(stockCell(row, 0)).toBeVisible();
       await expect(row.getByText('Hết hàng')).toHaveCount(0);
 
-      await row.getByRole('button', { name: 'Nhập mua…' }).click();
+      await row.getByRole('button', { name: 'Nhập mua', exact: true }).click();
       const purchase = page.getByRole('dialog', { name: `Nhập mua ${itemName}` });
       await purchase.getByLabel('Số lượng nhập').fill('10');
       await purchase.getByLabel('Ghi chú').fill('Đơn PW');
@@ -56,7 +61,7 @@ test.describe('E1-S4 Kho: nhập, điều chỉnh, xuất lẻ, sổ cái (dev-i
       if (info.project.name === 'mobile-390') await expectNoContrastViolations(page);
       await shot(page, info, 'stock-table', false);
 
-      await row.getByRole('button', { name: 'Xuất lẻ…' }).click();
+      await rowAction(row, itemName, 'Xuất lẻ');
       const issue = page.getByRole('dialog', { name: `Xuất lẻ ${itemName}` });
       await issue.getByLabel('Số lượng').fill('30');
       await issue.getByLabel('Dùng chung').check();
@@ -75,12 +80,12 @@ test.describe('E1-S4 Kho: nhập, điều chỉnh, xuất lẻ, sổ cái (dev-i
       await expect(issue).toBeHidden();
       await expect(stockCell(row, 7)).toBeVisible();
 
-      await row.getByRole('button', { name: `Sổ cái ${itemName}`, exact: true }).click();
-      const ledger = page.getByRole('dialog', { name: `Sổ cái · ${itemName}` });
+      await rowAction(row, itemName, 'Sổ cái');
+      const ledger = page.getByRole('dialog', { name: `Sổ cái ${itemName}` });
       await expect(ledger.getByRole('listitem')).toHaveCount(2);
       await expect(ledger.getByText(`Xuất lẻ · ${RECIPIENT.name}`)).toBeVisible();
       await expect(ledger.getByText('Người mới vào giữa kỳ')).toBeVisible();
-      await expect(ledger.getByText('Nhập mua', { exact: true })).toBeVisible();
+      await expect(ledger.getByRole('listitem').getByText('Nhập mua', { exact: true })).toBeVisible();
       await expect(ledger.getByText('Đơn PW')).toBeVisible();
       await shot(page, info, 'stock-ledger', false);
       await page.keyboard.press('Escape');
@@ -119,7 +124,7 @@ test.describe('E9-S5 Kho M1 (dev-identity admin)', () => {
       await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
       const row = page.getByRole('row').filter({ hasText: itemName });
 
-      await row.getByRole('button', { name: 'Nhập mua…' }).click();
+      await row.getByRole('button', { name: 'Nhập mua', exact: true }).click();
       const purchase = page.getByRole('dialog', { name: `Nhập mua ${itemName}` });
       await purchase.getByLabel('Số lượng nhập').fill('10');
       await expect(purchase.getByText('Tồn sau khi lưu 10')).toBeVisible();
@@ -127,7 +132,7 @@ test.describe('E9-S5 Kho M1 (dev-identity admin)', () => {
       await expect(purchase).toBeHidden();
       await expect(stockCell(row, 10)).toBeVisible();
 
-      await row.getByRole('button', { name: 'Xuất lẻ…' }).click();
+      await rowAction(row, itemName, 'Xuất lẻ');
       const first = page.getByRole('dialog', { name: `Xuất lẻ ${itemName}` });
       await first.getByLabel('Số lượng', { exact: false }).first().fill('3');
       await first.getByLabel('Dùng chung').check();
@@ -137,8 +142,8 @@ test.describe('E9-S5 Kho M1 (dev-identity admin)', () => {
       await expect(stockCell(row, 7)).toBeVisible();
 
       const ledgerOf = async () => {
-        await row.getByRole('button', { name: `Sổ cái ${itemName}`, exact: true }).click();
-        return page.getByRole('dialog', { name: `Sổ cái · ${itemName}` });
+        await rowAction(row, itemName, 'Sổ cái');
+        return page.getByRole('dialog', { name: `Sổ cái ${itemName}` });
       };
       const ledger = await ledgerOf();
       await expect(ledger.getByRole('listitem')).toHaveCount(2);
@@ -153,7 +158,7 @@ test.describe('E9-S5 Kho M1 (dev-identity admin)', () => {
       await page.reload();
       await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
       await expect(stockCell(row, 3)).toBeVisible();
-      await row.getByRole('button', { name: 'Xuất lẻ…' }).click();
+      await rowAction(row, itemName, 'Xuất lẻ');
       const again = page.getByRole('dialog', { name: `Xuất lẻ ${itemName}` });
       await again.getByLabel('Dùng chung').check();
       await again.getByLabel('Lý do').fill('PW biên');
@@ -166,6 +171,55 @@ test.describe('E9-S5 Kho M1 (dev-identity admin)', () => {
       await expect(again).toBeHidden();
       await expect(stockCell(row, 0)).toBeVisible();
       await expect(row.getByText('Hết hàng')).toBeVisible();
+    } finally {
+      await removeTestItem(request, itemId);
+    }
+  });
+
+  test('E9-S5 Kho: kiểm kê tồn 10 đếm 12 → "Tồn 10 → 12 (+2)", sổ cái "Điều chỉnh"; tồn đổi ở nơi khác → báo tồn mới, không tự lưu', async ({ page, request }, info) => {
+    const itemName = `PW kiểm kê ${Date.now()}-${info.project.name}`;
+    const itemId = await createItem(request, itemName);
+    const purchaseApi = (delta: number) =>
+      request.post(`/api/admin/items/${itemId}/stock`, { headers: devHeaders('admin'), data: { delta, reason: 'purchase', note: null } });
+    try {
+      expect((await purchaseApi(10)).status()).toBe(201);
+      await page.goto('/admin/stock');
+      await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
+      const row = page.getByRole('row').filter({ hasText: itemName });
+      await expect(stockCell(row, 10)).toBeVisible();
+
+      await rowAction(row, itemName, 'Kiểm kê');
+      const dialog = page.getByRole('dialog', { name: `Kiểm kê ${itemName}` });
+      await expect(dialog.getByText('Tồn hiện tại 10')).toBeVisible();
+      const save = dialog.getByRole('button', { name: 'Lưu kiểm kê' });
+      await expect(save).toBeDisabled();
+      await dialog.getByLabel('Số đếm thực tế').fill('10');
+      await expect(save).toBeDisabled();
+      await dialog.getByLabel('Số đếm thực tế').fill('12');
+      await expect(dialog.getByText('Tồn 10 → 12 (+2)')).toBeVisible();
+      await dialog.getByLabel('Lý do').fill('PW kiểm kê cuối tháng');
+      await shot(page, info, 'stock-count-dialog', false);
+      await save.click();
+      await expect(dialog).toBeHidden();
+      await expect(stockCell(row, 12)).toBeVisible();
+
+      await rowAction(row, itemName, 'Kiểm kê');
+      await dialog.getByLabel('Số đếm thực tế').fill('11');
+      await dialog.getByLabel('Lý do').fill('PW hàng hỏng');
+      expect((await purchaseApi(3)).status()).toBe(201);
+      await save.click();
+      await expect(dialog.getByRole('alert')).toHaveText(/Tồn vừa đổi thành 15 .* ở nơi khác — đếm lại rồi lưu\./);
+      await expect(dialog.getByText('Tồn 15 → 11 (−4)')).toBeVisible();
+      await save.click();
+      await expect(dialog).toBeHidden();
+      await expect(stockCell(row, 11)).toBeVisible();
+
+      await rowAction(row, itemName, 'Sổ cái');
+      const ledger = page.getByRole('dialog', { name: `Sổ cái ${itemName}` });
+      await expect(ledger.getByRole('listitem')).toHaveCount(4);
+      await expect(ledger.getByRole('listitem').nth(0).getByText('Điều chỉnh')).toBeVisible();
+      await expect(ledger.getByRole('listitem').nth(0).getByText('PW hàng hỏng')).toBeVisible();
+      if (info.project.name === 'mobile-390') await expectNoContrastViolations(page);
     } finally {
       await removeTestItem(request, itemId);
     }

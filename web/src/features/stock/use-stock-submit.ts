@@ -11,7 +11,7 @@ export function useStockSubmit(unit: string, onClose: () => void) {
   const refresh = useRefreshStock();
   const [errors, setErrors] = useState<StockErrors>({});
   const flight = useSingleFlight();
-  const run = (send: () => Promise<unknown>, doneText: string) =>
+  const run = (send: () => Promise<unknown>, doneText: string, handled?: (e: unknown) => boolean) =>
     flight.run(async () => {
       try {
         await send();
@@ -19,10 +19,10 @@ export function useStockSubmit(unit: string, onClose: () => void) {
         void refresh();
         onClose();
       } catch (e) {
-        setErrors(stockErrors(e, t, unit));
+        if (!handled?.(e)) setErrors(stockErrors(e, t, unit));
       }
     });
   const fail = (field: StockField, message: string) => setErrors((prev) => ({ ...prev, [field]: message }));
   const clear = (field: StockField) => setErrors((prev) => ({ ...prev, [field]: undefined, form: undefined }));
-  return { errors, saving: flight.pending, run, fail, clear };
+  return { errors, saving: flight.pending, run, fail, clear, refresh };
 }

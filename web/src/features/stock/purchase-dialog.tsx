@@ -22,7 +22,8 @@ export function PurchaseDialog({ item, onClose }: { item: StockRow; onClose: () 
   };
   return (
     <StockDialogShell
-      title={t('stock.dialog.purchaseTitle', { name: item.name })}
+      title={t('stock.dialog.purchaseTitle')}
+      itemName={item.name}
       itemUnit={item.unit}
       stockQty={item.stock_qty}
       after={delta !== null && delta > 0 ? item.stock_qty + delta : null}

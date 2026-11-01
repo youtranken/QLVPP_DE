@@ -2,15 +2,13 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/ui/data-table';
-import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
+import { RowMenu } from '@/ui/row-menu';
 import { useUnitNames } from '@/features/units/units.api';
 import type { ReactNode } from 'react';
 import type { StockRow } from './stock-rows';
 
-export type StockAction = 'purchase' | 'adjust' | 'issue' | 'ledger';
-
-const ACTIONS = ['purchase', 'adjust', 'issue'] as const;
+export type StockAction = 'purchase' | 'count' | 'issue' | 'ledger';
 
 export function StockBadge({ state }: { state: StockRow['stock_state'] }) {
   const { t } = useTranslation();
@@ -27,6 +25,26 @@ export function IssueButton({ item, onClick, className }: { item: Pick<StockRow,
     <button type="button" className={className} disabled={empty} title={empty ? t('stock.page.issueDisabled') : undefined} onClick={onClick}>
       {t('stock.page.issue')}
     </button>
+  );
+}
+
+function RowActions({ row: r, onAction }: { row: StockRow; onAction: (a: StockAction, r: StockRow) => void }) {
+  const { t } = useTranslation();
+  const empty = r.stock_qty <= 0;
+  return (
+    <span className="sk-actions__row">
+      <button type="button" className="btn btn--sm" onClick={() => onAction('purchase', r)}>
+        {t('stock.page.purchase')}
+      </button>
+      <RowMenu
+        label={t('stock.page.more', { name: r.name })}
+        items={[
+          { label: t('stock.page.count'), onSelect: () => onAction('count', r) },
+          { label: t('stock.page.issue'), disabled: empty, title: empty ? t('stock.page.issueDisabled') : undefined, onSelect: () => onAction('issue', r) },
+          { label: t('stock.page.ledger'), onSelect: () => onAction('ledger', r) },
+        ]}
+      />
+    </span>
   );
 }
 
@@ -58,22 +76,7 @@ function useColumns(groupName: (r: StockRow) => string, onAction: (a: StockActio
         id: 'actions',
         header: () => <span className="sr-only">{t('stock.page.colActions')}</span>,
         meta: { className: 'sk-actions' },
-        cell: ({ row: { original: r } }) => (
-          <span className="sk-actions__row">
-            {ACTIONS.map((a) =>
-              a === 'issue' ? (
-                <IssueButton key={a} item={r} className="btn btn--sm" onClick={() => onAction(a, r)} />
-              ) : (
-                <button key={a} type="button" className="btn btn--sm" onClick={() => onAction(a, r)}>
-                  {t(`stock.page.${a}`)}
-                </button>
-              ),
-            )}
-            <button type="button" className="btn btn--ghost btn--sm ct-icon-btn" aria-label={t('stock.page.ledgerIcon', { name: r.name })} onClick={() => onAction('ledger', r)}>
-              <Icon name="scroll" size={18} />
-            </button>
-          </span>
-        ),
+        cell: ({ row: { original: r } }) => <RowActions row={r} onAction={onAction} />,
       },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));

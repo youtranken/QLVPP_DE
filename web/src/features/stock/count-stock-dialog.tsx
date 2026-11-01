@@ -1,43 +1,56 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { apiErrorCode, apiErrorNumber } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { useUnitName } from '@/features/units/units.api';
-import { changeStock } from './stock.api';
+import { countStock } from './stock.api';
 import { QtyField, StockDialogShell, TextField } from './stock-dialog-parts';
-import { toInt } from './stock-input';
+import { COUNT_MAX, signed, toInt } from './stock-input';
 import { useStockSubmit } from './use-stock-submit';
 import type { StockRow } from './stock-rows';
 
-const signed = (n: number) => (n > 0 ? `+${n}` : `−${Math.abs(n)}`);
-
-export function AdjustStockDialog({ item, onClose }: { item: StockRow; onClose: () => void }) {
+export function CountStockDialog({ item, onClose }: { item: StockRow; onClose: () => void }) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const unit = useUnitName(item.unit);
-  const { errors, saving, run, fail, clear } = useStockSubmit(unit, onClose);
+  const { errors, saving, run, fail, clear, refresh } = useStockSubmit(unit, onClose);
+  const [stock, setStock] = useState(item.stock_qty);
   const [qty, setQty] = useState('');
   const [note, setNote] = useState('');
-  const delta = toInt(qty);
-  const after = delta !== null && delta !== 0 && item.stock_qty + delta >= 0 ? item.stock_qty + delta : null;
+  const n = toInt(qty);
+  const valid = n !== null && n >= 0 && n <= COUNT_MAX;
+  const preview = valid && n !== stock ? t('stock.dialog.countPreview', { from: stock, to: n, delta: signed(n - stock) }) : null;
+  // Tồn đổi ở nơi khác: báo số mới để người dùng đếm lại, không tự gửi lại
+  const onStale = (e: unknown) => {
+    const current = apiErrorCode(e) === 'STALE_UPDATE' ? apiErrorNumber(e, 'stock_qty') : undefined;
+    if (current === undefined) return false;
+    setStock(current);
+    fail('form', t('stock.errors.STALE_COUNT', { qty: current, unit }));
+    void refresh();
+    return true;
+  };
   const submit = () => {
-    if (delta === null) return fail('qty', t('stock.errors.FIELD_INVALID'));
-    void run(() => changeStock(item.id, { delta, reason: 'adjust', note: note.trim() || null }, csrfToken), t('stock.dialog.adjusted', { name: item.name, delta: signed(delta) }));
+    if (!valid) return fail('qty', t('stock.errors.COUNT_RANGE'));
+    const body = { counted_qty: n, expected_stock_qty: stock, note: note.trim() };
+    void run(() => countStock(item.id, body, csrfToken), t('stock.dialog.counted', { name: item.name, from: stock, to: n }), onStale);
   };
   return (
     <StockDialogShell
-      title={t('stock.dialog.adjustTitle', { name: item.name })}
+      title={t('stock.dialog.countTitle')}
+      itemName={item.name}
       itemUnit={item.unit}
-      stockQty={item.stock_qty}
-      after={after}
+      stockQty={stock}
+      preview={preview}
       dirty={qty !== '' || note !== ''}
       saving={saving}
-      submitLabel={t('stock.dialog.submitAdjust')}
+      submitLabel={t('stock.dialog.submitCount')}
+      submitDisabled={qty.trim() === '' || n === stock}
       formError={errors.form}
       onSubmit={submit}
       onClose={onClose}
     >
-      <QtyField label={t('stock.dialog.adjustDelta')} hint={t('stock.dialog.adjustDeltaHint')} value={qty} error={errors.qty} autoFocus onChange={(v) => { setQty(v); clear('qty'); }} />
-      <TextField label={t('stock.dialog.reason')} hint={t('stock.dialog.adjustReasonHint')} required value={note} error={errors.reason} onChange={(v) => { setNote(v); clear('reason'); }} />
+      <QtyField label={t('stock.dialog.countQty')} min={0} max={COUNT_MAX} value={qty} error={errors.qty} autoFocus onChange={(v) => { setQty(v); clear('qty'); }} />
+      <TextField label={t('stock.dialog.reason')} hint={t('stock.dialog.countReasonHint')} required value={note} error={errors.reason} onChange={(v) => { setNote(v); clear('reason'); }} />
     </StockDialogShell>
   );
 }

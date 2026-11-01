@@ -6,6 +6,8 @@ import { useFormatTime } from '@/lib/format-time';
 import { useDirectoryNames } from '@/features/directory/use-all-users';
 import { useUnitName } from '@/features/units/units.api';
 import { useMovements, type StockMovement } from './stock.api';
+import { StockTitle } from './stock-dialog-parts';
+import { signed } from './stock-input';
 import { balancesAfter, type StockRow } from './stock-rows';
 import { IssueButton, StockBadge, type StockAction } from './stock-table';
 
@@ -17,8 +19,6 @@ const TAG_CLASS: Record<StockMovement['reason'], string> = {
   return: 'tag tag--outline',
 };
 
-// Dấu trừ thật (U+2212) để số âm không bị đọc như gạch nối
-const signed = (n: number) => (n > 0 ? `+${n}` : `−${Math.abs(n)}`);
 
 interface Props {
   item: StockRow;
@@ -47,7 +47,9 @@ export function MovementsDrawer({ item, groupName, onAction, onClose }: Props) {
       <div className="drawer-header sk-drawer-head">
         <div className="sk-drawer-head__text">
           <small className="drawer-eyebrow">{t('stock.ledger.eyebrow', { group: groupName, unit })}</small>
-          <DrawerTitle className="sheet-title">{t('stock.ledger.title', { name: item.name })}</DrawerTitle>
+          <DrawerTitle className="sheet-title sk-title">
+            <StockTitle title={t('stock.ledger.title')} name={item.name} />
+          </DrawerTitle>
         </div>
         <DrawerClose asChild>
           <button type="button" className="sheet-close" aria-label={t('common.close')}>
@@ -87,8 +89,8 @@ export function MovementsDrawer({ item, groupName, onAction, onClose }: Props) {
         <button type="button" className="btn btn--sm" onClick={() => onAction('purchase')}>
           {t('stock.page.purchase')}
         </button>
-        <button type="button" className="btn btn--sm" onClick={() => onAction('adjust')}>
-          {t('stock.page.adjust')}
+        <button type="button" className="btn btn--sm" onClick={() => onAction('count')}>
+          {t('stock.page.count')}
         </button>
         <IssueButton item={item} className="btn btn--sm" onClick={() => onAction('issue')} />
       </div>

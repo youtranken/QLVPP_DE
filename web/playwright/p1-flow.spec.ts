@@ -48,14 +48,15 @@ async function stockFlow(page: Page, itemName: string) {
   await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
   const row = page.getByRole('row').filter({ hasText: itemName });
 
-  await row.getByRole('button', { name: 'Nhập mua…' }).click();
+  await row.getByRole('button', { name: 'Nhập mua', exact: true }).click();
   const purchase = page.getByRole('dialog', { name: `Nhập mua ${itemName}` });
   await purchase.getByLabel('Số lượng nhập').fill('10');
   await purchase.getByRole('button', { name: 'Lưu nhập mua' }).click();
   await expect(purchase).toBeHidden();
   await expect(row.getByRole('cell', { name: /^(Tồn kho )?10$/ })).toBeVisible();
 
-  await row.getByRole('button', { name: 'Xuất lẻ…' }).click();
+  await row.getByRole('button', { name: `Thao tác khác cho ${itemName}` }).click();
+  await page.getByRole('menuitem', { name: 'Xuất lẻ' }).click();
   const issue = page.getByRole('dialog', { name: `Xuất lẻ ${itemName}` });
   await issue.getByLabel('Số lượng').fill('3');
   await issue.getByRole('searchbox', { name: 'Tìm người nhận' }).fill(RECIPIENT.name);
@@ -65,11 +66,12 @@ async function stockFlow(page: Page, itemName: string) {
   await expect(issue).toBeHidden();
   await expect(row.getByRole('cell', { name: /^(Tồn kho )?7$/ })).toBeVisible();
 
-  await row.getByRole('button', { name: `Sổ cái ${itemName}`, exact: true }).click();
-  const ledger = page.getByRole('dialog', { name: `Sổ cái · ${itemName}` });
+  await row.getByRole('button', { name: `Thao tác khác cho ${itemName}` }).click();
+  await page.getByRole('menuitem', { name: 'Sổ cái' }).click();
+  const ledger = page.getByRole('dialog', { name: `Sổ cái ${itemName}` });
   await expect(ledger.getByRole('listitem')).toHaveCount(2);
   await expect(ledger.getByText(`Xuất lẻ · ${RECIPIENT.name}`)).toBeVisible();
-  await expect(ledger.getByText('Nhập mua', { exact: true })).toBeVisible();
+  await expect(ledger.getByRole('listitem').getByText('Nhập mua', { exact: true })).toBeVisible();
 }
 
 async function saveSigner(page: Page, preparer: string) {

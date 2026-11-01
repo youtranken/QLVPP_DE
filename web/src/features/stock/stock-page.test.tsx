@@ -3,7 +3,7 @@ import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-ut
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
-import { callsTo, stubStockApi } from './stock-fixtures';
+import { callsTo, item, stubStockApi } from './stock-fixtures';
 
 const LOW_BELL = {
   id: 'n-low',
@@ -104,21 +104,55 @@ describe('StockPage', () => {
     expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
   });
 
-  it('"Xuất lẻ…" vô hiệu khi tồn 0 (title "Hết hàng — nhập mua trước"), bật khi tồn 6', async () => {
+  it('mỗi hàng một nút "Nhập mua" (không dấu …) + nút ⋯; "Xuất lẻ" trong menu vô hiệu khi tồn 0 (title "Hết hàng — nhập mua trước"), bật khi tồn 6', async () => {
     await open();
-    const out = within(rowOf('Kẹp giấy')).getByRole('button', { name: 'Xuất lẻ…' });
-    expect(out).toBeDisabled();
+    expect(within(rowOf('Giấy A4')).getByRole('button', { name: 'Nhập mua' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /…$/ })).toBeNull();
+    await userEvent.click(within(rowOf('Kẹp giấy')).getByRole('button', { name: 'Thao tác khác cho Kẹp giấy' }));
+    const out = within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Xuất lẻ' });
+    expect(out).toHaveAttribute('aria-disabled', 'true');
     expect(out).toHaveAttribute('title', 'Hết hàng — nhập mua trước');
-    expect(within(rowOf('Giấy A4')).getByRole('button', { name: 'Xuất lẻ…' })).toBeEnabled();
+    await userEvent.click(out);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(within(rowOf('Giấy A4')).getByRole('button', { name: 'Thao tác khác cho Giấy A4' }));
+    expect(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Xuất lẻ' })).not.toHaveAttribute('aria-disabled');
   });
 
-  it('bấm "Xuất lẻ…" mở hộp "Xuất lẻ Bút bi xanh"; bấm tên món mở sổ cái', async () => {
+  it('menu ⋯ dùng được bằng bàn phím: Enter mở và focus "Kiểm kê", ↓ sang "Xuất lẻ", Esc đóng và trả focus về nút; Enter trên "Kiểm kê" mở hộp "Kiểm kê Bút bi xanh"', async () => {
     await open();
-    await userEvent.click(within(rowOf('Bút bi xanh')).getByRole('button', { name: 'Xuất lẻ…' }));
+    const more = within(rowOf('Bút bi xanh')).getByRole('button', { name: 'Thao tác khác cho Bút bi xanh' });
+    expect(more).toHaveAttribute('aria-haspopup', 'menu');
+    more.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(more).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('menuitem', { name: 'Kiểm kê' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(screen.getByRole('menuitem', { name: 'Xuất lẻ' })).toHaveFocus();
+    await userEvent.keyboard('{End}');
+    expect(screen.getByRole('menuitem', { name: 'Sổ cái' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(screen.getByRole('menuitem', { name: 'Kiểm kê' })).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(more).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard('{Enter}');
+    expect(await screen.findByRole('dialog', { name: 'Kiểm kê Bút bi xanh' })).toBeInTheDocument();
+  });
+
+  it('bấm ⋯ → "Xuất lẻ" mở hộp "Xuất lẻ Bút bi xanh"; ⋯ → "Sổ cái" và bấm tên món đều mở sổ cái', async () => {
+    await open();
+    await userEvent.click(within(rowOf('Bút bi xanh')).getByRole('button', { name: 'Thao tác khác cho Bút bi xanh' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Xuất lẻ' }));
     expect(await screen.findByRole('dialog', { name: 'Xuất lẻ Bút bi xanh' })).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
+    await userEvent.click(within(rowOf('Giấy A4')).getByRole('button', { name: 'Thao tác khác cho Giấy A4' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Sổ cái' }));
+    expect(await screen.findByRole('dialog', { name: 'Sổ cái Giấy A4' })).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
     await userEvent.click(screen.getByRole('button', { name: 'Mở sổ cái Giấy A4' }));
-    expect(await screen.findByRole('dialog', { name: 'Sổ cái · Giấy A4' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Sổ cái Giấy A4' })).toBeInTheDocument();
   });
 
   it('lỗi tải → "Thử lại" gọi lại items; thành công thì hiện bảng', async () => {
@@ -131,5 +165,39 @@ describe('StockPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
     expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
     await waitFor(() => expect(callsTo(f, '/api/admin/items').length).toBeGreaterThan(1));
+  });
+
+  describe('Xem thêm (50 món một lần)', () => {
+    const many = (n: number) => Array.from({ length: n }, (_, i) => item({ id: `m-${i}`, name: `Món ${String(i + 1).padStart(3, '0')}` }));
+    async function openMany(n: number) {
+      mockViewport(1280);
+      stubStockApi((url) => (url === '/api/admin/items' ? jsonResponse(200, many(n)) : undefined));
+      renderApp(makeMe('admin'), '/admin/stock');
+      await screen.findByText('Món 001');
+    }
+
+    it('50 món: hiện đủ 50, không có "Xem thêm"', async () => {
+      await openMany(50);
+      expect(screen.getByText('Món 050')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Xem thêm/ })).toBeNull();
+    });
+
+    it('51 món: hiện 50 + "Xem thêm (1 món nữa)"; bấm thì hiện món 51 và nút biến mất', async () => {
+      await openMany(51);
+      expect(screen.getByText('Món 050')).toBeInTheDocument();
+      expect(screen.queryByText('Món 051')).toBeNull();
+      expect(screen.getByText('Đang hiện 50/51 món')).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Xem thêm (1 món nữa)' }));
+      expect(screen.getByText('Món 051')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Xem thêm/ })).toBeNull();
+    });
+
+    it('tìm kiếm chạy trên mọi món, kể cả món chưa hiện (Món 051)', async () => {
+      await openMany(51);
+      await userEvent.click(screen.getByRole('searchbox', { name: 'Tìm theo tên món' }));
+      await userEvent.paste('Món 051');
+      expect(await screen.findByText('Món 051', {}, { timeout: 3000 })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Xem thêm/ })).toBeNull();
+    });
   });
 });

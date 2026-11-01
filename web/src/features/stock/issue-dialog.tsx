@@ -34,7 +34,8 @@ export function IssueDialog({ item, onClose }: { item: StockRow; onClose: () => 
   };
   return (
     <StockDialogShell
-      title={t('stock.dialog.issueTitle', { name: item.name })}
+      title={t('stock.dialog.issueTitle')}
+      itemName={item.name}
       itemUnit={item.unit}
       stockQty={item.stock_qty}
       after={n !== null && n > 0 && n <= item.stock_qty ? item.stock_qty - n : null}

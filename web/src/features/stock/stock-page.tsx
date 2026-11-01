@@ -9,13 +9,15 @@ import { Toolbar } from '@/ui/toolbar';
 import { categoryLabel, useAdminItems, useAllCategories } from '@/features/catalog/catalog.api';
 import { indexCategories, toRows } from '@/features/catalog/catalog-rows';
 import { useBacklog } from '@/features/delivery/backlog.api';
-import { AdjustStockDialog } from './adjust-stock-dialog';
+import { CountStockDialog } from './count-stock-dialog';
 import { IssueDialog } from './issue-dialog';
 import { MovementsDrawer } from './movements-drawer';
 import { PurchaseDialog } from './purchase-dialog';
+import { StockMore } from './stock-more';
 import { StockStats } from './stock-stats';
 import { StockTable, type StockAction } from './stock-table';
 import { applyStockView, owedByItem, stockStats, toStockRows, type StockRow } from './stock-rows';
+import { useShownLimit } from './use-shown-limit';
 import { useStockParams } from './use-stock-params';
 import './stock.m1.css';
 
@@ -59,6 +61,9 @@ export function StockPage() {
     },
     [d.index, i18n.language, t],
   );
+  const { filter } = p.view;
+  const shown = applyStockView(d.rows, p.view);
+  const page = useShownLimit(shown, `${filter ?? ''}|${p.view.q}`);
   const title = t('stock.title');
   const header = (
     <PageHeader
@@ -81,8 +86,6 @@ export function StockPage() {
     );
   }
 
-  const { filter } = p.view;
-  const shown = applyStockView(d.rows, p.view);
   const target = open ? d.rows.find((r) => r.id === open.id) : undefined;
   const close = () => setOpen(null);
   const emptyKey = filter === 'low' ? 'emptyLow' : filter === 'out' ? 'emptyOut' : 'emptyTitle';
@@ -93,7 +96,7 @@ export function StockPage() {
       <Toolbar search={{ value: search, onChange: setSearch, label: t('stock.page.search'), placeholder: t('stock.page.search'), maxLength: MAX_SEARCH }} />
       {filter && <FilterNotice label={t(`stock.stats.${filter}`)} count={shown.length} onClear={p.clearFilter} />}
       <StockTable
-        rows={shown}
+        rows={page.visible}
         loading={!d.loaded}
         activeRowId={open?.action === 'ledger' ? open.id : undefined}
         groupName={groupName}
@@ -108,8 +111,9 @@ export function StockPage() {
           ),
         }}
       />
+      <StockMore shown={page.visible.length} total={page.total} hidden={page.hidden} onMore={page.showMore} />
       {target && open?.action === 'purchase' && <PurchaseDialog item={target} onClose={close} />}
-      {target && open?.action === 'adjust' && <AdjustStockDialog item={target} onClose={close} />}
+      {target && open?.action === 'count' && <CountStockDialog item={target} onClose={close} />}
       {target && open?.action === 'issue' && <IssueDialog item={target} onClose={close} />}
       {target && open?.action === 'ledger' && (
         <MovementsDrawer item={target} groupName={groupName(target)} onAction={(action) => setOpen({ action, id: target.id })} onClose={close} />

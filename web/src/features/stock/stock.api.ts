@@ -21,8 +21,14 @@ interface Page<T> {
 
 export interface StockChangeBody {
   delta: number;
-  reason: 'purchase' | 'adjust';
+  reason: 'purchase';
   note: string | null;
+}
+
+export interface StockCountBody {
+  counted_qty: number;
+  expected_stock_qty: number;
+  note: string;
 }
 
 export interface IssueBody {
@@ -66,6 +72,13 @@ export function useRefreshStock() {
 
 export const changeStock = (itemId: string, body: StockChangeBody, csrfToken: string | null) =>
   apiFetch<{ stock_qty: number }>(`/api/admin/items/${itemId}/stock`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+    csrfToken,
+  });
+
+export const countStock = (itemId: string, body: StockCountBody, csrfToken: string | null) =>
+  apiFetch<{ stock_qty: number }>(`/api/admin/items/${itemId}/stock/count`, {
     method: 'POST',
     body: JSON.stringify(body),
     csrfToken,

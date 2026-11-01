@@ -18,11 +18,11 @@ const show = (stock: number, onAction = vi.fn()) =>
   renderWithI18n(<MovementsDrawer item={{ ...makeRow(stock), owed: 4 }} groupName="Giấy" onAction={onAction} onClose={vi.fn()} />);
 
 describe('MovementsDrawer', () => {
-  it('đầu ngăn kéo: "Giấy · ram", "Sổ cái · Giấy A4", tồn lớn 7, "Còn nợ: 4"', async () => {
+  it('đầu ngăn kéo: "Giấy · ram", "Sổ cái Giấy A4", tồn lớn 7, "Còn nợ: 4"', async () => {
     stubApi({ first: [] });
     show(7);
     expect(screen.getByText('Giấy · ram')).toBeInTheDocument();
-    expect(screen.getByRole('dialog', { name: 'Sổ cái · Giấy A4' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Sổ cái Giấy A4' })).toBeInTheDocument();
     expect(screen.getByText('Còn nợ: 4')).toBeInTheDocument();
     expect(await screen.findByText('Chưa có biến động nào.')).toBeInTheDocument();
   });
@@ -72,16 +72,16 @@ describe('MovementsDrawer', () => {
     expect(screen.queryByRole('button', { name: 'Xem thêm' })).toBeNull();
   });
 
-  it('chân: ba nút thao tác gọi onAction; "Xuất lẻ…" vô hiệu khi tồn 0', async () => {
+  it('chân: ba nút thao tác gọi onAction; "Xuất lẻ" vô hiệu khi tồn 0', async () => {
     stubApi({ first: [] });
     const onAction = vi.fn();
     const { unmount } = show(3, onAction);
-    await userEvent.click(screen.getByRole('button', { name: 'Nhập mua…' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Điều chỉnh…' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ…' }));
-    expect(onAction.mock.calls.map((c) => c[0])).toEqual(['purchase', 'adjust', 'issue']);
+    await userEvent.click(screen.getByRole('button', { name: 'Nhập mua' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Kiểm kê' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ' }));
+    expect(onAction.mock.calls.map((c) => c[0])).toEqual(['purchase', 'count', 'issue']);
     unmount();
     show(0);
-    expect(screen.getByRole('button', { name: 'Xuất lẻ…' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Xuất lẻ' })).toBeDisabled();
   });
 });
