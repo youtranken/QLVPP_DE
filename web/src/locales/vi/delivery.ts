@@ -6,8 +6,6 @@ const delivery = {
       progress: 'đã giao {{done}}/{{total}}',
       cancelled: 'đã hủy {{n}}',
       remaining: 'còn {{n}}',
-      min: 'Ít nhất 1',
-      max: 'Tối đa {{max}}',
       invalid: 'Nhập số nguyên',
       available: 'Chỉ còn {{available}}',
       exceeds: 'Chỉ còn {{remaining}} cần giao',

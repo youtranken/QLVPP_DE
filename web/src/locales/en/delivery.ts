@@ -9,8 +9,6 @@ const delivery: Messages<typeof vi> = {
       progress: 'delivered {{done}}/{{total}}',
       cancelled: 'cancelled {{n}}',
       remaining: '{{n}} left',
-      min: 'At least 1',
-      max: 'At most {{max}}',
       invalid: 'Enter a whole number',
       available: 'Only {{available}} in stock',
       exceeds: 'Only {{remaining}} left to deliver',
