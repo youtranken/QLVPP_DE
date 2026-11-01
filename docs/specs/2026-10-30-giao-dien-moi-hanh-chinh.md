@@ -764,3 +764,33 @@ Playwright: `E9-S4 Phiếu đề xuất D&E: chỉ món đặt mua, ô ký theo 
 **Test**
 - Unit: hàm thuần `parseBookingRows(rows)` và `normalizeUnit(raw)` với các ca: mã trùng giữ hàng đầu; "04 viên/vĩ" → vỉ + "4 viên/vỉ"; "Cái" (NFD) = "cái"; tên trống bỏ.
 - db-spec: `--apply` hai lần → lần hai tạo 0; có món sẵn cùng mã → bỏ qua; lỗi giữa chừng → không ghi gì (rollback).
+
+## 12. Bổ sung 2026-11-01 — góp ý sau lần thử đầu của chủ dự án
+
+Chủ dự án thử bản S0–S7 trên de-vpp và chốt các mục dưới. Mục này thắng §5.4, §5.5 và §11.1 khi mâu thuẫn.
+
+### 12.1 Ngừng nhóm món thì ẩn món trong nhóm (quyết định A)
+
+**Luật**
+- Món "dùng được" = `items.active` **và** (không có nhóm **hoặc** nhóm `active`). Server quyết, UI chỉ hiển thị.
+- Nhóm đang ngừng: mọi món trong nhóm ẩn khỏi `GET items` của nhân viên, không thêm/tăng được vào phiếu (400 `ITEM_INACTIVE`, như món ngừng), "Chép lại danh sách tháng X" bỏ qua (lý do `INACTIVE`).
+- Ngừng nhóm **không** sửa `items.active`; mở lại nhóm thì món hiện lại đúng trạng thái riêng của nó (món đã tự ngừng vẫn ngừng).
+- Dòng phiếu cũ của món trong nhóm ngừng: giữ, hiển thị và giao như dòng món đã ngừng; lưu lại phiếu mà không đổi dòng đó vẫn được.
+- Hành chính vẫn thấy, nhập/điều chỉnh/xuất kho món trong nhóm ngừng; Danh mục hiện nhãn "Nhóm đang ngừng" trên các món đó.
+
+**Nhóm món — menu ⋯** mỗi hàng: "Sửa" (tên, tên tiếng Anh; ngăn kéo/hộp hiện có), "Ngừng nhóm"/"Dùng lại". Ngừng nhóm có hộp xác nhận nói rõ "N món trong nhóm sẽ ẩn khỏi trang Đăng ký". Nút thứ tự ▲▼ gọn trên một hàng với số thứ tự.
+
+### 12.2 Kiểm kê thay "Điều chỉnh" ở Kho (quyết định B)
+
+- Nút và hộp đổi tên **"Kiểm kê"**: Hành chính gõ **số đếm thực tế** (nguyên 0…1 000 000), app hiện trước "Tồn 3 → 5 (+2)"; lý do bắt buộc (trim ≥ 3, như cũ).
+- API mới `POST admin/items/:id/stock/count {counted_qty, expected_stock_qty, note}`: một tx; `stock_qty ≠ expected_stock_qty` → 409 `STALE_UPDATE {stock_qty}`; `counted_qty = stock_qty` → 400 `VALIDATION` (không có gì để ghi); khác thì ghi như `adjust` với `delta = counted_qty − stock_qty` (cùng luật mốc `restock_level`, audit `stock.adjust`, sổ cái lý do "Điều chỉnh"). `POST admin/items/:id/stock {reason: adjust}` giữ cho tương thích, UI không dùng nữa.
+- Biên: `counted_qty` 0 được / −1 `VALIDATION`; 1 000 000 được / 1 000 001 `VALIDATION`; `expected` lệch 1 → `STALE_UPDATE`.
+
+### 12.3 Hiển thị
+
+- Danh mục: thêm cột **Tên tiếng Anh**; mở trang mặc định **thu gọn tất cả** nhóm (nhớ trạng thái mở/thu trong phiên trình duyệt); tìm kiếm có kết quả thì tự mở nhóm chứa kết quả.
+- Báo cáo & in: bảng Phần 1, Xuất lẻ trong kỳ, Phần 2 có đường kẻ cột và hàng (màn hình và bản in).
+- Bảng Nhóm món / Đơn vị tính: mọi ô cùng chiều cao, đường kẻ hàng thẳng.
+- Chuông thông báo không che tiêu đề trang; thông báo dài xuống dòng, không đè chữ.
+- Thanh bên kéo hết chiều cao trang; nút Kho không bị cắt chữ.
+- Kết quả rà giao diện trực tiếp (1280 + 390, chữ dài) ghi ở ledger plan; mục High/Medium sửa cùng đợt.
