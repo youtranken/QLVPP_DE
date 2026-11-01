@@ -20,6 +20,15 @@ describe('Segmented', () => {
     renderWithI18n(<Segmented label="Chế độ" value="b" options={opts} onChange={() => {}} />);
     expect(screen.getByRole('radio', { name: 'Một, 6' })).toBeInTheDocument();
   });
+  it('đếm 0 gắn data-zero để tô trung tính; đếm 1 thì không', () => {
+    const counts = [
+      { value: 'a', label: 'Một', count: 0 },
+      { value: 'b', label: 'Hai', count: 1 },
+    ];
+    renderWithI18n(<Segmented label="x" value="a" options={counts} onChange={() => {}} />);
+    expect(screen.getByText('0')).toHaveAttribute('data-zero');
+    expect(screen.getByText('1')).not.toHaveAttribute('data-zero');
+  });
   it('ArrowRight từ mục cuối quay về mục đầu và gọi onChange', async () => {
     const onChange = vi.fn();
     renderWithI18n(<Segmented label="x" value="c" options={opts} onChange={onChange} />);

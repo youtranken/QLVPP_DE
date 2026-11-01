@@ -59,7 +59,6 @@ function DetailFoot({ d, canAll, phone }: { d: ReturnType<typeof useDeliveryRequ
   return (
     <footer className="dv-foot">
       {d.outcome && phone && <DeliveryResult outcome={d.outcome} />}
-      <span className="dv-foot__count">{t('delivery.detail.selected', { n: d.selectedCount })}</span>
       <button type="button" className="btn" disabled={d.selectedCount === 0 || d.pending} onClick={() => void d.actions.deliverPicked()}>
         {t('delivery.detail.deliverSelected', { n: d.selectedCount })}
       </button>

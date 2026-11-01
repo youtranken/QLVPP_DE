@@ -50,7 +50,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       psql(`UPDATE users SET status = 'locked' WHERE sub = '${seed.sub}'`);
       try {
         await page.goto('/admin/backlog?filter=left');
-        const leftRow = page.getByRole('row').filter({ hasText: seed.name }).filter({ has: page.getByRole('button', { name: 'Hủy nợ…' }) });
+        const leftRow = page.getByRole('row').filter({ hasText: seed.name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung…' }) });
         await expect(leftRow.getByText('Người đã nghỉ')).toBeVisible();
       } finally {
         psql(`UPDATE users SET status = 'active' WHERE sub = '${seed.sub}'`);
@@ -61,10 +61,10 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await expect(page).toHaveURL(/\/admin\/backlog\?by=person$/);
       await expect(page.getByRole('radio', { name: 'Theo người' })).toBeChecked();
       const group = page.getByRole('rowheader', { name: new RegExp(seed.name) });
-      const row = page.getByRole('row').filter({ hasText: a.name }).filter({ has: page.getByRole('button', { name: 'Hủy nợ…' }) });
+      const row = page.getByRole('row').filter({ hasText: a.name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung…' }) });
       await expect(group).toContainText('PW Phòng giao');
       await expect(row.getByText('còn 2 cái')).toBeVisible();
-      await expect(row.getByText('/ 3')).toBeVisible();
+      await expect(row.getByText('/ đặt 3')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'backlog-person');
 
@@ -85,7 +85,12 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await expect(page.getByText(`Đã giao bổ sung 1 cái ${a.name} cho ${seed.name}`)).toBeVisible();
       expect(stockOf(a.id)).toBe(8);
 
-      await row.getByRole('button', { name: `Lịch sử giao ${a.name} — ${seed.name}` }).click();
+      if (isMobile(info)) {
+        await row.getByRole('button', { name: `Thao tác khác ${a.name} — ${seed.name}` }).click();
+        await page.getByRole('menuitem', { name: 'Lịch sử giao' }).click();
+      } else {
+        await row.getByRole('button', { name: `Lịch sử giao ${a.name} — ${seed.name}` }).click();
+      }
       const drawer = page.getByRole('dialog', { name: `Lịch sử giao ${seed.name}` });
       const rounds = drawer.getByRole('list', { name: 'Các đợt giao' }).getByRole('listitem');
       await expect(rounds).toHaveCount(2);
@@ -94,7 +99,12 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await snap(page, info, 'backlog-history');
       await drawer.getByRole('button', { name: 'Đóng' }).click();
 
-      await row.getByRole('button', { name: 'Hủy nợ…' }).click();
+      if (isMobile(info)) {
+        await row.getByRole('button', { name: `Thao tác khác ${a.name} — ${seed.name}` }).click();
+        await page.getByRole('menuitem', { name: 'Hủy nợ…' }).click();
+      } else {
+        await row.getByRole('button', { name: 'Hủy nợ…' }).click();
+      }
       const cancel = page.getByRole('dialog', { name: `Hủy 1 cái còn lại của ${seed.name}?` });
       const reason = cancel.getByLabel('Lý do hủy nợ', { exact: false });
       const submit = cancel.getByRole('button', { name: 'Hủy nợ', exact: true });

@@ -56,7 +56,6 @@
 [data-shell='admin'] .dv-give__note { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: var(--s-2); }
 [data-shell='admin'] .dv-give__note a { font: var(--t-sm); font-weight: 700; color: var(--c-acc); }
 [data-shell='admin'] .dv-foot { position: sticky; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--s-2); margin: 0 calc(-1 * var(--s-4)) calc(-1 * var(--s-4)); padding: var(--s-3) var(--s-4); border-top: 1px solid var(--c-line); border-radius: 0 0 var(--r-lg) var(--r-lg); background: var(--c-surface); }
-[data-shell='admin'] .dv-foot__count { margin-right: auto; font: var(--t-sm); color: var(--c-muted); }
 [data-shell='admin'] .dv-pick { margin: 0; padding: var(--s-6); border-radius: var(--r-lg); background: var(--c-surface); color: var(--c-muted); text-align: center; }
 
 @media (max-width: 1279px) {
@@ -69,9 +68,10 @@
   [data-shell='admin'] .dv-list__head .seg-m1 { justify-self: start; }
   [data-shell='admin'] .dv-detail { padding: var(--s-3); }
   [data-shell='admin'] .dv-foot { position: sticky; bottom: 0; z-index: 3; margin: 0 calc(-1 * var(--s-3)) calc(-1 * var(--s-3)); padding: var(--s-3) var(--s-3) calc(var(--s-3) + env(safe-area-inset-bottom)); box-shadow: 0 -6px 16px rgb(var(--sh-ink) / .06); }
-  [data-shell='admin'] .dv-foot .dv-result,
-  [data-shell='admin'] .dv-foot__count { flex: 1 1 100%; margin: 0; }
+  [data-shell='admin'] .dv-foot .dv-result { flex: 1 1 100%; margin: 0; }
   [data-shell='admin'] .dv-foot .btn { flex: 1 1 0; min-height: 48px; }
+  [data-shell='admin'] .dv-detail__head { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+  [data-shell='admin'] .dv-detail__head > .tag { grid-column: 2; justify-self: start; }
   [data-shell='admin'] .dv-lines thead { display: none; }
   [data-shell='admin'] .dv-lines, [data-shell='admin'] .dv-lines tbody { display: block; }
   [data-shell='admin'] .dv-lines tr { display: grid; grid-template-columns: 32px auto auto auto minmax(0, 1fr); gap: 8px 12px; align-items: center; padding: 12px 10px; border-bottom: 1px solid var(--c-line); }

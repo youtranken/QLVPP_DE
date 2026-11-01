@@ -38,7 +38,7 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
           onKeyDown={(e) => move(e, i)}
         >
           {o.label}
-          {o.count !== undefined && <em className="num">{o.count}</em>}
+          {o.count !== undefined && <em className="num" data-zero={o.count === 0 || undefined}>{o.count}</em>}
         </button>
       ))}
     </div>

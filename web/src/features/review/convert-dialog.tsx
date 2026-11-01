@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useUnitNames } from '@/features/units/units.api';
 import { apiErrorCode } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
-import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
+import { Dialog, DialogClose, DialogCloseButton, DialogTitle } from '@/ui/dialog';
 import { useAdminItems, useAllCategories } from '@/features/catalog/catalog.api';
 import { fieldErrors, type FieldErrors } from '@/features/catalog/catalog-errors';
 import { ITEM_ERROR_FIELD, ITEM_FIELDS, draftFrom, itemPayload, type ItemDraft } from '@/features/catalog/item-draft';
@@ -121,11 +121,7 @@ export function ConvertDialog({ line, who, onSubmit, onClose }: {
       <form onSubmit={submit} noValidate>
         <div className="sheet-header">
           <DialogTitle className="sheet-title">{t('review.convert.title', { name })}</DialogTitle>
-          <DialogClose asChild>
-            <button type="button" className="sheet-close" aria-label={t('common.close')} disabled={saving}>
-              ✕
-            </button>
-          </DialogClose>
+          <DialogCloseButton disabled={saving} />
         </div>
         <div className="sheet-body a-form-grid">
           {errors.form && (

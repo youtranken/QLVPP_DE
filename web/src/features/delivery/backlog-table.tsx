@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import { groupTone } from '@/lib/group-tone';
 import { DataTable } from '@/ui/data-table';
+import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
+import { RowMenu } from '@/ui/row-menu';
 import { useAdminItems, useAllCategories } from '@/features/catalog/catalog.api';
 import type { BacklogBy } from './backlog.api';
 import { useBacklogFormat } from './backlog-format';
@@ -46,17 +48,39 @@ function WhoCell({ row, by }: { row: BacklogRow; by: BacklogBy }) {
   );
 }
 
-function Actions({ row, onAction }: { row: BacklogRow; onAction: Props['onAction'] }) {
+// Theo món, "Hết hàng" đã ở tiêu đề nhóm (cả nhóm cùng một món); theo người thì báo ở từng dòng
+function Actions({ row, by, onAction }: { row: BacklogRow; by: BacklogBy; onAction: Props['onAction'] }) {
   const { t } = useTranslation();
   const f = useBacklogFormat();
-  const label = t('delivery.backlog.historyOf', { name: f.name(row), person: f.person(row) });
+  const phone = useMediaQuery(ADMIN_PHONE_QUERY);
+  const who = { name: f.name(row), person: f.person(row) };
+  const label = t('delivery.backlog.historyOf', who);
   const out = row.stock_qty === 0;
+  const deliver = (
+    <button type="button" className="btn btn--sm" disabled={out} onClick={() => onAction('deliver', row)}>
+      {t('delivery.backlog.deliverMore')}
+    </button>
+  );
+  const outTag = out && by === 'person' && <span className="tag">{t('delivery.backlog.outOfStock')}</span>;
+  if (phone) {
+    return (
+      <span className="bl-acts">
+        {outTag}
+        {deliver}
+        <RowMenu
+          label={t('delivery.backlog.moreOf', who)}
+          items={[
+            { label: t('delivery.backlog.cancel'), danger: true, onSelect: () => onAction('cancel', row) },
+            { label: t('delivery.backlog.history'), onSelect: () => onAction('history', row) },
+          ]}
+        />
+      </span>
+    );
+  }
   return (
     <span className="bl-acts">
-      {out && <span className="tag">{t('delivery.backlog.outOfStock')}</span>}
-      <button type="button" className="btn btn--sm" disabled={out} onClick={() => onAction('deliver', row)}>
-        {t('delivery.backlog.deliverMore')}
-      </button>
+      {outTag}
+      {deliver}
       <button type="button" className="btn btn--sm btn--danger-ghost" onClick={() => onAction('cancel', row)}>
         {t('delivery.backlog.cancel')}
       </button>
@@ -95,7 +119,7 @@ function useColumns(by: BacklogBy, onAction: Props['onAction']) {
         id: 'actions',
         header: () => <span className="sr-only">{t('delivery.backlog.cols.actions')}</span>,
         meta: { className: 'r' },
-        cell: ({ row }) => <Actions row={row.original} onAction={onAction} />,
+        cell: ({ row }) => <Actions row={row.original} by={by} onAction={onAction} />,
       },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));

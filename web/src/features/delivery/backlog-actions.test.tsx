@@ -95,4 +95,18 @@ describe('BacklogPage — thao tác trên dòng', () => {
     expect(screen.getByRole('dialog', { name: 'Lịch sử giao Phạm Văn Đức' })).toBeInTheDocument();
     expect(await screen.findByText('Chưa giao đợt nào')).toBeInTheDocument();
   });
+
+  it('390 px: dòng chỉ có nút "Giao bổ sung…" + menu ⋯ chứa "Hủy nợ…" và "Lịch sử giao"; chọn "Hủy nợ…" mở hộp hủy nợ', async () => {
+    stubBacklog([PEN_DUC]);
+    mockViewport(390);
+    renderApp(makeMe('admin'), '/admin/backlog');
+    const more = await screen.findByRole('button', { name: 'Thao tác khác Bút bi xanh — Phạm Văn Đức' });
+    expect(screen.getByRole('button', { name: 'Giao bổ sung…' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Hủy nợ…' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Lịch sử giao/ })).toBeNull();
+    await userEvent.click(more);
+    expect(screen.getByRole('menuitem', { name: 'Lịch sử giao' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Hủy nợ…' }));
+    expect(await screen.findByRole('dialog', { name: /^Hủy 3 cây còn lại của Phạm Văn Đức/ })).toBeInTheDocument();
+  });
 });

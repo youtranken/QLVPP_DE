@@ -149,13 +149,12 @@ describe('DeliveryDetail — giao một dòng', () => {
 });
 
 describe('DeliveryDetail — chân: chọn dòng', () => {
-  it('chưa chọn → "Đã chọn 0 dòng", "Giao dòng đã chọn (0)" vô hiệu; chọn 1 → (1) bật', async () => {
+  it('chưa chọn → chỉ nút "Giao dòng đã chọn (0)" vô hiệu, không lặp "Đã chọn 0 dòng"; chọn 1 → (1) bật', async () => {
     stubDelivery({ items: deliveryItems() });
     await openDetail();
-    expect(screen.getByText('Đã chọn 0 dòng')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Giao dòng đã chọn (0)' })).toBeDisabled();
+    expect(screen.queryByText(/^Đã chọn \d+ dòng$/)).toBeNull();
     await userEvent.click(screen.getByRole('checkbox', { name: 'Chọn Bút bi xanh' }));
-    expect(screen.getByText('Đã chọn 1 dòng')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Giao dòng đã chọn (1)' })).toBeEnabled();
   });
 });

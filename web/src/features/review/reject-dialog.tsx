@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode } from '@/lib/api-error';
-import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
+import { Dialog, DialogClose, DialogCloseButton, DialogTitle } from '@/ui/dialog';
 import { FormField } from '@/ui/form-field';
 import { reviewErrorKey } from './review-errors';
 
@@ -44,11 +44,7 @@ export function RejectDialog({ name, onSubmit, onClose }: {
       <form onSubmit={submit} noValidate>
         <div className="sheet-header">
           <DialogTitle className="sheet-title">{t('review.reject.title', { name })}</DialogTitle>
-          <DialogClose asChild>
-            <button type="button" className="sheet-close" aria-label={t('common.close')} disabled={saving}>
-              ✕
-            </button>
-          </DialogClose>
+          <DialogCloseButton disabled={saving} />
         </div>
         <div className="sheet-body">
           {error?.field === 'form' && (

@@ -101,7 +101,7 @@ describe('BacklogPage — đầu trang, thẻ, bộ lọc', () => {
 });
 
 describe('BacklogPage — nhóm và dòng', () => {
-  it('theo món: tiêu đề nhóm "còn 4 cây", "Tồn 10"; dòng "Phạm Văn Đức · Tổ Giám sát", "Tháng 10/2026", "còn 3 cây", "/ 5"', async () => {
+  it('theo món: tiêu đề nhóm "còn 4 cây", "Tồn 10"; dòng "Phạm Văn Đức · Tổ Giám sát", "Tháng 10/2026", "còn 3 cây", "/ đặt 5"', async () => {
     stubBacklog([PEN_DUC, PEN_LAN]);
     openPage();
     await screen.findByText('Bút bi xanh');
@@ -112,12 +112,12 @@ describe('BacklogPage — nhóm và dòng', () => {
     expect(row).toHaveTextContent('Tổ Giám sát');
     expect(row).toHaveTextContent('Tháng 10/2026');
     expect(row).toHaveTextContent('còn 3 cây');
-    expect(row).toHaveTextContent('/ 5');
+    expect(row).toHaveTextContent('/ đặt 5');
     expect(within(rowOf('Võ Thị Lan')).getByText('Người đã nghỉ')).toBeInTheDocument();
     expect(within(row).queryByText('Người đã nghỉ')).toBeNull();
   });
 
-  it('nhóm hết hàng: badge "Hết hàng" ở tiêu đề, "Giao bổ sung…" vô hiệu, "Hủy nợ…" bấm được; ngoài danh mục không hiện tồn', async () => {
+  it('theo món, nhóm hết hàng: "Hết hàng" chỉ ở tiêu đề (không lặp ở dòng), "Giao bổ sung…" vô hiệu, "Hủy nợ…" bấm được; ngoài danh mục không hiện tồn', async () => {
     stubBacklog([EMPTY_STOCK, TAPE]);
     openPage();
     await screen.findByText('Kẹp giấy');
@@ -126,7 +126,16 @@ describe('BacklogPage — nhóm và dòng', () => {
     const clip = bodyRows().find((r) => r.textContent?.includes('Phạm Văn Đức') && r.textContent.includes('còn 4'))!;
     expect(within(clip).getByRole('button', { name: 'Giao bổ sung…' })).toBeDisabled();
     expect(within(clip).getByRole('button', { name: 'Hủy nợ…' })).toBeEnabled();
-    expect(within(clip).getByText('Hết hàng')).toBeInTheDocument();
+    expect(within(clip).queryByText('Hết hàng')).toBeNull();
+  });
+
+  it('theo người: "Hết hàng" ở dòng của món hết hàng, không ở tiêu đề người', async () => {
+    stubBacklog([EMPTY_STOCK, PEN_DUC]);
+    openPage('/admin/backlog?by=person');
+    await screen.findByText('Kẹp giấy');
+    expect(headOf('Phạm Văn Đức')).not.toHaveTextContent('Hết hàng');
+    expect(within(rowOf('Kẹp giấy')).getByText('Hết hàng')).toBeInTheDocument();
+    expect(within(rowOf('Bút bi xanh')).queryByText('Hết hàng')).toBeNull();
   });
 
   it('theo người: tiêu đề nhóm có phòng ban (hoặc "Chưa có phòng ban") + "Người đã nghỉ"; dòng ghi tên món', async () => {

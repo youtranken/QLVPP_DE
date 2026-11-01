@@ -46,10 +46,10 @@ describe('DeliveryDetail — Giao dòng đã chọn (lần lượt từng dòng)
     stubDelivery({ deliver: () => jsonResponse(200, { line: {} }) });
     await openDetail();
     await userEvent.click(screen.getByRole('checkbox', { name: 'Chọn mọi dòng giao được' }));
-    expect(screen.getByText('Đã chọn 2 dòng')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Giao dòng đã chọn (2)' })).toBeEnabled();
     await userEvent.click(screen.getByRole('button', { name: 'Giao dòng đã chọn (2)' }));
     expect(await result()).toHaveTextContent(/^Đã giao 2 dòng$/);
-    expect(screen.getByText('Đã chọn 0 dòng')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Giao dòng đã chọn (0)' })).toBeDisabled();
   });
 
   it('PERIOD_NOT_LOCKED ở các dòng → khối "Kỳ chưa khóa…" đầu chi tiết', async () => {
