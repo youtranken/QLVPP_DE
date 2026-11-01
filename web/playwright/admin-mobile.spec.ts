@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { acquireLock, asRole, expectNoContrastViolations, settled } from './helpers';
+import { acquireLock, asRole, expectNoContrastViolations, expectTouchTargets, settled } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
 
 const PAGES = [
@@ -100,15 +100,9 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
       await expect(page.getByRole('list', { name: 'Danh sách phiếu' })).toHaveCount(0);
       await expectNoHorizontalScroll(page, 'chi tiết Giao hàng');
       await expectNoContrastViolations(page);
-      for (const button of [
-        page.getByRole('button', { name: 'Quay lại danh sách phiếu' }),
-        page.getByRole('button', { name: /, Hành chính$/ }),
-        page.getByRole('button', { name: 'Giao tất cả' }),
-        line.getByRole('button', { name: `Giao ${a.name}` }),
-      ]) {
-        const b = (await button.boundingBox())!;
-        expect(Math.min(b.width, b.height), await button.textContent() ?? '').toBeGreaterThanOrEqual(44);
-      }
+      await expect(page.getByRole('button', { name: 'Giao tất cả' })).toBeVisible();
+      await expect(line.getByRole('button', { name: `Giao ${a.name}` })).toBeVisible();
+      await expectTouchTargets(page, 'Giao hàng chi tiết');
 
       await page.getByRole('button', { name: 'Quay lại danh sách phiếu' }).tap();
       await expect(page).not.toHaveURL(/request=/);
@@ -144,8 +138,10 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     await expectNoContrastViolations(page);
 
     await openPage(page, 'catalog', 'Danh mục');
+    await expectTouchTargets(page, 'Danh mục');
     await page.getByRole('main').getByRole('button', { name: 'Thêm món', exact: true }).tap();
     await expect(page.getByRole('dialog', { name: 'Thêm món' })).toBeVisible();
+    await settled(page);
     await expectNoContrastViolations(page);
 
     await openPage(page, 'units', 'Đơn vị tính');

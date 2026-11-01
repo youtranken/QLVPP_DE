@@ -31,6 +31,18 @@ export async function expectNoContrastViolations(page: Page) {
   expect(result.violations.flatMap((v) => v.nodes.map((n) => n.target.join(' ')))).toEqual([]);
 }
 
+// Vùng chạm đo bằng hộp thật của nút (như boundingBox), không tính pseudo-element; một lượt evaluateAll vì Danh mục có > 200 nút
+export async function expectTouchTargets(page: Page, where: string) {
+  const small = await page.getByRole('button').evaluateAll((buttons) =>
+    buttons
+      .filter((b) => b.checkVisibility({ visibilityProperty: true, opacityProperty: true }))
+      .map((b) => ({ b, box: b.getBoundingClientRect() }))
+      .filter(({ box }) => box.width > 0 && (box.width < 44 || box.height < 44))
+      .map(({ b, box }) => `${b.getAttribute('aria-label') ?? (b as HTMLElement).innerText.trim()} ${Math.round(box.width)}×${Math.round(box.height)}`),
+  );
+  expect(small, `nút < 44×44 ở ${where}`).toEqual([]);
+}
+
 // Bảng giữ hàng cũ (mờ, aria-busy) lúc tải kết quả tìm; chờ theo thứ người dùng thấy thay vì bắt một response (từng treo ở 390)
 export async function searchSummaryPeople(page: Page, text: string) {
   await page.getByRole('searchbox', { name: 'Tìm người, email…' }).fill(text);

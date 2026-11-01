@@ -98,7 +98,7 @@ Playwright: `E9-S6 Danh bạ: thẻ lọc trạng thái, đồng bộ lỗi PMH 
 ## E9-S7 Hành chính ở 390 px
 SPEC §5.7.
 
-Trạng thái: xong trừ AC 5 (Danh mục + kiểm 44 px toàn bộ) → T24. T23: AC 1–4 + phần AC 5 ở Giao hàng chi tiết (Quay lại, avatar mở menu, Giao tất cả, Giao dòng) — Playwright `web/playwright/admin-mobile.spec.ts` (3 test tên story); vitest `shell/admin-topbar.test.tsx`, `features/delivery/delivery-phone.test.tsx`.
+Trạng thái: xong. T23: AC 1–4 — Playwright `web/playwright/admin-mobile.spec.ts` (3 test tên story); vitest `shell/admin-topbar.test.tsx`, `features/delivery/delivery-phone.test.tsx`. T24: AC 4 trên 12 màn (thêm Đơn vị tính) + menu sheet + ngăn kéo Thêm món + hộp thoại Thêm đơn vị tính; AC 5 — `expectTouchTargets` đo mọi `button` hiển thị ở Giao hàng chi tiết và Danh mục ≥ 44×44 (< 768: `.btn--sm`, `.icon-btn`, stepper, chọn tháng, ô sửa tại chỗ, chip nhóm, thu/mở nhóm cao/rộng 44 thật).
 **AC:**
 1. Ở 390 px mọi route `/admin/*` không cuộn ngang trang (`document.documentElement.scrollWidth ≤ 390`), trừ vùng cuộn có chủ đích (hàng thẻ số liệu, chip).
 2. Mọi trang Hành chính tới được trong ≤ 2 chạm từ bất kỳ trang Hành chính nào (Mở menu → mục).

@@ -62,6 +62,14 @@
 [data-shell='admin'] .month-switch__status { height: 22px; padding: 0 var(--s-2); border-radius: var(--r-pill); display: inline-flex; align-items: center; font: var(--t-micro); font-weight: 700; }
 [data-shell='admin'] .month-switch__status--ok { background: var(--c-ok-soft); color: var(--c-ok); }
 [data-shell='admin'] .month-switch__status--dark { background: var(--c-dark); color: var(--c-on-dark); }
+@media (max-width: 767px) {
+  [data-shell='admin'] .stepper { grid-template-columns: var(--hit) minmax(32px, auto) var(--hit); height: var(--hit); }
+  [data-shell='admin'] .stepper button { width: var(--hit); height: var(--hit); }
+  [data-shell='admin'] .stepper button::after { content: none; }
+  [data-shell='admin'] .month-switch { height: var(--hit); padding: 0; }
+  [data-shell='admin'] .month-switch button { width: var(--hit); height: var(--hit); }
+  [data-shell='admin'] .inline-number, [data-shell='admin'] .inline-text { min-height: var(--hit); }
+}
 
 [data-shell='admin'] .empty { display: grid; justify-items: center; gap: var(--s-2); padding: var(--s-8) var(--s-4); text-align: center; color: var(--c-muted); }
 [data-shell='admin'] .empty-title { font: var(--t-h3); color: var(--c-ink); }

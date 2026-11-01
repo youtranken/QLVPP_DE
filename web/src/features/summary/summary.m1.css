@@ -15,6 +15,7 @@
 [data-shell='admin'] .sm-acts { white-space: nowrap; }
 [data-shell='admin'] .sm-acts .btn + .btn { margin-left: var(--s-1); }
 [data-shell='admin'] .sm-icon-btn { width: 36px; padding: 0; }
+@media (max-width: 767px) { [data-shell='admin'] .sm-icon-btn { width: var(--hit); } }
 [data-shell='admin'] .sm-group-meta { margin-left: var(--s-3); color: var(--c-muted); font: var(--t-sm); font-weight: 600; }
 [data-shell='admin'] .sm-item-note { margin: 0; font: var(--t-sm); }
 [data-shell='admin'] .sm-item-note a { color: var(--c-acc); font-weight: 700; }

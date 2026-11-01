@@ -1,16 +1,9 @@
 /* Trang quản lý: thanh công cụ + khung bảng + form gọn (bo 6/8) */
-.a-stack { display: grid; gap: 12px; }
-.a-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .a-input, .ff input, .ff select { height: 32px; padding: 0 10px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--card); min-width: 0; }
 .ff input:focus, .ff select:focus, .a-input:focus { border-color: var(--brand); }
 .a-check-inline { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
-.a-panel { background: var(--card); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-.a-panel .table-search { margin: 10px 12px; }
-.a-panel .table td { height: 50px; padding: 6px 12px; }
 .table th.r, .table td.r { text-align: right; }
 .table tr.is-inactive td { color: var(--ink-3); }
-.row-actions { display: flex; gap: 6px; justify-content: flex-end; }
-.table th.col-actions { text-align: right; }
 .icon-btn { width: 28px; height: 28px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--card); color: var(--ink-2); }
 .icon-btn:disabled { opacity: .4; cursor: not-allowed; }
 
@@ -25,12 +18,8 @@
 .a-check { display: grid; gap: 2px; }
 .a-check label { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
 .a-check small { color: var(--ink-3); font-size: 12.5px; padding-left: 24px; }
-.a-form-need { margin-right: auto; color: var(--warn); font-weight: 500; font-size: 13px; }
 @media (max-width: 680px) {
   .a-form-grid { grid-template-columns: 1fr; }
-  .a-toolbar .sp { display: none; }
-  .a-panel .table td { height: auto; }
-  .row-actions { justify-content: flex-start; flex-wrap: wrap; }
   .table-stack td.r { text-align: left; }
 }
 

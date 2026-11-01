@@ -12,6 +12,7 @@
 [data-shell='admin'] .bl-owed b { font: var(--t-label); color: var(--c-warn); }
 [data-shell='admin'] .bl-acts { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--s-1); }
 [data-shell='admin'] .bl-icon-btn { width: 36px; padding: 0; }
+@media (max-width: 767px) { [data-shell='admin'] .bl-icon-btn { width: var(--hit); } }
 [data-shell='admin'] .table .dt-group:has(.bl-head[data-tone='g0']) th { background: var(--g0); color: var(--g0-ink); }
 [data-shell='admin'] .table .dt-group:has(.bl-head[data-tone='g1']) th { background: var(--g1); color: var(--g1-ink); }
 [data-shell='admin'] .table .dt-group:has(.bl-head[data-tone='g2']) th { background: var(--g2); color: var(--g2-ink); }
