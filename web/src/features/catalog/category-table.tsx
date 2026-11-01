@@ -37,14 +37,14 @@ export function CategoryTable({ ordered, counts, busy, onMove, onEdit, onToggleA
             return (
               <tr key={c.id} className={c.active ? undefined : 'is-inactive'}>
                 <td className="cg-order">
-                  <span className="cg-ord">
-                    <button type="button" className="cg-ord__btn" aria-label={t('catalog.categories.moveUp', { name: c.name })} disabled={busy || i === 0} onClick={() => onMove(i, -1)}>
+                  <span className="ord-ctl">
+                    <button type="button" className="ord-ctl__btn" aria-label={t('catalog.categories.moveUp', { name: c.name })} disabled={busy || i === 0} onClick={() => onMove(i, -1)}>
                       <Icon name="chevup" size={16} />
                     </button>
-                    <button type="button" className="cg-ord__btn" aria-label={t('catalog.categories.moveDown', { name: c.name })} disabled={busy || i === ordered.length - 1} onClick={() => onMove(i, 1)}>
+                    <button type="button" className="ord-ctl__btn" aria-label={t('catalog.categories.moveDown', { name: c.name })} disabled={busy || i === ordered.length - 1} onClick={() => onMove(i, 1)}>
                       <Icon name="chev" size={16} />
                     </button>
-                    <span className="num cg-ord__n">{i + 1}</span>
+                    <span className="num ord-ctl__n">{i + 1}</span>
                   </span>
                 </td>
                 <td className="cg-tone-cell">

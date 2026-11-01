@@ -100,6 +100,8 @@
 [data-shell='admin'] .icon-btn:focus-visible { box-shadow: var(--focus); }
 /* Vùng chạm 44 ở điện thoại là kích thước thật của nút (pseudo-element không được tính khi chạm cạnh và khi đo) */
 @media (max-width: 767px) {
+  [data-shell='admin'] .seg-m1 button, [data-shell='admin'] .seg button { height: var(--hit); }
+  [data-shell='admin'] .toolbar__search input { height: var(--hit); }
   [data-shell='admin'] .btn--sm { height: var(--hit); }
   [data-shell='admin'] .btn--sm::after { content: none; }
   [data-shell='admin'] .icon-btn { width: var(--hit); height: var(--hit); }

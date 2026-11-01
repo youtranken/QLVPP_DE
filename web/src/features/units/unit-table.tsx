@@ -38,14 +38,14 @@ export function UnitTable({ ordered, busy, onMove, onEdit, onToggleActive, onDel
           {ordered.map((u, i) => (
             <tr key={u.code} className={u.active ? undefined : 'is-inactive'}>
               <td className="un-order">
-                <span className="un-ord">
-                  <button type="button" className="un-ord__btn" aria-label={t('units.page.moveUp', { name: u.name })} disabled={busy || i === 0} onClick={() => onMove(i, -1)}>
+                <span className="ord-ctl">
+                  <button type="button" className="ord-ctl__btn" aria-label={t('units.page.moveUp', { name: u.name })} disabled={busy || i === 0} onClick={() => onMove(i, -1)}>
                     <Icon name="chevup" size={16} />
                   </button>
-                  <button type="button" className="un-ord__btn" aria-label={t('units.page.moveDown', { name: u.name })} disabled={busy || i === ordered.length - 1} onClick={() => onMove(i, 1)}>
+                  <button type="button" className="ord-ctl__btn" aria-label={t('units.page.moveDown', { name: u.name })} disabled={busy || i === ordered.length - 1} onClick={() => onMove(i, 1)}>
                     <Icon name="chev" size={16} />
                   </button>
-                  <span className="num un-ord__n">{i + 1}</span>
+                  <span className="num ord-ctl__n">{i + 1}</span>
                 </span>
               </td>
               <td className="un-name">

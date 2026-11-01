@@ -33,12 +33,12 @@ export async function expectNoContrastViolations(page: Page) {
 
 // Vùng chạm đo bằng hộp thật của nút (như boundingBox), không tính pseudo-element; một lượt evaluateAll vì Danh mục có > 200 nút
 export async function expectTouchTargets(page: Page, where: string) {
-  const small = await page.getByRole('button').evaluateAll((buttons) =>
-    buttons
+  const small = await page.locator('button, [role="radio"], input[type="checkbox"], input[type="search"]').evaluateAll((controls) =>
+    controls
       .filter((b) => b.checkVisibility({ visibilityProperty: true, opacityProperty: true }))
       .map((b) => ({ b, box: b.getBoundingClientRect() }))
       .filter(({ box }) => box.width > 0 && (box.width < 44 || box.height < 44))
-      .map(({ b, box }) => `${b.getAttribute('aria-label') ?? (b as HTMLElement).innerText.trim()} ${Math.round(box.width)}×${Math.round(box.height)}`),
+      .map(({ b, box }) => `${b.getAttribute('aria-label') ?? (b as HTMLElement).innerText?.trim() ?? b.getAttribute('type')} ${Math.round(box.width)}×${Math.round(box.height)}`),
   );
   expect(small, `nút < 44×44 ở ${where}`).toEqual([]);
 }

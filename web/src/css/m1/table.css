@@ -17,6 +17,22 @@
 [data-shell='admin'] .table .th-sort:focus-visible { border-radius: var(--r-xs); box-shadow: var(--focus); }
 [data-shell='admin'] .table .sel { width: 40px; }
 [data-shell='admin'] .table input[type='checkbox'] { width: 20px; height: 20px; margin: 0; accent-color: var(--c-acc); cursor: pointer; }
+[data-shell='admin'] .ord-ctl { display: inline-flex; align-items: center; gap: 2px; vertical-align: middle; }
+[data-shell='admin'] .ord-ctl__btn { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--r-sm); background: none; color: var(--c-ink-2); cursor: pointer; }
+[data-shell='admin'] .ord-ctl__btn:hover:not(:disabled) { background: var(--c-surface-hover); color: var(--c-ink); }
+[data-shell='admin'] .ord-ctl__btn:focus-visible { box-shadow: var(--focus); outline: none; }
+[data-shell='admin'] .ord-ctl__btn:disabled { color: var(--c-line-input); cursor: default; }
+[data-shell='admin'] .ord-ctl__n { min-width: 24px; color: var(--c-muted); font: var(--t-label); text-align: center; }
+@media (max-width: 767px) {
+  [data-shell='admin'] .ord-ctl__btn { width: var(--hit); height: var(--hit); }
+  [data-shell='admin'] .table input[type='checkbox'] { appearance: none; display: grid; place-content: center; width: var(--hit); height: var(--hit); background: none; }
+  [data-shell='admin'] .table input[type='checkbox']::before { content: ''; width: 20px; height: 20px; border: 2px solid var(--c-line-input); border-radius: var(--r-xs); background: var(--c-surface); box-sizing: border-box; }
+  [data-shell='admin'] .table input[type='checkbox']:checked::before, [data-shell='admin'] .table input[type='checkbox']:indeterminate::before { border-color: var(--c-acc); background: var(--c-acc) center / 14px no-repeat; }
+  [data-shell='admin'] .table input[type='checkbox']:checked::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+  [data-shell='admin'] .table input[type='checkbox']:indeterminate::before { background-image: linear-gradient(white, white); background-size: 10px 2px; }
+  [data-shell='admin'] .table input[type='checkbox']:focus-visible { box-shadow: var(--focus); border-radius: var(--r-sm); }
+  [data-shell='admin'] .table input[type='checkbox']:disabled::before { opacity: 0.4; }
+}
 
 [data-shell='admin'] .table .dt-group th { top: 36px; z-index: 1; height: 52px; padding: 8px 12px; border-bottom: 1px solid rgb(var(--sh-ink) / 0.06); background: var(--c-surface-2); color: var(--c-ink); font: var(--t-label); font-size: 15px; font-weight: 800; white-space: normal; }
 [data-shell='admin'] .dt-group__inner { display: flex; align-items: center; gap: 10px; }

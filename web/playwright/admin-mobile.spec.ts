@@ -137,6 +137,10 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     await expect(menu(page)).toBeVisible();
     await expectNoContrastViolations(page);
 
+    for (const [path, title] of [['review', 'Món ngoài danh mục'], ['delivery', 'Giao hàng'], ['backlog', 'Còn nợ'], ['categories', 'Nhóm món'], ['units', 'Đơn vị tính']] as const) {
+      await openPage(page, path, title);
+      await expectTouchTargets(page, title);
+    }
     await openPage(page, 'catalog', 'Danh mục');
     await expectTouchTargets(page, 'Danh mục');
     await page.getByRole('main').getByRole('button', { name: 'Thêm món', exact: true }).tap();

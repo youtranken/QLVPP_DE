@@ -47,7 +47,7 @@
 [data-shell='admin'] .inline-number__input.inline-text__input { width: 100%; min-width: 160px; text-align: left; }
 
 [data-shell='admin'] .stepper { display: inline-grid; grid-template-columns: 28px minmax(32px, auto) 28px; align-items: center; height: 32px; padding: 0 2px; border-radius: var(--r-pill); background: var(--c-surface-2); }
-[data-shell='admin'] .stepper button { position: relative; width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); box-shadow: var(--e-1); cursor: pointer; }
+[data-shell='admin'] .stepper button { position: relative; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; line-height: 1; border: 0; border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); box-shadow: var(--e-1); cursor: pointer; }
 [data-shell='admin'] .stepper button::after { content: ''; position: absolute; inset: -8px; }
 [data-shell='admin'] .stepper button:disabled { color: var(--c-faint); box-shadow: none; background: transparent; cursor: default; }
 [data-shell='admin'] .stepper button:focus-visible { box-shadow: var(--focus); }
