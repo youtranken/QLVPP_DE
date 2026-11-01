@@ -19,7 +19,6 @@ const TAG_CLASS: Record<StockMovement['reason'], string> = {
   return: 'tag tag--outline',
 };
 
-
 interface Props {
   item: StockRow;
   groupName: string;

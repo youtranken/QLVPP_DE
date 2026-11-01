@@ -46,7 +46,7 @@ export function CatalogPage() {
   useEffect(() => keepOnly(new Set(d.rows.map((r) => r.id))), [d.rows, keepOnly]);
   const title = t('catalog.title');
   const orderedIds = d.rows.map((r) => r.id);
-  const groupKeys = [...new Set(d.rows.map((r) => r.group))];
+  const groupKeys = useMemo(() => [...new Set(d.rows.map((r) => r.group))], [d.rows]);
   const narrowed = p.view.filter !== null || p.view.cat !== null || p.view.q.trim() !== '';
   const { collapsed, setCollapsed } = useGroupCollapse(groupKeys, narrowed ? JSON.stringify([p.view.q, p.view.cat, p.view.filter]) : null);
   const allCollapsed = groupKeys.length > 0 && groupKeys.every((k) => collapsed.has(k));

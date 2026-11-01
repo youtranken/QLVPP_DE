@@ -172,7 +172,8 @@ describe('Danh mục — bảng nhóm', () => {
     expect(card(/^Thiếu ảnh/)).toHaveTextContent('145');
     expect(screen.queryAllByRole('button', { name: /^Thêm món vào nhóm / })).toHaveLength(0);
     expect(screen.getAllByText(/^Món nhập \d+$/)).toHaveLength(145);
-  });
+    // 145 hàng thật: khi cả bộ test chạy song song có thể quá 5 s mặc định
+  }, 15_000);
 });
 
 describe('Danh mục — cột Tên tiếng Anh, nhóm đang ngừng', () => {

@@ -41,7 +41,7 @@ function useColumns(withPeople: boolean) {
       },
       { id: 'people', header: col('colPeople'), ...num, cell: ({ row }) => ('people' in row.original.row ? row.original.row.people : '') },
     ];
-    // Số người chỉ có ở hàng ngoài danh mục (spec G12): không có hàng nào thì bỏ hẳn cột rỗng
+    // Số người chỉ có ở hàng ngoài danh mục — không có hàng nào thì bỏ hẳn cột rỗng
     return columns.filter((c) => withPeople || c.id !== 'people').map((c) => ({ ...c, enableSorting: false }));
   }, [t, i18n.language, unitName, withPeople]);
 }

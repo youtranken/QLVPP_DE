@@ -49,10 +49,9 @@ function WhoCell({ row, by }: { row: BacklogRow; by: BacklogBy }) {
 }
 
 // Theo món, "Hết hàng" đã ở tiêu đề nhóm (cả nhóm cùng một món); theo người thì báo ở từng dòng
-function Actions({ row, by, onAction }: { row: BacklogRow; by: BacklogBy; onAction: Props['onAction'] }) {
+function Actions({ row, by, phone, onAction }: { row: BacklogRow; by: BacklogBy; phone: boolean; onAction: Props['onAction'] }) {
   const { t } = useTranslation();
   const f = useBacklogFormat();
-  const phone = useMediaQuery(ADMIN_PHONE_QUERY);
   const who = { name: f.name(row), person: f.person(row) };
   const label = t('delivery.backlog.historyOf', who);
   const out = row.stock_qty === 0;
@@ -100,6 +99,7 @@ function Actions({ row, by, onAction }: { row: BacklogRow; by: BacklogBy; onActi
 function useColumns(by: BacklogBy, onAction: Props['onAction']) {
   const { t } = useTranslation();
   const f = useBacklogFormat();
+  const phone = useMediaQuery(ADMIN_PHONE_QUERY);
   return useMemo<ColumnDef<BacklogRow, unknown>[]>(() => {
     const columns: ColumnDef<BacklogRow, unknown>[] = [
       { id: 'who', header: t(by === 'item' ? 'delivery.backlog.cols.person' : 'delivery.backlog.cols.item'), cell: ({ row }) => <WhoCell row={row.original} by={by} /> },
@@ -119,11 +119,11 @@ function useColumns(by: BacklogBy, onAction: Props['onAction']) {
         id: 'actions',
         header: () => <span className="sr-only">{t('delivery.backlog.cols.actions')}</span>,
         meta: { className: 'r' },
-        cell: ({ row }) => <Actions row={row.original} by={by} onAction={onAction} />,
+        cell: ({ row }) => <Actions row={row.original} by={by} phone={phone} onAction={onAction} />,
       },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
-  }, [t, f, by, onAction]);
+  }, [t, f, by, phone, onAction]);
 }
 
 function useGroupHead(by: BacklogBy) {
