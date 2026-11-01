@@ -21,7 +21,8 @@ export function SaveDialog({
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()} dismissible={!saving} className="sheet rq-dialog" maxWidth={440}>
+    // Lưu hỏng thì use-save-flow tự đưa focus tới dòng lỗi/thông báo, không trả về nút Lưu
+    <Dialog open onOpenChange={(o) => !o && onClose()} dismissible={!saving} className="sheet rq-dialog" maxWidth={440} returnFocus={false}>
       <div className="sheet-header">
         <DialogTitle className="sheet-title">{t('request.confirm.title', { month })}</DialogTitle>
       </div>
