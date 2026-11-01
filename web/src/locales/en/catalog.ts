@@ -57,7 +57,7 @@ const catalog: Messages<typeof vi> = {
       low: 'Low stock',
       out: 'Out of stock',
       noImage: 'No photo',
-      noImageHint: 'staff cannot pick these',
+      noImageHint: 'showing a placeholder',
     },
     bulk: {
       max: 'Change max/month',

@@ -54,7 +54,7 @@ const catalog = {
       low: 'Sắp hết',
       out: 'Hết hàng',
       noImage: 'Thiếu ảnh',
-      noImageHint: 'nhân viên không chọn được',
+      noImageHint: 'đang hiện ảnh tạm',
     },
     bulk: {
       max: 'Đổi tối đa/tháng',

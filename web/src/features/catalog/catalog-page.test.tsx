@@ -28,7 +28,8 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
     expect(card(/^Đang dùng/)).toHaveTextContent('2 nhóm');
     expect(card(/^Sắp hết/)).toHaveTextContent('1');
     expect(card(/^Hết hàng/)).toHaveTextContent('1');
-    expect(card(/^Thiếu ảnh/)).toHaveTextContent('nhân viên không chọn được');
+    expect(card(/^Thiếu ảnh/)).toHaveTextContent('đang hiện ảnh tạm');
+    expect(card(/^Thiếu ảnh/)).not.toHaveTextContent('không chọn được');
   });
 
   it('thẻ "Thiếu ảnh" → ?filter=noimage, chỉ món thiếu ảnh, "Đang lọc: Thiếu ảnh · 1"; bấm lại bỏ lọc', async () => {
