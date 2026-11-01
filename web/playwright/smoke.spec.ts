@@ -72,6 +72,7 @@ test.describe('E0-S9 khung Hành chính (dev-identity admin)', () => {
     await expect(side).toBeVisible();
     await expect(side.getByText('Hằng tháng')).toBeVisible();
     await shot(page, info, 'admin-catalog');
+    if (!isMobile(info)) await page.getByRole('button', { name: 'Ngôn ngữ' }).click();
     await page.getByRole('radio', { name: 'English' }).click();
     await expect(page.getByRole('navigation', { name: 'Admin menu' }).getByText('Monthly')).toBeVisible();
     await expect(page.getByText('Hằng tháng')).toHaveCount(0);

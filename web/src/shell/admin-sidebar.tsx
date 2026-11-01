@@ -61,7 +61,7 @@ export function AdminSidebar({ variant = 'side', onNavigate }: { variant?: 'side
         ))}
       </nav>
       {hasPeriod && <AdminPeriodCard period={period.data!} onNavigate={onNavigate} />}
-      <AdminSidebarUser />
+      <AdminSidebarUser compact={variant === 'side'} />
     </div>
   );
 }

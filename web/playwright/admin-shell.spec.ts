@@ -27,6 +27,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     await expect(page.getByRole('link', { name: /^Kỳ tháng \d+ đang mở/ })).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
 
+    if (!isMobile(info)) await page.getByRole('button', { name: 'Ngôn ngữ' }).click();
     await page.getByRole('radio', { name: 'English' }).click();
     const sideEn = page.getByRole('navigation', { name: 'Admin menu' });
     await expect(sideEn.getByRole('group', { name: 'Monthly' })).toBeVisible();
@@ -42,7 +43,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     for (const [width, expected] of [
       [768, 72],
       [1279, 72],
-      [1280, 232],
+      [1280, 252],
     ] as const) {
       await page.setViewportSize({ width, height: 800 });
       await expect(page.getByRole('button', { name: OPEN_MENU })).toHaveCount(0);
@@ -85,6 +86,18 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     );
     expect(overflow).toEqual([]);
     if (isMobile(info)) return;
+
+    for (const height of [800, 720]) {
+      await page.setViewportSize({ width: 1280, height });
+      await page.goto('/admin/review');
+      await expect(side.getByRole('link', { name: /^Cấu hình/ })).toBeInViewport({ ratio: 1 });
+      await expect(page.getByRole('button', { name: 'Đăng xuất' })).toBeInViewport({ ratio: 1 });
+      const clipped = await side.getByRole('link').evaluateAll((links) =>
+        links.map((a) => a.querySelector('span')!).filter((l) => l.scrollWidth > l.clientWidth).map((l) => l.textContent),
+      );
+      expect(clipped, `nhãn bị cắt ở 1280×${height}`).toEqual([]);
+    }
+    await page.setViewportSize({ width: 1280, height: 800 });
 
     await page.getByRole('banner').getByRole('button', { name: /^Thông báo, \d+ chưa đọc$/ }).click();
     const panel = page.getByRole('dialog', { name: 'Thông báo' });

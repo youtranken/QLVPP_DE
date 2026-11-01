@@ -71,6 +71,23 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
     expect(screen.getByRole('button', { name: 'Đăng xuất' })).toBeInTheDocument();
   });
 
+  it('cột ≥ 1280: hàng tài khoản một dòng — Đăng xuất là nút biểu tượng có tên, đổi ngôn ngữ nằm sau nút "Ngôn ngữ"', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    const logout = await screen.findByRole('button', { name: 'Đăng xuất' });
+    expect(logout).toHaveTextContent(/^$/);
+    expect(logout).toHaveAttribute('title', 'Đăng xuất');
+    expect(screen.queryByRole('radio', { name: 'English' })).toBeNull();
+    const lang = screen.getByRole('button', { name: 'Ngôn ngữ' });
+    expect(lang).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(lang);
+    expect(lang).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('radio', { name: 'English' })).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('radio', { name: 'English' })).toBeNull();
+  });
+
   it('đăng xuất lỗi → câu "Chưa đăng xuất được — thử lại." dưới nút', async () => {
     mockViewport(1280);
     stubShellApi({ '/api/auth/logout': () => jsonResponse(500, null) });
@@ -84,6 +101,7 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
     try {
+      await userEvent.click(screen.getByRole('button', { name: 'Ngôn ngữ' }));
       await userEvent.click(screen.getByRole('radio', { name: 'English' }));
       const side = screen.getByRole('navigation', { name: 'Admin menu' });
       expect(within(side).getByRole('group', { name: 'Monthly' })).toBeInTheDocument();

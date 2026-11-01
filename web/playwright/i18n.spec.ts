@@ -20,8 +20,9 @@ async function snap(page: Page, info: TestInfo, name: string) {
 async function switchLanguage(page: Page, info: TestInfo, lang: Lang) {
   await page.goto('/admin/summary');
   if (isMobile(info)) await page.getByRole('button', { name: /^(Mở menu quản lý|Open admin menu)$/ }).click();
+  else await page.getByRole('button', { name: /^(Ngôn ngữ|Language)$/ }).click();
   await page.getByRole('radio', { name: lang === 'en' ? 'English' : 'Tiếng Việt' }).click();
-  if (isMobile(info)) await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { level: 1, name: lang === 'en' ? 'Period summary' : 'Tổng hợp kỳ' })).toBeVisible();
 }
 
