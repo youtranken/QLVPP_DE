@@ -49,7 +49,10 @@ export function RowMenu({ label, items }: { label: string; items: RowMenuItem[] 
       const t = e.target as Node;
       if (!menu.current?.contains(t) && !button.current?.contains(t)) close(false);
     };
-    const onScroll = () => close(false);
+    // Đóng khi cuộn làm menu tự tắt ngay sau cú bấm (trình duyệt cuộn nút vào khung nhìn); bám theo nút thay vì đóng
+    const onScroll = () => {
+      if (button.current && menu.current) setStyle(placeBelowOrAbove(button.current, menu.current));
+    };
     document.addEventListener('pointerdown', onPointer);
     window.addEventListener('resize', onScroll);
     window.addEventListener('scroll', onScroll, true);
