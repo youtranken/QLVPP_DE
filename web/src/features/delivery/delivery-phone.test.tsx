@@ -122,6 +122,15 @@ describe('Giao hàng 390 px — giao đủ tự về danh sách sau 1,4 s', () =
     expect(search()).toContain('request=r-2');
   });
 
+  it('quay lại danh sách rồi mở lại đúng phiếu đó trước 1,4 s → hẹn giờ cũ đã hủy, vẫn ở chi tiết', async () => {
+    await completeOnDetail('/admin/delivery?all=1&request=r-1', ROWS);
+    act(() => within(screen.getAllByRole('banner')[0]).getByRole('button', { name: 'Quay lại danh sách phiếu' }).click());
+    await act(() => vi.advanceTimersByTimeAsync(0));
+    act(() => within(list()).getByRole('button', { name: /^Mở phiếu của Phạm Văn Đức/ }).click());
+    await act(() => vi.advanceTimersByTimeAsync(1400));
+    expect(search()).toContain('request=r-1');
+  });
+
   it('bảng phiếu dựng lại (đổi tháng đi rồi về) trước 1,4 s → hẹn giờ của bảng cũ bị hủy, mở lại đúng phiếu đó vẫn ở chi tiết', async () => {
     await completeOnDetail('/admin/delivery?all=1&request=r-1', ROWS);
     act(() => screen.getByRole('button', { name: 'Tháng trước' }).click());

@@ -61,7 +61,8 @@
 [data-shell='admin'] .topbar__text { flex: 1; min-width: 0; display: grid; }
 [data-shell='admin'] .topbar__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-label); font-size: 16px; font-weight: 800; color: var(--c-ink); }
 [data-shell='admin'] .topbar__sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-cap); color: var(--c-muted); }
-[data-shell='admin'] .topbar__avatar { display: grid; padding: 0; border: 0; cursor: pointer; place-items: center; flex: none; width: 36px; height: 36px; margin-left: 2px; border-radius: var(--r-pill); background: var(--g2); color: var(--g2-ink); font: var(--t-cap); font-weight: 800; }
+[data-shell='admin'] .topbar__avatar { display: grid; place-items: center; flex: none; width: var(--hit); height: var(--hit); padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; cursor: pointer; }
+[data-shell='admin'] .topbar__avatar-face { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--r-pill); background: var(--g2); color: var(--g2-ink); font: var(--t-cap); font-weight: 800; }
 [data-shell='admin'] .topbar__avatar:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell='admin'] .side-sheet-viewport { position: fixed; inset: 0; z-index: 51; display: flex; pointer-events: none; }
 [data-shell='admin'] .side-sheet { display: flex; flex-direction: column; width: min(320px, 88vw); height: 100%; padding-top: env(safe-area-inset-top); background: var(--c-surface); pointer-events: auto; box-shadow: var(--e-5); outline: none; animation: m1-side-in var(--d-3) var(--ease-out); }

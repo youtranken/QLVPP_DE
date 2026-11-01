@@ -45,7 +45,6 @@ export function DeliveryList({
   month: number;
   rows: PersonRow[];
   count: number;
-  // Có ở điện thoại: bộ lọc thành segmented kèm số phiếu mỗi bên
   counts?: { pending?: number; all?: number };
   showAll: boolean;
   selectedId: string | null;

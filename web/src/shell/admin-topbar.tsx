@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +28,7 @@ export function AdminTopbar() {
   const { pathname } = useLocation();
   const [params, update] = useUrlPatch();
   const [open, setOpen] = useState(false);
+  const avatarHint = useId();
   const page = PAGES.find((p) => pathname.startsWith(`/admin/${p.path}`));
   const delivery = page?.path === 'delivery';
   const detail = delivery && !!params.get('request');
@@ -54,11 +55,18 @@ export function AdminTopbar() {
         type="button"
         className="topbar__avatar"
         aria-label={t('nav.mobile.avatar', { name, role: t(`common.roles.${me.role}`) })}
+        aria-describedby={avatarHint}
         aria-haspopup="dialog"
+        aria-expanded={open}
         onClick={() => setOpen(true)}
       >
-        {initialsOf(name)}
+        <span className="topbar__avatar-face" aria-hidden="true">
+          {initialsOf(name)}
+        </span>
       </button>
+      <span id={avatarHint} hidden>
+        {t('nav.mobile.openMenu')}
+      </span>
       <AdminMenuSheet open={open} onOpenChange={setOpen} />
     </header>
   );

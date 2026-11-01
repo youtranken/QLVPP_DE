@@ -102,6 +102,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
       await expectNoContrastViolations(page);
       for (const button of [
         page.getByRole('button', { name: 'Quay lại danh sách phiếu' }),
+        page.getByRole('button', { name: /, Hành chính$/ }),
         page.getByRole('button', { name: 'Giao tất cả' }),
         line.getByRole('button', { name: `Giao ${a.name}` }),
       ]) {

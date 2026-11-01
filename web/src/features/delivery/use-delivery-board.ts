@@ -47,15 +47,17 @@ export function useDeliveryBoard(ym: string, p: ReturnType<typeof useDeliveryPar
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  // Điện thoại: phiếu vừa giao đủ → tự về danh sách, trừ khi người dùng đã tự rời phiếu đó
+  // Điện thoại: phiếu vừa giao đủ → tự về danh sách; người dùng tự rời/mở lại phiếu trước đó thì hủy
+  const returnTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const returnToList = useCallback((id: string) => {
-    timers.current.push(
-      setTimeout(() => {
-        const { requestId: current, select: pick } = latest.current;
-        if (current === id) pick(null, true);
-      }, PHONE_RETURN_MS),
-    );
+    clearTimeout(returnTimer.current);
+    returnTimer.current = setTimeout(() => {
+      const { requestId: current, select: pick } = latest.current;
+      if (current === id) pick(null, true);
+    }, PHONE_RETURN_MS);
   }, []);
+  useEffect(() => clearTimeout(returnTimer.current), [requestId]);
+  useEffect(() => () => clearTimeout(returnTimer.current), []);
 
   const onCompleted = useCallback(
     (id: string) => {

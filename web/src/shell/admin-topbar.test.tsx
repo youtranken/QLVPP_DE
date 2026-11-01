@@ -47,7 +47,11 @@ describe('AdminTopbar 390 px', () => {
 
   it('chi tiết Giao hàng: chạm avatar mở menu, chọn "Kho" → /admin/stock (2 chạm)', async () => {
     open('/admin/delivery?request=r-1');
-    await userEvent.click(within(topbar()).getByRole('button', { name: 'Nguyễn Văn An, Hành chính' }));
+    const avatar = within(topbar()).getByRole('button', { name: 'Nguyễn Văn An, Hành chính' });
+    expect(avatar).toHaveAttribute('aria-expanded', 'false');
+    expect(avatar).toHaveAccessibleDescription('Mở menu quản lý');
+    await userEvent.click(avatar);
+    expect(avatar).toHaveAttribute('aria-expanded', 'true');
     await userEvent.click(within(screen.getByRole('dialog', { name: 'Menu quản lý' })).getByRole('link', { name: 'Kho' }));
     expect(screen.getByTestId('location')).toHaveTextContent('/admin/stock');
     expect(screen.queryByRole('dialog', { name: 'Menu quản lý' })).toBeNull();
