@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, rmSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Locator, type Page, type TestInfo } from '@playwright/test';
 
 // Header dev-identity chỉ gắn cho /api: gắn toàn cục (extraHTTPHeaders) làm request font Google
 // thành CORS có header lạ và bị từ chối → trang rơi về font hệ thống
@@ -153,4 +153,14 @@ export async function acquireLock(name: string): Promise<() => void> {
       await new Promise((r) => setTimeout(r, 200));
     }
   }
+}
+
+// Chi tiết nhật ký là hàng riêng ngay dưới; nút "Xem" trỏ tới nó qua aria-controls
+export async function openAuditDetail(page: Page, row: Locator): Promise<Locator> {
+  await row.getByRole('button', { name: 'Xem', exact: true }).click();
+  const toggle = row.getByRole('button', { name: 'Thu', exact: true });
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  const id = await toggle.getAttribute('aria-controls');
+  expect(id).toBeTruthy();
+  return page.locator(`[id="${id}"]`);
 }

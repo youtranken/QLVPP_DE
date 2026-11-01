@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { asRole, expectNoContrastViolations, isMobile, psql, shot } from './helpers';
+import { asRole, expectNoContrastViolations, isMobile, openAuditDetail, psql, shot } from './helpers';
 
 // 12:00 UTC: xa mốc ngày VN; mốc ngày kiểm ở e2e api
 // audit_log chỉ thêm, không xóa được: dùng người giả cố định + ngày xa quá khứ, gieo một lần (idempotent) thay vì xóa sau test
@@ -35,16 +35,21 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
     await expect(page.getByText('Thứ Sáu, 16/03/2001')).toBeVisible();
 
     const first = bodyRows(page).first();
-    await first.getByRole('button', { name: 'Xem', exact: true }).click();
-    const diff = first.getByRole('table');
+    const detail = await openAuditDetail(page, first);
+    const diff = detail.getByRole('table');
     await expect(diff.getByRole('rowheader', { name: 'pw_marker' })).toBeVisible();
     await expect(diff.getByRole('rowheader', { name: 'giu_nguyen' })).toHaveCount(0);
-    await expect(diff.getByText(/"moi-50"/)).toBeVisible();
-    await expect(first.getByText(/Mã sự kiện #/)).toBeVisible();
+    await expect(diff.getByRole('cell', { name: 'cu-50', exact: true })).toBeVisible();
+    await expect(diff.getByRole('cell', { name: 'moi-50', exact: true })).toBeVisible();
+    await expect(detail.getByText(/Mã sự kiện #/)).toBeVisible();
+    await expect(detail.getByText(/^Sau: /)).toBeHidden();
+    await detail.getByText('Chi tiết kỹ thuật').click();
+    await expect(detail.getByText(/^Sau: \{.*"pw_marker":"moi-50"/)).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'admin-audit');
     await first.getByRole('button', { name: 'Thu', exact: true }).click();
-    await expect(first.getByText(/Mã sự kiện #/)).toHaveCount(0);
+    await expect(detail).toHaveCount(0);
+    await expect(page.getByText(/Mã sự kiện #/)).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Hôm nay', exact: true }).click();
     const today = vnToday();

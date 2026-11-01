@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
-import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, seedActiveUser, shot } from './helpers';
+import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, openAuditDetail, seedActiveUser, shot } from './helpers';
 
 const ACTIVE = { sub: 'pw-dir-active', name: 'PW Danh bạ An' };
 const LOCKED = { sub: 'pw-dir-locked', name: 'PW Danh bạ Bình' };
@@ -90,9 +90,13 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     await page.goto('/admin/audit?action=config.updated');
     await expect(page.getByRole('heading', { level: 1, name: 'Nhật ký' })).toBeVisible();
     const entry = page.getByRole('row').filter({ has: page.getByRole('button', { name: /^(Xem|Thu)$/ }) }).first();
-    await entry.getByRole('button', { name: 'Xem', exact: true }).click();
-    await expect(entry.getByText(`Sau: {"admin_contact":"${contact}"}`)).toBeVisible();
-    await expect(entry.getByText('Trước: {"admin_contact":')).toBeVisible();
+    const detail = await openAuditDetail(page, entry);
+    const diff = detail.getByRole('table');
+    const changed = diff.getByRole('row').filter({ has: page.getByRole('rowheader', { name: 'Liên hệ Hành chính', exact: true }) });
+    await expect(changed.getByRole('cell').last()).toHaveText(contact);
+    await detail.getByText('Chi tiết kỹ thuật').click();
+    await expect(detail.getByText(`Sau: {"admin_contact":"${contact}"}`)).toBeVisible();
+    await expect(detail.getByText('Trước: {"admin_contact":')).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'admin-audit');
   });
