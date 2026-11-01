@@ -7,6 +7,7 @@ import { MonthSwitcher } from '@/ui/month-switcher';
 import { PageHeader } from '@/ui/page-header';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
+import { usePeriodSummary } from '@/features/summary/summary.api';
 import { DeliveryDetail } from './delivery-detail';
 import { DeliveryList } from './delivery-list';
 import { DeliveryStrip } from './delivery-strip';
@@ -34,14 +35,18 @@ function NothingToDeliver({ month, showAll }: { month: number; showAll: boolean 
 function DeliveryBoard({ ym, p }: { ym: string; p: ReturnType<typeof useDeliveryParams> }) {
   const { t } = useTranslation();
   const b = useDeliveryBoard(ym, p);
+  const registered = usePeriodSummary(ym).data?.registered;
   const month = monthOf(ym);
-  const { source } = b;
+  const { source, phone } = b;
+  const detail = p.requestId ? <DeliveryDetail key={p.requestId} requestId={p.requestId} onCompleted={b.onCompleted} /> : null;
+  // Điện thoại: hai màn theo ?request= — có phiếu thì chỉ chi tiết toàn màn
+  if (phone && detail) return detail;
   if (source.isError) return <LoadError onRetry={() => void source.refetch()} />;
   if (source.isPending) return <Loading />;
   const serverCount = source.data.pages.reduce((n, pg) => n + pg.items.length, 0);
   return (
     <>
-      <DeliveryStrip ym={ym} pendingCount={b.pendingCount} />
+      <DeliveryStrip ym={ym} pendingCount={b.pendingCount} phone={phone} />
       {b.rows.length === 0 ? (
         <NothingToDeliver month={month} showAll={p.showAll} />
       ) : (
@@ -50,6 +55,7 @@ function DeliveryBoard({ ym, p }: { ym: string; p: ReturnType<typeof useDelivery
             month={month}
             rows={b.rows}
             count={serverCount}
+            counts={phone ? { pending: b.pendingCount, all: registered } : undefined}
             showAll={p.showAll}
             selectedId={p.requestId}
             leaving={b.leaving}
@@ -58,11 +64,7 @@ function DeliveryBoard({ ym, p }: { ym: string; p: ReturnType<typeof useDelivery
             onShowAll={p.setShowAll}
             onSelect={(id) => p.select(id)}
           />
-          {p.requestId ? (
-            <DeliveryDetail key={p.requestId} requestId={p.requestId} onCompleted={b.onCompleted} />
-          ) : (
-            <p className="dv-pick">{t('delivery.page.pick')}</p>
-          )}
+          {!phone && (detail ?? <p className="dv-pick">{t('delivery.page.pick')}</p>)}
         </div>
       )}
     </>

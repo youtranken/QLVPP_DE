@@ -28,25 +28,26 @@ function SideLink({ page, count, onNavigate }: { page: AdminPage; count?: number
   );
 }
 
-// 'side': cột trái ≥ 768 (hàng thương hiệu là banner, có chuông); 'sheet': trong hộp thoại menu điện thoại
+// 'side': cột trái ≥ 768 (hàng thương hiệu là banner, có chuông); 'sheet': thân menu điện thoại, đầu do AdminMenuSheet dựng
 export function AdminSidebar({ variant = 'side', onNavigate }: { variant?: 'side' | 'sheet'; onNavigate?: () => void }) {
   const { t } = useTranslation();
   const badges = useAdminBadges();
   const period = useQuery(currentPeriodQuery());
-  const Brand = variant === 'side' ? 'header' : 'div';
   const hasPeriod = typeof period.data?.ym === 'string' && typeof period.data.deadline === 'string';
   return (
     <div className="side" data-variant={variant}>
-      <Brand className="side__brand">
-        <span className="side__logo" aria-hidden="true">
-          <Icon name="pkg" />
-        </span>
-        <span className="side__brand-text">
-          {t('app.title')}
-          <small>{t('common.roles.admin')}</small>
-        </span>
-        {variant === 'side' && <NotificationBell />}
-      </Brand>
+      {variant === 'side' && (
+        <header className="side__brand">
+          <span className="side__logo" aria-hidden="true">
+            <Icon name="pkg" />
+          </span>
+          <span className="side__brand-text">
+            {t('app.title')}
+            <small>{t('common.roles.admin')}</small>
+          </span>
+          <NotificationBell />
+        </header>
+      )}
       <nav className="side__nav" aria-label={t('nav.adminMenu')}>
         {ADMIN_NAV.map((g) => (
           <div key={g.labelKey} className="side__group" role="group" aria-label={t(g.labelKey)}>
@@ -59,7 +60,7 @@ export function AdminSidebar({ variant = 'side', onNavigate }: { variant?: 'side
           </div>
         ))}
       </nav>
-      {hasPeriod && <AdminPeriodCard period={period.data!} />}
+      {hasPeriod && <AdminPeriodCard period={period.data!} onNavigate={onNavigate} />}
       <AdminSidebarUser />
     </div>
   );

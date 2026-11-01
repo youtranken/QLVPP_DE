@@ -2,17 +2,10 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { logout } from '@/lib/auth-actions';
+import { initialsOf } from '@/lib/initials';
 import { ADMIN_TABLET_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { Icon } from '@/ui/icon';
 import { LanguageSwitch } from '@/ui/language-switch';
-
-function initialsOf(name: string): string {
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return '?';
-  const first = words[0][0] ?? '';
-  const last = words.length > 1 ? (words[words.length - 1][0] ?? '') : '';
-  return (first + last).toUpperCase();
-}
 
 function LogoutButton() {
   const { t } = useTranslation();

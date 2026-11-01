@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatVnStamp } from '@/lib/format-time';
+import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { groupTone } from '@/lib/group-tone';
 import { ItemThumb } from '@/ui/item-thumb';
 import { Loading, LoadError } from '@/ui/load-state';
@@ -53,10 +54,27 @@ function useThumbOf() {
   );
 }
 
+function DetailFoot({ d, canAll, phone }: { d: ReturnType<typeof useDeliveryRequest>; canAll: boolean; phone: boolean }) {
+  const { t } = useTranslation();
+  return (
+    <footer className="dv-foot">
+      {d.outcome && phone && <DeliveryResult outcome={d.outcome} />}
+      <span className="dv-foot__count">{t('delivery.detail.selected', { n: d.selectedCount })}</span>
+      <button type="button" className="btn" disabled={d.selectedCount === 0 || d.pending} onClick={() => void d.actions.deliverPicked()}>
+        {t('delivery.detail.deliverSelected', { n: d.selectedCount })}
+      </button>
+      <button type="button" className="btn btn--primary" disabled={!canAll || d.pending} onClick={() => void d.actions.deliverEverything()}>
+        {d.busy === 'all' ? t('delivery.detail.sending') : t('delivery.detail.deliverAll')}
+      </button>
+    </footer>
+  );
+}
+
 export function DeliveryDetail({ requestId, onCompleted }: { requestId: string; onCompleted: (id: string) => void }) {
   const { t } = useTranslation();
   const d = useDeliveryRequest(requestId, onCompleted);
   const thumbOf = useThumbOf();
+  const phone = useMediaQuery(ADMIN_PHONE_QUERY);
   if (d.query.isError) return <LoadError onRetry={() => void d.query.refetch()} />;
   if (!d.view) return <Loading />;
   const view = d.view;
@@ -73,7 +91,7 @@ export function DeliveryDetail({ requestId, onCompleted }: { requestId: string; 
         </p>
       )}
       {short > 0 && <p className="alert alert--warn">{t('delivery.detail.shortWarn', { n: short })}</p>}
-      {d.outcome && <DeliveryResult outcome={d.outcome} />}
+      {d.outcome && !phone && <DeliveryResult outcome={d.outcome} />}
       <div className="table-wrap dv-lines-wrap">
         <table className="table dv-lines" aria-label={t('delivery.detail.lines', { name: view.full_name ?? view.user_sub })}>
           <thead>
@@ -114,15 +132,7 @@ export function DeliveryDetail({ requestId, onCompleted }: { requestId: string; 
           </tbody>
         </table>
       </div>
-      <footer className="dv-foot">
-        <span className="dv-foot__count">{t('delivery.detail.selected', { n: d.selectedCount })}</span>
-        <button type="button" className="btn" disabled={d.selectedCount === 0 || d.pending} onClick={() => void d.actions.deliverPicked()}>
-          {t('delivery.detail.deliverSelected', { n: d.selectedCount })}
-        </button>
-        <button type="button" className="btn btn--primary" disabled={!canAll || d.pending} onClick={() => void d.actions.deliverEverything()}>
-          {d.busy === 'all' ? t('delivery.detail.sending') : t('delivery.detail.deliverAll')}
-        </button>
-      </footer>
+      <DetailFoot d={d} canAll={canAll} phone={phone} />
     </section>
   );
 }

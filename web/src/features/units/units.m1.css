@@ -2,3 +2,7 @@
 [data-shell='admin'] .un-dirty__text { margin-right: auto; font: var(--t-label); }
 [data-shell='admin'] .un-order { display: flex; align-items: center; gap: var(--s-1); white-space: nowrap; }
 [data-shell='admin'] .un-order__n { min-width: 24px; color: var(--c-muted); font: var(--t-label); text-align: center; }
+@media (max-width: 767px) {
+  [data-shell='admin'] .table-stack td.un-order { flex: none; }
+  [data-shell='admin'] .table-stack td.un-name { flex: 1 1 140px; }
+}

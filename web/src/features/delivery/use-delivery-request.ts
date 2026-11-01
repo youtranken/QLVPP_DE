@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
+import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { useToast } from '@/ui/toast-context';
 import { useAdminItems } from '@/features/catalog/catalog.api';
@@ -48,6 +49,7 @@ function useDeliveryCtx(requestId: string, s: LineState, onCompleted: (id: strin
   const refreshStock = useRefreshStock();
   const sendSelected = useDeliverSelected();
   const flight = useSingleFlight();
+  const phone = useMediaQuery(ADMIN_PHONE_QUERY);
   const [busy, setBusy] = useState<string | null>(null);
   const [block, setBlock] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<DeliveryOutcome | null>(null);
@@ -56,7 +58,7 @@ function useDeliveryCtx(requestId: string, s: LineState, onCompleted: (id: strin
   const completeIf = (wasComplete: boolean, force = false) => {
     const fresh = qc.getQueryData<AdminRequestView>(adminRequestKey(requestId));
     if (wasComplete || !(force || (fresh && isComplete(fresh.lines)))) return false;
-    toast.show({ text: t('delivery.detail.toastComplete', { name: person }), tone: 'ok' });
+    toast.show({ text: t(phone ? 'delivery.detail.toastNotified' : 'delivery.detail.toastComplete', { name: person }), tone: 'ok' });
     onCompleted(requestId);
     return true;
   };

@@ -78,12 +78,14 @@ export function DeliveryLineRow({
           </div>
         </div>
       </td>
-      <td className="num r">{m.line.qty}</td>
-      <td className="num r">
+      <td className="num r" data-label={t('delivery.detail.colQty')}>{m.line.qty}</td>
+      <td className="num r" data-label={t('delivery.detail.colDelivered')}>
         {m.line.delivered_qty}
         {m.line.cancelled_qty > 0 && <small className="dv-cancelled">{t('delivery.detail.cancelled', { n: m.line.cancelled_qty })}</small>}
       </td>
-      <td className="num r">{m.stock ?? '—'}</td>
+      <td className="num r" data-label={t('delivery.detail.colStock')}>
+        {m.stock ?? '—'}
+      </td>
       <td className="r">
         <GiveCell m={m} errorId={errorId} disabled={disabled} reviewHref={reviewHref} onQty={onQty} />
       </td>

@@ -1,0 +1,91 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
+import { renderApp } from '@/test/render-app';
+import { makeMe } from '@/test/fixtures-me';
+import { mockViewport } from '@/test/viewport';
+import { stubShellApi } from '@/test/admin-shell-stub';
+
+const NAV_ORDER = ['Tổng hợp kỳ', 'Món ngoài danh mục', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Kho', 'Danh mục', 'Nhóm món', 'Đơn vị tính', 'Danh bạ', 'Nhật ký', 'Cấu hình'];
+
+const topbar = () => screen.getAllByRole('banner')[0];
+const search = () => screen.getByTestId('location-search').textContent ?? '';
+
+// Trang đích chỉ cần dựng được: API ngoài shell trả 500 → LoadError thay vì dữ liệu rỗng sai hình
+function open(path: string) {
+  mockViewport(390);
+  stubShellApi({}, () => jsonResponse(500, { code: 'INTERNAL' }));
+  renderApp(makeMe('admin'), path);
+}
+
+afterEach(() => vi.unstubAllGlobals());
+
+describe('AdminTopbar 390 px', () => {
+  it('thanh trên: nút "Mở menu quản lý", tiêu đề trang "Danh mục", chuông, avatar "Nguyễn Văn An, Hành chính"', async () => {
+    open('/admin/catalog');
+    const bar = topbar();
+    expect(within(bar).getByRole('button', { name: 'Mở menu quản lý' })).toBeInTheDocument();
+    expect(within(bar).getByText('Danh mục', { exact: true })).toBeInTheDocument();
+    expect(within(bar).getByRole('button', { name: 'Nguyễn Văn An, Hành chính' })).toBeInTheDocument();
+    expect(await within(bar).findByRole('button', { name: /^Thông báo/ })).toBeInTheDocument();
+  });
+
+  it('Giao hàng không có ?request=: nút trái vẫn là "Mở menu quản lý", dòng phụ "Tháng 10/2026 · đã khóa"', async () => {
+    open('/admin/delivery');
+    expect(within(topbar()).getByRole('button', { name: 'Mở menu quản lý' })).toBeInTheDocument();
+    expect(within(topbar()).queryByRole('button', { name: 'Quay lại danh sách phiếu' })).toBeNull();
+    expect(await within(topbar()).findByText('Tháng 10/2026 · đã khóa')).toBeInTheDocument();
+  });
+
+  it('chi tiết Giao hàng (?request=): nút trái "Quay lại danh sách phiếu" bỏ ?request= nhưng giữ bộ lọc ?all=1', async () => {
+    open('/admin/delivery?all=1&request=r-1');
+    expect(within(topbar()).queryByRole('button', { name: 'Mở menu quản lý' })).toBeNull();
+    await userEvent.click(within(topbar()).getByRole('button', { name: 'Quay lại danh sách phiếu' }));
+    expect(search()).not.toContain('request=');
+    expect(search()).toContain('all=1');
+    expect(within(topbar()).getByRole('button', { name: 'Mở menu quản lý' })).toBeInTheDocument();
+  });
+
+  it('chi tiết Giao hàng: chạm avatar mở menu, chọn "Kho" → /admin/stock (2 chạm)', async () => {
+    open('/admin/delivery?request=r-1');
+    await userEvent.click(within(topbar()).getByRole('button', { name: 'Nguyễn Văn An, Hành chính' }));
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Menu quản lý' })).getByRole('link', { name: 'Kho' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/admin/stock');
+    expect(screen.queryByRole('dialog', { name: 'Menu quản lý' })).toBeNull();
+  });
+});
+
+describe('Menu sheet 390 px', () => {
+  it('tiêu đề "Menu quản lý", "VPP Công trình · Hành chính", nút "Đóng menu", 12 mục, thẻ kỳ, ngôn ngữ, Đăng xuất', async () => {
+    open('/admin/catalog');
+    await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
+    const sheet = screen.getByRole('dialog', { name: 'Menu quản lý' });
+    expect(within(sheet).getByRole('heading', { name: 'Menu quản lý' })).toBeInTheDocument();
+    expect(within(sheet).getByText('VPP Công trình · Hành chính')).toBeInTheDocument();
+    const nav = within(sheet).getByRole('navigation', { name: 'Menu quản lý' });
+    expect(within(nav).getAllByRole('link').map((a) => a.getAttribute('title'))).toEqual(NAV_ORDER);
+    expect(await within(sheet).findByRole('link', { name: /^Kỳ tháng 11 đang mở/ })).toBeInTheDocument();
+    expect(within(sheet).getByRole('radio', { name: 'English' })).toBeInTheDocument();
+    expect(within(sheet).getByRole('button', { name: 'Đăng xuất' })).toBeInTheDocument();
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Đóng menu' }));
+    expect(screen.queryByRole('dialog', { name: 'Menu quản lý' })).toBeNull();
+  });
+
+  it.each(NAV_ORDER.map((label, i) => [label, i] as const))('chọn "%s" → tới trang đó và đóng menu (2 chạm)', async (label) => {
+    open('/admin/catalog');
+    await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
+    const sheet = screen.getByRole('dialog', { name: 'Menu quản lý' });
+    const link = within(sheet).getByRole('link', { name: new RegExp(`^${label.replace('&', '\\&')}`) });
+    const href = link.getAttribute('href');
+    await userEvent.click(link);
+    expect(screen.getByTestId('location')).toHaveTextContent(href!);
+    expect(screen.queryByRole('dialog', { name: 'Menu quản lý' })).toBeNull();
+  });
+
+  it('bấm thẻ kỳ trong menu → /admin/summary và đóng menu', async () => {
+    open('/admin/catalog');
+    await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
+    await userEvent.click(await screen.findByRole('link', { name: /^Kỳ tháng 11 đang mở/ }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/admin/summary');
+    expect(screen.queryByRole('dialog', { name: 'Menu quản lý' })).toBeNull();
+  });
+});

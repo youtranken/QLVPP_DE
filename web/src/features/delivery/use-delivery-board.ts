@@ -4,6 +4,7 @@ import { usePersonRows, type PersonRow } from '@/features/summary/summary.api';
 import type { useDeliveryParams } from './use-delivery-params';
 
 const LEAVE_MS = 600;
+const PHONE_RETURN_MS = 1400;
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 
 // Phiếu đang chọn/vừa giao đủ đã rời bộ lọc vẫn giữ đúng chỗ cũ trong danh sách tới khi chuyển phiếu
@@ -46,8 +47,19 @@ export function useDeliveryBoard(ym: string, p: ReturnType<typeof useDeliveryPar
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
+  // Điện thoại: phiếu vừa giao đủ → tự về danh sách, trừ khi người dùng đã tự rời phiếu đó
+  const returnToList = useCallback((id: string) => {
+    timers.current.push(
+      setTimeout(() => {
+        const { requestId: current, select: pick } = latest.current;
+        if (current === id) pick(null, true);
+      }, PHONE_RETURN_MS),
+    );
+  }, []);
+
   const onCompleted = useCallback(
     (id: string) => {
+      if (phone) return returnToList(id);
       if (p.showAll) return;
       const leave = () => {
         const { rows: now, requestId: current, select: pick } = latest.current;
@@ -61,10 +73,11 @@ export function useDeliveryBoard(ym: string, p: ReturnType<typeof useDeliveryPar
       if (reduced) leave();
       else timers.current.push(setTimeout(leave, LEAVE_MS));
     },
-    [p.showAll, reduced],
+    [p.showAll, reduced, phone, returnToList],
   );
 
   return {
+    phone,
     rows,
     source,
     leaving,

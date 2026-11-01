@@ -23,7 +23,7 @@ export function CategoryTable({ ordered, counts, busy, onMove, onPatch, onToggle
   const errorText = (e: unknown) => t(apiErrorCode(e) === 'VALIDATION' ? 'catalog.errors.FIELD_INVALID' : catalogErrorKey(e));
   return (
     <div className="table-wrap">
-      <table className="table cg-table">
+      <table className="table table-stack cg-table">
         <thead>
           <tr>
             <th>{t('catalog.categories.colOrder')}</th>
@@ -52,10 +52,10 @@ export function CategoryTable({ ordered, counts, busy, onMove, onPatch, onToggle
                 <td>
                   <span className="ct-dot cg-dot" style={{ background: `var(--${tone}-ink)` }} title={t(`catalog.tones.${tone}`)} />
                 </td>
-                <td>
+                <td className="cg-name">
                   <InlineText value={c.name} label={t('catalog.categories.editName', { name: c.name })} maxLength={NAME_MAX} onCommit={(name) => onPatch(c, { name })} formatError={errorText} />
                 </td>
-                <td>
+                <td data-label={t('catalog.categories.colNameEn')}>
                   <InlineText
                     value={c.name_en ?? ''}
                     label={t('catalog.categories.editNameEn', { name: c.name })}
@@ -65,11 +65,11 @@ export function CategoryTable({ ordered, counts, busy, onMove, onPatch, onToggle
                     formatError={errorText}
                   />
                 </td>
-                <td className="num r">{counts.get(c.id) ?? 0}</td>
-                <td>
+                <td className="num r" data-label={t('catalog.categories.colItems')}>{counts.get(c.id) ?? 0}</td>
+                <td data-label={t('catalog.categories.colStatus')}>
                   <span className={c.active ? 'tag tag--ok' : 'tag tag--outline'}>{t(c.active ? 'catalog.categories.active' : 'catalog.categories.inactive')}</span>
                 </td>
-                <td>
+                <td data-label={t('catalog.categories.colActive')}>
                   <Switch checked={c.active} disabled={busy} label={t(c.active ? 'catalog.categories.deactivateLabel' : 'catalog.categories.reactivateLabel', { name: c.name })} onChange={() => onToggleActive(c)} />
                 </td>
               </tr>

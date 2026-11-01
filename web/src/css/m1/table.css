@@ -31,9 +31,23 @@
 [data-shell='admin'] .table-search:focus { outline: none; box-shadow: inset 0 0 0 2px var(--c-acc), 0 0 0 4px var(--c-acc-soft); }
 [data-shell='admin'] .a-panel .table-search { margin: var(--s-3); }
 
+/* Điện thoại: mỗi hàng một thẻ — ô tên chiếm cả dòng đầu, các ô còn lại thành "nhãn giá trị" xếp nối, hành động cuối hàng dồn phải */
 @media (max-width: 767px) {
   [data-shell='admin'] .table-search { font-size: 16px; }
+  [data-shell='admin'] .table-stack, [data-shell='admin'] .table-stack tbody { display: block; }
+  [data-shell='admin'] .table-stack tbody tr:not(.dt-group) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 12px 14px; border-bottom: 1px solid var(--c-line); }
+  [data-shell='admin'] .table-stack tbody tr:not(.dt-group):last-child { border-bottom: 0; }
   [data-shell='admin'] .table-stack td,
-  [data-shell='admin'] .a-panel .table-stack td { height: auto; padding: 4px 12px; border: 0; }
-  [data-shell='admin'] .table-stack td[data-label]:not([data-label=''])::before { color: var(--c-muted); font: var(--t-cap); }
+  [data-shell='admin'] .a-panel .table-stack td { display: inline-flex; flex: 0 1 auto; align-items: center; gap: 6px; min-width: 0; max-width: 100%; height: auto; padding: 0; border: 0; text-align: left; }
+  [data-shell='admin'] .table-stack td:empty { display: none; }
+  [data-shell='admin'] .table-stack td.sel { flex: none; width: auto; }
+  [data-shell='admin'] .table-stack td:first-child:not(.sel),
+  [data-shell='admin'] .table-stack td.sel + td,
+  [data-shell='admin'] .table-stack td:only-child { flex: 1 1 calc(100% - 48px); }
+  [data-shell='admin'] .table-stack td:last-child:not(:first-child):not(.sel + td) { margin-left: auto; }
+  [data-shell='admin'] .table-stack td[data-label]:not([data-label=''])::before { content: attr(data-label); display: inline; color: var(--c-muted); font: var(--t-cap); }
+  [data-shell='admin'] .table-stack td:first-child::before,
+  [data-shell='admin'] .table-stack td.sel + td::before { display: none !important; }
+  [data-shell='admin'] .table-stack .dt-group { display: block; }
+  [data-shell='admin'] .table-stack .dt-group th { display: block; top: 0; }
 }

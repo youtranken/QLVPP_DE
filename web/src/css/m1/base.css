@@ -22,7 +22,8 @@
 [data-shell='admin'] .stat-row[data-count='3'] { grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 767px) {
   [data-shell='admin'] .stat-row { display: flex; overflow-x: auto; }
-  [data-shell='admin'] .stat-row > * { flex: 0 0 160px; }
+  [data-shell='admin'] .stat-row > *,
+  [data-shell='admin'] .stat-row > .stat-card { flex: 0 0 160px; }
 }
 [data-shell='admin'] .stat-card { all: unset; box-sizing: border-box; position: relative; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: var(--r-lg); background: var(--c-surface); box-shadow: inset 0 0 0 2px transparent, var(--e-1); color: var(--c-ink); font-family: var(--font); }
 [data-shell='admin'] button.stat-card { cursor: pointer; transition: box-shadow var(--d-1) var(--ease-out); }

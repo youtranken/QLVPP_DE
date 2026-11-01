@@ -54,4 +54,8 @@
   [data-shell='admin'] .ct-chips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: var(--s-1); }
   [data-shell='admin'] .ct-page .table-wrap { overflow-x: auto; }
   [data-shell='admin'] .ct-group-meta { display: none; }
+  [data-shell='admin'] .ct-group-add { justify-content: center; width: var(--hit); padding: 0; font-size: 0; }
+  [data-shell='admin'] .ct-page .table-stack td.ct-code { color: var(--c-muted); font: var(--t-cap); }
+  [data-shell='admin'] .ct-page .table-stack td.ct-code + td { flex: 1 1 100%; }
+  [data-shell='admin'] .ct-page .table-stack td.ct-code + td::before { display: none; }
 }

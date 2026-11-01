@@ -55,14 +55,26 @@
 [data-shell='admin'] .side .notif { position: static; }
 [data-shell='admin'] .side .notif-panel { position: fixed; top: 12px; left: 240px; right: auto; width: 360px; max-width: calc(100vw - 96px); }
 
-[data-shell='admin'] .topbar { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 8px 0 4px; border-bottom: 1px solid var(--c-line); background: var(--c-surface); }
-[data-shell='admin'] .topbar__menu { display: grid; place-items: center; width: var(--hit); height: var(--hit); border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-ink); }
+[data-shell='admin'] .topbar { display: flex; align-items: center; gap: 4px; height: calc(56px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 8px 0 4px; border-bottom: 1px solid var(--c-line); background: var(--c-surface); }
+[data-shell='admin'] .topbar__menu { display: grid; place-items: center; flex: none; width: var(--hit); height: var(--hit); border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-ink); }
 [data-shell='admin'] .topbar__menu:focus-visible { outline: none; box-shadow: var(--focus); }
-[data-shell='admin'] .topbar__title { flex: 1; font: var(--t-label); font-weight: 800; }
+[data-shell='admin'] .topbar__text { flex: 1; min-width: 0; display: grid; }
+[data-shell='admin'] .topbar__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-label); font-size: 16px; font-weight: 800; color: var(--c-ink); }
+[data-shell='admin'] .topbar__sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-cap); color: var(--c-muted); }
+[data-shell='admin'] .topbar__avatar { display: grid; padding: 0; border: 0; cursor: pointer; place-items: center; flex: none; width: 36px; height: 36px; margin-left: 2px; border-radius: var(--r-pill); background: var(--g2); color: var(--g2-ink); font: var(--t-cap); font-weight: 800; }
+[data-shell='admin'] .topbar__avatar:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell='admin'] .side-sheet-viewport { position: fixed; inset: 0; z-index: 51; display: flex; pointer-events: none; }
-[data-shell='admin'] .side-sheet { width: min(300px, 86vw); height: 100%; pointer-events: auto; box-shadow: var(--e-5); outline: none; }
-[data-shell='admin'] .side-sheet .side { position: static; height: 100%; border-right: 0; }
-[data-shell='admin'] .side-sheet .side__link[aria-current='page']::before { left: -28px; }
+[data-shell='admin'] .side-sheet { display: flex; flex-direction: column; width: min(320px, 88vw); height: 100%; padding-top: env(safe-area-inset-top); background: var(--c-surface); pointer-events: auto; box-shadow: var(--e-5); outline: none; animation: m1-side-in var(--d-3) var(--ease-out); }
+[data-shell='admin'] .side-sheet__head { display: flex; align-items: center; gap: 10px; padding: 12px 8px 8px 20px; border-bottom: 1px solid var(--c-line); }
+[data-shell='admin'] .side-sheet__title { flex: 1; min-width: 0; }
+[data-shell='admin'] .side-sheet__title h2 { margin: 0; font: var(--t-label); font-size: 16px; font-weight: 800; color: var(--c-ink); }
+[data-shell='admin'] .side-sheet__title small { display: block; font: var(--t-cap); color: var(--c-muted); }
+[data-shell='admin'] .side-sheet__close { display: grid; place-items: center; flex: none; width: var(--hit); height: var(--hit); border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-ink-2); }
+[data-shell='admin'] .side-sheet__close:focus-visible { outline: none; box-shadow: var(--focus); }
+[data-shell='admin'] .side-sheet .side { position: static; flex: 1; height: auto; min-height: 0; border-right: 0; }
+[data-shell='admin'] .side-sheet .side__link { height: var(--hit); }
+@keyframes m1-side-in { from { transform: translateX(-100%); } }
+@media (prefers-reduced-motion: reduce) { [data-shell='admin'] .side-sheet { animation: none; } }
 
 @media (min-width: 768px) and (max-width: 1279px) {
   [data-shell='admin'] .shell { grid-template-columns: 72px minmax(0, 1fr); }
@@ -87,5 +99,5 @@
 
 @media (max-width: 767px) {
   [data-shell='admin'] .shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
-  [data-shell='admin'] .shell__main { padding: 16px 16px 32px; }
+  [data-shell='admin'] .shell__main { padding: 16px 16px calc(88px + env(safe-area-inset-bottom)); }
 }

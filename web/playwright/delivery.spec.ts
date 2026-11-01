@@ -60,7 +60,7 @@ test.describe('E9-S3 Giao hàng (kỳ trước đã khóa, dev-identity admin)',
       await expect(page.getByRole('alert')).toHaveText(`Kỳ chưa khóa — giao sau 00:00 ngày 11/${Number(seed.prevYm.slice(5))}.`);
       await page.unroute('**/api/admin/requests/*/deliver-all');
       await page.getByRole('button', { name: 'Giao tất cả' }).click();
-      await expect(page.getByText(`Đã giao đủ phiếu của ${seed.name}`)).toBeVisible();
+      await expect(page.getByText(isMobile(info) ? `Đã giao đủ phiếu · Đã báo cho ${seed.name}.` : `Đã giao đủ phiếu của ${seed.name}`)).toBeVisible();
       await expect(page.getByRole('list', { name: 'Danh sách phiếu' }).getByRole('button', { name: new RegExp(`^${seed.name}`) })).toHaveCount(0);
       expect(stockOf(a.id)).toBe(0);
       expect(stockOf(c.id)).toBe(9);

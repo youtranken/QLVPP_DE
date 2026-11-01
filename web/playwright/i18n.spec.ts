@@ -59,7 +59,7 @@ test.describe('E6-S4 song ngữ các màn Hành chính của Plan 3', () => {
         const t = lang === 'vi' ? { delivery: 'Giao tất cả', backlog: 'Còn nợ', reports: 'In trình ký', bell: 'Thông báo' } : { delivery: 'Deliver all', backlog: 'Outstanding', reports: 'Print for signing', bell: 'Notifications' };
 
         await page.goto('/admin/delivery');
-        await page.getByRole('button', { name: new RegExp(`^${seed.name}`) }).click();
+        await page.getByRole('list').getByRole('button', { name: new RegExp(seed.name) }).click();
         await expect(page.getByRole('button', { name: t.delivery })).toBeVisible();
         await expectContentLanguage(page, lang);
         if (isMobile(info)) await expectNoContrastViolations(page);

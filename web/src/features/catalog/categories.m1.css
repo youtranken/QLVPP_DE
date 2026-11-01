@@ -19,4 +19,6 @@
 }
 @media (max-width: 767px) {
   [data-shell='admin'] .cg-layout .table-wrap { overflow-x: auto; }
+  [data-shell='admin'] .table-stack td.cg-order { flex: none; }
+  [data-shell='admin'] .table-stack td.cg-name { flex: 1 1 120px; }
 }

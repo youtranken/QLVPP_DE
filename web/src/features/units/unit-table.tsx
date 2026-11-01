@@ -21,7 +21,7 @@ export function UnitTable({ ordered, busy, onMove, onPatch, onToggleActive, onDe
   const errorText = (e: unknown) => t(unitErrorKey(e));
   return (
     <div className="table-wrap">
-      <table className="table un-table">
+      <table className="table table-stack un-table">
         <thead>
           <tr>
             <th>{t('units.page.colOrder')}</th>
@@ -45,10 +45,10 @@ export function UnitTable({ ordered, busy, onMove, onPatch, onToggleActive, onDe
                 </button>
                 <span className="num un-order__n">{i + 1}</span>
               </td>
-              <td>
+              <td className="un-name">
                 <InlineText value={u.name} label={t('units.page.editName', { name: u.name })} maxLength={NAME_MAX} onCommit={(name) => onPatch(u, { name })} formatError={errorText} />
               </td>
-              <td>
+              <td data-label={t('units.page.colNameEn')}>
                 <InlineText
                   value={u.name_en ?? ''}
                   label={t('units.page.editNameEn', { name: u.name })}
@@ -58,11 +58,11 @@ export function UnitTable({ ordered, busy, onMove, onPatch, onToggleActive, onDe
                   formatError={errorText}
                 />
               </td>
-              <td className="num r">{u.item_count}</td>
-              <td>
+              <td className="num r" data-label={t('units.page.colItems')}>{u.item_count}</td>
+              <td data-label={t('units.page.colStatus')}>
                 <span className={u.active ? 'tag tag--ok' : 'tag tag--outline'}>{t(u.active ? 'units.page.active' : 'units.page.inactive')}</span>
               </td>
-              <td>
+              <td data-label={t('units.page.colActive')}>
                 <Switch checked={u.active} disabled={busy} label={t(u.active ? 'units.page.deactivateLabel' : 'units.page.reactivateLabel', { name: u.name })} onChange={() => onToggleActive(u)} />
               </td>
               <td>
