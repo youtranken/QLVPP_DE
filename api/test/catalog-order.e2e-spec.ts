@@ -5,11 +5,11 @@ describe('GET /items: thứ tự theo nhóm rồi theo món', () => {
   const { SUFFIX, A, ADMIN, http, as, newItem, pool } = f;
   const categories: string[] = [];
 
-  const newCategory = async (sortOrder: number, tag: string) => {
+  const newCategory = async (sortOrder: number, tag: string, label = '') => {
     const id = (
       await pool().query<{ id: string }>(
         'INSERT INTO item_categories (name, sort_order) VALUES ($1, $2) RETURNING id',
-        [`e2e-order-${SUFFIX}-${tag}-${sortOrder}`, sortOrder],
+        [`e2e-order-${SUFFIX}-${tag}-${sortOrder}${label}`, sortOrder],
       )
     ).rows[0].id;
     categories.push(id);
@@ -69,4 +69,16 @@ describe('GET /items: thứ tự theo nhóm rồi theo món', () => {
       expect(pLateLow).toBeLessThan(pLoose);
     },
   );
+
+  it('hai nhóm cùng sort_order 15 → xếp theo tên không phân biệt hoa thường: món sort 9 nhóm "…a" trước món sort 0 nhóm "…B"', async () => {
+    const groupB = await newCategory(15, 'tie', '-Bx');
+    const groupA = await newCategory(15, 'tie', '-ax');
+    const inB = await placeItem(groupB, 0);
+    const inA = await placeItem(groupA, 9);
+
+    const [pA, pB] = await positionsOf([inA, inB], A, 'member');
+
+    expect(pA).toBeGreaterThanOrEqual(0);
+    expect(pA).toBeLessThan(pB);
+  });
 });

@@ -123,13 +123,14 @@ export class CatalogService {
       SELECT ${ITEM_COLUMNS}, ${ITEM_USABLE_SQL} AS usable,
              (image_file_id IS NULL) AS missing_image
       FROM items
+      LEFT JOIN LATERAL (
+        SELECT sort_order AS group_sort, lower(name) AS group_name
+        FROM item_categories WHERE id = items.category_id
+      ) g ON true
       WHERE ${privileged}
          OR (${ITEM_USABLE_SQL} AND NOT admin_only)
          OR id = ANY(${sql.param(includeIds)}::uuid[])
-      ORDER BY
-        (SELECT c.sort_order FROM item_categories c WHERE c.id = items.category_id) NULLS LAST,
-        (SELECT lower(c.name) FROM item_categories c WHERE c.id = items.category_id) NULLS LAST,
-        items.sort_order, lower(items.name)
+      ORDER BY g.group_sort NULLS LAST, g.group_name NULLS LAST, items.sort_order, lower(items.name)
     `);
     return result.rows;
   }
