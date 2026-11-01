@@ -3,8 +3,8 @@ import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-ut
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
-import { adminRequest } from './adjust-fixtures';
-import { PEOPLE, calledUrls, stubSummaryApi } from './summary-fixtures';
+import { PEOPLE, SUMMARY_ITEMS, calledUrls, stubSummaryApi } from './summary-fixtures';
+import { adminItem, adminRequest } from './adjust-fixtures';
 
 const search = () => screen.getByTestId('location-search').textContent ?? '';
 const open = (path = '/admin/summary') => {
@@ -238,5 +238,14 @@ describe('SummaryPage — thanh công cụ, bảng, ngăn kéo', () => {
     await waitFor(() => expect(screen.queryByText('Võ Thị Lan')).toBeNull());
     expect(screen.getByRole('button', { name: 'Điều chỉnh phiếu của Phạm Văn Đức' })).toBeEnabled();
     expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'false');
+  });
+});
+
+describe('SummaryPage — số món hết hàng', () => {
+  it('chỉ đếm món dùng được: món hết hàng thuộc nhóm đang ngừng (usable=false) không tính → "1 hết hàng"', async () => {
+    const paused = adminItem({ id: 'i-paused', name: 'Bút dạ quang', stock_qty: 0, stock_state: 'out', usable: false });
+    stubSummaryApi((url) => (url === '/api/admin/items' ? jsonResponse(200, [...SUMMARY_ITEMS, paused]) : undefined));
+    open();
+    expect(await screen.findByRole('button', { name: /Món sắp hết/ })).toHaveTextContent('1 hết hàng');
   });
 });

@@ -279,3 +279,25 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
     expect(within(drawer).queryByText(/^Nhân viên vừa sửa phiếu này/)).toBeNull();
   });
 });
+
+describe('AdjustDrawer — món thuộc nhóm đang ngừng (active, usable=false)', () => {
+  const paused = adminItem({ id: 'i-paused', name: 'Giấy nhóm ngừng', usable: false });
+
+  it('không được gợi ý khi thêm món', async () => {
+    stubAdjust({ items: [...ADMIN_ITEMS, paused] });
+    const { drawer } = await renderDrawer();
+    await userEvent.click(within(drawer).getByRole('button', { name: '+ Thêm món vào phiếu' }));
+    await userEvent.type(within(drawer).getByRole('searchbox', { name: 'Tìm món trong danh mục' }), 'nhóm ngừng');
+    expect(within(drawer).queryByRole('button', { name: /Giấy nhóm ngừng/ })).toBeNull();
+  });
+
+  it('dòng đã có của món đó: như món đã ngừng — chỉ giảm/bỏ, không tăng', async () => {
+    stubAdjust({
+      items: [...ADMIN_ITEMS, paused],
+      views: [adminRequest({ lines: [...adminRequest().lines, lineView({ id: 'l-paused', item_id: 'i-paused', item: facts('Giấy nhóm ngừng', 'cai'), qty: 4 })] })],
+    });
+    const { drawer } = await renderDrawer();
+    expect(within(drawer).getByRole('button', { name: 'Thêm Giấy nhóm ngừng' })).toBeDisabled();
+    expect(within(drawer).getByRole('button', { name: 'Bớt Giấy nhóm ngừng' })).toBeEnabled();
+  });
+});

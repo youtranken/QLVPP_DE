@@ -76,7 +76,7 @@ function RequestEditor({
   const [editing, setEditing] = useState<Editing>(null);
   useLeaveGuard(cart.dirtyCount);
 
-  const orderable = useMemo(() => items.filter((i) => i.active && !i.admin_only), [items]);
+  const orderable = useMemo(() => items.filter((i) => i.usable && !i.admin_only), [items]);
   const lineByKey = useMemo(() => new Map(cart.lines.map((l) => [l.key, l])), [cart.lines]);
   const editingLine = editing?.key ? lineByKey.get(editing.key) : undefined;
   const dirty = cart.dirtyCount > 0;

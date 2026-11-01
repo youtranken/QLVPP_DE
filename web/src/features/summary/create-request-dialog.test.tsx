@@ -7,7 +7,8 @@ import { ConfirmProvider } from '@/ui/confirm-provider';
 import { ToastProvider } from '@/ui/toast-provider';
 import type { DirectoryUser } from '@/features/directory/directory.api';
 import { CreateRequestDialog } from './create-request-dialog';
-import { ADMIN_ITEMS } from './adjust-fixtures';
+import type { AdminItem } from '@/features/catalog/catalog.api';
+import { ADMIN_ITEMS, adminItem } from './adjust-fixtures';
 
 const USERS: DirectoryUser[] = [
   { sub: 'u-lan', fullName: 'Võ Thị Lan', email: 'lan@pmh.com.vn', department: 'Tổ Thiết kế', status: 'active' },
@@ -15,10 +16,10 @@ const USERS: DirectoryUser[] = [
   { sub: 'u-old', fullName: 'Người Đã Nghỉ', email: 'old@pmh.com.vn', department: null, status: 'locked' },
 ];
 
-function stub(post: () => Response | Promise<Response>) {
+function stub(post: () => Response | Promise<Response>, items: AdminItem[] = ADMIN_ITEMS) {
   const fetchMock = vi.fn(async (url: string) => {
     if (url.startsWith('/api/admin/users?')) return jsonResponse(200, { items: USERS, next_cursor: null });
-    if (url === '/api/admin/items') return jsonResponse(200, ADMIN_ITEMS);
+    if (url === '/api/admin/items') return jsonResponse(200, items);
     if (url === '/api/admin/requests') return post();
     if (url === '/api/periods/current') return jsonResponse(200, PERIOD);
     if (url === '/api/admin/periods/2026-11/unregistered') {
@@ -221,5 +222,16 @@ describe('CreateRequestDialog — tạo phiếu hộ', () => {
     await userEvent.type(within(dialog).getByRole('searchbox', { name: 'Tìm món trong danh mục' }), 'zzz{Enter}');
     expect(f.mock.calls.some((c) => c[0] === '/api/admin/requests')).toBe(false);
     expect(onCreated).not.toHaveBeenCalled();
+  });
+});
+
+describe('CreateRequestDialog — món thuộc nhóm đang ngừng', () => {
+  it('món active nhưng usable=false không có trong danh sách thêm món', async () => {
+    stub(created, [...ADMIN_ITEMS, adminItem({ id: 'i-paused', name: 'Giấy nhóm ngừng', usable: false })]);
+    const { dialog } = await renderDialog();
+    await userEvent.click(within(dialog).getByRole('button', { name: '+ Thêm món vào phiếu' }));
+    await userEvent.type(within(dialog).getByRole('searchbox', { name: 'Tìm món trong danh mục' }), 'giấy');
+    expect(await within(dialog).findByRole('button', { name: /Giấy note vàng/ })).toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: /Giấy nhóm ngừng/ })).toBeNull();
   });
 });

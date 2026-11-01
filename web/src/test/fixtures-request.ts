@@ -12,6 +12,7 @@ export function memberItem(over: Partial<MemberItem>): MemberItem {
     admin_only: false,
     max_qty: 20,
     active: true,
+    usable: over.active ?? true,
     ...over,
   };
 }

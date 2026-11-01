@@ -46,7 +46,7 @@ export function toRows(items: AdminItem[], index: CategoryIndex): CatalogRow[] {
 export function catalogStats(items: AdminItem[], categories: Category[]) {
   const active = items.filter((i) => i.active);
   return {
-    active: active.length,
+    active: items.filter((i) => i.usable).length,
     groups: categories.filter((c) => c.active).length,
     low: active.filter((i) => i.stock_state === 'low').length,
     out: active.filter((i) => i.stock_state === 'out').length,

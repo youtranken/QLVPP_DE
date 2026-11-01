@@ -40,6 +40,13 @@ describe('catalogStats', () => {
   it('chỉ đếm món đang dùng: sắp hết, hết hàng, thiếu ảnh; số nhóm đang dùng; số món đã ngừng', () => {
     expect(catalogStats(ALL, CATEGORIES)).toEqual({ active: 4, groups: 2, low: 1, out: 1, noImage: 1, inactive: 1 });
   });
+
+  it('"Đang dùng" không đếm món còn active nhưng nhóm đang ngừng (usable=false); món đó cũng không tính là đã ngừng', () => {
+    const paused = adminItem({ id: 'i-paused', name: 'Bút dạ quang', usable: false });
+    const stats = catalogStats([...ALL, paused], CATEGORIES);
+    expect(stats.active).toBe(4);
+    expect(stats.inactive).toBe(1);
+  });
 });
 
 describe('applyView', () => {

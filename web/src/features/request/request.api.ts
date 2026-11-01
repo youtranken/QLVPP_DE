@@ -63,6 +63,7 @@ export interface MemberItem {
   admin_only: boolean;
   max_qty: number;
   active: boolean;
+  usable: boolean;
 }
 
 export interface LineInputBody {

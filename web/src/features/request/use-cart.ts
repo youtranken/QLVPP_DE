@@ -45,7 +45,7 @@ function itemLabel(i: MemberItem): CartLabel {
 }
 
 const orderable = (item: MemberItem | undefined, l: LineView) =>
-  !!item && item.active && !item.admin_only && l.item?.active !== false;
+  !!item && item.usable && !item.admin_only && l.item?.active !== false;
 
 // Server cho giảm dòng đã lưu bất kể max_qty hiện tại; món ngừng/chỉ Hành chính thì member chỉ được bỏ dòng
 function savedLimits(l: LineView, item: MemberItem | undefined, defaultMax: number) {
@@ -83,7 +83,7 @@ function fromView(l: LineView, ctx: CartContext): CartLine {
   };
 }
 
-const canOrder = (i: MemberItem) => i.active && !i.admin_only;
+const canOrder = (i: MemberItem) => i.usable && !i.admin_only;
 
 // Dòng chỉ đọc (Hành chính thêm…) không bao giờ làm gốc: dùng lại id của nó sẽ gửi trùng id
 function fromItem(i: MemberItem, qty: number, prior?: CartLine): CartLine {

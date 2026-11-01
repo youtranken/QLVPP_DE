@@ -68,7 +68,7 @@ export function SummaryPage() {
   const ym = p.ym;
   const data = summary.data;
   const canCreate = ym === openYm;
-  const outCount = (items.data ?? []).filter((i) => i.active && i.stock_state === 'out').length;
+  const outCount = (items.data ?? []).filter((i) => i.usable && i.stock_state === 'out').length;
   const views = [
     { value: 'person' as SummaryView, label: t('summary.page.byPerson') },
     { value: 'item' as SummaryView, label: t('summary.page.byItem') },

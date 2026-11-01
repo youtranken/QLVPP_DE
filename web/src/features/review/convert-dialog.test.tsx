@@ -35,7 +35,7 @@ const adminItem = (over: Partial<AdminItem>): AdminItem => ({
   restock_level: null,
   stock_state: 'untracked',
   active: true,
-  usable: true,
+  usable: over.active ?? true,
   sort_order: 0,
   missing_image: false,
   ...over,
@@ -44,6 +44,7 @@ const ITEMS = [
   adminItem({ id: 'i-2', name: 'Băng keo trong', unit: 'cuon' }),
   adminItem({ id: 'i-3', name: 'Bút bi', unit: 'cay' }),
   adminItem({ id: 'i-old', name: 'Băng keo cũ', active: false }),
+  adminItem({ id: 'i-paused', name: 'Băng keo nhóm ngừng', usable: false }),
 ];
 
 function stub(review: () => Response = () => jsonResponse(200, reviewResult('converted', { item_id: 'i-new' }))) {
@@ -134,6 +135,7 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     const { dialog, onDone } = await openConvert();
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
     expect(within(dialog).queryByText(/Băng keo cũ/)).toBeNull();
+    expect(within(dialog).queryByText(/Băng keo nhóm ngừng/)).toBeNull();
     expect(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' })).toBeDisabled();
     await userEvent.click(within(dialog).getByRole('button', { name: /Băng keo trong/ }));
     expect(within(dialog).getByText('Nhân viên đặt theo «cái», Băng keo trong tính theo «cuộn». Số lượng giữ nguyên 2 — kiểm tra lại với người đăng ký.')).toBeInTheDocument();

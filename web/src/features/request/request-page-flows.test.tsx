@@ -3,7 +3,7 @@ import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-ut
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
-import { NOTE, PEN, PERIOD, facts, stubRequestApi, view } from '@/test/request-api-stub';
+import { NOTE, PAUSED, PEN, PERIOD, facts, stubRequestApi, view } from '@/test/request-api-stub';
 import { mockViewport } from '@/test/viewport';
 
 const grid = () => screen.getByRole('region', { name: 'Danh mục món' });
@@ -248,5 +248,30 @@ describe('RequestPage — dòng món đã ngừng', () => {
     const card = (await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Giấy note vàng')).closest('article')!;
     await userEvent.click(within(card).getByRole('button', { name: 'Bớt Giấy note vàng' }));
     expect(within(card).getByRole('spinbutton', { name: 'Giấy note vàng' })).toHaveValue(11);
+  });
+});
+
+describe('RequestPage — món thuộc nhóm đang ngừng (active, usable=false)', () => {
+  it('không hiện trên lưới chọn món dù món còn active', async () => {
+    mockViewport(1280);
+    stubRequestApi({ items: [PEN, PAUSED] });
+    renderApp(makeMe('member'), '/');
+    expect(await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh')).toBeInTheDocument();
+    expect(within(screen.getByRole('region', { name: 'Danh mục món' })).queryByText('Bút dạ quang')).toBeNull();
+  });
+
+  it('dòng đã lưu của món đó: như món đã ngừng — Bớt/Thêm vô hiệu, Bỏ vẫn bấm được', async () => {
+    mockViewport(1280);
+    stubRequestApi({
+      items: [PEN, PAUSED],
+      request: view({ lines: [lineView({ id: 'l-paused', item_id: PAUSED.id, item: facts(PAUSED), qty: 3 })] }),
+    });
+    renderApp(makeMe('member'), '/');
+    const line = within(await screen.findByRole('complementary', { name: 'Phiếu của tôi' }))
+      .getByText('Bút dạ quang')
+      .closest('li')!;
+    expect(within(line).getByRole('button', { name: 'Bớt Bút dạ quang' })).toBeDisabled();
+    expect(within(line).getByRole('button', { name: 'Thêm Bút dạ quang' })).toBeDisabled();
+    expect(within(line).getByRole('button', { name: 'Bỏ Bút dạ quang' })).toBeEnabled();
   });
 });

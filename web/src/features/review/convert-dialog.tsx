@@ -78,7 +78,7 @@ export function ConvertDialog({ line, who, onSubmit, onClose }: {
   const [saving, setSaving] = useState(false);
 
   const active = useMemo(
-    () => (items.data ?? []).filter((i) => i.active).sort((a, b) => a.name.localeCompare(b.name, i18n.language)),
+    () => (items.data ?? []).filter((i) => i.usable).sort((a, b) => a.name.localeCompare(b.name, i18n.language)),
     [items.data, i18n.language],
   );
   // Đoán món có sẵn cùng tên → mặc định gắn vào món đó; admin vẫn tự chọn lại được

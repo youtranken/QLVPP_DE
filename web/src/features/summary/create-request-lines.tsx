@@ -25,7 +25,7 @@ export function CreateRequestLines({ lines, errors, missing, onChange }: {
   const cats = useAllCategories();
   const byId = useMemo(() => new Map((items.data ?? []).map((i) => [i.id, i])), [items.data]);
   const taken = new Set(lines.map((l) => l.item_id));
-  const candidates = (items.data ?? []).filter((i) => i.active && !i.admin_only && !taken.has(i.id));
+  const candidates = (items.data ?? []).filter((i) => i.usable && !i.admin_only && !taken.has(i.id));
   const setQty = (itemId: string, qty: number) => onChange(lines.map((l) => (l.item_id === itemId ? { ...l, qty } : l)));
 
   return (

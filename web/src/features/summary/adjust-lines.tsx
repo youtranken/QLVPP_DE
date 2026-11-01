@@ -15,7 +15,7 @@ import type { AdminRequestView } from './summary.api';
 
 // Server cho giảm dòng đã có bất kể max/ngừng; chỉ tăng khi món còn bán và dưới max; món chỉ Hành chính không có trần UI
 function maxOf(l: LineView, item: AdminItem | undefined): number {
-  if (!item?.active) return l.qty;
+  if (!item?.usable) return l.qty;
   return item.admin_only ? Infinity : Math.max(l.qty, item.max_qty);
 }
 
@@ -97,7 +97,7 @@ export function AdjustLines({ a, view }: { a: Adjust; view: AdminRequestView }) 
   const units = kept.reduce((s, l) => s + a.qtyOf(l), 0) + a.added.reduce((s, x) => s + x.qty, 0);
   // Mọi dòng còn giữ có món (kể cả converted) chặn trùng như api (DUPLICATE_ITEM)
   const taken = new Set([...kept.filter((l) => l.item_id).map((l) => l.item_id), ...a.added.map((x) => x.item_id)]);
-  const candidates = f.items.filter((i) => i.active && !taken.has(i.id));
+  const candidates = f.items.filter((i) => i.usable && !taken.has(i.id));
 
   return (
     <section className="aj-section">
