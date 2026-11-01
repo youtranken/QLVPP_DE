@@ -50,7 +50,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       psql(`UPDATE users SET status = 'locked' WHERE sub = '${seed.sub}'`);
       try {
         await page.goto('/admin/backlog?filter=left');
-        const leftRow = page.getByRole('row').filter({ hasText: seed.name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung…' }) });
+        const leftRow = page.getByRole('row').filter({ hasText: seed.name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
         await expect(leftRow.getByText('Người đã nghỉ')).toBeVisible();
       } finally {
         psql(`UPDATE users SET status = 'active' WHERE sub = '${seed.sub}'`);
@@ -61,14 +61,14 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await expect(page).toHaveURL(/\/admin\/backlog\?by=person$/);
       await expect(page.getByRole('radio', { name: 'Theo người' })).toBeChecked();
       const group = page.getByRole('rowheader', { name: new RegExp(seed.name) });
-      const row = page.getByRole('row').filter({ hasText: a.name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung…' }) });
+      const row = page.getByRole('row').filter({ hasText: a.name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
       await expect(group).toContainText('PW Phòng giao');
       await expect(row.getByText('còn 2 cái')).toBeVisible();
       await expect(row.getByText('/ đặt 3')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'backlog-person');
 
-      await row.getByRole('button', { name: 'Giao bổ sung…' }).click();
+      await row.getByRole('button', { name: 'Giao bổ sung' }).click();
       const deliver = page.getByRole('dialog', { name: `Giao bổ sung ${a.name} cho ${seed.name}` });
       const qty = deliver.getByLabel('Số lượng giao');
       await expect(qty).toHaveValue('2');
@@ -101,9 +101,9 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
 
       if (isMobile(info)) {
         await row.getByRole('button', { name: `Thao tác khác ${a.name} — ${seed.name}` }).click();
-        await page.getByRole('menuitem', { name: 'Hủy nợ…' }).click();
+        await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();
       } else {
-        await row.getByRole('button', { name: 'Hủy nợ…' }).click();
+        await row.getByRole('button', { name: 'Hủy nợ' }).click();
       }
       const cancel = page.getByRole('dialog', { name: `Hủy 1 cái còn lại của ${seed.name}?` });
       const reason = cancel.getByLabel('Lý do hủy nợ', { exact: false });

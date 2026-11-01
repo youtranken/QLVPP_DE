@@ -62,7 +62,7 @@ async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person,
   await expect(drawer).toBeHidden();
 
   drawer = await openDrawer(admin, a);
-  await drawer.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button', { name: `Thêm vào danh mục… — ${custom}` }).click();
+  await drawer.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button', { name: `Thêm vào danh mục — ${custom}` }).click();
   const convert = admin.getByRole('dialog', { name: `Thêm “${custom}” vào danh mục` });
   await convert.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
   // Dòng Món khác không có ảnh → món mới phải có ảnh mới chọn ở đây

@@ -134,7 +134,7 @@ async function purchaseAndDeliverMore(admin: Page, info: TestInfo, s: MonthSeed)
 
   await admin.goto('/admin/backlog');
   const group = admin.getByRole('rowheader', { name: new RegExp(s.paper.name) });
-  await admin.getByRole('row').filter({ hasText: s.a.name }).getByRole('button', { name: 'Giao bổ sung…' }).click();
+  await admin.getByRole('row').filter({ hasText: s.a.name }).getByRole('button', { name: 'Giao bổ sung' }).click();
   const dialog = admin.getByRole('dialog', { name: `Giao bổ sung ${s.paper.name} cho ${s.a.name}` });
   await expect(dialog.getByLabel('Số lượng giao')).toHaveValue('2');
   await dialog.getByRole('button', { name: 'Giao', exact: true }).click();
@@ -179,13 +179,13 @@ async function cancelClip(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/backlog');
   const group = admin.getByRole('rowheader', { name: new RegExp(s.clip.name) });
   const line = admin.getByRole('row').filter({ hasText: s.b.name });
-  // Dưới 768 px "Hủy nợ…" nằm trong menu ⋯ của dòng, không còn nút riêng
+  // Dưới 768 px "Hủy nợ" nằm trong menu ⋯ của dòng, không còn nút riêng
   if (isMobile(info)) {
-    await expect(line.getByRole('button', { name: 'Hủy nợ…' })).toHaveCount(0);
+    await expect(line.getByRole('button', { name: 'Hủy nợ' })).toHaveCount(0);
     await line.getByRole('button', { name: `Thao tác khác ${s.clip.name} — ${s.b.name}` }).click();
-    await admin.getByRole('menu', { name: `Thao tác khác ${s.clip.name} — ${s.b.name}` }).getByRole('menuitem', { name: 'Hủy nợ…' }).click();
+    await admin.getByRole('menu', { name: `Thao tác khác ${s.clip.name} — ${s.b.name}` }).getByRole('menuitem', { name: 'Hủy nợ' }).click();
   } else {
-    await line.getByRole('button', { name: 'Hủy nợ…' }).click();
+    await line.getByRole('button', { name: 'Hủy nợ' }).click();
   }
   const dialog = admin.getByRole('dialog', { name: `Hủy 3 cái còn lại của ${s.b.name}?` });
   await dialog.getByRole('textbox', { name: /^Lý do hủy nợ/ }).fill('Không mua được');

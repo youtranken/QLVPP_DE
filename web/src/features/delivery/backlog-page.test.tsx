@@ -117,15 +117,15 @@ describe('BacklogPage — nhóm và dòng', () => {
     expect(within(row).queryByText('Người đã nghỉ')).toBeNull();
   });
 
-  it('theo món, nhóm hết hàng: "Hết hàng" chỉ ở tiêu đề (không lặp ở dòng), "Giao bổ sung…" vô hiệu, "Hủy nợ…" bấm được; ngoài danh mục không hiện tồn', async () => {
+  it('theo món, nhóm hết hàng: "Hết hàng" chỉ ở tiêu đề (không lặp ở dòng), "Giao bổ sung" vô hiệu, "Hủy nợ" bấm được; ngoài danh mục không hiện tồn', async () => {
     stubBacklog([EMPTY_STOCK, TAPE]);
     openPage();
     await screen.findByText('Kẹp giấy');
     expect(headOf('Kẹp giấy')).toHaveTextContent('Hết hàng');
     expect(headOf('Băng keo 2 mặt')).not.toHaveTextContent(/Tồn|Hết hàng/);
     const clip = bodyRows().find((r) => r.textContent?.includes('Phạm Văn Đức') && r.textContent.includes('còn 4'))!;
-    expect(within(clip).getByRole('button', { name: 'Giao bổ sung…' })).toBeDisabled();
-    expect(within(clip).getByRole('button', { name: 'Hủy nợ…' })).toBeEnabled();
+    expect(within(clip).getByRole('button', { name: 'Giao bổ sung' })).toBeDisabled();
+    expect(within(clip).getByRole('button', { name: 'Hủy nợ' })).toBeEnabled();
     expect(within(clip).queryByText('Hết hàng')).toBeNull();
   });
 

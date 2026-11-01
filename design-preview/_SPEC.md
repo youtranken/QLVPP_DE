@@ -37,7 +37,7 @@
 - Đầu trang 52 px: tiêu đề, chọn tháng ‹ ›, nhãn trạng thái kỳ, nút "Xuất Excel", nút xanh "In trình ký".
 - KPI 4 ô bấm-để-lọc; ô đang lọc viền xanh. Số màu cảnh báo/đỏ theo nghĩa.
 - Bảng: đầu bảng nền phụ, nhóm theo tổ (hàng xám), thanh tiến độ giao 72 px, nhãn trạng thái, nút "Giao" / "Điều chỉnh".
-- Ngăn điều chỉnh 520 px: dòng đã sửa nền xanh nhạt + giá trị cũ gạch; khối món ngoài danh mục viền đứt với 3 nút "Chấp nhận" / "Thêm vào danh mục" / "Từ chối…"; ô "Lý do điều chỉnh" (bắt buộc khi kỳ khóa); chân "Hủy" / "Lưu điều chỉnh".
+- Ngăn điều chỉnh 520 px: dòng đã sửa nền xanh nhạt + giá trị cũ gạch; khối món ngoài danh mục viền đứt với 3 nút "Chấp nhận" / "Thêm vào danh mục" / "Từ chối"; ô "Lý do điều chỉnh" (bắt buộc khi kỳ khóa); chân "Hủy" / "Lưu điều chỉnh".
 
 ## Đăng nhập (`final/login.html`)
 Nền xanh nhạt; thẻ hai cột bo 24: trái nền xanh (nhãn PMH, tiêu đề, mô tả, kệ icon), phải trắng (Email công ty → "Tiếp tục với PMH ID", gợi ý SSO, ghi chú quyền và đường vào SA). ≤ 760 px xếp dọc.
@@ -55,7 +55,7 @@ Chủ động, thường, nói rõ kết quả: "Lưu đăng ký", "Lấy lại 
 - **Câu chữ:** "tối đa 20/tháng" (bỏ "Còn nhiều"); nút chép: "Chép lại danh sách tháng 10" (icon tài liệu, không dùng ↺); thống nhất gọi "phiếu" (nút "Lưu phiếu", tiêu đề "Phiếu tháng 11"); tên/cách liên hệ Hành chính lấy từ Cấu hình, không viết cứng; chữ phụ ≥ 14 px; nhãn trạng thái ≥ 12 px đậm 700.
 - **Admin · ngăn điều chỉnh:** 3 nút review mở **hộp riêng** và áp dụng ngay (Chấp nhận: xác nhận ngắn; Thêm vào danh mục: form món có ĐVT + ảnh; Từ chối: ô lý do riêng); sau khi xử lý, khối đổi thành nhãn trạng thái. Ô "Lý do điều chỉnh" chỉ cho sửa số lượng/thêm/bớt. Dòng không giảm được dưới số đã giao: stepper khóa cận dưới + chú thích "đã giao 3".
 - **Admin · Tổng hợp:** KPI "Phiếu đã đăng ký 32/40"; nút phụ "Sao chép danh sách chưa đăng ký"; bảng nhóm theo **phòng ban PMH ID** (hàng "Chưa có phòng ban" cuối); mockup ghi "Tổ Giám sát/Thiết kế" chỉ là ví dụ tên nhóm.
-- **Admin · Giao hàng / Còn nợ:** mỗi đợt giao trong lịch sử chỉ xem (không có Hoàn tác); dòng còn nợ có nút "Hủy nợ…" (lý do).
+- **Admin · Giao hàng / Còn nợ:** mỗi đợt giao trong lịch sử chỉ xem (không có Hoàn tác); dòng còn nợ có nút "Hủy nợ" (lý do).
 - **Admin · Kho:** mỗi món có nút "Xuất lẻ…" (hộp: số lượng, người nhận từ danh bạ hoặc ô chọn "Dùng chung", lý do); sổ cái gắn nhãn xanh dương "Xuất lẻ · tên người".
 - **Admin · Báo cáo:** cột "Đặt mua" là ô nhập (mặc định = Cần mua, nền vàng nhạt khi khác); bảng phụ "Xuất lẻ trong kỳ" dưới phần 1; nút "Xuất Excel" / "In trình ký" tạo **bản chốt**; nếu còn món ngoài danh mục chưa xem → hộp "Còn 3 món chưa xem — chốt vẫn thiếu các món này" (Quay lại / Vẫn chốt); danh sách bản chốt (giờ, người lập, tải lại / in lại).
 - **Đăng nhập:** nút chính "Đăng nhập bằng tài khoản công ty (PMH ID)" ngay trên cùng, không cần email; dưới nút: "Bạn sẽ được đưa sang trang đăng nhập chung của công ty rồi quay lại đây."; ô email thu thành liên kết "Gợi ý tài khoản (tùy chọn)"; liên kết nhỏ cuối thẻ "Dành cho IT" mở ô tên tài khoản + mật khẩu (`type=text`).

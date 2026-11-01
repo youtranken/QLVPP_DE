@@ -71,7 +71,7 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'review-list');
 
-      await card.getByRole('button', { name: 'Thêm vào danh mục…' }).click();
+      await card.getByRole('button', { name: 'Thêm vào danh mục' }).click();
       const dialog = page.getByRole('dialog', { name: `Thêm “${name}” vào danh mục` });
       await expect(dialog.getByLabel('Tên món')).toHaveValue(name);
       await expect(dialog.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
@@ -135,7 +135,7 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       const card = page.getByRole('article', { name });
       await expect(card).toBeVisible();
       await expect(page.getByLabel('Kỳ')).toHaveValue(prevYm);
-      await card.getByRole('button', { name: 'Từ chối…' }).click();
+      await card.getByRole('button', { name: 'Từ chối' }).click();
       const dialog = page.getByRole('dialog', { name: `Từ chối “${name}”` });
       const submit = dialog.getByRole('button', { name: 'Từ chối', exact: true });
       await expect(submit).toBeDisabled();
@@ -199,7 +199,7 @@ test.describe('E9-S2 món ngoài danh mục', () => {
       await expect(accept.getByText('Đã chấp nhận', { exact: true })).toBeVisible();
 
       const reject = cardOf(names.reject);
-      await reject.getByRole('button', { name: 'Từ chối…' }).click();
+      await reject.getByRole('button', { name: 'Từ chối' }).click();
       const rejectDialog = page.getByRole('dialog', { name: `Từ chối “${names.reject}”` });
       await rejectDialog.getByLabel('Lý do từ chối').fill('ab');
       await expect(rejectDialog.getByRole('button', { name: 'Từ chối', exact: true })).toBeDisabled();
@@ -208,7 +208,7 @@ test.describe('E9-S2 món ngoài danh mục', () => {
       await expect(reject.getByText('Đã từ chối')).toBeVisible();
 
       const convert = async (n: string) => {
-        await cardOf(n).getByRole('button', { name: 'Thêm vào danh mục…' }).click();
+        await cardOf(n).getByRole('button', { name: 'Thêm vào danh mục' }).click();
         const dialog = page.getByRole('dialog', { name: `Thêm “${n}” vào danh mục` });
         await dialog.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
         await expect(dialog.getByRole('group', { name: 'Ảnh món' })).toContainText('*');

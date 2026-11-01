@@ -72,7 +72,7 @@ async function openConvert(line: ReviewableLine = LINE) {
       </ConfirmProvider>
     </MeContext.Provider>,
   );
-  await userEvent.click(screen.getByRole('button', { name: `Thêm vào danh mục… — ${line.custom_name}` }));
+  await userEvent.click(screen.getByRole('button', { name: `Thêm vào danh mục — ${line.custom_name}` }));
   const dialog = screen.getByRole('dialog', { name: `Thêm “${line.custom_name}” vào danh mục` });
   // Hộp đã tải xong khi ô chọn (nhóm ở món mới, món ở món có sẵn) có lựa chọn
   await within(dialog).findAllByText(/Văn phòng|Bút bi/);

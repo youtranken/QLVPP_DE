@@ -29,7 +29,7 @@ describe('BacklogPage — thao tác trên dòng', () => {
   it('giao bổ sung đủ phần còn lại (3) → dòng và nhóm biến mất, toast "Đã giao bổ sung 3 cây Bút bi xanh cho Phạm Văn Đức"', async () => {
     const f = stubBacklog([PEN_DUC, TAPE]);
     openPage();
-    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Giao bổ sung…' }));
+    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Giao bổ sung' }));
     const dialog = screen.getByRole('dialog', { name: 'Giao bổ sung Bút bi xanh cho Phạm Văn Đức' });
     expect(within(dialog).getByLabelText('Số lượng giao')).toHaveValue(3);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Giao' }));
@@ -43,7 +43,7 @@ describe('BacklogPage — thao tác trên dòng', () => {
   it('giao bổ sung 2 (còn lại 3): bấm "−" một lần từ 3 → gửi 2, dòng ở lại "còn 1", "đã giao" tăng lên 4', async () => {
     stubBacklog([PEN_DUC]);
     openPage();
-    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Giao bổ sung…' }));
+    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Giao bổ sung' }));
     await userEvent.click(screen.getByRole('button', { name: /^Bớt/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Giao' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
@@ -56,7 +56,7 @@ describe('BacklogPage — thao tác trên dòng', () => {
       elsewhere: (l) => ({ ...l, qty: 3, remaining_qty: 1 }),
     });
     openPage();
-    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Giao bổ sung…' }));
+    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Giao bổ sung' }));
     await userEvent.click(screen.getByRole('button', { name: 'Giao' }));
     const dialog = screen.getByRole('dialog', { name: 'Giao bổ sung Bút bi xanh cho Phạm Văn Đức' });
     await waitFor(() => expect(within(dialog).getByText('Chỉ còn 1 chưa giao.')).toBeInTheDocument());
@@ -69,7 +69,7 @@ describe('BacklogPage — thao tác trên dòng', () => {
   it('hủy nợ với lý do → dòng biến mất, dòng khác của nhóm còn, toast "Đã hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức"', async () => {
     stubBacklog([PEN_DUC, PEN_LAN]);
     openPage();
-    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Hủy nợ…' }));
+    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Hủy nợ' }));
     await userEvent.type(screen.getByRole('textbox', { name: /^Lý do hủy nợ/ }), 'Hết mẫu');
     await userEvent.click(screen.getByRole('button', { name: 'Hủy nợ' }));
     await waitFor(() => expect(bodyRows()).toHaveLength(1));
@@ -80,7 +80,7 @@ describe('BacklogPage — thao tác trên dòng', () => {
   it('hủy nợ bị STALE_UPDATE {qty 4, delivered_qty 3} → hộp ở lại, khối "Dòng vừa thay đổi (đăng ký 4, đã giao 3) — kiểm tra lại." và tiêu đề đổi "Hủy 1 cây"', async () => {
     const f = stubBacklog([PEN_DUC], { cancel: () => jsonResponse(409, { code: 'STALE_UPDATE', qty: 4, delivered_qty: 3 }) });
     openPage();
-    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Hủy nợ…' }));
+    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Hủy nợ' }));
     await userEvent.type(screen.getByRole('textbox', { name: /^Lý do hủy nợ/ }), 'Hết mẫu');
     await userEvent.click(screen.getByRole('button', { name: 'Hủy nợ' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Dòng vừa thay đổi (đăng ký 4, đã giao 3) — kiểm tra lại.');
@@ -96,17 +96,17 @@ describe('BacklogPage — thao tác trên dòng', () => {
     expect(await screen.findByText('Chưa giao đợt nào')).toBeInTheDocument();
   });
 
-  it('390 px: dòng chỉ có nút "Giao bổ sung…" + menu ⋯ chứa "Hủy nợ…" và "Lịch sử giao"; chọn "Hủy nợ…" mở hộp hủy nợ', async () => {
+  it('390 px: dòng chỉ có nút "Giao bổ sung" + menu ⋯ chứa "Hủy nợ" và "Lịch sử giao"; chọn "Hủy nợ" mở hộp hủy nợ', async () => {
     stubBacklog([PEN_DUC]);
     mockViewport(390);
     renderApp(makeMe('admin'), '/admin/backlog');
     const more = await screen.findByRole('button', { name: 'Thao tác khác Bút bi xanh — Phạm Văn Đức' });
-    expect(screen.getByRole('button', { name: 'Giao bổ sung…' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Hủy nợ…' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Giao bổ sung' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Hủy nợ' })).toBeNull();
     expect(screen.queryByRole('button', { name: /^Lịch sử giao/ })).toBeNull();
     await userEvent.click(more);
     expect(screen.getByRole('menuitem', { name: 'Lịch sử giao' })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Hủy nợ…' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Hủy nợ' }));
     expect(await screen.findByRole('dialog', { name: /^Hủy 3 cây còn lại của Phạm Văn Đức/ })).toBeInTheDocument();
   });
 });

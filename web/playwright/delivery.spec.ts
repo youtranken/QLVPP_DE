@@ -114,7 +114,7 @@ test.describe('E9-S3 Giao hàng (kỳ trước đã khóa, dev-identity admin)',
 
       await page.goto('/admin/backlog?by=person');
       await expect(page.getByRole('rowheader', { name: new RegExp(seed.name) })).toBeVisible();
-      const owed = (name: string) => page.getByRole('row').filter({ hasText: name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung…' }) });
+      const owed = (name: string) => page.getByRole('row').filter({ hasText: name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
       await expect(owed(a.name).getByText('còn 2 cái')).toBeVisible();
       await expect(owed(b.name).getByText('còn 2 cái')).toBeVisible();
 

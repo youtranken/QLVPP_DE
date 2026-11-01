@@ -231,7 +231,7 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
     const clip = facts('Kẹp giấy 33 mm', 'hop');
     const f = stubAdjust({ review: () => jsonResponse(200, reviewResult('converted', { id: 'l-tape', item_id: 'i-clip', item: clip })) });
     const { drawer } = await renderDrawer();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm vào danh mục… — Băng keo 2 mặt' }));
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm vào danh mục — Băng keo 2 mặt' }));
     const dialog = screen.getByRole('dialog', { name: 'Thêm “Băng keo 2 mặt” vào danh mục' });
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
     await userEvent.click(await within(dialog).findByRole('button', { name: /Kẹp giấy 33 mm/ }));

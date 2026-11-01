@@ -48,7 +48,7 @@ describe('ReviewPage — xử lý dòng', () => {
     mockViewport(1280);
     stub(() => jsonResponse(400, { code: 'REASON_REQUIRED' }));
     renderApp(makeMe('admin'), '/admin/review');
-    await open('Băng keo 2 mặt', /^Từ chối… —/);
+    await open('Băng keo 2 mặt', /^Từ chối —/);
     const dialog = screen.getByRole('dialog');
     await userEvent.type(within(dialog).getByLabelText(/^Lý do từ chối/), 'abc');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
@@ -60,7 +60,7 @@ describe('ReviewPage — xử lý dòng', () => {
     mockViewport(1280);
     stub(() => jsonResponse(200, reviewResult('rejected', { review_note: 'Kho còn' })));
     renderApp(makeMe('admin'), '/admin/review');
-    const a = await open('Băng keo 2 mặt', /^Từ chối… —/);
+    const a = await open('Băng keo 2 mặt', /^Từ chối —/);
     const dialog = screen.getByRole('dialog');
     await userEvent.type(within(dialog).getByLabelText(/^Lý do từ chối/), 'Kho còn');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
@@ -106,7 +106,7 @@ describe('ReviewPage — xử lý dòng', () => {
     mockViewport(1280);
     stub(() => jsonResponse(500, {}));
     renderApp(makeMe('admin'), '/admin/review');
-    await open('Băng keo 2 mặt', /^Từ chối… —/);
+    await open('Băng keo 2 mặt', /^Từ chối —/);
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByLabelText(/^Lý do từ chối/)).toHaveAttribute('aria-required', 'true');
     expect(dialog).toHaveTextContent('Lý do từ chối *');
@@ -144,7 +144,7 @@ describe('ReviewPage — xử lý dòng', () => {
 
 describe('ReviewPage — Thêm vào danh mục', () => {
   async function openConvert(name = 'Băng keo 2 mặt') {
-    await open(name, /^Thêm vào danh mục… —/);
+    await open(name, /^Thêm vào danh mục —/);
     const dialog = screen.getByRole('dialog');
     await within(dialog).findByRole('radio', { name: 'Văn phòng' });
     return dialog;

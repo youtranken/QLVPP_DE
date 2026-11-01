@@ -46,8 +46,8 @@ const review: Messages<typeof vi> = {
     actions: {
       label: 'Handle {{name}}',
       accept: 'Accept',
-      convert: 'Add to catalog…',
-      reject: 'Reject…',
+      convert: 'Add to catalog',
+      reject: 'Reject',
       named: '{{action}} — {{name}}',
       unitMismatch: 'The catalog item uses a different unit than the original line — check quantity {{qty}}.',
     },

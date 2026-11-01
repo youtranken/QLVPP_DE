@@ -43,8 +43,8 @@ const review = {
     actions: {
       label: 'Xử lý {{name}}',
       accept: 'Chấp nhận',
-      convert: 'Thêm vào danh mục…',
-      reject: 'Từ chối…',
+      convert: 'Thêm vào danh mục',
+      reject: 'Từ chối',
       named: '{{action}} — {{name}}',
       unitMismatch: 'ĐVT của món trong danh mục khác dòng gốc — kiểm lại số lượng {{qty}}.',
     },

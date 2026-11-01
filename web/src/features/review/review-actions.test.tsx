@@ -43,13 +43,13 @@ const block = () => screen.getByRole('group', { name: 'Xử lý Băng keo 2 mặ
 afterEach(() => vi.unstubAllGlobals());
 
 describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
-  it('ba nút: Chấp nhận, Thêm vào danh mục…, Từ chối…', () => {
+  it('ba nút: Chấp nhận, Thêm vào danh mục, Từ chối', () => {
     stub(() => jsonResponse(500, {}));
     renderActions();
     expect(within(block()).getAllByRole('button').map((b) => b.textContent)).toEqual([
       'Chấp nhận',
-      'Thêm vào danh mục…',
-      'Từ chối…',
+      'Thêm vào danh mục',
+      'Từ chối',
     ]);
   });
 
@@ -58,8 +58,8 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
     renderActions();
     expect(within(block()).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual([
       'Chấp nhận — Băng keo 2 mặt',
-      'Thêm vào danh mục… — Băng keo 2 mặt',
-      'Từ chối… — Băng keo 2 mặt',
+      'Thêm vào danh mục — Băng keo 2 mặt',
+      'Từ chối — Băng keo 2 mặt',
     ]);
   });
 
@@ -77,14 +77,14 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
     expect(JSON.parse(String(call[1]?.body))).toEqual({ action: 'accept' });
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.getByText('Đã chấp nhận')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Từ chối…/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Từ chối/ })).toBeNull();
   });
 
-  it('Từ chối…: lý do trống (hoặc < 3 ký tự) → nút Từ chối vô hiệu; nhập lý do → gửi note, nhãn "Từ chối: <lý do>"', async () => {
+  it('Từ chối: lý do trống (hoặc < 3 ký tự) → nút Từ chối vô hiệu; nhập lý do → gửi note, nhãn "Từ chối: <lý do>"', async () => {
     const result = reviewResult('rejected', { review_note: 'Đã có trong kho' });
     const fetchMock = stub(() => jsonResponse(200, result));
     const { onDone } = renderActions();
-    await userEvent.click(screen.getByRole('button', { name: 'Từ chối… — Băng keo 2 mặt' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Từ chối — Băng keo 2 mặt' }));
     const dialog = screen.getByRole('dialog', { name: 'Từ chối “Băng keo 2 mặt”' });
     const submit = within(dialog).getByRole('button', { name: 'Từ chối' });
     expect(submit).toBeDisabled();
@@ -103,7 +103,7 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
   it('REASON_REQUIRED từ server → lỗi gắn vào ô lý do, hộp vẫn mở', async () => {
     stub(() => jsonResponse(400, { code: 'REASON_REQUIRED' }));
     const { onDone } = renderActions();
-    await userEvent.click(screen.getByRole('button', { name: 'Từ chối… — Băng keo 2 mặt' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Từ chối — Băng keo 2 mặt' }));
     const dialog = screen.getByRole('dialog', { name: 'Từ chối “Băng keo 2 mặt”' });
     await userEvent.type(within(dialog).getByLabelText(/^Lý do từ chối/), 'abc');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
