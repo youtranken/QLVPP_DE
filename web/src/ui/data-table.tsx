@@ -47,6 +47,7 @@ interface DataTableProps<T> {
   busy?: boolean;
   collapsed?: ReadonlySet<string>;
   onCollapsedChange?: (next: ReadonlySet<string>) => void;
+  expandedRow?: (row: T) => ReactNode;
 }
 
 export function DataTable<T>({
@@ -71,6 +72,7 @@ export function DataTable<T>({
   busy,
   collapsed: controlledCollapsed,
   onCollapsedChange,
+  expandedRow,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
   const [internalCollapsed, setInternalCollapsed] = useState<ReadonlySet<string>>(new Set());
@@ -109,16 +111,25 @@ export function DataTable<T>({
     else next.add(key);
     setCollapsed(next);
   };
-  const bodyRow = (row: Row<T>) => (
-    <BodyRow
-      key={row.id}
-      row={row}
-      active={row.id === activeRowId}
-      selection={selection}
-      onRowClick={onRowClick}
-      className={rowClassName?.(row.original)}
-    />
-  );
+  const bodyRow = (row: Row<T>) => {
+    const extra = expandedRow?.(row.original);
+    return (
+      <Fragment key={row.id}>
+        <BodyRow
+          row={row}
+          active={row.id === activeRowId}
+          selection={selection}
+          onRowClick={onRowClick}
+          className={rowClassName?.(row.original)}
+        />
+        {extra != null && (
+          <tr className="dt-expanded">
+            <td colSpan={colSpan}>{extra}</td>
+          </tr>
+        )}
+      </Fragment>
+    );
+  };
 
   return (
     <>

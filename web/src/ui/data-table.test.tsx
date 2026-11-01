@@ -160,4 +160,16 @@ describe('DataTable', () => {
     rerender(<DataTable data={DATA} columns={COLUMNS} emptyText="Trống" />);
     expect(screen.getByRole('table')).not.toHaveAttribute('aria-busy');
   });
+
+  it('expandedRow trả nội dung → một hàng chiếm đủ cột ngay dưới hàng đó; trả null thì không thêm hàng', () => {
+    renderWithI18n(
+      <DataTable data={DATA} columns={COLUMNS} emptyText="Trống" expandedRow={(r) => (r.name === 'apple' ? <p>Chi tiết apple</p> : null)} />,
+    );
+    const rows = screen.getAllByRole('row').slice(1);
+    expect(rows).toHaveLength(4);
+    const cell = within(rows[2]).getByRole('cell');
+    expect(cell).toHaveAttribute('colspan', '3');
+    expect(cell).toHaveTextContent('Chi tiết apple');
+    expect(within(rows[1]).getAllByRole('cell')[0]).toHaveTextContent('apple');
+  });
 });
