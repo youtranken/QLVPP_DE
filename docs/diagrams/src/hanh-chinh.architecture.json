@@ -1,0 +1,562 @@
+{
+ "schema_version": 1,
+ "diagram_type": "architecture",
+ "meta": {
+  "title": "VPP — giao diện Hành chính: shell, trang, module api",
+  "output": "docs/diagrams/vpp-hanh-chinh.html",
+  "locale": "vi",
+  "quality_profile": "showcase",
+  "repository": {
+   "url": "https://github.com/youtranken/QLVPP_DE.git",
+   "provider": "github",
+   "link_mode": "local-only",
+   "revision": "d839a80c790889770910dcd7b3b21d319da66dd7"
+  }
+ },
+ "components": [
+  {
+   "id": "admin",
+   "type": "external",
+   "label": "Hành chính",
+   "sublabel": "vai admin · sa",
+   "pos": [
+    40,
+    300
+   ],
+   "size": [
+    130,
+    64
+   ],
+   "sources": [
+    {
+     "path": "web/src/lib/me.ts",
+     "line": 3,
+     "end_line": 32,
+     "label": "Role, isAdminRole"
+    }
+   ]
+  },
+  {
+   "id": "guard",
+   "type": "security",
+   "label": "RequireRole",
+   "sublabel": "admin, sa → /admin",
+   "pos": [
+    230,
+    300
+   ],
+   "size": [
+    150,
+    64
+   ],
+   "tag": "khác → /",
+   "sources": [
+    {
+     "path": "web/src/shell/require-role.tsx",
+     "line": 5,
+     "end_line": 16
+    },
+    {
+     "path": "web/src/shell/app-routes.tsx",
+     "line": 55,
+     "end_line": 62
+    }
+   ]
+  },
+  {
+   "id": "shell",
+   "type": "frontend",
+   "label": "AdminShell",
+   "sublabel": "Toast · IconSprite · Outlet",
+   "pos": [
+    450,
+    296
+   ],
+   "size": [
+    170,
+    72
+   ],
+   "sources": [
+    {
+     "path": "web/src/shell/admin-shell.tsx",
+     "line": 12,
+     "end_line": 36
+    }
+   ]
+  },
+  {
+   "id": "sidebar",
+   "type": "frontend",
+   "label": "AdminSidebar ≥ 768",
+   "sublabel": "3 nhóm · 12 mục · thẻ kỳ · đếm",
+   "pos": [
+    450,
+    120
+   ],
+   "size": [
+    190,
+    64
+   ],
+   "sources": [
+    {
+     "path": "web/src/shell/admin-sidebar.tsx",
+     "line": 32,
+     "end_line": 67
+    },
+    {
+     "path": "web/src/shell/admin-nav.ts",
+     "line": 17,
+     "end_line": 45
+    },
+    {
+     "path": "web/src/shell/use-admin-badges.ts",
+     "line": 16,
+     "end_line": 27
+    }
+   ]
+  },
+  {
+   "id": "topbar",
+   "type": "frontend",
+   "label": "AdminTopbar < 768",
+   "sublabel": "Mở menu → AdminMenuSheet",
+   "pos": [
+    450,
+    480
+   ],
+   "size": [
+    190,
+    64
+   ],
+   "sources": [
+    {
+     "path": "web/src/shell/admin-topbar.tsx",
+     "line": 25,
+     "end_line": 73
+    },
+    {
+     "path": "web/src/shell/admin-menu-sheet.tsx",
+     "line": 6,
+     "end_line": 34
+    }
+   ]
+  },
+  {
+   "id": "monthly",
+   "type": "frontend",
+   "label": "Hằng tháng · 5 trang",
+   "sublabel": "summary review delivery backlog reports",
+   "pos": [
+    700,
+    214
+   ],
+   "size": [
+    240,
+    72
+   ],
+   "sources": [
+    {
+     "path": "web/src/shell/app-routes.tsx",
+     "line": 64,
+     "end_line": 68
+    },
+    {
+     "path": "web/src/features/summary/summary.api.ts",
+     "line": 51,
+     "end_line": 137
+    },
+    {
+     "path": "web/src/features/delivery/delivery.api.ts",
+     "line": 40,
+     "end_line": 43
+    }
+   ]
+  },
+  {
+   "id": "stockpages",
+   "type": "frontend",
+   "label": "Kho & danh mục · 4 trang",
+   "sublabel": "stock catalog categories units",
+   "pos": [
+    700,
+    428
+   ],
+   "size": [
+    240,
+    64
+   ],
+   "sources": [
+    {
+     "path": "web/src/shell/app-routes.tsx",
+     "line": 69,
+     "end_line": 72
+    },
+    {
+     "path": "web/src/features/stock/stock.api.ts",
+     "line": 40,
+     "end_line": 75
+    }
+   ]
+  },
+  {
+   "id": "syspages",
+   "type": "frontend",
+   "label": "Hệ thống · 3 trang",
+   "sublabel": "users audit config",
+   "pos": [
+    700,
+    548
+   ],
+   "size": [
+    240,
+    64
+   ],
+   "sources": [
+    {
+     "path": "web/src/shell/app-routes.tsx",
+     "line": 73,
+     "end_line": 75
+    },
+    {
+     "path": "web/src/features/admin/admin.api.ts",
+     "line": 63,
+     "end_line": 71
+    },
+    {
+     "path": "web/src/features/directory/directory.api.ts",
+     "line": 30,
+     "end_line": 76
+    }
+   ]
+  },
+  {
+   "id": "requests",
+   "type": "backend",
+   "label": "requests",
+   "sublabel": "admin/periods · review · admin/requests",
+   "pos": [
+    1030,
+    100
+   ],
+   "size": [
+    220,
+    64
+   ],
+   "sources": [
+    {
+     "path": "api/src/modules/requests/admin-summary.controller.ts",
+     "line": 17,
+     "end_line": 42
+    },
+    {
+     "path": "api/src/modules/requests/review.controller.ts",
+     "line": 23,
+     "end_line": 39
+    },
+    {
+     "path": "api/src/modules/requests/admin-requests.controller.ts",
+     "line": 14,
+     "end_line": 30
+    }
+   ]
+  },
+  {
+   "id": "delivery",
+   "type": "backend",
+   "label": "delivery",
+   "sublabel": "lines/:id/deliver · deliver-all · backlog",
+   "pos": [
+    1030,
+    218
+   ],
+   "size": [
+    220,
+    64
+   ],
+   "sources": [
+    {
+     "path": "api/src/modules/delivery/delivery.controller.ts",
+     "line": 21,
+     "end_line": 48
+    },
+    {
+     "path": "api/src/modules/delivery/backlog.controller.ts",
+     "line": 12,
+     "end_line": 21
+    }
+   ]
+  },
+  {
+   "id": "reports",
+   "type": "backend",
+   "label": "reports",
+   "sublabel": "báo cáo · snapshots · export.xlsx",
+   "pos": [
+    1030,
+    322
+   ],
+   "size": [
+    220,
+    64
+   ],
+   "sources": [
+    {
+     "path": "api/src/modules/reports/reports.controller.ts",
+     "line": 15,
+     "end_line": 19
+    },
+    {
+     "path": "api/src/modules/reports/snapshots.controller.ts",
+     "line": 35,
+     "end_line": 66
+    }
+   ]
+  },
+  {
+   "id": "catalog",
+   "type": "backend",
+   "label": "catalog · units",
+   "sublabel": "items · item-categories · stock · units",
+   "pos": [
+    1030,
+    428
+   ],
+   "size": [
+    220,
+    64
+   ],
+   "sources": [
+    {
+     "path": "api/src/modules/catalog/items-admin.controller.ts",
+     "line": 1,
+     "end_line": 52
+    },
+    {
+     "path": "api/src/modules/catalog/stock.controller.ts",
+     "line": 19,
+     "end_line": 51
+    },
+    {
+     "path": "api/src/modules/units/units-admin.controller.ts",
+     "line": 1,
+     "end_line": 46
+    }
+   ]
+  },
+  {
+   "id": "system",
+   "type": "backend",
+   "label": "users · audit · config",
+   "sublabel": "admin/users · directory/sync · audit",
+   "pos": [
+    1030,
+    548
+   ],
+   "size": [
+    220,
+    64
+   ],
+   "sources": [
+    {
+     "path": "api/src/modules/users/users-admin.controller.ts",
+     "line": 1,
+     "end_line": 60
+    },
+    {
+     "path": "api/src/modules/audit/audit.controller.ts",
+     "line": 1,
+     "end_line": 92
+    },
+    {
+     "path": "api/src/modules/config/config.controller.ts",
+     "line": 1,
+     "end_line": 34
+    }
+   ]
+  },
+  {
+   "id": "pg",
+   "type": "database",
+   "label": "Postgres",
+   "sublabel": "requests · request_lines · items",
+   "pos": [
+    1380,
+    100
+   ],
+   "size": [
+    170,
+    512
+   ],
+   "sources": [
+    {
+     "path": "docker-compose.yml",
+     "line": 51,
+     "end_line": 55
+    }
+   ]
+  }
+ ],
+ "boundaries": [
+  {
+   "kind": "region",
+   "label": "web · React SPA",
+   "wraps": [
+    "guard",
+    "shell",
+    "sidebar",
+    "topbar",
+    "monthly",
+    "stockpages",
+    "syspages"
+   ],
+   "pad": 22
+  },
+  {
+   "kind": "region",
+   "label": "api · NestJS (RolesGuard admin, sa)",
+   "wraps": [
+    "requests",
+    "delivery",
+    "reports",
+    "catalog",
+    "system"
+   ],
+   "pad": 22
+  }
+ ],
+ "connections": [
+  {
+   "id": "open-admin",
+   "from": "admin",
+   "to": "guard",
+   "label": "/admin/*",
+   "variant": "emphasis"
+  },
+  {
+   "id": "guard-shell",
+   "from": "guard",
+   "to": "shell",
+   "label": "vai hợp lệ",
+   "variant": "emphasis"
+  },
+  {
+   "id": "shell-side",
+   "from": "shell",
+   "to": "sidebar",
+   "label": "≥ 768 px"
+  },
+  {
+   "id": "shell-top",
+   "from": "shell",
+   "to": "topbar",
+   "label": "< 768 px"
+  },
+  {
+   "id": "shell-monthly",
+   "from": "shell",
+   "to": "monthly",
+   "label": "Outlet",
+   "variant": "emphasis"
+  },
+  {
+   "id": "shell-stock",
+   "from": "shell",
+   "to": "stockpages",
+   "label": "Outlet"
+  },
+  {
+   "id": "shell-sys",
+   "from": "shell",
+   "to": "syspages",
+   "label": "Outlet"
+  },
+  {
+   "id": "m-req",
+   "from": "monthly",
+   "to": "requests",
+   "label": "tổng hợp · duyệt"
+  },
+  {
+   "id": "m-del",
+   "from": "monthly",
+   "to": "delivery",
+   "label": "giao · còn nợ",
+   "variant": "emphasis"
+  },
+  {
+   "id": "m-rep",
+   "from": "monthly",
+   "to": "reports",
+   "label": "bản chốt · xlsx"
+  },
+  {
+   "id": "s-cat",
+   "from": "stockpages",
+   "to": "catalog",
+   "label": "món · kho"
+  },
+  {
+   "id": "y-sys",
+   "from": "syspages",
+   "to": "system",
+   "label": "danh bạ · nhật ký"
+  },
+  {
+   "id": "req-pg",
+   "from": "requests",
+   "to": "pg",
+   "label": "SQL"
+  },
+  {
+   "id": "del-pg",
+   "from": "delivery",
+   "to": "pg",
+   "label": "FOR UPDATE"
+  },
+  {
+   "id": "rep-pg",
+   "from": "reports",
+   "to": "pg",
+   "label": "report_snapshots"
+  },
+  {
+   "id": "cat-pg",
+   "from": "catalog",
+   "to": "pg",
+   "label": "stock_qty"
+  },
+  {
+   "id": "sys-pg",
+   "from": "system",
+   "to": "pg",
+   "label": "audit_log"
+  }
+ ],
+ "cards": [
+  {
+   "dot": "cyan",
+   "title": "Shell",
+   "items": [
+    "ADMIN_NAV một nguồn cho sidebar, menu sheet và tiêu đề thanh trên",
+    "Đếm: review chờ, dòng chờ giao kỳ khóa gần nhất, món sắp hết (useAdminBadges)",
+    "Chuông NotificationBell ở hàng thương hiệu (≥ 768) hoặc thanh trên (< 768) → me/notifications"
+   ]
+  },
+  {
+   "dot": "amber",
+   "title": "Ngoài shell",
+   "items": [
+    "Bản in A4 /admin/reports/snapshots/:id/print qua RequireRole nhưng không bọc AdminShell",
+    "Nhân viên dùng MemberShell; RequireMember đẩy admin/sa về /admin"
+   ]
+  },
+  {
+   "dot": "rose",
+   "title": "Luật ở server",
+   "items": [
+    "RequireRole chỉ ẩn giao diện; quyền thật do RolesGuard của api",
+    "delivery trừ kho qua StockService (UPDATE … WHERE stock_qty >= q) trong cùng giao dịch"
+   ]
+  }
+ ]
+}

@@ -56,16 +56,16 @@ web/
     main.tsx  App.tsx
     lib/        api-client, session-relogin, me, i18n, period (hiển thị kỳ), format
     locales/    {vi,en}/<feature>.ts + index.ts
-    shell/      login-screen, member-shell (top nav), admin-shell (sidebar)
-    ui/         button, dialog, drawer, stepper, kpi-strip, data-table, load-state, confirm
+    shell/      login-screen, member-shell (top nav), admin-shell (sidebar ≥ 768 / topbar + menu sheet < 768), admin-nav (12 mục), require-role
+    ui/         dialog, drawer, stepper, data-table, load-state, confirm, toast, icon-sprite, page-header, stat-card, … (không biết nghiệp vụ)
     features/
       request/      member: trang đăng ký, lịch sử
       summary/      admin: tổng hợp kỳ, drawer điều chỉnh
       review/       admin: món ngoài danh mục
       delivery/     admin: giao hàng, còn nợ
       notifications/ chuông (notification-bell) ở cả hai shell
-      stock/  catalog/  reports/ (báo cáo, trang in)  admin/ (danh bạ, nhật ký, cấu hình)
-    css/        tokens.css (từ design-preview/final), member.css, admin.css, print.css
+      stock/  catalog/ (danh mục, nhóm món)  units/  reports/ (báo cáo, trang in)  directory/ (danh bạ, chọn người)  admin/ (nhật ký, cấu hình)  profile/
+    css/        tokens.css (từ design-preview/final), base.css, member.css, admin.css (lớp nền cũ còn dùng), tokens-m1.css + m1/*.css (Hành chính); CSS màn Hành chính ở features/<ten>/<ten>.m1.css
   nginx.conf  proxy-api-headers.conf  Dockerfile  playwright/
 ops/backup/   docker-compose.yml  .env.example  update-vpp.sh  docs/  design-preview/
 ```
@@ -259,7 +259,7 @@ Bấm Xuất/In: `POST admin/reports/:ym/snapshots {kind, order_qty: {key: n}}` 
 - Trạng thái kỳ: FE nhận `deadline` ISO từ server và tự đếm ngược; mọi hành động vẫn do server quyết. Giỏ theo dõi `dirty`; `beforeunload` khi có thay đổi; sau PUT thành công hiển thị `updated_at` của server.
 - Ảnh: nén bằng canvas trước `POST files` (≤ 1600 px, ≤ 1 MB, áp EXIF); dòng ngoài danh mục giữ `file_id` cục bộ để lưu lại được khi mất mạng giữa chừng.
 - i18n: `react-i18next`, locale lưu `localStorage`, tên món dùng `name_en` khi có.
-- Token CSS: Nhân viên dùng `web/src/css/tokens.css` (từ `design-preview/final/tokens.css`); Hành chính dùng M1/P3 "Navy & cát" `web/src/css/tokens-m1.css` (mã màu chỉ ở tệp này) + `css/m1/*.css`, mọi luật mở đầu `[data-shell='admin']` (`body[data-shell]` do shell đặt), nên trang Nhân viên không đổi. Shell Hành chính: sidebar 232 (≥ 1280), cột icon 72 (768–1279), thanh trên + menu (< 768); 403 `FORBIDDEN_ROLE` khi đang ở `/admin/*` → `NoPermission`. Spec: `docs/specs/2026-10-30-giao-dien-moi-hanh-chinh.md`.
+- Token CSS: Nhân viên dùng `web/src/css/tokens.css` (từ `design-preview/final/tokens.css`); Hành chính dùng M1/P3 "Navy & cát" `web/src/css/tokens-m1.css` (mã màu chỉ ở tệp này) + `css/m1/*.css`, mọi luật mở đầu `[data-shell='admin']` (`body[data-shell]` do shell đặt), nên trang Nhân viên không đổi. Shell Hành chính: sidebar 232 (≥ 1280), cột icon 72 (768–1279), thanh trên + menu sheet (< 768), mục menu một nguồn `shell/admin-nav.ts` (3 nhóm, 12 mục gồm Đơn vị tính), < 768 mọi nút có vùng chạm 44×44 thật; 403 `FORBIDDEN_ROLE` khi đang ở `/admin/*` → `NoPermission`. Spec: `docs/specs/2026-10-30-giao-dien-moi-hanh-chinh.md`.
 - Test: vitest cho stepper/giỏ/luật hiển thị; Playwright smoke chạy trên `docker compose` dev với `AUTH_DEV_MODE=true`.
 
 ## 12. Triển khai

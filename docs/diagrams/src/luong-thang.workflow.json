@@ -1,0 +1,415 @@
+{
+ "schema_version": 2,
+ "diagram_type": "workflow",
+ "meta": {
+  "title": "VPP — vòng tháng của Hành chính",
+  "output": "docs/diagrams/vpp-luong-thang.html",
+  "locale": "vi",
+  "quality_profile": "showcase",
+  "repository": {
+   "url": "https://github.com/youtranken/QLVPP_DE.git",
+   "provider": "github",
+   "link_mode": "local-only",
+   "revision": "d839a80c790889770910dcd7b3b21d319da66dd7"
+  },
+  "legend": {
+   "entries": {
+    "frontend": {
+     "label": "Màn người dùng"
+    },
+    "backend": {
+     "label": "Nghiệp vụ api"
+    },
+    "security": {
+     "label": "Luật kỳ"
+    },
+    "messagebus": {
+     "label": "Thông báo"
+    },
+    "database": {
+     "label": "Kho (items)"
+    }
+   }
+  }
+ },
+ "lanes": [
+  {
+   "id": "member",
+   "label": "Nhân viên"
+  },
+  {
+   "id": "system",
+   "label": "Kỳ · cron",
+   "variant": "exception"
+  },
+  {
+   "id": "admin",
+   "label": "Hành chính"
+  },
+  {
+   "id": "stock",
+   "label": "Kho (items)"
+  }
+ ],
+ "phases": [
+  {
+   "id": "p-open",
+   "label": "Kỳ mở",
+   "fromCol": 0,
+   "toCol": 0
+  },
+  {
+   "id": "p-lock",
+   "label": "Khóa · tổng hợp",
+   "fromCol": 1,
+   "toCol": 2,
+   "variant": "emphasis"
+  },
+  {
+   "id": "p-del",
+   "label": "Giao · còn nợ",
+   "fromCol": 3,
+   "toCol": 4
+  },
+  {
+   "id": "p-rep",
+   "label": "Báo cáo · mua",
+   "fromCol": 5,
+   "toCol": 5,
+   "variant": "dashed"
+  }
+ ],
+ "mainPath": [
+  "register",
+  "lock",
+  "summary",
+  "review",
+  "deliver",
+  "backlog",
+  "report"
+ ],
+ "nodes": [
+  {
+   "id": "register",
+   "lane": "member",
+   "col": 0,
+   "type": "frontend",
+   "label": "Đăng ký phiếu",
+   "sublabel": "PUT me/request/lines",
+   "tag": "ngày 1 → lastDay",
+   "sources": [
+    {
+     "path": "api/src/modules/requests/me-request.controller.ts",
+     "line": 46,
+     "end_line": 52
+    },
+    {
+     "path": "api/src/modules/requests/request-lines.writer.ts",
+     "line": 171,
+     "end_line": 177
+    }
+   ]
+  },
+  {
+   "id": "lockerr",
+   "lane": "system",
+   "col": 0,
+   "type": "security",
+   "label": "PERIOD_LOCKED",
+   "sublabel": "lưu kỳ đã qua hạn",
+   "sources": [
+    {
+     "path": "api/src/modules/requests/request-errors.ts",
+     "line": 44,
+     "end_line": 48
+    },
+    {
+     "path": "api/src/modules/requests/request-lines.writer.ts",
+     "line": 171,
+     "end_line": 177
+    }
+   ]
+  },
+  {
+   "id": "lock",
+   "lane": "system",
+   "col": 1,
+   "type": "security",
+   "label": "Khóa kỳ",
+   "sublabel": "now ≥ deadline 00:00 lastDay+1",
+   "tag": "cron :05 báo Hành chính",
+   "sources": [
+    {
+     "path": "api/src/common/period.ts",
+     "line": 44,
+     "end_line": 54
+    },
+    {
+     "path": "api/src/modules/reminders/notification-scheduler.ts",
+     "line": 119,
+     "end_line": 139
+    }
+   ]
+  },
+  {
+   "id": "summary",
+   "lane": "admin",
+   "col": 1,
+   "type": "frontend",
+   "label": "Tổng hợp kỳ",
+   "sublabel": "summary · sửa hộ có lý do",
+   "sources": [
+    {
+     "path": "api/src/modules/requests/admin-summary.controller.ts",
+     "line": 17,
+     "end_line": 42
+    },
+    {
+     "path": "api/src/modules/requests/request-lines.writer.ts",
+     "line": 179,
+     "end_line": 187
+    }
+   ]
+  },
+  {
+   "id": "review",
+   "lane": "admin",
+   "col": 2,
+   "type": "frontend",
+   "label": "Duyệt món Khác",
+   "sublabel": "accept · convert · reject",
+   "sources": [
+    {
+     "path": "api/src/modules/requests/review.controller.ts",
+     "line": 23,
+     "end_line": 39
+    },
+    {
+     "path": "api/src/modules/requests/review.service.ts",
+     "line": 107,
+     "end_line": 135
+    }
+   ]
+  },
+  {
+   "id": "deliver",
+   "lane": "admin",
+   "col": 3,
+   "type": "backend",
+   "label": "Giao hàng",
+   "sublabel": "deliver · deliver-all",
+   "tag": "PERIOD_NOT_LOCKED trước hạn",
+   "sources": [
+    {
+     "path": "api/src/modules/delivery/delivery.controller.ts",
+     "line": 21,
+     "end_line": 38
+    },
+    {
+     "path": "api/src/modules/delivery/delivery.service.ts",
+     "line": 36,
+     "end_line": 55
+    },
+    {
+     "path": "api/src/modules/delivery/delivery.service.ts",
+     "line": 139,
+     "end_line": 142
+    }
+   ]
+  },
+  {
+   "id": "backlog",
+   "lane": "admin",
+   "col": 4,
+   "type": "backend",
+   "label": "Còn nợ",
+   "sublabel": "giao bổ sung · hủy nợ",
+   "sources": [
+    {
+     "path": "api/src/modules/delivery/backlog.service.ts",
+     "line": 54,
+     "end_line": 73
+    },
+    {
+     "path": "api/src/modules/delivery/delivery.controller.ts",
+     "line": 40,
+     "end_line": 48
+    }
+   ]
+  },
+  {
+   "id": "report",
+   "lane": "admin",
+   "col": 5,
+   "type": "backend",
+   "label": "Báo cáo · bản chốt",
+   "sublabel": "in A4 · export.xlsx",
+   "tag": "cần = SL + nợ − tồn",
+   "sources": [
+    {
+     "path": "api/src/modules/reports/snapshots.controller.ts",
+     "line": 35,
+     "end_line": 66
+    },
+    {
+     "path": "api/src/modules/reports/report-need.ts",
+     "line": 1,
+     "end_line": 8
+    }
+   ]
+  },
+  {
+   "id": "bell",
+   "lane": "member",
+   "col": 4,
+   "type": "messagebus",
+   "label": "Chuông giao đủ",
+   "sublabel": "request_complete",
+   "sources": [
+    {
+     "path": "api/src/modules/delivery/delivery.service.ts",
+     "line": 121,
+     "end_line": 136
+    }
+   ]
+  },
+  {
+   "id": "take",
+   "lane": "stock",
+   "col": 3,
+   "type": "database",
+   "label": "Trừ kho",
+   "sublabel": "WHERE stock_qty >= q",
+   "sources": [
+    {
+     "path": "api/src/modules/catalog/stock.service.ts",
+     "line": 134,
+     "end_line": 156
+    }
+   ]
+  },
+  {
+   "id": "restock",
+   "lane": "stock",
+   "col": 5,
+   "type": "database",
+   "label": "Nhập kho · xuất lẻ",
+   "sublabel": "admin/items/:id/stock",
+   "sources": [
+    {
+     "path": "api/src/modules/catalog/stock.controller.ts",
+     "line": 19,
+     "end_line": 37
+    },
+    {
+     "path": "api/src/modules/catalog/stock.service.ts",
+     "line": 64,
+     "end_line": 124
+    }
+   ]
+  }
+ ],
+ "edges": [
+  {
+   "id": "e1",
+   "from": "register",
+   "to": "lock",
+   "label": "hết hạn",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e1b",
+   "from": "register",
+   "to": "lockerr",
+   "label": "lưu sau hạn",
+   "variant": "security",
+   "role": "error"
+  },
+  {
+   "id": "e2",
+   "from": "lock",
+   "to": "summary",
+   "label": "kỳ đã khóa",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e3",
+   "from": "summary",
+   "to": "review",
+   "label": "dòng Khác chờ",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e4",
+   "from": "review",
+   "to": "deliver",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e5",
+   "from": "deliver",
+   "to": "take",
+   "label": "cùng giao dịch",
+   "role": "branch"
+  },
+  {
+   "id": "e6",
+   "from": "deliver",
+   "to": "bell",
+   "label": "giao đủ",
+   "variant": "dashed",
+   "role": "async"
+  },
+  {
+   "id": "e7",
+   "from": "deliver",
+   "to": "backlog",
+   "label": "thiếu kho",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e8",
+   "from": "backlog",
+   "to": "report",
+   "label": "nợ vào cần mua",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e9",
+   "from": "report",
+   "to": "restock",
+   "label": "mua về",
+   "variant": "dashed",
+   "role": "branch"
+  }
+ ],
+ "cards": [
+  {
+   "dot": "amber",
+   "title": "Mốc kỳ (ClockService)",
+   "items": [
+    "periodFor: ngày ≤ lastDay thuộc kỳ tháng này, sau đó sang kỳ tháng sau",
+    "deadline = 00:00 ngày lastDay+1 giờ VN; Nhân viên lưu kỳ cũ → PERIOD_LOCKED",
+    "Hành chính sửa phiếu kỳ khóa phải có lý do, không tạo phiếu mới"
+   ]
+  },
+  {
+   "dot": "emerald",
+   "title": "Giao và kho",
+   "items": [
+    "Giao chỉ khi kỳ đã khóa; expected_delivered_qty chống bấm đúp (STALE)",
+    "Trừ kho UPDATE có điều kiện + stock_movements trong cùng giao dịch",
+    "Phần chưa giao của kỳ đã khóa hiện ở Còn nợ tới khi giao bổ sung hoặc hủy"
+   ]
+  },
+  {
+   "dot": "cyan",
+   "title": "Báo cáo",
+   "items": [
+    "Bản chốt report_snapshots giữ số liệu lúc chốt; in A4 và Excel đọc từ bản chốt",
+    "Số cần mua (BR-15) = max(0, SL đăng ký + nợ kỳ trước − tồn)",
+    "Nhập kho theo hàng mua về là thao tác tay ở trang Kho"
+   ]
+  }
+ ]
+}
