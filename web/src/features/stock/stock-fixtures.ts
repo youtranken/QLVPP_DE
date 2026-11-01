@@ -32,7 +32,7 @@ export const CATEGORIES: Category[] = [
 
 export const LOW = item({ id: 'i-1', name: 'Giấy A4', unit: 'ram', stock_qty: 6, stock_state: 'low' });
 export const OUT = item({ id: 'i-4', name: 'Kẹp giấy', category_id: 'c-2', stock_qty: 0, stock_state: 'out' });
-export const NEVER = item({ id: 'i-5', name: 'Ghim bấm', category_id: 'c-2', stock_qty: 0, restock_level: null, stock_state: 'untracked' });
+export const NEVER = item({ id: 'i-5', name: 'Ghim bấm', category_id: 'c-2', stock_qty: 5, restock_level: null, stock_state: 'untracked' });
 export const OK = item({ id: 'i-2', name: 'Bút bi xanh', category_id: 'c-2' });
 export const ITEMS = [LOW, OK, item({ id: 'i-3', name: 'Bút xóa cũ', active: false }), OUT, NEVER];
 

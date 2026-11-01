@@ -205,7 +205,7 @@ describe('catalog: nhóm món, món', () => {
         admin_only: false,
         stock_qty: 0,
         restock_level: null,
-        stock_state: 'untracked',
+        stock_state: 'out',
         active: true,
       });
       // Mức tối thiểu nhập tay đã bỏ (FR-50): whitelist lọc khóa thừa

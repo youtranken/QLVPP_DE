@@ -9,11 +9,12 @@ export const ITEM_USABLE_SQL = sql.raw(
   '(items.active AND NOT EXISTS (SELECT 1 FROM item_categories c WHERE c.id = items.category_id AND NOT c.active))',
 );
 
+// Tồn 0 luôn là Hết hàng, kể cả món chưa có mốc nhập (quyết định 2026-11-01)
 export type StockState = 'ok' | 'low' | 'out' | 'untracked';
 
 export const ITEM_COLUMNS = sql.raw(
   `id, code, name, name_en, unit, pack_note, category_id, image_file_id, admin_only, max_qty, stock_qty, restock_level,
-   CASE WHEN restock_level IS NULL THEN 'untracked' WHEN stock_qty = 0 THEN 'out'
+   CASE WHEN stock_qty = 0 THEN 'out' WHEN restock_level IS NULL THEN 'untracked'
         WHEN ${LOW_STOCK_SQL} THEN 'low' ELSE 'ok' END AS stock_state,
    active, sort_order`,
 );

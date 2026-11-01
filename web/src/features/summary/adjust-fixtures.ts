@@ -16,7 +16,7 @@ export function adminItem(over: Partial<AdminItem>): AdminItem {
     max_qty: 20,
     stock_qty: 0,
     restock_level: null,
-    stock_state: 'untracked',
+    stock_state: 'out',
     active: true,
     usable: over.active ?? true,
     sort_order: 0,

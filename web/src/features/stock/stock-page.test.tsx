@@ -73,7 +73,7 @@ describe('StockPage', () => {
     expect(screen.getByTestId('location-search')).toHaveTextContent('');
   });
 
-  it('?filter=out chỉ còn món Hết hàng (không lấy món untracked tồn 0)', async () => {
+  it('?filter=out chỉ còn món Hết hàng (không lấy món untracked còn tồn)', async () => {
     await open('/admin/stock?filter=out', 'Kẹp giấy');
     expect(screen.getByText('Kẹp giấy')).toBeInTheDocument();
     expect(screen.queryByText('Ghim bấm')).toBeNull();
