@@ -111,6 +111,7 @@ export class CatalogService {
 
   // missing_image: món seed chưa có ảnh để admin biết cần bổ sung
   // Id được liệt kê vẫn trả dù ngừng/admin_only: để member xem lại dòng cũ trong phiếu của mình
+  // Xếp theo nhóm trước (cùng thứ tự chip nhóm) để trang Đăng ký không trộn món các nhóm
   async listFor(
     identity: RequestIdentity,
     includeIds: string[] = [],
@@ -125,7 +126,10 @@ export class CatalogService {
       WHERE ${privileged}
          OR (${ITEM_USABLE_SQL} AND NOT admin_only)
          OR id = ANY(${sql.param(includeIds)}::uuid[])
-      ORDER BY sort_order, lower(name)
+      ORDER BY
+        (SELECT c.sort_order FROM item_categories c WHERE c.id = items.category_id) NULLS LAST,
+        (SELECT lower(c.name) FROM item_categories c WHERE c.id = items.category_id) NULLS LAST,
+        items.sort_order, lower(items.name)
     `);
     return result.rows;
   }
