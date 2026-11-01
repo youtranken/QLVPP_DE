@@ -110,7 +110,7 @@ export function BulkMoveDialog({ count, categories, onSubmit, onClose }: {
           {t('catalog.bulk.moveTarget')}
           <span className="ff-req" aria-hidden="true"> *</span>
         </span>
-        <div role="radiogroup" aria-labelledby={`${uid}-label`} aria-describedby={error ? `${uid}-err` : undefined} className="ct-chips">
+        <div role="radiogroup" aria-labelledby={`${uid}-label`} aria-describedby={error ? `${uid}-err` : undefined} className="ct-chips ct-chips--wrap">
           {active.map((c) => {
             const tone = groupTone(categories, c.id);
             return (

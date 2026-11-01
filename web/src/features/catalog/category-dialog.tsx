@@ -3,11 +3,10 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { groupTone } from '@/lib/group-tone';
 import { useMe } from '@/lib/me';
-import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
+import { Dialog, DialogClose, DialogCloseButton, DialogTitle } from '@/ui/dialog';
 import { FormField } from '@/ui/form-field';
-import { Icon } from '@/ui/icon';
 import { useToast } from '@/ui/toast-context';
-import { createCategory, useRefreshCatalog, type Category } from './catalog.api';
+import { createCategory, patchCategory, useRefreshCatalog, type Category, type CategoryPayload } from './catalog.api';
 import { fieldErrors, type FieldErrors } from './catalog-errors';
 import { nextSortOrder } from '@/lib/local-order';
 
@@ -15,26 +14,53 @@ const NAME_MAX = 120;
 const ERROR_FIELD: Record<string, string> = { CATEGORY_EXISTS: 'name' };
 const NEW_ID = 'new';
 
-export function AddCategoryDialog({ categories, onClose }: { categories: Category[]; onClose: () => void }) {
+function changedFields(category: Category, body: { name: string; name_en: string | null }): CategoryPayload {
+  const out: CategoryPayload = {};
+  if (body.name !== category.name) out.name = body.name;
+  if (body.name_en !== category.name_en) out.name_en = body.name_en;
+  return out;
+}
+
+function NewPosition({ categories, sortOrder }: { categories: Category[]; sortOrder: number }) {
+  const { t } = useTranslation();
+  const tone = groupTone([...categories, { id: NEW_ID, name: '', sort_order: sortOrder }], NEW_ID);
+  return (
+    <p className="cg-new-tone">
+      <span className="ct-dot" style={{ background: `var(--${tone}-ink)` }} aria-hidden="true" />
+      {t('catalog.categories.newPosition', { k: categories.length + 1, tone: t(`catalog.tones.${tone}`) })}
+    </p>
+  );
+}
+
+export function CategoryDialog({ categories, category, onClose }: { categories: Category[]; category?: Category; onClose: () => void }) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const refresh = useRefreshCatalog();
   const toast = useToast();
-  const [name, setName] = useState('');
-  const [nameEn, setNameEn] = useState('');
+  const [name, setName] = useState(category?.name ?? '');
+  const [nameEn, setNameEn] = useState(category?.name_en ?? '');
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
   const sortOrder = nextSortOrder(categories);
-  const tone = groupTone([...categories, { id: NEW_ID, name: '', sort_order: sortOrder }], NEW_ID);
   const err = (k: string) => (errors[k] ? t(errors[k]) : undefined);
+  const dirty = name !== (category?.name ?? '') || nameEn !== (category?.name_en ?? '');
+
+  const save = async (body: { name: string; name_en: string | null }) => {
+    if (!category) {
+      await createCategory({ ...body, sort_order: sortOrder }, csrfToken);
+      return t('catalog.categories.added', { name: body.name });
+    }
+    const patch = changedFields(category, body);
+    if (Object.keys(patch).length > 0) await patchCategory(category.id, patch, csrfToken);
+    return t('catalog.categories.saved', { name: body.name });
+  };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    const body = { name: name.trim(), name_en: nameEn.trim() || null, sort_order: sortOrder };
     setSaving(true);
     try {
-      await createCategory(body, csrfToken);
-      toast.show({ text: t('catalog.categories.added', { name: body.name }), tone: 'ok' });
+      const text = await save({ name: name.trim(), name_en: nameEn.trim() || null });
+      toast.show({ text, tone: 'ok' });
       void refresh();
       onClose();
     } catch (error) {
@@ -43,16 +69,13 @@ export function AddCategoryDialog({ categories, onClose }: { categories: Categor
     }
   };
 
+  const title = t(category ? 'catalog.categories.editTitle' : 'catalog.categories.addTitle');
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()} dirty={name !== '' || nameEn !== ''} dismissible={!saving} className="sheet a-form" maxWidth={520}>
+    <Dialog open onOpenChange={(o) => !o && onClose()} dirty={dirty} dismissible={!saving} className="sheet a-form" maxWidth={520}>
       <form onSubmit={submit} noValidate>
         <div className="sheet-header">
-          <DialogTitle className="sheet-title">{t('catalog.categories.addTitle')}</DialogTitle>
-          <DialogClose asChild>
-            <button type="button" className="sheet-close" aria-label={t('common.close')} disabled={saving}>
-              <Icon name="x" />
-            </button>
-          </DialogClose>
+          <DialogTitle className="sheet-title">{title}</DialogTitle>
+          <DialogCloseButton disabled={saving} />
         </div>
         <div className="sheet-body">
           {errors.form && (
@@ -66,10 +89,7 @@ export function AddCategoryDialog({ categories, onClose }: { categories: Categor
           <FormField label={t('catalog.categories.nameEn')} error={err('name_en')}>
             {(p) => <input {...p} value={nameEn} maxLength={NAME_MAX} onChange={(e) => setNameEn(e.target.value)} />}
           </FormField>
-          <p className="cg-new-tone">
-            <span className="ct-dot" style={{ background: `var(--${tone}-ink)` }} aria-hidden="true" />
-            {t('catalog.categories.newPosition', { k: categories.length + 1, tone: t(`catalog.tones.${tone}`) })}
-          </p>
+          {!category && <NewPosition categories={categories} sortOrder={sortOrder} />}
         </div>
         <div className="sheet-footer">
           <DialogClose asChild>
@@ -78,7 +98,7 @@ export function AddCategoryDialog({ categories, onClose }: { categories: Categor
             </button>
           </DialogClose>
           <button type="submit" className="btn btn--primary" disabled={saving || name.trim() === ''}>
-            {saving ? t('catalog.form.saving') : t('catalog.categories.submitAdd')}
+            {saving ? t('catalog.form.saving') : t(category ? 'catalog.categories.submitEdit' : 'catalog.categories.submitAdd')}
           </button>
         </div>
       </form>

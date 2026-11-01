@@ -37,14 +37,14 @@ export function CategoryRadio({
       <span className="ff-label">{t('catalog.form.category')}</span>
       <div
         role="radiogroup"
-        className="ct-chips"
+        className="ct-chips ct-chips--wrap"
         aria-label={t('catalog.form.category')}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
         onKeyDown={onKeyDown}
       >
         {options.map((c, i) => (
-          <button key={c.id} type="button" role="radio" className="ct-chip" aria-checked={value === c.id} tabIndex={i === focusIndex ? 0 : -1} onClick={() => onChange(c.id)}>
+          <button key={c.id} type="button" role="radio" className="ct-chip" title={label(c)} aria-checked={value === c.id} tabIndex={i === focusIndex ? 0 : -1} onClick={() => onChange(c.id)}>
             <span className="ct-dot" style={{ background: `var(--${index.tone.get(c.id) ?? 'g0'}-ink)` }} aria-hidden="true" />
             {label(c)}
           </button>

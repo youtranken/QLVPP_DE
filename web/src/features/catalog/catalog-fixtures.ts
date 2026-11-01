@@ -22,6 +22,7 @@ export function adminItem(over: Partial<AdminItem> = {}): AdminItem {
     restock_level: 10,
     stock_state: 'ok',
     active: true,
+    usable: true,
     sort_order: 0,
     missing_image: false,
     ...over,

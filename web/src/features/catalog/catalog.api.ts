@@ -28,6 +28,8 @@ export interface AdminItem {
   restock_level: number | null;
   stock_state: StockState;
   active: boolean;
+  // active và nhóm (nếu có) đang dùng — server tính
+  usable: boolean;
   sort_order: number;
   missing_image: boolean;
 }

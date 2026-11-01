@@ -23,6 +23,7 @@ export function ItemCell({ row, error }: { row: CatalogRow; error?: string }) {
           {row.admin_only && <span className="tag tag--dark">{t('catalog.page.adminOnly')}</span>}
           {row.missing_image && <span className="tag tag--warn">{t('catalog.page.missingImage')}</span>}
           {!row.active && <span className="tag tag--outline">{t('catalog.list.inactive')}</span>}
+          {row.active && !row.usable && <span className="tag tag--warn">{t('catalog.list.groupPaused')}</span>}
         </span>
         {row.pack_note && <small className="ct-item__note">{row.pack_note}</small>}
         {error && (
@@ -31,6 +32,16 @@ export function ItemCell({ row, error }: { row: CatalogRow; error?: string }) {
           </span>
         )}
       </span>
+    </span>
+  );
+}
+
+export function CodeCell({ code }: { code: string | null }) {
+  const { t } = useTranslation();
+  if (!code) return <>{t('common.empty')}</>;
+  return (
+    <span className="ct-code__text" title={code}>
+      {code}
     </span>
   );
 }

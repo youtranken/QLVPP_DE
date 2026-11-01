@@ -3,54 +3,69 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
-import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
+import { Dialog, DialogClose, DialogCloseButton, DialogTitle } from '@/ui/dialog';
 import { FormField } from '@/ui/form-field';
-import { Icon } from '@/ui/icon';
 import { useToast } from '@/ui/toast-context';
 import { isFieldError, unitErrorKey } from './unit-errors';
 import { nextSortOrder } from '@/lib/local-order';
-import { createUnit, useRefreshUnits, type AdminUnit } from './units.api';
+import { createUnit, patchUnit, useRefreshUnits, type AdminUnit, type UnitPayload } from './units.api';
 
 const NAME_MAX = 40;
 
-export function AddUnitDialog({ units, onClose }: { units: AdminUnit[]; onClose: () => void }) {
+function changedFields(unit: AdminUnit, body: { name: string; name_en: string | null }): UnitPayload {
+  const out: UnitPayload = {};
+  if (body.name !== unit.name) out.name = body.name;
+  if (body.name_en !== unit.name_en) out.name_en = body.name_en;
+  return out;
+}
+
+function errorField(cause: unknown): 'name' | 'name_en' | 'form' {
+  if (apiErrorCode(cause) === 'VALIDATION' && !isFieldError(cause, 'name') && isFieldError(cause, 'name_en')) return 'name_en';
+  return isFieldError(cause, 'name') ? 'name' : 'form';
+}
+
+export function UnitDialog({ units, unit, onClose }: { units: AdminUnit[]; unit?: AdminUnit; onClose: () => void }) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const refresh = useRefreshUnits();
   const toast = useToast();
-  const [name, setName] = useState('');
-  const [nameEn, setNameEn] = useState('');
+  const [name, setName] = useState(unit?.name ?? '');
+  const [nameEn, setNameEn] = useState(unit?.name_en ?? '');
   const [error, setError] = useState<{ field: 'name' | 'name_en' | 'form'; key: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const err = (f: string) => (error?.field === f ? t(error.key) : undefined);
+  const dirty = name !== (unit?.name ?? '') || nameEn !== (unit?.name_en ?? '');
+
+  const save = async (body: { name: string; name_en: string | null }) => {
+    if (!unit) {
+      await createUnit({ ...body, sort_order: nextSortOrder(units) }, csrfToken);
+      return t('units.page.added', { name: body.name });
+    }
+    const patch = changedFields(unit, body);
+    if (Object.keys(patch).length > 0) await patchUnit(unit.code, patch, csrfToken);
+    return t('units.page.saved', { name: body.name });
+  };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    const body = { name: name.trim(), name_en: nameEn.trim() || null, sort_order: nextSortOrder(units) };
     setSaving(true);
     try {
-      await createUnit(body, csrfToken);
-      toast.show({ text: t('units.page.added', { name: body.name }), tone: 'ok' });
+      const text = await save({ name: name.trim(), name_en: nameEn.trim() || null });
+      toast.show({ text, tone: 'ok' });
       void refresh();
       onClose();
     } catch (cause) {
-      const nameEnBad = apiErrorCode(cause) === 'VALIDATION' && !isFieldError(cause, 'name') && isFieldError(cause, 'name_en');
-      const field = nameEnBad ? 'name_en' : isFieldError(cause, 'name') ? 'name' : 'form';
-      setError({ field, key: unitErrorKey(cause) });
+      setError({ field: errorField(cause), key: unitErrorKey(cause) });
       setSaving(false);
     }
   };
 
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()} dirty={name !== '' || nameEn !== ''} dismissible={!saving} className="sheet a-form" maxWidth={520}>
+    <Dialog open onOpenChange={(o) => !o && onClose()} dirty={dirty} dismissible={!saving} className="sheet a-form" maxWidth={520}>
       <form onSubmit={submit} noValidate>
         <div className="sheet-header">
-          <DialogTitle className="sheet-title">{t('units.page.addTitle')}</DialogTitle>
-          <DialogClose asChild>
-            <button type="button" className="sheet-close" aria-label={t('common.close')} disabled={saving}>
-              <Icon name="x" />
-            </button>
-          </DialogClose>
+          <DialogTitle className="sheet-title">{t(unit ? 'units.page.editTitle' : 'units.page.addTitle')}</DialogTitle>
+          <DialogCloseButton disabled={saving} />
         </div>
         <div className="sheet-body">
           {error?.field === 'form' && (
@@ -72,7 +87,7 @@ export function AddUnitDialog({ units, onClose }: { units: AdminUnit[]; onClose:
             </button>
           </DialogClose>
           <button type="submit" className="btn btn--primary" disabled={saving || name.trim() === ''}>
-            {saving ? t('units.page.saving') : t('units.page.submitAdd')}
+            {saving ? t('units.page.saving') : t(unit ? 'units.page.submitEdit' : 'units.page.submitAdd')}
           </button>
         </div>
       </form>

@@ -64,8 +64,13 @@ async function open(mutate?: Mutate, units?: AdminUnit[]) {
 }
 
 const table = () => within(screen.getByRole('table'));
-const rowOf = (name: string) => table().getByText(name, { selector: 'button, span' }).closest('tr') as HTMLElement;
-const names = () => table().getAllByRole('button', { name: /^Sửa tên đơn vị / }).map((b) => b.textContent);
+const rowOf = (name: string) => table().getByText(name, { selector: 'span' }).closest('tr') as HTMLElement;
+const names = () => table().getAllByRole('button', { name: /^Thao tác cho / }).map((b) => b.getAttribute('aria-label')!.replace('Thao tác cho ', ''));
+const openMenu = async (name: string) => {
+  await userEvent.click(screen.getByRole('button', { name: `Thao tác cho ${name}` }));
+  return within(screen.getByRole('menu', { name: `Thao tác cho ${name}` }));
+};
+const pick = async (name: string, item: string) => userEvent.click((await openMenu(name)).getByRole('menuitem', { name: item }));
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -79,10 +84,25 @@ describe('Trang Đơn vị tính', () => {
     expect(within(rowOf('Cũ')).getByText('Ngừng')).toBeInTheDocument();
   });
 
-  it('"Xóa {tên}" chỉ có ở ĐVT chưa dùng; xác nhận rồi DELETE admin/units/:code và hàng biến mất', async () => {
+  it('trạng thái chỉ một chỗ: nhãn "Đang dùng"/"Ngừng", không còn công tắc hay nút chữ "Xóa …" trong bảng', async () => {
+    await open();
+    expect(table().queryAllByRole('switch')).toHaveLength(0);
+    expect(table().queryByRole('button', { name: /^Xóa/ })).toBeNull();
+  });
+
+  it('menu ⋯: ĐVT đang dùng có món → "Sửa", "Ngừng" (không có Xóa); chưa dùng → thêm "Xóa"; đã ngừng → "Dùng lại"', async () => {
+    await open();
+    const items = async (name: string) => (await openMenu(name)).getAllByRole('menuitem').map((m) => m.textContent);
+    expect(await items('cái')).toEqual(['Sửa', 'Ngừng']);
+    await userEvent.keyboard('{Escape}');
+    expect(await items('hộp')).toEqual(['Sửa', 'Ngừng', 'Xóa']);
+    await userEvent.keyboard('{Escape}');
+    expect(await items('Cũ')).toEqual(['Sửa', 'Dùng lại', 'Xóa']);
+  });
+
+  it('menu "Xóa" chỉ có ở ĐVT chưa dùng; xác nhận rồi DELETE admin/units/:code và hàng biến mất', async () => {
     const f = await open();
-    expect(screen.queryByRole('button', { name: 'Xóa cái' })).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: 'Xóa hộp' }));
+    await pick('hộp', 'Xóa');
     expect(mutations(f)).toHaveLength(0);
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Xóa đơn vị' }));
     await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/units/hop', 'DELETE', undefined]]));
@@ -91,29 +111,31 @@ describe('Trang Đơn vị tính', () => {
 
   it('xóa mà server báo UNIT_IN_USE → toast danger "Đơn vị đang được dùng — chỉ ngừng được."', async () => {
     await open((_url, method) => (method === 'DELETE' ? jsonResponse(409, { code: 'UNIT_IN_USE', message: 'x' }) : undefined));
-    await userEvent.click(screen.getByRole('button', { name: 'Xóa hộp' }));
+    await pick('hộp', 'Xóa');
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Xóa đơn vị' }));
     expect(await screen.findByText('Đơn vị đang được dùng — chỉ ngừng được.')).toBeInTheDocument();
     expect(document.querySelector('.toast--danger')).not.toBeNull();
   });
 
-  it('công tắc "Ngừng cái" hỏi xác nhận rồi PATCH {active:false}; "Mở lại Cũ" xác nhận rồi {active:true}; Hủy thì không gọi API', async () => {
+  it('menu "Ngừng" hỏi xác nhận rồi PATCH {active:false}; "Dùng lại" Cũ xác nhận rồi {active:true}; Hủy thì không gọi API', async () => {
     const f = await open();
-    await userEvent.click(screen.getByRole('switch', { name: 'Ngừng cái' }));
+    await pick('cái', 'Ngừng');
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Hủy' }));
     expect(mutations(f)).toHaveLength(0);
-    await userEvent.click(screen.getByRole('switch', { name: 'Ngừng cái' }));
+    await pick('cái', 'Ngừng');
     expect(screen.getByRole('dialog', { name: 'Ngừng đơn vị “cái”?' })).toBeInTheDocument();
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Ngừng' }));
     await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/units/cai', 'PATCH', { active: false }]]));
-    await userEvent.click(await screen.findByRole('switch', { name: 'Mở lại Cũ' }));
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Mở lại' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await pick('Cũ', 'Dùng lại');
+    expect(screen.getByRole('dialog', { name: 'Dùng lại đơn vị “Cũ”?' })).toBeInTheDocument();
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Dùng lại' }));
     await waitFor(() => expect(mutations(f).at(-1)).toEqual(['/api/admin/units/cu', 'PATCH', { active: true }]));
   });
 
   it('lỗi khác UNIT_IN_USE khi ngừng/xóa → khối role=alert (không toast danger); UNIT_NOT_FOUND còn tải lại danh sách', async () => {
     const f = await open((_u, method) => (method === 'PATCH' ? jsonResponse(404, { code: 'UNIT_NOT_FOUND', message: 'x' }) : undefined));
-    await userEvent.click(screen.getByRole('switch', { name: 'Ngừng cái' }));
+    await pick('cái', 'Ngừng');
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Ngừng' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Đơn vị này không còn — tải lại trang.');
     expect(document.querySelector('.toast--danger')).toBeNull();
@@ -122,16 +144,16 @@ describe('Trang Đơn vị tính', () => {
 
   it('xóa mà server 500 → khối role=alert "Chưa lưu được"', async () => {
     await open((_u, method) => (method === 'DELETE' ? jsonResponse(500, { code: 'X', message: 'x' }) : undefined));
-    await userEvent.click(screen.getByRole('button', { name: 'Xóa hộp' }));
+    await pick('hộp', 'Xóa');
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Xóa đơn vị' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Chưa lưu được — thử lại sau ít phút.');
   });
 
   it('ngừng ĐVT xong, mở Danh mục > Thêm món trong cùng phiên: ô Đơn vị tính không còn ĐVT đó', async () => {
     await open();
-    await userEvent.click(screen.getByRole('switch', { name: 'Ngừng hộp' }));
+    await pick('hộp', 'Ngừng');
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Ngừng' }));
-    await screen.findByRole('switch', { name: 'Mở lại hộp' });
+    await waitFor(() => expect(within(rowOf('hộp')).getByText('Ngừng')).toBeInTheDocument());
     await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Danh mục' }));
     await userEvent.click((await screen.findAllByRole('button', { name: 'Thêm món' }))[0]);
     const select = await screen.findByLabelText(/Đơn vị tính/);
@@ -139,34 +161,32 @@ describe('Trang Đơn vị tính', () => {
     expect(within(select).queryByRole('option', { name: 'hộp' })).toBeNull();
   });
 
-  it('sửa tên tại chỗ: Enter gửi PATCH {name}; UNIT_EXISTS hiện "Đã có đơn vị tính tên này." tại ô', async () => {
+  it('menu "Sửa" mở hộp "Sửa đơn vị tính" điền sẵn; UNIT_EXISTS → lỗi tại ô Tên; lưu chỉ gửi trường đổi', async () => {
     const f = await open((_url, method, body) => (method === 'PATCH' && body.name === 'HỘP' ? jsonResponse(409, { code: 'UNIT_EXISTS', message: 'x' }) : undefined));
-    await userEvent.click(screen.getByRole('button', { name: 'Sửa tên đơn vị hộp' }));
-    await userEvent.clear(screen.getByRole('textbox', { name: 'Sửa tên đơn vị hộp' }));
-    await userEvent.type(screen.getByRole('textbox', { name: 'Sửa tên đơn vị hộp' }), 'HỘP{Enter}');
-    expect(await screen.findByText('Đã có đơn vị tính tên này.')).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Sửa tên đơn vị hộp' })).toHaveAttribute('aria-invalid', 'true');
-    await userEvent.clear(screen.getByRole('textbox', { name: 'Sửa tên đơn vị hộp' }));
-    await userEvent.type(screen.getByRole('textbox', { name: 'Sửa tên đơn vị hộp' }), 'thùng{Enter}');
+    await pick('hộp', 'Sửa');
+    const dialog = within(await screen.findByRole('dialog', { name: 'Sửa đơn vị tính' }));
+    const name = dialog.getByLabelText(/Tên đơn vị/);
+    expect(name).toHaveValue('hộp');
+    expect(name).toHaveAttribute('maxlength', '40');
+    await userEvent.clear(name);
+    await userEvent.type(name, 'HỘP');
+    await userEvent.click(dialog.getByRole('button', { name: 'Lưu thay đổi' }));
+    expect(await dialog.findByText('Đã có đơn vị tính tên này.')).toBeInTheDocument();
+    expect(name).toHaveAttribute('aria-invalid', 'true');
+    await userEvent.clear(name);
+    await userEvent.type(name, 'thùng');
+    await userEvent.click(dialog.getByRole('button', { name: 'Lưu thay đổi' }));
     await waitFor(() => expect(mutations(f).at(-1)).toEqual(['/api/admin/units/hop', 'PATCH', { name: 'thùng' }]));
+    expect(await screen.findByText('Đã lưu đơn vị tính thùng')).toBeInTheDocument();
   });
 
-  it('sửa tên tiếng Anh gửi {name_en}; xóa trắng gửi null', async () => {
+  it('sửa: xóa trắng tên tiếng Anh gửi {name_en: null}', async () => {
     const f = await open();
-    await userEvent.click(screen.getByRole('button', { name: 'Sửa tên tiếng Anh của cái' }));
-    const box = screen.getByRole('textbox', { name: 'Sửa tên tiếng Anh của cái' });
-    await userEvent.clear(box);
-    await userEvent.type(box, '{Enter}');
+    await pick('cái', 'Sửa');
+    const dialog = within(await screen.findByRole('dialog', { name: 'Sửa đơn vị tính' }));
+    await userEvent.clear(dialog.getByLabelText('Tên tiếng Anh'));
+    await userEvent.click(dialog.getByRole('button', { name: 'Lưu thay đổi' }));
     await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/units/cai', 'PATCH', { name_en: null }]]));
-  });
-
-  it('tên ô sửa tại chỗ tối đa 40 ký tự; VALIDATION của server → lỗi tại ô', async () => {
-    await open((_url, method) => (method === 'PATCH' ? jsonResponse(400, { code: 'VALIDATION', message: 'x', fields: ['name'] }) : undefined));
-    await userEvent.click(screen.getByRole('button', { name: 'Sửa tên đơn vị hộp' }));
-    const box = screen.getByRole('textbox', { name: 'Sửa tên đơn vị hộp' });
-    expect(box).toHaveAttribute('maxlength', '40');
-    await userEvent.type(box, 'x{Enter}');
-    expect(await screen.findByText('Kiểm tra lại giá trị này.')).toBeInTheDocument();
   });
 
   it('"Đưa {tên} lên" đổi vị trí tại chỗ, chưa gọi API; "Lưu thứ tự" PATCH {sort_order: vị trí*10} chỉ ĐVT lệch', async () => {

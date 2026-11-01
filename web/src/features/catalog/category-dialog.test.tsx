@@ -5,11 +5,11 @@ import { MeContext } from '@/lib/me';
 import { ConfirmProvider } from '@/ui/confirm-provider';
 import { ToastProvider } from '@/ui/toast-provider';
 import type { Category } from './catalog.api';
-import { AddCategoryDialog } from './add-category-dialog';
+import { CategoryDialog } from './category-dialog';
 
 const cat = (id: string, sort_order: number, active = true): Category => ({ id, name: `Nhóm ${id}`, name_en: null, sort_order, active });
 
-function render(categories: Category[], reply: Response = jsonResponse(201, cat('new', 0))) {
+function render(categories: Category[], reply: Response = jsonResponse(201, cat('new', 0)), category?: Category) {
   const f = vi.fn(async () => reply);
   vi.stubGlobal('fetch', f);
   const onClose = vi.fn();
@@ -17,12 +17,12 @@ function render(categories: Category[], reply: Response = jsonResponse(201, cat(
     <MeContext.Provider value={makeMe('admin')}>
       <ToastProvider>
         <ConfirmProvider>
-          <AddCategoryDialog categories={categories} onClose={onClose} />
+          <CategoryDialog categories={categories} category={category} onClose={onClose} />
         </ConfirmProvider>
       </ToastProvider>
     </MeContext.Provider>,
   );
-  return { f, onClose, dialog: within(screen.getByRole('dialog', { name: 'Thêm nhóm' })) };
+  return { f, onClose, dialog: within(screen.getByRole('dialog', { name: category ? 'Sửa nhóm' : 'Thêm nhóm' })) };
 }
 
 afterEach(() => vi.unstubAllGlobals());
@@ -76,5 +76,34 @@ describe('Hộp thoại Thêm nhóm', () => {
     await userEvent.type(dialog.getByLabelText(/^Tên nhóm/), 'x');
     await userEvent.click(dialog.getByRole('button', { name: 'Thêm nhóm' }));
     await vi.waitFor(() => expect(dialog.getByLabelText(/^Tên nhóm/)).toHaveAccessibleDescription('Kiểm tra lại giá trị này.'));
+  });
+
+  describe('chế độ Sửa', () => {
+    const editing = { ...cat('b', 20), name: 'Bút & viết', name_en: 'Pens' };
+
+    it('điền sẵn tên và tên tiếng Anh, không có dòng vị trí/màu nhóm mới', () => {
+      const { dialog } = render([cat('a', 10), editing], undefined, editing);
+      expect(dialog.getByLabelText(/^Tên nhóm/)).toHaveValue('Bút & viết');
+      expect(dialog.getByLabelText('Tên tiếng Anh')).toHaveValue('Pens');
+      expect(dialog.queryByText(/Nhóm mới đứng thứ/)).toBeNull();
+    });
+
+    it('chỉ PATCH trường đã đổi: xóa trắng tên tiếng Anh → {name_en: null}, toast "Đã lưu nhóm Bút & viết"', async () => {
+      const { f, onClose, dialog } = render([editing], jsonResponse(200, { ...editing, name_en: null }), editing);
+      await userEvent.clear(dialog.getByLabelText('Tên tiếng Anh'));
+      await userEvent.click(dialog.getByRole('button', { name: 'Lưu thay đổi' }));
+      await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
+      const call = f.mock.calls[0] as unknown as [string, RequestInit];
+      expect([call[0], call[1].method, JSON.parse(String(call[1].body))]).toEqual(['/api/admin/item-categories/b', 'PATCH', { name_en: null }]);
+      expect(await screen.findByText('Đã lưu nhóm Bút & viết')).toBeInTheDocument();
+    });
+
+    it('CATEGORY_EXISTS khi đổi tên → lỗi gắn ô Tên nhóm', async () => {
+      const { dialog } = render([editing], jsonResponse(409, { code: 'CATEGORY_EXISTS', message: 'x' }), editing);
+      await userEvent.clear(dialog.getByLabelText(/^Tên nhóm/));
+      await userEvent.type(dialog.getByLabelText(/^Tên nhóm/), 'giấy & sổ');
+      await userEvent.click(dialog.getByRole('button', { name: 'Lưu thay đổi' }));
+      await vi.waitFor(() => expect(dialog.getByLabelText(/^Tên nhóm/)).toHaveAccessibleDescription('Đã có nhóm tên này.'));
+    });
   });
 });

@@ -11,7 +11,9 @@ const CATS: Category[] = [
   { id: 'c-2', name: 'Bút & viết', name_en: null, sort_order: 20, active: true },
   { id: 'c-3', name: 'Cũ', name_en: null, sort_order: 30, active: false },
 ];
-const ITEMS = ['i-1', 'i-2', 'i-3'].map((id) => adminItem({ id, category_id: 'c-2' })).concat(adminItem({ id: 'i-4', category_id: 'c-1' }));
+const ITEMS = ['i-1', 'i-2', 'i-3']
+  .map((id) => adminItem({ id, category_id: 'c-2' }))
+  .concat(adminItem({ id: 'i-4', category_id: 'c-1' }), adminItem({ id: 'i-5', category_id: 'c-2', active: false }));
 
 type Mutate = (url: string, method: string, body: Record<string, unknown>) => Response | undefined;
 
@@ -45,8 +47,12 @@ async function open(mutate?: Mutate, categories?: Category[]) {
 }
 
 const table = () => within(screen.getByRole('table'));
-const rowOf = (name: string) => table().getByText(name, { selector: 'button, span' }).closest('tr') as HTMLElement;
-const names = () => within(screen.getByRole('table')).getAllByRole('button', { name: /^Sửa tên nhóm / }).map((b) => b.textContent);
+const rowOf = (name: string) => table().getByText(name, { selector: 'span' }).closest('tr') as HTMLElement;
+const names = () => table().getAllByRole('button', { name: /^Thao tác cho / }).map((b) => b.getAttribute('aria-label')!.replace('Thao tác cho ', ''));
+const openMenu = async (name: string) => {
+  await userEvent.click(screen.getByRole('button', { name: `Thao tác cho ${name}` }));
+  return within(screen.getByRole('menu', { name: `Thao tác cho ${name}` }));
+};
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -58,7 +64,7 @@ describe('Trang Nhóm món', () => {
     expect(within(screen.getByRole('navigation', { name: 'Vị trí' })).getByText('Danh mục')).toBeInTheDocument();
     expect(screen.getByText('Thứ tự nhóm quyết định thứ tự trên trang Đăng ký và màu của từng nhóm.')).toBeInTheDocument();
     expect(f.mock.calls.map((c) => c[0])).toContain('/api/item-categories?all=1');
-    expect(within(rowOf('Bút & viết')).getByText('3')).toBeInTheDocument();
+    expect(within(rowOf('Bút & viết')).getByText('4')).toBeInTheDocument();
     expect(within(rowOf('Cũ')).getByText('Ngừng')).toBeInTheDocument();
     expect(within(rowOf('Giấy & sổ')).getByText('Đang dùng')).toBeInTheDocument();
   });
@@ -126,38 +132,53 @@ describe('Trang Nhóm món', () => {
     expect(screen.queryByText(/Thứ tự đã đổi/)).toBeNull();
   });
 
-  it('sửa tên tại chỗ: Enter PATCH {name}; CATEGORY_EXISTS → "Đã có nhóm tên này." tại ô; Esc bỏ không gọi API', async () => {
-    const f = await open((_url, _m, body) => (body.name === 'giấy & sổ' ? jsonResponse(409, { code: 'CATEGORY_EXISTS', message: 'x' }) : undefined));
-    await userEvent.click(screen.getByRole('button', { name: 'Sửa tên nhóm Bút & viết' }));
-    const input = screen.getByRole('textbox', { name: 'Sửa tên nhóm Bút & viết' });
-    expect(input).toHaveAttribute('maxLength', '120');
-    await userEvent.clear(input);
-    await userEvent.type(input, 'giấy & sổ{Enter}');
-    await vi.waitFor(() => expect(input).toHaveAccessibleDescription('Đã có nhóm tên này.'));
-    expect(input).toHaveAttribute('aria-invalid', 'true');
+  it('trạng thái chỉ một chỗ: nhãn "Đang dùng"/"Ngừng", không còn công tắc trong bảng', async () => {
+    await open();
+    expect(table().queryAllByRole('switch')).toHaveLength(0);
+    expect(within(rowOf('Cũ')).getByText('Ngừng')).toBeInTheDocument();
+  });
+
+  it('menu ⋯ của nhóm đang dùng có "Sửa", "Ngừng nhóm"; nhóm đã ngừng có "Sửa", "Dùng lại"', async () => {
+    await open();
+    expect((await openMenu('Bút & viết')).getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Sửa', 'Ngừng nhóm']);
     await userEvent.keyboard('{Escape}');
-    expect(screen.queryByRole('textbox')).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: 'Sửa tên nhóm Bút & viết' }));
-    await userEvent.clear(screen.getByRole('textbox'));
-    await userEvent.type(screen.getByRole('textbox'), 'Bút{Enter}');
-    await vi.waitFor(() => expect(mutations(f).at(-1)).toEqual(['/api/admin/item-categories/c-2', 'PATCH', { name: 'Bút' }]));
+    expect((await openMenu('Cũ')).getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Sửa', 'Dùng lại']);
   });
 
-  it('sửa tên tiếng Anh tại chỗ: xóa hết → PATCH {name_en: null}', async () => {
+  it('"Ngừng nhóm" hỏi xác nhận nói rõ 3 món đang dùng sẽ ẩn (món đã ngừng không tính) rồi PATCH {active:false}', async () => {
     const f = await open();
-    await userEvent.click(screen.getByRole('button', { name: 'Sửa tên tiếng Anh của Giấy & sổ' }));
-    await userEvent.clear(screen.getByRole('textbox'));
-    await userEvent.keyboard('{Enter}');
-    await vi.waitFor(() => expect(mutations(f)).toEqual([['/api/admin/item-categories/c-1', 'PATCH', { name_en: null }]]));
-  });
-
-  it('công tắc "Ngừng {tên}" hỏi xác nhận rồi PATCH {active:false}; nhóm đã ngừng có "Mở lại {tên}"', async () => {
-    const f = await open();
-    expect(screen.getByRole('switch', { name: 'Mở lại Cũ' })).toHaveAttribute('aria-checked', 'false');
-    await userEvent.click(screen.getByRole('switch', { name: 'Ngừng Bút & viết' }));
+    await userEvent.click((await openMenu('Bút & viết')).getByRole('menuitem', { name: 'Ngừng nhóm' }));
     const dialog = await screen.findByRole('dialog', { name: 'Ngừng nhóm “Bút & viết”?' });
+    expect(within(dialog).getByText('3 món trong nhóm sẽ ẩn khỏi trang Đăng ký. Mở lại nhóm thì món hiện lại.')).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Ngừng nhóm' }));
     await vi.waitFor(() => expect(mutations(f)).toEqual([['/api/admin/item-categories/c-2', 'PATCH', { active: false }]]));
+  });
+
+  it('nhóm có 1 món đang dùng → "1 món trong nhóm sẽ ẩn…"; Hủy thì không gọi API', async () => {
+    const f = await open();
+    await userEvent.click((await openMenu('Giấy & sổ')).getByRole('menuitem', { name: 'Ngừng nhóm' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(/^1 món trong nhóm sẽ ẩn/)).toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Hủy' }));
+    expect(mutations(f)).toHaveLength(0);
+  });
+
+  it('"Dùng lại" nhóm đã ngừng: xác nhận rồi PATCH {active:true}', async () => {
+    const f = await open();
+    await userEvent.click((await openMenu('Cũ')).getByRole('menuitem', { name: 'Dùng lại' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Dùng lại nhóm “Cũ”?' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Dùng lại' }));
+    await vi.waitFor(() => expect(mutations(f)).toEqual([['/api/admin/item-categories/c-3', 'PATCH', { active: true }]]));
+  });
+
+  it('"Sửa" mở hộp "Sửa nhóm" điền sẵn; lưu tên tiếng Anh → PATCH {name_en}', async () => {
+    const f = await open();
+    await userEvent.click((await openMenu('Bút & viết')).getByRole('menuitem', { name: 'Sửa' }));
+    const dialog = within(await screen.findByRole('dialog', { name: 'Sửa nhóm' }));
+    expect(dialog.getByLabelText(/^Tên nhóm/)).toHaveValue('Bút & viết');
+    await userEvent.type(dialog.getByLabelText('Tên tiếng Anh'), 'Pens');
+    await userEvent.click(dialog.getByRole('button', { name: 'Lưu thay đổi' }));
+    await vi.waitFor(() => expect(mutations(f)).toEqual([['/api/admin/item-categories/c-2', 'PATCH', { name_en: 'Pens' }]]));
   });
 
   it('cột xem trước: "Nhân viên sẽ thấy" chỉ nhóm đang dùng theo thứ tự; 7 ô "Màu theo thứ tự"', async () => {

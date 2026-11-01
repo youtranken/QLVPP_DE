@@ -173,7 +173,7 @@ describe('Ngăn kéo Sửa món', () => {
   it('tiêu đề là tên món; PATCH chỉ trường đổi, nút "Lưu thay đổi", chân ghi "1 thay đổi chưa lưu"', async () => {
     const f = stubDrawerApi((_url, init) => (init.method === 'PATCH' ? jsonResponse(200, PEN) : undefined));
     const { onClose } = renderDrawer({ item: PEN });
-    expect(screen.getByRole('dialog', { name: 'Bút bi xanh' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Sửa món Bút bi xanh' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Ảnh món' })).toHaveAttribute('src', '/api/files/f-2');
     const max = screen.getByLabelText(/^Tối đa mỗi tháng/);
     await userEvent.clear(max);

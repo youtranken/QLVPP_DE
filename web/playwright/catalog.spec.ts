@@ -43,7 +43,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await catDialog.getByRole('button', { name: 'Thêm nhóm' }).click();
       await expect(catDialog).toBeHidden();
       const catTable = page.getByRole('table');
-      await expect(catTable.getByRole('button', { name: `Sửa tên nhóm ${category}` })).toBeVisible();
+      await expect(catTable.getByRole('button', { name: `Thao tác cho ${category}` })).toBeVisible();
       await expect(page.getByRole('button', { name: `Đưa ${category} xuống` })).toBeDisabled();
       await page.getByRole('button', { name: `Đưa ${category} lên` }).click();
       await expect(page.getByRole('button', { name: `Đưa ${category} xuống` })).toBeEnabled();
@@ -88,8 +88,11 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await expect(itemRow.getByRole('switch', { name: `Mở lại ${itemName}` })).toBeVisible();
 
       await page.getByRole('main').getByRole('link', { name: 'Nhóm món' }).click();
-      await page.getByRole('switch', { name: `Ngừng ${category}` }).click();
-      await page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` }).getByRole('button', { name: 'Ngừng nhóm' }).click();
+      await page.getByRole('button', { name: `Thao tác cho ${category}` }).click();
+      await page.getByRole('menu', { name: `Thao tác cho ${category}` }).getByRole('menuitem', { name: 'Ngừng nhóm' }).click();
+      const pause = page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` });
+      await expect(pause.getByText('0 món trong nhóm sẽ ẩn khỏi trang Đăng ký. Mở lại nhóm thì món hiện lại.')).toBeVisible();
+      await pause.getByRole('button', { name: 'Ngừng nhóm' }).click();
       await expect(page.getByRole('row').filter({ hasText: category }).getByText('Ngừng', { exact: true })).toBeVisible();
     } finally {
       await cleanupCatalog(request, itemName, category);
@@ -104,7 +107,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
     await expect(row.getByText('Thiếu ảnh', { exact: true })).toBeVisible();
     await expect(row.getByText('Chỉ Hành chính')).toBeVisible();
     await search.fill('');
-    await expect(page.getByText('Bút bi xanh')).toBeVisible();
+    await expect(page.getByText('Bút bi xanh')).toBeHidden();
     await shot(page, info, 'catalog-seed', false);
   });
 });

@@ -1,7 +1,7 @@
 -- audit_log append-only: dòng `pw-audit-*` (ngày 2001) và `pw-audit-51/50` gieo nhầm không xóa được, chỉ có ở DB dev, lọc theo actor nên vô hại.
 -- KHÔNG CHẠY TRÊN PROD. Chỉ cho DB dev của docker compose (POSTGRES_DB=vpp trong .env.example).
 -- Prod dùng cùng tên DB nên tên chưa đủ chặn: phải gọi kèm `-v dev_ok=1` (xem README) mới chạy.
--- Dọn dữ liệu Playwright còn sót (món/nhóm tên "PW …", người sub "pw-…", đợt giao, bản chốt, chuông); chỉ xóa dòng không còn bị
+-- Dọn dữ liệu Playwright còn sót (món/nhóm/ĐVT tên "PW …", người sub "pw-…", đợt giao, bản chốt, chuông); chỉ xóa dòng không còn bị
 -- dữ liệu thật tham chiếu; chạy lại bao nhiêu lần cũng được.
 \set QUIET on
 \set ON_ERROR_STOP on
@@ -24,6 +24,7 @@ CREATE TEMP VIEW pw_counts AS
 SELECT
   (SELECT count(*) FROM items WHERE name LIKE 'PW %') AS items,
   (SELECT count(*) FROM item_categories WHERE name LIKE 'PW %') AS categories,
+  (SELECT count(*) FROM units WHERE name LIKE 'PW %') AS units,
   (SELECT count(*) FROM users WHERE sub LIKE 'pw-%') AS users,
   (SELECT count(*) FROM requests WHERE user_sub LIKE 'pw-%') AS requests,
   (SELECT count(*) FROM stock_movements m JOIN items i ON i.id = m.item_id WHERE i.name LIKE 'PW %') AS movements,
@@ -70,6 +71,11 @@ DELETE FROM items WHERE id IN (SELECT id FROM pw_items);
 
 DELETE FROM item_categories c
 WHERE c.name LIKE 'PW %' AND NOT EXISTS (SELECT 1 FROM items i WHERE i.category_id = c.id);
+
+DELETE FROM units u
+WHERE u.name LIKE 'PW %'
+  AND NOT EXISTS (SELECT 1 FROM items i WHERE i.unit = u.code)
+  AND NOT EXISTS (SELECT 1 FROM request_lines l WHERE l.custom_unit = u.code);
 
 DELETE FROM users u
 WHERE u.sub LIKE 'pw-%'

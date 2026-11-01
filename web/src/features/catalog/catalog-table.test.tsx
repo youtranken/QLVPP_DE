@@ -105,6 +105,6 @@ describe('Danh mục — công tắc Dùng', () => {
   it('icon "Sửa Bút bi xanh" mở ngăn kéo sửa món', async () => {
     await openCatalog({ items: ITEMS });
     await userEvent.click(screen.getByRole('button', { name: 'Sửa Bút bi xanh' }));
-    expect(await screen.findByRole('dialog', { name: 'Bút bi xanh' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Sửa món Bút bi xanh' })).toBeInTheDocument();
   });
 });

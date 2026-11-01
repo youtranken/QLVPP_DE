@@ -18,6 +18,7 @@ export function adminItem(over: Partial<AdminItem>): AdminItem {
     restock_level: null,
     stock_state: 'untracked',
     active: true,
+    usable: true,
     sort_order: 0,
     missing_image: false,
     ...over,

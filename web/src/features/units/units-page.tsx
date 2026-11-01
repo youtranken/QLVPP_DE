@@ -6,11 +6,11 @@ import { useConfirm } from '@/ui/confirm-context';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { useToast } from '@/ui/toast-context';
-import { AddUnitDialog } from './add-unit-dialog';
+import { UnitDialog } from './unit-dialog';
 import { unitErrorKey } from './unit-errors';
 import { UnitTable } from './unit-table';
 import { useUnitOrder } from './use-unit-order';
-import { deleteUnit, patchUnit, useAdminUnits, useRefreshUnits, type AdminUnit, type UnitPayload } from './units.api';
+import { deleteUnit, patchUnit, useAdminUnits, useRefreshUnits, type AdminUnit } from './units.api';
 import './units.m1.css';
 
 export function UnitsPage() {
@@ -22,14 +22,9 @@ export function UnitsPage() {
   const units = useAdminUnits();
   const order = useUnitOrder(units.data ?? []);
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<AdminUnit | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-
-  const patch = async (u: AdminUnit, body: UnitPayload) => {
-    const saved = await patchUnit(u.code, body, csrfToken);
-    toast.show({ text: t('units.page.saved', { name: saved?.name ?? u.name }), tone: 'ok' });
-    await refresh();
-  };
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true);
@@ -54,7 +49,12 @@ export function UnitsPage() {
       confirmLabel: t(`units.page.${verb}`),
       danger: u.active,
     });
-    if (ok) await run(() => patch(u, { active: !u.active }));
+    if (!ok) return;
+    await run(async () => {
+      const saved = await patchUnit(u.code, { active: !u.active }, csrfToken);
+      toast.show({ text: t('units.page.saved', { name: saved?.name ?? u.name }), tone: 'ok' });
+      await refresh();
+    });
   };
 
   const remove = async (u: AdminUnit) => {
@@ -105,9 +105,10 @@ export function UnitsPage() {
       ) : list.length === 0 ? (
         <EmptyState title={t('units.page.empty')} hint={t('units.page.emptyHint')} action={add} />
       ) : (
-        <UnitTable ordered={list} busy={busy || order.saving} onMove={order.move} onPatch={patch} onToggleActive={(u) => void toggleActive(u)} onDelete={(u) => void remove(u)} />
+        <UnitTable ordered={list} busy={busy || order.saving} onMove={order.move} onEdit={setEditing} onToggleActive={(u) => void toggleActive(u)} onDelete={(u) => void remove(u)} />
       )}
-      {adding && <AddUnitDialog units={list} onClose={() => setAdding(false)} />}
+      {adding && <UnitDialog units={list} onClose={() => setAdding(false)} />}
+      {editing && <UnitDialog units={list} unit={editing} onClose={() => setEditing(null)} />}
     </div>
   );
 }

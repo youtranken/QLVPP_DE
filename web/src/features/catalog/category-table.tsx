@@ -1,26 +1,20 @@
 import { useTranslation } from 'react-i18next';
 import { toneAtRank } from '@/lib/group-tone';
-import { apiErrorCode } from '@/lib/api-error';
 import { Icon } from '@/ui/icon';
-import { InlineText } from '@/ui/inline-text';
-import { Switch } from '@/ui/switch';
-import type { Category, CategoryPayload } from './catalog.api';
-import { catalogErrorKey } from './catalog-errors';
-
-const NAME_MAX = 120;
+import { RowMenu } from '@/ui/row-menu';
+import type { Category } from './catalog.api';
 
 interface Props {
   ordered: Category[];
   counts: Map<string, number>;
   busy: boolean;
   onMove: (index: number, dir: -1 | 1) => void;
-  onPatch: (c: Category, body: CategoryPayload) => Promise<void>;
+  onEdit: (c: Category) => void;
   onToggleActive: (c: Category) => void;
 }
 
-export function CategoryTable({ ordered, counts, busy, onMove, onPatch, onToggleActive }: Props) {
+export function CategoryTable({ ordered, counts, busy, onMove, onEdit, onToggleActive }: Props) {
   const { t } = useTranslation();
-  const errorText = (e: unknown) => t(apiErrorCode(e) === 'VALIDATION' ? 'catalog.errors.FIELD_INVALID' : catalogErrorKey(e));
   return (
     <div className="table-wrap">
       <table className="table table-stack cg-table">
@@ -32,7 +26,9 @@ export function CategoryTable({ ordered, counts, busy, onMove, onPatch, onToggle
             <th>{t('catalog.categories.colNameEn')}</th>
             <th className="num r">{t('catalog.categories.colItems')}</th>
             <th>{t('catalog.categories.colStatus')}</th>
-            <th>{t('catalog.categories.colActive')}</th>
+            <th>
+              <span className="sr-only">{t('catalog.categories.colActions')}</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -41,36 +37,39 @@ export function CategoryTable({ ordered, counts, busy, onMove, onPatch, onToggle
             return (
               <tr key={c.id} className={c.active ? undefined : 'is-inactive'}>
                 <td className="cg-order">
-                  <button type="button" className="btn btn--ghost btn--sm ct-icon-btn" aria-label={t('catalog.categories.moveUp', { name: c.name })} disabled={busy || i === 0} onClick={() => onMove(i, -1)}>
-                    <Icon name="chevup" size={18} />
-                  </button>
-                  <button type="button" className="btn btn--ghost btn--sm ct-icon-btn" aria-label={t('catalog.categories.moveDown', { name: c.name })} disabled={busy || i === ordered.length - 1} onClick={() => onMove(i, 1)}>
-                    <Icon name="chev" size={18} />
-                  </button>
-                  <span className="num cg-order__n">{i + 1}</span>
+                  <span className="cg-ord">
+                    <button type="button" className="cg-ord__btn" aria-label={t('catalog.categories.moveUp', { name: c.name })} disabled={busy || i === 0} onClick={() => onMove(i, -1)}>
+                      <Icon name="chevup" size={16} />
+                    </button>
+                    <button type="button" className="cg-ord__btn" aria-label={t('catalog.categories.moveDown', { name: c.name })} disabled={busy || i === ordered.length - 1} onClick={() => onMove(i, 1)}>
+                      <Icon name="chev" size={16} />
+                    </button>
+                    <span className="num cg-ord__n">{i + 1}</span>
+                  </span>
                 </td>
-                <td>
+                <td className="cg-tone-cell">
                   <span className="ct-dot cg-dot" style={{ background: `var(--${tone}-ink)` }} title={t(`catalog.tones.${tone}`)} />
                 </td>
                 <td className="cg-name">
-                  <InlineText value={c.name} label={t('catalog.categories.editName', { name: c.name })} maxLength={NAME_MAX} onCommit={(name) => onPatch(c, { name })} formatError={errorText} />
+                  <span className="cg-name__text">{c.name}</span>
                 </td>
-                <td data-label={t('catalog.categories.colNameEn')}>
-                  <InlineText
-                    value={c.name_en ?? ''}
-                    label={t('catalog.categories.editNameEn', { name: c.name })}
-                    maxLength={NAME_MAX}
-                    placeholder={t('common.empty')}
-                    onCommit={(text) => onPatch(c, { name_en: text || null })}
-                    formatError={errorText}
-                  />
+                <td className="cg-name-en" data-label={t('catalog.categories.colNameEn')}>
+                  <span>{c.name_en ?? t('common.empty')}</span>
                 </td>
-                <td className="num r" data-label={t('catalog.categories.colItems')}>{counts.get(c.id) ?? 0}</td>
+                <td className="num r" data-label={t('catalog.categories.colItems')}>
+                  {counts.get(c.id) ?? 0}
+                </td>
                 <td data-label={t('catalog.categories.colStatus')}>
                   <span className={c.active ? 'tag tag--ok' : 'tag tag--outline'}>{t(c.active ? 'catalog.categories.active' : 'catalog.categories.inactive')}</span>
                 </td>
-                <td data-label={t('catalog.categories.colActive')}>
-                  <Switch checked={c.active} disabled={busy} label={t(c.active ? 'catalog.categories.deactivateLabel' : 'catalog.categories.reactivateLabel', { name: c.name })} onChange={() => onToggleActive(c)} />
+                <td className="cg-menu">
+                  <RowMenu
+                    label={t('catalog.categories.menu', { name: c.name })}
+                    items={[
+                      { label: t('catalog.categories.edit'), onSelect: () => onEdit(c) },
+                      { label: t(c.active ? 'catalog.categories.deactivate' : 'catalog.categories.reactivate'), disabled: busy, danger: c.active, onSelect: () => onToggleActive(c) },
+                    ]}
+                  />
                 </td>
               </tr>
             );

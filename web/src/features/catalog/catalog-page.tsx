@@ -16,6 +16,7 @@ import { ItemDrawer } from './item-drawer';
 import { useBulkItems } from './use-bulk-items';
 import { useCatalogActions } from './use-catalog-actions';
 import { useCatalogParams } from './use-catalog-params';
+import { useGroupCollapse } from './use-group-collapse';
 import './catalog.m1.css';
 
 type BulkDialog = 'max' | 'move' | null;
@@ -40,13 +41,14 @@ export function CatalogPage() {
   const bulk = useBulkItems(refresh);
   const actions = useCatalogActions(refresh, bulk.setRowError);
   const [search, setSearch] = useUrlSearchBox(p.view.q, p.setQ);
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [dialog, setDialog] = useState<BulkDialog>(null);
   const { keepOnly } = bulk;
   useEffect(() => keepOnly(new Set(d.rows.map((r) => r.id))), [d.rows, keepOnly]);
   const title = t('catalog.title');
   const orderedIds = d.rows.map((r) => r.id);
-  const groupKeys = [...d.counts.keys()];
+  const groupKeys = [...new Set(d.rows.map((r) => r.group))];
+  const narrowed = p.view.filter !== null || p.view.cat !== null || p.view.q.trim() !== '';
+  const { collapsed, setCollapsed } = useGroupCollapse(groupKeys, narrowed ? JSON.stringify([p.view.q, p.view.cat, p.view.filter]) : null);
   const allCollapsed = groupKeys.length > 0 && groupKeys.every((k) => collapsed.has(k));
   const editing = p.itemId && p.itemId !== 'new' ? d.items.data?.find((i) => i.id === p.itemId) : undefined;
   const visible = d.rows.filter((r) => !collapsed.has(r.group));

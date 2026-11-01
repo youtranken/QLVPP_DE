@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { discardOptions, useOptionalConfirm } from '@/ui/confirm-context';
+import { DialogCloseButton } from '@/ui/dialog';
 import { Drawer, DrawerClose, DrawerTitle } from '@/ui/drawer';
 import { Icon } from '@/ui/icon';
 import { categoryLabel, type AdminItem, type Category } from './catalog.api';
@@ -32,13 +33,32 @@ function useEyebrow(item: AdminItem | null, rows: CatalogRow[], categories: Cate
   return t('catalog.drawer.eyebrow', { group: groupName(group === NO_GROUP ? null : group), k });
 }
 
-function Header({ title, eyebrow, onStep, onPrev, onNext }: { title: string; eyebrow: string | null; onStep: (go?: () => void) => void; onPrev?: () => void; onNext?: () => void }) {
+interface HeaderProps {
+  title: string;
+  subtitle?: string;
+  eyebrow: string | null;
+  onStep: (go?: () => void) => void;
+  onPrev?: () => void;
+  onNext?: () => void;
+}
+
+function Header({ title, subtitle, eyebrow, onStep, onPrev, onNext }: HeaderProps) {
   const { t } = useTranslation();
   return (
     <div className="drawer-header ct-drawer-head">
       <div className="ct-drawer-head__text">
         {eyebrow && <small className="drawer-eyebrow">{eyebrow}</small>}
-        <DrawerTitle className="sheet-title">{title}</DrawerTitle>
+        <DrawerTitle className="sheet-title">
+          {title}
+          {subtitle && (
+            <>
+              {' '}
+              <span className="ct-drawer-head__sub" title={subtitle}>
+                {subtitle}
+              </span>
+            </>
+          )}
+        </DrawerTitle>
       </div>
       <button type="button" className="btn btn--ghost btn--sm ct-icon-btn" aria-label={t('catalog.drawer.prev')} disabled={!onPrev} onClick={() => onStep(onPrev)}>
         <Icon name="chevup" size={18} />
@@ -46,11 +66,7 @@ function Header({ title, eyebrow, onStep, onPrev, onNext }: { title: string; eye
       <button type="button" className="btn btn--ghost btn--sm ct-icon-btn" aria-label={t('catalog.drawer.next')} disabled={!onNext} onClick={() => onStep(onNext)}>
         <Icon name="chev" size={18} />
       </button>
-      <DrawerClose asChild>
-        <button type="button" className="sheet-close" aria-label={t('common.close')}>
-          <Icon name="x" />
-        </button>
-      </DrawerClose>
+      <DialogCloseButton />
     </div>
   );
 }
@@ -114,7 +130,7 @@ export function ItemDrawer({ item, categories, rows, defaultCategoryId, onClose,
   const next = f.saving ? undefined : onNext;
   return (
     <Drawer open onOpenChange={(o) => !o && onClose()} dirty={f.dirty} dismissible={!f.saving} onPrev={prev} onNext={next}>
-      <Header title={item?.name ?? t('catalog.form.addTitle')} eyebrow={eyebrow} onStep={step} onPrev={prev} onNext={next} />
+      <Header title={t(item ? 'catalog.form.editTitle' : 'catalog.form.addTitle')} subtitle={item?.name} eyebrow={eyebrow} onStep={step} onPrev={prev} onNext={next} />
       <form ref={form} className="ct-drawer-form" onSubmit={submit} noValidate>
         <div className="drawer-body">
           <Blocks f={f} />

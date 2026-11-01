@@ -9,7 +9,7 @@ import { InlineNumber } from '@/ui/inline-number';
 import { Switch } from '@/ui/switch';
 import { useUnitNames } from '@/features/units/units.api';
 import { categoryLabel } from './catalog.api';
-import { ItemCell, StockCell, Stop } from './catalog-cells';
+import { CodeCell, ItemCell, StockCell, Stop } from './catalog-cells';
 import { rowErrorText } from './catalog-errors';
 import { NO_GROUP, type CatalogRow, type CategoryIndex } from './catalog-rows';
 
@@ -43,8 +43,9 @@ function useColumns(rowErrors: Record<string, string>, actions: CatalogTableActi
     const onSaveMax = (row: CatalogRow, n: number) => latest.current.actions.onSaveMax(row, n);
     const onToggleActive = (row: CatalogRow) => latest.current.actions.onToggleActive(row);
     const columns: ColumnDef<CatalogRow, unknown>[] = [
-      { id: 'code', header: t('catalog.list.colCode'), meta: { className: 'ct-code' }, cell: ({ row }) => row.original.code ?? t('common.empty') },
-      { id: 'item', header: t('catalog.list.colItem'), cell: ({ row }) => <ItemCell row={row.original} error={latest.current.rowErrors[row.original.id]} /> },
+      { id: 'code', header: t('catalog.list.colCode'), meta: { className: 'ct-code' }, cell: ({ row }) => <CodeCell code={row.original.code} /> },
+      { id: 'item', header: t('catalog.list.colItem'), meta: { className: 'ct-item-cell' }, cell: ({ row }) => <ItemCell row={row.original} error={latest.current.rowErrors[row.original.id]} /> },
+      { id: 'nameEn', header: t('catalog.list.colNameEn'), meta: { className: 'ct-name-en' }, cell: ({ row }) => row.original.name_en ?? <span className="ct-name-en__empty">{t('common.empty')}</span> },
       { id: 'unit', header: t('catalog.page.colUnit'), cell: ({ row }) => unitName(row.original.unit) },
       {
         id: 'max',
@@ -118,7 +119,8 @@ export function CatalogTable({ rows, index, loading, selection, rowErrors, activ
             <span className="ct-group__thumb" aria-hidden="true">
               <Icon name="pkg" size={16} />
             </span>
-            {groupName(key)}
+            <span className="ct-group__name">{groupName(key)}</span>
+            {index.byId.get(key)?.active === false && <span className="tag tag--warn">{t('catalog.list.groupPaused')}</span>}
           </span>
         ),
         aside: (key, list) => <GroupAside groupKey={key} name={groupName(key)} list={list} onAdd={actions.onAddToGroup} />,
