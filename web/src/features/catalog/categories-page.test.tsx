@@ -17,10 +17,10 @@ const ITEMS = ['i-1', 'i-2', 'i-3']
 
 type Mutate = (url: string, method: string, body: Record<string, unknown>) => Response | undefined;
 
-function stub(mutate: Mutate = () => undefined, categories = CATS) {
+function stub(mutate: Mutate = () => undefined, categories = CATS, items: () => Promise<Response> = async () => jsonResponse(200, ITEMS)) {
   let list = categories.map((c) => ({ ...c }));
   const f = vi.fn(async (url: string, init?: RequestInit) => {
-    if (url === '/api/admin/items') return jsonResponse(200, ITEMS);
+    if (url === '/api/admin/items') return items();
     if (!init?.method) return jsonResponse(200, list);
     const body = JSON.parse(String(init.body)) as Record<string, unknown>;
     const custom = mutate(url, init.method, body);
@@ -43,6 +43,7 @@ async function open(mutate?: Mutate, categories?: Category[]) {
   const f = stub(mutate, categories);
   renderApp(makeMe('admin'), '/admin/categories');
   await screen.findByRole('table');
+  await vi.waitFor(() => expect(f.mock.calls.some(([u]) => u === '/api/admin/items')).toBe(true));
   return f;
 }
 
@@ -194,5 +195,28 @@ describe('Trang Nhóm món', () => {
     renderApp(makeMe('admin'), '/admin/categories');
     expect(await screen.findByText('Chưa có nhóm nào')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Thêm nhóm' }).length).toBeGreaterThan(0);
+  });
+});
+
+describe('Trang Nhóm món — "Ngừng nhóm" chờ danh sách món', () => {
+  it.each([
+    ['đang tải', () => new Promise<Response>(() => {})],
+    ['tải lỗi', async () => jsonResponse(500, {})],
+  ])('món %s → "Ngừng nhóm" vô hiệu (không hỏi "0 món"); "Sửa" vẫn bấm được', async (_label, items) => {
+    mockViewport(1280);
+    stub(undefined, CATS, items);
+    renderApp(makeMe('admin'), '/admin/categories');
+    await screen.findByRole('table');
+    const menu = await openMenu('Bút & viết');
+    expect(menu.getByRole('menuitem', { name: 'Ngừng nhóm' })).toHaveAttribute('aria-disabled', 'true');
+    expect(menu.getByRole('menuitem', { name: 'Sửa' })).not.toHaveAttribute('aria-disabled');
+    await userEvent.click(menu.getByRole('menuitem', { name: 'Ngừng nhóm' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('món tải xong → "Ngừng nhóm" bấm được', async () => {
+    await open();
+    expect(await within(rowOf('Bút & viết')).findByText('4')).toBeInTheDocument();
+    expect((await openMenu('Bút & viết')).getByRole('menuitem', { name: 'Ngừng nhóm' })).not.toHaveAttribute('aria-disabled');
   });
 });

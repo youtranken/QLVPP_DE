@@ -27,8 +27,8 @@ function useItemCounts() {
       bump(all, i.category_id);
       if (i.active) bump(active, i.category_id);
     }
-    return { all, active };
-  }, [items.data]);
+    return { all, active, ready: items.isSuccess };
+  }, [items.data, items.isSuccess]);
 }
 
 export function CategoriesPage() {
@@ -117,7 +117,7 @@ export function CategoriesPage() {
         <EmptyState title={t('catalog.categories.empty')} hint={t('catalog.categories.emptyHint')} action={add} />
       ) : (
         <div className="cg-layout">
-          <CategoryTable ordered={list} counts={counts.all} busy={busy || order.saving} onMove={order.move} onEdit={setEditing} onToggleActive={(c) => void toggleActive(c)} />
+          <CategoryTable ordered={list} counts={counts.all} countsReady={counts.ready} busy={busy || order.saving} onMove={order.move} onEdit={setEditing} onToggleActive={(c) => void toggleActive(c)} />
           <CategoryPreview ordered={list} />
         </div>
       )}

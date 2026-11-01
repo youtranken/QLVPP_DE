@@ -11,9 +11,11 @@ interface Props {
   onMove: (index: number, dir: -1 | 1) => void;
   onEdit: (c: Category) => void;
   onToggleActive: (c: Category) => void;
+  // Hộp "Ngừng nhóm" báo số món sẽ ẩn: chưa tải được món thì không cho mở (tránh "0 món")
+  countsReady: boolean;
 }
 
-export function CategoryTable({ ordered, counts, busy, onMove, onEdit, onToggleActive }: Props) {
+export function CategoryTable({ ordered, counts, countsReady, busy, onMove, onEdit, onToggleActive }: Props) {
   const { t } = useTranslation();
   return (
     <div className="table-wrap">
@@ -67,7 +69,7 @@ export function CategoryTable({ ordered, counts, busy, onMove, onEdit, onToggleA
                     label={t('catalog.categories.menu', { name: c.name })}
                     items={[
                       { label: t('catalog.categories.edit'), onSelect: () => onEdit(c) },
-                      { label: t(c.active ? 'catalog.categories.deactivate' : 'catalog.categories.reactivate'), disabled: busy, danger: c.active, onSelect: () => onToggleActive(c) },
+                      { label: t(c.active ? 'catalog.categories.deactivate' : 'catalog.categories.reactivate'), disabled: busy || (c.active && !countsReady), danger: c.active, onSelect: () => onToggleActive(c) },
                     ]}
                   />
                 </td>
