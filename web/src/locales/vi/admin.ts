@@ -5,7 +5,7 @@ const admin = {
       description: 'Người dùng đồng bộ từ PMH ID. Thông tin cá nhân sửa ở PMH ID, không sửa trong app.',
       searchLabel: 'Tìm người',
       search: 'Tìm theo tên, email hoặc mã NV',
-      hint: 'Tự đồng bộ từ PMH ID mỗi 60 phút.',
+      hint: 'Lấy dữ liệu mới từ PMH ID.',
       sync: 'Đồng bộ ngay',
       syncing: 'Đang đồng bộ…',
       syncDone: 'Đã đồng bộ từ PMH ID: {{created}} người mới, {{updated}} cập nhật.',
@@ -35,7 +35,7 @@ const admin = {
       people: 'người',
     },
     drawer: {
-      title: 'Thông tin người dùng',
+      title: 'Người dùng',
       eyebrow: 'Danh bạ · người {{k}}',
       prev: 'Người trước',
       next: 'Người kế tiếp',

@@ -58,7 +58,10 @@ describe('UsersPage B10', () => {
     await openUsers();
     expect(screen.getAllByRole('heading', { level: 1, name: 'Danh bạ' })).toHaveLength(1);
     expect(screen.getByText('Người dùng đồng bộ từ PMH ID. Thông tin cá nhân sửa ở PMH ID, không sửa trong app.')).toBeInTheDocument();
-    expect(screen.getByText('Tự đồng bộ từ PMH ID mỗi 60 phút.')).toBeInTheDocument();
+    const auto = screen.getByText('Đồng bộ tự động').closest('.stat-card') as HTMLElement;
+    expect(auto).toHaveTextContent('60');
+    expect(within(auto).getAllByText(/60/)).toHaveLength(1);
+    expect(screen.queryByText(/mỗi 60 phút/)).toBeNull();
     expect(screen.queryByText(/Đồng bộ lần cuối/)).toBeNull();
     expect(screen.getByRole('button', { name: 'Đồng bộ ngay' })).toBeInTheDocument();
   });
@@ -152,7 +155,7 @@ describe('UsersPage B10', () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     await userEvent.click(screen.getByRole('button', { name: 'Phạm Minh Đức' }));
-    const drawer = await screen.findByRole('dialog', { name: 'Thông tin người dùng' });
+    const drawer = await screen.findByRole('dialog', { name: 'Người dùng' });
     expect(within(drawer).getByText('Danh bạ · người 1')).toBeInTheDocument();
     expect(within(drawer).getByText('NV0231')).toBeInTheDocument();
     expect(within(drawer).getByText('Dữ liệu từ PMH ID, không sửa trong app.')).toBeInTheDocument();
@@ -170,10 +173,10 @@ describe('UsersPage B10', () => {
     const [x, footer] = within(drawer).getAllByRole('button', { name: 'Đóng' });
     expect(x).toHaveClass('sheet-close');
     await userEvent.click(x);
-    expect(screen.queryByRole('dialog', { name: 'Thông tin người dùng' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Người dùng' })).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Phạm Minh Đức' }));
-    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Thông tin người dùng' })).getAllByRole('button', { name: 'Đóng' })[1]);
-    expect(screen.queryByRole('dialog', { name: 'Thông tin người dùng' })).toBeNull();
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Người dùng' })).getAllByRole('button', { name: 'Đóng' })[1]);
+    expect(screen.queryByRole('dialog', { name: 'Người dùng' })).toBeNull();
     expect(footer).toBeTruthy();
   });
 

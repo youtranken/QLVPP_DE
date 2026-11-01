@@ -51,7 +51,7 @@ test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
     await expect(page.getByRole('button', { name: 'Đồng bộ ngay' })).toBeEnabled();
 
     await page.getByRole('button', { name: LOCKED.name, exact: true }).click();
-    const drawer = page.getByRole('dialog', { name: 'Thông tin người dùng' });
+    const drawer = page.getByRole('dialog', { name: 'Người dùng' });
     await expect(drawer.getByText(/Tài khoản đã khóa ở PMH ID/)).toBeVisible();
     await expect(drawer.getByText(/Vai trò trong app/)).toHaveCount(0);
     if (isMobile(info)) await expectNoContrastViolations(page);

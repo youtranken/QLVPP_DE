@@ -8,7 +8,7 @@ const admin: Messages<typeof vi> = {
       description: 'People synced from PMH ID. Personal details are edited in PMH ID, not in this app.',
       searchLabel: 'Search people',
       search: 'Search by name, email or employee code',
-      hint: 'Syncs from PMH ID automatically every 60 minutes.',
+      hint: 'Pulls fresh data from PMH ID.',
       sync: 'Sync now',
       syncing: 'Syncing…',
       syncDone: 'Synced from PMH ID: {{created}} new, {{updated}} updated.',
@@ -38,7 +38,7 @@ const admin: Messages<typeof vi> = {
       people: 'people',
     },
     drawer: {
-      title: 'User details',
+      title: 'User',
       eyebrow: 'Directory · person {{k}}',
       prev: 'Previous person',
       next: 'Next person',

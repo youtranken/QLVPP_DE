@@ -56,7 +56,7 @@ function useColumns(onOpen: (u: UserRow) => void) {
                 <button type="button" className="dr-person__name" onClick={() => onOpen(u)}>
                   {nameOf(u)}
                 </button>
-                {u.email && <small className="dr-muted">{u.email}</small>}
+                {u.email && <small className="dr-muted dr-person__email">{u.email}</small>}
               </span>
             </span>
           ),

@@ -24,3 +24,5 @@
 [data-shell='admin'] .dr-facts dt { color: var(--c-muted); font: var(--t-sm); font-weight: 600; }
 [data-shell='admin'] .dr-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 [data-shell='admin'] .dr-audit-link { justify-self: start; }
+[data-shell='admin'] .dr-person__email { overflow-wrap: anywhere; }
+[data-shell='admin'] .dr-drawer-head .sheet-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
