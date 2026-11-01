@@ -56,7 +56,11 @@ describe('nạp danh mục Booking — applyBookingImport', () => {
     );
   });
 
+  // default_max_qty = 7 của suite không được rò sang suite chạy sau trên cùng DB test
   afterAll(async () => {
+    await pool.query(
+      "UPDATE config SET value = '20' WHERE key = 'default_max_qty'",
+    );
     await pool.end();
   });
 
