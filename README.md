@@ -166,6 +166,34 @@ PW_SA_PASSWORD='<mật-khẩu-dev>' npx playwright test
 - Ảnh chụp màn `web/test-results/screens/`, báo cáo `web/playwright-report/` — không commit.
 - Fixture ảnh EXIF xoay 6: `python3 web/scripts/make-exif6-fixture.py web/src/test/fixtures/exif6.jpg` (Pillow).
 
+## Triển khai plan giao diện Hành chính
+
+Lần deploy đầu của nhánh giao diện Hành chính chạy hai migration không quay lui được: `0111_units` (bảng ĐVT,
+FK từ `items.unit` và `request_lines.custom_unit`) và `0112_config_signature_boxes` (bỏ `config.signers`, thay
+bằng `signature_boxes`). Làm theo thứ tự:
+
+1. **Kiểm trước** trên prod (phải ra **0 dòng**):
+
+   ```bash
+   docker compose -f docker-compose.yml exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <<'SQL'
+   SELECT DISTINCT custom_unit FROM request_lines
+   WHERE custom_unit IS NOT NULL
+     AND custom_unit NOT IN ('cai','hop','cay','ram','cuon','loc','bich','chai','bo');
+   SQL
+   ```
+
+   Có dòng → FK của `0111` sẽ hỏng, migration rollback và **api không khởi động**. Không deploy; báo dev để
+   chọn mã đúng cho từng giá trị lạ rồi `UPDATE request_lines SET custom_unit = '<mã>' WHERE custom_unit = '<giá trị lạ>'`
+   (có backup trước), kiểm lại ra 0 dòng rồi mới deploy. Nếu lỡ deploy và api không lên: sửa dữ liệu như trên
+   rồi `docker compose -f docker-compose.yml restart api` (migration chạy lại lúc boot).
+2. **Backup tay** ngay trước khi deploy:
+   `docker compose -f docker-compose.yml --profile backup run --rm backup`, kiểm file backup mới xuất hiện.
+3. Deploy (`bash update-vpp.sh`), chờ `/api/health` 200.
+4. **Không hạ phiên bản** sau khi `0112` đã chạy: bản cũ đọc `config.signers` (đã xóa). Cần quay lui thì phục hồi
+   backup ở bước 2 (`bash ops/backup/restore.sh`), không chỉ checkout code cũ.
+5. Nạp danh mục Booking (mục dưới) chỉ **sau** `0111` và **trước** khi Hành chính đổi tên các ĐVT có sẵn — bộ nạp
+   khớp ĐVT seed theo mã (`cai`, `hop`…), nhưng ĐVT khác (vd "cuốn", "xấp") khớp theo tên.
+
 ## Nạp danh mục Booking
 
 Nạp một lần danh mục từ sheet `Booking` của file Excel chủ dự án (SPEC giao diện Hành chính §11.4). Món đã có
