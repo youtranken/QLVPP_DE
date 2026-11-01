@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -21,10 +20,10 @@ import { useReportsParams } from './use-reports-params';
 import { useSnapshotDownload, useTakeSnapshot } from './use-snapshot';
 import './reports.m1.css';
 
-function ReportsHeader({ actions }: { actions?: ReactNode }) {
+function ReportsHeader() {
   const { t } = useTranslation();
   const title = t('nav.reports');
-  return <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('reports.page.description')} actions={actions} />;
+  return <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('reports.page.description')} />;
 }
 
 function TakeButtons({ taking, onTake }: { taking: SnapshotKind | null; onTake: (kind: SnapshotKind) => void }) {
@@ -103,8 +102,13 @@ function ReportBody({ report, period, onMonth, onInvalidPeriod }: { report: Mont
   };
   return (
     <div className="bc-page">
-      <ReportsHeader actions={<TakeButtons taking={snap.taking} onTake={snap.take} />} />
-      <MonthRow ym={report.ym} period={period} onChange={(v) => void changeMonth(v)} />
+      <ReportsHeader />
+      <div className="bc-bar">
+        <MonthRow ym={report.ym} period={period} onChange={(v) => void changeMonth(v)} />
+        <div className="bc-bar__actions">
+          <TakeButtons taking={snap.taking} onTake={snap.take} />
+        </div>
+      </div>
       {report.ym === period.ym && <p className="alert">{t('reports.page.openNotice', { month })}</p>}
       {report.pending_custom_count > 0 && (
         <p className="alert alert--warn">

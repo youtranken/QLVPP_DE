@@ -99,7 +99,7 @@ export function ReportPart1({ report, qty }: { report: MonthReport; qty: OrderQt
           data={rows}
           columns={columns}
           stackOnMobile
-          tableClassName="bc-table"
+          tableClassName="bc-table bc-grid"
           loading={!settled}
           emptyText={t(onlyNeed ? 'reports.part1.emptyNeed' : 'reports.part1.empty')}
           rowClassName={(r) => (qty.hasError(r.id) ? 'has-error' : '')}

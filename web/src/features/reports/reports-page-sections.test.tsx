@@ -22,6 +22,16 @@ afterEach(() => {
 });
 
 describe('ReportsPage — tháng', () => {
+  it('chọn tháng đứng trước Xuất Excel / In trình ký; chân Phần 1 đếm "4 món"', async () => {
+    stubReports();
+    openPage();
+    await orderCell('Bút bi xanh');
+    const month = screen.getByRole('group', { name: 'Chọn tháng báo cáo' });
+    const exportBtn = screen.getByRole('button', { name: 'Xuất Excel' });
+    expect(month.compareDocumentPosition(exportBtn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(await region(PART1)).getByText('3 món', { selector: 'p' })).toBeInTheDocument();
+  });
+
   it('lên tới kỳ đang mở (11/2026) rồi "Tháng sau" vô hiệu; badge "Đã khóa" → "Đang mở · hạn 10/11"', async () => {
     stubReports();
     openPage();
@@ -116,7 +126,7 @@ describe('ReportsPage — Phần 1 nhóm theo danh mục', () => {
     expect(within(tape).getByText('—')).toBeInTheDocument();
     expect(within(tape).getByText('2')).toBeInTheDocument();
     expect(within((await orderCell('Bút bi xanh')).closest('tr')!).getByText('Box of 20')).toBeInTheDocument();
-    expect(within(part1).getByText('6 hàng')).toBeInTheDocument();
+    expect(within(part1).getByText('6 món')).toBeInTheDocument();
   });
 
   it('danh sách nhóm rỗng → mọi món về "Chưa xếp nhóm", không lỗi', async () => {

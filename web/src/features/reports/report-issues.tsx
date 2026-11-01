@@ -48,7 +48,7 @@ export function ReportIssues({ issues }: { issues: ReportIssue[] }) {
   );
   return (
     <ReportSection title={t('reports.issues.title')} note={note}>
-      <DataTable data={rows} columns={columns} stackOnMobile emptyText="" />
+      <DataTable data={rows} columns={columns} stackOnMobile tableClassName="bc-grid" emptyText="" />
     </ReportSection>
   );
 }

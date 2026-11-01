@@ -72,6 +72,7 @@ export function ReportPart2({ departments }: { departments: ReportDepartment[] }
         data={rows}
         columns={columns}
         stackOnMobile
+        tableClassName="bc-grid"
         emptyText={t('reports.part2.empty')}
         groupBy={picked === ALL ? { key: (r) => r.dept, header: (key) => <b>{deptName(key)}</b> } : undefined}
       />

@@ -69,7 +69,7 @@ const reports: Messages<typeof vi> = {
       uncategorized: 'Uncategorized',
       custom: 'Off-catalogue (accepted)',
       groupItems: '{{count}} items',
-      rows: '{{count}} rows',
+      rows: '{{count}} items',
       empty: 'No items requested this month.',
       emptyNeed: 'Nothing to buy.',
     },

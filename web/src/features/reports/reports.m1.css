@@ -1,7 +1,8 @@
 [data-shell='admin'] .bc-page { display: grid; gap: var(--s-4); min-width: 0; }
 [data-shell='admin'] .bc-page > * { min-width: 0; }
 [data-shell='admin'] .bc-page .page-head { flex-wrap: wrap; margin-bottom: 0; }
-[data-shell='admin'] .bc-page .page-head__actions .btn { gap: var(--s-2); }
+[data-shell='admin'] .bc-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; }
+[data-shell='admin'] .bc-bar__actions { display: flex; gap: var(--s-2); flex-wrap: wrap; }
 [data-shell='admin'] .bc-month { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
 [data-shell='admin'] .bc-page > .alert a { color: inherit; font-weight: 800; text-decoration: underline; }
 [data-shell='admin'] .bc-section { display: grid; gap: var(--s-3); min-width: 0; }
@@ -48,9 +49,23 @@
 [data-shell='admin'] .bc-snap-error { align-items: center; flex-wrap: wrap; }
 [data-shell='admin'] .bc-how { margin: 0; font: var(--t-body); color: var(--c-ink-2); }
 @media (max-width: 767px) {
-  [data-shell='admin'] .bc-page .page-head__actions { width: 100%; }
-  [data-shell='admin'] .bc-page .page-head__actions .btn { flex: 1; }
+  [data-shell='admin'] .bc-bar__actions { width: 100%; }
+  [data-shell='admin'] .bc-bar__actions .btn { flex: 1; }
   [data-shell='admin'] .bc-order { justify-content: start; }
   [data-shell='admin'] .bc-order__error { text-align: left; }
 }
 [data-shell='admin'] .bc-inline-notice { align-items: center; justify-content: space-between; flex-wrap: wrap; }
+@media (min-width: 768px) {
+  [data-shell='admin'] .bc-grid th, [data-shell='admin'] .bc-grid td { border-bottom-color: var(--c-line-strong); }
+  [data-shell='admin'] .bc-grid thead th { background: var(--c-surface-2); color: var(--c-ink-2); }
+  [data-shell='admin'] .bc-grid th + th, [data-shell='admin'] .bc-grid td + td { border-left: 1px solid var(--c-line-strong); }
+  [data-shell='admin'] .bc-grid .dt-group th { border-top: 1px solid var(--c-line-strong); background: var(--c-surface-sunk); }
+}
+@media print {
+  [data-shell='admin'] .bc-section .table-wrap { overflow: visible; border-radius: 0; box-shadow: none; }
+  [data-shell='admin'] .bc-grid { border-collapse: collapse; }
+  [data-shell='admin'] .bc-grid th, [data-shell='admin'] .bc-grid td { position: static; border: 1px solid var(--c-print-ink); color: var(--c-print-ink); }
+  [data-shell='admin'] .bc-grid .dt-group th { font-weight: 800; }
+  [data-shell='admin'] .bc-grid .dt-group__toggle { display: none; }
+  [data-shell='admin'] .bc-grid tr { break-inside: avoid; }
+}

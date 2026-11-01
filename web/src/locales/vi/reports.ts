@@ -66,7 +66,7 @@ const reports = {
       uncategorized: 'Chưa xếp nhóm',
       custom: 'Ngoài danh mục (đã chấp nhận)',
       groupItems: '{{count}} món',
-      rows: '{{count}} hàng',
+      rows: '{{count}} món',
       empty: 'Tháng này chưa có món nào được đăng ký.',
       emptyNeed: 'Không có món nào cần mua.',
     },
