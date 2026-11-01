@@ -57,6 +57,7 @@ const common = {
     },
     languages: {
       label: 'Ngôn ngữ',
+      short: 'VI',
       vi: 'Tiếng Việt',
       en: 'English',
     },

@@ -88,6 +88,29 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
     expect(screen.queryByRole('radio', { name: 'English' })).toBeNull();
   });
 
+  it('cột ≥ 1280: nút "Ngôn ngữ" hiện mã ngôn ngữ hiện tại; mở → aria-controls trỏ tới hộp, focus vào lựa chọn đang chọn; bấm ra ngoài thì đóng; Esc đóng và trả focus về nút', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    const lang = await screen.findByRole('button', { name: 'Ngôn ngữ' });
+    expect(lang).toHaveTextContent('VI');
+    expect(lang).not.toHaveAttribute('aria-controls');
+    await userEvent.click(lang);
+    const group = screen.getByRole('radiogroup', { name: 'Ngôn ngữ' });
+    expect(group.closest(`[id="${lang.getAttribute('aria-controls')}"]`)).not.toBeNull();
+    expect(screen.getByRole('radio', { name: 'Tiếng Việt' })).toHaveFocus();
+    await userEvent.click(screen.getByRole('main'));
+    expect(screen.queryByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeNull();
+    expect(lang).toHaveAttribute('aria-expanded', 'false');
+
+    await userEvent.click(lang);
+    await userEvent.click(screen.getByRole('radio', { name: 'Tiếng Việt' }));
+    expect(screen.getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeNull();
+    expect(lang).toHaveFocus();
+  });
+
   it('đăng xuất lỗi → câu "Chưa đăng xuất được — thử lại." dưới nút', async () => {
     mockViewport(1280);
     stubShellApi({ '/api/auth/logout': () => jsonResponse(500, null) });

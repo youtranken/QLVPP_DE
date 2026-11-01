@@ -60,6 +60,7 @@ const common: Messages<typeof vi> = {
     },
     languages: {
       label: 'Language',
+      short: 'EN',
       vi: 'Tiếng Việt',
       en: 'English',
     },

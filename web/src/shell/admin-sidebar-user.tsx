@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { logout } from '@/lib/auth-actions';
@@ -41,21 +42,46 @@ function LogoutButton({ iconOnly = false }: { iconOnly?: boolean }) {
   );
 }
 
+function usePopover() {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const id = useId();
+  useEffect(() => {
+    if (!open) return;
+    panel.current?.querySelector<HTMLElement>('[aria-checked="true"], button')?.focus();
+    const onPointer = (e: PointerEvent) => {
+      if (!box.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointer);
+    return () => document.removeEventListener('pointerdown', onPointer);
+  }, [open]);
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key !== 'Escape' || !open) return;
+    setOpen(false);
+    trigger.current?.focus();
+  };
+  return { open, setOpen, box, trigger, panel, id, onKeyDown };
+}
+
 // Máy tính bảng: cột 72 chỉ còn avatar, bấm mới hiện đổi ngôn ngữ + đăng xuất.
-// Cột 232 (compact): một hàng để 12 mục vừa 1280×800 — đăng xuất là nút biểu tượng, ngôn ngữ sau nút "Ngôn ngữ".
+// Cột 252 (compact): một hàng để 12 mục vừa 1280×720 — đăng xuất là nút biểu tượng, ngôn ngữ sau nút "Ngôn ngữ".
 export function AdminSidebarUser({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation();
   const me = useMe();
   const tablet = useMediaQuery(ADMIN_TABLET_QUERY);
   const row = compact && !tablet;
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, box, trigger, panel, id, onKeyDown } = usePopover();
   const name = me.fullName ?? me.sub;
   const initials = initialsOf(name);
+  const popover = { ref: panel, id };
+  const toggle = { ref: trigger, 'aria-expanded': open, 'aria-controls': open ? id : undefined, onClick: () => setOpen((v) => !v) };
   return (
-    <div className="side__user" data-layout={row ? 'row' : undefined} onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}>
+    <div ref={box} className="side__user" data-layout={row ? 'row' : undefined} onKeyDown={onKeyDown}>
       <div className="side__who">
         {tablet ? (
-          <button type="button" className="side__avatar" title={name} aria-label={t('nav.userMenu')} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+          <button type="button" className="side__avatar" title={name} aria-label={t('nav.userMenu')} {...toggle}>
             {initials}
           </button>
         ) : (
@@ -69,8 +95,8 @@ export function AdminSidebarUser({ compact = false }: { compact?: boolean }) {
         </span>
         {row && (
           <>
-            <button type="button" className="side__icon-btn" aria-label={t('common.languages.label')} title={t('common.languages.label')} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-              <Icon name="more" size={18} />
+            <button type="button" className="side__icon-btn side__lang-btn" aria-label={t('common.languages.label')} title={t('common.languages.label')} {...toggle}>
+              {t('common.languages.short')}
             </button>
             <LogoutButton iconOnly />
           </>
@@ -78,12 +104,12 @@ export function AdminSidebarUser({ compact = false }: { compact?: boolean }) {
       </div>
       {row
         ? open && (
-            <div className="side__acct">
+            <div className="side__acct" {...popover}>
               <LanguageSwitch />
             </div>
           )
         : (!tablet || open) && (
-            <div className="side__acct">
+            <div className="side__acct" {...(tablet ? popover : {})}>
               <LanguageSwitch />
               <LogoutButton />
             </div>
