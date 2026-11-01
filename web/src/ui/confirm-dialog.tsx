@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Dialog, DialogTitle, DialogDescription, DialogClose } from '@/ui/dialog';
+import { Dialog, DialogTitle, DialogDescription, DialogCloseButton } from '@/ui/dialog';
 
 export function ConfirmDialog({
   title,
@@ -34,16 +34,7 @@ export function ConfirmDialog({
     >
       <div className="sheet-header">
         <DialogTitle className="sheet-title">{title}</DialogTitle>
-        <DialogClose asChild>
-          <button
-            type="button"
-            className="sheet-close"
-            aria-label={t('common.close')}
-            disabled={busy}
-          >
-            ✕
-          </button>
-        </DialogClose>
+        <DialogCloseButton disabled={busy} />
       </div>
       <div className="sheet-body">
         {error && <p role="alert" className="alert alert--danger">{error}</p>}

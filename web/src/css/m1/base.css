@@ -93,6 +93,8 @@
 [data-shell='admin'] .btn--block { width: 100%; }
 [data-shell='admin'] .btn:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell='admin'] .btn:disabled { opacity: 1; transform: none; background: var(--c-surface-2); color: var(--c-muted); box-shadow: none; cursor: not-allowed; }
+[data-shell='admin'] .btn--ghost:disabled,
+[data-shell='admin'] .icon-btn:disabled { opacity: .35; background: transparent; color: var(--c-ink-2); box-shadow: none; cursor: not-allowed; }
 [data-shell='admin'] .icon-btn { width: 36px; height: 36px; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--c-ink-2); }
 [data-shell='admin'] .icon-btn:hover:not(:disabled) { background: var(--c-acc-soft); color: var(--c-acc); }
 [data-shell='admin'] .icon-btn:focus-visible { box-shadow: var(--focus); }

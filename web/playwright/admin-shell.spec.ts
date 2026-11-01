@@ -67,6 +67,35 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     await expect(page.getByRole('button', { name: 'Đăng xuất' })).toBeVisible();
     await expect(page.getByRole('radio', { name: 'English' })).toBeVisible();
   });
+
+  test('E9-S1 khối tài khoản luôn trong màn hình, chuông nổi trên nội dung, số đếm không bị cắt', async ({ page }, info) => {
+    await page.goto('/admin/summary');
+    await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
+    const crumbs = page.getByRole('navigation', { name: 'Vị trí' });
+    if (isMobile(info)) {
+      await expect(crumbs).toBeHidden();
+      await page.getByRole('button', { name: OPEN_MENU }).click();
+    } else {
+      await expect(crumbs).toBeVisible();
+    }
+    await expect(page.getByRole('button', { name: 'Đăng xuất' })).toBeInViewport({ ratio: 1 });
+    const side = page.getByRole('navigation', { name: 'Menu quản lý' });
+    const overflow = await side.getByRole('link').evaluateAll((links) =>
+      links.filter((a) => a.getBoundingClientRect().right > a.closest('nav')!.parentElement!.getBoundingClientRect().right).map((a) => a.title),
+    );
+    expect(overflow).toEqual([]);
+    if (isMobile(info)) return;
+
+    await page.getByRole('banner').getByRole('button', { name: /^Thông báo, \d+ chưa đọc$/ }).click();
+    const panel = page.getByRole('dialog', { name: 'Thông báo' });
+    await expect(panel).toBeVisible();
+    const onTop = await panel.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.right - 8, r.top + r.height / 2);
+      return !!hit && el.contains(hit);
+    });
+    expect(onTop).toBe(true);
+  });
 });
 
 test.describe('E9-S1 trang member giữ giao diện cũ', () => {
