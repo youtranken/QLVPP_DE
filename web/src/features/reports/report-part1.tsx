@@ -10,7 +10,7 @@ import { OrderColumnCell } from './report-order-cell';
 import { ReportSection } from './report-section';
 import { OrderQtyContext, type OrderQty } from './use-order-qty';
 
-function useColumns() {
+function useColumns(withPeople: boolean) {
   const { t, i18n } = useTranslation();
   const unitName = useUnitNames();
   return useMemo<ColumnDef<Part1Row, unknown>[]>(() => {
@@ -41,8 +41,9 @@ function useColumns() {
       },
       { id: 'people', header: col('colPeople'), ...num, cell: ({ row }) => ('people' in row.original.row ? row.original.row.people : '') },
     ];
-    return columns.map((c) => ({ ...c, enableSorting: false }));
-  }, [t, i18n.language, unitName]);
+    // Số người chỉ có ở hàng ngoài danh mục (spec G12): không có hàng nào thì bỏ hẳn cột rỗng
+    return columns.filter((c) => withPeople || c.id !== 'people').map((c) => ({ ...c, enableSorting: false }));
+  }, [t, i18n.language, unitName, withPeople]);
 }
 
 function useGroupName(cats: Category[]) {
@@ -59,7 +60,7 @@ export function ReportPart1({ report, qty }: { report: MonthReport; qty: OrderQt
   const items = useAdminItems();
   const cats = useAllCategories();
   const [onlyNeed, setOnlyNeed] = useState(false);
-  const columns = useColumns();
+  const columns = useColumns(report.custom.length > 0);
   const groupName = useGroupName(cats.data ?? []);
   // Chờ nhóm và món tải xong (lỗi thì về "Chưa xếp nhóm") để hàng không đổi nhóm, ô đang gõ không bị dựng lại
   const settled = !items.isPending && !cats.isPending;

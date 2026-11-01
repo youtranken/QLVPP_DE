@@ -22,6 +22,13 @@ afterEach(() => {
 });
 
 describe('ReportsPage — tháng', () => {
+  it('cột "Số người" chỉ hiện khi Phần 1 có hàng ngoài danh mục; không có thì ẩn hẳn cột', async () => {
+    stubReports({ reports: { '2026-10': reportFixture({ custom: [] }) } });
+    openPage();
+    await orderCell('Bút bi xanh');
+    expect(within(await region(PART1)).queryByRole('columnheader', { name: 'Số người' })).toBeNull();
+  });
+
   it('chọn tháng đứng trước Xuất Excel / In trình ký; chân Phần 1 đếm "4 món"', async () => {
     stubReports();
     openPage();
@@ -30,6 +37,7 @@ describe('ReportsPage — tháng', () => {
     const exportBtn = screen.getByRole('button', { name: 'Xuất Excel' });
     expect(month.compareDocumentPosition(exportBtn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(await region(PART1)).getByText('3 món', { selector: 'p' })).toBeInTheDocument();
+    expect(within(await region(PART1)).getByRole('columnheader', { name: 'Số người' })).toBeInTheDocument();
   });
 
   it('lên tới kỳ đang mở (11/2026) rồi "Tháng sau" vô hiệu; badge "Đã khóa" → "Đang mở · hạn 10/11"', async () => {
