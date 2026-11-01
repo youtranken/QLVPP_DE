@@ -16,5 +16,3 @@ export function moveItem<T>(list: T[], index: number, dir: -1 | 1): T[] {
 export function orderPatches<T extends Ordered>(ordered: T[], keyOf: (item: T) => string): { key: string; sort_order: number }[] {
   return ordered.flatMap((item, i) => (item.sort_order === (i + 1) * ORDER_STEP ? [] : [{ key: keyOf(item), sort_order: (i + 1) * ORDER_STEP }]));
 }
-
-export const nextSortOrder = (list: Ordered[]) => list.reduce((m, x) => Math.max(m, x.sort_order), 0) + ORDER_STEP;

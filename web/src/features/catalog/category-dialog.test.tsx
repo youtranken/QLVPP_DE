@@ -41,7 +41,7 @@ describe('Hộp thoại Thêm nhóm', () => {
     expect(dialog.getByText(`Nhóm mới đứng thứ ${k} và nhận màu ${tone}.`)).toBeInTheDocument();
   });
 
-  it('POST {name, name_en, sort_order: max+10} rồi đóng, toast "Đã thêm nhóm {tên}"', async () => {
+  it('POST {name, name_en} không kèm sort_order (server xếp cuối) rồi đóng, toast "Đã thêm nhóm {tên}"', async () => {
     const { f, onClose, dialog } = render([cat('a', 10), cat('b', 35, false)]);
     expect(dialog.getByLabelText(/^Tên nhóm/)).toHaveAttribute('maxLength', '120');
     await userEvent.type(dialog.getByLabelText(/^Tên nhóm/), ' Mực in ');
@@ -50,16 +50,8 @@ describe('Hộp thoại Thêm nhóm', () => {
     await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     const call = f.mock.calls[0] as unknown as [string, RequestInit];
     expect(call[0]).toBe('/api/admin/item-categories');
-    expect(JSON.parse(String(call[1].body))).toEqual({ name: 'Mực in', name_en: 'Ink', sort_order: 45 });
+    expect(JSON.parse(String(call[1].body))).toEqual({ name: 'Mực in', name_en: 'Ink' });
     expect(await screen.findByText('Đã thêm nhóm Mực in')).toBeInTheDocument();
-  });
-
-  it('chưa có nhóm nào → sort_order 10', async () => {
-    const { f, dialog } = render([]);
-    await userEvent.type(dialog.getByLabelText(/^Tên nhóm/), 'Đầu tiên');
-    await userEvent.click(dialog.getByRole('button', { name: 'Thêm nhóm' }));
-    await vi.waitFor(() => expect(f).toHaveBeenCalled());
-    expect(JSON.parse(String((f.mock.calls[0] as unknown as [string, RequestInit])[1].body))).toMatchObject({ sort_order: 10 });
   });
 
   it('CATEGORY_EXISTS (trùng khác hoa thường) → "Đã có nhóm tên này." tại ô Tên nhóm', async () => {

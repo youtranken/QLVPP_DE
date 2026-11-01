@@ -1,18 +1,16 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { groupTone } from '@/lib/group-tone';
+import { toneAtRank } from '@/lib/group-tone';
 import { useMe } from '@/lib/me';
 import { Dialog, DialogClose, DialogCloseButton, DialogTitle } from '@/ui/dialog';
 import { FormField } from '@/ui/form-field';
 import { useToast } from '@/ui/toast-context';
 import { createCategory, patchCategory, useRefreshCatalog, type Category, type CategoryPayload } from './catalog.api';
 import { fieldErrors, type FieldErrors } from './catalog-errors';
-import { nextSortOrder } from '@/lib/local-order';
 
 const NAME_MAX = 120;
 const ERROR_FIELD: Record<string, string> = { CATEGORY_EXISTS: 'name' };
-const NEW_ID = 'new';
 
 function changedFields(category: Category, body: { name: string; name_en: string | null }): CategoryPayload {
   const out: CategoryPayload = {};
@@ -21,9 +19,10 @@ function changedFields(category: Category, body: { name: string; name_en: string
   return out;
 }
 
-function NewPosition({ categories, sortOrder }: { categories: Category[]; sortOrder: number }) {
+// Server đặt nhóm mới sau nhóm cuối (max + 10), nên nó nhận màu của vị trí kế tiếp
+function NewPosition({ categories }: { categories: Category[] }) {
   const { t } = useTranslation();
-  const tone = groupTone([...categories, { id: NEW_ID, name: '', sort_order: sortOrder }], NEW_ID);
+  const tone = toneAtRank(categories.length);
   return (
     <p className="cg-new-tone">
       <span className="ct-dot" style={{ background: `var(--${tone}-ink)` }} aria-hidden="true" />
@@ -41,13 +40,12 @@ export function CategoryDialog({ categories, category, onClose }: { categories: 
   const [nameEn, setNameEn] = useState(category?.name_en ?? '');
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
-  const sortOrder = nextSortOrder(categories);
   const err = (k: string) => (errors[k] ? t(errors[k]) : undefined);
   const dirty = name !== (category?.name ?? '') || nameEn !== (category?.name_en ?? '');
 
   const save = async (body: { name: string; name_en: string | null }) => {
     if (!category) {
-      await createCategory({ ...body, sort_order: sortOrder }, csrfToken);
+      await createCategory(body, csrfToken);
       return t('catalog.categories.added', { name: body.name });
     }
     const patch = changedFields(category, body);
@@ -89,7 +87,7 @@ export function CategoryDialog({ categories, category, onClose }: { categories: 
           <FormField label={t('catalog.categories.nameEn')} error={err('name_en')}>
             {(p) => <input {...p} value={nameEn} maxLength={NAME_MAX} onChange={(e) => setNameEn(e.target.value)} />}
           </FormField>
-          {!category && <NewPosition categories={categories} sortOrder={sortOrder} />}
+          {!category && <NewPosition categories={categories} />}
         </div>
         <div className="sheet-footer">
           <DialogClose asChild>

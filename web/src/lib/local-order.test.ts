@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { moveItem, nextSortOrder, orderPatches } from './local-order';
+import { moveItem, orderPatches } from './local-order';
 
 const x = (id: string, sort_order: number) => ({ id, sort_order });
 const key = (i: { id: string }) => i.id;
@@ -29,10 +29,5 @@ describe('thứ tự cục bộ', () => {
       { key: 'a', sort_order: 20 },
       { key: 'c', sort_order: 30 },
     ]);
-  });
-
-  it('nextSortOrder = lớn nhất + 10; danh sách rỗng → 10', () => {
-    expect(nextSortOrder([A, C, B])).toBe(40);
-    expect(nextSortOrder([])).toBe(10);
   });
 });

@@ -7,7 +7,6 @@ import { Dialog, DialogClose, DialogCloseButton, DialogTitle } from '@/ui/dialog
 import { FormField } from '@/ui/form-field';
 import { useToast } from '@/ui/toast-context';
 import { isFieldError, unitErrorKey } from './unit-errors';
-import { nextSortOrder } from '@/lib/local-order';
 import { createUnit, patchUnit, useRefreshUnits, type AdminUnit, type UnitPayload } from './units.api';
 
 const NAME_MAX = 40;
@@ -24,7 +23,7 @@ function errorField(cause: unknown): 'name' | 'name_en' | 'form' {
   return isFieldError(cause, 'name') ? 'name' : 'form';
 }
 
-export function UnitDialog({ units, unit, onClose }: { units: AdminUnit[]; unit?: AdminUnit; onClose: () => void }) {
+export function UnitDialog({ unit, onClose }: { unit?: AdminUnit; onClose: () => void }) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const refresh = useRefreshUnits();
@@ -38,7 +37,7 @@ export function UnitDialog({ units, unit, onClose }: { units: AdminUnit[]; unit?
 
   const save = async (body: { name: string; name_en: string | null }) => {
     if (!unit) {
-      await createUnit({ ...body, sort_order: nextSortOrder(units) }, csrfToken);
+      await createUnit(body, csrfToken);
       return t('units.page.added', { name: body.name });
     }
     const patch = changedFields(unit, body);

@@ -212,7 +212,7 @@ describe('Trang Đơn vị tính', () => {
     expect(names()).toEqual(['cái', 'hộp', 'Cũ']);
   });
 
-  it('thêm ĐVT: Tên tối đa 40; POST {name, name_en, sort_order: max+10}; trùng → lỗi ô "Đã có đơn vị tính tên này."', async () => {
+  it('thêm ĐVT: Tên tối đa 40; POST {name, name_en} không kèm sort_order (server xếp cuối); trùng → lỗi ô "Đã có đơn vị tính tên này."', async () => {
     const f = await open((_url, method, body) => (method === 'POST' && body.name === 'CÁI' ? jsonResponse(409, { code: 'UNIT_EXISTS', message: 'x' }) : undefined));
     await userEvent.click(screen.getByRole('button', { name: 'Thêm đơn vị tính' }));
     const dialog = screen.getByRole('dialog', { name: 'Thêm đơn vị tính' });
@@ -226,7 +226,7 @@ describe('Trang Đơn vị tính', () => {
     await userEvent.type(within(dialog).getByLabelText(/Tên đơn vị/), 'bộ');
     await userEvent.type(within(dialog).getByLabelText('Tên tiếng Anh'), 'set');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm đơn vị tính' }));
-    await waitFor(() => expect(mutations(f).at(-1)).toEqual(['/api/admin/units', 'POST', { name: 'bộ', name_en: 'set', sort_order: 40 }]));
+    await waitFor(() => expect(mutations(f).at(-1)).toEqual(['/api/admin/units', 'POST', { name: 'bộ', name_en: 'set' }]));
     expect(await screen.findByText('Đã thêm đơn vị tính bộ')).toBeInTheDocument();
   });
 

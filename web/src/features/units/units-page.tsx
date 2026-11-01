@@ -107,8 +107,8 @@ export function UnitsPage() {
       ) : (
         <UnitTable ordered={list} busy={busy || order.saving} onMove={order.move} onEdit={setEditing} onToggleActive={(u) => void toggleActive(u)} onDelete={(u) => void remove(u)} />
       )}
-      {adding && <UnitDialog units={list} onClose={() => setAdding(false)} />}
-      {editing && <UnitDialog units={list} unit={editing} onClose={() => setEditing(null)} />}
+      {adding && <UnitDialog onClose={() => setAdding(false)} />}
+      {editing && <UnitDialog unit={editing} onClose={() => setEditing(null)} />}
     </div>
   );
 }
