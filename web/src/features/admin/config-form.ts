@@ -23,7 +23,7 @@ export const wholeIn = (v: string, min: number, max: number) => isWhole(v) && Nu
 export type PeriodDraft = Record<'registration_last_day' | 'reminder_days_left' | 'default_max_qty', string>;
 const PERIOD_KEYS = ['registration_last_day', 'reminder_days_left', 'default_max_qty'] as const;
 
-// Ngày hạn và ngày nhắc gõ tay số nào cũng gửi để server quyết (AC E9-S6 1); chỉ chặn ô không phải số
+// Ngày hạn và ngày nhắc gõ tay số nào cũng gửi để server quyết; chỉ chặn ô không phải số
 export const periodSpec: BlockSpec<PeriodDraft> = {
   block: 'period',
   fromConfig: (c) => ({

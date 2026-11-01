@@ -1,7 +1,7 @@
 import { FormField } from '@/ui/form-field';
 import { isWhole } from './config-form';
 
-// Khác Stepper: số gõ tay không bị kẹp vào [min, max] để server là nơi quyết (AC E9-S6 1); chỉ nút ± dừng ở mốc
+// Khác Stepper: số gõ tay không bị kẹp vào [min, max] để server là nơi quyết; chỉ nút ± dừng ở mốc
 export function DayInput({
   label,
   hint,

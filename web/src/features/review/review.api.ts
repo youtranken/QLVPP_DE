@@ -86,7 +86,7 @@ export function useReviewLines(status: ReviewFilter, ym: string) {
   return useQuery(reviewLinesQuery(status, ym));
 }
 
-// Đếm từng tab = chính danh sách của tab đó (D9), cùng khóa nên tab đang xem dùng lại kết quả
+// Đếm từng tab = chính danh sách của tab đó, cùng khóa nên tab đang xem dùng lại kết quả
 export function useReviewCounts(ym: string): Record<ReviewFilter, number | undefined> {
   const results = useQueries({ queries: REVIEW_FILTERS.map((f) => reviewLinesQuery(f, ym)) });
   return Object.fromEntries(REVIEW_FILTERS.map((f, i) => [f, results[i]?.data?.items.length])) as Record<ReviewFilter, number | undefined>;

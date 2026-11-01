@@ -6,6 +6,6 @@ const SYNC_CODES = new Set(['SSO_UNAVAILABLE', 'DIRECTORY_UNAVAILABLE', 'DIRECTO
 export function syncErrorKey(e: unknown): string {
   const code = apiErrorCode(e);
   if (code && SYNC_CODES.has(code)) return `users.errors.${code}`;
-  // SPEC B10: mọi 5xx coi như PMH ID không liên lạc được
+  // Mọi 5xx coi như PMH ID không liên lạc được
   return e instanceof ApiError && e.status >= 500 ? 'users.errors.SSO_UNAVAILABLE' : 'users.errors.UNKNOWN';
 }

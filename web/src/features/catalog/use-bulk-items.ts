@@ -12,7 +12,7 @@ export interface BulkResult {
   failed: { id: string; error: unknown }[];
 }
 
-// D12: mỗi món một PATCH (một audit), lần lượt; lỗi một món không dừng các món sau
+// Mỗi món một PATCH (một audit), lần lượt; lỗi một món không dừng các món sau
 export async function patchEach(ids: string[], body: ItemPayload, csrfToken: string | null): Promise<BulkResult> {
   const result: BulkResult = { done: [], failed: [] };
   for (const id of ids) {

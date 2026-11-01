@@ -8,7 +8,7 @@ import { usePeriodSummary } from '@/features/summary/summary.api';
 
 const SHOWN_NAMES = 3;
 
-// "Thiếu kho" lấy số server tính (need > 0 của Báo cáo, BR-15), không tự tính ở FE (D5)
+// "Thiếu kho" lấy số server tính (need > 0 của Báo cáo), không tự tính ở FE
 export function DeliveryStrip({ ym, pendingCount, phone = false }: { ym: string; pendingCount?: number; phone?: boolean }) {
   const { t, i18n } = useTranslation();
   const summary = usePeriodSummary(ym).data;

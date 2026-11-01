@@ -20,7 +20,7 @@ function stepOf(e: KeyboardEvent<HTMLElement>): 'prev' | 'next' | null {
   return null;
 }
 
-// ≥ 1440 đẩy nội dung sang trái thay vì phủ lên (SPEC §4.2); #main do shell Hành chính cung cấp
+// ≥ 1440 đẩy nội dung sang trái thay vì phủ lên; #main do shell Hành chính cung cấp
 function usePushContent(active: boolean, width: number) {
   useEffect(() => {
     const main = active ? document.getElementById('main') : null;

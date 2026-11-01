@@ -16,7 +16,7 @@ async function snap(page: Page, info: TestInfo, name: string) {
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png`, fullPage: true });
 }
 
-// Hành chính không có /me (E9-S0): đổi ngôn ngữ ở đáy sidebar, điện thoại thì trong menu quản lý
+// Hành chính không có /me: đổi ngôn ngữ ở đáy sidebar, điện thoại thì trong menu quản lý
 async function switchLanguage(page: Page, info: TestInfo, lang: Lang) {
   await page.goto('/admin/summary');
   if (isMobile(info)) await page.getByRole('button', { name: /^(Mở menu quản lý|Open admin menu)$/ }).click();
@@ -77,7 +77,7 @@ test.describe('E6-S4 song ngữ các màn Hành chính của Plan 3', () => {
         if (isMobile(info)) await expectNoContrastViolations(page);
         await snap(page, info, `reports-${lang}`);
 
-        // Lịch sử chỉ dành cho Nhân viên (E9-S0): xem bằng chính người có phiếu đã khóa
+        // Lịch sử chỉ dành cho Nhân viên: xem bằng chính người có phiếu đã khóa
         const member = await newPage(browser, info, { 'x-dev-user-sub': seed.sub, 'x-dev-role': 'member' });
         try {
           await member.goto('/');

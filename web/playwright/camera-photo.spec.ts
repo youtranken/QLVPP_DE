@@ -35,7 +35,7 @@ function noisyPng(width: number, height: number): Buffer {
 
 asRole('admin');
 
-// Món khác của nhân viên không còn ô ảnh (T3b): kiểm nén ảnh ở ô ảnh món trong Danh mục của Hành chính
+// Món khác của nhân viên không còn ô ảnh: kiểm nén ảnh ở ô ảnh món trong Danh mục của Hành chính
 test.describe('E2-S5 ảnh từ camera', () => {
   test('E2-S5 ảnh 4 MB 2400 px từ ô "Chọn hoặc chụp ảnh" → nén trước khi tải: ≤ 1 MB, cạnh dài ≤ 1600 px', async ({ page }) => {
     const photo = noisyPng(2400, 560);

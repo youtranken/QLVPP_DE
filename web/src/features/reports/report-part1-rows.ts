@@ -14,7 +14,7 @@ export interface Part1Row {
   packNote: string | null;
 }
 
-// Nhóm theo danh mục sống chỉ để xem trên trang (D7); bản chốt không lưu nhóm nên bản in giữ thứ tự phẳng
+// Nhóm theo danh mục sống chỉ để xem trên trang; bản chốt không lưu nhóm nên bản in giữ thứ tự phẳng
 export function part1Rows(report: MonthReport, items: AdminItem[] | undefined, cats: Category[] | undefined): Part1Row[] {
   const catList = cats ?? [];
   const byId = new Map((items ?? []).map((i) => [i.id, i]));

@@ -38,7 +38,7 @@ export interface DeliveryFailure {
   remaining?: number;
 }
 
-// Trang Giao hàng (B3): lỗi khối ở đầu chi tiết, còn lại gắn vào dòng; mã làm bản phiếu cũ thì tải lại phiếu
+// Trang Giao hàng: lỗi khối ở đầu chi tiết, còn lại gắn vào dòng; mã làm bản phiếu cũ thì tải lại phiếu
 const BLOCK_CODES = new Set(['PERIOD_NOT_LOCKED', 'REQUEST_NOT_FOUND', 'LINE_NOT_FOUND']);
 const LINE_CODES = new Set(['STOCK_INSUFFICIENT', 'DELIVER_EXCEEDS_QTY', 'STALE_UPDATE', 'LINE_NOT_REVIEWED', 'LINE_REJECTED']);
 const STALE_CODES = new Set(['DELIVER_EXCEEDS_QTY', 'STALE_UPDATE', 'LINE_NOT_REVIEWED', 'LINE_REJECTED']);

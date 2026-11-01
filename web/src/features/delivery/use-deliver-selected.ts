@@ -28,7 +28,7 @@ export const failureInfo = (id: string, e: unknown): LineFailureInfo => ({
   remaining: apiErrorNumber(e, 'remaining'),
 });
 
-// D6: mỗi dòng một request (một tx riêng, có expected_delivered_qty); lỗi một dòng không dừng các dòng sau
+// Mỗi dòng một request (một tx riêng, có expected_delivered_qty); lỗi một dòng không dừng các dòng sau
 export async function deliverSelected(lines: SelectedLine[], csrfToken: string | null): Promise<DeliverSelectedResult> {
   const result: DeliverSelectedResult = { delivered: [], failed: [] };
   for (const line of lines) {

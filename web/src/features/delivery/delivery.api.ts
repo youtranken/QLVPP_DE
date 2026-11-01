@@ -31,7 +31,7 @@ export const isDeliverable = (l: LineView) => ['n/a', 'accepted', 'converted'].i
 export const remainingOf = (l: LineView) => l.qty - l.delivered_qty - l.cancelled_qty;
 export const isComplete = (lines: LineView[]) => lines.filter(isDeliverable).every((l) => remainingOf(l) <= 0);
 
-// Chỉ để kẹp nút (D4): server STOCK_INSUFFICIENT/DELIVER_EXCEEDS_QTY mới là chuẩn; món ngoài DM không có tồn
+// Chỉ để kẹp nút: server STOCK_INSUFFICIENT/DELIVER_EXCEEDS_QTY mới là chuẩn; món ngoài DM không có tồn
 export function deliverMax(remaining: number, stock: number | null, cap?: number): number {
   return Math.max(0, Math.min(remaining, stock ?? remaining, cap ?? remaining));
 }
