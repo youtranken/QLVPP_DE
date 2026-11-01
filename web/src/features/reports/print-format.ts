@@ -1,7 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { formatVnStamp } from '@/lib/format-time';
-import { unitLabel, unitsQuery } from '@/features/units/units.api';
+import { unitLabel, useUnitNames } from '@/features/units/units.api';
 import type { FrozenUnitName, SnapshotData, SnapshotRow } from './reports.api';
 
 export interface SignBox {
@@ -38,12 +37,10 @@ export function signBoxesOf(snap: SnapshotData, oldTitle: (role: string) => Omit
 
 // Bản chốt mới in tên ĐVT đã chụp; bản chốt cũ chưa có thì dùng tên hiện tại trong bảng ĐVT
 export function useFrozenUnitName() {
-  const { data } = useQuery(unitsQuery);
+  const unitNames = useUnitNames();
   return useCallback(
-    (row: { unit: string } & FrozenUnitName, lang: string) => {
-      const unit = row.unit_name !== undefined ? { name: row.unit_name, name_en: row.unit_name_en ?? null } : data?.find((u) => u.code === row.unit);
-      return unit ? unitLabel(unit, lang) : row.unit;
-    },
-    [data],
+    (row: { unit: string } & FrozenUnitName, lang: string) =>
+      row.unit_name !== undefined ? unitLabel({ name: row.unit_name, name_en: row.unit_name_en ?? null }, lang) : unitNames(row.unit, lang),
+    [unitNames],
   );
 }

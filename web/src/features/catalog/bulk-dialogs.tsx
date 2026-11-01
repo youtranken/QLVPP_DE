@@ -1,12 +1,12 @@
-import { useId, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { groupTone } from '@/lib/group-tone';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogTitle } from '@/ui/dialog';
 import { FormField } from '@/ui/form-field';
 import { Icon } from '@/ui/icon';
 import { categoryLabel, type Category } from './catalog.api';
+import { indexCategories } from './catalog-rows';
 
 const MAX_QTY_MIN = 1;
 const MAX_QTY_MAX = 999;
@@ -99,6 +99,7 @@ export function BulkMoveDialog({ count, categories, onSubmit, onClose }: {
   const [target, setTarget] = useState<Category | null>(null);
   const [error, setError] = useState(false);
   const active = categories.filter((c) => c.active);
+  const tones = useMemo(() => indexCategories(categories).tone, [categories]);
   const submit = () => {
     if (!target) return setError(true);
     void flight.run(() => onSubmit(target));
@@ -112,7 +113,7 @@ export function BulkMoveDialog({ count, categories, onSubmit, onClose }: {
         </span>
         <div role="radiogroup" aria-labelledby={`${uid}-label`} aria-describedby={error ? `${uid}-err` : undefined} className="ct-chips ct-chips--wrap">
           {active.map((c) => {
-            const tone = groupTone(categories, c.id);
+            const tone = tones.get(c.id) ?? 'g0';
             return (
               <button
                 key={c.id}

@@ -21,6 +21,18 @@ describe('part1Rows — nhóm Phần 1 theo danh mục sống (D7)', () => {
     expect(out[2].tone).toBe('g0');
   });
 
+  it('hai nhóm cùng sort_order → xếp theo tên như server, màu theo thứ tự đó', () => {
+    const report = reportFixture({ byItem: [row('item-glue'), row('item-pen')], custom: [] });
+    const cats = [
+      { ...REPORT_CATEGORIES[1], sort_order: 5 },
+      { ...REPORT_CATEGORIES[0], sort_order: 5 },
+    ];
+    expect(part1Rows(report, REPORT_ITEMS, cats).map((r) => [r.group, r.tone])).toEqual([
+      ['c-write', 'g1'],
+      ['c-glue', 'g2'],
+    ]);
+  });
+
   it('category_id không còn trong danh sách nhóm, hoặc món không có trong admin/items → "Chưa xếp nhóm" g0', () => {
     const report = reportFixture({ byItem: [row('item-stale'), row('item-missing')], custom: [] });
     const out = part1Rows(report, [adminItem({ id: 'item-stale', category_id: 'c-deleted' })], REPORT_CATEGORIES);

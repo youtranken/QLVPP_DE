@@ -1,9 +1,9 @@
-import { useId } from 'react';
+import { useId, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { groupTone } from '@/lib/group-tone';
 import { FormField } from '@/ui/form-field';
 import { categoryLabel, type Category } from '@/features/catalog/catalog.api';
 import type { FieldErrors } from '@/features/catalog/catalog-errors';
+import { indexCategories } from '@/features/catalog/catalog-rows';
 import type { ItemDraft } from '@/features/catalog/item-draft';
 import { ImageField } from '@/features/catalog/image-field';
 import { UnitSelect } from '@/features/units/unit-select';
@@ -19,6 +19,7 @@ export function ConvertNewFields({ draft, errors, categories, onChange, onUpload
   const uid = useId();
   const err = (k: string) => (errors[k] ? t(errors[k]) : undefined);
   const active = categories.filter((c) => c.active);
+  const tones = useMemo(() => indexCategories(categories).tone, [categories]);
   return (
     <>
       <div className="a-form-wide">
@@ -58,7 +59,7 @@ export function ConvertNewFields({ draft, errors, categories, onChange, onUpload
           className="rv-chips"
         >
           {active.map((c) => {
-            const tone = groupTone(categories, c.id);
+            const tone = tones.get(c.id) ?? 'g0';
             return (
               <button
                 key={c.id}

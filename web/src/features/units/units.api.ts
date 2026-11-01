@@ -21,18 +21,18 @@ export const unitsQuery = queryOptions({
 export const unitLabel = (unit: Pick<Unit, 'name' | 'name_en'>, lang: string) =>
   lang === 'en' && unit.name_en ? unit.name_en : unit.name;
 
-export function useUnitNames(): (code: string | null | undefined) => string {
+export function useUnitNames(): (code: string | null | undefined, lang?: string) => string {
   const { i18n } = useTranslation();
   const { data } = useQuery(unitsQuery);
-  const lang = i18n.language;
+  const uiLang = i18n.language;
   const byCode = useMemo(() => new Map((data ?? []).map((u) => [u.code, u])), [data]);
   return useCallback(
-    (code: string | null | undefined) => {
+    (code: string | null | undefined, lang = uiLang) => {
       if (!code) return '';
       const unit = byCode.get(code);
       return unit ? unitLabel(unit, lang) : code;
     },
-    [byCode, lang],
+    [byCode, uiLang],
   );
 }
 

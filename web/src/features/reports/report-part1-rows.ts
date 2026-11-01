@@ -1,4 +1,5 @@
-import { groupTone, type Tone } from '@/lib/group-tone';
+import type { Tone } from '@/lib/group-tone';
+import { indexCategories } from '@/features/catalog/catalog-rows';
 import type { AdminItem, Category } from '@/features/catalog/catalog.api';
 import { pickName, type MonthReport, type ReportCustomRow, type ReportItemRow } from './reports.api';
 
@@ -16,19 +17,19 @@ export interface Part1Row {
 
 // Nhóm theo danh mục sống chỉ để xem trên trang; bản chốt không lưu nhóm nên bản in giữ thứ tự phẳng
 export function part1Rows(report: MonthReport, items: AdminItem[] | undefined, cats: Category[] | undefined): Part1Row[] {
-  const catList = cats ?? [];
+  const index = indexCategories(cats ?? []);
+  const last = index.ordered.length;
   const byId = new Map((items ?? []).map((i) => [i.id, i]));
-  const order = [...catList].sort((a, b) => a.sort_order - b.sort_order).map((c) => c.id);
-  const rank = (g: string) => (g === CUSTOM_GROUP ? order.length + 1 : g === NONE_GROUP ? order.length : order.indexOf(g));
+  const rank = (g: string) => (g === CUSTOM_GROUP ? last + 1 : g === NONE_GROUP ? last : index.rank.get(g)!);
   const catalog = report.byItem.map((row): Part1Row => {
     const item = byId.get(row.item_id);
-    const known = !!item?.category_id && order.includes(item.category_id);
+    const known = !!item?.category_id && index.rank.has(item.category_id);
     return {
       id: row.key,
       row,
       custom: false,
       group: known ? item!.category_id! : NONE_GROUP,
-      tone: known ? groupTone(catList, item!.category_id) : 'g0',
+      tone: known ? index.tone.get(item!.category_id!)! : 'g0',
       packNote: item?.pack_note ?? null,
     };
   });

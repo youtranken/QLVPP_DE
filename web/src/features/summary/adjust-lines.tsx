@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { groupTone } from '@/lib/group-tone';
 import { useMe } from '@/lib/me';
 import { ItemThumb } from '@/ui/item-thumb';
 import { useAdminItems, useAllCategories, type AdminItem } from '@/features/catalog/catalog.api';
+import { indexCategories } from '@/features/catalog/catalog-rows';
 import type { LineView } from '@/features/request/request.api';
 import { useRequestFormat } from '@/features/request/request-format';
 import { ReviewActions } from '@/features/review/review-actions';
@@ -25,7 +25,8 @@ function useLineFacts() {
   const items = useAdminItems();
   const cats = useAllCategories();
   const byId = useMemo(() => new Map((items.data ?? []).map((i) => [i.id, i])), [items.data]);
-  const toneOf = (item: AdminItem | undefined) => groupTone(cats.data ?? [], item?.category_id ?? null);
+  const tones = useMemo(() => indexCategories(cats.data ?? []).tone, [cats.data]);
+  const toneOf = (item: AdminItem | undefined) => (item?.category_id ? (tones.get(item.category_id) ?? 'g0') : 'g0');
   const metaOf = (unit: string | null, item: AdminItem | undefined) => {
     const u = fmt.unit(unit);
     if (item?.admin_only) return t('summary.adjust.metaAdminOnly', { unit: u });
