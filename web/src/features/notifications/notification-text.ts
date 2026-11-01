@@ -2,15 +2,24 @@ import type { TFunction } from 'i18next';
 import type { NotificationView } from './notifications.api';
 
 const ZONE = 'Asia/Ho_Chi_Minh';
-const TOPICS = new Set([
-  'period_open',
-  'reminder',
-  'period_locked',
-  'low_stock',
-  'request_delivered',
-  'line_cancelled',
-  'custom_line_new',
-]);
+// Thiếu tham số bắt buộc thì dùng câu dự phòng của topic thay vì câu gãy
+const REQUIRED: Record<string, string[]> = {
+  period_open: ['ym', 'deadline'],
+  reminder: ['ym', 'deadline'],
+  period_locked: ['ym', 'registered', 'headcount'],
+  low_stock: ['name', 'stock_qty'],
+  request_delivered: ['ym'],
+  line_cancelled: ['ym', 'name', 'qty'],
+  custom_line_new: ['ym', 'name'],
+  line_review: ['ym', 'name'],
+};
+const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+const present = (v: unknown) => v != null && v !== '';
+function complete(topic: string, p: Record<string, unknown>): boolean {
+  const keys = [...REQUIRED[topic], ...(topic === 'line_review' && p.action === 'converted' ? ['item_name'] : [])];
+  return keys.every((k) => present(p[k])) && (!('ym' in p) || YM.test(str(p.ym)));
+}
 
 const str = (v: unknown): string => (typeof v === 'string' ? v : v == null ? '' : String(v));
 
@@ -37,8 +46,9 @@ export function notificationText(
   lang: string,
   unitName: (code: string) => string,
 ): string {
-  if (!TOPICS.has(n.topic) && n.topic !== 'line_review') return t('notifications.topics.unknown');
+  if (!(n.topic in REQUIRED)) return t('notifications.topics.unknown');
   const p = n.params;
+  if (!complete(n.topic, p)) return t(`notifications.fallback.${n.topic}`);
   const base = {
     month: monthLabel(str(p.ym), t, lang),
     deadline: p.deadline ? lastDay(str(p.deadline)) : '',
@@ -53,6 +63,7 @@ export function notificationText(
     item: pick(lang, p.item_name, p.item_name_en),
     note: str(p.note),
   };
+  if (n.topic === 'line_cancelled' && !base.reason) return t('notifications.topics.line_cancelledNoReason', base);
   if (n.topic !== 'line_review') return t(`notifications.topics.${n.topic}`, base);
   const action = str(p.action);
   const withNote = base.note && (action === 'accepted' || action === 'rejected') ? `${action}Note` : action;

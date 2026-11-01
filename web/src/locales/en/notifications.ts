@@ -20,6 +20,7 @@ const notifications: Messages<typeof vi> = {
       low_stock: '{{name}} is running low, {{stock_qty}} left.',
       request_delivered: 'Your {{month}} request has been fully delivered.',
       line_cancelled: 'Admin cancelled the remaining {{qty}} {{unit}} of {{name}} ({{month}}): {{reason}}',
+      line_cancelledNoReason: 'Admin cancelled the remaining {{qty}} {{unit}} of {{name}} ({{month}}).',
       custom_line_new: '{{person}} added an off-catalog item "{{name}}" ({{month}}).',
       line_review: {
         accepted: 'Admin accepted the item "{{name}}" ({{month}}).',
@@ -29,6 +30,16 @@ const notifications: Messages<typeof vi> = {
         rejectedNote: 'Admin rejected the item "{{name}}" ({{month}}): {{note}}',
       },
       unknown: 'You have a new notification.',
+    },
+    fallback: {
+      period_open: 'A new request period is open.',
+      reminder: 'You have not registered for this period yet — register before the deadline.',
+      period_locked: 'The request period is locked.',
+      low_stock: 'An item is running low.',
+      request_delivered: 'Your request has been fully delivered.',
+      line_cancelled: 'Admin cancelled the remaining quantity of an item.',
+      custom_line_new: 'There is a new off-catalog item to review.',
+      line_review: 'Admin reviewed your off-catalog item.',
     },
   },
 };

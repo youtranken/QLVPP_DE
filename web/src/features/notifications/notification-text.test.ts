@@ -79,4 +79,35 @@ describe('notificationText', () => {
       expect(text).not.toContain('{{');
     }
   });
+
+  describe('thiếu tham số → câu dự phòng theo topic, không ra câu gãy', () => {
+    const cases: [string, Record<string, unknown>, string, string][] = [
+      ['period_open', { ym: '2026-11' }, 'Kỳ đăng ký mới đã mở.', 'A new request period is open.'],
+      ['period_open', { deadline: '2026-11-10T17:00:00.000Z' }, 'Kỳ đăng ký mới đã mở.', 'A new request period is open.'],
+      ['reminder', { ym: '2026-11', deadline: null }, 'Bạn chưa đăng ký kỳ này — nhớ đăng ký trước hạn.', 'You have not registered for this period yet — register before the deadline.'],
+      ['period_locked', { ym: '2026-10' }, 'Kỳ đăng ký đã khóa.', 'The request period is locked.'],
+      ['period_locked', { ym: '2026-10', registered: 3 }, 'Kỳ đăng ký đã khóa.', 'The request period is locked.'],
+      ['low_stock', { name: 'Bút' }, 'Có món sắp hết kho.', 'An item is running low.'],
+      ['low_stock', { stock_qty: 2 }, 'Có món sắp hết kho.', 'An item is running low.'],
+      ['request_delivered', {}, 'Phiếu của bạn đã được giao đủ.', 'Your request has been fully delivered.'],
+      ['line_cancelled', { ym: '2026-11', qty: 2 }, 'Hành chính đã hủy phần còn nợ của một món.', 'Admin cancelled the remaining quantity of an item.'],
+      ['custom_line_new', { ym: '2026-11', person: 'An' }, 'Có món ngoài danh mục mới cần xem.', 'There is a new off-catalog item to review.'],
+      ['line_review', { action: 'accepted', name: 'Bìa' }, 'Hành chính đã xem món ngoài danh mục của bạn.', 'Admin reviewed your off-catalog item.'],
+      ['line_review', { ym: '2026-11', action: 'converted', name: 'Bìa' }, 'Hành chính đã xem món ngoài danh mục của bạn.', 'Admin reviewed your off-catalog item.'],
+      ['period_open', { ym: 'abc', deadline: '2026-11-10T17:00:00.000Z' }, 'Kỳ đăng ký mới đã mở.', 'A new request period is open.'],
+    ];
+    it.each(cases)('%s %j', (topic, params, viText, enText) => {
+      expect(notificationText(n(topic, params), vi, 'vi')).toBe(viText);
+      expect(notificationText(n(topic, params), en, 'en')).toBe(enText);
+    });
+
+    it('period_locked có registered = 0 vẫn là câu đầy đủ (0 không phải thiếu)', () => {
+      expect(notificationText(n('period_locked', { ym: '2026-10', registered: 0, headcount: 25 }), vi, 'vi')).toBe('Kỳ tháng 10 đã khóa: 0/25 người đã đăng ký.');
+    });
+
+    it('line_cancelled thiếu lý do → câu kết thúc bằng dấu chấm, không có ": " treo', () => {
+      const text = notificationText(n('line_cancelled', { ym: '2026-11', name: 'Bút bi xanh', unit: 'hop', qty: 2 }), vi, 'vi');
+      expect(text).toBe('Hành chính hủy phần còn nợ 2 hộp Bút bi xanh (tháng 11).');
+    });
+  });
 });

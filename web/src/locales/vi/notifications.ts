@@ -17,6 +17,7 @@ const notifications = {
       low_stock: '{{name}} sắp hết kho, còn {{stock_qty}}.',
       request_delivered: 'Phiếu {{month}} của bạn đã được giao đủ.',
       line_cancelled: 'Hành chính hủy phần còn nợ {{qty}} {{unit}} {{name}} ({{month}}): {{reason}}',
+      line_cancelledNoReason: 'Hành chính hủy phần còn nợ {{qty}} {{unit}} {{name}} ({{month}}).',
       custom_line_new: '{{person}} thêm món ngoài danh mục "{{name}}" ({{month}}).',
       line_review: {
         accepted: 'Hành chính đã chấp nhận món "{{name}}" ({{month}}).',
@@ -26,6 +27,16 @@ const notifications = {
         rejectedNote: 'Hành chính từ chối món "{{name}}" ({{month}}): {{note}}',
       },
       unknown: 'Bạn có thông báo mới.',
+    },
+    fallback: {
+      period_open: 'Kỳ đăng ký mới đã mở.',
+      reminder: 'Bạn chưa đăng ký kỳ này — nhớ đăng ký trước hạn.',
+      period_locked: 'Kỳ đăng ký đã khóa.',
+      low_stock: 'Có món sắp hết kho.',
+      request_delivered: 'Phiếu của bạn đã được giao đủ.',
+      line_cancelled: 'Hành chính đã hủy phần còn nợ của một món.',
+      custom_line_new: 'Có món ngoài danh mục mới cần xem.',
+      line_review: 'Hành chính đã xem món ngoài danh mục của bạn.',
     },
   },
 };
