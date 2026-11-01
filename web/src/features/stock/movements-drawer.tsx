@@ -3,7 +3,7 @@ import { Drawer, DrawerClose, DrawerTitle } from '@/ui/drawer';
 import { Icon } from '@/ui/icon';
 import { LoadError, Loading } from '@/ui/load-state';
 import { useFormatTime } from '@/lib/format-time';
-import { useDirectoryNames } from '@/features/directory/directory.api';
+import { useDirectoryNames } from '@/features/directory/use-all-users';
 import { useUnitName } from '@/features/units/units.api';
 import { useMovements, type StockMovement } from './stock.api';
 import { balancesAfter, type StockRow } from './stock-rows';

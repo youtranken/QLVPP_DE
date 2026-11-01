@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { fetchUsersPage, type AdminUser } from './directory.api';
+import { fetchUsersPage, userLabel, type AdminUser } from './directory.api';
 
 export const DIRECTORY_FULL_LOAD_MAX = 2000;
 
@@ -25,8 +25,19 @@ export async function loadAllUsers(fetchPage: FetchPage): Promise<LoadedUsers> {
   return { items, overflow: false };
 }
 
+const allUsersQuery = {
+  queryKey: ['users', 'admin-all'],
+  queryFn: () => loadAllUsers((c) => fetchUsersPage('', c)),
+  staleTime: 60_000,
+};
+
+// Sổ cái/Nhật ký chỉ có sub: dùng chung bộ tải hết danh bạ; vượt ngưỡng thì Map rỗng, nơi dùng hiện sub
+export function useDirectoryNames() {
+  return useQuery({ ...allUsersQuery, select: (all: LoadedUsers) => new Map(all.items.map((u) => [u.sub, userLabel(u)])) });
+}
+
 export function useDirectoryUsers(search: string) {
-  const all = useQuery({ queryKey: ['users', 'admin-all'], queryFn: () => loadAllUsers((c) => fetchUsersPage('', c)), staleTime: 60_000 });
+  const all = useQuery(allUsersQuery);
   const overflow = all.data?.overflow ?? false;
   const server = useInfiniteQuery({
     queryKey: ['users', 'admin-search', search],
