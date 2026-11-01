@@ -47,6 +47,21 @@ const clean = (v: string | null | undefined) =>
 const PACK = /^0*(\d+)\s*viên\s*\/\s*v[ĩỉ]$/;
 const ALIASES: Record<string, string> = { ream: 'ram', vĩ: 'vỉ' };
 
+// §11.4: ĐVT có sẵn khớp theo mã seed trước, để Hành chính đổi tên ĐVT seed rồi nạp không sinh bản trùng
+const SEEDED_CODES: Record<string, string> = {
+  cái: 'cai',
+  hộp: 'hop',
+  cây: 'cay',
+  ram: 'ram',
+  cuộn: 'cuon',
+  bịch: 'bich',
+  chai: 'chai',
+  bộ: 'bo',
+};
+
+export const seededUnitCode = (unitName: string): string | null =>
+  SEEDED_CODES[unitName] ?? null;
+
 export function normalizeUnit(raw: string | null): {
   unitName: string;
   packNote: string | null;

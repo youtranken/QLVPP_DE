@@ -2,6 +2,7 @@ import {
   bookingItemProblem,
   normalizeUnit,
   parseBookingRows,
+  seededUnitCode,
   type BookingRawRow,
 } from './booking-import';
 
@@ -132,5 +133,28 @@ describe('bookingItemProblem — giới hạn trường món', () => {
     expect(bookingItemProblem({ ...item, packNote: 'x'.repeat(121) })).toBe(
       'pack_note',
     );
+  });
+});
+
+describe('seededUnitCode', () => {
+  it('ĐVT có sẵn theo §11.4 → mã seed (cái→cai, hộp→hop, cây→cay, ram→ram, cuộn→cuon, bịch→bich, chai→chai, bộ→bo)', () => {
+    const cases: [string, string][] = [
+      ['cái', 'cai'],
+      ['hộp', 'hop'],
+      ['cây', 'cay'],
+      ['ram', 'ram'],
+      ['cuộn', 'cuon'],
+      ['bịch', 'bich'],
+      ['chai', 'chai'],
+      ['bộ', 'bo'],
+    ];
+    for (const [name, code] of cases) expect(seededUnitCode(name)).toBe(code);
+    expect(seededUnitCode(normalizeUnit('Ream').unitName)).toBe('ram');
+  });
+
+  it('ĐVT ngoài danh sách seed (cuốn, xấp, vỉ) → null, khớp theo tên', () => {
+    for (const name of ['cuốn', 'xấp', 'vỉ']) {
+      expect(seededUnitCode(name)).toBeNull();
+    }
   });
 });

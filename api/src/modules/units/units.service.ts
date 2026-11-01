@@ -116,6 +116,13 @@ export class UnitsService {
     );
   }
 
+  async findByCodeWithin(tx: Tx, code: string): Promise<UnitRow | null> {
+    const { rows } = await tx.execute<UnitRow>(sql`
+      SELECT ${COLUMNS} FROM units WHERE code = ${code}
+    `);
+    return rows[0] ?? null;
+  }
+
   // Nạp danh mục: khớp tên không phân biệt hoa thường (không theo slug — cuốn ≠ cuộn), chưa có thì tạo
   async findOrCreateWithin(
     tx: Tx,

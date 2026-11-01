@@ -5,6 +5,7 @@ import { SystemConfigService } from '../config/system-config.service';
 import { UnitsService, type UnitRow } from '../units/units.service';
 import {
   bookingItemProblem,
+  seededUnitCode,
   type BookingItem,
   type BookingNeedCode,
   type BookingSkip,
@@ -49,7 +50,7 @@ class BookingImporter {
         continue;
       }
       const unit = await this.unit(tx, item.unitName);
-      // SPEC §11.1: món mới không được dùng ĐVT đã ngừng — bỏ hàng, báo để Hành chính sửa file
+      // Món mới không được dùng ĐVT đã ngừng: bỏ hàng, báo để Hành chính sửa file
       if (!unit.active) {
         this.result.skipped.push(skip(item, 'unit_inactive'));
         continue;
@@ -94,6 +95,12 @@ class BookingImporter {
   private async unit(tx: Tx, name: string): Promise<UnitRow> {
     const known = this.unitsByName.get(name);
     if (known) return known;
+    const code = seededUnitCode(name);
+    const seeded = code && (await this.units.findByCodeWithin(tx, code));
+    if (seeded) {
+      this.unitsByName.set(name, seeded);
+      return seeded;
+    }
     const { unit, created } = await this.units.findOrCreateWithin(
       tx,
       name,

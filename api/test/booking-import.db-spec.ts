@@ -195,6 +195,18 @@ describe('nạp danh mục Booking — applyBookingImport', () => {
     expect(await count('items')).toBe(7);
   });
 
+  it('ĐVT seed đã đổi tên (cái → chiếc): hàng "Cái" vẫn dùng mã cai, không tạo ĐVT "cái" mới', async () => {
+    await pool.query("UPDATE units SET name = 'chiếc' WHERE code = 'cai'");
+    const r = await applyBookingImport(db, parseBookingRows(rows), {
+      apply: true,
+    });
+    expect(r.unitsCreated.map((u) => u.name)).not.toContain('cái');
+    expect(
+      (await pool.query("SELECT unit FROM items WHERE code = 'K01'")).rows,
+    ).toEqual([{ unit: 'cai' }]);
+    expect(await count('units', "lower(name) = 'cái'")).toBe(0);
+  });
+
   it('chạy thử (không --apply): báo cáo đủ nhưng không ghi gì', async () => {
     const r = await applyBookingImport(db, parseBookingRows(rows), {
       apply: false,
