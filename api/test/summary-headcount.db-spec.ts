@@ -4,6 +4,7 @@ import {
   resolveMigrationsDir,
   runMigrations,
 } from '../src/database/migration-runner';
+import { LOCAL_SA_SUB } from '../src/modules/auth/local-sa-env';
 import { SystemConfigService } from '../src/modules/config/system-config.service';
 import { SummaryService } from '../src/modules/requests/summary.service';
 import { createTestApp } from './test-app.helper';
@@ -151,6 +152,29 @@ describe('mẫu số Tổng hợp loại người thuộc admin_group (Postgres 
         headcount_source: 'live',
         unregistered: 0,
       });
+    });
+
+    it('phiếu của SA cục bộ (dữ liệu lạ) không vào mẫu số: SA có phiếu → headcount 1; A có phiếu → vẫn 1', async () => {
+      const seeded =
+        (
+          await pool.query(
+            `INSERT INTO users (sub, full_name, status) VALUES ($1, 'SA', 'active') ON CONFLICT (sub) DO NOTHING`,
+            [LOCAL_SA_SUB],
+          )
+        ).rowCount === 1;
+      try {
+        await addRequest(LOCAL_SA_SUB, REQ_YM);
+        expect((await summary().liveCounts(REQ_YM)).headcount).toBe(1);
+        await addRequest(A, REQ_YM);
+        expect((await summary().liveCounts(REQ_YM)).headcount).toBe(1);
+      } finally {
+        await pool.query(
+          'DELETE FROM requests WHERE user_sub = $1 AND created_by_sub = $2',
+          [LOCAL_SA_SUB, B],
+        );
+        if (seeded)
+          await pool.query('DELETE FROM users WHERE sub = $1', [LOCAL_SA_SUB]);
+      }
     });
 
     it('phiếu kỳ khác không tính: C có phiếu kỳ trước và kỳ sau → kỳ giữa headcount 1; chính kỳ đó headcount 2', async () => {

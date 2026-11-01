@@ -139,7 +139,8 @@ export class SummaryService {
       )
       SELECT (SELECT count(*) FROM (
                 SELECT sub FROM eligible
-                UNION SELECT r.user_sub FROM requests r WHERE r.period_ym = ${ymToDate(ym)}::date
+                UNION SELECT r.user_sub FROM requests r
+                WHERE r.period_ym = ${ymToDate(ym)}::date AND r.user_sub <> ${LOCAL_SA_SUB}
               ) people)::int AS headcount,
              (SELECT count(*) FROM eligible WHERE unregistered)::int AS unregistered
     `);
