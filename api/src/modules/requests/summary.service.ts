@@ -125,7 +125,7 @@ export class SummaryService {
     return rows[0];
   }
 
-  // Cùng điều kiện với danh sách unregistered → số luôn bằng độ dài danh sách
+  // unregistered cùng điều kiện với danh sách; headcount thêm chủ phiếu ngoài tập (phiếu tạo hộ) để registered ≤ headcount
   async liveCounts(
     ym: string,
   ): Promise<{ headcount: number; unregistered: number }> {
@@ -133,9 +133,15 @@ export class SummaryService {
       headcount: number;
       unregistered: number;
     }>(sql`
-      SELECT count(*)::int AS headcount,
-             count(*) FILTER (WHERE ${notRegistered(ym)})::int AS unregistered
-      FROM users u WHERE ${await this.headcountCondition()}
+      WITH eligible AS (
+        SELECT u.sub, ${notRegistered(ym)} AS unregistered
+        FROM users u WHERE ${await this.headcountCondition()}
+      )
+      SELECT (SELECT count(*) FROM (
+                SELECT sub FROM eligible
+                UNION SELECT r.user_sub FROM requests r WHERE r.period_ym = ${ymToDate(ym)}::date
+              ) people)::int AS headcount,
+             (SELECT count(*) FROM eligible WHERE unregistered)::int AS unregistered
     `);
     return rows[0];
   }

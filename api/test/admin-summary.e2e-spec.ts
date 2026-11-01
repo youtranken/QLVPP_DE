@@ -69,12 +69,12 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
     }
   });
 
-  it('người có phiếu rồi bị locked: registered vẫn đếm (FR-34), headcount sống và unregistered không chứa', async () => {
+  it('người có phiếu rồi bị locked: registered vẫn đếm (FR-34), headcount vẫn tính họ vì là chủ phiếu, unregistered không chứa', async () => {
     await setStatus(U2, 'locked');
     try {
       expect(await summary()).toMatchObject({
         registered: 2,
-        headcount: 2,
+        headcount: 3,
         unregistered: 1,
       });
       expect((await unregistered()).map((u) => u.sub)).toEqual([U3]);

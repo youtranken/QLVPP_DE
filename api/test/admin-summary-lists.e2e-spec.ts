@@ -192,7 +192,7 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
     }
   });
 
-  it('Hành chính (cùng gate, thêm "VPP_ADMIN") không vào unregistered/headcount; phiếu cũ seed SQL vẫn vào registered', async () => {
+  it('Hành chính (cùng gate, thêm "VPP_ADMIN") không vào unregistered/headcount; có phiếu (seed SQL) thì vào registered và headcount, unregistered không đổi', async () => {
     const hc = f.sub('hc');
     const summary = async () =>
       (await asAdmin(`/periods/${YM}/summary`).expect(200)).body as {
@@ -221,6 +221,7 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
       expect(await summary()).toEqual({
         ...before.summary,
         registered: before.summary.registered + 1,
+        headcount: before.summary.headcount + 1,
       });
     } finally {
       await f.pool().query('DELETE FROM requests WHERE user_sub = $1', [hc]);
