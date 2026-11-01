@@ -34,8 +34,10 @@ export const OptionalText =
     IsString()(target, key);
     MaxLength(max)(target, key);
   };
+export const SORT_ORDER_MAX = 1_000_000;
+
 export const SortOrder = () => (target: object, key: string) => {
   IsInt()(target, key);
-  Min(-1_000_000)(target, key);
-  Max(1_000_000)(target, key);
+  Min(-SORT_ORDER_MAX)(target, key);
+  Max(SORT_ORDER_MAX)(target, key);
 };

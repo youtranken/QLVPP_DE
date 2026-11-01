@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
+import { SORT_ORDER_MAX } from '../../common/dto-fields';
 import { pgViolation } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor, Tx } from '../../database/database.module';
@@ -242,7 +243,7 @@ export class UnitsService {
   // Gọi sau newCode: khóa tư vấn của nó cũng tuần tự hóa max + 10
   private async nextSortOrder(tx: Tx): Promise<number> {
     const { rows } = await tx.execute<{ next: number }>(
-      sql`SELECT COALESCE(MAX(sort_order), 0) + 10 AS next FROM units`,
+      sql`SELECT LEAST(COALESCE(MAX(sort_order), 0) + 10, ${SORT_ORDER_MAX}) AS next FROM units`,
     );
     return rows[0].next;
   }

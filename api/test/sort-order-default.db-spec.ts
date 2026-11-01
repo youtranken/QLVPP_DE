@@ -47,9 +47,9 @@ describe('sort_order mặc định khi tạo nhóm món / ĐVT = max + 10 (Postg
   });
 
   describe.each([
-    ['nhóm món', '/api/admin/item-categories'],
-    ['ĐVT', '/api/admin/units'],
-  ])('%s', (_label, path) => {
+    ['nhóm món', '/api/admin/item-categories', 'item_categories'],
+    ['ĐVT', '/api/admin/units', 'units'],
+  ])('%s', (_label, path, table) => {
     it('bảng trống, không gửi sort_order → 10', async () => {
       expect(sortOf(await post(path, { name: 'Đầu tiên' }))).toBe(10);
     });
@@ -79,6 +79,18 @@ describe('sort_order mặc định khi tạo nhóm món / ĐVT = max + 10 (Postg
       expect([sortOf(a), sortOf(b)].sort((x, y) => x - y)).toEqual([
         1015, 1025,
       ]);
+    });
+
+    it('max + 10 không vượt trần DTO 1 000 000 (max 999 989 → 999 999, 999 990 → 1 000 000, 999 995 → 1 000 000, 1 000 000 → 1 000 000)', async () => {
+      const after = async (max: number, tag: string) => {
+        await pool.query(`DELETE FROM ${table} WHERE sort_order >= 999000`);
+        sortOf(await post(path, { name: `Mốc ${tag}`, sort_order: max }));
+        return sortOf(await post(path, { name: `Sau ${tag}` }));
+      };
+      expect(await after(999_989, 'a')).toBe(999_999);
+      expect(await after(999_990, 'b')).toBe(1_000_000);
+      expect(await after(999_995, 'c')).toBe(1_000_000);
+      expect(await after(1_000_000, 'd')).toBe(1_000_000);
     });
   });
 });

@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
+import { SORT_ORDER_MAX } from '../../common/dto-fields';
 import { pgViolation } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Tx } from '../../database/database.module';
@@ -106,7 +107,7 @@ export class CategoriesService {
   private async nextSortOrder(tx: Tx): Promise<number> {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(${SORT_LOCK})`);
     const { rows } = await tx.execute<{ next: number }>(
-      sql`SELECT COALESCE(MAX(sort_order), 0) + 10 AS next FROM item_categories`,
+      sql`SELECT LEAST(COALESCE(MAX(sort_order), 0) + 10, ${SORT_ORDER_MAX}) AS next FROM item_categories`,
     );
     return rows[0].next;
   }

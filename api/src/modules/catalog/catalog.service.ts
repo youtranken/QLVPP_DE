@@ -76,6 +76,7 @@ export class CatalogService {
   ) {}
 
   // active ở đây = dùng được (tính cả nhóm); lockCategories chặn đua với tx ngừng nhóm/chuyển nhóm đang chạy
+  // — dựa vào PATCH admin/items lấy FOR UPDATE trên items (xung đột FOR KEY SHARE) khi đổi category_id
   async itemFacts(
     ids: string[],
     tx: Executor = this.db,
