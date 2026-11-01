@@ -1,5 +1,5 @@
 import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '@/lib/api-client';
 
@@ -25,13 +25,14 @@ export function useUnitNames(): (code: string | null | undefined) => string {
   const { i18n } = useTranslation();
   const { data } = useQuery(unitsQuery);
   const lang = i18n.language;
+  const byCode = useMemo(() => new Map((data ?? []).map((u) => [u.code, u])), [data]);
   return useCallback(
     (code: string | null | undefined) => {
       if (!code) return '';
-      const unit = data?.find((u) => u.code === code);
+      const unit = byCode.get(code);
       return unit ? unitLabel(unit, lang) : code;
     },
-    [data, lang],
+    [byCode, lang],
   );
 }
 
