@@ -12,7 +12,6 @@ export function AdminMenuSheet({ open, onOpenChange }: { open: boolean; onOpenCh
       className="side-sheet"
       overlayClassName="modal-backdrop"
       viewportClassName="side-sheet-viewport"
-      returnFocus
     >
       <div className="side-sheet__head">
         <span className="side__logo" aria-hidden="true">

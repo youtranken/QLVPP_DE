@@ -85,7 +85,8 @@ export function RowMenu({ label, items }: { label: string; items: RowMenuItem[] 
   };
   const select = (item: RowMenuItem) => {
     if (item.disabled) return;
-    close(false);
+    // Focus về nút ⋯ trước khi mở hộp thoại: mục menu sắp bị gỡ, hộp lấy phần tử đang focus làm nơi trả về
+    close(true);
     item.onSelect();
   };
 

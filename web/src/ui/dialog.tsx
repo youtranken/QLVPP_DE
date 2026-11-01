@@ -35,7 +35,7 @@ export function Dialog({
   maxWidth,
   dirty = false,
   onKeyDown,
-  returnFocus = false,
+  returnFocus = true,
   children,
 }: {
   open: boolean;
@@ -48,7 +48,7 @@ export function Dialog({
   // Form đang sửa dở: đóng bằng Esc/bấm nền/✕ phải hỏi "Bỏ thay đổi?" trước
   dirty?: boolean;
   onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
-  // Mở không qua Trigger nên Radix không biết trả focus về đâu; nơi tự quản focus sau khi đóng thì để false
+  // Mở không qua Trigger nên Radix không biết trả focus về đâu: mặc định trả về phần tử đang focus lúc mở; nơi tự quản focus sau khi đóng thì để false
   returnFocus?: boolean;
   children: ReactNode;
 }) {

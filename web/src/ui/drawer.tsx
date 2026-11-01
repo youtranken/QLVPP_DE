@@ -78,7 +78,6 @@ export function Drawer({
       viewportClassName="drawer-viewport"
       maxWidth={width}
       onKeyDown={onKeyDown}
-      returnFocus
     >
       {children}
     </Dialog>
