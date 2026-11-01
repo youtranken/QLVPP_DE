@@ -16,6 +16,7 @@ export function PeriodPreview({ ym, lastDay, reminder }: { ym: string; lastDay: 
   const weekdays = t('config.preview.weekdays').split(',');
   return (
     <div className="cf-preview">
+      <h3 className="cf-preview__title">{t('config.preview.heading', { month: monthLabel(ym) })}</h3>
       <div className="cf-cal__head" aria-hidden="true">
         {weekdays.map((w) => (
           <span key={w}>{w}</span>

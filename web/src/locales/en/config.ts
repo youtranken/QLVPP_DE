@@ -17,6 +17,7 @@ const config: Messages<typeof vi> = {
     recent: {
       title: 'Recent changes',
       row: '{{time}} · {{who}}',
+      changed: 'Changed: {{keys}}',
       empty: 'Nothing saved yet.',
       viewAll: 'View in Audit log',
     },
@@ -40,6 +41,7 @@ const config: Messages<typeof vi> = {
       save: 'Save registration period',
     },
     preview: {
+      heading: 'Example: period of {{month}}',
       title: 'Calendar preview for {{month}}',
       hint: 'Illustration from the numbers being typed — the real deadline is computed when the period is created.',
       invalid: 'Enter a valid deadline day to see the preview',

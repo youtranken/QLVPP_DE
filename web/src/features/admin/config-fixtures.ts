@@ -40,6 +40,16 @@ export const USERS = [
 
 export const RECENT = [
   { id: '9', actor: 'u-admin', actorName: 'Nguyễn Văn An', action: 'config.updated', objectType: 'config', objectId: 'admin_contact', detail: {}, createdAt: '2026-10-31T02:05:00.000Z' },
+  {
+    id: '8',
+    actor: 'u-admin',
+    actorName: 'Nguyễn Văn An',
+    action: 'config.updated',
+    objectType: 'config',
+    objectId: 'registration_last_day,reminder_days_left',
+    detail: { before: { registration_last_day: 10, reminder_days_left: 3 }, after: { registration_last_day: 12, reminder_days_left: 3 } },
+    createdAt: '2026-10-30T02:05:00.000Z',
+  },
 ];
 
 type Body = Record<string, unknown>;

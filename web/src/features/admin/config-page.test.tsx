@@ -214,6 +214,14 @@ describe('Cấu hình · Thay đổi gần đây', () => {
     expect(fetchMock.mock.calls.map((c) => String(c[0]))).toContain('/api/admin/audit?action=config.updated&limit=3');
   });
 
+  it('mỗi dòng nói đã đổi gì: chỉ khóa thật sự khác giữa trước/sau, nhãn tiếng Việt; không có trước/sau thì theo mã đối tượng', async () => {
+    stubConfigApi();
+    await openConfig();
+    const recent = screen.getByRole('region', { name: 'Thay đổi gần đây' });
+    expect(await within(recent).findByText('Đã đổi: Liên hệ Hành chính')).toBeInTheDocument();
+    expect(within(recent).getByText('Đã đổi: Ngày hạn đăng ký')).toBeInTheDocument();
+  });
+
   it('lưu xong → tải lại "Thay đổi gần đây"', async () => {
     const fetchMock = stubConfigApi((body) => jsonResponse(200, { ...CONFIG, ...body }));
     await openConfig();

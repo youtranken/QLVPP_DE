@@ -14,6 +14,7 @@ const config = {
     recent: {
       title: 'Thay đổi gần đây',
       row: '{{time}} · {{who}}',
+      changed: 'Đã đổi: {{keys}}',
       empty: 'Chưa có lần lưu nào.',
       viewAll: 'Xem trong Nhật ký',
     },
@@ -37,6 +38,7 @@ const config = {
       save: 'Lưu kỳ đăng ký',
     },
     preview: {
+      heading: 'Minh họa kỳ tháng {{month}}',
       title: 'Xem trước lịch tháng {{month}}',
       hint: 'Minh họa từ số đang nhập — hạn thật do hệ thống tính khi tạo kỳ.',
       invalid: 'Nhập ngày hạn hợp lệ để xem trước',

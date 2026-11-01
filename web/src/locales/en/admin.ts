@@ -142,6 +142,8 @@ const admin: Messages<typeof vi> = {
       technical: 'Technical details',
     },
     fields: {
+      admin_group: 'Admin group',
+      authorized_groups: 'Authorized groups',
       action: 'Action',
       active: 'Active',
       added: 'Added',
@@ -182,7 +184,7 @@ const admin: Messages<typeof vi> = {
       qty: 'Quantity',
       reason: 'Reason',
       recipient_sub: 'Recipient',
-      registration_last_day: 'Last registration day',
+      registration_last_day: 'Registration deadline day',
       reminder_days_left: 'Remind before (days)',
       removed: 'Removed',
       request_id: 'Request',

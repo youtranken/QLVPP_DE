@@ -154,6 +154,7 @@ describe('Cấu hình · khối Kỳ đăng ký', () => {
     stubConfigApi();
     await openConfig();
     expect(preview()).toHaveAccessibleName('Xem trước lịch tháng 12/2026');
+    expect(screen.getByRole('heading', { name: 'Minh họa kỳ tháng 12/2026' })).toBeInTheDocument();
     expect(dayCell(1)).toHaveTextContent('Mở đăng ký');
     expect(dayCell(8)).toHaveTextContent('Nhắc người chưa có phiếu');
     expect(dayCell(10)).toHaveTextContent('Ngày hạn (đến 23:59)');
