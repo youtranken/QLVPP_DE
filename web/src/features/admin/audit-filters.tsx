@@ -30,7 +30,7 @@ function useActorUser(sub: string): DirectoryUser | null {
 
 // Đổi key của form khi URL đổi để bản nháp luôn khớp bộ lọc đang áp dụng
 export function AuditFilterBar({ applied, serverError, onApply, onClear }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [draft, setDraft] = useState(applied);
   const [rangeError, setRangeError] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -46,7 +46,7 @@ export function AuditFilterBar({ applied, serverError, onApply, onClear }: Props
   };
 
   return (
-    <form ref={formRef} className="au-filters" aria-label={t('audit.filters.label')} onSubmit={submit} noValidate>
+    <form ref={formRef} className="au-filters" lang={i18n.language} aria-label={t('audit.filters.label')} onSubmit={submit} noValidate>
       <div className="au-actor">
         <UserPicker
           label={t('audit.filters.actor')}
@@ -58,12 +58,12 @@ export function AuditFilterBar({ applied, serverError, onApply, onClear }: Props
           onEnter={() => formRef.current?.requestSubmit()}
         />
         {!draft.actor && (
-          <button type="button" className="btn btn--sm au-system" onClick={() => set('actor', SYSTEM_ACTOR)}>
+          <button type="button" className="btn au-system" onClick={() => set('actor', SYSTEM_ACTOR)}>
             {t('audit.filters.system')}
           </button>
         )}
       </div>
-      <FormField label={t('audit.filters.action')}>
+      <FormField label={t('audit.filters.action')} className="au-action-field">
         {(p) => (
           <select {...p} value={draft.action} onChange={(e) => set('action', e.target.value)}>
             <option value="">{t('audit.filters.anyAction')}</option>

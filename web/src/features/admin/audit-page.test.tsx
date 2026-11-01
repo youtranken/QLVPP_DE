@@ -72,25 +72,43 @@ describe('AuditPage B11', () => {
     expect(groups[1]).toHaveTextContent('2 dòng');
   });
 
-  it('"Xem" mở Trước/Sau chỉ khóa khác nhau + JSON gọn + mã sự kiện; "Thu" đóng lại (aria-expanded)', async () => {
-    const detail = { before: { name: 'A', qty: 1, same: 'x' }, after: { name: 'B', qty: 1, same: 'x' }, self: true };
+  it('"Xem" mở hàng chi tiết chiếm đủ cột dưới dòng: nhãn trường qua i18n (stock_qty → Tồn kho, khóa lạ giữ nguyên), JSON thô ẩn trong "Chi tiết kỹ thuật"; "Thu" đóng lại', async () => {
+    const detail = { before: { stock_qty: 3, qty: 1, odd_key: 'a' }, after: { stock_qty: 7, qty: 1, odd_key: 'b' }, note: 'đếm lại' };
     vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items: [row('evt-1', { detail })], next_cursor: null } : { items: [], next_cursor: null }))));
     await openAudit();
     const btn = screen.getByRole('button', { name: 'Xem' });
     expect(btn).toHaveAttribute('aria-expanded', 'false');
     await userEvent.click(btn);
     expect(btn).toHaveAttribute('aria-expanded', 'true');
-    const diff = within(screen.getAllByRole('table')[1]);
-    expect(diff.getByRole('rowheader', { name: 'name' })).toBeInTheDocument();
-    expect(diff.queryByRole('rowheader', { name: 'qty' })).toBeNull();
-    expect(diff.queryByRole('rowheader', { name: 'same' })).toBeNull();
-    expect(diff.getByText('"A"')).toBeInTheDocument();
-    expect(diff.getByText('"B"')).toBeInTheDocument();
-    expect(screen.getByText('Mã sự kiện #evt-1')).toBeInTheDocument();
-    expect(screen.getByText('Trước: {"name":"A","qty":1,"same":"x"}')).toBeInTheDocument();
+    const detailCell = screen.getByText('Mã sự kiện #evt-1').closest('td')!;
+    expect(detailCell).toHaveAttribute('colspan', '5');
+    expect(detailCell).not.toContainElement(btn);
+    const diff = within(within(detailCell).getByRole('table'));
+    expect(diff.getByRole('rowheader', { name: 'Tồn kho' })).toBeInTheDocument();
+    expect(diff.getByRole('rowheader', { name: 'odd_key' })).toBeInTheDocument();
+    expect(diff.queryByRole('rowheader', { name: 'Số lượng' })).toBeNull();
+    expect(diff.getByText('3')).toBeInTheDocument();
+    expect(diff.getByText('7')).toBeInTheDocument();
+    expect(within(detailCell).getByText('Ghi chú')).toBeInTheDocument();
+    const tech = within(detailCell).getByText('Chi tiết kỹ thuật').closest('details')!;
+    expect(tech).not.toHaveAttribute('open');
+    expect(within(tech).getByText('Trước: {"stock_qty":3,"qty":1,"odd_key":"a"}')).not.toBeVisible();
     await userEvent.click(btn);
     expect(btn).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByText('Mã sự kiện #evt-1')).toBeNull();
+  });
+
+  it('cột Đối tượng hiện tên khi before/after có name/custom_name; không có thì loại · mã ngắn', async () => {
+    const items = [
+      row('n1', { objectType: 'item', objectId: '0b6f1c2e-1111-4222-8333-444455556666', detail: { before: null, after: { name: 'Bút bi xanh' } } }),
+      row('n2', { objectType: 'request_line', objectId: '9a8b7c6d-1111-4222-8333-444455556666', detail: { before: { custom_name: 'Băng keo 2 mặt' }, after: { review_status: 'accepted' } } }),
+      row('n3', { objectType: 'item', objectId: '12345678-1111-4222-8333-444455556666', detail: { before: { stock_qty: 1 }, after: { stock_qty: 2 } } }),
+    ];
+    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items, next_cursor: null } : { items: [], next_cursor: null }))));
+    await openAudit();
+    expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
+    expect(screen.getByText('Băng keo 2 mặt')).toBeInTheDocument();
+    expect(screen.getByText('item · 12345678…')).toBeInTheDocument();
   });
 
   it('"Xem thêm" tải trang kế bằng cursor; hết trang → thông báo "Đã hiện hết…" và không còn nút', async () => {
@@ -223,7 +241,8 @@ describe('AuditPage B11', () => {
     expect(within(screen.getAllByRole('table')[0]).getByText('Giao hàng')).toBeInTheDocument();
     expect(within(screen.getAllByRole('table')[0]).getByText('line.delivered')).toBeInTheDocument();
     await userEvent.click(screen.getAllByRole('button', { name: 'Xem' })[1]);
-    expect(screen.getByText('"10.0.0.5"')).toBeInTheDocument();
+    expect(screen.getByText('Địa chỉ IP')).toBeInTheDocument();
+    expect(screen.getByText('10.0.0.5')).toBeInTheDocument();
     expect(bodyRows().length).toBeGreaterThan(2);
   });
 });

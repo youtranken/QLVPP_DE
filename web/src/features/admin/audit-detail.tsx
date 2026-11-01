@@ -4,6 +4,10 @@ import { changedFields, otherDetail } from './audit-diff';
 
 const compact = (v: unknown) => JSON.stringify(v);
 
+type Translate = (key: string, opts?: { defaultValue?: string }) => string;
+// Khóa chưa có nhãn (api thêm trường mới) hiện tên thô thay vì trống
+const fieldLabel = (t: Translate, key: string) => t(`audit.fields.${key}`, { defaultValue: key });
+
 export function AuditDetail({ entry, id }: { entry: AuditEntry; id: string }) {
   const { t } = useTranslation();
   const d = entry.detail !== null && typeof entry.detail === 'object' ? (entry.detail as Record<string, unknown>) : {};
@@ -24,7 +28,7 @@ export function AuditDetail({ entry, id }: { entry: AuditEntry; id: string }) {
           <tbody>
             {fields.map((f) => (
               <tr key={f.key}>
-                <th scope="row">{f.key}</th>
+                <th scope="row">{fieldLabel(t, f.key)}</th>
                 <td>{f.before ?? t('common.empty')}</td>
                 <td>{f.after ?? t('common.empty')}</td>
               </tr>
@@ -37,17 +41,18 @@ export function AuditDetail({ entry, id }: { entry: AuditEntry; id: string }) {
         <dl className="au-pairs">
           {rest.map((r) => (
             <div key={r.key}>
-              <dt>{r.key}</dt>
-              <dd>{r.value}</dd>
+              <dt>{fieldLabel(t, r.key)}</dt>
+              <dd>{r.value ?? t('common.empty')}</dd>
             </div>
           ))}
         </dl>
       )}
       {hasSides && (
-        <div className="au-json">
+        <details className="au-json">
+          <summary>{t('audit.detail.technical')}</summary>
           {'before' in d && <code>{t('audit.page.before', { json: compact(d.before) })}</code>}
           {'after' in d && <code>{t('audit.page.after', { json: compact(d.after) })}</code>}
-        </div>
+        </details>
       )}
       <p className="au-muted">{t('audit.detail.eventId', { id: entry.id })}</p>
     </div>
