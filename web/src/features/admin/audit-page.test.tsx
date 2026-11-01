@@ -111,6 +111,31 @@ describe('AuditPage B11', () => {
     expect(screen.getByText('item · 12345678…')).toBeInTheDocument();
   });
 
+  it('cột Đối tượng dùng objectLabel của api: tên món, "Phiếu tháng 11/2026 · chủ phiếu", dòng phiếu, bản chốt, kỳ; null → loại · mã ngắn; mã đầy đủ ở tooltip và hàng chi tiết', async () => {
+    const itemId = 'c419efd8-1111-4222-8333-444455556666';
+    const owner = 'Trần Văn Cường';
+    const items = [
+      row('l1', { objectType: 'item', objectId: itemId, objectLabel: { name: 'Bút bi đỏ', ym: null, owner: null }, detail: { before: { stock_qty: 1 }, after: { stock_qty: 2 } } }),
+      row('l2', { objectType: 'request', objectId: 'aaaa0000-1111-4222-8333-444455556666', objectLabel: { name: null, ym: '2026-11', owner } }),
+      row('l3', { objectType: 'request_line', objectId: 'bbbb0000-1111-4222-8333-444455556666', objectLabel: { name: 'Băng keo', ym: '2026-11', owner } }),
+      row('l4', { objectType: 'report_snapshot', objectId: 'cccc0000-1111-4222-8333-444455556666', objectLabel: { name: null, ym: '2026-10', owner: null } }),
+      row('l5', { objectType: 'period', objectId: '2026-10', objectLabel: { name: null, ym: '2026-10', owner: null } }),
+      row('l6', { objectType: 'session', objectId: '1e004b5e-1111-4222-8333-444455556666', objectLabel: null, detail: {} }),
+    ];
+    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items, next_cursor: null } : { items: [], next_cursor: null }))));
+    await openAudit();
+    const item = screen.getByText('Bút bi đỏ');
+    expect(item.closest('[title]')).toHaveAttribute('title', `item · ${itemId}`);
+    expect(screen.queryByText('item · c419efd8…')).toBeNull();
+    expect(screen.getByText(`Phiếu tháng 11/2026 · ${owner}`)).toBeInTheDocument();
+    expect(screen.getByText(`Băng keo · Phiếu tháng 11/2026 · ${owner}`)).toBeInTheDocument();
+    expect(screen.getByText('Bản chốt kỳ 10/2026')).toBeInTheDocument();
+    expect(screen.getByText('Kỳ tháng 10/2026')).toBeInTheDocument();
+    expect(screen.getByText('session · 1e004b5e…')).toBeInTheDocument();
+    await userEvent.click(within(item.closest('tr')!).getByRole('button', { name: 'Xem' }));
+    expect(screen.getByText(`Mã đối tượng: item · ${itemId}`)).toBeInTheDocument();
+  });
+
   it('"Xem thêm" tải trang kế bằng cursor; hết trang → thông báo "Đã hiện hết…" và không còn nút', async () => {
     const fetchMock = stubApi();
     await openAudit();

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import type { AuditEntry } from './admin.api';
 import { changedFields, otherDetail } from './audit-diff';
+import { auditObjectRef } from './audit-object';
 
 const compact = (v: unknown) => JSON.stringify(v);
 
@@ -54,6 +55,7 @@ export function AuditDetail({ entry, id }: { entry: AuditEntry; id: string }) {
           {'after' in d && <code>{t('audit.page.after', { json: compact(d.after) })}</code>}
         </details>
       )}
+      {entry.objectId && <p className="au-muted">{t('audit.detail.objectId', { ref: auditObjectRef(entry) })}</p>}
       <p className="au-muted">{t('audit.detail.eventId', { id: entry.id })}</p>
     </div>
   );

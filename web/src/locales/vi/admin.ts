@@ -123,6 +123,12 @@ const admin = {
       more: 'Xem thêm',
       end: 'Đã hiện hết nhật ký trong khoảng lọc.',
     },
+    object: {
+      request: 'Phiếu tháng {{month}}/{{year}} · {{owner}}',
+      requestLine: '{{name}} · Phiếu tháng {{month}}/{{year}} · {{owner}}',
+      snapshot: 'Bản chốt kỳ {{month}}/{{year}}',
+      period: 'Kỳ tháng {{month}}/{{year}}',
+    },
     quick: {
       label: 'Nhanh:',
       today: 'Hôm nay',
@@ -136,6 +142,7 @@ const admin = {
       after: 'Sau',
       noChange: 'Không có trường nào khác nhau.',
       eventId: 'Mã sự kiện #{{id}}',
+      objectId: 'Mã đối tượng: {{ref}}',
       technical: 'Chi tiết kỹ thuật',
     },
     fields: {

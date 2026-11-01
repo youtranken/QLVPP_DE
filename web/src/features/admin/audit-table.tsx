@@ -7,14 +7,10 @@ import type { GroupBy } from '@/ui/data-table-group';
 import type { AuditEntry } from './admin.api';
 import { auditActionLabel } from './audit-actions';
 import { AuditDetail } from './audit-detail';
-import { auditObjectName } from './audit-diff';
+import { auditObjectRef, auditObjectText } from './audit-object';
 import { vnDayKey } from './audit-quick-ranges';
 
 const ZONE = 'Asia/Ho_Chi_Minh';
-const SHORT_ID = 8;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const shortId = (id: string) => (UUID.test(id) ? `${id.slice(0, SHORT_ID)}…` : id);
 const timeFmt = new Intl.DateTimeFormat('en-GB', {
   hour: '2-digit',
   minute: '2-digit',
@@ -50,12 +46,9 @@ function ToggleButton({ entryId }: { entryId: string }) {
 function ObjectCell({ entry: e }: { entry: AuditEntry }) {
   const { t } = useTranslation();
   if (!e.objectType && !e.objectId) return <>{t('common.empty')}</>;
-  const ref = [e.objectType, e.objectId && shortId(e.objectId)].filter(Boolean).join(' · ');
-  const name = auditObjectName(e.detail);
   return (
-    <span className="au-object" title={e.objectId ?? undefined}>
-      {name ?? ref}
-      {name && <small className="au-muted">{ref}</small>}
+    <span className="au-object" title={auditObjectRef(e)}>
+      {auditObjectText(t, e)}
     </span>
   );
 }

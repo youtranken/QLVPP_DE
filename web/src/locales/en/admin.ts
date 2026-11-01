@@ -126,6 +126,12 @@ const admin: Messages<typeof vi> = {
       more: 'Load more',
       end: 'All audit entries in the filtered range are shown.',
     },
+    object: {
+      request: 'Request {{month}}/{{year}} · {{owner}}',
+      requestLine: '{{name}} · Request {{month}}/{{year}} · {{owner}}',
+      snapshot: 'Report snapshot {{month}}/{{year}}',
+      period: 'Period {{month}}/{{year}}',
+    },
     quick: {
       label: 'Quick:',
       today: 'Today',
@@ -139,6 +145,7 @@ const admin: Messages<typeof vi> = {
       after: 'After',
       noChange: 'No fields differ.',
       eventId: 'Event #{{id}}',
+      objectId: 'Object ID: {{ref}}',
       technical: 'Technical details',
     },
     fields: {

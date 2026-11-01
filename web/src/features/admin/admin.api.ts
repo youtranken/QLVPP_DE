@@ -6,6 +6,12 @@ interface Page<T> {
   next_cursor: string | null;
 }
 
+export interface AuditObjectLabel {
+  name: string | null;
+  ym: string | null;
+  owner: string | null;
+}
+
 export interface AuditEntry {
   id: string;
   actor: string;
@@ -13,6 +19,7 @@ export interface AuditEntry {
   action: string;
   objectType: string | null;
   objectId: string | null;
+  objectLabel?: AuditObjectLabel | null;
   detail: unknown;
   createdAt: string;
 }

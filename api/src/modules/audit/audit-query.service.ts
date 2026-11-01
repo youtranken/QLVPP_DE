@@ -3,6 +3,8 @@ import { sql } from 'drizzle-orm';
 import { decodeTimestampCursor, encodeCursor } from '../../common/cursor';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
+import { resolveObjectLabels } from './audit-object-labels';
+import type { ObjectLabel } from './audit-object-labels';
 
 export interface AuditQuery {
   actor?: string;
@@ -24,6 +26,8 @@ export interface AuditRow {
   action: string;
   objectType: string | null;
   objectId: string | null;
+  // null khi đối tượng không còn hoặc loại không tra được — FE hiện id ngắn
+  objectLabel: ObjectLabel | null;
   detail: unknown;
   createdAt: string;
 }
@@ -74,14 +78,19 @@ export class AuditQueryService {
     `);
     const rows = result.rows.slice(0, q.limit);
     const last = rows[rows.length - 1];
+    const labels = await resolveObjectLabels(
+      this.db,
+      rows.map((r) => ({ objectType: r.object_type, objectId: r.object_id })),
+    );
     return {
-      items: rows.map((r) => ({
+      items: rows.map((r, i) => ({
         id: r.id,
         actor: r.actor,
         actorName: r.actor_name,
         action: r.action,
         objectType: r.object_type,
         objectId: r.object_id,
+        objectLabel: labels[i],
         detail: r.detail,
         createdAt: new Date(r.created_at).toISOString(),
       })),
