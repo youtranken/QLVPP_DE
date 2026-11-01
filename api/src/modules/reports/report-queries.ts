@@ -17,7 +17,6 @@ export interface ItemDemand {
   name_en: string | null;
   unit: string;
   pack_note: string | null;
-  active: boolean;
   stock: number;
   requested: number;
   backlog_prev: number;
@@ -56,7 +55,7 @@ export async function itemDemand(
   ym: string,
 ): Promise<ItemDemand[]> {
   const { rows } = await db.execute<Row<ItemDemand>>(sql`
-    SELECT i.id AS item_id, i.code, i.name, i.name_en, i.unit, i.pack_note, i.active,
+    SELECT i.id AS item_id, i.code, i.name, i.name_en, i.unit, i.pack_note,
            i.stock_qty AS stock, d.requested, d.backlog_prev
     FROM (SELECT l.item_id, ${splitByPeriod(ym)} ${demandSource(ym)}
             AND l.item_id IS NOT NULL GROUP BY l.item_id) d

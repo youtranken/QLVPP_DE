@@ -31,7 +31,6 @@ describe('GET admin/reports/:ym — Tổng theo món (BR-15)', () => {
       backlog_prev: 0,
       stock: 2,
       need: 1,
-      active: true,
     });
   });
 
@@ -110,15 +109,13 @@ describe('GET admin/reports/:ym — Tổng theo món (BR-15)', () => {
     });
   });
 
-  it('món đã ngừng (active false) còn nợ vẫn hiện', async () => {
+  it('món đã ngừng còn nợ vẫn hiện; hàng báo cáo không mang cờ active (không dùng)', async () => {
     const item = await stockItem(0);
     await seedLine('2026-11', A, { item_id: item, qty: 2 });
     await pool().query('UPDATE items SET active = false WHERE id = $1', [item]);
-    expect(itemRow(await build('2026-11'), item)).toMatchObject({
-      active: false,
-      requested: 2,
-      need: 2,
-    });
+    const row = itemRow(await build('2026-11'), item);
+    expect(row).toMatchObject({ requested: 2, need: 2 });
+    expect(row).not.toHaveProperty('active');
   });
 
   it('E5-S1 ngoài DM accepted 4 (A 3 + B 1 cùng tên khác hoa/khoảng trắng) → một hàng custom, stock null, need 4, people 2', async () => {

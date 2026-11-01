@@ -75,8 +75,7 @@ export class CatalogService {
     @Inject(ITEM_USAGE_HOOK) private readonly usage: ItemUsageHook,
   ) {}
 
-  // Cho module phiếu kiểm luật dòng và hiển thị món, kể cả món đã ngừng; active = món dùng được (tính cả nhóm)
-  // lockCategories: FOR SHARE nhóm để tx ngừng nhóm đang chạy phải commit trước (và ngược lại)
+  // active ở đây = dùng được (tính cả nhóm); lockCategories chặn đua với tx ngừng nhóm/chuyển nhóm đang chạy
   async itemFacts(
     ids: string[],
     tx: Executor = this.db,
@@ -85,6 +84,9 @@ export class CatalogService {
     if (ids.length === 0) return new Map();
     const idList = sql`${sql.param(ids)}::uuid[]`;
     if (opts.lockCategories) {
+      await tx.execute(sql`
+        SELECT id FROM items WHERE id = ANY(${idList}) ORDER BY id FOR KEY SHARE
+      `);
       await tx.execute(sql`
         SELECT id FROM item_categories
         WHERE id IN (SELECT category_id FROM items WHERE id = ANY(${idList}))
@@ -111,12 +113,14 @@ export class CatalogService {
   async listFor(
     identity: RequestIdentity,
     includeIds: string[] = [],
-  ): Promise<(ItemRow & { missing_image: boolean })[]> {
+  ): Promise<(ItemRow & { usable: boolean; missing_image: boolean })[]> {
     const privileged = identity.role === 'admin' || identity.role === 'sa';
     const result = await this.db.execute<
-      ItemRow & { missing_image: boolean }
+      ItemRow & { usable: boolean; missing_image: boolean }
     >(sql`
-      SELECT ${ITEM_COLUMNS}, (image_file_id IS NULL) AS missing_image FROM items
+      SELECT ${ITEM_COLUMNS}, ${ITEM_USABLE_SQL} AS usable,
+             (image_file_id IS NULL) AS missing_image
+      FROM items
       WHERE ${privileged}
          OR (${ITEM_USABLE_SQL} AND NOT admin_only)
          OR id = ANY(${sql.param(includeIds)}::uuid[])

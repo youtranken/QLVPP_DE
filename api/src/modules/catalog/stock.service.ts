@@ -84,7 +84,6 @@ export class StockService {
     );
   }
 
-  // Kiểm kê: số đếm thực tế → ghi như adjust với delta = đếm − tồn
   async count(
     itemId: string,
     dto: StockCountDto,

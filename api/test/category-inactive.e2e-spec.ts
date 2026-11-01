@@ -1,4 +1,5 @@
 import type { PoolClient } from 'pg';
+import { AFTER_DEADLINE } from './me-request.fixture';
 import { reviewFixture } from './review.fixture';
 
 const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -35,6 +36,14 @@ describe('nhóm món ngừng ẩn món trong nhóm (không sửa items.active)',
       )
     ).rows[0].active;
 
+  const linesOf = async (itemId: string) =>
+    (
+      await pool().query<{ n: number }>(
+        'SELECT count(*)::int AS n FROM request_lines WHERE item_id = $1',
+        [itemId],
+      )
+    ).rows[0].n;
+
   beforeAll(async () => {
     category = (
       await pool().query<{ id: string }>(
@@ -67,17 +76,31 @@ describe('nhóm món ngừng ẩn món trong nhóm (không sửa items.active)',
     expect(back).not.toContain(selfOff);
   });
 
-  it('GET items?include_inactive_ids: member vẫn xem lại món nhóm ngừng có trong phiếu', async () => {
+  it('GET items có usable: include_inactive_ids và danh sách Hành chính trả món nhóm ngừng với active=true, usable=false; món thường usable=true', async () => {
     const on = await itemInCategory();
+    const loose = await newItem();
     await setCategory(false);
-    const res = await as(
-      http().get(`/api/items?include_inactive_ids=${on}`),
-      A,
-    ).expect(200);
-    const found = (res.body as { id: string; active: boolean }[]).find(
-      (i) => i.id === on,
-    );
-    expect(found).toBeDefined();
+    const rowOf = async (url: string, sub: string, role: string, id: string) =>
+      (
+        (await as(http().get(url), sub, role).expect(200)).body as {
+          id: string;
+          active: boolean;
+          usable: boolean;
+        }[]
+      ).find((i) => i.id === id);
+    const included = `/api/items?include_inactive_ids=${on}`;
+    expect(await rowOf(included, A, 'member', on)).toMatchObject({
+      active: true,
+      usable: false,
+    });
+    expect(await rowOf('/api/items', A, 'member', loose)).toMatchObject({
+      active: true,
+      usable: true,
+    });
+    expect(await rowOf('/api/admin/items', ADMIN, 'admin', on)).toMatchObject({
+      active: true,
+      usable: false,
+    });
   });
 
   it('thêm dòng món nhóm ngừng → 400 ITEM_INACTIVE {line_index}; món không nhóm vẫn 200', async () => {
@@ -188,6 +211,54 @@ describe('nhóm món ngừng ẩn món trong nhóm (không sửa items.active)',
     if (saved.status === 400) {
       expect(saved.body).toMatchObject({ code: 'ITEM_INACTIVE' });
     }
+    expect(await linesOf(item)).toBe(saved.status === 200 ? 1 : 0);
     expect(await activeOf(item)).toBe(true);
+  });
+
+  it('lưu dòng khi tx chuyển món sang nhóm đang ngừng (khóa món như PATCH admin/items) chưa commit → chờ rồi 400 ITEM_INACTIVE', async () => {
+    const item = await newItem({ max_qty: 10 });
+    await setCategory(false);
+    const client: PoolClient = await pool().connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [
+        item,
+      ]);
+      await client.query('UPDATE items SET category_id = $2 WHERE id = $1', [
+        item,
+        category,
+      ]);
+      const pending = Promise.resolve(save([{ item_id: item, qty: 1 }]));
+      await pause(300);
+      await client.query('COMMIT');
+      const res = await pending;
+      expect(res.status).toBe(400);
+      expect(res.body).toMatchObject({ code: 'ITEM_INACTIVE', line_index: 0 });
+      expect(await linesOf(item)).toBe(0);
+    } finally {
+      client.release();
+    }
+  });
+
+  it('dòng cũ món trong nhóm ngừng, kỳ đã khóa: Hành chính giao 2 → 200, tồn 5 → 3', async () => {
+    const item = await itemInCategory();
+    await pool().query('UPDATE items SET stock_qty = 5 WHERE id = $1', [item]);
+    const r = view(await save([{ item_id: item, qty: 2 }]).expect(200));
+    await setCategory(false);
+    f.at(AFTER_DEADLINE);
+    const res = await as(
+      http().post(`/api/admin/lines/${r.lines[0].id}/deliver`),
+      ADMIN,
+      'admin',
+    )
+      .send({ qty: 2, expected_delivered_qty: 0 })
+      .expect(200);
+    expect(res.body).toMatchObject({ stock_qty: 3 });
+    await pool().query('DELETE FROM line_deliveries WHERE line_id = $1', [
+      r.lines[0].id,
+    ]);
+    await pool().query('DELETE FROM stock_movements WHERE item_id = $1', [
+      item,
+    ]);
   });
 });

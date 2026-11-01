@@ -16,7 +16,6 @@ export interface ReportItemRow extends FrozenUnitName {
   name_en: string | null;
   unit: string;
   pack_note: string | null;
-  active: boolean;
   requested: number;
   backlog_prev: number;
   stock: number;

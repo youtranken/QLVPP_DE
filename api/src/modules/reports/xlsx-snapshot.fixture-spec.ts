@@ -22,7 +22,6 @@ export const itemRow = (over: Partial<ReportItemRow>): ReportItemRow => ({
   name_en: 'Ballpoint pen',
   unit: 'cay',
   pack_note: null,
-  active: true,
   requested: 5,
   backlog_prev: 2,
   stock: 3,
