@@ -29,3 +29,9 @@ export class IssueDto {
   @TrimToNull() @IsOptional() @IsString() @MaxLength(500) reason?:
     string | null;
 }
+
+export class StockCountDto {
+  @IsInt() @Min(0) @Max(QTY_MAX) counted_qty!: number;
+  @IsInt() @Min(0) expected_stock_qty!: number;
+  @IsOptional() @IsString() @MaxLength(500) note?: string;
+}

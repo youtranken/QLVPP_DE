@@ -12,7 +12,8 @@ import { AuditWriterService } from '../audit/audit-writer.service';
 import { UsersService } from '../users/users.service';
 import { LOW_STOCK_SQL } from './catalog-sql';
 import { itemNotFound } from './catalog.service';
-import type { IssueDto, StockChangeDto } from './stock.dto';
+import { countDelta, countNote, reasonRequired } from './stock-count';
+import type { IssueDto, StockChangeDto, StockCountDto } from './stock.dto';
 
 export interface StockResult {
   stock_qty: number;
@@ -73,29 +74,65 @@ export class StockService {
       });
     }
     if (dto.reason === 'adjust' && !dto.note) throw reasonRequired();
-    return this.db.transaction(async (tx) => {
-      // Nhập mua đặt lại mốc (FR-50); điều chỉnh + chỉ đặt mốc khi món chưa có (tồn đầu kỳ), không đổi mốc đã có
-      const purchase = dto.reason === 'purchase';
-      const opening = dto.reason === 'adjust' && dto.delta > 0;
-      const updated = await tx.execute<{ stock_qty: number }>(sql`
-        UPDATE items SET stock_qty = stock_qty + ${dto.delta},
-          restock_level = CASE WHEN ${purchase}
-                                 OR (${opening} AND restock_level IS NULL)
-                               THEN stock_qty + ${dto.delta}
-                               ELSE restock_level END,
-          low_stock_notified_at = CASE WHEN ${purchase} THEN NULL
-                                       ELSE low_stock_notified_at END,
-          updated_at = now()
-        WHERE id = ${itemId} AND stock_qty + ${dto.delta} >= 0
-        RETURNING stock_qty
-      `);
-      return this.record(tx, updated.rows[0], actor, {
+    return this.db.transaction((tx) =>
+      this.applyChange(tx, actor, {
         itemId,
         delta: dto.delta,
         reason: dto.reason,
         note: dto.note ?? null,
+      }),
+    );
+  }
+
+  // Kiểm kê: số đếm thực tế → ghi như adjust với delta = đếm − tồn
+  async count(
+    itemId: string,
+    dto: StockCountDto,
+    actor: string,
+  ): Promise<StockResult> {
+    const note = countNote(dto.note);
+    return this.db.transaction(async (tx) => {
+      const locked = (
+        await tx.execute<{ stock_qty: number }>(sql`
+          SELECT stock_qty FROM items WHERE id = ${itemId} FOR NO KEY UPDATE
+        `)
+      ).rows[0];
+      if (!locked) throw itemNotFound();
+      const delta = countDelta({
+        counted: dto.counted_qty,
+        expected: dto.expected_stock_qty,
+        stock: locked.stock_qty,
+      });
+      return this.applyChange(tx, actor, {
+        itemId,
+        delta,
+        reason: 'adjust',
+        note,
       });
     });
+  }
+
+  // Nhập mua đặt lại mốc (FR-50); điều chỉnh + chỉ đặt mốc khi món chưa có (tồn đầu kỳ), không đổi mốc đã có
+  private async applyChange(
+    tx: Tx,
+    actor: string,
+    m: AuditedMovement & { reason: 'purchase' | 'adjust' },
+  ): Promise<StockResult> {
+    const purchase = m.reason === 'purchase';
+    const opening = m.reason === 'adjust' && m.delta > 0;
+    const updated = await tx.execute<{ stock_qty: number }>(sql`
+      UPDATE items SET stock_qty = stock_qty + ${m.delta},
+        restock_level = CASE WHEN ${purchase}
+                               OR (${opening} AND restock_level IS NULL)
+                             THEN stock_qty + ${m.delta}
+                             ELSE restock_level END,
+        low_stock_notified_at = CASE WHEN ${purchase} THEN NULL
+                                     ELSE low_stock_notified_at END,
+        updated_at = now()
+      WHERE id = ${m.itemId} AND stock_qty + ${m.delta} >= 0
+      RETURNING stock_qty
+    `);
+    return this.record(tx, updated.rows[0], actor, m);
   }
 
   async issue(
@@ -241,11 +278,4 @@ export class StockService {
       });
     }
   }
-}
-
-function reasonRequired() {
-  return new BadRequestException({
-    code: 'REASON_REQUIRED',
-    message: 'Cần ghi lý do.',
-  });
 }
