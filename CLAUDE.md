@@ -29,6 +29,7 @@ Tầng test theo loại code:
 ## Playwright (E2E thật)
 
 - Chạy trên `docker compose` dev; đăng nhập bằng SA local (`LOCAL_SA_*` dev) hoặc dev-identity qua `extraHTTPHeaders`. Không bao giờ chạy với PMH ID thật trong test tự động.
+- Xem live hoặc thử tay bằng tài khoản PMH ID thật (Hành chính / Nhân viên): lấy tài khoản và mật khẩu ở `test-accounts.local.md` (gốc repo, đã gitignore — không commit, không chép mật khẩu sang file khác hay vào chat/log).
 - Mỗi luồng chạy ở **1280 px và 390 px**; trang member phải kiểm 390 px (thanh dưới 3 mục, Lịch sử/Tôi ≤ 2 chạm). Chạy `@axe-core/playwright` trên màn chính ở 390 px: không lỗi tương phản.
 - Kiểm bằng vai trò/nhãn người dùng (`getByRole`, `getByLabel`, text tiếng Việt), không bằng CSS class. Luật kỳ, cron, chuông theo giờ kiểm ở e2e api với `ClockService` cố định (mốc tới ms); Playwright chỉ kiểm hiển thị (kỳ khóa/thông báo seed bằng SQL), không giả đồng hồ trình duyệt.
 - Mỗi story của backlog có AC Playwright thì spec Playwright phải có test mang tên story đó (`E2-S5 …`).

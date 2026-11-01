@@ -1,5 +1,6 @@
 # secrets
 .env
+*.local.md
 
 # deps & build
 node_modules/
