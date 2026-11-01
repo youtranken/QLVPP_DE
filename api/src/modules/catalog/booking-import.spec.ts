@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { resolveMigrationsDir } from '../../database/migration-runner';
 import {
   bookingItemProblem,
   normalizeUnit,
@@ -150,6 +153,18 @@ describe('seededUnitCode', () => {
     ];
     for (const [name, code] of cases) expect(seededUnitCode(name)).toBe(code);
     expect(seededUnitCode(normalizeUnit('Ream').unitName)).toBe('ram');
+  });
+
+  it('mọi ĐVT seed trong migration 0111 (kể cả lốc→loc) đều có trong bảng mã seed', () => {
+    const seed = readFileSync(
+      join(resolveMigrationsDir(), '0111_units.sql'),
+      'utf8',
+    );
+    const rows = [
+      ...seed.matchAll(/\('([a-z-]+)', '([^']+)', '[^']*', \d+\)/g),
+    ];
+    expect(rows.length).toBe(9);
+    for (const [, code, name] of rows) expect(seededUnitCode(name)).toBe(code);
   });
 
   it('ĐVT ngoài danh sách seed (cuốn, xấp, vỉ) → null, khớp theo tên', () => {

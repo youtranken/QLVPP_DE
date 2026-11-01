@@ -186,6 +186,18 @@ describe('units: GET units, admin/units', () => {
       expect(b.code).toBe(`${a.code}-2`);
     });
 
+    it('tên dạng tổ hợp NFD trùng tên NFC → 409 UNIT_EXISTS (cả "cái" seed và khi đổi tên); NFD tên mới → 201 lưu NFC', async () => {
+      const seeded = await postUnit({ name: 'ca\u0301i' }).expect(409);
+      expect(seeded.body).toMatchObject({ code: 'UNIT_EXISTS' });
+      const fresh = await postUnit({ name: `Thu\u0300ng ${RUN}` }).expect(201);
+      expect(fresh.body.name).toBe(`Thùng ${RUN}`);
+      const other = await newUnit('Túi NFD');
+      const renamed = await patchUnit(other.code, {
+        name: `Thu\u0300ng ${RUN}`,
+      }).expect(409);
+      expect(renamed.body).toMatchObject({ code: 'UNIT_EXISTS' });
+    });
+
     it('member POST → 403 FORBIDDEN_ROLE', async () => {
       const res = await member(http().post('/api/admin/units'))
         .send({ name: `M ${RUN}` })

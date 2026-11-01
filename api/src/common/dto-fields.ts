@@ -12,7 +12,9 @@ import {
 
 export const NAME_MAX = 120;
 
-const trim = (v: unknown) => (typeof v === 'string' ? v.trim() : v);
+// NFC để chỉ mục lower(name) không coi "cái" gõ tổ hợp (NFD) là tên khác
+const trim = (v: unknown) =>
+  typeof v === 'string' ? v.normalize('NFC').trim() : v;
 export const Trim = () => Transform(({ value }) => trim(value));
 // Chuỗi rỗng sau trim của trường tùy chọn = xóa giá trị
 export const TrimToNull = () =>

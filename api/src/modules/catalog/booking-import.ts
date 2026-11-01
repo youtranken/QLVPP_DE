@@ -54,6 +54,7 @@ const SEEDED_CODES: Record<string, string> = {
   cây: 'cay',
   ram: 'ram',
   cuộn: 'cuon',
+  lốc: 'loc',
   bịch: 'bich',
   chai: 'chai',
   bộ: 'bo',
