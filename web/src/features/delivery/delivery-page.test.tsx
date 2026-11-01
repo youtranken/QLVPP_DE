@@ -111,7 +111,7 @@ describe('DeliveryPage — danh sách phiếu (trái)', () => {
     open();
     await screen.findByRole('table', { name: 'Các dòng của phiếu Phạm Văn Đức' });
     expect(rowButton('Phạm Văn Đức')).toHaveAttribute('aria-pressed', 'true');
-    expect(within(rowButton('Phạm Văn Đức')).getByRole('progressbar', { name: 'đã giao 3/8' })).toBeInTheDocument();
+    expect(within(rowButton('Phạm Văn Đức')).getByRole('progressbar', { name: 'đã giao 3/8 đơn vị' })).toBeInTheDocument();
     expect(within(rowButton('Võ Thị Lan')).getByText('Chưa có phòng ban')).toBeInTheDocument();
     await waitFor(() => expect(search()).toContain('request=r-1'));
     await userEvent.click(rowButton('Võ Thị Lan'));

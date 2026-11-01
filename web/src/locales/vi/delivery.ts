@@ -2,6 +2,7 @@ const delivery = {
   delivery: {
     month: 'Tháng {{month}}/{{year}}',
     noDepartment: 'Chưa có phòng ban',
+    unitProgress: 'đã giao {{done}}/{{total}} đơn vị',
     line: {
       progress: 'đã giao {{done}}/{{total}}',
       cancelled: 'đã hủy {{n}}',
@@ -39,15 +40,13 @@ const delivery = {
       filter: 'Lọc phiếu',
       pending: 'Chưa giao đủ',
       all: 'Tất cả',
-      open: 'Mở phiếu của {{name}}, đã giao {{done}} trên {{total}}',
+      open: 'Mở phiếu của {{name}}, đã giao {{done}} trên {{total}} đơn vị',
       label: 'Danh sách phiếu',
-      progress: 'đã giao {{done}}/{{total}}',
       done: 'Đã giao đủ',
       more: 'Xem thêm',
     },
     detail: {
       saved: '{{department}} · lưu phiếu lúc {{time}}',
-      lineCount: 'đã giao {{done}}/{{total}} dòng',
       lines: 'Các dòng của phiếu {{name}}',
       colItem: 'Món',
       colQty: 'Đăng ký',

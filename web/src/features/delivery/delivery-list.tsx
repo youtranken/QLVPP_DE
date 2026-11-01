@@ -3,25 +3,26 @@ import { Progress } from '@/ui/progress';
 import { Segmented } from '@/ui/segmented';
 import type { PersonRow } from '@/features/summary/summary.api';
 import { DeliveryAvatar } from './delivery-avatar';
+import { unitProgress } from './delivery.api';
 
 function RequestButton({ row, selected, leaving, phone, onSelect }: { row: PersonRow; selected: boolean; leaving: boolean; phone: boolean; onSelect: () => void }) {
   const { t } = useTranslation();
   const name = row.full_name ?? row.email ?? row.user_sub;
-  const done = row.delivered_qty + row.cancelled_qty;
+  const { done, total } = unitProgress(row);
   return (
     <li>
       <button
         type="button"
         className={leaving ? 'dv-req is-done' : 'dv-req'}
         aria-pressed={phone ? undefined : selected}
-        aria-label={phone ? t('delivery.list.open', { name, done, total: row.total_qty }) : undefined}
+        aria-label={phone ? t('delivery.list.open', { name, done, total }) : undefined}
         onClick={onSelect}
       >
         <DeliveryAvatar name={name} done={leaving} />
         <span className="dv-req__text">
           <b className="dv-req__name">{name}</b>
           <small className="dv-req__dept">{row.department ?? t('delivery.noDepartment')}</small>
-          <Progress done={done} total={row.total_qty} tone="ok" label={t('delivery.list.progress', { done, total: row.total_qty })} />
+          <Progress done={done} total={total} tone="ok" label={t('delivery.unitProgress', { done, total })} />
         </span>
         {leaving && <span className="sr-only">{t('delivery.list.done')}</span>}
       </button>

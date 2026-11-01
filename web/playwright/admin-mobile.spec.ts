@@ -83,7 +83,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
         { stock: 10, qty: 1 },
       ]);
       const [a] = seed.items;
-      const rowName = `Mở phiếu của ${seed.name}, đã giao 0 trên 3`;
+      const rowName = `Mở phiếu của ${seed.name}, đã giao 0 trên 3 đơn vị`;
       await page.goto('/admin/delivery?all=1');
       await expect(page.getByRole('radio', { name: /^Tất cả/ })).toHaveAttribute('aria-checked', 'true');
       await expectNoContrastViolations(page);
@@ -112,7 +112,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
       await expect(page.getByText(`Đã giao đủ phiếu · Đã báo cho ${seed.name}.`)).toBeVisible();
       await expect(page).not.toHaveURL(/request=/, { timeout: 5_000 });
       await expect(page).toHaveURL(/all=1/);
-      await expect(page.getByRole('button', { name: `Mở phiếu của ${seed.name}, đã giao 3 trên 3` })).toBeVisible();
+      await expect(page.getByRole('button', { name: `Mở phiếu của ${seed.name}, đã giao 3 trên 3 đơn vị` })).toBeVisible();
 
       for (const [path, title] of PAGES) {
         await page.goto(`/admin/delivery?request=${seed.requestId}`);

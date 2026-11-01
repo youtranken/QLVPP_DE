@@ -15,7 +15,7 @@ const DONE_VIEW = deliveryRequest({ lines: [{ ...PEN_LINE, delivered_qty: 5 }, {
 
 const search = () => screen.getByTestId('location-search').textContent ?? '';
 const list = () => screen.getByRole('list', { name: 'Danh sách phiếu' });
-const DUC_ROW = 'Mở phiếu của Phạm Văn Đức, đã giao 3 trên 8';
+const DUC_ROW = 'Mở phiếu của Phạm Văn Đức, đã giao 3 trên 8 đơn vị';
 
 function open(path = '/admin/delivery') {
   mockViewport(390);

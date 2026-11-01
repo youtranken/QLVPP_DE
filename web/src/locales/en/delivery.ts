@@ -5,6 +5,7 @@ const delivery: Messages<typeof vi> = {
   delivery: {
     month: '{{month}}/{{year}}',
     noDepartment: 'No department',
+    unitProgress: '{{done}}/{{total}} units delivered',
     line: {
       progress: 'delivered {{done}}/{{total}}',
       cancelled: 'cancelled {{n}}',
@@ -42,15 +43,13 @@ const delivery: Messages<typeof vi> = {
       filter: 'Filter requests',
       pending: 'Not fully delivered',
       all: 'All',
-      open: 'Open request of {{name}}, delivered {{done}} of {{total}}',
+      open: 'Open request of {{name}}, {{done}} of {{total}} units delivered',
       label: 'Requests',
-      progress: 'delivered {{done}}/{{total}}',
       done: 'Fully delivered',
       more: 'Show more',
     },
     detail: {
       saved: '{{department}} · saved at {{time}}',
-      lineCount: 'delivered {{done}}/{{total}} lines',
       lines: 'Lines of {{name}}’s request',
       colItem: 'Item',
       colQty: 'Requested',

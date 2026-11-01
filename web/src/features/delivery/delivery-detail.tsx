@@ -7,7 +7,7 @@ import { ItemThumb } from '@/ui/item-thumb';
 import { Loading, LoadError } from '@/ui/load-state';
 import { useAdminItems, useAllCategories } from '@/features/catalog/catalog.api';
 import type { AdminRequestView } from '@/features/summary/summary.api';
-import { isDeliverable, remainingOf } from './delivery.api';
+import { unitProgress, unitTotalsOf } from './delivery.api';
 import { DeliveryLineRow } from './delivery-line-row';
 import type { LineModel } from './delivery-lines';
 import { DeliveryAvatar } from './delivery-avatar';
@@ -17,8 +17,7 @@ import { useDeliveryRequest } from './use-delivery-request';
 function DetailHead({ view }: { view: AdminRequestView }) {
   const { t } = useTranslation();
   const name = view.full_name ?? view.user_sub;
-  const effective = view.lines.filter(isDeliverable);
-  const done = effective.filter((l) => remainingOf(l) <= 0).length;
+  const { done, total } = unitProgress(unitTotalsOf(view.lines));
   return (
     <header className="dv-detail__head">
       <DeliveryAvatar name={name} large />
@@ -26,7 +25,7 @@ function DetailHead({ view }: { view: AdminRequestView }) {
         <h2>{name}</h2>
         <p>{t('delivery.detail.saved', { department: view.department ?? t('delivery.noDepartment'), time: formatVnStamp(view.updated_at) })}</p>
       </div>
-      <span className="tag tag--brand num">{t('delivery.detail.lineCount', { done, total: effective.length })}</span>
+      <span className="tag tag--brand num">{t('delivery.unitProgress', { done, total })}</span>
     </header>
   );
 }

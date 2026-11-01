@@ -38,12 +38,14 @@ async function openDetail() {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('DeliveryDetail — đầu chi tiết và các dòng', () => {
-  it('đầu: phòng ban + "lưu phiếu lúc", "đã giao 0/2 dòng"; dòng chờ xem có liên kết Xem, dòng từ chối có badge', async () => {
+  it('đầu: phòng ban + "lưu phiếu lúc", "đã giao 3/8 đơn vị" (cùng số với danh sách, bỏ dòng chờ xem/từ chối); dòng chờ xem có liên kết Xem, dòng từ chối có badge', async () => {
     stubDelivery();
     const table = await openDetail();
     expect(screen.getByRole('heading', { level: 2, name: 'Phạm Văn Đức' })).toBeInTheDocument();
     expect(screen.getByText('Tổ Giám sát · lưu phiếu lúc 14:20 05/10')).toBeInTheDocument();
-    expect(screen.getByText('đã giao 0/2 dòng')).toBeInTheDocument();
+    const head = screen.getByRole('heading', { level: 2, name: 'Phạm Văn Đức' }).closest('header')!;
+    expect(within(head).getByText('đã giao 3/8 đơn vị')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: 'đã giao 3/8 đơn vị' })).toBeInTheDocument();
     const pen = rowOf('Bút bi xanh');
     expect(within(pen).getAllByRole('cell').map((c) => c.textContent)).toEqual(expect.arrayContaining(['5', '3', '10']));
     expect(qtyOf('Bút bi xanh')).toHaveValue(2);
