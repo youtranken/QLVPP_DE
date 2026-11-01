@@ -138,4 +138,18 @@ describe('buildCopy', () => {
     const r = buildCopy([line({ item_id: 'gone', qty: 1 })], items, 20);
     expect(r.skipped).toEqual([{ name: '', reason: 'INACTIVE' }]);
   });
+
+  it('dòng ngoài DM có ĐVT đã ngừng → skipped UNIT_INACTIVE; ĐVT đang dùng → giữ', () => {
+    const r = buildCopy(
+      [
+        custom({ custom_name: 'Kẹp lạ', custom_unit: 'old' }),
+        custom({ custom_name: 'Kẹp thường', custom_unit: 'cai' }),
+      ],
+      items,
+      20,
+      new Set(['old']),
+    );
+    expect(r.skipped).toEqual([{ name: 'Kẹp lạ', reason: 'UNIT_INACTIVE' }]);
+    expect(r.lines).toMatchObject([{ custom_name: 'Kẹp thường' }]);
+  });
 });

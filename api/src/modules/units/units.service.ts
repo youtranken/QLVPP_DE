@@ -75,6 +75,13 @@ export class UnitsService {
     );
   }
 
+  async inactiveCodes(tx: Executor = this.db): Promise<Set<string>> {
+    const { rows } = await tx.execute<{ code: string }>(
+      sql`SELECT code FROM units WHERE NOT active`,
+    );
+    return new Set(rows.map((r) => r.code));
+  }
+
   async assertActive(
     code: string,
     tx: Executor = this.db,

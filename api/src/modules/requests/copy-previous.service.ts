@@ -6,6 +6,7 @@ import type { RequestIdentity } from '../auth/identity.types';
 import { CatalogService } from '../catalog/catalog.service';
 import { SystemConfigService } from '../config/system-config.service';
 import { PeriodsService } from '../periods/periods.service';
+import { UnitsService } from '../units/units.service';
 import { requestNotFound } from './request-errors';
 import type { LineRow } from './request-lines.rules';
 import * as repo from './requests.repo';
@@ -21,7 +22,7 @@ export interface CopyItemFacts {
   max_qty: number;
 }
 export type SkipReason =
-  'INACTIVE' | 'ADMIN_ONLY' | 'ADDED_BY_ADMIN' | 'REJECTED';
+  'INACTIVE' | 'ADMIN_ONLY' | 'ADDED_BY_ADMIN' | 'REJECTED' | 'UNIT_INACTIVE';
 export type CopiedLine =
   | { item_id: string; qty: number }
   | {
@@ -46,6 +47,7 @@ export function buildCopy(
   lines: SourceLine[],
   items: Map<string, CopyItemFacts>,
   defaultMax: number,
+  inactiveUnits: ReadonlySet<string> = new Set(),
 ): CopyResult {
   const out: CopyResult = {
     lines: [],
@@ -53,7 +55,7 @@ export function buildCopy(
     capped: [],
     previously_accepted: [],
   };
-  out.lines = keepLines(lines, items, out).map((k) =>
+  out.lines = keepLines(lines, items, inactiveUnits, out).map((k) =>
     'item_id' in k
       ? {
           item_id: k.item_id,
@@ -74,6 +76,7 @@ export function buildCopy(
 function keepLines(
   lines: SourceLine[],
   items: Map<string, CopyItemFacts>,
+  inactiveUnits: ReadonlySet<string>,
   out: CopyResult,
 ): Kept[] {
   const kept: Kept[] = [];
@@ -81,7 +84,7 @@ function keepLines(
   for (const line of lines) {
     const item = line.item_id ? items.get(line.item_id) : undefined;
     const name = (line.item_id ? item?.name : line.custom_name) ?? '';
-    const reason = skipReason(line, item);
+    const reason = skipReason(line, item, inactiveUnits);
     if (reason) {
       out.skipped.push({ name, reason });
     } else if (line.item_id && item) {
@@ -103,10 +106,15 @@ function keepLines(
 function skipReason(
   line: SourceLine,
   item: CopyItemFacts | undefined,
+  inactiveUnits: ReadonlySet<string>,
 ): SkipReason | null {
   if (line.added_by_admin) return 'ADDED_BY_ADMIN';
   if (line.review_status === 'rejected') return 'REJECTED';
-  if (!line.item_id) return null;
+  // Lưu lại với ĐVT đã ngừng sẽ UNIT_INACTIVE: bỏ ngay ở giỏ đề xuất
+  if (!line.item_id)
+    return line.custom_unit && inactiveUnits.has(line.custom_unit)
+      ? 'UNIT_INACTIVE'
+      : null;
   // Món không còn trong bảng (không thể khi đã có dòng dùng, nhưng phòng hờ) coi như ngừng
   if (!item || !item.active) return 'INACTIVE';
   if (item.admin_only) return 'ADMIN_ONLY';
@@ -127,6 +135,7 @@ export class CopyPreviousService {
     private readonly periods: PeriodsService,
     private readonly catalog: CatalogService,
     private readonly config: SystemConfigService,
+    private readonly units: UnitsService,
   ) {}
 
   // Chỉ đọc: giỏ đề xuất để client hiển thị, member tự bấm Lưu
@@ -138,9 +147,10 @@ export class CopyPreviousService {
     const ids = lines.map((l) => l.item_id).filter((id): id is string => !!id);
     const items = await this.catalog.itemFacts([...new Set(ids)], this.db);
     const defaultMax = await this.config.getInt('default_max_qty');
+    const inactiveUnits = await this.units.inactiveCodes(this.db);
     return {
       from_ym: source.period_ym,
-      ...buildCopy(lines, items, defaultMax),
+      ...buildCopy(lines, items, defaultMax, inactiveUnits),
     };
   }
 }

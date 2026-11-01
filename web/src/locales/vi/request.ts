@@ -80,6 +80,7 @@ const request = {
         ADMIN_ONLY: 'chỉ Hành chính đặt',
         ADDED_BY_ADMIN: 'do Hành chính thêm',
         REJECTED: 'Hành chính không nhận',
+        UNIT_INACTIVE: 'đơn vị tính đã ngừng dùng',
         HELD_BY_ADMIN: 'Hành chính đã thêm món này',
       },
       capped: 'Đã giảm: {{name}} từ {{from}} xuống {{to}} (tối đa mỗi tháng)',

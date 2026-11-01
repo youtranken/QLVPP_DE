@@ -147,7 +147,7 @@ export const saveMyLines = (body: SaveLinesBody, csrfToken: string | null) =>
     csrfToken,
   });
 
-export type SkipReason = 'INACTIVE' | 'ADMIN_ONLY' | 'ADDED_BY_ADMIN' | 'REJECTED';
+export type SkipReason = 'INACTIVE' | 'ADMIN_ONLY' | 'ADDED_BY_ADMIN' | 'REJECTED' | 'UNIT_INACTIVE';
 
 export type CopiedLine =
   | { item_id: string; qty: number }

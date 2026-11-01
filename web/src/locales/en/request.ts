@@ -83,6 +83,7 @@ const request: Messages<typeof vi> = {
         ADMIN_ONLY: 'only Admin can order it',
         ADDED_BY_ADMIN: 'added by Admin',
         REJECTED: 'not accepted by Admin',
+        UNIT_INACTIVE: 'unit of measure no longer in use',
         HELD_BY_ADMIN: 'Admin already added this item',
       },
       capped: 'Reduced: {{name}} from {{from}} to {{to}} (monthly max)',

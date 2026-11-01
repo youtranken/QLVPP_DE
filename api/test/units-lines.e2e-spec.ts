@@ -81,4 +81,37 @@ describe('me/request: "Món khác" với ĐVT ngừng', () => {
     const unit = (res.body as { code: string }[]).find((u) => u.code === ON);
     expect(unit).toMatchObject({ in_use: true, item_count: 0 });
   });
+
+  it('chép kỳ trước: dòng ngoài DM có ĐVT nay đã ngừng → bỏ vào skipped lý do UNIT_INACTIVE; giỏ còn lại lưu được 200', async () => {
+    await pool().query(
+      `INSERT INTO periods (ym, deadline) VALUES ('2026-10-01', '2026-10-10T17:00:00Z')
+       ON CONFLICT (ym) DO UPDATE SET deadline = EXCLUDED.deadline`,
+    );
+    const { rows } = await pool().query<{ id: string }>(
+      `INSERT INTO requests (period_ym, user_sub, created_by_sub)
+       VALUES ('2026-10-01', $1, $1) RETURNING id`,
+      [A],
+    );
+    await pool().query(
+      `INSERT INTO request_lines (request_id, custom_name, custom_unit, qty, review_status)
+       VALUES ($1, 'Kẹp ĐVT ngừng', $2, 1, 'pending'), ($1, 'Kẹp ĐVT dùng', $3, 2, 'pending')`,
+      [rows[0].id, LATER, ON],
+    );
+    await setActive(LATER, false);
+    const res = await as(
+      http().post('/api/me/request/copy-previous'),
+      A,
+    ).expect(200);
+    const body = res.body as {
+      lines: Record<string, unknown>[];
+      skipped: { name: string; reason: string }[];
+    };
+    expect(body.skipped).toEqual([
+      { name: 'Kẹp ĐVT ngừng', reason: 'UNIT_INACTIVE' },
+    ]);
+    expect(body.lines).toMatchObject([
+      { custom_name: 'Kẹp ĐVT dùng', custom_unit: ON, qty: 2 },
+    ]);
+    await save(body.lines).expect(200);
+  });
 });
