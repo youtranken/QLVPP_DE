@@ -83,7 +83,17 @@ describe('GET admin/audit: objectLabel tên người đọc được cho cột �
       'INSERT INTO request_lines (request_id, item_id, qty) VALUES ($1, $2, 2) RETURNING id',
       [ids.request, ids.item],
     );
+    ids.snapshot = await one(
+      `INSERT INTO report_snapshots (period_ym, kind, data, created_by_sub, created_at)
+       VALUES ($1, 'print', '{}', $2, now()) RETURNING id`,
+      [YM, OWNER],
+    );
     await audit('item', ids.item);
+    await audit('item', ids.item.toUpperCase());
+    await audit('report_snapshot', ids.snapshot);
+    await audit('period', '2001-13');
+    await audit('period', '2001-4');
+    await audit('constructor', GONE_ID);
     await audit('item_category', ids.category);
     await audit('unit', 'cai');
     await audit('request', ids.request);
@@ -98,6 +108,9 @@ describe('GET admin/audit: objectLabel tên người đọc được cho cột �
   afterAll(async () => {
     await app.close();
     await pool.query('DELETE FROM requests WHERE user_sub = $1', [OWNER]);
+    await pool.query('DELETE FROM report_snapshots WHERE created_by_sub = $1', [
+      OWNER,
+    ]);
     await pool.query('DELETE FROM items WHERE id = $1', [ids.item]);
     await pool.query('DELETE FROM item_categories WHERE id = $1', [
       ids.category,
@@ -144,6 +157,28 @@ describe('GET admin/audit: objectLabel tên người đọc được cho cột �
       ym: '2001-04',
       owner: null,
     });
+  });
+
+  it('bản chốt → tháng; uuid viết hoa vẫn ra tên món', async () => {
+    const rows = await list();
+    expect(labelOf(rows, 'report_snapshot', ids.snapshot)).toEqual({
+      name: null,
+      ym: '2001-04',
+      owner: null,
+    });
+    expect(labelOf(rows, 'item', ids.item.toUpperCase())).toEqual({
+      name: `Bút thử ${RUN}`,
+      ym: null,
+      owner: null,
+    });
+  });
+
+  it('kỳ sai dạng (2001-13, 2001-4) → null cạnh 2001-04 hợp lệ; loại "constructor" → null, trang vẫn 200', async () => {
+    const rows = await list();
+    expect(labelOf(rows, 'period', '2001-04')?.ym).toBe('2001-04');
+    expect(labelOf(rows, 'period', '2001-13')).toBeNull();
+    expect(labelOf(rows, 'period', '2001-4')).toBeNull();
+    expect(labelOf(rows, 'constructor', GONE_ID)).toBeNull();
   });
 
   it('đối tượng không còn, loại không tra được hoặc id không phải uuid → objectLabel null (FE hiện id ngắn)', async () => {

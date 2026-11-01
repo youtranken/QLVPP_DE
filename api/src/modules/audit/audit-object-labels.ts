@@ -26,7 +26,7 @@ const uuids = (ids: string[]) => sql`${sql.param(ids)}::uuid[]`;
 const texts = (ids: string[]) => sql`${sql.param(ids)}::text[]`;
 
 // Đọc-only như báo cáo: tra thẳng bảng của module khác để nhật ký hiện tên thay cho id
-const LOOKUPS: Record<
+const LOOKUP_TABLE: Record<
   string,
   { uuid: boolean; query: (ids: string[]) => SQL }
 > = {
@@ -77,6 +77,9 @@ const LOOKUPS: Record<
   },
 };
 
+// Map thay cho object: object_type lạ như "constructor" không được trúng thuộc tính có sẵn của Object
+const LOOKUPS = new Map(Object.entries(LOOKUP_TABLE));
+
 const keyOf = (type: string, id: string) => `${type}\u0000${id}`;
 
 // Một truy vấn cho mỗi loại đối tượng có trên trang, không tra từng dòng
@@ -86,14 +89,16 @@ export async function resolveObjectLabels(
 ): Promise<(ObjectLabel | null)[]> {
   const byType = new Map<string, Set<string>>();
   for (const { objectType: type, objectId: id } of refs) {
-    const lookup = type ? LOOKUPS[type] : undefined;
+    const lookup = type ? LOOKUPS.get(type) : undefined;
     if (!type || !id || !lookup || (lookup.uuid && !UUID.test(id))) continue;
     byType.set(type, (byType.get(type) ?? new Set()).add(id));
   }
   const found = new Map<string, ObjectLabel>();
   await Promise.all(
     [...byType].map(async ([type, ids]) => {
-      const { rows } = await db.execute<Row>(LOOKUPS[type].query([...ids]));
+      const { rows } = await db.execute<Row>(
+        LOOKUPS.get(type)!.query([...ids]),
+      );
       for (const r of rows) {
         found.set(keyOf(type, r.id), {
           name: r.name ?? null,
@@ -108,7 +113,7 @@ export async function resolveObjectLabels(
     if (type === 'period' && YM.test(id))
       return { name: null, ym: id, owner: null };
     return (
-      found.get(keyOf(type, LOOKUPS[type]?.uuid ? id.toLowerCase() : id)) ??
+      found.get(keyOf(type, LOOKUPS.get(type)?.uuid ? id.toLowerCase() : id)) ??
       null
     );
   });
