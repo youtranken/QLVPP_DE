@@ -3,7 +3,7 @@ import { vnLockDate } from '@/lib/format-time';
 import { shiftYm } from '@/lib/ym';
 import { FormField } from '@/ui/form-field';
 import { useCurrentPeriod } from '@/features/request/request.api';
-import type { PeriodDraft } from './config-form';
+import { periodClears, type PeriodDraft } from './config-form';
 import { ConfigSection } from './config-section';
 import { DayInput } from './day-input';
 import { PeriodPreview } from './period-preview';
@@ -14,7 +14,7 @@ export function PeriodBlock({ state }: { state: ConfigBlockState<PeriodDraft> })
   const period = useCurrentPeriod().data;
   const { draft, errors, update } = state;
   const err = (k: keyof PeriodDraft) => (errors[k] ? t(errors[k]) : undefined);
-  const set = (k: keyof PeriodDraft) => (v: string) => update((d) => ({ ...d, [k]: v }), k);
+  const set = (k: keyof PeriodDraft) => (v: string) => update((d) => ({ ...d, [k]: v }), periodClears(k));
   const note = period
     ? t('config.period.noteLocked', { month: Number(period.ym.slice(5)), date: vnLockDate(period.deadline) })
     : t('config.period.note');

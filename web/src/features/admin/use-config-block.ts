@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
@@ -14,9 +14,28 @@ export interface ConfigBlockState<D> {
   errors: FieldErrors;
   status: BlockStatus;
   dirty: boolean;
-  update: (next: (d: D) => D, clear?: string | 'all') => void;
+  update: (next: (d: D) => D, clear?: string | readonly string[] | 'all') => void;
   save: () => Promise<void>;
   cancel: () => void;
+}
+
+interface Edits<D> {
+  base: D;
+  draft: D;
+}
+
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+// Ô người dùng chưa đổi (so với cấu hình lúc sửa) theo cấu hình mới nhất, để không ghi đè thay đổi của admin khác
+function rebase<D>(edits: Edits<D> | null, fresh: D): D {
+  if (!edits) return fresh;
+  const { base, draft } = edits;
+  if (Array.isArray(draft) || typeof draft !== 'object' || draft === null) return same(draft, base) ? fresh : draft;
+  const merged = { ...draft } as Record<string, unknown>;
+  const baseRec = base as Record<string, unknown>;
+  const freshRec = fresh as Record<string, unknown>;
+  for (const k of Object.keys(merged)) if (same(merged[k], baseRec[k])) merged[k] = freshRec[k];
+  return merged as D;
 }
 
 export function useConfigBlock<D>(spec: BlockSpec<D>, config: AdminConfig, confirm?: () => Promise<boolean>): ConfigBlockState<D> {
@@ -24,19 +43,21 @@ export function useConfigBlock<D>(spec: BlockSpec<D>, config: AdminConfig, confi
   const { csrfToken } = useMe();
   const qc = useQueryClient();
   const toast = useToast();
-  const [draft, setDraft] = useState(() => spec.fromConfig(config));
+  const fresh = useMemo(() => spec.fromConfig(config), [spec, config]);
+  const [edits, setEdits] = useState<Edits<D> | null>(null);
+  const draft = rebase(edits, fresh);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<BlockStatus>('idle');
   const busy = useRef(false);
   const patch = spec.patchOf(draft, config);
   const dirty = Object.keys(patch).length > 0;
 
-  const update = (next: (d: D) => D, clear?: string | 'all') => {
-    setDraft(next);
+  const update = (next: (d: D) => D, clear?: string | readonly string[] | 'all') => {
+    setEdits((prev) => ({ base: fresh, draft: next(rebase(prev, fresh)) }));
     setStatus((s) => (s === 'saved' ? 'idle' : s));
     setErrors(({ form: _form, ...rest }) => {
       if (clear === 'all') return {};
-      if (clear) delete rest[clear];
+      for (const k of typeof clear === 'string' ? [clear] : (clear ?? [])) delete rest[k];
       return rest;
     });
   };
@@ -54,7 +75,7 @@ export function useConfigBlock<D>(spec: BlockSpec<D>, config: AdminConfig, confi
       qc.setQueryData(CONFIG_KEY, next);
       void qc.invalidateQueries({ queryKey: ['public-config'] });
       void qc.invalidateQueries({ queryKey: ['audit'] });
-      setDraft(spec.fromConfig(next));
+      setEdits(null);
       setStatus('saved');
       toast.show({ text: t('config.page.saved', { block: t(`config.${spec.block}.title`) }), tone: 'ok' });
     } catch (e) {
@@ -66,7 +87,7 @@ export function useConfigBlock<D>(spec: BlockSpec<D>, config: AdminConfig, confi
   };
 
   const cancel = () => {
-    setDraft(spec.fromConfig(config));
+    setEdits(null);
     setErrors({});
     setStatus('idle');
   };

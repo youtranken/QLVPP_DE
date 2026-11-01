@@ -22,6 +22,9 @@ export const wholeIn = (v: string, min: number, max: number) => isWhole(v) && Nu
 
 export type PeriodDraft = Record<'registration_last_day' | 'reminder_days_left' | 'default_max_qty', string>;
 const PERIOD_KEYS = ['registration_last_day', 'reminder_days_left', 'default_max_qty'] as const;
+// Server báo luật "hạn lớn hơn ngày nhắc" ở một trong hai ô, sửa ô nào cũng có thể gỡ lỗi
+const PERIOD_LINKED = ['registration_last_day', 'reminder_days_left'] as const;
+export const periodClears = (k: keyof PeriodDraft): readonly string[] => ((PERIOD_LINKED as readonly string[]).includes(k) ? PERIOD_LINKED : [k]);
 
 // Ngày hạn và ngày nhắc gõ tay số nào cũng gửi để server quyết; chỉ chặn ô không phải số
 export const periodSpec: BlockSpec<PeriodDraft> = {

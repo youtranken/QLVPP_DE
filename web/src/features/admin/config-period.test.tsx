@@ -100,6 +100,26 @@ describe('Cấu hình · khối Kỳ đăng ký', () => {
     expect(lastDay()).toHaveAccessibleDescription('Ngày hạn phải lớn hơn số ngày nhắc người chưa có phiếu.');
   });
 
+  it('lỗi ngày hạn đụng ngày nhắc được xóa khi sửa ô ngày nhắc', async () => {
+    stubConfigApi(() => configInvalid('registration_last_day'));
+    await openConfig();
+    await typeInto(lastDay(), '3');
+    await savePeriod();
+    await vi.waitFor(() => expect(lastDay()).toHaveAttribute('aria-invalid', 'true'));
+    await typeInto(reminder(), '1');
+    expect(lastDay()).not.toHaveAttribute('aria-invalid');
+  });
+
+  it('lỗi ngày nhắc từ server được xóa khi sửa ô ngày hạn', async () => {
+    stubConfigApi(() => configInvalid('reminder_days_left'));
+    await openConfig();
+    await typeInto(reminder(), '7');
+    await savePeriod();
+    await vi.waitFor(() => expect(reminder()).toHaveAttribute('aria-invalid', 'true'));
+    await typeInto(lastDay(), '12');
+    expect(reminder()).not.toHaveAttribute('aria-invalid');
+  });
+
   it('CONFIG_INVALID {field: reminder_days_left} → lỗi tại ô ngày nhắc, ô ngày hạn không lỗi', async () => {
     const fetchMock = stubConfigApi(() => configInvalid('reminder_days_left'));
     await openConfig();
