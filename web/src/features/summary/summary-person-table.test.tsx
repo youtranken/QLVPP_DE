@@ -50,10 +50,10 @@ describe('SummaryPersonTable — bảng theo người', () => {
     expect(within(duc).queryByRole('link', { name: /Giao/ })).toBeNull();
   });
 
-  it('kỳ khóa: Progress "đã giao {delivered+cancelled}/{total}" — giao 3 + hủy 2 trên 5 → đầy "đã giao 5/5", không nút Giao', async () => {
+  it('kỳ khóa: Progress "đã giao {delivered+cancelled}/{total}" — giao 3 + hủy 2 trên 5 → đầy "đã giao 5/5 đơn vị", không nút Giao', async () => {
     renderTable({ locked: true, rows: [person({ request_id: 'r-7', full_name: 'Lê Hủy', total_qty: 5, delivered_qty: 3, cancelled_qty: 2 })] });
     const row = await rowOf('Lê Hủy');
-    const bar = within(row).getByRole('progressbar', { name: 'đã giao 5/5' });
+    const bar = within(row).getByRole('progressbar', { name: 'đã giao 5/5 đơn vị' });
     expect(bar).toHaveAttribute('aria-valuenow', '5');
     expect(bar).toHaveAttribute('aria-valuemax', '5');
     expect(within(row).queryByRole('link', { name: /Giao/ })).toBeNull();
@@ -62,7 +62,7 @@ describe('SummaryPersonTable — bảng theo người', () => {
   it('kỳ khóa, còn phải giao (4/7) → nút Giao → /admin/delivery?ym=2026-10&request=r-1, không mở ngăn kéo', async () => {
     const onOpen = renderTable({ locked: true, rows: [PEOPLE[1]] });
     const row = await rowOf('Phạm Văn Đức');
-    expect(within(row).getByRole('progressbar', { name: 'đã giao 4/7' })).toBeInTheDocument();
+    expect(within(row).getByRole('progressbar', { name: 'đã giao 4/7 đơn vị' })).toBeInTheDocument();
     const link = within(row).getByRole('link', { name: 'Giao phiếu của Phạm Văn Đức' });
     expect(link).toHaveAttribute('href', '/admin/delivery?ym=2026-10&request=r-1');
     await userEvent.click(link);

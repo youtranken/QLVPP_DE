@@ -57,7 +57,7 @@ const summary: Messages<typeof vi> = {
       actions: 'Actions',
       noDepartment: 'No department',
       groupPeople: '{{n}} people',
-      delivered: 'delivered {{done}}/{{total}}',
+      delivered: '{{done}}/{{total}} units delivered',
       afterLock: 'Delivered after the period locks',
       leftCompany: 'Left the company',
       customPending: '{{n}} off-catalog to review',

@@ -81,6 +81,9 @@ describe('mẫu số Tổng hợp loại người thuộc admin_group (Postgres 
     await pool.query('DELETE FROM users WHERE sub LIKE $1', [
       `db-hc-%-${SUFFIX}`,
     ]);
+    await pool.query(
+      "DELETE FROM periods p WHERE p.ym BETWEEN '2021-03-01' AND '2021-05-01' AND NOT EXISTS (SELECT 1 FROM requests r WHERE r.period_ym = p.ym)",
+    );
     await (savedGroups === undefined
       ? pool.query("DELETE FROM config WHERE key = 'authorized_groups'")
       : pool.query(

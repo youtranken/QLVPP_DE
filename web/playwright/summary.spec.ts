@@ -36,8 +36,8 @@ test.describe('E9-S2 tổng hợp', () => {
       await searchSummaryPeople(page, seed.tag);
       const rowPending = page.getByRole('row').filter({ hasText: seed.name });
       const rowDone = page.getByRole('row').filter({ hasText: names.done });
-      await expect(rowPending.getByRole('progressbar', { name: 'đã giao 0/3' })).toBeVisible();
-      await expect(rowDone.getByRole('progressbar', { name: 'đã giao 2/2' })).toBeVisible();
+      await expect(rowPending.getByRole('progressbar', { name: 'đã giao 0/3 đơn vị' })).toBeVisible();
+      await expect(rowDone.getByRole('progressbar', { name: 'đã giao 2/2 đơn vị' })).toBeVisible();
 
       const pending = page.getByRole('button', { name: /Dòng chờ giao/ });
       await pending.click();

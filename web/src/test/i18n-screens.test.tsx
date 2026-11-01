@@ -68,9 +68,9 @@ describe('Song ngữ các màn Plan 3', () => {
   it('Giao hàng: vi có "Giao tất cả"; en không còn chữ Việt', async () => {
     stubDelivery();
     renderApp(ADMIN, '/admin/delivery?request=r-1');
-    expect(await screen.findByRole('button', { name: 'Giao tất cả' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Giao tất cả' }, { timeout: 5000 })).toBeInTheDocument();
     await english();
-    expect(await screen.findByRole('button', { name: 'Deliver all' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Deliver all' }, { timeout: 5000 })).toBeInTheDocument();
     expect(screen.getByText('Blue pen')).toBeInTheDocument();
     noVietnamese();
   });

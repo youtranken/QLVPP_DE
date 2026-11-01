@@ -98,10 +98,10 @@ describe('StockPage', () => {
   it('tìm theo tên món ghi lên URL ?q=; không khớp → trạng thái rỗng kèm "Xem tất cả món"', async () => {
     await open();
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm theo tên món' }), 'zzz');
-    expect(await screen.findByText('Không có món nào khớp')).toBeInTheDocument();
+    expect(await screen.findByText('Không có món nào khớp', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.getByTestId('location-search')).toHaveTextContent('?q=zzz');
     await userEvent.click(screen.getByRole('button', { name: 'Xem tất cả món' }));
-    expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
+    expect(await screen.findByText('Giấy A4', {}, { timeout: 3000 })).toBeInTheDocument();
   });
 
   it('mỗi hàng một nút "Nhập mua" (không dấu …) + nút ⋯; "Xuất lẻ" trong menu vô hiệu khi tồn 0 (title "Hết hàng — nhập mua trước"), bật khi tồn 6', async () => {

@@ -54,7 +54,7 @@ const summary = {
       actions: 'Thao tác',
       noDepartment: 'Chưa có phòng ban',
       groupPeople: '{{n}} người',
-      delivered: 'đã giao {{done}}/{{total}}',
+      delivered: 'đã giao {{done}}/{{total}} đơn vị',
       afterLock: 'Giao sau khi khóa kỳ',
       leftCompany: 'Người đã nghỉ',
       customPending: '{{n}} món ngoài DM chờ xem',

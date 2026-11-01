@@ -46,9 +46,9 @@ test.describe('E1-S4 Kho: nhập, kiểm kê, xuất lẻ, sổ cái (dev-identi
       await expect(page.getByRole('heading', { level: 1, name: 'Kho' })).toBeVisible();
       await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
       const row = page.getByRole('row').filter({ hasText: itemName });
-      // Chưa nhập mua lần nào → không cảnh báo dù tồn 0 (FR-50)
+      // Tồn 0 luôn Hết hàng, kể cả chưa nhập mua lần nào (FR-50)
       await expect(stockCell(row, 0)).toBeVisible();
-      await expect(row.getByText('Hết hàng')).toHaveCount(0);
+      await expect(row.getByText('Hết hàng')).toBeVisible();
 
       await row.getByRole('button', { name: 'Nhập mua', exact: true }).click();
       const purchase = page.getByRole('dialog', { name: `Nhập mua ${itemName}` });

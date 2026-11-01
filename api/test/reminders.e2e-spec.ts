@@ -25,6 +25,11 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
       `INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('2026-12-01', $1, $1)`,
       [U1],
     );
+    // Hành chính tạo phiếu hộ người ngoài group → vẫn vào mẫu số chụp lúc khóa
+    await f.q(
+      `INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('2026-12-01', $1, $2)`,
+      [OUT, ADMIN],
+    );
   });
 
   it('period_open: 23:59:59.999 30/11 VN không gửi; 00:00 1/12 VN gửi period_open:2026-12 cho 3 người mẫu số, người ngoài group và Hành chính (dù cùng group) không', async () => {
@@ -96,7 +101,7 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
     expect(await f.recipients('reminder:2026-12')).toEqual([U2, U3]);
   });
 
-  it('period_locked: hạn − 1 ms (23:59:59.999 10/12 VN) không gửi, headcount null; đúng hạn 00:00 11/12 VN → admin nhận registered 1, headcount 3 (không đếm Hành chính); periods.headcount = 3', async () => {
+  it('period_locked: hạn − 1 ms (23:59:59.999 10/12 VN) không gửi, headcount null; đúng hạn 00:00 11/12 VN → admin nhận registered 2, headcount 4 (gồm người ngoài group có phiếu hộ, không đếm Hành chính); periods.headcount = 4', async () => {
     expect((await f.run('2026-12-10T16:59:59.999Z')).period_locked).toBe(0);
     expect(await f.recipients('period_locked:2026-12')).toEqual([]);
     expect(await f.headcount('2026-12')).toBeNull();
@@ -106,12 +111,12 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
     expect(notes.map((n) => n.user_sub)).toEqual([ADMIN]);
     expect(notes[0]).toMatchObject({
       topic: 'period_locked',
-      params: { ym: '2026-12', registered: 1, headcount: 3 },
+      params: { ym: '2026-12', registered: 2, headcount: 4 },
       link: '/admin/summary?ym=2026-12',
     });
-    expect(await f.headcount('2026-12')).toBe(3);
+    expect(await f.headcount('2026-12')).toBe(4);
     expect(await f.auditsSince('period.headcount_recorded', '2026-12')).toEqual(
-      [{ detail: { before: null, after: 3 } }],
+      [{ detail: { before: null, after: 4 } }],
     );
     // Kỳ 2027-01 tạo sau khi đổi config → hạn theo 15 (BR-2)
     expect(await f.deadline('2027-01')).toBe('2027-01-15T17:00:00.000Z');
@@ -120,14 +125,14 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
     expect(await f.recipients('period_locked:2026-12')).toEqual([ADMIN]);
   });
 
-  it('headcount chụp một lần: chạy lại cùng ngày không thêm audit; ghi lần hai (thua đua) trả số đã lưu 3, không đè, không audit', async () => {
+  it('headcount chụp một lần: chạy lại cùng ngày không thêm audit; ghi lần hai (thua đua) trả số đã lưu 4, không đè, không audit', async () => {
     await f.run('2026-12-11T05:00:00Z');
     const db = f.app().get<Database>(DRIZZLE_DB);
     const persisted = await db.transaction((tx) =>
       f.app().get(PeriodsService).recordHeadcount('2026-12', 99, tx),
     );
-    expect(persisted).toBe(3);
-    expect(await f.headcount('2026-12')).toBe(3);
+    expect(persisted).toBe(4);
+    expect(await f.headcount('2026-12')).toBe(4);
     expect(
       await f.auditsSince('period.headcount_recorded', '2026-12'),
     ).toHaveLength(1);
@@ -140,7 +145,7 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
       [ADMIN],
     );
     expect((await f.run('2026-12-11T17:00:00Z')).period_locked).toBe(0);
-    expect(await f.headcount('2026-12')).toBe(3);
+    expect(await f.headcount('2026-12')).toBe(4);
     expect(await f.recipients('period_locked:2026-12')).toEqual([]);
   });
 
