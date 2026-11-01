@@ -133,11 +133,7 @@ export class UnitsService {
       SELECT ${COLUMNS} FROM units WHERE lower(name) = lower(${name})
     `);
     if (rows[0]) return { unit: rows[0], created: false };
-    const { rows: last } = await tx.execute<{ max: number | null }>(
-      sql`SELECT max(sort_order) AS max FROM units`,
-    );
-    const sort_order = (last[0]?.max ?? 0) + 10;
-    const unit = await this.insertWithin(tx, { name, sort_order }, actor);
+    const unit = await this.insertWithin(tx, { name }, actor);
     return { unit, created: true };
   }
 
@@ -147,7 +143,11 @@ export class UnitsService {
     actor: string,
   ): Promise<UnitRow> {
     const code = await this.newCode(tx, dto.name);
-    const fields = { ...definedEntries(dto), code };
+    const fields = {
+      ...definedEntries(dto),
+      code,
+      sort_order: dto.sort_order ?? (await this.nextSortOrder(tx)),
+    };
     const row = (
       await tx.execute<UnitRow>(sql`
         INSERT INTO units (${sql.join(
@@ -237,6 +237,14 @@ export class UnitsService {
       sql`SELECT code FROM units`,
     );
     return unitCodeFrom(name, new Set(rows.map((r) => r.code)));
+  }
+
+  // Gọi sau newCode: khóa tư vấn của nó cũng tuần tự hóa max + 10
+  private async nextSortOrder(tx: Tx): Promise<number> {
+    const { rows } = await tx.execute<{ next: number }>(
+      sql`SELECT COALESCE(MAX(sort_order), 0) + 10 AS next FROM units`,
+    );
+    return rows[0].next;
   }
 
   private async mapViolations<T>(run: () => Promise<T>): Promise<T> {

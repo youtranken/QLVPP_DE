@@ -7,12 +7,14 @@ import {
 import { sql } from 'drizzle-orm';
 import { pgViolation } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
-import type { Database } from '../../database/database.module';
+import type { Database, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import type { CreateCategoryDto, UpdateCategoryDto } from './catalog.dto';
 import { definedEntries, pick, setClause } from '../../common/sql-patch';
 import { CATEGORY_COLUMNS } from './catalog-sql';
 import type { CategoryRow } from './catalog-sql';
+
+const SORT_LOCK = sql.raw("hashtext('item_categories.sort_order')");
 
 @Injectable()
 export class CategoriesService {
@@ -33,7 +35,10 @@ export class CategoriesService {
   async create(dto: CreateCategoryDto, actor: string): Promise<CategoryRow> {
     return this.mapDuplicate(() =>
       this.db.transaction(async (tx) => {
-        const fields = definedEntries(dto);
+        const fields = {
+          ...definedEntries(dto),
+          sort_order: dto.sort_order ?? (await this.nextSortOrder(tx)),
+        };
         const result = await tx.execute<CategoryRow>(sql`
           INSERT INTO item_categories (${sql.join(
             Object.keys(fields).map((k) => sql.identifier(k)),
@@ -95,6 +100,15 @@ export class CategoriesService {
         return after;
       }),
     );
+  }
+
+  // Khóa tư vấn: hai lần thêm đồng thời không cùng nhận max + 10
+  private async nextSortOrder(tx: Tx): Promise<number> {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${SORT_LOCK})`);
+    const { rows } = await tx.execute<{ next: number }>(
+      sql`SELECT COALESCE(MAX(sort_order), 0) + 10 AS next FROM item_categories`,
+    );
+    return rows[0].next;
   }
 
   private async mapDuplicate<T>(run: () => Promise<T>): Promise<T> {

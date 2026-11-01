@@ -108,9 +108,9 @@ describe('catalog: nhóm món, món', () => {
       expect(res.body).toMatchObject({
         name: `Giấy ${RUN}`,
         name_en: null,
-        sort_order: 0,
         active: true,
       });
+      expect(res.body.sort_order).toBeGreaterThan(0);
       const dup = await postCat({ name: `giấy ${RUN}` }).expect(409);
       expect(dup.body).toMatchObject({ code: 'CATEGORY_EXISTS' });
       expect(await auditCount('category.created', (res.body as Item).id)).toBe(

@@ -150,10 +150,10 @@ describe('units: GET units, admin/units', () => {
     it('tên 40 ký tự → 201, code sinh từ tên; 41 → 400 VALIDATION {fields:[name]}; name_en 41 → VALIDATION {fields:[name_en]}', async () => {
       const name40 = `Thùng ${RUN}`.padEnd(40, 'x');
       const ok = await postUnit({ name: `  ${name40}  ` }).expect(201);
+      expect((ok.body as Unit).sort_order).toBeGreaterThan(0);
       expect(ok.body).toMatchObject({
         name: name40,
         name_en: null,
-        sort_order: 0,
         active: true,
       });
       expect((ok.body as Unit).code).toMatch(/^thung-[a-z0-9-]+$/);
@@ -232,7 +232,7 @@ describe('units: GET units, admin/units', () => {
       });
       expect(await auditOf('unit.updated', u.code)).toEqual([
         {
-          before: { name: u.name, name_en: null, sort_order: 0 },
+          before: { name: u.name, name_en: null, sort_order: u.sort_order },
           after: { name: `Xấp lớn ${RUN}`, name_en: 'Stack', sort_order: 15 },
         },
       ]);
