@@ -4,6 +4,11 @@ import { sql } from 'drizzle-orm';
 export const LOW_STOCK_SQL =
   'restock_level > 0 AND stock_qty > 0 AND stock_qty <= floor(restock_level * 0.2)';
 
+// Món dùng được: món active và nhóm (nếu có) active — ngừng nhóm không sửa items.active
+export const ITEM_USABLE_SQL = sql.raw(
+  '(items.active AND NOT EXISTS (SELECT 1 FROM item_categories c WHERE c.id = items.category_id AND NOT c.active))',
+);
+
 export type StockState = 'ok' | 'low' | 'out' | 'untracked';
 
 export const ITEM_COLUMNS = sql.raw(

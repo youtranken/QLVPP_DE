@@ -17,7 +17,7 @@ import { unknownUnit } from '../units/unit-errors';
 import { UnitsService } from '../units/units.service';
 import type { CreateItemDto, UpdateItemDto } from './catalog.dto';
 import { definedEntries, pick, setClause } from '../../common/sql-patch';
-import { ITEM_COLUMNS, LOW_STOCK_SQL } from './catalog-sql';
+import { ITEM_COLUMNS, ITEM_USABLE_SQL, LOW_STOCK_SQL } from './catalog-sql';
 import type { ItemFacts, ItemRow } from './catalog-sql';
 import { ITEM_USAGE_HOOK } from './item-usage.hook';
 import type { ItemUsageHook } from './item-usage.hook';
@@ -75,15 +75,26 @@ export class CatalogService {
     @Inject(ITEM_USAGE_HOOK) private readonly usage: ItemUsageHook,
   ) {}
 
-  // Cho module phiếu kiểm luật dòng và hiển thị món, kể cả món đã ngừng
+  // Cho module phiếu kiểm luật dòng và hiển thị món, kể cả món đã ngừng; active = món dùng được (tính cả nhóm)
+  // lockCategories: FOR SHARE nhóm để tx ngừng nhóm đang chạy phải commit trước (và ngược lại)
   async itemFacts(
     ids: string[],
     tx: Executor = this.db,
+    opts: { lockCategories?: boolean } = {},
   ): Promise<Map<string, ItemFacts>> {
     if (ids.length === 0) return new Map();
+    const idList = sql`${sql.param(ids)}::uuid[]`;
+    if (opts.lockCategories) {
+      await tx.execute(sql`
+        SELECT id FROM item_categories
+        WHERE id IN (SELECT category_id FROM items WHERE id = ANY(${idList}))
+        ORDER BY id FOR SHARE
+      `);
+    }
     const { rows } = await tx.execute<ItemFacts>(sql`
-      SELECT id, name, name_en, unit, pack_note, image_file_id, active, admin_only, max_qty
-      FROM items WHERE id = ANY(${sql.param(ids)}::uuid[])
+      SELECT id, name, name_en, unit, pack_note, image_file_id, ${ITEM_USABLE_SQL} AS active,
+             admin_only, max_qty
+      FROM items WHERE id = ANY(${idList})
     `);
     return new Map(rows.map((r) => [r.id, r]));
   }
@@ -107,7 +118,7 @@ export class CatalogService {
     >(sql`
       SELECT ${ITEM_COLUMNS}, (image_file_id IS NULL) AS missing_image FROM items
       WHERE ${privileged}
-         OR (active AND NOT admin_only)
+         OR (${ITEM_USABLE_SQL} AND NOT admin_only)
          OR id = ANY(${sql.param(includeIds)}::uuid[])
       ORDER BY sort_order, lower(name)
     `);

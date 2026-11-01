@@ -177,9 +177,11 @@ export class ReviewService {
     actor: string,
   ): Promise<ItemFacts | ItemRow> {
     if (input.existing_id) {
-      const found = (await this.catalog.itemFacts([input.existing_id], tx)).get(
-        input.existing_id,
-      );
+      const found = (
+        await this.catalog.itemFacts([input.existing_id], tx, {
+          lockCategories: true,
+        })
+      ).get(input.existing_id);
       if (!found) throw itemNotFound();
       if (!found.active) {
         throw new BadRequestException({

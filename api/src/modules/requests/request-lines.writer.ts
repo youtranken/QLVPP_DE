@@ -162,7 +162,9 @@ export class RequestLinesWriter {
       existing,
       body: args.body.lines,
       mode: lineMode(args),
-      items: await this.catalog.itemFacts([...new Set(ids)], tx),
+      items: await this.catalog.itemFacts([...new Set(ids)], tx, {
+        lockCategories: true,
+      }),
       units: await this.units.lockFacts(
         [
           ...new Set(
