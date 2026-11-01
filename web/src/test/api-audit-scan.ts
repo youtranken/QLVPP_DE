@@ -19,15 +19,16 @@ export interface ScanResult {
 
 export function stockReasons(source: string): string[] {
   const sf = ts.createSourceFile('stock.service.ts', source, ts.ScriptTarget.Latest, true);
-  let reasons: string[] = [];
+  // Gộp mọi khai báo reason dạng union: chữ ký thu hẹp ở chỗ khác không được che mất lý do còn lại
+  const reasons = new Set<string>();
   const visit = (node: ts.Node) => {
     if (ts.isPropertySignature(node) && node.name.getText(sf) === 'reason' && node.type && ts.isUnionTypeNode(node.type)) {
-      reasons = node.type.types.flatMap((t) => (ts.isLiteralTypeNode(t) && ts.isStringLiteral(t.literal) ? [t.literal.text] : []));
+      for (const t of node.type.types) if (ts.isLiteralTypeNode(t) && ts.isStringLiteral(t.literal)) reasons.add(t.literal.text);
     }
     ts.forEachChild(node, visit);
   };
   visit(sf);
-  return reasons;
+  return [...reasons];
 }
 
 function findConst(name: string, from: ts.Node): ts.Expression | undefined {

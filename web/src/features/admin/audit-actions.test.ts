@@ -37,6 +37,7 @@ describe('AUDIT_ACTIONS', () => {
   it('lý do kho đọc từ kiểu union ở stock.service.ts, không chép tay', () => {
     expect(stockReasons("interface M { reason: 'purchase' | 'adjust' | 'issue' | 'delivery'; note: string }")).toEqual(['purchase', 'adjust', 'issue', 'delivery']);
     expect(stockReasons('interface M { note: string }')).toEqual([]);
+    expect(stockReasons("interface M { reason: 'purchase' | 'adjust' | 'issue' } function f(m: M & { reason: 'purchase' | 'adjust' }) {}")).toEqual(['purchase', 'adjust', 'issue']);
   });
 
   it('mọi action có khóa audit.actions.<action> ở cả vi và en, nhãn không rỗng', () => {
