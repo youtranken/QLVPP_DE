@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { asRole, devHeaders, expectNoContrastViolations, isMobile, psql, removeTestItem, shot } from './helpers';
+import { asRole, devHeaders, expectNoContrastViolations, expectReorderArrowKeepsFocus, isMobile, psql, removeTestItem, shot } from './helpers';
 
 const TONES = ['xanh đá', 'rêu', 'cát mật', 'lam ngọc', 'đất hồng', 'tím khói', 'ô liu'];
 
@@ -142,6 +142,12 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       for (const id of itemIds) await removeTestItem(request, id);
       deleteTestCategories();
     }
+  });
+
+  test('E9-S5 Nhóm món: Enter trên ▲▼ giữ tiêu điểm ở mũi tên của dòng vừa dời, tới dòng cuối chuyển sang ▲', async ({ page }) => {
+    await page.goto('/admin/categories');
+    await expect(page.getByRole('heading', { level: 1, name: 'Nhóm món' })).toBeVisible();
+    await expectReorderArrowKeepsFocus(page, /^Thao tác cho /);
   });
 
   test('E9-S5 Nhóm món: lỗi tải → "Không tải được dữ liệu — thử lại." và "Thử lại"', async ({ page }) => {

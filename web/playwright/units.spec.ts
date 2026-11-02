@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Browser, type Page, type TestInfo } from '@playwright/test';
-import { asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, seedActiveUser, shot } from './helpers';
+import { asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, expectReorderArrowKeepsFocus, isMobile, seedActiveUser, shot } from './helpers';
 import { newPage } from './sessions';
 
 interface ApiUnit {
@@ -132,6 +132,12 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
     await page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
     await expect(page.getByRole('button', { name: /^Đưa / })).toHaveCount(0);
     expect(await names()).toEqual(before);
+  });
+
+  test('E9-S5b Đơn vị tính: Enter trên ▲▼ giữ tiêu điểm ở mũi tên của dòng vừa dời, tới dòng cuối chuyển sang ▲', async ({ page }) => {
+    await page.goto('/admin/units');
+    await expect(page.getByRole('heading', { level: 1, name: 'Đơn vị tính' })).toBeVisible();
+    await expectReorderArrowKeepsFocus(page, /^Thao tác cho /);
   });
 
   test('E9-S5b Đơn vị tính: lỗi tải → "Không tải được dữ liệu — thử lại." và "Thử lại"', async ({ page }) => {

@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/ui/icon';
 
@@ -31,6 +32,23 @@ interface CellProps {
 
 export function ReorderCell({ index, count, name, disabled, onMove }: CellProps) {
   const { t } = useTranslation();
+  const upRef = useRef<HTMLButtonElement>(null);
+  const downRef = useRef<HTMLButtonElement>(null);
+  const pressed = useRef<{ from: number; dir: -1 | 1 } | null>(null);
+  // <tr> bị dời theo key làm trình duyệt bỏ tiêu điểm; mũi tên vừa bấm tắt ở biên thì sang mũi tên kia
+  useLayoutEffect(() => {
+    const p = pressed.current;
+    if (!p || p.from === index) return;
+    pressed.current = null;
+    const [same, other] = p.dir === -1 ? [upRef, downRef] : [downRef, upRef];
+    (same.current && !same.current.disabled ? same.current : other.current)?.focus();
+  }, [index]);
+  const move = (dir: -1 | 1) => {
+    pressed.current = { from: index, dir };
+    onMove(index, dir);
+  };
+  const upOff = disabled || index === 0;
+  const downOff = disabled || index === count - 1;
   return (
     <td className="reorder-col">
       <span className="reorder-ctl">
@@ -38,10 +56,10 @@ export function ReorderCell({ index, count, name, disabled, onMove }: CellProps)
           ⋮⋮
         </span>
         <span className="reorder-ctl__arrows">
-          <button type="button" className="reorder-ctl__btn" aria-label={t('common.reorder.moveUp', { name })} disabled={disabled || index === 0} onClick={() => onMove(index, -1)}>
+          <button ref={upRef} type="button" className="reorder-ctl__btn" aria-label={t('common.reorder.moveUp', { name })} disabled={upOff} onClick={() => move(-1)}>
             <Icon name="chevup" size={16} />
           </button>
-          <button type="button" className="reorder-ctl__btn" aria-label={t('common.reorder.moveDown', { name })} disabled={disabled || index === count - 1} onClick={() => onMove(index, 1)}>
+          <button ref={downRef} type="button" className="reorder-ctl__btn" aria-label={t('common.reorder.moveDown', { name })} disabled={downOff} onClick={() => move(1)}>
             <Icon name="chev" size={16} />
           </button>
         </span>

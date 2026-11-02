@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, renderWithI18n, screen, userEvent, within } from '@/test/test-utils';
 import { ReorderBar, ReorderCell, ReorderToggle } from '@/ui/reorder';
@@ -52,6 +53,35 @@ describe('ReorderCell', () => {
       [0, 1],
       [1, -1],
     ]);
+  });
+});
+
+function Live({ initial }: { initial: string[] }) {
+  const [names, setNames] = useState(initial);
+  const move = (i: number, d: -1 | 1) =>
+    setNames((cur) => {
+      const next = [...cur];
+      [next[i], next[i + d]] = [next[i + d], next[i]];
+      return next;
+    });
+  return <Rows names={names} onMove={move} onMoveTo={() => {}} />;
+}
+
+describe('ReorderCell giữ tiêu điểm', () => {
+  it('▼ ở dòng giữa → tiêu điểm vẫn ở "Đưa hộp xuống" của dòng vừa dời', async () => {
+    renderWithI18n(<Live initial={['cái', 'hộp', 'ram', 'bút']} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Đưa hộp xuống' }));
+    expect(screen.getByRole('button', { name: 'Đưa hộp xuống' })).toHaveFocus();
+  });
+
+  it('▼ tới dòng cuối (▼ tắt) → tiêu điểm sang "Đưa … lên" cùng dòng; ▲ tới dòng đầu → sang "Đưa … xuống"', async () => {
+    renderWithI18n(<Live initial={['cái', 'hộp', 'ram']} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Đưa hộp xuống' }));
+    expect(screen.getByRole('button', { name: 'Đưa hộp xuống' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Đưa hộp lên' })).toHaveFocus();
+    await userEvent.click(screen.getByRole('button', { name: 'Đưa ram lên' }));
+    expect(screen.getByRole('button', { name: 'Đưa ram lên' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Đưa ram xuống' })).toHaveFocus();
   });
 });
 

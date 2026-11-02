@@ -187,3 +187,27 @@ export async function openPurchase(page: Page, row: Locator) {
   await row.getByRole('button', { name: /^Thao tác khác cho / }).click();
   await page.getByRole('menu').getByRole('menuitem', { name: 'Nhập mua', exact: true }).click();
 }
+
+// ▲▼ dời <tr> theo key: trình duyệt tự bỏ tiêu điểm nếu app không đặt lại; dời dòng đầu xuống tận cuối rồi lên một bậc
+export async function expectReorderArrowKeepsFocus(page: Page, menuLabel: RegExp) {
+  await page.getByRole('button', { name: 'Sắp xếp' }).click();
+  const downs = page.getByRole('button', { name: /^Đưa .+ xuống$/ });
+  const count = await downs.count();
+  expect(count).toBeGreaterThanOrEqual(3);
+  const name = /^Đưa (.+) xuống$/.exec((await downs.first().getAttribute('aria-label'))!)![1];
+  const active = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? document.activeElement?.tagName);
+  await page.getByRole('button', { name: `Đưa ${name} xuống`, exact: true }).focus();
+  for (let i = 1; i < count - 1; i++) {
+    await page.keyboard.press('Enter');
+    await expect.poll(active).toBe(`Đưa ${name} xuống`);
+  }
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: `Đưa ${name} xuống`, exact: true })).toBeDisabled();
+  await expect.poll(active).toBe(`Đưa ${name} lên`);
+  await page.keyboard.press('Enter');
+  await expect.poll(active).toBe(`Đưa ${name} lên`);
+  const labels = await page.getByRole('table').getByRole('button', { name: menuLabel }).evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
+  expect(labels.at(-2)).toMatch(new RegExp(` ${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
+  await page.getByRole('button', { name: 'Hủy' }).click();
+  await page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
+}
