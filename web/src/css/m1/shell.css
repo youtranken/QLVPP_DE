@@ -1,34 +1,34 @@
 [data-shell='admin'] .shell { --side-w: 252px; display: grid; grid-template-columns: var(--side-w) minmax(0, 1fr); min-height: 100vh; background: linear-gradient(90deg, var(--c-surface) 0 calc(var(--side-w) - 1px), var(--c-line) calc(var(--side-w) - 1px) var(--side-w), var(--c-page) var(--side-w)); }
-[data-shell='admin'] .shell__main { min-width: 0; padding: 20px 24px 40px; outline: none; }
+[data-shell='admin'] .shell__main { width: 100%; max-width: 1280px; min-width: 0; margin-inline: auto; padding: 20px 24px 40px; outline: none; }
 [data-shell='admin'] .skip-link { background: var(--c-surface); color: var(--c-acc); border-radius: var(--r-sm); box-shadow: var(--e-3); }
 
 [data-shell='admin'] .side { position: sticky; top: 0; z-index: 20; height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; padding: 12px; border-right: 1px solid var(--c-line); background: var(--c-surface); color: var(--c-ink); }
-[data-shell='admin'] .side__brand { flex: none; display: flex; align-items: center; gap: 10px; padding: 0 0 6px 4px; }
+[data-shell='admin'] .side__brand { flex: none; display: flex; align-items: center; gap: 12px; padding: 0 0 8px 4px; }
 [data-shell='admin'] .side__logo { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: var(--r-sm); background: var(--c-acc); color: var(--c-on-acc); }
 [data-shell='admin'] .side__logo svg { width: 18px; height: 18px; }
 [data-shell='admin'] .side__brand-text { flex: 1; min-width: 0; font: var(--t-label); font-weight: 800; }
 [data-shell='admin'] .side__brand-text small { display: block; font: var(--t-cap); font-weight: 500; color: var(--c-muted); }
-[data-shell='admin'] .side__nav { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; margin: 0 -12px; padding: 0 12px 6px; border-bottom: 1px solid var(--c-line); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
-[data-shell='admin'] .side__group { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); padding-left: 6px; }
+[data-shell='admin'] .side__nav { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; margin: 0 -12px; padding: 0 12px 8px; border-bottom: 1px solid var(--c-line); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+[data-shell='admin'] .side__group { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); padding-left: 8px; }
 [data-shell='admin'] .side__group::before { content: ''; position: absolute; left: 4px; top: 28px; bottom: 6px; width: 1px; background: var(--c-line); }
 [data-shell='admin'] .side__group:first-child .side__group-label { padding-top: 2px; }
-[data-shell='admin'] .side__group-label { margin-left: -6px; padding: 8px 4px 2px; line-height: 16px; font: var(--t-label); font-size: 12.5px; font-weight: 800; color: var(--c-ink); }
-[data-shell='admin'] .side__link { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; height: 36px; padding: 0 6px 0 8px; border-radius: var(--r-sm); color: var(--c-ink-2); font: var(--t-label); font-size: 13.5px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+[data-shell='admin'] .side__group-label { margin-left: -8px; padding: 8px 4px 2px; line-height: 16px; font: var(--t-label); font-size: 12px; font-weight: 800; color: var(--c-ink); }
+[data-shell='admin'] .side__link { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; height: 36px; padding: 0 8px; border-radius: var(--r-sm); color: var(--c-ink-2); font: var(--t-label); font-weight: 600; text-decoration: none; white-space: nowrap; }
 [data-shell='admin'] .side__link > svg { flex: none; }
 [data-shell='admin'] .side__label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 [data-shell='admin'] .side__link:hover { background: var(--c-surface-2); }
 [data-shell='admin'] .side__link:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell='admin'] .side__link[aria-current='page'] { background: var(--c-acc-soft); color: var(--c-acc); font-weight: 800; }
 [data-shell='admin'] .side__link[aria-current='page']::before { content: ''; position: absolute; left: -18px; top: 7px; bottom: 7px; width: 4px; border-radius: 0 4px 4px 0; background: var(--c-acc); }
-[data-shell='admin'] .side__cnt { display: inline-grid; flex: none; place-items: center; min-width: 20px; height: 20px; margin-left: auto; padding: 0 6px; border-radius: var(--r-pill); background: var(--g5); color: var(--g5-ink); font: var(--t-micro); }
+[data-shell='admin'] .side__cnt { display: inline-grid; flex: none; place-items: center; min-width: 20px; height: 20px; margin-left: auto; padding: 0 8px; border-radius: var(--r-pill); background: var(--g5); color: var(--g5-ink); font: var(--t-micro); }
 [data-shell='admin'] .side__cnt[data-badge='delivery'] { background: var(--c-surface-2); color: var(--c-ink-2); }
 [data-shell='admin'] .side__cnt[data-badge='stock'] { background: var(--c-warn-soft); color: var(--c-warn); }
 
-[data-shell='admin'] .side__period { flex: none; display: flex; gap: 10px; margin-top: 8px; padding: 8px 10px; border-radius: var(--r-md); background: var(--g1); color: var(--g1-ink); font: var(--t-cap); font-weight: 500; text-decoration: none; }
+[data-shell='admin'] .side__period { flex: none; display: flex; gap: 12px; margin-top: 8px; padding: 8px 12px; border-radius: var(--r-md); background: var(--g1); color: var(--g1-ink); font: var(--t-cap); font-weight: 500; text-decoration: none; }
 [data-shell='admin'] .side__period:hover { box-shadow: inset 0 0 0 1px var(--g1-strong); }
 [data-shell='admin'] .side__period:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell='admin'] .side__period b { display: block; font: var(--t-label); }
-[data-shell='admin'] .side__period-text > span { display: block; font-size: 11.5px; letter-spacing: -0.01em; }
+[data-shell='admin'] .side__period-text > span { display: block; font-size: 12px; letter-spacing: -0.01em; }
 [data-shell='admin'] .side__period-dot { display: none; width: 10px; height: 10px; border-radius: var(--r-pill); background: var(--c-ok); }
 [data-shell='admin'] .side__period[data-last] .side__period-dot { background: var(--c-warn); }
 
@@ -50,8 +50,8 @@
 [data-shell='admin'] .side__who-text { min-width: 0; }
 [data-shell='admin'] .side__who-text b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-label); font-size: 13px; }
 [data-shell='admin'] .side__who-text small { display: block; font: var(--t-cap); color: var(--c-muted); }
-[data-shell='admin'] .side__acct { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; }
-[data-shell='admin'] .side__logout { padding: 0 10px; }
+[data-shell='admin'] .side__acct { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+[data-shell='admin'] .side__logout { padding: 0 12px; }
 [data-shell='admin'] .side__error { margin: 0; font: var(--t-cap); color: var(--c-danger); }
 
 [data-shell='admin'] .side .notif-btn,
@@ -81,7 +81,7 @@
 [data-shell='admin'] .topbar__avatar:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell='admin'] .side-sheet-viewport { position: fixed; inset: 0; z-index: 51; display: flex; pointer-events: none; }
 [data-shell='admin'] .side-sheet { display: flex; flex-direction: column; width: min(320px, 88vw); height: 100%; padding-top: env(safe-area-inset-top); background: var(--c-surface); pointer-events: auto; box-shadow: var(--e-5); outline: none; animation: m1-side-in var(--d-3) var(--ease-out); }
-[data-shell='admin'] .side-sheet__head { display: flex; align-items: center; gap: 10px; padding: 12px 8px 8px 20px; border-bottom: 1px solid var(--c-line); }
+[data-shell='admin'] .side-sheet__head { display: flex; align-items: center; gap: 12px; padding: 12px 8px 8px 20px; border-bottom: 1px solid var(--c-line); }
 [data-shell='admin'] .side-sheet__title { flex: 1; min-width: 0; }
 [data-shell='admin'] .side-sheet__title h2 { margin: 0; font: var(--t-label); font-size: 16px; font-weight: 800; color: var(--c-ink); }
 [data-shell='admin'] .side-sheet__title small { display: block; font: var(--t-cap); color: var(--c-muted); }
@@ -95,19 +95,19 @@
 @media (min-width: 768px) and (max-width: 1279px) {
   [data-shell='admin'] .shell { --side-w: 72px; }
   [data-shell='admin'] .side { align-items: center; overflow-x: hidden; }
-  [data-shell='admin'] .side__brand { flex-direction: column; gap: 6px; padding: 0 0 8px; }
+  [data-shell='admin'] .side__brand { flex-direction: column; gap: 8px; padding: 0 0 8px; }
   [data-shell='admin'] .side__brand-text,
   [data-shell='admin'] .side__group-label,
   [data-shell='admin'] .side__label,
   [data-shell='admin'] .side__period-text,
   [data-shell='admin'] .side__who-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   [data-shell='admin'] .side__nav { justify-items: center; margin: 0 -12px; padding: 0 12px 8px; }
-  [data-shell='admin'] .side__group { padding-top: 8px; padding-left: 0; border-top: 1px solid var(--c-line); margin-top: 6px; }
+  [data-shell='admin'] .side__group { padding-top: 8px; padding-left: 0; border-top: 1px solid var(--c-line); margin-top: 8px; }
   [data-shell='admin'] .side__group::before { display: none; }
   [data-shell='admin'] .side__link { justify-content: center; width: 48px; padding: 0; }
   [data-shell='admin'] .side__link[aria-current='page']::before { left: -12px; }
-  [data-shell='admin'] .side__cnt { position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; font-size: 10px; }
-  [data-shell='admin'] .side__period { justify-content: center; width: 48px; padding: 14px 0; }
+  [data-shell='admin'] .side__cnt { position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; font-size: 12px; }
+  [data-shell='admin'] .side__period { justify-content: center; width: 48px; padding: 16px 0; }
   [data-shell='admin'] .side__period-dot { display: block; }
   [data-shell='admin'] .side__user { padding: 12px 0 0; justify-items: center; }
   [data-shell='admin'] .side__acct { position: fixed; left: 80px; bottom: 16px; z-index: 30; padding: 12px; border-radius: var(--r-md); background: var(--c-surface); box-shadow: var(--e-3); }

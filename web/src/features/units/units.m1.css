@@ -1,4 +1,4 @@
-[data-shell='admin'] .un-dirty { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); padding: 10px 14px; border-radius: var(--r-md); background: var(--c-acc-soft); color: var(--c-acc); }
+[data-shell='admin'] .un-dirty { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); padding: 12px 16px; border-radius: var(--r-md); background: var(--c-acc-soft); color: var(--c-acc); }
 [data-shell='admin'] .un-dirty__text { margin-right: auto; font: var(--t-label); }
 [data-shell='admin'] .un-order { width: 1%; white-space: nowrap; }
 [data-shell='admin'] .un-name__text { color: var(--c-ink); font: var(--t-label); overflow-wrap: anywhere; }
