@@ -15,7 +15,7 @@ const nav = {
       backToList: 'Quay lại danh sách phiếu',
       avatar: '{{name}}, {{role}}',
       lockedMonth: 'Tháng {{month}}/{{year}} · đã khóa',
-      currentPeriod: 'Kỳ đăng ký hiện tại: tháng {{month}} · đang mở',
+      currentPeriod: 'Kỳ hiện tại: tháng {{month}} · đang mở',
     },
     groups: {
       monthly: 'Hằng tháng',

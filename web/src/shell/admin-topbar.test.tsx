@@ -20,20 +20,20 @@ function open(path: string) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('AdminTopbar 390 px', () => {
-  it('thanh trên: nút "Mở menu quản lý", tên app "VPP Công trình" (không lặp tiêu đề trang "Danh mục"), dòng phụ kỳ "Kỳ đăng ký hiện tại: tháng 11 · đang mở", chuông, avatar', async () => {
+  it('thanh trên: nút "Mở menu quản lý", tên app "VPP Công trình" (không lặp tiêu đề trang "Danh mục"), dòng phụ kỳ "Kỳ hiện tại: tháng 11 · đang mở", chuông, avatar', async () => {
     open('/admin/catalog');
     const bar = topbar();
     expect(within(bar).getByRole('button', { name: 'Mở menu quản lý' })).toBeInTheDocument();
     expect(within(bar).getByText('VPP Công trình', { exact: true })).toBeInTheDocument();
     expect(within(bar).queryByText('Danh mục', { exact: true })).toBeNull();
-    expect(await within(bar).findByText('Kỳ đăng ký hiện tại: tháng 11 · đang mở')).toBeInTheDocument();
+    expect(await within(bar).findByText('Kỳ hiện tại: tháng 11 · đang mở')).toBeInTheDocument();
     expect(within(bar).getByRole('button', { name: 'Nguyễn Văn An, Hành chính' })).toBeInTheDocument();
     expect(await within(bar).findByRole('button', { name: /^Thông báo/ })).toBeInTheDocument();
   });
 
-  it('Tổng hợp kỳ đang xem tháng 10 (?ym=2026-10) → dòng phụ vẫn nói rõ kỳ đăng ký hiện tại, không ghi trống "Kỳ tháng 11 đang mở"', async () => {
+  it('Tổng hợp kỳ đang xem tháng 10 (?ym=2026-10) → dòng phụ vẫn nói rõ "Kỳ hiện tại", không ghi trống "Kỳ tháng 11 đang mở"', async () => {
     open('/admin/summary?ym=2026-10');
-    expect(await within(topbar()).findByText('Kỳ đăng ký hiện tại: tháng 11 · đang mở')).toBeInTheDocument();
+    expect(await within(topbar()).findByText('Kỳ hiện tại: tháng 11 · đang mở')).toBeInTheDocument();
     expect(within(topbar()).queryByText('Kỳ tháng 11 đang mở')).toBeNull();
   });
 

@@ -18,7 +18,7 @@ const nav: Messages<typeof vi> = {
       backToList: 'Back to request list',
       avatar: '{{name}}, {{role}}',
       lockedMonth: 'Month {{month}}/{{year}} · locked',
-      currentPeriod: 'Current sign-up period: month {{month}} · open',
+      currentPeriod: 'Current period: month {{month}} · open',
     },
     groups: {
       monthly: 'Monthly',
