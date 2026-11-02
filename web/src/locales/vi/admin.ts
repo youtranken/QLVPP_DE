@@ -109,6 +109,7 @@ const admin = {
       colAction: 'Hành động',
       colObject: 'Đối tượng',
       colDetail: 'Chi tiết',
+      rowHint: 'Enter để xem chi tiết',
       before: 'Trước: {{json}}',
       after: 'Sau: {{json}}',
       dayCount: '{{count}} dòng',

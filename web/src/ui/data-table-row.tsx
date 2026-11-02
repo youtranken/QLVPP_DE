@@ -60,7 +60,7 @@ export function BodyRow<T>({
       {...extra}
       className={[onRowClick || extra?.onClick ? 'clickable' : '', className || ''].filter(Boolean).join(' ') || undefined}
       aria-current={active ? 'true' : undefined}
-      // Bấm dòng chỉ là tiện ích chuột; không role=button vì dòng chứa nút (nested-interactive)
+      // Không role=button (dòng có thể chứa nút); dòng mở bằng bàn phím tự gắn tabIndex/onKeyDown/aria-describedby qua extra
       onClick={onRowClick ? () => onRowClick(row.original) : extra?.onClick}
     >
       {selection && (

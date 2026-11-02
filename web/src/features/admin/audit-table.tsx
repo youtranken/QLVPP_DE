@@ -87,9 +87,11 @@ function useRowToggle() {
     });
   }, []);
   const detailId = useCallback((id: string) => `${baseId}-${id}`, [baseId]);
+  const hintId = `${baseId}-hint`;
   const rowProps = useCallback(
     (e: AuditEntry) => ({
       tabIndex: 0,
+      'aria-describedby': hintId,
       'aria-expanded': open.has(e.id),
       'aria-controls': open.has(e.id) ? detailId(e.id) : undefined,
       onClick: () => toggle(e.id),
@@ -99,9 +101,9 @@ function useRowToggle() {
         toggle(e.id);
       },
     }),
-    [open, toggle, detailId],
+    [open, toggle, detailId, hintId],
   );
-  return { open, detailId, rowProps };
+  return { open, detailId, hintId, rowProps };
 }
 
 function useDayGroups(): GroupBy<AuditEntry> {
@@ -123,21 +125,27 @@ function useDayGroups(): GroupBy<AuditEntry> {
 }
 
 export function AuditTable({ rows, loading, empty }: { rows: AuditEntry[]; loading: boolean; empty: { title: string; hint?: string; action?: ReactNode } }) {
+  const { t } = useTranslation();
   const columns = useColumns();
   const groupBy = useDayGroups();
-  const { open, detailId, rowProps } = useRowToggle();
+  const { open, detailId, hintId, rowProps } = useRowToggle();
   return (
-    <DataTable
-      data={rows}
-      columns={columns}
-      loading={loading}
-      emptyText={empty.title}
-      empty={{ art: 'no-match', hint: empty.hint, action: empty.action }}
-      groupBy={groupBy}
-      expandedRow={(e) => (open.has(e.id) ? <AuditDetail entry={e} id={detailId(e.id)} /> : null)}
-      rowProps={rowProps}
-      tableClassName="au-table"
-      stackOnMobile
-    />
+    <>
+      <span id={hintId} hidden>
+        {t('audit.page.rowHint')}
+      </span>
+      <DataTable
+        data={rows}
+        columns={columns}
+        loading={loading}
+        emptyText={empty.title}
+        empty={{ art: 'no-match', hint: empty.hint, action: empty.action }}
+        groupBy={groupBy}
+        expandedRow={(e) => (open.has(e.id) ? <AuditDetail entry={e} id={detailId(e.id)} /> : null)}
+        rowProps={rowProps}
+        tableClassName="au-table"
+        stackOnMobile
+      />
+    </>
   );
 }

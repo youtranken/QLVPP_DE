@@ -112,6 +112,7 @@ const admin: Messages<typeof vi> = {
       colAction: 'Action',
       colObject: 'Object',
       colDetail: 'Details',
+      rowHint: 'Press Enter to show details',
       before: 'Before: {{json}}',
       after: 'After: {{json}}',
       dayCount: '{{count}} entries',

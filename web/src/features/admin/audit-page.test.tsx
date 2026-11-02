@@ -81,6 +81,7 @@ describe('AuditPage B11', () => {
     const r = entryRow('Lê Thị Bình');
     expect(r).toHaveAttribute('aria-expanded', 'false');
     expect(r).toHaveAttribute('tabindex', '0');
+    expect(r).toHaveAccessibleDescription('Enter để xem chi tiết');
     r.focus();
     await userEvent.keyboard('{Enter}');
     expect(r).toHaveAttribute('aria-expanded', 'true');
