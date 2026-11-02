@@ -246,6 +246,22 @@ describe('SummaryPage — số món hết hàng', () => {
     const paused = adminItem({ id: 'i-paused', name: 'Bút dạ quang', stock_qty: 0, stock_state: 'out', usable: false });
     stubSummaryApi((url) => (url === '/api/admin/items' ? jsonResponse(200, [...SUMMARY_ITEMS, paused]) : undefined));
     open();
-    expect(await screen.findByRole('button', { name: /Hết hàng \/ sắp hết/ })).toHaveTextContent('1 hết · 4 sắp hết');
+    expect(await screen.findByRole('button', { name: /Hết hàng \/ sắp hết/ })).toHaveTextContent('1 hết · 1 sắp hết');
+  });
+
+  it('"sắp hết" cùng nguồn danh sách món dùng được (không lấy low_stock server đếm cả nhóm ngừng): món sắp hết nhóm ngừng không tính', async () => {
+    const paused = adminItem({ id: 'i-paused-low', name: 'Kẹp giấy', stock_qty: 1, stock_state: 'low', usable: false });
+    stubSummaryApi((url) => (url === '/api/admin/items' ? jsonResponse(200, [...SUMMARY_ITEMS, paused]) : undefined));
+    open();
+    const card = await screen.findByRole('button', { name: /Hết hàng \/ sắp hết/ });
+    await waitFor(() => expect(card).toHaveTextContent('1 hết · 1 sắp hết'));
+    expect(card.querySelector('.stat-card__v')).toHaveTextContent(/^2/);
+  });
+
+  it('danh sách món còn đang tải → ô ghi "—" thay vì số tạm', async () => {
+    stubSummaryApi((url) => (url === '/api/admin/items' ? new Promise<Response>(() => {}) : undefined));
+    open();
+    const card = await screen.findByRole('button', { name: /Hết hàng \/ sắp hết/ });
+    expect(card.querySelector('.stat-card__v')).toHaveTextContent(/^—/);
   });
 });

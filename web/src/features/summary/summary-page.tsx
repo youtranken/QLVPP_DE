@@ -69,7 +69,9 @@ export function SummaryPage() {
   const ym = p.ym;
   const data = summary.data;
   const canCreate = ym === openYm;
-  const outCount = (items.data ?? []).filter((i) => i.usable && i.stock_state === 'out').length;
+  // Hết và sắp hết cùng một nguồn (món dùng được), chưa tải xong thì ô ghi "—" thay vì số tạm
+  const usable = items.data?.filter((i) => i.usable);
+  const stock = usable && { out: usable.filter((i) => i.stock_state === 'out').length, low: usable.filter((i) => i.stock_state === 'low').length };
   const searchKey = p.view === 'item' ? 'summary.page.searchItem' : 'summary.page.search';
   // 390: chữ ngắn để ô tìm cùng hàng vẫn đọc hết "Tìm người…"
   const views = [
@@ -90,7 +92,7 @@ export function SummaryPage() {
         },
       )}
       {summary.isError && <LoadError onRetry={() => void summary.refetch()} />}
-      {data && <SummaryStats summary={data} outCount={outCount} filter={p.filter} onFilter={p.toggleFilter} />}
+      {data && <SummaryStats summary={data} stock={stock} filter={p.filter} onFilter={p.toggleFilter} />}
       <Toolbar
         lead={<MonthControl ym={ym} openYm={openYm} summary={data} onChange={p.setMonth} />}
         search={{

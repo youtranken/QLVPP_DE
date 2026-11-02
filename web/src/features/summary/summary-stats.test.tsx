@@ -6,7 +6,7 @@ import type { PeriodSummary } from './summary.api';
 
 const renderStats = (summary: PeriodSummary, props: Partial<Parameters<typeof SummaryStats>[0]> = {}) => {
   const onFilter = vi.fn();
-  renderWithI18n(<SummaryStats summary={summary} outCount={2} filter={null} onFilter={onFilter} {...props} />);
+  renderWithI18n(<SummaryStats summary={summary} stock={{ out: 2, low: 4 }} filter={null} onFilter={onFilter} {...props} />);
   return onFilter;
 };
 
@@ -22,7 +22,7 @@ describe('SummaryStats — 4 thẻ số liệu', () => {
   });
 
   it('registered=3, headcount=4 → thanh 75%; headcount=0 → thanh 0%, không NaN', () => {
-    const { unmount } = renderWithI18n(<SummaryStats summary={{ ...OPEN, registered: 3, headcount: 4 }} outCount={0} filter={null} onFilter={() => {}} />);
+    const { unmount } = renderWithI18n(<SummaryStats summary={{ ...OPEN, registered: 3, headcount: 4 }} stock={{ out: 0, low: 0 }} filter={null} onFilter={() => {}} />);
     expect((document.querySelector('[data-meter] > span') as HTMLElement).style.width).toBe('75%');
     unmount();
     renderStats({ ...OPEN, registered: 0, headcount: 0, unregistered: 0 });
@@ -74,9 +74,17 @@ describe('SummaryStats — 4 thẻ số liệu', () => {
     [0, 1, 'warn'],
     [1, 0, 'danger'],
   ])('ô hết/sắp hết: %i hết + %i sắp hết → tông %s (cảnh báo chỉ khi > 0)', (out, low, tone) => {
-    renderStats({ ...OPEN, low_stock: low }, { outCount: out });
+    renderStats(OPEN, { stock: { out, low } });
     const card = screen.getByRole('button', { name: /Hết hàng \/ sắp hết/ });
     expect(card).toHaveAttribute('data-tone', tone);
     expect(card.querySelector('.stat-card__v')).toHaveTextContent(`${out + low}`);
+  });
+
+  it('danh sách món chưa tải (stock chưa có) → ô hết/sắp hết ghi "—", không hiện "0 hết" rồi nhảy số', () => {
+    renderStats(OPEN, { stock: undefined });
+    const card = screen.getByRole('button', { name: /Hết hàng \/ sắp hết/ });
+    expect(card.querySelector('.stat-card__v')).toHaveTextContent(/^—/);
+    expect(card).not.toHaveTextContent(/\d+ hết/);
+    expect(card).toHaveAttribute('data-tone', 'neutral');
   });
 });
