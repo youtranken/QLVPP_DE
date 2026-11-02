@@ -1,5 +1,5 @@
-[data-shell='admin'] .cf-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--s-4); align-items: start; }
-[data-shell='admin'] .cf-blocks { display: grid; gap: var(--s-4); min-width: 0; }
+[data-shell='admin'] .cf-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--s-6); align-items: start; }
+[data-shell='admin'] .cf-blocks { display: grid; gap: var(--s-6); min-width: 0; }
 [data-shell='admin'] .cf-block { position: relative; display: grid; gap: var(--s-4); padding: var(--s-5); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); min-width: 0; }
 [data-shell='admin'] .cf-block[data-dirty]::before { content: ''; position: absolute; left: 0; top: var(--s-4); bottom: var(--s-4); width: 4px; border-radius: 0 var(--r-xs) var(--r-xs) 0; background: var(--c-warn-fill); }
 [data-shell='admin'] .cf-block__head { display: grid; gap: var(--s-1); }
