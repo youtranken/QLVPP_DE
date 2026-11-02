@@ -18,6 +18,7 @@ const nav: Messages<typeof vi> = {
       backToList: 'Back to request list',
       avatar: '{{name}}, {{role}}',
       lockedMonth: 'Month {{month}}/{{year}} · locked',
+      currentPeriod: 'Current sign-up period: month {{month}} · open',
     },
     groups: {
       monthly: 'Monthly',
@@ -37,7 +38,6 @@ const nav: Messages<typeof vi> = {
       stock: '{{n}} items running low',
     },
     periodCard: {
-      title: 'Period {{month}} is open',
       label: 'Current sign-up period',
       state: 'Month {{month}} · open',
       name: 'Current sign-up period: month {{month}} · open · {{detail}}',

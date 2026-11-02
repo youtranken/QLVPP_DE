@@ -15,6 +15,7 @@ const nav = {
       backToList: 'Quay lại danh sách phiếu',
       avatar: '{{name}}, {{role}}',
       lockedMonth: 'Tháng {{month}}/{{year}} · đã khóa',
+      currentPeriod: 'Kỳ đăng ký hiện tại: tháng {{month}} · đang mở',
     },
     groups: {
       monthly: 'Hằng tháng',
@@ -34,7 +35,6 @@ const nav = {
       stock: '{{n}} món sắp hết',
     },
     periodCard: {
-      title: 'Kỳ tháng {{month}} đang mở',
       label: 'Kỳ đăng ký hiện tại',
       state: 'Tháng {{month}} · đang mở',
       name: 'Kỳ đăng ký hiện tại: tháng {{month}} · đang mở · {{detail}}',
