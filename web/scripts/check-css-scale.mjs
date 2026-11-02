@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 // Nét mảnh 0/1/2px được phép; trên --s-9 là kích thước bố cục (chừa thanh dưới, bề ngang ngăn kéo), không phải nhịp khoảng cách
 const HAIRLINES = [0, 1, 2];
 const DECLARATION = /(?<![-\w])(font-size|font|gap|row-gap|column-gap|padding(?:-[a-z]+)*|margin(?:-[a-z]+)*)\s*:\s*([^;{}]+)/g;
-const PX = /(\d+(?:\.\d+)?)px/g;
+const LENGTH = /(\d+(?:\.\d+)?)(px|rem|em|pt|ch)(?![\w-])/g;
+// Tệp không chặt (giao diện nhân viên cũ) chỉ chặn cỡ chữ lẻ và đơn vị tương đối; khoảng cách px vẫn theo thang ở mọi tệp
 
 export function readScale(tokens) {
   const fontSizes = new Set([...tokens.matchAll(/--t-[\w-]+:\s*[^;]*?\s(\d+(?:\.\d+)?)px/g)].map((m) => Number(m[1])));
@@ -15,13 +16,14 @@ export function readScale(tokens) {
 
 const blankComments = (source) => source.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '));
 
+function isBad(prop, n, unit, scale, strict) {
+  if (unit !== 'px') return true;
+  if (prop === 'font' || prop === 'font-size') return !Number.isInteger(n) || (strict && !scale.fontSizes.has(n));
+  return n <= Math.max(...scale.spacing) && !scale.spacing.has(n);
+}
+
 function badValues(prop, value, scale, strict) {
-  const sizes = [...value.matchAll(PX)].map((m) => Number(m[1]));
-  if (prop === 'font' || prop === 'font-size') {
-    return sizes.filter((n) => !Number.isInteger(n) || (strict && !scale.fontSizes.has(n)));
-  }
-  const max = Math.max(...scale.spacing);
-  return sizes.filter((n) => n <= max && !scale.spacing.has(n));
+  return [...value.matchAll(LENGTH)].filter((m) => isBad(prop, Number(m[1]), m[2], scale, strict)).map((m) => `${Number(m[1])}${m[2]}`);
 }
 
 export function findScaleIssues(file, source, scale, strict) {
@@ -29,7 +31,7 @@ export function findScaleIssues(file, source, scale, strict) {
   const issues = [];
   for (const m of text.matchAll(DECLARATION)) {
     const line = text.slice(0, m.index).split('\n').length;
-    for (const n of badValues(m[1], m[2], scale, strict)) issues.push({ file, line, prop: m[1], value: `${n}px` });
+    for (const value of badValues(m[1], m[2], scale, strict)) issues.push({ file, line, prop: m[1], value });
   }
   return issues;
 }

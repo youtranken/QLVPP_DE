@@ -69,6 +69,14 @@ describe('check-css-scale', () => {
     expect(findScaleIssues('tokens-m1.css', TOKENS, scale, true)).toEqual([]);
   });
 
+  it('đơn vị tương đối rem/em/pt/ch ở cỡ chữ và khoảng cách → báo cả tệp chặt lẫn không chặt; px, var(), %, 0 và chữ "remove" trong tên → sạch', () => {
+    const css = '.a { font-size: 0.875rem; } .b { gap: 1em; } .c { padding: 12px 1.5rem; } .d { margin-top: 10pt; } .e { font: 700 1em/1.3 var(--font); } .f { padding-left: 2ch; }';
+    const expected = ['font-size: 0.875rem', 'gap: 1em', 'padding: 1.5rem', 'margin-top: 10pt', 'font: 1em', 'padding-left: 2ch'];
+    expect(issues(css)).toEqual(expected);
+    expect(issues(css, false)).toEqual(expected);
+    expect(issues('.a { gap: var(--s-2); } .b { margin: 0 auto; } .c { padding-inline: 5%; } .d { font-size: 16px; } .e { margin: 0; } .remove { gap: 8px; }')).toEqual([]);
+  });
+
   it('isChecked: src/css/** và features/**/*.m1.css; isStrict: chỉ m1', () => {
     expect(isChecked(join('src', 'css', 'base.css'))).toBe(true);
     expect(isChecked(join('src', 'css', 'm1', 'shell.css'))).toBe(true);
