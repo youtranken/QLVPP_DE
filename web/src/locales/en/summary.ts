@@ -19,6 +19,8 @@ const summary: Messages<typeof vi> = {
       view: 'View',
       byPerson: 'By person',
       byItem: 'By item',
+      byPersonShort: 'People',
+      byItemShort: 'Items',
       more: 'Load more',
       noMatch: 'No requests match',
       empty: 'No requests in this period yet.',

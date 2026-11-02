@@ -3,6 +3,7 @@ import type { KeyboardEvent } from 'react';
 interface Option<T extends string> {
   value: T;
   label: string;
+  ariaLabel?: string;
   count?: number;
 }
 
@@ -32,7 +33,7 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
           type="button"
           role="radio"
           aria-checked={o.value === value}
-          aria-label={o.count !== undefined ? `${o.label}, ${o.count}` : undefined}
+          aria-label={o.count !== undefined ? `${o.ariaLabel ?? o.label}, ${o.count}` : o.ariaLabel}
           tabIndex={o.value === value ? 0 : -1}
           onClick={() => onChange(o.value)}
           onKeyDown={(e) => move(e, i)}

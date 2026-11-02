@@ -71,9 +71,10 @@ export function SummaryPage() {
   const canCreate = ym === openYm;
   const outCount = (items.data ?? []).filter((i) => i.usable && i.stock_state === 'out').length;
   const searchKey = p.view === 'item' ? 'summary.page.searchItem' : 'summary.page.search';
+  // 390: chữ ngắn để ô tìm cùng hàng vẫn đọc hết "Tìm người…"
   const views = [
-    { value: 'person' as SummaryView, label: t('summary.page.byPerson') },
-    { value: 'item' as SummaryView, label: t('summary.page.byItem') },
+    { value: 'person' as SummaryView, label: t(phone ? 'summary.page.byPersonShort' : 'summary.page.byPerson'), ariaLabel: phone ? t('summary.page.byPerson') : undefined },
+    { value: 'item' as SummaryView, label: t(phone ? 'summary.page.byItemShort' : 'summary.page.byItem'), ariaLabel: phone ? t('summary.page.byItem') : undefined },
   ];
 
   return (

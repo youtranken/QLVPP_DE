@@ -67,8 +67,6 @@ describe('Trang Nhóm món', () => {
     expect(screen.getByText('Thứ tự nhóm quyết định thứ tự trên trang Đăng ký và màu của từng nhóm.')).toBeInTheDocument();
     expect(f.mock.calls.map((c) => c[0])).toContain('/api/item-categories?all=1');
     expect(within(rowOf('Bút & viết')).getByText('4')).toBeInTheDocument();
-    expect(within(rowOf('Cũ')).getByText('Ngừng')).toBeInTheDocument();
-    expect(within(rowOf('Giấy & sổ')).getByText('Đang dùng')).toBeInTheDocument();
   });
 
   it('không còn nút "Về Danh mục" (trùng đường dẫn); ghi chú màu một câu ngắn', async () => {
@@ -159,10 +157,13 @@ describe('Trang Nhóm món', () => {
     expect(screen.queryByText(/Thứ tự đã đổi/)).toBeNull();
   });
 
-  it('trạng thái chỉ một chỗ: nhãn "Đang dùng"/"Ngừng", không còn công tắc trong bảng', async () => {
+  it('trạng thái như Đơn vị tính: không cột "Trạng thái", không chip "Đang dùng"; chỉ nhóm đã ngừng có chip "Đã ngừng" cạnh tên; không công tắc', async () => {
     await open();
     expect(table().queryAllByRole('switch')).toHaveLength(0);
-    expect(within(rowOf('Cũ')).getByText('Ngừng')).toBeInTheDocument();
+    expect(table().queryByRole('columnheader', { name: 'Trạng thái' })).toBeNull();
+    expect(table().queryByText('Đang dùng')).toBeNull();
+    expect(within(rowOf('Giấy & sổ')).queryByText('Đã ngừng')).toBeNull();
+    expect(within(rowOf('Cũ')).getByText('Đã ngừng')).toBeInTheDocument();
   });
 
   it('menu ⋯ của nhóm đang dùng có "Sửa", "Ngừng nhóm"; nhóm đã ngừng có "Sửa", "Dùng lại"', async () => {

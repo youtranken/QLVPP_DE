@@ -68,4 +68,20 @@ describe('SummaryPage — thanh công cụ theo luật bố cục', () => {
     expect(await screen.findByText('Chưa có phiếu nào trong kỳ này.')).toBeInTheDocument();
     expect(screen.queryAllByRole('columnheader')).toHaveLength(0);
   });
+
+  it('390: chuyển xem chữ ngắn "Người"/"Món" (tên đọc vẫn "Theo người"/"Theo món") để ô tìm đủ chỗ cho "Tìm người…"; 1280 giữ chữ đủ', async () => {
+    stubSummaryApi();
+    open(390);
+    const view = await screen.findByRole('radiogroup', { name: 'Cách xem' });
+    expect(within(view).getAllByRole('radio').map((r) => r.textContent)).toEqual(['Người', 'Món']);
+    expect(within(view).getByRole('radio', { name: 'Theo người' })).toHaveAttribute('aria-checked', 'true');
+    expect(within(view).getByRole('radio', { name: 'Theo món' })).toBeInTheDocument();
+  });
+
+  it('1280: chuyển xem giữ chữ "Theo người"/"Theo món"', async () => {
+    stubSummaryApi();
+    open(1280);
+    const view = await screen.findByRole('radiogroup', { name: 'Cách xem' });
+    expect(within(view).getAllByRole('radio').map((r) => r.textContent)).toEqual(['Theo người', 'Theo món']);
+  });
 });

@@ -120,7 +120,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect(confirm.getByText('2 món trong nhóm sẽ ẩn khỏi trang Đăng ký. Mở lại nhóm thì món hiện lại.')).toBeVisible();
       await shot(page, info, 'categories-pause-confirm', false);
       await confirm.getByRole('button', { name: 'Ngừng nhóm' }).click();
-      await expect(page.getByRole('row').filter({ hasText: category }).getByText('Ngừng', { exact: true })).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: category }).getByText('Đã ngừng', { exact: true })).toBeVisible();
       await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
 
       await page.goto('/admin/catalog');

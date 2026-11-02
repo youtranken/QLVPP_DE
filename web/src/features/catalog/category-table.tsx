@@ -31,7 +31,6 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
             <th>{t('catalog.categories.colName')}</th>
             <th>{t('catalog.categories.colNameEn')}</th>
             <th className="num r">{t('catalog.categories.colItems')}</th>
-            <th>{t('catalog.categories.colStatus')}</th>
             <th>
               <span className="sr-only">{t('catalog.categories.colActions')}</span>
             </th>
@@ -49,15 +48,13 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
                 </td>
                 <td className="cg-name">
                   <span className="cg-name__text">{c.name}</span>
+                  {!c.active && <span className="tag tag--outline">{t('catalog.categories.inactive')}</span>}
                 </td>
                 <td className="cg-name-en" data-label={t('catalog.categories.colNameEn')}>
                   <span>{c.name_en ?? t('common.empty')}</span>
                 </td>
                 <td className="num r" data-label={t('catalog.categories.colItems')}>
                   {counts.get(c.id) ?? 0}
-                </td>
-                <td data-label={t('catalog.categories.colStatus')}>
-                  <span className={c.active ? 'tag tag--ok' : 'tag tag--outline'}>{t(c.active ? 'catalog.categories.active' : 'catalog.categories.inactive')}</span>
                 </td>
                 <td className="cg-menu">
                   <RowMenu

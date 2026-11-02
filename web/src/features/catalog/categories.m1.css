@@ -1,6 +1,7 @@
 [data-shell='admin'] .cg-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--s-4); align-items: start; }
 [data-shell='admin'] .cg-layout > * { min-width: 0; }
 [data-shell='admin'] .cg-name__text { color: var(--c-ink); font: var(--t-label); overflow-wrap: break-word; }
+[data-shell='admin'] .cg-name .tag { margin-left: var(--s-2); vertical-align: middle; }
 [data-shell='admin'] .cg-name-en { overflow-wrap: break-word; }
 [data-shell='admin'] .cg-menu { width: 52px; text-align: right; }
 [data-shell='admin'] .cg-dot { display: inline-block; width: 14px; height: 14px; }

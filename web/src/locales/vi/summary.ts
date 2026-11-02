@@ -16,6 +16,8 @@ const summary = {
       view: 'Cách xem',
       byPerson: 'Theo người',
       byItem: 'Theo món',
+      byPersonShort: 'Người',
+      byItemShort: 'Món',
       more: 'Xem thêm',
       noMatch: 'Không có phiếu nào khớp',
       empty: 'Chưa có phiếu nào trong kỳ này.',
