@@ -23,9 +23,9 @@ const ROWS = [
 ];
 const ACCEPTED = [reviewRow({ line_id: 'l-9', custom_name: 'Kéo', review_status: 'accepted' })];
 
-function stub() {
+function stub(period: () => Promise<Response> = () => Promise.resolve(jsonResponse(200, PERIOD))) {
   const fetchMock = vi.fn((url: string) => {
-    if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
+    if (url === '/api/periods/current') return period();
     if (url.startsWith('/api/admin/review')) {
       const items = url.includes('status=pending') ? ROWS : url.includes('status=accepted') ? ACCEPTED : [];
       return Promise.resolve(jsonResponse(200, { items }));
@@ -151,7 +151,23 @@ describe('ReviewPage — /admin/review', () => {
     const group = await screen.findByRole('group', { name: 'Chọn tháng' });
     expect(screen.getByRole('radio', { name: 'Theo tháng' })).toHaveAttribute('aria-checked', 'true');
     expect(within(group).getByText(label)).toBeInTheDocument();
-    expect(within(group).getByRole('button', { name: 'Tháng trước' }).hasAttribute('disabled')).toBe(prevOff);
-    expect(within(group).getByRole('button', { name: 'Tháng sau' }).hasAttribute('disabled')).toBe(nextOff);
+    await waitFor(() => {
+      expect(within(group).getByRole('button', { name: 'Tháng trước' }).hasAttribute('disabled')).toBe(prevOff);
+      expect(within(group).getByRole('button', { name: 'Tháng sau' }).hasAttribute('disabled')).toBe(nextOff);
+    });
+  });
+
+  it.each([
+    ['đang tải', () => new Promise<Response>(() => {})],
+    ['lỗi', () => Promise.resolve(jsonResponse(500, { code: 'INTERNAL' }))],
+  ])('?ym=2026-10 khi kỳ hiện tại %s → vẫn giữ "Theo tháng" và ô chọn tháng, trần tạm là tháng đang xem', async (_state, period) => {
+    mockViewport(1280);
+    stub(period);
+    renderApp(makeMe('admin'), '/admin/review?ym=2026-10');
+    const group = await screen.findByRole('group', { name: 'Chọn tháng' });
+    expect(screen.getByRole('radio', { name: 'Theo tháng' })).toHaveAttribute('aria-checked', 'true');
+    expect(within(group).getByText('Tháng 10/2026')).toBeInTheDocument();
+    expect(within(group).getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
+    expect(within(group).getByRole('button', { name: 'Tháng trước' })).toBeEnabled();
   });
 });
