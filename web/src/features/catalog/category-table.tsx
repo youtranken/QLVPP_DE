@@ -39,7 +39,7 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
         <tbody>
           {ordered.map((c, i) => {
             const tone = toneAtRank(i);
-            const dragProps = sorting ? drag(i) : undefined;
+            const dragProps = sorting && !busy ? drag(i) : undefined;
             return (
               <tr key={c.id} {...dragProps} className={[c.active ? '' : 'is-inactive', dragProps?.className ?? ''].filter(Boolean).join(' ') || undefined}>
                 {sorting && <ReorderCell index={i} count={ordered.length} name={c.name} disabled={busy} onMove={onMove} />}

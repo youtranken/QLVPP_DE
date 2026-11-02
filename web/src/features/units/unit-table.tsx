@@ -39,7 +39,7 @@ export function UnitTable({ ordered, busy, sorting, onMove, onMoveTo, onEdit, on
         </thead>
         <tbody>
           {ordered.map((u, i) => {
-            const dragProps = sorting ? drag(i) : undefined;
+            const dragProps = sorting && !busy ? drag(i) : undefined;
             const cls = [u.active ? '' : 'is-inactive', dragProps?.className ?? ''].filter(Boolean).join(' ') || undefined;
             return (
               <tr key={u.code} {...dragProps} className={cls}>
