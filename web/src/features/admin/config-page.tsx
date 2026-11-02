@@ -68,7 +68,7 @@ function ConfigForm({ config }: { config: AdminConfig }) {
         crumbs={[t('nav.groups.system'), title]}
         title={title}
         description={t('config.page.description')}
-        actions={dirtyNames.length > 0 ? <span className="tag tag--warn">{t('config.page.dirty', { count: dirtyNames.length })}</span> : undefined}
+        secondary={dirtyNames.length > 0 ? <span className="tag tag--warn">{t('config.page.dirty', { count: dirtyNames.length })}</span> : undefined}
       />
       <div className="cf-layout">
         <div className="cf-blocks">

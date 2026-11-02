@@ -1,7 +1,15 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export function PageHeader({ crumbs, title, description, actions }: { crumbs: string[]; title: string; description?: string; actions?: ReactNode }) {
+interface Props {
+  crumbs: string[];
+  title: string;
+  description?: string;
+  primary?: ReactNode;
+  secondary?: ReactNode;
+}
+
+export function PageHeader({ crumbs, title, description, primary, secondary }: Props) {
   const { t } = useTranslation();
   return (
     <header className="page-head">
@@ -16,9 +24,14 @@ export function PageHeader({ crumbs, title, description, actions }: { crumbs: st
           </nav>
         )}
         <h1>{title}</h1>
-        {description && <p className="page-head__desc">{description}</p>}
+        {description && <p className="page-head__desc" title={description}>{description}</p>}
       </div>
-      {actions && <div className="page-head__actions">{actions}</div>}
+      {(primary || secondary) && (
+        <div className="page-head__actions" role="group" aria-label={t('common.pageActions')}>
+          {secondary}
+          {primary}
+        </div>
+      )}
     </header>
   );
 }

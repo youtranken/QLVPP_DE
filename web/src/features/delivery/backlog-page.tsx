@@ -52,8 +52,10 @@ export function BacklogPage() {
         crumbs={[t('nav.groups.monthly'), title]}
         title={title}
         description={t('delivery.backlog.description')}
-        actions={<Segmented label={t('delivery.backlog.by')} value={p.by} options={views} onChange={p.setBy} />}
       />
+      <div className="toolbar">
+        <Segmented label={t('delivery.backlog.by')} value={p.by} options={views} onChange={p.setBy} />
+      </div>
       {query.isError && <LoadError onRetry={() => void query.refetch()} />}
       {query.isSuccess && <BacklogStats stats={backlogStats(all)} filter={p.filter} onFilter={p.toggleFilter} />}
       {p.filter && <FilterNotice label={t(`delivery.backlog.filters.${p.filter}`)} count={rows.length} onClear={p.clearFilter} />}

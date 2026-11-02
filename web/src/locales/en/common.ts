@@ -44,6 +44,7 @@ const common: Messages<typeof vi> = {
       active: 'Filtering: {{label}} · {{count}}',
       clear: 'Clear filter',
     },
+    pageActions: 'Page actions',
     table: {
       breadcrumb: 'Breadcrumb',
       bulkLabel: 'Actions for selected rows',

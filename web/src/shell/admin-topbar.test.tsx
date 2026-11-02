@@ -20,11 +20,13 @@ function open(path: string) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('AdminTopbar 390 px', () => {
-  it('thanh trên: nút "Mở menu quản lý", tiêu đề trang "Danh mục", chuông, avatar "Nguyễn Văn An, Hành chính"', async () => {
+  it('thanh trên: nút "Mở menu quản lý", tên app "VPP Công trình" (không lặp tiêu đề trang "Danh mục"), dòng phụ kỳ "Kỳ tháng 11 đang mở", chuông, avatar', async () => {
     open('/admin/catalog');
     const bar = topbar();
     expect(within(bar).getByRole('button', { name: 'Mở menu quản lý' })).toBeInTheDocument();
-    expect(within(bar).getByText('Danh mục', { exact: true })).toBeInTheDocument();
+    expect(within(bar).getByText('VPP Công trình', { exact: true })).toBeInTheDocument();
+    expect(within(bar).queryByText('Danh mục', { exact: true })).toBeNull();
+    expect(await within(bar).findByText('Kỳ tháng 11 đang mở')).toBeInTheDocument();
     expect(within(bar).getByRole('button', { name: 'Nguyễn Văn An, Hành chính' })).toBeInTheDocument();
     expect(await within(bar).findByRole('button', { name: /^Thông báo/ })).toBeInTheDocument();
   });

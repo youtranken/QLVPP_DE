@@ -11,10 +11,7 @@
 
 [data-shell='admin'] .skeleton-group { display: grid; gap: var(--s-2); }
 [data-shell='admin'] .skeleton-group--stat { grid-template-columns: repeat(4, 1fr); gap: 12px; }
-@media (max-width: 767px) {
-  [data-shell='admin'] .skeleton-group--stat { display: flex; overflow-x: auto; }
-  [data-shell='admin'] .skeleton-group--stat > * { flex: 0 0 160px; }
-}
+@media (max-width: 767px) { [data-shell='admin'] .skeleton-group--stat { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 [data-shell='admin'] .skeleton-group--card { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s-4); }
 [data-shell='admin'] .skeleton { position: relative; overflow: hidden; border-radius: var(--r-sm); background: var(--c-surface-sunk); }
 [data-shell='admin'] .skeleton--row { height: 52px; }

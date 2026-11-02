@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { shiftYm } from '@/lib/ym';
@@ -77,16 +76,15 @@ export function DeliveryPage() {
   const lockedYm = current.data ? shiftYm(current.data.ym, -1) : undefined;
   const p = useDeliveryParams(lockedYm);
   const title = t('delivery.page.title');
-  const header = (actions?: ReactNode) => (
-    <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('delivery.page.description')} actions={actions} />
-  );
+  const header = () => <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('delivery.page.description')} />;
 
   if (current.isError) return <>{header()}<LoadError onRetry={() => void current.refetch()} /></>;
   if (!p.ym || !lockedYm) return <>{header()}<Loading /></>;
   const ym = p.ym;
   return (
     <div className="dv-page">
-      {header(
+      {header()}
+      <div className="toolbar">
         <MonthSwitcher
           value={ym}
           max={lockedYm}
@@ -94,8 +92,8 @@ export function DeliveryPage() {
           status={{ tone: 'dark', label: t('delivery.page.locked') }}
           formatLabel={(v) => t('delivery.month', { month: monthOf(v), year: v.slice(0, 4) })}
           labels={{ group: t('delivery.page.monthNav'), prev: t('delivery.page.prevMonth'), next: t('delivery.page.nextMonth') }}
-        />,
-      )}
+        />
+      </div>
       <DeliveryBoard key={ym} ym={ym} p={p} />
     </div>
   );

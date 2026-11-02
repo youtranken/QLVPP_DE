@@ -68,15 +68,15 @@ export function CatalogPage() {
       crumbs={[t('nav.groups.stock'), title]}
       title={title}
       description={t('catalog.list.description')}
-      actions={
-        <>
-          <Link className="btn" to="/admin/categories">
-            {t('catalog.page.categoriesLink')}
-          </Link>
-          <button type="button" className="btn btn--primary" onClick={() => p.openItemDrawer('new')}>
-            {t('catalog.page.add')}
-          </button>
-        </>
+      secondary={
+        <Link className="btn" to="/admin/categories">
+          {t('catalog.page.categoriesLink')}
+        </Link>
+      }
+      primary={
+        <button type="button" className="btn btn--primary" onClick={() => p.openItemDrawer('new')}>
+          {t('catalog.page.add')}
+        </button>
       }
     />
   );

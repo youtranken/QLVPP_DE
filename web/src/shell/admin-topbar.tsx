@@ -14,10 +14,12 @@ import { AdminMenuSheet } from '@/shell/admin-menu-sheet';
 
 const PAGES = ADMIN_NAV.flatMap((g) => g.pages);
 
-function useDeliveryMonth(active: boolean, asked: string | null): string | undefined {
+// Thanh trên không lặp tiêu đề trang (đã có h1): dòng phụ nói ngữ cảnh kỳ
+function usePeriodContext(delivery: boolean, asked: string | null): string | undefined {
   const { t } = useTranslation();
-  const period = useQuery({ ...currentPeriodQuery(), enabled: active });
-  if (!active || !period.data?.ym) return undefined;
+  const period = useQuery(currentPeriodQuery());
+  if (!period.data?.ym) return undefined;
+  if (!delivery) return t('nav.periodCard.title', { month: Number(period.data.ym.slice(5, 7)) });
   const ym = asked && YM.test(asked) ? asked : shiftYm(period.data.ym, -1);
   return t('nav.mobile.lockedMonth', { month: Number(ym.slice(5, 7)), year: ym.slice(0, 4) });
 }
@@ -32,7 +34,7 @@ export function AdminTopbar() {
   const page = PAGES.find((p) => pathname.startsWith(`/admin/${p.path}`));
   const delivery = page?.path === 'delivery';
   const detail = delivery && !!params.get('request');
-  const sub = useDeliveryMonth(delivery, params.get('ym'));
+  const sub = usePeriodContext(delivery, params.get('ym'));
   const name = me.fullName ?? me.sub;
   return (
     <header className="topbar">
@@ -46,7 +48,7 @@ export function AdminTopbar() {
         </button>
       )}
       <span className="topbar__text">
-        <span className="topbar__title">{page ? t(page.titleKey) : t('app.title')}</span>
+        <span className="topbar__title">{t('app.title')}</span>
         {sub && <small className="topbar__sub">{sub}</small>}
       </span>
       <NotificationBell />

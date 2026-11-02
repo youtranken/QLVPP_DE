@@ -41,6 +41,7 @@ const common = {
       active: 'Đang lọc: {{label}} · {{count}}',
       clear: 'Bỏ lọc',
     },
+    pageActions: 'Thao tác trang',
     table: {
       breadcrumb: 'Vị trí',
       bulkLabel: 'Hành động trên các dòng đã chọn',

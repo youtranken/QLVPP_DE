@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
 import { vnDeadlineDay, vnLockDate } from '@/lib/format-time';
@@ -58,9 +57,7 @@ export function SummaryPage() {
   const listed = p.view === 'person' && p.filter !== 'unregistered';
   const adjacent = useAdjacentRequests(p.ym, personFilter, p.q, listed ? p.requestId : null);
   const title = t('summary.page.title');
-  const header = (actions?: ReactNode) => (
-    <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('summary.page.description')} actions={actions} />
-  );
+  const header = () => <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('summary.page.description')} />;
 
   if (current.isError) return <>{header()}<LoadError onRetry={() => void current.refetch()} /></>;
   if (!p.ym || !openYm) return <>{header()}<Loading /></>;
@@ -76,7 +73,7 @@ export function SummaryPage() {
 
   return (
     <div className="sm-page">
-      {header(<MonthControl ym={ym} openYm={openYm} summary={data} onChange={p.setMonth} />)}
+      {header()}
       {summary.isError && <LoadError onRetry={() => void summary.refetch()} />}
       {data && <SummaryStats summary={data} outCount={outCount} filter={p.filter} onFilter={p.toggleFilter} />}
       <Toolbar
@@ -89,6 +86,7 @@ export function SummaryPage() {
         }}
       >
         <Segmented label={t('summary.page.view')} value={p.view} options={views} onChange={p.setView} />
+        <MonthControl ym={ym} openYm={openYm} summary={data} onChange={p.setMonth} />
         <span className="sm-spacer" />
         {data && <UnregisteredCopy ym={ym} deadline={data.deadline} count={data.unregistered} />}
         {data && (

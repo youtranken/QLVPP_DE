@@ -81,7 +81,7 @@ export function UnitsPage() {
   const list = order.ordered;
   return (
     <div className="ct-page">
-      <PageHeader crumbs={[t('nav.groups.stock'), title]} title={title} description={t('units.page.description')} actions={add} />
+      <PageHeader crumbs={[t('nav.groups.stock'), title]} title={title} description={t('units.page.description')} primary={add} />
       {actionError && (
         <p role="alert" className="alert alert--danger">
           {actionError}

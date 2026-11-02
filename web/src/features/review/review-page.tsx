@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
+import { Select } from '@/ui/select';
 import { Segmented } from '@/ui/segmented';
 import { useToast } from '@/ui/toast-context';
 import { useAdminItems } from '@/features/catalog/catalog.api';
@@ -80,20 +81,15 @@ export function ReviewPage() {
         crumbs={[t('nav.groups.monthly'), t('nav.review')]}
         title={t('nav.review')}
         description={t('review.page.description')}
-        actions={
-          <label className="rv-period">
-            <span>{t('review.period')}</span>
-            <select className="a-input" value={p.ym} onChange={(e) => change(() => p.setMonth(e.target.value))}>
-              <option value="">{t('review.allPeriods')}</option>
-              {months.map((m) => (
-                <option key={m} value={m}>
-                  {t('review.month', { month: Number(m.slice(5)), year: m.slice(0, 4) })}
-                </option>
-              ))}
-            </select>
-          </label>
-        }
       />
+      <div className="toolbar">
+        <Select
+          label={t('review.period')}
+          value={p.ym}
+          options={[{ value: '', label: t('review.allPeriods') }, ...months.map((m) => ({ value: m, label: t('review.month', { month: Number(m.slice(5)), year: m.slice(0, 4) }) }))]}
+          onChange={(v) => change(() => p.setMonth(v))}
+        />
+      </div>
       <div className="rv-tabs">
         <Segmented label={t('review.filters.label')} value={p.status} options={tabs} onChange={(s) => change(() => p.setStatus(s))} />
       </div>

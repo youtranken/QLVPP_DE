@@ -70,7 +70,7 @@ export function StockPage() {
       crumbs={[t('nav.groups.stock'), title]}
       title={title}
       description={t('stock.page.description')}
-      actions={
+      secondary={
         <Link className="btn" to="/admin/catalog">
           {t('stock.page.catalogLink')}
         </Link>

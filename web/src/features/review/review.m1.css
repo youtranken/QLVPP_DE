@@ -1,7 +1,6 @@
 [data-shell='admin'] .rv-page { display: grid; gap: var(--s-4); min-width: 0; }
 [data-shell='admin'] .rv-page > * { min-width: 0; }
 [data-shell='admin'] .rv-page .page-head { flex-wrap: wrap; margin-bottom: 0; }
-[data-shell='admin'] .rv-period { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--c-ink-2); font: var(--t-sm); }
 [data-shell='admin'] .rv-tabs { overflow-x: auto; max-width: 100%; }
 [data-shell='admin'] .rv-tabs .seg-m1 { min-width: max-content; }
 [data-shell='admin'] .rv-note { margin: 0; color: var(--c-muted); font: var(--t-sm); }
@@ -23,8 +22,6 @@
 [data-shell='admin'] .rv-mode legend { width: 100%; margin-bottom: var(--s-1); }
 @media (max-width: 767px) {
   [data-shell='admin'] .rv-card { grid-template-columns: minmax(0, 1fr); }
-  [data-shell='admin'] .rv-period { width: 100%; }
-  [data-shell='admin'] .rv-period select { flex: 1; }
 }
 [data-shell='admin'] .rv-chips { display: flex; flex-wrap: wrap; gap: var(--s-2); }
 [data-shell='admin'] .rv-chip { display: inline-flex; align-items: center; gap: var(--s-2); height: 36px; padding: 0 16px; border: 0; border-radius: var(--r-pill); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-ink); font: var(--t-label); cursor: pointer; }

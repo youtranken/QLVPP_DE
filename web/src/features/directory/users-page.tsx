@@ -54,7 +54,7 @@ export function UsersPage() {
       crumbs={[t('nav.groups.system'), title]}
       title={title}
       description={t('users.page.description')}
-      actions={
+      primary={
         <button type="button" className="btn btn--primary" disabled={sync.state.kind === 'running'} aria-busy={sync.state.kind === 'running'} onClick={sync.run}>
           {t(sync.state.kind === 'running' ? 'users.page.syncing' : 'users.page.sync')}
         </button>

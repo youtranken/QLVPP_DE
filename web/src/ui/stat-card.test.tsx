@@ -34,4 +34,22 @@ describe('StatCard', () => {
     rerender(<StatCard label="A" value={1} />);
     expect(document.querySelector('[data-meter]')).toBeNull();
   });
+  it('màu cảnh báo chỉ khi số chính > 0: tone danger với 0 → trung tính, với 1 → danger', () => {
+    const tone = () => screen.getByText('Hết hàng').closest('[data-tone]')!.getAttribute('data-tone');
+    const { rerender } = renderWithI18n(<StatCard label="Hết hàng" value={0} tone="danger" />);
+    expect(tone()).toBe('neutral');
+    rerender(<StatCard label="Hết hàng" value={1} tone="danger" />);
+    expect(tone()).toBe('danger');
+  });
+  it('số chính không phải số (—, 0/1) → không tô cảnh báo; tone dark vẫn giữ', () => {
+    const tone = () => screen.getByText('A').closest('[data-tone]')!.getAttribute('data-tone');
+    const { rerender } = renderWithI18n(<StatCard label="A" value="—" tone="warn" />);
+    expect(tone()).toBe('neutral');
+    rerender(<StatCard label="A" value="0/1" tone="dark" />);
+    expect(tone()).toBe('dark');
+  });
+  it('dòng phụ một dòng: khi bị cắt vẫn đọc đủ qua title', () => {
+    renderWithI18n(<StatCard label="A" value={1} sub="tính hiện tại · còn 1 người chưa đăng ký" />);
+    expect(screen.getByText('tính hiện tại · còn 1 người chưa đăng ký')).toHaveAttribute('title', 'tính hiện tại · còn 1 người chưa đăng ký');
+  });
 });

@@ -78,14 +78,12 @@ export function CategoriesPage() {
       crumbs={[t('nav.groups.stock'), t('catalog.title'), title]}
       title={title}
       description={t('catalog.categories.description')}
-      actions={
-        <>
-          <Link className="btn" to="/admin/catalog">
-            {t('catalog.categories.back')}
-          </Link>
-          {add}
-        </>
+      secondary={
+        <Link className="btn" to="/admin/catalog">
+          {t('catalog.categories.back')}
+        </Link>
       }
+      primary={add}
     />
   );
 
