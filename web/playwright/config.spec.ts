@@ -50,8 +50,8 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await expect(page.getByText('Tham số chung của app. Mỗi khối lưu riêng; mọi lần lưu được ghi vào Nhật ký.')).toBeVisible();
 
     const period = block(page, 'Kỳ đăng ký');
-    const lastDay = page.getByLabel('Ngày hạn đăng ký hằng tháng');
-    const reminder = page.getByLabel('Nhắc người chưa có phiếu trước hạn');
+    const lastDay = page.getByLabel('Hạn đăng ký (ngày)');
+    const reminder = page.getByLabel('Nhắc trước (ngày)');
     for (const typed of ['2', '29']) {
       await lastDay.fill(typed);
       await expect(page.getByText('Nhập ngày hạn hợp lệ để xem trước')).toBeVisible();
@@ -69,6 +69,8 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await expect(period.getByRole('button', { name: 'Lùi một ngày' })).toBeDisabled();
     await period.getByRole('button', { name: 'Lưu kỳ đăng ký' }).click();
     await saved(period);
+    await expect(period.getByRole('button', { name: 'Chưa có thay đổi' })).toBeDisabled();
+    await expect(period.getByText('Chỉ lưu khối này · ghi vào Nhật ký')).toBeVisible();
 
     await lastDay.fill('27');
     await period.getByRole('button', { name: 'Thêm một ngày' }).click();

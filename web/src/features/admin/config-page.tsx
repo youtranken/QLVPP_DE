@@ -1,4 +1,4 @@
-import { useId, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LoadError, Loading } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
@@ -60,7 +60,6 @@ function ConfigForm({ config }: { config: AdminConfig }) {
   const prompt = useMemo(() => ({ ...discardOptions(t), message: t('config.page.leaveBody', { blocks: dirtyList }) }), [t, dirtyList]);
   useLeaveGuard(dirtyNames.length, prompt);
   const title = t('config.title');
-  const howId = useId();
 
   return (
     <div className="ct-page">
@@ -68,7 +67,6 @@ function ConfigForm({ config }: { config: AdminConfig }) {
         crumbs={[t('nav.groups.system'), title]}
         title={title}
         description={t('config.page.description')}
-        secondary={dirtyNames.length > 0 ? <span className="tag tag--warn">{t('config.page.dirty', { count: dirtyNames.length })}</span> : undefined}
       />
       <div className="cf-layout">
         <div className="cf-blocks">
@@ -78,14 +76,6 @@ function ConfigForm({ config }: { config: AdminConfig }) {
           <ContactBlock state={contact} />
         </div>
         <aside className="cf-aside">
-          <section className="cf-aside__card" aria-labelledby={howId}>
-            <h2 id={howId}>{t('config.page.howTitle')}</h2>
-            <ul>
-              <li>{t('config.page.how1')}</li>
-              <li>{t('config.page.how2')}</li>
-              <li>{t('config.page.how3')}</li>
-            </ul>
-          </section>
           <RecentChanges />
         </aside>
       </div>

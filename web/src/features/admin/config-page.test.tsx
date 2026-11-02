@@ -17,14 +17,23 @@ async function retype(el: HTMLElement, value: string) {
 }
 
 describe('Cấu hình · trang', () => {
-  it('đầu trang có đúng một h1, mô tả, 4 khối, cột "Lưu thế nào"', async () => {
+  it('đầu trang có đúng một h1, mô tả, 4 khối; không còn khối "Lưu thế nào", thay bằng một dòng dưới mỗi nút Lưu', async () => {
     stubConfigApi();
     await openConfig();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1, name: 'Cấu hình' })).toBeInTheDocument();
     expect(screen.getByText('Tham số chung của app. Mỗi khối lưu riêng; mọi lần lưu được ghi vào Nhật ký.')).toBeInTheDocument();
     for (const name of ['Kỳ đăng ký', 'Quyền Hành chính', 'Ô ký trên phiếu đề xuất', 'Liên hệ & thông báo']) expect(block(name)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Lưu thế nào' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Lưu thế nào' })).toBeNull();
+    for (const name of ['Kỳ đăng ký', 'Quyền Hành chính', 'Ô ký trên phiếu đề xuất', 'Liên hệ & thông báo']) {
+      expect(within(block(name)).getByText('Chỉ lưu khối này · ghi vào Nhật ký')).toBeInTheDocument();
+    }
+  });
+
+  it('nhãn ngắn: "Hạn đăng ký (ngày)", "Nhắc trước (ngày)", "Tối đa mỗi món"', async () => {
+    stubConfigApi();
+    await openConfig();
+    for (const label of ['Hạn đăng ký (ngày)', 'Nhắc trước (ngày)', 'Tối đa mỗi món']) expect(screen.getByLabelText(label)).toBeInTheDocument();
   });
 
   it('đang tải cấu hình vẫn có đầu trang: đúng một h1 "Cấu hình"', async () => {
@@ -42,11 +51,11 @@ describe('Cấu hình · trang', () => {
     expect(screen.getByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
   });
 
-  it('chưa sửa gì → mọi nút Lưu vô hiệu, không gửi PUT, không có "khối chưa lưu"', async () => {
+  it('chưa sửa gì → cả 4 nút Lưu ghi "Chưa có thay đổi" và vô hiệu, không gửi PUT; đầu trang không có nhãn "khối chưa lưu"', async () => {
     const fetchMock = stubConfigApi();
     await openConfig();
-    for (const name of ['Lưu kỳ đăng ký', 'Lưu quyền Hành chính', 'Lưu ô ký', 'Lưu liên hệ']) {
-      const button = screen.getByRole('button', { name });
+    for (const name of ['Kỳ đăng ký', 'Quyền Hành chính', 'Ô ký trên phiếu đề xuất', 'Liên hệ & thông báo']) {
+      const button = within(block(name)).getByRole('button', { name: 'Chưa có thay đổi' });
       expect(button).toBeDisabled();
       await userEvent.click(button);
     }
@@ -54,15 +63,16 @@ describe('Cấu hình · trang', () => {
     expect(screen.queryByText(/khối chưa lưu/)).toBeNull();
   });
 
-  it('sửa hai khối → đầu trang "2 khối chưa lưu"; Hủy một khối trả giá trị cũ → "1 khối chưa lưu"', async () => {
+  it('sửa một khối → chỉ nút khối đó thành "Lưu liên hệ" (bật), khối khác vẫn "Chưa có thay đổi"; Hủy → về "Chưa có thay đổi"', async () => {
     stubConfigApi();
     await openConfig();
     await retype(contact(), 'chị Hoa');
-    await retype(screen.getByLabelText('Ngày hạn đăng ký hằng tháng'), '12');
-    expect(screen.getByText('2 khối chưa lưu')).toBeInTheDocument();
+    expect(within(block('Liên hệ & thông báo')).getByRole('button', { name: 'Lưu liên hệ' })).toBeEnabled();
+    expect(within(block('Kỳ đăng ký')).getByRole('button', { name: 'Chưa có thay đổi' })).toBeDisabled();
+    expect(screen.queryByText(/khối chưa lưu/)).toBeNull();
     await userEvent.click(within(block('Liên hệ & thông báo')).getByRole('button', { name: 'Hủy' }));
     expect(contact()).toHaveValue(CONFIG.admin_contact);
-    expect(screen.getByText('1 khối chưa lưu')).toBeInTheDocument();
+    expect(within(block('Liên hệ & thông báo')).getByRole('button', { name: 'Chưa có thay đổi' })).toBeDisabled();
   });
 
   it('rời trang khi bẩn → hỏi "Bỏ thay đổi chưa lưu?" liệt kê khối; Tiếp tục sửa thì ở lại', async () => {

@@ -46,8 +46,9 @@ export function ConfigSection({
           </button>
         )}
         <button type="submit" className={state.dirty ? 'btn btn--primary' : 'btn'} disabled={saving || !state.dirty}>
-          {saving ? t('config.saving') : saveLabel}
+          {saving ? t('config.saving') : state.dirty ? saveLabel : t('config.page.noChanges')}
         </button>
+        <p className="cf-block__note">{t('config.page.saveNote')}</p>
       </footer>
     </form>
   );

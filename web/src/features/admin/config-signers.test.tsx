@@ -44,7 +44,7 @@ describe('Cấu hình · khối Ô ký trên phiếu đề xuất', () => {
     expect(await within(signers()).findByText('Đã lưu.')).toBeInTheDocument();
     expect(putBodies(fetchMock)).toEqual([{ signature_boxes: boxes }]);
     expect(putHeaders(fetchMock)[0]['X-CSRF-Token']).toBe('csrf-1');
-    expect(within(signers()).getByRole('button', { name: 'Lưu ô ký' })).toBeDisabled();
+    expect(within(signers()).getByRole('button', { name: 'Chưa có thay đổi' })).toBeDisabled();
   });
 
   it('thêm ô thứ 3 → gửi 3 phần tử, ô mới có chức danh đã nhập và tên trống', async () => {

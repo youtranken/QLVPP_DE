@@ -4,9 +4,9 @@ import { CONFIG, block, configInvalid, openConfig, putBodies, stubConfigApi } fr
 
 afterEach(() => vi.unstubAllGlobals());
 
-const lastDay = () => screen.getByLabelText('Ngày hạn đăng ký hằng tháng');
-const reminder = () => screen.getByLabelText('Nhắc người chưa có phiếu trước hạn');
-const maxQty = () => screen.getByLabelText('Số lượng tối đa mặc định mỗi món');
+const lastDay = () => screen.getByLabelText('Hạn đăng ký (ngày)');
+const reminder = () => screen.getByLabelText('Nhắc trước (ngày)');
+const maxQty = () => screen.getByLabelText('Tối đa mỗi món');
 const savePeriod = () => userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
 const preview = () => screen.getByRole('list', { name: /^Xem trước lịch tháng/ });
 const dayCell = (d: number) => within(preview()).getByText(String(d), { selector: '.cf-day__n' }).closest('li') as HTMLElement;

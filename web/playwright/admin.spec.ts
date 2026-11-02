@@ -68,7 +68,7 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Cấu hình' })).toBeVisible();
     await expect(page.getByText('Chỉ áp dụng cho kỳ tạo sau; kỳ đang mở giữ hạn cũ')).toBeVisible();
 
-    const day = page.getByLabel('Ngày hạn đăng ký hằng tháng');
+    const day = page.getByLabel('Hạn đăng ký (ngày)');
     await day.fill('29');
     await page.getByRole('button', { name: 'Lưu kỳ đăng ký' }).click();
     await expect(day).toHaveAttribute('aria-invalid', 'true');
