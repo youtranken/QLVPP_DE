@@ -118,6 +118,9 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
     const downs = page.getByRole('button', { name: /^Đưa .+ xuống$/ });
     await expect(ups.first()).toBeDisabled();
     await expect(downs.last()).toBeDisabled();
+    await expect(ups.first()).toHaveCSS('opacity', '0.5');
+    await expect(ups.first()).toHaveAttribute('title', 'Đã ở đầu danh sách');
+    await expect(ups.nth(1)).toHaveCSS('opacity', '1');
     await expect(page.getByRole('button', { name: 'Lưu thứ tự' })).toBeDisabled();
     const up = (await ups.nth(1).boundingBox())!;
     const down = (await downs.nth(1).boundingBox())!;

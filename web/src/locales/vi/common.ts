@@ -34,6 +34,8 @@ const common = {
       handle: 'Kéo để đổi chỗ',
       moveUp: 'Đưa {{name}} lên',
       moveDown: 'Đưa {{name}} xuống',
+      atTop: 'Đã ở đầu danh sách',
+      atBottom: 'Đã ở cuối danh sách',
       hint: 'Kéo ⋮⋮ hoặc bấm ▲▼ để đổi chỗ',
       noChange: 'Chưa có thay đổi',
       cancel: 'Hủy',

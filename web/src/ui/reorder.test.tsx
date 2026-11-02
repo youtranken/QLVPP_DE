@@ -44,6 +44,26 @@ describe('ReorderCell', () => {
     expect(middle.getByTitle('Kéo để đổi chỗ')).toBeInTheDocument();
   });
 
+  it('mũi tên tắt có title nói lý do: ▲ dòng đầu "Đã ở đầu danh sách", ▼ dòng cuối "Đã ở cuối danh sách"; mũi tên bật không title; đang lưu → "Đang lưu…"', () => {
+    const { unmount } = renderWithI18n(<Rows names={['cái', 'hộp', 'ram']} onMove={() => {}} onMoveTo={() => {}} />);
+    expect(screen.getByRole('button', { name: 'Đưa cái lên' })).toHaveAccessibleDescription('Đã ở đầu danh sách');
+    expect(screen.getByRole('button', { name: 'Đưa ram xuống' })).toHaveAccessibleDescription('Đã ở cuối danh sách');
+    expect(screen.getByRole('button', { name: 'Đưa hộp lên' })).not.toHaveAttribute('title');
+    expect(screen.getByRole('button', { name: 'Đưa cái xuống' })).not.toHaveAttribute('title');
+    unmount();
+    renderWithI18n(
+      <table>
+        <tbody>
+          <tr>
+            <ReorderCell index={1} count={3} name="hộp" disabled onMove={() => {}} />
+          </tr>
+        </tbody>
+      </table>,
+    );
+    expect(screen.getByRole('button', { name: 'Đưa hộp lên' })).toHaveAttribute('title', 'Đang lưu…');
+    expect(screen.getByRole('button', { name: 'Đưa hộp xuống' })).toHaveAttribute('title', 'Đang lưu…');
+  });
+
   it('bấm ▼ gọi onMove(index, 1); ▲ gọi onMove(index, -1)', async () => {
     const onMove = vi.fn();
     renderWithI18n(<Rows names={['cái', 'hộp']} onMove={onMove} onMoveTo={() => {}} />);

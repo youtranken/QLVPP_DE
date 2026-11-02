@@ -37,6 +37,8 @@ const common: Messages<typeof vi> = {
       handle: 'Drag to move',
       moveUp: 'Move {{name}} up',
       moveDown: 'Move {{name}} down',
+      atTop: 'Already at the top',
+      atBottom: 'Already at the bottom',
       hint: 'Drag ⋮⋮ or press ▲▼ to move',
       noChange: 'No changes yet',
       cancel: 'Cancel',

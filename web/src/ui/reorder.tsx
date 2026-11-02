@@ -49,6 +49,7 @@ export function ReorderCell({ index, count, name, disabled, onMove }: CellProps)
   };
   const upOff = disabled || index === 0;
   const downOff = disabled || index === count - 1;
+  const why = (edge: 'atTop' | 'atBottom', off: boolean) => (disabled ? t('common.reorder.saving') : off ? t(`common.reorder.${edge}`) : undefined);
   return (
     <td className="reorder-col">
       <span className="reorder-ctl">
@@ -56,10 +57,10 @@ export function ReorderCell({ index, count, name, disabled, onMove }: CellProps)
           ⋮⋮
         </span>
         <span className="reorder-ctl__arrows">
-          <button ref={upRef} type="button" className="reorder-ctl__btn" aria-label={t('common.reorder.moveUp', { name })} disabled={upOff} onClick={() => move(-1)}>
+          <button ref={upRef} type="button" className="reorder-ctl__btn" aria-label={t('common.reorder.moveUp', { name })} disabled={upOff} title={why('atTop', upOff)} onClick={() => move(-1)}>
             <Icon name="chevup" size={16} />
           </button>
-          <button ref={downRef} type="button" className="reorder-ctl__btn" aria-label={t('common.reorder.moveDown', { name })} disabled={downOff} onClick={() => move(1)}>
+          <button ref={downRef} type="button" className="reorder-ctl__btn" aria-label={t('common.reorder.moveDown', { name })} disabled={downOff} title={why('atBottom', downOff)} onClick={() => move(1)}>
             <Icon name="chev" size={16} />
           </button>
         </span>
