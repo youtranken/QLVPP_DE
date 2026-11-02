@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DateField } from '@/ui/date-field';
-import { FormField } from '@/ui/form-field';
+import { Select } from '@/ui/select';
 import type { DirectoryUser } from '@/features/directory/directory.api';
 import { useDirectoryNames } from '@/features/directory/use-all-users';
 import { UserPicker } from '@/features/directory/user-picker';
@@ -46,6 +46,11 @@ export function AuditFilterBar({ applied, serverError, onApply, onClear }: Props
   };
   const dateError = (k: 'from' | 'to') => (showBad && badDates[k] ? t('common.dateField.invalid') : serverError[k] ? t('audit.filters.dateInvalid') : undefined);
   const known = AUDIT_ACTIONS.includes(draft.action);
+  const actionOptions = [
+    { value: '', label: t('audit.filters.anyAction') },
+    ...(draft.action !== '' && !known ? [{ value: draft.action, label: draft.action }] : []),
+    ...AUDIT_ACTIONS.map((a) => ({ value: a, label: auditActionLabel(t, a) })),
+  ];
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -74,19 +79,9 @@ export function AuditFilterBar({ applied, serverError, onApply, onClear }: Props
           </button>
         )}
       </div>
-      <FormField label={t('audit.filters.action')} className="au-action-field">
-        {(p) => (
-          <select {...p} value={draft.action} onChange={(e) => set('action', e.target.value)}>
-            <option value="">{t('audit.filters.anyAction')}</option>
-            {draft.action !== '' && !known && <option value={draft.action}>{draft.action}</option>}
-            {AUDIT_ACTIONS.map((a) => (
-              <option key={a} value={a}>
-                {auditActionLabel(t, a)}
-              </option>
-            ))}
-          </select>
-        )}
-      </FormField>
+      <div className="au-action-field">
+        <Select label={t('audit.filters.action')} stacked value={draft.action} options={actionOptions} onChange={(v) => set('action', v)} />
+      </div>
       <DateField label={t('audit.filters.from')} value={draft.from} error={dateError('from')} onChange={setDate('from')} />
       <DateField label={t('audit.filters.to')} value={draft.to} error={dateError('to') ?? (rangeError ? t('audit.filters.rangeInvalid') : undefined)} onChange={setDate('to')} />
       <div className="au-filter-actions">

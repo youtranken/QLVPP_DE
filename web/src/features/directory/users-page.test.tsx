@@ -53,15 +53,16 @@ const bodyRows = () => within(screen.getByRole('table')).getAllByRole('row').sli
 afterEach(() => vi.unstubAllGlobals());
 
 describe('UsersPage B10', () => {
-  it('tự dựng đầu trang: mô tả, "Đồng bộ ngay" kèm chữ nhỏ "Tự động mỗi 60 phút"; cài đặt không thành ô số liệu; đúng một h1', async () => {
+  it('tự dựng đầu trang: mô tả, "Đồng bộ ngay" kèm chữ nhỏ "Tự động mỗi 60 phút" đứng ngay trước nhóm thao tác (không nằm trong nhóm); cài đặt không thành ô số liệu; đúng một h1', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     expect(screen.getAllByRole('heading', { level: 1, name: 'Danh bạ' })).toHaveLength(1);
     expect(screen.getByText('Người dùng đồng bộ từ PMH ID. Thông tin cá nhân sửa ở PMH ID, không sửa trong app.')).toBeInTheDocument();
     expect(screen.queryByText('Đồng bộ tự động')).toBeNull();
     const actions = screen.getByRole('group', { name: 'Thao tác trang' });
-    expect(within(actions).getByText('Tự động mỗi 60 phút')).toBeInTheDocument();
+    expect(within(actions).queryByText('Tự động mỗi 60 phút')).toBeNull();
     expect(within(actions).getByRole('button', { name: 'Đồng bộ ngay' })).toBeInTheDocument();
+    expect(screen.getByText('Tự động mỗi 60 phút').nextElementSibling).toBe(actions);
     expect(screen.queryByText(/Đồng bộ lần cuối/)).toBeNull();
   });
 

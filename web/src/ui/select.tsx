@@ -11,13 +11,14 @@ interface Props<T extends string> {
   options: SelectOption<T>[];
   onChange: (value: T) => void;
   hideLabel?: boolean;
+  stacked?: boolean;
   disabled?: boolean;
   title?: string;
 }
 
-export function Select<T extends string>({ label, value, options, onChange, hideLabel, disabled, title }: Props<T>) {
+export function Select<T extends string>({ label, value, options, onChange, hideLabel, stacked, disabled, title }: Props<T>) {
   return (
-    <label className="select">
+    <label className={stacked ? 'select select--stacked' : 'select'}>
       <span className={hideLabel ? 'sr-only' : 'select__label'}>{label}</span>
       <span className="select__box">
         <select value={value} disabled={disabled} title={title} onChange={(e) => onChange(e.target.value as T)}>

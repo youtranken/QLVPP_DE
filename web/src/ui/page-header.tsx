@@ -7,10 +7,17 @@ interface Props {
   description?: string;
   primary?: ReactNode;
   secondary?: ReactNode;
+  note?: ReactNode;
 }
 
-export function PageHeader({ crumbs, title, description, primary, secondary }: Props) {
+export function PageHeader({ crumbs, title, description, primary, secondary, note }: Props) {
   const { t } = useTranslation();
+  const actions = (primary || secondary) && (
+    <div className="page-head__actions" role="group" aria-label={t('common.pageActions')}>
+      {secondary}
+      {primary}
+    </div>
+  );
   return (
     <header className="page-head">
       <div className="page-head__text">
@@ -26,11 +33,13 @@ export function PageHeader({ crumbs, title, description, primary, secondary }: P
         <h1>{title}</h1>
         {description && <p className="page-head__desc" title={description}>{description}</p>}
       </div>
-      {(primary || secondary) && (
-        <div className="page-head__actions" role="group" aria-label={t('common.pageActions')}>
-          {secondary}
-          {primary}
+      {note ? (
+        <div className="page-head__side">
+          {note}
+          {actions}
         </div>
+      ) : (
+        actions
       )}
     </header>
   );

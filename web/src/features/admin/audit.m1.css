@@ -2,6 +2,8 @@
 [data-shell='admin'] .au-filters input[type='text'], [data-shell='admin'] .au-filters select { width: 100%; min-height: var(--hit); padding: 0 12px; border-radius: var(--r-md); border: 1px solid var(--c-line-input); background: var(--c-surface); color: var(--c-ink); font: var(--t-body); }
 [data-shell='admin'] .au-filters input:focus-visible, [data-shell='admin'] .au-filters select:focus-visible { outline: none; border-color: var(--c-acc); box-shadow: 0 0 0 3px var(--c-acc-soft); }
 [data-shell='admin'] .au-actor, [data-shell='admin'] .au-action-field, [data-shell='admin'] .au-filter-actions { grid-column: span 2; }
+[data-shell='admin'] .au-action-field .select__box { display: flex; }
+[data-shell='admin'] .au-filters .select select { padding-right: var(--s-7); appearance: none; }
 [data-shell='admin'] .au-actor { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--s-2); align-items: start; min-width: 0; }
 [data-shell='admin'] .au-actor .a-input { width: 100%; height: var(--hit); }
 [data-shell='admin'] .au-system { margin-top: 16px; }

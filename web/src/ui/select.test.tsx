@@ -22,6 +22,12 @@ describe('Select', () => {
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Phòng ban' }), 'Kế toán');
     expect(onChange).toHaveBeenCalledWith('kt');
   });
+  it('stacked → nhãn hiện đứng trên ô chọn (dùng trong form lọc), ô chọn vẫn có tên', () => {
+    renderWithI18n(<Select label="Hành động" stacked value="" options={options} onChange={() => {}} />);
+    const box = screen.getByRole('combobox', { name: 'Hành động' });
+    expect(box.closest('label')).toHaveClass('select--stacked');
+    expect(screen.getByText('Hành động')).toBeVisible();
+  });
   it('hideLabel → nhãn chỉ cho trình đọc màn hình, ô chọn vẫn có tên', () => {
     renderWithI18n(<Select label="Phòng ban" hideLabel value="" options={options} onChange={() => {}} />);
     expect(screen.getByRole('combobox', { name: 'Phòng ban' })).toBeInTheDocument();

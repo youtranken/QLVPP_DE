@@ -281,7 +281,8 @@ describe('AuditPage B11', () => {
     renderApp(makeMe('admin'), '/admin/audit?action=future.thing');
     expect(await screen.findByText('Không có dòng nhật ký nào khớp bộ lọc.')).toBeInTheDocument();
     expect(screen.getByText(/Nới khoảng ngày/)).toBeInTheDocument();
-    expect(screen.getByLabelText('Hành động')).toHaveValue('future.thing');
+    expect(screen.getByRole('combobox', { name: 'Hành động' })).toHaveValue('future.thing');
+    expect(screen.getByRole('combobox', { name: 'Hành động' }).closest('label')).toHaveClass('select', 'select--stacked');
     expect(screen.queryByText('Đã hiện hết nhật ký trong khoảng lọc.')).toBeNull();
   });
 
