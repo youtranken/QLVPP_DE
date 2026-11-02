@@ -43,6 +43,7 @@ async function openAudit(path = '/admin/audit') {
 
 const lastAudit = (m: ReturnType<typeof stubApi>) => auditUrls(m).at(-1)!.searchParams;
 const bodyRows = () => within(screen.getByRole('table')).getAllByRole('row');
+const entryRow = (text: string) => screen.getByText(text).closest('tr')!;
 
 afterEach(() => vi.useRealTimers());
 
@@ -72,17 +73,20 @@ describe('AuditPage B11', () => {
     expect(groups[1]).toHaveTextContent('2 dòng');
   });
 
-  it('"Xem" mở hàng chi tiết chiếm đủ cột dưới dòng: nhãn trường qua i18n (stock_qty → Tồn kho, khóa lạ giữ nguyên), JSON thô ẩn trong "Chi tiết kỹ thuật"; "Thu" đóng lại', async () => {
+  it('cả dòng bấm được (không còn nút "Xem"): dòng có aria-expanded, Enter mở hàng chi tiết chiếm đủ cột, Space đóng; nhãn trường qua i18n, JSON thô ẩn trong "Chi tiết kỹ thuật"', async () => {
     const detail = { before: { stock_qty: 3, qty: 1, odd_key: 'a' }, after: { stock_qty: 7, qty: 1, odd_key: 'b' }, note: 'đếm lại' };
     vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items: [row('evt-1', { detail })], next_cursor: null } : { items: [], next_cursor: null }))));
     await openAudit();
-    const btn = screen.getByRole('button', { name: 'Xem' });
-    expect(btn).toHaveAttribute('aria-expanded', 'false');
-    await userEvent.click(btn);
-    expect(btn).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.queryByRole('button', { name: 'Xem' })).toBeNull();
+    const r = entryRow('Lê Thị Bình');
+    expect(r).toHaveAttribute('aria-expanded', 'false');
+    expect(r).toHaveAttribute('tabindex', '0');
+    r.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(r).toHaveAttribute('aria-expanded', 'true');
     const detailCell = screen.getByText('Mã sự kiện #evt-1').closest('td')!;
+    expect(r).toHaveAttribute('aria-controls', detailCell.firstElementChild!.id);
     expect(detailCell).toHaveAttribute('colspan', '5');
-    expect(detailCell).not.toContainElement(btn);
     const diff = within(within(detailCell).getByRole('table'));
     expect(diff.getByRole('rowheader', { name: 'Tồn kho' })).toBeInTheDocument();
     expect(diff.getByRole('rowheader', { name: 'odd_key' })).toBeInTheDocument();
@@ -93,12 +97,14 @@ describe('AuditPage B11', () => {
     const tech = within(detailCell).getByText('Chi tiết kỹ thuật').closest('details')!;
     expect(tech).not.toHaveAttribute('open');
     expect(within(tech).getByText('Trước: {"stock_qty":3,"qty":1,"odd_key":"a"}')).not.toBeVisible();
-    await userEvent.click(btn);
-    expect(btn).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.keyboard(' ');
+    expect(r).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByText('Mã sự kiện #evt-1')).toBeNull();
+    await userEvent.click(within(r).getByText('Sửa cấu hình'));
+    expect(r).toHaveAttribute('aria-expanded', 'true');
   });
 
-  it('cột Đối tượng hiện tên khi before/after có name/custom_name; không có thì loại · mã ngắn', async () => {
+  it('cột Đối tượng hiện tên khi before/after có name/custom_name; không có thì tên loại tiếng Việt, không mã', async () => {
     const items = [
       row('n1', { objectType: 'item', objectId: '0b6f1c2e-1111-4222-8333-444455556666', detail: { before: null, after: { name: 'Bút bi xanh' } } }),
       row('n2', { objectType: 'request_line', objectId: '9a8b7c6d-1111-4222-8333-444455556666', detail: { before: { custom_name: 'Băng keo 2 mặt' }, after: { review_status: 'accepted' } } }),
@@ -108,10 +114,11 @@ describe('AuditPage B11', () => {
     await openAudit();
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
     expect(screen.getByText('Băng keo 2 mặt')).toBeInTheDocument();
-    expect(screen.getByText('item · 12345678…')).toBeInTheDocument();
+    expect(within(entryRow('Bút bi xanh').parentElement!).getAllByText('Món')).toHaveLength(1);
+    expect(screen.queryByText(/12345678/)).toBeNull();
   });
 
-  it('cột Đối tượng dùng objectLabel của api: tên món, "Phiếu tháng 11/2026 · chủ phiếu", dòng phiếu, bản chốt, kỳ; null → loại · mã ngắn; mã đầy đủ ở tooltip và hàng chi tiết', async () => {
+  it('cột Đối tượng dùng objectLabel của api: tên món, "Phiếu tháng 11/2026 · chủ phiếu", dòng phiếu, bản chốt, kỳ; null → tên loại; mã chỉ ở hàng chi tiết, không ở bảng hay tooltip', async () => {
     const itemId = 'c419efd8-1111-4222-8333-444455556666';
     const owner = 'Trần Văn Cường';
     const items = [
@@ -125,14 +132,15 @@ describe('AuditPage B11', () => {
     vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items, next_cursor: null } : { items: [], next_cursor: null }))));
     await openAudit();
     const item = screen.getByText('Bút bi đỏ');
-    expect(item.closest('[title]')).toHaveAttribute('title', `item · ${itemId}`);
-    expect(screen.queryByText('item · c419efd8…')).toBeNull();
+    expect(item.closest('[title]')).toBeNull();
+    expect(screen.queryByText(/c419efd8/)).toBeNull();
     expect(screen.getByText(`Phiếu tháng 11/2026 · ${owner}`)).toBeInTheDocument();
     expect(screen.getByText(`Băng keo · Phiếu tháng 11/2026 · ${owner}`)).toBeInTheDocument();
     expect(screen.getByText('Bản chốt kỳ 10/2026')).toBeInTheDocument();
     expect(screen.getByText('Kỳ tháng 10/2026')).toBeInTheDocument();
-    expect(screen.getByText('session · 1e004b5e…')).toBeInTheDocument();
-    await userEvent.click(within(item.closest('tr')!).getByRole('button', { name: 'Xem' }));
+    expect(screen.getByText('Phiên đăng nhập')).toBeInTheDocument();
+    expect(screen.queryByText(/1e004b5e/)).toBeNull();
+    await userEvent.click(item);
     expect(screen.getByText(`Mã đối tượng: item · ${itemId}`)).toBeInTheDocument();
   });
 
@@ -154,8 +162,8 @@ describe('AuditPage B11', () => {
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người thực hiện' }), 'Bình');
     await userEvent.click(await screen.findByRole('button', { name: /Lê Thị Bình/ }));
     await userEvent.selectOptions(screen.getByLabelText('Hành động'), 'Sửa cấu hình');
-    await userEvent.type(screen.getByLabelText('Từ ngày'), '2026-10-01');
-    await userEvent.type(screen.getByLabelText('Đến ngày'), '2026-10-28');
+    await userEvent.type(screen.getByLabelText('Từ ngày'), '01/10/2026');
+    await userEvent.type(screen.getByLabelText('Đến ngày'), '28/10/2026');
     await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
     await vi.waitFor(() => expect(lastAudit(fetchMock).get('actor')).toBe('u-binh'));
     const last = lastAudit(fetchMock);
@@ -194,16 +202,36 @@ describe('AuditPage B11', () => {
     const fetchMock = stubApi();
     await openAudit();
     const before = auditUrls(fetchMock).length;
-    await userEvent.type(screen.getByLabelText('Từ ngày'), '2026-10-20');
-    await userEvent.type(screen.getByLabelText('Đến ngày'), '2026-10-19');
+    await userEvent.type(screen.getByLabelText('Từ ngày'), '20/10/2026');
+    await userEvent.type(screen.getByLabelText('Đến ngày'), '19/10/2026');
     await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
     expect(screen.getByLabelText('Đến ngày')).toHaveAccessibleDescription('“Đến ngày” phải bằng hoặc sau “Từ ngày”.');
     expect(auditUrls(fetchMock)).toHaveLength(before);
     await userEvent.clear(screen.getByLabelText('Đến ngày'));
-    await userEvent.type(screen.getByLabelText('Đến ngày'), '2026-10-20');
+    await userEvent.type(screen.getByLabelText('Đến ngày'), '20/10/2026');
     await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
     await vi.waitFor(() => expect(lastAudit(fetchMock).get('to')).toBe('2026-10-20'));
     expect(lastAudit(fetchMock).get('from')).toBe('2026-10-20');
+  });
+
+  it('ô ngày dd/mm/yyyy: "31/02/2026" ở Từ ngày → bấm Lọc báo lỗi tại ô, không gọi api; 29/02/2028 gửi from=2028-02-29', async () => {
+    const fetchMock = stubApi();
+    await openAudit();
+    const before = auditUrls(fetchMock).length;
+    await userEvent.type(screen.getByLabelText('Từ ngày'), '31/02/2026');
+    await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
+    expect(screen.getByLabelText('Từ ngày')).toHaveAccessibleDescription('Ngày không hợp lệ — nhập dd/mm/yyyy.');
+    expect(auditUrls(fetchMock)).toHaveLength(before);
+    await userEvent.clear(screen.getByLabelText('Từ ngày'));
+    await userEvent.type(screen.getByLabelText('Từ ngày'), '29/02/2028');
+    await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
+    await vi.waitFor(() => expect(lastAudit(fetchMock).get('from')).toBe('2028-02-29'));
+  });
+
+  it('?from=2026-10-01 trong URL hiện "01/10/2026" ở ô Từ ngày', async () => {
+    stubApi();
+    await openAudit('/admin/audit?from=2026-10-01');
+    expect(screen.getByLabelText('Từ ngày')).toHaveValue('01/10/2026');
   });
 
   it('chip "Hôm nay" lúc 23:30 UTC gửi from = to = ngày kế tiếp theo giờ VN', async () => {
@@ -256,7 +284,7 @@ describe('AuditPage B11', () => {
     expect(screen.queryByText('Đã hiện hết nhật ký trong khoảng lọc.')).toBeNull();
   });
 
-  it('mã hành động api mới hơn web hiện mã thô; nhãn đã biết kèm mã gốc; không có before/after → cặp khóa–giá trị', async () => {
+  it('mã hành động api mới hơn web hiện mã thô; nhãn đã biết chỉ hiện nhãn, mã gốc ở hàng chi tiết; không có before/after → cặp khóa–giá trị', async () => {
     vi.stubGlobal('fetch', vi.fn((url: string) =>
       Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items: [row('a1', { action: 'future.thing' }), row('a2', { action: 'line.delivered', detail: { ip: '10.0.0.5' } })], next_cursor: null } : { items: [], next_cursor: null })),
     ));
@@ -264,8 +292,9 @@ describe('AuditPage B11', () => {
     renderApp(makeMe('admin'), '/admin/audit');
     expect(await screen.findByText('future.thing')).toBeInTheDocument();
     expect(within(screen.getAllByRole('table')[0]).getByText('Giao hàng')).toBeInTheDocument();
-    expect(within(screen.getAllByRole('table')[0]).getByText('line.delivered')).toBeInTheDocument();
-    await userEvent.click(screen.getAllByRole('button', { name: 'Xem' })[1]);
+    expect(within(screen.getAllByRole('table')[0]).queryByText('line.delivered')).toBeNull();
+    await userEvent.click(within(screen.getAllByRole('table')[0]).getByText('Giao hàng'));
+    expect(screen.getByText('Mã hành động: line.delivered')).toBeInTheDocument();
     expect(screen.getByText('Địa chỉ IP')).toBeInTheDocument();
     expect(screen.getByText('10.0.0.5')).toBeInTheDocument();
     expect(bodyRows().length).toBeGreaterThan(2);

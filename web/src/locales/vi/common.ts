@@ -56,6 +56,7 @@ const common = {
       clear: 'Bỏ lọc',
     },
     pageActions: 'Thao tác trang',
+    dateField: { hint: 'dd/mm/yyyy', invalid: 'Ngày không hợp lệ — nhập dd/mm/yyyy.' },
     table: {
       breadcrumb: 'Vị trí',
       bulkLabel: 'Hành động trên các dòng đã chọn',

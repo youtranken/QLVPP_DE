@@ -59,6 +59,7 @@ const common: Messages<typeof vi> = {
       clear: 'Clear filter',
     },
     pageActions: 'Page actions',
+    dateField: { hint: 'dd/mm/yyyy', invalid: 'Invalid date — use dd/mm/yyyy.' },
     table: {
       breadcrumb: 'Breadcrumb',
       bulkLabel: 'Actions for selected rows',

@@ -16,7 +16,7 @@ import {
 import { EmptyState, Loading } from '@/ui/load-state';
 import type { EmptyArtKind } from '@/ui/empty-art';
 import { GroupHeaderRow, type GroupBy, type RowGroup } from '@/ui/data-table-group';
-import { BodyRow, SelectBox, type Selection } from '@/ui/data-table-row';
+import { BodyRow, SelectBox, type RowProps, type Selection } from '@/ui/data-table-row';
 
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -49,6 +49,7 @@ interface DataTableProps<T> {
   collapsed?: ReadonlySet<string>;
   onCollapsedChange?: (next: ReadonlySet<string>) => void;
   expandedRow?: (row: T) => ReactNode;
+  rowProps?: (row: T) => RowProps;
 }
 
 export function DataTable<T>({
@@ -74,6 +75,7 @@ export function DataTable<T>({
   collapsed: controlledCollapsed,
   onCollapsedChange,
   expandedRow,
+  rowProps,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
   const [internalCollapsed, setInternalCollapsed] = useState<ReadonlySet<string>>(new Set());
@@ -125,6 +127,7 @@ export function DataTable<T>({
           selection={selection}
           onRowClick={onRowClick}
           className={rowClassName?.(row.original)}
+          extra={rowProps?.(row.original)}
         />
         {extra != null && (
           <tr className="dt-expanded">

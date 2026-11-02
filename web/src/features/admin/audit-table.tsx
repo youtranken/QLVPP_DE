@@ -1,13 +1,14 @@
-import { createContext, useCallback, useContext, useId, useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useCallback, useId, useMemo, useState } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/ui/data-table';
+import { Icon } from '@/ui/icon';
 import type { GroupBy } from '@/ui/data-table-group';
 import type { AuditEntry } from './admin.api';
 import { auditActionLabel } from './audit-actions';
 import { AuditDetail } from './audit-detail';
-import { auditObjectRef, auditObjectText } from './audit-object';
+import { auditObjectText } from './audit-object';
 import { vnDayKey } from './audit-quick-ranges';
 
 const ZONE = 'Asia/Ho_Chi_Minh';
@@ -19,38 +20,10 @@ const timeFmt = new Intl.DateTimeFormat('en-GB', {
   timeZone: ZONE,
 });
 
-interface Expansion {
-  open: ReadonlySet<string>;
-  toggle: (id: string) => void;
-  detailId: (id: string) => string;
-}
-const ExpansionContext = createContext<Expansion>({
-  open: new Set(),
-  toggle: () => {},
-  detailId: (id) => id,
-});
-
-function ToggleButton({ entryId }: { entryId: string }) {
-  const { t } = useTranslation();
-  const x = useContext(ExpansionContext);
-  const open = x.open.has(entryId);
-  const controls = x.detailId(entryId);
-  const onToggle = () => x.toggle(entryId);
-  return (
-    <button type="button" className="btn btn--sm" aria-expanded={open} aria-controls={open ? controls : undefined} onClick={onToggle}>
-      {t(open ? 'audit.page.collapse' : 'audit.page.expand')}
-    </button>
-  );
-}
-
 function ObjectCell({ entry: e }: { entry: AuditEntry }) {
   const { t } = useTranslation();
   if (!e.objectType && !e.objectId) return <>{t('common.empty')}</>;
-  return (
-    <span className="au-object" title={auditObjectRef(e)}>
-      {auditObjectText(t, e)}
-    </span>
-  );
+  return <span className="au-object">{auditObjectText(t, e)}</span>;
 }
 
 function useColumns() {
@@ -82,13 +55,7 @@ function useColumns() {
         id: 'action',
         header: t('audit.page.colAction'),
         cell: ({ row: { original: e } }) => {
-          const label = auditActionLabel(t, e.action);
-          return (
-            <span className="au-action">
-              <span>{label}</span>
-              {label !== e.action && <small className="au-muted">{e.action}</small>}
-            </span>
-          );
+          return <span className="au-action">{auditActionLabel(t, e.action)}</span>;
         },
       },
       {
@@ -98,17 +65,17 @@ function useColumns() {
       },
       {
         id: 'detail',
-        header: t('audit.page.colDetail'),
+        header: () => <span className="sr-only">{t('audit.page.colDetail')}</span>,
         meta: { className: 'au-detail-col' },
-        cell: ({ row: { original: e } }) => <ToggleButton entryId={e.id} />,
+        cell: () => <span className="au-chev"><Icon name="chev" size={18} /></span>,
       },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
   }, [t]);
 }
 
-export function AuditTable({ rows, loading, empty }: { rows: AuditEntry[]; loading: boolean; empty: { title: string; hint?: string; action?: ReactNode } }) {
-  const { t, i18n } = useTranslation();
+// Cả dòng là nút mở/thu chi tiết; dòng không còn phần tử bấm nào khác nên không lồng tương tác
+function useRowToggle() {
   const baseId = useId();
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
   const toggle = useCallback((id: string) => {
@@ -120,9 +87,26 @@ export function AuditTable({ rows, loading, empty }: { rows: AuditEntry[]; loadi
     });
   }, []);
   const detailId = useCallback((id: string) => `${baseId}-${id}`, [baseId]);
-  const columns = useColumns();
-  const expansion = useMemo(() => ({ open, toggle, detailId }), [open, toggle, detailId]);
-  const groupBy = useMemo<GroupBy<AuditEntry>>(() => {
+  const rowProps = useCallback(
+    (e: AuditEntry) => ({
+      tabIndex: 0,
+      'aria-expanded': open.has(e.id),
+      'aria-controls': open.has(e.id) ? detailId(e.id) : undefined,
+      onClick: () => toggle(e.id),
+      onKeyDown: (ev: KeyboardEvent<HTMLTableRowElement>) => {
+        if (ev.target !== ev.currentTarget || (ev.key !== 'Enter' && ev.key !== ' ')) return;
+        ev.preventDefault();
+        toggle(e.id);
+      },
+    }),
+    [open, toggle, detailId],
+  );
+  return { open, detailId, rowProps };
+}
+
+function useDayGroups(): GroupBy<AuditEntry> {
+  const { t, i18n } = useTranslation();
+  return useMemo<GroupBy<AuditEntry>>(() => {
     const dayFmt = new Intl.DateTimeFormat(i18n.language === 'en' ? 'en-GB' : 'vi-VN', {
       weekday: 'long',
       day: '2-digit',
@@ -136,18 +120,24 @@ export function AuditTable({ rows, loading, empty }: { rows: AuditEntry[]; loadi
       aside: (_k, list) => <span className="au-muted">{t('audit.page.dayCount', { count: list.length })}</span>,
     };
   }, [t, i18n.language]);
+}
+
+export function AuditTable({ rows, loading, empty }: { rows: AuditEntry[]; loading: boolean; empty: { title: string; hint?: string; action?: ReactNode } }) {
+  const columns = useColumns();
+  const groupBy = useDayGroups();
+  const { open, detailId, rowProps } = useRowToggle();
   return (
-    <ExpansionContext.Provider value={expansion}>
-      <DataTable
-        data={rows}
-        columns={columns}
-        loading={loading}
-        emptyText={empty.title}
-        empty={{ art: 'no-match', hint: empty.hint, action: empty.action }}
-        groupBy={groupBy}
-        expandedRow={(e) => (open.has(e.id) ? <AuditDetail entry={e} id={detailId(e.id)} /> : null)}
-        stackOnMobile
-      />
-    </ExpansionContext.Provider>
+    <DataTable
+      data={rows}
+      columns={columns}
+      loading={loading}
+      emptyText={empty.title}
+      empty={{ art: 'no-match', hint: empty.hint, action: empty.action }}
+      groupBy={groupBy}
+      expandedRow={(e) => (open.has(e.id) ? <AuditDetail entry={e} id={detailId(e.id)} /> : null)}
+      rowProps={rowProps}
+      tableClassName="au-table"
+      stackOnMobile
+    />
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type HTMLAttributes } from 'react';
 import { useTranslation } from 'react-i18next';
 import { flexRender, type Row } from '@tanstack/react-table';
 
@@ -37,26 +37,31 @@ export function SelectBox({
   );
 }
 
+export type RowProps = Pick<HTMLAttributes<HTMLTableRowElement>, 'tabIndex' | 'aria-expanded' | 'aria-controls' | 'onClick' | 'onKeyDown'>;
+
 export function BodyRow<T>({
   row,
   active,
   selection,
   onRowClick,
   className,
+  extra,
 }: {
   row: Row<T>;
   active: boolean;
   selection?: Selection;
   onRowClick?: (row: T) => void;
   className?: string;
+  extra?: RowProps;
 }) {
   const { t } = useTranslation();
   return (
     <tr
-      className={[onRowClick ? 'clickable' : '', className || ''].filter(Boolean).join(' ') || undefined}
+      {...extra}
+      className={[onRowClick || extra?.onClick ? 'clickable' : '', className || ''].filter(Boolean).join(' ') || undefined}
       aria-current={active ? 'true' : undefined}
       // Bấm dòng chỉ là tiện ích chuột; không role=button vì dòng chứa nút (nested-interactive)
-      onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+      onClick={onRowClick ? () => onRowClick(row.original) : extra?.onClick}
     >
       {selection && (
         <td className="sel" onClick={(e) => e.stopPropagation()}>

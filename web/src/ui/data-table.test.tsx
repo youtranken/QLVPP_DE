@@ -33,6 +33,18 @@ function rowNames(): (string | null)[] {
 }
 
 describe('DataTable', () => {
+  it('rowProps gắn thuộc tính lên dòng dữ liệu (dòng mở rộng bằng bàn phím: tabIndex, aria-expanded, onKeyDown)', async () => {
+    const onKeyDown = vi.fn();
+    renderWithI18n(<DataTable data={DATA} columns={COLUMNS} emptyText="Trống" rowProps={(r) => ({ tabIndex: 0, 'aria-expanded': r.name === 'apple', onKeyDown })} />);
+    const banana = screen.getByText('Banana').closest('tr')!;
+    expect(banana).toHaveAttribute('tabindex', '0');
+    expect(banana).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText('apple').closest('tr')).toHaveAttribute('aria-expanded', 'true');
+    banana.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+  });
+
   it('ô xếp chồng 390: đầu cột là component thì nhãn ô lấy từ meta.label, đầu cột chuỗi giữ chuỗi', () => {
     const cols: ColumnDef<Row>[] = [
       { accessorKey: 'name', header: 'Tên' },

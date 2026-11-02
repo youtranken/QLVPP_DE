@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
-import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, openAuditDetail, seedActiveUser, shot } from './helpers';
+import { acquireLock, asRole, auditRows, devHeaders, expectNoContrastViolations, isMobile, openAuditDetail, seedActiveUser, shot } from './helpers';
 
 const ACTIVE = { sub: 'pw-dir-active', name: 'PW Danh bạ An' };
 const LOCKED = { sub: 'pw-dir-locked', name: 'PW Danh bạ Bình' };
@@ -89,7 +89,7 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
 
     await page.goto('/admin/audit?action=config.updated');
     await expect(page.getByRole('heading', { level: 1, name: 'Nhật ký' })).toBeVisible();
-    const entry = page.getByRole('row').filter({ has: page.getByRole('button', { name: /^(Xem|Thu)$/ }) }).first();
+    const entry = auditRows(page).first();
     const detail = await openAuditDetail(page, entry);
     const diff = detail.getByRole('table');
     const changed = diff.getByRole('row').filter({ has: page.getByRole('rowheader', { name: 'Liên hệ Hành chính', exact: true }) });

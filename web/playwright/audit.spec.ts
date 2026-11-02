@@ -1,5 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
-import { asRole, expectNoContrastViolations, isMobile, openAuditDetail, psql, shot } from './helpers';
+import { expect, test } from '@playwright/test';
+import { asRole, auditRows, expectNoContrastViolations, isMobile, openAuditDetail, psql, shot } from './helpers';
 
 // 12:00 UTC: xa mốc ngày VN; mốc ngày kiểm ở e2e api
 // audit_log chỉ thêm, không xóa được: dùng người giả cố định + ngày xa quá khứ, gieo một lần (idempotent) thay vì xóa sau test
@@ -17,7 +17,7 @@ function seed({ actor, day, rows }: { actor: string; day: string; rows: number }
 }
 
 const vnToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date());
-const bodyRows = (page: Page) => page.getByRole('table').getByRole('row').filter({ has: page.getByRole('button', { name: /^(Xem|Thu)$/ }) });
+const bodyRows = auditRows;
 
 test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
   asRole('admin');
@@ -42,12 +42,15 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
     await expect(diff.getByRole('cell', { name: 'cu-50', exact: true })).toBeVisible();
     await expect(diff.getByRole('cell', { name: 'moi-50', exact: true })).toBeVisible();
     await expect(detail.getByText(/Mã sự kiện #/)).toBeVisible();
+    await expect(detail.getByText('Mã hành động: config.updated')).toBeVisible();
+    await expect(first.getByText('Sửa cấu hình')).toBeVisible();
+    await expect(first.getByText('config.updated')).toHaveCount(0);
     await expect(detail.getByText(/^Sau: /)).toBeHidden();
     await detail.getByText('Chi tiết kỹ thuật').click();
     await expect(detail.getByText(/^Sau: \{.*"pw_marker":"moi-50"/)).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'admin-audit');
-    await first.getByRole('button', { name: 'Thu', exact: true }).click();
+    await first.press(' ');
     await expect(detail).toHaveCount(0);
     await expect(page.getByText(/Mã sự kiện #/)).toHaveCount(0);
 
@@ -59,13 +62,16 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
 
     await page.getByRole('button', { name: 'Xóa lọc', exact: true }).first().click();
     await expect(page.getByText(/^Đang lọc:/)).toHaveCount(0);
-    await page.getByLabel('Từ ngày').fill('2026-10-20');
-    await page.getByLabel('Đến ngày').fill('2026-10-19');
+    await page.getByLabel('Từ ngày').fill('31/02/2026');
+    await page.getByRole('button', { name: 'Lọc', exact: true }).click();
+    await expect(page.getByLabel('Từ ngày')).toHaveAccessibleDescription('Ngày không hợp lệ — nhập dd/mm/yyyy.');
+    await page.getByLabel('Từ ngày').fill('20/10/2026');
+    await page.getByLabel('Đến ngày').fill('19/10/2026');
     const before = calls;
     await page.getByRole('button', { name: 'Lọc', exact: true }).click();
     await expect(page.getByLabel('Đến ngày')).toHaveAccessibleDescription('“Đến ngày” phải bằng hoặc sau “Từ ngày”.');
     expect(calls).toBe(before);
-    await page.getByLabel('Đến ngày').fill('2026-10-20');
+    await page.getByLabel('Đến ngày').fill('20/10/2026');
     await page.getByRole('button', { name: 'Lọc', exact: true }).click();
     await expect(page).toHaveURL(/from=2026-10-20&to=2026-10-20/);
   });

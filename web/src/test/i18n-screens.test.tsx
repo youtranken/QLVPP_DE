@@ -191,7 +191,7 @@ describe('Song ngữ các màn Plan 3', () => {
     await english();
     const table = await screen.findByRole('table');
     expect(within(table).getByText('Delivered')).toBeInTheDocument();
-    expect(within(table).getByText('line.delivered')).toBeInTheDocument();
+    expect(within(table).queryByText('line.delivered')).toBeNull();
     expect(within(table).getByText('Backlog cancelled')).toBeInTheDocument();
     expect(document.querySelector('select option[value="line.cancel_remaining"]')).toHaveTextContent('Backlog cancelled');
     noVietnamese();

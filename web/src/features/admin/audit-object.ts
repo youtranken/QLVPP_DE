@@ -23,7 +23,10 @@ function fromLabel(t: TFunction, e: AuditEntry): string | null {
   return l.name;
 }
 
-// Ưu tiên tên api tra lúc đọc (đối tượng còn), rồi tên ghi trong detail, cuối cùng loại · mã ngắn
+// Loại lạ (api mới hơn web) hiện tên thô thay vì trống
+const typeLabel = (t: TFunction, type: string) => t(`audit.objectType.${type}`, { defaultValue: type });
+
+// Ưu tiên tên api tra lúc đọc (đối tượng còn), rồi tên ghi trong detail, cuối cùng tên loại; mã chỉ ở hàng chi tiết
 export function auditObjectText(t: TFunction, e: AuditEntry): string {
-  return fromLabel(t, e) ?? auditObjectName(e.detail) ?? auditObjectRef(e, true);
+  return fromLabel(t, e) ?? auditObjectName(e.detail) ?? (e.objectType ? typeLabel(t, e.objectType) : auditObjectRef(e, true));
 }

@@ -165,12 +165,15 @@ export async function acquireLock(name: string): Promise<() => void> {
   }
 }
 
-// Chi tiết nhật ký là hàng riêng ngay dưới; nút "Xem" trỏ tới nó qua aria-controls
+// Dòng nhật ký có aria-expanded (chưa mở hoặc đã mở)
+export const auditRows = (page: Page) => page.getByRole('table').getByRole('row', { expanded: false }).or(page.getByRole('table').getByRole('row', { expanded: true }));
+
+// Chi tiết nhật ký là hàng riêng ngay dưới; cả dòng mở bằng Enter và trỏ tới chi tiết qua aria-controls
 export async function openAuditDetail(page: Page, row: Locator): Promise<Locator> {
-  await row.getByRole('button', { name: 'Xem', exact: true }).click();
-  const toggle = row.getByRole('button', { name: 'Thu', exact: true });
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  const id = await toggle.getAttribute('aria-controls');
+  await row.focus();
+  await page.keyboard.press('Enter');
+  await expect(row).toHaveAttribute('aria-expanded', 'true');
+  const id = await row.getAttribute('aria-controls');
   expect(id).toBeTruthy();
   return page.locator(`[id="${id}"]`);
 }

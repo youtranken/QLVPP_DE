@@ -55,6 +55,7 @@ export function AuditDetail({ entry, id }: { entry: AuditEntry; id: string }) {
           {'after' in d && <code>{t('audit.page.after', { json: compact(d.after) })}</code>}
         </details>
       )}
+      <p className="au-muted">{t('audit.detail.actionCode', { code: entry.action })}</p>
       {entry.objectId && <p className="au-muted">{t('audit.detail.objectId', { ref: auditObjectRef(entry) })}</p>}
       <p className="au-muted">{t('audit.detail.eventId', { id: entry.id })}</p>
     </div>
