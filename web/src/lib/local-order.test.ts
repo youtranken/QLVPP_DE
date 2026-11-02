@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { moveItem, orderPatches } from './local-order';
+import { moveItem, moveItemTo, orderPatches } from './local-order';
 
 const x = (id: string, sort_order: number) => ({ id, sort_order });
 const key = (i: { id: string }) => i.id;
@@ -13,6 +13,14 @@ describe('thứ tự cục bộ', () => {
     expect(moveItem([A, B, C], 0, 1).map(key)).toEqual(['b', 'a', 'c']);
     expect(moveItem([A, B, C], 0, -1)).toEqual([A, B, C]);
     expect(moveItem([A, B, C], 2, 1)).toEqual([A, B, C]);
+  });
+
+  it('moveItemTo kéo một mục tới vị trí bất kỳ: đầu → cuối, cuối → đầu; ngoài biên hoặc cùng chỗ thì giữ nguyên', () => {
+    expect(moveItemTo([A, B, C], 0, 2).map(key)).toEqual(['b', 'c', 'a']);
+    expect(moveItemTo([A, B, C], 2, 0).map(key)).toEqual(['c', 'a', 'b']);
+    expect(moveItemTo([A, B, C], 1, 1)).toEqual([A, B, C]);
+    expect(moveItemTo([A, B, C], 0, 3)).toEqual([A, B, C]);
+    expect(moveItemTo([A, B, C], -1, 0)).toEqual([A, B, C]);
   });
 
   it('orderPatches: sort_order = vị trí*10 (từ 1), chỉ mục đổi số', () => {

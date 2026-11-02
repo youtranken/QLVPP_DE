@@ -27,7 +27,7 @@ async function createCategoryAndItem(page: Page, category: string, itemName: str
   await expect(catDialog).toBeHidden();
   await expect(page.getByRole('table').getByRole('button', { name: `Thao tác cho ${category}` })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Về Danh mục' }).click();
+  await page.goto('/admin/catalog');
   await page.getByRole('main').getByRole('button', { name: 'Thêm món', exact: true }).click();
   const form = page.getByRole('dialog', { name: 'Thêm món' });
   await form.getByLabel('Tên món').fill(itemName);

@@ -25,17 +25,17 @@
 [data-shell='admin'] .table tr.has-error td { background: var(--c-danger-tint); }
 [data-shell='admin'] .ct-group { display: inline-flex; flex: 1 1 auto; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-width: 0; }
 [data-shell='admin'] .ct-group__name { flex: 0 1 auto; min-width: 8ch; overflow-wrap: break-word; }
-[data-shell='admin'] .ct-group__thumb { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: var(--r-sm); background: var(--c-on-tone); color: inherit; }
+[data-shell='admin'] .ct-group__thumb { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: var(--r-sm); background: color-mix(in srgb, currentColor 10%, transparent); color: inherit; }
 [data-shell='admin'] .ct-group-meta { color: inherit; opacity: .8; font: var(--t-sm); font-weight: 600; white-space: nowrap; }
-[data-shell='admin'] .ct-group-add { color: inherit; white-space: nowrap; }
-[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g0']) th { background: var(--g0); color: var(--g0-ink); }
-[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g1']) th { background: var(--g1); color: var(--g1-ink); }
-[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g2']) th { background: var(--g2); color: var(--g2-ink); }
-[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g3']) th { background: var(--g3); color: var(--g3-ink); }
-[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g4']) th { background: var(--g4); color: var(--g4-ink); }
-[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g5']) th { background: var(--g5); color: var(--g5-ink); }
-[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g6']) th { background: var(--g6); color: var(--g6-ink); }
-[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g7']) th { background: var(--g7); color: var(--g7-ink); }
+[data-shell='admin'] .ct-group-add { color: inherit; }
+[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g0']) th { background: var(--g0-bg); box-shadow: inset 4px 0 0 var(--g0-strong); color: var(--g0-ink); }
+[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g1']) th { background: var(--g1-bg); box-shadow: inset 4px 0 0 var(--g1-strong); color: var(--g1-ink); }
+[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g2']) th { background: var(--g2-bg); box-shadow: inset 4px 0 0 var(--g2-strong); color: var(--g2-ink); }
+[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g3']) th { background: var(--g3-bg); box-shadow: inset 4px 0 0 var(--g3-strong); color: var(--g3-ink); }
+[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g4']) th { background: var(--g4-bg); box-shadow: inset 4px 0 0 var(--g4-strong); color: var(--g4-ink); }
+[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g5']) th { background: var(--g5-bg); box-shadow: inset 4px 0 0 var(--g5-strong); color: var(--g5-ink); }
+[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g6']) th { background: var(--g6-bg); box-shadow: inset 4px 0 0 var(--g6-strong); color: var(--g6-ink); }
+[data-shell='admin'] .table .dt-group:has(.ct-group[data-tone='g7']) th { background: var(--g7-bg); box-shadow: inset 4px 0 0 var(--g7-strong); color: var(--g7-ink); }
 [data-shell='admin'] .ct-drawer-head { display: flex; align-items: flex-start; gap: var(--s-1); }
 [data-shell='admin'] .ct-drawer-head__text { display: grid; gap: 2px; flex: 1; min-width: 0; }
 [data-shell='admin'] .ct-drawer-head .sheet-title { overflow-wrap: anywhere; }
@@ -64,7 +64,6 @@
   [data-shell='admin'] .ct-chip { height: var(--hit); }
   [data-shell='admin'] .ct-page .table-wrap { overflow-x: auto; }
   [data-shell='admin'] .ct-group-meta { display: none; }
-  [data-shell='admin'] .ct-group-add { justify-content: center; width: var(--hit); padding: 0; font-size: 0; }
   [data-shell='admin'] .ct-page .table-stack td.ct-code { color: var(--c-muted); font: var(--t-cap); }
   [data-shell='admin'] .ct-page .table-stack td.ct-code + td { flex: 1 1 100%; }
   [data-shell='admin'] .ct-page .table-stack td.ct-code + td::before { display: none; }

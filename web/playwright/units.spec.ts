@@ -94,7 +94,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
 
       await (await menuItems(page, name)).menu.getByRole('menuitem', { name: 'Ngừng' }).click();
       await page.getByRole('dialog', { name: `Ngừng đơn vị “${name}”?` }).getByRole('button', { name: 'Ngừng', exact: true }).click();
-      await expect(rowOf(page, name).getByText('Ngừng', { exact: true })).toBeVisible();
+      await expect(rowOf(page, name).getByText('Đã ngừng', { exact: true })).toBeVisible();
       expect((await menuItems(page, name)).labels).toEqual(['Sửa', 'Dùng lại', 'Xóa']);
       await page.keyboard.press('Escape');
       await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
@@ -104,6 +104,34 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
       await cleanUp(request, name, stamp);
       deleteTestUsers(sub);
     }
+  });
+
+  test('E9-S5b Đơn vị tính: chế độ Sắp xếp — ▲▼ xếp dọc chỉ khi bật, biên đầu/cuối tắt, Hủy hỏi rồi trả thứ tự cũ', async ({ page }, info) => {
+    await page.goto('/admin/units');
+    await expect(page.getByRole('heading', { level: 1, name: 'Đơn vị tính' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Thứ tự' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Đưa / })).toHaveCount(0);
+    const names = () => page.getByRole('table').getByRole('button', { name: /^Thao tác cho / }).evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
+    const before = await names();
+    await page.getByRole('button', { name: 'Sắp xếp' }).click();
+    const ups = page.getByRole('button', { name: /^Đưa .+ lên$/ });
+    const downs = page.getByRole('button', { name: /^Đưa .+ xuống$/ });
+    await expect(ups.first()).toBeDisabled();
+    await expect(downs.last()).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Lưu thứ tự' })).toBeDisabled();
+    const up = (await ups.nth(1).boundingBox())!;
+    const down = (await downs.nth(1).boundingBox())!;
+    expect(down.y).toBeGreaterThan(up.y + up.height - 1);
+    expect(Math.abs(down.x - up.x)).toBeLessThan(1);
+    await ups.nth(1).click();
+    await expect(page.getByText(/^Thứ tự đã đổi \(2 đơn vị\)$/)).toBeVisible();
+    await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
+    if (isMobile(info)) await expectNoContrastViolations(page);
+    await shot(page, info, 'units-sort', false);
+    await page.getByRole('button', { name: 'Hủy' }).click();
+    await page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
+    await expect(page.getByRole('button', { name: /^Đưa / })).toHaveCount(0);
+    expect(await names()).toEqual(before);
   });
 
   test('E9-S5b Đơn vị tính: lỗi tải → "Không tải được dữ liệu — thử lại." và "Thử lại"', async ({ page }) => {

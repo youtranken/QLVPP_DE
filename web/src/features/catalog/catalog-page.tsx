@@ -100,46 +100,48 @@ export function CatalogPage() {
     <div className="ct-page">
       {header}
       {loaded && <CatalogStats stats={d.stats} filter={p.view.filter} narrowed={p.view.filter !== null || p.view.cat !== null || p.view.q !== ''} onFilter={p.toggleFilter} onClear={p.clearAll} />}
-      <CatalogToolbar
-        search={search}
-        onSearch={setSearch}
-        searchable={d.base.length}
-        inactiveCount={d.stats.inactive}
-        showInactive={p.view.inactive}
-        onToggleInactive={p.toggleInactive}
-        allCollapsed={allCollapsed}
-        onToggleCollapse={() => setCollapsed(allCollapsed ? new Set() : new Set(groupKeys))}
-        bulk={{ count: bulk.count, pending: bulk.pending, onMax: () => setDialog('max'), onMove: () => setDialog('move'), onDeactivate: () => void deactivateSelected(), onClear: bulk.clear }}
-      />
-      {loaded && <CategoryChips index={d.index} counts={d.counts} total={d.base.length} value={p.view.cat} onChange={p.setCat} />}
-      {p.view.filter && <FilterNotice label={t(`catalog.stats.${p.view.filter === 'noimage' ? 'noImage' : p.view.filter}`)} count={d.rows.length} onClear={p.clearFilter} />}
-      <CatalogTable
-        rows={d.rows}
-        index={d.index}
-        loading={!loaded}
-        selection={bulk.selection}
-        rowErrors={bulk.rowErrors}
-        activeRowId={editing?.id}
-        collapsed={collapsed}
-        onCollapsedChange={setCollapsed}
-        onOpen={(id) => p.openItemDrawer(id)}
-        onAddToGroup={(cat) => p.openItemDrawer('new', cat)}
-        onSaveMax={actions.saveMax}
-        onToggleActive={(row) => void actions.toggleActive(row)}
-        empty={{
-          hint: t('catalog.list.emptyHint'),
-          action: (
-            <span className="ct-empty-actions">
-              <button type="button" className="btn" onClick={p.clearAll}>
-                {t('common.filter.clear')}
-              </button>
-              <button type="button" className="btn" onClick={() => p.openItemDrawer('new')}>
-                {t('catalog.page.add')}
-              </button>
-            </span>
-          ),
-        }}
-      />
+      <div className="ct-block">
+        <CatalogToolbar
+          search={search}
+          onSearch={setSearch}
+          searchable={d.base.length}
+          inactiveCount={d.stats.inactive}
+          showInactive={p.view.inactive}
+          onToggleInactive={p.toggleInactive}
+          allCollapsed={allCollapsed}
+          onToggleCollapse={() => setCollapsed(allCollapsed ? new Set() : new Set(groupKeys))}
+          bulk={{ count: bulk.count, pending: bulk.pending, onMax: () => setDialog('max'), onMove: () => setDialog('move'), onDeactivate: () => void deactivateSelected(), onClear: bulk.clear }}
+        />
+        {loaded && <CategoryChips index={d.index} counts={d.counts} total={d.base.length} value={p.view.cat} onChange={p.setCat} />}
+        {p.view.filter && <FilterNotice label={t(`catalog.stats.${p.view.filter === 'noimage' ? 'noImage' : p.view.filter}`)} count={d.rows.length} onClear={p.clearFilter} />}
+        <CatalogTable
+          rows={d.rows}
+          index={d.index}
+          loading={!loaded}
+          selection={bulk.selection}
+          rowErrors={bulk.rowErrors}
+          activeRowId={editing?.id}
+          collapsed={collapsed}
+          onCollapsedChange={setCollapsed}
+          onOpen={(id) => p.openItemDrawer(id)}
+          onAddToGroup={(cat) => p.openItemDrawer('new', cat)}
+          onSaveMax={actions.saveMax}
+          onToggleActive={(row) => void actions.toggleActive(row)}
+          empty={{
+            hint: t('catalog.list.emptyHint'),
+            action: (
+              <span className="ct-empty-actions">
+                <button type="button" className="btn" onClick={p.clearAll}>
+                  {t('common.filter.clear')}
+                </button>
+                <button type="button" className="btn" onClick={() => p.openItemDrawer('new')}>
+                  {t('catalog.page.add')}
+                </button>
+              </span>
+            ),
+          }}
+        />
+      </div>
       {dialog === 'max' && (
         <BulkMaxDialog count={bulk.count} onClose={() => setDialog(null)} onSubmit={(n) => runBulk({ max_qty: n }, (k) => t('catalog.bulk.maxDone', { n: k }))} />
       )}

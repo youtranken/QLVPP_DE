@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
-import { useConfirm } from '@/ui/confirm-context';
+import { useLeaveGuard } from '@/features/request/use-leave-guard';
+import { discardOptions, useConfirm } from '@/ui/confirm-context';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
+import { ReorderBar, ReorderToggle } from '@/ui/reorder';
 import { useToast } from '@/ui/toast-context';
+import { Toolbar } from '@/ui/toolbar';
+import { useReorderMode } from '@/ui/use-reorder-mode';
 import { patchCategory, useAdminItems, useAllCategories, useRefreshCatalog, type Category } from './catalog.api';
 import { CategoryDialog } from './category-dialog';
 import { CategoryPreview } from './category-preview';
@@ -40,6 +43,9 @@ export function CategoriesPage() {
   const categories = useAllCategories();
   const counts = useItemCounts();
   const order = useCategoryOrder(categories.data ?? []);
+  const sort = useReorderMode(order);
+  const leavePrompt = useMemo(() => discardOptions(t), [t]);
+  useLeaveGuard(sort.on ? order.moved : 0, leavePrompt);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [busy, setBusy] = useState(false);
@@ -68,7 +74,7 @@ export function CategoriesPage() {
   };
 
   const add = (
-    <button type="button" className={order.dirty ? 'btn' : 'btn btn--primary'} onClick={() => setAdding(true)}>
+    <button type="button" className={sort.on ? 'btn' : 'btn btn--primary'} onClick={() => setAdding(true)}>
       {t('catalog.categories.add')}
     </button>
   );
@@ -78,11 +84,6 @@ export function CategoriesPage() {
       crumbs={[t('nav.groups.stock'), t('catalog.title'), title]}
       title={title}
       description={t('catalog.categories.description')}
-      secondary={
-        <Link className="btn" to="/admin/catalog">
-          {t('catalog.categories.back')}
-        </Link>
-      }
       primary={add}
     />
   );
@@ -91,17 +92,6 @@ export function CategoriesPage() {
   return (
     <div className="ct-page">
       {header}
-      {order.dirty && (
-        <div className="cg-dirty">
-          <span className="cg-dirty__text">{t('catalog.categories.dirty', { n: order.moved })}</span>
-          <button type="button" className="btn btn--ghost" disabled={order.saving} onClick={order.revert}>
-            {t('catalog.categories.revert')}
-          </button>
-          <button type="button" className="btn btn--primary" disabled={order.saving} aria-busy={order.saving} onClick={() => void order.save()}>
-            {order.saving ? t('catalog.form.saving') : t('catalog.categories.saveOrder')}
-          </button>
-        </div>
-      )}
       {actionError && (
         <p role="alert" className="alert alert--danger">
           {actionError}
@@ -115,7 +105,28 @@ export function CategoriesPage() {
         <EmptyState title={t('catalog.categories.empty')} hint={t('catalog.categories.emptyHint')} action={add} />
       ) : (
         <div className="cg-layout">
-          <CategoryTable ordered={list} counts={counts.all} countsReady={counts.ready} busy={busy || order.saving} onMove={order.move} onEdit={setEditing} onToggleActive={(c) => void toggleActive(c)} />
+          <div className="ct-block">
+            <Toolbar>
+              {sort.on ? (
+                <ReorderBar dirty={order.dirty} dirtyText={t('catalog.categories.dirty', { n: order.moved })} saving={order.saving} onCancel={() => void sort.cancel()} onSave={() => void sort.save()} />
+              ) : (
+                <div className="toolbar__end">
+                  <ReorderToggle count={list.length} onStart={sort.start} />
+                </div>
+              )}
+            </Toolbar>
+            <CategoryTable
+              ordered={list}
+              counts={counts.all}
+              countsReady={counts.ready}
+              busy={busy || order.saving}
+              sorting={sort.on}
+              onMove={order.move}
+              onMoveTo={order.moveTo}
+              onEdit={setEditing}
+              onToggleActive={(c) => void toggleActive(c)}
+            />
+          </div>
           <CategoryPreview ordered={list} />
         </div>
       )}

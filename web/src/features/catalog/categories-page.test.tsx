@@ -50,6 +50,7 @@ async function open(mutate?: Mutate, categories?: Category[]) {
 const table = () => within(screen.getByRole('table'));
 const rowOf = (name: string) => table().getByText(name, { selector: 'span' }).closest('tr') as HTMLElement;
 const names = () => table().getAllByRole('button', { name: /^Thao tác cho / }).map((b) => b.getAttribute('aria-label')!.replace('Thao tác cho ', ''));
+const sortOn = () => userEvent.click(screen.getByRole('button', { name: 'Sắp xếp' }));
 const openMenu = async (name: string) => {
   await userEvent.click(screen.getByRole('button', { name: `Thao tác cho ${name}` }));
   return within(screen.getByRole('menu', { name: `Thao tác cho ${name}` }));
@@ -70,6 +71,12 @@ describe('Trang Nhóm món', () => {
     expect(within(rowOf('Giấy & sổ')).getByText('Đang dùng')).toBeInTheDocument();
   });
 
+  it('không còn nút "Về Danh mục" (trùng đường dẫn); ghi chú màu một câu ngắn', async () => {
+    await open();
+    expect(screen.queryByRole('link', { name: 'Về Danh mục' })).toBeNull();
+    expect(screen.getByText('Màu đi theo thứ tự nhóm; từ nhóm thứ 8 thì lặp lại.')).toBeInTheDocument();
+  });
+
   it('màu theo vị trí: chấm nhóm 1 "xanh đá", nhóm 2 "rêu", nhóm đã ngừng vẫn giữ vị trí "cát mật"', async () => {
     await open();
     expect(within(rowOf('Giấy & sổ')).getByTitle('xanh đá')).toBeInTheDocument();
@@ -77,8 +84,18 @@ describe('Trang Nhóm món', () => {
     expect(within(rowOf('Cũ')).getByTitle('cát mật')).toBeInTheDocument();
   });
 
+  it('bình thường không có cột Thứ tự và ▲▼; "Sắp xếp" bật ▲▼ + ⋮⋮ mỗi nhóm', async () => {
+    await open();
+    expect(table().queryByRole('columnheader', { name: 'Thứ tự' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Đưa / })).toBeNull();
+    await sortOn();
+    expect(screen.getAllByRole('button', { name: /^Đưa .+ lên$/ })).toHaveLength(3);
+    expect(table().getAllByTitle('Kéo để đổi chỗ')).toHaveLength(3);
+  });
+
   it('"Đưa {tên} lên" đổi vị trí tại chỗ, màu đổi theo, hiện "Thứ tự đã đổi (2 nhóm)", chưa gọi API', async () => {
     const f = await open();
+    await sortOn();
     await userEvent.click(screen.getByRole('button', { name: 'Đưa Bút & viết lên' }));
     expect(names()).toEqual(['Bút & viết', 'Giấy & sổ', 'Cũ']);
     expect(within(rowOf('Bút & viết')).getByTitle('xanh đá')).toBeInTheDocument();
@@ -86,22 +103,29 @@ describe('Trang Nhóm món', () => {
     expect(mutations(f)).toHaveLength(0);
   });
 
-  it('nhóm đầu không đưa lên được, nhóm cuối không đưa xuống được', async () => {
+  it('biên: ▲ nhóm đầu và ▼ nhóm cuối tắt; ▼ nhóm đầu và ▲ nhóm cuối bật', async () => {
     await open();
+    await sortOn();
+    expect(screen.getByRole('button', { name: 'Đưa Giấy & sổ xuống' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Đưa Cũ lên' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Đưa Giấy & sổ lên' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Đưa Cũ xuống' })).toBeDisabled();
   });
 
-  it('"Hoàn về" trả thứ tự server, ẩn dải', async () => {
+  it('"Hủy" → xác nhận "Bỏ thay đổi" trả thứ tự server, ẩn thanh, thoát chế độ sắp xếp', async () => {
     await open();
+    await sortOn();
     await userEvent.click(screen.getByRole('button', { name: 'Đưa Bút & viết lên' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Hoàn về' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Hủy' }));
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' })).getByRole('button', { name: 'Bỏ thay đổi' }));
     expect(names()).toEqual(['Giấy & sổ', 'Bút & viết', 'Cũ']);
     expect(screen.queryByText(/Thứ tự đã đổi/)).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Đưa / })).toBeNull();
   });
 
   it('"Lưu thứ tự" PATCH {sort_order: vị trí*10} lần lượt chỉ nhóm đổi vị trí → toast "Đã lưu thứ tự 2 nhóm"', async () => {
     const f = await open();
+    await sortOn();
     await userEvent.click(screen.getByRole('button', { name: 'Đưa Bút & viết lên' }));
     await userEvent.click(screen.getByRole('button', { name: 'Lưu thứ tự' }));
     expect(await screen.findByText('Đã lưu thứ tự 2 nhóm')).toBeInTheDocument();
@@ -116,6 +140,7 @@ describe('Trang Nhóm món', () => {
   it('dữ liệu cũ sort_order 1,2,3: lưu gửi cả nhóm được đánh số lại nhưng toast đếm nhóm đổi vị trí (2)', async () => {
     const legacy = CATS.map((c, i) => ({ ...c, sort_order: i + 1 }));
     const f = await open(undefined, legacy);
+    await sortOn();
     await userEvent.click(screen.getByRole('button', { name: 'Đưa Bút & viết lên' }));
     await userEvent.click(screen.getByRole('button', { name: 'Lưu thứ tự' }));
     expect(await screen.findByText('Đã lưu thứ tự 2 nhóm')).toBeInTheDocument();
@@ -126,6 +151,7 @@ describe('Trang Nhóm món', () => {
     const f = await open((url) => (url.endsWith('/c-1') ? jsonResponse(500, { code: 'X', message: 'x' }) : undefined));
     const loads = () => f.mock.calls.filter((c) => c[0] === '/api/item-categories?all=1').length;
     const before = loads();
+    await sortOn();
     await userEvent.click(screen.getByRole('button', { name: 'Đưa Bút & viết lên' }));
     await userEvent.click(screen.getByRole('button', { name: 'Lưu thứ tự' }));
     expect(await screen.findByText('Chưa lưu hết thứ tự (1/2 nhóm) — đã tải lại thứ tự hiện có.')).toBeInTheDocument();

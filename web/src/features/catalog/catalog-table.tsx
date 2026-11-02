@@ -139,10 +139,11 @@ function GroupAside({ groupKey, name, list, onAdd }: { groupKey: string; name: s
   return (
     <>
       <span className="ct-group-meta">{meta.join(' · ')}</span>
-      {groupKey !== NO_GROUP && (
-        <button type="button" className="btn btn--ghost btn--sm ct-group-add" aria-label={t('catalog.list.addToGroup', { name })} onClick={() => onAdd(groupKey)}>
-          <Icon name="plus" size={16} />
-          {t('catalog.list.addToGroupShort')}
+      {groupKey === NO_GROUP ? (
+        <span className="ct-icon-btn" aria-hidden="true" />
+      ) : (
+        <button type="button" className="btn btn--ghost btn--sm ct-icon-btn ct-group-add" aria-label={t('catalog.list.addToGroup', { name })} title={t('catalog.list.addToGroup', { name })} onClick={() => onAdd(groupKey)}>
+          <Icon name="plus" size={18} />
         </button>
       )}
     </>

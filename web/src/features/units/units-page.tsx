@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
-import { useConfirm } from '@/ui/confirm-context';
+import { useLeaveGuard } from '@/features/request/use-leave-guard';
+import { discardOptions, useConfirm } from '@/ui/confirm-context';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
+import { ReorderBar, ReorderToggle } from '@/ui/reorder';
 import { useToast } from '@/ui/toast-context';
+import { Toolbar } from '@/ui/toolbar';
+import { useReorderMode } from '@/ui/use-reorder-mode';
 import { UnitDialog } from './unit-dialog';
 import { unitErrorKey } from './unit-errors';
 import { UnitTable } from './unit-table';
@@ -21,6 +25,9 @@ export function UnitsPage() {
   const refresh = useRefreshUnits();
   const units = useAdminUnits();
   const order = useUnitOrder(units.data ?? []);
+  const sort = useReorderMode(order);
+  const leavePrompt = useMemo(() => discardOptions(t), [t]);
+  useLeaveGuard(sort.on ? order.moved : 0, leavePrompt);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<AdminUnit | null>(null);
   const [busy, setBusy] = useState(false);
@@ -73,7 +80,7 @@ export function UnitsPage() {
   };
 
   const add = (
-    <button type="button" className={order.dirty ? 'btn' : 'btn btn--primary'} onClick={() => setAdding(true)}>
+    <button type="button" className={sort.on ? 'btn' : 'btn btn--primary'} onClick={() => setAdding(true)}>
       {t('units.page.add')}
     </button>
   );
@@ -87,17 +94,6 @@ export function UnitsPage() {
           {actionError}
         </p>
       )}
-      {order.dirty && (
-        <div className="un-dirty">
-          <span className="un-dirty__text">{t('units.page.dirty', { n: order.moved })}</span>
-          <button type="button" className="btn btn--ghost" disabled={order.saving} onClick={order.revert}>
-            {t('units.page.revert')}
-          </button>
-          <button type="button" className="btn btn--primary" disabled={order.saving} aria-busy={order.saving} onClick={() => void order.save()}>
-            {order.saving ? t('units.page.saving') : t('units.page.saveOrder')}
-          </button>
-        </div>
-      )}
       {units.isError ? (
         <LoadError onRetry={() => void units.refetch()} />
       ) : units.isPending ? (
@@ -105,7 +101,27 @@ export function UnitsPage() {
       ) : list.length === 0 ? (
         <EmptyState title={t('units.page.empty')} hint={t('units.page.emptyHint')} action={add} />
       ) : (
-        <UnitTable ordered={list} busy={busy || order.saving} onMove={order.move} onEdit={setEditing} onToggleActive={(u) => void toggleActive(u)} onDelete={(u) => void remove(u)} />
+        <div className="ct-block un-block">
+          <Toolbar>
+            {sort.on ? (
+              <ReorderBar dirty={order.dirty} dirtyText={t('units.page.dirty', { n: order.moved })} saving={order.saving} onCancel={() => void sort.cancel()} onSave={() => void sort.save()} />
+            ) : (
+              <div className="toolbar__end">
+                <ReorderToggle count={list.length} onStart={sort.start} />
+              </div>
+            )}
+          </Toolbar>
+          <UnitTable
+            ordered={list}
+            busy={busy || order.saving}
+            sorting={sort.on}
+            onMove={order.move}
+            onMoveTo={order.moveTo}
+            onEdit={setEditing}
+            onToggleActive={(u) => void toggleActive(u)}
+            onDelete={(u) => void remove(u)}
+          />
+        </div>
       )}
       {adding && <UnitDialog onClose={() => setAdding(false)} />}
       {editing && <UnitDialog unit={editing} onClose={() => setEditing(null)} />}

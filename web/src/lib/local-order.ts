@@ -12,6 +12,14 @@ export function moveItem<T>(list: T[], index: number, dir: -1 | 1): T[] {
   return next;
 }
 
+export function moveItemTo<T>(list: T[], from: number, to: number): T[] {
+  if (from === to || from < 0 || to < 0 || from >= list.length || to >= list.length) return list;
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item);
+  return next;
+}
+
 // sort_order = vị trí*10; mục nào đã đúng số đó thì không gửi, dữ liệu cũ (0,1,2…) được đánh số lại một lần
 export function orderPatches<T extends Ordered>(ordered: T[], keyOf: (item: T) => string): { key: string; sort_order: number }[] {
   return ordered.flatMap((item, i) => (item.sort_order === (i + 1) * ORDER_STEP ? [] : [{ key: keyOf(item), sort_order: (i + 1) * ORDER_STEP }]));

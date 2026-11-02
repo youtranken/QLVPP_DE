@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { fireEvent, jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -70,6 +70,7 @@ const openMenu = async (name: string) => {
   await userEvent.click(screen.getByRole('button', { name: `Thao tác cho ${name}` }));
   return within(screen.getByRole('menu', { name: `Thao tác cho ${name}` }));
 };
+const sortOn = () => userEvent.click(screen.getByRole('button', { name: 'Sắp xếp' }));
 const pick = async (name: string, item: string) => userEvent.click((await openMenu(name)).getByRole('menuitem', { name: item }));
 
 afterEach(() => vi.unstubAllGlobals());
@@ -80,11 +81,21 @@ describe('Trang Đơn vị tính', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Đơn vị tính');
     expect(f.mock.calls.map((c) => c[0])).toContain('/api/units?all=1');
     expect(within(rowOf('cái')).getByText('4')).toBeInTheDocument();
-    expect(within(rowOf('cái')).getByText('Đang dùng')).toBeInTheDocument();
-    expect(within(rowOf('Cũ')).getByText('Ngừng')).toBeInTheDocument();
   });
 
-  it('trạng thái chỉ một chỗ: nhãn "Đang dùng"/"Ngừng", không còn công tắc hay nút chữ "Xóa …" trong bảng', async () => {
+  it('chip chỉ cho ĐVT "Đã ngừng"; ĐVT đang dùng không có chip "Đang dùng"; không còn cột Trạng thái', async () => {
+    await open();
+    expect(within(rowOf('Cũ')).getByText('Đã ngừng')).toBeInTheDocument();
+    expect(table().queryByText('Đang dùng')).toBeNull();
+    expect(table().queryByRole('columnheader', { name: 'Trạng thái' })).toBeNull();
+  });
+
+  it('mô tả một câu: "Danh sách đơn vị để chọn khi thêm món hoặc ghi Món khác."', async () => {
+    await open();
+    expect(screen.getByText('Danh sách đơn vị để chọn khi thêm món hoặc ghi Món khác.')).toBeInTheDocument();
+  });
+
+  it('trạng thái chỉ một chỗ: chip "Đã ngừng", không còn công tắc hay nút chữ "Xóa …" trong bảng', async () => {
     await open();
     expect(table().queryAllByRole('switch')).toHaveLength(0);
     expect(table().queryByRole('button', { name: /^Xóa/ })).toBeNull();
@@ -153,7 +164,7 @@ describe('Trang Đơn vị tính', () => {
     await open();
     await pick('hộp', 'Ngừng');
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Ngừng' }));
-    await waitFor(() => expect(within(rowOf('hộp')).getByText('Ngừng')).toBeInTheDocument());
+    await waitFor(() => expect(within(rowOf('hộp')).getByText('Đã ngừng')).toBeInTheDocument());
     await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Danh mục' }));
     await userEvent.click((await screen.findAllByRole('button', { name: 'Thêm món' }))[0]);
     const select = await screen.findByLabelText(/Đơn vị tính/);
@@ -189,8 +200,32 @@ describe('Trang Đơn vị tính', () => {
     await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/units/cai', 'PATCH', { name_en: null }]]));
   });
 
-  it('"Đưa {tên} lên" đổi vị trí tại chỗ, chưa gọi API; "Lưu thứ tự" PATCH {sort_order: vị trí*10} chỉ ĐVT lệch', async () => {
+  it('bình thường không có cột Thứ tự, không ▲▼, không tay nắm; "Sắp xếp" bật ▲▼ + ⋮⋮ mỗi dòng và thanh Hủy/Lưu thứ tự', async () => {
+    await open();
+    expect(table().queryByRole('columnheader', { name: 'Thứ tự' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Đưa / })).toBeNull();
+    expect(table().queryAllByTitle('Kéo để đổi chỗ')).toHaveLength(0);
+    await sortOn();
+    expect(screen.getAllByRole('button', { name: /^Đưa .+ lên$/ })).toHaveLength(3);
+    expect(screen.getAllByRole('button', { name: /^Đưa .+ xuống$/ })).toHaveLength(3);
+    expect(table().getAllByTitle('Kéo để đổi chỗ')).toHaveLength(3);
+    expect(screen.getByRole('button', { name: 'Hủy' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Lưu thứ tự' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Sắp xếp' })).toBeNull();
+  });
+
+  it('biên: ▲ của ĐVT đầu và ▼ của ĐVT cuối tắt; ▼ đầu và ▲ cuối bật', async () => {
+    await open();
+    await sortOn();
+    expect(screen.getByRole('button', { name: 'Đưa cái lên' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Đưa cái xuống' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Đưa Cũ lên' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Đưa Cũ xuống' })).toBeDisabled();
+  });
+
+  it('▲ đổi chỗ tại chỗ, chưa gọi API; "Lưu thứ tự" PATCH {sort_order: vị trí*10} chỉ ĐVT lệch rồi thoát chế độ sắp xếp', async () => {
     const f = await open();
+    await sortOn();
     await userEvent.click(screen.getByRole('button', { name: 'Đưa hộp lên' }));
     expect(names()).toEqual(['hộp', 'cái', 'Cũ']);
     expect(screen.getByText('Thứ tự đã đổi (2 đơn vị)')).toBeInTheDocument();
@@ -201,15 +236,57 @@ describe('Trang Đơn vị tính', () => {
       ['/api/admin/units/hop', 'PATCH', { sort_order: 10 }],
       ['/api/admin/units/cai', 'PATCH', { sort_order: 20 }],
     ]);
+    await waitFor(() => expect(screen.queryByRole('button', { name: /^Đưa / })).toBeNull());
+    expect(screen.getByRole('button', { name: 'Sắp xếp' })).toBeInTheDocument();
   });
 
-  it('ĐVT đầu không đưa lên được, cuối không đưa xuống được; "Hoàn về" trả thứ tự cũ', async () => {
-    await open();
-    expect(screen.getByRole('button', { name: 'Đưa cái lên' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Đưa Cũ xuống' })).toBeDisabled();
+  it('kéo thả: kéo "Cũ" thả lên "cái" → Cũ đứng đầu, Lưu gửi cả ba vị trí mới', async () => {
+    const f = await open();
+    await sortOn();
+    fireEvent.dragStart(rowOf('Cũ'));
+    fireEvent.dragOver(rowOf('cái'));
+    fireEvent.drop(rowOf('cái'));
+    expect(names()).toEqual(['Cũ', 'cái', 'hộp']);
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu thứ tự' }));
+    await waitFor(() =>
+      expect(mutations(f)).toEqual([
+        ['/api/admin/units/cu', 'PATCH', { sort_order: 10 }],
+        ['/api/admin/units/cai', 'PATCH', { sort_order: 20 }],
+        ['/api/admin/units/hop', 'PATCH', { sort_order: 30 }],
+      ]),
+    );
+  });
+
+  it('Hủy khi đã đổi → hỏi "Bỏ thay đổi chưa lưu?": "Tiếp tục sửa" giữ thứ tự mới; "Bỏ thay đổi" trả thứ tự cũ và thoát', async () => {
+    const f = await open();
+    await sortOn();
     await userEvent.click(screen.getByRole('button', { name: 'Đưa hộp lên' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Hoàn về' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Hủy' }));
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' })).getByRole('button', { name: 'Tiếp tục sửa' }));
+    expect(names()).toEqual(['hộp', 'cái', 'Cũ']);
+    await userEvent.click(screen.getByRole('button', { name: 'Hủy' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Bỏ thay đổi' }));
     expect(names()).toEqual(['cái', 'hộp', 'Cũ']);
+    expect(screen.queryByRole('button', { name: /^Đưa / })).toBeNull();
+    expect(mutations(f)).toHaveLength(0);
+  });
+
+  it('Hủy khi chưa đổi gì → thoát ngay, không hỏi', async () => {
+    await open();
+    await sortOn();
+    await userEvent.click(screen.getByRole('button', { name: 'Hủy' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Sắp xếp' })).toBeInTheDocument();
+  });
+
+  it('đang sắp xếp có thay đổi, bấm menu sang "Danh mục" → hỏi bỏ thay đổi; "Tiếp tục sửa" ở lại trang', async () => {
+    await open();
+    await sortOn();
+    await userEvent.click(screen.getByRole('button', { name: 'Đưa hộp lên' }));
+    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Danh mục' }));
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' })).getByRole('button', { name: 'Tiếp tục sửa' }));
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Đơn vị tính');
+    expect(names()).toEqual(['hộp', 'cái', 'Cũ']);
   });
 
   it('thêm ĐVT: Tên tối đa 40; POST {name, name_en} không kèm sort_order (server xếp cuối); trùng → lỗi ô "Đã có đơn vị tính tên này."', async () => {

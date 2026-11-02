@@ -139,12 +139,22 @@ describe('Danh mục — bảng nhóm', () => {
     expect(inRow('Bút bi xanh').getByRole('img', { name: 'Bút bi xanh' })).toHaveAttribute('src', '/api/files/f-2');
   });
 
-  it('"Thu tất cả" ẩn mọi hàng món, nút thành "Mở tất cả"', async () => {
+  it('"Thu tất cả" ẩn mọi hàng món và đầu bảng, nút thành "Mở tất cả"; mở lại một nhóm thì đầu bảng hiện lại', async () => {
     await openCatalog({ items: ITEMS });
     await userEvent.click(screen.getByRole('button', { name: 'Thu tất cả' }));
     expect(screen.queryByText('Bút bi xanh')).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: 'Mở tất cả' }));
+    expect(screen.queryByRole('columnheader', { name: 'Mã' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Mở tất cả' })).toBeInTheDocument();
+    await userEvent.click(within(groupHead('Bút & viết')).getByRole('button', { name: /Thu\/mở nhóm/ }));
+    expect(screen.getByRole('columnheader', { name: 'Mã' })).toBeInTheDocument();
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
+  });
+
+  it('nút thêm món vào nhóm gọn: chỉ biểu tượng, tên đầy đủ ở aria-label và title', async () => {
+    await openCatalog({ items: ITEMS });
+    const add = screen.getByRole('button', { name: 'Thêm món vào nhóm Bút & viết' });
+    expect(add).toHaveAttribute('title', 'Thêm món vào nhóm Bút & viết');
+    expect(add).not.toHaveTextContent('Thêm món vào nhóm');
   });
 
   it('"Thêm món" mở ngăn kéo ?item=new; "Thêm món vào nhóm" chọn sẵn nhóm; bấm hàng mở ngăn kéo sửa ?item=id', async () => {

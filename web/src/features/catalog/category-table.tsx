@@ -1,28 +1,32 @@
 import { useTranslation } from 'react-i18next';
 import { toneAtRank } from '@/lib/group-tone';
-import { Icon } from '@/ui/icon';
+import { ReorderCell, ReorderHead } from '@/ui/reorder';
 import { RowMenu } from '@/ui/row-menu';
+import { useRowDrag } from '@/ui/use-row-drag';
 import type { Category } from './catalog.api';
 
 interface Props {
   ordered: Category[];
   counts: Map<string, number>;
   busy: boolean;
+  sorting: boolean;
   onMove: (index: number, dir: -1 | 1) => void;
+  onMoveTo: (from: number, to: number) => void;
   onEdit: (c: Category) => void;
   onToggleActive: (c: Category) => void;
   // Hộp "Ngừng nhóm" báo số món sẽ ẩn: chưa tải được món thì không cho mở (tránh "0 món")
   countsReady: boolean;
 }
 
-export function CategoryTable({ ordered, counts, countsReady, busy, onMove, onEdit, onToggleActive }: Props) {
+export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onMove, onMoveTo, onEdit, onToggleActive }: Props) {
   const { t } = useTranslation();
+  const drag = useRowDrag(onMoveTo);
   return (
     <div className="table-wrap">
-      <table className="table table-stack cg-table">
+      <table className={`table table-stack cg-table${sorting ? ' is-sorting' : ''}`}>
         <thead>
           <tr>
-            <th>{t('catalog.categories.colOrder')}</th>
+            {sorting && <ReorderHead />}
             <th>{t('catalog.categories.colTone')}</th>
             <th>{t('catalog.categories.colName')}</th>
             <th>{t('catalog.categories.colNameEn')}</th>
@@ -36,19 +40,10 @@ export function CategoryTable({ ordered, counts, countsReady, busy, onMove, onEd
         <tbody>
           {ordered.map((c, i) => {
             const tone = toneAtRank(i);
+            const dragProps = sorting ? drag(i) : undefined;
             return (
-              <tr key={c.id} className={c.active ? undefined : 'is-inactive'}>
-                <td className="cg-order">
-                  <span className="ord-ctl">
-                    <button type="button" className="ord-ctl__btn" aria-label={t('catalog.categories.moveUp', { name: c.name })} disabled={busy || i === 0} onClick={() => onMove(i, -1)}>
-                      <Icon name="chevup" size={16} />
-                    </button>
-                    <button type="button" className="ord-ctl__btn" aria-label={t('catalog.categories.moveDown', { name: c.name })} disabled={busy || i === ordered.length - 1} onClick={() => onMove(i, 1)}>
-                      <Icon name="chev" size={16} />
-                    </button>
-                    <span className="num ord-ctl__n">{i + 1}</span>
-                  </span>
-                </td>
+              <tr key={c.id} {...dragProps} className={[c.active ? '' : 'is-inactive', dragProps?.className ?? ''].filter(Boolean).join(' ') || undefined}>
+                {sorting && <ReorderCell index={i} count={ordered.length} name={c.name} disabled={busy} onMove={onMove} />}
                 <td className="cg-tone-cell">
                   <span className="ct-dot cg-dot" style={{ background: `var(--${tone}-ink)` }} title={t(`catalog.tones.${tone}`)} />
                 </td>

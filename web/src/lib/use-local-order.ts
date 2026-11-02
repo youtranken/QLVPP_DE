@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { moveItem, orderPatches, type Ordered } from './local-order';
+import { moveItem, moveItemTo, orderPatches, type Ordered } from './local-order';
 
 interface Options<T> {
   server: T[];
@@ -25,6 +25,7 @@ export function useLocalOrder<T extends Ordered>({ server, keyOf, sort, patchOrd
   const moved = ordered.filter((x, i) => serverOrder[i] && keyOf(serverOrder[i]) !== keyOf(x)).length;
 
   const move = (index: number, dir: -1 | 1) => setLocal(moveItem(ordered, index, dir).map(keyOf));
+  const moveTo = (from: number, to: number) => setLocal(moveItemTo(ordered, from, to).map(keyOf));
   const revert = () => setLocal(null);
 
   const save = async () => {
@@ -47,5 +48,5 @@ export function useLocalOrder<T extends Ordered>({ server, keyOf, sort, patchOrd
     }
   };
 
-  return { ordered, moved, dirty: moved > 0, saving, move, revert, save };
+  return { ordered, moved, dirty: moved > 0, saving, move, moveTo, revert, save };
 }

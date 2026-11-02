@@ -39,7 +39,7 @@ function deleteTestCategories() {
 const menuButtons = (page: Page) => page.getByRole('table').getByRole('button', { name: /^Thao tác cho / });
 const nameOf = (page: Page, i: number | 'last') => (i === 'last' ? menuButtons(page).last() : menuButtons(page).nth(i));
 const toneOf = (page: Page, name: string) =>
-  page.getByRole('row').filter({ has: page.getByRole('button', { name: `Thao tác cho ${name}`, exact: true }) }).locator('[title]').first();
+  page.getByRole('row').filter({ has: page.getByRole('button', { name: `Thao tác cho ${name}`, exact: true }) }).locator('[title]:not([aria-hidden="true"])').first();
 const openMenu = async (page: Page, name: string) => {
   await page.getByRole('button', { name: `Thao tác cho ${name}`, exact: true }).click();
   return page.getByRole('menu', { name: `Thao tác cho ${name}` });
@@ -64,6 +64,8 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect(toneOf(page, second)).toHaveAttribute('title', TONES[(total - 1) % 7]);
       await expect(toneOf(page, first)).toHaveAttribute('title', TONES[(total - 2) % 7]);
 
+      await expect(page.getByRole('button', { name: `Đưa ${second} lên` })).toHaveCount(0);
+      await page.getByRole('button', { name: 'Sắp xếp' }).click();
       await page.getByRole('button', { name: `Đưa ${second} lên` }).click();
       await expect(page.getByText('Thứ tự đã đổi (2 nhóm)')).toBeVisible();
       await expect(toneOf(page, second)).toHaveAttribute('title', TONES[(total - 2) % 7]);
@@ -72,6 +74,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       expect((await saved).status()).toBe(200);
       await expect(page.getByRole('status').filter({ hasText: /^Đã lưu thứ tự \d+ nhóm$/ })).toBeVisible();
       await expect(page.getByText(/^Thứ tự đã đổi/)).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Sắp xếp' })).toBeVisible();
 
       await page.reload();
       await expect(nameOf(page, 'last')).toHaveAttribute('aria-label', `Thao tác cho ${first}`);

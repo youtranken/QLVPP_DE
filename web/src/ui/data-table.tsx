@@ -105,6 +105,9 @@ export function DataTable<T>({
   const rows = table.getRowModel().rows;
   const colSpan = table.getAllLeafColumns().length + (selection ? 1 : 0);
   const picked = selection ? rows.filter((r) => selection.selected.has(r.id)).length : 0;
+  const groups = groupBy ? groupRows(rows, groupBy.key) : null;
+  // Mọi nhóm đang thu thì không còn cột nào để đọc: ẩn đầu bảng cho gọn
+  const headHidden = groups !== null && groups.length > 0 && groups.every((g) => collapsed.has(g.key));
   const toggleGroup = (key: string) => {
     const next = new Set(collapsed);
     if (next.has(key)) next.delete(key);
@@ -144,7 +147,7 @@ export function DataTable<T>({
           data-density={density}
           aria-busy={busy}
         >
-          <thead>
+          <thead hidden={headHidden}>
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
                 {selection && (
@@ -201,8 +204,8 @@ export function DataTable<T>({
                   {loading ? <Loading /> : <EmptyState title={emptyText} {...empty} />}
                 </td>
               </tr>
-            ) : groupBy ? (
-              groupRows(rows, groupBy.key).map((g) => (
+            ) : groups && groupBy ? (
+              groups.map((g) => (
                 <Fragment key={g.key}>
                   <GroupHeaderRow
                     group={g}

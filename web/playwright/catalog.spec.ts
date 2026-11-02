@@ -44,14 +44,18 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await expect(catDialog).toBeHidden();
       const catTable = page.getByRole('table');
       await expect(catTable.getByRole('button', { name: `Thao tác cho ${category}` })).toBeVisible();
+      await expect(page.getByRole('button', { name: `Đưa ${category} xuống` })).toHaveCount(0);
+      await page.getByRole('button', { name: 'Sắp xếp' }).click();
       await expect(page.getByRole('button', { name: `Đưa ${category} xuống` })).toBeDisabled();
       await page.getByRole('button', { name: `Đưa ${category} lên` }).click();
       await expect(page.getByRole('button', { name: `Đưa ${category} xuống` })).toBeEnabled();
-      await page.getByRole('button', { name: 'Hoàn về' }).click();
+      await page.getByRole('button', { name: 'Hủy' }).click();
+      await page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
+      await expect(page.getByRole('button', { name: 'Sắp xếp' })).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'categories');
 
-      await page.getByRole('link', { name: 'Về Danh mục' }).click();
+      await page.goto('/admin/catalog');
       await page.getByRole('main').getByRole('button', { name: 'Thêm món', exact: true }).click();
       const form = page.getByRole('dialog', { name: 'Thêm món' });
       await form.getByRole('button', { name: 'Thêm món' }).click();

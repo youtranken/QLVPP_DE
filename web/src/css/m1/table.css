@@ -21,14 +21,25 @@
 [data-shell='admin'] .table .th-sort:focus-visible { border-radius: var(--r-xs); box-shadow: var(--focus); }
 [data-shell='admin'] .table .sel { width: 40px; }
 [data-shell='admin'] .table input[type='checkbox'] { width: 20px; height: 20px; margin: 0; accent-color: var(--c-acc); cursor: pointer; }
-[data-shell='admin'] .ord-ctl { display: inline-flex; align-items: center; gap: 2px; vertical-align: middle; }
-[data-shell='admin'] .ord-ctl__btn { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--r-sm); background: none; color: var(--c-ink-2); cursor: pointer; }
-[data-shell='admin'] .ord-ctl__btn:hover:not(:disabled) { background: var(--c-surface-hover); color: var(--c-ink); }
-[data-shell='admin'] .ord-ctl__btn:focus-visible { box-shadow: var(--focus); outline: none; }
-[data-shell='admin'] .ord-ctl__btn:disabled { color: var(--c-line-input); cursor: default; }
-[data-shell='admin'] .ord-ctl__n { min-width: 24px; color: var(--c-muted); font: var(--t-label); text-align: center; }
+[data-shell='admin'] .table .reorder-col { width: 1%; padding-block: 2px; white-space: nowrap; }
+[data-shell='admin'] .reorder-ctl { display: inline-flex; align-items: center; gap: var(--s-1); vertical-align: middle; }
+[data-shell='admin'] .reorder-ctl__grip { width: 16px; color: var(--c-muted); font: var(--t-label); letter-spacing: -0.3em; cursor: grab; user-select: none; }
+[data-shell='admin'] .reorder-ctl__arrows { display: flex; flex-direction: column; }
+[data-shell='admin'] .reorder-ctl__btn { display: grid; place-items: center; width: 32px; height: 24px; padding: 0; border: 0; border-radius: var(--r-sm); background: none; color: var(--c-ink-2); cursor: pointer; }
+[data-shell='admin'] .reorder-ctl__btn:hover:not(:disabled) { background: var(--c-surface-hover); color: var(--c-ink); }
+[data-shell='admin'] .reorder-ctl__btn:focus-visible { box-shadow: var(--focus); outline: none; }
+[data-shell='admin'] .reorder-ctl__btn:disabled { color: var(--c-line-input); cursor: default; }
+[data-shell='admin'] .table tr[draggable='true'] { cursor: grab; }
+[data-shell='admin'] .table tr.is-drop-target td { box-shadow: inset 0 2px 0 var(--c-acc); }
+[data-shell='admin'] .reorder-bar { display: flex; flex: 1 1 100%; flex-wrap: wrap; align-items: center; gap: var(--s-2); min-height: var(--ctl-h, var(--hit)); padding: 4px 4px 4px 16px; border-radius: var(--r-md); background: var(--c-acc-soft); color: var(--c-acc); }
+[data-shell='admin'] .reorder-bar__text { margin-right: auto; font: var(--t-label); }
+[data-shell='admin'] .reorder-bar .btn { height: var(--ctl-h, var(--hit)); }
 @media (max-width: 767px) {
-  [data-shell='admin'] .ord-ctl__btn { width: var(--hit); height: var(--hit); }
+  [data-shell='admin'] .reorder-ctl__grip { display: none; }
+  [data-shell='admin'] .reorder-ctl__btn { width: var(--hit); height: var(--hit); }
+  [data-shell='admin'] .reorder-bar { padding: 12px; }
+  [data-shell='admin'] .reorder-bar__text { flex: 1 1 100%; }
+  [data-shell='admin'] .reorder-bar .btn { flex: 1 1 0; }
   [data-shell='admin'] .table input[type='checkbox'] { appearance: none; display: grid; place-content: center; width: var(--hit); height: var(--hit); background: none; }
   [data-shell='admin'] .table input[type='checkbox']::before { content: ''; width: 20px; height: 20px; border: 2px solid var(--c-line-input); border-radius: var(--r-xs); background: var(--c-surface); box-sizing: border-box; }
   [data-shell='admin'] .table input[type='checkbox']:checked::before, [data-shell='admin'] .table input[type='checkbox']:indeterminate::before { border-color: var(--c-acc); background: var(--c-acc) center / 14px no-repeat; }
@@ -64,6 +75,10 @@
   [data-shell='admin'] .table-stack td[data-label]:not([data-label=''])::before { content: attr(data-label); display: inline; color: var(--c-muted); font: var(--t-cap); }
   [data-shell='admin'] .table-stack td:first-child::before,
   [data-shell='admin'] .table-stack td.sel + td::before { display: none !important; }
-  [data-shell='admin'] .table-stack .dt-group { display: block; }
+  [data-shell='admin'] .table-stack .dt-group { display: block; padding: 0; border-bottom: 0; }
   [data-shell='admin'] .table-stack .dt-group th { display: block; top: 0; height: auto; min-height: 52px; }
+}
+@media (max-width: 767px) {
+  [data-shell='admin'] .table-stack.is-sorting tbody tr:not(.dt-group) { position: relative; min-height: calc(var(--hit) * 2 + 24px); align-content: center; padding-left: calc(var(--hit) + 16px); }
+  [data-shell='admin'] .table-stack.is-sorting tbody td.reorder-col { position: absolute; top: 50%; left: 8px; width: auto; transform: translateY(-50%); }
 }
