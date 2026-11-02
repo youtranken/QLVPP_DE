@@ -1,7 +1,3 @@
-[data-shell='admin'] .sm-page { display: grid; gap: var(--s-4); min-width: 0; }
-[data-shell='admin'] .sm-page > * { min-width: 0; }
-[data-shell='admin'] .sm-page .page-head { flex-wrap: wrap; margin-bottom: 0; }
-[data-shell='admin'] .sm-spacer { flex: 1; }
 [data-shell='admin'] .sm-muted { color: var(--c-muted); font: var(--t-sm); }
 [data-shell='admin'] .sm-note { margin: 0; color: var(--c-muted); font: var(--t-sm); }
 [data-shell='admin'] .sm-copy { display: inline-flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
@@ -75,8 +71,6 @@
 [data-shell='admin'] .aj-create-lines { display: grid; gap: var(--s-2); min-width: 0; margin: 0; padding: 0; border: 0; }
 [data-shell='admin'] .user-picker-list button .tag { justify-self: start; }
 @media (max-width: 767px) {
-  [data-shell='admin'] .sm-spacer { display: none; }
   [data-shell='admin'] .sm-page .table-wrap { overflow-x: auto; }
-  [data-shell='admin'] .sm-copy, [data-shell='admin'] .sm-copy .btn { width: 100%; }
 }
 @media (max-width: 767px) { [data-shell='admin'] .aj-line__drop { width: var(--hit); height: var(--hit); } }

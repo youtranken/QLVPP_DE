@@ -4,6 +4,7 @@ import { FilterNotice } from '@/ui/filter-notice';
 import { LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
+import { Toolbar } from '@/ui/toolbar';
 import { useBacklog, type BacklogBy } from './backlog.api';
 import { BacklogStats } from './backlog-stats';
 import { BacklogTable, type LineAction } from './backlog-table';
@@ -47,19 +48,23 @@ export function BacklogPage() {
   ];
 
   return (
-    <div className="bl-page">
+    <div className="ct-page">
       <PageHeader
         crumbs={[t('nav.groups.monthly'), title]}
         title={title}
         description={t('delivery.backlog.description')}
       />
-      <div className="toolbar">
-        <Segmented label={t('delivery.backlog.by')} value={p.by} options={views} onChange={p.setBy} />
-      </div>
       {query.isError && <LoadError onRetry={() => void query.refetch()} />}
       {query.isSuccess && <BacklogStats stats={backlogStats(all)} filter={p.filter} onFilter={p.toggleFilter} />}
-      {p.filter && <FilterNotice label={t(`delivery.backlog.filters.${p.filter}`)} count={rows.length} onClear={p.clearFilter} />}
-      {!query.isError && <BacklogTable rows={rows} by={p.by} loading={query.isPending} filtered={p.filter !== null} onAction={open.start} />}
+      <Toolbar>
+        <Segmented label={t('delivery.backlog.by')} value={p.by} options={views} onChange={p.setBy} />
+      </Toolbar>
+      {!query.isError && (
+        <div className="ct-block">
+          {p.filter && <FilterNotice label={t(`delivery.backlog.filters.${p.filter}`)} count={rows.length} onClear={p.clearFilter} />}
+          <BacklogTable rows={rows} by={p.by} loading={query.isPending} filtered={p.filter !== null} onAction={open.start} />
+        </div>
+      )}
       {open.line && open.action === 'deliver' && <DeliverMoreDialog line={open.line} onDone={done} onStale={reload} onClose={open.close} />}
       {open.line && open.action === 'cancel' && <CancelDialog line={open.line} onDone={done} onStale={reload} onClose={open.close} />}
       {open.line && open.action === 'history' && <DeliveriesDrawer line={open.line} onClose={open.close} />}

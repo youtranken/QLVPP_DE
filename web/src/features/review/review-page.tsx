@@ -2,27 +2,15 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
-import { Select } from '@/ui/select';
 import { Segmented } from '@/ui/segmented';
 import { useToast } from '@/ui/toast-context';
 import { useAdminItems } from '@/features/catalog/catalog.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { REVIEW_FILTERS, useReviewCache, useReviewCounts, useReviewLines, type ReviewBody, type ReviewFilter, type ReviewResult, type ReviewRow } from './review.api';
 import { ReviewCard } from './review-card';
+import { ReviewPeriod } from './review-period';
 import { useReviewParams } from './use-review-params';
 import './review.m1.css';
-
-const MONTHS_BACK = 12;
-
-// Cùng mẫu với api/src/common/ym.ts
-function recentMonths(openYm: string | undefined): string[] {
-  if (!openYm) return [];
-  const [y, m] = openYm.split('-').map(Number);
-  return Array.from({ length: MONTHS_BACK }, (_, i) => {
-    const at = y * 12 + (m - 1) - i;
-    return `${Math.floor(at / 12)}-${String((at % 12) + 1).padStart(2, '0')}`;
-  });
-}
 
 // Dòng đã thêm vào danh mục không còn custom_name: lấy tên món đích
 function useItemNames() {
@@ -34,7 +22,6 @@ export function ReviewPage() {
   const { t } = useTranslation();
   const p = useReviewParams();
   const current = useCurrentPeriod();
-  const months = recentMonths(current.data?.ym);
   const list = useReviewLines(p.status, p.ym);
   const counts = useReviewCounts(p.ym);
   const cache = useReviewCache();
@@ -76,24 +63,21 @@ export function ReviewPage() {
   const tabs = REVIEW_FILTERS.map((f) => ({ value: f, label: t(`review.filters.${f}`), count: countOf(f) }));
 
   return (
-    <div className="rv-page">
+    <div className="ct-page">
       <PageHeader
         crumbs={[t('nav.groups.monthly'), t('nav.review')]}
         title={t('nav.review')}
         description={t('review.page.description')}
       />
       <div className="toolbar">
-        <Select
-          label={t('review.period')}
-          value={p.ym}
-          options={[{ value: '', label: t('review.allPeriods') }, ...months.map((m) => ({ value: m, label: t('review.month', { month: Number(m.slice(5)), year: m.slice(0, 4) }) }))]}
-          onChange={(v) => change(() => p.setMonth(v))}
-        />
+        <ReviewPeriod ym={p.ym} openYm={current.data?.ym} onChange={(v) => change(() => p.setMonth(v))} />
       </div>
-      <div className="rv-tabs">
-        <Segmented label={t('review.filters.label')} value={p.status} options={tabs} onChange={(s) => change(() => p.setStatus(s))} />
+      <div className="ct-block">
+        <div className="toolbar rv-tabs">
+          <Segmented label={t('review.filters.label')} value={p.status} options={tabs} onChange={(s) => change(() => p.setStatus(s))} />
+        </div>
+        <p className="rv-note">{t('review.page.note')}</p>
       </div>
-      <p className="rv-note">{t('review.page.note')}</p>
       {staleNotice && (
         <p role="status" className="alert alert--warn">
           {t('review.staleNotice')}

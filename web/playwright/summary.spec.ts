@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { asRole, expectNoContrastViolations, isMobile, psql, searchSummaryPeople, shot } from './helpers';
+import { asRole, copyUnregisteredList, expectNoContrastViolations, isMobile, psql, searchSummaryPeople, shot } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
 
 asRole('admin');
@@ -69,7 +69,7 @@ test.describe('E9-S2 tổng hợp', () => {
       await expect(page.getByRole('row').filter({ hasText: names.member })).toBeVisible();
       await expect(page.getByRole('row').filter({ hasText: names.admin })).toHaveCount(0);
 
-      await page.getByRole('button', { name: /Sao chép danh sách chưa đăng ký/ }).click();
+      await copyUnregisteredList(page, info);
       await expect(page.getByRole('status').filter({ hasText: /^Đã sao chép \d+ người$/ })).toBeVisible();
       const text = await page.evaluate(() => navigator.clipboard.readText());
       expect(text.split('\n')[0]).toMatch(/^Chưa đăng ký VPP tháng \d{1,2} \(hạn 23:59 ngày \d{1,2}\):$/);

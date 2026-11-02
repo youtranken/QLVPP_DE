@@ -28,6 +28,7 @@
 [data-shell='admin'] .side__period:hover { box-shadow: inset 0 0 0 1px var(--g1-strong); }
 [data-shell='admin'] .side__period:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell='admin'] .side__period b { display: block; font: var(--t-label); }
+[data-shell='admin'] .side__period small { display: block; font: var(--t-cap); }
 [data-shell='admin'] .side__period-text > span { display: block; font-size: 12px; letter-spacing: -0.01em; }
 [data-shell='admin'] .side__period-dot { display: none; width: 10px; height: 10px; border-radius: var(--r-pill); background: var(--c-ok); }
 [data-shell='admin'] .side__period[data-last] .side__period-dot { background: var(--c-warn); }

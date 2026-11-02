@@ -40,14 +40,14 @@ describe('BacklogPage — thao tác trên dòng', () => {
     expect(JSON.parse(String(callsTo(f, '/api/admin/lines/l-pen/deliver')[0][1]?.body))).toEqual({ qty: 3, expected_delivered_qty: 2 });
   });
 
-  it('giao bổ sung 2 (còn lại 3): bấm "−" một lần từ 3 → gửi 2, dòng ở lại "còn 1", "đã giao" tăng lên 4', async () => {
+  it('giao bổ sung 2 (còn lại 3): bấm "−" một lần từ 3 → gửi 2, dòng ở lại "Còn 1", "đã giao" tăng lên 4', async () => {
     stubBacklog([PEN_DUC]);
     openPage();
     await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Giao bổ sung' }));
     await userEvent.click(screen.getByRole('button', { name: /^Bớt/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Giao' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    await waitFor(async () => expect(await rowOf('Phạm Văn Đức')).toHaveTextContent('còn 1 cây'));
+    await waitFor(async () => expect(await rowOf('Phạm Văn Đức')).toHaveTextContent('Còn 1 cây'));
   });
 
   it('giao bổ sung bị DELIVER_EXCEEDS_QTY {remaining: 1} → hộp ở lại, lỗi dưới ô số lượng, danh sách tải lại; sửa còn 1 rồi giao được', async () => {

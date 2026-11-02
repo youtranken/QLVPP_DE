@@ -35,6 +35,9 @@ const nav = {
     },
     periodCard: {
       title: 'Kỳ tháng {{month}} đang mở',
+      label: 'Kỳ đăng ký hiện tại',
+      state: 'Tháng {{month}} · đang mở',
+      name: 'Kỳ đăng ký hiện tại: tháng {{month}} · đang mở · {{detail}}',
       daysLeft: 'còn {{n}} ngày · khóa 00:00 ngày {{date}}',
       lastDay: 'Hôm nay là ngày cuối · khóa 00:00 ngày {{date}}',
     },

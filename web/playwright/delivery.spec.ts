@@ -32,6 +32,12 @@ test.describe('E9-S3 Giao hàng (kỳ trước đã khóa, dev-identity admin)',
       await expect(lines.getByLabel(`Thực giao ${b.name}`)).toHaveValue('2');
       await expect(row(b.name).getByRole('button', { name: `Thêm ${b.name}` })).toBeDisabled();
       if (isMobile(info)) await expectNoContrastViolations(page);
+      else {
+        await expect(page.getByRole('region', { name: /^Trạng thái giao tháng/ })).not.toContainText('khóa');
+        // Cột Món ≥ 184 px: tên ngắn cỡ "Bút bi xanh" không gãy dòng; nút Giao vẫn trọn trong khung
+        expect((await lines.getByRole('columnheader', { name: 'Món' }).boundingBox())!.width).toBeGreaterThanOrEqual(184);
+        await expect(row(a.name).getByRole('button', { name: `Giao ${a.name}` })).toBeInViewport({ ratio: 1 });
+      }
 
       expect((await changeStock(request, a.id, -1)).ok()).toBe(true);
       await row(a.name).getByRole('button', { name: `Giao ${a.name}` }).click();

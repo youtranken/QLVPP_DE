@@ -43,21 +43,21 @@ afterEach(() => {
 });
 
 describe('DeliveryPage — đầu trang, tháng, dải trạng thái', () => {
-  it('đúng một h1 "Giao hàng", mô tả; mặc định kỳ khóa gần nhất (10/2026) badge "Đã khóa", › vô hiệu; chỉ gọi lọc chưa giao đủ', async () => {
+  it('đúng một h1 "Giao hàng", mô tả; mặc định kỳ khóa gần nhất (10/2026) badge "Đã khóa 11/10", › vô hiệu; chỉ gọi lọc chưa giao đủ', async () => {
     const f = stubDelivery({ rows: ROWS, others: { 'r-2': LAN_VIEW } });
     open();
     expect(await screen.findByText('Tháng 10/2026')).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Giao hàng');
     expect(screen.getByText('Giao theo phiếu sau khi khóa kỳ — tồn kho trừ ngay khi bấm Giao.')).toBeInTheDocument();
-    expect(screen.getByText('Đã khóa')).toBeInTheDocument();
+    expect(await screen.findByText('Đã khóa 11/10')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
     await screen.findByText('Phiếu tháng 10 · Chưa giao đủ (2)');
     expect(urlsOf(f).some((u) => u.startsWith('/api/admin/periods/2026-10/requests?by=person&filter=pending_delivery'))).toBe(true);
     expect(urlsOf(f).some((u) => u.includes('filter=all'))).toBe(false);
   });
 
-  it('dải: "Tháng 10/2026 đã khóa · Khóa 00:00 ngày 11/10", "16/18 phiếu đã giao đủ", "2 món thiếu kho: …" + liên kết Kho', async () => {
+  it('dải không lặp trạng thái kỳ (chỉ bộ chọn kỳ nói "Đã khóa"): "16/18 phiếu đã giao đủ", "2 món thiếu kho: …" + liên kết Kho', async () => {
     stubDelivery({
       rows: ROWS,
       others: { 'r-2': LAN_VIEW },
@@ -71,8 +71,9 @@ describe('DeliveryPage — đầu trang, tháng, dải trạng thái', () => {
     });
     open();
     const strip = await screen.findByRole('region', { name: 'Trạng thái giao tháng 10' });
-    expect(await within(strip).findByText('Tháng 10/2026 đã khóa · Khóa 00:00 ngày 11/10')).toBeInTheDocument();
     expect(await within(strip).findByText('16/18 phiếu đã giao đủ')).toBeInTheDocument();
+    expect(strip).not.toHaveTextContent(/khóa/i);
+    expect(screen.getAllByText(/đã khóa/i)).toHaveLength(1);
     expect(await within(strip).findByText('2 món thiếu kho: Giấy A4, Bìa lá')).toBeInTheDocument();
     expect(within(strip).getByRole('link', { name: 'Nhập mua ở Kho' })).toHaveAttribute('href', '/admin/stock');
   });

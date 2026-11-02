@@ -43,12 +43,12 @@ describe('SummaryPage — đầu trang, tháng, URL', () => {
     expect(calledUrls(f).some((u) => u.includes(`/periods/${bad}/`))).toBe(false);
   });
 
-  it('kỳ đã khóa: badge "Đã khóa", "tính tại lúc khóa"; › sang kỳ đang mở rồi bị khóa', async () => {
+  it('kỳ đã khóa: badge "Đã khóa", nhãn "Phiếu đã đăng ký · lúc khóa"; › sang kỳ đang mở rồi bị khóa', async () => {
     stubSummaryApi();
     open('/admin/summary?ym=2026-10');
     const kpi = await screen.findByRole('button', { name: /Phiếu đã đăng ký/ });
     expect(kpi).toHaveTextContent('30/38');
-    expect(kpi).toHaveTextContent('tính tại lúc khóa');
+    expect(kpi).toHaveTextContent('Phiếu đã đăng ký · lúc khóa');
     expect(screen.getByText('Đã khóa')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
     expect(await screen.findByText('Tháng 11/2026')).toBeInTheDocument();
@@ -75,18 +75,18 @@ describe('SummaryPage — thẻ lọc', () => {
     expect(screen.queryByText(/Đang lọc:/)).toBeNull();
   });
 
-  it('kỳ mở: "Dòng chờ giao" không có role button, số "—", dòng phụ "giao sau khi khóa 00:00 ngày 11/11"', async () => {
+  it('kỳ mở: "Dòng chờ giao" không có role button, số "—", dòng phụ "giao từ 11/11"', async () => {
     stubSummaryApi();
     open();
-    expect(await screen.findByText('giao sau khi khóa 00:00 ngày 11/11')).toBeInTheDocument();
+    expect(await screen.findByText('giao từ 11/11')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Dòng chờ giao/ })).toBeNull();
-    expect(screen.getByText('giao sau khi khóa 00:00 ngày 11/11').closest('.stat-card')).toHaveTextContent('—');
+    expect(screen.getByText('giao từ 11/11').closest('.stat-card')).toHaveTextContent('—');
   });
 
   it('kỳ mở mở thẳng ?filter=pending_delivery → bỏ filter khỏi URL, không gọi API với filter đó', async () => {
     const f = stubSummaryApi();
     open('/admin/summary?filter=pending_delivery');
-    await screen.findByText('giao sau khi khóa 00:00 ngày 11/11');
+    await screen.findByText('giao từ 11/11');
     await waitFor(() => expect(search()).not.toContain('filter='));
     expect(calledUrls(f).some((u) => u.includes('filter=pending_delivery'))).toBe(false);
     expect(screen.queryByText(/Đang lọc:/)).toBeNull();
@@ -113,10 +113,10 @@ describe('SummaryPage — thẻ lọc', () => {
     expect(await screen.findByText('Phạm Văn Đức')).toBeInTheDocument();
   });
 
-  it('"Món sắp hết" → view=item&filter=low: chỉ món sắp hết/hết hàng', async () => {
+  it('"Hết hàng / sắp hết" → view=item&filter=low: chỉ món sắp hết/hết hàng', async () => {
     stubSummaryApi();
     open();
-    await userEvent.click(await screen.findByRole('button', { name: /Món sắp hết/ }));
+    await userEvent.click(await screen.findByRole('button', { name: /Hết hàng \/ sắp hết/ }));
     expect(search()).toContain('view=item');
     expect(search()).toContain('filter=low');
     expect(await screen.findByText('Bút bi xanh')).toBeInTheDocument();
@@ -242,10 +242,10 @@ describe('SummaryPage — thanh công cụ, bảng, ngăn kéo', () => {
 });
 
 describe('SummaryPage — số món hết hàng', () => {
-  it('chỉ đếm món dùng được: món hết hàng thuộc nhóm đang ngừng (usable=false) không tính → "1 hết hàng"', async () => {
+  it('chỉ đếm món dùng được: món hết hàng thuộc nhóm đang ngừng (usable=false) không tính → "1 hết"', async () => {
     const paused = adminItem({ id: 'i-paused', name: 'Bút dạ quang', stock_qty: 0, stock_state: 'out', usable: false });
     stubSummaryApi((url) => (url === '/api/admin/items' ? jsonResponse(200, [...SUMMARY_ITEMS, paused]) : undefined));
     open();
-    expect(await screen.findByRole('button', { name: /Món sắp hết/ })).toHaveTextContent('1 hết hàng');
+    expect(await screen.findByRole('button', { name: /Hết hàng \/ sắp hết/ })).toHaveTextContent('1 hết · 4 sắp hết');
   });
 });

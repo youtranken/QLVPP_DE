@@ -24,7 +24,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     expect(titles).toEqual(NAV_ORDER);
     await expect(side.getByRole('link', { name: 'Danh mục', exact: true })).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('link', { name: /Phiếu của tôi/ })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: /^Kỳ tháng \d+ đang mở/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng \d+ · đang mở/ })).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
 
     if (!isMobile(info)) await page.getByRole('button', { name: 'Ngôn ngữ' }).click();
@@ -32,7 +32,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     const sideEn = page.getByRole('navigation', { name: 'Admin menu' });
     await expect(sideEn.getByRole('group', { name: 'Monthly' })).toBeVisible();
     await expect(sideEn.getByRole('link', { name: 'Categories' })).toBeVisible();
-    await expect(page.getByRole('link', { name: /^Period \d+ is open/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /^Current sign-up period: month \d+ · open/ })).toBeVisible();
     await page.getByRole('radio', { name: 'Tiếng Việt' }).click();
     await expect(page.getByRole('navigation', { name: 'Menu quản lý' }).getByRole('group', { name: 'Hằng tháng' })).toBeVisible();
   });

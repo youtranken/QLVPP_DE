@@ -86,4 +86,20 @@ describe('RowMenu', () => {
     expect(screen.queryByRole('menu')).toBeNull();
     expect(screen.getByRole('button', { name: 'ngoài' })).toHaveFocus();
   });
+
+  it.each([
+    ['nút sát mép trái (390, ⋯ đứng trước nút chính)', 16, 60, { left: '16px', right: '' }],
+    ['nút ở mép phải (menu dòng bảng)', 300, 344, { left: '', right: '46px' }],
+  ])('%s → menu không tràn ra ngoài màn hình', async (_case, left, right, expected) => {
+    vi.stubGlobal('innerWidth', 390);
+    const width = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(220);
+    const { trigger } = setup();
+    trigger.getBoundingClientRect = () => ({ left, right, top: 100, bottom: 140, width: right - left, height: 40, x: left, y: 100, toJSON: () => ({}) });
+    await userEvent.click(trigger);
+    const menu = screen.getByRole('menu');
+    expect(menu.style.left).toBe(expected.left);
+    expect(menu.style.right).toBe(expected.right);
+    width.mockRestore();
+    vi.unstubAllGlobals();
+  });
 });

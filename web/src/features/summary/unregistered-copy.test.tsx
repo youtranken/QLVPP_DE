@@ -38,7 +38,7 @@ describe('UnregisteredCopy — sao chép danh sách chưa đăng ký', () => {
     const writeText = vi.fn(() => Promise.resolve());
     setClipboard({ writeText });
     renderCopy();
-    await userEvent.click(screen.getByRole('button', { name: 'Sao chép danh sách chưa đăng ký (2)' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Chép DS chưa đăng ký (2)' }));
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Đã sao chép 2 người'));
     expect(writeText).toHaveBeenCalledWith(TEXT);
   });
@@ -46,7 +46,7 @@ describe('UnregisteredCopy — sao chép danh sách chưa đăng ký', () => {
   it('không có clipboard API → hộp thoại B1c, văn bản chọn sẵn, gợi ý Ctrl+C', async () => {
     stubList();
     renderCopy();
-    await userEvent.click(screen.getByRole('button', { name: /Sao chép danh sách chưa đăng ký/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Chép DS chưa đăng ký/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Danh sách chưa đăng ký' });
     const box = screen.getByRole('textbox', { name: 'Danh sách chưa đăng ký' }) as HTMLTextAreaElement;
     expect(dialog).toContainElement(box);
@@ -60,7 +60,7 @@ describe('UnregisteredCopy — sao chép danh sách chưa đăng ký', () => {
     stubList();
     setClipboard({ writeText: vi.fn(() => Promise.reject(new Error('NotAllowedError'))) });
     renderCopy();
-    await userEvent.click(screen.getByRole('button', { name: /Sao chép danh sách chưa đăng ký/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Chép DS chưa đăng ký/ }));
     expect(await screen.findByRole('dialog', { name: 'Danh sách chưa đăng ký' })).toBeInTheDocument();
     expect(screen.queryByText(/Đã sao chép/)).toBeNull();
   });
@@ -69,19 +69,19 @@ describe('UnregisteredCopy — sao chép danh sách chưa đăng ký', () => {
     stubList(500);
     setClipboard({ writeText: vi.fn(() => Promise.resolve()) });
     renderCopy();
-    await userEvent.click(screen.getByRole('button', { name: /Sao chép danh sách chưa đăng ký/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Chép DS chưa đăng ký/ }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Chưa tải được danh sách. Thử lại sau.');
   });
 
   it('n=0 → nút vô hiệu, chú thích "Mọi người đã đăng ký"; n=1 → bật', () => {
     stubList();
     const { unmount } = renderCopy(0);
-    const btn = screen.getByRole('button', { name: 'Sao chép danh sách chưa đăng ký (0)' });
+    const btn = screen.getByRole('button', { name: 'Chép DS chưa đăng ký (0)' });
     expect(btn).toBeDisabled();
     expect(btn).toHaveAccessibleDescription('Mọi người đã đăng ký');
     unmount();
     renderCopy(1);
-    expect(screen.getByRole('button', { name: 'Sao chép danh sách chưa đăng ký (1)' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Chép DS chưa đăng ký (1)' })).toBeEnabled();
     expect(screen.queryByText('Mọi người đã đăng ký')).toBeNull();
   });
 

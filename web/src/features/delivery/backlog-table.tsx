@@ -56,7 +56,7 @@ function Actions({ row, by, phone, onAction }: { row: BacklogRow; by: BacklogBy;
   const label = t('delivery.backlog.historyOf', who);
   const out = row.stock_qty === 0;
   const deliver = (
-    <button type="button" className="btn btn--sm" disabled={out} onClick={() => onAction('deliver', row)}>
+    <button type="button" className="btn btn--sm bl-deliver" disabled={out} title={out ? t('delivery.backlog.deliverOut') : undefined} onClick={() => onAction('deliver', row)}>
       {t('delivery.backlog.deliverMore')}
     </button>
   );
@@ -106,7 +106,8 @@ function useColumns(by: BacklogBy, onAction: Props['onAction']) {
       { id: 'period', header: t('delivery.backlog.cols.period'), cell: ({ row }) => f.month(row.original.period_ym) },
       {
         id: 'owed',
-        header: t('delivery.backlog.cols.owed'),
+        // Tiêu đề dạng hàm để thẻ 390 không gắn nhãn "Còn nợ" trước "Còn 3 cây"
+        header: () => t('delivery.backlog.cols.owed'),
         meta: { className: 'num r' },
         cell: ({ row: { original: r } }) => (
           <span className="bl-owed">

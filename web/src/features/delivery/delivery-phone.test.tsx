@@ -72,7 +72,7 @@ describe('Giao hàng 390 px — màn danh sách', () => {
     expect(screen.queryByRole('checkbox', { name: 'Hiện cả phiếu đã giao đủ' })).toBeNull();
   });
 
-  it('dải: "16/18 phiếu đã giao đủ · đã khóa 11/10", "2 món thiếu kho — phần thiếu chuyển sang Còn nợ"', async () => {
+  it('dải: "16/18 phiếu đã giao đủ" (trạng thái kỳ chỉ ở bộ chọn kỳ), "2 món thiếu kho — phần thiếu vào Còn nợ"', async () => {
     stubDelivery({
       rows: ROWS,
       others: { 'r-2': LAN_VIEW },
@@ -85,8 +85,9 @@ describe('Giao hàng 390 px — màn danh sách', () => {
     });
     open();
     const strip = await screen.findByRole('region', { name: 'Trạng thái giao tháng 10' });
-    expect(await within(strip).findByText('16/18 phiếu đã giao đủ · đã khóa 11/10')).toBeInTheDocument();
-    expect(await within(strip).findByText('2 món thiếu kho — phần thiếu chuyển sang Còn nợ')).toBeInTheDocument();
+    expect(await within(strip).findByText('16/18 phiếu đã giao đủ')).toBeInTheDocument();
+    expect(strip).not.toHaveTextContent(/khóa/i);
+    expect(await within(strip).findByText('2 món thiếu kho — phần thiếu vào Còn nợ')).toBeInTheDocument();
   });
 
   it('chạm hàng "Mở phiếu của …" → ?request=r-1, màn chi tiết toàn màn (danh sách và dải ẩn)', async () => {

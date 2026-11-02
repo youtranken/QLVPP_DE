@@ -1,6 +1,3 @@
-[data-shell='admin'] .rv-page { display: grid; gap: var(--s-4); min-width: 0; }
-[data-shell='admin'] .rv-page > * { min-width: 0; }
-[data-shell='admin'] .rv-page .page-head { flex-wrap: wrap; margin-bottom: 0; }
 [data-shell='admin'] .rv-tabs { overflow-x: auto; max-width: 100%; }
 [data-shell='admin'] .rv-tabs .seg-m1 { min-width: max-content; }
 [data-shell='admin'] .rv-note { margin: 0; color: var(--c-muted); font: var(--t-sm); }

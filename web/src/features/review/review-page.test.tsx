@@ -51,7 +51,7 @@ describe('ReviewPage — /admin/review', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Món ngoài danh mục');
     expect(screen.getByText('Món nhân viên tự thêm vào phiếu — xem từng món trước khi mua.')).toBeInTheDocument();
     expect(
-      screen.getByText('Chấp nhận = mua riêng lần này. Thêm vào danh mục = mọi người đặt được từ kỳ sau.'),
+      screen.getByText('Chấp nhận: mua riêng lần này · Thêm vào danh mục: ai cũng đặt được từ kỳ sau'),
     ).toBeInTheDocument();
   });
 
@@ -69,7 +69,8 @@ describe('ReviewPage — /admin/review', () => {
       '/api/admin/review?status=pending',
       '/api/admin/review?status=rejected',
     ]);
-    expect(screen.getByLabelText('Kỳ')).toHaveValue('');
+    expect(screen.getByRole('radio', { name: 'Mọi kỳ' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.queryByRole('group', { name: 'Chọn tháng' })).toBeNull();
   });
 
   it('thẻ có ảnh: alt "Ảnh {tên} do nhân viên gửi", "{qty} {ĐVT} · Phiếu tháng M/Y", ghi chú, người · phòng ban · thêm lúc', async () => {
@@ -110,9 +111,15 @@ describe('ReviewPage — /admin/review', () => {
     await userEvent.click(screen.getByRole('radio', { name: /^Từ chối/ }));
     expect(await screen.findByText('Chưa từ chối món nào')).toBeInTheDocument();
     expect(screen.getByTestId('location-search')).toHaveTextContent('?status=rejected');
-    await userEvent.selectOptions(screen.getByLabelText('Kỳ'), '2026-10');
+    await userEvent.click(screen.getByRole('radio', { name: 'Theo tháng' }));
+    await waitFor(() => expect(listUrls(fetchMock)).toContain('/api/admin/review?status=rejected&ym=2026-11'));
+    expect(within(screen.getByRole('group', { name: 'Chọn tháng' })).getByText('Tháng 11/2026')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Tháng trước' }));
     await waitFor(() => expect(listUrls(fetchMock)).toContain('/api/admin/review?status=rejected&ym=2026-10'));
-    expect(screen.getByRole('option', { name: 'Tháng 11/2026' })).toBeInTheDocument();
+    expect(screen.getByTestId('location-search')).toHaveTextContent('ym=2026-10');
+    await userEvent.click(screen.getByRole('radio', { name: 'Mọi kỳ' }));
+    expect(screen.getByTestId('location-search')).not.toHaveTextContent('ym=');
+    expect(screen.queryByRole('group', { name: 'Chọn tháng' })).toBeNull();
   });
 
   it('tab rỗng có câu riêng theo trạng thái; chuyển về Chờ xem lại thấy thẻ', async () => {
@@ -131,5 +138,20 @@ describe('ReviewPage — /admin/review', () => {
     await screen.findByRole('article', { name: 'Băng keo 2 mặt' });
     expect(listUrls(fetchMock).every((u) => !u.includes('ym='))).toBe(true);
     expect(listUrls(fetchMock)).toContain('/api/admin/review?status=pending');
+  });
+
+  it.each([
+    ['2026-11', 'Tháng 11/2026', false, true],
+    ['2026-01', 'Tháng 1/2026', false, false],
+    ['2025-12', 'Tháng 12/2025', true, false],
+  ])('?ym=%s → "Theo tháng" bật, hiện "%s"; ‹ tắt=%s (giới hạn 12 tháng gần nhất), › tắt=%s (trần kỳ đang mở)', async (ym, label, prevOff, nextOff) => {
+    mockViewport(1280);
+    stub();
+    renderApp(makeMe('admin'), `/admin/review?ym=${ym}`);
+    const group = await screen.findByRole('group', { name: 'Chọn tháng' });
+    expect(screen.getByRole('radio', { name: 'Theo tháng' })).toHaveAttribute('aria-checked', 'true');
+    expect(within(group).getByText(label)).toBeInTheDocument();
+    expect(within(group).getByRole('button', { name: 'Tháng trước' }).hasAttribute('disabled')).toBe(prevOff);
+    expect(within(group).getByRole('button', { name: 'Tháng sau' }).hasAttribute('disabled')).toBe(nextOff);
   });
 });

@@ -69,7 +69,7 @@ describe('Menu sheet 390 px', () => {
     expect(within(sheet).getByText('VPP Công trình · Hành chính')).toBeInTheDocument();
     const nav = within(sheet).getByRole('navigation', { name: 'Menu quản lý' });
     expect(within(nav).getAllByRole('link').map((a) => a.getAttribute('title'))).toEqual(NAV_ORDER);
-    expect(await within(sheet).findByRole('link', { name: /^Kỳ tháng 11 đang mở/ })).toBeInTheDocument();
+    expect(await within(sheet).findByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng 11 · đang mở/ })).toBeInTheDocument();
     expect(within(sheet).getByRole('radio', { name: 'English' })).toBeInTheDocument();
     expect(within(sheet).getByRole('button', { name: 'Đăng xuất' })).toBeInTheDocument();
     await userEvent.click(within(sheet).getByRole('button', { name: 'Đóng menu' }));
@@ -90,7 +90,7 @@ describe('Menu sheet 390 px', () => {
   it('bấm thẻ kỳ trong menu → /admin/summary và đóng menu', async () => {
     open('/admin/catalog');
     await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
-    await userEvent.click(await screen.findByRole('link', { name: /^Kỳ tháng 11 đang mở/ }));
+    await userEvent.click(await screen.findByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng 11 · đang mở/ }));
     expect(screen.getByTestId('location')).toHaveTextContent('/admin/summary');
     expect(screen.queryByRole('dialog', { name: 'Menu quản lý' })).toBeNull();
   });

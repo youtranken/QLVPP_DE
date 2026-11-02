@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { vnLockDate } from '@/lib/format-time';
 import { shiftYm } from '@/lib/ym';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
@@ -75,6 +76,7 @@ export function DeliveryPage() {
   const current = useCurrentPeriod();
   const lockedYm = current.data ? shiftYm(current.data.ym, -1) : undefined;
   const p = useDeliveryParams(lockedYm);
+  const deadline = usePeriodSummary(p.ym).data?.deadline;
   const title = t('delivery.page.title');
   const header = () => <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('delivery.page.description')} />;
 
@@ -82,14 +84,14 @@ export function DeliveryPage() {
   if (!p.ym || !lockedYm) return <>{header()}<Loading /></>;
   const ym = p.ym;
   return (
-    <div className="dv-page">
+    <div className="ct-page">
       {header()}
       <div className="toolbar">
         <MonthSwitcher
           value={ym}
           max={lockedYm}
           onChange={p.setMonth}
-          status={{ tone: 'dark', label: t('delivery.page.locked') }}
+          status={{ tone: 'dark', label: deadline ? t('delivery.page.lockedOn', { date: vnLockDate(deadline) }) : t('delivery.page.locked') }}
           formatLabel={(v) => t('delivery.month', { month: monthOf(v), year: v.slice(0, 4) })}
           labels={{ group: t('delivery.page.monthNav'), prev: t('delivery.page.prevMonth'), next: t('delivery.page.nextMonth') }}
         />

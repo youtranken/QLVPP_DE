@@ -102,11 +102,11 @@ export function DeliveryDetail({ requestId, onCompleted }: { requestId: string; 
                   onChange={d.actions.toggleAll}
                 />
               </th>
-              <th>{t('delivery.detail.colItem')}</th>
+              <th className="dv-col-item">{t('delivery.detail.colItem')}</th>
               <th className="r">{t('delivery.detail.colQty')}</th>
               <th className="r">{t('delivery.detail.colDelivered')}</th>
               <th className="r">{t('delivery.detail.colStock')}</th>
-              <th className="r">{t('delivery.detail.colGive')}</th>
+              <th className="r dv-col-give">{t('delivery.detail.colGive')}</th>
               <th>
                 <span className="sr-only">{t('delivery.detail.colAction')}</span>
               </th>

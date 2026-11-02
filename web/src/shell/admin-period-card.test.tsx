@@ -21,9 +21,11 @@ const renderCard = (p: CurrentPeriod) =>
   );
 
 describe('AdminPeriodCard', () => {
-  it('days_left=2 → "còn 2 ngày · khóa 00:00 ngày 11/11", bấm về Tổng hợp kỳ', () => {
+  it('ghi rõ "Kỳ đăng ký hiện tại" để không nhầm với tháng đang xem; days_left=2 → "còn 2 ngày · khóa 00:00 ngày 11/11", bấm về Tổng hợp kỳ', () => {
     renderCard(period(2));
-    const card = screen.getByRole('link', { name: /Kỳ tháng 11 đang mở/ });
+    const card = screen.getByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng 11 · đang mở/ });
+    expect(card).toHaveTextContent('Kỳ đăng ký hiện tại');
+    expect(card).toHaveTextContent('Tháng 11 · đang mở');
     expect(card).toHaveAttribute('href', '/admin/summary');
     expect(card).toHaveTextContent('còn 2 ngày · khóa 00:00 ngày 11/11');
     expect(card).not.toHaveTextContent('Hôm nay là ngày cuối');
@@ -31,7 +33,7 @@ describe('AdminPeriodCard', () => {
 
   it('days_left=1 → "Hôm nay là ngày cuối · khóa 00:00 ngày 11/11"', () => {
     renderCard(period(1));
-    const card = screen.getByRole('link', { name: /Kỳ tháng 11 đang mở/ });
+    const card = screen.getByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng 11 · đang mở/ });
     expect(card).toHaveTextContent('Hôm nay là ngày cuối · khóa 00:00 ngày 11/11');
     expect(card).not.toHaveTextContent('còn 1 ngày');
   });
@@ -40,7 +42,7 @@ describe('AdminPeriodCard', () => {
     await i18n.changeLanguage('en');
     try {
       renderCard(period(2));
-      expect(screen.getByRole('link', { name: /Period 11 is open/ })).toHaveTextContent('2 days left · locks 00:00 on 11/11');
+      expect(screen.getByRole('link', { name: /^Current sign-up period: month 11 · open/ })).toHaveTextContent('2 days left · locks 00:00 on 11/11');
     } finally {
       await i18n.changeLanguage('vi');
     }

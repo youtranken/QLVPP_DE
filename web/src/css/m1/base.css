@@ -85,6 +85,8 @@
   [data-shell='admin'] .toolbar__search input { font: var(--t-body-l); }
   [data-shell='admin'] .toolbar__end { flex: 1 1 100%; margin-left: 0; }
   [data-shell='admin'] .toolbar__end > .btn--primary { flex: 1 1 auto; }
+  [data-shell='admin'] .toolbar .seg-m1, [data-shell='admin'] .toolbar .seg { padding: 0; }
+  [data-shell='admin'] .toolbar .seg-m1 button, [data-shell='admin'] .toolbar .seg button { height: var(--ctl-h); }
 }
 
 [data-shell='admin'] .select { display: inline-flex; align-items: center; gap: var(--s-2); max-width: 100%; }

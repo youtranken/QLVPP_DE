@@ -1,6 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
 import {
+  copyUnregisteredList,
   deleteTestUsers,
   devHeaders,
   expectNoContrastViolations,
@@ -115,7 +116,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       await admin.goto('/admin/summary');
       await expect(admin.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
       await expect(admin.getByRole('button', { name: /Phiếu đã đăng ký/ })).toContainText(`${before.registered + 2}/${before.headcount}`);
-      await admin.getByRole('button', { name: /Sao chép danh sách chưa đăng ký/ }).click();
+      await copyUnregisteredList(admin, info);
       await expect(admin.getByText(/^Đã sao chép \d+ người$/)).toBeVisible();
       const copied = await admin.evaluate(() => navigator.clipboard.readText());
       expect(copied.split('\n')).toContain(`- ${c.name} (${dept})`);

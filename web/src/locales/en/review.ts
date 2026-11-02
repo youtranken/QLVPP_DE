@@ -12,10 +12,14 @@ const review: Messages<typeof vi> = {
     },
     page: {
       description: 'Items staff added to their requests — check each one before buying.',
-      note: 'Accept = buy separately this once. Add to catalog = everyone can order it from next period.',
+      note: 'Accept: buy separately this once · Add to catalog: everyone can order it from next period',
     },
     period: 'Period',
     allPeriods: 'All periods',
+    byMonth: 'By month',
+    monthNav: 'Choose month',
+    prevMonth: 'Previous month',
+    nextMonth: 'Next month',
     month: 'Month {{month}}/{{year}}',
     empty: {
       pending: 'Nothing left to review',

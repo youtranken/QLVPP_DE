@@ -9,10 +9,14 @@ const review = {
     },
     page: {
       description: 'Món nhân viên tự thêm vào phiếu — xem từng món trước khi mua.',
-      note: 'Chấp nhận = mua riêng lần này. Thêm vào danh mục = mọi người đặt được từ kỳ sau.',
+      note: 'Chấp nhận: mua riêng lần này · Thêm vào danh mục: ai cũng đặt được từ kỳ sau',
     },
     period: 'Kỳ',
     allPeriods: 'Mọi kỳ',
+    byMonth: 'Theo tháng',
+    monthNav: 'Chọn tháng',
+    prevMonth: 'Tháng trước',
+    nextMonth: 'Tháng sau',
     month: 'Tháng {{month}}/{{year}}',
     empty: {
       pending: 'Không còn món nào chờ xem',

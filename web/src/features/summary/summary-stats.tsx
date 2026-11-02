@@ -12,19 +12,19 @@ interface Props {
   onFilter: (filter: PageFilter) => void;
 }
 
-// Mẫu số = headcount server trả (kỳ cũ có thể < registered); "chưa đăng ký" lấy `unregistered`, không lấy hiệu
+// Mẫu số = headcount server trả (kỳ cũ là số lúc khóa, có thể < registered); "chưa đăng ký" lấy `unregistered`, không lấy hiệu
 export function SummaryStats({ summary, outCount, filter, onFilter }: Props) {
   const { t } = useTranslation();
-  const source = t(summary.headcount_source === 'snapshot' ? 'summary.kpi.headcountSnapshot' : 'summary.kpi.headcountLive');
+  const shortage = outCount + summary.low_stock;
   const ratio = summary.headcount > 0 ? summary.registered / summary.headcount : 0;
   return (
     <StatRow>
       <StatCard
-        label={t('summary.kpi.registered')}
+        label={t(summary.headcount_source === 'snapshot' ? 'summary.kpi.registeredAtLock' : 'summary.kpi.registered')}
         icon="users"
         value={`${summary.registered}/${summary.headcount}`}
         unit={t('summary.kpi.people')}
-        sub={`${source} · ${t('summary.kpi.unregistered', { n: summary.unregistered })}`}
+        sub={t('summary.kpi.unregistered', { n: summary.unregistered })}
         meter={ratio}
         pressed={filter === 'unregistered'}
         onClick={() => onFilter('unregistered')}
@@ -58,12 +58,12 @@ export function SummaryStats({ summary, outCount, filter, onFilter }: Props) {
         onClick={() => onFilter('custom_pending')}
       />
       <StatCard
-        label={t('summary.kpi.lowStock')}
+        label={t('summary.kpi.shortage')}
         icon="warehouse"
-        value={summary.low_stock}
+        value={shortage}
         unit={t('summary.kpi.items')}
-        sub={t('summary.kpi.outStock', { n: outCount })}
-        tone={outCount > 0 ? 'danger' : 'neutral'}
+        sub={t('summary.kpi.shortageSub', { out: outCount, low: summary.low_stock })}
+        tone={outCount > 0 ? 'danger' : 'warn'}
         pressed={filter === 'low'}
         onClick={() => onFilter('low')}
       />

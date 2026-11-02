@@ -56,4 +56,10 @@ describe('Toolbar', () => {
     expect(screen.queryByRole('searchbox')).toBeNull();
     expect(screen.getByRole('button', { name: 'Lọc' })).toBeInTheDocument();
   });
+  it('lead (bộ chọn kỳ) đứng trước ô tìm; children sau ô tìm', () => {
+    renderWithI18n(<Toolbar lead={<button type="button">Kỳ</button>} search={search()}><button type="button">Xem</button></Toolbar>);
+    const [lead, box, after] = [screen.getByRole('button', { name: 'Kỳ' }), screen.getByRole('searchbox'), screen.getByRole('button', { name: 'Xem' })];
+    expect(lead.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(box.compareDocumentPosition(after) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });

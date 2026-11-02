@@ -51,6 +51,16 @@ export async function searchSummaryPeople(page: Page, text: string) {
   await expect(page.getByRole('table')).toHaveAttribute('aria-busy', 'false');
 }
 
+// 390: nút chép danh sách nằm trong menu ⋯ ở đầu trang Tổng hợp kỳ
+export async function copyUnregisteredList(page: Page, info: TestInfo) {
+  if (isMobile(info)) {
+    await page.getByRole('button', { name: 'Thao tác khác' }).click();
+    await page.getByRole('menuitem', { name: /^Chép DS chưa đăng ký/ }).click();
+  } else {
+    await page.getByRole('button', { name: /^Chép DS chưa đăng ký/ }).click();
+  }
+}
+
 // Spinner quay vô hạn: finished không bao giờ xong → evaluate treo tới hết giờ test ("browserContext.close: Test ended")
 export async function settled(page: Page) {
   // aria-busy là trạng thái ARIA người dùng trợ năng thấy, không phải class; getByRole không lọc theo aria-busy nên giữ selector này

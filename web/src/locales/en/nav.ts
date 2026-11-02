@@ -38,6 +38,9 @@ const nav: Messages<typeof vi> = {
     },
     periodCard: {
       title: 'Period {{month}} is open',
+      label: 'Current sign-up period',
+      state: 'Month {{month}} · open',
+      name: 'Current sign-up period: month {{month}} · open · {{detail}}',
       daysLeft: '{{n}} days left · locks 00:00 on {{date}}',
       lastDay: 'Today is the last day · locks 00:00 on {{date}}',
     },

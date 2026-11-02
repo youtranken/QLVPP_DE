@@ -17,7 +17,10 @@ function placeBelowOrAbove(button: HTMLElement, menu: HTMLElement): CSSPropertie
   const b = button.getBoundingClientRect();
   const h = menu.offsetHeight;
   const below = b.bottom + GAP + h <= window.innerHeight;
-  return { position: 'fixed', right: Math.max(GAP, window.innerWidth - b.right), top: below ? b.bottom + GAP : Math.max(GAP, b.top - GAP - h) };
+  const top = below ? b.bottom + GAP : Math.max(GAP, b.top - GAP - h);
+  // Nút sát mép trái (⋯ đứng trước nút chính ở 390): canh trái theo nút, không thì menu tràn khỏi màn hình
+  if (b.right - menu.offsetWidth < GAP) return { position: 'fixed', left: Math.max(GAP, b.left), top };
+  return { position: 'fixed', right: Math.max(GAP, window.innerWidth - b.right), top };
 }
 
 export function RowMenu({ label, items }: { label: string; items: RowMenuItem[] }) {

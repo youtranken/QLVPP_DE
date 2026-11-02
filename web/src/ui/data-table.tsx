@@ -107,7 +107,7 @@ export function DataTable<T>({
   const picked = selection ? rows.filter((r) => selection.selected.has(r.id)).length : 0;
   const groups = groupBy ? groupRows(rows, groupBy.key) : null;
   // Mọi nhóm đang thu thì không còn cột nào để đọc: ẩn đầu bảng cho gọn
-  const headHidden = groups !== null && groups.length > 0 && groups.every((g) => collapsed.has(g.key));
+  const headHidden = (rows.length === 0 && !loading) || (groups !== null && groups.length > 0 && groups.every((g) => collapsed.has(g.key)));
   const toggleGroup = (key: string) => {
     const next = new Set(collapsed);
     if (next.has(key)) next.delete(key);

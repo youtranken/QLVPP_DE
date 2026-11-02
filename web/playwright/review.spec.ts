@@ -134,7 +134,8 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       await page.goto(`/admin/review?ym=${prevYm}`);
       const card = page.getByRole('article', { name });
       await expect(card).toBeVisible();
-      await expect(page.getByLabel('Kỳ')).toHaveValue(prevYm);
+      await expect(page.getByRole('radio', { name: 'Theo tháng' })).toBeChecked();
+      await expect(page.getByRole('group', { name: 'Chọn tháng' })).toContainText(`Tháng ${Number(prevYm.slice(5))}/${prevYm.slice(0, 4)}`);
       await card.getByRole('button', { name: /^Từ chối —/ }).click();
       const dialog = page.getByRole('dialog', { name: `Từ chối “${name}”` });
       const submit = dialog.getByRole('button', { name: 'Từ chối', exact: true });

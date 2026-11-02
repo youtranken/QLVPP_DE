@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
 import { vnDeadlineDay, vnLockDate } from '@/lib/format-time';
 import { Loading, LoadError } from '@/ui/load-state';
@@ -13,10 +14,10 @@ import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { AdjustDrawer } from './adjust-drawer';
 import { CreateRequestDialog } from './create-request-dialog';
+import { SummaryCopy } from './summary-actions';
 import { SummaryItemTable } from './summary-item-table';
 import { SummaryPersonTable } from './summary-person-table';
 import { SummaryStats } from './summary-stats';
-import { UnregisteredCopy } from './unregistered-copy';
 import { UnregisteredTable } from './unregistered-table';
 import { usePeriodSummary, type PeriodSummary } from './summary.api';
 import { useAdjacentRequests } from './use-person-table-rows';
@@ -52,12 +53,15 @@ export function SummaryPage() {
   const summary = usePeriodSummary(p.ym);
   const items = useAdminItems();
   const [search, setSearch] = useUrlSearchBox(p.q, p.setQ);
+  const phone = useMediaQuery(ADMIN_PHONE_QUERY);
   const [creating, setCreating] = useState<{ user: DirectoryUser | null } | null>(null);
   const personFilter = p.filter === 'low' || p.filter === 'unregistered' ? null : p.filter;
   const listed = p.view === 'person' && p.filter !== 'unregistered';
   const adjacent = useAdjacentRequests(p.ym, personFilter, p.q, listed ? p.requestId : null);
   const title = t('summary.page.title');
-  const header = () => <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('summary.page.description')} />;
+  const header = (actions?: { primary: ReactNode; secondary: ReactNode }) => (
+    <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('summary.page.description')} {...actions} />
+  );
 
   if (current.isError) return <>{header()}<LoadError onRetry={() => void current.refetch()} /></>;
   if (!p.ym || !openYm) return <>{header()}<Loading /></>;
@@ -66,50 +70,55 @@ export function SummaryPage() {
   const data = summary.data;
   const canCreate = ym === openYm;
   const outCount = (items.data ?? []).filter((i) => i.usable && i.stock_state === 'out').length;
+  const searchKey = p.view === 'item' ? 'summary.page.searchItem' : 'summary.page.search';
   const views = [
     { value: 'person' as SummaryView, label: t('summary.page.byPerson') },
     { value: 'item' as SummaryView, label: t('summary.page.byItem') },
   ];
 
   return (
-    <div className="sm-page">
-      {header()}
+    <div className="ct-page sm-page">
+      {header(
+        data && {
+          secondary: <SummaryCopy ym={ym} deadline={data.deadline} unregistered={data.unregistered} />,
+          primary: (
+            <button type="button" className="btn btn--primary" onClick={() => setCreating({ user: null })}>
+              {t('summary.create.button')}
+            </button>
+          ),
+        },
+      )}
       {summary.isError && <LoadError onRetry={() => void summary.refetch()} />}
       {data && <SummaryStats summary={data} outCount={outCount} filter={p.filter} onFilter={p.toggleFilter} />}
       <Toolbar
+        lead={<MonthControl ym={ym} openYm={openYm} summary={data} onChange={p.setMonth} />}
         search={{
           value: search,
           onChange: setSearch,
-          label: t(p.view === 'item' ? 'summary.page.searchItem' : 'summary.page.search'),
-          placeholder: t(p.view === 'item' ? 'summary.page.searchItem' : 'summary.page.search'),
+          label: t(searchKey),
+          placeholder: t(phone && p.view === 'person' ? 'summary.page.searchShort' : searchKey),
           maxLength: MAX_SEARCH,
         }}
       >
         <Segmented label={t('summary.page.view')} value={p.view} options={views} onChange={p.setView} />
-        <MonthControl ym={ym} openYm={openYm} summary={data} onChange={p.setMonth} />
-        <span className="sm-spacer" />
-        {data && <UnregisteredCopy ym={ym} deadline={data.deadline} count={data.unregistered} />}
-        {data && (
-          <button type="button" className="btn btn--primary" onClick={() => setCreating({ user: null })}>
-            {t('summary.create.button')}
-          </button>
-        )}
       </Toolbar>
-      {p.filter === 'unregistered' ? (
-        <UnregisteredTable ym={ym} canCreate={canCreate} onCreate={(user) => setCreating({ user })} onClearFilter={p.clearFilter} />
-      ) : p.view === 'item' ? (
-        <SummaryItemTable ym={ym} q={p.q} lowOnly={p.filter === 'low'} />
-      ) : (
-        <SummaryPersonTable
-          ym={ym}
-          locked={data?.is_open === false}
-          filter={personFilter}
-          q={p.q}
-          activeId={p.requestId ?? undefined}
-          onOpen={p.openAdjust}
-          onClearFilter={p.clearFilter}
-        />
-      )}
+      <div className="ct-block">
+        {p.filter === 'unregistered' ? (
+          <UnregisteredTable ym={ym} canCreate={canCreate} onCreate={(user) => setCreating({ user })} onClearFilter={p.clearFilter} />
+        ) : p.view === 'item' ? (
+          <SummaryItemTable ym={ym} q={p.q} lowOnly={p.filter === 'low'} />
+        ) : (
+          <SummaryPersonTable
+            ym={ym}
+            locked={data?.is_open === false}
+            filter={personFilter}
+            q={p.q}
+            activeId={p.requestId ?? undefined}
+            onOpen={p.openAdjust}
+            onClearFilter={p.clearFilter}
+          />
+        )}
+      </div>
       {p.requestId && (
         <AdjustDrawer
           requestId={p.requestId}

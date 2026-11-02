@@ -7,13 +7,14 @@ export function AdminPeriodCard({ period, onNavigate }: { period: CurrentPeriod;
   const { t } = useTranslation();
   const month = Number(period.ym.slice(5, 7));
   const date = vnLockDate(period.deadline);
-  const title = t('nav.periodCard.title', { month });
   const detail = period.days_left <= 1 ? t('nav.periodCard.lastDay', { date }) : t('nav.periodCard.daysLeft', { n: period.days_left, date });
+  const name = t('nav.periodCard.name', { month, detail });
   return (
-    <Link to="/admin/summary" className="side__period" data-last={period.days_left <= 1 || undefined} title={`${title} · ${detail}`} onClick={onNavigate}>
+    <Link to="/admin/summary" className="side__period" data-last={period.days_left <= 1 || undefined} aria-label={name} title={name} onClick={onNavigate}>
       <span className="side__period-dot" aria-hidden="true" />
       <span className="side__period-text">
-        <b>{title}</b>
+        <small>{t('nav.periodCard.label')}</small>
+        <b>{t('nav.periodCard.state', { month })}</b>
         <span>{detail}</span>
       </span>
     </Link>

@@ -81,9 +81,18 @@ describe('DataTable', () => {
     expect(rowNames()).toEqual(['apple']);
   });
 
-  it('data rỗng → hiện emptyText', () => {
+  it('data rỗng → hiện emptyText, ẩn đầu bảng (không còn tiêu đề cột trơ trọi)', () => {
     renderWithI18n(<DataTable data={[]} columns={COLUMNS} emptyText="Chưa có dữ liệu" />);
     expect(screen.getByText('Chưa có dữ liệu')).toBeInTheDocument();
+    expect(screen.queryAllByRole('columnheader')).toHaveLength(0);
+  });
+
+  it('1 dòng → đầu bảng hiện; đang tải (chưa có dòng) → đầu bảng vẫn hiện', () => {
+    const { unmount } = renderWithI18n(<DataTable data={DATA.slice(0, 1)} columns={COLUMNS} emptyText="Trống" />);
+    expect(screen.getAllByRole('columnheader').length).toBeGreaterThan(0);
+    unmount();
+    renderWithI18n(<DataTable data={[]} columns={COLUMNS} emptyText="Trống" loading />);
+    expect(screen.getAllByRole('columnheader').length).toBeGreaterThan(0);
   });
 
   it('rowClassName gán class <tr> theo dữ liệu dòng', () => {
