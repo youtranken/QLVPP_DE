@@ -197,3 +197,10 @@ Mốc kiểm của chủ dự án: sau T4 (nhìn lưới 4–5 cột + cột nh�
 - **Q4. Món chưa có ảnh (đa số món Booking hiện nay) hiện gì?** Gợi ý: **ô ảnh nền tông nhóm + icon hộp đồ trung tính** (không chữ cái, không minh họa theo loại món); Hành chính tải ảnh thật dần trong Danh mục, nhãn "Thiếu ảnh" đã có ở đó.
 - **Q5. Bề ngang tối đa của trang trên màn rất rộng.** Gợi ý: **1600 px** (1280 → 4 thẻ, 1440 → 5, ≥ 1600 → 6 thẻ/hàng), hai bên chỉ là lề khi màn > 1600.
 - **Q6. Hero kỳ to màu xanh hiện nay thành dải mảnh một hàng — có giữ hiệu ứng "đếm ngược" (≤ 3 ngày nền cảnh báo, ngày cuối nền đậm) không?** Gợi ý: **giữ đổi tông theo độ gấp ngay trên dải mảnh**, bỏ khối to; ngày cuối hiện "Hôm nay là ngày cuối" + nút Lưu phiếu nổi bật.
+
+## Quyết định chủ dự án (2026-11-02) — thay cho mục câu hỏi ở trên
+
+- Q1: bấm nhóm ở cột trái = **nhảy tới mục** (scroll-spy tô sáng); ô tìm vẫn lọc.
+- Q2: điện thoại **2 cột, thẻ thấp** (ảnh 4:3), chip nhóm dính.
+- Q3, Q5, Q6: theo gợi ý (tìm ở đầu cột giữa dính khi cuộn; rộng tối đa 1600 px; dải kỳ mảnh giữ đổi tông).
+- Q4: **ảnh mặc định = nền màu nhóm + icon trung tính**, dùng cho mọi món không có ảnh. **Đổi BR-10 / FR-10:** tạo món mới qua giao diện **không còn bắt buộc ảnh** — không tải ảnh thì hiện ảnh mặc định; Hành chính sẽ tải ảnh thật cho ~160 món sau. Thêm **Task 5b (api + web)**: bỏ `IMAGE_REQUIRED` khi tạo món ở Danh mục và khi "Thêm vào danh mục" từ món ngoài danh mục (TDD: tạo không ảnh → 201; có ảnh vẫn được; e2e + Playwright), cập nhật prd FR-10/BR-9/BR-10 + bảng quyết định, architecture §7 nếu mã lỗi thôi dùng; ảnh mặc định cũng thay ảnh tạm ở trang Hành chính (Danh mục, Kho, Giao hàng); giữ bộ lọc "Chưa có ảnh" ở Danh mục để Hành chính biết món nào cần tải ảnh.
