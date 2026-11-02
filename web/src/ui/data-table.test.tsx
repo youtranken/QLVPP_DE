@@ -33,6 +33,16 @@ function rowNames(): (string | null)[] {
 }
 
 describe('DataTable', () => {
+  it('ô xếp chồng 390: đầu cột là component thì nhãn ô lấy từ meta.label, đầu cột chuỗi giữ chuỗi', () => {
+    const cols: ColumnDef<Row>[] = [
+      { accessorKey: 'name', header: 'Tên' },
+      { accessorKey: 'qty', header: () => <span>SL <button type="button">i</button></span>, meta: { label: 'SL' }, enableSorting: false },
+    ];
+    renderWithI18n(<DataTable data={DATA} columns={cols} emptyText="Trống" stackOnMobile />);
+    const cells = within(screen.getAllByRole('row')[1]).getAllByRole('cell');
+    expect(cells.map((c) => c.getAttribute('data-label'))).toEqual(['Tên', 'SL']);
+  });
+
   it('render đủ dòng + cột', () => {
     renderWithI18n(<DataTable data={DATA} columns={COLUMNS} emptyText="Trống" />);
     expect(screen.getByText('Banana')).toBeInTheDocument();

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Locator } from '@playwright/test';
-import { asRole, devHeaders, expectNoContrastViolations, removeTestItem, seedActiveUser, shot } from './helpers';
+import { asRole, devHeaders, expectNoContrastViolations, removeTestItem, seedActiveUser, shot, openPurchase } from './helpers';
 
 // Ở 390 px bảng xếp dọc, ô có nhãn cột phía trước ("Tồn 10")
 const stockCell = (row: Locator, qty: number) => row.getByRole('cell', { name: new RegExp(`^(Tồn kho )?${qty}$`) });
@@ -50,7 +50,7 @@ test.describe('E1-S4 Kho: nhập, kiểm kê, xuất lẻ, sổ cái (dev-identi
       await expect(stockCell(row, 0)).toBeVisible();
       await expect(row.getByText('Hết hàng')).toBeVisible();
 
-      await row.getByRole('button', { name: 'Nhập mua', exact: true }).click();
+      await openPurchase(page, row);
       const purchase = page.getByRole('dialog', { name: `Nhập mua ${itemName}` });
       await purchase.getByLabel('Số lượng nhập').fill('10');
       await purchase.getByLabel('Ghi chú').fill('Đơn PW');
@@ -124,7 +124,7 @@ test.describe('E9-S5 Kho M1 (dev-identity admin)', () => {
       await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
       const row = page.getByRole('row').filter({ hasText: itemName });
 
-      await row.getByRole('button', { name: 'Nhập mua', exact: true }).click();
+      await openPurchase(page, row);
       const purchase = page.getByRole('dialog', { name: `Nhập mua ${itemName}` });
       await purchase.getByLabel('Số lượng nhập').fill('10');
       await expect(purchase.getByText('Tồn sau khi lưu 10')).toBeVisible();

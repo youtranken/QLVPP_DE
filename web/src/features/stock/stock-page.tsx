@@ -79,7 +79,7 @@ export function StockPage() {
   );
   if (d.failed) {
     return (
-      <div className="ct-page">
+      <div className="ct-page sk-page">
         {header}
         <LoadError onRetry={d.retry} />
       </div>
@@ -90,7 +90,7 @@ export function StockPage() {
   const close = () => setOpen(null);
   const emptyKey = filter === 'low' ? 'emptyLow' : filter === 'out' ? 'emptyOut' : 'emptyTitle';
   return (
-    <div className="ct-page">
+    <div className="ct-page sk-page">
       {header}
       {d.loaded && <StockStats stats={stockStats(d.rows)} filter={filter} narrowed={filter !== null || p.view.q !== ''} onFilter={p.toggleFilter} onClear={p.clearAll} />}
       <Toolbar search={{ value: search, onChange: setSearch, label: t('stock.page.search'), placeholder: t('stock.page.search'), maxLength: MAX_SEARCH }} />

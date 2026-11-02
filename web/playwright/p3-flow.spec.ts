@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { expect, test, type APIRequestContext, type Locator, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, devHeaders, expectNoContrastViolations, isMobile, psql, settled, urlOfNewTab } from './helpers';
+import { acquireLock, devHeaders, expectNoContrastViolations, isMobile, psql, settled, urlOfNewTab, openPurchase } from './helpers';
 import { deliveryMovements, seedMonth, type MonthSeed, type Person } from './p3-seed';
 import { adminPage, newPage, SA_PASSWORD } from './sessions';
 
@@ -126,7 +126,7 @@ async function expectFrozenPaper(admin: Page, s: MonthSeed) {
 async function purchaseAndDeliverMore(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/stock');
   await admin.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(s.paper.name);
-  await admin.getByRole('row').filter({ hasText: s.paper.name }).getByRole('button', { name: 'Nhập mua', exact: true }).click();
+  await openPurchase(admin, admin.getByRole('row').filter({ hasText: s.paper.name }));
   const purchase = admin.getByRole('dialog', { name: `Nhập mua ${s.paper.name}` });
   await purchase.getByLabel('Số lượng nhập').fill('2');
   await purchase.getByRole('button', { name: 'Lưu nhập mua' }).click();

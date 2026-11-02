@@ -14,8 +14,8 @@ const LOW_BELL = {
   read_at: '2026-11-12T04:00:00.000Z',
 };
 
-async function open(path = '/admin/stock', ready = 'Giấy A4') {
-  mockViewport(1280);
+async function open(path = '/admin/stock', ready = 'Giấy A4', width = 1280) {
+  mockViewport(width);
   const f = stubStockApi((url) =>
     url.startsWith('/api/me/notifications') ? jsonResponse(200, { items: [LOW_BELL], next_cursor: null, unread_count: 0 }) : undefined,
   );
@@ -117,6 +117,23 @@ describe('StockPage', () => {
     await userEvent.keyboard('{Escape}');
     await userEvent.click(within(rowOf('Giấy A4')).getByRole('button', { name: 'Thao tác khác cho Giấy A4' }));
     expect(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Xuất lẻ' })).not.toHaveAttribute('aria-disabled');
+  });
+
+  it('1280: "Nhập mua" là nút nhỏ trên hàng, không lặp trong ⋯', async () => {
+    await open();
+    expect(within(rowOf('Giấy A4')).getByRole('button', { name: 'Nhập mua' })).toBeVisible();
+    await userEvent.click(within(rowOf('Giấy A4')).getByRole('button', { name: 'Thao tác khác cho Giấy A4' }));
+    expect(within(screen.getByRole('menu')).queryByRole('menuitem', { name: 'Nhập mua' })).toBeNull();
+  });
+
+  it('390: không có nút "Nhập mua" trên hàng; "Nhập mua" là mục đầu của ⋯ và mở hộp nhập mua', async () => {
+    await open('/admin/stock', 'Giấy A4', 390);
+    expect(within(rowOf('Giấy A4')).queryByRole('button', { name: 'Nhập mua' })).toBeNull();
+    await userEvent.click(within(rowOf('Giấy A4')).getByRole('button', { name: 'Thao tác khác cho Giấy A4' }));
+    const items = within(screen.getByRole('menu')).getAllByRole('menuitem');
+    expect(items.map((i) => i.textContent)).toEqual(['Nhập mua', 'Kiểm kê', 'Xuất lẻ', 'Sổ cái']);
+    await userEvent.click(items[0]);
+    expect(await screen.findByRole('dialog', { name: 'Nhập mua Giấy A4' })).toBeInTheDocument();
   });
 
   it('menu ⋯ dùng được bằng bàn phím: Enter mở và focus "Kiểm kê", ↓ sang "Xuất lẻ", Esc đóng và trả focus về nút; Enter trên "Kiểm kê" mở hộp "Kiểm kê Bút bi xanh"', async () => {

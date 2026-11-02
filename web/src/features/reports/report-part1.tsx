@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/ui/data-table';
+import { InfoTip } from '@/ui/info-tip';
+import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { categoryLabel, useAdminItems, useAllCategories, type Category } from '@/features/catalog/catalog.api';
 import { useUnitNames } from '@/features/units/units.api';
 import type { MonthReport } from './reports.api';
@@ -10,7 +12,18 @@ import { OrderColumnCell } from './report-order-cell';
 import { ReportSection } from './report-section';
 import { OrderQtyContext, type OrderQty } from './use-order-qty';
 
-function useColumns(withPeople: boolean) {
+function NeedTip({ showLabel = false }: { showLabel?: boolean }) {
+  const { t } = useTranslation();
+  return (
+    <InfoTip label={t('reports.page.how.title')} showLabel={showLabel}>
+      <p>{t('reports.page.how.formula')}</p>
+      <p>{t('reports.page.how.order')}</p>
+    </InfoTip>
+  );
+}
+
+// Điện thoại không có đầu cột (bảng xếp chồng) nên nút (i) chuyển lên công cụ của Phần 1
+function useColumns(withPeople: boolean, phone: boolean) {
   const { t, i18n } = useTranslation();
   const unitName = useUnitNames();
   return useMemo<ColumnDef<Part1Row, unknown>[]>(() => {
@@ -32,7 +45,19 @@ function useColumns(withPeople: boolean) {
       { id: 'requested', header: col('colRequested'), ...num, cell: ({ row }) => row.original.row.requested },
       { id: 'backlog', header: col('colBacklog'), ...num, cell: ({ row }) => row.original.row.backlog_prev },
       { id: 'stock', header: col('colStock'), ...num, cell: ({ row }) => row.original.row.stock ?? '—' },
-      { id: 'need', header: col('colNeed'), ...num, cell: ({ row }) => row.original.row.need },
+      {
+        id: 'need',
+        header: phone
+          ? col('colNeed')
+          : () => (
+              <>
+                {col('colNeed')}
+                <NeedTip />
+              </>
+            ),
+        meta: { className: 'num r', label: col('colNeed') },
+        cell: ({ row }) => row.original.row.need,
+      },
       {
         id: 'order',
         header: col('colOrder'),
@@ -43,7 +68,7 @@ function useColumns(withPeople: boolean) {
     ];
     // Số người chỉ có ở hàng ngoài danh mục — không có hàng nào thì bỏ hẳn cột rỗng
     return columns.filter((c) => withPeople || c.id !== 'people').map((c) => ({ ...c, enableSorting: false }));
-  }, [t, i18n.language, unitName, withPeople]);
+  }, [t, i18n.language, unitName, withPeople, phone]);
 }
 
 function useGroupName(cats: Category[]) {
@@ -60,7 +85,8 @@ export function ReportPart1({ report, qty }: { report: MonthReport; qty: OrderQt
   const items = useAdminItems();
   const cats = useAllCategories();
   const [onlyNeed, setOnlyNeed] = useState(false);
-  const columns = useColumns(report.custom.length > 0);
+  const phone = useMediaQuery(ADMIN_PHONE_QUERY);
+  const columns = useColumns(report.custom.length > 0, phone);
   const groupName = useGroupName(cats.data ?? []);
   // Chờ nhóm và món tải xong (lỗi thì về "Chưa xếp nhóm") để hàng không đổi nhóm, ô đang gõ không bị dựng lại
   const settled = !items.isPending && !cats.isPending;
@@ -78,6 +104,7 @@ export function ReportPart1({ report, qty }: { report: MonthReport; qty: OrderQt
         <input type="checkbox" checked={onlyNeed} onChange={(e) => setOnlyNeed(e.target.checked)} />
         {t('reports.part1.onlyNeed')}
       </label>
+      {phone && <NeedTip showLabel />}
       {qty.editedCount > 0 && (
         <button type="button" className="btn btn--ghost btn--sm" onClick={qty.resetAll}>
           {t('reports.part1.resetAll', { count: qty.editedCount })}

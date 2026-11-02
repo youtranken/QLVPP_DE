@@ -174,3 +174,13 @@ export async function openAuditDetail(page: Page, row: Locator): Promise<Locator
   expect(id).toBeTruthy();
   return page.locator(`[id="${id}"]`);
 }
+
+// 1280: nút "Nhập mua" trên hàng; 390: nằm trong menu ⋯ của hàng
+export async function openPurchase(page: Page, row: Locator) {
+  if ((page.viewportSize()?.width ?? 1280) >= 768) {
+    await row.getByRole('button', { name: 'Nhập mua', exact: true }).click();
+    return;
+  }
+  await row.getByRole('button', { name: /^Thao tác khác cho / }).click();
+  await page.getByRole('menu').getByRole('menuitem', { name: 'Nhập mua', exact: true }).click();
+}

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -5,6 +6,7 @@ import { Icon } from '@/ui/icon';
 import { Loading, LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
 import { PageHeader } from '@/ui/page-header';
+import { Toolbar } from '@/ui/toolbar';
 import { useConfirm } from '@/ui/confirm-context';
 import { currentPeriodQuery, useCurrentPeriod, type CurrentPeriod } from '@/features/request/request.api';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
@@ -13,33 +15,26 @@ import { ReportPart1 } from './report-part1';
 import { ReportIssues } from './report-issues';
 import { ReportPart2 } from './report-part2';
 import { ReportSnapshots } from './report-snapshots';
-import { ReportSection } from './report-section';
 import { PendingDialog } from './report-pending-dialog';
 import { useOrderQty } from './use-order-qty';
 import { useReportsParams } from './use-reports-params';
 import { useSnapshotDownload, useTakeSnapshot } from './use-snapshot';
 import './reports.m1.css';
 
-function ReportsHeader() {
+function ReportsHeader({ primary, secondary }: { primary?: ReactNode; secondary?: ReactNode }) {
   const { t } = useTranslation();
   const title = t('nav.reports');
-  return <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('reports.page.description')} />;
+  return <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('reports.page.description')} primary={primary} secondary={secondary} />;
 }
 
-function TakeButtons({ taking, onTake }: { taking: SnapshotKind | null; onTake: (kind: SnapshotKind) => void }) {
+function TakeButton({ mode: kind, taking, onTake }: { mode: SnapshotKind; taking: SnapshotKind | null; onTake: (kind: SnapshotKind) => void }) {
   const { t } = useTranslation();
-  const label = (kind: SnapshotKind, text: string) => (taking === kind ? t('reports.page.taking') : text);
+  const xlsx = kind === 'xlsx';
   return (
-    <>
-      <button type="button" className="btn" disabled={taking !== null} onClick={() => onTake('xlsx')}>
-        <Icon name="sheet" size={18} />
-        {label('xlsx', t('reports.page.exportXlsx'))}
-      </button>
-      <button type="button" className="btn btn--primary" disabled={taking !== null} onClick={() => onTake('print')}>
-        <Icon name="printer" size={18} />
-        {label('print', t('reports.page.print'))}
-      </button>
-    </>
+    <button type="button" className={xlsx ? 'btn' : 'btn btn--primary'} disabled={taking !== null} onClick={() => onTake(kind)}>
+      <Icon name={xlsx ? 'sheet' : 'printer'} size={18} />
+      {taking === kind ? t('reports.page.taking') : t(xlsx ? 'reports.page.exportXlsx' : 'reports.page.print')}
+    </button>
   );
 }
 
@@ -52,26 +47,14 @@ function MonthRow({ ym, period, onChange }: { ym: string; period: CurrentPeriod;
       ? { tone: 'ok' as const, label: t('reports.page.status.open', { day: fmt.lastDay(period.deadline) }) }
       : { tone: 'dark' as const, label: t('reports.page.status.locked') };
   return (
-    <div className="bc-month">
-      <MonthSwitcher
-        value={ym}
-        max={period.ym}
-        onChange={onChange}
-        status={status}
-        formatLabel={(v) => t('reports.page.month', { month: monthOf(v), year: v.slice(0, 4) })}
-        labels={{ group: t('reports.page.monthNav'), prev: t('reports.page.prevMonth'), next: t('reports.page.nextMonth') }}
-      />
-    </div>
-  );
-}
-
-function HowToNeed() {
-  const { t } = useTranslation();
-  return (
-    <ReportSection title={t('reports.page.how.title')}>
-      <p className="bc-how">{t('reports.page.how.formula')}</p>
-      <p className="bc-how">{t('reports.page.how.order')}</p>
-    </ReportSection>
+    <MonthSwitcher
+      value={ym}
+      max={period.ym}
+      onChange={onChange}
+      status={status}
+      formatLabel={(v) => t('reports.page.month', { month: monthOf(v), year: v.slice(0, 4) })}
+      labels={{ group: t('reports.page.monthNav'), prev: t('reports.page.prevMonth'), next: t('reports.page.nextMonth') }}
+    />
   );
 }
 
@@ -101,14 +84,12 @@ function ReportBody({ report, period, onMonth, onInvalidPeriod }: { report: Mont
     if (await canLeave()) navigate(`/admin/review?ym=${report.ym}`);
   };
   return (
-    <div className="bc-page">
-      <ReportsHeader />
-      <div className="bc-bar">
-        <MonthRow ym={report.ym} period={period} onChange={(v) => void changeMonth(v)} />
-        <div className="bc-bar__actions">
-          <TakeButtons taking={snap.taking} onTake={snap.take} />
-        </div>
-      </div>
+    <div className="ct-page bc-page">
+      <ReportsHeader
+        secondary={<TakeButton mode="xlsx" taking={snap.taking} onTake={snap.take} />}
+        primary={<TakeButton mode="print" taking={snap.taking} onTake={snap.take} />}
+      />
+      <Toolbar lead={<MonthRow ym={report.ym} period={period} onChange={(v) => void changeMonth(v)} />} />
       {report.ym === period.ym && <p className="alert">{t('reports.page.openNotice', { month })}</p>}
       {report.pending_custom_count > 0 && (
         <p className="alert alert--warn">
@@ -122,7 +103,6 @@ function ReportBody({ report, period, onMonth, onInvalidPeriod }: { report: Mont
       <ReportIssues issues={report.issues} />
       <ReportPart2 departments={report.byDepartment} />
       <ReportSnapshots ym={report.ym} fresh={snap.fresh} files={files} />
-      <HowToNeed />
       {snap.asking && <PendingDialog count={report.pending_custom_count} onReview={() => void review()} onConfirm={snap.confirm} onCancel={snap.cancel} />}
     </div>
   );
@@ -132,7 +112,7 @@ function ReportForMonth({ ym, period, onMonth, onInvalidPeriod }: { ym: string; 
   const query = useMonthReport(ym);
   if (query.data) return <ReportBody report={query.data} period={period} onMonth={onMonth} onInvalidPeriod={onInvalidPeriod} />;
   return (
-    <div className="bc-page">
+    <div className="ct-page bc-page">
       <ReportsHeader />
       {query.isError ? <LoadError onRetry={() => void query.refetch()} /> : <Loading />}
     </div>
@@ -150,7 +130,7 @@ export function ReportsPage() {
   };
   if (!p.ym || !current.data) {
     return (
-      <div className="bc-page">
+      <div className="ct-page bc-page">
         <ReportsHeader />
         {current.isError ? <LoadError onRetry={() => void current.refetch()} /> : <Loading />}
       </div>

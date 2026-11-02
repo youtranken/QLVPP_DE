@@ -1,7 +1,7 @@
 const reports = {
   reports: {
     page: {
-      description: 'Số đặt mua của tháng, xuất Excel và in giấy trình ký. Excel và bản in luôn lấy từ một bản chốt, giao thêm sau đó không làm đổi số đã chốt.',
+      description: 'Số cần mua trong tháng, xuất Excel và in giấy trình ký.',
       exportXlsx: 'Xuất Excel',
       print: 'In trình ký',
       taking: 'Đang chốt…',
@@ -144,7 +144,7 @@ const reports = {
     },
     snapshots: {
       title: 'Bản chốt',
-      note: 'Mỗi lần Xuất Excel hoặc In trình ký tạo một bản chốt.',
+      note: 'Mỗi lần Xuất Excel hoặc In trình ký tạo một bản chốt. Excel và bản in luôn lấy từ một bản chốt, giao thêm sau đó không làm đổi số đã chốt.',
       kind: { xlsx: 'Excel', print: 'Bản in' },
       fresh: 'Mới',
       meta: 'Lập {{at}} · {{by}}',

@@ -73,7 +73,7 @@ export function BodyRow<T>({
           <td
             key={cell.id}
             className={cell.column.columnDef.meta?.className}
-            data-label={typeof h === 'string' ? h : ''}
+            data-label={cell.column.columnDef.meta?.label ?? (typeof h === 'string' ? h : '')}
           >
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
           </td>

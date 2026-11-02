@@ -74,7 +74,9 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     const list = page.getByRole('region', { name: 'Bản chốt' });
     const printed = list.getByRole('listitem').filter({ hasText: 'Bản in' }).first();
     await expect(printed.getByRole('link', { name: /^In lại bản lập/ })).toHaveAttribute('target', '_blank');
-    await expect(page.getByRole('region', { name: 'Cách tính Cần mua' })).toBeVisible();
+    await part1.getByRole('button', { name: 'Cách tính Cần mua' }).click();
+    await expect(page.getByRole('dialog', { name: 'Cách tính Cần mua' })).toContainText('Cần mua = Chưa giao kỳ này + Nợ kỳ trước − Tồn');
+    await page.keyboard.press('Escape');
 
     await expect(month.getByRole('button', { name: 'Tháng sau' })).toBeEnabled();
     if (isMobile(info)) await expectNoContrastViolations(page);

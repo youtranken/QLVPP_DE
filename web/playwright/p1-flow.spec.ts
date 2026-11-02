@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, devHeaders, expectNoContrastViolations, isMobile, seedActiveUser, shot } from './helpers';
+import { acquireLock, devHeaders, expectNoContrastViolations, isMobile, seedActiveUser, shot, openPurchase } from './helpers';
 
 const SA_USERNAME = process.env.PW_SA_USERNAME ?? 'sa';
 const SA_PASSWORD = process.env.PW_SA_PASSWORD;
@@ -48,7 +48,7 @@ async function stockFlow(page: Page, itemName: string) {
   await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
   const row = page.getByRole('row').filter({ hasText: itemName });
 
-  await row.getByRole('button', { name: 'Nhập mua', exact: true }).click();
+  await openPurchase(page, row);
   const purchase = page.getByRole('dialog', { name: `Nhập mua ${itemName}` });
   await purchase.getByLabel('Số lượng nhập').fill('10');
   await purchase.getByRole('button', { name: 'Lưu nhập mua' }).click();

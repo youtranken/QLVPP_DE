@@ -22,6 +22,7 @@ declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
     className?: string;
     tip?: string;
+    label?: string;
   }
 }
 

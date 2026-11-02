@@ -32,7 +32,7 @@ describe('Bản chốt — danh sách, tải lại, in lại', () => {
     captureDownloads();
     openPage();
     const region = await list();
-    expect(within(region).getByText('Mỗi lần Xuất Excel hoặc In trình ký tạo một bản chốt.')).toBeInTheDocument();
+    expect(within(region).getByText(/^Mỗi lần Xuất Excel hoặc In trình ký tạo một bản chốt\./)).toBeInTheDocument();
     expect(await within(region).findByText('Chưa có bản chốt nào.')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Xuất Excel' }));
     const fresh = await within(region).findByRole('listitem', { name: /Nguyễn Văn An/ });

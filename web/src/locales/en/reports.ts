@@ -4,7 +4,7 @@ import type { Messages } from '@/locales/messages';
 const reports: Messages<typeof vi> = {
   reports: {
     page: {
-      description: 'Order quantities for the month, Excel export and the sheet for signing. Excel and print always come from a snapshot; later deliveries do not change snapshot numbers.',
+      description: 'What to buy this month, Excel export and the sheet for signing.',
       exportXlsx: 'Export Excel',
       print: 'Print for signing',
       taking: 'Creating snapshot…',
@@ -147,7 +147,7 @@ const reports: Messages<typeof vi> = {
     },
     snapshots: {
       title: 'Snapshots',
-      note: 'Each Export Excel or Print for signing creates a snapshot.',
+      note: 'Each Export Excel or Print for signing creates a snapshot. Excel and print always come from a snapshot; later deliveries do not change snapshot numbers.',
       kind: { xlsx: 'Excel', print: 'Print' },
       fresh: 'New',
       meta: 'Created {{at}} · {{by}}',

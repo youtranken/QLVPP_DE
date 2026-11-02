@@ -1,11 +1,6 @@
-[data-shell='admin'] .bc-page { display: grid; gap: var(--s-4); min-width: 0; }
-[data-shell='admin'] .bc-page > * { min-width: 0; }
-[data-shell='admin'] .bc-page .page-head { flex-wrap: wrap; margin-bottom: 0; }
-[data-shell='admin'] .bc-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; }
-[data-shell='admin'] .bc-bar__actions { display: flex; gap: var(--s-2); flex-wrap: wrap; }
-[data-shell='admin'] .bc-month { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
 [data-shell='admin'] .bc-page > .alert a { color: inherit; font-weight: 800; text-decoration: underline; }
-[data-shell='admin'] .bc-section { display: grid; gap: var(--s-3); min-width: 0; }
+[data-shell='admin'] .bc-section { display: grid; gap: var(--s-4); min-width: 0; }
+[data-shell='admin'] .bc-page > .bc-section + .bc-section { margin-top: var(--s-2); }
 [data-shell='admin'] .bc-section__head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; }
 [data-shell='admin'] .bc-section__text { display: grid; gap: 2px; min-width: 0; }
 [data-shell='admin'] .bc-section__text h2 { margin: 0; font: var(--t-h2); letter-spacing: var(--ls-h2); color: var(--c-ink); }
@@ -47,10 +42,7 @@
 [data-shell='admin'] .bc-snap__meta { font: var(--t-sm); color: var(--c-muted); }
 [data-shell='admin'] .bc-icon-btn { width: 44px; padding: 0; }
 [data-shell='admin'] .bc-snap-error { align-items: center; flex-wrap: wrap; }
-[data-shell='admin'] .bc-how { margin: 0; font: var(--t-body); color: var(--c-ink-2); }
 @media (max-width: 767px) {
-  [data-shell='admin'] .bc-bar__actions { width: 100%; }
-  [data-shell='admin'] .bc-bar__actions .btn { flex: 1; }
   [data-shell='admin'] .bc-order { justify-content: start; }
   [data-shell='admin'] .bc-order__error { text-align: left; }
 }

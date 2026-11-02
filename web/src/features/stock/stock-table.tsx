@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/ui/data-table';
 import { ItemThumb } from '@/ui/item-thumb';
-import { RowMenu } from '@/ui/row-menu';
+import { RowMenu, type RowMenuItem } from '@/ui/row-menu';
+import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { useUnitNames } from '@/features/units/units.api';
 import type { ReactNode } from 'react';
 import type { StockRow } from './stock-rows';
@@ -28,22 +29,25 @@ export function IssueButton({ item, onClick, className }: { item: Pick<StockRow,
   );
 }
 
+// 390: Nhập mua vào ⋯ để hàng thẻ không bị nút chiếm chỗ; 1280: nút nhỏ luôn hiện (không chỉ khi rê chuột)
 function RowActions({ row: r, onAction }: { row: StockRow; onAction: (a: StockAction, r: StockRow) => void }) {
   const { t } = useTranslation();
+  const phone = useMediaQuery(ADMIN_PHONE_QUERY);
   const empty = r.stock_qty <= 0;
+  const purchase: RowMenuItem = { label: t('stock.page.purchase'), onSelect: () => onAction('purchase', r) };
+  const items: RowMenuItem[] = [
+    { label: t('stock.page.count'), onSelect: () => onAction('count', r) },
+    { label: t('stock.page.issue'), disabled: empty, title: empty ? t('stock.page.issueDisabled') : undefined, onSelect: () => onAction('issue', r) },
+    { label: t('stock.page.ledger'), onSelect: () => onAction('ledger', r) },
+  ];
   return (
     <span className="sk-actions__row">
-      <button type="button" className="btn btn--sm" onClick={() => onAction('purchase', r)}>
-        {t('stock.page.purchase')}
-      </button>
-      <RowMenu
-        label={t('stock.page.more', { name: r.name })}
-        items={[
-          { label: t('stock.page.count'), onSelect: () => onAction('count', r) },
-          { label: t('stock.page.issue'), disabled: empty, title: empty ? t('stock.page.issueDisabled') : undefined, onSelect: () => onAction('issue', r) },
-          { label: t('stock.page.ledger'), onSelect: () => onAction('ledger', r) },
-        ]}
-      />
+      {!phone && (
+        <button type="button" className="btn btn--ghost btn--sm sk-purchase" onClick={purchase.onSelect}>
+          {purchase.label}
+        </button>
+      )}
+      <RowMenu label={t('stock.page.more', { name: r.name })} items={phone ? [purchase, ...items] : items} />
     </span>
   );
 }

@@ -29,13 +29,16 @@ describe('ReportsPage — tháng', () => {
     expect(within(await region(PART1)).queryByRole('columnheader', { name: 'Số người' })).toBeNull();
   });
 
-  it('chọn tháng đứng trước Xuất Excel / In trình ký; chân Phần 1 đếm "4 món"', async () => {
+  it('Xuất Excel / In trình ký ở đầu trang (phụ trước chính); bộ chọn tháng ở thanh công cụ dưới; chân Phần 1 đếm "3 món"', async () => {
     stubReports();
     openPage();
     await orderCell('Bút bi xanh');
+    const actions = screen.getByRole('group', { name: 'Thao tác trang' });
+    expect(within(actions).getAllByRole('button').map((b) => b.textContent)).toEqual(['Xuất Excel', 'In trình ký']);
     const month = screen.getByRole('group', { name: 'Chọn tháng báo cáo' });
-    const exportBtn = screen.getByRole('button', { name: 'Xuất Excel' });
-    expect(month.compareDocumentPosition(exportBtn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(actions.contains(month)).toBe(false);
+    expect(actions.compareDocumentPosition(month) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByText('Số cần mua trong tháng, xuất Excel và in giấy trình ký.')).toBeInTheDocument();
     expect(within(await region(PART1)).getByText('3 món', { selector: 'p' })).toBeInTheDocument();
     expect(within(await region(PART1)).getByRole('columnheader', { name: 'Số người' })).toBeInTheDocument();
   });
@@ -205,10 +208,36 @@ describe('ReportsPage — Xuất lẻ, Phần 2, Cách tính', () => {
     expect(within(detail).queryByRole('row', { name: /Phạm Văn Đức/ })).toBeNull();
   });
 
-  it('khối "Cách tính Cần mua" ở cuối trang', async () => {
+  it('"Cách tính Cần mua" là nút (i) ở đầu cột Cần mua, bấm mới hiện công thức; không còn khối riêng cuối trang', async () => {
     stubReports();
     openPage();
-    const how = await region('Cách tính Cần mua');
-    expect(how).toHaveTextContent('Cần mua = Chưa giao kỳ này + Nợ kỳ trước − Tồn (không âm).');
+    const part1 = await region(PART1);
+    await orderCell('Bút bi xanh');
+    expect(screen.queryByRole('region', { name: 'Cách tính Cần mua' })).toBeNull();
+    const head = within(part1).getByRole('columnheader', { name: /^Cần mua/ });
+    await userEvent.click(within(head).getByRole('button', { name: 'Cách tính Cần mua' }));
+    expect(screen.getByRole('dialog', { name: 'Cách tính Cần mua' })).toHaveTextContent('Cần mua = Chưa giao kỳ này + Nợ kỳ trước − Tồn (không âm).');
+  });
+
+  it('390: không có đầu cột → nút (i) "Cách tính Cần mua" nằm ở công cụ Phần 1, chạm mở công thức; ô Cần mua giữ nhãn', async () => {
+    stubReports();
+    mockViewport(390);
+    renderApp(makeMe('admin'), '/admin/reports');
+    const part1 = await region(PART1);
+    const pen = (await orderCell('Bút bi xanh')).closest('tr')!;
+    expect(within(pen).getAllByRole('cell')[5]).toHaveAttribute('data-label', 'Cần mua');
+    const tips = within(part1).getAllByRole('button', { name: 'Cách tính Cần mua' });
+    expect(tips).toHaveLength(1);
+    expect(tips[0].closest('th')).toBeNull();
+    await userEvent.click(tips[0]);
+    expect(screen.getByRole('dialog', { name: 'Cách tính Cần mua' })).toHaveTextContent('Đặt mua mặc định bằng Cần mua.');
+  });
+
+  it('câu về bản chốt nằm ở mục "Bản chốt", không ở mô tả đầu trang', async () => {
+    stubReports();
+    openPage();
+    const snaps = await region('Bản chốt');
+    expect(within(snaps).getByText(/Excel và bản in luôn lấy từ một bản chốt/)).toBeInTheDocument();
+    expect(screen.queryByText(/Excel và bản in luôn lấy từ một bản chốt/, { selector: '.page-head__desc' })).toBeNull();
   });
 });
