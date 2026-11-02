@@ -6,7 +6,8 @@ import { seedLockedRequest, type Seed } from './locked-request';
 
 // exceljs là dependency của api: đọc lại tệp tải về bằng đúng thư viện đã ghi nó, không thêm gói cho web
 type Workbook = { xlsx: { readFile: (path: string) => Promise<unknown> }; worksheets: Sheet[] };
-type Sheet = { name: string; rowCount: number; getRows: (start: number, count: number) => { getCell: (n: number) => { value: unknown } }[] | undefined };
+type Cell = { value: unknown };
+type Sheet = { name: string; rowCount: number; getCell: (ref: string) => Cell; getRows: (start: number, count: number) => { getCell: (n: number) => Cell }[] | undefined };
 const ExcelJS = createRequire(new URL('../../api/package.json', import.meta.url))('exceljs') as { Workbook: new () => Workbook };
 
 const DOWNLOADS = 'test-results/downloads';

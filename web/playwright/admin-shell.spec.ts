@@ -82,7 +82,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     await expect(page.getByRole('button', { name: 'Đăng xuất' })).toBeInViewport({ ratio: 1 });
     const side = page.getByRole('navigation', { name: 'Menu quản lý' });
     const overflow = await side.getByRole('link').evaluateAll((links) =>
-      links.filter((a) => a.getBoundingClientRect().right > a.closest('nav')!.parentElement!.getBoundingClientRect().right).map((a) => a.title),
+      links.filter((a) => a.getBoundingClientRect().right > a.closest('nav')!.parentElement!.getBoundingClientRect().right).map((a) => a.getAttribute('title')),
     );
     expect(overflow).toEqual([]);
     if (isMobile(info)) return;
