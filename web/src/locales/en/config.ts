@@ -5,7 +5,7 @@ const config: Messages<typeof vi> = {
   config: {
     title: 'Settings',
     page: {
-      description: 'App-wide parameters. Each block saves on its own; every save is written to the Audit log.',
+      description: 'App-wide parameters that apply to every user.',
       saveNote: 'Saves this block only · recorded in the Audit log',
       noChanges: 'No changes',
       leaveBody: 'Unsaved: {{blocks}}.',

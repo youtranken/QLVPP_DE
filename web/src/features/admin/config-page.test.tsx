@@ -22,7 +22,7 @@ describe('Cấu hình · trang', () => {
     await openConfig();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1, name: 'Cấu hình' })).toBeInTheDocument();
-    expect(screen.getByText('Tham số chung của app. Mỗi khối lưu riêng; mọi lần lưu được ghi vào Nhật ký.')).toBeInTheDocument();
+    expect(screen.getByText('Tham số chung của app, áp dụng cho mọi người dùng.', { exact: true })).toBeInTheDocument();
     for (const name of ['Kỳ đăng ký', 'Quyền Hành chính', 'Ô ký trên phiếu đề xuất', 'Liên hệ & thông báo']) expect(block(name)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Lưu thế nào' })).toBeNull();
     for (const name of ['Kỳ đăng ký', 'Quyền Hành chính', 'Ô ký trên phiếu đề xuất', 'Liên hệ & thông báo']) {

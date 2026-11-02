@@ -2,7 +2,7 @@ const config = {
   config: {
     title: 'Cấu hình',
     page: {
-      description: 'Tham số chung của app. Mỗi khối lưu riêng; mọi lần lưu được ghi vào Nhật ký.',
+      description: 'Tham số chung của app, áp dụng cho mọi người dùng.',
       saveNote: 'Chỉ lưu khối này · ghi vào Nhật ký',
       noChanges: 'Chưa có thay đổi',
       leaveBody: 'Chưa lưu: {{blocks}}.',

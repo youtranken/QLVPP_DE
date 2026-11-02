@@ -47,7 +47,7 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     test.setTimeout(90_000);
     await page.goto('/admin/config');
     await expect(page.getByRole('heading', { level: 1, name: 'Cấu hình' })).toBeVisible();
-    await expect(page.getByText('Tham số chung của app. Mỗi khối lưu riêng; mọi lần lưu được ghi vào Nhật ký.')).toBeVisible();
+    await expect(page.getByText('Tham số chung của app, áp dụng cho mọi người dùng.', { exact: true })).toBeVisible();
 
     const period = block(page, 'Kỳ đăng ký');
     const lastDay = page.getByLabel('Hạn đăng ký (ngày)');
