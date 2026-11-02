@@ -21,7 +21,6 @@ export function UsersStats({ stats, filter, onFilter }: { stats: Record<UsersFil
           onClick={() => onFilter(f)}
         />
       ))}
-      <StatCard label={t('users.stats.auto')} icon="refresh" value={60} unit={t('users.stats.minutes')} sub={t('users.page.hint')} />
     </StatRow>
   );
 }

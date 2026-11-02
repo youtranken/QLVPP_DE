@@ -11,6 +11,7 @@ const admin: Messages<typeof vi> = {
       hint: 'Pulls fresh data from PMH ID.',
       sync: 'Sync now',
       syncing: 'Syncing…',
+      autoSync: 'Automatic every 60 min',
       syncDone: 'Synced from PMH ID: {{created}} new, {{updated}} updated.',
       closeNotice: 'Dismiss notice',
       dept: 'Department',
@@ -33,8 +34,6 @@ const admin: Messages<typeof vi> = {
       active: 'Active',
       never: 'Never signed in',
       locked: 'Locked',
-      auto: 'Automatic sync',
-      minutes: 'min',
       people: 'people',
     },
     drawer: {

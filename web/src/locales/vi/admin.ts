@@ -8,6 +8,7 @@ const admin = {
       hint: 'Lấy dữ liệu mới từ PMH ID.',
       sync: 'Đồng bộ ngay',
       syncing: 'Đang đồng bộ…',
+      autoSync: 'Tự động mỗi 60 phút',
       syncDone: 'Đã đồng bộ từ PMH ID: {{created}} người mới, {{updated}} cập nhật.',
       closeNotice: 'Đóng thông báo',
       dept: 'Phòng ban',
@@ -30,8 +31,6 @@ const admin = {
       active: 'Đang dùng',
       never: 'Chưa đăng nhập lần nào',
       locked: 'Đã khóa',
-      auto: 'Đồng bộ tự động',
-      minutes: 'phút',
       people: 'người',
     },
     drawer: {

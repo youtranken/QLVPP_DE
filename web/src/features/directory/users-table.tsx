@@ -96,6 +96,7 @@ export function UsersTable({
       onRowClick={onOpen}
       rowClassName={(u) => (u.status === 'locked' ? 'is-inactive' : '')}
       stackOnMobile
+      tableClassName="dr-table"
     />
   );
 }

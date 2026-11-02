@@ -6,6 +6,7 @@ import { useUrlSearchBox } from '@/lib/use-url-search-box';
 import { FilterNotice } from '@/ui/filter-notice';
 import { LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
+import { Select } from '@/ui/select';
 import { Toolbar } from '@/ui/toolbar';
 import { syncErrorKey } from './sync-errors';
 import { syncDirectory } from './directory.api';
@@ -54,8 +55,9 @@ export function UsersPage() {
       crumbs={[t('nav.groups.system'), title]}
       title={title}
       description={t('users.page.description')}
+      secondary={<span className="dr-auto">{t('users.page.autoSync')}</span>}
       primary={
-        <button type="button" className="btn btn--primary" disabled={sync.state.kind === 'running'} aria-busy={sync.state.kind === 'running'} onClick={sync.run}>
+        <button type="button" className="btn btn--primary" title={t('users.page.hint')} disabled={sync.state.kind === 'running'} aria-busy={sync.state.kind === 'running'} onClick={sync.run}>
           {t(sync.state.kind === 'running' ? 'users.page.syncing' : 'users.page.sync')}
         </button>
       }
@@ -63,7 +65,7 @@ export function UsersPage() {
   );
   if (dir.failed) {
     return (
-      <div className="ct-page">
+      <div className="ct-page dr-page">
         {header}
         <SyncNotice state={sync.state} onRetry={sync.run} onClose={sync.close} />
         <LoadError onRetry={dir.retry} />
@@ -77,23 +79,19 @@ export function UsersPage() {
   const step = (to: number) => setOpenSub(rows[to].sub);
   const narrowed = filter !== null || p.view.dept !== '' || p.view.q !== '';
   return (
-    <div className="ct-page">
+    <div className="ct-page dr-page">
       {header}
       <SyncNotice state={sync.state} onRetry={sync.run} onClose={sync.close} />
       {!dir.loading && !dir.overflow && <UsersStats stats={usersStats(dir.users)} filter={filter} onFilter={p.toggleFilter} />}
       {dir.overflow && <p role="note" className="alert">{t('users.page.overflow')}</p>}
       <Toolbar search={{ value: search, onChange: setSearch, label: t('users.page.searchLabel'), placeholder: t('users.page.search'), maxLength: MAX_SEARCH }}>
-        <label className="dr-dept">
-          <span className="sr-only">{t('users.page.dept')}</span>
-          <select value={p.view.dept} onChange={(e) => p.setDept(e.target.value)} aria-label={t('users.page.dept')}>
-            <option value="">{t('users.page.allDepts')}</option>
-            {departments.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Select
+          label={t('users.page.dept')}
+          hideLabel
+          value={p.view.dept}
+          onChange={p.setDept}
+          options={[{ value: '', label: t('users.page.allDepts') }, ...departments.map((d) => ({ value: d, label: d }))]}
+        />
       </Toolbar>
       {!dir.loading && (
         <p className="dr-count">{t(dir.overflow ? 'users.page.shownPartial' : 'users.page.shown', { shown: rows.length, total: dir.users.length })}</p>
