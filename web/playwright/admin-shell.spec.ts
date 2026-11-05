@@ -127,6 +127,24 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     expect(box.x).toBeGreaterThanOrEqual(72);
   });
 
+  test('v2: hàng người dùng 252px đọc được: tên >= 100px, vai trò một dòng, công cụ nằm dưới', async ({ page }, info) => {
+    test.skip(isMobile(info), 'chỉ đo ở 1280');
+    await page.goto('/admin/summary');
+    const user = page.locator('.side__user');
+    const name = user.locator('.side__who-text b');
+    const role = user.locator('.side__who-text small');
+    await expect(name).toBeVisible();
+    expect((await name.boundingBox())!.width).toBeGreaterThanOrEqual(100);
+    expect((await role.boundingBox())!.height).toBeLessThanOrEqual(20);
+    const bell = (await bellOf(page, false).boundingBox())!;
+    const logout = (await user.getByRole('button', { name: 'Đăng xuất' }).boundingBox())!;
+    expect(bell.y).toBeGreaterThanOrEqual((await name.boundingBox())!.y + 10);
+    expect(logout.x + logout.width).toBeLessThanOrEqual(252);
+    await page.setViewportSize({ width: 1280, height: 720 });
+    const nav = page.getByRole('navigation', { name: 'Menu quản lý' });
+    expect(await nav.evaluate((el) => el.scrollHeight - el.clientHeight), '12 mục vừa 1280×720, nav không phải cuộn').toBeLessThanOrEqual(1);
+  });
+
   test('E9-S1 khối tài khoản luôn trong màn hình, chuông nổi trên nội dung, số đếm không bị cắt', async ({ page }, info) => {
     await page.goto('/admin/summary');
     await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();

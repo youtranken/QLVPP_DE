@@ -94,14 +94,15 @@ export function AdminSidebarUser({ compact = false }: { compact?: boolean }) {
           <b>{name}</b>
           <small>{t(`common.roles.${me.role}`)}</small>
         </span>
-        {compact && <NotificationBell />}
+        {compact && !row && <NotificationBell />}
         {row && (
-          <>
+          <div className="side__tools">
+            <NotificationBell />
             <button type="button" className="side__icon-btn side__lang-btn" aria-label={t('common.languages.label')} title={t('common.languages.label')} {...toggle}>
               {t('common.languages.short')}
             </button>
             <LogoutButton iconOnly />
-          </>
+          </div>
         )}
       </div>
       {row

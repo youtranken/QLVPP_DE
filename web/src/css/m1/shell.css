@@ -19,7 +19,7 @@
 [data-shell='admin'] .side__cnt[data-badge='stock'],
 [data-shell='admin'] .side__cnt[data-badge='review'] { background: var(--c-warn-fill); color: var(--c-ink); }
 
-[data-shell='admin'] .side__period { flex: none; display: flex; gap: 12px; margin-top: 8px; padding: 8px 12px; border-radius: var(--r-md); border: 1px solid var(--c-glass-line); background: var(--c-glass); color: var(--c-on-dark); font: var(--t-cap); font-weight: 500; text-decoration: none; }
+[data-shell='admin'] .side__period { flex: none; display: flex; gap: 12px; margin-top: 4px; padding: 4px 12px; border-radius: var(--r-md); border: 1px solid var(--c-glass-line); background: var(--c-glass); color: var(--c-on-dark); font: var(--t-cap); font-weight: 500; text-decoration: none; }
 [data-shell='admin'] .side__period:hover { background: rgb(255 255 255 / .08); }
 [data-shell='admin'] .side__period:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 [data-shell='admin'] .side__period b { display: block; font: var(--t-label); }
@@ -33,10 +33,15 @@
 
 [data-shell='admin'] .side__user { position: relative; flex: none; display: grid; gap: 8px; padding: 8px 4px 0; }
 [data-shell='admin'] .side__who { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+[data-shell='admin'] .side__user[data-layout='row'] { gap: 0; padding-top: 4px; margin-bottom: -4px; }
+[data-shell='admin'] .side__user[data-layout='row'] .side__who { row-gap: 0; }
 [data-shell='admin'] .side__user[data-layout='row'] .side__avatar { width: 32px; height: 32px; font-size: 12px; }
 [data-shell='admin'] .side__user[data-layout='row'] .side__who-text { flex: 1 1 0; }
 [data-shell='admin'] .side__user[data-layout='row'] .side__acct { position: fixed; left: calc(var(--side-w) + 8px); bottom: 16px; z-index: 30; padding: 12px; border-radius: var(--r-md); background: var(--c-surface); color: var(--c-ink); box-shadow: var(--e-3); }
 [data-shell='admin'] .side__who .side__error { flex-basis: 100%; }
+[data-shell='admin'] .side__tools { flex: 1 0 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0 4px; margin-top: -4px; }
+[data-shell='admin'] .side__tools .side__error { flex-basis: 100%; }
+[data-shell='admin'] .side__tools .side__icon-btn, [data-shell='admin'] .side__tools .notif .notif-btn { width: 32px; height: 32px; }
 [data-shell='admin'] .side__icon-btn { display: grid; place-items: center; flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-on-dark-2); cursor: pointer; }
 [data-shell='admin'] .side__icon-btn:hover:not(:disabled) { background: rgb(255 255 255 / .08); color: var(--c-on-dark); }
 [data-shell='admin'] .side__icon-btn[aria-expanded='true'] { background: rgb(255 255 255 / .14); color: var(--c-on-dark); }
@@ -49,6 +54,9 @@
 [data-shell='admin'] .side__who-text { min-width: 0; }
 [data-shell='admin'] .side__who-text b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-label); font-size: 13px; color: var(--c-on-dark); }
 [data-shell='admin'] .side__who-text small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-cap); color: var(--c-on-dark-2); }
+[data-shell='admin'] .side__logout { padding: 0 12px; }
+[data-shell='admin'] .side__logout { color: inherit; }
+[data-shell='admin'] .side__logout:hover:not(:disabled) { background: rgb(255 255 255 / .08); }
 [data-shell='admin'] .side__acct { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 [data-shell='admin'] .side__user[data-layout='row'] .side__logout:hover:not(:disabled) { background: var(--c-surface-2); }
 [data-shell='admin'] .side__error { margin: 0; font: var(--t-cap); color: var(--c-on-dark); }
