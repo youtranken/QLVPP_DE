@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import i18n from '@/lib/i18n';
-import { jsonResponse, renderWithI18n, screen } from '@/test/test-utils';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { I18nextProvider } from 'react-i18next';
+import { act, jsonResponse, render, renderWithI18n, screen, waitFor } from '@/test/test-utils';
+import { periodSummaryQuery } from '@/features/summary/summary.api';
 import type { CurrentPeriod } from '@/features/request/request.api';
 import { AdminPeriodCard } from '@/shell/admin-period-card';
 
@@ -24,6 +27,22 @@ const renderCard = (p: CurrentPeriod) =>
     </MemoryRouter>,
   );
 
+// Truy vấn đã ổn định (success/error) thì mới khẳng định "không có thanh" — tránh test rỗng khi chưa tải xong
+async function renderSettled(p: CurrentPeriod, status: 'success' | 'error') {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={qc}>
+      <I18nextProvider i18n={i18n}>
+        <MemoryRouter>
+          <AdminPeriodCard period={p} />
+        </MemoryRouter>
+      </I18nextProvider>
+    </QueryClientProvider>,
+  );
+  await waitFor(() => expect(qc.getQueryState(periodSummaryQuery(p.ym).queryKey)?.status).toBe(status));
+  await act(async () => {});
+}
+
 describe('AdminPeriodCard', () => {
   it('ghi rõ "Kỳ đăng ký hiện tại" để không nhầm với tháng đang xem; days_left=2 → "còn 2 ngày · khóa 00:00 ngày 11/11", bấm về Tổng hợp kỳ', () => {
     renderCard(period(2));
@@ -38,6 +57,7 @@ describe('AdminPeriodCard', () => {
     stubSummary(() => jsonResponse(200, { registered: 32, headcount: 40 }));
     renderCard(period(2));
     expect(await screen.findByText('32/40 đã đăng ký')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /32\/40/ })).toHaveAttribute('href', '/admin/summary');
     const bar = screen.getByRole('progressbar');
     expect(bar).toHaveAttribute('aria-valuenow', '32');
     expect(bar).toHaveAttribute('aria-valuemax', '40');
@@ -46,9 +66,8 @@ describe('AdminPeriodCard', () => {
   it('summary lỗi → không có thanh, vẫn thấy "Kỳ tháng 11" và hạn', async () => {
     const f = vi.fn(() => Promise.resolve(jsonResponse(500, null)));
     vi.stubGlobal('fetch', f);
-    renderCard(period(2));
-    await vi.waitFor(() => expect(f).toHaveBeenCalled());
-    await new Promise((r) => setTimeout(r, 0));
+    await renderSettled(period(2), 'error');
+    expect(f).toHaveBeenCalled();
     expect(screen.queryByRole('progressbar')).toBeNull();
     expect(screen.getByText('Kỳ tháng 11')).toBeInTheDocument();
     expect(screen.getByText(/còn 2 ngày/)).toBeInTheDocument();
@@ -57,9 +76,8 @@ describe('AdminPeriodCard', () => {
   it('headcount 0 → không có thanh (không chia 0)', async () => {
     const f = vi.fn(() => Promise.resolve(jsonResponse(200, { registered: 0, headcount: 0 })));
     vi.stubGlobal('fetch', f);
-    renderCard(period(2));
-    await vi.waitFor(() => expect(f).toHaveBeenCalled());
-    await new Promise((r) => setTimeout(r, 0));
+    await renderSettled(period(2), 'success');
+    expect(f).toHaveBeenCalled();
     expect(screen.queryByRole('progressbar')).toBeNull();
     expect(screen.queryByText(/đã đăng ký/)).toBeNull();
   });

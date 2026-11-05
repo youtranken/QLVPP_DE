@@ -1,21 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LoadError, Loading } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
-import { currentPeriodQuery } from '@/features/request/request.api';
+import { vnYmNow } from '@/lib/ym';
 import { IssuesPanel } from './issues-panel';
 import { StockInventory } from './stock-inventory';
 import { useStockParams, type StockTab } from './use-stock-params';
 import './stock.m1.css';
-
-function IssuesTab({ ym, onYmChange }: { ym: string | undefined; onYmChange: (ym: string) => void }) {
-  const current = useQuery({ ...currentPeriodQuery(), enabled: !ym });
-  const shown = ym ?? current.data?.ym;
-  if (!shown) return current.isError ? <LoadError onRetry={() => void current.refetch()} /> : <Loading />;
-  return <IssuesPanel ym={shown} onYmChange={onYmChange} />;
-}
 
 export function StockPage() {
   const { t } = useTranslation();
@@ -38,7 +29,7 @@ export function StockPage() {
         }
       />
       <Segmented label={t('stock.issues.tabs')} value={p.tab} options={tabs} onChange={p.setTab} />
-      {p.tab === 'issues' ? <IssuesTab ym={p.ym} onYmChange={p.setYm} /> : <StockInventory p={p} />}
+      {p.tab === 'issues' ? <IssuesPanel ym={p.ym ?? vnYmNow()} onYmChange={p.setYm} /> : <StockInventory p={p} />}
     </div>
   );
 }

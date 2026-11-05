@@ -16,6 +16,7 @@
 [data-shell='admin'] .side__link:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 [data-shell='admin'] .side__link[aria-current='page'] { background: var(--c-surface); color: var(--c-ink); font-weight: 800; }
 [data-shell='admin'] .side__cnt { display: inline-grid; flex: none; place-items: center; min-width: 20px; height: 20px; margin-left: auto; padding: 0 8px; border-radius: var(--r-pill); background: rgb(255 255 255 / .14); color: var(--c-on-dark); font: var(--t-micro); }
+[data-shell='admin'] .side__link[aria-current='page'] .side__cnt:not([data-badge='stock']):not([data-badge='review']) { background: var(--c-acc-soft); color: var(--c-acc); }
 [data-shell='admin'] .side__cnt[data-badge='stock'],
 [data-shell='admin'] .side__cnt[data-badge='review'] { background: var(--c-warn-fill); color: var(--c-ink); }
 
@@ -28,8 +29,8 @@
 [data-shell='admin'] .side__period .progress__bar { background: rgb(255 255 255 / .15); }
 [data-shell='admin'] .side__period .progress__bar > span { background: var(--c-bar-fill); }
 [data-shell='admin'] .side__period-text > span { display: block; font-size: 12px; letter-spacing: -0.01em; }
-[data-shell='admin'] .side__period-dot { display: none; width: 10px; height: 10px; border-radius: var(--r-pill); background: var(--c-ok); }
-[data-shell='admin'] .side__period[data-last] .side__period-dot { background: var(--c-warn); }
+[data-shell='admin'] .side__period-dot { display: none; width: 10px; height: 10px; border-radius: var(--r-pill); background: var(--c-bar-fill); }
+[data-shell='admin'] .side__period[data-last] .side__period-dot { background: var(--c-warn-fill); }
 
 [data-shell='admin'] .side__user { position: relative; flex: none; display: grid; gap: 8px; padding: 8px 4px 0; }
 [data-shell='admin'] .side__who { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
@@ -54,11 +55,9 @@
 [data-shell='admin'] .side__who-text { min-width: 0; }
 [data-shell='admin'] .side__who-text b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-label); font-size: 13px; color: var(--c-on-dark); }
 [data-shell='admin'] .side__who-text small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-cap); color: var(--c-on-dark-2); }
-[data-shell='admin'] .side__logout { padding: 0 12px; }
-[data-shell='admin'] .side__logout { color: inherit; }
+[data-shell='admin'] .side__logout { padding: 0 12px; color: inherit; }
 [data-shell='admin'] .side__logout:hover:not(:disabled) { background: rgb(255 255 255 / .08); }
 [data-shell='admin'] .side__acct { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
-[data-shell='admin'] .side__user[data-layout='row'] .side__logout:hover:not(:disabled) { background: var(--c-surface-2); }
 [data-shell='admin'] .side__error { margin: 0; font: var(--t-cap); color: var(--c-on-dark); }
 
 [data-shell='admin'] .side .notif-btn,
@@ -90,6 +89,7 @@
 [data-shell='admin'] .side-sheet-viewport { position: fixed; inset: 0; z-index: 51; display: flex; pointer-events: none; }
 [data-shell='admin'] .side-sheet { display: flex; flex-direction: column; width: min(320px, 88vw); height: 100%; padding-top: env(safe-area-inset-top); background: linear-gradient(160deg, var(--c-shell-a) 0%, var(--c-shell-b) 100%); color: var(--c-on-dark-2); pointer-events: auto; box-shadow: var(--e-5); outline: none; animation: m1-side-in var(--d-3) var(--ease-out); }
 [data-shell='admin'] .side-sheet__head { display: flex; align-items: center; gap: 12px; padding: 12px 8px 8px 20px; border-bottom: 1px solid var(--c-glass-line); }
+[data-shell='admin'] .side-sheet__head .side__logo { display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--r-sm); background: var(--c-logo-bg); color: var(--c-ink); }
 [data-shell='admin'] .side-sheet__title { flex: 1; min-width: 0; }
 [data-shell='admin'] .side-sheet__title h2 { margin: 0; font: var(--t-label); font-size: 16px; font-weight: 800; color: var(--c-on-dark); }
 [data-shell='admin'] .side-sheet__title small { display: block; font: var(--t-cap); color: var(--c-on-dark-2); }

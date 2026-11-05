@@ -9,7 +9,7 @@
   /* viền */
   --c-line: #D6E6EB;  --c-line-strong: #B5CFD7;  --c-line-input: #7F9AA3; /* viền ô nhập/checkbox ≥ 3:1 */
   /* nhấn duy nhất: navy */
-  --c-acc: #0F6E80;  --c-acc-hover: #0A5868;  --c-acc-press: #08434F;  --c-acc-soft: #DDF1F5;  --c-acc-tint: #EEF8FA;  --c-on-acc: #FFFFFF;
+  --c-acc: #0E6A7B;  --c-acc-hover: #0A5868;  --c-acc-press: #08434F;  --c-acc-soft: #DDF1F5;  --c-acc-tint: #EEF8FA;  --c-on-acc: #FFFFFF;
   /* hero kỳ: cát → xanh xám */
   --c-hero-a: #DDF1F5;  --c-hero-b: #EEF6F8;  --c-hero-c: #CBE4EB;  --c-hero-ink: #0E2A33;  --c-blob: rgb(255 255 255 / .55);
   /* ngữ nghĩa: chữ / nền nhạt / vạch (fill chỉ cho thanh, chấm — không cho chữ) */

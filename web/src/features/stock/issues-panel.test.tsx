@@ -88,4 +88,12 @@ describe('IssuesPanel', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Tháng trước' }));
     expect(onYmChange).toHaveBeenCalledWith('2026-10');
   });
+
+  it('mới nhất lên đầu (API trả cũ → mới, bảng đảo lại)', async () => {
+    stub(() => jsonResponse(200, [row({ id: 'm-1', item_name: 'Cũ nhất' }), row({ id: 'm-2', item_name: 'Giữa' }), row({ id: 'm-3', item_name: 'Mới nhất' })]));
+    show();
+    await screen.findByText('Mới nhất');
+    const names = screen.getAllByRole('row').slice(1).map((r) => r.textContent ?? '');
+    expect(names.map((n) => ['Mới nhất', 'Giữa', 'Cũ nhất'].find((x) => n.includes(x)))).toEqual(['Mới nhất', 'Giữa', 'Cũ nhất']);
+  });
 });

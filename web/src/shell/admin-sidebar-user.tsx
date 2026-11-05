@@ -53,7 +53,9 @@ function usePopover() {
     if (!open) return;
     panel.current?.querySelector<HTMLElement>('[aria-checked="true"], button')?.focus();
     const onPointer = (e: PointerEvent) => {
-      if (!box.current?.contains(e.target as Node)) setOpen(false);
+      // Chuông nằm trong cùng khối nhưng không thuộc hộp này: bấm chuông cũng là bấm ra ngoài
+      const t = e.target as Node;
+      if (!panel.current?.contains(t) && !trigger.current?.contains(t)) setOpen(false);
     };
     document.addEventListener('pointerdown', onPointer);
     return () => document.removeEventListener('pointerdown', onPointer);
@@ -79,7 +81,7 @@ export function AdminSidebarUser({ compact = false }: { compact?: boolean }) {
   const popover = { ref: panel, id };
   const toggle = { ref: trigger, 'aria-expanded': open, 'aria-controls': open ? id : undefined, onClick: () => setOpen((v) => !v) };
   return (
-    <div ref={box} className="side__user" data-layout={row ? 'row' : undefined} onKeyDown={onKeyDown}>
+    <div ref={box} className="side__user" role="group" aria-label={t('nav.userMenu')} data-layout={row ? 'row' : undefined} onKeyDown={onKeyDown}>
       <div className="side__who">
         {tablet ? (
           <button type="button" className="side__avatar" title={name} aria-label={t('nav.userMenu')} {...toggle}>

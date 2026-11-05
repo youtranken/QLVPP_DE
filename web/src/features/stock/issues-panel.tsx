@@ -7,7 +7,8 @@ import { DataTable } from '@/ui/data-table';
 import { LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
 import { useUnitNames } from '@/features/units/units.api';
-import { currentPeriodQuery } from '@/features/request/request.api';
+import { monthOf } from '@/features/request/request-format';
+import { vnYmNow } from '@/lib/ym';
 import { issuesQuery, type IssueRow } from './stock.api';
 
 const dayThenTime = (iso: string) => {
@@ -42,18 +43,17 @@ function useColumns() {
 export function IssuesPanel({ ym, onYmChange }: { ym: string; onYmChange: (ym: string) => void }) {
   const { t } = useTranslation();
   const q = useQuery(issuesQuery(ym));
-  const current = useQuery(currentPeriodQuery());
   const columns = useColumns();
-  const rows = q.data ?? [];
+  const rows = useMemo(() => [...(q.data ?? [])].reverse(), [q.data]);
   const units = rows.reduce((sum, r) => sum + r.qty, 0);
   return (
     <div className="sk-issues">
       <div className="toolbar">
         <MonthSwitcher
           value={ym}
-          max={current.data?.ym}
+          max={vnYmNow()}
           onChange={onYmChange}
-          formatLabel={(v) => t('stock.issues.month', { month: Number(v.slice(5)), year: v.slice(0, 4) })}
+          formatLabel={(v) => t('stock.issues.month', { month: monthOf(v), year: v.slice(0, 4) })}
           labels={{ group: t('stock.issues.monthNav'), prev: t('stock.issues.prevMonth'), next: t('stock.issues.nextMonth') }}
         />
         {q.isSuccess && <p className="sk-issues__total">{t('stock.issues.total', { n: rows.length, units })}</p>}

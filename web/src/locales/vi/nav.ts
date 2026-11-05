@@ -39,11 +39,10 @@ const nav = {
       stock: '{{n}} món sắp hết',
     },
     periodCard: {
-      label: 'Kỳ đăng ký hiện tại',
       title: 'Kỳ tháng {{month}}',
       registered: '{{registered}}/{{headcount}} đã đăng ký',
-      state: 'Tháng {{month}} · đang mở',
       name: 'Kỳ đăng ký hiện tại: tháng {{month}} · đang mở · {{detail}}',
+      nameWithCount: 'Kỳ đăng ký hiện tại: tháng {{month}} · đang mở · {{registered}}/{{headcount}} đã đăng ký · {{detail}}',
       daysLeft: 'còn {{n}} ngày · khóa 00:00 ngày {{date}}',
       lastDay: 'Hôm nay là ngày cuối · khóa 00:00 ngày {{date}}',
     },

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
@@ -266,21 +266,19 @@ describe('StockPage', () => {
       expect(callsTo(f, '/api/admin/issues?ym=2026-10')).toHaveLength(1);
     });
 
-    it('thiếu ym thì lấy kỳ hiện tại', async () => {
-      const f = await openIssues('/admin/stock?tab=issues');
-      expect(callsTo(f, '/api/admin/issues?ym=2026-11')).toHaveLength(1);
-    });
-
-    it('kỳ hiện tại lỗi khi chưa có ym: hiện lỗi có Thử lại, bấm thì tải lại', async () => {
-      mockViewport(1280);
-      let fail = true;
-      const f = stubStockApi((url) => (url === '/api/periods/current' && fail ? jsonResponse(500, { code: 'X' }) : issuesApi(url)));
-      renderApp(makeMe('admin'), '/admin/stock?tab=issues');
-      const retry = await screen.findByRole('button', { name: 'Thử lại' });
-      fail = false;
-      await userEvent.click(retry);
-      expect(await screen.findByText('Trần Thị Bình')).toBeInTheDocument();
-      expect(callsTo(f, '/api/periods/current').length).toBeGreaterThan(1);
+    it('thiếu ym thì lấy THÁNG LỊCH hiện tại (giờ VN), không phải kỳ đăng ký đang mở: 25/11 với kỳ mở là 2026-12 → ym=2026-11', async () => {
+      vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-11-25T03:00:00Z') });
+      try {
+        const f = stubStockApi((url) => (url === '/api/periods/current' ? jsonResponse(200, { ym: '2026-12', registration_last_day: 10 }) : issuesApi(url)));
+        mockViewport(1280);
+        renderApp(makeMe('admin'), '/admin/stock?tab=issues');
+        await screen.findByText(/lần xuất/);
+        expect(callsTo(f, '/api/admin/issues?ym=2026-11')).toHaveLength(1);
+        expect(callsTo(f, '/api/admin/issues?ym=2026-12')).toHaveLength(0);
+        expect(screen.getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('tab lạ rơi về Tồn kho', async () => {

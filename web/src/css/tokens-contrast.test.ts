@@ -29,7 +29,11 @@ const PAIRS: [fg: string, bg: string][] = [
   ['--c-ok', '--c-ok-soft'], ['--c-warn', '--c-warn-soft'], ['--c-danger', '--c-danger-soft'],
   ['--c-on-dark', '--c-shell-c'], ['--c-on-dark-2', '--c-shell-a'], ['--c-on-dark-2', '--c-shell-c'],
   ['--c-on-dark', '--c-acc'], ['--c-warn', '--c-cart'],
+  ['--c-acc', '--c-panel-b'], ['--c-acc', '--c-panel-a'], ['--c-acc', '--c-acc-soft'],
 ];
+
+// Chấm kỳ ở cột 72 (không có chữ) — thành phần phi văn bản cần ≥ 3:1 trên nền kính
+const DOTS: [fg: string, bg: string][] = [['--c-bar-fill', '--c-shell-b'], ['--c-warn-fill', '--c-shell-b']];
 
 describe('tương phản token bảng màu v2', () => {
   it('bảng màu mang tiêu đề v2', () => {
@@ -37,5 +41,13 @@ describe('tương phản token bảng màu v2', () => {
   });
   it.each(PAIRS)('%s trên %s ≥ 4.5', (fg, bg) => {
     expect(contrast(tok(fg), tok(bg))).toBeGreaterThanOrEqual(4.5);
+  });
+  it.each(DOTS)('chấm kỳ %s trên %s ≥ 3', (fg, bg) => {
+    expect(contrast(tok(fg), tok(bg))).toBeGreaterThanOrEqual(3);
+  });
+  it('chấm kỳ trong shell.css dùng đúng hai token đó', () => {
+    const shell = readFileSync(resolve(process.cwd(), 'src/css/m1/shell.css'), 'utf8');
+    expect(shell).toMatch(/\.side__period-dot \{[^}]*background: var\(--c-bar-fill\)/);
+    expect(shell).toMatch(/\.side__period\[data-last\] \.side__period-dot \{ background: var\(--c-warn-fill\)/);
   });
 });

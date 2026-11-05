@@ -6,7 +6,7 @@ import { periodSummaryQuery } from '@/features/summary/summary.api';
 import { lowStockQuery } from '@/features/stock/stock.api';
 import type { AdminBadgeKey } from '@/shell/admin-nav';
 
-const BADGE_FRESH = { staleTime: 60_000, refetchOnWindowFocus: true } as const;
+export const BADGE_FRESH = { staleTime: 60_000, refetchOnWindowFocus: true } as const;
 
 const countOf = (n: unknown): number | undefined => (typeof n === 'number' && Number.isFinite(n) ? n : undefined);
 

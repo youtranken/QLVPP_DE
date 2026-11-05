@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { YM, shiftYm } from '@/lib/ym';
+import { YM, shiftYm, vnYmNow } from '@/lib/ym';
 
 describe('ym', () => {
   it('YM nhận tháng 01–12, từ chối 00/13/1 chữ số', () => {
@@ -17,5 +17,11 @@ describe('ym', () => {
     expect(shiftYm('2026-12', 1)).toBe('2027-01');
     expect(shiftYm('2026-01', -1)).toBe('2025-12');
     expect(shiftYm('2026-11', 1)).toBe('2026-12');
+  });
+
+  it('vnYmNow: 16:59:59Z ngày 30/11 vẫn là 2026-11, 17:00:00Z đã là 2026-12 (UTC+7)', () => {
+    expect(vnYmNow(new Date('2026-11-30T16:59:59Z'))).toBe('2026-11');
+    expect(vnYmNow(new Date('2026-11-30T17:00:00Z'))).toBe('2026-12');
+    expect(vnYmNow(new Date('2026-12-31T17:00:00Z'))).toBe('2027-01');
   });
 });

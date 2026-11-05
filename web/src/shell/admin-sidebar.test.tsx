@@ -101,6 +101,22 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
     expect(screen.queryByRole('radio', { name: 'English' })).toBeNull();
   });
 
+  it('mở chuông khi hộp "Ngôn ngữ" đang mở → hộp ngôn ngữ đóng (không chồng nhau); mở lại hộp ngôn ngữ thì chuông đóng', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    const lang = await screen.findByRole('button', { name: 'Ngôn ngữ' });
+    await userEvent.click(lang);
+    expect(screen.getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
+    const bell = screen.getByRole('button', { name: /^Thông báo/ });
+    await userEvent.click(bell);
+    expect(screen.queryByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeNull();
+    expect(bell).toHaveAttribute('aria-expanded', 'true');
+    await userEvent.click(lang);
+    expect(screen.getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
+    expect(bell).toHaveAttribute('aria-expanded', 'false');
+  });
+
   it('cột ≥ 1280: nút "Ngôn ngữ" hiện mã ngôn ngữ hiện tại; mở → aria-controls trỏ tới hộp, focus vào lựa chọn đang chọn; bấm ra ngoài thì đóng; Esc đóng và trả focus về nút', async () => {
     mockViewport(1280);
     stubShellApi();
