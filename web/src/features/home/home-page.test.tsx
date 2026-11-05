@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import i18n from '@/lib/i18n';
-import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 import { reportFixture } from '@/features/reports/reports-fixtures';
+import { adminItem } from '@/features/summary/adjust-fixtures';
 
 const kpi = (o: object) => ({ ym: '2026-10', deadline: '2026-10-10T17:00:00.000Z', is_open: false, registered: 39, headcount: 40, headcount_source: 'snapshot', unregistered: 0, lines_pending_delivery: 4, custom_pending: 0, low_stock: 0, ...o });
 const person = (i: number) => ({ sub: `u${i}`, full_name: `Người số ${i}`, email: null, department: null });
@@ -19,6 +20,9 @@ interface Setup {
   report?: ReturnType<typeof reportFixture>;
   unregistered?: number;
   review?: number;
+  items?: ReturnType<typeof adminItem>[];
+  reviewFails?: boolean;
+  unregisteredFails?: boolean;
   low?: { id: string; name: string; name_en: string | null; stock_qty: number }[];
 }
 
@@ -29,8 +33,9 @@ function setup(o: Setup = {}) {
     '/api/admin/periods/2026-11/summary': () => jsonResponse(200, kpi({ ym: '2026-11', is_open: true, registered: 32, unregistered: o.unregistered ?? 0, ...o.current })),
     '/api/admin/reports/2026-10/snapshots': () => jsonResponse(200, { items: snaps }),
     '/api/admin/reports/2026-10': () => jsonResponse(200, o.report ?? noNeed),
-    '/api/admin/periods/2026-11/unregistered': () => jsonResponse(200, { items: Array.from({ length: o.unregistered ?? 0 }, (_, i) => person(i + 1)) }),
-    '/api/admin/review?status=pending': () => jsonResponse(200, { items: Array.from({ length: o.review ?? 0 }, (_, i) => ({ line_id: `l${i}` })) }),
+    '/api/admin/items': () => jsonResponse(200, o.items ?? []),
+    '/api/admin/periods/2026-11/unregistered': () => (o.unregisteredFails ? jsonResponse(500, null) : jsonResponse(200, { items: Array.from({ length: o.unregistered ?? 0 }, (_, i) => person(i + 1)) })),
+    '/api/admin/review?status=pending': () => (o.reviewFails ? jsonResponse(500, null) : jsonResponse(200, { items: Array.from({ length: o.review ?? 0 }, (_, i) => ({ line_id: `l${i}` })) })),
     '/api/admin/stock/low': () => jsonResponse(200, o.low ?? []),
   });
 }
@@ -117,6 +122,42 @@ describe('Trang Tháng này: thẻ việc cần làm', () => {
     expect(within(custom).getByRole('link', { name: 'Xem món chờ duyệt' })).toHaveAttribute('href', '/admin/review');
     const low = (await screen.findByRole('heading', { name: '2 món trong tủ sắp hết' })).closest('section')!;
     expect(within(low).getByRole('link', { name: 'Xem tủ' })).toHaveAttribute('href', '/admin/stock');
+  });
+});
+
+describe('Trang Tháng này: món ngừng dùng và thẻ lỗi', () => {
+  it('món ngừng dùng còn need > 0 không giữ bước Hàng về: có chờ giao 4 → bước hiện tại là Giao', async () => {
+    const inactive = reportFixture({ byItem: [{ key: 'off', item_id: 'off', name: 'Món ngừng', name_en: null, unit: 'cay', requested: 5, backlog_prev: 0, stock: 0, need: 5 }], custom: [] });
+    await open({ report: inactive, items: [adminItem({ id: 'off', name: 'Món ngừng', active: false })] });
+    expect(within(currentStep()).getByText('Giao')).toBeInTheDocument();
+    expect(within(currentStep()).getByRole('link', { name: 'Mở Giao hàng' })).toHaveAttribute('href', '/admin/delivery');
+  });
+
+  it('cùng món còn dùng (active) với need 5 → bước Hàng về (đối chứng hai phía)', async () => {
+    const active = reportFixture({ byItem: [{ key: 'on', item_id: 'on', name: 'Món dùng', name_en: null, unit: 'cay', requested: 5, backlog_prev: 0, stock: 0, need: 5 }], custom: [] });
+    await open({ report: active, items: [adminItem({ id: 'on', name: 'Món dùng' })] });
+    expect(within(currentStep()).getByText('Hàng về')).toBeInTheDocument();
+  });
+
+  it('tải món chờ duyệt lỗi → thẻ báo lỗi có "Thử lại"; bấm → tải lại', async () => {
+    mockViewport(1280);
+    const f = setup({ reviewFails: true });
+    renderApp(makeMe('admin'), '/admin/home');
+    await screen.findByRole('list', { name: '4 bước của tháng' });
+    const retry = await screen.findByRole('button', { name: 'Thử lại' });
+    const calls = () => f.mock.calls.filter(([u]) => u === '/api/admin/review?status=pending').length;
+    const before = calls();
+    await userEvent.click(retry);
+    await waitFor(() => expect(calls()).toBeGreaterThan(before));
+  });
+
+  it('tải danh sách chưa đăng ký lỗi → không chip rỗng, có "Thử lại"', async () => {
+    mockViewport(1280);
+    setup({ unregistered: 3, unregisteredFails: true });
+    renderApp(makeMe('admin'), '/admin/home');
+    const card = (await screen.findByRole('heading', { name: '3 người chưa đăng ký kỳ tháng 11' })).closest('section')!;
+    expect(await within(card).findByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
+    expect(within(card).queryAllByRole('listitem')).toHaveLength(0);
   });
 });
 

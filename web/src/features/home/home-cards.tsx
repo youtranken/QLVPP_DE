@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/ui/icon';
+import { LoadError } from '@/ui/load-state';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import { useUnregisteredCopy } from '@/features/summary/use-unregistered-copy';
 import type { UnregisteredUser } from '@/features/summary/summary.api';
@@ -14,14 +15,17 @@ interface UnregisteredProps {
   ym: string;
   deadline: string | null;
   count: number;
-  people: UnregisteredUser[];
+  // null = chưa tải xong hoặc lỗi: không vẽ danh sách chip rỗng
+  people: UnregisteredUser[] | null;
+  failed?: boolean;
+  onRetry?: () => void;
 }
 
-export function UnregisteredCard({ ym, deadline, count, people }: UnregisteredProps) {
+export function UnregisteredCard({ ym, deadline, count, people, failed = false, onRetry }: UnregisteredProps) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   const copy = useUnregisteredCopy(ym, deadline);
-  const shown = people.slice(0, MAX_CHIPS);
+  const shown = (people ?? []).slice(0, MAX_CHIPS);
   const more = count - shown.length;
   return (
     <section aria-labelledby="hm-unreg" className="hm-card hm-card--main">
@@ -32,7 +36,8 @@ export function UnregisteredCard({ ym, deadline, count, people }: UnregisteredPr
           {deadline && <p>{t('home.unregistered.hint', { day: fmt.lastDay(deadline).split('/')[0] })}</p>}
         </div>
       </div>
-      <ul className="hm-chips">
+      {people === null && failed && onRetry && <LoadError onRetry={onRetry} />}
+      {people !== null && <ul className="hm-chips">
         {shown.map((p) => {
           const name = p.full_name ?? p.email ?? p.sub;
           return (
@@ -43,7 +48,7 @@ export function UnregisteredCard({ ym, deadline, count, people }: UnregisteredPr
           );
         })}
         {more > 0 && <li className="hm-chip hm-chip--more">{t('home.unregistered.more', { n: more })}</li>}
-      </ul>
+      </ul>}
       <div className="hm-card__actions">
         <button type="button" className="btn hm-btn-dark" disabled={copy.busy} onClick={copy.copy}>
           <Icon name="copy" size={18} />
@@ -85,6 +90,14 @@ export function LowStockCard({ items }: { items: AdminItem[] }) {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+export function CardError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <section className="hm-card">
+      <LoadError onRetry={onRetry} />
     </section>
   );
 }

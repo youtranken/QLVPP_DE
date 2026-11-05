@@ -6,13 +6,15 @@ import { useMe } from '@/lib/me';
 import { shiftYm } from '@/lib/ym';
 import { Loading, LoadError } from '@/ui/load-state';
 import { Segmented } from '@/ui/segmented';
+import { useAdminItems } from '@/features/catalog/catalog.api';
+import { toArrivalRows } from '@/features/arrivals/arrival-rows';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { useMonthReport, useSnapshots } from '@/features/reports/reports.api';
 import { reviewLinesQuery } from '@/features/review/review.api';
 import { lowStockQuery } from '@/features/stock/stock.api';
 import { usePeriodSummary, useUnregistered, type PeriodSummary } from '@/features/summary/summary.api';
-import { CustomCard, LowStockCard, UnregisteredCard } from './home-cards';
+import { CardError, CustomCard, LowStockCard, UnregisteredCard } from './home-cards';
 import { monthSteps } from './month-steps';
 import { MonthSteps } from './month-steps-list';
 import './home.m1.css';
@@ -21,7 +23,7 @@ type View = 'locked' | 'current';
 
 function UnregisteredSection({ ym, deadline, count }: { ym: string; deadline: string | null; count: number }) {
   const people = useUnregistered(ym);
-  return <UnregisteredCard ym={ym} deadline={deadline} count={count} people={people.data?.items ?? []} />;
+  return <UnregisteredCard ym={ym} deadline={deadline} count={count} people={people.data?.items ?? null} failed={people.isError} onRetry={() => void people.refetch()} />;
 }
 
 function Cards({ ym, summary }: { ym: string; summary: PeriodSummary }) {
@@ -29,14 +31,16 @@ function Cards({ ym, summary }: { ym: string; summary: PeriodSummary }) {
   const low = useQuery(lowStockQuery());
   const custom = review.data?.items.length ?? 0;
   const lowItems = low.data ?? [];
-  if (summary.unregistered === 0 && custom === 0 && lowItems.length === 0) return null;
+  const showCustom = custom > 0 || review.isError;
+  const showLow = lowItems.length > 0 || low.isError;
+  if (summary.unregistered === 0 && !showCustom && !showLow) return null;
   return (
     <div className="hm-cards">
       {summary.unregistered > 0 && <UnregisteredSection ym={ym} deadline={summary.deadline} count={summary.unregistered} />}
-      {(custom > 0 || lowItems.length > 0) && (
+      {(showCustom || showLow) && (
         <div className="hm-side">
-          {custom > 0 && <CustomCard count={custom} />}
-          {lowItems.length > 0 && <LowStockCard items={lowItems} />}
+          {review.isError ? <CardError onRetry={() => void review.refetch()} /> : custom > 0 && <CustomCard count={custom} />}
+          {low.isError ? <CardError onRetry={() => void low.refetch()} /> : lowItems.length > 0 && <LowStockCard items={lowItems} />}
         </div>
       )}
     </div>
@@ -52,17 +56,19 @@ function Ready({ currentYm }: { currentYm: string }) {
   const locked = usePeriodSummary(lockedYm);
   const snapshots = useSnapshots(lockedYm);
   const report = useMonthReport(lockedYm);
-  const queries = [current, locked, snapshots, report];
+  const items = useAdminItems();
+  const queries = [current, locked, snapshots, report, items];
   const failed = queries.find((q) => q.isError);
   if (failed) return <LoadError onRetry={() => void Promise.all(queries.map((q) => q.refetch()))} />;
-  if (!current.data || !locked.data || !snapshots.data || !report.data) return <Loading />;
+  if (!current.data || !locked.data || !snapshots.data || !report.data || !items.data) return <Loading />;
 
   const lockedSteps = monthSteps({
     registered: locked.data.registered,
     headcount: locked.data.headcount,
     isOpen: locked.data.is_open,
     snapshots: snapshots.data.items.length,
-    needTotal: report.data.byItem.reduce((n, r) => n + r.need, 0),
+    // Cùng tập dòng với trang Hàng về: bỏ món đã ngừng dùng (server không nhập kho cho món đó)
+    needTotal: toArrivalRows(report.data, items.data).reduce((n, r) => n + r.qty, 0),
     pendingDelivery: locked.data.lines_pending_delivery,
   });
   const currentSteps = monthSteps({ registered: current.data.registered, headcount: current.data.headcount, isOpen: current.data.is_open, snapshots: 0, needTotal: 0, pendingDelivery: 0 });

@@ -13,8 +13,8 @@ test.describe('Trang Tháng này (Plan v2-B, B6)', () => {
     await expect(page).toHaveURL(/\/admin\/home$/);
     await expect(page.getByRole('heading', { level: 1, name: /^Chào / })).toBeVisible();
     await expect(steps(page).getByRole('listitem')).toHaveCount(4);
-    const names = await steps(page).locator('.hm-step__name').allTextContents();
-    expect(names).toEqual(['Đăng ký', 'Gửi ADM', 'Hàng về', 'Giao']);
+    const items = steps(page).getByRole('listitem');
+    for (const [i, name] of ['Đăng ký', 'Gửi ADM', 'Hàng về', 'Giao'].entries()) await expect(items.nth(i)).toContainText(name);
     await settled(page);
     await shot(page, info, 'home');
     expect(await fitsWidth(page), 'không cuộn ngang').toBe(true);
@@ -68,6 +68,6 @@ test.describe('Trang Tháng này (Plan v2-B, B6)', () => {
     await page.goto('/admin/home');
     await expect(page.getByRole('heading', { level: 1, name: /^Hello / })).toBeVisible();
     await expect(steps(page).getByRole('listitem')).toHaveCount(4);
-    expect(await steps(page).locator('.hm-step__name').allTextContents()).toEqual(['Sign-up', 'Send to ADM', 'Goods in', 'Delivery']);
+    for (const name of ['Sign-up', 'Send to ADM', 'Goods in', 'Delivery']) await expect(steps(page).getByText(name, { exact: true })).toBeVisible();
   });
 });
