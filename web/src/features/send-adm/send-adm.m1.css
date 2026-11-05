@@ -36,8 +36,8 @@
 [data-shell='admin'] .sa-sheet__table td { padding: var(--s-1) var(--s-2); border: 1px solid rgb(51 51 51); font-family: 'Times New Roman', serif; font-size: 12px; color: black; }
 [data-shell='admin'] .sa-sheet__table td.n { text-align: right; font-variant-numeric: tabular-nums; }
 [data-shell='admin'] .sa-sheet__table td.sa-sheet__empty { text-align: center; font-style: italic; color: rgb(68 68 68); }
-[data-shell='admin'] .sa-signs { display: flex; justify-content: space-around; gap: var(--s-4); margin-top: var(--s-7); text-align: center; font-family: 'Times New Roman', serif; font-size: 13px; }
-[data-shell='admin'] .sa-sign { min-width: 0; display: grid; justify-items: center; gap: var(--s-1); }
+[data-shell='admin'] .sa-signs { display: flex; justify-content: space-around; gap: var(--s-2); min-width: 0; margin-top: var(--s-7); text-align: center; font-family: 'Times New Roman', serif; font-size: 13px; }
+[data-shell='admin'] .sa-sign { min-width: 0; flex: 1 1 0; max-width: 100%; display: grid; justify-items: center; gap: var(--s-1); }
 [data-shell='admin'] .sa-sign__en { font-style: italic; font-size: 12px; }
 [data-shell='admin'] .sa-sign__space { height: 64px; }
 [data-shell='admin'] .sa-sign__blank { width: min(160px, 100%); border-bottom: 1px dotted black; height: 1em; }

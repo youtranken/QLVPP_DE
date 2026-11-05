@@ -27,8 +27,8 @@ const REPORT = reportFixture({
 });
 const ITEMS = [adminItem({ id: 'kA', name: 'Bút bi xanh' }), adminItem({ id: 'kB', name: 'Giấy A4' }), adminItem({ id: 'kOff', name: 'Món ngừng bán', active: false })];
 
-function setup(over: { report?: MonthReport; deadline?: string; summary?: object } = {}) {
-  const base = stubReports({ reports: { '2026-10': over.report ?? REPORT }, items: ITEMS });
+function setup(over: { report?: MonthReport; deadline?: string; summary?: object; items?: typeof ITEMS } = {}) {
+  const base = stubReports({ reports: { '2026-10': over.report ?? REPORT }, items: over.items ?? ITEMS });
   const f = vi.fn(async (url: string, init?: RequestInit) => {
     if (url === SUMMARY_URL) return jsonResponse(200, { ym: '2026-10', deadline: over.deadline ?? PAST, unregistered: 3, custom_pending: 1, lines_pending_delivery: 0, ...over.summary });
     if (url === '/api/admin/config') return jsonResponse(200, { signature_boxes: BOXES });
@@ -192,5 +192,46 @@ describe('SendAdmPage — biên Đề nghị (0 … 99 999)', () => {
     expect(xlsx()).toBeDisabled();
     await userEvent.click(xlsx());
     expect(postsOf(f)).toHaveLength(0);
+  });
+});
+
+describe('SendAdmPage — vòng sửa 1', () => {
+  it('sửa một ô rồi bấm link ở checklist: hỏi trước khi rời; "Tiếp tục sửa" giữ nguyên trang và số đã gõ', async () => {
+    setup();
+    await open();
+    const a = await qtyBox('Bút bi xanh');
+    await retype(a, '10');
+    await userEvent.click(within(screen.getByRole('list', { name: 'Kiểm trước khi gửi' })).getByRole('link', { name: 'Tổng hợp kỳ' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Bỏ số Đặt mua đã sửa?' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Tiếp tục sửa' }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Gửi ADM, kỳ tháng 10' })).toBeInTheDocument();
+    expect(await qtyBox('Bút bi xanh')).toHaveValue(10);
+  });
+
+  it('chưa sửa gì thì link đi thẳng, không hỏi', async () => {
+    setup();
+    await open();
+    await userEvent.click(within(screen.getByRole('list', { name: 'Kiểm trước khi gửi' })).getByRole('link', { name: 'Tổng hợp kỳ' }));
+    expect(screen.queryByRole('dialog', { name: 'Bỏ số Đặt mua đã sửa?' })).toBeNull();
+  });
+
+  it('mọi món Đề nghị 0: hai nút vô hiệu kèm gợi ý, phiếu rỗng không gửi được', async () => {
+    const f = setup();
+    await open();
+    for (const name of ['Bút bi xanh', 'Giấy A4', 'Món ngừng bán', 'Băng keo lạ']) await retype(await qtyBox(name), '0');
+    expect(xlsx()).toBeDisabled();
+    expect(print()).toBeDisabled();
+    expect(screen.getByText('Mọi món đang để 0: chưa có gì để đề nghị.')).toBeInTheDocument();
+    await retype(await qtyBox('Giấy A4'), '1');
+    expect(xlsx()).toBeEnabled();
+    expect(postsOf(f)).toHaveLength(0);
+  });
+
+  it('tên EN lấy từ dòng báo cáo, không từ danh mục', async () => {
+    setup({ items: ITEMS.map((i) => (i.id === 'kA' ? { ...i, name_en: 'Catalog name' } : i)) });
+    await i18n.changeLanguage('en');
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/send-adm');
+    expect(await screen.findByRole('spinbutton', { name: 'Request: Blue pen' })).toBeInTheDocument();
   });
 });

@@ -4,7 +4,7 @@ const sendAdm = {
     description: 'Phiếu đúng mẫu sheet phòng của ADM. In trình Chủ quản ký, rồi gửi Excel để ADM dán vào cột phòng.',
     unlocked: 'Kỳ tháng {{month}} chưa khóa sổ, mở lại sau {{deadline}}.',
     unlockedNoDate: 'Kỳ tháng {{month}} chưa khóa sổ.',
-    actions: { print: 'In trình ký', xlsx: 'Xuất Excel mẫu phòng' },
+    actions: { empty: 'Mọi món đang để 0: chưa có gì để đề nghị.', print: 'In trình ký', xlsx: 'Xuất Excel mẫu phòng' },
     checklist: {
       title: 'Kiểm trước khi gửi',
       unregistered: '{{n}} người chưa đăng ký',

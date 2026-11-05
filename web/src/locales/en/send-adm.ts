@@ -7,7 +7,7 @@ const sendAdm: Messages<typeof vi> = {
     description: 'The form follows the ADM department sheet. Print it for the Head of Dept. to sign, then send the Excel for ADM to paste into the department column.',
     unlocked: 'The {{month}} period is not locked yet, reopens after {{deadline}}.',
     unlockedNoDate: 'The {{month}} period is not locked yet.',
-    actions: { print: 'Print for signing', xlsx: 'Export department Excel' },
+    actions: { empty: 'Every item is set to 0: nothing to request yet.', print: 'Print for signing', xlsx: 'Export department Excel' },
     checklist: {
       title: 'Check before sending',
       unregistered: '{{n}} people have not registered',

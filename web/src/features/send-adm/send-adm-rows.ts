@@ -24,7 +24,7 @@ export function toOrderRows(report: MonthReport, items: AdminItem[]): OrderRow[]
       key: r.key,
       code: r.code ?? null,
       name: r.name,
-      name_en: item?.name_en ?? r.name_en,
+      name_en: r.name_en,
       unit: r.unit,
       image_file_id: item?.image_file_id ?? null,
       need: r.need,

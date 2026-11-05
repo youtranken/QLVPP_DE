@@ -10,6 +10,7 @@ import { PageHeader } from '@/ui/page-header';
 import { useAdminConfig } from '@/features/admin/admin.api';
 import { useAdminItems } from '@/features/catalog/catalog.api';
 import { currentPeriodQuery, useCurrentPeriod } from '@/features/request/request.api';
+import { useLeaveGuard } from '@/features/request/use-leave-guard';
 import { monthOf } from '@/features/request/request-format';
 import { useUnitNames } from '@/features/units/units.api';
 import { PendingDialog } from '@/features/reports/report-pending-dialog';
@@ -73,7 +74,14 @@ function Ready({ report, items, summary, boxes, onInvalidPeriod }: ReadyProps) {
     .map((r) => ({ key: r.key, code: r.code, name: r.name, name_en: r.name_en, unit: unitName(r.unit, 'vi'), qty: orderOf(qty, r) }))
     .filter((r) => r.qty > 0);
   // Ô lỗi (kể cả để trống) khóa cả hai nút: không chốt phiếu có số chưa hợp lệ
-  const blocked = qty.errorCount > 0 || snap.taking !== null;
+  const empty = formRows.length === 0;
+  const blocked = qty.errorCount > 0 || snap.taking !== null || empty;
+  // Số Đề nghị đã sửa chưa xuất sẽ mất khi rời trang: hỏi như trang Báo cáo
+  const prompt = useMemo(
+    () => ({ title: t('reports.page.leaveConfirm.title'), message: t('reports.page.leaveConfirm.message', { count: qty.editedCount, month: monthOf(report.ym) }), confirmLabel: t('reports.page.leaveConfirm.ok'), cancelLabel: t('reports.page.leaveConfirm.cancel'), danger: true }),
+    [t, qty.editedCount, report.ym],
+  );
+  useLeaveGuard(qty.editedCount, prompt);
   return (
     <div className="ct-page sa-page">
       <PageHeader
@@ -81,6 +89,7 @@ function Ready({ report, items, summary, boxes, onInvalidPeriod }: ReadyProps) {
         secondary={<ActionButton mode="xlsx" disabled={blocked} taking={snap.taking} onTake={snap.take} />}
         primary={<ActionButton mode="print" disabled={blocked} taking={snap.taking} onTake={snap.take} />}
       />
+      {empty && <p className="alert alert--warn">{t('sendAdm.actions.empty')}</p>}
       {snap.notice && <p role="alert" className="alert alert--danger">{t(`reports.page.error.${snap.notice}`)}</p>}
       <div className="sa-grid">
         <div className="sa-left">
