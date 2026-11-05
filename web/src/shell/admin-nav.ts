@@ -20,6 +20,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     labelKey: 'nav.groups.monthly',
     pages: [
       { path: 'summary', titleKey: 'nav.summary', icon: 'dash' },
+      { path: 'send-adm', titleKey: 'nav.sendAdm', icon: 'printer' },
       { path: 'delivery', titleKey: 'nav.delivery', icon: 'truck', badge: 'delivery' },
       { path: 'arrivals', titleKey: 'nav.arrivals', icon: 'pkg' },
       { path: 'reports', titleKey: 'nav.reports', icon: 'printer' },

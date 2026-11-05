@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Tổng hợp kỳ', 'Giao hàng', 'Hàng về', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình', 'Còn nợ', 'Giao hàng (bản cũ)'];
+const NAV_ORDER = ['Tổng hợp kỳ', 'Gửi ADM', 'Giao hàng', 'Hàng về', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình', 'Còn nợ', 'Giao hàng (bản cũ)'];
 
 const topbar = () => screen.getAllByRole('banner')[0];
 const search = () => screen.getByTestId('location-search').textContent ?? '';
@@ -67,7 +67,7 @@ describe('AdminTopbar 390 px', () => {
 });
 
 describe('Menu sheet 390 px', () => {
-  it('tiêu đề "Menu quản lý", "VPP Công trình · Hành chính", nút "Đóng menu", 14 mục, thẻ kỳ, ngôn ngữ, Đăng xuất', async () => {
+  it('tiêu đề "Menu quản lý", "VPP Công trình · Hành chính", nút "Đóng menu", 15 mục, thẻ kỳ, ngôn ngữ, Đăng xuất', async () => {
     open('/admin/catalog');
     await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
     const sheet = screen.getByRole('dialog', { name: 'Menu quản lý' });

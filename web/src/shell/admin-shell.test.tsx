@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Tổng hợp kỳ', 'Giao hàng', 'Hàng về', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Tổng hợp kỳ', 'Gửi ADM', 'Giao hàng', 'Hàng về', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 const LATER = ['Còn nợ', 'Giao hàng (bản cũ)'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
@@ -25,7 +25,7 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.queryByRole('navigation', { name: 'Menu quản lý' })).toBeNull();
   });
 
-  it.each(['admin', 'sa'] as const)('role %s: sidebar 4 nhóm, 12 mục (nhóm "Xem lại sau" thu gọn) theo thứ tự SPEC §4.1, mục đang chọn aria-current, không "Phiếu của tôi"', (role) => {
+  it.each(['admin', 'sa'] as const)('role %s: sidebar 4 nhóm, 13 mục (nhóm "Xem lại sau" thu gọn) theo thứ tự SPEC §4.1, mục đang chọn aria-current, không "Phiếu của tôi"', (role) => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe(role), '/admin/catalog');
@@ -87,7 +87,7 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getByRole('main').querySelector('.shell__panel')).not.toBeNull();
   });
 
-  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 14 mục (menu điện thoại không thu gọn nhóm)', async () => {
+  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 15 mục (menu điện thoại không thu gọn nhóm)', async () => {
     mockViewport(767);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');

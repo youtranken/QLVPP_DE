@@ -32,6 +32,7 @@ const nav: Messages<typeof vi> = {
     users: 'Staff',
     review: 'Off-catalog items',
     arrivals: 'Goods arriving',
+    sendAdm: 'Send to ADM',
     delivery: 'Delivery',
     backlog: 'Outstanding',
     deliveryClassic: 'Deliveries (classic)',

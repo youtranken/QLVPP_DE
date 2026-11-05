@@ -17,7 +17,8 @@ import reports from './reports';
 import units from './units';
 import config from './config';
 import arrivals from './arrivals';
+import sendAdm from './send-adm';
 
-const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review, ...notifications, ...delivery, ...reports, ...units, ...config, ...arrivals };
+const en: Messages<typeof vi> = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review, ...notifications, ...delivery, ...reports, ...units, ...config, ...arrivals, ...sendAdm };
 
 export default en;

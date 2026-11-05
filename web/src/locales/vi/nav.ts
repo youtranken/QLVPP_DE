@@ -29,6 +29,7 @@ const nav = {
     users: 'Nhân viên',
     review: 'Món ngoài danh mục',
     arrivals: 'Hàng về',
+    sendAdm: 'Gửi ADM',
     delivery: 'Giao hàng',
     backlog: 'Còn nợ',
     deliveryClassic: 'Giao hàng (bản cũ)',

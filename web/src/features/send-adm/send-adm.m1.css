@@ -1,0 +1,60 @@
+[data-shell='admin'] .sa-grid { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--s-4); }
+[data-shell='admin'] .sa-left { flex: 1 1 400px; max-width: 480px; min-width: 0; display: grid; gap: var(--s-4); }
+[data-shell='admin'] .sa-card { display: grid; gap: var(--s-3); padding: var(--s-5); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
+[data-shell='admin'] .sa-card h2 { margin: 0; font: var(--t-h3); }
+[data-shell='admin'] .sa-note { margin: 0; color: var(--c-muted); font: var(--t-sm); }
+
+[data-shell='admin'] .sa-checks { display: grid; gap: var(--s-3); margin: 0; padding: 0; list-style: none; }
+[data-shell='admin'] .sa-check { display: flex; gap: var(--s-3); font: var(--t-body); }
+[data-shell='admin'] .sa-check svg { flex: none; }
+[data-shell='admin'] .sa-check[data-tone='ok'] svg { color: var(--c-ok-fill); }
+[data-shell='admin'] .sa-check[data-tone='warn'] { color: var(--c-warn); }
+[data-shell='admin'] .sa-check[data-tone='warn'] svg { color: var(--c-warn-fill); }
+[data-shell='admin'] .sa-check a { font-weight: 600; }
+
+[data-shell='admin'] .sa-orders-scroll { max-height: 440px; overflow: auto; }
+[data-shell='admin'] .sa-orders { width: 100%; border-collapse: collapse; }
+[data-shell='admin'] .sa-orders th { position: sticky; top: 0; background: var(--c-surface); padding: var(--s-2) var(--s-2); border-bottom: 1px solid var(--c-line); font: var(--t-cap); font-weight: 700; color: var(--c-muted); text-align: left; white-space: nowrap; }
+[data-shell='admin'] .sa-orders td { padding: var(--s-2); border-bottom: 1px solid var(--c-line); font: var(--t-body); vertical-align: middle; }
+[data-shell='admin'] .sa-orders .n { text-align: right; font-variant-numeric: tabular-nums; }
+[data-shell='admin'] .sa-item__in { display: flex; align-items: center; gap: var(--s-3); }
+[data-shell='admin'] .sa-item span { display: grid; min-width: 0; }
+[data-shell='admin'] .sa-item b { font: var(--t-label); overflow-wrap: anywhere; }
+[data-shell='admin'] .sa-item small { font: var(--t-sm); color: var(--c-muted); }
+[data-shell='admin'] .sa-qty input { width: 88px; min-height: var(--hit); padding: 0 var(--s-3); border: 1px solid var(--c-line-strong, var(--c-line)); border-radius: var(--r-md); background: var(--c-surface); font: var(--t-label); font-weight: 700; text-align: right; }
+[data-shell='admin'] .sa-qty input[aria-invalid='true'] { border-color: var(--c-danger); }
+[data-shell='admin'] .sa-err { display: block; margin-top: var(--s-1); color: var(--c-danger); font: var(--t-cap); font-weight: 700; }
+
+[data-shell='admin'] .sa-preview { flex: 999 1 480px; min-width: 0; padding: var(--s-5); box-sizing: border-box; overflow-x: auto; border-radius: var(--r-lg); background: var(--c-surface-2, var(--c-surface)); box-shadow: var(--e-1); }
+[data-shell='admin'] .sa-sheet { max-width: 760px; min-width: 480px; margin: 0 auto; padding: var(--s-8) var(--s-7); box-sizing: border-box; border-radius: 4px; background: white; color: black; font-family: 'Times New Roman', serif; font-size: 12px; box-shadow: 0 6px 24px rgb(8 48 59 / .12); }
+[data-shell='admin'] .sa-sheet__head { display: grid; gap: var(--s-1); text-align: center; margin-bottom: var(--s-4); }
+[data-shell='admin'] .sa-sheet__title { margin: 0; font-family: 'Times New Roman', serif; font-size: 18px; font-weight: 700; }
+[data-shell='admin'] .sa-sheet__sub { margin: 0; font-family: 'Times New Roman', serif; font-size: 12px; font-style: italic; }
+[data-shell='admin'] .sa-sheet__date { margin: var(--s-2) 0 0; font-family: 'Times New Roman', serif; font-size: 12px; text-align: right; }
+[data-shell='admin'] .sa-sheet__table { width: 100%; border-collapse: collapse; }
+[data-shell='admin'] .sa-sheet__table th { padding: var(--s-1) var(--s-2); border: 1px solid rgb(51 51 51); background: rgb(242 242 242); font-family: 'Times New Roman', serif; font-size: 12px; font-weight: 700; text-align: center; color: black; }
+[data-shell='admin'] .sa-sheet__table td { padding: var(--s-1) var(--s-2); border: 1px solid rgb(51 51 51); font-family: 'Times New Roman', serif; font-size: 12px; color: black; }
+[data-shell='admin'] .sa-sheet__table td.n { text-align: right; font-variant-numeric: tabular-nums; }
+[data-shell='admin'] .sa-sheet__table td.sa-sheet__empty { text-align: center; font-style: italic; color: rgb(68 68 68); }
+[data-shell='admin'] .sa-signs { display: flex; justify-content: space-around; gap: var(--s-4); margin-top: var(--s-7); text-align: center; font-family: 'Times New Roman', serif; font-size: 13px; }
+[data-shell='admin'] .sa-sign { min-width: 0; display: grid; justify-items: center; gap: var(--s-1); }
+[data-shell='admin'] .sa-sign__en { font-style: italic; font-size: 12px; }
+[data-shell='admin'] .sa-sign__space { height: 64px; }
+[data-shell='admin'] .sa-sign__blank { width: min(160px, 100%); border-bottom: 1px dotted black; height: 1em; }
+
+@media (max-width: 767px) {
+  [data-shell='admin'] .sa-card { padding: var(--s-4); }
+  [data-shell='admin'] .sa-preview { padding: var(--s-3); }
+  [data-shell='admin'] .sa-sheet { min-width: 0; padding: var(--s-5) var(--s-3); }
+  [data-shell='admin'] .sa-sheet__table th, [data-shell='admin'] .sa-sheet__table td { padding: var(--s-1); overflow-wrap: anywhere; }
+  [data-shell='admin'] .sa-orders-scroll { max-height: none; overflow: visible; }
+  [data-shell='admin'] .sa-orders thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  [data-shell='admin'] .sa-orders, [data-shell='admin'] .sa-orders tbody { display: block; }
+  [data-shell='admin'] .sa-orders tr { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--s-2) var(--s-3); padding: var(--s-3) 0; border-bottom: 1px solid var(--c-line); }
+  [data-shell='admin'] .sa-orders td { padding: 0; border: 0; }
+  [data-shell='admin'] .sa-orders td.sa-item { grid-column: 1 / -1; }
+  [data-shell='admin'] .sa-orders td[data-label] { display: grid; gap: 2px; text-align: left; }
+  [data-shell='admin'] .sa-orders td[data-label]::before { content: attr(data-label); font: var(--t-cap); color: var(--c-muted); }
+  [data-shell='admin'] .sa-orders td.n { text-align: left; }
+  [data-shell='admin'] .sa-qty input { width: 100%; text-align: left; }
+}
