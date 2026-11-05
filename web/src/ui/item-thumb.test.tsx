@@ -20,6 +20,10 @@ describe('ItemThumb', () => {
     expect(container.querySelector('img')).toBeNull();
     expect(container.querySelector('[data-thumb="placeholder"] use')!.getAttribute('href')).toBe('#u-image');
   });
+  it('placeholder lấy tông nhóm của món (không luôn g0)', () => {
+    const { container } = render(<ItemThumb fileId={null} alt="" tone="g3" size="card" />);
+    expect((container.querySelector('[data-thumb="placeholder"]') as HTMLElement).style.background).toBe('var(--g3)');
+  });
   it('đổi fileId sau khi lỗi thì thử lại ảnh mới', () => {
     const { container, rerender } = render(<ItemThumb fileId="f1" alt="a" tone="g1" size={48} />);
     fireEvent.error(container.querySelector('img')!);

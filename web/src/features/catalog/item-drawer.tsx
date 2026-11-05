@@ -9,6 +9,7 @@ import { categoryLabel, type AdminItem, type Category } from './catalog.api';
 import { NO_GROUP, indexCategories, type CatalogRow } from './catalog-rows';
 import { ItemFacts } from './item-facts';
 import { ItemFields } from './item-fields';
+import { StaffPreview } from './staff-preview';
 import { useItemForm, type ItemForm } from './use-item-form';
 
 interface Props {
@@ -135,6 +136,7 @@ export function ItemDrawer({ item, categories, rows, defaultCategoryId, onClose,
         <div className="drawer-body">
           <Blocks f={f} />
           <ItemFields draft={f.draft} errors={f.errors} index={index} keepCategoryId={item?.category_id} onChange={f.set} onUploadingChange={f.setUploading} />
+          <StaffPreview draft={f.draft} tone={index.tone.get(f.draft.category_id) ?? 'g0'} />
           {item && <ItemFacts item={item} />}
           {item && (
             <button type="button" className="btn btn--danger-ghost ct-delete" disabled={f.saving} onClick={() => void f.remove()}>

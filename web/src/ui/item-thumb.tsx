@@ -33,7 +33,7 @@ export function ItemThumb({ fileId, alt, tone, size }: { fileId: string | null; 
     );
   }
   return (
-    <span data-thumb="placeholder" style={{ ...box, background: 'var(--g0)', color: 'var(--c-faint)' }}>
+    <span data-thumb="placeholder" style={{ ...box, color: 'var(--c-faint)' }}>
       <Icon name="image" size={px ? Math.round(px * 0.4) : 40} />
     </span>
   );

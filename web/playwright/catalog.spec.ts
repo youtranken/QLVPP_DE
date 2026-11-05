@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Locator, type Page } from '@playwright/test';
-import { asRole, devHeaders, expectNoContrastViolations, isMobile, removeTestItem, shot } from './helpers';
+import { asRole, devHeaders, deleteTestFiles, expectNoContrastViolations, isMobile, psql, removeTestItem, shot } from './helpers';
 
 // Ảnh đã tải xong thật (không phải icon ảnh vỡ) và GET /api/files/:id trả 200
 async function expectImageServed(page: Page, img: Locator) {
@@ -55,7 +55,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'categories');
 
-      await page.goto('/admin/catalog');
+      await page.goto('/admin/catalog?view=table');
       await page.getByRole('main').getByRole('button', { name: 'Thêm món', exact: true }).click();
       const form = page.getByRole('dialog', { name: 'Thêm món' });
       await form.getByRole('button', { name: 'Thêm món' }).click();
@@ -104,7 +104,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
   });
 
   test('E1-S5 trang Danh mục hiện nhãn "Thiếu ảnh" cho món seed', async ({ page }, info) => {
-    await page.goto('/admin/catalog');
+    await page.goto('/admin/catalog?view=table');
     const search = page.getByRole('searchbox', { name: /^Tìm trong \d+ món$/ });
     await search.fill('Giấy A4');
     const row = page.getByRole('row').filter({ hasText: 'Giấy A4' });
@@ -145,7 +145,7 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
     const nameB = `PW E9 ${stamp} B`;
     const ids: string[] = [];
     try {
-      await page.goto('/admin/catalog');
+      await page.goto('/admin/catalog?view=table');
       await page.getByRole('main').getByRole('button', { name: 'Thêm món', exact: true }).click();
       const drawer = page.getByRole('dialog', { name: 'Thêm món' });
       await drawer.getByLabel('Tên món').fill(nameA);
@@ -194,6 +194,40 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
       await shot(page, info, 'catalog-e9-s5', false);
     } finally {
       for (const id of ids) await removeTestItem(request, id);
+    }
+  });
+
+  test('Lưới: tải ảnh lên cho món chưa có ảnh', async ({ page, request }, info) => {
+    const name = `PW Grid ${Date.now()}-${info.project.name}`;
+    const id = await createItemViaApi(request, name);
+    try {
+      const oldImage = psql(`SELECT image_file_id FROM items WHERE id = '${id}'`);
+      psql(`UPDATE items SET image_file_id = NULL WHERE id = '${id}'`);
+      deleteTestFiles([oldImage]);
+      await page.goto('/admin/catalog');
+      await expect(page.getByRole('group', { name: 'Chế độ xem' }).getByRole('button', { name: 'Lưới' })).toHaveAttribute('aria-pressed', 'true');
+      await page.getByRole('button', { name: /^Chưa có ảnh/ }).click();
+      await page.getByRole('searchbox', { name: /^Tìm trong \d+ món$/ }).fill(name);
+      const card = page.getByRole('article').filter({ hasText: name });
+      await expect(card.getByText('Tải ảnh lên', { exact: true })).toBeVisible();
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await shot(page, info, 'catalog-grid', false);
+      const patched = page.waitForResponse((r) => r.url().endsWith(`/api/admin/items/${id}`) && r.request().method() === 'PATCH');
+      await card.getByLabel(`Tải ảnh lên cho ${name}`).setInputFiles('playwright/fixtures/item.png');
+      expect((await patched).status()).toBe(200);
+      await expect(page.getByText(`Đã thêm ảnh cho ${name}`)).toBeVisible();
+      await page.getByRole('button', { name: /^Đang dùng/ }).click();
+      await expectImageServed(page, page.getByRole('article').filter({ hasText: name }).getByRole('img', { name }));
+      await expect(page.getByRole('article').filter({ hasText: name }).getByText('Tải ảnh lên', { exact: true })).toHaveCount(0);
+
+      await page.getByRole('button', { name: `Sửa ${name}` }).click();
+      const drawer = page.getByRole('dialog', { name: 'Sửa món' });
+      await expect(drawer.getByRole('region', { name: 'Nhân viên sẽ thấy' }).getByText(name)).toBeVisible();
+      await drawer.getByLabel('Tên món').fill(`${name} mới`);
+      await expect(drawer.getByRole('region', { name: 'Nhân viên sẽ thấy' }).getByText(`${name} mới`)).toBeVisible();
+      await shot(page, info, 'catalog-grid-drawer', false);
+    } finally {
+      await removeTestItem(request, id);
     }
   });
 

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
 import { OLD, PAPER, PEN } from './catalog-fixtures';
-import { inRow, openCatalog, patchCalls, validationError } from './catalog-fixtures-api';
+import { inRow, locationSearch, openCatalog, patchCalls, validationError } from './catalog-fixtures-api';
 
 const ITEMS = [PAPER, PEN, OLD];
 const maxCell = () => screen.getByRole('button', { name: 'Sửa tối đa/tháng của Bút bi xanh, đang là 10' });
@@ -65,7 +65,7 @@ describe('Danh mục — sửa tối đa/tháng tại chỗ (biên 1/999 vs 0/10
   it('bấm ô số không mở ngăn kéo sửa món', async () => {
     await openCatalog({ items: ITEMS });
     await userEvent.click(maxCell());
-    expect(screen.getByTestId('location-search').textContent).toBe('');
+    expect(locationSearch()).toBe('');
   });
 });
 

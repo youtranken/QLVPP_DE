@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { CATALOG_FILTERS, type CatalogFilter, type CatalogView } from './catalog-rows';
 import { useUrlPatch } from '@/lib/use-url-patch';
+import { parseTab, type CatalogTab, type CatalogViewMode } from './catalog-tabs';
 
 const parseFilter = (raw: string | null): CatalogFilter | null =>
   CATALOG_FILTERS.includes(raw as CatalogFilter) ? (raw as CatalogFilter) : null;
@@ -11,11 +12,16 @@ export function useCatalogParams() {
   const q = params.get('q') ?? '';
   const inactive = params.get('inactive') === '1';
   const filter = parseFilter(params.get('filter'));
+  const mode: CatalogViewMode = params.get('view') === 'table' ? 'table' : 'grid';
+  const tab = parseTab(params.get('tab'));
   const view = useMemo<CatalogView>(() => ({ cat, q, inactive, filter }), [cat, q, inactive, filter]);
-
 
   return {
     view,
+    mode,
+    tab,
+    setMode: (next: CatalogViewMode) => update({ view: next === 'table' ? 'table' : null }),
+    setTab: (next: CatalogTab) => update({ tab: next === 'active' ? null : next }),
     itemId: params.get('item'),
     itemCategoryId: params.get('itemCat'),
     setCat: (next: string | null) => update({ cat: next }),

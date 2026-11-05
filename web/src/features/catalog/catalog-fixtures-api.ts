@@ -52,11 +52,19 @@ export const patchCalls = (f: ReturnType<typeof stubCatalog>) =>
 export const validationError = (field: string) =>
   jsonResponse(400, { code: 'VALIDATION', message: 'Dữ liệu không hợp lệ', fields: [field] });
 
-export async function openCatalog(opts: Options, path = '/admin/catalog') {
+// Mặc định trang mở dạng lưới; các test của bảng mở ?view=table và đọc URL đã bỏ tham số đó
+const withTable = (path: string) => (/[?&]view=/.test(path) ? path : `${path}${path.includes('?') ? '&' : '?'}view=table`);
+
+export const locationSearch = () => {
+  const rest = (screen.getByTestId('location-search').textContent ?? '').replace(/^\?/, '').split('&').filter((kv) => kv !== 'view=table').join('&');
+  return rest ? `?${rest}` : '';
+};
+
+export async function openCatalog(opts: Options, path = '/admin/catalog', rawUrl = false) {
   mockViewport(1280);
   seedOpenGroups(opts);
   const fetchMock = stubCatalog(opts);
-  renderApp(makeMe('admin'), path);
+  renderApp(makeMe('admin'), rawUrl ? path : withTable(path));
   await screen.findByRole('group', { name: 'Lọc theo nhóm', hidden: true });
   return fetchMock;
 }

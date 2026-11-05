@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen, userEvent, within } from '@/test/test-utils';
 import { PAPER, PEN, PENCIL } from './catalog-fixtures';
-import { openCatalog, rowOf } from './catalog-fixtures-api';
+import { locationSearch, openCatalog, rowOf } from './catalog-fixtures-api';
 
 const ITEMS = [PAPER, PEN, PENCIL];
-const location = () => screen.getByTestId('location-search').textContent;
+const location = locationSearch;
 
 afterEach(() => vi.unstubAllGlobals());
 

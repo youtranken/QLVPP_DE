@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, screen, userEvent, within } from '@/test/test-utils';
 import { CATEGORIES, OLD, PAPER, PEN, PENCIL, STRAY, adminItem } from './catalog-fixtures';
-import { inRow, openCatalog, rowOf } from './catalog-fixtures-api';
+import { inRow, locationSearch, openCatalog, rowOf } from './catalog-fixtures-api';
 import { OPEN_GROUPS_KEY } from './use-group-collapse';
 
 const ITEMS = [PAPER, PEN, PENCIL, OLD];
-const location = () => screen.getByTestId('location-search').textContent;
+const location = locationSearch;
 const card = (name: RegExp) => screen.getByRole('button', { name });
 const chips = () => within(screen.getByRole('group', { name: 'Lọc theo nhóm' }));
 const groupHead = (name: string) => screen.getByRole('button', { name: `Thêm món vào nhóm ${name}` }).closest('tr') as HTMLElement;

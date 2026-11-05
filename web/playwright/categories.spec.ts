@@ -123,7 +123,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect(page.getByRole('row').filter({ hasText: category }).getByText('Đã ngừng', { exact: true })).toBeVisible();
       await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
 
-      await page.goto('/admin/catalog');
+      await page.goto('/admin/catalog?view=table');
       await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Mở tất cả' })).toBeVisible();
       await expect(page.getByText(names[0], { exact: true })).toBeHidden();
