@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AdminItem } from '@/features/catalog/catalog.api';
 import type { MonthReport, ReportItemRow } from '@/features/reports/reports.api';
-import { arrivalTag, parseQty, toArrivalRows } from './arrival-rows';
+import { arrivalTag, inactiveCount, parseQty, toArrivalRows } from './arrival-rows';
 
 const row = (over: Partial<ReportItemRow>): ReportItemRow => ({
   key: 'k', item_id: 'i-a', code: 'A', name: 'Bút', name_en: null, unit: 'cay', requested: 0, backlog_prev: 0, stock: 0, need: 0, ...over,
@@ -54,5 +54,20 @@ describe('parseQty — biên ô Về lần này', () => {
     ['1.5', 0, 'invalid'],
   ])('%j → qty %i lỗi %s', (raw, qty, error) => {
     expect(parseQty(raw)).toEqual({ qty, error });
+  });
+});
+
+describe('món đã ngừng dùng', () => {
+  const rep = report([row({ requested: 5, need: 5 }), row({ key: 'k2', item_id: 'i-off', requested: 2, need: 2 }), row({ key: 'k3', item_id: 'i-off2', requested: 0, need: 0 })]);
+  const items = [item({}), item({ id: 'i-off', active: false }), item({ id: 'i-off2', active: false })];
+
+  it('không có dòng sửa được cho món inactive, đếm đúng món inactive cần mua', () => {
+    expect(toArrivalRows(rep, items).map((r) => r.item_id)).toEqual(['i-a']);
+    expect(inactiveCount(rep, items)).toBe(1);
+  });
+
+  it('name_en lấy từ danh mục', () => {
+    const [r] = toArrivalRows(report([row({ requested: 1, need: 1 })]), [item({ name_en: 'Pen' })]);
+    expect(r.name_en).toBe('Pen');
   });
 });

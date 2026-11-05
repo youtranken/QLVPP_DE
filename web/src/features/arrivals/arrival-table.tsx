@@ -39,11 +39,13 @@ export function ArrivalTable({ rows, raw, onChange }: Props) {
           return (
             <tr key={r.item_id}>
               <td className="ar-item">
-                <ItemThumb fileId={r.image_file_id} alt="" tone={THUMB_TONE} size={36} />
-                <span>
-                  <b>{r.name}</b>
-                  <small>{fmt.unit(r.unit)}</small>
-                </span>
+                <div className="ar-item__in">
+                  <ItemThumb fileId={r.image_file_id} alt="" tone={THUMB_TONE} size={36} />
+                  <span>
+                    <b>{fmt.name(r)}</b>
+                    <small>{fmt.unit(r.unit)}</small>
+                  </span>
+                </div>
               </td>
               <td className="n" data-label={t('arrivals.table.waiting')}>{n(r.waiting)}</td>
               <td className="n" data-label={t('arrivals.table.stock')}>{n(r.stock)}</td>
@@ -52,7 +54,7 @@ export function ArrivalTable({ rows, raw, onChange }: Props) {
                   type="number"
                   inputMode="numeric"
                   min={0}
-                  aria-label={t('arrivals.table.qtyLabel', { name: r.name })}
+                  aria-label={t('arrivals.table.qtyLabel', { name: fmt.name(r) })}
                   aria-invalid={error ? true : undefined}
                   aria-describedby={error ? errId : undefined}
                   value={text}

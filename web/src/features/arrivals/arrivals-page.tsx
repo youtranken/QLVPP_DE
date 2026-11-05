@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { apiErrorCode } from '@/lib/api-error';
+import { apiErrorCode, apiErrorString } from '@/lib/api-error';
 import { vnLockDate } from '@/lib/format-time';
 import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
@@ -12,18 +12,19 @@ import { StatCard } from '@/ui/stat-card';
 import { StatRow } from '@/ui/stat-row';
 import { useAdminItems, type AdminItem } from '@/features/catalog/catalog.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
-import { monthOf } from '@/features/request/request-format';
+import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import { useMonthReport } from '@/features/reports/reports.api';
 import { usePeriodSummary } from '@/features/summary/summary.api';
 import { postReceipt, useRefreshAfterReceipt } from './arrivals.api';
 import { ArrivalTable } from './arrival-table';
-import { arrivalTag, needOf, outsideCount, parseQty, toArrivalRows, type ArrivalRow } from './arrival-rows';
+import { arrivalTag, needOf, inactiveCount, outsideCount, parseQty, toArrivalRows, waitingOf, type ArrivalRow } from './arrival-rows';
 import './arrivals.m1.css';
 
-type Notice = { kind: 'saved'; n: number } | { kind: 'stale' } | { kind: 'failed' } | null;
+type Notice = { kind: 'saved'; n: number } | { kind: 'stale' } | { kind: 'failed' } | { kind: 'missing'; name: string } | null;
 
 function AddItem({ candidates, onAdd }: { candidates: AdminItem[]; onAdd: (item: AdminItem) => void }) {
   const { t } = useTranslation();
+  const fmt = useRequestFormat();
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState('');
   if (!open) {
@@ -44,7 +45,7 @@ function AddItem({ candidates, onAdd }: { candidates: AdminItem[]; onAdd: (item:
             <option value="">{t('arrivals.add.pickPlaceholder')}</option>
             {candidates.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.name}
+                {fmt.name(c)}
               </option>
             ))}
           </select>
@@ -70,6 +71,7 @@ function AddItem({ candidates, onAdd }: { candidates: AdminItem[]; onAdd: (item:
 function ArrivalsBoard({ ym }: { ym: string }) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
+  const fmt = useRequestFormat();
   const report = useMonthReport(ym);
   const items = useAdminItems();
   const flight = useSingleFlight();
@@ -100,6 +102,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   const shown = new Set(rows.map((r) => r.item_id));
   const candidates = items.data.filter((i) => i.active && !shown.has(i.id));
   const outside = outsideCount(report.data);
+  const inactive = inactiveCount(report.data, items.data);
 
   const change = (id: string, value: string) => {
     setRaw((prev) => ({ ...prev, [id]: value }));
@@ -111,7 +114,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
     setNotice(null);
   };
   const add = (item: AdminItem) => {
-    setAdded((prev) => [...prev, { item_id: item.id, name: item.name, unit: item.unit, image_file_id: item.image_file_id, waiting: 0, stock: item.stock_qty, qty: 1, edited: true }]);
+    setAdded((prev) => [...prev, { item_id: item.id, name: item.name, name_en: item.name_en, unit: item.unit, image_file_id: item.image_file_id, waiting: report.data ? waitingOf(report.data, item.id) : 0, stock: item.stock_qty, qty: 1, edited: true }]);
     setRaw((prev) => ({ ...prev, [item.id]: '1' }));
   };
 
@@ -128,6 +131,11 @@ function ArrivalsBoard({ ym }: { ym: string }) {
       } catch (e) {
         if (apiErrorCode(e) === 'STALE_UPDATE') {
           setNotice({ kind: 'stale' });
+          await Promise.all([items.refetch(), report.refetch()]);
+        } else if (apiErrorCode(e) === 'ITEM_NOT_FOUND') {
+          const id = apiErrorString(e, 'item_id');
+          const row = rows.find((r) => r.item_id === id);
+          setNotice({ kind: 'missing', name: row ? fmt.name(row) : (id ?? '') });
           await Promise.all([items.refetch(), report.refetch()]);
         } else {
           setNotice({ kind: 'failed' });
@@ -147,9 +155,9 @@ function ArrivalsBoard({ ym }: { ym: string }) {
           </Link>
         </div>
       )}
-      {(notice?.kind === 'stale' || notice?.kind === 'failed') && (
+      {(notice?.kind === 'stale' || notice?.kind === 'failed' || notice?.kind === 'missing') && (
         <p role="alert" className="ar-warn">
-          {t(notice.kind === 'stale' ? 'arrivals.stale' : 'arrivals.saveFailed')}
+          {notice.kind === 'missing' ? t('arrivals.itemMissing', { name: notice.name }) : t(notice.kind === 'stale' ? 'arrivals.stale' : 'arrivals.saveFailed')}
         </p>
       )}
       <StatRow>
@@ -168,6 +176,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
           <AddItem key={added.length} candidates={candidates} onAdd={add} />
         </div>
         {rows.length === 0 ? <p className="ar-empty">{t('arrivals.table.empty')}</p> : <ArrivalTable rows={rows} raw={raw} onChange={change} />}
+        {inactive > 0 && <p className="ar-outside">{t('arrivals.inactive', { n: inactive })}</p>}
         {outside > 0 && <p className="ar-outside">{t('arrivals.outside', { n: outside })}</p>}
         <div className="ar-foot">
           <button type="button" className="btn" onClick={reset}>

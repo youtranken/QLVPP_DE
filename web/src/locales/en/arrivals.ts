@@ -49,6 +49,8 @@ const arrivals: Messages<typeof vi> = {
     toDelivery: 'Delivery',
     stale: 'Stock just changed, check the numbers and save again',
     saveFailed: 'Could not save the arrivals. Try again later.',
+    itemMissing: '{{name}} is no longer an active catalogue item, so it cannot be received. Check and save again.',
+    inactive: '{{n}} discontinued items, not received into stock',
     outside: '{{n}} items outside the catalogue are delivered directly, not through stock',
   },
 };

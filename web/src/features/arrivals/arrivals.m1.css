@@ -12,7 +12,7 @@
 [data-shell='admin'] .ar-table th { padding: var(--s-3); border-bottom: 1px solid var(--c-line); font: var(--t-cap); font-weight: 700; color: var(--c-muted); text-align: left; white-space: nowrap; }
 [data-shell='admin'] .ar-table td { padding: var(--s-3); border-bottom: 1px solid var(--c-line); font: var(--t-body); vertical-align: middle; }
 [data-shell='admin'] .ar-table .n { text-align: right; font-variant-numeric: tabular-nums; }
-[data-shell='admin'] .ar-item { display: flex; align-items: center; gap: var(--s-3); }
+[data-shell='admin'] .ar-item__in { display: flex; align-items: center; gap: var(--s-3); }
 [data-shell='admin'] .ar-item span { display: grid; min-width: 0; }
 [data-shell='admin'] .ar-item b { font: var(--t-label); overflow-wrap: anywhere; }
 [data-shell='admin'] .ar-item small { font: var(--t-sm); color: var(--c-muted); }

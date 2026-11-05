@@ -46,6 +46,8 @@ const arrivals = {
     toDelivery: 'Giao hàng',
     stale: 'Tủ vừa thay đổi, kiểm lại số rồi lưu lại',
     saveFailed: 'Chưa lưu được hàng về. Thử lại sau.',
+    itemMissing: 'Món {{name}} không còn trong danh mục đang dùng nên không nhập kho được. Kiểm lại rồi lưu lại.',
+    inactive: '{{n}} món đã ngừng dùng, không nhập kho',
     outside: '{{n}} món ngoài danh mục giao thẳng, không qua tủ',
   },
 };

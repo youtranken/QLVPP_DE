@@ -4,6 +4,7 @@ import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
+import i18n from '@/lib/i18n';
 import type { MonthReport } from '@/features/reports/reports.api';
 
 const REPORT_URL = '/api/admin/reports/2026-10';
@@ -19,7 +20,7 @@ const rep = (over: Partial<MonthReport['byItem'][number]>[], custom: MonthReport
   issues: [],
   pending_custom_count: 0,
 });
-const item = (id: string, name: string, stock: number, active = true) => ({ id, name, unit: 'cay', image_file_id: null, stock_qty: stock, active });
+const item = (id: string, name: string, stock: number, active = true) => ({ id, name, name_en: `${name} EN`, unit: 'cay', image_file_id: null, stock_qty: stock, active });
 const ITEMS = [item('i-0', 'Món 0', 2), item('i-1', 'Món 1', 0), item('i-9', 'Món thêm', 4), item('i-off', 'Món ngừng', 1, false)];
 const REPORT = rep([{ requested: 8, need: 6, stock: 2 }, { requested: 10, need: 10 }]);
 
@@ -178,6 +179,45 @@ describe('ArrivalsPage — biên ô Về lần này', () => {
     await type('Món 0', '100000');
     expect(document.getElementById(box('Món 0').getAttribute('aria-describedby') ?? '')).toHaveTextContent('Tối đa 99.999');
     expect(save()).toBeDisabled();
+  });
+});
+
+describe('ArrivalsPage — món đã ngừng và tên tiếng Anh', () => {
+  const withOff = rep([{ requested: 8, need: 6, stock: 2 }, { item_id: 'i-off', name: 'Món ngừng', requested: 3, need: 3 }]);
+
+  it('món inactive không có ô nhập, có dòng ghi chú, lưu không gửi món đó', async () => {
+    const f = stub({ report: withOff });
+    await open();
+    await screen.findByDisplayValue('6');
+    expect(screen.queryByRole('spinbutton', { name: 'Về lần này: Món ngừng' })).not.toBeInTheDocument();
+    expect(screen.getByText('1 món đã ngừng dùng, không nhập kho')).toBeInTheDocument();
+    await userEvent.click(save());
+    await waitFor(() => expect(sent(f)).toHaveLength(1));
+    expect(sent(f)[0].lines).toEqual([{ item_id: 'i-0', qty: 6, expected_stock_qty: 2 }]);
+  });
+
+  it('404 ITEM_NOT_FOUND: báo tên món, không báo lỗi chung', async () => {
+    stub({ receipt: () => jsonResponse(404, { code: 'ITEM_NOT_FOUND', item_id: 'i-0' }) });
+    await open();
+    await screen.findByDisplayValue('6');
+    await userEvent.click(save());
+    expect(await screen.findByRole('alert')).toHaveTextContent('Món 0');
+    expect(screen.getByRole('alert')).not.toHaveTextContent('Chưa lưu được');
+  });
+
+  it('giao diện tiếng Anh: bảng và danh sách Thêm món khác dùng name_en', async () => {
+    stub();
+    await i18n.changeLanguage('en');
+    try {
+      mockViewport(1280);
+      renderApp(makeMe('admin'), '/admin/arrivals');
+      expect(await screen.findByRole('spinbutton', { name: 'Arriving now: Món 0 EN' })).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Add another item' }));
+      const options = Array.from(screen.getByRole('combobox', { name: 'Choose item' }).querySelectorAll('option')).map((o) => o.textContent);
+      expect(options).toContain('Món thêm EN');
+    } finally {
+      await i18n.changeLanguage('vi');
+    }
   });
 });
 
