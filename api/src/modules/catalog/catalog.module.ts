@@ -13,6 +13,7 @@ import { ItemsAdminController } from './items-admin.controller';
 import { ItemsController } from './items.controller';
 import { StockController } from './stock.controller';
 import { StockQueryService } from './stock-query.service';
+import { StockReceiptService } from './stock-receipt.service';
 import { StockService } from './stock.service';
 
 @Module({
@@ -27,6 +28,7 @@ import { StockService } from './stock.service';
     CatalogService,
     CategoriesService,
     StockService,
+    StockReceiptService,
     StockQueryService,
     ItemUsageRegistry,
     { provide: ITEM_USAGE_HOOK, useExisting: ItemUsageRegistry },

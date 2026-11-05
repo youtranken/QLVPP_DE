@@ -1,12 +1,19 @@
+import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
   IsIn,
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
+  Matches,
   Max,
   MaxLength,
   Min,
   NotEquals,
+  ValidateNested,
 } from 'class-validator';
 import { TrimToNull } from '../../common/dto-fields';
 
@@ -34,4 +41,21 @@ export class StockCountDto {
   @IsInt() @Min(0) @Max(QTY_MAX) counted_qty!: number;
   @IsInt() @Min(0) expected_stock_qty!: number;
   @IsOptional() @IsString() @MaxLength(500) note?: string;
+}
+
+export class ReceiptLine {
+  @IsUUID() item_id!: string;
+  @IsInt() @Min(1) @Max(99_999) qty!: number;
+  @IsInt() @Min(0) expected_stock_qty!: number;
+}
+
+export class ReceiptBody {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(200)
+  @ValidateNested({ each: true })
+  @Type(() => ReceiptLine)
+  lines!: ReceiptLine[];
+  @IsString() @Matches(/^\d{4}-\d{2}$/) ym!: string;
+  @TrimToNull() @IsOptional() @IsString() @MaxLength(500) note?: string | null;
 }

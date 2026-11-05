@@ -1,11 +1,25 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { CurrentIdentity } from '../auth/current-identity.decorator';
 import type { RequestIdentity } from '../auth/identity.types';
 import { Roles } from '../auth/roles.decorator';
 import { uuidParam } from './catalog.dto';
 import { YmPipe } from '../../common/ym';
 import { PageQuery } from '../../common/page.query';
-import { IssueDto, StockChangeDto, StockCountDto } from './stock.dto';
+import {
+  IssueDto,
+  ReceiptBody,
+  StockChangeDto,
+  StockCountDto,
+} from './stock.dto';
+import { StockReceiptService } from './stock-receipt.service';
 import { StockQueryService } from './stock-query.service';
 import { StockService } from './stock.service';
 
@@ -14,6 +28,7 @@ export class StockController {
   constructor(
     private readonly stock: StockService,
     private readonly query: StockQueryService,
+    private readonly receipts: StockReceiptService,
   ) {}
 
   @Post('admin/items/:id/stock')
@@ -44,6 +59,16 @@ export class StockController {
     @CurrentIdentity() identity: RequestIdentity,
   ) {
     return this.stock.issue(id, dto, identity.sub);
+  }
+
+  @Post('admin/stock/receipts')
+  @HttpCode(200)
+  @Roles('admin', 'sa')
+  receive(
+    @Body() body: ReceiptBody,
+    @CurrentIdentity() identity: RequestIdentity,
+  ) {
+    return this.receipts.receive(body, identity.sub);
   }
 
   @Get('admin/items/:id/movements')

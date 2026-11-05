@@ -75,12 +75,12 @@ export class StockService {
     }
     if (dto.reason === 'adjust' && !dto.note) throw reasonRequired();
     return this.db.transaction((tx) =>
-      this.applyChange(tx, actor, {
+      this.applyChangeWithin(
+        tx,
         itemId,
-        delta: dto.delta,
-        reason: dto.reason,
-        note: dto.note ?? null,
-      }),
+        { delta: dto.delta, reason: dto.reason, note: dto.note ?? null },
+        actor,
+      ),
     );
   }
 
@@ -102,21 +102,27 @@ export class StockService {
         expected: dto.expected_stock_qty,
         stock: locked.stock_qty,
       });
-      return this.applyChange(tx, actor, {
+      return this.applyChangeWithin(
+        tx,
         itemId,
-        delta,
-        reason: 'adjust',
-        note,
-      });
+        { delta, reason: 'adjust', note },
+        actor,
+      );
     });
   }
 
   // Nhập mua đặt lại mốc (FR-50); điều chỉnh + chỉ đặt mốc khi món chưa có (tồn đầu kỳ), không đổi mốc đã có
-  private async applyChange(
+  async applyChangeWithin(
     tx: Tx,
+    itemId: string,
+    change: {
+      delta: number;
+      reason: 'purchase' | 'adjust';
+      note: string | null;
+    },
     actor: string,
-    m: AuditedMovement & { reason: 'purchase' | 'adjust' },
   ): Promise<StockResult> {
+    const m = { ...change, itemId };
     const purchase = m.reason === 'purchase';
     const opening = m.reason === 'adjust' && m.delta > 0;
     const updated = await tx.execute<{ stock_qty: number }>(sql`
