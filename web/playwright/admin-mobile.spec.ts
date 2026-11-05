@@ -62,7 +62,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
       await expect(menu(page)).toHaveCount(0);
     }
 
-    await openPage(page, 'catalog', 'Danh mục');
+    await openPage(page, 'catalog?view=table', 'Danh mục');
     const [first, second, third] = await Promise.all(
       [/^Đang dùng/, /^Sắp hết/, /^Hết hàng/].map(async (name) => (await page.getByRole('button', { name }).boundingBox())!),
     );

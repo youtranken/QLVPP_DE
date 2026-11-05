@@ -108,5 +108,5 @@
   [data-shell='admin'] .ct-tabs { max-width: 100%; }
   [data-shell='admin'] .ct-tabs--view { margin-left: 0; }
   [data-shell='admin'] .ct-page .toolbar__search { flex: 1 1 100%; }
-  [data-shell='admin'] .ct-tab { padding: 0 12px; }
+  [data-shell='admin'] .ct-tab { min-height: var(--hit); padding: 0 12px; }
 }
