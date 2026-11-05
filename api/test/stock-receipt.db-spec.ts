@@ -77,57 +77,75 @@ describe('POST admin/stock/receipts: tất cả hoặc không, đồng thời (P
     }
   });
 
-  it('nhập song song với giao (Promise.all receipt + deliver cùng món) → không deadlock, tồn cuối đúng', async () => {
+  it('nhập song song với giao (Promise.all receipt + deliver cùng món) → không deadlock, tồn cuối đúng theo thứ tự thắng khóa', async () => {
     const pool = f.pool();
     const tag = Date.now().toString(36);
     const owners: string[] = [];
-    await pool.query(
-      `INSERT INTO periods (ym, deadline) VALUES (($1 || '-01')::date, '2024-06-10T17:00:00Z')
-       ON CONFLICT (ym) DO NOTHING`,
-      [YM],
-    );
     const reqs: string[] = [];
-    for (let round = 0; round < 5; round++) {
-      const owner = `db-receipt-owner-${tag}-${round}`;
-      owners.push(owner);
-      await pool.query(
-        "INSERT INTO users (sub, full_name, status) VALUES ($1, 'Người nhận hàng', 'active')",
-        [owner],
-      );
-      const a = await newItem(10);
-      const b = await newItem(10);
-      const req = (
-        await pool.query<{ id: string }>(
-          "INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES (($1 || '-01')::date, $2, $2) RETURNING id",
-          [YM, owner],
+    const createdPeriod =
+      (
+        await pool.query(
+          `INSERT INTO periods (ym, deadline) VALUES (($1 || '-01')::date, '2024-06-10T17:00:00Z')
+           ON CONFLICT (ym) DO NOTHING`,
+          [YM],
         )
-      ).rows[0].id;
-      const lines = (
-        await pool.query<{ id: string }>(
-          `INSERT INTO request_lines (request_id, item_id, qty)
-           VALUES ($1, $2, 2), ($1, $3, 2) RETURNING id`,
+      ).rowCount === 1;
+    try {
+      for (let round = 0; round < 5; round++) {
+        const owner = `db-receipt-owner-${tag}-${round}`;
+        owners.push(owner);
+        await pool.query(
+          "INSERT INTO users (sub, full_name, status) VALUES ($1, 'Người nhận hàng', 'active')",
+          [owner],
+        );
+        const a = await newItem(10);
+        const b = await newItem(10);
+        const req = (
+          await pool.query<{ id: string }>(
+            "INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES (($1 || '-01')::date, $2, $2) RETURNING id",
+            [YM, owner],
+          )
+        ).rows[0].id;
+        reqs.push(req);
+        await pool.query(
+          `INSERT INTO request_lines (request_id, item_id, qty) VALUES ($1, $2, 2), ($1, $3, 2)`,
           [req, a, b],
-        )
-      ).rows;
-      const [rec, del] = await Promise.all([
-        receipts({ lines: [line(b, 5, 10), line(a, 5, 10)], ym: YM }),
-        admin(http().post(`/api/admin/requests/${req}/deliver-all`)),
-      ]);
-      expect([rec.status, del.status]).toEqual([200, 200]);
-      expect((await qtyOf(a)).stock_qty).toBe(13);
-      expect((await qtyOf(b)).stock_qty).toBe(13);
-      expect(lines).toHaveLength(2);
-      reqs.push(req);
+        );
+        const [rec, del] = await Promise.all([
+          receipts({ lines: [line(b, 5, 10), line(a, 5, 10)], ym: YM }),
+          admin(http().post(`/api/admin/requests/${req}/deliver-all`)),
+        ]);
+        expect(del.status).toBe(200);
+        // Giao thắng khóa trước → tồn 8, nhập cũ bị STALE_UPDATE đúng; nhập thắng → 13
+        expect([200, 409]).toContain(rec.status);
+        if (rec.status === 409) {
+          expect(rec.body.code).toBe('STALE_UPDATE');
+          expect((await qtyOf(a)).stock_qty).toBe(8);
+          await receipts({
+            lines: [line(b, 5, 8), line(a, 5, 8)],
+            ym: YM,
+          }).expect(200);
+        }
+        expect((await qtyOf(a)).stock_qty).toBe(13);
+        expect((await qtyOf(b)).stock_qty).toBe(13);
+      }
+    } finally {
+      const lineIds = 'SELECT id FROM request_lines WHERE request_id = ANY($1)';
+      await pool.query(
+        `DELETE FROM line_deliveries WHERE line_id IN (${lineIds})`,
+        [reqs],
+      );
+      await pool.query(
+        `DELETE FROM stock_movements WHERE ref_line_id IN (${lineIds})`,
+        [reqs],
+      );
+      await pool.query('DELETE FROM requests WHERE id = ANY($1)', [reqs]);
+      await pool.query('DELETE FROM users WHERE sub = ANY($1)', [owners]);
+      if (createdPeriod) {
+        await pool.query("DELETE FROM periods WHERE ym = ($1 || '-01')::date", [
+          YM,
+        ]);
+      }
     }
-    await pool.query(
-      'DELETE FROM line_deliveries WHERE line_id IN (SELECT id FROM request_lines WHERE request_id = ANY($1))',
-      [reqs],
-    );
-    await pool.query(
-      'DELETE FROM stock_movements WHERE ref_line_id IN (SELECT id FROM request_lines WHERE request_id = ANY($1))',
-      [reqs],
-    );
-    await pool.query('DELETE FROM requests WHERE id = ANY($1)', [reqs]);
-    await pool.query('DELETE FROM users WHERE sub = ANY($1)', [owners]);
   });
 });

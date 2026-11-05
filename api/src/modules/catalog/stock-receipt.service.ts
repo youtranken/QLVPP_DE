@@ -25,7 +25,11 @@ export class StockReceiptService {
   ) {}
 
   async receive(body: ReceiptBody, actor: string): Promise<ReceiptResult> {
-    const ids = body.lines.map((l) => l.item_id);
+    const lines = body.lines.map((l) => ({
+      ...l,
+      item_id: l.item_id.toLowerCase(),
+    }));
+    const ids = lines.map((l) => l.item_id);
     if (new Set(ids).size !== ids.length) {
       throw new BadRequestException({
         code: 'VALIDATION',
@@ -44,7 +48,7 @@ export class StockReceiptService {
           `)
         ).rows.map((r) => [r.id, r.stock_qty]),
       );
-      for (const l of body.lines) {
+      for (const l of lines) {
         const stockQty = current.get(l.item_id);
         if (stockQty === undefined) {
           throw new NotFoundException({
@@ -63,7 +67,7 @@ export class StockReceiptService {
         }
       }
       const items: ReceiptResult['items'] = [];
-      for (const l of body.lines) {
+      for (const l of lines) {
         const result = await this.stock.applyChangeWithin(
           tx,
           l.item_id,
@@ -78,7 +82,7 @@ export class StockReceiptService {
         objectType: 'period',
         objectId: body.ym,
         detail: {
-          lines: body.lines.map((l) => ({ item_id: l.item_id, qty: l.qty })),
+          lines: lines.map((l) => ({ item_id: l.item_id, qty: l.qty })),
           note: body.note ?? null,
         },
       });

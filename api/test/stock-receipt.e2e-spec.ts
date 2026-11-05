@@ -44,8 +44,8 @@ describe('POST admin/stock/receipts: vai, validate, mã lỗi (Postgres thật)'
     });
     expect((await movements(b)).items[0].note).toBe(`Hàng về kỳ ${YM} · đợt 1`);
     const purchases = await auditsOf('stock.purchase', [a, b]);
-    expect(purchases.map((p) => p.object_id)).toEqual([a, b]);
-    expect(purchases[0].detail).toMatchObject({
+    expect(purchases.map((p) => p.object_id).sort()).toEqual([a, b].sort());
+    expect(purchases.find((p) => p.object_id === a)!.detail).toMatchObject({
       before: { stock_qty: 3 },
       after: { stock_qty: 8 },
       delta: 5,
@@ -172,6 +172,15 @@ describe('POST admin/stock/receipts: vai, validate, mã lỗi (Postgres thật)'
     }).expect(400);
     expect(res.body).toMatchObject({ code: 'VALIDATION', fields: ['lines'] });
     expect((await qtyOf(a)).stock_qty).toBe(0);
+  });
+
+  it('cùng uuid khác hoa thường → 400 VALIDATION fields.lines', async () => {
+    const a = await newItem(0);
+    const res = await receipts({
+      lines: [line(a.toLowerCase()), line(a.toUpperCase(), 2)],
+      ym: YM,
+    }).expect(400);
+    expect(res.body).toMatchObject({ code: 'VALIDATION', fields: ['lines'] });
   });
 
   it('món không tồn tại → 404 ITEM_NOT_FOUND kèm item_id, không món nào được cộng', async () => {
