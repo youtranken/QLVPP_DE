@@ -144,7 +144,7 @@ export function CatalogPage() {
         {loaded && <CategoryChips index={d.index} counts={d.counts} total={d.base.length} value={p.view.cat} onChange={p.setCat} />}
         {!grid && p.view.filter && <FilterNotice label={t(`catalog.stats.${p.view.filter === 'noimage' ? 'noImage' : p.view.filter}`)} count={d.rows.length} onClear={p.clearFilter} />}
         {grid ? (
-          <CatalogGrid rows={d.rows} index={d.index} loading={!loaded} onEdit={(id) => p.openItemDrawer(id)} emptyAction={emptyActions} />
+          <CatalogGrid rows={d.rows} index={d.index} loading={!loaded} onEdit={(id) => p.openItemDrawer(id)} emptyAction={emptyActions} tab={p.tab} narrowed={p.view.cat !== null || p.view.q.trim() !== ''} />
         ) : (
           <CatalogTable
             rows={d.rows}

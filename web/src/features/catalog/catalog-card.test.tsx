@@ -121,6 +121,21 @@ describe('Tải ảnh lên ở thẻ', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Món này không còn — tải lại trang.');
   });
 
+  it('lỗi có nút đóng; đóng xong câu lỗi biến mất; tải lại thành công cũng xóa lỗi', async () => {
+    let fail = true;
+    stub((url) => (url === '/api/files' && fail ? jsonResponse(413, { code: 'FILE_TOO_LARGE', message: 'x' }) : undefined));
+    renderCard();
+    await userEvent.upload(screen.getByLabelText(UPLOAD), png());
+    await screen.findByRole('alert');
+    await userEvent.click(screen.getByRole('button', { name: 'Đóng thông báo lỗi' }));
+    expect(screen.queryByRole('alert')).toBeNull();
+    await userEvent.upload(screen.getByLabelText(UPLOAD), png());
+    await screen.findByRole('alert');
+    fail = false;
+    await userEvent.upload(screen.getByLabelText(UPLOAD), png());
+    await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
+  });
+
   it('HEIC → "Chọn ảnh JPG, PNG hoặc WebP", không gọi mạng', async () => {
     const actual = await vi.importActual<typeof import('@/lib/image-compress')>('@/lib/image-compress');
     vi.mocked(compressImage).mockImplementation(actual.compressImage);

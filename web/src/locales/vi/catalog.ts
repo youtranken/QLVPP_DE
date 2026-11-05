@@ -59,6 +59,8 @@ const catalog = {
       uploadFor: 'Tải ảnh lên cho {{name}}',
       uploading: 'Đang tải ảnh…',
       tooLarge: 'Ảnh quá 5 MB',
+      dismissError: 'Đóng thông báo lỗi',
+      empty: { inactive: 'Không có món đã ngừng.', low: 'Không có món sắp hết.', noImage: 'Món nào cũng đã có ảnh.' },
       uploaded: 'Đã thêm ảnh cho {{name}}',
     },
     staffPreview: {

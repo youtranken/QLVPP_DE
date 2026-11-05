@@ -1,6 +1,7 @@
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUnitNames } from '@/features/units/units.api';
+import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
 import type { CatalogRow } from './catalog-rows';
 import { useCardUpload } from './use-card-upload';
@@ -15,7 +16,7 @@ function StockBadge({ row }: { row: CatalogRow }) {
 
 function UploadButton({ id, name }: { id: string; name: string }) {
   const { t } = useTranslation();
-  const { busy, error, upload } = useCardUpload(id, name);
+  const { busy, error, upload, dismiss } = useCardUpload(id, name);
   return (
     <>
       <label className={`btn btn--primary btn--sm ct-card__upload${busy ? ' is-disabled' : ''}`}>
@@ -33,8 +34,13 @@ function UploadButton({ id, name }: { id: string; name: string }) {
         />
       </label>
       {error && (
-        <span role="alert" className="ct-card__error">
-          {error}
+        <span className="ct-card__error">
+          <span role="alert" className="ct-card__error-text">
+            {error}
+          </span>
+          <button type="button" className="ct-card__error-x" aria-label={t('catalog.grid.dismissError')} onClick={dismiss}>
+            <Icon name="x" size={14} />
+          </button>
         </span>
       )}
     </>
@@ -55,7 +61,7 @@ export function CatalogCard({ row, groupName, onEdit }: { row: CatalogRow; group
         {row.image_file_id === null && (
           <div className="ct-card__noimg">
             <span>{t('catalog.grid.noImage')}</span>
-            <UploadButton id={row.id} name={name} />
+            {row.active && <UploadButton id={row.id} name={name} />}
           </div>
         )}
       </div>

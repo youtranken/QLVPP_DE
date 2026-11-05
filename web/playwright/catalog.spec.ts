@@ -231,6 +231,14 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
     }
   });
 
+  test('Lưới: tab Đã ngừng đủ tương phản ở 390 px', async ({ page }, info) => {
+    await page.goto('/admin/catalog?tab=inactive');
+    await expect(page.getByRole('button', { name: /^Đã ngừng/ })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('article').first()).toBeVisible();
+    if (isMobile(info)) await expectNoContrastViolations(page);
+    await shot(page, info, 'catalog-grid-inactive', false);
+  });
+
   test('E9-S5 Danh mục: lỗi tải → "Không tải được dữ liệu — thử lại." và "Thử lại"', async ({ page }) => {
     await page.route('**/api/admin/items', (route) => route.fulfill({ status: 500, body: '{}' }));
     await page.goto('/admin/catalog');

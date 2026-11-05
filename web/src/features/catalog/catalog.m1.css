@@ -81,9 +81,9 @@
 [data-shell='admin'] .ct-tab__n { min-width: 22px; height: 22px; padding: 0 var(--s-2); border-radius: var(--r-pill); background: var(--c-surface-2); color: var(--c-ink-2); font: var(--t-cap); display: inline-flex; align-items: center; justify-content: center; }
 [data-shell='admin'] .ct-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: var(--s-4); }
 [data-shell='admin'] .ct-card { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-3); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); min-width: 0; }
-[data-shell='admin'] .ct-card.is-inactive .ct-card__tile { filter: grayscale(1); opacity: .65; }
+[data-shell='admin'] .ct-card.is-inactive .ct-card__tile > :first-child { filter: grayscale(1); opacity: .65; }
 [data-shell='admin'] .ct-card__tile { position: relative; display: grid; min-width: 0; }
-[data-shell='admin'] .ct-card__group { position: absolute; top: 10px; left: 10px; max-width: 62%; padding: var(--s-1) var(--s-3); overflow: hidden; border-radius: var(--r-pill); background: rgb(255 255 255 / .92); color: var(--c-ink); font: var(--t-cap); font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+[data-shell='admin'] .ct-card__group { position: absolute; top: 10px; left: 10px; max-width: 62%; padding: var(--s-1) var(--s-3); overflow: hidden; border-radius: var(--r-pill); background: var(--c-tile-chip); color: var(--c-ink); font: var(--t-cap); font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 [data-shell='admin'] .ct-card__stock { position: absolute; top: 10px; right: 10px; padding: var(--s-1) var(--s-3); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink-2); font: var(--t-cap); font-weight: 700; }
 [data-shell='admin'] .ct-card__stock--out { background: var(--c-danger-tint); color: var(--c-danger); }
 [data-shell='admin'] .ct-card__stock--low { background: var(--c-warn-soft); color: var(--c-warn); }
@@ -91,7 +91,9 @@
 [data-shell='admin'] .ct-card__upload { cursor: pointer; }
 [data-shell='admin'] .ct-card__upload:focus-within { box-shadow: var(--focus); }
 [data-shell='admin'] .ct-card__upload.is-disabled { opacity: .6; cursor: progress; }
-[data-shell='admin'] .ct-card__error { color: var(--c-danger); font: var(--t-cap); font-weight: 600; }
+[data-shell='admin'] .ct-card__error { display: inline-flex; align-items: center; gap: var(--s-1); }
+[data-shell='admin'] .ct-card__error-x { display: inline-grid; place-items: center; width: var(--hit); height: var(--hit); border: 0; background: transparent; color: inherit; cursor: pointer; }
+[data-shell='admin'] .ct-card__error-text { color: var(--c-danger); font: var(--t-cap); font-weight: 600; }
 [data-shell='admin'] .ct-card__body { display: grid; gap: 4px; padding: 0 var(--s-2); min-width: 0; }
 [data-shell='admin'] .ct-card__name { margin: 0; font: var(--t-label); font-weight: 700; color: var(--c-ink); overflow-wrap: anywhere; }
 [data-shell='admin'] .ct-card__meta { margin: 0; color: var(--c-muted); font: var(--t-sm); overflow-wrap: anywhere; }

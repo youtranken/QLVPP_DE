@@ -4,6 +4,7 @@ import { EmptyState } from '@/ui/load-state';
 import { Skeleton } from '@/ui/skeleton';
 import { categoryLabel } from './catalog.api';
 import { CatalogCard } from './catalog-card';
+import type { CatalogTab } from './catalog-tabs';
 import type { CatalogRow, CategoryIndex } from './catalog-rows';
 
 const CARDS = { shape: 'card', count: 8 } as const;
@@ -14,11 +15,14 @@ interface Props {
   loading: boolean;
   onEdit: (id: string) => void;
   emptyAction: ReactNode;
+  tab: CatalogTab;
+  narrowed: boolean;
 }
 
-export function CatalogGrid({ rows, index, loading, onEdit, emptyAction }: Props) {
+export function CatalogGrid({ rows, index, loading, onEdit, emptyAction, tab, narrowed }: Props) {
   const { t, i18n } = useTranslation();
   if (loading) return <Skeleton {...CARDS} />;
+  if (rows.length === 0 && !narrowed && tab !== 'active') return <EmptyState art="no-match" title={t(`catalog.grid.empty.${tab}`)} />;
   if (rows.length === 0) return <EmptyState art="no-match" title={t('catalog.list.emptyTitle')} hint={t('catalog.list.emptyHint')} action={emptyAction} />;
   const groupName = (key: string) => {
     const cat = index.byId.get(key);

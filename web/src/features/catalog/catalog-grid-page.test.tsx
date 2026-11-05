@@ -89,6 +89,25 @@ describe('Danh mục lưới — tab', () => {
   });
 });
 
+describe('Danh mục lưới — tab rỗng', () => {
+  it.each([
+    ['inactive', 'Không có món đã ngừng.'],
+    ['low', 'Không có món sắp hết.'],
+    ['noImage', 'Món nào cũng đã có ảnh.'],
+  ])('tab %s rỗng, không lọc → "%s", không có "Bỏ lọc"', async (t, text) => {
+    await open(`${GRID}?tab=${t}`, [PEN]);
+    expect(screen.getByText(text)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Bỏ lọc' })).toBeNull();
+    expect(screen.queryByText('Không có món nào khớp')).toBeNull();
+  });
+
+  it('tab rỗng nhưng đang tìm → vẫn "Không có món nào khớp" kèm "Bỏ lọc"', async () => {
+    await open(`${GRID}?tab=inactive&q=zz`, [PEN]);
+    expect(screen.getByText('Không có món nào khớp')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Bỏ lọc' })).toBeInTheDocument();
+  });
+});
+
 describe('Danh mục lưới — thẻ và ngăn kéo', () => {
   it('thẻ chưa ảnh có "Tải ảnh lên"; thẻ có ảnh thì không', async () => {
     await open();
@@ -109,6 +128,12 @@ describe('Danh mục lưới — thẻ và ngăn kéo', () => {
     await act(() => i18n.changeLanguage('en'));
     expect(screen.getByRole('heading', { name: 'Pen' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Kẹp' })).toBeInTheDocument();
+  });
+
+  it('món đã ngừng chưa có ảnh: không có nút "Tải ảnh lên"', async () => {
+    await open(`${GRID}?tab=inactive`, [adminItem({ id: 'z', name: 'Món cũ', active: false, image_file_id: null, missing_image: true })]);
+    expect(screen.getByText('Món cũ')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Tải ảnh lên cho Món cũ')).toBeNull();
   });
 
   it('thẻ chưa ảnh lấy tông nhóm của món cho ảnh tạm', async () => {

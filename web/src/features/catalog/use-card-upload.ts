@@ -45,5 +45,5 @@ export function useCardUpload(itemId: string, itemName: string) {
       setBusy(false);
     }
   };
-  return { busy, error, upload };
+  return { busy, error, upload, dismiss: () => setError(null) };
 }

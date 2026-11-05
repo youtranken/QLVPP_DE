@@ -62,6 +62,8 @@ const catalog: Messages<typeof vi> = {
       uploadFor: 'Upload photo for {{name}}',
       uploading: 'Uploading photo…',
       tooLarge: 'Photo over 5 MB',
+      dismissError: 'Dismiss error',
+      empty: { inactive: 'No discontinued items.', low: 'No low or out-of-stock items.', noImage: 'Every item has a photo.' },
       uploaded: 'Photo added for {{name}}',
     },
     staffPreview: {
