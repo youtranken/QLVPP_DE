@@ -1,9 +1,10 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { initialsOf } from '@/lib/initials';
 import { ItemThumb } from '@/ui/item-thumb';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import type { DeliveryPerson } from './delivery-people.api';
-import { isOpenLine, planOf } from './people-filter';
+import { isOpenLine, planOf, type PersonPlan } from './people-filter';
 
 const THUMBS = 4;
 
@@ -15,10 +16,10 @@ export function PersonAvatar({ name, large = false }: { name: string; large?: bo
   );
 }
 
-function quickLabel(person: DeliveryPerson, t: (k: string, o?: Record<string, unknown>) => string) {
-  const plan = planOf(person);
+function quickLabel(person: DeliveryPerson, plan: PersonPlan, t: (k: string, o?: Record<string, unknown>) => string) {
   if (person.status === 'done') return t('delivery.people.card.delivered');
   if (!plan.deliverable) return t('delivery.people.card.waitingReview');
+  if (plan.give === 0) return t('delivery.people.card.noStock');
   return plan.short ? t('delivery.people.card.deliverPart', { give: plan.give, need: plan.need }) : t('delivery.people.card.deliverAll');
 }
 
@@ -38,7 +39,9 @@ export function PersonCard({ person, selected, busy, onView, onQuick }: Props) {
   const lines = open.length > 0 ? open : person.lines;
   const debt = person.lines.filter((l) => l.is_debt && l.remaining_qty > 0);
   const months = [...new Set(debt.map((l) => monthOf(l.period_ym)))].join(', ');
-  const plan = planOf(person);
+  // Một lần tính kế hoạch giao cho cả nhãn nút, aria-label và trạng thái vô hiệu
+  const plan = useMemo(() => planOf(person), [person]);
+  const label = quickLabel(person, plan, t);
   const progress = {
     done: lines.reduce((n, l) => n + l.delivered_qty, 0),
     total: lines.reduce((n, l) => n + l.qty - l.cancelled_qty, 0),
@@ -68,11 +71,11 @@ export function PersonCard({ person, selected, busy, onView, onQuick }: Props) {
         <button
           type="button"
           className="btn btn--primary"
-          aria-label={`${quickLabel(person, t)}, ${name}`}
-          disabled={busy || person.status === 'done' || !plan.deliverable}
+          aria-label={`${label}, ${name}`}
+          disabled={busy || person.status === 'done' || !plan.deliverable || plan.give === 0}
           onClick={onQuick}
         >
-          {quickLabel(person, t)}
+          {label}
         </button>
       </div>
     </article>

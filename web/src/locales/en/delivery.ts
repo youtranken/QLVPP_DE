@@ -213,6 +213,7 @@ const delivery: Messages<typeof vi> = {
         deliverPart: 'Deliver {{give}}/{{need}}',
         delivered: 'Delivered',
         waitingReview: 'Awaiting review',
+        noStock: 'No stock yet',
         debt: 'Outstanding from month {{months}}: {{n}} items',
         progress: 'Delivered {{done}}/{{total}}',
         noDepartment: 'No department',

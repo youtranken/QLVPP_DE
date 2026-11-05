@@ -16,20 +16,36 @@ export function tabCounts(people: DeliveryPerson[]): Record<PeopleTab, number> {
   return n;
 }
 
-// Người khác còn chờ cùng món (kể cả nợ); dòng chờ duyệt chưa tính vì chưa giao được
-export function waitingFor(people: DeliveryPerson[], itemId: string, exceptSub: string): { people: number; qty: number } {
-  let count = 0;
-  let qty = 0;
-  for (const p of people) {
-    if (p.user_sub === exceptSub) continue;
-    const need = p.lines
-      .filter((l) => l.item_id === itemId && l.review_status !== 'pending')
-      .reduce((s, l) => s + l.remaining_qty, 0);
-    if (need > 0) count++;
-    qty += need;
-  }
-  return { people: count, qty };
+export interface Waiting {
+  people: number;
+  qty: number;
 }
+
+// Chỉ mục món → số cần của từng người, dựng một lần cho cả danh sách; dòng chờ duyệt chưa tính vì chưa giao được
+export function waitingIndex(people: DeliveryPerson[]): (itemId: string, exceptSub: string) => Waiting {
+  const byItem = new Map<string, Map<string, number>>();
+  for (const p of people) {
+    for (const l of p.lines) {
+      if (!l.item_id || l.review_status === 'pending' || l.remaining_qty <= 0) continue;
+      const bySub = byItem.get(l.item_id) ?? new Map<string, number>();
+      bySub.set(p.user_sub, (bySub.get(p.user_sub) ?? 0) + l.remaining_qty);
+      byItem.set(l.item_id, bySub);
+    }
+  }
+  return (itemId, exceptSub) => {
+    let count = 0;
+    let qty = 0;
+    for (const [sub, need] of byItem.get(itemId) ?? []) {
+      if (sub === exceptSub) continue;
+      count++;
+      qty += need;
+    }
+    return { people: count, qty };
+  };
+}
+
+// Người khác còn chờ cùng món (kể cả nợ)
+export const waitingFor = (people: DeliveryPerson[], itemId: string, exceptSub: string): Waiting => waitingIndex(people)(itemId, exceptSub);
 
 // Trần số giao một dòng: min(còn cần, tủ còn, số server vừa báo); server mới là chuẩn
 export function lineMax(line: DeliveryPersonLine, cap?: number): number {

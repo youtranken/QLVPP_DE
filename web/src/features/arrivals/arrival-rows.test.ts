@@ -14,13 +14,13 @@ describe('toArrivalRows — ví dụ chuẩn (A 3 + B 10, tủ 0)', () => {
 
   it('một dòng, need 13: còn chờ 13, qty điền sẵn 13, tag Đủ', () => {
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ item_id: 'i-a', waiting: 13, stock: 0, qty: 13, edited: false, image_file_id: 'f-1' });
+    expect(rows[0]).toMatchObject({ item_id: 'i-a', waiting: 13, stock: 0, qty: 13, image_file_id: 'f-1' });
     expect(arrivalTag(rows[0])).toBe('exact');
   });
 
   it('sửa qty 10 thì Thiếu, 14 thì Dư', () => {
-    expect(arrivalTag({ ...rows[0], qty: 10, edited: true })).toBe('short');
-    expect(arrivalTag({ ...rows[0], qty: 14, edited: true })).toBe('over');
+    expect(arrivalTag({ ...rows[0], qty: 10 })).toBe('short');
+    expect(arrivalTag({ ...rows[0], qty: 14 })).toBe('over');
   });
 });
 

@@ -51,11 +51,8 @@ function PersonCell({ row }: { row: PersonRow }) {
   );
 }
 
-function PersonActions({ row, ym, locked, stale, onOpen }: { row: PersonRow; ym: string; locked: boolean; stale: boolean; onOpen: (id: string) => void }) {
+function PersonActions({ row, ym, locked, stale, newPage, onOpen }: { row: PersonRow; ym: string; locked: boolean; stale: boolean; newPage: boolean; onOpen: (id: string) => void }) {
   const { t } = useTranslation();
-  const current = useCurrentPeriod().data;
-  // Trang Giao theo người luôn là kỳ khóa gần nhất; kỳ cũ hơn vẫn giao ở trang cũ
-  const newPage = !!current && ym === shiftYm(current.ym, -1);
   const canDeliver = locked && row.delivered_qty + row.cancelled_qty < row.total_qty;
   const deliverLabel = t('summary.table.deliverLabel', { name: nameOf(row) });
   return (
@@ -75,7 +72,7 @@ function PersonActions({ row, ym, locked, stale, onOpen }: { row: PersonRow; ym:
       {canDeliver && !stale && (
         <Link
           className="btn btn--ghost btn--sm sm-icon-btn"
-          to={newPage ? `/admin/delivery?person=${row.user_sub}` : `/admin/delivery/classic?ym=${ym}&request=${row.request_id}`}
+          to={newPage ? `/admin/delivery?person=${encodeURIComponent(row.user_sub)}` : `/admin/delivery/classic?ym=${ym}&request=${row.request_id}`}
           aria-label={deliverLabel}
           title={deliverLabel}
           onClick={(e) => e.stopPropagation()}
@@ -87,7 +84,7 @@ function PersonActions({ row, ym, locked, stale, onOpen }: { row: PersonRow; ym:
   );
 }
 
-function useColumns(ym: string, locked: boolean, stale: boolean, onOpen: (id: string) => void) {
+function useColumns(ym: string, locked: boolean, stale: boolean, newPage: boolean, onOpen: (id: string) => void) {
   const { t } = useTranslation();
   return useMemo<ColumnDef<Row, unknown>[]>(() => {
     const columns: ColumnDef<Row, unknown>[] = [
@@ -106,18 +103,21 @@ function useColumns(ym: string, locked: boolean, stale: boolean, onOpen: (id: st
         id: 'actions',
         header: () => <span className="sr-only">{t('summary.table.actions')}</span>,
         meta: { className: 'r sm-acts' },
-        cell: ({ row }) => <PersonActions row={row.original} ym={ym} locked={locked} stale={stale} onOpen={onOpen} />,
+        cell: ({ row }) => <PersonActions row={row.original} ym={ym} locked={locked} stale={stale} newPage={newPage} onOpen={onOpen} />,
       },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
-  }, [t, ym, locked, stale, onOpen]);
+  }, [t, ym, locked, stale, newPage, onOpen]);
 }
 
 export function SummaryPersonTable({ ym, locked, filter, q, activeId, onOpen, onClearFilter }: Props) {
   const { t } = useTranslation();
   const { query, rows } = usePersonTableRows(ym, filter, q);
   const stale = query.isPlaceholderData;
-  const columns = useColumns(ym, locked, stale, onOpen);
+  const current = useCurrentPeriod().data;
+  // Trang Giao theo người luôn là kỳ khóa gần nhất; kỳ cũ hơn vẫn giao ở trang cũ
+  const newPage = !!current && ym === shiftYm(current.ym, -1);
+  const columns = useColumns(ym, locked, stale, newPage, onOpen);
 
   if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
   const count = t('summary.filters.people', { n: `${rows.length}${query.hasNextPage ? '+' : ''}` });

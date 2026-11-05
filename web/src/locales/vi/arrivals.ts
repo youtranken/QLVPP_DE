@@ -43,6 +43,7 @@ const arrivals = {
     saving: 'Đang lưu…',
     saved: 'Đã nhập {{n}} món vào tủ.',
     savedNext: 'Tiếp theo: Giao hàng',
+    nextBatch: 'Nhập đợt tiếp',
     toDelivery: 'Giao hàng',
     stale: 'Tủ vừa thay đổi, kiểm lại số rồi lưu lại',
     saveFailed: 'Chưa lưu được hàng về. Thử lại sau.',

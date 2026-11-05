@@ -16,17 +16,17 @@ afterEach(() => {
 });
 
 describe('AdminSidebar: đếm', () => {
-  it('review trả 3 dòng → "Món ngoài danh mục" hiện 3; giao 6 dòng, kho 4 món kèm nhãn đọc màn hình', async () => {
+  it('review trả 3 dòng → "Món ngoài danh mục" hiện 3; giao 6 người chưa nhận (1 người Còn nợ không tính), kho 4 món kèm nhãn đọc màn hình', async () => {
     mockViewport(1280);
     stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(200, rows(3)),
-      '/api/admin/periods/2026-10/summary': () => jsonResponse(200, { lines_pending_delivery: 6 }),
+      '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(200, { ym: '2026-10', people: [...Array.from({ length: 6 }, (_, i) => ({ user_sub: `p${i}`, status: 'pending' })), { user_sub: 'x', status: 'debt' }] }),
       '/api/admin/stock/low': () => jsonResponse(200, rows(4).items),
     });
     renderApp(makeMe('admin'), '/admin/catalog');
     await waitFor(() => expect(navLink('Món ngoài danh mục')).toHaveTextContent('3'));
     expect(navLink('Món ngoài danh mục')).toHaveAccessibleName('Món ngoài danh mục, 3 món chờ xem');
-    await waitFor(() => expect(navLink('Giao hàng')).toHaveAccessibleName('Giao hàng, 6 dòng chờ giao'));
+    await waitFor(() => expect(navLink('Giao hàng')).toHaveAccessibleName('Giao hàng, 6 người chưa nhận'));
     await waitFor(() => expect(navLink('Tủ / Kho')).toHaveAccessibleName('Tủ / Kho, 4 món sắp hết'));
   });
 
@@ -37,7 +37,7 @@ describe('AdminSidebar: đếm', () => {
     mockViewport(1280);
     stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(200, rows(n)),
-      '/api/admin/periods/2026-10/summary': () => jsonResponse(200, { lines_pending_delivery: 2 }),
+      '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(200, { ym: '2026-10', people: [{ user_sub: 'a', status: 'pending' }, { user_sub: 'b', status: 'pending' }] }),
     });
     renderApp(makeMe('admin'), '/admin/catalog');
     // Đếm giao hàng phụ thuộc kỳ hiện tại → khi nó hiện thì đếm review (độc lập) cũng đã về
@@ -51,11 +51,11 @@ describe('AdminSidebar: đếm', () => {
     mockViewport(1280);
     const f = stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(500, null),
-      '/api/admin/periods/2026-10/summary': () => jsonResponse(500, null),
+      '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(409, { code: 'PERIOD_NOT_LOCKED' }),
       '/api/admin/stock/low': () => jsonResponse(500, null),
     });
     renderApp(makeMe('admin'), '/admin/catalog');
-    await waitFor(() => expect(f.mock.calls.some(([u]) => u === '/api/admin/periods/2026-10/summary')).toBe(true));
+    await waitFor(() => expect(f.mock.calls.some(([u]) => u === '/api/admin/periods/2026-10/delivery-people')).toBe(true));
     await new Promise((r) => setTimeout(r, 0));
     const links = within(sideNav()).getAllByRole('link');
     expect(links).toHaveLength(12);

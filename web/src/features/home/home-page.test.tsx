@@ -139,6 +139,24 @@ describe('Trang Tháng này: món ngừng dùng và thẻ lỗi', () => {
     expect(within(currentStep()).getByText('Hàng về')).toBeInTheDocument();
   });
 
+  it('R14: còn thiếu 5 nhưng đã có 1 phiếu Hàng về (receipts 1) → bước Hàng về xong, hiện "còn thiếu 5", bước hiện tại là Giao', async () => {
+    const active = reportFixture({ byItem: [{ key: 'on', item_id: 'on', name: 'Món dùng', name_en: null, unit: 'cay', requested: 5, backlog_prev: 0, stock: 0, need: 5 }], custom: [] });
+    await open({ report: active, items: [adminItem({ id: 'on', name: 'Món dùng' })], locked: { receipts: 1 } });
+    expect(within(currentStep()).getByText('Giao')).toBeInTheDocument();
+    const arrive = steps().getAllByRole('listitem')[2];
+    expect(within(arrive).getByText('còn thiếu 5')).toBeInTheDocument();
+  });
+
+  it('R14 (en): "5 short"', async () => {
+    await i18n.changeLanguage('en');
+    const active = reportFixture({ byItem: [{ key: 'on', item_id: 'on', name: 'Món dùng', name_en: null, unit: 'cay', requested: 5, backlog_prev: 0, stock: 0, need: 5 }], custom: [] });
+    mockViewport(1280);
+    setup({ report: active, items: [adminItem({ id: 'on', name: 'Món dùng' })], locked: { receipts: 1 } });
+    renderApp(makeMe('admin'), '/admin/home');
+    const list = await screen.findByRole('list', { name: 'The 4 steps of the month' });
+    expect(within(within(list).getAllByRole('listitem')[2]).getByText('5 short')).toBeInTheDocument();
+  });
+
   it('tải món chờ duyệt lỗi → thẻ báo lỗi có "Thử lại"; bấm → tải lại', async () => {
     mockViewport(1280);
     const f = setup({ reviewFails: true });

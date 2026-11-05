@@ -13,7 +13,6 @@ export interface ArrivalRow {
   waiting: number;
   stock: number;
   qty: number;
-  edited: boolean;
 }
 
 export type ArrivalTag = 'short' | 'over' | 'exact';
@@ -36,7 +35,6 @@ export function toArrivalRows(report: MonthReport, items: AdminItem[]): ArrivalR
         waiting: r.requested + r.backlog_prev,
         stock: it?.stock_qty ?? r.stock,
         qty: r.need,
-        edited: false,
       };
     });
 }

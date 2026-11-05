@@ -15,6 +15,8 @@ export interface MonthStepsInput {
   isOpen: boolean;
   snapshots: number;
   needTotal: number;
+  // Số phiếu Hàng về đã lưu cho kỳ: ADM hay giao thiếu, có phiếu rồi thì bước xong dù còn thiếu
+  receipts: number;
   pendingDelivery: number;
 }
 
@@ -30,7 +32,7 @@ export function monthSteps(i: MonthStepsInput): StepState[] {
       to: '/admin/summary',
     },
     { key: 'send', done: i.snapshots > 0, value: String(i.snapshots), to: '/admin/send-adm' },
-    { key: 'arrive', done: i.needTotal === 0, value: String(i.needTotal), to: '/admin/arrivals' },
+    { key: 'arrive', done: i.needTotal === 0 || i.receipts > 0, value: String(i.needTotal), to: '/admin/arrivals' },
     { key: 'deliver', done: i.pendingDelivery === 0, value: String(i.pendingDelivery), to: '/admin/delivery' },
   ];
   const first = steps.findIndex((s) => !s.done);

@@ -69,9 +69,10 @@ function Ready({ currentYm }: { currentYm: string }) {
     snapshots: snapshots.data.items.length,
     // Cùng tập dòng với trang Hàng về: bỏ món đã ngừng dùng (server không nhập kho cho món đó)
     needTotal: toArrivalRows(report.data, items.data).reduce((n, r) => n + r.qty, 0),
+    receipts: locked.data.receipts,
     pendingDelivery: locked.data.lines_pending_delivery,
   });
-  const currentSteps = monthSteps({ registered: current.data.registered, headcount: current.data.headcount, isOpen: current.data.is_open, snapshots: 0, needTotal: 0, pendingDelivery: 0 });
+  const currentSteps = monthSteps({ registered: current.data.registered, headcount: current.data.headcount, isOpen: current.data.is_open, snapshots: 0, needTotal: 0, receipts: 0, pendingDelivery: 0 });
   const registerView = view === 'current';
   const doing = lockedSteps.find((s) => s.current);
   const hero = registerView

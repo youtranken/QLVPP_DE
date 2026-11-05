@@ -46,6 +46,7 @@ const arrivals: Messages<typeof vi> = {
     saving: 'Saving…',
     saved: 'Added {{n}} items to stock.',
     savedNext: 'Next: Delivery',
+    nextBatch: 'Enter next batch',
     toDelivery: 'Delivery',
     stale: 'Stock just changed, check the numbers and save again',
     saveFailed: 'Could not save the arrivals. Try again later.',

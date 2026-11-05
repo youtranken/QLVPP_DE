@@ -16,6 +16,7 @@ export const OPEN: PeriodSummary = {
   lines_pending_delivery: 118,
   custom_pending: 3,
   low_stock: 4,
+  receipts: 0,
 };
 export const LOCKED: PeriodSummary = {
   ...OPEN,

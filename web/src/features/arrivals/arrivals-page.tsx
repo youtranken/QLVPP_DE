@@ -2,11 +2,10 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode, apiErrorString } from '@/lib/api-error';
-import { vnLockDate } from '@/lib/format-time';
 import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { shiftYm } from '@/lib/ym';
-import { EmptyState, Loading, LoadError } from '@/ui/load-state';
+import { Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { StatCard } from '@/ui/stat-card';
 import { StatRow } from '@/ui/stat-row';
@@ -14,11 +13,14 @@ import { useAdminItems, type AdminItem } from '@/features/catalog/catalog.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import { useMonthReport } from '@/features/reports/reports.api';
-import { usePeriodSummary } from '@/features/summary/summary.api';
-import { postReceipt, useRefreshAfterReceipt } from './arrivals.api';
+import { PeriodLockGate } from '@/features/summary/period-lock-gate';
+import { useRefreshAfterFlow } from '@/features/delivery/people/use-refresh-after-flow';
+import { postReceipt } from './arrivals.api';
 import { ArrivalTable } from './arrival-table';
 import { arrivalTag, needOf, inactiveCount, outsideCount, parseQty, toArrivalRows, waitingOf, type ArrivalRow } from './arrival-rows';
 import './arrivals.m1.css';
+
+const UNLOCKED_KEY = 'arrivals.unlocked';
 
 type Notice = { kind: 'saved'; n: number } | { kind: 'stale' } | { kind: 'failed' } | { kind: 'missing'; name: string } | null;
 
@@ -75,7 +77,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   const report = useMonthReport(ym);
   const items = useAdminItems();
   const flight = useSingleFlight();
-  const refresh = useRefreshAfterReceipt();
+  const refresh = useRefreshAfterFlow();
   const [raw, setRaw] = useState<Record<string, string>>({});
   const [added, setAdded] = useState<ArrivalRow[]>([]);
   const [note, setNote] = useState('');
@@ -84,10 +86,12 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   const base = useMemo(() => (report.data && items.data ? toArrivalRows(report.data, items.data) : []), [report.data, items.data]);
   const rows = useMemo(() => {
     const stockOf = new Map((items.data ?? []).map((i) => [i.id, i.stock_qty]));
-    return [...base, ...added].map((r) => {
+    // Món thêm tay mà báo cáo (sau khi tải lại) đã có thì lấy dòng của báo cáo: không để trùng item_id
+    const inBase = new Set(base.map((r) => r.item_id));
+    return [...base, ...added.filter((r) => !inBase.has(r.item_id))].map((r) => {
       const stock = stockOf.get(r.item_id) ?? r.stock;
       const text = raw[r.item_id];
-      return text === undefined ? { ...r, stock } : { ...r, stock, qty: parseQty(text).qty, edited: true };
+      return text === undefined ? { ...r, stock } : { ...r, stock, qty: parseQty(text).qty };
     });
   }, [base, added, raw, items.data]);
 
@@ -114,7 +118,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
     setNotice(null);
   };
   const add = (item: AdminItem) => {
-    setAdded((prev) => [...prev, { item_id: item.id, name: item.name, name_en: item.name_en, unit: item.unit, image_file_id: item.image_file_id, waiting: report.data ? waitingOf(report.data, item.id) : 0, stock: item.stock_qty, qty: 1, edited: true }]);
+    setAdded((prev) => [...prev, { item_id: item.id, name: item.name, name_en: item.name_en, unit: item.unit, image_file_id: item.image_file_id, waiting: report.data ? waitingOf(report.data, item.id) : 0, stock: item.stock_qty, qty: 1 }]);
     setRaw((prev) => ({ ...prev, [item.id]: '1' }));
   };
 
@@ -123,8 +127,9 @@ function ArrivalsBoard({ ym }: { ym: string }) {
       const lines = toSend.map((r) => ({ item_id: r.item_id, qty: r.qty, expected_stock_qty: r.stock }));
       try {
         await postReceipt({ lines, ym, ...(note.trim() ? { note: note.trim() } : {}) }, csrfToken);
-        setRaw({});
-        setAdded([]);
+        // Đợt đã lưu: dòng ở lại nhưng số về về 0 (không lưu đôi); "Nhập đợt tiếp" điền lại phần còn thiếu
+        setRaw(Object.fromEntries(rows.map((r) => [r.item_id, '0'])));
+        setAdded(rows.map((r) => ({ ...r, qty: 0 })));
         setNote('');
         setNotice({ kind: 'saved', n: lines.length });
         await refresh();
@@ -150,6 +155,9 @@ function ArrivalsBoard({ ym }: { ym: string }) {
           <span>
             <b>{t('arrivals.saved', { n: notice.n })}</b> {t('arrivals.savedNext')}
           </span>
+          <button type="button" className="btn" onClick={reset}>
+            {t('arrivals.nextBatch')}
+          </button>
           <Link className="btn btn--primary" to="/admin/delivery">
             {t('arrivals.toDelivery')}
           </Link>
@@ -191,20 +199,6 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   );
 }
 
-function Gate({ ym }: { ym: string }) {
-  const { t } = useTranslation();
-  const summary = usePeriodSummary(ym);
-  const month = monthOf(ym);
-  if (summary.isError) return <LoadError onRetry={() => void summary.refetch()} />;
-  if (!summary.data) return <Loading />;
-  const deadline = summary.data.deadline;
-  // Chưa tới hạn thì kỳ chưa khóa: số Cần mua còn đổi theo đăng ký
-  if (deadline && new Date(deadline).getTime() > Date.now()) {
-    return <EmptyState title={t('arrivals.unlocked', { month, deadline: vnLockDate(deadline) })} />;
-  }
-  return <ArrivalsBoard ym={ym} />;
-}
-
 export function ArrivalsPage() {
   const { t } = useTranslation();
   const current = useCurrentPeriod();
@@ -213,7 +207,7 @@ export function ArrivalsPage() {
   return (
     <div className="ct-page">
       <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.arrivals')]} title={title} description={t('arrivals.description')} />
-      {current.isError ? <LoadError onRetry={() => void current.refetch()} /> : lockedYm ? <Gate key={lockedYm} ym={lockedYm} /> : <Loading />}
+      {current.isError ? <LoadError onRetry={() => void current.refetch()} /> : lockedYm ? <PeriodLockGate key={lockedYm} ym={lockedYm} unlockedKey={UNLOCKED_KEY}><ArrivalsBoard ym={lockedYm} /></PeriodLockGate> : <Loading />}
     </div>
   );
 }

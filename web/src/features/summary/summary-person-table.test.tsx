@@ -69,6 +69,13 @@ describe('SummaryPersonTable — bảng theo người', () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
+  it('user_sub có + và # được mã hóa trong link: ?person=a%2Bb%23c (không bị cắt ở #, + không thành dấu cách)', async () => {
+    renderTable({ locked: true, rows: [{ ...PEOPLE[1], user_sub: 'a+b#c' }] });
+    const row = await rowOf('Phạm Văn Đức');
+    const link = await within(row).findByRole('link', { name: 'Giao phiếu của Phạm Văn Đức' });
+    await vi.waitFor(() => expect(link).toHaveAttribute('href', '/admin/delivery?person=a%2Bb%23c'));
+  });
+
   it('kỳ cũ hơn kỳ khóa gần nhất (2026-09) → giữ liên kết trang cũ /admin/delivery/classic?ym=2026-09&request=', async () => {
     renderTable({ locked: true, ym: '2026-09', rows: [PEOPLE[1]] });
     const row = await rowOf('Phạm Văn Đức');

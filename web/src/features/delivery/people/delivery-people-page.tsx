@@ -1,3 +1,4 @@
+import { Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode } from '@/lib/api-error';
 import { vnLockDate } from '@/lib/format-time';
@@ -148,9 +149,13 @@ function PeopleBoard({ ym }: { ym: string }) {
 
 export function DeliveryPeoplePage() {
   const { t } = useTranslation();
+  const { search } = useLocation();
   const current = useCurrentPeriod();
   const lockedYm = current.data ? shiftYm(current.data.ym, -1) : undefined;
+  // Dấu trang cũ của màn Giao theo phiếu (?request=…) vẫn mở được ở trang cũ
+  const old = new URLSearchParams(search);
   const title = t('delivery.people.title', { month: lockedYm ? monthOf(lockedYm) : '' }).trim();
+  if (old.has('request') && !old.has('person')) return <Navigate to={`/admin/delivery/classic${search}`} replace />;
   return (
     <div className="ct-page">
       <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.delivery')]} title={title} description={t('delivery.people.description')} />

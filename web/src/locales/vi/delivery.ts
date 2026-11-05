@@ -210,6 +210,7 @@ const delivery = {
         deliverPart: 'Giao {{give}}/{{need}}',
         delivered: 'Đã giao',
         waitingReview: 'Chờ duyệt',
+        noStock: 'Tủ chưa có hàng',
         debt: 'Nợ tháng {{months}}: {{n}} món',
         progress: 'Đã giao {{done}}/{{total}}',
         noDepartment: 'Chưa có phòng ban',

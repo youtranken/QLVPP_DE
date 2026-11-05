@@ -9,6 +9,8 @@ export interface OrderRow {
   name_en: string | null;
   unit: string;
   image_file_id: string | null;
+  // Gộp thô = đã xin + nợ kỳ trước (Cần = gộp thô − tồn)
+  want: number;
   need: number;
   // Món ngoài danh mục giao thẳng, không qua tủ
   stock: number | null;
@@ -27,12 +29,13 @@ export function toOrderRows(report: MonthReport, items: AdminItem[]): OrderRow[]
       name_en: r.name_en,
       unit: r.unit,
       image_file_id: item?.image_file_id ?? null,
+      want: r.requested + r.backlog_prev,
       need: r.need,
       stock: r.stock,
       custom: false,
     };
   });
-  const custom = report.custom.map((r) => ({ key: r.key, code: null, name: r.name, name_en: null, unit: r.unit, image_file_id: null, need: r.need, stock: null, custom: true }));
+  const custom = report.custom.map((r) => ({ key: r.key, code: null, name: r.name, name_en: null, unit: r.unit, image_file_id: null, want: r.requested + r.backlog_prev, need: r.need, stock: null, custom: true }));
   return [...listed, ...custom];
 }
 

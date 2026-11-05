@@ -117,6 +117,24 @@ describe('ArrivalsPage — lưu', () => {
     expect(calls(f, '/api/admin/items')).toBeGreaterThan(before[1]);
   });
 
+  it('sau khi lưu: dòng ở lại nhưng mọi số về = 0, Tổng đơn vị về 0, không lưu lần hai được; "Nhập đợt tiếp" điền lại số gợi ý', async () => {
+    const f = stub({ receipt: () => jsonResponse(200, { items: [] }) });
+    await open();
+    await screen.findByDisplayValue('6');
+    await userEvent.click(save());
+    await screen.findByText('Đã nhập 2 món vào tủ.');
+    expect(box('Món 0')).toHaveValue(0);
+    expect(box('Món 1')).toHaveValue(0);
+    expect(screen.getByText('Tổng đơn vị về').parentElement).toHaveTextContent('0');
+    expect(save()).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Nhập đợt tiếp' }));
+    expect(box('Món 0')).toHaveValue(6);
+    expect(box('Món 1')).toHaveValue(10);
+    expect(screen.getByText('Tổng đơn vị về').parentElement).toHaveTextContent('16');
+    expect(save()).toBeEnabled();
+    expect(sent(f)).toHaveLength(1);
+  });
+
   it('409 STALE_UPDATE: báo "Tủ vừa thay đổi…", tải lại tủ, giữ số đã gõ', async () => {
     const f = stub({ receipt: () => jsonResponse(409, { code: 'STALE_UPDATE', item_id: 'i-0', stock_qty: 5 }) });
     await open();
@@ -240,5 +258,33 @@ describe('ArrivalsPage — Thêm món khác', () => {
     await userEvent.click(save());
     await waitFor(() => expect(sent(f)).toHaveLength(1));
     expect(sent(f)[0].lines).toEqual([{ item_id: 'i-9', qty: 1, expected_stock_qty: 4 }]);
+  });
+
+  it('món vừa thêm rồi xuất hiện trong báo cáo sau khi tải lại: chỉ một dòng, gửi không trùng item_id', async () => {
+    let reported = false;
+    const f = stub({
+      receipt: () => {
+        reported = true;
+        return jsonResponse(409, { code: 'STALE_UPDATE', item_id: 'i-0', stock_qty: 2 });
+      },
+    });
+    const base = f.getMockImplementation()!;
+    f.mockImplementation(async (url: string, init?: RequestInit) =>
+      url === REPORT_URL && reported ? jsonResponse(200, rep([{ requested: 8, need: 6, stock: 2 }, { requested: 10, need: 10 }, { requested: 3, need: 3 }].map((o, i) => (i === 2 ? { ...o, item_id: 'i-9', name: 'Món thêm' } : o)))) : base(url, init),
+    );
+    await open();
+    await screen.findByDisplayValue('6');
+    await userEvent.click(screen.getByRole('button', { name: 'Thêm món khác' }));
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Chọn món' }), 'i-9');
+    await userEvent.click(screen.getByRole('button', { name: 'Thêm vào bảng' }));
+    await userEvent.click(save());
+    await screen.findByRole('alert');
+    await waitFor(() => expect(screen.getAllByRole('spinbutton', { name: 'Về lần này: Món thêm' })).toHaveLength(1));
+    f.mockImplementation(base);
+    await userEvent.click(save());
+    await waitFor(() => expect(sent(f)).toHaveLength(2));
+    const ids = (sent(f)[1].lines as { item_id: string }[]).map((l) => l.item_id);
+    expect(ids.filter((i) => i === 'i-9')).toHaveLength(1);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });

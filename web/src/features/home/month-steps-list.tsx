@@ -14,7 +14,12 @@ function useStepText() {
       case 'send':
         return { value: t(`home.value.send${state}`), note: s.done ? t('home.note.sendDone', { n: s.value }) : t('home.note.sendTodo') };
       case 'arrive':
+      {
+        // Xong vì đã có phiếu Hàng về nhưng ADM giao thiếu: còn số thiếu thì nói thẳng
+        const short = s.done && Number(s.value) > 0;
+        if (short) return { value: t('home.value.arriveShort', { n: s.value }), note: t('home.note.arriveShort') };
         return { value: s.done ? t('home.value.arriveDone') : s.value, note: t(`home.note.arrive${state}`) };
+      }
       case 'deliver':
         return { value: s.done ? t('home.value.deliverDone') : s.value, note: t(`home.note.deliver${state}`) };
     }

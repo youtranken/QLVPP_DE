@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
@@ -6,8 +6,9 @@ import { useToast } from '@/ui/toast-context';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import { lineErrorText } from '../delivery-errors';
 import { deliverSelected } from '../use-deliver-selected';
-import { useRefreshAfterPeopleDelivery, type DeliveryPerson } from './delivery-people.api';
-import { allocateLines, byPeriod, waitingFor } from './people-filter';
+import type { DeliveryPerson } from './delivery-people.api';
+import { useRefreshAfterFlow } from './use-refresh-after-flow';
+import { allocateLines, byPeriod, waitingIndex } from './people-filter';
 import { PersonLineRow } from './person-line-row';
 
 export interface PersonPanelProps {
@@ -25,11 +26,12 @@ export function PersonPanel({ ym, person, people, next, onNext }: PersonPanelPro
   const fmt = useRequestFormat();
   const { csrfToken } = useMe();
   const toast = useToast();
-  const refresh = useRefreshAfterPeopleDelivery();
+  const refresh = useRefreshAfterFlow([['admin-request']]);
   const [qtys, setQtys] = useState<Record<string, number>>({});
   const [caps, setCaps] = useState<Record<string, number>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const flight = useSingleFlight();
+  const waitingOn = useMemo(() => waitingIndex(people), [people]);
   const busy = flight.pending;
 
   const name = person.full_name ?? person.user_sub;
@@ -89,7 +91,7 @@ export function PersonPanel({ ym, person, people, next, onNext }: PersonPanelPro
                 max={maxOf(l.line_id)}
                 taken={alloc[l.line_id]?.taken ?? false}
                 error={errors[l.line_id]}
-                waiting={l.item_id ? waitingFor(people, l.item_id, person.user_sub) : NO_WAIT}
+                waiting={l.item_id ? waitingOn(l.item_id, person.user_sub) : NO_WAIT}
                 disabled={busy}
                 onChange={(n) => setQtys((q) => ({ ...q, [l.line_id]: n }))}
               />

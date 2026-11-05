@@ -15,6 +15,7 @@ export interface PeriodSummary {
   lines_pending_delivery: number;
   custom_pending: number;
   low_stock: number;
+  receipts: number;
 }
 
 export interface PersonRow {

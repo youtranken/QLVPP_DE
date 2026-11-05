@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { monthSteps } from './month-steps';
 
-const base = { registered: 39, headcount: 40, isOpen: false, snapshots: 1, needTotal: 0, pendingDelivery: 0 };
+const base = { registered: 39, headcount: 40, isOpen: false, snapshots: 1, needTotal: 0, receipts: 0, pendingDelivery: 0 };
 const currentOf = (steps: ReturnType<typeof monthSteps>) => steps.filter((s) => s.current).map((s) => s.key);
 
 describe('monthSteps', () => {
@@ -31,6 +31,13 @@ describe('monthSteps', () => {
     expect(currentOf(monthSteps({ ...base, needTotal: 13, pendingDelivery: 4 }))).toEqual(['arrive']);
     expect(currentOf(monthSteps({ ...base, needTotal: 1, pendingDelivery: 4 }))).toEqual(['arrive']);
     expect(currentOf(monthSteps({ ...base, needTotal: 0, pendingDelivery: 4 }))).toEqual(['deliver']);
+  });
+
+  it('R14: cần mua 5 mà đã có 1 phiếu Hàng về → bước xong, Giao hiện tại; 0 phiếu thì vẫn Hàng về (hai phía mốc)', () => {
+    expect(currentOf(monthSteps({ ...base, needTotal: 5, receipts: 0, pendingDelivery: 4 }))).toEqual(['arrive']);
+    const steps = monthSteps({ ...base, needTotal: 5, receipts: 1, pendingDelivery: 4 });
+    expect(currentOf(steps)).toEqual(['deliver']);
+    expect(steps[2]).toMatchObject({ done: true, value: '5' });
   });
 
   it('cần mua 0, còn 4 dòng chờ giao → Giao hiện tại, 3 bước trước xong', () => {

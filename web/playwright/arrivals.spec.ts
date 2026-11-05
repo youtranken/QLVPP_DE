@@ -43,7 +43,10 @@ test.describe('Hàng về (Plan v2-B, B4)', () => {
       await expect(page.getByText('Đã nhập 1 món vào tủ.', { exact: false }).first()).toBeVisible();
       await expect(page.getByRole('link', { name: 'Giao hàng', exact: true }).last()).toHaveAttribute('href', '/admin/delivery');
       expect(stockOf(itemId)).toBe(10);
-      // Cần mua còn 3 sau khi tủ có 10: dòng vẫn hiện, điền sẵn 3
+      // Sau khi lưu dòng vẫn hiện nhưng số về về 0, không lưu đôi được; "Nhập đợt tiếp" điền lại phần còn thiếu (Cần mua 3 khi tủ có 10)
+      await expect(box).toHaveValue('0');
+      await expect(page.getByRole('button', { name: 'Lưu hàng về' })).toBeDisabled();
+      await page.getByRole('button', { name: 'Nhập đợt tiếp' }).click();
       await expect(box).toHaveValue('3');
       await settled(page);
       await shot(page, info, 'arrivals-saved');

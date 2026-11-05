@@ -1,6 +1,7 @@
 import { queryOptions, useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import type { AdminItem } from '@/features/catalog/catalog.api';
+import { REPORTS_KEY } from '@/features/reports/reports.api';
 
 export type MovementReason = 'purchase' | 'adjust' | 'issue' | 'delivery' | 'return';
 
@@ -85,7 +86,7 @@ export function useMovements(itemId: string) {
   });
 }
 
-// Tồn hiện ở cả trang Kho và Danh mục nên làm mới cả hai; danh sách xuất lẻ không đang mở chỉ bị đánh dấu cũ, không gọi mạng
+// Tồn hiện ở cả trang Kho, Danh mục và báo cáo nên làm mới cả ba; danh sách xuất lẻ không đang mở chỉ bị đánh dấu cũ, không gọi mạng
 export function useRefreshStock() {
   const qc = useQueryClient();
   return () =>
@@ -93,6 +94,8 @@ export function useRefreshStock() {
       qc.invalidateQueries({ queryKey: STOCK_KEY }),
       qc.invalidateQueries({ queryKey: ['catalog'] }),
       qc.invalidateQueries({ queryKey: ISSUES_KEY }),
+      // Tồn đổi thì "Cần mua" của báo cáo/Gửi ADM đổi theo
+      qc.invalidateQueries({ queryKey: REPORTS_KEY }),
     ]);
 }
 

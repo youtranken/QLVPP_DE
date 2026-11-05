@@ -80,9 +80,13 @@ test.describe('Giao hàng theo người (Plan v2-B, B3)', () => {
 
       await page.getByRole('searchbox', { name: 'Tìm tên hoặc phòng ban' }).clear();
       await expect(page.getByRole('radio', { name: /^Chưa nhận/ })).toBeChecked();
+      // B được giao thiếu (7/10) → phần thiếu là nợ: sang "Còn nợ", không còn ở "Chưa nhận"
+      await expect(cardOf(page, s.b.name)).toHaveCount(0);
+      await page.getByRole('radio', { name: /^Còn nợ/ }).click();
       const stillB = cardOf(page, s.b.name);
-      await expect(stillB.getByText('Chưa nhận', { exact: true })).toBeVisible();
+      await expect(stillB.getByText('Còn nợ', { exact: true })).toBeVisible();
       await expect(stillB.getByText('Đã giao 7/10')).toBeVisible();
+      await expect(stillB.getByRole('button', { name: /^Tủ chưa có hàng/ })).toBeDisabled();
       await expect(cardOf(page, s.a.name)).toHaveCount(0);
       await settled(page);
       if (isMobile(info)) await expectNoContrastViolations(page);

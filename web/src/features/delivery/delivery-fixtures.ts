@@ -67,4 +67,5 @@ export const LOCKED_SUMMARY: PeriodSummary = {
   lines_pending_delivery: 5,
   custom_pending: 1,
   low_stock: 0,
+  receipts: 0,
 };

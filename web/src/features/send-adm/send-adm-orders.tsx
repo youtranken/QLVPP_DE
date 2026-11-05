@@ -65,7 +65,7 @@ export function SendAdmOrders({ rows, qty }: { rows: OrderRow[]; qty: OrderQty }
                       </span>
                     </div>
                   </td>
-                  <td className="n" data-label={t('sendAdm.orders.need')}>{n(r.need)}</td>
+                  <td className="n" data-label={t('sendAdm.orders.need')}>{n(r.want)}</td>
                   <td className="n" data-label={t('sendAdm.orders.stock')}>{r.stock === null ? '—' : n(r.stock)}</td>
                   <QtyCell row={r} qty={qty} />
                 </tr>

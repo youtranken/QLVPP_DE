@@ -7,8 +7,11 @@ import { useRequestFormat } from '@/features/request/request-format';
 import { deliverAll } from '../delivery.api';
 import { lineErrorText } from '../delivery-errors';
 import { deliverSelected, type LineFailureInfo } from '../use-deliver-selected';
-import { useRefreshAfterPeopleDelivery, type DeliveryPerson } from './delivery-people.api';
+import type { DeliveryPerson } from './delivery-people.api';
+import { useRefreshAfterFlow } from './use-refresh-after-flow';
 import { byPeriod, isOpenLine } from './people-filter';
+
+const NOT_DELIVERABLE = new Set(['LINE_REJECTED', 'LINE_NOT_REVIEWED']);
 
 // "Giao đủ" trên thẻ: nợ giao trước (kỳ cũ nhất trước, mỗi dòng một lệnh deliver với phần còn lại), rồi deliver-all cho phiếu kỳ này
 export function useQuickDeliver(onIncomplete: (person: DeliveryPerson) => void, onNext: (sub: string) => void) {
@@ -16,7 +19,7 @@ export function useQuickDeliver(onIncomplete: (person: DeliveryPerson) => void, 
   const fmt = useRequestFormat();
   const { csrfToken } = useMe();
   const toast = useToast();
-  const refresh = useRefreshAfterPeopleDelivery();
+  const refresh = useRefreshAfterFlow([['admin-request']]);
   const flight = useSingleFlight();
 
   const send = async (person: DeliveryPerson): Promise<LineFailureInfo[]> => {
@@ -29,7 +32,8 @@ export function useQuickDeliver(onIncomplete: (person: DeliveryPerson) => void, 
     if (person.request_id && person.lines.some((l) => !l.is_debt && isOpenLine(l))) {
       try {
         const r = await deliverAll(person.request_id, csrfToken);
-        failed.push(...r.failed.map((f) => ({ id: f.line_id, code: f.code, available: f.available })));
+        // Dòng ngoài DM bị từ chối/chưa duyệt cố ý không giao: không phải thất bại của lần giao này
+        failed.push(...r.failed.filter((f) => !NOT_DELIVERABLE.has(f.code)).map((f) => ({ id: f.line_id, code: f.code, available: f.available })));
       } catch (e) {
         failed.push({ id: '', code: apiErrorCode(e) ?? 'UNKNOWN', available: apiErrorNumber(e, 'available') });
       }

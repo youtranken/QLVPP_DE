@@ -98,6 +98,17 @@ describe('SendAdmPage — kiểm trước khi gửi', () => {
 });
 
 describe('SendAdmPage — số đề nghị và xem trước', () => {
+  it('cột Cần = đã xin + nợ kỳ trước (8), Tồn 2, Đề nghị mặc định = cần mua 6; món ngoài DM cũng cộng nợ', async () => {
+    setup({ report: { ...REPORT, custom: [{ ...REPORT.custom[0], requested: 2, backlog_prev: 3, need: 5 }] } });
+    await open();
+    const nums = (name: RegExp) => {
+      const tr = within(screen.getByRole('table', { name: 'Số đề nghị theo món' })).getAllByRole('row').find((r) => name.test(r.textContent ?? ''))!;
+      return within(tr).getAllByRole('cell').slice(1).map((c) => c.querySelector('input')?.value ?? c.textContent);
+    };
+    expect(nums(/Giấy A4/)).toEqual(['8', '2', '6']);
+    expect(nums(/Băng keo lạ/)).toEqual(['5', '—', '5']);
+  });
+
   it('mặc định Đề nghị = Cần; sửa 13 → 10 thì phiếu hiện 10; món 0 không có trong phiếu', async () => {
     setup();
     await open();

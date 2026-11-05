@@ -1,8 +1,5 @@
-import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { useRefreshStock } from '@/features/stock/stock.api';
-import { SUMMARY_KEY } from '@/features/summary/summary.api';
-import { BACKLOG_KEY } from '../delivery.api';
 
 export type DeliveryPersonStatus = 'pending' | 'debt' | 'done';
 
@@ -47,18 +44,4 @@ export const deliveryPeopleQuery = (ym: string | undefined) =>
 
 export function useDeliveryPeople(ym: string | undefined) {
   return useQuery(deliveryPeopleQuery(ym));
-}
-
-// Một đợt giao đổi danh sách người, Tổng hợp/đếm sidebar, Còn nợ, phiếu mở ở trang cũ và tồn kho
-export function useRefreshAfterPeopleDelivery() {
-  const qc = useQueryClient();
-  const refreshStock = useRefreshStock();
-  return () =>
-    Promise.all([
-      qc.invalidateQueries({ queryKey: DELIVERY_PEOPLE_KEY }),
-      qc.invalidateQueries({ queryKey: SUMMARY_KEY }),
-      qc.invalidateQueries({ queryKey: BACKLOG_KEY }),
-      qc.invalidateQueries({ queryKey: ['admin-request'] }),
-      refreshStock(),
-    ]);
 }

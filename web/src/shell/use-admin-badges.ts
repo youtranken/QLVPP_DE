@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { shiftYm } from '@/lib/ym';
 import { currentPeriodQuery } from '@/features/request/request.api';
 import { REVIEW_BADGE_KEY, reviewLinesQuery } from '@/features/review/review.api';
-import { periodSummaryQuery } from '@/features/summary/summary.api';
+import { deliveryPeopleQuery } from '@/features/delivery/people/delivery-people.api';
 import { lowStockQuery } from '@/features/stock/stock.api';
 import type { AdminBadgeKey } from '@/shell/admin-nav';
 
@@ -17,11 +17,12 @@ export function useAdminBadges(): AdminBadges {
   const review = useQuery({ ...reviewLinesQuery('pending', ''), queryKey: [...REVIEW_BADGE_KEY], ...BADGE_FRESH });
   const period = useQuery({ ...currentPeriodQuery(), ...BADGE_FRESH });
   const lockedYm = period.data?.ym ? shiftYm(period.data.ym, -1) : undefined;
-  const summary = useQuery({ ...periodSummaryQuery(lockedYm), ...BADGE_FRESH });
+  const people = useQuery({ ...deliveryPeopleQuery(lockedYm), ...BADGE_FRESH });
   const stock = useQuery({ ...lowStockQuery(), ...BADGE_FRESH });
   return {
     review: review.isError ? undefined : countOf(review.data?.items?.length),
-    delivery: summary.isError ? undefined : countOf(summary.data?.lines_pending_delivery),
+    // Số người chưa nhận gì (Q9); 409 kỳ chưa khóa hay lỗi khác → không có số
+    delivery: people.isError || !Array.isArray(people.data?.people) ? undefined : people.data.people.filter((p) => p.status === 'pending').length,
     stock: stock.isError || !Array.isArray(stock.data) ? undefined : stock.data.length,
   };
 }

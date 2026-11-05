@@ -2,10 +2,9 @@ import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { vnLockDate } from '@/lib/format-time';
 import { shiftYm } from '@/lib/ym';
 import { Icon } from '@/ui/icon';
-import { EmptyState, Loading, LoadError } from '@/ui/load-state';
+import { Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { useAdminConfig } from '@/features/admin/admin.api';
 import { useAdminItems } from '@/features/catalog/catalog.api';
@@ -18,6 +17,7 @@ import { useMonthReport, type MonthReport, type SnapshotKind } from '@/features/
 import { ReportSnapshots } from '@/features/reports/report-snapshots';
 import { useOrderQty } from '@/features/reports/use-order-qty';
 import { useSnapshotDownload, useTakeSnapshot } from '@/features/reports/use-snapshot';
+import { PeriodLockGate } from '@/features/summary/period-lock-gate';
 import { usePeriodSummary, type PeriodSummary } from '@/features/summary/summary.api';
 import { SendAdmChecklist } from './send-adm-checklist';
 import { SendAdmOrders } from './send-adm-orders';
@@ -26,6 +26,8 @@ import { orderOf, toOrderRows } from './send-adm-rows';
 import type { AdminItem } from '@/features/catalog/catalog.api';
 import type { SignatureBox } from '@/features/admin/admin.api';
 import './send-adm.m1.css';
+
+const UNLOCKED_KEY = 'sendAdm.unlocked';
 
 function useTitle(ym: string | undefined) {
   const { t } = useTranslation();
@@ -134,21 +136,15 @@ function Board({ ym }: { ym: string }) {
   return <Ready report={report.data} items={items.data} summary={summary.data} boxes={config.data.signature_boxes} onInvalidPeriod={invalidPeriod} />;
 }
 
-function Gate({ ym }: { ym: string }) {
-  const { t } = useTranslation();
-  const summary = usePeriodSummary(ym);
-  const month = monthOf(ym);
-  if (summary.isError) return <Bare ym={ym}><LoadError onRetry={() => void summary.refetch()} /></Bare>;
-  if (!summary.data) return <Bare ym={ym}><Loading /></Bare>;
-  const deadline = summary.data.deadline;
-  // Chưa tới hạn thì kỳ chưa khóa: số Cần mua còn đổi theo đăng ký, không chốt phiếu
-  if (deadline && new Date(deadline).getTime() > Date.now()) return <Bare ym={ym}><EmptyState title={t('sendAdm.unlocked', { month, deadline: vnLockDate(deadline) })} /></Bare>;
-  return <Board ym={ym} />;
-}
-
 export function SendAdmPage() {
   const current = useCurrentPeriod();
   const lockedYm = current.data ? shiftYm(current.data.ym, -1) : undefined;
-  if (lockedYm) return <Gate key={lockedYm} ym={lockedYm} />;
+  if (lockedYm) {
+    return (
+      <PeriodLockGate key={lockedYm} ym={lockedYm} unlockedKey={UNLOCKED_KEY} frame={(node) => <Bare ym={lockedYm}>{node}</Bare>}>
+        <Board ym={lockedYm} />
+      </PeriodLockGate>
+    );
+  }
   return <Bare ym={undefined}>{current.isError ? <LoadError onRetry={() => void current.refetch()} /> : <Loading />}</Bare>;
 }

@@ -64,10 +64,10 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
 
   test('v2: số đếm trên mục đang chọn (nền trắng) vẫn đọc được, đạt axe', async ({ page }, info) => {
     test.skip(isMobile(info), 'chỉ đo ở 1280');
-    await page.route('**/api/admin/periods/*/summary', async (route) => {
-      const res = await route.fetch();
-      const body = res.ok() ? await res.json() : {};
-      await route.fulfill({ response: res, status: 200, json: { ...body, lines_pending_delivery: 5 } });
+    // Số đếm Giao hàng = số người chưa nhận: giả 5 người (không dòng) cho kỳ khóa gần nhất
+    await page.route('**/api/admin/periods/*/delivery-people', async (route) => {
+      const people = Array.from({ length: 5 }, (_, i) => ({ user_sub: `pw-badge-${i}`, full_name: `PW Badge ${i}`, department: null, user_status: 'active', request_id: null, status: 'pending', owed_lines: 0, open_lines: 0, lines: [] }));
+      await route.fulfill({ status: 200, json: { ym: '2000-01', people } });
     });
     await page.goto('/admin/delivery');
     const link = page.getByRole('navigation', { name: 'Menu quản lý' }).getByRole('link', { name: /^Giao hàng/ });
