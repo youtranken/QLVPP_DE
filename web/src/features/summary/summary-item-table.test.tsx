@@ -2,7 +2,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, renderWithI18n, screen, within } from '@/test/test-utils';
 import { SummaryItemTable } from './summary-item-table';
-import { stubSummaryApi } from './summary-fixtures';
+import { SUMMARY_ITEMS, stubSummaryApi } from './summary-fixtures';
 
 function renderTable(props: { q?: string; lowOnly?: boolean } = {}) {
   renderWithI18n(
@@ -56,13 +56,22 @@ describe('SummaryItemTable — bảng theo món', () => {
     expect(within(tape).getAllByRole('cell').at(-1)).toHaveTextContent('—');
   });
 
-  it('lowOnly: chỉ món trong admin/stock/low hoặc stock_state=out', async () => {
+  it('lowOnly: chỉ món dùng được có stock_state low hoặc out', async () => {
     stubSummaryApi();
     renderTable({ lowOnly: true });
     expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
     expect(screen.queryByText('Giấy note')).toBeNull();
     expect(screen.queryByText('Băng keo 2 mặt')).toBeNull();
+  });
+
+  it('lowOnly khớp ô "Hết hàng / sắp hết": món thuộc nhóm đang ngừng (usable=false) không vào danh sách', async () => {
+    const paused = SUMMARY_ITEMS.map((i) => (i.id === 'i-a4' || i.id === 'i-pen' ? { ...i, usable: false } : i));
+    stubSummaryApi((url) => (url === '/api/admin/items' ? jsonResponse(200, paused) : undefined));
+    renderTable({ lowOnly: true });
+    expect(await screen.findByText('Không có món nào khớp')).toBeInTheDocument();
+    expect(screen.queryByText('Giấy A4')).toBeNull();
+    expect(screen.queryByText('Bút bi xanh')).toBeNull();
   });
 
   it('tìm theo tên bỏ dấu ở phía trang: "giay" khớp "Giấy A4", "Giấy note"', async () => {

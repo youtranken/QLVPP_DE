@@ -8,7 +8,6 @@ import { ItemThumb } from '@/ui/item-thumb';
 import { LoadError } from '@/ui/load-state';
 import { categoryLabel, useAdminItems, useAllCategories, type AdminItem, type Category } from '@/features/catalog/catalog.api';
 import { matchesSearch, useRequestFormat } from '@/features/request/request-format';
-import { useLowStock } from '@/features/stock/stock.api';
 import { useItemRows, type ItemSummaryRow } from './summary.api';
 
 type Row = ItemSummaryRow & { id: string; item?: AdminItem; group: string; tone: Tone };
@@ -25,22 +24,20 @@ function useRows(ym: string, q: string, lowOnly: boolean) {
   const rows = useItemRows(ym);
   const items = useAdminItems();
   const cats = useAllCategories();
-  const low = useLowStock();
   const data = useMemo<Row[]>(() => {
     const byId = new Map((items.data ?? []).map((i) => [i.id, i]));
     const catList = cats.data ?? [];
     const order = [...catList].sort((a, b) => a.sort_order - b.sort_order).map((c) => c.id);
     const rank = (g: string) => (g === CUSTOM ? order.length + 1 : g === NONE ? order.length : order.indexOf(g));
-    const lowIds = new Set((low.data ?? []).map((i) => i.id));
     return (rows.data?.items ?? [])
       .map((r) => {
         const item = r.item_id ? byId.get(r.item_id) : undefined;
         return { ...r, id: r.key, item, group: groupOf(item, r, catList), tone: groupTone(catList, item?.category_id ?? null) };
       })
-      .filter((r) => !lowOnly || (r.item_id !== null && (lowIds.has(r.item_id) || r.item?.stock_state === 'out')))
+      .filter((r) => !lowOnly || (!!r.item?.usable && (r.item.stock_state === 'low' || r.item.stock_state === 'out')))
       .filter((r) => !q || matchesSearch(r.name, q))
       .sort((a, b) => rank(a.group) - rank(b.group));
-  }, [rows.data, items.data, cats.data, low.data, q, lowOnly]);
+  }, [rows.data, items.data, cats.data, q, lowOnly]);
   return { data, rows, cats: cats.data ?? [] };
 }
 
