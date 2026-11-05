@@ -15,6 +15,7 @@ import { ConfigPage } from '@/features/admin/config-page';
 import { SummaryPage } from '@/features/summary/summary-page';
 import { ReviewPage } from '@/features/review/review-page';
 import { DeliveryPage } from '@/features/delivery/delivery-page';
+import { ArrivalsPage } from '@/features/arrivals/arrivals-page';
 import { DeliveryPeoplePage } from '@/features/delivery/people/delivery-people-page';
 import { BacklogPage } from '@/features/delivery/backlog-page';
 import { ReportsPage } from '@/features/reports/reports-page';
@@ -64,6 +65,7 @@ export function AppRoutes() {
         <Route index element={<Navigate to={ADMIN_HOME} replace />} />
         <Route path="summary" element={<SummaryPage />} />
         <Route path="review" element={<ReviewPage />} />
+        <Route path="arrivals" element={<ArrivalsPage />} />
         <Route path="delivery" element={<DeliveryPeoplePage />} />
         <Route path="delivery/classic" element={<DeliveryPage />} />
         <Route path="backlog" element={<BacklogPage />} />

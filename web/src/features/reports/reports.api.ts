@@ -83,7 +83,7 @@ export interface SnapshotRow {
   created_by_name: string | null;
 }
 
-const REPORTS_KEY = ['reports'] as const;
+export const REPORTS_KEY = ['reports'] as const;
 const snapshotsKey = (ym: string) => [...REPORTS_KEY, ym, 'snapshots'];
 
 export function useMonthReport(ym: string) {

@@ -31,6 +31,7 @@ const nav: Messages<typeof vi> = {
     stock: 'Cupboard',
     users: 'Staff',
     review: 'Off-catalog items',
+    arrivals: 'Goods arriving',
     delivery: 'Delivery',
     backlog: 'Outstanding',
     deliveryClassic: 'Deliveries (classic)',

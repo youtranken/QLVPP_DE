@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { asRole, devHeaders, expectNoContrastViolations, isMobile } from './helpers';
 
-const NAV_ORDER = ['Tổng hợp kỳ', 'Giao hàng', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Tổng hợp kỳ', 'Giao hàng', 'Hàng về', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 const LATER = ['Còn nợ', 'Giao hàng (bản cũ)'];
 const OPEN_MENU = /^(Mở menu quản lý|Open admin menu)$/;
 
@@ -15,7 +15,7 @@ const sidebarWidth = (page: Page) =>
 test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
   asRole('admin');
 
-  test('E9-S1 shell Hành chính: sidebar 4 nhóm (cột 11 mục + nhóm Xem lại sau thu gọn; menu điện thoại đủ 13), thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
+  test('E9-S1 shell Hành chính: sidebar 4 nhóm (cột 12 mục + nhóm Xem lại sau thu gọn; menu điện thoại đủ 14), thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
     await page.goto('/admin/catalog');
     await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
     await expect(bellOf(page, isMobile(info))).toBeVisible();
@@ -165,7 +165,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     expect(logout.x + logout.width).toBeLessThanOrEqual(252);
     await page.setViewportSize({ width: 1280, height: 720 });
     const nav = page.getByRole('navigation', { name: 'Menu quản lý' });
-    expect(await nav.evaluate((el) => el.scrollHeight - el.clientHeight), '11 mục (nhóm Xem lại sau thu gọn) vừa 1280×720, nav không phải cuộn').toBeLessThanOrEqual(1);
+    expect(await nav.evaluate((el) => el.scrollHeight - el.clientHeight), '12 mục (nhóm Xem lại sau thu gọn) vừa 1280×720, nav không phải cuộn').toBeLessThanOrEqual(1);
   });
 
   test('v2-B R2: mở nhóm "Xem lại sau" thì nav cuộn được nhưng khối tài khoản vẫn trong màn 1280×720', async ({ page }, info) => {

@@ -14,7 +14,8 @@ import delivery from './delivery';
 import reports from './reports';
 import units from './units';
 import config from './config';
+import arrivals from './arrivals';
 
-const vi = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review, ...notifications, ...delivery, ...reports, ...units, ...config };
+const vi = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review, ...notifications, ...delivery, ...reports, ...units, ...config, ...arrivals };
 
 export default vi;

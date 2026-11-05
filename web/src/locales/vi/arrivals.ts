@@ -1,0 +1,53 @@
+const arrivals = {
+  arrivals: {
+    title: 'Hàng về kỳ tháng {{month}}',
+    description: 'Nhập số hàng về từng món. Ô đã điền sẵn phần Cần mua; điền 0 để bỏ qua món chưa về. Lưu xong tủ tự cộng.',
+    unlocked: 'Kỳ tháng {{month}} chưa khóa sổ, mở lại sau {{deadline}}.',
+    unlockedNoDate: 'Kỳ tháng {{month}} chưa khóa sổ.',
+    stats: {
+      toReceive: 'Món cần nhập',
+      toReceiveSub: 'Món còn thiếu trong tủ',
+      units: 'Tổng đơn vị về',
+      unitsSub: 'Cộng vào tủ khi lưu',
+      done: 'Món đã đủ',
+      doneSub: 'Về lần này đủ Cần mua',
+      unit: 'món',
+      unitsUnit: 'đơn vị',
+    },
+    table: {
+      label: 'Hàng về theo món',
+      item: 'Món',
+      waiting: 'Còn chờ',
+      stock: 'Tủ hiện có',
+      qty: 'Về lần này',
+      status: 'Tình trạng',
+      after: 'Tủ sau khi lưu',
+      qtyLabel: 'Về lần này: {{name}}',
+      empty: 'Không có món nào cần nhập. Dùng Thêm món khác nếu hàng về ngoài danh sách.',
+    },
+    tag: { short: 'Thiếu', over: 'Dư', exact: 'Đủ' },
+    errors: {
+      invalid: 'Nhập số nguyên từ 0 trở lên',
+      max: 'Tối đa 99.999',
+    },
+    add: {
+      open: 'Thêm món khác',
+      pick: 'Chọn món',
+      pickPlaceholder: 'Chọn một món trong danh mục',
+      confirm: 'Thêm vào bảng',
+      none: 'Mọi món trong danh mục đã có trong bảng.',
+    },
+    note: { label: 'Ghi chú đợt (không bắt buộc)', placeholder: 'VD: ADM chia đợt 2, giấy A4 hẹn tuần sau' },
+    reset: 'Điền lại số gợi ý',
+    save: 'Lưu hàng về',
+    saving: 'Đang lưu…',
+    saved: 'Đã nhập {{n}} món vào tủ.',
+    savedNext: 'Tiếp theo: Giao hàng',
+    toDelivery: 'Giao hàng',
+    stale: 'Tủ vừa thay đổi, kiểm lại số rồi lưu lại',
+    saveFailed: 'Chưa lưu được hàng về. Thử lại sau.',
+    outside: '{{n}} món ngoài danh mục giao thẳng, không qua tủ',
+  },
+};
+
+export default arrivals;
