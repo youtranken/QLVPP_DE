@@ -71,11 +71,12 @@ describe('GET admin/periods/:ym/delivery-people', () => {
     expect(a?.lines[0]).toMatchObject({ delivered_qty: 3, remaining_qty: 0 });
   });
 
-  it('B giao 7 → vẫn pending kỳ 11; sang kỳ 12 B có dòng is_debt remaining 3, request_id kỳ 12 null nếu B không đăng ký → status debt', async () => {
+  it('B giao 7/10 (giao thiếu) → status debt kỳ 11 (mọi dòng mở đã được giao một phần); sang kỳ 12 B có dòng is_debt remaining 3, request_id kỳ 12 null nếu B không đăng ký → status debt', async () => {
     const { lb } = await scenario();
     await deliver(lb.id, { qty: 7, expected_delivered_qty: 0 }).expect(200);
     const b11 = await mine(B);
-    expect(b11?.status).toBe('pending');
+    expect(b11?.status).toBe('debt');
+    expect(b11).toMatchObject({ open_lines: 1, owed_lines: 0 });
     expect(b11?.lines[0].remaining_qty).toBe(3);
 
     freeze('2026-12-11T03:00:00Z');

@@ -28,6 +28,7 @@ export interface PeriodSummary {
   lines_pending_delivery: number;
   custom_pending: number;
   low_stock: number;
+  receipts: number;
 }
 
 export interface UnregisteredUser extends Record<string, unknown> {
@@ -63,11 +64,12 @@ export class SummaryService {
 
   async summary(ym: string): Promise<PeriodSummary> {
     const { isOpen } = await this.assertViewable(ym);
-    const [period, counts, live, lowStock] = await Promise.all([
+    const [period, counts, live, lowStock, receipts] = await Promise.all([
       this.periods.findSnapshot(ym),
       this.requestCounts(ym),
       this.liveCounts(ym),
       this.catalog.countLowStock(),
+      this.receiptCount(ym),
     ]);
     const snapshot = period?.headcount ?? null;
     return {
@@ -79,7 +81,17 @@ export class SummaryService {
       headcount_source: snapshot === null ? 'live' : 'snapshot',
       unregistered: live.unregistered,
       low_stock: lowStock,
+      receipts,
     };
+  }
+
+  // Số phiếu Hàng về của kỳ: audit stock.receipt có object_id = ym (chính xác, không suy từ note)
+  private async receiptCount(ym: string): Promise<number> {
+    const { rows } = await this.db.execute<{ n: number }>(sql`
+      SELECT count(*)::int AS n FROM audit_log
+      WHERE action = 'stock.receipt' AND object_id = ${ym}
+    `);
+    return rows[0].n;
   }
 
   async unregistered(ym: string): Promise<{ items: UnregisteredUser[] }> {

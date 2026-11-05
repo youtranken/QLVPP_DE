@@ -120,6 +120,11 @@ describe('POST admin/stock/receipts: vai, validate, mã lỗi (Postgres thật)'
       const res = await one(100_000).expect(400);
       expect(res.body.code).toBe('VALIDATION');
     });
+    it('ym 2026-13 (tháng 13) → 400, 2026-12 → 200', async () => {
+      await receipts({ lines: [line(item, 1, 0)], ym: '2026-13' }).expect(400);
+      await receipts({ lines: [line(item, 1, 0)], ym: '2026-00' }).expect(400);
+      await receipts({ lines: [line(item, 1, 0)], ym: '2026-12' }).expect(200);
+    });
     it('expected_stock_qty -1 → 400', async () => {
       await receipts({ lines: [line(item, 1, -1)], ym: YM }).expect(400);
     });

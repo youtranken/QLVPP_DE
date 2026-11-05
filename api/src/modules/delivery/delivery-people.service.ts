@@ -97,7 +97,11 @@ export class DeliveryPeopleService {
   }
 }
 
+// Giao thiếu: mọi dòng mở của kỳ đã có delivered_qty > 0 → phần thiếu là nợ (Còn nợ), không còn "chưa nhận"
 function statusOf(p: DeliveryPerson): DeliveryPersonStatus {
-  if (p.open_lines > 0) return 'pending';
-  return p.owed_lines > 0 ? 'debt' : 'done';
+  const untouched = p.lines.some(
+    (l) => !l.is_debt && l.remaining_qty > 0 && l.delivered_qty === 0,
+  );
+  if (untouched) return 'pending';
+  return p.open_lines > 0 || p.owed_lines > 0 ? 'debt' : 'done';
 }

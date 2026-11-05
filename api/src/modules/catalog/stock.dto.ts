@@ -16,6 +16,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { TrimToNull } from '../../common/dto-fields';
+import { YM } from '../../common/ym';
 
 const QTY_MAX = 1_000_000;
 
@@ -56,6 +57,6 @@ export class ReceiptBody {
   @ValidateNested({ each: true })
   @Type(() => ReceiptLine)
   lines!: ReceiptLine[];
-  @IsString() @Matches(/^\d{4}-\d{2}$/) ym!: string;
+  @IsString() @Matches(YM) ym!: string;
   @TrimToNull() @IsOptional() @IsString() @MaxLength(500) note?: string | null;
 }

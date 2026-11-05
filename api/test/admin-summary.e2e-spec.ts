@@ -49,7 +49,28 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
       lines_pending_delivery: 2,
       custom_pending: 1,
       low_stock: lowStock,
+      receipts: 0,
     });
+  });
+
+  // audit_log append-only: không xóa được → so với số đếm trước, kỳ 2025-09 không bao giờ có phiếu
+  it('summary.receipts đếm audit stock.receipt có object_id = ym: +1 khi có phiếu kỳ đó, kỳ khác không đổi', async () => {
+    const of = async (ym: string) =>
+      (
+        (await asAdmin(`/periods/${ym}/summary`).expect(200)).body as {
+          receipts: number;
+        }
+      ).receipts;
+    const before = await of('2025-08');
+    expect(await of('2025-09')).toBe(0);
+    await f
+      .pool()
+      .query(
+        "INSERT INTO audit_log (actor, action, object_type, object_id, detail) VALUES ('t', 'stock.receipt', 'period', '2025-08', '{}'::jsonb)",
+      );
+    expect(await of('2025-08')).toBe(before + 1);
+    expect(await of('2025-09')).toBe(0);
+    expect((await summary()).receipts).toBe(0);
   });
 
   it('summary: periods.headcount đã chụp thì dùng snapshot; unregistered vẫn theo tập sống', async () => {
