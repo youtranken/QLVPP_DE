@@ -215,6 +215,32 @@ describe('SendAdmPage — vòng sửa 1', () => {
     expect(screen.queryByRole('dialog', { name: 'Bỏ số Đặt mua đã sửa?' })).toBeNull();
   });
 
+  it('sau khi xuất thành công: rời trang không hỏi', async () => {
+    const f = setup();
+    const saved = captureDownloads();
+    await open();
+    await retype(await qtyBox('Bút bi xanh'), '10');
+    await userEvent.click(xlsx());
+    await waitFor(() => expect(postsOf(f)).toHaveLength(1));
+    await waitFor(() => expect(saved).toHaveLength(1));
+    await userEvent.click(within(screen.getByRole('list', { name: 'Kiểm trước khi gửi' })).getByRole('link', { name: 'Tổng hợp kỳ' }));
+    expect(screen.queryByRole('dialog', { name: 'Bỏ số Đặt mua đã sửa?' })).toBeNull();
+  });
+
+  it('sau khi xuất rồi sửa thêm: rời trang vẫn hỏi', async () => {
+    const f = setup();
+    const saved = captureDownloads();
+    await open();
+    await retype(await qtyBox('Bút bi xanh'), '10');
+    await userEvent.click(xlsx());
+    await waitFor(() => expect(postsOf(f)).toHaveLength(1));
+    await waitFor(() => expect(saved).toHaveLength(1));
+    await waitFor(() => expect(xlsx()).toBeEnabled());
+    await retype(await qtyBox('Giấy A4'), '5');
+    await userEvent.click(within(screen.getByRole('list', { name: 'Kiểm trước khi gửi' })).getByRole('link', { name: 'Tổng hợp kỳ' }));
+    expect(await screen.findByRole('dialog', { name: 'Bỏ số Đặt mua đã sửa?' })).toBeInTheDocument();
+  });
+
   it('mọi món Đề nghị 0: hai nút vô hiệu kèm gợi ý, phiếu rỗng không gửi được', async () => {
     const f = setup();
     await open();

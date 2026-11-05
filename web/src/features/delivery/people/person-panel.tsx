@@ -87,6 +87,7 @@ export function PersonPanel({ ym, person, people, next, onNext }: PersonPanelPro
                 line={l}
                 value={valueOf(l.line_id)}
                 max={maxOf(l.line_id)}
+                taken={alloc[l.line_id]?.taken ?? false}
                 error={errors[l.line_id]}
                 waiting={l.item_id ? waitingFor(people, l.item_id, person.user_sub) : NO_WAIT}
                 disabled={busy}

@@ -148,6 +148,22 @@ describe('PersonPanel — biên stepper', () => {
 });
 
 describe('PersonPanel — tồn chia theo món', () => {
+  it('dòng sau cùng món bị dòng trên lấy hết tồn: chữ "Đã dành hết cho dòng trên", không phải "Tủ hết món này"; hạ dòng trên thì dòng sau có stepper', async () => {
+    stub();
+    const d = pLine({ line_id: 'd', period_ym: '2026-09', is_debt: true, qty: 3, remaining_qty: 3, stock_qty: 3 });
+    const c = pLine({ line_id: 'c', qty: 5, remaining_qty: 5, stock_qty: 3 });
+    open(person({ lines: [c, d] }));
+    expect(screen.getAllByRole('spinbutton')).toHaveLength(1);
+    expect(screen.getByText('Đã dành hết cho dòng trên')).toBeInTheDocument();
+    expect(screen.queryByText('Tủ hết món này')).toBeNull();
+    const input = screen.getByRole('spinbutton') as HTMLInputElement;
+    await userEvent.clear(input);
+    await userEvent.type(input, '1');
+    expect(screen.queryByText('Đã dành hết cho dòng trên')).toBeNull();
+    const inputs = screen.getAllByRole('spinbutton') as HTMLInputElement[];
+    expect(inputs.map((i) => i.value)).toEqual(['1', '2']);
+  });
+
   const debt = pLine({ line_id: 'd', period_ym: '2026-09', is_debt: true, qty: 3, remaining_qty: 3, stock_qty: 6 });
   const cur = pLine({ line_id: 'c', qty: 5, remaining_qty: 5, stock_qty: 6 });
 

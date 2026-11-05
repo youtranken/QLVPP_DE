@@ -13,6 +13,7 @@ describe('GET admin/periods/:ym/delivery-people', () => {
     B,
     as,
     at,
+    cancel,
     customLine,
     deliver,
     freeze,
@@ -131,6 +132,47 @@ describe('GET admin/periods/:ym/delivery-people', () => {
       image_file_id: c.img,
     });
     expect(await mine(B)).toBeUndefined();
+  });
+
+  const setName = (sub: string, name: string | null) =>
+    f
+      .pool()
+      .query('UPDATE users SET full_name = $2 WHERE sub = $1', [sub, name]);
+  const order = async () =>
+    (await people()).map((p) => p.user_sub).filter((s) => s === A || s === B);
+
+  it('sắp xếp theo tên tiếng Việt: "Dũng" trước "Đào"', async () => {
+    await scenario();
+    await setName(A, 'Đào');
+    await setName(B, 'Dũng');
+    expect(await order()).toEqual([B, A]);
+  });
+
+  it('trùng full_name → xếp theo user_sub', async () => {
+    await scenario();
+    await setName(A, 'Trùng Tên');
+    await setName(B, 'Trùng Tên');
+    expect(await order()).toEqual([A, B].sort());
+  });
+
+  it('full_name null vẫn được liệt kê (xếp đầu)', async () => {
+    await scenario();
+    await setName(A, null);
+    await setName(B, 'Bình');
+    const list = await order();
+    expect(list).toEqual([A, B]);
+    expect((await mine(A))?.full_name).toBeNull();
+  });
+
+  it('dòng nợ đã hủy phần còn lại (remaining 0) không xuất hiện kỳ sau', async () => {
+    const { lb } = await scenario();
+    await cancel(lb.id, {
+      reason: 'Người đã nghỉ',
+      expected_delivered_qty: 0,
+      expected_qty: 10,
+    }).expect(200);
+    freeze('2026-12-11T03:00:00Z');
+    expect(await mine(B, '2026-12')).toBeUndefined();
   });
 
   it('deadline − 1 ms → 409 PERIOD_NOT_LOCKED', async () => {

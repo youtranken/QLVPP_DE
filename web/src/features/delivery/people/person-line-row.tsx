@@ -14,13 +14,14 @@ interface Props {
   line: DeliveryPersonLine;
   value: number;
   max: number;
+  taken: boolean;
   error?: string;
   waiting: LineWaiting;
   disabled: boolean;
   onChange: (n: number) => void;
 }
 
-function Control({ line, value, max, disabled, onChange }: Pick<Props, 'line' | 'value' | 'max' | 'disabled' | 'onChange'>) {
+function Control({ line, value, max, taken, disabled, onChange }: Pick<Props, 'line' | 'value' | 'max' | 'taken' | 'disabled' | 'onChange'>) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   const name = fmt.name(line);
@@ -32,11 +33,11 @@ function Control({ line, value, max, disabled, onChange }: Pick<Props, 'line' | 
       </span>
     );
   }
-  if (max <= 0) return <span className="pp-row__oos">{t('delivery.people.panel.outOfStock')}</span>;
+  if (max <= 0) return <span className="pp-row__oos">{t(taken ? 'delivery.people.panel.allocatedAbove' : 'delivery.people.panel.outOfStock')}</span>;
   return <Stepper className="pp-row__step" value={value} min={0} max={max} disabled={disabled} label={t('delivery.people.panel.qty', { name })} onChange={onChange} />;
 }
 
-export function PersonLineRow({ line, value, max, error, waiting, disabled, onChange }: Props) {
+export function PersonLineRow({ line, value, max, taken, error, waiting, disabled, onChange }: Props) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   const reviewing = line.review_status === 'pending';
@@ -56,7 +57,7 @@ export function PersonLineRow({ line, value, max, error, waiting, disabled, onCh
             {meta}
           </small>
         </div>
-        <Control line={line} value={value} max={max} disabled={disabled} onChange={onChange} />
+        <Control line={line} value={value} max={max} taken={taken} disabled={disabled} onChange={onChange} />
       </div>
       {!reviewing && max > 0 && owe > 0 && (
         <div className="pp-row__warn">

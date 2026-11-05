@@ -224,6 +224,7 @@ const delivery = {
         need: 'Cần {{n}} · Tủ còn {{stock}}',
         needNoStock: 'Cần {{n}}',
         outOfStock: 'Tủ hết món này',
+        allocatedAbove: 'Đã dành hết cho dòng trên',
         pendingReview: 'Chờ duyệt',
         reviewLink: 'Xem',
         qty: 'Giao {{name}}',

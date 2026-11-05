@@ -44,6 +44,8 @@ export const byPeriod = (a: { period_ym: string }, b: { period_ym: string }) => 
 export interface Allocated {
   max: number;
   value: number;
+  // Dòng trên cùng món đã lấy bớt tồn (max về 0 vì chia tồn, không vì tủ hết)
+  taken: boolean;
 }
 
 // Tồn thuộc về món, không thuộc dòng: dòng nợ cũ nhất lấy trước, dòng sau chỉ còn phần tồn dư.
@@ -62,7 +64,7 @@ export function allocateLines(
     const max = lineMax({ ...l, stock_qty: left }, caps[l.line_id]);
     const value = Math.max(0, Math.min(qtys[l.line_id] ?? Infinity, max));
     if (tracked) pool.set(l.item_id!, left! - value);
-    out[l.line_id] = { max, value };
+    out[l.line_id] = { max, value, taken: tracked && left! < l.stock_qty! };
   }
   return out;
 }

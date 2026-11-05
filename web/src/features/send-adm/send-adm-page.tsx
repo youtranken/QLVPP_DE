@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -81,13 +81,26 @@ function Ready({ report, items, summary, boxes, onInvalidPeriod }: ReadyProps) {
     () => ({ title: t('reports.page.leaveConfirm.title'), message: t('reports.page.leaveConfirm.message', { count: qty.editedCount, month: monthOf(report.ym) }), confirmLabel: t('reports.page.leaveConfirm.ok'), cancelLabel: t('reports.page.leaveConfirm.cancel'), danger: true }),
     [t, qty.editedCount, report.ym],
   );
-  useLeaveGuard(qty.editedCount, prompt);
+  // Xuất/In thành công = số đã chốt: lấy làm mốc, chỉ hỏi khi còn sửa khác mốc đó
+  const draftSig = `${JSON.stringify(qty.edited)}|${qty.errorCount}`;
+  const sentSig = useRef(draftSig);
+  const [exportedSig, setExportedSig] = useState<string | null>(null);
+  const [seenFresh, setSeenFresh] = useState(0);
+  if (snap.fresh.size !== seenFresh) {
+    setSeenFresh(snap.fresh.size);
+    setExportedSig(sentSig.current);
+  }
+  const take = (kind: SnapshotKind) => {
+    sentSig.current = draftSig;
+    snap.take(kind);
+  };
+  useLeaveGuard(draftSig === exportedSig ? 0 : qty.editedCount, prompt);
   return (
     <div className="ct-page sa-page">
       <PageHeader
         {...head}
-        secondary={<ActionButton mode="xlsx" disabled={blocked} taking={snap.taking} onTake={snap.take} />}
-        primary={<ActionButton mode="print" disabled={blocked} taking={snap.taking} onTake={snap.take} />}
+        secondary={<ActionButton mode="xlsx" disabled={blocked} taking={snap.taking} onTake={take} />}
+        primary={<ActionButton mode="print" disabled={blocked} taking={snap.taking} onTake={take} />}
       />
       {empty && <p className="alert alert--warn">{t('sendAdm.actions.empty')}</p>}
       {snap.notice && <p role="alert" className="alert alert--danger">{t(`reports.page.error.${snap.notice}`)}</p>}
