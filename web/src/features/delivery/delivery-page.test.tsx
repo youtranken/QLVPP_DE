@@ -17,7 +17,7 @@ const search = () => screen.getByTestId('location-search').textContent ?? '';
 const rowButton = (name: string) => screen.getByRole('button', { name: new RegExp(`^${name}`) });
 const list = () => screen.getByRole('list', { name: 'Danh sách phiếu' });
 
-function open(path = '/admin/delivery', opts: { reducedMotion?: boolean } = {}) {
+function open(path = '/admin/delivery/classic', opts: { reducedMotion?: boolean } = {}) {
   mockViewport(1280, opts);
   renderApp(makeMe('admin'), path);
 }
@@ -80,7 +80,7 @@ describe('DeliveryPage — đầu trang, tháng, dải trạng thái', () => {
 
   it('?ym=2026-11 (kỳ đang mở) → kẹp về 2026-10 bằng replace, không gọi danh sách/báo cáo kỳ 2026-11', async () => {
     const f = stubDelivery();
-    open('/admin/delivery?ym=2026-11');
+    open('/admin/delivery/classic?ym=2026-11');
     expect(await screen.findByText('Tháng 10/2026')).toBeInTheDocument();
     await waitFor(() => expect(search()).toContain('ym=2026-10'));
     await screen.findByText('Phiếu tháng 10 · Chưa giao đủ (1)');
@@ -89,7 +89,7 @@ describe('DeliveryPage — đầu trang, tháng, dải trạng thái', () => {
 
   it('?ym=2026-09 (kỳ khóa cũ hơn) → giữ 2026-09, gọi danh sách kỳ đó', async () => {
     const f = stubDelivery();
-    open('/admin/delivery?ym=2026-09');
+    open('/admin/delivery/classic?ym=2026-09');
     expect(await screen.findByText('Tháng 9/2026')).toBeInTheDocument();
     await waitFor(() => expect(urlsOf(f).some((u) => u.startsWith('/api/admin/periods/2026-09/requests?by=person'))).toBe(true));
     expect(search()).toContain('ym=2026-09');
@@ -124,7 +124,7 @@ describe('DeliveryPage — danh sách phiếu (trái)', () => {
 
   it('?request=r-2 mở đúng phiếu đó', async () => {
     stubDelivery({ rows: ROWS, others: { 'r-2': LAN_VIEW } });
-    open('/admin/delivery?request=r-2');
+    open('/admin/delivery/classic?request=r-2');
     expect(await screen.findByRole('table', { name: 'Các dòng của phiếu Võ Thị Lan' })).toBeInTheDocument();
     expect(rowButton('Võ Thị Lan')).toHaveAttribute('aria-pressed', 'true');
   });
@@ -152,7 +152,7 @@ describe('DeliveryPage — danh sách phiếu (trái)', () => {
 describe('DeliveryPage — phiếu vừa giao đủ rời bộ lọc', () => {
   it('giảm chuyển động: Giao tất cả đủ → toast "Đã giao đủ phiếu của Phạm Văn Đức", phiếu rời danh sách ngay, chọn sang Võ Thị Lan', async () => {
     completingStub();
-    open('/admin/delivery', { reducedMotion: true });
+    open('/admin/delivery/classic', { reducedMotion: true });
     await screen.findByRole('table', { name: 'Các dòng của phiếu Phạm Văn Đức' });
     await userEvent.click(screen.getByRole('button', { name: 'Giao tất cả' }));
     expect(await screen.findByText('Đã giao đủ phiếu của Phạm Văn Đức')).toBeInTheDocument();
@@ -180,7 +180,7 @@ describe('DeliveryPage — phiếu vừa giao đủ rời bộ lọc', () => {
 
   it('đang xem "Tất cả": phiếu giao đủ vẫn ở danh sách và vẫn được chọn', async () => {
     completingStub({ allRows: ROWS });
-    open('/admin/delivery?all=1', { reducedMotion: true });
+    open('/admin/delivery/classic?all=1', { reducedMotion: true });
     await screen.findByRole('table', { name: 'Các dòng của phiếu Phạm Văn Đức' });
     await userEvent.click(screen.getByRole('button', { name: 'Giao tất cả' }));
     await screen.findByText('Đã giao đủ phiếu của Phạm Văn Đức');

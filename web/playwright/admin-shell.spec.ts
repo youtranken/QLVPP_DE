@@ -1,7 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { asRole, devHeaders, expectNoContrastViolations, isMobile } from './helpers';
 
-const NAV_ORDER = ['Tổng hợp kỳ', 'Giao hàng', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình', 'Còn nợ'];
+const NAV_ORDER = ['Tổng hợp kỳ', 'Giao hàng', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const LATER = ['Còn nợ', 'Giao hàng (bản cũ)'];
 const OPEN_MENU = /^(Mở menu quản lý|Open admin menu)$/;
 
 // Bell: topbar on phone, bottom of sidebar (next to avatar) elsewhere
@@ -14,7 +15,7 @@ const sidebarWidth = (page: Page) =>
 test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
   asRole('admin');
 
-  test('E9-S1 shell Hành chính: sidebar 4 nhóm 12 mục, thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
+  test('E9-S1 shell Hành chính: sidebar 4 nhóm (cột 11 mục + nhóm Xem lại sau thu gọn; menu điện thoại đủ 13), thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
     await page.goto('/admin/catalog');
     await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
     await expect(bellOf(page, isMobile(info))).toBeVisible();
@@ -25,7 +26,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     const side = page.getByRole('navigation', { name: 'Menu quản lý' });
     await expect(side.getByRole('group')).toHaveCount(4);
     const titles = await side.getByRole('link').evaluateAll((links) => links.map((a) => a.getAttribute('title')));
-    expect(titles).toEqual(NAV_ORDER);
+    expect(titles).toEqual(isMobile(info) ? [...NAV_ORDER, ...LATER] : NAV_ORDER);
     await expect(side.getByRole('link', { name: 'Danh mục món', exact: true })).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('link', { name: /Phiếu của tôi/ })).toHaveCount(0);
     await expect(page.getByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng \d+ · đang mở/ })).toBeVisible();
@@ -164,7 +165,27 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     expect(logout.x + logout.width).toBeLessThanOrEqual(252);
     await page.setViewportSize({ width: 1280, height: 720 });
     const nav = page.getByRole('navigation', { name: 'Menu quản lý' });
-    expect(await nav.evaluate((el) => el.scrollHeight - el.clientHeight), '12 mục vừa 1280×720, nav không phải cuộn').toBeLessThanOrEqual(1);
+    expect(await nav.evaluate((el) => el.scrollHeight - el.clientHeight), '11 mục (nhóm Xem lại sau thu gọn) vừa 1280×720, nav không phải cuộn').toBeLessThanOrEqual(1);
+  });
+
+  test('v2-B R2: mở nhóm "Xem lại sau" thì nav cuộn được nhưng khối tài khoản vẫn trong màn 1280×720', async ({ page }, info) => {
+    test.skip(isMobile(info), 'chỉ đo ở 1280');
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto('/admin/summary');
+    const nav = page.getByRole('navigation', { name: 'Menu quản lý' });
+    const toggle = nav.getByRole('button', { name: 'Xem lại sau' });
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(nav.getByRole('link', { name: 'Còn nợ' })).toHaveCount(0);
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(nav.getByRole('link', { name: 'Giao hàng (bản cũ)' })).toBeAttached();
+    const user = page.getByRole('group', { name: 'Tài khoản và ngôn ngữ' });
+    await expect(user).toBeInViewport({ ratio: 1 });
+    expect(await nav.evaluate((el) => getComputedStyle(el).overflowY)).toBe('auto');
+    await nav.getByRole('link', { name: 'Giao hàng (bản cũ)' }).scrollIntoViewIfNeeded();
+    await expect(nav.getByRole('link', { name: 'Giao hàng (bản cũ)' })).toBeInViewport();
+    await page.reload();
+    await expect(page.getByRole('navigation', { name: 'Menu quản lý' }).getByRole('button', { name: 'Xem lại sau' })).toHaveAttribute('aria-expanded', 'true');
   });
 
   test('E9-S1 khối tài khoản luôn trong màn hình, chuông nổi trên nội dung, số đếm không bị cắt', async ({ page }, info) => {

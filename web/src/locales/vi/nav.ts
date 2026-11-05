@@ -30,6 +30,7 @@ const nav = {
     review: 'Món ngoài danh mục',
     delivery: 'Giao hàng',
     backlog: 'Còn nợ',
+    deliveryClassic: 'Giao hàng (bản cũ)',
     reports: 'Báo cáo & in',
     categories: 'Nhóm món',
     units: 'Đơn vị tính',

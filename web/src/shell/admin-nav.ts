@@ -11,6 +11,7 @@ export interface AdminPage {
 
 export interface AdminNavGroup {
   labelKey: string;
+  collapsible?: boolean;
   pages: AdminPage[];
 }
 
@@ -43,7 +44,11 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   },
   {
     labelKey: 'nav.groups.later',
-    pages: [{ path: 'backlog', titleKey: 'nav.backlog', icon: 'receipt' }],
+    collapsible: true,
+    pages: [
+      { path: 'backlog', titleKey: 'nav.backlog', icon: 'receipt' },
+      { path: 'delivery/classic', titleKey: 'nav.deliveryClassic', icon: 'truck' },
+    ],
   },
 ];
 

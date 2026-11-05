@@ -22,7 +22,7 @@ test.describe('E9-S3 Giao hàng (kỳ trước đã khóa, dev-identity admin)',
         { stock: 10, qty: 1 },
       ]);
       const [a, b, c] = seed.items;
-      await page.goto(`/admin/delivery?request=${seed.requestId}`);
+      await page.goto(`/admin/delivery/classic?request=${seed.requestId}`);
       await expect(page.getByRole('heading', { level: 1, name: 'Giao hàng' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
       const lines = linesOf(page, seed.name);
@@ -82,7 +82,7 @@ test.describe('E9-S3 Giao hàng (kỳ trước đã khóa, dev-identity admin)',
     try {
       seed = await seedLockedRequest(request, info, [{ stock: 10, qty: 5 }]);
       const [a] = seed.items;
-      await page.goto(`/admin/delivery?request=${seed.requestId}`);
+      await page.goto(`/admin/delivery/classic?request=${seed.requestId}`);
       const line = linesOf(page, seed.name).getByRole('row').filter({ hasText: a.name });
       await line.getByRole('button', { name: `Giao ${a.name}` }).dblclick();
       await expect(line.getByText('Đã giao đủ')).toBeVisible();
@@ -110,7 +110,7 @@ test.describe('E9-S3 Giao hàng (kỳ trước đã khóa, dev-identity admin)',
         { stock: 1, qty: 2 },
       ]);
       const [a, b] = seed.items;
-      await page.goto(`/admin/delivery?request=${seed.requestId}`);
+      await page.goto(`/admin/delivery/classic?request=${seed.requestId}`);
       const line = linesOf(page, seed.name).getByRole('row').filter({ hasText: a.name });
       await line.getByLabel(`Thực giao ${a.name}`).fill('3');
       await line.getByRole('button', { name: `Giao ${a.name}` }).click();
@@ -135,7 +135,7 @@ test.describe('E9-S3 Giao hàng (kỳ trước đã khóa, dev-identity admin)',
 
   test('E9-S3 Giao hàng: lỗi tải danh sách → "Không tải được dữ liệu — thử lại." + "Thử lại"', async ({ page }) => {
     await page.route('**/api/admin/periods/*/requests?*', (route) => route.fulfill({ status: 500, json: { code: 'INTERNAL', message: 'x' } }));
-    await page.goto('/admin/delivery');
+    await page.goto('/admin/delivery/classic');
     await expect(page.getByRole('main').getByText('Không tải được dữ liệu — thử lại.')).toBeVisible();
     await expect(page.getByRole('main').getByRole('button', { name: 'Thử lại' })).toBeVisible();
   });

@@ -39,7 +39,7 @@ async function confirmPendingIfAny(page: Page, request: APIRequestContext, ym: s
 }
 
 async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
-  await admin.goto('/admin/delivery');
+  await admin.goto('/admin/delivery/classic');
   await expect(admin.getByText(`Tháng ${month(s.prevYm)}/${s.prevYm.slice(0, 4)}`, { exact: true })).toBeVisible();
   // 390: hàng mở màn chi tiết riêng (nhãn "Mở phiếu của …"), không còn trạng thái chọn trong danh sách
   const pick = admin.getByRole('button', { name: new RegExp(isMobile(info) ? `^Mở phiếu của ${s.a.name},` : `^${s.a.name}`) });

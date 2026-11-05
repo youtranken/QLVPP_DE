@@ -59,7 +59,7 @@ test.describe('E6-S4 song ngữ các màn Hành chính của Plan 3', () => {
         await switchLanguage(page, info, lang);
         const t = lang === 'vi' ? { delivery: 'Giao tất cả', backlog: 'Còn nợ', reports: 'In trình ký', bell: 'Thông báo' } : { delivery: 'Deliver all', backlog: 'Outstanding', reports: 'Print for signing', bell: 'Notifications' };
 
-        await page.goto('/admin/delivery');
+        await page.goto('/admin/delivery/classic');
         await page.getByRole('list').getByRole('button', { name: new RegExp(seed.name) }).click();
         await expect(page.getByRole('button', { name: t.delivery })).toBeVisible();
         await expectContentLanguage(page, lang);
@@ -144,7 +144,7 @@ async function vietnameseLeftovers(page: Page, data: string[]) {
   return stripped.match(new RegExp(`\\S*${VIETNAMESE.source}\\S*`, 'gi')) ?? [];
 }
 
-const ADMIN_SCREENS = ['/admin/summary', '/admin/review', '/admin/delivery', '/admin/backlog', '/admin/reports', '/admin/stock', '/admin/catalog', '/admin/categories', '/admin/users', '/admin/audit', '/admin/config'];
+const ADMIN_SCREENS = ['/admin/summary', '/admin/review', '/admin/delivery', '/admin/delivery/classic', '/admin/backlog', '/admin/reports', '/admin/stock', '/admin/catalog', '/admin/categories', '/admin/users', '/admin/audit', '/admin/config'];
 const MEMBER_SCREENS = ['/', '/history', '/me'];
 
 async function englishPage(browser: Browser, info: TestInfo, headers?: Record<string, string>) {

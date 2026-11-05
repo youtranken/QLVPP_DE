@@ -59,12 +59,12 @@ describe('SummaryPersonTable — bảng theo người', () => {
     expect(within(row).queryByRole('link', { name: /Giao/ })).toBeNull();
   });
 
-  it('kỳ khóa, còn phải giao (4/7) → nút Giao → /admin/delivery?ym=2026-10&request=r-1, không mở ngăn kéo', async () => {
+  it('kỳ khóa, còn phải giao (4/7) → nút Giao → /admin/delivery/classic?ym=2026-10&request=r-1, không mở ngăn kéo', async () => {
     const onOpen = renderTable({ locked: true, rows: [PEOPLE[1]] });
     const row = await rowOf('Phạm Văn Đức');
     expect(within(row).getByRole('progressbar', { name: 'đã giao 4/7 đơn vị' })).toBeInTheDocument();
     const link = within(row).getByRole('link', { name: 'Giao phiếu của Phạm Văn Đức' });
-    expect(link).toHaveAttribute('href', '/admin/delivery?ym=2026-10&request=r-1');
+    expect(link).toHaveAttribute('href', '/admin/delivery/classic?ym=2026-10&request=r-1');
     await userEvent.click(link);
     expect(onOpen).not.toHaveBeenCalled();
   });

@@ -70,7 +70,7 @@ function PersonActions({ row, ym, locked, stale, onOpen }: { row: PersonRow; ym:
       {canDeliver && !stale && (
         <Link
           className="btn btn--ghost btn--sm sm-icon-btn"
-          to={`/admin/delivery?ym=${ym}&request=${row.request_id}`}
+          to={`/admin/delivery/classic?ym=${ym}&request=${row.request_id}`}
           aria-label={deliverLabel}
           title={deliverLabel}
           onClick={(e) => e.stopPropagation()}

@@ -10,7 +10,10 @@ const rows = (n: number) => ({ items: Array.from({ length: n }, (_, i) => ({ id:
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
 const navLink = (title: string) => within(sideNav()).getByTitle(title);
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  localStorage.clear();
+});
 
 describe('AdminSidebar: đếm', () => {
   it('review trả 3 dòng → "Món ngoài danh mục" hiện 3; giao 6 dòng, kho 4 món kèm nhãn đọc màn hình', async () => {
@@ -44,7 +47,7 @@ describe('AdminSidebar: đếm', () => {
     expect(navLink('Món ngoài danh mục')).toHaveTextContent(shown ? /1/ : /^Món ngoài danh mục$/);
   });
 
-  it('lỗi tải đếm → không có số, sidebar vẫn đủ 12 mục', async () => {
+  it('lỗi tải đếm → không có số, sidebar vẫn đủ 11 mục (nhóm "Xem lại sau" thu gọn)', async () => {
     mockViewport(1280);
     const f = stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(500, null),
@@ -55,7 +58,7 @@ describe('AdminSidebar: đếm', () => {
     await waitFor(() => expect(f.mock.calls.some(([u]) => u === '/api/admin/periods/2026-10/summary')).toBe(true));
     await new Promise((r) => setTimeout(r, 0));
     const links = within(sideNav()).getAllByRole('link');
-    expect(links).toHaveLength(12);
+    expect(links).toHaveLength(11);
     for (const a of links) expect(a.textContent).not.toMatch(/\d/);
   });
 });
@@ -68,7 +71,9 @@ describe('AdminSidebar: nhóm', () => {
     await screen.findByRole('link', { name: /Kỳ đăng ký hiện tại/ });
     const groups = within(sideNav()).getAllByRole('group');
     expect(groups.map((g) => g.getAttribute('aria-label'))).toEqual(['Hằng tháng', 'Danh mục và tủ', 'Quản lý', 'Xem lại sau']);
+    await userEvent.click(within(groups[3]).getByRole('button', { name: 'Xem lại sau' }));
     expect(within(groups[3]).getByRole('link', { name: 'Còn nợ' })).toHaveAttribute('href', '/admin/backlog');
+    expect(within(groups[3]).getByRole('link', { name: 'Giao hàng (bản cũ)' })).toHaveAttribute('href', '/admin/delivery/classic');
     expect(within(groups[1]).getByRole('link', { name: /Món ngoài danh mục/ })).toBeInTheDocument();
   });
 });
@@ -188,5 +193,83 @@ describe('AdminSidebar: đầu và cuối', () => {
     renderApp(makeMe('admin'), '/admin/catalog');
     await screen.findByRole('navigation', { name: 'Menu quản lý' });
     for (const t of ['Danh mục món', 'Tủ / Kho', 'Nhân viên']) expect(navLink(t)).toBeInTheDocument();
+  });
+});
+
+describe('AdminSidebar: nhóm "Xem lại sau" thu gọn', () => {
+  const later = () => within(sideNav()).getByRole('group', { name: 'Xem lại sau' });
+  const toggle = () => within(later()).getByRole('button', { name: 'Xem lại sau' });
+
+  afterEach(() => localStorage.clear());
+
+  it('mặc định thu gọn: nút aria-expanded=false, không có liên kết nào trong nhóm', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    await screen.findByRole('navigation', { name: 'Menu quản lý' });
+    expect(toggle()).toHaveAttribute('aria-expanded', 'false');
+    expect(within(later()).queryAllByRole('link')).toHaveLength(0);
+  });
+
+  it('bấm nút → mở (aria-expanded=true, thấy 2 liên kết); bấm lại → thu gọn', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    await screen.findByRole('navigation', { name: 'Menu quản lý' });
+    await userEvent.click(toggle());
+    expect(toggle()).toHaveAttribute('aria-expanded', 'true');
+    expect(within(later()).getAllByRole('link').map((a) => a.getAttribute('title'))).toEqual(['Còn nợ', 'Giao hàng (bản cũ)']);
+    await userEvent.click(toggle());
+    expect(within(later()).queryAllByRole('link')).toHaveLength(0);
+  });
+
+  it('trạng thái mở nhớ qua lần tải sau (localStorage)', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    const first = renderApp(makeMe('admin'), '/admin/catalog');
+    await userEvent.click(await within(await screen.findByRole('navigation', { name: 'Menu quản lý' })).findByRole('button', { name: 'Xem lại sau' }));
+    first.unmount();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    await screen.findByRole('navigation', { name: 'Menu quản lý' });
+    expect(toggle()).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it.each(['/admin/backlog', '/admin/delivery/classic'])('đang ở %s (trong nhóm) → tự mở, mục đang chọn có aria-current', async (path) => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), path);
+    await screen.findByRole('navigation', { name: 'Menu quản lý' });
+    expect(toggle()).toHaveAttribute('aria-expanded', 'true');
+    expect(within(later()).getAllByRole('link').filter((a) => a.hasAttribute('aria-current'))).toHaveLength(1);
+  });
+
+  it('/admin/delivery/classic không đánh dấu thêm mục "Giao hàng" (chỉ khớp đúng đường dẫn)', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/delivery/classic');
+    await screen.findByRole('navigation', { name: 'Menu quản lý' });
+    expect(navLink('Giao hàng')).not.toHaveAttribute('aria-current');
+    expect(navLink('Giao hàng (bản cũ)')).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('localStorage hỏng (ném lỗi) → nhóm vẫn dựng, vẫn bấm mở được', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    const get = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    const set = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    try {
+      renderApp(makeMe('admin'), '/admin/catalog');
+      await screen.findByRole('navigation', { name: 'Menu quản lý' });
+      expect(toggle()).toHaveAttribute('aria-expanded', 'false');
+      await userEvent.click(toggle());
+      expect(toggle()).toHaveAttribute('aria-expanded', 'true');
+    } finally {
+      get.mockRestore();
+      set.mockRestore();
+    }
   });
 });

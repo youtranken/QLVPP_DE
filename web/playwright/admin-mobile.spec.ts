@@ -18,12 +18,14 @@ const PAGES = [
 ] as const;
 
 const overflowOf = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-const heading = (page: Page, title: string) => page.getByRole('heading', { level: 1, name: title, exact: true });
+// Giao hàng theo người ghi tháng vào tiêu đề: "Giao hàng kỳ tháng 10"
+const heading = (page: Page, title: string) =>
+  page.getByRole('heading', { level: 1, name: title === 'Giao hàng' ? /^Giao hàng kỳ tháng \d+$/ : title, exact: true });
 const menu = (page: Page) => page.getByRole('dialog', { name: 'Menu quản lý' });
 const MENU_LABEL: Record<string, string> = { Kho: 'Tủ / Kho', 'Danh mục': 'Danh mục món', 'Danh bạ': 'Nhân viên' }; // nhãn sidebar khác tiêu đề trang
 const menuLink = (page: Page, title: string) => {
   const label = MENU_LABEL[title] ?? title;
-  return menu(page).getByRole('link', { name: new RegExp(`^${label.replace('&', '\\&').replace('/', '\\/')}`) });
+  return menu(page).getByRole('link', { name: new RegExp(`^${label.replace('&', '\\&').replace('/', '\\/')}(?! \\()`) });
 };
 
 async function openPage(page: Page, path: string, title: string) {
@@ -95,7 +97,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
       ]);
       const [a] = seed.items;
       const rowName = `Mở phiếu của ${seed.name}, đã giao 0 trên 3 đơn vị`;
-      await page.goto('/admin/delivery?all=1');
+      await page.goto('/admin/delivery/classic?all=1');
       await expect(page.getByRole('radio', { name: /^Tất cả/ })).toHaveAttribute('aria-checked', 'true');
       await expectNoContrastViolations(page);
       await page.getByRole('button', { name: rowName }).tap();
@@ -126,7 +128,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
       await expect(page.getByRole('button', { name: `Mở phiếu của ${seed.name}, đã giao 3 trên 3 đơn vị` })).toBeVisible();
 
       for (const [path, title] of PAGES) {
-        await page.goto(`/admin/delivery?request=${seed.requestId}`);
+        await page.goto(`/admin/delivery/classic?request=${seed.requestId}`);
         await page.getByRole('button', { name: /, Hành chính$/ }).tap();
         await menuLink(page, title).tap();
         await expect(page).toHaveURL(new RegExp(`/admin/${path}`));

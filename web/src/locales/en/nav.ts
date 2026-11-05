@@ -33,6 +33,7 @@ const nav: Messages<typeof vi> = {
     review: 'Off-catalog items',
     delivery: 'Delivery',
     backlog: 'Outstanding',
+    deliveryClassic: 'Deliveries (classic)',
     reports: 'Reports & print',
     categories: 'Categories',
     units: 'Units',

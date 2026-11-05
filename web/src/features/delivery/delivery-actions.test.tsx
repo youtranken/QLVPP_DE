@@ -11,7 +11,7 @@ const DELIVER_ALL = '/api/admin/requests/r-1/deliver-all';
 
 async function openDetail() {
   mockViewport(1280);
-  renderApp(makeMe('admin'), '/admin/delivery?request=r-1');
+  renderApp(makeMe('admin'), '/admin/delivery/classic?request=r-1');
   return screen.findByRole('table', { name: 'Các dòng của phiếu Phạm Văn Đức' });
 }
 

@@ -31,6 +31,7 @@ export const AUDIT_ACTIONS: readonly string[] = [
   'stock.adjust',
   'stock.issue',
   'stock.purchase',
+  'stock.receipt',
   'unit.created',
   'unit.deleted',
   'unit.updated',

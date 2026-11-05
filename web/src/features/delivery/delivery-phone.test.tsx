@@ -17,7 +17,7 @@ const search = () => screen.getByTestId('location-search').textContent ?? '';
 const list = () => screen.getByRole('list', { name: 'Danh sách phiếu' });
 const DUC_ROW = 'Mở phiếu của Phạm Văn Đức, đã giao 3 trên 8 đơn vị';
 
-function open(path = '/admin/delivery') {
+function open(path = '/admin/delivery/classic') {
   mockViewport(390);
   renderApp(makeMe('admin'), path);
 }
@@ -36,7 +36,7 @@ function completingStub(allRows?: PersonRow[]) {
   });
 }
 
-async function completeOnDetail(path = '/admin/delivery?request=r-1', allRows?: PersonRow[]) {
+async function completeOnDetail(path = '/admin/delivery/classic?request=r-1', allRows?: PersonRow[]) {
   completingStub(allRows);
   open(path);
   await screen.findByRole('table', { name: 'Các dòng của phiếu Phạm Văn Đức' });
@@ -92,7 +92,7 @@ describe('Giao hàng 390 px — màn danh sách', () => {
 
   it('chạm hàng "Mở phiếu của …" → ?request=r-1, màn chi tiết toàn màn (danh sách và dải ẩn)', async () => {
     stubDelivery({ rows: ROWS, others: { 'r-2': LAN_VIEW } });
-    open('/admin/delivery?all=1');
+    open('/admin/delivery/classic?all=1');
     await userEvent.click(await screen.findByRole('button', { name: DUC_ROW }));
     expect(search()).toContain('request=r-1');
     expect(search()).toContain('all=1');
@@ -124,7 +124,7 @@ describe('Giao hàng 390 px — giao đủ tự về danh sách sau 1,4 s', () =
   });
 
   it('quay lại danh sách rồi mở lại đúng phiếu đó trước 1,4 s → hẹn giờ cũ đã hủy, vẫn ở chi tiết', async () => {
-    await completeOnDetail('/admin/delivery?all=1&request=r-1', ROWS);
+    await completeOnDetail('/admin/delivery/classic?all=1&request=r-1', ROWS);
     act(() => within(screen.getAllByRole('banner')[0]).getByRole('button', { name: 'Quay lại danh sách phiếu' }).click());
     await act(() => vi.advanceTimersByTimeAsync(0));
     act(() => within(list()).getByRole('button', { name: /^Mở phiếu của Phạm Văn Đức/ }).click());
@@ -133,7 +133,7 @@ describe('Giao hàng 390 px — giao đủ tự về danh sách sau 1,4 s', () =
   });
 
   it('bảng phiếu dựng lại (đổi tháng đi rồi về) trước 1,4 s → hẹn giờ của bảng cũ bị hủy, mở lại đúng phiếu đó vẫn ở chi tiết', async () => {
-    await completeOnDetail('/admin/delivery?all=1&request=r-1', ROWS);
+    await completeOnDetail('/admin/delivery/classic?all=1&request=r-1', ROWS);
     act(() => screen.getByRole('button', { name: 'Tháng trước' }).click());
     await act(() => vi.advanceTimersByTimeAsync(0));
     act(() => screen.getByRole('button', { name: 'Tháng sau' }).click());
