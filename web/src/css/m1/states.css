@@ -57,8 +57,9 @@
   [data-shell='admin'] .stepper { grid-template-columns: var(--hit) minmax(32px, auto) var(--hit); height: var(--hit); }
   [data-shell='admin'] .stepper button { width: var(--hit); height: var(--hit); }
   [data-shell='admin'] .stepper button::after { content: none; }
-  [data-shell='admin'] .month-switch { height: var(--hit); padding: 0; }
-  [data-shell='admin'] .month-switch button { width: var(--hit); height: var(--hit); }
+  [data-shell='admin'] .month-switch { max-width: 100%; height: var(--hit); padding: 0; }
+  [data-shell='admin'] .month-switch__status { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: block; line-height: 22px; }
+  [data-shell='admin'] .month-switch button { flex: none; width: var(--hit); height: var(--hit); }
   [data-shell='admin'] .inline-number { min-height: var(--hit); }
 }
 

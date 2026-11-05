@@ -37,6 +37,19 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     await expect(page.getByRole('navigation', { name: 'Menu quản lý' }).getByRole('group', { name: 'Hằng tháng' })).toBeVisible();
   });
 
+  test('v2: khung teal + panel, đạt axe', async ({ page }, info) => {
+    await page.goto('/admin/summary');
+    await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
+    if (isMobile(info)) await expect(page.getByRole('button', { name: OPEN_MENU })).toBeVisible();
+    else await expect(page.getByRole('navigation', { name: 'Menu quản lý' })).toBeVisible();
+    await expect(page.locator('main .shell__panel')).toBeVisible();
+    if (isMobile(info)) {
+      await page.getByRole('button', { name: OPEN_MENU }).click();
+      await expect(page.getByRole('navigation', { name: 'Menu quản lý' })).toBeVisible();
+    }
+    await expectNoContrastViolations(page);
+  });
+
   test('E9-S1 điểm gãy 767/768 và 1279/1280', async ({ page }) => {
     await page.goto('/admin/summary');
     await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();

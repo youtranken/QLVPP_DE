@@ -24,11 +24,7 @@ export function AdminShell() {
         </a>
         {phone ? <AdminTopbar /> : <AdminSidebar />}
         <main id="main" className="shell__main" tabIndex={-1}>
-          {forbidden ? (
-            <NoPermission />
-          ) : (
-            <Outlet />
-          )}
+          <div className="shell__panel">{forbidden ? <NoPermission /> : <Outlet />}</div>
         </main>
       </div>
     </ToastProvider>

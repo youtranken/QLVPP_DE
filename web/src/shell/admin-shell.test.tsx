@@ -95,6 +95,13 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
   });
 
+  it('nội dung trang nằm trong khung panel', () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/summary');
+    expect(screen.getByRole('main').querySelector('.shell__panel')).not.toBeNull();
+  });
+
   it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 12 mục', async () => {
     mockViewport(767);
     stubShellApi();
