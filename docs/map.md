@@ -69,3 +69,4 @@
 - `vpp-hanh-chinh.html` / `.png` — giao diện Hành chính (vẽ cuối plan giao diện Hành chính): RequireRole(admin, sa) → AdminShell (sidebar ≥ 768 / topbar + menu sheet < 768) → 3 nhóm trang (5 + 4 + 3) → module api requests · delivery · reports · catalog·units · users·audit·config → Postgres.
 - `vpp-luong-thang.html` / `.png` — vòng tháng của Hành chính (workflow): đăng ký → khóa kỳ (deadline, PERIOD_LOCKED) → tổng hợp → duyệt món Khác → giao (trừ kho cùng giao dịch, chuông giao đủ) → còn nợ → báo cáo/bản chốt (in A4, xlsx) → nhập kho.
 - `vpp-dang-nhap.html` / `.png` — luồng đăng nhập SSO PKCE, token hết hạn khi PMH ID sập (503 `SSO_UNAVAILABLE`), SA break-glass qua route `@Public`.
+- `vpp-luong-hc-v2.html` / `.png` — luồng Hành chính 4 bước hằng tháng (v2-B): Tháng này → Gửi ADM → Hàng về → Giao, kèm endpoint mỗi bước (`summary`/`reports`, `snapshots`, `stock/receipts`, `delivery-people` + `deliver`), nợ sang kỳ sau.
