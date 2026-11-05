@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext, type TestInfo } from '@playwright/test';
+import { type APIRequestContext, type TestInfo } from '@playwright/test';
 import { devHeaders, isMobile, psql } from './helpers';
 
 export const prevYmOf = (ym: string) => {
@@ -16,21 +16,19 @@ export interface Seed {
   cleanup: () => void;
 }
 
-// Kỳ trước đã khóa (hạn đã qua) seed bằng SQL; món tạo bằng SQL dùng lại một ảnh có sẵn để không tải tệp mới lên kho tệp
+// Kỳ trước đã khóa (hạn đã qua) seed bằng SQL; món không ảnh để không phụ thuộc kho tệp đang có gì
 export async function seedLockedRequest(request: APIRequestContext, info: TestInfo, lines: { stock: number; qty: number }[]): Promise<Seed> {
   const tag = `${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}`;
   const sub = `pw-dlv-${tag}`;
   const name = `PW Giao ${tag}`;
   const period = await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json();
   const prevYm = prevYmOf(period.ym);
-  const fileId = psql(`SELECT id FROM files WHERE purpose = 'item_image' ORDER BY created_at LIMIT 1`);
-  expect(fileId).not.toBe('');
   psql(`INSERT INTO users (sub, full_name, email, department, status)
     VALUES ('${sub}', '${name}', '${sub}@example.test', 'PW Phòng giao', 'active')`);
   const items = lines.map((l, i) => {
     const itemName = `PW món ${String.fromCharCode(65 + i)} ${tag}`;
-    const id = psql(`INSERT INTO items (name, unit, image_file_id, stock_qty)
-      VALUES ('${itemName}', 'cai', '${fileId}', ${l.stock}) RETURNING id`);
+    const id = psql(`INSERT INTO items (name, unit, stock_qty)
+      VALUES ('${itemName}', 'cai', ${l.stock}) RETURNING id`);
     return { id, name: itemName };
   });
   const createdPeriod = psql(
