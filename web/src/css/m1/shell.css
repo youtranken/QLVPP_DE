@@ -56,7 +56,7 @@
 [data-shell='admin'] .side__logout { color: inherit; }
 [data-shell='admin'] .side__logout:hover:not(:disabled) { background: rgb(255 255 255 / .08); }
 [data-shell='admin'] .side__user[data-layout='row'] .side__logout:hover:not(:disabled) { background: var(--c-surface-2); }
-[data-shell='admin'] .side__error { margin: 0; font: var(--t-cap); color: var(--c-warn-fill); }
+[data-shell='admin'] .side__error { margin: 0; font: var(--t-cap); color: var(--c-on-dark); }
 
 [data-shell='admin'] .side .notif-btn,
 [data-shell='admin'] .topbar .notif-btn { width: var(--hit); height: var(--hit); border-radius: var(--r-pill); color: var(--c-on-dark-2); }
@@ -71,6 +71,7 @@
 [data-shell='admin'] .side .notif { position: static; }
 [data-shell='admin'] .side .notif-btn { width: 36px; height: 36px; }
 [data-shell='admin'] .side .notif-badge { top: 7px; right: 8px; }
+[data-shell='admin'] .topbar .notif-panel { color: var(--c-ink); }
 [data-shell='admin'] .side .notif-panel { position: fixed; top: 52px; left: 12px; right: auto; z-index: 40; width: 380px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 80px); overscroll-behavior: contain; color: var(--c-ink); }
 [data-shell='admin'] .notif-text { overflow-wrap: anywhere; }
 
@@ -113,6 +114,7 @@
   [data-shell='admin'] .side__period { justify-content: center; width: 48px; padding: 16px 0; }
   [data-shell='admin'] .side__period-dot { display: block; }
   [data-shell='admin'] .side__user { padding: 12px 0 0; justify-items: center; }
+  [data-shell='admin'] .side__acct .side__error { color: var(--c-danger); }
   [data-shell='admin'] .side__acct .side__logout:hover:not(:disabled) { background: var(--c-surface-2); }
   [data-shell='admin'] .side__acct { position: fixed; left: 80px; bottom: 16px; z-index: 30; padding: 12px; border-radius: var(--r-md); background: var(--c-surface); color: var(--c-ink); box-shadow: var(--e-3); }
   [data-shell='admin'] .side .notif-panel { top: 12px; left: 80px; }

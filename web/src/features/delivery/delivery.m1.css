@@ -5,7 +5,7 @@
 [data-shell='admin'] .dv-strip__short { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); color: var(--c-warn); }
 [data-shell='admin'] .dv-strip__short a { color: var(--c-acc); }
 
-[data-shell='admin'] .dv-split { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--s-4); align-items: start; }
+[data-shell='admin'] .dv-split { display: grid; grid-template-columns: 256px minmax(0, 1fr); gap: var(--s-4); align-items: start; }
 [data-shell='admin'] .dv-split > * { min-width: 0; }
 
 [data-shell='admin'] .dv-list { position: sticky; top: var(--s-4); display: grid; gap: var(--s-2); max-height: calc(100vh - 2 * var(--s-4)); overflow: auto; padding: var(--s-3); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }

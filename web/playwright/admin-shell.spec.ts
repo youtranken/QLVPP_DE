@@ -50,6 +50,26 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     await expectNoContrastViolations(page);
   });
 
+  test('v2: bảng thông báo mở vẫn đủ tương phản (chuông trên nền tối)', async ({ page }) => {
+    await page.goto('/admin/summary');
+    await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
+    await page.getByRole('banner').getByRole('button', { name: /^Thông báo, \d+ chưa đọc$/ }).click();
+    const panel = page.getByRole('dialog', { name: 'Thông báo' });
+    await expect(panel).toBeVisible();
+    expect(await panel.locator('strong').first().evaluate((el) => getComputedStyle(el).color)).toBe('rgb(14, 42, 51)');
+    await expectNoContrastViolations(page);
+  });
+
+  test('v2: đăng xuất lỗi hiện câu báo đủ tương phản trên nền tối', async ({ page }, info) => {
+    await page.route('**/api/auth/logout', (route) => route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }));
+    await page.goto('/admin/summary');
+    await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
+    if (isMobile(info)) await page.getByRole('button', { name: OPEN_MENU }).click();
+    await page.getByRole('button', { name: 'Đăng xuất' }).click();
+    await expect(page.getByRole('alert').filter({ hasText: /đăng xuất/i })).toBeVisible();
+    await expectNoContrastViolations(page);
+  });
+
   test('E9-S1 điểm gãy 767/768 và 1279/1280', async ({ page }) => {
     await page.goto('/admin/summary');
     await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
