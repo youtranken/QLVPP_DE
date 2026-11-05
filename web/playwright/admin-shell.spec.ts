@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { asRole, devHeaders, expectNoContrastViolations, isMobile } from './helpers';
 
-const NAV_ORDER = ['Tổng hợp kỳ', 'Gửi ADM', 'Giao hàng', 'Hàng về', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
-const LATER = ['Còn nợ', 'Giao hàng (bản cũ)'];
+const NAV_ORDER = ['Tháng này', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const LATER = ['Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ', 'Giao hàng (bản cũ)'];
 const OPEN_MENU = /^(Mở menu quản lý|Open admin menu)$/;
 
 // Bell: topbar on phone, bottom of sidebar (next to avatar) elsewhere
@@ -15,7 +15,7 @@ const sidebarWidth = (page: Page) =>
 test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
   asRole('admin');
 
-  test('E9-S1 shell Hành chính: sidebar 4 nhóm (cột 13 mục + nhóm Xem lại sau thu gọn; menu điện thoại đủ 15), thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
+  test('E9-S1 shell Hành chính: sidebar 4 nhóm (cột 12 mục + nhóm Xem lại sau thu gọn; menu điện thoại đủ 16), thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
     await page.goto('/admin/catalog');
     await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
     await expect(bellOf(page, isMobile(info))).toBeVisible();
@@ -50,8 +50,8 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
   });
 
   test('v2: khung teal + panel, đạt axe', async ({ page }, info) => {
-    await page.goto('/admin/summary');
-    await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
+    await page.goto('/admin/home');
+    await expect(page.getByRole('heading', { level: 1, name: /^Chào / })).toBeVisible();
     if (isMobile(info)) await expect(page.getByRole('button', { name: OPEN_MENU })).toBeVisible();
     else await expect(page.getByRole('navigation', { name: 'Menu quản lý' })).toBeVisible();
     await expect(page.getByRole('main')).toBeVisible();
@@ -85,8 +85,8 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
   });
 
   test('v2: bảng thông báo mở vẫn đủ tương phản (chuông trên nền tối)', async ({ page }, info) => {
-    await page.goto('/admin/summary');
-    await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
+    await page.goto('/admin/home');
+    await expect(page.getByRole('heading', { level: 1, name: /^Chào / })).toBeVisible();
     await bellOf(page, isMobile(info)).click();
     const panel = page.getByRole('dialog', { name: 'Thông báo' });
     await expect(panel).toBeVisible();
@@ -96,8 +96,8 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
 
   test('v2: đăng xuất lỗi hiện câu báo đủ tương phản trên nền tối', async ({ page }, info) => {
     await page.route('**/api/auth/logout', (route) => route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }));
-    await page.goto('/admin/summary');
-    await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
+    await page.goto('/admin/home');
+    await expect(page.getByRole('heading', { level: 1, name: /^Chào / })).toBeVisible();
     if (isMobile(info)) await page.getByRole('button', { name: OPEN_MENU }).click();
     await page.getByRole('button', { name: 'Đăng xuất' }).click();
     await expect(page.getByRole('alert').filter({ hasText: /đăng xuất/i })).toBeVisible();
@@ -105,8 +105,8 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
   });
 
   test('E9-S1 điểm gãy 767/768 và 1279/1280', async ({ page }) => {
-    await page.goto('/admin/summary');
-    await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
+    await page.goto('/admin/home');
+    await expect(page.getByRole('heading', { level: 1, name: /^Chào / })).toBeVisible();
     for (const [width, expected] of [
       [768, 72],
       [1279, 72],
@@ -138,7 +138,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
 
   test('v2: không còn đầu sidebar thương hiệu; máy tính bảng vẫn bấm được chuông, panel nằm trọn màn hình', async ({ page }, info) => {
     test.skip(isMobile(info), 'chỉ đo ở máy tính');
-    await page.goto('/admin/summary');
+    await page.goto('/admin/home');
     await expect(page.getByText('VPP Công trình', { exact: true })).toHaveCount(0);
     await page.setViewportSize({ width: 1024, height: 720 });
     await bellOf(page, false).click();
@@ -152,7 +152,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
 
   test('v2: hàng người dùng 252px đọc được: tên >= 100px, vai trò một dòng, công cụ nằm dưới', async ({ page }, info) => {
     test.skip(isMobile(info), 'chỉ đo ở 1280');
-    await page.goto('/admin/summary');
+    await page.goto('/admin/home');
     const user = page.getByRole('group', { name: 'Tài khoản và ngôn ngữ' });
     const name = user.locator('b');
     const role = user.locator('small');
@@ -165,13 +165,13 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     expect(logout.x + logout.width).toBeLessThanOrEqual(252);
     await page.setViewportSize({ width: 1280, height: 720 });
     const nav = page.getByRole('navigation', { name: 'Menu quản lý' });
-    expect(await nav.evaluate((el) => el.scrollHeight - el.clientHeight), '13 mục (nhóm Xem lại sau thu gọn) vừa 1280×720, nav không phải cuộn').toBeLessThanOrEqual(1);
+    expect(await nav.evaluate((el) => el.scrollHeight - el.clientHeight), '12 mục (nhóm Xem lại sau thu gọn), .side__link 36px, vừa 1280×720, nav không phải cuộn').toBeLessThanOrEqual(1);
   });
 
   test('v2-B R2: mở nhóm "Xem lại sau" thì nav cuộn được nhưng khối tài khoản vẫn trong màn 1280×720', async ({ page }, info) => {
     test.skip(isMobile(info), 'chỉ đo ở 1280');
     await page.setViewportSize({ width: 1280, height: 720 });
-    await page.goto('/admin/summary');
+    await page.goto('/admin/home');
     const nav = page.getByRole('navigation', { name: 'Menu quản lý' });
     const toggle = nav.getByRole('button', { name: 'Xem lại sau' });
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -240,7 +240,7 @@ test.describe('E9-S1 trang member giữ giao diện cũ', () => {
     await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...devHeaders(role) } }));
 
     await page.goto('/admin');
-    await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /^Chào / })).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
     expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(215, 234, 239)');
     expect(await page.getByRole('heading', { level: 1 }).evaluate((h) => getComputedStyle(h).fontFamily)).toContain('Be Vietnam Pro');

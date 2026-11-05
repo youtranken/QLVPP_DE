@@ -12,6 +12,7 @@ import { StockPage } from '@/features/stock/stock-page';
 import { UsersPage } from '@/features/directory/users-page';
 import { AuditPage } from '@/features/admin/audit-page';
 import { ConfigPage } from '@/features/admin/config-page';
+import { HomePage } from '@/features/home/home-page';
 import { SummaryPage } from '@/features/summary/summary-page';
 import { ReviewPage } from '@/features/review/review-page';
 import { DeliveryPage } from '@/features/delivery/delivery-page';
@@ -64,6 +65,7 @@ export function AppRoutes() {
         }
       >
         <Route index element={<Navigate to={ADMIN_HOME} replace />} />
+        <Route path="home" element={<HomePage />} />
         <Route path="summary" element={<SummaryPage />} />
         <Route path="review" element={<ReviewPage />} />
         <Route path="arrivals" element={<ArrivalsPage />} />

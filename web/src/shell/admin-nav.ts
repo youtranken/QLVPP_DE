@@ -19,11 +19,10 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     labelKey: 'nav.groups.monthly',
     pages: [
-      { path: 'summary', titleKey: 'nav.summary', icon: 'dash' },
+      { path: 'home', titleKey: 'nav.home', icon: 'calendar' },
       { path: 'send-adm', titleKey: 'nav.sendAdm', icon: 'printer' },
-      { path: 'delivery', titleKey: 'nav.delivery', icon: 'truck', badge: 'delivery' },
       { path: 'arrivals', titleKey: 'nav.arrivals', icon: 'pkg' },
-      { path: 'reports', titleKey: 'nav.reports', icon: 'printer' },
+      { path: 'delivery', titleKey: 'nav.delivery', icon: 'truck', badge: 'delivery' },
     ],
   },
   {
@@ -48,10 +47,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     labelKey: 'nav.groups.later',
     collapsible: true,
     pages: [
+      { path: 'summary', titleKey: 'nav.summary', icon: 'dash' },
+      { path: 'reports', titleKey: 'nav.reports', icon: 'printer' },
       { path: 'backlog', titleKey: 'nav.backlog', icon: 'receipt' },
       { path: 'delivery/classic', titleKey: 'nav.deliveryClassic', icon: 'truck' },
     ],
   },
 ];
 
-export const ADMIN_HOME = 'summary';
+export const ADMIN_HOME = 'home';

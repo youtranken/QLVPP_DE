@@ -144,7 +144,7 @@ async function vietnameseLeftovers(page: Page, data: string[]) {
   return stripped.match(new RegExp(`\\S*${VIETNAMESE.source}\\S*`, 'gi')) ?? [];
 }
 
-const ADMIN_SCREENS = ['/admin/summary', '/admin/review', '/admin/delivery', '/admin/delivery/classic', '/admin/backlog', '/admin/reports', '/admin/stock', '/admin/catalog', '/admin/categories', '/admin/users', '/admin/audit', '/admin/config'];
+const ADMIN_SCREENS = ['/admin/home', '/admin/summary', '/admin/review', '/admin/delivery', '/admin/delivery/classic', '/admin/backlog', '/admin/reports', '/admin/stock', '/admin/catalog', '/admin/categories', '/admin/users', '/admin/audit', '/admin/config'];
 const MEMBER_SCREENS = ['/', '/history', '/me'];
 
 async function englishPage(browser: Browser, info: TestInfo, headers?: Record<string, string>) {

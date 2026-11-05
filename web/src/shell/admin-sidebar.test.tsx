@@ -47,7 +47,7 @@ describe('AdminSidebar: đếm', () => {
     expect(navLink('Món ngoài danh mục')).toHaveTextContent(shown ? /1/ : /^Món ngoài danh mục$/);
   });
 
-  it('lỗi tải đếm → không có số, sidebar vẫn đủ 13 mục (nhóm "Xem lại sau" thu gọn)', async () => {
+  it('lỗi tải đếm → không có số, sidebar vẫn đủ 12 mục (nhóm "Xem lại sau" thu gọn)', async () => {
     mockViewport(1280);
     const f = stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(500, null),
@@ -58,7 +58,7 @@ describe('AdminSidebar: đếm', () => {
     await waitFor(() => expect(f.mock.calls.some(([u]) => u === '/api/admin/periods/2026-10/summary')).toBe(true));
     await new Promise((r) => setTimeout(r, 0));
     const links = within(sideNav()).getAllByRole('link');
-    expect(links).toHaveLength(13);
+    expect(links).toHaveLength(12);
     for (const a of links) expect(a.textContent).not.toMatch(/\d/);
   });
 });
@@ -211,14 +211,14 @@ describe('AdminSidebar: nhóm "Xem lại sau" thu gọn', () => {
     expect(within(later()).queryAllByRole('link')).toHaveLength(0);
   });
 
-  it('bấm nút → mở (aria-expanded=true, thấy 2 liên kết); bấm lại → thu gọn', async () => {
+  it('bấm nút → mở (aria-expanded=true, thấy 4 liên kết); bấm lại → thu gọn', async () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
     await screen.findByRole('navigation', { name: 'Menu quản lý' });
     await userEvent.click(toggle());
     expect(toggle()).toHaveAttribute('aria-expanded', 'true');
-    expect(within(later()).getAllByRole('link').map((a) => a.getAttribute('title'))).toEqual(['Còn nợ', 'Giao hàng (bản cũ)']);
+    expect(within(later()).getAllByRole('link').map((a) => a.getAttribute('title'))).toEqual(['Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ', 'Giao hàng (bản cũ)']);
     await userEvent.click(toggle());
     expect(within(later()).queryAllByRole('link')).toHaveLength(0);
   });
@@ -234,7 +234,7 @@ describe('AdminSidebar: nhóm "Xem lại sau" thu gọn', () => {
     expect(toggle()).toHaveAttribute('aria-expanded', 'true');
   });
 
-  it.each(['/admin/backlog', '/admin/delivery/classic'])('đang ở %s (trong nhóm) → tự mở, mục đang chọn có aria-current', async (path) => {
+  it.each(['/admin/summary', '/admin/reports', '/admin/backlog', '/admin/delivery/classic'])('đang ở %s (trong nhóm) → tự mở, mục đang chọn có aria-current', async (path) => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), path);

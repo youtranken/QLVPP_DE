@@ -141,10 +141,10 @@ describe('Hành chính không có phiếu — route nhân viên chuyển về /a
     vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})));
   });
 
-  it.each(['admin', 'sa'] as const)('%s vào /, /history, /history/2026-10, /me → /admin/summary', (role) => {
+  it.each(['admin', 'sa'] as const)('%s vào /, /history, /history/2026-10, /me → /admin/home', (role) => {
     for (const path of ['/', '/history', '/history/2026-10', '/me']) {
       const { unmount } = renderApp(makeMe(role), path);
-      expect(screen.getByTestId('location')).toHaveTextContent('/admin/summary');
+      expect(screen.getByTestId('location')).toHaveTextContent('/admin/home');
       unmount();
     }
   });
@@ -155,7 +155,7 @@ describe('Hành chính không có phiếu — route nhân viên chuyển về /a
   });
 
   it('sidebar Hành chính không có "Phiếu của tôi"', () => {
-    renderApp(makeMe('admin'), '/admin/summary');
+    renderApp(makeMe('admin'), '/admin/home');
     expect(screen.getByRole('navigation', { name: 'Menu quản lý' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Phiếu của tôi/ })).toBeNull();
   });
@@ -167,7 +167,7 @@ describe('Hành chính không có phiếu — route nhân viên chuyển về /a
     vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(url === '/api/auth/me' ? jsonResponse(200, makeMe('admin')) : new Promise<Response>(() => {}))));
     const Fresh = (await import('@/App')).default;
     renderWithI18n(<Fresh />);
-    await vi.waitFor(() => expect(window.location.pathname).toBe('/admin/summary'));
+    await vi.waitFor(() => expect(window.location.pathname).toBe('/admin/home'));
     window.history.replaceState(null, '', '/');
   });
 });

@@ -23,6 +23,7 @@ const nav = {
       system: 'Quản lý',
       later: 'Xem lại sau',
     },
+    home: 'Tháng này',
     summary: 'Tổng hợp kỳ',
     catalog: 'Danh mục món',
     stock: 'Tủ / Kho',
