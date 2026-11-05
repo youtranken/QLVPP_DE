@@ -165,7 +165,7 @@ describe('Trang Đơn vị tính', () => {
     await pick('hộp', 'Ngừng');
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Ngừng' }));
     await waitFor(() => expect(within(rowOf('hộp')).getByText('Đã ngừng')).toBeInTheDocument());
-    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Danh mục' }));
+    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Danh mục món' }));
     await userEvent.click((await screen.findAllByRole('button', { name: 'Thêm món' }))[0]);
     const select = await screen.findByLabelText(/Đơn vị tính/);
     await waitFor(() => expect(within(select).getByRole('option', { name: 'cái' })).toBeInTheDocument());
@@ -283,7 +283,7 @@ describe('Trang Đơn vị tính', () => {
     await open();
     await sortOn();
     await userEvent.click(screen.getByRole('button', { name: 'Đưa hộp lên' }));
-    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Danh mục' }));
+    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Danh mục món' }));
     await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' })).getByRole('button', { name: 'Tiếp tục sửa' }));
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Đơn vị tính');
     expect(names()).toEqual(['hộp', 'cái', 'Cũ']);

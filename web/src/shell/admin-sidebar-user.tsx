@@ -5,6 +5,7 @@ import { useMe } from '@/lib/me';
 import { logout } from '@/lib/auth-actions';
 import { initialsOf } from '@/lib/initials';
 import { ADMIN_TABLET_QUERY, useMediaQuery } from '@/lib/use-media-query';
+import { NotificationBell } from '@/features/notifications/notification-bell';
 import { Icon } from '@/ui/icon';
 import { LanguageSwitch } from '@/ui/language-switch';
 
@@ -93,6 +94,7 @@ export function AdminSidebarUser({ compact = false }: { compact?: boolean }) {
           <b>{name}</b>
           <small>{t(`common.roles.${me.role}`)}</small>
         </span>
+        {compact && <NotificationBell />}
         {row && (
           <>
             <button type="button" className="side__icon-btn side__lang-btn" aria-label={t('common.languages.label')} title={t('common.languages.label')} {...toggle}>

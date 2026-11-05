@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Tổng hợp kỳ', 'Giao hàng', 'Báo cáo & in', 'Danh mục', 'Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Danh bạ', 'Nhật ký', 'Cấu hình', 'Còn nợ'];
+const NAV_ORDER = ['Tổng hợp kỳ', 'Giao hàng', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình', 'Còn nợ'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
 const linkLabels = (nav: HTMLElement) =>
@@ -31,7 +31,7 @@ describe('AdminShell + RequireRole', () => {
     const side = sideNav();
     expect(within(side).getAllByRole('group').map((g) => g.getAttribute('aria-label'))).toEqual(['Hằng tháng', 'Danh mục và tủ', 'Quản lý', 'Xem lại sau']);
     expect(linkLabels(side)).toEqual(NAV_ORDER);
-    expect(within(side).getByRole('link', { name: 'Danh mục' })).toHaveAttribute('aria-current', 'page');
+    expect(within(side).getByRole('link', { name: 'Danh mục món' })).toHaveAttribute('aria-current', 'page');
     expect(within(side).getAllByRole('link').filter((a) => a.hasAttribute('aria-current'))).toHaveLength(1);
     expect(screen.queryByRole('link', { name: /Phiếu của tôi/ })).toBeNull();
     expect(screen.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeInTheDocument();
@@ -61,17 +61,14 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
 
-  it('chuông nằm ở hàng thương hiệu (banner) của sidebar, cạnh "VPP Công trình" / "Hành chính"', async () => {
+  it('chuông (có số chưa đọc) nằm ở khối người dùng cuối sidebar', async () => {
     mockViewport(1280);
     stubShellApi({
       '/api/me/notifications?unread=true&limit=1': () => jsonResponse(200, { items: [], next_cursor: null, unread_count: 2 }),
     });
-    renderApp(makeMe('admin'), '/admin/summary');
-    // jsdom coi <header> trong <main> (PageHeader) cũng là banner; trình duyệt thì không
-    const banner = screen.getAllByRole('banner')[0];
-    expect(banner).not.toBe(screen.getByRole('heading', { level: 1 }).closest('header'));
-    expect(banner).toHaveTextContent('VPP Công trình');
-    expect(await within(banner).findByRole('button', { name: 'Thông báo, 2 chưa đọc' })).toBeInTheDocument();
+    const { container } = renderApp(makeMe('admin'), '/admin/summary');
+    const user = container.querySelector<HTMLElement>('.side__user')!;
+    expect(await within(user).findByRole('button', { name: 'Thông báo, 2 chưa đọc' })).toBeInTheDocument();
   });
 
   it('có liên kết "Tới nội dung" trỏ #main, vùng nội dung có id main', () => {
@@ -97,7 +94,7 @@ describe('AdminShell + RequireRole', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
     const dialog = screen.getByRole('dialog', { name: 'Menu quản lý' });
     expect(linkLabels(within(dialog).getByRole('navigation', { name: 'Menu quản lý' }))).toEqual(NAV_ORDER);
-    await userEvent.click(within(dialog).getByRole('link', { name: 'Kho' }));
+    await userEvent.click(within(dialog).getByRole('link', { name: 'Tủ / Kho' }));
     expect(screen.getByTestId('location')).toHaveTextContent('/admin/stock');
     expect(screen.queryByRole('dialog', { name: 'Menu quản lý' })).toBeNull();
   });

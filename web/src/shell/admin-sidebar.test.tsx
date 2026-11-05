@@ -24,7 +24,7 @@ describe('AdminSidebar: đếm', () => {
     await waitFor(() => expect(navLink('Món ngoài danh mục')).toHaveTextContent('3'));
     expect(navLink('Món ngoài danh mục')).toHaveAccessibleName('Món ngoài danh mục, 3 món chờ xem');
     await waitFor(() => expect(navLink('Giao hàng')).toHaveAccessibleName('Giao hàng, 6 dòng chờ giao'));
-    await waitFor(() => expect(navLink('Kho')).toHaveAccessibleName('Kho, 4 món sắp hết'));
+    await waitFor(() => expect(navLink('Tủ / Kho')).toHaveAccessibleName('Tủ / Kho, 4 món sắp hết'));
   });
 
   it.each([
@@ -145,5 +145,32 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
     } finally {
       await i18n.changeLanguage('vi');
     }
+  });
+});
+
+describe('AdminSidebar: đầu và cuối', () => {
+  it('không còn hàng thương hiệu ở đầu sidebar', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    const { container } = renderApp(makeMe('admin'), '/admin/catalog');
+    await screen.findByRole('navigation', { name: 'Menu quản lý' });
+    expect(container.querySelector('.side__brand')).toBeNull();
+  });
+
+  it('chuông nằm cùng khối người dùng ở cuối, sau thanh điều hướng', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    const bell = await screen.findByRole('button', { name: /Thông báo/ });
+    expect(bell.closest('.side__user')).not.toBeNull();
+    expect(sideNav().compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('nhãn sidebar theo thiết kế: Danh mục món, Tủ / Kho, Nhân viên', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    await screen.findByRole('navigation', { name: 'Menu quản lý' });
+    for (const t of ['Danh mục món', 'Tủ / Kho', 'Nhân viên']) expect(navLink(t)).toBeInTheDocument();
   });
 });

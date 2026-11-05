@@ -4,11 +4,6 @@
 [data-shell='admin'] .skip-link { background: var(--c-surface); color: var(--c-acc); border-radius: var(--r-sm); box-shadow: var(--e-3); }
 
 [data-shell='admin'] .side { position: sticky; top: 0; z-index: 20; height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; padding: 12px; border-right: 1px solid var(--c-glass-line); background: var(--c-glass); color: var(--c-on-dark-2); }
-[data-shell='admin'] .side__brand { flex: none; display: flex; align-items: center; gap: 12px; padding: 0 0 8px 4px; }
-[data-shell='admin'] .side__logo { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: var(--r-sm); background: var(--c-logo-bg); color: var(--c-ink); }
-[data-shell='admin'] .side__logo svg { width: 18px; height: 18px; }
-[data-shell='admin'] .side__brand-text { flex: 1; min-width: 0; font: var(--t-label); font-weight: 800; color: var(--c-on-dark); }
-[data-shell='admin'] .side__brand-text small { display: block; font: var(--t-cap); font-weight: 500; color: var(--c-on-dark-2); }
 [data-shell='admin'] .side__nav { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; margin: 0 -12px; padding: 0 12px 8px; border-bottom: 1px solid var(--c-glass-line); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
 [data-shell='admin'] .side__group { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); padding-left: 8px; }
 [data-shell='admin'] .side__group::before { content: ''; position: absolute; left: 4px; top: 28px; bottom: 6px; width: 1px; background: var(--c-glass-line); }
@@ -53,11 +48,8 @@
 [data-shell='admin'] button.side__avatar:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 [data-shell='admin'] .side__who-text { min-width: 0; }
 [data-shell='admin'] .side__who-text b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-label); font-size: 13px; color: var(--c-on-dark); }
-[data-shell='admin'] .side__who-text small { display: block; font: var(--t-cap); color: var(--c-on-dark-2); }
+[data-shell='admin'] .side__who-text small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-cap); color: var(--c-on-dark-2); }
 [data-shell='admin'] .side__acct { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
-[data-shell='admin'] .side__logout { padding: 0 12px; }
-[data-shell='admin'] .side__logout { color: inherit; }
-[data-shell='admin'] .side__logout:hover:not(:disabled) { background: rgb(255 255 255 / .08); }
 [data-shell='admin'] .side__user[data-layout='row'] .side__logout:hover:not(:disabled) { background: var(--c-surface-2); }
 [data-shell='admin'] .side__error { margin: 0; font: var(--t-cap); color: var(--c-on-dark); }
 
@@ -75,7 +67,7 @@
 [data-shell='admin'] .side .notif-btn { width: 36px; height: 36px; }
 [data-shell='admin'] .side .notif-badge { top: 7px; right: 8px; }
 [data-shell='admin'] .topbar .notif-panel { color: var(--c-ink); }
-[data-shell='admin'] .side .notif-panel { position: fixed; top: 52px; left: 12px; right: auto; z-index: 40; width: 380px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 80px); overscroll-behavior: contain; color: var(--c-ink); }
+[data-shell='admin'] .side .notif-panel { position: fixed; top: auto; bottom: 16px; left: calc(var(--side-w) + 8px); right: auto; z-index: 40; width: 380px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 80px); overscroll-behavior: contain; color: var(--c-ink); }
 [data-shell='admin'] .notif-text { overflow-wrap: anywhere; }
 
 [data-shell='admin'] .topbar { display: flex; align-items: center; gap: 4px; height: calc(56px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 8px 0 4px; border-bottom: 1px solid var(--c-glass-line); background: var(--c-shell-a); color: var(--c-on-dark); }
@@ -103,8 +95,6 @@
 @media (min-width: 768px) and (max-width: 1279px) {
   [data-shell='admin'] .shell { --side-w: 72px; }
   [data-shell='admin'] .side { align-items: center; overflow-x: hidden; }
-  [data-shell='admin'] .side__brand { flex-direction: column; gap: 8px; padding: 0 0 8px; }
-  [data-shell='admin'] .side__brand-text,
   [data-shell='admin'] .side__group-label,
   [data-shell='admin'] .side__label,
   [data-shell='admin'] .side__period-text,
@@ -120,7 +110,7 @@
   [data-shell='admin'] .side__acct .side__error { color: var(--c-danger); }
   [data-shell='admin'] .side__acct .side__logout:hover:not(:disabled) { background: var(--c-surface-2); }
   [data-shell='admin'] .side__acct { position: fixed; left: 80px; bottom: 16px; z-index: 30; padding: 12px; border-radius: var(--r-md); background: var(--c-surface); color: var(--c-ink); box-shadow: var(--e-3); }
-  [data-shell='admin'] .side .notif-panel { top: 12px; left: 80px; }
+  [data-shell='admin'] .side .notif-panel { top: auto; bottom: 16px; left: 80px; }
 }
 
 @media (max-width: 767px) {

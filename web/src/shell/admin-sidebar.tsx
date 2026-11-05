@@ -2,7 +2,6 @@ import { NavLink } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/ui/icon';
-import { NotificationBell } from '@/features/notifications/notification-bell';
 import { currentPeriodQuery } from '@/features/request/request.api';
 import { ADMIN_NAV, type AdminPage } from '@/shell/admin-nav';
 import { AdminPeriodCard } from '@/shell/admin-period-card';
@@ -28,7 +27,7 @@ function SideLink({ page, count, onNavigate }: { page: AdminPage; count?: number
   );
 }
 
-// 'side': cột trái ≥ 768 (hàng thương hiệu là banner, có chuông); 'sheet': thân menu điện thoại, đầu do AdminMenuSheet dựng
+// 'side': cột trái ≥ 768 (chuông nằm ở khối người dùng cuối cột); 'sheet': thân menu điện thoại, đầu do AdminMenuSheet dựng
 export function AdminSidebar({ variant = 'side', onNavigate }: { variant?: 'side' | 'sheet'; onNavigate?: () => void }) {
   const { t } = useTranslation();
   const badges = useAdminBadges();
@@ -36,18 +35,6 @@ export function AdminSidebar({ variant = 'side', onNavigate }: { variant?: 'side
   const hasPeriod = typeof period.data?.ym === 'string' && typeof period.data.deadline === 'string';
   return (
     <div className="side" data-variant={variant}>
-      {variant === 'side' && (
-        <header className="side__brand">
-          <span className="side__logo" aria-hidden="true">
-            <Icon name="pkg" />
-          </span>
-          <span className="side__brand-text">
-            {t('app.title')}
-            <small>{t('common.roles.admin')}</small>
-          </span>
-          <NotificationBell />
-        </header>
-      )}
       <nav className="side__nav" aria-label={t('nav.adminMenu')}>
         {ADMIN_NAV.map((g) => (
           <div key={g.labelKey} className="side__group" role="group" aria-label={t(g.labelKey)}>

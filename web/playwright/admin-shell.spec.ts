@@ -1,8 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 import { asRole, devHeaders, expectNoContrastViolations, isMobile } from './helpers';
 
-const NAV_ORDER = ['Tổng hợp kỳ', 'Giao hàng', 'Báo cáo & in', 'Danh mục', 'Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Danh bạ', 'Nhật ký', 'Cấu hình', 'Còn nợ'];
+const NAV_ORDER = ['Tổng hợp kỳ', 'Giao hàng', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình', 'Còn nợ'];
 const OPEN_MENU = /^(Mở menu quản lý|Open admin menu)$/;
+
+// Bell: topbar on phone, bottom of sidebar (next to avatar) elsewhere
+const bellOf = (page: Page, mobile: boolean) =>
+  (mobile ? page.getByRole('banner') : page.locator('.side__user')).getByRole('button', { name: /^Thông báo, \d+ chưa đọc$/ });
 
 const sidebarWidth = (page: Page) =>
   page.getByRole('navigation', { name: 'Menu quản lý' }).evaluate((nav) => nav.parentElement!.getBoundingClientRect().width);
@@ -13,7 +17,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
   test('E9-S1 shell Hành chính: sidebar 4 nhóm 12 mục, thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
     await page.goto('/admin/catalog');
     await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
-    await expect(page.getByRole('banner').getByRole('button', { name: /^Thông báo, \d+ chưa đọc$/ })).toBeVisible();
+    await expect(bellOf(page, isMobile(info))).toBeVisible();
     if (isMobile(info)) {
       await expect(page.getByRole('navigation', { name: 'Menu quản lý' })).toHaveCount(0);
       await page.getByRole('button', { name: OPEN_MENU }).click();
@@ -22,7 +26,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     await expect(side.getByRole('group')).toHaveCount(4);
     const titles = await side.getByRole('link').evaluateAll((links) => links.map((a) => a.getAttribute('title')));
     expect(titles).toEqual(NAV_ORDER);
-    await expect(side.getByRole('link', { name: 'Danh mục', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(side.getByRole('link', { name: 'Danh mục món', exact: true })).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('link', { name: /Phiếu của tôi/ })).toHaveCount(0);
     await expect(page.getByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng \d+ · đang mở/ })).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
@@ -57,10 +61,10 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     await expectNoContrastViolations(page);
   });
 
-  test('v2: bảng thông báo mở vẫn đủ tương phản (chuông trên nền tối)', async ({ page }) => {
+  test('v2: bảng thông báo mở vẫn đủ tương phản (chuông trên nền tối)', async ({ page }, info) => {
     await page.goto('/admin/summary');
     await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
-    await page.getByRole('banner').getByRole('button', { name: /^Thông báo, \d+ chưa đọc$/ }).click();
+    await bellOf(page, isMobile(info)).click();
     const panel = page.getByRole('dialog', { name: 'Thông báo' });
     await expect(panel).toBeVisible();
     expect(await panel.locator('strong').first().evaluate((el) => getComputedStyle(el).color)).toBe('rgb(14, 42, 51)');
@@ -99,14 +103,28 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     await page.setViewportSize({ width: 1024, height: 800 });
     await page.goto('/admin/stock');
     const side = page.getByRole('navigation', { name: 'Menu quản lý' });
-    const stock = side.getByRole('link', { name: /^Kho/ });
+    const stock = side.getByRole('link', { name: /^Tủ \/ Kho/ });
     await expect(stock).toHaveAttribute('aria-current', 'page');
-    await expect(stock).toHaveAttribute('title', 'Kho');
+    await expect(stock).toHaveAttribute('title', 'Tủ / Kho');
     expect((await stock.boundingBox())!.width).toBeLessThanOrEqual(48);
     await expect(page.getByRole('button', { name: 'Đăng xuất' })).toHaveCount(0);
     await page.getByRole('button', { name: 'Tài khoản và ngôn ngữ' }).click();
     await expect(page.getByRole('button', { name: 'Đăng xuất' })).toBeVisible();
     await expect(page.getByRole('radio', { name: 'English' })).toBeVisible();
+  });
+
+  test('v2: không còn đầu sidebar thương hiệu; máy tính bảng vẫn bấm được chuông, panel nằm trọn màn hình', async ({ page }, info) => {
+    test.skip(isMobile(info), 'chỉ đo ở máy tính');
+    await page.goto('/admin/summary');
+    await expect(page.locator('.side__brand')).toHaveCount(0);
+    await page.setViewportSize({ width: 1024, height: 720 });
+    await bellOf(page, false).click();
+    const panel = page.getByRole('dialog', { name: 'Thông báo' });
+    await expect(panel).toBeVisible();
+    const box = (await panel.boundingBox())!;
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(720);
+    expect(box.x).toBeGreaterThanOrEqual(72);
   });
 
   test('E9-S1 khối tài khoản luôn trong màn hình, chuông nổi trên nội dung, số đếm không bị cắt', async ({ page }, info) => {
@@ -139,9 +157,13 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     }
     await page.setViewportSize({ width: 1280, height: 800 });
 
-    await page.getByRole('banner').getByRole('button', { name: /^Thông báo, \d+ chưa đọc$/ }).click();
+    await bellOf(page, isMobile(info)).click();
     const panel = page.getByRole('dialog', { name: 'Thông báo' });
     await expect(panel).toBeVisible();
+    const box = (await panel.boundingBox())!;
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(800);
+    expect(box.x).toBeGreaterThanOrEqual(252);
     const onTop = await panel.evaluate((el) => {
       const r = el.getBoundingClientRect();
       const hit = document.elementFromPoint(r.right - 8, r.top + r.height / 2);

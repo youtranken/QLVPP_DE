@@ -26,8 +26,8 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     labelKey: 'nav.groups.stock',
     pages: [
-      { path: 'catalog', titleKey: 'catalog.title', icon: 'layers' },
-      { path: 'stock', titleKey: 'stock.title', icon: 'warehouse', badge: 'stock' },
+      { path: 'catalog', titleKey: 'nav.catalog', icon: 'layers' },
+      { path: 'stock', titleKey: 'nav.stock', icon: 'warehouse', badge: 'stock' },
       { path: 'review', titleKey: 'nav.review', icon: 'pkgplus', badge: 'review' },
       { path: 'categories', titleKey: 'nav.categories', icon: 'filter' },
       { path: 'units', titleKey: 'nav.units', icon: 'sheet' },
@@ -36,7 +36,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     labelKey: 'nav.groups.system',
     pages: [
-      { path: 'users', titleKey: 'users.title', icon: 'users' },
+      { path: 'users', titleKey: 'nav.users', icon: 'users' },
       { path: 'audit', titleKey: 'audit.title', icon: 'scroll' },
       { path: 'config', titleKey: 'config.title', icon: 'sliders' },
     ],

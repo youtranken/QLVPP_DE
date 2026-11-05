@@ -20,7 +20,11 @@ const PAGES = [
 const overflowOf = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 const heading = (page: Page, title: string) => page.getByRole('heading', { level: 1, name: title, exact: true });
 const menu = (page: Page) => page.getByRole('dialog', { name: 'Menu quản lý' });
-const menuLink = (page: Page, title: string) => menu(page).getByRole('link', { name: new RegExp(`^${title.replace('&', '\\&')}`) });
+const MENU_LABEL: Record<string, string> = { Kho: 'Tủ / Kho', 'Danh mục': 'Danh mục món', 'Danh bạ': 'Nhân viên' }; // nhãn sidebar khác tiêu đề trang
+const menuLink = (page: Page, title: string) => {
+  const label = MENU_LABEL[title] ?? title;
+  return menu(page).getByRole('link', { name: new RegExp(`^${label.replace('&', '\\&').replace('/', '\\/')}`) });
+};
 
 async function openPage(page: Page, path: string, title: string) {
   await page.goto(`/admin/${path}`);

@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Tổng hợp kỳ', 'Giao hàng', 'Báo cáo & in', 'Danh mục', 'Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Danh bạ', 'Nhật ký', 'Cấu hình', 'Còn nợ'];
+const NAV_ORDER = ['Tổng hợp kỳ', 'Giao hàng', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình', 'Còn nợ'];
 
 const topbar = () => screen.getAllByRole('banner')[0];
 const search = () => screen.getByTestId('location-search').textContent ?? '';
@@ -60,7 +60,7 @@ describe('AdminTopbar 390 px', () => {
     expect(avatar).toHaveAccessibleDescription('Mở menu quản lý');
     await userEvent.click(avatar);
     expect(avatar).toHaveAttribute('aria-expanded', 'true');
-    await userEvent.click(within(screen.getByRole('dialog', { name: 'Menu quản lý' })).getByRole('link', { name: 'Kho' }));
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Menu quản lý' })).getByRole('link', { name: 'Tủ / Kho' }));
     expect(screen.getByTestId('location')).toHaveTextContent('/admin/stock');
     expect(screen.queryByRole('dialog', { name: 'Menu quản lý' })).toBeNull();
   });
