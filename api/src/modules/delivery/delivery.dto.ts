@@ -104,3 +104,33 @@ export interface DeliverAllResult {
   delivered: { line_id: string; qty: number }[];
   failed: DeliverAllFailure[];
 }
+
+export type DeliveryPersonStatus = 'pending' | 'debt' | 'done';
+export interface DeliveryPersonLine {
+  line_id: string;
+  request_id: string;
+  period_ym: string;
+  is_debt: boolean; // period_ym < ym
+  item_id: string | null;
+  name: string;
+  name_en: string | null;
+  unit: string;
+  image_file_id: string | null; // ảnh món; món ngoài DM: ảnh của dòng
+  qty: number;
+  delivered_qty: number;
+  cancelled_qty: number;
+  remaining_qty: number;
+  stock_qty: number | null;
+  review_status: 'n/a' | 'pending' | 'accepted' | 'converted';
+}
+export interface DeliveryPerson {
+  user_sub: string;
+  full_name: string | null;
+  department: string | null;
+  user_status: string;
+  request_id: string | null; // phiếu kỳ ym, null nếu chỉ có nợ
+  status: DeliveryPersonStatus;
+  owed_lines: number;
+  open_lines: number;
+  lines: DeliveryPersonLine[];
+}

@@ -8,16 +8,23 @@ import { BacklogService } from './backlog.service';
 import { CancelRemainingService } from './cancel-remaining.service';
 import { DeliverAllService } from './deliver-all.service';
 import { DeliveryController } from './delivery.controller';
+import { DeliveryPeopleController } from './delivery-people.controller';
+import { DeliveryPeopleService } from './delivery-people.service';
 import { DeliveryService } from './delivery.service';
 
 @Module({
   imports: [RequestsModule, CatalogModule, PeriodsModule, NotificationsModule],
-  controllers: [DeliveryController, BacklogController],
+  controllers: [
+    DeliveryController,
+    BacklogController,
+    DeliveryPeopleController,
+  ],
   providers: [
     DeliveryService,
     DeliverAllService,
     CancelRemainingService,
     BacklogService,
+    DeliveryPeopleService,
   ],
   exports: [DeliveryService],
 })
