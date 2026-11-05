@@ -70,7 +70,7 @@ describe('StockPage', () => {
     expect(screen.getByText(/Đang lọc: Sắp hết · 1/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Bỏ lọc' }));
     expect(await screen.findByText('Bút bi xanh')).toBeInTheDocument();
-    expect(screen.getByTestId('location-search')).toHaveTextContent('');
+    expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
   });
 
   it('?filter=out chỉ còn món Hết hàng (không lấy món untracked còn tồn)', async () => {
@@ -84,7 +84,7 @@ describe('StockPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /Hết hàng/ }));
     expect(screen.getByTestId('location-search')).toHaveTextContent('?filter=out');
     await userEvent.click(screen.getByRole('button', { name: /Đang theo dõi/ }));
-    expect(screen.getByTestId('location-search')).toHaveTextContent('');
+    expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
   });
 
   it('bấm thông báo sắp hết trên chuông khi đang ở /admin/stock → ?filter=low', async () => {
@@ -215,6 +215,65 @@ describe('StockPage', () => {
       await userEvent.paste('Món 051');
       expect(await screen.findByText('Món 051', {}, { timeout: 3000 })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /^Xem thêm/ })).toBeNull();
+    });
+  });
+  describe('tab Xuất lẻ', () => {
+    const ISSUE = {
+      id: 'm-1',
+      item_id: 'i-1',
+      item_name: 'Giấy A4',
+      item_name_en: null,
+      unit: 'ram',
+      qty: 1,
+      recipient_sub: null,
+      recipient_name: 'Trần Thị Bình',
+      note: null,
+      actor_sub: 'u-hc',
+      created_at: '2026-11-03T03:00:00.000Z',
+    };
+    const issuesApi = (url: string) => {
+      if (url.startsWith('/api/admin/issues')) return jsonResponse(200, url.endsWith('2026-10') ? [] : [ISSUE]);
+      if (url === '/api/periods/current') return jsonResponse(200, { ym: '2026-11' });
+      return undefined;
+    };
+
+    async function openIssues(path: string) {
+      mockViewport(1280);
+      const f = stubStockApi(issuesApi);
+      renderApp(makeMe('admin'), path);
+      await screen.findByText(/lần xuất/);
+      return f;
+    }
+
+    it('tab Xuất lẻ đổi URL và hiện bảng xuất lẻ', async () => {
+      mockViewport(1280);
+      stubStockApi(issuesApi);
+      renderApp(makeMe('admin'), '/admin/stock');
+      await screen.findByText('Giấy A4');
+      expect(screen.getByRole('radio', { name: 'Tồn kho' })).toBeChecked();
+      await userEvent.click(screen.getByRole('radio', { name: 'Xuất lẻ' }));
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?tab=issues');
+      expect(await screen.findByText('Trần Thị Bình')).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: 'Người nhận' })).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('radio', { name: 'Tồn kho' }));
+      expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
+      expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
+    });
+
+    it('?tab=issues&ym=2026-10: radio Xuất lẻ đang chọn, API gọi với ym=2026-10', async () => {
+      const f = await openIssues('/admin/stock?tab=issues&ym=2026-10');
+      expect(screen.getByRole('radio', { name: 'Xuất lẻ' })).toBeChecked();
+      expect(callsTo(f, '/api/admin/issues?ym=2026-10')).toHaveLength(1);
+    });
+
+    it('thiếu ym thì lấy kỳ hiện tại', async () => {
+      const f = await openIssues('/admin/stock?tab=issues');
+      expect(callsTo(f, '/api/admin/issues?ym=2026-11')).toHaveLength(1);
+    });
+
+    it('tab lạ rơi về Tồn kho', async () => {
+      await open('/admin/stock?tab=zzz');
+      expect(screen.getByRole('radio', { name: 'Tồn kho' })).toBeChecked();
     });
   });
 });

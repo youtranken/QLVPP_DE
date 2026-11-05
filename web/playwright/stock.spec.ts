@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Locator } from '@playwright/test';
-import { asRole, devHeaders, expectNoContrastViolations, removeTestItem, seedActiveUser, shot, openPurchase } from './helpers';
+import { asRole, devHeaders, expectNoContrastViolations, isMobile, removeTestItem, seedActiveUser, shot, openPurchase } from './helpers';
 
 // Ở 390 px bảng xếp dọc, ô có nhãn cột phía trước ("Tồn 10")
 const stockCell = (row: Locator, qty: number) => row.getByRole('cell', { name: new RegExp(`^(Tồn kho )?${qty}$`) });
@@ -220,6 +220,39 @@ test.describe('E9-S5 Kho M1 (dev-identity admin)', () => {
       await expect(ledger.getByRole('listitem').nth(0).getByText('Điều chỉnh')).toBeVisible();
       await expect(ledger.getByRole('listitem').nth(0).getByText('PW hàng hỏng')).toBeVisible();
       if (info.project.name === 'mobile-390') await expectNoContrastViolations(page);
+    } finally {
+      await removeTestItem(request, itemId);
+    }
+  });
+
+  test('Xuất lẻ: xuất 1 món rồi thấy ở tab Xuất lẻ', async ({ page, request }, info) => {
+    const itemName = `PW xuất lẻ ${Date.now()}-${info.project.name}`;
+    const itemId = await createItem(request, itemName);
+    try {
+      const bought = await request.post(`/api/admin/items/${itemId}/stock`, {
+        headers: devHeaders('admin'),
+        data: { delta: 10, reason: 'purchase', note: null },
+      });
+      expect(bought.status()).toBe(201);
+      await page.goto('/admin/stock');
+      await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
+      const row = page.getByRole('row').filter({ hasText: itemName });
+      await rowAction(row, itemName, 'Xuất lẻ');
+      const issue = page.getByRole('dialog', { name: `Xuất lẻ ${itemName}` });
+      await issue.getByLabel('Số lượng').fill('3');
+      await issue.getByLabel('Dùng chung').check();
+      await issue.getByLabel('Lý do').fill('Họp khách PW');
+      await issue.getByRole('button', { name: 'Xuất lẻ', exact: true }).click();
+      await expect(issue).toBeHidden();
+
+      await page.getByRole('radio', { name: 'Xuất lẻ' }).click();
+      await expect(page).toHaveURL(/tab=issues/);
+      const issued = page.getByRole('row').filter({ hasText: itemName });
+      await expect(issued).toBeVisible();
+      await expect(issued).toContainText('3 cái');
+      await expect(issued).toContainText('Họp khách PW');
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await shot(page, info, 'stock-issues-tab', false);
     } finally {
       await removeTestItem(request, itemId);
     }
