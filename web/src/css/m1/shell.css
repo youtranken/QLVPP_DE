@@ -8,7 +8,7 @@
 [data-shell='admin'] .side__group { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); padding-left: 8px; }
 [data-shell='admin'] .side__group::before { content: ''; position: absolute; left: 4px; top: 28px; bottom: 6px; width: 1px; background: var(--c-glass-line); }
 [data-shell='admin'] .side__group:first-child .side__group-label { padding-top: 2px; }
-[data-shell='admin'] .side__group-toggle { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); width: calc(100% + 8px); margin-left: -8px; padding: 0 8px 0 0; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--c-on-dark-2); cursor: pointer; }
+[data-shell='admin'] .side__group-toggle { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); width: calc(100% + 8px); min-height: 32px; margin-left: -8px; padding: 0 8px 0 0; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--c-on-dark-2); cursor: pointer; }
 [data-shell='admin'] .side__group-toggle:hover { color: var(--c-on-dark); }
 [data-shell='admin'] .side__group-toggle:focus-visible { outline: 2px solid var(--c-bar-fill); outline-offset: 2px; }
 [data-shell='admin'] .side__group-toggle .side__group-label { margin-left: 0; }
@@ -115,7 +115,7 @@
   [data-shell='admin'] .side__nav { justify-items: center; margin: 0 -12px; padding: 0 12px 8px; }
   [data-shell='admin'] .side__group { padding-top: 8px; padding-left: 0; border-top: 1px solid var(--c-glass-line); margin-top: 8px; }
   [data-shell='admin'] .side__group::before { display: none; }
-  [data-shell='admin'] .side__group-toggle { justify-content: center; width: 48px; margin-left: 0; padding: 0; }
+  [data-shell='admin'] .side__group-toggle { justify-content: center; width: 48px; min-height: var(--hit); margin-left: 0; padding: 0; }
   [data-shell='admin'] .side__link { justify-content: center; width: 48px; padding: 0; }
   [data-shell='admin'] .side__cnt { position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; font-size: 12px; }
   [data-shell='admin'] .side__period { justify-content: center; width: 48px; padding: 16px 0; }

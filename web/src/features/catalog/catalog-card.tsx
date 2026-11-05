@@ -1,11 +1,11 @@
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useRequestFormat } from '@/features/request/request-format';
 import { useUnitNames } from '@/features/units/units.api';
 import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
 import type { CatalogRow } from './catalog-rows';
 import { useCardUpload } from './use-card-upload';
-import { useItemName } from './use-item-name';
 
 function StockBadge({ row }: { row: CatalogRow }) {
   const { t } = useTranslation();
@@ -50,7 +50,7 @@ function UploadButton({ id, name }: { id: string; name: string }) {
 export function CatalogCard({ row, groupName, onEdit }: { row: CatalogRow; groupName: string; onEdit: (id: string) => void }) {
   const { t } = useTranslation();
   const unitName = useUnitNames();
-  const name = useItemName()(row);
+  const name = useRequestFormat().name(row);
   const meta = [row.code, t('request.grid.unitMax', { unit: unitName(row.unit), max: row.max_qty })].filter(Boolean).join(' · ');
   return (
     <article className={`ct-card${row.active ? '' : ' is-inactive'}`}>

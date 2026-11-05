@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { initialsOf } from '@/lib/initials';
 import { Icon } from '@/ui/icon';
 import { LoadError } from '@/ui/load-state';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
@@ -9,7 +10,6 @@ import type { AdminItem } from '@/features/catalog/catalog.api';
 
 const MAX_CHIPS = 8;
 const MAX_LOW = 3;
-const initials = (name: string) => name.trim().split(/\s+/).slice(-2).map((w) => w[0]?.toUpperCase() ?? '').join('');
 
 interface UnregisteredProps {
   ym: string;
@@ -42,7 +42,7 @@ export function UnregisteredCard({ ym, deadline, count, people, failed = false, 
           const name = p.full_name ?? p.email ?? p.sub;
           return (
             <li key={p.sub} className="hm-chip">
-              <span className="hm-chip__av" aria-hidden="true">{initials(name)}</span>
+              <span className="hm-chip__av" aria-hidden="true">{initialsOf(name)}</span>
               {name}
             </li>
           );
