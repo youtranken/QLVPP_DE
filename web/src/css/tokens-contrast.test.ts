@@ -1,0 +1,41 @@
+import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+// vitest chạy với cwd = web/ (css?raw trả rỗng trong môi trường này)
+const css = readFileSync(resolve(process.cwd(), 'src/css/tokens-m1.css'), 'utf8');
+
+/** Lấy giá trị hex của token trong khối bảng màu (trước dấu `HẾT BẢNG MÀU`). */
+function tok(name: string): string {
+  const block = css.split('HẾT BẢNG MÀU')[0];
+  const m = new RegExp(`${name}:\\s*(#[0-9A-Fa-f]{6})\\b`).exec(block);
+  if (!m) throw new Error(`thiếu token ${name}`);
+  return m[1];
+}
+
+function lum(hex: string): number {
+  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+
+function contrast(a: string, b: string): number {
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+const PAIRS: [fg: string, bg: string][] = [
+  ['--c-ink', '--c-surface'], ['--c-muted', '--c-surface'], ['--c-acc', '--c-surface'],
+  ['--c-ink', '--c-panel-b'], ['--c-muted', '--c-panel-b'], ['--c-muted', '--c-page'],
+  ['--c-ok', '--c-ok-soft'], ['--c-warn', '--c-warn-soft'], ['--c-danger', '--c-danger-soft'],
+  ['--c-on-dark', '--c-shell-c'], ['--c-on-dark-2', '--c-shell-a'], ['--c-on-dark-2', '--c-shell-c'],
+  ['--c-on-dark', '--c-acc'], ['--c-warn', '--c-cart'],
+];
+
+describe('tương phản token bảng màu v2', () => {
+  it('bảng màu mang tiêu đề v2', () => {
+    expect(css).toContain('BẢNG MÀU v2 "Teal kính"');
+  });
+  it.each(PAIRS)('%s trên %s ≥ 4.5', (fg, bg) => {
+    expect(contrast(tok(fg), tok(bg))).toBeGreaterThanOrEqual(4.5);
+  });
+});

@@ -119,7 +119,7 @@ test.describe('E9-S1 trang member giữ giao diện cũ', () => {
     await page.goto('/admin');
     await expect(page.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
-    expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(239, 235, 228)');
+    expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(215, 234, 239)');
     expect(await page.getByRole('heading', { level: 1 }).evaluate((h) => getComputedStyle(h).fontFamily)).toContain('Be Vietnam Pro');
 
     role = 'member';

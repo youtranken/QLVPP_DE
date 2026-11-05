@@ -1,22 +1,22 @@
-/* ===== BẢNG MÀU P3 "Navy & cát" — thay cả khối khi đổi bảng màu ===== */
+/* ===== BẢNG MÀU v2 "Teal kính" — thay cả khối khi đổi bảng màu ===== */
 :root {
   /* nền & mặt: cát ấm */
-  --c-page: #EFEBE4;  --c-surface: #FFFFFF;  --c-canvas: #FBF9F6;  --c-surface-2: #F6F3EE;  --c-surface-hover: #FBF9F7;  --c-surface-sunk: #EDE8E0;
+  --c-page: #D7EAEF;  --c-surface: #FFFFFF;  --c-canvas: #F4FAFB;  --c-surface-2: #EEF5F7;  --c-surface-hover: #F2F8FA;  --c-surface-sunk: #DCEAEE;
   /* mực (chữ) */
-  --c-ink: #1A2233;  --c-ink-2: #353C4B;  --c-muted: #5F6372;  --c-faint: #ABA79F; /* faint: chỉ icon trang trí, KHÔNG cho chữ */
+  --c-ink: #0E2A33;  --c-ink-2: #2F4A52;  --c-muted: #47636C;  --c-faint: #9FBAC2; /* faint: chỉ icon trang trí, KHÔNG cho chữ */
   /* mảng đậm: chip/nav đang chọn, stepper card, thanh hàng loạt, toast, ô hạn ngày cuối */
-  --c-dark: #16213A;  --c-on-dark: #FFFFFF;  --c-on-dark-2: #C2C9D8;  --c-device: #0E1526;
+  --c-dark: #0E2A33;  --c-on-dark: #FFFFFF;  --c-on-dark-2: #C9DEE4;  --c-device: #08303B;
   /* viền */
-  --c-line: #E7E1D7;  --c-line-strong: #CEC5B6;  --c-line-input: #9A9183; /* viền ô nhập/checkbox ≥ 3:1 */
+  --c-line: #D6E6EB;  --c-line-strong: #B5CFD7;  --c-line-input: #7F9AA3; /* viền ô nhập/checkbox ≥ 3:1 */
   /* nhấn duy nhất: navy */
-  --c-acc: #1F3A6B;  --c-acc-hover: #172D55;  --c-acc-press: #11223F;  --c-acc-soft: #E4E9F2;  --c-acc-tint: #F0F3F8;  --c-on-acc: #FFFFFF;
+  --c-acc: #0F6E80;  --c-acc-hover: #0A5868;  --c-acc-press: #08434F;  --c-acc-soft: #DDF1F5;  --c-acc-tint: #EEF8FA;  --c-on-acc: #FFFFFF;
   /* hero kỳ: cát → xanh xám */
-  --c-hero-a: #E9E1D2;  --c-hero-b: #F2ECE1;  --c-hero-c: #DFE5EF;  --c-hero-ink: #1F3A6B;  --c-blob: rgb(255 255 255 / .55);
+  --c-hero-a: #DDF1F5;  --c-hero-b: #EEF6F8;  --c-hero-c: #CBE4EB;  --c-hero-ink: #0E2A33;  --c-blob: rgb(255 255 255 / .55);
   /* ngữ nghĩa: chữ / nền nhạt / vạch (fill chỉ cho thanh, chấm — không cho chữ) */
-  --c-ok: #2B6A3F;     --c-ok-soft: #DFEBDD;     --c-ok-fill: #3F8A55;
-  --c-warn: #86520E;   --c-warn-soft: #F3E7CC;   --c-warn-fill: #D3A04C;
-  --c-danger: #A7312B; --c-danger-soft: #F4E0DC; --c-danger-line: #E1B4B0; --c-danger-tint: #FBF3F1;
-  --c-info: #1F3A6B;   --c-info-soft: #E4E9F2;
+  --c-ok: #0D5E46;     --c-ok-soft: #E3F5EE;     --c-ok-fill: #11795A;
+  --c-warn: #8A3F06;   --c-warn-soft: #FFF1E3;   --c-warn-fill: #E39A52;
+  --c-danger: #A32C1E; --c-danger-soft: #FBE4E1; --c-danger-line: #EDB8B0; --c-danger-tint: #FDF3F1;
+  --c-info: #0A5868;   --c-info-soft: #DDF1F5;
   --c-dot: #CF4340;   /* chấm chưa đọc trên chuông */
   /* tờ in (bản in A4): đen trắng tuyệt đối */
   --c-print-ink: #000000;  --c-print-paper: #FFFFFF;  --c-print-muted: #333333;
@@ -39,7 +39,7 @@
   --g6-bg: color-mix(in srgb, var(--g6) 50%, #FFFFFF);
   --g7-bg: color-mix(in srgb, var(--g7) 50%, #FFFFFF);
   /* bóng & phủ (bộ ba RGB để dùng trong rgb(… / α)) */
-  --c-shimmer: rgb(255 255 255 / .6);  --sh-ink: 22 33 58;  --sh-acc: 31 58 107;  --c-scrim: rgb(22 33 58 / .45);
+  --c-shimmer: rgb(255 255 255 / .6);  --sh-ink: 8 48 59;  --sh-acc: 15 110 128;  --c-scrim: rgb(8 48 59 / .6);
   /* minh họa: nét, giấy, kim loại… + màu từng loại món (xem illustrations.html) */
   --ill-line: #1A2233; --ill-paper: #FFFFFF; --ill-rule: #ABA79F; --ill-metal: #E2E8F0; --ill-metal-2: #CBD5E1;
   --ill-graphite: #334155; --ill-wood: #F2D3A2; --ill-pink: #F472B6; --ill-shine: #FFFFFF;
@@ -50,6 +50,9 @@
   --k-tape-a: #FFD66B; --k-tape-b: #C27A0E;  --k-binder-a: #4C7BFF; --k-binder-b: #23409B;  --k-box-a: #E2B27A; --k-box-b: #A9773B;
   --k-sleeve-a: #9AD8FF; --k-sleeve-b: #2A8AD0;  --k-cutter-a: #FFB020; --k-cutter-b: #4A5268;  --k-clip-a: #7A6BE0; --k-clip-b: #3B2D9E;
   --k-misc-a: #FF9DB8; --k-misc-b: #C2416E;
+  /* khung v2: vỏ teal, mặt kính, giỏ hàng */
+  --c-shell-a: #08303B;  --c-shell-b: #0E4757;  --c-shell-c: #12596A;  --c-panel-a: #E3F1F5;  --c-panel-b: #CBE4EB;
+  --c-glass: rgb(255 255 255 / .06);  --c-glass-line: rgb(255 255 255 / .12);  --c-cart: #FFF4E8;  --c-cart-line: #F7D9B5;
 }
 /* ===== HẾT BẢNG MÀU ===== */
 
