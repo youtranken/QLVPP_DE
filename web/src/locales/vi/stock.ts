@@ -39,6 +39,7 @@ const stock = {
       colQty: 'SL',
       colRecipient: 'Người nhận',
       colNote: 'Lý do',
+      shared: 'Dùng chung',
       empty: 'Tháng này chưa xuất lẻ món nào.',
       total: '{{n}} lần xuất, {{units}} đơn vị',
       month: 'Tháng {{month}}/{{year}}',

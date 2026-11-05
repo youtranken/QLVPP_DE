@@ -31,7 +31,7 @@ const show = (ym = '2026-11', onYmChange = vi.fn()) => {
 
 describe('IssuesPanel', () => {
   it('liệt kê các lần xuất lẻ của tháng', async () => {
-    const f = stub(() => jsonResponse(200, [row({}), row({ id: 'm-2', qty: 3, recipient_name: null, note: null, created_at: '2026-10-31T16:59:00.000Z' })]));
+    const f = stub(() => jsonResponse(200, [row({}), row({ id: 'm-2', qty: 3, recipient_sub: null, recipient_name: null, note: null, created_at: '2026-10-31T16:59:00.000Z' })]));
     show();
     expect(await screen.findAllByText('Bút bi FO-03')).toHaveLength(2);
     expect(screen.getByText('2 cây')).toBeInTheDocument();
@@ -48,10 +48,19 @@ describe('IssuesPanel', () => {
     expect(await screen.findByText('31/10 23:59')).toBeInTheDocument();
   });
 
-  it('người nhận/lý do trống hiện gạch ngang', async () => {
-    stub(() => jsonResponse(200, [row({ recipient_name: null, note: null })]));
+  it('người nhận trống (xuất dùng chung) hiện "Dùng chung", lý do trống hiện gạch ngang', async () => {
+    stub(() => jsonResponse(200, [row({ recipient_sub: null, recipient_name: null, note: null })]));
     show();
     await screen.findByText('Bút bi FO-03');
+    expect(screen.getByText('Dùng chung')).toBeInTheDocument();
+    expect(screen.getAllByText('—')).toHaveLength(1);
+  });
+
+  it('có recipient_sub nhưng thiếu tên trong danh bạ thì hiện gạch ngang', async () => {
+    stub(() => jsonResponse(200, [row({ recipient_sub: 'u-gone', recipient_name: null, note: null })]));
+    show();
+    await screen.findByText('Bút bi FO-03');
+    expect(screen.queryByText('Dùng chung')).toBeNull();
     expect(screen.getAllByText('—')).toHaveLength(2);
   });
 

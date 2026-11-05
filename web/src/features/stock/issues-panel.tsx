@@ -7,6 +7,7 @@ import { DataTable } from '@/ui/data-table';
 import { LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
 import { useUnitNames } from '@/features/units/units.api';
+import { currentPeriodQuery } from '@/features/request/request.api';
 import { issuesQuery, type IssueRow } from './stock.api';
 
 const dayThenTime = (iso: string) => {
@@ -27,7 +28,11 @@ function useColumns() {
         cell: ({ row: { original: r } }) => (i18n.language === 'en' && r.item_name_en ? r.item_name_en : r.item_name),
       },
       { id: 'qty', header: t('stock.issues.colQty'), meta: { className: 'num r' }, cell: ({ row: { original: r } }) => `${r.qty} ${unitName(r.unit)}` },
-      { id: 'recipient', header: t('stock.issues.colRecipient'), cell: ({ row }) => row.original.recipient_name ?? dash },
+      {
+        id: 'recipient',
+        header: t('stock.issues.colRecipient'),
+        cell: ({ row: { original: r } }) => (r.recipient_sub === null ? t('stock.issues.shared') : (r.recipient_name ?? dash)),
+      },
       { id: 'note', header: t('stock.issues.colNote'), cell: ({ row }) => row.original.note ?? dash },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
@@ -37,6 +42,7 @@ function useColumns() {
 export function IssuesPanel({ ym, onYmChange }: { ym: string; onYmChange: (ym: string) => void }) {
   const { t } = useTranslation();
   const q = useQuery(issuesQuery(ym));
+  const current = useQuery(currentPeriodQuery());
   const columns = useColumns();
   const rows = q.data ?? [];
   const units = rows.reduce((sum, r) => sum + r.qty, 0);
@@ -45,6 +51,7 @@ export function IssuesPanel({ ym, onYmChange }: { ym: string; onYmChange: (ym: s
       <div className="toolbar">
         <MonthSwitcher
           value={ym}
+          max={current.data?.ym}
           onChange={onYmChange}
           formatLabel={(v) => t('stock.issues.month', { month: Number(v.slice(5)), year: v.slice(0, 4) })}
           labels={{ group: t('stock.issues.monthNav'), prev: t('stock.issues.prevMonth'), next: t('stock.issues.nextMonth') }}

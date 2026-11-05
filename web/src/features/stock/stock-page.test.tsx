@@ -225,7 +225,7 @@ describe('StockPage', () => {
       item_name_en: null,
       unit: 'ram',
       qty: 1,
-      recipient_sub: null,
+      recipient_sub: 'u-binh',
       recipient_name: 'Trần Thị Bình',
       note: null,
       actor_sub: 'u-hc',
@@ -269,6 +269,18 @@ describe('StockPage', () => {
     it('thiếu ym thì lấy kỳ hiện tại', async () => {
       const f = await openIssues('/admin/stock?tab=issues');
       expect(callsTo(f, '/api/admin/issues?ym=2026-11')).toHaveLength(1);
+    });
+
+    it('kỳ hiện tại lỗi khi chưa có ym: hiện lỗi có Thử lại, bấm thì tải lại', async () => {
+      mockViewport(1280);
+      let fail = true;
+      const f = stubStockApi((url) => (url === '/api/periods/current' && fail ? jsonResponse(500, { code: 'X' }) : issuesApi(url)));
+      renderApp(makeMe('admin'), '/admin/stock?tab=issues');
+      const retry = await screen.findByRole('button', { name: 'Thử lại' });
+      fail = false;
+      await userEvent.click(retry);
+      expect(await screen.findByText('Trần Thị Bình')).toBeInTheDocument();
+      expect(callsTo(f, '/api/periods/current').length).toBeGreaterThan(1);
     });
 
     it('tab lạ rơi về Tồn kho', async () => {

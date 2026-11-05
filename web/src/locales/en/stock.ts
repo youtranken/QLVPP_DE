@@ -42,6 +42,7 @@ const stock: Messages<typeof vi> = {
       colQty: 'Qty',
       colRecipient: 'Recipient',
       colNote: 'Reason',
+      shared: 'Shared use',
       empty: 'No one-off issues this month.',
       total: '{{n}} issues, {{units}} units',
       month: '{{month}}/{{year}}',

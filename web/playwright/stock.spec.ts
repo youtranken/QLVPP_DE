@@ -251,6 +251,7 @@ test.describe('E9-S5 Kho M1 (dev-identity admin)', () => {
       await expect(issued).toBeVisible();
       await expect(issued).toContainText('3 cái');
       await expect(issued).toContainText('Họp khách PW');
+      await expect(issued).toContainText('Dùng chung');
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'stock-issues-tab', false);
     } finally {
