@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Danh mục món — Hành chính</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#08303B}
+a{color:#0F6E80}a:hover{color:#0A4F5C}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:999px;font:600 14px 'Be Vietnam Pro',sans-serif;text-decoration:none;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn-dark{background:#0E2A33;color:#FFFFFF}.btn-dark:hover{background:#18414D;color:#FFFFFF}
+.btn-light{background:#FFFFFF;color:#0E2A33;border-color:#C9DDE3}.btn-light:hover{background:#F2F8FA;color:#0E2A33}
+.btn:focus-visible,.icon-btn:focus-visible,.top-search:focus-visible,.seg:focus-visible,.chipf:focus-visible{outline:2px solid #0F6E80;outline-offset:2px}
+.icon-btn{width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#D6E9EE}
+.top-search{width:100%;box-sizing:border-box;min-height:46px;padding:0 16px 0 44px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#FFFFFF;font:500 14px 'Be Vietnam Pro',sans-serif}
+.top-search::placeholder{color:#9DBDC6}
+.card{background:rgba(255,255,255,.9);border:1px solid #FFFFFF;border-radius:20px;box-shadow:0 10px 30px rgba(8,48,59,.08)}
+.seg{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border-radius:999px;border:none;background:transparent;font:600 14px 'Be Vietnam Pro',sans-serif;color:#47636C;cursor:pointer}
+.seg-n{min-width:22px;height:22px;padding:0 7px;box-sizing:border-box;border-radius:999px;background:#E2EEF1;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+.chipf{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #C9DDE3;background:#FFFFFF;font:600 13px 'Be Vietnam Pro',sans-serif;color:#2F4A52;cursor:pointer}
+.panel-search{width:100%;box-sizing:border-box;min-height:44px;padding:0 16px 0 42px;border-radius:999px;border:1px solid #9FBAC2;background:#fff;color:#0E2A33;font:500 14px 'Be Vietnam Pro',sans-serif}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #0E2A33; background: linear-gradient(160deg, #08303B 0%, #0E4757 55%, #12596A 100%)">
+
+  <div style="flex: 0 1 264px; min-width: 240px">
+    <dc-import name="Sidebar" active="danhmuc" hint-size="100%,1180px"></dc-import>
+  </div>
+
+  <div style="flex: 999 1 560px; min-width: 0; padding: 16px 20px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+      <div style="position: relative; flex: 1 1 320px; max-width: 640px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9DBDC6" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 16px; top: 14px"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <label for="top-q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Tìm nhân viên, món, phiếu</label>
+        <input id="top-q" class="top-search" type="search" placeholder="Tìm nhân viên, món, phiếu…">
+      </div>
+      <div style="margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+        <button type="button" class="icon-btn" aria-label="Thông báo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 4px 14px 4px 4px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16)">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #9FE3F0; color: #0E2A33; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">LB</div>
+          <div style="font-size: 13px; line-height: 1.25; color: #FFFFFF"><div style="font-weight: 600">Lê Thị Bình</div><div style="color: #9DBDC6">Hành chính</div></div>
+        </div>
+      </div>
+    </div>
+
+    <main style="flex: 1; border-radius: 28px; padding: 28px; box-sizing: border-box; background: {{panelBg}}; border: 1px solid rgba(255,255,255,.6); display: flex; flex-direction: column; gap: 20px">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+        <div>
+          <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Danh mục món</h1>
+          <p style="margin: 6px 0 0; font-size: 15px; color: #47636C">Món nhân viên thấy khi đăng ký. Mã theo sheet Booking của ADM.</p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <button type="button" class="btn btn-light">Cập nhật từ file Booking</button>
+          <button type="button" class="btn btn-dark">Thêm món</button>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+        <div style="position: relative; flex: 1 1 260px; max-width: 380px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#47636C" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 15px; top: 13px"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <label for="iq" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Tìm món hoặc mã</label>
+          <input id="iq" class="panel-search" type="search" placeholder="Tìm món hoặc mã" value="{{q}}" onChange="{{onSearch}}">
+        </div>
+        <div role="group" aria-label="Trạng thái" style="display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.7); border: 1px solid #FFFFFF; flex-wrap: wrap">
+          <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+            <button type="button" class="seg" style="{{t.style}}" aria-pressed="{{t.on}}" onClick="{{t.pick}}">{{t.label}} <span class="seg-n" style="{{t.nStyle}}">{{t.n}}</span></button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div role="group" aria-label="Nhóm món" style="display: flex; gap: 8px; flex-wrap: wrap">
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="6">
+          <button type="button" class="chipf" style="{{g.style}}" aria-pressed="{{g.on}}" onClick="{{g.pick}}">{{g.label}}</button>
+        </sc-for>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 16px">
+        <sc-for list="{{items}}" as="it" hint-placeholder-count="8">
+          <article class="card" style="padding: 10px; display: flex; flex-direction: column; gap: 10px">
+            <div style="{{it.tileStyle}}">
+              <span style="position: absolute; top: 10px; left: 10px; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.92); color: #0E2A33">{{it.group}}</span>
+              <span style="{{it.stockStyle}}">{{it.stockLabel}}</span>
+              <sc-if value="{{it.hasImg}}" hint-placeholder-val="{{ true }}">
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="{{it.ink}}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{it.d}}"></path></svg>
+              </sc-if>
+              <sc-if value="{{it.noImg}}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; color: #47636C; font-size: 12px; font-weight: 600">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="m21 16-5-5-8 8"></path></svg>
+                  Chưa có ảnh
+                  <button type="button" class="btn btn-dark" style="min-height: 36px; padding: 0 14px; font-size: 13px" onClick="{{it.upload}}">Tải ảnh lên</button>
+                </div>
+              </sc-if>
+            </div>
+            <div style="padding: 0 6px">
+              <div style="font-size: 15px; font-weight: 700; line-height: 1.35">{{it.name}}</div>
+              <div style="font-size: 13px; color: #47636C; margin-top: 4px">{{it.code}}, {{it.unit}}, tối đa {{it.max}}/tháng</div>
+            </div>
+            <div style="display: flex; gap: 8px; padding: 0 6px 6px">
+              <button type="button" class="btn btn-light" style="flex: 1; padding: 0 10px" onClick="{{it.edit}}">Sửa</button>
+              <button type="button" class="btn btn-light" style="flex: 1; padding: 0 10px">{{it.secondary}}</button>
+            </div>
+          </article>
+        </sc-for>
+      </div>
+    </main>
+  </div>
+
+  <sc-if value="{{isEditing}}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; inset: 0; background: rgba(8,48,59,.55); backdrop-filter: blur(6px); display: flex; justify-content: flex-end; z-index: 20">
+      <section role="dialog" aria-modal="true" aria-labelledby="ed-h" style="width: min(100%, 480px); height: 100%; overflow-y: auto; box-sizing: border-box; background: #FFFFFF; padding: 28px; display: flex; flex-direction: column; gap: 20px; box-shadow: -20px 0 50px rgba(8,48,59,.25)">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+          <h2 id="ed-h" style="margin: 0; font-size: 22px; font-weight: 800">Sửa món</h2>
+          <button type="button" class="btn btn-light" style="width: 44px; padding: 0" aria-label="Đóng" onClick="{{closeEdit}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+        </div>
+
+        <div>
+          <div style="font-size: 13px; font-weight: 600; color: #47636C; margin-bottom: 8px">Ảnh món</div>
+          <sc-if value="{{ed.hasImg}}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="{{ed.tileStyle}}"><svg width="88" height="88" viewBox="0 0 24 24" fill="none" stroke="{{ed.ink}}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ed.d}}"></path></svg></div>
+              <div style="display: flex; gap: 8px"><button type="button" class="btn btn-light" style="flex: 1">Đổi ảnh</button><button type="button" class="btn btn-light" style="flex: 1" onClick="{{ed.removeImg}}">Xóa ảnh</button></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ed.noImg}}" hint-placeholder-val="{{ false }}">
+            <div style="border: 2px dashed #9FBAC2; border-radius: 18px; background: #F4F9FA; padding: 28px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0F6E80" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"></path><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg>
+              <div style="font-weight: 700">Kéo ảnh vào đây</div>
+              <div style="font-size: 13px; color: #47636C">JPG, PNG hoặc WebP, tối đa 5 MB. Chụp món trên nền trắng để nhân viên dễ nhận ra.</div>
+              <button type="button" class="btn btn-dark" onClick="{{ed.upload}}">Chọn ảnh từ máy</button>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div><label for="ed-name" style="display: block; font-size: 13px; font-weight: 600; color: #47636C; margin-bottom: 6px">Tên món</label><input id="ed-name" type="text" value="{{ed.name}}" readonly style="width: 100%; box-sizing: border-box; min-height: 44px; padding: 0 14px; border: 1px solid #9FBAC2; border-radius: 12px; font: 500 15px 'Be Vietnam Pro', sans-serif; color: #0E2A33"></div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+            <div><label for="ed-code" style="display: block; font-size: 13px; font-weight: 600; color: #47636C; margin-bottom: 6px">Mã Booking</label><input id="ed-code" type="text" value="{{ed.code}}" readonly style="width: 100%; box-sizing: border-box; min-height: 44px; padding: 0 14px; border: 1px solid #C9DDE3; border-radius: 12px; background: #F4F9FA; font: 600 15px 'Be Vietnam Pro', sans-serif; color: #47636C"></div>
+            <div><label for="ed-unit" style="display: block; font-size: 13px; font-weight: 600; color: #47636C; margin-bottom: 6px">Đơn vị tính</label><input id="ed-unit" type="text" value="{{ed.unit}}" readonly style="width: 100%; box-sizing: border-box; min-height: 44px; padding: 0 14px; border: 1px solid #9FBAC2; border-radius: 12px; font: 500 15px 'Be Vietnam Pro', sans-serif; color: #0E2A33"></div>
+            <div><label for="ed-group" style="display: block; font-size: 13px; font-weight: 600; color: #47636C; margin-bottom: 6px">Nhóm</label><input id="ed-group" type="text" value="{{ed.group}}" readonly style="width: 100%; box-sizing: border-box; min-height: 44px; padding: 0 14px; border: 1px solid #9FBAC2; border-radius: 12px; font: 500 15px 'Be Vietnam Pro', sans-serif; color: #0E2A33"></div>
+            <div><label for="ed-max" style="display: block; font-size: 13px; font-weight: 600; color: #47636C; margin-bottom: 6px">Tối đa mỗi tháng</label><input id="ed-max" type="number" value="{{ed.max}}" readonly style="width: 100%; box-sizing: border-box; min-height: 44px; padding: 0 14px; border: 1px solid #9FBAC2; border-radius: 12px; font: 500 15px 'Be Vietnam Pro', sans-serif; color: #0E2A33"></div>
+          </div>
+        </div>
+
+        <div style="border-radius: 18px; background: #EEF6F8; padding: 14px">
+          <div style="font-size: 13px; font-weight: 600; color: #47636C; margin-bottom: 10px">Nhân viên sẽ thấy</div>
+          <div style="background: #FFFFFF; border-radius: 14px; padding: 10px; display: flex; gap: 12px; align-items: center">
+            <div style="{{ed.miniStyle}}"><sc-if value="{{ed.hasImg}}" hint-placeholder-val="{{ true }}"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="{{ed.ink}}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ed.d}}"></path></svg></sc-if></div>
+            <div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 14px">{{ed.name}}</div><div style="font-size: 12px; color: #47636C">{{ed.unit}}, tối đa {{ed.max}}</div></div>
+            <span style="width: 44px; height: 44px; border-radius: 999px; border: 1px solid #C9DDE3; display: inline-flex; align-items: center; justify-content: center; font-weight: 700" aria-hidden="true">+</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: auto"><button type="button" class="btn btn-light" style="flex: 1" onClick="{{closeEdit}}">Hủy</button><button type="button" class="btn btn-dark" style="flex: 1" onClick="{{closeEdit}}">Lưu thay đổi</button></div>
+      </section>
+    </div>
+  </sc-if>
+  <div style="display: none">
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'use', grp: 'all', q: '', up: {}, edit: null };
+  }
+  nenCur() { return 'Vừa'; }
+  nenBtns() {
+    const cur = this.nenCur();
+    return ['Nhạt', 'Vừa', 'Như ảnh mẫu'].map((v) => ({
+      label: v, on: v === cur ? 'true' : 'false',
+      style: 'min-height:36px;padding:0 12px;border-radius:999px;border:none;cursor:pointer;font-weight:600;font-size:13px;font-family:inherit;' + (v === cur ? 'background:#FFFFFF;color:#0E2A33' : 'background:transparent;color:#C9DEE4'),
+      pick: () => this.setState({ nen: v })
+    }));
+  }
+  renderVals() {
+    const st = this.state;
+    const ICON = {
+      pen: ['M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z', '#2A4E9A', '#DDE7F7'],
+      paper: ['M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6zM14 3v6h6', '#6B4A2E', '#F4ECE1'],
+      folder: ['M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z', '#5B3F8C', '#E9E4F3'],
+      tape: ['M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM20 12h2v8h-8', '#0A5868', '#DDF1F5'],
+      staple: ['M4 15h16M6 15V9h12v6M8 9V6h8v3', '#4A5A60', '#E6EEF0'],
+      pin: ['M7 7h10v14H7zM10 3h4v4h-4zM10 12h4M12 10v4', '#7A5A00', '#F6EDCB']
+    };
+    const G = { pen: 'Bút', paper: 'Giấy và sổ', folder: 'Bìa hồ sơ', tape: 'Băng keo', staple: 'Kim bấm', pin: 'Pin và mực' };
+    const R = [
+      ['B33', 'Bút bi Thiên Long FO-03 (xanh)', 'cây', 20, 'pen', 7, 'low', true],
+      ['B29', 'Bút bi Cello Comfort', 'cây', 10, 'pen', 15, 'ok', true],
+      ['B38', 'Bút dạ quang TL (vàng)', 'cây', 4, 'pen', 12, 'ok', true],
+      ['B24', 'Bút bảng Thiên Long (đỏ)', 'cây', 4, 'pen', 0, 'out', false],
+      ['G11', 'Giấy 70GSM-A4 trắng', 'ream', 5, 'paper', 0, 'out', true],
+      ['T02', 'Tập 200 trang', 'cuốn', 2, 'paper', 0, 'out', false],
+      ['B10', 'Bìa còng đại Kokoyo F4', 'cái', 5, 'folder', 3, 'low', true],
+      ['B13', 'Bìa hồ sơ 40 lá', 'cái', 5, 'folder', 9, 'ok', false],
+      ['B03', 'Băng keo 2cm (trong)', 'cuộn', 3, 'tape', 6, 'ok', true],
+      ['B01', 'Băng keo 2 mặt mỏng 1,2cm', 'cuộn', 3, 'tape', 4, 'ok', false],
+      ['K14', 'Kim bấm 10 Plus', 'hộp', 2, 'staple', 2, 'low', true],
+      ['P01', 'Pin AA Energizer', 'vỉ 4 viên', 2, 'pin', 8, 'ok', true]
+    ];
+    const SL = {
+      ok: (n) => ['Tủ: ' + n, 'background:rgba(255,255,255,.92);color:#0D5E46'],
+      low: (n) => ['Sắp hết: ' + n, 'background:#FFF1E3;color:#8A3F06'],
+      out: () => ['Hết', 'background:#FBE4E1;color:#A32C1E']
+    };
+    const q = st.q.trim().toLowerCase();
+    const imgOf = (r) => (st.up[r[0]] ?? r[7]);
+    const setImg = (code, v) => this.setState({ up: { ...this.state.up, [code]: v } });
+    const items = R.filter((r) => {
+      if (st.grp !== 'all' && r[4] !== st.grp) return false;
+      if (st.tab === 'low' && r[6] === 'ok') return false;
+      if (st.tab === 'noimg' && imgOf(r)) return false;
+      if (st.tab === 'off') return false;
+      if (q && !(r[0] + ' ' + r[1]).toLowerCase().includes(q)) return false;
+      return true;
+    }).map((r) => {
+      const [code, name, unit, max, g, stock, s] = r;
+      const img = imgOf(r);
+      const [d, ink, bg] = ICON[g];
+      const [stockLabel, sStyle] = SL[s](stock);
+      return {
+        code, name, unit, max, group: G[g], d, ink, hasImg: img, noImg: !img, stockLabel,
+        secondary: 'Ngừng dùng',
+        upload: () => setImg(code, true),
+        edit: () => this.setState({ edit: code }),
+        tileStyle: 'position:relative;height:150px;border-radius:14px;display:flex;align-items:center;justify-content:center;' + (img ? 'background:' + bg : 'background:repeating-linear-gradient(135deg,#EEF5F7 0 10px,#E4EEF1 10px 20px)'),
+        stockStyle: 'position:absolute;top:10px;right:10px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;' + sStyle
+      };
+    });
+    const tabsDef = [['use', 'Đang dùng', 171], ['low', 'Sắp hết hoặc hết', 13], ['noimg', 'Chưa có ảnh', 38], ['off', 'Đã ngừng', 6]];
+    const tabs = tabsDef.map(([id, label, n]) => {
+      const on = st.tab === id;
+      return { label, n, on: on ? 'true' : 'false', style: on ? 'background:#0E2A33;color:#FFFFFF' : '', nStyle: on ? 'background:rgba(255,255,255,.2);color:#FFFFFF' : '', pick: () => this.setState({ tab: id }) };
+    });
+    const groups = [['all', 'Tất cả nhóm']].concat(Object.keys(G).map((k) => [k, G[k]])).map(([id, label]) => {
+      const on = st.grp === id;
+      return { label, on: on ? 'true' : 'false', style: on ? 'background:#0E2A33;border-color:#0E2A33;color:#FFFFFF' : '', pick: () => this.setState({ grp: id }) };
+    });
+    const er = R.find((r) => r[0] === st.edit) || R[0];
+    const [eD, eInk, eBg] = ICON[er[4]];
+    const eImg = imgOf(er);
+    const ed = {
+      code: er[0], name: er[1], unit: er[2], max: er[3], group: G[er[4]], d: eD, ink: eInk, hasImg: eImg, noImg: !eImg,
+      tileStyle: 'height:220px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:' + eBg,
+      miniStyle: 'width:52px;height:52px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;background:' + (eImg ? eBg : '#EEF5F7'),
+      upload: () => setImg(er[0], true),
+      removeImg: () => setImg(er[0], false)
+    };
+    return {
+      panelBg: ({ 'Nhạt': 'linear-gradient(180deg, #EEF6F8 0%, #DCEDF2 100%)', 'Vừa': 'linear-gradient(180deg, #E3F1F5 0%, #CBE4EB 100%)', 'Như ảnh mẫu': 'linear-gradient(180deg, #CFE8EF 0%, #A9D3DF 100%)' })[this.nenCur()], nenBtns: this.nenBtns(),
+      items, tabs, groups, q: st.q, onSearch: (e) => this.setState({ q: e.target.value }),
+      isEditing: !!st.edit, ed, closeEdit: () => this.setState({ edit: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

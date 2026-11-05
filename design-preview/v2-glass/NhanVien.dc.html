@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Đăng ký VPP — Nhân viên</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.grp{flex:none;min-height:40px;padding:0 16px;border-radius:999px;border:1px solid #C9DDE3;background:#FFFFFF;font:600 13px 'Be Vietnam Pro',sans-serif;color:#2F4A52;cursor:pointer}
+.st{width:36px;height:36px;border-radius:999px;border:1px solid #C9DDE3;background:#FFFFFF;font:700 17px 'Be Vietnam Pro',sans-serif;color:#0E2A33;cursor:pointer}
+.add{width:100%;min-height:36px;border-radius:999px;border:none;background:#0E2A33;color:#FFFFFF;font:600 13px 'Be Vietnam Pro',sans-serif;cursor:pointer}
+.nav{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:58px;font:600 11px 'Be Vietnam Pro',sans-serif;color:#8FB3BD;text-decoration:none}
+.grp:focus-visible,.st:focus-visible,.add:focus-visible,.nav:focus-visible,button:focus-visible{outline:2px solid #0F6E80;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #0E2A33; background: linear-gradient(160deg, #08303B 0%, #0E4757 60%, #12596A 100%)">
+
+  <header style="padding: 20px 18px 18px; color: #FFFFFF; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <div>
+        <div style="font-size: 13px; color: #9DBDC6">Chào anh Khoa</div>
+        <h1 style="margin: 2px 0 0; font-size: 22px; font-weight: 800">Đăng ký tháng 11</h1>
+      </div>
+      <div style="text-align: right">
+        <div style="font-size: 22px; font-weight: 800; line-height: 1">6 ngày</div>
+        <div style="font-size: 12px; color: #9DBDC6; margin-top: 2px">hạn 10/11</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 16px; background: rgba(247,178,103,.16); border: 1px solid rgba(247,178,103,.4); font-size: 13px; color: #FFE6CC">
+      <span style="width: 34px; height: 34px; border-radius: 10px; background: #F4ECE1; flex: none; display: inline-flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B4A2E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6zM14 3v6h6"></path></svg></span>
+      <span>Bạn còn chờ nhận <strong style="color: #FFFFFF">1 ream giấy A4</strong> từ tháng 10. Gặp chị Bình khi hàng về.</span>
+    </div>
+  </header>
+
+  <div style="flex: 1; min-height: 0; border-radius: 26px 26px 0 0; background: linear-gradient(180deg, #E3F1F5 0%, #CBE4EB 100%); display: flex; flex-direction: column">
+    <div style="padding: 16px 18px 10px; display: flex; flex-direction: column; gap: 12px">
+      <button type="button" onClick="{{copyPrev}}" style="min-height: 44px; border-radius: 999px; border: 1px dashed #0F6E80; background: rgba(255,255,255,.6); font: 600 14px 'Be Vietnam Pro', sans-serif; color: #0A5868; cursor: pointer">Chép lại danh sách tháng 10</button>
+      <div role="group" aria-label="Nhóm món" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px">
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="5">
+          <button type="button" class="grp" style="{{g.style}}" aria-pressed="{{g.on}}" onClick="{{g.pick}}">{{g.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 0 18px 150px">
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <sc-for list="{{items}}" as="it" hint-placeholder-count="6">
+          <article style="{{it.cardStyle}}">
+            <div style="{{it.tileStyle}}"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="{{it.ink}}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{it.d}}"></path></svg></div>
+            <div style="font-size: 13px; font-weight: 700; line-height: 1.3; min-height: 34px">{{it.name}}</div>
+            <div style="font-size: 12px; color: #47636C">{{it.unit}}, tối đa {{it.max}}</div>
+            <sc-if value="{{it.inCart}}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; align-items: center; justify-content: space-between">
+                <button type="button" class="st" aria-label="Giảm {{it.name}}" onClick="{{it.dec}}">−</button>
+                <output style="font-size: 17px; font-weight: 800">{{it.qty}}</output>
+                <button type="button" class="st" aria-label="Tăng {{it.name}}" onClick="{{it.inc}}" style="{{it.incStyle}}">+</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{it.notInCart}}" hint-placeholder-val="{{ true }}">
+              <button type="button" class="add" onClick="{{it.inc}}">Thêm</button>
+            </sc-if>
+          </article>
+        </sc-for>
+      </div>
+      <button type="button" style="width: 100%; margin-top: 14px; min-height: 44px; background: none; border: none; font: 600 14px 'Be Vietnam Pro', sans-serif; color: #0A5868; cursor: pointer">Món không có trong danh sách? Gửi đề nghị</button>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 14px; right: 14px; bottom: 72px; border-radius: 999px; background: #0E2A33; color: #FFFFFF; padding: 8px 8px 8px 20px; display: flex; align-items: center; gap: 12px; box-shadow: 0 14px 30px rgba(8,48,59,.35)">
+    <div style="flex: 1; font-size: 13px; line-height: 1.3"><div style="font-weight: 700; font-size: 15px">{{cartTitle}}</div><div style="color: #9DBDC6">{{cartSub}}</div></div>
+    <button type="button" onClick="{{save}}" style="min-height: 44px; padding: 0 22px; border-radius: 999px; border: none; background: #9FE3F0; color: #0E2A33; font: 700 15px 'Be Vietnam Pro', sans-serif; cursor: pointer">Lưu phiếu</button>
+  </div>
+
+  <nav aria-label="Chính" style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; background: rgba(8,48,59,.92); backdrop-filter: blur(14px); border-top: 1px solid rgba(255,255,255,.1)">
+    <a class="nav" href="#" aria-current="page" style="color: #FFFFFF"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>Đăng ký</a>
+    <a class="nav" href="#"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>Lịch sử</a>
+    <a class="nav" href="#"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Tôi</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { grp: 'fav', qty: { B33: 5, G11: 2, B38: 2 }, saved: false };
+  }
+  renderVals() {
+    const st = this.state;
+    const pen = ['M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z', '#2A4E9A', '#DDE7F7'];
+    const paper = ['M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6zM14 3v6h6', '#6B4A2E', '#F4ECE1'];
+    const folder = ['M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z', '#5B3F8C', '#E9E4F3'];
+    const tape = ['M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z', '#0A5868', '#DDF1F5'];
+    const staple = ['M4 15h16M6 15V9h12v6M8 9V6h8v3', '#4A5A60', '#E6EEF0'];
+    const R = [
+      ['B33', 'Bút bi FO-03 (xanh)', 'cây', 20, pen, 'pen', true],
+      ['G11', 'Giấy A4 70GSM', 'ream', 5, paper, 'paper', true],
+      ['B38', 'Bút dạ quang (vàng)', 'cây', 4, pen, 'pen', true],
+      ['K14', 'Kim bấm 10 Plus', 'hộp', 2, staple, 'staple', true],
+      ['B03', 'Băng keo 2cm (trong)', 'cuộn', 3, tape, 'tape', true],
+      ['B10', 'Bìa còng Kokoyo F4', 'cái', 5, folder, 'folder', true],
+      ['B29', 'Bút bi Cello Comfort', 'cây', 10, pen, 'pen', false],
+      ['T02', 'Tập 200 trang', 'cuốn', 2, paper, 'paper', false]
+    ];
+    const items = R.filter((r) => st.grp === 'all' || (st.grp === 'fav' ? r[6] : r[5] === st.grp)).map(([code, name, unit, max, ic]) => {
+      const qty = st.qty[code] || 0;
+      const set = (n) => this.setState({ qty: { ...this.state.qty, [code]: Math.max(0, Math.min(max, n)) }, saved: false });
+      return {
+        code, name, unit, max, qty, d: ic[0], ink: ic[1], inCart: qty > 0, notInCart: qty === 0,
+        tileStyle: 'height:92px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:' + ic[2],
+        cardStyle: 'background:#FFFFFF;border-radius:18px;padding:8px 8px 10px;display:flex;flex-direction:column;gap:6px;' + (qty > 0 ? 'box-shadow:inset 0 0 0 2px #0F6E80' : 'box-shadow:0 6px 16px rgba(8,48,59,.06)'),
+        incStyle: qty >= max ? 'opacity:.4' : '',
+        inc: () => set(qty + 1), dec: () => set(qty - 1)
+      };
+    });
+    const groups = [['fav', 'Hay dùng'], ['all', 'Tất cả'], ['pen', 'Bút'], ['paper', 'Giấy'], ['folder', 'Bìa hồ sơ'], ['tape', 'Băng keo'], ['staple', 'Kim bấm']].map(([id, label]) => ({
+      label, on: st.grp === id ? 'true' : 'false',
+      style: st.grp === id ? 'background:#0E2A33;border-color:#0E2A33;color:#FFFFFF' : '',
+      pick: () => this.setState({ grp: id })
+    }));
+    const lines = Object.values(st.qty).filter((n) => n > 0);
+    const units = lines.reduce((s, n) => s + n, 0);
+    return {
+      items, groups,
+      cartTitle: lines.length + ' món, ' + units + ' đơn vị',
+      cartSub: st.saved ? 'Đã lưu lúc 09:41' : 'Chưa lưu',
+      save: () => this.setState({ saved: true }),
+      copyPrev: () => this.setState({ qty: { B33: 5, G11: 2, B38: 2, K14: 1 }, saved: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

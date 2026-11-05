@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Giao hàng — Hành chính</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#08303B}
+a{color:#0F6E80}a:hover{color:#0A4F5C}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:999px;font:600 14px 'Be Vietnam Pro',sans-serif;text-decoration:none;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn-dark{background:#0E2A33;color:#FFFFFF}.btn-dark:hover{background:#18414D;color:#FFFFFF}
+.btn-light{background:#FFFFFF;color:#0E2A33;border-color:#C9DDE3}.btn-light:hover{background:#F2F8FA;color:#0E2A33}
+.btn:focus-visible,.icon-btn:focus-visible,.top-search:focus-visible,.seg:focus-visible,.step:focus-visible{outline:2px solid #0F6E80;outline-offset:2px}
+.icon-btn{width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#D6E9EE}
+.top-search{width:100%;box-sizing:border-box;min-height:46px;padding:0 16px 0 44px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#FFFFFF;font:500 14px 'Be Vietnam Pro',sans-serif}
+.top-search::placeholder{color:#9DBDC6}
+.card{background:rgba(255,255,255,.86);border:1px solid #FFFFFF;border-radius:20px;box-shadow:0 10px 30px rgba(8,48,59,.08)}
+.seg{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border-radius:999px;border:none;background:transparent;font:600 14px 'Be Vietnam Pro',sans-serif;color:#47636C;cursor:pointer}
+.seg-n{min-width:22px;height:22px;padding:0 7px;box-sizing:border-box;border-radius:999px;background:#E2EEF1;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+.step{width:44px;height:44px;border-radius:999px;border:1px solid #C9DDE3;background:#fff;font:700 18px 'Be Vietnam Pro',sans-serif;color:#0E2A33;cursor:pointer}
+.panel-search{width:100%;box-sizing:border-box;min-height:44px;padding:0 16px 0 42px;border-radius:999px;border:1px solid #9FBAC2;background:#fff;color:#0E2A33;font:500 14px 'Be Vietnam Pro',sans-serif}
+.panel-search:focus-visible{outline:2px solid #0F6E80;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #0E2A33; background: linear-gradient(160deg, #08303B 0%, #0E4757 55%, #12596A 100%)">
+
+  <div style="flex: 0 1 264px; min-width: 240px">
+    <dc-import name="Sidebar" active="giao" hint-size="100%,1180px"></dc-import>
+  </div>
+
+  <div style="flex: 999 1 560px; min-width: 0; padding: 16px 20px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+      <div style="position: relative; flex: 1 1 320px; max-width: 640px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9DBDC6" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 16px; top: 14px"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <label for="top-q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Tìm nhân viên, món, phiếu</label>
+        <input id="top-q" class="top-search" type="search" placeholder="Tìm nhân viên, món, phiếu…">
+      </div>
+      <div style="margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+        <button type="button" class="icon-btn" aria-label="Thông báo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 4px 14px 4px 4px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16)">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #9FE3F0; color: #0E2A33; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">LB</div>
+          <div style="font-size: 13px; line-height: 1.25; color: #FFFFFF"><div style="font-weight: 600">Lê Thị Bình</div><div style="color: #9DBDC6">Hành chính</div></div>
+        </div>
+      </div>
+    </div>
+
+    <main style="flex: 1; border-radius: 28px; padding: 28px; box-sizing: border-box; background: {{panelBg}}; border: 1px solid rgba(255,255,255,.6); display: flex; flex-direction: column; gap: 20px">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+        <div>
+          <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Giao hàng</h1>
+          <p style="margin: 6px 0 0; font-size: 15px; color: #47636C">Kỳ tháng 10. Nhân viên đến lấy: tìm tên, kiểm hàng, bấm Giao. Phần thiếu tự thành nợ.</p>
+        </div>
+        <a class="btn btn-light" href="HangVe.dc.html">Nhập hàng về</a>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+        <div style="position: relative; flex: 1 1 260px; max-width: 380px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#47636C" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 15px; top: 13px"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <label for="pq" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Tìm tên hoặc mã nhân viên</label>
+          <input id="pq" class="panel-search" type="search" placeholder="Tìm tên hoặc mã NV" value="{{q}}" onChange="{{onSearch}}">
+        </div>
+        <div role="group" aria-label="Lọc" style="display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.7); border: 1px solid #FFFFFF; flex-wrap: wrap">
+          <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+            <button type="button" class="seg" style="{{t.style}}" aria-pressed="{{t.on}}" onClick="{{t.pick}}">{{t.label}} <span class="seg-n" style="{{t.nStyle}}">{{t.n}}</span></button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+
+        <div style="flex: 999 1 520px; min-width: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 14px">
+          <sc-for list="{{cards}}" as="c" hint-placeholder-count="6">
+            <article class="card" style="{{c.cardStyle}}">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+                <span style="{{c.chipStyle}}">{{c.chip}}</span>
+                <span style="font-size: 12px; color: #5E7A83">{{c.code}}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px">
+                <div style="width: 48px; height: 48px; flex: none; border-radius: 50%; background: #DDF1F5; color: #0A5868; display: flex; align-items: center; justify-content: center; font-weight: 800">{{c.initials}}</div>
+                <div style="min-width: 0"><div style="font-weight: 700; font-size: 16px">{{c.name}}</div><div style="font-size: 13px; color: #47636C">{{c.dept}}</div></div>
+              </div>
+              <div style="display: flex; gap: 6px; align-items: center">
+                <sc-for list="{{c.thumbs}}" as="t" hint-placeholder-count="3">
+                  <span style="{{t.style}}" title="{{t.label}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{t.ink}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{t.label}}"><path d="{{t.d}}"></path></svg></span>
+                </sc-for>
+                <sc-if value="{{c.hasMore}}" hint-placeholder-val="{{ false }}">
+                  <span style="width: 48px; height: 48px; border-radius: 12px; background: #EEF5F7; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #47636C">+{{c.more}}</span>
+                </sc-if>
+              </div>
+              <div style="font-size: 13px; color: #2F4A52; line-height: 1.5">{{c.summary}}</div>
+              <sc-if value="{{c.hasDebt}}" hint-placeholder-val="{{ false }}">
+                <div style="font-size: 12px; font-weight: 600; color: #8A3F06; background: #FFF1E3; padding: 6px 10px; border-radius: 10px">{{c.debtText}}</div>
+              </sc-if>
+              <div style="display: flex; gap: 8px; margin-top: auto">
+                <button type="button" class="btn btn-light" style="flex: 1; padding: 0 12px" onClick="{{c.pick}}">Xem</button>
+                <button type="button" class="btn btn-dark" style="flex: 1; padding: 0 12px" onClick="{{c.quick}}" disabled="{{c.doneFlag}}">{{c.quickLabel}}</button>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+
+        <section aria-labelledby="who" class="card" style="flex: 1 1 380px; min-width: 0; padding: 22px; display: flex; flex-direction: column; gap: 16px; background: #FFFFFF">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 52px; height: 52px; border-radius: 50%; background: #0E2A33; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800">{{cur.initials}}</div>
+            <div><h2 id="who" style="margin: 0; font-size: 20px; font-weight: 800">{{cur.name}}</h2><div style="font-size: 13px; color: #47636C">{{cur.dept}}, {{cur.code}}</div></div>
+          </div>
+
+          <sc-if value="{{isDone}}" hint-placeholder-val="{{ false }}">
+            <div role="status" style="border-radius: 16px; background: #E3F5EE; padding: 18px; display: flex; flex-direction: column; gap: 8px">
+              <div style="font-size: 17px; font-weight: 800; color: #0D5E46">Đã giao {{doneGive}} đơn vị</div>
+              <sc-if value="{{doneHasDebt}}" hint-placeholder-val="{{ false }}"><div style="font-size: 14px; color: #8A3F06; font-weight: 600">Còn nợ {{doneOwe}} đơn vị. Lần sau người này đến, phần nợ hiện ở đầu.</div></sc-if>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px"><button type="button" class="btn btn-dark" onClick="{{nextPerson}}">Người tiếp theo</button><button type="button" class="btn btn-light" onClick="{{undo}}">Hoàn tác</button></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{notDone}}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; gap: 14px">
+              <sc-if value="{{hasDebt}}" hint-placeholder-val="{{ true }}">
+                <div style="border-radius: 16px; background: #FFF1E3; padding: 14px">
+                  <div style="font-size: 13px; font-weight: 700; color: #8A3F06; margin-bottom: 4px">Còn nợ từ kỳ trước</div>
+                  <sc-for list="{{debtLines}}" as="l" hint-placeholder-count="1">
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 6px 0">
+                      <span style="{{l.thumbStyle}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{l.ink}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{l.d}}"></path></svg></span>
+                      <div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 14px">{{l.name}}</div><div style="font-size: 12px; color: #6B4A2E">{{l.from}}: nợ {{l.need}} {{l.unit}}, tủ còn {{l.stock}}</div></div>
+                      <button type="button" class="step" aria-label="Giảm" onClick="{{l.dec}}">−</button>
+                      <output style="min-width: 28px; text-align: center; font-size: 17px; font-weight: 800">{{l.qty}}</output>
+                      <button type="button" class="step" aria-label="Tăng" onClick="{{l.inc}}">+</button>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: #47636C; padding-bottom: 6px; border-bottom: 1px solid #E2EEF1">Phiếu tháng 10</div>
+                <sc-for list="{{monthLines}}" as="l" hint-placeholder-count="4">
+                  <div style="padding: 10px 0; border-bottom: 1px solid #EEF5F7">
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <span style="{{l.thumbStyle}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{l.ink}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{l.d}}"></path></svg></span>
+                      <div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 14px">{{l.name}}</div><div style="font-size: 12px; color: #47636C">Đăng ký {{l.need}} {{l.unit}}, tủ còn {{l.stock}}</div></div>
+                      <button type="button" class="step" aria-label="Giảm" onClick="{{l.dec}}">−</button>
+                      <output style="min-width: 28px; text-align: center; font-size: 17px; font-weight: 800">{{l.qty}}</output>
+                      <button type="button" class="step" aria-label="Tăng" onClick="{{l.inc}}">+</button>
+                    </div>
+                    <sc-if value="{{l.short}}" hint-placeholder-val="{{ false }}">
+                      <div style="margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: #FFF1E3; font-size: 12px; color: #6B3205"><strong>Giao {{l.qty}}, nợ {{l.owe}} {{l.unit}}.</strong> {{l.others}}</div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="font-size: 14px; color: #47636C">Giao <strong style="color: #0E2A33">{{sumGive}}</strong> đơn vị<sc-if value="{{hasOwe}}" hint-placeholder-val="{{ true }}"><span>, <strong style="color: #8A3F06">ghi nợ {{sumOwe}}</strong></span></sc-if></div>
+              <button type="button" class="btn btn-dark" onClick="{{deliver}}" style="min-height: 52px; font-size: 16px">{{deliverLabel}}</button>
+            </div>
+          </sc-if>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 'p1', q: '', tab: 'wait', qty: {}, done: {} };
+  }
+  data() {
+    const S = { B33: 7, G11: 1, B38: 12, K14: 2, B03: 6, B10: 3, B29: 15 };
+    const I = {
+      B33: ['Bút bi FO-03 (xanh)', 'cây'], G11: ['Giấy A4 70GSM', 'ream'], B38: ['Bút dạ quang (vàng)', 'cây'],
+      K14: ['Kim bấm 10 Plus', 'hộp'], B03: ['Băng keo 2cm', 'cuộn'], B10: ['Bìa còng Kokoyo F4', 'cái'], B29: ['Bút bi Cello Comfort', 'cây']
+    };
+    const P = [
+      { id: 'p1', name: 'Nguyễn Thị Hoa', dept: 'Kỹ thuật điện', code: 'NV0231', debt: [['B33', 3, 'Tháng 9']], lines: [['G11', 2], ['B38', 2], ['K14', 1], ['B03', 2]] },
+      { id: 'p2', name: 'Phạm Quốc Anh', dept: 'Kết cấu', code: 'NV0118', debt: [], lines: [['B33', 5], ['B10', 2], ['B29', 3]] },
+      { id: 'p3', name: 'Trần Minh Khoa', dept: 'Kiến trúc', code: 'NV0307', debt: [['G11', 1, 'Tháng 10']], lines: [] },
+      { id: 'p4', name: 'Võ Thanh Tâm', dept: 'Cơ điện', code: 'NV0412', debt: [], lines: [['G11', 3], ['B03', 1], ['B38', 1]] },
+      { id: 'p5', name: 'Huỳnh Gia Bảo', dept: 'Giám sát', code: 'NV0350', debt: [], lines: [['B29', 2], ['K14', 1]] },
+      { id: 'p6', name: 'Lâm Ngọc Trâm', dept: 'Dự toán', code: 'NV0166', debt: [], lines: [['B38', 2], ['B03', 1]] },
+      { id: 'p7', name: 'Đỗ Mai Linh', dept: 'QS', code: 'NV0125', debt: [], lines: [['B29', 2]], received: true }
+    ];
+    const others = { G11: 'Còn 4 người chờ giấy A4, cần thêm 7 ream.', B33: 'Còn 6 người chờ bút bi xanh.', K14: 'Còn 2 người chờ kim bấm.' };
+    const pen = ['M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z', '#2A4E9A', '#DDE7F7'];
+    const T = {
+      B33: pen, B38: pen, B29: pen,
+      G11: ['M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6zM14 3v6h6', '#6B4A2E', '#F4ECE1'],
+      K14: ['M4 15h16M6 15V9h12v6M8 9V6h8v3', '#4A5A60', '#E6EEF0'],
+      B03: ['M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z', '#0A5868', '#DDF1F5'],
+      B10: ['M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z', '#5B3F8C', '#E9E4F3']
+    };
+    return { S, I, P, others, T };
+  }
+  initials(n) { const w = n.split(' '); return (w[0][0] + w[w.length - 1][0]).toUpperCase(); }
+  mkLine(pid, kind, idx, row, D) {
+    const [code, need, from] = row;
+    const key = pid + ':' + kind + ':' + idx;
+    const stock = D.S[code];
+    const qty = this.state.qty[key] ?? Math.min(need, stock);
+    const owe = need - qty;
+    return {
+      key, code, need, stock, qty, owe, from, name: D.I[code][0], unit: D.I[code][1],
+      d: D.T[code][0], ink: D.T[code][1],
+      thumbStyle: 'width:44px;height:44px;flex:none;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:' + D.T[code][2],
+      short: owe > 0, others: owe > 0 ? (D.others[code] || '') : '',
+      inc: () => this.setState({ qty: { ...this.state.qty, [key]: Math.min(need, stock, qty + 1) } }),
+      dec: () => this.setState({ qty: { ...this.state.qty, [key]: Math.max(0, qty - 1) } })
+    };
+  }
+  totals(p, D) {
+    const all = p.debt.map((r, i) => this.mkLine(p.id, 'd', i, r, D)).concat(p.lines.map((r, i) => this.mkLine(p.id, 'm', i, r, D)));
+    return { all, give: all.reduce((s, l) => s + l.qty, 0), owe: all.reduce((s, l) => s + l.owe, 0) };
+  }
+  status(p) {
+    const d = this.state.done[p.id];
+    if (p.received || (d && !d.owe)) return 'got';
+    if (d && d.owe) return 'debt';
+    if (p.debt.length && !p.lines.length) return 'debt';
+    return 'wait';
+  }
+  nenCur() { return 'Vừa'; }
+  nenBtns() {
+    const cur = this.nenCur();
+    return ['Nhạt', 'Vừa', 'Như ảnh mẫu'].map((v) => ({
+      label: v, on: v === cur ? 'true' : 'false',
+      style: 'min-height:36px;padding:0 12px;border-radius:999px;border:none;cursor:pointer;font-weight:600;font-size:13px;font-family:inherit;' + (v === cur ? 'background:#FFFFFF;color:#0E2A33' : 'background:transparent;color:#C9DEE4'),
+      pick: () => this.setState({ nen: v })
+    }));
+  }
+  renderVals() {
+    const D = this.data();
+    const st = this.state;
+    const q = st.q.trim().toLowerCase();
+    const chipBase = 'font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;white-space:nowrap;';
+    const CH = {
+      wait: ['Chưa nhận', 'background:#DDF1F5;color:#0A5868'],
+      debt: ['Còn nợ', 'background:#FFF1E3;color:#8A3F06'],
+      got: ['Đã nhận', 'background:#E3F5EE;color:#0D5E46']
+    };
+    const counts = { wait: 0, debt: 0, got: 0 };
+    D.P.forEach((p) => counts[this.status(p)]++);
+    const tabsDef = [['wait', 'Chưa nhận', 26], ['debt', 'Còn nợ', 5], ['got', 'Đã nhận', 11], ['all', 'Tất cả', 40]];
+    const tabs = tabsDef.map(([id, label, base]) => {
+      const on = st.tab === id;
+      const n = id === 'all' ? base : base + counts[id];
+      return {
+        label, n, on: on ? 'true' : 'false',
+        style: on ? 'background:#0E2A33;color:#FFFFFF' : '',
+        nStyle: on ? 'background:rgba(255,255,255,.2);color:#FFFFFF' : '',
+        pick: () => this.setState({ tab: id })
+      };
+    });
+    const cards = D.P.filter((p) => {
+      const s = this.status(p);
+      if (q) return (p.name + ' ' + p.code).toLowerCase().includes(q);
+      return st.tab === 'all' || s === st.tab;
+    }).map((p) => {
+      const s = this.status(p);
+      const t = this.totals(p, D);
+      const isSel = p.id === st.sel;
+      const names = p.lines.map(([c, n]) => D.I[c][0] + ' ×' + n);
+      const summary = names.length ? names.slice(0, 2).join(', ') + (names.length > 2 ? ', +' + (names.length - 2) + ' món' : '') : 'Chỉ còn phần nợ';
+      const d = st.done[p.id];
+      const codes = p.debt.map((r) => r[0]).concat(p.lines.map((r) => r[0]));
+      const thumbs = codes.slice(0, 4).map((c) => ({
+        d: D.T[c][0], ink: D.T[c][1], label: D.I[c][0],
+        style: 'width:48px;height:48px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:' + D.T[c][2]
+      }));
+      return {
+        ...p, initials: this.initials(p.name), chip: CH[s][0], chipStyle: chipBase + CH[s][1], summary,
+        thumbs, hasMore: codes.length > 4, more: codes.length - 4,
+        hasDebt: p.debt.length > 0 && !d, debtText: p.debt.map(([c, n, f]) => 'Nợ ' + f.toLowerCase() + ': ' + D.I[c][0] + ' ×' + n).join(', '),
+        cardStyle: 'padding:16px;display:flex;flex-direction:column;gap:12px;' + (isSel ? 'box-shadow:0 10px 30px rgba(8,48,59,.12),inset 0 0 0 2px #0F6E80;' : ''),
+        doneFlag: s === 'got',
+        quickLabel: s === 'got' ? 'Đã giao' : (t.owe > 0 ? 'Giao ' + t.give + '/' + (t.give + t.owe) : 'Giao đủ'),
+        pick: () => this.setState({ sel: p.id }),
+        quick: () => this.setState({ sel: p.id, done: { ...this.state.done, [p.id]: { give: t.give, owe: t.owe } } })
+      };
+    });
+    const curP = D.P.find((p) => p.id === st.sel) || D.P[0];
+    const debtLines = curP.debt.map((r, i) => this.mkLine(curP.id, 'd', i, r, D));
+    const monthLines = curP.lines.map((r, i) => this.mkLine(curP.id, 'm', i, r, D));
+    const all = debtLines.concat(monthLines);
+    const sumGive = all.reduce((s, l) => s + l.qty, 0);
+    const sumOwe = all.reduce((s, l) => s + l.owe, 0);
+    const done = st.done[curP.id] || (curP.received ? { give: 2, owe: 0 } : null);
+    const order = D.P.map((p) => p.id);
+    return {
+      q: st.q, onSearch: (e) => this.setState({ q: e.target.value }),
+      tabs, cards,
+      panelBg: ({ 'Nhạt': 'linear-gradient(180deg, #EEF6F8 0%, #DCEDF2 100%)', 'Vừa': 'linear-gradient(180deg, #E3F1F5 0%, #CBE4EB 100%)', 'Như ảnh mẫu': 'linear-gradient(180deg, #CFE8EF 0%, #A9D3DF 100%)' })[this.nenCur()], nenBtns: this.nenBtns(),
+      cur: { ...curP, initials: this.initials(curP.name) },
+      debtLines, monthLines, hasDebt: debtLines.length > 0,
+      sumGive, sumOwe, hasOwe: sumOwe > 0,
+      deliverLabel: sumOwe > 0 ? 'Giao ' + sumGive + ', ghi nợ ' + sumOwe : 'Giao đủ',
+      isDone: !!done, notDone: !done,
+      doneGive: done ? done.give : 0, doneOwe: done ? done.owe : 0, doneHasDebt: !!(done && done.owe),
+      deliver: () => this.setState({ done: { ...st.done, [curP.id]: { give: sumGive, owe: sumOwe } } }),
+      undo: () => { const d = { ...st.done }; delete d[curP.id]; this.setState({ done: d }); },
+      nextPerson: () => {
+        const i = order.indexOf(curP.id);
+        const nxt = order.slice(i + 1).concat(order.slice(0, i)).find((id) => !st.done[id] && !D.P.find((p) => p.id === id).received);
+        this.setState({ sel: nxt || curP.id });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

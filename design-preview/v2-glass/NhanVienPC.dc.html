@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Đăng ký VPP — Nhân viên (máy tính)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#08303B}
+a{color:#0F6E80}a:hover{color:#0A4F5C}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:999px;font:600 14px 'Be Vietnam Pro',sans-serif;text-decoration:none;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn-dark{background:#0E2A33;color:#FFFFFF}.btn-dark:hover{background:#18414D;color:#FFFFFF}
+.btn-light{background:#FFFFFF;color:#0E2A33;border-color:#C9DDE3}.btn-light:hover{background:#F2F8FA;color:#0E2A33}
+.btn-dark[disabled]{opacity:.45;cursor:not-allowed}
+.toptab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;border:none;background:transparent;font:600 14px 'Be Vietnam Pro',sans-serif;color:#C9DEE4;cursor:pointer}
+.toptab:hover{background:rgba(255,255,255,.08);color:#FFFFFF}
+.chipf{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #C9DDE3;background:#FFFFFF;font:600 13px 'Be Vietnam Pro',sans-serif;color:#2F4A52;cursor:pointer;white-space:nowrap}
+.chipf:hover{border-color:#0F6E80}
+.cnt{font-size:12px;font-weight:700;opacity:.7}
+.st{width:36px;height:36px;border-radius:999px;border:1px solid #C9DDE3;background:#FFFFFF;font:700 17px 'Be Vietnam Pro',sans-serif;color:#0E2A33;cursor:pointer}
+.st:hover{background:#F2F8FA}
+.st-o{border-color:#F0C89A}
+.search{width:100%;box-sizing:border-box;min-height:46px;padding:0 16px 0 44px;border-radius:999px;border:1px solid #9FBAC2;background:#FFFFFF;color:#0E2A33;font:500 15px 'Be Vietnam Pro',sans-serif}
+.sel{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid #9FBAC2;background:#FFFFFF;color:#0E2A33;font:600 14px 'Be Vietnam Pro',sans-serif;cursor:pointer}
+.btn:focus-visible,.toptab:focus-visible,.chipf:focus-visible,.st:focus-visible,.search:focus-visible,.sel:focus-visible,button:focus-visible{outline:2px solid #0F6E80;outline-offset:2px}
+.chip{font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;white-space:nowrap}
+</style>
+</helmet>
+<div style="min-height: 100vh; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #0E2A33; background: linear-gradient(160deg, #08303B 0%, #0E4757 55%, #12596A 100%); padding: 0 20px 24px; box-sizing: border-box; position: relative">
+
+  <header style="max-width: 1440px; margin: 0 auto; padding: 14px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="width: 38px; height: 38px; border-radius: 12px; background: #E7F6F9; color: #0E2A33; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px">VPP</div>
+      <div style="font-weight: 700; font-size: 15px; color: #FFFFFF">VPP D&amp;E</div>
+    </div>
+    <nav aria-label="Chính" style="display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12)">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+        <button type="button" class="toptab" style="{{t.style}}" aria-current="{{t.current}}" onClick="{{t.pick}}">{{t.label}}</button>
+      </sc-for>
+    </nav>
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 10px">
+      <button type="button" aria-label="Thông báo" style="width: 44px; height: 44px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.08); color: #D6E9EE; display: inline-flex; align-items: center; justify-content: center; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 4px 14px 4px 4px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16)">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: #9FE3F0; color: #0E2A33; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">MK</div>
+        <div style="font-size: 13px; line-height: 1.25; color: #FFFFFF"><div style="font-weight: 600">Trần Minh Khoa</div><div style="color: #9DBDC6">Kiến trúc</div></div>
+      </div>
+    </div>
+  </header>
+
+  <sc-if value="{{isOrder}}" hint-placeholder-val="{{ true }}">
+    <div style="max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px">
+
+      <section aria-labelledby="hero" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; color: #FFFFFF">
+        <div style="flex: 1 1 420px; padding: 4px">
+          <h1 id="hero" style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Đăng ký văn phòng phẩm tháng 11</h1>
+          <p style="margin: 6px 0 0; font-size: 15px; color: #C9DEE4">Chọn món, bấm Lưu phiếu. Bạn sửa được tới 23:59 ngày 10/11, còn 6 ngày.</p>
+        </div>
+        <div style="padding: 12px 16px; border-radius: 18px; background: rgba(247,178,103,.14); border: 1px solid rgba(247,178,103,.4); display: flex; gap: 12px; align-items: center; max-width: 420px">
+          <span style="width: 40px; height: 40px; border-radius: 12px; background: #F4ECE1; flex: none; display: inline-flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B4A2E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6zM14 3v6h6"></path></svg></span>
+          <div style="font-size: 13px; color: #FFE6CC">Bạn còn chờ nhận <strong style="color: #FFFFFF">1 ream giấy A4</strong> từ tháng 10. Không cần đăng ký lại.</div>
+        </div>
+      </section>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+
+        <main style="flex: 999 1 640px; min-width: 0; border-radius: 28px; padding: 22px; box-sizing: border-box; background: linear-gradient(180deg, #E3F1F5 0%, #CBE4EB 100%); border: 1px solid rgba(255,255,255,.6); box-shadow: inset 0 1px 0 rgba(255,255,255,.9); display: flex; flex-direction: column; gap: 16px">
+
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+            <div style="position: relative; flex: 1 1 280px; max-width: 440px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#47636C" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 16px; top: 14px"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+              <label for="sq" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Tìm món</label>
+              <input id="sq" class="search" type="search" placeholder="Tìm món, ví dụ: bút bi, giấy A4" value="{{q}}" onChange="{{onSearch}}">
+            </div>
+            <label for="sort" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Sắp xếp</label>
+            <select id="sort" class="sel" value="{{sort}}" onChange="{{onSort}}">
+              <option value="fav">Hay dùng trước</option>
+              <option value="az">Tên A → Z</option>
+              <option value="group">Theo nhóm</option>
+            </select>
+            <button type="button" class="chipf" style="{{onlyPickedStyle}}" aria-pressed="{{onlyPickedOn}}" onClick="{{toggleOnlyPicked}}">Đã chọn <span class="cnt">{{cartCount}}</span></button>
+            <button type="button" class="btn btn-light" onClick="{{copyPrev}}" style="margin-left: auto">Chép lại tháng 10</button>
+          </div>
+
+          <div role="group" aria-label="Nhóm món" style="display: flex; gap: 8px; flex-wrap: wrap">
+            <sc-for list="{{groups}}" as="g" hint-placeholder-count="8">
+              <button type="button" class="chipf" style="{{g.style}}" aria-pressed="{{g.on}}" onClick="{{g.pick}}">{{g.label}} <span class="cnt">{{g.n}}</span></button>
+            </sc-for>
+          </div>
+
+          <div style="font-size: 13px; color: #47636C">{{resultText}}</div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 176px), 1fr)); gap: 14px">
+            <sc-for list="{{items}}" as="it" hint-placeholder-count="10">
+              <article style="{{it.cardStyle}}">
+                <div style="{{it.tileStyle}}">
+                  <span style="position: absolute; top: 8px; left: 8px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,.92); color: #2F4A52">{{it.groupLabel}}</span>
+                  <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="{{it.ink}}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{it.d}}"></path></svg>
+                  <sc-if value="{{it.inCart}}" hint-placeholder-val="{{ false }}">
+                    <span style="position: absolute; top: 8px; right: 8px; min-width: 28px; height: 28px; padding: 0 8px; box-sizing: border-box; border-radius: 999px; background: #B4540A; color: #FFFFFF; font-size: 13px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center">{{it.qty}}</span>
+                  </sc-if>
+                </div>
+                <div style="padding: 0 4px">
+                  <div style="font-size: 14px; font-weight: 700; line-height: 1.35; min-height: 38px">{{it.name}}</div>
+                  <div style="font-size: 12px; color: #47636C; margin-top: 2px">{{it.unit}}, tối đa {{it.max}}/tháng</div>
+                </div>
+                <sc-if value="{{it.inCart}}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 4px 4px">
+                    <button type="button" class="st" aria-label="Giảm {{it.name}}" onClick="{{it.dec}}">−</button>
+                    <output style="font-size: 17px; font-weight: 800">{{it.qty}}</output>
+                    <button type="button" class="st" aria-label="Tăng {{it.name}}" onClick="{{it.inc}}" style="{{it.incStyle}}">+</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{it.notInCart}}" hint-placeholder-val="{{ true }}">
+                  <div style="padding: 0 4px 4px"><button type="button" class="btn btn-light" style="width: 100%; min-height: 38px" onClick="{{it.inc}}">Thêm vào phiếu</button></div>
+                </sc-if>
+              </article>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{noResult}}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 32px; text-align: center; border-radius: 20px; background: rgba(255,255,255,.6)">
+              <div style="font-weight: 700">Không có món phù hợp</div>
+              <div style="font-size: 14px; color: #47636C; margin-top: 4px">Thử từ khóa khác, hoặc gửi đề nghị món mới cho Hành chính.</div>
+              <button type="button" class="btn btn-dark" style="margin-top: 12px" onClick="{{clearFilters}}">Xóa bộ lọc</button>
+            </div>
+          </sc-if>
+
+          <button type="button" class="btn btn-light" style="align-self: flex-start">Món không có trong danh sách? Gửi đề nghị</button>
+        </main>
+
+        <aside aria-labelledby="cart-h" style="flex: 1 1 340px; max-width: 380px; min-width: 0; position: sticky; top: 16px; background: #FFF4E8; border: 1px solid #F7D9B5; border-radius: 26px; padding: 20px; box-sizing: border-box; box-shadow: 0 18px 40px rgba(8,48,59,.18); display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+            <div>
+              <h2 id="cart-h" style="margin: 0; font-size: 19px; font-weight: 800">Phiếu tháng 11</h2>
+              <div style="font-size: 13px; color: #7A4A1E; margin-top: 2px">{{cartTotal}}</div>
+            </div>
+            <span class="chip" style="{{statusStyle}}">{{statusLabel}}</span>
+          </div>
+
+          <sc-if value="{{cartEmpty}}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 28px 8px; text-align: center; color: #7A4A1E; font-size: 14px; border: 1px dashed #F0C89A; border-radius: 18px">Chưa có món nào. Bấm “Thêm vào phiếu” ở món cần dùng, hoặc chép lại tháng 10.</div>
+          </sc-if>
+
+          <div style="display: flex; flex-direction: column; gap: 8px; max-height: 520px; overflow-y: auto">
+            <sc-for list="{{cart}}" as="l" hint-placeholder-count="3">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 16px; background: #FFFFFF">
+                <span style="{{l.thumbStyle}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{l.ink}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{l.d}}"></path></svg></span>
+                <div style="flex: 1; min-width: 0"><div style="font-size: 13px; font-weight: 600; line-height: 1.3">{{l.name}}</div><div style="font-size: 12px; color: #7A4A1E">{{l.qty}} {{l.unit}}</div></div>
+                <button type="button" class="st st-o" aria-label="Giảm {{l.name}}" onClick="{{l.dec}}" style="width: 32px; height: 32px; font-size: 15px">−</button>
+                <button type="button" class="st st-o" aria-label="Tăng {{l.name}}" onClick="{{l.inc}}" style="width: 32px; height: 32px; font-size: 15px">+</button>
+              </div>
+            </sc-for>
+          </div>
+
+          <button type="button" class="btn btn-dark" style="min-height: 52px; font-size: 16px" onClick="{{openConfirm}}" disabled="{{cartEmpty}}">Lưu phiếu</button>
+          <div style="font-size: 12px; color: #7A4A1E; text-align: center">{{saveNote}}</div>
+        </aside>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isHistory}}" hint-placeholder-val="{{ false }}">
+    <div style="max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px">
+      <div style="padding: 8px 4px; color: #FFFFFF">
+        <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Lịch sử</h1>
+        <p style="margin: 6px 0 0; font-size: 15px; color: #C9DEE4">Phiếu các tháng trước và tình trạng nhận hàng.</p>
+      </div>
+      <main style="border-radius: 28px; padding: 22px; background: linear-gradient(180deg, #E3F1F5 0%, #CBE4EB 100%); border: 1px solid rgba(255,255,255,.6); display: flex; flex-direction: column; gap: 14px">
+        <article style="background: #FFFFFF; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap"><h2 style="margin: 0; font-size: 18px; font-weight: 800">Tháng 10</h2><span class="chip" style="background: #FFF1E3; color: #8A3F06">Còn chờ 1 món</span></div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #EEF5F7"><span style="width: 40px; height: 40px; border-radius: 12px; background: #DDE7F7; flex: none"></span><span style="flex: 1; font-weight: 600; font-size: 14px">Bút bi FO-03 (xanh), 5 cây</span><span class="chip" style="background: #E3F5EE; color: #0D5E46">Đã nhận 02/11</span></div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #EEF5F7"><span style="width: 40px; height: 40px; border-radius: 12px; background: #F4ECE1; flex: none"></span><span style="flex: 1; font-weight: 600; font-size: 14px">Giấy A4 70GSM, 2 ream</span><span class="chip" style="background: #FFF1E3; color: #8A3F06">Nhận 1, chờ 1</span></div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0"><span style="width: 40px; height: 40px; border-radius: 12px; background: #DDE7F7; flex: none"></span><span style="flex: 1; font-weight: 600; font-size: 14px">Bút dạ quang (vàng), 2 cây</span><span class="chip" style="background: #E3F5EE; color: #0D5E46">Đã nhận 02/11</span></div>
+        </article>
+        <article style="background: #FFFFFF; border-radius: 22px; padding: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+          <div><h2 style="margin: 0; font-size: 18px; font-weight: 800">Tháng 9</h2><div style="font-size: 13px; color: #47636C; margin-top: 4px">3 món, 9 đơn vị</div></div>
+          <span class="chip" style="background: #E3F5EE; color: #0D5E46">Đã nhận đủ</span>
+        </article>
+        <article style="background: #FFFFFF; border-radius: 22px; padding: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+          <div><h2 style="margin: 0; font-size: 18px; font-weight: 800">Tháng 8</h2><div style="font-size: 13px; color: #47636C; margin-top: 4px">Bạn không đăng ký tháng này</div></div>
+          <span class="chip" style="background: #EEF5F7; color: #47636C">Không có phiếu</span>
+        </article>
+      </main>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{confirmOpen}}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; inset: 0; background: rgba(8,48,59,.6); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 30">
+      <section role="dialog" aria-modal="true" aria-labelledby="cf-h" style="width: min(100%, 480px); background: #FFFFFF; border-radius: 24px; padding: 26px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 30px 60px rgba(8,48,59,.35)">
+        <h2 id="cf-h" style="margin: 0; font-size: 22px; font-weight: 800">Lưu phiếu tháng 11?</h2>
+        <div style="display: flex; flex-direction: column">
+          <sc-for list="{{cart}}" as="l" hint-placeholder-count="3">
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #EEF5F7; font-size: 14px"><span>{{l.name}}</span><strong>{{l.qty}} {{l.unit}}</strong></div>
+          </sc-for>
+        </div>
+        <div style="font-size: 14px; color: #47636C">Tổng {{cartTotal}}. Sau khi lưu bạn vẫn sửa được tới hết ngày 10/11.</div>
+        <div style="display: flex; gap: 10px"><button type="button" class="btn btn-light" style="flex: 1" onClick="{{closeConfirm}}">Quay lại sửa</button><button type="button" class="btn btn-dark" style="flex: 1" onClick="{{save}}">Lưu phiếu</button></div>
+      </section>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { view: 'order', grp: 'all', q: '', sort: 'fav', onlyPicked: false, qty: { B33: 5, G11: 2, B38: 2 }, saved: false, confirm: false };
+  }
+  renderVals() {
+    const st = this.state;
+    const pen = ['M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z', '#2A4E9A', '#DDE7F7'];
+    const paper = ['M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6zM14 3v6h6', '#6B4A2E', '#F4ECE1'];
+    const folder = ['M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z', '#5B3F8C', '#E9E4F3'];
+    const tape = ['M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z', '#0A5868', '#DDF1F5'];
+    const staple = ['M4 15h16M6 15V9h12v6M8 9V6h8v3', '#4A5A60', '#E6EEF0'];
+    const pin = ['M7 7h10v14H7zM10 3h4v4h-4zM10 12h4M12 10v4', '#7A5A00', '#F6EDCB'];
+    const GL = { pen: 'Bút', paper: 'Giấy và sổ', folder: 'Bìa hồ sơ', tape: 'Băng keo', staple: 'Kim bấm', pin: 'Pin và mực' };
+    const R = [
+      ['B33', 'Bút bi Thiên Long FO-03 (xanh)', 'cây', 20, pen, 'pen', true],
+      ['B29', 'Bút bi Cello Comfort', 'cây', 10, pen, 'pen', true],
+      ['B38', 'Bút dạ quang TL (vàng)', 'cây', 4, pen, 'pen', true],
+      ['B24', 'Bút bảng Thiên Long (đỏ)', 'cây', 4, pen, 'pen', false],
+      ['B34', 'Bút chì bấm Pentel', 'cây', 2, pen, 'pen', false],
+      ['G11', 'Giấy 70GSM-A4 trắng', 'ream', 5, paper, 'paper', true],
+      ['T02', 'Tập 200 trang', 'cuốn', 2, paper, 'paper', false],
+      ['B08', 'Bao thư trắng 12 x 22cm', 'xấp', 2, paper, 'paper', false],
+      ['B10', 'Bìa còng đại Kokoyo F4', 'cái', 5, folder, 'folder', true],
+      ['B13', 'Bìa hồ sơ 40 lá', 'cái', 5, folder, 'folder', false],
+      ['B03', 'Băng keo 2cm (trong)', 'cuộn', 3, tape, 'tape', true],
+      ['B01', 'Băng keo 2 mặt 1,2cm', 'cuộn', 3, tape, 'tape', false],
+      ['K14', 'Kim bấm 10 Plus', 'hộp', 2, staple, 'staple', true],
+      ['K01', 'Kim bấm 24/6', 'hộp', 2, staple, 'staple', false],
+      ['P01', 'Pin AA Energizer', 'vỉ 4 viên', 2, pin, 'pin', false]
+    ];
+    const set = (code, max, n) => this.setState({ qty: { ...this.state.qty, [code]: Math.max(0, Math.min(max, n)) }, saved: false });
+    const q = st.q.trim().toLowerCase();
+    let list = R.filter((r) => {
+      if (q && !r[1].toLowerCase().includes(q)) return false;
+      if (st.grp === 'fav' && !r[6]) return false;
+      if (st.grp !== 'all' && st.grp !== 'fav' && r[5] !== st.grp) return false;
+      if (st.onlyPicked && !(st.qty[r[0]] > 0)) return false;
+      return true;
+    });
+    if (st.sort === 'az') list = list.slice().sort((a, b) => a[1].localeCompare(b[1], 'vi'));
+    else if (st.sort === 'fav') list = list.slice().sort((a, b) => (b[6] ? 1 : 0) - (a[6] ? 1 : 0));
+    const items = list.map(([code, name, unit, max, ic, g]) => {
+      const qty = st.qty[code] || 0;
+      return {
+        code, name, unit, max, qty, d: ic[0], ink: ic[1], groupLabel: GL[g], inCart: qty > 0, notInCart: qty === 0,
+        tileStyle: 'position:relative;height:120px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:' + ic[2],
+        cardStyle: 'background:#FFFFFF;border-radius:20px;padding:8px;display:flex;flex-direction:column;gap:10px;' + (qty > 0 ? 'box-shadow:inset 0 0 0 2px #E39A52' : 'box-shadow:0 8px 20px rgba(8,48,59,.06)'),
+        incStyle: qty >= max ? 'opacity:.4' : '',
+        inc: () => set(code, max, qty + 1), dec: () => set(code, max, qty - 1)
+      };
+    });
+    const cart = R.filter((r) => (st.qty[r[0]] || 0) > 0).map(([code, name, unit, max, ic]) => {
+      const qty = st.qty[code];
+      return {
+        name, unit, qty, d: ic[0], ink: ic[1],
+        thumbStyle: 'width:42px;height:42px;border-radius:12px;flex:none;display:inline-flex;align-items:center;justify-content:center;background:' + ic[2],
+        inc: () => set(code, max, qty + 1), dec: () => set(code, max, qty - 1)
+      };
+    });
+    const units = cart.reduce((s, l) => s + l.qty, 0);
+    const G = [['all', 'Tất cả'], ['fav', 'Hay dùng'], ['pen', 'Bút'], ['paper', 'Giấy và sổ'], ['folder', 'Bìa hồ sơ'], ['tape', 'Băng keo'], ['staple', 'Kim bấm'], ['pin', 'Pin và mực']];
+    const onStyle = 'background:#0E2A33;border-color:#0E2A33;color:#FFFFFF';
+    const groups = G.map(([id, label]) => ({
+      label, n: R.filter((r) => id === 'all' || (id === 'fav' ? r[6] : r[5] === id)).length,
+      on: st.grp === id ? 'true' : 'false', style: st.grp === id ? onStyle : '',
+      pick: () => this.setState({ grp: id })
+    }));
+    const tabs = [['order', 'Đăng ký'], ['history', 'Lịch sử'], ['me', 'Tôi']].map(([id, label]) => ({
+      label, current: st.view === id ? 'page' : 'false',
+      style: st.view === id ? 'background:#FFFFFF;color:#0E2A33' : '',
+      pick: () => this.setState({ view: id === 'me' ? st.view : id })
+    }));
+    return {
+      tabs, groups, items, cart, q: st.q, sort: st.sort,
+      onSearch: (e) => this.setState({ q: e.target.value }),
+      onSort: (e) => this.setState({ sort: e.target.value }),
+      onlyPickedOn: st.onlyPicked ? 'true' : 'false',
+      onlyPickedStyle: st.onlyPicked ? onStyle : '',
+      toggleOnlyPicked: () => this.setState({ onlyPicked: !st.onlyPicked }),
+      clearFilters: () => this.setState({ q: '', grp: 'all', onlyPicked: false }),
+      resultText: items.length + ' món' + (st.grp !== 'all' || q || st.onlyPicked ? ' khớp bộ lọc' : ' trong danh mục'),
+      noResult: items.length === 0,
+      isOrder: st.view === 'order', isHistory: st.view === 'history',
+      cartEmpty: cart.length === 0, cartCount: cart.length,
+      cartTotal: cart.length + ' món, ' + units + ' đơn vị',
+      statusLabel: st.saved ? 'Đã lưu' : 'Chưa lưu',
+      statusStyle: st.saved ? 'background:#E3F5EE;color:#0D5E46' : 'background:#FFFFFF;color:#8A3F06',
+      saveNote: st.saved ? 'Đã lưu lúc 09:41. Bạn vẫn sửa được tới hết 10/11.' : 'Phiếu chỉ được tính khi bạn bấm Lưu phiếu.',
+      confirmOpen: st.confirm,
+      openConfirm: () => this.setState({ confirm: true }),
+      closeConfirm: () => this.setState({ confirm: false }),
+      save: () => this.setState({ confirm: false, saved: true }),
+      copyPrev: () => this.setState({ qty: { B33: 5, G11: 2, B38: 2, K14: 1 }, saved: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

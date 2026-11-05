@@ -1,0 +1,23 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-11-05T10:30:00Z"},
+  "title": "VPP D&E — Hành chính",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 1440, "h": 1180, "title": "1 · Tháng này (tổng quan)", "expand": "fill", "is_interactive": true},
+    "Giao.dc.html": {"x": 1520, "y": 0, "w": 1440, "h": 1180, "title": "2 · Giao hàng — thẻ theo người", "expand": "fill", "is_interactive": true},
+    "DanhMuc.dc.html": {"x": 3040, "y": 0, "w": 1440, "h": 1180, "title": "3 · Danh mục món (quản lý)", "expand": "fill", "is_interactive": true},
+    "HangVe.dc.html": {"x": 0, "y": 1300, "w": 1440, "h": 1180, "title": "4 · Hàng về — nhập theo món", "expand": "fill", "is_interactive": true},
+    "GuiADM.dc.html": {"x": 1520, "y": 1300, "w": 1440, "h": 1300, "title": "5 · Gửi ADM — in trình ký, Excel mẫu phòng", "expand": "fill", "is_interactive": true},
+    "Kho.dc.html": {"x": 3040, "y": 1300, "w": 1440, "h": 1180, "title": "6 · Tủ / Kho", "expand": "fill", "is_interactive": true},
+    "Sidebar.dc.html": {"x": 0, "y": 2720, "w": 272, "h": 1180, "title": "Sidebar dùng chung"},
+    "NhanVienPC.dc.html": {"x": 352, "y": 2720, "w": 1440, "h": 1180, "title": "7 · Nhân viên — đặt VPP trên máy tính", "expand": "fill", "is_interactive": true},
+    "NhanVien.dc.html": {"x": 1872, "y": 2720, "w": 390, "h": 844, "title": "8 · Nhân viên — đặt VPP trên điện thoại", "is_interactive": true}
+  },
+  "order": ["Main.dc.html", "Giao.dc.html", "DanhMuc.dc.html", "HangVe.dc.html", "GuiADM.dc.html", "Kho.dc.html", "Sidebar.dc.html", "NhanVienPC.dc.html", "NhanVien.dc.html"],
+  "notes": {
+    "t1": {"x": 0, "y": -300, "text": "VPP D&E — khu vực Hành chính", "kind": "title1", "maxW": 4480}
+  },
+  "designSystems": []
+}

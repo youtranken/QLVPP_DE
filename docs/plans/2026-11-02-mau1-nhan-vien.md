@@ -1,5 +1,7 @@
 # VPP — Plan 3c: Trang Nhân viên theo "Mẫu 1 — Nhân viên đặt hàng" (E10-S0…S6)
 
+> ⏸ **TẠM HOÃN (2026-11-05)** — xem `docs/quyet-dinh-2026-11-05-luong-hanh-chinh.md`. Chưa làm cho tới khi luồng Hành chính chốt và có người dùng thật thử.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Làm GỌN trang Nhân viên theo bố cục Mẫu 1 mà chủ dự án đã duyệt: **header mảnh · cột nhóm trái · lưới thẻ dày · giỏ phải**, giữ màu P3 "Navy & cát", font Be Vietnam Pro. Ở 1280 px lưới phải có **4–5 thẻ mỗi hàng, đều hai bên**, không còn khoảng trống thừa trái/phải như hiện nay (3 thẻ/hàng, `max-width: 1240`, trang 390 cao ~26 000 px với 169 món Booking). Áp cùng hệ cho Lịch sử, Chi tiết phiếu, Tôi, chuông.

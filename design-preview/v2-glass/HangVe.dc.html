@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Hàng về — Hành chính</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#08303B}
+a{color:#0F6E80}a:hover{color:#0A4F5C}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:999px;font:600 14px 'Be Vietnam Pro',sans-serif;text-decoration:none;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn-dark{background:#0E2A33;color:#FFFFFF}.btn-dark:hover{background:#18414D;color:#FFFFFF}
+.btn-light{background:#FFFFFF;color:#0E2A33;border-color:#C9DDE3}.btn-light:hover{background:#F2F8FA;color:#0E2A33}
+.btn:focus-visible,.icon-btn:focus-visible,.top-search:focus-visible,.qty:focus-visible,.note:focus-visible{outline:2px solid #0F6E80;outline-offset:2px}
+.icon-btn{width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#D6E9EE}
+.top-search{width:100%;box-sizing:border-box;min-height:46px;padding:0 16px 0 44px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#FFFFFF;font:500 14px 'Be Vietnam Pro',sans-serif}
+.top-search::placeholder{color:#9DBDC6}
+.card{background:rgba(255,255,255,.9);border:1px solid #FFFFFF;border-radius:20px;box-shadow:0 10px 30px rgba(8,48,59,.08)}
+th{font-size:12px;font-weight:600;color:#47636C;text-align:left;padding:12px 14px;border-bottom:1px solid #E2EEF1;white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid #EEF5F7;font-size:14px;vertical-align:middle}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+.qty{width:88px;box-sizing:border-box;min-height:44px;padding:0 12px;border:1px solid #9FBAC2;border-radius:12px;font:700 16px 'Be Vietnam Pro',sans-serif;text-align:right;color:#0E2A33;background:#fff}
+.note{width:100%;box-sizing:border-box;min-height:44px;padding:0 14px;border:1px solid #9FBAC2;border-radius:12px;font:500 14px 'Be Vietnam Pro',sans-serif;color:#0E2A33;background:#fff}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #0E2A33; background: linear-gradient(160deg, #08303B 0%, #0E4757 55%, #12596A 100%)">
+
+  <div style="flex: 0 1 264px; min-width: 240px">
+    <dc-import name="Sidebar" active="hangve" hint-size="100%,1180px"></dc-import>
+  </div>
+
+  <div style="flex: 999 1 560px; min-width: 0; padding: 16px 20px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+      <div style="position: relative; flex: 1 1 320px; max-width: 640px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9DBDC6" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 16px; top: 14px"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <label for="top-q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Tìm nhân viên, món, phiếu</label>
+        <input id="top-q" class="top-search" type="search" placeholder="Tìm nhân viên, món, phiếu…">
+      </div>
+      <div style="margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+        <button type="button" class="icon-btn" aria-label="Thông báo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 4px 14px 4px 4px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16)">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #9FE3F0; color: #0E2A33; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">LB</div>
+          <div style="font-size: 13px; line-height: 1.25; color: #FFFFFF"><div style="font-weight: 600">Lê Thị Bình</div><div style="color: #9DBDC6">Hành chính</div></div>
+        </div>
+      </div>
+    </div>
+
+    <main style="flex: 1; border-radius: 28px; padding: 28px; box-sizing: border-box; background: {{panelBg}}; border: 1px solid rgba(255,255,255,.6); display: flex; flex-direction: column; gap: 20px">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+        <div>
+          <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Hàng về, kỳ tháng 10</h1>
+          <p style="margin: 6px 0 0; font-size: 15px; color: #47636C; max-width: 720px">Nhập số ADM chia về đợt này. Ô đã điền sẵn phần D&amp;E còn chờ, chỉ sửa món về khác. Lưu xong tủ tự cộng.</p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <button type="button" class="btn btn-light" onClick="{{reset}}">Điền lại số gợi ý</button>
+          <button type="button" class="btn btn-dark" onClick="{{save}}">Lưu hàng về</button>
+        </div>
+      </div>
+
+      <sc-if value="{{saved}}" hint-placeholder-val="{{ false }}">
+        <div role="status" class="card" style="padding: 16px 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; background: #E3F5EE; border-color: #E3F5EE">
+          <div style="font-size: 15px"><strong style="color: #0D5E46">Đã lưu đợt 2, cộng {{totalIn}} đơn vị vào tủ.</strong> {{shortText}}</div>
+          <a class="btn btn-dark" href="Giao.dc.html">Đi giao hàng</a>
+        </div>
+      </sc-if>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 14px">
+        <div class="card" style="padding: 16px 18px"><div style="font-size: 13px; color: #47636C">Đợt</div><div style="font-size: 20px; font-weight: 800; margin-top: 4px">Đợt 2, 05/11</div></div>
+        <div class="card" style="padding: 16px 18px"><div style="font-size: 13px; color: #47636C">Cộng vào tủ</div><div style="font-size: 20px; font-weight: 800; margin-top: 4px">{{totalIn}} đơn vị</div></div>
+        <div class="card" style="padding: 16px 18px"><div style="font-size: 13px; color: #47636C">Món còn thiếu</div><div style="font-size: 20px; font-weight: 800; margin-top: 4px; color: #8A3F06">{{shortCount}} món</div></div>
+      </div>
+
+      <section class="card" style="overflow: hidden">
+        <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; padding: 18px 20px">
+          <div style="flex: 1 1 360px">
+            <label for="note" style="display: block; font-size: 13px; font-weight: 600; color: #47636C; margin-bottom: 6px">Ghi chú (không bắt buộc)</label>
+            <input id="note" class="note" type="text" placeholder="VD: ADM chia đợt 2, giấy A4 hẹn tuần sau">
+          </div>
+          <label style="display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; font-weight: 600; cursor: pointer">
+            <input type="checkbox" checked="{{onlyPending}}" onChange="{{togglePending}}" style="width: 20px; height: 20px; accent-color: #0E2A33">
+            Chỉ món còn chờ
+          </label>
+        </div>
+        <div style="overflow-x: auto">
+          <table style="width: 100%; border-collapse: collapse; min-width: 860px">
+            <thead><tr><th>Mã</th><th>Món</th><th class="n">D&amp;E xin</th><th class="n">Đã về</th><th class="n">Về đợt này</th><th>Tình trạng</th><th class="n">Tủ sau khi lưu</th></tr></thead>
+            <tbody>
+              <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+                <tr style="{{r.rowStyle}}">
+                  <td style="font-size: 13px; font-weight: 700; color: #47636C">{{r.code}}</td>
+                  <td><div style="font-weight: 600">{{r.name}}</div><div style="font-size: 12px; color: #47636C">{{r.unit}}{{r.debtNote}}</div></td>
+                  <td class="n">{{r.ask}}</td>
+                  <td class="n" style="color: #47636C">{{r.got}}</td>
+                  <td class="n">
+                    <label for="{{r.inputId}}" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Về đợt này: {{r.name}}</label>
+                    <input id="{{r.inputId}}" class="qty" type="number" min="0" inputmode="numeric" value="{{r.v}}" onChange="{{r.onChange}}">
+                  </td>
+                  <td><span style="{{r.chipStyle}}">{{r.chip}}</span></td>
+                  <td class="n" style="font-weight: 700">{{r.after}}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { v: { G11: 5, K14: 2 }, onlyPending: false, saved: false };
+  }
+  nenCur() { return 'Vừa'; }
+  nenBtns() {
+    const cur = this.nenCur();
+    return ['Nhạt', 'Vừa', 'Như ảnh mẫu'].map((v) => ({
+      label: v, on: v === cur ? 'true' : 'false',
+      style: 'min-height:36px;padding:0 12px;border-radius:999px;border:none;cursor:pointer;font-weight:600;font-size:13px;font-family:inherit;' + (v === cur ? 'background:#FFFFFF;color:#0E2A33' : 'background:transparent;color:#C9DEE4'),
+      pick: () => this.setState({ nen: v })
+    }));
+  }
+  renderVals() {
+    const R = [
+      { code: 'B33', name: 'Bút bi Thiên Long FO-03 (xanh)', unit: 'cây', ask: 48, debt: 3, got: 30, tu: 7 },
+      { code: 'G11', name: 'Giấy 70GSM-A4 trắng', unit: 'ream', ask: 20, debt: 0, got: 12, tu: 1 },
+      { code: 'K14', name: 'Kim bấm 10 Plus', unit: 'hộp', ask: 8, debt: 0, got: 5, tu: 2 },
+      { code: 'B10', name: 'Bìa còng đại Kokoyo F4', unit: 'cái', ask: 12, debt: 0, got: 6, tu: 3 },
+      { code: 'T02', name: 'Tập 200 trang', unit: 'cuốn', ask: 6, debt: 1, got: 0, tu: 0 },
+      { code: 'B38', name: 'Bút dạ quang TL (vàng)', unit: 'cây', ask: 15, debt: 0, got: 15, tu: 12 },
+      { code: 'B03', name: 'Băng keo 2cm (trong)', unit: 'cuộn', ask: 10, debt: 0, got: 10, tu: 6 },
+      { code: 'B29', name: 'Bút bi Cello Comfort', unit: 'cây', ask: 20, debt: 0, got: 20, tu: 15 }
+    ];
+    const st = this.state;
+    const chipBase = 'font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;white-space:nowrap;';
+    let totalIn = 0, shortCount = 0;
+    const rows = R.map((r) => {
+      const wait = Math.max(0, r.ask - r.got);
+      const v = st.v[r.code] ?? wait;
+      const n = Number(v) || 0;
+      totalIn += n;
+      const left = wait - n;
+      let chip, chipStyle;
+      if (wait === 0) { chip = 'Đã đủ'; chipStyle = chipBase + 'background:#E3F5EE;color:#0D5E46'; }
+      else if (left > 0) { chip = 'Thiếu ' + left; chipStyle = chipBase + 'background:#FFF1E3;color:#8A3F06'; shortCount++; }
+      else if (left < 0) { chip = 'Dư ' + (-left) + ', để tủ'; chipStyle = chipBase + 'background:#DDF1F5;color:#0A5868'; }
+      else { chip = 'Đủ'; chipStyle = chipBase + 'background:#E3F5EE;color:#0D5E46'; }
+      return {
+        ...r, v, wait, chip, chipStyle, after: r.tu + n, inputId: 'q-' + r.code,
+        debtNote: r.debt ? ', gồm ' + r.debt + ' nợ kỳ trước' : '',
+        rowStyle: wait === 0 ? 'opacity:.6' : '',
+        onChange: (e) => this.setState({ v: { ...this.state.v, [r.code]: e.target.value }, saved: false })
+      };
+    }).filter((r) => !st.onlyPending || r.wait > 0);
+    return {
+      rows, totalIn, shortCount, saved: st.saved, onlyPending: st.onlyPending,
+      panelBg: ({ 'Nhạt': 'linear-gradient(180deg, #EEF6F8 0%, #DCEDF2 100%)', 'Vừa': 'linear-gradient(180deg, #E3F1F5 0%, #CBE4EB 100%)', 'Như ảnh mẫu': 'linear-gradient(180deg, #CFE8EF 0%, #A9D3DF 100%)' })[this.nenCur()], nenBtns: this.nenBtns(),
+      shortText: shortCount ? shortCount + ' món còn thiếu, khi giao phần thiếu tự thành nợ.' : 'Đủ hết.',
+      togglePending: () => this.setState({ onlyPending: !st.onlyPending }),
+      reset: () => this.setState({ v: {}, saved: false }),
+      save: () => this.setState({ saved: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

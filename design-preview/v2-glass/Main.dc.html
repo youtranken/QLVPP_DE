@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Tháng này — Hành chính</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#08303B}
+a{color:#0F6E80}a:hover{color:#0A4F5C}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:999px;font:600 14px 'Be Vietnam Pro',sans-serif;text-decoration:none;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn-dark{background:#0E2A33;color:#FFFFFF}.btn-dark:hover{background:#18414D;color:#FFFFFF}
+.btn-light{background:#FFFFFF;color:#0E2A33;border-color:#C9DDE3}.btn-light:hover{background:#F2F8FA;color:#0E2A33}
+.btn-glow{background:#9FE3F0;color:#0E2A33}.btn-glow:hover{background:#C4EEF6;color:#0E2A33}
+.btn-ghost{background:rgba(255,255,255,.08);color:#FFFFFF;border-color:rgba(255,255,255,.22)}.btn-ghost:hover{background:rgba(255,255,255,.16);color:#FFFFFF}
+.btn:focus-visible,.icon-btn:focus-visible,.top-search:focus-visible,.kseg:focus-visible{outline:2px solid #9FE3F0;outline-offset:2px}
+.icon-btn{width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#D6E9EE}
+.top-search{width:100%;box-sizing:border-box;min-height:46px;padding:0 16px 0 44px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#FFFFFF;font:500 14px 'Be Vietnam Pro',sans-serif;backdrop-filter:blur(12px)}
+.top-search::placeholder{color:#9DBDC6}
+.kseg{min-height:40px;padding:0 16px;border-radius:999px;border:none;background:transparent;font:600 14px 'Be Vietnam Pro',sans-serif;color:#C9DEE4;cursor:pointer}
+.quiet{background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.8);border-radius:20px}
+.solid{background:#FFFFFF;border:1px solid #FFFFFF;border-radius:22px;box-shadow:0 14px 36px rgba(8,48,59,.10)}
+@media (prefers-reduced-motion: no-preference){.bar{transition:width .5s ease}}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #0E2A33; background: linear-gradient(160deg, #08303B 0%, #0E4757 55%, #12596A 100%)">
+
+  <div style="flex: 0 1 264px; min-width: 240px">
+    <dc-import name="Sidebar" active="main" hint-size="100%,1180px"></dc-import>
+  </div>
+
+  <div style="flex: 999 1 560px; min-width: 0; padding: 16px 20px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+      <div style="position: relative; flex: 1 1 320px; max-width: 640px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9DBDC6" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 16px; top: 14px"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <label for="top-q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Tìm nhân viên, món, phiếu</label>
+        <input id="top-q" class="top-search" type="search" placeholder="Tìm nhân viên, món, phiếu…">
+      </div>
+      <div style="margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+        <button type="button" class="icon-btn" aria-label="Thông báo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 4px 14px 4px 4px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16)">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #9FE3F0; color: #0E2A33; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">LB</div>
+          <div style="font-size: 13px; line-height: 1.25; color: #FFFFFF"><div style="font-weight: 600">Lê Thị Bình</div><div style="color: #9DBDC6">Hành chính</div></div>
+        </div>
+      </div>
+    </div>
+
+    <main style="flex: 1; border-radius: 28px; padding: 28px; box-sizing: border-box; background: {{panelBg}}; border: 1px solid rgba(255,255,255,.6); box-shadow: inset 0 1px 0 rgba(255,255,255,.9); display: flex; flex-direction: column; gap: 22px">
+
+      <div>
+        <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Chào chị Bình</h1>
+        <p style="margin: 6px 0 0; font-size: 15px; color: #47636C">Thứ Năm, 05/11. Hôm nay có 3 việc cần làm.</p>
+      </div>
+
+      <section aria-labelledby="hero-h" style="border-radius: 26px; padding: 26px 28px; background: #0E2A33; color: #FFFFFF; box-shadow: 0 18px 40px rgba(8,48,59,.28), inset 0 1px 0 rgba(255,255,255,.08); display: flex; flex-direction: column; gap: 24px">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px">
+          <div>
+            <h2 id="hero-h" style="margin: 0; font-size: 22px; font-weight: 800">{{hero.title}}</h2>
+            <div style="font-size: 14px; color: #9DBDC6; margin-top: 4px">{{hero.sub}}</div>
+          </div>
+          <div role="group" aria-label="Chọn kỳ" style="display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14)">
+            <sc-for list="{{kys}}" as="k" hint-placeholder-count="2">
+              <button type="button" class="kseg" style="{{k.style}}" aria-pressed="{{k.on}}" onClick="{{k.pick}}">{{k.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <ol style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 12px">
+          <sc-for list="{{steps}}" as="s" hint-placeholder-count="4">
+            <li style="{{s.boxStyle}}">
+              <div style="display: flex; align-items: center; gap: 10px">
+                <span style="{{s.dotStyle}}">
+                  <sc-if value="{{s.done}}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+                  <sc-if value="{{s.notDone}}" hint-placeholder-val="{{ true }}">{{s.n}}</sc-if>
+                </span>
+                <span style="font-weight: 700; font-size: 15px">{{s.label}}</span>
+              </div>
+              <div style="{{s.valStyle}}">{{s.value}}</div>
+              <div style="font-size: 13px; color: #9DBDC6">{{s.note}}</div>
+              <sc-if value="{{s.current}}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 12px">
+                  <div style="height: 6px; border-radius: 999px; background: rgba(255,255,255,.14); overflow: hidden"><div class="bar" style="{{s.barStyle}}"></div></div>
+                  <a class="btn btn-glow" href="{{s.href}}" style="align-self: flex-start">{{s.cta}}</a>
+                </div>
+              </sc-if>
+            </li>
+          </sc-for>
+        </ol>
+      </section>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: stretch">
+        <section aria-labelledby="t1" class="solid" style="flex: 2 1 420px; min-width: 0; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+          <div style="display: flex; gap: 14px; align-items: flex-start">
+            <div style="width: 48px; height: 48px; flex: none; border-radius: 16px; background: #DDF1F5; color: #0F6E80; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path></svg></div>
+            <div style="flex: 1">
+              <h2 id="t1" style="margin: 0; font-size: 20px; font-weight: 800">8 người chưa đăng ký kỳ tháng 11</h2>
+              <div style="font-size: 14px; color: #47636C; margin-top: 4px">Hạn 23:59 ngày 10/11, còn 6 ngày. Nhắc sớm để kịp gửi ADM.</div>
+            </div>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; background: #EEF6F8; font-size: 13px; font-weight: 600"><span style="width: 26px; height: 26px; border-radius: 50%; background: #DDE7F7; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">PA</span>Phạm Quốc Anh</span>
+            <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; background: #EEF6F8; font-size: 13px; font-weight: 600"><span style="width: 26px; height: 26px; border-radius: 50%; background: #F4ECE1; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">VT</span>Võ Thanh Tâm</span>
+            <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; background: #EEF6F8; font-size: 13px; font-weight: 600"><span style="width: 26px; height: 26px; border-radius: 50%; background: #E9E4F3; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">LT</span>Lâm Ngọc Trâm</span>
+            <span style="display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 999px; background: #EEF6F8; font-size: 13px; font-weight: 600; color: #47636C">và 5 người khác</span>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: auto">
+            <button type="button" class="btn btn-dark">Chép tin nhắc gửi Zalo</button>
+            <button type="button" class="btn btn-light">Xem cả 8 người</button>
+          </div>
+        </section>
+
+        <div style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+          <section aria-labelledby="t2" class="quiet" style="padding: 18px 20px; box-shadow: inset 0 0 0 2px #F7B267; display: flex; flex-direction: column; gap: 10px">
+            <h2 id="t2" style="margin: 0; font-size: 16px; font-weight: 700">1 món ngoài danh mục chờ xem</h2>
+            <div style="font-size: 13px; color: #47636C">Trần Minh Khoa xin “Bút lông kim Artline 0.4”, 2 cây.</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap"><button type="button" class="btn btn-light" style="min-height: 40px">Từ chối</button><button type="button" class="btn btn-dark" style="min-height: 40px">Chấp nhận</button></div>
+          </section>
+          <section aria-labelledby="t3" class="quiet" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 id="t3" style="margin: 0; font-size: 16px; font-weight: 700">Tủ sắp hết</h2><a href="Kho.dc.html" style="font-size: 13px; font-weight: 600">Xem tủ</a></div>
+            <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 10px; background: #F4ECE1; flex: none"></span><span style="flex: 1; font-size: 14px; font-weight: 600">Giấy A4 70GSM</span><span style="font-size: 13px; font-weight: 700; color: #A32C1E">Hết</span></div>
+            <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 10px; background: #DDE7F7; flex: none"></span><span style="flex: 1; font-size: 14px; font-weight: 600">Bút bi FO-03 xanh</span><span style="font-size: 13px; font-weight: 700; color: #8A3F06">7 cây</span></div>
+            <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 10px; background: #E6EEF0; flex: none"></span><span style="flex: 1; font-size: 14px; font-weight: 600">Kim bấm 10 Plus</span><span style="font-size: 13px; font-weight: 700; color: #8A3F06">2 hộp</span></div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { ky: '10' };
+  }
+  nenCur() { return 'Vừa'; }
+  nenBtns() {
+    const cur = this.nenCur();
+    return ['Nhạt', 'Vừa', 'Như ảnh mẫu'].map((v) => ({
+      label: v, on: v === cur ? 'true' : 'false',
+      style: 'min-height:36px;padding:0 12px;border-radius:999px;border:none;cursor:pointer;font-weight:600;font-size:13px;font-family:inherit;' + (v === cur ? 'background:#FFFFFF;color:#0E2A33' : 'background:transparent;color:#C9DEE4'),
+      pick: () => this.setState({ nen: v })
+    }));
+  }
+  renderVals() {
+    const ky = this.state.ky;
+    const K = {
+      '10': {
+        title: 'Kỳ tháng 10 đang ở bước Giao',
+        sub: 'Hàng ADM đã chia về 2 đợt, thiếu 3 món. Phần thiếu tự thành nợ khi giao.',
+        cur: 3,
+        steps: [
+          ['Đăng ký', '39/40', 'Đã khóa ngày 11/10', '', '', 0],
+          ['Gửi ADM', 'Đã in', 'Chủ quản ký 11/10', '', '', 0],
+          ['Hàng về', '2 đợt', 'Thiếu giấy A4, tập, kim bấm', '', '', 0],
+          ['Giao', '12/40', '28 người chưa nhận, 5 người còn nợ', 'Giao.dc.html', 'Mở Giao hàng', 30]
+        ]
+      },
+      '11': {
+        title: 'Kỳ tháng 11 đang nhận đăng ký',
+        sub: 'Khóa tự động 00:00 ngày 11/11. Sau đó in phiếu gửi ADM.',
+        cur: 0,
+        steps: [
+          ['Đăng ký', '32/40', 'Còn 6 ngày', '#', 'Nhắc 8 người', 80],
+          ['Gửi ADM', 'Từ 11/11', 'In trình ký, xuất Excel', '', '', 0],
+          ['Hàng về', '—', 'Khi ADM chia hàng', '', '', 0],
+          ['Giao', '—', 'Nhân viên đến lấy', '', '', 0]
+        ]
+      }
+    };
+    const d = K[ky];
+    const steps = d.steps.map(([label, value, note, href, cta, pct], i) => {
+      const done = i < d.cur, current = i === d.cur;
+      return {
+        n: i + 1, label, value, note, href, cta, done, notDone: !done, current,
+        boxStyle: 'border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:8px;' + (current ? 'background:rgba(159,227,240,.14);box-shadow:inset 0 0 0 1px rgba(159,227,240,.45)' : 'background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)'),
+        dotStyle: 'width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none;' + (done ? 'background:#9FE3F0;color:#0E2A33' : current ? 'background:#FFFFFF;color:#0E2A33' : 'box-shadow:inset 0 0 0 2px rgba(255,255,255,.3);color:#C9DEE4'),
+        valStyle: 'font-weight:800;letter-spacing:-0.02em;' + (current ? 'font-size:34px;color:#FFFFFF' : 'font-size:20px;color:' + (done ? '#D6E9EE' : '#8FB3BD')),
+        barStyle: 'height:100%;border-radius:999px;background:#9FE3F0;width:' + pct + '%'
+      };
+    });
+    const kys = [['10', 'Kỳ tháng 10'], ['11', 'Kỳ tháng 11']].map(([id, label]) => ({
+      label, on: id === ky ? 'true' : 'false',
+      style: id === ky ? 'background:#FFFFFF;color:#0E2A33' : '',
+      pick: () => this.setState({ ky: id })
+    }));
+    const panelBg = ({ 'Nhạt': 'linear-gradient(180deg, #EEF6F8 0%, #DCEDF2 100%)', 'Vừa': 'linear-gradient(180deg, #E3F1F5 0%, #CBE4EB 100%)', 'Như ảnh mẫu': 'linear-gradient(180deg, #CFE8EF 0%, #A9D3DF 100%)' })[this.nenCur()];
+    return { hero: { title: d.title, sub: d.sub }, steps, kys, panelBg, nenBtns: this.nenBtns() };
+  }
+}
+</script>
+</body>
+</html>

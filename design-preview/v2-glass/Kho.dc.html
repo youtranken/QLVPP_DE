@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Tủ / Kho — Hành chính</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#08303B}
+a{color:#0F6E80}a:hover{color:#0A4F5C}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:999px;font:600 14px 'Be Vietnam Pro',sans-serif;text-decoration:none;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn-dark{background:#0E2A33;color:#FFFFFF}.btn-dark:hover{background:#18414D;color:#FFFFFF}
+.btn-light{background:#FFFFFF;color:#0E2A33;border-color:#C9DDE3}.btn-light:hover{background:#F2F8FA;color:#0E2A33}
+.btn:focus-visible,.icon-btn:focus-visible,.top-search:focus-visible,.seg:focus-visible{outline:2px solid #0F6E80;outline-offset:2px}
+.icon-btn{width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#D6E9EE}
+.top-search{width:100%;box-sizing:border-box;min-height:46px;padding:0 16px 0 44px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#FFFFFF;font:500 14px 'Be Vietnam Pro',sans-serif}
+.top-search::placeholder{color:#9DBDC6}
+.card{background:rgba(255,255,255,.9);border:1px solid #FFFFFF;border-radius:20px;box-shadow:0 10px 30px rgba(8,48,59,.08)}
+.seg{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border-radius:999px;border:none;background:transparent;font:600 14px 'Be Vietnam Pro',sans-serif;color:#47636C;cursor:pointer}
+.seg-on{background:#0E2A33;color:#FFFFFF}
+.seg-n{min-width:22px;height:22px;padding:0 7px;box-sizing:border-box;border-radius:999px;background:#E2EEF1;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+.seg-on .seg-n{background:rgba(255,255,255,.2);color:#FFFFFF}
+th{font-size:12px;font-weight:600;color:#47636C;text-align:left;padding:12px 14px;border-bottom:1px solid #E2EEF1;white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid #EEF5F7;font-size:14px;vertical-align:middle}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+.chip{font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;white-space:nowrap}
+.thumb{width:40px;height:40px;border-radius:12px;flex:none}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #0E2A33; background: linear-gradient(160deg, #08303B 0%, #0E4757 55%, #12596A 100%)">
+
+  <div style="flex: 0 1 264px; min-width: 240px">
+    <dc-import name="Sidebar" active="kho" hint-size="100%,1180px"></dc-import>
+  </div>
+
+  <div style="flex: 999 1 560px; min-width: 0; padding: 16px 20px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+      <div style="position: relative; flex: 1 1 320px; max-width: 640px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9DBDC6" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 16px; top: 14px"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <label for="top-q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Tìm nhân viên, món, phiếu</label>
+        <input id="top-q" class="top-search" type="search" placeholder="Tìm nhân viên, món, phiếu…">
+      </div>
+      <div style="margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+        <button type="button" class="icon-btn" aria-label="Thông báo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 4px 14px 4px 4px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16)">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #9FE3F0; color: #0E2A33; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">LB</div>
+          <div style="font-size: 13px; line-height: 1.25; color: #FFFFFF"><div style="font-weight: 600">Lê Thị Bình</div><div style="color: #9DBDC6">Hành chính</div></div>
+        </div>
+      </div>
+    </div>
+
+    <main style="flex: 1; border-radius: 28px; padding: 28px; box-sizing: border-box; background: {{panelBg}}; border: 1px solid rgba(255,255,255,.6); display: flex; flex-direction: column; gap: 20px">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+        <div>
+          <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Tủ / Kho</h1>
+          <p style="margin: 6px 0 0; font-size: 15px; color: #47636C">Hàng đang có trong tủ D&amp;E. Tự cộng khi nhập hàng về, tự trừ khi giao.</p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <button type="button" class="btn btn-light">Kiểm kê</button>
+          <button type="button" class="btn btn-light">Xuất lẻ</button>
+          <a class="btn btn-dark" href="HangVe.dc.html">Nhập hàng về</a>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 14px">
+        <div class="card" style="padding: 16px 18px"><div style="font-size: 13px; color: #47636C">Món trong tủ</div><div style="font-size: 26px; font-weight: 800; margin-top: 4px">86</div></div>
+        <div class="card" style="padding: 16px 18px"><div style="font-size: 13px; color: #47636C">Sắp hết</div><div style="font-size: 26px; font-weight: 800; margin-top: 4px; color: #8A3F06">9</div></div>
+        <div class="card" style="padding: 16px 18px"><div style="font-size: 13px; color: #47636C">Hết</div><div style="font-size: 26px; font-weight: 800; margin-top: 4px; color: #A32C1E">4</div></div>
+        <div class="card" style="padding: 16px 18px"><div style="font-size: 13px; color: #47636C">Đang nợ nhân viên</div><div style="font-size: 26px; font-weight: 800; margin-top: 4px">7 dòng <span style="font-size: 14px; font-weight: 600; color: #47636C">5 người</span></div></div>
+      </div>
+
+      <section class="card" style="overflow: hidden">
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 16px 20px">
+          <div role="group" aria-label="Lọc" style="display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: #EEF6F8; flex-wrap: wrap">
+            <button type="button" class="seg seg-on" aria-pressed="true">Tất cả <span class="seg-n">86</span></button>
+            <button type="button" class="seg" aria-pressed="false">Sắp hết <span class="seg-n">9</span></button>
+            <button type="button" class="seg" aria-pressed="false">Hết <span class="seg-n">4</span></button>
+            <button type="button" class="seg" aria-pressed="false">Có người đang nợ <span class="seg-n">3</span></button>
+          </div>
+        </div>
+        <div style="overflow-x: auto">
+          <table style="width: 100%; border-collapse: collapse; min-width: 820px">
+            <thead><tr><th>Món</th><th>ĐVT</th><th class="n">Trong tủ</th><th class="n">Đang nợ</th><th>Trạng thái</th><th>Lần về gần nhất</th></tr></thead>
+            <tbody>
+              <tr><td><div style="display: flex; gap: 12px; align-items: center"><div class="thumb" style="background: #F4ECE1"></div><div><div style="font-weight: 600">Giấy 70GSM-A4 trắng</div><div style="font-size: 12px; color: #47636C">G11</div></div></div></td><td>ream</td><td class="n" style="font-weight: 800; color: #A32C1E">0</td><td class="n">4</td><td><span class="chip" style="background: #FBE4E1; color: #A32C1E">Hết</span></td><td style="color: #47636C">05/11, +5 (thiếu 3)</td></tr>
+              <tr><td><div style="display: flex; gap: 12px; align-items: center"><div class="thumb" style="background: #F4ECE1"></div><div><div style="font-weight: 600">Tập 200 trang</div><div style="font-size: 12px; color: #47636C">T02</div></div></div></td><td>cuốn</td><td class="n" style="font-weight: 800; color: #A32C1E">0</td><td class="n">1</td><td><span class="chip" style="background: #FBE4E1; color: #A32C1E">Hết</span></td><td style="color: #47636C">Chưa về</td></tr>
+              <tr><td><div style="display: flex; gap: 12px; align-items: center"><div class="thumb" style="background: #E6EEF0"></div><div><div style="font-weight: 600">Kim bấm 10 Plus</div><div style="font-size: 12px; color: #47636C">K14</div></div></div></td><td>hộp</td><td class="n" style="font-weight: 800; color: #8A3F06">2</td><td class="n" style="color: #47636C">0</td><td><span class="chip" style="background: #FFF1E3; color: #8A3F06">Sắp hết</span></td><td style="color: #47636C">05/11, +2</td></tr>
+              <tr><td><div style="display: flex; gap: 12px; align-items: center"><div class="thumb" style="background: #E9E4F3"></div><div><div style="font-weight: 600">Bìa còng đại Kokoyo F4</div><div style="font-size: 12px; color: #47636C">B10</div></div></div></td><td>cái</td><td class="n" style="font-weight: 800; color: #8A3F06">3</td><td class="n" style="color: #47636C">0</td><td><span class="chip" style="background: #FFF1E3; color: #8A3F06">Sắp hết</span></td><td style="color: #47636C">28/10, +6</td></tr>
+              <tr><td><div style="display: flex; gap: 12px; align-items: center"><div class="thumb" style="background: #DDE7F7"></div><div><div style="font-weight: 600">Bút bi Thiên Long FO-03 (xanh)</div><div style="font-size: 12px; color: #47636C">B33</div></div></div></td><td>cây</td><td class="n" style="font-weight: 800; color: #8A3F06">7</td><td class="n">3</td><td><span class="chip" style="background: #FFF1E3; color: #8A3F06">Sắp hết</span></td><td style="color: #47636C">05/11, +18</td></tr>
+              <tr><td><div style="display: flex; gap: 12px; align-items: center"><div class="thumb" style="background: #DDE7F7"></div><div><div style="font-weight: 600">Bút dạ quang TL (vàng)</div><div style="font-size: 12px; color: #47636C">B38</div></div></div></td><td>cây</td><td class="n" style="font-weight: 800">12</td><td class="n" style="color: #47636C">0</td><td><span class="chip" style="background: #E3F5EE; color: #0D5E46">Đủ</span></td><td style="color: #47636C">28/10, +15</td></tr>
+              <tr><td><div style="display: flex; gap: 12px; align-items: center"><div class="thumb" style="background: #DDE7F7"></div><div><div style="font-weight: 600">Bút bi Cello Comfort</div><div style="font-size: 12px; color: #47636C">B29</div></div></div></td><td>cây</td><td class="n" style="font-weight: 800">15</td><td class="n" style="color: #47636C">0</td><td><span class="chip" style="background: #E3F5EE; color: #0D5E46">Đủ</span></td><td style="color: #47636C">28/10, +20</td></tr>
+              <tr><td><div style="display: flex; gap: 12px; align-items: center"><div class="thumb" style="background: #DDF1F5"></div><div><div style="font-weight: 600">Băng keo 2cm (trong)</div><div style="font-size: 12px; color: #47636C">B03</div></div></div></td><td>cuộn</td><td class="n" style="font-weight: 800">6</td><td class="n" style="color: #47636C">0</td><td><span class="chip" style="background: #E3F5EE; color: #0D5E46">Đủ</span></td><td style="color: #47636C">28/10, +10</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding: 14px 20px; font-size: 13px; color: #47636C">Bấm một dòng để xem lịch sử về, giao và kiểm kê của món đó.</div>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  nenCur() { return 'Vừa'; }
+  nenBtns() {
+    const cur = this.nenCur();
+    return ['Nhạt', 'Vừa', 'Như ảnh mẫu'].map((v) => ({
+      label: v, on: v === cur ? 'true' : 'false',
+      style: 'min-height:36px;padding:0 12px;border-radius:999px;border:none;cursor:pointer;font-weight:600;font-size:13px;font-family:inherit;' + (v === cur ? 'background:#FFFFFF;color:#0E2A33' : 'background:transparent;color:#C9DEE4'),
+      pick: () => this.setState({ nen: v })
+    }));
+  }
+  renderVals() {
+    return { panelBg: ({ 'Nhạt': 'linear-gradient(180deg, #EEF6F8 0%, #DCEDF2 100%)', 'Vừa': 'linear-gradient(180deg, #E3F1F5 0%, #CBE4EB 100%)', 'Như ảnh mẫu': 'linear-gradient(180deg, #CFE8EF 0%, #A9D3DF 100%)' })[this.nenCur()], nenBtns: this.nenBtns() };
+  }
+}
+</script>
+</body>
+</html>

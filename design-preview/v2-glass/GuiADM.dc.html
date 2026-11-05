@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Gửi ADM — Hành chính</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#08303B}
+a{color:#0F6E80}a:hover{color:#0A4F5C}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:999px;font:600 14px 'Be Vietnam Pro',sans-serif;text-decoration:none;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn-dark{background:#0E2A33;color:#FFFFFF}.btn-dark:hover{background:#18414D;color:#FFFFFF}
+.btn-light{background:#FFFFFF;color:#0E2A33;border-color:#C9DDE3}.btn-light:hover{background:#F2F8FA;color:#0E2A33}
+.btn:focus-visible,.icon-btn:focus-visible,.top-search:focus-visible{outline:2px solid #0F6E80;outline-offset:2px}
+.icon-btn{width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#D6E9EE}
+.top-search{width:100%;box-sizing:border-box;min-height:46px;padding:0 16px 0 44px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#FFFFFF;font:500 14px 'Be Vietnam Pro',sans-serif}
+.top-search::placeholder{color:#9DBDC6}
+.card{background:rgba(255,255,255,.9);border:1px solid #FFFFFF;border-radius:20px;box-shadow:0 10px 30px rgba(8,48,59,.08)}
+.adj th{font-size:12px;font-weight:600;color:#47636C;text-align:left;padding:8px 6px;border-bottom:1px solid #E2EEF1}
+.adj td{font-size:14px;padding:10px 6px;border-bottom:1px solid #EEF5F7}
+.sheet th{font:700 10px 'Times New Roman',serif;border:1px solid #333;padding:5px 6px;text-align:center;background:#F2F2F2;color:#000}
+.sheet td{font:12px 'Times New Roman',serif;border:1px solid #333;padding:4px 6px;color:#000}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #0E2A33; background: linear-gradient(160deg, #08303B 0%, #0E4757 55%, #12596A 100%)">
+
+  <div style="flex: 0 1 264px; min-width: 240px">
+    <dc-import name="Sidebar" active="guiadm" hint-size="100%,1300px"></dc-import>
+  </div>
+
+  <div style="flex: 999 1 560px; min-width: 0; padding: 16px 20px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+      <div style="position: relative; flex: 1 1 320px; max-width: 640px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9DBDC6" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 16px; top: 14px"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <label for="top-q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Tìm nhân viên, món, phiếu</label>
+        <input id="top-q" class="top-search" type="search" placeholder="Tìm nhân viên, món, phiếu…">
+      </div>
+      <div style="margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+        <button type="button" class="icon-btn" aria-label="Thông báo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 4px 14px 4px 4px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16)">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #9FE3F0; color: #0E2A33; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">LB</div>
+          <div style="font-size: 13px; line-height: 1.25; color: #FFFFFF"><div style="font-weight: 600">Lê Thị Bình</div><div style="color: #9DBDC6">Hành chính</div></div>
+        </div>
+      </div>
+    </div>
+
+    <main style="flex: 1; border-radius: 28px; padding: 28px; box-sizing: border-box; background: {{panelBg}}; border: 1px solid rgba(255,255,255,.6); display: flex; flex-direction: column; gap: 20px">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+        <div>
+          <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Gửi ADM, kỳ tháng 10</h1>
+          <p style="margin: 6px 0 0; font-size: 15px; color: #47636C; max-width: 720px">Phiếu đúng mẫu sheet phòng của ADM. In trình Chủ quản ký, rồi gửi Excel để ADM dán vào cột D&amp;E.</p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <button type="button" class="btn btn-light">Xuất Excel mẫu phòng</button>
+          <button type="button" class="btn btn-dark">In trình ký A4</button>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+        <aside style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+          <section aria-labelledby="ck" class="card" style="padding: 20px">
+            <h2 id="ck" style="margin: 0 0 12px; font-size: 16px; font-weight: 700">Trước khi gửi</h2>
+            <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; font-size: 14px">
+              <li style="display: flex; gap: 10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#11795A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M20 6 9 17l-5-5"></path></svg><span>39/40 người đã đăng ký</span></li>
+              <li style="display: flex; gap: 10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#11795A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M20 6 9 17l-5-5"></path></svg><span>Đã cộng 4 dòng nợ từ tháng 9</span></li>
+              <li style="display: flex; gap: 10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#11795A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M20 6 9 17l-5-5"></path></svg><span>Đã trừ hàng còn trong tủ</span></li>
+              <li style="display: flex; gap: 10px; color: #6B3205"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B4540A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg><span>1 món ngoài danh mục chưa xem. <a href="Main.dc.html">Xem ngay</a></span></li>
+            </ul>
+          </section>
+          <section aria-labelledby="adj" class="card" style="padding: 20px">
+            <h2 id="adj" style="margin: 0 0 4px; font-size: 16px; font-weight: 700">Số đề nghị</h2>
+            <p style="margin: 0 0 10px; font-size: 13px; color: #47636C">Bằng đăng ký cộng nợ, trừ tủ còn. Sửa nếu muốn xin dư.</p>
+            <table class="adj" style="width: 100%; border-collapse: collapse">
+              <thead><tr><th>Món</th><th class="n">Cần</th><th class="n">Tủ</th><th class="n">Đề nghị</th></tr></thead>
+              <tbody>
+                <tr><td>Bút bi FO-03 xanh</td><td class="n">55</td><td class="n">7</td><td class="n"><strong>48</strong></td></tr>
+                <tr><td>Giấy A4 70GSM</td><td class="n">21</td><td class="n">1</td><td class="n"><strong>20</strong></td></tr>
+                <tr><td>Kim bấm 10 Plus</td><td class="n">10</td><td class="n">2</td><td class="n"><strong>8</strong></td></tr>
+                <tr><td>Bút dạ quang vàng</td><td class="n">10</td><td class="n">12</td><td class="n" style="color: #47636C">0</td></tr>
+              </tbody>
+            </table>
+            <button type="button" class="btn btn-light" style="margin-top: 12px; width: 100%">Xem và sửa cả 24 món</button>
+          </section>
+        </aside>
+
+        <section aria-label="Xem trước phiếu A4" class="card" style="flex: 999 1 620px; min-width: 0; padding: 24px; box-sizing: border-box; overflow-x: auto; background: rgba(255,255,255,.55)">
+          <div style="background: #fff; max-width: 760px; min-width: 600px; margin: 0 auto; padding: 40px 44px; box-sizing: border-box; border-radius: 4px; box-shadow: 0 6px 24px rgba(8,48,59,.12); font-family: 'Times New Roman', serif; color: #000">
+            <div style="display: flex; justify-content: space-between; font-size: 12px"><div><strong>PHÚ MỸ HƯNG</strong><br>Phòng D&amp;E</div><div style="text-align: right">Date: 11/10/2026</div></div>
+            <div style="text-align: center; margin: 18px 0 16px"><div style="font-size: 17px; font-weight: 700">PHIẾU ĐỀ NGHỊ CẤP VĂN PHÒNG PHẨM</div><div style="font-size: 12px; font-style: italic">Stationery Request, kỳ tháng 10/2026</div></div>
+            <table class="sheet" style="width: 100%; border-collapse: collapse">
+              <thead><tr><th style="width: 34px">STT<br>No.</th><th style="width: 52px">Mã<br>Code</th><th>Tên vật dụng</th><th>Item name</th><th style="width: 60px">ĐVT<br>Unit</th><th style="width: 46px">D&amp;E</th></tr></thead>
+              <tbody>
+                <tr><td class="n">1</td><td>B03</td><td>Băng keo 2cm (trong)</td><td>Tape 2cm</td><td>cuộn</td><td class="n">4</td></tr>
+                <tr><td class="n">2</td><td>B10</td><td>Bìa còng đại Kokoyo F4</td><td>Lever Arch file F4</td><td>cái</td><td class="n">12</td></tr>
+                <tr><td class="n">3</td><td>B29</td><td>Bút bi Cello Comfort</td><td>Pen Cello Comfort</td><td>cây</td><td class="n">20</td></tr>
+                <tr><td class="n">4</td><td>B33</td><td>Bút bi Thiên Long FO-03 (xanh)</td><td>Pen FO-03 (Blue)</td><td>cây</td><td class="n">48</td></tr>
+                <tr><td class="n">5</td><td>B36</td><td>Bút dạ quang TL (cam)</td><td>Highlight-Pen (orange)</td><td>cây</td><td class="n">10</td></tr>
+                <tr><td class="n">6</td><td>G10</td><td>Gôm Pentel</td><td>Eraser</td><td>cục</td><td class="n">5</td></tr>
+                <tr><td class="n">7</td><td>G11</td><td>Giấy 70GSM-A4 trắng</td><td>Paper A4 70gsm white</td><td>ream</td><td class="n">20</td></tr>
+                <tr><td class="n">8</td><td>K01</td><td>Kim bấm (24/6)</td><td>Stapler 24/6</td><td>hộp</td><td class="n">3</td></tr>
+                <tr><td class="n">9</td><td>K14</td><td>Kim bấm 10 Plus</td><td>Stapler 10 Plus</td><td>hộp</td><td class="n">8</td></tr>
+                <tr><td class="n">10</td><td>M08</td><td>Mực dấu Shiny 15ml (Xanh)</td><td>Stamp ink (blue)</td><td>chai</td><td class="n">1</td></tr>
+                <tr><td class="n">11</td><td>P01</td><td>Pin AA Energizer</td><td>Battery size AA</td><td>04 viên/vỉ</td><td class="n">2</td></tr>
+                <tr><td class="n">12</td><td>T02</td><td>Tập 200 trang</td><td>Notebook 200</td><td>cuốn</td><td class="n">6</td></tr>
+                <tr><td colspan="6" style="text-align: center; font-style: italic; color: #444">… 12 món nữa</td></tr>
+              </tbody>
+            </table>
+            <div style="display: flex; justify-content: space-around; margin-top: 36px; text-align: center; font-size: 13px">
+              <div><strong>Chủ quản đơn vị</strong><div style="font-style: italic; font-size: 11px">Head of Dept.</div><div style="height: 64px"></div><div>[TÊN CHỦ QUẢN]</div></div>
+              <div><strong>Người yêu cầu</strong><div style="font-style: italic; font-size: 11px">Applicant</div><div style="height: 64px"></div><div>Lê Thị Bình</div></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  nenCur() { return 'Vừa'; }
+  nenBtns() {
+    const cur = this.nenCur();
+    return ['Nhạt', 'Vừa', 'Như ảnh mẫu'].map((v) => ({
+      label: v, on: v === cur ? 'true' : 'false',
+      style: 'min-height:36px;padding:0 12px;border-radius:999px;border:none;cursor:pointer;font-weight:600;font-size:13px;font-family:inherit;' + (v === cur ? 'background:#FFFFFF;color:#0E2A33' : 'background:transparent;color:#C9DEE4'),
+      pick: () => this.setState({ nen: v })
+    }));
+  }
+  renderVals() {
+    return { panelBg: ({ 'Nhạt': 'linear-gradient(180deg, #EEF6F8 0%, #DCEDF2 100%)', 'Vừa': 'linear-gradient(180deg, #E3F1F5 0%, #CBE4EB 100%)', 'Như ảnh mẫu': 'linear-gradient(180deg, #CFE8EF 0%, #A9D3DF 100%)' })[this.nenCur()], nenBtns: this.nenBtns() };
+  }
+}
+</script>
+</body>
+</html>
