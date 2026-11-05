@@ -88,7 +88,7 @@
    "id": "sidebar",
    "type": "frontend",
    "label": "AdminSidebar ≥ 768",
-   "sublabel": "3 nhóm · 12 mục · thẻ kỳ · đếm",
+   "sublabel": "4 nhóm · 12 mục · thẻ kỳ · đếm",
    "pos": [
     450,
     120
@@ -144,8 +144,8 @@
   {
    "id": "monthly",
    "type": "frontend",
-   "label": "Hằng tháng · 5 trang",
-   "sublabel": "summary review delivery backlog reports",
+   "label": "Hằng tháng · 3 trang",
+   "sublabel": "summary delivery reports",
    "pos": [
     700,
     214
@@ -175,8 +175,8 @@
   {
    "id": "stockpages",
    "type": "frontend",
-   "label": "Kho & danh mục · 4 trang",
-   "sublabel": "stock catalog categories units",
+   "label": "Danh mục và tủ · 5 trang",
+   "sublabel": "catalog stock(+Xuất lẻ) review categories units",
    "pos": [
     700,
     428
@@ -201,8 +201,8 @@
   {
    "id": "syspages",
    "type": "frontend",
-   "label": "Hệ thống · 3 trang",
-   "sublabel": "users audit config",
+   "label": "Quản lý · 3 trang",
+   "sublabel": "users audit config (+ backlog)",
    "pos": [
     700,
     548
@@ -537,9 +537,10 @@
    "dot": "cyan",
    "title": "Shell",
    "items": [
-    "ADMIN_NAV một nguồn cho sidebar, menu sheet và tiêu đề thanh trên",
+    "ADMIN_NAV (4 nhóm: Hằng tháng · Danh mục và tủ · Quản lý · Xem lại sau) một nguồn cho sidebar, menu sheet và tiêu đề thanh trên",
     "Đếm: review chờ, dòng chờ giao kỳ khóa gần nhất, món sắp hết (useAdminBadges)",
-    "Chuông NotificationBell ở hàng thương hiệu (≥ 768) hoặc thanh trên (< 768) → me/notifications"
+    "Chuông NotificationBell ở hàng thương hiệu (≥ 768) hoặc thanh trên (< 768) → me/notifications",
+    "Trang Kho có tab Xuất lẻ (IssuesPanel) cạnh tồn kho; xuất lẻ trừ kho trong cùng giao dịch"
    ]
   },
   {
