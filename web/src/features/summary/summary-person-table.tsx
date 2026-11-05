@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import { vnSavedAt } from '@/lib/format-time';
+import { shiftYm } from '@/lib/ym';
+import { useCurrentPeriod } from '@/features/request/request.api';
 import { DataTable } from '@/ui/data-table';
 import { FilterNotice } from '@/ui/filter-notice';
 import { Icon } from '@/ui/icon';
@@ -51,6 +53,9 @@ function PersonCell({ row }: { row: PersonRow }) {
 
 function PersonActions({ row, ym, locked, stale, onOpen }: { row: PersonRow; ym: string; locked: boolean; stale: boolean; onOpen: (id: string) => void }) {
   const { t } = useTranslation();
+  const current = useCurrentPeriod().data;
+  // Trang Giao theo người luôn là kỳ khóa gần nhất; kỳ cũ hơn vẫn giao ở trang cũ
+  const newPage = !!current && ym === shiftYm(current.ym, -1);
   const canDeliver = locked && row.delivered_qty + row.cancelled_qty < row.total_qty;
   const deliverLabel = t('summary.table.deliverLabel', { name: nameOf(row) });
   return (
@@ -70,7 +75,7 @@ function PersonActions({ row, ym, locked, stale, onOpen }: { row: PersonRow; ym:
       {canDeliver && !stale && (
         <Link
           className="btn btn--ghost btn--sm sm-icon-btn"
-          to={`/admin/delivery/classic?ym=${ym}&request=${row.request_id}`}
+          to={newPage ? `/admin/delivery?person=${row.user_sub}` : `/admin/delivery/classic?ym=${ym}&request=${row.request_id}`}
           aria-label={deliverLabel}
           title={deliverLabel}
           onClick={(e) => e.stopPropagation()}

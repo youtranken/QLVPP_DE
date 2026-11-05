@@ -65,7 +65,7 @@ test.describe('Giao hàng theo người (Plan v2-B, B3)', () => {
       const cardB = cardOf(page, s.b.name);
       await expect(cardB.getByRole('button', { name: /^Giao 7\/10/ })).toBeVisible();
       await cardB.getByRole('button', { name: `Xem ${s.b.name}` }).click();
-      const panel = isMobile(info) ? page.getByRole('dialog', { name: s.b.name }) : page.getByRole('region', { name: s.b.name });
+      const panel = isMobile(info) ? page.getByRole('dialog', { name: s.b.name }) : page.getByRole('region', { name: s.b.name, exact: true });
       await expect(panel.getByRole('spinbutton', { name: `Giao ${s.pen.name}` })).toHaveValue('7');
       await expect(panel.getByText('Giao 7, còn nợ 3')).toBeVisible();
       await expect(panel.getByRole('button', { name: `Thêm Giao ${s.pen.name}` })).toBeDisabled();

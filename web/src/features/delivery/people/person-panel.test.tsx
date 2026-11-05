@@ -97,14 +97,37 @@ describe('PersonPanel — biên stepper', () => {
     expect(screen.getByRole('button', { name: 'Bớt Giao Bút bi xanh' })).toBeEnabled();
   });
 
-  it('giá trị 1 → nút Bớt vô hiệu, không xuống 0; từ 2 bấm Bớt một lần rồi dừng ở 1', async () => {
+  it('stepper xuống tới 0 (bỏ qua dòng): từ 2 bấm Bớt hai lần → 0, nút Bớt vô hiệu ở 0', async () => {
     stub();
     open(person({ lines: [pLine({ remaining_qty: 2, qty: 2, stock_qty: 9 })] }));
     const dec = screen.getByRole('button', { name: 'Bớt Giao Bút bi xanh' });
-    expect(dec).toBeEnabled();
     await userEvent.click(dec);
     expect(spin('Giao Bút bi xanh').value).toBe('1');
+    expect(dec).toBeEnabled();
+    await userEvent.click(dec);
+    expect(spin('Giao Bút bi xanh').value).toBe('0');
     expect(dec).toBeDisabled();
+    expect(screen.getByText('Giao 0, còn nợ 2')).toBeInTheDocument();
+  });
+
+  it('mọi dòng đặt 0 → nút Giao vô hiệu; đặt lại 1 → bật', async () => {
+    stub();
+    open(person({ lines: [pLine({ remaining_qty: 1, qty: 1, stock_qty: 9 })] }));
+    await userEvent.click(screen.getByRole('button', { name: 'Bớt Giao Bút bi xanh' }));
+    expect(screen.getByRole('button', { name: 'Giao' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Thêm Giao Bút bi xanh' }));
+    expect(screen.getByRole('button', { name: 'Giao' })).toBeEnabled();
+  });
+
+  it('dòng đặt 0 không được gửi; dòng còn lại vẫn gửi', async () => {
+    const f = stub();
+    open(B);
+    const input = spin('Giao Giấy A4');
+    await userEvent.clear(input);
+    await userEvent.type(input, '0');
+    await userEvent.click(screen.getByRole('button', { name: 'Giao' }));
+    await screen.findByText('Đã giao cho Lê Thị Bình');
+    expect(deliverCalls(f).map(([u]) => u)).toEqual(['/api/admin/lines/lb/deliver']);
   });
 
   it('tủ 0 → không có stepper, chữ "Tủ hết món này", nút Giao vô hiệu nếu không còn dòng nào giao được', () => {
@@ -115,12 +138,43 @@ describe('PersonPanel — biên stepper', () => {
     expect(screen.getByRole('button', { name: 'Giao' })).toBeDisabled();
   });
 
-  it('tủ 1 (biên trên cùng với dưới): stepper cố định 1, cả hai nút vô hiệu', () => {
+  it('tủ 1: stepper mặc định 1, Thêm vô hiệu, Bớt còn bấm được (để bỏ qua dòng)', () => {
     stub();
     open(person({ lines: [pLine({ remaining_qty: 4, qty: 4, stock_qty: 1 })] }));
     expect(spin('Giao Bút bi xanh').value).toBe('1');
-    expect(screen.getByRole('button', { name: 'Bớt Giao Bút bi xanh' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Bớt Giao Bút bi xanh' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Thêm Giao Bút bi xanh' })).toBeDisabled();
+  });
+});
+
+describe('PersonPanel — tồn chia theo món', () => {
+  const debt = pLine({ line_id: 'd', period_ym: '2026-09', is_debt: true, qty: 3, remaining_qty: 3, stock_qty: 6 });
+  const cur = pLine({ line_id: 'c', qty: 5, remaining_qty: 5, stock_qty: 6 });
+
+  it('nợ 3 + kỳ này 5 cùng món, tủ 6: mặc định 3 rồi 3, cảnh báo "Giao 3, còn nợ 2" ở dòng kỳ này', () => {
+    stub();
+    open(person({ lines: [cur, debt] }));
+    const inputs = screen.getAllByRole('spinbutton') as HTMLInputElement[];
+    expect(inputs.map((i) => i.value)).toEqual(['3', '3']);
+    expect(screen.getAllByText('Giao 3, còn nợ 2')).toHaveLength(1);
+    expect(screen.getByText('Giao 6 đơn vị, ghi nợ 2')).toBeInTheDocument();
+  });
+
+  it('hạ dòng nợ xuống 1 thì dòng kỳ này được thêm tồn (tối đa 5)', async () => {
+    stub();
+    open(person({ lines: [cur, debt] }));
+    const [debtInput, curInput] = screen.getAllByRole('spinbutton') as HTMLInputElement[];
+    await userEvent.click(screen.getAllByRole('button', { name: /^Bớt/ })[0]);
+    expect(debtInput.value).toBe('2');
+    expect(curInput.max).toBe('4');
+  });
+
+  it('giao: gửi 3 cho dòng nợ rồi 3 cho dòng kỳ này', async () => {
+    const f = stub();
+    open(person({ lines: [cur, debt] }));
+    await userEvent.click(screen.getByRole('button', { name: 'Giao' }));
+    await waitFor(() => expect(deliverCalls(f)).toHaveLength(2));
+    expect(deliverCalls(f).map(([u, b]) => [u, b.qty])).toEqual([['/api/admin/lines/d/deliver', 3], ['/api/admin/lines/c/deliver', 3]]);
   });
 });
 
@@ -130,7 +184,7 @@ describe('PersonPanel — dòng chờ duyệt', () => {
     open(person({ status: 'pending', lines: [pLine({ review_status: 'pending', name: 'Băng keo', item_id: null })] }));
     expect(screen.queryByRole('spinbutton')).toBeNull();
     expect(screen.getByText('Chờ duyệt')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Xem/ })).toHaveAttribute('href', '/admin/review');
+    expect(screen.getByRole('link', { name: /Xem/ })).toHaveAttribute('href', '/admin/review?status=pending&ym=2026-10');
     expect(screen.getByRole('button', { name: 'Giao' })).toBeDisabled();
   });
 });

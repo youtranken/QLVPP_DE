@@ -7,7 +7,7 @@ import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import { lineErrorText } from '../delivery-errors';
 import { deliverSelected } from '../use-deliver-selected';
 import { useRefreshAfterPeopleDelivery, type DeliveryPerson } from './delivery-people.api';
-import { isOpenLine, lineMax, waitingFor } from './people-filter';
+import { allocateLines, byPeriod, waitingFor } from './people-filter';
 import { PersonLineRow } from './person-line-row';
 
 export interface PersonPanelProps {
@@ -33,10 +33,11 @@ export function PersonPanel({ ym, person, people, next, onNext }: PersonPanelPro
   const busy = flight.pending;
 
   const name = person.full_name ?? person.user_sub;
-  const shown = person.lines.filter((l) => l.remaining_qty > 0 || l.review_status === 'pending');
-  const maxOf = (id: string) => lineMax(person.lines.find((l) => l.line_id === id)!, caps[id]);
-  const valueOf = (id: string) => Math.max(1, Math.min(qtys[id] ?? Infinity, maxOf(id)));
-  const toDeliver = shown.filter((l) => isOpenLine(l) && maxOf(l.line_id) > 0);
+  const shown = person.lines.filter((l) => l.remaining_qty > 0 || l.review_status === 'pending').sort(byPeriod);
+  const alloc = allocateLines(shown, qtys, caps);
+  const maxOf = (id: string) => alloc[id]?.max ?? 0;
+  const valueOf = (id: string) => alloc[id]?.value ?? 0;
+  const toDeliver = shown.filter((l) => valueOf(l.line_id) > 0);
   const give = toDeliver.reduce((s, l) => s + valueOf(l.line_id), 0);
   const owe = shown.filter((l) => l.review_status !== 'pending').reduce((s, l) => s + l.remaining_qty, 0) - give;
 
@@ -75,7 +76,7 @@ export function PersonPanel({ ym, person, people, next, onNext }: PersonPanelPro
   if (person.status === 'done') return <p className="pp-done">{t('delivery.people.panel.done')}</p>;
 
   return (
-    <div className="pp-panel" aria-label={t('delivery.people.panel.label', { name })}>
+    <section className="pp-panel" aria-label={t('delivery.people.panel.label', { name })}>
       {groups.map((g) => (
         <section key={g.key} className={`pp-group pp-group--${g.key}`}>
           <h3>{g.title}</h3>
@@ -101,6 +102,6 @@ export function PersonPanel({ ym, person, people, next, onNext }: PersonPanelPro
           {busy ? t('delivery.people.panel.sending') : t('delivery.people.panel.deliver')}
         </button>
       </footer>
-    </div>
+    </section>
   );
 }

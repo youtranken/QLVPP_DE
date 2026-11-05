@@ -28,12 +28,12 @@ function Control({ line, value, max, disabled, onChange }: Pick<Props, 'line' | 
     return (
       <span className="pp-row__review">
         <span className="tag tag--warn">{t('delivery.people.panel.pendingReview')}</span>
-        <Link to="/admin/review">{t('delivery.people.panel.reviewLink')}</Link>
+        <Link to={`/admin/review?status=pending&ym=${line.period_ym}`}>{t('delivery.people.panel.reviewLink')}</Link>
       </span>
     );
   }
   if (max <= 0) return <span className="pp-row__oos">{t('delivery.people.panel.outOfStock')}</span>;
-  return <Stepper className="pp-row__step" value={value} min={1} max={max} disabled={disabled} label={t('delivery.people.panel.qty', { name })} onChange={onChange} />;
+  return <Stepper className="pp-row__step" value={value} min={0} max={max} disabled={disabled} label={t('delivery.people.panel.qty', { name })} onChange={onChange} />;
 }
 
 export function PersonLineRow({ line, value, max, error, waiting, disabled, onChange }: Props) {

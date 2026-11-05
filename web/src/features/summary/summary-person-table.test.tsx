@@ -5,13 +5,13 @@ import { SummaryPersonTable } from './summary-person-table';
 import { PEOPLE, person, stubSummaryApi } from './summary-fixtures';
 import type { PersonRow } from './summary.api';
 
-function renderTable(props: { locked?: boolean; rows?: PersonRow[]; onOpen?: (id: string) => void } = {}) {
+function renderTable(props: { locked?: boolean; ym?: string; rows?: PersonRow[]; onOpen?: (id: string) => void } = {}) {
   if (props.rows) stubSummaryApi((url) => (url.includes('by=person') ? jsonResponse(200, { items: props.rows, next_cursor: null }) : undefined));
   else stubSummaryApi();
   const onOpen = props.onOpen ?? vi.fn();
   renderWithI18n(
     <MemoryRouter>
-      <SummaryPersonTable ym={props.locked ? '2026-10' : '2026-11'} locked={props.locked ?? false} filter={null} q="" onOpen={onOpen} onClearFilter={() => {}} />
+      <SummaryPersonTable ym={props.ym ?? (props.locked ? '2026-10' : '2026-11')} locked={props.locked ?? false} filter={null} q="" onOpen={onOpen} onClearFilter={() => {}} />
     </MemoryRouter>,
   );
   return onOpen;
@@ -59,14 +59,21 @@ describe('SummaryPersonTable — bảng theo người', () => {
     expect(within(row).queryByRole('link', { name: /Giao/ })).toBeNull();
   });
 
-  it('kỳ khóa, còn phải giao (4/7) → nút Giao → /admin/delivery/classic?ym=2026-10&request=r-1, không mở ngăn kéo', async () => {
+  it('kỳ khóa gần nhất (2026-10, hiện tại 11), còn phải giao (4/7) → nút Giao → /admin/delivery?person=<user_sub> (trang mới), không mở ngăn kéo', async () => {
     const onOpen = renderTable({ locked: true, rows: [PEOPLE[1]] });
     const row = await rowOf('Phạm Văn Đức');
     expect(within(row).getByRole('progressbar', { name: 'đã giao 4/7 đơn vị' })).toBeInTheDocument();
-    const link = within(row).getByRole('link', { name: 'Giao phiếu của Phạm Văn Đức' });
-    expect(link).toHaveAttribute('href', '/admin/delivery/classic?ym=2026-10&request=r-1');
+    const link = await within(row).findByRole('link', { name: 'Giao phiếu của Phạm Văn Đức' });
+    await vi.waitFor(() => expect(link).toHaveAttribute('href', `/admin/delivery?person=${PEOPLE[1].user_sub}`));
     await userEvent.click(link);
     expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it('kỳ cũ hơn kỳ khóa gần nhất (2026-09) → giữ liên kết trang cũ /admin/delivery/classic?ym=2026-09&request=', async () => {
+    renderTable({ locked: true, ym: '2026-09', rows: [PEOPLE[1]] });
+    const row = await rowOf('Phạm Văn Đức');
+    const link = await within(row).findByRole('link', { name: 'Giao phiếu của Phạm Văn Đức' });
+    await vi.waitFor(() => expect(link).toHaveAttribute('href', '/admin/delivery/classic?ym=2026-09&request=r-1'));
   });
 
   it('tổng 0 (chỉ dòng chờ xem) → cột Giao "—", không NaN', async () => {

@@ -1,44 +1,54 @@
 import { useTranslation } from 'react-i18next';
+import { apiErrorCode, apiErrorNumber } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { useToast } from '@/ui/toast-context';
+import { useRequestFormat } from '@/features/request/request-format';
 import { deliverAll } from '../delivery.api';
-import { deliverSelected } from '../use-deliver-selected';
+import { lineErrorText } from '../delivery-errors';
+import { deliverSelected, type LineFailureInfo } from '../use-deliver-selected';
 import { useRefreshAfterPeopleDelivery, type DeliveryPerson } from './delivery-people.api';
-import { isOpenLine } from './people-filter';
+import { byPeriod, isOpenLine } from './people-filter';
 
-// "Giao đủ" trên thẻ: phiếu kỳ này một lệnh deliver-all, mỗi dòng nợ một lệnh deliver với phần còn lại
+// "Giao đủ" trên thẻ: nợ giao trước (kỳ cũ nhất trước, mỗi dòng một lệnh deliver với phần còn lại), rồi deliver-all cho phiếu kỳ này
 export function useQuickDeliver(onIncomplete: (person: DeliveryPerson) => void, onNext: (sub: string) => void) {
   const { t } = useTranslation();
+  const fmt = useRequestFormat();
   const { csrfToken } = useMe();
   const toast = useToast();
   const refresh = useRefreshAfterPeopleDelivery();
   const flight = useSingleFlight();
 
-  const send = async (person: DeliveryPerson): Promise<boolean> => {
-    let complete = true;
-    if (person.request_id && person.lines.some((l) => !l.is_debt && isOpenLine(l))) {
-      try {
-        complete = (await deliverAll(person.request_id, csrfToken)).failed.length === 0;
-      } catch {
-        complete = false;
-      }
-    }
-    const debt = person.lines.filter((l) => l.is_debt && isOpenLine(l));
+  const send = async (person: DeliveryPerson): Promise<LineFailureInfo[]> => {
+    const failed: LineFailureInfo[] = [];
+    const debt = person.lines.filter((l) => l.is_debt && isOpenLine(l)).sort(byPeriod);
     if (debt.length > 0) {
       const r = await deliverSelected(debt.map((l) => ({ id: l.line_id, qty: l.remaining_qty, expectedDelivered: l.delivered_qty })), csrfToken);
-      complete &&= r.failed.length === 0;
+      failed.push(...r.failed);
     }
-    return complete;
+    if (person.request_id && person.lines.some((l) => !l.is_debt && isOpenLine(l))) {
+      try {
+        const r = await deliverAll(person.request_id, csrfToken);
+        failed.push(...r.failed.map((f) => ({ id: f.line_id, code: f.code, available: f.available })));
+      } catch (e) {
+        failed.push({ id: '', code: apiErrorCode(e) ?? 'UNKNOWN', available: apiErrorNumber(e, 'available') });
+      }
+    }
+    return failed;
+  };
+
+  const failureText = (person: DeliveryPerson, name: string, f: LineFailureInfo) => {
+    const unit = fmt.unit(person.lines.find((l) => l.line_id === f.id)?.unit ?? null);
+    return `${t('delivery.people.quickFailed', { name })} ${lineErrorText(f, unit, t)}`;
   };
 
   const run = (person: DeliveryPerson, next?: DeliveryPerson) =>
     flight.run(async () => {
-      const complete = await send(person);
+      const failed = await send(person);
       await refresh();
       const name = person.full_name ?? person.user_sub;
-      if (!complete) {
-        toast.show({ text: t('delivery.people.quickFailed', { name }), tone: 'warn' });
+      if (failed.length > 0) {
+        toast.show({ text: failureText(person, name, failed[0]), tone: 'warn' });
         return onIncomplete(person);
       }
       toast.show({

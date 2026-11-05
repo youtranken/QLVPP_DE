@@ -243,6 +243,17 @@ describe('AdminSidebar: nhóm "Xem lại sau" thu gọn', () => {
     expect(within(later()).getAllByRole('link').filter((a) => a.hasAttribute('aria-current'))).toHaveLength(1);
   });
 
+  it('đang ở trong nhóm: bấm nút không ghi localStorage (không đè lựa chọn đã nhớ) và nhóm vẫn mở', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    localStorage.setItem('vpp.admin.navLater', '1');
+    renderApp(makeMe('admin'), '/admin/backlog');
+    await screen.findByRole('navigation', { name: 'Menu quản lý' });
+    await userEvent.click(toggle());
+    expect(localStorage.getItem('vpp.admin.navLater')).toBe('1');
+    expect(toggle()).toHaveAttribute('aria-expanded', 'true');
+  });
+
   it('/admin/delivery/classic không đánh dấu thêm mục "Giao hàng" (chỉ khớp đúng đường dẫn)', async () => {
     mockViewport(1280);
     stubShellApi();

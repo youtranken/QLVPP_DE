@@ -20,6 +20,11 @@ import { useQuickDeliver } from './use-quick-deliver';
 import './delivery-people.m1.css';
 
 const TABS: PeopleTab[] = ['pending', 'debt', 'done', 'all'];
+// Thiếu hàng hoặc một món ở hai dòng (tồn chia chung) thì người giao phải nhìn từng dòng
+const needsPanel = (p: DeliveryPerson) => {
+  const plan = planOf(p);
+  return plan.short || plan.shared;
+};
 const TABLET_DOWN = '(max-width: 1279px)';
 
 function PanelHead({ person, inDrawer = false }: { person: DeliveryPerson; inDrawer?: boolean }) {
@@ -105,14 +110,14 @@ function PeopleBoard({ ym }: { ym: string }) {
                   selected={p.user_sub === selected?.user_sub}
                   busy={quick.pending}
                   onView={() => open(p.user_sub)}
-                  onQuick={() => (planOf(p).short ? open(p.user_sub) : void quick.run(p, nextOf(p.user_sub)))}
+                  onQuick={() => (needsPanel(p) ? open(p.user_sub) : void quick.run(p, nextOf(p.user_sub)))}
                 />
               </div>
             ))}
           </div>
         )}
         {!narrow && (
-          <section className="pp-side" aria-label={selected?.full_name ?? undefined}>
+          <section className="pp-side" aria-label={selected ? (selected.full_name ?? selected.user_sub) : t('delivery.people.list')}>
             {selected ? (
               <>
                 <PanelHead person={selected} />

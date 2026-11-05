@@ -49,6 +49,7 @@ function CollapsibleGroup({ group, children }: { group: AdminNavGroup; children:
   const inside = group.pages.some((p) => pathname === `/admin/${p.path}` || pathname.startsWith(`/admin/${p.path}/`));
   const open = stored || inside;
   const toggle = () => {
+    if (inside) return;
     const next = !open;
     setStored(next);
     try {
@@ -59,7 +60,7 @@ function CollapsibleGroup({ group, children }: { group: AdminNavGroup; children:
   };
   return (
     <div className="side__group" role="group" aria-label={t(group.labelKey)}>
-      <button type="button" className="side__group-toggle" aria-expanded={open} onClick={toggle}>
+      <button type="button" className="side__group-toggle" aria-expanded={open} aria-disabled={inside || undefined} onClick={toggle}>
         <span className="side__group-label">{t(group.labelKey)}</span>
         <Icon name="chev" size={16} />
       </button>
