@@ -28,7 +28,10 @@
 [data-shell='admin'] .side__period:hover { background: rgb(255 255 255 / .08); }
 [data-shell='admin'] .side__period:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 [data-shell='admin'] .side__period b { display: block; font: var(--t-label); }
-[data-shell='admin'] .side__period small { display: block; font: var(--t-cap); }
+[data-shell='admin'] .side__period .progress { display: flex; flex-direction: column-reverse; gap: 4px; margin: 2px 0 4px; }
+[data-shell='admin'] .side__period .progress__label { font: var(--t-cap); color: var(--c-on-dark-2); }
+[data-shell='admin'] .side__period .progress__bar { background: rgb(255 255 255 / .15); }
+[data-shell='admin'] .side__period .progress__bar > span { background: var(--c-bar-fill); }
 [data-shell='admin'] .side__period-text > span { display: block; font-size: 12px; letter-spacing: -0.01em; }
 [data-shell='admin'] .side__period-dot { display: none; width: 10px; height: 10px; border-radius: var(--r-pill); background: var(--c-ok); }
 [data-shell='admin'] .side__period[data-last] .side__period-dot { background: var(--c-warn); }

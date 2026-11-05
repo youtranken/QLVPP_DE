@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { asRole, devHeaders, expectNoContrastViolations, isMobile } from './helpers';
 
-const NAV_ORDER = ['Tổng hợp kỳ', 'Món ngoài danh mục', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Kho', 'Danh mục', 'Nhóm món', 'Đơn vị tính', 'Danh bạ', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Tổng hợp kỳ', 'Giao hàng', 'Báo cáo & in', 'Danh mục', 'Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Danh bạ', 'Nhật ký', 'Cấu hình', 'Còn nợ'];
 const OPEN_MENU = /^(Mở menu quản lý|Open admin menu)$/;
 
 const sidebarWidth = (page: Page) =>
@@ -10,7 +10,7 @@ const sidebarWidth = (page: Page) =>
 test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
   asRole('admin');
 
-  test('E9-S1 shell Hành chính: sidebar 3 nhóm 12 mục, thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
+  test('E9-S1 shell Hành chính: sidebar 4 nhóm 12 mục, thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
     await page.goto('/admin/catalog');
     await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
     await expect(page.getByRole('banner').getByRole('button', { name: /^Thông báo, \d+ chưa đọc$/ })).toBeVisible();
@@ -19,7 +19,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
       await page.getByRole('button', { name: OPEN_MENU }).click();
     }
     const side = page.getByRole('navigation', { name: 'Menu quản lý' });
-    await expect(side.getByRole('group')).toHaveCount(3);
+    await expect(side.getByRole('group')).toHaveCount(4);
     const titles = await side.getByRole('link').evaluateAll((links) => links.map((a) => a.getAttribute('title')));
     expect(titles).toEqual(NAV_ORDER);
     await expect(side.getByRole('link', { name: 'Danh mục', exact: true })).toHaveAttribute('aria-current', 'page');
@@ -35,6 +35,13 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     await expect(page.getByRole('link', { name: /^Current sign-up period: month \d+ · open/ })).toBeVisible();
     await page.getByRole('radio', { name: 'Tiếng Việt' }).click();
     await expect(page.getByRole('navigation', { name: 'Menu quản lý' }).getByRole('group', { name: 'Hằng tháng' })).toBeVisible();
+  });
+
+  test('v2: nhãn dài "Món ngoài danh mục" không vượt cột sidebar 252', async ({ page }, info) => {
+    test.skip(isMobile(info), 'chỉ đo ở 1280');
+    await page.goto('/admin/catalog');
+    const box = await page.getByRole('navigation', { name: 'Menu quản lý' }).getByRole('link', { name: /Món ngoài danh mục/ }).boundingBox();
+    expect(box!.width).toBeLessThanOrEqual(252);
   });
 
   test('v2: khung teal + panel, đạt axe', async ({ page }, info) => {

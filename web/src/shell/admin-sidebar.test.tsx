@@ -60,6 +60,19 @@ describe('AdminSidebar: đếm', () => {
   });
 });
 
+describe('AdminSidebar: nhóm', () => {
+  it('sidebar có 4 nhóm theo thứ tự v2', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    await screen.findByRole('link', { name: /Kỳ đăng ký hiện tại/ });
+    const groups = within(sideNav()).getAllByRole('group');
+    expect(groups.map((g) => g.getAttribute('aria-label'))).toEqual(['Hằng tháng', 'Danh mục và tủ', 'Quản lý', 'Xem lại sau']);
+    expect(within(groups[3]).getByRole('link', { name: 'Còn nợ' })).toHaveAttribute('href', '/admin/backlog');
+    expect(within(groups[1]).getByRole('link', { name: /Món ngoài danh mục/ })).toBeInTheDocument();
+  });
+});
+
 describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
   it('đáy sidebar: thẻ kỳ, họ tên + vai, nút Đăng xuất', async () => {
     mockViewport(1280);

@@ -22,8 +22,9 @@ const nav: Messages<typeof vi> = {
     },
     groups: {
       monthly: 'Monthly',
-      stock: 'Stock & catalog',
-      system: 'System',
+      stock: 'Catalog & cupboard',
+      system: 'Manage',
+      later: 'To review',
     },
     summary: 'Period summary',
     review: 'Off-catalog items',
@@ -39,6 +40,8 @@ const nav: Messages<typeof vi> = {
     },
     periodCard: {
       label: 'Current sign-up period',
+      title: 'Period: month {{month}}',
+      registered: '{{registered}}/{{headcount}} signed up',
       state: 'Month {{month}} · open',
       name: 'Current sign-up period: month {{month}} · open · {{detail}}',
       daysLeft: '{{n}} days left · locks 00:00 on {{date}}',

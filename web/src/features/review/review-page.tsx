@@ -65,7 +65,7 @@ export function ReviewPage() {
   return (
     <div className="ct-page">
       <PageHeader
-        crumbs={[t('nav.groups.monthly'), t('nav.review')]}
+        crumbs={[t('nav.groups.stock'), t('nav.review')]}
         title={t('nav.review')}
         description={t('review.page.description')}
       />

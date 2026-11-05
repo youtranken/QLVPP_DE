@@ -5,7 +5,7 @@
   /* mực (chữ) */
   --c-ink: #0E2A33;  --c-ink-2: #2F4A52;  --c-muted: #47636C;  --c-faint: #9FBAC2; /* faint: chỉ icon trang trí, KHÔNG cho chữ */
   /* mảng đậm: chip/nav đang chọn, stepper card, thanh hàng loạt, toast, ô hạn ngày cuối */
-  --c-dark: #0E2A33;  --c-on-dark: #FFFFFF;  --c-on-dark-2: #C9DEE4;  --c-device: #08303B;
+  --c-dark: #0E2A33;  --c-on-dark: #FFFFFF;  --c-on-dark-2: #C9DEE4;  --c-bar-fill: #9FE3F0;  --c-device: #08303B;
   /* viền */
   --c-line: #D6E6EB;  --c-line-strong: #B5CFD7;  --c-line-input: #7F9AA3; /* viền ô nhập/checkbox ≥ 3:1 */
   /* nhấn duy nhất: navy */

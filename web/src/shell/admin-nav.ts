@@ -19,17 +19,16 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     labelKey: 'nav.groups.monthly',
     pages: [
       { path: 'summary', titleKey: 'nav.summary', icon: 'dash' },
-      { path: 'review', titleKey: 'nav.review', icon: 'pkgplus', badge: 'review' },
       { path: 'delivery', titleKey: 'nav.delivery', icon: 'truck', badge: 'delivery' },
-      { path: 'backlog', titleKey: 'nav.backlog', icon: 'receipt' },
       { path: 'reports', titleKey: 'nav.reports', icon: 'printer' },
     ],
   },
   {
     labelKey: 'nav.groups.stock',
     pages: [
-      { path: 'stock', titleKey: 'stock.title', icon: 'warehouse', badge: 'stock' },
       { path: 'catalog', titleKey: 'catalog.title', icon: 'layers' },
+      { path: 'stock', titleKey: 'stock.title', icon: 'warehouse', badge: 'stock' },
+      { path: 'review', titleKey: 'nav.review', icon: 'pkgplus', badge: 'review' },
       { path: 'categories', titleKey: 'nav.categories', icon: 'filter' },
       { path: 'units', titleKey: 'nav.units', icon: 'sheet' },
     ],
@@ -41,6 +40,10 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { path: 'audit', titleKey: 'audit.title', icon: 'scroll' },
       { path: 'config', titleKey: 'config.title', icon: 'sliders' },
     ],
+  },
+  {
+    labelKey: 'nav.groups.later',
+    pages: [{ path: 'backlog', titleKey: 'nav.backlog', icon: 'receipt' }],
   },
 ];
 

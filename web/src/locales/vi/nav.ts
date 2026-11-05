@@ -19,8 +19,9 @@ const nav = {
     },
     groups: {
       monthly: 'Hằng tháng',
-      stock: 'Kho & danh mục',
-      system: 'Hệ thống',
+      stock: 'Danh mục và tủ',
+      system: 'Quản lý',
+      later: 'Xem lại sau',
     },
     summary: 'Tổng hợp kỳ',
     review: 'Món ngoài danh mục',
@@ -36,6 +37,8 @@ const nav = {
     },
     periodCard: {
       label: 'Kỳ đăng ký hiện tại',
+      title: 'Kỳ tháng {{month}}',
+      registered: '{{registered}}/{{headcount}} đã đăng ký',
       state: 'Tháng {{month}} · đang mở',
       name: 'Kỳ đăng ký hiện tại: tháng {{month}} · đang mở · {{detail}}',
       daysLeft: 'còn {{n}} ngày · khóa 00:00 ngày {{date}}',
