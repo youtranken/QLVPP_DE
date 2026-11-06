@@ -161,7 +161,7 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
 
       await otherAdminSaves(4);
       await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();
-      await expect(drawer.getByRole('alert')).toContainText('Nhân viên vừa sửa phiếu này — tải bản mới nhất rồi sửa lại.');
+      await expect(drawer.getByRole('alert')).toContainText('Phiếu vừa được người khác sửa — tải lại.');
       await snap(page, info, 'adjust-stale');
       await drawer.getByRole('button', { name: 'Tải bản mới nhất' }).click();
       await expect(line.getByRole('spinbutton')).toHaveValue('4');

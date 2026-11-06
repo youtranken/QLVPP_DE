@@ -15,9 +15,26 @@ const open = (path = '/admin/summary') => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('SummaryPage — đầu trang, tháng, URL', () => {
+  it('không có ?ym → mặc định kỳ khóa gần nhất 2026-10 (không phải kỳ đang mở), không gọi danh sách kỳ mở', async () => {
+    const f = stubSummaryApi();
+    open();
+    await waitFor(() => expect(search()).toContain('ym=2026-10'));
+    expect(await screen.findByText('Đã khóa')).toBeInTheDocument();
+    expect(calledUrls(f).some((u) => u.includes('/2026-11/requests'))).toBe(false);
+  });
+
+  it('kỳ đang mở mà danh sách trả 409 PERIOD_NOT_LOCKED → khung lỗi "Không tải được dữ liệu — thử lại.", không quay "Đang tải…" mãi', async () => {
+    stubSummaryApi((url) =>
+      url.startsWith('/api/admin/periods/2026-11/requests') ? jsonResponse(409, { code: 'PERIOD_NOT_LOCKED', ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z' }) : undefined,
+    );
+    open('/admin/summary?ym=2026-11');
+    expect(await screen.findByText('Không tải được dữ liệu — thử lại.')).toBeInTheDocument();
+    expect(screen.queryByText('Đang tải…')).toBeNull();
+  });
+
   it('đúng một h1 "Tổng hợp kỳ", breadcrumb "Hằng tháng", mô tả; badge "Đang mở · hạn 10"; › khóa ở kỳ đang mở', async () => {
     stubSummaryApi();
-    open();
+    open('/admin/summary?ym=2026-11');
     expect(await screen.findByText('Đang mở · hạn 10')).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tổng hợp kỳ');
@@ -27,19 +44,19 @@ describe('SummaryPage — đầu trang, tháng, URL', () => {
     expect(screen.getByText('Tháng 11/2026')).toBeInTheDocument();
   });
 
-  it('?ym=2099-01 vượt trần → URL thay bằng ?ym=2026-11, không request nào mang 2099-01', async () => {
+  it('?ym=2099-01 vượt trần → URL thay bằng kỳ khóa gần nhất ?ym=2026-10, không request nào mang 2099-01', async () => {
     const f = stubSummaryApi();
     open('/admin/summary?ym=2099-01');
-    await waitFor(() => expect(search()).toContain('ym=2026-11'));
-    expect(await screen.findByRole('button', { name: /Phiếu đã đăng ký/ })).toHaveTextContent('32/40');
+    await waitFor(() => expect(search()).toContain('ym=2026-10'));
+    expect(await screen.findByRole('button', { name: /Phiếu đã đăng ký/ })).toHaveTextContent('30/38');
     expect(calledUrls(f).some((u) => u.includes('2099-01'))).toBe(false);
   });
 
-  it.each(['2026-00', '2025-13', '2026-1'])('?ym=%s sai mẫu → về kỳ đang mở, không gọi API kỳ sai', async (bad) => {
+  it.each(['2026-00', '2025-13', '2026-1'])('?ym=%s sai mẫu → về kỳ khóa gần nhất, không gọi API kỳ sai', async (bad) => {
     const f = stubSummaryApi();
     open(`/admin/summary?ym=${bad}`);
-    expect(await screen.findByText('Tháng 11/2026')).toBeInTheDocument();
-    await waitFor(() => expect(search()).toContain('ym=2026-11'));
+    expect(await screen.findByText('Tháng 10/2026')).toBeInTheDocument();
+    await waitFor(() => expect(search()).toContain('ym=2026-10'));
     expect(calledUrls(f).some((u) => u.includes(`/periods/${bad}/`))).toBe(false);
   });
 
@@ -77,7 +94,7 @@ describe('SummaryPage — thẻ lọc', () => {
 
   it('kỳ mở: "Dòng chờ giao" không có role button, số "—", dòng phụ "giao từ 11/11"', async () => {
     stubSummaryApi();
-    open();
+    open('/admin/summary?ym=2026-11');
     expect(await screen.findByText('giao từ 11/11')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Dòng chờ giao/ })).toBeNull();
     expect(screen.getByText('giao từ 11/11').closest('.stat-card')).toHaveTextContent('—');
@@ -85,7 +102,7 @@ describe('SummaryPage — thẻ lọc', () => {
 
   it('kỳ mở mở thẳng ?filter=pending_delivery → bỏ filter khỏi URL, không gọi API với filter đó', async () => {
     const f = stubSummaryApi();
-    open('/admin/summary?filter=pending_delivery');
+    open('/admin/summary?ym=2026-11&filter=pending_delivery');
     await screen.findByText('giao từ 11/11');
     await waitFor(() => expect(search()).not.toContain('filter='));
     expect(calledUrls(f).some((u) => u.includes('filter=pending_delivery'))).toBe(false);

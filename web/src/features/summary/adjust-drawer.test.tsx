@@ -253,7 +253,7 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
     const confirm = screen.getByRole('dialog', { name: /Chấp nhận “Băng keo 2 mặt”/ });
     await userEvent.click(within(confirm).getByRole('button', { name: 'Chấp nhận' }));
     await userEvent.click(await within(confirm).findByRole('button', { name: 'Quay lại' }));
-    expect(await within(drawer).findByText('Nhân viên vừa sửa phiếu này — đã tải bản mới nhất, sửa lại rồi lưu.')).toBeInTheDocument();
+    expect(await within(drawer).findByText('Phiếu vừa được người khác sửa — đã tải bản mới nhất, sửa lại rồi lưu.')).toBeInTheDocument();
     await waitFor(() => expect(within(drawer).getByRole('spinbutton', { name: 'Giấy note vàng' })).toHaveValue(4));
     expect(within(drawer).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(10);
     expect(within(drawer).queryByRole('button', { name: 'Tải bản mới nhất' })).toBeNull();
@@ -276,7 +276,7 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
     await waitFor(() => expect(loadCalls(f)).toHaveLength(2));
     await waitFor(() => expect(within(drawer).getByText('Đã chấp nhận')).toBeInTheDocument());
     expect(within(drawer).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(11);
-    expect(within(drawer).queryByText(/^Nhân viên vừa sửa phiếu này/)).toBeNull();
+    expect(within(drawer).queryByText(/^Phiếu vừa được người khác sửa/)).toBeNull();
   });
 });
 

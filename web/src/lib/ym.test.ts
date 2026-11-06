@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { YM, shiftYm, vnYmNow } from '@/lib/ym';
+import { YM, lockedYm, shiftYm, vnYmNow } from '@/lib/ym';
 
 describe('ym', () => {
+  it('lockedYm = kỳ liền trước kỳ đang mở, qua năm đúng', () => {
+    expect(lockedYm('2026-11')).toBe('2026-10');
+    expect(lockedYm('2027-01')).toBe('2026-12');
+  });
+
+
   it('YM nhận tháng 01–12, từ chối 00/13/1 chữ số', () => {
     expect(['2026-01', '2026-12'].every((s) => YM.test(s))).toBe(true);
     expect(['2026-00', '2026-13', '2026-1', 'abc'].some((s) => YM.test(s))).toBe(false);

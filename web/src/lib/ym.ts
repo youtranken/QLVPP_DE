@@ -7,6 +7,9 @@ export function shiftYm(ym: string, delta: number): string {
   return `${Math.floor(at / 12)}-${String((at % 12) + 1).padStart(2, '0')}`;
 }
 
+// Kỳ Hành chính làm việc: kỳ liền trước kỳ đang mở (kỳ đã khóa gần nhất)
+export const lockedYm = (openYm: string): string => shiftYm(openYm, -1);
+
 // Tháng lịch hiện tại theo giờ Việt Nam (UTC+7, không DST). Khác "kỳ đăng ký" (sau ngày chốt là tháng sau).
 export function vnYmNow(now: Date = new Date()): string {
   const vn = new Date(now.getTime() + 7 * 3600_000);

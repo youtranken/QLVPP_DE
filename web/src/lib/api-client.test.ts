@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { apiFetch, apiFetchBlob, ApiError } from '@/lib/api-client';
+import { apiFetch, apiFetchBlob, ApiError, makeQueryClient } from '@/lib/api-client';
 import { handleSessionExpired } from '@/lib/session-relogin';
 import { jsonResponse } from '@/test/test-utils';
 
@@ -85,5 +85,12 @@ describe('apiFetchBlob — tải tệp qua cùng luật lỗi với apiFetch', (
   it('404 → ApiError kèm body JSON (code), không trả blob', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fileResponse(404, { 'Content-Type': 'application/json' }, '{"code":"SNAPSHOT_NOT_FOUND"}')));
     await expect(apiFetchBlob('/x')).rejects.toMatchObject({ status: 404, body: { code: 'SNAPSHOT_NOT_FOUND' } });
+  });
+
+  it('query mặc định: 409 (vd PERIOD_NOT_LOCKED) không thử lại → hiện lỗi ngay; lỗi khác thử lại 1 lần', () => {
+    const retry = makeQueryClient().getDefaultOptions().queries?.retry as (n: number, e: unknown) => boolean;
+    expect(retry(0, new ApiError(409, { code: 'PERIOD_NOT_LOCKED' }))).toBe(false);
+    expect(retry(0, new ApiError(500, null))).toBe(true);
+    expect(retry(1, new ApiError(500, null))).toBe(false);
   });
 });

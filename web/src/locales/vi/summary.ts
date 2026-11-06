@@ -137,9 +137,9 @@ const summary = {
       cancel: 'Hủy',
       save: 'Lưu điều chỉnh',
       saving: 'Đang lưu…',
-      stale: 'Nhân viên vừa sửa phiếu này — tải bản mới nhất rồi sửa lại.',
+      stale: 'Phiếu vừa được người khác sửa — tải lại.',
       reload: 'Tải bản mới nhất',
-      reloaded: 'Nhân viên vừa sửa phiếu này — đã tải bản mới nhất, sửa lại rồi lưu.',
+      reloaded: 'Phiếu vừa được người khác sửa — đã tải bản mới nhất, sửa lại rồi lưu.',
       saved: 'Đã lưu điều chỉnh phiếu của {{name}}',
       dropped: 'Đã bỏ phiếu của {{name}}',
       errors: {

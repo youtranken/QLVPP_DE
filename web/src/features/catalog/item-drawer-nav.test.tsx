@@ -55,18 +55,18 @@ describe('Ngăn kéo món — đầu, chuyển món, thông tin kho', () => {
     expect(onNext).toHaveBeenCalledTimes(1);
   });
 
-  it('sửa món: "Tồn hiện có 10 cây" + "Mở Kho" tới Kho tìm theo tên, "Đăng ký kỳ tháng 11: 7 người"', async () => {
+  it('sửa món: "Tồn hiện có 10 cây" + "Mở Kho" tới Kho tìm theo tên, "Đăng ký kỳ tháng 10: 7 người"', async () => {
     stubDrawerApi();
     renderDrawer({ item: PEN });
     expect(screen.getByText('Tồn hiện có 10 cây')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Mở Kho' })).toHaveAttribute('href', `/admin/stock?q=${encodeURIComponent(PEN.name)}`);
-    expect(await screen.findByText('Đăng ký kỳ tháng 11: 7 người')).toBeInTheDocument();
+    expect(await screen.findByText('Đăng ký kỳ tháng 10: 7 người')).toBeInTheDocument();
   });
 
-  it('món chưa ai đăng ký kỳ này → "Đăng ký kỳ tháng 11: 0 người"', async () => {
+  it('món chưa ai đăng ký kỳ này → "Đăng ký kỳ tháng 10: 0 người"', async () => {
     stubDrawerApi();
     renderDrawer({ item: PENCIL });
-    expect(await screen.findByText('Đăng ký kỳ tháng 11: 0 người')).toBeInTheDocument();
+    expect(await screen.findByText('Đăng ký kỳ tháng 10: 0 người')).toBeInTheDocument();
   });
 
   it('thêm món: không khối tồn/đăng ký, không "Xóa món"', () => {

@@ -140,9 +140,9 @@ const summary: Messages<typeof vi> = {
       cancel: 'Cancel',
       save: 'Save adjustment',
       saving: 'Saving…',
-      stale: 'The employee just edited this request — load the latest version and edit again.',
+      stale: 'Someone else just edited this request — reload.',
       reload: 'Load latest version',
-      reloaded: 'The employee just edited this request — the latest version is loaded, edit again and save.',
+      reloaded: 'Someone else just edited this request — the latest version is loaded, edit again and save.',
       saved: 'Saved adjustment to the request of {{name}}',
       dropped: 'Removed the request of {{name}}',
       errors: {

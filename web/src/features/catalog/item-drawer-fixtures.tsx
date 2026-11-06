@@ -20,7 +20,7 @@ export function stubDrawerApi(reply: Reply = () => undefined) {
     if (custom) return custom;
     if (url === '/api/files') return jsonResponse(201, { id: 'f-new', mime: 'image/png', size_bytes: 4 });
     if (url === '/api/periods/current') return jsonResponse(200, { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 9, previous: null });
-    if (url.startsWith('/api/admin/periods/2026-11/requests')) return jsonResponse(200, { items: [{ key: PEN.id, item_id: PEN.id, name: PEN.name, unit: 'cay', requested_qty: 12, people: 7 }] });
+    if (url.startsWith('/api/admin/periods/2026-10/requests')) return jsonResponse(200, { items: [{ key: PEN.id, item_id: PEN.id, name: PEN.name, unit: 'cay', requested_qty: 12, people: 7 }] });
     return jsonResponse(200, {});
   });
   vi.stubGlobal('fetch', fetchMock);

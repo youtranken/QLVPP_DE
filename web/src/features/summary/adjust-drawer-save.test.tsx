@@ -136,12 +136,12 @@ describe('AdjustDrawer — lỗi server đúng chỗ', () => {
     await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Giấy note vàng' }));
     await userEvent.type(reasonBox(drawer), 'An báo nhầm');
     await userEvent.click(saveButton(drawer));
-    expect(await within(drawer).findByRole('alert')).toHaveTextContent('Nhân viên vừa sửa phiếu này — tải bản mới nhất rồi sửa lại.');
+    expect(await within(drawer).findByRole('alert')).toHaveTextContent('Phiếu vừa được người khác sửa — tải lại.');
     expect(loadCalls(f)).toHaveLength(1);
     await userEvent.click(within(drawer).getByRole('button', { name: 'Tải bản mới nhất' }));
     await waitFor(() => expect(within(drawer).getByRole('spinbutton', { name: 'Giấy note vàng' })).toHaveValue(4));
     expect(loadCalls(f)).toHaveLength(2);
-    expect(within(drawer).queryByText(/^Nhân viên vừa sửa phiếu này/)).toBeNull();
+    expect(within(drawer).queryByText(/^Phiếu vừa được người khác sửa/)).toBeNull();
     expect(within(drawer).queryByText(/^Trước khi sửa/)).toBeNull();
     expect(reasonBox(drawer)).toHaveValue('An báo nhầm');
   });

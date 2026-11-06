@@ -70,7 +70,8 @@ export function makeQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        retry: 1,
+        // 409 là trạng thái nghiệp vụ (vd kỳ chưa khóa sổ): thử lại vẫn 409, chỉ làm trang quay "Đang tải…" lâu hơn
+        retry: (failures, error) => failures < 1 && !(error instanceof ApiError && error.status === 409),
         staleTime: 10_000,
         refetchOnWindowFocus: false,
       },

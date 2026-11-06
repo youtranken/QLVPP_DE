@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { YM } from '@/lib/ym';
+import { YM, lockedYm } from '@/lib/ym';
 import { useUrlPatch, type UrlPatch } from '@/lib/use-url-patch';
 
 export type SummaryView = 'person' | 'item';
@@ -8,11 +8,11 @@ export type PageFilter = PersonFilter | 'low';
 
 const PERSON_FILTERS: readonly string[] = ['unregistered', 'pending_delivery', 'custom_pending'];
 
-// ?ym= sai mẫu hoặc vượt kỳ đang mở → thay URL bằng kỳ đang mở, không gọi API với tháng sai
+// Mặc định kỳ khóa gần nhất (Hành chính làm việc trên kỳ đã khóa); ?ym= sai mẫu hoặc vượt kỳ đang mở → thay URL bằng kỳ đó, không gọi API với tháng sai
 export function useSummaryParams(openYm: string | undefined) {
   const [params, update] = useUrlPatch();
   const asked = params.get('ym');
-  const ym = asked && openYm && YM.test(asked) && asked <= openYm ? asked : openYm;
+  const ym = asked && openYm && YM.test(asked) && asked <= openYm ? asked : openYm && lockedYm(openYm);
   const view: SummaryView = params.get('view') === 'item' ? 'item' : 'person';
   const raw = params.get('filter') ?? '';
   // Kỳ đang mở chưa giao được (PERIOD_NOT_LOCKED) → lọc "còn dòng chờ giao" vô nghĩa, bỏ đi
@@ -23,7 +23,7 @@ export function useSummaryParams(openYm: string | undefined) {
 
   useEffect(() => {
     const patch: UrlPatch = {};
-    if (openYm && ym && asked !== null && asked !== ym) patch.ym = ym;
+    if (openYm && ym && asked !== ym) patch.ym = ym;
     if (pendingInOpen) patch.filter = null;
     if (Object.keys(patch).length) update(patch, true);
   }, [openYm, ym, asked, pendingInOpen, update]);

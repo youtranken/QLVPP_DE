@@ -152,15 +152,12 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     expect(await snapshotsOf(request, seed.prevYm)).toBe(before + 1);
   });
 
-  test('E9-S4 Báo cáo: kỳ đang mở → 409 PERIOD_NOT_LOCKED {ym, deadline}, không tạo bản chốt', async ({ request }) => {
+  test('E9-S4 Báo cáo: kỳ đang mở → 409 PERIOD_NOT_LOCKED {ym, deadline} (chặn ghi bản chốt kiểm ở api e2e report-snapshots)', async ({ request }) => {
     const period = await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json();
     const ym: string = period.ym;
     const report = await request.get(`/api/admin/reports/${ym}`, { headers: devHeaders('admin') });
     expect(report.status()).toBe(409);
     expect(await report.json()).toMatchObject({ code: 'PERIOD_NOT_LOCKED', ym, deadline: period.deadline });
-    const created = await request.post(`/api/admin/reports/${ym}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print' } });
-    expect(created.status()).toBe(409);
-    expect(psql(`SELECT count(*) FROM report_snapshots WHERE period_ym = '${ym}-01' AND created_at >= '${run.since}'`)).toBe('0');
   });
 
   test('E9-S4 Báo cáo: lỗi tải báo cáo → "Không tải được dữ liệu — thử lại." + "Thử lại"', async ({ page }) => {
