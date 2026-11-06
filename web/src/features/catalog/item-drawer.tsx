@@ -86,6 +86,7 @@ export function ItemDrawer({ item, categories, defaultCategoryId, onClose, nav }
           </button>
         )}
       </form>
+      {f.toastHost}
     </OverlayPanel>
   );
 }

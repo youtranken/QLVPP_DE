@@ -92,7 +92,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'categories-add-dup', false);
       await dialog.getByRole('button', { name: 'Hủy' }).click();
-      await page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
+      await page.getByRole('dialog', { name: 'Bỏ thay đổi?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
       await expect(dialog).toBeHidden();
       if (isMobile(info)) await expectNoContrastViolations(page);
     } finally {
@@ -117,7 +117,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect(menu.getByRole('menuitem')).toHaveText(['Sửa', 'Ngừng nhóm']);
       await menu.getByRole('menuitem', { name: 'Ngừng nhóm' }).click();
       const confirm = page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` });
-      await expect(confirm.getByText('2 món trong nhóm sẽ ẩn khỏi trang Đăng ký. Mở lại nhóm thì món hiện lại.')).toBeVisible();
+      await expect(confirm.getByText('2 món sẽ ẩn với nhân viên. Dùng lại nhóm chỉ hiện lại những món này; món đã ngừng riêng vẫn ngừng.')).toBeVisible();
       await shot(page, info, 'categories-pause-confirm', false);
       await confirm.getByRole('button', { name: 'Ngừng nhóm' }).click();
       await expect(page.getByRole('row').filter({ hasText: category }).getByText('Đã ngừng', { exact: true })).toBeVisible();

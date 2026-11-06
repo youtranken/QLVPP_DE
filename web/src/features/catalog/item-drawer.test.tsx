@@ -181,7 +181,7 @@ describe('Ngăn kéo Thêm món', () => {
 });
 
 describe('Ngăn kéo Sửa món', () => {
-  it('tiêu đề là tên món; PATCH chỉ trường đổi, nút "Lưu thay đổi", chân ghi "1 thay đổi chưa lưu"; lưu xong panel ở lại món đó', async () => {
+  it('tiêu đề là tên món; PATCH chỉ trường đổi, nút "Lưu thay đổi", chân ghi "1 thay đổi chưa lưu"; lưu xong panel ở lại món đó, toast "Đã lưu" đọc được trong panel', async () => {
     const f = stubDrawerApi((_url, init) => (init.method === 'PATCH' ? jsonResponse(200, PEN) : undefined));
     const { onClose } = renderDrawer({ item: PEN });
     expect(screen.getByRole('dialog', { name: 'Sửa món Bút bi xanh' })).toBeInTheDocument();
@@ -191,7 +191,8 @@ describe('Ngăn kéo Sửa món', () => {
     await userEvent.type(max, '30');
     expect(screen.getByText('1 thay đổi chưa lưu')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
-    expect(await screen.findByText('Đã lưu Bút bi xanh')).toBeInTheDocument();
+    // Toast nằm trong panel: toast chung ngoài hộp bị Radix ẩn khỏi trình đọc màn hình
+    expect(await within(screen.getByRole('dialog', { name: 'Sửa món Bút bi xanh' })).findByRole('status')).toHaveTextContent('Đã lưu Bút bi xanh');
     expect(bodyOf(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toEqual({ max_qty: 30 });
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Lưu thay đổi' })).toBeEnabled();

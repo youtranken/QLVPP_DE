@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, useLocation } from 'react-router-dom';
+import { usePanelParam } from '@/lib/use-panel-param';
 import { OverlayPanel } from '@/ui/overlay-panel';
 import { ConfirmProvider } from '@/ui/confirm-provider';
 import { act, renderWithI18n, screen, userEvent, waitFor } from '@/test/test-utils';
@@ -168,15 +169,14 @@ describe('OverlayPanel — focus', () => {
 
 function RoutedPanel({ dirty }: { dirty: boolean }) {
   const { search } = useLocation();
-  const navigate = useNavigate();
-  const open = search.includes('item=');
+  const panel = usePanelParam('item');
   return (
     <>
       <output data-testid="search">{search}</output>
-      <button type="button" onClick={() => void navigate('?item=m1', { state: { panel: 'item' } })}>
+      <button type="button" onClick={() => panel.open('m1')}>
         Mở
       </button>
-      <OverlayPanel open={open} onClose={() => void navigate(-1)} title="Sửa món Bút bi xanh" dirty={dirty}>
+      <OverlayPanel open={panel.id !== null} onClose={panel.close} title="Sửa món Bút bi xanh" dirty={dirty}>
         <p>Nội dung</p>
       </OverlayPanel>
     </>
@@ -220,7 +220,19 @@ describe('OverlayPanel — nút Back của trình duyệt', () => {
     expect(window.location.search).toBe('');
   });
 
-  it('đang sửa: rời trang/đóng tab → beforeunload bị chặn; chưa sửa thì không', () => {
+  it('đang sửa: × → "Bỏ thay đổi" chỉ hỏi một lần, panel đóng, URL sạch', async () => {
+    mockViewport(1280);
+    renderRouted(true);
+    await userEvent.click(screen.getByRole('button', { name: 'Mở' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Đóng' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Bỏ thay đổi' }));
+    await waitFor(() => expect(screen.getByTestId('search').textContent).toBe(''));
+    await act(() => new Promise((r) => setTimeout(r, 30)));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(window.location.search).toBe('');
+  });
+
+  it('đang sửa: rời trang/đóng tab → beforeunload bị chặn (preventDefault + returnValue cho Safari/Chrome cũ); chưa sửa thì không', () => {
     mockViewport(1280);
     window.history.replaceState(null, '', '/admin/catalog?item=m1');
     const { rerender } = renderWithI18n(
@@ -231,8 +243,11 @@ describe('OverlayPanel — nút Back của trình duyệt', () => {
       </BrowserRouter>,
     );
     const dirtyEvent = new Event('beforeunload', { cancelable: true });
+    const returnValue = vi.fn();
+    Object.defineProperty(dirtyEvent, 'returnValue', { set: returnValue });
     window.dispatchEvent(dirtyEvent);
     expect(dirtyEvent.defaultPrevented).toBe(true);
+    expect(returnValue).toHaveBeenCalledWith('');
     rerender(
       <BrowserRouter>
         <ConfirmProvider>

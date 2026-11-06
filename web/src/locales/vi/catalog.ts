@@ -146,7 +146,7 @@ const catalog = {
       deactivate: 'Ngừng nhóm',
       reactivate: 'Dùng lại',
       deactivateTitle: 'Ngừng nhóm “{{name}}”?',
-      deactivateBody: '{{n}} món trong nhóm sẽ ẩn khỏi trang Đăng ký. Mở lại nhóm thì món hiện lại.',
+      deactivateBody: '{{n}} món sẽ ẩn với nhân viên. Dùng lại nhóm chỉ hiện lại những món này; món đã ngừng riêng vẫn ngừng.',
       dirty: 'Thứ tự đã đổi ({{n}} nhóm)',
       orderSaved: 'Đã lưu thứ tự {{n}} nhóm',
       orderPartial: 'Chưa lưu hết thứ tự ({{a}}/{{n}} nhóm) — đã tải lại thứ tự hiện có.',

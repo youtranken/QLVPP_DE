@@ -2,6 +2,8 @@ import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { useConfirm } from '@/ui/confirm-context';
+import { usePanelToast } from '@/ui/panel-toast';
+import { TOAST_MS } from '@/ui/toast-provider';
 import { useToast } from '@/ui/toast-context';
 import { createItem, deleteItem, patchItem, useRefreshCatalog, type AdminItem } from './catalog.api';
 import { catalogErrorKey, fieldErrors, type FieldErrors } from './catalog-errors';
@@ -53,17 +55,25 @@ export function useItemForm({ item, defaultCategoryId, onClose }: { item: AdminI
   const { csrfToken } = useMe();
   const refresh = useRefreshCatalog();
   const toast = useToast();
+  // Lưu xong panel còn mở: toast phải nằm trong panel, toast chung ngoài hộp bị ẩn khỏi trình đọc màn hình
+  const panelToast = usePanelToast(TOAST_MS);
   const confirm = useConfirm();
   const d = useItemDraft(item, defaultCategoryId);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [closing, setClosing] = useState(false);
   const inFlight = useRef(false);
 
   const finish = (text: string, close: boolean) => {
-    toast.show({ text, tone: 'ok' });
     void refresh();
-    if (close) onClose();
-    else setSaving(false);
+    if (!close) {
+      panelToast.show({ text, tone: 'ok' });
+      return setSaving(false);
+    }
+    toast.show({ text, tone: 'ok' });
+    // Đã lưu/xóa xong: nháp không còn là "chưa lưu", đóng không hỏi và không chặn rời trang
+    setClosing(true);
+    onClose();
   };
 
   const submit = async () => {
@@ -102,7 +112,7 @@ export function useItemForm({ item, defaultCategoryId, onClose }: { item: AdminI
     }
   };
 
-  return { ...d, dirty: d.changes > 0, uploading, saving, setUploading, submit, remove };
+  return { ...d, dirty: d.changes > 0 && !closing, uploading, saving, setUploading, submit, remove, toastHost: panelToast.host };
 }
 
 export type ItemForm = ReturnType<typeof useItemForm>;

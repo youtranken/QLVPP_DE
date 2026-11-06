@@ -198,7 +198,7 @@ describe('AdjustDrawer — ↑/↓ chuyển người', () => {
     expect(onNext).toHaveBeenCalledTimes(1);
     await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Giấy note vàng' }));
     await userEvent.keyboard('{ArrowDown}');
-    expect(await screen.findByText('Bỏ thay đổi chưa lưu?')).toBeInTheDocument();
+    expect(await screen.findByText('Bỏ thay đổi?')).toBeInTheDocument();
     expect(onNext).toHaveBeenCalledTimes(1);
     await userEvent.click(screen.getByRole('button', { name: 'Bỏ thay đổi' }));
     expect(onNext).toHaveBeenCalledTimes(2);

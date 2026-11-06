@@ -65,6 +65,24 @@ describe('Danh mục lưới — tab', () => {
     expect(cards()).toHaveLength(3);
   });
 
+  it.each([
+    ['?cat=c-pen', '?group=c-pen'],
+    ['?inactive=1', '?tab=inactive'],
+    ['?inactive=0', ''],
+    ['?filter=noimage', '?tab=noImage'],
+    ['?filter=low', ''],
+    ['?q=b&filter=out', '?q=b'],
+  ])('liên kết cũ %s → %s (đổi sang tham số mới, thay mục lịch sử)', async (old, next) => {
+    await open(`${GRID}${old}`);
+    await waitFor(() => expect(locationSearch()).toBe(next));
+  });
+
+  it('liên kết cũ ?inactive=1 mở tab Đã ngừng', async () => {
+    await open(`${GRID}?inactive=1`);
+    await waitFor(() => expect(tab(/^Đã ngừng/)).toHaveAttribute('aria-pressed', 'true'));
+    expect(screen.getByText('Bút xóa cũ')).toBeInTheDocument();
+  });
+
   it('Đã ngừng chỉ hiện món ngừng; Đang dùng không hiện món ngừng', async () => {
     await open(`${GRID}?tab=inactive`);
     expect(screen.getByText('Bút xóa cũ')).toBeInTheDocument();

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { STOCK_FILTERS, type StockFilter, type StockView } from './stock-rows';
 import { useUrlPatch } from '@/lib/use-url-patch';
 import { YM } from '@/lib/ym';
@@ -12,7 +12,13 @@ export function useStockParams() {
   const tab: StockTab = params.get('tab') === 'issues' ? 'issues' : 'stock';
   const rawYm = params.get('ym') ?? '';
   const ym = YM.test(rawYm) ? rawYm : undefined;
-  const filter = parseFilter(params.get('filter'));
+  const rawFilter = params.get('filter');
+  const filter = parseFilter(rawFilter);
+  // Bộ lọc cũ (?filter=out "Hết hàng") không còn: gỡ khỏi URL, không để lại mục lịch sử
+  const staleFilter = rawFilter !== null && filter === null;
+  useEffect(() => {
+    if (staleFilter) update({ filter: null }, true);
+  }, [staleFilter, update]);
   const q = params.get('q') ?? '';
   const view = useMemo<StockView>(() => ({ filter, q }), [filter, q]);
   return {

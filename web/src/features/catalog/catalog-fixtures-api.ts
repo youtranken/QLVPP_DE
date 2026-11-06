@@ -10,10 +10,9 @@ interface Options {
   items: AdminItem[];
   categories?: Category[];
   patch?: (id: string, body: ItemPayload) => Response | Promise<Response>;
-  // GET admin/items/:id/pending-arrival theo id; thiếu → 404 (hộp ngừng vẫn mở, không khối W24)
+  // GET admin/items/:id/pending-arrival theo id; thiếu → 404 (hộp ngừng vẫn mở, không khối cam hàng đang về)
   pending?: Record<string, unknown>;
 }
-
 
 // Server giả giữ trạng thái: PATCH thành công đổi món, lần tải lại trả bản mới
 export function stubCatalog({ items, categories = CATEGORIES, patch, pending = {} }: Options) {

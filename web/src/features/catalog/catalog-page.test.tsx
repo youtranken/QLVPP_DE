@@ -127,6 +127,15 @@ describe('Danh mục — bảng nhóm', () => {
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
   });
 
+  it('đang thu mọi nhóm mà tìm "but chi" → nhóm chứa kết quả tự mở; xóa ô tìm thì nhóm thu lại như cũ', async () => {
+    await openCatalog({ items: ITEMS });
+    await userEvent.click(screen.getByRole('button', { name: 'Thu tất cả' }));
+    await userEvent.type(screen.getByRole('searchbox'), 'but chi');
+    expect(await screen.findByText('Bút chì 2B')).toBeInTheDocument();
+    await userEvent.clear(screen.getByRole('searchbox'));
+    await waitFor(() => expect(screen.queryByText('Bút chì 2B')).toBeNull());
+  });
+
   it('nút thêm món vào nhóm gọn: chỉ biểu tượng, tên đầy đủ ở aria-label và title', async () => {
     await openCatalog({ items: ITEMS });
     const add = screen.getByRole('button', { name: 'Thêm món vào nhóm Bút & viết' });

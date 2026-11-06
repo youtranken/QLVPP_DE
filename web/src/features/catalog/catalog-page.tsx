@@ -42,7 +42,9 @@ export function CatalogPage() {
   const bulk = useBulkItems(refresh);
   const actions = useCatalogActions(refresh, bulk.setRowError);
   const [dialog, setDialog] = useState<BulkDialog>(null);
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(NO_COLLAPSE);
+  const [stored, setCollapsed] = useState<ReadonlySet<string>>(NO_COLLAPSE);
+  // Đang tìm thì mở mọi nhóm để kết quả không nằm trong nhóm đang thu; xóa ô tìm thì trả lại như cũ
+  const collapsed = p.view.q.trim() ? NO_COLLAPSE : stored;
   const { keepOnly } = bulk;
   useEffect(() => keepOnly(new Set(d.rows.map((r) => r.id))), [d.rows, keepOnly]);
   const title = t('catalog.title');

@@ -149,7 +149,7 @@ const catalog: Messages<typeof vi> = {
       deactivate: 'Retire category',
       reactivate: 'Use again',
       deactivateTitle: 'Retire “{{name}}”?',
-      deactivateBody: '{{n}} item(s) in this category will be hidden from the request page. Reopen the category to show them again.',
+      deactivateBody: '{{n}} item(s) will be hidden from staff. Re-enabling the category brings back only these items; items retired one by one stay retired.',
       dirty: 'Order changed ({{n}} categories)',
       orderSaved: 'Saved the order of {{n}} categories',
       orderPartial: 'Order not fully saved ({{a}}/{{n}} categories) — reloaded the current order.',

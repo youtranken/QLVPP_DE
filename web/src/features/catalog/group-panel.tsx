@@ -8,6 +8,7 @@ import { ItemThumb } from '@/ui/item-thumb';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { OverlayPanel } from '@/ui/overlay-panel';
 import { usePanelToast } from '@/ui/panel-toast';
+import type { ToastSpec } from '@/ui/toast-context';
 import { Switch } from '@/ui/switch';
 import type { Tone } from '@/lib/group-tone';
 import { useUnitNames } from '@/features/units/units.api';
@@ -26,7 +27,7 @@ interface Props {
   onRetry: () => void;
   busy: boolean;
   error: string | null;
-  onToggleGroup: (c: Category) => void;
+  onToggleGroup: (c: Category, notify: (t: ToastSpec) => void) => void;
   onClose: () => void;
   refresh: () => Promise<unknown>;
 }
@@ -58,7 +59,7 @@ export function GroupPanel({ group, tone, items, loading, loadError, onRetry, bu
             label={title}
             text={t(group.active ? 'catalog.categories.itemActive' : 'catalog.categories.itemInactive')}
             disabled={busy}
-            onChange={() => onToggleGroup(group)}
+            onChange={() => onToggleGroup(group, toast.show)}
           />
           {!group.active && (
             <p id={hintId} className="gp-hint">

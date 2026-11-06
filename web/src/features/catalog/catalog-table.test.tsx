@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
-import { OLD, PAPER, PEN } from './catalog-fixtures';
+import { OLD, PAPER, PEN, adminItem } from './catalog-fixtures';
 import { inRow, locationSearch, openCatalog, patchCalls, validationError } from './catalog-fixtures-api';
 
 const ITEMS = [PAPER, PEN, OLD];
@@ -103,6 +103,17 @@ describe('Danh mục — công tắc Dùng', () => {
     await userEvent.click(inRow('Bút xóa cũ').getByRole('switch', { name: 'Mở lại Bút xóa cũ' }));
     expect(await screen.findByText('Đã mở lại Bút xóa cũ')).toBeInTheDocument();
     expect(patchCalls(f)).toEqual([{ id: 'i-old', body: { active: true } }]);
+  });
+
+  it('món đang dùng trong nhóm đã ngừng: công tắc tắt, vô hiệu, gợi ý "Bật lại nhóm để đổi từng món"; bấm không gửi gì', async () => {
+    const byGroup = adminItem({ id: 'i-clip', name: 'Kẹp nhóm ngừng', category_id: 'c-pen', usable: false, inactive_reason: 'group' });
+    const f = await openCatalog({ items: [...ITEMS, byGroup] });
+    const sw = inRow('Kẹp nhóm ngừng').getByRole('switch', { name: 'Mở lại Kẹp nhóm ngừng' });
+    expect(sw).toBeDisabled();
+    expect(sw).toHaveAttribute('aria-checked', 'false');
+    expect(sw).toHaveAccessibleDescription('Bật lại nhóm để đổi từng món');
+    await userEvent.click(sw);
+    expect(patchCalls(f)).toEqual([]);
   });
 
   it('ngừng lỗi → câu lỗi ở hàng, không toast', async () => {

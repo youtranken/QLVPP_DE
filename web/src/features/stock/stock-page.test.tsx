@@ -56,10 +56,11 @@ describe('StockPage', () => {
     expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
   });
 
-  it('?filter=out (URL cũ) không còn là bộ lọc → hiện tất cả', async () => {
+  it('?filter=out (URL cũ "Hết hàng") → Tất cả, tham số bị gỡ (replace)', async () => {
     await open('/admin/stock?filter=out');
     expect(screen.getByText('Bìa còng')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Tất cả/ })).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => expect(screen.getByTestId('location-search')).toBeEmptyDOMElement());
   });
 
   it('bấm thẻ Không có đặt URL ?filter=none; bấm "Tất cả" bỏ lọc', async () => {

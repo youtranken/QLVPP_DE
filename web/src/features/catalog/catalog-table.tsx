@@ -6,10 +6,9 @@ import { DataTable } from '@/ui/data-table';
 import type { Selection } from '@/ui/data-table-row';
 import { Icon } from '@/ui/icon';
 import { InlineNumber } from '@/ui/inline-number';
-import { Switch } from '@/ui/switch';
 import { useUnitNames } from '@/features/units/units.api';
 import { categoryLabel } from './catalog.api';
-import { CodeCell, ItemCell, StockCell, Stop } from './catalog-cells';
+import { ActiveCell, CodeCell, ItemCell, StockCell, Stop } from './catalog-cells';
 import { rowErrorText } from './catalog-errors';
 import { NO_GROUP, type CatalogRow, type CategoryIndex } from './catalog-rows';
 
@@ -68,11 +67,7 @@ function useColumns(rowErrors: Record<string, string>, actions: CatalogTableActi
       {
         id: 'active',
         header: t('catalog.list.colActive'),
-        cell: ({ row: { original: r } }) => (
-          <Stop>
-            <Switch checked={r.active} label={t(r.active ? 'catalog.list.deactivateLabel' : 'catalog.list.reactivateLabel', { name: r.name })} onChange={() => onToggleActive(r)} />
-          </Stop>
-        ),
+        cell: ({ row: { original: r } }) => <ActiveCell row={r} onToggle={() => onToggleActive(r)} />,
       },
       {
         id: 'edit',

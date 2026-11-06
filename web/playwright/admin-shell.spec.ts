@@ -297,11 +297,20 @@ test.describe('V2D-13 toàn màn hình và panel phủ', () => {
       await page.reload();
       await expect(panel).toBeVisible();
       await panel.getByLabel(/^Tên món/).fill(`${item.name} X`);
+      const discard = page.getByRole('dialog', { name: 'Bỏ thay đổi?' });
       await page.goBack();
-      await expect(page.getByRole('alertdialog').or(page.getByRole('dialog', { name: 'Bỏ thay đổi?' }))).toBeVisible();
+      await expect(discard).toBeVisible();
+      await discard.getByRole('button', { name: 'Ở lại' }).click();
+      await expect(panel).toBeVisible();
+      await expect(panel.getByLabel(/^Tên món/)).toHaveValue(`${item.name} X`);
       expect(new URL(page.url()).searchParams.get('item')).toBe(item.id);
-      await page.getByRole('button', { name: 'Bỏ thay đổi' }).click();
+      await page.goBack();
+      await expect(discard).toBeVisible();
+      await discard.getByRole('button', { name: 'Bỏ thay đổi' }).click();
       await expect(panel).toBeHidden();
+      const listUrl = new URL(page.url());
+      expect(listUrl.pathname, 'Back lần hai về danh sách, không về trang trước').toBe('/admin/catalog');
+      expect(listUrl.searchParams.get('item')).toBeNull();
     } finally {
       await removeTestItem(page.request, item.id);
     }

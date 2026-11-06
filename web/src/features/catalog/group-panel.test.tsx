@@ -147,19 +147,19 @@ describe('Panel nhóm (?group=)', () => {
     await screen.findByRole('dialog', { name: 'Nhóm Kẹp & dán' });
     await userEvent.click(panel().getByRole('switch', { name: 'Nhóm Kẹp & dán' }));
     const dialog = await screen.findByRole('dialog', { name: 'Ngừng nhóm “Kẹp & dán”?' });
-    expect(within(dialog).getByText(/^4 món trong nhóm sẽ ẩn/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/^4 món sẽ ẩn với nhân viên/)).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Ngừng nhóm' }));
     await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/item-categories/c-1', 'PATCH', { active: false }]]));
   });
 
-  it('bật lại nhóm: không hỏi, PATCH {active:true}, toast "4 món dùng lại; 1 món vẫn ngừng riêng"', async () => {
+  it('bật lại nhóm: không hỏi, PATCH {active:true}, toast "4 món dùng lại; 1 món vẫn ngừng riêng" nằm trong panel', async () => {
     const f = await openAt('/admin/categories?group=c-1', {
       cats: [{ ...CATS[0], active: false }, CATS[1]],
       mutate: (url, _m, body) => (url.endsWith('/c-1') && body.active === true ? jsonResponse(200, { ...CATS[0], active: true, affected_items: { reactivated: 4, still_inactive: 1 } }) : undefined),
     });
     await screen.findByRole('dialog', { name: 'Nhóm Kẹp & dán' });
     await userEvent.click(panel().getByRole('switch', { name: 'Nhóm Kẹp & dán' }));
-    expect(await screen.findByText('4 món dùng lại; 1 món vẫn ngừng riêng')).toBeInTheDocument();
+    expect(await panel().findByText('4 món dùng lại; 1 món vẫn ngừng riêng')).toBeInTheDocument();
     expect(mutations(f)).toEqual([['/api/admin/item-categories/c-1', 'PATCH', { active: true }]]);
     expect(screen.queryByRole('dialog', { name: /^Dùng lại nhóm/ })).toBeNull();
   });

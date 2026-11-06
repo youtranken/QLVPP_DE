@@ -1,6 +1,6 @@
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { panelDiscardOptions, useOptionalConfirm } from '@/ui/confirm-context';
+import { discardOptions, useOptionalConfirm } from '@/ui/confirm-context';
 import { Dialog, DialogClose, DialogCloseButton, DialogTitle } from '@/ui/dialog';
 import { Icon } from '@/ui/icon';
 import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
@@ -56,7 +56,7 @@ export function OverlayPanel({ open, onClose, title, dirty = false, saving = fal
   const { t } = useTranslation();
   const askConfirm = useOptionalConfirm();
   const phone = useMediaQuery(ADMIN_PHONE_QUERY);
-  const ask = () => (askConfirm ? askConfirm(panelDiscardOptions(t)) : Promise.resolve(true));
+  const ask = () => (askConfirm ? askConfirm(discardOptions(t)) : Promise.resolve(true));
   const guarded = (go: () => void) => {
     if (!dirty) return go();
     void ask().then((ok) => ok && go());

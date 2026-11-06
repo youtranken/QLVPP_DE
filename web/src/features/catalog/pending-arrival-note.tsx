@@ -9,7 +9,7 @@ type PendingArrival = { remaining: number; unit?: string; snapshot_at?: string }
 const fetchPending = (id: string) =>
   apiFetch<PendingArrival>(`/api/admin/items/${id}/pending-arrival`).catch(() => null);
 
-// Khối W24 cho hộp ngừng món/nhóm; lỗi tải thì bỏ khối, không chặn việc ngừng
+// Khối cam "đang chờ ADM giao" cho hộp ngừng món/nhóm; lỗi tải thì bỏ khối, không chặn việc ngừng
 export function usePendingArrivalNote() {
   const { t } = useTranslation();
   const unitName = useUnitNames();

@@ -87,7 +87,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'units-add-dup', false);
       await dialog.getByRole('button', { name: 'Hủy' }).click();
-      await page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
+      await page.getByRole('dialog', { name: 'Bỏ thay đổi?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
       await expect(dialog).toBeHidden();
 
       expect(await memberOtherItemUnits(browser, info, sub, name)).toBe(1);
@@ -132,7 +132,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'units-sort', false);
     await page.getByRole('button', { name: 'Hủy' }).click();
-    await page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
+    await page.getByRole('dialog', { name: 'Bỏ thay đổi?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
     await expect(page.getByRole('button', { name: /^Đưa / })).toHaveCount(0);
     expect(await names()).toEqual(before);
   });

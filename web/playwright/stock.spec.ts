@@ -315,7 +315,7 @@ test.describe('V2D-16 Tủ / Kho theo người đang chờ (dev-identity admin)'
       await count.getByLabel('Số đếm thực tế').fill('1');
       await expect(count.getByRole('note')).toHaveText('Sau kiểm kê tủ còn 1, thiếu 3 cho người đang chờ.');
       await count.getByRole('button', { name: 'Hủy' }).click();
-      await page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' }).getByRole('button', { name: 'Bỏ thay đổi', exact: true }).click();
+      await page.getByRole('dialog', { name: 'Bỏ thay đổi?' }).getByRole('button', { name: 'Bỏ thay đổi', exact: true }).click();
       await expect(count).toBeHidden();
 
       await page.getByRole('radio', { name: 'Xuất lẻ' }).click();

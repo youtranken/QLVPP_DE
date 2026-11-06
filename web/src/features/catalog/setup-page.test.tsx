@@ -65,6 +65,23 @@ describe('Trang "Nhóm & đơn vị" (2 tab)', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Đơn vị tính' })).toBeInTheDocument();
   });
 
+  it('tablist bàn phím: chỉ tab đang mở trong Tab; ←/→ chuyển focus giữa hai tab (vòng), Enter mới đổi trang', async () => {
+    render(['/admin/categories/units']);
+    const tabs = within(await screen.findByRole('tablist'));
+    const units = tabs.getByRole('tab', { name: 'Đơn vị tính' });
+    const groups = tabs.getByRole('tab', { name: 'Nhóm món' });
+    expect(units).toHaveAttribute('tabindex', '0');
+    expect(groups).toHaveAttribute('tabindex', '-1');
+    units.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(groups).toHaveFocus();
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(units).toHaveFocus();
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(groups).toHaveFocus();
+    expect(screen.getByTestId('where')).toHaveTextContent('/admin/categories/units');
+  });
+
   it('bấm tab Nhóm món → /admin/categories (push: Back về tab Đơn vị)', async () => {
     render(['/admin/categories/units']);
     await userEvent.click(within(await screen.findByRole('tablist')).getByRole('tab', { name: 'Nhóm món' }));

@@ -67,20 +67,20 @@ describe('Drawer — ngăn trượt phải', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it('đang sửa dở: Hủy hỏi "Bỏ thay đổi?" — Tiếp tục sửa giữ ngăn mở', async () => {
+  it('đang sửa dở: Hủy hỏi "Bỏ thay đổi?" — Ở lại giữ ngăn mở', async () => {
     const onOpenChange = vi.fn();
     renderWithI18n(<Harness dirty onOpenChange={onOpenChange} />);
     await userEvent.click(screen.getByRole('button', { name: 'Hủy' }));
-    expect(await screen.findByText('Bỏ thay đổi chưa lưu?')).toBeInTheDocument();
-    await userEvent.click(screen.getByText('Tiếp tục sửa'));
+    expect(await screen.findByText('Bỏ thay đổi?')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('Ở lại'));
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
-  it('dirty + Esc → hỏi "Bỏ thay đổi chưa lưu?"; Bỏ thay đổi mới đóng', async () => {
+  it('dirty + Esc → hỏi "Bỏ thay đổi?"; Bỏ thay đổi mới đóng', async () => {
     const onOpenChange = vi.fn();
     renderWithI18n(<Harness dirty onOpenChange={onOpenChange} />);
     await userEvent.keyboard('{Escape}');
-    expect(await screen.findByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Bỏ thay đổi?' })).toBeInTheDocument();
     expect(onOpenChange).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: 'Bỏ thay đổi' }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -112,13 +112,13 @@ describe('Drawer — ↑/↓ đổi nội dung tại chỗ', () => {
     expect(onPrev).not.toHaveBeenCalled();
   });
 
-  it('đang sửa dở: ↓ hỏi "Bỏ thay đổi chưa lưu?" — Tiếp tục sửa không chuyển, Bỏ thay đổi mới gọi onNext', async () => {
+  it('đang sửa dở: ↓ hỏi "Bỏ thay đổi?" — Ở lại không chuyển, Bỏ thay đổi mới gọi onNext', async () => {
     const onNext = vi.fn();
     renderWithI18n(<Harness dirty onOpenChange={vi.fn()} onNext={onNext} />);
     screen.getByRole('button', { name: 'Lưu nháp' }).focus();
     await userEvent.keyboard('{ArrowDown}');
-    expect(await screen.findByText('Bỏ thay đổi chưa lưu?')).toBeInTheDocument();
-    await userEvent.click(screen.getByText('Tiếp tục sửa'));
+    expect(await screen.findByText('Bỏ thay đổi?')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('Ở lại'));
     expect(onNext).not.toHaveBeenCalled();
     screen.getByRole('button', { name: 'Lưu nháp' }).focus();
     await userEvent.keyboard('{ArrowDown}');

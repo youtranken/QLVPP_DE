@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ItemThumb } from '@/ui/item-thumb';
+import { Switch } from '@/ui/switch';
 import type { CatalogRow } from './catalog-rows';
 
 // Ô có nút/ô nhập: chặn bấm lan lên hàng (bấm hàng = mở form món)
@@ -49,4 +50,28 @@ export function CodeCell({ code }: { code: string | null }) {
 export function StockCell({ row }: { row: CatalogRow }) {
   const { t } = useTranslation();
   return <span className="ct-stock">{t('catalog.card.stock', { n: row.stock_qty })}</span>;
+}
+
+// Món ngừng theo nhóm: công tắc tắt và khóa như trong panel nhóm, bật lại nhóm mới đổi được từng món
+export function ActiveCell({ row, onToggle }: { row: CatalogRow; onToggle: () => void }) {
+  const { t } = useTranslation();
+  const hintId = useId();
+  const byGroup = row.inactive_reason === 'group';
+  const on = row.active && !byGroup;
+  return (
+    <Stop>
+      <Switch
+        checked={on}
+        label={t(on ? 'catalog.list.deactivateLabel' : 'catalog.list.reactivateLabel', { name: row.name })}
+        disabled={byGroup}
+        describedBy={byGroup ? hintId : undefined}
+        onChange={onToggle}
+      />
+      {byGroup && (
+        <span id={hintId} className="sr-only">
+          {t('catalog.categories.enableGroupFirst')}
+        </span>
+      )}
+    </Stop>
+  );
 }

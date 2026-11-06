@@ -73,7 +73,7 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     await expect(part1.getByRole('rowheader', { name: /^Chưa xếp nhóm/ })).toBeVisible();
     const issues = page.getByRole('region', { name: 'Xuất lẻ trong kỳ' });
     await expect(issues.getByRole('row').filter({ hasText: reason }).getByText(seed.name)).toBeVisible();
-    await expect(issues.getByRole('link', { name: 'Mở Kho' })).toHaveAttribute('href', '/admin/stock');
+    await expect(issues.getByRole('link', { name: 'Mở Tủ / Kho' })).toHaveAttribute('href', '/admin/stock');
     const part2 = page.getByRole('region', { name: 'Phần 2 · Chi tiết theo phòng ban' });
     await expect(part2.getByRole('rowheader', { name: 'PW Phòng giao' })).toBeVisible();
     await expect(part2.getByRole('row').filter({ hasText: seed.name })).toContainText(`${a.name} 5`);

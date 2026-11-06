@@ -106,7 +106,7 @@ export function CategoriesPage() {
           onRetry={() => void items.refetch()}
           busy={group.busy}
           error={group.error}
-          onToggleGroup={(c) => void group.toggle(c)}
+          onToggleGroup={(c, notify) => void group.toggle(c, notify)}
           onClose={panel.close}
           refresh={refresh}
         />

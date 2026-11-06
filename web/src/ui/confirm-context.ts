@@ -6,7 +6,7 @@ export type ConfirmOptions = {
   confirmLabel?: string;
   cancelLabel?: string;
   danger?: boolean;
-  // Khối cam không chặn (W…): nút chính vẫn bấm được
+  // Khối cảnh báo cam không chặn: nút chính vẫn bấm được
   warning?: ReactNode;
 };
 
@@ -30,14 +30,5 @@ export const discardOptions = (t: (key: string) => string): ConfirmOptions => ({
   message: t('common.discardBody'),
   confirmLabel: t('common.discardOk'),
   cancelLabel: t('common.discardKeep'),
-  danger: true,
-});
-
-// Panel phủ: hộp chọn giữa hai lựa chọn nên nút thoát là "Ở lại", không phải "Tiếp tục sửa"
-export const panelDiscardOptions = (t: (key: string) => string): ConfirmOptions => ({
-  title: t('common.panel.discardTitle'),
-  message: t('common.discardBody'),
-  confirmLabel: t('common.discardOk'),
-  cancelLabel: t('common.panel.stay'),
   danger: true,
 });

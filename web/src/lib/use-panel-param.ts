@@ -53,11 +53,19 @@ export function usePanelParam(name: PanelName, { order = NONE, known, extra = NO
       if (target !== undefined) go({ ...cleared(), [name]: target }, true, location.state);
     },
     // Mở bằng đẩy lịch sử thì đóng = lùi lại, để Back sau đó không mở lại panel
-    close: () => (pushed ? void navigate(-1) : go(cleared(), true, null)),
+    close: () => {
+      if (!pushed) return go(cleared(), true, null);
+      selfClose = true;
+      void navigate(-1);
+    },
   };
 }
 
-// BrowserRouter không có useBlocker: nghe popstate ở pha capture (trước router), đẩy lại mục của panel rồi hỏi
+// Panel tự đóng (đã hỏi hoặc vừa lưu/xóa xong) bằng lùi lịch sử: popstate đó không phải Back của người dùng
+let selfClose = false;
+
+// BrowserRouter không có useBlocker: nghe popstate ở pha capture (trước router) và giữ router đứng yên trong lúc hỏi.
+// Không đẩy lại lịch sử ngay trong popstate (Chrome coi là thao tác không do người dùng); "Ở lại" mới đẩy lại, sau cú bấm.
 export function useDirtyBackGuard(dirty: boolean, ask: () => Promise<boolean>) {
   const latest = useRef({ dirty, ask });
   const entry = useRef({ state: null as unknown, url: '' });
@@ -66,22 +74,30 @@ export function useDirtyBackGuard(dirty: boolean, ask: () => Promise<boolean>) {
     entry.current = { state: window.history.state, url: window.location.href };
   });
   useEffect(() => {
-    let bypass = false;
+    let pass = false;
+    let asking = false;
     const onPop = (e: PopStateEvent) => {
-      if (bypass || !latest.current.dirty) {
-        bypass = false;
+      if (selfClose || pass) {
+        selfClose = false;
+        pass = false;
         return;
       }
+      if (!asking && !latest.current.dirty) return;
       e.stopImmediatePropagation();
-      window.history.pushState(entry.current.state, '', entry.current.url);
+      if (asking) return;
+      asking = true;
+      const panelEntry = entry.current;
       void latest.current.ask().then((ok) => {
-        if (!ok) return;
-        bypass = true;
-        window.history.back();
+        asking = false;
+        if (!ok) return window.history.pushState(panelEntry.state, '', panelEntry.url);
+        pass = true;
+        window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }));
       });
     };
     const onUnload = (e: BeforeUnloadEvent) => {
-      if (latest.current.dirty) e.preventDefault();
+      if (!latest.current.dirty) return;
+      e.preventDefault();
+      e.returnValue = '';
     };
     window.addEventListener('popstate', onPop, true);
     window.addEventListener('beforeunload', onUnload);

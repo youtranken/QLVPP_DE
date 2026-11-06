@@ -21,14 +21,14 @@ describe('Dialog dirty guard', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it('đang sửa dở: Esc hỏi "Bỏ thay đổi?" — Tiếp tục sửa giữ mở, Bỏ thay đổi mới đóng', async () => {
+  it('đang sửa dở: Esc hỏi "Bỏ thay đổi?" — Ở lại giữ mở, Bỏ thay đổi mới đóng', async () => {
     const onOpenChange = vi.fn();
     renderWithI18n(<Harness dirty onOpenChange={onOpenChange} />);
     await userEvent.keyboard('{Escape}');
-    expect(await screen.findByText('Bỏ thay đổi chưa lưu?')).toBeInTheDocument();
+    expect(await screen.findByText('Bỏ thay đổi?')).toBeInTheDocument();
     expect(onOpenChange).not.toHaveBeenCalled();
 
-    await userEvent.click(screen.getByText('Tiếp tục sửa'));
+    await userEvent.click(screen.getByText('Ở lại'));
     expect(onOpenChange).not.toHaveBeenCalled();
 
     await userEvent.keyboard('{Escape}');

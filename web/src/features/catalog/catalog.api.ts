@@ -24,7 +24,7 @@ export interface AdminItem {
   admin_only: boolean;
   max_qty: number;
   stock_qty: number;
-  // Tồn ngay sau lần nhập mua gần nhất; null = chưa nhập lần nào (FR-50)
+  // Tồn ngay sau lần nhập mua gần nhất; null = chưa nhập lần nào
   restock_level: number | null;
   /** @deprecated Chỉ theo tồn, không xét người chờ — Tủ/Kho dùng `GET admin/stock` (`stockListQuery`) */
   stock_state: StockState;

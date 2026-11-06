@@ -258,12 +258,12 @@ describe('Trang Đơn vị tính', () => {
     );
   });
 
-  it('Hủy khi đã đổi → hỏi "Bỏ thay đổi chưa lưu?": "Tiếp tục sửa" giữ thứ tự mới; "Bỏ thay đổi" trả thứ tự cũ và thoát', async () => {
+  it('Hủy khi đã đổi → hỏi "Bỏ thay đổi?": "Ở lại" giữ thứ tự mới; "Bỏ thay đổi" trả thứ tự cũ và thoát', async () => {
     const f = await open();
     await sortOn();
     await userEvent.click(screen.getByRole('button', { name: 'Đưa hộp lên' }));
     await userEvent.click(screen.getByRole('button', { name: 'Hủy' }));
-    await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' })).getByRole('button', { name: 'Tiếp tục sửa' }));
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi?' })).getByRole('button', { name: 'Ở lại' }));
     expect(names()).toEqual(['hộp', 'cái', 'Cũ']);
     await userEvent.click(screen.getByRole('button', { name: 'Hủy' }));
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Bỏ thay đổi' }));
@@ -280,12 +280,12 @@ describe('Trang Đơn vị tính', () => {
     expect(screen.getByRole('button', { name: 'Sắp xếp' })).toBeInTheDocument();
   });
 
-  it('đang sắp xếp có thay đổi, bấm menu sang "Danh mục" → hỏi bỏ thay đổi; "Tiếp tục sửa" ở lại trang', async () => {
+  it('đang sắp xếp có thay đổi, bấm menu sang "Danh mục" → hỏi bỏ thay đổi; "Ở lại" ở lại trang', async () => {
     await open();
     await sortOn();
     await userEvent.click(screen.getByRole('button', { name: 'Đưa hộp lên' }));
     await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Danh mục món' }));
-    await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' })).getByRole('button', { name: 'Tiếp tục sửa' }));
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi?' })).getByRole('button', { name: 'Ở lại' }));
     expect(screen.getByRole('heading', { level: 2, name: 'Đơn vị tính' })).toBeInTheDocument();
     expect(names()).toEqual(['hộp', 'cái', 'Cũ']);
   });

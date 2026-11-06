@@ -247,7 +247,7 @@ export async function expectReorderArrowKeepsFocus(page: Page, menuLabel: RegExp
   const labels = await page.getByRole('table').getByRole('button', { name: menuLabel }).evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
   expect(labels.at(-2)).toMatch(new RegExp(` ${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
   await page.getByRole('button', { name: 'Hủy' }).click();
-  await page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
+  await page.getByRole('dialog', { name: 'Bỏ thay đổi?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
 }
 
 // Phiếu nhân viên: ≥ 901 là khung "complementary" bên phải; ≤ 900 là dialog (sheet) mở từ thanh phiếu nổi
