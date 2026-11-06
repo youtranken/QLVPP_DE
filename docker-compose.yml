@@ -19,6 +19,9 @@ services:
       APP_BASE_URL: ${APP_BASE_URL:?APP_BASE_URL bắt buộc trong .env}
       # EDGE → web nginx = 2 hop
       TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:?TRUST_PROXY_HOPS bắt buộc trong .env}
+      # Giới hạn request/phút (rỗng = mặc định 300 của api); dev chạy Playwright cả bộ từ một IP cần nâng (xem .env.example)
+      THROTTLE_IP_PER_MIN: ${THROTTLE_IP_PER_MIN:-}
+      THROTTLE_USER_PER_MIN: ${THROTTLE_USER_PER_MIN:-}
       LOCAL_SA_USERNAME: ${LOCAL_SA_USERNAME:?LOCAL_SA_USERNAME bắt buộc trong .env}
       LOCAL_SA_PASSWORD_HASH: ${LOCAL_SA_PASSWORD_HASH:?LOCAL_SA_PASSWORD_HASH bắt buộc trong .env (scrypt.saltHex.hashHex)}
       FILES_DIR: /data/files
