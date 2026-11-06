@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, cartOf, closeCart, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, openCart, psql, removeTestItem, seedActiveUser } from './helpers';
+import { acquireLock, cartOf, closeCart, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, openCart, psql, removeTestItem, seedActiveUser, seedPwItem } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-12-shots';
 const FIXTURE = 'playwright/fixtures/item.png';
@@ -112,6 +112,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
     const nameB = `PW chép HC ${stamp}`;
     const itemA = await createItem(request, nameA, { max_qty: 5 });
     const itemB = await createItem(request, nameB, { admin_only: true });
+    const other = await seedPwItem(page);
     const period = await (await request.get('/api/periods/current', { headers: me.headers })).json();
     const prevYm = prevYmOf(period.ym);
     const prevMonth = Number(prevYm.slice(5));
@@ -134,9 +135,8 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'copy-hero');
 
-      const items = await (await request.get('/api/items', { headers: me.headers })).json();
-      const other = items.find((i: { name: string; active: boolean; admin_only: boolean }) => i.active && !i.admin_only && !i.name.startsWith('PW '));
       const grid = page.getByRole('region', { name: 'Danh mục món' });
+      await grid.getByRole('searchbox', { name: 'Tìm món' }).fill(other.name);
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${other.name}`, exact: true }).click();
       await snap(page, info, 'copy-before');
 
@@ -164,13 +164,14 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       deleteTestUsers(me.sub);
       if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${prevYm}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${prevYm}-01')`);
       release();
-      for (const id of [itemA, itemB]) await removeTestItem(request, id);
+      for (const id of [itemA, itemB, other.id]) await removeTestItem(request, id);
     }
   });
 
   test('Kỳ khóa giữa chừng, chưa từng lưu (PERIOD_LOCKED giả qua route): giỏ chuyển sang tháng sau, câu báo thấy ngay', async ({ page, request }, info) => {
     const me = memberIdentity(info, 'locked');
     seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
+    let item: { id: string; name: string } | undefined;
     try {
       const period = await (await request.get('/api/periods/current', { headers: me.headers })).json();
       const [y, m] = String(period.ym).split('-').map(Number);
@@ -193,11 +194,11 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
         }
         return route.continue({ headers });
       });
-      const items = await (await request.get('/api/items', { headers: me.headers })).json();
-      const item = items.find((i: { name: string; active: boolean; admin_only: boolean }) => i.active && !i.admin_only && !i.name.startsWith('PW '));
+      item = await seedPwItem(page);
 
       await page.goto('/');
       const grid = page.getByRole('region', { name: 'Danh mục món' });
+      await grid.getByRole('searchbox', { name: 'Tìm món' }).fill(item.name);
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${item.name}`, exact: true }).click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
@@ -215,6 +216,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await expect(cartOf(page).getByRole('spinbutton', { name: item.name, exact: true })).toHaveValue('1');
     } finally {
       deleteTestUsers(me.sub);
+      if (item) await removeTestItem(request, item.id);
     }
   });
 
@@ -243,12 +245,12 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       }
       return route.continue({ headers });
     });
-    const items = await (await request.get('/api/items', { headers: me.headers })).json();
-    const item = items.find((i: { name: string; active: boolean; admin_only: boolean }) => i.active && !i.admin_only && !i.name.startsWith('PW '));
+    const item = await seedPwItem(page);
 
     try {
       await page.goto('/');
       const grid = page.getByRole('region', { name: 'Danh mục món' });
+      await grid.getByRole('searchbox', { name: 'Tìm món' }).fill(item.name);
       const add = grid.getByRole('button', { name: `Thêm vào phiếu: ${item.name}`, exact: true });
       await add.click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
@@ -270,6 +272,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await expect(page.getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu”/)).toBeAttached();
     } finally {
       deleteTestUsers(me.sub);
+      await removeTestItem(request, item.id);
     }
   });
 });

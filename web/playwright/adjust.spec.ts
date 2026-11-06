@@ -1,6 +1,18 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, asRole, deleteTestUsers, expectNoContrastViolations, isMobile, psql, searchSummaryPeople, settled } from './helpers';
+import {
+  acquireLock,
+  asRole,
+  deleteTestUsers,
+  expectNoContrastViolations,
+  isMobile,
+  psql,
+  removeTestItem,
+  searchSummaryPeople,
+  seedActiveUser,
+  seedPwItem,
+  settled,
+} from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-30-giao-dien-hanh-chinh/task-11-shots';
 
@@ -17,21 +29,7 @@ const prevYmOf = (ym: string) => {
   return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
 };
 
-interface Item {
-  id: string;
-  name: string;
-  active: boolean;
-  admin_only: boolean;
-  max_qty: number;
-}
-
 const asMember = (sub: string) => ({ 'x-dev-user-sub': sub, 'x-dev-role': 'member' });
-
-async function memberItems(request: APIRequestContext, sub: string) {
-  const res = await request.get('/api/items', { headers: asMember(sub) });
-  const items: Item[] = await res.json();
-  return items.filter((i) => i.active && !i.admin_only && !i.name.startsWith('PW ') && i.max_qty >= 5);
-}
 
 async function uploadLineImage(request: APIRequestContext, sub: string) {
   const img = await request.post('/api/files', {
@@ -43,13 +41,15 @@ async function uploadLineImage(request: APIRequestContext, sub: string) {
 }
 
 function seedUser(sub: string, name: string) {
-  psql(`INSERT INTO users (sub, full_name, email, department, status)
-    VALUES ('${sub}', '${name}', '${sub}@example.test', 'PW Phòng điều chỉnh', 'active')`);
+  seedActiveUser(sub, name, 'active', { department: 'PW Phòng điều chỉnh' });
 }
 
 asRole('admin');
 
 test.describe('E3-S3/E3-S4 điều chỉnh và tạo hộ (M1)', () => {
+  // Mỗi test tự gieo món PW có ảnh qua API (tải ảnh + tạo món) nên dài hơn mặc định 30 s
+  test.describe.configure({ timeout: 60_000 });
+
   test('E9-S2 Điều chỉnh kỳ khóa: cận dưới đã giao, lý do 2/3 ký tự, lưu ra toast', async ({ page, request }, info) => {
     const tag = `${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}`;
     const sub = `pw-adj-${tag}`;
@@ -57,7 +57,8 @@ test.describe('E3-S3/E3-S4 điều chỉnh và tạo hộ (M1)', () => {
     seedUser(sub, name);
     const period = await (await request.get('/api/periods/current', { headers: asMember(sub) })).json();
     const prevYm = prevYmOf(period.ym);
-    const [a, b] = await memberItems(request, sub);
+    const items = [await seedPwItem(page), await seedPwItem(page)];
+    const [a, b] = items;
     const imageId = await uploadLineImage(request, sub);
     const custom = `PW băng keo ${tag}`;
     const release = await acquireLock('prev-period');
@@ -127,6 +128,7 @@ test.describe('E3-S3/E3-S4 điều chỉnh và tạo hộ (M1)', () => {
       expect(logged).toBe(reason);
     } finally {
       deleteTestUsers(sub);
+      for (const it of items) await removeTestItem(request, it.id);
       if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${prevYm}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${prevYm}-01')`);
       release();
     }
@@ -137,7 +139,8 @@ test.describe('E3-S3/E3-S4 điều chỉnh và tạo hộ (M1)', () => {
     const sub = `pw-stale-${tag}`;
     const name = `PW Sửa đua ${tag}`;
     seedUser(sub, name);
-    const [item] = await memberItems(request, sub);
+    const item = await seedPwItem(page);
+    const items = [item];
     const period = await (await request.get('/api/periods/current', { headers: asMember(sub) })).json();
     let stamp: string | undefined;
     const memberSaves = async (qty: number) => {
@@ -165,6 +168,7 @@ test.describe('E3-S3/E3-S4 điều chỉnh và tạo hộ (M1)', () => {
       await expect(drawer.getByRole('alert')).toHaveCount(0);
     } finally {
       deleteTestUsers(sub);
+      for (const it of items) await removeTestItem(request, it.id);
     }
   });
 
@@ -173,7 +177,8 @@ test.describe('E3-S3/E3-S4 điều chỉnh và tạo hộ (M1)', () => {
     const sub = `pw-crt-${tag}`;
     const name = `PW Tạo hộ ${tag}`;
     seedUser(sub, name);
-    const [item] = await memberItems(request, sub);
+    const item = await seedPwItem(page);
+    const items = [item];
     const period = await (await request.get('/api/periods/current', { headers: asMember(sub) })).json();
     const month = Number(String(period.ym).slice(5));
 
@@ -213,6 +218,7 @@ test.describe('E3-S3/E3-S4 điều chỉnh và tạo hộ (M1)', () => {
       await snap(page, info, 'create-open-adjust');
     } finally {
       deleteTestUsers(sub);
+      for (const it of items) await removeTestItem(request, it.id);
     }
   });
 });

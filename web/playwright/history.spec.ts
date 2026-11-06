@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, deleteTestUsers, expectNoContrastViolations, isMobile, psql, seedActiveUser } from './helpers';
+import { acquireLock, deleteTestUsers, expectNoContrastViolations, isMobile, psql, removeTestItem, seedActiveUser, seedPwItem } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-13-shots';
 
@@ -24,8 +24,7 @@ test.describe('E2-S6 lịch sử', () => {
     const month = Number(String(period.ym).slice(5));
     const prevYm = prevYmOf(period.ym);
     const prevMonth = Number(prevYm.slice(5));
-    const items: { id: string; name: string; active: boolean; admin_only: boolean }[] = await (await request.get('/api/items', { headers })).json();
-    const [a, b] = items.filter((i) => i.active && !i.admin_only && !i.name.startsWith('PW '));
+    const [a, b] = [await seedPwItem(page), await seedPwItem(page)];
     const img = await request.post('/api/files', {
       headers,
       multipart: { purpose: 'line_image', file: { name: 'l.png', mimeType: 'image/png', buffer: readFileSync('playwright/fixtures/item.png') } },
@@ -87,6 +86,7 @@ test.describe('E2-S6 lịch sử', () => {
       await snap(page, info, 'detail');
     } finally {
       deleteTestUsers(sub);
+      for (const it of [a, b]) await removeTestItem(request, it.id);
       if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${prevYm}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${prevYm}-01')`);
       release();
     }

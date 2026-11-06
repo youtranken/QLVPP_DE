@@ -1,5 +1,5 @@
 import { type APIRequestContext, type TestInfo } from '@playwright/test';
-import { devHeaders, isMobile, psql } from './helpers';
+import { devHeaders, isMobile, psql, seedActiveUser } from './helpers';
 
 export const prevYmOf = (ym: string) => {
   const [y, m] = ym.split('-').map(Number);
@@ -23,8 +23,7 @@ export async function seedLockedRequest(request: APIRequestContext, info: TestIn
   const name = `PW Giao ${tag}`;
   const period = await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json();
   const prevYm = prevYmOf(period.ym);
-  psql(`INSERT INTO users (sub, full_name, email, department, status)
-    VALUES ('${sub}', '${name}', '${sub}@example.test', 'PW Phòng giao', 'active')`);
+  seedActiveUser(sub, name, 'active', { department: 'PW Phòng giao' });
   const items = lines.map((l, i) => {
     const itemName = `PW món ${String.fromCharCode(65 + i)} ${tag}`;
     const id = psql(`INSERT INTO items (name, unit, stock_qty)

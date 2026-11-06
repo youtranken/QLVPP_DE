@@ -159,9 +159,14 @@ PW_SA_PASSWORD='<mật-khẩu-dev>' npx playwright test
 - Spec ghi vào DB dev dùng chung: dữ liệu thử có tên `PW …` / sub `pw-…`, dọn trong `finally` (phiếu và người thử
   bị xóa kèm ảnh họ tải; món xóa được thì xóa kèm ảnh, đã có sổ kho thì ngừng; nhóm thử bị ngừng; đợt giao, bản chốt,
   chuông của dữ liệu thử bị xóa); cấu hình được trả lại giá trị gốc.
-  Còn sót (test bị ngắt giữa chừng) thì dọn một lần — chỉ xóa dòng `PW`/`pw-` không bị dữ liệu thật tham chiếu,
-  in số dòng trước/sau:
+  Còn sót (test bị ngắt giữa chừng) thì dọn một lần — chỉ xóa dòng `PW`/`pw-` không bị dữ liệu thật tham chiếu
+  (kể cả bản ghi điều chỉnh, đánh dấu ADM hết hàng và hàng về ngoài DM của món/khóa thử; bỏ `pw-…` khỏi
+  `periods.headcount_subs` và đặt lại `headcount`), in số dòng trước/sau; chạy lại bao nhiêu lần cũng được:
   `docker compose exec -T postgres sh -c 'psql -v dev_ok=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < web/playwright/cleanup-dev-data.sql` — **chỉ trên DB dev, không bao giờ trên prod**
+  Bảng điều chỉnh là chỉ-thêm: script tắt trigger chặn xóa trong chính giao dịch dọn rồi bật lại. Migration mới có
+  bảng/cột trỏ tới phiếu, món, người hoặc kỳ phải cập nhật script cùng lúc. Test chỉ ghi lên dữ liệu tự gieo
+  (`seedPwItem`, `seedActiveUser`; kiểm bằng `web/src/test/playwright-data-policy.test.ts`); dữ liệu PW lỡ ghi lên
+  món/phiếu thật thì script không nhận ra, phải dọn tay một lần.
 - Không mạng tải Chromium: đặt `PW_CHROMIUM_PATH=/đường/dẫn/chrome`.
 - Ảnh chụp màn `web/test-results/screens/`, báo cáo `web/playwright-report/` — không commit.
 - Fixture ảnh EXIF xoay 6: `python3 web/scripts/make-exif6-fixture.py web/src/test/fixtures/exif6.jpg` (Pillow).

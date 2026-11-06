@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, rmSync, statSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type APIRequestContext, type Locator, type Page, type TestInfo } from '@playwright/test';
@@ -136,15 +136,52 @@ export async function removeTestItem(request: APIRequestContext, id: string) {
   else expect((await request.patch(`/api/admin/items/${id}`, { headers, data: { active: false } })).ok()).toBe(true);
 }
 
+const sqlText = (s: string) => `'${s.replaceAll("'", "''")}'`;
+
 // Dev-identity không tạo dòng users; người nhận xuất lẻ/danh bạ phải có sẵn trong bảng users
-export function seedActiveUser(sub: string, fullName: string, status: 'active' | 'locked' = 'active') {
-  const sql = `INSERT INTO users (sub, full_name, email, status) VALUES ('${sub}', '${fullName}', '${sub}@example.test', '${status}')
-    ON CONFLICT (sub) DO UPDATE SET full_name = EXCLUDED.full_name, status = EXCLUDED.status`;
+export function seedActiveUser(
+  sub: string,
+  fullName: string,
+  status: 'active' | 'locked' = 'active',
+  extra: { department?: string; groups?: string[] } = {},
+) {
+  const department = extra.department ? sqlText(extra.department) : 'NULL';
+  const groups = extra.groups ? `${sqlText(JSON.stringify(extra.groups))}::jsonb` : "'[]'::jsonb";
+  const sql = `INSERT INTO users (sub, full_name, email, status, department, groups)
+    VALUES (${sqlText(sub)}, ${sqlText(fullName)}, ${sqlText(`${sub}@example.test`)}, '${status}', ${department}, ${groups})
+    ON CONFLICT (sub) DO UPDATE SET full_name = EXCLUDED.full_name, status = EXCLUDED.status
+      ${extra.department ? ', department = EXCLUDED.department' : ''}${extra.groups ? ', groups = EXCLUDED.groups' : ''}`;
   execFileSync(
     'docker',
     ['compose', 'exec', '-T', 'postgres', 'sh', '-c', 'psql -v ON_ERROR_STOP=1 -q -U "$POSTGRES_USER" -d "$POSTGRES_DB"'],
     { cwd: REPO_ROOT, input: sql, stdio: ['pipe', 'ignore', 'inherit'] },
   );
+}
+
+let pwItemSeq = 0;
+
+// Món thử riêng của test (không dựa vào danh mục dev): có ảnh để nhân viên thấy, tồn gieo thẳng; dọn bằng removeTestItem
+export async function seedPwItem(page: Page, opts: { stock?: number; group?: string } = {}): Promise<{ id: string; name: string }> {
+  const headers = devHeaders('admin');
+  const name = `PW món ${Date.now().toString(36)}${(pwItemSeq++).toString(36)}-${page.viewportSize()?.width ?? 0}`;
+  const group = opts.group && (opts.group.startsWith('PW ') ? opts.group : `PW ${opts.group}`);
+  const categoryId = group
+    ? psql(`INSERT INTO item_categories (name) VALUES (${sqlText(group)})
+        ON CONFLICT ((lower(name))) DO UPDATE SET active = true RETURNING id`)
+    : undefined;
+  const file = await page.request.post('/api/files', {
+    headers,
+    multipart: { purpose: 'item_image', file: { name: 'item.png', mimeType: 'image/png', buffer: readFileSync('playwright/fixtures/item.png') } },
+  });
+  expect(file.status()).toBe(201);
+  const item = await page.request.post('/api/admin/items', {
+    headers,
+    data: { name, unit: 'cai', max_qty: 99, image_file_id: (await file.json()).id, ...(categoryId ? { category_id: categoryId } : {}) },
+  });
+  expect(item.status(), await item.text()).toBe(201);
+  const id = (await item.json()).id as string;
+  if (opts.stock) psql(`UPDATE items SET stock_qty = ${Number(opts.stock)} WHERE id = '${id}'`);
+  return { id, name };
 }
 
 const LOCK_STALE_MS = 120_000;

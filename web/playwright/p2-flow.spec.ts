@@ -6,9 +6,10 @@ import {
   devHeaders,
   expectNoContrastViolations,
   isMobile,
-  psql,
   removeTestItem,
   searchSummaryPeople,
+  seedActiveUser,
+  seedPwItem,
   settled,
 } from './helpers';
 import { adminPage } from './sessions';
@@ -17,7 +18,7 @@ const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-17-
 const FIXTURE = 'playwright/fixtures/item.png';
 
 type Person = { sub: string; name: string };
-type Item = { id: string; name: string; active: boolean; admin_only: boolean };
+type Item = { id: string; name: string };
 
 async function snap(page: Page, info: TestInfo, name: string) {
   mkdirSync(SHOTS, { recursive: true });
@@ -119,14 +120,12 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
     const giay = `PW Giấy A4 ${tag}`;
     const giayId = await createAdminItem(request, giay);
     // Dev DB có authorized_groups: người seed phải thuộc nhóm được dùng app mới vào danh sách chưa đăng ký
-    psql(`INSERT INTO users (sub, full_name, email, department, status, groups) VALUES
-      ${[a, b, c].map((p) => `('${p.sub}', '${p.name}', '${p.sub}@example.test', '${dept}', 'active', '["Test_VPP"]'::jsonb)`).join(',\n')}`);
+    for (const p of [a, b, c]) seedActiveUser(p.sub, p.name, 'active', { department: dept, groups: ['Test_VPP'] });
+    const [x, y] = [await seedPwItem(page), await seedPwItem(page)];
     let admin: Page | undefined;
     try {
       const period = await (await request.get('/api/periods/current', { headers: memberHeaders(a.sub) })).json();
       const month = Number(String(period.ym).slice(5));
-      const items: Item[] = await (await request.get('/api/items', { headers: memberHeaders(a.sub) })).json();
-      const [x, y] = items.filter((i) => i.active && !i.admin_only && !i.name.startsWith('PW '));
       const before = await summaryKpi(request, period.ym);
 
       await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...memberHeaders(a.sub) } }));
@@ -172,6 +171,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       await admin?.context().close();
       deleteTestUsers(a.sub, b.sub, c.sub);
       await removeTestItem(request, giayId);
+      for (const it of [x, y]) await removeTestItem(request, it.id);
       const all: Item[] = await (await request.get('/api/admin/items', { headers: devHeaders('admin') })).json();
       const converted = all.find((i) => i.name === custom);
       if (converted) await removeTestItem(request, converted.id);
