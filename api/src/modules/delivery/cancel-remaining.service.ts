@@ -60,23 +60,7 @@ export class CancelRemainingService {
       if (admOut && !(await lineIsAdmOut(tx, lineId))) throw itemNotAdmOut();
       const result = await this.lines.cancelRemaining(tx, lineId, reason, now);
       if (result.cancelled_now === 0) return result;
-      if (admOut) {
-        await this.audit.appendWithin(tx, {
-          actor,
-          action: 'line.cancel_remaining',
-          objectType: 'request_line',
-          objectId: line.id,
-          detail: admOutCancelDetail(line, result, now),
-        });
-        await this.lines.touchRequest(tx, line.request_id, now);
-        await this.notifier.linesAdjusted(tx, {
-          userSub: line.user_sub,
-          ym: line.period_ym,
-          reasons: [ADM_OUT_REASON],
-          now,
-        });
-        return result;
-      }
+      if (admOut) return this.afterAdmOut(tx, line, result, actor, now);
       await this.audit.appendWithin(tx, {
         actor,
         action: 'line.cancel_remaining',
@@ -88,11 +72,38 @@ export class CancelRemainingService {
           after: { cancelled_qty: result.line.cancelled_qty },
           reason,
         },
+        at: now,
       });
       await this.lines.touchRequest(tx, line.request_id, now);
       await this.notifyOwner(tx, line, result, reason, now);
       return result;
     });
+  }
+
+  // ADM hết hàng: không chuông line_cancelled, gộp vào chuông ngày line_adjusted
+  private async afterAdmOut(
+    tx: Tx,
+    line: LockedLine,
+    result: CancelResult,
+    actor: string,
+    now: Date,
+  ): Promise<CancelResult> {
+    await this.audit.appendWithin(tx, {
+      actor,
+      action: 'line.cancel_remaining',
+      objectType: 'request_line',
+      objectId: line.id,
+      detail: admOutCancelDetail(line, result, now),
+      at: now,
+    });
+    await this.lines.touchRequest(tx, line.request_id, now);
+    await this.notifier.linesAdjusted(tx, {
+      userSub: line.user_sub,
+      ym: line.period_ym,
+      reasons: [ADM_OUT_REASON],
+      now,
+    });
+    return result;
   }
 
   // Không gọi notifyIfComplete: hủy nợ làm phiếu đủ thì không báo "đã giao đủ"

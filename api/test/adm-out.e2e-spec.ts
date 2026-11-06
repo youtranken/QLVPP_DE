@@ -3,6 +3,10 @@ import { arrivalsFixture } from './arrivals.fixture';
 
 const YM = '2026-11';
 const LOCKED_AT = '2026-11-12T03:00:00Z';
+// Kỳ riêng quá khứ cho ranh giới khóa kỳ sau: audit mang giờ ClockService nên không để lại dòng tương lai
+const OLD = '2000-07';
+const OLD_NEXT = '2000-08';
+const OLD_NEXT_DEADLINE_MS = Date.parse('2000-08-10T17:00:00Z');
 
 describe('V2D-5 ADM hết hàng theo kỳ: PUT/DELETE adm-out, nhập hàng về, hủy khi giao (e2e)', () => {
   const f = arrivalsFixture('admout');
@@ -11,6 +15,17 @@ describe('V2D-5 ADM hết hàng theo kỳ: PUT/DELETE adm-out, nhập hàng về
   beforeEach(async () => {
     await f.resetPeriod(YM);
     f.freeze(LOCKED_AT);
+  });
+  f.onCleanup(async (p) => {
+    await p.query(
+      'DELETE FROM requests WHERE period_ym = ANY($1::date[]) AND user_sub LIKE $2',
+      [[`${OLD}-01`, `${OLD_NEXT}-01`], `e2e-req-%-${f.SUFFIX}`],
+    );
+    await p.query(
+      `DELETE FROM periods p WHERE p.ym = ANY($1::date[])
+         AND NOT EXISTS (SELECT 1 FROM requests r WHERE r.period_ym = p.ym)`,
+      [[`${OLD}-01`, `${OLD_NEXT}-01`]],
+    );
   });
 
   const marks = async (key: string) =>
@@ -102,6 +117,31 @@ describe('V2D-5 ADM hết hàng theo kỳ: PUT/DELETE adm-out, nhập hàng về
       expect((await f.rowOf(YM, item))?.adm_out_final).toBe(true);
     });
 
+    it('kỳ sau khóa sổ (R-D11.12): .999 → PUT 200; .000 → PUT và DELETE 409 ADM_OUT_FINAL, không audit', async () => {
+      await f.ensurePeriod(OLD);
+      await f.ensurePeriod(OLD_NEXT);
+      const marked = await f.stockItem(0);
+      const late = await f.stockItem(0);
+      await f.seedLine(OLD, A, { item_id: marked, qty: 2 });
+      await f.seedLine(OLD, B, { item_id: late, qty: 2 });
+      f.freeze(new Date(OLD_NEXT_DEADLINE_MS - 1).toISOString());
+      await markOut(OLD, marked).expect(200);
+      f.freeze(new Date(OLD_NEXT_DEADLINE_MS).toISOString());
+      await markOut(OLD, late).expect(409, /ADM_OUT_FINAL/);
+      await unmarkOut(OLD, marked).expect(409, /ADM_OUT_FINAL/);
+      const audits = async (action: string) =>
+        (await f.auditRows(action, OLD)).filter((r) =>
+          [marked, late].includes(r.detail.line_key as string),
+        );
+      expect(await audits('arrival.adm_out_marked')).toHaveLength(1);
+      expect(await audits('arrival.adm_out_unmarked')).toEqual([]);
+      const { rows } = await pool().query(
+        `SELECT line_key FROM period_adm_out WHERE period_ym = $1::date`,
+        [`${OLD}-01`],
+      );
+      expect(rows).toEqual([{ line_key: marked }]);
+    });
+
     it('khóa ngoài DM có ngoặc, dấu, khoảng trắng qua encodeURIComponent → 200; khóa hỏng → 400 VALIDATION', async () => {
       const name = `Kéo cắt "giấy" / A4-${f.SUFFIX}`;
       const l = await f.seedLine(YM, A, f.customCols(name, 2));
@@ -127,11 +167,13 @@ describe('V2D-5 ADM hết hàng theo kỳ: PUT/DELETE adm-out, nhập hàng về
       await f.closeOwed(YM, 'custom:x').expect(400, /VALIDATION/);
     });
 
-    // changedAt (Task 4) đọc audit kỳ theo object_type/object_id; send-state không dùng được ở đây vì audit chung DB có dòng tương lai
+    // changedAt đọc audit kỳ theo object_type/object_id; ranh giới T±1 ms ở changed-after.e2e
     it('đánh/bỏ đánh dấu ghi audit object_type period, object_id = kỳ — nguồn của cảnh báo thay đổi sau bản chốt', async () => {
       const item = await f.stockItem(0);
       await f.seedLine(YM, A, { item_id: item, qty: 2 });
       await markOut(YM, item).expect(200);
+      // audit mang giờ ClockService: tách mốc để thứ tự created_at xác định
+      f.freeze('2026-11-12T03:00:01Z');
       await unmarkOut(YM, item).expect(204);
       const { rows } = await pool().query<{ action: string }>(
         `SELECT action FROM audit_log
@@ -209,7 +251,12 @@ describe('V2D-5 ADM hết hàng theo kỳ: PUT/DELETE adm-out, nhập hàng về
       const l = await f.seedLine(YM, A, { item_id: item, qty: 2 });
       await cancelAdm(l, 2).expect(409, /ITEM_NOT_ADM_OUT/);
       await f.seedLine('2026-10', B, { item_id: item, qty: 1 });
-      await markOut('2026-10', item).expect(200);
+      // Kỳ 10 đã qua hạn khóa kỳ 11 → không đánh dấu qua API được nữa (ADM_OUT_FINAL); gieo dấu như đã có
+      await pool().query(
+        `INSERT INTO period_adm_out (period_ym, line_key, kind, marked_by, marked_at)
+         VALUES ('2026-10-01', $1, 'out', $2, '2026-11-05T03:00:00Z')`,
+        [item, ADMIN],
+      );
       await cancelAdm(l, 2).expect(409, /ITEM_NOT_ADM_OUT/);
       expect((await f.line(l)).cancelled_qty).toBe(0);
     });

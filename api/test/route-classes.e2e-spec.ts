@@ -3,7 +3,10 @@ import { ADMIN_ROUTE_CLASSES } from '../src/modules/periods/admin-route-classes'
 import type { RouteClass } from '../src/modules/periods/admin-route-classes';
 import { Roles } from '../src/modules/auth/roles.decorator';
 import { createTestApp } from './test-app.helper';
-import { unclassifiedAdminRoutes } from './admin-routes.helper';
+import {
+  staleAdminRouteClasses,
+  unclassifiedAdminRoutes,
+} from './admin-routes.helper';
 import { deliveryFixture } from './delivery.fixture';
 
 const OPEN = '2026-11';
@@ -95,7 +98,11 @@ describe('phân loại route /admin/* và guard kỳ khóa (e2e)', () => {
     }
     if (route.endsWith('/snapshots')) return { kind: 'print' };
     if (route.endsWith('/custom-receipts')) {
-      return { line_key: 'custom:["bìa phân loại", "cai"]', qty: 1 };
+      return {
+        line_key: 'custom:["bìa phân loại", "cai"]',
+        qty: 1,
+        expected_received: 0,
+      };
     }
     if (route.endsWith('/lines')) {
       return {
@@ -138,6 +145,16 @@ describe('phân loại route /admin/* và guard kỳ khóa (e2e)', () => {
 
   it('mọi route /api/admin/* đã đăng ký đều có lớp trong ADMIN_ROUTE_CLASSES', () => {
     expect(unclassifiedAdminRoutes(f.app())).toEqual([]);
+  });
+
+  it('mọi khóa ADMIN_ROUTE_CLASSES khớp một route đã đăng ký; khóa thừa → bộ kiểm báo đúng tên', () => {
+    expect(staleAdminRouteClasses(f.app())).toEqual([]);
+    expect(
+      staleAdminRouteClasses(f.app(), {
+        ...ADMIN_ROUTE_CLASSES,
+        'GET /api/admin/zz-removed': 'none',
+      }),
+    ).toEqual(['GET /api/admin/zz-removed']);
   });
 
   it('route /admin/* giả chưa phân loại → bộ kiểm báo đúng tên route', async () => {
@@ -244,6 +261,21 @@ describe('phân loại route /admin/* và guard kỳ khóa (e2e)', () => {
       freeze(FIRST_LOCKED_MS);
       expect(await reviewIds()).toContain(ids.customLine);
       expect(await backlogIds()).toContain(ids.itemLine);
+    });
+
+    it('GET /admin/items/:id/pending-arrival: .999 không đọc bản chốt kỳ mở; .000 đọc', async () => {
+      const pending = async () =>
+        (
+          await as(
+            http().get(`/api/admin/items/${ids.item}/pending-arrival`),
+            ADMIN,
+            'admin',
+          ).expect(200)
+        ).body as { remaining: number };
+      freeze(LAST_OPEN_MS);
+      expect(await pending()).toEqual({ remaining: 0 });
+      freeze(FIRST_LOCKED_MS);
+      expect(await pending()).toMatchObject({ remaining: 2 });
     });
 
     it('GET /admin/audit: vai admin không thấy request.created kỳ mở ở .999, thấy ở .000; vai sa luôn thấy', async () => {

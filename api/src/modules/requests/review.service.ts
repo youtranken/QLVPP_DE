@@ -164,6 +164,7 @@ export class ReviewService {
           after: pickReview(after),
           ...(item ? { item_id: item.id } : {}),
         },
+        at: now,
       });
       const facts = item
         ? await this.catalog.itemFacts([item.id], tx)

@@ -27,3 +27,12 @@ export function unclassifiedAdminRoutes(app: INestApplication): string[] {
       r.split(' ')[1].startsWith('/api/admin/') && !(r in ADMIN_ROUTE_CLASSES),
   );
 }
+
+// Chiều ngược: khai báo lớp cho route không còn đăng ký (đổi tên/xóa) cũng làm test đỏ
+export function staleAdminRouteClasses(
+  app: INestApplication,
+  classes: Record<string, unknown> = ADMIN_ROUTE_CLASSES,
+): string[] {
+  const registered = new Set(registeredRoutes(app));
+  return Object.keys(classes).filter((r) => !registered.has(r));
+}

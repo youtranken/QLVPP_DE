@@ -78,6 +78,7 @@ export class AdmOutSettlement {
         objectType: 'request_line',
         objectId: line.id,
         detail: admOutCancelDetail(line, result, now),
+        at: now,
       });
       await this.lines.touchRequest(tx, line.request_id, now);
       owners.add(line.user_sub);
@@ -91,6 +92,7 @@ export class AdmOutSettlement {
         objectType: 'period',
         objectId: ym,
         detail: { period_ym: ym, line_key: key, ...done },
+        at: now,
       });
     }
     return done;

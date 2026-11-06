@@ -8,6 +8,7 @@ import { hasItemsSql } from '../reports/sent-snapshot';
 import {
   CUSTOM_ITEM_KEY,
   EFFECTIVE_LINE,
+  lockedPeriod,
   REMAINING_QTY,
   UNDELIVERED_LINE,
 } from '../requests/line-predicates';
@@ -24,6 +25,19 @@ type Row = DeliveryPersonLine & {
   user_status: string;
 } & Record<string, unknown>;
 
+// Trần gợi ý theo thứ tự đăng ký (ahead); server ép tổng ở custom-cap.ts khi giao
+const DELIVER_CAP = sql`
+  CASE WHEN x.item_id IS NOT NULL THEN NULL
+       WHEN coalesce(s.ordered, 0) > 0 THEN LEAST(x.remaining_qty, GREATEST(0,
+         (SELECT coalesce(sum(c.qty), 0) FROM custom_receipts c
+          WHERE c.period_ym = x.period_ym AND c.line_key = x.key)
+         - (SELECT coalesce(sum(l.delivered_qty), 0)
+            FROM request_lines l JOIN requests r ON r.id = l.request_id
+            WHERE r.period_ym = x.period_ym AND l.item_id IS NULL
+              AND ${CUSTOM_ITEM_KEY} = x.key)
+         - x.ahead))::int
+       ELSE x.remaining_qty END`;
+
 // Đọc-only cho màn "Giao theo người": dòng kỳ ym + nợ các kỳ trước của từng người
 @Injectable()
 export class DeliveryPeopleService {
@@ -36,7 +50,8 @@ export class DeliveryPeopleService {
   async list(ym: string): Promise<{ ym: string; people: DeliveryPerson[] }> {
     const now = this.clock.now();
     await this.periods.assertLocked(ym, now);
-    const rows = await this.rows(ym, now);
+    const open = await this.periods.openPeriod(this.db, now);
+    const rows = await this.rows(ym, open.ym);
     const byUser = new Map<string, DeliveryPerson>();
     for (const {
       user_sub,
@@ -78,7 +93,7 @@ export class DeliveryPeopleService {
   }
 
   // Dòng ngoài DM có trong bản in của kỳ dòng: trần = hàng đã về − đã giao của khóa, chia theo thứ tự đăng ký
-  private async rows(ym: string, now: Date): Promise<Row[]> {
+  private async rows(ym: string, openYm: string): Promise<Row[]> {
     const k = `${ym}-01`;
     const { rows } = await this.db.execute<Row>(sql`
       WITH base AS (
@@ -92,10 +107,9 @@ export class DeliveryPeopleService {
                i.stock_qty, l.review_status, ${EFFECTIVE_LINE} AS effective
         FROM request_lines l
         JOIN requests r ON r.id = l.request_id
-        JOIN periods p ON p.ym = r.period_ym
         JOIN users u ON u.sub = r.user_sub
         LEFT JOIN items i ON i.id = l.item_id
-        WHERE p.deadline <= ${now.toISOString()}::timestamptz
+        WHERE ${lockedPeriod(openYm)}
           AND ((r.period_ym = ${k}::date AND l.review_status <> 'rejected')
             OR (r.period_ym < ${k}::date AND ${UNDELIVERED_LINE}))
       ), ranked AS (
@@ -112,16 +126,7 @@ export class DeliveryPeopleService {
              EXISTS (SELECT 1 FROM period_adm_out a WHERE a.period_ym = x.period_ym
                      AND a.line_key = x.key AND a.kind = 'out') AS adm_out,
              (x.item_id IS NULL AND coalesce(s.ordered, 0) > 0) AS custom_tracked,
-             CASE WHEN x.item_id IS NOT NULL THEN NULL
-                  WHEN coalesce(s.ordered, 0) > 0 THEN LEAST(x.remaining_qty, GREATEST(0,
-                    (SELECT coalesce(sum(c.qty), 0) FROM custom_receipts c
-                     WHERE c.period_ym = x.period_ym AND c.line_key = x.key)
-                    - (SELECT coalesce(sum(l.delivered_qty), 0)
-                       FROM request_lines l JOIN requests r ON r.id = l.request_id
-                       WHERE r.period_ym = x.period_ym AND l.item_id IS NULL
-                         AND ${CUSTOM_ITEM_KEY} = x.key)
-                    - x.ahead))::int
-                  ELSE x.remaining_qty END AS deliver_cap
+             ${DELIVER_CAP} AS deliver_cap
       FROM ranked x
       LEFT JOIN LATERAL (
         SELECT (rs.data->'order_qty'->>x.key)::int AS ordered FROM report_snapshots rs

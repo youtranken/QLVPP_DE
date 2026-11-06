@@ -15,6 +15,7 @@ const LINE_FAILURES = new Set([
   'LINE_NOT_REVIEWED',
   'LINE_REJECTED',
   'STOCK_INSUFFICIENT',
+  'CUSTOM_NOT_RECEIVED',
 ]);
 
 @Injectable()

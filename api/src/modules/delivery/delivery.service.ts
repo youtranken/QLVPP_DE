@@ -18,6 +18,7 @@ import {
   staleDelivery,
 } from './delivery-errors';
 import type { DeliverBody, DeliverResult } from './delivery.dto';
+import { assertCustomReceived } from './custom-cap';
 import * as repo from './delivery.repo';
 
 @Injectable()
@@ -64,6 +65,7 @@ export class DeliveryService {
     assertDeliverable(line);
     const remaining = remainingOf(line);
     if (qty > remaining) throw deliverExceedsQty(remaining);
+    await assertCustomReceived(tx, line, qty);
     const taken = line.item_id
       ? await this.stock.takeForDeliveryWithin(tx, {
           itemId: line.item_id,

@@ -7,9 +7,19 @@ import { AuditWriterService } from '../audit/audit-writer.service';
 import { PeriodsService } from '../periods/periods.service';
 import { CUSTOM_ITEM_KEY, UNDELIVERED_LINE } from '../requests/line-predicates';
 import { itemNotFound } from './catalog.service';
+import { lockCustomKey } from './custom-key-lock';
 import type { LineKey } from './line-key';
 
 type Kind = 'out' | 'owed_closed';
+
+interface MarkAudit {
+  ym: string;
+  key: string;
+  kind: Kind;
+  on: boolean;
+  actor: string;
+  now: Date;
+}
 
 export const admOutNothingOpen = () =>
   new ConflictException({
@@ -17,12 +27,15 @@ export const admOutNothingOpen = () =>
     message: 'Không còn ai chờ món này trong kỳ.',
   });
 
-export const admOutFinal = () =>
-  new ConflictException({
-    code: 'ADM_OUT_FINAL',
-    message:
-      'Các dòng của món này đã giao/hủy xong — không bỏ đánh dấu được nữa.',
-  });
+export const admOutFinal = (
+  message = 'Các dòng của món này đã giao/hủy xong — không bỏ đánh dấu được nữa.',
+) => new ConflictException({ code: 'ADM_OUT_FINAL', message });
+
+// Kỳ sau đã khóa thì việc tự hủy lúc khóa sổ đã chạy: đổi dấu lúc này không còn ai xử lý (R-D11.12)
+const settledFinal = () =>
+  admOutFinal(
+    'Kỳ sau đã khóa sổ — "ADM hết hàng" của kỳ này đã xử lý xong, không đổi được nữa.',
+  );
 
 export const itemAdmOut = (key: string) =>
   new ConflictException({
@@ -70,10 +83,10 @@ export class AdmOutService {
   ) {}
 
   async mark(ym: string, lk: LineKey, actor: string, now: Date) {
-    await this.periods.assertLocked(ym, now);
+    await this.assertMarkable(ym, now);
     await this.db.transaction(async (tx) => {
-      await this.assertItem(tx, lk);
       if (await this.locked(tx, ym, lk.key, 'out')) return;
+      await this.assertItem(tx, ym, lk);
       if ((await openLineCount(tx, ym, lk.key)) === 0) {
         throw admOutNothingOpen();
       }
@@ -83,19 +96,19 @@ export class AdmOutService {
   }
 
   async unmark(ym: string, lk: LineKey, actor: string, now: Date) {
-    await this.periods.assertLocked(ym, now);
+    await this.assertMarkable(ym, now);
     await this.db.transaction(async (tx) => {
       if (!(await this.locked(tx, ym, lk.key, 'out'))) return;
       if ((await openLineCount(tx, ym, lk.key)) === 0) throw admOutFinal();
-      await this.remove(tx, ym, lk.key, 'out', actor);
+      await this.remove(tx, ym, lk.key, 'out', actor, now);
     });
   }
 
   async closeOwed(ym: string, lk: LineKey, actor: string, now: Date) {
     await this.periods.assertLocked(ym, now);
     await this.db.transaction(async (tx) => {
-      await this.assertItem(tx, lk);
       if (await this.locked(tx, ym, lk.key, 'owed_closed')) return;
+      await this.assertItem(tx, ym, lk);
       await this.insert(tx, ym, lk.key, 'owed_closed', actor, now);
     });
     return { line_key: lk.key, item_id: lk.item_id, owed_closed: true };
@@ -105,14 +118,21 @@ export class AdmOutService {
     await this.periods.assertLocked(ym, now);
     await this.db.transaction(async (tx) => {
       if (!(await this.locked(tx, ym, lk.key, 'owed_closed'))) return;
-      await this.remove(tx, ym, lk.key, 'owed_closed', actor);
+      await this.remove(tx, ym, lk.key, 'owed_closed', actor, now);
     });
   }
 
-  private async assertItem(tx: Tx, lk: LineKey): Promise<void> {
-    if (!lk.item_id) return;
+  private async assertMarkable(ym: string, now: Date): Promise<void> {
+    await this.periods.assertLocked(ym, now);
+    const latest = await this.periods.latestLocked(now);
+    if (latest && ym < latest.ym) throw settledFinal();
+  }
+
+  // Khóa cùng thứ tự với nhập hàng về (món FOR NO KEY UPDATE / khóa tư vấn khóa ngoài DM) → nhập không lọt qua lúc dấu đang ghi
+  private async assertItem(tx: Tx, ym: string, lk: LineKey): Promise<void> {
+    if (!lk.item_id) return lockCustomKey(tx, ym, lk.key);
     const { rows } = await tx.execute(
-      sql`SELECT 1 FROM items WHERE id = ${lk.item_id}`,
+      sql`SELECT 1 FROM items WHERE id = ${lk.item_id} FOR SHARE`,
     );
     if (rows.length === 0) throw itemNotFound();
   }
@@ -148,7 +168,7 @@ export class AdmOutService {
       if (await this.locked(tx, ym, key, kind)) return;
       throw admOutNothingOpen();
     }
-    await this.writeAudit(tx, ym, key, kind, true, actor);
+    await this.writeAudit(tx, { ym, key, kind, on: true, actor, now });
   }
 
   private async remove(
@@ -157,21 +177,16 @@ export class AdmOutService {
     key: string,
     kind: Kind,
     actor: string,
+    now: Date,
   ): Promise<void> {
     await tx.execute(sql`
       DELETE FROM period_adm_out
       WHERE period_ym = ${ymToDate(ym)}::date AND line_key = ${key} AND kind = ${kind}`);
-    await this.writeAudit(tx, ym, key, kind, false, actor);
+    await this.writeAudit(tx, { ym, key, kind, on: false, actor, now });
   }
 
-  private async writeAudit(
-    tx: Tx,
-    ym: string,
-    key: string,
-    kind: Kind,
-    on: boolean,
-    actor: string,
-  ): Promise<void> {
+  private async writeAudit(tx: Tx, a: MarkAudit): Promise<void> {
+    const { ym, key, kind, on, actor } = a;
     await this.audit.appendWithin(tx, {
       actor,
       action:
@@ -189,6 +204,7 @@ export class AdmOutService {
         before: { [FLAG[kind]]: !on },
         after: { [FLAG[kind]]: on },
       },
+      at: a.now,
     });
   }
 }

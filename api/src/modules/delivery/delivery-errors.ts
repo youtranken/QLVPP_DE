@@ -35,6 +35,14 @@ export const deliverExceedsQty = (remaining: number) =>
     remaining,
   });
 
+// Dòng ngoài DM có trong bản in: chỉ giao trong số đã về của khóa
+export const customNotReceived = (available: number) =>
+  new ConflictException({
+    code: 'CUSTOM_NOT_RECEIVED',
+    message: `Hàng ngoài danh mục chưa về đủ — chỉ còn giao được ${available}.`,
+    available,
+  });
+
 export const cancelReasonRequired = () =>
   new BadRequestException({
     code: 'REASON_REQUIRED',

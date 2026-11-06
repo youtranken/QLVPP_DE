@@ -64,5 +64,7 @@ export class ReceiptBody {
 export class CustomReceiptBody {
   @IsString() @MaxLength(500) line_key!: string;
   @IsInt() @Min(1) @Max(99_999) qty!: number;
+  // Số đã về client đang thấy: gửi lại/hai người cùng bấm → STALE_UPDATE thay vì cộng hai lần
+  @IsInt() @Min(0) expected_received!: number;
   @TrimToNull() @IsOptional() @IsString() @MaxLength(500) note?: string | null;
 }

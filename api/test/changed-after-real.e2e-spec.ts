@@ -1,6 +1,6 @@
 import { snapshotsFixture } from './report-snapshots.fixture';
 
-// audit_log.created_at là now() của DB (giờ thật) → bản chốt kỳ 10 đặt ngay trước giờ thật, thao tác thật sau đó
+// Đồng hồ thật (audit mang giờ ClockService): bản chốt kỳ 10 đặt ngay trước giờ thật, thao tác thật sau đó
 const YM = '2026-10';
 const DEBT_YM = '2026-09';
 

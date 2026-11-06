@@ -64,6 +64,7 @@ export class AdminRequestService {
         objectType: 'request',
         objectId: id,
         detail: auditDetail(found, changes, records, admin.sub),
+        at: now,
       });
       await adjustments.insertAdjustments(tx, {
         batchId,

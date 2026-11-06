@@ -10,6 +10,8 @@ export interface AuditEntry {
   objectType?: string;
   objectId?: string;
   detail?: Record<string, unknown>;
+  // Giờ nghiệp vụ (ClockService) cho audit mà luật kỳ đọc lại; vắng → now() của DB
+  at?: Date;
 }
 
 @Injectable()
@@ -49,5 +51,6 @@ function toRow(entry: AuditEntry) {
     objectType: entry.objectType ?? null,
     objectId: entry.objectId ?? null,
     detail: entry.detail ?? null,
+    ...(entry.at ? { createdAt: entry.at } : {}),
   };
 }

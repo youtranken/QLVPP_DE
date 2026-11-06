@@ -131,6 +131,14 @@ describe('V2D-4 bản chốt có hàng: GET …/sent, danh sách, bản cũ, dù
     expect(third.data.replaces.id).toBe(second.id);
   });
 
+  it('hai lần In song song cùng nội dung (reuse_if_unchanged) → một 201, một 200 dùng lại; chỉ một bản', async () => {
+    const body = { kind: 'print', reuse_if_unchanged: true };
+    const res = await Promise.all([create(YM, body), create(YM, body)]);
+    expect(res.map((r) => r.status).sort()).toEqual([200, 201]);
+    expect(res[0].body.id).toBe(res[1].body.id);
+    expect((await list(YM)).map((s) => s.kind)).toEqual(['print']);
+  });
+
   it('dùng lại chỉ cùng kind: bản mới nhất là xlsx, In print lần đầu → 201; Excel 2 lần không cờ → 2 bản xlsx', async () => {
     await create(YM, { kind: 'xlsx' }).expect(201);
     await create(YM, { kind: 'xlsx' }).expect(201);

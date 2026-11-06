@@ -8,7 +8,8 @@ export interface NoOrderFlag {
   no_order_by: string | null;
 }
 
-// Mọi đường ghi cờ hoặc tạo bản chốt khóa cùng dòng periods → kỳ không bao giờ vừa có bản vừa có cờ
+// Mọi đường ghi cờ hoặc tạo bản chốt khóa cùng dòng periods → kỳ không bao giờ vừa có bản vừa có cờ.
+// Ghi (không đổi giá trị) thay vì FOR UPDATE: tx REPEATABLE READ đến sau một bản vừa tạo nhận 40001 và làm lại trên ảnh mới (thấy bản đó để dùng lại/replaces)
 export async function lockNoOrderFlag(
   tx: Tx,
   ym: string,
@@ -17,8 +18,9 @@ export async function lockNoOrderFlag(
     no_order_at: Date | string | null;
     no_order_by: string | null;
   }>(sql`
-    SELECT no_order_at, no_order_by FROM periods
-    WHERE ym = ${ymToDate(ym)}::date FOR UPDATE`);
+    UPDATE periods SET no_order_at = no_order_at
+    WHERE ym = ${ymToDate(ym)}::date
+    RETURNING no_order_at, no_order_by`);
   const row = rows[0];
   return {
     no_order_at: row?.no_order_at
