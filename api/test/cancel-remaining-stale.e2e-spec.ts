@@ -3,7 +3,7 @@ import type { RequestView } from './me-request.fixture';
 
 describe('POST admin/lines/:id/cancel-remaining: hộp hủy đã cũ → STALE_UPDATE', () => {
   const f = deliveryFixture('cancel-stale');
-  const { ADMIN, as, backlog, bellsOf, cancel, deliver, http, lockedLine } = f;
+  const { ADMIN, as, bellsOf, cancel, deliver, http, lockedLine } = f;
 
   const adminSetQty = async (requestId: string, qty: number) => {
     const r = (
@@ -27,8 +27,6 @@ describe('POST admin/lines/:id/cancel-remaining: hộp hủy đã cũ → STALE_
       })
       .expect(200);
   };
-  const backlogLineIds = async () =>
-    (await backlog('item')).flatMap((g) => g.lines.map((l) => l.line_id));
   const cancelledQty = async (lineId: string) =>
     (
       await f.pool().query<{
@@ -45,7 +43,7 @@ describe('POST admin/lines/:id/cancel-remaining: hộp hủy đã cũ → STALE_
       expected_qty: 5,
     }).expect(409);
     expect(res.body).toMatchObject({ code: 'STALE_UPDATE', delivered_qty: 3 });
-    expect(await backlogLineIds()).toContain(line.id);
+    expect(await cancelledQty(line.id)).toBe(0);
   });
 
   it('mở hộp lúc qty 5 (còn 2), Hành chính giảm qty còn 4 → expected_qty 5: 409 STALE_UPDATE {qty: 4, delivered_qty: 3}, không hủy, không chuông; expected_qty 4: 200 hủy 1', async () => {

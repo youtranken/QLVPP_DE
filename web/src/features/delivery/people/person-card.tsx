@@ -4,7 +4,7 @@ import { initialsOf } from '@/lib/initials';
 import { ItemThumb } from '@/ui/item-thumb';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import type { DeliveryPerson } from './delivery-people.api';
-import { isOpenLine, planOf, type PersonPlan } from './people-filter';
+import { cardSummary, isOpenLine, planOf, type PersonPlan } from './people-filter';
 
 const THUMBS = 4;
 
@@ -42,6 +42,7 @@ export function PersonCard({ person, selected, busy, onView, onQuick }: Props) {
   // Một lần tính kế hoạch giao cho cả nhãn nút, aria-label và trạng thái vô hiệu
   const plan = useMemo(() => planOf(person), [person]);
   const label = quickLabel(person, plan, t);
+  const summary = cardSummary(person);
   const progress = {
     done: lines.reduce((n, l) => n + l.delivered_qty, 0),
     total: lines.reduce((n, l) => n + l.qty - l.cancelled_qty, 0),
@@ -62,6 +63,7 @@ export function PersonCard({ person, selected, busy, onView, onQuick }: Props) {
         ))}
         {lines.length > THUMBS && <span className="pp-card__more">{t('delivery.people.card.more', { n: lines.length - THUMBS })}</span>}
       </div>
+      {summary.n > 0 && <p className="pp-card__sum num">{t('delivery.people.card.summary', summary)}</p>}
       {progress.done > 0 && person.status !== 'done' && <p className="pp-card__progress num">{t('delivery.people.card.progress', progress)}</p>}
       {debt.length > 0 && <p className="pp-card__debt">{t('delivery.people.card.debt', { months, n: debt.length })}</p>}
       <div className="pp-card__actions">

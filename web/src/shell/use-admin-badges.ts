@@ -21,8 +21,8 @@ export function useAdminBadges(): AdminBadges {
   const stock = useQuery({ ...lowStockQuery(), ...BADGE_FRESH });
   return {
     review: review.isError ? undefined : countOf(review.data?.items?.length),
-    // Số người chưa nhận gì (Q9); 409 kỳ chưa khóa hay lỗi khác → không có số
-    delivery: people.isError || !Array.isArray(people.data?.people) ? undefined : people.data.people.filter((p) => p.status === 'pending').length,
+    // Số người giao được ngay từ tủ/hàng đã về (tủ trống sau khóa sổ → 0); 409 kỳ chưa khóa hay lỗi khác → không có số
+    delivery: people.isError || !Array.isArray(people.data?.people) ? undefined : people.data.people.filter((p) => p.deliverable_now).length,
     stock: stock.isError || !Array.isArray(stock.data) ? undefined : stock.data.length,
   };
 }

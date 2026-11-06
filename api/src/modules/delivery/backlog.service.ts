@@ -8,9 +8,8 @@ import { PeriodsService } from '../periods/periods.service';
 import { hasItemsSql } from '../reports/sent-snapshot';
 import {
   CUSTOM_ITEM_KEY,
+  DEBT_LINE_SQL,
   REMAINING_QTY,
-  UNDELIVERED_LINE,
-  lockedPeriod,
 } from '../requests/line-predicates';
 import { lineNotFound } from '../requests/request-errors';
 import type {
@@ -56,9 +55,10 @@ export class BacklogService {
     return { groups: [...groups.values()].sort(byLabel) };
   }
 
-  // Chỉ kỳ đã khóa: kỳ đang mở chưa giao được nên chưa phải nợ
+  // Chỉ kỳ trước tháng đang giao: phần còn lại của tháng đang giao là Chưa nhận, chưa phải nợ
   private async backlogRows(openYm: string): Promise<BacklogRow[]> {
-    const lastLocked = ymToDate(addMonths(openYm, -1));
+    const current = addMonths(openYm, -1);
+    const lastLocked = ymToDate(current);
     const key = sql`coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY})`;
     const { rows } = await this.db.execute<BacklogRow>(sql`
       WITH sent AS (
@@ -86,7 +86,7 @@ export class BacklogService {
       JOIN users u ON u.sub = r.user_sub
       LEFT JOIN items i ON i.id = l.item_id
       LEFT JOIN sent ON r.period_ym < ${lastLocked}::date
-      WHERE ${UNDELIVERED_LINE} AND ${lockedPeriod(openYm)}
+      WHERE ${DEBT_LINE_SQL(current)}
       ORDER BY r.period_ym, coalesce(u.full_name, ''), l.id
     `);
     return rows;

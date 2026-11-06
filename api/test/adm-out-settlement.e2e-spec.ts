@@ -70,9 +70,9 @@ describe('V2D-5 tự hủy ADM hết hàng lúc khóa sổ kỳ sau (e2e)', () =
     await cron(BEFORE_LOCK);
     expect(await f.line(cLine)).toMatchObject({ cancelled_qty: 0 });
     expect(await headcountSubs()).toBeNull();
-    expect(await backlogLines()).toEqual(
-      expect.arrayContaining([cLine, leftLine, keep]),
-    );
+    // Trước mốc kỳ P còn là tháng đang giao: phần còn lại là Chưa nhận, chưa ở Còn nợ
+    const before = await backlogLines();
+    for (const id of [cLine, leftLine, keep]) expect(before).not.toContain(id);
     expect(f.itemRow(await nextReport(), bk)?.backlog_prev).toBe(3);
 
     await cron(AT_LOCK);

@@ -11,6 +11,9 @@ export const REMAINING_QTY = sql.raw(
   '(l.qty - l.delivered_qty - l.cancelled_qty)',
 );
 export const UNDELIVERED_LINE = sql`(${EFFECTIVE_LINE} AND ${REMAINING_QTY} > 0)`;
+// Còn nợ = phần chưa giao của kỳ trước tháng đang giao; phần còn lại của chính tháng đó là "Chưa nhận"
+export const DEBT_LINE_SQL = (latestLockedYm: string): SQL =>
+  sql`(${UNDELIVERED_LINE} AND r.period_ym < ${ymToDate(latestLockedYm)}::date)`;
 // Khóa gộp món ngoài DM (tên + ĐVT đã trim, không phân biệt hoa thường) dùng chung Tổng hợp/Còn nợ/báo cáo; mảng jsonb để không ký tự phân cách nào gây trùng khóa
 export const CUSTOM_ITEM_KEY = sql.raw(
   `('custom:' || jsonb_build_array(lower(trim(l.custom_name)), lower(trim(l.custom_unit)))::text)`,

@@ -5,6 +5,9 @@ import { LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
 import { Toolbar } from '@/ui/toolbar';
+import { shiftYm } from '@/lib/ym';
+import { monthOf } from '@/features/request/request-format';
+import { useCurrentPeriod } from '@/features/request/request.api';
 import { useBacklog, type BacklogBy } from './backlog.api';
 import { BacklogStats } from './backlog-stats';
 import { BacklogTable, type LineAction } from './backlog-table';
@@ -37,6 +40,8 @@ export function BacklogPage() {
   const rows = useMemo(() => applyFilter(all, p.filter), [all, p.filter]);
   const open = useOpenLine(all);
   const title = t('delivery.backlog.title');
+  const current = useCurrentPeriod();
+  const month = current.data?.ym ? monthOf(shiftYm(current.data.ym, -1)) : undefined;
   const reload = () => open.line && void refresh(open.line.request_id);
   const done = async () => {
     if (open.line) await refresh(open.line.request_id);
@@ -52,7 +57,7 @@ export function BacklogPage() {
       <PageHeader
         crumbs={[t('nav.groups.later'), title]}
         title={title}
-        description={t('delivery.backlog.description')}
+        description={month ? t('delivery.backlog.description', { month }) : undefined}
       />
       {query.isError && <LoadError onRetry={() => void query.refetch()} />}
       {query.isSuccess && <BacklogStats stats={backlogStats(all)} filter={p.filter} onFilter={p.toggleFilter} />}

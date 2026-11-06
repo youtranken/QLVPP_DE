@@ -39,7 +39,7 @@ describe('GET admin/backlog, GET admin/lines/:id/deliveries', () => {
     stockItem,
   } = f;
 
-  // Kỳ 2026-10 hạn 10/10 → đã khóa ở mọi mốc test; 2026-12 hạn 10/12 → còn mở
+  // Mặc định 2026-12 là tháng đang giao: nợ = dòng kỳ 2026-10/2026-11; dòng 2026-12 là Chưa nhận
   const seedLine = async (ym: string, sub: string, cols: object) => {
     await pool().query(
       `INSERT INTO periods (ym, deadline) VALUES ('2026-10-01', '2026-10-10T17:00:00Z')
@@ -73,7 +73,7 @@ describe('GET admin/backlog, GET admin/lines/:id/deliveries', () => {
     review_status: status,
   });
 
-  beforeEach(() => freeze('2026-11-12T03:00:00Z'));
+  beforeEach(() => freeze('2026-12-12T03:00:00Z'));
 
   it('nợ kỳ 2026-10 (2) + kỳ 2026-11 (3) cùng món → by=item một nhóm remaining_qty 5, 2 dòng kỳ cũ trước', async () => {
     const item = await stockItem(4);
@@ -127,7 +127,7 @@ describe('GET admin/backlog, GET admin/lines/:id/deliveries', () => {
     expect(lineIdsOf(await groupOf('item', item))).toEqual([a.line, b.line]);
   });
 
-  it('không có: rejected, pending, đã hủy hết, đã giao đủ, kỳ đang mở 2026-12; còn lại 1 (hủy 2/3) vẫn có', async () => {
+  it('không có: rejected, pending, đã hủy hết, đã giao đủ, tháng đang giao 2026-12; còn lại 1 (hủy 2/3) vẫn có', async () => {
     const item = await stockItem(10);
     const full = await seedLine('2026-11', A, {
       item_id: item,
@@ -140,7 +140,7 @@ describe('GET admin/backlog, GET admin/lines/:id/deliveries', () => {
       delivered_qty: 1,
       cancelled_qty: 2,
     });
-    const openPeriod = await seedLine('2026-12', A, { item_id: item, qty: 1 });
+    const current = await seedLine('2026-12', A, { item_id: item, qty: 1 });
     const oneLeft = await seedLine('2026-10', B, {
       item_id: item,
       qty: 3,
@@ -156,17 +156,17 @@ describe('GET admin/backlog, GET admin/lines/:id/deliveries', () => {
     });
     expect(lineIdsOf(await groupOf('item', item))).toEqual([oneLeft.line]);
     const all = (await backlog('item')).flatMap(lineIdsOf);
-    for (const gone of [full, allCancelled, openPeriod, rejected, pending]) {
+    for (const gone of [full, allCancelled, current, rejected, pending]) {
       expect(all).not.toContain(gone.line);
     }
   });
 
-  it('kỳ 2026-11 chưa có lúc 2026-11-10T16:59:59.999Z (23:59:59.999 VN); có lúc 2026-11-10T17:00:00.000Z (00:00 ngày 11 VN)', async () => {
+  it('kỳ 2026-11 chưa là nợ lúc 2026-12-10T16:59:59.999Z (còn là tháng đang giao); là nợ lúc 2026-12-10T17:00:00.000Z (kỳ 12 khóa sổ)', async () => {
     const item = await stockItem(10);
     await seedLine('2026-11', A, { item_id: item, qty: 2 });
-    freeze('2026-11-10T16:59:59.999Z');
+    freeze('2026-12-10T16:59:59.999Z');
     expect(await groupOf('item', item)).toBeUndefined();
-    freeze('2026-11-10T17:00:00.000Z');
+    freeze('2026-12-10T17:00:00.000Z');
     expect((await groupOf('item', item))?.remaining_qty).toBe(2);
   });
 

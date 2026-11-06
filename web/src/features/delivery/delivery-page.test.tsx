@@ -140,12 +140,12 @@ describe('DeliveryPage — danh sách phiếu (trái)', () => {
     expect(search()).toContain('all=1');
   });
 
-  it('không còn phiếu cần giao → "Không còn phiếu cần giao", câu nhắc tháng 10, liên kết "Xem Còn nợ"', async () => {
+  it('không còn phiếu cần giao → "Không còn phiếu cần giao", câu nhắc tháng 10, liên kết "Xem Chưa nhận"', async () => {
     stubDelivery({ rows: [] });
     open();
     expect(await screen.findByText('Không còn phiếu cần giao')).toBeInTheDocument();
-    expect(screen.getByText('Mọi phiếu tháng 10 đã giao đủ. Phần thiếu kho nằm ở Còn nợ.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Xem Còn nợ' })).toHaveAttribute('href', '/admin/backlog');
+    expect(screen.getByText('Mọi phiếu tháng 10 đã giao đủ. Phần thiếu kho còn ở tab Chưa nhận.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Xem Chưa nhận' })).toHaveAttribute('href', '/admin/delivery');
   });
 });
 

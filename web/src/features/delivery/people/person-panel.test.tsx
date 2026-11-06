@@ -56,31 +56,52 @@ describe('PersonPanel — thứ tự và mặc định', () => {
     expect(screen.queryByRole('heading', { name: 'Tháng 10' })).toBeNull();
   });
 
-  it('B cần 10 bút, tủ 7 → stepper mặc định 7, cảnh báo "Giao 7, còn nợ 3" và "Còn 1 người chờ món này, cần thêm 3"', () => {
+  it('B cần 10 bút, tủ 7 → stepper mặc định 7, dòng "Cần 10 · Tủ 7 · 1 người khác còn chờ 3", cảnh báo "Giao 7 · Chưa nhận 3"', () => {
     stub();
     open(B);
     expect(spin('Giao Bút bi xanh').value).toBe('7');
-    expect(screen.getByText('Cần 10 · Tủ còn 7')).toBeInTheDocument();
-    expect(screen.getByText('Giao 7, còn nợ 3')).toBeInTheDocument();
-    expect(screen.getByText('Còn 1 người chờ món này, cần thêm 3')).toBeInTheDocument();
+    expect(screen.getByText('Cần 10 · Tủ 7 · 1 người khác còn chờ 3')).toBeInTheDocument();
+    expect(screen.getByText('Giao 7 · Chưa nhận 3')).toBeInTheDocument();
+  });
+
+  it('dòng panel: "Cần 2 · Tủ 20 · 4 người khác còn chờ 18" (đếm cả nợ của người khác, không đếm dòng chờ duyệt)', () => {
+    stub();
+    const me = person({ user_sub: 'u-me', lines: [pLine({ line_id: 'm', qty: 2, remaining_qty: 2, stock_qty: 20 })] });
+    const others = [
+      person({ user_sub: 'o1', lines: [pLine({ line_id: 'o1', remaining_qty: 5 })] }),
+      person({ user_sub: 'o2', lines: [pLine({ line_id: 'o2', remaining_qty: 4 })] }),
+      person({ user_sub: 'o3', lines: [pLine({ line_id: 'o3', is_debt: true, period_ym: '2026-09', remaining_qty: 6 })] }),
+      person({ user_sub: 'o4', lines: [pLine({ line_id: 'o4', remaining_qty: 3 })] }),
+      person({ user_sub: 'o5', lines: [pLine({ line_id: 'o5', review_status: 'pending', remaining_qty: 9 })] }),
+    ];
+    renderWithI18n(
+      <MeContext.Provider value={makeMe('admin')}>
+        <MemoryRouter>
+          <ToastProvider>
+            <PersonPanel ym="2026-10" person={me} people={[me, ...others]} />
+          </ToastProvider>
+        </MemoryRouter>
+      </MeContext.Provider>,
+    );
+    expect(screen.getByText('Cần 2 · Tủ 20 · 4 người khác còn chờ 18')).toBeInTheDocument();
   });
 
   it('đủ hàng → không cảnh báo; hạ xuống dưới mức cần thì cảnh báo hiện theo số mới', async () => {
     stub();
     open(A);
     expect(spin('Giao Bút bi xanh').value).toBe('3');
-    expect(screen.queryByText(/còn nợ/)).toBeNull();
+    expect(screen.queryByText(/Chưa nhận/)).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Bớt Giao Bút bi xanh' }));
-    expect(screen.getByText('Giao 2, còn nợ 1')).toBeInTheDocument();
-    expect(screen.getByText('Còn 1 người chờ món này, cần thêm 10')).toBeInTheDocument();
+    expect(screen.getByText('Giao 2 · Chưa nhận 1')).toBeInTheDocument();
   });
 
-  it('không ai khác chờ món → cảnh báo nợ nhưng không có câu "Còn n người chờ"', () => {
+  it('không ai khác chờ món → "Cần 5 · Tủ 2" không có phần "người khác còn chờ"', () => {
     stub();
     const solo = person({ lines: [pLine({ item_id: 'i-solo', remaining_qty: 5, qty: 5, stock_qty: 2 })] });
     open(solo);
-    expect(screen.getByText('Giao 2, còn nợ 3')).toBeInTheDocument();
-    expect(screen.queryByText(/người chờ món này/)).toBeNull();
+    expect(screen.getByText('Cần 5 · Tủ 2')).toBeInTheDocument();
+    expect(screen.getByText('Giao 2 · Chưa nhận 3')).toBeInTheDocument();
+    expect(screen.queryByText(/người khác còn chờ/)).toBeNull();
   });
 });
 
@@ -107,7 +128,7 @@ describe('PersonPanel — biên stepper', () => {
     await userEvent.click(dec);
     expect(spin('Giao Bút bi xanh').value).toBe('0');
     expect(dec).toBeDisabled();
-    expect(screen.getByText('Giao 0, còn nợ 2')).toBeInTheDocument();
+    expect(screen.getByText('Giao 0 · Chưa nhận 2')).toBeInTheDocument();
   });
 
   it('mọi dòng đặt 0 → nút Giao vô hiệu; đặt lại 1 → bật', async () => {
@@ -167,13 +188,20 @@ describe('PersonPanel — tồn chia theo món', () => {
   const debt = pLine({ line_id: 'd', period_ym: '2026-09', is_debt: true, qty: 3, remaining_qty: 3, stock_qty: 6 });
   const cur = pLine({ line_id: 'c', qty: 5, remaining_qty: 5, stock_qty: 6 });
 
-  it('nợ 3 + kỳ này 5 cùng món, tủ 6: mặc định 3 rồi 3, cảnh báo "Giao 3, còn nợ 2" ở dòng kỳ này', () => {
+  it('nợ 3 + kỳ này 5 cùng món, tủ 6: mặc định 3 rồi 3, cảnh báo "Giao 3 · Chưa nhận 2" ở dòng kỳ này; tổng "Giao 6 · còn 2 chưa nhận"', () => {
     stub();
     open(person({ lines: [cur, debt] }));
     const inputs = screen.getAllByRole('spinbutton') as HTMLInputElement[];
     expect(inputs.map((i) => i.value)).toEqual(['3', '3']);
-    expect(screen.getAllByText('Giao 3, còn nợ 2')).toHaveLength(1);
-    expect(screen.getByText('Giao 6 đơn vị, ghi nợ 2')).toBeInTheDocument();
+    expect(screen.getAllByText('Giao 3 · Chưa nhận 2')).toHaveLength(1);
+    expect(screen.getByText('Giao 6 · còn 2 chưa nhận')).toBeInTheDocument();
+  });
+
+  it('tủ 2 cho nợ 3: dòng nợ "Giao 2 · Nợ 1"; tổng thêm "· nợ tháng trước 1"', () => {
+    stub();
+    open(person({ lines: [debt, pLine({ ...cur, stock_qty: 2 })].map((l) => ({ ...l, stock_qty: 2 })) }));
+    expect(screen.getByText('Giao 2 · Nợ 1')).toBeInTheDocument();
+    expect(screen.getByText('Giao 2 · còn 5 chưa nhận · nợ tháng trước 1')).toBeInTheDocument();
   });
 
   it('hạ dòng nợ xuống 1 thì dòng kỳ này được thêm tồn (tối đa 5)', async () => {

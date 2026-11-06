@@ -51,7 +51,7 @@ test.describe('E9-S3 Giao hàng (kỳ trước đã khóa, dev-identity admin)',
       await page.getByRole('button', { name: 'Giao dòng đã chọn (2)' }).click();
       await expect(page.getByRole('status', { name: 'Kết quả giao' })).toHaveText(`Đã giao 1 dòng · Không giao được 1: ${a.name} — chỉ còn 0`);
       await expect(row(a.name).getByText('Chỉ còn 0 cái.')).toBeVisible();
-      await expect(row(a.name).getByText('Hết hàng — còn nợ 5')).toBeVisible();
+      await expect(row(a.name).getByText('Hết hàng — chưa nhận 5')).toBeVisible();
       await expect(row(b.name).getByText('Đã giao đủ')).toBeVisible();
       expect(stockOf(a.id)).toBe(0);
       expect(stockOf(b.id)).toBe(8);

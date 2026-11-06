@@ -75,7 +75,7 @@ describe('V2D-4 hộp hoàn tác đọc bản đã gửi (R-D3.6, R-D17.9)', () 
         .find((l) => l.line_id === lineId) as
         (Record<string, unknown> & { line_id: string }) | undefined;
 
-    it('nợ kỳ 10 còn 4, bản kỳ 11 tính debt 3 → 3; chưa có bản → null; dòng của chính kỳ 11 → null', async () => {
+    it('nợ kỳ 10 còn 4, bản kỳ 11 tính debt 3 → 3; chưa có bản → null; dòng của chính kỳ 11 là Chưa nhận → không ở Còn nợ', async () => {
       const item = await f.stockItem(0);
       const debt = await seedLine('2026-10', B, { item_id: item, qty: 4 });
       const own = await seedLine(YM, A, { item_id: item, qty: 2 });
@@ -96,7 +96,7 @@ describe('V2D-4 hộp hoàn tác đọc bản đã gửi (R-D3.6, R-D17.9)', () 
         },
       );
       expect((await backlogLine(debt))?.counted_in_snapshot_qty).toBe(3);
-      expect((await backlogLine(own))?.counted_in_snapshot_qty).toBeNull();
+      expect(await backlogLine(own)).toBeUndefined();
     });
 
     it('bản cũ thiếu order_basis → lấy backlog_prev của hàng trong bản; khóa không có trong bản → 0', async () => {

@@ -55,11 +55,11 @@ describe('DeliveryPeoplePage — đầu trang và tab', () => {
     expect(f.mock.calls.filter(([u]) => String(u).includes('delivery-people') && u !== PEOPLE_URL)).toHaveLength(0);
   });
 
-  it('số trên tab đúng: Chưa nhận 2, Còn nợ 1, Đã nhận 1, Tất cả 4; mặc định tab Chưa nhận chỉ có A và B', async () => {
+  it('số trên tab đúng (B ở cả hai tab): Chưa nhận 2, Còn nợ 2, Đã nhận 1, Tất cả 4; mặc định tab Chưa nhận chỉ có A và B', async () => {
     stub();
     open();
     await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
-    for (const name of ['Chưa nhận, 2', 'Còn nợ, 1', 'Đã nhận, 1', 'Tất cả, 4']) expect(screen.getByRole('radio', { name })).toBeInTheDocument();
+    for (const name of ['Chưa nhận, 2', 'Còn nợ, 2', 'Đã nhận, 1', 'Tất cả, 4']) expect(screen.getByRole('radio', { name })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Chưa nhận, 2' })).toBeChecked();
     expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Nguyễn Văn An', 'Lê Thị Bình']);
   });
@@ -67,9 +67,9 @@ describe('DeliveryPeoplePage — đầu trang và tab', () => {
   it('người chỉ có nợ (không phiếu kỳ này) có ở tab Còn nợ với dòng cam "Nợ tháng 9: 1 món"; đổi tab ghi ?tab=debt', async () => {
     stub();
     open();
-    await userEvent.click(await screen.findByRole('radio', { name: 'Còn nợ, 1' }));
+    await userEvent.click(await screen.findByRole('radio', { name: 'Còn nợ, 2' }));
     expect(search()).toContain('tab=debt');
-    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Trần Minh Khoa']);
+    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Lê Thị Bình', 'Trần Minh Khoa']);
     expect(within(card('Trần Minh Khoa')).getByText('Nợ tháng 9: 1 món')).toBeInTheDocument();
   });
 
@@ -115,16 +115,16 @@ describe('DeliveryPeoplePage — liên kết cũ', () => {
 });
 
 describe('DeliveryPeoplePage — giao thiếu và tủ trống', () => {
-  const served = person({ user_sub: 'u-s1', full_name: 'Sơn Giao Thiếu', status: 'debt', lines: [pLine({ line_id: 'ls', qty: 10, delivered_qty: 7, remaining_qty: 3, stock_qty: 9 })] });
+  const served = person({ user_sub: 'u-s1', full_name: 'Sơn Giao Thiếu', lines: [pLine({ line_id: 'ls', qty: 10, delivered_qty: 7, remaining_qty: 3, stock_qty: 9 })] });
 
-  it('người đã nhận một phần (server: debt) nằm ở "Còn nợ", không ở "Chưa nhận"', async () => {
+  it('người đã nhận một phần tháng đang giao vẫn ở "Chưa nhận", không ở "Còn nợ"', async () => {
     stub({ people: [served, A] });
     open();
     await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
-    expect(screen.getByRole('radio', { name: 'Chưa nhận, 1' })).toBeChecked();
-    expect(screen.queryByRole('heading', { level: 3, name: 'Sơn Giao Thiếu' })).toBeNull();
-    await userEvent.click(screen.getByRole('radio', { name: 'Còn nợ, 1' }));
+    expect(screen.getByRole('radio', { name: 'Chưa nhận, 2' })).toBeChecked();
     expect(screen.getByRole('heading', { level: 3, name: 'Sơn Giao Thiếu' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('radio', { name: 'Còn nợ, 0' }));
+    expect(screen.queryByRole('heading', { level: 3, name: 'Sơn Giao Thiếu' })).toBeNull();
   });
 
   it('tủ không có hàng (giao được 0): nút chính vô hiệu, chữ "Tủ chưa có hàng", không "Giao 0/x"; tủ có 1 thì "Giao 1/3"', async () => {
@@ -264,7 +264,7 @@ describe('DeliveryPeoplePage — nút nhanh trên thẻ', () => {
     await screen.findByRole('heading', { level: 3, name: 'Lê Thị Bình' });
     await userEvent.click(within(card('Lê Thị Bình')).getByRole('button', { name: /^Giao 9\/12/ }));
     expect(search()).toContain('person=u-b');
-    expect(await screen.findByText('Giao 7, còn nợ 3')).toBeInTheDocument();
+    expect(await screen.findByText('Giao 7 · Chưa nhận 3')).toBeInTheDocument();
     expect(f.mock.calls.some(([u]) => /\/deliver(-all)?$/.test(String(u)))).toBe(false);
   });
 

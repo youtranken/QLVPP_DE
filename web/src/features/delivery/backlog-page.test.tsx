@@ -25,13 +25,13 @@ const card = (name: RegExp) => screen.getByRole('button', { name });
 afterEach(() => vi.unstubAllGlobals());
 
 describe('BacklogPage — đầu trang, thẻ, bộ lọc', () => {
-  it('đúng một h1 "Còn nợ" + mô tả; "Theo món" mặc định, gọi by=item', async () => {
+  it('đúng một h1 "Còn nợ" + mô tả theo tháng đang giao (kỳ mở 11 → tháng 10); "Theo món" mặc định, gọi by=item', async () => {
     const f = stubBacklog([PEN_DUC]);
     openPage();
     await screen.findByText('Bút bi xanh');
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Còn nợ');
-    expect(screen.getByText(/^Phần chưa giao của các kỳ đã khóa/)).toBeInTheDocument();
+    expect(await screen.findByText('Phần chưa giao của các tháng trước tháng 10 — giao bổ sung khi có hàng, hoặc hủy nợ.')).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Theo món' })).toHaveAttribute('aria-checked', 'true');
     expect(callsTo(f, '/api/admin/backlog?by=item')).toHaveLength(1);
   });

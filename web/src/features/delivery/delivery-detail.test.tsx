@@ -77,16 +77,16 @@ describe('DeliveryDetail — đầu chi tiết và các dòng', () => {
     expect(screen.getByRole('button', { name: 'Bớt Kim bấm' })).toBeDisabled();
   });
 
-  it('tồn 0 → "Hết hàng — còn nợ 5", stepper và Giao vô hiệu; cảnh báo "2 dòng thiếu kho…"; dòng đủ → "Đã giao đủ"', async () => {
+  it('tồn 0 → "Hết hàng — chưa nhận 5", stepper và Giao vô hiệu; cảnh báo "2 dòng thiếu kho…"; dòng đủ → "Đã giao đủ"', async () => {
     stubDelivery({ views: [BOUNDARY], items: BOUNDARY_ITEMS });
     await openDetail();
     const pencil = rowOf('Bút chì');
-    expect(within(pencil).getByText('Hết hàng — còn nợ 5')).toBeInTheDocument();
+    expect(within(pencil).getByText('Hết hàng — chưa nhận 5')).toBeInTheDocument();
     expect(qtyOf('Bút chì')).toBeDisabled();
     expect(within(pencil).getByRole('button', { name: 'Thêm Bút chì' })).toBeDisabled();
     expect(within(pencil).getByRole('button', { name: 'Giao Bút chì' })).toBeDisabled();
     expect(within(pencil).getByRole('checkbox', { name: 'Chọn Bút chì' })).toBeDisabled();
-    expect(screen.getByText('2 dòng thiếu kho. Giao phần đang có; phần còn lại tự chuyển sang Còn nợ.')).toBeInTheDocument();
+    expect(screen.getByText('2 dòng thiếu kho. Giao phần đang có; phần còn lại chờ hàng về.')).toBeInTheDocument();
     expect(within(rowOf('Kim bấm lớn')).getByText('Đã giao đủ')).toBeInTheDocument();
     expect(within(rowOf('Kim bấm lớn')).queryByRole('spinbutton')).toBeNull();
   });

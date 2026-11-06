@@ -41,7 +41,10 @@ export function PersonPanel({ ym, person, people, next, onNext }: PersonPanelPro
   const valueOf = (id: string) => alloc[id]?.value ?? 0;
   const toDeliver = shown.filter((l) => valueOf(l.line_id) > 0);
   const give = toDeliver.reduce((s, l) => s + valueOf(l.line_id), 0);
-  const owe = shown.filter((l) => l.review_status !== 'pending').reduce((s, l) => s + l.remaining_qty, 0) - give;
+  const leftOf = (debt: boolean) =>
+    shown.filter((l) => l.review_status !== 'pending' && l.is_debt === debt).reduce((s, l) => s + l.remaining_qty - valueOf(l.line_id), 0);
+  const left = leftOf(false);
+  const debt = leftOf(true);
 
   const deliver = () =>
     flight.run(async () => {
@@ -100,7 +103,10 @@ export function PersonPanel({ ym, person, people, next, onNext }: PersonPanelPro
         </section>
       ))}
       <footer className="pp-foot">
-        <p className="pp-sum">{owe > 0 ? t('delivery.people.panel.sumOwe', { give, owe }) : t('delivery.people.panel.sum', { give })}</p>
+        <p className="pp-sum">
+          {left > 0 ? t('delivery.people.panel.sumOwe', { give, left }) : t('delivery.people.panel.sum', { give })}
+          {debt > 0 && t('delivery.people.panel.sumDebt', { debt })}
+        </p>
         <button type="button" className="btn btn--primary" disabled={busy || toDeliver.length === 0} onClick={() => void deliver()}>
           {busy ? t('delivery.people.panel.sending') : t('delivery.people.panel.deliver')}
         </button>

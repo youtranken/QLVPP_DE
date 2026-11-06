@@ -16,11 +16,11 @@ afterEach(() => {
 });
 
 describe('AdminSidebar: đếm', () => {
-  it('review trả 3 dòng → "Món ngoài danh mục" hiện 3; giao 6 người chưa nhận (1 người Còn nợ không tính), kho 4 món kèm nhãn đọc màn hình', async () => {
+  it('review trả 3 dòng → "Món ngoài danh mục" hiện 3; giao 6 người giao được ngay (1 người chưa nhận nhưng tủ trống không tính), kho 4 món kèm nhãn đọc màn hình', async () => {
     mockViewport(1280);
     stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(200, rows(3)),
-      '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(200, { ym: '2026-10', people: [...Array.from({ length: 6 }, (_, i) => ({ user_sub: `p${i}`, status: 'pending' })), { user_sub: 'x', status: 'debt' }] }),
+      '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(200, { ym: '2026-10', people: [...Array.from({ length: 6 }, (_, i) => ({ user_sub: `p${i}`, status: 'pending', deliverable_now: true })), { user_sub: 'x', status: 'pending', deliverable_now: false }] }),
       '/api/admin/stock/low': () => jsonResponse(200, rows(4).items),
     });
     renderApp(makeMe('admin'), '/admin/catalog');
@@ -37,7 +37,7 @@ describe('AdminSidebar: đếm', () => {
     mockViewport(1280);
     stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(200, rows(n)),
-      '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(200, { ym: '2026-10', people: [{ user_sub: 'a', status: 'pending' }, { user_sub: 'b', status: 'pending' }] }),
+      '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(200, { ym: '2026-10', people: [{ user_sub: 'a', status: 'pending', deliverable_now: true }, { user_sub: 'b', status: 'pending', deliverable_now: true }] }),
     });
     renderApp(makeMe('admin'), '/admin/catalog');
     // Đếm giao hàng phụ thuộc kỳ hiện tại → khi nó hiện thì đếm review (độc lập) cũng đã về

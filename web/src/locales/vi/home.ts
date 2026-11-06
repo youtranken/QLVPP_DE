@@ -17,7 +17,7 @@ const home = {
         register: 'Còn đang nhận đăng ký.',
         send: 'Kỳ đã khóa. In phiếu trình ký hoặc xuất Excel gửi ADM.',
         arrive: 'Nhập số lượng hàng ADM đã chia về để cộng vào tủ.',
-        deliver: 'Hàng đã về. Giao cho từng người, phần thiếu tự thành nợ.',
+        deliver: 'Hàng đã về. Giao cho từng người; phần chưa đủ hàng còn ở Chưa nhận.',
       },
     },
     step: {

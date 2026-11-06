@@ -23,6 +23,8 @@ export function pLine(over: Partial<DeliveryPersonLine> = {}): DeliveryPersonLin
 
 export function person(over: Partial<DeliveryPerson> = {}): DeliveryPerson {
   const lines = over.lines ?? [pLine()];
+  const owed = lines.filter((l) => l.is_debt && l.remaining_qty > 0).length;
+  const open = lines.filter((l) => !l.is_debt && l.remaining_qty > 0).length;
   return {
     user_sub: 'u-a',
     full_name: 'Nguyễn Văn An',
@@ -30,14 +32,17 @@ export function person(over: Partial<DeliveryPerson> = {}): DeliveryPerson {
     user_status: 'active',
     request_id: 'r-1',
     status: 'pending',
-    owed_lines: lines.filter((l) => l.is_debt && l.remaining_qty > 0).length,
-    open_lines: lines.filter((l) => !l.is_debt && l.remaining_qty > 0).length,
+    owed_lines: owed,
+    open_lines: open,
+    has_pending: open > 0,
+    has_debt: owed > 0,
+    deliverable_now: false,
     ...over,
     lines,
   };
 }
 
-// Kịch bản chuẩn: A cần 3 bút, B cần 10 bút (tủ 7) và còn nợ 2 giấy kỳ 9, C chỉ có nợ, D đã nhận đủ
+// Kịch bản chuẩn: A cần 3 bút, B cần 10 bút (tủ 7) và còn nợ 2 giấy kỳ 9 (có cả hai), C chỉ có nợ, D đã nhận đủ
 export const A = person({ user_sub: 'u-a', full_name: 'Nguyễn Văn An', request_id: 'r-a', lines: [pLine({ line_id: 'la', request_id: 'r-a' })] });
 export const B = person({
   user_sub: 'u-b',

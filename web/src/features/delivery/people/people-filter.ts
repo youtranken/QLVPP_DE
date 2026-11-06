@@ -4,17 +4,26 @@ import type { DeliveryPerson, DeliveryPersonLine } from './delivery-people.api';
 
 export type PeopleTab = 'pending' | 'debt' | 'done' | 'all';
 
+// Tab theo cờ chứ không theo status: người vừa chưa nhận vừa còn nợ có ở cả hai tab
+const IN_TAB: Record<PeopleTab, (p: DeliveryPerson) => boolean> = {
+  pending: (p) => p.has_pending,
+  debt: (p) => p.has_debt,
+  done: (p) => !p.has_pending && !p.has_debt,
+  all: () => true,
+};
+
 // Có từ khóa thì tìm trên mọi trạng thái: người đứng trước quầy cần thấy ngay dù đã nhận
 export function filterPeople(people: DeliveryPerson[], tab: PeopleTab, q: string): DeliveryPerson[] {
   if (q.trim()) return people.filter((p) => matchesSearch(`${p.full_name ?? ''} ${p.department ?? ''}`, q));
-  return tab === 'all' ? people : people.filter((p) => p.status === tab);
+  return people.filter(IN_TAB[tab]);
 }
 
 export function tabCounts(people: DeliveryPerson[]): Record<PeopleTab, number> {
-  const n: Record<PeopleTab, number> = { pending: 0, debt: 0, done: 0, all: people.length };
-  for (const p of people) n[p.status]++;
-  return n;
+  const count = (tab: PeopleTab) => people.filter(IN_TAB[tab]).length;
+  return { pending: count('pending'), debt: count('debt'), done: count('done'), all: people.length };
 }
+
+export const overlapCount = (people: DeliveryPerson[]) => people.filter((p) => p.has_pending && p.has_debt).length;
 
 export interface Waiting {
   people: number;
@@ -54,6 +63,12 @@ export function lineMax(line: DeliveryPersonLine, cap?: number): number {
 
 // Dòng chờ duyệt chưa giao được; dòng đã giao đủ không còn gì để giao
 export const isOpenLine = (l: DeliveryPersonLine) => l.review_status !== 'pending' && l.remaining_qty > 0;
+
+// Số trên thẻ: dòng chưa nhận + nợ còn giao được (bỏ dòng chờ duyệt)
+export function cardSummary(p: DeliveryPerson): { n: number; u: number } {
+  const open = p.lines.filter(isOpenLine);
+  return { n: open.length, u: open.reduce((s, l) => s + l.remaining_qty, 0) };
+}
 
 export const byPeriod = (a: { period_ym: string }, b: { period_ym: string }) => (a.period_ym < b.period_ym ? -1 : a.period_ym > b.period_ym ? 1 : 0);
 

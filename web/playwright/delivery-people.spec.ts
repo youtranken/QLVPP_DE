@@ -67,7 +67,7 @@ test.describe('Giao hàng theo người (Plan v2-B, B3)', () => {
       await cardB.getByRole('button', { name: `Xem ${s.b.name}` }).click();
       const panel = isMobile(info) ? page.getByRole('dialog', { name: s.b.name }) : page.getByRole('region', { name: s.b.name, exact: true });
       await expect(panel.getByRole('spinbutton', { name: `Giao ${s.pen.name}` })).toHaveValue('7');
-      await expect(panel.getByText('Giao 7, còn nợ 3')).toBeVisible();
+      await expect(panel.getByText('Giao 7 · Chưa nhận 3')).toBeVisible();
       await expect(panel.getByRole('button', { name: `Thêm Giao ${s.pen.name}` })).toBeDisabled();
       if (isMobile(info)) {
         await expectNoContrastViolations(page);
@@ -80,11 +80,9 @@ test.describe('Giao hàng theo người (Plan v2-B, B3)', () => {
 
       await page.getByRole('searchbox', { name: 'Tìm tên hoặc phòng ban' }).clear();
       await expect(page.getByRole('radio', { name: /^Chưa nhận/ })).toBeChecked();
-      // B được giao thiếu (7/10) → phần thiếu là nợ: sang "Còn nợ", không còn ở "Chưa nhận"
-      await expect(cardOf(page, s.b.name)).toHaveCount(0);
-      await page.getByRole('radio', { name: /^Còn nợ/ }).click();
+      // B được giao thiếu (7/10) tháng đang giao → vẫn "Chưa nhận" tới khi tháng sau khóa sổ
       const stillB = cardOf(page, s.b.name);
-      await expect(stillB.getByText('Còn nợ', { exact: true })).toBeVisible();
+      await expect(stillB.getByText('Chưa nhận', { exact: true })).toBeVisible();
       await expect(stillB.getByText('Đã giao 7/10')).toBeVisible();
       await expect(stillB.getByRole('button', { name: /^Tủ chưa có hàng/ })).toBeDisabled();
       await expect(cardOf(page, s.a.name)).toHaveCount(0);

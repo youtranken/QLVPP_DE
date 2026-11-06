@@ -114,7 +114,7 @@ export interface DeliveryPersonLine {
   line_id: string;
   request_id: string;
   period_ym: string;
-  is_debt: boolean; // period_ym < ym
+  is_debt: boolean; // period_ym < tháng đang giao (kỳ khóa mới nhất)
   item_id: string | null;
   name: string;
   name_en: string | null;
@@ -139,5 +139,8 @@ export interface DeliveryPerson {
   status: DeliveryPersonStatus;
   owed_lines: number;
   open_lines: number;
+  has_pending: boolean;
+  has_debt: boolean;
+  deliverable_now: boolean; // có dòng giao được ngay từ tủ/hàng đã về theo thứ tự đăng ký
   lines: DeliveryPersonLine[];
 }

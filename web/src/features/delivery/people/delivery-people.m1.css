@@ -58,3 +58,8 @@
   [data-shell='admin'] .pp-tabs .seg-m1 em { padding: 1px var(--s-2); }
 }
 [data-shell='admin'] .pp-row__main > :first-child { grid-row: span 2; align-self: start; }
+[data-shell='admin'] .pp-card__sum { margin: 0; font: var(--t-sm); font-weight: 700; color: var(--c-ink); }
+[data-shell='admin'] .pp-tabs__note { display: block; margin-top: var(--s-1); font: var(--t-cap); color: var(--c-ink-2); }
+@media (max-width: 767px) {
+  [data-shell='admin'] .pp-toolbar { position: sticky; top: 0; z-index: 2; background: var(--c-page); }
+}

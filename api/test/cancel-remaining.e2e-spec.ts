@@ -54,6 +54,9 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
   it('dòng 5 đã giao 3 → hủy "Người đã nghỉ": cancelled_qty 2, cancelled_now 2, rời Còn nợ, member thấy cancel_note, đúng 1 chuông line_cancelled:<id>:2', async () => {
     const { request, line } = await lockedLine(10);
     await deliver(line.id, { qty: 3, expected_delivered_qty: 0 }).expect(200);
+    expect(await backlogLineIds()).not.toContain(line.id);
+    // Kỳ 12 khóa sổ → phần còn lại của kỳ 11 thành nợ
+    freeze('2026-12-11T03:00:00Z');
     expect(await backlogLineIds()).toContain(line.id);
     const res = await cancel(line.id, {
       reason: 'Người đã nghỉ',

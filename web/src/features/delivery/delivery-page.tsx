@@ -24,7 +24,7 @@ function NothingToDeliver({ month, showAll }: { month: number; showAll: boolean 
       title={t('delivery.page.emptyTitle')}
       hint={t('delivery.page.emptyHint', { month })}
       action={
-        <Link className="btn" to="/admin/backlog">
+        <Link className="btn" to="/admin/delivery">
           {t('delivery.page.toBacklog')}
         </Link>
       }

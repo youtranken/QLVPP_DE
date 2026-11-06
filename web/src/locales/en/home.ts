@@ -20,7 +20,7 @@ const home: Messages<typeof vi> = {
         register: 'Sign-ups are still open.',
         send: 'The period is locked. Print the form for signing or export Excel for ADM.',
         arrive: 'Enter the quantities ADM sent so they are added to the cabinet.',
-        deliver: 'Goods are in. Deliver person by person, shortfalls become backlog.',
+        deliver: 'Goods are in. Deliver person by person; anything short stays under Not collected.',
       },
     },
     step: {

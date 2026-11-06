@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import { jsonResponse } from '@/test/test-utils';
+import { SHELL_PERIOD } from '@/test/admin-shell-stub';
 import type { BacklogLine } from './backlog.api';
 import { itemGroup, personGroup } from './backlog-fixtures';
 
@@ -28,6 +29,7 @@ export function stubBacklog(initial: BacklogLine[], handlers: Handlers = {}) {
     const u = new URL(url, 'http://x');
     const lineId = u.pathname.split('/')[4];
     const line = lines.find((l) => l.line_id === lineId);
+    if (u.pathname === '/api/periods/current') return jsonResponse(200, SHELL_PERIOD);
     if (u.pathname === '/api/admin/backlog') return jsonResponse(200, { groups: groups(u.searchParams.get('by')) });
     if (u.pathname.endsWith('/deliver') && line) {
       const qty = JSON.parse(String(init?.body)).qty as number;

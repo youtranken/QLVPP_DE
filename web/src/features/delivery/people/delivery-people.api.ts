@@ -30,6 +30,10 @@ export interface DeliveryPerson {
   status: DeliveryPersonStatus;
   owed_lines: number;
   open_lines: number;
+  // Chưa nhận = còn dòng tháng đang giao; Còn nợ = còn dòng tháng trước; một người có thể có cả hai
+  has_pending: boolean;
+  has_debt: boolean;
+  deliverable_now: boolean;
   lines: DeliveryPersonLine[];
 }
 

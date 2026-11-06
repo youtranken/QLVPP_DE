@@ -14,7 +14,7 @@ import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { usePeriodSummary } from '@/features/summary/summary.api';
 import { useDeliveryPeople, type DeliveryPerson } from './delivery-people.api';
-import { filterPeople, planOf, tabCounts, type PeopleTab } from './people-filter';
+import { filterPeople, overlapCount, planOf, tabCounts, type PeopleTab } from './people-filter';
 import { PersonAvatar, PersonCard } from './person-card';
 import { PersonPanel } from './person-panel';
 import { useQuickDeliver } from './use-quick-deliver';
@@ -74,12 +74,13 @@ function PeopleBoard({ ym }: { ym: string }) {
   if (people.length === 0) return <EmptyState title={t('delivery.people.emptyAll', { month })} />;
 
   const counts = tabCounts(people);
+  const both = overlapCount(people);
   const panel = selected && (
     <PersonPanel key={selected.user_sub} ym={ym} person={selected} people={people} next={at >= 0 ? listed[at + 1] : undefined} onNext={open} />
   );
   return (
     <>
-      <div className="toolbar">
+      <div className="toolbar pp-toolbar">
         <div className="toolbar__search">
           <Icon name="search" size={18} />
           <input
@@ -97,6 +98,7 @@ function PeopleBoard({ ym }: { ym: string }) {
             options={TABS.map((x) => ({ value: x, label: t(`delivery.people.tabs.${x}`), count: counts[x] }))}
             onChange={(v) => update({ tab: v === 'pending' ? null : v })}
           />
+          {both > 0 && <small className="pp-tabs__note">{t('delivery.people.overlap', { n: both })}</small>}
         </div>
       </div>
       <div className="pp-split">

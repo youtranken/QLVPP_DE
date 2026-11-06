@@ -254,13 +254,13 @@ describe('phân loại route /admin/* và guard kỳ khóa (e2e)', () => {
         ).body as { items: { objectId: string }[] }
       ).items.map((i) => i.objectId);
 
-    it('GET /admin/review, /admin/backlog: .999 không có dòng kỳ mở; .000 có', async () => {
+    it('GET /admin/review, /admin/backlog: .999 không có dòng kỳ mở; .000 review có, Còn nợ vẫn không (kỳ vừa khóa là tháng đang giao → Chưa nhận)', async () => {
       freeze(LAST_OPEN_MS);
       expect(await reviewIds()).not.toContain(ids.customLine);
       expect(await backlogIds()).not.toContain(ids.itemLine);
       freeze(FIRST_LOCKED_MS);
       expect(await reviewIds()).toContain(ids.customLine);
-      expect(await backlogIds()).toContain(ids.itemLine);
+      expect(await backlogIds()).not.toContain(ids.itemLine);
     });
 
     it('GET /admin/items/:id/pending-arrival: .999 không đọc bản chốt kỳ mở; .000 đọc', async () => {

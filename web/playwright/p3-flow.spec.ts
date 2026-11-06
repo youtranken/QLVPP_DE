@@ -44,7 +44,7 @@ async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
   await paper.getByLabel(`Thực giao ${s.paper.name}`).fill('3');
   await paper.getByRole('button', { name: `Giao ${s.paper.name}` }).dblclick();
   await expect(admin.getByText(`Đã giao 3 cái ${s.paper.name}`)).toBeVisible();
-  await expect(paper.getByText('Hết hàng — còn nợ 2')).toBeVisible();
+  await expect(paper.getByText('Hết hàng — chưa nhận 2')).toBeVisible();
   expect(deliveryMovements(s.paper.id)).toBe('-3');
   await axe390(admin, info);
   await snap(admin, info, 'p3-delivered-paper');

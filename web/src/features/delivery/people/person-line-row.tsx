@@ -45,7 +45,9 @@ export function PersonLineRow({ line, value, max, taken, error, waiting, disable
   const meta =
     line.stock_qty === null
       ? t('delivery.people.panel.needNoStock', { n: line.remaining_qty })
-      : t('delivery.people.panel.need', { n: line.remaining_qty, stock: line.stock_qty });
+      : waiting.people > 0
+        ? t('delivery.people.panel.lineInfo', { need: line.remaining_qty, stock: line.stock_qty, k: waiting.people, q: waiting.qty })
+        : t('delivery.people.panel.need', { n: line.remaining_qty, stock: line.stock_qty });
   return (
     <li className="pp-row">
       <div className="pp-row__main">
@@ -61,8 +63,7 @@ export function PersonLineRow({ line, value, max, taken, error, waiting, disable
       </div>
       {!reviewing && max > 0 && owe > 0 && (
         <div className="pp-row__warn">
-          <strong>{t('delivery.people.panel.short', { give: value, owe })}</strong>
-          {waiting.people > 0 && <span> {t('delivery.people.panel.waiting', { n: waiting.people, qty: waiting.qty })}</span>}
+          <strong>{t(line.is_debt ? 'delivery.people.panel.shortDebt' : 'delivery.people.panel.short', { give: value, owe })}</strong>
         </div>
       )}
       {error && (
