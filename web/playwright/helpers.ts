@@ -232,3 +232,10 @@ export async function closeCart(page: Page, info: TestInfo) {
   await page.keyboard.press('Escape');
   await expect(sheet).toBeHidden();
 }
+
+/** Waits for the /api/files/:id response (ok) and for the <img> to decode. Start it BEFORE the navigation that triggers the load. */
+export async function waitForImageLoaded(page: Page, img: Locator, fileId: string, timeoutMs = 20_000): Promise<void> {
+  const response = page.waitForResponse((r) => r.url().includes(`/api/files/${fileId}`) && r.ok(), { timeout: timeoutMs });
+  await response;
+  await expect.poll(() => img.evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth > 0), { timeout: timeoutMs }).toBe(true);
+}

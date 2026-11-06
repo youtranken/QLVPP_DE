@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Browser, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, psql, removeTestItem, seedActiveUser } from './helpers';
+import { acquireLock, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, psql, removeTestItem, seedActiveUser, waitForImageLoaded } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-16-shots';
 const FIXTURE = 'playwright/fixtures/item.png';
@@ -59,6 +59,8 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       expect(saved.status()).toBe(200);
 
       await routeAs(page, admin);
+      const photoLoaded = waitForImageLoaded(page, page.getByRole('article', { name }).getByRole('img', { name: `Ảnh ${name}` }), imageId);
+      photoLoaded.catch(() => {});
       await page.goto('/admin/review');
       await expect(page.getByRole('heading', { level: 1, name: 'Món ngoài danh mục' })).toBeVisible();
       await expect(page.getByRole('radio', { name: 'Chờ xem' })).toHaveAttribute('aria-checked', 'true');
@@ -67,7 +69,8 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       await expect(card.getByText('“Loại 2 cm”')).toBeVisible();
       await card.scrollIntoViewIfNeeded();
       const photo = card.getByRole('img', { name: `Ảnh ${name}` });
-      await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+      await expect(photo).toBeVisible();
+      await photoLoaded;
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'review-list');
 
