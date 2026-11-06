@@ -57,7 +57,7 @@ test.describe('E6-S4 song ngữ các màn Hành chính của Plan 3', () => {
 
       for (const lang of ['vi', 'en'] as const) {
         await switchLanguage(page, info, lang);
-        const t = lang === 'vi' ? { delivery: 'Giao tất cả', backlog: 'Còn nợ', reports: 'In trình ký', bell: 'Thông báo' } : { delivery: 'Deliver all', backlog: 'Outstanding', reports: 'Print for signing', bell: 'Notifications' };
+        const t = lang === 'vi' ? { delivery: 'Giao tất cả', backlog: 'Còn nợ', reports: 'Phần 1 · Tổng hợp theo món', bell: 'Thông báo' } : { delivery: 'Deliver all', backlog: 'Outstanding', reports: 'Part 1 · Summary by item', bell: 'Notifications' };
 
         await page.goto('/admin/delivery/classic');
         await page.getByRole('list').getByRole('button', { name: new RegExp(seed.name) }).click();
@@ -72,8 +72,9 @@ test.describe('E6-S4 song ngữ các màn Hành chính của Plan 3', () => {
         if (isMobile(info)) await expectNoContrastViolations(page);
         await snap(page, info, `backlog-${lang}`);
 
+        // Báo cáo chỉ đọc (không nút In/Xuất): chờ Phần 1 có số liệu
         await page.goto('/admin/reports');
-        await expect(page.getByRole('button', { name: t.reports })).toBeVisible();
+        await expect(page.getByRole('heading', { name: t.reports })).toBeVisible();
         await expectContentLanguage(page, lang);
         if (isMobile(info)) await expectNoContrastViolations(page);
         await snap(page, info, `reports-${lang}`);

@@ -16,13 +16,12 @@ export interface Seed {
   cleanup: () => void;
 }
 
-// Kỳ trước đã khóa (hạn đã qua) seed bằng SQL; món không ảnh để không phụ thuộc kho tệp đang có gì
-export async function seedLockedRequest(request: APIRequestContext, info: TestInfo, lines: { stock: number; qty: number }[]): Promise<Seed> {
+// Kỳ trước đã khóa (hạn đã qua) seed bằng SQL; món không ảnh để không phụ thuộc kho tệp đang có gì. ym: seed vào kỳ đã khóa khác (kỳ riêng của PW)
+export async function seedLockedRequest(request: APIRequestContext, info: TestInfo, lines: { stock: number; qty: number }[], ym?: string): Promise<Seed> {
   const tag = `${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}`;
   const sub = `pw-dlv-${tag}`;
   const name = `PW Giao ${tag}`;
-  const period = await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json();
-  const prevYm = prevYmOf(period.ym);
+  const prevYm = ym ?? prevYmOf((await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json()).ym);
   seedActiveUser(sub, name, 'active', { department: 'PW Phòng giao' });
   const items = lines.map((l, i) => {
     const itemName = `PW món ${String.fromCharCode(65 + i)} ${tag}`;
