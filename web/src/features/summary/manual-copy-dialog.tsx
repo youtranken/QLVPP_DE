@@ -32,7 +32,7 @@ export function ManualCopyDialog({ text, onClose }: { text: string; onClose: () 
       </div>
       <div className="sheet-footer">
         <button type="button" className="btn" onClick={onClose}>
-          {t('summary.unregistered.copy.close')}
+          {t('common.cancel')}
         </button>
       </div>
     </Dialog>

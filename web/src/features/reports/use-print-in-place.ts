@@ -53,7 +53,7 @@ function useRegion() {
   const ref = useRef<HTMLDivElement>(null);
   const clear = useRef<() => void>(() => {});
   useEffect(() => () => clear.current(), []);
-  const mount = (data: SnapshotData, onPrinted: () => void) => {
+  const mount = (data: SnapshotData, onPrinted: () => void, onCleared: () => void) => {
     clear.current();
     flushSync(() => setSnap(data));
     let style: HTMLStyleElement | null = null;
@@ -63,6 +63,7 @@ function useRegion() {
       style?.remove();
       clear.current = () => {};
       setSnap(null);
+      onCleared();
       if (printed) onPrinted();
     };
     const after = () => done(true);
@@ -90,13 +91,19 @@ export function usePrintInPlace() {
 
   const print = async (data: SnapshotData): Promise<PrintResult> => {
     const time = formatVnStamp(data.created_at);
-    const shown = region.mount(data, () => toast.show({ text: t('reports.page.printedToast', { time }), tone: 'ok' }));
+    // Nút In của toast bị chặn là lối in lại duy nhất: toast ở lại tới khi vùng in được gỡ
+    const blocked = { text: t('reports.page.printBlocked'), tone: 'warn' as const, persist: true, action: { label: t('reports.print.toolbar.print'), onClick: reprint } };
+    const shown = region.mount(
+      data,
+      () => toast.show({ text: t('reports.page.printedToast', { time }), tone: 'ok' }),
+      () => toast.dismiss(blocked),
+    );
     setPending(true);
     try {
       await waitReady(region.ref.current);
       shown.arm();
       if (await openDialog()) return 'printed';
-      toast.show({ text: t('reports.page.printBlocked'), tone: 'warn', action: { label: t('reports.print.toolbar.print'), onClick: reprint } });
+      toast.show(blocked);
       return 'blocked';
     } catch {
       shown.drop();

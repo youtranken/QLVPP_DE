@@ -52,7 +52,7 @@ function ConfigForm({ config }: { config: AdminConfig }) {
       title: t('config.period.confirmTitle'),
       message: effectiveSentence(t, langOf(i18n.language), open, period.draft.registration_last_day),
       confirmLabel: t('config.period.confirmOk'),
-      cancelLabel: t('config.cancel'),
+      cancelLabel: t('common.cancel'),
     });
   };
   const period = useConfigBlock(periodSpec, config, confirmDeadline);

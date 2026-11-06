@@ -15,7 +15,7 @@ const home: Messages<typeof vi> = {
       titleDone: 'Month {{month}} is done',
       titleRegister: 'Month {{month}} is taking sign-ups',
       subDone: 'All 4 steps are done. Only closing the period is left.',
-      subRegister: 'Locks automatically at 00:00 on {{date}}. Then print the ADM form.',
+      subRegister: 'Locks automatically at {{lock}}. Then print the ADM form.',
       sub: {
         register: 'Sign-ups are still open.',
         send: 'The period is locked. Print the form for signing or export Excel for ADM.',

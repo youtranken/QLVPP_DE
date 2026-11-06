@@ -1,14 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { vnDeadlineDay, vnLockDate, vnSavedAt } from './format-time';
+import { vnDeadlineDay, vnSavedAt } from './format-time';
 
 describe('mốc kỳ theo giờ VN', () => {
-  it('hạn 2026-11-10T17:00Z = 00:00 ngày 11/11 giờ VN: khóa "11/11", ngày cuối 10', () => {
-    expect(vnLockDate('2026-11-10T17:00:00.000Z')).toBe('11/11');
+  it('hạn 2026-11-10T17:00Z = 00:00 ngày 11/11 giờ VN: ngày cuối 10', () => {
     expect(vnDeadlineDay('2026-11-10T17:00:00.000Z')).toBe(10);
   });
 
-  it('hạn cuối năm 2026-12-31T17:00Z → khóa "1/1", ngày cuối 31', () => {
-    expect(vnLockDate('2026-12-31T17:00:00.000Z')).toBe('1/1');
+  it('hạn cuối năm 2026-12-31T17:00Z → ngày cuối 31', () => {
     expect(vnDeadlineDay('2026-12-31T17:00:00.000Z')).toBe(31);
   });
 });

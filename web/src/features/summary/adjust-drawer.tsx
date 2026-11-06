@@ -63,7 +63,7 @@ function Footer({ a, formId }: { a: Adjust; formId: string }) {
       <small className="drawer-note">{note}</small>
       <DialogClose asChild>
         <button type="button" className="btn btn--ghost" disabled={a.saving}>
-          {t('summary.adjust.cancel')}
+          {t('common.cancel')}
         </button>
       </DialogClose>
       <button type="submit" form={formId} className="btn btn--primary" disabled={!a.canSave}>

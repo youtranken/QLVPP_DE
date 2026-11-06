@@ -8,6 +8,7 @@ import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { OpenPeriodNotice } from './open-period-notice';
+import { useUnlockedSentence } from './use-unlocked-sentence';
 import { usePeriodSummary } from './summary.api';
 
 interface Props {
@@ -40,12 +41,9 @@ export function NoLockedPeriod() {
 
 // Chặn màn thao tác trên số liệu kỳ khóa: chưa tới hạn thì số liệu còn đổi theo đăng ký
 export function PeriodLockGate({ ym, frame = (n) => n, children }: Props) {
-  const { t, i18n } = useTranslation();
   const summary = usePeriodSummary(ym);
   const current = useCurrentPeriod().data;
-  const lang = langOf(i18n.language);
-  const unlocked = (deadline: string | undefined) =>
-    deadline ? t('summary.gate.unlocked', { month: monthOf(ym), lockPhrase: lockPhrase(deadline, lang) }) : t('summary.gate.unlockedNoDate', { month: monthOf(ym) });
+  const unlocked = useUnlockedSentence(ym);
 
   if (summary.isError) {
     if (apiErrorCode(summary.error) !== 'PERIOD_NOT_LOCKED') return <>{frame(<LoadError onRetry={() => void summary.refetch()} />)}</>;

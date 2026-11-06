@@ -3,7 +3,7 @@ import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
-import { OPEN, stubSummaryApi } from './summary-fixtures';
+import { LOCKED, stubSummaryApi } from './summary-fixtures';
 
 const open = (width: number, path = '/admin/summary') => {
   mockViewport(width);
@@ -47,8 +47,8 @@ describe('SummaryPage — thanh công cụ theo luật bố cục', () => {
   });
 
   it('390, không còn ai chưa đăng ký (0) → mục menu tắt, title "Mọi người đã đăng ký"', async () => {
-    stubSummaryApi((url) => (url === '/api/admin/periods/2026-11/summary' ? jsonResponse(200, { ...OPEN, unregistered: 0 }) : undefined));
-    open(390, '/admin/summary?ym=2026-11');
+    stubSummaryApi((url) => (url === '/api/admin/periods/2026-10/summary' ? jsonResponse(200, { ...LOCKED, unregistered: 0 }) : undefined));
+    open(390, '/admin/summary?ym=2026-10');
     await userEvent.click(await screen.findByRole('button', { name: 'Thao tác khác' }));
     const off = screen.getByRole('menuitem', { name: 'Chép DS chưa đăng ký (0)' });
     expect(off).toHaveAttribute('aria-disabled', 'true');
@@ -56,8 +56,8 @@ describe('SummaryPage — thanh công cụ theo luật bố cục', () => {
   });
 
   it('390, còn 1 người chưa đăng ký → mục menu bật', async () => {
-    stubSummaryApi((url) => (url === '/api/admin/periods/2026-11/summary' ? jsonResponse(200, { ...OPEN, unregistered: 1 }) : undefined));
-    open(390, '/admin/summary?ym=2026-11');
+    stubSummaryApi((url) => (url === '/api/admin/periods/2026-10/summary' ? jsonResponse(200, { ...LOCKED, unregistered: 1 }) : undefined));
+    open(390, '/admin/summary?ym=2026-10');
     await userEvent.click(await screen.findByRole('button', { name: 'Thao tác khác' }));
     expect(screen.getByRole('menuitem', { name: 'Chép DS chưa đăng ký (1)' })).not.toHaveAttribute('aria-disabled');
   });

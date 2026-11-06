@@ -93,13 +93,24 @@ describe('Báo cáo chỉ đọc', () => {
     expect(within(await part1()).queryByRole('link', { name: /Gửi ADM/ })).toBeNull();
   });
 
-  it('kỳ đang mở → không gọi send-state, ghi "Gợi ý, chưa gửi", không liên kết Gửi ADM; cảnh báo tạm tính', async () => {
+  it('?ym=kỳ đang mở → URL thành kỳ khóa 2026-10 + dải nhắc "xem được từ 00:00 ngày 11/11", không hỏi báo cáo kỳ mở', async () => {
     const f = stubReports();
     openPage('/admin/reports?ym=2026-11');
-    expect(await within(await part1()).findByText('Gợi ý, chưa gửi')).toBeInTheDocument();
-    expect(screen.getByText('Kỳ tháng 11 đang mở — số liệu tạm tính theo phiếu đã lưu.')).toBeInTheDocument();
-    expect(within(await part1()).queryByRole('link', { name: /Gửi ADM/ })).toBeNull();
-    expect(f.mock.calls.some((c) => String(c[0]).includes('send-state'))).toBe(false);
+    await rowOf('Bút bi xanh');
+    await waitFor(() => expect(screen.getByTestId('location-search')).toHaveTextContent('?ym=2026-10'));
+    expect(screen.getByText(/Kỳ tháng 11 đang mở, xem được từ 00:00 ngày 11\/11\./)).toBeInTheDocument();
+    expect(f.mock.calls.map((c) => String(c[0])).filter((u) => u.startsWith('/api/admin/reports/2026-11'))).toEqual([]);
+  });
+
+  it('server trả 409 PERIOD_NOT_LOCKED → câu khóa sổ "xem được từ 00:00 ngày 11/11" trong trang, không "Thử lại"', async () => {
+    const f = stubReports();
+    const base = f.getMockImplementation()!;
+    f.mockImplementation(async (url: string, init?: RequestInit) =>
+      url === '/api/admin/reports/2026-10' ? errorResponse(409, 'PERIOD_NOT_LOCKED') : base(url, init),
+    );
+    openPage();
+    expect(await screen.findByText('Kỳ tháng 10 chưa khóa sổ — xem được từ 00:00 ngày 11/11.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Thử lại' })).toBeNull();
   });
 
   it('kỳ đã khóa → không có cảnh báo tạm tính', async () => {

@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
-import { vnDeadlineDay } from '@/lib/format-time';
+import { lockedYm } from '@/lib/ym';
 import { Loading, LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
 import { PageHeader } from '@/ui/page-header';
@@ -20,26 +20,22 @@ import { SummaryPersonTable } from './summary-person-table';
 import { SummaryStats } from './summary-stats';
 import { UnregisteredTable } from './unregistered-table';
 import { OpenPeriodNotice } from './open-period-notice';
-import { usePeriodSummary, type PeriodSummary } from './summary.api';
+import { usePeriodSummary } from './summary.api';
 import { useRequestOrder } from './use-person-table-rows';
 import { useSummaryParams, type SummaryView } from './use-summary-params';
 import './summary.m1.css';
 
 const MAX_SEARCH = 100;
 
-function MonthControl({ ym, openYm, summary, onChange }: { ym: string; openYm: string; summary?: PeriodSummary; onChange: (v: string) => void }) {
+function MonthControl({ ym, openYm, onChange }: { ym: string; openYm: string; onChange: (v: string) => void }) {
   const { t } = useTranslation();
-  const status = summary
-    ? summary.is_open
-      ? { tone: 'ok' as const, label: t('summary.page.open', { day: summary.deadline ? vnDeadlineDay(summary.deadline) : '' }) }
-      : { tone: 'dark' as const, label: t('summary.page.locked') }
-    : undefined;
   return (
     <MonthSwitcher
       value={ym}
-      max={openYm}
+      max={lockedYm(openYm)}
       onChange={onChange}
-      status={status}
+      status={{ tone: 'dark', label: t('summary.page.locked') }}
+      beyond={{ ym: openYm, label: t('summary.page.open') }}
       formatLabel={(v) => t('summary.page.month', { month: monthOf(v), year: v.slice(0, 4) })}
       labels={{ group: t('summary.page.monthNav'), prev: t('summary.page.prevMonth'), next: t('summary.page.nextMonth') }}
     />
@@ -70,8 +66,8 @@ export function SummaryPage() {
 
   const ym = p.ym;
   const data = summary.data;
-  // Kỳ khóa không có phiếu nào: khung trống thay bảng, vẫn kèm danh sách chưa đăng ký
-  const emptyLocked = data?.is_open === false && data.registered === 0;
+  // Kỳ không có phiếu nào: khung trống thay bảng, vẫn kèm danh sách chưa đăng ký
+  const emptyLocked = data?.registered === 0;
   // Hết và sắp hết cùng một nguồn (món dùng được), chưa tải xong thì ô ghi "—" thay vì số tạm
   const usable = items.data?.filter((i) => i.usable);
   const stock = usable && { out: usable.filter((i) => i.stock_state === 'out').length, low: usable.filter((i) => i.stock_state === 'low').length };
@@ -98,7 +94,7 @@ export function SummaryPage() {
       {summary.isError && <LoadError onRetry={() => void summary.refetch()} />}
       {data && <SummaryStats summary={data} stock={stock} filter={p.filter} onFilter={p.toggleFilter} />}
       <Toolbar
-        lead={<MonthControl ym={ym} openYm={openYm} summary={data} onChange={p.setMonth} />}
+        lead={<MonthControl ym={ym} openYm={openYm} onChange={p.setMonth} />}
         search={{
           value: search,
           onChange: setSearch,
@@ -108,7 +104,7 @@ export function SummaryPage() {
         }}
       >
         <Segmented label={t('summary.page.view')} value={p.view} options={views} onChange={p.setView} />
-        {data?.is_open === false && p.view === 'person' && (
+        {p.view === 'person' && (
           <button type="button" className="flt-chip" aria-pressed={p.filter === 'over_max'} onClick={() => p.toggleFilter('over_max')}>
             {t('summary.filters.over_max')}
           </button>
@@ -127,7 +123,6 @@ export function SummaryPage() {
         ) : (
           <SummaryPersonTable
             ym={ym}
-            locked={data?.is_open === false}
             filter={personFilter}
             q={p.q}
             activeId={panel.id ?? undefined}

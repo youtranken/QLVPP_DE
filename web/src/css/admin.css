@@ -5,7 +5,7 @@
 .table th.r, .table td.r { text-align: right; }
 .table tr.is-inactive td { color: var(--ink-3); }
 .icon-btn { width: 28px; height: 28px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--card); color: var(--ink-2); }
-.icon-btn:disabled { opacity: .4; cursor: not-allowed; }
+.icon-btn:disabled { opacity: .6; cursor: not-allowed; }
 
 .ff { display: grid; gap: 4px; align-content: start; }
 .ff-label { font-weight: 500; font-size: 13px; color: var(--ink-2); padding: 0; }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { vnLockDate } from '@/lib/format-time';
+import { langOf, lockPhrase } from '@/lib/period-text';
 import { useMe } from '@/lib/me';
 import { shiftYm } from '@/lib/ym';
 import { Loading, LoadError } from '@/ui/load-state';
@@ -71,7 +71,7 @@ function LeftReminder({ ym }: { ym: string }) {
 }
 
 function Ready({ currentYm }: { currentYm: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const me = useMe();
   const lockedYm = shiftYm(currentYm, -1);
   const [view, setView] = useState<View>('locked');
@@ -102,7 +102,7 @@ function Ready({ currentYm }: { currentYm: string }) {
   const registerView = view === 'current';
   const doing = lockedSteps.find((s) => s.current);
   const hero = registerView
-    ? { title: t('home.hero.titleRegister', { month: monthOf(currentYm) }), sub: t('home.hero.subRegister', { date: current.data.deadline ? vnLockDate(current.data.deadline) : '' }) }
+    ? { title: t('home.hero.titleRegister', { month: monthOf(currentYm) }), sub: t('home.hero.subRegister', { lock: current.data.deadline ? lockPhrase(current.data.deadline, langOf(i18n.language)) : '' }) }
     : doing
       ? { title: t('home.hero.titleStep', { month: monthOf(lockedYm), step: t(`home.step.${doing.key}`) }), sub: t(`home.hero.sub.${doing.key}`) }
       : { title: t('home.hero.titleDone', { month: monthOf(lockedYm) }), sub: t('home.hero.subDone') };

@@ -34,4 +34,14 @@ describe('MonthSwitcher', () => {
     renderWithI18n(<MonthSwitcher value="2026-11" onChange={() => {}} formatLabel={fmt} labels={labels} />);
     expect(screen.queryByText('Đang mở · hạn 10')).not.toBeInTheDocument();
   });
+
+  it('beyond: kỳ sau trần hiện nút vô hiệu có nhãn "Đang mở" và tên tháng', () => {
+    renderWithI18n(
+      <MonthSwitcher value="2026-10" max="2026-10" onChange={() => {}} formatLabel={fmt} labels={labels} beyond={{ ym: '2026-11', label: 'Đang mở' }} />,
+    );
+    const open = screen.getByRole('button', { name: 'Tháng 11/2026 · Đang mở' });
+    expect(open).toBeDisabled();
+    expect(open).toHaveTextContent('Đang mở');
+    expect(screen.getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
+  });
 });

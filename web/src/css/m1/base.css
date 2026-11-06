@@ -103,14 +103,14 @@
 @media (max-width: 767px) { [data-shell='admin'] .select select { height: var(--hit); font-size: 16px; } }
 
 [data-shell='admin'] .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); height: var(--hit); padding: 0 16px; border: 0; border-radius: var(--r-pill); background: var(--btn-bg, var(--c-surface)); box-shadow: var(--btn-sh, inset 0 0 0 1px var(--c-line)); color: var(--btn-fg, var(--c-ink)); font: var(--t-label); white-space: nowrap; text-decoration: none; cursor: pointer; transition: background var(--d-1) var(--ease-out), box-shadow var(--d-1) var(--ease-out), transform var(--d-1) var(--ease-out); }
-/* Luật gốc chỉ ĐỌC biến (R-D4.7): biến thể chỉ khai --btn-bg/-hover/-active/--btn-fg (+ --btn-sh*), không viết lại :hover/:active */
+/* Luật gốc chỉ ĐỌC biến: biến thể chỉ khai --btn-bg/-hover/-active/--btn-fg (+ --btn-sh*), không viết lại :hover/:active */
 [data-shell='admin'] .btn:hover:not(:disabled) { background: var(--btn-bg-hover, var(--c-surface-hover)); box-shadow: var(--btn-sh-hover, inset 0 0 0 1px var(--c-line-strong)); }
-[data-shell='admin'] .btn:active:not(:disabled) { transform: scale(0.97); background: var(--btn-bg-active, var(--c-surface-2)); box-shadow: var(--btn-sh-active, var(--btn-sh-hover, inset 0 0 0 1px var(--c-line-strong))); }
+[data-shell='admin'] .btn:active:not(:disabled) { transform: scale(0.97); background: var(--btn-bg-active, var(--c-surface-2)); color: var(--btn-fg-active, var(--btn-fg, var(--c-ink))); box-shadow: var(--btn-sh-active, var(--btn-sh-hover, inset 0 0 0 1px var(--c-line-strong))); }
 [data-shell='admin'] .btn--primary { --btn-bg: var(--c-acc); --btn-bg-hover: var(--c-acc-hover); --btn-bg-active: var(--c-acc-press); --btn-fg: var(--c-on-acc); --btn-sh: var(--e-acc); --btn-sh-hover: var(--e-acc); --btn-sh-active: none; }
 [data-shell='admin'] .btn--ghost { --btn-bg: transparent; --btn-bg-hover: var(--c-surface-2); --btn-bg-active: var(--c-surface-sunk); --btn-fg: var(--c-ink-2); --btn-sh: none; --btn-sh-hover: none; }
 [data-shell='admin'] .btn--danger,
-[data-shell='admin'] .btn--danger-ghost { --btn-bg: var(--c-danger-soft); --btn-bg-hover: var(--c-danger-hover); --btn-bg-active: var(--c-danger-press); --btn-fg: var(--c-danger); --btn-sh: none; --btn-sh-hover: inset 0 0 0 1px var(--c-danger); }
-[data-shell='admin'] .btn--danger.btn--solid { --btn-bg: var(--c-danger); --btn-bg-hover: var(--c-danger-solid-hover); --btn-bg-active: var(--c-danger-solid-press); --btn-fg: var(--c-on-dark); --btn-sh: none; --btn-sh-hover: none; }
+[data-shell='admin'] .btn--danger-ghost { --btn-bg: var(--c-danger-soft); --btn-bg-hover: var(--c-danger-hover); --btn-bg-active: var(--c-danger-press); --btn-fg: var(--c-danger); --btn-fg-active: var(--c-danger-ink-press); --btn-sh: none; --btn-sh-hover: inset 0 0 0 1px var(--c-danger); }
+[data-shell='admin'] .btn--danger.btn--solid { --btn-bg: var(--c-danger); --btn-bg-hover: var(--c-danger-solid-hover); --btn-bg-active: var(--c-danger-solid-press); --btn-fg: var(--c-on-dark); --btn-fg-active: var(--c-on-dark); --btn-sh: none; --btn-sh-hover: none; }
 [data-shell='admin'] .btn--dark { --btn-bg: var(--c-dark); --btn-bg-hover: var(--c-ink-2); --btn-bg-active: var(--c-dark-press); --btn-fg: var(--c-on-dark); --btn-sh: none; --btn-sh-hover: none; }
 [data-shell='admin'] .btn--sm { height: 36px; padding: 0 16px; font-size: 13px; }
 [data-shell='admin'] .btn--sm::after { content: ''; position: absolute; inset: -4px 0; }
@@ -119,8 +119,9 @@
 [data-shell='admin'] .btn--xl { font-weight: 800; white-space: normal; text-align: center; line-height: 1.25; }
 [data-shell='admin'] .btn--block { width: 100%; }
 [data-shell='admin'] .btn:focus-visible { outline: none; box-shadow: var(--focus); }
-[data-shell='admin'] .btn:disabled,
-[data-shell='admin'] .icon-btn:disabled { opacity: .5; transform: none; box-shadow: none; cursor: not-allowed; }
+/* Vô hiệu bằng màu riêng, không opacity: chữ/nền ≥ 3:1 dù nút nằm trên nền nào */
+[data-shell='admin'] .btn:disabled { background: var(--btn-bg-disabled, var(--c-surface-2)); color: var(--btn-fg-disabled, var(--c-muted)); transform: none; box-shadow: none; cursor: not-allowed; }
+[data-shell='admin'] .icon-btn:disabled { color: var(--c-muted); background: transparent; cursor: not-allowed; }
 [data-shell='admin'] .icon-btn { width: 36px; height: 36px; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--c-ink-2); }
 [data-shell='admin'] .icon-btn:hover:not(:disabled) { background: var(--c-acc-soft); color: var(--c-acc); }
 [data-shell='admin'] .icon-btn:focus-visible { box-shadow: var(--focus); }
@@ -177,4 +178,4 @@
 [data-shell='admin'] .switch[aria-checked='true'] .switch__thumb { transform: translateX(16px); }
 [data-shell='admin'] .switch:focus-visible { outline: none; }
 [data-shell='admin'] .switch:focus-visible .switch__track { box-shadow: var(--focus); }
-[data-shell='admin'] .switch:disabled { opacity: .5; cursor: not-allowed; }
+[data-shell='admin'] .switch:disabled { opacity: .6; cursor: not-allowed; }

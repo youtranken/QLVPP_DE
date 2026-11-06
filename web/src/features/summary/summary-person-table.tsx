@@ -13,7 +13,6 @@ import { usePersonTableRows, type PersonTableFilter, type PersonTableRow as Row 
 
 interface Props {
   ym: string;
-  locked: boolean;
   filter: PersonTableFilter;
   q: string;
   activeId?: string;
@@ -24,9 +23,8 @@ interface Props {
 const nameOf = (r: PersonRow) => r.full_name ?? r.email ?? r.user_sub;
 const NO_DEPT = '\u0000';
 
-function DeliveryCell({ row, locked }: { row: PersonRow; locked: boolean }) {
+function DeliveryCell({ row }: { row: PersonRow }) {
   const { t } = useTranslation();
-  if (!locked) return <span className="sm-muted">{t('summary.table.afterLock')}</span>;
   if (row.total_qty === 0) return <span className="sm-muted">—</span>;
   const done = row.delivered_qty + row.cancelled_qty;
   return <Progress done={done} total={row.total_qty} label={t('summary.table.delivered', { done, total: row.total_qty })} />;
@@ -49,9 +47,9 @@ function PersonCell({ row }: { row: PersonRow }) {
   );
 }
 
-function PersonActions({ row, locked, stale, onOpen }: { row: PersonRow; locked: boolean; stale: boolean; onOpen: (id: string) => void }) {
+function PersonActions({ row, stale, onOpen }: { row: PersonRow; stale: boolean; onOpen: (id: string) => void }) {
   const { t } = useTranslation();
-  const canDeliver = locked && row.delivered_qty + row.cancelled_qty < row.total_qty;
+  const canDeliver = row.delivered_qty + row.cancelled_qty < row.total_qty;
   const deliverLabel = t('summary.table.deliverLabel', { name: nameOf(row) });
   return (
     <>
@@ -82,20 +80,20 @@ function PersonActions({ row, locked, stale, onOpen }: { row: PersonRow; locked:
   );
 }
 
-function useColumns(locked: boolean, stale: boolean, onOpen: (id: string) => void) {
+function useColumns(stale: boolean, onOpen: (id: string) => void) {
   const { t } = useTranslation();
   return useMemo<ColumnDef<Row, unknown>[]>(() => {
     const columns: ColumnDef<Row, unknown>[] = [
       { id: 'person', header: t('summary.table.person'), cell: ({ row }) => <PersonCell row={row.original} /> },
       { accessorKey: 'line_count', header: t('summary.table.lines'), meta: { className: 'num r' } },
       { accessorKey: 'total_qty', header: t('summary.table.total'), meta: { className: 'num r' } },
-      { id: 'delivery', header: t('summary.table.delivery'), cell: ({ row }) => <DeliveryCell row={row.original} locked={locked} /> },
+      { id: 'delivery', header: t('summary.table.delivery'), cell: ({ row }) => <DeliveryCell row={row.original} /> },
       {
         id: 'note',
         header: t('summary.table.note'),
         cell: ({ row: { original: r } }) => (
           <>
-            {locked && r.line_count === 0 && <span className="sm-muted">{t('summary.adjust.removedAll')}</span>}
+            {r.line_count === 0 && <span className="sm-muted">{t('summary.adjust.removedAll')}</span>}
             {r.custom_pending > 0 && <span className="tag tag--warn">{t('summary.table.customPending', { n: r.custom_pending })}</span>}
             {r.over_max && <span className="tag tag--warn">{t('summary.table.overMax')}</span>}
           </>
@@ -106,19 +104,18 @@ function useColumns(locked: boolean, stale: boolean, onOpen: (id: string) => voi
         id: 'actions',
         header: () => <span className="sr-only">{t('summary.table.actions')}</span>,
         meta: { className: 'r sm-acts' },
-        cell: ({ row }) => <PersonActions row={row.original} locked={locked} stale={stale} onOpen={onOpen} />,
+        cell: ({ row }) => <PersonActions row={row.original} stale={stale} onOpen={onOpen} />,
       },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
-  }, [t, locked, stale, onOpen]);
+  }, [t, stale, onOpen]);
 }
 
-export function SummaryPersonTable({ ym, locked, filter, q, activeId, onOpen, onClearFilter }: Props) {
+export function SummaryPersonTable({ ym, filter, q, activeId, onOpen, onClearFilter }: Props) {
   const { t } = useTranslation();
   const { query, rows } = usePersonTableRows(ym, filter, q);
   const stale = query.isPlaceholderData;
-  // Trang Giao hàng luôn là kỳ khóa gần nhất; phần còn lại của kỳ cũ hơn hiện ở đó dưới dạng nợ
-  const columns = useColumns(locked, stale, onOpen);
+  const columns = useColumns(stale, onOpen);
 
   if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
   const count = t('summary.filters.people', { n: `${rows.length}${query.hasNextPage ? '+' : ''}` });

@@ -1,35 +1,67 @@
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import en from '@/locales/en';
 import vi from '@/locales/vi';
 
-// R-D4.8: nút đóng hộp thoại (không làm gì) luôn là "Quay lại"/"Back"; "Hủy …" chỉ cho hành động thật
+// Nút đóng hộp thoại (không làm gì) luôn là "Quay lại"/"Back"; "Hủy …" chỉ cho hành động thật
 type Tree = { [k: string]: string | Tree };
 const get = (tree: Tree, path: string): unknown => path.split('.').reduce<unknown>((o, k) => (o as Tree | undefined)?.[k], tree);
 
-// Khóa nhãn nút đóng của các hộp thoại (xác nhận, giao, Hủy nợ, nhóm, Đủ hàng, Làm bản mới, form món/đơn vị/nhóm, dòng ngoài danh mục)
-const DIALOG_CLOSE_KEYS = [
-  'common.cancel',
-  'request.custom.cancel',
-  'delivery.confirm.cancel',
-  'request.confirm.back',
-  'sendAdm.draft.back',
-  'sendAdm.sent.confirmBack',
-];
+const SRC = resolve(__dirname, '..');
+function walk(dir: string, out: string[] = []): string[] {
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) walk(p, out);
+    else if (/\.tsx?$/.test(p) && !/\.test\.tsx?$/.test(p)) out.push(p);
+  }
+  return out;
+}
+
+// Mọi chỗ đặt nhãn nút đóng: cancelLabel của hộp xác nhận và chữ của nút nằm trong <DialogClose>
+type Site = { file: string; key: string; kind: 'cancelLabel' | 'DialogClose' };
+const sites: Site[] = walk(SRC).flatMap((file) => {
+  const text = readFileSync(file, 'utf8');
+  const rel = file.replace(SRC, '');
+  const cancel = [...text.matchAll(/cancelLabel(?::|=\{)\s*t\(\s*'([\w.]+)'/g)].map((m) => ({ file: rel, key: m[1]!, kind: 'cancelLabel' as const }));
+  const close = [...text.matchAll(/<DialogClose\b[^>]*>([\s\S]*?)<\/DialogClose>/g)].flatMap((m) =>
+    [...(m[1] ?? '').matchAll(/>\s*\{t\(\s*'([\w.]+)'/g)].slice(0, 1).map((k) => ({ file: rel, key: k[1]!, kind: 'DialogClose' as const })),
+  );
+  return [...cancel, ...close];
+});
+
+// Lựa chọn thật (không phải nút đóng): ở lại trang, giữ giỏ hiện có
+const CHOICES = new Set(['Ở lại', 'Giữ giỏ', 'Đóng, xem giỏ của tôi']);
+const BANNED = /^(Hủy|Cancel|Tiếp tục sửa|Keep editing|Quay lại sửa)$/;
 
 describe('Nút đóng hộp thoại là "Quay lại"', () => {
-  for (const key of DIALOG_CLOSE_KEYS) {
-    it(`${key}: vi "Quay lại", en "Back"`, () => {
-      expect(get(vi as unknown as Tree, key), `vi ${key}`).toBe('Quay lại');
-      expect(get(en as unknown as Tree, key), `en ${key}`).toBe('Back');
-    });
-  }
+  it('tìm được các chỗ đặt nhãn đóng trong mã (hộp xác nhận + DialogClose)', () => {
+    expect(sites.filter((s) => s.kind === 'cancelLabel').length).toBeGreaterThanOrEqual(8);
+    expect(sites.filter((s) => s.kind === 'DialogClose').length).toBeGreaterThanOrEqual(10);
+    expect(sites.map((s) => s.key)).toContain('common.cancel');
+  });
 
-  it('không khóa nút đóng nào là "Hủy"/"Cancel"/"Tiếp tục sửa"/"Keep editing"', () => {
-    const banned = /^(Hủy|Cancel|Tiếp tục sửa|Keep editing|Quay lại sửa)$/;
-    for (const key of DIALOG_CLOSE_KEYS) {
-      expect(String(get(vi as unknown as Tree, key))).not.toMatch(banned);
-      expect(String(get(en as unknown as Tree, key))).not.toMatch(banned);
-    }
+  it('mọi cancelLabel là "Quay lại"/"Back" (trừ lựa chọn ở lại/giữ giỏ)', () => {
+    const bad = sites
+      .filter((s) => s.kind === 'cancelLabel')
+      .filter((s) => {
+        const v = get(vi as unknown as Tree, s.key);
+        return !CHOICES.has(String(v)) && (v !== 'Quay lại' || get(en as unknown as Tree, s.key) !== 'Back');
+      })
+      .map((s) => `${s.file}: ${s.key} = ${String(get(vi as unknown as Tree, s.key))}`);
+    expect(bad).toEqual([]);
+  });
+
+  it('không nút đóng nào là "Hủy"/"Cancel"/"Tiếp tục sửa"/"Keep editing"', () => {
+    const bad = sites
+      .filter((s) => BANNED.test(String(get(vi as unknown as Tree, s.key))) || BANNED.test(String(get(en as unknown as Tree, s.key))))
+      .map((s) => `${s.file}: ${s.key}`);
+    expect(bad).toEqual([]);
+  });
+
+  it('nút đóng mặc định của hộp xác nhận: vi "Quay lại", en "Back"', () => {
+    expect(get(vi as unknown as Tree, 'common.cancel')).toBe('Quay lại');
+    expect(get(en as unknown as Tree, 'common.cancel')).toBe('Back');
   });
 
   it('hộp rời trang/bỏ thay đổi giữ lựa chọn "Ở lại" / "Bỏ thay đổi"', () => {

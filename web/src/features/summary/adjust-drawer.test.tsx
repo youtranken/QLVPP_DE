@@ -120,11 +120,11 @@ describe('AdjustDrawer — chỉ giảm sau khóa sổ (R-D6.3)', () => {
     await userEvent.click(within(drawer).getByRole('button', { name: 'Bỏ Giấy note vàng khỏi phiếu' }));
     await userEvent.click(less(drawer, 'Bút bi xanh'));
     expect(within(drawer).getByText('2 thay đổi chưa lưu')).toBeInTheDocument();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Hủy' }));
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Quay lại' }));
     expect(await screen.findByText('Bỏ thay đổi?')).toBeInTheDocument();
     await userEvent.click(screen.getByText('Ở lại'));
     expect(onClose).not.toHaveBeenCalled();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Hủy' }));
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Quay lại' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Bỏ thay đổi' }));
     expect(onClose).toHaveBeenCalled();
   });

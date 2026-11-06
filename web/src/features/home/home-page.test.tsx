@@ -48,7 +48,7 @@ interface Setup {
 function setup(o: Setup = {}) {
   return stubShellApi({
     '/api/admin/periods/2026-10/summary': () => jsonResponse(200, kpi(o.locked ?? {})),
-    '/api/admin/periods/2026-11/summary': () => jsonResponse(200, kpi({ ym: '2026-11', is_open: true, registered: 32, unregistered: o.unregistered ?? 0, ...o.current })),
+    '/api/admin/periods/2026-11/summary': () => jsonResponse(200, kpi({ ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, registered: 32, unregistered: o.unregistered ?? 0, ...o.current })),
     '/api/admin/periods/2026-10/send-state': () => jsonResponse(200, o.send ?? sentState()),
     '/api/admin/periods/2026-10/arrivals-plan': () => jsonResponse(200, o.plan ?? planOf([{ remaining: 0 }])),
     '/api/admin/periods/2026-11/unregistered': () => (o.unregisteredFails ? jsonResponse(500, null) : jsonResponse(200, { items: Array.from({ length: o.unregistered ?? 0 }, (_, i) => person(i + 1)) })),
@@ -94,6 +94,7 @@ describe('Trang Tháng này: bước hiện tại và nút đi thẳng', () => {
     expect(within(currentStep()).getByRole('link', { name: 'Xem tổng hợp' })).toHaveAttribute('href', '/admin/summary');
     expect(steps().getAllByText('Sau khi khóa sổ')).toHaveLength(3);
     expect(steps().getAllByRole('link')).toHaveLength(1);
+    expect(screen.getByText('Khóa tự động 00:00 ngày 11/11. Sau đó in phiếu gửi ADM.')).toBeInTheDocument();
   });
 
   it('kỳ giao hiện tên món theo ngôn ngữ ở thẻ tủ sắp hết (en dùng name_en)', async () => {

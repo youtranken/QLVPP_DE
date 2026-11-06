@@ -48,7 +48,7 @@
 [data-shell='admin'] .side__icon-btn[aria-expanded='true'] { background: rgb(255 255 255 / .14); color: var(--c-on-dark); }
 [data-shell='admin'] .side__icon-btn:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 [data-shell='admin'] .side__lang-btn { font-size: 12px; font-weight: 700; letter-spacing: .04em; }
-[data-shell='admin'] .side__icon-btn:disabled { opacity: .35; cursor: not-allowed; }
+[data-shell='admin'] .side__icon-btn:disabled { opacity: .6; cursor: not-allowed; }
 [data-shell='admin'] .side__avatar { display: grid; place-items: center; flex: none; width: 40px; height: 40px; padding: 0; border: 0; border-radius: var(--r-pill); background: var(--g2); color: var(--g2-ink); font: var(--t-label); font-size: 13px; font-weight: 800; }
 [data-shell='admin'] button.side__avatar { cursor: pointer; }
 [data-shell='admin'] button.side__avatar:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }

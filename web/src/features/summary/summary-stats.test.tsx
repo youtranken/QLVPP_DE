@@ -45,13 +45,6 @@ describe('SummaryStats — 4 thẻ số liệu', () => {
     expect(card.querySelector('.stat-card__sub')).toHaveTextContent(/^8 chưa đăng ký$/);
   });
 
-  it('kỳ mở: "Dòng chờ giao" là div (không button), số "—", chữ phụ "giao từ 11/11"', () => {
-    renderStats(OPEN);
-    expect(screen.queryByRole('button', { name: /Dòng chờ giao/ })).toBeNull();
-    const sub = screen.getByText('giao từ 11/11');
-    expect(sub.closest('.stat-card')?.tagName).toBe('DIV');
-    expect(sub.closest('.stat-card')).toHaveTextContent('—');
-  });
 
   it('kỳ mở: "Món ngoài danh mục chờ xem" là div, số "—" (server không trả số dòng kỳ mở)', () => {
     renderStats(OPEN);

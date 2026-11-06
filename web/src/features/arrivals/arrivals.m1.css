@@ -19,7 +19,7 @@
 [data-shell='admin'] .ar-after { font-weight: 700; }
 [data-shell='admin'] .ar-foot { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: flex-end; gap: var(--s-2); }
 [data-shell='admin'] .ar-foot .field { flex: 1 1 320px; min-width: 0; }
-[data-shell='admin'] .ar-foot .btn:disabled { opacity: .55; cursor: default; }
+[data-shell='admin'] .ar-foot .btn:disabled { cursor: default; }
 
 [data-shell='admin'] .ar-qty input:disabled { background: var(--c-surface-2); color: var(--c-muted); }
 [data-shell='admin'] .ar-adm { min-height: var(--hit); padding: 0 var(--s-3); border: 1px solid var(--c-line-input); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink-2); font: var(--t-cap); font-weight: 700; white-space: nowrap; cursor: pointer; }

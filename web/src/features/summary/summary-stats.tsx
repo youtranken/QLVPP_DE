@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import { vnLockDate } from '@/lib/format-time';
 import { StatCard } from '@/ui/stat-card';
 import { StatRow } from '@/ui/stat-row';
 import type { PeriodSummary } from './summary.api';
@@ -29,24 +28,15 @@ export function SummaryStats({ summary, stock, filter, onFilter }: Props) {
           pressed={filter === 'unregistered'}
           onClick={() => onFilter('unregistered')}
         />
-        {summary.is_open ? (
-          <StatCard
-            label={t('summary.kpi.pendingDelivery')}
-            icon="truck"
-            value="—"
-            sub={summary.deadline ? t('summary.kpi.pendingOpen', { date: vnLockDate(summary.deadline) }) : undefined}
-          />
-        ) : (
-          <StatCard
-            label={t('summary.kpi.pendingDelivery')}
-            icon="truck"
-            value={summary.lines_pending_delivery}
-            unit={t('summary.kpi.lines')}
-            sub={t('summary.kpi.pendingDeliveryHint')}
-            pressed={filter === 'pending_delivery'}
-            onClick={() => onFilter('pending_delivery')}
-          />
-        )}
+        <StatCard
+          label={t('summary.kpi.pendingDelivery')}
+          icon="truck"
+          value={summary.lines_pending_delivery}
+          unit={t('summary.kpi.lines')}
+          sub={t('summary.kpi.pendingDeliveryHint')}
+          pressed={filter === 'pending_delivery'}
+          onClick={() => onFilter('pending_delivery')}
+        />
         {summary.custom_pending === null ? (
           <StatCard label={t('summary.kpi.customPending')} icon="pkgplus" value="—" />
         ) : (

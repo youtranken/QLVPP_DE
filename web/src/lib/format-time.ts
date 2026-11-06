@@ -32,12 +32,6 @@ function dayMonthOf(ms: number): { day: number; month: number } {
   return { day: part('day'), month: part('month') };
 }
 
-// Hạn là mốc 00:00 ngày khóa theo giờ VN: "d/M" của chính mốc đó
-export function vnLockDate(deadline: string): string {
-  const { day, month } = dayMonthOf(new Date(deadline).getTime());
-  return `${day}/${month}`;
-}
-
 // Ngày cuối được sửa = ngày trước mốc khóa → lùi 1 ms
 export function vnDeadlineDay(deadline: string): number {
   return dayMonthOf(new Date(deadline).getTime() - 1).day;

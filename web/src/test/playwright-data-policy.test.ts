@@ -11,6 +11,7 @@ const WRITE_CALL =
 // Mã món dev dạng chữ + 2 số (B23, K05); mã test/story (E9-S2, V2D-1) không khớp
 const DEV_ITEM_CODE = /\b[A-Z]\d{2}\b/;
 const REAL_ITEM_PICK = /!\s*\w+\.name\.startsWith\(\s*['"`]PW /;
+const ADJUSTMENT_WRITE = /\binsert\s+into\s+request_line_adjustments\b/i;
 const TEST_START = /\n(?=[ \t]*test(?:\.\w+)?\(\s*['"`])/;
 
 type Source = { file: string; text: string };
@@ -122,6 +123,16 @@ describe('chính sách dữ liệu Playwright: chỉ ghi lên dữ liệu PW t�
       expect(realPeriodSnapshotWrites(s.text, snapshotWriters)).toEqual([]);
     },
   );
+
+  // Bảng điều chỉnh là chỉ-thêm (trigger chặn UPDATE/DELETE): dòng PW ghi vào sẽ không bao giờ dọn được → giả ở trình duyệt
+  it('không spec/helper nào ghi thẳng vào request_line_adjustments', () => {
+    const offenders = helpers.flatMap((s) =>
+      s.text.split('\n').flatMap((line, i) => (ADJUSTMENT_WRITE.test(line) ? [`${s.file}:${i + 1}: ${line.trim()}`] : [])),
+    );
+    expect(ADJUSTMENT_WRITE.test("psql(`INSERT INTO request_line_adjustments (batch_id) VALUES (gen_random_uuid())`)")).toBe(true);
+    expect(ADJUSTMENT_WRITE.test("      insert   into request_line_adjustments(")).toBe(true);
+    expect(offenders).toEqual([]);
+  });
 
   it('web/playwright không có mã món dev, không dùng demo-d10, không lọc món thật', () => {
     const offenders = helpers.flatMap((s) =>

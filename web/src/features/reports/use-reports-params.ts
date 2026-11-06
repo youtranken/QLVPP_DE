@@ -1,13 +1,13 @@
 import { useCallback, useEffect } from 'react';
 import { useUrlPatch } from '@/lib/use-url-patch';
-import { YM, shiftYm } from '@/lib/ym';
+import { YM, lockedYm } from '@/lib/ym';
 
-// Mặc định kỳ khóa gần nhất, trần là kỳ đang mở; ?ym= sai mẫu hoặc vượt trần → thay URL, không gọi API với tháng sai
+// Chỉ xem kỳ đã khóa: mặc định và trần là kỳ khóa gần nhất; ?ym= sai mẫu, là kỳ mở hoặc tương lai → thay URL, không gọi API với tháng đó
 export function useReportsParams(openYm: string | undefined) {
   const [params, update] = useUrlPatch();
   const asked = params.get('ym');
-  const fallback = openYm && shiftYm(openYm, -1);
-  const ym = asked && openYm && YM.test(asked) && asked <= openYm ? asked : fallback;
+  const ceiling = openYm && lockedYm(openYm);
+  const ym = asked && openYm && YM.test(asked) && asked < openYm ? asked : ceiling;
 
   const setMonth = useCallback((next: string, replace = false) => update({ ym: next }, replace), [update]);
 

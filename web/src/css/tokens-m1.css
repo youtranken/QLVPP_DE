@@ -16,8 +16,8 @@
   --c-ok: #0D5E46;     --c-ok-soft: #E3F5EE;     --c-ok-fill: #11795A;
   --c-warn: #8A3F06;   --c-warn-soft: #FFF1E3;   --c-warn-fill: #E39A52;
   --c-danger: #A32C1E; --c-danger-soft: #FBE4E1; --c-danger-line: #EDB8B0; --c-danger-tint: #FDF3F1;
-  /* nút: nền hover/nhấn của biến thể (R-D4.4, R-D4.7) */
-  --c-danger-hover: #F8D3CE;  --c-danger-press: #F2BFB8;  --c-danger-solid-hover: #8A2418;  --c-danger-solid-press: #71200F;
+  /* nút: nền hover/nhấn của biến thể; đỏ nhạt cách nhau ≥ 1.15, chữ lúc nhấn đậm hơn để giữ ≥ 4.5 */
+  --c-danger-hover: #F7CDC7;  --c-danger-press: #F0B7AE;  --c-danger-ink-press: #8A2418;  --c-danger-solid-hover: #8A2418;  --c-danger-solid-press: #71200F;
   --c-dark-press: #0A1F26;  --c-cta-hover: #C4EEF6;  --c-cta-press: #8AD6E5;
   --c-info: #0A5868;   --c-info-soft: #DDF1F5;
   --c-dot: #CF4340;   /* chấm chưa đọc trên chuông */

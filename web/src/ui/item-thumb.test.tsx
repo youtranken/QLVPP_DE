@@ -50,7 +50,9 @@ describe('ItemThumb', () => {
       expect(container.querySelector('img')!.getAttribute('src')).toBe('/api/files/f1');
       fireEvent.error(container.querySelector('img')!);
       act(() => { vi.advanceTimersByTime(499); });
-      expect(container.querySelector('img')!.getAttribute('src')).toBe('/api/files/f1');
+      // Trong lúc chờ: khung giữ chỗ, không để ảnh vỡ/alt hiện ra
+      expect(container.querySelector('img')).toBeNull();
+      expect(container.querySelector('[data-thumb="placeholder"]')).not.toBeNull();
       act(() => { vi.advanceTimersByTime(1); });
       expect(container.querySelector('img')!.getAttribute('src')).toBe('/api/files/f1?r=1');
       fireEvent.load(container.querySelector('img')!);
@@ -64,7 +66,7 @@ describe('ItemThumb', () => {
       act(() => { vi.advanceTimersByTime(500); });
       fireEvent.error(container.querySelector('img')!);
       act(() => { vi.advanceTimersByTime(1499); });
-      expect(container.querySelector('img')!.getAttribute('src')).toBe('/api/files/f1?r=1');
+      expect(container.querySelector('img')).toBeNull();
       act(() => { vi.advanceTimersByTime(1); });
       expect(container.querySelector('img')!.getAttribute('src')).toBe('/api/files/f1?r=2');
       fireEvent.error(container.querySelector('img')!);

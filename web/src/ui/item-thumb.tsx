@@ -10,7 +10,7 @@ const FLUID = {
   tile: { aspectRatio: '1 / 1' as const, height: undefined, radius: 14, img: undefined },
 };
 
-// Đ48: ảnh có thể dính 429/lỗi mạng thoáng qua → thử lại tối đa 2 lần (500 ms, 1500 ms), tham số ?r=n chỉ thêm khi thử lại
+// Ảnh có thể dính 429/lỗi mạng thoáng qua → thử lại tối đa 2 lần (500 ms, 1500 ms), tham số ?r=n chỉ thêm khi thử lại
 const RETRY_DELAYS_MS = [500, 1500];
 
 export function ItemThumb({ fileId, alt, tone, size }: { fileId: string | null; alt: string; tone: Tone; size: ThumbSize }) {
@@ -27,7 +27,8 @@ export function ItemThumb({ fileId, alt, tone, size }: { fileId: string | null; 
     if (attempt < RETRY_DELAYS_MS.length) setRetry({ id: fileId, n: attempt, waiting: true });
     else setFailedId(fileId);
   };
-  const showImg = fileId != null && failedId !== fileId;
+  // Đang chờ thử lại: hiện khung giữ chỗ thay ảnh vỡ/chữ alt
+  const showImg = fileId != null && failedId !== fileId && !waiting;
   const px = typeof size === 'number' ? size : undefined;
   const shape = FLUID[size as 'card' | 'tile'];
   const box: CSSProperties = {

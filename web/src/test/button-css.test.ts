@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-// R-D4.1, R-D4.7: luật gốc `.btn` chỉ đọc biến; mỗi biến thể chỉ khai biến, không viết lại :hover/:active
+// Luật gốc `.btn` chỉ đọc biến; mỗi biến thể chỉ khai biến, không viết lại :hover/:active
 const SRC = resolve(__dirname, '..');
 const BASE = join(SRC, 'css/m1/base.css');
 

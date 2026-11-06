@@ -12,7 +12,7 @@ const home = {
       titleDone: 'Kỳ tháng {{month}} đã xong',
       titleRegister: 'Kỳ tháng {{month}} đang nhận đăng ký',
       subDone: 'Cả 4 bước đã xong. Việc còn lại là đóng kỳ.',
-      subRegister: 'Khóa tự động 00:00 ngày {{date}}. Sau đó in phiếu gửi ADM.',
+      subRegister: 'Khóa tự động {{lock}}. Sau đó in phiếu gửi ADM.',
       sub: {
         register: 'Còn đang nhận đăng ký.',
         send: 'Kỳ đã khóa. In phiếu trình ký hoặc xuất Excel gửi ADM.',

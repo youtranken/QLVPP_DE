@@ -79,7 +79,7 @@ export class FilesController {
     return this.files.upload(file, purpose, identityOf(req).sub);
   }
 
-  // Đ48: ảnh không tính vào giới hạn tốc độ (một trang nhiều ảnh làm 429 cả API); xác thực/phân quyền giữ nguyên.
+  // Ảnh không tính vào giới hạn tốc độ (một trang nhiều ảnh làm 429 cả API); xác thực/phân quyền giữ nguyên.
   // Không tồn tại và không được xem cùng trả 404 để không lộ id hợp lệ
   @Get(':id')
   @SkipThrottle({ default: true, ip: true })

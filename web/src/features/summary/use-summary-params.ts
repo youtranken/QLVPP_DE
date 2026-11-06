@@ -8,29 +8,26 @@ export type PersonFilter = 'unregistered' | 'pending_delivery' | 'custom_pending
 export type PageFilter = PersonFilter | 'low';
 
 const PERSON_FILTERS: readonly string[] = ['unregistered', 'pending_delivery', 'custom_pending', 'over_max', 'left'];
-// Lọc theo việc giao/vượt tối đa/người nghỉ chỉ có nghĩa ở kỳ đã khóa: kỳ đang mở thì bỏ
-const LOCKED_ONLY: readonly string[] = ['pending_delivery', 'over_max', 'left'];
 
-// Mặc định kỳ khóa gần nhất (Hành chính làm việc trên kỳ đã khóa); ?ym= sai mẫu hoặc vượt kỳ đang mở → thay URL bằng kỳ đó, không gọi API với tháng sai
+// Chỉ xem kỳ đã khóa: mặc định và trần là kỳ khóa gần nhất; ?ym= sai mẫu, là kỳ mở hoặc tương lai → thay URL, không gọi API với tháng đó
 export function useSummaryParams(openYm: string | undefined) {
   const [params, update] = useUrlPatch();
   const asked = params.get('ym');
-  const ym = asked && openYm && YM.test(asked) && asked <= openYm ? asked : openYm && lockedYm(openYm);
-  const view: SummaryView = params.get('view') === 'item' ? 'item' : 'person';
+  const ym = asked && openYm && YM.test(asked) && asked < openYm ? asked : openYm && lockedYm(openYm);
+  // Liên kết cũ/viết tay dùng view=items: hiểu như view=item rồi chuẩn hóa URL
+  const askedView = params.get('view');
+  const view: SummaryView = askedView === 'item' || askedView === 'items' ? 'item' : 'person';
   // ?left=1 đến từ nhắc người đã nghỉ ở Tháng này: lọc người nghỉ còn phần chưa nhận, lý do giảm chọn sẵn "Người đã nghỉ"
   const left = params.get('left') === '1';
   const raw = params.get('filter') ?? (left ? 'left' : '');
-  const inOpen = !!ym && ym === openYm;
-  const lockedOnlyInOpen = inOpen && (LOCKED_ONLY.includes(raw) || left);
-  const filter: PageFilter | null =
-    view === 'item' ? (raw === 'low' ? 'low' : null) : PERSON_FILTERS.includes(raw) && !lockedOnlyInOpen ? (raw as PersonFilter) : null;
+  const filter: PageFilter | null = view === 'item' ? (raw === 'low' ? 'low' : null) : PERSON_FILTERS.includes(raw) ? (raw as PersonFilter) : null;
 
   useEffect(() => {
     const patch: UrlPatch = {};
     if (openYm && ym && asked !== ym) patch.ym = ym;
-    if (lockedOnlyInOpen) Object.assign(patch, { filter: null, left: null });
+    if (askedView === 'items') patch.view = 'item';
     if (Object.keys(patch).length) update(patch, true);
-  }, [openYm, ym, asked, lockedOnlyInOpen, update]);
+  }, [openYm, ym, asked, askedView, update]);
 
   // ?item= đến từ "Xem ai đăng ký" ở Gửi ADM: Tổng hợp theo món lọc sẵn một món
   const item = view === 'item' ? params.get('item') || null : null;
@@ -42,8 +39,7 @@ export function useSummaryParams(openYm: string | undefined) {
     item,
     presetReason: (filter === 'left' ? 'user_left' : undefined) as AdjustReason | undefined,
     q: params.get('q') ?? '',
-    setMonth: (next: string) =>
-      update({ ym: next, request: null, ...(next === openYm && (LOCKED_ONLY.includes(raw) || left) ? { filter: null, left: null } : {}) }),
+    setMonth: (next: string) => update({ ym: next, request: null }),
     setView: (next: SummaryView) => update({ view: next === 'item' ? 'item' : null, filter: null, left: null, item: null }),
     toggleFilter: (next: PageFilter) =>
       update({ view: next === 'low' ? 'item' : null, filter: filter === next ? null : next, left: null, item: null }),

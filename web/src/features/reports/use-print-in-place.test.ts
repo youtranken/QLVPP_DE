@@ -22,6 +22,11 @@ function Harness() {
   );
 }
 
+function Toggle() {
+  const [on, setOn] = useState(true);
+  return createElement('div', null, on && createElement(Harness), createElement('button', { type: 'button', onClick: () => setOn(false) }, 'leave'));
+}
+
 const mount = () => renderWithI18n(createElement(ToastProvider, null, createElement(Harness)));
 const go = () => act(async () => void fireEvent.click(screen.getByRole('button', { name: 'go' })));
 
@@ -68,6 +73,45 @@ describe('usePrintInPlace: in tại chỗ, không đổi trang', () => {
     act(() => void window.dispatchEvent(new Event('afterprint')));
     expect(region()).toBeNull();
     expect(pageStyle()).toBeNull();
+  });
+
+  it('toast bị chặn ở lại (không tự ẩn sau 4 s): sau 5 s nút In vẫn còn; afterprint thì toast bị chặn biến mất', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(window, 'print').mockImplementation(() => {});
+    mount();
+    await go();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    await act(() => vi.advanceTimersByTimeAsync(5000));
+    expect(screen.getByRole('button', { name: 'In' })).toBeInTheDocument();
+    act(() => void window.dispatchEvent(new Event('afterprint')));
+    expect(screen.queryByText('Bấm để mở hộp in')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'In' })).toBeNull();
+  });
+
+  it.each([
+    ['trang lấy lại focus', () => void window.dispatchEvent(new Event('focus'))],
+    ['bấm in lần nữa', () => void fireEvent.click(screen.getByRole('button', { name: 'go' }))],
+  ])('toast bị chặn biến mất khi %s', async (_label, trigger) => {
+    vi.useFakeTimers();
+    vi.spyOn(window, 'print').mockImplementation(() => {});
+    mount();
+    await go();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(screen.getByText('Bấm để mở hộp in')).toBeInTheDocument();
+    act(trigger);
+    expect(screen.queryByText('Bấm để mở hộp in')).toBeNull();
+  });
+
+  it('toast bị chặn biến mất khi rời trang (gỡ màn in)', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(window, 'print').mockImplementation(() => {});
+    const view = renderWithI18n(createElement(ToastProvider, null, createElement(Toggle)));
+    await go();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(screen.getByText('Bấm để mở hộp in')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'leave' }));
+    expect(screen.queryByText('Bấm để mở hộp in')).toBeNull();
+    view.unmount();
   });
 
   it('beforeprint tới trong 0.5 s → "printed", không toast bị chặn', async () => {

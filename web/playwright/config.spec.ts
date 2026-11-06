@@ -144,7 +144,7 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await access.getByRole('button', { name: 'Lưu quyền Hành chính' }).click();
     const dialog = page.getByRole('dialog', { name: 'Đổi nhóm Hành chính?' });
     await expect(dialog).toBeVisible();
-    await dialog.getByRole('button', { name: 'Hủy' }).click();
+    await dialog.getByRole('button', { name: 'Quay lại' }).click();
     await expect(dialog).toBeHidden();
     expect(puts).toBe(0);
     await access.getByRole('button', { name: 'Hủy' }).click();

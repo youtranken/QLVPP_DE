@@ -23,27 +23,27 @@ describe('SummaryPage — đầu trang, tháng, URL', () => {
     expect(calledUrls(f).some((u) => u.includes('/2026-11/requests'))).toBe(false);
   });
 
-  it('kỳ đang mở mà danh sách trả 409 PERIOD_NOT_LOCKED → khung lỗi "Không tải được dữ liệu — thử lại.", không quay "Đang tải…" mãi', async () => {
+  it('danh sách trả 409 PERIOD_NOT_LOCKED → khung lỗi "Không tải được dữ liệu — thử lại.", không quay "Đang tải…" mãi', async () => {
     stubSummaryApi((url) =>
-      url.startsWith('/api/admin/periods/2026-11/requests') ? jsonResponse(409, { code: 'PERIOD_NOT_LOCKED', ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z' }) : undefined,
+      url.startsWith('/api/admin/periods/2026-10/requests') ? jsonResponse(409, { code: 'PERIOD_NOT_LOCKED', ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z' }) : undefined,
     );
-    open('/admin/summary?ym=2026-11');
+    open('/admin/summary?ym=2026-10');
     expect(await screen.findByText('Không tải được dữ liệu — thử lại.')).toBeInTheDocument();
     expect(screen.queryByText('Đang tải…')).toBeNull();
   });
-
-  it('đúng một h1 "Tổng hợp kỳ", breadcrumb "Hằng tháng", mô tả; badge "Đang mở · hạn 10"; › khóa ở kỳ đang mở', async () => {
+  it('đúng một h1 "Tổng hợp kỳ", breadcrumb "Hằng tháng", mô tả; badge "Đã khóa"; › khóa ở kỳ khóa gần nhất, kỳ mở hiện vô hiệu "Đang mở"', async () => {
     stubSummaryApi();
-    open('/admin/summary?ym=2026-11');
-    expect(await screen.findByText('Đang mở · hạn 10')).toBeInTheDocument();
+    open();
+    expect(await screen.findByText('Đã khóa')).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tổng hợp kỳ');
     expect(within(screen.getByRole('navigation', { name: 'Vị trí' })).getByText('Hằng tháng')).toBeInTheDocument();
     expect(screen.getByText('Ai đã đăng ký, món nào cần mua, phiếu nào cần sửa — trong một bảng.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
-    expect(screen.getByText('Tháng 11/2026')).toBeInTheDocument();
+    expect(screen.getByText('Tháng 10/2026')).toBeInTheDocument();
+    const month = screen.getByRole('group', { name: 'Chọn tháng' });
+    expect(within(month).getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
+    expect(within(month).getByRole('button', { name: 'Tháng 11/2026 · Đang mở' })).toBeDisabled();
   });
-
   it('?ym=2099-01 vượt trần → URL thay bằng kỳ khóa gần nhất ?ym=2026-10, không request nào mang 2099-01', async () => {
     const f = stubSummaryApi();
     open('/admin/summary?ym=2099-01');
@@ -60,17 +60,21 @@ describe('SummaryPage — đầu trang, tháng, URL', () => {
     expect(calledUrls(f).some((u) => u.includes(`/periods/${bad}/`))).toBe(false);
   });
 
-  it('kỳ đã khóa: badge "Đã khóa", nhãn "Phiếu đã đăng ký · lúc khóa"; › sang kỳ đang mở rồi bị khóa', async () => {
+  it('kỳ đã khóa: badge "Đã khóa", nhãn "Phiếu đã đăng ký · lúc khóa"', async () => {
     stubSummaryApi();
     open('/admin/summary?ym=2026-10');
     const kpi = await screen.findByRole('button', { name: /Phiếu đã đăng ký/ });
     expect(kpi).toHaveTextContent('30/38');
     expect(kpi).toHaveTextContent('Phiếu đã đăng ký · lúc khóa');
     expect(screen.getByText('Đã khóa')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
-    expect(await screen.findByText('Tháng 11/2026')).toBeInTheDocument();
-    expect(search()).toContain('ym=2026-11');
-    expect(screen.getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
+  });
+
+  it('?ym=2026-11 (kỳ đang mở) → URL thành 2026-10 + dải nhắc "xem được từ 00:00 ngày 11/11"; không gọi API kỳ mở cho danh sách', async () => {
+    const f = stubSummaryApi();
+    open('/admin/summary?ym=2026-11');
+    await waitFor(() => expect(search()).toContain('ym=2026-10'));
+    expect(await screen.findByText(/Kỳ tháng 11 đang mở, xem được từ 00:00 ngày 11\/11\./)).toBeInTheDocument();
+    expect(calledUrls(f).some((u) => u.includes('/2026-11/requests') || u.includes('/2026-11/unregistered'))).toBe(false);
   });
 });
 
@@ -92,32 +96,23 @@ describe('SummaryPage — thẻ lọc', () => {
     expect(screen.queryByText(/Đang lọc:/)).toBeNull();
   });
 
-  it('kỳ mở: "Dòng chờ giao" không có role button, số "—", dòng phụ "giao từ 11/11"', async () => {
-    stubSummaryApi();
-    open('/admin/summary?ym=2026-11');
-    expect(await screen.findByText('giao từ 11/11')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Dòng chờ giao/ })).toBeNull();
-    expect(screen.getByText('giao từ 11/11').closest('.stat-card')).toHaveTextContent('—');
-  });
 
-  it('kỳ mở mở thẳng ?filter=pending_delivery → bỏ filter khỏi URL, không gọi API với filter đó', async () => {
+
+  it('?ym=kỳ mở&filter=pending_delivery → về kỳ khóa 2026-10 và giữ lọc chờ giao', async () => {
     const f = stubSummaryApi();
     open('/admin/summary?ym=2026-11&filter=pending_delivery');
-    await screen.findByText('giao từ 11/11');
-    await waitFor(() => expect(search()).not.toContain('filter='));
-    expect(calledUrls(f).some((u) => u.includes('filter=pending_delivery'))).toBe(false);
-    expect(screen.queryByText(/Đang lọc:/)).toBeNull();
+    await waitFor(() => expect(search()).toContain('ym=2026-10'));
+    expect(await screen.findByRole('button', { name: /Dòng chờ giao/ })).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => expect(calledUrls(f).some((u) => u.includes('/2026-10/requests') && u.includes('filter=pending_delivery'))).toBe(true));
   });
-
-  it('kỳ khóa đang lọc chờ giao → › sang kỳ đang mở thì bỏ lọc', async () => {
+  it('kỳ khóa đang lọc chờ giao → ‹ sang kỳ trước vẫn giữ lọc', async () => {
     stubSummaryApi();
     open('/admin/summary?ym=2026-10&filter=pending_delivery');
     expect(await screen.findByRole('button', { name: /Dòng chờ giao/ })).toHaveAttribute('aria-pressed', 'true');
-    await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
-    await screen.findByText('Tháng 11/2026');
-    expect(search()).not.toContain('filter=');
+    await userEvent.click(screen.getByRole('button', { name: 'Tháng trước' }));
+    await screen.findByText('Tháng 9/2026');
+    expect(search()).toContain('filter=pending_delivery');
   });
-
   it('"Phiếu đã đăng ký" → filter=unregistered: bảng chưa đăng ký + "Đang lọc: Chưa đăng ký · 2 người"; "Bỏ lọc" trả bảng theo người', async () => {
     stubSummaryApi();
     open();
@@ -205,7 +200,7 @@ describe('SummaryPage — thanh công cụ, bảng, ngăn kéo', () => {
     expect(search()).toContain('request=r-2');
   });
 
-  it.each(['2026-10', '2026-11'])('kỳ %s: không còn nút tạo phiếu thay người; nút chính "Sang Gửi ADM →" dẫn /admin/send-adm?ym=', async (ym) => {
+  it.each(['2026-09', '2026-10'])('kỳ %s: không còn nút tạo phiếu thay người; nút chính "Sang Gửi ADM →" dẫn /admin/send-adm?ym=', async (ym) => {
     stubSummaryApi();
     open(`/admin/summary?ym=${ym}`);
     const link = await screen.findByRole('link', { name: 'Sang Gửi ADM →' });
@@ -219,8 +214,8 @@ describe('SummaryPage — thanh công cụ, bảng, ngăn kéo', () => {
     open('/admin/summary?ym=2026-10');
     expect(await screen.findByRole('button', { name: /Phiếu đã đăng ký/ })).toHaveTextContent('6/8');
     expect(screen.getByText('+2 phiếu của người ngoài danh sách')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
-    await screen.findByText('Tháng 11/2026');
+    await userEvent.click(screen.getByRole('button', { name: 'Tháng trước' }));
+    await screen.findByText('Tháng 9/2026');
     expect(screen.queryByText(/ngoài danh sách/)).toBeNull();
   });
 
@@ -246,11 +241,11 @@ describe('SummaryPage — thanh công cụ, bảng, ngăn kéo', () => {
     open('/admin/summary?request=r-2');
     const drawer = await screen.findByRole('dialog', { name: 'Phiếu của Võ Thị Lan' });
     await screen.findByText('Phạm Văn Đức');
-    within(drawer).getByRole('button', { name: 'Hủy' }).focus();
+    within(drawer).getByRole('button', { name: 'Quay lại' }).focus();
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() => expect(search()).toContain('request=r-3'));
     expect(await screen.findByRole('dialog', { name: 'Phiếu của Trần Bình' })).toBeInTheDocument();
-    screen.getByRole('button', { name: 'Hủy' }).focus();
+    screen.getByRole('button', { name: 'Quay lại' }).focus();
     await userEvent.keyboard('{ArrowUp}');
     await waitFor(() => expect(search()).toContain('request=r-2'));
   });
@@ -321,15 +316,13 @@ describe('SummaryPage — vượt tối đa, người đã nghỉ (R-D8.20, R-D1
     expect(await screen.findByText('Đang lọc: Vượt tối đa · 3 người')).toBeInTheDocument();
   });
 
-  it('kỳ mở: không có nút "Vượt tối đa"; ?filter=over_max bị bỏ, không gọi API với filter đó', async () => {
+  it('?ym=kỳ mở&filter=over_max → về kỳ khóa 2026-10, nút "Vượt tối đa" bật và lọc lên API', async () => {
     const f = stubSummaryApi();
     open('/admin/summary?ym=2026-11&filter=over_max');
-    await screen.findByText('giao từ 11/11');
-    await waitFor(() => expect(search()).not.toContain('filter='));
-    expect(screen.queryByRole('button', { name: 'Vượt tối đa' })).toBeNull();
-    expect(calledUrls(f).some((u) => u.includes('filter=over_max'))).toBe(false);
+    await waitFor(() => expect(search()).toContain('ym=2026-10'));
+    expect(await screen.findByRole('button', { name: 'Vượt tối đa' })).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => expect(calledUrls(f).some((u) => u.includes('/2026-10/requests') && u.includes('filter=over_max'))).toBe(true));
   });
-
   it('theo món: dòng vượt tối đa có nhãn "Vượt tối đa hiện tại (4)"', async () => {
     stubSummaryApi();
     open('/admin/summary?ym=2026-10&view=item');
@@ -348,11 +341,10 @@ describe('SummaryPage — vượt tối đa, người đã nghỉ (R-D8.20, R-D1
     expect(within(drawer).getByRole('radio', { name: 'Người đã nghỉ' })).toBeChecked();
   });
 
-  it('kỳ mở ?left=1 → không lọc, không gọi API filter=left', async () => {
+  it('?ym=kỳ mở&left=1 → về kỳ khóa 2026-10 và lọc người đã nghỉ', async () => {
     const f = stubSummaryApi();
     open('/admin/summary?ym=2026-11&left=1');
-    await screen.findByText('giao từ 11/11');
-    await waitFor(() => expect(search()).not.toContain('left='));
-    expect(calledUrls(f).some((u) => u.includes('filter=left'))).toBe(false);
+    await waitFor(() => expect(search()).toContain('ym=2026-10'));
+    await waitFor(() => expect(calledUrls(f).some((u) => u.includes('/2026-10/requests') && u.includes('filter=left'))).toBe(true));
   });
 });

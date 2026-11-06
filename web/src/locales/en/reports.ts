@@ -11,10 +11,8 @@ const reports: Messages<typeof vi> = {
       prevMonth: 'Previous month',
       nextMonth: 'Next month',
       status: {
-        open: 'Open · due {{day}}',
         locked: 'Locked',
       },
-      openNotice: 'The {{month}} period is still open — figures are provisional, based on saved requests.',
       pendingNotice: '{{count}} off-catalogue items not reviewed yet — they are not counted in this report.',
       pendingLink: 'Review pending items',
       error: {

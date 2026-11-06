@@ -5,13 +5,13 @@ import { SummaryPersonTable } from './summary-person-table';
 import { PEOPLE, person, stubSummaryApi } from './summary-fixtures';
 import type { PersonRow } from './summary.api';
 
-function renderTable(props: { locked?: boolean; ym?: string; rows?: PersonRow[]; onOpen?: (id: string) => void } = {}) {
+function renderTable(props: { ym?: string; rows?: PersonRow[]; onOpen?: (id: string) => void } = {}) {
   if (props.rows) stubSummaryApi((url) => (url.includes('by=person') ? jsonResponse(200, { items: props.rows, next_cursor: null }) : undefined));
   else stubSummaryApi();
   const onOpen = props.onOpen ?? vi.fn();
   renderWithI18n(
     <MemoryRouter>
-      <SummaryPersonTable ym={props.ym ?? (props.locked ? '2026-10' : '2026-11')} locked={props.locked ?? false} filter={null} q="" onOpen={onOpen} onClearFilter={() => {}} />
+      <SummaryPersonTable ym={props.ym ?? '2026-10'} filter={null} q="" onOpen={onOpen} onClearFilter={() => {}} />
     </MemoryRouter>,
   );
   return onOpen;
@@ -42,9 +42,8 @@ describe('SummaryPersonTable — bảng theo người', () => {
     expect(within(duc).getByText('1 món ngoài DM chờ xem')).toBeInTheDocument();
   });
 
-  it('kỳ khóa, phiếu 0 dòng → ghi chú "0 món — Hành chính đã bỏ toàn bộ"; phiếu có dòng thì không', async () => {
+  it('phiếu 0 dòng → ghi chú "0 món — Hành chính đã bỏ toàn bộ"; phiếu có dòng thì không', async () => {
     renderTable({
-      locked: true,
       rows: [
         person({ request_id: 'r-0', full_name: 'Lê Bỏ Hết', line_count: 0, total_qty: 0, delivered_qty: 0, cancelled_qty: 0 }),
         person({ request_id: 'r-1', full_name: 'Lê Còn', total_qty: 2 }),
@@ -54,16 +53,8 @@ describe('SummaryPersonTable — bảng theo người', () => {
     expect(within(await rowOf('Lê Còn')).queryByText(/Hành chính đã bỏ toàn bộ/)).toBeNull();
   });
 
-  it('kỳ mở: cột Giao "Giao sau khi khóa kỳ", không thanh tiến độ, không nút Giao', async () => {
-    renderTable();
-    const duc = await rowOf('Phạm Văn Đức');
-    expect(within(duc).getByText('Giao sau khi khóa kỳ')).toBeInTheDocument();
-    expect(within(duc).queryByRole('progressbar')).toBeNull();
-    expect(within(duc).queryByRole('link', { name: /Giao/ })).toBeNull();
-  });
-
   it('kỳ khóa: Progress "đã giao {delivered+cancelled}/{total}" — giao 3 + hủy 2 trên 5 → đầy "đã giao 5/5 đơn vị", không nút Giao', async () => {
-    renderTable({ locked: true, rows: [person({ request_id: 'r-7', full_name: 'Lê Hủy', total_qty: 5, delivered_qty: 3, cancelled_qty: 2 })] });
+    renderTable({ rows: [person({ request_id: 'r-7', full_name: 'Lê Hủy', total_qty: 5, delivered_qty: 3, cancelled_qty: 2 })] });
     const row = await rowOf('Lê Hủy');
     const bar = within(row).getByRole('progressbar', { name: 'đã giao 5/5 đơn vị' });
     expect(bar).toHaveAttribute('aria-valuenow', '5');
@@ -72,7 +63,7 @@ describe('SummaryPersonTable — bảng theo người', () => {
   });
 
   it('kỳ khóa gần nhất (2026-10, hiện tại 11), còn phải giao (4/7) → nút Giao → /admin/delivery?person=<user_sub> (trang mới), không mở ngăn kéo', async () => {
-    const onOpen = renderTable({ locked: true, rows: [PEOPLE[1]] });
+    const onOpen = renderTable({ rows: [PEOPLE[1]] });
     const row = await rowOf('Phạm Văn Đức');
     expect(within(row).getByRole('progressbar', { name: 'đã giao 4/7 đơn vị' })).toBeInTheDocument();
     const link = await within(row).findByRole('link', { name: 'Giao phiếu của Phạm Văn Đức' });
@@ -82,21 +73,21 @@ describe('SummaryPersonTable — bảng theo người', () => {
   });
 
   it('user_sub có + và # được mã hóa trong link: ?person=a%2Bb%23c (không bị cắt ở #, + không thành dấu cách)', async () => {
-    renderTable({ locked: true, rows: [{ ...PEOPLE[1], user_sub: 'a+b#c' }] });
+    renderTable({ rows: [{ ...PEOPLE[1], user_sub: 'a+b#c' }] });
     const row = await rowOf('Phạm Văn Đức');
     const link = await within(row).findByRole('link', { name: 'Giao phiếu của Phạm Văn Đức' });
     await vi.waitFor(() => expect(link).toHaveAttribute('href', '/admin/delivery?person=a%2Bb%23c'));
   });
 
   it('kỳ cũ hơn kỳ khóa gần nhất (2026-09) → cũng mở Giao hàng của người đó (trang cũ đã gỡ)', async () => {
-    renderTable({ locked: true, ym: '2026-09', rows: [PEOPLE[1]] });
+    renderTable({ ym: '2026-09', rows: [PEOPLE[1]] });
     const row = await rowOf('Phạm Văn Đức');
     const link = await within(row).findByRole('link', { name: 'Giao phiếu của Phạm Văn Đức' });
     await vi.waitFor(() => expect(link).toHaveAttribute('href', `/admin/delivery?person=${PEOPLE[1].user_sub}`));
   });
 
   it('tổng 0 (chỉ dòng chờ xem) → cột Giao "—", không NaN', async () => {
-    renderTable({ locked: true, rows: [person({ request_id: 'r-9', full_name: 'Đỗ Chờ', total_qty: 0, custom_pending: 1 })] });
+    renderTable({ rows: [person({ request_id: 'r-9', full_name: 'Đỗ Chờ', total_qty: 0, custom_pending: 1 })] });
     const row = await rowOf('Đỗ Chờ');
     expect(within(row).queryByRole('progressbar')).toBeNull();
     expect(within(row).getByText('—')).toBeInTheDocument();
@@ -125,7 +116,7 @@ describe('SummaryPersonTable — bảng theo người', () => {
     );
     renderWithI18n(
       <MemoryRouter>
-        <SummaryPersonTable ym="2026-11" locked={false} filter={null} q="" onOpen={() => {}} onClearFilter={() => {}} />
+        <SummaryPersonTable ym="2026-10" filter={null} q="" onOpen={() => {}} onClearFilter={() => {}} />
       </MemoryRouter>,
     );
     await screen.findByText('Phạm Văn Đức');

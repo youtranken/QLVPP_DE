@@ -9,6 +9,9 @@ async function snap(page: Page, info: TestInfo, name: string) {
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png`, fullPage: true });
 }
 
+// Kỳ quá khứ chỉ V2D-21 dùng (khác PRIVATE_YM của Gửi ADM/Hàng về): cũ trước
+const OWED_YMS = ['2000-03', '2000-04'] as const;
+
 const prevYmOf = (ym: string) => {
   const [y, m] = ym.split('-').map(Number);
   return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
@@ -144,36 +147,40 @@ test.describe('E2-S6 lịch sử', () => {
     }
   });
 
+  // Hai kỳ quá khứ riêng của spec (không phải kỳ trước thật của dev); owed liệt kê mọi kỳ đã khóa nên kỳ cũ vẫn hiện
   test('V2D-21 owed across months: Đăng ký nói mọi tháng còn chờ nhận, ≤ 2 chạm tới điều chỉnh của Hành chính trong Lịch sử', async ({ page, request }, info) => {
     const sub = `pw-owed-${Date.now()}-${info.project.name}`;
     const headers = { 'x-dev-user-sub': sub, 'x-dev-role': 'member' };
     seedActiveUser(sub, `PW Chờ nhận ${info.project.name}`);
     await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...headers } }));
-    const period = await (await request.get('/api/periods/current', { headers })).json();
-    const prevYm = prevYmOf(period.ym);
-    const olderYm = prevYmOf(prevYm);
+    const [olderYm, prevYm] = OWED_YMS;
     const [pen, tape, glue] = [await seedPwItem(page), await seedPwItem(page), await seedPwItem(page)];
     const monthOf = (ym: string) => Number(ym.slice(5));
+    // Bảng điều chỉnh chỉ-thêm, không dọn được: giả bản ghi "Hành chính giảm 3 → 1" ở trình duyệt; phía server đã có e2e me-request-adjustments
+    const adjustment = { before: 3, after: 1, reason_code: 'over_quota', reason_note: null, at: `${prevYm}-13T02:10:00Z` };
+    await page.route(
+      (url) => url.pathname === '/api/me/request' && url.searchParams.get('ym') === prevYm,
+      async (route) => {
+        const res = await route.fetch({ headers: { ...route.request().headers(), ...headers } });
+        const body = await res.json();
+        const lines = body.lines.map((l: { item_id: string | null }) => (l.item_id === tape.id ? { ...l, adjustments: [adjustment] } : l));
+        await route.fulfill({ response: res, json: { ...body, lines } });
+      },
+    );
 
-    const release = await acquireLock('prev-period');
-    const created = [olderYm, prevYm].filter((ym) =>
+    const release = await acquireLock('owed-private-periods');
+    const created = OWED_YMS.filter((ym) =>
       psql(`INSERT INTO periods (ym, deadline) VALUES ('${ym}-01', '${ym}-10T17:00:00Z') ON CONFLICT DO NOTHING RETURNING ym`),
     );
     psql(`WITH r AS (
         INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('${olderYm}-01', '${sub}', '${sub}') RETURNING id
       ) INSERT INTO request_lines (request_id, item_id, qty, delivered_qty) SELECT r.id, '${pen.id}', 3, 1 FROM r`);
-    // Kỳ trước: Hành chính giảm Băng keo 3 → 1 (bản ghi chỉ-thêm như PUT admin/requests/:id/lines ghi)
     psql(`WITH r AS (
         INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('${prevYm}-01', '${sub}', '${sub}') RETURNING id
       ), t AS (
-        INSERT INTO request_lines (request_id, item_id, qty) SELECT r.id, '${tape.id}', 1 FROM r RETURNING id, request_id
-      ), g AS (
-        INSERT INTO request_lines (request_id, item_id, qty, delivered_qty) SELECT r.id, '${glue.id}', 2, 1 FROM r
+        INSERT INTO request_lines (request_id, item_id, qty) SELECT r.id, '${tape.id}', 1 FROM r
       )
-      INSERT INTO request_line_adjustments (batch_id, period_ym, user_sub, request_id, line_id, item_id, name, unit,
-                                            qty_before, qty_after, reason_code, actor_sub, created_at)
-      SELECT gen_random_uuid(), '${prevYm}-01', '${sub}', t.request_id, t.id, '${tape.id}', '${tape.name}', 'cai',
-             3, 1, 'over_quota', 'pw-admin', '${prevYm}-13T02:10:00Z' FROM t`);
+      INSERT INTO request_lines (request_id, item_id, qty, delivered_qty) SELECT r.id, '${glue.id}', 2, 1 FROM r`);
 
     try {
       await page.goto('/');

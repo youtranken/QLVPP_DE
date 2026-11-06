@@ -260,7 +260,7 @@ describe('Cấu hình · Thay đổi gần đây', () => {
       const dialog = await screen.findByRole('dialog', { name: 'Đổi hạn đăng ký?' });
       expect(within(dialog).getByText(LINE)).toBeInTheDocument();
       expect(putBodies(fetchMock)).toHaveLength(0);
-      await userEvent.click(within(dialog).getByRole('button', { name: 'Hủy' }));
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Quay lại' }));
       expect(putBodies(fetchMock)).toHaveLength(0);
       await userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
       await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu hạn mới' }));

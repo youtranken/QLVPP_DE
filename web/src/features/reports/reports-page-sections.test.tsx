@@ -40,19 +40,17 @@ describe('ReportsPage — tháng', () => {
     expect(within(await region(PART1)).getByRole('columnheader', { name: 'Số người' })).toBeInTheDocument();
   });
 
-  it('lên tới kỳ đang mở (11/2026) rồi "Tháng sau" vô hiệu; badge "Đã khóa" → "Đang mở · hạn 10/11"', async () => {
+  it('trần là kỳ khóa gần nhất (10/2026): "Tháng sau" vô hiệu, badge "Đã khóa", kỳ mở hiện vô hiệu "Đang mở"', async () => {
     stubReports();
     openPage();
     await rowOf('Bút bi xanh');
     const month = screen.getByRole('group', { name: 'Chọn tháng báo cáo' });
     expect(within(month).getByText('Đã khóa')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
-    await waitFor(() => expect(screen.getByTestId('location-search')).toHaveTextContent('?ym=2026-11'));
-    expect(await screen.findByRole('button', { name: 'Tháng sau' })).toBeDisabled();
-    expect(await within(screen.getByRole('group', { name: 'Chọn tháng báo cáo' })).findByText('Đang mở · hạn 10/11')).toBeInTheDocument();
+    expect(within(month).getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
+    expect(within(month).getByRole('button', { name: /Đang mở/ })).toBeDisabled();
   });
 
-  it.each(['abc', '2026-13', '1999-12', '2026-1', '2026-12', '2099-01'])('?ym=%s sai hoặc vượt kỳ mở → thay URL bằng kỳ khóa gần nhất, không gọi API với tháng sai', async (bad) => {
+  it.each(['abc', '2026-13', '1999-12', '2026-1', '2026-11', '2026-12', '2099-01'])('?ym=%s sai, là kỳ mở hoặc vượt kỳ mở → thay URL bằng kỳ khóa gần nhất, không gọi API với tháng sai', async (bad) => {
     const f = stubReports();
     openPage(`/admin/reports?ym=${bad}`);
     await rowOf('Bút bi xanh');

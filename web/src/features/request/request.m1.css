@@ -57,7 +57,7 @@
 [data-shell='member'] .rq-ghost { width: 100%; min-height: 44px; border: 1px dashed var(--c-cart-dash); border-radius: var(--r-pill); background: transparent; color: var(--c-cart-ink); font: var(--t-label); cursor: pointer; }
 [data-shell='member'] .rq-ghost:hover { background: var(--c-surface); }
 [data-shell='member'] .rq-cart-save { min-height: 52px; background: var(--c-dark); color: var(--c-on-dark); border-color: var(--c-dark); font: var(--t-body-l); font-weight: 800; }
-[data-shell='member'] .rq-cart-save:disabled { opacity: .5; }
+[data-shell='member'] .rq-cart-save:disabled { opacity: .6; }
 [data-shell='member'] .rq-cart-note { margin: 0; text-align: center; color: var(--c-cart-ink); font: var(--t-body); }
 
 @media (min-width: 901px) {
@@ -102,7 +102,7 @@
 [data-shell='member'] .rq-dialog .sheet-footer { gap: var(--s-3); }
 [data-shell='member'] .rq-dialog .sheet-footer .btn { flex: 1; min-height: 48px; border: 1px solid var(--c-line); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); }
 [data-shell='member'] .rq-dialog .sheet-footer .btn--primary { background: var(--c-dark); border-color: var(--c-dark); color: var(--c-on-dark); }
-[data-shell='member'] .rq-dialog .sheet-footer .btn:disabled { opacity: .5; }
+[data-shell='member'] .rq-dialog .sheet-footer .btn:disabled { opacity: .6; }
 
 @media (min-width: 901px) {
   /* Máy tính: ảnh · tên đủ rộng (tối đa 2 dòng) · ×, bộ chỉnh gọn 34px nằm dưới tên; Lưu phiếu vẫn trong màn 1280x800 */

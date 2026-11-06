@@ -8,10 +8,8 @@ const reports = {
       prevMonth: 'Tháng trước',
       nextMonth: 'Tháng sau',
       status: {
-        open: 'Đang mở · hạn {{day}}',
         locked: 'Đã khóa',
       },
-      openNotice: 'Kỳ tháng {{month}} đang mở — số liệu tạm tính theo phiếu đã lưu.',
       pendingNotice: 'Còn {{count}} món ngoài danh mục chưa xem — chưa được tính vào báo cáo này.',
       pendingLink: 'Xem món chờ',
       error: {

@@ -54,6 +54,20 @@ describe('AdminPeriodCard', () => {
     expect(card).not.toHaveTextContent('Hôm nay là ngày cuối');
   });
 
+  it('câu khóa sổ chung (lockPhrase): hạn 2027-01-10T17:00Z → "khóa 00:00 ngày 11/01" (vi), "locks 00:00 on 11/01" (en)', async () => {
+    const jan = { ...period(2), ym: '2027-01', deadline: '2027-01-10T17:00:00.000Z' };
+    const { unmount } = renderCard(jan);
+    expect(screen.getByRole('link', { name: /^Kỳ đăng ký hiện tại/ })).toHaveTextContent('còn 2 ngày · khóa 00:00 ngày 11/01');
+    unmount();
+    await i18n.changeLanguage('en');
+    try {
+      renderCard(jan);
+      expect(screen.getByRole('link')).toHaveTextContent('2 days left · locks 00:00 on 11/01');
+    } finally {
+      await i18n.changeLanguage('vi');
+    }
+  });
+
   it('có số đăng ký → "32/40 đã đăng ký" và thanh tiến độ 32/40', async () => {
     stubSummary(() => jsonResponse(200, { registered: 32, headcount: 40 }));
     renderCard(period(2));

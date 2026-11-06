@@ -1,7 +1,7 @@
 import { expect, test, type CDPSession, type Page } from '@playwright/test';
 import { asRole, settled } from './helpers';
 
-// R-D4.1–R-D4.3, R-D4.7, R-D9.2: ma trận biến thể nút x 5 trạng thái x nền đặt nút, đo getComputedStyle
+// Ma trận biến thể nút x 5 trạng thái x nền đặt nút, đo getComputedStyle
 // (nền trộn alpha với tổ tiên thật). Fixture tự dựng trong trang, không đụng dữ liệu dev.
 asRole('admin');
 
@@ -19,7 +19,7 @@ const VARIANTS = {
 type Variant = keyof typeof VARIANTS;
 const STATES = ['default', 'hover', 'focus', 'active', 'disabled'] as const;
 type State = (typeof STATES)[number];
-// Nền đặt nút: panel sáng, thẻ trắng, dải tối hm-hero, hộp thoại, panel phủ kính (R-D1.4)
+// Nền đặt nút: panel sáng, thẻ trắng, dải tối hm-hero, hộp thoại, panel phủ kính
 const SURFACES = {
   panel: 'background: var(--c-surface-2)',
   card: 'background: var(--c-surface)',
@@ -31,6 +31,7 @@ type Surface = keyof typeof SURFACES;
 
 const TEXT_MIN = 4.5;
 const BORDER_MIN = 3;
+const DISABLED_MIN = 3;
 const CHANGE_MIN = 1.15;
 // Tổ hợp được khai báo: nút hm-cta/hm-dark chỉ ở dải tối; còn lại mọi nền
 const DARK_ONLY: Variant[] = ['hm-cta', 'hm-dark'];
@@ -147,6 +148,7 @@ test.describe('Ma trận nút admin (R-D4)', () => {
         const x = at(st);
         const disabled = st === 'disabled';
         if (!disabled && ratio(x.fg, x.bg) < TEXT_MIN) fails.push(`${v} x ${st} x ${s}: chữ ${ratio(x.fg, x.bg).toFixed(2)} < ${TEXT_MIN}`);
+        if (disabled && ratio(x.fg, x.bg) < DISABLED_MIN) fails.push(`${v} x disabled x ${s}: chữ ${ratio(x.fg, x.bg).toFixed(2)} < ${DISABLED_MIN}`);
         // Biên nút nhìn thấy được: viền hoặc nền so với nền đặt nút
         if (!disabled) {
           const edge = Math.max(ratio(x.border, x.surfaceBg), ratio(x.bg, x.surfaceBg));
@@ -166,7 +168,7 @@ test.describe('Ma trận nút admin (R-D4)', () => {
         if (at('hover').bg === surfHover) fails.push(`${v} x hover x ${s}: rơi về --c-surface-hover`);
         if (at('active').bg === surf2) fails.push(`${v} x active x ${s}: rơi về --c-surface-2`);
       }
-      // Biến thể nền tối: nhấn tối hơn hover (R-D4.4)
+      // Biến thể nền tối: nhấn tối hơn hover
       if (['danger-solid', 'dark', 'hm-dark'].includes(v) && lum(at('active').bg) >= lum(at('hover').bg)) fails.push(`${v} x active x ${s}: nhấn không tối hơn hover`);
     }
     expect(fails, fails.join('\n')).toEqual([]);

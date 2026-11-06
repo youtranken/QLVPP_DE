@@ -46,8 +46,8 @@ const nav: Messages<typeof vi> = {
       registered: '{{registered}}/{{headcount}} signed up',
       name: 'Current sign-up period: month {{month}} · open · {{detail}}',
       nameWithCount: 'Current sign-up period: month {{month}} · open · {{registered}}/{{headcount}} signed up · {{detail}}',
-      daysLeft: '{{n}} days left · locks 00:00 on {{date}}',
-      lastDay: 'Today is the last day · locks 00:00 on {{date}}',
+      daysLeft: '{{n}} days left · locks {{lock}}',
+      lastDay: 'Today is the last day · locks {{lock}}',
     },
   },
 };
