@@ -23,6 +23,7 @@ test.describe('E0-S9 khung nhân viên (dev-identity member)', () => {
       await expect(page.getByRole('navigation', { name: 'Chuyển trang' }).getByRole('link')).toHaveText([
         'Đăng ký',
         'Lịch sử',
+        'Tôi',
       ]);
       await shot(page, info, 'member-home');
       await page.getByRole('link', { name: 'Tôi' }).click();
@@ -42,7 +43,7 @@ test.describe('E0-S9 khung nhân viên (dev-identity member)', () => {
     await expect(bottom.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử', 'Tôi']);
     await expect(tabs).toHaveCount(0);
     await page.setViewportSize({ width: 901, height: 800 });
-    await expect(tabs.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử']);
+    await expect(tabs.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử', 'Tôi']);
     await expect(bottom).toHaveCount(0);
   });
 

@@ -53,7 +53,7 @@
   /* khung v2: vỏ teal, mặt kính, giỏ hàng */
   --c-shell-a: #08303B;  --c-shell-b: #0E4757;  --c-shell-c: #12596A;  --c-panel-a: #E3F1F5;  --c-panel-b: #CBE4EB;
   --c-glass: rgb(255 255 255 / .06);  --c-glass-line: rgb(255 255 255 / .12);  --c-cart: #FFF4E8;  --c-cart-line: #F7D9B5;
-  --c-tile-chip: rgb(255 255 255 / .92);
+  --c-tile-chip: rgb(255 255 255 / .92);  --c-pick: #B4540A; /* badge số món đã chọn, chữ trắng ≥ 4.5:1 */
 }
 /* ===== HẾT BẢNG MÀU ===== */
 

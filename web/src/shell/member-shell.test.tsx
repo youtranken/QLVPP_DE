@@ -21,7 +21,7 @@ describe('MemberShell', () => {
     mockViewport(1280);
     renderApp(makeMe('member'), '/');
     const tabs = screen.getByRole('navigation', { name: 'Chuyển trang' });
-    expect(within(tabs).getAllByRole('link').map((a) => a.textContent)).toEqual(['Đăng ký', 'Lịch sử']);
+    expect(within(tabs).getAllByRole('link').map((a) => a.textContent)).toEqual(['Đăng ký', 'Lịch sử', 'Tôi']);
     expect(screen.queryByRole('navigation', { name: 'Điều hướng chính' })).toBeNull();
     expect(screen.getByRole('link', { name: 'Tôi' })).toHaveAttribute('href', '/me');
   });
@@ -43,6 +43,29 @@ describe('MemberShell', () => {
     const nav = screen.getByRole('navigation', { name: 'Điều hướng chính' });
     expect(within(nav).getByRole('link', { name: 'Lịch sử' })).toHaveAttribute('aria-current', 'page');
     expect(within(nav).getByRole('link', { name: 'Đăng ký' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('1280 px: tab "Đăng ký" có aria-current=page ở /, các tab khác không', () => {
+    mockViewport(1280);
+    renderApp(makeMe('member'), '/');
+    const tabs = screen.getByRole('navigation', { name: 'Chuyển trang' });
+    expect(within(tabs).getByRole('link', { name: 'Đăng ký' })).toHaveAttribute('aria-current', 'page');
+    expect(within(tabs).getByRole('link', { name: 'Lịch sử' })).not.toHaveAttribute('aria-current');
+    expect(within(tabs).getByRole('link', { name: 'Tôi' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('1280 px: khối avatar hiện chữ đầu, tên và phòng; 390 px chỉ còn chữ đầu', () => {
+    mockViewport(1280);
+    const { unmount } = renderApp(makeMe('member'), '/');
+    const banner = screen.getByRole('banner');
+    expect(within(banner).getByText('Nguyễn Văn An')).toBeInTheDocument();
+    expect(within(banner).getByText('Phòng Công trình')).toBeInTheDocument();
+    expect(within(banner).getByText('NA')).toBeInTheDocument();
+    unmount();
+    mockViewport(390);
+    renderApp(makeMe('member'), '/');
+    expect(within(screen.getByRole('banner')).queryByText('Phòng Công trình')).toBeNull();
+    expect(within(screen.getByRole('banner')).getByText('NA')).toBeInTheDocument();
   });
 
   it('member không thấy lối vào trang quản lý', () => {

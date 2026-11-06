@@ -3,7 +3,16 @@ import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const SRC = resolve(__dirname, '..');
-const SCOPE = "[data-shell='admin']";
+const ADMIN = "[data-shell='admin']";
+const MEMBER = "[data-shell='member']";
+
+// Tệp member (css/m1/member-*.css, features/**/*.m1.css) thuộc phạm vi nhân viên, còn lại là Hành chính
+function scopeOf(file: string): string {
+  const name = file.split('/').pop() ?? '';
+  const memberCss = file.includes('/css/m1/') && name.startsWith('member-');
+  const memberFeat = file.includes('/features/request/') || file.includes('/features/history/') || file.includes('/features/profile/');
+  return memberCss || memberFeat ? MEMBER : ADMIN;
+}
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
@@ -57,15 +66,24 @@ describe('M1 CSS chỉ nằm trong phạm vi Hành chính', () => {
     expect(files.some((f) => f.endsWith('css/m1/base.css'))).toBe(true);
   });
 
-  it.each(files.map((f) => [f.replace(SRC, ''), f]))('%s: mọi selector bắt đầu bằng phạm vi admin', (_n, file) => {
+  it.each(files.map((f) => [f.replace(SRC, ''), f]))('%s: mọi selector bắt đầu bằng phạm vi của tệp (admin hoặc member)', (_n, file) => {
     const sels = selectors(stripComments(readFileSync(file, 'utf8')));
     expect(sels.length).toBeGreaterThan(0);
-    const bad = sels.filter((s) => !s.startsWith(SCOPE));
+    const bad = sels.filter((s) => !s.startsWith(scopeOf(file)));
     expect(bad).toEqual([]);
   });
 
   it.each(files.map((f) => [f.replace(SRC, ''), f]))('%s: không chứa mã màu hex', (_n, file) => {
     expect(readFileSync(file, 'utf8')).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+  });
+
+  it('CSS member M1 bắt đầu bằng [data-shell=member]', () => {
+    const member = files.filter((f) => scopeOf(f) === MEMBER);
+    expect(member.some((f) => f.endsWith('css/m1/member-shell.css'))).toBe(true);
+    for (const f of member) {
+      const sels = selectors(stripComments(readFileSync(f, 'utf8')));
+      expect(sels.filter((s) => !s.startsWith(MEMBER))).toEqual([]);
+    }
   });
 
   it('bộ phân tích bắt được selector thiếu phạm vi', () => {

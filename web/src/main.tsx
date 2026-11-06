@@ -14,6 +14,7 @@ import '@/css/m1/table.css';
 import '@/css/m1/list-page.css';
 import '@/css/m1/overlay.css';
 import '@/css/m1/row-menu.css';
+import '@/css/m1/member-shell.css';
 import '@/lib/i18n';
 import App from '@/App.tsx';
 import { queryClient } from '@/lib/api-client';

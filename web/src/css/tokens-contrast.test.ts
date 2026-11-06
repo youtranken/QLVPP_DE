@@ -29,7 +29,7 @@ const PAIRS: [fg: string, bg: string][] = [
   ['--c-ok', '--c-ok-soft'], ['--c-warn', '--c-warn-soft'], ['--c-danger', '--c-danger-soft'],
   ['--c-on-dark', '--c-shell-c'], ['--c-on-dark-2', '--c-shell-a'], ['--c-on-dark-2', '--c-shell-c'],
   ['--c-on-dark', '--c-acc'], ['--c-warn', '--c-cart'],
-  ['--c-acc', '--c-panel-b'], ['--c-acc', '--c-panel-a'], ['--c-acc', '--c-acc-soft'],
+  ['--c-on-dark', '--c-pick'], ['--c-acc', '--c-panel-b'], ['--c-acc', '--c-panel-a'], ['--c-acc', '--c-acc-soft'],
 ];
 
 // Chấm kỳ ở cột 72 (không có chữ) — thành phần phi văn bản cần ≥ 3:1 trên nền kính

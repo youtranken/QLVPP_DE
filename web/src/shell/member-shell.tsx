@@ -35,15 +35,20 @@ export function MemberShell() {
               {t('nav.register')}
             </NavLink>
             <NavLink to="/history">{t('nav.history')}</NavLink>
+            <NavLink to="/me">{t('nav.me')}</NavLink>
           </nav>
         )}
         <span className="sp" />
         <NotificationBell />
-        {!narrow && (
-          <NavLink to="/me" className="m-avatar" aria-label={t('nav.me')} title={me.fullName ?? undefined}>
-            <span aria-hidden="true">{initials(me.fullName, me.sub)}</span>
-          </NavLink>
-        )}
+        <div className="m-avatar">
+          <span className="m-avatar__ini" aria-hidden="true">{initials(me.fullName, me.sub)}</span>
+          {!narrow && (
+            <span className="m-avatar__who">
+              <b>{me.fullName ?? me.sub}</b>
+              {me.department && <small>{me.department}</small>}
+            </span>
+          )}
+        </div>
       </header>
       <main id="main" className="m-main">
         <Outlet />
