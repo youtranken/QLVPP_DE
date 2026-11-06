@@ -1,4 +1,5 @@
-[data-shell='admin'] .pp-page { display: grid; gap: var(--s-4); max-width: 860px; margin: 0 auto; padding: var(--s-4); }
+/* minmax(0,1fr): tờ 210mm không được nới cột lưới quá khung (390 px bị phóng cả trang, thanh công cụ lệch) */
+[data-shell='admin'] .pp-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); max-width: 860px; margin: 0 auto; padding: var(--s-4); }
 [data-shell='admin'] .pp-toolbar { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; padding: var(--s-2) var(--s-3); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
 [data-shell='admin'] .pp-toolbar__text { flex: 1 1 200px; min-width: 0; font: var(--t-sm); color: var(--c-muted); }
 [data-shell='admin'] .pp-switch { display: inline-flex; align-items: center; gap: var(--s-2); min-height: var(--hit); font: var(--t-sm); font-weight: 600; color: var(--c-ink-2); cursor: pointer; }
