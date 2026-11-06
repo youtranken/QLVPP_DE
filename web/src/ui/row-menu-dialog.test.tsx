@@ -63,7 +63,7 @@ describe('RowMenu mở hộp thoại — trả focus về nút ⋯ khi hộp đ�
   it('hộp xác nhận (ConfirmDialog): Hủy hoặc Esc → focus về nút ⋯', async () => {
     const trigger = setup();
     await choose(trigger, 'Xóa');
-    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Xóa Bút?' })).getByRole('button', { name: 'Hủy' }));
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Xóa Bút?' })).getByRole('button', { name: 'Quay lại' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     await waitFor(() => expect(trigger).toHaveFocus());
 

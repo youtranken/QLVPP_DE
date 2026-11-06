@@ -47,7 +47,7 @@ function ConfigForm({ config }: { config: AdminConfig }) {
       title: t('config.access.confirmTitle'),
       message: t('config.access.confirmBody', { group: access.draft.admin_group.trim() }),
       confirmLabel: t('config.access.confirmOk'),
-      cancelLabel: t('config.cancel'),
+      cancelLabel: t('common.cancel'),
       danger: true,
     });
   const access = useConfigBlock(accessSpec, config, confirmGroup);

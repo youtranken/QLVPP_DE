@@ -12,6 +12,8 @@ export default defineConfig({
   workers: 1,
   forbidOnly: !!process.env.CI,
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
+  // R-D9.2: ảnh chuẩn chỉ trên fixture tự gieo, dung sai 1%
+  expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.01 } },
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: 'retain-on-failure',

@@ -73,7 +73,7 @@ const request = {
       missingUnit: 'đơn vị tính',
       submitAdd: 'Thêm vào phiếu',
       submitEdit: 'Lưu thay đổi',
-      cancel: 'Hủy',
+      cancel: 'Quay lại',
     },
     copy: {
       askTitle: 'Thay giỏ hiện tại?',
@@ -163,7 +163,7 @@ const request = {
       title: 'Lưu phiếu tháng {{month}}?',
       hint: 'Bạn vẫn sửa được đến hết ngày {{date}}.',
       emptyHint: 'Phiếu không còn món nào — lưu sẽ bỏ phiếu tháng này.',
-      back: 'Quay lại sửa',
+      back: 'Quay lại',
       submit: 'Lưu phiếu',
       saving: 'Đang lưu…',
     },

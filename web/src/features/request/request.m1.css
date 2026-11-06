@@ -95,7 +95,7 @@
 @keyframes rq-sheet-in { from { transform: translateY(24px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { [data-shell='member'] .rq-sheet { animation: none; } }
 
-/* Hộp Lưu phiếu v2: bo 24, "Quay lại sửa" trắng, "Lưu phiếu" tối */
+/* Hộp Lưu phiếu v2: bo 24, "Quay lại" trắng, "Lưu phiếu" tối */
 [data-shell='member'] .rq-dialog { border-radius: 24px; background: var(--c-surface); }
 [data-shell='member'] .rq-dialog .sheet-title { font: var(--t-h2); color: var(--c-ink); }
 [data-shell='member'] .rq-dialog .sheet-footer { gap: var(--s-3); }

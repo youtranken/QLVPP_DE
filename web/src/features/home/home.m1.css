@@ -26,8 +26,7 @@
 [data-shell='admin'] .hm-step__link:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 [data-shell='admin'] .hm-bar { height: 6px; border-radius: var(--r-pill); background: var(--c-on-dark-fill); overflow: hidden; }
 [data-shell='admin'] .hm-bar span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--c-bar-fill); }
-[data-shell='admin'] .hm-cta { justify-self: start; border-color: transparent; background: var(--c-bar-fill); color: var(--c-dark); font-weight: 600; }
-[data-shell='admin'] .hm-cta:hover { background: var(--c-acc-soft); color: var(--c-dark); }
+[data-shell='admin'] .hm-cta { --btn-bg: var(--c-bar-fill); --btn-bg-hover: var(--c-cta-hover); --btn-bg-active: var(--c-cta-press); --btn-fg: var(--c-dark); --btn-sh: none; --btn-sh-hover: none; justify-self: start; border-color: transparent; font-weight: 600; }
 [data-shell='admin'] .hm-cta:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { [data-shell='admin'] .hm-bar span { transition: width .5s ease; } }
 
@@ -44,8 +43,7 @@
 [data-shell='admin'] .hm-card__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
 [data-shell='admin'] .hm-card__row a { font: var(--t-label); font-weight: 600; }
 [data-shell='admin'] .hm-card__actions { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-top: auto; }
-[data-shell='admin'] .hm-btn-dark { border-color: transparent; background: var(--c-dark); color: var(--c-on-dark); }
-[data-shell='admin'] .hm-btn-dark:hover:not(:disabled) { background: var(--c-ink-2); color: var(--c-on-dark); }
+[data-shell='admin'] .hm-btn-dark { --btn-bg: var(--c-dark); --btn-bg-hover: var(--c-ink-2); --btn-bg-active: var(--c-dark-press); --btn-fg: var(--c-on-dark); --btn-sh: none; --btn-sh-hover: none; border-color: transparent; }
 [data-shell='admin'] .hm-chips { display: flex; flex-wrap: wrap; gap: var(--s-2); margin: 0; padding: 0; list-style: none; }
 [data-shell='admin'] .hm-chip { display: inline-flex; align-items: center; gap: var(--s-2); padding: 4px 12px 4px 4px; border-radius: var(--r-pill); background: var(--c-surface-2); font: var(--t-sm); font-weight: 600; }
 [data-shell='admin'] .hm-chip--more { padding: var(--s-2) var(--s-3); color: var(--c-muted); }

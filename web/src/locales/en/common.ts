@@ -22,7 +22,7 @@ const common: Messages<typeof vi> = {
     skipToContent: 'Skip to content',
     confirmTitle: 'Confirm',
     confirmOk: 'OK',
-    cancel: 'Cancel',
+    cancel: 'Back',
     close: 'Close',
     discardTitle: 'Discard changes?',
     discardBody: 'What you just entered will be lost.',

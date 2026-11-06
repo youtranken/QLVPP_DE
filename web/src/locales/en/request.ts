@@ -76,7 +76,7 @@ const request: Messages<typeof vi> = {
       missingUnit: 'unit',
       submitAdd: 'Add to order',
       submitEdit: 'Save changes',
-      cancel: 'Cancel',
+      cancel: 'Back',
     },
     copy: {
       askTitle: 'Replace your current cart?',
@@ -166,7 +166,7 @@ const request: Messages<typeof vi> = {
       title: 'Save month {{month}} order?',
       hint: 'You can still edit until the end of {{date}}.',
       emptyHint: 'The order has no items left — saving removes this month’s order.',
-      back: 'Keep editing',
+      back: 'Back',
       submit: 'Save order',
       saving: 'Saving…',
     },

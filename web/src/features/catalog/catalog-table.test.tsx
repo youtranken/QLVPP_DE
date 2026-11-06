@@ -77,7 +77,7 @@ describe('Danh mục — công tắc Dùng', () => {
     await userEvent.click(sw);
     let dialog = await screen.findByRole('dialog', { name: 'Ngừng Bút bi xanh?' });
     expect(dialog).toHaveTextContent('Nhân viên không thấy món này từ bây giờ; phiếu đã lưu giữ nguyên.');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Hủy' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Quay lại' }));
     expect(patchCalls(f)).toEqual([]);
 
     await userEvent.click(sw);

@@ -132,7 +132,7 @@ describe('Trang Đơn vị tính', () => {
   it('menu "Ngừng" hỏi xác nhận rồi PATCH {active:false}; "Dùng lại" Cũ xác nhận rồi {active:true}; Hủy thì không gọi API', async () => {
     const f = await open();
     await pick('cái', 'Ngừng');
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Hủy' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Quay lại' }));
     expect(mutations(f)).toHaveLength(0);
     await pick('cái', 'Ngừng');
     expect(screen.getByRole('dialog', { name: 'Ngừng đơn vị “cái”?' })).toBeInTheDocument();

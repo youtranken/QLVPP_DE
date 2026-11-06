@@ -161,7 +161,7 @@ describe('Cấu hình · khối Quyền Hành chính', () => {
     await retype(group(), 'nhom-moi');
     await saveAccess();
     let dialog = await screen.findByRole('dialog', { name: 'Đổi nhóm Hành chính?' });
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Hủy' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Quay lại' }));
     expect(putBodies(fetchMock)).toHaveLength(0);
     await saveAccess();
     dialog = await screen.findByRole('dialog', { name: 'Đổi nhóm Hành chính?' });

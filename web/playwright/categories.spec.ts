@@ -91,7 +91,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect(dialog.getByText('Đã có nhóm tên này.')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'categories-add-dup', false);
-      await dialog.getByRole('button', { name: 'Hủy' }).click();
+      await dialog.getByRole('button', { name: 'Quay lại' }).click();
       await page.getByRole('dialog', { name: 'Bỏ thay đổi?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
       await expect(dialog).toBeHidden();
       if (isMobile(info)) await expectNoContrastViolations(page);

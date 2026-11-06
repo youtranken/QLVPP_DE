@@ -19,7 +19,7 @@ const common = {
     skipToContent: 'Tới nội dung',
     confirmTitle: 'Xác nhận',
     confirmOk: 'Đồng ý',
-    cancel: 'Hủy',
+    cancel: 'Quay lại',
     close: 'Đóng',
     discardTitle: 'Bỏ thay đổi?',
     discardBody: 'Những gì bạn vừa nhập sẽ mất.',
