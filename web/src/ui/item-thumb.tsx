@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import type { Tone } from '@/lib/group-tone';
 import { Icon } from './icon';
 
@@ -10,8 +10,23 @@ const FLUID = {
   tile: { aspectRatio: undefined, height: 120, radius: 14, img: { width: 'auto', height: '88%' } },
 };
 
+// Đ48: ảnh có thể dính 429/lỗi mạng thoáng qua → thử lại tối đa 2 lần (500 ms, 1500 ms), tham số ?r=n chỉ thêm khi thử lại
+const RETRY_DELAYS_MS = [500, 1500];
+
 export function ItemThumb({ fileId, alt, tone, size }: { fileId: string | null; alt: string; tone: Tone; size: ThumbSize }) {
   const [failedId, setFailedId] = useState<string | null>(null);
+  const [retry, setRetry] = useState({ id: fileId, n: 0, waiting: false });
+  const attempt = retry.id === fileId ? retry.n : 0;
+  const waiting = retry.id === fileId && retry.waiting;
+  useEffect(() => {
+    if (!waiting) return;
+    const timer = setTimeout(() => setRetry({ id: fileId, n: attempt + 1, waiting: false }), RETRY_DELAYS_MS[attempt]);
+    return () => clearTimeout(timer);
+  }, [waiting, attempt, fileId]);
+  const onError = () => {
+    if (attempt < RETRY_DELAYS_MS.length) setRetry({ id: fileId, n: attempt, waiting: true });
+    else setFailedId(fileId);
+  };
   const showImg = fileId != null && failedId !== fileId;
   const px = typeof size === 'number' ? size : undefined;
   const shape = FLUID[size as 'card' | 'tile'];
@@ -30,10 +45,10 @@ export function ItemThumb({ fileId, alt, tone, size }: { fileId: string | null; 
     return (
       <span style={box}>
         <img
-          src={`/api/files/${fileId}`}
+          src={attempt > 0 ? `/api/files/${fileId}?r=${attempt}` : `/api/files/${fileId}`}
           alt={alt}
           loading="lazy"
-          onError={() => setFailedId(fileId)}
+          onError={onError}
           style={{ ...(shape?.img ?? { width: '78%', height: '78%' }), maxWidth: '88%', objectFit: 'contain', filter: 'drop-shadow(0 8px 12px rgb(var(--sh-ink) / .18))' }}
         />
       </span>

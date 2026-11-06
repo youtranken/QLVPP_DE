@@ -179,7 +179,9 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
       expect(res.headers['content-type']).toBe('image/png');
       expect(res.headers['content-disposition']).toBe('inline');
       expect(res.headers['x-content-type-options']).toBe('nosniff');
-      expect(res.headers['cache-control']).toBe('private, max-age=86400');
+      expect(res.headers['cache-control']).toBe(
+        'private, max-age=86400, immutable',
+      );
       expect(Buffer.compare(res.body as Buffer, PNG_1X1)).toBe(0);
     });
 

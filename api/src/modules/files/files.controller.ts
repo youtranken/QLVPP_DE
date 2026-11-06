@@ -17,7 +17,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Throttle } from '@nestjs/throttler';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
@@ -79,8 +79,10 @@ export class FilesController {
     return this.files.upload(file, purpose, identityOf(req).sub);
   }
 
+  // Đ48: ảnh không tính vào giới hạn tốc độ (một trang nhiều ảnh làm 429 cả API); xác thực/phân quyền giữ nguyên.
   // Không tồn tại và không được xem cùng trả 404 để không lộ id hợp lệ
   @Get(':id')
+  @SkipThrottle({ default: true, ip: true })
   async read(
     @Param('id') id: string,
     @Req() req: AuthedRequest,
@@ -98,7 +100,8 @@ export class FilesController {
       'Content-Type': file.mime,
       'Content-Disposition': 'inline',
       'X-Content-Type-Options': 'nosniff',
-      'Cache-Control': 'private, max-age=86400',
+      // id là randomUUID, ghi cờ 'wx' (không bao giờ ghi đè nội dung) → bất biến
+      'Cache-Control': 'private, max-age=86400, immutable',
     });
     return new StreamableFile(createReadStream(path));
   }
