@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
+import { useConfirm } from '@/ui/confirm-context';
 import { Switch } from '@/ui/switch';
 import type { ToastSpec } from '@/ui/toast-context';
 import { patchItem, type AdminItem } from './catalog.api';
 import { rowErrorText } from './catalog-errors';
+import { usePendingArrivalNote } from './pending-arrival-note';
 
 interface Props {
   item: AdminItem;
@@ -15,13 +17,22 @@ interface Props {
   notify: (toast: ToastSpec) => void;
 }
 
-// Ghi ngay, cập nhật lạc quan; một request mỗi món (bấm lần hai khi đang gửi bị bỏ qua)
+// Ghi ngay, cập nhật lạc quan; một request mỗi món (bấm lần hai khi đang gửi bị bỏ qua).
+// Tắt món còn hàng ADM đang về thì hỏi trước (kèm khối cam); không còn gì đang về thì tắt luôn.
 export function GroupItemSwitch({ item, name, groupActive, hintId, refresh, notify }: Props) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
+  const confirm = useConfirm();
+  const pendingNote = usePendingArrivalNote();
   const busy = useRef(false);
   const [optimistic, setOptimistic] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const askStop = async () => {
+    const warning = await pendingNote([{ id: item.id, name }], false);
+    if (!warning) return true;
+    return confirm({ title: t('catalog.list.deactivateTitle', { name }), message: t('catalog.list.deactivateBody'), confirmLabel: t('catalog.bulk.deactivate'), danger: true, warning });
+  };
 
   const send = async (active: boolean) => {
     if (busy.current) return;
@@ -29,6 +40,7 @@ export function GroupItemSwitch({ item, name, groupActive, hintId, refresh, noti
     setOptimistic(active);
     setError(null);
     try {
+      if (!active && !(await askStop())) return;
       await patchItem(item.id, { active }, csrfToken);
       await refresh();
       if (!active) {

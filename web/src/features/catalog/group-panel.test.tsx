@@ -109,6 +109,29 @@ describe('Panel nhóm (?group=)', () => {
     await waitFor(() => expect(mutations(f).at(-1)).toEqual(['/api/admin/items/i-b', 'PATCH', { active: true }]));
   });
 
+  it('tắt món đang chờ ADM giao 3 → hỏi "Ngừng Kẹp B?" kèm khối cam; Quay lại → không PATCH, vẫn "Đang dùng"; Ngừng → PATCH', async () => {
+    const f = await openAt('/admin/categories?group=c-1', { pending: { 'i-b': { remaining: 3, unit: 'cai', snapshot_at: '2026-11-03T02:15:00.000Z' } } });
+    await screen.findByRole('dialog', { name: 'Nhóm Kẹp & dán' });
+    await userEvent.click(itemSwitch('Kẹp B'));
+    const ask = await screen.findByRole('dialog', { name: 'Ngừng Kẹp B?' });
+    expect(within(ask).getByRole('note')).toHaveTextContent(/Món này đang chờ ADM giao 3 cái \(bản in .+\) — ngừng thì vẫn nhập được hàng đã đặt\./);
+    await userEvent.click(within(ask).getByRole('button', { name: 'Quay lại' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Ngừng Kẹp B?' })).toBeNull());
+    expect(mutations(f)).toEqual([]);
+    expect(itemSwitch('Kẹp B')).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(itemSwitch('Kẹp B'));
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Ngừng Kẹp B?' })).getByRole('button', { name: 'Ngừng' }));
+    await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/items/i-b', 'PATCH', { active: false }]]));
+  });
+
+  it('tắt món chờ 0 hoặc lỗi tải pending-arrival → không hỏi, PATCH ngay', async () => {
+    const f = await openAt('/admin/categories?group=c-1', { pending: { 'i-c': 'error' } });
+    await screen.findByRole('dialog', { name: 'Nhóm Kẹp & dán' });
+    await userEvent.click(itemSwitch('Kẹp C'));
+    await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/items/i-c', 'PATCH', { active: false }]]));
+    expect(screen.queryByRole('dialog', { name: 'Ngừng Kẹp C?' })).toBeNull();
+  });
+
   it('PATCH lỗi 500 → công tắc trả lại "Đang dùng" và báo lỗi tại dòng', async () => {
     await openAt('/admin/categories?group=c-1', { mutate: () => jsonResponse(500, { code: 'X' }) });
     await screen.findByRole('dialog', { name: 'Nhóm Kẹp & dán' });

@@ -108,7 +108,6 @@ describe('Danh mục — hàng loạt', () => {
     await userEvent.click(screen.getByRole('button', { name: /^Chưa có ảnh/ }));
     expect(bulkBar().getByText('1 món đã chọn')).toBeInTheDocument();
     await userEvent.click(bulkBar().getByRole('button', { name: 'Ngừng' }));
-    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Ngừng 1 món?' })).getByRole('button', { name: 'Ngừng' }));
     expect(await screen.findByText('Đã ngừng 1 món')).toBeInTheDocument();
     expect(patchCalls(f)).toEqual([{ id: 'i-pencil', body: { active: false } }]);
   });
@@ -127,14 +126,26 @@ describe('Danh mục — hàng loạt', () => {
     expect(patchCalls(f).map((c) => c.body)).toEqual([{ category_id: 'c-paper' }, { category_id: 'c-paper' }]);
   });
 
-  it('"Ngừng" hỏi xác nhận "Ngừng 2 món?" → PATCH {active:false} từng món, toast', async () => {
+  it('"Ngừng" khi không món nào chờ ADM giao → không hỏi, PATCH {active:false} từng món, toast', async () => {
     const f = await openCatalog({ items: ITEMS });
     await pickPens();
     await userEvent.click(bulkBar().getByRole('button', { name: 'Ngừng' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Ngừng 2 món?' });
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Ngừng' }));
     expect(await screen.findByText('Đã ngừng 2 món')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Ngừng 2 món?' })).toBeNull();
     expect(patchCalls(f).map((c) => c.body)).toEqual([{ active: false }, { active: false }]);
     expect(screen.queryByText('Bút bi xanh')).toBeNull();
+  });
+
+  it('"Ngừng" có Bút bi xanh chờ ADM giao 3 → hỏi "Ngừng 2 món?" kèm khối cam ghi tên món; Quay lại → không PATCH', async () => {
+    const f = await openCatalog({ items: ITEMS, pending: { 'i-pen': { remaining: 3, unit: 'cay', snapshot_at: '2026-11-03T02:15:00.000Z' } } });
+    await pickPens();
+    await userEvent.click(bulkBar().getByRole('button', { name: 'Ngừng' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Ngừng 2 món?' });
+    expect(within(dialog).getByRole('note')).toHaveTextContent(/Bút bi xanh: Món này đang chờ ADM giao 3/);
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Quay lại' }));
+    expect(patchCalls(f)).toEqual([]);
+    await userEvent.click(bulkBar().getByRole('button', { name: 'Ngừng' }));
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Ngừng 2 món?' })).getByRole('button', { name: 'Ngừng' }));
+    expect(await screen.findByText('Đã ngừng 2 món')).toBeInTheDocument();
   });
 });

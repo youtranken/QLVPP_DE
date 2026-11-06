@@ -4,6 +4,9 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { useReviewCache } from '@/features/review/review.api';
 import { useRefreshStock } from '@/features/stock/stock.api';
+import { useRefreshArrivals } from '@/features/arrivals/use-arrivals-plan';
+import { useRefreshAfterAdjust } from '@/features/summary/use-adjust';
+import { useRefreshAfterDelivery } from '../delivery.api';
 import { useRefreshAfterFlow } from './use-refresh-after-flow';
 
 function setup() {
@@ -32,5 +35,20 @@ describe('làm mới sau thao tác kho/giao: báo cáo đổi theo (REPORTS_KEY)
     const { wrapper, keys } = setup();
     await renderHook(() => useReviewCache(), { wrapper }).result.current.reviewed();
     expect(keys()).toContain('reports');
+  });
+});
+
+describe('Tủ / Kho và badge Tủ làm mới sau mọi luồng đổi tồn hoặc phần đang giữ', () => {
+  it.each<[string, () => () => Promise<unknown>]>([
+    ['Hàng về lưu / ADM hết hàng / về bù', () => useRefreshArrivals('2026-10')],
+    ['Hủy nợ ở Còn nợ', () => {
+      const refresh = useRefreshAfterDelivery();
+      return () => refresh('r-1');
+    }],
+    ['Tổng hợp điều chỉnh phiếu', () => useRefreshAfterAdjust()],
+  ])('%s → làm mới khóa stock (danh sách Tủ và đếm sidebar)', async (_label, hook) => {
+    const { wrapper, keys } = setup();
+    await renderHook(hook, { wrapper }).result.current();
+    expect(keys()).toContain('stock');
   });
 });

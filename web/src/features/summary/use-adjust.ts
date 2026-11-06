@@ -8,6 +8,7 @@ import { useToast } from '@/ui/toast-context';
 import type { LineView } from '@/features/request/request.api';
 import { REVIEW_KEY, type ReviewResult } from '@/features/review/review.api';
 import { useSendState } from '@/features/send-adm/use-send-state';
+import { useRefreshStock } from '@/features/stock/stock.api';
 import { adjustFailure, isStaleUpdate, type AdjustErrors } from './summary-errors';
 import { SUMMARY_KEY, adminRequestKey, saveAdjust, useAdminRequest, type AdjustBody, type AdjustLineBody, type AdjustReason, type AdminRequestView } from './summary.api';
 
@@ -97,19 +98,24 @@ function bodyOf(current: AdminRequestView, d: Draft, preset: AdjustReason | unde
   return { body, keys: current.lines.map((l) => l.id) };
 }
 
+// Giảm phiếu đổi phần đang giữ ở Tủ (và đếm Tủ trên sidebar); bỏ/sửa dòng ngoài DM đổi hàng chờ của Món ngoài danh mục
+export function useRefreshAfterAdjust() {
+  const qc = useQueryClient();
+  const refreshStock = useRefreshStock();
+  return () => Promise.all([qc.invalidateQueries({ queryKey: SUMMARY_KEY }), qc.invalidateQueries({ queryKey: REVIEW_KEY }), refreshStock()]);
+}
+
 function useSendAdjust(requestId: string, patch: Patch, onDone: () => void) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
-  const qc = useQueryClient();
+  const refresh = useRefreshAfterAdjust();
   const toast = useToast();
   return async (current: AdminRequestView, d: Draft, preset: AdjustReason | undefined) => {
     const { body, keys } = bodyOf(current, d, preset);
     patch((x) => ({ ...x, errors: {} }));
     try {
       const res = await saveAdjust(requestId, body, csrfToken);
-      void qc.invalidateQueries({ queryKey: SUMMARY_KEY });
-      // Bỏ/sửa dòng ngoài DM đang chờ đổi hàng chờ của trang Món ngoài danh mục
-      void qc.invalidateQueries({ queryKey: REVIEW_KEY });
+      void refresh();
       const name = current.full_name ?? current.user_sub;
       toast.show({ text: t(res.request ? 'summary.adjust.saved' : 'summary.adjust.dropped', { name }), tone: 'ok' });
       onDone();

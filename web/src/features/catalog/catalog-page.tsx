@@ -63,7 +63,8 @@ export function CatalogPage() {
     setDialog(null);
   };
   const deactivateSelected = async () => {
-    if (await actions.confirmDeactivateMany(bulk.count)) await bulk.run(orderedIds, { active: false }, (n) => t('catalog.bulk.deactivated', { n }));
+    const picked = d.rows.filter((r) => bulk.selection.selected.has(r.id)).map((r) => ({ id: r.id, name: r.name }));
+    if (await actions.confirmDeactivateMany(picked)) await bulk.run(orderedIds, { active: false }, (n) => t('catalog.bulk.deactivated', { n }));
   };
 
   const emptyActions = (

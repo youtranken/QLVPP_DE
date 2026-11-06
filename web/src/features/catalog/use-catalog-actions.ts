@@ -50,13 +50,18 @@ export function useCatalogActions(refresh: () => Promise<unknown>, setRowError: 
     [confirm, csrfToken, pendingNote, refresh, setRowError, t, toast],
   );
 
-  const confirmDeactivateMany = (n: number) =>
-    confirm({
-      title: t('catalog.bulk.deactivateTitle', { n }),
+  // Ngừng hàng loạt chỉ hỏi khi có món còn hàng ADM đang về (khối cam ghi tên từng món)
+  const confirmDeactivateMany = async (items: { id: string; name: string }[]) => {
+    const warning = await pendingNote(items, true);
+    if (!warning) return true;
+    return confirm({
+      title: t('catalog.bulk.deactivateTitle', { n: items.length }),
       message: t('catalog.bulk.deactivateBody'),
       confirmLabel: t('catalog.bulk.deactivate'),
       danger: true,
+      warning,
     });
+  };
 
   return { saveMax, toggleActive, confirmDeactivateMany };
 }
