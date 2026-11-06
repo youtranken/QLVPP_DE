@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { expect, test, type APIRequestContext, type Locator, type Page } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Locator, type Page, type TestInfo } from '@playwright/test';
 import { asRole, devHeaders, deleteTestFiles, expectNoContrastViolations, isMobile, psql, removeTestItem, shot } from './helpers';
 
 // Ảnh đã tải xong thật (không phải icon ảnh vỡ) và GET /api/files/:id trả 200
@@ -103,16 +103,27 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
     }
   });
 
-  test('E1-S5 trang Danh mục hiện nhãn "Thiếu ảnh" cho món seed', async ({ page }, info) => {
-    await page.goto('/admin/catalog?view=table');
-    const search = page.getByRole('searchbox', { name: /^Tìm trong \d+ món$/ });
-    await search.fill('Giấy A4');
-    const row = page.getByRole('row').filter({ hasText: 'Giấy A4' });
-    await expect(row.getByText('Thiếu ảnh', { exact: true })).toBeVisible();
-    await expect(row.getByText('Chỉ Hành chính')).toBeVisible();
-    await search.fill('');
-    await expect(page.getByText('Bút bi xanh')).toBeHidden();
-    await shot(page, info, 'catalog-seed', false);
+  test('E1-S5 trang Danh mục hiện nhãn "Thiếu ảnh" cho món seed', async ({ page, request }, info) => {
+    // Danh mục dev đã đặt lại (50 món thật có ảnh): test tự tạo món "PW … Thiếu ảnh" không ảnh, chỉ Hành chính
+    const name = `PW Giấy A4 ${Date.now()}-${info.project.name}`;
+    const id = await createItemViaApi(request, name);
+    const imageId = psql(`SELECT image_file_id FROM items WHERE id = '${id}'`);
+    expect((await request.patch(`/api/admin/items/${id}`, { headers: devHeaders('admin'), data: { admin_only: true } })).ok()).toBe(true);
+    psql(`UPDATE items SET image_file_id = NULL WHERE id = '${id}'`);
+    deleteTestFiles([imageId]);
+    try {
+      await page.goto('/admin/catalog?view=table');
+      const search = page.getByRole('searchbox', { name: /^Tìm trong \d+ món$/ });
+      await search.fill(name);
+      const row = page.getByRole('row').filter({ hasText: name });
+      await expect(row.getByText('Thiếu ảnh', { exact: true })).toBeVisible();
+      await expect(row.getByText('Chỉ Hành chính')).toBeVisible();
+      await search.fill('');
+      await expect(page.getByText('Bút bi xanh')).toBeHidden();
+      await shot(page, info, 'catalog-seed', false);
+    } finally {
+      await removeTestItem(request, id);
+    }
   });
 });
 
@@ -231,13 +242,24 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
     }
   });
 
-  test('Lưới: tab Đã ngừng đủ tương phản ở 390 px', async ({ page }, info) => {
+  test('Lưới: tab Đã ngừng đủ tương phản ở 390 px', async ({ page, request }, info) => {
+    // Danh mục dev đã đặt lại (không còn món ngừng): test tự tạo một món "PW …" rồi ngừng nó
+    const id = await createItemViaApi(request, `PW Ngừng ${Date.now()}-${info.project.name}`);
+    expect((await request.patch(`/api/admin/items/${id}`, { headers: devHeaders('admin'), data: { active: false } })).ok()).toBe(true);
+    try {
+      await inactiveTabAxe(page, info);
+    } finally {
+      await removeTestItem(request, id);
+    }
+  });
+
+  async function inactiveTabAxe(page: Page, info: TestInfo) {
     await page.goto('/admin/catalog?tab=inactive');
     await expect(page.getByRole('button', { name: /^Đã ngừng/ })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('article').first()).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'catalog-grid-inactive', false);
-  });
+  }
 
   test('E9-S5 Danh mục: lỗi tải → "Không tải được dữ liệu — thử lại." và "Thử lại"', async ({ page }) => {
     await page.route('**/api/admin/items', (route) => route.fulfill({ status: 500, body: '{}' }));

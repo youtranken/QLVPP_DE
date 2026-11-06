@@ -22,6 +22,7 @@ import { DeliveryPeoplePage } from '@/features/delivery/people/delivery-people-p
 import { BacklogPage } from '@/features/delivery/backlog-page';
 import { ReportsPage } from '@/features/reports/reports-page';
 import { PrintPage } from '@/features/reports/print-page';
+import { MemberPage } from '@/shell/member-page';
 import { MemberShell } from '@/shell/member-shell';
 import { AdminShell } from '@/shell/admin-shell';
 import { RequireMember, RequireRole } from '@/shell/require-role';
@@ -47,6 +48,7 @@ export function AppRoutes() {
         <Route path="history" element={<HistoryPage />} />
         <Route path="history/:ym" element={<HistoryDetailPage />} />
         <Route path="me" element={<ProfilePage />} />
+        <Route path="*" element={<MemberPage><NotFound /></MemberPage>} />
       </Route>
       <Route
         path="/admin/reports/snapshots/:id/print"

@@ -1,6 +1,6 @@
 # VPP — Plan 3c: Trang Nhân viên theo "Mẫu 1 — Nhân viên đặt hàng" (E10-S0…S6)
 
-> ⏸ **TẠM HOÃN (2026-11-05)** — xem `docs/quyet-dinh-2026-11-05-luong-hanh-chinh.md`. Chưa làm cho tới khi luồng Hành chính chốt và có người dùng thật thử.
+> **THAY THẾ bởi `docs/plans/2026-11-05-v2c-nhan-vien.md` (v2-C).** Giữ lại làm nguồn mục "Giữ hành vi hiện có". ⏸ **TẠM HOÃN (2026-11-05)** — xem `docs/quyet-dinh-2026-11-05-luong-hanh-chinh.md`. Chưa làm cho tới khi luồng Hành chính chốt và có người dùng thật thử.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

@@ -12,3 +12,8 @@
   [data-shell='member'] .m-page--plain { padding: 0 var(--s-3) calc(88px + env(safe-area-inset-bottom)); }
   [data-shell='member'] .m-panel--stack { padding: var(--s-3); border-radius: var(--r-lg); }
 }
+/* 404 trong khung nhân viên */
+[data-shell='member'] .m-panel .state-page { color: var(--c-ink); }
+[data-shell='member'] .m-panel .state-page h1 { margin: 0; font: var(--t-h2); color: var(--c-ink); }
+[data-shell='member'] .m-panel .state-page p { margin: 0; font: var(--t-body); color: var(--c-ink-2); }
+[data-shell='member'] .m-panel .state-page .btn--primary { min-height: 44px; padding: 0 var(--s-5); border-color: var(--c-dark); border-radius: var(--r-pill); background: var(--c-dark); color: var(--c-on-dark); font: var(--t-label); }

@@ -377,16 +377,18 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${longName}`, exact: true }).click();
       await expect(cart.getByText('3 món, 3 đơn vị')).toBeVisible();
       await expect(cart.getByText('Chưa lưu', { exact: true })).toBeVisible();
-      // R-C11: 3 dòng gọn một hàng → nút Lưu nằm trọn trong màn 1280×800 không cần cuộn, không dòng nào bị cắt
+      // R-C11 + C8: 3 dòng (tên đủ rộng, stepper dưới tên) → nút Lưu nằm trọn trong màn 1280×800 không cần cuộn, không dòng nào bị cắt
       await expect(cart.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' })).toBeInViewport({ ratio: 1 });
       const rows = cart.getByRole('listitem');
       await expect(rows).toHaveCount(3);
       expect(await cart.getByRole('list').evaluate((el) => el.scrollHeight <= el.clientHeight)).toBe(true);
-      // dòng món thường gọn ~56px (dòng ngoài danh mục có thêm nhãn nên cao hơn)
+      // C8: dòng món thường ≤ 110px (tên + số lượng + stepper 34px; dòng ngoài danh mục có thêm nhãn nên cao hơn)
       const plain = rows.filter({ hasNot: page.getByText('Ngoài danh mục') });
       await expect(plain).toHaveCount(2);
       const shortRow = plain.filter({ hasText: shortName });
-      expect((await shortRow.boundingBox())!.height).toBeLessThan(72);
+      expect((await shortRow.boundingBox())!.height).toBeLessThan(110);
+      // C8: cột tên đủ rộng để đọc (trước đây ~80px cắt tên thật)
+      expect((await shortRow.locator('.rq-line-name').boundingBox())!.width).toBeGreaterThan(150);
       // tên dài tối đa 2 dòng (cắt bằng line-clamp, tên đầy đủ nằm ở title)
       const longLabel = plain.filter({ hasText: longName }).locator('.rq-line-name');
       await expect(longLabel).toHaveAttribute('title', longName);

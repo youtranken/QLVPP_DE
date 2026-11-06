@@ -1,4 +1,4 @@
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
 import {
   copyUnregisteredList,
@@ -26,20 +26,43 @@ async function snap(page: Page, info: TestInfo, name: string) {
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png` });
 }
 
+// Danh mục dev đã đặt lại (50 món thật): test tự tạo món "PW Giấy A4 …" cho bước Hành chính thêm vào phiếu
+async function createAdminItem(request: APIRequestContext, name: string): Promise<string> {
+  const headers = devHeaders('admin');
+  const file = await request.post('/api/files', {
+    headers,
+    multipart: { purpose: 'item_image', file: { name: 'item.png', mimeType: 'image/png', buffer: readFileSync(FIXTURE) } },
+  });
+  expect(file.status()).toBe(201);
+  const item = await request.post('/api/admin/items', { headers, data: { name, unit: 'cai', max_qty: 99, image_file_id: (await file.json()).id } });
+  expect(item.status()).toBe(201);
+  return (await item.json()).id as string;
+}
+
+// ≥ 901 phiếu là aside; ≤ 900 phiếu nằm trong sheet mở từ thanh nổi
+async function openCart(page: Page, info: TestInfo) {
+  if (!isMobile(info)) return page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
+  await page.getByRole('button', { name: /^Xem phiếu \(/ }).click();
+  return page.getByRole('dialog', { name: /^Phiếu tháng \d+$/ });
+}
+
 const memberHeaders = (sub: string) => ({ 'x-dev-user-sub': sub, 'x-dev-role': 'member' });
 
 async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom: string) {
   await page.goto('/');
   const grid = page.getByRole('region', { name: 'Danh mục món' });
-  for (const item of items) await grid.getByRole('button', { name: `Thêm ${item.name}`, exact: true }).click();
+  for (const item of items) {
+    await grid.getByRole('searchbox', { name: 'Tìm món' }).fill(item.name);
+    await grid.getByRole('button', { name: `Thêm vào phiếu: ${item.name}`, exact: true }).click();
+  }
   await grid.getByRole('button', { name: '+ Thêm món khác' }).click();
   const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
   await dialog.getByLabel('Tên món').fill(custom);
   await dialog.getByLabel('Đơn vị tính').selectOption('cai');
   await dialog.getByRole('button', { name: 'Thêm vào phiếu' }).click();
   await expect(dialog).toBeHidden();
-  await page.getByRole('button', { name: '3 thay đổi chưa lưu · Lưu' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
+  await page.getByRole('button', { name: isMobile(info) ? 'Lưu phiếu' : '3 thay đổi chưa lưu · Lưu' }).click();
+  await page.getByRole('dialog', { name: /^Lưu phiếu tháng/ }).getByRole('button', { name: 'Lưu phiếu' }).click();
   await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
   await snap(page, info, 'member-a-saved');
 }
@@ -51,13 +74,13 @@ async function openDrawer(admin: Page, person: Person) {
   return drawer;
 }
 
-async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person, custom: string) {
+async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person, custom: string, giay: string) {
   await searchSummaryPeople(admin, tag);
   let drawer = await openDrawer(admin, a);
   await drawer.getByRole('button', { name: '+ Thêm món vào phiếu' }).click();
-  await drawer.getByRole('searchbox', { name: 'Tìm món trong danh mục' }).fill('Giấy A4');
+  await drawer.getByRole('searchbox', { name: 'Tìm món trong danh mục' }).fill(giay);
   await drawer.getByRole('list', { name: 'Món tìm thấy' }).getByRole('button').first().click();
-  await expect(drawer.getByRole('listitem').filter({ hasText: 'Giấy A4' }).getByRole('spinbutton')).toHaveValue('1');
+  await expect(drawer.getByRole('listitem').filter({ hasText: giay }).getByRole('spinbutton')).toHaveValue('1');
   await snap(admin, info, 'admin-adjust');
   await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();
   await expect(drawer).toBeHidden();
@@ -93,6 +116,8 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
     const dept = `PW Phòng P2 ${tag}`;
     const [a, b, c]: Person[] = ['a', 'b', 'c'].map((k) => ({ sub: `pw-p2-${k}-${tag}`, name: `PW P2 ${k.toUpperCase()} ${tag}` }));
     const custom = `PW kẹp giấy P2 ${tag}`;
+    const giay = `PW Giấy A4 ${tag}`;
+    const giayId = await createAdminItem(request, giay);
     // Dev DB có authorized_groups: người seed phải thuộc nhóm được dùng app mới vào danh sách chưa đăng ký
     psql(`INSERT INTO users (sub, full_name, email, department, status, groups) VALUES
       ${[a, b, c].map((p) => `('${p.sub}', '${p.name}', '${p.sub}@example.test', '${dept}', 'active', '["Test_VPP"]'::jsonb)`).join(',\n')}`);
@@ -123,13 +148,13 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       expect(copied).not.toContain(a.name);
       if (isMobile(info)) await expectNoContrastViolations(admin);
       await snap(admin, info, 'admin-summary');
-      await adminAdjusts(admin, info, tag, a, custom);
+      await adminAdjusts(admin, info, tag, a, custom, giay);
       await admin.context().close();
       admin = undefined;
 
       await page.reload();
-      const cart = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
-      const added = cart.locator('li', { hasText: 'Giấy A4' });
+      const cart = await openCart(page, info);
+      const added = cart.locator('li', { hasText: giay });
       await expect(added.getByText('Hành chính thêm')).toBeVisible();
       await expect(added.getByRole('button')).toHaveCount(0);
       await expect(added.getByRole('spinbutton')).toHaveCount(0);
@@ -137,6 +162,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'member-a-after');
 
+      if (isMobile(info)) await page.keyboard.press('Escape');
       const nav = page.getByRole('navigation', { name: isMobile(info) ? 'Điều hướng chính' : 'Chuyển trang' });
       await nav.getByRole('link', { name: 'Lịch sử' }).click();
       const current = page.getByRole('link', { name: new RegExp(`Tháng ${month}/`) });
@@ -145,6 +171,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
     } finally {
       await admin?.context().close();
       deleteTestUsers(a.sub, b.sub, c.sub);
+      await removeTestItem(request, giayId);
       const all: Item[] = await (await request.get('/api/admin/items', { headers: devHeaders('admin') })).json();
       const converted = all.find((i) => i.name === custom);
       if (converted) await removeTestItem(request, converted.id);

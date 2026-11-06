@@ -30,7 +30,6 @@ import { useCart } from './use-cart';
 import { useCopyPrevious } from './use-copy-previous';
 import { useLeaveGuard } from './use-leave-guard';
 import { lockedNotice, useSaveFlow, type LockedInfo } from './use-save-flow';
-import '@/features/request/request.css';
 import '@/features/request/request.m1.css';
 
 // Kỳ đang sửa vừa khóa (PERIOD_LOCKED): editor của kỳ mới nhận giỏ mang sang (nếu có) và câu báo
@@ -236,7 +235,7 @@ export function RequestPage() {
   const categories = useMemberCategories();
 
   const failed = [period, request, items, categories].find((q) => q.isError);
-  // Trang Đăng ký không có panel sáng của shell (m-main--bare): trạng thái tải/lỗi tự đặt trong khung sáng
+  // Trạng thái tải/lỗi tự đặt trong khung sáng
   if (failed) return <LoadPanel><LoadError onRetry={() => void failed.refetch()} /></LoadPanel>;
   if (!period.data || request.data === undefined || !items.data || !categories.data) return <LoadPanel><Loading /></LoadPanel>;
   const ym = period.data.ym;

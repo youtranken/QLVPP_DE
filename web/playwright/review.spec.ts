@@ -91,7 +91,9 @@ test.describe('E3-S5 món ngoài danh mục', () => {
 
       const mp = await pageAs(browser, info, member);
       await mp.goto('/');
-      const cart = mp.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
+      // ≤ 900: phiếu nằm trong sheet mở từ thanh nổi
+      if (isMobile(info)) await mp.getByRole('button', { name: /^Xem phiếu \(/ }).click();
+      const cart = isMobile(info) ? mp.getByRole('dialog', { name: /^Phiếu tháng \d+$/ }) : mp.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
       const line = cart.locator('li', { hasText: name });
       await expect(line.getByText('Đã thêm vào danh mục')).toBeVisible();
       await expect(line.getByText('Ngoài danh mục')).toHaveCount(0);

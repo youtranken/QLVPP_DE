@@ -1,7 +1,10 @@
 /* Trang Đăng ký v2 (NhanVienPC.dc.html): tiêu đề kỳ, nhắc nợ, panel lưới + phiếu cam */
-[data-shell='member'] .m-main--bare { max-width: none; margin: 0; padding: 0; background: none; border-radius: 0; }
-[data-shell='member'] .m-shell.is-narrow .m-main--bare { margin: 0; padding: 0; }
-
+/* Bộ chỉnh số dùng chung (hộp Thêm món khác); thẻ món và phiếu ghi đè bên dưới */
+[data-shell='member'] .stepper { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; height: 44px; border-radius: var(--r-pill); background: var(--c-surface-2); overflow: hidden; }
+[data-shell='member'] .stepper button { height: 44px; border: 0; background: transparent; color: var(--c-ink); font-size: 18px; font-weight: 800; cursor: pointer; }
+[data-shell='member'] .stepper button:disabled { color: var(--c-faint); cursor: default; }
+[data-shell='member'] .stepper input { width: 100%; min-width: 0; border: 0; background: transparent; text-align: center; font-size: 16px; font-weight: 800; color: var(--c-ink); appearance: textfield; -moz-appearance: textfield; }
+[data-shell='member'] .stepper input::-webkit-outer-spin-button, [data-shell='member'] .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 [data-shell='member'] .rq-v2 { display: flex; flex-direction: column; gap: var(--s-4); }
 [data-shell='member'] .rq-head { display: flex; flex-wrap: wrap; gap: var(--s-4); align-items: center; color: var(--c-on-dark); }
 
@@ -103,11 +106,38 @@
 [data-shell='member'] .rq-dialog .sheet-footer .btn:disabled { opacity: .5; }
 
 @media (min-width: 901px) {
-  /* Máy tính: dòng phiếu gọn một hàng như thiết kế (R-C11): ảnh · tên + số lượng · − ô + · × */
-  [data-shell='member'] .rq-line { grid-template-columns: 42px minmax(0, 1fr) auto auto; gap: var(--s-2); }
+  /* Máy tính (R-C11, sửa ở C8): ảnh · tên đủ rộng (tối đa 2 dòng) · ×, bộ chỉnh gọn 34px nằm dưới tên; Lưu phiếu vẫn trong màn 1280x800 */
+  [data-shell='member'] .rq-line { grid-template-columns: 42px minmax(0, 1fr) 32px; gap: var(--s-1) var(--s-2); }
   [data-shell='member'] .rq-line-main { grid-column: 2; grid-row: 1; }
   [data-shell='member'] .rq-line-link { min-height: 0; }
-  [data-shell='member'] .rq-line-stepper { grid-column: 3; grid-row: 1; justify-self: end; grid-template-columns: 32px 36px 32px; height: 34px; }
+  [data-shell='member'] .rq-line-stepper { grid-column: 2 / 4; grid-row: 2; justify-self: start; grid-template-columns: 32px 36px 32px; height: 34px; }
   [data-shell='member'] .rq-line-stepper button { height: 34px; }
-  [data-shell='member'] .rq-line-x { grid-column: 4; grid-row: 1; width: 32px; height: 32px; }
+  [data-shell='member'] .rq-line-x { grid-column: 3; grid-row: 1; width: 32px; height: 32px; }
+}
+
+/* Thành phần dùng chung còn lại của luồng Đăng ký (trước đây ở request.css): thanh nổi, thông báo, toast, hộp thoại */
+[data-shell='member'] .rq-bar { position: fixed; z-index: 19; display: flex; align-items: center; }
+[data-shell='member'] .rq-copy { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: var(--s-2); padding: 0 var(--s-4); border: 0; border-radius: var(--r-pill); font: var(--t-label); cursor: pointer; }
+[data-shell='member'] .rq-copy svg { width: 18px; height: 18px; flex: none; }
+[data-shell='member'] .rq-notice { position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%); z-index: 60; width: min(560px, calc(100% - 28px)); box-sizing: border-box; display: flex; align-items: flex-start; gap: var(--s-3); padding: var(--s-3) var(--s-3) var(--s-3) var(--s-4); border-radius: 14px; border: 2px solid var(--c-danger); background: var(--c-danger-soft); color: var(--c-danger); font: var(--t-label); box-shadow: 0 10px 30px rgb(8 48 59 / .2); }
+[data-shell='member'] .rq-notice span { flex: 1; }
+[data-shell='member'] .rq-notice button { flex: none; width: 44px; height: 44px; margin: -8px -8px -8px 0; border: 0; border-radius: 50%; background: transparent; color: inherit; font-weight: 800; cursor: pointer; }
+[data-shell='member'] .rq-notice--info { background: var(--c-info-soft); color: var(--c-info); border-color: var(--c-info); }
+[data-shell='member'] .rq-toast-slot { position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%); z-index: 60; pointer-events: none; }
+[data-shell='member'] .rq-toast { display: block; padding: var(--s-3) var(--s-5); border-radius: var(--r-pill); background: var(--c-dark); color: var(--c-on-dark); font: var(--t-label); font-weight: 800; box-shadow: 0 10px 30px rgb(8 48 59 / .25); white-space: nowrap; }
+[data-shell='member'] .rq-confirm-table { width: 100%; border-collapse: collapse; color: var(--c-ink); }
+[data-shell='member'] .rq-confirm-table td { padding: var(--s-2) 0; border-bottom: 1px solid var(--c-line); font-weight: 600; }
+[data-shell='member'] .rq-confirm-table td:last-child { text-align: right; font-weight: 800; white-space: nowrap; padding-left: var(--s-3); }
+[data-shell='member'] .rq-copy-list { margin: var(--s-2) 0 0; padding-left: 20px; display: grid; gap: var(--s-2); color: var(--c-ink); font-weight: 600; }
+[data-shell='member'] .rq-custom-form { display: grid; gap: var(--s-4); }
+[data-shell='member'] .rq-custom-intro { color: var(--c-ink-2); font-weight: 600; }
+[data-shell='member'] .rq-custom-row { display: grid; grid-template-columns: 1fr auto; gap: var(--s-3); align-items: end; }
+[data-shell='member'] .rq-custom-qty { display: grid; gap: var(--s-2); }
+[data-shell='member'] .rq-custom-form textarea { min-height: 72px; resize: vertical; }
+[data-shell='member'] .rq-custom-footer { flex-wrap: wrap; }
+[data-shell='member'] .rq-custom-missing { flex-basis: 100%; text-align: right; margin: 0; }
+@media (max-width: 900px) {
+  [data-shell='member'] .rq-custom-row { grid-template-columns: 1fr; }
+  [data-shell='member'] .rq-copy { order: 3; }
+  [data-shell='member'] .rq-notice, [data-shell='member'] .rq-toast-slot { bottom: calc(142px + env(safe-area-inset-bottom)); }
 }

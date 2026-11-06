@@ -65,7 +65,7 @@ web/
       delivery/     admin: giao hàng, còn nợ
       notifications/ chuông (notification-bell) ở cả hai shell
       stock/  catalog/ (danh mục, nhóm món)  units/  reports/ (báo cáo, trang in)  directory/ (danh bạ, chọn người)  admin/ (nhật ký, cấu hình)  profile/
-    css/        tokens.css (từ design-preview/final), base.css, member.css, admin.css (lớp nền cũ còn dùng), tokens-m1.css + m1/*.css (Hành chính); CSS màn Hành chính ở features/<ten>/<ten>.m1.css
+    css/        tokens.css (từ design-preview/final), base.css, login.css (màn đăng nhập), admin.css (lớp nền cũ còn dùng); CSS Nhân viên: m1/member-*.css + features/request|profile/*.m1.css (v2-C, request.css/history.css/member.css đã xóa), tokens-m1.css + m1/*.css (Hành chính); CSS màn Hành chính ở features/<ten>/<ten>.m1.css
   nginx.conf  proxy-api-headers.conf  Dockerfile  playwright/
 ops/backup/   docker-compose.yml  .env.example  update-vpp.sh  docs/  design-preview/
 ```
