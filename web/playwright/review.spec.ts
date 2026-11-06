@@ -91,7 +91,7 @@ test.describe('E3-S5 món ngoài danh mục', () => {
 
       const mp = await pageAs(browser, info, member);
       await mp.goto('/');
-      const cart = mp.getByRole('complementary', { name: 'Phiếu của tôi' });
+      const cart = mp.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
       const line = cart.locator('li', { hasText: name });
       await expect(line.getByText('Đã thêm vào danh mục')).toBeVisible();
       await expect(line.getByText('Ngoài danh mục')).toHaveCount(0);

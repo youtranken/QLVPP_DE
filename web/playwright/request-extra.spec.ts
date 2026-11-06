@@ -65,7 +65,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await dialog.getByRole('button', { name: 'Thêm vào phiếu' }).click();
       await expect(dialog).toBeHidden();
 
-      const cart = page.getByRole('complementary', { name: 'Phiếu của tôi' });
+      const cart = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
       const line = cart.locator('li', { has: page.getByRole('button', { name: `Sửa ${name}` }) });
       await expect(line.getByText('Ngoài danh mục')).toBeVisible();
       await expect(line.getByRole('spinbutton', { name })).toHaveValue('2');
@@ -145,7 +145,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await snap(page, info, 'copy-summary');
       await summary.getByRole('button', { name: 'Đã hiểu' }).click();
 
-      const cart = page.getByRole('complementary', { name: 'Phiếu của tôi' });
+      const cart = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
       await expect(cart.getByRole('spinbutton', { name: nameA, exact: true })).toHaveValue('5');
       await expect(cart.getByRole('spinbutton', { name: other.name, exact: true })).toHaveCount(0);
       await page.getByRole('button', { name: /thay đổi chưa lưu · Lưu/ }).click();
@@ -204,7 +204,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       );
       await expect(alert).toBeInViewport();
       await expect(page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' })).toBeVisible();
-      await expect(page.getByRole('complementary', { name: 'Phiếu của tôi' }).getByRole('spinbutton', { name: item.name, exact: true })).toHaveValue('1');
+      await expect(page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ }).getByRole('spinbutton', { name: item.name, exact: true })).toHaveValue('1');
       await snap(page, info, 'period-locked');
     } finally {
       deleteTestUsers(me.sub);
@@ -258,7 +258,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
         new RegExp(`Phiếu tháng ${m} đã khóa lúc 00:00\\. Phiếu đã lưu lúc \\d{2}:\\d{2} vẫn giữ và sẽ được giao; thay đổi chưa lưu không kịp áp dụng\\. Phiếu tháng ${next} đã mở\\.`),
       );
       await expect(alert).toBeInViewport();
-      await expect(page.getByText('Chưa chọn món nào — bấm + trên thẻ món để thêm.')).toBeAttached();
+      await expect(page.getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu”/)).toBeAttached();
       await snap(page, info, 'period-locked-saved');
     } finally {
       deleteTestUsers(me.sub);

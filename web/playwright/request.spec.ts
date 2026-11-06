@@ -22,8 +22,8 @@ async function snap(page: Page, info: TestInfo, name: string, fullPage = false) 
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png`, fullPage });
 }
 
-async function shotTo(page: Page, info: TestInfo, name: string) {
-  await page.screenshot({ path: `../live-real/v2c/task-C4/${name}-${info.project.name}.png`, fullPage: false });
+async function shotTo(page: Page, info: TestInfo, name: string, dir = 'task-C4') {
+  await page.screenshot({ path: `../live-real/v2c/${dir}/${name}-${info.project.name}.png`, fullPage: false });
 }
 
 async function createItem(request: APIRequestContext, name: string) {
@@ -67,8 +67,8 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${b.name}`, exact: true }).click();
       await grid.getByRole('button', { name: `Thêm ${b.name}`, exact: true }).click();
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${c.name}`, exact: true }).click();
-      const cart = page.getByRole('complementary', { name: 'Phiếu của tôi' });
-      await expect(cart.getByText('3 loại món · 4 đơn vị')).toBeVisible();
+      const cart = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
+      await expect(cart.getByText('3 món, 4 đơn vị')).toBeVisible();
       const save = page.getByRole('button', { name: '3 thay đổi chưa lưu · Lưu' });
       await expect(save).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
@@ -156,7 +156,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       const alert = page.getByRole('alert');
       await expect(alert).toContainText(`Chưa lưu được — ${itemName}: ${msg}`);
       await expect(alert).toBeInViewport();
-      const stepper = page.getByRole('complementary', { name: 'Phiếu của tôi' }).getByRole('spinbutton', { name: itemName, exact: true });
+      const stepper = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ }).getByRole('spinbutton', { name: itemName, exact: true });
       await expect(stepper).toBeFocused();
       await expect(stepper).toBeInViewport();
       await expect(stepper).toHaveAccessibleDescription(msg);
@@ -177,7 +177,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await page.goto('/');
       await expect(page.getByRole('heading', { level: 1, name: `Đăng ký văn phòng phẩm tháng ${Number(String(period.ym).slice(5))}` })).toBeVisible();
       const grid = page.getByRole('region', { name: 'Danh mục món' });
-      const cart = page.getByRole('complementary', { name: 'Phiếu của tôi' });
+      const cart = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
       await expect(grid.getByText(a.name, { exact: true })).toBeVisible();
       if (!isMobile(info)) {
         const g = (await grid.boundingBox())!;
@@ -296,6 +296,74 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
     } finally {
       deleteTestUsers(me.sub);
       await removeTestItem(request, itemId);
+    }
+  });
+  test('V2C-T5 phiếu dài vẫn thấy nút Lưu: 16 dòng → danh sách cuộn trong khung, nút Lưu phiếu và ghi chú luôn trong màn hình', async ({ page }, info) => {
+    test.skip(isMobile(info), 'phiếu 1280; điện thoại là C6');
+    const me = memberIdentity(info);
+    seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
+    await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...me.headers } }));
+    try {
+      await page.goto('/');
+      const grid = page.getByRole('region', { name: 'Danh mục món' });
+      await expect(grid.getByRole('button', { name: /^Thêm vào phiếu: / }).first()).toBeVisible();
+      for (let i = 0; i < 16; i++) await grid.getByRole('button', { name: /^Thêm vào phiếu: / }).first().click();
+      const cart = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
+      await expect(cart.getByText('16 món, 16 đơn vị')).toBeVisible();
+      const list = cart.getByRole('list');
+      const { scrolls, bounded } = await list.evaluate((el) => ({
+        scrolls: el.scrollHeight > el.clientHeight && getComputedStyle(el).overflowY === 'auto',
+        bounded: el.clientHeight <= 520,
+      }));
+      expect(scrolls && bounded).toBe(true);
+      const save = cart.getByRole('button', { name: '16 thay đổi chưa lưu · Lưu' });
+      await expect(save).toBeInViewport({ ratio: 1 });
+      await expect(cart.getByText('Phiếu chỉ được tính khi bạn bấm Lưu phiếu.')).toBeInViewport();
+      expect((await save.boundingBox())!.height).toBeGreaterThanOrEqual(52 - 0.5);
+      await shotTo(page, info, 'long-cart', 'task-C5');
+    } finally {
+      deleteTestUsers(me.sub);
+    }
+  });
+
+  test('V2C-T5 phiếu cam: rỗng, 3 dòng gồm dòng ngoài danh mục chờ xem, sau khi lưu (chụp 1280)', async ({ page }, info) => {
+    test.skip(isMobile(info), 'phiếu 1280; điện thoại là C6');
+    const me = memberIdentity(info);
+    seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
+    await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...me.headers } }));
+    try {
+      await page.goto('/');
+      const cart = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
+      await expect(cart.getByText('Chưa lưu', { exact: true })).toBeVisible();
+      await expect(cart.getByText('0 món, 0 đơn vị')).toBeVisible();
+      await shotTo(page, info, 'empty', 'task-C5');
+
+      const grid = page.getByRole('region', { name: 'Danh mục món' });
+      await grid.getByRole('button', { name: '+ Thêm món khác' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
+      await dialog.getByLabel('Tên món').fill(`PW món lạ ${Date.now()}`);
+      await dialog.getByLabel('Đơn vị tính').selectOption('hop');
+      await dialog.getByRole('button', { name: 'Thêm vào phiếu' }).click();
+      await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
+      await expect(cart.getByText('Đã lưu', { exact: true })).toBeVisible();
+      await page.reload();
+      await expect(cart.getByText('Chờ Hành chính xem')).toBeVisible();
+
+      for (let i = 0; i < 2; i++) await grid.getByRole('button', { name: /^Thêm vào phiếu: / }).first().click();
+      await expect(cart.getByText('3 món, 3 đơn vị')).toBeVisible();
+      await expect(cart.getByText('Chưa lưu', { exact: true })).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      await shotTo(page, info, 'three-lines', 'task-C5');
+
+      await page.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' }).click();
+      await shotTo(page, info, 'confirm', 'task-C5');
+      await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
+      await expect(cart.getByText('Đã lưu', { exact: true })).toBeVisible();
+      await expect(cart.getByText(/^Đã lưu lúc \d{2}:\d{2}\. Bạn vẫn sửa được tới hết \d{2}\/\d{2}\.$/)).toBeVisible();
+      await shotTo(page, info, 'after-save', 'task-C5');
+    } finally {
+      deleteTestUsers(me.sub);
     }
   });
   test('V2C-T2 đang tải/lỗi tải nằm trong khung sáng: /api/me/request 500 → "Thử lại" thấy, không lỗi tương phản (390)', async ({ page }, info) => {

@@ -128,7 +128,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       admin = undefined;
 
       await page.reload();
-      const cart = page.getByRole('complementary', { name: 'Phiếu của tôi' });
+      const cart = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
       const added = cart.locator('li', { hasText: 'Giấy A4' });
       await expect(added.getByText('Hành chính thêm')).toBeVisible();
       await expect(added.getByRole('button')).toHaveCount(0);

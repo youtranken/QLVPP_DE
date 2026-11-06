@@ -28,7 +28,7 @@ const PAIRS: [fg: string, bg: string][] = [
   ['--c-ink', '--c-panel-b'], ['--c-muted', '--c-panel-b'], ['--c-muted', '--c-page'],
   ['--c-ok', '--c-ok-soft'], ['--c-warn', '--c-warn-soft'], ['--c-danger', '--c-danger-soft'],
   ['--c-on-dark', '--c-shell-c'], ['--c-on-dark-2', '--c-shell-a'], ['--c-on-dark-2', '--c-shell-c'],
-  ['--c-on-dark', '--c-acc'], ['--c-warn', '--c-cart'],
+  ['--c-on-dark', '--c-acc'], ['--c-warn', '--c-cart'], ['--c-cart-ink', '--c-cart'], ['--c-cart-ink', '--c-surface'], ['--c-warn', '--c-surface'], ['--c-ok', '--c-surface'], ['--c-danger', '--c-danger-tint'], ['--c-on-dark', '--c-dark'],
   ['--c-on-dark', '--c-pick'], ['--c-acc', '--c-panel-b'], ['--c-acc', '--c-panel-a'], ['--c-acc', '--c-acc-soft'],
 ];
 

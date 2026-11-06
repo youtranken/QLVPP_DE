@@ -128,6 +128,11 @@ function RequestEditor({
           lines={cart.lines}
           errors={flow.lineErrors}
           categories={categories}
+          month={monthOf(period.ym)}
+          prevMonth={copy.fromYm ? monthOf(copy.fromYm) : null}
+          dirty={dirty}
+          saved={cart.saved ? { time: fmt.time(cart.saved.updated_at), lastDay: fmt.lastDay(period.deadline) } : null}
+          locked={!period.is_open}
           showSave={!narrow}
           saveLabel={saveLabel}
           canSave={dirty && !flow.saving}

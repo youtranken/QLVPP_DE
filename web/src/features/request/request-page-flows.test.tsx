@@ -7,7 +7,7 @@ import { NOTE, PAUSED, PEN, PERIOD, facts, stubRequestApi, view } from '@/test/r
 import { mockViewport } from '@/test/viewport';
 
 const grid = () => screen.getByRole('region', { name: 'Danh mục món' });
-const cart = () => screen.getByRole('complementary', { name: 'Phiếu của tôi' });
+const cart = () => screen.getByRole('complementary', { name: 'Phiếu tháng 11' });
 const location = () => screen.getByTestId('location').textContent;
 
 const COPY = {
@@ -66,7 +66,7 @@ describe('RequestPage — món ngoài danh mục', () => {
     const custom = lineView({ id: 'l-c', custom_name: 'Bìa còng', custom_unit: 'cai', image_file_id: 'f-1', qty: 2, review_status: 'pending' });
     const api = stubRequestApi({ request: view({ lines: [custom] }), put: () => jsonResponse(500, {}) });
     renderApp(makeMe('member'), '/');
-    const name = await within(await screen.findByRole('complementary', { name: 'Phiếu của tôi' })).findByRole('button', { name: 'Sửa Bìa còng' });
+    const name = await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByRole('button', { name: 'Sửa Bìa còng' });
     expect(within(name.closest('li')!).getByText('Chờ Hành chính xem')).toBeInTheDocument();
     await userEvent.click(name);
     const edit = await screen.findByRole('dialog', { name: 'Sửa món khác' });
@@ -92,7 +92,7 @@ describe('RequestPage — món ngoài danh mục', () => {
     });
     stubRequestApi({ request: view({ lines: [converted] }) });
     renderApp(makeMe('member'), '/');
-    const side = await screen.findByRole('complementary', { name: 'Phiếu của tôi' });
+    const side = await screen.findByRole('complementary', { name: 'Phiếu tháng 11' });
     const line = (await within(side).findByText('Giấy note vàng')).closest('li')!;
     expect(within(line).getByText('Đã thêm vào danh mục')).toHaveClass('tag--ok');
     expect(within(line).queryByText('Ngoài danh mục')).toBeNull();
@@ -233,7 +233,7 @@ describe('RequestPage — dòng món đã ngừng', () => {
       request: view({ lines: [lineView({ id: 'l-pen', item_id: PEN.id, item: { ...facts(PEN), active: false }, qty: 3 })] }),
     });
     renderApp(makeMe('member'), '/');
-    const line = within(await screen.findByRole('complementary', { name: 'Phiếu của tôi' }))
+    const line = within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' }))
       .getByText('Bút bi xanh')
       .closest('li')!;
     expect(within(line).getByRole('button', { name: 'Bớt Bút bi xanh' })).toBeDisabled();
@@ -267,7 +267,7 @@ describe('RequestPage — món thuộc nhóm đang ngừng (active, usable=false
       request: view({ lines: [lineView({ id: 'l-paused', item_id: PAUSED.id, item: facts(PAUSED), qty: 3 })] }),
     });
     renderApp(makeMe('member'), '/');
-    const line = within(await screen.findByRole('complementary', { name: 'Phiếu của tôi' }))
+    const line = within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' }))
       .getByText('Bút dạ quang')
       .closest('li')!;
     expect(within(line).getByRole('button', { name: 'Bớt Bút dạ quang' })).toBeDisabled();
