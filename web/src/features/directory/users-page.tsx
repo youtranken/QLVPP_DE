@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
@@ -57,7 +57,12 @@ export function UsersPage() {
   // Danh bạ còn trang chưa tải thì chưa kết luận người lạ: chỉ gỡ ?person= khi đã có đủ danh sách
   const known = (sub: string) => (dir.users.some((u) => u.sub === sub) ? true : dir.loading || dir.hasMore ? undefined : false);
   const panel = usePanelParam('person', { order, known });
-  const open = (u: UserRow) => panel.open(u.sub);
+  // onOpen giữ nguyên qua các lần vẽ: cột bảng memo theo nó, đổi mỗi lần vẽ thì bảng dựng lại (dữ liệu đăng ký về sau làm nút tên đang bấm bị thay)
+  const openPanel = useRef(panel.open);
+  useEffect(() => {
+    openPanel.current = panel.open;
+  });
+  const open = useCallback((u: UserRow) => openPanel.current(u.sub), []);
   const title = t('users.title');
   const header = (
     <PageHeader
