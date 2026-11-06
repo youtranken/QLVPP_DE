@@ -19,6 +19,14 @@ export interface NotifyInput {
   now: Date;
 }
 
+export interface UpsertInput {
+  eventId: string;
+  userSub: string;
+  kind: 'line_adjusted';
+  params: Record<string, unknown> & { ym: string };
+  now: Date;
+}
+
 export interface NotificationView {
   id: string;
   topic: string;
@@ -82,6 +90,30 @@ export class NotificationsService {
         msg: 'notification_write_failed',
         event_id: n.eventId,
         topic: n.topic,
+        code: pgSqlState(error) ?? null,
+      });
+      return 0;
+    }
+  }
+
+  // Chuông gộp: lần sau ghi đè nội dung, đưa lên đầu và thành chưa đọc lại
+  async upsertWithin(tx: Tx, n: UpsertInput): Promise<number> {
+    try {
+      return await tx.transaction(async (sp) => {
+        const result = await sp.execute(sql`
+          INSERT INTO in_app_notifications (user_sub, event_id, topic, params, link, created_at)
+          VALUES (${n.userSub}, ${n.eventId}, ${n.kind}, ${JSON.stringify(n.params)}::jsonb,
+                  ${`/history/${n.params.ym}`}, ${n.now.toISOString()}::timestamptz)
+          ON CONFLICT (event_id, user_sub) DO UPDATE
+          SET params = EXCLUDED.params, created_at = EXCLUDED.created_at, read_at = NULL
+        `);
+        return result.rowCount ?? 0;
+      });
+    } catch (error) {
+      this.logger.warn({
+        msg: 'notification_write_failed',
+        event_id: n.eventId,
+        topic: n.kind,
         code: pgSqlState(error) ?? null,
       });
       return 0;

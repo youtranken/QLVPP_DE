@@ -9,11 +9,17 @@ describe('giảm số lượng dòng đã có khi món đổi trạng thái sau 
     as(http().patch(`/api/admin/items/${id}`), ADMIN, 'admin')
       .send(body)
       .expect(200);
-  const adminPut = (r: RequestView, qty: number, reason?: string) =>
+  const adminPut = (r: RequestView, qty: number) =>
     as(http().put(`/api/admin/requests/${r.id}/lines`), ADMIN, 'admin').send({
-      lines: [{ id: r.lines[0].id, qty }],
+      lines: [
+        {
+          id: r.lines[0].id,
+          qty,
+          expected_qty: r.lines[0].qty,
+          reason_code: 'over_quota',
+        },
+      ],
       expected_updated_at: r.updated_at,
-      reason,
     });
   const memberPut = (r: RequestView, qty: number) =>
     save([{ id: r.lines[0].id, qty }], { expected_updated_at: r.updated_at });
@@ -55,16 +61,16 @@ describe('giảm số lượng dòng đã có khi món đổi trạng thái sau 
     expect(res.body.code).toBe('ADMIN_ONLY_ITEM');
   });
 
-  it('Hành chính sau hạn (có lý do) giảm dòng món đã ngừng và vượt max → 200; tăng → ITEM_INACTIVE', async () => {
+  it('Hành chính sau hạn giảm dòng món đã ngừng và vượt max → 200; tăng → QTY_INCREASE_FORBIDDEN', async () => {
     const { item, r } = await seedLine(8);
     await patchItem(item, { active: false, max_qty: 3 });
     at(AFTER_DEADLINE);
-    const up = await adminPut(r, 9, 'Bổ sung theo email').expect(400);
+    const up = await adminPut(r, 9).expect(400);
     expect(up.body).toMatchObject({
-      code: 'ITEM_INACTIVE',
+      code: 'QTY_INCREASE_FORBIDDEN',
       line_id: r.lines[0].id,
     });
-    const res = await adminPut(r, 6, 'Giảm theo email').expect(200);
+    const res = await adminPut(r, 6).expect(200);
     expect(view(res).lines[0].qty).toBe(6);
   });
 });

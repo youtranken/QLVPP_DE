@@ -1,6 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
-import { SaveLinesBody } from '../modules/requests/request.dto';
+import { SaveMyLinesBody } from '../modules/requests/request.dto';
 import { ReviewBody } from '../modules/requests/review.dto';
 import { StockChangeDto } from '../modules/catalog/stock.dto';
 import { validationException } from './validation-error';
@@ -21,7 +21,8 @@ describe('validationException', () => {
   });
 
   it('dòng 1 custom_name 121 ký tự → fields [custom_name], line_index 1, message không rỗng', () => {
-    const body = bodyOf(SaveLinesBody, {
+    const body = bodyOf(SaveMyLinesBody, {
+      ym: '2026-11',
       expected_updated_at: STAMP,
       lines: [{ qty: 1 }, { qty: 1, custom_name: 'x'.repeat(121) }],
     });
@@ -34,7 +35,8 @@ describe('validationException', () => {
   });
 
   it('lỗi lồng lẫn lỗi phẳng → line_index của dòng lỗi đầu tiên, fields gộp không trùng', () => {
-    const body = bodyOf(SaveLinesBody, {
+    const body = bodyOf(SaveMyLinesBody, {
+      ym: '2026-11',
       expected_updated_at: 'hôm qua',
       lines: [
         { qty: 1 },
@@ -73,7 +75,11 @@ describe('validationException', () => {
   it.each([[[5]], [[null]], [[{ qty: 1 }, 'x']]])(
     'lines %j có phần tử không phải object → fields [lines], line_index của phần tử đó',
     (lines) => {
-      const body = bodyOf(SaveLinesBody, { expected_updated_at: STAMP, lines });
+      const body = bodyOf(SaveMyLinesBody, {
+        ym: '2026-11',
+        expected_updated_at: STAMP,
+        lines,
+      });
       expect(body).toMatchObject({
         code: 'VALIDATION',
         fields: ['lines'],
@@ -83,7 +89,8 @@ describe('validationException', () => {
   );
 
   it('nhiều dòng lỗi → chỉ báo dòng lỗi đầu tiên: line_index 1, fields và message của dòng 1, không lẫn dòng 2', () => {
-    const body = bodyOf(SaveLinesBody, {
+    const body = bodyOf(SaveMyLinesBody, {
+      ym: '2026-11',
       expected_updated_at: STAMP,
       lines: [
         { qty: 1 },

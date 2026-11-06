@@ -113,9 +113,15 @@ describe('khóa sổ ở API: kỳ mở chỉ tiến độ, nhân viên chỉ đ
       .expect(409, /PERIOD_LOCKED/);
     await as(http().put(`/api/admin/requests/${r.id}/lines`), ADMIN, 'admin')
       .send({
-        lines: [{ item_id: item, qty: 1 }],
+        lines: [
+          {
+            id: r.lines[0].id,
+            qty: 1,
+            expected_qty: 2,
+            reason_code: 'over_quota',
+          },
+        ],
         expected_updated_at: r.updated_at,
-        reason: 'Giảm còn 1',
       })
       .expect(200);
   });

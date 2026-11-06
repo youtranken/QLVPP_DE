@@ -4,6 +4,7 @@ import {
   deadlineOf,
   periodFor,
   vnDate,
+  vnDay,
   ymToDate,
 } from './period';
 
@@ -89,5 +90,17 @@ describe('vnDate', () => {
 describe('ymToDate', () => {
   it('ngày 1 của tháng', () => {
     expect(ymToDate('2026-11')).toBe('2026-11-01');
+  });
+});
+
+describe('vnDay', () => {
+  it('23:59:59.999 VN (16:59:59.999Z) và 00:00:00.000 VN (17:00:00.000Z) → hai ngày; khoảng [00:00, 24:00) VN', () => {
+    expect(vnDay(at('2026-11-12T16:59:59.999Z'))).toEqual({
+      day: '2026-11-12',
+      from: at('2026-11-11T17:00:00.000Z'),
+      to: at('2026-11-12T17:00:00.000Z'),
+    });
+    expect(vnDay(at('2026-11-12T17:00:00.000Z')).day).toBe('2026-11-13');
+    expect(vnDay(at('2026-12-31T17:00:00.000Z')).day).toBe('2027-01-01');
   });
 });

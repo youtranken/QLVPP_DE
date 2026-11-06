@@ -66,11 +66,9 @@ describe('RequestLinesWriter.save: hai lần lưu đầu song song (Postgres th�
     const saveOnce = (qty: number) =>
       db.transaction((tx) =>
         writer.save(tx, {
-          request: null,
           owner_sub: OWNER,
           period_ym: ym,
           actor: { sub: OWNER, role: 'member', devMode: true },
-          mode: 'member',
           body: { lines: [{ item_id: itemId, qty }] },
           now,
         }),

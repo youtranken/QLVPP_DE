@@ -15,9 +15,15 @@ describe('POST admin/lines/:id/cancel-remaining: hộp hủy đã cũ → STALE_
     ).body as RequestView;
     await as(http().put(`/api/admin/requests/${r.id}/lines`), ADMIN, 'admin')
       .send({
-        lines: [{ id: r.lines[0].id, qty }],
+        lines: [
+          {
+            id: r.lines[0].id,
+            qty,
+            expected_qty: r.lines[0].qty,
+            reason_code: 'over_quota',
+          },
+        ],
         expected_updated_at: r.updated_at,
-        reason: 'Bổ sung theo yêu cầu',
       })
       .expect(200);
   };
@@ -42,10 +48,10 @@ describe('POST admin/lines/:id/cancel-remaining: hộp hủy đã cũ → STALE_
     expect(await backlogLineIds()).toContain(line.id);
   });
 
-  it('mở hộp lúc qty 5 (còn 2), Hành chính tăng qty lên 7 → expected_qty 5: 409 STALE_UPDATE {qty: 7, delivered_qty: 3}, không hủy, không chuông; expected_qty 7: 200 hủy 4', async () => {
+  it('mở hộp lúc qty 5 (còn 2), Hành chính giảm qty còn 4 → expected_qty 5: 409 STALE_UPDATE {qty: 4, delivered_qty: 3}, không hủy, không chuông; expected_qty 4: 200 hủy 1', async () => {
     const { request, line } = await lockedLine(10);
     await deliver(line.id, { qty: 3, expected_delivered_qty: 0 }).expect(200);
-    await adminSetQty(request.id, 7);
+    await adminSetQty(request.id, 4);
     const stale = await cancel(line.id, {
       reason: 'Người đã nghỉ',
       expected_delivered_qty: 3,
@@ -53,7 +59,7 @@ describe('POST admin/lines/:id/cancel-remaining: hộp hủy đã cũ → STALE_
     }).expect(409);
     expect(stale.body).toMatchObject({
       code: 'STALE_UPDATE',
-      qty: 7,
+      qty: 4,
       delivered_qty: 3,
     });
     expect(await cancelledQty(line.id)).toBe(0);
@@ -61,11 +67,11 @@ describe('POST admin/lines/:id/cancel-remaining: hộp hủy đã cũ → STALE_
     const ok = await cancel(line.id, {
       reason: 'Người đã nghỉ',
       expected_delivered_qty: 3,
-      expected_qty: 7,
+      expected_qty: 4,
     }).expect(200);
     expect(ok.body).toMatchObject({
-      line: { qty: 7, cancelled_qty: 4 },
-      cancelled_now: 4,
+      line: { qty: 4, cancelled_qty: 1 },
+      cancelled_now: 1,
     });
   });
 

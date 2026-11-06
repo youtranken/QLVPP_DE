@@ -67,3 +67,14 @@ export function daysLeft(now: Date, deadline: Date): number {
 export function ymToDate(ym: string): string {
   return `${ym}-01`;
 }
+
+// Ngày lịch VN chứa `at`: nhãn YYYY-MM-DD và khoảng [00:00, 00:00 hôm sau) giờ VN
+export function vnDay(at: Date): { day: string; from: Date; to: Date } {
+  const { y, m, d } = vnDate(at);
+  const from = new Date(Date.UTC(y, m - 1, d) - VN_OFFSET_MS);
+  return {
+    day: `${toYm(y, m)}-${String(d).padStart(2, '0')}`,
+    from,
+    to: new Date(from.getTime() + DAY_MS),
+  };
+}

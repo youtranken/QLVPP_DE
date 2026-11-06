@@ -56,12 +56,6 @@ export const periodLocked = (nextYm: string) =>
     next_ym: nextYm,
   });
 
-export const reasonRequired = () =>
-  new BadRequestException({
-    code: 'REASON_REQUIRED',
-    message: 'Kỳ đã khóa — cần ghi lý do điều chỉnh.',
-  });
-
 export const userNotFound = () =>
   new NotFoundException({
     code: 'USER_NOT_FOUND',

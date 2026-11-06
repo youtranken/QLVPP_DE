@@ -189,11 +189,9 @@ describe('Thứ tự khóa items: deliver-all không deadlock với lưu phiếu
       await waitFor(1, delivering);
       const saving = db.transaction((tx) =>
         writer.save(tx, {
-          request: null,
           owner_sub: MEMBER,
           period_ym: ym,
           actor: { sub: MEMBER, role: 'member', devMode: true },
-          mode: 'member',
           body: {
             lines: [
               { item_id: y, qty: 1 },

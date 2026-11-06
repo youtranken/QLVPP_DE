@@ -1,7 +1,7 @@
 import { AFTER_DEADLINE } from './me-request.fixture';
 import { lineNotifyFixture } from './line-notify.fixture';
 
-describe('chuông custom_line_new: chỉ cho dòng ngoài DM Hành chính thấy được (kỳ đã khóa)', () => {
+describe('chuông custom_line_new không còn nguồn: nhân viên lưu kỳ mở, Hành chính không thêm được ở kỳ khóa', () => {
   const f = lineNotifyFixture('custom-notify');
   const {
     A,
@@ -48,16 +48,11 @@ describe('chuông custom_line_new: chỉ cho dòng ngoài DM Hành chính thấy
   ) =>
     as(http().put(`/api/admin/requests/${r.id}/lines`), ADMIN, 'admin').send({
       lines: [
-        ...r.lines.map((l) => ({ id: l.id, qty: l.qty })),
+        ...r.lines.map((l) => ({ id: l.id, qty: l.qty, expected_qty: l.qty })),
         { custom_name: name, custom_unit: 'cai', image_file_id: img, qty: 1 },
       ],
       expected_updated_at: expected,
-      reason: 'Bổ sung theo email',
     });
-  const addedId = (body: unknown, name: string) =>
-    (body as { request: Seeded }).request.lines.find(
-      (l) => l.custom_name === name,
-    )!.id;
 
   it('member lưu dòng ngoài DM trong kỳ mở (lần đầu, đổi qty, thêm dòng thứ hai) → không admin nào nhận chuông', async () => {
     const item = await newItem();
@@ -95,63 +90,47 @@ describe('chuông custom_line_new: chỉ cho dòng ngoài DM Hành chính thấy
     }
   });
 
-  it('Hành chính thêm dòng ngoài DM khi điều chỉnh phiếu kỳ đã khóa → admin khác nhận (params/link); người thêm, admin khóa, SA, chủ phiếu không', async () => {
+  it('Hành chính thêm dòng ngoài DM ở kỳ đã khóa → 400 LINE_ADD_FORBIDDEN, không admin nào nhận custom_line_new', async () => {
     const r = await seed([{ item_id: await newItem(), qty: 1 }]);
     at(AFTER_DEADLINE);
     const img = await upload(ADMIN, 'line_image', 'admin');
-    const id = addedId(
-      (await adminAdd(r, 'Món Hành chính thêm', img).expect(200)).body,
-      'Món Hành chính thêm',
-    );
-    expect(
-      (await bells('custom_line_new', ADMIN2)).find(
-        (b) => b.event_id === `custom_line_new:${id}`,
-      ),
-    ).toEqual({
-      event_id: `custom_line_new:${id}`,
-      params: {
-        ym: '2026-11',
-        name: 'Món Hành chính thêm',
-        person: 'Nhân viên A',
-      },
-      link: '/admin/review?ym=2026-11',
+    const res = await adminAdd(r, 'Món Hành chính thêm', img).expect(400);
+    expect(res.body).toMatchObject({
+      code: 'LINE_ADD_FORBIDDEN',
+      line_index: 1,
     });
-    for (const sub of [ADMIN, LOCKED_ADMIN, SA, A]) {
+    for (const sub of [ADMIN, ADMIN2, LOCKED_ADMIN, SA, A]) {
       expect(await bells('custom_line_new', sub)).toEqual([]);
     }
   });
 
-  it('điều chỉnh lỗi (STALE_UPDATE) → không chuông', async () => {
-    const r = await seed([{ item_id: await newItem(), qty: 1 }], B);
+  it('ghi chuông line_adjusted lỗi (trigger RAISE) → điều chỉnh vẫn 200, bản ghi còn, không chuông', async () => {
+    const r = await seed([{ item_id: await newItem(), qty: 3 }], B);
     at(AFTER_DEADLINE);
-    const before = (await bells('custom_line_new', ADMIN2)).length;
-    const img = await upload(ADMIN, 'line_image', 'admin');
-    await adminAdd(r, 'Món lạ B3', img, '2020-01-01T00:00:00.000Z').expect(409);
-    expect(await bells('custom_line_new', ADMIN2)).toHaveLength(before);
-  });
-
-  it('ghi chuông lỗi (trigger RAISE) → điều chỉnh vẫn 200, dòng còn, không chuông', async () => {
-    const r = await seed([{ item_id: await newItem(), qty: 1 }], B);
-    at(AFTER_DEADLINE);
-    const img = await upload(ADMIN, 'line_image', 'admin');
     await breakNotifications();
-    let id: string;
     try {
-      id = addedId(
-        (await adminAdd(r, 'Món lạ D1', img).expect(200)).body,
-        'Món lạ D1',
-      );
+      await as(http().put(`/api/admin/requests/${r.id}/lines`), ADMIN, 'admin')
+        .send({
+          expected_updated_at: r.updated_at,
+          lines: [
+            {
+              id: r.lines[0].id,
+              qty: 1,
+              expected_qty: 3,
+              reason_code: 'over_quota',
+            },
+          ],
+        })
+        .expect(200);
     } finally {
       await repairNotifications();
     }
     const kept = await f
       .pool()
-      .query('SELECT 1 FROM request_lines WHERE id = $1', [id]);
+      .query('SELECT 1 FROM request_line_adjustments WHERE request_id = $1', [
+        r.id,
+      ]);
     expect(kept.rowCount).toBe(1);
-    expect(
-      (await bells('custom_line_new', ADMIN2)).find(
-        (b) => b.event_id === `custom_line_new:${id}`,
-      ),
-    ).toBeUndefined();
+    expect(await bells('line_adjusted', B)).toEqual([]);
   });
 });

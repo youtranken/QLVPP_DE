@@ -9,13 +9,12 @@ import {
   sameSnap,
   snapOf,
 } from './request-lines.rules';
-import type { LineRow, LineSnap, WriteMode } from './request-lines.rules';
+import type { LineRow, LineSnap } from './request-lines.rules';
 import type { LineInput } from './request.dto';
 
 export interface PlanInput {
   existing: LineRow[];
   body: LineInput[];
-  mode: WriteMode;
   items: Map<string, ItemFacts>;
   units: Map<string, UnitFacts>;
   defaultMaxQty: number;
@@ -54,7 +53,7 @@ export function planLines(input: PlanInput): LinesPlan {
     planExisting(before, raw, input, plan);
   });
   plan.deletes = input.existing.filter(
-    (l) => !sent.has(l.id) && isDeletable(l, input.mode),
+    (l) => !sent.has(l.id) && isDeletable(l),
   );
   assertNoDuplicateItems(input.existing, plan);
   return plan;
@@ -113,7 +112,7 @@ function planExisting(
   if (before.item_id) assertNoCustomFields(raw, ref, before);
   const after = merge(before, raw);
   if (sameSnap(snapOf(before), after)) return;
-  if (input.mode === 'member' && isMemberReadonly(before)) {
+  if (isMemberReadonly(before)) {
     throw lineError('LINE_READONLY', 'Dòng này chỉ xem được.', ref);
   }
   validateLine(after, ref, input, after.qty <= before.qty);
@@ -169,7 +168,7 @@ function assertNoCustomFields(
   }
 }
 
-// Dòng đã có không tăng SL: bỏ kiểm max (max có thể bị hạ sau khi lưu); Hành chính còn được sửa món ngừng/admin_only
+// Dòng đã có không tăng SL: bỏ kiểm max (max có thể bị hạ sau khi lưu)
 function validateLine(
   line: LineSnap,
   ref: LineRef,
@@ -186,8 +185,7 @@ function validateLine(
     if (!item) {
       throw lineError('ITEM_NOT_FOUND', 'Không tìm thấy món.', ref);
     }
-    if (!(notIncreased && input.mode === 'admin'))
-      assertOrderable(item, ref, input.mode);
+    assertOrderable(item, ref);
     max = item.max_qty;
   } else {
     if (!line.custom_name) {
@@ -218,9 +216,9 @@ function assertUnitChoosable(
   if (error) throw withLineRef(error, ref);
 }
 
-function assertOrderable(item: ItemFacts, ref: LineRef, mode: WriteMode): void {
+function assertOrderable(item: ItemFacts, ref: LineRef): void {
   if (!item.active) throw lineError('ITEM_INACTIVE', 'Món đã ngừng.', ref);
-  if (mode === 'member' && item.admin_only) {
+  if (item.admin_only) {
     throw lineError('ADMIN_ONLY_ITEM', 'Món chỉ Hành chính đặt được.', ref);
   }
 }

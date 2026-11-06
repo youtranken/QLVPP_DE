@@ -33,8 +33,12 @@ export class AuditWriterService {
   async appendWithin(
     tx: Pick<Database, 'insert'>,
     entry: AuditEntry,
-  ): Promise<void> {
-    await tx.insert(auditLogTable).values(toRow(entry));
+  ): Promise<string> {
+    const [row] = await tx
+      .insert(auditLogTable)
+      .values(toRow(entry))
+      .returning({ id: auditLogTable.id });
+    return row.id;
   }
 }
 

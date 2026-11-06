@@ -15,6 +15,7 @@ interface PersonRow {
   delivered_qty: number;
   cancelled_qty: number;
   custom_pending: number;
+  over_max: boolean;
   updated_at: string;
 }
 interface ItemRow {
@@ -24,6 +25,8 @@ interface ItemRow {
   unit: string;
   requested_qty: number;
   people: number;
+  max_qty: number | null;
+  over_max: boolean;
 }
 
 describe('admin/periods/:ym/requests — theo người, theo món', () => {
@@ -69,6 +72,7 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
       delivered_qty: 3,
       cancelled_qty: 2,
       custom_pending: 1,
+      over_max: false,
       updated_at: expect.any(String) as string,
     });
     expect(page.items[2]).toMatchObject({
@@ -152,6 +156,8 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
           unit: 'cay',
           requested_qty: 6,
           people: 3,
+          max_qty: 5,
+          over_max: false,
         },
         {
           key: expect.any(String) as string,
@@ -160,9 +166,54 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
           unit: 'cai',
           requested_qty: 6,
           people: 2,
+          max_qty: null,
+          over_max: false,
         },
       ]),
     );
+  });
+
+  it('tối đa hạ sau khi lưu: dòng 5 > max 4 → over_max (người + món), lọc "over_max" đúng 1 phiếu; dòng 4 = max 4 → không', async () => {
+    const lowered = (
+      await f
+        .pool()
+        .query<{ id: string }>(
+          `INSERT INTO items (name, unit, max_qty) VALUES ($1, 'cay', 4) RETURNING id`,
+          [`e2e-sum-low-${SUFFIX}`],
+        )
+    ).rows[0].id;
+    const [over, edge] = [f.sub('over'), f.sub('edge')];
+    const made: string[] = [];
+    try {
+      for (const [sub, qty] of [
+        [over, 5],
+        [edge, 4],
+      ] as const) {
+        await f.addUser(sub, `Z ${sub}`, null, 'Phòng Z');
+        const id = await f.newRequest(sub, 'Phòng Z');
+        made.push(id);
+        await f.addLine(id, { item_id: lowered, qty });
+      }
+      expect(await requestIds('filter=over_max')).toEqual([made[0]]);
+      const rows = (await people('')).items;
+      expect(rows.find((r) => r.request_id === made[1])!.over_max).toBe(false);
+      const items = (
+        (await asAdmin(`/periods/${YM}/requests?by=item`).expect(200)).body as {
+          items: ItemRow[];
+        }
+      ).items;
+      expect(items.find((i) => i.item_id === lowered)).toMatchObject({
+        max_qty: 4,
+        over_max: true,
+        requested_qty: 9,
+      });
+    } finally {
+      await f.pool().query('DELETE FROM requests WHERE id = ANY($1)', [made]);
+      await f
+        .pool()
+        .query('DELETE FROM users WHERE sub = ANY($1)', [[over, edge]]);
+      await f.pool().query('DELETE FROM items WHERE id = $1', [lowered]);
+    }
   });
 
   it('phiếu 1 dòng qty 5 giao 3 hủy 2 → PersonRow {total_qty: 5, delivered_qty: 3, cancelled_qty: 2}', async () => {

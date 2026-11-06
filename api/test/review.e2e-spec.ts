@@ -127,9 +127,12 @@ describe('admin/review: hàng chờ, nhận, từ chối', () => {
         ADMIN,
         'admin',
       ).send({
-        lines: got.lines.map((l) => ({ id: l.id, qty: l.qty })),
+        lines: got.lines.map((l) => ({
+          id: l.id,
+          qty: l.qty,
+          expected_qty: l.qty,
+        })),
         expected_updated_at: expected,
-        reason: 'Giữ nguyên',
       });
     const stale = await adjust(got.updated_at);
     expect(stale.status).toBe(409);

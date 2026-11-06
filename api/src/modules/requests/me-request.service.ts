@@ -43,11 +43,9 @@ export class MeRequestService {
     const now = this.clock.now();
     return this.db.transaction(async (tx) => {
       const { request_id } = await this.writer.save(tx, {
-        request: null,
         owner_sub: me.sub,
         period_ym: body.ym,
         actor: me,
-        mode: 'member',
         body,
         now,
       });

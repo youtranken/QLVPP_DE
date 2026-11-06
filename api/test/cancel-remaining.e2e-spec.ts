@@ -37,15 +37,15 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
         200,
       )
     ).body as RequestView;
-  const adminSetQty = async (requestId: string, qty: number) => {
+  // Kỳ khóa không còn đường tăng qty qua API; dòng tăng sau hủy chỉ còn ở dữ liệu cũ → dựng bằng SQL
+  const legacyRaiseQty = async (requestId: string, qty: number) => {
     const r = await adminView(requestId);
-    await as(http().put(`/api/admin/requests/${r.id}/lines`), ADMIN, 'admin')
-      .send({
-        lines: [{ id: r.lines[0].id, qty }],
-        expected_updated_at: r.updated_at,
-        reason: 'Bổ sung theo yêu cầu',
-      })
-      .expect(200);
+    await f
+      .pool()
+      .query('UPDATE request_lines SET qty = $2 WHERE id = $1', [
+        r.lines[0].id,
+        qty,
+      ]);
   };
   const backlogLineIds = async () =>
     (await backlog('item')).flatMap((g) => g.lines.map((l) => l.line_id));
@@ -224,7 +224,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
     await cancel(line.id, body).expect(200);
   });
 
-  it('Hành chính tăng qty 5→7 sau khi hủy 2 rồi hủy tiếp → cancelled_qty 4, chuông mới line_cancelled:<id>:4', async () => {
+  it('dữ liệu cũ: qty tăng 5→7 sau khi hủy 2 rồi hủy tiếp → cancelled_qty 4, chuông mới line_cancelled:<id>:4', async () => {
     const { request, line } = await lockedLine(10);
     await deliver(line.id, { qty: 3, expected_delivered_qty: 0 }).expect(200);
     await cancel(line.id, {
@@ -232,7 +232,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
       expected_delivered_qty: 3,
       expected_qty: line.qty,
     }).expect(200);
-    await adminSetQty(request.id, 7);
+    await legacyRaiseQty(request.id, 7);
     const res = await cancel(line.id, {
       reason: 'Vẫn nghỉ',
       expected_delivered_qty: 3,
@@ -248,7 +248,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
     ]);
   });
 
-  it('cancelled_qty > 0 rồi tăng qty 5→7 (còn 7−3−2 = 2): giao 3 → DELIVER_EXCEEDS_QTY {remaining: 2}; deliver-all giao đúng 2, chuông giao đủ', async () => {
+  it('dữ liệu cũ: cancelled_qty > 0 rồi qty tăng 5→7 (còn 7−3−2 = 2): giao 3 → DELIVER_EXCEEDS_QTY {remaining: 2}; deliver-all giao đúng 2, chuông giao đủ', async () => {
     const { request, line } = await lockedLine(10);
     await deliver(line.id, { qty: 3, expected_delivered_qty: 0 }).expect(200);
     await cancel(line.id, {
@@ -256,7 +256,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
       expected_delivered_qty: 3,
       expected_qty: line.qty,
     }).expect(200);
-    await adminSetQty(request.id, 7);
+    await legacyRaiseQty(request.id, 7);
     const over = await deliver(line.id, {
       qty: 3,
       expected_delivered_qty: 3,

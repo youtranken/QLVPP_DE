@@ -1,6 +1,5 @@
 export type ReviewStatus =
   'n/a' | 'pending' | 'accepted' | 'converted' | 'rejected';
-export type WriteMode = 'member' | 'admin';
 
 export interface LineState {
   added_by_admin: boolean;
@@ -42,11 +41,11 @@ export function isMemberReadonly(line: LineState): boolean {
   );
 }
 
-export function isDeletable(line: LineState, mode: WriteMode): boolean {
+export function isDeletable(line: LineState): boolean {
   return (
     line.delivered_qty === 0 &&
     ['n/a', 'pending'].includes(line.review_status) &&
-    (mode === 'admin' || !line.added_by_admin)
+    !line.added_by_admin
   );
 }
 

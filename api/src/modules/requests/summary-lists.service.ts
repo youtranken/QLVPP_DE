@@ -27,6 +27,7 @@ export interface PersonRow {
   delivered_qty: number;
   cancelled_qty: number;
   custom_pending: number;
+  over_max: boolean;
   updated_at: string;
 }
 
@@ -37,6 +38,9 @@ export interface ItemSummaryRow {
   unit: string;
   requested_qty: number;
   people: number;
+  // Tối đa/tháng hiện tại của món; null với dòng ngoài DM
+  max_qty: number | null;
+  over_max: boolean;
 }
 
 type PersonDbRow = Omit<PersonRow, 'updated_at'> & {
@@ -47,8 +51,11 @@ type PersonDbRow = Omit<PersonRow, 'updated_at'> & {
 const PERSON_ORDER = sql.raw(
   `(r.department IS NULL), coalesce(r.department, ''), coalesce(u.full_name, ''), r.id`,
 );
+// Tối đa có thể bị hạ sau khi nhân viên đã lưu: dòng giữ số cũ lớn hơn tối đa hiện tại
+const OVER_MAX = sql`coalesce(bool_or(l.qty > i.max_qty) FILTER (WHERE ${EFFECTIVE_LINE}), false)`;
 const FILTERS: Record<SummaryFilter, SQL> = {
   all: sql`true`,
+  over_max: OVER_MAX,
   pending_delivery: sql`count(l.id) FILTER (WHERE ${UNDELIVERED_LINE}) > 0`,
   custom_pending: sql`count(l.id) FILTER (WHERE l.review_status = 'pending') > 0`,
 };
@@ -75,10 +82,11 @@ export class SummaryListsService {
              ${effectiveSum('l.delivered_qty')} AS delivered_qty,
              ${effectiveSum('l.cancelled_qty')} AS cancelled_qty,
              count(l.id) FILTER (WHERE l.review_status = 'pending')::int AS custom_pending,
-             r.updated_at
+             ${OVER_MAX} AS over_max, r.updated_at
       FROM requests r
       JOIN users u ON u.sub = r.user_sub
       LEFT JOIN request_lines l ON l.request_id = r.id
+      LEFT JOIN items i ON i.id = l.item_id
       WHERE r.period_ym = ${ymToDate(ym)}::date
         AND (${like}::text IS NULL OR u.full_name ILIKE ${like} OR u.email ILIKE ${like})
         AND (${after === null} OR (${PERSON_ORDER}) > (${after?.[0] === '1'}, ${after?.[1] ?? ''},
@@ -110,27 +118,30 @@ export class SummaryListsService {
   // Không phân trang: số món một kỳ nhỏ; dòng ngoài DM gộp theo CUSTOM_ITEM_KEY
   async byItem(ym: string): Promise<{ items: ItemSummaryRow[] }> {
     const { rows } = await this.db.execute<
-      Omit<ItemSummaryRow, 'name' | 'unit'> & {
+      Omit<ItemSummaryRow, 'name' | 'unit' | 'max_qty' | 'over_max'> & {
         custom_name: string | null;
         custom_unit: string | null;
+        top_qty: number;
       }
     >(sql`
       SELECT coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) AS key,
              l.item_id, min(trim(l.custom_name)) AS custom_name,
              min(trim(l.custom_unit)) AS custom_unit, sum(l.qty)::int AS requested_qty,
-             count(DISTINCT r.user_sub)::int AS people
+             count(DISTINCT r.user_sub)::int AS people, max(l.qty)::int AS top_qty
       FROM requests r JOIN request_lines l ON l.request_id = r.id
       WHERE r.period_ym = ${ymToDate(ym)}::date AND ${EFFECTIVE_LINE}
       GROUP BY 1, l.item_id
     `);
     const ids = rows.map((r) => r.item_id).filter((id): id is string => !!id);
     const facts = await this.catalog.itemFacts(ids);
-    const items = rows.map(({ custom_name, custom_unit, ...row }) => {
+    const items = rows.map(({ custom_name, custom_unit, top_qty, ...row }) => {
       const item = row.item_id ? facts.get(row.item_id) : undefined;
       return {
         ...row,
         name: item?.name ?? custom_name ?? '',
         unit: item?.unit ?? custom_unit ?? '',
+        max_qty: item?.max_qty ?? null,
+        over_max: !!item && top_qty > item.max_qty,
       };
     });
     return { items: items.sort((a, b) => a.name.localeCompare(b.name, 'vi')) };

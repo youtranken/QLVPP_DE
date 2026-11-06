@@ -4,9 +4,12 @@ import {
   IsArray,
   IsDefined,
   IsISO8601,
+  IsInt,
   IsOptional,
   IsUUID,
   Matches,
+  Min,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { STAMP_FROM_2000 } from '../../common/ym';
@@ -42,11 +45,9 @@ class LinesBody {
   lines!: LineInput[];
 }
 
-// Writer nhận chung cho member/Hành chính; reason chỉ Hành chính gửi được
 export interface LinesPayload {
   lines: LineInput[];
   expected_updated_at?: string;
-  reason?: string | null;
 }
 
 // Member phải nói rõ đang lưu kỳ nào: tab mở từ kỳ trước sau hạn sẽ bị PERIOD_LOCKED thay vì ghi nhầm kỳ mới
@@ -56,8 +57,24 @@ export class SaveMyLinesBody extends LinesBody {
   @IsOptional() @UpdatedAtStamp() expected_updated_at?: string;
 }
 
+// Mã/ghi chú lý do kiểm ở parseAdjustLines (VALIDATION fields 'lines.*', đếm mã điểm sau NFC); dòng không id để writer trả LINE_ADD_FORBIDDEN
+export class AdjustLineDto {
+  @IsOptional() @IsUUID() id?: string;
+  @IsInt() @Min(0) qty!: number;
+  @ValidateIf((line: AdjustLineDto) => line.id !== undefined)
+  @IsInt()
+  @Min(1)
+  expected_qty?: number;
+  @IsOptional() reason_code?: unknown;
+  @IsOptional() reason_note?: unknown;
+}
+
 // Hành chính luôn sửa phiếu đã có → bắt buộc mốc updated_at đang xem
-export class SaveLinesBody extends LinesBody {
+export class SaveLinesBody {
   @UpdatedAtStamp() expected_updated_at!: string;
-  @OptionalText(NOTE_MAX) reason?: string | null;
+  @IsArray()
+  @ArrayMaxSize(200)
+  @ValidateNested({ each: true })
+  @Type(() => AdjustLineDto)
+  lines!: AdjustLineDto[];
 }

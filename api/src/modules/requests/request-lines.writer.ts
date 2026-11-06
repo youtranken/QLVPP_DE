@@ -1,4 +1,5 @@
 import { HttpException, Injectable } from '@nestjs/common';
+import { ClockService } from '../../common/clock.service';
 import type { Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
@@ -9,22 +10,20 @@ import { FilesService } from '../files/files.service';
 import { UnitsService } from '../units/units.service';
 import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
+import type { Period } from '../periods/periods.service';
 import {
   constraintError,
   invalidPeriod,
   lineError,
   linesEmpty,
   periodLocked,
-  reasonRequired,
   staleUpdate,
   userNotFound,
 } from './request-errors';
-import { LineNotifier } from './line-notifier';
-import type { NewCustomLine } from './line-notifier';
 import { planLines } from './request-lines.diff';
 import type { LinesPlan } from './request-lines.diff';
 import { snapOf } from './request-lines.rules';
-import type { LineRow, LineSnap, WriteMode } from './request-lines.rules';
+import type { LineRow, LineSnap } from './request-lines.rules';
 import type { LinesPayload } from './request.dto';
 import * as repo from './requests.repo';
 
@@ -36,17 +35,14 @@ export interface LinesDiff {
   changed: { id: string; before: LineSnap; after: LineSnap }[];
 }
 
+// Chỉ nhân viên lưu phiếu kỳ đang mở; Hành chính điều chỉnh kỳ khóa qua AdminRequestService
 export interface SaveArgs {
-  request: { id: string; user_sub: string; period_ym: string } | null;
   owner_sub: string;
   period_ym: string;
   actor: RequestIdentity;
-  mode: WriteMode;
   body: LinesPayload;
   now: Date;
 }
-
-const REASON_MIN = 3;
 
 @Injectable()
 export class RequestLinesWriter {
@@ -57,8 +53,8 @@ export class RequestLinesWriter {
     private readonly files: FilesService,
     private readonly config: SystemConfigService,
     private readonly audit: AuditWriterService,
-    private readonly notifier: LineNotifier,
     private readonly units: UnitsService,
+    private readonly clock: ClockService,
   ) {}
 
   async save(
@@ -75,14 +71,16 @@ export class RequestLinesWriter {
   private async write(tx: Tx, args: SaveArgs) {
     // SA cục bộ là tài khoản IT khẩn cấp, không thuộc danh bạ → không có phiếu
     if (args.owner_sub === LOCAL_SA_SUB) throw userNotFound();
-    await this.assertPeriod(tx, args);
+    const open = await this.assertPeriod(tx, args);
     const owner = await this.users.findBySub(args.owner_sub);
     if (!owner) throw userNotFound();
     const head = await this.lockHead(tx, args, owner.department);
     const existing = await repo.lockLines(tx, head.id);
     const plan = await this.plan(tx, existing, args);
     await this.assertImagesOwned(tx, plan, args);
-    const { diff, newCustom } = await this.apply(tx, head.id, plan, args);
+    // Chờ khóa có thể vượt qua hạn: đọc lại đồng hồ để dòng không lọt vào kỳ Hành chính đã bắt đầu làm
+    if (this.clock.now() >= open.deadline) throw periodLocked(open.ym);
+    const diff = await this.apply(tx, head.id, plan, args);
     if (!head.inserted && isEmpty(diff)) return { request_id: head.id, diff };
 
     const remaining =
@@ -104,21 +102,9 @@ export class RequestLinesWriter {
         ym: args.period_ym,
         owner_sub: args.owner_sub,
         ...diff,
-        ...(args.mode === 'admin' && reason(args)
-          ? { reason: reason(args) }
-          : {}),
-        self: args.actor.sub === args.owner_sub && args.mode === 'admin',
+        self: false,
       },
     });
-    // Dòng nhân viên lưu luôn thuộc kỳ mở mà Hành chính chưa được xem; chỉ báo dòng Hành chính thêm ở kỳ khóa
-    if (args.mode === 'admin')
-      await this.notifier.customLinesAdded(tx, {
-        ym: args.period_ym,
-        person: owner.fullName,
-        actorSub: args.actor.sub,
-        lines: newCustom,
-        now: args.now,
-      });
     return { request_id: remaining === 0 ? null : head.id, diff };
   }
 
@@ -128,19 +114,16 @@ export class RequestLinesWriter {
     department: string | null,
   ): Promise<repo.RequestHead> {
     const expected = args.body.expected_updated_at;
-    const head = args.request
-      ? await repo.lockRequest(tx, args.request.id, expected)
-      : await repo.upsertRequest(tx, {
-          ym: args.period_ym,
-          owner_sub: args.owner_sub,
-          department,
-          created_by: args.actor.sub,
-          now: args.now,
-          expected,
-        });
+    const head = await repo.upsertRequest(tx, {
+      ym: args.period_ym,
+      owner_sub: args.owner_sub,
+      department,
+      created_by: args.actor.sub,
+      now: args.now,
+      expected,
+    });
     // Phiếu đã có mà client không gửi đúng updated_at mới nhất → đang xem bản cũ
-    const stale =
-      !head || (head.inserted ? expected !== undefined : head.fresh !== true);
+    const stale = head.inserted ? expected !== undefined : head.fresh !== true;
     if (stale) throw staleUpdate();
     if (head.inserted && args.body.lines.length === 0) throw linesEmpty();
     return head;
@@ -158,7 +141,6 @@ export class RequestLinesWriter {
     return planLines({
       existing,
       body: args.body.lines,
-      mode: args.mode,
       items: await this.catalog.itemFacts([...new Set(ids)], tx, {
         lockCategories: true,
       }),
@@ -176,20 +158,12 @@ export class RequestLinesWriter {
     });
   }
 
-  private async assertPeriod(tx: Tx, args: SaveArgs): Promise<void> {
-    if (args.mode === 'member') {
-      const open = await this.periods.openPeriod(tx, args.now);
-      // 'YYYY-MM' so sánh chuỗi đúng thứ tự thời gian
-      if (args.period_ym > open.ym) throw invalidPeriod();
-      if (args.period_ym !== open.ym) throw periodLocked(open.ym);
-      return;
-    }
-    await this.periods.assertLocked(args.period_ym, args.now, tx);
-    // BR-7: kỳ đã khóa chỉ sửa phiếu đã có, không tạo phiếu mới
-    if (!args.request) {
-      throw periodLocked((await this.periods.openPeriod(tx, args.now)).ym);
-    }
-    if ((reason(args)?.length ?? 0) < REASON_MIN) throw reasonRequired();
+  private async assertPeriod(tx: Tx, args: SaveArgs): Promise<Period> {
+    const open = await this.periods.openPeriod(tx, args.now);
+    // 'YYYY-MM' so sánh chuỗi đúng thứ tự thời gian
+    if (args.period_ym > open.ym) throw invalidPeriod();
+    if (args.period_ym !== open.ym) throw periodLocked(open.ym);
+    return open;
   }
 
   // Ảnh hợp lệ: người lưu tự tải, hoặc đã nằm trên dòng của chủ phiếu (chép lại dòng có ảnh Hành chính thay)
@@ -226,7 +200,7 @@ export class RequestLinesWriter {
     requestId: string,
     plan: LinesPlan,
     args: SaveArgs,
-  ): Promise<{ diff: LinesDiff; newCustom: NewCustomLine[] }> {
+  ): Promise<LinesDiff> {
     await repo.deleteLines(
       tx,
       plan.deletes.map((l) => l.id),
@@ -235,20 +209,16 @@ export class RequestLinesWriter {
       await repo.updateLine(tx, before.id, after, args.now);
     }
     const added: LineSnapWithId[] = [];
-    const newCustom: NewCustomLine[] = [];
     for (const line of plan.inserts) {
       const id = await repo.insertLine(tx, requestId, {
         snap: line.snap,
         review_status: line.review_status,
-        added_by_admin: args.mode === 'admin',
+        added_by_admin: false,
         now: args.now,
       });
       added.push({ id, ...line.snap });
-      if (line.review_status === 'pending') {
-        newCustom.push({ id, name: line.snap.custom_name! });
-      }
     }
-    const diff = {
+    return {
       added,
       removed: plan.deletes.map(withId),
       changed: plan.updates.map(({ before, after }) => ({
@@ -257,12 +227,7 @@ export class RequestLinesWriter {
         after,
       })),
     };
-    return { diff, newCustom };
   }
-}
-
-function reason(args: SaveArgs): string | undefined {
-  return args.body.reason?.trim() || undefined;
 }
 
 function withId(line: LineRow): LineSnapWithId {

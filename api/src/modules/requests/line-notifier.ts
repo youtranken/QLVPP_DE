@@ -2,8 +2,12 @@ import { Injectable } from '@nestjs/common';
 import type { Tx } from '../../database/database.module';
 import { eventIds } from '../notifications/notification-events';
 import { NotificationsService } from '../notifications/notifications.service';
-import * as repo from './requests.repo';
+import { UsersService } from '../users/users.service';
+import { vnDay } from '../../common/period';
 import type { ItemFacts } from '../catalog/catalog-sql';
+import type { AdjustReason } from './adjust-rules';
+import * as adjustments from './line-adjustments.repo';
+import * as repo from './requests.repo';
 
 export interface ReviewedLine {
   lineId: string;
@@ -15,14 +19,14 @@ export interface ReviewedLine {
   now: Date;
 }
 
-export interface NewCustomLine {
-  id: string;
-  name: string;
-}
+const BELL_LINES = 5;
 
 @Injectable()
 export class LineNotifier {
-  constructor(private readonly notifications: NotificationsService) {}
+  constructor(
+    private readonly notifications: NotificationsService,
+    private readonly users: UsersService,
+  ) {}
 
   async reviewed(tx: Tx, l: ReviewedLine): Promise<void> {
     const owner = await repo.requestOwner(tx, l.requestId);
@@ -44,29 +48,32 @@ export class LineNotifier {
     });
   }
 
-  async customLinesAdded(
+  // Gộp theo ngày: params tính lại từ mọi bản ghi trong ngày; lần lưu chỉ có user_left hoặc chủ phiếu đã nghỉ thì không chuông
+  async linesAdjusted(
     tx: Tx,
-    args: {
-      ym: string;
-      person: string | null;
-      actorSub: string;
-      lines: NewCustomLine[];
-      now: Date;
-    },
+    args: { userSub: string; ym: string; reasons: AdjustReason[]; now: Date },
   ): Promise<void> {
-    if (args.lines.length === 0) return;
-    const admins = (await this.notifications.adminRecipients(tx)).filter(
-      (sub) => sub !== args.actorSub,
-    );
-    for (const line of args.lines) {
-      await this.notifications.notifyWithin(tx, {
-        eventId: eventIds.customLineNew(line.id),
-        recipients: admins,
-        topic: 'custom_line_new',
-        params: { ym: args.ym, name: line.name, person: args.person },
-        link: `/admin/review?ym=${args.ym}`,
-        now: args.now,
-      });
-    }
+    if (args.reasons.every((r) => r === 'user_left')) return;
+    const owner = await this.users.findBySub(args.userSub);
+    if (owner?.status !== 'active') return;
+    const { day, from, to } = vnDay(args.now);
+    const lines = await adjustments.dayBellLines(tx, {
+      userSub: args.userSub,
+      ym: args.ym,
+      from,
+      to,
+    });
+    if (lines.length === 0) return;
+    await this.notifications.upsertWithin(tx, {
+      eventId: eventIds.lineAdjusted(args.userSub, args.ym, day),
+      userSub: args.userSub,
+      kind: 'line_adjusted',
+      params: {
+        ym: args.ym,
+        lines: lines.slice(0, BELL_LINES),
+        more: Math.max(0, lines.length - BELL_LINES),
+      },
+      now: args.now,
+    });
   }
 }

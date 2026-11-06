@@ -81,21 +81,13 @@ describe('POST admin/lines/:id/deliver: chuông giao đủ, audit, updated_at', 
     ]);
   });
 
-  it('giao đủ → Hành chính tăng qty 5→6 qua PUT admin lines (lý do) → giao 1 → thông báo thứ 2 với event_id khác', async () => {
+  // Kỳ khóa không còn đường tăng qty qua API; dòng tăng sau khi giao đủ chỉ còn ở dữ liệu cũ
+  it('dữ liệu cũ: giao đủ → qty tăng 5→6 → giao 1 → thông báo thứ 2 với event_id khác', async () => {
     const { request, line } = await lockedLine(10);
     await deliver(line.id, { qty: 5, expected_delivered_qty: 0 }).expect(200);
-    const current = await adminView(request.id);
-    await as(
-      http().put(`/api/admin/requests/${request.id}/lines`),
-      ADMIN,
-      'admin',
-    )
-      .send({
-        lines: [{ id: line.id, qty: 6 }],
-        expected_updated_at: current.updated_at,
-        reason: 'Bổ sung một cây',
-      })
-      .expect(200);
+    await f
+      .pool()
+      .query('UPDATE request_lines SET qty = 6 WHERE id = $1', [line.id]);
     const more = await deliver(line.id, {
       qty: 1,
       expected_delivered_qty: 5,
@@ -136,9 +128,15 @@ describe('POST admin/lines/:id/deliver: chuông giao đủ, audit, updated_at', 
       'admin',
     )
       .send({
-        lines: [{ id: line.id, qty: 4 }],
+        lines: [
+          {
+            id: line.id,
+            qty: 4,
+            expected_qty: 5,
+            reason_code: 'over_quota',
+          },
+        ],
         expected_updated_at: before.updated_at,
-        reason: 'Giảm một cây',
       })
       .expect(409);
     expect(stale.body.code).toBe('STALE_UPDATE');

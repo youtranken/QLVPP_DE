@@ -6,7 +6,8 @@ export type NotificationTopic =
   | 'line_review'
   | 'custom_line_new'
   | 'low_stock'
-  | 'line_cancelled';
+  | 'line_cancelled'
+  | 'line_adjusted';
 
 // event_id tất định (§9): UNIQUE (event_id, user_sub) chống gửi trùng khi cron/tx chạy lại
 export const eventIds = {
@@ -21,4 +22,7 @@ export const eventIds = {
     `low_stock:${itemId}:${purchaseMovementId ?? '0'}`,
   lineCancelled: (lineId: string, cancelledQty: number) =>
     `line_cancelled:${lineId}:${cancelledQty}`,
+  // Một chuông mỗi người mỗi kỳ mỗi ngày giờ VN: các lần giảm trong ngày ghi đè cùng dòng
+  lineAdjusted: (sub: string, ym: string, vnDay: string) =>
+    `line_adjusted:${sub}:${ym}:${vnDay}`,
 };
