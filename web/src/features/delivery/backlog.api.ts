@@ -53,7 +53,9 @@ export interface LineDeliveries {
 }
 
 export interface CancelBody {
-  reason: string;
+  reason?: string;
+  // Có mã thì server ghi lý do cố định "ADM hết hàng", không cần chữ
+  reason_code?: 'adm_out_of_stock';
   expected_delivered_qty: number;
   expected_qty: number;
 }

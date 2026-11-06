@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import { vnSavedAt } from '@/lib/format-time';
-import { shiftYm } from '@/lib/ym';
-import { useCurrentPeriod } from '@/features/request/request.api';
 import { DataTable } from '@/ui/data-table';
 import { FilterNotice } from '@/ui/filter-notice';
 import { Icon } from '@/ui/icon';
@@ -51,7 +49,7 @@ function PersonCell({ row }: { row: PersonRow }) {
   );
 }
 
-function PersonActions({ row, ym, locked, stale, newPage, onOpen }: { row: PersonRow; ym: string; locked: boolean; stale: boolean; newPage: boolean; onOpen: (id: string) => void }) {
+function PersonActions({ row, locked, stale, onOpen }: { row: PersonRow; locked: boolean; stale: boolean; onOpen: (id: string) => void }) {
   const { t } = useTranslation();
   const canDeliver = locked && row.delivered_qty + row.cancelled_qty < row.total_qty;
   const deliverLabel = t('summary.table.deliverLabel', { name: nameOf(row) });
@@ -72,7 +70,7 @@ function PersonActions({ row, ym, locked, stale, newPage, onOpen }: { row: Perso
       {canDeliver && !stale && (
         <Link
           className="btn btn--ghost btn--sm sm-icon-btn"
-          to={newPage ? `/admin/delivery?person=${encodeURIComponent(row.user_sub)}` : `/admin/delivery/classic?ym=${ym}&request=${row.request_id}`}
+          to={`/admin/delivery?person=${encodeURIComponent(row.user_sub)}`}
           aria-label={deliverLabel}
           title={deliverLabel}
           onClick={(e) => e.stopPropagation()}
@@ -84,7 +82,7 @@ function PersonActions({ row, ym, locked, stale, newPage, onOpen }: { row: Perso
   );
 }
 
-function useColumns(ym: string, locked: boolean, stale: boolean, newPage: boolean, onOpen: (id: string) => void) {
+function useColumns(locked: boolean, stale: boolean, onOpen: (id: string) => void) {
   const { t } = useTranslation();
   return useMemo<ColumnDef<Row, unknown>[]>(() => {
     const columns: ColumnDef<Row, unknown>[] = [
@@ -103,21 +101,19 @@ function useColumns(ym: string, locked: boolean, stale: boolean, newPage: boolea
         id: 'actions',
         header: () => <span className="sr-only">{t('summary.table.actions')}</span>,
         meta: { className: 'r sm-acts' },
-        cell: ({ row }) => <PersonActions row={row.original} ym={ym} locked={locked} stale={stale} newPage={newPage} onOpen={onOpen} />,
+        cell: ({ row }) => <PersonActions row={row.original} locked={locked} stale={stale} onOpen={onOpen} />,
       },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
-  }, [t, ym, locked, stale, newPage, onOpen]);
+  }, [t, locked, stale, onOpen]);
 }
 
 export function SummaryPersonTable({ ym, locked, filter, q, activeId, onOpen, onClearFilter }: Props) {
   const { t } = useTranslation();
   const { query, rows } = usePersonTableRows(ym, filter, q);
   const stale = query.isPlaceholderData;
-  const current = useCurrentPeriod().data;
-  // Trang Giao theo người luôn là kỳ khóa gần nhất; kỳ cũ hơn vẫn giao ở trang cũ
-  const newPage = !!current && ym === shiftYm(current.ym, -1);
-  const columns = useColumns(ym, locked, stale, newPage, onOpen);
+  // Trang Giao hàng luôn là kỳ khóa gần nhất; phần còn lại của kỳ cũ hơn hiện ở đó dưới dạng nợ
+  const columns = useColumns(locked, stale, onOpen);
 
   if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
   const count = t('summary.filters.people', { n: `${rows.length}${query.hasNextPage ? '+' : ''}` });

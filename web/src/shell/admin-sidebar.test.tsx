@@ -73,7 +73,7 @@ describe('AdminSidebar: nhóm', () => {
     expect(groups.map((g) => g.getAttribute('aria-label'))).toEqual(['Hằng tháng', 'Danh mục và tủ', 'Quản lý', 'Xem lại sau']);
     await userEvent.click(within(groups[3]).getByRole('button', { name: 'Xem lại sau' }));
     expect(within(groups[3]).getByRole('link', { name: 'Còn nợ' })).toHaveAttribute('href', '/admin/backlog');
-    expect(within(groups[3]).getByRole('link', { name: 'Giao hàng (bản cũ)' })).toHaveAttribute('href', '/admin/delivery/classic');
+    expect(within(groups[3]).queryByRole('link', { name: 'Giao hàng (bản cũ)' })).toBeNull();
     expect(within(groups[1]).getByRole('link', { name: /Món ngoài danh mục/ })).toBeInTheDocument();
   });
 });
@@ -211,14 +211,14 @@ describe('AdminSidebar: nhóm "Xem lại sau" thu gọn', () => {
     expect(within(later()).queryAllByRole('link')).toHaveLength(0);
   });
 
-  it('bấm nút → mở (aria-expanded=true, thấy 4 liên kết); bấm lại → thu gọn', async () => {
+  it('bấm nút → mở (aria-expanded=true, thấy 3 liên kết); bấm lại → thu gọn', async () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
     await screen.findByRole('navigation', { name: 'Menu quản lý' });
     await userEvent.click(toggle());
     expect(toggle()).toHaveAttribute('aria-expanded', 'true');
-    expect(within(later()).getAllByRole('link').map((a) => a.getAttribute('title'))).toEqual(['Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ', 'Giao hàng (bản cũ)']);
+    expect(within(later()).getAllByRole('link').map((a) => a.getAttribute('title'))).toEqual(['Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ']);
     await userEvent.click(toggle());
     expect(within(later()).queryAllByRole('link')).toHaveLength(0);
   });
@@ -234,7 +234,7 @@ describe('AdminSidebar: nhóm "Xem lại sau" thu gọn', () => {
     expect(toggle()).toHaveAttribute('aria-expanded', 'true');
   });
 
-  it.each(['/admin/summary', '/admin/reports', '/admin/backlog', '/admin/delivery/classic'])('đang ở %s (trong nhóm) → tự mở, mục đang chọn có aria-current', async (path) => {
+  it.each(['/admin/summary', '/admin/reports', '/admin/backlog'])('đang ở %s (trong nhóm) → tự mở, mục đang chọn có aria-current', async (path) => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), path);
@@ -252,15 +252,6 @@ describe('AdminSidebar: nhóm "Xem lại sau" thu gọn', () => {
     await userEvent.click(toggle());
     expect(localStorage.getItem('vpp.admin.navLater')).toBe('1');
     expect(toggle()).toHaveAttribute('aria-expanded', 'true');
-  });
-
-  it('/admin/delivery/classic không đánh dấu thêm mục "Giao hàng" (chỉ khớp đúng đường dẫn)', async () => {
-    mockViewport(1280);
-    stubShellApi();
-    renderApp(makeMe('admin'), '/admin/delivery/classic');
-    await screen.findByRole('navigation', { name: 'Menu quản lý' });
-    expect(navLink('Giao hàng')).not.toHaveAttribute('aria-current');
-    expect(navLink('Giao hàng (bản cũ)')).toHaveAttribute('aria-current', 'page');
   });
 
   it('localStorage hỏng (ném lỗi) → nhóm vẫn dựng, vẫn bấm mở được', async () => {

@@ -76,11 +76,11 @@ describe('SummaryPersonTable — bảng theo người', () => {
     await vi.waitFor(() => expect(link).toHaveAttribute('href', '/admin/delivery?person=a%2Bb%23c'));
   });
 
-  it('kỳ cũ hơn kỳ khóa gần nhất (2026-09) → giữ liên kết trang cũ /admin/delivery/classic?ym=2026-09&request=', async () => {
+  it('kỳ cũ hơn kỳ khóa gần nhất (2026-09) → cũng mở Giao hàng của người đó (trang cũ đã gỡ)', async () => {
     renderTable({ locked: true, ym: '2026-09', rows: [PEOPLE[1]] });
     const row = await rowOf('Phạm Văn Đức');
     const link = await within(row).findByRole('link', { name: 'Giao phiếu của Phạm Văn Đức' });
-    await vi.waitFor(() => expect(link).toHaveAttribute('href', '/admin/delivery/classic?ym=2026-09&request=r-1'));
+    await vi.waitFor(() => expect(link).toHaveAttribute('href', `/admin/delivery?person=${PEOPLE[1].user_sub}`));
   });
 
   it('tổng 0 (chỉ dòng chờ xem) → cột Giao "—", không NaN', async () => {

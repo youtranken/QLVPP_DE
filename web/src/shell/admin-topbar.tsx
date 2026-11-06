@@ -28,31 +28,24 @@ export function AdminTopbar() {
   const { t } = useTranslation();
   const me = useMe();
   const { pathname } = useLocation();
-  const [params, update] = useUrlPatch();
+  const [params] = useUrlPatch();
   const [open, setOpen] = useState(false);
   const avatarHint = useId();
   const page = PAGES.find((p) => pathname.startsWith(`/admin/${p.path}`));
   const delivery = page?.path === 'delivery';
-  const detail = delivery && !!params.get('request');
   const sub = usePeriodContext(delivery, params.get('ym'));
   const name = me.fullName ?? me.sub;
   return (
     <header className="topbar">
-      {detail ? (
-        <button type="button" className="topbar__menu" aria-label={t('nav.mobile.backToList')} onClick={() => update({ request: null })}>
-          <Icon name="back" />
-        </button>
-      ) : (
-        <button type="button" className="topbar__menu" aria-label={t('nav.mobile.openMenu')} aria-expanded={open} onClick={() => setOpen(true)}>
-          <Icon name="menu" />
-        </button>
-      )}
+      <button type="button" className="topbar__menu" aria-label={t('nav.mobile.openMenu')} aria-expanded={open} onClick={() => setOpen(true)}>
+        <Icon name="menu" />
+      </button>
       <span className="topbar__text">
         <span className="topbar__title">{t('app.title')}</span>
         {sub && <small className="topbar__sub">{sub}</small>}
       </span>
       <NotificationBell />
-      {/* Avatar cũng mở menu: ở màn chi tiết nút trái là Quay lại, mọi trang vẫn chỉ cách 2 chạm */}
+      {/* Avatar cũng mở menu: mọi trang chỉ cách 2 chạm */}
       <button
         type="button"
         className="topbar__avatar"

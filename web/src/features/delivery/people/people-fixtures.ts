@@ -17,6 +17,10 @@ export function pLine(over: Partial<DeliveryPersonLine> = {}): DeliveryPersonLin
     remaining_qty: 3,
     stock_qty: 7,
     review_status: 'n/a',
+    adm_out: false,
+    deliver_cap: null,
+    request_at: '2026-10-01T01:00:00.000000Z',
+    line_at: '2026-10-01T01:00:00.000000Z',
     ...over,
   };
 }

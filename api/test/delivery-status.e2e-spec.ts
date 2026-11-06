@@ -178,4 +178,32 @@ describe('V2D-9 Chưa nhận là tháng đang giao, Còn nợ chỉ tháng trư�
       .query('UPDATE items SET stock_qty = 3 WHERE id = $1', [item]);
     expect((await ready()).sort()).toEqual([B, C].sort());
   });
+
+  it('người đã nghỉ đứng trước không giữ tủ, không tính giao được ngay; ahead_qty theo thứ tự đăng ký', async () => {
+    const { item, b, c9, c10 } = await scenario();
+    await f
+      .pool()
+      .query('UPDATE items SET stock_qty = 2 WHERE id = $1', [item]);
+    const lineOf = (p: DeliveryPerson | undefined, id: string) =>
+      p?.lines.find((l) => l.line_id === id);
+    let p = await byId();
+    expect(lineOf(p[B], b)).toMatchObject({ ahead_qty: 0 });
+    expect(lineOf(p[C], c9)).toMatchObject({ ahead_qty: 2 });
+    expect(lineOf(p[C], c10)).toMatchObject({ ahead_qty: 4 });
+    expect(typeof lineOf(p[C], c10)?.request_at).toBe('string');
+    expect(typeof lineOf(p[C], c10)?.line_at).toBe('string');
+    expect(await ready()).toEqual([B]);
+    await f
+      .pool()
+      .query("UPDATE users SET status = 'inactive' WHERE sub = $1", [B]);
+    try {
+      p = await byId();
+      expect(lineOf(p[C], c9)).toMatchObject({ ahead_qty: 0 });
+      expect(await ready()).toEqual([C]);
+    } finally {
+      await f
+        .pool()
+        .query("UPDATE users SET status = 'active' WHERE sub = $1", [B]);
+    }
+  });
 });

@@ -15,6 +15,8 @@ export function Stepper({
   describedBy,
   invalid = false,
   disabled = false,
+  onOverMax,
+  emptyAsMin = false,
 }: {
   value: number;
   min?: number;
@@ -26,6 +28,10 @@ export function Stepper({
   describedBy?: string;
   invalid?: boolean;
   disabled?: boolean;
+  // Gõ vượt trần: số bị kẹp về trần, nơi dùng báo "Tối đa n"
+  onOverMax?: () => void;
+  // Xóa trống ô coi như min thay vì giữ số cũ
+  emptyAsMin?: boolean;
 }) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState<string | null>(null);
@@ -35,9 +41,13 @@ export function Stepper({
   };
   const type = (text: string) => {
     if (!/^\d*$/.test(text)) return;
-    if (text === '') return setDraft('');
+    if (text === '') {
+      if (emptyAsMin) set(min);
+      return setDraft('');
+    }
     setDraft(null);
     set(Number(text));
+    if (Number(text) > max) onOverMax?.();
   };
   return (
     <div className={['stepper', className].filter(Boolean).join(' ')}>

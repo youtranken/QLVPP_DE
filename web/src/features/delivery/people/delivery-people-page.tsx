@@ -1,4 +1,5 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { useRef, useState } from 'react';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode } from '@/lib/api-error';
 import { vnLockDate } from '@/lib/format-time';
@@ -14,18 +15,15 @@ import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { usePeriodSummary } from '@/features/summary/summary.api';
 import { useDeliveryPeople, type DeliveryPerson } from './delivery-people.api';
-import { filterPeople, overlapCount, planOf, tabCounts, type PeopleTab } from './people-filter';
+import { filterPeople, overlapCount, tabCounts, type PeopleTab } from './people-filter';
+import { stockShortages } from './deliver-plan';
+import { DeliverDialog } from './deliver-dialog';
 import { PersonAvatar, PersonCard } from './person-card';
 import { PersonPanel } from './person-panel';
 import { useQuickDeliver } from './use-quick-deliver';
 import './delivery-people.m1.css';
 
 const TABS: PeopleTab[] = ['pending', 'debt', 'done', 'all'];
-// Thiếu hàng hoặc một món ở hai dòng (tồn chia chung) thì người giao phải nhìn từng dòng
-const needsPanel = (p: DeliveryPerson) => {
-  const plan = planOf(p);
-  return plan.short || plan.shared;
-};
 const TABLET_DOWN = '(max-width: 1279px)';
 
 function PanelHead({ person, inDrawer = false }: { person: DeliveryPerson; inDrawer?: boolean }) {
@@ -63,7 +61,18 @@ function PeopleBoard({ ym }: { ym: string }) {
     return i < 0 ? undefined : listed[i + 1];
   };
   const open = (sub: string | null) => update({ person: sub });
-  const quick = useQuickDeliver((p) => open(p.user_sub), open);
+  const quick = useQuickDeliver(people);
+  const [confirmFor, setConfirmFor] = useState<string | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  // Giao xong: về ô tìm, chọn sẵn chữ để gõ ngay người kế
+  const focusSearch = () => {
+    const input = searchRef.current;
+    if (!input?.isConnected) return false;
+    input.focus();
+    input.select();
+    return true;
+  };
+  const confirming = people.find((p) => p.user_sub === confirmFor);
 
   if (query.isError) {
     if (apiErrorCode(query.error) !== 'PERIOD_NOT_LOCKED') return <LoadError onRetry={() => void query.refetch()} />;
@@ -75,8 +84,18 @@ function PeopleBoard({ ym }: { ym: string }) {
 
   const counts = tabCounts(people);
   const both = overlapCount(people);
+  const short = stockShortages(people).size;
   const panel = selected && (
-    <PersonPanel key={selected.user_sub} ym={ym} person={selected} people={people} next={at >= 0 ? listed[at + 1] : undefined} onNext={open} />
+    <PersonPanel
+      key={selected.user_sub}
+      ym={ym}
+      person={selected}
+      people={people}
+      next={at >= 0 ? listed[at + 1] : undefined}
+      onNext={open}
+      onDelivered={() => open(null)}
+      focusAfter={focusSearch}
+    />
   );
   return (
     <>
@@ -84,6 +103,7 @@ function PeopleBoard({ ym }: { ym: string }) {
         <div className="toolbar__search">
           <Icon name="search" size={18} />
           <input
+            ref={searchRef}
             type="search"
             aria-label={t('delivery.people.searchLabel')}
             placeholder={t('delivery.people.searchPlaceholder')}
@@ -101,6 +121,12 @@ function PeopleBoard({ ym }: { ym: string }) {
           {both > 0 && <small className="pp-tabs__note">{t('delivery.people.overlap', { n: both })}</small>}
         </div>
       </div>
+      {short > 0 && (
+        <p className="pp-short">
+          <span>{t('warn.W19head', { n: short })}</span>
+          <Link to="/admin/stock">{t('delivery.people.toStock')}</Link>
+        </p>
+      )}
       <div className="pp-split">
         {listed.length === 0 ? (
           <EmptyState title={t('delivery.people.empty')} />
@@ -111,9 +137,9 @@ function PeopleBoard({ ym }: { ym: string }) {
                 <PersonCard
                   person={p}
                   selected={p.user_sub === selected?.user_sub}
-                  busy={quick.pending}
+                  canDeliver={quick.canDeliver(p)}
                   onView={() => open(p.user_sub)}
-                  onQuick={() => (needsPanel(p) ? open(p.user_sub) : void quick.run(p, nextOf(p.user_sub)))}
+                  onDeliver={() => setConfirmFor(p.user_sub)}
                 />
               </div>
             ))}
@@ -145,23 +171,42 @@ function PeopleBoard({ ym }: { ym: string }) {
           <div className="sheet-body">{panel}</div>
         </Drawer>
       )}
+      {confirming && (
+        <DeliverDialog
+          key={confirming.user_sub}
+          person={confirming}
+          people={people}
+          next={nextOf(confirming.user_sub)}
+          onNext={open}
+          onClose={() => setConfirmFor(null)}
+          onDone={() => setConfirmFor(null)}
+          onOpenPerson={() => {
+            setConfirmFor(null);
+            open(confirming.user_sub);
+          }}
+          focusAfter={focusSearch}
+        />
+      )}
     </>
   );
 }
 
 export function DeliveryPeoplePage() {
   const { t } = useTranslation();
-  const { search } = useLocation();
   const current = useCurrentPeriod();
   const lockedYm = current.data ? shiftYm(current.data.ym, -1) : undefined;
-  // Dấu trang cũ của màn Giao theo phiếu (?request=…) vẫn mở được ở trang cũ
-  const old = new URLSearchParams(search);
   const title = t('delivery.people.title', { month: lockedYm ? monthOf(lockedYm) : '' }).trim();
-  if (old.has('request') && !old.has('person')) return <Navigate to={`/admin/delivery/classic${search}`} replace />;
   return (
     <div className="ct-page">
       <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.delivery')]} title={title} description={t('delivery.people.description')} />
       {current.isError ? <LoadError onRetry={() => void current.refetch()} /> : lockedYm ? <PeopleBoard key={lockedYm} ym={lockedYm} /> : <Loading />}
     </div>
   );
+}
+
+// Trang Giao hàng bản cũ đã gỡ: dấu trang cũ về trang Giao hàng, giữ tháng
+export function DeliveryClassicRedirect() {
+  const { search } = useLocation();
+  const ym = new URLSearchParams(search).get('ym');
+  return <Navigate to={ym ? `/admin/delivery?${new URLSearchParams({ ym })}` : '/admin/delivery'} replace />;
 }

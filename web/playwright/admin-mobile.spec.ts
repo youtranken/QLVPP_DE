@@ -87,7 +87,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     await expectNoHorizontalScroll(page, 'hộp thoại Thêm đơn vị tính');
   });
 
-  test('E9-S7 Giao hàng 390: danh sách → chi tiết → giao tất cả → về danh sách', async ({ page, request }, info) => {
+  test('E9-S7 Giao hàng 390: thẻ → hộp tấm đáy → xác nhận → về ô tìm', async ({ page, request }, info) => {
     test.setTimeout(120_000);
     const release = await acquireLock('prev-period');
     let seed: Seed | undefined;
@@ -97,39 +97,21 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
         { stock: 10, qty: 1 },
       ]);
       const [a] = seed.items;
-      const rowName = `Mở phiếu của ${seed.name}, đã giao 0 trên 3 đơn vị`;
-      await page.goto('/admin/delivery/classic?all=1');
-      await expect(page.getByRole('radio', { name: /^Tất cả/ })).toHaveAttribute('aria-checked', 'true');
+      await page.goto('/admin/delivery');
+      await page.getByRole('searchbox', { name: 'Tìm tên hoặc phòng ban' }).fill(seed.name);
       await expectNoContrastViolations(page);
-      await page.getByRole('button', { name: rowName }).tap();
-      await expect(page).toHaveURL(new RegExp(`request=${seed.requestId}`));
-      const lines = page.getByRole('table', { name: `Các dòng của phiếu ${seed.name}` });
-      const line = lines.getByRole('row').filter({ hasText: a.name });
-      // Đăng ký / Đã giao / Tồn vẫn hiện trong thẻ dòng (trước đây bị ẩn ở < 768)
-      const cells = line.getByRole('cell');
-      for (const [i, value] of [[2, '2'], [3, '0'], [4, '10']] as const) {
-        await expect(cells.nth(i)).toBeVisible();
-        await expect(cells.nth(i)).toHaveText(value);
-      }
-      await expect(page.getByRole('list', { name: 'Danh sách phiếu' })).toHaveCount(0);
-      await expectNoHorizontalScroll(page, 'chi tiết Giao hàng');
+      await page.getByRole('button', { name: `Giao…, ${seed.name}` }).tap();
+      const dialog = page.getByRole('dialog', { name: `Giao cho ${seed.name}?` });
+      await expect(dialog.getByRole('spinbutton', { name: `Giao lần này: ${a.name}` })).toHaveValue('2');
+      await expectNoHorizontalScroll(page, 'hộp giao');
       await expectNoContrastViolations(page);
-      await expect(page.getByRole('button', { name: 'Giao tất cả' })).toBeVisible();
-      await expect(line.getByRole('button', { name: `Giao ${a.name}` })).toBeVisible();
-      await expectTouchTargets(page, 'Giao hàng chi tiết');
-
-      await page.getByRole('button', { name: 'Quay lại danh sách phiếu' }).tap();
-      await expect(page).not.toHaveURL(/request=/);
-      await expect(page).toHaveURL(/all=1/);
-      await page.getByRole('button', { name: rowName }).tap();
-      await page.getByRole('button', { name: 'Giao tất cả' }).tap();
-      await expect(page.getByText(`Đã giao đủ phiếu · Đã báo cho ${seed.name}.`)).toBeVisible();
-      await expect(page).not.toHaveURL(/request=/, { timeout: 5_000 });
-      await expect(page).toHaveURL(/all=1/);
-      await expect(page.getByRole('button', { name: `Mở phiếu của ${seed.name}, đã giao 3 trên 3 đơn vị` })).toBeVisible();
+      await expectTouchTargets(page, 'hộp giao');
+      await dialog.getByRole('button', { name: 'Xác nhận giao' }).tap();
+      await expect(page.getByText(`Đã giao cho ${seed.name}`)).toBeVisible();
+      await expect(dialog).toHaveCount(0);
 
       for (const [path, title] of PAGES) {
-        await page.goto(`/admin/delivery/classic?request=${seed.requestId}`);
+        await page.goto('/admin/delivery');
         await page.getByRole('button', { name: /, Hành chính$/ }).tap();
         await menuLink(page, title).tap();
         await expect(page).toHaveURL(new RegExp(`/admin/${path}`));

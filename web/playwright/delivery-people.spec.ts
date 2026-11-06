@@ -36,8 +36,16 @@ async function seedStandard(tag: string, prevYm: string) {
   return { a, b, pen, cleanup };
 }
 
-test.describe('Giao hàng theo người (Plan v2-B, B3)', () => {
-  test('Ví dụ chuẩn: A đủ 3, B giao 7 nợ 3', async ({ page, request }, info) => {
+const deliverPosts = (page: Page) => {
+  const seen: string[] = [];
+  page.on('request', (r) => {
+    if (r.method() === 'POST' && /\/(deliver|deliver-all|cancel-remaining)$/.test(r.url())) seen.push(r.url());
+  });
+  return seen;
+};
+
+test.describe('Giao hàng theo người — mọi lần giao qua hộp xác nhận', () => {
+  test('V2D-10 card opens dialog: A đủ 3, B giao 7 chưa nhận 3, kho cuối 0', async ({ page, request }, info) => {
     const release = await acquireLock('prev-period');
     const tag = `${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}`;
     const period = await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json();
@@ -46,46 +54,54 @@ test.describe('Giao hàng theo người (Plan v2-B, B3)', () => {
     try {
       const stock = await request.post(`/api/admin/items/${s.pen.id}/stock`, { headers: devHeaders('admin'), data: { delta: 10, reason: 'purchase', note: 'PW nhập tồn' } });
       expect(stock.ok()).toBe(true);
+      const posts = deliverPosts(page);
 
       await page.goto('/admin/delivery');
       await expect(page.getByRole('heading', { level: 1, name: `Giao hàng kỳ tháng ${month(prevYm)}` })).toBeVisible();
       await find(page, s.a.name);
       const cardA = cardOf(page, s.a.name);
-      await expect(cardA.getByText('Chưa nhận', { exact: true })).toBeVisible();
+      const actA = cardA.getByRole('button', { name: `Giao…, ${s.a.name}` });
+      const view = await cardA.getByRole('button', { name: `Xem ${s.a.name}` }).boundingBox();
+      const act = await actA.boundingBox();
+      expect(act!.x - (view!.x + view!.width), '"Giao…" cách "Xem" ≥ 8 px').toBeGreaterThanOrEqual(8);
+      await actA.click();
+      const dlgA = page.getByRole('dialog', { name: `Giao cho ${s.a.name}?` });
+      await expect(dlgA).toBeVisible();
+      await expect(dlgA.getByRole('heading', { name: `Giao cho ${s.a.name}?` })).toBeFocused();
+      expect(posts, 'mở hộp chưa gửi gì').toEqual([]);
+      expect(page.url()).toMatch(/\/admin\/delivery(\?.*)?$/);
       if (isMobile(info)) {
+        const box = await dlgA.boundingBox();
+        const vp = page.viewportSize()!;
+        expect(Math.round(box!.width), 'tấm đáy toàn rộng').toBe(vp.width);
+        expect(Math.round(box!.y + box!.height), 'tấm đáy sát đáy màn').toBe(vp.height);
+        expect(await fitsWidth(page), 'hộp không cuộn ngang ở 390').toBe(true);
         await expectNoContrastViolations(page);
-        expect(await fitsWidth(page), 'trang không cuộn ngang ở 390').toBe(true);
       }
-      await cardA.getByRole('button', { name: /^Giao đủ/ }).click();
+      await dlgA.getByRole('button', { name: 'Xác nhận giao' }).click();
       await expect(page.getByText(`Đã giao cho ${s.a.name}`)).toBeVisible();
+      await expect(dlgA).toHaveCount(0);
+      await expect(page.getByRole('searchbox', { name: 'Tìm tên hoặc phòng ban' })).toBeFocused();
       expect(stockOf(s.pen.id)).toBe(7);
-      await expect(cardA.getByText('Đã nhận', { exact: true })).toBeVisible();
 
       await find(page, s.b.name);
-      const cardB = cardOf(page, s.b.name);
-      await expect(cardB.getByRole('button', { name: /^Giao 7\/10/ })).toBeVisible();
-      await cardB.getByRole('button', { name: `Xem ${s.b.name}` }).click();
-      const panel = isMobile(info) ? page.getByRole('dialog', { name: s.b.name }) : page.getByRole('region', { name: s.b.name, exact: true });
-      await expect(panel.getByRole('spinbutton', { name: `Giao ${s.pen.name}` })).toHaveValue('7');
-      await expect(panel.getByText('Giao 7 · Chưa nhận 3')).toBeVisible();
-      await expect(panel.getByRole('button', { name: `Thêm Giao ${s.pen.name}` })).toBeDisabled();
-      if (isMobile(info)) {
-        await expectNoContrastViolations(page);
-        expect(await fitsWidth(page), 'ngăn kéo không rộng hơn màn 390').toBe(true);
-      }
-      await panel.getByRole('button', { name: 'Giao', exact: true }).click();
+      await cardOf(page, s.b.name).getByRole('button', { name: `Giao…, ${s.b.name}` }).click();
+      const dlgB = page.getByRole('dialog', { name: `Giao cho ${s.b.name}?` });
+      await expect(dlgB.getByRole('spinbutton', { name: `Giao lần này: ${s.pen.name}` })).toHaveValue('7');
+      await expect(dlgB.getByText('Chưa nhận 3')).toBeVisible();
+      await expect(dlgB.getByRole('button', { name: `Thêm Giao lần này: ${s.pen.name}` })).toBeDisabled();
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await dlgB.getByRole('button', { name: 'Xác nhận giao' }).click();
       await expect(page.getByText(`Đã giao cho ${s.b.name}`)).toBeVisible();
       expect(stockOf(s.pen.id)).toBe(0);
-      if (isMobile(info)) await page.getByRole('button', { name: 'Đóng' }).click();
+      expect(posts).toHaveLength(2);
 
       await page.getByRole('searchbox', { name: 'Tìm tên hoặc phòng ban' }).clear();
-      await expect(page.getByRole('radio', { name: /^Chưa nhận/ })).toBeChecked();
       // B được giao thiếu (7/10) tháng đang giao → vẫn "Chưa nhận" tới khi tháng sau khóa sổ
       const stillB = cardOf(page, s.b.name);
       await expect(stillB.getByText('Chưa nhận', { exact: true })).toBeVisible();
       await expect(stillB.getByText('Đã giao 7/10')).toBeVisible();
       await expect(stillB.getByRole('button', { name: /^Tủ chưa có hàng/ })).toBeDisabled();
-      await expect(cardOf(page, s.a.name)).toHaveCount(0);
       await settled(page);
       if (isMobile(info)) await expectNoContrastViolations(page);
     } finally {

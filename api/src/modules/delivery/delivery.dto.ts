@@ -129,6 +129,9 @@ export interface DeliveryPersonLine {
   adm_out: boolean; // món/khóa của dòng đánh "ADM hết hàng" cho kỳ của dòng
   custom_tracked: boolean; // dòng ngoài DM có trong bản in: trần theo hàng đã về
   deliver_cap: number | null; // null = món danh mục (trần theo tủ ở web)
+  ahead_qty: number; // còn chờ của các dòng cùng món đứng trước (kỳ → lưu phiếu → thêm dòng → id), bỏ người đã nghỉ
+  request_at: string; // lần lưu đầu của phiếu (ISO, µs) — thứ tự đăng ký
+  line_at: string;
 }
 export interface DeliveryPerson {
   user_sub: string;

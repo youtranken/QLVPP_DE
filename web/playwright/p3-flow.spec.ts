@@ -26,34 +26,27 @@ async function axe390(page: Page, info: TestInfo) {
 
 const PRINT_URL = /\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print(\?.*)?$/;
 const month = (ym: string) => Number(ym.slice(5, 7));
-const rowOf = (lines: Locator, name: string) => lines.getByRole('row').filter({ hasText: name });
 const reportRow = (page: Page, name: string) => page.getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row').filter({ hasText: name });
 // Cột: Món · ĐVT · Đăng ký · Nợ tháng trước · Tủ hiện có · Tổng cần · Đề nghị · [Đã về] · [Đã giao]
 const needCell = (row: Locator) => row.getByRole('cell').nth(5);
 const orderCell = (row: Locator) => row.getByRole('cell').nth(6);
 
 async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
-  await admin.goto('/admin/delivery/classic');
-  await expect(admin.getByText(`Tháng ${month(s.prevYm)}/${s.prevYm.slice(0, 4)}`, { exact: true })).toBeVisible();
-  // 390: hàng mở màn chi tiết riêng (nhãn "Mở phiếu của …"), không còn trạng thái chọn trong danh sách
-  const pick = admin.getByRole('button', { name: new RegExp(isMobile(info) ? `^Mở phiếu của ${s.a.name},` : `^${s.a.name}`) });
-  await pick.click();
-  if (!isMobile(info)) await expect(pick).toHaveAttribute('aria-pressed', 'true');
-  const lines = admin.getByRole('table', { name: `Các dòng của phiếu ${s.a.name}` });
-  const paper = rowOf(lines, s.paper.name);
-  await paper.getByLabel(`Thực giao ${s.paper.name}`).fill('3');
-  await paper.getByRole('button', { name: `Giao ${s.paper.name}` }).dblclick();
-  await expect(admin.getByText(`Đã giao 3 cái ${s.paper.name}`)).toBeVisible();
-  await expect(paper.getByText('Hết hàng — chưa nhận 2')).toBeVisible();
-  expect(deliveryMovements(s.paper.id)).toBe('-3');
+  await admin.goto('/admin/delivery');
+  await admin.getByRole('searchbox', { name: 'Tìm tên hoặc phòng ban' }).fill(s.a.name);
+  const card = admin.getByRole('heading', { level: 3, name: s.a.name, exact: true }).locator('xpath=ancestor::article');
+  await card.getByRole('button', { name: `Giao…, ${s.a.name}` }).click();
+  const dialog = admin.getByRole('dialog', { name: `Giao cho ${s.a.name}?` });
+  // Tủ giấy 3, cần 5: đề xuất 3 và phần thiếu còn ở Chưa nhận
+  await expect(dialog.getByRole('spinbutton', { name: `Giao lần này: ${s.paper.name}` })).toHaveValue('3');
+  await expect(dialog.getByText('Chưa nhận 2')).toBeVisible();
   await axe390(admin, info);
-  await snap(admin, info, 'p3-delivered-paper');
-
-  await admin.getByRole('button', { name: 'Giao tất cả' }).click();
-  const result = admin.getByRole('status', { name: 'Kết quả giao' });
-  await expect(result).toHaveText(`Đã giao 2 dòng · Không giao được: ${s.paper.name} (chỉ còn 0)`);
-  await expect(rowOf(lines, s.pen.name).getByText('Đã giao đủ')).toBeVisible();
-  await expect(rowOf(lines, s.custom).getByText('Đã giao đủ')).toBeVisible();
+  await snap(admin, info, 'p3-deliver-dialog');
+  // Bấm đúp vẫn chỉ một lượt giao
+  await dialog.getByRole('button', { name: 'Xác nhận giao' }).dblclick();
+  await expect(admin.getByText(`Đã giao cho ${s.a.name}`)).toBeVisible();
+  await expect(dialog).toHaveCount(0);
+  expect(deliveryMovements(s.paper.id)).toBe('-3');
   expect(deliveryMovements(s.pen.id)).toBe('-2');
   await snap(admin, info, 'p3-delivered-all');
 }

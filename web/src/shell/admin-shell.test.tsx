@@ -6,7 +6,7 @@ import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
 const NAV_ORDER = ['Tháng này', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
-const LATER = ['Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ', 'Giao hàng (bản cũ)'];
+const LATER = ['Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
 const linkLabels = (nav: HTMLElement) =>
@@ -94,7 +94,7 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getByRole('main').querySelector('.shell__panel')).not.toBeNull();
   });
 
-  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 16 mục (menu điện thoại không thu gọn nhóm)', async () => {
+  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 15 mục (menu điện thoại không thu gọn nhóm)', async () => {
     mockViewport(767);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');

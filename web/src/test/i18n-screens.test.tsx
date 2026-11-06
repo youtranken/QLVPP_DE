@@ -5,19 +5,16 @@ import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { PERIOD } from '@/test/request-api-stub';
-import { lineView } from '@/test/fixtures-request';
 import i18n from '@/lib/i18n';
 import { MeContext } from '@/lib/me';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { backlogLine } from '@/features/delivery/backlog-fixtures';
 import { stubBacklog } from '@/features/delivery/backlog-test-stub';
-import { LOCKED_SUMMARY, personRow } from '@/features/delivery/delivery-fixtures';
+import { person, pLine } from '@/features/delivery/people/people-fixtures';
 import { reportFixture, snapshotDataFixture, snapshotRow, ISSUE } from '@/features/reports/reports-fixtures';
 import { stubReports } from '@/features/reports/reports-test-stub';
-import type { AdminRequestView } from '@/features/summary/summary.api';
 
 const PERSON = { full_name: 'Pham Van Duc', department: 'Inspection Team' };
-const pen = { name: 'Bút bi xanh', name_en: 'Blue pen', unit: 'cay', pack_note: null, image_file_id: null, active: true, admin_only: false };
 
 const english = () => i18n.changeLanguage('en');
 // Vỏ app có tên người đăng nhập và tên ngôn ngữ "Tiếng Việt" (đúng ở mọi ngôn ngữ) → chỉ kiểm vùng nội dung
@@ -28,17 +25,16 @@ const vietnameseWords = () =>
   );
 const noVietnamese = () => expect(vietnameseWords()).toEqual([]);
 
-const deliveryView = (): AdminRequestView => ({
-  id: 'r-1',
-  period_ym: '2026-10',
+// Hộp giao có đủ nhóm: dòng nợ, dòng thiếu tủ, ADM hết hàng, dòng chờ xem; người đã nghỉ
+const DUC = person({
   user_sub: 'u-duc',
   ...PERSON,
-  updated_at: '2026-10-05T07:20:00.000Z',
-  is_open: false,
-  user_status: 'active',
+  user_status: 'locked',
   lines: [
-    lineView({ id: 'l-pen', item_id: 'i-pen', item: pen, qty: 5, delivered_qty: 3 }),
-    lineView({ id: 'l-tape', custom_name: 'Double tape', custom_unit: 'cai', qty: 2, review_status: 'accepted' }),
+    pLine({ line_id: 'l-pen', name: 'Bút bi xanh', name_en: 'Blue pen', qty: 5, remaining_qty: 5, stock_qty: 3 }),
+    pLine({ line_id: 'l-old', period_ym: '2026-09', is_debt: true, item_id: 'i-a4', name: 'Giấy A4', name_en: 'A4 paper', unit: 'ream', remaining_qty: 2, stock_qty: 9 }),
+    pLine({ line_id: 'l-clip', item_id: 'i-clip', name: 'Kẹp giấy', name_en: 'Paper clip', remaining_qty: 2, stock_qty: 1, adm_out: true }),
+    pLine({ line_id: 'l-tape', item_id: null, name: 'Double tape', unit: 'cai', stock_qty: null, review_status: 'pending' }),
   ],
 });
 
@@ -48,9 +44,7 @@ function stubDelivery() {
     vi.fn((url: string) => {
       if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
       if (url === '/api/admin/items' || url.startsWith('/api/item-categories')) return Promise.resolve(jsonResponse(200, []));
-      if (url.endsWith('/summary')) return Promise.resolve(jsonResponse(200, LOCKED_SUMMARY));
-      if (url.startsWith('/api/admin/periods/')) return Promise.resolve(jsonResponse(200, { items: [personRow({ ...PERSON })], next_cursor: null }));
-      if (url === '/api/admin/requests/r-1') return Promise.resolve(jsonResponse(200, deliveryView()));
+      if (url.endsWith('/delivery-people')) return Promise.resolve(jsonResponse(200, { ym: '2026-10', people: [DUC] }));
       return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null, unread_count: 0 }));
     }),
   );
@@ -65,13 +59,14 @@ afterEach(async () => {
 });
 
 describe('Song ngữ các màn Plan 3', () => {
-  it('Giao hàng: vi có "Giao tất cả"; en không còn chữ Việt', async () => {
+  it('Giao hàng: hộp giao vi có "Xác nhận giao"; en không còn chữ Việt', async () => {
     stubDelivery();
-    renderApp(ADMIN, '/admin/delivery/classic?request=r-1');
-    expect(await screen.findByRole('button', { name: 'Giao tất cả' }, { timeout: 5000 })).toBeInTheDocument();
+    renderApp(ADMIN, '/admin/delivery');
+    await userEvent.click(await screen.findByRole('button', { name: /^Giao…/ }, { timeout: 5000 }));
+    expect(await screen.findByRole('button', { name: 'Xác nhận giao' })).toBeInTheDocument();
     await english();
-    expect(await screen.findByRole('button', { name: 'Deliver all' }, { timeout: 5000 })).toBeInTheDocument();
-    expect(screen.getByText('Blue pen')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Confirm delivery' }, { timeout: 5000 })).toBeInTheDocument();
+    expect(within(screen.getByRole('dialog')).getByText('Blue pen')).toBeInTheDocument();
     noVietnamese();
   });
 

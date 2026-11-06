@@ -38,6 +38,7 @@ export function Dialog({
   returnFocus = true,
   opener: openerProp,
   onOpenAutoFocus,
+  onCloseFocus,
   children,
 }: {
   open: boolean;
@@ -56,6 +57,8 @@ export function Dialog({
   opener?: RefObject<HTMLElement | null>;
   // Gọi khi hộp mở, sau khi ghi nhớ phần tử đang focus; preventDefault() để tự đặt focus thay vì phần tử đầu tiên
   onOpenAutoFocus?: (e: Event) => void;
+  // Lúc đóng: trả true nếu đã tự đặt focus (vd về ô tìm sau khi giao xong) thì bỏ qua trả focus mặc định
+  onCloseFocus?: () => boolean;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -89,6 +92,10 @@ export function Dialog({
               onOpenAutoFocus?.(e);
             }}
             onCloseAutoFocus={(e) => {
+              if (onCloseFocus?.()) {
+                e.preventDefault();
+                return;
+              }
               if (!returnFocus || !opener.current?.isConnected) return;
               e.preventDefault();
               opener.current.focus();

@@ -63,3 +63,53 @@
 @media (max-width: 767px) {
   [data-shell='admin'] .pp-toolbar { position: sticky; top: 0; z-index: 2; background: var(--c-page); }
 }
+[data-shell='admin'] .pp-short { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); margin: 0 0 var(--s-3); padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); background: var(--c-warn-soft); color: var(--c-warn); font: var(--t-sm); font-weight: 700; }
+[data-shell='admin'] .pp-short a { color: var(--c-acc); }
+[data-shell='admin'] .pp-row__short { color: var(--c-warn); font: var(--t-cap); }
+@media (max-width: 767px) {
+  [data-shell='admin'] .pp-card__actions .pp-card__view { flex: none; min-height: 44px; padding: 0 var(--s-2); border: 0; background: none; box-shadow: none; color: var(--c-acc); text-decoration: underline; }
+}
+
+[data-shell='admin'] .dd-sub { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-3); margin: var(--s-1) 0 0; font: var(--t-sm); color: var(--c-muted); }
+[data-shell='admin'] .dd-leftuser { color: var(--c-warn); font-weight: 700; }
+[data-shell='admin'] .dd-rows { display: grid; gap: var(--s-4); }
+[data-shell='admin'] .dd-table { width: 100%; border-collapse: collapse; }
+[data-shell='admin'] .dd-table th { padding: var(--s-2); border-bottom: 1px solid var(--c-line); font: var(--t-cap); color: var(--c-ink-2); text-align: left; }
+[data-shell='admin'] .dd-table td { padding: var(--s-2); border-bottom: 1px solid var(--c-line); vertical-align: top; font: var(--t-sm); }
+[data-shell='admin'] .dd-table th:nth-child(2), [data-shell='admin'] .dd-table td:nth-child(2) { width: 72px; text-align: right; }
+[data-shell='admin'] .dd-table th:nth-child(3), [data-shell='admin'] .dd-table td:nth-child(3) { width: 144px; }
+[data-shell='admin'] .dd-table th:nth-child(4), [data-shell='admin'] .dd-table td:nth-child(4) { width: 112px; }
+[data-shell='admin'] .dd-item { display: flex; gap: var(--s-3); }
+[data-shell='admin'] .dd-item__text { display: grid; gap: 2px; min-width: 0; }
+[data-shell='admin'] .dd-item__text b { font: var(--t-label); overflow-wrap: anywhere; }
+[data-shell='admin'] .dd-item__text small { font: var(--t-cap); color: var(--c-ink-2); }
+[data-shell='admin'] .dd-debt { justify-self: start; padding: 0 var(--s-2); border-radius: var(--r-pill); background: var(--c-warn-soft); color: var(--c-warn); font: var(--t-micro); }
+[data-shell='admin'] .dd-item__text .dd-warn, [data-shell='admin'] .dd-max { color: var(--c-warn); font-weight: 700; }
+[data-shell='admin'] .dd-max { display: block; margin-top: var(--s-1); font: var(--t-cap); }
+[data-shell='admin'] .dd-step { width: 132px; }
+[data-shell='admin'] .dd-none { font: var(--t-cap); font-weight: 700; color: var(--c-danger); }
+[data-shell='admin'] .dd-left { color: var(--c-warn); font: var(--t-cap); font-weight: 700; }
+[data-shell='admin'] .dd-group h3 { margin: 0 0 var(--s-2); font: var(--t-label); color: var(--c-ink-2); }
+[data-shell='admin'] .dd-group--adm { padding: var(--s-3); border-radius: var(--r-md); background: var(--c-warn-soft); }
+[data-shell='admin'] .dd-group--adm h3 { color: var(--c-warn); }
+[data-shell='admin'] .dd-group--skip { color: var(--c-muted); }
+[data-shell='admin'] .dd-group--skip ul { display: grid; gap: var(--s-1); margin: 0; padding: 0; list-style: none; font: var(--t-sm); }
+[data-shell='admin'] .dd-group--skip li { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+[data-shell='admin'] .dd-nostock { margin: 0; padding: var(--s-3); border-radius: var(--r-md); background: var(--c-warn-soft); color: var(--c-warn); font: var(--t-label); }
+[data-shell='admin'] .dd-sum { margin: var(--s-3) 0 0; font: var(--t-label); color: var(--c-ink); }
+[data-shell='admin'] .dd-note { margin: var(--s-2) 0 0; font: var(--t-cap); color: var(--c-ink-2); }
+[data-shell='admin'] .dd-results ul { display: grid; gap: var(--s-2); margin: 0; padding: 0; list-style: none; }
+[data-shell='admin'] .dd-results li { display: flex; flex-wrap: wrap; gap: var(--s-2); font: var(--t-sm); }
+[data-shell='admin'] .dd-results .is-ok > span:first-child { color: var(--c-ok); font-weight: 800; }
+[data-shell='admin'] .dd-results .is-err { color: var(--c-danger); }
+[data-shell='admin'] .dd-expired { margin: var(--s-3) 0 0; color: var(--c-danger); font: var(--t-label); }
+@media (max-width: 767px) {
+  [data-shell='admin'] .dd-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  [data-shell='admin'] .dd-table, [data-shell='admin'] .dd-table tbody, [data-shell='admin'] .dd-table tr, [data-shell='admin'] .dd-table td { display: block; width: auto; }
+  [data-shell='admin'] .dd-table tr { padding: var(--s-2) 0; border-bottom: 1px solid var(--c-line); }
+  [data-shell='admin'] .dd-table td { padding: var(--s-1) 0; border: 0; text-align: left; }
+  [data-shell='admin'] .dd-table td:nth-child(2) { display: none; }
+  [data-shell='admin'] .dd-table td:nth-child(3), [data-shell='admin'] .dd-table td:nth-child(4) { width: auto; text-align: left; }
+  [data-shell='admin'] .dd-step { width: 100%; max-width: 200px; }
+  [data-shell='admin'] .dd-step button, [data-shell='admin'] .dd-step input { min-height: 44px; }
+}

@@ -40,10 +40,13 @@ const DELIVER_CAP = sql`
          - x.ahead))::int
        ELSE x.remaining_qty END`;
 
-// Gợi ý theo người đăng ký trước: món danh mục giao được khi tủ còn sau phần giữ cho các dòng đứng trước
+// Gợi ý theo người đăng ký trước: món danh mục giao được khi tủ còn sau phần giữ cho các dòng đứng trước;
+// người đã nghỉ được gợi ý 0 nên không giữ tủ của ai và không tính là giao được ngay
 const READY_NOW = sql`
   CASE WHEN NOT x.effective OR x.remaining_qty <= 0 THEN false
+       WHEN x.user_status <> 'active' THEN false
        WHEN x.item_id IS NULL THEN ${DELIVER_CAP} > 0
+       WHEN x.user_status <> 'active' THEN false
        ELSE coalesce(x.stock_qty, 0) > x.ahead_all END`;
 
 // Đọc-only cho màn "Giao theo người": dòng kỳ ym + nợ các kỳ trước của từng người
@@ -76,7 +79,8 @@ export class DeliveryPeopleService {
                coalesce(i.unit, trim(l.custom_unit)) AS unit,
                coalesce(i.image_file_id, l.image_file_id) AS image_file_id,
                l.qty, l.delivered_qty, l.cancelled_qty, ${REMAINING_QTY} AS remaining_qty,
-               i.stock_qty, l.review_status, ${EFFECTIVE_LINE} AS effective
+               i.stock_qty, l.review_status, ${EFFECTIVE_LINE} AS effective,
+               (${EFFECTIVE_LINE} AND u.status = 'active') AS holds
         FROM request_lines l
         JOIN requests r ON r.id = l.request_id
         JOIN users u ON u.sub = r.user_sub
@@ -86,10 +90,10 @@ export class DeliveryPeopleService {
             OR ${DEBT_LINE_SQL(ym)})
       ), ranked AS (
         SELECT b.*,
-               coalesce(sum(CASE WHEN b.effective THEN b.remaining_qty ELSE 0 END) OVER (
+               coalesce(sum(CASE WHEN b.holds THEN b.remaining_qty ELSE 0 END) OVER (
                  PARTITION BY b.period_ym, b.key ORDER BY b.request_at, b.line_at, b.line_id
                  ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), 0)::int AS ahead,
-               coalesce(sum(CASE WHEN b.effective THEN b.remaining_qty ELSE 0 END) OVER (
+               coalesce(sum(CASE WHEN b.holds THEN b.remaining_qty ELSE 0 END) OVER (
                  PARTITION BY b.key ORDER BY b.period_ym, b.request_at, b.line_at, b.line_id
                  ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), 0)::int AS ahead_all
         FROM base b
@@ -101,7 +105,10 @@ export class DeliveryPeopleService {
              EXISTS (SELECT 1 FROM period_adm_out a WHERE a.period_ym = x.period_ym
                      AND a.line_key = x.key AND a.kind = 'out') AS adm_out,
              (x.item_id IS NULL AND coalesce(s.ordered, 0) > 0) AS custom_tracked,
-             ${DELIVER_CAP} AS deliver_cap, ${READY_NOW} AS ready_now
+             ${DELIVER_CAP} AS deliver_cap, ${READY_NOW} AS ready_now,
+             x.ahead_all AS ahead_qty,
+             to_char(x.request_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS request_at,
+             to_char(x.line_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS line_at
       FROM ranked x
       LEFT JOIN LATERAL (
         SELECT (rs.data->'order_qty'->>x.key)::int AS ordered FROM report_snapshots rs

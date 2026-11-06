@@ -50,7 +50,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { path: 'summary', titleKey: 'nav.summary', icon: 'dash' },
       { path: 'reports', titleKey: 'nav.reports', icon: 'printer' },
       { path: 'backlog', titleKey: 'nav.backlog', icon: 'receipt' },
-      { path: 'delivery/classic', titleKey: 'nav.deliveryClassic', icon: 'truck' },
     ],
   },
 ];

@@ -15,7 +15,7 @@ const LATER_KEY = 'vpp.admin.navLater';
 function SideLink({ page, count, onNavigate }: { page: AdminPage; count?: number; onNavigate?: () => void }) {
   const { t } = useTranslation();
   const label = t(page.titleKey);
-  // "delivery" là tiền tố của "delivery/classic": chỉ khớp đúng đường dẫn thì mục không sáng chung
+  // Mục là tiền tố của mục khác thì chỉ khớp đúng đường dẫn để hai mục không sáng chung
   const end = ALL_PATHS.some((p) => p.startsWith(`${page.path}/`));
   return (
     <NavLink to={`/admin/${page.path}`} end={end} title={label} className="side__link" onClick={onNavigate}>

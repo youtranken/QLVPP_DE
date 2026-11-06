@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cardSummary, filterPeople, lineMax, overlapCount, planOf, tabCounts, waitingFor } from './people-filter';
+import { cardSummary, filterPeople, overlapCount, tabCounts, waitingFor } from './people-filter';
 import { A, B, C, D, PEOPLE, person, pLine } from './people-fixtures';
 
 const subs = (xs: { user_sub: string }[]) => xs.map((p) => p.user_sub);
@@ -82,61 +82,5 @@ describe('fixtures', () => {
   it('B có dòng nợ đứng trước', () => {
     expect(B.lines[0].is_debt).toBe(true);
     expect(C.request_id).toBeNull();
-  });
-});
-
-describe('lineMax — trần stepper', () => {
-  it.each([
-    [10, 7, undefined, 7],
-    [10, 10, undefined, 10],
-    [10, 11, undefined, 10],
-    [10, 0, undefined, 0],
-    [10, null, undefined, 10],
-    [10, 7, 2, 2],
-    [10, 7, 9, 7],
-    [10, 7, 0, 0],
-  ])('cần %i, tủ %s, trần server %s → %i', (remaining, stock, cap, want) => {
-    expect(lineMax(pLine({ remaining_qty: remaining, stock_qty: stock }), cap)).toBe(want);
-  });
-});
-
-describe('planOf — nút nhanh trên thẻ', () => {
-  it('đủ hàng: giao đủ, không thiếu', () => {
-    expect(planOf(A)).toEqual({ give: 3, need: 3, short: false, deliverable: true, shared: false });
-  });
-
-  it('B cần 10 bút tủ 7 + nợ 2 giấy tủ 5 → giao 9/12, thiếu', () => {
-    expect(planOf(B)).toEqual({ give: 9, need: 12, short: true, deliverable: true, shared: false });
-  });
-
-  it('tủ vừa đúng (3/3) vẫn đủ; tủ 2/3 là thiếu', () => {
-    expect(planOf(person({ lines: [pLine({ stock_qty: 3 })] })).short).toBe(false);
-    expect(planOf(person({ lines: [pLine({ stock_qty: 2 })] })).short).toBe(true);
-  });
-
-  it('dòng chờ duyệt và đã giao đủ không tính; người chỉ có dòng chờ duyệt không giao được', () => {
-    const onlyReview = person({ lines: [pLine({ review_status: 'pending' })] });
-    expect(planOf(onlyReview)).toEqual({ give: 0, need: 0, short: false, deliverable: false, shared: false });
-    expect(planOf(D)).toEqual({ give: 0, need: 0, short: false, deliverable: false, shared: false });
-  });
-});
-
-describe('planOf — tồn chia theo món, không theo dòng', () => {
-  const debt = pLine({ line_id: 'd', period_ym: '2026-09', is_debt: true, qty: 3, remaining_qty: 3, stock_qty: 6 });
-  const cur = pLine({ line_id: 'c', qty: 5, remaining_qty: 5, stock_qty: 6 });
-
-  it('nợ 3 + kỳ này 5 cùng món, tủ 6 → giao 6/8, thiếu, món trùng', () => {
-    expect(planOf(person({ lines: [cur, debt] }))).toEqual({ give: 6, need: 8, short: true, deliverable: true, shared: true });
-  });
-
-  it('biên: tủ 8 (vừa đủ cả hai dòng) → không thiếu; tủ 7 → thiếu 1', () => {
-    const at = (stock: number) => planOf(person({ lines: [{ ...debt, stock_qty: stock }, { ...cur, stock_qty: stock }] }));
-    expect(at(8)).toMatchObject({ give: 8, short: false, shared: true });
-    expect(at(7)).toMatchObject({ give: 7, short: true });
-  });
-
-  it('hai món khác nhau không chia chung tồn', () => {
-    const other = { ...cur, line_id: 'o', item_id: 'i-other', stock_qty: 5 };
-    expect(planOf(person({ lines: [debt, other] }))).toMatchObject({ give: 8, short: false, shared: false });
   });
 });

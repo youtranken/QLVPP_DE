@@ -4,6 +4,7 @@ import { ItemThumb } from '@/ui/item-thumb';
 import { Stepper } from '@/ui/stepper';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import type { DeliveryPersonLine } from './delivery-people.api';
+import type { Shortage } from './deliver-plan';
 
 export interface LineWaiting {
   people: number;
@@ -15,8 +16,8 @@ interface Props {
   value: number;
   max: number;
   taken: boolean;
-  error?: string;
   waiting: LineWaiting;
+  shortage?: Shortage;
   disabled: boolean;
   onChange: (n: number) => void;
 }
@@ -37,7 +38,7 @@ function Control({ line, value, max, taken, disabled, onChange }: Pick<Props, 'l
   return <Stepper className="pp-row__step" value={value} min={0} max={max} disabled={disabled} label={t('delivery.people.panel.qty', { name })} onChange={onChange} />;
 }
 
-export function PersonLineRow({ line, value, max, taken, error, waiting, disabled, onChange }: Props) {
+export function PersonLineRow({ line, value, max, taken, waiting, shortage, disabled, onChange }: Props) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   const reviewing = line.review_status === 'pending';
@@ -58,6 +59,7 @@ export function PersonLineRow({ line, value, max, taken, error, waiting, disable
             {line.is_debt && <span className="pp-row__from">{t('delivery.people.panel.fromMonth', { month: monthOf(line.period_ym) })}</span>}
             {meta}
           </small>
+          {shortage && <small className="pp-row__short">{t('warn.W19row', { ...shortage })}</small>}
         </div>
         <Control line={line} value={value} max={max} taken={taken} disabled={disabled} onChange={onChange} />
       </div>
@@ -65,11 +67,6 @@ export function PersonLineRow({ line, value, max, taken, error, waiting, disable
         <div className="pp-row__warn">
           <strong>{t(line.is_debt ? 'delivery.people.panel.shortDebt' : 'delivery.people.panel.short', { give: value, owe })}</strong>
         </div>
-      )}
-      {error && (
-        <p role="alert" className="pp-row__err">
-          {error}
-        </p>
       )}
     </li>
   );

@@ -19,6 +19,13 @@ export interface DeliveryPersonLine {
   remaining_qty: number;
   stock_qty: number | null;
   review_status: 'n/a' | 'pending' | 'accepted' | 'converted';
+  // Món/khóa của dòng bị đánh "ADM hết hàng" trong kỳ của dòng: giao từ tủ, phần thiếu hủy luôn
+  adm_out: boolean;
+  // Món ngoài DM: trần theo hàng đã về và thứ tự đăng ký; null = món danh mục (trần theo tủ)
+  deliver_cap: number | null;
+  // Thứ tự đăng ký: kỳ → lần lưu đầu của phiếu → lúc thêm dòng → id
+  request_at: string;
+  line_at: string;
 }
 
 export interface DeliveryPerson {

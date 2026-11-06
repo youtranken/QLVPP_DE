@@ -5,10 +5,9 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Tháng này', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình', 'Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ', 'Giao hàng (bản cũ)'];
+const NAV_ORDER = ['Tháng này', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình', 'Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ'];
 
 const topbar = () => screen.getAllByRole('banner')[0];
-const search = () => screen.getByTestId('location-search').textContent ?? '';
 
 // Trang đích chỉ cần dựng được: API ngoài shell trả 500 → LoadError thay vì dữ liệu rỗng sai hình
 function open(path: string) {
@@ -37,24 +36,14 @@ describe('AdminTopbar 390 px', () => {
     expect(within(topbar()).queryByText('Kỳ tháng 11 đang mở')).toBeNull();
   });
 
-  it('Giao hàng không có ?request=: nút trái vẫn là "Mở menu quản lý", dòng phụ "Tháng 10/2026 · đã khóa"', async () => {
-    open('/admin/delivery/classic');
+  it('Giao hàng: nút trái là "Mở menu quản lý", dòng phụ "Tháng 10/2026 · đã khóa"', async () => {
+    open('/admin/delivery');
     expect(within(topbar()).getByRole('button', { name: 'Mở menu quản lý' })).toBeInTheDocument();
-    expect(within(topbar()).queryByRole('button', { name: 'Quay lại danh sách phiếu' })).toBeNull();
     expect(await within(topbar()).findByText('Tháng 10/2026 · đã khóa')).toBeInTheDocument();
   });
 
-  it('chi tiết Giao hàng (?request=): nút trái "Quay lại danh sách phiếu" bỏ ?request= nhưng giữ bộ lọc ?all=1', async () => {
-    open('/admin/delivery/classic?all=1&request=r-1');
-    expect(within(topbar()).queryByRole('button', { name: 'Mở menu quản lý' })).toBeNull();
-    await userEvent.click(within(topbar()).getByRole('button', { name: 'Quay lại danh sách phiếu' }));
-    expect(search()).not.toContain('request=');
-    expect(search()).toContain('all=1');
-    expect(within(topbar()).getByRole('button', { name: 'Mở menu quản lý' })).toBeInTheDocument();
-  });
-
-  it('chi tiết Giao hàng: chạm avatar mở menu, chọn "Kho" → /admin/stock (2 chạm)', async () => {
-    open('/admin/delivery/classic?request=r-1');
+  it('chạm avatar mở menu, chọn "Kho" → /admin/stock (2 chạm)', async () => {
+    open('/admin/delivery');
     const avatar = within(topbar()).getByRole('button', { name: 'Nguyễn Văn An, Hành chính' });
     expect(avatar).toHaveAttribute('aria-expanded', 'false');
     expect(avatar).toHaveAccessibleDescription('Mở menu quản lý');
@@ -67,7 +56,7 @@ describe('AdminTopbar 390 px', () => {
 });
 
 describe('Menu sheet 390 px', () => {
-  it('tiêu đề "Menu quản lý", "VPP Công trình · Hành chính", nút "Đóng menu", 16 mục, thẻ kỳ, ngôn ngữ, Đăng xuất', async () => {
+  it('tiêu đề "Menu quản lý", "VPP Công trình · Hành chính", nút "Đóng menu", 15 mục, thẻ kỳ, ngôn ngữ, Đăng xuất', async () => {
     open('/admin/catalog');
     await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
     const sheet = screen.getByRole('dialog', { name: 'Menu quản lý' });
