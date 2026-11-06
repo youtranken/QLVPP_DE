@@ -26,7 +26,7 @@ async function shotTo(page: Page, info: TestInfo, name: string, dir = 'task-C4')
   await page.screenshot({ path: `../live-real/v2c/${dir}/${name}-${info.project.name}.png`, fullPage: false });
 }
 
-async function createItem(request: APIRequestContext, name: string) {
+async function createItem(request: APIRequestContext, name: string, maxQty = 99) {
   const headers = devHeaders('admin');
   const file = await request.post('/api/files', {
     headers,
@@ -38,7 +38,7 @@ async function createItem(request: APIRequestContext, name: string) {
   expect(file.status()).toBe(201);
   const item = await request.post('/api/admin/items', {
     headers,
-    data: { name, unit: 'cai', image_file_id: (await file.json()).id },
+    data: { name, unit: 'cai', max_qty: maxQty, image_file_id: (await file.json()).id },
   });
   expect(item.status()).toBe(201);
   return (await item.json()).id as string;
@@ -51,15 +51,23 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
     await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...me.headers } }));
     const period = await (await request.get('/api/periods/current', { headers: me.headers })).json();
     const month = Number(String(period.ym).slice(5));
-    const items: Item[] = await (await request.get('/api/items', { headers: me.headers })).json();
-    // Bỏ món "PW …" do test khác tạo (có thể bị ngừng giữa chừng ở viewport chạy song song)
-    const [a, b, c] = items.filter((i) => i.active && !i.admin_only && !i.name.startsWith('PW '));
+    // Ba món riêng (tên ngắn, max_qty đủ lớn) để test không phụ thuộc dữ liệu danh mục thật
+    const stamp = `${Date.now()}-${info.project.name}`;
+    const ids: string[] = [];
+    const [a, b, c] = ['A', 'B', 'C'].map((k) => ({ id: '', name: `PW lưu ${k} ${stamp}` }));
+    for (const it of [a, b, c]) {
+      it.id = await createItem(request, it.name);
+      ids.push(it.id);
+    }
 
     try {
       await page.goto('/');
       await expect(page.getByRole('heading', { level: 1, name: `Đăng ký văn phòng phẩm tháng ${month}` })).toBeVisible();
       await expect(page.getByText('Chưa lưu phiếu tháng này')).toBeVisible();
       const grid = page.getByRole('region', { name: 'Danh mục món' });
+      // Lọc theo tiền tố riêng để 3 món nằm trong tầm nhìn dù danh mục thật dài
+      const search = grid.getByRole('searchbox', { name: 'Tìm món' });
+      await search.fill(`PW lưu`);
       await expect(grid.getByText(a.name, { exact: true })).toBeVisible();
       await snap(page, info, 'empty');
 
@@ -93,6 +101,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       }
       await expect(page.getByRole('button', { name: 'Lưu phiếu' })).toBeDisabled();
       await closeCart(page, info);
+      await search.fill(`PW lưu`);
 
       // Thay đổi chưa lưu → trình duyệt hỏi trước khi rời trang
       await grid.getByRole('button', { name: `Thêm ${a.name}`, exact: true }).click();
@@ -103,6 +112,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       expect(dialog.type()).toBe('beforeunload');
       await dialog.accept();
       await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
+      await search.fill(`PW lưu`);
 
       // Thiết bị khác sửa phiếu → lưu từ tab này bị STALE_UPDATE
       const view = await (await request.get(`/api/me/request?ym=${period.ym}`, { headers: me.headers })).json();
@@ -114,7 +124,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
           lines: view.lines.map((l: { id: string; item_id: string; qty: number }) => ({ id: l.id, qty: l.item_id === c.id ? 3 : l.qty })),
         },
       });
-      expect(other.status()).toBe(200);
+      expect(other.status(), await other.text()).toBe(200);
       await grid.getByRole('button', { name: `Thêm ${a.name}`, exact: true }).click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog', { name: `Lưu phiếu tháng ${month}?` }).getByRole('button', { name: 'Lưu phiếu' }).click();
@@ -128,6 +138,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await expect(cart.getByRole('spinbutton', { name: a.name, exact: true })).toHaveValue('1');
     } finally {
       deleteTestUsers(me.sub);
+      for (const id of ids) await removeTestItem(request, id);
     }
   });
 
@@ -331,11 +342,17 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
     }
   });
 
-  test('V2C-T5 phiếu cam: rỗng, 3 dòng gồm dòng ngoài danh mục chờ xem, sau khi lưu (chụp 1280)', async ({ page }, info) => {
+  test('V2C-T5 phiếu cam: rỗng, 3 dòng gồm dòng ngoài danh mục chờ xem, sau khi lưu (chụp 1280)', async ({ page, request }, info) => {
     test.skip(isMobile(info), 'phiếu 1280; điện thoại là C6');
     const me = memberIdentity(info);
     seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
     await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...me.headers } }));
+    // Hai món riêng: một tên ngắn (dòng gọn), một tên dài như hàng thật (tối đa 2 dòng trong phiếu 340px)
+    const stamp = String(Date.now()).slice(-5);
+    // cột tên trong phiếu 1280 chỉ ~80px: tên ngắn để dòng thường vẫn một dòng tên
+    const shortName = `PW ${stamp.slice(-3)}`;
+    const longName = `PW cam Băng keo trong đóng gói loại dày 5cm x 70 yard lõi nhựa ${stamp}`;
+    const ids = [await createItem(request, shortName), await createItem(request, longName)];
     try {
       await page.goto('/');
       const cart = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
@@ -355,7 +372,9 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await page.reload();
       await expect(cart.getByText('Chờ Hành chính xem')).toBeVisible();
 
-      for (let i = 0; i < 2; i++) await grid.getByRole('button', { name: /^Thêm vào phiếu: / }).first().click();
+      await grid.getByRole('searchbox', { name: 'Tìm món' }).fill('PW');
+      await grid.getByRole('button', { name: `Thêm vào phiếu: ${shortName}`, exact: true }).click();
+      await grid.getByRole('button', { name: `Thêm vào phiếu: ${longName}`, exact: true }).click();
       await expect(cart.getByText('3 món, 3 đơn vị')).toBeVisible();
       await expect(cart.getByText('Chưa lưu', { exact: true })).toBeVisible();
       // R-C11: 3 dòng gọn một hàng → nút Lưu nằm trọn trong màn 1280×800 không cần cuộn, không dòng nào bị cắt
@@ -366,7 +385,13 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       // dòng món thường gọn ~56px (dòng ngoài danh mục có thêm nhãn nên cao hơn)
       const plain = rows.filter({ hasNot: page.getByText('Ngoài danh mục') });
       await expect(plain).toHaveCount(2);
-      for (let i = 0; i < 2; i++) expect((await plain.nth(i).boundingBox())!.height).toBeLessThan(72);
+      const shortRow = plain.filter({ hasText: shortName });
+      expect((await shortRow.boundingBox())!.height).toBeLessThan(72);
+      // tên dài tối đa 2 dòng (cắt bằng line-clamp, tên đầy đủ nằm ở title)
+      const longLabel = plain.filter({ hasText: longName }).locator('.rq-line-name');
+      await expect(longLabel).toHaveAttribute('title', longName);
+      const lines = await longLabel.evaluate((el) => el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight));
+      expect(lines).toBeLessThanOrEqual(2.05);
       await page.evaluate(() => document.fonts.ready);
       await shotTo(page, info, 'three-lines-desktop-1280', 'task-C5');
 
@@ -378,6 +403,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await shotTo(page, info, 'after-save', 'task-C5');
     } finally {
       deleteTestUsers(me.sub);
+      for (const id of ids) await removeTestItem(request, id);
     }
   });
   test('V2C-T6 390: chip cuộn ngang, 2 cột, thanh phiếu nổi, mở phiếu (sheet), lưu từ sheet; 1280 không có thanh nổi', async ({ page }, info) => {

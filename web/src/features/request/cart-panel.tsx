@@ -51,11 +51,11 @@ function CartRow({
       <ItemThumb fileId={line.label.image_file_id} alt="" tone={tone} size={42} />
       <div className="rq-line-main">
         {!line.item_id && !line.readonly ? (
-          <button type="button" className="rq-line-name rq-line-link" aria-label={t('request.cart.edit', { name })} onClick={onEdit}>
+          <button type="button" className="rq-line-name rq-line-link" aria-label={t('request.cart.edit', { name })} title={name} onClick={onEdit}>
             {name}
           </button>
         ) : (
-          <span className="rq-line-name">{name}</span>
+          <span className="rq-line-name" title={name}>{name}</span>
         )}
         <span className="rq-line-qty num">{t('request.cart.qty', { qty: line.qty, unit: fmt.unit(line.label.unit) })}</span>
         {!line.item_id && <CustomTags line={line} />}
