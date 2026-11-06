@@ -3,9 +3,15 @@ import { ymToDate } from '../../common/period';
 import type { Executor } from '../../database/database.module';
 
 const LINE_ACTIONS = ['line.cancel_remaining', 'line.review'];
-const PERIOD_ACTIONS = ['arrival.adm_out_marked', 'arrival.adm_owed_closed'];
+// Bỏ đánh dấu cũng đổi số đề nghị (adm_owed) nên tính như đánh dấu
+const PERIOD_ACTIONS = [
+  'arrival.adm_out_marked',
+  'arrival.adm_out_unmarked',
+  'arrival.adm_owed_closed',
+  'arrival.adm_owed_reopened',
+];
 
-// Thay đổi làm số của bản chốt kỳ ym lỗi thời; dòng kỳ trước (nợ) cũng tính vì nằm trong số đề nghị kỳ ym
+// Chỉ sự kiện đổi căn cứ đề nghị; không dùng requests.updated_at vì giao hàng cũng chạm nó. Dòng kỳ trước (nợ) tính vì nằm trong đề nghị kỳ ym
 export async function changedAt(
   ex: Executor,
   ym: string,
@@ -30,9 +36,6 @@ export async function changedAt(
       WHERE a.action = ANY(${sql.param(PERIOD_ACTIONS)}::text[])
         AND a.object_type = 'period' AND a.object_id <= ${ym}
         AND a.created_at > ${t}::timestamptz
-      UNION ALL
-      SELECT r.updated_at FROM requests r
-      WHERE r.period_ym = ${k}::date AND r.updated_at > ${t}::timestamptz
     ) x`);
   const at = rows[0]?.at;
   return at ? new Date(at) : null;

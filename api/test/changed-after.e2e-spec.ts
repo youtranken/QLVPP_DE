@@ -1,10 +1,7 @@
 import { snapshotsFixture } from './report-snapshots.fixture';
 
 const YM = '2026-11';
-// audit_log chỉ thêm, không xóa: mốc tăng theo giờ thật để dòng "kỳ" của lần chạy trước luôn cũ hơn bản chốt lần này
-const BASE_MS =
-  Date.parse('2026-11-10T17:00:01Z') +
-  Math.floor((Date.now() - Date.parse('2026-01-01')) / 1000);
+const FIRST_BASE_MS = Date.parse('2026-11-10T17:00:01Z');
 
 const ACTIONS = [
   ['request.updated', 'request'],
@@ -12,12 +9,26 @@ const ACTIONS = [
   ['line.review', 'request_line'],
   ['arrival.adm_out_marked', 'period'],
   ['arrival.adm_owed_closed', 'period'],
+  ['arrival.adm_out_unmarked', 'period'],
+  ['arrival.adm_owed_reopened', 'period'],
 ] as const;
 
 describe('V2D-4 changedAfter: thay đổi sau bản chốt có hàng (R-X.1)', () => {
   const f = snapshotsFixture('chgafter');
   const { ADMIN, create, pool, sendState } = f;
   let ids: { request: string; line: string };
+  // audit_log chỉ thêm, không xóa: mốc lần này đặt sau mọi dòng "kỳ" lần chạy trước để không bị đọc nhầm
+  let BASE_MS = FIRST_BASE_MS;
+
+  beforeAll(async () => {
+    const { rows } = await pool().query<{ last: Date | null }>(
+      `SELECT max(created_at) AS last FROM audit_log
+       WHERE object_type = 'period' AND action LIKE 'arrival.%' AND created_at < '2026-11-12'`,
+    );
+    if (rows[0].last) {
+      BASE_MS = Math.max(FIRST_BASE_MS, rows[0].last.getTime() + 1000);
+    }
+  });
 
   beforeEach(async () => {
     await f.resetPeriod(YM);
@@ -62,22 +73,14 @@ describe('V2D-4 changedAfter: thay đổi sau bản chốt có hàng (R-X.1)', (
     },
   );
 
-  it('requests.updated_at: T−1 ms / T → false; T+1 ms → true', async () => {
+  it('requests.updated_at sau bản (giao hàng/Hủy nợ cũng chạm) không tính là thay đổi: T+1 ms → false', async () => {
     const t = BASE_MS + ACTIONS.length * 10;
     await snapshotAt(t);
-    const touch = (ms: number) =>
-      pool().query('UPDATE requests SET updated_at = $2 WHERE id = $1', [
-        ids.request,
-        new Date(ms).toISOString(),
-      ]);
-    for (const [ms, changed] of [
-      [t - 1, false],
-      [t, false],
-      [t + 1, true],
-    ] as const) {
-      await touch(ms);
-      expect((await sendState(YM)).changed_after).toBe(changed);
-    }
+    await pool().query('UPDATE requests SET updated_at = $2 WHERE id = $1', [
+      ids.request,
+      new Date(t + 1).toISOString(),
+    ]);
+    expect((await sendState(YM)).changed_after).toBe(false);
   });
 
   it('thay đổi của kỳ sau hoặc hành động khác không tính; chưa có bản → false', async () => {
