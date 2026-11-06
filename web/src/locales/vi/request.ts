@@ -154,6 +154,7 @@ const request = {
       addOther: 'Thêm món khác',
       save: 'Lưu phiếu',
       saveDirty: '{{n}} thay đổi chưa lưu · Lưu',
+      barDirty: '{{n}} thay đổi chưa lưu ·',
       viewCart: 'Xem phiếu ({{n}} món)',
       barSub: '{{units}} đơn vị · {{status}}',
       count: '{{n}} món',

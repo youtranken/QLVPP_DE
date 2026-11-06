@@ -74,6 +74,8 @@ export function useSaveFlow(
   const [notice, setNotice] = useState<Notice | null>(opts.initialNotice ?? null);
   const noticeRef = useRef<HTMLDivElement>(null);
   const [toast, setToast] = useState<string | null>(null);
+  // Mỗi lần báo toast thành công là một số mới (hai lần lưu liền nhau trong 3 s vẫn khác nhau)
+  const [toastSeq, setToastSeq] = useState(0);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const month = monthOf(ym);
 
@@ -88,6 +90,7 @@ export function useSaveFlow(
 
   const showToast = (text: string) => {
     setToast(text);
+    setToastSeq((n) => n + 1);
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(null), TOAST_MS);
   };
@@ -174,7 +177,9 @@ export function useSaveFlow(
     notice: notice?.text ?? null,
     noticeRef,
     noticeTone: notice?.tone ?? 'danger',
-    noticeFocusKey: notice?.focusKey ?? null,
+    // Object mới cho mỗi lần lỗi: cùng một dòng lỗi lặp lại vẫn là sự kiện mới
+    noticeEvent: notice,
+    toastSeq,
     closeNotice: () => setNotice(null),
     toast,
     showToast,

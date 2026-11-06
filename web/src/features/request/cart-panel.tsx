@@ -94,9 +94,9 @@ function CartRow({
 }
 
 // Máy tính: aside "complementary" có tên; sheet: nằm trong dialog nên là div, tên lấy từ DialogTitle
-function Root({ className, labelledBy, panelRef, children }: { className: string; labelledBy?: string; panelRef: RefObject<HTMLElement | null>; children: ReactNode }) {
+function Root({ className, labelledBy, panelRef, children }: { className: string; labelledBy?: string; panelRef: RefObject<HTMLDivElement | null>; children: ReactNode }) {
   if (labelledBy) return <aside className={className} aria-labelledby={labelledBy} ref={panelRef}>{children}</aside>;
-  return <div className={className} ref={panelRef as RefObject<HTMLDivElement | null>}>{children}</div>;
+  return <div className={className} ref={panelRef}>{children}</div>;
 }
 
 function Title({ id, sheet, children }: { id: string; sheet: boolean; children: ReactNode }) {
@@ -144,7 +144,7 @@ export function CartPanel({
   sheet?: boolean;
   saveLabel: string;
   canSave: boolean;
-  panelRef: RefObject<HTMLElement | null>;
+  panelRef: RefObject<HTMLDivElement | null>;
   onQty: (key: string, n: number) => void;
   onRemove: (key: string) => void;
   onSave: () => void;

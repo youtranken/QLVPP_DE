@@ -54,7 +54,7 @@ describe('RequestPage — món ngoài danh mục', () => {
     await userEvent.click(within(edit).getByRole('button', { name: 'Lưu thay đổi' }));
     await userEvent.click(within(cart()).getByRole('button', { name: 'Thêm Bìa còng 5cm' }));
 
-    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(screen.getByRole('button', { name: /^1 thay đổi chưa lưu · Lưu/ }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
     await screen.findByRole('alert');
     expect(api.putBody()).toEqual({
@@ -74,7 +74,7 @@ describe('RequestPage — món ngoài danh mục', () => {
     const edit = await screen.findByRole('dialog', { name: 'Sửa món khác' });
     await userEvent.type(within(edit).getByLabelText('Ghi chú (tùy chọn)'), 'loại dày');
     await userEvent.click(within(edit).getByRole('button', { name: 'Lưu thay đổi' }));
-    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(screen.getByRole('button', { name: /^1 thay đổi chưa lưu · Lưu/ }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
     await screen.findByRole('alert');
     expect(api.putBody().lines).toEqual([
@@ -120,7 +120,7 @@ describe('RequestPage — chép lại tháng trước', () => {
     await userEvent.click(within(summary).getByRole('button', { name: 'Đã hiểu' }));
     expect(within(cart()).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(20);
     expect(within(cart()).getByRole('button', { name: 'Sửa Bìa còng 7cm' })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(screen.getByRole('button', { name: /^2 thay đổi chưa lưu · Lưu/ }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
     await screen.findByRole('alert');
     expect(api.putBody()).toEqual({
@@ -146,7 +146,7 @@ describe('RequestPage — chép lại tháng trước', () => {
     expect(within(summary).getByText('Đã bỏ: Bút bi xanh — Hành chính đã thêm món này')).toBeInTheDocument();
     await userEvent.click(within(summary).getByRole('button', { name: 'Đã hiểu' }));
     expect(within(cart()).getAllByText('Bút bi xanh')).toHaveLength(1);
-    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
+    await userEvent.click(screen.getByRole('button', { name: /^1 thay đổi chưa lưu · Lưu/ }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
     await screen.findByRole('alert');
     expect(api.putBody().lines).toEqual([

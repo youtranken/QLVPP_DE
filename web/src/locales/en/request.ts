@@ -157,6 +157,7 @@ const request: Messages<typeof vi> = {
       addOther: 'Add another item',
       save: 'Save order',
       saveDirty: '{{n}} unsaved change(s) · Save',
+      barDirty: '{{n}} unsaved change(s) ·',
       viewCart: 'View order ({{n}} items)',
       barSub: '{{units}} units · {{status}}',
       count: '{{n}} items',

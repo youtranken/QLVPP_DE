@@ -67,7 +67,7 @@ function RequestEditor({
     [period.ym, items, me.config.default_max_qty],
   );
   const cart = useCart(server, ctx, carry?.carry ?? undefined);
-  const cartRef = useRef<HTMLElement>(null);
+  const cartRef = useRef<HTMLDivElement>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const flow = useSaveFlow(cart, period.ym, refetch, cartRef, {
     initialNotice: carry ? lockedNotice(t, carry, cart.initialReport?.unavailable) : null,
@@ -81,15 +81,22 @@ function RequestEditor({
   }, [hadCarry, onCarryUsed]);
   const [editing, setEditing] = useState<Editing>(null);
   useLeaveGuard(cart.dirtyCount);
-  // Lỗi theo dòng: mở sheet để dòng lỗi thấy được; lưu xong (toast) thì đóng sheet
-  const lineFocusKey = flow.noticeFocusKey;
+  // Lỗi theo dòng: mở sheet để dòng lỗi thấy được (mỗi lần lỗi là một sự kiện mới); lưu xong (toast) thì đóng sheet và trả focus về nút mở
+  const lineFailure = flow.noticeEvent?.focusKey ? flow.noticeEvent : null;
   useEffect(() => {
-    if (narrow && lineFocusKey) setSheetOpen(true);
-  }, [narrow, lineFocusKey]);
-  const toasted = !!flow.toast;
+    if (narrow && lineFailure) setSheetOpen(true);
+  }, [narrow, lineFailure]);
+  const openerRef = useRef<HTMLButtonElement>(null);
+  const toastSeq = flow.toastSeq;
   useEffect(() => {
-    if (toasted) setSheetOpen(false);
-  }, [toasted]);
+    if (toastSeq === 0) return;
+    setSheetOpen(false);
+    const id = setTimeout(() => openerRef.current?.focus(), 0);
+    return () => clearTimeout(id);
+  }, [toastSeq]);
+  useEffect(() => {
+    if (!narrow) setSheetOpen(false);
+  }, [narrow]);
 
   const orderable = useMemo(() => items.filter((i) => i.usable && !i.admin_only), [items]);
   const lineByKey = useMemo(() => new Map(cart.lines.map((l) => [l.key, l])), [cart.lines]);
@@ -163,7 +170,8 @@ function RequestEditor({
           count={cart.lines.length}
           units={cart.lines.reduce((sum, l) => sum + l.qty, 0)}
           saved={!!cart.saved && !dirty}
-          label={saveLabel}
+          dirtyCount={cart.dirtyCount}
+          openRef={openerRef}
           canSave={dirty && !flow.saving}
           onOpen={() => setSheetOpen(true)}
           onSave={flow.openConfirm}
