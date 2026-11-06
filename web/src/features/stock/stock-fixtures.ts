@@ -19,6 +19,7 @@ export function item(over: Partial<AdminItem>): AdminItem {
     stock_state: 'ok',
     active: true,
     usable: over.active ?? true,
+    inactive_reason: over.active === false ? 'item' : null,
     sort_order: 0,
     missing_image: false,
     ...over,

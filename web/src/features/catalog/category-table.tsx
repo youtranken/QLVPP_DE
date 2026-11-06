@@ -14,11 +14,12 @@ interface Props {
   onMoveTo: (from: number, to: number) => void;
   onEdit: (c: Category) => void;
   onToggleActive: (c: Category) => void;
+  onOpen: (c: Category) => void;
   // Hộp "Ngừng nhóm" báo số món sẽ ẩn: chưa tải được món thì không cho mở (tránh "0 món")
   countsReady: boolean;
 }
 
-export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onMove, onMoveTo, onEdit, onToggleActive }: Props) {
+export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onMove, onMoveTo, onEdit, onToggleActive, onOpen }: Props) {
   const { t } = useTranslation();
   const drag = useRowDrag(onMoveTo);
   return (
@@ -47,14 +48,26 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
                   <span className="ct-dot cg-dot" style={{ background: `var(--${tone}-ink)` }} title={t(`catalog.tones.${tone}`)} />
                 </td>
                 <td className="cg-name">
-                  <span className="cg-name__text">{c.name}</span>
+                  {sorting ? (
+                    <span className="cg-name__text">{c.name}</span>
+                  ) : (
+                    <button type="button" className="cg-open" onClick={() => onOpen(c)}>
+                      <span className="cg-name__text">{c.name}</span>
+                    </button>
+                  )}
                   {!c.active && <span className="tag tag--outline">{t('catalog.categories.inactive')}</span>}
                 </td>
                 <td className="cg-name-en" data-label={t('catalog.categories.colNameEn')}>
                   <span>{c.name_en ?? t('common.empty')}</span>
                 </td>
                 <td className="num r" data-label={t('catalog.categories.colItems')}>
-                  {counts.get(c.id) ?? 0}
+                  {sorting ? (
+                    counts.get(c.id) ?? 0
+                  ) : (
+                    <button type="button" className="btn btn--ghost btn--sm cg-count" onClick={() => onOpen(c)}>
+                      {t('catalog.categories.itemsCount', { n: counts.get(c.id) ?? 0 })}
+                    </button>
+                  )}
                 </td>
                 <td className="cg-menu">
                   <RowMenu

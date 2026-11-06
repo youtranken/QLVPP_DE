@@ -47,7 +47,7 @@ describe('AdminSidebar: đếm', () => {
     expect(navLink('Món ngoài danh mục')).toHaveTextContent(shown ? /1/ : /^Món ngoài danh mục$/);
   });
 
-  it('lỗi tải đếm → không có số, sidebar vẫn đủ 12 mục (nhóm "Xem lại sau" thu gọn)', async () => {
+  it('lỗi tải đếm → không có số, sidebar vẫn đủ 11 mục (nhóm "Xem lại sau" thu gọn)', async () => {
     mockViewport(1280);
     const f = stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(500, null),
@@ -58,7 +58,7 @@ describe('AdminSidebar: đếm', () => {
     await waitFor(() => expect(f.mock.calls.some(([u]) => u === '/api/admin/periods/2026-10/delivery-people')).toBe(true));
     await new Promise((r) => setTimeout(r, 0));
     const links = within(sideNav()).getAllByRole('link');
-    expect(links).toHaveLength(12);
+    expect(links).toHaveLength(11);
     for (const a of links) expect(a.textContent).not.toMatch(/\d/);
   });
 });
@@ -162,7 +162,7 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
       await userEvent.click(screen.getByRole('radio', { name: 'English' }));
       const side = screen.getByRole('navigation', { name: 'Admin menu' });
       expect(within(side).getByRole('group', { name: 'Monthly' })).toBeInTheDocument();
-      expect(within(side).getByTitle('Categories')).toBeInTheDocument();
+      expect(within(side).getByTitle('Groups & units')).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage('vi');
     }

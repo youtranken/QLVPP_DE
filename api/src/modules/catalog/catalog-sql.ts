@@ -9,6 +9,15 @@ export const ITEM_USABLE_SQL = sql.raw(
   '(items.active AND NOT EXISTS (SELECT 1 FROM item_categories c WHERE c.id = items.category_id AND NOT c.active))',
 );
 
+export type InactiveReason = 'item' | 'group' | null;
+
+// Ngừng riêng thắng ngừng theo nhóm: bật lại nhóm không làm món ngừng riêng dùng lại
+export const ITEM_INACTIVE_REASON_SQL = sql.raw(
+  `CASE WHEN NOT items.active THEN 'item'
+        WHEN EXISTS (SELECT 1 FROM item_categories c WHERE c.id = items.category_id AND NOT c.active) THEN 'group'
+   END`,
+);
+
 export type StockState = 'ok' | 'low' | 'out' | 'untracked';
 
 export const ITEM_COLUMNS = sql.raw(

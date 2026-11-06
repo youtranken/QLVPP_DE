@@ -6,7 +6,7 @@ import type { Executor } from '../../database/database.module';
 // Alias c = item_categories (LEFT JOIN), i = items; nhóm NULL/không tồn tại xếp cuối.
 // lower(tên) theo mã điểm (COLLATE "C") để comparator web (compareItems) cho đúng cùng dãy.
 export const ITEM_ORDER: SQL = sql.raw(
-  'c.sort_order NULLS LAST, c.name, i.sort_order, lower(i.name) COLLATE "C", i.id',
+  'c.sort_order NULLS LAST, lower(c.name) COLLATE "C", i.sort_order, lower(i.name) COLLATE "C", i.id',
 );
 
 // Không khóa nhóm: hai món tạo song song có thể cùng số, lower(name) rồi id vẫn phân định

@@ -38,8 +38,7 @@ const nav: Messages<typeof vi> = {
     backlog: 'Outstanding',
     deliveryClassic: 'Deliveries (classic)',
     reports: 'Reports & print',
-    categories: 'Categories',
-    units: 'Units',
+    categoriesUnits: 'Groups & units',
     badge: {
       review: '{{n}} items to review',
       delivery: '{{n}} people waiting',

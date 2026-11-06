@@ -22,8 +22,8 @@ export function ItemCell({ row, error }: { row: CatalogRow; error?: string }) {
           <span className="ct-item__name">{row.name}</span>
           {row.admin_only && <span className="tag tag--dark">{t('catalog.page.adminOnly')}</span>}
           {row.missing_image && <span className="tag tag--warn">{t('catalog.page.missingImage')}</span>}
-          {!row.active && <span className="tag tag--outline">{t('catalog.list.inactive')}</span>}
-          {row.active && !row.usable && <span className="tag tag--warn">{t('catalog.list.groupPaused')}</span>}
+          {row.inactive_reason === 'item' && <span className="tag tag--outline">{t('catalog.categories.byItem')}</span>}
+          {row.inactive_reason === 'group' && <span className="tag tag--warn">{t('catalog.categories.byGroup')}</span>}
         </span>
         {row.pack_note && <small className="ct-item__note">{row.pack_note}</small>}
         {error && (

@@ -5,6 +5,7 @@ import { useConfirm } from '@/ui/confirm-context';
 import { useToast } from '@/ui/toast-context';
 import { patchItem } from './catalog.api';
 import { rowErrorText } from './catalog-errors';
+import { usePendingArrivalNote } from './pending-arrival-note';
 import type { CatalogRow } from './catalog-rows';
 
 export function useCatalogActions(refresh: () => Promise<unknown>, setRowError: (id: string, text: string | null) => void) {
@@ -12,6 +13,7 @@ export function useCatalogActions(refresh: () => Promise<unknown>, setRowError: 
   const { csrfToken } = useMe();
   const confirm = useConfirm();
   const toast = useToast();
+  const pendingNote = usePendingArrivalNote();
 
   // Lỗi ném lại để InlineNumber giữ ô mở và gắn câu lỗi vào đúng ô
   const saveMax = useCallback(
@@ -32,6 +34,7 @@ export function useCatalogActions(refresh: () => Promise<unknown>, setRowError: 
           message: t('catalog.list.deactivateBody'),
           confirmLabel: t('catalog.bulk.deactivate'),
           danger: true,
+          warning: await pendingNote([{ id: row.id, name: row.name }], false),
         });
         if (!ok) return;
       }
@@ -44,7 +47,7 @@ export function useCatalogActions(refresh: () => Promise<unknown>, setRowError: 
         setRowError(row.id, rowErrorText(e, t));
       }
     },
-    [confirm, csrfToken, refresh, setRowError, t, toast],
+    [confirm, csrfToken, pendingNote, refresh, setRowError, t, toast],
   );
 
   const confirmDeactivateMany = (n: number) =>

@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Tháng này', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Tháng này', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm & đơn vị', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 const LATER = ['Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ', 'Giao hàng (bản cũ)'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
@@ -25,7 +25,7 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.queryByRole('navigation', { name: 'Menu quản lý' })).toBeNull();
   });
 
-  it.each(['admin', 'sa'] as const)('role %s: sidebar 4 nhóm, 12 mục (nhóm "Xem lại sau" thu gọn) theo thứ tự SPEC §4.1, mục đang chọn aria-current, không "Phiếu của tôi"', (role) => {
+  it.each(['admin', 'sa'] as const)('role %s: sidebar 4 nhóm, 11 mục (nhóm "Xem lại sau" thu gọn) theo thứ tự SPEC §4.1, mục đang chọn aria-current, không "Phiếu của tôi"', (role) => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe(role), '/admin/catalog');
@@ -38,12 +38,12 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeInTheDocument();
   });
 
-  it('Nhóm món là mục sidebar riêng: /admin/categories đánh dấu "Nhóm món"', () => {
+  it('"Nhóm & đơn vị" là mục sidebar riêng: /admin/categories đánh dấu mục đó', () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/categories');
-    expect(within(sideNav()).getByRole('link', { name: 'Nhóm món' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('heading', { level: 1, name: 'Nhóm món' })).toBeInTheDocument();
+    expect(within(sideNav()).getByRole('link', { name: 'Nhóm & đơn vị' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('heading', { level: 1, name: 'Nhóm & đơn vị' })).toBeInTheDocument();
   });
 
   it('/admin chuyển tới /admin/home (trang Tháng này)', async () => {
@@ -94,7 +94,7 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getByRole('main').querySelector('.shell__panel')).not.toBeNull();
   });
 
-  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 16 mục (menu điện thoại không thu gọn nhóm)', async () => {
+  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 15 mục (menu điện thoại không thu gọn nhóm)', async () => {
     mockViewport(767);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');

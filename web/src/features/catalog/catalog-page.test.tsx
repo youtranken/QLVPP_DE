@@ -55,12 +55,12 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
     expect(screen.getByText('Giấy A4')).toBeInTheDocument();
   });
 
-  it('tab "Đã ngừng" → ?tab=inactive, món ngừng hiện kèm badge "Ngừng"', async () => {
+  it('tab "Đã ngừng" → ?tab=inactive, món ngừng hiện kèm badge "Ngừng riêng"', async () => {
     await openCatalog({ items: ITEMS });
     expect(screen.queryByText('Bút xóa cũ')).toBeNull();
     await userEvent.click(tab(/^Đã ngừng/));
     expect(location()).toBe('?tab=inactive');
-    expect(inRow('Bút xóa cũ').getByText('Ngừng')).toBeInTheDocument();
+    expect(inRow('Bút xóa cũ').getByText('Ngừng riêng')).toBeInTheDocument();
   });
 
   it('ô tìm "Tìm trong 3 món" lọc qua ?q=', async () => {
@@ -172,21 +172,21 @@ describe('Danh mục — cột Tên tiếng Anh, nhóm đang ngừng', () => {
     expect(inRow('Bút chì 2B').getAllByText('—')).toHaveLength(2);
   });
 
-  it('món active nhưng usable=false (nhóm ngừng) → nhãn "Nhóm đang ngừng", không phải "Ngừng"; tiêu đề nhóm ngừng cũng có nhãn', async () => {
-    const paused = adminItem({ id: 'i-p', name: 'Bút dạ cũ', category_id: 'c-old', usable: false });
+  it('inactive_reason=group → nhãn "Ngừng theo nhóm", không phải "Ngừng riêng"; tiêu đề nhóm ngừng có nhãn "Nhóm đang ngừng"', async () => {
+    const paused = adminItem({ id: 'i-p', name: 'Bút dạ cũ', category_id: 'c-old', usable: false, inactive_reason: 'group' });
     await openCatalog({ items: [PEN, paused] });
-    expect(inRow('Bút dạ cũ').getByText('Nhóm đang ngừng')).toBeInTheDocument();
-    expect(inRow('Bút dạ cũ').queryByText('Ngừng')).toBeNull();
-    expect(inRow('Bút bi xanh').queryByText('Nhóm đang ngừng')).toBeNull();
+    expect(inRow('Bút dạ cũ').getByText('Ngừng theo nhóm')).toBeInTheDocument();
+    expect(inRow('Bút dạ cũ').queryByText('Ngừng riêng')).toBeNull();
+    expect(inRow('Bút bi xanh').queryByText(/^Ngừng/)).toBeNull();
     expect(within(groupHead('Nhóm cũ')).getByText('Nhóm đang ngừng')).toBeInTheDocument();
     expect(within(groupHead('Bút & viết')).queryByText('Nhóm đang ngừng')).toBeNull();
   });
 
-  it('món tự ngừng trong nhóm ngừng (active=false) chỉ có nhãn "Ngừng"', async () => {
+  it('món ngừng riêng trong nhóm ngừng (inactive_reason=item) chỉ có nhãn "Ngừng riêng"', async () => {
     const both = adminItem({ id: 'i-b', name: 'Bút hỏng', category_id: 'c-old', active: false, usable: false });
     await openCatalog({ items: [PEN, both] }, '/admin/catalog?tab=inactive');
-    expect(inRow('Bút hỏng').getByText('Ngừng')).toBeInTheDocument();
-    expect(inRow('Bút hỏng').queryByText('Nhóm đang ngừng')).toBeNull();
+    expect(inRow('Bút hỏng').getByText('Ngừng riêng')).toBeInTheDocument();
+    expect(inRow('Bút hỏng').queryByText('Ngừng theo nhóm')).toBeNull();
   });
 });
 

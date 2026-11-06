@@ -18,10 +18,10 @@ function byCodePoint(a: string, b: string): number {
 
 function byCategory(a: ItemOrderKey['category'], b: ItemOrderKey['category']): number {
   if (!a || !b) return (a ? 0 : 1) - (b ? 0 : 1);
-  return a.sort_order - b.sort_order || byCodePoint(a.name, b.name);
+  return a.sort_order - b.sort_order || byCodePoint(a.name.toLowerCase(), b.name.toLowerCase());
 }
 
-// Cùng khóa với ITEM_ORDER của api: c.sort_order NULLS LAST, c.name, i.sort_order, lower(i.name) COLLATE "C", i.id
+// Cùng khóa với ITEM_ORDER của api: c.sort_order NULLS LAST, lower(c.name) COLLATE "C", i.sort_order, lower(i.name) COLLATE "C", i.id
 export function compareItems(a: ItemOrderKey, b: ItemOrderKey): number {
   return (
     byCategory(a.category, b.category) ||

@@ -35,8 +35,7 @@ const nav = {
     backlog: 'Còn nợ',
     deliveryClassic: 'Giao hàng (bản cũ)',
     reports: 'Báo cáo & in',
-    categories: 'Nhóm món',
-    units: 'Đơn vị tính',
+    categoriesUnits: 'Nhóm & đơn vị',
     badge: {
       review: '{{n}} món chờ xem',
       delivery: '{{n}} người chưa nhận',

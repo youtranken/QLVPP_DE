@@ -29,11 +29,12 @@ describe('compareItems', () => {
     expect(orderKeyOf({ id: 'x', name: 'X', sort_order: 1, category_id: 'gone' }, new Map()).category).toBeNull();
   });
 
-  it('nhóm: sort_order rồi tên nhóm theo mã điểm (không hạ chữ): "Giấy" trước "bút" khi cùng số', () => {
+  it('nhóm: sort_order rồi tên nhóm chữ thường theo mã điểm: "bút" trước "Giấy", "…a" trước "…B" khi cùng số', () => {
     const giay = { name: 'Giấy', sort_order: 10 };
     const but = { name: 'bút', sort_order: 10 };
-    expect(ids([key('b', 'A', 0, but), key('g', 'Z', 0, giay)])).toEqual(['g', 'b']);
-    expect(ids([key('b', 'A', 0, { ...but, sort_order: 5 }), key('g', 'Z', 0, giay)])).toEqual(['b', 'g']);
+    expect(ids([key('g', 'A', 0, giay), key('b', 'Z', 9, but)])).toEqual(['b', 'g']);
+    expect(ids([key('B', 'A', 0, { name: 'Kẹp B', sort_order: 15 }), key('a', 'Z', 9, { name: 'Kẹp a', sort_order: 15 })])).toEqual(['a', 'B']);
+    expect(ids([key('b', 'A', 0, { ...but, sort_order: 50 }), key('g', 'Z', 0, giay)])).toEqual(['g', 'b']);
   });
 
   it('trùng sort_order → tên chữ thường theo mã điểm → id; "đ" sau "e" (không localeCompare)', () => {

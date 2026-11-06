@@ -17,8 +17,13 @@ import { unknownUnit } from '../units/unit-errors';
 import { UnitsService } from '../units/units.service';
 import type { CreateItemDto, UpdateItemDto } from './catalog.dto';
 import { definedEntries, pick, setClause } from '../../common/sql-patch';
-import { ITEM_COLUMNS, ITEM_USABLE_SQL, LOW_STOCK_SQL } from './catalog-sql';
-import type { ItemFacts, ItemRow } from './catalog-sql';
+import {
+  ITEM_COLUMNS,
+  ITEM_INACTIVE_REASON_SQL,
+  ITEM_USABLE_SQL,
+  LOW_STOCK_SQL,
+} from './catalog-sql';
+import type { InactiveReason, ItemFacts, ItemRow } from './catalog-sql';
 import { ITEM_ORDER, nextItemSortOrder } from './item-order';
 import { ITEM_USAGE_HOOK } from './item-usage.hook';
 import type { ItemUsageHook } from './item-usage.hook';
@@ -64,6 +69,12 @@ function itemInUse() {
     message: 'Món này đã được dùng — chỉ ngừng được, không xóa.',
   });
 }
+
+type ListedItem = ItemRow & {
+  usable: boolean;
+  inactive_reason: InactiveReason;
+  missing_image: boolean;
+};
 
 @Injectable()
 export class CatalogService {
@@ -115,13 +126,12 @@ export class CatalogService {
   async listFor(
     identity: RequestIdentity,
     includeIds: string[] = [],
-  ): Promise<(ItemRow & { usable: boolean; missing_image: boolean })[]> {
+  ): Promise<ListedItem[]> {
     const privileged = identity.role === 'admin' || identity.role === 'sa';
-    const result = await this.db.execute<
-      ItemRow & { usable: boolean; missing_image: boolean }
-    >(sql`
+    const result = await this.db.execute<ListedItem>(sql`
       SELECT i.* FROM (
         SELECT ${ITEM_COLUMNS}, ${ITEM_USABLE_SQL} AS usable,
+               ${ITEM_INACTIVE_REASON_SQL} AS inactive_reason,
                (image_file_id IS NULL) AS missing_image
         FROM items
         WHERE ${privileged}

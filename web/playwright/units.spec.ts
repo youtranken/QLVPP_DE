@@ -56,8 +56,8 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
     const sub = `pw-units-${stamp}`;
     seedActiveUser(sub, `PW Nhân viên ${stamp}`);
     try {
-      await page.goto('/admin/units');
-      await expect(page.getByRole('heading', { level: 1, name: 'Đơn vị tính' })).toBeVisible();
+      await page.goto('/admin/categories/units');
+      await expect(page.getByRole('heading', { level: 1, name: 'Nhóm & đơn vị' })).toBeVisible();
       const inUse = (await listUnits(request)).find((u) => u.in_use);
       expect(inUse).toBeDefined();
       await expect(page.getByRole('main').getByRole('switch')).toHaveCount(0);
@@ -107,8 +107,8 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
   });
 
   test('E9-S5b Đơn vị tính: chế độ Sắp xếp — ▲▼ xếp dọc chỉ khi bật, biên đầu/cuối tắt, Hủy hỏi rồi trả thứ tự cũ', async ({ page }, info) => {
-    await page.goto('/admin/units');
-    await expect(page.getByRole('heading', { level: 1, name: 'Đơn vị tính' })).toBeVisible();
+    await page.goto('/admin/categories/units');
+    await expect(page.getByRole('heading', { level: 1, name: 'Nhóm & đơn vị' })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Thứ tự' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /^Đưa / })).toHaveCount(0);
     const names = () => page.getByRole('table').getByRole('button', { name: /^Thao tác cho / }).evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
@@ -138,14 +138,14 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
   });
 
   test('E9-S5b Đơn vị tính: Enter trên ▲▼ giữ tiêu điểm ở mũi tên của dòng vừa dời, tới dòng cuối chuyển sang ▲', async ({ page }) => {
-    await page.goto('/admin/units');
-    await expect(page.getByRole('heading', { level: 1, name: 'Đơn vị tính' })).toBeVisible();
+    await page.goto('/admin/categories/units');
+    await expect(page.getByRole('heading', { level: 1, name: 'Nhóm & đơn vị' })).toBeVisible();
     await expectReorderArrowKeepsFocus(page, /^Thao tác cho /);
   });
 
   test('E9-S5b Đơn vị tính: lỗi tải → "Không tải được dữ liệu — thử lại." và "Thử lại"', async ({ page }) => {
     await page.route('**/api/units?all=1', (route) => route.fulfill({ status: 500, body: '{}' }));
-    await page.goto('/admin/units');
+    await page.goto('/admin/categories/units');
     await expect(page.getByText('Không tải được dữ liệu — thử lại.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Thử lại' })).toBeVisible();
   });

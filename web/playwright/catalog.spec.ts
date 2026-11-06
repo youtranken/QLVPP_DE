@@ -35,7 +35,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
 
     try {
       await page.goto('/admin/categories');
-      await expect(page.getByRole('heading', { level: 1, name: 'Nhóm món' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: 'Nhóm & đơn vị' })).toBeVisible();
       await page.getByRole('button', { name: 'Thêm nhóm' }).click();
       const catDialog = page.getByRole('dialog', { name: 'Thêm nhóm' });
       await catDialog.getByLabel('Tên nhóm').fill(category);
@@ -88,7 +88,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await expect(page.getByText(itemName, { exact: true })).toBeHidden();
       await page.getByRole('group', { name: 'Trạng thái' }).getByRole('button', { name: /^Đã ngừng/ }).click();
       const itemRow = page.getByRole('row').filter({ hasText: itemName });
-      await expect(itemRow.getByText('Ngừng', { exact: true })).toBeVisible();
+      await expect(itemRow.getByText('Ngừng riêng', { exact: true })).toBeVisible();
       await expect(itemRow.getByRole('switch', { name: `Mở lại ${itemName}` })).toBeVisible();
 
       await page.getByRole('main').getByRole('link', { name: 'Nhóm món' }).click();

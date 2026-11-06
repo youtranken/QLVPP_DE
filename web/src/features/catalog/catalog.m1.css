@@ -98,3 +98,4 @@
   [data-shell='admin'] .ct-page .toolbar__search { flex: 1 1 100%; }
   [data-shell='admin'] .ct-tab { min-height: var(--hit); padding: 0 12px; }
 }
+[data-shell='admin'] .w24-list { display: grid; gap: var(--s-1); margin: 0; padding: 0; list-style: none; }

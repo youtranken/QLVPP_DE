@@ -11,8 +11,7 @@ const PAGES = [
   ['reports', 'Báo cáo & in'],
   ['stock', 'Kho'],
   ['catalog', 'Danh mục'],
-  ['categories', 'Nhóm món'],
-  ['units', 'Đơn vị tính'],
+  ['categories', 'Nhóm & đơn vị'],
   ['users', 'Danh bạ'],
   ['audit', 'Nhật ký'],
   ['config', 'Cấu hình'],
@@ -71,7 +70,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     expect(Math.round((await drawer.boundingBox())!.width)).toBe(390);
     await expectNoHorizontalScroll(page, 'ngăn kéo Thêm món');
 
-    await openPage(page, 'units', 'Đơn vị tính');
+    await openPage(page, 'categories/units', 'Nhóm & đơn vị');
     await page.getByRole('main').getByRole('button', { name: 'Thêm đơn vị tính' }).tap();
     const dialog = page.getByRole('dialog', { name: 'Thêm đơn vị tính' });
     await expect(dialog).toBeVisible();
@@ -146,7 +145,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     await expect(menu(page)).toBeVisible();
     await expectNoContrastViolations(page);
 
-    for (const [path, title] of [['home', 'Tháng này'], ['review', 'Món ngoài danh mục'], ['delivery', 'Giao hàng'], ['backlog', 'Còn nợ'], ['categories', 'Nhóm món'], ['units', 'Đơn vị tính']] as const) {
+    for (const [path, title] of [['home', 'Tháng này'], ['review', 'Món ngoài danh mục'], ['delivery', 'Giao hàng'], ['backlog', 'Còn nợ'], ['categories', 'Nhóm & đơn vị'], ['categories/units', 'Nhóm & đơn vị']] as const) {
       await openPage(page, path, title);
       await expectTouchTargets(page, title);
     }
@@ -157,7 +156,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     await settled(page);
     await expectNoContrastViolations(page);
 
-    await openPage(page, 'units', 'Đơn vị tính');
+    await openPage(page, 'categories/units', 'Nhóm & đơn vị');
     await page.getByRole('main').getByRole('button', { name: 'Thêm đơn vị tính' }).tap();
     await expect(page.getByRole('dialog', { name: 'Thêm đơn vị tính' })).toBeVisible();
     await expectNoContrastViolations(page);

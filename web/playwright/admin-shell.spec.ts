@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { asRole, devHeaders, expectNoContrastViolations, isMobile, removeTestItem, seedPwItem } from './helpers';
 
-const NAV_ORDER = ['Tháng này', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Tháng này', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm & đơn vị', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 const LATER = ['Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ', 'Giao hàng (bản cũ)'];
 const OPEN_MENU = /^(Mở menu quản lý|Open admin menu)$/;
 
@@ -235,7 +235,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
 });
 
 // Mọi route trong khung Hành chính (bảng route của spec), kể cả 404
-const FULL_WIDTH_ROUTES = ['home', 'summary', 'send-adm', 'arrivals', 'delivery', 'delivery/classic', 'backlog', 'reports', 'catalog', 'stock', 'review', 'categories', 'units', 'users', 'audit', 'config', 'khong-co-trang'];
+const FULL_WIDTH_ROUTES = ['home', 'summary', 'send-adm', 'arrivals', 'delivery', 'delivery/classic', 'backlog', 'reports', 'catalog', 'stock', 'review', 'categories', 'categories/units', 'users', 'audit', 'config', 'khong-co-trang'];
 
 const panelAndViewport = (page: Page) =>
   page.getByRole('main').evaluate((main) => ({ panel: main.firstElementChild!.getBoundingClientRect().width, vw: document.documentElement.clientWidth, scroll: document.scrollingElement!.scrollWidth }));

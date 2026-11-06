@@ -87,6 +87,17 @@ describe('Danh mục — công tắc Dùng', () => {
     expect(patchCalls(f)).toEqual([{ id: 'i-pen', body: { active: false } }]);
   });
 
+  it('W24: Bút bi xanh đang chờ ADM giao 3 cây → hộp ngừng có khối cam, nút "Ngừng" vẫn bấm được; chờ 0 → không khối', async () => {
+    const f = await openCatalog({ items: ITEMS, pending: { 'i-pen': { remaining: 3, unit: 'cay', snapshot_at: '2026-11-03T02:15:00.000Z' }, 'i-paper': { remaining: 0 } } });
+    await userEvent.click(inRow('Bút bi xanh').getByRole('switch', { name: 'Ngừng Bút bi xanh' }));
+    const dialog = within(await screen.findByRole('dialog', { name: 'Ngừng Bút bi xanh?' }));
+    expect(dialog.getByRole('note')).toHaveTextContent(/^Món này đang chờ ADM giao 3 cây \(bản in \d\d:\d\d 03\/11\) — ngừng thì vẫn nhập được hàng đã đặt\.$/);
+    await userEvent.click(dialog.getByRole('button', { name: 'Ngừng' }));
+    await vi.waitFor(() => expect(patchCalls(f)).toEqual([{ id: 'i-pen', body: { active: false } }]));
+    await userEvent.click(inRow('Giấy A4').getByRole('switch', { name: 'Ngừng Giấy A4' }));
+    expect(within(await screen.findByRole('dialog', { name: 'Ngừng Giấy A4?' })).queryByRole('note')).toBeNull();
+  });
+
   it('"Mở lại Bút xóa cũ" PATCH {active:true} không cần hỏi', async () => {
     const f = await openCatalog({ items: ITEMS }, '/admin/catalog?tab=inactive');
     await userEvent.click(inRow('Bút xóa cũ').getByRole('switch', { name: 'Mở lại Bút xóa cũ' }));

@@ -10,16 +10,20 @@ interface Options {
   items: AdminItem[];
   categories?: Category[];
   patch?: (id: string, body: ItemPayload) => Response | Promise<Response>;
+  // GET admin/items/:id/pending-arrival theo id; thiếu → 404 (hộp ngừng vẫn mở, không khối W24)
+  pending?: Record<string, unknown>;
 }
 
 
 // Server giả giữ trạng thái: PATCH thành công đổi món, lần tải lại trả bản mới
-export function stubCatalog({ items, categories = CATEGORIES, patch }: Options) {
+export function stubCatalog({ items, categories = CATEGORIES, patch, pending = {} }: Options) {
   let list = items.map((i) => ({ ...i }));
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     const path = new URL(url, 'http://x').pathname;
     if (path === '/api/admin/items' && !init?.method) return jsonResponse(200, list);
     if (path === '/api/item-categories') return jsonResponse(200, categories);
+    const waiting = /^\/api\/admin\/items\/([^/]+)\/pending-arrival$/.exec(path);
+    if (waiting && pending[waiting[1]]) return jsonResponse(200, pending[waiting[1]]);
     const id = path.startsWith('/api/admin/items/') ? path.slice('/api/admin/items/'.length) : null;
     if (id && init?.method === 'PATCH') {
       const body = JSON.parse(String(init.body)) as ItemPayload;

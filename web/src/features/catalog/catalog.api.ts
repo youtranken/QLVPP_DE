@@ -30,6 +30,8 @@ export interface AdminItem {
   active: boolean;
   // active và nhóm (nếu có) đang dùng — server tính
   usable: boolean;
+  // 'item' = ngừng riêng (thắng nhóm), 'group' = món còn active nhưng nhóm ngừng
+  inactive_reason: 'item' | 'group' | null;
   sort_order: number;
   missing_image: boolean;
 }
@@ -56,7 +58,7 @@ const CATALOG_KEY = ['catalog'] as const;
 const ITEMS_KEY = [...CATALOG_KEY, 'items'] as const;
 const CATEGORIES_KEY = [...CATALOG_KEY, 'categories'] as const;
 
-export const categoryLabel = (c: Category, lang: string) => (lang === 'en' && c.name_en ? c.name_en : c.name);
+export const categoryLabel = (c: Pick<Category, 'name' | 'name_en'>, lang: string) => (lang === 'en' && c.name_en ? c.name_en : c.name);
 
 export const fileUrl = (id: string) => `/api/files/${id}`;
 
@@ -94,8 +96,13 @@ export const deleteItem = (id: string, csrfToken: string | null) =>
 export const createCategory = (body: CategoryPayload, csrf: string | null) =>
   send<Category>('POST', '/api/admin/item-categories', body, csrf);
 
+export interface CategorySaved extends Category {
+  // Chỉ có khi vừa bật lại nhóm
+  affected_items?: { reactivated: number; still_inactive: number };
+}
+
 export const patchCategory = (id: string, body: CategoryPayload, csrf: string | null) =>
-  send<Category>('PATCH', `/api/admin/item-categories/${id}`, body, csrf);
+  send<CategorySaved>('PATCH', `/api/admin/item-categories/${id}`, body, csrf);
 
 const EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 

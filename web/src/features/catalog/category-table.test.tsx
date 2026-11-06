@@ -8,7 +8,7 @@ const noop = () => {};
 
 function renderTable(busy: boolean) {
   return renderWithI18n(
-    <CategoryTable ordered={[C('a', 'Giấy'), C('b', 'Bút')]} counts={new Map()} countsReady busy={busy} sorting onMove={noop} onMoveTo={noop} onEdit={noop} onToggleActive={noop} />,
+    <CategoryTable ordered={[C('a', 'Giấy'), C('b', 'Bút')]} counts={new Map()} countsReady busy={busy} sorting onMove={noop} onMoveTo={noop} onEdit={noop} onToggleActive={noop} onOpen={noop} />,
   );
 }
 

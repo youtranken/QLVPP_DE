@@ -59,14 +59,15 @@ const openMenu = async (name: string) => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Trang Nhóm món', () => {
-  it('đúng một h1 "Nhóm món", breadcrumb, mô tả; lấy ?all=1 và số món mỗi nhóm', async () => {
+  it('đúng một h1 "Nhóm & đơn vị", tab "Nhóm món", breadcrumb, mô tả; lấy ?all=1 và số món mỗi nhóm', async () => {
     const f = await open();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Nhóm món');
-    expect(within(screen.getByRole('navigation', { name: 'Vị trí' })).getByText('Danh mục')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Nhóm & đơn vị');
+    expect(screen.getByRole('heading', { level: 2, name: 'Nhóm món' })).toBeInTheDocument();
+    expect(within(screen.getByRole('navigation', { name: 'Vị trí' })).getByText('Danh mục và tủ')).toBeInTheDocument();
     expect(screen.getByText('Thứ tự nhóm quyết định thứ tự trên trang Đăng ký và màu của từng nhóm.')).toBeInTheDocument();
     expect(f.mock.calls.map((c) => c[0])).toContain('/api/item-categories?all=1');
-    expect(within(rowOf('Bút & viết')).getByText('4')).toBeInTheDocument();
+    expect(within(rowOf('Bút & viết')).getByRole('button', { name: 'Món trong nhóm (4)' })).toBeInTheDocument();
   });
 
   it('không còn nút "Về Danh mục" (trùng đường dẫn); ghi chú màu một câu ngắn', async () => {
@@ -191,12 +192,12 @@ describe('Trang Nhóm món', () => {
     expect(mutations(f)).toHaveLength(0);
   });
 
-  it('"Dùng lại" nhóm đã ngừng: xác nhận rồi PATCH {active:true}', async () => {
-    const f = await open();
+  it('"Dùng lại" nhóm đã ngừng: không hỏi, PATCH {active:true}, toast số món dùng lại / vẫn ngừng riêng', async () => {
+    const f = await open((url, _m, body) => (url.endsWith('/c-3') && body.active === true ? jsonResponse(200, { ...CATS[2], active: true, affected_items: { reactivated: 2, still_inactive: 0 } }) : undefined));
     await userEvent.click((await openMenu('Cũ')).getByRole('menuitem', { name: 'Dùng lại' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Dùng lại nhóm “Cũ”?' });
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Dùng lại' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
     await vi.waitFor(() => expect(mutations(f)).toEqual([['/api/admin/item-categories/c-3', 'PATCH', { active: true }]]));
+    expect(await screen.findByText('2 món dùng lại; 0 món vẫn ngừng riêng')).toBeInTheDocument();
   });
 
   it('"Sửa" mở hộp "Sửa nhóm" điền sẵn; lưu tên tiếng Anh → PATCH {name_en}', async () => {
@@ -243,7 +244,7 @@ describe('Trang Nhóm món — "Ngừng nhóm" chờ danh sách món', () => {
 
   it('món tải xong → "Ngừng nhóm" bấm được', async () => {
     await open();
-    expect(await within(rowOf('Bút & viết')).findByText('4')).toBeInTheDocument();
+    expect(await within(rowOf('Bút & viết')).findByRole('button', { name: 'Món trong nhóm (4)' })).toBeInTheDocument();
     expect((await openMenu('Bút & viết')).getByRole('menuitem', { name: 'Ngừng nhóm' })).not.toHaveAttribute('aria-disabled');
   });
 });

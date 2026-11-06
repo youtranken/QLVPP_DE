@@ -31,8 +31,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { path: 'catalog', titleKey: 'nav.catalog', icon: 'layers' },
       { path: 'stock', titleKey: 'nav.stock', icon: 'warehouse', badge: 'stock' },
       { path: 'review', titleKey: 'nav.review', icon: 'pkgplus', badge: 'review' },
-      { path: 'categories', titleKey: 'nav.categories', icon: 'filter' },
-      { path: 'units', titleKey: 'nav.units', icon: 'sheet' },
+      { path: 'categories', titleKey: 'nav.categoriesUnits', icon: 'filter' },
     ],
   },
   {
