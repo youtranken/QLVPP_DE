@@ -3,6 +3,7 @@ import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Tx } from '../../database/database.module';
 import { StockService } from '../catalog/stock.service';
+import { PeriodsService } from '../periods/periods.service';
 import { LineDeliveryStore } from '../requests/line-delivery.store';
 import type { LockedLine } from '../requests/line-delivery.store';
 import { requestNotFound } from '../requests/request-errors';
@@ -21,6 +22,7 @@ export class DeliverAllService {
   constructor(
     @Inject(DRIZZLE_DB) private readonly db: Database,
     private readonly clock: ClockService,
+    private readonly periods: PeriodsService,
     private readonly lines: LineDeliveryStore,
     private readonly stock: StockService,
     private readonly delivery: DeliveryService,
@@ -35,7 +37,7 @@ export class DeliverAllService {
     return this.db.transaction(async (tx) => {
       const request = await this.lines.lockRequestLines(tx, requestId);
       if (!request) throw requestNotFound('Không tìm thấy phiếu.');
-      await this.delivery.assertPeriodLocked(tx, request.period_ym, now);
+      await this.periods.assertLocked(request.period_ym, now, tx);
       const open = request.lines.filter((l) => remainingOf(l) > 0);
       await this.stock.lockItemsWithin(tx, itemIdsOf(open));
       const result = await this.deliverEach(tx, open, actor, now);

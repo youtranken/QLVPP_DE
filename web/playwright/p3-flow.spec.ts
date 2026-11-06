@@ -75,9 +75,8 @@ async function backlogByItem(admin: Page, info: TestInfo, s: MonthSeed) {
 }
 
 async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, request: APIRequestContext, file: string) {
-  await admin.goto(`/admin/reports?ym=${s.ym}`);
-  // PRD §10 mục 6: nợ 2 kỳ trước + đăng ký 3 kỳ này, tồn 0 → Cần mua 5
-  await expect(needCell(reportRow(admin, s.paper.name))).toHaveText('5');
+  // Báo cáo kỳ đang mở bị chặn (Hành chính chỉ làm việc trên kỳ đã khóa); cộng nợ kỳ trước vào kỳ sau kiểm ở api e2e reports
+  expect((await request.get(`/api/admin/reports/${s.ym}`, { headers: devHeaders('admin') })).status()).toBe(409);
   await admin.goto(`/admin/reports?ym=${s.prevYm}`);
   await expect(needCell(reportRow(admin, s.paper.name))).toHaveText('2');
   await expect(needCell(reportRow(admin, s.clip.name))).toHaveText('3');
@@ -162,8 +161,6 @@ async function memberSeesDelivered(member: Page, info: TestInfo, s: MonthSeed) {
 }
 
 async function reopenSnapshot(admin: Page, s: MonthSeed, snapshotId: string) {
-  await admin.goto(`/admin/reports?ym=${s.ym}`);
-  await expect(needCell(reportRow(admin, s.paper.name))).toHaveText('3');
   await admin.goto(`/admin/reports?ym=${s.prevYm}`);
   // Kỳ trước đã giao đủ A4 → không còn dòng A4 (Cần mua 0) trong báo cáo sống
   await expect(reportRow(admin, s.paper.name)).toHaveCount(0);

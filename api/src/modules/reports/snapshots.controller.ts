@@ -43,12 +43,12 @@ export class SnapshotsController {
 
   @Get(':ym/snapshots')
   list(@Param('ym', YmPipe) ym: string) {
-    return this.snapshots.list(ym);
+    return this.snapshots.list(ym, this.clock.now());
   }
 
   @Get('snapshots/:id')
   get(@Param('id', uuidParam) id: string) {
-    return this.snapshots.get(id);
+    return this.snapshots.get(id, this.clock.now());
   }
 
   @Get('snapshots/:id/export.xlsx')
@@ -57,7 +57,7 @@ export class SnapshotsController {
     @Query() query: ExportQuery,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    const snapshot = await this.snapshots.get(id);
+    const snapshot = await this.snapshots.get(id, this.clock.now());
     const file = await buildWorkbook(
       snapshot,
       query.lang,

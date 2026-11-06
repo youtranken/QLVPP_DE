@@ -1,4 +1,6 @@
 import type { Pool } from 'pg';
+import type { ClockService } from '../../common/clock.service';
+import type { PeriodsService } from '../periods/periods.service';
 import { FileAccessPolicy } from './file-access.policy';
 
 const ref = (name: string, purpose: 'item_image' | 'line_image') => ({
@@ -9,7 +11,8 @@ const ref = (name: string, purpose: 'item_image' | 'line_image') => ({
 });
 
 describe('FileAccessPolicy.cleanupScope — dọn fail-closed theo purpose', () => {
-  const policy = () => new FileAccessPolicy({} as Pool);
+  const policy = () =>
+    new FileAccessPolicy({} as Pool, {} as PeriodsService, {} as ClockService);
 
   it('chưa đăng ký reference nào → null (không dọn gì)', () => {
     expect(policy().cleanupScope()).toBeNull();

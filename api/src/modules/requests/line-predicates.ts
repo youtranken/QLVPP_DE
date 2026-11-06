@@ -1,4 +1,6 @@
 import { sql } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
+import { ymToDate } from '../../common/period';
 
 // Dòng hiệu lực (cần mua/giao) của bảng request_lines bí danh `l`; pending/rejected không tính
 export const EFFECTIVE_LINE = sql.raw(
@@ -13,3 +15,6 @@ export const UNDELIVERED_LINE = sql`(${EFFECTIVE_LINE} AND ${REMAINING_QTY} > 0)
 export const CUSTOM_ITEM_KEY = sql.raw(
   `('custom:' || jsonb_build_array(lower(trim(l.custom_name)), lower(trim(l.custom_unit)))::text)`,
 );
+// Kỳ đã khóa của phiếu bí danh `r`; openYm lấy từ ClockService (không now() của Postgres)
+export const lockedPeriod = (openYm: string): SQL =>
+  sql`r.period_ym < ${ymToDate(openYm)}::date`;

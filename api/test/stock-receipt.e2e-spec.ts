@@ -4,7 +4,8 @@ import { ADMIN, stockFixture } from './stock.fixture';
 describe('POST admin/stock/receipts: vai, validate, mã lỗi (Postgres thật)', () => {
   const f = stockFixture();
   const { http, admin, qtyOf, newItem, movements } = f;
-  const YM = '2031-05';
+  // Kỳ quá khứ (đã khóa) riêng của suite
+  const YM = '2024-05';
   const receipts = (body: object) =>
     admin(http().post('/api/admin/stock/receipts')).send(body);
   const line = (item_id: string, qty = 1, expected_stock_qty = 0) => ({
@@ -120,10 +121,10 @@ describe('POST admin/stock/receipts: vai, validate, mã lỗi (Postgres thật)'
       const res = await one(100_000).expect(400);
       expect(res.body.code).toBe('VALIDATION');
     });
-    it('ym 2026-13 (tháng 13) → 400, 2026-12 → 200', async () => {
+    it('ym 2026-13 (tháng 13) → 400, 2025-12 (đã khóa) → 200', async () => {
       await receipts({ lines: [line(item, 1, 0)], ym: '2026-13' }).expect(400);
       await receipts({ lines: [line(item, 1, 0)], ym: '2026-00' }).expect(400);
-      await receipts({ lines: [line(item, 1, 0)], ym: '2026-12' }).expect(200);
+      await receipts({ lines: [line(item, 1, 0)], ym: '2025-12' }).expect(200);
     });
     it('expected_stock_qty -1 → 400', async () => {
       await receipts({ lines: [line(item, 1, -1)], ym: YM }).expect(400);

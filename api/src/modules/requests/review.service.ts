@@ -9,6 +9,8 @@ import type { RequestIdentity } from '../auth/identity.types';
 import type { CreateItemDto } from '../catalog/catalog.dto';
 import type { ItemFacts, ItemRow } from '../catalog/catalog-sql';
 import { CatalogService, itemNotFound } from '../catalog/catalog.service';
+import { PeriodsService } from '../periods/periods.service';
+import { lockedPeriod } from './line-predicates';
 import { LineNotifier } from './line-notifier';
 import {
   lineAlreadyReviewed,
@@ -76,11 +78,13 @@ export class ReviewService {
     private readonly catalog: CatalogService,
     private readonly audit: AuditWriterService,
     private readonly notifier: LineNotifier,
+    private readonly periods: PeriodsService,
   ) {}
 
   // previously_accepted: cùng người đã có dòng accepted cùng tên (chuẩn hóa) ở kỳ nào đó trước kỳ này
   async list(query: ReviewListQuery): Promise<{ items: ReviewRow[] }> {
     const ym = query.ym ? ymToDate(query.ym) : null;
+    const open = await this.periods.openPeriod(this.db, this.clock.now());
     const { rows } = await this.db.execute<
       ReviewRow & Record<string, unknown>
     >(sql`
@@ -99,6 +103,7 @@ export class ReviewService {
       LEFT JOIN users u ON u.sub = r.user_sub
       WHERE l.review_status = ${query.status}
         AND (${ym}::date IS NULL OR r.period_ym = ${ym}::date)
+        AND ${lockedPeriod(open.ym)}
       ORDER BY r.period_ym, l.created_at, l.id
     `);
     return { items: rows };
@@ -118,6 +123,7 @@ export class ReviewService {
     return this.db.transaction(async (tx) => {
       const before = await repo.lockLineForReview(tx, lineId);
       if (!before) throw lineNotFound();
+      const ym = await this.periods.assertLineLocked(tx, lineId, now);
       if (before.review_status !== 'pending') throw lineAlreadyReviewed();
       const item =
         body.action === 'convert'
@@ -139,6 +145,7 @@ export class ReviewService {
         objectType: 'request_line',
         objectId: lineId,
         detail: {
+          ym,
           action: body.action,
           before: pickReview(before),
           after: pickReview(after),

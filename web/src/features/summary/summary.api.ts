@@ -12,8 +12,10 @@ export interface PeriodSummary {
   headcount: number;
   headcount_source: 'snapshot' | 'live';
   unregistered: number;
-  lines_pending_delivery: number;
-  custom_pending: number;
+  outside: number;
+  // Kỳ đang mở: server không trả số dòng (Hành chính chỉ thấy tiến độ đăng ký)
+  lines_pending_delivery: number | null;
+  custom_pending: number | null;
   low_stock: number;
   receipts: number;
 }
@@ -125,14 +127,3 @@ export const saveAdjust = (id: string, body: AdjustBody, csrfToken: string | nul
     csrfToken,
   });
 
-export interface CreateOnBehalfBody {
-  user_sub: string;
-  lines: { item_id: string; qty: number }[];
-}
-
-export const createOnBehalf = (body: CreateOnBehalfBody, csrfToken: string | null) =>
-  apiFetch<{ request: RequestView | null }>('/api/admin/requests', {
-    method: 'POST',
-    body: JSON.stringify(body),
-    csrfToken,
-  });

@@ -25,7 +25,7 @@ function Check({ tone, text, link }: { tone: Tone; text: string; link?: { to: st
 export function SendAdmChecklist({ ym, summary }: { ym: string; summary: PeriodSummary }) {
   const { t } = useTranslation();
   const missing = summary.unregistered;
-  const outside = summary.custom_pending;
+  const outside = summary.custom_pending ?? 0;
   return (
     <section className="sa-card" aria-labelledby="sa-check-title">
       <h2 id="sa-check-title">{t('sendAdm.checklist.title')}</h2>

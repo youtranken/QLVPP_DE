@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { addMonths } from '../src/common/period';
 import { createTestApp } from './test-app.helper';
 
 const MISSING = '00000000-0000-4000-8000-000000000000';
@@ -85,12 +86,14 @@ describe('Quyền các route admin Plan 3: admin và sa qua guard, member 403', 
   beforeAll(async () => {
     process.env.AUTH_DEV_MODE = 'true';
     app = (await createTestApp()) as INestApplication<App>;
-    ym = (
+    const open = (
       await request(app.getHttpServer())
         .get('/api/periods/current')
         .set('x-dev-user-sub', 'e2e-p3-roles-admin')
         .set('x-dev-role', 'admin')
-    ).body.ym;
+    ).body.ym as string;
+    // Route theo tháng chỉ mở cho kỳ đã khóa: dùng kỳ liền trước kỳ đang mở
+    ym = addMonths(open, -1);
   });
 
   afterAll(async () => {
@@ -104,14 +107,14 @@ describe('Quyền các route admin Plan 3: admin và sa qua guard, member 403', 
     '%s: admin và sa → trạng thái nghiệp vụ (không 401/403), member → 403',
     async (_name, r) => {
       for (const role of ['admin', 'sa']) {
-        const res = await call(r as Route, role);
+        const res = await call(r, role);
         expect([role, res.status, res.body.code]).toEqual([
           role,
-          (r as Route).allowed[0],
-          (r as Route).allowed[1] ?? res.body.code,
+          r.allowed[0],
+          r.allowed[1] ?? res.body.code,
         ]);
       }
-      const member = await call(r as Route, 'member');
+      const member = await call(r, 'member');
       expect(member.status).toBe(403);
     },
   );

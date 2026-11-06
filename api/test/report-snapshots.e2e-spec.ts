@@ -133,10 +133,15 @@ describe('POST admin/reports/:ym/snapshots — bản chốt (E5-S2)', () => {
     }
   });
 
-  it('biên kỳ: kỳ đang mở 2026-12 → 201; kỳ sau 2027-01 → 400 INVALID_PERIOD; member → 403', async () => {
+  it('biên kỳ: kỳ đang mở 2026-12 → 409 PERIOD_NOT_LOCKED; kỳ đã khóa 2026-11 → 201; kỳ sau 2027-01 → 400 INVALID_PERIOD; member → 403', async () => {
     // 10:00 12/11 giờ VN: kỳ 2026-11 đã khóa nên 2026-12 là kỳ mở
-    const { id } = await createOk('2026-12');
-    expect((await snapshot(id)).period_ym).toBe('2026-12');
+    const open = await create('2026-12', { kind: 'xlsx' }).expect(409);
+    expect(open.body).toMatchObject({
+      code: 'PERIOD_NOT_LOCKED',
+      ym: '2026-12',
+    });
+    const { id } = await createOk('2026-11');
+    expect((await snapshot(id)).period_ym).toBe('2026-11');
     const res = await create('2027-01', { kind: 'xlsx' }).expect(400);
     expect(res.body.code).toBe('INVALID_PERIOD');
     await create('2026-11', { kind: 'xlsx' }, B, 'member').expect(403);

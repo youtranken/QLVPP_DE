@@ -3,13 +3,10 @@ import {
   ArrayMaxSize,
   IsArray,
   IsDefined,
-  IsNotEmpty,
   IsISO8601,
   IsOptional,
-  IsString,
   IsUUID,
   Matches,
-  MaxLength,
   ValidateNested,
 } from 'class-validator';
 import { STAMP_FROM_2000 } from '../../common/ym';
@@ -63,8 +60,4 @@ export class SaveMyLinesBody extends LinesBody {
 export class SaveLinesBody extends LinesBody {
   @UpdatedAtStamp() expected_updated_at!: string;
   @OptionalText(NOTE_MAX) reason?: string | null;
-}
-
-export class CreateOnBehalfBody extends LinesBody {
-  @IsString() @IsNotEmpty() @MaxLength(255) user_sub!: string;
 }

@@ -54,8 +54,8 @@ describe('POST admin/requests/:id/deliver-all: giao tất cả theo phiếu', ()
     const penLine = lineOf((l) => l.item_id === pen);
     const accepted = lineOf((l) => l.custom_name === 'Bìa đã duyệt');
     const pending = lineOf((l) => l.custom_name === 'Bìa chờ duyệt');
-    await review(accepted, { action: 'accept' }).expect(200);
     freeze(AFTER_DEADLINE);
+    await review(accepted, { action: 'accept' }).expect(200);
 
     const first = (await deliverAll(request.id).expect(200))
       .body as DeliverAllResult;
@@ -116,8 +116,8 @@ describe('POST admin/requests/:id/deliver-all: giao tất cả theo phiếu', ()
     const request = await seed([{ item_id: item, qty: 2 }, custom()]);
     const line = request.lines.find((l) => l.item_id === item)!.id;
     const rejected = request.lines.find((l) => l.item_id === null)!.id;
-    await review(rejected, { action: 'reject', note: 'Không mua' }).expect(200);
     freeze(AFTER_DEADLINE);
+    await review(rejected, { action: 'reject', note: 'Không mua' }).expect(200);
     await deliver(line, { qty: 1, expected_delivered_qty: 0 }).expect(200);
 
     const res = (await deliverAll(request.id).expect(200))

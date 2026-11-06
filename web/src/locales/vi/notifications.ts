@@ -14,6 +14,7 @@ const notifications = {
       period_open: 'Kỳ đăng ký {{month}} đã mở, hạn đăng ký đến hết {{deadline}}.',
       reminder: 'Bạn chưa đăng ký {{month}} — hạn đăng ký đến hết {{deadline}}.',
       period_locked: 'Kỳ {{month}} đã khóa: {{registered}}/{{headcount}} người đã đăng ký.',
+      period_lockedCustom: 'Kỳ {{month}} đã khóa: {{registered}}/{{headcount}} người đã đăng ký · {{custom}} món ngoài danh mục chờ xem.',
       low_stock: '{{name}} sắp hết kho, còn {{stock_qty}}.',
       request_delivered: 'Phiếu {{month}} của bạn đã được giao đủ.',
       line_cancelled: 'Hành chính hủy phần còn nợ {{qty}} {{unit}} {{name}} ({{month}}): {{reason}}',

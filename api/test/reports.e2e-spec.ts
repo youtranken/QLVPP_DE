@@ -14,6 +14,7 @@ describe('GET admin/reports/:ym — Tổng theo món (BR-15)', () => {
     itemRow,
     lockedLine,
     pool,
+    report,
     seedLine,
     stockItem,
   } = f;
@@ -78,7 +79,7 @@ describe('GET admin/reports/:ym — Tổng theo món (BR-15)', () => {
     });
   });
 
-  it('kỳ sau ym không tính; báo cáo kỳ đang mở 2026-12: requested = dòng kỳ mở, backlog_prev = kỳ đã khóa', async () => {
+  it('kỳ sau ym không tính; kỳ đang mở 2026-12 → 409 PERIOD_NOT_LOCKED; sau khóa 2026-12: requested = dòng kỳ đó, backlog_prev = kỳ trước', async () => {
     const item = await stockItem(1);
     await seedLine('2026-11', A, { item_id: item, qty: 2 });
     await seedLine('2026-12', A, { item_id: item, qty: 3 });
@@ -87,6 +88,10 @@ describe('GET admin/reports/:ym — Tổng theo món (BR-15)', () => {
       backlog_prev: 0,
       need: 1,
     });
+    expect((await report('2026-12').expect(409)).body.code).toBe(
+      'PERIOD_NOT_LOCKED',
+    );
+    freeze('2026-12-11T03:00:00Z');
     expect(itemRow(await build('2026-12'), item)).toMatchObject({
       requested: 3,
       backlog_prev: 2,

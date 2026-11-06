@@ -106,14 +106,19 @@ describe('GET admin/reports/:ym — chi tiết phòng ban, xuất lẻ, kỳ h�
     },
   );
 
-  it('biên kỳ mở: 10/11 16:59:59.999Z (kỳ mở 2026-11) → 2026-12 bị chặn; 17:00:00Z (kỳ mở 2026-12) → 200', async () => {
+  it('biên khóa sổ: 10/11 16:59:59.999Z → 2026-12 INVALID_PERIOD, 2026-11 (đang mở) PERIOD_NOT_LOCKED; 17:00:00Z → 2026-11 200, 2026-12 (đang mở) PERIOD_NOT_LOCKED', async () => {
     freeze('2026-11-10T16:59:59.999Z');
     expect((await report('2026-12').expect(400)).body.code).toBe(
       'INVALID_PERIOD',
     );
-    await report('2026-11').expect(200);
+    expect((await report('2026-11').expect(409)).body.code).toBe(
+      'PERIOD_NOT_LOCKED',
+    );
     freeze('2026-11-10T17:00:00.000Z');
-    await report('2026-12').expect(200);
+    await report('2026-11').expect(200);
+    expect((await report('2026-12').expect(409)).body.code).toBe(
+      'PERIOD_NOT_LOCKED',
+    );
   });
 
   it('member → 403; sa → 200', async () => {

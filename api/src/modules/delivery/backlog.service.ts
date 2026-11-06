@@ -3,10 +3,12 @@ import { sql } from 'drizzle-orm';
 import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
+import { PeriodsService } from '../periods/periods.service';
 import {
   CUSTOM_ITEM_KEY,
   REMAINING_QTY,
   UNDELIVERED_LINE,
+  lockedPeriod,
 } from '../requests/line-predicates';
 import { lineNotFound } from '../requests/request-errors';
 import type {
@@ -27,10 +29,12 @@ export class BacklogService {
   constructor(
     @Inject(DRIZZLE_DB) private readonly db: Database,
     private readonly clock: ClockService,
+    private readonly periods: PeriodsService,
   ) {}
 
   async backlog(by: BacklogBy): Promise<{ groups: BacklogGroup[] }> {
-    const rows = await this.backlogRows(this.clock.now());
+    const open = await this.periods.openPeriod(this.db, this.clock.now());
+    const rows = await this.backlogRows(open.ym);
     const groups = new Map<string, BacklogGroup>();
     for (const { item_key, user_department, ...line } of rows) {
       const key = by === 'item' ? item_key : line.user_sub;
@@ -51,7 +55,7 @@ export class BacklogService {
   }
 
   // Chỉ kỳ đã khóa: kỳ đang mở chưa giao được nên chưa phải nợ
-  private async backlogRows(now: Date): Promise<BacklogRow[]> {
+  private async backlogRows(openYm: string): Promise<BacklogRow[]> {
     const { rows } = await this.db.execute<BacklogRow>(sql`
       SELECT l.id AS line_id, l.request_id, to_char(r.period_ym, 'YYYY-MM') AS period_ym,
              r.user_sub, u.full_name, r.department, u.status AS user_status,
@@ -63,16 +67,21 @@ export class BacklogService {
              coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) AS item_key
       FROM request_lines l
       JOIN requests r ON r.id = l.request_id
-      JOIN periods p ON p.ym = r.period_ym
       JOIN users u ON u.sub = r.user_sub
       LEFT JOIN items i ON i.id = l.item_id
-      WHERE ${UNDELIVERED_LINE} AND p.deadline <= ${now.toISOString()}::timestamptz
+      WHERE ${UNDELIVERED_LINE} AND ${lockedPeriod(openYm)}
       ORDER BY r.period_ym, coalesce(u.full_name, ''), l.id
     `);
     return rows;
   }
 
   async deliveries(lineId: string): Promise<LineDeliveries> {
+    const ym = await this.periods.assertLineLocked(
+      this.db,
+      lineId,
+      this.clock.now(),
+    );
+    if (!ym) throw lineNotFound();
     const head = await this.db.execute<
       LineDeliveries['line'] & Record<string, unknown>
     >(sql`

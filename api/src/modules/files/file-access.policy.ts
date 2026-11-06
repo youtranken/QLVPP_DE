@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
+import { ClockService } from '../../common/clock.service';
+import { ymToDate } from '../../common/period';
 import { PG_POOL } from '../../database/database.module';
 import { isUuid } from '../../common/uuid';
+import { PeriodsService } from '../periods/periods.service';
 import type { RequestIdentity } from '../auth/identity.types';
 import type { FilePurpose } from './file-validation';
 
@@ -15,6 +18,8 @@ export interface FileReference {
   readonly readCondition: string;
   // Đúng khi f còn được tham chiếu (bất kể ai) — cron dọn mồ côi giữ lại
   readonly referencedCondition: string;
+  // Đúng khi vai đặc quyền không được xem f chỉ nhờ vai trò; `$4` = ngày đầu kỳ đang mở
+  readonly hiddenFromPrivilegedCondition?: string;
 }
 
 export interface CleanupScope {
@@ -31,7 +36,11 @@ export interface ReadableFile {
 export class FileAccessPolicy {
   private readonly references: FileReference[] = [];
 
-  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+  constructor(
+    @Inject(PG_POOL) private readonly pool: Pool,
+    private readonly periods: PeriodsService,
+    private readonly clock: ClockService,
+  ) {}
 
   registerReference(reference: FileReference): void {
     if (this.references.some((r) => r.name === reference.name)) {
@@ -52,11 +61,21 @@ export class FileAccessPolicy {
     if (!isUuid(fileId)) return null;
     const privileged = identity.role === 'admin' || identity.role === 'sa';
     const viaReferences = this.references.map((r) => `(${r.readCondition})`);
-    const allowed = ['$3::boolean', 'f.uploaded_by_sub = $2', ...viaReferences];
+    const hidden = this.references
+      .filter((r) => r.hiddenFromPrivilegedCondition)
+      .map((r) => `(${r.hiddenFromPrivilegedCondition})`);
+    const params: unknown[] = [fileId, identity.sub, privileged];
+    let byRole = '$3::boolean';
+    if (privileged && hidden.length > 0) {
+      const open = await this.periods.openPeriod(undefined, this.clock.now());
+      params.push(ymToDate(open.ym));
+      byRole = `($3::boolean AND NOT (${hidden.join(' OR ')}))`;
+    }
+    const allowed = [byRole, 'f.uploaded_by_sub = $2', ...viaReferences];
     const result = await this.pool.query<ReadableFile>(
       `SELECT f.id, f.mime FROM files f
        WHERE f.id = $1 AND (${allowed.join(' OR ')})`,
-      [fileId, identity.sub, privileged],
+      params,
     );
     return result.rows[0] ?? null;
   }

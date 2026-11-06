@@ -203,7 +203,7 @@ const catalog: Messages<typeof vi> = {
       UNIT_REQUIRED: 'Choose a unit.',
       UNIT_INACTIVE: 'This unit is no longer used — choose another unit.',
       ITEM_CODE_EXISTS: 'Another item already uses this code.',
-      ITEM_IN_USE: 'This item is already in a request — it can only be retired.',
+      ITEM_IN_USE: 'This item has been used — you can discontinue it but not delete it.',
       ITEM_NOT_FOUND: 'This item no longer exists — reload the page.',
       CATEGORY_EXISTS: 'A category with this name already exists.',
       CATEGORY_NOT_FOUND: 'This category no longer exists — reload the page and pick another.',

@@ -7,7 +7,6 @@ import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
 import { SystemConfigService } from '../config/system-config.service';
 import { PeriodsService } from '../periods/periods.service';
-import { invalidPeriod } from '../requests/request-errors';
 import { UnitsService } from '../units/units.service';
 import { UsersService } from '../users/users.service';
 import { resolveOrderQty } from './order-qty';
@@ -41,8 +40,7 @@ export class SnapshotsService {
     now: Date,
   ) {
     // Tạo kỳ trước khi mở tx REPEATABLE READ (ảnh dữ liệu không thấy dòng tx khác vừa chèn); kỳ cũ cần dòng cho FK
-    const open = await this.periods.openPeriod(this.db, now);
-    if (ym > open.ym) throw invalidPeriod();
+    await this.periods.assertLocked(ym, now);
     await this.periods.ensurePeriod(ym);
     const signature_boxes =
       await this.config.get<SignatureBox[]>('signature_boxes');
@@ -85,7 +83,8 @@ export class SnapshotsService {
     return { id, kind: body.kind, created_at, created_by };
   }
 
-  async list(ym: string) {
+  async list(ym: string, now: Date) {
+    await this.periods.assertLocked(ym, now);
     const { rows } = await this.db.execute<{
       id: string;
       kind: string;
@@ -105,7 +104,7 @@ export class SnapshotsService {
     };
   }
 
-  async get(id: string): Promise<StoredSnapshot> {
+  async get(id: string, now: Date): Promise<StoredSnapshot> {
     const { rows } = await this.db.execute<{
       kind: string;
       period_ym: string;
@@ -120,6 +119,7 @@ export class SnapshotsService {
       });
     }
     const { data, kind, period_ym } = rows[0];
+    await this.periods.assertLocked(period_ym, now);
     return { ...data, id, kind, period_ym };
   }
 }

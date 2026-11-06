@@ -5,7 +5,6 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { PeriodsService } from '../periods/periods.service';
 import { REMAINING_QTY, UNDELIVERED_LINE } from '../requests/line-predicates';
-import { periodNotLocked } from './delivery-errors';
 import type {
   DeliveryPerson,
   DeliveryPersonLine,
@@ -30,8 +29,7 @@ export class DeliveryPeopleService {
 
   async list(ym: string): Promise<{ ym: string; people: DeliveryPerson[] }> {
     const now = this.clock.now();
-    const period = await this.periods.findSnapshot(ym);
-    if (!period || now < period.deadline) throw periodNotLocked();
+    await this.periods.assertLocked(ym, now);
     const rows = await this.rows(ym, now);
     const byUser = new Map<string, DeliveryPerson>();
     for (const {

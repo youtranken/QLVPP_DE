@@ -23,7 +23,6 @@ export interface PmhIdClaims {
 
 export interface UserListQuery {
   search?: string;
-  excludeAdminGroup?: string;
   limit: number;
   cursor?: string;
 }
@@ -83,11 +82,6 @@ export class UsersService {
           ilike(usersTable.fullName, pattern),
           ilike(usersTable.email, pattern),
         )!,
-      );
-    }
-    if (query.excludeAdminGroup) {
-      conds.push(
-        sql`NOT ${inAdminGroup(sql`${usersTable.groups}`, query.excludeAdminGroup)}`,
       );
     }
     if (query.cursor) {

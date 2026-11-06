@@ -67,6 +67,7 @@ export async function lockRequest(
 export async function findRequest(
   ex: Executor,
   where: { id: string } | { ym: string; user_sub: string },
+  forUpdate = false,
 ): Promise<RequestRow | null> {
   const cond =
     'id' in where
@@ -75,7 +76,7 @@ export async function findRequest(
   const { rows } = await ex.execute<RequestRow>(sql`
     SELECT id, to_char(period_ym, 'YYYY-MM') AS period_ym, user_sub, department,
            ${UPDATED_AT_ISO} AS updated_at
-    FROM requests WHERE ${cond}
+    FROM requests WHERE ${cond} ${forUpdate ? sql`FOR UPDATE` : sql``}
   `);
   return rows[0] ?? null;
 }

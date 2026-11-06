@@ -66,10 +66,10 @@ describe('POST admin/lines/:id/deliver: chuông giao đủ, audit, updated_at', 
       await save([{ item_id: item, qty: 2 }, custom()]).expect(200),
     );
     const customLine = request.lines.find((l) => l.item_id === null)!;
+    freeze('2026-11-12T03:00:00Z');
     await f
       .review(customLine.id, { action: 'reject', note: 'Không mua' })
       .expect(200);
-    freeze('2026-11-12T03:00:00Z');
     const catalogLine = request.lines.find((l) => l.item_id === item)!;
     const res = await deliver(catalogLine.id, {
       qty: 2,

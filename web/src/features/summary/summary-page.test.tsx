@@ -3,7 +3,7 @@ import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-ut
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
-import { PEOPLE, SUMMARY_ITEMS, calledUrls, stubSummaryApi } from './summary-fixtures';
+import { LOCKED, PEOPLE, SUMMARY_ITEMS, calledUrls, stubSummaryApi } from './summary-fixtures';
 import { adminItem, adminRequest } from './adjust-fixtures';
 
 const search = () => screen.getByTestId('location-search').textContent ?? '';
@@ -125,9 +125,9 @@ describe('SummaryPage — thẻ lọc', () => {
     expect(screen.getByRole('radio', { name: 'Theo món' })).toHaveAttribute('aria-checked', 'true');
   });
 
-  it('"Món ngoài danh mục chờ xem" → filter=custom_pending gửi lên API', async () => {
+  it('kỳ khóa: "Món ngoài danh mục chờ xem" → filter=custom_pending gửi lên API', async () => {
     const f = stubSummaryApi();
-    open();
+    open('/admin/summary?ym=2026-10');
     await userEvent.click(await screen.findByRole('button', { name: /Món ngoài danh mục chờ xem/ }));
     await waitFor(() => expect(calledUrls(f).some((u) => u.includes('filter=custom_pending'))).toBe(true));
     expect(await screen.findByText('Đang lọc: Còn món ngoài DM chờ xem · 3 người')).toBeInTheDocument();
@@ -188,19 +188,40 @@ describe('SummaryPage — thanh công cụ, bảng, ngăn kéo', () => {
     expect(search()).toContain('request=r-2');
   });
 
-  it('"Tạo phiếu hộ" ở kỳ đang mở mở hộp tạo hộ; ở kỳ đã khóa hộp cảnh báo và "Tạo phiếu" vô hiệu', async () => {
+  it.each(['2026-10', '2026-11'])('kỳ %s: không còn nút tạo phiếu thay người; nút chính "Sang Gửi ADM →" dẫn /admin/send-adm?ym=', async (ym) => {
     stubSummaryApi();
+    open(`/admin/summary?ym=${ym}`);
+    const link = await screen.findByRole('link', { name: 'Sang Gửi ADM →' });
+    expect(link).toHaveAttribute('href', `/admin/send-adm?ym=${ym}`);
+    expect(link).toHaveClass('btn--primary');
+    expect(screen.queryByRole('button', { name: /Tạo phiếu/ })).toBeNull();
+  });
+
+  it('outside 2 → dòng nhỏ "+2 phiếu của người ngoài danh sách"; outside 0 → không có', async () => {
+    stubSummaryApi((url) => (url === '/api/admin/periods/2026-10/summary' ? jsonResponse(200, { ...LOCKED, registered: 6, headcount: 8, unregistered: 2, outside: 2 }) : undefined));
     open('/admin/summary?ym=2026-10');
-    await screen.findByText('Đã khóa');
-    await userEvent.click(screen.getByRole('button', { name: 'Tạo phiếu hộ' }));
-    const locked = await screen.findByRole('dialog', { name: 'Tạo phiếu hộ — Tháng 10/2026' });
-    expect(within(locked).getByText(/^Kỳ tháng 10 đã khóa lúc 00:00 ngày 11\/10/)).toBeInTheDocument();
-    expect(within(locked).getByRole('button', { name: 'Tạo phiếu' })).toBeDisabled();
-    await userEvent.click(within(locked).getByRole('button', { name: 'Hủy' }));
+    expect(await screen.findByRole('button', { name: /Phiếu đã đăng ký/ })).toHaveTextContent('6/8');
+    expect(screen.getByText('+2 phiếu của người ngoài danh sách')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
-    await userEvent.click(await screen.findByRole('button', { name: 'Tạo phiếu hộ' }));
-    const open11 = await screen.findByRole('dialog', { name: 'Tạo phiếu hộ — Tháng 11/2026' });
-    expect(within(open11).getByRole('button', { name: 'Tạo phiếu' })).toBeEnabled();
+    await screen.findByText('Tháng 11/2026');
+    expect(screen.queryByText(/ngoài danh sách/)).toBeNull();
+  });
+
+  it('kỳ khóa 0 phiếu → khung trống "Kỳ tháng 10 không có phiếu nào (0/38)" kèm danh sách chưa đăng ký; kỳ 1 phiếu → bảng', async () => {
+    const zero = { ...LOCKED, registered: 0, unregistered: 38 };
+    const f = stubSummaryApi((url) => (url === '/api/admin/periods/2026-10/summary' ? jsonResponse(200, zero) : undefined));
+    open('/admin/summary?ym=2026-10');
+    expect(await screen.findByText('Kỳ tháng 10 không có phiếu nào (0/38)')).toBeInTheDocument();
+    expect(await screen.findByText('Phạm Thu Hà')).toBeInTheDocument();
+    expect(calledUrls(f).some((u) => u.includes('/2026-10/requests'))).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
+  it('kỳ khóa 1 phiếu → bảng theo người, không có khung trống', async () => {
+    stubSummaryApi((url) => (url === '/api/admin/periods/2026-10/summary' ? jsonResponse(200, { ...LOCKED, registered: 1 }) : undefined));
+    open('/admin/summary?ym=2026-10');
+    expect(await screen.findByText('Phạm Văn Đức')).toBeInTheDocument();
+    expect(screen.queryByText(/không có phiếu nào/)).toBeNull();
   });
 
   it('ngăn kéo mở: ↓ sang người kế trong bảng (theo thứ tự hiển thị, nhóm "Chưa có phòng ban" cuối), ↑ về người trước', async () => {

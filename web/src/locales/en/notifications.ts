@@ -17,6 +17,7 @@ const notifications: Messages<typeof vi> = {
       period_open: 'The {{month}} request period is open, register by the end of {{deadline}}.',
       reminder: 'You have not registered for {{month}} yet — register by the end of {{deadline}}.',
       period_locked: '{{month}} is locked: {{registered}}/{{headcount}} people registered.',
+      period_lockedCustom: '{{month}} is closed: {{registered}}/{{headcount}} registered · {{custom}} off-catalogue items to review.',
       low_stock: '{{name}} is running low, {{stock_qty}} left.',
       request_delivered: 'Your {{month}} request has been fully delivered.',
       line_cancelled: 'Admin cancelled the remaining {{qty}} {{unit}} of {{name}} ({{month}}): {{reason}}',

@@ -3,7 +3,6 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor } from '../../database/database.module';
 import { StockQueryService } from '../catalog/stock-query.service';
 import { PeriodsService } from '../periods/periods.service';
-import { invalidPeriod } from '../requests/request-errors';
 import { needOf } from './report-need';
 import {
   customDemand,
@@ -35,8 +34,7 @@ export class ReportsService {
     now: Date,
     db: Executor = this.db,
   ): Promise<MonthReport> {
-    const open = await this.periods.openPeriod(db, now);
-    if (ym > open.ym) throw invalidPeriod();
+    await this.periods.assertLocked(ym, now, db);
     // Tuần tự: tx chỉ có một client, pg không cho chồng truy vấn trên cùng client
     const items = await itemDemand(db, ym);
     const custom = await customDemand(db, ym);

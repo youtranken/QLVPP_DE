@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Browser, type Page, type TestInfo } from '@playwright/test';
 import { acquireLock, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, psql, removeTestItem, seedActiveUser, waitForImageLoaded } from './helpers';
+import { seedLockedCustomLines } from './locked-request';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-16-shots';
 const FIXTURE = 'playwright/fixtures/item.png';
@@ -49,19 +50,15 @@ test.describe('E3-S5 món ngoài danh mục', () => {
     const name = `PW băng keo ${stamp}`;
     seedActiveUser(sub, `PW Review ${info.project.name}`);
     let itemId: string | undefined;
+    const release = await acquireLock('prev-period');
+    // Hành chính chỉ thấy món ngoài DM của kỳ đã khóa: dòng gieo ở kỳ trước
+    const imageId = await uploadLineImage(request, member);
+    const seeded = await seedLockedCustomLines(request, sub, [{ name, note: 'Loại 2 cm', imageId, qty: 2 }]);
     try {
-      const period = await (await request.get('/api/periods/current', { headers: member })).json();
-      const imageId = await uploadLineImage(request, member);
-      const saved = await request.put('/api/me/request/lines', {
-        headers: member,
-        data: { ym: period.ym, lines: [{ custom_name: name, custom_unit: 'cai', custom_note: 'Loại 2 cm', image_file_id: imageId, qty: 2 }] },
-      });
-      expect(saved.status()).toBe(200);
-
       await routeAs(page, admin);
       const photoLoaded = waitForImageLoaded(page, page.getByRole('article', { name }).getByRole('img', { name: `Ảnh ${name}` }), imageId);
       photoLoaded.catch(() => {});
-      await page.goto('/admin/review');
+      await page.goto(`/admin/review?ym=${seeded.prevYm}`);
       await expect(page.getByRole('heading', { level: 1, name: 'Món ngoài danh mục' })).toBeVisible();
       await expect(page.getByRole('radio', { name: 'Chờ xem' })).toHaveAttribute('aria-checked', 'true');
       const card = page.getByRole('article', { name });
@@ -93,13 +90,12 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       expect(itemId).toBeTruthy();
 
       const mp = await pageAs(browser, info, member);
-      await mp.goto('/');
-      // ≤ 900: phiếu nằm trong sheet mở từ thanh nổi
-      if (isMobile(info)) await mp.getByRole('button', { name: /^Xem phiếu \(/ }).click();
-      const cart = isMobile(info) ? mp.getByRole('dialog', { name: /^Phiếu tháng \d+$/ }) : mp.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
-      const line = cart.locator('li', { hasText: name });
+      // Phiếu kỳ đã khóa: member xem dòng ở Lịch sử kỳ đó, món mới hiện trong lưới kỳ đang mở
+      await mp.goto(`/history/${seeded.prevYm}`);
+      const line = mp.locator('li', { hasText: name });
       await expect(line.getByText('Đã thêm vào danh mục')).toBeVisible();
       await expect(line.getByText('Ngoài danh mục')).toHaveCount(0);
+      await mp.goto('/');
       const grid = mp.getByRole('region', { name: 'Danh mục món' });
       await expect(grid.getByText(name)).toHaveCount(1);
       await grid.getByText(name).scrollIntoViewIfNeeded();
@@ -107,6 +103,8 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       await mp.context().close();
     } finally {
       deleteTestUsers(sub);
+      seeded.cleanup();
+      release();
       if (itemId) await removeTestItem(request, itemId);
     }
   });
@@ -178,21 +176,16 @@ test.describe('E9-S2 món ngoài danh mục', () => {
     test.setTimeout(120_000);
     const stamp = `${Date.now()}-${info.project.name}`;
     const sub = `pw-rvs-${stamp}`;
-    const member = { 'x-dev-user-sub': sub, 'x-dev-role': 'member' };
     const names = { accept: `PW chấp nhận ${stamp}`, reject: `PW từ chối ${stamp}`, big: `PW món lớn ${stamp}`, one: `PW món một ${stamp}` };
     seedActiveUser(sub, `PW Review ${info.project.name}`);
     const created: string[] = [];
+    const release = await acquireLock('prev-period');
+    const seeded = await seedLockedCustomLines(request, sub, Object.values(names).map((n) => ({ name: n, qty: 1 })));
     try {
-      const period = await (await request.get('/api/periods/current', { headers: member })).json();
-      const saved = await request.put('/api/me/request/lines', {
-        headers: member,
-        data: { ym: period.ym, lines: Object.values(names).map((n) => ({ custom_name: n, custom_unit: 'cai', qty: 1 })) },
-      });
-      expect(saved.status()).toBe(200);
-      const pendingCount = ((await (await request.get(`/api/admin/review?status=pending&ym=${period.ym}`, { headers: devHeaders('admin') })).json()) as { items: unknown[] }).items.length;
+      const pendingCount = ((await (await request.get(`/api/admin/review?status=pending&ym=${seeded.prevYm}`, { headers: devHeaders('admin') })).json()) as { items: unknown[] }).items.length;
 
       await routeAs(page, devHeaders('admin'));
-      await page.goto(`/admin/review?ym=${period.ym}`);
+      await page.goto(`/admin/review?ym=${seeded.prevYm}`);
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
       await expect(page.getByRole('radio', { name: new RegExp(`^Chờ xem,\\s*${pendingCount}$`) })).toBeVisible();
       const cardOf = (n: string) => page.getByRole('article', { name: n });
@@ -254,6 +247,8 @@ test.describe('E9-S2 món ngoài danh mục', () => {
       await expect(cardOf(names.accept)).toBeVisible();
     } finally {
       deleteTestUsers(sub);
+      seeded.cleanup();
+      release();
       for (const id of created) await removeTestItem(request, id);
     }
   });

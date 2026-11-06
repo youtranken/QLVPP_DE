@@ -1,11 +1,5 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 
-export const periodNotLocked = () =>
-  new ConflictException({
-    code: 'PERIOD_NOT_LOCKED',
-    message: 'Kỳ chưa khóa sổ — chưa giao được.',
-  });
-
 export const lineNotReviewed = () =>
   new ConflictException({
     code: 'LINE_NOT_REVIEWED',

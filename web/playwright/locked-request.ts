@@ -58,3 +58,36 @@ export async function seedLockedRequest(request: APIRequestContext, info: TestIn
 }
 
 export const stockOf = (id: string) => Number(psql(`SELECT stock_qty FROM items WHERE id = '${id}'`));
+
+export interface CustomLine {
+  name: string;
+  qty: number;
+  note?: string;
+  imageId?: string;
+}
+
+// Dòng ngoài danh mục ở kỳ trước đã khóa: Hành chính chỉ thấy món ngoài DM của kỳ đã khóa.
+// Gọi trong acquireLock('prev-period'); cleanup chỉ xóa kỳ nếu chính hàm này tạo và kỳ không còn phiếu.
+export async function seedLockedCustomLines(request: APIRequestContext, sub: string, lines: CustomLine[]) {
+  const period = await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json();
+  const prevYm = prevYmOf(period.ym);
+  const createdPeriod = psql(
+    `INSERT INTO periods (ym, deadline) VALUES ('${prevYm}-01', '${prevYm}-10T17:00:00Z') ON CONFLICT DO NOTHING RETURNING ym`,
+  );
+  const sqlText = (v: string | undefined) => (v === undefined ? 'NULL' : `'${v.replace(/'/g, "''")}'`);
+  const values = lines
+    .map((l, i) => `(${sqlText(l.name)}, ${sqlText(l.note)}, ${l.imageId ? `'${l.imageId}'::uuid` : 'NULL::uuid'}, ${l.qty}, ${i})`)
+    .join(', ');
+  const requestId = psql(`WITH r AS (
+      INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('${prevYm}-01', '${sub}', '${sub}') RETURNING id
+    ), l AS (
+      INSERT INTO request_lines (request_id, custom_name, custom_unit, custom_note, image_file_id, qty, review_status, created_at)
+      SELECT r.id, x.name, 'cai', x.note, x.img, x.qty, 'pending', now() + x.pos * interval '1 second'
+      FROM r, (VALUES ${values}) AS x(name, note, img, qty, pos)
+    )
+    SELECT id FROM r`);
+  const cleanup = () => {
+    if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${prevYm}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${prevYm}-01')`);
+  };
+  return { prevYm, requestId, cleanup };
+}

@@ -53,8 +53,14 @@ describe('SummaryStats — 4 thẻ số liệu', () => {
     expect(sub.closest('.stat-card')).toHaveTextContent('—');
   });
 
-  it('"Món ngoài danh mục chờ xem" 3 món, "xem ở mục riêng" → custom_pending; "Hết hàng / sắp hết" 6 = 2 hết + 4 sắp hết → low', async () => {
-    const onFilter = renderStats(OPEN);
+  it('kỳ mở: "Món ngoài danh mục chờ xem" là div, số "—" (server không trả số dòng kỳ mở)', () => {
+    renderStats(OPEN);
+    expect(screen.queryByRole('button', { name: /Món ngoài danh mục chờ xem/ })).toBeNull();
+    expect(screen.getByText('Món ngoài danh mục chờ xem').closest('.stat-card')).toHaveTextContent('—');
+  });
+
+  it('kỳ khóa: "Món ngoài danh mục chờ xem" 3 món, "xem ở mục riêng" → custom_pending; "Hết hàng / sắp hết" 6 = 2 hết + 4 sắp hết → low', async () => {
+    const onFilter = renderStats(LOCKED);
     const custom = screen.getByRole('button', { name: /Món ngoài danh mục chờ xem/ });
     expect(custom).toHaveTextContent('3');
     expect(custom).toHaveTextContent('xem ở mục riêng');

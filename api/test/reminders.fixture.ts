@@ -28,13 +28,18 @@ export interface NoteRow {
 }
 
 interface Globals {
-  periods: Array<{ ym: string; deadline: Date; headcount: number | null }>;
+  periods: Array<{
+    ym: string;
+    deadline: Date;
+    headcount: number | null;
+    headcount_subs: string[] | null;
+  }>;
   config: Array<{ key: string; value: unknown }>;
 }
 
 async function snapshotGlobals(pool: Pool): Promise<Globals> {
   const periods = await pool.query<Globals['periods'][number]>(
-    "SELECT to_char(ym, 'YYYY-MM-DD') AS ym, deadline, headcount FROM periods",
+    "SELECT to_char(ym, 'YYYY-MM-DD') AS ym, deadline, headcount, headcount_subs FROM periods",
   );
   const config = await pool.query<Globals['config'][number]>(
     'SELECT key, value FROM config WHERE key = ANY($1)',
@@ -52,9 +57,10 @@ async function restoreGlobals(pool: Pool, saved: Globals): Promise<void> {
   }
   for (const p of saved.periods) {
     await pool.query(
-      `INSERT INTO periods (ym, deadline, headcount) VALUES ($1::date, $2, $3)
-       ON CONFLICT (ym) DO UPDATE SET deadline = EXCLUDED.deadline, headcount = EXCLUDED.headcount`,
-      [p.ym, p.deadline, p.headcount],
+      `INSERT INTO periods (ym, deadline, headcount, headcount_subs) VALUES ($1::date, $2, $3, $4)
+       ON CONFLICT (ym) DO UPDATE SET deadline = EXCLUDED.deadline, headcount = EXCLUDED.headcount,
+         headcount_subs = EXCLUDED.headcount_subs`,
+      [p.ym, p.deadline, p.headcount, p.headcount_subs],
     );
   }
   await pool.query(
@@ -81,7 +87,7 @@ async function isolateCalendar(pool: Pool, group: string): Promise<void> {
     AND NOT EXISTS (SELECT 1 FROM requests r WHERE r.period_ym = p.ym)`);
   await pool.query(
     `INSERT INTO periods (ym, deadline) VALUES ('2026-12-01', '2026-12-10T17:00:00Z')
-     ON CONFLICT (ym) DO UPDATE SET deadline = EXCLUDED.deadline, headcount = NULL`,
+     ON CONFLICT (ym) DO UPDATE SET deadline = EXCLUDED.deadline, headcount = NULL, headcount_subs = NULL`,
   );
 }
 

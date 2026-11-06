@@ -10,9 +10,13 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { ClockService } from '../../common/clock.service';
 import { DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../../common/cursor';
 import { DATE_FROM_2000 } from '../../common/ym';
+import { CurrentIdentity } from '../auth/current-identity.decorator';
+import type { RequestIdentity } from '../auth/identity.types';
 import { Roles } from '../auth/roles.decorator';
+import { PeriodsService } from '../periods/periods.service';
 import { AuditQueryService } from './audit-query.service';
 
 function invalid(field: string, message: string): BadRequestException {
@@ -70,10 +74,17 @@ class AuditQueryDto {
 @Controller('admin/audit')
 @Roles('sa', 'admin')
 export class AuditController {
-  constructor(private readonly audit: AuditQueryService) {}
+  constructor(
+    private readonly audit: AuditQueryService,
+    private readonly periods: PeriodsService,
+    private readonly clock: ClockService,
+  ) {}
 
   @Get()
-  list(@Query() q: AuditQueryDto) {
+  async list(
+    @Query() q: AuditQueryDto,
+    @CurrentIdentity() identity: RequestIdentity,
+  ) {
     if (q.from) assertValidDate('from', q.from);
     if (q.to) assertValidDate('to', q.to);
     if (q.from && q.to && q.to < q.from) {
@@ -87,6 +98,11 @@ export class AuditController {
       self: q.self === undefined ? undefined : q.self === 'true',
       limit: q.limit,
       cursor: q.cursor,
+      // SA thấy hết; Hành chính không thấy thao tác trên phiếu kỳ còn mở
+      lockedBefore:
+        identity.role === 'sa'
+          ? undefined
+          : (await this.periods.openPeriod(undefined, this.clock.now())).ym,
     });
   }
 }

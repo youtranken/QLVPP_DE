@@ -121,7 +121,7 @@ describe('mẫu số Tổng hợp loại người thuộc admin_group (Postgres 
   });
 
   describe('mẫu số = người đủ điều kiện ∪ chủ phiếu của kỳ (quyết định 2026-11-01 câu 5)', () => {
-    it('chủ phiếu ngoài tập (C ngoài nhóm, phiếu tạo hộ) → đếm một lần: headcount 2, unregistered vẫn chỉ [A]', async () => {
+    it('chủ phiếu ngoài tập (C ngoài nhóm, chủ phiếu ngoài tập) → đếm một lần: headcount 2, unregistered vẫn chỉ [A]', async () => {
       await addRequest(C, REQ_YM);
       expect(await summary().liveCounts(REQ_YM)).toEqual({
         headcount: 2,

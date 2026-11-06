@@ -15,7 +15,6 @@ import {
   deliverExceedsQty,
   lineNotReviewed,
   lineRejected,
-  periodNotLocked,
   staleDelivery,
 } from './delivery-errors';
 import type { DeliverBody, DeliverResult } from './delivery.dto';
@@ -42,7 +41,7 @@ export class DeliveryService {
     return this.db.transaction(async (tx) => {
       const line = await this.lines.lockLine(tx, lineId);
       if (!line) throw lineNotFound();
-      await this.assertPeriodLocked(tx, line.period_ym, now);
+      await this.periods.assertLocked(line.period_ym, now, tx);
       assertDeliverable(line);
       if (line.delivered_qty !== body.expected_delivered_qty) {
         throw staleDelivery(line.delivered_qty);
@@ -134,11 +133,6 @@ export class DeliveryService {
       now,
     });
     return true;
-  }
-
-  async assertPeriodLocked(tx: Tx, ym: string, now: Date): Promise<void> {
-    const period = await this.periods.findSnapshot(ym, tx);
-    if (!period || now < period.deadline) throw periodNotLocked();
   }
 }
 

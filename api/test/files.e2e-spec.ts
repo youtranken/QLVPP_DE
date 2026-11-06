@@ -10,6 +10,7 @@ import {
   resolveMigrationsDir,
   runMigrations,
 } from '../src/database/migration-runner';
+import { ClockService } from '../src/common/clock.service';
 import { DRIZZLE_DB, PG_POOL } from '../src/database/database.module';
 import type { Database } from '../src/database/database.module';
 import { AuditWriterService } from '../src/modules/audit/audit-writer.service';
@@ -17,6 +18,7 @@ import { ITEM_IMAGE_REFERENCE } from '../src/modules/catalog/item-image.referenc
 import { FileAccessPolicy } from '../src/modules/files/file-access.policy';
 import { FilesCleanupJob } from '../src/modules/files/files-cleanup.job';
 import { FilesService } from '../src/modules/files/files.service';
+import { PeriodsService } from '../src/modules/periods/periods.service';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
 
@@ -285,7 +287,11 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
         }
       ).id;
       await backdate([line]);
-      const itemsOnly = new FileAccessPolicy(app.get<Pool>(PG_POOL));
+      const itemsOnly = new FileAccessPolicy(
+        app.get<Pool>(PG_POOL),
+        app.get(PeriodsService),
+        app.get(ClockService),
+      );
       itemsOnly.registerReference(ITEM_IMAGE_REFERENCE);
       const job = new FilesCleanupJob(
         app.get<Database>(DRIZZLE_DB),
@@ -315,7 +321,11 @@ describe('files: upload, đọc theo tham chiếu, dọn mồ côi', () => {
       const bare = new FilesCleanupJob(
         app.get<Database>(DRIZZLE_DB),
         app.get(AuditWriterService),
-        new FileAccessPolicy(app.get<Pool>(PG_POOL)),
+        new FileAccessPolicy(
+          app.get<Pool>(PG_POOL),
+          app.get(PeriodsService),
+          app.get(ClockService),
+        ),
       );
       expect(await bare.run(new Date(Date.now() + 25 * 3600_000))).toBe(0);
       expect(existsSync(join(dir, `${id}.png`))).toBe(true);

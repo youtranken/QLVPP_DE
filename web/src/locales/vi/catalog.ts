@@ -200,7 +200,7 @@ const catalog = {
       UNIT_REQUIRED: 'Chọn đơn vị tính.',
       UNIT_INACTIVE: 'Đơn vị tính này đã ngừng — chọn đơn vị khác.',
       ITEM_CODE_EXISTS: 'Mã này đã có món khác dùng.',
-      ITEM_IN_USE: 'Món đã có trong phiếu — chỉ ngừng được.',
+      ITEM_IN_USE: 'Món này đã được dùng — chỉ ngừng được, không xóa.',
       ITEM_NOT_FOUND: 'Món này không còn — tải lại trang.',
       CATEGORY_EXISTS: 'Đã có nhóm tên này.',
       CATEGORY_NOT_FOUND: 'Nhóm này không còn — tải lại trang rồi chọn nhóm khác.',

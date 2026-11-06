@@ -60,7 +60,7 @@ export function itemConstraintError(error: unknown): unknown {
 function itemInUse() {
   return new ConflictException({
     code: 'ITEM_IN_USE',
-    message: 'Món đã có trong phiếu hoặc sổ kho — hãy ngừng món thay vì xóa.',
+    message: 'Món này đã được dùng — chỉ ngừng được, không xóa.',
   });
 }
 

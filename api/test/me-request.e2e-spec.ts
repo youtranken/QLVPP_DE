@@ -180,10 +180,12 @@ describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', ()
     },
   );
 
-  it('ảnh dòng: B GET → 404; A → 200; admin → 200; ảnh Hành chính tải cho dòng của A → A đọc được nhờ tham chiếu, B 404', async () => {
+  it('ảnh dòng: B GET → 404; A → 200; admin kỳ mở → 404, sau khóa → 200; ảnh Hành chính tải cho dòng của A → A đọc được nhờ tham chiếu, B 404', async () => {
     const v1 = view(await save([custom()]).expect(200));
     await as(http().get(`/api/files/${imgA()}`), B).expect(404);
     await as(http().get(`/api/files/${imgA()}`), A).expect(200);
+    await as(http().get(`/api/files/${imgA()}`), ADMIN, 'admin').expect(404);
+    at(AFTER_DEADLINE);
     await as(http().get(`/api/files/${imgA()}`), ADMIN, 'admin').expect(200);
     const adminImg = await upload(ADMIN, 'line_image', 'admin');
     await as(http().get(`/api/files/${adminImg}`), A).expect(404);
@@ -196,7 +198,7 @@ describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', ()
     await as(http().get(`/api/files/${adminImg}`), B).expect(404);
   });
 
-  it('DELETE admin/items/:id món đã nằm trong phiếu → 409 ITEM_IN_USE; món chưa dùng → 204', async () => {
+  it('DELETE admin/items/:id món đã nằm trong phiếu kỳ mở → 409 ITEM_IN_USE chữ trung tính (không nói "phiếu"); món chưa dùng → 204', async () => {
     const [used, unused] = [await newItem(), await newItem()];
     await save([{ item_id: used, qty: 1 }]).expect(200);
     const res = await as(
@@ -204,7 +206,11 @@ describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', ()
       ADMIN,
       'admin',
     ).expect(409);
-    expect(res.body).toMatchObject({ code: 'ITEM_IN_USE' });
+    expect(res.body).toMatchObject({
+      code: 'ITEM_IN_USE',
+      message: 'Món này đã được dùng — chỉ ngừng được, không xóa.',
+    });
+    expect((res.body as { message: string }).message).not.toMatch(/phiếu/);
     await as(
       http().delete(`/api/admin/items/${unused}`),
       ADMIN,

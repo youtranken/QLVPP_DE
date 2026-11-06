@@ -16,7 +16,6 @@ import {
   linesEmpty,
   periodLocked,
   reasonRequired,
-  requestExists,
   staleUpdate,
   userNotFound,
 } from './request-errors';
@@ -45,8 +44,6 @@ export interface SaveArgs {
   mode: WriteMode;
   body: LinesPayload;
   now: Date;
-  // Tạo hộ: dòng là đăng ký của chủ phiếu → luật dòng như member, không đánh dấu added_by_admin
-  on_behalf?: boolean;
 }
 
 const REASON_MIN = 3;
@@ -76,7 +73,7 @@ export class RequestLinesWriter {
   }
 
   private async write(tx: Tx, args: SaveArgs) {
-    // SA cục bộ là tài khoản IT khẩn cấp, không thuộc danh bạ → không có phiếu (tự lưu hay được tạo hộ)
+    // SA cục bộ là tài khoản IT khẩn cấp, không thuộc danh bạ → không có phiếu
     if (args.owner_sub === LOCAL_SA_SUB) throw userNotFound();
     await this.assertPeriod(tx, args);
     const owner = await this.users.findBySub(args.owner_sub);
@@ -113,13 +110,15 @@ export class RequestLinesWriter {
         self: args.actor.sub === args.owner_sub && args.mode === 'admin',
       },
     });
-    await this.notifier.customLinesAdded(tx, {
-      ym: args.period_ym,
-      person: owner.fullName,
-      actorSub: args.actor.sub,
-      lines: newCustom,
-      now: args.now,
-    });
+    // Dòng nhân viên lưu luôn thuộc kỳ mở mà Hành chính chưa được xem; chỉ báo dòng Hành chính thêm ở kỳ khóa
+    if (args.mode === 'admin')
+      await this.notifier.customLinesAdded(tx, {
+        ym: args.period_ym,
+        person: owner.fullName,
+        actorSub: args.actor.sub,
+        lines: newCustom,
+        now: args.now,
+      });
     return { request_id: remaining === 0 ? null : head.id, diff };
   }
 
@@ -139,8 +138,6 @@ export class RequestLinesWriter {
           now: args.now,
           expected,
         });
-    // Tạo hộ thua đua (phiếu vừa được tạo/lưu ở tx khác): báo phiếu đã có để mở Điều chỉnh
-    if (args.on_behalf && head && !head.inserted) throw requestExists(head.id);
     // Phiếu đã có mà client không gửi đúng updated_at mới nhất → đang xem bản cũ
     const stale =
       !head || (head.inserted ? expected !== undefined : head.fresh !== true);
@@ -161,7 +158,7 @@ export class RequestLinesWriter {
     return planLines({
       existing,
       body: args.body.lines,
-      mode: lineMode(args),
+      mode: args.mode,
       items: await this.catalog.itemFacts([...new Set(ids)], tx, {
         lockCategories: true,
       }),
@@ -187,9 +184,7 @@ export class RequestLinesWriter {
       if (args.period_ym !== open.ym) throw periodLocked(open.ym);
       return;
     }
-    const period = await this.periods.findSnapshot(args.period_ym, tx);
-    if (!period) throw invalidPeriod();
-    if (args.now < period.deadline) return;
+    await this.periods.assertLocked(args.period_ym, args.now, tx);
     // BR-7: kỳ đã khóa chỉ sửa phiếu đã có, không tạo phiếu mới
     if (!args.request) {
       throw periodLocked((await this.periods.openPeriod(tx, args.now)).ym);
@@ -245,7 +240,7 @@ export class RequestLinesWriter {
       const id = await repo.insertLine(tx, requestId, {
         snap: line.snap,
         review_status: line.review_status,
-        added_by_admin: lineMode(args) === 'admin',
+        added_by_admin: args.mode === 'admin',
         now: args.now,
       });
       added.push({ id, ...line.snap });
@@ -264,10 +259,6 @@ export class RequestLinesWriter {
     };
     return { diff, newCustom };
   }
-}
-
-function lineMode(args: SaveArgs): WriteMode {
-  return args.on_behalf ? 'member' : args.mode;
 }
 
 function reason(args: SaveArgs): string | undefined {

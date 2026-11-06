@@ -1,3 +1,4 @@
+import { AFTER_DEADLINE } from './me-request.fixture';
 import { reviewFixture } from './review.fixture';
 
 describe('admin/review: hàng chờ, nhận, từ chối', () => {
@@ -15,7 +16,6 @@ describe('admin/review: hàng chờ, nhận, từ chối', () => {
     newItem,
     pool,
     review,
-    save,
     seed,
     upload,
   } = f;
@@ -55,6 +55,7 @@ describe('admin/review: hàng chờ, nhận, từ chối', () => {
     expect(missing.status).toBe(404);
     expect(missing.body.code).toBe('LINE_NOT_FOUND');
     const r = await seed([{ item_id: await newItem(), qty: 1 }]);
+    f.at(AFTER_DEADLINE);
     const res = await review(r.lines[0].id, { action: 'accept' });
     expect(res.status).toBe(409);
     expect(res.body.code).toBe('LINE_ALREADY_REVIEWED');
@@ -107,7 +108,7 @@ describe('admin/review: hàng chờ, nhận, từ chối', () => {
     });
   });
 
-  it('review đổi updated_at phiếu: tab member giữ mốc cũ lưu → 409 STALE_UPDATE; request_updated_at khớp DB', async () => {
+  it('review đổi updated_at phiếu: ngăn Điều chỉnh giữ mốc cũ lưu → 409 STALE_UPDATE; request_updated_at khớp DB', async () => {
     const { line } = await customLine();
     const got = await getMine();
     const res = await review(line.id, { action: 'accept' }).expect(200);
@@ -120,18 +121,20 @@ describe('admin/review: hàng chờ, nhận, từ chối', () => {
       [got.id],
     );
     expect(stamp).toBe(db.rows[0].at);
-    const stale = await save(
-      got.lines.map((l) => ({ id: l.id, qty: l.qty })),
-      { expected_updated_at: got.updated_at },
-    );
+    const adjust = (expected: string) =>
+      as(
+        http().put(`/api/admin/requests/${got.id}/lines`),
+        ADMIN,
+        'admin',
+      ).send({
+        lines: got.lines.map((l) => ({ id: l.id, qty: l.qty })),
+        expected_updated_at: expected,
+        reason: 'Giữ nguyên',
+      });
+    const stale = await adjust(got.updated_at);
     expect(stale.status).toBe(409);
     expect(stale.body.code).toBe('STALE_UPDATE');
-    await save(
-      got.lines.map((l) => ({ id: l.id, qty: l.qty })),
-      {
-        expected_updated_at: stamp,
-      },
-    ).expect(200);
+    await adjust(stamp).expect(200);
   });
 
   it('GET admin/review: lọc theo status/ym; previously_accepted theo người + tên chuẩn hóa ở kỳ trước', async () => {

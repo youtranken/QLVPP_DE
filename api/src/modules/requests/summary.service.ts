@@ -12,21 +12,27 @@ import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
 import { inAdminGroup } from '../users/admin-group.sql';
 import { UNDELIVERED_LINE } from './line-predicates';
+import { lockState } from '../periods/period-lock';
 import { invalidPeriod, requestNotFound } from './request-errors';
 import { RequestViewBuilder } from './request-view';
 import type { RequestView } from './request-view';
 import * as repo from './requests.repo';
 
-export interface PeriodSummary {
+export interface PeopleCounts {
+  registered: number;
+  headcount: number;
+  unregistered: number;
+  outside: number;
+  headcount_source: 'snapshot' | 'live';
+}
+
+export interface PeriodSummary extends PeopleCounts {
   ym: string;
   deadline: string | null;
   is_open: boolean;
-  registered: number;
-  headcount: number;
-  headcount_source: 'snapshot' | 'live';
-  unregistered: number;
-  lines_pending_delivery: number;
-  custom_pending: number;
+  // Kỳ đang mở: Hành chính chỉ thấy tiến độ đăng ký, không thấy số dòng
+  lines_pending_delivery: number | null;
+  custom_pending: number | null;
   low_stock: number;
   receipts: number;
 }
@@ -37,10 +43,6 @@ export interface UnregisteredUser extends Record<string, unknown> {
   email: string | null;
   department: string | null;
 }
-
-const notRegistered = (ym: string) => sql`NOT EXISTS (
-  SELECT 1 FROM requests r
-  WHERE r.user_sub = u.sub AND r.period_ym = ${ymToDate(ym)}::date)`;
 
 // Báo cáo đọc-only: đọc thẳng users/requests/request_lines cho tổng hợp, không ghi
 @Injectable()
@@ -55,31 +57,30 @@ export class SummaryService {
     private readonly views: RequestViewBuilder,
   ) {}
 
-  // Kỳ quá khứ không cần có dòng periods; chỉ chặn kỳ sau kỳ đang mở
-  async assertViewable(ym: string): Promise<{ isOpen: boolean }> {
+  // Tiến độ đăng ký xem được cả kỳ mở; chỉ chặn kỳ sau kỳ đang mở
+  private async assertViewable(ym: string): Promise<{ isOpen: boolean }> {
     const open = await this.periods.openPeriod(this.db, this.clock.now());
-    if (ym > open.ym) throw invalidPeriod();
-    return { isOpen: ym === open.ym };
+    const state = lockState(ym, open.ym);
+    if (state === 'future') throw invalidPeriod();
+    return { isOpen: state === 'open' };
   }
 
   async summary(ym: string): Promise<PeriodSummary> {
     const { isOpen } = await this.assertViewable(ym);
-    const [period, counts, live, lowStock, receipts] = await Promise.all([
+    const [period, people, lines, lowStock, receipts] = await Promise.all([
       this.periods.findSnapshot(ym),
-      this.requestCounts(ym),
-      this.liveCounts(ym),
+      this.people(ym),
+      isOpen ? null : this.lineCounts(ym),
       this.catalog.countLowStock(),
       this.receiptCount(ym),
     ]);
-    const snapshot = period?.headcount ?? null;
     return {
       ym,
       deadline: period ? period.deadline.toISOString() : null,
       is_open: isOpen,
-      ...counts,
-      headcount: snapshot ?? live.headcount,
-      headcount_source: snapshot === null ? 'live' : 'snapshot',
-      unregistered: live.unregistered,
+      ...people,
+      lines_pending_delivery: lines?.lines_pending_delivery ?? null,
+      custom_pending: lines?.custom_pending ?? null,
       low_stock: lowStock,
       receipts,
     };
@@ -113,31 +114,51 @@ export class SummaryService {
   }
 
   async request(id: string): Promise<RequestView & { user_status: string }> {
-    const open = await this.periods.openPeriod(this.db, this.clock.now());
     const head = await repo.findRequest(this.db, { id });
-    const view =
-      head && (await this.views.build(this.db, id, head.period_ym === open.ym));
+    if (!head) throw requestNotFound('Không tìm thấy phiếu.');
+    await this.periods.assertLocked(head.period_ym, this.clock.now());
+    const view = await this.views.build(this.db, id, false);
     if (!view) throw requestNotFound('Không tìm thấy phiếu.');
     const owner = await this.users.findBySub(view.user_sub);
     return { ...view, user_status: owner?.status ?? 'unknown' };
   }
 
-  async requestCounts(ym: string) {
+  async lineCounts(ym: string) {
     const { rows } = await this.db.execute<{
-      registered: number;
       lines_pending_delivery: number;
       custom_pending: number;
     }>(sql`
-      SELECT count(DISTINCT r.id)::int AS registered,
-             count(l.id) FILTER (WHERE ${UNDELIVERED_LINE})::int AS lines_pending_delivery,
+      SELECT count(l.id) FILTER (WHERE ${UNDELIVERED_LINE})::int AS lines_pending_delivery,
              count(l.id) FILTER (WHERE l.review_status = 'pending')::int AS custom_pending
-      FROM requests r LEFT JOIN request_lines l ON l.request_id = r.id
+      FROM requests r JOIN request_lines l ON l.request_id = r.id
       WHERE r.period_ym = ${ymToDate(ym)}::date
     `);
     return rows[0];
   }
 
-  // unregistered cùng điều kiện với danh sách; headcount thêm chủ phiếu ngoài tập (phiếu tạo hộ) để registered ≤ headcount
+  // Một tập người S: chụp lúc khóa (headcount_subs) hoặc tập sống; mọi số đếm từ S để registered + unregistered = headcount
+  async people(ym: string): Promise<PeopleCounts> {
+    const s = await this.peopleSet(ym);
+    const { rows } = await this.db.execute<
+      Omit<PeopleCounts, 'headcount_source'>
+    >(sql`
+      WITH ${s.cte}
+      SELECT (SELECT count(*) FROM s)::int AS headcount,
+             (SELECT count(*) FROM s WHERE sub IN (SELECT sub FROM owners))::int AS registered,
+             (SELECT count(*) FROM s WHERE sub NOT IN (SELECT sub FROM owners))::int AS unregistered,
+             (SELECT count(*) FROM owners WHERE sub NOT IN (SELECT sub FROM s))::int AS outside
+    `);
+    return { ...rows[0], headcount_source: s.source };
+  }
+
+  // Tập sống: người đủ điều kiện ∪ chủ phiếu của kỳ, trừ SA cục bộ — cron ghi tập này lúc khóa
+  async liveSubs(ym: string): Promise<string[]> {
+    const { rows } = await this.db.execute<{ sub: string }>(sql`
+      WITH ${await this.liveCte(ym)} SELECT sub FROM s ORDER BY sub
+    `);
+    return rows.map((r) => r.sub);
+  }
+
   async liveCounts(
     ym: string,
   ): Promise<{ headcount: number; unregistered: number }> {
@@ -145,27 +166,40 @@ export class SummaryService {
       headcount: number;
       unregistered: number;
     }>(sql`
-      WITH eligible AS (
-        SELECT u.sub, ${notRegistered(ym)} AS unregistered
-        FROM users u WHERE ${await this.headcountCondition()}
-      )
-      SELECT (SELECT count(*) FROM (
-                SELECT sub FROM eligible
-                UNION SELECT r.user_sub FROM requests r
-                WHERE r.period_ym = ${ymToDate(ym)}::date AND r.user_sub <> ${LOCAL_SA_SUB}
-              ) people)::int AS headcount,
-             (SELECT count(*) FROM eligible WHERE unregistered)::int AS unregistered
+      WITH ${await this.liveCte(ym)}
+      SELECT (SELECT count(*) FROM s)::int AS headcount,
+             (SELECT count(*) FROM s WHERE sub NOT IN (SELECT sub FROM owners))::int AS unregistered
     `);
     return rows[0];
   }
 
   private async unregisteredRows(ym: string): Promise<UnregisteredUser[]> {
+    const s = await this.peopleSet(ym);
     const { rows } = await this.db.execute<UnregisteredUser>(sql`
-      SELECT u.sub, u.full_name, u.email, u.department FROM users u
-      WHERE ${await this.headcountCondition()} AND ${notRegistered(ym)}
-      ORDER BY u.department NULLS LAST, u.full_name, u.sub
+      WITH ${s.cte}
+      SELECT s.sub, u.full_name, u.email, u.department
+      FROM s LEFT JOIN users u ON u.sub = s.sub
+      WHERE s.sub NOT IN (SELECT sub FROM owners)
+      ORDER BY u.department NULLS LAST, u.full_name, s.sub
     `);
     return rows;
+  }
+
+  private async peopleSet(
+    ym: string,
+  ): Promise<{ cte: SQL; source: 'snapshot' | 'live' }> {
+    const subs = (await this.periods.findSnapshot(ym))?.headcount_subs ?? null;
+    if (subs === null) return { cte: await this.liveCte(ym), source: 'live' };
+    return {
+      cte: sql`${ownersCte(ym)}, s AS (SELECT DISTINCT unnest(${sql.param(subs)}::text[]) AS sub)`,
+      source: 'snapshot',
+    };
+  }
+
+  private async liveCte(ym: string): Promise<SQL> {
+    return sql`${ownersCte(ym)}, s AS (
+      SELECT u.sub FROM users u WHERE ${await this.headcountCondition()}
+      UNION SELECT sub FROM owners)`;
   }
 
   // Mẫu số sống: người active, không phải SA cục bộ, thuộc group được cấp (gate rỗng = mọi người), trừ Hành chính
@@ -182,3 +216,8 @@ export class SummaryService {
       AND NOT ${inAdminGroup(sql`u.groups`, adminGroup)}`;
   }
 }
+
+// Chủ phiếu của kỳ trừ SA cục bộ (không thuộc danh bạ, không bao giờ vào S)
+const ownersCte = (ym: string) => sql`owners AS (
+  SELECT DISTINCT r.user_sub AS sub FROM requests r
+  WHERE r.period_ym = ${ymToDate(ym)}::date AND r.user_sub <> ${LOCAL_SA_SUB})`;

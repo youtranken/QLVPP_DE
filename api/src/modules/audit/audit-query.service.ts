@@ -16,6 +16,8 @@ export interface AuditQuery {
   self?: boolean;
   limit: number;
   cursor?: string;
+  // Kỳ đang mở 'YYYY-MM': ẩn request.* và line.review của kỳ đó trở đi
+  lockedBefore?: string;
 }
 
 export interface AuditRow {
@@ -51,6 +53,7 @@ export class AuditQueryService {
         : null,
       q.self === undefined ? null : selfCondition(q.self),
       q.cursor ? this.afterCursor(q.cursor) : null,
+      q.lockedBefore ? lockedOnly(q.lockedBefore) : null,
     ].filter((c): c is NonNullable<typeof c> => c !== null);
     const where =
       conds.length > 0 ? sql`WHERE ${sql.join(conds, sql` AND `)}` : sql``;
@@ -105,6 +108,14 @@ export class AuditQueryService {
     const [ts, id] = decodeTimestampCursor(raw);
     return sql`(a.created_at, a.id) < (${ts}::timestamptz, ${id}::uuid)`;
   }
+}
+
+// Lọc trong cùng truy vấn trang để con trỏ và số dòng đúng; line.review cũ thiếu ym thì tra kỳ qua dòng
+function lockedOnly(openYm: string) {
+  return sql`(NOT (a.action LIKE 'request.%' OR a.action = 'line.review')
+    OR coalesce(a.detail->>'ym', (
+      SELECT to_char(r.period_ym, 'YYYY-MM') FROM request_lines l JOIN requests r ON r.id = l.request_id
+      WHERE l.id::text = a.object_id), '') < ${openYm})`;
 }
 
 // Dòng không có cờ self tính là không phải self

@@ -6,12 +6,13 @@ import { AuditWriterService } from '../audit/audit-writer.service';
 import { CatalogService } from '../catalog/catalog.service';
 import { eventIds } from '../notifications/notification-events';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PeriodsService } from '../periods/periods.service';
 import { LineDeliveryStore } from '../requests/line-delivery.store';
 import type { LockedLine } from '../requests/line-delivery.store';
 import { lineNotFound } from '../requests/request-errors';
 import { cancelReasonRequired, staleCancel } from './delivery-errors';
 import type { CancelBody, CancelResult } from './delivery.dto';
-import { DeliveryService, assertDeliverable } from './delivery.service';
+import { assertDeliverable } from './delivery.service';
 
 const REASON_MIN = 3;
 
@@ -20,8 +21,8 @@ export class CancelRemainingService {
   constructor(
     @Inject(DRIZZLE_DB) private readonly db: Database,
     private readonly clock: ClockService,
+    private readonly periods: PeriodsService,
     private readonly lines: LineDeliveryStore,
-    private readonly delivery: DeliveryService,
     private readonly catalog: CatalogService,
     private readonly audit: AuditWriterService,
     private readonly notifications: NotificationsService,
@@ -38,7 +39,7 @@ export class CancelRemainingService {
     return this.db.transaction(async (tx) => {
       const line = await this.lines.lockLine(tx, lineId);
       if (!line) throw lineNotFound();
-      await this.delivery.assertPeriodLocked(tx, line.period_ym, now);
+      await this.periods.assertLocked(line.period_ym, now, tx);
       assertDeliverable(line);
       if (
         line.delivered_qty !== body.expected_delivered_qty ||

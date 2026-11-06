@@ -1,19 +1,18 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
-import { vnDeadlineDay, vnLockDate } from '@/lib/format-time';
+import { vnDeadlineDay } from '@/lib/format-time';
 import { Loading, LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
 import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
 import { Toolbar } from '@/ui/toolbar';
 import { useAdminItems } from '@/features/catalog/catalog.api';
-import type { DirectoryUser } from '@/features/directory/directory.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { AdjustDrawer } from './adjust-drawer';
-import { CreateRequestDialog } from './create-request-dialog';
 import { SummaryCopy } from './summary-actions';
 import { SummaryItemTable } from './summary-item-table';
 import { SummaryPersonTable } from './summary-person-table';
@@ -54,7 +53,6 @@ export function SummaryPage() {
   const items = useAdminItems();
   const [search, setSearch] = useUrlSearchBox(p.q, p.setQ);
   const phone = useMediaQuery(ADMIN_PHONE_QUERY);
-  const [creating, setCreating] = useState<{ user: DirectoryUser | null } | null>(null);
   const personFilter = p.filter === 'low' || p.filter === 'unregistered' ? null : p.filter;
   const listed = p.view === 'person' && p.filter !== 'unregistered';
   const adjacent = useAdjacentRequests(p.ym, personFilter, p.q, listed ? p.requestId : null);
@@ -68,7 +66,8 @@ export function SummaryPage() {
 
   const ym = p.ym;
   const data = summary.data;
-  const canCreate = ym === openYm;
+  // Kỳ khóa không có phiếu nào: khung trống thay bảng, vẫn kèm danh sách chưa đăng ký
+  const emptyLocked = data?.is_open === false && data.registered === 0;
   // Hết và sắp hết cùng một nguồn (món dùng được), chưa tải xong thì ô ghi "—" thay vì số tạm
   const usable = items.data?.filter((i) => i.usable);
   const stock = usable && { out: usable.filter((i) => i.stock_state === 'out').length, low: usable.filter((i) => i.stock_state === 'low').length };
@@ -85,9 +84,9 @@ export function SummaryPage() {
         data && {
           secondary: <SummaryCopy ym={ym} deadline={data.deadline} unregistered={data.unregistered} />,
           primary: (
-            <button type="button" className="btn btn--primary" onClick={() => setCreating({ user: null })}>
-              {t('summary.create.button')}
-            </button>
+            <Link className="btn btn--primary" to={`/admin/send-adm?ym=${ym}`}>
+              {t('summary.page.toSendAdm')}
+            </Link>
           ),
         },
       )}
@@ -106,8 +105,13 @@ export function SummaryPage() {
         <Segmented label={t('summary.page.view')} value={p.view} options={views} onChange={p.setView} />
       </Toolbar>
       <div className="ct-block">
-        {p.filter === 'unregistered' ? (
-          <UnregisteredTable ym={ym} canCreate={canCreate} onCreate={(user) => setCreating({ user })} onClearFilter={p.clearFilter} />
+        {!data ? null : emptyLocked ? (
+          <>
+            <p className="sm-empty-period">{t('summary.emptyPeriod', { month: monthOf(ym), headcount: data.headcount })}</p>
+            <UnregisteredTable ym={ym} />
+          </>
+        ) : p.filter === 'unregistered' ? (
+          <UnregisteredTable ym={ym} onClearFilter={p.clearFilter} />
         ) : p.view === 'item' ? (
           <SummaryItemTable ym={ym} q={p.q} lowOnly={p.filter === 'low'} />
         ) : (
@@ -128,19 +132,6 @@ export function SummaryPage() {
           onClose={p.closeAdjust}
           onPrev={adjacent.prev ? () => p.stepAdjust(adjacent.prev!) : undefined}
           onNext={adjacent.next ? () => p.stepAdjust(adjacent.next!) : undefined}
-        />
-      )}
-      {creating && (
-        <CreateRequestDialog
-          ym={ym}
-          lockedOn={canCreate ? undefined : data?.deadline ? vnLockDate(data.deadline) : null}
-          initialUser={creating.user}
-          onClose={() => setCreating(null)}
-          onCreated={() => setCreating(null)}
-          onOpenExisting={(id) => {
-            setCreating(null);
-            p.openAdjust(id);
-          }}
         />
       )}
     </div>

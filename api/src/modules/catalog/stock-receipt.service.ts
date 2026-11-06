@@ -6,9 +6,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
+import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
+import { PeriodsService } from '../periods/periods.service';
 import type { ReceiptBody } from './stock.dto';
 import { StockService } from './stock.service';
 
@@ -22,6 +24,8 @@ export class StockReceiptService {
     @Inject(DRIZZLE_DB) private readonly db: Database,
     private readonly stock: StockService,
     private readonly audit: AuditWriterService,
+    private readonly periods: PeriodsService,
+    private readonly clock: ClockService,
   ) {}
 
   async receive(body: ReceiptBody, actor: string): Promise<ReceiptResult> {
@@ -37,6 +41,7 @@ export class StockReceiptService {
         fields: ['lines'],
       });
     }
+    await this.periods.assertLocked(body.ym, this.clock.now());
     const note = `Hàng về kỳ ${body.ym}${body.note ? ` · ${body.note}` : ''}`;
     return this.db.transaction(async (tx) => {
       await this.stock.lockItemsWithin(tx, ids);

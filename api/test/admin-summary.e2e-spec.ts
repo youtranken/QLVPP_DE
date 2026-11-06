@@ -46,6 +46,7 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
       headcount: 3,
       headcount_source: 'live',
       unregistered: 1,
+      outside: 0,
       lines_pending_delivery: 2,
       custom_pending: 1,
       low_stock: lowStock,
@@ -73,20 +74,36 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
     expect((await summary()).receipts).toBe(0);
   });
 
-  it('summary: periods.headcount đã chụp thì dùng snapshot; unregistered vẫn theo tập sống', async () => {
-    await f
-      .pool()
-      .query("UPDATE periods SET headcount = 7 WHERE ym = '2025-06-01'");
+  it('summary: kỳ có headcount_subs đã chụp → đếm theo S (snapshot), danh sách chưa đăng ký lấy từ S; chỉ có headcount cũ không mảng → live', async () => {
+    const pool = f.pool();
+    await pool.query(
+      "UPDATE periods SET headcount = 7 WHERE ym = '2025-06-01'",
+    );
     try {
       expect(await summary()).toMatchObject({
-        headcount: 7,
-        headcount_source: 'snapshot',
-        unregistered: 1,
+        headcount: 3,
+        headcount_source: 'live',
       });
+      await pool.query(
+        "UPDATE periods SET headcount = 4, headcount_subs = $1::text[] WHERE ym = '2025-06-01'",
+        [[U1, U2, U3, OUTSIDER]],
+      );
+      expect(await summary()).toMatchObject({
+        registered: 2,
+        headcount: 4,
+        unregistered: 2,
+        outside: 0,
+        headcount_source: 'snapshot',
+      });
+      const list = (await asAdmin(`/periods/${YM}/unregistered`).expect(200))
+        .body as { items: { sub: string }[] };
+      expect(list.items.map((u) => u.sub).sort()).toEqual(
+        [U3, OUTSIDER].sort(),
+      );
     } finally {
-      await f
-        .pool()
-        .query("UPDATE periods SET headcount = NULL WHERE ym = '2025-06-01'");
+      await pool.query(
+        "UPDATE periods SET headcount = NULL, headcount_subs = NULL WHERE ym = '2025-06-01'",
+      );
     }
   });
 

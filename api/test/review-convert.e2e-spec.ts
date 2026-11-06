@@ -1,3 +1,4 @@
+import { AFTER_DEADLINE } from './me-request.fixture';
 import { reviewFixture } from './review.fixture';
 
 describe('admin/review: thêm vào danh mục (convert)', () => {
@@ -19,7 +20,6 @@ describe('admin/review: thêm vào danh mục (convert)', () => {
     save,
     seed,
     upload,
-    view,
   } = f;
 
   it('convert món có sẵn: gắn item_id, xóa custom_*, giữ ảnh, review_note "Từ: …"; cùng món n/a trong phiếu không lỗi unique', async () => {
@@ -29,6 +29,7 @@ describe('admin/review: thêm vào danh mục (convert)', () => {
       { item_id: item, qty: 1 },
       { custom_name: 'Bút lạ', custom_unit: 'cai', image_file_id: img, qty: 3 },
     ]);
+    f.at(AFTER_DEADLINE);
     const custom = r.lines.find((l) => !l.item_id)!;
     const res = await review(custom.id, {
       action: 'convert',
@@ -124,6 +125,7 @@ describe('admin/review: thêm vào danh mục (convert)', () => {
       (await seed([{ custom_name: 'Kẹp lạ', custom_unit: 'cai', qty: 1 }]))
         .lines[0];
     const first = await noImg();
+    f.at(AFTER_DEADLINE);
     const bad = await review(first.id, {
       action: 'convert',
       item: newItemBody(),
@@ -143,6 +145,7 @@ describe('admin/review: thêm vào danh mục (convert)', () => {
     const r = await seed([
       { custom_name: 'Kẹp lạ 2', custom_unit: 'cai', qty: 1 },
     ]);
+    f.at(AFTER_DEADLINE);
     await review(r.lines[0].id, {
       action: 'convert',
       item: { existing_id: existing },
@@ -185,7 +188,7 @@ describe('admin/review: thêm vào danh mục (convert)', () => {
     expect(made.rows).toHaveLength(1);
   });
 
-  it('member lưu lại phiếu có dòng converted y như nhận về → 200, không đổi', async () => {
+  it('sau khóa sổ member gửi lại phiếu có dòng converted y như nhận về → 409 PERIOD_LOCKED, phiếu không đổi', async () => {
     const { line } = await customLine();
     await review(line.id, {
       action: 'convert',
@@ -204,11 +207,10 @@ describe('admin/review: thêm vào danh mục (convert)', () => {
         qty: l.qty,
       };
     });
-    const res = await save(echo, {
+    await save(echo, {
       expected_updated_at: got.updated_at,
-    }).expect(200);
-    const after = view(res);
-    expect(after.lines).toEqual(got.lines);
+    }).expect(409, /PERIOD_LOCKED/);
+    expect((await getMine()).lines).toEqual(got.lines);
   });
 
   it('convert có cả existing_id lẫn trường món mới → 400 VALIDATION {fields: [item.name, item.unit]}, dòng vẫn pending', async () => {

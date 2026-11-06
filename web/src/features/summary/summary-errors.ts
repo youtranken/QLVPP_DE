@@ -8,14 +8,6 @@ export interface AdjustErrors {
   block?: string;
 }
 
-export interface CreateErrors {
-  user?: string;
-  lines?: Record<string, string>;
-  linesMissing?: string;
-  block?: string;
-  exists?: { requestId?: string };
-}
-
 const LINE_CODES = new Set([
   'QTY_BELOW_DELIVERED',
   'QTY_INVALID',
@@ -27,7 +19,6 @@ const LINE_CODES = new Set([
   'LINE_NOT_FOUND',
 ]);
 const ADJUST_BLOCK_CODES = new Set(['REQUEST_NOT_FOUND', 'PERIOD_LOCKED', 'DUPLICATE_ITEM']);
-const USER_CODES = new Set(['USER_NOT_FOUND', 'USER_INACTIVE', 'USER_IS_ADMIN']);
 
 export const isStaleUpdate = (e: unknown) => apiErrorCode(e) === 'STALE_UPDATE';
 
@@ -53,14 +44,4 @@ export function adjustFailure(e: unknown, keys: string[], t: T): AdjustErrors {
   const key = lineKeyOf(e, keys);
   if (key) return { lines: { [key]: lineMessage(e, t) } };
   return { block: t(`summary.adjust.errors.${ADJUST_BLOCK_CODES.has(code) ? code : 'UNKNOWN'}`) };
-}
-
-export function createFailure(e: unknown, keys: string[], t: T): CreateErrors {
-  const code = apiErrorCode(e) ?? '';
-  if (code === 'REQUEST_EXISTS') return { exists: { requestId: apiErrorString(e, 'request_id') } };
-  if (USER_CODES.has(code)) return { user: t(`summary.create.errors.${code}`) };
-  if (code === 'LINES_EMPTY') return { linesMissing: t('summary.create.needLines') };
-  const key = lineKeyOf(e, keys);
-  if (key) return { lines: { [key]: lineMessage(e, t) } };
-  return { block: t(`summary.create.errors.${code === 'PERIOD_LOCKED' ? code : 'UNKNOWN'}`) };
 }

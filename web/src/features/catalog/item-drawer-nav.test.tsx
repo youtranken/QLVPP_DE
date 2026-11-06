@@ -90,13 +90,13 @@ describe('Ngăn kéo món — xóa món', () => {
     expect(await screen.findByText('Đã xóa Bút bi xanh')).toBeInTheDocument();
   });
 
-  it('ITEM_IN_USE → "Món đã có trong phiếu — chỉ ngừng được." trong ngăn kéo, không đóng', async () => {
+  it('ITEM_IN_USE → "Món này đã được dùng — chỉ ngừng được, không xóa." trong ngăn kéo, không đóng', async () => {
     stubDrawerApi((_url, init) => (init.method === 'DELETE' ? jsonResponse(409, { code: 'ITEM_IN_USE', message: 'x' }) : undefined));
     const { onClose } = renderDrawer({ item: PEN });
     await userEvent.click(screen.getByRole('button', { name: 'Xóa món' }));
     const confirm = await screen.findByRole('dialog', { name: 'Xóa Bút bi xanh?' });
     await userEvent.click(within(confirm).getByRole('button', { name: 'Xóa món' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Món đã có trong phiếu — chỉ ngừng được.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Món này đã được dùng — chỉ ngừng được, không xóa.');
     expect(onClose).not.toHaveBeenCalled();
   });
 });

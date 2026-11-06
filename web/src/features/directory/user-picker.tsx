@@ -17,7 +17,6 @@ export function UserPicker({
   hint,
   allowLocked = false,
   resultsWhenEmpty = true,
-  excludeAdmin = false,
   required = false,
   badge,
   onChange,
@@ -30,7 +29,6 @@ export function UserPicker({
   hint?: string;
   allowLocked?: boolean;
   resultsWhenEmpty?: boolean;
-  excludeAdmin?: boolean;
   required?: boolean;
   badge?: (u: DirectoryUser) => ReactNode;
   onChange: (u: DirectoryUser | null) => void;
@@ -42,7 +40,7 @@ export function UserPicker({
   const note = error ?? hint;
   const [text, setText] = useState('');
   const [search, setSearch] = useState('');
-  const users = useUserSearch(search.trim(), { excludeAdmin });
+  const users = useUserSearch(search.trim());
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(text), SEARCH_DEBOUNCE_MS);
@@ -74,7 +72,7 @@ export function UserPicker({
             aria-required={required || undefined}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            // Ô tìm hay nằm trong form khác (tạo hộ, xuất lẻ): Enter không tự gửi form, chỉ form nào muốn mới nhận qua onEnter
+            // Ô tìm hay nằm trong form khác (xuất lẻ): Enter không tự gửi form, chỉ form nào muốn mới nhận qua onEnter
             onKeyDown={(e) => {
               if (e.key !== 'Enter') return;
               e.preventDefault();

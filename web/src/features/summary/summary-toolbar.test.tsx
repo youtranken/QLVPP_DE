@@ -31,14 +31,14 @@ describe('SummaryPage — thanh công cụ theo luật bố cục', () => {
     expect(searchBox).toHaveAttribute('placeholder', 'Tìm người, email…');
   });
 
-  it('390: "Chép DS chưa đăng ký (8)" nằm trong menu ⋯, bấm thì sao chép và báo "Đã sao chép 2 người"; "Tạo phiếu hộ" vẫn là nút', async () => {
+  it('390: "Chép DS chưa đăng ký (8)" nằm trong menu ⋯, bấm thì sao chép và báo "Đã sao chép 2 người"; "Sang Gửi ADM →" vẫn là nút chính', async () => {
     stubSummaryApi();
     const writeText = vi.fn(() => Promise.resolve());
     setClipboard({ writeText });
     open(390);
     const more = await screen.findByRole('button', { name: 'Thao tác khác' });
     expect(screen.queryByRole('button', { name: /Chép DS chưa đăng ký/ })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Tạo phiếu hộ' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Sang Gửi ADM →' })).toBeInTheDocument();
     expect(screen.getByRole('searchbox', { name: 'Tìm người, email…' })).toHaveAttribute('placeholder', 'Tìm người…');
     await userEvent.click(more);
     await userEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Chép DS chưa đăng ký (8)' }));

@@ -1,4 +1,8 @@
-import { meRequestFixture } from './me-request.fixture';
+import {
+  AFTER_DEADLINE,
+  BEFORE_DEADLINE,
+  meRequestFixture,
+} from './me-request.fixture';
 import type { Line, RequestView } from './me-request.fixture';
 
 export interface ReviewRow {
@@ -15,7 +19,7 @@ export interface ReviewRow {
 // Fixture chung cho các suite review: người Hành chính, nhóm món thử, dọn phiếu/món/kỳ 10
 export function reviewFixture(tag: string) {
   const f = meRequestFixture(tag);
-  const { A, B, ADMIN, SUFFIX, http, as, upload, save, view, pool } = f;
+  const { A, B, ADMIN, SUFFIX, http, as, upload, save, view, pool, at } = f;
   const NEW_PREFIX = `e2e-req-item-${SUFFIX}-new`;
   let category: string;
   // Hình `item` trong response review: giống nhau cho món có sẵn và món mới
@@ -47,12 +51,15 @@ export function reviewFixture(tag: string) {
     ).items;
   const seed = async (lines: Line[], sub = A) =>
     view(await save(lines, {}, sub).expect(200));
+  // Nhân viên lưu trong kỳ mở rồi qua giờ khóa sổ: Hành chính chỉ xem/duyệt dòng kỳ đã khóa
   const customLine = async (sub = A, name = 'Bìa còng đặc biệt') => {
+    at(BEFORE_DEADLINE);
     const img = await upload(sub);
     const r = await seed(
       [{ custom_name: name, custom_unit: 'cai', image_file_id: img, qty: 2 }],
       sub,
     );
+    at(AFTER_DEADLINE);
     return { request: r, line: r.lines[0], img };
   };
   const newItemBody = (over: object = {}) => ({

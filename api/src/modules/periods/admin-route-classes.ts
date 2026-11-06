@@ -1,0 +1,47 @@
+export type RouteClass =
+  'by-ym' | 'by-id' | 'sql-filter' | 'open-progress' | 'none';
+
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+// Mọi route /api/admin/* phải nằm ở đúng một lớp; route mới chưa khai báo làm test phân loại đỏ
+export const ADMIN_ROUTE_CLASSES: Record<`${Method} ${string}`, RouteClass> = {
+  'GET /api/admin/periods/:ym/summary': 'open-progress',
+  'GET /api/admin/periods/:ym/unregistered': 'open-progress',
+  'GET /api/admin/periods/:ym/requests': 'by-ym',
+  'GET /api/admin/periods/:ym/delivery-people': 'by-ym',
+  'GET /api/admin/reports/:ym': 'by-ym',
+  'POST /api/admin/reports/:ym/snapshots': 'by-ym',
+  'GET /api/admin/reports/:ym/snapshots': 'by-ym',
+  'POST /api/admin/stock/receipts': 'by-ym',
+  'GET /api/admin/reports/snapshots/:id': 'by-id',
+  'GET /api/admin/reports/snapshots/:id/export.xlsx': 'by-id',
+  'GET /api/admin/requests/:id': 'by-id',
+  'PUT /api/admin/requests/:id/lines': 'by-id',
+  'POST /api/admin/requests/:id/deliver-all': 'by-id',
+  'POST /api/admin/lines/:id/deliver': 'by-id',
+  'POST /api/admin/lines/:id/cancel-remaining': 'by-id',
+  'POST /api/admin/lines/:id/review': 'by-id',
+  'GET /api/admin/lines/:id/deliveries': 'by-id',
+  'GET /api/admin/review': 'sql-filter',
+  'GET /api/admin/backlog': 'sql-filter',
+  'GET /api/admin/audit': 'sql-filter',
+  'GET /api/admin/config': 'none',
+  'PUT /api/admin/config': 'none',
+  'GET /api/admin/items': 'none',
+  'POST /api/admin/items': 'none',
+  'PATCH /api/admin/items/:id': 'none',
+  'DELETE /api/admin/items/:id': 'none',
+  'POST /api/admin/items/:id/stock': 'none',
+  'POST /api/admin/items/:id/stock/count': 'none',
+  'POST /api/admin/items/:id/issue': 'none',
+  'GET /api/admin/items/:id/movements': 'none',
+  'GET /api/admin/issues': 'none',
+  'GET /api/admin/stock/low': 'none',
+  'POST /api/admin/item-categories': 'none',
+  'PATCH /api/admin/item-categories/:id': 'none',
+  'POST /api/admin/units': 'none',
+  'PATCH /api/admin/units/:code': 'none',
+  'DELETE /api/admin/units/:code': 'none',
+  'POST /api/admin/directory/sync': 'none',
+  'GET /api/admin/users': 'none',
+};

@@ -64,6 +64,7 @@ export const LOCKED_SUMMARY: PeriodSummary = {
   headcount: 20,
   headcount_source: 'snapshot',
   unregistered: 2,
+  outside: 0,
   lines_pending_delivery: 5,
   custom_pending: 1,
   low_stock: 0,

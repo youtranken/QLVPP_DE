@@ -52,10 +52,13 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
 
     it('thêm dòng ngoài DM không ảnh → 200; ảnh Hành chính tải → 200; ảnh của người khác → 403 FILE_FORBIDDEN', async () => {
       const r = await seed([{ item_id: item, qty: 2 }]);
+      at(AFTER_DEADLINE);
       const base = { custom_name: 'Kẹp lạ', custom_unit: 'cai', qty: 1 };
+      const reason = 'Bổ sung theo email';
       const none = await adminPut(r.id, {
         lines: [...keep(r), base],
         expected_updated_at: r.updated_at,
+        reason,
       }).expect(200);
       const added = (none.body as { request: RequestView }).request;
       expect(added.lines.find((l) => l.custom_name === 'Kẹp lạ')).toMatchObject(
@@ -71,6 +74,7 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
           },
         ],
         expected_updated_at: added.updated_at,
+        reason,
       }).expect(200);
       const next = (own.body as { request: RequestView }).request;
       const bad = await adminPut(r.id, {
@@ -83,6 +87,7 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
           },
         ],
         expected_updated_at: next.updated_at,
+        reason,
       }).expect(403);
       expect(bad.body).toMatchObject({ code: 'FILE_FORBIDDEN' });
     });
@@ -169,21 +174,23 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
       });
     });
 
-    it('mốc hạn: 23:59:59.999 ngày 10 không cần lý do → 200; 00:00:00.000 ngày 11 thiếu lý do → REASON_REQUIRED, lý do "  abc  " (đúng 3 ký tự sau trim) → 200', async () => {
+    it('mốc hạn: 23:59:59.999 ngày 10 → 409 PERIOD_NOT_LOCKED {ym, deadline}, phiếu không đổi; 00:00:00.000 ngày 11 thiếu lý do → REASON_REQUIRED, lý do "  abc  " (đúng 3 ký tự sau trim) → 200', async () => {
       const r = await seed([{ item_id: item, qty: 2 }]);
       f.freeze('2026-11-10T16:59:59.999Z');
-      const open = view(
-        await adminPut(r.id, {
-          lines: [{ id: r.lines[0].id, qty: 3 }],
-          expected_updated_at: r.updated_at,
-        }).expect(200),
-      );
-      expect(open.is_open).toBe(true);
-      f.freeze('2026-11-10T17:00:00.000Z');
       const body = {
         lines: [{ id: r.lines[0].id, qty: 4 }],
-        expected_updated_at: open.updated_at,
+        expected_updated_at: r.updated_at,
       };
+      const open = await adminPut(r.id, { ...body, reason: 'Bổ sung' }).expect(
+        409,
+      );
+      expect(open.body).toMatchObject({
+        code: 'PERIOD_NOT_LOCKED',
+        ym: '2026-11',
+        deadline: '2026-11-10T17:00:00.000Z',
+      });
+      expect(await auditOf('request.updated', r.id)).toEqual([]);
+      f.freeze('2026-11-10T17:00:00.000Z');
       const missing = await adminPut(r.id, body).expect(400);
       expect(missing.body.code).toBe('REASON_REQUIRED');
       const res = await adminPut(r.id, { ...body, reason: '  abc  ' }).expect(
@@ -196,22 +203,16 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
       );
     });
 
-    it('trong hạn không cần lý do', async () => {
-      const r = await seed([{ item_id: item, qty: 2 }]);
-      await adminPut(r.id, {
-        lines: [{ id: r.lines[0].id, qty: 3 }],
-        expected_updated_at: r.updated_at,
-      }).expect(200);
-    });
-
-    it('admin giữ expected_updated_at cũ trong lúc member vừa lưu → 409 STALE_UPDATE', async () => {
+    it('admin giữ expected_updated_at cũ trong lúc member vừa lưu (trước khóa) → 409 STALE_UPDATE', async () => {
       const r = await seed([{ item_id: item, qty: 2 }]);
       await save([{ id: r.lines[0].id, qty: 3 }], {
         expected_updated_at: r.updated_at,
       }).expect(200);
+      at(AFTER_DEADLINE);
       const res = await adminPut(r.id, {
         lines: [{ id: r.lines[0].id, qty: 5 }],
         expected_updated_at: r.updated_at,
+        reason: 'Bổ sung',
       }).expect(409);
       expect(res.body.code).toBe('STALE_UPDATE');
     });
@@ -227,11 +228,13 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
         'UPDATE request_lines SET delivered_qty = 2 WHERE id = $1',
         [delivered.id],
       );
+      at(AFTER_DEADLINE);
       const low = await adminPut(r.id, {
         lines: keep(r).map((l) =>
           l.id === delivered.id ? { ...l, qty: 1 } : l,
         ),
         expected_updated_at: r.updated_at,
+        reason: 'Giảm theo kho',
       }).expect(400);
       expect(low.body).toMatchObject({
         code: 'QTY_BELOW_DELIVERED',
@@ -241,6 +244,7 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
       const res = await adminPut(r.id, {
         lines: keep(r).filter((l) => l.id !== delivered.id),
         expected_updated_at: r.updated_at,
+        reason: 'Giảm theo kho',
       }).expect(200);
       expect(view(res).lines.map((l) => [l.id, l.qty])).toEqual(
         r.lines.map((l) => [l.id, l.qty]),
@@ -254,9 +258,11 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
         'UPDATE request_lines SET delivered_qty = 2 WHERE id = $1',
         [line.id],
       );
+      at(AFTER_DEADLINE);
       const low = await adminPut(r.id, {
         lines: [{ id: line.id, qty: 1 }],
         expected_updated_at: r.updated_at,
+        reason: 'Giảm theo kho',
       }).expect(400);
       expect(low.body).toMatchObject({
         code: 'QTY_BELOW_DELIVERED',
@@ -266,6 +272,7 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
       const res = await adminPut(r.id, {
         lines: [{ id: line.id, qty: 2 }],
         expected_updated_at: r.updated_at,
+        reason: 'Giảm theo kho',
       }).expect(200);
       expect(view(res).lines[0]).toMatchObject({ id: line.id, qty: 2 });
     });
@@ -273,13 +280,17 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
     it('thêm món admin_only → 200, added_by_admin; member thấy readonly_for_member', async () => {
       const paper = await newItem({ admin_only: true });
       const r = await seed([{ item_id: item, qty: 2 }]);
+      at(AFTER_DEADLINE);
       const res = await adminPut(r.id, {
         lines: [...keep(r), { item_id: paper, qty: 3 }],
         expected_updated_at: r.updated_at,
+        reason: 'Bổ sung giấy',
       }).expect(200);
       const added = view(res).lines.find((l) => l.item_id === paper)!;
       expect(added.added_by_admin).toBe(true);
-      const mine = await as(http().get('/api/me/request'), A).expect(200);
+      const mine = await as(http().get('/api/me/request?ym=2026-11'), A).expect(
+        200,
+      );
       const seen = (mine.body as RequestView).lines.find(
         (l) => l.item_id === paper,
       )!;
@@ -291,10 +302,12 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
     });
 
     it('Hành chính sửa phiếu của chính mình → audit self:true, lọc GET admin/audit?self=true thấy', async () => {
+      at(AFTER_DEADLINE);
       const r = await seedLegacy(ADMIN, 2);
       await adminPut(r.id, {
         lines: [{ id: r.lines[0].id, qty: 1 }],
         expected_updated_at: r.updated_at,
+        reason: 'Giảm còn 1',
       }).expect(200);
       const [detail] = await auditOf('request.updated', r.id);
       expect(detail.self).toBe(true);

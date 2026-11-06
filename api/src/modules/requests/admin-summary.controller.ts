@@ -1,7 +1,9 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
+import { ClockService } from '../../common/clock.service';
 import { YmPipe } from '../../common/ym';
 import { Roles } from '../auth/roles.decorator';
 import { uuidParam } from '../catalog/catalog.dto';
+import { PeriodsService } from '../periods/periods.service';
 import { SummaryListsService } from './summary-lists.service';
 import { PeriodRequestsQuery } from './summary.dto';
 import { SummaryService } from './summary.service';
@@ -12,6 +14,8 @@ export class AdminSummaryController {
   constructor(
     private readonly summary: SummaryService,
     private readonly lists: SummaryListsService,
+    private readonly periods: PeriodsService,
+    private readonly clock: ClockService,
   ) {}
 
   @Get('periods/:ym/summary')
@@ -24,7 +28,7 @@ export class AdminSummaryController {
     @Param('ym', YmPipe) ym: string,
     @Query() query: PeriodRequestsQuery,
   ) {
-    await this.summary.assertViewable(ym);
+    await this.periods.assertLocked(ym, this.clock.now());
     return query.by === 'item'
       ? this.lists.byItem(ym)
       : this.lists.byPerson(ym, query);

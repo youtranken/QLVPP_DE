@@ -152,26 +152,15 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     expect(await snapshotsOf(request, seed.prevYm)).toBe(before + 1);
   });
 
-  test('E9-S4 Báo cáo: kỳ đang mở → cảnh báo tạm tính, In trình ký vẫn tạo bản chốt', async ({ page, request }) => {
+  test('E9-S4 Báo cáo: kỳ đang mở → 409 PERIOD_NOT_LOCKED {ym, deadline}, không tạo bản chốt', async ({ request }) => {
     const period = await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json();
     const ym: string = period.ym;
-    const before = await snapshotsOf(request, ym);
-    try {
-      await page.goto(`/admin/reports?ym=${ym}`);
-      await expect(page.getByText(`Kỳ tháng ${Number(ym.slice(5, 7))} đang mở — số liệu tạm tính theo phiếu đã lưu.`)).toBeVisible();
-      await expect(page.getByRole('group', { name: 'Chọn tháng báo cáo' }).getByText(/^Đang mở · hạn /)).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
-      await page.getByRole('button', { name: 'In trình ký' }).click();
-      const pending = page.getByRole('dialog', { name: PENDING_DIALOG });
-      const toast = page.getByText(new RegExp(`^Đã tạo bản in ${monthLabel(ym).replace('Tháng', 'tháng')} · bản chốt \\d{2}:\\d{2}$`));
-      await expect(pending.or(toast)).toBeVisible();
-      if (await pending.isVisible()) await pending.getByRole('button', { name: 'Vẫn chốt' }).click();
-      await expect(toast).toBeVisible();
-      expect(await snapshotsOf(request, ym)).toBe(before + 1);
-      await expect(page.getByRole('region', { name: 'Bản chốt' }).getByRole('listitem').filter({ hasText: 'Mới' })).toHaveCount(1);
-    } finally {
-      dropSnapshots(ym, run.since);
-    }
+    const report = await request.get(`/api/admin/reports/${ym}`, { headers: devHeaders('admin') });
+    expect(report.status()).toBe(409);
+    expect(await report.json()).toMatchObject({ code: 'PERIOD_NOT_LOCKED', ym, deadline: period.deadline });
+    const created = await request.post(`/api/admin/reports/${ym}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print' } });
+    expect(created.status()).toBe(409);
+    expect(psql(`SELECT count(*) FROM report_snapshots WHERE period_ym = '${ym}-01' AND created_at >= '${run.since}'`)).toBe('0');
   });
 
   test('E9-S4 Báo cáo: lỗi tải báo cáo → "Không tải được dữ liệu — thử lại." + "Thử lại"', async ({ page }) => {

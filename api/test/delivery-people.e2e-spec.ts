@@ -195,14 +195,20 @@ describe('GET admin/periods/:ym/delivery-people', () => {
     ).expect(200);
   });
 
-  it('kỳ không tồn tại → 409 PERIOD_NOT_LOCKED', async () => {
+  it('kỳ sau kỳ mở → 400 INVALID_PERIOD; kỳ đã qua không có dòng periods → 200 rỗng', async () => {
     freeze(AFTER_DEADLINE);
     const res = await as(
       http().get('/api/admin/periods/2031-01/delivery-people'),
       ADMIN,
       'admin',
-    ).expect(409);
-    expect((res.body as { code: string }).code).toBe('PERIOD_NOT_LOCKED');
+    ).expect(400);
+    expect((res.body as { code: string }).code).toBe('INVALID_PERIOD');
+    const past = await as(
+      http().get('/api/admin/periods/2003-01/delivery-people'),
+      ADMIN,
+      'admin',
+    ).expect(200);
+    expect((past.body as { people: unknown[] }).people).toEqual([]);
   });
 
   it('member gọi → 403', async () => {

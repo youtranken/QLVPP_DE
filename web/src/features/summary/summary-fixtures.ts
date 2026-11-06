@@ -13,8 +13,9 @@ export const OPEN: PeriodSummary = {
   headcount: 40,
   headcount_source: 'live',
   unregistered: 8,
-  lines_pending_delivery: 118,
-  custom_pending: 3,
+  outside: 0,
+  lines_pending_delivery: null,
+  custom_pending: null,
   low_stock: 4,
   receipts: 0,
 };
@@ -27,6 +28,7 @@ export const LOCKED: PeriodSummary = {
   registered: 30,
   headcount: 38,
   lines_pending_delivery: 12,
+  custom_pending: 3,
 };
 
 export const person = (over: Partial<PersonRow>): PersonRow => ({

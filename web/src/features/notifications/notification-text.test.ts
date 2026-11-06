@@ -101,6 +101,13 @@ describe('notificationText', () => {
       expect(notificationText(n(topic, params), en, 'en')).toBe(enText);
     });
 
+    it('period_locked custom_pending > 0 → thêm "· N món ngoài danh mục chờ xem"; = 0 → câu thường', () => {
+      const locked = (custom_pending: number) => n('period_locked', { ym: '2026-10', registered: 6, headcount: 8, custom_pending });
+      expect(notificationText(locked(2), vi, 'vi')).toBe('Kỳ tháng 10 đã khóa: 6/8 người đã đăng ký · 2 món ngoài danh mục chờ xem.');
+      expect(notificationText(locked(2), en, 'en')).toBe('October is closed: 6/8 registered · 2 off-catalogue items to review.');
+      expect(notificationText(locked(0), vi, 'vi')).toBe('Kỳ tháng 10 đã khóa: 6/8 người đã đăng ký.');
+    });
+
     it('period_locked có registered = 0 vẫn là câu đầy đủ (0 không phải thiếu)', () => {
       expect(notificationText(n('period_locked', { ym: '2026-10', registered: 0, headcount: 25 }), vi, 'vi')).toBe('Kỳ tháng 10 đã khóa: 0/25 người đã đăng ký.');
     });

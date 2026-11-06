@@ -75,26 +75,6 @@ export const duplicateItem = (ref: LineRef | Record<string, never> = {}) =>
     ...ref,
   });
 
-// Kèm id để Hành chính mở thẳng ngăn Điều chỉnh phiếu đó
-export const requestExists = (requestId: string) =>
-  new ConflictException({
-    code: 'REQUEST_EXISTS',
-    message: 'Người này đã có phiếu kỳ đang mở — sửa phiếu đó.',
-    request_id: requestId,
-  });
-
-export const userInactive = () =>
-  new BadRequestException({
-    code: 'USER_INACTIVE',
-    message: 'Người này không còn hoạt động.',
-  });
-
-export const userIsAdmin = () =>
-  new BadRequestException({
-    code: 'USER_IS_ADMIN',
-    message: 'Người này là Hành chính — Hành chính không đăng ký VPP.',
-  });
-
 export const lineNotFound = () =>
   new NotFoundException({
     code: 'LINE_NOT_FOUND',

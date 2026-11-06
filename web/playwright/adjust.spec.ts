@@ -4,6 +4,7 @@ import {
   acquireLock,
   asRole,
   deleteTestUsers,
+  devHeaders,
   expectNoContrastViolations,
   isMobile,
   psql,
@@ -13,6 +14,7 @@ import {
   seedPwItem,
   settled,
 } from './helpers';
+import { seedLockedRequest } from './locked-request';
 
 const SHOTS = '../.superpowers/sdd/2026-10-30-giao-dien-hanh-chinh/task-11-shots';
 
@@ -46,7 +48,7 @@ function seedUser(sub: string, name: string) {
 
 asRole('admin');
 
-test.describe('E3-S3/E3-S4 điều chỉnh và tạo hộ (M1)', () => {
+test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
   // Mỗi test tự gieo món PW có ảnh qua API (tải ảnh + tạo món) nên dài hơn mặc định 30 s
   test.describe.configure({ timeout: 60_000 });
 
@@ -134,32 +136,30 @@ test.describe('E3-S3/E3-S4 điều chỉnh và tạo hộ (M1)', () => {
     }
   });
 
-  test('E9-S2 Điều chỉnh: nhân viên lưu ở tab khác trước → STALE_UPDATE, "Tải bản mới nhất" lấy số mới', async ({ page, request }, info) => {
-    const tag = `${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}`;
-    const sub = `pw-stale-${tag}`;
-    const name = `PW Sửa đua ${tag}`;
-    seedUser(sub, name);
-    const item = await seedPwItem(page);
-    const items = [item];
-    const period = await (await request.get('/api/periods/current', { headers: asMember(sub) })).json();
-    let stamp: string | undefined;
-    const memberSaves = async (qty: number) => {
-      const data = { ym: period.ym, lines: [{ item_id: item.id, qty }], ...(stamp ? { expected_updated_at: stamp } : {}) };
-      const res = await request.put('/api/me/request/lines', { headers: asMember(sub), data });
+  test('E9-S2 Điều chỉnh: Hành chính khác lưu trước → STALE_UPDATE, "Tải bản mới nhất" lấy số mới', async ({ page, request }, info) => {
+    const release = await acquireLock('prev-period');
+    const seed = await seedLockedRequest(request, info, [{ stock: 5, qty: 1 }]);
+    const [item] = seed.items;
+    const otherAdminSaves = async (qty: number) => {
+      const view = await (await request.get(`/api/admin/requests/${seed.requestId}`, { headers: devHeaders('admin') })).json();
+      const line = view.lines[0];
+      const res = await request.put(`/api/admin/requests/${seed.requestId}/lines`, {
+        headers: devHeaders('admin'),
+        data: { lines: [{ id: line.id, qty }], expected_updated_at: view.updated_at, reason: 'Hành chính khác sửa' },
+      });
       expect(res.status()).toBe(200);
-      stamp = (await res.json()).request.updated_at;
     };
     try {
-      await memberSaves(1);
-      await page.goto('/admin/summary');
-      await searchSummaryPeople(page, tag);
-      await page.getByRole('row').filter({ hasText: name }).getByRole('button', { name: 'Điều chỉnh' }).click();
-      const drawer = page.getByRole('dialog', { name: `Phiếu của ${name}` });
+      await page.goto(`/admin/summary?ym=${seed.prevYm}`);
+      await searchSummaryPeople(page, seed.tag);
+      await page.getByRole('row').filter({ hasText: seed.name }).getByRole('button', { name: 'Điều chỉnh' }).click();
+      const drawer = page.getByRole('dialog', { name: `Phiếu của ${seed.name}` });
       const line = drawer.getByRole('listitem').filter({ hasText: item.name });
       await expect(line.getByRole('spinbutton')).toHaveValue('1');
       await line.getByRole('button', { name: `Thêm ${item.name}` }).click();
+      await drawer.getByLabel('Lý do điều chỉnh').fill('Bổ sung theo email');
 
-      await memberSaves(4);
+      await otherAdminSaves(4);
       await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();
       await expect(drawer.getByRole('alert')).toContainText('Nhân viên vừa sửa phiếu này — tải bản mới nhất rồi sửa lại.');
       await snap(page, info, 'adjust-stale');
@@ -167,58 +167,8 @@ test.describe('E3-S3/E3-S4 điều chỉnh và tạo hộ (M1)', () => {
       await expect(line.getByRole('spinbutton')).toHaveValue('4');
       await expect(drawer.getByRole('alert')).toHaveCount(0);
     } finally {
-      deleteTestUsers(sub);
-      for (const it of items) await removeTestItem(request, it.id);
-    }
-  });
-
-  test('E9-S2 Tạo phiếu hộ: trùng phiếu mở Điều chỉnh', async ({ page, request }, info) => {
-    const tag = `${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}`;
-    const sub = `pw-crt-${tag}`;
-    const name = `PW Tạo hộ ${tag}`;
-    seedUser(sub, name);
-    const item = await seedPwItem(page);
-    const items = [item];
-    const period = await (await request.get('/api/periods/current', { headers: asMember(sub) })).json();
-    const month = Number(String(period.ym).slice(5));
-
-    const create = async () => {
-      await page.getByRole('button', { name: 'Tạo phiếu hộ' }).click();
-      const dialog = page.getByRole('dialog', { name: /^Tạo phiếu hộ — Tháng/ });
-      await dialog.getByRole('searchbox', { name: 'Tìm người đăng ký' }).fill(tag);
-      await dialog.getByRole('button', { name: new RegExp(name) }).click();
-      await dialog.getByRole('button', { name: '+ Thêm món vào phiếu' }).click();
-      await dialog.getByRole('searchbox', { name: 'Tìm món trong danh mục' }).fill(item.name);
-      await dialog.getByRole('list', { name: 'Món tìm thấy' }).getByRole('button').first().click();
-      await dialog.getByRole('button', { name: `Thêm ${item.name}` }).click();
-      return dialog;
-    };
-
-    try {
-      await page.goto('/admin/summary');
-      let dialog = await create();
-      await snap(page, info, 'create-filled');
-      await dialog.getByRole('button', { name: 'Tạo phiếu' }).click();
-      await expect(dialog).toBeHidden();
-      await expect(page.getByText(`Đã tạo phiếu cho ${name}`)).toBeVisible();
-      const saved = psql(`SELECT r.period_ym::text || ':' || l.qty FROM requests r JOIN request_lines l ON l.request_id = r.id
-        WHERE r.user_sub = '${sub}'`);
-      expect(saved).toBe(`${period.ym}-01:2`);
-
-      dialog = await create();
-      await dialog.getByRole('button', { name: 'Tạo phiếu' }).click();
-      await expect(dialog.getByRole('alert')).toContainText(`${name} đã có phiếu tháng ${month} — sửa phiếu đó thay vì tạo phiếu mới.`);
-      if (isMobile(info)) await expectNoContrastViolations(page);
-      await snap(page, info, 'create-exists');
-      await dialog.getByRole('button', { name: 'Mở Điều chỉnh' }).click();
-      const drawer = page.getByRole('dialog', { name: `Phiếu của ${name}` });
-      await expect(drawer).toBeVisible();
-      await expect(drawer.getByText('Đang mở', { exact: true })).toBeVisible();
-      await expect(drawer.getByRole('listitem').filter({ hasText: item.name }).getByRole('spinbutton')).toHaveValue('2');
-      await snap(page, info, 'create-open-adjust');
-    } finally {
-      deleteTestUsers(sub);
-      for (const it of items) await removeTestItem(request, it.id);
+      seed.cleanup();
+      release();
     }
   });
 });

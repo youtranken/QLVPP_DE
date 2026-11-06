@@ -115,25 +115,28 @@ export class NotificationScheduler
     });
   }
 
-  // Headcount ghi bù kể cả khi trượt ngày khóa; chuông chỉ gửi đúng ngày khóa
+  // Tập người S ghi bù kể cả khi trượt ngày khóa; chuông chỉ gửi đúng ngày khóa, kỳ 0 phiếu vẫn gửi (0/N)
   private async locked(now: Date): Promise<number> {
     const period = await this.periods.latestLocked(now);
     if (!period) return 0;
-    let headcount = period.headcount;
-    if (headcount === null) {
-      const live = (await this.summary.liveCounts(period.ym)).headcount;
-      headcount = await this.db.transaction((tx) =>
-        this.periods.recordHeadcount(period.ym, live, tx),
+    if (period.headcount === null) {
+      const subs = await this.summary.liveSubs(period.ym);
+      await this.db.transaction((tx) =>
+        this.periods.recordHeadcount(period.ym, subs, tx),
       );
     }
     if (!isLockDay(now, period.deadline)) return 0;
-    const { registered } = await this.summary.requestCounts(period.ym);
+    const { registered, headcount } = await this.summary.people(period.ym);
+    const { custom_pending } = await this.summary.lineCounts(period.ym);
     return this.notify({
       eventId: eventIds.periodLocked(period.ym),
       recipients: await this.notifications.adminRecipients(),
       topic: 'period_locked',
-      params: { ym: period.ym, registered, headcount },
-      link: `/admin/summary?ym=${period.ym}`,
+      params: { ym: period.ym, registered, headcount, custom_pending },
+      link:
+        custom_pending > 0
+          ? `/admin/review?ym=${period.ym}`
+          : `/admin/summary?ym=${period.ym}`,
       now,
     });
   }

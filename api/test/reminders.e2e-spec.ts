@@ -25,7 +25,7 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
       `INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('2026-12-01', $1, $1)`,
       [U1],
     );
-    // Hành chính tạo phiếu hộ người ngoài group → vẫn vào mẫu số chụp lúc khóa
+    // Chủ phiếu ngoài tập (người ngoài group có phiếu) → vẫn vào mẫu số chụp lúc khóa
     await f.q(
       `INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('2026-12-01', $1, $2)`,
       [OUT, ADMIN],
@@ -101,7 +101,7 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
     expect(await f.recipients('reminder:2026-12')).toEqual([U2, U3]);
   });
 
-  it('period_locked: hạn − 1 ms (23:59:59.999 10/12 VN) không gửi, headcount null; đúng hạn 00:00 11/12 VN → admin nhận registered 2, headcount 4 (gồm người ngoài group có phiếu hộ, không đếm Hành chính); periods.headcount = 4', async () => {
+  it('period_locked: hạn − 1 ms (23:59:59.999 10/12 VN) không gửi, headcount null; đúng hạn 00:00 11/12 VN → admin nhận registered 2, headcount 4 (gồm chủ phiếu ngoài tập, không đếm Hành chính); periods.headcount = 4', async () => {
     expect((await f.run('2026-12-10T16:59:59.999Z')).period_locked).toBe(0);
     expect(await f.recipients('period_locked:2026-12')).toEqual([]);
     expect(await f.headcount('2026-12')).toBeNull();
@@ -129,7 +129,14 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
     await f.run('2026-12-11T05:00:00Z');
     const db = f.app().get<Database>(DRIZZLE_DB);
     const persisted = await db.transaction((tx) =>
-      f.app().get(PeriodsService).recordHeadcount('2026-12', 99, tx),
+      f
+        .app()
+        .get(PeriodsService)
+        .recordHeadcount(
+          '2026-12',
+          Array.from({ length: 99 }, (_, i) => `x${i}`),
+          tx,
+        ),
     );
     expect(persisted).toBe(4);
     expect(await f.headcount('2026-12')).toBe(4);

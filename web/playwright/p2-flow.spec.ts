@@ -1,11 +1,13 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
 import {
+  acquireLock,
   copyUnregisteredList,
   deleteTestUsers,
   devHeaders,
   expectNoContrastViolations,
   isMobile,
+  psql,
   removeTestItem,
   searchSummaryPeople,
   seedActiveUser,
@@ -40,13 +42,6 @@ async function createAdminItem(request: APIRequestContext, name: string): Promis
   return (await item.json()).id as string;
 }
 
-// ≥ 901 phiếu là aside; ≤ 900 phiếu nằm trong sheet mở từ thanh nổi
-async function openCart(page: Page, info: TestInfo) {
-  if (!isMobile(info)) return page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
-  await page.getByRole('button', { name: /^Xem phiếu \(/ }).click();
-  return page.getByRole('dialog', { name: /^Phiếu tháng \d+$/ });
-}
-
 const memberHeaders = (sub: string) => ({ 'x-dev-user-sub': sub, 'x-dev-role': 'member' });
 
 async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom: string) {
@@ -71,7 +66,7 @@ async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom
 async function openDrawer(admin: Page, person: Person) {
   await admin.getByRole('row').filter({ hasText: person.name }).getByRole('button', { name: 'Điều chỉnh' }).click();
   const drawer = admin.getByRole('dialog', { name: `Phiếu của ${person.name}` });
-  await expect(drawer.getByText('Đang mở', { exact: true })).toBeVisible();
+  await expect(drawer.getByText('Đã khóa', { exact: true })).toBeVisible();
   return drawer;
 }
 
@@ -83,6 +78,7 @@ async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person,
   await drawer.getByRole('list', { name: 'Món tìm thấy' }).getByRole('button').first().click();
   await expect(drawer.getByRole('listitem').filter({ hasText: giay }).getByRole('spinbutton')).toHaveValue('1');
   await snap(admin, info, 'admin-adjust');
+  await drawer.getByLabel('Lý do điều chỉnh').fill('Bổ sung theo email');
   await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();
   await expect(drawer).toBeHidden();
 
@@ -108,7 +104,7 @@ async function summaryKpi(request: APIRequestContext, ym: string) {
 }
 
 test.describe('Smoke Plan 2 toàn luồng', () => {
-  test('Plan 2: A đăng ký 2 món + 1 món ngoài DM, B lưu 1 món → Hành chính Tổng hợp, sao chép chưa đăng ký có C, thêm Giấy A4 vào phiếu A, Thêm vào danh mục → A thấy "Hành chính thêm" chỉ đọc, "Đã thêm vào danh mục", Lịch sử có kỳ hiện tại', async ({
+  test('Plan 2: A đăng ký 2 món + 1 món ngoài DM, B lưu 1 món → kỳ khóa → Hành chính Tổng hợp, sao chép chưa đăng ký có C, thêm Giấy A4 vào phiếu A, Thêm vào danh mục → A thấy ở Lịch sử kỳ đó món Hành chính thêm và "Đã thêm vào danh mục"', async ({
     page,
     browser,
     request,
@@ -123,10 +119,15 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
     for (const p of [a, b, c]) seedActiveUser(p.sub, p.name, 'active', { department: dept, groups: ['Test_VPP'] });
     const [x, y] = [await seedPwItem(page), await seedPwItem(page)];
     let admin: Page | undefined;
+    // Đồng hồ dev không dời được: phiếu lưu ở kỳ mở rồi chuyển sang một kỳ quá khứ riêng (chưa chụp S) để giả lập khóa sổ
+    const LOCKED_YM = '2003-05';
+    const release = await acquireLock('prev-period');
+    const createdPeriod = psql(
+      `INSERT INTO periods (ym, deadline) VALUES ('${LOCKED_YM}-01', '${LOCKED_YM}-10T17:00:00Z') ON CONFLICT DO NOTHING RETURNING ym`,
+    );
     try {
       const period = await (await request.get('/api/periods/current', { headers: memberHeaders(a.sub) })).json();
-      const month = Number(String(period.ym).slice(5));
-      const before = await summaryKpi(request, period.ym);
+      const before = await summaryKpi(request, LOCKED_YM);
 
       await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...memberHeaders(a.sub) } }));
       await memberRegisters(page, info, [x, y], custom);
@@ -135,9 +136,10 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
         data: { ym: period.ym, lines: [{ item_id: x.id, qty: 1 }] },
       });
       expect(savedB.status()).toBe(200);
+      psql(`UPDATE requests SET period_ym = '${LOCKED_YM}-01' WHERE user_sub IN ('${a.sub}', '${b.sub}')`);
 
       admin = await adminPage(browser, info);
-      await admin.goto('/admin/summary');
+      await admin.goto(`/admin/summary?ym=${LOCKED_YM}`);
       await expect(admin.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
       await expect(admin.getByRole('button', { name: /Phiếu đã đăng ký/ })).toContainText(`${before.registered + 2}/${before.headcount}`);
       await copyUnregisteredList(admin, info);
@@ -151,25 +153,21 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       await admin.context().close();
       admin = undefined;
 
-      await page.reload();
-      const cart = await openCart(page, info);
-      const added = cart.locator('li', { hasText: giay });
-      await expect(added.getByText('Hành chính thêm')).toBeVisible();
-      await expect(added.getByRole('button')).toHaveCount(0);
-      await expect(added.getByRole('spinbutton')).toHaveCount(0);
-      await expect(cart.locator('li', { hasText: custom }).getByText('Đã thêm vào danh mục')).toBeVisible();
+      await page.goto(`/history/${LOCKED_YM}`);
+      await expect(page.locator('li', { hasText: giay })).toBeVisible();
+      await expect(page.locator('li', { hasText: custom }).getByText('Đã thêm vào danh mục')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'member-a-after');
 
-      if (isMobile(info)) await page.keyboard.press('Escape');
       const nav = page.getByRole('navigation', { name: isMobile(info) ? 'Điều hướng chính' : 'Chuyển trang' });
       await nav.getByRole('link', { name: 'Lịch sử' }).click();
-      const current = page.getByRole('link', { name: new RegExp(`Tháng ${month}/`) });
-      await expect(current.getByText('Đang mở')).toBeVisible();
+      await expect(page.getByRole('link', { name: /Tháng 5\/2003/ })).toBeVisible();
       await snap(page, info, 'member-a-history');
     } finally {
       await admin?.context().close();
       deleteTestUsers(a.sub, b.sub, c.sub);
+      if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${LOCKED_YM}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${LOCKED_YM}-01')`);
+      release();
       await removeTestItem(request, giayId);
       for (const it of [x, y]) await removeTestItem(request, it.id);
       const all: Item[] = await (await request.get('/api/admin/items', { headers: devHeaders('admin') })).json();

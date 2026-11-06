@@ -63,6 +63,9 @@ export function notificationText(
     item: pick(lang, p.item_name, p.item_name_en),
     note: str(p.note),
   };
+  if (n.topic === 'period_locked' && Number(p.custom_pending) > 0) {
+    return t('notifications.topics.period_lockedCustom', { ...base, custom: str(p.custom_pending) });
+  }
   if (n.topic === 'line_cancelled' && !base.reason) return t('notifications.topics.line_cancelledNoReason', base);
   if (n.topic !== 'line_review') return t(`notifications.topics.${n.topic}`, base);
   const action = str(p.action);

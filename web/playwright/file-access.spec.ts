@@ -5,7 +5,7 @@ import { deleteTestUsers, devHeaders, removeTestItem, seedActiveUser } from './h
 const PNG = readFileSync('playwright/fixtures/item.png');
 
 test.describe('PRD §10.10 quyền đọc ảnh', () => {
-  test('member A mở ảnh dòng của B → 404 FILE_NOT_FOUND; A mở ảnh dòng của chính mình, B và Hành chính → 200; ảnh món đang bán → A 200', async ({ request }, info) => {
+  test('member A mở ảnh dòng của B → 404 FILE_NOT_FOUND; A mở ảnh dòng của chính mình, B → 200; Hành chính kỳ đang mở → 404; ảnh món đang bán → A 200', async ({ request }, info) => {
     const suffix = `${Date.now()}-${info.project.name}`;
     const a = { 'x-dev-user-sub': `pw-fa-a-${suffix}`, 'x-dev-role': 'member' };
     const b = { 'x-dev-user-sub': `pw-fa-b-${suffix}`, 'x-dev-role': 'member' };
@@ -40,7 +40,8 @@ test.describe('PRD §10.10 quyền đọc ảnh', () => {
       expect(await denied.json()).toMatchObject({ code: 'FILE_NOT_FOUND' });
       expect((await request.get(`/api/files/${ownImg}`, { headers: a })).status()).toBe(200);
       expect((await request.get(`/api/files/${lineImg}`, { headers: b })).status()).toBe(200);
-      expect((await request.get(`/api/files/${lineImg}`, { headers: admin })).status()).toBe(200);
+      // Kỳ đang mở: Hành chính chưa thấy ảnh dòng ngoài DM (chỉ làm việc trên kỳ đã khóa)
+      expect((await request.get(`/api/files/${lineImg}`, { headers: admin })).status()).toBe(404);
 
       const itemImg = await upload(admin, 'item_image');
       const item = await request.post('/api/admin/items', {
