@@ -102,6 +102,8 @@ const stock = {
       search: 'Tìm người nhận',
     },
     ledger: {
+      prev: 'Món trước',
+      next: 'Món sau',
       eyebrow: '{{group}} · {{unit}}',
       title: 'Sổ cái',
       held: 'Đang giữ cho người chờ: {{n}}',

@@ -4,9 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { apiErrorCode } from '@/lib/api-error';
 import { vnLockDate } from '@/lib/format-time';
 import { shiftYm } from '@/lib/ym';
-import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
+import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlPatch } from '@/lib/use-url-patch';
-import { Drawer, DrawerClose, DrawerTitle } from '@/ui/drawer';
+import { OverlayPanel } from '@/ui/overlay-panel';
 import { Icon } from '@/ui/icon';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
@@ -24,19 +24,13 @@ import { useQuickDeliver } from './use-quick-deliver';
 import './delivery-people.m1.css';
 
 const TABS: PeopleTab[] = ['pending', 'debt', 'done', 'all'];
-const TABLET_DOWN = '(max-width: 1279px)';
 
-function PanelHead({ person, inDrawer = false }: { person: DeliveryPerson; inDrawer?: boolean }) {
+function PanelHead({ person }: { person: DeliveryPerson }) {
   const { t } = useTranslation();
-  const name = person.full_name ?? person.user_sub;
-  const title = inDrawer ? <DrawerTitle className="pp-head__name">{name}</DrawerTitle> : <h2 className="pp-head__name">{name}</h2>;
   return (
     <header className="pp-head">
-      <PersonAvatar name={name} large />
-      <div>
-        {title}
-        <small>{person.department ?? t('delivery.people.card.noDepartment')}</small>
-      </div>
+      <PersonAvatar name={person.full_name ?? person.user_sub} large />
+      <small>{person.department ?? t('delivery.people.card.noDepartment')}</small>
     </header>
   );
 }
@@ -44,8 +38,6 @@ function PanelHead({ person, inDrawer = false }: { person: DeliveryPerson; inDra
 function PeopleBoard({ ym }: { ym: string }) {
   const { t } = useTranslation();
   const [params, update] = useUrlPatch();
-  const narrow = useMediaQuery(TABLET_DOWN);
-  const phone = useMediaQuery(ADMIN_PHONE_QUERY);
   const query = useDeliveryPeople(ym);
   const summary = usePeriodSummary(ym);
   const month = monthOf(ym);
@@ -54,13 +46,17 @@ function PeopleBoard({ ym }: { ym: string }) {
   const tab: PeopleTab = TABS.find((x) => x === asked) ?? 'pending';
   const q = params.get('q') ?? '';
   const listed = filterPeople(people, tab, q);
-  const selected = people.find((p) => p.user_sub === params.get('person'));
-  const at = selected ? listed.findIndex((p) => p.user_sub === selected.user_sub) : -1;
+  const panel = usePanelParam('person', {
+    order: listed.map((p) => p.user_sub),
+    known: (sub) => (query.data ? people.some((p) => p.user_sub === sub) : undefined),
+  });
+  const selected = people.find((p) => p.user_sub === panel.id);
+  const at = panel.index;
   const nextOf = (sub: string) => {
     const i = listed.findIndex((p) => p.user_sub === sub);
     return i < 0 ? undefined : listed[i + 1];
   };
-  const open = (sub: string | null) => update({ person: sub });
+  const open = (sub: string) => panel.open(sub);
   const quick = useQuickDeliver(people);
   const [confirmFor, setConfirmFor] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -85,7 +81,7 @@ function PeopleBoard({ ym }: { ym: string }) {
   const counts = tabCounts(people);
   const both = overlapCount(people);
   const short = stockShortages(people).size;
-  const panel = selected && (
+  const personPanel = selected && (
     <PersonPanel
       key={selected.user_sub}
       ym={ym}
@@ -93,7 +89,7 @@ function PeopleBoard({ ym }: { ym: string }) {
       people={people}
       next={at >= 0 ? listed[at + 1] : undefined}
       onNext={open}
-      onDelivered={() => open(null)}
+      onDelivered={panel.close}
       focusAfter={focusSearch}
     />
   );
@@ -127,49 +123,33 @@ function PeopleBoard({ ym }: { ym: string }) {
           <Link to="/admin/stock">{t('delivery.people.toStock')}</Link>
         </p>
       )}
-      <div className="pp-split">
-        {listed.length === 0 ? (
-          <EmptyState title={t('delivery.people.empty')} />
-        ) : (
-          <div className="pp-grid" role="list" aria-label={t('delivery.people.list')}>
-            {listed.map((p) => (
-              <div role="listitem" key={p.user_sub}>
-                <PersonCard
-                  person={p}
-                  selected={p.user_sub === selected?.user_sub}
-                  canDeliver={quick.canDeliver(p)}
-                  onView={() => open(p.user_sub)}
-                  onDeliver={() => setConfirmFor(p.user_sub)}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-        {!narrow && (
-          <section className="pp-side" aria-label={selected ? (selected.full_name ?? selected.user_sub) : t('delivery.people.list')}>
-            {selected ? (
-              <>
-                <PanelHead person={selected} />
-                {panel}
-              </>
-            ) : (
-              <p className="pp-pick">{t('delivery.people.panel.pick')}</p>
-            )}
-          </section>
-        )}
-      </div>
-      {narrow && selected && (
-        <Drawer open onOpenChange={(o) => !o && open(null)} width={phone ? 390 : 420}>
-          <div className="drawer-header pp-drawer-head">
-            <PanelHead person={selected} inDrawer />
-            <DrawerClose asChild>
-              <button type="button" className="sheet-close" aria-label={t('delivery.people.panel.close')}>
-                <Icon name="x" />
-              </button>
-            </DrawerClose>
-          </div>
-          <div className="sheet-body">{panel}</div>
-        </Drawer>
+      {listed.length === 0 ? (
+        <EmptyState title={t('delivery.people.empty')} />
+      ) : (
+        <div className="pp-grid" role="list" aria-label={t('delivery.people.list')}>
+          {listed.map((p) => (
+            <div role="listitem" key={p.user_sub}>
+              <PersonCard
+                person={p}
+                selected={p.user_sub === selected?.user_sub}
+                canDeliver={quick.canDeliver(p)}
+                onView={() => open(p.user_sub)}
+                onDeliver={() => setConfirmFor(p.user_sub)}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+      {selected && (
+        <OverlayPanel
+          open
+          onClose={panel.close}
+          title={selected.full_name ?? selected.user_sub}
+          nav={{ index: panel.index, total: panel.total, onStep: panel.step, prevLabel: t('delivery.people.panel.prevPerson'), nextLabel: t('delivery.people.panel.nextPerson') }}
+        >
+          <PanelHead person={selected} />
+          {personPanel}
+        </OverlayPanel>
       )}
       {confirming && (
         <DeliverDialog

@@ -128,12 +128,25 @@ describe('BacklogPage — thao tác trên dòng', () => {
     await waitFor(() => expect(callsTo(f, '/api/admin/backlog?by=item').length).toBeGreaterThan(1));
   });
 
-  it('"Lịch sử giao" mở ngăn lịch sử của dòng', async () => {
-    stubBacklog([PEN_DUC]);
+  it('"Lịch sử giao" mở panel phủ ?line=<id> có bộ đếm; Đóng gỡ tham số; ?line=<dòng không còn nợ> → không panel, gỡ tham số', async () => {
+    stubBacklog([PEN_DUC, PEN_LAN]);
     openPage();
     await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: /^Lịch sử giao/ }));
-    expect(screen.getByRole('dialog', { name: 'Lịch sử giao Phạm Văn Đức' })).toBeInTheDocument();
-    expect(await screen.findByText('Chưa giao đợt nào')).toBeInTheDocument();
+    const panel = await screen.findByRole('dialog', { name: 'Lịch sử giao Phạm Văn Đức' });
+    expect(screen.getByTestId('location-search')).toHaveTextContent('line=l-pen');
+    expect(within(panel).getByText(/^\d\/2$/)).toBeInTheDocument();
+    expect(await within(panel).findByText('Chưa giao đợt nào')).toBeInTheDocument();
+    await userEvent.click(within(panel).getByRole('button', { name: 'Đóng' }));
+    await waitFor(() => expect(screen.getByTestId('location-search')).not.toHaveTextContent('line='));
+  });
+
+  it('?line= trỏ tới dòng không có trong Còn nợ → không mở panel, gỡ tham số', async () => {
+    stubBacklog([PEN_DUC]);
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/backlog?line=l-gone');
+    await screen.findByText('Bút bi xanh');
+    await waitFor(() => expect(screen.getByTestId('location-search')).not.toHaveTextContent('line='));
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('390 px: dòng chỉ có nút "Giao bổ sung" + menu ⋯ chứa "Hủy nợ" và "Lịch sử giao"; chọn "Hủy nợ" mở hộp hủy nợ', async () => {

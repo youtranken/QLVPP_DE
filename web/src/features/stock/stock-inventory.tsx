@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
 import { FilterNotice } from '@/ui/filter-notice';
 import { LoadError } from '@/ui/load-state';
@@ -19,8 +20,10 @@ import type { StockParams } from './use-stock-params';
 
 const MAX_SEARCH = 100;
 
+type DialogAction = Exclude<StockAction, 'ledger'>;
+
 interface Open {
-  action: StockAction;
+  action: DialogAction;
   id: string;
 }
 
@@ -31,7 +34,6 @@ export function StockInventory({ p }: { p: StockParams }) {
   const d = useStockData();
   const [search, setSearch] = useUrlSearchBox(p.view.q, p.setQ);
   const [open, setOpen] = useState<Open | null>(null);
-  const onAction = useCallback((action: StockAction, r: StockRow) => setOpen({ action, id: r.id }), []);
   const groupName = useCallback(
     (r: StockRow) => {
       const cat = d.index.byId.get(r.group);
@@ -42,11 +44,16 @@ export function StockInventory({ p }: { p: StockParams }) {
   const { filter } = p.view;
   const shown = applyStockView(d.rows, p.view);
   const page = useShownLimit(shown, `${filter ?? ''}|${p.view.q}`);
+  // Sổ cái là panel phủ ?item=; Nhập/Kiểm kê/Xuất lẻ từ chân panel mở hộp trên panel, panel giữ nguyên
+  const ledger = usePanelParam('item', { order: shown.map((r) => r.id), known: (id) => (d.loaded ? d.rows.some((r) => r.id === id) : undefined) });
+  const { open: openLedger } = ledger;
+  const onAction = useCallback((action: StockAction, r: StockRow) => (action === 'ledger' ? openLedger(r.id) : setOpen({ action, id: r.id })), [openLedger]);
   if (d.failed) {
     return <LoadError onRetry={d.retry} />;
   }
 
   const target = open ? d.rows.find((r) => r.id === open.id) : undefined;
+  const ledgerItem = ledger.id ? d.rows.find((r) => r.id === ledger.id) : undefined;
   const close = () => setOpen(null);
   const emptyKey = filter ? EMPTY_KEY[filter] : 'emptyTitle';
   return (
@@ -57,7 +64,7 @@ export function StockInventory({ p }: { p: StockParams }) {
       <StockTable
         rows={page.visible}
         loading={!d.loaded}
-        activeRowId={open?.action === 'ledger' ? open.id : undefined}
+        activeRowId={ledgerItem?.id}
         groupName={groupName}
         onAction={onAction}
         empty={{
@@ -71,12 +78,18 @@ export function StockInventory({ p }: { p: StockParams }) {
         }}
       />
       <StockMore shown={page.visible.length} total={page.total} hidden={page.hidden} onMore={page.showMore} />
+      {ledgerItem && (
+        <MovementsDrawer
+          item={ledgerItem}
+          groupName={groupName(ledgerItem)}
+          onAction={(action) => action !== 'ledger' && setOpen({ action, id: ledgerItem.id })}
+          onClose={ledger.close}
+          nav={{ index: ledger.index, total: ledger.total, onStep: ledger.step }}
+        />
+      )}
       {target && open?.action === 'purchase' && <PurchaseDialog item={target} onClose={close} />}
       {target && open?.action === 'count' && <CountStockDialog item={target} onClose={close} />}
       {target && open?.action === 'issue' && <IssueDialog item={target} onClose={close} />}
-      {target && open?.action === 'ledger' && (
-        <MovementsDrawer item={target} groupName={groupName(target)} onAction={(action) => setOpen({ action, id: target.id })} onClose={close} />
-      )}
     </>
   );
 }

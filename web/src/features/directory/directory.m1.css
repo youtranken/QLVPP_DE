@@ -11,10 +11,6 @@
 [data-shell='admin'] .dr-more { justify-self: center; }
 [data-shell='admin'] .dr-sync { align-items: center; }
 [data-shell='admin'] .dr-sync__text { flex: 1; }
-[data-shell='admin'] .dr-drawer-head { display: flex; align-items: flex-start; gap: var(--s-1); }
-[data-shell='admin'] .dr-drawer-head__text { display: grid; gap: 2px; flex: 1; min-width: 0; }
-[data-shell='admin'] .dr-icon-btn { width: 36px; padding: 0; }
-@media (max-width: 767px) { [data-shell='admin'] .dr-icon-btn { width: var(--hit); } }
 [data-shell='admin'] .dr-who { display: flex; align-items: center; gap: var(--s-3); }
 [data-shell='admin'] .dr-who__text { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
 [data-shell='admin'] .dr-facts { display: grid; gap: 0; margin: 0; }
@@ -23,7 +19,6 @@
 [data-shell='admin'] .dr-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 [data-shell='admin'] .dr-audit-link { justify-self: start; }
 [data-shell='admin'] .dr-person__email { overflow-wrap: anywhere; }
-[data-shell='admin'] .dr-drawer-head .sheet-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 [data-shell='admin'] .dr-auto { color: var(--c-muted); font: var(--t-sm); white-space: nowrap; }
 /* 390: thẻ người là lưới 2 cột nhãn/giá trị (nhãn 12 px), tên chiếm cả hàng */
 @media (max-width: 767px) {

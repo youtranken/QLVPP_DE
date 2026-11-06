@@ -70,11 +70,11 @@ describe('DeliveriesDrawer — lịch sử đợt giao của một dòng (chỉ 
     expect(await screen.findByText('Đã hủy 2')).toBeInTheDocument();
   });
 
-  it('đang tải → khung xương (role status), không phải chữ "Đang tải"; ngăn rộng 384', async () => {
+  it('đang tải → khung xương (role status), không phải chữ "Đang tải"; panel phủ không đặt bề rộng riêng (440 px chung)', async () => {
     stub(() => new Promise<Response>(() => {}));
     renderWithI18n(<DeliveriesDrawer line={backlogLine()} onClose={() => {}} />);
     expect(await screen.findByRole('status')).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getByRole('dialog', { name: 'Lịch sử giao Phạm Văn Đức' })).toHaveStyle({ maxWidth: '384px' });
+    expect(screen.getByRole('dialog', { name: 'Lịch sử giao Phạm Văn Đức' })).not.toHaveAttribute('style', expect.stringContaining('max-width'));
   });
 
   it('tải lỗi → báo lỗi có nút thử lại, không nuốt thành rỗng', async () => {

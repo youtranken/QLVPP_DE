@@ -190,6 +190,8 @@ const delivery: Messages<typeof vi> = {
         },
       },
       deliveries: {
+        prev: 'Previous line',
+        next: 'Next line',
         title: 'Delivery history of {{person}}',
         eyebrow: '{{name}} · Month {{month}}',
         registered: 'Requested',
@@ -266,7 +268,8 @@ const delivery: Messages<typeof vi> = {
         summary: '{{n}} items · {{u}} units',
       },
       panel: {
-        pick: 'Pick a person on the left to deliver.',
+        prevPerson: 'Previous person',
+        nextPerson: 'Next person',
         label: 'Delivery for {{name}}',
         debtGroup: 'Earlier outstanding',
         monthGroup: 'Month {{month}}',
@@ -289,7 +292,6 @@ const delivery: Messages<typeof vi> = {
         done: 'Everything available has been collected.',
         delivered: 'Delivered to {{name}}',
         next: 'Next person',
-        close: 'Close',
       },
     },
   },

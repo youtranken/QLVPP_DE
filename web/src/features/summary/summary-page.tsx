@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
+import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
 import { vnDeadlineDay } from '@/lib/format-time';
 import { Loading, LoadError } from '@/ui/load-state';
@@ -19,7 +20,7 @@ import { SummaryPersonTable } from './summary-person-table';
 import { SummaryStats } from './summary-stats';
 import { UnregisteredTable } from './unregistered-table';
 import { usePeriodSummary, type PeriodSummary } from './summary.api';
-import { useAdjacentRequests } from './use-person-table-rows';
+import { useRequestOrder } from './use-person-table-rows';
 import { useSummaryParams, type SummaryView } from './use-summary-params';
 import './summary.m1.css';
 
@@ -55,7 +56,9 @@ export function SummaryPage() {
   const phone = useMediaQuery(ADMIN_PHONE_QUERY);
   const personFilter = p.filter === 'low' || p.filter === 'unregistered' ? null : p.filter;
   const listed = p.view === 'person' && p.filter !== 'unregistered';
-  const adjacent = useAdjacentRequests(p.ym, personFilter, p.q, listed ? p.requestId : null);
+  const requestOpen = new URLSearchParams(useLocation().search).has('request');
+  const order = useRequestOrder(p.ym, personFilter, p.q, listed && requestOpen);
+  const panel = usePanelParam('request', { order: listed ? order : undefined });
   const title = t('summary.page.title');
   const header = (actions?: { primary: ReactNode; secondary: ReactNode }) => (
     <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('summary.page.description')} {...actions} />
@@ -125,19 +128,18 @@ export function SummaryPage() {
             locked={data?.is_open === false}
             filter={personFilter}
             q={p.q}
-            activeId={p.requestId ?? undefined}
-            onOpen={p.openAdjust}
+            activeId={panel.id ?? undefined}
+            onOpen={panel.open}
             onClearFilter={p.clearFilter}
           />
         )}
       </div>
-      {p.requestId && (
+      {panel.id && (
         <AdjustDrawer
-          requestId={p.requestId}
+          requestId={panel.id}
           presetReason={p.presetReason}
-          onClose={p.closeAdjust}
-          onPrev={adjacent.prev ? () => p.stepAdjust(adjacent.prev!) : undefined}
-          onNext={adjacent.next ? () => p.stepAdjust(adjacent.next!) : undefined}
+          onClose={panel.close}
+          nav={listed ? { index: panel.index, total: panel.total, onStep: panel.step } : undefined}
         />
       )}
     </div>

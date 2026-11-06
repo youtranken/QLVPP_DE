@@ -1,7 +1,4 @@
-[data-shell='admin'] .pp-split { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--s-4); }
-[data-shell='admin'] .pp-grid { flex: 999 1 420px; min-width: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 232px), 1fr)); gap: var(--s-3); }
-[data-shell='admin'] .pp-side { flex: 1 1 360px; min-width: 0; position: sticky; top: var(--s-4); display: grid; gap: var(--s-3); max-height: calc(100vh - 2 * var(--s-4)); overflow: auto; padding: var(--s-5); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
-[data-shell='admin'] .pp-pick { margin: 0; color: var(--c-muted); font: var(--t-body); }
+[data-shell='admin'] .pp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 232px), 1fr)); gap: var(--s-3); }
 
 [data-shell='admin'] .pp-card { display: grid; gap: var(--s-3); height: 100%; padding: var(--s-4); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
 [data-shell='admin'] .pp-card.is-selected { box-shadow: inset 0 0 0 2px var(--c-acc), var(--e-1); }
@@ -23,9 +20,7 @@
 [data-shell='admin'] .pp-avatar { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: var(--r-pill); background: var(--c-acc-soft); color: var(--c-acc-hover); font: var(--t-label); font-weight: 800; }
 [data-shell='admin'] .pp-avatar--lg { width: 52px; height: 52px; background: var(--c-dark); color: var(--c-on-dark); }
 [data-shell='admin'] .pp-head { display: flex; align-items: center; gap: var(--s-3); }
-[data-shell='admin'] .pp-head__name { margin: 0; font: var(--t-h2); color: var(--c-ink); }
 [data-shell='admin'] .pp-head small { display: block; font: var(--t-sm); color: var(--c-muted); }
-[data-shell='admin'] .pp-drawer-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
 
 [data-shell='admin'] .pp-panel { display: grid; gap: var(--s-3); }
 [data-shell='admin'] .pp-group h3 { margin: 0 0 var(--s-1); padding-bottom: var(--s-2); border-bottom: 1px solid var(--c-line); font: var(--t-label); color: var(--c-ink-2); }

@@ -35,7 +35,6 @@ const admin = {
     },
     drawer: {
       title: 'Người dùng',
-      eyebrow: 'Danh bạ · người {{k}}',
       prev: 'Người trước',
       next: 'Người kế tiếp',
       email: 'Email',

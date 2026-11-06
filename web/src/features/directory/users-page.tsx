@@ -1,7 +1,8 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
+import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
 import { FilterNotice } from '@/ui/filter-notice';
 import { LoadError } from '@/ui/load-state';
@@ -44,11 +45,14 @@ export function UsersPage() {
   const [search, setSearch] = useUrlSearchBox(p.view.q, p.setQ);
   const dir = useDirectoryUsers(p.view.q);
   const sync = useSync();
-  const [openSub, setOpenSub] = useState<string | null>(null);
   const shownUsers = useMemo(() => applyUsersView(dir.users, p.view, !dir.overflow), [dir.users, p.view, dir.overflow]);
   const rows = useMemo<UserRow[]>(() => shownUsers.map((u) => ({ ...u, id: u.sub })), [shownUsers]);
+  const order = useMemo(() => rows.map((r) => r.sub), [rows]);
   const departments = useMemo(() => departmentsOf(dir.users), [dir.users]);
-  const open = useCallback((u: UserRow) => setOpenSub(u.sub), []);
+  // Danh bạ còn trang chưa tải thì chưa kết luận người lạ: chỉ gỡ ?person= khi đã có đủ danh sách
+  const known = (sub: string) => (dir.users.some((u) => u.sub === sub) ? true : dir.loading || dir.hasMore ? undefined : false);
+  const panel = usePanelParam('person', { order, known });
+  const open = (u: UserRow) => panel.open(u.sub);
   const title = t('users.title');
   const header = (
     <PageHeader
@@ -74,9 +78,8 @@ export function UsersPage() {
   }
 
   const { filter } = p.view;
-  const index = openSub ? rows.findIndex((r) => r.sub === openSub) : -1;
-  const target = index >= 0 ? rows[index] : undefined;
-  const step = (to: number) => setOpenSub(rows[to].sub);
+  const openUser = panel.id ? dir.users.find((u) => u.sub === panel.id) : undefined;
+  const target: UserRow | undefined = openUser && { ...openUser, id: openUser.sub };
   const narrowed = filter !== null || p.view.dept !== '' || p.view.q !== '';
   return (
     <div className="ct-page dr-page">
@@ -117,7 +120,7 @@ export function UsersPage() {
           {t('users.page.more')}
         </button>
       )}
-      {target && <UserDrawer user={target} position={index + 1} onPrev={index > 0 ? () => step(index - 1) : undefined} onNext={index < rows.length - 1 ? () => step(index + 1) : undefined} onClose={() => setOpenSub(null)} />}
+      {target && <UserDrawer user={target} nav={{ index: panel.index, total: panel.total, onStep: panel.step }} onClose={panel.close} />}
     </div>
   );
 }

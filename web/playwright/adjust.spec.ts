@@ -90,7 +90,7 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       await expect(drawer.getByText('Kỳ đã khóa. Chỉ giảm hoặc bỏ dòng, mỗi dòng giảm cần lý do; không giảm dưới số đã giao.')).toBeVisible();
       // Sau khóa sổ không tăng/thêm được: không nút +, không "Thêm món"
       await expect(drawer.getByRole('button', { name: /^(\+|Tăng|Thêm (?!vào danh mục —))/ })).toHaveCount(0);
-      expect((await drawer.boundingBox())!.width).toBeCloseTo(isMobile(info) ? 390 : 384, 0);
+      expect((await drawer.boundingBox())!.width).toBeCloseTo(isMobile(info) ? 390 : 440, 0);
 
       const lineA = drawer.getByRole('listitem').filter({ hasText: a.name });
       const lineB = drawer.getByRole('listitem').filter({ hasText: b.name });

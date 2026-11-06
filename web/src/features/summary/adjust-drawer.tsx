@@ -1,45 +1,29 @@
-import type { FormEvent } from 'react';
+import { useId, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormatTime } from '@/lib/format-time';
-import { Drawer, DrawerClose, DrawerTitle } from '@/ui/drawer';
-import { Icon } from '@/ui/icon';
+import { DialogClose } from '@/ui/dialog';
+import { OverlayPanel, type PanelNav } from '@/ui/overlay-panel';
 import { Loading, LoadError } from '@/ui/load-state';
 import { monthOf } from '@/features/request/request-format';
 import { AdjustLines } from './adjust-lines';
 import { useAdjust, type Adjust } from './use-adjust';
 import type { AdjustReason, AdminRequestView } from './summary.api';
 
-function Header({ view }: { view: AdminRequestView | undefined }) {
+function Context({ view }: { view: AdminRequestView }) {
   const { t } = useTranslation();
   return (
-    <div className="drawer-header aj-head">
-      <div className="aj-head__text">
-        {view && (
-          <small className="drawer-eyebrow">
-            {t('summary.adjust.eyebrow', {
-              month: monthOf(view.period_ym),
-              year: view.period_ym.slice(0, 4),
-              department: view.department ?? t('summary.adjust.noDepartment'),
-            })}
-          </small>
-        )}
-        <DrawerTitle className="sheet-title">
-          {view ? t('summary.adjust.title', { name: view.full_name ?? view.user_sub }) : t('summary.adjust.loading')}
-        </DrawerTitle>
-        {view && (
-          <span className="aj-head__tags">
-            <span className={view.is_open ? 'tag tag--ok' : 'tag tag--dark'}>
-              {t(view.is_open ? 'summary.adjust.open' : 'summary.adjust.locked')}
-            </span>
-            {view.user_status !== 'active' && <span className="tag tag--outline">{t('summary.adjust.leftCompany')}</span>}
-          </span>
-        )}
-      </div>
-      <DrawerClose asChild>
-        <button type="button" className="sheet-close" aria-label={t('common.close')}>
-          <Icon name="x" />
-        </button>
-      </DrawerClose>
+    <div className="aj-head__text">
+      <small className="drawer-eyebrow">
+        {t('summary.adjust.eyebrow', {
+          month: monthOf(view.period_ym),
+          year: view.period_ym.slice(0, 4),
+          department: view.department ?? t('summary.adjust.noDepartment'),
+        })}
+      </small>
+      <span className="aj-head__tags">
+        <span className={view.is_open ? 'tag tag--ok' : 'tag tag--dark'}>{t(view.is_open ? 'summary.adjust.open' : 'summary.adjust.locked')}</span>
+        {view.user_status !== 'active' && <span className="tag tag--outline">{t('summary.adjust.leftCompany')}</span>}
+      </span>
     </div>
   );
 }
@@ -70,34 +54,34 @@ function Blocks({ a }: { a: Adjust }) {
   );
 }
 
-function Footer({ a }: { a: Adjust }) {
+function Footer({ a, formId }: { a: Adjust; formId: string }) {
   const { t } = useTranslation();
   const at = useFormatTime();
   const note = a.changes > 0 ? t('summary.adjust.changes', { n: a.changes }) : a.view && t('summary.adjust.savedAt', { at: at(a.view.updated_at) });
   return (
-    <div className="drawer-footer">
+    <>
       <small className="drawer-note">{note}</small>
-      <DrawerClose asChild>
+      <DialogClose asChild>
         <button type="button" className="btn btn--ghost" disabled={a.saving}>
           {t('summary.adjust.cancel')}
         </button>
-      </DrawerClose>
-      <button type="submit" className="btn btn--primary" disabled={!a.canSave}>
+      </DialogClose>
+      <button type="submit" form={formId} className="btn btn--primary" disabled={!a.canSave}>
         {a.saving ? t('summary.adjust.saving') : t('summary.adjust.save')}
       </button>
-    </div>
+    </>
   );
 }
 
-export function AdjustDrawer({ requestId, presetReason, onClose, onPrev, onNext }: {
+export function AdjustDrawer({ requestId, presetReason, onClose, nav }: {
   requestId: string;
   // Mở từ lọc người đã nghỉ (?left=1): dòng giảm chọn sẵn lý do "Người đã nghỉ"
   presetReason?: AdjustReason;
   onClose: () => void;
-  onPrev?: () => void;
-  onNext?: () => void;
+  nav?: Omit<PanelNav, 'prevLabel' | 'nextLabel'>;
 }) {
   const { t } = useTranslation();
+  const formId = useId();
   const a = useAdjust(requestId, onClose, presetReason);
   const view = a.view;
   // Phiếu Hành chính đã bỏ hết dòng sau khóa sổ vẫn giữ (vẫn tính đã đăng ký) nhưng không còn gì để sửa
@@ -107,26 +91,24 @@ export function AdjustDrawer({ requestId, presetReason, onClose, onPrev, onNext 
     a.save();
   };
   return (
-    <Drawer
+    <OverlayPanel
       open
-      onOpenChange={(o) => !o && onClose()}
+      onClose={onClose}
+      title={view ? t('summary.adjust.title', { name: view.full_name ?? view.user_sub }) : t('summary.adjust.loading')}
       dirty={a.dirty}
-      dismissible={!a.saving}
-      onPrev={a.saving ? undefined : onPrev}
-      onNext={a.saving ? undefined : onNext}
+      saving={a.saving}
+      nav={nav && { ...nav, prevLabel: t('summary.adjust.prev'), nextLabel: t('summary.adjust.next') }}
+      footer={<Footer a={a} formId={formId} />}
     >
-      <Header view={view} />
-      <form className="aj-form" onSubmit={submit} noValidate>
-        <div className="drawer-body">
-          {view && !view.is_open && !removedAll && <p className="alert alert--warn">{t('summary.adjust.lockedWarn')}</p>}
-          <Blocks a={a} />
-          {a.query.isError && <LoadError onRetry={a.reload} />}
-          {a.query.isPending && <Loading />}
-          {removedAll && <p className="sm-muted">{t('summary.adjust.removedAll')}</p>}
-          {view && !removedAll && <AdjustLines a={a} view={view} />}
-        </div>
-        <Footer a={a} />
+      <form id={formId} className="aj-form" onSubmit={submit} noValidate>
+        {view && <Context view={view} />}
+        {view && !view.is_open && !removedAll && <p className="alert alert--warn">{t('summary.adjust.lockedWarn')}</p>}
+        <Blocks a={a} />
+        {a.query.isError && <LoadError onRetry={a.reload} />}
+        {a.query.isPending && <Loading />}
+        {removedAll && <p className="sm-muted">{t('summary.adjust.removedAll')}</p>}
+        {view && !removedAll && <AdjustLines a={a} view={view} />}
       </form>
-    </Drawer>
+    </OverlayPanel>
   );
 }

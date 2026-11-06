@@ -105,6 +105,8 @@ const stock: Messages<typeof vi> = {
       search: 'Find recipient',
     },
     ledger: {
+      prev: 'Previous item',
+      next: 'Next item',
       eyebrow: '{{group}} · {{unit}}',
       title: 'Ledger',
       held: 'Held for waiting staff: {{n}}',

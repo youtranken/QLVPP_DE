@@ -106,6 +106,8 @@ const summary: Messages<typeof vi> = {
       },
     },
     adjust: {
+      prev: 'Previous request',
+      next: 'Next request',
       loading: 'Adjust request',
       title: 'Request of {{name}}',
       eyebrow: 'Month {{month}}/{{year}} · {{department}}',

@@ -38,7 +38,6 @@ export function useSummaryParams(openYm: string | undefined) {
     filter,
     presetReason: (filter === 'left' ? 'user_left' : undefined) as AdjustReason | undefined,
     q: params.get('q') ?? '',
-    requestId: params.get('request'),
     setMonth: (next: string) =>
       update({ ym: next, request: null, ...(next === openYm && (LOCKED_ONLY.includes(raw) || left) ? { filter: null, left: null } : {}) }),
     setView: (next: SummaryView) => update({ view: next === 'item' ? 'item' : null, filter: null, left: null }),
@@ -46,9 +45,5 @@ export function useSummaryParams(openYm: string | undefined) {
       update({ view: next === 'low' ? 'item' : null, filter: filter === next ? null : next, left: null }),
     clearFilter: () => update({ filter: null, left: null }),
     setQ: (next: string) => update({ q: next || null }, true),
-    openAdjust: (id: string) => update({ request: id }),
-    // ↑/↓ trong ngăn kéo thay mục lịch sử: Back về trang trước khi mở, không đi lùi qua từng người
-    stepAdjust: (id: string) => update({ request: id }, true),
-    closeAdjust: () => update({ request: null }),
   };
 }

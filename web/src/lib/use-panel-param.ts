@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-export type PanelName = 'item' | 'person' | 'request' | 'group';
+export type PanelName = 'item' | 'person' | 'request' | 'group' | 'line';
 
 interface Options {
   // Thứ tự mục đang hiện trên trang: ↑/↓ đi theo danh sách này

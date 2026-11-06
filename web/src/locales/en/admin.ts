@@ -38,7 +38,6 @@ const admin: Messages<typeof vi> = {
     },
     drawer: {
       title: 'User',
-      eyebrow: 'Directory · person {{k}}',
       prev: 'Previous person',
       next: 'Next person',
       email: 'Email',

@@ -119,7 +119,7 @@ describe('DeliveryPeoplePage — trang Giao hàng bản cũ đã gỡ', () => {
   it('?request=… cũ (không có person) ở lại trang Giao hàng', async () => {
     stub();
     open('/admin/delivery?person=u-a&request=r-1');
-    await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
+    await screen.findByRole('dialog', { name: 'Nguyễn Văn An' });
     expect(screen.getByTestId('location')).toHaveTextContent(/^\/admin\/delivery$/);
   });
 });
@@ -283,22 +283,38 @@ describe('DeliveryPeoplePage — panel và Người tiếp theo', () => {
     expect(search()).toContain('person=u-b');
   });
 
-  it('?person= không có trong danh sách → không panel, không lỗi', async () => {
+  it('?person= không có trong danh sách → không panel, không lỗi, tham số bị gỡ', async () => {
     stub();
-    open('/admin/delivery?person=u-nobody');
+    open('/admin/delivery?person=u-nobody&tab=all');
     await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
-    expect(screen.queryByRole('heading', { level: 2 })).toBeNull();
-    expect(screen.getByText('Chọn một người bên trái để giao hàng.')).toBeInTheDocument();
+    await waitFor(() => expect(search()).toBe('?tab=all'));
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('390 px: "Xem" mở ngăn kéo (hộp thoại) có tên người; đóng bỏ ?person=', async () => {
+  it.each([390, 1280])('%i px: không còn cột bên; "Xem" mở panel phủ có tên người, bộ đếm, ↓ sang người kế; đóng bỏ ?person=', async (width) => {
     stub();
-    open('/admin/delivery', 390);
-    await userEvent.click(await screen.findByRole('button', { name: 'Xem Lê Thị Bình' }));
-    const dlg = await screen.findByRole('dialog', { name: 'Lê Thị Bình' });
+    open('/admin/delivery', width);
+    await userEvent.click(await screen.findByRole('button', { name: 'Xem Nguyễn Văn An' }));
+    const dlg = await screen.findByRole('dialog', { name: 'Nguyễn Văn An' });
     expect(within(dlg).getByRole('button', { name: 'Giao…' })).toBeInTheDocument();
-    await userEvent.click(within(dlg).getByRole('button', { name: 'Đóng' }));
+    expect(within(dlg).getByText('1/2')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Nguyễn Văn An', hidden: true })).toBeNull();
+    await userEvent.click(within(dlg).getByRole('button', { name: 'Người sau' }));
+    expect(await screen.findByRole('dialog', { name: 'Lê Thị Bình' })).toBeInTheDocument();
+    const close = width === 390 ? '← Đóng' : 'Đóng';
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Lê Thị Bình' })).getByRole('button', { name: close }));
     await waitFor(() => expect(search()).not.toContain('person='));
+  });
+
+  it('"Giao…" trong panel mở hộp giao trên panel; giao có lỗi → hộp và panel đều ở lại', async () => {
+    stub({ deliver: () => jsonResponse(409, { code: 'INSUFFICIENT_STOCK', available: 0 }) });
+    open('/admin/delivery?person=u-a');
+    const dlg = await screen.findByRole('dialog', { name: 'Nguyễn Văn An' });
+    await userEvent.click(within(dlg).getByRole('button', { name: 'Giao…' }));
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Giao cho Nguyễn Văn An?' })).getByRole('button', { name: 'Xác nhận giao' }));
+    expect(await screen.findByRole('button', { name: 'Mở chi tiết người' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Nguyễn Văn An', hidden: true })).toBeInTheDocument();
+    expect(search()).toContain('person=u-a');
   });
 });
 

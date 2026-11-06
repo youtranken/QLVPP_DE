@@ -30,10 +30,9 @@
 [data-shell='admin'] .hm-cta:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { [data-shell='admin'] .hm-bar span { transition: width .5s ease; } }
 
-[data-shell='admin'] .hm-cards { display: flex; flex-wrap: wrap; gap: var(--s-4); align-items: stretch; }
-[data-shell='admin'] .hm-side { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: var(--s-4); }
+[data-shell='admin'] .hm-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: var(--s-4); align-items: stretch; }
 [data-shell='admin'] .hm-card { display: grid; gap: var(--s-3); align-content: start; padding: var(--s-4) var(--s-5); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); min-width: 0; }
-[data-shell='admin'] .hm-card--main { flex: 2 1 420px; padding: var(--s-6); gap: var(--s-4); }
+[data-shell='admin'] .hm-card--main { padding: var(--s-6); gap: var(--s-4); }
 [data-shell='admin'] .hm-card--warn { box-shadow: inset 0 0 0 2px var(--c-warn-fill); }
 [data-shell='admin'] .hm-card h2 { margin: 0; font: var(--t-h3); overflow-wrap: anywhere; }
 [data-shell='admin'] .hm-card--main h2 { font: var(--t-h2); }

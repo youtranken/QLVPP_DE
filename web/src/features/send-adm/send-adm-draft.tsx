@@ -147,9 +147,11 @@ export function SendAdmDraft({ head, report, items, summary, boxes, sent, carry,
         )}
         <PreviewButton rows={formRows} signatureBoxes={boxes} ym={report.ym} />
       </div>
-      <SendAdmChecklist ym={report.ym} summary={summary} />
+      <div className="sa-cols">
+        <SendAdmChecklist ym={report.ym} summary={summary} />
+        <ReportSnapshots ym={report.ym} files={files} from={SNAPSHOTS_FROM} />
+      </div>
       <SendAdmOrders rows={rows} qty={qty} />
-      <ReportSnapshots ym={report.ym} files={files} from={SNAPSHOTS_FROM} />
       {snap.asking && <PrintConfirm kind={snap.asking} ym={report.ym} pending={report.pending_custom_count} changes={changes} sentAt={sent?.created_at ?? null} onConfirm={snap.confirm} onCancel={snap.cancel} />}
     </div>
   );

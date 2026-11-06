@@ -5,6 +5,7 @@ import { LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
 import { Toolbar } from '@/ui/toolbar';
+import { usePanelParam } from '@/lib/use-panel-param';
 import { shiftYm } from '@/lib/ym';
 import { monthOf } from '@/features/request/request-format';
 import { useCurrentPeriod } from '@/features/request/request.api';
@@ -39,6 +40,11 @@ export function BacklogPage() {
   const all = useMemo(() => flatten(query.data?.groups ?? []), [query.data]);
   const rows = useMemo(() => applyFilter(all, p.filter), [all, p.filter]);
   const open = useOpenLine(all);
+  const order = useMemo(() => rows.map((r) => r.id), [rows]);
+  // Dòng hết nợ rời danh sách: tham số trỏ tới dòng không còn → gỡ, không mở panel
+  const panel = usePanelParam('line', { order, known: (id) => (query.isSuccess ? all.some((r) => r.id === id) : undefined) });
+  const historyLine = panel.id ? all.find((r) => r.id === panel.id) : undefined;
+  const onAction = (action: LineAction, row: BacklogRow) => (action === 'history' ? panel.open(row.id) : open.start(action, row));
   const title = t('delivery.backlog.title');
   const current = useCurrentPeriod();
   const sentYm = current.data?.ym ? shiftYm(current.data.ym, -1) : undefined;
@@ -68,14 +74,14 @@ export function BacklogPage() {
       {!query.isError && (
         <div className="ct-block">
           {p.filter && <FilterNotice label={t(`delivery.backlog.filters.${p.filter}`)} count={rows.length} onClear={p.clearFilter} />}
-          <BacklogTable rows={rows} by={p.by} loading={query.isPending} filtered={p.filter !== null} onAction={open.start} />
+          <BacklogTable rows={rows} by={p.by} loading={query.isPending} filtered={p.filter !== null} onAction={onAction} />
         </div>
       )}
       {open.line && open.action === 'deliver' && <DeliverMoreDialog line={open.line} onDone={done} onStale={reload} onClose={open.close} />}
       {open.line && open.action === 'cancel' && (
         <CancelDialog line={open.line} sentYm={sentYm} initialReason={p.cancelReason} onDone={done} onStale={reload} onClose={open.close} />
       )}
-      {open.line && open.action === 'history' && <DeliveriesDrawer line={open.line} onClose={open.close} />}
+      {historyLine && <DeliveriesDrawer line={historyLine} onClose={panel.close} nav={{ index: panel.index, total: panel.total, onStep: panel.step }} />}
     </div>
   );
 }

@@ -32,18 +32,12 @@ function Cards({ ym, summary }: { ym: string; summary: PeriodSummary }) {
   const low = useQuery(lowStockQuery());
   const custom = review.data?.items.length ?? 0;
   const lowItems = low.data ?? [];
-  const showCustom = custom > 0 || review.isError;
-  const showLow = lowItems.length > 0 || low.isError;
-  if (summary.unregistered === 0 && !showCustom && !showLow) return null;
+  if (summary.unregistered === 0 && custom === 0 && !review.isError && lowItems.length === 0 && !low.isError) return null;
   return (
     <div className="hm-cards">
       {summary.unregistered > 0 && <UnregisteredSection ym={ym} deadline={summary.deadline} count={summary.unregistered} />}
-      {(showCustom || showLow) && (
-        <div className="hm-side">
-          {review.isError ? <CardError onRetry={() => void review.refetch()} /> : custom > 0 && <CustomCard count={custom} />}
-          {low.isError ? <CardError onRetry={() => void low.refetch()} /> : lowItems.length > 0 && <LowStockCard items={lowItems} />}
-        </div>
-      )}
+      {review.isError ? <CardError onRetry={() => void review.refetch()} /> : custom > 0 && <CustomCard count={custom} />}
+      {low.isError ? <CardError onRetry={() => void low.refetch()} /> : lowItems.length > 0 && <LowStockCard items={lowItems} />}
     </div>
   );
 }

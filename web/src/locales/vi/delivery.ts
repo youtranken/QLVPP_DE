@@ -187,6 +187,8 @@ const delivery = {
         },
       },
       deliveries: {
+        prev: 'Dòng trước',
+        next: 'Dòng sau',
         title: 'Lịch sử giao {{person}}',
         eyebrow: '{{name}} · Tháng {{month}}',
         registered: 'Đăng ký',
@@ -263,7 +265,8 @@ const delivery = {
         summary: '{{n}} món · {{u}} đơn vị',
       },
       panel: {
-        pick: 'Chọn một người bên trái để giao hàng.',
+        prevPerson: 'Người trước',
+        nextPerson: 'Người sau',
         label: 'Giao hàng cho {{name}}',
         debtGroup: 'Nợ kỳ trước',
         monthGroup: 'Tháng {{month}}',
@@ -286,7 +289,6 @@ const delivery = {
         done: 'Đã nhận đủ phần đang có.',
         delivered: 'Đã giao cho {{name}}',
         next: 'Người tiếp theo',
-        close: 'Đóng',
       },
     },
   },

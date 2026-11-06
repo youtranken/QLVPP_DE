@@ -53,7 +53,15 @@ function useColumns(onOpen: (u: UserRow) => void) {
             <span className="dr-person">
               <UserAvatar user={u} />
               <span className="dr-person__text">
-                <button type="button" className="dr-person__name" onClick={() => onOpen(u)}>
+                <button
+                  type="button"
+                  className="dr-person__name"
+                  onClick={(e) => {
+                    // Dòng cũng mở panel: không để cú bấm nổi lên mở lần hai (thêm một mục lịch sử)
+                    e.stopPropagation();
+                    onOpen(u);
+                  }}
+                >
                   {nameOf(u)}
                 </button>
                 {u.email && <small className="dr-muted dr-person__email">{u.email}</small>}

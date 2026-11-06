@@ -66,12 +66,14 @@ export async function renderDrawer({
   waitItems = true,
 }: { extra?: ReactNode; onNext?: () => void; onPrev?: () => void; preset?: AdjustReason; waitItems?: boolean } = {}) {
   const onClose = vi.fn();
+  // Giữa danh sách 3 phiếu: ↑/↓ đều bấm được
+  const nav = onNext || onPrev ? { index: 1, total: 3, onStep: (dir: 1 | -1) => (dir === 1 ? onNext : onPrev)?.() } : undefined;
   renderWithI18n(
     <MeContext.Provider value={makeMe('admin')}>
       <MemoryRouter>
         <ToastProvider>
           <ConfirmProvider>
-            <AdjustDrawer requestId="r-1" onClose={onClose} onNext={onNext} onPrev={onPrev} presetReason={preset} />
+            <AdjustDrawer requestId="r-1" onClose={onClose} nav={nav} presetReason={preset} />
             {extra}
           </ConfirmProvider>
         </ToastProvider>

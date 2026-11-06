@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { cleanup, jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -151,12 +151,14 @@ describe('UsersPage B10', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('ngăn kéo: không có "Vai trò trong app"/phiếu; "Xem nhật ký" → /admin/audit?actor=<sub>; chỉ đọc', async () => {
+  it('panel phủ ?person=: không có "Vai trò trong app"/phiếu; "Xem nhật ký" → /admin/audit?actor=<sub>; chỉ đọc; bộ đếm, ↑/↓, đóng bỏ tham số', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     await userEvent.click(screen.getByRole('button', { name: 'Phạm Minh Đức' }));
     const drawer = await screen.findByRole('dialog', { name: 'Người dùng' });
-    expect(within(drawer).getByText('Danh bạ · người 1')).toBeInTheDocument();
+    expect(screen.getByTestId('location-search')).toHaveTextContent('person=u-an');
+    expect(within(drawer).getByText('1/3')).toBeInTheDocument();
+    expect(within(drawer).getByRole('button', { name: 'Người trước' })).toBeDisabled();
     expect(within(drawer).getByText('NV0231')).toBeInTheDocument();
     expect(within(drawer).getByText('Dữ liệu từ PMH ID, không sửa trong app.')).toBeInTheDocument();
     expect(within(drawer).queryByText(/Vai trò trong app/)).toBeNull();
@@ -164,20 +166,29 @@ describe('UsersPage B10', () => {
     expect(within(drawer).queryByText(/Tài khoản đã khóa ở PMH ID/)).toBeNull();
     expect(within(drawer).getByRole('link', { name: 'Xem nhật ký' })).toHaveAttribute('href', '/admin/audit?actor=u-an');
     await userEvent.click(within(drawer).getByRole('button', { name: 'Người kế tiếp' }));
-    expect(within(drawer).getByText('Danh bạ · người 2')).toBeInTheDocument();
-    expect(within(drawer).getByText(/Tài khoản đã khóa ở PMH ID — không đăng nhập được/)).toBeInTheDocument();
-    expect(within(drawer).getByRole('link', { name: 'Xem nhật ký' })).toHaveAttribute('href', '/admin/audit?actor=u-binh');
-    expect(within(drawer).getByRole('button', { name: 'Người kế tiếp' })).toBeEnabled();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Người kế tiếp' }));
-    expect(within(drawer).getByRole('button', { name: 'Người kế tiếp' })).toBeDisabled();
-    const [x, footer] = within(drawer).getAllByRole('button', { name: 'Đóng' });
-    expect(x).toHaveClass('sheet-close');
+    const second = await screen.findByRole('dialog', { name: 'Người dùng' });
+    expect(within(second).getByText('2/3')).toBeInTheDocument();
+    expect(within(second).getByText(/Tài khoản đã khóa ở PMH ID — không đăng nhập được/)).toBeInTheDocument();
+    expect(within(second).getByRole('link', { name: 'Xem nhật ký' })).toHaveAttribute('href', '/admin/audit?actor=u-binh');
+    await userEvent.click(within(second).getByRole('button', { name: 'Người kế tiếp' }));
+    await waitFor(() => expect(within(screen.getByRole('dialog', { name: 'Người dùng' })).getByRole('button', { name: 'Người kế tiếp' })).toBeDisabled());
+    const [x] = within(screen.getByRole('dialog', { name: 'Người dùng' })).getAllByRole('button', { name: 'Đóng' });
     await userEvent.click(x);
-    expect(screen.queryByRole('dialog', { name: 'Người dùng' })).toBeNull();
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Người dùng' })).toBeNull());
+    expect(screen.getByTestId('location-search')).not.toHaveTextContent('person=');
     await userEvent.click(screen.getByRole('button', { name: 'Phạm Minh Đức' }));
     await userEvent.click(within(await screen.findByRole('dialog', { name: 'Người dùng' })).getAllByRole('button', { name: 'Đóng' })[1]);
-    expect(screen.queryByRole('dialog', { name: 'Người dùng' })).toBeNull();
-    expect(footer).toBeTruthy();
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Người dùng' })).toBeNull());
+  });
+
+  it('?person=<sub lạ> → không mở panel, gỡ tham số; ?person=u-binh → mở đúng người (F5/dán URL)', async () => {
+    stubUsers([AN, BINH, CHI]);
+    await openUsers('/admin/users?person=u-nobody');
+    await waitFor(() => expect(screen.getByTestId('location-search')).not.toHaveTextContent('person='));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    cleanup();
+    await openUsers('/admin/users?person=u-binh');
+    expect(within(await screen.findByRole('dialog', { name: 'Người dùng' })).getByText(/Tài khoản đã khóa ở PMH ID/)).toBeInTheDocument();
   });
 
   it.each([

@@ -27,7 +27,7 @@
 [data-shell='admin'] .table .dt-group:has(.sm-group[data-tone='g6']) th { background: var(--g6); color: var(--g6-ink); }
 [data-shell='admin'] .table .dt-group:has(.sm-group[data-tone='g7']) th { background: var(--g7); color: var(--g7-ink); }
 [data-shell='admin'] .dt-group .sm-group .sm-group-meta { color: inherit; opacity: .8; }
-[data-shell='admin'] .aj-form { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+[data-shell='admin'] .aj-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-3); }
 [data-shell='admin'] .aj-head { display: flex; align-items: flex-start; gap: var(--s-3); }
 [data-shell='admin'] .aj-head__text { flex: 1; min-width: 0; display: grid; gap: var(--s-1); }
 [data-shell='admin'] .aj-head__tags { display: flex; flex-wrap: wrap; gap: var(--s-1); }

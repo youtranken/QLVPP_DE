@@ -3,6 +3,7 @@
 [data-shell='admin'] .sa-page .seg-m1 { max-width: 100%; overflow-x: auto; }
 [data-shell='admin'] .sa-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
 [data-shell='admin'] .sa-banner { font: var(--t-label); }
+[data-shell='admin'] .sa-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); gap: var(--s-4); align-items: start; }
 [data-shell='admin'] .sa-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-3); padding: var(--s-5); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
 [data-shell='admin'] .sa-card h2 { margin: 0; font: var(--t-h3); }
 [data-shell='admin'] .sa-note { margin: 0; color: var(--c-muted); font: var(--t-sm); }

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -145,6 +145,17 @@ describe('Hành chính toàn màn hình', () => {
     const hits = files.filter((f) => /has-drawer|--drawer-w|usePushContent/.test(readFileSync(f, 'utf8')));
     expect(hits.map((f) => relative(SRC, f))).toEqual([]);
   });
+
+  it('panel cũ 384 px đã gỡ: không còn ui/drawer, cột .pp-side, lớp .drawer — Tổng hợp, Nhân viên, Còn nợ, Giao hàng, Tủ đều dùng OverlayPanel', () => {
+    expect(existsSync(join(SRC, 'ui/drawer.tsx'))).toBe(false);
+    const files = walk(SRC).filter((f) => /\.(css|tsx?)$/.test(f) && !f.endsWith('admin-full-width.test.ts'));
+    const css = /\.drawer(-viewport|-backdrop|-header|-body|-footer)?\s*[{,.[]|pp-side/;
+    const code = /@\/ui\/drawer'|pp-side/;
+    const hits = files.filter((f) => (f.endsWith('.css') ? css : code).test(readFileSync(f, 'utf8')));
+    expect(hits.map((f) => relative(SRC, f))).toEqual([]);
+    const panels = ['features/summary/adjust-drawer.tsx', 'features/directory/user-drawer.tsx', 'features/delivery/deliveries-drawer.tsx', 'features/delivery/people/delivery-people-page.tsx', 'features/stock/movements-drawer.tsx'];
+    for (const f of panels) expect(readFileSync(join(SRC, f), 'utf8'), f).toMatch(/<OverlayPanel/);
+  });
 });
 
 describe('Bố cục theo route', () => {
@@ -152,6 +163,20 @@ describe('Bố cục theo route', () => {
     const css = readFileSync(join(SRC, 'features/admin/config.m1.css'), 'utf8');
     expect(css).toMatch(/\.cf-blocks \{[^}]*grid-template-columns: repeat\(auto-fill, minmax\(min\(100%, 420px\), 1fr\)\)/);
     expect(css).toMatch(/\.cf-block:has\(\.cf-box\) \{ grid-column: 1 \/ -1; \}/);
+  });
+
+  it('Tháng này: dải bước rộng hết, thẻ xếp lưới repeat(auto-fill, minmax(320px, 1fr)), không còn cột phụ cố định', () => {
+    const css = readFileSync(join(SRC, 'features/home/home.m1.css'), 'utf8');
+    expect(css).toMatch(/\.hm-cards \{[^}]*display: grid; grid-template-columns: repeat\(auto-fill, minmax\(min\(100%, 320px\), 1fr\)\)/);
+    expect(css).not.toMatch(/\.hm-side \{/);
+    expect(css).not.toMatch(/\.hm-card--main \{[^}]*flex:/);
+  });
+
+  it('Gửi ADM: hai cột minmax(400px, 1fr) (Trước khi gửi · Bản đã chốt), bảng Số đề nghị rộng hết hàng', () => {
+    const css = readFileSync(join(SRC, 'features/send-adm/send-adm.m1.css'), 'utf8');
+    expect(css).toMatch(/\.sa-cols \{[^}]*display: grid; grid-template-columns: repeat\(auto-fit, minmax\(min\(100%, 400px\), 1fr\)\)/);
+    const draft = readFileSync(join(SRC, 'features/send-adm/send-adm-draft.tsx'), 'utf8');
+    expect(draft).toMatch(/<div className="sa-cols">\s*<SendAdmChecklist[^>]*\/>\s*<ReportSnapshots[^>]*\/>\s*<\/div>\s*<SendAdmOrders/);
   });
 });
 

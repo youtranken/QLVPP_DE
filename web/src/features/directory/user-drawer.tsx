@@ -1,20 +1,18 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Drawer, DrawerClose, DrawerTitle } from '@/ui/drawer';
-import { Icon } from '@/ui/icon';
+import { DialogClose } from '@/ui/dialog';
+import { OverlayPanel, type PanelNav } from '@/ui/overlay-panel';
 import { GroupBadges, LastLogin, StatusBadge, UserAvatar, type UserRow } from './users-table';
 import { nameOf } from './users-rows';
 
 interface Props {
   user: UserRow;
-  position: number;
-  onPrev?: () => void;
-  onNext?: () => void;
+  nav: Omit<PanelNav, 'prevLabel' | 'nextLabel'>;
   onClose: () => void;
 }
 
-export function UserDrawer({ user, position, onPrev, onNext, onClose }: Props) {
+export function UserDrawer({ user, nav, onClose }: Props) {
   const { t } = useTranslation();
   const empty = t('common.empty');
   const facts: [string, ReactNode][] = [
@@ -26,57 +24,43 @@ export function UserDrawer({ user, position, onPrev, onNext, onClose }: Props) {
     [t('users.drawer.lastLogin'), <LastLogin key="l" iso={user.lastLoginAt} />],
   ];
   return (
-    <Drawer open onOpenChange={(o) => !o && onClose()} onPrev={onPrev} onNext={onNext}>
-      <div className="drawer-header dr-drawer-head">
-        <div className="dr-drawer-head__text">
-          <small className="drawer-eyebrow">{t('users.drawer.eyebrow', { k: position })}</small>
-          <DrawerTitle className="sheet-title">{t('users.drawer.title')}</DrawerTitle>
-        </div>
-        <button type="button" className="btn btn--ghost btn--sm dr-icon-btn" aria-label={t('users.drawer.prev')} disabled={!onPrev} onClick={onPrev}>
-          <Icon name="chevup" size={18} />
-        </button>
-        <button type="button" className="btn btn--ghost btn--sm dr-icon-btn" aria-label={t('users.drawer.next')} disabled={!onNext} onClick={onNext}>
-          <Icon name="chev" size={18} />
-        </button>
-        <DrawerClose asChild>
-          <button type="button" className="sheet-close" aria-label={t('common.close')}>
-            <Icon name="x" />
-          </button>
-        </DrawerClose>
-      </div>
-      <div className="drawer-body">
-        <div className="dr-who">
-          <UserAvatar user={user} large />
-          <span className="dr-who__text">
-            <b>{nameOf(user)}</b>
-            <small className="dr-muted">{user.department ?? empty}</small>
-          </span>
-        </div>
-        {user.status === 'locked' && (
-          <p role="note" className="alert alert--warn">
-            {t('users.drawer.lockedWarning')}
-          </p>
-        )}
-        <dl className="dr-facts">
-          {facts.map(([k, v]) => (
-            <div key={k}>
-              <dt>{k}</dt>
-              <dd>{v}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="dr-muted">{t('users.drawer.readonly')}</p>
-        <Link className="btn btn--sm dr-audit-link" to={`/admin/audit?actor=${encodeURIComponent(user.sub)}`}>
-          {t('users.drawer.audit')}
-        </Link>
-      </div>
-      <div className="drawer-footer">
-        <DrawerClose asChild>
+    <OverlayPanel
+      open
+      onClose={onClose}
+      title={t('users.drawer.title')}
+      nav={{ ...nav, prevLabel: t('users.drawer.prev'), nextLabel: t('users.drawer.next') }}
+      footer={
+        <DialogClose asChild>
           <button type="button" className="btn">
             {t('common.close')}
           </button>
-        </DrawerClose>
+        </DialogClose>
+      }
+    >
+      <div className="dr-who">
+        <UserAvatar user={user} large />
+        <span className="dr-who__text">
+          <b>{nameOf(user)}</b>
+          <small className="dr-muted">{user.department ?? empty}</small>
+        </span>
       </div>
-    </Drawer>
+      {user.status === 'locked' && (
+        <p role="note" className="alert alert--warn">
+          {t('users.drawer.lockedWarning')}
+        </p>
+      )}
+      <dl className="dr-facts">
+        {facts.map(([k, v]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="dr-muted">{t('users.drawer.readonly')}</p>
+      <Link className="btn btn--sm dr-audit-link" to={`/admin/audit?actor=${encodeURIComponent(user.sub)}`}>
+        {t('users.drawer.audit')}
+      </Link>
+    </OverlayPanel>
   );
 }

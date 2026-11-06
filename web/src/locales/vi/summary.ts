@@ -103,6 +103,8 @@ const summary = {
       },
     },
     adjust: {
+      prev: 'Phiếu trước',
+      next: 'Phiếu sau',
       loading: 'Điều chỉnh phiếu',
       title: 'Phiếu của {{name}}',
       eyebrow: 'Tháng {{month}}/{{year}} · {{department}}',
