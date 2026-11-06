@@ -57,6 +57,11 @@ const common = {
       active: 'Đang lọc: {{label}} · {{count}}',
       clear: 'Bỏ lọc',
     },
+    errors: {
+      ITEM_ADM_OUT: 'Món này đang đánh "ADM hết hàng" — bỏ đánh dấu trước khi nhập.',
+      ADM_OUT_FINAL: 'Các dòng của món này đã giao/hủy xong — không bỏ đánh dấu được nữa.',
+      ADM_OUT_NOTHING_OPEN: 'Không còn ai chờ món này trong kỳ.',
+    },
     pageActions: 'Thao tác trang',
     dateField: { hint: 'dd/mm/yyyy', invalid: 'Ngày không hợp lệ — nhập dd/mm/yyyy.' },
     table: {

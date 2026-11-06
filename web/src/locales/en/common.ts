@@ -60,6 +60,11 @@ const common: Messages<typeof vi> = {
       active: 'Filtering: {{label}} · {{count}}',
       clear: 'Clear filter',
     },
+    errors: {
+      ITEM_ADM_OUT: 'This item is marked out at ADM — unmark it first.',
+      ADM_OUT_FINAL: "All lines for this item are settled — can't unmark.",
+      ADM_OUT_NOTHING_OPEN: 'Nobody is waiting for this item this period.',
+    },
     pageActions: 'Page actions',
     dateField: { hint: 'dd/mm/yyyy', invalid: 'Invalid date — use dd/mm/yyyy.' },
     table: {

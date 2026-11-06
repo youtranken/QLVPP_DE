@@ -1,3 +1,4 @@
+import { groupCounts as countGroups } from '@/lib/group-counts';
 import { categoryLabel, type Category } from '@/features/catalog/catalog.api';
 import type { MemberItem } from './request.api';
 import { matchesSearch, nameIn } from './request-format';
@@ -60,10 +61,9 @@ export function applyFilters(
 }
 
 export function groupCounts(items: MemberItem[], categories: Category[], lang: string, noneLabel: string, known: ReadonlySet<string>) {
-  const chips = categories
-    .map((c) => ({ id: c.id, label: categoryLabel(c, lang), n: items.filter((i) => i.category_id === c.id).length }))
-    .filter((g) => g.n > 0);
-  const none = items.filter((i) => hasNoGroup(i, known)).length;
+  const counts = countGroups(items, (i) => (hasNoGroup(i, known) ? NO_GROUP : (i.category_id as string)));
+  const chips = categories.map((c) => ({ id: c.id, label: categoryLabel(c, lang), n: counts.get(c.id) ?? 0 })).filter((g) => g.n > 0);
+  const none = counts.get(NO_GROUP) ?? 0;
   return none > 0 ? [...chips, { id: NO_GROUP, label: noneLabel, n: none }] : chips;
 }
 

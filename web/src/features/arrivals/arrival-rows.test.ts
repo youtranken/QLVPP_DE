@@ -1,49 +1,118 @@
 import { describe, expect, it } from 'vitest';
 import type { AdminItem } from '@/features/catalog/catalog.api';
-import type { MonthReport, ReportItemRow } from '@/features/reports/reports.api';
-import { arrivalTag, inactiveCount, parseQty, toArrivalRows } from './arrival-rows';
+import { applyArrivalFilter, arrivalTag, differingRows, fullBatch, isAllArrived, isShort, parseArrivalFilter, parseQty, prefillOf, toArrivalRows } from './arrival-rows';
+import { customRow, plan, planRow } from './arrivals-fixtures';
 
-const row = (over: Partial<ReportItemRow>): ReportItemRow => ({
-  key: 'k', item_id: 'i-a', code: 'A', name: 'Bút', name_en: null, unit: 'cay', requested: 0, backlog_prev: 0, stock: 0, need: 0, ...over,
-});
-const report = (byItem: ReportItemRow[], custom: MonthReport['custom'] = []): MonthReport => ({ ym: '2026-10', byItem, custom, byDepartment: [], issues: [], pending_custom_count: 0 });
-const item = (over: Partial<AdminItem>): AdminItem => ({ id: 'i-a', name: 'Bút', image_file_id: 'f-1', stock_qty: 0, active: true, ...over }) as AdminItem;
+const item = (over: Partial<AdminItem>): AdminItem => ({ id: 'i-x', code: 'X9', name: 'Món thêm', name_en: null, unit: 'cai', category_id: null, image_file_id: null, stock_qty: 4, active: true, usable: true, ...over }) as AdminItem;
 
-describe('toArrivalRows — ví dụ chuẩn (A 3 + B 10, tủ 0)', () => {
-  const rows = toArrivalRows(report([row({ requested: 13, need: 13 })]), [item({})]);
-
-  it('một dòng, need 13: còn chờ 13, qty điền sẵn 13, tag Đủ', () => {
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ item_id: 'i-a', waiting: 13, stock: 0, qty: 13, image_file_id: 'f-1' });
-    expect(arrivalTag(rows[0])).toBe('exact');
+describe('toArrivalRows — nguồn theo bản in', () => {
+  it('giữ ordered/received/remaining của kế hoạch; tủ = stock_qty; reduced theo reduced_after_snapshot', () => {
+    const [r] = toArrivalRows(plan([planRow({ ordered: 12, received: 4, remaining: 8, stock_qty: 3, reduced_after_snapshot: 2 })]), []);
+    expect(r).toMatchObject({ item_id: 'i-a', ordered: 12, received: 4, remaining: 8, stock: 3, reduced: 2, added: false });
   });
 
-  it('sửa qty 10 thì Thiếu, 14 thì Dư', () => {
-    expect(arrivalTag({ ...rows[0], qty: 10 })).toBe('short');
-    expect(arrivalTag({ ...rows[0], qty: 14 })).toBe('over');
+  it('hàng thêm bằng "Thêm món khác": ordered 0, received 0, remaining 0, added; món đã có trong kế hoạch không thêm lần hai', () => {
+    const rows = toArrivalRows(plan([planRow()]), [item({}), item({ id: 'i-a' })]);
+    expect(rows.map((r) => r.item_id)).toEqual(['i-a', 'i-x']);
+    expect(rows[1]).toMatchObject({ ordered: 0, received: 0, remaining: 0, stock: 4, added: true });
   });
 });
 
-describe('toArrivalRows — chọn dòng', () => {
-  it('tháng sau B nợ 3: waiting = requested + backlog_prev', () => {
-    const [r] = toArrivalRows(report([row({ requested: 4, backlog_prev: 3, need: 7 })]), [item({})]);
-    expect(r.waiting).toBe(7);
-    expect(r.qty).toBe(7);
+describe('prefillOf — điền sẵn "Về đợt này"', () => {
+  it('= remaining (không bao giờ need net); ADM hết hàng → 0; hàng thêm → 0', () => {
+    expect(prefillOf(toArrivalRows(plan([planRow({ ordered: 10, received: 4, remaining: 6, stock_qty: 9 })]), [])[0])).toBe(6);
+    expect(prefillOf(toArrivalRows(plan([planRow({ adm_out: true })]), [])[0])).toBe(0);
+    expect(prefillOf(toArrivalRows(plan([]), [item({})])[0])).toBe(0);
   });
 
-  it('bỏ món need 0 và món không có item_id; tủ đủ thì không hiện', () => {
-    const rows = toArrivalRows(report([row({ item_id: 'i-a', requested: 3, stock: 5, need: 0 }), row({ key: 'x', item_id: '', requested: 2, need: 2 })]), [item({})]);
-    expect(rows).toEqual([]);
-  });
-
-  it('stock lấy từ tủ hiện tại của danh mục, need theo báo cáo', () => {
-    const [r] = toArrivalRows(report([row({ requested: 10, stock: 2, need: 8 })]), [item({ stock_qty: 2 })]);
-    expect(r).toMatchObject({ waiting: 10, stock: 2, qty: 8 });
-    expect(arrivalTag(r)).toBe('exact');
+  it('chưa có bản chốt: remaining theo ordered gộp của server', () => {
+    const [r] = toArrivalRows(plan([planRow({ ordered: 10, remaining: 10, stock_qty: 5 })], { snapshot: null }), []);
+    expect(prefillOf(r)).toBe(10);
   });
 });
 
-describe('parseQty — biên ô Về lần này', () => {
+describe('arrivalTag — so qty với remaining', () => {
+  it.each([
+    [10, 10, 'exact', 0],
+    [9, 10, 'short', 1],
+    [11, 10, 'over', 1],
+    [0, 0, 'exact', 0],
+  ])('về %i / còn %i → %s %i', (qty, remaining, kind, n) => {
+    expect(arrivalTag(qty, remaining)).toEqual({ kind, n });
+  });
+});
+
+describe('isShort — "Chỉ món chưa về đủ"', () => {
+  const r = (over: Parameters<typeof planRow>[0]) => toArrivalRows(plan([planRow(over)]), [])[0];
+  it('received 9/10 → có; 10/10 → không; 11/10 → không; ADM hết hàng → không; món ngừng → không', () => {
+    expect(isShort(r({ received: 9 }))).toBe(true);
+    expect(isShort(r({ received: 10 }))).toBe(false);
+    expect(isShort(r({ received: 11 }))).toBe(false);
+    expect(isShort(r({ received: 9, adm_out: true }))).toBe(false);
+    expect(isShort(r({ received: 9, usable: false }))).toBe(false);
+  });
+});
+
+describe('fullBatch — "Đủ hàng"', () => {
+  it('remaining 6/0/4 + 1 ADM + 1 ngừng → 2 dòng, 10 đơn vị; bỏ qua 1 ADM, 1 ngừng, 1 đã về đủ', () => {
+    const rows = toArrivalRows(
+      plan([
+        planRow({ item_id: 'a', remaining: 6 }),
+        planRow({ item_id: 'b', remaining: 0, received: 10 }),
+        planRow({ item_id: 'c', remaining: 4 }),
+        planRow({ item_id: 'd', remaining: 5, adm_out: true }),
+        planRow({ item_id: 'e', remaining: 2, usable: false }),
+      ]),
+      [],
+    );
+    const b = fullBatch(rows);
+    expect(b.lines.map((r) => [r.item_id, r.remaining])).toEqual([
+      ['a', 6],
+      ['c', 4],
+    ]);
+    expect(b.units).toBe(10);
+    expect(b.skip).toEqual({ adm: 1, inactive: 1, done: 1 });
+  });
+});
+
+describe('differingRows — hộp W15', () => {
+  it('liệt kê hàng có qty ≠ remaining; bỏ hàng ADM hết hàng và hàng thêm', () => {
+    const rows = toArrivalRows(plan([planRow({ item_id: 'a', remaining: 7 }), planRow({ item_id: 'b', remaining: 2 }), planRow({ item_id: 'c', remaining: 3, adm_out: true })]), [item({})]);
+    const qty: Record<string, number> = { a: 3, b: 2, c: 0, 'i-x': 5 };
+    expect(differingRows(rows, (r) => qty[r.item_id]).map((d) => [d.row.item_id, d.qty])).toEqual([['a', 3]]);
+  });
+});
+
+describe('isAllArrived — trạng thái "đã về đủ"', () => {
+  it('mọi remaining 0 (1 hàng ADM, 1 ngừng) → đủ; 1 hàng remaining 1 → chưa; chưa có bản → chưa; ngoài DM còn 1 → chưa', () => {
+    const done = [planRow({ remaining: 0, received: 10 }), planRow({ item_id: 'b', adm_out: true }), planRow({ item_id: 'c', usable: false })];
+    expect(isAllArrived(plan(done))).toBe(true);
+    expect(isAllArrived(plan([...done, planRow({ item_id: 'd', remaining: 1 })]))).toBe(false);
+    expect(isAllArrived(plan(done, { snapshot: null }))).toBe(false);
+    expect(isAllArrived(plan(done, { custom: [customRow({ remaining: 1 })] }))).toBe(false);
+    expect(isAllArrived(plan(done, { custom: [customRow({ remaining: 1, adm_out: true })] }))).toBe(true);
+  });
+});
+
+describe('lọc ?q=&g=&short=1', () => {
+  const rows = toArrivalRows(plan([planRow({ item_id: 'a', name: 'Bút bi', category_id: 'c-but', received: 10, remaining: 0 }), planRow({ item_id: 'b', name: 'Kẹp giấy', name_en: 'Paper clip', code: 'K14', category_id: 'c-kep' }), planRow({ item_id: 'c', name: 'Băng keo', category_id: null })]), []);
+  const ids = (q: string) => applyArrivalFilter(rows, parseArrivalFilter(new URLSearchParams(q)), new Set(['c-but', 'c-kep'])).map((r) => r.item_id);
+
+  it('tìm không dấu theo tên vi / en / mã', () => {
+    expect(ids('q=but')).toEqual(['a']);
+    expect(ids('q=clip')).toEqual(['b']);
+    expect(ids('q=k14')).toEqual(['b']);
+  });
+
+  it('g = nhóm; g=none = chưa xếp nhóm; short=1 bỏ hàng đã về đủ; không lọc → mọi hàng', () => {
+    expect(ids('g=c-kep')).toEqual(['b']);
+    expect(ids('g=none')).toEqual(['c']);
+    expect(ids('short=1')).toEqual(['b', 'c']);
+    expect(ids('')).toEqual(['a', 'b', 'c']);
+  });
+});
+
+describe('parseQty — biên ô Về đợt này', () => {
   it.each([
     ['0', 0, null],
     ['1', 1, null],
@@ -54,20 +123,5 @@ describe('parseQty — biên ô Về lần này', () => {
     ['1.5', 0, 'invalid'],
   ])('%j → qty %i lỗi %s', (raw, qty, error) => {
     expect(parseQty(raw)).toEqual({ qty, error });
-  });
-});
-
-describe('món đã ngừng dùng', () => {
-  const rep = report([row({ requested: 5, need: 5 }), row({ key: 'k2', item_id: 'i-off', requested: 2, need: 2 }), row({ key: 'k3', item_id: 'i-off2', requested: 0, need: 0 })]);
-  const items = [item({}), item({ id: 'i-off', active: false }), item({ id: 'i-off2', active: false })];
-
-  it('không có dòng sửa được cho món inactive, đếm đúng món inactive cần mua', () => {
-    expect(toArrivalRows(rep, items).map((r) => r.item_id)).toEqual(['i-a']);
-    expect(inactiveCount(rep, items)).toBe(1);
-  });
-
-  it('name_en lấy từ danh mục', () => {
-    const [r] = toArrivalRows(report([row({ requested: 1, need: 1 })]), [item({ name_en: 'Pen' })]);
-    expect(r.name_en).toBe('Pen');
   });
 });

@@ -1,7 +1,7 @@
 import type { ReactNode, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useUrlSearchBox } from '@/lib/use-url-search-box';
-import { IconSearch } from '@/ui/icons';
+import { GroupChips } from '@/ui/filter/group-chips';
+import { SearchBox } from '@/ui/filter/search-box';
 import type { FilterState, SortKey } from './item-filters';
 import './filter-bar.m1.css';
 
@@ -34,27 +34,18 @@ const SORT_KEYS: [SortKey, string][] = [
 
 export function FilterBar({ filter, groups, total, shown, pickedCount, canFav = false, searchRef, copy, onChange, onClear, onAddCustom }: Props) {
   const { t } = useTranslation();
-  const [text, setText] = useUrlSearchBox(filter.q, (q) => onChange({ q }));
-  const chip = (id: string, label: string, n: number) => (
-    <button key={id} type="button" className="rq-f-chip" aria-pressed={filter.group === id} onClick={() => onChange({ group: id })}>
-      {label} <span className="rq-f-cnt">{n}</span>
-    </button>
-  );
   const narrowed = filter.q !== '' || filter.onlyPicked || filter.group !== 'all';
   return (
     <div className="rq-f">
       <div className="rq-f-row">
-        <label className="rq-f-search">
-          <IconSearch />
-          <input
-            ref={searchRef}
-            type="search"
-            aria-label={t('request.grid.search')}
-            placeholder={t('request.grid.searchPlaceholder')}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-        </label>
+        <SearchBox
+          className="rq-f-search"
+          inputRef={searchRef}
+          label={t('request.grid.search')}
+          placeholder={t('request.grid.searchPlaceholder')}
+          value={filter.q}
+          onChange={(q) => onChange({ q })}
+        />
         <label className="rq-f-sort">
           <span className="sr-only">{t('request.grid.sort')}</span>
           <select value={filter.sort} onChange={(e) => onChange({ sort: e.target.value as SortKey })}>
@@ -73,10 +64,18 @@ export function FilterBar({ filter, groups, total, shown, pickedCount, canFav = 
         </button>
         {copy && <span className="rq-f-copy">{copy}</span>}
       </div>
-      <div className="rq-f-chips" role="group" aria-label={t('request.grid.categories')}>
-        {chip('all', t('request.grid.all'), total)}
-        {groups.map((g) => chip(g.id, g.label, g.n))}
-      </div>
+      <GroupChips
+        className="rq-f-chips"
+        chipClassName="rq-f-chip"
+        countClassName="rq-f-cnt"
+        label={t('request.grid.categories')}
+        allLabel={t('request.grid.all')}
+        total={total}
+        groups={groups}
+        counts={new Map(groups.map((g) => [g.id, g.n]))}
+        value={filter.group}
+        onChange={(group) => onChange({ group })}
+      />
       <p className="rq-f-count" aria-live="polite">
         {t(narrowed ? 'request.grid.countMatch' : 'request.grid.countAll', { n: narrowed ? shown : total })}
       </p>

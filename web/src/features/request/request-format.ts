@@ -54,8 +54,4 @@ export function useAdminContact(): string {
   return useMe().config.admin_contact.trim() || t('request.contactFallback');
 }
 
-export function matchesSearch(text: string, query: string): boolean {
-  const fold = (s: string) =>
-    s.normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/đ/gi, 'd').toLowerCase();
-  return fold(text).includes(fold(query.trim()));
-}
+export { matchesSearch } from '@/lib/search';

@@ -1,200 +1,210 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { apiErrorCode, apiErrorString } from '@/lib/api-error';
-import { useMe } from '@/lib/me';
-import { useSingleFlight } from '@/lib/use-single-flight';
+import { formatVnStamp } from '@/lib/format-time';
+import { groupCounts } from '@/lib/group-counts';
+import { useUrlPatch } from '@/lib/use-url-patch';
 import { shiftYm } from '@/lib/ym';
 import { Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
-import { StatCard } from '@/ui/stat-card';
-import { StatRow } from '@/ui/stat-row';
-import { useAdminItems, type AdminItem } from '@/features/catalog/catalog.api';
+import { useToast } from '@/ui/toast-context';
+import { categoryLabel, useAdminItems, useAllCategories } from '@/features/catalog/catalog.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
-import { useMonthReport } from '@/features/reports/reports.api';
 import { PeriodLockGate } from '@/features/summary/period-lock-gate';
-import { useRefreshAfterFlow } from '@/features/delivery/people/use-refresh-after-flow';
-import { postReceipt } from './arrivals.api';
+import { NO_GROUP, applyArrivalFilter, differingRows, fullBatch, groupOf, isAllArrived, isShort, parseArrivalFilter, toArrivalRows } from './arrival-rows';
 import { ArrivalTable } from './arrival-table';
-import { arrivalTag, needOf, inactiveCount, outsideCount, parseQty, toArrivalRows, waitingOf, type ArrivalRow } from './arrival-rows';
+import { FullConfirm, SaveConfirm } from './arrivals-confirm';
+import { ArrivalsCustom } from './arrivals-custom';
+import { ArrivalsDone } from './arrivals-done';
+import { ArrivalsMakeup } from './arrivals-makeup';
+import { ArrivalsToolbar, type FullBlock } from './arrivals-toolbar';
+import { useAdmOutToggle, useArrivalsPlan } from './use-arrivals-plan';
+import { useArrivalsDraft } from './use-arrivals-draft';
+import { useArrivalsSave, type Notice } from './use-arrivals-save';
 import './arrivals.m1.css';
 
 const UNLOCKED_KEY = 'arrivals.unlocked';
+const CLEAR_FILTER = { q: null, g: null, short: null };
 
-type Notice = { kind: 'saved'; n: number } | { kind: 'stale' } | { kind: 'failed' } | { kind: 'missing'; name: string } | null;
-
-function AddItem({ candidates, onAdd }: { candidates: AdminItem[]; onAdd: (item: AdminItem) => void }) {
-  const { t } = useTranslation();
-  const fmt = useRequestFormat();
-  const [open, setOpen] = useState(false);
-  const [picked, setPicked] = useState('');
-  if (!open) {
+function NoticeLine({ notice, nameOf }: { notice: Notice; nameOf: (id: string) => string }) {
+  const { t, i18n } = useTranslation();
+  if (!notice) return null;
+  if (notice.kind === 'saved') {
     return (
-      <button type="button" className="btn" onClick={() => setOpen(true)}>
-        {t('arrivals.add.open')}
-      </button>
+      <div role="status" className="ar-saved">
+        <span>
+          <b>{t('arrivals.saved', { n: notice.n })}</b> {t('arrivals.savedNext')}
+        </span>
+        <Link className="btn btn--primary" to="/admin/delivery">
+          {t('arrivals.toDelivery')}
+        </Link>
+      </div>
     );
   }
-  const item = candidates.find((c) => c.id === picked);
+  const { code, itemId } = notice;
+  const text =
+    code === 'STALE_UPDATE'
+      ? t('arrivals.stale')
+      : code === 'ITEM_NOT_FOUND' && itemId
+        ? t('arrivals.itemMissing', { name: nameOf(itemId) })
+        : i18n.exists(`common.errors.${code}`)
+          ? t(`common.errors.${code}`)
+          : t('arrivals.saveFailed');
   return (
-    <div className="ar-add">
-      {candidates.length === 0 ? (
-        <p>{t('arrivals.add.none')}</p>
-      ) : (
-        <>
-          <select aria-label={t('arrivals.add.pick')} value={picked} onChange={(e) => setPicked(e.target.value)}>
-            <option value="">{t('arrivals.add.pickPlaceholder')}</option>
-            {candidates.map((c) => (
-              <option key={c.id} value={c.id}>
-                {fmt.name(c)}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className="btn btn--primary"
-            disabled={!item}
-            onClick={() => {
-              if (!item) return;
-              onAdd(item);
-              setPicked('');
-              setOpen(false);
-            }}
-          >
-            {t('arrivals.add.confirm')}
-          </button>
-        </>
-      )}
-    </div>
+    <p role="alert" className="ar-warn">
+      {text}
+    </p>
   );
 }
 
 function ArrivalsBoard({ ym }: { ym: string }) {
-  const { t } = useTranslation();
-  const { csrfToken } = useMe();
+  const { t, i18n } = useTranslation();
   const fmt = useRequestFormat();
-  const report = useMonthReport(ym);
+  const toast = useToast();
+  const planQ = useArrivalsPlan(ym);
   const items = useAdminItems();
-  const flight = useSingleFlight();
-  const refresh = useRefreshAfterFlow();
-  const [raw, setRaw] = useState<Record<string, string>>({});
-  const [added, setAdded] = useState<ArrivalRow[]>([]);
+  const cats = useAllCategories();
+  const [params, patchUrl] = useUrlPatch();
+  const draft = useArrivalsDraft();
+  const saver = useArrivalsSave(ym);
+  const adm = useAdmOutToggle(ym);
+  const [added, setAdded] = useState<string[]>([]);
   const [note, setNote] = useState('');
-  const [notice, setNotice] = useState<Notice>(null);
+  const [dialog, setDialog] = useState<'save' | 'full' | null>(null);
 
-  const base = useMemo(() => (report.data && items.data ? toArrivalRows(report.data, items.data) : []), [report.data, items.data]);
-  const rows = useMemo(() => {
-    const stockOf = new Map((items.data ?? []).map((i) => [i.id, i.stock_qty]));
-    // Món thêm tay mà báo cáo (sau khi tải lại) đã có thì lấy dòng của báo cáo: không để trùng item_id
-    const inBase = new Set(base.map((r) => r.item_id));
-    return [...base, ...added.filter((r) => !inBase.has(r.item_id))].map((r) => {
-      const stock = stockOf.get(r.item_id) ?? r.stock;
-      const text = raw[r.item_id];
-      return text === undefined ? { ...r, stock } : { ...r, stock, qty: parseQty(text).qty };
-    });
-  }, [base, added, raw, items.data]);
+  if (planQ.isError || items.isError || cats.isError) return <LoadError onRetry={() => void Promise.all([planQ.refetch(), items.refetch(), cats.refetch()])} />;
+  if (!planQ.data || !items.data || !cats.data) return <Loading />;
+  const plan = planQ.data;
+  const filter = parseArrivalFilter(params);
+  const catById = new Map(cats.data.map((c) => [c.id, c]));
+  const known = new Set(catById.keys());
+  const labelOf = (g: string) => {
+    const c = catById.get(g);
+    return c ? categoryLabel(c, i18n.language) : t('arrivals.group.none');
+  };
 
-  if (report.isError || items.isError) return <LoadError onRetry={() => void Promise.all([report.refetch(), items.refetch()])} />;
-  if (!report.data || !items.data) return <Loading />;
+  const rows = toArrivalRows(plan, added.flatMap((id) => items.data.filter((i) => i.id === id)));
+  const done = isAllArrived(plan);
+  // Đã về đủ: chỉ còn bày hàng thêm tay và món ngừng còn phần đặt chưa về
+  const tableRows = done ? rows.filter((r) => r.added || (!r.usable && !r.adm_out && r.remaining > 0)) : rows;
+  const visible = applyArrivalFilter(tableRows, filter, known);
+  const counts = groupCounts(rows, (r) => groupOf(r, known), NO_GROUP);
+  const groups = [...counts.keys()].map((id) => ({ id, label: labelOf(id) }));
+  const sections = groups
+    .map((g) => ({ ...g, rows: visible.filter((r) => groupOf(r, known) === g.id), all: tableRows.filter((r) => groupOf(r, known) === g.id) }))
+    .filter((s) => s.rows.length > 0);
 
-  const invalid = rows.some((r) => parseQty(raw[r.item_id] ?? String(r.qty)).error);
-  const toSend = rows.filter((r) => r.qty > 0);
-  const needing = rows.filter((r) => needOf(r) > 0);
-  const covered = needing.filter((r) => arrivalTag(r) !== 'short').length;
-  const units = rows.reduce((sum, r) => sum + r.qty, 0);
+  const batch = fullBatch(rows);
+  const customLeft = plan.custom.filter((c) => c.remaining > 0 && !c.adm_out);
+  const fullBlock: FullBlock = !plan.snapshot ? 'noSnapshot' : saver.pending ? 'sending' : batch.lines.length === 0 && customLeft.length === 0 ? 'allDone' : null;
+  const toSend = tableRows.filter((r) => !r.adm_out && draft.qtyOf(r) > 0).map((row) => ({ row, qty: draft.qtyOf(row) }));
+  const invalid = tableRows.some((r) => draft.errorOf(r));
+  const diffs = differingRows(tableRows, draft.qtyOf);
   const shown = new Set(rows.map((r) => r.item_id));
-  const candidates = items.data.filter((i) => i.active && !shown.has(i.id));
-  const outside = outsideCount(report.data);
-  const inactive = inactiveCount(report.data, items.data);
+  const candidates = items.data
+    .filter((i) => i.usable && !shown.has(i.id))
+    .map((i) => ({ id: i.id, label: fmt.name(i), group: labelOf(groupOf(i, known)), search: [i.name, i.name_en, i.code].filter(Boolean).join(' ') }));
 
-  const change = (id: string, value: string) => {
-    setRaw((prev) => ({ ...prev, [id]: value }));
-    setNotice(null);
-  };
-  const reset = () => {
-    setRaw({});
+  const afterSave = () => {
+    draft.reset();
+    setNote('');
     setAdded([]);
-    setNotice(null);
   };
-  const add = (item: AdminItem) => {
-    setAdded((prev) => [...prev, { item_id: item.id, name: item.name, name_en: item.name_en, unit: item.unit, image_file_id: item.image_file_id, waiting: report.data ? waitingOf(report.data, item.id) : 0, stock: item.stock_qty, qty: 1 }]);
-    setRaw((prev) => ({ ...prev, [item.id]: '1' }));
+  const doSave = async () => {
+    await saver.save(toSend, note, afterSave);
+    setDialog(null);
   };
-
-  const save = () =>
-    flight.run(async () => {
-      const lines = toSend.map((r) => ({ item_id: r.item_id, qty: r.qty, expected_stock_qty: r.stock }));
-      try {
-        await postReceipt({ lines, ym, ...(note.trim() ? { note: note.trim() } : {}) }, csrfToken);
-        // Đợt đã lưu: dòng ở lại nhưng số về về 0 (không lưu đôi); "Nhập đợt tiếp" điền lại phần còn thiếu
-        setRaw(Object.fromEntries(rows.map((r) => [r.item_id, '0'])));
-        setAdded(rows.map((r) => ({ ...r, qty: 0 })));
-        setNote('');
-        setNotice({ kind: 'saved', n: lines.length });
-        await refresh();
-      } catch (e) {
-        if (apiErrorCode(e) === 'STALE_UPDATE') {
-          setNotice({ kind: 'stale' });
-          await Promise.all([items.refetch(), report.refetch()]);
-        } else if (apiErrorCode(e) === 'ITEM_NOT_FOUND') {
-          const id = apiErrorString(e, 'item_id');
-          const row = rows.find((r) => r.item_id === id);
-          setNotice({ kind: 'missing', name: row ? fmt.name(row) : (id ?? '') });
-          await Promise.all([items.refetch(), report.refetch()]);
-        } else {
-          setNotice({ kind: 'failed' });
-        }
-      }
+  const doFull = async () => {
+    await saver.full(batch.lines, customLeft, () => {
+      draft.reset();
+      toast.show({ text: t('arrivals.full.done', { x: batch.lines.length }), tone: 'ok' });
     });
+    setDialog(null);
+  };
+  const toggleAdm = async (key: string, on: boolean) => {
+    const code = await adm.toggle(key, on);
+    draft.clear(key);
+    saver.setNotice(code ? { kind: 'error', code } : null);
+  };
+  const afterSide = async (code: string | null, saved?: number) => {
+    saver.setNotice(code ? { kind: 'error', code } : null);
+    if (!code && saved) toast.show({ text: t('arrivals.makeup.saved', { n: saved }), tone: 'ok' });
+    await saver.refresh();
+  };
+  const nameOf = (id: string) => {
+    const r = rows.find((x) => x.item_id === id);
+    return r ? fmt.name(r) : id;
+  };
 
   return (
     <>
-      {notice?.kind === 'saved' && (
-        <div role="status" className="ar-saved">
-          <span>
-            <b>{t('arrivals.saved', { n: notice.n })}</b> {t('arrivals.savedNext')}
-          </span>
-          <button type="button" className="btn" onClick={reset}>
-            {t('arrivals.nextBatch')}
-          </button>
-          <Link className="btn btn--primary" to="/admin/delivery">
-            {t('arrivals.toDelivery')}
-          </Link>
-        </div>
-      )}
-      {(notice?.kind === 'stale' || notice?.kind === 'failed' || notice?.kind === 'missing') && (
-        <p role="alert" className="ar-warn">
-          {notice.kind === 'missing' ? t('arrivals.itemMissing', { name: notice.name }) : t(notice.kind === 'stale' ? 'arrivals.stale' : 'arrivals.saveFailed')}
-        </p>
-      )}
-      <StatRow>
-        <StatCard label={t('arrivals.stats.toReceive')} icon="pkg" value={needing.length} unit={t('arrivals.stats.unit')} sub={t('arrivals.stats.toReceiveSub')} />
-        <StatCard label={t('arrivals.stats.units')} icon="pkgplus" value={units} unit={t('arrivals.stats.unitsUnit')} sub={t('arrivals.stats.unitsSub')} />
-        <StatCard label={t('arrivals.stats.done')} icon="truck" value={covered} unit={t('arrivals.stats.unit')} sub={t('arrivals.stats.doneSub')} />
-      </StatRow>
-      <section className="ar-card">
-        <div className="ar-tools">
-          <div className="field">
-            <label htmlFor="ar-note" className="field-label">
-              {t('arrivals.note.label')}
-            </label>
-            <input id="ar-note" type="text" maxLength={500} placeholder={t('arrivals.note.placeholder')} value={note} onChange={(e) => setNote(e.target.value)} />
+      <NoticeLine notice={saver.notice} nameOf={nameOf} />
+      <ArrivalsToolbar
+        plan={plan}
+        filter={filter}
+        groups={groups}
+        counts={counts}
+        total={rows.length}
+        shown={visible.length}
+        shortCount={rows.filter(isShort).length}
+        reducedCount={rows.filter((r) => r.reduced > 0).length}
+        fullBlock={fullBlock}
+        candidates={candidates}
+        onFilter={(patch) => patchUrl(patch, true)}
+        onFull={() => setDialog('full')}
+        onAdd={(id) => setAdded((prev) => [...prev, id])}
+      />
+      {done && <ArrivalsDone plan={plan} ym={ym} admBusy={adm.busy} onToggleAdm={(key, on) => void toggleAdm(key, on)} />}
+      {(!done || tableRows.length > 0) && (
+        <section className="ar-card">
+          {tableRows.length === 0 ? (
+            <p className="ar-empty">{t('arrivals.table.empty')}</p>
+          ) : visible.length === 0 ? (
+            <div className="ar-nomatch">
+              <b>{t('arrivals.filter.none')}</b>
+              <button type="button" className="btn" onClick={() => patchUrl(CLEAR_FILTER, true)}>
+                {t('arrivals.filter.clear')}
+              </button>
+            </div>
+          ) : (
+            <ArrivalTable sections={sections} draft={draft} admBusy={adm.busy} onToggleAdm={(r) => void toggleAdm(r.item_id, !r.adm_out)} />
+          )}
+          <div className="ar-foot">
+            <div className="field">
+              <label htmlFor="ar-note" className="field-label">
+                {t('arrivals.note.label')}
+              </label>
+              <input id="ar-note" type="text" maxLength={500} placeholder={t('arrivals.note.placeholder')} value={note} onChange={(e) => setNote(e.target.value)} />
+            </div>
+            <button type="button" className="btn" onClick={draft.reset}>
+              {t('arrivals.reset')}
+            </button>
+            <button type="button" className="btn btn--primary" disabled={invalid || toSend.length === 0 || saver.pending} onClick={() => (diffs.length > 0 ? setDialog('save') : void doSave())}>
+              {t('arrivals.save')}
+            </button>
           </div>
-          <AddItem key={added.length} candidates={candidates} onAdd={add} />
-        </div>
-        {rows.length === 0 ? <p className="ar-empty">{t('arrivals.table.empty')}</p> : <ArrivalTable rows={rows} raw={raw} onChange={change} />}
-        {inactive > 0 && <p className="ar-outside">{t('arrivals.inactive', { n: inactive })}</p>}
-        {outside > 0 && <p className="ar-outside">{t('arrivals.outside', { n: outside })}</p>}
-        <div className="ar-foot">
-          <button type="button" className="btn" onClick={reset}>
-            {t('arrivals.reset')}
-          </button>
-          <button type="button" className="btn btn--primary" disabled={invalid || toSend.length === 0 || flight.pending} onClick={() => void save()}>
-            {t('arrivals.save')}
-          </button>
-        </div>
-      </section>
+        </section>
+      )}
+      <ArrivalsCustom ym={ym} rows={plan.custom} admBusy={adm.busy} onToggleAdm={(key, on) => void toggleAdm(key, on)} onSaved={afterSide} />
+      <ArrivalsMakeup groups={plan.makeup} onDone={afterSide} />
+      {dialog === 'save' && <SaveConfirm diffs={diffs} pending={saver.pending} onBack={() => setDialog(null)} onSave={() => void doSave()} />}
+      {dialog === 'full' && plan.snapshot && (
+        <FullConfirm
+          s={{
+            items: batch.lines.length,
+            units: batch.units,
+            time: formatVnStamp(plan.snapshot.created_at),
+            skip: batch.skip,
+            custom: customLeft.length,
+            reduced: batch.lines.filter((r) => r.reduced > 0).length,
+            replacesDraft: draft.typed(rows),
+          }}
+          pending={saver.pending}
+          onBack={() => setDialog(null)}
+          onConfirm={() => void doFull()}
+        />
+      )}
     </>
   );
 }
@@ -207,7 +217,15 @@ export function ArrivalsPage() {
   return (
     <div className="ct-page">
       <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.arrivals')]} title={title} description={t('arrivals.description')} />
-      {current.isError ? <LoadError onRetry={() => void current.refetch()} /> : lockedYm ? <PeriodLockGate key={lockedYm} ym={lockedYm} unlockedKey={UNLOCKED_KEY}><ArrivalsBoard ym={lockedYm} /></PeriodLockGate> : <Loading />}
+      {current.isError ? (
+        <LoadError onRetry={() => void current.refetch()} />
+      ) : lockedYm ? (
+        <PeriodLockGate key={lockedYm} ym={lockedYm} unlockedKey={UNLOCKED_KEY}>
+          <ArrivalsBoard ym={lockedYm} />
+        </PeriodLockGate>
+      ) : (
+        <Loading />
+      )}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { groupCounts as countGroups } from '@/lib/group-counts';
 import { compareCategories, toneAtRank, type Tone } from '@/lib/group-tone';
 import { matchesSearch } from '@/features/request/request-format';
 import type { AdminItem, Category } from './catalog.api';
@@ -73,8 +74,4 @@ export function applyView(rows: CatalogRow[], view: CatalogView): CatalogRow[] {
   );
 }
 
-export function groupCounts(rows: CatalogRow[]): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const r of rows) counts.set(r.group, (counts.get(r.group) ?? 0) + 1);
-  return counts;
-}
+export const groupCounts = (rows: CatalogRow[]): Map<string, number> => countGroups(rows, (r) => r.group);
