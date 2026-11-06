@@ -8,10 +8,12 @@ import type { OrderQty } from '@/features/reports/use-order-qty';
 import { OrderCell } from './order-cell';
 import { orderDiff } from './order-formula';
 import { orderOf, type OrderRow } from './send-adm-rows';
+import { useRegistrants } from './use-registrants';
+import { WhoRegistered } from './send-adm-who';
 
 type Filter = 'all' | DiffTone;
 
-export function ItemCell({ row }: { row: OrderRow }) {
+export function ItemCell({ row, who }: { row: OrderRow; who?: { ym: string; people: number | undefined } }) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   return (
@@ -27,6 +29,7 @@ export function ItemCell({ row }: { row: OrderRow }) {
               <small>{t('warn.W3')}</small>
             </>
           )}
+          {who && <WhoRegistered ym={who.ym} itemKey={row.key} people={who.people} />}
         </span>
       </div>
     </td>
@@ -55,8 +58,9 @@ function Toolbar({ counts, filter, onFilter }: { counts: ReturnType<typeof useTo
   );
 }
 
-export function SendAdmOrders({ rows, qty }: { rows: OrderRow[]; qty: OrderQty }) {
+export function SendAdmOrders({ ym, rows, qty }: { ym: string; rows: OrderRow[]; qty: OrderQty }) {
   const { t } = useTranslation();
+  const people = useRegistrants(ym);
   const [filter, setFilter] = useState<Filter>('all');
   const counts = useTones(rows, qty);
   const shown = filter === 'all' ? rows : rows.filter((r) => counts.tones.get(r.key) === filter);
@@ -88,7 +92,7 @@ export function SendAdmOrders({ rows, qty }: { rows: OrderRow[]; qty: OrderQty }
                 const vals = [r.registered, ...(delivered ? [r.delivered] : []), r.backlog, r.stock, r.want];
                 return (
                   <tr key={r.key}>
-                    <ItemCell row={r} />
+                    <ItemCell row={r} who={{ ym, people: people.get(r.key) }} />
                     {vals.map((v, i) => (
                       <td key={cols[i]} className="n" data-label={cols[i]}>{v === null ? '—' : n(v)}</td>
                     ))}

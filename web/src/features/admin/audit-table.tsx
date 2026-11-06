@@ -55,7 +55,8 @@ function useColumns() {
         id: 'action',
         header: t('audit.page.colAction'),
         cell: ({ row: { original: e } }) => {
-          return <span className="au-action">{auditActionLabel(t, e.action)}</span>;
+          const label = e.batch ? t('audit.batch.title', { month: Number(e.batch.ym.slice(5)), n: e.batch.items.length, u: e.batch.units }) : auditActionLabel(t, e.action);
+          return <span className="au-action">{label}</span>;
         },
       },
       {

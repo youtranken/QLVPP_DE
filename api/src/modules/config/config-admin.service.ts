@@ -1,8 +1,11 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { inArray, sql } from 'drizzle-orm';
 import { DRIZZLE_DB } from '../../database/database.module';
-import type { Database } from '../../database/database.module';
+import type { Database, Tx } from '../../database/database.module';
+import { ClockService } from '../../common/clock.service';
+import { addMonths } from '../../common/period';
 import { AuditWriterService } from '../audit/audit-writer.service';
+import { PeriodsService } from '../periods/periods.service';
 import { configTable } from './config.schema';
 import { reminderConflict, validateConfigPatch } from './config-validation';
 import type { ConfigPatch, ReminderWindow } from './config-validation';
@@ -42,6 +45,8 @@ export class ConfigAdminService {
     @Inject(DRIZZLE_DB) private readonly db: Database,
     private readonly audit: AuditWriterService,
     private readonly config: SystemConfigService,
+    private readonly periods: PeriodsService,
+    private readonly clock: ClockService,
   ) {}
 
   async listEditable(): Promise<Record<string, unknown>> {
@@ -73,6 +78,7 @@ export class ConfigAdminService {
       );
       const conflict = reminderConflict(patch, reminderWindowOf(current));
       if (conflict) throw invalid(conflict);
+      const effective = await this.effectiveFrom(tx, patch);
       const before = Object.fromEntries(keys.map((k) => [k, current[k]]));
       const after: Record<string, unknown> = {};
       for (const key of keys) {
@@ -88,10 +94,24 @@ export class ConfigAdminService {
         action: 'config.updated',
         objectType: 'config',
         objectId: keys.join(','),
-        detail: { before, after },
+        detail: {
+          before,
+          after,
+          ...(effective ? { effective_from_ym: effective } : {}),
+        },
       });
     });
     this.config.clearCache();
     return this.listEditable();
+  }
+
+  // Hạn mới chỉ áp cho kỳ tạo sau (BR-2): chốt dòng kỳ đang mở theo hạn cũ trước khi ghi, kỳ kế tiếp nhận hạn mới
+  private async effectiveFrom(
+    tx: Tx,
+    patch: ConfigPatch,
+  ): Promise<string | null> {
+    if (patch.registration_last_day === undefined) return null;
+    const open = await this.periods.openPeriod(tx, this.clock.now());
+    return addMonths(open.ym, 1);
   }
 }

@@ -84,3 +84,7 @@
   [data-shell='admin'] .sa-orders td.n { text-align: left; }
   [data-shell='admin'] .sa-qty input { width: 100%; text-align: left; }
 }
+[data-shell='admin'] .sa-who { justify-self: start; margin-top: var(--s-1); font: var(--t-sm); font-weight: 700; color: var(--c-acc); }
+@media (max-width: 767px) {
+  [data-shell='admin'] .sa-who { display: inline-flex; align-items: center; min-height: var(--hit); }
+}

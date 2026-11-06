@@ -50,17 +50,8 @@ export class StockReceiptService {
     return this.db.transaction(async (tx) => {
       await this.stock.lockItemsWithin(tx, ids);
       await this.assertReceivable(tx, body.ym, lines);
-      const items: ReceiptResult['items'] = [];
-      for (const l of lines) {
-        const result = await this.stock.applyChangeWithin(
-          tx,
-          l.item_id,
-          { delta: l.qty, reason: 'purchase', note, receiptYm: body.ym },
-          actor,
-        );
-        items.push({ item_id: l.item_id, ...result });
-      }
-      await this.audit.appendWithin(tx, {
+      // Dòng gộp ghi trước để từng món mang id của nó (batch_id) — Nhật ký hiện một lần Lưu thành một dòng
+      const batchId = await this.audit.appendWithin(tx, {
         actor,
         action: 'stock.receipt',
         objectType: 'period',
@@ -70,6 +61,22 @@ export class StockReceiptService {
           note: body.note ?? null,
         },
       });
+      const items: ReceiptResult['items'] = [];
+      for (const l of lines) {
+        const result = await this.stock.applyChangeWithin(
+          tx,
+          l.item_id,
+          {
+            delta: l.qty,
+            reason: 'purchase',
+            note,
+            receiptYm: body.ym,
+            batchId,
+          },
+          actor,
+        );
+        items.push({ item_id: l.item_id, ...result });
+      }
       return { items };
     });
   }

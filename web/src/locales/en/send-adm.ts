@@ -32,6 +32,7 @@ const sendAdm: Messages<typeof vi> = {
       invalid: 'From 0 to 99,999.',
       outside: 'Off-catalog',
       empty: 'No items to request for this period.',
+      who: 'See who signed up ({{count}})',
       filter: { label: 'Filter by difference', all: 'All', short: 'Short', surplus: 'Extra', ok: 'Enough' },
     },
     order: {

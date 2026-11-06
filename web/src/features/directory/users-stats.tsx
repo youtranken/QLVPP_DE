@@ -1,26 +1,42 @@
 import { useTranslation } from 'react-i18next';
 import { StatCard } from '@/ui/stat-card';
 import { StatRow } from '@/ui/stat-row';
-import { USERS_FILTERS, type UsersFilter } from './users-rows';
+import type { UsersFilter } from './users-rows';
 
-const ICON = { active: 'users', never: 'clock', locked: 'lock' } as const;
+interface RegCard {
+  month: number;
+  // null: đang tải hoặc lỗi → ô ghi "—"
+  count: number | null;
+  pressed: boolean;
+  onClick: () => void;
+}
 
-export function UsersStats({ stats, filter, onFilter }: { stats: Record<UsersFilter, number>; filter: UsersFilter | null; onFilter: (f: UsersFilter) => void }) {
+export function UsersStats({ stats, filter, onFilter, reg }: { stats: Record<UsersFilter, number>; filter: UsersFilter | null; onFilter: (f: UsersFilter) => void; reg: RegCard | null }) {
   const { t } = useTranslation();
   return (
     <StatRow>
-      {USERS_FILTERS.map((f) => (
+      <StatCard label={t('users.stats.active')} icon="users" value={stats.active} unit={t('users.stats.people')} pressed={filter === 'active'} onClick={() => onFilter('active')} />
+      {reg && (
         <StatCard
-          key={f}
-          label={t(`users.stats.${f}`)}
-          icon={ICON[f]}
-          value={stats[f]}
-          unit={t('users.stats.people')}
-          tone={f === 'locked' && stats[f] > 0 ? 'danger' : 'neutral'}
-          pressed={filter === f}
-          onClick={() => onFilter(f)}
+          label={t('users.reg.no', { month: reg.month })}
+          icon="clock"
+          value={reg.count ?? t('common.empty')}
+          unit={reg.count === null ? undefined : t('users.stats.people')}
+          tone="warn"
+          pressed={reg.pressed}
+          onClick={reg.onClick}
         />
-      ))}
+      )}
+      <StatCard
+        label={t('users.stats.locked')}
+        icon="lock"
+        value={stats.locked}
+        unit={t('users.stats.people')}
+        tone={stats.locked > 0 ? 'danger' : 'neutral'}
+        pressed={filter === 'locked'}
+        onClick={() => onFilter('locked')}
+      />
     </StatRow>
   );
 }
+

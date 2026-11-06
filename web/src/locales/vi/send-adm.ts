@@ -29,6 +29,7 @@ const sendAdm = {
       invalid: 'Từ 0 đến 99 999.',
       outside: 'Ngoài danh mục',
       empty: 'Kỳ này chưa có món nào để đề nghị.',
+      who: 'Xem ai đăng ký ({{count}} người)',
       filter: { label: 'Lọc theo lệch số', all: 'Tất cả', short: 'Thiếu', surplus: 'Dư', ok: 'Đủ' },
     },
     order: {

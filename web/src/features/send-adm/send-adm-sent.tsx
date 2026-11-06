@@ -11,6 +11,7 @@ import { ReportSnapshots } from '@/features/reports/report-snapshots';
 import type { SnapshotDownload } from '@/features/reports/use-snapshot';
 import { useNewDraftConfirm } from './use-send-adm-confirms';
 import { ItemCell } from './send-adm-orders';
+import { useRegistrants } from './use-registrants';
 import { basisNeedOf, carryFromSent, sentOrderOf, toOrderRows } from './send-adm-rows';
 import type { SendState } from './use-send-state';
 import type { SentSnapshot } from './send-adm.api';
@@ -40,6 +41,7 @@ function W7({ sent, now }: { sent: number; now: number }) {
 function SentTable({ data, report, items, delivered }: { data: SnapshotData; report: MonthReport; items: AdminItem[]; delivered: Record<string, number> }) {
   const { t } = useTranslation();
   const rows = useMemo(() => toOrderRows(data, items), [data, items]);
+  const people = useRegistrants(report.ym);
   const live = useMemo(() => new Map([...report.byItem, ...report.custom].map((r) => [r.key, activeNeed(r) + (delivered[r.key] ?? 0)])), [report, delivered]);
   const source = new Map([...data.byItem, ...data.custom].map((r) => [r.key, r]));
   const n = (v: number) => v.toLocaleString('vi-VN');
@@ -62,7 +64,7 @@ function SentTable({ data, report, items, delivered }: { data: SnapshotData; rep
             const now = live.get(r.key) ?? delivered[r.key] ?? 0;
             return (
               <tr key={r.key}>
-                <ItemCell row={r} />
+                <ItemCell row={r} who={{ ym: report.ym, people: people.get(r.key) }} />
                 <td className="n" data-label={t('sendAdm.orders.need')}>{n(r.want)}</td>
                 <td className="n" data-label={t('sendAdm.orders.stock')}>{r.stock === null ? '—' : n(r.stock)}</td>
                 <td className="n sa-qty" data-label={t('sendAdm.orders.qty')}>

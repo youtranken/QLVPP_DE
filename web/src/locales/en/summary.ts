@@ -95,6 +95,8 @@ const summary: Messages<typeof vi> = {
       groupLow: '{{k}} low/out of stock',
       custom: 'Off-catalog',
       uncategorized: 'No group',
+      onlyItem: 'Only item: {{name}}',
+      onlyItemGone: 'Only the selected item',
       toReports: 'See quantities to buy in Reports',
       emptyItems: 'No items requested yet.',
     },

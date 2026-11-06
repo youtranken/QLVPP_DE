@@ -32,18 +32,23 @@ export function useSummaryParams(openYm: string | undefined) {
     if (Object.keys(patch).length) update(patch, true);
   }, [openYm, ym, asked, lockedOnlyInOpen, update]);
 
+  // ?item= đến từ "Xem ai đăng ký" ở Gửi ADM: Tổng hợp theo món lọc sẵn một món
+  const item = view === 'item' ? params.get('item') || null : null;
+
   return {
     ym,
     view,
     filter,
+    item,
     presetReason: (filter === 'left' ? 'user_left' : undefined) as AdjustReason | undefined,
     q: params.get('q') ?? '',
     requestId: params.get('request'),
     setMonth: (next: string) =>
       update({ ym: next, request: null, ...(next === openYm && (LOCKED_ONLY.includes(raw) || left) ? { filter: null, left: null } : {}) }),
-    setView: (next: SummaryView) => update({ view: next === 'item' ? 'item' : null, filter: null, left: null }),
+    setView: (next: SummaryView) => update({ view: next === 'item' ? 'item' : null, filter: null, left: null, item: null }),
     toggleFilter: (next: PageFilter) =>
-      update({ view: next === 'low' ? 'item' : null, filter: filter === next ? null : next, left: null }),
+      update({ view: next === 'low' ? 'item' : null, filter: filter === next ? null : next, left: null, item: null }),
+    clearItem: () => update({ item: null }),
     clearFilter: () => update({ filter: null, left: null }),
     setQ: (next: string) => update({ q: next || null }, true),
     openAdjust: (id: string) => update({ request: id }),

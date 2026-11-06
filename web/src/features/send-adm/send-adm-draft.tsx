@@ -140,7 +140,7 @@ export function SendAdmDraft({ head, report, items, summary, boxes, sent, carry,
         <PreviewButton rows={formRows} signatureBoxes={boxes} ym={report.ym} />
       </div>
       <SendAdmChecklist ym={report.ym} summary={summary} />
-      <SendAdmOrders rows={rows} qty={qty} />
+      <SendAdmOrders ym={report.ym} rows={rows} qty={qty} />
       <ReportSnapshots ym={report.ym} files={files} />
       {snap.asking && <PrintConfirm kind={snap.asking} ym={report.ym} pending={report.pending_custom_count} changes={changes} sentAt={sent?.created_at ?? null} onConfirm={snap.confirm} onCancel={snap.cancel} />}
     </div>

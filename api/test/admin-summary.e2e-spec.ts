@@ -132,6 +132,15 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
     ]);
   });
 
+  it('unregistered kèm registered_subs = S ∩ chủ phiếu (trang Nhân viên tô Đã đăng ký/Chưa); người ngoài S không ở danh sách nào', async () => {
+    const body = (await asAdmin(`/periods/${YM}/unregistered`).expect(200))
+      .body as { items: { sub: string }[]; registered_subs: string[] };
+    expect([...body.registered_subs].sort()).toEqual([U1, U2].sort());
+    expect(body.items.map((u) => u.sub)).toEqual([U3]);
+    for (const outside of [LOCKED, OUTSIDER])
+      expect(body.registered_subs).not.toContain(outside);
+  });
+
   it('authorized_groups rỗng → gate tắt: người ngoài group vào tập sống, locked vẫn bị loại', async () => {
     await f.setGroups([]);
     try {

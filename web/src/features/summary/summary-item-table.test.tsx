@@ -1,13 +1,13 @@
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, renderWithI18n, screen, within } from '@/test/test-utils';
+import { jsonResponse, renderWithI18n, screen, userEvent, within } from '@/test/test-utils';
 import { SummaryItemTable } from './summary-item-table';
 import { SUMMARY_ITEMS, stubSummaryApi } from './summary-fixtures';
 
-function renderTable(props: { q?: string; lowOnly?: boolean } = {}) {
+function renderTable(props: { q?: string; lowOnly?: boolean; item?: string; onClearItem?: () => void } = {}) {
   renderWithI18n(
     <MemoryRouter>
-      <SummaryItemTable ym="2026-11" q={props.q ?? ''} lowOnly={props.lowOnly ?? false} />
+      <SummaryItemTable ym="2026-11" q={props.q ?? ''} lowOnly={props.lowOnly ?? false} item={props.item ?? null} onClearItem={props.onClearItem ?? (() => undefined)} />
     </MemoryRouter>,
   );
 }
@@ -95,5 +95,25 @@ describe('SummaryItemTable — bảng theo món', () => {
     stubSummaryApi((url) => (url === '/api/item-categories?all=1' ? jsonResponse(200, []) : undefined));
     renderTable();
     expect(await screen.findByRole('rowheader', { name: /^Chưa xếp nhóm/ })).toHaveTextContent('3 món');
+  });
+
+  it('?item= (từ Gửi ADM "Xem ai đăng ký"): chỉ hàng của món đó, kèm nút "Chỉ món: Giấy A4" đang bật; bấm → bỏ lọc', async () => {
+    stubSummaryApi();
+    const clear = vi.fn();
+    renderTable({ item: 'i-a4', onClearItem: clear });
+    expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
+    expect(screen.queryByText('Giấy note')).toBeNull();
+    expect(screen.queryByText('Bút bi xanh')).toBeNull();
+    const chip = screen.getByRole('button', { name: 'Chỉ món: Giấy A4' });
+    expect(chip).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(chip);
+    expect(clear).toHaveBeenCalledOnce();
+  });
+
+  it('?item= không khớp món nào của kỳ → bảng trống "Không có món nào khớp", vẫn có nút bỏ lọc', async () => {
+    stubSummaryApi();
+    renderTable({ item: 'i-gone' });
+    expect(await screen.findByText('Không có món nào khớp')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Chỉ món/ })).toBeInTheDocument();
   });
 });

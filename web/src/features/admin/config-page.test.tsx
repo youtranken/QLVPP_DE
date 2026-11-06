@@ -242,4 +242,64 @@ describe('Cấu hình · Thay đổi gần đây', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Lưu liên hệ' }));
     await vi.waitFor(() => expect(auditCalls()).toBe(before + 1));
   });
+
+  describe('ngày hạn nói rõ kỳ áp dụng', () => {
+    const JAN = { ym: '2027-01', deadline: '2027-01-10T17:00:00.000Z', is_open: true, days_left: 5, previous: null };
+    const LINE = 'Kỳ tháng 01 (đang mở) vẫn khóa 00:00 ngày 11/01. Áp dụng từ kỳ tháng 02: khóa 00:00 ngày 09/02.';
+    const lastDay = () => screen.getByLabelText('Hạn đăng ký (ngày)');
+    const openJan = (put?: Parameters<typeof stubConfigApi>[0]) =>
+      stubConfigApi(put, (url) => (url === '/api/periods/current' ? jsonResponse(200, JAN) : undefined));
+
+    it('kỳ mở 01, hạn 10 → 8: dòng sống dưới ô; Lưu → hộp xác nhận lặp đúng câu; đồng ý mới gửi', async () => {
+      const fetchMock = openJan((body) => jsonResponse(200, { ...CONFIG, ...body }));
+      await openConfig();
+      expect(await screen.findByText('Kỳ tháng 01 (đang mở) vẫn khóa 00:00 ngày 11/01. Áp dụng từ kỳ tháng 02: khóa 00:00 ngày 11/02.')).toBeInTheDocument();
+      await retype(lastDay(), '8');
+      expect(within(block('Kỳ đăng ký')).getByText(LINE)).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Đổi hạn đăng ký?' });
+      expect(within(dialog).getByText(LINE)).toBeInTheDocument();
+      expect(putBodies(fetchMock)).toHaveLength(0);
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Hủy' }));
+      expect(putBodies(fetchMock)).toHaveLength(0);
+      await userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
+      await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu hạn mới' }));
+      await vi.waitFor(() => expect(putBodies(fetchMock)).toEqual([{ registration_last_day: 8 }]));
+    });
+
+    it('chỉ đổi số ngày nhắc → không hỏi xác nhận hạn', async () => {
+      const fetchMock = openJan((body) => jsonResponse(200, { ...CONFIG, ...body }));
+      await openConfig();
+      await retype(screen.getByLabelText('Nhắc trước (ngày)'), '2');
+      await userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
+      await vi.waitFor(() => expect(putBodies(fetchMock)).toEqual([{ reminder_days_left: 2 }]));
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('ô hạn đang sai (2) → chỉ còn nửa câu kỳ đang mở, không đoán ngày khóa kỳ sau', async () => {
+      openJan();
+      await openConfig();
+      await retype(lastDay(), '2');
+      expect(screen.getByText('Kỳ tháng 01 (đang mở) vẫn khóa 00:00 ngày 11/01.')).toBeInTheDocument();
+      expect(screen.queryByText(/Áp dụng từ kỳ tháng 02/)).toBeNull();
+    });
+  });
+
+  describe('cảnh báo nhóm chỉ sau khi đổi ID', () => {
+    const OUTSIDE = { ...CONFIG, admin_group: 'cong-trinh' };
+    const openOutside = () => stubConfigApi(undefined, (url, init) => (url === '/api/admin/config' && !init?.method ? jsonResponse(200, OUTSIDE) : undefined));
+
+    it('mở trang với nhóm đang dùng (mình không thuộc) → không cảnh báo; đổi ID sang nhóm không thuộc → hiện; đổi về giá trị đã lưu → ẩn', async () => {
+      openOutside();
+      mockViewport(1280);
+      renderApp(makeMe('admin'), '/admin/config');
+      await screen.findByDisplayValue('cong-trinh');
+      expect(await screen.findByText('1 người trong danh bạ thuộc nhóm này')).toBeInTheDocument();
+      expect(screen.queryByText(/sẽ mất quyền vào trang quản lý/)).toBeNull();
+      await retype(group(), 'nhom-moi');
+      expect(await screen.findByText(/Sau khi lưu, Nguyễn Văn An sẽ mất quyền vào trang quản lý/)).toBeInTheDocument();
+      await retype(group(), 'cong-trinh');
+      expect(screen.queryByText(/sẽ mất quyền vào trang quản lý/)).toBeNull();
+    });
+  });
 });

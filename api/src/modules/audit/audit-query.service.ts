@@ -3,6 +3,8 @@ import { sql } from 'drizzle-orm';
 import { decodeTimestampCursor, encodeCursor } from '../../common/cursor';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
+import { notBatchMember, receiptBatches } from './audit-batches';
+import type { ReceiptBatch } from './audit-batches';
 import { resolveObjectLabels } from './audit-object-labels';
 import type { ObjectLabel } from './audit-object-labels';
 
@@ -32,6 +34,8 @@ export interface AuditRow {
   objectLabel: ObjectLabel | null;
   detail: unknown;
   createdAt: string;
+  // Chỉ dòng gộp một lần Lưu hàng về
+  batch?: ReceiptBatch;
 }
 
 @Injectable()
@@ -43,7 +47,7 @@ export class AuditQueryService {
   ): Promise<{ items: AuditRow[]; next_cursor: string | null }> {
     const conds = [
       q.actor ? sql`a.actor = ${q.actor}` : null,
-      q.action ? sql`a.action = ${q.action}` : null,
+      q.action ? sql`a.action = ${q.action}` : notBatchMember,
       // ::timestamp bắt buộc: date AT TIME ZONE ngầm đổi sang timestamptz theo UTC → lệch 7 giờ
       q.from
         ? sql`a.created_at >= (${q.from}::date::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh')`
@@ -81,10 +85,13 @@ export class AuditQueryService {
     `);
     const rows = result.rows.slice(0, q.limit);
     const last = rows[rows.length - 1];
-    const labels = await resolveObjectLabels(
-      this.db,
-      rows.map((r) => ({ objectType: r.object_type, objectId: r.object_id })),
-    );
+    const [labels, batches] = await Promise.all([
+      resolveObjectLabels(
+        this.db,
+        rows.map((r) => ({ objectType: r.object_type, objectId: r.object_id })),
+      ),
+      receiptBatches(this.db, rows),
+    ]);
     return {
       items: rows.map((r, i) => ({
         id: r.id,
@@ -96,6 +103,7 @@ export class AuditQueryService {
         objectLabel: labels[i],
         detail: r.detail,
         createdAt: new Date(r.created_at).toISOString(),
+        ...(batches.has(r.id) ? { batch: batches.get(r.id) } : {}),
       })),
       next_cursor:
         result.rows.length > q.limit && last

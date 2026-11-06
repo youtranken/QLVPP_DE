@@ -120,7 +120,7 @@ export function SummaryPage() {
         ) : p.filter === 'unregistered' ? (
           <UnregisteredTable ym={ym} onClearFilter={p.clearFilter} />
         ) : p.view === 'item' ? (
-          <SummaryItemTable ym={ym} q={p.q} lowOnly={p.filter === 'low'} />
+          <SummaryItemTable ym={ym} q={p.q} lowOnly={p.filter === 'low'} item={p.item} onClearItem={p.clearItem} />
         ) : (
           <SummaryPersonTable
             ym={ym}

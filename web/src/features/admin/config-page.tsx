@@ -1,13 +1,16 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { langOf } from '@/lib/period-text';
 import { LoadError, Loading } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { discardOptions, useConfirm } from '@/ui/confirm-context';
+import { useCurrentPeriod } from '@/features/request/request.api';
 import { useLeaveGuard } from '@/features/request/use-leave-guard';
 import { useAdminConfig, type AdminConfig } from './admin.api';
 import { AccessBlock } from './access-block';
 import { accessSpec, contactSpec, periodSpec, signersSpec } from './config-form';
 import { ContactBlock } from './contact-block';
+import { effectiveSentence } from './effective-period';
 import { PeriodBlock } from './period-block';
 import { RecentChanges } from './recent-changes';
 import { SignatureBoxesBlock } from './signature-boxes-block';
@@ -39,9 +42,20 @@ export function ConfigPage() {
 }
 
 function ConfigForm({ config }: { config: AdminConfig }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const ask = useConfirm();
-  const period = useConfigBlock(periodSpec, config);
+  const open = useCurrentPeriod().data;
+  // Hộp xác nhận lặp đúng câu kỳ áp dụng dưới ô hạn; chỉ hỏi khi hạn thật sự đổi
+  const confirmDeadline = async (): Promise<boolean> => {
+    if (!open || period.draft.registration_last_day.trim() === String(config.registration_last_day)) return true;
+    return ask({
+      title: t('config.period.confirmTitle'),
+      message: effectiveSentence(t, langOf(i18n.language), open, period.draft.registration_last_day),
+      confirmLabel: t('config.period.confirmOk'),
+      cancelLabel: t('config.cancel'),
+    });
+  };
+  const period = useConfigBlock(periodSpec, config, confirmDeadline);
   const confirmGroup = (): Promise<boolean> =>
     ask({
       title: t('config.access.confirmTitle'),
@@ -71,7 +85,7 @@ function ConfigForm({ config }: { config: AdminConfig }) {
       <div className="cf-layout">
         <div className="cf-blocks">
           <PeriodBlock state={period} />
-          <AccessBlock state={access} authorizedGroups={config.authorized_groups} />
+          <AccessBlock state={access} saved={config.admin_group} authorizedGroups={config.authorized_groups} />
           <SignatureBoxesBlock state={signers} />
           <ContactBlock state={contact} />
         </div>

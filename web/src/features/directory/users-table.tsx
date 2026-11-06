@@ -5,9 +5,10 @@ import { formatVnStamp } from '@/lib/format-time';
 import { DataTable } from '@/ui/data-table';
 import type { ReactNode } from 'react';
 import type { AdminUser } from './directory.api';
-import { nameOf } from './users-rows';
+import { nameOf, type RegFilter } from './users-rows';
 
-export type UserRow = AdminUser & { id: string };
+// reg: undefined khi chưa tải danh sách đăng ký; null khi người không thuộc danh sách kỳ
+export type UserRow = AdminUser & { id: string; reg?: RegFilter | null };
 
 export function UserAvatar({ user, large = false }: { user: Pick<AdminUser, 'sub' | 'fullName'>; large?: boolean }) {
   const letter = nameOf(user).trim().charAt(0).toUpperCase();
@@ -42,7 +43,16 @@ export function LastLogin({ iso }: { iso: string | null }) {
   return iso ? <>{formatVnStamp(iso, true)}</> : <span className="dr-muted">{t('users.page.neverLoggedIn')}</span>;
 }
 
-function useColumns(onOpen: (u: UserRow) => void) {
+// Chỉ đã/chưa đăng ký, không món/số lượng; người ngoài danh sách kỳ (khóa, Hành chính…) ghi "—"
+function RegCell({ reg }: { reg: RegFilter | null | undefined }) {
+  const { t } = useTranslation();
+  if (reg === undefined) return null;
+  if (reg === null) return <span className="dr-muted">{t('common.empty')}</span>;
+  return <span className={reg === 'yes' ? 'tag tag--ok' : 'tag tag--warn'}>{t(reg === 'yes' ? 'users.reg.cellYes' : 'users.reg.cellNo')}</span>;
+}
+
+// Cột chỉ phụ thuộc tháng: dữ liệu đăng ký về sau đổi hàng chứ không đổi cột (đổi cột dựng lại bảng, panel đang mở bị đóng)
+function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
   const { t } = useTranslation();
   return useMemo<ColumnDef<UserRow, unknown>[]>(() => {
     const columns: ColumnDef<UserRow, unknown>[] = [
@@ -63,12 +73,13 @@ function useColumns(onOpen: (u: UserRow) => void) {
         },
         { id: 'code', header: t('users.page.colCode'), cell: ({ row }) => row.original.employeeCode ?? t('common.empty') },
         { id: 'department', header: t('users.page.colDepartment'), cell: ({ row }) => row.original.department ?? t('common.empty') },
+        ...(regMonth === null ? [] : [{ id: 'reg', header: t('users.reg.col', { month: regMonth }), cell: ({ row }: { row: { original: UserRow } }) => <RegCell reg={row.original.reg} /> }]),
         { id: 'groups', header: t('users.page.colGroups'), cell: ({ row }) => <GroupBadges groups={row.original.groups} /> },
         { id: 'status', header: t('users.page.colStatus'), cell: ({ row }) => <StatusBadge status={row.original.status} /> },
         { id: 'lastLogin', header: t('users.page.colLastLogin'), cell: ({ row }) => <LastLogin iso={row.original.lastLoginAt} /> },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
-  }, [t, onOpen]);
+  }, [t, onOpen, regMonth]);
 }
 
 export function UsersTable({
@@ -77,14 +88,16 @@ export function UsersTable({
   activeId,
   empty,
   onOpen,
+  regMonth,
 }: {
+  regMonth: number | null;
   rows: UserRow[];
   loading: boolean;
   activeId?: string;
   empty: { title: string; hint: string; action: ReactNode };
   onOpen: (u: UserRow) => void;
 }) {
-  const columns = useColumns(onOpen);
+  const columns = useColumns(onOpen, regMonth);
   return (
     <DataTable
       data={rows}

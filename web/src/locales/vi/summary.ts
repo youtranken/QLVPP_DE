@@ -92,6 +92,8 @@ const summary = {
       groupLow: '{{k}} sắp hết/hết hàng',
       custom: 'Ngoài danh mục',
       uncategorized: 'Chưa xếp nhóm',
+      onlyItem: 'Chỉ món: {{name}}',
+      onlyItemGone: 'Chỉ món đã chọn',
       toReports: 'Xem số cần mua ở Báo cáo',
       emptyItems: 'Chưa có món nào được đăng ký.',
     },

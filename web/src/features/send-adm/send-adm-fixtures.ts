@@ -51,10 +51,12 @@ interface Setup {
   afterPost?: SendStateDto;
   makeup?: { ym: string; rows: { key: string; adm_owed: number }[] }[];
   summary?: object;
+  // Số người đăng ký từng món (Tổng hợp theo món)
+  people?: Record<string, number>;
 }
 
 // Server giả cho Gửi ADM: báo cáo + trạng thái gửi (đổi sau POST bản chốt / no-order)
-export function setupSendAdm({ report, state = UNSENT, afterPost, makeup = [], summary }: Setup) {
+export function setupSendAdm({ report, state = UNSENT, afterPost, makeup = [], summary, people = {} }: Setup) {
   let current = state;
   const items = report.byItem.map((r) => adminItem({ id: r.item_id, name: r.name }));
   const base = stubReports({ reports: { [YM]: report }, items });
@@ -62,6 +64,7 @@ export function setupSendAdm({ report, state = UNSENT, afterPost, makeup = [], s
     const method = init?.method ?? 'GET';
     if (url === `/api/admin/periods/${YM}/summary`) return jsonResponse(200, { ym: YM, deadline: PAST, unregistered: 0, custom_pending: 0, lines_pending_delivery: 0, ...summary });
     if (url === '/api/admin/config') return jsonResponse(200, { signature_boxes: BOXES });
+    if (url === `/api/admin/periods/${YM}/requests?by=item`) return jsonResponse(200, { items: Object.entries(people).map(([key, n]) => ({ key, item_id: key, name: key, unit: 'cay', requested_qty: n, people: n, max_qty: null, over_max: false })) });
     if (url === `/api/admin/periods/${YM}/send-state`) return jsonResponse(200, current);
     if (url === `/api/admin/periods/${YM}/arrivals-plan`) return jsonResponse(200, { makeup });
     if (url === `/api/admin/periods/${YM}/no-order` && method === 'POST') {

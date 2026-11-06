@@ -7,7 +7,12 @@ afterEach(() => vi.unstubAllGlobals());
 const lastDay = () => screen.getByLabelText('Hạn đăng ký (ngày)');
 const reminder = () => screen.getByLabelText('Nhắc trước (ngày)');
 const maxQty = () => screen.getByLabelText('Tối đa mỗi món');
-const savePeriod = () => userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
+// Đổi hạn thì có hộp xác nhận kỳ áp dụng — đồng ý để đi tiếp tới PUT
+async function savePeriod() {
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
+  const ok = screen.queryByRole('button', { name: 'Lưu hạn mới' });
+  if (ok) await userEvent.click(ok);
+}
 const preview = () => screen.getByRole('list', { name: /^Xem trước lịch tháng/ });
 const dayCell = (d: number) => within(preview()).getByText(String(d), { selector: '.cf-day__n' }).closest('li') as HTMLElement;
 
@@ -17,14 +22,14 @@ async function typeInto(el: HTMLElement, value: string) {
 }
 
 describe('Cấu hình · khối Kỳ đăng ký', () => {
-  it('hiện giá trị hiện tại và cảnh báo kỳ đang mở giữ hạn cũ kèm ngày khóa từ periods/current', async () => {
+  it('hiện giá trị hiện tại và dòng kỳ áp dụng: kỳ đang mở giữ hạn cũ (ngày khóa từ periods/current), kỳ sau theo hạn trong ô', async () => {
     stubConfigApi();
     await openConfig();
     expect(lastDay()).toHaveValue(10);
     expect(reminder()).toHaveValue(3);
     expect(maxQty()).toHaveValue(20);
     expect(
-      await screen.findByText('Chỉ áp dụng cho kỳ tạo sau; kỳ đang mở giữ hạn cũ (tháng 11 vẫn khóa 00:00 ngày 11/11).'),
+      await screen.findByText('Kỳ tháng 11 (đang mở) vẫn khóa 00:00 ngày 11/11. Áp dụng từ kỳ tháng 12: khóa 00:00 ngày 11/12.'),
     ).toBeInTheDocument();
   });
 

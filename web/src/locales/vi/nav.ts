@@ -20,7 +20,6 @@ const nav = {
       monthly: 'Hằng tháng',
       stock: 'Danh mục và tủ',
       system: 'Quản lý',
-      later: 'Xem lại sau',
     },
     home: 'Tháng này',
     summary: 'Tổng hợp kỳ',
