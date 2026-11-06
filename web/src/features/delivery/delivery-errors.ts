@@ -40,7 +40,9 @@ export interface DeliveryFailure {
 
 // Trang Giao hàng: lỗi khối ở đầu chi tiết, còn lại gắn vào dòng; mã làm bản phiếu cũ thì tải lại phiếu
 const BLOCK_CODES = new Set(['PERIOD_NOT_LOCKED', 'REQUEST_NOT_FOUND', 'LINE_NOT_FOUND']);
-const LINE_CODES = new Set(['STOCK_INSUFFICIENT', 'DELIVER_EXCEEDS_QTY', 'STALE_UPDATE', 'LINE_NOT_REVIEWED', 'LINE_REJECTED']);
+const DELIVER_CODES = ['STOCK_INSUFFICIENT', 'DELIVER_EXCEEDS_QTY', 'STALE_UPDATE', 'LINE_NOT_REVIEWED', 'LINE_REJECTED'];
+// Hộp giao: dòng ngoài DM giao vượt số đã về; hủy phần thiếu ADM khi khóa vừa bỏ đánh dấu
+const LINE_CODES = new Set([...DELIVER_CODES, 'CUSTOM_NOT_RECEIVED', 'ITEM_NOT_ADM_OUT']);
 const STALE_CODES = new Set(['DELIVER_EXCEEDS_QTY', 'STALE_UPDATE', 'LINE_NOT_REVIEWED', 'LINE_REJECTED']);
 
 export const isBlockCode = (code: string) => BLOCK_CODES.has(code);
@@ -58,7 +60,7 @@ export function lineErrorText(f: DeliveryFailure, unit: string, t: T): string {
   });
 }
 
-const REASON_CODES = new Set([...LINE_CODES, 'PERIOD_NOT_LOCKED']);
+const REASON_CODES = new Set([...DELIVER_CODES, 'PERIOD_NOT_LOCKED']);
 
 export function reasonText(f: DeliveryFailure, t: T): string {
   return t(`delivery.result.reasons.${REASON_CODES.has(f.code) ? f.code : 'UNKNOWN'}`, {

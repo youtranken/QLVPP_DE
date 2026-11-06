@@ -53,6 +53,7 @@ const home = {
     },
     left: {
       action: 'Xử lý',
+      debt: 'Xem nợ tháng trước',
     },
     cta: {
       register: 'Xem tổng hợp',

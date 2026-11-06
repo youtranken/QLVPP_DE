@@ -100,6 +100,8 @@ export function AdjustDrawer({ requestId, presetReason, onClose, onPrev, onNext 
   const { t } = useTranslation();
   const a = useAdjust(requestId, onClose, presetReason);
   const view = a.view;
+  // Phiếu Hành chính đã bỏ hết dòng sau khóa sổ vẫn giữ (vẫn tính đã đăng ký) nhưng không còn gì để sửa
+  const removedAll = !!view && !view.is_open && view.lines.length === 0;
   const submit = (e: FormEvent) => {
     e.preventDefault();
     a.save();
@@ -116,11 +118,12 @@ export function AdjustDrawer({ requestId, presetReason, onClose, onPrev, onNext 
       <Header view={view} />
       <form className="aj-form" onSubmit={submit} noValidate>
         <div className="drawer-body">
-          {view && !view.is_open && <p className="alert alert--warn">{t('summary.adjust.lockedWarn')}</p>}
+          {view && !view.is_open && !removedAll && <p className="alert alert--warn">{t('summary.adjust.lockedWarn')}</p>}
           <Blocks a={a} />
           {a.query.isError && <LoadError onRetry={a.reload} />}
           {a.query.isPending && <Loading />}
-          {view && <AdjustLines a={a} view={view} />}
+          {removedAll && <p className="sm-muted">{t('summary.adjust.removedAll')}</p>}
+          {view && !removedAll && <AdjustLines a={a} view={view} />}
         </div>
         <Footer a={a} />
       </form>

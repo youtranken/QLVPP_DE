@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import home from '@/locales/vi/home';
 import delivery from '@/locales/vi/delivery';
+import homeEn from '@/locales/en/home';
+import deliveryEn from '@/locales/en/delivery';
 
 function strings(node: unknown, path = ''): [string, string][] {
   if (typeof node === 'string') return [[path, node]];
@@ -29,5 +31,22 @@ describe('Chữ: phần chưa giao của tháng đang giao không gọi là nợ
     expect(all['delivery.detail.shortWarn']).toBe('{{n}} dòng thiếu kho. Giao phần đang có; phần còn lại chờ hàng về.');
     expect(all['delivery.backlog.description']).toBe('Phần chưa giao của các tháng trước tháng {{month}} — giao bổ sung khi có hàng, hoặc hủy nợ.');
     expect(all['delivery.people.description']).toBe('Nhân viên đến lấy: tìm tên, kiểm hàng, bấm Giao.');
+  });
+
+  it('en: một thuật ngữ cho Chưa nhận là "Not yet received", không còn "Not collected"/"not-yet-collected"', () => {
+    const hits = [...strings(homeEn), ...strings(deliveryEn)].filter(([, s]) => /not(-| )collected|not-yet-collected/i.test(s));
+    expect(hits).toEqual([]);
+    const all = Object.fromEntries(strings(deliveryEn));
+    expect(all['delivery.people.tabs.pending']).toBe('Not yet received');
+    expect(all['delivery.people.status.pending']).toBe('Not yet received');
+  });
+
+  it('en theo bảng chữ của spec (Hủy nợ, Tủ còn, NOT_DEBT_YET)', () => {
+    const all = Object.fromEntries(strings(deliveryEn));
+    expect(all['delivery.backlog.cancelDialog.title']).toBe('Write off {{n}} {{unit}} {{name}} for {{person}}?');
+    expect(all['delivery.backlog.cols.stock']).toBe('In stock');
+    expect(all['delivery.backlog.stock']).toBe('In stock {{n}}');
+    expect(all['delivery.backlog.cancelDialog.block.NOT_DEBT_YET']).toBe('This is still pending for the current month — reduce it in Summary instead.');
+    expect(all['delivery.backlog.cancelDialog.seen']).toBe('The employee will see the reason in History.');
   });
 });

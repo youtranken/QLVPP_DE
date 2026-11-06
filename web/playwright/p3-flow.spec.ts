@@ -40,6 +40,7 @@ async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
   // Tủ giấy 3, cần 5: đề xuất 3 và phần thiếu còn ở Chưa nhận
   await expect(dialog.getByRole('spinbutton', { name: `Giao lần này: ${s.paper.name}` })).toHaveValue('3');
   await expect(dialog.getByText('Chưa nhận 2')).toBeVisible();
+  await expect(dialog.getByRole('spinbutton', { name: `Giao lần này: ${s.custom}` })).toHaveValue('1');
   await axe390(admin, info);
   await snap(admin, info, 'p3-deliver-dialog');
   // Bấm đúp vẫn chỉ một lượt giao
@@ -48,6 +49,8 @@ async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
   await expect(dialog).toHaveCount(0);
   expect(deliveryMovements(s.paper.id)).toBe('-3');
   expect(deliveryMovements(s.pen.id)).toBe('-2');
+  // Món ngoài DM đã duyệt, chưa có bản gửi ADM: giao cùng lượt, không trừ kho
+  expect(psql(`SELECT delivered_qty FROM request_lines WHERE custom_name = '${s.custom}'`)).toBe('1');
   await snap(admin, info, 'p3-delivered-all');
 }
 
@@ -122,14 +125,18 @@ async function expectFrozenPaper(admin: Page, s: MonthSeed) {
   expect((await row.getByRole('cell').allTextContents()).slice(3, 8)).toEqual(['2', '0', '0', '2', '4']);
 }
 
-async function purchaseAndDeliverMore(admin: Page, info: TestInfo, s: MonthSeed) {
+async function purchase(admin: Page, item: { name: string }, qty: number) {
   await admin.goto('/admin/stock');
-  await admin.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(s.tape.name);
-  await openPurchase(admin, admin.getByRole('row').filter({ hasText: s.tape.name }));
-  const purchase = admin.getByRole('dialog', { name: `Nhập mua ${s.tape.name}` });
-  await purchase.getByLabel('Số lượng nhập').fill('2');
-  await purchase.getByRole('button', { name: 'Lưu nhập mua' }).click();
-  await expect(purchase).toBeHidden();
+  await admin.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(item.name);
+  await openPurchase(admin, admin.getByRole('row').filter({ hasText: item.name }));
+  const dialog = admin.getByRole('dialog', { name: `Nhập mua ${item.name}` });
+  await dialog.getByLabel('Số lượng nhập').fill(String(qty));
+  await dialog.getByRole('button', { name: 'Lưu nhập mua' }).click();
+  await expect(dialog).toBeHidden();
+}
+
+async function purchaseAndDeliverMore(admin: Page, info: TestInfo, s: MonthSeed) {
+  await purchase(admin, s.tape, 2);
 
   await admin.goto('/admin/backlog');
   const group = admin.getByRole('rowheader', { name: new RegExp(s.tape.name) });
@@ -144,6 +151,24 @@ async function purchaseAndDeliverMore(admin: Page, info: TestInfo, s: MonthSeed)
   expect(deliveryMovements(s.paper.id)).toBe('-3');
   expect(Number(psql(`SELECT stock_qty FROM items WHERE id = '${s.tape.id}'`))).toBe(0);
   await snap(admin, info, 'p3-backlog-after-purchase');
+}
+
+// Hàng về thêm cho phần Chưa nhận của tháng đang giao: giao qua hộp, PRD §10 mục 5 — tổng trừ kho đúng 5 qua hai lần giao
+async function deliverRestOfPaper(admin: Page, info: TestInfo, s: MonthSeed) {
+  await purchase(admin, s.paper, 2);
+  await admin.goto('/admin/delivery');
+  await admin.getByRole('searchbox', { name: 'Tìm tên hoặc phòng ban' }).fill(s.a.name);
+  const card = admin.getByRole('heading', { level: 3, name: s.a.name, exact: true }).locator('xpath=ancestor::article');
+  await card.getByRole('button', { name: `Giao…, ${s.a.name}` }).click();
+  const dialog = admin.getByRole('dialog', { name: `Giao cho ${s.a.name}?` });
+  await expect(dialog.getByRole('spinbutton', { name: `Giao lần này: ${s.paper.name}` })).toHaveValue('2');
+  await dialog.getByRole('button', { name: 'Xác nhận giao' }).click();
+  await expect(admin.getByText(`Đã giao cho ${s.a.name}`)).toBeVisible();
+  await expect(dialog).toHaveCount(0);
+  expect(deliveryMovements(s.paper.id)).toBe('-3,-2');
+  expect(Number(psql(`SELECT stock_qty FROM items WHERE id = '${s.paper.id}'`))).toBe(0);
+  await expect(card.getByText('Chưa nhận', { exact: true })).toHaveCount(0);
+  await snap(admin, info, 'p3-delivered-rest');
 }
 
 async function openBell(member: Page, text: string) {
@@ -225,6 +250,7 @@ test.describe('P3 vòng tháng', () => {
       await purchaseAndDeliverMore(admin, info, seed);
       await memberSeesDelivered(await open(seed.a), info, seed);
       await reopenSnapshot(admin, seed, snapshotId);
+      await deliverRestOfPaper(admin, info, seed);
       await cancelClip(admin, info, seed);
       expect(psql(`SELECT cancelled_qty || '|' || cancel_note FROM request_lines WHERE item_id = '${seed.glue.id}'`)).toBe('3|Khác: Không mua được');
       await memberSeesCancelled(await open(seed.b), info, seed);

@@ -8,7 +8,7 @@ export type PersonFilter = 'unregistered' | 'pending_delivery' | 'custom_pending
 export type PageFilter = PersonFilter | 'low';
 
 const PERSON_FILTERS: readonly string[] = ['unregistered', 'pending_delivery', 'custom_pending', 'over_max', 'left'];
-// Lọc theo việc giao/vượt tối đa/người nghỉ chỉ có nghĩa ở kỳ đã khóa (Đ6): kỳ đang mở thì bỏ
+// Lọc theo việc giao/vượt tối đa/người nghỉ chỉ có nghĩa ở kỳ đã khóa: kỳ đang mở thì bỏ
 const LOCKED_ONLY: readonly string[] = ['pending_delivery', 'over_max', 'left'];
 
 // Mặc định kỳ khóa gần nhất (Hành chính làm việc trên kỳ đã khóa); ?ym= sai mẫu hoặc vượt kỳ đang mở → thay URL bằng kỳ đó, không gọi API với tháng sai
@@ -17,7 +17,7 @@ export function useSummaryParams(openYm: string | undefined) {
   const asked = params.get('ym');
   const ym = asked && openYm && YM.test(asked) && asked <= openYm ? asked : openYm && lockedYm(openYm);
   const view: SummaryView = params.get('view') === 'item' ? 'item' : 'person';
-  // ?left=1 đến từ nhắc người đã nghỉ ở Tháng này (W25): lọc người nghỉ còn phần chưa nhận, lý do giảm chọn sẵn "Người đã nghỉ"
+  // ?left=1 đến từ nhắc người đã nghỉ ở Tháng này: lọc người nghỉ còn phần chưa nhận, lý do giảm chọn sẵn "Người đã nghỉ"
   const left = params.get('left') === '1';
   const raw = params.get('filter') ?? (left ? 'left' : '');
   const inOpen = !!ym && ym === openYm;

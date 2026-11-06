@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
+import { cutNote, noteLength } from '@/lib/note-text';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { useToast } from '@/ui/toast-context';
 import type { LineView } from '@/features/request/request.api';
@@ -31,10 +32,8 @@ export const NOTE_MAX = 200;
 const OTHER_NOTE_MIN = 3;
 // Server đếm ghi chú theo mã điểm sau NFC + trim
 const clean = (note: string) => note.normalize('NFC').trim();
-export const cutNote = (note: string) => [...note].slice(0, NOTE_MAX).join('');
-export const noteLength = (note: string) => [...note].length;
 
-// Bỏ dòng (qty 0) hợp lệ khi chưa giao, chưa hủy nợ — bất kể trạng thái duyệt (R-D6.5)
+// Bỏ dòng (qty 0) hợp lệ khi chưa giao, chưa hủy nợ — bất kể trạng thái duyệt
 export const canRemove = (l: LineView) => l.delivered_qty + l.cancelled_qty === 0;
 
 // Không giảm dưới phần đã giao + đã hủy nợ (QTY_BELOW_DELIVERED); ô số luôn ≥ 1, về 0 bằng nút Bỏ
@@ -43,7 +42,7 @@ export const floorOf = (l: LineView) => Math.max(1, l.delivered_qty + l.cancelle
 // Tối đa/tháng bị hạ sau khi nhân viên lưu: dòng giữ số cũ lớn hơn tối đa hiện tại
 export const isOverMax = (l: LineView) => l.max_qty !== null && l.qty > l.max_qty;
 
-export const reasonComplete = (r: LineReason) => !!r.code && (r.code !== 'other' || noteLength(clean(r.note)) >= OTHER_NOTE_MIN);
+export const reasonComplete = (r: LineReason) => !!r.code && (r.code !== 'other' || noteLength(r.note) >= OTHER_NOTE_MIN);
 
 const FACTS = ['qty', 'delivered_qty', 'cancelled_qty', 'review_status', 'item_id'] as const;
 
@@ -66,7 +65,7 @@ function useDraft(requestId: string) {
     setQty: (id: string, n: number) => patch((d) => withoutError({ ...d, qty: { ...d.qty, [id]: n } }, id)),
     remove: (id: string) => patch((d) => ({ ...d, removed: [...d.removed, id] })),
     restore: (id: string) => patch((d) => ({ ...d, removed: d.removed.filter((x) => x !== id) })),
-    setReason: (id: string, r: LineReason) => patch((d) => withoutError({ ...d, reasons: { ...d.reasons, [id]: { ...r, note: cutNote(r.note) } } }, id)),
+    setReason: (id: string, r: LineReason) => patch((d) => withoutError({ ...d, reasons: { ...d.reasons, [id]: { ...r, note: cutNote(r.note, NOTE_MAX) } } }, id)),
     // "Dùng cho các món giảm còn lại": chỉ điền dòng giảm chưa chọn lý do, không ghi đè
     fillReasons: (ids: string[], r: LineReason) =>
       patch((d) => ({ ...d, reasons: { ...d.reasons, ...Object.fromEntries(ids.map((id) => [id, { ...r }])) } })),
@@ -141,7 +140,7 @@ function useReviewSync(requestId: string, restart: (mark?: Partial<Pick<Draft, '
   return { query, reviewed, reviewStale, reloadLatest };
 }
 
-// Bản có hàng đã gửi ADM của kỳ (W11): giảm sau mốc này thì hàng về dư vào kho
+// Bản có hàng đã gửi ADM của kỳ: giảm sau mốc này thì hàng về dư vào kho
 function useSentAt(view: AdminRequestView | undefined) {
   const send = useSendState(view?.period_ym ?? '', !!view && !view.is_open);
   return send.state === 'sent' ? (send.sent?.created_at ?? null) : null;

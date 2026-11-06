@@ -15,6 +15,7 @@ import {
   settled,
 } from './helpers';
 import { seedLockedRequest } from './locked-request';
+import { PRIVATE_YM, clearPrivateSnapshots } from './private-period';
 
 const SHOTS = '../.superpowers/sdd/2026-10-30-giao-dien-hanh-chinh/task-11-shots';
 
@@ -87,7 +88,7 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       await expect(drawer).toBeVisible();
       await expect(drawer.getByText('Đã khóa', { exact: true })).toBeVisible();
       await expect(drawer.getByText('Kỳ đã khóa. Chỉ giảm hoặc bỏ dòng, mỗi dòng giảm cần lý do; không giảm dưới số đã giao.')).toBeVisible();
-      // Sau khóa sổ không tăng/thêm được (Đ12): không nút +, không "Thêm món"
+      // Sau khóa sổ không tăng/thêm được: không nút +, không "Thêm món"
       await expect(drawer.getByRole('button', { name: /^(\+|Tăng|Thêm (?!vào danh mục —))/ })).toHaveCount(0);
       expect((await drawer.boundingBox())!.width).toBeCloseTo(isMobile(info) ? 390 : 384, 0);
 
@@ -184,23 +185,17 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
   });
 });
 
-// Cảnh báo giảm sau khi gửi ADM (Đ11): kỳ đã có bản → giảm vẫn được, cảnh báo ngay dưới dòng trước khi Lưu
-function insertSentSnapshot(ym: string, item: { id: string; name: string }, qty: number): string {
-  const byItem = [{ key: item.id, item_id: item.id, code: null, name: item.name, name_en: null, unit: 'cai', requested: qty, backlog_prev: 0, stock: 0, need: qty }];
-  const data = { ym, byItem, custom: [], byDepartment: [], issues: [], pending_custom_count: 0, order_qty: { [item.id]: qty } };
-  return psql(`INSERT INTO report_snapshots (period_ym, kind, data, created_by_sub, created_at)
-    VALUES ('${ym}-01', 'print', '${JSON.stringify(data).replace(/'/g, "''")}'::jsonb, 'pw-admin', now()) RETURNING id`);
-}
-
 test.describe('Tổng hợp — giảm sau khi đã gửi ADM (Plan v2-D, Task 12)', () => {
   test('V2D-12 reduce after sent', async ({ page, request }, info) => {
+    // Kỳ riêng của PW dùng chung với Gửi ADM/Hàng về (cùng xóa bản chốt kỳ riêng) nên vẫn giữ khóa
     const release = await acquireLock('prev-period');
-    const seed = await seedLockedRequest(request, info, [{ stock: 0, qty: 5 }]);
+    clearPrivateSnapshots();
+    const seed = await seedLockedRequest(request, info, [{ stock: 0, qty: 5 }], { ym: PRIVATE_YM });
     const [item] = seed.items;
-    let snapshotId = '';
     try {
-      snapshotId = insertSentSnapshot(seed.prevYm, item, 5);
-      await page.goto(`/admin/summary?ym=${seed.prevYm}`);
+      const made = await request.post(`/api/admin/reports/${PRIVATE_YM}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print' } });
+      expect(made.status()).toBe(201);
+      await page.goto(`/admin/summary?ym=${PRIVATE_YM}`);
       await searchSummaryPeople(page, seed.tag);
       await page.getByRole('row').filter({ hasText: seed.name }).getByRole('button', { name: 'Điều chỉnh' }).click();
       const drawer = page.getByRole('dialog', { name: `Phiếu của ${seed.name}` });
@@ -225,7 +220,7 @@ test.describe('Tổng hợp — giảm sau khi đã gửi ADM (Plan v2-D, Task 1
         FROM request_line_adjustments WHERE request_id = '${seed.requestId}'`);
       expect(logged).toBe('5>3:over_quota');
     } finally {
-      if (snapshotId) psql(`DELETE FROM report_snapshots WHERE id = '${snapshotId}'`);
+      clearPrivateSnapshots();
       seed.cleanup();
       release();
     }

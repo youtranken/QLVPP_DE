@@ -74,6 +74,18 @@ describe('AdjustDrawer — lưu với lý do từng dòng', () => {
     expect(note).toBe('😀'.repeat(150) + 'x'.repeat(50));
   });
 
+  it('ghi chú dán 201 chữ "ế" dạng NFD → bộ đếm "200/200" như server (NFC), lưu 200 chữ NFC', async () => {
+    const f = stubAdjust();
+    const { drawer, onClose } = await renderDrawer();
+    await reduceNote(drawer);
+    await userEvent.click(noteBox(drawer, NOTE));
+    await userEvent.paste('ế'.normalize('NFD').repeat(201));
+    expect(within(row(drawer, NOTE)).getByText('200/200')).toBeInTheDocument();
+    await userEvent.click(saveButton(drawer));
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(putBody(f).lines[1].reason_note).toBe('ế'.repeat(200));
+  });
+
   it('dòng giảm rồi về lại số cũ (nháp lý do còn) → không gửi lý do dòng đó', async () => {
     const f = stubAdjust();
     const { drawer } = await renderDrawer();

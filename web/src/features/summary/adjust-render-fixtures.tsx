@@ -63,7 +63,8 @@ export async function renderDrawer({
   onNext,
   onPrev,
   preset,
-}: { extra?: ReactNode; onNext?: () => void; onPrev?: () => void; preset?: AdjustReason } = {}) {
+  waitItems = true,
+}: { extra?: ReactNode; onNext?: () => void; onPrev?: () => void; preset?: AdjustReason; waitItems?: boolean } = {}) {
   const onClose = vi.fn();
   renderWithI18n(
     <MeContext.Provider value={makeMe('admin')}>
@@ -79,7 +80,7 @@ export async function renderDrawer({
   );
   const drawer = await screen.findByRole('dialog', { name: 'Phiếu của Nguyễn Văn An' });
   // Dòng "tối đa n/tháng" lấy từ danh mục Hành chính: chờ tải xong
-  await waitFor(() => expect(within(drawer).getAllByText(/tối đa \d+\/tháng/).length).toBeGreaterThan(0));
+  if (waitItems) await waitFor(() => expect(within(drawer).getAllByText(/tối đa \d+\/tháng/).length).toBeGreaterThan(0));
   return { drawer, onClose };
 }
 

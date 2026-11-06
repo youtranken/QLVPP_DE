@@ -76,6 +76,8 @@ const delivery = {
         STALE_UPDATE: 'Dòng vừa được giao ở nơi khác — đã cập nhật.',
         LINE_NOT_REVIEWED: 'Dòng chưa được duyệt — chưa giao được.',
         LINE_REJECTED: 'Dòng vừa bị từ chối — không giao.',
+        CUSTOM_NOT_RECEIVED: 'Hàng ngoài danh mục chưa về đủ — chỉ giao được {{available}} {{unit}}.',
+        ITEM_NOT_ADM_OUT: 'Món chưa được đánh dấu ADM hết hàng — chưa hủy được phần thiếu.',
         UNKNOWN: 'Không giao được — thử lại.',
       },
       block: {

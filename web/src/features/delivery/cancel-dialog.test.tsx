@@ -98,15 +98,17 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
     expect(sent(f)).toEqual({ reason_code: 'other', reason: 'abc', expected_delivered_qty: 2, expected_qty: 5 });
   });
 
-  it('biên độ dài: ô ghi chú maxLength 200; 200 ký tự gửi được', async () => {
+  it('biên độ dài đếm như server (NFC + trim): 200 chữ "ế" NFD + khoảng trắng → "200/200", gửi được 200 chữ NFC; chữ thứ 201 bị cắt', async () => {
     const f = stub();
     renderDialog();
     await pick('Khác');
-    expect(noteBox()).toHaveAttribute('maxlength', '200');
-    setNote('a'.repeat(200));
+    setNote(`${'ế'.normalize('NFD').repeat(200)} `);
+    expect(screen.getByText('200/200')).toBeInTheDocument();
+    setNote('ế'.normalize('NFD').repeat(201));
+    expect(screen.getByText('200/200')).toBeInTheDocument();
     await userEvent.click(submit());
     await waitFor(() => expect(posts(f)).toHaveLength(1));
-    expect(String(sent(f).reason)).toHaveLength(200);
+    expect(sent(f).reason).toBe('ế'.repeat(200));
   });
 
   it('initialReason user_left (?left=1) → "Đã nghỉ việc" chọn sẵn, Hủy nợ bật ngay', () => {

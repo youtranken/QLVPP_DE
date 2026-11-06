@@ -8,6 +8,7 @@ import { shiftYm } from '@/lib/ym';
 import { Loading, LoadError } from '@/ui/load-state';
 import { Segmented } from '@/ui/segmented';
 import { arrivalsPlanQuery } from '@/features/arrivals/arrivals.api';
+import { useBacklog } from '@/features/delivery/backlog.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { reviewLinesQuery } from '@/features/review/review.api';
@@ -47,19 +48,30 @@ function Cards({ ym, summary }: { ym: string; summary: PeriodSummary }) {
   );
 }
 
-// W25 (Đ41, R-D13.11): người đã nghỉ còn phần chưa nhận ở kỳ giao → "Xử lý" mở Tổng hợp lọc ?left=1 (lý do giảm chọn sẵn "Người đã nghỉ")
+// Người đã nghỉ: phần chưa nhận của kỳ giao giảm ở Tổng hợp, nợ tháng trước hủy ở Còn nợ (lý do chọn sẵn ở cả hai)
 function LeftReminder({ ym }: { ym: string }) {
   const { t } = useTranslation();
   const left = useLeftPeople(ym, true);
-  const people = left.data?.items ?? [];
-  if (people.length === 0) return null;
-  const names = people.map((p) => p.full_name ?? p.email ?? p.user_sub).join(', ');
+  const backlog = useBacklog('person');
+  const inPeriod = left.data?.items ?? [];
+  const debtors = (backlog.data?.groups ?? []).flatMap((g) => g.lines.slice(0, 1)).filter((l) => l.user_status !== 'active');
+  const names = new Map<string, string>();
+  for (const p of inPeriod) names.set(p.user_sub, p.full_name ?? p.email ?? p.user_sub);
+  for (const l of debtors) if (!names.has(l.user_sub)) names.set(l.user_sub, l.full_name ?? l.user_sub);
+  if (names.size === 0) return null;
   return (
     <div className="alert alert--warn hm-left">
-      <span>{t('warn.W25', { n: people.length, names })}</span>
-      <Link className="btn btn--sm" to={`/admin/summary?ym=${ym}&left=1`}>
-        {t('home.left.action')}
-      </Link>
+      <span>{t('warn.W25', { n: names.size, names: [...names.values()].join(', ') })}</span>
+      {inPeriod.length > 0 && (
+        <Link className="btn btn--sm" to={`/admin/summary?ym=${ym}&left=1`}>
+          {t('home.left.action')}
+        </Link>
+      )}
+      {debtors.length > 0 && (
+        <Link className="btn btn--sm" to="/admin/backlog?left=1">
+          {t('home.left.debt')}
+        </Link>
+      )}
     </div>
   );
 }
@@ -122,7 +134,7 @@ function Ready({ currentYm }: { currentYm: string }) {
         </div>
         <MonthSteps steps={registerView ? currentSteps : lockedSteps} onlyFirst={registerView} />
       </section>
-      {/* Đ6: kỳ đang đăng ký không có cảnh báo W nào */}
+      {/* Kỳ đang đăng ký không có cảnh báo W nào */}
       {!registerView && lockedDone && <LeftReminder ym={lockedYm} />}
       <Cards ym={currentYm} summary={current.data} />
     </div>

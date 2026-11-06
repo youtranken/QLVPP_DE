@@ -59,7 +59,7 @@
 [data-shell='admin'] .aj-line__extra { grid-column: 2 / -1; display: grid; gap: var(--s-1); justify-items: start; }
 [data-shell='admin'] .aj-line .rv-actions { display: grid; gap: var(--s-1); }
 [data-shell='admin'] .aj-line .rv-buttons { display: flex; flex-wrap: wrap; gap: var(--s-1); }
-/* Ngăn Điều chỉnh sau khóa sổ: chỉ "−", ô số, Bỏ; khối "Vì sao giảm?" ngay dưới dòng giảm (R-D6.14) */
+/* Ngăn Điều chỉnh sau khóa sổ: chỉ "−", ô số, Bỏ; khối "Vì sao giảm?" ngay dưới dòng giảm */
 [data-shell='admin'] .aj-line .stepper { grid-template-columns: 28px minmax(40px, auto); }
 [data-shell='admin'] .aj-line__hint { margin: 0; font: var(--t-sm); color: var(--c-warn); }
 [data-shell='admin'] .aj-w11 { justify-self: stretch; }

@@ -20,8 +20,9 @@ const read = (dir: string, keep: (f: string) => boolean): Source[] =>
     .filter(keep)
     .map((f) => ({ file: f, text: readFileSync(join(dir, f), 'utf8') }));
 
-// Hàm (khai báo hoặc arrow gán const) mà thân gọi tới một hàm gieo → gọi hàm đó cũng là gieo dữ liệu PW
-function seedingFunctions(sources: string[]): Set<string> {
+const callPattern = (name: string) => new RegExp(`\\b${name}\\(`);
+
+function functionBodies(sources: string[]): Map<string, string> {
   const bodies = new Map<string, string>();
   const decl = /^([ \t]*)(?:export\s+)?(?:(?:async\s+)?function\s+(\w+)|const\s+(\w+)\s*=\s*(?:async\s*)?\()/gm;
   for (const src of sources) {
@@ -34,12 +35,18 @@ function seedingFunctions(sources: string[]): Set<string> {
       bodies.set(m[2] ?? m[3], src.slice(src.indexOf('(', m.index), end));
     }
   }
-  const found = new Set(SEEDERS);
+  return bodies;
+}
+
+// Hàm mà thân khớp mẫu hoặc gọi tới một hàm đã thuộc tập → gọi hàm đó cũng là làm việc ấy
+function closureOf(bodies: Map<string, string>, start: Iterable<string>, direct?: RegExp): Set<string> {
+  const found = new Set(start);
+  for (const [name, body] of bodies) if (direct?.test(body)) found.add(name);
   for (let grew = true; grew; ) {
     grew = false;
     for (const [name, body] of bodies) {
       if (found.has(name)) continue;
-      if ([...found].some((s) => new RegExp(`\\b${s}\\(`).test(body))) {
+      if ([...found].some((s) => callPattern(s).test(body))) {
         found.add(name);
         grew = true;
       }
@@ -48,8 +55,28 @@ function seedingFunctions(sources: string[]): Set<string> {
   return found;
 }
 
+const seedingFunctions = (sources: string[]) => closureOf(functionBodies(sources), SEEDERS);
+
+// Bản chốt ở kỳ trước thật làm kỳ dev của chủ hiện "đã gửi" với bản PW → chỉ ghi vào kỳ riêng PRIVATE_YM.
+// print/reports có từ trước luật này, chưa chuyển sang kỳ riêng
+const LEGACY_SNAPSHOT_WRITERS = ['print.spec.ts', 'reports.spec.ts'];
+const SNAPSHOT_WRITE = /INSERT INTO report_snapshots|request\.post\([^)]*\/snapshots`/;
+// Hàm cấp tệp nằm sau test cuối của một khối không thuộc test đó
+const TOP_LEVEL_DECL = /\n(?=(?:export\s+)?(?:async\s+)?function\s|const\s)/;
+
+function realPeriodSnapshotWrites(spec: string, writers: Set<string>): string[] {
+  const calls = [...writers].map(callPattern);
+  return spec
+    .split(TEST_START)
+    .slice(1)
+    .map((block) => block.split(TOP_LEVEL_DECL)[0])
+    .filter((block) => SNAPSHOT_WRITE.test(block) || calls.some((c) => c.test(block)))
+    .filter((block) => !(block.includes('PRIVATE_YM') && block.includes('clearPrivateSnapshots()')))
+    .map((block) => block.trim().split('\n')[0]);
+}
+
 function unseededWrites(spec: string, seeders: Set<string>): string[] {
-  const calls = [...seeders].map((s) => new RegExp(`\\b${s}\\(`));
+  const calls = [...seeders].map(callPattern);
   return spec
     .split(TEST_START)
     .slice(1)
@@ -61,6 +88,7 @@ describe('chính sách dữ liệu Playwright: chỉ ghi lên dữ liệu PW t�
   const helpers = read(PW_DIR, (f) => f.endsWith('.ts'));
   const specs = helpers.filter((s) => s.file.endsWith('.spec.ts'));
   const seeders = seedingFunctions(helpers.map((s) => s.text));
+  const snapshotWriters = closureOf(functionBodies(helpers.map((s) => s.text)), [], SNAPSHOT_WRITE);
 
   it('bộ quét bắt được test ghi mà không gieo, và chấp nhận test có gieo qua hàm trung gian', () => {
     const bad = `test('a', async ({ request }) => {\n  await request.post('/api/admin/lines/x/deliver', {});\n});\n`;
@@ -80,6 +108,22 @@ describe('chính sách dữ liệu Playwright: chỉ ghi lên dữ liệu PW t�
   it.each(specs.map((s) => [s.file, s]))('%s: mọi lời gọi ghi nằm trong test có gieo món/người PW', (_f, s) => {
     expect(unseededWrites(s.text, seeders)).toEqual([]);
   });
+
+  it('bộ quét bản chốt bắt được ghi qua hàm trung gian ở kỳ thật, chấp nhận kỳ riêng có dọn', () => {
+    const helper = `function insertSnap(ym) {\n  return psql(\`INSERT INTO report_snapshots (period_ym) VALUES ('\${ym}-01')\`);\n}\n`;
+    const real = `\ntest('a', async () => {\n  insertSnap(seed.prevYm);\n});\n${helper}`;
+    const priv = `\ntest('b', async () => {\n  insertSnap(PRIVATE_YM);\n  clearPrivateSnapshots();\n});\n`;
+    const writers = closureOf(functionBodies([helper]), [], SNAPSHOT_WRITE);
+    expect(realPeriodSnapshotWrites(real, writers)).toEqual(["test('a', async () => {"]);
+    expect(realPeriodSnapshotWrites(priv, writers)).toEqual([]);
+  });
+
+  it.each(specs.filter((s) => !LEGACY_SNAPSHOT_WRITERS.includes(s.file)).map((s) => [s.file, s]))(
+    '%s: test ghi bản chốt chỉ ghi vào kỳ riêng PRIVATE_YM và dọn bằng clearPrivateSnapshots',
+    (_f, s) => {
+      expect(realPeriodSnapshotWrites(s.text, snapshotWriters)).toEqual([]);
+    },
+  );
 
   it('web/playwright không có mã món dev, không dùng demo-d10, không lọc món thật', () => {
     const offenders = helpers.flatMap((s) =>

@@ -28,7 +28,7 @@ function useLineFacts() {
   return { byId, toneOf, metaOf, fmt };
 }
 
-// Món đã ngừng (hoặc nhóm ngừng) sau khóa sổ vẫn giảm/bỏ được như thường, chỉ gắn nhãn (R-D6.21)
+// Món đã ngừng (hoặc nhóm ngừng) sau khóa sổ vẫn giảm/bỏ được như thường, chỉ gắn nhãn
 function LineTags({ line, item }: { line: LineView; item: AdminItem | undefined }) {
   const { t } = useTranslation();
   const adminOnly = item?.admin_only ?? line.item?.admin_only ?? false;

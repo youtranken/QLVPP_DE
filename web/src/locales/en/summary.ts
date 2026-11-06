@@ -112,6 +112,7 @@ const summary: Messages<typeof vi> = {
       noDepartment: 'No department',
       open: 'Open',
       locked: 'Locked',
+      removedAll: '0 items — removed by admin',
       lockedWarn: 'The period is locked. Lines can only be reduced or removed, each with a reason; not below delivered.',
       leftCompany: 'Left the company',
       heading: 'Items on request · {{n}} lines',

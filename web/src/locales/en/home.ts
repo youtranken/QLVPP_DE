@@ -20,7 +20,7 @@ const home: Messages<typeof vi> = {
         register: 'Sign-ups are still open.',
         send: 'The period is locked. Print the form for signing or export Excel for ADM.',
         arrive: 'Enter the quantities ADM sent so they are added to the cabinet.',
-        deliver: 'Goods are in. Deliver person by person; anything short stays under Not collected.',
+        deliver: 'Goods are in. Deliver person by person; anything short stays under Not yet received.',
       },
     },
     step: {
@@ -56,6 +56,7 @@ const home: Messages<typeof vi> = {
     },
     left: {
       action: 'Handle',
+      debt: "View last month's debt",
     },
     cta: {
       register: 'View summary',

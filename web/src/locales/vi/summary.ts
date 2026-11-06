@@ -109,6 +109,7 @@ const summary = {
       noDepartment: 'Chưa có phòng ban',
       open: 'Đang mở',
       locked: 'Đã khóa',
+      removedAll: '0 món — Hành chính đã bỏ toàn bộ',
       lockedWarn: 'Kỳ đã khóa. Chỉ giảm hoặc bỏ dòng, mỗi dòng giảm cần lý do; không giảm dưới số đã giao.',
       leftCompany: 'Người đã nghỉ',
       heading: 'Món trong phiếu · {{n}} dòng',

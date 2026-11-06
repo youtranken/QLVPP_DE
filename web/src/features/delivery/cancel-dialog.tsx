@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode, apiErrorFields, apiErrorNumber } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
+import { cutNote, noteLength } from '@/lib/note-text';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { FormField } from '@/ui/form-field';
@@ -52,8 +53,8 @@ function useCancelForm(line: BacklogLine, initialReason: CancelReason | undefine
   const [note, setNote] = useState('');
   const [failed, setFailed] = useState<Failure | null>(null);
   const [seen, setSeen] = useState<{ qty: number; delivered: number } | null>(null);
-  const trimmed = note.trim();
-  const ready = code !== null && (code !== 'other' || [...trimmed].length >= OTHER_NOTE_MIN);
+  const trimmed = note.normalize('NFC').trim();
+  const ready = code !== null && (code !== 'other' || noteLength(note) >= OTHER_NOTE_MIN);
   return { code, setCode, note, setNote, trimmed, failed, setFailed, setSeen, qty: seen?.qty ?? line.qty, delivered: seen?.delivered ?? line.delivered_qty, ready };
 }
 
@@ -126,15 +127,14 @@ export function CancelDialog({ line, sentYm, initialReason, onDone, onStale, onC
               form.setFailed(null);
             }}
           />
-          <FormField label={t(`${KEY}.note`)} hint={t(`${KEY}.noteHint`)} error={noteError} counter={{ value: form.note.length, max: REASON_MAX }} required={form.code === 'other'}>
+          <FormField label={t(`${KEY}.note`)} hint={t(`${KEY}.noteHint`)} error={noteError} counter={{ value: noteLength(form.note), max: REASON_MAX }} required={form.code === 'other'}>
             {(p) => (
               <textarea
                 {...p}
                 rows={2}
-                maxLength={REASON_MAX}
                 value={form.note}
                 onChange={(e) => {
-                  form.setNote(e.target.value);
+                  form.setNote(cutNote(e.target.value, REASON_MAX));
                   form.setFailed(null);
                 }}
               />

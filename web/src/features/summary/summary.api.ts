@@ -87,7 +87,7 @@ export function usePersonRows(ym: string | undefined, filter: SummaryFilter, q: 
   });
 }
 
-// Người đã nghỉ còn phần chưa nhận ở kỳ khóa (nhắc W25 ở Tháng này); trang đầu 100 người là đủ để nhắc
+// Người đã nghỉ còn phần chưa nhận ở kỳ khóa (nhắc ở Tháng này); trang đầu 100 người là đủ để nhắc
 export function useLeftPeople(ym: string, enabled: boolean) {
   return useQuery({
     queryKey: [...SUMMARY_KEY, ym, 'person', 'left-reminder'],

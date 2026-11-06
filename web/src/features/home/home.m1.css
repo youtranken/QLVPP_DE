@@ -60,5 +60,5 @@
   [data-shell='admin'] .hm-hero .seg-m1 { width: 100%; grid-auto-flow: row; border-radius: var(--r-lg); }
 }
 [data-shell='admin'] .hm-left { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); }
-[data-shell='admin'] .hm-left span { min-width: 0; overflow-wrap: anywhere; }
+[data-shell='admin'] .hm-left span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 767px) { [data-shell='admin'] .hm-left .btn { min-height: var(--hit); } }

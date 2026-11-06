@@ -42,6 +42,18 @@ describe('SummaryPersonTable — bảng theo người', () => {
     expect(within(duc).getByText('1 món ngoài DM chờ xem')).toBeInTheDocument();
   });
 
+  it('kỳ khóa, phiếu 0 dòng → ghi chú "0 món — Hành chính đã bỏ toàn bộ"; phiếu có dòng thì không', async () => {
+    renderTable({
+      locked: true,
+      rows: [
+        person({ request_id: 'r-0', full_name: 'Lê Bỏ Hết', line_count: 0, total_qty: 0, delivered_qty: 0, cancelled_qty: 0 }),
+        person({ request_id: 'r-1', full_name: 'Lê Còn', total_qty: 2 }),
+      ],
+    });
+    expect(within(await rowOf('Lê Bỏ Hết')).getByText('0 món — Hành chính đã bỏ toàn bộ')).toBeInTheDocument();
+    expect(within(await rowOf('Lê Còn')).queryByText(/Hành chính đã bỏ toàn bộ/)).toBeNull();
+  });
+
   it('kỳ mở: cột Giao "Giao sau khi khóa kỳ", không thanh tiến độ, không nút Giao', async () => {
     renderTable();
     const duc = await rowOf('Phạm Văn Đức');

@@ -1,18 +1,19 @@
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatVnStamp } from '@/lib/format-time';
+import { noteLength } from '@/lib/note-text';
 import { FormField } from '@/ui/form-field';
 import { ADJUST_REASONS } from './summary.api';
-import { NOTE_MAX, noteLength, type Adjust, type LineReason } from './use-adjust';
+import { NOTE_MAX, type Adjust, type LineReason } from './use-adjust';
 import type { LineView } from '@/features/request/request.api';
 
-// W11 (R-D17.6): kỳ đã có bản gửi ADM → giảm bây giờ thì phần giảm về dư vào kho; không chặn Lưu
+// Kỳ đã có bản gửi ADM → giảm bây giờ thì phần giảm về dư vào kho; không chặn Lưu
 function SentWarning({ sentAt, n, unit }: { sentAt: string; n: number; unit: string }) {
   const { t } = useTranslation();
   return <p className="alert alert--warn aj-w11">{t('warn.W11', { time: formatVnStamp(sentAt), n, unit })}</p>;
 }
 
-// Khối "Vì sao giảm?" của một dòng (R-D6.14): chỉ hiện khi số mới < số cũ; ẩn thì nháp vẫn giữ trong use-adjust
+// Khối "Vì sao giảm?" của một dòng: chỉ hiện khi số mới < số cũ; ẩn thì nháp vẫn giữ trong use-adjust
 function ReasonBlock({ reason, onChange, reuse }: { reason: LineReason; onChange: (r: LineReason) => void; reuse?: () => void }) {
   const { t } = useTranslation();
   const id = useId();

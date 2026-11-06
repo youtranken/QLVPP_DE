@@ -22,6 +22,14 @@ const planOf = (rows: PlanRow[], snapshot: object | null = { id: 's1', kind: 'pr
 });
 
 const LEFT_URL = '/api/admin/periods/2026-10/requests?by=person&filter=left&limit=100';
+const BACKLOG_URL = '/api/admin/backlog?by=person';
+type Debtor = { name: string; status: string };
+const debtGroup = ({ name, status }: Debtor) => ({
+  key: `u-${name}`,
+  label: { user_sub: `u-${name}`, full_name: name, department: null },
+  remaining_qty: 2,
+  lines: [{ line_id: `l-${name}`, user_sub: `u-${name}`, full_name: name, user_status: status, period_ym: '2026-09', remaining_qty: 2 }],
+});
 
 interface Setup {
   locked?: object;
@@ -34,6 +42,7 @@ interface Setup {
   unregisteredFails?: boolean;
   low?: { id: string; name: string; name_en: string | null; stock_qty: number }[];
   left?: string[];
+  debt?: Debtor[];
 }
 
 function setup(o: Setup = {}) {
@@ -45,7 +54,8 @@ function setup(o: Setup = {}) {
     '/api/admin/periods/2026-11/unregistered': () => (o.unregisteredFails ? jsonResponse(500, null) : jsonResponse(200, { items: Array.from({ length: o.unregistered ?? 0 }, (_, i) => person(i + 1)) })),
     '/api/admin/review?status=pending': () => (o.reviewFails ? jsonResponse(500, null) : jsonResponse(200, { items: Array.from({ length: o.review ?? 0 }, (_, i) => ({ line_id: `l${i}` })) })),
     '/api/admin/stock/low': () => jsonResponse(200, o.low ?? []),
-    [LEFT_URL]: () => jsonResponse(200, { items: (o.left ?? []).map((name, i) => ({ request_id: `r-${i}`, user_sub: `u-${i}`, full_name: name, user_status: 'locked' })), next_cursor: null }),
+    [LEFT_URL]: () => jsonResponse(200, { items: (o.left ?? []).map((name, i) => ({ request_id: `r-${i}`, user_sub: `u-${name}`, full_name: name, user_status: 'locked' })), next_cursor: null }),
+    [BACKLOG_URL]: () => jsonResponse(200, { groups: (o.debt ?? []).map(debtGroup) }),
   });
 }
 
@@ -225,6 +235,26 @@ describe('Trang Tháng này: nhắc người đã nghỉ còn phần chưa nhậ
     await open({ left: ['C'] });
     expect(await screen.findByText('1 người đã nghỉ còn phần chưa nhận: C')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Xử lý' })).toHaveAttribute('href', '/admin/summary?ym=2026-10&left=1');
+  });
+
+  it('D đã nghỉ chỉ còn nợ tháng trước → vẫn nhắc, "Xem nợ tháng trước" mở Còn nợ ?left=1, không có "Xử lý"', async () => {
+    await open({ debt: [{ name: 'D', status: 'locked' }, { name: 'An', status: 'active' }] });
+    expect(await screen.findByText('1 người đã nghỉ còn phần chưa nhận: D')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Xem nợ tháng trước' })).toHaveAttribute('href', '/admin/backlog?left=1');
+    expect(screen.queryByRole('link', { name: 'Xử lý' })).toBeNull();
+  });
+
+  it('C còn phần kỳ giao và cả nợ, D chỉ nợ → đếm mỗi người một lần, đủ hai nút', async () => {
+    await open({ left: ['C'], debt: [{ name: 'C', status: 'locked' }, { name: 'D', status: 'locked' }] });
+    expect(await screen.findByText('2 người đã nghỉ còn phần chưa nhận: C, D')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Xử lý' })).toHaveAttribute('href', '/admin/summary?ym=2026-10&left=1');
+    expect(screen.getByRole('link', { name: 'Xem nợ tháng trước' })).toHaveAttribute('href', '/admin/backlog?left=1');
+  });
+
+  it('chỉ C ở kỳ giao → không có "Xem nợ tháng trước"', async () => {
+    await open({ left: ['C'] });
+    await screen.findByText('1 người đã nghỉ còn phần chưa nhận: C');
+    expect(screen.queryByRole('link', { name: 'Xem nợ tháng trước' })).toBeNull();
   });
 
   it('2 người → nối tên bằng ", "', async () => {

@@ -95,6 +95,7 @@ function useColumns(locked: boolean, stale: boolean, onOpen: (id: string) => voi
         header: t('summary.table.note'),
         cell: ({ row: { original: r } }) => (
           <>
+            {locked && r.line_count === 0 && <span className="sm-muted">{t('summary.adjust.removedAll')}</span>}
             {r.custom_pending > 0 && <span className="tag tag--warn">{t('summary.table.customPending', { n: r.custom_pending })}</span>}
             {r.over_max && <span className="tag tag--warn">{t('summary.table.overMax')}</span>}
           </>

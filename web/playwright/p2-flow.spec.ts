@@ -63,7 +63,7 @@ async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person,
   let drawer = await openDrawer(admin, a);
   await drawer.getByRole('button', { name: `Bỏ ${dropped} khỏi phiếu` }).click();
   await snap(admin, info, 'admin-adjust');
-  // Lý do riêng từng dòng giảm (R-D6.14)
+  // Lý do riêng từng dòng giảm
   await drawer.getByRole('listitem').filter({ hasText: dropped }).getByRole('radiogroup', { name: 'Vì sao giảm?' }).getByRole('radio', { name: 'Trùng với phiếu khác' }).check();
   await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();
   await expect(drawer).toBeHidden();
