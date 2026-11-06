@@ -6,7 +6,7 @@ import type { ArrivalRow } from './arrival-rows';
 import { postCustomReceipt, postReceipt, type PlanCustomRow } from './arrivals.api';
 import { useRefreshArrivals } from './use-arrivals-plan';
 
-export type Notice = { kind: 'saved'; n: number } | { kind: 'error'; code: string; itemId?: string } | null;
+export type Notice = { kind: 'saved'; n: number } | { kind: 'error'; code: string; itemId?: string } | { kind: 'partial'; x: number; n: number } | { kind: 'makeup'; ym: string } | null;
 
 // Lưu một đợt (tất cả hoặc không) và "Đủ hàng" dùng chung một luồng chống bấm đúp
 export function useArrivalsSave(ym: string) {
@@ -30,17 +30,27 @@ export function useArrivalsSave(ym: string) {
       await refresh();
     });
 
-  const full = (rows: ArrivalRow[], custom: PlanCustomRow[], onDone: () => void) =>
+  // Tủ lưu một lần, món ngoài DM ghi từng khóa sau đó: lỗi giữa chừng thì báo rõ phần đã lưu (thử lại an toàn: tủ còn 0, ngoài DM có expected_received)
+  const full = (rows: ArrivalRow[], custom: PlanCustomRow[], onStocked: () => void) =>
     flight.run(async () => {
+      let stocked = false;
+      let recorded = 0;
       try {
         if (rows.length > 0) {
           await postReceipt({ lines: rows.map((r) => ({ item_id: r.item_id, qty: r.remaining, expected_stock_qty: r.stock })), ym }, csrfToken);
         }
-        for (const c of custom) await postCustomReceipt(ym, { line_key: c.key, qty: c.remaining, expected_received: c.received }, csrfToken);
+        stocked = true;
+        for (const c of custom) {
+          await postCustomReceipt(ym, { line_key: c.key, qty: c.remaining, expected_received: c.received }, csrfToken);
+          recorded += 1;
+        }
         setNotice(null);
-        onDone();
+        onStocked();
       } catch (e) {
-        fail(e);
+        if (stocked) {
+          setNotice({ kind: 'partial', x: rows.length, n: custom.length - recorded });
+          onStocked();
+        } else fail(e);
       }
       await refresh();
     });

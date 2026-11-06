@@ -56,3 +56,4 @@
 - Đ46. Cách chạy Plan D: chia 4–5 đợt theo mảng (Dữ liệu/API · Gửi ADM+Hàng về · Giao+Còn nợ · Danh mục+Tủ · Giao diện chung); làm liền trong đợt, review + Playwright full 1 lần cuối mỗi đợt; cuối plan: final review + code-review high + 1 đợt sửa.
 - Đ47. Tăng tốc phần còn lại (chủ dự án 2026-11-06): đợt 3 + đợt 4 chạy song song, mỗi đợt một git worktree riêng, gộp vào feat/giao-dien-v2d trước cổng; task trong đợt không chạy Playwright (chỉ unit/e2e/db + build), Playwright full chỉ ở cổng đợt; task giao diện đơn giản dùng sonnet, review cổng vẫn opus.
 - Đ48. Dev .env thêm THROTTLE_IP_PER_MIN/THROTTLE_USER_PER_MIN=100000 (chỉ máy dev). Đợt 5 thêm task: /api/files không tính vào giới hạn chung, ảnh có Cache-Control để trình duyệt nhớ, web tải lại ảnh khi 429.
+- Đ49. Bỏ Playwright ở cổng các đợt còn lại (3, 4, 5): cổng chỉ review + unit/e2e/db/build. Playwright full chạy MỘT lần ở cuối Plan D (sau đợt sửa cuối).

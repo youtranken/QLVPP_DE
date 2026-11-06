@@ -6,7 +6,7 @@ import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
 import { PeriodsService } from '../periods/periods.service';
-import { changedAt } from './changed-after';
+import { changedAt, deliveredSince } from './changed-after';
 import { clearNoOrderFlag, lockNoOrderFlag } from './no-order-flag';
 import { resolveOrderQty } from './order-qty';
 import { ReportsService } from './reports.service';
@@ -26,6 +26,7 @@ export interface SendState {
   sent: SentSnapshot | null;
   changed_after: boolean;
   changed_at: string | null;
+  delivered_since: Record<string, number>;
 }
 
 @Injectable()
@@ -51,6 +52,9 @@ export class SendStateService {
     const changed = sent
       ? await changedAt(this.db, ym, new Date(sent.created_at))
       : null;
+    const delivered = sent
+      ? await deliveredSince(this.db, ym, new Date(sent.created_at))
+      : {};
     return {
       state: sent ? 'sent' : flag?.no_order_at ? 'no_order' : 'unsent',
       no_order_at: flag?.no_order_at
@@ -60,6 +64,7 @@ export class SendStateService {
       sent,
       changed_after: changed !== null,
       changed_at: changed?.toISOString() ?? null,
+      delivered_since: delivered,
     };
   }
 

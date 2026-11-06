@@ -27,7 +27,7 @@ import './arrivals.m1.css';
 const UNLOCKED_KEY = 'arrivals.unlocked';
 const CLEAR_FILTER = { q: null, g: null, short: null };
 
-function NoticeLine({ notice, nameOf }: { notice: Notice; nameOf: (id: string) => string }) {
+function NoticeLine({ notice, nameOf, onRetry }: { notice: Notice; nameOf: (id: string) => string; onRetry: () => void }) {
   const { t, i18n } = useTranslation();
   if (!notice) return null;
   if (notice.kind === 'saved') {
@@ -40,6 +40,23 @@ function NoticeLine({ notice, nameOf }: { notice: Notice; nameOf: (id: string) =
           {t('arrivals.toDelivery')}
         </Link>
       </div>
+    );
+  }
+  if (notice.kind === 'partial') {
+    return (
+      <div role="alert" className="ar-warn">
+        <span>{t('arrivals.full.partial', { x: notice.x, n: notice.n })}</span>{' '}
+        <button type="button" className="btn btn--sm" onClick={onRetry}>
+          {t('arrivals.full.retry')}
+        </button>
+      </div>
+    );
+  }
+  if (notice.kind === 'makeup') {
+    return (
+      <p role="alert" className="ar-warn">
+        {t('arrivals.makeup.failed', { month: monthOf(notice.ym) })}
+      </p>
     );
   }
   const { code, itemId } = notice;
@@ -86,8 +103,8 @@ function ArrivalsBoard({ ym }: { ym: string }) {
 
   const rows = toArrivalRows(plan, added.flatMap((id) => items.data.filter((i) => i.id === id)));
   const done = isAllArrived(plan);
-  // Đã về đủ: chỉ còn bày hàng thêm tay và món ngừng còn phần đặt chưa về
-  const tableRows = done ? rows.filter((r) => r.added || (!r.usable && !r.adm_out && r.remaining > 0)) : rows;
+  // Đã về đủ: chỉ còn bày hàng thêm tay
+  const tableRows = done ? rows.filter((r) => r.added) : rows;
   const visible = applyArrivalFilter(tableRows, filter, known);
   const counts = groupCounts(rows, (r) => groupOf(r, known), NO_GROUP);
   const groups = [...counts.keys()].map((id) => ({ id, label: labelOf(id) }));
@@ -115,11 +132,13 @@ function ArrivalsBoard({ ym }: { ym: string }) {
     await saver.save(toSend, note, afterSave);
     setDialog(null);
   };
-  const doFull = async () => {
-    await saver.full(batch.lines, customLeft, () => {
+  const runFull = (lines: typeof batch.lines) =>
+    saver.full(lines, customLeft, () => {
       draft.reset();
-      toast.show({ text: t('arrivals.full.done', { x: batch.lines.length }), tone: 'ok' });
+      if (lines.length > 0) toast.show({ text: t('arrivals.full.done', { x: lines.length }), tone: 'ok' });
     });
+  const doFull = async () => {
+    await runFull(batch.lines);
     setDialog(null);
   };
   const toggleAdm = async (key: string, on: boolean) => {
@@ -127,9 +146,9 @@ function ArrivalsBoard({ ym }: { ym: string }) {
     draft.clear(key);
     saver.setNotice(code ? { kind: 'error', code } : null);
   };
-  const afterSide = async (code: string | null, saved?: number) => {
-    saver.setNotice(code ? { kind: 'error', code } : null);
-    if (!code && saved) toast.show({ text: t('arrivals.makeup.saved', { n: saved }), tone: 'ok' });
+  const afterSide = async (code: string | null, saved?: number, failedYm?: string) => {
+    saver.setNotice(failedYm ? { kind: 'makeup', ym: failedYm } : code ? { kind: 'error', code } : null);
+    if ((!code || failedYm) && saved) toast.show({ text: t('arrivals.makeup.saved', { n: saved }), tone: 'ok' });
     await saver.refresh();
   };
   const nameOf = (id: string) => {
@@ -139,7 +158,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
 
   return (
     <>
-      <NoticeLine notice={saver.notice} nameOf={nameOf} />
+      <NoticeLine notice={saver.notice} nameOf={nameOf} onRetry={() => void runFull([])} />
       <ArrivalsToolbar
         plan={plan}
         filter={filter}

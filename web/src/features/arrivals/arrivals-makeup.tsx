@@ -9,27 +9,45 @@ import { postCustomReceipt, postReceipt, setOwedClosed, type PlanMakeupGroup, ty
 
 interface Props {
   groups: PlanMakeupGroup[];
-  onDone: (error: string | null, saved?: number) => Promise<void>;
+  onDone: (error: string | null, saved?: number, failedYm?: string) => Promise<void>;
 }
 
 const idOf = (ym: string, key: string) => `${ym}|${key}`;
 
-// Mỗi kỳ cũ một lần nhập (receipt_ym = kỳ đó); cùng món ở hai kỳ thì tủ dự kiến cộng dồn để lần sau không lệch
-async function saveMakeup(groups: PlanMakeupGroup[], qtyOf: (ym: string, r: PlanMakeupRow) => number, csrf: string | null) {
+class MakeupFailed extends Error {
+  readonly ym: string;
+  readonly saved: number;
+  constructor(ym: string, saved: number) {
+    super(ym);
+    this.ym = ym;
+    this.saved = saved;
+  }
+}
+
+// Mỗi kỳ cũ một lần nhập (receipt_ym = kỳ đó); cùng món ở hai kỳ thì tủ dự kiến cộng dồn để lần sau không lệch.
+// Lưu xong lần nào xóa ô của lần đó ngay: lỗi ở kỳ sau thì bấm lại không nhập trùng kỳ trước
+async function saveMakeup(groups: PlanMakeupGroup[], qtyOf: (ym: string, r: PlanMakeupRow) => number, csrf: string | null, cleared: (ids: string[]) => void) {
   const stock = new Map<string, number>();
   let saved = 0;
   for (const g of groups) {
     const picked = g.rows.filter((r) => qtyOf(g.ym, r) > 0);
     const items = picked.filter((r) => r.item_id !== null);
-    if (items.length > 0) {
-      const lines = items.map((r) => ({ item_id: r.item_id as string, qty: qtyOf(g.ym, r), expected_stock_qty: stock.get(r.item_id as string) ?? r.stock_qty ?? 0 }));
-      await postReceipt({ lines, ym: g.ym }, csrf);
-      for (const l of lines) stock.set(l.item_id, l.expected_stock_qty + l.qty);
+    try {
+      if (items.length > 0) {
+        const lines = items.map((r) => ({ item_id: r.item_id as string, qty: qtyOf(g.ym, r), expected_stock_qty: stock.get(r.item_id as string) ?? r.stock_qty ?? 0 }));
+        await postReceipt({ lines, ym: g.ym }, csrf);
+        for (const l of lines) stock.set(l.item_id, l.expected_stock_qty + l.qty);
+        cleared(items.map((r) => idOf(g.ym, r.key)));
+        saved += items.length;
+      }
+      for (const r of picked.filter((x) => x.item_id === null)) {
+        await postCustomReceipt(g.ym, { line_key: r.key, qty: qtyOf(g.ym, r), expected_received: r.received }, csrf);
+        cleared([idOf(g.ym, r.key)]);
+        saved += 1;
+      }
+    } catch {
+      throw new MakeupFailed(g.ym, saved);
     }
-    for (const r of picked.filter((x) => x.item_id === null)) {
-      await postCustomReceipt(g.ym, { line_key: r.key, qty: qtyOf(g.ym, r), expected_received: r.received }, csrf);
-    }
-    saved += picked.length;
   }
   return saved;
 }
@@ -53,15 +71,20 @@ export function ArrivalsMakeup({ groups, onDone }: Props) {
         const n = await task();
         await onDone(null, typeof n === 'number' ? n : undefined);
       } catch (e) {
-        await onDone(apiErrorCode(e) ?? 'UNKNOWN');
+        if (e instanceof MakeupFailed) await onDone('MAKEUP_FAILED', e.saved, e.ym);
+        else await onDone(apiErrorCode(e) ?? 'UNKNOWN');
       }
     });
   const save = () =>
-    run(async () => {
-      const n = await saveMakeup(groups, qtyOf, csrfToken);
-      setRaw({});
-      return n;
-    });
+    run(() =>
+      saveMakeup(groups, qtyOf, csrfToken, (ids) =>
+        setRaw((prev) => {
+          const next = { ...prev };
+          for (const id of ids) delete next[id];
+          return next;
+        }),
+      ),
+    );
   const close = (ym: string, r: PlanMakeupRow) =>
     run(async () => {
       await setOwedClosed(ym, r.key, true, csrfToken);

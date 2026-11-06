@@ -18,14 +18,17 @@ export interface Seed {
 }
 
 // Kỳ đã khóa (hạn đã qua) seed bằng SQL; món không ảnh để không phụ thuộc kho tệp đang có gì.
-// monthsBack 1 = tháng đang giao (Chưa nhận); 2 = tháng trước đó (Còn nợ thật)
-export async function seedLockedRequest(request: APIRequestContext, info: TestInfo, lines: { stock: number; qty: number }[], { monthsBack = 1 }: { monthsBack?: 1 | 2 } = {}): Promise<Seed> {
+// monthsBack 1 = tháng đang giao (Chưa nhận); 2 = tháng trước đó (Còn nợ thật). ym: seed vào kỳ đã khóa khác (kỳ riêng của PW), bỏ qua monthsBack
+export async function seedLockedRequest(request: APIRequestContext, info: TestInfo, lines: { stock: number; qty: number }[], { monthsBack = 1, ym }: { monthsBack?: 1 | 2; ym?: string } = {}): Promise<Seed> {
   const tag = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}${isMobile(info) ? 'm' : 'd'}`;
   const sub = `pw-dlv-${tag}`;
   const name = `PW Giao ${tag}`;
-  const period = await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json();
-  const current = prevYmOf(period.ym);
-  const prevYm = monthsBack === 2 ? prevYmOf(current) : current;
+  let prevYm = ym;
+  if (!prevYm) {
+    const period = await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json();
+    const current = prevYmOf(period.ym);
+    prevYm = monthsBack === 2 ? prevYmOf(current) : current;
+  }
   seedActiveUser(sub, name, 'active', { department: 'PW Phòng giao' });
   const items = lines.map((l, i) => {
     const itemName = `PW món ${String.fromCharCode(65 + i)} ${tag}`;

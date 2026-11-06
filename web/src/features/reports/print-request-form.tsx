@@ -2,7 +2,7 @@ import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SnapshotData } from './reports.api';
 import { formatVnStamp } from '@/lib/format-time';
-import { orderOf, signBoxesOf, useFrozenUnitName, vnStampParts, type SignBox } from './print-format';
+import { keepsZeroRows, orderOf, signBoxesOf, useFrozenUnitName, vnStampParts, type SignBox } from './print-format';
 
 const FORM_LANG = 'vi';
 const COLUMNS = ['no', 'code', 'name', 'nameEn', 'unit', 'qty'] as const;
@@ -19,10 +19,10 @@ interface FormRow {
 
 function useFormRows(snap: SnapshotData, noCode: string): FormRow[] {
   const unitName = useFrozenUnitName();
-  // Giữ hàng Đề nghị 0 để tờ in khớp bảng Gửi ADM
   const items = snap.byItem.map((r) => ({ key: r.key, code: r.code || noCode, name: r.name, nameEn: r.name_en ?? '', unit: unitName(r, FORM_LANG), qty: orderOf(snap, r) }));
   const custom = snap.custom.map((r) => ({ key: r.key, code: noCode, name: r.name, nameEn: '', unit: unitName(r, FORM_LANG), qty: orderOf(snap, r) }));
-  return [...items, ...custom];
+  const rows = [...items, ...custom];
+  return keepsZeroRows(snap) ? rows : rows.filter((r) => r.qty > 0);
 }
 
 function ColumnHead({ col }: { col: (typeof COLUMNS)[number] }) {

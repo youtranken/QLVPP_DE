@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import vi from '@/locales/vi/warnings';
 import en from '@/locales/en/warnings';
 
-// Chữ bắt buộc của danh mục cảnh báo (spec D17, R-D17.3); biến đặt tên lại cho i18next, chữ giữ từng ký tự
+// Chữ bắt buộc của danh mục cảnh báo; biến đặt tên lại cho i18next, chữ giữ từng ký tự
 const SPEC: Record<string, string> = {
   W1a: 'Đủ cho người đăng ký',
   W1b: 'Thiếu {{n}} — {{n}} {{unit}} sẽ không có để giao',

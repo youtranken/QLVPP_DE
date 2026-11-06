@@ -63,9 +63,10 @@ describe('monthSteps', () => {
     expect(step({ plan: plan([{ remaining: 0 }, { remaining: 0 }]) }, 'arrive')).toMatchObject({ done: true, value: 'Đủ hàng' });
   });
 
-  it('giá trị Hàng về = tổng remaining; hàng ADM hết hàng và món đã ngừng bị bỏ qua; ngoài DM còn remaining vẫn tính', () => {
+  it('giá trị Hàng về = tổng remaining; hàng ADM hết hàng bị bỏ qua; món đã ngừng đã đặt còn 2 vẫn chờ về; ngoài DM còn remaining vẫn tính', () => {
     expect(step({ plan: plan([{ remaining: 3 }, { remaining: 4 }]) }, 'arrive').value).toBe('7');
-    expect(step({ plan: plan([{ remaining: 0 }, { remaining: 5, adm_out: true }, { remaining: 2, usable: false }]) }, 'arrive').done).toBe(true);
+    expect(step({ plan: plan([{ remaining: 0 }, { remaining: 5, adm_out: true }]) }, 'arrive').done).toBe(true);
+    expect(step({ plan: plan([{ remaining: 0 }, { remaining: 2, usable: false }]) }, 'arrive')).toMatchObject({ done: false, value: '2' });
     expect(step({ plan: plan([{ remaining: 0 }], [{ remaining: 1 }]) }, 'arrive')).toMatchObject({ done: false, value: '1' });
     expect(step({ plan: plan([{ remaining: 0 }], [{ remaining: 1, adm_out: true }]) }, 'arrive').done).toBe(true);
   });

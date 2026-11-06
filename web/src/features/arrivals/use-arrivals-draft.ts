@@ -26,7 +26,7 @@ export function useArrivalsDraft() {
   };
 
   const fill = (group: string, rows: ArrivalRow[]) => {
-    const targets = rows.filter((r) => !r.adm_out && r.usable);
+    const targets = rows.filter((r) => !r.adm_out);
     setFills((prev) => ({ ...prev, [group]: Object.fromEntries(targets.map((r) => [r.item_id, raw[r.item_id]])) }));
     setRaw((prev) => ({ ...prev, ...Object.fromEntries(targets.map((r) => [r.item_id, String(r.remaining)])) }));
   };

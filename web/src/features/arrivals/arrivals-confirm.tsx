@@ -55,7 +55,7 @@ export interface FullSummary {
   items: number;
   units: number;
   time: string;
-  skip: { adm: number; inactive: number; done: number };
+  skip: { adm: number; done: number };
   custom: number;
   reduced: number;
   replacesDraft: boolean;
@@ -72,7 +72,6 @@ export function FullConfirm({ s, pending, onBack, onConfirm }: FullProps) {
   const { t } = useTranslation();
   const skips = [
     ['skipAdm', s.skip.adm],
-    ['skipInactive', s.skip.inactive],
     ['skipDone', s.skip.done],
   ].filter(([, n]) => Number(n) > 0) as [string, number][];
   return (

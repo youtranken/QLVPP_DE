@@ -48,6 +48,7 @@ const arrivals: Messages<typeof vi> = {
       saveLabel: 'Record received: {{name}}',
     },
     makeup: {
+      failed: 'Could not save make-up for month {{month}} — its numbers are kept so you can save again.',
       title: 'Make-up for earlier periods ({{n}})',
       month: 'Month',
       item: 'Item',
@@ -64,10 +65,11 @@ const arrivals: Messages<typeof vi> = {
       saved: 'Added make-up for {{n}} items to stock',
     },
     full: {
+      partial: 'Added {{x}} items to stock; could not record "Received" for {{n}} off-catalogue items — press Try again.',
+      retry: 'Try again',
       button: 'All arrived',
       title: 'All arrived per the print',
       skipAdm: '{{n}} out at ADM',
-      skipInactive: '{{n}} discontinued',
       skipDone: '{{n}} already received',
       custom: 'Record "Received" for {{n}} off-catalogue items (delivered directly, not stocked).',
       replaceDraft: 'Numbers typed in the table will be replaced.',

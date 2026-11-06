@@ -37,12 +37,20 @@ describe('Trang in · trang 1 Phiếu đề xuất (mẫu D&E)', () => {
     expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['STT No.', 'Mã Code', 'Tên vật dụng', 'Item name', 'ĐVT Unit', 'SL Qty']);
   });
 
-  it('mọi hàng của bản chốt theo thứ tự (Đề nghị 0 vẫn in số 0, 1 in 1), ngoài DM cuối với Mã "—"; ĐVT tên vi đã chụp', async () => {
-    openPrint(snapshotDataFixture({ order_qty: { [PEN_KEY]: 1, 'item-glue': 0, [TAPE_KEY]: 5 } }));
+  it('bản có order_basis: mọi hàng của bản theo thứ tự (Đề nghị 0 vẫn in số 0, 1 in 1), ngoài DM cuối với Mã "—"; ĐVT tên vi đã chụp', async () => {
+    openPrint(snapshotDataFixture({ order_qty: { [PEN_KEY]: 1, 'item-glue': 0, [TAPE_KEY]: 5 }, order_basis: {} }));
     expect(bodyRows(await formTable())).toEqual([
       ['1', 'B31', 'Bút bi xanh', 'Blue pen', 'cây', '1'],
       ['2', '—', 'Hồ dán', '', 'lọ', '0'],
       ['3', '—', 'Băng keo 2 mặt', '', 'cuộn', '5'],
+    ]);
+  });
+
+  it('bản cũ không có order_basis: in lại không thêm hàng Đề nghị 0 (giữ như tờ đã gửi ADM)', async () => {
+    openPrint(snapshotDataFixture({ order_qty: { [PEN_KEY]: 1, 'item-glue': 0, [TAPE_KEY]: 5 } }));
+    expect(bodyRows(await formTable())).toEqual([
+      ['1', 'B31', 'Bút bi xanh', 'Blue pen', 'cây', '1'],
+      ['2', '—', 'Băng keo 2 mặt', '', 'cuộn', '5'],
     ]);
   });
 
@@ -86,8 +94,8 @@ describe('Trang in · trang 1 Phiếu đề xuất (mẫu D&E)', () => {
   it('bản chốt cũ: thiếu code → "—", thiếu tên ĐVT → lấy tên vi hiện tại của bảng ĐVT', async () => {
     const base = snapshotDataFixture();
     const old = base.byItem.map(({ code: _c, unit_name: _u, unit_name_en: _e, ...r }) => r);
-    openPrint(snapshotDataFixture({ byItem: [old[0]], custom: [], order_qty: { [PEN_KEY]: 0, 'item-x': 1 } }));
-    expect(bodyRows(await formTable())).toEqual([['1', '—', 'Bút bi xanh', 'Blue pen', 'cây', '0']]);
+    openPrint(snapshotDataFixture({ byItem: [old[0]], custom: [], order_qty: { [PEN_KEY]: 2, 'item-x': 1 } }));
+    expect(bodyRows(await formTable())).toEqual([['1', '—', 'Bút bi xanh', 'Blue pen', 'cây', '2']]);
   });
 
   it('bản chốt cũ không có khóa order_qty của hàng → in số gộp 15', async () => {

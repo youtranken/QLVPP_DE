@@ -18,8 +18,6 @@ import { useReportsParams } from './use-reports-params';
 import { useSnapshotDownload } from './use-snapshot';
 import './reports.m1.css';
 
-const NO_FRESH: ReadonlySet<string> = new Set();
-
 function ReportsHeader() {
   const { t } = useTranslation();
   const title = t('nav.reports');
@@ -71,7 +69,7 @@ function ReportBody({ report, sent, period, onMonth }: BodyProps) {
       <ReportPart1 report={report} sent={sent} editable={report.ym === shiftYm(period.ym, -1)} />
       <ReportIssues issues={report.issues} />
       <ReportPart2 departments={report.byDepartment} />
-      <ReportSnapshots ym={report.ym} fresh={NO_FRESH} files={files} />
+      <ReportSnapshots ym={report.ym} files={files} />
     </div>
   );
 }

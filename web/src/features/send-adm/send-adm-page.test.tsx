@@ -7,8 +7,9 @@ import i18n from '@/lib/i18n';
 import { adminItem } from '@/features/summary/adjust-fixtures';
 import type { MonthReport } from '@/features/reports/reports.api';
 import { reportFixture } from '@/features/reports/reports-fixtures';
-import { captureDownloads, postsOf, stubReports } from '@/features/reports/reports-test-stub';
-import { UNSENT } from './send-adm-fixtures';
+import { captureDownloads, errorResponse, postsOf, stubReports } from '@/features/reports/reports-test-stub';
+import type { SendStateDto } from './send-adm.api';
+import { sentData, sentState, UNSENT } from './send-adm-fixtures';
 
 const SUMMARY_URL = '/api/admin/periods/2026-10/summary';
 const PAST = '2026-10-10T17:00:00.000Z';
@@ -28,13 +29,19 @@ const REPORT = reportFixture({
 });
 const ITEMS = [adminItem({ id: 'kA', name: 'Bút bi xanh' }), adminItem({ id: 'kB', name: 'Giấy A4' }), adminItem({ id: 'kOff', name: 'Món ngừng bán', active: false })];
 
-function setup(over: { report?: MonthReport; deadline?: string; summary?: object; items?: typeof ITEMS } = {}) {
-  const base = stubReports({ reports: { '2026-10': over.report ?? REPORT }, items: over.items ?? ITEMS });
+type StubOptions = NonNullable<Parameters<typeof stubReports>[0]>;
+
+// afterPost: trạng thái gửi sau khi POST bản chốt thành công (trang chuyển sang Đã gửi như thật)
+function setup(over: { report?: MonthReport; deadline?: string; summary?: object; items?: typeof ITEMS; post?: StubOptions['post']; exportFile?: StubOptions['exportFile']; afterPost?: SendStateDto } = {}) {
+  const base = stubReports({ reports: { '2026-10': over.report ?? REPORT }, items: over.items ?? ITEMS, post: over.post, exportFile: over.exportFile });
+  let state = UNSENT;
   const f = vi.fn(async (url: string, init?: RequestInit) => {
     if (url === SUMMARY_URL) return jsonResponse(200, { ym: '2026-10', deadline: over.deadline ?? PAST, unregistered: 3, custom_pending: 1, lines_pending_delivery: 0, ...over.summary });
     if (url === '/api/admin/config') return jsonResponse(200, { signature_boxes: BOXES });
-    if (url === '/api/admin/periods/2026-10/send-state') return jsonResponse(200, UNSENT);
-    return base(url, init);
+    if (url === '/api/admin/periods/2026-10/send-state') return jsonResponse(200, state);
+    const res = await base(url, init);
+    if (init?.method === 'POST' && res.ok && over.afterPost) state = over.afterPost;
+    return res;
   });
   vi.stubGlobal('fetch', f);
   return f;
@@ -131,7 +138,7 @@ describe('SendAdmPage — số đề nghị và xem trước', () => {
     expect(document.body.textContent).not.toMatch(/trừ tủ/);
   });
 
-  it('mặc định Đề nghị 13; sửa 13 → 10 thì phiếu hiện 10; món 0 không có trong phiếu', async () => {
+  it('mặc định Đề nghị 13; sửa 13 → 10 thì phiếu hiện 10; món sửa 0 vẫn có hàng SL 0 như tờ in', async () => {
     setup();
     await open();
     const a = await qtyBox('Bút bi xanh');
@@ -140,8 +147,8 @@ describe('SendAdmPage — số đề nghị và xem trước', () => {
     await retype(await qtyBox('Giấy A4'), '0');
     const sheet = await preview();
     expect(within(sheet).getByRole('row', { name: /Bút bi xanh/ })).toHaveTextContent('10');
-    expect(within(sheet).queryByRole('row', { name: /Giấy A4/ })).toBeNull();
-    expect(within(sheet).getAllByRole('row').slice(1).map((r) => within(r).getAllByRole('cell')[0].textContent)).toEqual(['1', '2', '3']);
+    expect(within(sheet).getByRole('row', { name: /Giấy A4/ })).toHaveTextContent(/0$/);
+    expect(within(sheet).getAllByRole('row').slice(1).map((r) => within(r).getAllByRole('cell')[0].textContent)).toEqual(['1', '2', '3', '4']);
   });
 
   it('Xuất Excel mẫu phòng gọi createSnapshot với order_qty chứa 10, reuse_if_unchanged, và tải tệp', async () => {
@@ -153,6 +160,30 @@ describe('SendAdmPage — số đề nghị và xem trước', () => {
     await waitFor(() => expect(postsOf(f)).toHaveLength(1));
     expect(postsOf(f)[0]).toEqual({ url: '/api/admin/reports/2026-10/snapshots', body: { kind: 'xlsx', order_qty: { kA: 10 }, reuse_if_unchanged: true } });
     await waitFor(() => expect(saved).toHaveLength(1));
+  });
+
+  it('Xuất Excel: POST ok, tải tệp 500 → lỗi "Không tải được tệp — thử lại." ở mục Bản chốt (cả khi đã về Đã gửi), không toast; "Thử lại" tải lại, 0 POST thêm', async () => {
+    const f = setup({ exportFile: () => errorResponse(500, 'INTERNAL'), afterPost: sentState(sentData(REPORT, { kA: 13 }, { id: 'snap-1' })) });
+    await open();
+    await userEvent.click(xlsx());
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Không tải được tệp — thử lại.');
+    expect(await screen.findByText(/^Đã gửi ADM lúc/)).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Không tải được tệp — thử lại.');
+    expect(screen.queryByText(/^Đã xuất Excel/)).toBeNull();
+    await userEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Thử lại' }));
+    await waitFor(() => expect(f.mock.calls.filter((c) => String(c[0]).includes('/export.xlsx'))).toHaveLength(2));
+    expect(postsOf(f)).toHaveLength(1);
+  });
+
+  it('POST 400 INVALID_PERIOD ở tháng mặc định → khối "Tháng này chưa tới, chưa lập báo cáo được." và tải lại kỳ hiện tại', async () => {
+    const f = setup({ post: () => errorResponse(400, 'INVALID_PERIOD') });
+    await open();
+    const periodCalls = () => f.mock.calls.filter((c) => c[0] === '/api/periods/current').length;
+    const before = periodCalls();
+    await userEvent.click(print());
+    expect(await screen.findByRole('alert')).toHaveTextContent('Tháng này chưa tới, chưa lập báo cáo được.');
+    await waitFor(() => expect(periodCalls()).toBeGreaterThan(before));
   });
 
   it('In trình ký gọi createSnapshot kind print và báo có link mở bản in', async () => {

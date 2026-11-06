@@ -27,6 +27,7 @@ export interface SendState {
   sent: SentView | null;
   changed_after: boolean;
   changed_at: string | null;
+  delivered_since: Record<string, number>;
 }
 
 export interface SnapshotListItem {

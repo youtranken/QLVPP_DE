@@ -6,6 +6,8 @@ import { useSingleFlight } from '@/lib/use-single-flight';
 import { useToast } from '@/ui/toast-context';
 import { monthOf } from '@/features/request/request-format';
 import { createSnapshot, downloadSnapshot, printPath, useRefreshSnapshots, useReloadReport, type MonthReport, type SnapshotKind } from './reports.api';
+import { downloadFailure, takeFailure, type DownloadError } from './reports-errors';
+import type { OrderQty } from './use-order-qty';
 
 export interface TakeOptions {
   // Gửi ADM: số trùng bản có hàng mới nhất cùng loại → server dùng lại bản đó
@@ -14,8 +16,6 @@ export interface TakeOptions {
   mustConfirm?: boolean;
   onTaken?: () => void;
 }
-import { downloadFailure, takeFailure, type DownloadError } from './reports-errors';
-import type { OrderQty } from './use-order-qty';
 
 export type SnapshotDownload = ReturnType<typeof useSnapshotDownload>;
 
@@ -106,7 +106,7 @@ function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDown
   return { post, pending: flight.pending, taking, fresh, notice, rejected, clearNotice: () => setNotice(null) };
 }
 
-// Mỗi lần Xuất/In là một bản chốt mới (quyết định chủ sản phẩm); chỉ gửi ô khác Cần mua, server vẫn kiểm 0–99 999
+// Chỉ gửi ô đã sửa (ô vắng = số mặc định ở server, server vẫn kiểm 0–99 999); reuse → số trùng bản mới nhất cùng loại thì server dùng lại bản đó
 export function useTakeSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => boolean, opts: TakeOptions = {}) {
   const sender = usePostSnapshot(report, qty, files, onInvalidPeriod, opts);
   const [tried, setTried] = useState(false);

@@ -133,23 +133,26 @@ describe('Hàng về — lọc ?q=&g=&short=1', () => {
 });
 
 describe('Hàng về — Về đủ cả nhóm', () => {
-  it('điền remaining cho hàng của nhóm, bỏ qua ADM hết hàng; 0 request; "Bỏ điền cả nhóm" trả số cũ; không có "ADM hết hàng cả nhóm"', async () => {
+  it('điền remaining cho hàng của nhóm (gồm món ngừng đã đặt), bỏ qua ADM hết hàng; 0 request; "Bỏ điền cả nhóm" trả số cũ; không có "ADM hết hàng cả nhóm"', async () => {
     const rows = [
       planRow({ item_id: 'k1', name: 'Kẹp 1', category_id: 'c-kep', remaining: 3 }),
       planRow({ item_id: 'k2', name: 'Kẹp 2', category_id: 'c-kep', remaining: 4 }),
       planRow({ item_id: 'k3', name: 'Kẹp 3', category_id: 'c-kep', remaining: 5, adm_out: true }),
+      planRow({ item_id: 'k4', name: 'Kẹp ngừng', category_id: 'c-kep', remaining: 2, usable: false }),
     ];
     const f = stub({ plan: plan(rows) });
     await open();
     await screen.findByDisplayValue('3');
     await type(box('Kẹp 1'), '1');
     await type(box('Kẹp 2'), '0');
+    await type(box('Kẹp ngừng'), '0');
     const before = f.mock.calls.length;
     const group = screen.getByRole('rowgroup', { name: 'Kẹp & dán' });
     await userEvent.click(within(group).getByRole('button', { name: 'Về đủ cả nhóm' }));
     expect(box('Kẹp 1')).toHaveValue(3);
     expect(box('Kẹp 2')).toHaveValue(4);
     expect(box('Kẹp 3')).toHaveValue(0);
+    expect(box('Kẹp ngừng')).toHaveValue(2);
     await userEvent.click(within(group).getByRole('button', { name: 'Bỏ điền cả nhóm' }));
     expect(box('Kẹp 1')).toHaveValue(1);
     expect(box('Kẹp 2')).toHaveValue(0);

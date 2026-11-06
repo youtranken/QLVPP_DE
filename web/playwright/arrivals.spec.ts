@@ -1,33 +1,31 @@
 import { expect, test, type Page } from '@playwright/test';
-import { acquireLock, asRole, expectNoContrastViolations, isMobile, psql, settled, shot } from './helpers';
+import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, settled, shot } from './helpers';
 import { seedLockedRequest, stockOf } from './locked-request';
+import { PRIVATE_YM, clearPrivateSnapshots, openOnPrivatePeriod } from './private-period';
 
 asRole('admin');
 
 const fitsWidth = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
-// Bản in PW chỉ chứa món PW: "Đủ hàng" không bao giờ chạm món thật của kỳ dev
-function insertSnapshot(prevYm: string, rows: { id: string; name: string; qty: number }[]): string {
-  const byItem = rows.map((r) => ({ key: r.id, item_id: r.id, code: null, name: r.name, name_en: null, unit: 'cai', requested: r.qty, backlog_prev: 0, stock: 0, need: r.qty }));
-  const data = { ym: prevYm, byItem, custom: [], byDepartment: [], issues: [], pending_custom_count: 0, order_qty: Object.fromEntries(rows.map((r) => [r.id, r.qty])) };
-  return psql(`INSERT INTO report_snapshots (period_ym, kind, data, created_by_sub, created_at)
-    VALUES ('${prevYm}-01', 'print', '${JSON.stringify(data).replace(/'/g, "''")}'::jsonb, 'pw-admin', now()) RETURNING id`);
-}
-
 test.describe('Hàng về theo bản in (Plan v2-D, Task 8)', () => {
   test('V2D-8 partial then Đủ hàng', async ({ page, request }, info) => {
+    // Kỳ riêng của PW: bản in thật của server (chỉ món PW), không ghi vào kỳ trước thật trên dev
     const release = await acquireLock('prev-period');
-    const seed = await seedLockedRequest(request, info, [
-      { stock: 0, qty: 5 },
-      { stock: 0, qty: 3 },
-    ]);
+    clearPrivateSnapshots();
+    const seed = await seedLockedRequest(
+      request,
+      info,
+      [
+        { stock: 0, qty: 5 },
+        { stock: 0, qty: 3 },
+      ],
+      { ym: PRIVATE_YM },
+    );
     const [a, b] = seed.items;
-    let snapshotId = '';
     try {
-      snapshotId = insertSnapshot(seed.prevYm, [
-        { ...a, qty: 5 },
-        { ...b, qty: 3 },
-      ]);
+      const made = await request.post(`/api/admin/reports/${PRIVATE_YM}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print' } });
+      expect(made.status()).toBe(201);
+      await openOnPrivatePeriod(page);
       await page.goto(`/admin/arrivals?q=${encodeURIComponent(seed.tag)}`);
       await expect(page.getByRole('heading', { level: 1, name: `Hàng về kỳ tháng ${Number(seed.prevYm.slice(5))}` })).toBeVisible();
       await expect(page.getByRole('link', { name: /^Theo bản in / })).toBeVisible();
@@ -76,7 +74,7 @@ test.describe('Hàng về theo bản in (Plan v2-D, Task 8)', () => {
         expect(await fitsWidth(page), 'trang không cuộn ngang ở 390').toBe(true);
       }
     } finally {
-      if (snapshotId) psql(`DELETE FROM report_snapshots WHERE id = '${snapshotId}'`);
+      clearPrivateSnapshots();
       seed.cleanup();
       release();
     }

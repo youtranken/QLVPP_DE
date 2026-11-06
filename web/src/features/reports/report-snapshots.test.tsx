@@ -31,7 +31,7 @@ describe('Bản chốt — danh sách, tải lại, in lại', () => {
     stubReports();
     openPage();
     const region = await list();
-    expect(within(region).getByText(/^Mỗi lần Xuất Excel hoặc In trình ký tạo một bản chốt\./)).toBeInTheDocument();
+    expect(within(region).getByText('Excel và bản in luôn lấy từ một bản chốt. Số chưa đổi so với bản gần nhất cùng loại thì dùng lại bản đó, không tạo bản mới. Giao thêm sau đó không làm đổi số đã chốt.')).toBeInTheDocument();
     expect(await within(region).findByText('Chưa có bản chốt nào.')).toBeInTheDocument();
   });
 
@@ -44,14 +44,13 @@ describe('Bản chốt — danh sách, tải lại, in lại', () => {
     expect(within(full).queryByText('Không có món')).toBeNull();
   });
 
-  it('bản cũ: "Excel", "Lập 09:30 28/10/2026 · Trần Thị Bình", không badge "Mới"; "Tải lại" lưu tệp từ server, không POST', async () => {
+  it('bản cũ: "Excel", "Lập 09:30 28/10/2026 · Trần Thị Bình"; "Tải lại" lưu tệp từ server, không POST', async () => {
     const f = stubReports({ snapshots: [snapshotRow()] });
     const downloads = captureDownloads();
     openPage();
     const item = await oldItem();
     expect(within(item).getByText('Excel')).toBeInTheDocument();
     expect(within(item).getByText('Lập 09:30 28/10/2026 · Trần Thị Bình')).toBeInTheDocument();
-    expect(within(item).queryByText('Mới')).toBeNull();
     await userEvent.click(await reload());
     await waitFor(() => expect(downloads.map((d) => d.name)).toEqual(['vpp-bao-cao-2026-10.xlsx']));
     expect(exportsOf(f)).toEqual(['/api/admin/reports/snapshots/snap-old/export.xlsx?lang=vi']);

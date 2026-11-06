@@ -1,26 +1,29 @@
 import { expect, test, type Page } from '@playwright/test';
-import { acquireLock, asRole, expectNoContrastViolations, isMobile, psql, settled, shot } from './helpers';
+import { acquireLock, asRole, expectNoContrastViolations, isMobile, settled, shot } from './helpers';
 import { confirmIfAsked, openDraft } from './send-adm-flow';
 import { seedLockedRequest, type Seed } from './locked-request';
+import { PRIVATE_YM, clearPrivateSnapshots, openOnPrivatePeriod } from './private-period';
 
 asRole('admin');
 
 const fitsWidth = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
 test.describe('Gửi ADM (Plan v2-D, Task 6)', () => {
-  let run: { release: () => void; since: string; seed?: Seed };
-  test.beforeEach(async () => {
-    run = { release: await acquireLock('prev-period'), since: new Date().toISOString() };
+  // Kỳ riêng của PW: bản chốt chỉ có món PW và không thay bản đã gửi của kỳ trước thật trên dev
+  let run: { release: () => void; seed?: Seed };
+  test.beforeEach(async ({ page }) => {
+    run = { release: await acquireLock('prev-period') };
+    clearPrivateSnapshots();
+    await openOnPrivatePeriod(page);
   });
   test.afterEach(() => {
-    // report_snapshots có FK tới periods: xóa bản chốt của lần chạy trước khi dọn kỳ seed
-    if (run.seed) psql(`DELETE FROM report_snapshots WHERE period_ym = '${run.seed.prevYm}-01' AND created_by_sub = 'pw-admin' AND created_at >= '${run.since}'`);
+    clearPrivateSnapshots();
     run.seed?.cleanup();
     run.release();
   });
 
   test('V2D-6 draft→print→new draft', async ({ page, request }, info) => {
-    const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 0, qty: 13 }]));
+    const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 0, qty: 13 }], { ym: PRIVATE_YM }));
     const [item] = seed.items;
     await page.goto('/admin/send-adm');
     await expect(page.getByRole('heading', { level: 1, name: `Gửi ADM, kỳ tháng ${Number(seed.prevYm.slice(5))}` })).toBeVisible();

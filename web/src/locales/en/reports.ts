@@ -134,9 +134,8 @@ const reports: Messages<typeof vi> = {
     },
     snapshots: {
       title: 'Snapshots',
-      note: 'Each Export Excel or Print for signing creates a snapshot. Excel and print always come from a snapshot; later deliveries do not change snapshot numbers.',
+      note: 'Excel and print always come from a snapshot. If the numbers match the latest snapshot of the same kind, that snapshot is reused instead of creating a new one. Later deliveries do not change snapshot numbers.',
       kind: { xlsx: 'Excel', print: 'Print' },
-      fresh: 'New',
       meta: 'Created {{at}} · {{by}}',
       download: 'Download Excel again, created {{at}}',
       reprint: 'Print again, created {{at}}',

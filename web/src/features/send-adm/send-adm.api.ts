@@ -22,6 +22,8 @@ export interface SendStateDto {
   sent: SentSnapshot | null;
   changed_after: boolean;
   changed_at: string | null;
+  // Đã giao (người đang làm việc) sau bản theo khóa
+  delivered_since: Record<string, number>;
 }
 
 export const sendStateKey = (ym: string) => ['send-state', ym] as const;
