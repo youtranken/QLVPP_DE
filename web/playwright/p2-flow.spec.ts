@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
 import {
   acquireLock,
@@ -29,19 +29,6 @@ async function snap(page: Page, info: TestInfo, name: string) {
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png` });
 }
 
-// Danh mục dev đã đặt lại (50 món thật): test tự tạo món "PW Giấy A4 …" cho bước Hành chính thêm vào phiếu
-async function createAdminItem(request: APIRequestContext, name: string): Promise<string> {
-  const headers = devHeaders('admin');
-  const file = await request.post('/api/files', {
-    headers,
-    multipart: { purpose: 'item_image', file: { name: 'item.png', mimeType: 'image/png', buffer: readFileSync(FIXTURE) } },
-  });
-  expect(file.status()).toBe(201);
-  const item = await request.post('/api/admin/items', { headers, data: { name, unit: 'cai', max_qty: 99, image_file_id: (await file.json()).id } });
-  expect(item.status()).toBe(201);
-  return (await item.json()).id as string;
-}
-
 const memberHeaders = (sub: string) => ({ 'x-dev-user-sub': sub, 'x-dev-role': 'member' });
 
 async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom: string) {
@@ -70,15 +57,13 @@ async function openDrawer(admin: Page, person: Person) {
   return drawer;
 }
 
-async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person, custom: string, giay: string) {
+// Kỳ khóa Hành chính chỉ giảm/bỏ: bỏ món y khỏi phiếu A, có lý do
+async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person, custom: string, dropped: string) {
   await searchSummaryPeople(admin, tag);
   let drawer = await openDrawer(admin, a);
-  await drawer.getByRole('button', { name: '+ Thêm món vào phiếu' }).click();
-  await drawer.getByRole('searchbox', { name: 'Tìm món trong danh mục' }).fill(giay);
-  await drawer.getByRole('list', { name: 'Món tìm thấy' }).getByRole('button').first().click();
-  await expect(drawer.getByRole('listitem').filter({ hasText: giay }).getByRole('spinbutton')).toHaveValue('1');
+  await drawer.getByRole('button', { name: `Bỏ ${dropped} khỏi phiếu` }).click();
   await snap(admin, info, 'admin-adjust');
-  await drawer.getByLabel('Lý do điều chỉnh').fill('Bổ sung theo email');
+  await drawer.getByLabel('Lý do điều chỉnh').fill('Trùng với phiếu khác');
   await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();
   await expect(drawer).toBeHidden();
 
@@ -104,7 +89,7 @@ async function summaryKpi(request: APIRequestContext, ym: string) {
 }
 
 test.describe('Smoke Plan 2 toàn luồng', () => {
-  test('Plan 2: A đăng ký 2 món + 1 món ngoài DM, B lưu 1 món → kỳ khóa → Hành chính Tổng hợp, sao chép chưa đăng ký có C, thêm Giấy A4 vào phiếu A, Thêm vào danh mục → A thấy ở Lịch sử kỳ đó món Hành chính thêm và "Đã thêm vào danh mục"', async ({
+  test('Plan 2: A đăng ký 2 món + 1 món ngoài DM, B lưu 1 món → kỳ khóa → Hành chính Tổng hợp, sao chép chưa đăng ký có C, bỏ một món khỏi phiếu A có lý do, Thêm vào danh mục → A thấy ở Lịch sử kỳ đó món bị bỏ không còn và "Đã thêm vào danh mục"', async ({
     page,
     browser,
     request,
@@ -113,8 +98,6 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
     const dept = `PW Phòng P2 ${tag}`;
     const [a, b, c]: Person[] = ['a', 'b', 'c'].map((k) => ({ sub: `pw-p2-${k}-${tag}`, name: `PW P2 ${k.toUpperCase()} ${tag}` }));
     const custom = `PW kẹp giấy P2 ${tag}`;
-    const giay = `PW Giấy A4 ${tag}`;
-    const giayId = await createAdminItem(request, giay);
     // Dev DB có authorized_groups: người seed phải thuộc nhóm được dùng app mới vào danh sách chưa đăng ký
     for (const p of [a, b, c]) seedActiveUser(p.sub, p.name, 'active', { department: dept, groups: ['Test_VPP'] });
     const [x, y] = [await seedPwItem(page), await seedPwItem(page)];
@@ -149,12 +132,13 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       expect(copied).not.toContain(a.name);
       if (isMobile(info)) await expectNoContrastViolations(admin);
       await snap(admin, info, 'admin-summary');
-      await adminAdjusts(admin, info, tag, a, custom, giay);
+      await adminAdjusts(admin, info, tag, a, custom, y.name);
       await admin.context().close();
       admin = undefined;
 
       await page.goto(`/history/${LOCKED_YM}`);
-      await expect(page.locator('li', { hasText: giay })).toBeVisible();
+      await expect(page.locator('li', { hasText: x.name })).toBeVisible();
+      await expect(page.locator('li', { hasText: y.name })).toHaveCount(0);
       await expect(page.locator('li', { hasText: custom }).getByText('Đã thêm vào danh mục')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'member-a-after');
@@ -168,7 +152,6 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       deleteTestUsers(a.sub, b.sub, c.sub);
       if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${LOCKED_YM}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${LOCKED_YM}-01')`);
       release();
-      await removeTestItem(request, giayId);
       for (const it of [x, y]) await removeTestItem(request, it.id);
       const all: Item[] = await (await request.get('/api/admin/items', { headers: devHeaders('admin') })).json();
       const converted = all.find((i) => i.name === custom);

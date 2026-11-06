@@ -100,8 +100,8 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       await lessA.click();
       await expect(lineA.getByRole('spinbutton')).toHaveValue('2');
       await expect(lessA).toBeDisabled();
-      await lineB.getByRole('button', { name: `Thêm ${b.name}` }).click();
-      await lineB.getByRole('button', { name: `Thêm ${b.name}` }).click();
+      await lineB.getByRole('button', { name: `Bớt ${b.name}` }).click();
+      await lineB.getByRole('button', { name: `Bớt ${b.name}` }).click();
       await expect(lineB.getByText('Trước khi sửa: 3')).toBeVisible();
 
       const customLine = drawer.getByRole('listitem').filter({ hasText: custom });
@@ -124,10 +124,10 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       await expect(page.getByText(`Đã lưu điều chỉnh phiếu của ${name}`)).toBeVisible();
 
       const qty = psql(`SELECT string_agg(qty::text, ',' ORDER BY qty) FROM request_lines WHERE request_id = '${requestId}'`);
-      expect(qty).toBe('1,2,5');
-      const logged = psql(`SELECT detail->>'reason' FROM audit_log
-        WHERE object_type = 'request' AND object_id = '${requestId}' AND action = 'request.updated'`);
-      expect(logged).toBe(reason);
+      expect(qty).toBe('1,1,2');
+      const logged = psql(`SELECT string_agg(DISTINCT reason_code || ':' || reason_note, ',')
+        FROM request_line_adjustments WHERE request_id = '${requestId}'`);
+      expect(logged).toBe(`other:${reason}`);
     } finally {
       deleteTestUsers(sub);
       for (const it of items) await removeTestItem(request, it.id);
@@ -138,14 +138,17 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
 
   test('E9-S2 Điều chỉnh: Hành chính khác lưu trước → STALE_UPDATE, "Tải bản mới nhất" lấy số mới', async ({ page, request }, info) => {
     const release = await acquireLock('prev-period');
-    const seed = await seedLockedRequest(request, info, [{ stock: 5, qty: 1 }]);
+    const seed = await seedLockedRequest(request, info, [{ stock: 5, qty: 5 }]);
     const [item] = seed.items;
     const otherAdminSaves = async (qty: number) => {
       const view = await (await request.get(`/api/admin/requests/${seed.requestId}`, { headers: devHeaders('admin') })).json();
       const line = view.lines[0];
       const res = await request.put(`/api/admin/requests/${seed.requestId}/lines`, {
         headers: devHeaders('admin'),
-        data: { lines: [{ id: line.id, qty }], expected_updated_at: view.updated_at, reason: 'Hành chính khác sửa' },
+        data: {
+          lines: [{ id: line.id, qty, expected_qty: line.qty, reason_code: 'over_quota' }],
+          expected_updated_at: view.updated_at,
+        },
       });
       expect(res.status()).toBe(200);
     };
@@ -155,9 +158,9 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       await page.getByRole('row').filter({ hasText: seed.name }).getByRole('button', { name: 'Điều chỉnh' }).click();
       const drawer = page.getByRole('dialog', { name: `Phiếu của ${seed.name}` });
       const line = drawer.getByRole('listitem').filter({ hasText: item.name });
-      await expect(line.getByRole('spinbutton')).toHaveValue('1');
-      await line.getByRole('button', { name: `Thêm ${item.name}` }).click();
-      await drawer.getByLabel('Lý do điều chỉnh').fill('Bổ sung theo email');
+      await expect(line.getByRole('spinbutton')).toHaveValue('5');
+      await line.getByRole('button', { name: `Bớt ${item.name}` }).click();
+      await drawer.getByLabel('Lý do điều chỉnh').fill('Giảm theo email');
 
       await otherAdminSaves(4);
       await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();

@@ -13,17 +13,46 @@ function ReviewListProbe() {
 }
 
 describe('AdjustDrawer — lưu và lý do', () => {
-  it('kỳ khóa, lý do trống: FE không chặn, Lưu bấm được; server REASON_REQUIRED → lỗi gắn ô lý do', async () => {
-    const f = stubAdjust({ put: () => jsonResponse(400, { code: 'REASON_REQUIRED' }) });
+  it('kỳ khóa, lý do ngắn: FE không chặn; dòng giảm gửi reason_code other + ghi chú đã trim, không reason cấp phiếu; server REASON_REQUIRED → lỗi gắn ô lý do', async () => {
+    const f = stubAdjust({ put: () => jsonResponse(400, { code: 'REASON_REQUIRED', line_id: 'l-note' }) });
     const { drawer, onClose } = await renderDrawer();
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm Giấy note vàng' }));
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Bớt Giấy note vàng' }));
     await userEvent.type(reasonBox(drawer), ' ab ');
     expect(saveButton(drawer)).toBeEnabled();
     await userEvent.click(saveButton(drawer));
     await waitFor(() => expect(reasonBox(drawer)).toHaveAttribute('aria-invalid', 'true'));
     expect(reasonBox(drawer)).toHaveAccessibleDescription('Kỳ đã khóa — nhập lý do điều chỉnh (ít nhất 3 ký tự).');
-    expect(putBody(f).reason).toBe('ab');
+    expect(putBody(f)).toEqual({
+      lines: [
+        { id: 'l-pen', qty: 10, expected_qty: 10 },
+        { id: 'l-note', qty: 2, expected_qty: 3, reason_code: 'other', reason_note: 'ab' },
+        { id: 'l-tape', qty: 2, expected_qty: 2 },
+      ],
+      expected_updated_at: '2026-10-05T07:20:00.000Z',
+    });
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('lý do dài hơn 200 mã điểm → ghi chú cắt còn đúng 200 mã điểm', async () => {
+    const f = stubAdjust();
+    const { drawer, onClose } = await renderDrawer();
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Bớt Giấy note vàng' }));
+    await userEvent.click(reasonBox(drawer));
+    await userEvent.paste('😀'.repeat(150) + 'x'.repeat(100));
+    await userEvent.click(saveButton(drawer));
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    const note = putBody(f).lines[1].reason_note as string;
+    expect([...note]).toHaveLength(200);
+    expect(note).toBe('😀'.repeat(150) + 'x'.repeat(50));
+  });
+
+  it('dòng giảm không lý do → reason_code other, không có reason_note', async () => {
+    const f = stubAdjust();
+    const { drawer } = await renderDrawer();
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Bớt Giấy note vàng' }));
+    await userEvent.click(saveButton(drawer));
+    await waitFor(() => expect(putCalls(f)).toHaveLength(1));
+    expect(putBody(f).lines[1]).toEqual({ id: 'l-note', qty: 2, expected_qty: 3, reason_code: 'other' });
   });
 
   it('chưa sửa gì → Lưu vô hiệu (không có gì để gửi)', async () => {
@@ -44,13 +73,12 @@ describe('AdjustDrawer — lưu và lý do', () => {
     expect(await screen.findByText('Đã lưu điều chỉnh phiếu của Nguyễn Văn An')).toBeInTheDocument();
     expect(putBody(f)).toEqual({
       lines: [
-        { id: 'l-pen', qty: 10 },
-        { id: 'l-note', qty: 3 },
-        { id: 'l-tape', qty: 2 },
+        { id: 'l-pen', qty: 10, expected_qty: 10 },
+        { id: 'l-note', qty: 3, expected_qty: 3 },
+        { id: 'l-tape', qty: 2, expected_qty: 2 },
         { item_id: 'i-a4', qty: 1 },
       ],
       expected_updated_at: '2026-10-05T07:20:00.000Z',
-      reason: 'Bổ sung giấy in bản vẽ',
     });
   });
 
@@ -63,7 +91,7 @@ describe('AdjustDrawer — lưu và lý do', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('kỳ mở: bỏ dòng, không lý do → body không còn dòng đó, không có reason', async () => {
+  it('bỏ dòng → gửi qty 0 (mọi dòng có mặt), reason_code other, không có reason cấp phiếu', async () => {
     const f = stubAdjust({ views: [adminRequest({ is_open: true, period_ym: '2026-11' })] });
     const { drawer } = await renderDrawer();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Bỏ Giấy note vàng khỏi phiếu' }));
@@ -71,8 +99,9 @@ describe('AdjustDrawer — lưu và lý do', () => {
     await waitFor(() => expect(putCalls(f)).toHaveLength(1));
     expect(putBody(f)).toEqual({
       lines: [
-        { id: 'l-pen', qty: 10 },
-        { id: 'l-tape', qty: 2 },
+        { id: 'l-pen', qty: 10, expected_qty: 10 },
+        { id: 'l-note', qty: 0, expected_qty: 3, reason_code: 'other' },
+        { id: 'l-tape', qty: 2, expected_qty: 2 },
       ],
       expected_updated_at: '2026-10-05T07:20:00.000Z',
     });

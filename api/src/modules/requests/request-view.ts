@@ -23,6 +23,8 @@ export interface LineView {
   review_note: string | null;
   added_by_admin: boolean;
   readonly_for_member: boolean;
+  // Tối đa/tháng hiện tại của món (có thể đã hạ sau khi lưu); null với dòng ngoài DM
+  max_qty: number | null;
 }
 
 export interface RequestView {
@@ -98,5 +100,6 @@ export function toLineView(
     review_note: line.review_note,
     added_by_admin: line.added_by_admin,
     readonly_for_member: isMemberReadonly(line),
+    max_qty: item?.max_qty ?? null,
   };
 }

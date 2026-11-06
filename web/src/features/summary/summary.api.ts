@@ -1,6 +1,6 @@
 import { keepPreviousData, queryOptions, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import type { LineInputBody, RequestView } from '@/features/request/request.api';
+import type { RequestView } from '@/features/request/request.api';
 
 export type SummaryFilter = 'all' | 'pending_delivery' | 'custom_pending';
 
@@ -114,10 +114,18 @@ export function useAdminRequest(id: string, enabled = true) {
   });
 }
 
+export interface AdjustLineBody {
+  id?: string;
+  item_id?: string;
+  qty: number;
+  expected_qty?: number;
+  reason_code?: 'other';
+  reason_note?: string;
+}
+
 export interface AdjustBody {
-  lines: LineInputBody[];
+  lines: AdjustLineBody[];
   expected_updated_at: string;
-  reason?: string;
 }
 
 export const saveAdjust = (id: string, body: AdjustBody, csrfToken: string | null) =>

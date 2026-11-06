@@ -48,6 +48,27 @@ describe('admin/requests: Hành chính sửa phiếu', () => {
     );
   });
 
+  it('GET admin/requests/:id: mỗi dòng có max_qty hiện tại của món (hạ sau khi lưu vẫn thấy số mới); dòng ngoài DM → null', async () => {
+    const r = await seed([{ item_id: item, qty: 2 }, f.custom()]);
+    await pool().query('UPDATE items SET max_qty = 1 WHERE id = $1', [item]);
+    try {
+      at(AFTER_DEADLINE);
+      const got = (
+        await as(
+          http().get(`/api/admin/requests/${r.id}`),
+          ADMIN,
+          'admin',
+        ).expect(200)
+      ).body as { lines: { item_id: string | null; max_qty: number | null }[] };
+      expect(got.lines.map((l) => [l.item_id, l.max_qty])).toEqual([
+        [item, 1],
+        [null, null],
+      ]);
+    } finally {
+      await pool().query('UPDATE items SET max_qty = 10 WHERE id = $1', [item]);
+    }
+  });
+
   describe('PUT admin/requests/:id/lines', () => {
     it('member → 403', async () => {
       const r = await seed([{ item_id: item, qty: 2 }]);

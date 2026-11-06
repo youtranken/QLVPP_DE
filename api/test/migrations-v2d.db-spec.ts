@@ -31,7 +31,9 @@ describe('migration v2-D 0113–0118', () => {
     const dir = await mkdtemp(join(tmpdir(), 'vpp-mig-v2d-'));
     try {
       const all = await readdir(resolveMigrationsDir());
-      for (const f of all.filter((n) => n.endsWith('.sql') && n < lastExclusive)) {
+      for (const f of all.filter(
+        (n) => n.endsWith('.sql') && n < lastExclusive,
+      )) {
         await copyFile(join(resolveMigrationsDir(), f), join(dir, f));
       }
       await runMigrations(pool, dir, silent);
@@ -40,7 +42,11 @@ describe('migration v2-D 0113–0118', () => {
     }
   }
 
-  async function addMovement(reason: string, delta: number, note: string | null) {
+  async function addMovement(
+    reason: string,
+    delta: number,
+    note: string | null,
+  ) {
     const { rows } = await pool.query<{ id: string }>(
       `INSERT INTO stock_movements (item_id, delta, reason, note, actor_sub)
        VALUES ($1, $2, $3, $4, 'pw-admin') RETURNING id`,
@@ -64,7 +70,11 @@ describe('migration v2-D 0113–0118', () => {
         `INSERT INTO items (name, unit) VALUES ('Món mig', 'cai') RETURNING id`,
       )
     ).rows[0].id;
-    movement.withNote = await addMovement('purchase', 5, 'Hàng về kỳ 2026-10 · x');
+    movement.withNote = await addMovement(
+      'purchase',
+      5,
+      'Hàng về kỳ 2026-10 · x',
+    );
     movement.plain = await addMovement('purchase', 3, 'Hàng về kỳ 2026-10');
     movement.other = await addMovement('purchase', 2, 'Nhập ngoài kỳ');
     movement.noNote = await addMovement('purchase', 1, null);
@@ -120,7 +130,12 @@ describe('migration v2-D 0113–0118', () => {
     });
 
     it('0113 reason_code: 5 mã chính thức được; mã lạ → 23514; NULL → 23502', async () => {
-      for (const reason of ['over_quota', 'adm_out_of_stock', 'duplicate', 'user_left']) {
+      for (const reason of [
+        'over_quota',
+        'adm_out_of_stock',
+        'duplicate',
+        'user_left',
+      ]) {
         expect(await insert({ reason })).toBe('OK');
       }
       expect(await insert({ reason: 'xyz' })).toBe('23514');
@@ -128,8 +143,12 @@ describe('migration v2-D 0113–0118', () => {
     });
 
     it('0113 reason_note 200 ký tự được, 201 → 23514', async () => {
-      expect(await insert({ reason: 'other', note: 'a'.repeat(200) })).toBe('OK');
-      expect(await insert({ reason: 'other', note: 'a'.repeat(201) })).toBe('23514');
+      expect(await insert({ reason: 'other', note: 'a'.repeat(200) })).toBe(
+        'OK',
+      );
+      expect(await insert({ reason: 'other', note: 'a'.repeat(201) })).toBe(
+        '23514',
+      );
     });
 
     it('0113 UNIQUE(batch_id,line_id) lặp → 23505', async () => {

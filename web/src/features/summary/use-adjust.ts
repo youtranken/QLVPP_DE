@@ -7,7 +7,7 @@ import { useToast } from '@/ui/toast-context';
 import type { LineView } from '@/features/request/request.api';
 import { REVIEW_KEY, type ReviewResult } from '@/features/review/review.api';
 import { adjustFailure, isStaleUpdate, type AdjustErrors } from './summary-errors';
-import { SUMMARY_KEY, adminRequestKey, saveAdjust, useAdminRequest, type AdjustBody, type AdminRequestView } from './summary.api';
+import { SUMMARY_KEY, adminRequestKey, saveAdjust, useAdminRequest, type AdjustBody, type AdjustLineBody, type AdminRequestView } from './summary.api';
 
 export interface AddedLine {
   key: string;
@@ -71,15 +71,23 @@ type Patch = (fn: (d: Draft) => Draft) => void;
 
 const qtyIn = (d: Draft) => (l: LineView) => d.qty[l.id] ?? l.qty;
 
+const NOTE_MAX = 200;
+// Server đếm ghi chú theo mã điểm sau NFC + trim
+const noteOf = (reason: string) => [...reason.normalize('NFC').trim()].slice(0, NOTE_MAX).join('').trim();
+
+// Server đòi mọi dòng kèm expected_qty; bỏ dòng = qty 0; dòng giảm mang lý do chung dưới mã "Khác" tới khi có chọn lý do từng dòng
 function bodyOf(current: AdminRequestView, d: Draft) {
-  const kept = current.lines.filter((l) => !d.removed.includes(l.id));
-  const reason = d.reason.trim();
-  const body: AdjustBody = {
-    lines: [...kept.map((l) => ({ id: l.id, qty: qtyIn(d)(l) })), ...d.added.map((a) => ({ item_id: a.item_id, qty: a.qty }))],
-    expected_updated_at: current.updated_at,
-    ...(reason ? { reason } : {}),
+  const note = noteOf(d.reason);
+  const lineOf = (l: LineView): AdjustLineBody => {
+    const qty = d.removed.includes(l.id) ? 0 : qtyIn(d)(l);
+    const reduced = qty < l.qty ? { reason_code: 'other' as const, ...(note ? { reason_note: note } : {}) } : {};
+    return { id: l.id, qty, expected_qty: l.qty, ...reduced };
   };
-  return { body, keys: [...kept.map((l) => l.id), ...d.added.map((a) => a.key)] };
+  const body: AdjustBody = {
+    lines: [...current.lines.map(lineOf), ...d.added.map((a) => ({ item_id: a.item_id, qty: a.qty }))],
+    expected_updated_at: current.updated_at,
+  };
+  return { body, keys: [...current.lines.map((l) => l.id), ...d.added.map((a) => a.key)] };
 }
 
 function useSendAdjust(requestId: string, patch: Patch, onDone: () => void) {
