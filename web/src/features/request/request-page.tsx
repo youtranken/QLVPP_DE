@@ -81,6 +81,12 @@ function RequestEditor({
 
   const orderable = useMemo(() => items.filter((i) => i.usable && !i.admin_only), [items]);
   const lineByKey = useMemo(() => new Map(cart.lines.map((l) => [l.key, l])), [cart.lines]);
+  // "Hay dùng trước" = món có trong phiếu kỳ trước (GET, không phải chép lại); không có kỳ trước thì thành thứ tự nhóm
+  const previousRequest = useMyRequest(period.previous?.ym);
+  const favIds = useMemo(
+    () => new Set((previousRequest.data?.lines ?? []).flatMap((l) => (l.item_id ? [l.item_id] : []))),
+    [previousRequest.data],
+  );
   const editingLine = editing?.key ? lineByKey.get(editing.key) : undefined;
   const dirty = cart.dirtyCount > 0;
   const saveLabel = dirty ? t('request.cart.saveDirty', { n: cart.dirtyCount }) : t('request.cart.save');
@@ -101,14 +107,21 @@ function RequestEditor({
           period={period}
           saved={cart.saved}
           dirty={dirty}
-          action={copy.fromYm && <CopyPreviousButton fromYm={copy.fromYm} busy={copy.busy} onClick={() => void copy.run()} />}
         />
         <OwedNotice previous={period.previous} />
       </div>
       <PreviousPeriodCard previous={period.previous} />
       <div className="rq-frame">
         <div className="m-panel rq-panel">
-          <ItemGrid items={orderable} categories={categories} lineByKey={lineByKey} onQty={setQty} onAddCustom={addCustom} />
+          <ItemGrid
+            items={orderable}
+            categories={categories}
+            lineByKey={lineByKey}
+            favIds={favIds}
+            copy={copy.fromYm && <CopyPreviousButton fromYm={copy.fromYm} busy={copy.busy} onClick={() => void copy.run()} />}
+            onQty={setQty}
+            onAddCustom={addCustom}
+          />
         </div>
         <CartPanel
           lines={cart.lines}

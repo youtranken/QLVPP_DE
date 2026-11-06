@@ -9,7 +9,7 @@ export function CopyPreviousButton({ fromYm, busy, onClick }: { fromYm: string; 
   return (
     <button type="button" className="rq-copy" disabled={busy} onClick={onClick}>
       <IconDocCopy />
-      {t('request.hero.copy', { month: monthOf(fromYm) })}
+      {t('request.grid.copy', { month: monthOf(fromYm) })}
     </button>
   );
 }

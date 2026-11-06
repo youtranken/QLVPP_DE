@@ -105,14 +105,14 @@ describe('RequestPage — chép lại tháng trước', () => {
     stubRequestApi();
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh');
-    expect(screen.queryByRole('button', { name: /Chép lại danh sách/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Chép lại tháng/ })).toBeNull();
   });
 
   it('giỏ rỗng → điền thẳng (chưa lưu) + hộp tóm tắt "Đã bỏ: Giấy A4 — chỉ Hành chính đặt"; lưu gửi dòng ngoài DM kèm ảnh cũ', async () => {
     mockViewport(1280);
     const api = stubRequestApi({ copy: () => jsonResponse(200, COPY), put: () => jsonResponse(500, {}) });
     renderApp(makeMe('member'), '/');
-    await userEvent.click(await screen.findByRole('button', { name: 'Chép lại danh sách tháng 10' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Chép lại tháng 10' }));
     const summary = await screen.findByRole('dialog', { name: 'Đã chép danh sách tháng 10' });
     expect(within(summary).getByText('Đã bỏ: Giấy A4 — chỉ Hành chính đặt')).toBeInTheDocument();
     await userEvent.click(within(summary).getByRole('button', { name: 'Đã hiểu' }));
@@ -139,7 +139,7 @@ describe('RequestPage — chép lại tháng trước', () => {
       put: () => jsonResponse(500, {}),
     });
     renderApp(makeMe('member'), '/');
-    await userEvent.click(await screen.findByRole('button', { name: 'Chép lại danh sách tháng 10' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Chép lại tháng 10' }));
     const summary = await screen.findByRole('dialog', { name: 'Đã chép danh sách tháng 10' });
     expect(within(summary).getByText('Đã bỏ: Bút bi xanh — Hành chính đã thêm món này')).toBeInTheDocument();
     await userEvent.click(within(summary).getByRole('button', { name: 'Đã hiểu' }));
@@ -159,7 +159,7 @@ describe('RequestPage — chép lại tháng trước', () => {
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Giấy note vàng');
     await userEvent.click(within(grid()).getByRole('button', { name: `Thêm ${NOTE.name}` }));
-    const copy = await screen.findByRole('button', { name: 'Chép lại danh sách tháng 10' });
+    const copy = await screen.findByRole('button', { name: 'Chép lại tháng 10' });
 
     await userEvent.click(copy);
     let ask = await screen.findByRole('dialog', { name: 'Thay giỏ hiện tại?' });

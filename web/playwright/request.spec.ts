@@ -206,6 +206,51 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       deleteTestUsers(me.sub);
     }
   });
+  test('V2C-T3 lọc: tìm + Đã chọn + Xóa bộ lọc', async ({ page, request }, info) => {
+    const me = memberIdentity(info);
+    seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
+    await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...me.headers } }));
+    const stamp = Date.now();
+    const name = `PW Bút lọc ${stamp}`;
+    const itemId = await createItem(request, name);
+    try {
+      await page.goto('/');
+      const grid = page.getByRole('region', { name: 'Danh mục món' });
+      const chips = grid.getByRole('group', { name: 'Nhóm món' });
+      await expect(chips.getByRole('button', { name: /^Tất cả/ })).toBeVisible();
+      const addButtons = grid.getByRole('button', { name: /^Thêm (?!món khác|tại đây)/ });
+      if (isMobile(info)) {
+        // Review Focus 1: 390 px mặc định nhóm đầu → số thẻ không vượt số món của nhóm
+        const first = chips.getByRole('button').nth(1);
+        await expect(first).toHaveAttribute('aria-pressed', 'true');
+        const n = Number(((await first.innerText()).match(/(\d+)\s*$/) ?? [])[1]);
+        expect(await addButtons.count()).toBeLessThanOrEqual(n);
+        for (const chip of await chips.getByRole('button').all()) expect((await chip.boundingBox())!.height).toBeGreaterThanOrEqual(44 - 0.5);
+      }
+      // Tìm không dấu, không phân biệt hoa thường, trên mọi nhóm
+      await grid.getByRole('searchbox', { name: 'Tìm món' }).fill(`BUT LOC ${stamp}`);
+      await expect(addButtons).toHaveCount(1);
+      await expect(page).toHaveURL(/q=BUT\+LOC/);
+      await grid.getByRole('button', { name: `Thêm ${name}`, exact: true }).click();
+      const picked = grid.getByRole('button', { name: 'Đã chọn 1' });
+      await picked.click();
+      await expect(picked).toHaveAttribute('aria-pressed', 'true');
+      await expect(page).toHaveURL(/picked=1/);
+      await expect(addButtons).toHaveCount(1); // giao của Đã chọn và từ khóa: đúng món này
+      await expect(grid.getByRole('spinbutton', { name, exact: true })).toHaveValue('1');
+      await grid.getByRole('searchbox', { name: 'Tìm món' }).fill('khong co mon nay');
+      await expect(grid.getByText('Không có món phù hợp')).toBeVisible();
+      await grid.getByRole('button', { name: 'Xóa bộ lọc' }).click();
+      await expect(grid.getByRole('searchbox', { name: 'Tìm món' })).toHaveValue('');
+      await expect(picked).toHaveAttribute('aria-pressed', 'false');
+      await expect(page).not.toHaveURL(/q=|picked=|g=/);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await page.evaluate(() => document.fonts.ready);
+    } finally {
+      deleteTestUsers(me.sub);
+      await removeTestItem(request, itemId);
+    }
+  });
   test('V2C-T2 đang tải/lỗi tải nằm trong khung sáng: /api/me/request 500 → "Thử lại" thấy, không lỗi tương phản (390)', async ({ page }, info) => {
     const me = memberIdentity(info);
     seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
