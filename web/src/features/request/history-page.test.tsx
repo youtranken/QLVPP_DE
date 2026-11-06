@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
-import { PERIOD } from '@/test/request-api-stub';
+import { PERIOD, PEN, NOTE, facts, view } from '@/test/request-api-stub';
+import { lineView } from '@/test/fixtures-request';
+import { setLanguage } from '@/lib/i18n';
 import { deliveryState, type HistoryItem, type MyIssue } from './history.api';
 
 const item = (over: Partial<HistoryItem>): HistoryItem => ({
@@ -31,11 +33,16 @@ const issue = (over: Partial<MyIssue>): MyIssue => ({
 function stub(
   pages: { items: HistoryItem[]; next_cursor: string | null }[],
   issuePages: { items: MyIssue[]; next_cursor: string | null }[] = [],
+  requests: Record<string, ReturnType<typeof view>> = {},
 ) {
   let at = 0;
   let issueAt = 0;
   const fetchMock = vi.fn((url: string) => {
     if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
+    if (url.startsWith('/api/me/request?ym=')) {
+      const found = requests[url.slice('/api/me/request?ym='.length)];
+      return Promise.resolve(found ? jsonResponse(200, found) : jsonResponse(404, { code: 'REQUEST_NOT_FOUND' }));
+    }
     if (url.startsWith('/api/me/issues')) return Promise.resolve(jsonResponse(200, issuePages[issueAt++] ?? { items: [], next_cursor: null }));
     if (url.startsWith('/api/me/requests')) return Promise.resolve(jsonResponse(200, pages[at++] ?? { items: [], next_cursor: null }));
     return Promise.resolve(jsonResponse(500, {}));
@@ -44,7 +51,10 @@ function stub(
   return fetchMock;
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(async () => {
+  vi.unstubAllGlobals();
+  await setLanguage('vi');
+});
 
 describe('deliveryState', () => {
   it.each([
@@ -79,10 +89,77 @@ describe('HistoryPage', () => {
     const oct = screen.getByText('Tháng 10/2026').closest('a')!;
     expect(oct).toHaveAttribute('href', '/history/2026-10');
     expect(within(oct).getByText('3 loại món · 10 đơn vị')).toBeInTheDocument();
-    expect(within(oct).getByText('Còn nợ 4')).toBeInTheDocument();
+    expect(within(oct).getByText('Còn chờ 4 món')).toBeInTheDocument();
     expect(within(oct).getByText(/1 món chờ Hành chính xem · 2 món đã thêm vào danh mục · 1 món bị từ chối/)).toBeInTheDocument();
-    expect(within(screen.getByText('Tháng 9/2026').closest('a')!).getByText('Đã giao đủ')).toBeInTheDocument();
-    expect(within(screen.getByText('Tháng 8/2026').closest('a')!).getByText('Chưa giao')).toBeInTheDocument();
+    expect(within(screen.getByText('Tháng 9/2026').closest('a')!).getByText('Đã nhận đủ')).toBeInTheDocument();
+    expect(within(screen.getByText('Tháng 8/2026').closest('a')!).getByText('Còn chờ 10 món')).toBeInTheDocument();
+  });
+
+  it.each([
+    [{ delivered_qty: 10, remaining_qty: 0 }, 'Đã nhận đủ'],
+    [{ delivered_qty: 6, remaining_qty: 4 }, 'Còn chờ 4 món'],
+    [{ total_qty: 0, line_count: 0, delivered_qty: 0, remaining_qty: 0 }, 'Không có phiếu'],
+  ])('chip tháng %j → "%s"; kỳ đang mở → "Đang mở"', async (over, chip) => {
+    stub([{ items: [item({ period_ym: '2026-11' }), item({ period_ym: '2026-10', ...over })], next_cursor: null }]);
+    renderApp(makeMe('member'), '/history');
+    const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
+    expect(within(card).getByText(chip)).toBeInTheDocument();
+    expect(within((await screen.findByText('Tháng 11/2026')).closest('li')!).getByText('Đang mở')).toBeInTheDocument();
+  });
+
+  it('tháng gần nhất đã đóng có dòng món: tên theo ngôn ngữ, số lượng, chip từng dòng, dòng hủy kèm lý do', async () => {
+    stub(
+      [{ items: [item({ period_ym: '2026-11' }), item({ period_ym: '2026-10', delivered_qty: 7, remaining_qty: 2, cancelled_qty: 2 }), item({ period_ym: '2026-09' })], next_cursor: null }],
+      [],
+      {
+        '2026-10': view({
+          period_ym: '2026-10',
+          is_open: false,
+          lines: [
+            lineView({ id: 'a', item_id: PEN.id, item: { ...facts(PEN), name_en: 'Blue pen' }, qty: 4, delivered_qty: 4 }),
+            lineView({ id: 'b', item_id: NOTE.id, item: facts(NOTE), qty: 5, delivered_qty: 2, cancelled_qty: 1 }),
+            lineView({ id: 'c', custom_name: 'Bìa còng', custom_unit: 'cai', qty: 3, cancelled_qty: 3, cancel_note: 'Hết hàng', review_status: 'accepted' }),
+          ],
+        }),
+      },
+    );
+    renderApp(makeMe('member'), '/history');
+    const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
+    const pen = (await within(card).findByText('Bút bi xanh')).closest('li')!;
+    expect(within(pen).getByText('Đã nhận đủ')).toBeInTheDocument();
+    const note = within(card).getByText('Giấy note vàng').closest('li')!;
+    expect(within(note).getByText('Nhận 2, chờ 2')).toBeInTheDocument();
+    expect(within(note).getByText('Đã hủy 1')).toBeInTheDocument();
+    const cover = within(card).getByText('Bìa còng').closest('li')!;
+    expect(within(cover).getByText('Đã hủy 3 — Hết hàng')).toBeInTheDocument();
+    // chỉ tháng gần nhất có dòng món
+    expect(within(screen.getByText('Tháng 9/2026').closest('li')!).queryAllByRole('listitem')).toHaveLength(0);
+  });
+
+  it('en: dòng món dùng name_en', async () => {
+    await setLanguage('en');
+    stub(
+      [{ items: [item({ period_ym: '2026-10', delivered_qty: 4, remaining_qty: 0 })], next_cursor: null }],
+      [],
+      { '2026-10': view({ period_ym: '2026-10', is_open: false, lines: [lineView({ id: 'a', item_id: PEN.id, item: { ...facts(PEN), name_en: 'Blue pen' }, qty: 4, delivered_qty: 4 })] }) },
+    );
+    renderApp(makeMe('member'), '/history');
+    expect(await screen.findByText('Blue pen')).toBeInTheDocument();
+    expect(screen.queryByText('Bút bi xanh')).toBeNull();
+  });
+
+  it('phiếu tháng gần nhất lỗi tải: báo lỗi ngay trong thẻ, có Thử lại, các tháng khác vẫn hiện', async () => {
+    const fetchMock = stub([{ items: [item({ period_ym: '2026-10' }), item({ period_ym: '2026-09' })], next_cursor: null }]);
+    fetchMock.mockImplementation((url: string) => {
+      if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
+      if (url.startsWith('/api/me/issues')) return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }));
+      if (url.startsWith('/api/me/request?ym=')) return Promise.resolve(jsonResponse(500, {}));
+      return Promise.resolve(jsonResponse(200, { items: [item({ period_ym: '2026-10' }), item({ period_ym: '2026-09' })], next_cursor: null }));
+    });
+    renderApp(makeMe('member'), '/history');
+    const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
+    expect(await within(card).findByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
+    expect(screen.getByText('Tháng 9/2026')).toBeInTheDocument();
   });
 
   it('"Xem thêm" tải trang kế theo cursor', async () => {

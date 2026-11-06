@@ -1,0 +1,20 @@
+/* Trang Tôi v2: thẻ trắng bo 22 trong panel sáng */
+[data-shell='member'] .pf-card { background: var(--c-surface); border-radius: 22px; padding: var(--s-5); display: grid; gap: var(--s-3); }
+[data-shell='member'] .pf-title { margin: 0; font: var(--t-h2); letter-spacing: var(--ls-h2); color: var(--c-ink); }
+[data-shell='member'] .pf-kv { margin: 0; display: grid; gap: var(--s-3); }
+[data-shell='member'] .pf-kv > div { display: grid; grid-template-columns: 150px 1fr; gap: var(--s-3); }
+[data-shell='member'] .pf-kv dt { font: var(--t-body); color: var(--c-muted); }
+[data-shell='member'] .pf-kv dd { margin: 0; font: var(--t-label); color: var(--c-ink); overflow-wrap: anywhere; }
+[data-shell='member'] .pf-source { margin: 0; font: var(--t-body); color: var(--c-muted); }
+
+[data-shell='member'] .pf-lang .seg { display: flex; padding: 4px; gap: 4px; border-radius: var(--r-pill); background: var(--c-surface-2); border: 1px solid var(--c-line); }
+[data-shell='member'] .pf-lang .seg button { flex: 1; min-height: 44px; padding: 0 var(--s-4); border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-ink-2); font: var(--t-label); cursor: pointer; }
+[data-shell='member'] .pf-lang .seg button[aria-checked='true'] { background: var(--c-dark); color: var(--c-on-dark); }
+[data-shell='member'] .pf-lang .seg button:focus-visible { outline: 2px solid var(--c-acc); outline-offset: 2px; }
+
+[data-shell='member'] .pf-logout { min-height: 48px; border-radius: var(--r-pill); border: 1px solid var(--c-danger-line); background: var(--c-surface); color: var(--c-danger); font: var(--t-label); cursor: pointer; }
+[data-shell='member'] .pf-logout:hover:not(:disabled) { background: var(--c-danger-tint); }
+[data-shell='member'] .pf-logout:disabled { opacity: .6; cursor: default; }
+[data-shell='member'] .pf-logout:focus-visible { outline: 2px solid var(--c-danger); outline-offset: 2px; }
+[data-shell='member'] .pf-alert { margin: 0; padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--c-danger-soft); color: var(--c-danger); font: var(--t-label); }
+@media (max-width: 480px) { [data-shell='member'] .pf-kv > div { grid-template-columns: 1fr; gap: 0; } }

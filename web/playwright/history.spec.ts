@@ -64,7 +64,7 @@ test.describe('E2-S6 lịch sử', () => {
       await expect(open.getByText('Đang mở')).toBeVisible();
       await expect(open).toHaveAttribute('href', '/');
       const prev = page.getByRole('link', { name: new RegExp(`Tháng ${prevMonth}/`) });
-      await expect(prev.getByText('Còn nợ 2')).toBeVisible();
+      await expect(prev.getByText('Còn chờ 2 món')).toBeVisible();
       await expect(prev.getByText('1 món chờ Hành chính xem · 1 món bị từ chối')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'list');

@@ -35,7 +35,9 @@ const request = {
       cancelledAllWhy: 'Đã hủy {{n}} — {{reason}}',
       issues: { title: 'Nhận lẻ' },
       owed: 'còn nợ {{n}}',
-      delivery: { done: 'Đã giao đủ', owed: 'Còn nợ {{k}}', undelivered: 'Chưa giao', cancelled: 'Đã hủy' },
+      delivery: { done: 'Đã nhận đủ', owed: 'Còn chờ {{k}} món', undelivered: 'Còn chờ {{k}} món', cancelled: 'Đã hủy', none: 'Không có phiếu' },
+      line: { full: 'Đã nhận đủ', got: 'Đã nhận {{a}}', part: 'Nhận {{a}}, chờ {{b}}', wait: 'Chờ {{b}}' },
+      subtitle: 'Phiếu các tháng trước và tình trạng nhận hàng.',
       customCount: {
         pending: '{{n}} món chờ Hành chính xem',
         accepted: '{{n}} món đã chấp nhận',

@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { logout } from '@/lib/auth-actions';
 import { LanguageSwitch } from '@/ui/language-switch';
+import { MemberPage } from '@/shell/member-page';
+import './profile.m1.css';
 
 export function ProfilePage() {
   const { t } = useTranslation();
@@ -18,11 +20,10 @@ export function ProfilePage() {
   ];
 
   return (
-    <div className="profile">
-      <h1 className="page-title">{t('profile.title')}</h1>
-      <section className="card">
-        <h2 className="card-title">{t('profile.account')}</h2>
-        <dl className="kv">
+    <MemberPage title={t('profile.title')}>
+      <section className="pf-card">
+        <h2 className="pf-title">{t('profile.account')}</h2>
+        <dl className="pf-kv">
           {rows.map(([key, value]) => (
             <div key={key}>
               <dt>{t(key)}</dt>
@@ -30,20 +31,20 @@ export function ProfilePage() {
             </div>
           ))}
         </dl>
-        <p className="profile-source">{t('profile.dataFromPmhId')}</p>
+        <p className="pf-source">{t('profile.dataFromPmhId')}</p>
       </section>
-      <section className="card">
-        <h2 className="card-title">{t('common.languages.label')}</h2>
+      <section className="pf-card pf-lang">
+        <h2 className="pf-title">{t('common.languages.label')}</h2>
         <LanguageSwitch className="seg--block" />
       </section>
       {failed && (
-        <p role="alert" className="alert alert--danger">
+        <p role="alert" className="pf-alert">
           {t('auth.logoutFailed')}
         </p>
       )}
       <button
         type="button"
-        className="btn btn--lg btn--block btn--danger-ghost"
+        className="pf-logout"
         disabled={busy}
         onClick={async () => {
           setBusy(true);
@@ -56,6 +57,6 @@ export function ProfilePage() {
       >
         {t('auth.logout')}
       </button>
-    </div>
+    </MemberPage>
   );
 }

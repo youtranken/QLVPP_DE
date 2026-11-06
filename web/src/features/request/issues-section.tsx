@@ -19,19 +19,19 @@ export function IssuesSection() {
       {initialFailed && <LoadError onRetry={() => void issues.refetch()} />}
       <ul className="hs-list">
         {items.map((i) => (
-          <li key={i.id} className="hs-line">
-            <div className="hs-line-head">
-              <span className="hs-line-name">{fmt.name({ name: i.item_name, name_en: i.item_name_en })}</span>
-              <span className="hs-line-qty">{t('request.cart.qty', { qty: i.qty, unit: fmt.unit(i.unit) })}</span>
+          <li key={i.id} className="hs-card hs-issue">
+            <div className="hs-issue-head">
+              <span className="hs-item-name">{fmt.name({ name: i.item_name, name_en: i.item_name_en })}</span>
+              <span className="hs-item-qty">{t('request.cart.qty', { qty: i.qty, unit: fmt.unit(i.unit) })}</span>
             </div>
             <div className="hs-owed">{formatVnStamp(i.created_at, true)}</div>
-            <div className="hs-line-qty">{i.note}</div>
+            <div className="hs-item-qty">{i.note}</div>
           </li>
         ))}
       </ul>
       {issues.isFetchNextPageError && <LoadError onRetry={() => void issues.fetchNextPage()} />}
       {issues.hasNextPage && !issues.isFetchNextPageError && (
-        <button type="button" className="btn hs-more" disabled={issues.isFetchingNextPage} onClick={() => void issues.fetchNextPage()}>
+        <button type="button" className="hs-more" disabled={issues.isFetchingNextPage} onClick={() => void issues.fetchNextPage()}>
           {t('request.history.more')}
         </button>
       )}

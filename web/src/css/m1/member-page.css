@@ -1,0 +1,14 @@
+/* Tiêu đề + panel dùng chung cho Lịch sử / Chi tiết phiếu / Tôi (NhanVienPC.dc.html) */
+[data-shell='member'] .m-head { padding: var(--s-2) var(--s-1) var(--s-4); color: var(--c-on-dark); }
+[data-shell='member'] .m-head h1 { margin: 0; font: var(--t-h1); letter-spacing: var(--ls-h1); color: var(--c-on-dark); }
+[data-shell='member'] .m-head p { margin: var(--s-2) 0 0; font: var(--t-body-l); color: var(--c-on-dark-2); }
+[data-shell='member'] .m-head .m-back { display: inline-flex; align-items: center; gap: var(--s-2); min-height: 44px; margin-bottom: var(--s-1); padding: 0 var(--s-2); border-radius: var(--r-pill); color: var(--c-on-dark); font: var(--t-label); text-decoration: none; }
+[data-shell='member'] .m-head .m-back:hover { background: rgb(255 255 255 / .1); }
+[data-shell='member'] .m-head .m-back:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
+[data-shell='member'] .m-panel--stack { display: flex; flex-direction: column; gap: var(--s-3); max-width: 1100px; margin: 0 auto; }
+[data-shell='member'] .m-head, [data-shell='member'] .m-panel--stack { max-width: 1100px; margin-left: auto; margin-right: auto; }
+[data-shell='member'] .m-panel--stack .load-state, [data-shell='member'] .m-panel--stack .load-error { color: var(--c-ink); }
+@media (max-width: 900px) {
+  [data-shell='member'] .m-page--plain { padding: 0 var(--s-3) calc(88px + env(safe-area-inset-bottom)); }
+  [data-shell='member'] .m-panel--stack { padding: var(--s-3); border-radius: var(--r-lg); }
+}
