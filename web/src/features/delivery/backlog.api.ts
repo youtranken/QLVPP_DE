@@ -22,6 +22,8 @@ export interface BacklogLine {
   cancelled_qty: number;
   remaining_qty: number;
   stock_qty: number | null;
+  // Phần nợ đã tính vào phiếu gửi ADM của tháng đang giao; null khi chưa có phiếu
+  counted_in_snapshot_qty: number | null;
 }
 
 export interface BacklogGroup {
@@ -52,16 +54,18 @@ export interface LineDeliveries {
   items: LineDelivery[];
 }
 
+export const CANCEL_REASONS = ['adm_out_of_stock', 'not_needed', 'user_left', 'other'] as const;
+export type CancelReason = (typeof CANCEL_REASONS)[number];
+
 export interface CancelBody {
+  reason_code: CancelReason;
   reason?: string;
-  // Có mã thì server ghi lý do cố định "ADM hết hàng", không cần chữ
-  reason_code?: 'adm_out_of_stock';
   expected_delivered_qty: number;
   expected_qty: number;
 }
 
-export const REASON_MIN = 3;
-export const REASON_MAX = 500;
+export const OTHER_NOTE_MIN = 3;
+export const REASON_MAX = 200;
 
 export const parseBy = (v: string | null): BacklogBy => (v === 'person' ? 'person' : 'item');
 

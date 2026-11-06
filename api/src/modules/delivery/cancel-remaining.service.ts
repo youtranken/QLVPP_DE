@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClockService } from '../../common/clock.service';
+import { addMonths } from '../../common/period';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
@@ -18,11 +19,10 @@ import {
   itemNotAdmOut,
   lineIsAdmOut,
 } from './adm-out-cancel';
-import { cancelReasonRequired, staleCancel } from './delivery-errors';
+import { cancelNoteOf } from './cancel-reason';
+import { notDebtYet, staleCancel } from './delivery-errors';
 import type { CancelBody, CancelResult } from './delivery.dto';
 import { assertDeliverable } from './delivery.service';
-
-const REASON_MIN = 3;
 
 @Injectable()
 export class CancelRemainingService {
@@ -42,14 +42,18 @@ export class CancelRemainingService {
     body: CancelBody,
     actor: string,
   ): Promise<CancelResult> {
-    const admOut = body.reason_code === ADM_OUT_REASON;
-    const reason = admOut ? ADM_OUT_NOTE : (body.reason?.trim() ?? '');
-    if (reason.length < REASON_MIN) throw cancelReasonRequired();
+    const { code, note } = cancelNoteOf(body);
     const now = this.clock.now();
     return this.db.transaction(async (tx) => {
       const line = await this.lines.lockLine(tx, lineId);
       if (!line) throw lineNotFound();
       await this.periods.assertLocked(line.period_ym, now, tx);
+      const current = addMonths(
+        (await this.periods.openPeriod(tx, now)).ym,
+        -1,
+      );
+      const isDebt = line.period_ym < current;
+      if (!isDebt && code !== ADM_OUT_REASON) throw notDebtYet();
       assertDeliverable(line);
       if (
         line.delivered_qty !== body.expected_delivered_qty ||
@@ -57,7 +61,11 @@ export class CancelRemainingService {
       ) {
         throw staleCancel(line);
       }
-      if (admOut && !(await lineIsAdmOut(tx, lineId))) throw itemNotAdmOut();
+      // Tháng đang giao chỉ hủy được khi khóa đang đánh ADM hết hàng (đường hộp giao); nợ tháng trước dùng mã như một lý do
+      const admOut =
+        code === ADM_OUT_REASON && (await lineIsAdmOut(tx, lineId));
+      if (!isDebt && !admOut) throw itemNotAdmOut();
+      const reason = admOut ? ADM_OUT_NOTE : note;
       const result = await this.lines.cancelRemaining(tx, lineId, reason, now);
       if (result.cancelled_now === 0) return result;
       if (admOut) return this.afterAdmOut(tx, line, result, actor, now);
@@ -71,11 +79,15 @@ export class CancelRemainingService {
           before: { cancelled_qty: line.cancelled_qty },
           after: { cancelled_qty: result.line.cancelled_qty },
           reason,
+          reason_code: code,
         },
         at: now,
       });
       await this.lines.touchRequest(tx, line.request_id, now);
-      await this.notifyOwner(tx, line, result, reason, now);
+      // Người đã nghỉ không đọc chuông nữa
+      if (code !== 'user_left') {
+        await this.notifyOwner(tx, line, result, reason, now);
+      }
       return result;
     });
   }

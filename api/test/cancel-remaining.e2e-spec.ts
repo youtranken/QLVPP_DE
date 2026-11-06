@@ -1,4 +1,4 @@
-import { deliveryFixture } from './delivery.fixture';
+import { DEBT_AT, deliveryFixture } from './delivery.fixture';
 import type { RequestView } from './me-request.fixture';
 
 interface CancelResult {
@@ -27,6 +27,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
     deliverAll,
     freeze,
     http,
+    debtLine,
     lockedLine,
     review,
   } = f;
@@ -50,16 +51,17 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
   const backlogLineIds = async () =>
     (await backlog('item')).flatMap((g) => g.lines.map((l) => l.line_id));
   const lineCancelled = () => bellsOf('line_cancelled');
+  const NOT_NEEDED = 'Người nhận không cần nữa';
 
-  it('dòng 5 đã giao 3 → hủy "Người đã nghỉ": cancelled_qty 2, cancelled_now 2, rời Còn nợ, member thấy cancel_note, đúng 1 chuông line_cancelled:<id>:2', async () => {
+  it('dòng 5 đã giao 3 → hủy "Người nhận không cần nữa" khi đã là nợ: cancelled_qty 2, cancelled_now 2, rời Còn nợ, member thấy cancel_note, đúng 1 chuông line_cancelled:<id>:2', async () => {
     const { request, line } = await lockedLine(10);
     await deliver(line.id, { qty: 3, expected_delivered_qty: 0 }).expect(200);
     expect(await backlogLineIds()).not.toContain(line.id);
     // Kỳ 12 khóa sổ → phần còn lại của kỳ 11 thành nợ
-    freeze('2026-12-11T03:00:00Z');
+    freeze(DEBT_AT);
     expect(await backlogLineIds()).toContain(line.id);
     const res = await cancel(line.id, {
-      reason: 'Người đã nghỉ',
+      reason_code: 'not_needed',
       expected_delivered_qty: 3,
       expected_qty: line.qty,
     }).expect(200);
@@ -69,7 +71,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
         qty: 5,
         delivered_qty: 3,
         cancelled_qty: 2,
-        cancel_note: 'Người đã nghỉ',
+        cancel_note: NOT_NEEDED,
       },
       cancelled_now: 2,
     });
@@ -79,7 +81,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
     ).body as { lines: Record<string, unknown>[] };
     expect(mine.lines[0]).toMatchObject({
       cancelled_qty: 2,
-      cancel_note: 'Người đã nghỉ',
+      cancel_note: NOT_NEEDED,
     });
     const [bell, ...more] = await lineCancelled();
     expect(more).toEqual([]);
@@ -91,7 +93,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
         name_en: null,
         unit: 'cay',
         qty: 2,
-        reason: 'Người đã nghỉ',
+        reason: NOT_NEEDED,
       },
       link: '/history/2026-11',
     });
@@ -100,17 +102,18 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
         request_id: request.id,
         before: { cancelled_qty: 0 },
         after: { cancelled_qty: 2 },
-        reason: 'Người đã nghỉ',
+        reason: NOT_NEEDED,
+        reason_code: 'not_needed',
       },
     ]);
     expect(await bellsOf('request_delivered')).toEqual([]);
   });
 
   it('sau hủy: giao thêm 1 (= còn lại + 1) → 400 DELIVER_EXCEEDS_QTY {remaining: 0}', async () => {
-    const { line } = await lockedLine(10);
+    const { line } = await debtLine(10);
     await deliver(line.id, { qty: 3, expected_delivered_qty: 0 }).expect(200);
     await cancel(line.id, {
-      reason: 'Người đã nghỉ',
+      reason_code: 'not_needed',
       expected_delivered_qty: 3,
       expected_qty: line.qty,
     }).expect(200);
@@ -125,62 +128,19 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
     });
   });
 
-  it('reason "ab", "  ab  ", thiếu → 400 REASON_REQUIRED, dòng không đổi; "  abc " → 200, cancel_note "abc"', async () => {
-    const { line } = await lockedLine(10);
-    for (const body of [
-      { reason: 'ab', expected_delivered_qty: 0, expected_qty: line.qty },
-      { reason: '  ab  ', expected_delivered_qty: 0, expected_qty: line.qty },
-      { expected_delivered_qty: 0, expected_qty: line.qty },
-    ]) {
-      const res = await cancel(line.id, body).expect(400);
-      expect(res.body.code).toBe('REASON_REQUIRED');
-    }
-    expect(await lineCancelled()).toEqual([]);
-    const ok = await cancel(line.id, {
-      reason: '  abc ',
-      expected_delivered_qty: 0,
-      expected_qty: line.qty,
-    }).expect(200);
-    expect(ok.body).toMatchObject({
-      line: { cancelled_qty: 5, cancel_note: 'abc' },
-      cancelled_now: 5,
-    });
-  });
-
-  it('reason 501 ký tự (NOTE_MAX + 1) → 400 VALIDATION {fields: [reason]}, dòng không đổi, không chuông; 500 ký tự → 200, cancel_note dài 500', async () => {
-    const { line } = await lockedLine(10);
-    const over = await cancel(line.id, {
-      reason: 'x'.repeat(501),
-      expected_delivered_qty: 0,
-      expected_qty: line.qty,
-    }).expect(400);
-    expect(over.body).toMatchObject({ code: 'VALIDATION', fields: ['reason'] });
-    expect(await f.lineRow(line.id)).toMatchObject({
-      cancelled_qty: 0,
-      cancel_note: null,
-    });
-    expect(await lineCancelled()).toEqual([]);
-    const ok = await cancel(line.id, {
-      reason: 'x'.repeat(500),
-      expected_delivered_qty: 0,
-      expected_qty: line.qty,
-    }).expect(200);
-    expect((ok.body as CancelResult).line.cancel_note).toHaveLength(500);
-    expect(await lineCancelled()).toHaveLength(1);
-  });
-
   it('gọi lại khi phần còn lại 0 → 200 cancelled_now 0, không chuông thứ hai, không audit thứ hai, updated_at phiếu không đổi', async () => {
-    const { request, line } = await lockedLine(10);
+    const { request, line } = await debtLine(10);
     const body = {
-      reason: 'Người đã nghỉ',
+      reason_code: 'not_needed',
       expected_delivered_qty: 0,
       expected_qty: line.qty,
     };
     await cancel(line.id, body).expect(200);
     const before = (await adminView(request.id)).updated_at;
-    freeze('2026-11-13T03:00:00Z');
+    freeze('2026-12-13T03:00:00Z');
     const again = await cancel(line.id, {
       ...body,
+      reason_code: 'other',
       reason: 'Lý do khác',
     }).expect(200);
     expect(again.body).toEqual({
@@ -189,7 +149,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
         qty: 5,
         delivered_qty: 0,
         cancelled_qty: 5,
-        cancel_note: 'Người đã nghỉ',
+        cancel_note: NOT_NEEDED,
       },
       cancelled_now: 0,
     });
@@ -199,24 +159,24 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
   });
 
   it('có hủy → updated_at phiếu đổi (tab Điều chỉnh cũ nhận STALE_UPDATE)', async () => {
-    const { request, line } = await lockedLine(10);
+    const { request, line } = await debtLine(10);
     const before = (await adminView(request.id)).updated_at;
-    freeze('2026-11-13T03:00:00Z');
+    freeze('2026-12-13T03:00:00Z');
     await cancel(line.id, {
-      reason: 'Người đã nghỉ',
+      reason_code: 'not_needed',
       expected_delivered_qty: 0,
       expected_qty: line.qty,
     }).expect(200);
     expect((await adminView(request.id)).updated_at).toBe(
-      '2026-11-13T03:00:00.000Z',
+      '2026-12-13T03:00:00.000Z',
     );
-    expect(before).not.toBe('2026-11-13T03:00:00.000Z');
+    expect(before).not.toBe('2026-12-13T03:00:00.000Z');
   });
 
-  it('PERIOD_NOT_LOCKED lúc 2026-11-10T16:59:59.999Z (23:59:59.999 ngày 10 VN); hủy được lúc 2026-11-10T17:00:00.000Z (00:00 ngày 11 VN)', async () => {
+  it('2026-11-10T16:59:59.999Z (23:59:59.999 ngày 10 VN) → PERIOD_NOT_LOCKED; 17:00:00.000Z kỳ vừa khóa là tháng đang giao → NOT_DEBT_YET', async () => {
     const { line } = await lockedLine(10);
     const body = {
-      reason: 'Người đã nghỉ',
+      reason_code: 'not_needed',
       expected_delivered_qty: 0,
       expected_qty: line.qty,
     };
@@ -224,25 +184,27 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
     const early = await cancel(line.id, body).expect(409);
     expect(early.body.code).toBe('PERIOD_NOT_LOCKED');
     freeze('2026-11-10T17:00:00.000Z');
-    await cancel(line.id, body).expect(200);
+    const current = await cancel(line.id, body).expect(409);
+    expect(current.body.code).toBe('NOT_DEBT_YET');
   });
 
   it('dữ liệu cũ: qty tăng 5→7 sau khi hủy 2 rồi hủy tiếp → cancelled_qty 4, chuông mới line_cancelled:<id>:4', async () => {
-    const { request, line } = await lockedLine(10);
+    const { request, line } = await debtLine(10);
     await deliver(line.id, { qty: 3, expected_delivered_qty: 0 }).expect(200);
     await cancel(line.id, {
-      reason: 'Người đã nghỉ',
+      reason_code: 'not_needed',
       expected_delivered_qty: 3,
       expected_qty: line.qty,
     }).expect(200);
     await legacyRaiseQty(request.id, 7);
     const res = await cancel(line.id, {
+      reason_code: 'other',
       reason: 'Vẫn nghỉ',
       expected_delivered_qty: 3,
       expected_qty: 7,
     }).expect(200);
     expect(res.body).toMatchObject({
-      line: { qty: 7, cancelled_qty: 4, cancel_note: 'Vẫn nghỉ' },
+      line: { qty: 7, cancelled_qty: 4, cancel_note: 'Khác: Vẫn nghỉ' },
       cancelled_now: 2,
     });
     expect((await lineCancelled()).map((b) => b.event_id)).toEqual([
@@ -252,10 +214,10 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
   });
 
   it('dữ liệu cũ: cancelled_qty > 0 rồi qty tăng 5→7 (còn 7−3−2 = 2): giao 3 → DELIVER_EXCEEDS_QTY {remaining: 2}; deliver-all giao đúng 2, chuông giao đủ', async () => {
-    const { request, line } = await lockedLine(10);
+    const { request, line } = await debtLine(10);
     await deliver(line.id, { qty: 3, expected_delivered_qty: 0 }).expect(200);
     await cancel(line.id, {
-      reason: 'Người đã nghỉ',
+      reason_code: 'not_needed',
       expected_delivered_qty: 3,
       expected_qty: line.qty,
     }).expect(200);
@@ -281,8 +243,9 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
   it('dòng ngoài DM accepted → chuông có tên/ĐVT của dòng, name_en null', async () => {
     const { line } = await customLine();
     await review(line.id, { action: 'accept' }).expect(200);
-    freeze('2026-11-12T03:00:00Z');
+    freeze(DEBT_AT);
     await cancel(line.id, {
+      reason_code: 'other',
       reason: 'Không mua nữa',
       expected_delivered_qty: 0,
       expected_qty: line.qty,
@@ -293,15 +256,15 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
       name_en: null,
       unit: 'cai',
       qty: 2,
-      reason: 'Không mua nữa',
+      reason: 'Khác: Không mua nữa',
     });
   });
 
   it('pending → 409 LINE_NOT_REVIEWED; rejected → 409 LINE_REJECTED', async () => {
     const { line } = await customLine();
-    freeze('2026-11-12T03:00:00Z');
+    freeze(DEBT_AT);
     const body = {
-      reason: 'Người đã nghỉ',
+      reason_code: 'not_needed',
       expected_delivered_qty: 0,
       expected_qty: line.qty,
     };
@@ -314,7 +277,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
 
   it('id không có → 404 LINE_NOT_FOUND; id sai dạng → 400; member → 403; expected_delivered_qty -1 → VALIDATION', async () => {
     const body = {
-      reason: 'Người đã nghỉ',
+      reason_code: 'not_needed',
       expected_delivered_qty: 0,
       expected_qty: 5,
     };
@@ -324,7 +287,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
     ).expect(404);
     expect(missing.body.code).toBe('LINE_NOT_FOUND');
     await cancel('x', body).expect(400);
-    const { line } = await lockedLine(10);
+    const { line } = await debtLine(10);
     await cancel(line.id, body, A, 'member').expect(403);
     const bad = await cancel(line.id, {
       ...body,

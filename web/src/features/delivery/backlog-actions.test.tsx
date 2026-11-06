@@ -20,6 +20,11 @@ const rowOf = async (text: string) => {
   await screen.findByText('Bút bi xanh');
   return bodyRows().find((r) => r.textContent?.includes(text))!;
 };
+const openCancel = async (who: string) => {
+  await userEvent.click(within(await rowOf(who)).getByRole('button', { name: `Thao tác khác Bút bi xanh — ${who}` }));
+  await userEvent.click(screen.getByRole('menuitem', { name: 'Hủy nợ' }));
+};
+const pickReason = (name: string) => userEvent.click(within(screen.getByRole('radiogroup', { name: 'Lý do hủy nợ' })).getByRole('radio', { name }));
 const heads = () => screen.queryAllByRole('row').filter((r) => r.classList.contains('dt-group'));
 const hasHead = (text: string) => heads().some((r) => r.textContent?.includes(text));
 
@@ -66,25 +71,60 @@ describe('BacklogPage — thao tác trên dòng', () => {
     await waitFor(() => expect(hasHead('Bút bi xanh')).toBe(false));
   });
 
-  it('hủy nợ với lý do → dòng biến mất, dòng khác của nhóm còn, toast "Đã hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức"', async () => {
-    stubBacklog([PEN_DUC, PEN_LAN]);
+  it('1280: dòng không có nút "Hủy nợ" trực tiếp; menu ⋯ có "Hủy nợ" (đỏ); chọn lý do "Người nhận không cần nữa" → dòng biến mất, dòng khác còn, toast "Đã hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức"', async () => {
+    const f = stubBacklog([PEN_DUC, PEN_LAN]);
     openPage();
-    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Hủy nợ' }));
-    await userEvent.type(screen.getByRole('textbox', { name: /^Lý do hủy nợ/ }), 'Hết mẫu');
+    const row = await rowOf('Phạm Văn Đức');
+    expect(within(row).queryByRole('button', { name: 'Hủy nợ' })).toBeNull();
+    expect(within(row).getByRole('button', { name: 'Giao bổ sung' })).toBeInTheDocument();
+    await userEvent.click(within(row).getByRole('button', { name: 'Thao tác khác Bút bi xanh — Phạm Văn Đức' }));
+    expect(screen.getByRole('menuitem', { name: 'Hủy nợ' })).toHaveClass('row-menu__item--danger');
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Hủy nợ' }));
+    expect(screen.getByRole('dialog', { name: 'Hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức?' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Hủy nợ' })).toBeDisabled();
+    await pickReason('Người nhận không cần nữa');
     await userEvent.click(screen.getByRole('button', { name: 'Hủy nợ' }));
     await waitFor(() => expect(bodyRows()).toHaveLength(1));
     expect(bodyRows()[0]).toHaveTextContent('Võ Thị Lan');
     expect(await screen.findByText('Đã hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức')).toBeInTheDocument();
+    expect(JSON.parse(String(callsTo(f, '/api/admin/lines/l-pen/cancel-remaining')[0][1]?.body))).toEqual({ reason_code: 'not_needed', expected_delivered_qty: 2, expected_qty: 5 });
   });
 
-  it('hủy nợ bị STALE_UPDATE {qty 4, delivered_qty 3} → hộp ở lại, khối "Dòng vừa thay đổi (đăng ký 4, đã giao 3) — kiểm tra lại." và tiêu đề đổi "Hủy 1 cây"', async () => {
+  it('W23: dòng có counted_in_snapshot_qty 2 → hộp Hủy nợ có "Phiếu gửi ADM tháng 10 đã tính 2 cây này — hủy thì hàng về dư vào kho." (tháng đang giao)', async () => {
+    stubBacklog([{ ...PEN_DUC, counted_in_snapshot_qty: 2 }]);
+    openPage();
+    await openCancel('Phạm Văn Đức');
+    expect(screen.getByText('Phiếu gửi ADM tháng 10 đã tính 2 cây này — hủy thì hàng về dư vào kho.')).toBeInTheDocument();
+  });
+
+  it('?left=1 → chỉ dòng người đã nghỉ; mở Hủy nợ thì "Đã nghỉ việc" chọn sẵn, gửi user_left', async () => {
+    const f = stubBacklog([PEN_DUC, PEN_LAN]);
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/backlog?left=1');
+    await screen.findByText('Bút bi xanh');
+    await waitFor(() => expect(bodyRows()).toHaveLength(1));
+    await openCancel('Võ Thị Lan');
+    expect(within(screen.getByRole('radiogroup', { name: 'Lý do hủy nợ' })).getByRole('radio', { name: 'Đã nghỉ việc' })).toBeChecked();
+    await userEvent.click(screen.getByRole('button', { name: 'Hủy nợ' }));
+    await waitFor(() => expect(callsTo(f, '/api/admin/lines/l-pen-lan/cancel-remaining')).toHaveLength(1));
+    expect(JSON.parse(String(callsTo(f, '/api/admin/lines/l-pen-lan/cancel-remaining')[0][1]?.body)).reason_code).toBe('user_left');
+  });
+
+  it('không có ?left=1 → mở Hủy nợ không chọn sẵn lý do', async () => {
+    stubBacklog([PEN_LAN]);
+    openPage();
+    await openCancel('Võ Thị Lan');
+    expect(within(screen.getByRole('radiogroup', { name: 'Lý do hủy nợ' })).queryByRole('radio', { checked: true })).toBeNull();
+  });
+
+  it('hủy nợ bị STALE_UPDATE {qty 4, delivered_qty 3} → hộp ở lại, khối "Dòng vừa thay đổi (đăng ký 4, đã giao 3) — kiểm tra lại." và tiêu đề đổi "Hủy nợ 1 cây"', async () => {
     const f = stubBacklog([PEN_DUC], { cancel: () => jsonResponse(409, { code: 'STALE_UPDATE', qty: 4, delivered_qty: 3 }) });
     openPage();
-    await userEvent.click(within(await rowOf('Phạm Văn Đức')).getByRole('button', { name: 'Hủy nợ' }));
-    await userEvent.type(screen.getByRole('textbox', { name: /^Lý do hủy nợ/ }), 'Hết mẫu');
+    await openCancel('Phạm Văn Đức');
+    await pickReason('Đã nghỉ việc');
     await userEvent.click(screen.getByRole('button', { name: 'Hủy nợ' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Dòng vừa thay đổi (đăng ký 4, đã giao 3) — kiểm tra lại.');
-    expect(screen.getByRole('dialog', { name: 'Hủy 1 cây còn lại của Phạm Văn Đức?' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Hủy nợ 1 cây Bút bi xanh của Phạm Văn Đức?' })).toBeInTheDocument();
     await waitFor(() => expect(callsTo(f, '/api/admin/backlog?by=item').length).toBeGreaterThan(1));
   });
 
@@ -107,6 +147,6 @@ describe('BacklogPage — thao tác trên dòng', () => {
     await userEvent.click(more);
     expect(screen.getByRole('menuitem', { name: 'Lịch sử giao' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('menuitem', { name: 'Hủy nợ' }));
-    expect(await screen.findByRole('dialog', { name: /^Hủy 3 cây còn lại của Phạm Văn Đức/ })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức?' })).toBeInTheDocument();
   });
 });

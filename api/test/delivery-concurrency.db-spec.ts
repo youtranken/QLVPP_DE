@@ -43,7 +43,7 @@ describe('Giao song song (Postgres thật, hai request HTTP thật)', () => {
       .set('x-dev-user-sub', ADMIN)
       .set('x-dev-role', 'admin')
       .send({
-        reason: 'Người đã nghỉ',
+        reason_code: 'not_needed',
         expected_delivered_qty: expected,
         expected_qty: 5,
       });

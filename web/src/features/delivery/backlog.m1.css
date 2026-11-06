@@ -34,3 +34,8 @@
 [data-shell='admin'] .bl-rounds b { font: var(--t-label); color: var(--c-ink); }
 [data-shell='admin'] .bl-rounds small { font: var(--t-sm); color: var(--c-muted); }
 [data-shell='admin'] .bl-cancelled { margin: var(--s-3) 0 0; padding: var(--s-3); border-radius: var(--r-md); background: var(--c-warn-soft); color: var(--c-ink); font: var(--t-sm); }
+
+[data-shell='admin'] .bl-cancel { display: grid; gap: var(--s-3); }
+[data-shell='admin'] .bl-reasons { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--s-1) var(--s-3); }
+[data-shell='admin'] .bl-reason { display: flex; align-items: center; gap: var(--s-2); min-height: var(--hit); color: var(--c-ink); font: var(--t-body); cursor: pointer; }
+[data-shell='admin'] .bl-reason input { width: 18px; height: 18px; margin: 0; accent-color: var(--c-acc); }

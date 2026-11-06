@@ -41,7 +41,8 @@ export function BacklogPage() {
   const open = useOpenLine(all);
   const title = t('delivery.backlog.title');
   const current = useCurrentPeriod();
-  const month = current.data?.ym ? monthOf(shiftYm(current.data.ym, -1)) : undefined;
+  const sentYm = current.data?.ym ? shiftYm(current.data.ym, -1) : undefined;
+  const month = sentYm ? monthOf(sentYm) : undefined;
   const reload = () => open.line && void refresh(open.line.request_id);
   const done = async () => {
     if (open.line) await refresh(open.line.request_id);
@@ -71,7 +72,9 @@ export function BacklogPage() {
         </div>
       )}
       {open.line && open.action === 'deliver' && <DeliverMoreDialog line={open.line} onDone={done} onStale={reload} onClose={open.close} />}
-      {open.line && open.action === 'cancel' && <CancelDialog line={open.line} onDone={done} onStale={reload} onClose={open.close} />}
+      {open.line && open.action === 'cancel' && (
+        <CancelDialog line={open.line} sentYm={sentYm} initialReason={p.cancelReason} onDone={done} onStale={reload} onClose={open.close} />
+      )}
       {open.line && open.action === 'history' && <DeliveriesDrawer line={open.line} onClose={open.close} />}
     </div>
   );

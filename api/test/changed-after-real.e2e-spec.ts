@@ -71,7 +71,7 @@ describe('V2D-4 changedAfter theo thao tác thật: giao không tính, điều c
     const { debt } = await setup();
     await f
       .cancel(debt, {
-        reason: 'Người đã nghỉ',
+        reason_code: 'not_needed',
         expected_delivered_qty: 0,
         expected_qty: 3,
       })

@@ -30,7 +30,7 @@ const ROUTES: Route[] = [
     method: 'post',
     path: () => `/api/admin/lines/${MISSING}/cancel-remaining`,
     body: {
-      reason: 'Người đã nghỉ',
+      reason_code: 'not_needed',
       expected_delivered_qty: 0,
       expected_qty: 1,
     },

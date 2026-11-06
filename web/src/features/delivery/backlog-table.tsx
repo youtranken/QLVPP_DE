@@ -61,18 +61,13 @@ function Actions({ row, by, phone, onAction }: { row: BacklogRow; by: BacklogBy;
     </button>
   );
   const outTag = out && by === 'person' && <span className="tag">{t('delivery.backlog.outOfStock')}</span>;
+  const cancel = { label: t('delivery.backlog.cancel'), danger: true, onSelect: () => onAction('cancel', row) };
   if (phone) {
     return (
       <span className="bl-acts">
         {outTag}
         {deliver}
-        <RowMenu
-          label={t('delivery.backlog.moreOf', who)}
-          items={[
-            { label: t('delivery.backlog.cancel'), danger: true, onSelect: () => onAction('cancel', row) },
-            { label: t('delivery.backlog.history'), onSelect: () => onAction('history', row) },
-          ]}
-        />
+        <RowMenu label={t('delivery.backlog.moreOf', who)} items={[cancel, { label: t('delivery.backlog.history'), onSelect: () => onAction('history', row) }]} />
       </span>
     );
   }
@@ -80,9 +75,6 @@ function Actions({ row, by, phone, onAction }: { row: BacklogRow; by: BacklogBy;
     <span className="bl-acts">
       {outTag}
       {deliver}
-      <button type="button" className="btn btn--sm btn--danger-ghost" onClick={() => onAction('cancel', row)}>
-        {t('delivery.backlog.cancel')}
-      </button>
       <button
         type="button"
         className="btn btn--sm btn--ghost bl-icon-btn"
@@ -92,6 +84,7 @@ function Actions({ row, by, phone, onAction }: { row: BacklogRow; by: BacklogBy;
       >
         <Icon name="history" size={18} />
       </button>
+      <RowMenu label={t('delivery.backlog.moreOf', who)} items={[cancel]} />
     </span>
   );
 }
@@ -115,6 +108,12 @@ function useColumns(by: BacklogBy, onAction: Props['onAction']) {
             <small>{t('delivery.backlog.ofQty', { qty: r.qty })}</small>
           </span>
         ),
+      },
+      {
+        id: 'stock',
+        header: () => t('delivery.backlog.cols.stock'),
+        meta: { className: 'num r' },
+        cell: ({ row: { original: r } }) => (r.stock_qty === null ? '—' : r.stock_qty),
       },
       {
         id: 'actions',

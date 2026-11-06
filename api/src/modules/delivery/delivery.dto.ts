@@ -7,7 +7,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { NOTE_MAX } from '../requests/request.dto';
+import { REASON_NOTE_MAX } from '../requests/adjust-rules';
 import type { CancelledLine } from '../requests/line-delivery.store';
 
 export const DELIVER_QTY_MAX = 9999;
@@ -17,11 +17,18 @@ export class DeliverBody {
   @IsInt() @Min(0) expected_delivered_qty!: number;
 }
 
-// Thiếu/ngắn đều là REASON_REQUIRED (luật trim ≥ 3 ở service), không phải VALIDATION
+export const CANCEL_REASONS = [
+  'adm_out_of_stock',
+  'not_needed',
+  'user_left',
+  'other',
+] as const;
+export type CancelReason = (typeof CANCEL_REASONS)[number];
+
+// Thiếu mã / "Khác" thiếu ghi chú là REASON_REQUIRED (luật ở service), không phải VALIDATION
 export class CancelBody {
-  @IsOptional() @IsString() @MaxLength(NOTE_MAX) reason?: string;
-  // Có mã thì không cần lý do chữ: ghi chú hủy cố định "ADM hết hàng"
-  @IsOptional() @IsIn(['adm_out_of_stock']) reason_code?: 'adm_out_of_stock';
+  @IsOptional() @IsIn(CANCEL_REASONS) reason_code?: CancelReason;
+  @IsOptional() @IsString() @MaxLength(REASON_NOTE_MAX) reason?: string;
   @IsInt() @Min(0) expected_delivered_qty!: number;
   // qty đổi sau khi mở hộp thì phần hủy khác số hộp đang hiện
   @IsInt() @Min(1) expected_qty!: number;

@@ -26,7 +26,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
     const release = await acquireLock('prev-period');
     let seed: Seed | undefined;
     try {
-      seed = await seedLockedRequest(request, info, [{ stock: 10, qty: 3 }]);
+      seed = await seedLockedRequest(request, info, [{ stock: 10, qty: 3 }], { monthsBack: 2 });
       const [a] = seed.items;
       const lineId = psql(`SELECT id FROM request_lines WHERE request_id = '${seed.requestId}'`);
       const first = await request.post(`/api/admin/lines/${lineId}/deliver`, {
@@ -39,7 +39,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await expect(page.getByRole('radio', { name: 'Theo món' })).toBeChecked();
       const itemGroup = page.getByRole('rowheader', { name: new RegExp(a.name) });
       await expect(itemGroup).toContainText('còn 2 cái');
-      await expect(itemGroup).toContainText('Tồn 9');
+      await expect(itemGroup).toContainText('Tủ còn 9');
       await expect(page.getByRole('button', { name: /^Có hàng để giao bổ sung/ })).toBeVisible();
       await page.getByRole('button', { name: /^Của người đã nghỉ/ }).click();
       await expect(page).toHaveURL(/filter=left/);
@@ -99,16 +99,17 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await snap(page, info, 'backlog-history');
       await drawer.getByRole('button', { name: 'Đóng' }).click();
 
-      if (isMobile(info)) {
-        await row.getByRole('button', { name: `Thao tác khác ${a.name} — ${seed.name}` }).click();
-        await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();
-      } else {
-        await row.getByRole('button', { name: 'Hủy nợ' }).click();
-      }
-      const cancel = page.getByRole('dialog', { name: `Hủy 1 cái còn lại của ${seed.name}?` });
-      const reason = cancel.getByLabel('Lý do hủy nợ', { exact: false });
+      // Hủy nợ chỉ nằm trong menu ⋯ của dòng ở mọi bề rộng
+      await expect(row.getByRole('button', { name: 'Hủy nợ' })).toHaveCount(0);
+      await row.getByRole('button', { name: `Thao tác khác ${a.name} — ${seed.name}` }).click();
+      await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();
+      const cancel = page.getByRole('dialog', { name: `Hủy nợ 1 cái ${a.name} của ${seed.name}?` });
+      const reason = cancel.getByRole('textbox', { name: /^Ghi chú/ });
       const submit = cancel.getByRole('button', { name: 'Hủy nợ', exact: true });
-      await expect(reason).toHaveAttribute('maxlength', '500');
+      await expect(cancel.getByRole('radiogroup', { name: 'Lý do hủy nợ' }).getByRole('radio')).toHaveCount(4);
+      await expect(submit).toBeDisabled();
+      await cancel.getByRole('radio', { name: 'Khác' }).check();
+      await expect(reason).toHaveAttribute('maxlength', '200');
       await reason.fill('  ab  ');
       await expect(submit).toBeDisabled();
       await reason.fill('  abc  ');
@@ -119,7 +120,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await expect(cancel).toHaveCount(0);
       await expect(page.getByText(`Đã hủy nợ 1 cái ${a.name} của ${seed.name}`)).toBeVisible();
       await expect(group).toHaveCount(0);
-      expect(psql(`SELECT cancelled_qty || '|' || cancel_note FROM request_lines WHERE id = '${lineId}'`)).toBe('1|abc');
+      expect(psql(`SELECT cancelled_qty || '|' || cancel_note FROM request_lines WHERE id = '${lineId}'`)).toBe('1|Khác: abc');
 
       const member = await browser.newPage();
       try {
@@ -130,13 +131,44 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
         await bell.click();
         const month = Number(seed.prevYm.slice(5, 7));
         await expect(
-          member.getByRole('dialog', { name: 'Thông báo' }).getByText(`Hành chính hủy phần còn nợ 1 cái ${a.name} (tháng ${month}): abc`),
+          member.getByRole('dialog', { name: 'Thông báo' }).getByText(`Hành chính hủy phần còn nợ 1 cái ${a.name} (tháng ${month}): Khác: abc`),
         ).toBeVisible();
       } finally {
         await member.close();
       }
     } finally {
       seed?.cleanup();
+      release();
+    }
+  });
+
+  test('V2D-11 Còn nợ chỉ có nợ tháng trước; ?left=1 lọc người đã nghỉ, Hủy nợ qua ⋯ chọn sẵn "Đã nghỉ việc"', async ({ page, request }, info) => {
+    const release = await acquireLock('prev-period');
+    const seeds: Seed[] = [];
+    try {
+      const current = await seedLockedRequest(request, info, [{ stock: 0, qty: 2 }]);
+      seeds.push(current);
+      const debt = await seedLockedRequest(request, info, [{ stock: 0, qty: 2 }], { monthsBack: 2 });
+      seeds.push(debt);
+      psql(`UPDATE users SET status = 'locked' WHERE sub = '${debt.sub}'`);
+      await page.goto('/admin/backlog?left=1');
+      const debtRow = page.getByRole('row').filter({ hasText: debt.name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
+      await expect(debtRow).toHaveCount(1);
+      await expect(page.getByRole('rowheader', { name: new RegExp(current.items[0].name) })).toHaveCount(0);
+      await expect(debtRow.getByRole('button', { name: 'Hủy nợ' })).toHaveCount(0);
+      await debtRow.getByRole('button', { name: `Thao tác khác ${debt.items[0].name} — ${debt.name}` }).click();
+      await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();
+      const cancel = page.getByRole('dialog', { name: `Hủy nợ 2 cái ${debt.items[0].name} của ${debt.name}?` });
+      await expect(cancel.getByRole('radio', { name: 'Đã nghỉ việc' })).toBeChecked();
+      await expect(cancel.getByRole('button', { name: 'Quay lại' })).toBeVisible();
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await cancel.getByRole('button', { name: 'Hủy nợ', exact: true }).click();
+      await expect(cancel).toHaveCount(0);
+      await expect(debtRow).toHaveCount(0);
+      expect(psql(`SELECT cancelled_qty || '|' || cancel_note FROM request_lines WHERE request_id = '${debt.requestId}'`)).toBe('2|Đã nghỉ việc');
+      expect(psql(`SELECT count(*) FROM in_app_notifications WHERE user_sub = '${debt.sub}'`)).toBe('0');
+    } finally {
+      seeds.forEach((s) => s.cleanup());
       release();
     }
   });

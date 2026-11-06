@@ -1,10 +1,11 @@
 import { arrivalsFixture } from './arrivals.fixture';
 
 // Kỳ riêng nhỏ nhất (object_id <= ym): audit mang giờ ClockService (2000) nên không rơi sau bản chốt của suite khác, và audit giờ thật cũ của kỳ khác không lọt vào
+const PREV = '2000-02';
 const YM = '2000-03';
 const NEXT = '2000-04';
 const AFTER_NEXT = '2000-05';
-const PRIVATE_YMS = [YM, NEXT, AFTER_NEXT].map((ym) => `${ym}-01`);
+const PRIVATE_YMS = [PREV, YM, NEXT, AFTER_NEXT].map((ym) => `${ym}-01`);
 // audit_log chỉ thêm: audit kỳ của lần chạy trước còn đó → mốc T mỗi ca đặt sau mọi audit kỳ ≤ YM đã có (vẫn trong năm 2000, trước hạn kỳ sau)
 const FIRST_T = Date.parse('2000-03-15T03:00:00Z');
 const NEXT_DEADLINE = Date.parse('2000-04-10T17:00:00Z');
@@ -129,20 +130,25 @@ describe('V2D-4 changedAfter qua endpoint thật, đồng hồ đứng (R-X.1, R
     await boundary([reduce(5), reduce(4), reduce(3)]);
   });
 
+  // Hủy nợ chỉ cho nợ tháng trước kỳ đang giao: dòng kỳ PREV, bản chốt kỳ YM
   it('line.cancel_remaining (Hủy nợ)', async () => {
-    const lines = await itemLines(3);
+    await f.ensurePeriod(PREV);
+    const lines: string[] = [];
+    for (let i = 0; i < 3; i++) {
+      const item = await f.stockItem(0);
+      lines.push(await seedLine(PREV, A, { item_id: item, qty: 2 }));
+    }
     await snapshotAtT();
     await boundary(
       lines.map(
-        ({ line }) =>
-          () =>
-            f
-              .cancel(line, {
-                reason: 'Người đã nghỉ',
-                expected_delivered_qty: 0,
-                expected_qty: 2,
-              })
-              .expect(200),
+        (line) => () =>
+          f
+            .cancel(line, {
+              reason_code: 'not_needed',
+              expected_delivered_qty: 0,
+              expected_qty: 2,
+            })
+            .expect(200),
       ),
     );
   });

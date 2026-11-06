@@ -18,6 +18,7 @@ export function backlogLine(over: Partial<BacklogLine> = {}): BacklogLine {
     cancelled_qty: 0,
     remaining_qty: 3,
     stock_qty: 10,
+    counted_in_snapshot_qty: null,
     ...over,
   };
 }

@@ -54,9 +54,12 @@ async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
 async function backlogByItem(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/backlog');
   await expect(admin.getByRole('radio', { name: 'Theo món' })).toBeChecked();
-  await expect(admin.getByRole('rowheader', { name: new RegExp(s.paper.name) })).toContainText('còn 2 cái');
-  await expect(admin.getByRole('rowheader', { name: new RegExp(s.clip.name) })).toContainText('còn 3 cái');
+  await expect(admin.getByRole('rowheader', { name: new RegExp(s.tape.name) })).toContainText('còn 2 cái');
+  await expect(admin.getByRole('rowheader', { name: new RegExp(s.glue.name) })).toContainText('còn 3 cái');
   await expect(admin.getByRole('rowheader', { name: new RegExp(s.pen.name) })).toHaveCount(0);
+  // Phần thiếu của tháng đang giao (giấy 2 của A, kẹp 3 của B) là Chưa nhận, không phải nợ
+  await expect(admin.getByRole('rowheader', { name: new RegExp(s.paper.name) })).toHaveCount(0);
+  await expect(admin.getByRole('rowheader', { name: new RegExp(s.clip.name) })).toHaveCount(0);
   await axe390(admin, info);
   await snap(admin, info, 'p3-backlog');
 }
@@ -121,24 +124,25 @@ async function expectFrozenPaper(admin: Page, s: MonthSeed) {
 
 async function purchaseAndDeliverMore(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/stock');
-  await admin.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(s.paper.name);
-  await openPurchase(admin, admin.getByRole('row').filter({ hasText: s.paper.name }));
-  const purchase = admin.getByRole('dialog', { name: `Nhập mua ${s.paper.name}` });
+  await admin.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(s.tape.name);
+  await openPurchase(admin, admin.getByRole('row').filter({ hasText: s.tape.name }));
+  const purchase = admin.getByRole('dialog', { name: `Nhập mua ${s.tape.name}` });
   await purchase.getByLabel('Số lượng nhập').fill('2');
   await purchase.getByRole('button', { name: 'Lưu nhập mua' }).click();
   await expect(purchase).toBeHidden();
 
   await admin.goto('/admin/backlog');
-  const group = admin.getByRole('rowheader', { name: new RegExp(s.paper.name) });
+  const group = admin.getByRole('rowheader', { name: new RegExp(s.tape.name) });
   await admin.getByRole('row').filter({ hasText: s.a.name }).getByRole('button', { name: 'Giao bổ sung' }).click();
-  const dialog = admin.getByRole('dialog', { name: `Giao bổ sung ${s.paper.name} cho ${s.a.name}` });
+  const dialog = admin.getByRole('dialog', { name: `Giao bổ sung ${s.tape.name} cho ${s.a.name}` });
   await expect(dialog.getByLabel('Số lượng giao')).toHaveValue('2');
   await dialog.getByRole('button', { name: 'Giao', exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(group).toHaveCount(0);
-  // PRD §10 mục 5: tổng trừ kho đúng 5 qua ba lần giao
-  expect(deliveryMovements(s.paper.id)).toBe('-3,-2');
-  expect(Number(psql(`SELECT stock_qty FROM items WHERE id = '${s.paper.id}'`))).toBe(0);
+  // Giao bổ sung trừ kho đúng phần nợ; giấy tháng đang giao không bị đụng
+  expect(deliveryMovements(s.tape.id)).toBe('-2');
+  expect(deliveryMovements(s.paper.id)).toBe('-3');
+  expect(Number(psql(`SELECT stock_qty FROM items WHERE id = '${s.tape.id}'`))).toBe(0);
   await snap(admin, info, 'p3-backlog-after-purchase');
 }
 
@@ -151,17 +155,17 @@ async function openBell(member: Page, text: string) {
 
 async function memberSeesDelivered(member: Page, info: TestInfo, s: MonthSeed) {
   await member.goto('/');
-  const item = await openBell(member, `Phiếu tháng ${month(s.prevYm)} của bạn đã được giao đủ.`);
+  const item = await openBell(member, `Phiếu tháng ${month(s.debtYm)} của bạn đã được giao đủ.`);
   await axe390(member, info);
   await item.click();
-  await expect(member).toHaveURL(new RegExp(`/history/${s.prevYm}$`));
+  await expect(member).toHaveURL(new RegExp(`/history/${s.debtYm}$`));
 }
 
 async function reopenSnapshot(admin: Page, s: MonthSeed, snapshotId: string) {
   await admin.goto(`/admin/reports?ym=${s.prevYm}`);
-  // Kỳ đã gửi: Phần 1 theo bản đã gửi (A4 vẫn có dù đã giao đủ), Đề nghị 4 theo bản, Đã giao 5 sống
+  // Kỳ đã gửi: Phần 1 theo bản đã gửi, Đề nghị 4 theo bản, Đã giao 3 sống (phần còn lại vẫn Chưa nhận)
   await expect(orderCell(reportRow(admin, s.paper.name))).toHaveText('4');
-  await expect(reportRow(admin, s.paper.name).getByRole('cell').nth(8)).toHaveText('5');
+  await expect(reportRow(admin, s.paper.name).getByRole('cell').nth(8)).toHaveText('3');
   await expect(needCell(reportRow(admin, s.clip.name))).toHaveText('3');
   const printed = admin.getByRole('region', { name: 'Bản chốt' }).getByRole('listitem').filter({ hasText: 'Bản in' }).first();
   const reprint = printed.getByRole('link', { name: /^In lại bản lập/ });
@@ -172,18 +176,15 @@ async function reopenSnapshot(admin: Page, s: MonthSeed, snapshotId: string) {
 
 async function cancelClip(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/backlog');
-  const group = admin.getByRole('rowheader', { name: new RegExp(s.clip.name) });
+  const group = admin.getByRole('rowheader', { name: new RegExp(s.glue.name) });
   const line = admin.getByRole('row').filter({ hasText: s.b.name });
-  // Dưới 768 px "Hủy nợ" nằm trong menu ⋯ của dòng, không còn nút riêng
-  if (isMobile(info)) {
-    await expect(line.getByRole('button', { name: 'Hủy nợ' })).toHaveCount(0);
-    await line.getByRole('button', { name: `Thao tác khác ${s.clip.name} — ${s.b.name}` }).click();
-    await admin.getByRole('menu', { name: `Thao tác khác ${s.clip.name} — ${s.b.name}` }).getByRole('menuitem', { name: 'Hủy nợ' }).click();
-  } else {
-    await line.getByRole('button', { name: 'Hủy nợ' }).click();
-  }
-  const dialog = admin.getByRole('dialog', { name: `Hủy 3 cái còn lại của ${s.b.name}?` });
-  await dialog.getByRole('textbox', { name: /^Lý do hủy nợ/ }).fill('Không mua được');
+  // "Hủy nợ" nằm trong menu ⋯ của dòng ở mọi bề rộng, không còn nút riêng
+  await expect(line.getByRole('button', { name: 'Hủy nợ' })).toHaveCount(0);
+  await line.getByRole('button', { name: `Thao tác khác ${s.glue.name} — ${s.b.name}` }).click();
+  await admin.getByRole('menu', { name: `Thao tác khác ${s.glue.name} — ${s.b.name}` }).getByRole('menuitem', { name: 'Hủy nợ' }).click();
+  const dialog = admin.getByRole('dialog', { name: `Hủy nợ 3 cái ${s.glue.name} của ${s.b.name}?` });
+  await dialog.getByRole('radio', { name: 'Khác' }).check();
+  await dialog.getByRole('textbox', { name: /^Ghi chú/ }).fill('Không mua được');
   await axe390(admin, info);
   await dialog.getByRole('button', { name: 'Hủy nợ', exact: true }).click();
   await expect(dialog).toHaveCount(0);
@@ -191,9 +192,9 @@ async function cancelClip(admin: Page, info: TestInfo, s: MonthSeed) {
 }
 
 async function memberSeesCancelled(member: Page, info: TestInfo, s: MonthSeed) {
-  await member.goto(`/history/${s.prevYm}`);
-  await expect(member.getByText(/^đã hủy 3 — Không mua được$/i)).toBeVisible();
-  await openBell(member, `Hành chính hủy phần còn nợ 3 cái ${s.clip.name} (tháng ${month(s.prevYm)}): Không mua được`);
+  await member.goto(`/history/${s.debtYm}`);
+  await expect(member.getByText(/^đã hủy 3 — Khác: Không mua được$/i)).toBeVisible();
+  await openBell(member, `Hành chính hủy phần còn nợ 3 cái ${s.glue.name} (tháng ${month(s.debtYm)}): Khác: Không mua được`);
   await axe390(member, info);
   await snap(member, info, 'p3-member-b');
 }
@@ -225,7 +226,7 @@ test.describe('P3 vòng tháng', () => {
       await memberSeesDelivered(await open(seed.a), info, seed);
       await reopenSnapshot(admin, seed, snapshotId);
       await cancelClip(admin, info, seed);
-      expect(psql(`SELECT cancelled_qty || '|' || cancel_note FROM request_lines WHERE item_id = '${seed.clip.id}'`)).toBe('3|Không mua được');
+      expect(psql(`SELECT cancelled_qty || '|' || cancel_note FROM request_lines WHERE item_id = '${seed.glue.id}'`)).toBe('3|Khác: Không mua được');
       await memberSeesCancelled(await open(seed.b), info, seed);
     } finally {
       for (const p of pages) await p.context().close();

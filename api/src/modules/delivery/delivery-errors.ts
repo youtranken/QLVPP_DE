@@ -46,5 +46,12 @@ export const customNotReceived = (available: number) =>
 export const cancelReasonRequired = () =>
   new BadRequestException({
     code: 'REASON_REQUIRED',
-    message: 'Nhập lý do hủy nợ (ít nhất 3 ký tự).',
+    message: 'Chọn lý do hủy nợ; lý do "Khác" cần ghi chú ít nhất 3 ký tự.',
+  });
+
+export const notDebtYet = () =>
+  new ConflictException({
+    code: 'NOT_DEBT_YET',
+    message:
+      'Đây là phần chưa nhận của tháng đang giao — giảm ở Tổng hợp nếu không giao nữa.',
   });

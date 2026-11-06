@@ -92,12 +92,25 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 - FR-32 Hành chính không tạo phiếu thay nhân viên (gỡ 2026-11-06, Đ9). Quên đăng ký: chờ tháng sau; cần gấp: Xuất lẻ từ tủ nếu còn hàng.
 - FR-33 Xử lý món ngoài danh mục — ba nút mở hộp riêng, **áp dụng ngay**, không phụ thuộc nút "Lưu điều chỉnh": **Chấp nhận** (giao như món thường, không tính tồn) / **Thêm vào danh mục** (tạo món mới có ảnh và ĐVT, cảnh báo nếu ĐVT khác dòng gốc, gắn dòng vào món, tồn ban đầu 0) / **Từ chối** (hộp có ô lý do riêng, bắt buộc; người đăng ký thấy). Dòng chép lại từ dòng đã chấp nhận kỳ trước có gợi ý "Đã chấp nhận kỳ trước → nên Thêm vào danh mục".
 - FR-34 Nhãn "Người đã nghỉ" trên phiếu của user bị PMH ID khóa/xóa; admin bỏ dòng chưa giao hoặc giữ.
-- FR-35 **Hủy nợ** (người đăng ký nhận chuông kèm lý do; email ở GĐ2): với dòng còn nợ (người đã nghỉ, món không mua được nữa) admin hủy phần chưa giao kèm lý do bắt buộc; dòng rời Còn nợ, ghi nhật ký, số đăng ký gốc vẫn hiện trong lịch sử với nhãn "đã hủy n".
+- FR-35 **Hủy nợ** (người đăng ký nhận chuông kèm lý do, trừ "Đã nghỉ việc"; email ở GĐ2): chỉ cho **nợ tháng trước** (dòng của các kỳ trước tháng đang giao); phần chưa nhận của tháng đang giao không Hủy nợ được (`NOT_DEBT_YET`) mà giảm ở Tổng hợp. Hành chính chọn một lý do có sẵn — ADM hết hàng · Người nhận không cần nữa · Đã nghỉ việc · Khác (Khác bắt buộc ghi chú ≥ 3 ký tự; ghi chú ≤ 200) — qua menu ⋯ của dòng Còn nợ; dòng rời Còn nợ, ghi nhật ký, số đăng ký gốc vẫn hiện trong lịch sử với nhãn "đã hủy n".
+
+  Ghi chú — một đường cho "ADM không có / giao thiếu":
+
+  | Lúc | Tình huống | Đường duy nhất |
+  |---|---|---|
+  | Sau khóa, trước/sau gửi ADM | HC thấy một người xin quá/không hợp lý | Giảm ở Tổng hợp, lý do theo dòng |
+  | Sau gửi ADM, ADM báo **không có** món X cả kỳ | Mọi người chờ X | Đánh "ADM hết hàng" ở Hàng về → giao từ tủ theo đăng ký trước, hủy phần thiếu → ai chưa đến: tự hủy lúc khóa kỳ sau |
+  | ADM giao thiếu, hứa giao bù | Người chờ phần thiếu | Không đặt lại; hàng bù nhập ở "Về bù kỳ trước"; ADM thôi giao → "ADM không giao nữa" |
+  | Người nghỉ còn phần chờ | — | Không vào đề nghị; Tháng này nhắc; giảm "Người đã nghỉ" / Hủy nợ "Đã nghỉ việc" |
+  | Hàng về **thiếu** | ADM giao ít hơn bản in | Nhập số thật; giao chia theo đăng ký trước; phần thiếu ở **Chưa nhận**, thành nợ khi kỳ sau khóa |
+  | Chưa nhận tháng đang giao, không giao nữa | — | Giảm ở Tổng hợp với lý do; **không** Hủy nợ |
+  | Nợ tháng trước, không mua nữa | Còn nợ | Hủy nợ qua ⋯ với lý do có sẵn |
+  | Dòng ngoài DM đã chấp nhận, ADM không mua được | — | Giảm về 0, lý do "ADM không còn hàng" (mọi trạng thái duyệt) |
 
 ### 6.5 Giao hàng và còn nợ (Admin)
 - FR-40 Giao theo phiếu: tick từng dòng (mặc định giao đủ, sửa được số thực giao) hoặc "Giao tất cả" (giao những dòng kho đủ, báo danh sách dòng không giao được). Bấm đúp / hai admin cùng giao một dòng không giao hai lần.
 - FR-41 Giao trừ tồn kho cùng lúc; nếu tồn không đủ → từ chối với số tồn hiện có; không bao giờ âm kho. Món ngoài danh mục đã chấp nhận giao không trừ tồn. Dòng bị từ chối / chờ xem không giao được.
-- FR-42 Màn **Còn nợ**: mọi dòng chưa đủ (`delivered_qty < qty`, không tính dòng từ chối/chờ xem/đã hủy nợ) của mọi kỳ, nhóm theo món và theo người; nút giao bổ sung; nút Hủy nợ; lịch sử từng đợt giao của một dòng.
+- FR-42 Màn **Còn nợ**: mọi dòng chưa đủ (`delivered_qty < qty`, không tính dòng từ chối/chờ xem/đã hủy nợ) của các kỳ **trước tháng đang giao**, nhóm theo món và theo người; nút giao bổ sung; Hủy nợ trong menu ⋯; lịch sử từng đợt giao của một dòng.
 - FR-43 Chuông cho người nhận khi phiếu giao đủ (một lần khi phiếu giao đủ).
 - FR-44 ~~Hoàn tác đợt giao~~ — **bỏ khỏi GĐ1** (chủ dự án 2026-10-28: ghi giao nhầm thì Hành chính tự đưa bù ngoài hệ thống).
 

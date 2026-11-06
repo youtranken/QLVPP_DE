@@ -174,12 +174,12 @@ describe('GET admin/periods/:ym/delivery-people', () => {
 
   it('dòng nợ đã hủy phần còn lại (remaining 0) không xuất hiện kỳ sau', async () => {
     const { lb } = await scenario();
+    freeze('2026-12-11T03:00:00Z');
     await cancel(lb.id, {
-      reason: 'Người đã nghỉ',
+      reason_code: 'not_needed',
       expected_delivered_qty: 0,
       expected_qty: 10,
     }).expect(200);
-    freeze('2026-12-11T03:00:00Z');
     expect(await mine(B, '2026-12')).toBeUndefined();
   });
 

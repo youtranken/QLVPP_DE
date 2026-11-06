@@ -2,6 +2,9 @@ import type { Pool } from 'pg';
 import { AFTER_DEADLINE, BEFORE_DEADLINE } from './me-request.fixture';
 import { reviewFixture } from './review.fixture';
 
+// Kỳ 12 đã khóa sổ: dòng kỳ 11 là nợ tháng trước (Hủy nợ được)
+export const DEBT_AT = '2026-12-11T03:00:00Z';
+
 export interface DeliverResult {
   line: {
     id: string;
@@ -143,6 +146,11 @@ export function deliveryFixture(tag: string) {
     freeze(AFTER_DEADLINE);
     return { item, request, line: request.lines[0] };
   };
+  const debtLine = async (stock: number, qty = 5, sub = A) => {
+    const seeded = await lockedLine(stock, qty, sub);
+    freeze(DEBT_AT);
+    return seeded;
+  };
 
   return {
     ...f,
@@ -157,5 +165,6 @@ export function deliveryFixture(tag: string) {
     deliveriesOf,
     notificationsOf,
     lockedLine,
+    debtLine,
   };
 }

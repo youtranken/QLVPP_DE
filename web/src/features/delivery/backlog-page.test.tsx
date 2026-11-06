@@ -102,14 +102,17 @@ describe('BacklogPage — đầu trang, thẻ, bộ lọc', () => {
 });
 
 describe('BacklogPage — nhóm và dòng', () => {
-  it('theo món: tiêu đề nhóm "còn 4 cây", "Tồn 10"; dòng "Phạm Văn Đức · Tổ Giám sát", "Tháng 10/2026", "Còn 3 cây", "/ đặt 5"', async () => {
+  it('theo món: tiêu đề nhóm "còn 4 cây", "Tủ còn 10"; cột "Tủ còn" (10); dòng "Phạm Văn Đức · Tổ Giám sát", "Tháng 10/2026", "Còn 3 cây", "/ đặt 5"', async () => {
     stubBacklog([PEN_DUC, PEN_LAN]);
     openPage();
     await screen.findByText('Bút bi xanh');
     const head = headOf('Bút bi xanh');
     expect(head).toHaveTextContent('còn 4 cây');
-    expect(head).toHaveTextContent('Tồn 10');
+    expect(head).toHaveTextContent('Tủ còn 10');
+    expect(screen.getByRole('columnheader', { name: 'Tủ còn' })).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Tồn' })).toBeNull();
     const row = rowOf('Phạm Văn Đức');
+    expect(within(row).getByRole('cell', { name: '10' })).toBeInTheDocument();
     expect(row).toHaveTextContent('Tổ Giám sát');
     expect(row).toHaveTextContent('Tháng 10/2026');
     expect(row).toHaveTextContent('Còn 3 cây');
@@ -118,15 +121,15 @@ describe('BacklogPage — nhóm và dòng', () => {
     expect(within(row).queryByText('Người đã nghỉ')).toBeNull();
   });
 
-  it('theo món, nhóm hết hàng: "Hết hàng" chỉ ở tiêu đề (không lặp ở dòng), "Giao bổ sung" vô hiệu, "Hủy nợ" bấm được; ngoài danh mục không hiện tồn', async () => {
+  it('theo món, nhóm hết hàng: "Hết hàng" chỉ ở tiêu đề (không lặp ở dòng), "Giao bổ sung" vô hiệu, menu ⋯ (chứa Hủy nợ) bấm được; ngoài danh mục không hiện tủ', async () => {
     stubBacklog([EMPTY_STOCK, TAPE]);
     openPage();
     await screen.findByText('Kẹp giấy');
     expect(headOf('Kẹp giấy')).toHaveTextContent('Hết hàng');
-    expect(headOf('Băng keo 2 mặt')).not.toHaveTextContent(/Tồn|Hết hàng/);
+    expect(headOf('Băng keo 2 mặt')).not.toHaveTextContent(/Tủ còn|Hết hàng/);
     const clip = bodyRows().find((r) => r.textContent?.includes('Phạm Văn Đức') && r.textContent.includes('Còn 4'))!;
     expect(within(clip).getByRole('button', { name: 'Giao bổ sung' })).toBeDisabled();
-    expect(within(clip).getByRole('button', { name: 'Hủy nợ' })).toBeEnabled();
+    expect(within(clip).getByRole('button', { name: 'Thao tác khác Kẹp giấy — Phạm Văn Đức' })).toBeEnabled();
     expect(within(clip).queryByText('Hết hàng')).toBeNull();
   });
 
