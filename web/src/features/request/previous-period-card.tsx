@@ -1,10 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMyRequest, type CurrentPeriod, type LineView } from './request.api';
-import { monthOf } from './request-format';
+import { counted, monthOf } from './request-format';
 
-// Dòng bị từ chối/còn chờ xem không giao nên không tính vào a/b
-const counted = (l: LineView) => ['n/a', 'accepted', 'converted'].includes(l.review_status);
 const done = (l: LineView) => l.delivered_qty + l.cancelled_qty >= l.qty;
 
 export function PreviousPeriodCard({ previous }: { previous: CurrentPeriod['previous'] }) {

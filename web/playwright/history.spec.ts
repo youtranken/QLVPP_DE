@@ -70,7 +70,7 @@ test.describe('E2-S6 lịch sử', () => {
       await snap(page, info, 'list');
 
       await open.click();
-      await expect(page.getByRole('heading', { level: 1, name: new RegExp(`^Phiếu tháng ${month}$`) })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: new RegExp(`^Đăng ký văn phòng phẩm tháng ${month}$`) })).toBeVisible();
       await page.getByRole('navigation', { name: isMobile(info) ? 'Điều hướng chính' : 'Chuyển trang' }).getByRole('link', { name: 'Lịch sử' }).click();
       await prev.click();
 

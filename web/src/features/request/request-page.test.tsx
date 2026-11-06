@@ -19,13 +19,13 @@ afterEach(() => {
 });
 
 describe('RequestPage', () => {
-  it('chưa có phiếu: hero "Phiếu tháng 11", 4 ngày còn lại, "Chưa lưu phiếu tháng này"; món chỉ Hành chính không hiện', async () => {
+  it('chưa có phiếu: hero "Đăng ký văn phòng phẩm tháng 11", còn 4 ngày, "Chưa lưu phiếu tháng này"; món chỉ Hành chính không hiện', async () => {
     mockViewport(1280);
     stubRequestApi();
     renderApp(makeMe('member'), '/');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Phiếu tháng 11' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Đăng ký văn phòng phẩm tháng 11' })).toBeInTheDocument();
     expect(screen.getByText('Chưa lưu phiếu tháng này')).toBeInTheDocument();
-    expect(screen.getByText('ngày còn lại')).toBeInTheDocument();
+    expect(screen.getByText('Chọn món, bấm Lưu phiếu. Bạn sửa được tới 23:59 ngày 10/11, còn 4 ngày.')).toBeInTheDocument();
     expect(await within(grid()).findByText('Bút bi xanh')).toBeInTheDocument();
     expect(within(grid()).getByText('cây · tối đa 20/tháng')).toBeInTheDocument();
     expect(within(grid()).queryByText('Giấy A4')).toBeNull();
@@ -219,7 +219,7 @@ describe('RequestPage', () => {
     await userEvent.click(screen.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Phiếu tháng 12' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Đăng ký văn phòng phẩm tháng 12' })).toBeInTheDocument();
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Phiếu tháng 11 đã khóa lúc 00:00. Món bạn chọn đã được chuyển sang phiếu tháng 12 — bấm Lưu phiếu để giữ.',
     );
@@ -253,7 +253,7 @@ describe('RequestPage', () => {
     await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Phiếu tháng 12' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Đăng ký văn phòng phẩm tháng 12' })).toBeInTheDocument();
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Phiếu tháng 11 đã khóa lúc 00:00. Phiếu đã lưu lúc 14:20 vẫn giữ và sẽ được giao; thay đổi chưa lưu không kịp áp dụng. Phiếu tháng 12 đã mở.',
     );
@@ -279,7 +279,7 @@ describe('RequestPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Phiếu tháng 12 đã khóa lúc 00:00. Món bạn chọn đã được chuyển sang phiếu tháng 1 — bấm Lưu phiếu để giữ.',
     );
-    expect(await screen.findByRole('heading', { level: 1, name: 'Phiếu tháng 1' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Đăng ký văn phòng phẩm tháng 1' })).toBeInTheDocument();
     expect(within(cartLine('Bút bi xanh')).getByRole('spinbutton')).toHaveValue(1);
   });
 });

@@ -53,7 +53,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
 
     try {
       await page.goto('/');
-      await expect(page.getByRole('heading', { level: 1, name: `Phiếu tháng ${month}` })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: `Đăng ký văn phòng phẩm tháng ${month}` })).toBeVisible();
       await expect(page.getByText('Chưa lưu phiếu tháng này')).toBeVisible();
       const grid = page.getByRole('region', { name: 'Danh mục món' });
       await expect(grid.getByText(a.name, { exact: true })).toBeVisible();
@@ -160,6 +160,50 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
     } finally {
       deleteTestUsers(me.sub);
       await removeTestItem(request, itemId);
+    }
+  });
+  test('V2C-T2 bố cục: 1280 phiếu cam bên phải panel lưới; 390 nút lưu nổi và thanh dưới đều thấy đủ, bấm được, không chồng nhau', async ({ page, request }, info) => {
+    const me = memberIdentity(info);
+    seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
+    await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...me.headers } }));
+    const period = await (await request.get('/api/periods/current', { headers: me.headers })).json();
+    const items: Item[] = await (await request.get('/api/items', { headers: me.headers })).json();
+    const [a] = items.filter((i) => i.active && !i.admin_only && !i.name.startsWith('PW '));
+    try {
+      await page.goto('/');
+      await expect(page.getByRole('heading', { level: 1, name: `Đăng ký văn phòng phẩm tháng ${Number(String(period.ym).slice(5))}` })).toBeVisible();
+      const grid = page.getByRole('region', { name: 'Danh mục món' });
+      const cart = page.getByRole('complementary', { name: 'Phiếu của tôi' });
+      await expect(grid.getByText(a.name, { exact: true })).toBeVisible();
+      if (!isMobile(info)) {
+        const g = (await grid.boundingBox())!;
+        const c = (await cart.boundingBox())!;
+        expect(c.x).toBeGreaterThanOrEqual(g.x + g.width);
+        expect(c.width).toBeLessThanOrEqual(380);
+        expect(await cart.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(255, 244, 232)');
+      } else {
+        await grid.getByRole('button', { name: `Thêm ${a.name}`, exact: true }).click();
+        const save = page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' });
+        await expect(save).toBeVisible();
+        const nav = page.getByRole('navigation', { name: 'Điều hướng chính' });
+        const vh = page.viewportSize()!.height;
+        const barBox = (await save.locator('xpath=..').boundingBox())!; // cả thanh nổi, không chỉ nút
+        const navBox = (await nav.boundingBox())!;
+        expect(barBox.y + barBox.height).toBeLessThanOrEqual(navBox.y + 0.5);
+        expect(navBox.y + navBox.height).toBeLessThanOrEqual(vh + 0.5);
+        for (const target of [save, ...(await nav.getByRole('link').all())]) {
+          const box = (await target.boundingBox())!;
+          expect(box.height).toBeGreaterThanOrEqual(44 - 0.5);
+          const hit = await target.evaluate((el, p) => el.contains(document.elementFromPoint(p.x, p.y)), {
+            x: box.x + box.width / 2,
+            y: box.y + box.height / 2,
+          });
+          expect(hit).toBe(true);
+        }
+        await expectNoContrastViolations(page);
+      }
+    } finally {
+      deleteTestUsers(me.sub);
     }
   });
 });

@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useMatch } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
@@ -18,6 +18,8 @@ export function MemberShell() {
   const me = useMe();
   const narrow = useMediaQuery(NARROW_QUERY);
   useShellFont('member');
+  // Trang Đăng ký tự dựng khung panel (v2); các trang cũ tạm nằm trong panel sáng tới C8
+  const ownLayout = useMatch({ path: '/', end: true }) !== null;
 
   return (
     <div className={`m-shell${narrow ? ' is-narrow' : ''}`}>
@@ -50,7 +52,7 @@ export function MemberShell() {
           )}
         </div>
       </header>
-      <main id="main" className="m-main">
+      <main id="main" className={ownLayout ? 'm-main m-main--bare' : 'm-main'}>
         <Outlet />
       </main>
       {narrow && <BottomNav />}

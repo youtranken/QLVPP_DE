@@ -16,13 +16,21 @@ export function PeriodHero({
 }) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
+  const last = period.days_left <= 1;
   const status = saved
     ? t('request.hero.saved', { time: fmt.time(saved.updated_at), date: fmt.lastDay(period.deadline) })
     : t('request.hero.notSaved');
+  const sub = !period.is_open
+    ? t('request.hero.subLocked', { month: monthOf(period.ym) })
+    : t(last ? 'request.hero.subLast' : 'request.hero.sub', { date: fmt.lastDay(period.deadline), n: period.days_left });
   return (
-    <section className="rq-hero">
+    <section className="rq-hero" aria-labelledby="rq-hero-title">
       <div className="rq-hero-text">
-        <h1>{t('request.hero.title', { month: monthOf(period.ym) })}</h1>
+        <h1 id="rq-hero-title">{t('request.hero.title', { month: monthOf(period.ym) })}</h1>
+        <p className="rq-sub">
+          {sub}
+          {last && period.is_open && <> <b className="rq-last">{t('request.hero.lastDay')}</b></>}
+        </p>
         <p className="rq-status">
           {dirty && (
             <>
@@ -34,16 +42,6 @@ export function PeriodHero({
         </p>
       </div>
       {action}
-      <div className="rq-days">
-        {period.days_left <= 1 ? (
-          <span className="rq-days-last">{t('request.hero.lastDay')}</span>
-        ) : (
-          <>
-            <b className="num">{period.days_left}</b>
-            <span>{t('request.hero.daysLeft')}</span>
-          </>
-        )}
-      </div>
     </section>
   );
 }

@@ -2,7 +2,11 @@ import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
 import { useUnitNames } from '@/features/units/units.api';
 import { useMe } from '@/lib/me';
+import type { LineView } from './request.api';
 import type { CartLabel } from './use-cart';
+
+// Dòng bị từ chối/còn chờ xem không giao nên không tính vào a/b hay nợ
+export const counted = (l: LineView) => ['n/a', 'accepted', 'converted'].includes(l.review_status);
 
 export const monthOf = (ym: string) => Number(ym.slice(5, 7));
 

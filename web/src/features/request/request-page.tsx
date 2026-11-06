@@ -9,6 +9,7 @@ import { CopyPreviousButton, CopySummaryDialog } from './copy-previous-dialog';
 import { CustomLineDialog } from './custom-line-dialog';
 import { ItemGrid } from './item-grid';
 import { MobileSaveBar } from './mobile-save-bar';
+import { OwedNotice } from './owed-notice';
 import { PeriodHero } from './period-hero';
 import { PreviousPeriodCard } from './previous-period-card';
 import {
@@ -27,6 +28,7 @@ import { useCopyPrevious } from './use-copy-previous';
 import { useLeaveGuard } from './use-leave-guard';
 import { lockedNotice, useSaveFlow, type LockedInfo } from './use-save-flow';
 import '@/features/request/request.css';
+import '@/features/request/request.m1.css';
 
 // Kỳ đang sửa vừa khóa (PERIOD_LOCKED): editor của kỳ mới nhận giỏ mang sang (nếu có) và câu báo
 type Carry = LockedInfo;
@@ -92,31 +94,36 @@ function RequestEditor({
   const addCustom = () => setEditing({});
 
   return (
-    <div className="rq-page">
-      <div className="rq-main">
+    <div className="m-page rq-v2">
+      <div className="rq-head">
         <PeriodHero
           period={period}
           saved={cart.saved}
           dirty={dirty}
           action={copy.fromYm && <CopyPreviousButton fromYm={copy.fromYm} busy={copy.busy} onClick={() => void copy.run()} />}
         />
-        <PreviousPeriodCard previous={period.previous} />
-        <ItemGrid items={orderable} categories={categories} lineByKey={lineByKey} onQty={setQty} onAddCustom={addCustom} />
+        <OwedNotice previous={period.previous} />
       </div>
-      <CartPanel
-        lines={cart.lines}
-        errors={flow.lineErrors}
-        categories={categories}
-        showSave={!narrow}
-        saveLabel={saveLabel}
-        canSave={dirty && !flow.saving}
-        panelRef={cartRef}
-        onQty={setQty}
-        onRemove={remove}
-        onSave={flow.openConfirm}
-        onAddCustom={addCustom}
-        onEdit={(key) => setEditing({ key })}
-      />
+      <PreviousPeriodCard previous={period.previous} />
+      <div className="rq-frame">
+        <div className="m-panel rq-panel">
+          <ItemGrid items={orderable} categories={categories} lineByKey={lineByKey} onQty={setQty} onAddCustom={addCustom} />
+        </div>
+        <CartPanel
+          lines={cart.lines}
+          errors={flow.lineErrors}
+          categories={categories}
+          showSave={!narrow}
+          saveLabel={saveLabel}
+          canSave={dirty && !flow.saving}
+          panelRef={cartRef}
+          onQty={setQty}
+          onRemove={remove}
+          onSave={flow.openConfirm}
+          onAddCustom={addCustom}
+          onEdit={(key) => setEditing({ key })}
+        />
+      </div>
       {narrow && (
         <MobileSaveBar count={cart.lines.length} label={saveLabel} canSave={dirty && !flow.saving} onSave={flow.openConfirm} />
       )}

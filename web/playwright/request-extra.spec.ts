@@ -197,7 +197,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
 
       const next = Number(nextYm.slice(5));
-      await expect(page.getByRole('heading', { level: 1, name: `Phiếu tháng ${next}` })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: `Đăng ký văn phòng phẩm tháng ${next}` })).toBeVisible();
       const alert = page.getByRole('alert');
       await expect(alert).toContainText(
         `Phiếu tháng ${m} đã khóa lúc 00:00. Món bạn chọn đã được chuyển sang phiếu tháng ${next} — bấm Lưu phiếu để giữ.`,
@@ -252,7 +252,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
 
       const next = Number(nextYm.slice(5));
-      await expect(page.getByRole('heading', { level: 1, name: `Phiếu tháng ${next}` })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: `Đăng ký văn phòng phẩm tháng ${next}` })).toBeVisible();
       const alert = page.getByRole('alert');
       await expect(alert).toContainText(
         new RegExp(`Phiếu tháng ${m} đã khóa lúc 00:00\\. Phiếu đã lưu lúc \\d{2}:\\d{2} vẫn giữ và sẽ được giao; thay đổi chưa lưu không kịp áp dụng\\. Phiếu tháng ${next} đã mở\\.`),

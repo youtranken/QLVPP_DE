@@ -19,9 +19,9 @@
 
 [data-shell='member'] .m-avatar { display: flex; align-items: center; gap: var(--s-2); width: auto; height: auto; padding: 4px; border-radius: var(--r-pill); background: var(--c-on-dark-fill); border: 1px solid var(--c-glass-line); color: var(--c-on-dark); }
 [data-shell='member'] .m-avatar__ini { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--c-bar-fill); color: var(--c-ink); font-size: 13px; font-weight: 700; }
-[data-shell='member'] .m-avatar__who { display: grid; padding-right: var(--s-3); font-size: 13px; line-height: 1.25; }
+[data-shell='member'] .m-avatar__who { display: grid; padding-right: var(--s-3); font: var(--t-body); line-height: 1.25; }
 [data-shell='member'] .m-avatar__who b { font-weight: 600; color: var(--c-on-dark); }
-[data-shell='member'] .m-avatar__who small { font-size: 13px; color: var(--c-on-dark-2); }
+[data-shell='member'] .m-avatar__who small { font-size: 14px; color: var(--c-on-dark-2); }
 
 /* Khung nội dung dùng chung cho C2–C6 */
 [data-shell='member'] .m-page { max-width: 1440px; margin: 0 auto; padding: 0 20px 24px; box-sizing: border-box; }

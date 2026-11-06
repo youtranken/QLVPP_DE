@@ -1,0 +1,48 @@
+/* Trang Đăng ký v2 (NhanVienPC.dc.html): tiêu đề kỳ, nhắc nợ, panel lưới + phiếu cam */
+[data-shell='member'] .m-main--bare { max-width: none; margin: 0; padding: 0; background: none; border-radius: 0; }
+[data-shell='member'] .m-shell.is-narrow .m-main--bare { margin: 0; padding: 0; }
+
+[data-shell='member'] .rq-v2 { display: flex; flex-direction: column; gap: var(--s-4); }
+[data-shell='member'] .rq-head { display: flex; flex-wrap: wrap; gap: var(--s-4); align-items: center; color: var(--c-on-dark); }
+
+[data-shell='member'] .rq-hero { flex: 1 1 420px; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-4); padding: var(--s-1); min-width: 0; }
+[data-shell='member'] .rq-hero-text { flex: 1 1 320px; min-width: 0; }
+[data-shell='member'] .rq-hero h1 { margin: 0; font: var(--t-h1); letter-spacing: -0.02em; color: var(--c-on-dark); }
+[data-shell='member'] .rq-sub { margin: var(--s-2) 0 0; font: var(--t-body-l); color: var(--c-on-dark-2); }
+[data-shell='member'] .rq-last { color: var(--c-on-dark); font-weight: 800; }
+[data-shell='member'] .rq-status { display: flex; align-items: center; gap: var(--s-2); margin: var(--s-1) 0 0; font: var(--t-label); color: var(--c-on-dark); }
+[data-shell='member'] .rq-dot { width: 10px; height: 10px; flex: none; border-radius: 50%; background: var(--c-warn-fill); box-shadow: 0 0 0 3px rgb(227 154 82 / .3); }
+[data-shell='member'] .rq-copy { height: 44px; background: var(--c-surface); color: var(--c-ink); }
+
+[data-shell='member'] .rq-owed { display: flex; align-items: center; gap: var(--s-3); max-width: 420px; padding: var(--s-3) var(--s-4); border-radius: 18px; background: rgb(247 178 103 / .14); border: 1px solid rgb(247 178 103 / .4); color: rgb(255 230 204); }
+[data-shell='member'] .rq-owed svg { flex: none; width: 40px; height: 40px; padding: var(--s-2); box-sizing: border-box; border-radius: var(--r-sm); background: rgb(244 236 225); color: rgb(107 74 46); }
+[data-shell='member'] .rq-owed p { margin: 0; flex: 1; min-width: 0; font: var(--t-body); }
+[data-shell='member'] .rq-owed strong { color: var(--c-on-dark); font-weight: 700; }
+[data-shell='member'] .rq-owed a { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s-2); color: var(--c-on-dark); font: var(--t-label); text-decoration: underline; text-underline-offset: 3px; }
+[data-shell='member'] .rq-owed a:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; border-radius: var(--r-xs); }
+
+[data-shell='member'] .rq-prev { display: flex; align-items: center; gap: var(--s-3); min-height: 44px; padding: var(--s-2) var(--s-4); border-radius: var(--r-md); background: var(--c-glass); border: 1px solid var(--c-glass-line); color: var(--c-on-dark); font: var(--t-label); text-decoration: none; }
+[data-shell='member'] .rq-prev:hover { background: rgb(255 255 255 / .1); }
+[data-shell='member'] .rq-prev:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
+[data-shell='member'] .rq-prev-dot { width: 10px; height: 10px; flex: none; border-radius: 50%; background: var(--c-bar-fill); }
+[data-shell='member'] .rq-prev span:last-child { margin-left: auto; color: var(--c-on-dark-2); white-space: nowrap; }
+
+[data-shell='member'] .rq-frame { display: flex; flex-wrap: wrap; gap: var(--s-4); align-items: flex-start; }
+[data-shell='member'] .rq-panel { flex: 999 1 640px; min-width: 0; }
+[data-shell='member'] .rq-cart { flex: 1 1 340px; max-width: 380px; min-width: 0; position: sticky; top: 84px; padding: var(--s-5); border-radius: 26px; box-sizing: border-box; background: var(--c-cart); border: 1px solid var(--c-cart-line); box-shadow: 0 18px 40px rgb(8 48 59 / .18); }
+
+@media (min-width: 901px) {
+  [data-shell='member'] .rq-frame { flex-wrap: nowrap; }
+  [data-shell='member'] .rq-panel { flex: 999 1 0; }
+  [data-shell='member'] .rq-cart { flex: 1 1 340px; min-width: 300px; }
+}
+
+@media (max-width: 900px) {
+  [data-shell='member'] .rq-v2 { padding: 0 var(--s-3) calc(150px + env(safe-area-inset-bottom)); }
+  [data-shell='member'] .rq-owed { max-width: none; flex: 1 1 100%; }
+  [data-shell='member'] .rq-copy { width: 100%; justify-content: center; }
+  [data-shell='member'] .rq-panel { padding: var(--s-3); flex-basis: 100%; }
+  [data-shell='member'] .rq-cart { position: static; flex-basis: 100%; max-width: none; }
+  /* Tạm tới C6: thanh lưu cũ nằm trên thanh dưới 3 mục, không đè lên */
+  [data-shell='member'] .rq-bar { bottom: calc(58px + env(safe-area-inset-bottom)); }
+}

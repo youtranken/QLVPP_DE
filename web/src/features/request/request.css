@@ -1,17 +1,5 @@
 /* Trang Đăng ký — final/member.html + "Thay đổi sau review" (_SPEC) */
-.rq-page { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
-.rq-main { min-width: 0; }
 
-.rq-hero { background: var(--brand-deep); color: #fff; border-radius: 18px; padding: 22px 24px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; position: relative; overflow: hidden; }
-.rq-hero::after { content: ""; position: absolute; right: -50px; top: -50px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255, 255, 255, .1); pointer-events: none; }
-.rq-hero-text { flex: 1; min-width: 0; position: relative; z-index: 1; }
-.rq-hero h1 { font-size: 24px; font-weight: 800; }
-.rq-status { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-weight: 700; font-size: 15px; }
-.rq-dot { width: 10px; height: 10px; border-radius: 50%; background: #fbbf24; flex: none; box-shadow: 0 0 0 3px rgba(251, 191, 36, .3); }
-.rq-days { background: #fff; color: var(--brand-ink); border-radius: 14px; padding: 10px 16px; text-align: center; min-width: 110px; position: relative; z-index: 1; }
-.rq-days b { display: block; font-size: 30px; line-height: 1; font-weight: 800; }
-.rq-days span { font-size: 13px; font-weight: 700; }
-.rq-days .rq-days-last { font-size: 15px; font-weight: 800; display: block; max-width: 12ch; }
 
 .rq-tools { display: flex; align-items: center; gap: 10px; padding: 18px 0 14px; flex-wrap: wrap; }
 .rq-search { flex: 0 1 260px; display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 14px; border-radius: 999px; background: var(--card); border: 2px solid var(--line); color: var(--ink-3); }
@@ -83,8 +71,6 @@
 .rq-toast { display: block; padding: 12px 20px; border-radius: 999px; background: var(--side); color: #fff; font-weight: 800; box-shadow: 0 10px 30px rgba(20, 35, 28, .25); white-space: nowrap; }
 
 @media (max-width: 900px) {
-  .rq-page { grid-template-columns: minmax(0, 1fr); gap: 16px; padding-bottom: 72px; }
-  .rq-hero { padding: 18px; }
   .rq-tools { gap: 8px; }
   .rq-search { flex: 1 1 100%; order: 1; }
   .rq-chips { flex-basis: 100%; order: 2; margin: 0 -14px; padding: 0 14px; }
@@ -100,10 +86,6 @@
 .rq-line-link:hover { color: var(--brand-ink); }
 .rq-copy { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px; border-radius: 999px; border: 0; background: #fff; color: var(--brand-ink); font-weight: 800; }
 .rq-copy svg { width: 18px; height: 18px; flex: none; }
-.rq-prev { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 12px 16px; border-radius: 14px; background: var(--card); border: 2px solid var(--line); color: var(--ink); font-weight: 700; text-decoration: none; }
-.rq-prev:hover { border-color: var(--brand); }
-.rq-prev-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--info); flex: none; }
-.rq-prev span:last-child { margin-left: auto; color: var(--brand-ink); font-weight: 800; white-space: nowrap; }
 .rq-notice--info { background: var(--info-soft); color: var(--info); border-color: var(--info); }
 .rq-notice--info button { color: var(--info); }
 .rq-custom-form { display: grid; gap: 14px; }

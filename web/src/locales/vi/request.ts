@@ -1,8 +1,10 @@
 const request = {
   request: {
     hero: {
-      title: 'Phiếu tháng {{month}}',
-      daysLeft: 'ngày còn lại',
+      title: 'Đăng ký văn phòng phẩm tháng {{month}}',
+      sub: 'Chọn món, bấm Lưu phiếu. Bạn sửa được tới 23:59 ngày {{date}}, còn {{n}} ngày.',
+      subLast: 'Chọn món, bấm Lưu phiếu. Bạn sửa được tới 23:59 ngày {{date}}.',
+      subLocked: 'Kỳ tháng {{month}} đã khóa sổ — phiếu chỉ xem.',
       lastDay: 'Hôm nay là ngày cuối',
       saved: 'Đã lưu {{time}} · sửa tiếp đến hết {{date}}',
       notSaved: 'Chưa lưu phiếu tháng này',
@@ -10,6 +12,10 @@ const request = {
       copy: 'Chép lại danh sách tháng {{month}}',
       previous: 'Tháng {{month}} đang giao · {{done}}/{{total}} món',
       previousAction: 'Xem lịch sử',
+      owedBefore: 'Bạn còn chờ nhận ',
+      owedAfter: ' từ tháng {{month}}. Không cần đăng ký lại.',
+      owedMany: '{{k}} món',
+      owedView: 'Xem',
     },
     history: {
       title: 'Lịch sử',

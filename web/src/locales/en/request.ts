@@ -4,8 +4,10 @@ import type { Messages } from '@/locales/messages';
 const request: Messages<typeof vi> = {
   request: {
     hero: {
-      title: 'Month {{month}} order',
-      daysLeft: 'days left',
+      title: 'Order office supplies for month {{month}}',
+      sub: 'Pick items, then press Save order. You can edit until 23:59 on {{date}}, {{n}} days left.',
+      subLast: 'Pick items, then press Save order. You can edit until 23:59 on {{date}}.',
+      subLocked: 'Month {{month}} is closed — the order is view-only.',
       lastDay: 'Today is the last day',
       saved: 'Saved {{time}} · editable until end of {{date}}',
       notSaved: 'No order saved this month yet',
@@ -13,6 +15,10 @@ const request: Messages<typeof vi> = {
       copy: 'Copy month {{month}} list',
       previous: 'Month {{month}} being delivered · {{done}}/{{total}} items',
       previousAction: 'View history',
+      owedBefore: 'You are still waiting for ',
+      owedAfter: ' from month {{month}}. No need to order again.',
+      owedMany: '{{k}} items',
+      owedView: 'View',
     },
     history: {
       title: 'History',
