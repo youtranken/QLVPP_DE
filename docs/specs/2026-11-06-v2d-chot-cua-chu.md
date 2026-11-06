@@ -1,0 +1,56 @@
+# Plan D — câu chốt của chủ dự án (2026-11-06, hỏi trong chat)
+
+Đây là nguồn ưu tiên cao nhất, đè lên đề xuất trong spec 2026-11-06-v2d-gop-y-hanh-chinh.md.
+
+- Đ0a. Danh mục dev: xóa hết, giữ 50 món có ảnh; nhóm/ĐVT/tối đa tự suy, chủ sửa sau.
+- Đ0b. Giảm số lượng ở Tổng hợp kỳ: BẮT BUỘC lý do từng dòng; nhân viên được báo (chuông + Lịch sử "5 → 3: lý do").
+- Đ0c. Thứ tự: xong Plan C, spec chi tiết rồi Plan D (nhánh riêng).
+- Đ1. Món ngoài danh mục trước giờ khóa kỳ (23:59 ngày 10, giờ VN): Hành chính KHÔNG thấy gì cả (không chi tiết, không số đếm, không badge). Lý do: HC chỉ vào làm khi kỳ đã chốt sổ.
+- Đ2. Lý do giảm: chọn nhanh (Vượt định mức / ADM không còn hàng / Trùng với phiếu khác / Khác — Khác bắt buộc ghi) + ghi thêm ≤200 ký tự; ô lý do CHỈ hiện khi HC bấm giảm (số mới < số cũ).
+- Đ3. Giao hàng: bấm Giao → popup có sửa số (từng món, số đề xuất, không vượt tủ/không vượt còn nợ, dòng 'còn nợ sau khi giao'), Xác nhận giao / Hủy; không chuyển trang.
+- Đ4. Admin full màn cho MỌI trang admin (không chỉ Danh mục). Bấm một món → popup trượt từ phải vào, PHỦ lên (không đẩy lưới/danh sách).
+- Đ5. In trình ký: bấm là chốt bản + mở ngay hộp in của trình duyệt, không chuyển trang; A4 dọc, lề chuẩn; trang in riêng giữ để in lại từ Báo cáo.
+- Đ6. HC chỉ làm việc trên kỳ ĐÃ chốt: khi kỳ đăng ký còn mở, HC không thấy và không điều chỉnh (giảm) được phiếu của kỳ đó. Vì vậy không có tình huống "giảm khi kỳ còn mở" → bỏ R-D6.12; lý do giảm chỉ áp dụng cho kỳ đã khóa. (Tổng quát hóa Đ1 cho mọi dòng, không riêng món ngoài danh mục — spec phải kiểm lại mọi màn HC đọc phiếu kỳ đang mở: tổng hợp, home, badge, báo cáo.)
+- Đ7. Thứ tự món chung (admin = nhân viên = Excel/bản in ADM) theo SỐ trên tên ảnh (01…50), lưu vào items.sort_order; món thêm sau đứng cuối nhóm; bỏ ô 'Thứ tự hiển thị' khỏi màn sửa món. Nếu sau này cần đổi thì làm kéo-thả (chưa làm bây giờ).
+- Đ8. Kỳ còn mở: HC VẪN thấy tiến độ đăng ký (x/N đã đăng ký, tên người chưa đăng ký, Chép tin nhắc) — chỉ ai đã/chưa đăng ký, KHÔNG món/số lượng.
+- Đ9. Bỏ "Tạo phiếu hộ": bỏ nút, API trả lỗi; rà BE xóa sạch mọi phần còn sót của tạo phiếu hộ (endpoint, service, DTO, test, i18n, docs). Cần gấp thì HC Xuất lẻ từ tủ.
+- Đ10. Tồn tủ dev: đưa tất cả về 0 (lịch sử nhập/xuất đã xóa khi reset danh mục).
+- Đ11. Giảm SAU khi đã in trình ký/xuất Excel gửi ADM: VẪN cho giảm; hàng về dư so với phiếu thì phần dư tự vào tủ, kèm cảnh báo "đã giảm sau khi gửi ADM".
+- Đ12. Sau khi chốt kỳ HC KHÔNG được tăng số hay thêm món vào phiếu người khác — chỉ giảm hoặc bỏ (có lý do).
+- Đ13. ADM giao thiếu: HC tự chia trong popup giao; app gợi ý theo ai đăng ký trước; phần chưa giao thành nợ.
+- Đ14. Chuông giảm số: gộp 1 chuông/người/ngày (nội dung cập nhật lần mới nhất); người đã nghỉ → không chuông, chỉ lưu lịch sử.
+- Đ15. In lại sau khi hủy hộp in: dùng lại bản chốt gần nhất nếu số liệu chưa đổi.
+- Đ16. Món "ADM hết hàng" trong kỳ: khi giao, dòng đó mặc định 0 và HỦY LUÔN (không thành nợ); tháng sau ai cần thì đăng ký lại. (Chỗ đánh dấu: đang giải thích trang Hàng về cho chủ — chờ chốt.)
+- Đ17. Kỳ đăng ký đang mở: Tổng hợp/Báo cáo/Giao hàng hiện kỳ đã chốt gần nhất + dòng nhắc "Kỳ tháng N đang mở, xem được từ 00:00 ngày 11/N".
+- Đ18. HC bỏ hết dòng của một phiếu ở kỳ đã chốt: giữ phiếu rỗng, vẫn tính đã đăng ký; Lịch sử nhân viên hiện "Hành chính đã bỏ toàn bộ: lý do".
+- Đ19. Chỗ đánh dấu "ADM hết hàng": nút nhỏ trên từng dòng trang Hàng về, cạnh ô "Về đợt này"; bấm → ô về 0 + khóa + nhãn xám "ADM hết hàng"; bấm lại để bỏ; theo kỳ; bỏ được tới khi giao xong; không đổi trạng thái món trong danh mục. Khi giao: dòng món đó tự 0 và hủy luôn (Đ16).
+- Đ20. Dev: tạo dữ liệu mẫu kỳ tháng 10 (nhân viên "(demo)", 3–5 món trong 50 món mới, 1 món ngoài danh mục) để chủ đi thử luồng HC.
+- Đ21 (mới, chủ phát hiện): trang "Nhóm món" chỉ cho Ngừng cả nhóm, không cho ngừng TỪNG món trong nhóm — cần spec (chờ chốt cách làm).
+- Đ22. Trang Nhóm món: bấm mở nhóm → panel trượt phải liệt kê món trong nhóm, mỗi món có công tắc Đang dùng/Ngừng; công tắc trên nhóm ngừng thì MỌI món trong nhóm ngừng luôn. (Spec phải nói: bật lại nhóm thì món có bật lại không — đề xuất: chỉ bật lại các món bị ngừng DO ngừng nhóm, món ngừng riêng giữ nguyên.)
+- Ghi chú dev: dữ liệu mẫu kỳ 10 đã tạo (live-real/v2c/demo-seed.md; xóa bằng sub 'demo-d10-%').
+- Đ23. Trang Hàng về thao tác nhanh: thanh lọc gồm chip theo Nhóm món (có số đếm), ô tìm món (không dấu), công tắc "Chỉ món chưa về đủ"; danh sách gom theo nhóm (đầu nhóm có nút "Về đủ cả nhóm" / "ADM hết hàng cả nhóm" là tùy chọn spec đề xuất); "Thêm món khác" (món ngoài danh sách gửi ADM) là ô chọn dạng dropdown có tìm kiếm, gom theo nhóm.
+- Đ24. Trang Hàng về có nút lớn "Đủ hàng" (giống ý bước Hàng về "Đủ hàng" ở Tháng này): HC kiểm hàng thật đủ → bấm 1 lần là lấy số lượng ĐỀ NGHỊ trong bản in chốt gửi ADM (snapshot mới nhất của kỳ) trừ phần đã về các đợt trước, đưa hết vào tủ — không nhập tay từng món. Có hộp xác nhận tóm tắt (x món, y đơn vị) trước khi lưu. Món đã đánh "ADM hết hàng" bị bỏ qua. Nguồn số mặc định của trang Hàng về cũng đổi sang bản in chốt (giải quyết câu M6 cũ: điền sẵn theo Đề nghị đã gửi, không theo Cần mua). Chưa có bản in chốt → nút tắt, kèm lý do "Chưa in trình ký gửi ADM".
+- Đ25. Gửi ADM: "Số đề nghị" mặc định = tổng đăng ký + nợ tháng trước (KHÔNG trừ tồn tủ). Tủ do HC tự quản lý (Xuất lẻ, Kiểm kê). Cột "Tủ" có thể vẫn hiện để tham khảo nhưng không tham gia công thức; HC muốn bớt thì sửa số. Kéo theo: Tháng này/badge "cần mua" và mọi chỗ đang dùng need = want − stock phải rà lại cho nhất quán; Giao hàng vẫn lấy từ tủ như cũ.
+- Đ26. Thêm lý do giảm thứ 5 "Người đã nghỉ" (user_left): không bắt ghi chú, không gửi chuông (Đ14).
+- Đ27. Gửi ADM: Số đề nghị là số đậm CHỈ ĐỌC + dòng xám "= a đăng ký + b nợ" + link "Sửa số"; dòng đã sửa có nhãn cam "Đã sửa: x (gợi ý y)".
+- Đ28. "Còn nợ" CHỈ là phần chưa giao của các tháng TRƯỚC; phần chưa giao của tháng đang giao gọi là "Chưa nhận". Trang Còn nợ + Hủy nợ chỉ áp cho nợ tháng trước.
+- Đ29. Kỳ đã gửi ADM: trang Gửi ADM hiện bản đã gửi (chỉ đọc) + In lại; "Làm bản mới" có xác nhận.
+- Đ30. Không cho chốt/in/xuất Excel phiếu gửi ADM khi mọi món = 0 ("Chưa có món nào để đề nghị").
+- Đ31. Tủ/Kho: nút "Nhập mua" trên từng dòng → vào menu ⋯, đổi tên "Nhập ngoài kỳ (tự mua lẻ)".
+- Đ32. Báo cáo & trang in: chỉ đọc; chỉ sửa số đề nghị ở Gửi ADM.
+- Đ33. Thẻ món ở Danh mục: chữ xám "Tủ: n" để tham khảo, không nhãn đỏ; đỏ chỉ ở Tủ/Kho khi có người đang cần món đó.
+- Đ34. Gộp Nhóm món + Đơn vị tính thành một trang "Nhóm & đơn vị" có 2 tab; nhóm vẫn mở panel công tắc từng món (Đ22).
+- Đ35. Playwright vẫn chạy trên 1 DB dev như hiện nay (KHÔNG làm DB riêng). Dữ liệu dev bị test làm bẩn thì xóa rồi chạy lại (dùng script dọn có sẵn web/playwright/cleanup-dev-data.sql / hoặc bản dump).
+- Đ36. Hai mức sửa, đúng việc từng nơi: (a) số TỔNG gửi ADM sửa tự do ở Gửi ADM (tăng → dư vào kho; giảm → dùng hàng tủ), không cần lý do; (b) giảm phiếu TỪNG NGƯỜI ở Tổng hợp (hiếm) có lý do + chuông. PHẢI có cảnh báo lệch số ở mọi bước: Gửi ADM mỗi món hiện "đủ cho người đăng ký / thiếu n / dư n vào kho" = tủ + đề nghị − (đăng ký + nợ); Hàng về: về khác bản in; Giao hàng: tủ không đủ cho người đang chờ; Tổng hợp: giảm sau khi đã gửi ADM (Đ11); và chỗ nào khác kịch bản chuẩn tìm ra.
+- Luồng chuẩn (chủ mô tả 2026-11-06): NV đăng ký → chốt kỳ → HC xem số tổng theo món, sửa tăng/giảm (tăng dư vào kho, giảm vì tủ còn) → In trình ký báo ADM → Hàng về: đối chiếu bản in, đúng thì nhập kho → Giao: lấy từ kho trừ cho từng NV.
+- Đ37 (CH1). Món "ADM hết hàng" mà tủ còn hàng: HC tự chọn giao từ tủ cho ai (popup gợi ý theo thứ tự đăng ký, HC sửa tự do). Phần còn lại của các phiếu: xem Đ37b.
+- Đ38 (CH2). Món đã đánh dấu "ADM hết hàng" mà người đăng ký chưa được giao: app TỰ HỦY lúc chốt kỳ sau, không thành nợ; lịch sử ghi "ADM hết hàng".
+- Đ39 (CH3). ADM còn nợ hàng kỳ trước (giao thiếu, hứa bù): KHÔNG đề nghị lại phần đó ở kỳ mới. Hàng ADM giao bù ghi ở Hàng về như "Về bù kỳ trước", không liên quan bản in kỳ này; vào tủ rồi giao cho người còn nợ.
+- Đ40 (CH4). Món đã ngừng dùng mà kỳ chốt vẫn có người đăng ký: Gửi ADM hiện nhãn "Ngừng dùng", đề nghị mặc định 0 (HC vẫn sửa được); nếu đã đặt thì Hàng về vẫn nhận.
+- Đ37b (CH1 tiếp). Phần còn lại của món "ADM hết hàng" sau khi HC giao từ tủ: HỦY luôn, lý do "ADM hết hàng", báo chuông NV (gộp theo Đ14). Tháng sau ai cần thì đăng ký lại.
+- Đ41 (CH5). Người đã nghỉ còn phần chưa nhận/nợ: KHÔNG tính vào đề nghị ADM; Tháng này có dòng nhắc "n người đã nghỉ còn phần chưa nhận" để HC hủy bằng lý do "Người đã nghỉ".
+- Đ42 (CH6). Mọi món đề nghị = 0: nút "Tháng này không cần đề nghị ADM" (có xác nhận, ghi Nhật ký) → bước Gửi ADM + Hàng về coi như xong, sang Giao.
+- Đ43 (CH7). Xuất lẻ được lấy phần đang giữ cho người chờ nhận, nhưng có cảnh báo "Phần này đang giữ cho n người chờ nhận" + nút "Vẫn xuất".
+- Đ44 (CH8). Gửi ADM = in phiếu cứng giấy. In xong phát hiện thiếu/sai → "Làm bản mới", điều chỉnh, in lại: bản mới THAY THẾ TOÀN BỘ bản cũ (ghi "Thay thế bản in lúc hh:mm dd/mm"); Hàng về / Đủ hàng dùng bản mới nhất.
+- Đ45. "ADM không giao nữa" (phần ADM còn nợ kỳ trước): phần NV đang chờ vẫn là nợ của NV và tự TÍNH VÀO đề nghị lần gửi ADM tới; NV không phải đăng ký lại. (Spec r4 đã viết đúng như vậy.)
+- Đ46. Cách chạy Plan D: chia 4–5 đợt theo mảng (Dữ liệu/API · Gửi ADM+Hàng về · Giao+Còn nợ · Danh mục+Tủ · Giao diện chung); làm liền trong đợt, review + Playwright full 1 lần cuối mỗi đợt; cuối plan: final review + code-review high + 1 đợt sửa.
