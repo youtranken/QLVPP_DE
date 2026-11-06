@@ -19,6 +19,18 @@ afterEach(() => {
 });
 
 describe('RequestPage', () => {
+  it('đang tải và lỗi tải nằm trong khung sáng .m-panel (không trơ trên nền teal); lỗi có "Thử lại"', async () => {
+    mockViewport(1280);
+    const api = stubRequestApi();
+    api.fetchMock.mockImplementation((url: string) =>
+      Promise.resolve(url.startsWith('/api/me/request?ym=') ? jsonResponse(500, {}) : jsonResponse(200, url === '/api/periods/current' ? PERIOD : [])),
+    );
+    renderApp(makeMe('member'), '/');
+    expect(document.querySelector('.load-state')?.closest('.m-panel')).not.toBeNull();
+    const retry = await screen.findByRole('button', { name: 'Thử lại' });
+    expect(retry.closest('.m-panel')).not.toBeNull();
+  });
+
   it('chưa có phiếu: hero "Đăng ký văn phòng phẩm tháng 11", còn 4 ngày, "Chưa lưu phiếu tháng này"; món chỉ Hành chính không hiện', async () => {
     mockViewport(1280);
     stubRequestApi();

@@ -206,4 +206,19 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       deleteTestUsers(me.sub);
     }
   });
+  test('V2C-T2 đang tải/lỗi tải nằm trong khung sáng: /api/me/request 500 → "Thử lại" thấy, không lỗi tương phản (390)', async ({ page }, info) => {
+    const me = memberIdentity(info);
+    seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
+    await page.route('**/api/**', (route) => {
+      if (route.request().url().includes('/api/me/request?ym=')) return route.fulfill({ status: 500, json: { code: 'INTERNAL' } });
+      return route.continue({ headers: { ...route.request().headers(), ...me.headers } });
+    });
+    try {
+      await page.goto('/');
+      await expect(page.getByRole('button', { name: 'Thử lại' })).toBeVisible();
+      if (isMobile(info)) await expectNoContrastViolations(page);
+    } finally {
+      deleteTestUsers(me.sub);
+    }
+  });
 });

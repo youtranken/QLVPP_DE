@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
@@ -173,6 +174,14 @@ function RequestEditor({
   );
 }
 
+function LoadPanel({ children }: { children: ReactNode }) {
+  return (
+    <div className="m-page">
+      <div className="m-panel">{children}</div>
+    </div>
+  );
+}
+
 export function RequestPage() {
   const period = useCurrentPeriod();
   const request = useMyRequest(period.data?.ym);
@@ -184,8 +193,9 @@ export function RequestPage() {
   const categories = useMemberCategories();
 
   const failed = [period, request, items, categories].find((q) => q.isError);
-  if (failed) return <LoadError onRetry={() => void failed.refetch()} />;
-  if (!period.data || request.data === undefined || !items.data || !categories.data) return <Loading />;
+  // Trang Đăng ký không có panel sáng của shell (m-main--bare): trạng thái tải/lỗi tự đặt trong khung sáng
+  if (failed) return <LoadPanel><LoadError onRetry={() => void failed.refetch()} /></LoadPanel>;
+  if (!period.data || request.data === undefined || !items.data || !categories.data) return <LoadPanel><Loading /></LoadPanel>;
   const ym = period.data.ym;
   return (
     <RequestEditor
