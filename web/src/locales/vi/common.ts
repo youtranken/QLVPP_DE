@@ -58,6 +58,8 @@ const common = {
       clear: 'Bỏ lọc',
     },
     errors: {
+      ORDER_NOT_EMPTY: 'Tổng đề nghị ở máy chủ đã lớn hơn 0 — tải lại trang rồi lập phiếu.',
+      ALREADY_SENT: 'Kỳ này đã có bản gửi ADM — tải lại trang để xem.',
       ITEM_ADM_OUT: 'Món này đang đánh "ADM hết hàng" — bỏ đánh dấu trước khi nhập.',
       ADM_OUT_FINAL: 'Các dòng của món này đã giao/hủy xong — không bỏ đánh dấu được nữa.',
       ADM_OUT_NOTHING_OPEN: 'Không còn ai chờ món này trong kỳ.',

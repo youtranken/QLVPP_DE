@@ -20,6 +20,9 @@ export function vnStampParts(iso: string) {
 // Bản chốt cũ thiếu khóa → số gộp, như server
 export const orderOf = (snap: SnapshotData, row: { key: string; requested: number; backlog_prev: number }) => snap.order_qty[row.key] ?? wantOf(row);
 
+// Bản chốt từ v2-D (có order_basis) in cả hàng Đề nghị 0 để khớp bảng Gửi ADM; bản cũ giữ đúng tờ đã gửi (bỏ hàng 0), như server
+export const keepsZeroRows = (snap: Pick<SnapshotData, 'order_basis'>) => snap.order_basis !== undefined;
+
 // Bản có hàng ⇔ có Đề nghị > 0 (cùng vị từ với server)
 export const hasItems = (snap: Pick<SnapshotData, 'order_qty'>) => Object.values(snap.order_qty).some((n) => n > 0);
 

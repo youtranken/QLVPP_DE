@@ -88,7 +88,8 @@ export function arrivalTag(qty: number, remaining: number): ArrivalTag {
   return { kind: 'exact', n: 0 };
 }
 
-export const isShort = (r: ArrivalRow) => !r.adm_out && r.usable && r.received < r.ordered;
+// Món ngừng đã đặt vẫn chờ về như món thường (đã đặt thì phải nhận)
+export const isShort = (r: ArrivalRow) => !r.adm_out && r.received < r.ordered;
 
 export const groupOf = (r: Pick<ArrivalRow, 'category_id'>, known: ReadonlySet<string>) =>
   r.category_id && known.has(r.category_id) ? r.category_id : NO_GROUP;
@@ -111,17 +112,16 @@ export function applyArrivalFilter(rows: ArrivalRow[], f: ArrivalFilter, known: 
   return rows.filter((r) => (!f.g || groupOf(r, known) === f.g) && (!f.short || isShort(r)) && matches(r, f.q));
 }
 
-// Lô "Đủ hàng": mọi hàng còn lại > 0 trừ ADM hết hàng và món đã ngừng
+// Lô "Đủ hàng": mọi hàng còn lại > 0 trừ ADM hết hàng (món ngừng đã đặt vẫn nhận)
 export function fullBatch(rows: ArrivalRow[]) {
   const counted = rows.filter((r) => !r.added);
-  const lines = counted.filter((r) => r.remaining > 0 && !r.adm_out && r.usable);
+  const lines = counted.filter((r) => r.remaining > 0 && !r.adm_out);
   return {
     lines,
     units: lines.reduce((n, r) => n + r.remaining, 0),
     skip: {
       adm: counted.filter((r) => r.adm_out).length,
-      inactive: counted.filter((r) => !r.adm_out && !r.usable).length,
-      done: counted.filter((r) => !r.adm_out && r.usable && r.remaining === 0).length,
+      done: counted.filter((r) => !r.adm_out && r.remaining === 0).length,
     },
   };
 }
@@ -132,7 +132,7 @@ export function differingRows(rows: ArrivalRow[], qtyOf: (r: ArrivalRow) => numb
 
 export function isAllArrived(plan: ArrivalsPlan): boolean {
   if (!plan.snapshot) return false;
-  return plan.rows.every((r) => r.remaining === 0 || r.adm_out || !r.usable) && plan.custom.every((c) => c.remaining === 0 || c.adm_out);
+  return plan.rows.every((r) => r.remaining === 0 || r.adm_out) && plan.custom.every((c) => c.remaining === 0 || c.adm_out);
 }
 
 export type QtyError = 'invalid' | 'max' | null;

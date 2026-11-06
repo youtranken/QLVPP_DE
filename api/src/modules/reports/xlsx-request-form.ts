@@ -54,7 +54,6 @@ export function requestFormRows(
 ): RequestFormRow[] {
   const qty = (r: { key: string; requested: number; backlog_prev: number }) =>
     data.order_qty[r.key] ?? wantOf(r);
-  // Giữ hàng Đề nghị 0 để phiếu khớp bảng Gửi ADM
   const items = data.byItem.map((r) => ({
     code: r.code || FORM.noCode,
     name: r.name,
@@ -69,7 +68,9 @@ export function requestFormRows(
     unit: unitNameOf(r, names, 'vi'),
     qty: qty(r),
   }));
-  return [...items, ...custom];
+  const rows = [...items, ...custom];
+  // Bản từ v2-D (có order_basis) giữ hàng Đề nghị 0 để khớp bảng Gửi ADM; bản cũ xuất lại đúng phiếu đã gửi
+  return data.order_basis ? rows : rows.filter((r) => r.qty > 0);
 }
 
 // Bản chốt trước 0112 chỉ có signers: 3 ô chức danh cũ

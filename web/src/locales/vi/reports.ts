@@ -16,7 +16,7 @@ const reports = {
       pendingLink: 'Xem món chờ',
       error: {
         INVALID_PERIOD: 'Tháng này chưa tới, chưa lập báo cáo được.',
-        REPORT_CHANGED: 'Báo cáo đã đổi, đã tải lại — xem lại số Đặt mua rồi chốt lại.',
+        REPORT_CHANGED: 'Báo cáo đã đổi, đã tải lại — xem lại số Đề nghị rồi chốt lại.',
         UNKNOWN: 'Chưa chốt được, thử lại sau.',
         ORDER_EMPTY: 'Chưa có món nào để đề nghị.',
       },
@@ -130,9 +130,8 @@ const reports = {
     },
     snapshots: {
       title: 'Bản chốt',
-      note: 'Mỗi lần Xuất Excel hoặc In trình ký tạo một bản chốt. Excel và bản in luôn lấy từ một bản chốt, giao thêm sau đó không làm đổi số đã chốt.',
+      note: 'Excel và bản in luôn lấy từ một bản chốt. Số chưa đổi so với bản gần nhất cùng loại thì dùng lại bản đó, không tạo bản mới. Giao thêm sau đó không làm đổi số đã chốt.',
       kind: { xlsx: 'Excel', print: 'Bản in' },
-      fresh: 'Mới',
       meta: 'Lập {{at}} · {{by}}',
       download: 'Tải lại Excel lập {{at}}',
       reprint: 'In lại bản lập {{at}}',

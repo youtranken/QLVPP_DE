@@ -173,9 +173,10 @@ describe('Trang Tháng này: bước Gửi ADM theo bản có hàng', () => {
 });
 
 describe('Trang Tháng này: món ngừng dùng và thẻ lỗi', () => {
-  it('món đã ngừng còn remaining 5 bị bỏ qua: chờ giao 4 → bước hiện tại là Giao; món còn dùng remaining 5 → Hàng về (hai phía)', async () => {
+  it('món đã ngừng đã đặt còn remaining 5 vẫn chờ về: bước hiện tại là Hàng về, giá trị 5 (đã đặt thì phải nhận)', async () => {
     await open({ plan: planOf([{ remaining: 5, usable: false }]) });
-    expect(within(currentStep()).getByText('Giao')).toBeInTheDocument();
+    expect(within(currentStep()).getByText('Hàng về')).toBeInTheDocument();
+    expect(within(currentStep()).getByText('5')).toBeInTheDocument();
   });
 
   it('món còn dùng remaining 5 → bước Hàng về, giá trị 5', async () => {

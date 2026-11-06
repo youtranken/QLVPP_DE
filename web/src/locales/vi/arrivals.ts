@@ -45,6 +45,7 @@ const arrivals = {
       saveLabel: 'Ghi đã về: {{name}}',
     },
     makeup: {
+      failed: 'Chưa lưu được về bù tháng {{month}} — số của tháng đó vẫn còn để lưu lại.',
       title: 'Về bù kỳ trước ({{n}})',
       month: 'Tháng',
       item: 'Món',
@@ -61,10 +62,11 @@ const arrivals = {
       saved: 'Đã nhập về bù {{n}} món vào tủ',
     },
     full: {
+      partial: 'Đã nhập {{x}} món vào tủ; chưa ghi được "Đã về" cho {{n}} món ngoài danh mục — bấm Thử lại.',
+      retry: 'Thử lại',
       button: 'Đủ hàng',
       title: 'Đủ hàng theo bản in',
       skipAdm: '{{n}} món ADM hết hàng',
-      skipInactive: '{{n}} món đã ngừng',
       skipDone: '{{n}} món đã về đủ',
       custom: 'Ghi "Đã về" {{n}} món ngoài danh mục (giao thẳng, không vào tủ).',
       replaceDraft: 'Các số đang gõ ở bảng sẽ được thay.',

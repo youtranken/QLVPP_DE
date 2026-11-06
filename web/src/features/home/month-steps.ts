@@ -25,7 +25,7 @@ export interface SendInput {
 
 export interface PlanInput {
   snapshot: { id: string } | null;
-  rows: { remaining: number; adm_out: boolean; usable: boolean }[];
+  rows: { remaining: number; adm_out: boolean }[];
   custom: { remaining: number; adm_out: boolean }[];
 }
 
@@ -40,10 +40,10 @@ export interface MonthStepsInput {
 
 const SEND_ADM = '/admin/send-adm';
 
-// Hàng ADM hết hàng và món đã ngừng không chờ về nữa
+// Hàng ADM hết hàng không chờ về nữa; món ngừng đã đặt vẫn chờ
 function outstanding(plan: PlanInput | null): number {
   if (!plan) return 0;
-  const rows = plan.rows.filter((r) => !r.adm_out && r.usable).reduce((n, r) => n + r.remaining, 0);
+  const rows = plan.rows.filter((r) => !r.adm_out).reduce((n, r) => n + r.remaining, 0);
   return rows + plan.custom.filter((c) => !c.adm_out).reduce((n, c) => n + c.remaining, 0);
 }
 

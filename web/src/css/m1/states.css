@@ -5,6 +5,8 @@
 [data-shell='admin'] .toast--danger { background: var(--c-danger-soft); color: var(--c-danger); box-shadow: inset 0 0 0 1px var(--c-danger-line); }
 [data-shell='admin'] .toast__ic { display: inline-flex; flex-shrink: 0; }
 @media (max-width: 767px) { [data-shell='admin'] .toast-host { bottom: calc(16px + env(safe-area-inset-bottom)); } }
+/* Hộp đang mở (tấm dưới ở 390) thì toast nằm dưới nền mờ: không che nút của hộp */
+[data-shell='admin']:has(.modal-backdrop) .toast-host { z-index: 49; }
 [data-shell='admin'] .toast__action { all: unset; cursor: pointer; font-weight: 700; text-decoration: underline; border-radius: var(--r-xs); }
 [data-shell='admin'] .toast__action:focus-visible { box-shadow: var(--focus); }
 @keyframes m1-toast-in { from { opacity: 0; transform: translateY(8px); } }

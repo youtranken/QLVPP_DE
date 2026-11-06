@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { apiErrorCode } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { defaultOrder } from '@/lib/report-qty';
 import { useSingleFlight } from '@/lib/use-single-flight';
@@ -13,7 +14,7 @@ import { useUnitNames } from '@/features/units/units.api';
 import type { MonthReport, SnapshotKind } from '@/features/reports/reports.api';
 import { ReportSnapshots } from '@/features/reports/report-snapshots';
 import { useOrderQty, type OrderQty } from '@/features/reports/use-order-qty';
-import { useSnapshotDownload, useTakeSnapshot } from '@/features/reports/use-snapshot';
+import { useTakeSnapshot, type SnapshotDownload } from '@/features/reports/use-snapshot';
 import type { PeriodSummary } from '@/features/summary/summary.api';
 import { SendAdmChecklist } from './send-adm-checklist';
 import { PrintConfirm } from './send-adm-dialogs';
@@ -35,6 +36,7 @@ export interface DraftProps {
   onBack?: () => void;
   onTaken: () => void;
   onInvalidPeriod: () => boolean;
+  files: SnapshotDownload;
 }
 
 function ActionButton({ mode: kind, disabled, taking, onTake }: { mode: SnapshotKind; disabled: boolean; taking: SnapshotKind | null; onTake: (kind: SnapshotKind) => void }) {
@@ -53,15 +55,15 @@ function useNoOrder(ym: string, qty: OrderQty) {
   const ask = useNoOrderConfirm();
   const refresh = useRefreshSendState(ym);
   const flight = useSingleFlight();
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
   const run = () =>
     flight.run(async () => {
       if (!(await ask())) return;
-      setFailed(false);
+      setFailed(null);
       try {
         await markNoOrder(ym, qty.edited, csrfToken);
-      } catch {
-        setFailed(true);
+      } catch (e) {
+        setFailed(apiErrorCode(e) ?? 'UNKNOWN');
       }
       await refresh();
     });
@@ -87,24 +89,22 @@ function useDraftRows(report: MonthReport, items: AdminItem[]) {
   return useMemo(() => toOrderRows(report, items, { progress: report.progress, admMonths }), [report, items, admMonths]);
 }
 
+// Bản sắp chốt có order_basis nên tờ in giữ hàng Đề nghị 0: xem trước cũng vậy
 function previewRows(rows: OrderRow[], qty: OrderQty, unitName: ReturnType<typeof useUnitNames>): PreviewRow[] {
-  return rows
-    .map((r) => ({ key: r.key, code: r.code, name: r.name, name_en: r.name_en, unit: unitName(r.unit, 'vi'), qty: orderOf(qty, r) }))
-    .filter((r) => r.qty > 0);
+  return rows.map((r) => ({ key: r.key, code: r.code, name: r.name, name_en: r.name_en, unit: unitName(r.unit, 'vi'), qty: orderOf(qty, r) }));
 }
 
-export function SendAdmDraft({ head, report, items, summary, boxes, sent, carry, onBack, onTaken, onInvalidPeriod }: DraftProps) {
-  const { t } = useTranslation();
+export function SendAdmDraft({ head, report, items, summary, boxes, sent, carry, onBack, onTaken, onInvalidPeriod, files }: DraftProps) {
+  const { t, i18n } = useTranslation();
   const ask = useConfirm();
   const unitName = useUnitNames();
   const qty = useOrderQty(report, { baseOf: defaultOrder, initial: carry });
   const rows = useDraftRows(report, items);
   const changes = sent ? orderChanges(rows, (r) => orderOf(qty, r), sent.data) : [];
-  const files = useSnapshotDownload(report.ym);
   const snap = useTakeSnapshot(report, qty, files, onInvalidPeriod, { reuse: true, mustConfirm: report.pending_custom_count > 0 || changes.length > 0, onTaken });
   const noOrder = useNoOrder(report.ym, qty);
   const formRows = previewRows(rows, qty, unitName);
-  const empty = formRows.length === 0;
+  const empty = formRows.every((r) => r.qty === 0);
   const blocked = qty.errorCount > 0 || snap.taking !== null || empty;
   const dirty = useDirtyCount(qty, snap.fresh);
   const prompt = useLeavePrompt(qty.editedCount);
@@ -128,7 +128,7 @@ export function SendAdmDraft({ head, report, items, summary, boxes, sent, carry,
       ) : (
         empty && <p className="alert alert--warn">{t('warn.W9')}</p>
       )}
-      {noOrder.failed && <p role="alert" className="alert alert--danger">{t('sendAdm.noOrder.failed')}</p>}
+      {noOrder.failed && <p role="alert" className="alert alert--danger">{i18n.exists(`common.errors.${noOrder.failed}`) ? t(`common.errors.${noOrder.failed}`) : t('sendAdm.noOrder.failed')}</p>}
       {snap.notice && <p role="alert" className="alert alert--danger">{t(`reports.page.error.${snap.notice}`)}</p>}
       <div className="sa-row">
         {onBack && (
@@ -141,7 +141,7 @@ export function SendAdmDraft({ head, report, items, summary, boxes, sent, carry,
       </div>
       <SendAdmChecklist ym={report.ym} summary={summary} />
       <SendAdmOrders rows={rows} qty={qty} />
-      <ReportSnapshots ym={report.ym} fresh={snap.fresh} files={files} />
+      <ReportSnapshots ym={report.ym} files={files} />
       {snap.asking && <PrintConfirm kind={snap.asking} ym={report.ym} pending={report.pending_custom_count} changes={changes} sentAt={sent?.created_at ?? null} onConfirm={snap.confirm} onCancel={snap.cancel} />}
     </div>
   );

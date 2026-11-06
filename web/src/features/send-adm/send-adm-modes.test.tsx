@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -70,6 +70,21 @@ describe('Gửi ADM — chế độ Đã gửi', () => {
     await open();
     expect(await rowOf('Bút bi')).toHaveTextContent('Bản gửi 7 · nay cần 5 → dư 2 vào kho');
     expect(await rowOf('Giấy A4')).not.toHaveTextContent('Bản gửi');
+  });
+
+  it('W7 sau giao một phần: bản gửi 7 (cần 7), sau đó giao 5 → nay cần 2 chưa giao + 5 đã giao = 7 → không W7', async () => {
+    const basis = sentData(sendReport([{ ...PEN, requested: 7 }]), { kA: 7 });
+    setupSendAdm({ report: sendReport([{ ...PEN, requested: 2 }]), state: sentState(basis, { delivered_since: { kA: 5 } }) });
+    await open();
+    expect(await rowOf('Bút bi')).toHaveTextContent('7');
+    expect(await rowOf('Bút bi')).not.toHaveTextContent('Bản gửi');
+  });
+
+  it('W7 sau giao + giảm: bản gửi 7, giao 3 rồi giảm 2 → "Bản gửi 7 · nay cần 5 → dư 2 vào kho"', async () => {
+    const basis = sentData(sendReport([{ ...PEN, requested: 7 }]), { kA: 7 });
+    setupSendAdm({ report: sendReport([{ ...PEN, requested: 2 }]), state: sentState(basis, { changed_after: true, delivered_since: { kA: 3 } }) });
+    await open();
+    expect(await rowOf('Bút bi')).toHaveTextContent('Bản gửi 7 · nay cần 5 → dư 2 vào kho');
   });
 
   it('W7 thiếu: bản gửi 3, nay cần 5 → "→ thiếu 2"; không có W1 ở chế độ này', async () => {
@@ -187,6 +202,20 @@ describe('Gửi ADM — Lập phiếu (chưa gửi)', () => {
     expect(await screen.findByText('Tháng này không cần đề nghị ADM (09:02 12/12, An)')).toBeInTheDocument();
   });
 
+  it.each([
+    ['ORDER_NOT_EMPTY', 'Tổng đề nghị ở máy chủ đã lớn hơn 0 — tải lại trang rồi lập phiếu.'],
+    ['ALREADY_SENT', 'Kỳ này đã có bản gửi ADM — tải lại trang để xem.'],
+  ])('no-order trả 409 %s → báo đúng lý do, không phải "Chưa lưu được"', async (code, text) => {
+    const f = setupSendAdm({ report: sendReport([{ ...PEN, requested: 0 }]), state: UNSENT });
+    const base = f.getMockImplementation()!;
+    f.mockImplementation((url: string, init?: RequestInit) => (url.endsWith('/no-order') && init?.method === 'POST' ? Promise.resolve(jsonResponse(409, { code })) : base(url, init)));
+    await open();
+    await userEvent.click(await screen.findByRole('button', { name: 'Tháng này không cần đề nghị ADM' }));
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Xác nhận' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(text);
+    expect(screen.queryByText('Chưa lưu được, thử lại sau.')).toBeNull();
+  });
+
   it('Không cần đề nghị → "Lập phiếu" xóa cờ (DELETE) và về Lập phiếu', async () => {
     const f = setupSendAdm({ report: sendReport([{ ...PEN, requested: 0 }]), state: { ...UNSENT, state: 'no_order', no_order_at: SENT_AT, no_order_by_name: 'An' } });
     await open();
@@ -261,5 +290,19 @@ describe('Gửi ADM — Lập phiếu (chưa gửi)', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Xem trước bản in' }));
     const dialog = await screen.findByRole('dialog', { name: 'Xem trước bản in' });
     expect(within(dialog).getByRole('region', { name: /Xem trước phiếu A4/ })).toHaveTextContent('Bút bi');
+  });
+
+  it('"Xem trước bản in" giữ hàng Đề nghị 0 như tờ in: Bút bi 5, Giấy A4 sửa 0 → 2 hàng, Giấy A4 SL 0', async () => {
+    setupSendAdm({ report: sendReport([PEN, PAPER]) });
+    await open();
+    const paper = await rowOf('Giấy A4');
+    await userEvent.click(within(paper).getByRole('button', { name: 'Sửa số' }));
+    const box = within(await rowOf('Giấy A4')).getByRole('spinbutton');
+    await userEvent.clear(box);
+    await userEvent.type(box, '0');
+    await userEvent.click(screen.getByRole('button', { name: 'Xem trước bản in' }));
+    const sheet = within(await screen.findByRole('dialog', { name: 'Xem trước bản in' })).getByRole('region', { name: /Xem trước phiếu A4/ });
+    const rows = within(sheet).getAllByRole('row').filter((r) => within(r).queryAllByRole('cell').length > 0);
+    expect(rows.map((r) => within(r).getAllByRole('cell').at(-1)?.textContent)).toEqual(['5', '0']);
   });
 });

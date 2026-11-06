@@ -21,7 +21,7 @@ interface Options {
   sendState?: Record<string, SendStateDto>;
 }
 
-export const UNSENT: SendStateDto = { state: 'unsent', no_order_at: null, no_order_by_name: null, sent: null, changed_after: false, changed_at: null };
+export const UNSENT: SendStateDto = { state: 'unsent', no_order_at: null, no_order_by_name: null, sent: null, changed_after: false, changed_at: null, delivered_since: {} };
 
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 

@@ -56,12 +56,25 @@ describe('buildWorkbook · bản thay thế', () => {
     expect(found).toBe(false);
   });
 
-  it('hàng Đề nghị 0 vẫn có trên phiếu với SL 0 (một ô 0, các ô khác > 0)', async () => {
+  it('bản có order_basis: hàng Đề nghị 0 vẫn có trên phiếu với SL 0 (một ô 0, các ô khác > 0)', async () => {
     const ws = await form(
-      snapshotData({ order_qty: { [ITEM]: 0, [PLAIN]: 1, [CUSTOM]: 3 } }),
+      snapshotData({
+        order_qty: { [ITEM]: 0, [PLAIN]: 1, [CUSTOM]: 3 },
+        order_basis: {},
+      }),
     );
     expect([6, 7, 8].map((n) => [values(ws, n)[2], values(ws, n)[5]])).toEqual([
       ['Bút bi', 0],
+      ['Kẹp giấy', 1],
+      ['Bìa còng', 3],
+    ]);
+  });
+
+  it('bản cũ không có order_basis: xuất lại không thêm hàng Đề nghị 0', async () => {
+    const ws = await form(
+      snapshotData({ order_qty: { [ITEM]: 0, [PLAIN]: 1, [CUSTOM]: 3 } }),
+    );
+    expect([6, 7].map((n) => [values(ws, n)[2], values(ws, n)[5]])).toEqual([
       ['Kẹp giấy', 1],
       ['Bìa còng', 3],
     ]);

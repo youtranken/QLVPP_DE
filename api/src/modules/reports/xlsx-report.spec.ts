@@ -85,9 +85,9 @@ describe('buildWorkbook · sheet 1 Phiếu đề xuất (mẫu D&E)', () => {
     ]);
   });
 
-  it('order_qty = 0 vẫn có hàng SL 0, order_qty = 1 có hàng; thiếu khóa thì lấy số gộp (2 + 1 = 3)', async () => {
+  it('bản có order_basis: order_qty = 0 vẫn có hàng SL 0, order_qty = 1 có hàng; thiếu khóa thì lấy số gộp (2 + 1 = 3)', async () => {
     const ws = await form(
-      snapshotData({ order_qty: { [ITEM]: 0, [PLAIN]: 1 } }),
+      snapshotData({ order_qty: { [ITEM]: 0, [PLAIN]: 1 }, order_basis: {} }),
     );
     expect(rowsAfterHeader(ws).map((r) => [r[2], r[5]])).toEqual([
       ['Bút bi', 0],

@@ -7,7 +7,7 @@ import { printPath, useSnapshots, type SnapshotRow } from './reports.api';
 import { ReportSection } from './report-section';
 import type { SnapshotDownload } from './use-snapshot';
 
-function SnapshotItem({ snapshot: s, fresh, files }: { snapshot: SnapshotRow; fresh: boolean; files: SnapshotDownload }) {
+function SnapshotItem({ snapshot: s, files }: { snapshot: SnapshotRow; files: SnapshotDownload }) {
   const { t } = useTranslation();
   const id = useId();
   const at = formatVnStamp(s.created_at);
@@ -19,7 +19,6 @@ function SnapshotItem({ snapshot: s, fresh, files }: { snapshot: SnapshotRow; fr
       <span className="bc-snap__text">
         <span className="bc-snap__kind">
           <b id={`${id}-kind`}>{t(`reports.snapshots.kind.${s.kind}`)}</b>
-          {fresh && <span className="tag tag--ok">{t('reports.snapshots.fresh')}</span>}
           {s.has_items === false && <span className="tag">{t('reports.snapshots.empty')}</span>}
         </span>
         <span id={`${id}-meta`} className="bc-snap__meta">
@@ -56,7 +55,7 @@ function DownloadFailure({ files }: { files: SnapshotDownload }) {
   );
 }
 
-export function ReportSnapshots({ ym, fresh, files }: { ym: string; fresh: ReadonlySet<string>; files: SnapshotDownload }) {
+export function ReportSnapshots({ ym, files }: { ym: string; files: SnapshotDownload }) {
   const { t } = useTranslation();
   const query = useSnapshots(ym);
   const items = query.data?.items ?? [];
@@ -68,7 +67,7 @@ export function ReportSnapshots({ ym, fresh, files }: { ym: string; fresh: Reado
       {items.length > 0 && (
         <ul className="bc-snaps">
           {items.map((s) => (
-            <SnapshotItem key={s.id} snapshot={s} fresh={fresh.has(s.id)} files={files} />
+            <SnapshotItem key={s.id} snapshot={s} files={files} />
           ))}
         </ul>
       )}

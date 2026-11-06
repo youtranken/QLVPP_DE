@@ -61,6 +61,8 @@ const common: Messages<typeof vi> = {
       clear: 'Clear filter',
     },
     errors: {
+      ORDER_NOT_EMPTY: 'The server order total is now above 0 — reload the page, then prepare the form.',
+      ALREADY_SENT: 'This period already has a form sent to ADM — reload the page to see it.',
       ITEM_ADM_OUT: 'This item is marked out at ADM — unmark it first.',
       ADM_OUT_FINAL: "All lines for this item are settled — can't unmark.",
       ADM_OUT_NOTHING_OPEN: 'Nobody is waiting for this item this period.',

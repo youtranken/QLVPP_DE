@@ -8,20 +8,19 @@ import { PageHeader } from '@/ui/page-header';
 import type { AdminItem } from '@/features/catalog/catalog.api';
 import { printPath, type MonthReport, type SnapshotData } from '@/features/reports/reports.api';
 import { ReportSnapshots } from '@/features/reports/report-snapshots';
-import { useSnapshotDownload } from '@/features/reports/use-snapshot';
+import type { SnapshotDownload } from '@/features/reports/use-snapshot';
 import { useNewDraftConfirm } from './use-send-adm-confirms';
 import { ItemCell } from './send-adm-orders';
 import { basisNeedOf, carryFromSent, sentOrderOf, toOrderRows } from './send-adm-rows';
 import type { SendState } from './use-send-state';
 import type { SentSnapshot } from './send-adm.api';
 
-const NO_FRESH: ReadonlySet<string> = new Set();
-
 interface Props {
   head: { crumbs: string[]; title: string; description: string };
   report: MonthReport;
   items: AdminItem[];
   send: SendState & { sent: SentSnapshot };
+  files: SnapshotDownload;
   onNewDraft: (carry: Record<string, number>) => void;
 }
 
@@ -37,10 +36,11 @@ function W7({ sent, now }: { sent: number; now: number }) {
   );
 }
 
-function SentTable({ data, report, items }: { data: SnapshotData; report: MonthReport; items: AdminItem[] }) {
+// Cần nay cộng lại phần đã giao sau bản: giao hàng không làm lệch so với cần lúc chốt
+function SentTable({ data, report, items, delivered }: { data: SnapshotData; report: MonthReport; items: AdminItem[]; delivered: Record<string, number> }) {
   const { t } = useTranslation();
   const rows = useMemo(() => toOrderRows(data, items), [data, items]);
-  const live = useMemo(() => new Map([...report.byItem, ...report.custom].map((r) => [r.key, activeNeed(r)])), [report]);
+  const live = useMemo(() => new Map([...report.byItem, ...report.custom].map((r) => [r.key, activeNeed(r) + (delivered[r.key] ?? 0)])), [report, delivered]);
   const source = new Map([...data.byItem, ...data.custom].map((r) => [r.key, r]));
   const n = (v: number) => v.toLocaleString('vi-VN');
   return (
@@ -59,7 +59,7 @@ function SentTable({ data, report, items }: { data: SnapshotData; report: MonthR
           {rows.map((r) => {
             const src = source.get(r.key)!;
             const qty = sentOrderOf(data, src);
-            const now = live.get(r.key) ?? 0;
+            const now = live.get(r.key) ?? delivered[r.key] ?? 0;
             return (
               <tr key={r.key}>
                 <ItemCell row={r} />
@@ -78,10 +78,9 @@ function SentTable({ data, report, items }: { data: SnapshotData; report: MonthR
   );
 }
 
-export function SendAdmSent({ head, report, items, send, onNewDraft }: Props) {
+export function SendAdmSent({ head, report, items, send, files, onNewDraft }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const files = useSnapshotDownload(report.ym);
   const confirmNew = useNewDraftConfirm();
   const { sent } = send;
   const time = formatVnStamp(sent.created_at);
@@ -113,8 +112,8 @@ export function SendAdmSent({ head, report, items, send, onNewDraft }: Props) {
           {t('sendAdm.sent.newDraft')}
         </button>
       </div>
-      <SentTable data={sent.data} report={report} items={items} />
-      <ReportSnapshots ym={report.ym} fresh={NO_FRESH} files={files} />
+      <SentTable data={sent.data} report={report} items={items} delivered={send.deliveredSince} />
+      <ReportSnapshots ym={report.ym} files={files} />
     </div>
   );
 }

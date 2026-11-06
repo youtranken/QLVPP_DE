@@ -9,6 +9,7 @@ import { useAdminItems } from '@/features/catalog/catalog.api';
 import { currentPeriodQuery, useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { useMonthReport } from '@/features/reports/reports.api';
+import { useSnapshotDownload } from '@/features/reports/use-snapshot';
 import { PeriodLockGate } from '@/features/summary/period-lock-gate';
 import { usePeriodSummary } from '@/features/summary/summary.api';
 import { SendAdmDraft } from './send-adm-draft';
@@ -45,12 +46,14 @@ function Board({ ym }: { ym: string }) {
   const summary = usePeriodSummary(ym);
   const send = useSendState(ym);
   const refreshSend = useRefreshSendState(ym);
+  // Một chỗ tải tệp cho cả hai chế độ: lỗi tải ngay sau khi chốt vẫn còn khi trang chuyển sang Đã gửi
+  const files = useSnapshotDownload(ym);
   const [carry, setCarry] = useState<Record<string, number> | null>(null);
   const queries = [report, items, config, summary, send.query];
   if (queries.some((q) => q.isError)) return <Bare ym={ym}><LoadError onRetry={() => queries.forEach((q) => void q.refetch())} /></Bare>;
   if (!report.data || !items.data || !config.data || !summary.data || !send.query.data) return <Bare ym={ym}><Loading /></Bare>;
   if (send.noOrder) return <SendAdmNoOrder head={head} ym={ym} noOrder={send.noOrder} />;
-  if (send.sent && !carry) return <SendAdmSent head={head} report={report.data} items={items.data} send={{ ...send, sent: send.sent }} onNewDraft={setCarry} />;
+  if (send.sent && !carry) return <SendAdmSent head={head} report={report.data} items={items.data} send={{ ...send, sent: send.sent }} files={files} onNewDraft={setCarry} />;
   // Server nói kỳ chưa tới: kỳ hiện hành trên trang đã cũ → tải lại, không có tháng nào khác để về
   const invalidPeriod = () => {
     void qc.invalidateQueries({ queryKey: currentPeriodQuery().queryKey });
@@ -73,6 +76,7 @@ function Board({ ym }: { ym: string }) {
       onBack={carry ? () => setCarry(null) : undefined}
       onTaken={taken}
       onInvalidPeriod={invalidPeriod}
+      files={files}
     />
   );
 }
