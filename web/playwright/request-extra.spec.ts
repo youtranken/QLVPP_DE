@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, psql, removeTestItem, seedActiveUser } from './helpers';
+import { acquireLock, cartOf, closeCart, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, openCart, psql, removeTestItem, seedActiveUser } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-12-shots';
 const FIXTURE = 'playwright/fixtures/item.png';
@@ -65,7 +65,8 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await dialog.getByRole('button', { name: 'Thêm vào phiếu' }).click();
       await expect(dialog).toBeHidden();
 
-      const cart = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
+      const cart = cartOf(page);
+      await openCart(page, info);
       const line = cart.locator('li', { has: page.getByRole('button', { name: `Sửa ${name}` }) });
       await expect(line.getByText('Ngoài danh mục')).toBeVisible();
       await expect(line.getByRole('spinbutton', { name })).toHaveValue('2');
@@ -74,6 +75,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
 
       await page.reload();
+      await openCart(page, info);
       await expect(line.getByText('Chờ Hành chính xem')).toBeVisible();
       await expect(line.locator('img')).toHaveCount(0);
       if (isMobile(info)) await expectNoContrastViolations(page);
@@ -81,6 +83,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
 
       // Còn thay đổi chưa lưu → link nội bộ (Lịch sử) hỏi trước khi rời
       await line.getByRole('button', { name: `Thêm ${name}` }).click();
+      await closeCart(page, info);
       const history = isMobile(info)
         ? page.getByRole('navigation', { name: 'Điều hướng chính' }).getByRole('link', { name: 'Lịch sử' })
         : page.getByRole('link', { name: 'Lịch sử' });
@@ -90,6 +93,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await snap(page, info, 'leave-guard');
       await ask.getByRole('button', { name: 'Ở lại' }).click();
       await expect(page).toHaveURL(/\/$/);
+      await openCart(page, info);
       await expect(line.getByRole('spinbutton', { name })).toHaveValue('3');
     } finally {
       deleteTestUsers(me.sub);
@@ -145,13 +149,15 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await snap(page, info, 'copy-summary');
       await summary.getByRole('button', { name: 'Đã hiểu' }).click();
 
-      const cart = page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ });
+      const cart = cartOf(page);
+      await openCart(page, info);
       await expect(cart.getByRole('spinbutton', { name: nameA, exact: true })).toHaveValue('5');
       await expect(cart.getByRole('spinbutton', { name: other.name, exact: true })).toHaveCount(0);
       await page.getByRole('button', { name: /thay đổi chưa lưu · Lưu/ }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
       await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
       await page.reload();
+      await openCart(page, info);
       await expect(cart.getByRole('spinbutton', { name: nameA, exact: true })).toHaveValue('5');
       await snap(page, info, 'copy-saved');
     } finally {
@@ -204,8 +210,9 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       );
       await expect(alert).toBeInViewport();
       await expect(page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' })).toBeVisible();
-      await expect(page.getByRole('complementary', { name: /^Phiếu tháng \d+$/ }).getByRole('spinbutton', { name: item.name, exact: true })).toHaveValue('1');
       await snap(page, info, 'period-locked');
+      await openCart(page, info);
+      await expect(cartOf(page).getByRole('spinbutton', { name: item.name, exact: true })).toHaveValue('1');
     } finally {
       deleteTestUsers(me.sub);
     }
@@ -258,8 +265,9 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
         new RegExp(`Phiếu tháng ${m} đã khóa lúc 00:00\\. Phiếu đã lưu lúc \\d{2}:\\d{2} vẫn giữ và sẽ được giao; thay đổi chưa lưu không kịp áp dụng\\. Phiếu tháng ${next} đã mở\\.`),
       );
       await expect(alert).toBeInViewport();
-      await expect(page.getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu”/)).toBeAttached();
       await snap(page, info, 'period-locked-saved');
+      await openCart(page, info);
+      await expect(page.getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu”/)).toBeAttached();
     } finally {
       deleteTestUsers(me.sub);
     }

@@ -211,3 +211,24 @@ export async function expectReorderArrowKeepsFocus(page: Page, menuLabel: RegExp
   await page.getByRole('button', { name: 'Hủy' }).click();
   await page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
 }
+
+// Phiếu nhân viên: ≥ 901 là khung "complementary" bên phải; ≤ 900 là dialog (sheet) mở từ thanh phiếu nổi
+const CART_NAME = /^Phiếu tháng \d+$/;
+export const cartOf = (page: Page) =>
+  page.getByRole('complementary', { name: CART_NAME }).or(page.getByRole('dialog', { name: CART_NAME }));
+
+export async function openCart(page: Page, info: TestInfo) {
+  if (!isMobile(info)) return;
+  const sheet = page.getByRole('dialog', { name: CART_NAME });
+  if (await sheet.isVisible()) return;
+  await page.getByRole('button', { name: /^Xem phiếu \(/ }).click();
+  await expect(sheet).toBeVisible();
+}
+
+export async function closeCart(page: Page, info: TestInfo) {
+  if (!isMobile(info)) return;
+  const sheet = page.getByRole('dialog', { name: CART_NAME });
+  if (!(await sheet.isVisible())) return;
+  await page.keyboard.press('Escape');
+  await expect(sheet).toBeHidden();
+}

@@ -5,9 +5,10 @@ import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
 import { NOTE, PAUSED, PEN, PERIOD, facts, stubRequestApi, view } from '@/test/request-api-stub';
 import { mockViewport } from '@/test/viewport';
+import { openPhoneCart } from '@/test/request-cart';
 
 const grid = () => screen.getByRole('region', { name: 'Danh mục món' });
-const cart = () => screen.getByRole('complementary', { name: 'Phiếu tháng 11' });
+const cart = () => screen.queryByRole('complementary', { name: 'Phiếu tháng 11' }) ?? screen.getByRole('dialog', { name: 'Phiếu tháng 11' });
 const location = () => screen.getByTestId('location').textContent;
 
 const COPY = {
@@ -41,6 +42,7 @@ describe('RequestPage — món ngoài danh mục', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào phiếu' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await openPhoneCart();
     const line = within(cart()).getByRole('button', { name: 'Sửa Bìa còng 7cm' }).closest('li')!;
     expect(within(line).getByText('Ngoài danh mục')).toHaveClass('tag--info');
     expect(within(line).getByRole('spinbutton', { name: 'Bìa còng 7cm' })).toHaveValue(1);
@@ -207,7 +209,10 @@ describe('RequestPage — kỳ trước đang giao, rời trang', () => {
     let ask = await screen.findByRole('dialog', { name: 'Rời trang khi chưa lưu?' });
     await userEvent.click(within(ask).getByRole('button', { name: 'Ở lại' }));
     expect(location()).toBe('/');
+    await openPhoneCart();
     expect(within(cart()).getByRole('spinbutton', { name: PEN.name })).toHaveValue(1);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
 
     await userEvent.click(within(nav).getByRole('link', { name: /Lịch sử/ }));
     ask = await screen.findByRole('dialog', { name: 'Rời trang khi chưa lưu?' });

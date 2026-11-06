@@ -174,6 +174,7 @@ export function useSaveFlow(
     notice: notice?.text ?? null,
     noticeRef,
     noticeTone: notice?.tone ?? 'danger',
+    noticeFocusKey: notice?.focusKey ?? null,
     closeNotice: () => setNotice(null),
     toast,
     showToast,

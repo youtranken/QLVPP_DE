@@ -6,8 +6,10 @@ import { useMe } from '@/lib/me';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { Loading, LoadError } from '@/ui/load-state';
 import { CartPanel } from './cart-panel';
+import { CartSheet } from './cart-sheet';
 import { CopyPreviousButton, CopySummaryDialog } from './copy-previous-dialog';
 import { CustomLineDialog } from './custom-line-dialog';
+import { FlowNotice } from './flow-notice';
 import { ItemGrid } from './item-grid';
 import { MobileSaveBar } from './mobile-save-bar';
 import { OwedNotice } from './owed-notice';
@@ -66,6 +68,7 @@ function RequestEditor({
   );
   const cart = useCart(server, ctx, carry?.carry ?? undefined);
   const cartRef = useRef<HTMLElement>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const flow = useSaveFlow(cart, period.ym, refetch, cartRef, {
     initialNotice: carry ? lockedNotice(t, carry, cart.initialReport?.unavailable) : null,
     onLocked,
@@ -78,6 +81,15 @@ function RequestEditor({
   }, [hadCarry, onCarryUsed]);
   const [editing, setEditing] = useState<Editing>(null);
   useLeaveGuard(cart.dirtyCount);
+  // Lỗi theo dòng: mở sheet để dòng lỗi thấy được; lưu xong (toast) thì đóng sheet
+  const lineFocusKey = flow.noticeFocusKey;
+  useEffect(() => {
+    if (narrow && lineFocusKey) setSheetOpen(true);
+  }, [narrow, lineFocusKey]);
+  const toasted = !!flow.toast;
+  useEffect(() => {
+    if (toasted) setSheetOpen(false);
+  }, [toasted]);
 
   const orderable = useMemo(() => items.filter((i) => i.usable && !i.admin_only), [items]);
   const lineByKey = useMemo(() => new Map(cart.lines.map((l) => [l.key, l])), [cart.lines]);
@@ -99,6 +111,26 @@ function RequestEditor({
     cart.remove(key);
   };
   const addCustom = () => setEditing({});
+
+  const cartProps = {
+    lines: cart.lines,
+    errors: flow.lineErrors,
+    categories,
+    month: monthOf(period.ym),
+    prevMonth: copy.fromYm ? monthOf(copy.fromYm) : null,
+    dirty,
+    saved: cart.saved ? { time: fmt.time(cart.saved.updated_at), lastDay: fmt.lastDay(period.deadline) } : null,
+    locked: !period.is_open,
+    saveLabel,
+    canSave: dirty && !flow.saving,
+    panelRef: cartRef,
+    onQty: setQty,
+    onRemove: remove,
+    onSave: flow.openConfirm,
+    onAddCustom: addCustom,
+    onEdit: (key: string) => setEditing({ key }),
+  };
+  const sheetShown = narrow && sheetOpen;
 
   return (
     <div className="m-page rq-v2">
@@ -124,29 +156,20 @@ function RequestEditor({
             onAddCustom={addCustom}
           />
         </div>
-        <CartPanel
-          lines={cart.lines}
-          errors={flow.lineErrors}
-          categories={categories}
-          month={monthOf(period.ym)}
-          prevMonth={copy.fromYm ? monthOf(copy.fromYm) : null}
-          dirty={dirty}
-          saved={cart.saved ? { time: fmt.time(cart.saved.updated_at), lastDay: fmt.lastDay(period.deadline) } : null}
-          locked={!period.is_open}
-          showSave={!narrow}
-          saveLabel={saveLabel}
-          canSave={dirty && !flow.saving}
-          panelRef={cartRef}
-          onQty={setQty}
-          onRemove={remove}
-          onSave={flow.openConfirm}
-          onAddCustom={addCustom}
-          onEdit={(key) => setEditing({ key })}
-        />
+        {!narrow && <CartPanel {...cartProps} showSave />}
       </div>
       {narrow && (
-        <MobileSaveBar count={cart.lines.length} label={saveLabel} canSave={dirty && !flow.saving} onSave={flow.openConfirm} />
+        <MobileSaveBar
+          count={cart.lines.length}
+          units={cart.lines.reduce((sum, l) => sum + l.qty, 0)}
+          saved={!!cart.saved && !dirty}
+          label={saveLabel}
+          canSave={dirty && !flow.saving}
+          onOpen={() => setSheetOpen(true)}
+          onSave={flow.openConfirm}
+        />
       )}
+      {sheetShown && <CartSheet {...cartProps} onOpenChange={setSheetOpen} notice={<FlowNotice flow={flow} />} />}
       {editing && (
         <CustomLineDialog
           initial={editingLine}
@@ -178,14 +201,7 @@ function RequestEditor({
         <StaleDialog month={monthOf(period.ym)} reloading={flow.reloading} onReload={() => void flow.reload()} onClose={flow.closeStale} />
       )}
       {copy.summary && <CopySummaryDialog summary={copy.summary} onClose={copy.closeSummary} />}
-      {flow.notice && (
-        <div className={`rq-notice rq-notice--${flow.noticeTone}`} role="alert" tabIndex={-1} ref={flow.noticeRef}>
-          <span>{flow.notice}</span>
-          <button type="button" aria-label={t('common.close')} onClick={flow.closeNotice}>
-            ✕
-          </button>
-        </div>
-      )}
+      {!sheetShown && <FlowNotice flow={flow} />}
       <div className="rq-toast-slot" role="status" aria-live="polite">
         {flow.toast && <span className="rq-toast">{flow.toast}</span>}
       </div>

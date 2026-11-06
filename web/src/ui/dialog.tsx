@@ -36,6 +36,7 @@ export function Dialog({
   dirty = false,
   onKeyDown,
   returnFocus = true,
+  onOpenAutoFocus,
   children,
 }: {
   open: boolean;
@@ -50,6 +51,8 @@ export function Dialog({
   onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
   // Mở không qua Trigger nên Radix không biết trả focus về đâu: mặc định trả về phần tử đang focus lúc mở; nơi tự quản focus sau khi đóng thì để false
   returnFocus?: boolean;
+  // Gọi khi hộp mở, sau khi ghi nhớ phần tử đang focus; preventDefault() để tự đặt focus thay vì phần tử đầu tiên
+  onOpenAutoFocus?: (e: Event) => void;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -78,8 +81,9 @@ export function Dialog({
             onPointerDownOutside={block}
             onInteractOutside={block}
             onKeyDown={onKeyDown}
-            onOpenAutoFocus={() => {
+            onOpenAutoFocus={(e) => {
               opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+              onOpenAutoFocus?.(e);
             }}
             onCloseAutoFocus={(e) => {
               if (!returnFocus || !opener.current?.isConnected) return;

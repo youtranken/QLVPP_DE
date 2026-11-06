@@ -1,6 +1,7 @@
-import { useId, type RefObject } from 'react';
+import { useId, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
+import { DialogCloseButton, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { Stepper } from '@/ui/stepper';
 import { groupTone, type Tone } from '@/lib/group-tone';
 import { ItemThumb } from '@/ui/item-thumb';
@@ -92,6 +93,24 @@ function CartRow({
   );
 }
 
+// Máy tính: aside "complementary" có tên; sheet: nằm trong dialog nên là div, tên lấy từ DialogTitle
+function Root({ className, labelledBy, panelRef, children }: { className: string; labelledBy?: string; panelRef: RefObject<HTMLElement | null>; children: ReactNode }) {
+  if (labelledBy) return <aside className={className} aria-labelledby={labelledBy} ref={panelRef}>{children}</aside>;
+  return <div className={className} ref={panelRef as RefObject<HTMLDivElement | null>}>{children}</div>;
+}
+
+function Title({ id, sheet, children }: { id: string; sheet: boolean; children: ReactNode }) {
+  return sheet ? <DialogTitle asChild><h2>{children}</h2></DialogTitle> : <h2 id={id}>{children}</h2>;
+}
+
+function Summary({ sheet, children }: { sheet: boolean; children: ReactNode }) {
+  return sheet ? (
+    <DialogDescription asChild><p className="rq-cart-sum num">{children}</p></DialogDescription>
+  ) : (
+    <p className="rq-cart-sum num">{children}</p>
+  );
+}
+
 export function CartPanel({
   lines,
   errors,
@@ -102,6 +121,7 @@ export function CartPanel({
   saved,
   locked,
   showSave,
+  sheet = false,
   saveLabel,
   canSave,
   panelRef,
@@ -120,6 +140,8 @@ export function CartPanel({
   saved: { time: string; lastDay: string } | null;
   locked: boolean;
   showSave: boolean;
+  // Trong sheet điện thoại: h2 là tiêu đề dialog, có nút đóng; nút Lưu nằm đáy, ngoài danh sách cuộn
+  sheet?: boolean;
   saveLabel: string;
   canSave: boolean;
   panelRef: RefObject<HTMLElement | null>;
@@ -134,15 +156,16 @@ export function CartPanel({
   const units = lines.reduce((sum, l) => sum + l.qty, 0);
   const isSaved = !!saved && !dirty;
   return (
-    <aside className="rq-cart" aria-labelledby={titleId} ref={panelRef}>
+    <Root className={`rq-cart${sheet ? ' rq-cart--sheet' : ''}`} labelledBy={sheet ? undefined : titleId} panelRef={panelRef}>
       <div className="rq-cart-head">
         <div>
-          <h2 id={titleId}>{t('request.cart.title', { month })}</h2>
-          <p className="rq-cart-sum num">{t('request.cart.summary', { kinds: lines.length, units })}</p>
+          <Title id={titleId} sheet={sheet}>{t('request.cart.title', { month })}</Title>
+          <Summary sheet={sheet}>{t('request.cart.summary', { kinds: lines.length, units })}</Summary>
         </div>
         <span className={`rq-cart-chip${isSaved ? ' is-saved' : ''}`}>
           {t(isSaved ? 'request.cart.statusSaved' : 'request.cart.statusDirty')}
         </span>
+        {sheet && <DialogCloseButton />}
       </div>
       {lines.length === 0 ? (
         <p className="rq-cart-empty">
@@ -177,6 +200,6 @@ export function CartPanel({
           ? t('request.cart.noteSaved', { time: saved.time, date: saved.lastDay })
           : t('request.cart.noteUnsaved')}
       </p>
-    </aside>
+    </Root>
   );
 }
