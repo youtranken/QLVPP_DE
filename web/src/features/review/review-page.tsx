@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { EmptyState, LoadError, Loading } from '@/ui/load-state';
+import { LoadError, Loading } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
 import { useToast } from '@/ui/toast-context';
+import { lockedYm } from '@/lib/ym';
 import { useAdminItems } from '@/features/catalog/catalog.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { REVIEW_FILTERS, useReviewCache, useReviewCounts, useReviewLines, type ReviewBody, type ReviewFilter, type ReviewResult, type ReviewRow } from './review.api';
+import { OpenPeriodNotice } from '@/features/summary/open-period-notice';
 import { ReviewCard } from './review-card';
+import { ReviewEmpty } from './review-empty';
 import { ReviewPeriod } from './review-period';
 import { useReviewParams } from './use-review-params';
 import './review.m1.css';
@@ -20,8 +23,8 @@ function useItemNames() {
 
 export function ReviewPage() {
   const { t } = useTranslation();
-  const p = useReviewParams();
   const current = useCurrentPeriod();
+  const p = useReviewParams(current.data?.ym);
   const list = useReviewLines(p.status, p.ym);
   const counts = useReviewCounts(p.ym);
   const cache = useReviewCache();
@@ -69,14 +72,14 @@ export function ReviewPage() {
         title={t('nav.review')}
         description={t('review.page.description')}
       />
+      <OpenPeriodNotice />
       <div className="toolbar">
-        <ReviewPeriod ym={p.ym} openYm={current.data?.ym} onChange={(v) => change(() => p.setMonth(v))} />
+        <ReviewPeriod ym={p.ym} ceilingYm={current.data && lockedYm(current.data.ym)} onChange={(v) => change(() => p.setMonth(v))} />
       </div>
       <div className="ct-block">
         <div className="toolbar rv-tabs">
           <Segmented label={t('review.filters.label')} value={p.status} options={tabs} onChange={(s) => change(() => p.setStatus(s))} />
         </div>
-        <p className="rv-note">{t('review.page.note')}</p>
       </div>
       {staleNotice && (
         <p role="status" className="alert alert--warn">
@@ -88,17 +91,7 @@ export function ReviewPage() {
       ) : list.isPending ? (
         <Loading />
       ) : list.data.items.length === 0 ? (
-        <EmptyState
-          art="no-match"
-          title={t(`review.empty.${p.status}`)}
-          action={
-            p.status === 'pending' ? (
-              <button type="button" className="btn" onClick={() => change(() => p.setStatus('accepted'))}>
-                {t('review.empty.pendingAction')}
-              </button>
-            ) : undefined
-          }
-        />
+        <ReviewEmpty status={p.status} onSeeAccepted={() => change(() => p.setStatus('accepted'))} />
       ) : (
         <div className="rv-grid">
           {list.data.items.map((row) => (

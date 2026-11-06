@@ -5,8 +5,6 @@ const arrivals: Messages<typeof vi> = {
   arrivals: {
     title: 'Goods arriving, {{month}} period',
     description: 'Enter what ADM delivered in this batch. Boxes are prefilled with what is still due on the print sent to ADM; enter 0 to skip an item that has not arrived. Stock is added on save.',
-    unlocked: 'The {{month}} period is not locked yet, come back after {{deadline}}.',
-    unlockedNoDate: 'The {{month}} period is not locked yet.',
     table: {
       label: 'Goods arriving by item',
       item: 'Item',

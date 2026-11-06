@@ -24,7 +24,6 @@ import { useArrivalsDraft } from './use-arrivals-draft';
 import { useArrivalsSave, type Notice } from './use-arrivals-save';
 import './arrivals.m1.css';
 
-const UNLOCKED_KEY = 'arrivals.unlocked';
 const CLEAR_FILTER = { q: null, g: null, short: null };
 
 function NoticeLine({ notice, nameOf, onRetry }: { notice: Notice; nameOf: (id: string) => string; onRetry: () => void }) {
@@ -239,7 +238,7 @@ export function ArrivalsPage() {
       {current.isError ? (
         <LoadError onRetry={() => void current.refetch()} />
       ) : lockedYm ? (
-        <PeriodLockGate key={lockedYm} ym={lockedYm} unlockedKey={UNLOCKED_KEY}>
+        <PeriodLockGate key={lockedYm} ym={lockedYm}>
           <ArrivalsBoard ym={lockedYm} />
         </PeriodLockGate>
       ) : (

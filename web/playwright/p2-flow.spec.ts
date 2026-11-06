@@ -69,13 +69,13 @@ async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person,
   await expect(drawer).toBeHidden();
 
   drawer = await openDrawer(admin, a);
-  await drawer.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button', { name: `Thêm vào danh mục — ${custom}` }).click();
-  const convert = admin.getByRole('dialog', { name: `Thêm “${custom}” vào danh mục` });
+  await drawer.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button', { name: `Mua và thêm vào danh mục — ${custom}` }).click();
+  const convert = admin.getByRole('dialog', { name: `Mua “${custom}” và thêm vào danh mục` });
   await convert.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
   // Dòng Món khác không có ảnh → món mới phải có ảnh mới chọn ở đây
   await convert.getByLabel('Chụp hoặc chọn ảnh').setInputFiles(FIXTURE);
   await expect(convert.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
-  await convert.getByRole('button', { name: 'Thêm vào danh mục', exact: true }).click();
+  await convert.getByRole('button', { name: 'Mua và thêm vào danh mục', exact: true }).click();
   await expect(convert).toBeHidden();
   await expect(drawer.getByText('Đã thêm vào danh mục')).toBeVisible();
   await snap(admin, info, 'admin-converted');

@@ -6,6 +6,7 @@ import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
 import type { ReviewBody, ReviewResult, ReviewRow } from './review.api';
 import { ReviewActions } from './review-actions';
+import { sentOf } from './review-sent';
 
 const BADGE_TONE = { accepted: 'ok', converted: 'info', rejected: 'danger' } as const;
 
@@ -65,6 +66,7 @@ export function ReviewCard({ row, name, onDone, onStale }: {
         <ReviewActions
           line={{ ...row, id: row.line_id, custom_name: name, review_status: status }}
           context={{ who, month }}
+          sent={sentOf(row)}
           hideStatus
           onDone={(result, body) => {
             setDone(result);

@@ -1,5 +1,5 @@
 import { useId, useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUnitNames } from '@/features/units/units.api';
 import { apiErrorCode } from '@/lib/api-error';
@@ -49,9 +49,10 @@ function newItemOf(d: ItemDraft, lineImage: string | null): ConvertItem {
   };
 }
 
-export function ConvertDialog({ line, who, onSubmit, onClose }: {
+export function ConvertDialog({ line, who, warning, onSubmit, onClose }: {
   line: ReviewableLine;
   who?: string;
+  warning?: ReactNode;
   onSubmit: (item: ConvertItem) => Promise<void>;
   onClose: () => void;
 }) {
@@ -146,6 +147,11 @@ export function ConvertDialog({ line, who, onSubmit, onClose }: {
               </label>
             ))}
           </fieldset>
+          {warning && (
+            <div role="note" className="alert alert--warn a-form-wide">
+              {warning}
+            </div>
+          )}
           {unitMismatch && (
             <p role="status" className="alert alert--warn a-form-wide">
               {mode === 'existing' && chosen

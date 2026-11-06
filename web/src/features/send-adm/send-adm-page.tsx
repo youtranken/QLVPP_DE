@@ -19,7 +19,6 @@ import { useRefreshSendState } from './send-adm.api';
 import { useSendState } from './use-send-state';
 import './send-adm.m1.css';
 
-const UNLOCKED_KEY = 'sendAdm.unlocked';
 
 function useTitle(ym: string | undefined) {
   const { t } = useTranslation();
@@ -86,7 +85,7 @@ export function SendAdmPage() {
   const lockedYm = current.data ? shiftYm(current.data.ym, -1) : undefined;
   if (lockedYm) {
     return (
-      <PeriodLockGate key={lockedYm} ym={lockedYm} unlockedKey={UNLOCKED_KEY} frame={(node) => <Bare ym={lockedYm}>{node}</Bare>}>
+      <PeriodLockGate key={lockedYm} ym={lockedYm} frame={(node) => <Bare ym={lockedYm}>{node}</Bare>}>
         <Board ym={lockedYm} />
       </PeriodLockGate>
     );

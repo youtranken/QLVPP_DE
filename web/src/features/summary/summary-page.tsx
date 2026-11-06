@@ -18,6 +18,7 @@ import { SummaryItemTable } from './summary-item-table';
 import { SummaryPersonTable } from './summary-person-table';
 import { SummaryStats } from './summary-stats';
 import { UnregisteredTable } from './unregistered-table';
+import { OpenPeriodNotice } from './open-period-notice';
 import { usePeriodSummary, type PeriodSummary } from './summary.api';
 import { useAdjacentRequests } from './use-person-table-rows';
 import { useSummaryParams, type SummaryView } from './use-summary-params';
@@ -90,6 +91,7 @@ export function SummaryPage() {
           ),
         },
       )}
+      <OpenPeriodNotice />
       {summary.isError && <LoadError onRetry={() => void summary.refetch()} />}
       {data && <SummaryStats summary={data} stock={stock} filter={p.filter} onFilter={p.toggleFilter} />}
       <Toolbar

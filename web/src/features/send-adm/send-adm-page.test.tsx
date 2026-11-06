@@ -113,7 +113,7 @@ describe('SendAdmPage — kiểm trước khi gửi', () => {
     setup({ deadline: '2999-10-10T17:00:00.000Z' });
     mockViewport(1280);
     renderApp(makeMe('admin'), '/admin/send-adm');
-    expect(await screen.findByText(/^Kỳ tháng 10 chưa khóa sổ, mở lại sau/)).toBeInTheDocument();
+    expect(await screen.findByText('Kỳ tháng 10 chưa khóa sổ — xem được từ 00:00 ngày 11/10.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Xuất Excel mẫu phòng' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'In trình ký' })).toBeNull();
   });

@@ -28,6 +28,14 @@ const summary: Messages<typeof vi> = {
       noItems: 'No items match',
       toSendAdm: 'Go to Send to ADM →',
     },
+    gate: {
+      openNotice: 'The month {{month}} period is open and can be viewed from {{lockPhrase}}.',
+      viewProgress: 'View registration progress',
+      noneTitle: 'No period has been closed yet',
+      noneHint: 'The month {{month}} period is taking registrations ({{registered}}/{{headcount}} people). Admin work starts from {{lockPhrase}}.',
+      unlocked: 'The month {{month}} period is not locked yet — viewable from {{lockPhrase}}.',
+      unlockedNoDate: 'The month {{month}} period is not locked yet.',
+    },
     outside: '+{{n}} requests from people outside the list',
     emptyPeriod: 'No requests for {{month}} (0/{{headcount}})',
     kpi: {

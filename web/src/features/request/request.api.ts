@@ -88,9 +88,11 @@ const REQUEST_KEY = ['request'] as const;
 export const HISTORY_KEY = [...REQUEST_KEY, 'history'] as const;
 export const ownRequestKey = (ym: string) => [...REQUEST_KEY, 'mine', ym] as const;
 
+export const CURRENT_PERIOD_KEY = ['periods', 'current'] as const;
+
 export const currentPeriodQuery = () =>
   queryOptions({
-    queryKey: [...REQUEST_KEY, 'period'],
+    queryKey: CURRENT_PERIOD_KEY,
     queryFn: () => apiFetch<CurrentPeriod>('/api/periods/current'),
   });
 

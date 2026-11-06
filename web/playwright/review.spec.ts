@@ -71,8 +71,8 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'review-list');
 
-      await card.getByRole('button', { name: /^Thêm vào danh mục —/ }).click();
-      const dialog = page.getByRole('dialog', { name: `Thêm “${name}” vào danh mục` });
+      await card.getByRole('button', { name: /^Mua và thêm vào danh mục —/ }).click();
+      const dialog = page.getByRole('dialog', { name: `Mua “${name}” và thêm vào danh mục` });
       await expect(dialog.getByLabel('Tên món')).toHaveValue(name);
       await expect(dialog.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
       await dialog.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
@@ -80,7 +80,7 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       await expect(dialog.getByText('ĐVT khác dòng gốc (cái) — số lượng 2 sẽ tính theo ĐVT mới.')).toBeVisible();
       await snap(page, info, 'convert-dialog');
       await dialog.getByLabel('Đơn vị tính').selectOption('cai');
-      await dialog.getByRole('button', { name: 'Thêm vào danh mục', exact: true }).click();
+      await dialog.getByRole('button', { name: 'Mua và thêm vào danh mục', exact: true }).click();
       await expect(dialog).toBeHidden();
       await expect(card.getByText('Đã thêm vào danh mục')).toBeVisible();
       await snap(page, info, 'converted');
@@ -139,9 +139,9 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       await expect(card).toBeVisible();
       await expect(page.getByRole('radio', { name: 'Theo tháng' })).toBeChecked();
       await expect(page.getByRole('group', { name: 'Chọn tháng' })).toContainText(`Tháng ${Number(prevYm.slice(5))}/${prevYm.slice(0, 4)}`);
-      await card.getByRole('button', { name: /^Từ chối —/ }).click();
-      const dialog = page.getByRole('dialog', { name: `Từ chối “${name}”` });
-      const submit = dialog.getByRole('button', { name: 'Từ chối', exact: true });
+      await card.getByRole('button', { name: /^Không mua —/ }).click();
+      const dialog = page.getByRole('dialog', { name: `Không mua “${name}”` });
+      const submit = dialog.getByRole('button', { name: 'Không mua', exact: true });
       await expect(submit).toBeDisabled();
       await dialog.getByLabel('Lý do từ chối').fill(reason);
       await snap(page, info, 'reject-dialog');
@@ -193,29 +193,29 @@ test.describe('E9-S2 món ngoài danh mục', () => {
       if (isMobile(info)) await expectNoContrastViolations(page);
 
       const accept = cardOf(names.accept);
-      await accept.getByRole('button', { name: /^Chấp nhận —/ }).click();
-      await page.getByRole('dialog').getByRole('button', { name: 'Chấp nhận', exact: true }).click();
+      await accept.getByRole('button', { name: /^Mua lần này —/ }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Mua lần này', exact: true }).click();
       await expect(accept.getByText('Đã chấp nhận', { exact: true })).toBeVisible();
 
       const reject = cardOf(names.reject);
-      await reject.getByRole('button', { name: /^Từ chối —/ }).click();
-      const rejectDialog = page.getByRole('dialog', { name: `Từ chối “${names.reject}”` });
+      await reject.getByRole('button', { name: /^Không mua —/ }).click();
+      const rejectDialog = page.getByRole('dialog', { name: `Không mua “${names.reject}”` });
       await rejectDialog.getByLabel('Lý do từ chối').fill('ab');
-      await expect(rejectDialog.getByRole('button', { name: 'Từ chối', exact: true })).toBeDisabled();
+      await expect(rejectDialog.getByRole('button', { name: 'Không mua', exact: true })).toBeDisabled();
       await rejectDialog.getByLabel('Lý do từ chối').fill('abc');
-      await rejectDialog.getByRole('button', { name: 'Từ chối', exact: true }).click();
+      await rejectDialog.getByRole('button', { name: 'Không mua', exact: true }).click();
       await expect(reject.getByText('Đã từ chối')).toBeVisible();
 
       const convert = async (n: string) => {
-        await cardOf(n).getByRole('button', { name: /^Thêm vào danh mục —/ }).click();
-        const dialog = page.getByRole('dialog', { name: `Thêm “${n}” vào danh mục` });
+        await cardOf(n).getByRole('button', { name: /^Mua và thêm vào danh mục —/ }).click();
+        const dialog = page.getByRole('dialog', { name: `Mua “${n}” và thêm vào danh mục` });
         await dialog.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
         await expect(dialog.getByRole('group', { name: 'Ảnh món' })).toContainText('*');
-        await dialog.getByRole('button', { name: 'Thêm vào danh mục', exact: true }).click();
+        await dialog.getByRole('button', { name: 'Mua và thêm vào danh mục', exact: true }).click();
         await expect(dialog.getByText('Món phải có ảnh — chọn hoặc chụp một ảnh.')).toBeVisible();
         await dialog.getByLabel('Chụp hoặc chọn ảnh').setInputFiles(FIXTURE);
         await expect(dialog.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
-        return { dialog, submit: () => dialog.getByRole('button', { name: 'Thêm vào danh mục', exact: true }).click() };
+        return { dialog, submit: () => dialog.getByRole('button', { name: 'Mua và thêm vào danh mục', exact: true }).click() };
       };
 
       const big = await convert(names.big);
@@ -259,5 +259,41 @@ test.describe('E9-S2 món ngoài danh mục', () => {
     await page.goto('/admin/review');
     await expect(page.getByRole('main').getByText('Không tải được dữ liệu — thử lại.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Thử lại' })).toBeVisible();
+  });
+});
+
+const OPEN_PERIOD = { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 3, previous: null };
+const LOCKED_SUMMARY = { ym: '2026-10', deadline: '2026-10-10T17:00:00.000Z', is_open: false, registered: 6, headcount: 8, outside: 0, unregistered: 2, headcount_source: 'snapshot', lines_pending_delivery: 0, custom_pending: 0, low_stock: 0, receipts: 0 };
+
+// Dữ liệu giả cố định: không chạm kỳ/phiếu thật của dev, ảnh chuẩn không đổi theo ngày chạy
+async function mockEmptyReview(page: Page) {
+  await routeAs(page, devHeaders('admin'));
+  await page.route('**/api/periods/current', (route) => route.fulfill({ json: OPEN_PERIOD }));
+  await page.route('**/api/admin/periods/2026-10/summary', (route) => route.fulfill({ json: LOCKED_SUMMARY }));
+  await page.route('**/api/admin/review*', (route) => route.fulfill({ json: { items: [] } }));
+}
+
+test.describe('V2D-18 trạng thái trống Món ngoài danh mục', () => {
+  test('V2D-18 tab Chờ xem rỗng 1440 px: khung trống rộng hết vùng danh sách, ảnh chuẩn', async ({ page }, info) => {
+    test.skip(isMobile(info), 'ảnh chuẩn chỉ ở desktop');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mockEmptyReview(page);
+    await page.goto('/admin/review');
+    const title = page.getByRole('heading', { level: 2, name: 'Không còn món nào chờ xem' });
+    await expect(title).toBeVisible();
+    await expect(page.getByText('Món ngoài danh mục của kỳ tháng 11 sẽ hiện ở đây từ 00:00 ngày 11/11.')).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.getByRole('main')).toHaveScreenshot('review-empty-pending-1440.png', { maxDiffPixelRatio: 0.01 });
+  });
+
+  test('V2D-18 tab rỗng không lỗi tương phản ở 390 (Chờ xem và Đã chấp nhận)', async ({ page }, info) => {
+    test.skip(!isMobile(info), 'axe chỉ ở 390');
+    await mockEmptyReview(page);
+    await page.goto('/admin/review');
+    await expect(page.getByRole('heading', { level: 2, name: 'Không còn món nào chờ xem' })).toBeVisible();
+    await expectNoContrastViolations(page);
+    await page.getByRole('radio', { name: /^Đã chấp nhận/ }).click();
+    await expect(page.getByRole('heading', { level: 2, name: 'Chưa chấp nhận món nào' })).toBeVisible();
+    await expectNoContrastViolations(page);
   });
 });

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { FormEvent } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode } from '@/lib/api-error';
 import { Dialog, DialogClose, DialogCloseButton, DialogTitle } from '@/ui/dialog';
@@ -10,8 +10,9 @@ const REASON_MIN = 3;
 const NOTE_MAX = 500;
 
 // Ô lý do riêng của Từ chối, không dùng chung với lý do điều chỉnh phiếu
-export function RejectDialog({ name, onSubmit, onClose }: {
+export function RejectDialog({ name, warning, onSubmit, onClose }: {
   name: string;
+  warning?: ReactNode;
   onSubmit: (note: string) => Promise<void>;
   onClose: () => void;
 }) {
@@ -47,6 +48,11 @@ export function RejectDialog({ name, onSubmit, onClose }: {
           <DialogCloseButton disabled={saving} />
         </div>
         <div className="sheet-body">
+          {warning && (
+            <div role="note" className="alert alert--warn">
+              {warning}
+            </div>
+          )}
           {error?.field === 'form' && (
             <p role="alert" className="alert alert--danger">
               {t(error.key)}

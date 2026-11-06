@@ -9,6 +9,7 @@ const TECHNICAL_ATTRS = new Set([
   'htmlFor', 'autoComplete', 'autoCapitalize', 'inputMode', 'method', 'rel', 'target', 'src', 'accept', 'capture',
   'loading', 'scope', 'lang', 'dir', 'd', 'viewBox', 'fill', 'stroke', 'xmlns',
   'side', 'align', 'orientation', 'enterKeyHint', 'form', 'i18nKey', 'icon', 'art',
+  'strokeLinecap', 'strokeLinejoin', 'strokeWidth', 'fillOpacity',
 ]);
 const TOKEN_ARIA = new Set([
   'aria-hidden', 'aria-live', 'aria-current', 'aria-haspopup', 'aria-expanded', 'aria-controls', 'aria-labelledby',

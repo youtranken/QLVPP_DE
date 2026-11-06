@@ -73,8 +73,8 @@ async function openConvert(line: ReviewableLine = LINE) {
       </ConfirmProvider>
     </MeContext.Provider>,
   );
-  await userEvent.click(screen.getByRole('button', { name: `Thêm vào danh mục — ${line.custom_name}` }));
-  const dialog = screen.getByRole('dialog', { name: `Thêm “${line.custom_name}” vào danh mục` });
+  await userEvent.click(screen.getByRole('button', { name: `Mua và thêm vào danh mục — ${line.custom_name}` }));
+  const dialog = screen.getByRole('dialog', { name: `Mua “${line.custom_name}” và thêm vào danh mục` });
   // Hộp đã tải xong khi ô chọn (nhóm ở món mới, món ở món có sẵn) có lựa chọn
   await within(dialog).findAllByText(/Văn phòng|Bút bi/);
   return { dialog, onDone };
@@ -93,7 +93,7 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     expect(within(dialog).queryByLabelText('Thứ tự hiển thị')).toBeNull();
     expect(within(dialog).queryByRole('radio', { name: /Đã bỏ/ })).toBeNull();
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Văn phòng' }));
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Mua và thêm vào danh mục' }));
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(sentBody(fetchMock)).toEqual({
       action: 'convert',
@@ -105,7 +105,7 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
   it('món mới chưa chọn nhóm → báo tại ô Nhóm, không gửi', async () => {
     const fetchMock = stub();
     const { dialog } = await openConvert();
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Mua và thêm vào danh mục' }));
     expect(within(dialog).getByLabelText('Nhóm')).toHaveAttribute('aria-invalid', 'true');
     expect(within(dialog).getByText('Chọn nhóm cho món mới.')).toBeInTheDocument();
     expect(fetchMock.mock.calls.some((c) => c[0] === '/api/admin/lines/l-1/review')).toBe(false);
@@ -115,7 +115,7 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     stub(() => jsonResponse(400, { code: 'VALIDATION', message: 'max_qty', fields: ['item.max_qty'] }));
     const { dialog } = await openConvert();
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Văn phòng' }));
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Mua và thêm vào danh mục' }));
     await waitFor(() => expect(within(dialog).getByLabelText(/^Tối đa mỗi tháng/)).toHaveAttribute('aria-invalid', 'true'));
     expect(within(dialog).getByText('Kiểm tra lại giá trị này.')).toBeInTheDocument();
     expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument();
@@ -137,10 +137,10 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
     expect(within(dialog).queryByText(/Băng keo cũ/)).toBeNull();
     expect(within(dialog).queryByText(/Băng keo nhóm ngừng/)).toBeNull();
-    expect(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: 'Mua và thêm vào danh mục' })).toBeDisabled();
     await userEvent.click(within(dialog).getByRole('button', { name: /Băng keo trong/ }));
     expect(within(dialog).getByText('Nhân viên đặt theo «cái», Băng keo trong tính theo «cuộn». Số lượng giữ nguyên 2 — kiểm tra lại với người đăng ký.')).toBeInTheDocument();
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Mua và thêm vào danh mục' }));
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(sentBody(fetchMock)).toEqual({ action: 'convert', item: { existing_id: 'i-2' } });
   });
@@ -150,7 +150,7 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     const { dialog } = await openConvert();
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
     await userEvent.click(within(dialog).getByRole('button', { name: /Bút bi/ }));
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Mua và thêm vào danh mục' }));
     expect(await within(dialog).findByText('Món này đã ngừng — chọn món khác.')).toBeInTheDocument();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
@@ -160,7 +160,7 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     const { dialog, onDone } = await openConvert({ ...LINE, custom_name: 'bút BI' });
     await waitFor(() => expect(within(dialog).getByRole('radio', { name: 'Món có sẵn' })).toBeChecked());
     expect(within(dialog).getByRole('button', { name: /Bút bi/ })).toHaveAttribute('aria-pressed', 'true');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Mua và thêm vào danh mục' }));
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(sentBody(fetchMock)).toEqual({ action: 'convert', item: { existing_id: 'i-3' } });
   });
@@ -172,7 +172,7 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: /Bút bi/ }));
     const itemLoads = () => fetchMock.mock.calls.filter((c) => c[0] === '/api/admin/items').length;
     const before = itemLoads();
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Mua và thêm vào danh mục' }));
     expect(await within(dialog).findByText('Món này không còn trong danh mục — chọn món khác.')).toBeInTheDocument();
     await waitFor(() => expect(itemLoads()).toBe(before + 1));
   });
@@ -182,7 +182,7 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     const { dialog } = await openConvert();
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
     await userEvent.click(within(dialog).getByRole('button', { name: /Băng keo trong/ }));
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào danh mục' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Mua và thêm vào danh mục' }));
     expect(await screen.findByText('ĐVT của món trong danh mục khác dòng gốc — kiểm lại số lượng 2.')).toBeInTheDocument();
   });
 });

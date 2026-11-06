@@ -303,10 +303,10 @@ describe('DeliveryPeoplePage — panel và Người tiếp theo', () => {
 });
 
 describe('DeliveryPeoplePage — kỳ chưa khóa và lỗi', () => {
-  it('409 PERIOD_NOT_LOCKED → "Kỳ tháng 10 chưa khóa sổ. Giao được từ 11/10.", không thẻ, không nút Giao', async () => {
+  it('409 PERIOD_NOT_LOCKED → "Kỳ tháng 10 chưa khóa sổ — xem được từ 00:00 ngày 11/10.", không thẻ, không nút Giao', async () => {
     stub({ locked: false });
     open();
-    expect(await screen.findByText('Kỳ tháng 10 chưa khóa sổ. Giao được từ 11/10.')).toBeInTheDocument();
+    expect(await screen.findByText('Kỳ tháng 10 chưa khóa sổ — xem được từ 00:00 ngày 11/10.')).toBeInTheDocument();
     expect(screen.queryByRole('article')).toBeNull();
     expect(screen.queryByRole('button', { name: /^Giao/ })).toBeNull();
   });

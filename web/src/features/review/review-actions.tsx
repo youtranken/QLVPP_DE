@@ -10,6 +10,8 @@ export type { ReviewableLine };
 import { isStaleReview, reviewErrorKey } from './review-errors';
 import { ConvertDialog } from './convert-dialog';
 import { RejectDialog } from './reject-dialog';
+import { sentApplies, type SentInfo, type SentKind } from './review-sent';
+import { SentNote } from './review-sent-note';
 import './review.m1.css';
 
 type Open = 'accept' | 'convert' | 'reject' | null;
@@ -30,8 +32,9 @@ export interface ReviewContext {
   month: number;
 }
 
-export function ReviewActions({ line, context, hideStatus = false, onDone, onStale }: {
+export function ReviewActions({ line, context, sent, hideStatus = false, onDone, onStale }: {
   line: ReviewableLine;
+  sent?: SentInfo;
   context?: ReviewContext;
   hideStatus?: boolean;
   onDone: (result: ReviewResult, body: ReviewBody) => void;
@@ -51,6 +54,7 @@ export function ReviewActions({ line, context, hideStatus = false, onDone, onSta
   const status = result?.line.review_status ?? line.review_status;
   const note = result ? result.line.review_note : line.review_note;
   // Nhiều dòng ngoài DM cùng ngăn: tên nút kèm tên dòng để trình đọc màn hình phân biệt
+  const sentWarning = (kind: SentKind) => (sentApplies(sent, kind) ? <SentNote sent={sent} kind={kind} unit={unitName} /> : undefined);
   const named = (action: string) => t('review.actions.named', { action: t(`review.actions.${action}`), name });
 
   // Mọi lỗi ném lại để hộp đang mở gắn vào ô/khối; dòng đã đổi thì nhớ để đóng hộp xong tải lại
@@ -128,6 +132,7 @@ export function ReviewActions({ line, context, hideStatus = false, onDone, onSta
           }
           confirmLabel={t('review.accept.ok')}
           cancelLabel={t('review.back')}
+          warning={sentWarning('buy')}
           busy={accepting}
           error={acceptError}
           onConfirm={() => void accept()}
@@ -135,10 +140,10 @@ export function ReviewActions({ line, context, hideStatus = false, onDone, onSta
         />
       )}
       {open === 'convert' && (
-        <ConvertDialog line={line} who={context?.who} onSubmit={(item) => send({ action: 'convert', item })} onClose={close} />
+        <ConvertDialog line={line} who={context?.who} warning={sentWarning('buy')} onSubmit={(item) => send({ action: 'convert', item })} onClose={close} />
       )}
       {open === 'reject' && (
-        <RejectDialog name={name} onSubmit={(n) => send({ action: 'reject', note: n })} onClose={close} />
+        <RejectDialog name={name} warning={sentWarning('skip')} onSubmit={(n) => send({ action: 'reject', note: n })} onClose={close} />
       )}
     </div>
   );

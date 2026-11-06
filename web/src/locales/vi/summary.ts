@@ -25,6 +25,14 @@ const summary = {
       noItems: 'Không có món nào khớp',
       toSendAdm: 'Sang Gửi ADM →',
     },
+    gate: {
+      openNotice: 'Kỳ tháng {{month}} đang mở, xem được từ {{lockPhrase}}.',
+      viewProgress: 'Xem tiến độ đăng ký',
+      noneTitle: 'Chưa có kỳ nào chốt sổ',
+      noneHint: 'Kỳ tháng {{month}} đang nhận đăng ký ({{registered}}/{{headcount}} người). Hành chính làm việc từ {{lockPhrase}}.',
+      unlocked: 'Kỳ tháng {{month}} chưa khóa sổ — xem được từ {{lockPhrase}}.',
+      unlockedNoDate: 'Kỳ tháng {{month}} chưa khóa sổ.',
+    },
     outside: '+{{n}} phiếu của người ngoài danh sách',
     emptyPeriod: 'Kỳ tháng {{month}} không có phiếu nào (0/{{headcount}})',
     kpi: {

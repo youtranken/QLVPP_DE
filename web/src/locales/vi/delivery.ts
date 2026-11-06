@@ -81,7 +81,8 @@ const delivery = {
         UNKNOWN: 'Không giao được — thử lại.',
       },
       block: {
-        PERIOD_NOT_LOCKED: 'Kỳ chưa khóa — giao sau 00:00 ngày 11/{{month}}.',
+        PERIOD_NOT_LOCKED: 'Kỳ chưa khóa — giao sau {{lockPhrase}}.',
+        PERIOD_NOT_LOCKED_NODATE: 'Kỳ chưa khóa — chưa giao được.',
         REQUEST_NOT_FOUND: 'Không tìm thấy phiếu — có thể phiếu đã bị xóa.',
         LINE_NOT_FOUND: 'Dòng không còn trong phiếu — đã tải lại phiếu.',
         UNKNOWN: 'Không giao được — thử lại.',
@@ -245,8 +246,6 @@ const delivery = {
       status: { pending: 'Chưa nhận', debt: 'Còn nợ', done: 'Đã nhận' },
       empty: 'Không có ai trong mục này.',
       emptyAll: 'Tháng {{month}} chưa có ai cần nhận hàng.',
-      unlocked: 'Kỳ tháng {{month}} chưa khóa sổ. Giao được từ {{deadline}}.',
-      unlockedNoDate: 'Kỳ tháng {{month}} chưa khóa sổ.',
       card: {
         action: 'Giao…',
         view: 'Xem',

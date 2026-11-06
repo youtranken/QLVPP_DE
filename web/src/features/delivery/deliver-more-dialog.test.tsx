@@ -119,11 +119,18 @@ describe('DeliverMoreDialog — giao bổ sung một dòng còn nợ', () => {
     expect(onDone).not.toHaveBeenCalled();
   });
 
-  it('server PERIOD_NOT_LOCKED → khối dưới ô số lượng "Kỳ chưa khóa — giao sau 00:00 ngày 11/10."', async () => {
+  it('server PERIOD_NOT_LOCKED → khối dưới ô số lượng bằng câu khóa sổ theo hạn server trả (kỳ mở tháng 11 → 11/11)', async () => {
+    renderDialog();
+    stub(() => jsonResponse(409, { code: 'PERIOD_NOT_LOCKED', deadline: '2026-11-10T17:00:00.000Z' }));
+    await userEvent.click(giao());
+    expect(await screen.findByText('Kỳ chưa khóa — giao sau 00:00 ngày 11/11.')).toBeInTheDocument();
+  });
+
+  it('PERIOD_NOT_LOCKED không kèm hạn → không bịa ngày', async () => {
     renderDialog();
     stub(() => jsonResponse(409, { code: 'PERIOD_NOT_LOCKED' }));
     await userEvent.click(giao());
-    expect(await screen.findByText('Kỳ chưa khóa — giao sau 00:00 ngày 11/10.')).toBeInTheDocument();
+    expect(await screen.findByText('Kỳ chưa khóa — chưa giao được.')).toBeInTheDocument();
   });
 
   it('bấm "Giao" hai lần sát nhau → chỉ một POST', async () => {

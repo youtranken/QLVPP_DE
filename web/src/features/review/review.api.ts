@@ -25,6 +25,9 @@ export interface ReviewRow {
   previously_accepted: boolean;
   item_id: string | null;
   created_at: string;
+  in_sent_snapshot: boolean | null;
+  in_sent_snapshot_qty: number | null;
+  in_sent_snapshot_at: string | null;
 }
 
 // Hình tối thiểu để ReviewActions dùng được cho cả thẻ trang review lẫn LineView trong ngăn điều chỉnh
