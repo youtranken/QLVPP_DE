@@ -20,6 +20,15 @@ describe('toRows — nhóm theo thứ tự nhóm', () => {
     expect(stray).toMatchObject({ group: NO_GROUP, tone: 'g0' });
   });
 
+  it('trùng sort_order trong nhóm → tên chữ thường theo mã điểm rồi id, không localeCompare ("đ" sau "e")', () => {
+    const items = [
+      adminItem({ id: 'b', name: 'Đinh ghim', category_id: 'c-pen', sort_order: 10 }),
+      adminItem({ id: 'z', name: 'eke', category_id: 'c-pen', sort_order: 10 }),
+      adminItem({ id: 'a', name: 'EKE', category_id: 'c-pen', sort_order: 10 }),
+    ];
+    expect(toRows(items, indexCategories(CATEGORIES)).map((r) => r.id)).toEqual(['a', 'z', 'b']);
+  });
+
   it('danh sách nhóm rỗng → mọi món về "Chưa xếp nhóm" tông g0, không lỗi', () => {
     const rows = toRows(ALL, indexCategories([]));
     expect(new Set(rows.map((r) => r.group))).toEqual(new Set([NO_GROUP]));

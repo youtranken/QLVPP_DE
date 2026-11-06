@@ -46,7 +46,6 @@ export type ItemPayload = Partial<
     | 'image_file_id'
     | 'admin_only'
     | 'max_qty'
-    | 'sort_order'
     | 'active'
   >
 >;

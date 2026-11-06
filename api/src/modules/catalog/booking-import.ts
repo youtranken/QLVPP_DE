@@ -16,7 +16,6 @@ export interface BookingItem {
   nameEn: string | null;
   unitName: string;
   packNote: string | null;
-  sortOrder: number;
 }
 
 export type BookingSkipReason =
@@ -101,7 +100,6 @@ export function parseBookingRows(rows: BookingRawRow[]): ParsedBooking {
       nameEn: clean(r.nameEn) || null,
       unitName,
       packNote,
-      sortOrder: r.row * 10,
     });
   }
   return result;

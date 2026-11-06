@@ -167,6 +167,17 @@ describe('Ngăn kéo Thêm món', () => {
     });
     expect(await screen.findByText('Đã thêm Bút chì')).toBeInTheDocument();
   });
+
+  it('không có ô "Thứ tự hiển thị" và khối "Nhân viên sẽ thấy"; POST không có khóa sort_order (server xếp cuối nhóm)', async () => {
+    const f = stubDrawerApi((url, init) => (url === '/api/admin/items' && init.method === 'POST' ? jsonResponse(201, { ...PEN, id: 'i-new' }) : undefined));
+    renderDrawer();
+    expect(screen.queryByLabelText('Thứ tự hiển thị')).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Nhân viên sẽ thấy' })).toBeNull();
+    await fillNew();
+    await submitAdd();
+    await vi.waitFor(() => expect(callsTo(f, '/api/admin/items', 'POST')).toHaveLength(1));
+    expect(bodyOf(f, '/api/admin/items', 'POST')).not.toHaveProperty('sort_order');
+  });
 });
 
 describe('Ngăn kéo Sửa món', () => {
@@ -184,6 +195,17 @@ describe('Ngăn kéo Sửa món', () => {
     expect(bodyOf(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toEqual({ max_qty: 30 });
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Lưu thay đổi' })).toBeEnabled();
+  });
+
+  it('sửa món: không có ô "Thứ tự hiển thị" và "Nhân viên sẽ thấy"; đổi nhóm → PATCH chỉ {category_id}, không sort_order', async () => {
+    const f = stubDrawerApi((_url, init) => (init.method === 'PATCH' ? jsonResponse(200, PEN) : undefined));
+    renderDrawer({ item: PEN });
+    expect(screen.queryByLabelText('Thứ tự hiển thị')).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Nhân viên sẽ thấy' })).toBeNull();
+    await userEvent.click(within(screen.getByRole('radiogroup', { name: 'Nhóm' })).getByRole('radio', { name: 'Giấy & sổ' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
+    await vi.waitFor(() => expect(callsTo(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toHaveLength(1));
+    expect(bodyOf(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toEqual({ category_id: 'c-paper' });
   });
 
   it('VALIDATION [max_qty] → lỗi gắn ô Tối đa mỗi tháng; ô số có min 1, max 999', async () => {

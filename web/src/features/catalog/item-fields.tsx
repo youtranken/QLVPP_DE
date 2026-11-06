@@ -37,7 +37,7 @@ export function ItemFields({
       {(p) => <input {...p} value={draft[key]} maxLength={opts.max ?? TEXT_MAX} placeholder={opts.placeholder} onChange={(e) => onChange(key, e.target.value)} />}
     </FormField>
   );
-  const number = (key: 'max_qty' | 'sort_order', label: string, opts: { required?: boolean; hint?: string; min?: number; max?: number } = {}) => (
+  const number = (key: 'max_qty', label: string, opts: { required?: boolean; hint?: string; min?: number; max?: number } = {}) => (
     <FormField label={label} required={opts.required} hint={opts.hint} error={err(key)}>
       {(p) => (
         <input {...p} type="number" inputMode="numeric" step={1} min={opts.min} max={opts.max} value={draft[key]} onChange={(e) => onChange(key, e.target.value)} />
@@ -63,7 +63,6 @@ export function ItemFields({
       {text('pack_note', t('catalog.form.packNote'), { placeholder: t('catalog.form.packNoteHint') })}
       <CategoryRadio index={index} value={draft.category_id} keepId={keepCategoryId} error={err('category_id')} onChange={(id) => onChange('category_id', id)} />
       {number('max_qty', t('catalog.form.maxQty'), { required: true, min: 1, max: 999 })}
-      {number('sort_order', t('catalog.form.sortOrder'), { hint: t('catalog.form.sortOrderHint') })}
       <div className="ct-switch-row">
         <Switch
           checked={draft.admin_only}

@@ -58,10 +58,6 @@ const catalog = {
     },
     card: { stock: 'Tủ: {{n}}' },
     panel: { edit: 'Sửa món {{name}}', add: 'Thêm món' },
-    staffPreview: {
-      title: 'Nhân viên sẽ thấy',
-      namePlaceholder: 'Tên món',
-    },
     stats: {
       items: 'món',
     },
@@ -98,8 +94,6 @@ const catalog = {
       category: 'Nhóm',
       inactiveCategory: '{{name}} (đã ngừng)',
       maxQty: 'Tối đa mỗi tháng',
-      sortOrder: 'Thứ tự hiển thị',
-      sortOrderHint: 'Số nhỏ đứng trước trong nhóm.',
       adminOnly: 'Chỉ Hành chính được đặt',
       adminOnlyHint: 'Nhân viên không thấy món này khi đăng ký.',
       image: 'Ảnh món',

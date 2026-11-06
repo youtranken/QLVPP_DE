@@ -5,6 +5,7 @@ import { decodeTimestampCursor, encodeCursor } from '../../common/cursor';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor } from '../../database/database.module';
 import { ITEM_COLUMNS, LOW_STOCK_SQL } from './catalog-sql';
+import { ITEM_ORDER } from './item-order';
 import type { ItemRow } from './catalog-sql';
 
 // Định nghĩa ở catalog-sql để ITEM_COLUMNS dùng chung mà không vòng import
@@ -67,9 +68,12 @@ export class StockQueryService {
 
   async lowStock(): Promise<ItemRow[]> {
     const result = await this.db.execute<ItemRow>(sql`
-      SELECT ${ITEM_COLUMNS} FROM items
-      WHERE active AND ${sql.raw(LOW_STOCK_SQL)}
-      ORDER BY sort_order, lower(name)
+      SELECT i.* FROM (
+        SELECT ${ITEM_COLUMNS} FROM items
+        WHERE active AND ${sql.raw(LOW_STOCK_SQL)}
+      ) i
+      LEFT JOIN item_categories c ON c.id = i.category_id
+      ORDER BY ${ITEM_ORDER}
     `);
     return result.rows;
   }

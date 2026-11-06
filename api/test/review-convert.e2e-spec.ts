@@ -22,6 +22,34 @@ describe('admin/review: thêm vào danh mục (convert)', () => {
     upload,
   } = f;
 
+  it('convert món mới vào nhóm có max sort_order 480 → món mới 490 (cuối nhóm)', async () => {
+    const cat = (
+      await pool().query<{ id: string }>(
+        'INSERT INTO item_categories (name) VALUES ($1) RETURNING id',
+        [`${f.NEW_PREFIX}-cat480`],
+      )
+    ).rows[0].id;
+    f.onCleanup(async (p) => {
+      await p.query('DELETE FROM items WHERE category_id = $1', [cat]);
+      await p.query('DELETE FROM item_categories WHERE id = $1', [cat]);
+    });
+    await pool().query(
+      `INSERT INTO items (name, unit, max_qty, category_id, sort_order)
+       VALUES ($1, 'cai', 5, $2, 480)`,
+      [`${f.NEW_PREFIX}-max480`, cat],
+    );
+    const { line } = await customLine();
+    const res = await review(line.id, {
+      action: 'convert',
+      item: newItemBody({ unit: 'cai', category_id: cat }),
+    }).expect(200);
+    const stored = await pool().query<{ sort_order: number }>(
+      'SELECT sort_order FROM items WHERE id = $1',
+      [(res.body.item as { id: string }).id],
+    );
+    expect(stored.rows[0].sort_order).toBe(490);
+  });
+
   it('convert món có sẵn: gắn item_id, xóa custom_*, giữ ảnh, review_note "Từ: …"; cùng món n/a trong phiếu không lỗi unique', async () => {
     const item = await newItem({ max_qty: 10 });
     const img = await upload(A);

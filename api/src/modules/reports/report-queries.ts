@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { ymToDate } from '../../common/period';
 import type { Executor } from '../../database/database.module';
+import { ITEM_ORDER } from '../catalog/item-order';
 import {
   CUSTOM_ITEM_KEY,
   EFFECTIVE_LINE,
@@ -54,7 +55,7 @@ const splitByPeriod = (ym: string) => sql`
   coalesce(sum(${REMAINING_QTY}) FILTER (WHERE r.period_ym < ${ymToDate(ym)}::date), 0)::int AS backlog_prev,
   coalesce(sum(${REMAINING_QTY}) FILTER (WHERE u.status IS DISTINCT FROM 'active'), 0)::int AS left_excluded`;
 
-// Thứ tự danh mục (nhóm → món → tên), món chưa xếp nhóm sau cùng; bản chốt giữ thứ tự này cho phiếu đề xuất
+// Thứ tự món chung; bản chốt giữ thứ tự này cho phiếu đề xuất
 export async function itemDemand(
   db: Executor,
   ym: string,
@@ -67,7 +68,7 @@ export async function itemDemand(
             AND l.item_id IS NOT NULL GROUP BY l.item_id) d
     JOIN items i ON i.id = d.item_id
     LEFT JOIN item_categories c ON c.id = i.category_id
-    ORDER BY c.sort_order NULLS LAST, lower(c.name), c.id, i.sort_order, lower(i.name), i.id
+    ORDER BY ${ITEM_ORDER}
   `);
   return rows;
 }
@@ -100,9 +101,10 @@ export async function detailLines(
     JOIN requests r ON r.id = l.request_id
     JOIN users u ON u.sub = r.user_sub
     LEFT JOIN items i ON i.id = l.item_id
+    LEFT JOIN item_categories c ON c.id = i.category_id
     WHERE ${EFFECTIVE_LINE} AND r.period_ym = ${ymToDate(ym)}::date
     ORDER BY r.department IS NULL, r.department, coalesce(u.full_name, ''), r.user_sub,
-             coalesce(i.sort_order, 2147483647), lower(coalesce(i.name, l.custom_name)), l.id
+             l.item_id IS NULL, ${ITEM_ORDER}, lower(trim(l.custom_name)) COLLATE "C", l.id
   `);
   return rows;
 }

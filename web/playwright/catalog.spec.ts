@@ -233,9 +233,9 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
 
       await page.getByRole('button', { name: `Sửa ${name}` }).click();
       const drawer = page.getByRole('dialog', { name: 'Sửa món' });
-      await expect(drawer.getByRole('region', { name: 'Nhân viên sẽ thấy' }).getByText(name)).toBeVisible();
-      await drawer.getByLabel('Tên món').fill(`${name} mới`);
-      await expect(drawer.getByRole('region', { name: 'Nhân viên sẽ thấy' }).getByText(`${name} mới`)).toBeVisible();
+      await expect(drawer.getByLabel('Tên món')).toHaveValue(name);
+      await expect(drawer.getByRole('region', { name: 'Nhân viên sẽ thấy' })).toHaveCount(0);
+      await expect(drawer.getByLabel('Thứ tự hiển thị')).toHaveCount(0);
       await shot(page, info, 'catalog-grid-drawer', false);
     } finally {
       await removeTestItem(request, id);

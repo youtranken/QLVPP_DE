@@ -19,6 +19,7 @@ import type { CreateItemDto, UpdateItemDto } from './catalog.dto';
 import { definedEntries, pick, setClause } from '../../common/sql-patch';
 import { ITEM_COLUMNS, ITEM_USABLE_SQL, LOW_STOCK_SQL } from './catalog-sql';
 import type { ItemFacts, ItemRow } from './catalog-sql';
+import { ITEM_ORDER, nextItemSortOrder } from './item-order';
 import { ITEM_USAGE_HOOK } from './item-usage.hook';
 import type { ItemUsageHook } from './item-usage.hook';
 
@@ -111,7 +112,6 @@ export class CatalogService {
 
   // missing_image: món seed chưa có ảnh để admin biết cần bổ sung
   // Id được liệt kê vẫn trả dù ngừng/admin_only: để member xem lại dòng cũ trong phiếu của mình
-  // Xếp theo nhóm trước (cùng thứ tự chip nhóm) để trang Đăng ký không trộn món các nhóm
   async listFor(
     identity: RequestIdentity,
     includeIds: string[] = [],
@@ -120,17 +120,16 @@ export class CatalogService {
     const result = await this.db.execute<
       ItemRow & { usable: boolean; missing_image: boolean }
     >(sql`
-      SELECT ${ITEM_COLUMNS}, ${ITEM_USABLE_SQL} AS usable,
-             (image_file_id IS NULL) AS missing_image
-      FROM items
-      LEFT JOIN LATERAL (
-        SELECT sort_order AS group_sort, lower(name) AS group_name
-        FROM item_categories WHERE id = items.category_id
-      ) g ON true
-      WHERE ${privileged}
-         OR (${ITEM_USABLE_SQL} AND NOT admin_only)
-         OR id = ANY(${sql.param(includeIds)}::uuid[])
-      ORDER BY g.group_sort NULLS LAST, g.group_name NULLS LAST, items.sort_order, lower(items.name)
+      SELECT i.* FROM (
+        SELECT ${ITEM_COLUMNS}, ${ITEM_USABLE_SQL} AS usable,
+               (image_file_id IS NULL) AS missing_image
+        FROM items
+        WHERE ${privileged}
+           OR (${ITEM_USABLE_SQL} AND NOT admin_only)
+           OR id = ANY(${sql.param(includeIds)}::uuid[])
+      ) i
+      LEFT JOIN item_categories c ON c.id = i.category_id
+      ORDER BY ${ITEM_ORDER}
     `);
     return result.rows;
   }
@@ -154,6 +153,9 @@ export class CatalogService {
     }
     const fields = {
       max_qty: await this.config.getInt('default_max_qty'),
+      sort_order:
+        dto.sort_order ??
+        (await nextItemSortOrder(tx, dto.category_id ?? null)),
       ...definedEntries(dto),
     };
     const row = await this.mapConstraints(
@@ -199,6 +201,16 @@ export class CatalogService {
         ).rows[0];
         if (!before) throw itemNotFound();
         if (Object.keys(patch).length === 0) return before;
+        if (
+          'category_id' in patch &&
+          !('sort_order' in patch) &&
+          patch.category_id !== before.category_id
+        ) {
+          patch.sort_order = await nextItemSortOrder(
+            tx,
+            patch.category_id as string | null,
+          );
+        }
         // Giữ nguyên ĐVT đã ngừng của món cũ vẫn lưu được; chỉ chọn mới mới phải active
         if (patch.unit && patch.unit !== before.unit) {
           await this.units.assertActive(patch.unit as string, tx);

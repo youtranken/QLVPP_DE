@@ -8,6 +8,7 @@ import { isUuid } from '../../common/uuid';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { CatalogService } from '../catalog/catalog.service';
+import { ITEM_ORDER } from '../catalog/item-order';
 import type { PeriodRequestsQuery, SummaryFilter } from './summary.dto';
 import {
   CUSTOM_ITEM_KEY,
@@ -124,13 +125,18 @@ export class SummaryListsService {
         top_qty: number;
       }
     >(sql`
-      SELECT coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) AS key,
-             l.item_id, min(trim(l.custom_name)) AS custom_name,
-             min(trim(l.custom_unit)) AS custom_unit, sum(l.qty)::int AS requested_qty,
-             count(DISTINCT r.user_sub)::int AS people, max(l.qty)::int AS top_qty
-      FROM requests r JOIN request_lines l ON l.request_id = r.id
-      WHERE r.period_ym = ${ymToDate(ym)}::date AND ${EFFECTIVE_LINE}
-      GROUP BY 1, l.item_id
+      SELECT g.* FROM (
+        SELECT coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) AS key,
+               l.item_id, min(trim(l.custom_name)) AS custom_name,
+               min(trim(l.custom_unit)) AS custom_unit, sum(l.qty)::int AS requested_qty,
+               count(DISTINCT r.user_sub)::int AS people, max(l.qty)::int AS top_qty
+        FROM requests r JOIN request_lines l ON l.request_id = r.id
+        WHERE r.period_ym = ${ymToDate(ym)}::date AND ${EFFECTIVE_LINE}
+        GROUP BY 1, l.item_id
+      ) g
+      LEFT JOIN items i ON i.id = g.item_id
+      LEFT JOIN item_categories c ON c.id = i.category_id
+      ORDER BY g.item_id IS NULL, ${ITEM_ORDER}, lower(g.custom_name) COLLATE "C", g.key
     `);
     const ids = rows.map((r) => r.item_id).filter((id): id is string => !!id);
     const facts = await this.catalog.itemFacts(ids);
@@ -144,7 +150,7 @@ export class SummaryListsService {
         over_max: !!item && top_qty > item.max_qty,
       };
     });
-    return { items: items.sort((a, b) => a.name.localeCompare(b.name, 'vi')) };
+    return { items };
   }
 }
 

@@ -112,12 +112,13 @@ describe('Danh mục lưới — thẻ và ngăn kéo', () => {
     expect(screen.getByLabelText('Tải ảnh lên cho Giấy A4')).toBeInTheDocument();
   });
 
-  it('"Sửa" mở ngăn kéo ?item=id có khối "Nhân viên sẽ thấy"', async () => {
+  it('"Sửa" mở ngăn kéo ?item=id; không còn khối "Nhân viên sẽ thấy"', async () => {
     await open();
     await userEvent.click(screen.getByRole('button', { name: 'Sửa Bút bi xanh' }));
     expect(locationSearch()).toBe('?item=i-pen');
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByRole('region', { name: 'Nhân viên sẽ thấy' })).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/^Tên món/)).toHaveValue('Bút bi xanh');
+    expect(within(dialog).queryByRole('region', { name: 'Nhân viên sẽ thấy' })).toBeNull();
   });
 
   it('tiếng Anh: thẻ hiện name_en khi có, rơi về name khi không', async () => {

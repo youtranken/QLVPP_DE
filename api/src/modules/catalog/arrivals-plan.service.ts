@@ -137,7 +137,13 @@ export class ArrivalsPlanService {
       if (!row) continue;
       byPeriod.set(o.period_ym, [...(byPeriod.get(o.period_ym) ?? []), row]);
     }
-    return [...byPeriod].map(([p, rows]) => ({ ym: p, rows }));
+    const rank = new Map([...items.keys()].map((id, i) => [id, i]));
+    const rankOf = (r: MakeupRow) =>
+      r.item_id === null ? rank.size : rank.get(r.item_id)!;
+    return [...byPeriod].map(([p, rows]) => ({
+      ym: p,
+      rows: rows.sort((a, b) => rankOf(a) - rankOf(b)),
+    }));
   }
 
   private async makeupRow(

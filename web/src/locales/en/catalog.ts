@@ -61,10 +61,6 @@ const catalog: Messages<typeof vi> = {
     },
     card: { stock: 'Stock: {{n}}' },
     panel: { edit: 'Edit item {{name}}', add: 'Add item' },
-    staffPreview: {
-      title: 'What staff will see',
-      namePlaceholder: 'Item name',
-    },
     stats: {
       items: 'items',
     },
@@ -101,8 +97,6 @@ const catalog: Messages<typeof vi> = {
       category: 'Category',
       inactiveCategory: '{{name}} (retired)',
       maxQty: 'Max per month',
-      sortOrder: 'Display order',
-      sortOrderHint: 'Lower numbers come first within the category.',
       adminOnly: 'Only Admin can order',
       adminOnlyHint: 'Staff do not see this item when ordering.',
       image: 'Item photo',

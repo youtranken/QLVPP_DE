@@ -7,6 +7,8 @@ import { MeContext } from '@/lib/me';
 import { compressImage } from '@/lib/image-compress';
 import { ToastProvider } from '@/ui/toast-provider';
 import { CATEGORIES, PAPER, PEN, PENCIL } from './catalog-fixtures';
+import { memberItem } from '@/test/fixtures-request';
+import { ItemCard } from '@/features/request/item-card';
 import { CatalogCard } from './catalog-card';
 import { indexCategories, toRows } from './catalog-rows';
 import { png } from './item-drawer-fixtures';
@@ -56,6 +58,16 @@ describe('Thẻ món dạng lưới', () => {
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
     expect(await screen.findByText('VPP-010 · cây · tối đa 10/tháng')).toBeInTheDocument();
     expect(screen.queryByText('Tải ảnh lên')).toBeNull();
+  });
+
+  it('cùng ảnh với thẻ Đăng ký của nhân viên: cùng src /api/files/<file_id>, object-fit: contain', () => {
+    stub();
+    renderCard(PEN);
+    renderWithI18n(<ItemCard item={memberItem({ id: PEN.id, name: PEN.name, image_file_id: PEN.image_file_id })} line={undefined} tone="g1" groupLabel={null} onQty={vi.fn()} />);
+    const imgs = [...document.querySelectorAll('img')];
+    expect(imgs).toHaveLength(2);
+    expect(imgs.map((i) => i.getAttribute('src'))).toEqual(['/api/files/f-2', '/api/files/f-2']);
+    expect(imgs.map((i) => i.style.objectFit)).toEqual(['contain', 'contain']);
   });
 
   it('tủ 0 → "Tủ: 0" xám, không nhãn "Hết", không .tag--danger/.tag--warn', () => {

@@ -1,5 +1,6 @@
 import { groupCounts as countGroups } from '@/lib/group-counts';
 import { compareCategories, toneAtRank, type Tone } from '@/lib/group-tone';
+import { compareItems, orderKeyOf } from '@/lib/item-order';
 import { matchesSearch } from '@/lib/search';
 import type { AdminItem, Category } from './catalog.api';
 
@@ -31,13 +32,12 @@ export function indexCategories(categories: Category[]): CategoryIndex {
 
 // category_id không còn trong danh sách nhóm (nhóm bị xóa, dữ liệu nạp) → "Chưa xếp nhóm", tông g0
 export function toRows(items: AdminItem[], index: CategoryIndex): CatalogRow[] {
-  const last = index.ordered.length;
   const rows = items.map((item) => {
     const known = item.category_id !== null && index.rank.has(item.category_id);
     return { ...item, group: known ? item.category_id! : NO_GROUP, tone: known ? index.tone.get(item.category_id!)! : 'g0' } as CatalogRow;
   });
-  const rankOf = (r: CatalogRow) => (r.group === NO_GROUP ? last : index.rank.get(r.group)!);
-  return rows.sort((a, b) => rankOf(a) - rankOf(b) || a.sort_order - b.sort_order || a.name.localeCompare(b.name, 'vi'));
+  const keys = new Map(rows.map((r) => [r.id, orderKeyOf(r, index.byId)]));
+  return rows.sort((a, b) => compareItems(keys.get(a.id)!, keys.get(b.id)!));
 }
 
 export function applyView(rows: CatalogRow[], view: CatalogView): CatalogRow[] {

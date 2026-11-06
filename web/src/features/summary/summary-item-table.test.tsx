@@ -32,6 +32,15 @@ describe('SummaryItemTable — bảng theo món', () => {
     expect(screen.getByRole('rowheader', { name: /^Bút & viết/ })).toHaveTextContent('1 món · 1 sắp hết/hết hàng');
   });
 
+  it('trong nhóm theo thứ tự món chung (sort_order món), không theo thứ tự trả về: "Giấy note" (10) trước "Giấy A4" (20)', async () => {
+    const items = SUMMARY_ITEMS.map((i) => ({ ...i, sort_order: i.id === 'i-note' ? 10 : 20 }));
+    stubSummaryApi((url) => (url === '/api/admin/items' ? jsonResponse(200, items) : undefined));
+    renderTable();
+    await screen.findByText('Giấy note');
+    const rows = rowTexts();
+    expect(rows.findIndex((r) => r.includes('Giấy note'))).toBeLessThan(rows.findIndex((r) => r.includes('Giấy A4')));
+  });
+
   it('liên kết "Xem số cần mua ở Báo cáo" → /admin/reports?ym=2026-11; không có cột "Cần mua thêm" (G4)', async () => {
     stubSummaryApi();
     renderTable();

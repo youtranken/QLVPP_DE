@@ -70,15 +70,15 @@ describe('GET /items: thứ tự theo nhóm rồi theo món', () => {
     },
   );
 
-  it('hai nhóm cùng sort_order 15 → xếp theo tên không phân biệt hoa thường: món sort 9 nhóm "…a" trước món sort 0 nhóm "…B"', async () => {
-    const groupB = await newCategory(15, 'tie', '-Bx');
+  it('hai nhóm cùng sort_order 15 → xếp theo tên nhóm theo mã điểm (c.name): món sort 9 nhóm "…B" trước món sort 0 nhóm "…a"', async () => {
     const groupA = await newCategory(15, 'tie', '-ax');
-    const inB = await placeItem(groupB, 0);
-    const inA = await placeItem(groupA, 9);
+    const groupB = await newCategory(15, 'tie', '-Bx');
+    const inA = await placeItem(groupA, 0);
+    const inB = await placeItem(groupB, 9);
 
-    const [pA, pB] = await positionsOf([inA, inB], A, 'member');
+    const [pB, pA] = await positionsOf([inB, inA], A, 'member');
 
-    expect(pA).toBeGreaterThanOrEqual(0);
-    expect(pA).toBeLessThan(pB);
+    expect(pB).toBeGreaterThanOrEqual(0);
+    expect(pB).toBeLessThan(pA);
   });
 });

@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { ymToDate } from '../../common/period';
 import type { Executor } from '../../database/database.module';
+import { ITEM_ORDER } from './item-order';
 import { CUSTOM_ITEM_KEY, UNDELIVERED_LINE } from '../requests/line-predicates';
 
 export interface ItemFactsRow {
@@ -61,7 +62,7 @@ export async function itemFacts(
                        AND a.created_at > ${snapshotAt}::timestamptz), 0)::int AS reduced_after_snapshot
     FROM ids JOIN items i ON i.id = ids.id
     LEFT JOIN item_categories c ON c.id = i.category_id
-    ORDER BY c.sort_order NULLS LAST, lower(c.name), c.id, i.sort_order, lower(i.name), i.id`);
+    ORDER BY ${ITEM_ORDER}`);
   return rows;
 }
 
@@ -129,7 +130,10 @@ export async function itemsByIds(
       stock_qty: number;
     }>
   >(sql`
-    SELECT id, name, name_en, unit, stock_qty FROM items
-    WHERE id = ANY(${sql.param(ids)}::uuid[])`);
+    SELECT i.id, i.name, i.name_en, i.unit, i.stock_qty FROM items i
+    LEFT JOIN item_categories c ON c.id = i.category_id
+    WHERE i.id = ANY(${sql.param(ids)}::uuid[])
+    ORDER BY ${ITEM_ORDER}`);
+  // Map giữ thứ tự chèn = thứ tự món chung
   return new Map(rows.map(({ id, ...rest }) => [id, rest]));
 }

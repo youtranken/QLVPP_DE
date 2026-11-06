@@ -98,7 +98,7 @@ describe('parseBookingRows', () => {
     expect(r.skipped[0]).toMatchObject({ row: 8, reason: 'empty_unit' });
   });
 
-  it('tên en trống → null; trim và NFC mọi ô; sort_order = hàng*10', () => {
+  it('tên en trống → null; trim và NFC mọi ô; không còn số thứ tự theo hàng', () => {
     const r = parseBookingRows([
       raw(12, ' B01 ', ' Bìa '.normalize('NFD'), '  ', '04 viên/vĩ'),
     ]);
@@ -109,7 +109,6 @@ describe('parseBookingRows', () => {
       nameEn: null,
       unitName: 'vỉ',
       packNote: '4 viên/vỉ',
-      sortOrder: 120,
     });
   });
 });
