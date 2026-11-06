@@ -1,9 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useMyRequest, type CurrentPeriod, type LineView } from './request.api';
-import { counted, monthOf, useRequestFormat } from './request-format';
-
-const owedQty = (l: LineView) => l.qty - l.delivered_qty - l.cancelled_qty;
+import { useMyRequest, type CurrentPeriod } from './request.api';
+import { counted, monthOf, owedQty, useRequestFormat } from './request-format';
 
 // Kỳ trước đang giao mà còn dòng chưa nhận hết: nhắc nhân viên khỏi đăng ký lại
 export function OwedNotice({ previous }: { previous: CurrentPeriod['previous'] }) {

@@ -7,6 +7,12 @@ import type { CartLabel } from './use-cart';
 // Dòng bị từ chối/còn chờ xem không giao nên không tính vào a/b hay nợ
 export const counted = (l: LineView) => ['n/a', 'accepted', 'converted'].includes(l.review_status);
 
+// Phần còn chờ giao của một dòng (bản web của REMAINING_QTY phía api)
+export const owedQty = (l: Pick<LineView, 'qty' | 'delivered_qty' | 'cancelled_qty'>) => l.qty - l.delivered_qty - l.cancelled_qty;
+
+// Tên theo ngôn ngữ giao diện: en dùng name_en khi có
+export const nameIn = (l: Pick<CartLabel, 'name' | 'name_en'>, lang: string) => (lang === 'en' && l.name_en ? l.name_en : l.name);
+
 export const monthOf = (ym: string) => Number(ym.slice(5, 7));
 
 const ZONE = 'Asia/Ho_Chi_Minh';
@@ -38,7 +44,7 @@ export function useRequestFormat() {
       return `${part('day')}/${part('month')}`;
     },
     unit: (code: string | null) => unitName(code),
-    name: (l: Pick<CartLabel, 'name' | 'name_en'>) => (i18n.language === 'en' && l.name_en ? l.name_en : l.name),
+    name: (l: Pick<CartLabel, 'name' | 'name_en'>) => nameIn(l, i18n.language),
   };
 }
 

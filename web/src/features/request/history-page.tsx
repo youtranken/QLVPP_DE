@@ -2,8 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { MemberPage } from '@/shell/member-page';
-import { useCurrentPeriod, useMyRequest } from './request.api';
-import { counted } from './request-format';
+import { useCurrentPeriod } from './request.api';
 import { deliveryState, useMyHistory, type DeliveryState, type HistoryItem } from './history.api';
 import { Chip, type ChipTone } from './history-chip';
 import { LatestLines } from './history-lines';
@@ -12,19 +11,16 @@ import './history.m1.css';
 
 const TONE: Record<DeliveryState, ChipTone> = { done: 'ok', owed: 'warn', undelivered: 'warn', cancelled: 'muted', none: 'muted' };
 
-// "Còn chờ k món" đếm DÒNG còn chờ (cùng cách với OwedNotice), nên lấy từ phiếu của tháng đó
-function WaitingChip({ ym }: { ym: string }) {
-  const { t } = useTranslation();
-  const request = useMyRequest(ym);
-  const k = (request.data?.lines ?? []).filter((l) => counted(l) && l.qty - l.delivered_qty - l.cancelled_qty > 0).length;
-  // Chưa biết số dòng (đang tải, lỗi, hoặc 0) vẫn hiện chip chung để trạng thái không biến mất rồi nhảy bố cục
-  return <Chip tone="warn">{k > 0 ? t('request.history.delivery.owed', { k }) : t('request.history.delivery.waiting')}</Chip>;
-}
+type TagItem = Pick<HistoryItem, 'line_count' | 'total_qty' | 'delivered_qty' | 'remaining_qty' | 'owed_line_count'>;
 
-export function DeliveryTag({ item }: { item: Pick<HistoryItem, 'period_ym' | 'line_count' | 'total_qty' | 'delivered_qty' | 'remaining_qty'> }) {
+// "Còn chờ k món" đếm DÒNG còn chờ (cùng cách với OwedNotice); server đếm sẵn nên không tải phiếu từng tháng
+export function DeliveryTag({ item }: { item: TagItem }) {
   const { t } = useTranslation();
   const state = deliveryState(item);
-  if (state === 'owed' || state === 'undelivered') return <WaitingChip ym={item.period_ym} />;
+  if (state === 'owed' || state === 'undelivered') {
+    const k = item.owed_line_count;
+    return <Chip tone="warn">{k > 0 ? t('request.history.delivery.owed', { k }) : t('request.history.delivery.waiting')}</Chip>;
+  }
   // Chỉ có món chờ/từ chối (total 0) thì không có trạng thái giao; hết phiếu mới là "Không có phiếu"
   if (state === 'none' && item.line_count > 0) return null;
   return <Chip tone={TONE[state]}>{t(`request.history.delivery.${state}`)}</Chip>;
@@ -60,7 +56,8 @@ export function HistoryPage() {
   const period = useCurrentPeriod();
   const items = history.data?.pages.flatMap((p) => p.items) ?? [];
   const isOpen = (ym: string) => !!period.data?.is_open && period.data.ym === ym;
-  const latestClosed = items.find((i) => !isOpen(i.period_ym) && i.line_count > 0)?.period_ym;
+  // Chưa biết kỳ đang mở thì chưa chọn tháng để liệt kê dòng (tránh vẽ sai rồi GET thừa phiếu kỳ đang mở)
+  const latestClosed = period.isPending ? undefined : items.find((i) => !isOpen(i.period_ym) && i.line_count > 0)?.period_ym;
   return (
     <MemberPage title={t('request.history.title')} subtitle={t('request.history.subtitle')}>
       {history.isPending ? (

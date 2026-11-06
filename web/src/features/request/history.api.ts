@@ -9,6 +9,8 @@ export interface HistoryItem {
   delivered_qty: number;
   remaining_qty: number;
   cancelled_qty: number;
+  // Số dòng hiệu lực còn chờ giao (server đếm), cho chip "Còn chờ k món"
+  owed_line_count: number;
   custom: { pending: number; accepted: number; converted: number; rejected: number };
 }
 

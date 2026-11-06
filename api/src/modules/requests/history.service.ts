@@ -6,7 +6,11 @@ import { ymToDate } from '../../common/period';
 import { YM } from '../../common/ym';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
-import { EFFECTIVE_LINE, REMAINING_QTY } from './line-predicates';
+import {
+  EFFECTIVE_LINE,
+  REMAINING_QTY,
+  UNDELIVERED_LINE,
+} from './line-predicates';
 
 export interface HistoryItem {
   period_ym: string;
@@ -15,6 +19,8 @@ export interface HistoryItem {
   delivered_qty: number;
   remaining_qty: number;
   cancelled_qty: number;
+  // Số dòng hiệu lực còn chờ giao: chip "Còn chờ k món" của Lịch sử khỏi phải tải từng phiếu
+  owed_line_count: number;
   custom: {
     pending: number;
     accepted: number;
@@ -56,6 +62,7 @@ export class HistoryService {
              ${effective(sql`l.delivered_qty`)} AS delivered_qty,
              ${effective(sql`l.cancelled_qty`)} AS cancelled_qty,
              ${effective(REMAINING_QTY)} AS remaining_qty,
+             count(l.id) FILTER (WHERE ${UNDELIVERED_LINE})::int AS owed_line_count,
              ${count('pending')} AS pending, ${count('accepted')} AS accepted,
              ${count('converted')} AS converted, ${count('rejected')} AS rejected
       FROM requests r LEFT JOIN request_lines l ON l.request_id = r.id

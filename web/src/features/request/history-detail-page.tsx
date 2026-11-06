@@ -2,7 +2,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { EmptyState, LoadError, Loading, NotFound } from '@/ui/load-state';
 import { useCurrentPeriod, useMyRequest, type LineView } from './request.api';
-import { useRequestFormat } from './request-format';
+import { counted, owedQty, useRequestFormat } from './request-format';
 import { LineProgress } from './line-progress';
 import { ItemThumb } from '@/ui/item-thumb';
 import { MemberPage } from '@/shell/member-page';
@@ -10,15 +10,13 @@ import { Chip, ReviewTag } from './history-chip';
 import './history.m1.css';
 import { YM } from '@/lib/ym';
 
-const EFFECTIVE = ['n/a', 'accepted', 'converted'];
-
 function DetailLine({ line }: { line: LineView }) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   const name = line.item ? fmt.name(line.item) : (line.custom_name ?? '');
   const unit = fmt.unit(line.item?.unit ?? line.custom_unit);
-  const effective = EFFECTIVE.includes(line.review_status);
-  const owed = line.qty - line.delivered_qty - line.cancelled_qty;
+  const effective = counted(line);
+  const owed = owedQty(line);
   const reason = line.cancel_note?.trim();
   const base = line.cancelled_qty >= line.qty ? 'cancelledAll' : 'cancelled';
   const cancelText = reason

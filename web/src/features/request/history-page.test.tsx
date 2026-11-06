@@ -4,52 +4,9 @@ import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { PERIOD, PEN, NOTE, facts, view } from '@/test/request-api-stub';
 import { lineView } from '@/test/fixtures-request';
+import { historyItem as item, issue, stubHistory as stub } from '@/test/history-stub';
 import { setLanguage } from '@/lib/i18n';
-import { deliveryState, type HistoryItem, type MyIssue } from './history.api';
-
-const item = (over: Partial<HistoryItem>): HistoryItem => ({
-  period_ym: '2026-10',
-  line_count: 3,
-  total_qty: 10,
-  delivered_qty: 0,
-  remaining_qty: 10,
-  cancelled_qty: 0,
-  custom: { pending: 0, accepted: 0, converted: 0, rejected: 0 },
-  ...over,
-});
-
-const issue = (over: Partial<MyIssue>): MyIssue => ({
-  id: 'm-1',
-  item_id: 'i-1',
-  item_name: 'Bút bi',
-  item_name_en: 'Ballpoint pen',
-  unit: 'cai',
-  qty: 2,
-  note: 'Người mới vào',
-  created_at: '2026-10-20T03:30:00Z',
-  ...over,
-});
-
-function stub(
-  pages: { items: HistoryItem[]; next_cursor: string | null }[],
-  issuePages: { items: MyIssue[]; next_cursor: string | null }[] = [],
-  requests: Record<string, ReturnType<typeof view>> = {},
-) {
-  let at = 0;
-  let issueAt = 0;
-  const fetchMock = vi.fn((url: string) => {
-    if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
-    if (url.startsWith('/api/me/request?ym=')) {
-      const found = requests[url.slice('/api/me/request?ym='.length)];
-      return Promise.resolve(found ? jsonResponse(200, found) : jsonResponse(404, { code: 'REQUEST_NOT_FOUND' }));
-    }
-    if (url.startsWith('/api/me/issues')) return Promise.resolve(jsonResponse(200, issuePages[issueAt++] ?? { items: [], next_cursor: null }));
-    if (url.startsWith('/api/me/requests')) return Promise.resolve(jsonResponse(200, pages[at++] ?? { items: [], next_cursor: null }));
-    return Promise.resolve(jsonResponse(500, {}));
-  });
-  vi.stubGlobal('fetch', fetchMock);
-  return fetchMock;
-}
+import { deliveryState } from './history.api';
 
 afterEach(async () => {
   vi.unstubAllGlobals();
@@ -75,9 +32,9 @@ describe('HistoryPage', () => {
       {
         items: [
           item({ period_ym: '2026-11', line_count: 2, total_qty: 3, remaining_qty: 3 }),
-          item({ period_ym: '2026-10', delivered_qty: 6, remaining_qty: 4, custom: { pending: 1, accepted: 0, converted: 2, rejected: 1 } }),
+          item({ period_ym: '2026-10', delivered_qty: 6, remaining_qty: 4, owed_line_count: 2, custom: { pending: 1, accepted: 0, converted: 2, rejected: 1 } }),
           item({ period_ym: '2026-09', delivered_qty: 10, remaining_qty: 0 }),
-          item({ period_ym: '2026-08' }),
+          item({ period_ym: '2026-08', owed_line_count: 1 }),
         ],
         next_cursor: null,
       },
@@ -100,20 +57,6 @@ describe('HistoryPage', () => {
     expect(within(oct).getByText(/1 món chờ Hành chính xem · 2 món đã thêm vào danh mục · 1 món bị từ chối/)).toBeInTheDocument();
     expect(within(screen.getByText('Tháng 9/2026').closest('a')!).getByText('Đã nhận đủ')).toBeInTheDocument();
     expect(await within(screen.getByText('Tháng 8/2026').closest('a')!).findByText('Còn chờ 1 món')).toBeInTheDocument();
-  });
-
-  it.each([
-    [{ delivered_qty: 10, remaining_qty: 0 }, 'Đã nhận đủ'],
-    [{ delivered_qty: 6, remaining_qty: 4 }, 'Còn chờ 1 món'],
-    [{ total_qty: 0, line_count: 0, delivered_qty: 0, remaining_qty: 0 }, 'Không có phiếu'],
-  ])('chip tháng %j → "%s"; kỳ đang mở → "Đang mở"', async (over, chip) => {
-    stub([{ items: [item({ period_ym: '2026-11' }), item({ period_ym: '2026-10', ...over })], next_cursor: null }], [], {
-      '2026-10': view({ period_ym: '2026-10', is_open: false, lines: [lineView({ id: 'a', item_id: PEN.id, item: facts(PEN), qty: 10, delivered_qty: 6 })] }),
-    });
-    renderApp(makeMe('member'), '/history');
-    const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
-    expect(await within(card).findByText(chip)).toBeInTheDocument();
-    expect(within((await screen.findByText('Tháng 11/2026')).closest('li')!).getByText('Đang mở')).toBeInTheDocument();
   });
 
   it('tháng gần nhất đã đóng có dòng món: tên theo ngôn ngữ, số lượng, chip từng dòng, dòng hủy kèm lý do', async () => {
@@ -170,46 +113,6 @@ describe('HistoryPage', () => {
     });
     renderApp(makeMe('member'), '/history');
     expect(await screen.findByText('Đã hủy 2')).toBeInTheDocument();
-  });
-
-  describe('chip "Còn chờ" khi chưa biết số dòng', () => {
-    const owedPage = { items: [item({ period_ym: '2026-10', delivered_qty: 6, remaining_qty: 4 })], next_cursor: null };
-    const withRequest = (respond: () => Promise<Response>) => {
-      vi.stubGlobal(
-        'fetch',
-        vi.fn((url: string) => {
-          if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
-          if (url.startsWith('/api/me/issues')) return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }));
-          if (url.startsWith('/api/me/request?ym=')) return respond();
-          return Promise.resolve(jsonResponse(200, owedPage));
-        }),
-      );
-    };
-
-    it('đang tải phiếu: chip chung "Còn chờ nhận" đã có sẵn', async () => {
-      withRequest(() => new Promise<Response>(() => {}));
-      renderApp(makeMe('member'), '/history');
-      const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
-      expect(within(card).getByText('Còn chờ nhận')).toBeInTheDocument();
-    });
-
-    it('phiếu lỗi 500: chip chung vẫn hiện, không văng lỗi', async () => {
-      withRequest(() => Promise.resolve(jsonResponse(500, {})));
-      renderApp(makeMe('member'), '/history');
-      const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
-      expect(await within(card).findByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
-      expect(within(card).getByText('Còn chờ nhận')).toBeInTheDocument();
-    });
-
-    it('đã tải: thay chip chung bằng số dòng "Còn chờ 1 món"', async () => {
-      stub([owedPage], [], {
-        '2026-10': view({ period_ym: '2026-10', is_open: false, lines: [lineView({ id: 'a', item_id: PEN.id, item: facts(PEN), qty: 10, delivered_qty: 6 })] }),
-      });
-      renderApp(makeMe('member'), '/history');
-      const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
-      expect(await within(card).findByText('Còn chờ 1 món')).toBeInTheDocument();
-      expect(within(card).queryByText('Còn chờ nhận')).toBeNull();
-    });
   });
 
   it('en: dòng món dùng name_en', async () => {

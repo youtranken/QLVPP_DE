@@ -7,6 +7,7 @@ interface HistoryItem {
   delivered_qty: number;
   remaining_qty: number;
   cancelled_qty: number;
+  owed_line_count: number;
   custom: Record<string, number>;
 }
 interface HistoryPage {
@@ -247,6 +248,8 @@ describe('me/request/copy-previous và me/requests (lịch sử)', () => {
           delivered_qty: 6,
           cancelled_qty: 1,
           remaining_qty: 8,
+          // dòng hiệu lực còn chờ: x (10−4−1) và y (3); Bìa đã giao đủ, Kẹp/Ghim không tính
+          owed_line_count: 2,
           custom: { pending: 1, accepted: 1, converted: 1, rejected: 1 },
         },
         {
@@ -256,6 +259,7 @@ describe('me/request/copy-previous và me/requests (lịch sử)', () => {
           delivered_qty: 2,
           cancelled_qty: 0,
           remaining_qty: 0,
+          owed_line_count: 0,
           custom: { pending: 0, accepted: 0, converted: 0, rejected: 0 },
         },
       ]);
