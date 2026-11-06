@@ -54,7 +54,7 @@ describe('RequestPage — món ngoài danh mục', () => {
     await userEvent.click(within(edit).getByRole('button', { name: 'Lưu thay đổi' }));
     await userEvent.click(within(cart()).getByRole('button', { name: 'Thêm Bìa còng 5cm' }));
 
-    await userEvent.click(screen.getByRole('button', { name: /^1 thay đổi chưa lưu · Lưu/ }));
+    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
     await screen.findByRole('alert');
     expect(api.putBody()).toEqual({
@@ -74,7 +74,7 @@ describe('RequestPage — món ngoài danh mục', () => {
     const edit = await screen.findByRole('dialog', { name: 'Sửa món khác' });
     await userEvent.type(within(edit).getByLabelText('Ghi chú (tùy chọn)'), 'loại dày');
     await userEvent.click(within(edit).getByRole('button', { name: 'Lưu thay đổi' }));
-    await userEvent.click(screen.getByRole('button', { name: /^1 thay đổi chưa lưu · Lưu/ }));
+    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
     await screen.findByRole('alert');
     expect(api.putBody().lines).toEqual([
@@ -107,20 +107,20 @@ describe('RequestPage — chép lại tháng trước', () => {
     stubRequestApi();
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh');
-    expect(screen.queryByRole('button', { name: /Chép lại tháng/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Chép lại danh sách tháng/ })).toBeNull();
   });
 
   it('giỏ rỗng → điền thẳng (chưa lưu) + hộp tóm tắt "Đã bỏ: Giấy A4 — chỉ Hành chính đặt"; lưu gửi dòng ngoài DM kèm ảnh cũ', async () => {
     mockViewport(1280);
     const api = stubRequestApi({ copy: () => jsonResponse(200, COPY), put: () => jsonResponse(500, {}) });
     renderApp(makeMe('member'), '/');
-    await userEvent.click(await screen.findByRole('button', { name: 'Chép lại tháng 10' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Chép lại danh sách tháng 10' }));
     const summary = await screen.findByRole('dialog', { name: 'Đã chép danh sách tháng 10' });
     expect(within(summary).getByText('Đã bỏ: Giấy A4 — chỉ Hành chính đặt')).toBeInTheDocument();
     await userEvent.click(within(summary).getByRole('button', { name: 'Đã hiểu' }));
     expect(within(cart()).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(20);
     expect(within(cart()).getByRole('button', { name: 'Sửa Bìa còng 7cm' })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /^2 thay đổi chưa lưu · Lưu/ }));
+    await userEvent.click(screen.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
     await screen.findByRole('alert');
     expect(api.putBody()).toEqual({
@@ -141,12 +141,12 @@ describe('RequestPage — chép lại tháng trước', () => {
       put: () => jsonResponse(500, {}),
     });
     renderApp(makeMe('member'), '/');
-    await userEvent.click(await screen.findByRole('button', { name: 'Chép lại tháng 10' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Chép lại danh sách tháng 10' }));
     const summary = await screen.findByRole('dialog', { name: 'Đã chép danh sách tháng 10' });
     expect(within(summary).getByText('Đã bỏ: Bút bi xanh — Hành chính đã thêm món này')).toBeInTheDocument();
     await userEvent.click(within(summary).getByRole('button', { name: 'Đã hiểu' }));
     expect(within(cart()).getAllByText('Bút bi xanh')).toHaveLength(1);
-    await userEvent.click(screen.getByRole('button', { name: /^1 thay đổi chưa lưu · Lưu/ }));
+    await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
     await screen.findByRole('alert');
     expect(api.putBody().lines).toEqual([
@@ -161,7 +161,7 @@ describe('RequestPage — chép lại tháng trước', () => {
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Giấy note vàng');
     await userEvent.click(within(grid()).getByRole('button', { name: `Thêm vào phiếu: ${NOTE.name}` }));
-    const copy = await screen.findByRole('button', { name: 'Chép lại tháng 10' });
+    const copy = await screen.findByRole('button', { name: 'Chép lại danh sách tháng 10' });
 
     await userEvent.click(copy);
     let ask = await screen.findByRole('dialog', { name: 'Thay giỏ hiện tại?' });

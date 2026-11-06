@@ -140,7 +140,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${other.name}`, exact: true }).click();
       await snap(page, info, 'copy-before');
 
-      await page.getByRole('button', { name: `Chép lại tháng ${prevMonth}` }).click();
+      await page.getByRole('button', { name: `Chép lại danh sách tháng ${prevMonth}` }).click();
       const ask = page.getByRole('dialog', { name: 'Thay giỏ hiện tại?' });
       await ask.getByRole('button', { name: 'Thay giỏ' }).click();
       const summary = page.getByRole('dialog', { name: `Đã chép danh sách tháng ${prevMonth}` });

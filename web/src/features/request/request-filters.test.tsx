@@ -87,6 +87,23 @@ describe('RequestPage — thanh lọc', () => {
     expect(names()).toEqual(['Bút bi xanh', 'Giấy note vàng', 'Kẹp giấy']);
   });
 
+  it('lựa chọn sắp xếp: không có phiếu kỳ trước → không có "Hay dùng trước"; có phiếu kỳ trước → có', async () => {
+    mockViewport(1280);
+    stubRequestApi();
+    const { unmount } = renderApp(makeMe('member'), '/?sort=fav');
+    const none = await screen.findByRole('combobox', { name: 'Sắp xếp' });
+    expect(within(none).getAllByRole('option').map((o) => o.textContent)).toEqual(['Tên A → Z', 'Theo nhóm']);
+    expect(none).toHaveValue('group');
+    unmount();
+    stubRequestApi({
+      period: { ...PERIOD, previous: { ym: '2026-10', delivering: false } },
+      others: { '2026-10': view({ period_ym: '2026-10', lines: [lineView({ id: 'p-1', item_id: CLIP.id, item: facts(CLIP), qty: 1 })] }) },
+    });
+    renderApp(makeMe('member'), '/');
+    const sort = await screen.findByRole('combobox', { name: 'Sắp xếp' });
+    await waitFor(() => expect(within(sort).getAllByRole('option').map((o) => o.textContent)).toEqual(['Hay dùng trước', 'Tên A → Z', 'Theo nhóm']));
+  });
+
   it('sort=xyz trên URL → "Theo nhóm"; không có món khớp → thông báo rỗng', async () => {
     mockViewport(1280);
     stubRequestApi();

@@ -37,7 +37,6 @@ const show = (props: Props = {}) => {
         prevMonth={10}
         dirty={false}
         saved={null}
-        locked={false}
         showSave
         saveLabel="Lưu phiếu"
         canSave={false}
@@ -52,10 +51,10 @@ const show = (props: Props = {}) => {
 const aside = () => screen.getByRole('complementary', { name: 'Phiếu tháng 11' });
 
 describe('CartPanel', () => {
-  it('rỗng: khung "Chưa có món nào" nhắc chép lại tháng trước; đầu phiếu "0 món, 0 đơn vị" + chip Chưa lưu', () => {
+  it('rỗng: khung "Chưa có món nào" nhắc chép lại tháng trước; đầu phiếu "0 loại món · 0 đơn vị" + chip Chưa lưu', () => {
     show();
     expect(within(aside()).getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu” ở món cần dùng, hoặc chép lại tháng 10\./)).toBeInTheDocument();
-    expect(within(aside()).getByText('0 món, 0 đơn vị')).toBeInTheDocument();
+    expect(within(aside()).getByText('0 loại món · 0 đơn vị')).toBeInTheDocument();
     expect(within(aside()).getByText('Chưa lưu')).toBeInTheDocument();
     expect(within(aside()).getByText('Phiếu chỉ được tính khi bạn bấm Lưu phiếu.')).toBeInTheDocument();
   });
@@ -75,7 +74,7 @@ describe('CartPanel', () => {
     show({ lines: [mk(1), mk(2)], saved: { time: '09:41', lastDay: '10/11' } });
     expect(within(aside()).getByText('Đã lưu')).toBeInTheDocument();
     expect(within(aside()).getByText('Đã lưu lúc 09:41. Bạn vẫn sửa được tới hết 10/11.')).toBeInTheDocument();
-    expect(within(aside()).getByText('2 món, 3 đơn vị')).toBeInTheDocument();
+    expect(within(aside()).getByText('2 loại món · 3 đơn vị')).toBeInTheDocument();
   });
 
   it('16 dòng: danh sách là vùng cuộn riêng, nút Lưu phiếu nằm ngoài vùng cuộn', () => {
@@ -94,14 +93,6 @@ describe('CartPanel', () => {
     expect(fns.onQty).toHaveBeenCalledWith('k2', 3);
     await userEvent.click(within(aside()).getByRole('button', { name: 'Bỏ Món 2' }));
     expect(fns.onRemove).toHaveBeenCalledWith('k2');
-  });
-
-  it('locked: − và + vô hiệu, nút Bỏ vẫn bấm được; nút Lưu chỉ theo canSave (không theo locked)', () => {
-    show({ lines: [mk(2)], locked: true, canSave: true });
-    expect(within(aside()).getByRole('button', { name: 'Bỏ Món 2' })).toBeEnabled();
-    expect(within(aside()).getByRole('button', { name: 'Lưu phiếu' })).toBeEnabled();
-    expect(within(aside()).getByRole('button', { name: 'Thêm Món 2' })).toBeDisabled();
-    expect(within(aside()).getByRole('button', { name: 'Bớt Món 2' })).toBeDisabled();
   });
 
   it('thứ tự Tab trong dòng: tên → stepper (− ô +) → nút Bỏ cuối cùng', () => {

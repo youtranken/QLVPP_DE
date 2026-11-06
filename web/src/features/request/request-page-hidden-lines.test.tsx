@@ -19,7 +19,7 @@ async function saveWith(path: string, edit: () => Promise<void>) {
   renderApp(makeMe('member'), path);
   await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Giấy note vàng');
   await edit();
-  await userEvent.click(await screen.findByRole('button', { name: /^1 thay đổi chưa lưu · Lưu/ }));
+  await userEvent.click(await screen.findByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
   await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
   await screen.findByRole('alert');
   return api.putBody();

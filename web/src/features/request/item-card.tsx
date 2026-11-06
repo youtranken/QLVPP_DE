@@ -13,14 +13,12 @@ export function ItemCard({
   line,
   tone,
   groupLabel,
-  locked = false,
   onQty,
 }: {
   item: MemberItem;
   line: CartLine | undefined;
   tone: Tone;
   groupLabel: string | null;
-  locked?: boolean;
   onQty: (n: number) => void;
 }) {
   const { t } = useTranslation();
@@ -67,14 +65,13 @@ export function ItemCard({
           className="rq-card-add"
           ref={addRef}
           aria-label={t('request.grid.addAria', { name })}
-          title={locked ? t('request.grid.lockedReason') : undefined}
-          disabled={locked || max < 1}
+          disabled={max < 1}
           onClick={() => onQty(1)}
         >
           {t('request.grid.addToCart')}
         </button>
       ) : (
-        <Stepper className="rq-card-stepper" value={qty} max={max} label={name} disabled={locked} onChange={change} />
+        <Stepper className="rq-card-stepper" value={qty} max={max} label={name} onChange={change} />
       )}
     </article>
   );

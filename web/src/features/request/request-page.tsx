@@ -80,19 +80,26 @@ function RequestEditor({
   }, [hadCarry, onCarryUsed]);
   const [editing, setEditing] = useState<Editing>(null);
   useLeaveGuard(cart.dirtyCount);
-  // Lỗi theo dòng: mở sheet để dòng lỗi thấy được (mỗi lần lỗi là một sự kiện mới); lưu xong (toast) thì đóng sheet và trả focus về nút mở
+  const openerRef = useRef<HTMLButtonElement>(null);
+  const barSaveRef = useRef<HTMLButtonElement>(null);
+  const sheetOpenRef = useRef(sheetOpen);
+  sheetOpenRef.current = sheetOpen;
+  const narrowRef = useRef(narrow);
+  narrowRef.current = narrow;
+  // Lỗi theo dòng: mở sheet để dòng lỗi thấy được — một lần cho mỗi sự kiện lỗi (đổi bề ngang không mở lại)
   const lineFailure = flow.noticeEvent?.focusKey ? flow.noticeEvent : null;
   useEffect(() => {
-    if (narrow && lineFailure) setSheetOpen(true);
-  }, [narrow, lineFailure]);
-  const openerRef = useRef<HTMLButtonElement>(null);
-  const toastSeq = flow.toastSeq;
+    if (lineFailure && narrowRef.current) setSheetOpen(true);
+  }, [lineFailure]);
+  // Chỉ sau khi LƯU thành công: đóng sheet, focus về nút đã dùng (Xem phiếu nếu lưu trong sheet, Lưu của thanh nổi nếu lưu thẳng)
+  const savedSeq = flow.savedSeq;
   useEffect(() => {
-    if (toastSeq === 0) return;
+    if (savedSeq === 0 || !narrowRef.current) return;
+    const target = sheetOpenRef.current ? openerRef : barSaveRef;
     setSheetOpen(false);
-    const id = setTimeout(() => openerRef.current?.focus(), 0);
+    const id = setTimeout(() => target.current?.focus(), 0);
     return () => clearTimeout(id);
-  }, [toastSeq]);
+  }, [savedSeq]);
   useEffect(() => {
     if (!narrow) setSheetOpen(false);
   }, [narrow]);
@@ -126,7 +133,6 @@ function RequestEditor({
     prevMonth: copy.fromYm ? monthOf(copy.fromYm) : null,
     dirty,
     saved: cart.saved ? { time: fmt.time(cart.saved.updated_at), lastDay: fmt.lastDay(period.deadline) } : null,
-    locked: !period.is_open,
     saveLabel,
     canSave: dirty && !flow.saving,
     panelRef: cartRef,
@@ -157,7 +163,6 @@ function RequestEditor({
             lineByKey={lineByKey}
             favIds={favIds}
             copy={copy.fromYm && <CopyPreviousButton fromYm={copy.fromYm} busy={copy.busy} onClick={() => void copy.run()} />}
-            locked={!period.is_open}
             onQty={setQty}
             onAddCustom={addCustom}
           />
@@ -171,12 +176,13 @@ function RequestEditor({
           saved={!!cart.saved && !dirty}
           dirtyCount={cart.dirtyCount}
           openRef={openerRef}
+          saveRef={barSaveRef}
           canSave={dirty && !flow.saving}
           onOpen={() => setSheetOpen(true)}
           onSave={flow.openConfirm}
         />
       )}
-      {sheetShown && <CartSheet {...cartProps} onOpenChange={setSheetOpen} notice={<FlowNotice flow={flow} />} />}
+      {sheetShown && <CartSheet {...cartProps} opener={openerRef} onOpenChange={setSheetOpen} notice={<FlowNotice flow={flow} />} />}
       {editing && (
         <CustomLineDialog
           initial={editingLine}

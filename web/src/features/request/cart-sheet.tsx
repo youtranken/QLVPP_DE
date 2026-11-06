@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from 'react';
+import type { ComponentProps, ReactNode, RefObject } from 'react';
 import { Dialog } from '@/ui/dialog';
 import { CartPanel } from './cart-panel';
 
@@ -14,11 +14,17 @@ function focusInvalidLine(panel: HTMLElement | null, e: Event) {
   bad.focus({ preventScroll: true });
 }
 
-export function CartSheet({ onOpenChange, notice, ...panel }: PanelProps & { onOpenChange: (open: boolean) => void; notice: ReactNode }) {
+export function CartSheet({
+  onOpenChange,
+  notice,
+  opener,
+  ...panel
+}: PanelProps & { onOpenChange: (open: boolean) => void; notice: ReactNode; opener: RefObject<HTMLElement | null> }) {
   return (
     <Dialog
       open
       onOpenChange={onOpenChange}
+      opener={opener}
       className="rq-sheet"
       overlayClassName="modal-backdrop rq-sheet-backdrop"
       viewportClassName="rq-sheet-viewport"

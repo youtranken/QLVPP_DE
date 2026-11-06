@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
 import { IconSearch } from '@/ui/icons';
@@ -17,6 +17,9 @@ interface Props {
   total: number;
   shown: number;
   pickedCount: number;
+  // Chỉ có "Hay dùng trước" khi có phiếu kỳ trước
+  canFav?: boolean;
+  searchRef?: RefObject<HTMLInputElement | null>;
   copy?: ReactNode;
   onChange: (patch: Partial<FilterState>) => void;
   onClear: () => void;
@@ -29,7 +32,7 @@ const SORT_KEYS: [SortKey, string][] = [
   ['group', 'request.grid.sortGroup'],
 ];
 
-export function FilterBar({ filter, groups, total, shown, pickedCount, copy, onChange, onClear, onAddCustom }: Props) {
+export function FilterBar({ filter, groups, total, shown, pickedCount, canFav = false, searchRef, copy, onChange, onClear, onAddCustom }: Props) {
   const { t } = useTranslation();
   const [text, setText] = useUrlSearchBox(filter.q, (q) => onChange({ q }));
   const chip = (id: string, label: string, n: number) => (
@@ -44,6 +47,7 @@ export function FilterBar({ filter, groups, total, shown, pickedCount, copy, onC
         <label className="rq-f-search">
           <IconSearch />
           <input
+            ref={searchRef}
             type="search"
             aria-label={t('request.grid.search')}
             placeholder={t('request.grid.searchPlaceholder')}
@@ -54,7 +58,7 @@ export function FilterBar({ filter, groups, total, shown, pickedCount, copy, onC
         <label className="rq-f-sort">
           <span className="sr-only">{t('request.grid.sort')}</span>
           <select value={filter.sort} onChange={(e) => onChange({ sort: e.target.value as SortKey })}>
-            {SORT_KEYS.map(([key, label]) => (
+            {SORT_KEYS.filter(([key]) => canFav || key !== 'fav').map(([key, label]) => (
               <option key={key} value={key}>
                 {t(label)}
               </option>

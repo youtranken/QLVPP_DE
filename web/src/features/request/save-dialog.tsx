@@ -42,6 +42,11 @@ export function SaveDialog({
             </tbody>
           </table>
         )}
+        {lines.length > 0 && (
+          <p className="rq-confirm-total num">
+            {t('request.cart.summary', { kinds: lines.length, units: lines.reduce((sum, l) => sum + l.qty, 0) })}
+          </p>
+        )}
       </div>
       <div className="sheet-footer">
         <DialogClose asChild>

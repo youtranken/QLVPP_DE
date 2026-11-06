@@ -1,6 +1,6 @@
 import * as RD from '@radix-ui/react-dialog';
 import { useRef, useState } from 'react';
-import type { KeyboardEvent, ReactNode, SVGProps } from 'react';
+import type { KeyboardEvent, ReactNode, RefObject, SVGProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { discardOptions, useOptionalConfirm } from '@/ui/confirm-context';
 import { DialogPortalContext } from '@/ui/dialog-portal';
@@ -36,6 +36,7 @@ export function Dialog({
   dirty = false,
   onKeyDown,
   returnFocus = true,
+  opener: openerProp,
   onOpenAutoFocus,
   children,
 }: {
@@ -51,6 +52,8 @@ export function Dialog({
   onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
   // Mở không qua Trigger nên Radix không biết trả focus về đâu: mặc định trả về phần tử đang focus lúc mở; nơi tự quản focus sau khi đóng thì để false
   returnFocus?: boolean;
+  // Nút mở cố định (hộp có thể tự mở khi focus đang ở phần tử sắp biến mất): đóng thì focus về đây thay vì phần tử đang focus lúc mở
+  opener?: RefObject<HTMLElement | null>;
   // Gọi khi hộp mở, sau khi ghi nhớ phần tử đang focus; preventDefault() để tự đặt focus thay vì phần tử đầu tiên
   onOpenAutoFocus?: (e: Event) => void;
   children: ReactNode;
@@ -82,7 +85,7 @@ export function Dialog({
             onInteractOutside={block}
             onKeyDown={onKeyDown}
             onOpenAutoFocus={(e) => {
-              opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+              opener.current = openerProp?.current ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
               onOpenAutoFocus?.(e);
             }}
             onCloseAutoFocus={(e) => {

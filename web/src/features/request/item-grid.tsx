@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { categoryLabel, type Category } from '@/features/catalog/catalog.api';
 import { groupTone } from '@/lib/group-tone';
@@ -17,7 +17,6 @@ export function ItemGrid({
   favIds,
   copy,
   onQty,
-  locked,
   onAddCustom,
 }: {
   items: MemberItem[];
@@ -26,7 +25,6 @@ export function ItemGrid({
   favIds?: ReadonlySet<string>;
   copy?: ReactNode;
   onQty: (itemId: string, n: number) => void;
-  locked: boolean;
   onAddCustom: () => void;
 }) {
   const { t, i18n } = useTranslation();
@@ -42,7 +40,22 @@ export function ItemGrid({
     [categories, i18n.language],
   );
   // Điện thoại: 169 món không đổ hết một trang, mặc định nhóm đầu (R-C2); máy tính mặc định "Tất cả"
-  const filter = parseFilter(params, groups.map((g) => g.id), narrow && groups[0] ? groups[0].id : 'all');
+  const parsed = parseFilter(params, groups.map((g) => g.id), narrow && groups[0] ? groups[0].id : 'all');
+  // Không có phiếu kỳ trước thì không có "Hay dùng trước": sort=fav trên URL rơi về "Theo nhóm"
+  const canFav = !!favIds && favIds.size > 0;
+  const filter = !canFav && parsed.sort === 'fav' ? { ...parsed, sort: 'group' as const } : parsed;
+  const searchRef = useRef<HTMLInputElement>(null);
+  const refocusSearch = useRef(false);
+  // Lọc "Đã chọn": bấm − về 0 làm thẻ biến khỏi lưới → focus về ô tìm thay vì rơi về body
+  useEffect(() => {
+    if (!refocusSearch.current) return;
+    refocusSearch.current = false;
+    searchRef.current?.focus();
+  });
+  const changeQty = (itemId: string, n: number) => {
+    if (n === 0 && filter.onlyPicked) refocusSearch.current = true;
+    onQty(itemId, n);
+  };
   const visible = applyFilters(items, { lines: [...lineByKey.values()] }, filter, i18n.language, favIds, categoryIds);
   const pickedCount = useMemo(() => items.filter((i) => lineByKey.has(i.id)).length, [items, lineByKey]);
   return (
@@ -53,6 +66,8 @@ export function ItemGrid({
         total={items.length}
         shown={visible.length}
         pickedCount={pickedCount}
+        canFav={canFav}
+        searchRef={searchRef}
         copy={copy}
         onChange={(f) => patch(filterPatch(f), true)}
         onClear={() => patch(CLEAR_PATCH, true)}
@@ -66,8 +81,7 @@ export function ItemGrid({
             line={lineByKey.get(item.id)}
             tone={catInfo.get(item.category_id ?? '')?.tone ?? 'g0'}
             groupLabel={catInfo.get(item.category_id ?? '')?.label ?? null}
-            locked={locked}
-            onQty={(n) => onQty(item.id, n)}
+            onQty={(n) => changeQty(item.id, n)}
           />
         ))}
         <button type="button" className="rq-card rq-card-more" onClick={onAddCustom}>

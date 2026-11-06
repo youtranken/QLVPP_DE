@@ -1,13 +1,14 @@
 import { useId, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
-// Thanh phiếu nổi trên thanh dưới (≤ 900): trái = mở sheet phiếu, phải = lưu thẳng (cùng hộp xác nhận)
+// Thanh phiếu nổi trên thanh dưới (≤ 900): trái = mở sheet phiếu, phải = lưu thẳng (cùng hộp xác nhận); số thay đổi chưa lưu hiện bằng chữ trên nút
 export function MobileSaveBar({
   count,
   units,
   saved,
   dirtyCount,
   openRef,
+  saveRef,
   canSave,
   onOpen,
   onSave,
@@ -17,6 +18,7 @@ export function MobileSaveBar({
   saved: boolean;
   dirtyCount: number;
   openRef: RefObject<HTMLButtonElement | null>;
+  saveRef: RefObject<HTMLButtonElement | null>;
   canSave: boolean;
   onOpen: () => void;
   onSave: () => void;
@@ -31,10 +33,15 @@ export function MobileSaveBar({
         <span id={titleId} className="rq-bar-title num">{t('request.cart.viewCart', { n: count })}</span>
         <span id={subId} className="rq-bar-sub num">{t('request.cart.barSub', { units, status })}</span>
       </button>
-      <button type="button" className="rq-bar-save" disabled={!canSave} onClick={onSave}>
-        {dirtyCount > 0 && <span className="sr-only">{t('request.cart.barDirty', { n: dirtyCount })}</span>}
-        {dirtyCount > 0 && ' '}
-        {t('request.cart.save')}
+      {/* aria-disabled (không disabled): lưu xong nút vẫn nhận lại focus, không rơi về body */}
+      <button type="button" className="rq-bar-save" ref={saveRef} aria-disabled={!canSave} onClick={() => canSave && onSave()}>
+        {dirtyCount > 0 && (
+          <>
+            <span className="rq-bar-dirty">{t('request.cart.barDirty', { n: dirtyCount })}</span>{' '}
+            <span className="sr-only">·</span>{' '}
+          </>
+        )}
+        <span>{t('request.cart.save')}</span>
       </button>
     </div>
   );

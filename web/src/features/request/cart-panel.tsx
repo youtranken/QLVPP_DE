@@ -28,7 +28,6 @@ function CartRow({
   line,
   error,
   tone,
-  locked,
   onQty,
   onRemove,
   onEdit,
@@ -36,7 +35,6 @@ function CartRow({
   line: CartLine;
   error?: string;
   tone: Tone;
-  locked: boolean;
   onQty: (n: number) => void;
   onRemove: () => void;
   onEdit: () => void;
@@ -74,7 +72,6 @@ function CartRow({
             min={line.min}
             max={line.max}
             label={name}
-            disabled={locked}
             onChange={onQty}
             describedBy={error ? errorId : undefined}
             invalid={!!error}
@@ -119,7 +116,6 @@ export function CartPanel({
   prevMonth,
   dirty,
   saved,
-  locked,
   showSave,
   sheet = false,
   saveLabel,
@@ -138,7 +134,6 @@ export function CartPanel({
   prevMonth: number | null;
   dirty: boolean;
   saved: { time: string; lastDay: string } | null;
-  locked: boolean;
   showSave: boolean;
   // Trong sheet điện thoại: h2 là tiêu đề dialog, có nút đóng; nút Lưu nằm đáy, ngoài danh sách cuộn
   sheet?: boolean;
@@ -179,7 +174,6 @@ export function CartPanel({
               line={l}
               error={errors[l.key]}
               tone={groupTone(categories, l.label.category_id)}
-              locked={locked}
               onQty={(n) => onQty(l.key, n)}
               onRemove={() => onRemove(l.key)}
               onEdit={() => onEdit(l.key)}

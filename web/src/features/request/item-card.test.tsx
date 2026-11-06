@@ -7,8 +7,8 @@ import type { CartLine } from './use-cart';
 
 const ITEM = memberItem({ id: 'i-1', name: 'Bút bi xanh', name_en: 'Blue pen', unit: 'cay', pack_note: 'hộp 10', max_qty: 5, category_id: 'c-1' });
 const line = (qty: number, extra: Partial<CartLine> = {}) => ({ key: 'i-1', qty, ...extra }) as CartLine;
-const view = (l: CartLine | undefined, onQty = vi.fn(), locked = false) => {
-  renderWithI18n(<ItemCard item={ITEM} line={l} tone="g1" groupLabel="Bút & viết" locked={locked} onQty={onQty} />);
+const view = (l: CartLine | undefined, onQty = vi.fn()) => {
+  renderWithI18n(<ItemCard item={ITEM} line={l} tone="g1" groupLabel="Bút & viết" onQty={onQty} />);
   return onQty;
 };
 const ADD = 'Thêm vào phiếu: Bút bi xanh';
@@ -67,12 +67,6 @@ describe('ItemCard', () => {
     view(line(3, { readonly: true, added_by_admin: true }));
     expect(screen.queryByRole('button', { name: /Thêm/ })).toBeNull();
     expect(screen.getByText('Hành chính thêm · 3')).toBeInTheDocument();
-  });
-  it('kỳ khóa → nút thêm vô hiệu kèm lý do; stepper vô hiệu', () => {
-    view(undefined, vi.fn(), true);
-    const add = screen.getByRole('button', { name: ADD });
-    expect(add).toBeDisabled();
-    expect(add).toHaveAttribute('title', 'Kỳ đã khóa sổ — phiếu chỉ xem');
   });
 });
 
