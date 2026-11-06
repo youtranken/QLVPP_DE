@@ -4,6 +4,7 @@ import type {
   ReportItemRow,
   SnapshotData,
 } from './report.types';
+import { wantOf } from './report-need';
 import { unitNameOf } from './snapshot-unit-names';
 import type { UnitNames } from './snapshot-unit-names';
 import { XLSX_LABELS } from './xlsx-labels';
@@ -47,7 +48,7 @@ function fillByItem(
   }: { lang: XlsxLang; unitLabel: (row: { unit: string }) => string },
 ): void {
   const order = (r: ReportItemRow | ReportCustomRow) =>
-    data.order_qty[r.key] ?? r.need;
+    data.order_qty[r.key] ?? wantOf(r);
   bold(
     ws.addRow([
       l.item,

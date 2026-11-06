@@ -14,6 +14,6 @@ export class ReportsController {
 
   @Get(':ym')
   report(@Param('ym', YmPipe) ym: string) {
-    return this.reports.build(ym, this.clock.now());
+    return this.reports.live(ym, this.clock.now());
   }
 }

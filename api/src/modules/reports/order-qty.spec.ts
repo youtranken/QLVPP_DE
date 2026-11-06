@@ -3,9 +3,21 @@ import { resolveOrderQty } from './order-qty';
 
 const A4 = '11111111-1111-4111-8111-111111111111';
 const CUSTOM = 'custom:["bìa còng","cái"]';
+// need (net) cố ý khác số gộp để chứng minh mặc định không trừ tủ
 const report = {
-  byItem: [{ key: A4, need: 4 }],
-  custom: [{ key: CUSTOM, need: 3 }],
+  byItem: [
+    {
+      key: A4,
+      requested: 3,
+      backlog_prev: 1,
+      stock: 2,
+      need: 2,
+      adm_owed: 0,
+      left_excluded: 0,
+      usable: true,
+    },
+  ],
+  custom: [{ key: CUSTOM, requested: 3, backlog_prev: 0, need: 3 }],
 } as unknown as MonthReport;
 
 const fieldsOf = (input: Record<string, unknown>) => {
@@ -20,7 +32,7 @@ const fieldsOf = (input: Record<string, unknown>) => {
 };
 
 describe('resolveOrderQty', () => {
-  it('ô thiếu → need; đủ mọi hàng byItem + custom', () => {
+  it('ô thiếu → số mặc định gộp (đăng ký + nợ, không trừ tủ); hàng thiếu trường mới đọc như wantOf', () => {
     expect(resolveOrderQty(report)).toEqual({ [A4]: 4, [CUSTOM]: 3 });
     expect(resolveOrderQty(report, { [A4]: 7 })).toEqual({
       [A4]: 7,

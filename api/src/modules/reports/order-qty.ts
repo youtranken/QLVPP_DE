@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import { defaultOrder } from './order-default';
 import type { MonthReport } from './report.types';
 import { ORDER_QTY_MAX } from './snapshot.dto';
 
@@ -22,6 +23,9 @@ export function resolveOrderQty(
     });
   }
   return Object.fromEntries(
-    rows.map((r) => [r.key, (input[r.key] as number | undefined) ?? r.need]),
+    rows.map((r) => [
+      r.key,
+      (input[r.key] as number | undefined) ?? defaultOrder(r),
+    ]),
   );
 }

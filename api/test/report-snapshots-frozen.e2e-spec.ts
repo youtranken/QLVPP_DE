@@ -60,6 +60,8 @@ describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
     ];
     try {
       await putSignatureBoxes(boxes);
+      // Bản chốt rỗng bị chặn (ORDER_EMPTY) → cần một dòng đề nghị
+      await f.lockedLine(0, 1);
       const { id } = await createOk('2026-11', { kind: 'print' });
       await putSignatureBoxes([{ title: 'Khác', title_en: '', name: '' }]);
       const s = await snapshot(id);
@@ -124,6 +126,7 @@ describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
       .query('UPDATE items SET name_en = $2 WHERE id = $1', [withEn, enName]);
     await f.issueAt(withEn, 2, '2026-11-05T03:00:00Z', null);
     await f.issueAt(plain, 1, '2026-11-06T03:00:00Z', null);
+    await f.lockedLine(0, 1);
     const { id } = await createOk('2026-11');
     const issues = (await snapshot(id)).issues;
     expect(issues.find((i) => i.item_name_en === enName)).toBeDefined();

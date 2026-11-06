@@ -109,6 +109,7 @@ describe('GET admin/backlog, GET admin/lines/:id/deliveries', () => {
         cancelled_qty: 0,
         remaining_qty: 2,
         stock_qty: 4,
+        counted_in_snapshot_qty: null,
       },
       expect.objectContaining({
         line_id: cur.line,

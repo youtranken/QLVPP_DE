@@ -32,13 +32,27 @@ export class SnapshotsController {
     private readonly units: UnitsService,
   ) {}
 
+  // 200 khi dùng lại bản cũ, 201 khi tạo bản mới
   @Post(':ym/snapshots')
-  create(
+  async create(
     @CurrentIdentity() admin: RequestIdentity,
     @Param('ym', YmPipe) ym: string,
     @Body() body: SnapshotBody,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.snapshots.create(ym, body, admin, this.clock.now());
+    const result = await this.snapshots.create(
+      ym,
+      body,
+      admin,
+      this.clock.now(),
+    );
+    res.status(result.reused ? 200 : 201);
+    return result;
+  }
+
+  @Get(':ym/sent')
+  sent(@Param('ym', YmPipe) ym: string) {
+    return this.snapshots.sent(ym, this.clock.now());
   }
 
   @Get(':ym/snapshots')

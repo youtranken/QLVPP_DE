@@ -81,7 +81,11 @@ const admin = {
       files: { orphans_deleted: 'Dọn ảnh mồ côi', uploaded: 'Tải ảnh lên' },
       item: { created: 'Thêm món', updated: 'Sửa món', deactivated: 'Ngừng dùng món', deleted: 'Xóa món' },
       line: { review: 'Duyệt dòng ngoài danh mục', delivered: 'Giao hàng', cancel_remaining: 'Hủy nợ' },
-      period: { headcount_recorded: 'Chốt số người của kỳ' },
+      period: {
+        headcount_recorded: 'Chốt số người của kỳ',
+        no_order: 'Tháng này không cần đề nghị ADM',
+        no_order_cleared: 'Bỏ đánh dấu không cần đề nghị ADM',
+      },
       report: { snapshot_created: 'Chốt báo cáo' },
       request: { created: 'Tạo phiếu', updated: 'Sửa phiếu', deleted: 'Xóa phiếu' },
       stock: { adjust: 'Điều chỉnh kho', issue: 'Xuất lẻ', purchase: 'Nhập kho', receipt: 'Hàng về' },

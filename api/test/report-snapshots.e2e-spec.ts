@@ -29,7 +29,7 @@ describe('POST admin/reports/:ym/snapshots — bản chốt (E5-S2)', () => {
     return { item, other };
   };
 
-  it('E5-S2 order_qty {A4: 7} → bản chốt A4 = 7, món khác = need', async () => {
+  it('E5-S2 order_qty {A4: 7} → bản chốt A4 = 7, món khác = số gộp (đăng ký + nợ)', async () => {
     const { item, other } = await twoItems();
     const created = await createOk('2026-11', {
       kind: 'xlsx',
@@ -52,7 +52,7 @@ describe('POST admin/reports/:ym/snapshots — bản chốt (E5-S2)', () => {
     expect(s.created_at).toBe('2026-11-12T03:00:00.000Z');
   });
 
-  it('khóa CUSTOM_ITEM_KEY (chuỗi mờ) nhận được; ô thiếu → need của nhóm ngoài danh mục', async () => {
+  it('khóa CUSTOM_ITEM_KEY (chuỗi mờ) nhận được; ô thiếu → số gộp của nhóm ngoài danh mục', async () => {
     await seedLine('2026-11', B, customCols(customName('bia'), 2));
     await seedLine('2026-11', B, customCols(customName('ghim'), 4));
     const live = await f.build('2026-11');
@@ -140,6 +140,7 @@ describe('POST admin/reports/:ym/snapshots — bản chốt (E5-S2)', () => {
       code: 'PERIOD_NOT_LOCKED',
       ym: '2026-12',
     });
+    await lockedLine(0, 1);
     const { id } = await createOk('2026-11');
     expect((await snapshot(id)).period_ym).toBe('2026-11');
     const res = await create('2027-01', { kind: 'xlsx' }).expect(400);
@@ -163,6 +164,9 @@ describe('POST admin/reports/:ym/snapshots — bản chốt (E5-S2)', () => {
         created_at: '2026-11-12T03:05:00.000Z',
         created_by_sub: ADMIN,
         created_by_name: 'Hành chính',
+        has_items: true,
+        items_count: 2,
+        units_total: 8,
       },
       {
         id: first.id,
@@ -170,6 +174,9 @@ describe('POST admin/reports/:ym/snapshots — bản chốt (E5-S2)', () => {
         created_at: '2026-11-12T03:00:00.000Z',
         created_by_sub: ADMIN,
         created_by_name: 'Hành chính',
+        has_items: true,
+        items_count: 2,
+        units_total: 8,
       },
     ]);
   });

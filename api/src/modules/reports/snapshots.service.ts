@@ -2,18 +2,51 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { ymToDate } from '../../common/period';
 import { DRIZZLE_DB } from '../../database/database.module';
-import type { Database } from '../../database/database.module';
+import type { Database, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
 import { SystemConfigService } from '../config/system-config.service';
 import { PeriodsService } from '../periods/periods.service';
 import { UnitsService } from '../units/units.service';
 import { UsersService } from '../users/users.service';
+import { pgSqlState } from '../../common/sql';
+import { clearNoOrderFlag, lockNoOrderFlag } from './no-order-flag';
+import { orderBasisOf } from './order-default';
 import { resolveOrderQty } from './order-qty';
 import type { SignatureBox, SnapshotData } from './report.types';
 import { ReportsService } from './reports.service';
+import {
+  hasItemsSql,
+  latestSent,
+  noSentSnapshot,
+  orderEmpty,
+  orderTotals,
+  sameContent,
+  sameOrder,
+} from './sent-snapshot';
+import type { SentSnapshot } from './sent-snapshot';
 import type { SnapshotBody } from './snapshot.dto';
 import { withUnitNames } from './snapshot-unit-names';
+
+const MAX_ATTEMPTS = 3;
+
+interface CreateContext {
+  ym: string;
+  body: SnapshotBody;
+  actor: string;
+  now: Date;
+  signature_boxes: SignatureBox[];
+  created_by: SnapshotData['created_by'];
+}
+
+export interface CreatedSnapshot {
+  id: string;
+  kind: string;
+  created_at: string;
+  created_by: SnapshotData['created_by'];
+  reused: boolean;
+  data: SnapshotData;
+}
 
 export type StoredSnapshot = SnapshotData & {
   id: string;
@@ -38,49 +71,109 @@ export class SnapshotsService {
     body: SnapshotBody,
     actor: RequestIdentity,
     now: Date,
-  ) {
+  ): Promise<CreatedSnapshot> {
     // Tạo kỳ trước khi mở tx REPEATABLE READ (ảnh dữ liệu không thấy dòng tx khác vừa chèn); kỳ cũ cần dòng cho FK
     await this.periods.assertLocked(ym, now);
     await this.periods.ensurePeriod(ym);
-    const signature_boxes =
-      await this.config.get<SignatureBox[]>('signature_boxes');
     const user = await this.users.findBySub(actor.sub);
-    const created_by = {
-      sub: actor.sub,
-      name: user?.fullName ?? actor.fullName ?? null,
-    };
-    const created_at = now.toISOString();
-    const id = await this.db.transaction(
-      async (tx) => {
-        const report = withUnitNames(
-          await this.reports.build(ym, now, tx),
-          await this.units.namesByCode(tx),
-        );
-        const data: SnapshotData = {
-          ...report,
-          order_qty: resolveOrderQty(report, body.order_qty),
-          signature_boxes,
-          created_by,
-          created_at,
-        };
-        const { rows } = await tx.execute<{ id: string }>(sql`
-          INSERT INTO report_snapshots (period_ym, kind, data, created_by_sub, created_at)
-          VALUES (${ymToDate(ym)}::date, ${body.kind}, ${JSON.stringify(data)}::jsonb,
-                  ${actor.sub}, ${created_at}::timestamptz)
-          RETURNING id`);
-        const snapshotId = rows[0].id;
-        await this.audit.appendWithin(tx, {
-          actor: actor.sub,
-          action: 'report.snapshot_created',
-          objectType: 'report_snapshot',
-          objectId: snapshotId,
-          detail: { ym, kind: body.kind, snapshot_id: snapshotId },
-        });
-        return snapshotId;
+    const ctx: CreateContext = {
+      ym,
+      body,
+      actor: actor.sub,
+      now,
+      signature_boxes: await this.config.get<SignatureBox[]>('signature_boxes'),
+      created_by: {
+        sub: actor.sub,
+        name: user?.fullName ?? actor.fullName ?? null,
       },
-      { isolationLevel: 'repeatable read' },
+    };
+    // Đua với "không cần đề nghị" trên cùng dòng periods → 40001; làm lại thấy cờ đã ghi và tự xóa
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.db.transaction((tx) => this.createWithin(tx, ctx), {
+          isolationLevel: 'repeatable read',
+        });
+      } catch (error) {
+        if (pgSqlState(error) !== '40001' || attempt >= MAX_ATTEMPTS) {
+          throw error;
+        }
+      }
+    }
+  }
+
+  private async createWithin(
+    tx: Tx,
+    ctx: CreateContext,
+  ): Promise<CreatedSnapshot> {
+    const { ym, body, now, created_by } = ctx;
+    const flag = await lockNoOrderFlag(tx, ym);
+    const report = withUnitNames(
+      await this.reports.build(ym, now, tx),
+      await this.units.namesByCode(tx),
     );
-    return { id, kind: body.kind, created_at, created_by };
+    const order_qty = resolveOrderQty(report, body.order_qty);
+    if (orderTotals(order_qty).units_total === 0) throw orderEmpty();
+    const content = {
+      ...report,
+      order_qty,
+      order_basis: orderBasisOf([...report.byItem, ...report.custom]),
+      signature_boxes: ctx.signature_boxes,
+    };
+    if (body.reuse_if_unchanged) {
+      const same = await latestSent(tx, ym, body.kind);
+      if (same && sameContent(same.data, content)) {
+        return {
+          id: same.id,
+          kind: same.kind,
+          created_at: same.created_at,
+          created_by: same.data.created_by,
+          reused: true,
+          data: same.data,
+        };
+      }
+    }
+    const prev = await latestSent(tx, ym);
+    const created_at = now.toISOString();
+    const data: SnapshotData = {
+      ...content,
+      ...(prev && !sameOrder(prev.data.order_qty, order_qty)
+        ? { replaces: { id: prev.id, created_at: prev.created_at } }
+        : {}),
+      created_by,
+      created_at,
+    };
+    const id = await this.insert(tx, ctx, data);
+    if (flag.no_order_at) await clearNoOrderFlag(tx, this.audit, ym, ctx.actor);
+    return { id, kind: body.kind, created_at, created_by, reused: false, data };
+  }
+
+  private async insert(
+    tx: Tx,
+    ctx: CreateContext,
+    data: SnapshotData,
+  ): Promise<string> {
+    const { ym, body, actor } = ctx;
+    const { rows } = await tx.execute<{ id: string }>(sql`
+      INSERT INTO report_snapshots (period_ym, kind, data, created_by_sub, created_at)
+      VALUES (${ymToDate(ym)}::date, ${body.kind}, ${JSON.stringify(data)}::jsonb,
+              ${actor}, ${data.created_at}::timestamptz)
+      RETURNING id`);
+    const id = rows[0].id;
+    await this.audit.appendWithin(tx, {
+      actor,
+      action: 'report.snapshot_created',
+      objectType: 'report_snapshot',
+      objectId: id,
+      detail: { ym, kind: body.kind, snapshot_id: id },
+    });
+    return id;
+  }
+
+  async sent(ym: string, now: Date): Promise<SentSnapshot> {
+    await this.periods.assertLocked(ym, now);
+    const sent = await latestSent(this.db, ym);
+    if (!sent) throw noSentSnapshot();
+    return sent;
   }
 
   async list(ym: string, now: Date) {
@@ -91,9 +184,17 @@ export class SnapshotsService {
       created_at: Date;
       created_by_sub: string;
       created_by_name: string | null;
+      has_items: boolean;
+      items_count: number;
+      units_total: number;
     }>(sql`
       SELECT id, kind, created_at, created_by_sub,
-             data->'created_by'->>'name' AS created_by_name
+             data->'created_by'->>'name' AS created_by_name,
+             ${hasItemsSql} AS has_items,
+             (SELECT count(*) FROM jsonb_each_text(data->'order_qty') e
+              WHERE e.value::int > 0)::int AS items_count,
+             (SELECT coalesce(sum(e.value::int), 0) FROM jsonb_each_text(data->'order_qty') e
+              WHERE e.value::int > 0)::int AS units_total
       FROM report_snapshots WHERE period_ym = ${ymToDate(ym)}::date
       ORDER BY created_at DESC, id DESC`);
     return {

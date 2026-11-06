@@ -1,6 +1,7 @@
 import type ExcelJS from 'exceljs';
 import { vnDate } from '../../common/period';
 import type { SignatureBox, SnapshotData } from './report.types';
+import { wantOf } from './report-need';
 import { unitNameOf } from './snapshot-unit-names';
 import type { UnitNames } from './snapshot-unit-names';
 
@@ -50,8 +51,8 @@ export function requestFormRows(
   data: SnapshotData,
   names: UnitNames,
 ): RequestFormRow[] {
-  const qty = (r: { key: string; need: number }) =>
-    data.order_qty[r.key] ?? r.need;
+  const qty = (r: { key: string; requested: number; backlog_prev: number }) =>
+    data.order_qty[r.key] ?? wantOf(r);
   const items = data.byItem
     .filter((r) => qty(r) > 0)
     .map((r) => ({

@@ -1,9 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { ClockService } from '../../common/clock.service';
+import { addMonths, ymToDate } from '../../common/period';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { PeriodsService } from '../periods/periods.service';
+import { hasItemsSql } from '../reports/sent-snapshot';
 import {
   CUSTOM_ITEM_KEY,
   REMAINING_QTY,
@@ -56,7 +58,14 @@ export class BacklogService {
 
   // Chỉ kỳ đã khóa: kỳ đang mở chưa giao được nên chưa phải nợ
   private async backlogRows(openYm: string): Promise<BacklogRow[]> {
+    const lastLocked = ymToDate(addMonths(openYm, -1));
+    const key = sql`coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY})`;
     const { rows } = await this.db.execute<BacklogRow>(sql`
+      WITH sent AS (
+        SELECT data FROM report_snapshots
+        WHERE period_ym = ${lastLocked}::date AND ${hasItemsSql}
+        ORDER BY created_at DESC, id DESC LIMIT 1
+      )
       SELECT l.id AS line_id, l.request_id, to_char(r.period_ym, 'YYYY-MM') AS period_ym,
              r.user_sub, u.full_name, r.department, u.status AS user_status,
              u.department AS user_department, l.item_id,
@@ -64,11 +73,19 @@ export class BacklogService {
              coalesce(i.unit, trim(l.custom_unit)) AS unit,
              l.qty, l.delivered_qty, l.cancelled_qty, ${REMAINING_QTY} AS remaining_qty,
              i.stock_qty,
-             coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) AS item_key
+             ${key} AS item_key,
+             CASE WHEN sent.data IS NULL THEN NULL
+                  ELSE LEAST(${REMAINING_QTY}, coalesce(
+                    (sent.data->'order_basis'->${key}->>'debt')::int,
+                    (SELECT (e->>'backlog_prev')::int
+                     FROM jsonb_array_elements(coalesce(sent.data->'byItem', '[]') || coalesce(sent.data->'custom', '[]')) e
+                     WHERE e->>'key' = ${key}),
+                    0)) END AS counted_in_snapshot_qty
       FROM request_lines l
       JOIN requests r ON r.id = l.request_id
       JOIN users u ON u.sub = r.user_sub
       LEFT JOIN items i ON i.id = l.item_id
+      LEFT JOIN sent ON r.period_ym < ${lastLocked}::date
       WHERE ${UNDELIVERED_LINE} AND ${lockedPeriod(openYm)}
       ORDER BY r.period_ym, coalesce(u.full_name, ''), l.id
     `);

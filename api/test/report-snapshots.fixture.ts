@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs';
+import type { Pool } from 'pg';
 import type { Response } from 'supertest';
 import type { SnapshotData } from '../src/modules/reports/report.types';
 import { reportsFixture } from './reports.fixture';
@@ -8,6 +9,25 @@ export type Snapshot = SnapshotData & {
   kind: string;
   period_ym: string;
 };
+
+export interface SentView {
+  id: string;
+  kind: string;
+  created_at: string;
+  items_count: number;
+  units_total: number;
+  replaces: { id: string; created_at: string } | null;
+  data: SnapshotData;
+}
+
+export interface SendState {
+  state: 'unsent' | 'no_order' | 'sent';
+  no_order_at: string | null;
+  no_order_by_name: string | null;
+  sent: SentView | null;
+  changed_after: boolean;
+  changed_at: string | null;
+}
 
 export interface SnapshotListItem {
   id: string;
@@ -30,11 +50,15 @@ export function snapshotsFixture(tag: string) {
   const f = reportsFixture(tag);
   const { ADMIN, SUFFIX, as, http, pool } = f;
 
-  f.onCleanup((p) =>
-    p.query('DELETE FROM report_snapshots WHERE created_by_sub LIKE $1', [
+  f.onCleanup(async (p) => {
+    await p.query('DELETE FROM report_snapshots WHERE created_by_sub LIKE $1', [
       `e2e-req-%-${SUFFIX}`,
-    ]),
-  );
+    ]);
+    await p.query(
+      'UPDATE periods SET no_order_at = NULL, no_order_by = NULL WHERE no_order_by LIKE $1',
+      [`e2e-req-%-${SUFFIX}`],
+    );
+  });
 
   const create = (ym: string, body: object, sub = ADMIN, role = 'admin') =>
     as(http().post(`/api/admin/reports/${ym}/snapshots`), sub, role).send(body);
@@ -84,6 +108,44 @@ export function snapshotsFixture(tag: string) {
         [objectId],
       )
     ).rows[0].n;
+  const ymDir = (ym: string) => `/api/admin/periods/${ym}`;
+  const sent = (ym: string) =>
+    as(http().get(`/api/admin/reports/${ym}/sent`), ADMIN, 'admin');
+  const sendState = async (ym: string) =>
+    (
+      await as(http().get(`${ymDir(ym)}/send-state`), ADMIN, 'admin').expect(
+        200,
+      )
+    ).body as SendState;
+  const noOrder = (ym: string, body: object = {}, sub = ADMIN) =>
+    as(http().post(`${ymDir(ym)}/no-order`), sub, 'admin').send(body);
+  const clearNoOrder = (ym: string) =>
+    as(http().delete(`${ymDir(ym)}/no-order`), ADMIN, 'admin');
+  // Bản chốt cũ/rỗng không tạo được qua API (ORDER_EMPTY) → gieo thẳng JSON như dữ liệu đã có
+  const insertSnapshot = async (
+    ym: string,
+    data: object,
+    createdAt: string,
+    kind = 'print',
+  ) =>
+    (
+      await pool().query<{ id: string }>(
+        `INSERT INTO report_snapshots (period_ym, kind, data, created_by_sub, created_at)
+         VALUES ($1::date, $2, $3::jsonb, $4, $5::timestamptz) RETURNING id`,
+        [`${ym}-01`, kind, JSON.stringify(data), ADMIN, createdAt],
+      )
+    ).rows[0].id;
+  // Kỳ dùng chung giữa các suite: "bản mới nhất"/cờ phải sạch trước mỗi ca
+  const resetPeriod = (ym: string, p: Pool = pool()) =>
+    Promise.all([
+      p.query(
+        'UPDATE periods SET no_order_at = NULL, no_order_by = NULL WHERE ym = $1::date',
+        [`${ym}-01`],
+      ),
+      p.query('DELETE FROM report_snapshots WHERE period_ym = $1::date', [
+        `${ym}-01`,
+      ]),
+    ]);
   const putSignatureBoxes = (signature_boxes: object[]) =>
     as(http().put('/api/admin/config'), ADMIN, 'admin')
       .send({ signature_boxes })
@@ -101,5 +163,11 @@ export function snapshotsFixture(tag: string) {
     binaryError,
     auditCount,
     putSignatureBoxes,
+    sent,
+    sendState,
+    noOrder,
+    clearNoOrder,
+    insertSnapshot,
+    resetPeriod,
   };
 }

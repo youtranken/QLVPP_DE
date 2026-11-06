@@ -20,6 +20,8 @@ export interface ItemDemand {
   stock: number;
   requested: number;
   backlog_prev: number;
+  left_excluded: number;
+  usable: boolean;
 }
 
 export interface CustomDemand {
@@ -28,6 +30,7 @@ export interface CustomDemand {
   unit: string;
   requested: number;
   backlog_prev: number;
+  left_excluded: number;
   people: number;
 }
 
@@ -44,10 +47,12 @@ export interface DetailLine {
 // Kỳ ≤ ym: kỳ ym là "đăng ký kỳ này", kỳ trước là nợ (BR-15); chỉ dòng còn phần chưa giao/hủy
 const demandSource = (ym: string) => sql`
   FROM request_lines l JOIN requests r ON r.id = l.request_id
+  LEFT JOIN users u ON u.sub = r.user_sub
   WHERE ${UNDELIVERED_LINE} AND r.period_ym <= ${ymToDate(ym)}::date`;
 const splitByPeriod = (ym: string) => sql`
   coalesce(sum(${REMAINING_QTY}) FILTER (WHERE r.period_ym = ${ymToDate(ym)}::date), 0)::int AS requested,
-  coalesce(sum(${REMAINING_QTY}) FILTER (WHERE r.period_ym < ${ymToDate(ym)}::date), 0)::int AS backlog_prev`;
+  coalesce(sum(${REMAINING_QTY}) FILTER (WHERE r.period_ym < ${ymToDate(ym)}::date), 0)::int AS backlog_prev,
+  coalesce(sum(${REMAINING_QTY}) FILTER (WHERE u.status IS DISTINCT FROM 'active'), 0)::int AS left_excluded`;
 
 // Thứ tự danh mục (nhóm → món → tên), món chưa xếp nhóm sau cùng; bản chốt giữ thứ tự này cho phiếu đề xuất
 export async function itemDemand(
@@ -56,7 +61,8 @@ export async function itemDemand(
 ): Promise<ItemDemand[]> {
   const { rows } = await db.execute<Row<ItemDemand>>(sql`
     SELECT i.id AS item_id, i.code, i.name, i.name_en, i.unit, i.pack_note,
-           i.stock_qty AS stock, d.requested, d.backlog_prev
+           i.stock_qty AS stock, d.requested, d.backlog_prev, d.left_excluded,
+           (i.active AND coalesce(c.active, true)) AS usable
     FROM (SELECT l.item_id, ${splitByPeriod(ym)} ${demandSource(ym)}
             AND l.item_id IS NOT NULL GROUP BY l.item_id) d
     JOIN items i ON i.id = d.item_id
@@ -111,4 +117,38 @@ export async function pendingCustomCount(
     WHERE l.review_status = 'pending' AND r.period_ym = ${ymToDate(ym)}::date
   `);
   return rows[0].n;
+}
+
+export interface KeyProgress {
+  registered: number;
+  delivered: number;
+  received: number;
+}
+
+// Cột sống của kỳ ym (Đăng ký sau điều chỉnh, Đã giao, Đã về) theo khóa, kể cả khóa đã giao xong
+export async function periodProgress(
+  db: Executor,
+  ym: string,
+): Promise<Record<string, KeyProgress>> {
+  const k = ymToDate(ym);
+  const { rows } = await db.execute<Row<KeyProgress & { key: string }>>(sql`
+    SELECT key, sum(registered)::int AS registered, sum(delivered)::int AS delivered,
+           sum(received)::int AS received
+    FROM (
+      SELECT coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) AS key,
+             l.qty - l.cancelled_qty AS registered, l.delivered_qty AS delivered, 0 AS received
+      FROM request_lines l JOIN requests r ON r.id = l.request_id
+      WHERE ${EFFECTIVE_LINE} AND r.period_ym = ${k}::date
+      UNION ALL
+      SELECT item_id::text, 0, 0, delta FROM stock_movements
+      WHERE reason = 'purchase' AND receipt_ym = ${k}::date
+      UNION ALL
+      SELECT line_key, 0, 0, qty FROM custom_receipts WHERE period_ym = ${k}::date
+    ) x GROUP BY key`);
+  return Object.fromEntries(
+    rows.map(({ key, registered, delivered, received }) => [
+      key,
+      { registered, delivered, received },
+    ]),
+  );
 }

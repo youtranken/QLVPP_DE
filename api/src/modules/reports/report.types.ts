@@ -19,7 +19,12 @@ export interface ReportItemRow extends FrozenUnitName {
   requested: number;
   backlog_prev: number;
   stock: number;
+  /** @deprecated số net BR-15, chỉ giữ cho bản chốt và client cũ; không là số mặc định */
   need: number;
+  // Bản chốt cũ không có ba trường dưới → đọc như wantOf (không ADM nợ, không người nghỉ, còn dùng)
+  adm_owed?: number;
+  left_excluded?: number;
+  usable?: boolean;
 }
 
 export interface ReportCustomRow extends FrozenUnitName {
@@ -29,8 +34,13 @@ export interface ReportCustomRow extends FrozenUnitName {
   requested: number;
   backlog_prev: number;
   stock: null;
+  /** @deprecated số net BR-15, chỉ giữ cho bản chốt và client cũ; không là số mặc định */
   need: number;
   people: number;
+  // Bản chốt cũ không có ba trường dưới → đọc như wantOf (không ADM nợ, không người nghỉ, còn dùng)
+  adm_owed?: number;
+  left_excluded?: number;
+  usable?: boolean;
 }
 
 export interface ReportDetailLine extends FrozenUnitName {
@@ -76,9 +86,25 @@ export interface ReportSigners {
   approver: string;
 }
 
+// Căn cứ số mặc định lúc chốt cho dòng xám và cảnh báo; bản cũ không có → đọc như wantOf
+export interface OrderBasis {
+  requested: number;
+  debt: number;
+  adm_owed: number;
+  left_excluded: number;
+  discontinued: boolean;
+}
+
+export interface SnapshotRef {
+  id: string;
+  created_at: string;
+}
+
 // Bản chốt trước 0112 chỉ có signers; bản mới chỉ có signature_boxes
 export interface SnapshotData extends MonthReport {
   order_qty: Record<string, number>;
+  order_basis?: Record<string, OrderBasis>;
+  replaces?: SnapshotRef;
   signature_boxes?: SignatureBox[];
   signers?: ReportSigners;
   created_by: { sub: string; name: string | null };

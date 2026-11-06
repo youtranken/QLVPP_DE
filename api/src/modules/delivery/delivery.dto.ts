@@ -54,6 +54,8 @@ export interface BacklogLine {
   cancelled_qty: number;
   remaining_qty: number;
   stock_qty: number | null;
+  // Phần nợ đã tính vào bản gửi ADM của kỳ khóa gần nhất; null khi chưa có bản hoặc dòng thuộc chính kỳ đó
+  counted_in_snapshot_qty: number | null;
 }
 
 export interface BacklogGroup {

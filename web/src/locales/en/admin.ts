@@ -84,7 +84,11 @@ const admin: Messages<typeof vi> = {
       files: { orphans_deleted: 'Orphan images cleaned', uploaded: 'Image uploaded' },
       item: { created: 'Item added', updated: 'Item edited', deactivated: 'Item retired', deleted: 'Item deleted' },
       line: { review: 'Custom line reviewed', delivered: 'Delivered', cancel_remaining: 'Backlog cancelled' },
-      period: { headcount_recorded: 'Period headcount recorded' },
+      period: {
+        headcount_recorded: 'Period headcount recorded',
+        no_order: 'No ADM order needed this month',
+        no_order_cleared: 'No-order mark removed',
+      },
       report: { snapshot_created: 'Report snapshot taken' },
       request: { created: 'Request created', updated: 'Request edited', deleted: 'Request deleted' },
       stock: { adjust: 'Stock adjusted', issue: 'Ad-hoc issue', purchase: 'Stock received', receipt: 'Goods arrived' },

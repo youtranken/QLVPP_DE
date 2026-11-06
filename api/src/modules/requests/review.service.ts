@@ -10,7 +10,8 @@ import type { CreateItemDto } from '../catalog/catalog.dto';
 import type { ItemFacts, ItemRow } from '../catalog/catalog-sql';
 import { CatalogService, itemNotFound } from '../catalog/catalog.service';
 import { PeriodsService } from '../periods/periods.service';
-import { lockedPeriod } from './line-predicates';
+import { hasItemsSql } from '../reports/sent-snapshot';
+import { CUSTOM_ITEM_KEY, lockedPeriod } from './line-predicates';
 import { LineNotifier } from './line-notifier';
 import {
   lineAlreadyReviewed,
@@ -45,6 +46,9 @@ export interface ReviewRow {
   review_note: string | null;
   previously_accepted: boolean;
   created_at: string;
+  // null khi kỳ của dòng chưa có bản chốt có hàng
+  in_sent_snapshot: boolean | null;
+  in_sent_snapshot_qty: number | null;
 }
 
 type ReviewedAction = 'accepted' | 'converted' | 'rejected';
@@ -97,10 +101,19 @@ export class ReviewService {
                  AND pl.review_status = 'accepted'
                  AND lower(trim(pl.custom_name)) = lower(trim(l.custom_name))
              ) AS previously_accepted,
-             l.created_at
+             l.created_at,
+             CASE WHEN sent.order_qty IS NULL THEN NULL
+                  ELSE coalesce((sent.order_qty->>${CUSTOM_ITEM_KEY})::int, 0) > 0 END AS in_sent_snapshot,
+             CASE WHEN sent.order_qty IS NULL THEN NULL
+                  ELSE coalesce((sent.order_qty->>${CUSTOM_ITEM_KEY})::int, 0) END AS in_sent_snapshot_qty
       FROM request_lines l
       JOIN requests r ON r.id = l.request_id
       LEFT JOIN users u ON u.sub = r.user_sub
+      LEFT JOIN LATERAL (
+        SELECT data->'order_qty' AS order_qty FROM report_snapshots
+        WHERE period_ym = r.period_ym AND ${hasItemsSql}
+        ORDER BY created_at DESC, id DESC LIMIT 1
+      ) sent ON true
       WHERE l.review_status = ${query.status}
         AND (${ym}::date IS NULL OR r.period_ym = ${ym}::date)
         AND ${lockedPeriod(open.ym)}

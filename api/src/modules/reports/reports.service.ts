@@ -3,14 +3,21 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor } from '../../database/database.module';
 import { StockQueryService } from '../catalog/stock-query.service';
 import { PeriodsService } from '../periods/periods.service';
+import { admOwedByKey } from './order-default';
 import { needOf } from './report-need';
 import {
   customDemand,
   detailLines,
   itemDemand,
   pendingCustomCount,
+  periodProgress,
 } from './report-queries';
-import type { CustomDemand, DetailLine, ItemDemand } from './report-queries';
+import type {
+  CustomDemand,
+  DetailLine,
+  ItemDemand,
+  KeyProgress,
+} from './report-queries';
 import type {
   MonthReport,
   ReportCustomRow,
@@ -41,31 +48,46 @@ export class ReportsService {
     const detail = await detailLines(db, ym);
     const pending = await pendingCustomCount(db, ym);
     const issues = await this.stockQuery.issuesInMonth(ym, db);
+    const owed = await admOwedByKey(db, ym);
     return {
       ym,
       generated_at: now.toISOString(),
-      byItem: items.map(toItemRow),
-      custom: custom.map(toCustomRow).sort(byName),
+      byItem: items.map((d) => toItemRow(d, owed.get(d.item_id) ?? 0)),
+      custom: custom
+        .map((d) => toCustomRow(d, owed.get(d.key) ?? 0))
+        .sort(byName),
       byDepartment: groupDetail(detail),
       issues: issues.map(toIssue),
       pending_custom_count: pending,
     };
   }
+
+  // Báo cáo sống (không vào bản chốt): cột Đăng ký/Đã giao/Đã về để đối chiếu với bản đã gửi
+  async live(
+    ym: string,
+    now: Date,
+  ): Promise<MonthReport & { progress: Record<string, KeyProgress> }> {
+    const report = await this.build(ym, now);
+    return { ...report, progress: await periodProgress(this.db, ym) };
+  }
 }
 
-function toItemRow(d: ItemDemand): ReportItemRow {
+function toItemRow(d: ItemDemand, admOwed: number): ReportItemRow {
   return {
     key: d.item_id,
     ...d,
     need: needOf(d.requested, d.backlog_prev, d.stock),
+    adm_owed: admOwed,
   };
 }
 
-function toCustomRow(d: CustomDemand): ReportCustomRow {
+function toCustomRow(d: CustomDemand, admOwed: number): ReportCustomRow {
   return {
     ...d,
     stock: null,
     need: needOf(d.requested, d.backlog_prev, null),
+    adm_owed: admOwed,
+    usable: true,
   };
 }
 

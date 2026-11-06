@@ -4,8 +4,10 @@ import { SystemConfigModule } from '../config/config.module';
 import { PeriodsModule } from '../periods/periods.module';
 import { UnitsModule } from '../units/units.module';
 import { UsersModule } from '../users/users.module';
+import { NoOrderController } from './no-order.controller';
 import { ReportsController } from './reports.controller';
 import { ReportsService } from './reports.service';
+import { SendStateService } from './send-state.service';
 import { SnapshotsController } from './snapshots.controller';
 import { SnapshotsService } from './snapshots.service';
 
@@ -17,8 +19,8 @@ import { SnapshotsService } from './snapshots.service';
     UnitsModule,
     UsersModule,
   ],
-  controllers: [ReportsController, SnapshotsController],
-  providers: [ReportsService, SnapshotsService],
+  controllers: [ReportsController, SnapshotsController, NoOrderController],
+  providers: [ReportsService, SnapshotsService, SendStateService],
   exports: [ReportsService],
 })
 export class ReportsModule {}
