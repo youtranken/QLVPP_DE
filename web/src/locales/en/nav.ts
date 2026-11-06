@@ -42,7 +42,7 @@ const nav: Messages<typeof vi> = {
     badge: {
       review: '{{n}} items to review',
       delivery: '{{n}} people waiting',
-      stock: '{{n}} items running low',
+      stock: '{{n}} items short for waiting staff',
     },
     periodCard: {
       title: 'Period: month {{month}}',

@@ -175,7 +175,7 @@ export class ArrivalsPlanService {
   }
 }
 
-function orderedFromSnapshot(sent: SentSnapshot): Map<string, number> {
+export function orderedFromSnapshot(sent: SentSnapshot): Map<string, number> {
   const ordered = new Map<string, number>();
   for (const r of sent.data.byItem) {
     const qty = sent.data.order_qty[r.key] ?? wantOf(r);

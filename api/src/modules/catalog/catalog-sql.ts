@@ -45,6 +45,7 @@ export interface ItemRow extends Record<string, unknown> {
   max_qty: number;
   stock_qty: number;
   restock_level: number | null;
+  /** @deprecated Chỉ theo tồn, không xét người chờ — Tủ/Kho đọc `GET admin/stock` */
   stock_state: StockState;
   active: boolean;
   sort_order: number;

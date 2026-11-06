@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent } from '@/test/test-utils';
 import { IssueDialog } from './issue-dialog';
-import { makeRow, mutationCall, stubMutation, wrap } from './stock-dialog-fixtures';
+import { makeRow, mutationCall, mutationCount, stubMutation, wrap } from './stock-dialog-fixtures';
 
 const URL = '/api/admin/items/i-1/issue';
 
@@ -15,7 +15,7 @@ describe('IssueDialog', () => {
     expect(screen.getByText('Tồn sau khi lưu 0')).toBeInTheDocument();
     await userEvent.click(screen.getByLabelText('Dùng chung'));
     await userEvent.type(screen.getByLabelText(/^Lý do/), 'Máy in tầng 2');
-    await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xuất' }));
     await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     const { body } = mutationCall(f, URL);
     expect(body).toEqual({ qty: 3, reason: 'Máy in tầng 2' });
@@ -23,17 +23,68 @@ describe('IssueDialog', () => {
     expect(await screen.findByText('Đã xuất lẻ 3 ram Giấy A4 cho Dùng chung')).toBeInTheDocument();
   });
 
-  it('tồn 3 gõ 4: không còn dòng tồn sau, server chặn STOCK_INSUFFICIENT {available: 3} → "Chỉ còn 3 ram." tại ô số', async () => {
-    stubMutation(jsonResponse(409, { code: 'STOCK_INSUFFICIENT', message: 'x', available: 3 }));
+  it('tồn 3 gõ 4 (vượt tủ) → chặn ngay "Chỉ còn 3 ram." tại ô số, không gọi API; gõ 3 thì bỏ chặn', async () => {
+    const f = stubMutation(jsonResponse(201, { stock_qty: 0 }));
     const onClose = vi.fn();
     wrap(<IssueDialog item={makeRow(3)} onClose={onClose} />);
     await userEvent.type(screen.getByLabelText(/^Số lượng/), '4');
     expect(screen.queryByText(/Tồn sau khi lưu/)).toBeNull();
     await userEvent.click(screen.getByLabelText('Dùng chung'));
     await userEvent.type(screen.getByLabelText(/^Lý do/), 'In hồ sơ thầu');
-    await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ' }));
-    await vi.waitFor(() => expect(screen.getByLabelText(/^Số lượng/)).toHaveAccessibleDescription('Chỉ còn 3 ram.'));
+    await userEvent.click(screen.getByRole('button', { name: 'Xuất' }));
+    expect(screen.getByLabelText(/^Số lượng/)).toHaveAccessibleDescription('Chỉ còn 3 ram.');
+    expect(mutationCount(f, URL)).toBe(0);
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('server vẫn chặn STOCK_INSUFFICIENT {available: 2} (tồn đổi nơi khác) → "Chỉ còn 2 ram." tại ô số', async () => {
+    stubMutation(jsonResponse(409, { code: 'STOCK_INSUFFICIENT', message: 'x', available: 2 }));
+    wrap(<IssueDialog item={makeRow(3)} onClose={vi.fn()} />);
+    await userEvent.type(screen.getByLabelText(/^Số lượng/), '3');
+    await userEvent.click(screen.getByLabelText('Dùng chung'));
+    await userEvent.type(screen.getByLabelText(/^Lý do/), 'In hồ sơ thầu');
+    await userEvent.click(screen.getByRole('button', { name: 'Xuất' }));
+    await vi.waitFor(() => expect(screen.getByLabelText(/^Số lượng/)).toHaveAccessibleDescription('Chỉ còn 2 ram.'));
+  });
+
+  describe('tủ 5, giữ 4 cho 2 người chờ (còn trống 1)', () => {
+    it('xuất 1 → không cảnh báo, nút "Xuất"', async () => {
+      stubMutation(jsonResponse(201, {}));
+      wrap(<IssueDialog item={makeRow(5, 4, 2)} onClose={vi.fn()} />);
+      await userEvent.type(screen.getByLabelText(/^Số lượng/), '1');
+      expect(screen.queryByRole('note')).toBeNull();
+      expect(screen.getByRole('button', { name: 'Xuất' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Vẫn xuất' })).toBeNull();
+    });
+
+    it('xuất 3 → khối cam "Phần này đang giữ cho 2 người chờ nhận." + "Xuất 3 sẽ lấy 2 ram đang giữ."; "Vẫn xuất" gửi {qty: 3}', async () => {
+      const f = stubMutation(jsonResponse(201, { stock_qty: 2 }));
+      const onClose = vi.fn();
+      wrap(<IssueDialog item={makeRow(5, 4, 2)} onClose={onClose} />);
+      await userEvent.type(screen.getByLabelText(/^Số lượng/), '3');
+      const note = screen.getByRole('note');
+      expect(note).toHaveTextContent('Phần này đang giữ cho 2 người chờ nhận.');
+      expect(note).toHaveTextContent('Xuất 3 sẽ lấy 2 ram đang giữ.');
+      await userEvent.click(screen.getByLabelText('Dùng chung'));
+      await userEvent.type(screen.getByLabelText(/^Lý do/), 'Phòng họp');
+      await userEvent.click(screen.getByRole('button', { name: 'Vẫn xuất' }));
+      await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
+      expect(mutationCall(f, URL).body).toEqual({ qty: 3, reason: 'Phòng họp' });
+    });
+
+    it('xuất 2 (= trống + 1) đã cảnh báo lấy 1; xuất 6 (> tủ) → chặn, không gọi API', async () => {
+      const f = stubMutation(jsonResponse(201, {}));
+      wrap(<IssueDialog item={makeRow(5, 4, 2)} onClose={vi.fn()} />);
+      await userEvent.type(screen.getByLabelText(/^Số lượng/), '2');
+      expect(screen.getByRole('note')).toHaveTextContent('Xuất 2 sẽ lấy 1 ram đang giữ.');
+      await userEvent.clear(screen.getByLabelText(/^Số lượng/));
+      await userEvent.type(screen.getByLabelText(/^Số lượng/), '6');
+      await userEvent.click(screen.getByLabelText('Dùng chung'));
+      await userEvent.type(screen.getByLabelText(/^Lý do/), 'x');
+      await userEvent.click(screen.getByRole('button', { name: /Xuất/ }));
+      expect(screen.getByLabelText(/^Số lượng/)).toHaveAccessibleDescription('Chỉ còn 5 ram.');
+      expect(mutationCount(f, URL)).toBe(0);
+    });
   });
 
   it('chọn người từ danh bạ → gửi recipient_sub, toast có tên người; người đã khóa không chọn được', async () => {
@@ -44,7 +95,7 @@ describe('IssueDialog', () => {
     await userEvent.type(screen.getByLabelText(/^Lý do/), 'Người mới vào giữa kỳ');
     expect(await screen.findByRole('button', { name: /Lê Văn Cường/ })).toBeDisabled();
     await userEvent.click(screen.getByRole('button', { name: /Trần Thị Bình/ }));
-    await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xuất' }));
     await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(mutationCall(f, URL).body).toEqual({ qty: 1, recipient_sub: 'u-binh', reason: 'Người mới vào giữa kỳ' });
     expect(await screen.findByText('Đã xuất lẻ 1 ram Giấy A4 cho Trần Thị Bình')).toBeInTheDocument();
@@ -55,7 +106,7 @@ describe('IssueDialog', () => {
     wrap(<IssueDialog item={makeRow(5)} onClose={vi.fn()} />);
     await userEvent.type(screen.getByLabelText(/^Số lượng/), '1');
     await userEvent.type(screen.getByLabelText(/^Lý do/), 'x');
-    await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xuất' }));
     expect(await screen.findByText('Chọn người nhận hoặc đánh dấu “Dùng chung”.', { selector: '.ff-error, .ff-error *' })).toBeInTheDocument();
     expect(f.mock.calls.filter((c) => c[0] === URL)).toHaveLength(0);
   });
@@ -65,7 +116,7 @@ describe('IssueDialog', () => {
     wrap(<IssueDialog item={makeRow(5)} onClose={vi.fn()} />);
     await userEvent.type(screen.getByLabelText(/^Số lượng/), '1');
     await userEvent.click(screen.getByLabelText('Dùng chung'));
-    await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xuất' }));
     await vi.waitFor(() => expect(screen.getByLabelText(/^Lý do/)).toHaveAccessibleDescription('Cần ghi lý do.'));
   });
 
@@ -78,7 +129,7 @@ describe('IssueDialog', () => {
     await userEvent.type(screen.getByLabelText(/^Số lượng/), '1');
     await userEvent.type(screen.getByLabelText(/^Lý do/), 'x');
     await userEvent.click(await screen.findByRole('button', { name: /Trần Thị Bình/ }));
-    await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xuất' }));
     const picker = await screen.findByRole('searchbox', { name: /Tìm người nhận/ });
     await vi.waitFor(() => expect(picker).toHaveAccessibleDescription(message));
     expect(picker).toBeInvalid();

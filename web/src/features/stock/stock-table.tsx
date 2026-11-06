@@ -4,19 +4,33 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/ui/data-table';
 import { ItemThumb } from '@/ui/item-thumb';
 import { RowMenu, type RowMenuItem } from '@/ui/row-menu';
-import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { useUnitNames } from '@/features/units/units.api';
 import type { ReactNode } from 'react';
 import type { StockRow } from './stock-rows';
 
 export type StockAction = 'purchase' | 'count' | 'issue' | 'ledger';
 
-export function StockBadge({ state }: { state: StockRow['stock_state'] }) {
+const BADGE_CLASS: Record<StockRow['stock_state'], string> = {
+  short: 'tag tag--danger',
+  incoming: 'tag tag--outline',
+  none: 'tag tag--outline',
+  low: 'tag tag--warn',
+  untracked: 'tag tag--outline',
+  ok: 'tag tag--ok',
+};
+
+// Đỏ chỉ khi người đang chờ thiếu hàng (đã tính hàng đang về); tủ 0 không ai cần chỉ xám
+export function StockBadge({ row }: { row: Pick<StockRow, 'stock_state' | 'short' | 'awaiting' | 'free'> }) {
   const { t } = useTranslation();
-  if (state === 'out') return <span className="tag tag--danger">{t('stock.page.out')}</span>;
-  if (state === 'low') return <span className="tag tag--warn">{t('stock.page.low')}</span>;
-  if (state === 'ok') return <span className="tag tag--ok">{t('stock.page.ok')}</span>;
-  return null;
+  const text: Record<StockRow['stock_state'], string> = {
+    short: t('warn.W20short', { short: row.short }),
+    incoming: t('warn.W20pending', { n: row.awaiting }),
+    none: t('stock.state.none'),
+    low: t('stock.state.low'),
+    untracked: t('stock.state.untracked'),
+    ok: t('stock.state.ok', { n: row.free }),
+  };
+  return <span className={BADGE_CLASS[row.stock_state]}>{text[row.stock_state]}</span>;
 }
 
 export function IssueButton({ item, onClick, className }: { item: Pick<StockRow, 'stock_qty'>; onClick: () => void; className: string }) {
@@ -29,27 +43,22 @@ export function IssueButton({ item, onClick, className }: { item: Pick<StockRow,
   );
 }
 
-// 390: Nhập mua vào ⋯ để hàng thẻ không bị nút chiếm chỗ; 1280: nút nhỏ luôn hiện (không chỉ khi rê chuột)
 function RowActions({ row: r, onAction }: { row: StockRow; onAction: (a: StockAction, r: StockRow) => void }) {
   const { t } = useTranslation();
-  const phone = useMediaQuery(ADMIN_PHONE_QUERY);
   const empty = r.stock_qty <= 0;
-  const purchase: RowMenuItem = { label: t('stock.page.purchase'), onSelect: () => onAction('purchase', r) };
   const items: RowMenuItem[] = [
     { label: t('stock.page.count'), onSelect: () => onAction('count', r) },
     { label: t('stock.page.issue'), disabled: empty, title: empty ? t('stock.page.issueDisabled') : undefined, onSelect: () => onAction('issue', r) },
     { label: t('stock.page.ledger'), onSelect: () => onAction('ledger', r) },
+    { label: t('stock.actions.buyOutside'), onSelect: () => onAction('purchase', r) },
   ];
-  return (
-    <span className="sk-actions__row">
-      {!phone && (
-        <button type="button" className="btn btn--ghost btn--sm sk-purchase" onClick={purchase.onSelect}>
-          {purchase.label}
-        </button>
-      )}
-      <RowMenu label={t('stock.page.more', { name: r.name })} items={phone ? [purchase, ...items] : items} />
-    </span>
-  );
+  return <RowMenu label={t('stock.page.more', { name: r.name })} items={items} />;
+}
+
+function InactiveTag({ reason }: { reason: StockRow['inactive_reason'] }) {
+  const { t } = useTranslation();
+  if (!reason) return null;
+  return <span className="tag tag--outline">{t(reason === 'item' ? 'catalog.categories.byItem' : 'catalog.categories.byGroup')}</span>;
 }
 
 function useColumns(groupName: (r: StockRow) => string, onAction: (a: StockAction, r: StockRow) => void) {
@@ -67,15 +76,18 @@ function useColumns(groupName: (r: StockRow) => string, onAction: (a: StockActio
               <button type="button" className="sk-item__name" aria-label={t('stock.page.openLedger', { name: r.name })} onClick={() => onAction('ledger', r)}>
                 {r.name}
               </button>
-              <small className="sk-item__note">{[groupName(r), r.pack_note].filter(Boolean).join(' · ')}</small>
+              <small className="sk-item__note">
+                {[groupName(r), r.pack_note].filter(Boolean).join(' · ')} <InactiveTag reason={r.inactive_reason} />
+              </small>
             </span>
           </span>
         ),
       },
       { id: 'unit', header: t('stock.page.colUnit'), cell: ({ row }) => unitName(row.original.unit) },
       { id: 'stock', header: t('stock.page.colStock'), meta: { className: 'num r' }, cell: ({ row }) => <b>{row.original.stock_qty}</b> },
-      { id: 'status', header: t('stock.page.colStatus'), cell: ({ row }) => <StockBadge state={row.original.stock_state} /> },
-      { id: 'owed', header: t('stock.page.colOwed'), meta: { className: 'num r' }, cell: ({ row }) => (row.original.owed > 0 ? row.original.owed : t('common.empty')) },
+      { id: 'held', header: t('stock.page.colHeld'), meta: { className: 'num r' }, cell: ({ row }) => row.original.held },
+      { id: 'free', header: t('stock.page.colFree'), meta: { className: 'num r' }, cell: ({ row }) => row.original.free },
+      { id: 'status', header: t('stock.page.colStatus'), cell: ({ row }) => <StockBadge row={row.original} /> },
       {
         id: 'actions',
         header: () => <span className="sr-only">{t('stock.page.colActions')}</span>,

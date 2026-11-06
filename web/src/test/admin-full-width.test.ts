@@ -113,6 +113,14 @@ describe('Hành chính toàn màn hình', () => {
   });
 });
 
+describe('Bố cục theo route', () => {
+  it('Cấu hình: khối xếp auto-fill minmax(420px) (một khối lẻ không kéo hết hàng), khối ô ký chiếm cả hàng; < 420 một cột', () => {
+    const css = readFileSync(join(SRC, 'features/admin/config.m1.css'), 'utf8');
+    expect(css).toMatch(/\.cf-blocks \{[^}]*grid-template-columns: repeat\(auto-fill, minmax\(min\(100%, 420px\), 1fr\)\)/);
+    expect(css).toMatch(/\.cf-block:has\(\.cf-box\) \{ grid-column: 1 \/ -1; \}/);
+  });
+});
+
 describe('Panel phủ — hoạt ảnh và thứ tự lớp', () => {
   const overlay = readFileSync(join(SRC, 'css/m1/overlay.css'), 'utf8');
   const rule = (sel: string) => new RegExp(`\\[data-shell='admin'\\] ${sel.replace('.', '\\.')} \\{([^}]*)\\}`).exec(overlay)?.[1] ?? '';

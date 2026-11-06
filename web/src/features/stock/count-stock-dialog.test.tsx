@@ -143,4 +143,24 @@ describe('CountStockDialog', () => {
     await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(mutationCall(f, URL).body.note).toBe('x'.repeat(500));
   });
+
+  describe('tủ 5, đang giữ 4 cho người chờ', () => {
+    it('đếm 3 → khối cam "Sau kiểm kê tủ còn 3, thiếu 1 cho người đang chờ.", vẫn lưu được', async () => {
+      const f = stubMutation(jsonResponse(201, { stock_qty: 3 }));
+      const onClose = vi.fn();
+      wrap(<CountStockDialog item={makeRow(5, 4, 2)} onClose={onClose} />);
+      await fill('3');
+      expect(screen.getByRole('note')).toHaveTextContent('Sau kiểm kê tủ còn 3, thiếu 1 cho người đang chờ.');
+      await userEvent.click(submit());
+      await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
+      expect(mutationCall(f, URL).body.counted_qty).toBe(3);
+    });
+
+    it('đếm 4 (= đang giữ) → không cảnh báo', async () => {
+      stubMutation(jsonResponse(201, {}));
+      wrap(<CountStockDialog item={makeRow(5, 4, 2)} onClose={vi.fn()} />);
+      await fill('4', '');
+      expect(screen.queryByRole('note')).toBeNull();
+    });
+  });
 });

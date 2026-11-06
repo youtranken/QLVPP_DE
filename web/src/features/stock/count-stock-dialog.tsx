@@ -4,6 +4,7 @@ import { apiErrorCode, apiErrorNumber } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { useUnitName } from '@/features/units/units.api';
 import { countStock } from './stock.api';
+import { CountHeldNote } from './held-note';
 import { QtyField, StockDialogShell, TextField } from './stock-dialog-parts';
 import { COUNT_MAX, signed, toInt } from './stock-input';
 import { useStockSubmit } from './use-stock-submit';
@@ -57,6 +58,7 @@ export function CountStockDialog({ item, onClose }: { item: StockRow; onClose: (
         </p>
       )}
       <QtyField label={t('stock.dialog.countQty')} min={0} max={COUNT_MAX} value={qty} error={errors.qty} autoFocus onChange={(v) => { setQty(v); clear('qty'); }} />
+      {valid && n !== null && <CountHeldNote counted={n} held={item.held} />}
       <TextField label={t('stock.dialog.reason')} hint={t('stock.dialog.countReasonHint')} required value={note} error={errors.reason} onChange={(v) => { setNote(v); clear('reason'); }} />
     </StockDialogShell>
   );

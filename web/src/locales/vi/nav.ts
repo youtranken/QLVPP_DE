@@ -39,7 +39,7 @@ const nav = {
     badge: {
       review: '{{n}} món chờ xem',
       delivery: '{{n}} người chưa nhận',
-      stock: '{{n}} món sắp hết',
+      stock: '{{n}} món thiếu cho người chờ',
     },
     periodCard: {
       title: 'Kỳ tháng {{month}}',

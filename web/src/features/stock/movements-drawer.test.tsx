@@ -15,15 +15,15 @@ function stubApi(pages: { first: unknown[]; next?: string | null; second?: unkno
 }
 
 const show = (stock: number, onAction = vi.fn()) =>
-  renderWithI18n(<MovementsDrawer item={{ ...makeRow(stock), owed: 4 }} groupName="Giấy" onAction={onAction} onClose={vi.fn()} />);
+  renderWithI18n(<MovementsDrawer item={makeRow(stock, 4, 2)} groupName="Giấy" onAction={onAction} onClose={vi.fn()} />);
 
 describe('MovementsDrawer', () => {
-  it('đầu ngăn kéo: "Giấy · ram", "Sổ cái Giấy A4", tồn lớn 7, "Còn nợ: 4"', async () => {
+  it('đầu ngăn kéo: "Giấy · ram", "Sổ cái Giấy A4", tồn lớn 7, "Đang giữ cho người chờ: 4"', async () => {
     stubApi({ first: [] });
     show(7);
     expect(screen.getByText('Giấy · ram')).toBeInTheDocument();
     expect(screen.getByRole('dialog', { name: 'Sổ cái Giấy A4' })).toBeInTheDocument();
-    expect(screen.getByText('Còn nợ: 4')).toBeInTheDocument();
+    expect(screen.getByText('Đang giữ cho người chờ: 4')).toBeInTheDocument();
     expect(await screen.findByText('Chưa có biến động nào.')).toBeInTheDocument();
   });
 
@@ -76,7 +76,7 @@ describe('MovementsDrawer', () => {
     stubApi({ first: [] });
     const onAction = vi.fn();
     const { unmount } = show(3, onAction);
-    await userEvent.click(screen.getByRole('button', { name: 'Nhập mua' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Nhập ngoài kỳ (tự mua lẻ)' }));
     await userEvent.click(screen.getByRole('button', { name: 'Kiểm kê' }));
     await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ' }));
     expect(onAction.mock.calls.map((c) => c[0])).toEqual(['purchase', 'count', 'issue']);

@@ -52,6 +52,24 @@ export interface IssueRow {
   created_at: string;
 }
 
+export type HeldStockState = 'short' | 'incoming' | 'none' | 'low' | 'untracked' | 'ok';
+
+// Tủ/Kho theo người đang chờ: held = phần còn lại của dòng kỳ khóa, incoming = hàng ADM đang về
+export interface StockFacts {
+  item_id: string;
+  stock_qty: number;
+  restock_level: number | null;
+  held: number;
+  free: number;
+  short: number;
+  incoming: number;
+  // Phần thiếu đã có hàng đang về bù ("Chờ hàng về n")
+  awaiting: number;
+  // Số người đang chờ món
+  waiting: number;
+  stock_state: HeldStockState;
+}
+
 const STOCK_KEY = ['stock'] as const;
 export const ISSUES_KEY = ['admin', 'issues'] as const;
 const MOVEMENTS_PAGE = 20;
@@ -60,6 +78,12 @@ export const lowStockQuery = () =>
   queryOptions({
     queryKey: [...STOCK_KEY, 'low'],
     queryFn: () => apiFetch<AdminItem[]>('/api/admin/stock/low'),
+  });
+
+export const stockListQuery = () =>
+  queryOptions({
+    queryKey: [...STOCK_KEY, 'list'],
+    queryFn: () => apiFetch<StockFacts[]>('/api/admin/stock'),
   });
 
 export const issuesQuery = (ym: string | undefined) =>

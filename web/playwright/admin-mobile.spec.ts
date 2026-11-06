@@ -9,7 +9,7 @@ const PAGES = [
   ['delivery', 'Giao hàng'],
   ['backlog', 'Còn nợ'],
   ['reports', 'Báo cáo & in'],
-  ['stock', 'Kho'],
+  ['stock', 'Tủ / Kho'],
   ['catalog', 'Danh mục'],
   ['categories', 'Nhóm & đơn vị'],
   ['users', 'Danh bạ'],
@@ -22,7 +22,7 @@ const overflowOf = (page: Page) => page.evaluate(() => document.documentElement.
 const headingName = (title: string) => (title === 'Giao hàng' ? /^Giao hàng kỳ tháng \d+$/ : title === 'Tháng này' ? /^Chào / : title);
 const heading = (page: Page, title: string) => page.getByRole('heading', { level: 1, name: headingName(title), exact: typeof headingName(title) === 'string' });
 const menu = (page: Page) => page.getByRole('dialog', { name: 'Menu quản lý' });
-const MENU_LABEL: Record<string, string> = { Kho: 'Tủ / Kho', 'Danh mục': 'Danh mục món', 'Danh bạ': 'Nhân viên' }; // nhãn sidebar khác tiêu đề trang
+const MENU_LABEL: Record<string, string> = { 'Danh mục': 'Danh mục món', 'Danh bạ': 'Nhân viên' }; // nhãn sidebar khác tiêu đề trang
 const menuLink = (page: Page, title: string) => {
   const label = MENU_LABEL[title] ?? title;
   return menu(page).getByRole('link', { name: new RegExp(`^${label.replace('&', '\\&').replace('/', '\\/')}(?! \\()`) });

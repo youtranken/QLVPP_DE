@@ -16,18 +16,18 @@ afterEach(() => {
 });
 
 describe('AdminSidebar: đếm', () => {
-  it('review trả 3 dòng → "Món ngoài danh mục" hiện 3; giao 6 người chưa nhận (1 người Còn nợ không tính), kho 4 món kèm nhãn đọc màn hình', async () => {
+  it('review trả 3 dòng → "Món ngoài danh mục" hiện 3; giao 6 người chưa nhận (1 người Còn nợ không tính), Tủ/Kho 4 món thiếu cho người chờ kèm nhãn đọc màn hình', async () => {
     mockViewport(1280);
     stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(200, rows(3)),
       '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(200, { ym: '2026-10', people: [...Array.from({ length: 6 }, (_, i) => ({ user_sub: `p${i}`, status: 'pending' })), { user_sub: 'x', status: 'debt' }] }),
-      '/api/admin/stock/low': () => jsonResponse(200, rows(4).items),
+      '/api/admin/stock': () => jsonResponse(200, Array.from({ length: 4 }, (_, i) => ({ item_id: `i${i}`, short: i + 1, stock_state: 'short' }))),
     });
     renderApp(makeMe('admin'), '/admin/catalog');
     await waitFor(() => expect(navLink('Món ngoài danh mục')).toHaveTextContent('3'));
     expect(navLink('Món ngoài danh mục')).toHaveAccessibleName('Món ngoài danh mục, 3 món chờ xem');
     await waitFor(() => expect(navLink('Giao hàng')).toHaveAccessibleName('Giao hàng, 6 người chưa nhận'));
-    await waitFor(() => expect(navLink('Tủ / Kho')).toHaveAccessibleName('Tủ / Kho, 4 món sắp hết'));
+    await waitFor(() => expect(navLink('Tủ / Kho')).toHaveAccessibleName('Tủ / Kho, 4 món thiếu cho người chờ'));
   });
 
   it.each([
@@ -52,7 +52,7 @@ describe('AdminSidebar: đếm', () => {
     const f = stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(500, null),
       '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(409, { code: 'PERIOD_NOT_LOCKED' }),
-      '/api/admin/stock/low': () => jsonResponse(500, null),
+      '/api/admin/stock': () => jsonResponse(500, null),
     });
     renderApp(makeMe('admin'), '/admin/catalog');
     await waitFor(() => expect(f.mock.calls.some(([u]) => u === '/api/admin/periods/2026-10/delivery-people')).toBe(true));

@@ -59,8 +59,8 @@ export function MovementsDrawer({ item, groupName, onAction, onClose }: Props) {
       <div className="drawer-body">
         <div className="sk-balance">
           <b className="sk-balance__n num">{item.stock_qty}</b>
-          <StockBadge state={item.stock_state} />
-          <span className="sk-balance__owed">{t('stock.ledger.owed', { n: item.owed > 0 ? item.owed : t('common.empty') })}</span>
+          <StockBadge row={item} />
+          <span className="sk-balance__owed">{t('stock.ledger.held', { n: item.held > 0 ? item.held : t('common.empty') })}</span>
         </div>
         {movements.isPending && <Loading />}
         {movements.isError && <LoadError onRetry={() => void movements.refetch()} />}
@@ -86,7 +86,7 @@ export function MovementsDrawer({ item, groupName, onAction, onClose }: Props) {
       </div>
       <div className="drawer-footer sk-drawer-foot">
         <button type="button" className="btn btn--sm" onClick={() => onAction('purchase')}>
-          {t('stock.page.purchase')}
+          {t('stock.actions.buyOutside')}
         </button>
         <button type="button" className="btn btn--sm" onClick={() => onAction('count')}>
           {t('stock.page.count')}

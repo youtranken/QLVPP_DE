@@ -11,15 +11,20 @@ interface Props {
   onClear: () => void;
 }
 
+// Đỏ chỉ khi có người đang chờ mà thiếu; "Không có" không tô
 export function StockStats({ stats, filter, narrowed, onFilter, onClear }: Props) {
   const { t } = useTranslation();
   const items = t('stock.stats.items');
+  const card = (f: StockFilter, icon: 'alert' | 'pkg' | 'warehouse' | 'layers', tone: 'danger' | 'warn' | 'neutral') => (
+    <StatCard key={f} label={t(`stock.stats.${f}`)} icon={icon} value={stats[f]} unit={items} tone={stats[f] > 0 ? tone : 'neutral'} pressed={filter === f} onClick={() => onFilter(f)} />
+  );
   return (
     <StatRow>
-      <StatCard label={t('stock.stats.tracked')} icon="layers" value={stats.tracked} unit={items} pressed={!narrowed} onClick={onClear} />
-      <StatCard label={t('stock.stats.low')} icon="warehouse" value={stats.low} unit={items} tone={stats.low > 0 ? 'warn' : 'neutral'} pressed={filter === 'low'} onClick={() => onFilter('low')} />
-      <StatCard label={t('stock.stats.out')} icon="alert" value={stats.out} unit={items} tone={stats.out > 0 ? 'danger' : 'neutral'} pressed={filter === 'out'} onClick={() => onFilter('out')} />
-      <StatCard label={t('stock.stats.owed')} icon="receipt" value={stats.owedQty > 0 ? stats.owedQty : t('common.empty')} unit={stats.owedQty > 0 ? t('stock.stats.units') : undefined} sub={stats.owedQty > 0 ? t('stock.stats.owedItems', { items: stats.owedItems }) : undefined} />
+      <StatCard label={t('stock.stats.all')} icon="layers" value={stats.all} unit={items} pressed={!narrowed} onClick={onClear} />
+      {card('short', 'alert', 'danger')}
+      {card('incoming', 'pkg', 'neutral')}
+      {card('low', 'warehouse', 'warn')}
+      {card('none', 'layers', 'neutral')}
     </StatRow>
   );
 }

@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, devHeaders, expectNoContrastViolations, isMobile, seedActiveUser, shot, openPurchase } from './helpers';
+import { acquireLock, devHeaders, expectNoContrastViolations, expectStockCell, isMobile, seedActiveUser, shot, openPurchase } from './helpers';
 
 const SA_USERNAME = process.env.PW_SA_USERNAME ?? 'sa';
 const SA_PASSWORD = process.env.PW_SA_PASSWORD;
@@ -49,11 +49,11 @@ async function stockFlow(page: Page, itemName: string) {
   const row = page.getByRole('row').filter({ hasText: itemName });
 
   await openPurchase(page, row);
-  const purchase = page.getByRole('dialog', { name: `Nhập mua ${itemName}` });
+  const purchase = page.getByRole('dialog', { name: `Nhập ngoài kỳ (tự mua lẻ) ${itemName}` });
   await purchase.getByLabel('Số lượng nhập').fill('10');
   await purchase.getByRole('button', { name: 'Lưu nhập mua' }).click();
   await expect(purchase).toBeHidden();
-  await expect(row.getByRole('cell', { name: /^(Tồn kho )?10$/ })).toBeVisible();
+  await expectStockCell(row, 10);
 
   await row.getByRole('button', { name: `Thao tác khác cho ${itemName}` }).click();
   await page.getByRole('menuitem', { name: 'Xuất lẻ' }).click();
@@ -62,9 +62,9 @@ async function stockFlow(page: Page, itemName: string) {
   await issue.getByRole('searchbox', { name: 'Tìm người nhận' }).fill(RECIPIENT.name);
   await issue.getByRole('button', { name: new RegExp(RECIPIENT.name) }).click();
   await issue.getByLabel('Lý do').fill('Smoke Plan 1');
-  await issue.getByRole('button', { name: 'Xuất lẻ', exact: true }).click();
+  await issue.getByRole('button', { name: 'Xuất', exact: true }).click();
   await expect(issue).toBeHidden();
-  await expect(row.getByRole('cell', { name: /^(Tồn kho )?7$/ })).toBeVisible();
+  await expectStockCell(row, 7);
 
   await row.getByRole('button', { name: `Thao tác khác cho ${itemName}` }).click();
   await page.getByRole('menuitem', { name: 'Sổ cái' }).click();
