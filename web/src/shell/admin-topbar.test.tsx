@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Tháng này', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình', 'Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ'];
+const NAV_ORDER = ['Tháng này', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm & đơn vị', 'Nhân viên', 'Nhật ký', 'Cấu hình', 'Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ'];
 
 const topbar = () => screen.getAllByRole('banner')[0];
 

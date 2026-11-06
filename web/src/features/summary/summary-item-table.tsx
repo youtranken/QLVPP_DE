@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import { groupTone, type Tone } from '@/lib/group-tone';
+import { compareItems, orderKeyOf, type ItemOrderKey } from '@/lib/item-order';
 import { DataTable } from '@/ui/data-table';
 import { ItemThumb } from '@/ui/item-thumb';
 import { LoadError } from '@/ui/load-state';
@@ -27,8 +28,10 @@ function useRows(ym: string, q: string, lowOnly: boolean) {
   const data = useMemo<Row[]>(() => {
     const byId = new Map((items.data ?? []).map((i) => [i.id, i]));
     const catList = cats.data ?? [];
-    const order = [...catList].sort((a, b) => a.sort_order - b.sort_order).map((c) => c.id);
-    const rank = (g: string) => (g === CUSTOM ? order.length + 1 : g === NONE ? order.length : order.indexOf(g));
+    const catById = new Map(catList.map((c) => [c.id, c]));
+    // Món chưa có trong /admin/items (đang tải) xếp như chưa nhóm; ngoài DM luôn cuối, giữ thứ tự server
+    const keyOf = (r: Row): ItemOrderKey => (r.item ? orderKeyOf(r.item, catById) : { id: r.key, name: r.name, sort_order: 0, category: null });
+    const custom = (r: Row) => Number(r.group === CUSTOM);
     return (rows.data?.items ?? [])
       .map((r) => {
         const item = r.item_id ? byId.get(r.item_id) : undefined;
@@ -36,7 +39,7 @@ function useRows(ym: string, q: string, lowOnly: boolean) {
       })
       .filter((r) => !lowOnly || (!!r.item?.usable && (r.item.stock_state === 'low' || r.item.stock_state === 'out')))
       .filter((r) => !q || matchesSearch(r.name, q))
-      .sort((a, b) => rank(a.group) - rank(b.group));
+      .sort((a, b) => custom(a) - custom(b) || (custom(a) ? 0 : compareItems(keyOf(a), keyOf(b))));
   }, [rows.data, items.data, cats.data, q, lowOnly]);
   return { data, rows, cats: cats.data ?? [] };
 }

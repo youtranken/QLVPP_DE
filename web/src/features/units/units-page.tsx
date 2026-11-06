@@ -5,11 +5,11 @@ import { useMe } from '@/lib/me';
 import { useLeaveGuard } from '@/features/request/use-leave-guard';
 import { discardOptions, useConfirm } from '@/ui/confirm-context';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
-import { PageHeader } from '@/ui/page-header';
 import { ReorderBar, ReorderToggle } from '@/ui/reorder';
 import { useToast } from '@/ui/toast-context';
 import { Toolbar } from '@/ui/toolbar';
 import { useReorderMode } from '@/ui/use-reorder-mode';
+import { SetupHeader } from '@/features/catalog/setup-page';
 import { UnitDialog } from './unit-dialog';
 import { unitErrorKey } from './unit-errors';
 import { UnitTable } from './unit-table';
@@ -84,11 +84,10 @@ export function UnitsPage() {
       {t('units.page.add')}
     </button>
   );
-  const title = t('nav.units');
   const list = order.ordered;
   return (
     <div className="ct-page">
-      <PageHeader crumbs={[t('nav.groups.stock'), title]} title={title} description={t('units.page.description')} primary={add} />
+      <SetupHeader variant="units" description={t('units.page.description')} primary={add} />
       {actionError && (
         <p role="alert" className="alert alert--danger">
           {actionError}

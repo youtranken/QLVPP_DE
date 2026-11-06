@@ -36,6 +36,7 @@ export const ADMIN_ROUTE_CLASSES: Record<`${Method} ${string}`, RouteClass> = {
   'GET /api/admin/items/:id/pending-arrival': 'sql-filter',
   'GET /api/admin/backlog': 'sql-filter',
   'GET /api/admin/audit': 'sql-filter',
+  'GET /api/admin/stock': 'sql-filter',
   'GET /api/admin/config': 'none',
   'PUT /api/admin/config': 'none',
   'GET /api/admin/items': 'none',

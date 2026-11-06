@@ -4,8 +4,12 @@ import type { SQL } from 'drizzle-orm';
 import { decodeTimestampCursor, encodeCursor } from '../../common/cursor';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor } from '../../database/database.module';
+import { PeriodsService } from '../periods/periods.service';
 import { ITEM_COLUMNS, LOW_STOCK_SQL } from './catalog-sql';
+import { ITEM_ORDER } from './item-order';
 import type { ItemRow } from './catalog-sql';
+import { stockList } from './stock-list';
+import type { StockListRow } from './stock-list';
 
 // Định nghĩa ở catalog-sql để ITEM_COLUMNS dùng chung mà không vòng import
 export { LOW_STOCK_SQL };
@@ -22,7 +26,16 @@ interface Keyed extends Record<string, unknown> {
 
 @Injectable()
 export class StockQueryService {
-  constructor(@Inject(DRIZZLE_DB) private readonly db: Database) {}
+  constructor(
+    @Inject(DRIZZLE_DB) private readonly db: Database,
+    private readonly periods: PeriodsService,
+  ) {}
+
+  async list(now: Date): Promise<StockListRow[]> {
+    const open = await this.periods.openPeriod(this.db, now);
+    const latest = await this.periods.latestLocked(now);
+    return stockList(this.db, open.ym, latest?.ym ?? null);
+  }
 
   movements(itemId: string, limit: number, cursor?: string) {
     return this.page(
@@ -67,9 +80,12 @@ export class StockQueryService {
 
   async lowStock(): Promise<ItemRow[]> {
     const result = await this.db.execute<ItemRow>(sql`
-      SELECT ${ITEM_COLUMNS} FROM items
-      WHERE active AND ${sql.raw(LOW_STOCK_SQL)}
-      ORDER BY sort_order, lower(name)
+      SELECT i.* FROM (
+        SELECT ${ITEM_COLUMNS} FROM items
+        WHERE active AND ${sql.raw(LOW_STOCK_SQL)}
+      ) i
+      LEFT JOIN item_categories c ON c.id = i.category_id
+      ORDER BY ${ITEM_ORDER}
     `);
     return result.rows;
   }

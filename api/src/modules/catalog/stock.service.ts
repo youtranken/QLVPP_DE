@@ -8,11 +8,14 @@ import {
 import { sql } from 'drizzle-orm';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Tx } from '../../database/database.module';
+import { ClockService } from '../../common/clock.service';
 import { AuditWriterService } from '../audit/audit-writer.service';
+import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
 import { LOW_STOCK_SQL } from './catalog-sql';
 import { itemNotFound } from './catalog.service';
 import { countDelta, countNote, reasonRequired } from './stock-count';
+import { heldSql } from './stock-held-sql';
 import type { IssueDto, StockChangeDto, StockCountDto } from './stock.dto';
 
 export interface StockResult {
@@ -38,6 +41,7 @@ interface MovementInput {
 // Chỉ biến động tay qua record() mới audit stock.<reason>; giao hàng audit ở line.delivered
 interface AuditedMovement extends Omit<MovementInput, 'reason'> {
   reason: 'purchase' | 'adjust' | 'issue';
+  tookHeld?: number;
 }
 
 export interface LowStockClaim extends Record<string, unknown> {
@@ -62,6 +66,8 @@ export class StockService {
     @Inject(DRIZZLE_DB) private readonly db: Database,
     private readonly audit: AuditWriterService,
     private readonly users: UsersService,
+    private readonly periods: PeriodsService,
+    private readonly clock: ClockService,
   ) {}
 
   async change(
@@ -113,7 +119,7 @@ export class StockService {
     });
   }
 
-  // Nhập mua đặt lại mốc (FR-50); điều chỉnh + chỉ đặt mốc khi món chưa có (tồn đầu kỳ), không đổi mốc đã có
+  // Nhập mua đặt lại mốc Sắp hết; điều chỉnh + chỉ đặt mốc khi món chưa có (tồn đầu kỳ), không đổi mốc đã có
   async applyChangeWithin(
     tx: Tx,
     itemId: string,
@@ -156,14 +162,36 @@ export class StockService {
         WHERE id = ${itemId} AND stock_qty >= ${dto.qty}
         RETURNING stock_qty
       `);
-      return this.record(tx, updated.rows[0], actor, {
+      const after = updated.rows[0];
+      return this.record(tx, after, actor, {
         itemId,
         delta: -dto.qty,
         reason: 'issue',
         note: dto.reason ?? null,
         recipientSub: dto.recipient_sub ?? null,
+        tookHeld: after
+          ? await this.tookHeldWithin(tx, itemId, after.stock_qty, dto.qty)
+          : 0,
       });
     });
+  }
+
+  // Xuất lẻ được lấy phần đang giữ cho người chờ (không chặn); chỉ ghi lại đã lấy bao nhiêu
+  private async tookHeldWithin(
+    tx: Tx,
+    itemId: string,
+    stockAfter: number,
+    qty: number,
+  ): Promise<number> {
+    const open = await this.periods.openPeriod(tx, this.clock.now());
+    const held =
+      (
+        await tx.execute<{ held: number }>(sql`
+          SELECT h.held FROM (${heldSql(open.ym)}) h WHERE h.item_id = ${itemId}
+        `)
+      ).rows[0]?.held ?? 0;
+    const freeBefore = Math.max(0, stockAfter + qty - held);
+    return Math.max(0, qty - freeBefore);
   }
 
   // Khóa theo id tăng chống deadlock chéo món; NO KEY để không chặn FK KEY SHARE khi lưu phiếu chèn dòng
@@ -252,7 +280,9 @@ export class StockService {
         delta: m.delta,
         note: m.note,
         movement_id: movement.id,
-        ...(m.reason === 'issue' ? { recipient_sub: m.recipientSub } : {}),
+        ...(m.reason === 'issue'
+          ? { recipient_sub: m.recipientSub, took_held: m.tookHeld ?? 0 }
+          : {}),
       },
     });
     return { stock_qty: updated.stock_qty, movement_id: movement.id };

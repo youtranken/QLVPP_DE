@@ -35,7 +35,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
 
     try {
       await page.goto('/admin/categories');
-      await expect(page.getByRole('heading', { level: 1, name: 'Nhóm món' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: 'Nhóm & đơn vị' })).toBeVisible();
       await page.getByRole('button', { name: 'Thêm nhóm' }).click();
       const catDialog = page.getByRole('dialog', { name: 'Thêm nhóm' });
       await catDialog.getByLabel('Tên nhóm').fill(category);
@@ -50,7 +50,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await page.getByRole('button', { name: `Đưa ${category} lên` }).click();
       await expect(page.getByRole('button', { name: `Đưa ${category} xuống` })).toBeEnabled();
       await page.getByRole('button', { name: 'Hủy' }).click();
-      await page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
+      await page.getByRole('dialog', { name: 'Bỏ thay đổi?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
       await expect(page.getByRole('button', { name: 'Sắp xếp' })).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'categories');
@@ -86,16 +86,16 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       const confirm = page.getByRole('dialog', { name: `Ngừng ${itemName}?` });
       await confirm.getByRole('button', { name: 'Ngừng', exact: true }).click();
       await expect(page.getByText(itemName, { exact: true })).toBeHidden();
-      await page.getByRole('switch', { name: /^Hiện món đã ngừng/ }).click();
+      await page.getByRole('group', { name: 'Trạng thái' }).getByRole('button', { name: /^Đã ngừng/ }).click();
       const itemRow = page.getByRole('row').filter({ hasText: itemName });
-      await expect(itemRow.getByText('Ngừng', { exact: true })).toBeVisible();
+      await expect(itemRow.getByText('Ngừng riêng', { exact: true })).toBeVisible();
       await expect(itemRow.getByRole('switch', { name: `Mở lại ${itemName}` })).toBeVisible();
 
       await page.getByRole('main').getByRole('link', { name: 'Nhóm món' }).click();
       await page.getByRole('button', { name: `Thao tác cho ${category}` }).click();
       await page.getByRole('menu', { name: `Thao tác cho ${category}` }).getByRole('menuitem', { name: 'Ngừng nhóm' }).click();
       const pause = page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` });
-      await expect(pause.getByText('0 món trong nhóm sẽ ẩn khỏi trang Đăng ký. Mở lại nhóm thì món hiện lại.')).toBeVisible();
+      await expect(pause.getByText('0 món sẽ ẩn với nhân viên. Dùng lại nhóm chỉ hiện lại những món này; món đã ngừng riêng vẫn ngừng.')).toBeVisible();
       await pause.getByRole('button', { name: 'Ngừng nhóm' }).click();
       await expect(page.getByRole('row').filter({ hasText: category }).getByText('Đã ngừng', { exact: true })).toBeVisible();
     } finally {
@@ -233,9 +233,9 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
 
       await page.getByRole('button', { name: `Sửa ${name}` }).click();
       const drawer = page.getByRole('dialog', { name: 'Sửa món' });
-      await expect(drawer.getByRole('region', { name: 'Nhân viên sẽ thấy' }).getByText(name)).toBeVisible();
-      await drawer.getByLabel('Tên món').fill(`${name} mới`);
-      await expect(drawer.getByRole('region', { name: 'Nhân viên sẽ thấy' }).getByText(`${name} mới`)).toBeVisible();
+      await expect(drawer.getByLabel('Tên món')).toHaveValue(name);
+      await expect(drawer.getByRole('region', { name: 'Nhân viên sẽ thấy' })).toHaveCount(0);
+      await expect(drawer.getByLabel('Thứ tự hiển thị')).toHaveCount(0);
       await shot(page, info, 'catalog-grid-drawer', false);
     } finally {
       await removeTestItem(request, id);

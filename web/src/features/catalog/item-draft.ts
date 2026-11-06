@@ -10,7 +10,6 @@ export interface ItemDraft {
   image_file_id: string | null;
   admin_only: boolean;
   max_qty: string;
-  sort_order: string;
 }
 
 export const ITEM_FIELDS: (keyof ItemDraft)[] = [
@@ -23,7 +22,6 @@ export const ITEM_FIELDS: (keyof ItemDraft)[] = [
   'image_file_id',
   'admin_only',
   'max_qty',
-  'sort_order',
 ];
 
 // Mã lỗi server → ô hiển thị lỗi
@@ -49,7 +47,6 @@ export function draftFrom(item: AdminItem | null, defaultMaxQty: number): ItemDr
     image_file_id: item?.image_file_id ?? null,
     admin_only: item?.admin_only ?? false,
     max_qty: String(item?.max_qty ?? defaultMaxQty),
-    sort_order: String(item?.sort_order ?? 0),
   };
 }
 
@@ -68,7 +65,6 @@ function toPayload(d: ItemDraft): ItemPayload {
     image_file_id: d.image_file_id,
     admin_only: d.admin_only,
     max_qty: intOrNull(d.max_qty) as number,
-    sort_order: intOrNull(d.sort_order) as number,
   };
 }
 

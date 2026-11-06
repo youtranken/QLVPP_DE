@@ -24,10 +24,11 @@ const common: Messages<typeof vi> = {
     confirmOk: 'OK',
     cancel: 'Cancel',
     close: 'Close',
-    discardTitle: 'Discard unsaved changes?',
+    discardTitle: 'Discard changes?',
     discardBody: 'What you just entered will be lost.',
     discardOk: 'Discard changes',
-    discardKeep: 'Keep editing',
+    discardKeep: 'Stay',
+    panel: { close: '← Close', position: '{{i}}/{{n}}' },
     selectAll: 'Select all',
     selectRow: 'Select row',
     reorder: {

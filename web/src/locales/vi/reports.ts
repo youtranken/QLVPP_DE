@@ -119,7 +119,7 @@ const reports = {
     },
     issues: {
       note: 'Xuất ngoài phiếu tháng, đã trừ tồn ở Kho. In kèm trong bản chốt.',
-      openStock: 'Mở Kho',
+      openStock: 'Mở Tủ / Kho',
       title: 'Xuất lẻ trong kỳ',
       colName: 'Món',
       colRecipient: 'Người nhận',

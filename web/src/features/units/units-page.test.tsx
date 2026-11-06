@@ -58,7 +58,7 @@ const mutations = (f: ReturnType<typeof stub>) =>
 async function open(mutate?: Mutate, units?: AdminUnit[]) {
   mockViewport(1280);
   const f = stub(mutate, units);
-  renderApp(makeMe('admin'), '/admin/units');
+  renderApp(makeMe('admin'), '/admin/categories/units');
   await screen.findByRole('table');
   return f;
 }
@@ -76,9 +76,10 @@ const pick = async (name: string, item: string) => userEvent.click((await openMe
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Trang Đơn vị tính', () => {
-  it('h1 "Đơn vị tính", lấy GET units?all=1, hiện số món đang dùng và trạng thái từng ĐVT', async () => {
+  it('h1 "Nhóm & đơn vị" + tab "Đơn vị tính", lấy GET units?all=1, hiện số món đang dùng và trạng thái từng ĐVT', async () => {
     const f = await open();
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Đơn vị tính');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Nhóm & đơn vị');
+    expect(screen.getByRole('heading', { level: 2, name: 'Đơn vị tính' })).toBeInTheDocument();
     expect(f.mock.calls.map((c) => c[0])).toContain('/api/units?all=1');
     expect(within(rowOf('cái')).getByText('4')).toBeInTheDocument();
   });
@@ -257,12 +258,12 @@ describe('Trang Đơn vị tính', () => {
     );
   });
 
-  it('Hủy khi đã đổi → hỏi "Bỏ thay đổi chưa lưu?": "Tiếp tục sửa" giữ thứ tự mới; "Bỏ thay đổi" trả thứ tự cũ và thoát', async () => {
+  it('Hủy khi đã đổi → hỏi "Bỏ thay đổi?": "Ở lại" giữ thứ tự mới; "Bỏ thay đổi" trả thứ tự cũ và thoát', async () => {
     const f = await open();
     await sortOn();
     await userEvent.click(screen.getByRole('button', { name: 'Đưa hộp lên' }));
     await userEvent.click(screen.getByRole('button', { name: 'Hủy' }));
-    await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' })).getByRole('button', { name: 'Tiếp tục sửa' }));
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi?' })).getByRole('button', { name: 'Ở lại' }));
     expect(names()).toEqual(['hộp', 'cái', 'Cũ']);
     await userEvent.click(screen.getByRole('button', { name: 'Hủy' }));
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Bỏ thay đổi' }));
@@ -279,13 +280,13 @@ describe('Trang Đơn vị tính', () => {
     expect(screen.getByRole('button', { name: 'Sắp xếp' })).toBeInTheDocument();
   });
 
-  it('đang sắp xếp có thay đổi, bấm menu sang "Danh mục" → hỏi bỏ thay đổi; "Tiếp tục sửa" ở lại trang', async () => {
+  it('đang sắp xếp có thay đổi, bấm menu sang "Danh mục" → hỏi bỏ thay đổi; "Ở lại" ở lại trang', async () => {
     await open();
     await sortOn();
     await userEvent.click(screen.getByRole('button', { name: 'Đưa hộp lên' }));
     await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Danh mục món' }));
-    await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' })).getByRole('button', { name: 'Tiếp tục sửa' }));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Đơn vị tính');
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi?' })).getByRole('button', { name: 'Ở lại' }));
+    expect(screen.getByRole('heading', { level: 2, name: 'Đơn vị tính' })).toBeInTheDocument();
     expect(names()).toEqual(['hộp', 'cái', 'Cũ']);
   });
 
@@ -321,7 +322,7 @@ describe('Trang Đơn vị tính', () => {
   it('chưa có ĐVT nào → "Chưa có đơn vị tính nào" kèm nút thêm', async () => {
     mockViewport(1280);
     stub(undefined, []);
-    renderApp(makeMe('admin'), '/admin/units');
+    renderApp(makeMe('admin'), '/admin/categories/units');
     expect(await screen.findByText('Chưa có đơn vị tính nào')).toBeInTheDocument();
   });
 });

@@ -7,6 +7,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ClockService } from '../../common/clock.service';
 import { CurrentIdentity } from '../auth/current-identity.decorator';
 import type { RequestIdentity } from '../auth/identity.types';
 import { Roles } from '../auth/roles.decorator';
@@ -29,6 +30,7 @@ export class StockController {
     private readonly stock: StockService,
     private readonly query: StockQueryService,
     private readonly receipts: StockReceiptService,
+    private readonly clock: ClockService,
   ) {}
 
   @Post('admin/items/:id/stock')
@@ -81,6 +83,12 @@ export class StockController {
   @Roles('admin', 'sa')
   issues(@Query('ym', YmPipe) ym: string) {
     return this.query.issuesInMonth(ym);
+  }
+
+  @Get('admin/stock')
+  @Roles('admin', 'sa')
+  list() {
+    return this.query.list(this.clock.now());
   }
 
   @Get('admin/stock/low')

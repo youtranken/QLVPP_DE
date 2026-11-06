@@ -15,6 +15,10 @@ import { definedEntries, pick, setClause } from '../../common/sql-patch';
 import { CATEGORY_COLUMNS } from './catalog-sql';
 import type { CategoryRow } from './catalog-sql';
 
+type AffectedItems =
+  | { reactivated: number; still_inactive: number }
+  | { deactivated: number; still_inactive: number };
+
 const SORT_LOCK = sql.raw("hashtext('item_categories.sort_order')");
 
 @Injectable()
@@ -68,7 +72,7 @@ export class CategoriesService {
     id: string,
     dto: UpdateCategoryDto,
     actor: string,
-  ): Promise<CategoryRow> {
+  ): Promise<CategoryRow & { affected_items?: AffectedItems }> {
     const patch = definedEntries(dto);
     return this.mapDuplicate(() =>
       this.db.transaction(async (tx) => {
@@ -91,16 +95,43 @@ export class CategoriesService {
           `)
         ).rows[0];
         const keys = Object.keys(patch);
+        const affected =
+          before.active === after.active
+            ? undefined
+            : await this.affectedItems(tx, id, after.active);
         await this.audit.appendWithin(tx, {
           actor,
           action: 'category.updated',
           objectType: 'item_category',
           objectId: id,
-          detail: { before: pick(before, keys), after: pick(after, keys) },
+          detail: {
+            before: pick(before, keys),
+            after: pick(after, keys),
+            ...(affected && { affected_items: affected }),
+          },
         });
-        return after;
+        return affected && 'reactivated' in affected
+          ? { ...after, affected_items: affected }
+          : after;
       }),
     );
+  }
+
+  // Ngừng nhóm không ghi items.active: món còn active = món theo nhóm, món active=false = ngừng riêng
+  private async affectedItems(
+    tx: Tx,
+    id: string,
+    nowActive: boolean,
+  ): Promise<AffectedItems> {
+    const { rows } = await tx.execute<{ on: number; off: number }>(sql`
+      SELECT count(*) FILTER (WHERE active)::int AS on,
+             count(*) FILTER (WHERE NOT active)::int AS off
+      FROM items WHERE category_id = ${id}
+    `);
+    const { on, off } = rows[0];
+    return nowActive
+      ? { reactivated: on, still_inactive: off }
+      : { deactivated: on, still_inactive: off };
   }
 
   // Khóa tư vấn: hai lần thêm đồng thời không cùng nhận max + 10

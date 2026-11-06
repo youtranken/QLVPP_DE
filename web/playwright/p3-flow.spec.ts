@@ -129,7 +129,7 @@ async function purchase(admin: Page, item: { name: string }, qty: number) {
   await admin.goto('/admin/stock');
   await admin.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(item.name);
   await openPurchase(admin, admin.getByRole('row').filter({ hasText: item.name }));
-  const dialog = admin.getByRole('dialog', { name: `Nhập mua ${item.name}` });
+  const dialog = admin.getByRole('dialog', { name: `Nhập ngoài kỳ (tự mua lẻ) ${item.name}` });
   await dialog.getByLabel('Số lượng nhập').fill(String(qty));
   await dialog.getByRole('button', { name: 'Lưu nhập mua' }).click();
   await expect(dialog).toBeHidden();

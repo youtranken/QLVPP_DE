@@ -78,7 +78,7 @@ describe('NotificationScheduler.runHourly — sắp hết báo một lần tới
         name_en: 'Bút bi en',
         stock_qty: 6,
       },
-      link: '/admin/stock?filter=low',
+      link: `/admin/stock?${new URLSearchParams({ q: `Bút bi ${f.SUFFIX}` })}`,
     });
     expect(await notifiedAt(id)).toEqual(new Date(NOW));
 

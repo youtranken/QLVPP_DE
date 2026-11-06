@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { ymToDate } from '../../common/period';
 import type { Executor } from '../../database/database.module';
+import { ITEM_ORDER } from '../catalog/item-order';
 import type { AdjustReason } from './adjust-rules';
 
 export interface AdjustmentRecord {
@@ -109,7 +110,7 @@ export async function dayBellLines(
     FROM x
     LEFT JOIN items i ON i.id = x.item_id
     LEFT JOIN item_categories c ON c.id = i.category_id
-    ORDER BY c.sort_order NULLS LAST, c.name, i.sort_order, lower(x.name) COLLATE "C", x.line_id, x.kind
+    ORDER BY ${ITEM_ORDER}, lower(x.name) COLLATE "C", x.line_id, x.kind
   `);
   return rows.map(toBellLine);
 }

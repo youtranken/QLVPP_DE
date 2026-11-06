@@ -114,15 +114,15 @@ describe('AdjustDrawer — chỉ giảm sau khóa sổ (R-D6.3)', () => {
     expect(within(a4).getByText('ram · Hành chính đặt')).toBeInTheDocument();
   });
 
-  it('Hủy sau khi sửa → hỏi "Bỏ thay đổi chưa lưu?"; Tiếp tục sửa giữ ngăn, Bỏ thay đổi đóng; chân ngăn đếm thay đổi', async () => {
+  it('Hủy sau khi sửa → hỏi "Bỏ thay đổi?"; Ở lại giữ ngăn, Bỏ thay đổi đóng; chân ngăn đếm thay đổi', async () => {
     stubAdjust();
     const { drawer, onClose } = await renderDrawer();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Bỏ Giấy note vàng khỏi phiếu' }));
     await userEvent.click(less(drawer, 'Bút bi xanh'));
     expect(within(drawer).getByText('2 thay đổi chưa lưu')).toBeInTheDocument();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Hủy' }));
-    expect(await screen.findByText('Bỏ thay đổi chưa lưu?')).toBeInTheDocument();
-    await userEvent.click(screen.getByText('Tiếp tục sửa'));
+    expect(await screen.findByText('Bỏ thay đổi?')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('Ở lại'));
     expect(onClose).not.toHaveBeenCalled();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Hủy' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Bỏ thay đổi' }));

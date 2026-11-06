@@ -6,7 +6,7 @@ const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 describe('nhóm món ngừng ẩn món trong nhóm (không sửa items.active)', () => {
   const f = reviewFixture('catoff');
-  const { SUFFIX, A, ADMIN, http, as, newItem, save, view, pool } = f;
+  const { SUFFIX, A, ADMIN, http, as, newItem, save, view, pool, auditOf } = f;
   const { review, customLine, lineRow } = f;
   let category: string;
 
@@ -260,5 +260,41 @@ describe('nhóm món ngừng ẩn món trong nhóm (không sửa items.active)',
     await pool().query('DELETE FROM stock_movements WHERE item_id = $1', [
       item,
     ]);
+  });
+
+  it('nhóm ngừng sau khóa: Hành chính giảm dòng kỳ khóa của món đó 3 → 1 → 200, dòng còn 1, có bản ghi điều chỉnh và audit', async () => {
+    await pool().query(
+      `INSERT INTO users (sub, full_name, department, status) VALUES ($1, 'Hành chính', 'Phòng HC', 'active') ON CONFLICT (sub) DO NOTHING`,
+      [ADMIN],
+    );
+    const item = await itemInCategory();
+    const r = view(await save([{ item_id: item, qty: 3 }]).expect(200));
+    await setCategory(false);
+    f.at(AFTER_DEADLINE);
+    const line = r.lines[0];
+    const res = await as(
+      http().put(`/api/admin/requests/${r.id}/lines`),
+      ADMIN,
+      'admin',
+    )
+      .send({
+        expected_updated_at: r.updated_at,
+        lines: [
+          { id: line.id, expected_qty: 3, qty: 1, reason_code: 'over_quota' },
+        ],
+      })
+      .expect(200);
+    expect(res.body.adjustments).toMatchObject([
+      { line_id: line.id, item_id: item, before: 3, after: 1 },
+    ]);
+    const qty = await pool().query<{ qty: number }>(
+      'SELECT qty FROM request_lines WHERE id = $1',
+      [line.id],
+    );
+    expect(qty.rows[0].qty).toBe(1);
+    const [detail] = await auditOf('request.updated', r.id);
+    expect(detail).toMatchObject({
+      adjustments: [{ line_id: line.id, before: 3, after: 1 }],
+    });
   });
 });

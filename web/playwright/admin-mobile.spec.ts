@@ -9,10 +9,9 @@ const PAGES = [
   ['delivery', 'Giao hàng'],
   ['backlog', 'Còn nợ'],
   ['reports', 'Báo cáo & in'],
-  ['stock', 'Kho'],
+  ['stock', 'Tủ / Kho'],
   ['catalog', 'Danh mục'],
-  ['categories', 'Nhóm món'],
-  ['units', 'Đơn vị tính'],
+  ['categories', 'Nhóm & đơn vị'],
   ['users', 'Danh bạ'],
   ['audit', 'Nhật ký'],
   ['config', 'Cấu hình'],
@@ -23,7 +22,7 @@ const overflowOf = (page: Page) => page.evaluate(() => document.documentElement.
 const headingName = (title: string) => (title === 'Giao hàng' ? /^Giao hàng kỳ tháng \d+$/ : title === 'Tháng này' ? /^Chào / : title);
 const heading = (page: Page, title: string) => page.getByRole('heading', { level: 1, name: headingName(title), exact: typeof headingName(title) === 'string' });
 const menu = (page: Page) => page.getByRole('dialog', { name: 'Menu quản lý' });
-const MENU_LABEL: Record<string, string> = { Kho: 'Tủ / Kho', 'Danh mục': 'Danh mục món', 'Danh bạ': 'Nhân viên' }; // nhãn sidebar khác tiêu đề trang
+const MENU_LABEL: Record<string, string> = { 'Danh mục': 'Danh mục món', 'Danh bạ': 'Nhân viên' }; // nhãn sidebar khác tiêu đề trang
 const menuLink = (page: Page, title: string) => {
   const label = MENU_LABEL[title] ?? title;
   return menu(page).getByRole('link', { name: new RegExp(`^${label.replace('&', '\\&').replace('/', '\\/')}(?! \\()`) });
@@ -63,12 +62,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     }
 
     await openPage(page, 'catalog?view=table', 'Danh mục');
-    const [first, second, third] = await Promise.all(
-      [/^Đang dùng/, /^Sắp hết/, /^Hết hàng/].map(async (name) => (await page.getByRole('button', { name }).boundingBox())!),
-    );
-    expect(Math.round(first.y)).toBe(Math.round(second.y));
-    expect(Math.round(first.width)).toBe(Math.round(second.width));
-    expect(third.y).toBeGreaterThan(first.y + first.height);
+    await expect(page.getByRole('group', { name: 'Trạng thái' }).getByRole('button', { name: /^Đang dùng/ })).toBeVisible();
     await page.getByRole('main').getByRole('button', { name: 'Thêm món', exact: true }).tap();
     const drawer = page.getByRole('dialog', { name: 'Thêm món' });
     await expect(drawer).toBeVisible();
@@ -76,7 +70,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     expect(Math.round((await drawer.boundingBox())!.width)).toBe(390);
     await expectNoHorizontalScroll(page, 'ngăn kéo Thêm món');
 
-    await openPage(page, 'units', 'Đơn vị tính');
+    await openPage(page, 'categories/units', 'Nhóm & đơn vị');
     await page.getByRole('main').getByRole('button', { name: 'Thêm đơn vị tính' }).tap();
     const dialog = page.getByRole('dialog', { name: 'Thêm đơn vị tính' });
     await expect(dialog).toBeVisible();
@@ -133,7 +127,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     await expect(menu(page)).toBeVisible();
     await expectNoContrastViolations(page);
 
-    for (const [path, title] of [['home', 'Tháng này'], ['review', 'Món ngoài danh mục'], ['delivery', 'Giao hàng'], ['backlog', 'Còn nợ'], ['categories', 'Nhóm món'], ['units', 'Đơn vị tính']] as const) {
+    for (const [path, title] of [['home', 'Tháng này'], ['review', 'Món ngoài danh mục'], ['delivery', 'Giao hàng'], ['backlog', 'Còn nợ'], ['categories', 'Nhóm & đơn vị'], ['categories/units', 'Nhóm & đơn vị']] as const) {
       await openPage(page, path, title);
       await expectTouchTargets(page, title);
     }
@@ -144,7 +138,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     await settled(page);
     await expectNoContrastViolations(page);
 
-    await openPage(page, 'units', 'Đơn vị tính');
+    await openPage(page, 'categories/units', 'Nhóm & đơn vị');
     await page.getByRole('main').getByRole('button', { name: 'Thêm đơn vị tính' }).tap();
     await expect(page.getByRole('dialog', { name: 'Thêm đơn vị tính' })).toBeVisible();
     await expectNoContrastViolations(page);

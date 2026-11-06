@@ -1,14 +1,10 @@
 import type { CatalogRow } from './catalog-rows';
 
-export const CATALOG_TABS = ['active', 'low', 'noImage', 'inactive'] as const;
+export const CATALOG_TABS = ['active', 'noImage', 'inactive'] as const;
 export type CatalogTab = (typeof CATALOG_TABS)[number];
-
-// stock_state do server tính (như stock-rows.ts): "sắp hết" gồm cả "hết"
-const isLowOrOut = (r: CatalogRow) => r.stock_state === 'low' || r.stock_state === 'out';
 
 const TEST: Record<CatalogTab, (r: CatalogRow) => boolean> = {
   active: (r) => r.active,
-  low: (r) => r.active && isLowOrOut(r),
   noImage: (r) => r.active && r.missing_image,
   inactive: (r) => !r.active,
 };

@@ -1,12 +1,21 @@
 import { sql } from 'drizzle-orm';
 
-// FR-50: đã dùng hết 80 % tồn sau lần nhập mua gần nhất; tồn 0 là "Hết hàng", không tính vào đây
+// Sắp hết: đã dùng hết 80 % tồn sau lần nhập mua gần nhất; tồn 0 là "Hết hàng", không tính vào đây
 export const LOW_STOCK_SQL =
   'restock_level > 0 AND stock_qty > 0 AND stock_qty <= floor(restock_level * 0.2)';
 
 // Món dùng được: món active và nhóm (nếu có) active — ngừng nhóm không sửa items.active
 export const ITEM_USABLE_SQL = sql.raw(
   '(items.active AND NOT EXISTS (SELECT 1 FROM item_categories c WHERE c.id = items.category_id AND NOT c.active))',
+);
+
+export type InactiveReason = 'item' | 'group' | null;
+
+// Ngừng riêng thắng ngừng theo nhóm: bật lại nhóm không làm món ngừng riêng dùng lại
+export const ITEM_INACTIVE_REASON_SQL = sql.raw(
+  `CASE WHEN NOT items.active THEN 'item'
+        WHEN EXISTS (SELECT 1 FROM item_categories c WHERE c.id = items.category_id AND NOT c.active) THEN 'group'
+   END`,
 );
 
 export type StockState = 'ok' | 'low' | 'out' | 'untracked';
@@ -36,6 +45,7 @@ export interface ItemRow extends Record<string, unknown> {
   max_qty: number;
   stock_qty: number;
   restock_level: number | null;
+  /** @deprecated Chỉ theo tồn, không xét người chờ — Tủ/Kho đọc `GET admin/stock` */
   stock_state: StockState;
   active: boolean;
   sort_order: number;

@@ -34,6 +34,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           confirmLabel={opts.confirmLabel ?? t('common.confirmOk')}
           cancelLabel={opts.cancelLabel}
           danger={opts.danger}
+          warning={opts.warning}
           onConfirm={() => settle(true)}
           onCancel={() => settle(false)}
         />

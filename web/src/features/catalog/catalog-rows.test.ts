@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { NO_GROUP, applyView, type CatalogView, catalogStats, groupCounts, indexCategories, toRows } from './catalog-rows';
+import { NO_GROUP, applyView, type CatalogView, groupCounts, indexCategories, toRows } from './catalog-rows';
 import { CATEGORIES, OLD, PAPER, PEN, PENCIL, STRAY, adminItem } from './catalog-fixtures';
 
 const ALL = [PEN, OLD, STRAY, PENCIL, PAPER];
-const view: CatalogView = { cat: null, q: '', inactive: false, filter: null };
+const view: CatalogView = { group: null, q: '' };
 
 describe('toRows — nhóm theo thứ tự nhóm', () => {
   it('nhóm theo sort_order nhóm, trong nhóm theo sort_order món; "Chưa xếp nhóm" đứng cuối', () => {
@@ -20,6 +20,15 @@ describe('toRows — nhóm theo thứ tự nhóm', () => {
     expect(stray).toMatchObject({ group: NO_GROUP, tone: 'g0' });
   });
 
+  it('trùng sort_order trong nhóm → tên chữ thường theo mã điểm rồi id, không localeCompare ("đ" sau "e")', () => {
+    const items = [
+      adminItem({ id: 'b', name: 'Đinh ghim', category_id: 'c-pen', sort_order: 10 }),
+      adminItem({ id: 'z', name: 'eke', category_id: 'c-pen', sort_order: 10 }),
+      adminItem({ id: 'a', name: 'EKE', category_id: 'c-pen', sort_order: 10 }),
+    ];
+    expect(toRows(items, indexCategories(CATEGORIES)).map((r) => r.id)).toEqual(['a', 'z', 'b']);
+  });
+
   it('danh sách nhóm rỗng → mọi món về "Chưa xếp nhóm" tông g0, không lỗi', () => {
     const rows = toRows(ALL, indexCategories([]));
     expect(new Set(rows.map((r) => r.group))).toEqual(new Set([NO_GROUP]));
@@ -32,20 +41,7 @@ describe('toRows — nhóm theo thứ tự nhóm', () => {
     );
     const rows = toRows(many, indexCategories(CATEGORIES));
     expect(groupCounts(rows)).toEqual(new Map([[NO_GROUP, 145]]));
-    expect(catalogStats(many, CATEGORIES).noImage).toBe(145);
-  });
-});
-
-describe('catalogStats', () => {
-  it('chỉ đếm món đang dùng: sắp hết, hết hàng, thiếu ảnh; số nhóm đang dùng; số món đã ngừng', () => {
-    expect(catalogStats(ALL, CATEGORIES)).toEqual({ active: 4, groups: 2, low: 1, out: 1, noImage: 1, inactive: 1 });
-  });
-
-  it('"Đang dùng" không đếm món còn active nhưng nhóm đang ngừng (usable=false); món đó cũng không tính là đã ngừng', () => {
-    const paused = adminItem({ id: 'i-paused', name: 'Bút dạ quang', usable: false });
-    const stats = catalogStats([...ALL, paused], CATEGORIES);
-    expect(stats.active).toBe(4);
-    expect(stats.inactive).toBe(1);
+    expect(rows.filter((r) => r.missing_image)).toHaveLength(145);
   });
 });
 
@@ -53,25 +49,15 @@ describe('applyView', () => {
   const rows = toRows(ALL, indexCategories(CATEGORIES));
   const ids = (v: Partial<CatalogView>) => applyView(rows, { ...view, ...v }).map((r) => r.id);
 
-  it('mặc định ẩn món đã ngừng; inactive bật thì hiện', () => {
-    expect(ids({})).not.toContain('i-old');
-    expect(ids({ inactive: true })).toContain('i-old');
-  });
-
-  it('lọc nhóm theo cat; cat="none" lấy món chưa xếp nhóm', () => {
-    expect(ids({ cat: 'c-pen' })).toEqual(['i-pen', 'i-pencil']);
-    expect(ids({ cat: NO_GROUP })).toEqual(['i-stray']);
-  });
-
-  it('filter low/out/noimage', () => {
-    expect(ids({ filter: 'low' })).toEqual(['i-paper']);
-    expect(ids({ filter: 'out' })).toEqual(['i-pencil']);
-    expect(ids({ filter: 'noimage' })).toEqual(['i-paper']);
+  it('lọc nhóm theo group; group="none" lấy món chưa xếp nhóm; không tự ẩn món ngừng (tab quyết định)', () => {
+    expect(ids({ group: 'c-pen' })).toEqual(['i-pen', 'i-pencil', 'i-old']);
+    expect(ids({ group: NO_GROUP })).toEqual(['i-stray']);
   });
 
   it('tìm bỏ dấu theo tên, mã, quy cách', () => {
     expect(ids({ q: 'but bi' })).toEqual(['i-pen']);
     expect(ids({ q: 'vpp-001' })).toEqual(['i-paper']);
     expect(ids({ q: 'hộp 20' })).toEqual(['i-pen']);
+    expect(ids({ q: 'GIAY' })).toEqual(['i-paper']);
   });
 });

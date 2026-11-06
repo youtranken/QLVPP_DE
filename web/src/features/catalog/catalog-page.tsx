@@ -1,66 +1,62 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useUrlSearchBox } from '@/lib/use-url-search-box';
-import { FilterNotice } from '@/ui/filter-notice';
+import { usePanelParam } from '@/lib/use-panel-param';
 import { LoadError } from '@/ui/load-state';
-import { Toolbar } from '@/ui/toolbar';
 import { PageHeader } from '@/ui/page-header';
-import { categoryLabel, useAdminItems, useAllCategories, useRefreshCatalog } from './catalog.api';
-import { applyView, byActive, catalogStats, groupCounts, indexCategories, toRows } from './catalog-rows';
+import { categoryLabel, useAdminItems, useAllCategories, useRefreshCatalog, type AdminItem } from './catalog.api';
+import { applyView, groupCounts, indexCategories, toRows, type CatalogView } from './catalog-rows';
+import { CatalogFilterBar } from './catalog-filter-bar';
 import { CatalogGrid } from './catalog-grid';
-import { CatalogStats } from './catalog-stats';
-import { CatalogTabBar, ViewSwitch } from './catalog-tab-bar';
-import { inTab, tabCounts, type CatalogTab, type CatalogViewMode } from './catalog-tabs';
+import { inTab, tabCounts, type CatalogTab } from './catalog-tabs';
 import { CatalogTable } from './catalog-table';
-import { CatalogToolbar } from './catalog-toolbar';
-import { CategoryChips } from './category-chips';
 import { BulkMaxDialog, BulkMoveDialog } from './bulk-dialogs';
 import { ItemDrawer } from './item-drawer';
 import { useBulkItems } from './use-bulk-items';
 import { useCatalogActions } from './use-catalog-actions';
 import { useCatalogParams } from './use-catalog-params';
-import { useGroupCollapse } from './use-group-collapse';
 import './catalog.m1.css';
 
 type BulkDialog = 'max' | 'move' | null;
+const NO_COLLAPSE: ReadonlySet<string> = new Set();
 
-function useCatalogData(view: ReturnType<typeof useCatalogParams>['view'], mode: CatalogViewMode, tab: CatalogTab) {
+function useCatalogData(view: CatalogView, tab: CatalogTab) {
   const items = useAdminItems();
   const categories = useAllCategories();
   const index = useMemo(() => indexCategories(categories.data ?? []), [categories.data]);
   const all = useMemo(() => toRows(items.data ?? [], index), [items.data, index]);
-  const grid = mode === 'grid';
-  const base = useMemo(() => (grid ? all.filter((r) => inTab(r, tab)) : byActive(all, view.inactive)), [all, grid, tab, view.inactive]);
-  const rows = useMemo(() => applyView(base, grid ? { ...view, inactive: true, filter: null } : { ...view, inactive: true }), [base, grid, view]);
+  const base = useMemo(() => all.filter((r) => inTab(r, tab)), [all, tab]);
+  const rows = useMemo(() => applyView(base, view), [base, view]);
   const tabs = useMemo(() => tabCounts(all), [all]);
-  const stats = useMemo(() => catalogStats(items.data ?? [], categories.data ?? []), [items.data, categories.data]);
   const counts = useMemo(() => groupCounts(base), [base]);
-  return { items, categories, index, all, base, rows, stats, counts, tabs };
+  return { items, categories, index, base, rows, counts, tabs };
 }
+
+const knownItem = (items: AdminItem[] | undefined) => (id: string) => (id === 'new' ? true : items ? items.some((i) => i.id === id) : undefined);
 
 export function CatalogPage() {
   const { t, i18n } = useTranslation();
   const p = useCatalogParams();
-  const d = useCatalogData(p.view, p.mode, p.tab);
+  const d = useCatalogData(p.view, p.tab);
   const refresh = useRefreshCatalog();
   const bulk = useBulkItems(refresh);
   const actions = useCatalogActions(refresh, bulk.setRowError);
-  const [search, setSearch] = useUrlSearchBox(p.view.q, p.setQ);
   const [dialog, setDialog] = useState<BulkDialog>(null);
+  const [stored, setCollapsed] = useState<ReadonlySet<string>>(NO_COLLAPSE);
+  // Đang tìm thì mở mọi nhóm để kết quả không nằm trong nhóm đang thu; xóa ô tìm thì trả lại như cũ
+  const collapsed = p.view.q.trim() ? NO_COLLAPSE : stored;
   const { keepOnly } = bulk;
   useEffect(() => keepOnly(new Set(d.rows.map((r) => r.id))), [d.rows, keepOnly]);
   const title = t('catalog.title');
+  const grid = p.mode === 'grid';
   const orderedIds = d.rows.map((r) => r.id);
   const groupKeys = useMemo(() => [...new Set(d.rows.map((r) => r.group))], [d.rows]);
-  const narrowed = p.view.filter !== null || p.view.cat !== null || p.view.q.trim() !== '';
-  const { collapsed, setCollapsed } = useGroupCollapse(groupKeys, narrowed ? JSON.stringify([p.view.q, p.view.cat, p.view.filter]) : null);
   const allCollapsed = groupKeys.length > 0 && groupKeys.every((k) => collapsed.has(k));
-  const editing = p.itemId && p.itemId !== 'new' ? d.items.data?.find((i) => i.id === p.itemId) : undefined;
-  const grid = p.mode === 'grid';
-  const visible = grid ? d.rows : d.rows.filter((r) => !collapsed.has(r.group));
-  const at = editing ? visible.findIndex((r) => r.id === editing.id) : -1;
-  const stepTo = (k: number) => (at >= 0 && visible[k] ? () => p.openItemDrawer(visible[k].id) : undefined);
+  const visible = useMemo(() => (grid ? d.rows : d.rows.filter((r) => !collapsed.has(r.group))).map((r) => r.id), [grid, d.rows, collapsed]);
+  const panel = usePanelParam('item', { order: visible, known: knownItem(d.items.data), extra: ['itemCat'] });
+  const editing = panel.id && panel.id !== 'new' ? d.items.data?.find((i) => i.id === panel.id) : undefined;
+  const openItem = (id: string) => panel.open(id);
+  const addItem = (categoryId?: string) => panel.open('new', { itemCat: categoryId ?? null });
 
   const runBulk = async (body: Parameters<typeof bulk.run>[1], doneText: (n: number) => string) => {
     await bulk.run(orderedIds, body, doneText);
@@ -70,13 +66,12 @@ export function CatalogPage() {
     if (await actions.confirmDeactivateMany(bulk.count)) await bulk.run(orderedIds, { active: false }, (n) => t('catalog.bulk.deactivated', { n }));
   };
 
-  const viewSwitch = <ViewSwitch value={p.mode} onChange={p.setMode} />;
   const emptyActions = (
     <span className="ct-empty-actions">
       <button type="button" className="btn" onClick={p.clearAll}>
         {t('common.filter.clear')}
       </button>
-      <button type="button" className="btn" onClick={() => p.openItemDrawer('new')}>
+      <button type="button" className="btn" onClick={() => addItem()}>
         {t('catalog.page.add')}
       </button>
     </span>
@@ -93,7 +88,7 @@ export function CatalogPage() {
         </Link>
       }
       primary={
-        <button type="button" className="btn btn--primary" onClick={() => p.openItemDrawer('new')}>
+        <button type="button" className="btn btn--primary" onClick={() => addItem()}>
           {t('catalog.page.add')}
         </button>
       }
@@ -118,33 +113,26 @@ export function CatalogPage() {
   return (
     <div className="ct-page">
       {header}
-      {loaded && !grid && <CatalogStats stats={d.stats} filter={p.view.filter} narrowed={p.view.filter !== null || p.view.cat !== null || p.view.q !== ''} onFilter={p.toggleFilter} onClear={p.clearAll} />}
       <div className="ct-block">
+        <CatalogFilterBar
+          q={p.view.q}
+          onSearch={p.setQ}
+          searchable={d.base.length}
+          mode={p.mode}
+          onMode={p.setMode}
+          tab={p.tab}
+          tabCounts={loaded ? d.tabs : null}
+          onTab={p.setTab}
+          index={d.index}
+          counts={d.counts}
+          total={d.base.length}
+          group={p.view.group}
+          onGroup={p.setGroup}
+          collapse={grid ? null : { all: allCollapsed, onToggle: () => setCollapsed(allCollapsed ? NO_COLLAPSE : new Set(groupKeys)) }}
+          bulk={grid ? null : { count: bulk.count, pending: bulk.pending, onMax: () => setDialog('max'), onMove: () => setDialog('move'), onDeactivate: () => void deactivateSelected(), onClear: bulk.clear }}
+        />
         {grid ? (
-          <>
-            <Toolbar search={{ value: search, onChange: setSearch, label: t('catalog.list.search', { n: d.base.length }), placeholder: t('catalog.list.search', { n: d.base.length }), maxLength: 100 }}>
-              {viewSwitch}
-            </Toolbar>
-            {loaded && <CatalogTabBar value={p.tab} counts={d.tabs} onChange={p.setTab} />}
-          </>
-        ) : (
-          <CatalogToolbar
-            search={search}
-            onSearch={setSearch}
-            searchable={d.base.length}
-            inactiveCount={d.stats.inactive}
-            showInactive={p.view.inactive}
-            onToggleInactive={p.toggleInactive}
-            allCollapsed={allCollapsed}
-            onToggleCollapse={() => setCollapsed(allCollapsed ? new Set() : new Set(groupKeys))}
-            viewSwitch={viewSwitch}
-            bulk={{ count: bulk.count, pending: bulk.pending, onMax: () => setDialog('max'), onMove: () => setDialog('move'), onDeactivate: () => void deactivateSelected(), onClear: bulk.clear }}
-          />
-        )}
-        {loaded && <CategoryChips index={d.index} counts={d.counts} total={d.base.length} value={p.view.cat} onChange={p.setCat} />}
-        {!grid && p.view.filter && <FilterNotice label={t(`catalog.stats.${p.view.filter === 'noimage' ? 'noImage' : p.view.filter}`)} count={d.rows.length} onClear={p.clearFilter} />}
-        {grid ? (
-          <CatalogGrid rows={d.rows} index={d.index} loading={!loaded} onEdit={(id) => p.openItemDrawer(id)} emptyAction={emptyActions} tab={p.tab} narrowed={p.view.cat !== null || p.view.q.trim() !== ''} />
+          <CatalogGrid rows={d.rows} index={d.index} loading={!loaded} openId={panel.id} onEdit={openItem} emptyAction={emptyActions} tab={p.tab} narrowed={p.narrowed} />
         ) : (
           <CatalogTable
             rows={d.rows}
@@ -155,8 +143,8 @@ export function CatalogPage() {
             activeRowId={editing?.id}
             collapsed={collapsed}
             onCollapsedChange={setCollapsed}
-            onOpen={(id) => p.openItemDrawer(id)}
-            onAddToGroup={(cat) => p.openItemDrawer('new', cat)}
+            onOpen={openItem}
+            onAddToGroup={addItem}
             onSaveMax={actions.saveMax}
             onToggleActive={(row) => void actions.toggleActive(row)}
             empty={{ hint: t('catalog.list.emptyHint'), action: emptyActions }}
@@ -174,15 +162,13 @@ export function CatalogPage() {
           onSubmit={(cat) => runBulk({ category_id: cat.id }, (k) => t('catalog.bulk.moveDone', { n: k, name: categoryLabel(cat, i18n.language) }))}
         />
       )}
-      {loaded && (p.itemId === 'new' || editing) && (
+      {loaded && (panel.id === 'new' || editing) && (
         <ItemDrawer
           item={editing ?? null}
           categories={d.categories.data ?? []}
-          rows={d.all}
           defaultCategoryId={p.itemCategoryId}
-          onClose={p.closeItemDrawer}
-          onPrev={stepTo(at - 1)}
-          onNext={stepTo(at + 1)}
+          onClose={panel.close}
+          nav={editing ? { index: panel.index, total: panel.total, onStep: panel.step } : undefined}
         />
       )}
     </div>

@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { isAdminRole, useMe } from '@/lib/me';
 import { NotFound } from '@/ui/load-state';
 import { ProfilePage } from '@/features/profile/profile-page';
@@ -27,6 +27,12 @@ import { AdminShell } from '@/shell/admin-shell';
 import { RequireMember, RequireRole } from '@/shell/require-role';
 import { ForbiddenScreen } from '@/shell/forbidden-screen';
 import { ADMIN_HOME } from '@/shell/admin-nav';
+
+// Địa chỉ cũ của trang Đơn vị tính: thay mục lịch sử (Back không quay lại) và giữ query
+function UnitsRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={{ pathname: '/admin/categories/units', search }} replace />;
+}
 
 function ForbiddenRoute() {
   return <ForbiddenScreen email={useMe().email} />;
@@ -80,7 +86,8 @@ export function AppRoutes() {
         <Route path="stock" element={<StockPage />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="categories" element={<CategoriesPage />} />
-        <Route path="units" element={<UnitsPage />} />
+        <Route path="categories/units" element={<UnitsPage />} />
+        <Route path="units" element={<UnitsRedirect />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="config" element={<ConfigPage />} />

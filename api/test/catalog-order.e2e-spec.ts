@@ -70,11 +70,11 @@ describe('GET /items: thứ tự theo nhóm rồi theo món', () => {
     },
   );
 
-  it('hai nhóm cùng sort_order 15 → xếp theo tên không phân biệt hoa thường: món sort 9 nhóm "…a" trước món sort 0 nhóm "…B"', async () => {
-    const groupB = await newCategory(15, 'tie', '-Bx');
+  it('hai nhóm cùng sort_order 15 → xếp theo tên nhóm không phân biệt hoa/thường: món sort 9 nhóm "…a" trước món sort 0 nhóm "…B"', async () => {
     const groupA = await newCategory(15, 'tie', '-ax');
-    const inB = await placeItem(groupB, 0);
+    const groupB = await newCategory(15, 'tie', '-Bx');
     const inA = await placeItem(groupA, 9);
+    const inB = await placeItem(groupB, 0);
 
     const [pA, pB] = await positionsOf([inA, inB], A, 'member');
 

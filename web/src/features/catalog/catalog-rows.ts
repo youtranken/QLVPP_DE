@@ -1,11 +1,10 @@
 import { groupCounts as countGroups } from '@/lib/group-counts';
 import { compareCategories, toneAtRank, type Tone } from '@/lib/group-tone';
-import { matchesSearch } from '@/features/request/request-format';
+import { compareItems, orderKeyOf } from '@/lib/item-order';
+import { matchesSearch } from '@/lib/search';
 import type { AdminItem, Category } from './catalog.api';
 
 export const NO_GROUP = 'none';
-export const CATALOG_FILTERS = ['low', 'out', 'noimage'] as const;
-export type CatalogFilter = (typeof CATALOG_FILTERS)[number];
 
 export type CatalogRow = AdminItem & { group: string; tone: Tone };
 
@@ -17,10 +16,8 @@ export interface CategoryIndex {
 }
 
 export interface CatalogView {
-  cat: string | null;
+  group: string | null;
   q: string;
-  inactive: boolean;
-  filter: CatalogFilter | null;
 }
 
 export function indexCategories(categories: Category[]): CategoryIndex {
@@ -35,41 +32,19 @@ export function indexCategories(categories: Category[]): CategoryIndex {
 
 // category_id không còn trong danh sách nhóm (nhóm bị xóa, dữ liệu nạp) → "Chưa xếp nhóm", tông g0
 export function toRows(items: AdminItem[], index: CategoryIndex): CatalogRow[] {
-  const last = index.ordered.length;
   const rows = items.map((item) => {
     const known = item.category_id !== null && index.rank.has(item.category_id);
     return { ...item, group: known ? item.category_id! : NO_GROUP, tone: known ? index.tone.get(item.category_id!)! : 'g0' } as CatalogRow;
   });
-  const rankOf = (r: CatalogRow) => (r.group === NO_GROUP ? last : index.rank.get(r.group)!);
-  return rows.sort((a, b) => rankOf(a) - rankOf(b) || a.sort_order - b.sort_order || a.name.localeCompare(b.name, 'vi'));
+  const keys = new Map(rows.map((r) => [r.id, orderKeyOf(r, index.byId)]));
+  return rows.sort((a, b) => compareItems(keys.get(a.id)!, keys.get(b.id)!));
 }
-
-export function catalogStats(items: AdminItem[], categories: Category[]) {
-  const active = items.filter((i) => i.active);
-  return {
-    active: items.filter((i) => i.usable).length,
-    groups: categories.filter((c) => c.active).length,
-    low: active.filter((i) => i.stock_state === 'low').length,
-    out: active.filter((i) => i.stock_state === 'out').length,
-    noImage: active.filter((i) => i.missing_image).length,
-    inactive: items.length - active.length,
-  };
-}
-
-const FILTER_TEST: Record<CatalogFilter, (r: CatalogRow) => boolean> = {
-  low: (r) => r.stock_state === 'low',
-  out: (r) => r.stock_state === 'out',
-  noimage: (r) => r.missing_image,
-};
-
-export const byActive = (rows: CatalogRow[], inactive: boolean) => (inactive ? rows : rows.filter((r) => r.active));
 
 export function applyView(rows: CatalogRow[], view: CatalogView): CatalogRow[] {
   const q = view.q.trim();
-  return byActive(rows, view.inactive).filter(
+  return rows.filter(
     (r) =>
-      (!view.cat || r.group === view.cat) &&
-      (!view.filter || FILTER_TEST[view.filter](r)) &&
+      (!view.group || r.group === view.group) &&
       (!q || [r.name, r.name_en, r.code, r.pack_note].some((text) => text !== null && matchesSearch(text, q))),
   );
 }

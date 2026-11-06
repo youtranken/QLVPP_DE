@@ -11,6 +11,7 @@ import {
   type BookingSkip,
   type ParsedBooking,
 } from './booking-import';
+import { nextItemSortOrder } from './item-order';
 
 export const IMPORT_ACTOR = 'system:import';
 
@@ -55,10 +56,11 @@ class BookingImporter {
         this.result.skipped.push(skip(item, 'unit_inactive'));
         continue;
       }
+      const sortOrder = await nextItemSortOrder(tx, null);
       await tx.execute(sql`
         INSERT INTO items (code, name, name_en, unit, pack_note, max_qty, sort_order)
         VALUES (${item.code}, ${item.name}, ${item.nameEn}, ${unit.code},
-                ${item.packNote}, ${maxQty}, ${item.sortOrder})
+                ${item.packNote}, ${maxQty}, ${sortOrder})
       `);
       this.result.created.push(item);
     }

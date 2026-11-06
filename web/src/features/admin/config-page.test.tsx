@@ -75,14 +75,14 @@ describe('Cấu hình · trang', () => {
     expect(within(block('Liên hệ & thông báo')).getByRole('button', { name: 'Chưa có thay đổi' })).toBeDisabled();
   });
 
-  it('rời trang khi bẩn → hỏi "Bỏ thay đổi chưa lưu?" liệt kê khối; Tiếp tục sửa thì ở lại', async () => {
+  it('rời trang khi bẩn → hỏi "Bỏ thay đổi?" liệt kê khối; Ở lại thì ở lại', async () => {
     stubConfigApi();
     await openConfig();
     await retype(contact(), 'chị Hoa');
     await userEvent.click(screen.getByRole('link', { name: 'Nhật ký' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' });
+    const dialog = await screen.findByRole('dialog', { name: 'Bỏ thay đổi?' });
     expect(dialog).toHaveTextContent('Chưa lưu: Liên hệ & thông báo.');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Tiếp tục sửa' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Ở lại' }));
     expect(screen.getByTestId('location')).toHaveTextContent('/admin/config');
     await userEvent.click(screen.getByRole('link', { name: 'Nhật ký' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Bỏ thay đổi' }));

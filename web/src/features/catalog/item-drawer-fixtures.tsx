@@ -6,8 +6,7 @@ import { MeContext } from '@/lib/me';
 import { ConfirmProvider } from '@/ui/confirm-provider';
 import { ToastProvider } from '@/ui/toast-provider';
 import type { AdminItem } from './catalog.api';
-import { CATEGORIES, PEN, PENCIL } from './catalog-fixtures';
-import { indexCategories, toRows } from './catalog-rows';
+import { CATEGORIES, PEN } from './catalog-fixtures';
 import { ItemDrawer } from './item-drawer';
 
 export const png = () => new File([new Uint8Array([137, 80, 78, 71])], 'but.png', { type: 'image/png' });
@@ -39,12 +38,9 @@ export const bodyOf = (f: ReturnType<typeof stubDrawerApi>, url: string, method:
 export function renderDrawer({
   item = null,
   categoryId,
-  onPrev,
-  onNext,
-  items = [PEN, PENCIL],
-}: { item?: AdminItem | null; categoryId?: string; onPrev?: () => void; onNext?: () => void; items?: AdminItem[] } = {}) {
+  nav,
+}: { item?: AdminItem | null; categoryId?: string; nav?: { index: number; total: number; onStep: (dir: 1 | -1) => void } } = {}) {
   const onClose = vi.fn();
-  const index = indexCategories(CATEGORIES);
   renderWithI18n(
     <MeContext.Provider value={makeMe('admin')}>
       <MemoryRouter>
@@ -53,11 +49,9 @@ export function renderDrawer({
             <ItemDrawer
               item={item}
               categories={CATEGORIES}
-              rows={toRows(items, index)}
               defaultCategoryId={categoryId}
               onClose={onClose}
-              onPrev={onPrev}
-              onNext={onNext}
+              nav={nav}
             />
           </ConfirmProvider>
         </ToastProvider>

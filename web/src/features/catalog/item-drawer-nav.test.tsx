@@ -6,60 +6,59 @@ import { callsTo, renderDrawer, stubDrawerApi } from './item-drawer-fixtures';
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Ngăn kéo món — đầu, chuyển món, thông tin kho', () => {
-  it('eyebrow "{nhóm} · thứ {k}" theo vị trí món trong nhóm', () => {
+  it('đầu panel: "Sửa món {tên}" + bộ đếm vị trí; thêm món: "Thêm món"', () => {
     stubDrawerApi();
-    renderDrawer({ item: PENCIL });
-    expect(screen.getByText('Bút & viết · thứ 2')).toBeInTheDocument();
+    renderDrawer({ item: PENCIL, nav: { index: 2, total: 48, onStep: vi.fn() } });
+    expect(screen.getByRole('dialog', { name: 'Sửa món Bút chì 2B' })).toBeInTheDocument();
+    expect(screen.getByText('3/48')).toBeInTheDocument();
   });
 
-  it('thêm món vào nhóm → eyebrow "{nhóm} · món mới"', () => {
+  it('thêm món → tiêu đề "Thêm món", không có ↑/↓', () => {
     stubDrawerApi();
     renderDrawer({ categoryId: 'c-pen' });
-    expect(screen.getByText('Bút & viết · món mới')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Thêm món' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Món sau' })).toBeNull();
   });
 
-  it('↓/↑ (focus ngoài ô nhập) và nút "Món sau"/"Món trước" gọi đúng callback', async () => {
+  it('↓/↑ (focus ngoài ô nhập) và nút "Món sau"/"Món trước" gọi bước +1/−1', async () => {
     stubDrawerApi();
-    const onPrev = vi.fn();
-    const onNext = vi.fn();
-    renderDrawer({ item: PEN, onPrev, onNext });
+    const onStep = vi.fn();
+    renderDrawer({ item: PEN, nav: { index: 1, total: 3, onStep } });
     const next = screen.getByRole('button', { name: 'Món sau' });
     next.focus();
     await userEvent.keyboard('{ArrowDown}');
-    expect(onNext).toHaveBeenCalledTimes(1);
     await userEvent.keyboard('{ArrowUp}');
-    expect(onPrev).toHaveBeenCalledTimes(1);
     await userEvent.click(next);
-    expect(onNext).toHaveBeenCalledTimes(2);
     await userEvent.click(screen.getByRole('button', { name: 'Món trước' }));
-    expect(onPrev).toHaveBeenCalledTimes(2);
+    expect(onStep.mock.calls).toEqual([[1], [-1], [1], [-1]]);
   });
 
-  it('không có món trước/sau → nút vô hiệu', () => {
+  it('món duy nhất → ↑ và ↓ vô hiệu', () => {
     stubDrawerApi();
-    renderDrawer({ item: PEN });
+    renderDrawer({ item: PEN, nav: { index: 0, total: 1, onStep: vi.fn() } });
     expect(screen.getByRole('button', { name: 'Món trước' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Món sau' })).toBeDisabled();
   });
 
-  it('đã sửa: "Món sau" hỏi bỏ thay đổi; "Tiếp tục sửa" ở lại, "Bỏ thay đổi" mới chuyển', async () => {
+  it('đã sửa tên rồi ↓: hỏi "Bỏ thay đổi?"; "Ở lại" giữ nháp, "Bỏ thay đổi" mới chuyển', async () => {
     stubDrawerApi();
-    const onNext = vi.fn();
-    renderDrawer({ item: PEN, onNext });
+    const onStep = vi.fn();
+    renderDrawer({ item: PEN, nav: { index: 0, total: 3, onStep } });
     await userEvent.type(screen.getByLabelText('Quy cách'), ' mới');
     await userEvent.click(screen.getByRole('button', { name: 'Món sau' }));
-    await userEvent.click(await screen.findByRole('button', { name: 'Tiếp tục sửa' }));
-    expect(onNext).not.toHaveBeenCalled();
+    await userEvent.click(await screen.findByRole('button', { name: 'Ở lại' }));
+    expect(onStep).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Quy cách')).toHaveValue('hộp 20 cây mới');
     await userEvent.click(screen.getByRole('button', { name: 'Món sau' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Bỏ thay đổi' }));
-    expect(onNext).toHaveBeenCalledTimes(1);
+    expect(onStep).toHaveBeenCalledWith(1);
   });
 
-  it('sửa món: "Tồn hiện có 10 cây" + "Mở Kho" tới Kho tìm theo tên, "Đăng ký kỳ tháng 10: 7 người"', async () => {
+  it('sửa món: tồn chỉ đọc "Tồn hiện có 10 cây" + "Xem ở Tủ / Kho" tới Kho tìm theo tên, "Đăng ký kỳ tháng 10: 7 người"', async () => {
     stubDrawerApi();
     renderDrawer({ item: PEN });
     expect(screen.getByText('Tồn hiện có 10 cây')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Mở Kho' })).toHaveAttribute('href', `/admin/stock?q=${encodeURIComponent(PEN.name)}`);
+    expect(screen.getByRole('link', { name: 'Xem ở Tủ / Kho' })).toHaveAttribute('href', `/admin/stock?q=${encodeURIComponent(PEN.name)}`);
     expect(await screen.findByText('Đăng ký kỳ tháng 10: 7 người')).toBeInTheDocument();
   });
 

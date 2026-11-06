@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import { jsonResponse } from '@/test/test-utils';
 import type { AdminItem, Category } from '@/features/catalog/catalog.api';
+import type { StockFacts } from './stock.api';
 
 export function item(over: Partial<AdminItem>): AdminItem {
   return {
@@ -19,6 +20,7 @@ export function item(over: Partial<AdminItem>): AdminItem {
     stock_state: 'ok',
     active: true,
     usable: over.active ?? true,
+    inactive_reason: over.active === false ? 'item' : null,
     sort_order: 0,
     missing_image: false,
     ...over,
@@ -30,19 +32,28 @@ export const CATEGORIES: Category[] = [
   { id: 'c-2', name: 'Bút', name_en: null, sort_order: 1, active: true },
 ];
 
-export const LOW = item({ id: 'i-1', name: 'Giấy A4', unit: 'ram', stock_qty: 6, stock_state: 'low' });
-export const OUT = item({ id: 'i-4', name: 'Kẹp giấy', category_id: 'c-2', stock_qty: 0, stock_state: 'out' });
-export const NEVER = item({ id: 'i-5', name: 'Ghim bấm', category_id: 'c-2', stock_qty: 5, restock_level: null, stock_state: 'untracked' });
+export const LOW = item({ id: 'i-1', name: 'Giấy A4', unit: 'ram', stock_qty: 6 });
+export const OUT = item({ id: 'i-4', name: 'Kẹp giấy', category_id: 'c-2', stock_qty: 0 });
+export const NEVER = item({ id: 'i-5', name: 'Ghim bấm', category_id: 'c-2', stock_qty: 5, restock_level: null });
 export const OK = item({ id: 'i-2', name: 'Bút bi xanh', category_id: 'c-2' });
-export const ITEMS = [LOW, OK, item({ id: 'i-3', name: 'Bút xóa cũ', active: false }), OUT, NEVER];
+export const SHORT = item({ id: 'i-6', name: 'Bìa còng', category_id: 'c-1', stock_qty: 0 });
+export const PENDING = item({ id: 'i-7', name: 'Bút chì', category_id: 'c-2', stock_qty: 0 });
+export const ITEMS = [LOW, OK, item({ id: 'i-3', name: 'Bút xóa cũ', active: false, stock_qty: 0 }), OUT, NEVER, SHORT, PENDING];
 
-export const BACKLOG = {
-  groups: [
-    { key: 'i-1', label: { item_id: 'i-1', name: 'Giấy A4', unit: 'ram' }, remaining_qty: 4, lines: [] },
-    { key: 'i-2', label: { item_id: 'i-2', name: 'Bút bi xanh', unit: 'cai' }, remaining_qty: 3, lines: [] },
-    { key: 'custom:x', label: { item_id: null, name: 'Băng keo' }, remaining_qty: 9, lines: [] },
-  ],
-};
+export function facts(item_id: string, over: Partial<StockFacts> = {}): StockFacts {
+  return { item_id, stock_qty: 10, restock_level: 30, held: 0, free: 10, short: 0, incoming: 0, awaiting: 0, waiting: 0, stock_state: 'ok', ...over };
+}
+
+// Tồn từ /admin/stock: Giấy A4 giữ 4 cho 2 người còn trống 2 (Sắp hết), Bìa còng thiếu 3, Bút chì chờ hàng về 5
+export const STOCK: StockFacts[] = [
+  facts('i-1', { stock_qty: 6, held: 4, free: 2, waiting: 2, stock_state: 'low' }),
+  facts('i-2', { held: 3, free: 7, waiting: 1 }),
+  facts('i-3', { stock_qty: 0, free: 0, stock_state: 'none' }),
+  facts('i-4', { stock_qty: 0, free: 0, stock_state: 'none' }),
+  facts('i-5', { stock_qty: 5, restock_level: null, free: 5, stock_state: 'untracked' }),
+  facts('i-6', { stock_qty: 0, held: 3, free: 0, short: 3, waiting: 1, stock_state: 'short' }),
+  facts('i-7', { stock_qty: 0, held: 5, free: 0, incoming: 5, awaiting: 5, waiting: 2, stock_state: 'incoming' }),
+];
 
 export const move = (id: string, over: Record<string, unknown>) => ({
   id,
@@ -73,7 +84,7 @@ export function stubStockApi(extra?: Handler) {
     const path = url.split('?')[0];
     if (path === '/api/admin/items') return Promise.resolve(jsonResponse(200, ITEMS));
     if (path === '/api/item-categories') return Promise.resolve(jsonResponse(200, CATEGORIES));
-    if (path === '/api/admin/backlog') return Promise.resolve(jsonResponse(200, BACKLOG));
+    if (path === '/api/admin/stock') return Promise.resolve(jsonResponse(200, STOCK));
     if (path === '/api/admin/users') return Promise.resolve(jsonResponse(200, USERS));
     if (path.startsWith('/api/me/notifications')) return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null, unread_count: 0 }));
     return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }));

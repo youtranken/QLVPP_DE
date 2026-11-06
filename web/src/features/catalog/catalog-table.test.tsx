@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
-import { OLD, PAPER, PEN } from './catalog-fixtures';
+import { OLD, PAPER, PEN, adminItem } from './catalog-fixtures';
 import { inRow, locationSearch, openCatalog, patchCalls, validationError } from './catalog-fixtures-api';
 
 const ITEMS = [PAPER, PEN, OLD];
@@ -87,11 +87,33 @@ describe('Danh mục — công tắc Dùng', () => {
     expect(patchCalls(f)).toEqual([{ id: 'i-pen', body: { active: false } }]);
   });
 
+  it('W24: Bút bi xanh đang chờ ADM giao 3 cây → hộp ngừng có khối cam, nút "Ngừng" vẫn bấm được; chờ 0 → không khối', async () => {
+    const f = await openCatalog({ items: ITEMS, pending: { 'i-pen': { remaining: 3, unit: 'cay', snapshot_at: '2026-11-03T02:15:00.000Z' }, 'i-paper': { remaining: 0 } } });
+    await userEvent.click(inRow('Bút bi xanh').getByRole('switch', { name: 'Ngừng Bút bi xanh' }));
+    const dialog = within(await screen.findByRole('dialog', { name: 'Ngừng Bút bi xanh?' }));
+    expect(dialog.getByRole('note')).toHaveTextContent(/^Món này đang chờ ADM giao 3 cây \(bản in \d\d:\d\d 03\/11\) — ngừng thì vẫn nhập được hàng đã đặt\.$/);
+    await userEvent.click(dialog.getByRole('button', { name: 'Ngừng' }));
+    await vi.waitFor(() => expect(patchCalls(f)).toEqual([{ id: 'i-pen', body: { active: false } }]));
+    await userEvent.click(inRow('Giấy A4').getByRole('switch', { name: 'Ngừng Giấy A4' }));
+    expect(within(await screen.findByRole('dialog', { name: 'Ngừng Giấy A4?' })).queryByRole('note')).toBeNull();
+  });
+
   it('"Mở lại Bút xóa cũ" PATCH {active:true} không cần hỏi', async () => {
-    const f = await openCatalog({ items: ITEMS }, '/admin/catalog?inactive=1');
+    const f = await openCatalog({ items: ITEMS }, '/admin/catalog?tab=inactive');
     await userEvent.click(inRow('Bút xóa cũ').getByRole('switch', { name: 'Mở lại Bút xóa cũ' }));
     expect(await screen.findByText('Đã mở lại Bút xóa cũ')).toBeInTheDocument();
     expect(patchCalls(f)).toEqual([{ id: 'i-old', body: { active: true } }]);
+  });
+
+  it('món đang dùng trong nhóm đã ngừng: công tắc tắt, vô hiệu, gợi ý "Bật lại nhóm để đổi từng món"; bấm không gửi gì', async () => {
+    const byGroup = adminItem({ id: 'i-clip', name: 'Kẹp nhóm ngừng', category_id: 'c-pen', usable: false, inactive_reason: 'group' });
+    const f = await openCatalog({ items: [...ITEMS, byGroup] });
+    const sw = inRow('Kẹp nhóm ngừng').getByRole('switch', { name: 'Mở lại Kẹp nhóm ngừng' });
+    expect(sw).toBeDisabled();
+    expect(sw).toHaveAttribute('aria-checked', 'false');
+    expect(sw).toHaveAccessibleDescription('Bật lại nhóm để đổi từng món');
+    await userEvent.click(sw);
+    expect(patchCalls(f)).toEqual([]);
   });
 
   it('ngừng lỗi → câu lỗi ở hàng, không toast', async () => {

@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from 'react';
 import type { Tone } from '@/lib/group-tone';
 import { Icon } from './icon';
 
-export type ThumbSize = 34 | 36 | 42 | 48 | 96 | 120 | 'card' | 'tile';
+export type ThumbSize = 34 | 36 | 40 | 42 | 48 | 96 | 120 | 'card' | 'tile';
 
 // Cỡ co giãn theo ô: card vuông, tile cao 120 (thẻ món nhân viên)
 const FLUID = {

@@ -5,32 +5,24 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import type { AdminItem, Category, ItemPayload } from './catalog.api';
 import { CATEGORIES } from './catalog-fixtures';
-import { OPEN_GROUPS_KEY } from './use-group-collapse';
 
 interface Options {
   items: AdminItem[];
   categories?: Category[];
   patch?: (id: string, body: ItemPayload) => Response | Promise<Response>;
-  // Mặc định trang thu gọn mọi nhóm; phần lớn test cần thấy món nên mở sẵn
-  groupsOpen?: boolean | 'keep';
-}
-
-
-function seedOpenGroups({ items, categories = CATEGORIES, groupsOpen = true }: Options) {
-  if (groupsOpen === 'keep') return;
-  sessionStorage.removeItem(OPEN_GROUPS_KEY);
-  if (!groupsOpen) return;
-  const keys = [...categories.map((c) => c.id), ...items.map((i) => i.category_id ?? 'none'), 'none'];
-  sessionStorage.setItem(OPEN_GROUPS_KEY, JSON.stringify([...new Set(keys)]));
+  // GET admin/items/:id/pending-arrival theo id; thiếu → 404 (hộp ngừng vẫn mở, không khối cam hàng đang về)
+  pending?: Record<string, unknown>;
 }
 
 // Server giả giữ trạng thái: PATCH thành công đổi món, lần tải lại trả bản mới
-export function stubCatalog({ items, categories = CATEGORIES, patch }: Options) {
+export function stubCatalog({ items, categories = CATEGORIES, patch, pending = {} }: Options) {
   let list = items.map((i) => ({ ...i }));
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     const path = new URL(url, 'http://x').pathname;
     if (path === '/api/admin/items' && !init?.method) return jsonResponse(200, list);
     if (path === '/api/item-categories') return jsonResponse(200, categories);
+    const waiting = /^\/api\/admin\/items\/([^/]+)\/pending-arrival$/.exec(path);
+    if (waiting && pending[waiting[1]]) return jsonResponse(200, pending[waiting[1]]);
     const id = path.startsWith('/api/admin/items/') ? path.slice('/api/admin/items/'.length) : null;
     if (id && init?.method === 'PATCH') {
       const body = JSON.parse(String(init.body)) as ItemPayload;
@@ -62,7 +54,6 @@ export const locationSearch = () => {
 
 export async function openCatalog(opts: Options, path = '/admin/catalog', rawUrl = false) {
   mockViewport(1280);
-  seedOpenGroups(opts);
   const fetchMock = stubCatalog(opts);
   renderApp(makeMe('admin'), rawUrl ? path : withTable(path));
   await screen.findByRole('group', { name: 'Lọc theo nhóm', hidden: true });

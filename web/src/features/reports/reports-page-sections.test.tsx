@@ -152,12 +152,12 @@ describe('ReportsPage — Xuất lẻ, Phần 2, Cách tính', () => {
     expect(screen.queryByRole('region', { name: 'Xuất lẻ trong kỳ' })).toBeNull();
   });
 
-  it('có xuất lẻ → mô tả + "Mở Kho"; hàng: món, "Dùng chung"/tên người nhận, SL, lý do', async () => {
+  it('có xuất lẻ → mô tả + "Mở Tủ / Kho"; hàng: món, "Dùng chung"/tên người nhận, SL, lý do', async () => {
     stubReports({ reports: { '2026-10': reportFixture({ issues: [ISSUE, { ...ISSUE, recipient_sub: 'u-duc', recipient_name: 'Phạm Văn Đức', qty: 1, reason: 'Thay bút hỏng' }] }) } });
     openPage();
     const issues = await region('Xuất lẻ trong kỳ');
     expect(within(issues).getByText('Xuất ngoài phiếu tháng, đã trừ tồn ở Kho. In kèm trong bản chốt.')).toBeInTheDocument();
-    expect(within(issues).getByRole('link', { name: 'Mở Kho' })).toHaveAttribute('href', '/admin/stock');
+    expect(within(issues).getByRole('link', { name: 'Mở Tủ / Kho' })).toHaveAttribute('href', '/admin/stock');
     const shared = within(issues).getByRole('row', { name: /Họp giao ban/ });
     for (const text of ['Giấy A4', 'Dùng chung', '2']) expect(within(shared).getByText(text)).toBeInTheDocument();
     expect(within(within(issues).getByRole('row', { name: /Thay bút hỏng/ })).getByText('Phạm Văn Đức')).toBeInTheDocument();

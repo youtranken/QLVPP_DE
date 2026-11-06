@@ -7,13 +7,6 @@ import { ItemThumb } from '@/ui/item-thumb';
 import type { CatalogRow } from './catalog-rows';
 import { useCardUpload } from './use-card-upload';
 
-function StockBadge({ row }: { row: CatalogRow }) {
-  const { t } = useTranslation();
-  if (row.stock_state === 'untracked') return null;
-  const out = row.stock_state === 'out';
-  return <span className={`ct-card__stock ct-card__stock--${out ? 'out' : row.stock_state === 'low' ? 'low' : 'ok'}`}>{out ? t('catalog.grid.stockOut') : t('catalog.grid.stockLeft', { n: row.stock_qty })}</span>;
-}
-
 function UploadButton({ id, name }: { id: string; name: string }) {
   const { t } = useTranslation();
   const { busy, error, upload, dismiss } = useCardUpload(id, name);
@@ -47,17 +40,16 @@ function UploadButton({ id, name }: { id: string; name: string }) {
   );
 }
 
-export function CatalogCard({ row, groupName, onEdit }: { row: CatalogRow; groupName: string; onEdit: (id: string) => void }) {
+export function CatalogCard({ row, groupName, open = false, onEdit }: { row: CatalogRow; groupName: string; open?: boolean; onEdit: (id: string) => void }) {
   const { t } = useTranslation();
   const unitName = useUnitNames();
   const name = useRequestFormat().name(row);
   const meta = [row.code, t('request.grid.unitMax', { unit: unitName(row.unit), max: row.max_qty })].filter(Boolean).join(' · ');
   return (
-    <article className={`ct-card${row.active ? '' : ' is-inactive'}`}>
+    <article className={['ct-card', row.active ? '' : 'is-inactive', open ? 'is-open' : ''].filter(Boolean).join(' ')}>
       <div className="ct-card__tile">
         <ItemThumb fileId={row.image_file_id} alt={name} tone={row.tone} size="card" />
         <span className="ct-card__group">{groupName}</span>
-        <StockBadge row={row} />
         {row.image_file_id === null && (
           <div className="ct-card__noimg">
             <span>{t('catalog.grid.noImage')}</span>
@@ -68,6 +60,7 @@ export function CatalogCard({ row, groupName, onEdit }: { row: CatalogRow; group
       <div className="ct-card__body">
         <h3 className="ct-card__name">{name}</h3>
         <p className="ct-card__meta">{meta}</p>
+        <p className="ct-card__stock">{t('catalog.card.stock', { n: row.stock_qty })}</p>
       </div>
       <button type="button" className="btn btn--sm ct-card__edit" aria-label={t('catalog.page.editLabel', { name })} onClick={() => onEdit(row.id)}>
         {t('catalog.page.edit')}

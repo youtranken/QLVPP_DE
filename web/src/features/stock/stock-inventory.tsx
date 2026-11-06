@@ -1,12 +1,10 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
 import { FilterNotice } from '@/ui/filter-notice';
 import { LoadError } from '@/ui/load-state';
 import { Toolbar } from '@/ui/toolbar';
-import { categoryLabel, useAdminItems, useAllCategories } from '@/features/catalog/catalog.api';
-import { indexCategories, toRows } from '@/features/catalog/catalog-rows';
-import { useBacklog } from '@/features/delivery/backlog.api';
+import { categoryLabel } from '@/features/catalog/catalog.api';
 import { CountStockDialog } from './count-stock-dialog';
 import { IssueDialog } from './issue-dialog';
 import { MovementsDrawer } from './movements-drawer';
@@ -14,7 +12,8 @@ import { PurchaseDialog } from './purchase-dialog';
 import { StockMore } from './stock-more';
 import { StockStats } from './stock-stats';
 import { StockTable, type StockAction } from './stock-table';
-import { applyStockView, owedByItem, stockStats, toStockRows, type StockRow } from './stock-rows';
+import { applyStockView, stockStats, type StockFilter, type StockRow } from './stock-rows';
+import { useStockData } from './use-stock-data';
 import { useShownLimit } from './use-shown-limit';
 import type { StockParams } from './use-stock-params';
 
@@ -25,24 +24,7 @@ interface Open {
   id: string;
 }
 
-function useStockData() {
-  const items = useAdminItems();
-  const categories = useAllCategories();
-  const backlog = useBacklog('item');
-  const index = useMemo(() => indexCategories(categories.data ?? []), [categories.data]);
-  const rows = useMemo(
-    () => toStockRows(toRows(items.data ?? [], index), owedByItem(backlog.data?.groups ?? [])),
-    [items.data, index, backlog.data],
-  );
-  const loaded = items.isSuccess && categories.isSuccess && backlog.isSuccess;
-  const failed = items.isError || categories.isError || backlog.isError;
-  const retry = () => {
-    void items.refetch();
-    void categories.refetch();
-    void backlog.refetch();
-  };
-  return { index, rows, loaded, failed, retry };
-}
+const EMPTY_KEY: Record<StockFilter, string> = { short: 'emptyShort', incoming: 'emptyIncoming', low: 'emptyLow', none: 'emptyNone' };
 
 export function StockInventory({ p }: { p: StockParams }) {
   const { t, i18n } = useTranslation();
@@ -61,14 +43,12 @@ export function StockInventory({ p }: { p: StockParams }) {
   const shown = applyStockView(d.rows, p.view);
   const page = useShownLimit(shown, `${filter ?? ''}|${p.view.q}`);
   if (d.failed) {
-    return (
-      <LoadError onRetry={d.retry} />
-    );
+    return <LoadError onRetry={d.retry} />;
   }
 
   const target = open ? d.rows.find((r) => r.id === open.id) : undefined;
   const close = () => setOpen(null);
-  const emptyKey = filter === 'low' ? 'emptyLow' : filter === 'out' ? 'emptyOut' : 'emptyTitle';
+  const emptyKey = filter ? EMPTY_KEY[filter] : 'emptyTitle';
   return (
     <>
       {d.loaded && <StockStats stats={stockStats(d.rows)} filter={filter} narrowed={filter !== null || p.view.q !== ''} onFilter={p.toggleFilter} onClear={p.clearAll} />}

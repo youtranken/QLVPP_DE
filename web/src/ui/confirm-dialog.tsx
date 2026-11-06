@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogTitle, DialogDescription, DialogCloseButton } from '@/ui/dialog';
 
@@ -7,6 +8,7 @@ export function ConfirmDialog({
   confirmLabel,
   cancelLabel,
   danger = false,
+  warning,
   busy = false,
   error,
   onConfirm,
@@ -17,6 +19,7 @@ export function ConfirmDialog({
   confirmLabel: string;
   cancelLabel?: string;
   danger?: boolean;
+  warning?: ReactNode;
   busy?: boolean;
   error?: string | null;
   onConfirm: () => void;
@@ -39,6 +42,11 @@ export function ConfirmDialog({
       <div className="sheet-body">
         {error && <p role="alert" className="alert alert--danger">{error}</p>}
         <DialogDescription>{message}</DialogDescription>
+        {warning && (
+          <div role="note" className="alert alert--warn">
+            {warning}
+          </div>
+        )}
       </div>
       <div className="sheet-footer">
         <button type="button" className="btn btn--ghost" disabled={busy} onClick={onCancel}>

@@ -216,14 +216,15 @@ export async function openAuditDetail(page: Page, row: Locator): Promise<Locator
 }
 
 // 1280: nút "Nhập mua" trên hàng; 390: nằm trong menu ⋯ của hàng
+// Nhập ngoài kỳ chỉ còn trong ⋯ của dòng Tủ/Kho (mọi bề rộng)
 export async function openPurchase(page: Page, row: Locator) {
-  if ((page.viewportSize()?.width ?? 1280) >= 768) {
-    await row.getByRole('button', { name: 'Nhập mua', exact: true }).click();
-    return;
-  }
   await row.getByRole('button', { name: /^Thao tác khác cho / }).click();
-  await page.getByRole('menu').getByRole('menuitem', { name: 'Nhập mua', exact: true }).click();
+  await page.getByRole('menu').getByRole('menuitem', { name: 'Nhập ngoài kỳ (tự mua lẻ)', exact: true }).click();
 }
+
+// Cột Trong tủ là ô thứ 3 (Món · ĐVT · Trong tủ · Đang giữ · Còn trống); 390 xếp dọc có nhãn cột phía trước
+export const stockCellOf = (row: Locator) => row.getByRole('cell').nth(2);
+export const expectStockCell = (row: Locator, qty: number) => expect(stockCellOf(row)).toHaveText(new RegExp(`^(Trong tủ\\s*)?${qty}$`));
 
 // ▲▼ dời <tr> theo key: trình duyệt tự bỏ tiêu điểm nếu app không đặt lại; dời dòng đầu xuống tận cuối rồi lên một bậc
 export async function expectReorderArrowKeepsFocus(page: Page, menuLabel: RegExp) {
@@ -246,7 +247,7 @@ export async function expectReorderArrowKeepsFocus(page: Page, menuLabel: RegExp
   const labels = await page.getByRole('table').getByRole('button', { name: menuLabel }).evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
   expect(labels.at(-2)).toMatch(new RegExp(` ${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
   await page.getByRole('button', { name: 'Hủy' }).click();
-  await page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
+  await page.getByRole('dialog', { name: 'Bỏ thay đổi?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
 }
 
 // Phiếu nhân viên: ≥ 901 là khung "complementary" bên phải; ≤ 900 là dialog (sheet) mở từ thanh phiếu nổi

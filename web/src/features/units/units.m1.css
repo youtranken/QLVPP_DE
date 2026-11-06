@@ -1,4 +1,3 @@
-[data-shell='admin'] .un-block { max-width: 960px; }
 [data-shell='admin'] .un-name__text { color: var(--c-ink); font: var(--t-label); overflow-wrap: anywhere; }
 [data-shell='admin'] .un-name .tag { margin-left: var(--s-2); vertical-align: middle; }
 [data-shell='admin'] .un-name-en { overflow-wrap: anywhere; }

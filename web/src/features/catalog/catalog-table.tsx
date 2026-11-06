@@ -6,10 +6,9 @@ import { DataTable } from '@/ui/data-table';
 import type { Selection } from '@/ui/data-table-row';
 import { Icon } from '@/ui/icon';
 import { InlineNumber } from '@/ui/inline-number';
-import { Switch } from '@/ui/switch';
 import { useUnitNames } from '@/features/units/units.api';
 import { categoryLabel } from './catalog.api';
-import { CodeCell, ItemCell, StockCell, Stop } from './catalog-cells';
+import { ActiveCell, CodeCell, ItemCell, StockCell, Stop } from './catalog-cells';
 import { rowErrorText } from './catalog-errors';
 import { NO_GROUP, type CatalogRow, type CategoryIndex } from './catalog-rows';
 
@@ -68,11 +67,7 @@ function useColumns(rowErrors: Record<string, string>, actions: CatalogTableActi
       {
         id: 'active',
         header: t('catalog.list.colActive'),
-        cell: ({ row: { original: r } }) => (
-          <Stop>
-            <Switch checked={r.active} label={t(r.active ? 'catalog.list.deactivateLabel' : 'catalog.list.reactivateLabel', { name: r.name })} onChange={() => onToggleActive(r)} />
-          </Stop>
-        ),
+        cell: ({ row: { original: r } }) => <ActiveCell row={r} onToggle={() => onToggleActive(r)} />,
       },
       {
         id: 'edit',
@@ -131,14 +126,9 @@ export function CatalogTable({ rows, index, loading, selection, rowErrors, activ
 
 function GroupAside({ groupKey, name, list, onAdd }: { groupKey: string; name: string; list: CatalogRow[]; onAdd: (id: string) => void }) {
   const { t } = useTranslation();
-  const low = list.filter((r) => r.stock_state === 'low').length;
-  const out = list.filter((r) => r.stock_state === 'out').length;
-  const meta = [t('catalog.list.groupItems', { n: list.length })];
-  if (low > 0) meta.push(t('catalog.list.groupLow', { k: low }));
-  if (out > 0) meta.push(t('catalog.list.groupOut', { h: out }));
   return (
     <>
-      <span className="ct-group-meta">{meta.join(' · ')}</span>
+      <span className="ct-group-meta">{t('catalog.list.groupItems', { n: list.length })}</span>
       {groupKey === NO_GROUP ? (
         <span className="ct-icon-btn" aria-hidden="true" />
       ) : (

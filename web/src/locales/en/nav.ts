@@ -36,12 +36,11 @@ const nav: Messages<typeof vi> = {
     delivery: 'Delivery',
     backlog: 'Outstanding',
     reports: 'Reports & print',
-    categories: 'Categories',
-    units: 'Units',
+    categoriesUnits: 'Groups & units',
     badge: {
       review: '{{n}} items to review',
       delivery: '{{n}} people waiting',
-      stock: '{{n}} items running low',
+      stock: '{{n}} items short for waiting staff',
     },
     periodCard: {
       title: 'Period: month {{month}}',

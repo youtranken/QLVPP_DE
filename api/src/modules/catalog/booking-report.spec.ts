@@ -7,7 +7,6 @@ const item = {
   nameEn: null,
   unitName: 'cây',
   packNote: null,
-  sortOrder: 90,
 };
 
 describe('formatBookingReport', () => {

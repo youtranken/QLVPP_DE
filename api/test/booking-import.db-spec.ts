@@ -106,8 +106,12 @@ describe('nạp danh mục Booking — applyBookingImport', () => {
       stock_qty: 0,
       active: true,
       admin_only: false,
-      sort_order: 90,
+      sort_order: 20,
     });
+    // Không còn số hàng × 10: món mới nối cuối nhóm (chưa nhóm) theo thứ tự tạo
+    expect(items.rows.map((i) => i.sort_order)).toEqual([
+      10, 20, 30, 40, 50, 60, 70, 80,
+    ]);
     expect(items.rows[4].pack_note).toBe('4 viên/vỉ');
 
     const audit = await pool.query(

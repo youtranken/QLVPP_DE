@@ -23,7 +23,17 @@ function stubApi(over: Record<string, Route> = {}) {
           { user_sub: 'd2', status: 'done', deliverable_now: false },
         ],
       }),
-    '/api/admin/stock/low': () => jsonResponse(200, [{ id: 'i1' }, { id: 'i2' }, { id: 'i3' }, { id: 'i4' }]),
+    // 2 món thiếu cho người chờ, 3 "Không có", 1 sắp hết, 1 chờ hàng về → badge 2
+    '/api/admin/stock': () =>
+      jsonResponse(200, [
+        { item_id: 'i1', short: 3, stock_state: 'short' },
+        { item_id: 'i2', short: 1, stock_state: 'short' },
+        { item_id: 'i3', short: 0, stock_state: 'none' },
+        { item_id: 'i4', short: 0, stock_state: 'none' },
+        { item_id: 'i5', short: 0, stock_state: 'none' },
+        { item_id: 'i6', short: 0, stock_state: 'low' },
+        { item_id: 'i7', short: 0, stock_state: 'incoming' },
+      ]),
     ...over,
   };
   const f = vi.fn((url: string) => Promise.resolve((routes[String(url)] ?? (() => jsonResponse(500, null)))()));
@@ -45,10 +55,10 @@ afterEach(() => {
 });
 
 describe('useAdminBadges', () => {
-  it('đếm review = số dòng chờ, giao hàng = số người giao được ngay (deliverable_now) của kỳ khóa gần nhất, kho = số món sắp hết', async () => {
+  it('đếm review = số dòng chờ, giao hàng = số người giao được ngay (deliverable_now) của kỳ khóa gần nhất, Tủ/Kho = số món thiếu cho người chờ (short > 0)', async () => {
     const f = stubApi();
     const { result } = renderHook(() => useAdminBadges(), { wrapper: wrapper() });
-    await waitFor(() => expect(result.current).toEqual({ review: 3, delivery: 4, stock: 4 }));
+    await waitFor(() => expect(result.current).toEqual({ review: 3, delivery: 4, stock: 2 }));
     expect(calls(f, '/api/admin/periods/2026-10/delivery-people')).toBe(1);
   });
 
@@ -56,7 +66,7 @@ describe('useAdminBadges', () => {
     stubApi({
       '/api/admin/review?status=pending': () => jsonResponse(200, { items: [] }),
       '/api/admin/periods/2026-10/delivery-people': () => jsonResponse(200, { ym: '2026-10', people: [{ user_sub: 'a', status: 'debt' }] }),
-      '/api/admin/stock/low': () => jsonResponse(200, []),
+      '/api/admin/stock': () => jsonResponse(200, [{ item_id: 'i1', short: 0, stock_state: 'incoming' }]),
     });
     const { result } = renderHook(() => useAdminBadges(), { wrapper: wrapper() });
     await waitFor(() => expect(result.current).toEqual({ review: 0, delivery: 0, stock: 0 }));
@@ -83,10 +93,10 @@ describe('useAdminBadges', () => {
     const f = stubApi({
       '/api/admin/review?status=pending': () => jsonResponse(500, null),
       '/api/periods/current': () => jsonResponse(500, null),
-      '/api/admin/stock/low': () => jsonResponse(403, { code: 'FORBIDDEN_ROLE' }),
+      '/api/admin/stock': () => jsonResponse(403, { code: 'FORBIDDEN_ROLE' }),
     });
     const { result } = renderHook(() => useAdminBadges(), { wrapper: wrapper() });
-    await waitFor(() => expect(calls(f, '/api/admin/stock/low')).toBe(1));
+    await waitFor(() => expect(calls(f, '/api/admin/stock')).toBe(1));
     await waitFor(() => expect(result.current).toEqual({ review: undefined, delivery: undefined, stock: undefined }));
   });
 
@@ -109,7 +119,7 @@ describe('useAdminBadges', () => {
     vi.setSystemTime(t0 + 60_000);
     focus();
     await waitFor(() => expect(calls(f, '/api/admin/review?status=pending')).toBe(2));
-    expect(calls(f, '/api/admin/stock/low')).toBe(2);
+    expect(calls(f, '/api/admin/stock')).toBe(2);
     focusManager.setFocused(undefined);
   });
 });

@@ -22,7 +22,7 @@ export function StockDialogShell({ title, itemName, itemUnit, stockQty, after, p
   title: string;
   itemName: string;
   itemUnit: string;
-  stockQty: number;
+  stockQty?: number;
   after?: number | null;
   preview?: string | null;
   dirty: boolean;
@@ -54,10 +54,12 @@ export function StockDialogShell({ title, itemName, itemUnit, stockQty, after, p
           </DialogClose>
         </div>
         <div className="sheet-body">
-          <p className="sk-now">
-            <span>{t('stock.dialog.current', { qty: stockQty, unit })}</span>
-            {preview ? <b>{preview}</b> : after != null && <b>{t('stock.dialog.after', { qty: after })}</b>}
-          </p>
+          {stockQty !== undefined && (
+            <p className="sk-now">
+              <span>{t('stock.dialog.current', { qty: stockQty, unit })}</span>
+              {preview ? <b>{preview}</b> : after != null && <b>{t('stock.dialog.after', { qty: after })}</b>}
+            </p>
+          )}
           {formError && (
             <p role="alert" className="alert alert--danger">
               {formError}

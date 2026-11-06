@@ -58,7 +58,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await createCategory(request, first, 900_000);
       await createCategory(request, second, 900_010);
       await page.goto('/admin/categories');
-      await expect(page.getByRole('heading', { level: 1, name: 'Nhóm món' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: 'Nhóm & đơn vị' })).toBeVisible();
       await expect(nameOf(page, 'last')).toHaveAttribute('aria-label', `Thao tác cho ${second}`);
       const total = await menuButtons(page).count();
       await expect(toneOf(page, second)).toHaveAttribute('title', TONES[(total - 1) % 7]);
@@ -92,7 +92,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'categories-add-dup', false);
       await dialog.getByRole('button', { name: 'Hủy' }).click();
-      await page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
+      await page.getByRole('dialog', { name: 'Bỏ thay đổi?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
       await expect(dialog).toBeHidden();
       if (isMobile(info)) await expectNoContrastViolations(page);
     } finally {
@@ -117,7 +117,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect(menu.getByRole('menuitem')).toHaveText(['Sửa', 'Ngừng nhóm']);
       await menu.getByRole('menuitem', { name: 'Ngừng nhóm' }).click();
       const confirm = page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` });
-      await expect(confirm.getByText('2 món trong nhóm sẽ ẩn khỏi trang Đăng ký. Mở lại nhóm thì món hiện lại.')).toBeVisible();
+      await expect(confirm.getByText('2 món sẽ ẩn với nhân viên. Dùng lại nhóm chỉ hiện lại những món này; món đã ngừng riêng vẫn ngừng.')).toBeVisible();
       await shot(page, info, 'categories-pause-confirm', false);
       await confirm.getByRole('button', { name: 'Ngừng nhóm' }).click();
       await expect(page.getByRole('row').filter({ hasText: category }).getByText('Đã ngừng', { exact: true })).toBeVisible();
@@ -125,13 +125,11 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
 
       await page.goto('/admin/catalog?view=table');
       await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Mở tất cả' })).toBeVisible();
-      await expect(page.getByText(names[0], { exact: true })).toBeHidden();
+      await expect(page.getByRole('button', { name: 'Thu tất cả' })).toBeVisible();
       const head = page.getByRole('row').filter({ hasText: category });
       await expect(head.getByText('Nhóm đang ngừng')).toBeVisible();
-      await head.getByRole('button', { expanded: false }).click();
       const row = page.getByRole('row').filter({ hasText: names[0] });
-      await expect(row.getByText('Nhóm đang ngừng')).toBeVisible();
+      await expect(row.getByText('Ngừng theo nhóm')).toBeVisible();
       await expect(row.getByText('PW item EN 1')).toBeVisible();
       if (!isMobile(info)) await expect(page.getByRole('columnheader', { name: 'Tên tiếng Anh' })).toBeVisible();
       await page.reload();
@@ -146,7 +144,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
 
   test('E9-S5 Nhóm món: Enter trên ▲▼ giữ tiêu điểm ở mũi tên của dòng vừa dời, tới dòng cuối chuyển sang ▲', async ({ page }) => {
     await page.goto('/admin/categories');
-    await expect(page.getByRole('heading', { level: 1, name: 'Nhóm món' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Nhóm & đơn vị' })).toBeVisible();
     await expectReorderArrowKeepsFocus(page, /^Thao tác cho /);
   });
 
@@ -155,5 +153,53 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
     await page.goto('/admin/categories');
     await expect(page.getByText('Không tải được dữ liệu — thử lại.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Thử lại' })).toBeVisible();
+  });
+
+  test('V2D-15 group panel: mở nhóm, tắt một món + Hoàn tác, ngừng nhóm, bật lại; axe 390 khi panel mở', async ({ page, request }, info) => {
+    const stamp = `${Date.now()}-${info.project.name}`;
+    const category = `PW nhóm ${stamp} panel`;
+    const names = [`PW món ${stamp} 1`, `PW món ${stamp} 2`, `PW món ${stamp} 3`];
+    const itemIds: string[] = [];
+    deleteTestCategories();
+    try {
+      const catId = await createCategory(request, category);
+      for (const name of names) itemIds.push(await createItem(request, { name, name_en: `PW item EN ${name.slice(-1)}`, category_id: catId }));
+
+      await page.goto('/admin/categories');
+      await page.getByRole('button', { name: category, exact: true }).click();
+      await expect(page).toHaveURL(new RegExp(`[?&]group=${catId}`));
+      const panel = page.getByRole('dialog', { name: `Nhóm ${category}` });
+      await expect(panel.getByRole('listitem')).toHaveCount(3);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+
+      const one = panel.getByRole('switch', { name: names[0], exact: true });
+      await one.click();
+      await expect(one).toHaveAttribute('aria-checked', 'false');
+      await expect(panel.getByText(`Đã ngừng ${names[0]}`)).toBeVisible();
+      await panel.getByRole('button', { name: 'Hoàn tác' }).click();
+      await expect(one).toHaveAttribute('aria-checked', 'true');
+      await one.click();
+      await expect(one).toHaveAttribute('aria-checked', 'false');
+
+      await panel.getByRole('switch', { name: `Nhóm ${category}` }).click();
+      const confirm = page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` });
+      await expect(confirm.getByText(/^2 món trong nhóm sẽ ẩn/)).toBeVisible();
+      await confirm.getByRole('button', { name: 'Ngừng nhóm' }).click();
+      await expect(panel.getByText('Ngừng theo nhóm')).toHaveCount(2);
+      await expect(panel.getByText('Ngừng riêng')).toHaveCount(1);
+      await expect(panel.getByRole('switch', { name: names[1], exact: true })).toBeDisabled();
+      await expect(panel.getByText('Bật lại nhóm để đổi từng món')).toBeVisible();
+
+      await panel.getByRole('switch', { name: `Nhóm ${category}` }).click();
+      await expect(page.getByText('2 món dùng lại; 1 món vẫn ngừng riêng')).toBeVisible();
+      await expect(panel.getByRole('switch', { name: names[1], exact: true })).toHaveAttribute('aria-checked', 'true');
+      await expect(one).toHaveAttribute('aria-checked', 'false');
+      await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await shot(page, info, 'v2d-15-group-panel', false);
+    } finally {
+      for (const id of itemIds) await removeTestItem(request, id);
+      deleteTestCategories();
+    }
   });
 });

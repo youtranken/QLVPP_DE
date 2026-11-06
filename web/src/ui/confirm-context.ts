@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 
 export type ConfirmOptions = {
   message: string;
@@ -6,6 +6,8 @@ export type ConfirmOptions = {
   confirmLabel?: string;
   cancelLabel?: string;
   danger?: boolean;
+  // Khối cảnh báo cam không chặn: nút chính vẫn bấm được
+  warning?: ReactNode;
 };
 
 export type ConfirmFn = (o: ConfirmOptions) => Promise<boolean>;
