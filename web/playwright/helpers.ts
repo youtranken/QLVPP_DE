@@ -123,17 +123,28 @@ export function deleteTestFiles(ids: string[]) {
 export function deleteTestUsers(...subs: string[]) {
   const list = subs.map((s) => `'${s}'`).join(', ');
   const files = psql(`SELECT id FROM files WHERE uploaded_by_sub IN (${list})`).split('\n');
-  psql(`DELETE FROM requests WHERE user_sub IN (${list}); DELETE FROM users WHERE sub IN (${list})`);
+  // Chuông không có khóa ngoài tới users: xóa theo để không sót chuông của người thử
+  psql(`DELETE FROM in_app_notifications WHERE user_sub IN (${list}); DELETE FROM requests WHERE user_sub IN (${list}); DELETE FROM users WHERE sub IN (${list})`);
   deleteTestFiles(files);
 }
 
-// Món đã có sổ kho/dòng phiếu thì không xóa được (ITEM_IN_USE) → ngừng thay vì xóa, ảnh giữ theo món
+// Món đã có dòng phiếu thì không xóa được (ITEM_IN_USE) → ngừng thay vì xóa, ảnh giữ theo món
 export async function removeTestItem(request: APIRequestContext, id: string) {
   const headers = devHeaders('admin');
   const image = psql(`SELECT image_file_id FROM items WHERE id = '${id}'`);
   const res = await request.delete(`/api/admin/items/${id}`, { headers });
-  if (res.ok()) deleteTestFiles([image]);
-  else expect((await request.patch(`/api/admin/items/${id}`, { headers, data: { active: false } })).ok()).toBe(true);
+  if (res.ok()) return deleteTestFiles([image]);
+  // Món PW đã có sổ kho (nhập/xuất lẻ/kiểm kê) mà không dòng phiếu nào trỏ tới: xóa sổ kho của chính nó rồi xóa món
+  const pw = `SELECT i.id FROM items i WHERE i.id = '${id}' AND i.name LIKE 'PW %'
+      AND NOT EXISTS (SELECT 1 FROM request_lines l WHERE l.item_id = i.id)
+      AND NOT EXISTS (SELECT 1 FROM stock_movements m JOIN stock_movements src ON src.id = m.ref_movement_id
+        WHERE src.item_id = i.id AND m.item_id <> i.id)`;
+  const purged = psql(`BEGIN;
+    DELETE FROM stock_movements WHERE item_id IN (${pw});
+    DELETE FROM items WHERE id IN (${pw}) RETURNING id;
+    COMMIT;`);
+  if (purged === id) return deleteTestFiles([image]);
+  expect((await request.patch(`/api/admin/items/${id}`, { headers, data: { active: false } })).ok()).toBe(true);
 }
 
 const sqlText = (s: string) => `'${s.replaceAll("'", "''")}'`;

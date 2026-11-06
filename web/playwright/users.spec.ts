@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { asRole, expectNoContrastViolations, isMobile, seedActiveUser, shot } from './helpers';
+import { asRole, deleteTestUsers, expectNoContrastViolations, isMobile, seedActiveUser, shot } from './helpers';
 
 const ACTIVE = { sub: 'pw-dir-active', name: 'PW Danh bạ An' };
 const LOCKED = { sub: 'pw-dir-locked', name: 'PW Danh bạ Bình' };
@@ -17,6 +17,7 @@ async function stubSync(page: Page, handler: () => { status: number; body: unkno
 
 test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
   asRole('admin');
+  test.afterAll(() => deleteTestUsers(ACTIVE.sub, LOCKED.sub));
 
   test('E9-S6 Danh bạ: thẻ lọc trạng thái, đồng bộ lỗi PMH ID bảng vẫn còn, ngăn kéo người', async ({ page }, info) => {
     seedActiveUser(ACTIVE.sub, ACTIVE.name);

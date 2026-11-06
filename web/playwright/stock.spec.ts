@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Locator } from '@playwright/test';
-import { asRole, devHeaders, expectNoContrastViolations, expectStockCell, isMobile, removeTestItem, seedActiveUser, shot, openPurchase } from './helpers';
+import { asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, expectStockCell, isMobile, removeTestItem, seedActiveUser, shot, openPurchase } from './helpers';
 import { seedLockedRequest } from './locked-request';
 
 const RECIPIENT = { sub: 'pw-recipient', name: 'PW Người nhận' };
@@ -30,6 +30,7 @@ async function createItem(request: APIRequestContext, name: string) {
 
 test.describe('E1-S4 Tủ / Kho: nhập, kiểm kê, xuất lẻ, sổ cái (dev-identity admin)', () => {
   asRole('admin');
+  test.afterAll(() => deleteTestUsers(RECIPIENT.sub));
 
   test('E1-S4 nhập 10 → tồn 10; xuất lẻ 3 cho người trong danh bạ → tồn 7; sổ cái hiện 2 dòng; còn 2 → Sắp hết, 0 không ai chờ → Không có', async ({
     page,
