@@ -63,10 +63,10 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await expect(grid.getByText(a.name, { exact: true })).toBeVisible();
       await snap(page, info, 'empty');
 
-      await grid.getByRole('button', { name: `Thêm ${a.name}`, exact: true }).click();
+      await grid.getByRole('button', { name: `Thêm vào phiếu: ${a.name}`, exact: true }).click();
+      await grid.getByRole('button', { name: `Thêm vào phiếu: ${b.name}`, exact: true }).click();
       await grid.getByRole('button', { name: `Thêm ${b.name}`, exact: true }).click();
-      await grid.getByRole('button', { name: `Thêm ${b.name}`, exact: true }).click();
-      await grid.getByRole('button', { name: `Thêm ${c.name}`, exact: true }).click();
+      await grid.getByRole('button', { name: `Thêm vào phiếu: ${c.name}`, exact: true }).click();
       const cart = page.getByRole('complementary', { name: 'Phiếu của tôi' });
       await expect(cart.getByText('3 loại món · 4 đơn vị')).toBeVisible();
       const save = page.getByRole('button', { name: '3 thay đổi chưa lưu · Lưu' });
@@ -141,7 +141,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await page.goto('/');
       const grid = page.getByRole('region', { name: 'Danh mục món' });
       await grid.getByRole('searchbox', { name: 'Tìm món' }).fill(itemName);
-      await grid.getByRole('button', { name: `Thêm ${itemName}`, exact: true }).click();
+      await grid.getByRole('button', { name: `Thêm vào phiếu: ${itemName}`, exact: true }).click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
       await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
@@ -186,7 +186,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
         expect(c.width).toBeLessThanOrEqual(380);
         expect(await cart.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(255, 244, 232)');
       } else {
-        await grid.getByRole('button', { name: `Thêm ${a.name}`, exact: true }).click();
+        await grid.getByRole('button', { name: `Thêm vào phiếu: ${a.name}`, exact: true }).click();
         const save = page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' });
         await expect(save).toBeVisible();
         const nav = page.getByRole('navigation', { name: 'Điều hướng chính' });
@@ -235,7 +235,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await grid.getByRole('searchbox', { name: 'Tìm món' }).fill(`BUT LOC ${stamp}`);
       await expect(addButtons).toHaveCount(1);
       await expect(page).toHaveURL(/q=BUT\+LOC/);
-      await grid.getByRole('button', { name: `Thêm ${name}`, exact: true }).click();
+      await grid.getByRole('button', { name: `Thêm vào phiếu: ${name}`, exact: true }).click();
       const picked = grid.getByRole('button', { name: 'Đã chọn 1' });
       await picked.click();
       await expect(picked).toHaveAttribute('aria-pressed', 'true');
@@ -255,7 +255,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await removeTestItem(request, itemId);
     }
   });
-  test('V2C-T4 lưới: 1280 ≥ 4 thẻ một hàng, 390 hai cột; stepper 44px; món không nhóm tới được qua chip "Khác"', async ({ page, request }, info) => {
+  test('V2C-T4 lưới: 1280 ≥ 4 thẻ một hàng, 390 hai cột; stepper 44px; món không nhóm tới được qua chip "Chưa có nhóm"', async ({ page, request }, info) => {
     const me = memberIdentity(info);
     seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
     await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...me.headers } }));
@@ -281,10 +281,10 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       } else {
         expect(new Set(ys).size).toBe(1);
       }
-      // Món không có nhóm: chip cuối "Khác" → URL g=none → món hiện ra và thêm được
-      await chips.getByRole('button').last().click(); // chip "Khác" luôn ở cuối (dev DB còn nhóm thật cũng tên "Khác")
+      // Món không có nhóm: chip "Chưa có nhóm" → URL g=none → món hiện ra và thêm được
+      await chips.getByRole('button', { name: /^Chưa có nhóm/ }).click();
       await expect(page).toHaveURL(/g=none/);
-      const add = grid.getByRole('button', { name: `Thêm ${name}`, exact: true });
+      const add = grid.getByRole('button', { name: `Thêm vào phiếu: ${name}`, exact: true });
       await expect(add).toBeVisible();
       await add.click();
       const plus = grid.getByRole('button', { name: `Thêm ${name}`, exact: true });

@@ -17,6 +17,7 @@ export function ItemGrid({
   favIds,
   copy,
   onQty,
+  locked,
   onAddCustom,
 }: {
   items: MemberItem[];
@@ -25,17 +26,21 @@ export function ItemGrid({
   favIds?: ReadonlySet<string>;
   copy?: ReactNode;
   onQty: (itemId: string, n: number) => void;
+  locked: boolean;
   onAddCustom: () => void;
 }) {
   const { t, i18n } = useTranslation();
   const narrow = useMediaQuery(NARROW_QUERY);
   const [params, patch] = useUrlPatch();
-  const groups = useMemo(() => groupCounts(items, categories, i18n.language, t('request.grid.none')), [items, categories, i18n.language, t]);
+  const categoryIds = useMemo(() => new Set(categories.map((c) => c.id)), [categories]);
+  const groups = useMemo(
+    () => groupCounts(items, categories, i18n.language, t('request.grid.none'), categoryIds),
+    [items, categories, i18n.language, t, categoryIds],
+  );
   const catInfo = useMemo(
     () => new Map(categories.map((c) => [c.id, { tone: groupTone(categories, c.id), label: categoryLabel(c, i18n.language) }])),
     [categories, i18n.language],
   );
-  const categoryIds = useMemo(() => new Set(categories.map((c) => c.id)), [categories]);
   // Điện thoại: 169 món không đổ hết một trang, mặc định nhóm đầu (R-C2); máy tính mặc định "Tất cả"
   const filter = parseFilter(params, groups.map((g) => g.id), narrow && groups[0] ? groups[0].id : 'all');
   const visible = applyFilters(items, { lines: [...lineByKey.values()] }, filter, i18n.language, favIds, categoryIds);
@@ -61,6 +66,7 @@ export function ItemGrid({
             line={lineByKey.get(item.id)}
             tone={catInfo.get(item.category_id ?? '')?.tone ?? 'g0'}
             groupLabel={catInfo.get(item.category_id ?? '')?.label ?? null}
+            locked={locked}
             onQty={(n) => onQty(item.id, n)}
           />
         ))}

@@ -133,7 +133,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       const items = await (await request.get('/api/items', { headers: me.headers })).json();
       const other = items.find((i: { name: string; active: boolean; admin_only: boolean }) => i.active && !i.admin_only && !i.name.startsWith('PW '));
       const grid = page.getByRole('region', { name: 'Danh mục món' });
-      await grid.getByRole('button', { name: `Thêm ${other.name}`, exact: true }).click();
+      await grid.getByRole('button', { name: `Thêm vào phiếu: ${other.name}`, exact: true }).click();
       await snap(page, info, 'copy-before');
 
       await page.getByRole('button', { name: `Chép lại tháng ${prevMonth}` }).click();
@@ -192,7 +192,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
 
       await page.goto('/');
       const grid = page.getByRole('region', { name: 'Danh mục món' });
-      await grid.getByRole('button', { name: `Thêm ${item.name}`, exact: true }).click();
+      await grid.getByRole('button', { name: `Thêm vào phiếu: ${item.name}`, exact: true }).click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
 
@@ -242,12 +242,12 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
     try {
       await page.goto('/');
       const grid = page.getByRole('region', { name: 'Danh mục món' });
-      const add = grid.getByRole('button', { name: `Thêm ${item.name}`, exact: true });
+      const add = grid.getByRole('button', { name: `Thêm vào phiếu: ${item.name}`, exact: true });
       await add.click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
       await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
-      await add.click();
+      await grid.getByRole('button', { name: `Thêm ${item.name}`, exact: true }).click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
 

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Tone } from '@/lib/group-tone';
 import { ItemThumb } from '@/ui/item-thumb';
@@ -12,12 +13,14 @@ export function ItemCard({
   line,
   tone,
   groupLabel,
+  locked = false,
   onQty,
 }: {
   item: MemberItem;
   line: CartLine | undefined;
   tone: Tone;
   groupLabel: string | null;
+  locked?: boolean;
   onQty: (n: number) => void;
 }) {
   const { t } = useTranslation();
@@ -25,6 +28,17 @@ export function ItemCard({
   const name = fmt.name(item);
   const qty = line?.qty ?? 0;
   const max = line?.max ?? item.max_qty;
+  const addRef = useRef<HTMLButtonElement>(null);
+  const refocus = useRef(false);
+  // Bấm − về 0 thì stepper biến mất: đưa focus sang nút "Thêm vào phiếu" mới
+  useEffect(() => {
+    if (qty === 0 && refocus.current) addRef.current?.focus();
+    refocus.current = false;
+  }, [qty]);
+  const change = (n: number) => {
+    if (n === 0) refocus.current = true;
+    onQty(n);
+  };
   return (
     <article className={`rq-card${qty > 0 ? ' is-picked' : ''}`}>
       <div className="rq-card-tile">
@@ -37,7 +51,7 @@ export function ItemCard({
         )}
       </div>
       <div className="rq-card-body">
-        <div className="rq-card-name">
+        <div className="rq-card-name" title={name}>
           {name}
           {item.pack_note && <span className="rq-card-pack"> · {item.pack_note}</span>}
         </div>
@@ -51,14 +65,16 @@ export function ItemCard({
         <button
           type="button"
           className="rq-card-add"
-          aria-label={t('common.stepper.increase', { label: name })}
-          disabled={max < 1}
+          ref={addRef}
+          aria-label={t('request.grid.addAria', { name })}
+          title={locked ? t('request.grid.lockedReason') : undefined}
+          disabled={locked || max < 1}
           onClick={() => onQty(1)}
         >
           {t('request.grid.addToCart')}
         </button>
       ) : (
-        <Stepper className="rq-card-stepper" value={qty} max={max} label={name} onChange={onQty} />
+        <Stepper className="rq-card-stepper" value={qty} max={max} label={name} disabled={locked} onChange={change} />
       )}
     </article>
   );

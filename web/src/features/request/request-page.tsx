@@ -119,6 +119,7 @@ function RequestEditor({
             lineByKey={lineByKey}
             favIds={favIds}
             copy={copy.fromYm && <CopyPreviousButton fromYm={copy.fromYm} busy={copy.busy} onClick={() => void copy.run()} />}
+            locked={!period.is_open}
             onQty={setQty}
             onAddCustom={addCustom}
           />

@@ -158,7 +158,7 @@ describe('RequestPage — chép lại tháng trước', () => {
     stubRequestApi({ copy: () => jsonResponse(200, { ...COPY, skipped: [], capped: [] }) });
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Giấy note vàng');
-    await userEvent.click(within(grid()).getByRole('button', { name: `Thêm ${NOTE.name}` }));
+    await userEvent.click(within(grid()).getByRole('button', { name: `Thêm vào phiếu: ${NOTE.name}` }));
     const copy = await screen.findByRole('button', { name: 'Chép lại tháng 10' });
 
     await userEvent.click(copy);
@@ -201,7 +201,7 @@ describe('RequestPage — kỳ trước đang giao, rời trang', () => {
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh');
     const nav = screen.getByRole('navigation', { name: 'Điều hướng chính' });
-    await userEvent.click(within(grid()).getByRole('button', { name: `Thêm ${PEN.name}` }));
+    await userEvent.click(within(grid()).getByRole('button', { name: `Thêm vào phiếu: ${PEN.name}` }));
 
     await userEvent.click(within(nav).getByRole('link', { name: /Lịch sử/ }));
     let ask = await screen.findByRole('dialog', { name: 'Rời trang khi chưa lưu?' });

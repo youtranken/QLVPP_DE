@@ -7,10 +7,8 @@ import { CLIP, NOTE, PEN, PERIOD, facts, stubRequestApi, view } from '@/test/req
 import { mockViewport } from '@/test/viewport';
 
 const grid = () => screen.getByRole('region', { name: 'Danh mục món' });
-const names = () =>
-  within(grid())
-    .getAllByRole('button', { name: /^Thêm (?!món)/ })
-    .map((b) => b.getAttribute('aria-label')!.replace('Thêm ', ''));
+// Tên mọi thẻ đang hiện (cả thẻ đã chọn, chỉ còn stepper); tên đầy đủ nằm ở title
+const names = () => within(grid()).getAllByRole('article').map((a) => a.querySelector('[title]')!.getAttribute('title')!);
 
 afterEach(() => {
   vi.unstubAllGlobals();

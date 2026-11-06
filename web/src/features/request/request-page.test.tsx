@@ -61,11 +61,11 @@ describe('RequestPage', () => {
     });
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh');
-    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Bút bi xanh' }));
+    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm vào phiếu: Bút bi xanh' }));
     await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Bút bi xanh' }));
     await showAll();
-    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Giấy note vàng' }));
-    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Kẹp giấy' }));
+    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm vào phiếu: Giấy note vàng' }));
+    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm vào phiếu: Kẹp giấy' }));
 
     expect(within(cart()).getByText('3 loại món · 4 đơn vị')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: '3 thay đổi chưa lưu · Lưu' }));
@@ -178,7 +178,7 @@ describe('RequestPage', () => {
     stubRequestApi({ request: null, put: () => jsonResponse(500, {}) });
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh');
-    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Bút bi xanh' }));
+    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm vào phiếu: Bút bi xanh' }));
     await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
     // Giỏ nằm dưới lưới ở 390 → thông báo phải ở ngoài giỏ (cạnh thanh lưu), chỉ một alert
@@ -229,10 +229,10 @@ describe('RequestPage', () => {
     });
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh');
-    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Bút bi xanh' }));
+    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm vào phiếu: Bút bi xanh' }));
     await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Bút bi xanh' }));
     await showAll();
-    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Giấy note vàng' }));
+    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm vào phiếu: Giấy note vàng' }));
     await userEvent.click(screen.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
 
@@ -267,7 +267,7 @@ describe('RequestPage', () => {
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('complementary', { name: 'Phiếu của tôi' })).findByText('Bút bi xanh');
     await showAll();
-    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Giấy note vàng' }));
+    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm vào phiếu: Giấy note vàng' }));
     await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
 
@@ -291,7 +291,7 @@ describe('RequestPage', () => {
     });
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh');
-    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm Bút bi xanh' }));
+    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm vào phiếu: Bút bi xanh' }));
     await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu phiếu' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -299,5 +299,22 @@ describe('RequestPage', () => {
     );
     expect(await screen.findByRole('heading', { level: 1, name: 'Đăng ký văn phòng phẩm tháng 1' })).toBeInTheDocument();
     expect(within(cartLine('Bút bi xanh')).getByRole('spinbutton')).toHaveValue(1);
+  });
+});
+
+describe('RequestPage — kỳ khóa', () => {
+  it('period.is_open=false → thẻ lưới vô hiệu kèm lý do, stepper thẻ đã chọn vô hiệu', async () => {
+    mockViewport(1280);
+    stubRequestApi({
+      period: { ...PERIOD, is_open: false, days_left: 0 },
+      request: view({ lines: [lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 2 })] }),
+    });
+    renderApp(makeMe('member'), '/');
+    await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Giấy note vàng');
+    const add = within(grid()).getByRole('button', { name: 'Thêm vào phiếu: Giấy note vàng' });
+    expect(add).toBeDisabled();
+    expect(add).toHaveAttribute('title', 'Kỳ đã khóa sổ — phiếu chỉ xem');
+    expect(within(grid()).getByRole('button', { name: 'Thêm Bút bi xanh' })).toBeDisabled();
+    expect(within(grid()).getByRole('button', { name: 'Bớt Bút bi xanh' })).toBeDisabled();
   });
 });

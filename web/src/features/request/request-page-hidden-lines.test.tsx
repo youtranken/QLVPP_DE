@@ -29,8 +29,8 @@ describe('RequestPage — dòng bị bộ lọc ẩn thẻ vẫn nằm trong pay
   it('tìm "giay note" ẩn thẻ Bút bi nhưng dòng Bút bi (đã lưu) vẫn được gửi cùng món mới', async () => {
     const body = await saveWith('/', async () => {
       await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm món' }), 'giay note');
-      await waitFor(() => expect(within(grid()).queryByRole('button', { name: 'Thêm Bút bi xanh' })).toBeNull());
-      await userEvent.click(within(grid()).getByRole('button', { name: `Thêm ${NOTE.name}` }));
+      await waitFor(() => expect(within(grid()).queryByRole('button', { name: 'Thêm vào phiếu: Bút bi xanh' })).toBeNull());
+      await userEvent.click(within(grid()).getByRole('button', { name: `Thêm vào phiếu: ${NOTE.name}` }));
     });
     expect(body.lines).toEqual(expect.arrayContaining([{ id: 'l-pen', qty: 2 }, { item_id: NOTE.id, qty: 1 }]));
     expect(body.lines).toHaveLength(2);
@@ -38,8 +38,8 @@ describe('RequestPage — dòng bị bộ lọc ẩn thẻ vẫn nằm trong pay
 
   it('lọc theo nhóm Giấy & sổ ẩn thẻ Bút bi nhưng dòng Bút bi vẫn được gửi', async () => {
     const body = await saveWith('/?g=c-2', async () => {
-      expect(within(grid()).queryByRole('button', { name: 'Thêm Bút bi xanh' })).toBeNull();
-      await userEvent.click(within(grid()).getByRole('button', { name: `Thêm ${NOTE.name}` }));
+      expect(within(grid()).queryByRole('button', { name: 'Thêm vào phiếu: Bút bi xanh' })).toBeNull();
+      await userEvent.click(within(grid()).getByRole('button', { name: `Thêm vào phiếu: ${NOTE.name}` }));
     });
     expect(body.lines).toEqual(expect.arrayContaining([{ id: 'l-pen', qty: 2 }, { item_id: NOTE.id, qty: 1 }]));
     expect(body.lines).toHaveLength(2);

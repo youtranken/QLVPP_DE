@@ -33,10 +33,9 @@ export function parseFilter(params: URLSearchParams, groupIds: string[], default
   return { q, group, sort, onlyPicked };
 }
 
-const hasNoGroup = (i: MemberItem, known?: ReadonlySet<string>) =>
-  i.category_id == null || (known != null && !known.has(i.category_id));
+const hasNoGroup = (i: MemberItem, known: ReadonlySet<string>) => i.category_id == null || !known.has(i.category_id);
 
-const inGroup = (i: MemberItem, group: string, known?: ReadonlySet<string>) =>
+const inGroup = (i: MemberItem, group: string, known: ReadonlySet<string>) =>
   group === 'all' || (group === NO_GROUP ? hasNoGroup(i, known) : i.category_id === group);
 
 export function applyFilters(
@@ -44,8 +43,8 @@ export function applyFilters(
   cart: { lines: Pick<CartLine, 'key'>[] },
   f: FilterState,
   lang: string,
-  favIds?: ReadonlySet<string>,
-  categoryIds?: ReadonlySet<string>,
+  favIds: ReadonlySet<string> | undefined,
+  categoryIds: ReadonlySet<string>,
 ): MemberItem[] {
   const picked = new Set(cart.lines.map((l) => l.key));
   const out = items.filter(
@@ -62,8 +61,7 @@ export function applyFilters(
   return out;
 }
 
-export function groupCounts(items: MemberItem[], categories: Category[], lang: string, noneLabel: string) {
-  const known = new Set(categories.map((c) => c.id));
+export function groupCounts(items: MemberItem[], categories: Category[], lang: string, noneLabel: string, known: ReadonlySet<string>) {
   const chips = categories
     .map((c) => ({ id: c.id, label: categoryLabel(c, lang), n: items.filter((i) => i.category_id === c.id).length }))
     .filter((g) => g.n > 0);

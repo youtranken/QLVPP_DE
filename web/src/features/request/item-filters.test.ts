@@ -17,57 +17,56 @@ const CATS = [
   { id: 'g2', name: 'Bìa', name_en: null },
   { id: 'g3', name: 'Trống', name_en: null },
 ] as Category[];
+const KNOWN = new Set(CATS.map((c) => c.id));
 const cart = (...keys: string[]) => ({ lines: keys.map((key) => ({ key })) });
 const ids = (l: MemberItem[]) => l.map((i) => i.id);
 
 describe('applyFilters', () => {
   it('"but bi" khớp "Bút bi Thiên Long" (bỏ dấu, không phân biệt hoa thường), khớp cả tên tiếng Anh', () => {
-    expect(ids(applyFilters(ITEMS, cart(), { ...DEFAULT_FILTER, q: 'BUT BI' }, 'vi'))).toEqual(['1']);
-    expect(ids(applyFilters(ITEMS, cart(), { ...DEFAULT_FILTER, q: 'binder' }, 'en'))).toEqual(['2']);
+    expect(ids(applyFilters(ITEMS, cart(), { ...DEFAULT_FILTER, q: 'BUT BI' }, 'vi', undefined, KNOWN))).toEqual(['1']);
+    expect(ids(applyFilters(ITEMS, cart(), { ...DEFAULT_FILTER, q: 'binder' }, 'en', undefined, KNOWN))).toEqual(['2']);
   });
   it('Đã chọn + từ khóa là giao hai điều kiện', () => {
     const f = { ...DEFAULT_FILTER, onlyPicked: true, q: 'giay' };
-    expect(ids(applyFilters(ITEMS, cart('1', '3'), f, 'vi'))).toEqual(['3']);
-    expect(ids(applyFilters(ITEMS, cart('1'), f, 'vi'))).toEqual([]);
+    expect(ids(applyFilters(ITEMS, cart('1', '3'), f, 'vi', undefined, KNOWN))).toEqual(['3']);
+    expect(ids(applyFilters(ITEMS, cart('1'), f, 'vi', undefined, KNOWN))).toEqual([]);
   });
   it('nhóm lọc theo category', () => {
-    expect(ids(applyFilters(ITEMS, cart(), { ...DEFAULT_FILTER, group: 'g1' }, 'vi'))).toEqual(['1', '3']);
+    expect(ids(applyFilters(ITEMS, cart(), { ...DEFAULT_FILTER, group: 'g1' }, 'vi', undefined, KNOWN))).toEqual(['1', '3']);
   });
   it('az theo tiếng Việt: "Bìa" trước "Bút"', () => {
-    expect(ids(applyFilters(ITEMS, cart(), { ...DEFAULT_FILTER, sort: 'az' }, 'vi'))).toEqual(['2', '1', '3']);
+    expect(ids(applyFilters(ITEMS, cart(), { ...DEFAULT_FILTER, sort: 'az' }, 'vi', undefined, KNOWN))).toEqual(['2', '1', '3']);
   });
   it('fav: món kỳ trước lên trước; không có dữ liệu thì như group', () => {
     const f = { ...DEFAULT_FILTER, sort: 'fav' as const };
-    expect(ids(applyFilters(ITEMS, cart(), f, 'vi', new Set(['3'])))).toEqual(['3', '1', '2']);
-    expect(ids(applyFilters(ITEMS, cart(), f, 'vi'))).toEqual(['1', '2', '3']);
-    expect(ids(applyFilters(ITEMS, cart(), f, 'vi', new Set()))).toEqual(['1', '2', '3']);
+    expect(ids(applyFilters(ITEMS, cart(), f, 'vi', new Set(['3']), KNOWN))).toEqual(['3', '1', '2']);
+    expect(ids(applyFilters(ITEMS, cart(), f, 'vi', undefined, KNOWN))).toEqual(['1', '2', '3']);
+    expect(ids(applyFilters(ITEMS, cart(), f, 'vi', new Set(), KNOWN))).toEqual(['1', '2', '3']);
   });
 });
 
 describe('groupCounts', () => {
   it('đếm theo nhóm, bỏ nhóm không có món, giữ thứ tự nhóm', () => {
-    expect(groupCounts(ITEMS, CATS, 'vi', 'Khác')).toEqual([
+    expect(groupCounts(ITEMS, CATS, 'vi', 'Chưa có nhóm', KNOWN)).toEqual([
       { id: 'g1', label: 'Bút', n: 2 },
       { id: 'g2', label: 'Bìa', n: 1 },
     ]);
-    expect(groupCounts(ITEMS, CATS, 'en', 'Other')[0].label).toBe('Pens');
+    expect(groupCounts(ITEMS, CATS, 'en', 'No group', KNOWN)[0].label).toBe('Pens');
   });
 });
 
-describe('nhóm "Khác" (R-C7)', () => {
+describe('chip "Chưa có nhóm" (R-C7)', () => {
   const STRAY = [...ITEMS, item('4', 'Không nhóm', ''), item('5', 'Nhóm đã xóa', 'gone')].map((i) =>
     i.id === '4' ? { ...i, category_id: null } : i,
   );
-  const known = new Set(CATS.map((c) => c.id));
   it('groupCounts thêm chip cuối "none" đếm món không nhóm + nhóm lạ; ẩn khi 0', () => {
-    expect(groupCounts(STRAY, CATS, 'vi', 'Khác').at(-1)).toEqual({ id: 'none', label: 'Khác', n: 2 });
-    expect(groupCounts(STRAY, CATS, 'en', 'Other').at(-1)?.label).toBe('Other');
-    expect(groupCounts(ITEMS, CATS, 'vi', 'Khác').some((g) => g.id === 'none')).toBe(false);
+    expect(groupCounts(STRAY, CATS, 'vi', 'Chưa có nhóm', KNOWN).at(-1)).toEqual({ id: 'none', label: 'Chưa có nhóm', n: 2 });
+    expect(groupCounts(STRAY, CATS, 'en', 'No group', KNOWN).at(-1)?.label).toBe('No group');
+    expect(groupCounts(ITEMS, CATS, 'vi', 'Chưa có nhóm', KNOWN).some((g) => g.id === 'none')).toBe(false);
   });
   it('applyFilters group=none chỉ giữ món category null hoặc không có trong danh sách nhóm', () => {
     const f = { ...DEFAULT_FILTER, group: 'none' };
-    expect(ids(applyFilters(STRAY, cart(), f, 'vi', undefined, known))).toEqual(['4', '5']);
-    expect(ids(applyFilters(STRAY, cart(), f, 'vi'))).toEqual(['4']);
+    expect(ids(applyFilters(STRAY, cart(), f, 'vi', undefined, KNOWN))).toEqual(['4', '5']);
   });
   it('parseFilter nhận g=none', () => {
     expect(parseFilter(new URLSearchParams('g=none'), ['g1'], 'all').group).toBe('none');
