@@ -39,7 +39,7 @@ export function ItemGrid({
     () => new Map(categories.map((c) => [c.id, { tone: groupTone(categories, c.id), label: categoryLabel(c, i18n.language) }])),
     [categories, i18n.language],
   );
-  // Điện thoại: 169 món không đổ hết một trang, mặc định nhóm đầu (R-C2); máy tính mặc định "Tất cả"
+  // Điện thoại: 169 món không đổ hết một trang, mặc định nhóm đầu; máy tính mặc định "Tất cả"
   const parsed = parseFilter(params, groups.map((g) => g.id), narrow && groups[0] ? groups[0].id : 'all');
   // Không có phiếu kỳ trước thì không có "Hay dùng trước": sort=fav trên URL rơi về "Theo nhóm"
   const canFav = !!favIds && favIds.size > 0;

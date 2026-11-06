@@ -68,6 +68,14 @@ describe('MemberShell', () => {
     expect(within(screen.getByRole('banner')).getByText('NA')).toBeInTheDocument();
   });
 
+  it('chữ đầu avatar bỏ từ không bắt đầu bằng chữ: "Nguyễn Thị Lan (demo)" → "NL" (không ra "N(")', () => {
+    mockViewport(1280);
+    renderApp(makeMe('member', { fullName: 'Nguyễn Thị Lan (demo)' }), '/');
+    const banner = screen.getByRole('banner');
+    expect(within(banner).getByText('NL')).toBeInTheDocument();
+    expect(within(banner).queryByText('N(')).toBeNull();
+  });
+
   it('member không thấy lối vào trang quản lý', () => {
     mockViewport(1280);
     renderApp(makeMe('member'), '/');

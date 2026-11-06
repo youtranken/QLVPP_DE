@@ -38,7 +38,7 @@ const request: Messages<typeof vi> = {
       cancelledAllWhy: 'Cancelled {{n}} — {{reason}}',
       issues: { title: 'Ad hoc pickups' },
       owed: '{{n}} pending',
-      delivery: { done: 'Fully received', owed: '{{k}} still waiting', undelivered: '{{k}} still waiting', cancelled: 'Cancelled', waiting: 'Waiting', none: 'No order' },
+      delivery: { done: 'Fully received', owed: '{{k}} items still waiting', cancelled: 'Cancelled', waiting: 'Waiting', none: 'No order' },
       line: { full: 'Fully received', got: 'Received {{a}}', part: 'Received {{a}}, waiting {{b}}', wait: 'Waiting {{b}}' },
       subtitle: 'Past monthly orders and what you have received.',
       customCount: {
@@ -111,8 +111,8 @@ const request: Messages<typeof vi> = {
       search: 'Search items',
       searchPlaceholder: 'Search items…',
       none: 'No group',
-      addAria: 'Add to request: {{name}}',
-      addToCart: 'Add to request',
+      addAria: 'Add to order: {{name}}',
+      addToCart: 'Add to order',
       categories: 'Item groups',
       all: 'All',
       addOther: 'Add another item',
@@ -136,8 +136,8 @@ const request: Messages<typeof vi> = {
     },
     cart: {
       title: 'Order for month {{month}}',
-      empty: 'Nothing here yet. Tap “Add to request” on an item you need.',
-      emptyCopy: 'Nothing here yet. Tap “Add to request” on an item you need, or copy month {{month}}.',
+      empty: 'Nothing here yet. Tap “Add to order” on an item you need.',
+      emptyCopy: 'Nothing here yet. Tap “Add to order” on an item you need, or copy the month {{month}} list.',
       summary: '{{kinds}} kinds · {{units}} units',
       statusDirty: 'Unsaved',
       statusSaved: 'Saved',
@@ -161,7 +161,6 @@ const request: Messages<typeof vi> = {
       barDirty: '{{n}} unsaved change(s)',
       viewCart: 'View order ({{n}} items)',
       barSub: '{{units}} units · {{status}}',
-      count: '{{n}} items',
     },
     confirm: {
       title: 'Save month {{month}} order?',

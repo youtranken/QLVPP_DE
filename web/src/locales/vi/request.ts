@@ -35,7 +35,7 @@ const request = {
       cancelledAllWhy: 'Đã hủy {{n}} — {{reason}}',
       issues: { title: 'Nhận lẻ' },
       owed: 'còn chờ {{n}}',
-      delivery: { done: 'Đã nhận đủ', owed: 'Còn chờ {{k}} món', undelivered: 'Còn chờ {{k}} món', cancelled: 'Đã hủy', waiting: 'Còn chờ nhận', none: 'Không có phiếu' },
+      delivery: { done: 'Đã nhận đủ', owed: 'Còn chờ {{k}} món', cancelled: 'Đã hủy', waiting: 'Còn chờ nhận', none: 'Không có phiếu' },
       line: { full: 'Đã nhận đủ', got: 'Đã nhận {{a}}', part: 'Nhận {{a}}, chờ {{b}}', wait: 'Chờ {{b}}' },
       subtitle: 'Phiếu các tháng trước và tình trạng nhận hàng.',
       customCount: {
@@ -134,7 +134,7 @@ const request = {
     cart: {
       title: 'Phiếu tháng {{month}}',
       empty: 'Chưa có món nào. Bấm “Thêm vào phiếu” ở món cần dùng.',
-      emptyCopy: 'Chưa có món nào. Bấm “Thêm vào phiếu” ở món cần dùng, hoặc chép lại tháng {{month}}.',
+      emptyCopy: 'Chưa có món nào. Bấm “Thêm vào phiếu” ở món cần dùng, hoặc chép lại danh sách tháng {{month}}.',
       summary: '{{kinds}} loại món · {{units}} đơn vị',
       statusDirty: 'Chưa lưu',
       statusSaved: 'Đã lưu',
@@ -158,7 +158,6 @@ const request = {
       barDirty: '{{n}} thay đổi chưa lưu',
       viewCart: 'Xem phiếu ({{n}} món)',
       barSub: '{{units}} đơn vị · {{status}}',
-      count: '{{n}} món',
     },
     confirm: {
       title: 'Lưu phiếu tháng {{month}}?',

@@ -13,7 +13,7 @@ const cart = (hidden = false, month = 11): HTMLElement =>
   hidden
     ? screen.getByRole<HTMLElement>('heading', { name: `Phiếu tháng ${month}`, hidden: true }).closest<HTMLElement>('aside, [role="dialog"]')!
     : (screen.queryByRole('complementary', { name: `Phiếu tháng ${month}` }) ?? screen.getByRole('dialog', { name: `Phiếu tháng ${month}` }));
-// 390 px mặc định nhóm đầu (R-C2): món ở nhóm khác phải bấm chip "Tất cả" mới thấy
+// 390 px mặc định nhóm đầu: món ở nhóm khác phải bấm chip "Tất cả" mới thấy
 const showAll = () => userEvent.click(within(grid()).getByRole('button', { name: /^Tất cả/ }));
 const cartLine = (name: string, hidden = false, month = 11) => within(cart(hidden, month)).getByText(name).closest('li')!;
 

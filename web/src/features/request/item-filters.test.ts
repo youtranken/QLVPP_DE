@@ -55,7 +55,7 @@ describe('groupCounts', () => {
   });
 });
 
-describe('chip "Chưa có nhóm" (R-C7)', () => {
+describe('chip "Chưa có nhóm"', () => {
   const STRAY = [...ITEMS, item('4', 'Không nhóm', ''), item('5', 'Nhóm đã xóa', 'gone')].map((i) =>
     i.id === '4' ? { ...i, category_id: null } : i,
   );

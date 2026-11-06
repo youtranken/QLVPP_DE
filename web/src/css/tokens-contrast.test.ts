@@ -30,10 +30,11 @@ const PAIRS: [fg: string, bg: string][] = [
   ['--c-on-dark', '--c-shell-c'], ['--c-on-dark-2', '--c-shell-a'], ['--c-on-dark-2', '--c-shell-c'],
   ['--c-on-dark', '--c-acc'], ['--c-warn', '--c-cart'], ['--c-cart-ink', '--c-cart'], ['--c-cart-ink', '--c-surface'], ['--c-warn', '--c-surface'], ['--c-ok', '--c-surface'], ['--c-danger', '--c-danger-tint'], ['--c-on-dark', '--c-dark'],
   ['--c-on-dark', '--c-pick'], ['--c-acc', '--c-panel-b'], ['--c-acc', '--c-panel-a'], ['--c-acc', '--c-acc-soft'],
+  ['--c-on-dark-2', '--c-owed-bg'], ['--c-on-dark', '--c-owed-bg'],
 ];
 
-// Chấm kỳ ở cột 72 (không có chữ) — thành phần phi văn bản cần ≥ 3:1 trên nền kính
-const DOTS: [fg: string, bg: string][] = [['--c-bar-fill', '--c-shell-b'], ['--c-warn-fill', '--c-shell-b']];
+// Thành phần phi văn bản (chấm kỳ ở cột 72, icon nhắc nợ) cần ≥ 3:1 trên nền của nó
+const DOTS: [fg: string, bg: string][] = [['--c-bar-fill', '--c-shell-b'], ['--c-warn-fill', '--c-shell-b'], ['--c-owed-ic', '--c-owed-ic-bg']];
 
 describe('tương phản token bảng màu v2', () => {
   it('bảng màu mang tiêu đề v2', () => {

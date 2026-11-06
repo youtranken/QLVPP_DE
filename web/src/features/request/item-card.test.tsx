@@ -71,13 +71,13 @@ describe('ItemCard', () => {
 });
 
 describe('ItemCard — tiếng Anh', () => {
-  it('en: hiện name_en và nút "Add to request: Blue pen"', async () => {
+  it('en: hiện name_en và nút "Add to order: Blue pen"', async () => {
     const i18n = (await import('@/lib/i18n')).default;
     await i18n.changeLanguage('en');
     try {
       view(undefined);
       expect(screen.getByText('Blue pen')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Add to request: Blue pen' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Add to order: Blue pen' })).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage('vi');
     }

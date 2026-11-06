@@ -11,7 +11,7 @@ export interface FilterState {
   onlyPicked: boolean;
 }
 
-// Chip cuối cho món chưa xếp nhóm hoặc nhóm không còn trong danh sách (R-C7)
+// Chip cuối cho món chưa xếp nhóm hoặc nhóm không còn trong danh sách
 export const NO_GROUP = 'none';
 
 export const DEFAULT_FILTER: FilterState = { q: '', group: 'all', sort: 'group', onlyPicked: false };
@@ -19,7 +19,7 @@ export const DEFAULT_FILTER: FilterState = { q: '', group: 'all', sort: 'group',
 const SORTS: SortKey[] = ['fav', 'az', 'group'];
 
 // Đọc bộ lọc từ URL (?q=&g=&sort=&picked=1); giá trị lạ → mặc định.
-// Không có g: đang tìm hoặc lọc "Đã chọn" thì tìm trên mọi nhóm, ngược lại dùng nhóm mặc định của thiết bị (R-C2)
+// Không có g: đang tìm hoặc lọc "Đã chọn" thì tìm trên mọi nhóm, ngược lại dùng nhóm mặc định của thiết bị
 export function parseFilter(params: URLSearchParams, groupIds: string[], defaultGroup: string | 'all'): FilterState {
   const q = (params.get('q') ?? '').trim();
   const sortRaw = params.get('sort') as SortKey | null;

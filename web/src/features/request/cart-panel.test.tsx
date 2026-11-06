@@ -53,7 +53,7 @@ const aside = () => screen.getByRole('complementary', { name: 'Phiếu tháng 11
 describe('CartPanel', () => {
   it('rỗng: khung "Chưa có món nào" nhắc chép lại tháng trước; đầu phiếu "0 loại món · 0 đơn vị" + chip Chưa lưu', () => {
     show();
-    expect(within(aside()).getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu” ở món cần dùng, hoặc chép lại tháng 10\./)).toBeInTheDocument();
+    expect(within(aside()).getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu” ở món cần dùng, hoặc chép lại danh sách tháng 10\./)).toBeInTheDocument();
     expect(within(aside()).getByText('0 loại món · 0 đơn vị')).toBeInTheDocument();
     expect(within(aside()).getByText('Chưa lưu')).toBeInTheDocument();
     expect(within(aside()).getByText('Phiếu chỉ được tính khi bạn bấm Lưu phiếu.')).toBeInTheDocument();

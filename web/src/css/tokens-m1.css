@@ -54,6 +54,10 @@
   --c-shell-a: #08303B;  --c-shell-b: #0E4757;  --c-shell-c: #12596A;  --c-panel-a: #E3F1F5;  --c-panel-b: #CBE4EB;
   --c-glass: rgb(255 255 255 / .06);  --c-glass-line: rgb(255 255 255 / .12);  --c-cart: #FFF4E8;  --c-cart-line: #F7D9B5;  --c-cart-ink: #7A4A1E;  --c-cart-dash: #F0C89A; /* chữ phụ + viền đứt trên phiếu cam */
   --c-tile-chip: rgb(255 255 255 / .92);  --c-pick: #B4540A; /* badge số món đã chọn, chữ trắng ≥ 4.5:1 */
+  --c-on-dark-hover: rgb(255 255 255 / .1);  --c-on-dark-current: rgb(255 255 255 / .12);  --c-veil: rgb(255 255 255 / .6);  --c-veil-hi: rgb(255 255 255 / .9);
+  --c-warn-halo: rgb(227 154 82 / .3); /* quầng chấm "chưa lưu" */
+  /* nhắc nợ trên nền teal: nền đặc (cam .14 trộn trên --c-shell-b) để kiểm được tương phản */
+  --c-owed-bg: #2F5658;  --c-owed-line: #6B725D;  --c-owed-ic-bg: #F4ECE1;  --c-owed-ic: #6B4A2E;
 }
 /* ===== HẾT BẢNG MÀU ===== */
 

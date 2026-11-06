@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { initialsOf } from '@/lib/initials';
 import { useMe } from '@/lib/me';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { NotificationBell } from '@/features/notifications/notification-bell';
@@ -7,10 +8,8 @@ import { BottomNav } from '@/shell/bottom-nav';
 import { useShellFont } from '@/shell/use-shell-font';
 
 function initials(name: string | null, fallback: string): string {
-  const words = (name ?? '').trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return fallback.slice(0, 2).toUpperCase();
-  const pick = words.length === 1 ? [words[0]] : [words[0], words[words.length - 1]];
-  return pick.map((w) => w[0]).join('').toUpperCase();
+  const fromName = initialsOf((name ?? '').trim());
+  return fromName === '?' ? fallback.slice(0, 2).toUpperCase() : fromName;
 }
 
 export function MemberShell() {
@@ -50,7 +49,7 @@ export function MemberShell() {
           )}
         </div>
       </header>
-      <main id="main" className="m-main">
+      <main id="main">
         <Outlet />
       </main>
       {narrow && <BottomNav />}
