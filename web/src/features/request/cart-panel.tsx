@@ -59,7 +59,7 @@ function CartRow({
         <span className="rq-line-qty num">{t('request.cart.qty', { qty: line.qty, unit: fmt.unit(line.label.unit) })}</span>
         {!line.item_id && <CustomTags line={line} lockAt={lockAt} />}
         {line.review_status === 'converted' && <span className="tag tag--ok">{t('request.cart.review.converted')}</span>}
-        {line.lowered && !line.readonly && (
+        {line.lowered && !line.readonly && line.qty > line.lowered.max && (
           <span className="rq-line-max">{t('request.cart.loweredMax', line.lowered)}</span>
         )}
         {line.added_by_admin && (

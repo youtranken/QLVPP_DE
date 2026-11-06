@@ -59,6 +59,23 @@ describe('HistoryPage', () => {
     expect(await within(screen.getByText('Tháng 8/2026').closest('a')!).findByText('Còn chờ 1 món')).toBeInTheDocument();
   });
 
+  it('phiếu Hành chính đã bỏ hết (removed_all) → chip "Hành chính đã bỏ toàn bộ", không "Không có phiếu"', async () => {
+    stub([
+      {
+        items: [
+          item({ period_ym: '2026-10', line_count: 0, total_qty: 0, delivered_qty: 0, remaining_qty: 0, removed_all: true }),
+          item({ period_ym: '2026-09', line_count: 0, total_qty: 0, delivered_qty: 0, remaining_qty: 0 }),
+        ],
+        next_cursor: null,
+      },
+    ]);
+    renderApp(makeMe('member'), '/history');
+    const oct = (await screen.findByText('Tháng 10/2026')).closest('a')!;
+    expect(within(oct).getByText('Hành chính đã bỏ toàn bộ')).toBeInTheDocument();
+    expect(within(oct).queryByText('Không có phiếu')).toBeNull();
+    expect(within(screen.getByText('Tháng 9/2026').closest('a')!).getByText('Không có phiếu')).toBeInTheDocument();
+  });
+
   it('tháng gần nhất đã đóng có dòng món: tên theo ngôn ngữ, số lượng, chip từng dòng, dòng hủy kèm lý do', async () => {
     stub(
       [{ items: [item({ period_ym: '2026-11' }), item({ period_ym: '2026-10', delivered_qty: 7, remaining_qty: 2, cancelled_qty: 2 }), item({ period_ym: '2026-09' })], next_cursor: null }],

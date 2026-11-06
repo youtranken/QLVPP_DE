@@ -92,6 +92,33 @@ describe('GET me/request: nhân viên thấy điều chỉnh của Hành chính 
     );
   });
 
+  it('Lịch sử (danh sách): phiếu bị Hành chính bỏ hết → removed_all true; phiếu còn dòng hoặc chưa ai sửa → false', async () => {
+    const sub = await newOwner();
+    const r = await seed([2], sub);
+    const history = async () =>
+      (
+        (await as(http().get('/api/me/requests'), sub).expect(200)).body as {
+          items: {
+            period_ym: string;
+            line_count: number;
+            removed_all: boolean;
+          }[];
+        }
+      ).items.find((i) => i.period_ym === '2026-11');
+    expect(await history()).toMatchObject({
+      line_count: 1,
+      removed_all: false,
+    });
+    freeze('2026-11-13T02:00:00.000Z');
+    const once = await cut(r, { 0: { qty: 1, ...over } }).expect(200);
+    expect(await history()).toMatchObject({
+      line_count: 1,
+      removed_all: false,
+    });
+    await cut(once.body.request, { 0: { qty: 0, ...over } }).expect(200);
+    expect(await history()).toMatchObject({ line_count: 0, removed_all: true });
+  });
+
   it('kỳ đang mở: nhân viên không thấy gì của Hành chính (adjustments rỗng, removed_all false)', async () => {
     const sub = await newOwner();
     await seed([2], sub);

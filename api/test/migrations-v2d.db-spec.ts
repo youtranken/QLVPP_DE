@@ -12,7 +12,7 @@ import { assertTestDatabase } from './test-database';
 const silent = { log: () => undefined };
 const YM = '2026-10-01';
 
-describe('migration v2-D 0113–0118', () => {
+describe('migration v2-D 0113–0119', () => {
   let pool: Pool;
   let itemId: string;
   const movement: Record<string, string> = {};
@@ -297,5 +297,13 @@ describe('migration v2-D 0113–0118', () => {
       [YM],
     );
     expect(rows[0]).toEqual({ no_order_at: null, no_order_by: null });
+  });
+
+  it('0119 chỉ mục detail->>batch_id của audit_log (bộ phận, chỉ dòng có batch_id) được dùng khi tra món con', async () => {
+    const { rows } = await pool.query<{ def: string }>(
+      `SELECT pg_get_indexdef(indexrelid) AS def FROM pg_index WHERE indexrelid = 'idx_audit_log_batch_id'::regclass`,
+    );
+    expect(rows[0].def).toContain("((detail ->> 'batch_id'::text))");
+    expect(rows[0].def).toContain('IS NOT NULL');
   });
 });

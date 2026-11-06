@@ -29,8 +29,8 @@ export function GroupItemSwitch({ item, name, groupActive, hintId, refresh, noti
   const [error, setError] = useState<string | null>(null);
 
   const askStop = async () => {
-    const warning = await pendingNote([{ id: item.id, name }], false);
-    if (!warning) return true;
+    const { warning, unknown } = await pendingNote([{ id: item.id, name }], false);
+    if (!warning && !unknown) return true;
     return confirm({ title: t('catalog.list.deactivateTitle', { name }), message: t('catalog.list.deactivateBody'), confirmLabel: t('catalog.bulk.deactivate'), danger: true, warning });
   };
 

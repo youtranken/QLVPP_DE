@@ -34,7 +34,7 @@ export function useCatalogActions(refresh: () => Promise<unknown>, setRowError: 
           message: t('catalog.list.deactivateBody'),
           confirmLabel: t('catalog.bulk.deactivate'),
           danger: true,
-          warning: await pendingNote([{ id: row.id, name: row.name }], false),
+          warning: (await pendingNote([{ id: row.id, name: row.name }], false)).warning,
         });
         if (!ok) return;
       }
@@ -50,10 +50,19 @@ export function useCatalogActions(refresh: () => Promise<unknown>, setRowError: 
     [confirm, csrfToken, pendingNote, refresh, setRowError, t, toast],
   );
 
-  // Ngừng hàng loạt chỉ hỏi khi có món còn hàng ADM đang về (khối cam ghi tên từng món)
-  const confirmDeactivateMany = async (items: { id: string; name: string }[]) => {
-    const warning = await pendingNote(items, true);
-    if (!warning) return true;
+  const confirmDeactivateMany = useConfirmDeactivateMany();
+
+  return { saveMax, toggleActive, confirmDeactivateMany };
+}
+
+// Ngừng hàng loạt chỉ hỏi khi có món còn hàng ADM đang về (khối cam ghi tên từng món) hoặc không tải được để biết
+function useConfirmDeactivateMany() {
+  const { t } = useTranslation();
+  const confirm = useConfirm();
+  const pendingNote = usePendingArrivalNote();
+  return async (items: { id: string; name: string }[]) => {
+    const { warning, unknown } = await pendingNote(items, true);
+    if (!warning && !unknown) return true;
     return confirm({
       title: t('catalog.bulk.deactivateTitle', { n: items.length }),
       message: t('catalog.bulk.deactivateBody'),
@@ -62,6 +71,4 @@ export function useCatalogActions(refresh: () => Promise<unknown>, setRowError: 
       warning,
     });
   };
-
-  return { saveMax, toggleActive, confirmDeactivateMany };
 }

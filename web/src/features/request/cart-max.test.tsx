@@ -28,7 +28,10 @@ describe('Giỏ — tối đa/tháng bị hạ sau khi lưu', () => {
     expect(within(line).getByRole('button', { name: 'Thêm Bút bi xanh' })).toBeDisabled();
 
     await userEvent.click(within(line).getByRole('button', { name: 'Bớt Bút bi xanh' }));
+    // Đang để 4 (= tối đa mới) thì câu "giữ được 5" không còn đúng với số đang thấy → ẩn; tăng lại 5 thì hiện lại
+    expect(within(line).queryByText(/Tối đa mới/)).toBeNull();
     await userEvent.click(within(line).getByRole('button', { name: 'Thêm Bút bi xanh' }));
+    expect(within(line).getByText('Tối đa mới 4 — giữ được 5, không tăng được')).toBeInTheDocument();
     expect(within(line).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(5);
     expect(within(line).getByRole('button', { name: 'Thêm Bút bi xanh' })).toBeDisabled();
 

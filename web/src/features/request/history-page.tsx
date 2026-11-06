@@ -11,11 +11,12 @@ import './history.m1.css';
 
 const TONE: Record<DeliveryState, ChipTone> = { done: 'ok', owed: 'warn', undelivered: 'warn', cancelled: 'muted', none: 'muted' };
 
-type TagItem = Pick<HistoryItem, 'line_count' | 'total_qty' | 'delivered_qty' | 'remaining_qty' | 'owed_line_count'>;
+type TagItem = Pick<HistoryItem, 'line_count' | 'total_qty' | 'delivered_qty' | 'remaining_qty' | 'owed_line_count' | 'removed_all'>;
 
 // "Còn chờ k món" đếm DÒNG còn chờ (cùng cách với OwedNotice); server đếm sẵn nên không tải phiếu từng tháng
 export function DeliveryTag({ item }: { item: TagItem }) {
   const { t } = useTranslation();
+  if (item.removed_all) return <Chip tone="muted">{t('request.history.delivery.removedAll')}</Chip>;
   const state = deliveryState(item);
   if (state === 'owed' || state === 'undelivered') {
     const k = item.owed_line_count;

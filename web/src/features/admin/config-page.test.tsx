@@ -155,7 +155,7 @@ describe('Cấu hình · khối Quyền Hành chính', () => {
     expect(screen.queryByText(/sẽ mất quyền vào trang quản lý/)).toBeNull();
   });
 
-  it('Lưu hỏi xác nhận nguy hiểm "Đổi nhóm Hành chính?"; Hủy thì không gửi, đồng ý mới gửi admin_group', async () => {
+  it('Lưu hỏi xác nhận nguy hiểm "Đổi nhóm Hành chính?"; Quay lại thì không gửi, đồng ý mới gửi admin_group', async () => {
     const fetchMock = stubConfigApi((body) => jsonResponse(200, { ...CONFIG, ...body }));
     await openConfig();
     await retype(group(), 'nhom-moi');

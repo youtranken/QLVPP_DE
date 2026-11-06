@@ -61,8 +61,8 @@ describe('POST admin/stock/receipts: vai, validate, mã lỗi (Postgres thật)'
     ).rows;
     expect(summary.detail).toEqual({
       lines: [
-        { item_id: a, qty: 5 },
-        { item_id: b, qty: 2 },
+        { item_id: a, qty: 5, name: expect.any(String), name_en: null },
+        { item_id: b, qty: 2, name: expect.any(String), name_en: null },
       ],
       note: 'đợt 1',
     });

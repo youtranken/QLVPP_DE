@@ -10,6 +10,7 @@ import { auditActionLabel } from './audit-actions';
 import { AuditDetail } from './audit-detail';
 import { auditObjectText } from './audit-object';
 import { vnDayKey } from './audit-quick-ranges';
+import { monthOf } from '@/features/request/request-format';
 
 const ZONE = 'Asia/Ho_Chi_Minh';
 const timeFmt = new Intl.DateTimeFormat('en-GB', {
@@ -55,7 +56,7 @@ function useColumns() {
         id: 'action',
         header: t('audit.page.colAction'),
         cell: ({ row: { original: e } }) => {
-          const label = e.batch ? t('audit.batch.title', { month: Number(e.batch.ym.slice(5)), n: e.batch.items.length, u: e.batch.units }) : auditActionLabel(t, e.action);
+          const label = e.batch ? t('audit.batch.title', { month: monthOf(e.batch.ym), n: e.batch.items.length, u: e.batch.units }) : auditActionLabel(t, e.action);
           return <span className="au-action">{label}</span>;
         },
       },

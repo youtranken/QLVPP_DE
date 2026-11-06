@@ -11,6 +11,8 @@ export interface HistoryItem {
   cancelled_qty: number;
   // Số dòng hiệu lực còn chờ giao (server đếm), cho chip "Còn chờ k món"
   owed_line_count: number;
+  // Hành chính bỏ hết dòng của phiếu (phiếu vẫn giữ, 0 dòng)
+  removed_all?: boolean;
   custom: { pending: number; accepted: number; converted: number; rejected: number };
 }
 

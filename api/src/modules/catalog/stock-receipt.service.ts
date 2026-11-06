@@ -50,14 +50,21 @@ export class StockReceiptService {
     return this.db.transaction(async (tx) => {
       await this.stock.lockItemsWithin(tx, ids);
       await this.assertReceivable(tx, body.ym, lines);
-      // Dòng gộp ghi trước để từng món mang id của nó (batch_id) — Nhật ký hiện một lần Lưu thành một dòng
+      // Dòng gộp ghi trước để từng món mang id của nó (batch_id) — Nhật ký hiện một lần Lưu thành một dòng.
+      // Ghi kèm tên lúc Lưu để Nhật ký vẫn đọc được khi món bị xóa sau này
+      const names = await this.namesWithin(tx, ids);
       const batchId = await this.audit.appendWithin(tx, {
         actor,
         action: 'stock.receipt',
         objectType: 'period',
         objectId: body.ym,
         detail: {
-          lines: lines.map((l) => ({ item_id: l.item_id, qty: l.qty })),
+          lines: lines.map((l) => ({
+            item_id: l.item_id,
+            qty: l.qty,
+            name: names.get(l.item_id)?.name ?? null,
+            name_en: names.get(l.item_id)?.name_en ?? null,
+          })),
           note: body.note ?? null,
         },
       });
@@ -79,6 +86,22 @@ export class StockReceiptService {
       }
       return { items };
     });
+  }
+
+  private async namesWithin(
+    tx: Tx,
+    ids: string[],
+  ): Promise<Map<string, { name: string; name_en: string | null }>> {
+    const { rows } = await tx.execute<{
+      id: string;
+      name: string;
+      name_en: string | null;
+    }>(
+      sql`SELECT id::text, name, name_en FROM items WHERE id = ANY(${sql.param(ids)}::uuid[])`,
+    );
+    return new Map(
+      rows.map((r) => [r.id, { name: r.name, name_en: r.name_en }]),
+    );
   }
 
   // Kỳ trước kỳ làm việc = ADM giao bù phần còn nợ của kỳ đó

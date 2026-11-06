@@ -42,7 +42,7 @@ const request: Messages<typeof vi> = {
       removedAll: 'Admin removed the whole request: {{reasons}}',
       issues: { title: 'Ad hoc pickups' },
       owed: '{{n}} pending',
-      delivery: { done: 'Fully received', owed: '{{k}} items still waiting', cancelled: 'Cancelled', waiting: 'Waiting', none: 'No order' },
+      delivery: { done: 'Fully received', owed: '{{k}} items still waiting', cancelled: 'Cancelled', waiting: 'Waiting', none: 'No order', removedAll: 'Admin removed the whole request' },
       line: { full: 'Fully received', got: 'Received {{a}}', part: 'Received {{a}}, waiting {{b}}', wait: 'Waiting {{b}}' },
       subtitle: 'Past monthly orders and what you have received.',
       customCount: {

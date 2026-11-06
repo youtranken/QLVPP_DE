@@ -21,6 +21,8 @@ export interface HistoryItem {
   cancelled_qty: number;
   // Số dòng hiệu lực còn chờ giao: chip "Còn chờ k món" của Lịch sử khỏi phải tải từng phiếu
   owed_line_count: number;
+  // Phiếu còn giữ nhưng Hành chính đã bỏ hết dòng: Lịch sử ghi rõ thay vì "Không có phiếu"
+  removed_all: boolean;
   custom: {
     pending: number;
     accepted: number;
@@ -63,6 +65,9 @@ export class HistoryService {
              ${effective(sql`l.cancelled_qty`)} AS cancelled_qty,
              ${effective(REMAINING_QTY)} AS remaining_qty,
              count(l.id) FILTER (WHERE ${UNDELIVERED_LINE})::int AS owed_line_count,
+             (count(l.id) = 0 AND EXISTS (
+               SELECT 1 FROM request_line_adjustments a WHERE a.request_id = r.id
+             )) AS removed_all,
              ${count('pending')} AS pending, ${count('accepted')} AS accepted,
              ${count('converted')} AS converted, ${count('rejected')} AS rejected
       FROM requests r LEFT JOIN request_lines l ON l.request_id = r.id

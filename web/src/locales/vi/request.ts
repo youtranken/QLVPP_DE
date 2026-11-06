@@ -39,7 +39,7 @@ const request = {
       removedAll: 'Hành chính đã bỏ toàn bộ: {{reasons}}',
       issues: { title: 'Nhận lẻ' },
       owed: 'còn chờ {{n}}',
-      delivery: { done: 'Đã nhận đủ', owed: 'Còn chờ {{k}} món', cancelled: 'Đã hủy', waiting: 'Còn chờ nhận', none: 'Không có phiếu' },
+      delivery: { done: 'Đã nhận đủ', owed: 'Còn chờ {{k}} món', cancelled: 'Đã hủy', waiting: 'Còn chờ nhận', none: 'Không có phiếu', removedAll: 'Hành chính đã bỏ toàn bộ' },
       line: { full: 'Đã nhận đủ', got: 'Đã nhận {{a}}', part: 'Nhận {{a}}, chờ {{b}}', wait: 'Chờ {{b}}' },
       subtitle: 'Phiếu các tháng trước và tình trạng nhận hàng.',
       customCount: {

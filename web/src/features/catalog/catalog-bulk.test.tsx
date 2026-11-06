@@ -148,4 +148,15 @@ describe('Danh mục — hàng loạt', () => {
     await userEvent.click(within(await screen.findByRole('dialog', { name: 'Ngừng 2 món?' })).getByRole('button', { name: 'Ngừng' }));
     expect(await screen.findByText('Đã ngừng 2 món')).toBeInTheDocument();
   });
+
+  it('"Ngừng" mà tải pending-arrival lỗi → vẫn hỏi "Ngừng 2 món?" (hộp thường, không khối cam), không PATCH tới khi bấm Ngừng', async () => {
+    const f = await openCatalog({ items: ITEMS, pending: { 'i-pen': 'error' } });
+    await pickPens();
+    await userEvent.click(bulkBar().getByRole('button', { name: 'Ngừng' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Ngừng 2 món?' });
+    expect(within(dialog).queryByRole('note')).toBeNull();
+    expect(patchCalls(f)).toEqual([]);
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Ngừng' }));
+    expect(await screen.findByText('Đã ngừng 2 món')).toBeInTheDocument();
+  });
 });

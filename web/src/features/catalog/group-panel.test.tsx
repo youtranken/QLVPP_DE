@@ -124,12 +124,23 @@ describe('Panel nhóm (?group=)', () => {
     await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/items/i-b', 'PATCH', { active: false }]]));
   });
 
-  it('tắt món chờ 0 hoặc lỗi tải pending-arrival → không hỏi, PATCH ngay', async () => {
-    const f = await openAt('/admin/categories?group=c-1', { pending: { 'i-c': 'error' } });
+  it('tắt món chờ 0 → không hỏi, PATCH ngay', async () => {
+    const f = await openAt('/admin/categories?group=c-1');
     await screen.findByRole('dialog', { name: 'Nhóm Kẹp & dán' });
     await userEvent.click(itemSwitch('Kẹp C'));
     await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/items/i-c', 'PATCH', { active: false }]]));
     expect(screen.queryByRole('dialog', { name: 'Ngừng Kẹp C?' })).toBeNull();
+  });
+
+  it('lỗi tải pending-arrival → không biết còn hàng đang về hay không nên vẫn hỏi (hộp thường, không khối cam); Ngừng → PATCH', async () => {
+    const f = await openAt('/admin/categories?group=c-1', { pending: { 'i-c': 'error' } });
+    await screen.findByRole('dialog', { name: 'Nhóm Kẹp & dán' });
+    await userEvent.click(itemSwitch('Kẹp C'));
+    const ask = await screen.findByRole('dialog', { name: 'Ngừng Kẹp C?' });
+    expect(within(ask).queryByRole('note')).toBeNull();
+    expect(mutations(f)).toEqual([]);
+    await userEvent.click(within(ask).getByRole('button', { name: 'Ngừng' }));
+    await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/items/i-c', 'PATCH', { active: false }]]));
   });
 
   it('PATCH lỗi 500 → công tắc trả lại "Đang dùng" và báo lỗi tại dòng', async () => {

@@ -84,6 +84,56 @@ describe('Nhật ký gộp một lần Lưu hàng về thành một dòng', () =
     ]);
   });
 
+  it('dòng stock.receipt cũ không có món con mang batch_id → không gắn batch (tránh hiện cả dòng gộp lẫn từng món)', async () => {
+    const [id] = await newItems(1);
+    await f
+      .pool()
+      .query(
+        "INSERT INTO audit_log (actor, action, object_type, object_id, detail) VALUES ($1, 'stock.receipt', 'period', $2, $3)",
+        [
+          ACTOR,
+          YM,
+          JSON.stringify({ lines: [{ item_id: id, qty: 2 }], note: null }),
+        ],
+      );
+    const [legacy] = await auditPage('&action=stock.receipt');
+    expect(legacy.detail).toEqual({
+      lines: [{ item_id: id, qty: 2 }],
+      note: null,
+    });
+    expect(legacy.batch).toBeUndefined();
+  });
+
+  it('món của lần Lưu đã bị xóa khỏi danh mục → tên lấy từ dòng gộp (ghi lúc Lưu), không rỗng', async () => {
+    const ids = await newItems(1);
+    await receive(ids.map((item_id) => ({ item_id, qty: 1 })));
+    const [head] = await auditPage('&action=stock.receipt');
+    expect(head.detail.lines).toEqual([
+      { item_id: ids[0], qty: 1, name: 'Giấy A4 db', name_en: null },
+    ]);
+    const gone = '00000000-0000-4000-8000-000000000001';
+    const lines = [
+      { item_id: gone, qty: 3, name: 'Món đã xóa', name_en: 'Removed item' },
+    ];
+    const { rows } = await f
+      .pool()
+      .query<{ id: string }>(
+        "INSERT INTO audit_log (actor, action, object_type, object_id, detail, created_at) VALUES ($1, 'stock.receipt', 'period', $2, $3, now() + interval '1 minute') RETURNING id",
+        [ACTOR, YM, JSON.stringify({ lines, note: null })],
+      );
+    await f
+      .pool()
+      .query(
+        "INSERT INTO audit_log (actor, action, object_type, object_id, detail) VALUES ($1, 'stock.purchase', 'item', $2, $3)",
+        [ACTOR, gone, JSON.stringify({ batch_id: rows[0].id })],
+      );
+    const [top] = await auditPage('&action=stock.receipt');
+    expect(top.id).toBe(rows[0].id);
+    expect(top.batch?.items).toEqual([
+      { item_id: gone, name: 'Món đã xóa', name_en: 'Removed item', qty: 3 },
+    ]);
+  });
+
   it('dòng không thuộc đợt (Điều chỉnh tồn tay) vẫn là một dòng riêng, không có batch', async () => {
     const [id] = await newItems(1);
     await asActor(f.http().post(`/api/admin/items/${id}/stock`))

@@ -19,7 +19,7 @@ export function useGroupToggle(items: AdminItem[] | undefined, refresh: () => Pr
 
   const askDeactivate = async (c: Category) => {
     const inUse = (items ?? []).filter((i) => i.category_id === c.id && i.active);
-    const warning = await pendingNote(inUse.map((i) => ({ id: i.id, name: categoryLabel(i, i18n.language) })), true);
+    const { warning } = await pendingNote(inUse.map((i) => ({ id: i.id, name: categoryLabel(i, i18n.language) })), true);
     return confirm({
       title: t('catalog.categories.deactivateTitle', { name: categoryLabel(c, i18n.language) }),
       message: t('catalog.categories.deactivateBody', { n: inUse.length }),
