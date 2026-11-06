@@ -5,14 +5,11 @@ import { decodeTimestampCursor, encodeCursor } from '../../common/cursor';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor } from '../../database/database.module';
 import { PeriodsService } from '../periods/periods.service';
-import { ITEM_COLUMNS, LOW_STOCK_SQL } from './catalog-sql';
+import { itemColumns, lowStockSql } from './catalog-sql';
 import { ITEM_ORDER } from './item-order';
 import type { ItemRow } from './catalog-sql';
 import { stockList } from './stock-list';
 import type { StockListRow } from './stock-list';
-
-// Định nghĩa ở catalog-sql để ITEM_COLUMNS dùng chung mà không vòng import
-export { LOW_STOCK_SQL };
 
 export interface Page<T> {
   items: T[];
@@ -78,11 +75,12 @@ export class StockQueryService {
     return result.rows;
   }
 
-  async lowStock(): Promise<ItemRow[]> {
+  async lowStock(now: Date): Promise<ItemRow[]> {
+    const { ym } = await this.periods.openPeriod(this.db, now);
     const result = await this.db.execute<ItemRow>(sql`
       SELECT i.* FROM (
-        SELECT ${ITEM_COLUMNS} FROM items
-        WHERE active AND ${sql.raw(LOW_STOCK_SQL)}
+        SELECT ${itemColumns(ym)} FROM items
+        WHERE active AND ${lowStockSql(ym)}
       ) i
       LEFT JOIN item_categories c ON c.id = i.category_id
       ORDER BY ${ITEM_ORDER}

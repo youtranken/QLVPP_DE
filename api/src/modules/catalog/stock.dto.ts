@@ -59,6 +59,8 @@ export class ReceiptBody {
   lines!: ReceiptLine[];
   @IsString() @Matches(YM) ym!: string;
   @TrimToNull() @IsOptional() @IsString() @MaxLength(500) note?: string | null;
+  // Bản in client đã đọc (null = chưa có bản); bỏ trống = không kiểm (về bù)
+  @IsOptional() @IsUUID() snapshot_id?: string | null;
 }
 
 export class CustomReceiptBody {
@@ -67,4 +69,5 @@ export class CustomReceiptBody {
   // Số đã về client đang thấy: gửi lại/hai người cùng bấm → STALE_UPDATE thay vì cộng hai lần
   @IsInt() @Min(0) expected_received!: number;
   @TrimToNull() @IsOptional() @IsString() @MaxLength(500) note?: string | null;
+  @IsOptional() @IsUUID() snapshot_id?: string | null;
 }

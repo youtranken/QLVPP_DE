@@ -45,6 +45,10 @@ type Sent = Map<string, { before: LineRow; line: AdjustLine }>;
 // Độ dài theo mã điểm như char_length của Postgres, không theo UTF-16
 const codePoints = (s: string) => [...s].length;
 
+// "Khác" phải có ghi chú ≥ 3 chữ: một luật cho giảm phiếu và hủy nợ
+export const otherNoteTooShort = (code: string | null, note: string | null) =>
+  code === 'other' && codePoints(note ?? '') < OTHER_NOTE_MIN;
+
 export function normalizeNote(raw: unknown): string | null {
   if (typeof raw !== 'string') return null;
   const note = raw.normalize('NFC').trim();
@@ -179,10 +183,7 @@ function withReason(change: Pending): AdjustChange {
   if (code === null) {
     throw lineError('REASON_REQUIRED', 'Chọn lý do giảm.', ref);
   }
-  if (
-    code === 'other' &&
-    codePoints(change.reason_note ?? '') < OTHER_NOTE_MIN
-  ) {
+  if (otherNoteTooShort(code, change.reason_note)) {
     throw lineError(
       'REASON_REQUIRED',
       'Chọn "Khác" thì ghi lý do, ít nhất 3 chữ.',

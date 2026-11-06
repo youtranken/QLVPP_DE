@@ -5,7 +5,7 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { PeriodsService } from '../periods/periods.service';
-import { CUSTOM_ITEM_KEY, UNDELIVERED_LINE } from '../requests/line-predicates';
+import { openLineIds } from '../requests/line-delivery.store';
 import { itemNotFound } from './catalog.service';
 import { lockCustomKey } from './custom-key-lock';
 import type { LineKey } from './line-key';
@@ -54,12 +54,7 @@ export async function openLineCount(
   ym: string,
   key: string,
 ): Promise<number> {
-  const { rows } = await ex.execute<{ n: number }>(sql`
-    SELECT count(*)::int AS n
-    FROM request_lines l JOIN requests r ON r.id = l.request_id
-    WHERE r.period_ym = ${ymToDate(ym)}::date AND ${UNDELIVERED_LINE}
-      AND coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) = ${key}`);
-  return rows[0].n;
+  return (await openLineIds(ex, ym, key)).length;
 }
 
 export async function markedKeys(

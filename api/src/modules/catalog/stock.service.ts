@@ -12,7 +12,7 @@ import { ClockService } from '../../common/clock.service';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
-import { LOW_STOCK_SQL } from './catalog-sql';
+import { lowStockSql } from './catalog-sql';
 import { itemNotFound } from './catalog.service';
 import { countDelta, countNote, reasonRequired } from './stock-count';
 import { heldSql } from './stock-held-sql';
@@ -231,12 +231,16 @@ export class StockService {
     return { stock_qty: updated.stock_qty, movement_id: movement.id };
   }
 
-  // Khóa theo id tăng như giao hàng (UPDATE trơn khóa theo thứ tự quét → deadlock với deliver-all); bên sau thấy đã báo
+  // Sắp hết xét theo ảnh đầu câu lệnh (đọc lại khi chờ khóa không chạy lại truy vấn con phần giữ); chỉ cờ đã báo được đọc lại.
+  // Khóa theo id tăng như giao hàng (UPDATE trơn khóa theo thứ tự quét → deadlock với nhập hàng nhiều món); bên sau thấy đã báo
   async claimLowStockWithin(tx: Tx, now: Date): Promise<LowStockClaim[]> {
+    const { ym } = await this.periods.openPeriod(tx, now);
     const { rows } = await tx.execute<LowStockClaim>(sql`
-      WITH due AS (
+      WITH low AS (
+        SELECT id FROM items WHERE active AND ${lowStockSql(ym)}
+      ), due AS (
         SELECT id FROM items
-        WHERE active AND ${sql.raw(LOW_STOCK_SQL)} AND low_stock_notified_at IS NULL
+        WHERE id IN (SELECT id FROM low) AND low_stock_notified_at IS NULL
         ORDER BY id FOR NO KEY UPDATE
       )
       UPDATE items i SET low_stock_notified_at = ${now.toISOString()}::timestamptz

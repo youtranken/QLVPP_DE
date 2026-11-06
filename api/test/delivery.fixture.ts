@@ -70,8 +70,6 @@ export function deliveryFixture(tag: string) {
 
   const deliver = (lineId: string, body: object, sub = ADMIN, role = 'admin') =>
     as(http().post(`/api/admin/lines/${lineId}/deliver`), sub, role).send(body);
-  const deliverAll = (requestId: string, sub = ADMIN, role = 'admin') =>
-    as(http().post(`/api/admin/requests/${requestId}/deliver-all`), sub, role);
   const cancel = (lineId: string, body: object, sub = ADMIN, role = 'admin') =>
     as(
       http().post(`/api/admin/lines/${lineId}/cancel-remaining`),
@@ -155,7 +153,6 @@ export function deliveryFixture(tag: string) {
   return {
     ...f,
     deliver,
-    deliverAll,
     cancel,
     backlog,
     bellsOf,

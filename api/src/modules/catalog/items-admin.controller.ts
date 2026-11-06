@@ -10,7 +10,6 @@ import {
   Post,
 } from '@nestjs/common';
 import { ClockService } from '../../common/clock.service';
-import { addMonths } from '../../common/period';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { CurrentIdentity } from '../auth/current-identity.decorator';
@@ -44,11 +43,10 @@ export class ItemsAdminController {
     return this.catalog.create(dto, identity.sub);
   }
 
-  // Kỳ khóa gần nhất = kỳ trước kỳ mở; bản chốt chỉ có ở kỳ đã khóa
   @Get(':id/pending-arrival')
   async pendingArrival(@Param('id', uuidParam) id: string) {
     const open = await this.periods.openPeriod(this.db, this.clock.now());
-    return pendingArrival(this.db, id, addMonths(open.ym, -1));
+    return pendingArrival(this.db, id, open.ym);
   }
 
   @Patch(':id')

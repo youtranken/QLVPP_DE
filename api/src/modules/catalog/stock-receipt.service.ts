@@ -12,6 +12,8 @@ import type { Database, Tx } from '../../database/database.module';
 import { addMonths } from '../../common/period';
 import { latestSent } from '../reports/sent-snapshot';
 import { itemAdmOut, markedKeys } from './adm-out.service';
+import { ITEM_USABLE_SQL } from './catalog-sql';
+import { assertLatestSheet } from './receipt-sheet';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { PeriodsService } from '../periods/periods.service';
 import type { ReceiptBody } from './stock.dto';
@@ -49,6 +51,7 @@ export class StockReceiptService {
     const note = `${await this.notePrefix(body.ym, now)}${body.note ? ` · ${body.note}` : ''}`;
     return this.db.transaction(async (tx) => {
       await this.stock.lockItemsWithin(tx, ids);
+      await assertLatestSheet(tx, body.ym, body.snapshot_id);
       await this.assertReceivable(tx, body.ym, lines);
       // Dòng gộp ghi trước để từng món mang id của nó (batch_id) — Nhật ký hiện một lần Lưu thành một dòng.
       // Ghi kèm tên lúc Lưu để Nhật ký vẫn đọc được khi món bị xóa sau này
@@ -113,7 +116,7 @@ export class StockReceiptService {
     return ym < working ? `Về bù kỳ ${ym}` : `Hàng về kỳ ${ym}`;
   }
 
-  // Món ngừng vẫn nhận nếu bản in của kỳ đã đặt (đã đặt thì phải nhận); món đánh "ADM hết hàng" của kỳ thì không
+  // Món ngừng (hoặc nhóm ngừng) vẫn nhận nếu bản in của kỳ đã đặt (đã đặt thì phải nhận); món đánh "ADM hết hàng" của kỳ thì không
   private async assertReceivable(
     tx: Tx,
     ym: string,
@@ -123,15 +126,16 @@ export class StockReceiptService {
     const { rows } = await tx.execute<{
       id: string;
       stock_qty: number;
-      active: boolean;
+      usable: boolean;
     }>(sql`
-      SELECT id, stock_qty, active FROM items WHERE id = ANY(${sql.param(ids)}::uuid[])
+      SELECT id, stock_qty, ${ITEM_USABLE_SQL} AS usable
+      FROM items WHERE id = ANY(${sql.param(ids)}::uuid[])
     `);
     const current = new Map(rows.map((r) => [r.id, r]));
     const ordered = (await latestSent(tx, ym))?.data.order_qty ?? {};
     for (const l of lines) {
       const item = current.get(l.item_id);
-      if (!item || (!item.active && !((ordered[l.item_id] ?? 0) > 0))) {
+      if (!item || (!item.usable && !((ordered[l.item_id] ?? 0) > 0))) {
         throw new NotFoundException({
           code: 'ITEM_NOT_FOUND',
           message: 'Không tìm thấy món.',

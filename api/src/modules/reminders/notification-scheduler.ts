@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { ClockService } from '../../common/clock.service';
-import { addMonths } from '../../common/period';
 import { pgSqlState } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
@@ -118,17 +117,18 @@ export class NotificationScheduler
     });
   }
 
-  // Tập người S ghi bù kể cả khi trượt ngày khóa; chuông chỉ gửi đúng ngày khóa, kỳ 0 phiếu vẫn gửi (0/N)
+  // Tập người S và tự hủy ADM hết hàng ghi bù kể cả khi trượt ngày/tháng khóa; chuông chỉ gửi đúng ngày khóa, kỳ 0 phiếu vẫn gửi (0/N)
   private async locked(now: Date): Promise<number> {
     const period = await this.periods.latestLocked(now);
     if (!period) return 0;
-    if (period.headcount === null) {
-      const subs = await this.summary.liveSubs(period.ym);
-      await this.db.transaction(async (tx) => {
-        await this.periods.recordHeadcount(period.ym, subs, tx);
-        await this.settlement.settleAdmOut(tx, addMonths(period.ym, -1), now);
-      });
-    }
+    const subs =
+      period.headcount === null ? await this.summary.liveSubs(period.ym) : null;
+    await this.db.transaction(async (tx) => {
+      if (subs) await this.periods.recordHeadcount(period.ym, subs, tx);
+      for (const ym of await this.settlement.unsettledPeriods(tx, period.ym)) {
+        await this.settlement.settleAdmOut(tx, ym, now);
+      }
+    });
     if (!isLockDay(now, period.deadline)) return 0;
     const { registered, headcount } = await this.summary.people(period.ym);
     const { custom_pending } = await this.summary.lineCounts(period.ym);

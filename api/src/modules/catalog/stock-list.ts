@@ -28,10 +28,11 @@ export interface StockListRow extends HeldStock {
   incoming: number;
 }
 
-async function stockFacts(
+export async function stockFacts(
   ex: Executor,
   openYm: string,
   kStar: string | null,
+  itemId: string | null = null,
 ): Promise<StockFactsRow[]> {
   const k = kStar ? ymToDate(kStar) : null;
   const { rows } = await ex.execute<StockFactsRow>(sql`
@@ -46,12 +47,13 @@ async function stockFacts(
     FROM items i
     LEFT JOIN item_categories c ON c.id = i.category_id
     LEFT JOIN (${heldSql(openYm)}) h ON h.item_id = i.id
+    WHERE ${itemId}::uuid IS NULL OR i.id = ${itemId}::uuid
     ORDER BY ${ITEM_ORDER}`);
   return rows;
 }
 
 // Hàng đang về = phần bản in kỳ K* chưa về (bỏ món ADM hết hàng) + ADM còn nợ giao các kỳ trước
-async function incomingByItem(
+export async function incomingByItem(
   ex: Executor,
   kStar: string | null,
   facts: StockFactsRow[],

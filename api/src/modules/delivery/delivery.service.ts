@@ -54,7 +54,7 @@ export class DeliveryService {
     });
   }
 
-  // Khóa dòng (lockLine) và kiểm kỳ là việc của người gọi; deliver-all dùng lại trong SAVEPOINT từng dòng
+  // Khóa dòng (lockLine) và kiểm kỳ là việc của người gọi
   async deliverWithin(
     tx: Tx,
     line: LockedLine,

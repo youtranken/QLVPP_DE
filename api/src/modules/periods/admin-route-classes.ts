@@ -27,7 +27,6 @@ export const ADMIN_ROUTE_CLASSES: Record<`${Method} ${string}`, RouteClass> = {
   'GET /api/admin/reports/snapshots/:id/export.xlsx': 'by-id',
   'GET /api/admin/requests/:id': 'by-id',
   'PUT /api/admin/requests/:id/lines': 'by-id',
-  'POST /api/admin/requests/:id/deliver-all': 'by-id',
   'POST /api/admin/lines/:id/deliver': 'by-id',
   'POST /api/admin/lines/:id/cancel-remaining': 'by-id',
   'POST /api/admin/lines/:id/review': 'by-id',

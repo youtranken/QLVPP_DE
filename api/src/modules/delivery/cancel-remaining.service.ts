@@ -17,7 +17,7 @@ import {
   ADM_OUT_REASON,
   admOutCancelDetail,
   itemNotAdmOut,
-  lineIsAdmOut,
+  lockLineAdmOut,
 } from './adm-out-cancel';
 import { cancelNoteOf } from './cancel-reason';
 import { notDebtYet, staleCancel } from './delivery-errors';
@@ -45,6 +45,8 @@ export class CancelRemainingService {
     const { code, note } = cancelNoteOf(body);
     const now = this.clock.now();
     return this.db.transaction(async (tx) => {
+      const marked =
+        code === ADM_OUT_REASON && (await lockLineAdmOut(tx, lineId));
       const line = await this.lines.lockLine(tx, lineId);
       if (!line) throw lineNotFound();
       await this.periods.assertLocked(line.period_ym, now, tx);
@@ -62,13 +64,11 @@ export class CancelRemainingService {
         throw staleCancel(line);
       }
       // Tháng đang giao chỉ hủy được khi khóa đang đánh ADM hết hàng (đường hộp giao); nợ tháng trước dùng mã như một lý do
-      const admOut =
-        code === ADM_OUT_REASON && (await lineIsAdmOut(tx, lineId));
-      if (!isDebt && !admOut) throw itemNotAdmOut();
-      const reason = admOut ? ADM_OUT_NOTE : note;
+      if (!isDebt && !marked) throw itemNotAdmOut();
+      const reason = marked ? ADM_OUT_NOTE : note;
       const result = await this.lines.cancelRemaining(tx, lineId, reason, now);
       if (result.cancelled_now === 0) return result;
-      if (admOut) return this.afterAdmOut(tx, line, result, actor, now);
+      if (marked) return this.afterAdmOut(tx, line, result, actor, now);
       await this.audit.appendWithin(tx, {
         actor,
         action: 'line.cancel_remaining',

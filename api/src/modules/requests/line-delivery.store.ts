@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
-import type { Tx } from '../../database/database.module';
+import type { Executor, Tx } from '../../database/database.module';
 import { ymToDate } from '../../common/period';
 import {
   CUSTOM_ITEM_KEY,
@@ -22,13 +22,6 @@ export interface LockedLine {
   delivered_qty: number;
   cancelled_qty: number;
   review_status: string;
-}
-
-export interface LockedRequest {
-  request_id: string;
-  period_ym: string;
-  user_sub: string;
-  lines: LockedLine[];
 }
 
 export interface CancelledLine {
@@ -53,6 +46,21 @@ const LINE_COLUMNS = sql`
   l.item_id, l.custom_name, l.custom_unit, l.qty, l.delivered_qty, l.cancelled_qty, l.review_status
 `;
 
+// Dòng còn phần chưa giao của một khóa món trong kỳ; thứ tự theo phiếu để khóa cùng chiều lockLine
+export async function openLineIds(
+  ex: Executor,
+  ym: string,
+  key: string,
+): Promise<string[]> {
+  const { rows } = await ex.execute<{ id: string }>(sql`
+    SELECT l.id FROM request_lines l JOIN requests r ON r.id = l.request_id
+    WHERE r.period_ym = ${ymToDate(ym)}::date AND ${UNDELIVERED_LINE}
+      AND coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) = ${key}
+    ORDER BY l.request_id, l.id
+  `);
+  return rows.map((r) => r.id);
+}
+
 // Ghi request_lines cho giao/hủy nợ ở lại module requests; delivery chỉ gọi qua đây
 @Injectable()
 export class LineDeliveryStore {
@@ -69,23 +77,6 @@ export class LineDeliveryStore {
       WHERE l.id = ${lineId} FOR UPDATE OF l
     `);
     return rows[0] ?? null;
-  }
-
-  async lockRequestLines(
-    tx: Tx,
-    requestId: string,
-  ): Promise<LockedRequest | null> {
-    const head = await tx.execute<Omit<LockedRequest, 'lines'>>(sql`
-      SELECT r.id AS request_id, to_char(r.period_ym, 'YYYY-MM') AS period_ym, r.user_sub
-      FROM requests r WHERE r.id = ${requestId} FOR UPDATE
-    `);
-    if (head.rows.length === 0) return null;
-    const { rows } = await tx.execute<LockedLine & Record<string, unknown>>(sql`
-      SELECT ${LINE_COLUMNS}
-      FROM request_lines l JOIN requests r ON r.id = l.request_id
-      WHERE l.request_id = ${requestId} ORDER BY l.id FOR UPDATE OF l
-    `);
-    return { ...head.rows[0], lines: rows };
   }
 
   async addDelivered(
@@ -130,15 +121,8 @@ export class LineDeliveryStore {
     return { cancelled_now: 0, line: current.rows[0] };
   }
 
-  // Dòng còn phần chưa giao của một khóa món trong kỳ; thứ tự theo phiếu để khóa cùng chiều lockLine
-  async openLineIds(tx: Tx, ym: string, key: string): Promise<string[]> {
-    const { rows } = await tx.execute<{ id: string }>(sql`
-      SELECT l.id FROM request_lines l JOIN requests r ON r.id = l.request_id
-      WHERE r.period_ym = ${ymToDate(ym)}::date AND ${UNDELIVERED_LINE}
-        AND coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) = ${key}
-      ORDER BY l.request_id, l.id
-    `);
-    return rows.map((r) => r.id);
+  openLineIds(tx: Tx, ym: string, key: string): Promise<string[]> {
+    return openLineIds(tx, ym, key);
   }
 
   // Dòng đổi số đã giao = phiếu đổi: tab Điều chỉnh mở với mốc cũ phải nhận STALE_UPDATE

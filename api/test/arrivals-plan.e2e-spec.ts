@@ -2,6 +2,7 @@ import { arrivalsFixture } from './arrivals.fixture';
 
 const YM = '2026-11';
 const LOCKED_AT = '2026-11-12T03:00:00Z';
+const LOCKED_AT_ISO = '2026-11-12T03:00:00.000Z';
 
 describe('V2D-5 GET /admin/periods/:ym/arrivals-plan — Hàng về theo bản in (e2e)', () => {
   const f = arrivalsFixture('arrplan');
@@ -124,6 +125,28 @@ describe('V2D-5 GET /admin/periods/:ym/arrivals-plan — Hàng về theo bản i
       adm_out_final: false,
       reduced_after_snapshot: 0,
     });
+  });
+
+  it('Tháng này không cần đề nghị ADM (cờ no_order, không bản): rows chỉ còn món đã về kỳ này (ordered 0), custom rỗng, có no_order {at, by_name}', async () => {
+    const item = await f.stockItem(5);
+    const came = await f.stockItem(0);
+    await f.seedLine(YM, A, { item_id: item, qty: 8 });
+    await f.noOrder(YM, { order_qty: { [item]: 0 } }).expect(200);
+    await purchase(came, 2, YM, '2026-11-12T02:00:00Z');
+    const p = await plan(YM);
+    expect(p.snapshot).toBeNull();
+    expect(p.no_order).toEqual({
+      at: LOCKED_AT_ISO,
+      by_name: expect.any(String),
+    });
+    expect(p.custom).toEqual([]);
+    expect(p.rows.map((r) => [r.item_id, r.ordered, r.received])).toEqual([
+      [came, 0, 2],
+    ]);
+  });
+
+  it('chưa có bản, không cờ → no_order null', async () => {
+    expect((await plan(YM)).no_order).toBeNull();
   });
 
   it('món ngừng có trong bản in đặt 3 → nhập 3 thành công, ghi receipt_ym; hàng usable false; món ngừng không trong bản in → 404 ITEM_NOT_FOUND', async () => {

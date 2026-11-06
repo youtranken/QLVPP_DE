@@ -10,8 +10,6 @@ import {
   runMigrations,
 } from '../src/database/migration-runner';
 import { StockService } from '../src/modules/catalog/stock.service';
-import { PeriodsService } from '../src/modules/periods/periods.service';
-import { RequestLinesWriter } from '../src/modules/requests/request-lines.writer';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
 
@@ -26,18 +24,26 @@ const ROUNDS = 3;
 type Settled = PromiseSettledResult<unknown>;
 
 // Một giao dịch thứ ba giữ món giữa để ép hai bên xen kẽ đúng thứ tự gây deadlock, không phụ thuộc may rủi
-describe('Thứ tự khóa items: deliver-all không deadlock với lưu phiếu và cron sắp hết (Postgres thật)', () => {
+describe('Thứ tự khóa items: nhập hàng nhiều món không deadlock với cron sắp hết (Postgres thật)', () => {
   let app: INestApplication<App>;
   let pool: Pool;
   let db: Database;
   let created: string[] = [];
   let createdPeriod = false;
 
-  const deliverAll = (requestId: string) =>
+  const receive = (ids: string[], expected: number) =>
     request(app.getHttpServer())
-      .post(`/api/admin/requests/${requestId}/deliver-all`)
+      .post('/api/admin/stock/receipts')
       .set('x-dev-user-sub', ADMIN)
-      .set('x-dev-role', 'admin');
+      .set('x-dev-role', 'admin')
+      .send({
+        ym: LOCKED_YM.slice(0, 7),
+        lines: ids.map((item_id) => ({
+          item_id,
+          qty: 1,
+          expected_stock_qty: expected,
+        })),
+      });
 
   const newItems = async (n: number, stock: number, restock: number | null) => {
     const ids = Array.from({ length: n }, () => randomUUID()).sort();
@@ -51,20 +57,6 @@ describe('Thứ tự khóa items: deliver-all không deadlock với lưu phiếu
     }
     created.push(...ids);
     return ids;
-  };
-
-  const lockedRequest = async (itemIds: string[]) => {
-    const req = await pool.query<{ id: string }>(
-      `INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ($1, $2, $2) RETURNING id`,
-      [LOCKED_YM, OWNER],
-    );
-    for (const item of itemIds) {
-      await pool.query(
-        `INSERT INTO request_lines (request_id, item_id, qty) VALUES ($1, $2, 1)`,
-        [req.rows[0].id, item],
-      );
-    }
-    return req.rows[0].id;
   };
 
   const lockWaiters = async () =>
@@ -177,60 +169,25 @@ describe('Thứ tự khóa items: deliver-all không deadlock với lưu phiếu
     delete process.env.AUTH_DEV_MODE;
   });
 
-  it(`${ROUNDS} vòng deliver-all (món X < Y) song song member lưu phiếu kỳ mới chèn dòng Y rồi X → không 40P01, cả hai thành công`, async () => {
-    const writer = app.get(RequestLinesWriter);
-    for (let round = 0; round < ROUNDS; round++) {
-      const [x, y] = await newItems(2, 10, null);
-      const requestId = await lockedRequest([x, y]);
-      const now = new Date();
-      const { ym } = await app.get(PeriodsService).openPeriod(db, now);
-      const holder = await holdRow(y);
-      const delivering = deliverAll(requestId).then((r) => r);
-      await waitFor(1, delivering);
-      const saving = db.transaction((tx) =>
-        writer.save(tx, {
-          owner_sub: MEMBER,
-          period_ym: ym,
-          actor: { sub: MEMBER, role: 'member', devMode: true },
-          body: {
-            lines: [
-              { item_id: y, qty: 1 },
-              { item_id: x, qty: 1 },
-            ],
-          },
-          now,
-        }),
-      );
-      await waitFor(2, saving);
-      await release(holder);
-      const results = await Promise.allSettled([delivering, saving]);
-      expect(results.map(describeOutcome)).toEqual(['ok', 'ok']);
-      const delivered = (results[0] as PromiseFulfilledResult<request.Response>)
-        .value.body as { delivered: unknown[] };
-      expect(delivered.delivered).toHaveLength(2);
-      await cleanRound();
-    }
-  });
-
-  it(`${ROUNDS} vòng claimLowStockWithin (3 món sắp hết, seq scan gặp id lớn trước) song song deliver-all cùng 3 món → không 40P01, cron đòi đủ 3 món`, async () => {
+  it(`${ROUNDS} vòng claimLowStockWithin (3 món sắp hết, seq scan gặp id lớn trước) song song nhập hàng cùng 3 món → không 40P01, cron đòi đủ 3 món`, async () => {
     const stock = app.get(StockService);
     for (let round = 0; round < ROUNDS; round++) {
-      const [x, m, y] = await newItems(3, 2, 10);
+      // Mức 20 → ngưỡng 4: tồn 2 nhập thêm 1 vẫn sắp hết, cron đọc lại sau khi chờ vẫn đòi món
+      const [x, m, y] = await newItems(3, 2, 20);
       const order = await pool.query<{ id: string }>(
         'SELECT id FROM items WHERE id = ANY($1) ORDER BY ctid',
         [[x, m, y]],
       );
       expect(order.rows.map((r) => r.id)).toEqual([y, m, x]);
-      const requestId = await lockedRequest([x, m, y]);
       const holder = await holdRow(m);
-      const delivering = deliverAll(requestId).then((r) => r);
-      await waitFor(1, delivering);
+      const receiving = receive([y, x, m], 2).then((r) => r);
+      await waitFor(1, receiving);
       const claiming = db.transaction((tx) =>
         stock.claimLowStockWithin(tx, new Date()),
       );
       await waitFor(2, claiming);
       await release(holder);
-      const results = await Promise.allSettled([delivering, claiming]);
+      const results = await Promise.allSettled([receiving, claiming]);
       expect(results.map(describeOutcome)).toEqual(['ok', 'ok']);
       const claimed = (
         results[1] as PromiseFulfilledResult<{ id: string }[]>

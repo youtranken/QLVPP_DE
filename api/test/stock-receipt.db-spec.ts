@@ -107,22 +107,31 @@ describe('POST admin/stock/receipts: tất cả hoặc không, đồng thời (P
           )
         ).rows[0].id;
         reqs.push(req);
-        await pool.query(
-          `INSERT INTO request_lines (request_id, item_id, qty) VALUES ($1, $2, 2), ($1, $3, 2)`,
-          [req, a, b],
-        );
-        const [rec, del] = await Promise.all([
+        const lineIds = (
+          await pool.query<{ id: string }>(
+            `INSERT INTO request_lines (request_id, item_id, qty) VALUES ($1, $2, 2), ($1, $3, 2) RETURNING id`,
+            [req, a, b],
+          )
+        ).rows.map((r) => r.id);
+        const [rec, ...dels] = await Promise.all([
           receipts({ lines: [line(b, 5, 10), line(a, 5, 10)], ym: YM }),
-          admin(http().post(`/api/admin/requests/${req}/deliver-all`)),
+          ...lineIds.map((id) =>
+            admin(http().post(`/api/admin/lines/${id}/deliver`)).send({
+              qty: 2,
+              expected_delivered_qty: 0,
+            }),
+          ),
         ]);
-        expect(del.status).toBe(200);
-        // Giao thắng khóa trước → tồn 8, nhập cũ bị STALE_UPDATE đúng; nhập thắng → 13
+        expect(dels.map((d) => d.status)).toEqual([200, 200]);
+        // Giao thắng khóa trước → nhập cũ bị STALE_UPDATE đúng, nhập lại theo tồn mới; nhập thắng → 13
         expect([200, 409]).toContain(rec.status);
         if (rec.status === 409) {
           expect(rec.body.code).toBe('STALE_UPDATE');
-          expect((await qtyOf(a)).stock_qty).toBe(8);
           await receipts({
-            lines: [line(b, 5, 8), line(a, 5, 8)],
+            lines: [
+              line(b, 5, (await qtyOf(b)).stock_qty),
+              line(a, 5, (await qtyOf(a)).stock_qty),
+            ],
             ym: YM,
           }).expect(200);
         }

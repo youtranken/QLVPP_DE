@@ -205,15 +205,6 @@ describe('V2D-5 hàng ngoài danh mục đã về: custom-receipts, trần giao 
   describe('trần giao ngoài DM ở server (R-D11.21)', () => {
     const receive = (key: string, qty: number, expected: number) =>
       customReceive(YM, { line_key: key, qty, expected_received: expected });
-    const requestOf = async (lineId: string) =>
-      (
-        await f
-          .pool()
-          .query<{ request_id: string }>(
-            'SELECT request_id FROM request_lines WHERE id = $1',
-            [lineId],
-          )
-      ).rows[0].request_id;
 
     // A đăng ký 2, B 1 cùng khóa; bản in đặt 3
     const seedTracked = async () => {
@@ -269,24 +260,6 @@ describe('V2D-5 hàng ngoài danh mục đã về: custom-receipts, trần giao 
         available: 0,
       });
       expect(await f.line(y)).toMatchObject({ delivered_qty: 0 });
-    });
-
-    it('giao tất cả: dòng ngoài DM vượt hàng đã về → failed CUSTOM_NOT_RECEIVED, dòng khác vẫn giao; về thêm → giao được', async () => {
-      const { key, y } = await seedTracked();
-      const item = await f.stockItem(5);
-      const other = await f.seedLine(YM, B, { item_id: item, qty: 1 });
-      const request = await requestOf(y);
-      const first = await f.deliverAll(request).expect(200);
-      expect(first.body).toEqual({
-        delivered: [{ line_id: other, qty: 1 }],
-        failed: [{ line_id: y, code: 'CUSTOM_NOT_RECEIVED', available: 0 }],
-      });
-      await receive(key, 1, 0).expect(201);
-      const second = await f.deliverAll(request).expect(200);
-      expect(second.body).toEqual({
-        delivered: [{ line_id: y, qty: 1 }],
-        failed: [],
-      });
     });
 
     it('khóa ngoài DM không có trong bản in → không giới hạn theo hàng đã về', async () => {

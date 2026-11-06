@@ -9,6 +9,8 @@ const P = '2005-12';
 const NEXT = '2006-01';
 const BEFORE_LOCK = '2006-01-10T16:59:59.999Z';
 const AT_LOCK = '2006-01-10T17:00:00.000Z';
+const LATER = '2006-02';
+const LATER_LOCK = '2006-02-10T17:00:00.000Z';
 
 describe('V2D-5 tự hủy ADM hết hàng lúc khóa sổ kỳ sau (e2e)', () => {
   const f = arrivalsFixture('admsettle');
@@ -19,10 +21,18 @@ describe('V2D-5 tự hủy ADM hết hàng lúc khóa sổ kỳ sau (e2e)', () =
     await f.ensurePeriod(NEXT);
   });
 
+  // afterAll của suite chạy sau khi fixture đóng pool → dọn qua onCleanup
+  f.onCleanup((p) =>
+    p.query(
+      'DELETE FROM periods WHERE ym = $1::date AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = $1::date)',
+      [`${LATER}-01`],
+    ),
+  );
+
   beforeEach(async () => {
     await pool().query(
       'UPDATE periods SET headcount = NULL, headcount_subs = NULL WHERE ym = ANY($1::date[])',
-      [[`${P}-01`, `${NEXT}-01`]],
+      [[`${P}-01`, `${NEXT}-01`, `${LATER}-01`]],
     );
     await pool().query("UPDATE users SET status = 'active' WHERE sub = $1", [
       B,
@@ -139,5 +149,26 @@ describe('V2D-5 tự hủy ADM hết hàng lúc khóa sổ kỳ sau (e2e)', () =
     expect((await f.line(l)).cancelled_qty).toBe(0);
     expect(await settled(bk)).toEqual([]);
     expect(f.itemRow(await nextReport(), bk)?.backlog_prev).toBe(2);
+  });
+
+  it('cron bỏ lỡ cả tháng khóa kỳ sau: lần chạy đầu tiên sau khóa kỳ sau nữa vẫn hủy phần ADM hết hàng của P; chạy lại không đổi', async () => {
+    const bk = await f.stockItem(0);
+    const l = await f.seedLine(P, A, { item_id: bk, qty: 2 });
+    f.freeze('2005-12-20T03:00:00Z');
+    await markOut(P, bk).expect(200);
+    await f.ensurePeriod(LATER);
+
+    await cron(LATER_LOCK);
+    expect(await f.line(l)).toMatchObject({
+      cancelled_qty: 2,
+      cancel_note: 'ADM hết hàng',
+    });
+    expect((await settled(bk)).map((r) => r.detail)).toEqual([
+      { period_ym: P, line_key: bk, lines: 1, units: 2 },
+    ]);
+
+    await cron('2006-02-10T18:05:00.000Z');
+    expect(await settled(bk)).toHaveLength(1);
+    expect(await f.auditRows('line.cancel_remaining', l)).toHaveLength(1);
   });
 });

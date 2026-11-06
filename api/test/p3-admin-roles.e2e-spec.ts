@@ -23,11 +23,6 @@ const ROUTES: Route[] = [
   },
   {
     method: 'post',
-    path: () => `/api/admin/requests/${MISSING}/deliver-all`,
-    allowed: [404, 'REQUEST_NOT_FOUND'],
-  },
-  {
-    method: 'post',
     path: () => `/api/admin/lines/${MISSING}/cancel-remaining`,
     body: {
       reason_code: 'not_needed',

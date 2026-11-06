@@ -55,11 +55,12 @@ describe('Một thứ tự món chung ở mọi bề mặt (6 món, 2 nhóm + ch
         [c.id, c.name, c.sort_order],
       );
     }
-    // Chèn ngược thứ tự mong đợi để thứ tự chèn không tình cờ trùng kết quả
+    // Chèn ngược thứ tự mong đợi để thứ tự chèn không tình cờ trùng kết quả.
+    // Tồn 4, mỗi món giữ 3 → trống 1 ≤ floor(10 × 0.2): mọi món "Sắp hết" theo phần trống
     for (const i of [...FIXTURE.items].reverse()) {
       await p.query(
         `INSERT INTO items (id, code, name, unit, max_qty, sort_order, category_id, stock_qty, restock_level)
-         VALUES ($1, $2, $3, 'cay', 20, $4, $5, 1, 10)`,
+         VALUES ($1, $2, $3, 'cay', 20, $4, $5, 4, 10)`,
         [i.id, i.code, i.name, i.sort_order, i.category_id],
       );
     }

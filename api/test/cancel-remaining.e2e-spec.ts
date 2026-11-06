@@ -24,7 +24,6 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
     cancel,
     customLine,
     deliver,
-    deliverAll,
     freeze,
     http,
     debtLine,
@@ -213,7 +212,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
     ]);
   });
 
-  it('dữ liệu cũ: cancelled_qty > 0 rồi qty tăng 5→7 (còn 7−3−2 = 2): giao 3 → DELIVER_EXCEEDS_QTY {remaining: 2}; deliver-all giao đúng 2, chuông giao đủ', async () => {
+  it('dữ liệu cũ: cancelled_qty > 0 rồi qty tăng 5→7 (còn 7−3−2 = 2): giao 3 → DELIVER_EXCEEDS_QTY {remaining: 2}; giao đúng 2, chuông giao đủ', async () => {
     const { request, line } = await debtLine(10);
     await deliver(line.id, { qty: 3, expected_delivered_qty: 0 }).expect(200);
     await cancel(line.id, {
@@ -230,11 +229,7 @@ describe('POST admin/lines/:id/cancel-remaining: hủy nợ', () => {
       code: 'DELIVER_EXCEEDS_QTY',
       remaining: 2,
     });
-    const all = await deliverAll(request.id).expect(200);
-    expect(all.body).toEqual({
-      delivered: [{ line_id: line.id, qty: 2 }],
-      failed: [],
-    });
+    await deliver(line.id, { qty: 2, expected_delivered_qty: 3 }).expect(200);
     expect((await bellsOf('request_delivered')).map((b) => b.event_id)).toEqual(
       [`request_delivered:${request.id}:2`],
     );

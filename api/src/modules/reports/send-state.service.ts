@@ -7,7 +7,7 @@ import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
 import { PeriodsService } from '../periods/periods.service';
 import { changedAt, deliveredSince } from './changed-after';
-import { clearNoOrderFlag, lockNoOrderFlag } from './no-order-flag';
+import { clearNoOrderFlag, lockNoOrderFlag, noOrderOf } from './no-order-flag';
 import { resolveOrderQty } from './order-qty';
 import { ReportsService } from './reports.service';
 import {
@@ -41,14 +41,7 @@ export class SendStateService {
   async state(ym: string, now: Date): Promise<SendState> {
     await this.periods.assertLocked(ym, now);
     const sent = await latestSent(this.db, ym);
-    const { rows } = await this.db.execute<{
-      no_order_at: Date | string | null;
-      no_order_by_name: string | null;
-    }>(sql`
-      SELECT p.no_order_at, coalesce(u.full_name, p.no_order_by) AS no_order_by_name
-      FROM periods p LEFT JOIN users u ON u.sub = p.no_order_by
-      WHERE p.ym = ${ymToDate(ym)}::date`);
-    const flag = rows[0];
+    const flag = await noOrderOf(this.db, ym);
     const changed = sent
       ? await changedAt(this.db, ym, new Date(sent.created_at))
       : null;
@@ -56,11 +49,9 @@ export class SendStateService {
       ? await deliveredSince(this.db, ym, new Date(sent.created_at))
       : {};
     return {
-      state: sent ? 'sent' : flag?.no_order_at ? 'no_order' : 'unsent',
-      no_order_at: flag?.no_order_at
-        ? new Date(flag.no_order_at).toISOString()
-        : null,
-      no_order_by_name: flag?.no_order_at ? flag.no_order_by_name : null,
+      state: sent ? 'sent' : flag ? 'no_order' : 'unsent',
+      no_order_at: flag?.at ?? null,
+      no_order_by_name: flag?.by_name ?? null,
       sent,
       changed_after: changed !== null,
       changed_at: changed?.toISOString() ?? null,

@@ -39,7 +39,7 @@ describe('cancelNoteOf — lý do Hủy nợ', () => {
 
   it.each([
     ['not_needed', 'Người nhận không cần nữa'],
-    ['user_left', 'Đã nghỉ việc'],
+    ['user_left', 'Người đã nghỉ'],
     ['adm_out_of_stock', 'ADM hết hàng'],
   ] as const)(
     '%s không ghi chú → "%s"; có ghi chú → nhãn + ": " + ghi chú',

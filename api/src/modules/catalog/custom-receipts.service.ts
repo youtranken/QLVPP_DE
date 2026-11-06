@@ -14,6 +14,7 @@ import { latestSent } from '../reports/sent-snapshot';
 import { itemAdmOut, markedKeys } from './adm-out.service';
 import { customReceived, lockCustomKey } from './custom-key-lock';
 import { invalidLineKey, parseLineKey } from './line-key';
+import { assertLatestSheet } from './receipt-sheet';
 import type { CustomReceiptBody } from './stock.dto';
 
 export interface CustomReceiptResult {
@@ -57,6 +58,7 @@ export class CustomReceiptsService {
     if (!lk || lk.item_id) throw invalidLineKey();
     await this.periods.assertLocked(ym, now);
     return this.db.transaction(async (tx) => {
+      await assertLatestSheet(tx, ym, body.snapshot_id);
       const sent = await latestSent(tx, ym);
       if (!sent || !((sent.data.order_qty[lk.key] ?? 0) > 0)) {
         throw notInPrint();

@@ -138,14 +138,14 @@ describe('POST admin/lines/:id/cancel-remaining: lý do có sẵn, chỉ nợ th
     expect(res.body.line.cancel_note).toBe(`${NOT_NEEDED}: Đổi mẫu`);
   });
 
-  it('user_left → 200, cancel_note "Đã nghỉ việc", 0 chuông (mọi topic)', async () => {
+  it('user_left → 200, cancel_note "Người đã nghỉ", 0 chuông (mọi topic)', async () => {
     const { line } = await debtLine(10);
     const res = await cancel(
       line.id,
       body(line, { reason_code: 'user_left' }),
     ).expect(200);
     expect(res.body).toMatchObject({
-      line: { cancelled_qty: 5, cancel_note: 'Đã nghỉ việc' },
+      line: { cancelled_qty: 5, cancel_note: 'Người đã nghỉ' },
       cancelled_now: 5,
     });
     expect(await allBells()).toEqual([]);

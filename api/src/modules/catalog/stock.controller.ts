@@ -94,7 +94,7 @@ export class StockController {
   @Get('admin/stock/low')
   @Roles('admin', 'sa')
   low() {
-    return this.query.lowStock();
+    return this.query.lowStock(this.clock.now());
   }
 
   @Get('me/issues')

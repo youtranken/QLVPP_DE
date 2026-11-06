@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { INestApplication } from '@nestjs/common';
 import { Pool } from 'pg';
 import request from 'supertest';
@@ -32,11 +31,6 @@ describe('Giao song song (Postgres thật, hai request HTTP thật)', () => {
       .set('x-dev-user-sub', ADMIN)
       .set('x-dev-role', 'admin')
       .send({ qty, expected_delivered_qty: expected });
-  const deliverAll = (requestId: string) =>
-    request(app.getHttpServer())
-      .post(`/api/admin/requests/${requestId}/deliver-all`)
-      .set('x-dev-user-sub', ADMIN)
-      .set('x-dev-role', 'admin');
   const cancel = (lineId: string, expected: number) =>
     request(app.getHttpServer())
       .post(`/api/admin/lines/${lineId}/cancel-remaining`)
@@ -47,8 +41,6 @@ describe('Giao song song (Postgres thật, hai request HTTP thật)', () => {
         expected_delivered_qty: expected,
         expected_qty: 5,
       });
-  const deliveredCount = (r: request.Response) =>
-    (r.body as { delivered: unknown[] }).delivered.length;
   const outcome = (r: request.Response) =>
     r.status === 200 ? '200' : `${r.status} ${r.body.code}`;
   const seedRequest = async (
@@ -187,61 +179,6 @@ describe('Giao song song (Postgres thật, hai request HTTP thật)', () => {
       expect(results.find((r) => r.status === 409)!.body.available).toBe(1);
       expect(await stock()).toBe(1);
       expect(await movementCount()).toBe(1);
-    }
-  });
-
-  it(`${ROUNDS} vòng hai deliver-all song song cùng phiếu (P qty 2, Q qty 1) → cả hai 200, một bên delivered [], đúng 2 movement, tồn P 8 Q 9, một chuông`, async () => {
-    const [p, q] = items;
-    for (let round = 0; round < ROUNDS; round++) {
-      await reset(10);
-      const { requestId } = await seedRequest(OWNERS[0], [
-        { item: p, qty: 2 },
-        { item: q, qty: 1 },
-      ]);
-      const results = await Promise.all([
-        deliverAll(requestId),
-        deliverAll(requestId),
-      ]);
-      expect(results.map(outcome)).toEqual(['200', '200']);
-      expect(results.map(deliveredCount).sort()).toEqual([0, 2]);
-      expect(await movementCount()).toBe(2);
-      expect([await stock(p), await stock(q)]).toEqual([8, 9]);
-      const bells = await pool.query(
-        "SELECT 1 FROM in_app_notifications WHERE user_sub = $1 AND topic = 'request_delivered'",
-        [OWNERS[0]],
-      );
-      expect(bells.rows).toHaveLength(1);
-    }
-  });
-
-  it(`${ROUNDS} vòng phiếu X (dòng P rồi Q) và Y (dòng Q rồi P) deliver-all song song, tồn mỗi món 3, mỗi dòng 2 → không 40P01, một phiếu giao cả hai, phiếu kia failed STOCK_INSUFFICIENT {available: 1} cả hai, tồn 1/1`, async () => {
-    const [p, q] = items;
-    for (let round = 0; round < ROUNDS; round++) {
-      await reset(3);
-      const ids = Array.from({ length: 4 }, () => randomUUID()).sort();
-      const x = await seedRequest(OWNERS[0], [
-        { id: ids[0], item: p, qty: 2 },
-        { id: ids[1], item: q, qty: 2 },
-      ]);
-      const y = await seedRequest(OWNERS[1], [
-        { id: ids[2], item: q, qty: 2 },
-        { id: ids[3], item: p, qty: 2 },
-      ]);
-      const results = await Promise.all([
-        deliverAll(x.requestId),
-        deliverAll(y.requestId),
-      ]);
-      expect(results.map(outcome)).toEqual(['200', '200']);
-      const loser = results.find((r) => deliveredCount(r) === 0)!;
-      expect(results.map(deliveredCount).sort()).toEqual([0, 2]);
-      expect(loser.body.failed).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ code: 'STOCK_INSUFFICIENT', available: 1 }),
-        ]),
-      );
-      expect(loser.body.failed).toHaveLength(2);
-      expect([await stock(p), await stock(q)]).toEqual([1, 1]);
-      expect(await movementCount()).toBe(2);
     }
   });
 

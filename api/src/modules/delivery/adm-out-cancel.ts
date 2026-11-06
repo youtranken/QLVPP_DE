@@ -16,20 +16,20 @@ export const itemNotAdmOut = () =>
     message: 'Món của dòng này chưa đánh "ADM hết hàng" cho kỳ của dòng.',
   });
 
-// Đánh dấu theo kỳ của chính dòng: dòng nợ kỳ khác cùng món không bị ảnh hưởng
-export async function lineIsAdmOut(
+// Đánh dấu theo kỳ của chính dòng: dòng nợ kỳ khác cùng món không bị ảnh hưởng.
+// FOR SHARE trước khi khóa dòng, cùng chiều bỏ dấu/tự hủy (period_adm_out → requests → request_lines): bỏ dấu đang chạy thì chờ rồi đọc lại
+export async function lockLineAdmOut(
   ex: Executor,
   lineId: string,
 ): Promise<boolean> {
-  const { rows } = await ex.execute<{ out: boolean }>(sql`
-    SELECT EXISTS (
-      SELECT 1 FROM period_adm_out a
-      WHERE a.period_ym = r.period_ym AND a.kind = 'out'
-        AND a.line_key = coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY})
-    ) AS out
-    FROM request_lines l JOIN requests r ON r.id = l.request_id
-    WHERE l.id = ${lineId}`);
-  return rows[0]?.out ?? false;
+  const { rows } = await ex.execute(sql`
+    SELECT 1 FROM period_adm_out a
+    JOIN requests r ON r.period_ym = a.period_ym
+    JOIN request_lines l ON l.request_id = r.id
+    WHERE l.id = ${lineId} AND a.kind = 'out'
+      AND a.line_key = coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY})
+    FOR SHARE OF a`);
+  return rows.length > 0;
 }
 
 // `at` theo ClockService: chuông ngày gộp đọc lại các lần hủy này theo ngày giờ VN

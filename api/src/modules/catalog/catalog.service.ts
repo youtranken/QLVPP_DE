@@ -9,6 +9,7 @@ import { sql } from 'drizzle-orm';
 import { pgViolation } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor, Tx } from '../../database/database.module';
+import { PeriodsService } from '../periods/periods.service';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
 import { SystemConfigService } from '../config/system-config.service';
@@ -18,10 +19,10 @@ import { UnitsService } from '../units/units.service';
 import type { CreateItemDto, UpdateItemDto } from './catalog.dto';
 import { definedEntries, pick, setClause } from '../../common/sql-patch';
 import {
-  ITEM_COLUMNS,
+  itemColumns,
   ITEM_INACTIVE_REASON_SQL,
   ITEM_USABLE_SQL,
-  LOW_STOCK_SQL,
+  lowStockSql,
 } from './catalog-sql';
 import type { InactiveReason, ItemFacts, ItemRow } from './catalog-sql';
 import { ITEM_ORDER, nextItemSortOrder } from './item-order';
@@ -85,7 +86,12 @@ export class CatalogService {
     private readonly config: SystemConfigService,
     private readonly units: UnitsService,
     @Inject(ITEM_USAGE_HOOK) private readonly usage: ItemUsageHook,
+    private readonly periods: PeriodsService,
   ) {}
+
+  private async columns(ex: Executor = this.db) {
+    return itemColumns((await this.periods.openPeriod(ex)).ym);
+  }
 
   // active ở đây = dùng được (tính cả nhóm); lockCategories chặn đua với tx ngừng nhóm/chuyển nhóm đang chạy
   // — dựa vào PATCH admin/items lấy FOR UPDATE trên items (xung đột FOR KEY SHARE) khi đổi category_id
@@ -115,8 +121,9 @@ export class CatalogService {
   }
 
   async countLowStock(): Promise<number> {
+    const { ym } = await this.periods.openPeriod(this.db);
     const { rows } = await this.db.execute<{ n: number }>(sql`
-      SELECT count(*)::int AS n FROM items WHERE active AND ${sql.raw(LOW_STOCK_SQL)}
+      SELECT count(*)::int AS n FROM items WHERE active AND ${lowStockSql(ym)}
     `);
     return rows[0].n;
   }
@@ -128,9 +135,10 @@ export class CatalogService {
     includeIds: string[] = [],
   ): Promise<ListedItem[]> {
     const privileged = identity.role === 'admin' || identity.role === 'sa';
+    const columns = await this.columns();
     const result = await this.db.execute<ListedItem>(sql`
       SELECT i.* FROM (
-        SELECT ${ITEM_COLUMNS}, ${ITEM_USABLE_SQL} AS usable,
+        SELECT ${columns}, ${ITEM_USABLE_SQL} AS usable,
                ${ITEM_INACTIVE_REASON_SQL} AS inactive_reason,
                (image_file_id IS NULL) AS missing_image
         FROM items
@@ -168,6 +176,7 @@ export class CatalogService {
         (await nextItemSortOrder(tx, dto.category_id ?? null)),
       ...definedEntries(dto),
     };
+    const columns = await this.columns(tx);
     const row = await this.mapConstraints(
       async () =>
         (
@@ -180,7 +189,7 @@ export class CatalogService {
               Object.values(fields).map((v) => sql`${v}`),
               sql`, `,
             )})
-            RETURNING ${ITEM_COLUMNS}
+            RETURNING ${columns}
           `)
         ).rows[0],
     );
@@ -204,9 +213,10 @@ export class CatalogService {
     if ('unit' in patch && !patch.unit) throw unitRequired();
     return this.mapConstraints(() =>
       this.db.transaction(async (tx) => {
+        const columns = await this.columns(tx);
         const before = (
           await tx.execute<ItemRow>(sql`
-            SELECT ${ITEM_COLUMNS} FROM items WHERE id = ${id} FOR UPDATE
+            SELECT ${columns} FROM items WHERE id = ${id} FOR UPDATE
           `)
         ).rows[0];
         if (!before) throw itemNotFound();
@@ -239,7 +249,7 @@ export class CatalogService {
         const after = (
           await tx.execute<ItemRow>(sql`
             UPDATE items SET ${setClause(patch)}, updated_at = now()
-            WHERE id = ${id} RETURNING ${ITEM_COLUMNS}
+            WHERE id = ${id} RETURNING ${columns}
           `)
         ).rows[0];
         const keys = Object.keys(patch);
@@ -262,9 +272,10 @@ export class CatalogService {
     await this.mapConstraints(() =>
       this.db.transaction(async (tx) => {
         if (await this.usage.isUsed(id, tx)) throw itemInUse();
+        const columns = await this.columns(tx);
         const before = (
           await tx.execute<ItemRow>(sql`
-            DELETE FROM items WHERE id = ${id} RETURNING ${ITEM_COLUMNS}
+            DELETE FROM items WHERE id = ${id} RETURNING ${columns}
           `)
         ).rows[0];
         if (!before) throw itemNotFound();

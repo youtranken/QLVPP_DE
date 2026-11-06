@@ -8,6 +8,7 @@ import {
   ADM_OUT_REASON,
   admOutCancelDetail,
 } from '../delivery/adm-out-cancel';
+import { CUSTOM_ITEM_KEY, UNDELIVERED_LINE } from '../requests/line-predicates';
 import { LineDeliveryStore } from '../requests/line-delivery.store';
 import { LineNotifier } from '../requests/line-notifier';
 
@@ -17,6 +18,7 @@ export interface SettleResult {
 }
 
 const SYSTEM = 'system';
+const CUSTOM_ITEM_KEY_OR_ID = sql`coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY})`;
 
 // Kỳ sau khóa sổ: phần chưa giao của món đánh "ADM hết hàng" bị hủy, không thành nợ; chạy lại không còn gì để hủy
 @Injectable()
@@ -26,6 +28,19 @@ export class AdmOutSettlement {
     private readonly audit: AuditWriterService,
     private readonly notifier: LineNotifier,
   ) {}
+
+  // Mọi kỳ trước kỳ khóa mới nhất còn dòng mở của món đánh dấu: cron trượt nhiều tháng vẫn hủy bù
+  async unsettledPeriods(tx: Tx, latestLockedYm: string): Promise<string[]> {
+    const { rows } = await tx.execute<{ ym: string }>(sql`
+      SELECT DISTINCT to_char(a.period_ym, 'YYYY-MM') AS ym
+      FROM period_adm_out a
+      JOIN requests r ON r.period_ym = a.period_ym
+      JOIN request_lines l ON l.request_id = r.id
+      WHERE a.kind = 'out' AND a.period_ym < ${ymToDate(latestLockedYm)}::date
+        AND ${UNDELIVERED_LINE} AND ${CUSTOM_ITEM_KEY_OR_ID} = a.line_key
+      ORDER BY 1`);
+    return rows.map((r) => r.ym);
+  }
 
   async settleAdmOut(
     tx: Tx,

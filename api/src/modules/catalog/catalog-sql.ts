@@ -1,8 +1,14 @@
 import { sql } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
+import { heldSql } from './stock-held-sql';
 
-// Sắp hết: đã dùng hết 80 % tồn sau lần nhập mua gần nhất; tồn 0 là "Hết hàng", không tính vào đây
-export const LOW_STOCK_SQL =
-  'restock_level > 0 AND stock_qty > 0 AND stock_qty <= floor(restock_level * 0.2)';
+// Sắp hết theo phần trống (tồn − phần giữ cho người chờ các kỳ khóa), cùng luật Tủ (stock-state.ts):
+// có mức, còn hàng, không thiếu, trống ≤ 20 % mức. Bảng items không bí danh
+export const lowStockSql = (
+  openYm: string,
+): SQL => sql`(items.restock_level > 0 AND items.stock_qty > 0
+  AND items.stock_qty - coalesce((SELECT h.held FROM (${heldSql(openYm)}) h WHERE h.item_id = items.id), 0)
+      BETWEEN 0 AND floor(items.restock_level * 0.2))`;
 
 // Món dùng được: món active và nhóm (nếu có) active — ngừng nhóm không sửa items.active
 export const ITEM_USABLE_SQL = sql.raw(
@@ -20,13 +26,12 @@ export const ITEM_INACTIVE_REASON_SQL = sql.raw(
 
 export type StockState = 'ok' | 'low' | 'out' | 'untracked';
 
-export const ITEM_COLUMNS = sql.raw(
-  // Tồn 0 luôn là Hết hàng, kể cả món chưa có mốc nhập mua
-  `id, code, name, name_en, unit, pack_note, category_id, image_file_id, admin_only, max_qty, stock_qty, restock_level,
-   CASE WHEN stock_qty = 0 THEN 'out' WHEN restock_level IS NULL THEN 'untracked'
-        WHEN ${LOW_STOCK_SQL} THEN 'low' ELSE 'ok' END AS stock_state,
-   active, sort_order`,
-);
+// Tồn 0 luôn là Hết hàng, kể cả món chưa có mốc nhập mua
+export const itemColumns = (openYm: string): SQL => sql`
+  id, code, name, name_en, unit, pack_note, category_id, image_file_id, admin_only, max_qty, stock_qty, restock_level,
+  CASE WHEN stock_qty = 0 THEN 'out' WHEN restock_level IS NULL THEN 'untracked'
+       WHEN ${lowStockSql(openYm)} THEN 'low' ELSE 'ok' END AS stock_state,
+  active, sort_order`;
 
 export const CATEGORY_COLUMNS = sql.raw(
   'id, name, name_en, sort_order, active',
@@ -45,7 +50,6 @@ export interface ItemRow extends Record<string, unknown> {
   max_qty: number;
   stock_qty: number;
   restock_level: number | null;
-  /** @deprecated Chỉ theo tồn, không xét người chờ — Tủ/Kho đọc `GET admin/stock` */
   stock_state: StockState;
   active: boolean;
   sort_order: number;

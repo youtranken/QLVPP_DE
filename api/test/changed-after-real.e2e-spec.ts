@@ -23,11 +23,19 @@ describe('V2D-4 changedAfter theo thao tác thật: giao không tính, điều c
   });
   afterEach(() => f.resetPeriod(YM));
 
+  // Dòng có trước bản chốt (bản chốt đặt lùi tới 60 s so với giờ thật)
+  const backdate = (ids: string[]) =>
+    pool().query(
+      "UPDATE request_lines SET created_at = now() - interval '2 minutes' WHERE id = ANY($1::uuid[])",
+      [ids],
+    );
+
   // Nợ kỳ 9 (3) + đăng ký kỳ 10 (2) cùng món, tủ 10; bản chốt kỳ 10 lúc giờ thật − 1 phút
   const setup = async () => {
     const item = await f.stockItem(10);
     const debt = await seedLine(DEBT_YM, B, { item_id: item, qty: 3 });
     const own = await seedLine(YM, B, { item_id: item, qty: 2 });
+    await backdate([debt, own]);
     // Audit kỳ (Hàng về) của suite khác trong phút vừa qua không được rơi sau bản chốt
     const { rows } = await pool().query<{ at: Date }>(
       `SELECT greatest(now() - interval '60 seconds',
@@ -53,6 +61,14 @@ describe('V2D-4 changedAfter theo thao tác thật: giao không tính, điều c
     await f.deliver(own, { qty: 1, expected_delivered_qty: 0 }).expect(200);
     await f.deliver(debt, { qty: 2, expected_delivered_qty: 0 }).expect(200);
     expect((await sendState(YM)).delivered_since).toEqual({ [item]: 3 });
+  });
+
+  it('dòng vào sau bản chốt (không có trong căn cứ lúc chốt) được giao → không cộng vào delivered_since', async () => {
+    const { item, own } = await setup();
+    const late = await seedLine(YM, f.A, { item_id: item, qty: 2 });
+    await f.deliver(late, { qty: 2, expected_delivered_qty: 0 }).expect(200);
+    await f.deliver(own, { qty: 1, expected_delivered_qty: 0 }).expect(200);
+    expect((await sendState(YM)).delivered_since).toEqual({ [item]: 1 });
   });
 
   it('điều chỉnh (giảm) một dòng sau bản → có thay đổi sau bản', async () => {

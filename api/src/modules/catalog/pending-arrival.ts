@@ -1,47 +1,38 @@
 import { sql } from 'drizzle-orm';
-import { ymToDate } from '../../common/period';
+import { addMonths } from '../../common/period';
 import type { Executor } from '../../database/database.module';
-import { hasItemsSql } from '../reports/sent-snapshot';
+import { admOwedRows } from '../reports/order-default';
+import { latestSent } from '../reports/sent-snapshot';
+import { orderedFromSnapshot } from './arrivals-plan.service';
 import { itemNotFound } from './catalog.service';
+import { incomingByItem, stockFacts } from './stock-list';
 
 export type PendingArrival =
   { remaining: number; unit: string; snapshot_at: string } | { remaining: 0 };
 
-// Phần bản in kỳ khóa gần nhất còn chờ ADM giao; món đánh "ADM hết hàng" thì không còn chờ
+// Cùng "Hàng đang về" của Tủ: phần bản in kỳ khóa chưa về + ADM còn nợ các kỳ trước; mốc = bản in kỳ khóa, không có món thì bản kỳ còn nợ gần nhất
 export async function pendingArrival(
   ex: Executor,
   itemId: string,
-  lockedYm: string,
+  openYm: string,
 ): Promise<PendingArrival> {
-  const k = ymToDate(lockedYm);
-  const { rows } = await ex.execute<{
-    unit: string;
-    ordered: number | null;
-    received: number;
-    snapshot_at: Date | string | null;
-    adm_out: boolean;
-  }>(sql`
-    SELECT i.unit, sent.ordered, sent.created_at AS snapshot_at,
-           coalesce((SELECT sum(delta) FROM stock_movements
-                     WHERE item_id = i.id AND reason = 'purchase' AND receipt_ym = ${k}::date), 0)::int AS received,
-           EXISTS (SELECT 1 FROM period_adm_out
-                   WHERE period_ym = ${k}::date AND line_key = i.id::text AND kind = 'out') AS adm_out
-    FROM items i
-    LEFT JOIN LATERAL (
-      SELECT (data->'order_qty'->>i.id::text)::int AS ordered, created_at
-      FROM report_snapshots
-      WHERE period_ym = ${k}::date AND ${hasItemsSql}
-      ORDER BY created_at DESC, id DESC LIMIT 1
-    ) sent ON true
-    WHERE i.id = ${itemId}`);
-  const row = rows[0];
-  if (!row) throw itemNotFound();
-  const remaining = Math.max(0, (row.ordered ?? 0) - row.received);
-  if (row.adm_out || remaining === 0 || !row.snapshot_at)
-    return { remaining: 0 };
-  return {
-    remaining,
-    unit: row.unit,
-    snapshot_at: new Date(row.snapshot_at).toISOString(),
-  };
+  const { rows } = await ex.execute<{ unit: string }>(
+    sql`SELECT unit FROM items WHERE id = ${itemId}`,
+  );
+  if (!rows[0]) throw itemNotFound();
+  const kStar = addMonths(openYm, -1);
+  const facts = await stockFacts(ex, openYm, kStar, itemId);
+  const remaining = (await incomingByItem(ex, kStar, facts)).get(itemId) ?? 0;
+  if (remaining === 0) return { remaining: 0 };
+  const sheet = await sheetOf(ex, kStar, itemId);
+  if (!sheet) return { remaining: 0 };
+  return { remaining, unit: rows[0].unit, snapshot_at: sheet.created_at };
+}
+
+async function sheetOf(ex: Executor, kStar: string, itemId: string) {
+  const sent = await latestSent(ex, kStar);
+  if (sent && (orderedFromSnapshot(sent).get(itemId) ?? 0) > 0) return sent;
+  const owed = (await admOwedRows(ex, kStar)).filter((r) => r.key === itemId);
+  const last = owed.at(-1);
+  return last ? latestSent(ex, last.period_ym) : null;
 }

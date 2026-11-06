@@ -18,6 +18,7 @@ export interface ArrivalRow {
 
 export interface ArrivalsPlan {
   snapshot: { id: string; kind: string; created_at: string } | null;
+  no_order: { at: string; by_name: string | null } | null;
   batches: {
     at: string;
     actor_name: string | null;

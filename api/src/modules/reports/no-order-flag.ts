@@ -1,11 +1,35 @@
 import { sql } from 'drizzle-orm';
 import { ymToDate } from '../../common/period';
-import type { Tx } from '../../database/database.module';
+import type { Executor, Tx } from '../../database/database.module';
 import type { AuditWriterService } from '../audit/audit-writer.service';
 
 export interface NoOrderFlag {
   no_order_at: string | null;
   no_order_by: string | null;
+}
+
+export interface NoOrderMark {
+  at: string;
+  by_name: string | null;
+}
+
+export async function noOrderOf(
+  ex: Executor,
+  ym: string,
+): Promise<NoOrderMark | null> {
+  const { rows } = await ex.execute<{
+    no_order_at: Date | string | null;
+    no_order_by_name: string | null;
+  }>(sql`
+    SELECT p.no_order_at, coalesce(u.full_name, p.no_order_by) AS no_order_by_name
+    FROM periods p LEFT JOIN users u ON u.sub = p.no_order_by
+    WHERE p.ym = ${ymToDate(ym)}::date`);
+  const row = rows[0];
+  if (!row?.no_order_at) return null;
+  return {
+    at: new Date(row.no_order_at).toISOString(),
+    by_name: row.no_order_by_name,
+  };
 }
 
 // Mọi đường ghi cờ hoặc tạo bản chốt khóa cùng dòng periods → kỳ không bao giờ vừa có bản vừa có cờ.

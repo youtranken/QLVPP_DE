@@ -5,6 +5,8 @@ import { PeriodsService } from '../periods/periods.service';
 import { admOwedRows } from '../reports/order-default';
 import { itemDemand } from '../reports/report-queries';
 import { wantOf } from '../reports/report-need';
+import { noOrderOf } from '../reports/no-order-flag';
+import type { NoOrderMark } from '../reports/no-order-flag';
 import { latestSent } from '../reports/sent-snapshot';
 import type { SentSnapshot } from '../reports/sent-snapshot';
 import {
@@ -47,6 +49,8 @@ export interface MakeupRow {
 
 export interface ArrivalsPlan {
   snapshot: { id: string; kind: string; created_at: string } | null;
+  // Tháng không cần đề nghị ADM: không có kế hoạch, chỉ hàng đã về/về bù
+  no_order: NoOrderMark | null;
   batches: BatchRow[];
   rows: ArrivalRow[];
   custom: ArrivalCustomRow[];
@@ -67,9 +71,12 @@ export class ArrivalsPlanService {
   async plan(ym: string, now: Date): Promise<ArrivalsPlan> {
     await this.periods.assertLocked(ym, now);
     const sent = await latestSent(this.db, ym);
+    const noOrder = sent ? null : await noOrderOf(this.db, ym);
     const ordered = sent
       ? orderedFromSnapshot(sent)
-      : await this.orderedFromDemand(ym);
+      : noOrder
+        ? new Map<string, number>()
+        : await this.orderedFromDemand(ym);
     const facts = await itemFacts(
       this.db,
       ym,
@@ -80,6 +87,7 @@ export class ArrivalsPlanService {
       snapshot: sent
         ? { id: sent.id, kind: sent.kind, created_at: sent.created_at }
         : null,
+      no_order: noOrder,
       batches: await receiptBatches(this.db, ym),
       rows: facts
         .map((f) => toRow(f, ordered.get(f.item_id) ?? 0))

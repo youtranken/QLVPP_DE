@@ -107,17 +107,6 @@ export interface DeliverResult {
   request_complete: boolean;
 }
 
-export interface DeliverAllFailure {
-  line_id: string;
-  code: string;
-  available?: number;
-}
-
-export interface DeliverAllResult {
-  delivered: { line_id: string; qty: number }[];
-  failed: DeliverAllFailure[];
-}
-
 export type DeliveryPersonStatus = 'pending' | 'debt' | 'done';
 export interface DeliveryPersonLine {
   line_id: string;

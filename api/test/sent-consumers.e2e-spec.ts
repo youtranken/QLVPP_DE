@@ -125,6 +125,25 @@ describe('V2D-4 hộp hoàn tác đọc bản đã gửi (R-D3.6, R-D17.9)', () 
   describe('GET /admin/items/:id/pending-arrival', () => {
     const pending = (id: string, role = 'admin', sub = ADMIN) =>
       f.as(f.http().get(`/api/admin/items/${id}/pending-arrival`), sub, role);
+    // Bản thật luôn có hàng byItem cho món đặt; Tủ và hộp ngừng cùng đọc số đặt qua byItem
+    const sentItem = (item: string, qty: number) =>
+      sentWith(
+        { [item]: qty },
+        {
+          byItem: [
+            {
+              key: item,
+              item_id: item,
+              name: 'x',
+              unit: 'cay',
+              requested: qty,
+              backlog_prev: 0,
+              stock: 0,
+              need: 0,
+            },
+          ],
+        },
+      );
     const receive = (item: string, qty: number) =>
       pool().query(
         `INSERT INTO stock_movements (item_id, delta, reason, note, actor_sub, receipt_ym, created_at)
@@ -136,7 +155,7 @@ describe('V2D-4 hộp hoàn tác đọc bản đã gửi (R-D3.6, R-D17.9)', () 
       const item = await f.stockItem(0);
       f.freeze('2026-11-12T03:00:00Z');
       expect((await pending(item).expect(200)).body).toEqual({ remaining: 0 });
-      await sentWith({ [item]: 7 });
+      await sentItem(item, 7);
       await receive(item, 3);
       expect((await pending(item).expect(200)).body).toEqual({
         remaining: 4,
@@ -150,7 +169,7 @@ describe('V2D-4 hộp hoàn tác đọc bản đã gửi (R-D3.6, R-D17.9)', () 
     it('món đánh "ADM hết hàng" ở kỳ khóa → {remaining 0}; id lạ → 404 ITEM_NOT_FOUND; member → 403', async () => {
       const item = await f.stockItem(0);
       f.freeze('2026-11-12T03:00:00Z');
-      await sentWith({ [item]: 7 });
+      await sentItem(item, 7);
       await pool().query(
         `INSERT INTO period_adm_out (period_ym, line_key, kind, marked_by, marked_at)
          VALUES ('2026-11-01', $1, 'out', $2, '2026-11-12T02:00:00Z')`,
@@ -170,6 +189,49 @@ describe('V2D-4 hộp hoàn tác đọc bản đã gửi (R-D3.6, R-D17.9)', () 
         'ITEM_NOT_FOUND',
       );
       await pending(item, 'member', A).expect(403);
+    });
+
+    it('ADM còn nợ kỳ trước (bản kỳ 10 đặt 5, A còn chờ 4, chưa về) dù bản kỳ 11 không có món → {remaining 4, snapshot_at = bản kỳ 10}; cộng thêm phần bản kỳ 11 còn chờ', async () => {
+      const item = await f.stockItem(0);
+      f.freeze('2026-11-12T03:00:00Z');
+      await f.resetPeriod('2026-10');
+      try {
+        await seedLine('2026-10', A, { item_id: item, qty: 4 });
+        await insertSnapshot(
+          '2026-10',
+          {
+            ym: '2026-10',
+            byItem: [
+              {
+                key: item,
+                item_id: item,
+                name: 'x',
+                unit: 'cay',
+                requested: 4,
+                backlog_prev: 0,
+                stock: 0,
+                need: 0,
+              },
+            ],
+            custom: [],
+            order_qty: { [item]: 5 },
+          },
+          '2026-10-11T04:00:00Z',
+        );
+        expect((await pending(item).expect(200)).body).toEqual({
+          remaining: 4,
+          unit: 'cay',
+          snapshot_at: '2026-10-11T04:00:00.000Z',
+        });
+        await sentItem(item, 2);
+        expect((await pending(item).expect(200)).body).toEqual({
+          remaining: 6,
+          unit: 'cay',
+          snapshot_at: '2026-11-11T15:12:00.000Z',
+        });
+      } finally {
+        await f.resetPeriod('2026-10');
+      }
     });
   });
 });

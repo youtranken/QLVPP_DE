@@ -25,6 +25,10 @@ describe('mẫu số Tổng hợp loại người thuộc admin_group (Postgres 
   let savedGroups: unknown;
 
   const summary = () => app.get(SummaryService);
+  const live = async (ym: string) => {
+    const { headcount, unregistered } = await summary().people(ym);
+    return { headcount, unregistered };
+  };
   const setGroups = (sub: string, groups: string[]) =>
     pool.query('UPDATE users SET groups = $2::jsonb WHERE sub = $1', [
       sub,
@@ -94,11 +98,11 @@ describe('mẫu số Tổng hợp loại người thuộc admin_group (Postgres 
     await pool.end();
   });
 
-  it('liveCounts loại người thuộc admin_group: A thường, B Hành chính, C ngoài nhóm → headcount 1, unregistered chỉ [A]', async () => {
+  it('tập sống loại người thuộc admin_group: A thường, B Hành chính, C ngoài nhóm → headcount 1, unregistered chỉ [A]', async () => {
     expect(await app.get(SystemConfigService).getAdminGroup()).toBe(
       'vpp_admin',
     );
-    expect(await summary().liveCounts(YM)).toEqual({
+    expect(await live(YM)).toEqual({
       headcount: 1,
       unregistered: 1,
     });
@@ -109,7 +113,7 @@ describe('mẫu số Tổng hợp loại người thuộc admin_group (Postgres 
   it('biên có/không nhóm: B bỏ admin_group (còn Test_VPP) → headcount 2, unregistered [A, B]', async () => {
     await setGroups(B, [GROUP]);
     try {
-      expect(await summary().liveCounts(YM)).toEqual({
+      expect(await live(YM)).toEqual({
         headcount: 2,
         unregistered: 2,
       });
@@ -123,7 +127,7 @@ describe('mẫu số Tổng hợp loại người thuộc admin_group (Postgres 
   describe('mẫu số = người đủ điều kiện ∪ chủ phiếu của kỳ (quyết định 2026-11-01 câu 5)', () => {
     it('chủ phiếu ngoài tập (C ngoài nhóm, chủ phiếu ngoài tập) → đếm một lần: headcount 2, unregistered vẫn chỉ [A]', async () => {
       await addRequest(C, REQ_YM);
-      expect(await summary().liveCounts(REQ_YM)).toEqual({
+      expect(await live(REQ_YM)).toEqual({
         headcount: 2,
         unregistered: 1,
       });
@@ -133,7 +137,7 @@ describe('mẫu số Tổng hợp loại người thuộc admin_group (Postgres 
 
     it('chủ phiếu thuộc tập (A có phiếu) → không đếm hai lần: headcount 1, unregistered 0', async () => {
       await addRequest(A, REQ_YM);
-      expect(await summary().liveCounts(REQ_YM)).toEqual({
+      expect(await live(REQ_YM)).toEqual({
         headcount: 1,
         unregistered: 0,
       });
@@ -142,7 +146,7 @@ describe('mẫu số Tổng hợp loại người thuộc admin_group (Postgres 
 
     it('A, B (Hành chính) và C cùng có phiếu → headcount 3 = số phiếu; summary registered 3 ≤ headcount 3 (live)', async () => {
       for (const sub of [A, B, C]) await addRequest(sub, REQ_YM);
-      expect(await summary().liveCounts(REQ_YM)).toEqual({
+      expect(await live(REQ_YM)).toEqual({
         headcount: 3,
         unregistered: 0,
       });
@@ -164,9 +168,9 @@ describe('mẫu số Tổng hợp loại người thuộc admin_group (Postgres 
         ).rowCount === 1;
       try {
         await addRequest(LOCAL_SA_SUB, REQ_YM);
-        expect((await summary().liveCounts(REQ_YM)).headcount).toBe(1);
+        expect((await live(REQ_YM)).headcount).toBe(1);
         await addRequest(A, REQ_YM);
-        expect((await summary().liveCounts(REQ_YM)).headcount).toBe(1);
+        expect((await live(REQ_YM)).headcount).toBe(1);
       } finally {
         await pool.query(
           'DELETE FROM requests WHERE user_sub = $1 AND created_by_sub = $2',
@@ -180,9 +184,31 @@ describe('mẫu số Tổng hợp loại người thuộc admin_group (Postgres 
     it('phiếu kỳ khác không tính: C có phiếu kỳ trước và kỳ sau → kỳ giữa headcount 1; chính kỳ đó headcount 2', async () => {
       await addRequest(C, BEFORE);
       await addRequest(C, AFTER);
-      expect((await summary().liveCounts(REQ_YM)).headcount).toBe(1);
-      expect((await summary().liveCounts(BEFORE)).headcount).toBe(2);
-      expect((await summary().liveCounts(AFTER)).headcount).toBe(2);
+      expect((await live(REQ_YM)).headcount).toBe(1);
+      expect((await live(BEFORE)).headcount).toBe(2);
+      expect((await live(AFTER)).headcount).toBe(2);
     });
+  });
+
+  it('kỳ khóa trước 0116 (headcount đã ghi, headcount_subs NULL) → mẫu số đóng băng headcount, nguồn snapshot; đếm đăng ký vẫn sống', async () => {
+    await addRequest(A, REQ_YM);
+    await pool.query(
+      'UPDATE periods SET headcount = 7, headcount_subs = NULL WHERE ym = $1::date',
+      [`${REQ_YM}-01`],
+    );
+    try {
+      expect(await summary().people(REQ_YM)).toEqual({
+        headcount: 7,
+        headcount_source: 'snapshot',
+        registered: 1,
+        unregistered: 0,
+        outside: 0,
+      });
+    } finally {
+      await pool.query(
+        'UPDATE periods SET headcount = NULL WHERE ym = $1::date',
+        [`${REQ_YM}-01`],
+      );
+    }
   });
 });
