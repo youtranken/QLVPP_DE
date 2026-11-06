@@ -68,6 +68,17 @@ describe('PeriodLockGate — trang chỉ-kỳ-khóa', () => {
     expect(screen.queryByText('nội dung trang')).not.toBeInTheDocument();
   });
 
+  it('tháng cũ hơn kỳ khóa mới nhất không có dòng periods (deadline null, server coi là đã khóa) → nội dung trang, không "Chưa có kỳ nào chốt sổ"', async () => {
+    stub((ym) => jsonResponse(200, ym === '2026-09' ? { ...LOCKED, ym, deadline: null } : OPEN_SUMMARY));
+    mount(
+      <PeriodLockGate ym="2026-09">
+        <p>nội dung trang</p>
+      </PeriodLockGate>,
+    );
+    expect(await screen.findByText('nội dung trang')).toBeInTheDocument();
+    expect(screen.queryByText('Chưa có kỳ nào chốt sổ')).not.toBeInTheDocument();
+  });
+
   it('409 PERIOD_NOT_LOCKED: gọi đúng 1 lần (không retry), chữ lỗi bằng câu khóa sổ trong trang, không LoadError', async () => {
     const f = stub((ym) => (ym === '2026-10' ? jsonResponse(409, { code: 'PERIOD_NOT_LOCKED', ym, deadline: OPEN.deadline }) : jsonResponse(200, OPEN_SUMMARY)));
     mount(gate());

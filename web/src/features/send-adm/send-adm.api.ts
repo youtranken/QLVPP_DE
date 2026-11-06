@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import type { SnapshotData, SnapshotRef } from '@/features/reports/reports.api';
-import { arrivalsPlanQuery } from '@/features/arrivals/arrivals.api';
+import { arrivalsPlanKey, arrivalsPlanQuery } from '@/features/arrivals/arrivals.api';
 
 // Bản chốt có hàng mới nhất của kỳ (mọi loại); bản rỗng cũ không bao giờ là bản này
 export interface SentSnapshot {
@@ -26,7 +26,8 @@ export interface SendStateDto {
   delivered_since: Record<string, number>;
 }
 
-export const sendStateKey = (ym: string) => ['send-state', ym] as const;
+export const SEND_STATE_KEY = ['send-state'] as const;
+export const sendStateKey = (ym: string) => [...SEND_STATE_KEY, ym] as const;
 
 // Server chỉ trả trạng thái cho kỳ đã khóa: kỳ đang mở thì không gọi
 export function useSendStateQuery(ym: string, enabled = true) {
@@ -37,9 +38,11 @@ export function useSendStateQuery(ym: string, enabled = true) {
   });
 }
 
+// Bản mới / cờ không cần đề nghị đổi nguồn của Hàng về: tải lại kế hoạch để Đủ hàng không nhập theo bản cũ
 export function useRefreshSendState(ym: string) {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: sendStateKey(ym) });
+  return () =>
+    Promise.all([qc.invalidateQueries({ queryKey: sendStateKey(ym) }), qc.invalidateQueries({ queryKey: arrivalsPlanKey(ym) })]).then(() => undefined);
 }
 
 export const markNoOrder = (ym: string, orderQty: Record<string, number>, csrfToken: string | null) =>

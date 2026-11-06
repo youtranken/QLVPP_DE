@@ -9,7 +9,7 @@ import { printPath } from '@/features/reports/reports.api';
 import type { ArrivalFilter } from './arrival-rows';
 import type { ArrivalsPlan } from './arrivals.api';
 
-export type FullBlock = 'noSnapshot' | 'allDone' | 'sending' | null;
+export type FullBlock = 'noSnapshot' | 'noOrder' | 'allDone' | 'sending' | null;
 
 interface Props {
   plan: ArrivalsPlan;
@@ -35,6 +35,8 @@ export function ArrivalsToolbar({ plan, filter, groups, counts, total, shown, sh
         <div className="ar-source">
           {plan.snapshot ? (
             <Link to={printPath(plan.snapshot.id)}>{t('arrivals.source', { time: formatVnStamp(plan.snapshot.created_at) })}</Link>
+          ) : plan.no_order ? (
+            <p className="ar-note-line">{t('arrivals.noOrder', { time: formatVnStamp(plan.no_order.at) })}</p>
           ) : (
             <p className="ar-note-line">{t('arrivals.noSnapshot')}</p>
           )}

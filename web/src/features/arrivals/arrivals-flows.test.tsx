@@ -36,6 +36,7 @@ describe('Lưu — hộp W15 khi khác bản in', () => {
       ],
       ym: '2026-10',
       note: 'đợt 2',
+      snapshot_id: 's-1',
     });
     expect(await screen.findByText('Đã nhập 2 món vào tủ.')).toBeInTheDocument();
   });
@@ -130,9 +131,10 @@ describe('"Đủ hàng" — hộp W18', () => {
         { item_id: 'e', qty: 2, expected_stock_qty: 0 },
       ],
       ym: '2026-10',
+      snapshot_id: 's-1',
     });
     await waitFor(() => expect(bodiesOf(f, CUSTOM_URL)).toHaveLength(1));
-    expect(bodiesOf(f, CUSTOM_URL)[0]).toEqual({ line_key: 'custom:["kéo cắt giấy", "cái"]', qty: 2, expected_received: 0 });
+    expect(bodiesOf(f, CUSTOM_URL)[0]).toEqual({ line_key: 'custom:["kéo cắt giấy", "cái"]', qty: 2, expected_received: 0, snapshot_id: 's-1' });
     expect(await screen.findByText('Đã nhập 3 món vào tủ')).toBeInTheDocument();
   });
 
@@ -173,6 +175,16 @@ describe('"Đủ hàng" — hộp W18', () => {
     await userEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Thử lại' }));
     await waitFor(() => expect(customCalls).toBe(4));
     expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1);
+  });
+
+  it('Đủ hàng chỉ còn món ngoài DM, ghi "Đã về" lỗi → báo chưa ghi được, không có "Đã nhập 0 món vào tủ"', async () => {
+    const only = plan([planRow({ item_id: 'a', name: 'A', remaining: 0, received: 10 })], { custom: [customRow({ remaining: 2 })] });
+    stub({ plan: only, routes: { [CUSTOM_URL]: () => jsonResponse(500, { code: 'INTERNAL' }) } });
+    await open();
+    await userEvent.click(await screen.findByRole('button', { name: 'Đủ hàng' }));
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Nhập vào tủ' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Chưa ghi được "Đã về" cho 1 món ngoài danh mục — bấm Thử lại.');
+    expect(screen.queryByText(/Đã nhập 0 món/)).toBeNull();
   });
 
   it('409 STALE_UPDATE từ "Đủ hàng" → báo và tải lại kế hoạch', async () => {
@@ -258,6 +270,17 @@ describe('Về bù kỳ trước', () => {
     await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(3));
     expect(bodiesOf(f, RECEIPT_URL).map((b) => b.ym)).toEqual(['2026-09', '2026-08', '2026-08']);
     expect(bodiesOf(f, RECEIPT_URL)[2]).toEqual({ lines: [{ item_id: 'i-b', qty: 5, expected_stock_qty: 0 }], ym: '2026-08' });
+  });
+
+  it('về bù lỗi 409 ITEM_ADM_OUT → báo tháng và lý do của server (không gộp thành lỗi chung)', async () => {
+    stub({ plan: MAKEUP, receipt: () => jsonResponse(409, { code: 'ITEM_ADM_OUT' }) });
+    await open();
+    await userEvent.click(await screen.findByText('Về bù kỳ trước (1)'));
+    await type(screen.getByRole('spinbutton', { name: 'Về bù đợt này: Bút bi (tháng 9)' }), '4');
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu về bù' }));
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Chưa lưu được về bù tháng 9');
+    expect(alert).toHaveTextContent('Món này đang đánh "ADM hết hàng" — bỏ đánh dấu trước khi nhập.');
   });
 
   it('"ADM không giao nữa" → PUT adm-owed-closed của kỳ cũ; Hoàn tác → DELETE', async () => {

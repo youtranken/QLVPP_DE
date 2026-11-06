@@ -31,6 +31,7 @@ const arrivals = {
     group: { done: 'đã về đủ {{a}}/{{b}}', fill: 'Về đủ cả nhóm', unfill: 'Bỏ điền cả nhóm', none: 'Chưa xếp nhóm' },
     source: 'Theo bản in {{time}}',
     noSnapshot: 'Chưa in trình ký gửi ADM — số điền sẵn theo tổng đăng ký + nợ tháng trước',
+    noOrder: 'Không có đơn gửi ADM · {{time}}',
     admOut: { button: 'ADM hết hàng', buttonFor: 'ADM hết hàng: {{name}}', tag: 'ADM hết hàng', final: 'ADM hết hàng · đã xử lý xong', finalFor: 'ADM hết hàng · đã xử lý xong: {{name}}' },
     inactiveOrdered: 'Ngừng dùng — đã đặt trong bản in',
     custom: {
@@ -61,6 +62,7 @@ const arrivals = {
     },
     full: {
       partial: 'Đã nhập {{x}} món vào tủ; chưa ghi được "Đã về" cho {{n}} món ngoài danh mục — bấm Thử lại.',
+      customFailed: 'Chưa ghi được "Đã về" cho {{n}} món ngoài danh mục — bấm Thử lại.',
       retry: 'Thử lại',
       button: 'Đủ hàng',
       title: 'Đủ hàng theo bản in',
@@ -68,6 +70,7 @@ const arrivals = {
       skipDone: '{{n}} món đã về đủ',
       custom: 'Ghi "Đã về" {{n}} món ngoài danh mục (giao thẳng, không vào tủ).',
       replaceDraft: 'Các số đang gõ ở bảng sẽ được thay.',
+      noOrder: 'Tháng này không cần đề nghị ADM',
       noSnapshot: 'Chưa in trình ký gửi ADM',
       allDone: 'Đã về đủ theo bản in',
       sending: 'Đang nhập…',

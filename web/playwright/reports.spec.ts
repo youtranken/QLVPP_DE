@@ -49,7 +49,7 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     const reason = `PW họp ${seed.tag}`;
     psql(`INSERT INTO stock_movements (item_id, delta, reason, recipient_sub, note, actor_sub, created_at)
       VALUES ('${a.id}', -1, 'issue', '${seed.sub}', '${reason}', 'pw-admin', '${seed.prevYm}-15T03:00:00Z')`);
-    const made = await request.post(`/api/admin/reports/${seed.prevYm}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print' } });
+    const made = await request.post(`/api/admin/reports/${PRIVATE_YM}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print' } });
     expect(made.ok()).toBe(true);
 
     await page.goto(`/admin/reports?ym=${PRIVATE_YM}`);
@@ -110,7 +110,7 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     await expect(page.getByText(/^Còn \d+ món ngoài danh mục chưa xem — chưa được tính vào báo cáo này\./)).toBeVisible();
 
     // Gửi ADM chốt bản Excel với Đề nghị 9 (sửa ở Gửi ADM)
-    const made = await request.post(`/api/admin/reports/${seed.prevYm}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'xlsx', order_qty: { [key]: 9 } } });
+    const made = await request.post(`/api/admin/reports/${PRIVATE_YM}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'xlsx', order_qty: { [key]: 9 } } });
     expect(made.ok()).toBe(true);
     const before = await snapshotsOf(request, seed.prevYm);
     await page.reload();

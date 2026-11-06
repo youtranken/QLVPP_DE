@@ -156,7 +156,6 @@ const summary = {
       reload: 'Tải bản mới nhất',
       reloaded: 'Phiếu vừa được người khác sửa — đã tải bản mới nhất, sửa lại rồi lưu.',
       saved: 'Đã lưu điều chỉnh phiếu của {{name}}',
-      dropped: 'Đã bỏ phiếu của {{name}}',
       errors: {
         REQUEST_NOT_FOUND: 'Phiếu không còn.',
         PERIOD_NOT_LOCKED: 'Kỳ chưa khóa sổ — chưa điều chỉnh được.',

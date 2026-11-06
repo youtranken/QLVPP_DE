@@ -63,6 +63,25 @@ const SNAPSHOT_WRITE = /INSERT INTO report_snapshots|request\.post\([^)]*\/snaps
 // Hàm cấp tệp nằm sau test cuối của một khối không thuộc test đó
 const TOP_LEVEL_DECL = /\n(?=(?:export\s+)?(?:async\s+)?function\s|const\s)/;
 
+// Một dòng ghi bản chốt (trực tiếp hoặc gọi hàm ghi) an toàn khi chính dòng đó nhắm PRIVATE_YM; khối có PRIVATE_YM ở chỗ khác không đủ
+const unsafeLine = (line: string, calls: RegExp[]) =>
+  (SNAPSHOT_WRITE.test(line) || calls.some((c) => c.test(line))) && !line.includes('PRIVATE_YM');
+
+// Hàm có một dòng ghi không nhắm PRIVATE_YM (kể cả gọi hàm như vậy) → gọi hàm đó phải truyền PRIVATE_YM
+function snapshotWriters(bodies: Map<string, string>): Set<string> {
+  const found = new Set<string>();
+  for (let grew = true; grew; ) {
+    grew = false;
+    const calls = [...found].map(callPattern);
+    for (const [name, body] of bodies) {
+      if (found.has(name) || !body.split('\n').some((l) => unsafeLine(l, calls))) continue;
+      found.add(name);
+      grew = true;
+    }
+  }
+  return found;
+}
+
 function realPeriodSnapshotWrites(spec: string, writers: Set<string>): string[] {
   const calls = [...writers].map(callPattern);
   return spec
@@ -70,7 +89,7 @@ function realPeriodSnapshotWrites(spec: string, writers: Set<string>): string[] 
     .slice(1)
     .map((block) => block.split(TOP_LEVEL_DECL)[0])
     .filter((block) => SNAPSHOT_WRITE.test(block) || calls.some((c) => c.test(block)))
-    .filter((block) => !(block.includes('PRIVATE_YM') && block.includes('clearPrivateSnapshots()')))
+    .filter((block) => block.split('\n').some((l) => unsafeLine(l, calls)) || !block.includes('clearPrivateSnapshots()'))
     .map((block) => block.trim().split('\n')[0]);
 }
 
@@ -87,7 +106,7 @@ describe('chính sách dữ liệu Playwright: chỉ ghi lên dữ liệu PW t�
   const helpers = read(PW_DIR, (f) => f.endsWith('.ts'));
   const specs = helpers.filter((s) => s.file.endsWith('.spec.ts'));
   const seeders = seedingFunctions(helpers.map((s) => s.text));
-  const snapshotWriters = closureOf(functionBodies(helpers.map((s) => s.text)), [], SNAPSHOT_WRITE);
+  const writers = snapshotWriters(functionBodies(helpers.map((s) => s.text)));
 
   it('bộ quét bắt được test ghi mà không gieo, và chấp nhận test có gieo qua hàm trung gian', () => {
     const bad = `test('a', async ({ request }) => {\n  await request.post('/api/admin/lines/x/deliver', {});\n});\n`;
@@ -112,15 +131,26 @@ describe('chính sách dữ liệu Playwright: chỉ ghi lên dữ liệu PW t�
     const helper = `function insertSnap(ym) {\n  return psql(\`INSERT INTO report_snapshots (period_ym) VALUES ('\${ym}-01')\`);\n}\n`;
     const real = `\ntest('a', async () => {\n  insertSnap(seed.prevYm);\n});\n${helper}`;
     const priv = `\ntest('b', async () => {\n  insertSnap(PRIVATE_YM);\n  clearPrivateSnapshots();\n});\n`;
-    const writers = closureOf(functionBodies([helper]), [], SNAPSHOT_WRITE);
+    const writers = snapshotWriters(functionBodies([helper]));
     expect(realPeriodSnapshotWrites(real, writers)).toEqual(["test('a', async () => {"]);
     expect(realPeriodSnapshotWrites(priv, writers)).toEqual([]);
   });
 
+  it('bộ quét xét từng lần ghi, không cả khối: có PRIVATE_YM và dọn ở chỗ khác mà một lần ghi vẫn vào kỳ thật → bắt', () => {
+    const helper = `function insertSnap(ym) {\n  return psql(\`INSERT INTO report_snapshots (period_ym) VALUES ('\${ym}-01')\`);\n}\n`;
+    const mixed = `\ntest('c', async ({ request }) => {\n  clearPrivateSnapshots();\n  insertSnap(PRIVATE_YM);\n  insertSnap(seed.prevYm);\n});\n`;
+    const direct = `\ntest('d', async ({ request }) => {\n  clearPrivateSnapshots();\n  await page.goto(\`/admin/reports?ym=\${PRIVATE_YM}\`);\n  await request.post(\`/api/admin/reports/\${seed.prevYm}/snapshots\`, {});\n});\n`;
+    const ok = `\ntest('e', async ({ request }) => {\n  clearPrivateSnapshots();\n  await request.post(\`/api/admin/reports/\${PRIVATE_YM}/snapshots\`, {});\n});\n`;
+    const writers = snapshotWriters(functionBodies([helper]));
+    expect(realPeriodSnapshotWrites(mixed, writers)).toEqual(["test('c', async ({ request }) => {"]);
+    expect(realPeriodSnapshotWrites(direct, writers)).toEqual(["test('d', async ({ request }) => {"]);
+    expect(realPeriodSnapshotWrites(ok, writers)).toEqual([]);
+  });
+
   it.each(specs.map((s) => [s.file, s]))(
-    '%s: test ghi bản chốt chỉ ghi vào kỳ riêng PRIVATE_YM và dọn bằng clearPrivateSnapshots',
+    '%s: mỗi lần ghi bản chốt trong test nhắm kỳ riêng PRIVATE_YM ngay tại dòng ghi, và test dọn bằng clearPrivateSnapshots',
     (_f, s) => {
-      expect(realPeriodSnapshotWrites(s.text, snapshotWriters)).toEqual([]);
+      expect(realPeriodSnapshotWrites(s.text, writers)).toEqual([]);
     },
   );
 

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { formatVnStamp } from '@/lib/format-time';
 import { groupCounts } from '@/lib/group-counts';
 import { useUrlPatch } from '@/lib/use-url-patch';
-import { shiftYm } from '@/lib/ym';
+import { lockedYm } from '@/lib/ym';
 import { Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { useToast } from '@/ui/toast-context';
@@ -51,25 +51,34 @@ function NoticeLine({ notice, nameOf, onRetry }: { notice: Notice; nameOf: (id: 
       </div>
     );
   }
-  if (notice.kind === 'makeup') {
+  if (notice.kind === 'customFailed') {
     return (
-      <p role="alert" className="ar-warn">
-        {t('arrivals.makeup.failed', { month: monthOf(notice.ym) })}
-      </p>
+      <div role="alert" className="ar-warn">
+        <span>{t('arrivals.full.customFailed', { n: notice.n })}</span>{' '}
+        <button type="button" className="btn btn--sm" onClick={onRetry}>
+          {t('arrivals.full.retry')}
+        </button>
+      </div>
     );
   }
-  const { code, itemId } = notice;
-  const text =
+  const reason = (code: string, itemId?: string) =>
     code === 'STALE_UPDATE'
       ? t('arrivals.stale')
       : code === 'ITEM_NOT_FOUND' && itemId
         ? t('arrivals.itemMissing', { name: nameOf(itemId) })
         : i18n.exists(`common.errors.${code}`)
           ? t(`common.errors.${code}`)
-          : t('arrivals.saveFailed');
+          : null;
+  if (notice.kind === 'makeup') {
+    return (
+      <p role="alert" className="ar-warn">
+        {[t('arrivals.makeup.failed', { month: monthOf(notice.ym) }), reason(notice.code)].filter(Boolean).join(' ')}
+      </p>
+    );
+  }
   return (
     <p role="alert" className="ar-warn">
-      {text}
+      {reason(notice.code, notice.itemId) ?? t('arrivals.saveFailed')}
     </p>
   );
 }
@@ -113,7 +122,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
 
   const batch = fullBatch(rows);
   const customLeft = plan.custom.filter((c) => c.remaining > 0 && !c.adm_out);
-  const fullBlock: FullBlock = !plan.snapshot ? 'noSnapshot' : saver.pending ? 'sending' : batch.lines.length === 0 && customLeft.length === 0 ? 'allDone' : null;
+  const fullBlock: FullBlock = plan.no_order ? 'noOrder' : !plan.snapshot ? 'noSnapshot' : saver.pending ? 'sending' : batch.lines.length === 0 && customLeft.length === 0 ? 'allDone' : null;
   const toSend = tableRows.filter((r) => !r.adm_out && draft.qtyOf(r) > 0).map((row) => ({ row, qty: draft.qtyOf(row) }));
   const invalid = tableRows.some((r) => draft.errorOf(r));
   const diffs = differingRows(tableRows, draft.qtyOf);
@@ -128,11 +137,11 @@ function ArrivalsBoard({ ym }: { ym: string }) {
     setAdded([]);
   };
   const doSave = async () => {
-    await saver.save(toSend, note, afterSave);
+    await saver.save(toSend, note, plan.snapshot?.id ?? null, afterSave);
     setDialog(null);
   };
   const runFull = (lines: typeof batch.lines) =>
-    saver.full(lines, customLeft, () => {
+    saver.full(lines, customLeft, plan.snapshot?.id ?? null, () => {
       draft.reset();
       if (lines.length > 0) toast.show({ text: t('arrivals.full.done', { x: lines.length }), tone: 'ok' });
     });
@@ -146,7 +155,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
     saver.setNotice(code ? { kind: 'error', code } : null);
   };
   const afterSide = async (code: string | null, saved?: number, failedYm?: string) => {
-    saver.setNotice(failedYm ? { kind: 'makeup', ym: failedYm } : code ? { kind: 'error', code } : null);
+    saver.setNotice(failedYm ? { kind: 'makeup', ym: failedYm, code: code ?? 'UNKNOWN' } : code ? { kind: 'error', code } : null);
     if ((!code || failedYm) && saved) toast.show({ text: t('arrivals.makeup.saved', { n: saved }), tone: 'ok' });
     await saver.refresh();
   };
@@ -230,16 +239,16 @@ function ArrivalsBoard({ ym }: { ym: string }) {
 export function ArrivalsPage() {
   const { t } = useTranslation();
   const current = useCurrentPeriod();
-  const lockedYm = current.data ? shiftYm(current.data.ym, -1) : undefined;
-  const title = t('arrivals.title', { month: lockedYm ? monthOf(lockedYm) : '' }).trim();
+  const workingYm = current.data ? lockedYm(current.data.ym) : undefined;
+  const title = t('arrivals.title', { month: workingYm ? monthOf(workingYm) : '' }).trim();
   return (
     <div className="ct-page">
       <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.arrivals')]} title={title} description={t('arrivals.description')} />
       {current.isError ? (
         <LoadError onRetry={() => void current.refetch()} />
-      ) : lockedYm ? (
-        <PeriodLockGate key={lockedYm} ym={lockedYm}>
-          <ArrivalsBoard ym={lockedYm} />
+      ) : workingYm ? (
+        <PeriodLockGate key={workingYm} ym={workingYm}>
+          <ArrivalsBoard ym={workingYm} />
         </PeriodLockGate>
       ) : (
         <Loading />

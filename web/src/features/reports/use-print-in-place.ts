@@ -74,6 +74,9 @@ function useRegion() {
         window.addEventListener('afterprint', after);
         window.addEventListener('focus', after);
       },
+      // Hộp in chưa mở: lấy lại focus không có nghĩa đã in — chỉ afterprint, hoặc focus sau khi bấm In ở toast
+      blocked: () => window.removeEventListener('focus', after),
+      watchFocus: () => window.addEventListener('focus', after),
       drop: () => done(false),
     };
   };
@@ -92,7 +95,18 @@ export function usePrintInPlace() {
   const print = async (data: SnapshotData): Promise<PrintResult> => {
     const time = formatVnStamp(data.created_at);
     // Nút In của toast bị chặn là lối in lại duy nhất: toast ở lại tới khi vùng in được gỡ
-    const blocked = { text: t('reports.page.printBlocked'), tone: 'warn' as const, persist: true, action: { label: t('reports.print.toolbar.print'), onClick: reprint } };
+    const blocked = {
+      text: t('reports.page.printBlocked'),
+      tone: 'warn' as const,
+      persist: true,
+      action: {
+        label: t('reports.print.toolbar.print'),
+        onClick: () => {
+          shown.watchFocus();
+          reprint();
+        },
+      },
+    };
     const shown = region.mount(
       data,
       () => toast.show({ text: t('reports.page.printedToast', { time }), tone: 'ok' }),
@@ -103,6 +117,7 @@ export function usePrintInPlace() {
       await waitReady(region.ref.current);
       shown.arm();
       if (await openDialog()) return 'printed';
+      shown.blocked();
       toast.show(blocked);
       return 'blocked';
     } catch {

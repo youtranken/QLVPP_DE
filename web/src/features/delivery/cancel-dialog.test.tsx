@@ -52,7 +52,7 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
     renderDialog();
     expect(screen.getByRole('dialog', { name: TITLE })).toBeInTheDocument();
     const radios = within(reasons()).getAllByRole('radio');
-    expect(radios.map((r) => r.closest('label')?.textContent)).toEqual(['ADM hết hàng', 'Người nhận không cần nữa', 'Đã nghỉ việc', 'Khác']);
+    expect(radios.map((r) => r.closest('label')?.textContent)).toEqual(['ADM hết hàng', 'Người nhận không cần nữa', 'Người đã nghỉ', 'Khác']);
     expect(radios.every((r) => !(r as HTMLInputElement).checked)).toBe(true);
     expect(screen.getByText('Nhân viên sẽ thấy lý do trong Lịch sử.')).toBeInTheDocument();
     const footer = screen.getByRole('button', { name: 'Quay lại' }).parentElement!;
@@ -111,10 +111,10 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
     expect(sent(f).reason).toBe('ế'.repeat(200));
   });
 
-  it('initialReason user_left (?left=1) → "Đã nghỉ việc" chọn sẵn, Hủy nợ bật ngay', () => {
+  it('initialReason user_left (?left=1) → "Người đã nghỉ" chọn sẵn, Hủy nợ bật ngay', () => {
     stub();
     renderDialog({ initialReason: 'user_left' });
-    expect(within(reasons()).getByRole('radio', { name: 'Đã nghỉ việc' })).toBeChecked();
+    expect(within(reasons()).getByRole('radio', { name: 'Người đã nghỉ' })).toBeChecked();
     expect(submit()).toBeEnabled();
   });
 
@@ -122,7 +122,7 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
     stub();
     renderDialog({ line: { counted_in_snapshot_qty: 2 } });
     expect(screen.getByText(W23)).toHaveClass('alert--warn');
-    await pick('Đã nghỉ việc');
+    await pick('Người đã nghỉ');
     expect(submit()).toBeEnabled();
   });
 
@@ -163,7 +163,7 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
   it('cancelled_now = 0 → toast info "Dòng này không còn nợ." và đóng (onDone)', async () => {
     stub(() => jsonResponse(200, { cancelled_now: 0 }));
     const { onDone } = renderDialog();
-    await pick('Đã nghỉ việc');
+    await pick('Người đã nghỉ');
     await userEvent.click(submit());
     await waitFor(() => expect(onDone).toHaveBeenCalledOnce());
     expect(await screen.findByText('Dòng này không còn nợ.')).toBeInTheDocument();
@@ -173,7 +173,7 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
   it('cancelled_now = 3 → toast "Đã hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức"', async () => {
     stub();
     renderDialog();
-    await pick('Đã nghỉ việc');
+    await pick('Người đã nghỉ');
     await userEvent.click(submit());
     expect(await screen.findByText('Đã hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức')).toBeInTheDocument();
   });
@@ -209,7 +209,7 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
   ])('%s → khối trong hộp "%s", không gắn ô ghi chú', async (code, text) => {
     stub(() => jsonResponse(409, { code }));
     renderDialog();
-    await pick('Đã nghỉ việc');
+    await pick('Người đã nghỉ');
     await userEvent.click(submit());
     expect(await screen.findByRole('alert')).toHaveTextContent(text);
     expect(noteBox()).not.toHaveAttribute('aria-invalid');
@@ -219,7 +219,7 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
     let release!: (r: Response) => void;
     const f = stub(() => new Promise<Response>((r) => (release = r)));
     renderDialog();
-    await pick('Đã nghỉ việc');
+    await pick('Người đã nghỉ');
     act(() => {
       submit().click();
       submit().click();

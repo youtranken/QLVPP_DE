@@ -6,7 +6,7 @@ import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
 import { Toolbar } from '@/ui/toolbar';
 import { usePanelParam } from '@/lib/use-panel-param';
-import { shiftYm } from '@/lib/ym';
+import { lockedYm } from '@/lib/ym';
 import { monthOf } from '@/features/request/request-format';
 import { OpenPeriodNotice } from '@/features/summary/open-period-notice';
 import { useCurrentPeriod } from '@/features/request/request.api';
@@ -17,7 +17,7 @@ import { applyFilter, backlogStats, flatten, type BacklogRow } from './backlog-r
 import { CancelDialog } from './cancel-dialog';
 import { DeliverMoreDialog } from './deliver-more-dialog';
 import { DeliveriesDrawer } from './deliveries-drawer';
-import { useRefreshAfterDelivery } from './delivery.api';
+import { useRefreshAfterLineChange } from './people/use-refresh-after-flow';
 import { useBacklogParams } from './use-backlog-params';
 import './backlog.m1.css';
 
@@ -37,7 +37,7 @@ export function BacklogPage() {
   const { t } = useTranslation();
   const p = useBacklogParams();
   const query = useBacklog(p.by);
-  const refresh = useRefreshAfterDelivery();
+  const refresh = useRefreshAfterLineChange([['admin-request']]);
   const all = useMemo(() => flatten(query.data?.groups ?? []), [query.data]);
   const rows = useMemo(() => applyFilter(all, p.filter), [all, p.filter]);
   const open = useOpenLine(all);
@@ -48,11 +48,11 @@ export function BacklogPage() {
   const onAction = (action: LineAction, row: BacklogRow) => (action === 'history' ? panel.open(row.id) : open.start(action, row));
   const title = t('delivery.backlog.title');
   const current = useCurrentPeriod();
-  const sentYm = current.data?.ym ? shiftYm(current.data.ym, -1) : undefined;
+  const sentYm = current.data?.ym ? lockedYm(current.data.ym) : undefined;
   const month = sentYm ? monthOf(sentYm) : undefined;
-  const reload = () => open.line && void refresh(open.line.request_id);
+  const reload = () => open.line && void refresh();
   const done = async () => {
-    if (open.line) await refresh(open.line.request_id);
+    if (open.line) await refresh();
     open.close();
   };
   const views = [

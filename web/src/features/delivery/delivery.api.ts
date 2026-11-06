@@ -1,8 +1,5 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import type { LineView } from '@/features/request/request.api';
-import { useRefreshStock } from '@/features/stock/stock.api';
-import { SUMMARY_KEY, adminRequestKey } from '@/features/summary/summary.api';
 
 export interface DeliverBody {
   qty: number;
@@ -43,15 +40,3 @@ export const deliverLine = (lineId: string, body: DeliverBody, csrfToken: string
   apiFetch<DeliverResult>(`/api/admin/lines/${lineId}/deliver`, { method: 'POST', body: JSON.stringify(body), csrfToken });
 
 
-// Một đợt giao đổi phiếu, Tổng hợp/KPI, Còn nợ và tồn kho cùng lúc
-export function useRefreshAfterDelivery() {
-  const qc = useQueryClient();
-  const refreshStock = useRefreshStock();
-  return (requestId: string) =>
-    Promise.all([
-      qc.invalidateQueries({ queryKey: adminRequestKey(requestId) }),
-      qc.invalidateQueries({ queryKey: SUMMARY_KEY }),
-      qc.invalidateQueries({ queryKey: BACKLOG_KEY }),
-      refreshStock(),
-    ]);
-}

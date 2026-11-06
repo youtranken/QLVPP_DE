@@ -2,8 +2,7 @@ import { queryOptions, useQueries, useQuery, useQueryClient } from '@tanstack/re
 import { apiFetch } from '@/lib/api-client';
 import type { LineView, ReviewStatus } from '@/features/request/request.api';
 import { useRefreshCatalog } from '@/features/catalog/catalog.api';
-import { REPORTS_KEY } from '@/features/reports/reports.api';
-import { SUMMARY_KEY } from '@/features/summary/summary.api';
+import { useRefreshAfterLineChange } from '@/features/delivery/people/use-refresh-after-flow';
 
 export const REVIEW_FILTERS = ['pending', 'accepted', 'converted', 'rejected'] as const;
 export type ReviewFilter = (typeof REVIEW_FILTERS)[number];
@@ -102,10 +101,10 @@ export const reviewLine = (lineId: string, body: ReviewBody, csrfToken: string |
 export function useReviewCache() {
   const qc = useQueryClient();
   const refreshCatalog = useRefreshCatalog();
+  const refreshLines = useRefreshAfterLineChange();
   return {
-    // Món mới vào danh mục và KPI "chờ xem" của Tổng hợp đổi theo
-    reviewed: () =>
-      Promise.all([refreshCatalog(), qc.invalidateQueries({ queryKey: SUMMARY_KEY }), qc.invalidateQueries({ queryKey: REPORTS_KEY })]),
+    // Món mới vào danh mục; dòng đổi hiệu lực nên Tổng hợp, Giao hàng, Gửi ADM, Hàng về đổi theo
+    reviewed: () => Promise.all([refreshCatalog(), refreshLines()]),
     refetchList: () => qc.invalidateQueries({ queryKey: REVIEW_KEY }),
     // Thẻ vừa xử lý ở lại với nhãn trạng thái; danh sách tải lại ở lần xem sau
     // Đếm các tab khác và huy hiệu sidebar đổi theo ngay; tab đang xem giữ nguyên thẻ vừa xử lý

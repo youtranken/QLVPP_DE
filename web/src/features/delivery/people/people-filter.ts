@@ -29,10 +29,12 @@ export interface Waiting {
   qty: number;
 }
 
-// Chỉ mục món → số cần của từng người, dựng một lần cho cả danh sách; dòng chờ duyệt chưa tính vì chưa giao được
+// Chỉ mục món → số cần của từng người, dựng một lần cho cả danh sách; dòng chờ duyệt chưa tính vì chưa giao được.
+// Người đã nghỉ không giữ phần nào (như W19) nên không tính là người đang chờ
 export function waitingIndex(people: DeliveryPerson[]): (itemId: string, exceptSub: string) => Waiting {
   const byItem = new Map<string, Map<string, number>>();
   for (const p of people) {
+    if (p.user_status !== 'active') continue;
     for (const l of p.lines) {
       if (!l.item_id || l.review_status === 'pending' || l.remaining_qty <= 0) continue;
       const bySub = byItem.get(l.item_id) ?? new Map<string, number>();
@@ -58,8 +60,9 @@ export const waitingFor = (people: DeliveryPerson[], itemId: string, exceptSub: 
 // Dòng chờ duyệt chưa giao được; dòng đã giao đủ không còn gì để giao
 export const isOpenLine = (l: DeliveryPersonLine) => l.review_status !== 'pending' && l.remaining_qty > 0;
 
-// Số trên thẻ: dòng chưa nhận + nợ còn giao được (bỏ dòng chờ duyệt)
+// Số trên thẻ: số món (nợ + kỳ này cùng món là một) và đơn vị còn giao được (bỏ dòng chờ duyệt)
 export function cardSummary(p: DeliveryPerson): { n: number; u: number } {
   const open = p.lines.filter(isOpenLine);
-  return { n: open.length, u: open.reduce((s, l) => s + l.remaining_qty, 0) };
+  const items = new Set(open.map((l) => l.item_id ?? `${l.name}|${l.unit}`));
+  return { n: items.size, u: open.reduce((s, l) => s + l.remaining_qty, 0) };
 }

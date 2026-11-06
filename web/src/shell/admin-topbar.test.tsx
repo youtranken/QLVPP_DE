@@ -42,6 +42,11 @@ describe('AdminTopbar 390 px', () => {
     expect(await within(topbar()).findByText('Tháng 10/2026 · đã khóa')).toBeInTheDocument();
   });
 
+  it('Giao hàng với ?ym cũ trên URL → dòng phụ vẫn là kỳ khóa gần nhất "Tháng 10/2026 · đã khóa" (trang chỉ làm kỳ đó)', async () => {
+    open('/admin/delivery?ym=2026-08');
+    expect(await within(topbar()).findByText('Tháng 10/2026 · đã khóa')).toBeInTheDocument();
+  });
+
   it('chạm avatar mở menu, chọn "Kho" → /admin/stock (2 chạm)', async () => {
     open('/admin/delivery');
     const avatar = within(topbar()).getByRole('button', { name: 'Nguyễn Văn An, Hành chính' });

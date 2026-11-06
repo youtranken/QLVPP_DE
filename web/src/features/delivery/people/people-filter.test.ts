@@ -43,7 +43,7 @@ describe('overlapCount', () => {
 });
 
 describe('cardSummary', () => {
-  it('đếm dòng chưa nhận + nợ còn giao được: 4 món · 18 đơn vị; bỏ dòng chờ duyệt và dòng đã giao đủ', () => {
+  it('đếm món (không phải dòng) chưa nhận + nợ còn giao được: nợ + kỳ này cùng bút là 1 món → 3 món · 18 đơn vị; bỏ dòng chờ duyệt và dòng đã giao đủ', () => {
     const p = person({
       lines: [
         pLine({ line_id: 'x1', is_debt: true, period_ym: '2026-09', remaining_qty: 2 }),
@@ -54,7 +54,7 @@ describe('cardSummary', () => {
         pLine({ line_id: 'x6', item_id: 'i-tape', delivered_qty: 3, remaining_qty: 0 }),
       ],
     });
-    expect(cardSummary(p)).toEqual({ n: 4, u: 18 });
+    expect(cardSummary(p)).toEqual({ n: 3, u: 18 });
     expect(cardSummary(D)).toEqual({ n: 0, u: 0 });
   });
 });
@@ -75,6 +75,13 @@ describe('waitingFor', () => {
     expect(waitingFor(PEOPLE, 'i-a4', 'u-a')).toEqual({ people: 2, qty: 3 });
     const twice = person({ user_sub: 'u-t', lines: [pLine({ line_id: 't1', remaining_qty: 2 }), pLine({ line_id: 't2', remaining_qty: 4, is_debt: true })] });
     expect(waitingFor([twice], 'i-pen', 'u-z')).toEqual({ people: 1, qty: 6 });
+  });
+});
+
+describe('waitingFor — người đã nghỉ', () => {
+  it('người đã nghỉ còn chờ bút không tính vào "k người khác còn chờ" (như W19)', () => {
+    const left = person({ user_sub: 'u-l', user_status: 'left', lines: [pLine({ line_id: 'll', remaining_qty: 4 })] });
+    expect(waitingFor([A, left], 'i-pen', 'u-z')).toEqual(waitingFor([A], 'i-pen', 'u-z'));
   });
 });
 

@@ -5,7 +5,7 @@ import { parseFilter, type BacklogFilter } from './backlog-rows';
 export function useBacklogParams() {
   const [params, update] = useUrlPatch();
   const by = parseBy(params.get('by'));
-  // ?left=1 đến từ nhắc người đã nghỉ ở Tháng này: lọc người đã nghỉ và Hủy nợ chọn sẵn "Đã nghỉ việc"
+  // ?left=1 đến từ nhắc người đã nghỉ ở Tháng này: lọc người đã nghỉ và Hủy nợ chọn sẵn "Người đã nghỉ"
   const left = params.get('left') === '1';
   const filter = parseFilter(params.get('filter')) ?? (left ? 'left' : null);
 

@@ -41,6 +41,18 @@ describe('Hàng về — bảng theo bản in', () => {
     expect(box('Bút bi')).toHaveValue(10);
   });
 
+  it('Tháng này không cần đề nghị ADM: băng "Không có đơn gửi ADM · hh:mm dd/mm", Đủ hàng khóa với lý do, vẫn còn Thêm món khác và Về bù kỳ trước', async () => {
+    const makeup = [{ ym: '2026-09', rows: [{ key: 'i-a', item_id: 'i-a', name: 'Bút bi', name_en: null, unit: 'cay', stock_qty: 2, ordered: 7, received: 3, adm_owed: 4 }] }];
+    stub({ plan: plan([], { snapshot: null, no_order: { at: '2026-11-12T03:00:00.000Z', by_name: 'Hà' }, makeup }) });
+    await open();
+    expect(await screen.findByText('Không có đơn gửi ADM · 10:00 12/11')).toBeInTheDocument();
+    expect(screen.queryByText(/Chưa in trình ký gửi ADM/)).toBeNull();
+    expect(screen.getByRole('button', { name: 'Đủ hàng' })).toBeDisabled();
+    expect(screen.getByText('Tháng này không cần đề nghị ADM')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Tìm món để thêm' })).toBeInTheDocument();
+    expect(screen.getByText('Về bù kỳ trước (1)')).toBeInTheDocument();
+  });
+
   it('nhãn W13: đủ → "Đủ"; thiếu 1 → "Thiếu 1 so với bản in"; dư 1 → "Dư 1 so với bản in — vào kho"; tủ sau khi lưu đổi theo', async () => {
     stub();
     await open();

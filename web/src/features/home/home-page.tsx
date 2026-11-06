@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { langOf, lockPhrase } from '@/lib/period-text';
 import { useMe } from '@/lib/me';
-import { shiftYm } from '@/lib/ym';
+import { lockedYm } from '@/lib/ym';
 import { Loading, LoadError } from '@/ui/load-state';
 import { Segmented } from '@/ui/segmented';
 import { arrivalsPlanQuery } from '@/features/arrivals/arrivals.api';
@@ -73,14 +73,14 @@ function LeftReminder({ ym }: { ym: string }) {
 function Ready({ currentYm }: { currentYm: string }) {
   const { t, i18n } = useTranslation();
   const me = useMe();
-  const lockedYm = shiftYm(currentYm, -1);
+  const workingYm = lockedYm(currentYm);
   const [view, setView] = useState<View>('locked');
   const current = usePeriodSummary(currentYm);
-  const locked = usePeriodSummary(lockedYm);
+  const locked = usePeriodSummary(workingYm);
   // Gửi ADM và Hàng về chỉ có nghĩa khi kỳ giao đã khóa
   const lockedDone = locked.data?.is_open === false;
-  const send = useSendState(lockedYm, lockedDone);
-  const plan = useQuery({ ...arrivalsPlanQuery(lockedYm), enabled: lockedDone });
+  const send = useSendState(workingYm, lockedDone);
+  const plan = useQuery({ ...arrivalsPlanQuery(workingYm), enabled: lockedDone });
   const queries = [current, locked, send.query, plan];
   const failed = queries.find((q) => q.isError);
   if (failed) return <LoadError onRetry={() => void Promise.all(queries.filter((q) => q.isError).map((q) => q.refetch()))} />;
@@ -95,17 +95,18 @@ function Ready({ currentYm }: { currentYm: string }) {
       send: send.state ? { state: send.state, at: sent?.created_at ?? send.noOrder?.at ?? null, items: sent?.items_count ?? 0, units: sent?.units_total ?? 0, changed: send.changedAfter } : null,
       plan: plan.data ?? null,
       pendingDelivery: locked.data.lines_pending_delivery ?? 0,
+      summaryYm: workingYm,
     },
     t,
   );
-  const currentSteps = monthSteps({ registered: current.data.registered, headcount: current.data.headcount, isOpen: current.data.is_open, send: null, plan: null, pendingDelivery: 0 }, t);
+  const currentSteps = monthSteps({ registered: current.data.registered, headcount: current.data.headcount, isOpen: current.data.is_open, send: null, plan: null, pendingDelivery: 0, summaryYm: workingYm }, t);
   const registerView = view === 'current';
   const doing = lockedSteps.find((s) => s.current);
   const hero = registerView
     ? { title: t('home.hero.titleRegister', { month: monthOf(currentYm) }), sub: t('home.hero.subRegister', { lock: current.data.deadline ? lockPhrase(current.data.deadline, langOf(i18n.language)) : '' }) }
     : doing
-      ? { title: t('home.hero.titleStep', { month: monthOf(lockedYm), step: t(`home.step.${doing.key}`) }), sub: t(`home.hero.sub.${doing.key}`) }
-      : { title: t('home.hero.titleDone', { month: monthOf(lockedYm) }), sub: t('home.hero.subDone') };
+      ? { title: t('home.hero.titleStep', { month: monthOf(workingYm), step: t(`home.step.${doing.key}`) }), sub: t(`home.hero.sub.${doing.key}`) }
+      : { title: t('home.hero.titleDone', { month: monthOf(workingYm) }), sub: t('home.hero.subDone') };
 
   return (
     <div className="hm-page">
@@ -121,7 +122,7 @@ function Ready({ currentYm }: { currentYm: string }) {
             value={view}
             onChange={setView}
             options={[
-              { value: 'locked', label: t('home.period.locked', { month: monthOf(lockedYm) }) },
+              { value: 'locked', label: t('home.period.locked', { month: monthOf(workingYm) }) },
               { value: 'current', label: t('home.period.current', { month: monthOf(currentYm) }) },
             ]}
           />
@@ -129,7 +130,7 @@ function Ready({ currentYm }: { currentYm: string }) {
         <MonthSteps steps={registerView ? currentSteps : lockedSteps} onlyFirst={registerView} />
       </section>
       {/* Kỳ đang đăng ký không có cảnh báo W nào */}
-      {!registerView && lockedDone && <LeftReminder ym={lockedYm} />}
+      {!registerView && lockedDone && <LeftReminder ym={workingYm} />}
       <Cards ym={currentYm} summary={current.data} />
     </div>
   );

@@ -147,7 +147,7 @@ export interface AdjustBody {
 }
 
 export const saveAdjust = (id: string, body: AdjustBody, csrfToken: string | null) =>
-  apiFetch<{ request: RequestView | null }>(`/api/admin/requests/${id}/lines`, {
+  apiFetch<{ request: RequestView }>(`/api/admin/requests/${id}/lines`, {
     method: 'PUT',
     body: JSON.stringify(body),
     csrfToken,

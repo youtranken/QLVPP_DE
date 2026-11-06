@@ -11,7 +11,7 @@ const plan = (rows: { remaining: number; adm_out?: boolean; usable?: boolean }[]
   rows: rows.map((r) => ({ adm_out: false, usable: true, ...r })),
   custom: custom.map((c) => ({ adm_out: false, ...c })),
 });
-const base: MonthStepsInput = { registered: 39, headcount: 40, isOpen: false, send: sent, plan: plan([{ remaining: 0 }]), pendingDelivery: 0 };
+const base: MonthStepsInput = { registered: 39, headcount: 40, isOpen: false, send: sent, plan: plan([{ remaining: 0 }]), pendingDelivery: 0, summaryYm: '2026-10' };
 const steps = (o: Partial<MonthStepsInput> = {}) => monthSteps({ ...base, ...o }, i18n.t);
 const currentOf = (s: ReturnType<typeof monthSteps>) => s.filter((x) => x.current).map((x) => x.key);
 const step = (o: Partial<MonthStepsInput>, key: string) => steps(o).find((s) => s.key === key)!;
@@ -19,7 +19,7 @@ const step = (o: Partial<MonthStepsInput>, key: string) => steps(o).find((s) => 
 describe('monthSteps', () => {
   it('trả đúng 4 bước theo thứ tự Đăng ký → Gửi ADM → Hàng về → Giao, mỗi bước có đường dẫn', () => {
     expect(steps().map((s) => [s.key, s.to])).toEqual([
-      ['register', '/admin/summary'],
+      ['register', '/admin/summary?ym=2026-10'],
       ['send', '/admin/send-adm'],
       ['arrive', '/admin/arrivals'],
       ['deliver', '/admin/delivery'],

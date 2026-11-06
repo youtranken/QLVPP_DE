@@ -88,18 +88,40 @@ describe('usePrintInPlace: in tại chỗ, không đổi trang', () => {
     expect(screen.queryByRole('button', { name: 'In' })).toBeNull();
   });
 
-  it.each([
-    ['trang lấy lại focus', () => void window.dispatchEvent(new Event('focus'))],
-    ['bấm in lần nữa', () => void fireEvent.click(screen.getByRole('button', { name: 'go' }))],
-  ])('toast bị chặn biến mất khi %s', async (_label, trigger) => {
+  it('toast bị chặn biến mất khi bấm in lần nữa', async () => {
     vi.useFakeTimers();
     vi.spyOn(window, 'print').mockImplementation(() => {});
     mount();
     await go();
     await act(() => vi.advanceTimersByTimeAsync(1000));
     expect(screen.getByText('Bấm để mở hộp in')).toBeInTheDocument();
-    act(trigger);
+    act(() => void fireEvent.click(screen.getByRole('button', { name: 'go' })));
     expect(screen.queryByText('Bấm để mở hộp in')).toBeNull();
+  });
+
+  it('bị chặn rồi trang lấy lại focus (chưa in gì): không báo "Đã chốt…", toast bị chặn và vùng in còn nguyên', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(window, 'print').mockImplementation(() => {});
+    mount();
+    await go();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    act(() => void window.dispatchEvent(new Event('focus')));
+    expect(screen.queryByText('Đã chốt bản 09:30 28/10. Cần in lại: mở Bản chốt.')).toBeNull();
+    expect(screen.getByText('Bấm để mở hộp in')).toBeInTheDocument();
+    expect(region()).not.toBeNull();
+  });
+
+  it('bị chặn → bấm In ở toast mở được hộp in, không có afterprint: trang lấy lại focus thì gỡ vùng in và báo đã chốt', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(window, 'print').mockImplementation(() => {});
+    mount();
+    await go();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    fireEvent.click(screen.getByRole('button', { name: 'In' }));
+    act(() => void window.dispatchEvent(new Event('focus')));
+    expect(region()).toBeNull();
+    expect(screen.queryByText('Bấm để mở hộp in')).toBeNull();
+    expect(screen.getByText('Đã chốt bản 09:30 28/10. Cần in lại: mở Bản chốt.')).toBeInTheDocument();
   });
 
   it('toast bị chặn biến mất khi rời trang (gỡ màn in)', async () => {

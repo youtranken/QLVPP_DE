@@ -12,7 +12,7 @@ import { dialogRows, limitsOf, priorityFor, stepsOf, stockShortages, totalsOf, t
 import { DeliverRows } from './deliver-dialog-rows';
 import { NETWORK, NOT_SENT, sendSteps, type SendResult, type SentLine } from './deliver-send';
 import { waitingIndex } from './people-filter';
-import { useRefreshAfterFlow } from './use-refresh-after-flow';
+import { useRefreshAfterLineChange } from './use-refresh-after-flow';
 
 export interface DeliverDialogProps {
   person: DeliveryPerson;
@@ -68,7 +68,7 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const toast = useToast();
-  const refresh = useRefreshAfterFlow([['admin-request']]);
+  const refresh = useRefreshAfterLineChange([['admin-request']]);
   const flight = useSingleFlight();
   const sumId = useId();
   const titleRef = useRef<HTMLHeadingElement>(null);

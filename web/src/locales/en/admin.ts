@@ -53,7 +53,7 @@ const admin: Messages<typeof vi> = {
       status: 'Status',
       lastLogin: 'Last sign-in',
       readonly: 'Data from PMH ID, not editable in this app.',
-      lockedWarning: 'This account is locked in PMH ID — they cannot sign in. Anything they still owe shows the "Left the company" label under Owed.',
+      lockedWarning: 'This account is locked in PMH ID — they cannot sign in. Anything they still owe shows the "No longer with the company" label under Owed.',
       audit: 'View audit log',
     },
     status: {

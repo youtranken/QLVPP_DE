@@ -36,6 +36,8 @@ export interface MonthStepsInput {
   send: SendInput | null;
   plan: PlanInput | null;
   pendingDelivery: number;
+  // Tổng hợp chỉ xem kỳ đã khóa: bước Đăng ký của cả hai kỳ dẫn tới kỳ khóa gần nhất
+  summaryYm: string;
 }
 
 const SEND_ADM = '/admin/send-adm';
@@ -73,7 +75,7 @@ export function monthSteps(i: MonthStepsInput, t: TFunction): StepState[] {
       done: !i.isOpen,
       value: known ? `${i.registered}/${i.headcount}` : String(i.registered),
       progress: known ? Math.min(100, Math.round((i.registered / i.headcount!) * 100)) : undefined,
-      to: '/admin/summary',
+      to: `/admin/summary?ym=${i.summaryYm}`,
     },
     { key: 'send', to: SEND_ADM, ...sendStep(i.send, t) },
     { key: 'arrive', to: '/admin/arrivals', ...arriveStep(i.send, i.plan, t) },

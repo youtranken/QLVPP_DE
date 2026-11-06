@@ -8,9 +8,9 @@ import { useToast } from '@/ui/toast-context';
 import type { LineView } from '@/features/request/request.api';
 import { REVIEW_KEY, type ReviewResult } from '@/features/review/review.api';
 import { useSendState } from '@/features/send-adm/use-send-state';
-import { useRefreshStock } from '@/features/stock/stock.api';
+import { useRefreshAfterLineChange } from '@/features/delivery/people/use-refresh-after-flow';
 import { adjustFailure, isStaleUpdate, type AdjustErrors } from './summary-errors';
-import { SUMMARY_KEY, adminRequestKey, saveAdjust, useAdminRequest, type AdjustBody, type AdjustLineBody, type AdjustReason, type AdminRequestView } from './summary.api';
+import { adminRequestKey, saveAdjust, useAdminRequest, type AdjustBody, type AdjustLineBody, type AdjustReason, type AdminRequestView } from './summary.api';
 
 // Nháp lý do của một dòng: giữ cả khi dòng về lại số cũ (khối ẩn) tới khi Lưu/Hủy
 export interface LineReason {
@@ -98,11 +98,9 @@ function bodyOf(current: AdminRequestView, d: Draft, preset: AdjustReason | unde
   return { body, keys: current.lines.map((l) => l.id) };
 }
 
-// Giảm phiếu đổi phần đang giữ ở Tủ (và đếm Tủ trên sidebar); bỏ/sửa dòng ngoài DM đổi hàng chờ của Món ngoài danh mục
+// Giảm phiếu đổi phần đang giữ ở Tủ, Gửi ADM (W6/W15), Hàng về (W14), Còn nợ; bỏ/sửa dòng ngoài DM đổi hàng chờ của Món ngoài danh mục
 export function useRefreshAfterAdjust() {
-  const qc = useQueryClient();
-  const refreshStock = useRefreshStock();
-  return () => Promise.all([qc.invalidateQueries({ queryKey: SUMMARY_KEY }), qc.invalidateQueries({ queryKey: REVIEW_KEY }), refreshStock()]);
+  return useRefreshAfterLineChange([REVIEW_KEY]);
 }
 
 function useSendAdjust(requestId: string, patch: Patch, onDone: () => void) {
@@ -114,10 +112,9 @@ function useSendAdjust(requestId: string, patch: Patch, onDone: () => void) {
     const { body, keys } = bodyOf(current, d, preset);
     patch((x) => ({ ...x, errors: {} }));
     try {
-      const res = await saveAdjust(requestId, body, csrfToken);
+      await saveAdjust(requestId, body, csrfToken);
       void refresh();
-      const name = current.full_name ?? current.user_sub;
-      toast.show({ text: t(res.request ? 'summary.adjust.saved' : 'summary.adjust.dropped', { name }), tone: 'ok' });
+      toast.show({ text: t('summary.adjust.saved', { name: current.full_name ?? current.user_sub }), tone: 'ok' });
       onDone();
     } catch (e) {
       patch((x) => (isStaleUpdate(e) ? { ...x, stale: true } : { ...x, errors: adjustFailure(e, keys, t) }));

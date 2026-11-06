@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiErrorCode } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
-import { useRefreshAfterFlow } from '@/features/delivery/people/use-refresh-after-flow';
+import { useRefreshAfterLineChange } from '@/features/delivery/people/use-refresh-after-flow';
 import { arrivalsPlanKey, arrivalsPlanQuery, setAdmOut } from './arrivals.api';
 
 export const useArrivalsPlan = (ym: string) => useQuery(arrivalsPlanQuery(ym));
@@ -10,8 +10,8 @@ export const useArrivalsPlan = (ym: string) => useQuery(arrivalsPlanQuery(ym));
 // Nhập hàng đổi kế hoạch, tủ, danh sách giao và Còn nợ cùng lúc
 export function useRefreshArrivals(ym: string) {
   const qc = useQueryClient();
-  const refreshFlow = useRefreshAfterFlow();
-  return () => Promise.all([qc.invalidateQueries({ queryKey: arrivalsPlanKey(ym) }), refreshFlow()]).then(() => undefined);
+  const refreshAll = useRefreshAfterLineChange();
+  return () => Promise.all([qc.invalidateQueries({ queryKey: arrivalsPlanKey(ym) }), refreshAll()]).then(() => undefined);
 }
 
 // Đánh/bỏ "ADM hết hàng" ghi ngay; trả mã lỗi (nếu có) để trang báo, luôn tải lại kế hoạch

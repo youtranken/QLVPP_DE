@@ -37,6 +37,7 @@ export const SNAP = { id: 's-1', kind: 'print', created_at: '2026-11-02T02:05:00
 
 export const plan = (rows: PlanRow[], over: Partial<ArrivalsPlan> = {}): ArrivalsPlan => ({
   snapshot: SNAP,
+  no_order: null,
   batches: [],
   rows,
   custom: [],

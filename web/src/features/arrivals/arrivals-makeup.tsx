@@ -17,10 +17,12 @@ const idOf = (ym: string, key: string) => `${ym}|${key}`;
 class MakeupFailed extends Error {
   readonly ym: string;
   readonly saved: number;
-  constructor(ym: string, saved: number) {
+  readonly code: string;
+  constructor(ym: string, saved: number, code: string) {
     super(ym);
     this.ym = ym;
     this.saved = saved;
+    this.code = code;
   }
 }
 
@@ -45,8 +47,8 @@ async function saveMakeup(groups: PlanMakeupGroup[], qtyOf: (ym: string, r: Plan
         cleared([idOf(g.ym, r.key)]);
         saved += 1;
       }
-    } catch {
-      throw new MakeupFailed(g.ym, saved);
+    } catch (e) {
+      throw new MakeupFailed(g.ym, saved, apiErrorCode(e) ?? 'UNKNOWN');
     }
   }
   return saved;
@@ -71,7 +73,7 @@ export function ArrivalsMakeup({ groups, onDone }: Props) {
         const n = await task();
         await onDone(null, typeof n === 'number' ? n : undefined);
       } catch (e) {
-        if (e instanceof MakeupFailed) await onDone('MAKEUP_FAILED', e.saved, e.ym);
+        if (e instanceof MakeupFailed) await onDone(e.code, e.saved, e.ym);
         else await onDone(apiErrorCode(e) ?? 'UNKNOWN');
       }
     });

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { apiErrorCode, apiErrorString } from '@/lib/api-error';
 import { langOf, lockPhrase } from '@/lib/period-text';
+import { lockedYm } from '@/lib/ym';
 import { EmptyFrame } from '@/ui/empty-frame';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { useCurrentPeriod } from '@/features/request/request.api';
@@ -51,8 +52,11 @@ export function PeriodLockGate({ ym, frame = (n) => n, children }: Props) {
   }
   if (!summary.data) return <>{frame(<Loading />)}</>;
   const { deadline } = summary.data;
-  if (deadline === null) return <>{frame(<NoLockedPeriod />)}</>;
-  if (new Date(deadline).getTime() > Date.now()) return <>{frame(<EmptyState title={unlocked(deadline)} />)}</>;
+  // Không có dòng periods: kỳ khóa mới nhất (cài mới) = chưa có kỳ nào khóa; tháng cũ hơn thì server vẫn coi là đã khóa
+  if (deadline === null) {
+    if (!current) return <>{frame(<Loading />)}</>;
+    if (ym >= lockedYm(current.ym)) return <>{frame(<NoLockedPeriod />)}</>;
+  } else if (new Date(deadline).getTime() > Date.now()) return <>{frame(<EmptyState title={unlocked(deadline)} />)}</>;
   return (
     <div className="ct-page">
       <OpenPeriodNotice />

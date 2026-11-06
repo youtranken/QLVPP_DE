@@ -33,7 +33,7 @@ describe('DeliveryPeoplePage — Chưa nhận / Còn nợ chồng nhau', () => {
 });
 
 describe('PersonCard — số trên thẻ', () => {
-  it('thẻ ghi "4 món · 18 đơn vị" (chưa nhận + nợ còn giao được); người đã nhận đủ không có dòng số', async () => {
+  it('thẻ ghi "3 món · 18 đơn vị" (món chưa nhận + nợ còn giao được; nợ + kỳ này cùng bút là 1 món); người đã nhận đủ không có dòng số', async () => {
     const many = person({
       user_sub: 'u-m',
       full_name: 'Mai Nhiều Món',
@@ -47,7 +47,7 @@ describe('PersonCard — số trên thẻ', () => {
     });
     open([many, D]);
     await screen.findByRole('heading', { level: 3, name: 'Mai Nhiều Món' });
-    expect(within(card('Mai Nhiều Món')).getByText('4 món · 18 đơn vị')).toBeInTheDocument();
+    expect(within(card('Mai Nhiều Món')).getByText('3 món · 18 đơn vị')).toBeInTheDocument();
     expect(within(card('Đỗ Mai Linh')).queryByText(/đơn vị/)).toBeNull();
   });
 });

@@ -59,13 +59,15 @@ export interface PlanBatch {
 // Kế hoạch Hàng về theo bản có hàng mới nhất (chưa có bản → số gộp)
 export interface ArrivalsPlan {
   snapshot: { id: string; kind: string; created_at: string } | null;
+  no_order: { at: string; by_name: string | null } | null;
   batches: PlanBatch[];
   rows: PlanRow[];
   custom: PlanCustomRow[];
   makeup: PlanMakeupGroup[];
 }
 
-export const arrivalsPlanKey = (ym: string) => ['arrivals-plan', ym] as const;
+export const ARRIVALS_PLAN_KEY = ['arrivals-plan'] as const;
+export const arrivalsPlanKey = (ym: string) => [...ARRIVALS_PLAN_KEY, ym] as const;
 
 export const arrivalsPlanQuery = (ym: string) => ({
   queryKey: arrivalsPlanKey(ym),
@@ -78,10 +80,12 @@ export interface ReceiptLineBody {
   expected_stock_qty: number;
 }
 
+// snapshot_id = bản in đang xem (null = chưa có bản): server trả STALE_UPDATE nếu đã có bản mới hơn; về bù không gửi
 export interface ReceiptBody {
   lines: ReceiptLineBody[];
   ym: string;
   note?: string;
+  snapshot_id?: string | null;
 }
 
 export interface ReceiptResult {
@@ -105,6 +109,7 @@ export interface CustomReceiptBody {
   line_key: string;
   qty: number;
   expected_received: number;
+  snapshot_id?: string | null;
 }
 
 export const postCustomReceipt = (ym: string, body: CustomReceiptBody, csrf: string | null) =>

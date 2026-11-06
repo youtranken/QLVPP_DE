@@ -20,11 +20,11 @@ const PRINT_URL = /\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print\?from=repor
 const FORM = 'Phiếu đề xuất văn phòng phẩm';
 
 // Báo cáo chỉ đọc: bản chốt tạo qua api (như Gửi ADM gửi), rồi mở trang in riêng của bản đó
-async function printSnapshot(page: Page, request: APIRequestContext, seed: Seed, order: Record<string, number>) {
-  const report = await (await request.get(`/api/admin/reports/${seed.prevYm}`, { headers: devHeaders('admin') })).json();
+async function printSnapshot(page: Page, request: APIRequestContext, ym: string, order: Record<string, number>) {
+  const report = await (await request.get(`/api/admin/reports/${ym}`, { headers: devHeaders('admin') })).json();
   const keyOf = (name: string) => [...report.byItem, ...report.custom].find((r: { name: string }) => r.name === name).key as string;
   const order_qty = Object.fromEntries(Object.entries(order).map(([name, qty]) => [keyOf(name), qty]));
-  const made = await request.post(`/api/admin/reports/${seed.prevYm}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print', order_qty } });
+  const made = await request.post(`/api/admin/reports/${ym}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print', order_qty } });
   expect(made.ok()).toBe(true);
   const { id } = (await made.json()) as { id: string };
   await page.goto(`/admin/reports/snapshots/${id}/print`);
@@ -88,7 +88,7 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
       { title: 'Người yêu cầu', title_en: 'Applicant', name: '' },
     ]);
 
-    const snapshotId = await printSnapshot(page, request, seed, { [a.name]: 9 });
+    const snapshotId = await printSnapshot(page, request, PRIVATE_YM, { [a.name]: 9 });
     expect(snapshotCount(seed.prevYm)).toBe(before + 1);
     await expect(page.getByRole('heading', { level: 1, name: FORM })).toBeVisible();
     await expect(formTable(page).getByRole('row', { name: new RegExp(a.name) }).getByRole('cell').last()).toHaveText('9');
@@ -168,7 +168,7 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     ];
     await setBoxes(request, boxes);
 
-    await printSnapshot(page, request, seed, { [a.name]: 1 });
+    await printSnapshot(page, request, PRIVATE_YM, { [a.name]: 1 });
     const rowA = formTable(page).getByRole('row', { name: new RegExp(a.name) });
     await expect(rowA).toBeVisible();
     expect((await rowA.getByRole('cell').allTextContents()).slice(1)).toEqual([code, a.name, `PW pen ${seed.tag}`, unit, '1']);

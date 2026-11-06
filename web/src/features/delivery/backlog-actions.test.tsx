@@ -97,14 +97,14 @@ describe('BacklogPage — thao tác trên dòng', () => {
     expect(screen.getByText('Phiếu gửi ADM tháng 10 đã tính 2 cây này — hủy thì hàng về dư vào kho.')).toBeInTheDocument();
   });
 
-  it('?left=1 → chỉ dòng người đã nghỉ; mở Hủy nợ thì "Đã nghỉ việc" chọn sẵn, gửi user_left', async () => {
+  it('?left=1 → chỉ dòng người đã nghỉ; mở Hủy nợ thì "Người đã nghỉ" chọn sẵn, gửi user_left', async () => {
     const f = stubBacklog([PEN_DUC, PEN_LAN]);
     mockViewport(1280);
     renderApp(makeMe('admin'), '/admin/backlog?left=1');
     await screen.findByText('Bút bi xanh');
     await waitFor(() => expect(bodyRows()).toHaveLength(1));
     await openCancel('Võ Thị Lan');
-    expect(within(screen.getByRole('radiogroup', { name: 'Lý do hủy nợ' })).getByRole('radio', { name: 'Đã nghỉ việc' })).toBeChecked();
+    expect(within(screen.getByRole('radiogroup', { name: 'Lý do hủy nợ' })).getByRole('radio', { name: 'Người đã nghỉ' })).toBeChecked();
     await userEvent.click(screen.getByRole('button', { name: 'Hủy nợ' }));
     await waitFor(() => expect(callsTo(f, '/api/admin/lines/l-pen-lan/cancel-remaining')).toHaveLength(1));
     expect(JSON.parse(String(callsTo(f, '/api/admin/lines/l-pen-lan/cancel-remaining')[0][1]?.body)).reason_code).toBe('user_left');
@@ -121,7 +121,7 @@ describe('BacklogPage — thao tác trên dòng', () => {
     const f = stubBacklog([PEN_DUC], { cancel: () => jsonResponse(409, { code: 'STALE_UPDATE', qty: 4, delivered_qty: 3 }) });
     openPage();
     await openCancel('Phạm Văn Đức');
-    await pickReason('Đã nghỉ việc');
+    await pickReason('Người đã nghỉ');
     await userEvent.click(screen.getByRole('button', { name: 'Hủy nợ' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Dòng vừa thay đổi (đăng ký 4, đã giao 3) — kiểm tra lại.');
     expect(screen.getByRole('dialog', { name: 'Hủy nợ 1 cây Bút bi xanh của Phạm Văn Đức?' })).toBeInTheDocument();

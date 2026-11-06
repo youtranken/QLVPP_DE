@@ -119,6 +119,8 @@ export function DeliverRows(props: RowsProps) {
   const adm = props.rows.filter((r) => r.kind === 'adm');
   const skip = props.rows.filter((r) => r.kind === 'skip');
   const noStock = give.length === 0 && skip.some((r) => r.reason === 'stock');
+  // Tủ trống thay cả danh sách thiếu hàng bằng một câu; dòng chờ duyệt vẫn phải hiện
+  const skipShown = noStock ? skip.filter((r) => r.reason === 'review') : skip;
   return (
     <div className="dd-rows">
       {noStock ? <p className="dd-nostock">{t('delivery.confirm.noStock')}</p> : give.length > 0 && <Table {...props} rows={give} />}
@@ -128,11 +130,11 @@ export function DeliverRows(props: RowsProps) {
           <Table {...props} rows={adm} hiddenHead={give.length > 0} />
         </section>
       )}
-      {skip.length > 0 && !noStock && (
+      {skipShown.length > 0 && (
         <section className="dd-group dd-group--skip">
           <h3>{t('delivery.confirm.skipped')}</h3>
           <ul>
-            {skip.map((r) => (
+            {skipShown.map((r) => (
               <li key={r.line.line_id}>
                 <b>{fmt.name(r.line)}</b>
                 <span>{t(r.reason === 'review' ? 'delivery.people.panel.pendingReview' : 'delivery.people.panel.outOfStock')}</span>

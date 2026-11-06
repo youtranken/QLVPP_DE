@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { shiftYm } from '@/lib/ym';
+import { lockedYm } from '@/lib/ym';
 import { Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { useAdminConfig } from '@/features/admin/admin.api';
@@ -97,11 +97,11 @@ function Modes({ ym, printer }: { ym: string; printer: Printer }) {
 
 export function SendAdmPage() {
   const current = useCurrentPeriod();
-  const lockedYm = current.data ? shiftYm(current.data.ym, -1) : undefined;
-  if (lockedYm) {
+  const workingYm = current.data ? lockedYm(current.data.ym) : undefined;
+  if (workingYm) {
     return (
-      <PeriodLockGate key={lockedYm} ym={lockedYm} frame={(node) => <Bare ym={lockedYm}>{node}</Bare>}>
-        <Board ym={lockedYm} />
+      <PeriodLockGate key={workingYm} ym={workingYm} frame={(node) => <Bare ym={workingYm}>{node}</Bare>}>
+        <Board ym={workingYm} />
       </PeriodLockGate>
     );
   }

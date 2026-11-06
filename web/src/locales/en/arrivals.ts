@@ -34,6 +34,7 @@ const arrivals: Messages<typeof vi> = {
     group: { done: '{{a}}/{{b}} received', fill: 'Fill whole group', unfill: 'Undo fill', none: 'Ungrouped' },
     source: 'From print {{time}}',
     noSnapshot: 'Not sent to ADM yet — prefilled from requested + carried over',
+    noOrder: 'No order sent to ADM · {{time}}',
     admOut: { button: 'Out at ADM', buttonFor: 'Out at ADM: {{name}}', tag: 'Out at ADM', final: 'Out at ADM · settled', finalFor: 'Out at ADM · settled: {{name}}' },
     inactiveOrdered: 'Discontinued — already ordered on the print',
     custom: {
@@ -64,6 +65,7 @@ const arrivals: Messages<typeof vi> = {
     },
     full: {
       partial: 'Added {{x}} items to stock; could not record "Received" for {{n}} off-catalogue items — press Try again.',
+      customFailed: 'Could not record "Received" for {{n}} off-catalogue items — press Try again.',
       retry: 'Try again',
       button: 'All arrived',
       title: 'All arrived per the print',
@@ -71,6 +73,7 @@ const arrivals: Messages<typeof vi> = {
       skipDone: '{{n}} already received',
       custom: 'Record "Received" for {{n}} off-catalogue items (delivered directly, not stocked).',
       replaceDraft: 'Numbers typed in the table will be replaced.',
+      noOrder: 'No ADM order needed this month',
       noSnapshot: 'Not sent to ADM yet',
       allDone: 'Everything on the print has arrived',
       sending: 'Saving…',

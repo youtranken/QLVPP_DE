@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { shiftYm } from '@/lib/ym';
+import { lockedYm } from '@/lib/ym';
 import { currentPeriodQuery } from '@/features/request/request.api';
 import { REVIEW_BADGE_KEY, reviewLinesQuery } from '@/features/review/review.api';
 import { deliveryPeopleQuery } from '@/features/delivery/people/delivery-people.api';
@@ -17,8 +17,8 @@ export type AdminBadges = Record<AdminBadgeKey, number | undefined>;
 export function useAdminBadges(): AdminBadges {
   const review = useQuery({ ...reviewLinesQuery('pending', ''), queryKey: [...REVIEW_BADGE_KEY], ...BADGE_FRESH });
   const period = useQuery({ ...currentPeriodQuery(), ...BADGE_FRESH });
-  const lockedYm = period.data?.ym ? shiftYm(period.data.ym, -1) : undefined;
-  const people = useQuery({ ...deliveryPeopleQuery(lockedYm), ...BADGE_FRESH });
+  const workingYm = period.data?.ym ? lockedYm(period.data.ym) : undefined;
+  const people = useQuery({ ...deliveryPeopleQuery(workingYm), ...BADGE_FRESH });
   const stock = useQuery({ ...stockListQuery(), ...BADGE_FRESH });
   return {
     review: review.isError ? undefined : countOf(review.data?.items?.length),

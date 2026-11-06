@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode, apiErrorString } from '@/lib/api-error';
 import { langOf, lockPhrase } from '@/lib/period-text';
-import { shiftYm } from '@/lib/ym';
+import { lockedYm } from '@/lib/ym';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlPatch } from '@/lib/use-url-patch';
 import { OverlayPanel } from '@/ui/overlay-panel';
@@ -175,13 +175,13 @@ function PeopleBoard({ ym }: { ym: string }) {
 export function DeliveryPeoplePage() {
   const { t } = useTranslation();
   const current = useCurrentPeriod();
-  const lockedYm = current.data ? shiftYm(current.data.ym, -1) : undefined;
-  const title = t('delivery.people.title', { month: lockedYm ? monthOf(lockedYm) : '' }).trim();
+  const workingYm = current.data ? lockedYm(current.data.ym) : undefined;
+  const title = t('delivery.people.title', { month: workingYm ? monthOf(workingYm) : '' }).trim();
   return (
     <div className="ct-page">
       <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.delivery')]} title={title} description={t('delivery.people.description')} />
       <OpenPeriodNotice />
-      {current.isError ? <LoadError onRetry={() => void current.refetch()} /> : lockedYm ? <PeopleBoard key={lockedYm} ym={lockedYm} /> : <Loading />}
+      {current.isError ? <LoadError onRetry={() => void current.refetch()} /> : workingYm ? <PeopleBoard key={workingYm} ym={workingYm} /> : <Loading />}
     </div>
   );
 }

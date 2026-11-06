@@ -91,7 +91,8 @@ describe('Trang Tháng này: bước hiện tại và nút đi thẳng', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'Kỳ đang đăng ký (tháng 11)' }));
     expect(within(currentStep()).getByText('Đăng ký')).toBeInTheDocument();
     expect(within(currentStep()).getByText('32/40')).toBeInTheDocument();
-    expect(within(currentStep()).getByRole('link', { name: 'Xem tổng hợp' })).toHaveAttribute('href', '/admin/summary');
+    // Kỳ mở chưa có Tổng hợp: dẫn tới Tổng hợp của kỳ khóa gần nhất
+    expect(within(currentStep()).getByRole('link', { name: 'Xem tổng hợp' })).toHaveAttribute('href', '/admin/summary?ym=2026-10');
     expect(steps().getAllByText('Sau khi khóa sổ')).toHaveLength(3);
     expect(steps().getAllByRole('link')).toHaveLength(1);
     expect(screen.getByText('Khóa tự động 00:00 ngày 11/11. Sau đó in phiếu gửi ADM.')).toBeInTheDocument();
