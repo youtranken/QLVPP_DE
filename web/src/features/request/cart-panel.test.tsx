@@ -82,7 +82,7 @@ describe('CartPanel', () => {
     show({ lines: Array.from({ length: 16 }, (_, i) => mk(i + 1)), dirty: true, canSave: true });
     const list = within(aside()).getByRole('list');
     expect(list.querySelectorAll('li')).toHaveLength(16);
-    expect(list.getAttribute('data-scroll')).toBe('y');
+    expect(list.classList.contains('rq-lines')).toBe(true); // cuộn thật được Playwright V2C-T5 kiểm bằng scrollHeight
     expect(list.contains(within(aside()).getByRole('button', { name: 'Lưu phiếu' }))).toBe(false);
   });
 
@@ -96,10 +96,21 @@ describe('CartPanel', () => {
     expect(fns.onRemove).toHaveBeenCalledWith('k2');
   });
 
-  it('locked: stepper vô hiệu, vẫn còn nút Lưu theo canSave', () => {
-    show({ lines: [mk(2)], locked: true });
+  it('locked: − và + vô hiệu, nút Bỏ vẫn bấm được; nút Lưu chỉ theo canSave (không theo locked)', () => {
+    show({ lines: [mk(2)], locked: true, canSave: true });
+    expect(within(aside()).getByRole('button', { name: 'Bỏ Món 2' })).toBeEnabled();
+    expect(within(aside()).getByRole('button', { name: 'Lưu phiếu' })).toBeEnabled();
     expect(within(aside()).getByRole('button', { name: 'Thêm Món 2' })).toBeDisabled();
     expect(within(aside()).getByRole('button', { name: 'Bớt Món 2' })).toBeDisabled();
+  });
+
+  it('thứ tự Tab trong dòng: tên → stepper (− ô +) → nút Bỏ cuối cùng', () => {
+    show({ lines: [mk(2)] });
+    const li = within(aside()).getByText('Món 2').closest('li')!;
+    const stepper = within(li).getByRole('spinbutton', { name: 'Món 2' });
+    const remove = within(li).getByRole('button', { name: 'Bỏ Món 2' });
+    expect(stepper.compareDocumentPosition(remove) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(li).getByRole('button', { name: 'Thêm Món 2' }).compareDocumentPosition(remove) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('lỗi dòng gắn vào đúng dòng (aria-describedby, aria-invalid), dòng có data-line-key để focus', () => {

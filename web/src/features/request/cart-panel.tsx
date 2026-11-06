@@ -67,9 +67,6 @@ function CartRow({
       </div>
       {!line.readonly && (
         <>
-          <button type="button" className="rq-line-x" aria-label={t('request.cart.remove', { name })} onClick={onRemove}>
-            ×
-          </button>
           <Stepper
             className="rq-line-stepper"
             value={line.qty}
@@ -81,6 +78,9 @@ function CartRow({
             describedBy={error ? errorId : undefined}
             invalid={!!error}
           />
+          <button type="button" className="rq-line-x" aria-label={t('request.cart.remove', { name })} onClick={onRemove}>
+            ×
+          </button>
         </>
       )}
       {error && (
@@ -149,7 +149,7 @@ export function CartPanel({
           {prevMonth ? t('request.cart.emptyCopy', { month: prevMonth }) : t('request.cart.empty')}
         </p>
       ) : (
-        <ul className="rq-lines" data-scroll="y">
+        <ul className="rq-lines">
           {lines.map((l) => (
             <CartRow
               key={l.key}

@@ -353,8 +353,17 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       for (let i = 0; i < 2; i++) await grid.getByRole('button', { name: /^Thêm vào phiếu: / }).first().click();
       await expect(cart.getByText('3 món, 3 đơn vị')).toBeVisible();
       await expect(cart.getByText('Chưa lưu', { exact: true })).toBeVisible();
+      // R-C11: 3 dòng gọn một hàng → nút Lưu nằm trọn trong màn 1280×800 không cần cuộn, không dòng nào bị cắt
+      await expect(cart.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' })).toBeInViewport({ ratio: 1 });
+      const rows = cart.getByRole('listitem');
+      await expect(rows).toHaveCount(3);
+      expect(await cart.getByRole('list').evaluate((el) => el.scrollHeight <= el.clientHeight)).toBe(true);
+      // dòng món thường gọn ~56px (dòng ngoài danh mục có thêm nhãn nên cao hơn)
+      const plain = rows.filter({ hasNot: page.getByText('Ngoài danh mục') });
+      await expect(plain).toHaveCount(2);
+      for (let i = 0; i < 2; i++) expect((await plain.nth(i).boundingBox())!.height).toBeLessThan(72);
       await page.evaluate(() => document.fonts.ready);
-      await shotTo(page, info, 'three-lines', 'task-C5');
+      await shotTo(page, info, 'three-lines-desktop-1280', 'task-C5');
 
       await page.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' }).click();
       await shotTo(page, info, 'confirm', 'task-C5');
