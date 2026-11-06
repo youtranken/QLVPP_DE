@@ -1,14 +1,15 @@
 import type { Page } from '@playwright/test';
-import { psql } from './helpers';
+import { devHeaders, psql } from './helpers';
 
 // Kỳ quá khứ chỉ PW dùng: bản chốt và Hàng về của spec ghi vào kỳ này, không thay bản đã gửi của kỳ trước thật trên dev
 export const PRIVATE_YM = '2000-01';
 const PRIVATE_OPEN_YM = '2000-02';
 
-// Gửi ADM/Hàng về làm việc trên kỳ hiện hành − 1: giả kỳ hiện hành để trang mở đúng kỳ riêng, mọi API khác vẫn thật
+// Gửi ADM/Hàng về làm việc trên kỳ hiện hành − 1: giả kỳ hiện hành để trang mở đúng kỳ riêng, mọi API khác vẫn thật.
+// Route này thắng route của asRole nên tự gắn dev-identity Hành chính
 export async function openOnPrivatePeriod(page: Page) {
   await page.route('**/api/periods/current', async (route) => {
-    const res = await route.fetch();
+    const res = await route.fetch({ headers: { ...route.request().headers(), ...devHeaders('admin') } });
     const body = await res.json();
     await route.fulfill({ response: res, json: { ...body, ym: PRIVATE_OPEN_YM, previous: body.previous ? { ...body.previous, ym: PRIVATE_YM } : null } });
   });
