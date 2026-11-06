@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="archify 3.2.0">
   <meta name="archify-reader-contract" content="declared-wide-v1">
-  <title>VPP Công trình — giao một dòng (POST admin/lines/:id/deliver) Diagram</title>
+  <title>VPP — hộp giao và mọi đường giao/hủy (v2-D) Diagram</title>
   <script>
     // Resolve the theme before first paint so light-preference users don't
     // see a dark flash. The toolbar script below re-applies with UI state.
@@ -5193,17 +5193,17 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
            data-preset-badge-blueprint="BLUEPRINT / REV 01"
            data-preset-badge-editorial="EDITORIAL / FIELD NOTE">
         <div class="pulse-dot"></div>
-        <h1>VPP Công trình — giao một dòng (POST admin/lines/:id/deliver)</h1>
+        <h1>VPP — hộp giao và mọi đường giao/hủy (v2-D)</h1>
       </div>
     </div>
 
-    <script id="archify-source-evidence-data" type="application/json">{"schemaVersion":1,"verified":true,"repository":{"url":"https://github.com/youtranken/QLVPP_DE","revision":"e706b4e7539c5345bc55cf37dc40ea017107f628","shortRevision":"e706b4e","label":"youtranken/QLVPP_DE","linkMode":"local-only"},"referenceCount":9,"nodes":{"ui":[{"path":"web/src/features/delivery/deliver-line-row.tsx","line":31,"endLine":45,"label":"useSingleFlight"}],"svc":[{"path":"api/src/modules/delivery/delivery.service.ts","line":36,"endLine":55,"label":"deliverLine"},{"path":"api/src/modules/delivery/delivery.service.ts","line":58,"endLine":96,"label":"deliverWithin"},{"path":"api/src/modules/delivery/delivery.service.ts","line":121,"endLine":142,"label":"chuông + kỳ khóa"}],"store":[{"path":"api/src/modules/requests/line-delivery.store.ts","line":53,"endLine":66,"label":"lockLine"},{"path":"api/src/modules/requests/line-delivery.store.ts","line":85,"endLine":100,"label":"addDelivered"}],"stock":[{"path":"api/src/modules/catalog/stock.service.ts","line":124,"endLine":146,"label":"takeForDeliveryWithin"}],"notif":[{"path":"api/src/modules/notifications/notifications.service.ts","line":65,"endLine":89}],"db":[{"path":"api/src/modules/delivery/delivery.repo.ts","line":4,"endLine":20,"label":"INSERT line_deliveries"}]}}</script>
+    <script id="archify-source-evidence-data" type="application/json">{"schemaVersion":1,"verified":true,"repository":{"url":"https://github.com/youtranken/QLVPP_DE","revision":"e5d57874ceec1ebcd998227c71f05088c110d70c","shortRevision":"e5d5787","label":"youtranken/QLVPP_DE","linkMode":"local-only"},"referenceCount":15,"nodes":{"dlg":[{"path":"web/src/features/delivery/people/deliver-dialog.tsx","line":67,"endLine":100,"label":"DeliverDialog"},{"path":"web/src/features/delivery/people/deliver-plan.ts","line":109,"endLine":133,"label":"dialogRows"},{"path":"web/src/features/delivery/people/deliver-send.ts","line":27,"endLine":56,"label":"sendSteps"}],"back":[{"path":"web/src/features/delivery/backlog-page.tsx","line":80,"endLine":85},{"path":"web/src/features/delivery/deliver-more-dialog.tsx","line":24,"endLine":25}],"people":[{"path":"api/src/modules/delivery/delivery-people.service.ts","line":32,"endLine":60,"label":"holds"},{"path":"api/src/modules/delivery/delivery-people.service.ts","line":114,"endLine":135}],"dsvc":[{"path":"api/src/modules/delivery/delivery.service.ts","line":36,"endLine":70,"label":"deliverLine"},{"path":"api/src/modules/delivery/custom-cap.ts","line":12,"endLine":29,"label":"trần ngoài DM"}],"csvc":[{"path":"api/src/modules/delivery/cancel-remaining.service.ts","line":40,"endLine":95},{"path":"api/src/modules/delivery/cancel-remaining.service.ts","line":97,"endLine":140,"label":"chuông"}],"notif":[{"path":"api/src/modules/requests/line-notifier.ts","line":56,"endLine":61},{"path":"api/src/modules/notifications/notifications.service.ts","line":74,"endLine":100}],"db":[{"path":"api/src/migrations/0105_vpp_deliveries.sql","line":1,"endLine":23},{"path":"api/src/migrations/0117_custom_receipts.sql","line":1,"endLine":11}]}}</script>
     <script id="archify-i18n-data" type="application/json">{"locale":"en","messages":{"viewer.kind.frontend":"Frontend","viewer.kind.backend":"Backend","viewer.kind.database":"Database","viewer.kind.cloud":"Cloud","viewer.kind.security":"Security","viewer.kind.messagebus":"Message bus","viewer.kind.external":"External","viewer.kind.neutral":"Neutral","viewer.kind.node":"Node","viewer.kind.start":"Start","viewer.kind.active":"Active","viewer.kind.waiting":"Waiting","viewer.kind.decision":"Decision","viewer.kind.success":"Success","viewer.kind.failure":"Failure","viewer.toolbar.actions":"Diagram actions","viewer.theme.toggle.title":"Toggle theme (T)","viewer.theme.toggle":"Toggle color theme","viewer.theme.dark":"Dark","viewer.theme.light":"Light","viewer.preset.choose.title":"Choose visual style (S cycles)","viewer.preset.choose":"Choose visual style","viewer.preset.style":"Style","viewer.preset.menu":"Visual style","viewer.preset.identity":"Visual identity","viewer.preset.cycles":"to cycle","viewer.preset.classic":"Classic","viewer.preset.classic.short":"Classic","viewer.preset.classic.hint":"Stable technical default","viewer.preset.flow":"Signal Flow","viewer.preset.flow.short":"Flow","viewer.preset.flow.hint":"Motion-forward presentation","viewer.preset.blueprint":"Blueprint","viewer.preset.blueprint.hint":"Engineering review","viewer.preset.editorial":"Editorial","viewer.preset.editorial.hint":"Publication and launch notes","viewer.preset.badge.signalFlow":"SIGNAL FLOW","viewer.preset.badge.blueprint":"BLUEPRINT / REV 01","viewer.preset.badge.editorial":"EDITORIAL / FIELD NOTE","viewer.preset.badge.editorialPlate":"ARCHIFY / PLATE 04","viewer.preset.current":"Visual style: {style}. Choose visual style","viewer.motion.live":"Live","viewer.motion.still":"Still","viewer.motion.pause":"Pause motion","viewer.motion.resume":"Resume motion","viewer.motion.reduced":"Motion paused by reduced-motion preference","viewer.motion.hidden":"Motion paused while this page is hidden","viewer.motion.yielding":"Pause motion; currently yielding to {owner}","viewer.motion.yielding.title":"Live preview enabled · yielding to {owner}","viewer.owner.route":"Route Probe","viewer.owner.lens":"Semantic Lens","viewer.owner.relationship":"Relationship Preview","viewer.owner.intent":"Intent Trace","viewer.owner.focus":"semantic focus","viewer.owner.legend":"legend preview","viewer.owner.reader":"reader interaction","viewer.present.enter":"Enter presentation stage","viewer.present.enter.title":"Presentation stage (F)","viewer.present.exit":"Exit presentation stage","viewer.present.exit.title":"Exit presentation stage (F or Escape)","viewer.present.present":"Present","viewer.present.exit.label":"Exit","viewer.export.button":"Export","viewer.export.button.title":"Export diagram (E)","viewer.export.diagram":"Export diagram","viewer.export.menu":"Export","viewer.export.subtitle":"Portable, clean outputs","viewer.export.share":"Share","viewer.export.shareCard":"Share Card","viewer.export.routeShareCard":"Route Share Card","viewer.export.reachShareCard":"Reach Share Card","viewer.export.copyDiagram":"Copy diagram","viewer.export.clipboardPng":"PNG to clipboard","viewer.export.raster":"Raster images","viewer.export.image":"Image","viewer.export.lossless":"Lossless image","viewer.export.compact":"Compact image","viewer.export.modern":"Modern image","viewer.export.vectorMotion":"Vector and motion","viewer.export.vectorMotion.heading":"Vector \u0026 motion","viewer.export.editable":"Editable vector","viewer.export.svg.auto":"SVG · Auto","viewer.export.svg.auto.hint":"Matches host theme","viewer.export.svg.light":"SVG · Light","viewer.export.svg.light.hint":"Always light","viewer.export.svg.dark":"SVG · Dark","viewer.export.svg.dark.hint":"Always dark","viewer.export.motion6s":"6s motion","viewer.export.unsupported":"Not supported by this browser","viewer.export.clipboardUnsupported":"Clipboard image write not supported by this browser","viewer.export.clipboardUnsupported.short":"Clipboard image write not supported in this browser.","viewer.export.motionUnavailable":"Motion capture unavailable in this browser","viewer.export.webmUnavailable":"WebM unavailable in this browser","viewer.export.failed":"Export failed: {message}","viewer.export.unknownVariant":"Unknown Share Card variant: {variant}","viewer.export.routeRequired":"Trace a route before exporting a Route Share Card","viewer.export.reachRequired":"Trace authored reach before exporting a Reach Share Card","viewer.export.unknown":"unknown","viewer.export.routeFailed":"Route Share Card export failed: {message}","viewer.export.reachFailed":"Reach Share Card export failed: {message}","viewer.export.copyFailed":"Copy failed: {message}","viewer.export.copiedPng":"Copied PNG to clipboard","viewer.export.downloadedRoute":"Downloaded Route Share Card","viewer.export.downloadedReach":"Downloaded Reach Share Card","viewer.export.downloadedWebm":"Downloaded WebM","viewer.export.recording":"Recording 6 seconds of motion…","viewer.export.card.routeSummary.one":"Path: {source} → {target} · {count} step","viewer.export.card.routeSummary.other":"Path: {source} → {target} · {count} steps","viewer.export.card.reachSummary":"Authored {direction} from {origin} · {nodes} · {links} · max {hops}","viewer.export.card.node.one":"{count} node","viewer.export.card.node.other":"{count} nodes","viewer.export.card.link.one":"{count} link","viewer.export.card.link.other":"{count} links","viewer.export.card.hop.one":"{count} hop","viewer.export.card.hop.other":"{count} hops","viewer.export.card.routeBadge":"ARCHIFY · ROUTE · {hops}","viewer.export.card.reachBadge":"ARCHIFY · {direction} REACH","viewer.export.direction.upstream":"Upstream","viewer.export.direction.downstream":"Downstream","viewer.export.error.canvasUnavailable":"Canvas unavailable for {label}","viewer.export.error.contextUnavailable":"2D canvas context unavailable for {label}","viewer.export.error.toBlobUnavailable":"canvas.toBlob unavailable for {label}","viewer.export.error.toBlobNull":"canvas.toBlob returned no data for {label}","viewer.export.error.variantsCombined":"Share Card variants cannot be combined","viewer.export.error.viewerState":"Share Card export could not remove temporary viewer state","viewer.export.error.routeState":"Route Card export could not preserve the resolved route safely","viewer.export.error.reachState":"Reach Card export could not preserve authored reach safely","viewer.export.error.webmRequirements":"WebM motion export requires a trace animation and browser MediaRecorder support","viewer.export.error.mediaRecorder":"MediaRecorder failed","viewer.export.error.emptyWebm":"MediaRecorder produced an empty WebM","viewer.export.error.webmBackground":"SVG background could not be loaded for WebM export","viewer.guide.title":"Explore this system","viewer.focus.selectedNodes":"{count} selected nodes","viewer.guide.eyebrow":"Diagram guide","viewer.guide.close":"Close diagram guide","viewer.guide.inspecting":"Inspecting compiled semantics","viewer.guide.actions":"Diagram exploration actions","viewer.guide.find":"Find any node","viewer.guide.find.hint":"Search labels, responsibilities, kinds, and stable IDs.","viewer.guide.route":"Trace a route","viewer.guide.route.aria":"Trace a directed route","viewer.guide.route.hint":"Ask how two semantic nodes connect in authored direction.","viewer.guide.map":"See the whole system","viewer.guide.map.hint":"Open Semantic Radar with a live viewport and stable nodes.","viewer.guide.lens":"Compare semantic kinds","viewer.guide.lens.hint":"Count roles, reveal their traffic, and compare direct authored links.","viewer.guide.present":"Enter Presentation Stage","viewer.guide.present.hint":"Give the live diagram the viewport without changing export.","viewer.guide.shortcuts":"Additional keyboard shortcuts","viewer.guide.shortcut.export":"Export","viewer.guide.shortcut.theme":"Theme","viewer.guide.shortcut.style":"Style","viewer.guide.shortcut.reset":"Reset","viewer.guide.shortcut.zoomIn":"Zoom in","viewer.guide.shortcut.zoomOut":"Zoom out","viewer.guide.shortcut.close":"Close","viewer.guide.credit":"Find Archify useful? A star on GitHub helps","viewer.guide.star":"Star","viewer.guide.facts":"{nodes} · {relationships}","viewer.guide.fact.node.one":"{count} semantic node","viewer.guide.fact.node.other":"{count} semantic nodes","viewer.guide.fact.relationship.one":"{count} relationship","viewer.guide.fact.relationship.other":"{count} relationships","viewer.guide.open":"Open diagram guide","viewer.finder.title":"Find a node","viewer.finder.close":"Close node finder","viewer.finder.placeholder":"Search labels or IDs","viewer.finder.search":"Search diagram nodes","viewer.finder.results":"Diagram nodes","viewer.finder.empty":"No matching nodes","viewer.finder.result.focus":"Focus {label}","viewer.finder.result.routeStart":"Choose {label} as route start","viewer.finder.result.routeTarget":"Choose {label} as route destination, {links}","viewer.finder.status.empty":"No matching nodes","viewer.finder.status.count.one":"{count} matching node","viewer.finder.status.count.other":"{count} matching nodes","viewer.finder.noun.nodes":"nodes","viewer.finder.link.one":"{count} link","viewer.finder.link.other":"{count} links","viewer.finder.result.focus.one":"Focus {label}, {count} related connection","viewer.finder.result.focus.other":"Focus {label}, {count} related connections","viewer.finder.status.filtered":"{visible} of {available} {noun}","viewer.finder.status.all":"{available} {noun}","viewer.passport.eyebrow":"Semantic passport","viewer.passport.metadata":"Node metadata","viewer.passport.evidence":"Verified source evidence","viewer.passport.verified":"Verified source","viewer.passport.verificationScope":"Verified against local Git at the pinned revision. Remote access has not been checked.","viewer.passport.reach":"Authored reach","viewer.passport.reach.trace":"Trace authored reachability","viewer.passport.upstream":"Upstream","viewer.passport.downstream":"Downstream","viewer.passport.upstream.trace":"Trace upstream authored reachability","viewer.passport.downstream.trace":"Trace downstream authored reachability","viewer.passport.close":"Close semantic passport","viewer.passport.move":"Move semantic passport. Drag, use arrow keys, or press Home to reset.","viewer.passport.copy":"Copy link","viewer.passport.copy.focus":"Copy link to focused node","viewer.passport.relations":"Relations","viewer.passport.relations.show":"Show connected relationships","viewer.passport.relations.hide":"Hide connected relationships","viewer.passport.relations.list":"Connected relationships","viewer.passport.copyRelation":"Copy relation","viewer.passport.copyNode":"Copy node","viewer.passport.copyPinned":"Copy link to pinned relationship","viewer.passport.copySource":"Copy link to source node","viewer.passport.copy.focused.success":"Focused node link copied","viewer.passport.copy.pinned.success":"Pinned relationship link copied","viewer.passport.copy.focused.failed":"Could not copy focused node link","viewer.passport.copy.pinned.failed":"Could not copy pinned relationship link","viewer.passport.relationship.none":"No connected relationships","viewer.passport.relationship.count.one":"{count} relation","viewer.passport.relationship.count.other":"{count} relations","viewer.passport.relationship.show.one":"Show {count} connected relationship","viewer.passport.relationship.show.other":"Show {count} connected relationships","viewer.passport.relationship.summary":"{out} outgoing · {in} incoming{loops}","viewer.passport.relationship.loops":" · {count} loop","viewer.passport.relationship.explorer":"Direct relationship explorer","viewer.passport.relationship.help":"Use arrow keys to explore relationships. Press Enter or Space to pin details; Escape clears.","viewer.passport.relationship.loopsBack":"loops back","viewer.passport.relationship.connectsTo":"connects to","viewer.passport.relationship.connectsFrom":"connects from","viewer.passport.relationship.pinned":"Pinned relationship · {from} → {to} · {label}","viewer.passport.relationship.inspect":"Inspect relationship {index} of {total}: {from} to {to}, {label}. Press Enter for details.","viewer.passport.relationship.group.out":"Outgoing","viewer.passport.relationship.group.in":"Incoming","viewer.passport.relationship.group.loop":"Self loops","viewer.passport.relationship.row":"{group}: {relationship}, {neighbor}","viewer.passport.relationship.direction.out":"OUT →","viewer.passport.relationship.direction.in":"← IN","viewer.passport.relationship.direction.loop":"LOOP","viewer.passport.sourceCount.one":"{count} verified source reference","viewer.passport.sourceCount.other":"{count} verified source references","viewer.passport.repository.open":"Open verified repository revision {revision}","viewer.passport.source.open":"Open verified source {path} at revision {revision}","viewer.passport.source.openLink":"Open ↗","viewer.passport.reach.upstream.one":"Trace {count} upstream authored node","viewer.passport.reach.upstream.other":"Trace {count} upstream authored nodes","viewer.passport.reach.downstream.one":"Trace {count} downstream authored node","viewer.passport.reach.downstream.other":"Trace {count} downstream authored nodes","viewer.passport.reach.noUpstream":"No upstream authored nodes","viewer.passport.reach.noDownstream":"No downstream authored nodes","viewer.passport.reach.status":"{direction} · {nodes} nodes · {links} links · max {hops} hops","viewer.route.eyebrow":"Path","viewer.route.start":"Click where the path starts","viewer.route.start.find":"Find start","viewer.route.start.find.aria":"Find a route start","viewer.route.copy":"Copy link","viewer.route.copy.aria":"Copy link to traced route","viewer.route.clear":"Clear","viewer.route.clear.aria":"Clear route probe","viewer.route.traced":"Path","viewer.route.pickTwo":"Click two nodes on the diagram","viewer.route.pickOne":"Click a node on the diagram","viewer.route.controls":"Route journey controls","viewer.route.previous":"Previous route position","viewer.route.play":"Play route journey","viewer.route.pause":"Pause route journey","viewer.route.replay":"Replay route journey","viewer.route.next":"Next route position","viewer.route.journey":"Journey","viewer.route.pause.label":"Pause","viewer.route.replay.label":"Replay","viewer.route.overview":"Overview","viewer.route.overview.aria":"Show complete route overview","viewer.route.instructions":"Click a start, then an end. Paths follow the arrows.","viewer.route.destination":"Where does the path from {label} end?","viewer.route.destination.find":"Find target","viewer.route.destination.find.aria":"Find a reachable route destination","viewer.route.differentDestination":"Choose a different destination","viewer.route.distinct":"Pick two different nodes.","viewer.route.unreachable":"Cannot reach {label} from here","viewer.route.unreachable.detail":"{target} cannot be reached from {source} along the arrows. Pick a highlighted node.","viewer.route.start.instructions":"Next, pick the end. Only nodes you can reach will light up.","viewer.route.copy.success":"Traced route link copied","viewer.route.copy.failed":"Could not copy traced route link","viewer.route.position":"Route position {index} of {total}: {label}","viewer.route.step":"Step {index} of {total} · {phase} · {label}","viewer.route.motionRequired":"Automatic journey requires Live motion","viewer.route.trigger.clear":"Clear traced route","viewer.route.overview.status":"{nodes} · {hops} · shortest path","viewer.route.overview.node.one":"{count} node","viewer.route.overview.node.other":"{count} nodes","viewer.route.overview.hop.one":"{count} step","viewer.route.overview.hop.other":"{count} steps","viewer.route.phase.playing":"Playing","viewer.route.phase.complete":"Complete","viewer.route.phase.inspecting":"Inspecting","viewer.route.destination.count.one":"{count} reachable node is highlighted. Click it.","viewer.route.destination.count.other":"{count} reachable nodes are highlighted. Click one.","viewer.route.noOutgoing":"No arrows lead out of this node. Clear it and pick another start.","viewer.route.result.title":"{source} to {target}","viewer.route.finder.source.title":"Choose route start","viewer.route.finder.source.placeholder":"Search route sources","viewer.route.finder.source.empty":"No matching route sources","viewer.route.finder.source.results":"Nodes that can start a route","viewer.route.finder.source.noun":"route sources","viewer.route.finder.source.badge":"start","viewer.route.finder.target.title":"Destination from {label}","viewer.route.finder.target.placeholder":"Search reachable destinations","viewer.route.finder.target.empty":"No matching reachable destinations","viewer.route.finder.target.results":"Reachable route destinations","viewer.route.finder.target.noun":"reachable destinations","viewer.route.hop.one":"{count} hop","viewer.route.hop.other":"{count} hops","viewer.lens.eyebrow":"Semantic lens","viewer.lens.title":"Compare system roles","viewer.lens.close":"Close semantic lens","viewer.lens.instruction":"Choose up to two semantic kinds. One reveals its real traffic; two compare only direct authored relationships.","viewer.lens.kinds":"Semantic kinds","viewer.lens.choose":"Choose a kind to inspect its nodes and touching relationships.","viewer.lens.copy":"Copy link to semantic lens","viewer.lens.clear":"Clear semantic lens","viewer.lens.open":"Open semantic lens","viewer.lens.openActive":"Open active semantic lens","viewer.lens.legend":"Semantic legend","viewer.lens.legend.inspect.one":"Inspect {label}, {count} node","viewer.lens.legend.inspect.other":"Inspect {label}, {count} nodes","viewer.lens.kind.count.one":"{label}, {count} node","viewer.lens.kind.count.other":"{label}, {count} nodes","viewer.lens.compare.one":"{first} → {second}: {forward} · {second} → {first}: {reverse} · {count} direct relationship","viewer.lens.compare.other":"{first} → {second}: {forward} · {second} → {first}: {reverse} · {count} direct relationships","viewer.lens.single":"{nodes} · {relationships} · connected peers remain visible","viewer.lens.node.one":"{count} {label} node","viewer.lens.node.other":"{count} {label} nodes","viewer.lens.relationship.one":"{count} touching relationship","viewer.lens.relationship.other":"{count} touching relationships","viewer.radar.title":"Semantic radar","viewer.radar.building":"Building overview","viewer.radar.openFull":"Open full semantic radar","viewer.radar.open":"Open radar","viewer.radar.close":"Close semantic radar","viewer.radar.surface":"Diagram overview. Click a node to focus it, or use arrow keys to pan.","viewer.radar.click":"Click node","viewer.radar.drag":"Drag to pan","viewer.radar.space":"Semantic radar needs more MAP space.","viewer.radar.nodes":"Semantic diagram radar nodes","viewer.radar.focus":"Focus {label} from Semantic Radar","viewer.radar.status":"{count} nodes · {viewport}","viewer.radar.fullMap":"{count} nodes · full map","viewer.radar.compacted":"Radar compacted to avoid covering the Semantic Passport or MAP controls.","viewer.radar.cancelWaiting":"Cancel semantic radar waiting for more MAP space","viewer.radar.needsSpace":"Semantic radar needs more visible MAP space","viewer.radar.viewport.full":"full map","viewer.radar.viewport.width":"{percent}% width","viewer.radar.viewport.scale":"{percent}% viewport","viewer.nav.controls":"Diagram view controls","viewer.nav.route":"Trace a directed route","viewer.nav.route.title":"Trace route (R)","viewer.nav.route.short":"ROUTE","viewer.nav.radar":"Open semantic radar","viewer.nav.radar.title":"Semantic radar (M)","viewer.nav.radar.short":"MAP","viewer.nav.lens":"Open semantic lens","viewer.nav.lens.title":"Semantic lens (L)","viewer.nav.lens.short":"LENS","viewer.nav.find":"Find a node","viewer.nav.find.title":"Find a node (/)","viewer.outline.title":"Node index","viewer.rail.show":"Notes \u0026 index","viewer.rail.controls":"Side panel","viewer.rail.collapse":"Collapse side panel","viewer.rail.bottom":"Move panel below the diagram","viewer.rail.right":"Move panel beside the diagram","viewer.nav.guide":"Open diagram guide","viewer.nav.guide.title":"Diagram guide (?)","viewer.nav.zoomOut":"Zoom out","viewer.nav.zoomOut.title":"Zoom out (-)","viewer.nav.reset":"Reset diagram view","viewer.nav.reset.title":"Reset view (0)","viewer.nav.read":"READ","viewer.nav.zoomIn":"Zoom in","viewer.nav.zoomIn.title":"Zoom in (+)","viewer.nav.camera":"{hint}. Reset diagram view","viewer.nav.camera.title":"{semantic}{hint} · reset view (0)","viewer.nav.camera.semantic":"Semantic camera active · ","viewer.nav.level.map":"MAP","viewer.nav.level.read":"READ","viewer.nav.level.full":"FULL","viewer.nav.level.auto":"AUTO","viewer.nav.detail.map":"Zoom in to reveal relationship labels and node context","viewer.nav.detail.read":"Zoom in again to reveal tags and annotations","viewer.nav.detail.full":"Full diagram detail","viewer.intent.summary":"{label}. {out} outgoing, {in} incoming{loops}. {total} connections. Press Enter for details.","viewer.intent.loops":", {count} self loop","viewer.common.copied":"Copied","viewer.common.copyFailed":"Copy failed","viewer.common.copyLink":"Copy link","viewer.common.clear":"Clear","viewer.common.close":"Close"}}</script>
     <!-- Main Diagram -->
     <div class="diagram-container" data-detail-level="read"
          data-preset-badge-editorial-plate="ARCHIFY / PLATE 04">
-      <svg viewBox="0 0 1054 848" data-sequence-column-fit="spread" data-reader-fit="width-first" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase" data-motion-choreography="sequence">
-        <title id="archify-diagram-title">VPP Công trình — giao một dòng (POST admin/lines/:id/deliver)</title>
+      <svg viewBox="0 0 1002 1133" data-sequence-column-fit="spread" data-reader-fit="width-first" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase" data-motion-choreography="sequence">
+        <title id="archify-diagram-title">VPP — hộp giao và mọi đường giao/hủy (v2-D)</title>
         <desc id="archify-diagram-description">A sequence diagram generated by Archify.</desc>
         <!-- Definitions -->
         <defs>
@@ -5228,260 +5228,298 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <rect width="100%" height="100%" fill="url(#grid)" />
 
         <!-- Time Segments -->
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="segment" data-composition-frame-id="0" x="48" y="150" width="958" height="50" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="segment" data-composition-frame-id="0" x="48" y="165" width="906" height="120" rx="10" class="c-lane" stroke-width="1"/>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="segment" data-composition-frame-id="1" x="48" y="202" width="958" height="208" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="segment" data-composition-frame-id="1" x="48" y="305" width="906" height="290" rx="10" class="c-lane" stroke-width="1"/>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="segment" data-composition-frame-id="2" x="48" y="412" width="958" height="174" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="segment" data-composition-frame-id="2" x="48" y="615" width="906" height="200" rx="10" class="c-lane" stroke-width="1"/>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="segment" data-composition-frame-id="3" x="48" y="588" width="958" height="162" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="segment" data-composition-frame-id="3" x="48" y="835" width="906" height="200" rx="10" class="c-lane" stroke-width="1"/>
 
         <!-- Lifelines -->
-        <path d="M 127.5 142 L 127.5 752" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
-        <path d="M 291.7 142 L 291.7 752" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
-        <path d="M 455.9 142 L 455.9 752" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
-        <path d="M 620.0999999999999 142 L 620.0999999999999 752" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
-        <path d="M 784.3 142 L 784.3 752" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
-        <path d="M 948.5 142 L 948.5 752" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
+        <path d="M 112.5 142 L 112.5 1037" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
+        <path d="M 245.66666666666666 142 L 245.66666666666666 1037" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
+        <path d="M 378.8333333333333 142 L 378.8333333333333 1037" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
+        <path d="M 512 142 L 512 1037" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
+        <path d="M 645.1666666666666 142 L 645.1666666666666 1037" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
+        <path d="M 778.3333333333333 142 L 778.3333333333333 1037" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
+        <path d="M 911.5 142 L 911.5 1037" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
 
         <!-- Activations -->
-        <rect x="122.5" y="160" width="10" height="582" rx="3" class="c-mask"/>
-        <rect x="122.5" y="160" width="10" height="582" rx="3" class="c-frontend" stroke-width="1"/>
-        <rect x="286.7" y="165" width="10" height="573" rx="3" class="c-mask"/>
-        <rect x="286.7" y="165" width="10" height="573" rx="3" class="c-backend" stroke-width="1"/>
-        <rect x="450.9" y="215" width="10" height="107" rx="3" class="c-mask"/>
-        <rect x="450.9" y="215" width="10" height="107" rx="3" class="c-backend" stroke-width="1"/>
-        <rect x="615.0999999999999" y="426" width="10" height="62" rx="3" class="c-mask"/>
-        <rect x="615.0999999999999" y="426" width="10" height="62" rx="3" class="c-backend" stroke-width="1"/>
-        <rect x="450.9" y="536" width="10" height="34" rx="3" class="c-mask"/>
-        <rect x="450.9" y="536" width="10" height="34" rx="3" class="c-backend" stroke-width="1"/>
-        <rect x="779.3" y="632" width="10" height="54" rx="3" class="c-mask"/>
-        <rect x="779.3" y="632" width="10" height="54" rx="3" class="c-backend" stroke-width="1"/>
+        <rect x="107.5" y="180" width="10" height="620" rx="3" class="c-mask"/>
+        <rect x="107.5" y="180" width="10" height="620" rx="3" class="c-frontend" stroke-width="1"/>
+        <rect x="507" y="330" width="10" height="250" rx="3" class="c-mask"/>
+        <rect x="507" y="330" width="10" height="250" rx="3" class="c-backend" stroke-width="1"/>
+        <rect x="640.1666666666666" y="640" width="10" height="160" rx="3" class="c-mask"/>
+        <rect x="640.1666666666666" y="640" width="10" height="160" rx="3" class="c-backend" stroke-width="1"/>
+        <rect x="240.66666666666666" y="855" width="10" height="165" rx="3" class="c-mask"/>
+        <rect x="240.66666666666666" y="855" width="10" height="165" rx="3" class="c-frontend" stroke-width="1"/>
+        <rect x="640.1666666666666" y="920" width="10" height="100" rx="3" class="c-mask"/>
+        <rect x="640.1666666666666" y="920" width="10" height="100" rx="3" class="c-backend" stroke-width="1"/>
 
         <!-- Messages -->
-        <g data-edge-from="ui" data-edge-to="svc" data-edge-label="deliver {qty, expected_delivered_qty}" data-edge-key="0" data-edge-id="post">
-          <path data-composition-edge-from="ui" data-composition-edge-to="svc" data-composition-edge-id="post" data-composition-points="134.5,165;284.7,165" d="M 134.5 165 L 284.7 165" class="a-emphasis" data-animate="edge" style="--step:0" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <g data-edge-from="dlg" data-edge-to="people" data-edge-label="GET periods/:ym/delivery-people" data-edge-key="0" data-edge-id="m1">
+          <path data-composition-edge-from="dlg" data-composition-edge-to="people" data-composition-edge-id="m1" data-composition-points="119.5,185;371.8333333333333,185" d="M 119.5 185 L 371.8333333333333 185" class="a-default" data-animate="edge" style="--step:0" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <g data-detail="context">
-          <rect x="81.5" y="145" width="256.2" height="18" rx="3" class="c-mask"/>
-          <text x="209.6" y="155" class="t-edge-emphasis" font-size="11" text-anchor="middle">deliver {qty, expected_delivered_qty}</text>
+          <rect x="137.36666666666667" y="165" width="216.6" height="18" rx="3" class="c-mask"/>
+          <text x="245.66666666666669" y="175" class="t-muted" font-size="11" text-anchor="middle">GET periods/:ym/delivery-people</text>
         </g>
-        <rect data-detail="context" data-graph-role="message-note-background" x="144.5" y="172.6" width="121.6" height="27.400000000000006" rx="2" class="c-mask" pointer-events="none"/>
-        <text data-detail="context" x="146.5" y="183" class="t-muted" font-size="7"><tspan x="146.5" dy="0">useSingleFlight: bấm đúp chỉ</tspan><tspan x="146.5" dy="11">gửi một request</tspan></text>
+        <text data-detail="context" x="131.5" y="203" class="t-muted" font-size="7"><tspan x="131.5" dy="0">dòng kỳ K* + nợ;</tspan><tspan x="131.5" dy="11">adm_out; deliver_cap</tspan></text>
         </g>
 
-        <g data-edge-from="svc" data-edge-to="store" data-edge-label="lockLine(tx)" data-edge-key="1" data-edge-id="lock">
-          <path data-composition-edge-from="svc" data-composition-edge-to="store" data-composition-edge-id="lock" data-composition-points="298.7,215;448.9,215" d="M 298.7 215 L 448.9 215" class="a-default" data-animate="edge" style="--step:1" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <g data-edge-from="people" data-edge-to="dlg" data-edge-label="{people}" data-edge-key="1" data-edge-id="m2">
+          <path data-composition-edge-from="people" data-composition-edge-to="dlg" data-composition-edge-id="m2" data-composition-points="371.8333333333333,245;119.5,245" d="M 371.8333333333333 245 L 119.5 245" class="a-default" data-animate="edge" style="--step:1" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
         <g data-detail="context">
-          <rect x="328.19999999999993" y="195" width="91.19999999999999" height="18" rx="3" class="c-mask"/>
-          <text x="373.79999999999995" y="205" class="t-muted" font-size="11" text-anchor="middle">lockLine(tx)</text>
+          <rect x="213.26666666666665" y="225" width="64.8" height="18" rx="3" class="c-mask"/>
+          <text x="245.66666666666666" y="235" class="t-muted" font-size="11" text-anchor="middle">{people}</text>
         </g>
-        <text data-detail="context" x="310.7" y="233" class="t-muted" font-size="7"><tspan x="310.7" dy="0">now = ClockService.now() đọc</tspan><tspan x="310.7" dy="11">một lần; BEGIN</tspan></text>
+        <text data-detail="context" x="131.5" y="263" class="t-muted" font-size="7"><tspan x="131.5" dy="0">đề xuất: đăng ký trước</tspan><tspan x="131.5" dy="11">giữ trước; người nghỉ 0</tspan></text>
         </g>
 
-        <g data-edge-from="store" data-edge-to="db" data-edge-label="SELECT … FOR UPDATE OF r" data-edge-key="2" data-edge-id="lock-r">
-          <path data-composition-edge-from="store" data-composition-edge-to="db" data-composition-edge-id="lock-r" data-composition-points="462.9,262;941.5,262" d="M 462.9 262 L 941.5 262" class="a-security" data-animate="edge" style="--step:2" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <g data-edge-from="dlg" data-edge-to="dsvc" data-edge-label="POST lines/:id/deliver {qty, expected}" data-edge-key="2" data-edge-id="m3">
+          <path data-composition-edge-from="dlg" data-composition-edge-to="dsvc" data-composition-edge-id="m3" data-composition-points="119.5,330;505,330" d="M 119.5 330 L 505 330" class="a-emphasis" data-animate="edge" style="--step:2" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <g data-detail="context">
-          <rect x="617" y="242" width="170.39999999999998" height="18" rx="3" class="c-mask"/>
-          <text x="702.2" y="252" class="t-edge-security" font-size="11" text-anchor="middle">SELECT … FOR UPDATE OF r</text>
+          <rect x="180.85000000000002" y="310" width="262.79999999999995" height="18" rx="3" class="c-mask"/>
+          <text x="312.25" y="320" class="t-edge-emphasis" font-size="11" text-anchor="middle">POST lines/:id/deliver {qty, expected}</text>
         </g>
+        <text data-detail="context" x="131.5" y="348" class="t-muted" font-size="7"><tspan x="131.5" dy="0">tuần tự; lỗi một dòng</tspan><tspan x="131.5" dy="11">không chặn dòng sau</tspan></text>
         </g>
 
-        <g data-edge-from="store" data-edge-to="db" data-edge-label="SELECT … FOR UPDATE OF l" data-edge-key="3" data-edge-id="lock-l">
-          <path data-composition-edge-from="store" data-composition-edge-to="db" data-composition-edge-id="lock-l" data-composition-points="462.9,290;941.5,290" d="M 462.9 290 L 941.5 290" class="a-security" data-animate="edge" style="--step:3" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <g data-edge-from="dsvc" data-edge-to="db" data-edge-label="FOR UPDATE requests → request_lines" data-edge-key="3" data-edge-id="m4">
+          <path data-composition-edge-from="dsvc" data-composition-edge-to="db" data-composition-edge-id="m4" data-composition-points="519,385;904.5,385" d="M 519 385 L 904.5 385" class="a-security" data-animate="edge" style="--step:3" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
         <g data-detail="context">
-          <rect x="617" y="270" width="170.39999999999998" height="18" rx="3" class="c-mask"/>
-          <text x="702.2" y="280" class="t-edge-security" font-size="11" text-anchor="middle">SELECT … FOR UPDATE OF l</text>
-        </g>
-        </g>
-
-        <g data-edge-from="store" data-edge-to="svc" data-edge-label="LockedLine" data-edge-key="4" data-edge-id="locked">
-          <path data-composition-edge-from="store" data-composition-edge-to="svc" data-composition-edge-id="locked" data-composition-points="448.9,318;298.7,318" d="M 448.9 318 L 298.7 318" class="a-default" data-animate="edge" style="--step:4" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
-        <g data-detail="context">
-          <rect x="334.79999999999995" y="298" width="78" height="18" rx="3" class="c-mask"/>
-          <text x="373.79999999999995" y="308" class="t-muted" font-size="11" text-anchor="middle">LockedLine</text>
-        </g>
-        <text data-detail="context" x="310.7" y="336" class="t-muted" font-size="7"><tspan x="310.7" dy="0">now &lt; deadline → 409</tspan><tspan x="310.7" dy="11">PERIOD_NOT_LOCKED;</tspan><tspan x="310.7" dy="11">pending/rejected →</tspan><tspan x="310.7" dy="11">LINE_NOT_REVIEWED/LINE_</tspan><tspan x="310.7" dy="11">REJECTED; delivered ≠ expected</tspan><tspan x="310.7" dy="11">→ 409 STALE_UPDATE</tspan></text>
-        </g>
-
-        <g data-edge-from="svc" data-edge-to="stock" data-edge-label="takeForDeliveryWithin" data-edge-key="5" data-edge-id="take">
-          <path data-composition-edge-from="svc" data-composition-edge-to="stock" data-composition-edge-id="take" data-composition-points="298.7,426;613.0999999999999,426" d="M 298.7 426 L 613.0999999999999 426" class="a-default" data-animate="edge" style="--step:5" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <g data-detail="context">
-          <rect x="380.59999999999997" y="406" width="150.6" height="18" rx="3" class="c-mask"/>
-          <text x="455.9" y="416" class="t-muted" font-size="11" text-anchor="middle">takeForDeliveryWithin</text>
-        </g>
-        <text data-detail="context" x="310.7" y="444" class="t-muted" font-size="7"><tspan x="310.7" dy="0">qty &gt; còn lại → 400</tspan><tspan x="310.7" dy="11">DELIVER_EXCEEDS_QTY; dòng ngoài</tspan><tspan x="310.7" dy="11">DM bỏ qua bước này</tspan></text>
-        </g>
-
-        <g data-edge-from="stock" data-edge-to="db" data-edge-label="UPDATE items … WHERE stock_qty &gt;= q" data-edge-key="6" data-edge-id="take-sql">
-          <path data-composition-edge-from="stock" data-composition-edge-to="db" data-composition-edge-id="take-sql" data-composition-points="627.0999999999999,482;941.5,482" d="M 627.0999999999999 482 L 941.5 482" class="a-emphasis" data-animate="edge" style="--step:6" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <g data-detail="context">
-          <rect x="662.8" y="462" width="243" height="18" rx="3" class="c-mask"/>
-          <text x="784.3" y="472" class="t-edge-emphasis" font-size="11" text-anchor="middle">UPDATE items … WHERE stock_qty &gt;= q</text>
-        </g>
-        <text data-detail="context" x="639.0999999999999" y="500" class="t-muted" font-size="7"><tspan x="639.0999999999999" dy="0">0 dòng → 409 STOCK_INSUFFICIENT</tspan><tspan x="639.0999999999999" dy="11">{available}; có → INSERT</tspan><tspan x="639.0999999999999" dy="11">stock_movements −q</tspan></text>
-        </g>
-
-        <g data-edge-from="svc" data-edge-to="store" data-edge-label="addDelivered" data-edge-key="7" data-edge-id="add">
-          <path data-composition-edge-from="svc" data-composition-edge-to="store" data-composition-edge-id="add" data-composition-points="298.7,536;448.9,536" d="M 298.7 536 L 448.9 536" class="a-default" data-animate="edge" style="--step:7" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <g data-detail="context">
-          <rect x="328.19999999999993" y="516" width="91.19999999999999" height="18" rx="3" class="c-mask"/>
-          <text x="373.79999999999995" y="526" class="t-muted" font-size="11" text-anchor="middle">addDelivered</text>
+          <rect x="590.25" y="365" width="243" height="18" rx="3" class="c-mask"/>
+          <text x="711.75" y="375" class="t-edge-security" font-size="11" text-anchor="middle">FOR UPDATE requests → request_lines</text>
         </g>
         </g>
 
-        <g data-edge-from="store" data-edge-to="db" data-edge-label="UPDATE request_lines WHERE delivered_qty = expected" data-edge-key="8" data-edge-id="add-sql">
-          <path data-composition-edge-from="store" data-composition-edge-to="db" data-composition-edge-id="add-sql" data-composition-points="462.9,564;941.5,564" d="M 462.9 564 L 941.5 564" class="a-emphasis" data-animate="edge" style="--step:8" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <g data-edge-from="dsvc" data-edge-to="db" data-edge-label="ngoài DM: Σ đã về − Σ đã giao" data-edge-key="4" data-edge-id="m5">
+          <path data-composition-edge-from="dsvc" data-composition-edge-to="db" data-composition-edge-id="m5" data-composition-points="519,420;904.5,420" d="M 519 420 L 904.5 420" class="a-security" data-animate="edge" style="--step:4" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
         <g data-detail="context">
-          <rect x="527.9000000000001" y="544" width="348.59999999999997" height="18" rx="3" class="c-mask"/>
-          <text x="702.2" y="554" class="t-edge-emphasis" font-size="11" text-anchor="middle">UPDATE request_lines WHERE delivered_qty = expected</text>
+          <rect x="610.05" y="400" width="203.39999999999998" height="18" rx="3" class="c-mask"/>
+          <text x="711.75" y="410" class="t-edge-security" font-size="11" text-anchor="middle">ngoài DM: Σ đã về − Σ đã giao</text>
+        </g>
+        <text data-detail="context" x="531" y="438" class="t-muted" font-size="7"><tspan x="531" dy="0">vượt → 409</tspan><tspan x="531" dy="11">CUSTOM_NOT_RECEIVED</tspan></text>
+        </g>
+
+        <g data-edge-from="dsvc" data-edge-to="db" data-edge-label="UPDATE items WHERE stock_qty &gt;= q" data-edge-key="5" data-edge-id="m6">
+          <path data-composition-edge-from="dsvc" data-composition-edge-to="db" data-composition-edge-id="m6" data-composition-points="519,480;904.5,480" d="M 519 480 L 904.5 480" class="a-emphasis" data-animate="edge" style="--step:5" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <g data-detail="context">
+          <rect x="596.85" y="460" width="229.79999999999998" height="18" rx="3" class="c-mask"/>
+          <text x="711.75" y="470" class="t-edge-emphasis" font-size="11" text-anchor="middle">UPDATE items WHERE stock_qty &gt;= q</text>
+        </g>
+        <text data-detail="context" x="531" y="498" class="t-muted" font-size="7"><tspan x="531" dy="0">0 dòng → 409</tspan><tspan x="531" dy="11">STOCK_INSUFFICIENT</tspan></text>
+        </g>
+
+        <g data-edge-from="dsvc" data-edge-to="notif" data-edge-label="notifyIfComplete" data-edge-key="6" data-edge-id="m7">
+          <path data-composition-edge-from="dsvc" data-composition-edge-to="notif" data-composition-edge-id="m7" data-composition-points="519,540;771.3333333333333,540" d="M 519 540 L 771.3333333333333 540" class="a-dashed" data-animate="edge" style="--step:6" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <g data-detail="context">
+          <rect x="586.3666666666667" y="520" width="117.6" height="18" rx="3" class="c-mask"/>
+          <text x="645.1666666666666" y="530" class="t-edge-dashed" font-size="11" text-anchor="middle">notifyIfComplete</text>
         </g>
         </g>
 
-        <g data-edge-from="svc" data-edge-to="db" data-edge-label="line_deliveries · audit · bumpRequest" data-edge-key="9" data-edge-id="rest">
-          <path data-composition-edge-from="svc" data-composition-edge-to="db" data-composition-edge-id="rest" data-composition-points="298.7,602;941.5,602" d="M 298.7 602 L 941.5 602" class="a-default" data-animate="edge" style="--step:9" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <g data-edge-from="dsvc" data-edge-to="dlg" data-edge-label="200 {line, stock_qty, request_complete}" data-edge-key="7" data-edge-id="m8">
+          <path data-composition-edge-from="dsvc" data-composition-edge-to="dlg" data-composition-edge-id="m8" data-composition-points="505,575;119.5,575" d="M 505 575 L 119.5 575" class="a-default" data-animate="edge" style="--step:7" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
         <g data-detail="context">
-          <rect x="492" y="582" width="256.2" height="18" rx="3" class="c-mask"/>
-          <text x="620.1" y="592" class="t-muted" font-size="11" text-anchor="middle">line_deliveries · audit · bumpRequest</text>
+          <rect x="177.55" y="555" width="269.4" height="18" rx="3" class="c-mask"/>
+          <text x="312.25" y="565" class="t-muted" font-size="11" text-anchor="middle">200 {line, stock_qty, request_complete}</text>
         </g>
         </g>
 
-        <g data-edge-from="svc" data-edge-to="notif" data-edge-label="notifyWithin nếu phiếu đủ" data-edge-key="10" data-edge-id="notify">
-          <path data-composition-edge-from="svc" data-composition-edge-to="notif" data-composition-edge-id="notify" data-composition-points="298.7,632;777.3,632" d="M 298.7 632 L 777.3 632" class="a-dashed" data-animate="edge" style="--step:10" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <g data-edge-from="dlg" data-edge-to="csvc" data-edge-label="POST cancel-remaining {adm_out_of_stock}" data-edge-key="8" data-edge-id="m9">
+          <path data-composition-edge-from="dlg" data-composition-edge-to="csvc" data-composition-edge-id="m9" data-composition-points="119.5,640;638.1666666666666,640" d="M 119.5 640 L 638.1666666666666 640" class="a-emphasis" data-animate="edge" style="--step:8" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <g data-detail="context">
-          <rect x="449.5" y="612" width="177" height="18" rx="3" class="c-mask"/>
-          <text x="538" y="622" class="t-edge-dashed" font-size="11" text-anchor="middle">notifyWithin nếu phiếu đủ</text>
+          <rect x="240.83333333333331" y="620" width="276" height="18" rx="3" class="c-mask"/>
+          <text x="378.8333333333333" y="630" class="t-edge-emphasis" font-size="11" text-anchor="middle">POST cancel-remaining {adm_out_of_stock}</text>
         </g>
-        <text data-detail="context" x="310.7" y="650" class="t-muted" font-size="7"><tspan x="310.7" dy="0">event_id</tspan><tspan x="310.7" dy="11">request_delivered:&lt;request_</tspan><tspan x="310.7" dy="11">id&gt;:&lt;n&gt;</tspan></text>
+        <text data-detail="context" x="131.5" y="658" class="t-muted" font-size="7"><tspan x="131.5" dy="0">sau mọi lần giao; bỏ qua</tspan><tspan x="131.5" dy="11">nếu giao dòng đó lỗi</tspan></text>
         </g>
 
-        <g data-edge-from="notif" data-edge-to="db" data-edge-label="SAVEPOINT · INSERT … ON CONFLICT DO NOTHING" data-edge-key="11" data-edge-id="notify-sql">
-          <path data-composition-edge-from="notif" data-composition-edge-to="db" data-composition-edge-id="notify-sql" data-composition-points="791.3,680;941.5,680" d="M 791.3 680 L 941.5 680" class="a-dashed" data-animate="edge" style="--step:11" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <g data-edge-from="csvc" data-edge-to="db" data-edge-label="khóa dấu out → khóa dòng" data-edge-key="9" data-edge-id="m10">
+          <path data-composition-edge-from="csvc" data-composition-edge-to="db" data-composition-edge-id="m10" data-composition-points="652.1666666666666,700;904.5,700" d="M 652.1666666666666 700 L 904.5 700" class="a-security" data-animate="edge" style="--step:9" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
         <g data-detail="context">
-          <rect x="718.5" y="660" width="295.8" height="18" rx="3" class="c-mask"/>
-          <text x="866.4" y="670" class="t-edge-dashed" font-size="11" text-anchor="middle">SAVEPOINT · INSERT … ON CONFLICT DO NOTHING</text>
+          <rect x="693.1333333333332" y="680" width="170.39999999999998" height="18" rx="3" class="c-mask"/>
+          <text x="778.3333333333333" y="690" class="t-edge-security" font-size="11" text-anchor="middle">khóa dấu out → khóa dòng</text>
         </g>
-        <text data-detail="context" x="803.3" y="698" class="t-muted" font-size="7"><tspan x="803.3" dy="0">lỗi → rollback savepoint, log</tspan><tspan x="803.3" dy="11">{event_id, topic, code}; tx</tspan><tspan x="803.3" dy="11">nghiệp vụ vẫn COMMIT</tspan></text>
+        <text data-detail="context" x="664.1666666666666" y="718" class="t-muted" font-size="7"><tspan x="664.1666666666666" dy="0">K* không đánh dấu → 409</tspan><tspan x="664.1666666666666" dy="11">ITEM_NOT_ADM_OUT</tspan></text>
         </g>
 
-        <g data-edge-from="svc" data-edge-to="ui" data-edge-label="200 {line, movement_id, stock_qty, request_complete}" data-edge-key="12" data-edge-id="reply">
-          <path data-composition-edge-from="svc" data-composition-edge-to="ui" data-composition-edge-id="reply" data-composition-points="284.7,736;134.5,736" d="M 284.7 736 L 134.5 736" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
+        <g data-edge-from="csvc" data-edge-to="notif" data-edge-label="linesAdjusted (chuông ngày)" data-edge-key="10" data-edge-id="m11">
+          <path data-composition-edge-from="csvc" data-composition-edge-to="notif" data-composition-edge-id="m11" data-composition-points="652.1666666666666,760;771.3333333333333,760" d="M 652.1666666666666 760 L 771.3333333333333 760" class="a-dashed" data-animate="edge" style="--step:10" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
         <g data-detail="context">
-          <rect x="32" y="716" width="355.2" height="18" rx="3" class="c-mask"/>
-          <text x="209.6" y="726" class="t-muted" font-size="11" text-anchor="middle">200 {line, movement_id, stock_qty, request_complete}</text>
+          <rect x="616.65" y="740" width="190.2" height="18" rx="3" class="c-mask"/>
+          <text x="711.75" y="750" class="t-edge-dashed" font-size="11" text-anchor="middle">linesAdjusted (chuông ngày)</text>
+        </g>
+        </g>
+
+        <g data-edge-from="csvc" data-edge-to="dlg" data-edge-label="200 {cancelled_now}" data-edge-key="11" data-edge-id="m12">
+          <path data-composition-edge-from="csvc" data-composition-edge-to="dlg" data-composition-edge-id="m12" data-composition-points="638.1666666666666,795;119.5,795" d="M 638.1666666666666 795 L 119.5 795" class="a-default" data-animate="edge" style="--step:11" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
+        <g data-detail="context">
+          <rect x="310.1333333333333" y="775" width="137.39999999999998" height="18" rx="3" class="c-mask"/>
+          <text x="378.8333333333333" y="785" class="t-muted" font-size="11" text-anchor="middle">200 {cancelled_now}</text>
+        </g>
+        </g>
+
+        <g data-edge-from="back" data-edge-to="dsvc" data-edge-label="Giao bổ sung: POST deliver" data-edge-key="12" data-edge-id="m13">
+          <path data-composition-edge-from="back" data-composition-edge-to="dsvc" data-composition-edge-id="m13" data-composition-points="252.66666666666666,860;505,860" d="M 252.66666666666666 860 L 505 860" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <g data-detail="context">
+          <rect x="287.0333333333333" y="840" width="183.6" height="18" rx="3" class="c-mask"/>
+          <text x="378.8333333333333" y="850" class="t-muted" font-size="11" text-anchor="middle">Giao bổ sung: POST deliver</text>
+        </g>
+        <text data-detail="context" x="264.66666666666663" y="878" class="t-muted" font-size="7"><tspan x="264.66666666666663" dy="0">cùng luật khóa và trần</tspan><tspan x="264.66666666666663" dy="11">như hộp giao</tspan></text>
+        </g>
+
+        <g data-edge-from="back" data-edge-to="csvc" data-edge-label="Hủy nợ: POST cancel-remaining {reason_code}" data-edge-key="13" data-edge-id="m14">
+          <path data-composition-edge-from="back" data-composition-edge-to="csvc" data-composition-edge-id="m14" data-composition-points="252.66666666666666,920;638.1666666666666,920" d="M 252.66666666666666 920 L 638.1666666666666 920" class="a-emphasis" data-animate="edge" style="--step:12" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <g data-detail="context">
+          <rect x="297.51666666666665" y="900" width="295.8" height="18" rx="3" class="c-mask"/>
+          <text x="445.41666666666663" y="910" class="t-edge-emphasis" font-size="11" text-anchor="middle">Hủy nợ: POST cancel-remaining {reason_code}</text>
+        </g>
+        <text data-detail="context" x="264.66666666666663" y="938" class="t-muted" font-size="7"><tspan x="264.66666666666663" dy="0">dòng K* → 409</tspan><tspan x="264.66666666666663" dy="11">NOT_DEBT_YET</tspan></text>
+        </g>
+
+        <g data-edge-from="csvc" data-edge-to="notif" data-edge-label="line_cancelled (trừ user_left)" data-edge-key="14" data-edge-id="m15">
+          <path data-composition-edge-from="csvc" data-composition-edge-to="notif" data-composition-edge-id="m15" data-composition-points="652.1666666666666,980;771.3333333333333,980" d="M 652.1666666666666 980 L 771.3333333333333 980" class="a-dashed" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <g data-detail="context">
+          <rect x="606.75" y="960" width="210" height="18" rx="3" class="c-mask"/>
+          <text x="711.75" y="970" class="t-edge-dashed" font-size="11" text-anchor="middle">line_cancelled (trừ user_left)</text>
+        </g>
+        </g>
+
+        <g data-edge-from="csvc" data-edge-to="back" data-edge-label="200 {line, cancelled_now}" data-edge-key="15" data-edge-id="m16">
+          <path data-composition-edge-from="csvc" data-composition-edge-to="back" data-composition-edge-id="m16" data-composition-points="638.1666666666666,1015;252.66666666666666,1015" d="M 638.1666666666666 1015 L 252.66666666666666 1015" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
+        <g data-detail="context">
+          <rect x="356.91666666666663" y="995" width="177" height="18" rx="3" class="c-mask"/>
+          <text x="445.41666666666663" y="1005" class="t-muted" font-size="11" text-anchor="middle">200 {line, cancelled_now}</text>
         </g>
         </g>
 
         <!-- Segment Labels -->
         <g data-graph-role="segment-label" data-segment-id="0">
-          <rect x="339.7" y="134" width="42" height="18" rx="3" class="c-mask"/>
-          <text x="345.7" y="147" class="t-muted" font-size="9" font-weight="600">Gửi</text>
+          <rect x="56" y="143" width="92" height="18" rx="3" class="c-mask"/>
+          <text x="62" y="156" class="t-muted" font-size="9" font-weight="600">Mở hộp: đề xuất</text>
         </g>
         <g data-graph-role="segment-label" data-segment-id="1">
-          <rect x="56" y="206" width="196" height="18" rx="3" class="c-mask"/>
-          <text x="62" y="219" class="t-muted" font-size="9" font-weight="600">Khóa requests → request_lines, kiểm</text>
+          <rect x="56" y="283" width="154.4" height="18" rx="3" class="c-mask"/>
+          <text x="62" y="296" class="t-muted" font-size="9" font-weight="600">Giao từng dòng, nợ cũ trước</text>
         </g>
         <g data-graph-role="segment-label" data-segment-id="2">
-          <rect x="56" y="390" width="102.4" height="18" rx="3" class="c-mask"/>
-          <text x="62" y="403" class="t-muted" font-size="9" font-weight="600">Trừ kho, ghi giao</text>
+          <rect x="56" y="593" width="154.4" height="18" rx="3" class="c-mask"/>
+          <text x="62" y="606" class="t-muted" font-size="9" font-weight="600">Hủy phần thiếu ADM hết hàng</text>
         </g>
         <g data-graph-role="segment-label" data-segment-id="3">
-          <rect x="56" y="566" width="196" height="18" rx="3" class="c-mask"/>
-          <text x="62" y="579" class="t-muted" font-size="9" font-weight="600">Chuông trong SAVEPOINT, trả kết quả</text>
+          <rect x="56" y="813" width="164.8" height="18" rx="3" class="c-mask"/>
+          <text x="62" y="826" class="t-muted" font-size="9" font-weight="600">Còn nợ: Giao bổ sung · Hủy nợ</text>
         </g>
 
         <!-- Participants -->
-        <g id="node-ui" data-node-id="ui" data-node-label="Giao hàng" tabindex="0" role="button" aria-label="Focus Giao hàng, DeliverLineRow, Sequence participant" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="DeliverLineRow" data-node-context="Sequence participant">
-          <title>Giao hàng · DeliverLineRow · Sequence participant</title>
-          <rect x="62" y="72" width="131" height="60" rx="6" class="c-mask"/>
-          <rect x="62" y="72" width="131" height="60" rx="6" class="c-frontend" data-animate="node" style="--step:0" stroke-width="1.5"/>
+        <g id="node-dlg" data-node-id="dlg" data-node-label="Hộp giao" tabindex="0" role="button" aria-label="Focus Hộp giao, thẻ hoặc panel ?person, Sequence participant" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="thẻ hoặc panel ?person" data-node-context="Sequence participant">
+          <title>Hộp giao · thẻ hoặc panel ?person · Sequence participant</title>
+          <rect x="62" y="72" width="101" height="60" rx="6" class="c-mask"/>
+          <rect x="62" y="72" width="101" height="60" rx="6" class="c-frontend" data-animate="node" style="--step:0" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(68 78) scale(0.6875)">
             <rect x="2" y="3" width="12" height="10" rx="2"/>
             <path d="M2 6.5h12"/>
             <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="127.5" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Giao hàng</text>
-          <text data-detail="context" x="127.5" y="122" class="t-muted" font-size="7" text-anchor="middle">DeliverLineRow</text>
+          <text data-node-label="" data-detail-anchor="" x="112.5" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Hộp giao</text>
+          <text data-detail="context" x="112.5" y="122" class="t-muted" font-size="7" text-anchor="middle">thẻ hoặc panel ?person</text>
         </g>
 
-        <g id="node-svc" data-node-id="svc" data-node-label="DeliveryService" tabindex="0" role="button" aria-label="Focus DeliveryService, một transaction, Sequence participant" aria-pressed="false" data-node-kind="backend" data-node-sublabel="một transaction" data-node-context="Sequence participant">
-          <title>DeliveryService · một transaction · Sequence participant</title>
-          <rect x="226.2" y="72" width="131" height="60" rx="6" class="c-mask"/>
-          <rect x="226.2" y="72" width="131" height="60" rx="6" class="c-backend" data-animate="node" style="--step:1" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(232.2 78) scale(0.6875)">
-            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+        <g id="node-back" data-node-id="back" data-node-label="Còn nợ" tabindex="0" role="button" aria-label="Focus Còn nợ, /admin/backlog, Sequence participant" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="/admin/backlog" data-node-context="Sequence participant">
+          <title>Còn nợ · /admin/backlog · Sequence participant</title>
+          <rect x="195.16666666666666" y="72" width="101" height="60" rx="6" class="c-mask"/>
+          <rect x="195.16666666666666" y="72" width="101" height="60" rx="6" class="c-frontend" data-animate="node" style="--step:1" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(201.16666666666666 78) scale(0.6875)">
+            <rect x="2" y="3" width="12" height="10" rx="2"/>
+            <path d="M2 6.5h12"/>
+            <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
+            <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="291.7" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">DeliveryService</text>
-          <text data-detail="context" x="291.7" y="122" class="t-muted" font-size="7" text-anchor="middle">một transaction</text>
+          <text data-node-label="" data-detail-anchor="" x="245.66666666666666" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Còn nợ</text>
+          <text data-detail="context" x="245.66666666666666" y="122" class="t-muted" font-size="7" text-anchor="middle">/admin/backlog</text>
         </g>
 
-        <g id="node-store" data-node-id="store" data-node-label="LineDeliveryStore" tabindex="0" role="button" aria-label="Focus LineDeliveryStore, module requests, Sequence participant" aria-pressed="false" data-node-kind="backend" data-node-sublabel="module requests" data-node-context="Sequence participant">
-          <title>LineDeliveryStore · module requests · Sequence participant</title>
-          <rect x="390.4" y="72" width="131" height="60" rx="6" class="c-mask"/>
-          <rect x="390.4" y="72" width="131" height="60" rx="6" class="c-backend" data-animate="node" style="--step:2" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(396.4 78) scale(0.6875)">
+        <g id="node-people" data-node-id="people" data-node-label="delivery-people" tabindex="0" role="button" aria-label="Focus delivery-people, đọc-only, Sequence participant" aria-pressed="false" data-node-kind="backend" data-node-sublabel="đọc-only" data-node-context="Sequence participant">
+          <title>delivery-people · đọc-only · Sequence participant</title>
+          <rect x="328.3333333333333" y="72" width="101" height="60" rx="6" class="c-mask"/>
+          <rect x="328.3333333333333" y="72" width="101" height="60" rx="6" class="c-backend" data-animate="node" style="--step:2" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(334.3333333333333 78) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="455.9" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">LineDeliveryStore</text>
-          <text data-detail="context" x="455.9" y="122" class="t-muted" font-size="7" text-anchor="middle">module requests</text>
+          <text data-node-label="" data-detail-anchor="" x="378.8333333333333" y="108" class="t-primary" font-size="10.3" font-weight="600" text-anchor="middle">delivery-people</text>
+          <text data-detail="context" x="378.8333333333333" y="122" class="t-muted" font-size="7" text-anchor="middle">đọc-only</text>
         </g>
 
-        <g id="node-stock" data-node-id="stock" data-node-label="StockService" tabindex="0" role="button" aria-label="Focus StockService, module catalog, Sequence participant" aria-pressed="false" data-node-kind="backend" data-node-sublabel="module catalog" data-node-context="Sequence participant">
-          <title>StockService · module catalog · Sequence participant</title>
-          <rect x="554.5999999999999" y="72" width="131" height="60" rx="6" class="c-mask"/>
-          <rect x="554.5999999999999" y="72" width="131" height="60" rx="6" class="c-backend" data-animate="node" style="--step:3" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(560.5999999999999 78) scale(0.6875)">
+        <g id="node-dsvc" data-node-id="dsvc" data-node-label="DeliveryService" tabindex="0" role="button" aria-label="Focus DeliveryService, một tx mỗi dòng, Sequence participant" aria-pressed="false" data-node-kind="backend" data-node-sublabel="một tx mỗi dòng" data-node-context="Sequence participant">
+          <title>DeliveryService · một tx mỗi dòng · Sequence participant</title>
+          <rect x="461.5" y="72" width="101" height="60" rx="6" class="c-mask"/>
+          <rect x="461.5" y="72" width="101" height="60" rx="6" class="c-backend" data-animate="node" style="--step:3" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(467.5 78) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="620.0999999999999" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">StockService</text>
-          <text data-detail="context" x="620.0999999999999" y="122" class="t-muted" font-size="7" text-anchor="middle">module catalog</text>
+          <text data-node-label="" data-detail-anchor="" x="512" y="108" class="t-primary" font-size="10.3" font-weight="600" text-anchor="middle">DeliveryService</text>
+          <text data-detail="context" x="512" y="122" class="t-muted" font-size="7" text-anchor="middle">một tx mỗi dòng</text>
         </g>
 
-        <g id="node-notif" data-node-id="notif" data-node-label="NotificationsService" tabindex="0" role="button" aria-label="Focus NotificationsService, notifyWithin, Sequence participant" aria-pressed="false" data-node-kind="backend" data-node-sublabel="notifyWithin" data-node-context="Sequence participant">
-          <title>NotificationsService · notifyWithin · Sequence participant</title>
-          <rect x="718.8" y="72" width="131" height="60" rx="6" class="c-mask"/>
-          <rect x="718.8" y="72" width="131" height="60" rx="6" class="c-backend" data-animate="node" style="--step:4" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(724.8 78) scale(0.6875)">
+        <g id="node-csvc" data-node-id="csvc" data-node-label="CancelRemaining" tabindex="0" role="button" aria-label="Focus CancelRemaining, hủy phần còn lại, Sequence participant" aria-pressed="false" data-node-kind="backend" data-node-sublabel="hủy phần còn lại" data-node-context="Sequence participant">
+          <title>CancelRemaining · hủy phần còn lại · Sequence participant</title>
+          <rect x="594.6666666666666" y="72" width="101" height="60" rx="6" class="c-mask"/>
+          <rect x="594.6666666666666" y="72" width="101" height="60" rx="6" class="c-backend" data-animate="node" style="--step:4" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(600.6666666666666 78) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="784.3" y="108" class="t-primary" font-size="10.2" font-weight="600" text-anchor="middle">NotificationsService</text>
-          <text data-detail="context" x="784.3" y="122" class="t-muted" font-size="7" text-anchor="middle">notifyWithin</text>
+          <text data-node-label="" data-detail-anchor="" x="645.1666666666666" y="108" class="t-primary" font-size="10.3" font-weight="600" text-anchor="middle">CancelRemaining</text>
+          <text data-detail="context" x="645.1666666666666" y="122" class="t-muted" font-size="7" text-anchor="middle">hủy phần còn lại</text>
+        </g>
+
+        <g id="node-notif" data-node-id="notif" data-node-label="Chuông" tabindex="0" role="button" aria-label="Focus Chuông, LineNotifier, Sequence participant" aria-pressed="false" data-node-kind="backend" data-node-sublabel="LineNotifier" data-node-context="Sequence participant">
+          <title>Chuông · LineNotifier · Sequence participant</title>
+          <rect x="727.8333333333333" y="72" width="101" height="60" rx="6" class="c-mask"/>
+          <rect x="727.8333333333333" y="72" width="101" height="60" rx="6" class="c-backend" data-animate="node" style="--step:5" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(733.8333333333333 78) scale(0.6875)">
+            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="778.3333333333333" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Chuông</text>
+          <text data-detail="context" x="778.3333333333333" y="122" class="t-muted" font-size="7" text-anchor="middle">LineNotifier</text>
         </g>
 
         <g id="node-db" data-node-id="db" data-node-label="PostgreSQL" tabindex="0" role="button" aria-label="Focus PostgreSQL, khóa theo hàng, Sequence participant" aria-pressed="false" data-node-kind="database" data-node-sublabel="khóa theo hàng" data-node-context="Sequence participant">
           <title>PostgreSQL · khóa theo hàng · Sequence participant</title>
-          <rect x="883" y="72" width="131" height="60" rx="6" class="c-mask"/>
-          <rect x="883" y="72" width="131" height="60" rx="6" class="c-database" data-animate="node" style="--step:5" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(889 78) scale(0.6875)">
+          <rect x="861" y="72" width="101" height="60" rx="6" class="c-mask"/>
+          <rect x="861" y="72" width="101" height="60" rx="6" class="c-database" data-animate="node" style="--step:6" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(867 78) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="948.5" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">PostgreSQL</text>
-          <text data-detail="context" x="948.5" y="122" class="t-muted" font-size="7" text-anchor="middle">khóa theo hàng</text>
+          <text data-node-label="" data-detail-anchor="" x="911.5" y="108" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">PostgreSQL</text>
+          <text data-detail="context" x="911.5" y="122" class="t-muted" font-size="7" text-anchor="middle">khóa theo hàng</text>
         </g>
 
         <!-- Legend -->
         <g data-legend="">
-          <text x="40" y="774" class="t-primary" font-size="12" font-weight="650">Legend</text>
-          <g data-legend-semantic-kind="emphasis" data-legend-x="40" data-legend-baseline="794" data-legend-width="236">
-            <path d="M 40 791 L 74 791" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-            <text x="83" y="794" class="t-muted" font-size="10" font-weight="500">ghi chính (trừ kho, số đã giao)</text>
+          <text x="40" y="1059" class="t-primary" font-size="12" font-weight="650">Legend</text>
+          <g data-legend-semantic-kind="emphasis" data-legend-x="40" data-legend-baseline="1079" data-legend-width="192">
+            <path d="M 40 1076 L 74 1076" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+            <text x="83" y="1079" class="t-muted" font-size="10" font-weight="500">ghi chính (giao, trừ tủ)</text>
           </g>
-          <g data-legend-semantic-kind="return" data-legend-x="298" data-legend-baseline="794" data-legend-width="81">
-            <path d="M 298 791 L 332 791" class="a-default" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
-            <text x="341" y="794" class="t-muted" font-size="10" font-weight="500">trả về</text>
+          <g data-legend-semantic-kind="return" data-legend-x="254" data-legend-baseline="1079" data-legend-width="81">
+            <path d="M 254 1076 L 288 1076" class="a-default" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
+            <text x="297" y="1079" class="t-muted" font-size="10" font-weight="500">trả về</text>
           </g>
-          <g data-legend-semantic-kind="security" data-legend-x="401" data-legend-baseline="794" data-legend-width="167">
-            <path d="M 401 791 L 435 791" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-            <text x="444" y="794" class="t-muted" font-size="10" font-weight="500">khóa hàng FOR UPDATE</text>
+          <g data-legend-semantic-kind="security" data-legend-x="357" data-legend-baseline="1079" data-legend-width="242">
+            <path d="M 357 1076 L 391 1076" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+            <text x="400" y="1079" class="t-muted" font-size="10" font-weight="500">khóa hàng FOR UPDATE / kiểm trần</text>
           </g>
-          <g data-legend-semantic-kind="dashed" data-legend-x="590" data-legend-baseline="794" data-legend-width="229">
-            <path d="M 590 791 L 624 791" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-            <text x="633" y="794" class="t-muted" font-size="10" font-weight="500">chuông: SAVEPOINT, lỗi bị nuốt</text>
+          <g data-legend-semantic-kind="dashed" data-legend-x="621" data-legend-baseline="1079" data-legend-width="180">
+            <path d="M 621 1076 L 655 1076" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+            <text x="664" y="1079" class="t-muted" font-size="10" font-weight="500">chuông trong SAVEPOINT</text>
           </g>
-          <g data-legend-semantic-kind="default" data-legend-x="841" data-legend-baseline="794" data-legend-width="118">
-            <path d="M 841 791 L 875 791" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-            <text x="884" y="794" class="t-muted" font-size="10" font-weight="500">gọi trong tx</text>
+          <g data-legend-semantic-kind="default" data-legend-x="823" data-legend-baseline="1079" data-legend-width="62">
+            <path d="M 823 1076 L 857 1076" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+            <text x="866" y="1079" class="t-muted" font-size="10" font-weight="500">gọi</text>
           </g>
         </g>
       </svg>
@@ -5663,37 +5701,37 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <div class="cards">
       <div class="card">
         <div class="card-header">
-          <div class="card-dot rose"></div>
-          <h3>Thứ tự khóa</h3>
+          <div class="card-dot cyan"></div>
+          <h3>Đề xuất trong hộp</h3>
         </div>
         <ul>
-          <li>requests → request_lines (id tăng) → items, như writer phiếu và review</li>
-          <li>Giao tất cả khóa trước mọi món của phiếu (lockItemsWithin, ORDER BY id) rồi mỗi dòng một SAVEPOINT</li>
-          <li>Trừ kho bằng UPDATE có điều kiện, không đọc-rồi-ghi</li>
+          <li>Hàng: nợ trước (kỳ cũ nhất trước), rồi kỳ này; trong kỳ theo thứ tự món chung</li>
+          <li>Tủ thuộc về món: dòng trên lấy trước; &quot;Giữ k cho m người đăng ký trước&quot;</li>
+          <li>Dòng chờ duyệt không giao; dòng ngoài DM có trong bản in chỉ giao trong số đã về</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot amber"></div>
-          <h3>Bấm hai lần</h3>
+          <h3>Dòng ADM hết hàng</h3>
         </div>
         <ul>
-          <li>FE: useSingleFlight chặn request thứ hai khi request đầu chưa xong</li>
-          <li>Lọt tới server: expected_delivered_qty cũ → 409 STALE_UPDATE, kho không trừ lần hai</li>
-          <li>Không có hoàn tác đợt giao trong GĐ1 (FR-44)</li>
+          <li>Gợi ý = phần tủ còn cho người này; phần thiếu bị hủy (không thành nợ)</li>
+          <li>Chủ phiếu nhận một chuông ngày line_adjusted, không phải line_cancelled</li>
+          <li>Không mở hộp thì cron khóa kỳ sau tự hủy phần chưa giao</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
-          <div class="card-dot cyan"></div>
-          <h3>Ai ghi bảng nào</h3>
+          <div class="card-dot rose"></div>
+          <h3>Chống ghi đè</h3>
         </div>
         <ul>
-          <li>request_lines chỉ qua LineDeliveryStore (module requests)</li>
-          <li>items / stock_movements chỉ qua StockService (module catalog)</li>
-          <li>delivery tự ghi line_deliveries; chuông qua NotificationsService</li>
+          <li>Mỗi request kèm expected_delivered_qty (và expected_qty khi hủy) → 409 STALE_UPDATE</li>
+          <li>Phiên hết giữa chừng: các dòng sau đánh dấu &quot;chưa gửi&quot;</li>
+          <li>Không có route giao cả phiếu (deliver-all đã gỡ)</li>
         </ul>
       </div>
     </div>

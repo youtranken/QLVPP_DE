@@ -1,575 +1,582 @@
 {
-  "schema_version": 1,
-  "diagram_type": "architecture",
-  "meta": {
-    "title": "VPP Công trình — kiến trúc thành phần (hết Plan 3)",
-    "output": "docs/diagrams/vpp-kien-truc.html",
-    "locale": "vi",
-    "quality_profile": "showcase",
-    "repository": {
-      "url": "https://github.com/youtranken/QLVPP_DE.git",
-      "provider": "github",
-      "link_mode": "local-only",
-      "revision": "e706b4e7539c5345bc55cf37dc40ea017107f628"
+ "schema_version": 1,
+ "diagram_type": "architecture",
+ "meta": {
+  "title": "VPP Công trình — kiến trúc thành phần (hết Plan v2-D)",
+  "output": "docs/diagrams/vpp-kien-truc.html",
+  "locale": "vi",
+  "quality_profile": "showcase",
+  "repository": {
+   "url": "https://github.com/youtranken/QLVPP_DE.git",
+   "provider": "github",
+   "link_mode": "local-only",
+   "revision": "e5d57874ceec1ebcd998227c71f05088c110d70c"
+  }
+ },
+ "components": [
+  {
+   "id": "browser",
+   "type": "external",
+   "label": "Trình duyệt",
+   "sublabel": "SPA React · cookie vpp_sid",
+   "pos": [
+    40,
+    40
+   ],
+   "size": [
+    150,
+    62
+   ],
+   "sources": [
+    {
+     "path": "web/src/App.tsx",
+     "line": 10,
+     "end_line": 26,
+     "label": "boot /api/auth/me"
     }
+   ]
   },
-  "components": [
+  {
+   "id": "edge",
+   "type": "security",
+   "label": "EDGE nginx",
+   "sublabel": "TLS :8443 · XFF",
+   "pos": [
+    240,
+    40
+   ],
+   "size": [
+    140,
+    62
+   ],
+   "tag": "PMH_IDE",
+   "sources": [
     {
-      "id": "browser",
-      "type": "external",
-      "label": "Trình duyệt",
-      "sublabel": "SPA React · cookie vpp_sid",
-      "pos": [
-        40,
-        40
-      ],
-      "size": [
-        150,
-        62
-      ],
-      "sources": [
-        {
-          "path": "web/src/App.tsx",
-          "line": 10,
-          "end_line": 26,
-          "label": "boot /api/auth/me"
-        }
-      ]
-    },
-    {
-      "id": "edge",
-      "type": "security",
-      "label": "EDGE nginx",
-      "sublabel": "TLS :8443 · XFF",
-      "pos": [
-        240,
-        40
-      ],
-      "size": [
-        140,
-        62
-      ],
-      "tag": "PMH_IDE",
-      "sources": [
-        {
-          "path": "docker-compose.yml",
-          "line": 41,
-          "end_line": 46,
-          "label": "mạng edge, alias vpp-web"
-        }
-      ]
-    },
-    {
-      "id": "web",
-      "type": "frontend",
-      "label": "web nginx",
-      "sublabel": "SPA tĩnh + proxy /api",
-      "pos": [
-        420,
-        200
-      ],
-      "size": [
-        150,
-        62
-      ],
-      "sources": [
-        {
-          "path": "web/nginx.conf",
-          "line": 22,
-          "end_line": 39
-        }
-      ]
-    },
-    {
-      "id": "guards",
-      "type": "security",
-      "label": "Guard toàn cục",
-      "sublabel": "IpThrottle→Identity→Csrf→Roles→UserThrottle",
-      "pos": [
-        640,
-        200
-      ],
-      "size": [
-        220,
-        62
-      ],
-      "tag": "container api",
-      "sources": [
-        {
-          "path": "api/src/modules/auth/auth.module.ts",
-          "line": 30,
-          "end_line": 35
-        },
-        {
-          "path": "api/src/modules/auth/identity.guard.ts",
-          "line": 85,
-          "end_line": 98,
-          "label": "@Public ẩn danh khi 503"
-        }
-      ]
-    },
-    {
-      "id": "auth",
-      "type": "backend",
-      "label": "auth · users",
-      "sublabel": "OIDC PKCE · phiên · SA · BCL",
-      "pos": [
-        960,
-        200
-      ],
-      "size": [
-        170,
-        62
-      ],
-      "tag": "container api",
-      "sources": [
-        {
-          "path": "api/src/modules/auth/auth.controller.ts",
-          "line": 87,
-          "end_line": 135,
-          "label": "sa-login"
-        },
-        {
-          "path": "api/src/modules/auth/session-auth.service.ts",
-          "line": 95,
-          "end_line": 132,
-          "label": "refresh → 503"
-        },
-        {
-          "path": "api/src/modules/users/directory-sync.scheduler.ts",
-          "line": 40,
-          "end_line": 46
-        }
-      ]
-    },
-    {
-      "id": "pmhid",
-      "type": "external",
-      "label": "PMH ID",
-      "sublabel": "OIDC · JWKS · Directory API",
-      "pos": [
-        960,
-        40
-      ],
-      "size": [
-        170,
-        62
-      ],
-      "sources": [
-        {
-          "path": "api/src/modules/auth/openid-client.provider.ts",
-          "line": 34,
-          "end_line": 60,
-          "label": "discovery"
-        },
-        {
-          "path": "api/src/modules/auth/jwt-verifier.service.ts",
-          "line": 22,
-          "end_line": 35,
-          "label": "JWKS"
-        },
-        {
-          "path": "api/src/modules/users/directory.client.ts",
-          "line": 49,
-          "end_line": 80
-        }
-      ]
-    },
-    {
-      "id": "core",
-      "type": "backend",
-      "label": "catalog · periods · requests",
-      "sublabel": "danh mục · kho · kỳ · phiếu · review",
-      "pos": [
-        640,
-        380
-      ],
-      "size": [
-        220,
-        62
-      ],
-      "tag": "container api",
-      "sources": [
-        {
-          "path": "api/src/app.module.ts",
-          "line": 55,
-          "end_line": 70,
-          "label": "ScheduleModule + module nghiệp vụ"
-        },
-        {
-          "path": "api/src/modules/requests/line-delivery.store.ts",
-          "line": 50,
-          "end_line": 66,
-          "label": "LineDeliveryStore"
-        },
-        {
-          "path": "api/src/modules/catalog/stock.service.ts",
-          "line": 115,
-          "end_line": 146,
-          "label": "StockService"
-        }
-      ]
-    },
-    {
-      "id": "delivery",
-      "type": "backend",
-      "label": "delivery",
-      "sublabel": "giao · giao tất cả · còn nợ · hủy nợ",
-      "pos": [
-        340,
-        380
-      ],
-      "size": [
-        210,
-        62
-      ],
-      "tag": "container api",
-      "sources": [
-        {
-          "path": "api/src/modules/delivery/delivery.service.ts",
-          "line": 36,
-          "end_line": 55,
-          "label": "deliverLine"
-        },
-        {
-          "path": "api/src/modules/delivery/deliver-all.service.ts",
-          "line": 30,
-          "end_line": 48,
-          "label": "deliverAll"
-        },
-        {
-          "path": "api/src/modules/delivery/backlog.service.ts",
-          "line": 54,
-          "end_line": 72,
-          "label": "còn nợ kỳ đã khóa"
-        }
-      ]
-    },
-    {
-      "id": "reports",
-      "type": "backend",
-      "label": "reports",
-      "sublabel": "báo cáo sống · bản chốt · exceljs",
-      "pos": [
-        960,
-        380
-      ],
-      "size": [
-        200,
-        62
-      ],
-      "tag": "container api",
-      "sources": [
-        {
-          "path": "api/src/modules/reports/reports.service.ts",
-          "line": 33,
-          "end_line": 50,
-          "label": "build"
-        },
-        {
-          "path": "api/src/modules/reports/snapshots.service.ts",
-          "line": 40,
-          "end_line": 70,
-          "label": "REPEATABLE READ"
-        },
-        {
-          "path": "api/src/modules/reports/xlsx-report.ts",
-          "line": 1,
-          "end_line": 25,
-          "label": "exceljs"
-        }
-      ]
-    },
-    {
-      "id": "notifications",
-      "type": "backend",
-      "label": "notifications",
-      "sublabel": "notifyWithin trong SAVEPOINT",
-      "pos": [
-        340,
-        560
-      ],
-      "size": [
-        210,
-        62
-      ],
-      "tag": "container api",
-      "sources": [
-        {
-          "path": "api/src/modules/notifications/notifications.service.ts",
-          "line": 65,
-          "end_line": 89
-        },
-        {
-          "path": "api/src/modules/notifications/notification-events.ts",
-          "line": 1,
-          "end_line": 24,
-          "label": "event_id"
-        }
-      ]
-    },
-    {
-      "id": "reminders",
-      "type": "backend",
-      "label": "reminders (cron)",
-      "sublabel": "@Cron '5 * * * *' VN + lúc boot",
-      "pos": [
-        40,
-        560
-      ],
-      "size": [
-        210,
-        62
-      ],
-      "tag": "container api",
-      "sources": [
-        {
-          "path": "api/src/modules/reminders/notification-scheduler.ts",
-          "line": 53,
-          "end_line": 90,
-          "label": "runHourly"
-        },
-        {
-          "path": "api/src/modules/reminders/schedule-days.ts",
-          "line": 1,
-          "end_line": 14,
-          "label": "ngày 1 · còn 3 ngày · ngày khóa"
-        }
-      ]
-    },
-    {
-      "id": "postgres",
-      "type": "database",
-      "label": "PostgreSQL 18",
-      "sublabel": "volume pgdata",
-      "pos": [
-        640,
-        560
-      ],
-      "size": [
-        220,
-        62
-      ],
-      "sources": [
-        {
-          "path": "docker-compose.yml",
-          "line": 51,
-          "end_line": 61
-        },
-        {
-          "path": "api/src/database/database.module.ts",
-          "line": 13,
-          "end_line": 28
-        }
-      ]
-    },
-    {
-      "id": "files",
-      "type": "database",
-      "label": "volume filesdata",
-      "sublabel": "/data/files/<uuid>.<ext>",
-      "pos": [
-        960,
-        560
-      ],
-      "size": [
-        200,
-        62
-      ],
-      "sources": [
-        {
-          "path": "docker-compose.yml",
-          "line": 24,
-          "end_line": 26
-        },
-        {
-          "path": "api/src/modules/files/files.service.ts",
-          "line": 59,
-          "end_line": 59,
-          "label": "writeFile"
-        }
-      ]
-    },
-    {
-      "id": "backup",
-      "type": "backend",
-      "label": "backup-cron",
-      "sublabel": "pg_dump + ảnh, BACKUP_AT",
-      "pos": [
-        960,
-        740
-      ],
-      "size": [
-        200,
-        62
-      ],
-      "sources": [
-        {
-          "path": "docker-compose.yml",
-          "line": 68,
-          "end_line": 91
-        }
-      ]
+     "path": "docker-compose.yml",
+     "line": 41,
+     "end_line": 46,
+     "label": "mạng edge, alias vpp-web"
     }
-  ],
-  "boundaries": [
+   ]
+  },
+  {
+   "id": "web",
+   "type": "frontend",
+   "label": "web nginx",
+   "sublabel": "SPA tĩnh + proxy /api",
+   "pos": [
+    420,
+    200
+   ],
+   "size": [
+    150,
+    62
+   ],
+   "sources": [
     {
-      "kind": "region",
-      "label": "Docker Compose · mạng default",
-      "wraps": [
-        "web",
-        "guards",
-        "auth",
-        "core",
-        "delivery",
-        "reports",
-        "notifications",
-        "reminders",
-        "postgres",
-        "files",
-        "backup"
-      ],
-      "pad": 22
+     "path": "web/nginx.conf",
+     "line": 22,
+     "end_line": 39
     }
-  ],
-  "connections": [
+   ]
+  },
+  {
+   "id": "guards",
+   "type": "security",
+   "label": "Guard toàn cục",
+   "sublabel": "IpThrottle→Identity→Csrf→Roles→UserThrottle",
+   "pos": [
+    640,
+    200
+   ],
+   "size": [
+    220,
+    62
+   ],
+   "tag": "container api",
+   "sources": [
     {
-      "from": "browser",
-      "to": "edge",
-      "label": "HTTPS",
-      "variant": "emphasis"
+     "path": "api/src/modules/auth/auth.module.ts",
+     "line": 30,
+     "end_line": 35
     },
     {
-      "from": "edge",
-      "to": "web",
-      "label": "vpp-web:80",
-      "variant": "emphasis"
-    },
-    {
-      "from": "web",
-      "to": "guards",
-      "label": "/api → api:3000",
-      "variant": "emphasis"
-    },
-    {
-      "from": "guards",
-      "to": "auth",
-      "label": "auth/*",
-      "variant": "emphasis"
-    },
-    {
-      "from": "auth",
-      "to": "pmhid",
-      "label": "token · refresh · JWKS",
-      "variant": "security"
-    },
-    {
-      "from": "pmhid",
-      "to": "auth",
-      "label": "webhook v2 · BCL",
-      "variant": "dashed"
-    },
-    {
-      "from": "guards",
-      "to": "core",
-      "label": "phiếu · kho · danh mục"
-    },
-    {
-      "from": "guards",
-      "to": "delivery",
-      "label": "admin/lines · backlog"
-    },
-    {
-      "from": "guards",
-      "to": "reports",
-      "label": "admin/reports"
-    },
-    {
-      "from": "delivery",
-      "to": "core",
-      "label": "khóa dòng · trừ kho"
-    },
-    {
-      "from": "delivery",
-      "to": "notifications",
-      "label": "giao đủ · hủy nợ"
-    },
-    {
-      "from": "core",
-      "to": "notifications",
-      "label": "xử lý món ngoài DM"
-    },
-    {
-      "from": "reminders",
-      "to": "notifications",
-      "label": "kỳ mở · nhắc · khóa · sắp hết"
-    },
-    {
-      "from": "notifications",
-      "to": "postgres",
-      "label": "in_app_notifications"
-    },
-    {
-      "from": "core",
-      "to": "postgres",
-      "label": "SQL"
-    },
-    {
-      "from": "reports",
-      "to": "postgres",
-      "label": "đọc · report_snapshots"
-    },
-    {
-      "from": "auth",
-      "to": "postgres",
-      "label": "sessions · users"
-    },
-    {
-      "from": "core",
-      "to": "files",
-      "label": "ghi ảnh"
-    },
-    {
-      "from": "backup",
-      "to": "postgres",
-      "label": "pg_dump",
-      "variant": "dashed"
-    },
-    {
-      "from": "backup",
-      "to": "files",
-      "label": "đọc ro",
-      "variant": "dashed"
+     "path": "api/src/modules/auth/identity.guard.ts",
+     "line": 85,
+     "end_line": 98,
+     "label": "@Public ẩn danh khi 503"
     }
-  ],
-  "cards": [
+   ]
+  },
+  {
+   "id": "auth",
+   "type": "backend",
+   "label": "auth · users",
+   "sublabel": "OIDC PKCE · phiên · SA · BCL",
+   "pos": [
+    960,
+    200
+   ],
+   "size": [
+    170,
+    62
+   ],
+   "tag": "container api",
+   "sources": [
     {
-      "dot": "rose",
-      "title": "Ranh giới tin cậy",
-      "items": [
-        "TLS kết thúc ở EDGE (repo PMH_IDE, cấu hình không nằm trong repo này)",
-        "web chỉ join mạng edge, không publish cổng; nginx xóa header dev-identity",
-        "TRUST_PROXY_HOPS = 2 (EDGE + web nginx) để req.ip là IP máy người dùng"
-      ]
+     "path": "api/src/modules/auth/auth.controller.ts",
+     "line": 87,
+     "end_line": 135,
+     "label": "sa-login"
     },
     {
-      "dot": "amber",
-      "title": "PMH ID sập",
-      "items": [
-        "Refresh lỗi mạng → route bảo vệ 503 SSO_UNAVAILABLE, phiên được giữ",
-        "Route @Public (sa-login, public-config, health) đi tiếp ẩn danh",
-        "SA local là lối vào break-glass; lockout (IP, user) 5 sai, toàn cục 50"
-      ]
+     "path": "api/src/modules/auth/session-auth.service.ts",
+     "line": 95,
+     "end_line": 132,
+     "label": "refresh → 503"
     },
     {
-      "dot": "cyan",
-      "title": "Gộp trong sơ đồ",
-      "items": [
-        "auth · users: AuthModule import UsersModule (directory sync 60′ gọi Directory API)",
-        "delivery ghi request_lines qua LineDeliveryStore, trừ kho qua StockService; tự ghi line_deliveries",
-        "reminders đọc SummaryService/PeriodsService, đòi quyền sắp hết bằng StockService.claimLowStockWithin",
-        "Cron khác: dọn tệp mồ côi 03:00 VN (files); audit được mọi module gọi qua AuditWriterService"
-      ]
+     "path": "api/src/modules/users/directory-sync.scheduler.ts",
+     "line": 40,
+     "end_line": 46
     }
-  ]
+   ]
+  },
+  {
+   "id": "pmhid",
+   "type": "external",
+   "label": "PMH ID",
+   "sublabel": "OIDC · JWKS · Directory API",
+   "pos": [
+    960,
+    40
+   ],
+   "size": [
+    170,
+    62
+   ],
+   "sources": [
+    {
+     "path": "api/src/modules/auth/openid-client.provider.ts",
+     "line": 34,
+     "end_line": 60,
+     "label": "discovery"
+    },
+    {
+     "path": "api/src/modules/auth/jwt-verifier.service.ts",
+     "line": 22,
+     "end_line": 35,
+     "label": "JWKS"
+    },
+    {
+     "path": "api/src/modules/users/directory.client.ts",
+     "line": 49,
+     "end_line": 80
+    }
+   ]
+  },
+  {
+   "id": "core",
+   "type": "backend",
+   "label": "catalog · periods · requests",
+   "sublabel": "phiếu · giảm có lý do · tủ · hàng về",
+   "pos": [
+    640,
+    380
+   ],
+   "size": [
+    220,
+    62
+   ],
+   "tag": "container api",
+   "sources": [
+    {
+     "path": "api/src/app.module.ts",
+     "line": 58,
+     "end_line": 72
+    },
+    {
+     "path": "api/src/modules/requests/admin-request.service.ts",
+     "line": 40,
+     "end_line": 89
+    },
+    {
+     "path": "api/src/modules/catalog/adm-out.controller.ts",
+     "line": 23,
+     "end_line": 85
+    }
+   ]
+  },
+  {
+   "id": "delivery",
+   "type": "backend",
+   "label": "delivery",
+   "sublabel": "giao từng dòng · còn nợ · hủy nợ",
+   "pos": [
+    340,
+    380
+   ],
+   "size": [
+    210,
+    62
+   ],
+   "tag": "container api",
+   "sources": [
+    {
+     "path": "api/src/modules/delivery/delivery.service.ts",
+     "line": 36,
+     "end_line": 70
+    },
+    {
+     "path": "api/src/modules/delivery/cancel-remaining.service.ts",
+     "line": 40,
+     "end_line": 95
+    },
+    {
+     "path": "api/src/modules/delivery/delivery-people.service.ts",
+     "line": 114,
+     "end_line": 135
+    }
+   ]
+  },
+  {
+   "id": "reports",
+   "type": "backend",
+   "label": "reports",
+   "sublabel": "bản chốt · send-state · no-order",
+   "pos": [
+    960,
+    380
+   ],
+   "size": [
+    200,
+    62
+   ],
+   "tag": "container api",
+   "sources": [
+    {
+     "path": "api/src/modules/reports/snapshots.service.ts",
+     "line": 104,
+     "end_line": 148
+    },
+    {
+     "path": "api/src/modules/reports/send-state.service.ts",
+     "line": 41,
+     "end_line": 97
+    },
+    {
+     "path": "api/src/modules/reports/xlsx-report.ts",
+     "line": 1,
+     "end_line": 25
+    }
+   ]
+  },
+  {
+   "id": "notifications",
+   "type": "backend",
+   "label": "notifications",
+   "sublabel": "notifyWithin trong SAVEPOINT",
+   "pos": [
+    340,
+    560
+   ],
+   "size": [
+    210,
+    62
+   ],
+   "tag": "container api",
+   "sources": [
+    {
+     "path": "api/src/modules/notifications/notifications.service.ts",
+     "line": 65,
+     "end_line": 89
+    },
+    {
+     "path": "api/src/modules/notifications/notification-events.ts",
+     "line": 1,
+     "end_line": 24,
+     "label": "event_id"
+    }
+   ]
+  },
+  {
+   "id": "reminders",
+   "type": "backend",
+   "label": "reminders (cron)",
+   "sublabel": "khóa sổ · tự hủy ADM hết hàng",
+   "pos": [
+    40,
+    560
+   ],
+   "size": [
+    210,
+    62
+   ],
+   "tag": "container api",
+   "sources": [
+    {
+     "path": "api/src/modules/reminders/notification-scheduler.ts",
+     "line": 120,
+     "end_line": 145
+    },
+    {
+     "path": "api/src/modules/reminders/adm-out-settlement.ts",
+     "line": 23,
+     "end_line": 70
+    }
+   ]
+  },
+  {
+   "id": "postgres",
+   "type": "database",
+   "label": "PostgreSQL 18",
+   "sublabel": "pgdata · migrations 0001–0119",
+   "pos": [
+    640,
+    560
+   ],
+   "size": [
+    220,
+    62
+   ],
+   "sources": [
+    {
+     "path": "docker-compose.yml",
+     "line": 51,
+     "end_line": 61
+    },
+    {
+     "path": "api/src/database/database.module.ts",
+     "line": 13,
+     "end_line": 28
+    }
+   ]
+  },
+  {
+   "id": "files",
+   "type": "database",
+   "label": "volume filesdata",
+   "sublabel": "/data/files/<uuid>.<ext>",
+   "pos": [
+    960,
+    560
+   ],
+   "size": [
+    200,
+    62
+   ],
+   "sources": [
+    {
+     "path": "docker-compose.yml",
+     "line": 24,
+     "end_line": 26
+    },
+    {
+     "path": "api/src/modules/files/files.service.ts",
+     "line": 59,
+     "end_line": 59,
+     "label": "writeFile"
+    }
+   ]
+  },
+  {
+   "id": "backup",
+   "type": "backend",
+   "label": "backup-cron",
+   "sublabel": "pg_dump + ảnh, BACKUP_AT",
+   "pos": [
+    960,
+    740
+   ],
+   "size": [
+    200,
+    62
+   ],
+   "sources": [
+    {
+     "path": "docker-compose.yml",
+     "line": 68,
+     "end_line": 91
+    }
+   ]
+  }
+ ],
+ "boundaries": [
+  {
+   "kind": "region",
+   "label": "Docker Compose · mạng default",
+   "wraps": [
+    "web",
+    "guards",
+    "auth",
+    "core",
+    "delivery",
+    "reports",
+    "notifications",
+    "reminders",
+    "postgres",
+    "files",
+    "backup"
+   ],
+   "pad": 22
+  }
+ ],
+ "connections": [
+  {
+   "from": "browser",
+   "to": "edge",
+   "label": "HTTPS",
+   "variant": "emphasis"
+  },
+  {
+   "from": "edge",
+   "to": "web",
+   "label": "vpp-web:80",
+   "variant": "emphasis"
+  },
+  {
+   "from": "web",
+   "to": "guards",
+   "label": "/api → api:3000",
+   "variant": "emphasis"
+  },
+  {
+   "from": "guards",
+   "to": "auth",
+   "label": "auth/*",
+   "variant": "emphasis"
+  },
+  {
+   "from": "auth",
+   "to": "pmhid",
+   "label": "token · refresh · JWKS",
+   "variant": "security"
+  },
+  {
+   "from": "pmhid",
+   "to": "auth",
+   "label": "webhook v2 · BCL",
+   "variant": "dashed"
+  },
+  {
+   "from": "guards",
+   "to": "core",
+   "label": "phiếu · tủ · hàng về"
+  },
+  {
+   "from": "guards",
+   "to": "delivery",
+   "label": "admin/lines · delivery-people"
+  },
+  {
+   "from": "guards",
+   "to": "reports",
+   "label": "reports · send-state · no-order"
+  },
+  {
+   "from": "delivery",
+   "to": "core",
+   "label": "khóa dòng · trừ kho"
+  },
+  {
+   "from": "delivery",
+   "to": "notifications",
+   "label": "giao đủ · hủy · ADM hết"
+  },
+  {
+   "from": "core",
+   "to": "notifications",
+   "label": "giảm phiếu · món ngoài DM"
+  },
+  {
+   "from": "reminders",
+   "to": "notifications",
+   "label": "kỳ mở · nhắc · khóa · sắp hết"
+  },
+  {
+   "from": "notifications",
+   "to": "postgres",
+   "label": "in_app_notifications"
+  },
+  {
+   "from": "core",
+   "to": "postgres",
+   "label": "SQL"
+  },
+  {
+   "from": "reports",
+   "to": "postgres",
+   "label": "đọc · report_snapshots"
+  },
+  {
+   "from": "auth",
+   "to": "postgres",
+   "label": "sessions · users"
+  },
+  {
+   "from": "core",
+   "to": "files",
+   "label": "ghi ảnh"
+  },
+  {
+   "from": "backup",
+   "to": "postgres",
+   "label": "pg_dump",
+   "variant": "dashed"
+  },
+  {
+   "from": "backup",
+   "to": "files",
+   "label": "đọc ro",
+   "variant": "dashed"
+  }
+ ],
+ "cards": [
+  {
+   "dot": "rose",
+   "title": "Ranh giới tin cậy",
+   "items": [
+    "TLS kết thúc ở EDGE (repo PMH_IDE, cấu hình không nằm trong repo này)",
+    "web chỉ join mạng edge, không publish cổng; nginx xóa header dev-identity",
+    "TRUST_PROXY_HOPS = 2 (EDGE + web nginx) để req.ip là IP máy người dùng"
+   ]
+  },
+  {
+   "dot": "amber",
+   "title": "PMH ID sập",
+   "items": [
+    "Refresh lỗi mạng → route bảo vệ 503 SSO_UNAVAILABLE, phiên được giữ",
+    "Route @Public (sa-login, public-config, health) đi tiếp ẩn danh",
+    "SA local là lối vào break-glass; lockout (IP, user) 5 sai, toàn cục 50"
+   ]
+  },
+  {
+   "dot": "cyan",
+   "title": "Gộp trong sơ đồ",
+   "items": [
+    "auth · users: AuthModule import UsersModule (directory sync 60′ gọi Directory API)",
+    "delivery ghi request_lines qua LineDeliveryStore, trừ tủ qua StockService; deliver-all đã gỡ",
+    "reminders lúc khóa sổ: ghi headcount_subs, AdmOutSettlement hủy phần chưa giao của món ADM hết hàng mọi kỳ trước",
+    "ConfigAdminModule tách khỏi SystemConfigModule (sửa cấu hình cần kỳ đang mở); audit được mọi module gọi"
+   ]
+  },
+  {
+   "dot": "violet",
+   "title": "Bảng/cột mới Plan v2-D",
+   "items": [
+    "0113 request_line_adjustments (chỉ-thêm, trigger chặn UPDATE/DELETE/TRUNCATE) · 0114 period_adm_out (out · owed_closed)",
+    "0115 stock_movements.receipt_ym · 0116 periods.headcount_subs · 0117 custom_receipts",
+    "0118 periods.no_order_at/by · 0119 chỉ mục audit_log(detail->>'batch_id')"
+   ]
+  },
+  {
+   "dot": "emerald",
+   "title": "Endpoint mới Plan v2-D",
+   "items": [
+    "admin/periods/:ym: arrivals-plan · adm-out/:line_key · adm-owed-closed/:line_key · custom-receipts · send-state · no-order",
+    "GET admin/reports/:ym/sent · GET admin/stock · GET admin/items/:id/pending-arrival",
+    "Đã gỡ: POST admin/requests (tạo phiếu hộ), POST admin/requests/:id/deliver-all, ?exclude_admin của admin/users"
+   ]
+  }
+ ]
 }

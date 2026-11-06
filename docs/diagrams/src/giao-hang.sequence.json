@@ -1,340 +1,395 @@
 {
-  "schema_version": 1,
-  "diagram_type": "sequence",
-  "meta": {
-    "title": "VPP Công trình — giao một dòng (POST admin/lines/:id/deliver)",
-    "output": "docs/diagrams/vpp-giao-hang.html",
-    "locale": "vi",
-    "quality_profile": "showcase",
-    "repository": {
-      "url": "https://github.com/youtranken/QLVPP_DE.git",
-      "provider": "github",
-      "link_mode": "local-only",
-      "revision": "e706b4e7539c5345bc55cf37dc40ea017107f628"
-    },
-    "legend": {
-      "entries": {
-        "emphasis": {
-          "label": "ghi chính (trừ kho, số đã giao)"
-        },
-        "security": {
-          "label": "khóa hàng FOR UPDATE"
-        },
-        "dashed": {
-          "label": "chuông: SAVEPOINT, lỗi bị nuốt"
-        },
-        "return": {
-          "label": "trả về"
-        },
-        "default": {
-          "label": "gọi trong tx"
-        }
-      }
-    }
+ "schema_version": 1,
+ "diagram_type": "sequence",
+ "meta": {
+  "title": "VPP — hộp giao và mọi đường giao/hủy (v2-D)",
+  "output": "docs/diagrams/vpp-giao-hang.html",
+  "locale": "vi",
+  "quality_profile": "showcase",
+  "repository": {
+   "url": "https://github.com/youtranken/QLVPP_DE.git",
+   "provider": "github",
+   "link_mode": "local-only",
+   "revision": "e5d57874ceec1ebcd998227c71f05088c110d70c"
   },
-  "participants": [
-    {
-      "id": "ui",
-      "type": "frontend",
-      "label": "Giao hàng",
-      "sublabel": "DeliverLineRow",
-      "sources": [
-        {
-          "path": "web/src/features/delivery/deliver-line-row.tsx",
-          "line": 31,
-          "end_line": 45,
-          "label": "useSingleFlight"
-        }
-      ]
+  "legend": {
+   "entries": {
+    "emphasis": {
+     "label": "ghi chính (giao, trừ tủ)"
     },
-    {
-      "id": "svc",
-      "type": "backend",
-      "label": "DeliveryService",
-      "sublabel": "một transaction",
-      "sources": [
-        {
-          "path": "api/src/modules/delivery/delivery.service.ts",
-          "line": 36,
-          "end_line": 55,
-          "label": "deliverLine"
-        },
-        {
-          "path": "api/src/modules/delivery/delivery.service.ts",
-          "line": 58,
-          "end_line": 96,
-          "label": "deliverWithin"
-        },
-        {
-          "path": "api/src/modules/delivery/delivery.service.ts",
-          "line": 121,
-          "end_line": 142,
-          "label": "chuông + kỳ khóa"
-        }
-      ]
+    "security": {
+     "label": "khóa hàng FOR UPDATE / kiểm trần"
     },
-    {
-      "id": "store",
-      "type": "backend",
-      "label": "LineDeliveryStore",
-      "sublabel": "module requests",
-      "sources": [
-        {
-          "path": "api/src/modules/requests/line-delivery.store.ts",
-          "line": 53,
-          "end_line": 66,
-          "label": "lockLine"
-        },
-        {
-          "path": "api/src/modules/requests/line-delivery.store.ts",
-          "line": 85,
-          "end_line": 100,
-          "label": "addDelivered"
-        }
-      ]
+    "dashed": {
+     "label": "chuông trong SAVEPOINT"
     },
-    {
-      "id": "stock",
-      "type": "backend",
-      "label": "StockService",
-      "sublabel": "module catalog",
-      "sources": [
-        {
-          "path": "api/src/modules/catalog/stock.service.ts",
-          "line": 124,
-          "end_line": 146,
-          "label": "takeForDeliveryWithin"
-        }
-      ]
+    "return": {
+     "label": "trả về"
     },
-    {
-      "id": "notif",
-      "type": "backend",
-      "label": "NotificationsService",
-      "sublabel": "notifyWithin",
-      "sources": [
-        {
-          "path": "api/src/modules/notifications/notifications.service.ts",
-          "line": 65,
-          "end_line": 89
-        }
-      ]
-    },
-    {
-      "id": "db",
-      "type": "database",
-      "label": "PostgreSQL",
-      "sublabel": "khóa theo hàng",
-      "sources": [
-        {
-          "path": "api/src/modules/delivery/delivery.repo.ts",
-          "line": 4,
-          "end_line": 20,
-          "label": "INSERT line_deliveries"
-        }
-      ]
+    "default": {
+     "label": "gọi"
     }
-  ],
-  "segments": [
+   }
+  }
+ },
+ "participants": [
+  {
+   "id": "dlg",
+   "type": "frontend",
+   "label": "Hộp giao",
+   "sublabel": "thẻ hoặc panel ?person",
+   "sources": [
     {
-      "from": 150,
-      "to": 200,
-      "label": "Gửi"
+     "path": "web/src/features/delivery/people/deliver-dialog.tsx",
+     "line": 67,
+     "end_line": 100,
+     "label": "DeliverDialog"
     },
     {
-      "from": 202,
-      "to": 410,
-      "label": "Khóa requests → request_lines, kiểm"
+     "path": "web/src/features/delivery/people/deliver-plan.ts",
+     "line": 109,
+     "end_line": 133,
+     "label": "dialogRows"
     },
     {
-      "from": 412,
-      "to": 586,
-      "label": "Trừ kho, ghi giao"
-    },
-    {
-      "from": 588,
-      "to": 750,
-      "label": "Chuông trong SAVEPOINT, trả kết quả"
+     "path": "web/src/features/delivery/people/deliver-send.ts",
+     "line": 27,
+     "end_line": 56,
+     "label": "sendSteps"
     }
-  ],
-  "messages": [
+   ]
+  },
+  {
+   "id": "back",
+   "type": "frontend",
+   "label": "Còn nợ",
+   "sublabel": "/admin/backlog",
+   "sources": [
     {
-      "id": "post",
-      "from": "ui",
-      "to": "svc",
-      "y": 165,
-      "label": "deliver {qty, expected_delivered_qty}",
-      "variant": "emphasis",
-      "note": "useSingleFlight: bấm đúp chỉ gửi một request"
+     "path": "web/src/features/delivery/backlog-page.tsx",
+     "line": 80,
+     "end_line": 85
     },
     {
-      "id": "lock",
-      "from": "svc",
-      "to": "store",
-      "y": 215,
-      "label": "lockLine(tx)",
-      "variant": "default",
-      "note": "now = ClockService.now() đọc một lần; BEGIN"
-    },
-    {
-      "id": "lock-r",
-      "from": "store",
-      "to": "db",
-      "y": 262,
-      "label": "SELECT … FOR UPDATE OF r",
-      "variant": "security"
-    },
-    {
-      "id": "lock-l",
-      "from": "store",
-      "to": "db",
-      "y": 290,
-      "label": "SELECT … FOR UPDATE OF l",
-      "variant": "security"
-    },
-    {
-      "id": "locked",
-      "from": "store",
-      "to": "svc",
-      "y": 318,
-      "label": "LockedLine",
-      "variant": "return",
-      "note": "now < deadline → 409 PERIOD_NOT_LOCKED; pending/rejected → LINE_NOT_REVIEWED/LINE_REJECTED; delivered ≠ expected → 409 STALE_UPDATE"
-    },
-    {
-      "id": "take",
-      "from": "svc",
-      "to": "stock",
-      "y": 426,
-      "label": "takeForDeliveryWithin",
-      "variant": "default",
-      "note": "qty > còn lại → 400 DELIVER_EXCEEDS_QTY; dòng ngoài DM bỏ qua bước này"
-    },
-    {
-      "id": "take-sql",
-      "from": "stock",
-      "to": "db",
-      "y": 482,
-      "label": "UPDATE items … WHERE stock_qty >= q",
-      "variant": "emphasis",
-      "note": "0 dòng → 409 STOCK_INSUFFICIENT {available}; có → INSERT stock_movements −q"
-    },
-    {
-      "id": "add",
-      "from": "svc",
-      "to": "store",
-      "y": 536,
-      "label": "addDelivered",
-      "variant": "default"
-    },
-    {
-      "id": "add-sql",
-      "from": "store",
-      "to": "db",
-      "y": 564,
-      "label": "UPDATE request_lines WHERE delivered_qty = expected",
-      "variant": "emphasis"
-    },
-    {
-      "id": "rest",
-      "from": "svc",
-      "to": "db",
-      "y": 602,
-      "label": "line_deliveries · audit · bumpRequest",
-      "variant": "default"
-    },
-    {
-      "id": "notify",
-      "from": "svc",
-      "to": "notif",
-      "y": 632,
-      "label": "notifyWithin nếu phiếu đủ",
-      "variant": "dashed",
-      "note": "event_id request_delivered:<request_id>:<n>"
-    },
-    {
-      "id": "notify-sql",
-      "from": "notif",
-      "to": "db",
-      "y": 680,
-      "label": "SAVEPOINT · INSERT … ON CONFLICT DO NOTHING",
-      "variant": "dashed",
-      "note": "lỗi → rollback savepoint, log {event_id, topic, code}; tx nghiệp vụ vẫn COMMIT"
-    },
-    {
-      "id": "reply",
-      "from": "svc",
-      "to": "ui",
-      "y": 736,
-      "label": "200 {line, movement_id, stock_qty, request_complete}",
-      "variant": "return"
+     "path": "web/src/features/delivery/deliver-more-dialog.tsx",
+     "line": 24,
+     "end_line": 25
     }
-  ],
-  "activations": [
+   ]
+  },
+  {
+   "id": "people",
+   "type": "backend",
+   "label": "delivery-people",
+   "sublabel": "đọc-only",
+   "sources": [
     {
-      "participant": "ui",
-      "from": 160,
-      "to": 742,
-      "type": "frontend"
+     "path": "api/src/modules/delivery/delivery-people.service.ts",
+     "line": 32,
+     "end_line": 60,
+     "label": "holds"
     },
     {
-      "participant": "svc",
-      "from": 165,
-      "to": 738,
-      "type": "backend"
-    },
-    {
-      "participant": "store",
-      "from": 215,
-      "to": 322,
-      "type": "backend"
-    },
-    {
-      "participant": "stock",
-      "from": 426,
-      "to": 488,
-      "type": "backend"
-    },
-    {
-      "participant": "store",
-      "from": 536,
-      "to": 570,
-      "type": "backend"
-    },
-    {
-      "participant": "notif",
-      "from": 632,
-      "to": 686,
-      "type": "backend"
+     "path": "api/src/modules/delivery/delivery-people.service.ts",
+     "line": 114,
+     "end_line": 135
     }
-  ],
-  "cards": [
+   ]
+  },
+  {
+   "id": "dsvc",
+   "type": "backend",
+   "label": "DeliveryService",
+   "sublabel": "một tx mỗi dòng",
+   "sources": [
     {
-      "dot": "rose",
-      "title": "Thứ tự khóa",
-      "items": [
-        "requests → request_lines (id tăng) → items, như writer phiếu và review",
-        "Giao tất cả khóa trước mọi món của phiếu (lockItemsWithin, ORDER BY id) rồi mỗi dòng một SAVEPOINT",
-        "Trừ kho bằng UPDATE có điều kiện, không đọc-rồi-ghi"
-      ]
+     "path": "api/src/modules/delivery/delivery.service.ts",
+     "line": 36,
+     "end_line": 70,
+     "label": "deliverLine"
     },
     {
-      "dot": "amber",
-      "title": "Bấm hai lần",
-      "items": [
-        "FE: useSingleFlight chặn request thứ hai khi request đầu chưa xong",
-        "Lọt tới server: expected_delivered_qty cũ → 409 STALE_UPDATE, kho không trừ lần hai",
-        "Không có hoàn tác đợt giao trong GĐ1 (FR-44)"
-      ]
-    },
-    {
-      "dot": "cyan",
-      "title": "Ai ghi bảng nào",
-      "items": [
-        "request_lines chỉ qua LineDeliveryStore (module requests)",
-        "items / stock_movements chỉ qua StockService (module catalog)",
-        "delivery tự ghi line_deliveries; chuông qua NotificationsService"
-      ]
+     "path": "api/src/modules/delivery/custom-cap.ts",
+     "line": 12,
+     "end_line": 29,
+     "label": "trần ngoài DM"
     }
-  ]
+   ]
+  },
+  {
+   "id": "csvc",
+   "type": "backend",
+   "label": "CancelRemaining",
+   "sublabel": "hủy phần còn lại",
+   "sources": [
+    {
+     "path": "api/src/modules/delivery/cancel-remaining.service.ts",
+     "line": 40,
+     "end_line": 95
+    },
+    {
+     "path": "api/src/modules/delivery/cancel-remaining.service.ts",
+     "line": 97,
+     "end_line": 140,
+     "label": "chuông"
+    }
+   ]
+  },
+  {
+   "id": "notif",
+   "type": "backend",
+   "label": "Chuông",
+   "sublabel": "LineNotifier",
+   "sources": [
+    {
+     "path": "api/src/modules/requests/line-notifier.ts",
+     "line": 56,
+     "end_line": 61
+    },
+    {
+     "path": "api/src/modules/notifications/notifications.service.ts",
+     "line": 74,
+     "end_line": 100
+    }
+   ]
+  },
+  {
+   "id": "db",
+   "type": "database",
+   "label": "PostgreSQL",
+   "sublabel": "khóa theo hàng",
+   "sources": [
+    {
+     "path": "api/src/migrations/0105_vpp_deliveries.sql",
+     "line": 1,
+     "end_line": 23
+    },
+    {
+     "path": "api/src/migrations/0117_custom_receipts.sql",
+     "line": 1,
+     "end_line": 11
+    }
+   ]
+  }
+ ],
+ "segments": [
+  {
+   "from": 165,
+   "to": 285,
+   "label": "Mở hộp: đề xuất"
+  },
+  {
+   "from": 305,
+   "to": 595,
+   "label": "Giao từng dòng, nợ cũ trước"
+  },
+  {
+   "from": 615,
+   "to": 815,
+   "label": "Hủy phần thiếu ADM hết hàng"
+  },
+  {
+   "from": 835,
+   "to": 1035,
+   "label": "Còn nợ: Giao bổ sung · Hủy nợ"
+  }
+ ],
+ "messages": [
+  {
+   "id": "m1",
+   "from": "dlg",
+   "to": "people",
+   "y": 185,
+   "label": "GET periods/:ym/delivery-people",
+   "note": "dòng kỳ K* + nợ; adm_out; deliver_cap"
+  },
+  {
+   "id": "m2",
+   "from": "people",
+   "to": "dlg",
+   "y": 245,
+   "label": "{people}",
+   "variant": "return",
+   "note": "đề xuất: đăng ký trước giữ trước; người nghỉ 0"
+  },
+  {
+   "id": "m3",
+   "from": "dlg",
+   "to": "dsvc",
+   "y": 330,
+   "label": "POST lines/:id/deliver {qty, expected}",
+   "variant": "emphasis",
+   "note": "tuần tự; lỗi một dòng không chặn dòng sau"
+  },
+  {
+   "id": "m4",
+   "from": "dsvc",
+   "to": "db",
+   "y": 385,
+   "label": "FOR UPDATE requests → request_lines",
+   "variant": "security"
+  },
+  {
+   "id": "m5",
+   "from": "dsvc",
+   "to": "db",
+   "y": 420,
+   "label": "ngoài DM: Σ đã về − Σ đã giao",
+   "variant": "security",
+   "note": "vượt → 409 CUSTOM_NOT_RECEIVED"
+  },
+  {
+   "id": "m6",
+   "from": "dsvc",
+   "to": "db",
+   "y": 480,
+   "label": "UPDATE items WHERE stock_qty >= q",
+   "variant": "emphasis",
+   "note": "0 dòng → 409 STOCK_INSUFFICIENT"
+  },
+  {
+   "id": "m7",
+   "from": "dsvc",
+   "to": "notif",
+   "y": 540,
+   "label": "notifyIfComplete",
+   "variant": "dashed"
+  },
+  {
+   "id": "m8",
+   "from": "dsvc",
+   "to": "dlg",
+   "y": 575,
+   "label": "200 {line, stock_qty, request_complete}",
+   "variant": "return"
+  },
+  {
+   "id": "m9",
+   "from": "dlg",
+   "to": "csvc",
+   "y": 640,
+   "label": "POST cancel-remaining {adm_out_of_stock}",
+   "variant": "emphasis",
+   "note": "sau mọi lần giao; bỏ qua nếu giao dòng đó lỗi"
+  },
+  {
+   "id": "m10",
+   "from": "csvc",
+   "to": "db",
+   "y": 700,
+   "label": "khóa dấu out → khóa dòng",
+   "variant": "security",
+   "note": "K* không đánh dấu → 409 ITEM_NOT_ADM_OUT"
+  },
+  {
+   "id": "m11",
+   "from": "csvc",
+   "to": "notif",
+   "y": 760,
+   "label": "linesAdjusted (chuông ngày)",
+   "variant": "dashed"
+  },
+  {
+   "id": "m12",
+   "from": "csvc",
+   "to": "dlg",
+   "y": 795,
+   "label": "200 {cancelled_now}",
+   "variant": "return"
+  },
+  {
+   "id": "m13",
+   "from": "back",
+   "to": "dsvc",
+   "y": 860,
+   "label": "Giao bổ sung: POST deliver",
+   "note": "cùng luật khóa và trần như hộp giao"
+  },
+  {
+   "id": "m14",
+   "from": "back",
+   "to": "csvc",
+   "y": 920,
+   "label": "Hủy nợ: POST cancel-remaining {reason_code}",
+   "variant": "emphasis",
+   "note": "dòng K* → 409 NOT_DEBT_YET"
+  },
+  {
+   "id": "m15",
+   "from": "csvc",
+   "to": "notif",
+   "y": 980,
+   "label": "line_cancelled (trừ user_left)",
+   "variant": "dashed"
+  },
+  {
+   "id": "m16",
+   "from": "csvc",
+   "to": "back",
+   "y": 1015,
+   "label": "200 {line, cancelled_now}",
+   "variant": "return"
+  }
+ ],
+ "activations": [
+  {
+   "participant": "dlg",
+   "from": 180,
+   "to": 800,
+   "type": "frontend"
+  },
+  {
+   "participant": "dsvc",
+   "from": 330,
+   "to": 580,
+   "type": "backend"
+  },
+  {
+   "participant": "csvc",
+   "from": 640,
+   "to": 800,
+   "type": "backend"
+  },
+  {
+   "participant": "back",
+   "from": 855,
+   "to": 1020,
+   "type": "frontend"
+  },
+  {
+   "participant": "csvc",
+   "from": 920,
+   "to": 1020,
+   "type": "backend"
+  }
+ ],
+ "cards": [
+  {
+   "dot": "cyan",
+   "title": "Đề xuất trong hộp",
+   "items": [
+    "Hàng: nợ trước (kỳ cũ nhất trước), rồi kỳ này; trong kỳ theo thứ tự món chung",
+    "Tủ thuộc về món: dòng trên lấy trước; \"Giữ k cho m người đăng ký trước\"",
+    "Dòng chờ duyệt không giao; dòng ngoài DM có trong bản in chỉ giao trong số đã về"
+   ]
+  },
+  {
+   "dot": "amber",
+   "title": "Dòng ADM hết hàng",
+   "items": [
+    "Gợi ý = phần tủ còn cho người này; phần thiếu bị hủy (không thành nợ)",
+    "Chủ phiếu nhận một chuông ngày line_adjusted, không phải line_cancelled",
+    "Không mở hộp thì cron khóa kỳ sau tự hủy phần chưa giao"
+   ]
+  },
+  {
+   "dot": "rose",
+   "title": "Chống ghi đè",
+   "items": [
+    "Mỗi request kèm expected_delivered_qty (và expected_qty khi hủy) → 409 STALE_UPDATE",
+    "Phiên hết giữa chừng: các dòng sau đánh dấu \"chưa gửi\"",
+    "Không có route giao cả phiếu (deliver-all đã gỡ)"
+   ]
+  }
+ ]
 }

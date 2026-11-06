@@ -2,7 +2,7 @@
  "schema_version": 1,
  "diagram_type": "architecture",
  "meta": {
-  "title": "VPP — giao diện Hành chính: shell, trang, module api",
+  "title": "VPP — giao diện Hành chính: menu theo luồng chuẩn, panel phủ, module api (v2-D)",
   "output": "docs/diagrams/vpp-hanh-chinh.html",
   "locale": "vi",
   "quality_profile": "showcase",
@@ -10,7 +10,7 @@
    "url": "https://github.com/youtranken/QLVPP_DE.git",
    "provider": "github",
    "link_mode": "local-only",
-   "revision": "d839a80c790889770910dcd7b3b21d319da66dd7"
+   "revision": "e5d57874ceec1ebcd998227c71f05088c110d70c"
   }
  },
  "components": [
@@ -58,8 +58,8 @@
     },
     {
      "path": "web/src/shell/app-routes.tsx",
-     "line": 55,
-     "end_line": 62
+     "line": 60,
+     "end_line": 75
     }
    ]
   },
@@ -79,7 +79,7 @@
    "sources": [
     {
      "path": "web/src/shell/admin-shell.tsx",
-     "line": 12,
+     "line": 14,
      "end_line": 36
     }
    ]
@@ -88,7 +88,7 @@
    "id": "sidebar",
    "type": "frontend",
    "label": "AdminSidebar ≥ 768",
-   "sublabel": "4 nhóm · 12 mục · thẻ kỳ · đếm",
+   "sublabel": "3 nhóm · 14 mục · thẻ kỳ · đếm",
    "pos": [
     450,
     120
@@ -100,18 +100,18 @@
    "sources": [
     {
      "path": "web/src/shell/admin-sidebar.tsx",
-     "line": 32,
-     "end_line": 67
+     "line": 35,
+     "end_line": 61
     },
     {
      "path": "web/src/shell/admin-nav.ts",
      "line": 17,
-     "end_line": 45
+     "end_line": 47
     },
     {
      "path": "web/src/shell/use-admin-badges.ts",
-     "line": 16,
-     "end_line": 27
+     "line": 1,
+     "end_line": 30
     }
    ]
   },
@@ -131,21 +131,21 @@
    "sources": [
     {
      "path": "web/src/shell/admin-topbar.tsx",
-     "line": 25,
-     "end_line": 73
+     "line": 26,
+     "end_line": 66
     },
     {
      "path": "web/src/shell/admin-menu-sheet.tsx",
      "line": 6,
-     "end_line": 34
+     "end_line": 33
     }
    ]
   },
   {
    "id": "monthly",
    "type": "frontend",
-   "label": "Hằng tháng · 3 trang",
-   "sublabel": "summary delivery reports",
+   "label": "Hằng tháng · 7 trang",
+   "sublabel": "Tháng này → Tổng hợp → … → Báo cáo",
    "pos": [
     700,
     214
@@ -157,26 +157,26 @@
    "sources": [
     {
      "path": "web/src/shell/app-routes.tsx",
-     "line": 64,
-     "end_line": 68
+     "line": 77,
+     "end_line": 85
     },
     {
-     "path": "web/src/features/summary/summary.api.ts",
-     "line": 51,
-     "end_line": 137
+     "path": "web/src/features/send-adm/send-adm.api.ts",
+     "line": 36,
+     "end_line": 52
     },
     {
-     "path": "web/src/features/delivery/delivery.api.ts",
-     "line": 40,
-     "end_line": 43
+     "path": "web/src/features/arrivals/arrivals.api.ts",
+     "line": 74,
+     "end_line": 116
     }
    ]
   },
   {
    "id": "stockpages",
    "type": "frontend",
-   "label": "Danh mục và tủ · 5 trang",
-   "sublabel": "catalog stock(+Xuất lẻ) review categories units",
+   "label": "Danh mục và tủ · 4 trang",
+   "sublabel": "catalog stock review categories",
    "pos": [
     700,
     428
@@ -188,13 +188,13 @@
    "sources": [
     {
      "path": "web/src/shell/app-routes.tsx",
-     "line": 69,
-     "end_line": 72
+     "line": 86,
+     "end_line": 90
     },
     {
      "path": "web/src/features/stock/stock.api.ts",
      "line": 40,
-     "end_line": 75
+     "end_line": 80
     }
    ]
   },
@@ -202,7 +202,7 @@
    "id": "syspages",
    "type": "frontend",
    "label": "Quản lý · 3 trang",
-   "sublabel": "users audit config (+ backlog)",
+   "sublabel": "users audit config",
    "pos": [
     700,
     548
@@ -214,8 +214,8 @@
    "sources": [
     {
      "path": "web/src/shell/app-routes.tsx",
-     "line": 73,
-     "end_line": 75
+     "line": 91,
+     "end_line": 93
     },
     {
      "path": "web/src/features/admin/admin.api.ts",
@@ -225,7 +225,7 @@
     {
      "path": "web/src/features/directory/directory.api.ts",
      "line": 30,
-     "end_line": 76
+     "end_line": 53
     }
    ]
   },
@@ -233,7 +233,7 @@
    "id": "requests",
    "type": "backend",
    "label": "requests",
-   "sublabel": "admin/periods · review · admin/requests",
+   "sublabel": "admin/periods · review · requests/:id/lines",
    "pos": [
     1030,
     100
@@ -245,8 +245,8 @@
    "sources": [
     {
      "path": "api/src/modules/requests/admin-summary.controller.ts",
-     "line": 17,
-     "end_line": 42
+     "line": 11,
+     "end_line": 45
     },
     {
      "path": "api/src/modules/requests/review.controller.ts",
@@ -255,8 +255,8 @@
     },
     {
      "path": "api/src/modules/requests/admin-requests.controller.ts",
-     "line": 14,
-     "end_line": 30
+     "line": 9,
+     "end_line": 22
     }
    ]
   },
@@ -264,7 +264,7 @@
    "id": "delivery",
    "type": "backend",
    "label": "delivery",
-   "sublabel": "lines/:id/deliver · deliver-all · backlog",
+   "sublabel": "deliver · cancel-remaining · backlog",
    "pos": [
     1030,
     218
@@ -276,13 +276,18 @@
    "sources": [
     {
      "path": "api/src/modules/delivery/delivery.controller.ts",
-     "line": 21,
-     "end_line": 48
+     "line": 1,
+     "end_line": 38
     },
     {
      "path": "api/src/modules/delivery/backlog.controller.ts",
      "line": 12,
      "end_line": 21
+    },
+    {
+     "path": "api/src/modules/delivery/delivery-people.controller.ts",
+     "line": 11,
+     "end_line": 14
     }
    ]
   },
@@ -290,7 +295,7 @@
    "id": "reports",
    "type": "backend",
    "label": "reports",
-   "sublabel": "báo cáo · snapshots · export.xlsx",
+   "sublabel": "snapshots · sent · send-state · no-order",
    "pos": [
     1030,
     322
@@ -301,14 +306,14 @@
    ],
    "sources": [
     {
-     "path": "api/src/modules/reports/reports.controller.ts",
-     "line": 15,
-     "end_line": 19
+     "path": "api/src/modules/reports/snapshots.controller.ts",
+     "line": 26,
+     "end_line": 66
     },
     {
-     "path": "api/src/modules/reports/snapshots.controller.ts",
-     "line": 35,
-     "end_line": 66
+     "path": "api/src/modules/reports/no-order.controller.ts",
+     "line": 1,
+     "end_line": 49
     }
    ]
   },
@@ -316,7 +321,7 @@
    "id": "catalog",
    "type": "backend",
    "label": "catalog · units",
-   "sublabel": "items · item-categories · stock · units",
+   "sublabel": "items · stock · adm-out · arrivals-plan",
    "pos": [
     1030,
     428
@@ -327,19 +332,19 @@
    ],
    "sources": [
     {
-     "path": "api/src/modules/catalog/items-admin.controller.ts",
-     "line": 1,
-     "end_line": 52
+     "path": "api/src/modules/catalog/adm-out.controller.ts",
+     "line": 23,
+     "end_line": 85
     },
     {
      "path": "api/src/modules/catalog/stock.controller.ts",
-     "line": 19,
-     "end_line": 51
+     "line": 88,
+     "end_line": 92
     },
     {
-     "path": "api/src/modules/units/units-admin.controller.ts",
+     "path": "api/src/modules/catalog/items-admin.controller.ts",
      "line": 1,
-     "end_line": 46
+     "end_line": 52
     }
    ]
   },
@@ -360,7 +365,7 @@
     {
      "path": "api/src/modules/users/users-admin.controller.ts",
      "line": 1,
-     "end_line": 60
+     "end_line": 47
     },
     {
      "path": "api/src/modules/audit/audit.controller.ts",
@@ -378,7 +383,7 @@
    "id": "pg",
    "type": "database",
    "label": "Postgres",
-   "sublabel": "requests · request_lines · items",
+   "sublabel": "phiếu · tủ · bản chốt · adm_out",
    "pos": [
     1380,
     100
@@ -394,6 +399,32 @@
      "end_line": 55
     }
    ]
+  },
+  {
+   "id": "panel",
+   "type": "frontend",
+   "label": "OverlayPanel",
+   "sublabel": "?request ?person ?line ?item ?group",
+   "pos": [
+    700,
+    70
+   ],
+   "size": [
+    240,
+    64
+   ],
+   "sources": [
+    {
+     "path": "web/src/ui/overlay-panel.tsx",
+     "line": 55,
+     "end_line": 101
+    },
+    {
+     "path": "web/src/lib/use-panel-param.ts",
+     "line": 1,
+     "end_line": 60
+    }
+   ]
   }
  ],
  "boundaries": [
@@ -407,7 +438,8 @@
     "topbar",
     "monthly",
     "stockpages",
-    "syspages"
+    "syspages",
+    "panel"
    ],
    "pad": 22
   },
@@ -474,7 +506,7 @@
    "id": "m-req",
    "from": "monthly",
    "to": "requests",
-   "label": "tổng hợp · duyệt"
+   "label": "tổng hợp · giảm"
   },
   {
    "id": "m-del",
@@ -493,7 +525,7 @@
    "id": "s-cat",
    "from": "stockpages",
    "to": "catalog",
-   "label": "món · kho"
+   "label": "món · tủ · hàng về"
   },
   {
    "id": "y-sys",
@@ -530,33 +562,40 @@
    "from": "system",
    "to": "pg",
    "label": "audit_log"
+  },
+  {
+   "id": "m-panel",
+   "from": "monthly",
+   "to": "panel",
+   "label": "mở panel trong URL"
   }
  ],
  "cards": [
   {
    "dot": "cyan",
-   "title": "Shell",
+   "title": "Menu (ADMIN_NAV, một nguồn cho sidebar và menu sheet)",
    "items": [
-    "ADMIN_NAV (4 nhóm: Hằng tháng · Danh mục và tủ · Quản lý · Xem lại sau) một nguồn cho sidebar, menu sheet và tiêu đề thanh trên",
-    "Đếm: review chờ, dòng chờ giao kỳ khóa gần nhất, món sắp hết (useAdminBadges)",
-    "Chuông NotificationBell ở hàng thương hiệu (≥ 768) hoặc thanh trên (< 768) → me/notifications",
-    "Trang Kho có tab Xuất lẻ (IssuesPanel) cạnh tồn kho; xuất lẻ trừ kho trong cùng giao dịch"
+    "Hằng tháng (7): Tháng này · Tổng hợp kỳ · Gửi ADM · Hàng về · Giao hàng · Còn nợ · Báo cáo & in",
+    "Danh mục và tủ (4): Danh mục món · Tủ / Kho · Món ngoài danh mục · Nhóm & đơn vị (/admin/units chuyển sang /admin/categories/units)",
+    "Quản lý (3): Nhân viên · Nhật ký · Cấu hình; đếm: Giao hàng, Tủ / Kho, Món ngoài DM (useAdminBadges)"
+   ]
+  },
+  {
+   "dot": "emerald",
+   "title": "Panel phủ (OverlayPanel + usePanelParam)",
+   "items": [
+    "Một tham số URL mỗi loại: summary ?request · delivery ?person · backlog ?line · catalog ?item · categories ?group · stock ?item · users ?person",
+    "↑/↓ hoặc j/k đi qua mục đang hiện; đang sửa dở thì hỏi trước khi đóng/chuyển/Back",
+    "Mở bằng đẩy lịch sử nên Back đóng panel; < 768 px chiếm cả màn hình, có nút Đóng trên cùng (thay ui/drawer đã xóa)"
    ]
   },
   {
    "dot": "amber",
-   "title": "Ngoài shell",
+   "title": "Ngoài shell và luật ở server",
    "items": [
-    "Bản in A4 /admin/reports/snapshots/:id/print qua RequireRole nhưng không bọc AdminShell",
-    "Nhân viên dùng MemberShell; RequireMember đẩy admin/sa về /admin"
-   ]
-  },
-  {
-   "dot": "rose",
-   "title": "Luật ở server",
-   "items": [
-    "RequireRole chỉ ẩn giao diện; quyền thật do RolesGuard của api",
-    "delivery trừ kho qua StockService (UPDATE … WHERE stock_qty >= q) trong cùng giao dịch"
+    "Bản in /admin/reports/snapshots/:id/print qua RequireRole nhưng không bọc AdminShell; Gửi ADM in tại chỗ (PrintPortal)",
+    "RequireRole chỉ ẩn giao diện; quyền thật do RolesGuard của api; route kỳ mở → 409 PERIOD_NOT_LOCKED",
+    "Hàng về đi qua module catalog (arrivals-plan, adm-out, stock/receipts) dù nằm ở nhóm Hằng tháng"
    ]
   }
  ]

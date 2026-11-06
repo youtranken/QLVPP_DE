@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="archify 3.2.0">
   <meta name="archify-reader-contract" content="declared-wide-v1">
-  <title>VPP Công trình — vòng đời một tháng (kỳ → giao → còn nợ → bản chốt) Diagram</title>
+  <title>VPP — vòng đời phần chưa giao của một dòng (v2-D) Diagram</title>
   <script>
     // Resolve the theme before first paint so light-preference users don't
     // see a dark flash. The toolbar script below re-applies with UI state.
@@ -5193,17 +5193,17 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
            data-preset-badge-blueprint="BLUEPRINT / REV 01"
            data-preset-badge-editorial="EDITORIAL / FIELD NOTE">
         <div class="pulse-dot"></div>
-        <h1>VPP Công trình — vòng đời một tháng (kỳ → giao → còn nợ → bản chốt)</h1>
+        <h1>VPP — vòng đời phần chưa giao của một dòng (v2-D)</h1>
       </div>
     </div>
 
-    <script id="archify-source-evidence-data" type="application/json">{"schemaVersion":1,"verified":true,"repository":{"url":"https://github.com/youtranken/QLVPP_DE","revision":"e706b4e7539c5345bc55cf37dc40ea017107f628","shortRevision":"e706b4e","label":"youtranken/QLVPP_DE","linkMode":"local-only"},"referenceCount":15,"nodes":{"open":[{"path":"api/src/modules/periods/periods.service.ts","line":50,"endLine":67,"label":"openPeriod"},{"path":"api/src/modules/reminders/notification-scheduler.ts","line":92,"endLine":102,"label":"period_open"}],"remind":[{"path":"api/src/modules/reminders/schedule-days.ts","line":3,"endLine":9},{"path":"api/src/modules/reminders/notification-scheduler.ts","line":104,"endLine":114,"label":"reminder"}],"locked":[{"path":"api/src/modules/reminders/notification-scheduler.ts","line":116,"endLine":137,"label":"headcount + period_locked"},{"path":"api/src/modules/reminders/schedule-days.ts","line":11,"endLine":14,"label":"isLockDay"},{"path":"api/src/modules/delivery/delivery.service.ts","line":139,"endLine":142,"label":"PERIOD_NOT_LOCKED"}],"delivering":[{"path":"api/src/modules/delivery/delivery.service.ts","line":36,"endLine":55,"label":"deliverLine"},{"path":"api/src/modules/delivery/deliver-all.service.ts","line":30,"endLine":48,"label":"deliverAll"}],"done":[{"path":"api/src/modules/delivery/delivery.service.ts","line":120,"endLine":137,"label":"notifyIfComplete"},{"path":"api/src/modules/requests/line-delivery.store.ts","line":132,"endLine":140,"label":"isComplete"}],"owed":[{"path":"api/src/modules/delivery/backlog.service.ts","line":54,"endLine":72,"label":"backlogRows"},{"path":"api/src/modules/reports/report-queries.ts","line":44,"endLine":50,"label":"backlog_prev"}],"cancelled":[{"path":"api/src/modules/delivery/cancel-remaining.service.ts","line":30,"endLine":92}],"snapshot":[{"path":"api/src/modules/reports/snapshots.service.ts","line":40,"endLine":70,"label":"REPEATABLE READ"}]}}</script>
+    <script id="archify-source-evidence-data" type="application/json">{"schemaVersion":1,"verified":true,"repository":{"url":"https://github.com/youtranken/QLVPP_DE","revision":"e5d57874ceec1ebcd998227c71f05088c110d70c","shortRevision":"e5d5787","label":"youtranken/QLVPP_DE","linkMode":"local-only"},"referenceCount":15,"nodes":{"cart":[{"path":"api/src/modules/requests/me-request.controller.ts","line":46,"endLine":52,"label":"PUT me/request/lines"},{"path":"api/src/modules/periods/period-lock.ts","line":6,"endLine":14,"label":"lockState"}],"waiting":[{"path":"api/src/modules/catalog/stock-held-sql.ts","line":8,"endLine":16,"label":"heldSql"},{"path":"api/src/modules/requests/adjust-rules.ts","line":150,"endLine":178,"label":"không thêm/tăng"},{"path":"api/src/modules/delivery/delivery-people.service.ts","line":32,"endLine":42,"label":"holds"}],"done":[{"path":"api/src/modules/delivery/delivery.service.ts","line":36,"endLine":70,"label":"deliverLine"},{"path":"api/src/modules/delivery/delivery.service.ts","line":122,"endLine":142,"label":"notifyIfComplete"}],"owed":[{"path":"api/src/modules/requests/line-predicates.ts","line":14,"endLine":16,"label":"DEBT_LINE_SQL"},{"path":"api/src/modules/delivery/delivery-people.service.ts","line":123,"endLine":135,"label":"is_debt"}],"removed":[{"path":"api/src/modules/requests/admin-request.service.ts","line":128,"endLine":148,"label":"apply"},{"path":"api/src/modules/requests/line-adjustments.repo.ts","line":50,"endLine":75,"label":"insertAdjustments"}],"admout":[{"path":"web/src/features/delivery/people/deliver-send.ts","line":27,"endLine":31,"label":"hộp giao"},{"path":"api/src/modules/reminders/adm-out-settlement.ts","line":23,"endLine":70,"label":"tự hủy lúc khóa"}],"cancelled":[{"path":"api/src/modules/delivery/cancel-remaining.service.ts","line":40,"endLine":70},{"path":"api/src/modules/delivery/cancel-reason.ts","line":10,"endLine":29}]}}</script>
     <script id="archify-i18n-data" type="application/json">{"locale":"en","messages":{"viewer.kind.frontend":"Frontend","viewer.kind.backend":"Backend","viewer.kind.database":"Database","viewer.kind.cloud":"Cloud","viewer.kind.security":"Security","viewer.kind.messagebus":"Message bus","viewer.kind.external":"External","viewer.kind.neutral":"Neutral","viewer.kind.node":"Node","viewer.kind.start":"Start","viewer.kind.active":"Active","viewer.kind.waiting":"Waiting","viewer.kind.decision":"Decision","viewer.kind.success":"Success","viewer.kind.failure":"Failure","viewer.toolbar.actions":"Diagram actions","viewer.theme.toggle.title":"Toggle theme (T)","viewer.theme.toggle":"Toggle color theme","viewer.theme.dark":"Dark","viewer.theme.light":"Light","viewer.preset.choose.title":"Choose visual style (S cycles)","viewer.preset.choose":"Choose visual style","viewer.preset.style":"Style","viewer.preset.menu":"Visual style","viewer.preset.identity":"Visual identity","viewer.preset.cycles":"to cycle","viewer.preset.classic":"Classic","viewer.preset.classic.short":"Classic","viewer.preset.classic.hint":"Stable technical default","viewer.preset.flow":"Signal Flow","viewer.preset.flow.short":"Flow","viewer.preset.flow.hint":"Motion-forward presentation","viewer.preset.blueprint":"Blueprint","viewer.preset.blueprint.hint":"Engineering review","viewer.preset.editorial":"Editorial","viewer.preset.editorial.hint":"Publication and launch notes","viewer.preset.badge.signalFlow":"SIGNAL FLOW","viewer.preset.badge.blueprint":"BLUEPRINT / REV 01","viewer.preset.badge.editorial":"EDITORIAL / FIELD NOTE","viewer.preset.badge.editorialPlate":"ARCHIFY / PLATE 04","viewer.preset.current":"Visual style: {style}. Choose visual style","viewer.motion.live":"Live","viewer.motion.still":"Still","viewer.motion.pause":"Pause motion","viewer.motion.resume":"Resume motion","viewer.motion.reduced":"Motion paused by reduced-motion preference","viewer.motion.hidden":"Motion paused while this page is hidden","viewer.motion.yielding":"Pause motion; currently yielding to {owner}","viewer.motion.yielding.title":"Live preview enabled · yielding to {owner}","viewer.owner.route":"Route Probe","viewer.owner.lens":"Semantic Lens","viewer.owner.relationship":"Relationship Preview","viewer.owner.intent":"Intent Trace","viewer.owner.focus":"semantic focus","viewer.owner.legend":"legend preview","viewer.owner.reader":"reader interaction","viewer.present.enter":"Enter presentation stage","viewer.present.enter.title":"Presentation stage (F)","viewer.present.exit":"Exit presentation stage","viewer.present.exit.title":"Exit presentation stage (F or Escape)","viewer.present.present":"Present","viewer.present.exit.label":"Exit","viewer.export.button":"Export","viewer.export.button.title":"Export diagram (E)","viewer.export.diagram":"Export diagram","viewer.export.menu":"Export","viewer.export.subtitle":"Portable, clean outputs","viewer.export.share":"Share","viewer.export.shareCard":"Share Card","viewer.export.routeShareCard":"Route Share Card","viewer.export.reachShareCard":"Reach Share Card","viewer.export.copyDiagram":"Copy diagram","viewer.export.clipboardPng":"PNG to clipboard","viewer.export.raster":"Raster images","viewer.export.image":"Image","viewer.export.lossless":"Lossless image","viewer.export.compact":"Compact image","viewer.export.modern":"Modern image","viewer.export.vectorMotion":"Vector and motion","viewer.export.vectorMotion.heading":"Vector \u0026 motion","viewer.export.editable":"Editable vector","viewer.export.svg.auto":"SVG · Auto","viewer.export.svg.auto.hint":"Matches host theme","viewer.export.svg.light":"SVG · Light","viewer.export.svg.light.hint":"Always light","viewer.export.svg.dark":"SVG · Dark","viewer.export.svg.dark.hint":"Always dark","viewer.export.motion6s":"6s motion","viewer.export.unsupported":"Not supported by this browser","viewer.export.clipboardUnsupported":"Clipboard image write not supported by this browser","viewer.export.clipboardUnsupported.short":"Clipboard image write not supported in this browser.","viewer.export.motionUnavailable":"Motion capture unavailable in this browser","viewer.export.webmUnavailable":"WebM unavailable in this browser","viewer.export.failed":"Export failed: {message}","viewer.export.unknownVariant":"Unknown Share Card variant: {variant}","viewer.export.routeRequired":"Trace a route before exporting a Route Share Card","viewer.export.reachRequired":"Trace authored reach before exporting a Reach Share Card","viewer.export.unknown":"unknown","viewer.export.routeFailed":"Route Share Card export failed: {message}","viewer.export.reachFailed":"Reach Share Card export failed: {message}","viewer.export.copyFailed":"Copy failed: {message}","viewer.export.copiedPng":"Copied PNG to clipboard","viewer.export.downloadedRoute":"Downloaded Route Share Card","viewer.export.downloadedReach":"Downloaded Reach Share Card","viewer.export.downloadedWebm":"Downloaded WebM","viewer.export.recording":"Recording 6 seconds of motion…","viewer.export.card.routeSummary.one":"Path: {source} → {target} · {count} step","viewer.export.card.routeSummary.other":"Path: {source} → {target} · {count} steps","viewer.export.card.reachSummary":"Authored {direction} from {origin} · {nodes} · {links} · max {hops}","viewer.export.card.node.one":"{count} node","viewer.export.card.node.other":"{count} nodes","viewer.export.card.link.one":"{count} link","viewer.export.card.link.other":"{count} links","viewer.export.card.hop.one":"{count} hop","viewer.export.card.hop.other":"{count} hops","viewer.export.card.routeBadge":"ARCHIFY · ROUTE · {hops}","viewer.export.card.reachBadge":"ARCHIFY · {direction} REACH","viewer.export.direction.upstream":"Upstream","viewer.export.direction.downstream":"Downstream","viewer.export.error.canvasUnavailable":"Canvas unavailable for {label}","viewer.export.error.contextUnavailable":"2D canvas context unavailable for {label}","viewer.export.error.toBlobUnavailable":"canvas.toBlob unavailable for {label}","viewer.export.error.toBlobNull":"canvas.toBlob returned no data for {label}","viewer.export.error.variantsCombined":"Share Card variants cannot be combined","viewer.export.error.viewerState":"Share Card export could not remove temporary viewer state","viewer.export.error.routeState":"Route Card export could not preserve the resolved route safely","viewer.export.error.reachState":"Reach Card export could not preserve authored reach safely","viewer.export.error.webmRequirements":"WebM motion export requires a trace animation and browser MediaRecorder support","viewer.export.error.mediaRecorder":"MediaRecorder failed","viewer.export.error.emptyWebm":"MediaRecorder produced an empty WebM","viewer.export.error.webmBackground":"SVG background could not be loaded for WebM export","viewer.guide.title":"Explore this system","viewer.focus.selectedNodes":"{count} selected nodes","viewer.guide.eyebrow":"Diagram guide","viewer.guide.close":"Close diagram guide","viewer.guide.inspecting":"Inspecting compiled semantics","viewer.guide.actions":"Diagram exploration actions","viewer.guide.find":"Find any node","viewer.guide.find.hint":"Search labels, responsibilities, kinds, and stable IDs.","viewer.guide.route":"Trace a route","viewer.guide.route.aria":"Trace a directed route","viewer.guide.route.hint":"Ask how two semantic nodes connect in authored direction.","viewer.guide.map":"See the whole system","viewer.guide.map.hint":"Open Semantic Radar with a live viewport and stable nodes.","viewer.guide.lens":"Compare semantic kinds","viewer.guide.lens.hint":"Count roles, reveal their traffic, and compare direct authored links.","viewer.guide.present":"Enter Presentation Stage","viewer.guide.present.hint":"Give the live diagram the viewport without changing export.","viewer.guide.shortcuts":"Additional keyboard shortcuts","viewer.guide.shortcut.export":"Export","viewer.guide.shortcut.theme":"Theme","viewer.guide.shortcut.style":"Style","viewer.guide.shortcut.reset":"Reset","viewer.guide.shortcut.zoomIn":"Zoom in","viewer.guide.shortcut.zoomOut":"Zoom out","viewer.guide.shortcut.close":"Close","viewer.guide.credit":"Find Archify useful? A star on GitHub helps","viewer.guide.star":"Star","viewer.guide.facts":"{nodes} · {relationships}","viewer.guide.fact.node.one":"{count} semantic node","viewer.guide.fact.node.other":"{count} semantic nodes","viewer.guide.fact.relationship.one":"{count} relationship","viewer.guide.fact.relationship.other":"{count} relationships","viewer.guide.open":"Open diagram guide","viewer.finder.title":"Find a node","viewer.finder.close":"Close node finder","viewer.finder.placeholder":"Search labels or IDs","viewer.finder.search":"Search diagram nodes","viewer.finder.results":"Diagram nodes","viewer.finder.empty":"No matching nodes","viewer.finder.result.focus":"Focus {label}","viewer.finder.result.routeStart":"Choose {label} as route start","viewer.finder.result.routeTarget":"Choose {label} as route destination, {links}","viewer.finder.status.empty":"No matching nodes","viewer.finder.status.count.one":"{count} matching node","viewer.finder.status.count.other":"{count} matching nodes","viewer.finder.noun.nodes":"nodes","viewer.finder.link.one":"{count} link","viewer.finder.link.other":"{count} links","viewer.finder.result.focus.one":"Focus {label}, {count} related connection","viewer.finder.result.focus.other":"Focus {label}, {count} related connections","viewer.finder.status.filtered":"{visible} of {available} {noun}","viewer.finder.status.all":"{available} {noun}","viewer.passport.eyebrow":"Semantic passport","viewer.passport.metadata":"Node metadata","viewer.passport.evidence":"Verified source evidence","viewer.passport.verified":"Verified source","viewer.passport.verificationScope":"Verified against local Git at the pinned revision. Remote access has not been checked.","viewer.passport.reach":"Authored reach","viewer.passport.reach.trace":"Trace authored reachability","viewer.passport.upstream":"Upstream","viewer.passport.downstream":"Downstream","viewer.passport.upstream.trace":"Trace upstream authored reachability","viewer.passport.downstream.trace":"Trace downstream authored reachability","viewer.passport.close":"Close semantic passport","viewer.passport.move":"Move semantic passport. Drag, use arrow keys, or press Home to reset.","viewer.passport.copy":"Copy link","viewer.passport.copy.focus":"Copy link to focused node","viewer.passport.relations":"Relations","viewer.passport.relations.show":"Show connected relationships","viewer.passport.relations.hide":"Hide connected relationships","viewer.passport.relations.list":"Connected relationships","viewer.passport.copyRelation":"Copy relation","viewer.passport.copyNode":"Copy node","viewer.passport.copyPinned":"Copy link to pinned relationship","viewer.passport.copySource":"Copy link to source node","viewer.passport.copy.focused.success":"Focused node link copied","viewer.passport.copy.pinned.success":"Pinned relationship link copied","viewer.passport.copy.focused.failed":"Could not copy focused node link","viewer.passport.copy.pinned.failed":"Could not copy pinned relationship link","viewer.passport.relationship.none":"No connected relationships","viewer.passport.relationship.count.one":"{count} relation","viewer.passport.relationship.count.other":"{count} relations","viewer.passport.relationship.show.one":"Show {count} connected relationship","viewer.passport.relationship.show.other":"Show {count} connected relationships","viewer.passport.relationship.summary":"{out} outgoing · {in} incoming{loops}","viewer.passport.relationship.loops":" · {count} loop","viewer.passport.relationship.explorer":"Direct relationship explorer","viewer.passport.relationship.help":"Use arrow keys to explore relationships. Press Enter or Space to pin details; Escape clears.","viewer.passport.relationship.loopsBack":"loops back","viewer.passport.relationship.connectsTo":"connects to","viewer.passport.relationship.connectsFrom":"connects from","viewer.passport.relationship.pinned":"Pinned relationship · {from} → {to} · {label}","viewer.passport.relationship.inspect":"Inspect relationship {index} of {total}: {from} to {to}, {label}. Press Enter for details.","viewer.passport.relationship.group.out":"Outgoing","viewer.passport.relationship.group.in":"Incoming","viewer.passport.relationship.group.loop":"Self loops","viewer.passport.relationship.row":"{group}: {relationship}, {neighbor}","viewer.passport.relationship.direction.out":"OUT →","viewer.passport.relationship.direction.in":"← IN","viewer.passport.relationship.direction.loop":"LOOP","viewer.passport.sourceCount.one":"{count} verified source reference","viewer.passport.sourceCount.other":"{count} verified source references","viewer.passport.repository.open":"Open verified repository revision {revision}","viewer.passport.source.open":"Open verified source {path} at revision {revision}","viewer.passport.source.openLink":"Open ↗","viewer.passport.reach.upstream.one":"Trace {count} upstream authored node","viewer.passport.reach.upstream.other":"Trace {count} upstream authored nodes","viewer.passport.reach.downstream.one":"Trace {count} downstream authored node","viewer.passport.reach.downstream.other":"Trace {count} downstream authored nodes","viewer.passport.reach.noUpstream":"No upstream authored nodes","viewer.passport.reach.noDownstream":"No downstream authored nodes","viewer.passport.reach.status":"{direction} · {nodes} nodes · {links} links · max {hops} hops","viewer.route.eyebrow":"Path","viewer.route.start":"Click where the path starts","viewer.route.start.find":"Find start","viewer.route.start.find.aria":"Find a route start","viewer.route.copy":"Copy link","viewer.route.copy.aria":"Copy link to traced route","viewer.route.clear":"Clear","viewer.route.clear.aria":"Clear route probe","viewer.route.traced":"Path","viewer.route.pickTwo":"Click two nodes on the diagram","viewer.route.pickOne":"Click a node on the diagram","viewer.route.controls":"Route journey controls","viewer.route.previous":"Previous route position","viewer.route.play":"Play route journey","viewer.route.pause":"Pause route journey","viewer.route.replay":"Replay route journey","viewer.route.next":"Next route position","viewer.route.journey":"Journey","viewer.route.pause.label":"Pause","viewer.route.replay.label":"Replay","viewer.route.overview":"Overview","viewer.route.overview.aria":"Show complete route overview","viewer.route.instructions":"Click a start, then an end. Paths follow the arrows.","viewer.route.destination":"Where does the path from {label} end?","viewer.route.destination.find":"Find target","viewer.route.destination.find.aria":"Find a reachable route destination","viewer.route.differentDestination":"Choose a different destination","viewer.route.distinct":"Pick two different nodes.","viewer.route.unreachable":"Cannot reach {label} from here","viewer.route.unreachable.detail":"{target} cannot be reached from {source} along the arrows. Pick a highlighted node.","viewer.route.start.instructions":"Next, pick the end. Only nodes you can reach will light up.","viewer.route.copy.success":"Traced route link copied","viewer.route.copy.failed":"Could not copy traced route link","viewer.route.position":"Route position {index} of {total}: {label}","viewer.route.step":"Step {index} of {total} · {phase} · {label}","viewer.route.motionRequired":"Automatic journey requires Live motion","viewer.route.trigger.clear":"Clear traced route","viewer.route.overview.status":"{nodes} · {hops} · shortest path","viewer.route.overview.node.one":"{count} node","viewer.route.overview.node.other":"{count} nodes","viewer.route.overview.hop.one":"{count} step","viewer.route.overview.hop.other":"{count} steps","viewer.route.phase.playing":"Playing","viewer.route.phase.complete":"Complete","viewer.route.phase.inspecting":"Inspecting","viewer.route.destination.count.one":"{count} reachable node is highlighted. Click it.","viewer.route.destination.count.other":"{count} reachable nodes are highlighted. Click one.","viewer.route.noOutgoing":"No arrows lead out of this node. Clear it and pick another start.","viewer.route.result.title":"{source} to {target}","viewer.route.finder.source.title":"Choose route start","viewer.route.finder.source.placeholder":"Search route sources","viewer.route.finder.source.empty":"No matching route sources","viewer.route.finder.source.results":"Nodes that can start a route","viewer.route.finder.source.noun":"route sources","viewer.route.finder.source.badge":"start","viewer.route.finder.target.title":"Destination from {label}","viewer.route.finder.target.placeholder":"Search reachable destinations","viewer.route.finder.target.empty":"No matching reachable destinations","viewer.route.finder.target.results":"Reachable route destinations","viewer.route.finder.target.noun":"reachable destinations","viewer.route.hop.one":"{count} hop","viewer.route.hop.other":"{count} hops","viewer.lens.eyebrow":"Semantic lens","viewer.lens.title":"Compare system roles","viewer.lens.close":"Close semantic lens","viewer.lens.instruction":"Choose up to two semantic kinds. One reveals its real traffic; two compare only direct authored relationships.","viewer.lens.kinds":"Semantic kinds","viewer.lens.choose":"Choose a kind to inspect its nodes and touching relationships.","viewer.lens.copy":"Copy link to semantic lens","viewer.lens.clear":"Clear semantic lens","viewer.lens.open":"Open semantic lens","viewer.lens.openActive":"Open active semantic lens","viewer.lens.legend":"Semantic legend","viewer.lens.legend.inspect.one":"Inspect {label}, {count} node","viewer.lens.legend.inspect.other":"Inspect {label}, {count} nodes","viewer.lens.kind.count.one":"{label}, {count} node","viewer.lens.kind.count.other":"{label}, {count} nodes","viewer.lens.compare.one":"{first} → {second}: {forward} · {second} → {first}: {reverse} · {count} direct relationship","viewer.lens.compare.other":"{first} → {second}: {forward} · {second} → {first}: {reverse} · {count} direct relationships","viewer.lens.single":"{nodes} · {relationships} · connected peers remain visible","viewer.lens.node.one":"{count} {label} node","viewer.lens.node.other":"{count} {label} nodes","viewer.lens.relationship.one":"{count} touching relationship","viewer.lens.relationship.other":"{count} touching relationships","viewer.radar.title":"Semantic radar","viewer.radar.building":"Building overview","viewer.radar.openFull":"Open full semantic radar","viewer.radar.open":"Open radar","viewer.radar.close":"Close semantic radar","viewer.radar.surface":"Diagram overview. Click a node to focus it, or use arrow keys to pan.","viewer.radar.click":"Click node","viewer.radar.drag":"Drag to pan","viewer.radar.space":"Semantic radar needs more MAP space.","viewer.radar.nodes":"Semantic diagram radar nodes","viewer.radar.focus":"Focus {label} from Semantic Radar","viewer.radar.status":"{count} nodes · {viewport}","viewer.radar.fullMap":"{count} nodes · full map","viewer.radar.compacted":"Radar compacted to avoid covering the Semantic Passport or MAP controls.","viewer.radar.cancelWaiting":"Cancel semantic radar waiting for more MAP space","viewer.radar.needsSpace":"Semantic radar needs more visible MAP space","viewer.radar.viewport.full":"full map","viewer.radar.viewport.width":"{percent}% width","viewer.radar.viewport.scale":"{percent}% viewport","viewer.nav.controls":"Diagram view controls","viewer.nav.route":"Trace a directed route","viewer.nav.route.title":"Trace route (R)","viewer.nav.route.short":"ROUTE","viewer.nav.radar":"Open semantic radar","viewer.nav.radar.title":"Semantic radar (M)","viewer.nav.radar.short":"MAP","viewer.nav.lens":"Open semantic lens","viewer.nav.lens.title":"Semantic lens (L)","viewer.nav.lens.short":"LENS","viewer.nav.find":"Find a node","viewer.nav.find.title":"Find a node (/)","viewer.outline.title":"Node index","viewer.rail.show":"Notes \u0026 index","viewer.rail.controls":"Side panel","viewer.rail.collapse":"Collapse side panel","viewer.rail.bottom":"Move panel below the diagram","viewer.rail.right":"Move panel beside the diagram","viewer.nav.guide":"Open diagram guide","viewer.nav.guide.title":"Diagram guide (?)","viewer.nav.zoomOut":"Zoom out","viewer.nav.zoomOut.title":"Zoom out (-)","viewer.nav.reset":"Reset diagram view","viewer.nav.reset.title":"Reset view (0)","viewer.nav.read":"READ","viewer.nav.zoomIn":"Zoom in","viewer.nav.zoomIn.title":"Zoom in (+)","viewer.nav.camera":"{hint}. Reset diagram view","viewer.nav.camera.title":"{semantic}{hint} · reset view (0)","viewer.nav.camera.semantic":"Semantic camera active · ","viewer.nav.level.map":"MAP","viewer.nav.level.read":"READ","viewer.nav.level.full":"FULL","viewer.nav.level.auto":"AUTO","viewer.nav.detail.map":"Zoom in to reveal relationship labels and node context","viewer.nav.detail.read":"Zoom in again to reveal tags and annotations","viewer.nav.detail.full":"Full diagram detail","viewer.intent.summary":"{label}. {out} outgoing, {in} incoming{loops}. {total} connections. Press Enter for details.","viewer.intent.loops":", {count} self loop","viewer.common.copied":"Copied","viewer.common.copyFailed":"Copy failed","viewer.common.copyLink":"Copy link","viewer.common.clear":"Clear","viewer.common.close":"Close"}}</script>
     <!-- Main Diagram -->
     <div class="diagram-container" data-detail-level="read"
          data-preset-badge-editorial-plate="ARCHIFY / PLATE 04">
-      <svg viewBox="0 0 1224 326" data-reader-fit="intrinsic-height" data-lifecycle-layout="main-path-v3" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase" data-motion-choreography="walk">
-        <title id="archify-diagram-title">VPP Công trình — vòng đời một tháng (kỳ → giao → còn nợ → bản chốt)</title>
+      <svg viewBox="0 0 1026 500" data-reader-fit="intrinsic-height" data-lifecycle-layout="main-path-v3" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase" data-motion-choreography="walk">
+        <title id="archify-diagram-title">VPP — vòng đời phần chưa giao của một dòng (v2-D)</title>
         <desc id="archify-diagram-description">A lifecycle diagram generated by Archify.</desc>
         <!-- Definitions -->
         <defs>
@@ -5232,216 +5232,192 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 
         <!-- Transition paths -->
         <g data-graph-role="automatic-crossover" style="--step:0">
-          <path data-graph-role="automatic-crossover-underlay" d="M 210 60 L 308 60" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="open" data-edge-to="remind" data-edge-label="còn 3 ngày" data-edge-key="0" data-edge-id="open-remind" data-composition-points="210,60;308,60" data-composition-crossover="halo" data-composition-independent="true" d="M 210 60 L 308 60" class="a-emphasis" data-animate="edge" style="--step:0" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 260 60 L 466 60" fill="none" stroke="var(--mask)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="cart" data-edge-to="waiting" data-edge-label="khóa sổ 00:00" data-edge-key="0" data-edge-id="t-lock" data-composition-points="260,60;466,60" data-composition-crossover="halo" data-composition-independent="true" d="M 260 60 L 466 60" class="a-security" data-animate="edge" style="--step:0" stroke-width="1.2" marker-end="url(#arrowhead-security)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:1">
-          <path data-graph-role="automatic-crossover-underlay" d="M 462 60 L 542 60" fill="none" stroke="var(--mask)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="remind" data-edge-to="locked" data-edge-label="qua hạn" data-edge-key="1" data-edge-id="remind-locked" data-composition-points="462,60;542,60" data-composition-crossover="halo" data-composition-independent="true" d="M 462 60 L 542 60" class="a-security" data-animate="edge" style="--step:1" stroke-width="1.2" marker-end="url(#arrowhead-security)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 686 60 L 766 60" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="waiting" data-edge-to="done" data-edge-label="giao đủ" data-edge-key="1" data-edge-id="t-done" data-composition-points="686,60;766,60" data-composition-crossover="halo" data-composition-independent="true" d="M 686 60 L 766 60" class="a-emphasis" data-animate="edge" style="--step:1" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:2">
-          <path data-graph-role="automatic-crossover-underlay" d="M 696 60 L 768 60" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="locked" data-edge-to="delivering" data-edge-label="giao" data-edge-key="2" data-edge-id="locked-delivering" data-composition-points="696,60;768,60" data-composition-crossover="halo" data-composition-independent="true" d="M 696 60 L 768 60" class="a-emphasis" data-animate="edge" style="--step:2" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 602 92 L 602 132 Q 602 144 614 144 L 841.8 144 Q 853.8 144 853.8 156 L 853.8 202" fill="none" stroke="var(--mask)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="waiting" data-edge-to="owed" data-edge-label="kỳ sau khóa" data-edge-key="2" data-edge-id="t-owed" data-composition-points="602,92;602,144;853.8,144;853.8,202" data-composition-crossover="halo" data-composition-independent="true" d="M 602 92 L 602 132 Q 602 144 614 144 L 841.8 144 Q 853.8 144 853.8 156 L 853.8 202" class="a-default" data-animate="edge" style="--step:2" stroke-width="1.2" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:3">
-          <path data-graph-role="automatic-crossover-underlay" d="M 915 60 L 987 60" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="delivering" data-edge-to="done" data-edge-label="đủ" data-edge-key="3" data-edge-id="delivering-done" data-composition-points="915,60;987,60" data-composition-crossover="halo" data-composition-independent="true" d="M 915 60 L 987 60" class="a-emphasis" data-animate="edge" style="--step:3" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 550 92 L 550 114 Q 550 126 538 126 L 423.3 126 Q 411.3 126 411.3 138 L 411.3 202" fill="none" stroke="var(--mask)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="waiting" data-edge-to="removed" data-edge-label="Tổng hợp giảm" data-edge-key="3" data-edge-id="t-reduce" data-composition-points="550,92;550,126;411.3,126;411.3,202" data-composition-crossover="halo" data-composition-independent="true" d="M 550 92 L 550 114 Q 550 126 538 126 L 423.3 126 Q 411.3 126 411.3 138 L 411.3 202" class="a-default" data-animate="edge" style="--step:3" stroke-width="1.2" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:4">
-          <path data-graph-role="automatic-crossover-underlay" d="M 849.3 92 L 849.3 184" fill="none" stroke="var(--mask)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="delivering" data-edge-to="owed" data-edge-label="giao thiếu" data-edge-key="4" data-edge-id="delivering-owed" data-composition-points="849.3,92;849.3,184" data-composition-crossover="halo" data-composition-independent="true" d="M 849.3 92 L 849.3 184" class="a-default" data-animate="edge" style="--step:4" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 576 92 L 576 202" fill="none" stroke="var(--mask)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="waiting" data-edge-to="admout" data-edge-label="ADM hết hàng" data-edge-key="4" data-edge-id="t-adm" data-composition-points="576,92;576,202" data-composition-crossover="halo" data-composition-independent="true" d="M 576 92 L 576 202" class="a-dashed" data-animate="edge" style="--step:4" stroke-width="1.2" marker-end="url(#arrowhead-dashed)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:5">
-          <path data-graph-role="automatic-crossover-underlay" d="M 875.3 184 L 875.3 92" fill="none" stroke="var(--mask)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="owed" data-edge-to="delivering" data-edge-label="Giao bổ sung" data-edge-key="5" data-edge-id="owed-delivering" data-composition-points="875.3,184;875.3,92" data-composition-crossover="halo" data-composition-independent="true" d="M 875.3 184 L 875.3 92" class="a-default" data-animate="edge" style="--step:5" stroke-width="1.2" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 879.8 202 L 879.8 135.39999999999998 Q 879.8 126 870.4 126 L 870.4 126 Q 861 126 861 116.60000000000002 L 861 92" fill="none" stroke="var(--mask)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="owed" data-edge-to="done" data-edge-label="giao bổ sung" data-edge-key="5" data-edge-id="t-more" data-composition-points="879.8,202;879.8,126;861,126;861,92" data-composition-crossover="halo" data-composition-independent="true" d="M 879.8 202 L 879.8 135.39999999999998 Q 879.8 126 870.4 126 L 870.4 126 Q 861 126 861 116.60000000000002 L 861 92" class="a-default" data-animate="edge" style="--step:5" stroke-width="1.2" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:6">
-          <path data-graph-role="automatic-crossover-underlay" d="M 941.25 216 L 1027.25 216" fill="none" stroke="var(--mask)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="owed" data-edge-to="cancelled" data-edge-label="Hủy nợ…" data-edge-key="6" data-edge-id="owed-cancelled" data-composition-points="941.25,216;1027.25,216" data-composition-crossover="halo" data-composition-independent="true" d="M 941.25 216 L 1027.25 216" class="a-security" data-animate="edge" style="--step:6" stroke-width="1.2" marker-end="url(#arrowhead-security)"/>
-        </g>
-        <g data-graph-role="automatic-crossover" style="--step:7">
-          <path data-graph-role="automatic-crossover-underlay" d="M 1097.3 184 L 1097.3 92" fill="none" stroke="var(--mask)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="cancelled" data-edge-to="done" data-edge-label="hết nợ" data-edge-key="7" data-edge-id="cancelled-done" data-composition-points="1097.3,184;1097.3,92" data-composition-crossover="halo" data-composition-independent="true" d="M 1097.3 184 L 1097.3 92" class="a-dashed" data-animate="edge" style="--step:7" stroke-width="1.2" marker-end="url(#arrowhead-dashed)"/>
-        </g>
-        <g data-graph-role="automatic-crossover" style="--step:8">
-          <path data-graph-role="automatic-crossover-underlay" d="M 619 92 L 619 184" fill="none" stroke="var(--mask)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="locked" data-edge-to="snapshot" data-edge-label="chốt" data-edge-key="8" data-edge-id="locked-snapshot" data-composition-points="619,92;619,184" data-composition-crossover="halo" data-composition-independent="true" d="M 619 92 L 619 184" class="a-dashed" data-animate="edge" style="--step:8" stroke-width="1.2" marker-end="url(#arrowhead-dashed)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 866.8 266 L 866.8 358" fill="none" stroke="var(--mask)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="owed" data-edge-to="cancelled" data-edge-label="Hủy nợ" data-edge-key="6" data-edge-id="t-cancel" data-composition-points="866.8,266;866.8,358" data-composition-crossover="halo" data-composition-independent="true" d="M 866.8 266 L 866.8 358" class="a-security" data-animate="edge" style="--step:6" stroke-width="1.2" marker-end="url(#arrowhead-security)"/>
         </g>
 
 
         <!-- States -->
-        <g id="node-open" data-node-id="open" data-node-label="Kỳ đang mở" tabindex="0" role="button" aria-label="Focus Kỳ đang mở, ngày 1: period_open, Lifecycle state" aria-pressed="false" data-node-kind="start" data-node-sublabel="ngày 1: period_open" data-node-tag="lưu phiếu" data-node-context="Lifecycle state">
-          <title>Kỳ đang mở · ngày 1: period_open · Lifecycle state · lưu phiếu</title>
-          <rect x="56" y="28" width="154" height="64" rx="8" class="c-mask"/>
-          <rect x="56" y="28" width="154" height="64" rx="8" class="c-frontend" data-animate="node" style="--step:0" stroke-width="1.5"/>
+        <g id="node-cart" data-node-id="cart" data-node-label="Trong phiếu kỳ mở" tabindex="0" role="button" aria-label="Focus Trong phiếu kỳ mở, nhân viên sửa tự do, Lifecycle state" aria-pressed="false" data-node-kind="start" data-node-sublabel="nhân viên sửa tự do" data-node-tag="HC chỉ thấy tiến độ" data-node-context="Lifecycle state">
+          <title>Trong phiếu kỳ mở · nhân viên sửa tự do · Lifecycle state · HC chỉ thấy tiến độ</title>
+          <rect x="56" y="28" width="204" height="64" rx="8" class="c-mask"/>
+          <rect x="56" y="28" width="204" height="64" rx="8" class="c-frontend" data-animate="node" style="--step:0" stroke-width="1.5"/>
           <g aria-hidden="true" data-lifecycle-initial-marker=""><circle cx="30" cy="60" r="4.5" style="fill: var(--arrow-emphasis)"/><path d="M 34.5 60 L 49 60" class="a-emphasis" stroke-width="1.4"/><path d="M 48 56.5 L 55 60 L 48 63.5 Z" style="fill: var(--arrow-emphasis)"/></g>
           
           <text data-detail="fine" x="79" y="42" class="t-frontend" font-size="8" font-weight="700">01</text>
-          <text data-node-label="" data-detail-anchor="" x="132" y="51" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Kỳ đang mở</text>
-          <text data-detail="context" x="133" y="68" class="t-muted" font-size="9" text-anchor="middle">ngày 1: period_open</text>
-          <text data-detail="fine" x="133" y="83" class="t-frontend" font-size="8" text-anchor="middle">lưu phiếu</text>
+          <text data-node-label="" data-detail-anchor="" x="156.8" y="51" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Trong phiếu kỳ mở</text>
+          <text data-detail="context" x="158" y="68" class="t-muted" font-size="9" text-anchor="middle">nhân viên sửa tự do</text>
+          <text data-detail="fine" x="158" y="83" class="t-frontend" font-size="8" text-anchor="middle">HC chỉ thấy tiến độ</text>
         </g>
 
-        <g id="node-remind" data-node-id="remind" data-node-label="Còn 3 ngày" tabindex="0" role="button" aria-label="Focus Còn 3 ngày, lastDay − 2, Lifecycle state" aria-pressed="false" data-node-kind="waiting" data-node-sublabel="lastDay − 2" data-node-tag="reminder" data-node-context="Lifecycle state">
-          <title>Còn 3 ngày · lastDay − 2 · Lifecycle state · reminder</title>
-          <rect x="308" y="28" width="154" height="64" rx="8" class="c-mask"/>
-          <rect x="308" y="28" width="154" height="64" rx="8" class="c-cloud" data-animate="node" style="--step:1" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="waiting" class="semantic-sigil s-cloud" transform="translate(314 34) scale(0.6875)">
-            <path d="M4 2.5h8M4 13.5h8M5 3c0 2.8 2 3.2 3 5-1 1.8-3 2.2-3 5M11 3c0 2.8-2 3.2-3 5 1 1.8 3 2.2 3 5"/>
-          </g>
-          <text data-detail="fine" x="331" y="42" class="t-cloud" font-size="8" font-weight="700">02</text>
-          <text data-node-label="" data-detail-anchor="" x="384" y="51" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Còn 3 ngày</text>
-          <text data-detail="context" x="385" y="68" class="t-muted" font-size="9" text-anchor="middle">lastDay − 2</text>
-          <text data-detail="fine" x="385" y="83" class="t-cloud" font-size="8" text-anchor="middle">reminder</text>
-        </g>
-
-        <g id="node-locked" data-node-id="locked" data-node-label="Kỳ đã khóa" tabindex="0" role="button" aria-label="Focus Kỳ đã khóa, now ≥ deadline, Lifecycle state" aria-pressed="false" data-node-kind="decision" data-node-sublabel="now ≥ deadline" data-node-tag="lastDay + 1 · 00:00 VN" data-node-context="Lifecycle state">
-          <title>Kỳ đã khóa · now ≥ deadline · Lifecycle state · lastDay + 1 · 00:00 VN</title>
-          <rect x="542" y="28" width="154" height="64" rx="8" class="c-mask"/>
-          <rect x="542" y="28" width="154" height="64" rx="8" class="c-database" data-animate="node" style="--step:2" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="decision" class="semantic-sigil s-database" transform="translate(548 34) scale(0.6875)">
-            <path d="M8 2.2 13.8 8 8 13.8 2.2 8Z"/>
-          </g>
-          <text data-detail="fine" x="565" y="42" class="t-database" font-size="8" font-weight="700">03</text>
-          <text data-node-label="" data-detail-anchor="" x="618" y="51" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Kỳ đã khóa</text>
-          <text data-detail="context" x="619" y="68" class="t-muted" font-size="9" text-anchor="middle">now ≥ deadline</text>
-          <text data-detail="fine" x="619" y="83" class="t-database" font-size="8" text-anchor="middle">lastDay + 1 · 00:00 VN</text>
-        </g>
-
-        <g id="node-delivering" data-node-id="delivering" data-node-label="Đang giao" tabindex="0" role="button" aria-label="Focus Đang giao, dòng · Giao tất cả, Lifecycle state" aria-pressed="false" data-node-kind="active" data-node-sublabel="dòng · Giao tất cả" data-node-tag="trừ kho" data-node-context="Lifecycle state">
-          <title>Đang giao · dòng · Giao tất cả · Lifecycle state · trừ kho</title>
-          <rect x="768" y="28" width="147" height="64" rx="8" class="c-mask"/>
-          <rect x="768" y="28" width="147" height="64" rx="8" class="c-frontend" data-animate="node" style="--step:3" stroke-width="1.5"/>
+        <g id="node-waiting" data-node-id="waiting" data-node-label="Chưa nhận (tháng K*)" tabindex="0" role="button" aria-label="Focus Chưa nhận (tháng K*), giữ tủ theo thứ tự đăng ký, Lifecycle state" aria-pressed="false" data-node-kind="active" data-node-sublabel="giữ tủ theo thứ tự đăng ký" data-node-tag="chỉ giảm, không tăng" data-node-context="Lifecycle state">
+          <title>Chưa nhận (tháng K*) · giữ tủ theo thứ tự đăng ký · Lifecycle state · chỉ giảm, không tăng</title>
+          <rect x="466" y="28" width="220" height="64" rx="8" class="c-mask"/>
+          <rect x="466" y="28" width="220" height="64" rx="8" class="c-frontend" data-animate="node" style="--step:1" stroke-width="1.5"/>
           
-          <text data-detail="fine" x="791" y="42" class="t-frontend" font-size="8" font-weight="700">04</text>
-          <text data-node-label="" data-detail-anchor="" x="840.6" y="51" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Đang giao</text>
-          <text data-detail="context" x="841.5" y="68" class="t-muted" font-size="9" text-anchor="middle">dòng · Giao tất cả</text>
-          <text data-detail="fine" x="841.5" y="83" class="t-frontend" font-size="8" text-anchor="middle">trừ kho</text>
+          <text data-detail="fine" x="489" y="42" class="t-frontend" font-size="8" font-weight="700">02</text>
+          <text data-node-label="" data-detail-anchor="" x="576" y="61" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Chưa nhận (tháng K*)</text>
+          <text data-detail="context" x="576" y="74.6" class="t-muted" font-size="9" text-anchor="middle">giữ tủ theo thứ tự đăng ký</text>
+          <text data-detail="fine" x="576" y="86.3" class="t-frontend" font-size="8" text-anchor="middle">chỉ giảm, không tăng</text>
         </g>
 
-        <g id="node-done" data-node-id="done" data-node-label="Phiếu giao đủ" tabindex="0" role="button" aria-label="Focus Phiếu giao đủ, request_delivered, Lifecycle state" aria-pressed="false" data-node-kind="success" data-node-sublabel="request_delivered" data-node-tag="đã giao + hủy = qty" data-node-context="Lifecycle state">
-          <title>Phiếu giao đủ · request_delivered · Lifecycle state · đã giao + hủy = qty</title>
-          <rect x="987" y="28" width="176" height="64" rx="8" class="c-mask"/>
-          <rect x="987" y="28" width="176" height="64" rx="8" class="c-backend" data-animate="node" style="--step:4" stroke-width="1.5"/>
-          <rect x="990" y="31" width="170" height="58" rx="5" class="c-backend" style="fill: none" stroke-width="1"/>
-          <g aria-hidden="true" data-semantic-sigil="success" class="semantic-sigil s-backend" transform="translate(993 34) scale(0.6875)">
+        <g id="node-done" data-node-id="done" data-node-label="Đã nhận đủ" tabindex="0" role="button" aria-label="Focus Đã nhận đủ, delivered + cancelled = qty, Lifecycle state" aria-pressed="false" data-node-kind="success" data-node-sublabel="delivered + cancelled = qty" data-node-tag="chuông giao đủ (chỉ khi giao)" data-node-context="Lifecycle state">
+          <title>Đã nhận đủ · delivered + cancelled = qty · Lifecycle state · chuông giao đủ (chỉ khi giao)</title>
+          <rect x="766" y="28" width="190" height="64" rx="8" class="c-mask"/>
+          <rect x="766" y="28" width="190" height="64" rx="8" class="c-backend" data-animate="node" style="--step:2" stroke-width="1.5"/>
+          <rect x="769" y="31" width="184" height="58" rx="5" class="c-backend" style="fill: none" stroke-width="1"/>
+          <g aria-hidden="true" data-semantic-sigil="success" class="semantic-sigil s-backend" transform="translate(772 34) scale(0.6875)">
             <circle cx="8" cy="8" r="5.3"/>
             <path d="m5.2 8 1.8 1.8 3.8-4"/>
           </g>
-          <text data-detail="fine" x="1010" y="42" class="t-backend" font-size="8" font-weight="700">05</text>
-          <text data-node-label="" data-detail-anchor="" x="1074.2" y="51" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Phiếu giao đủ</text>
-          <text data-detail="context" x="1075" y="68" class="t-muted" font-size="9" text-anchor="middle">request_delivered</text>
-          <text data-detail="fine" x="1075" y="83" class="t-backend" font-size="8" text-anchor="middle">đã giao + hủy = qty</text>
+          <text data-detail="fine" x="789" y="42" class="t-backend" font-size="8" font-weight="700">03</text>
+          <text data-node-label="" data-detail-anchor="" x="861" y="51" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Đã nhận đủ</text>
+          <text data-detail="context" x="861" y="68" class="t-muted" font-size="9" text-anchor="middle">delivered + cancelled = qty</text>
+          <text data-detail="fine" x="861" y="83" class="t-backend" font-size="8" text-anchor="middle">chuông giao đủ (chỉ khi giao)</text>
         </g>
 
-        <g id="node-owed" data-node-id="owed" data-node-label="Còn nợ" tabindex="0" role="button" aria-label="Focus Còn nợ, kỳ đã khóa, chưa giao, Lifecycle state" aria-pressed="false" data-node-kind="waiting" data-node-sublabel="kỳ đã khóa, chưa giao" data-node-tag="Nợ kỳ trước" data-node-context="Lifecycle state">
-          <title>Còn nợ · kỳ đã khóa, chưa giao · Lifecycle state · Nợ kỳ trước</title>
-          <rect x="783.25" y="184" width="158" height="64" rx="8" class="c-mask"/>
-          <rect x="783.25" y="184" width="158" height="64" rx="8" class="c-cloud" data-animate="node" style="--step:5" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="waiting" class="semantic-sigil s-cloud" transform="translate(789.25 190) scale(0.6875)">
+        <g id="node-owed" data-node-id="owed" data-node-label="Còn nợ (kỳ &lt; K*)" tabindex="0" role="button" aria-label="Focus Còn nợ (kỳ &lt; K*), tính lúc đọc, không có job, Lifecycle state" aria-pressed="false" data-node-kind="waiting" data-node-sublabel="tính lúc đọc, không có job" data-node-tag="giao trước dòng kỳ này" data-node-context="Lifecycle state">
+          <title>Còn nợ (kỳ &lt; K*) · tính lúc đọc, không có job · Lifecycle state · giao trước dòng kỳ này</title>
+          <rect x="774.3333333333334" y="202" width="185" height="64" rx="8" class="c-mask"/>
+          <rect x="774.3333333333334" y="202" width="185" height="64" rx="8" class="c-cloud" data-animate="node" style="--step:3" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="waiting" class="semantic-sigil s-cloud" transform="translate(780.3333333333334 208) scale(0.6875)">
             <path d="M4 2.5h8M4 13.5h8M5 3c0 2.8 2 3.2 3 5-1 1.8-3 2.2-3 5M11 3c0 2.8-2 3.2-3 5 1 1.8 3 2.2 3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="862.25" y="207" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Còn nợ</text>
-          <text data-detail="context" x="862.25" y="224" class="t-muted" font-size="9" text-anchor="middle">kỳ đã khóa, chưa giao</text>
-          <text data-detail="fine" x="862.25" y="239" class="t-cloud" font-size="8" text-anchor="middle">Nợ kỳ trước</text>
+          <text data-node-label="" data-detail-anchor="" x="859.7333333333333" y="225" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Còn nợ (kỳ &lt; K*)</text>
+          <text data-detail="context" x="866.8333333333334" y="242" class="t-muted" font-size="9" text-anchor="middle">tính lúc đọc, không có job</text>
+          <text data-detail="fine" x="866.8333333333334" y="257" class="t-cloud" font-size="8" text-anchor="middle">giao trước dòng kỳ này</text>
         </g>
 
-        <g id="node-cancelled" data-node-id="cancelled" data-node-label="Hủy nợ" tabindex="0" role="button" aria-label="Focus Hủy nợ, lý do ≥ 3 ký tự, Lifecycle state" aria-pressed="false" data-node-kind="neutral" data-node-sublabel="lý do ≥ 3 ký tự" data-node-tag="line_cancelled" data-node-context="Lifecycle state">
-          <title>Hủy nợ · lý do ≥ 3 ký tự · Lifecycle state · line_cancelled</title>
-          <rect x="1027.25" y="184" width="140" height="64" rx="8" class="c-mask"/>
-          <rect x="1027.25" y="184" width="140" height="64" rx="8" class="c-external" data-animate="node" style="--step:7" stroke-width="1.5"/>
-          
-          <text data-node-label="" data-detail-anchor="" x="1097.25" y="207" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Hủy nợ</text>
-          <text data-detail="context" x="1097.25" y="224" class="t-muted" font-size="9" text-anchor="middle">lý do ≥ 3 ký tự</text>
-          <text data-detail="fine" x="1097.25" y="239" class="t-muted" font-size="8" text-anchor="middle">line_cancelled</text>
-        </g>
-
-        <g id="node-snapshot" data-node-id="snapshot" data-node-label="Bản chốt báo cáo" tabindex="0" role="button" aria-label="Focus Bản chốt báo cáo, Excel / In trình ký, Lifecycle state" aria-pressed="false" data-node-kind="external" data-node-sublabel="Excel / In trình ký" data-node-tag="số cố định" data-node-context="Lifecycle state">
-          <title>Bản chốt báo cáo · Excel / In trình ký · Lifecycle state · số cố định</title>
-          <rect x="528.5" y="184" width="181" height="64" rx="8" class="c-mask"/>
-          <rect x="528.5" y="184" width="181" height="64" rx="8" class="c-external" data-animate="node" style="--step:9" stroke-width="1.5"/>
-          <rect x="531.5" y="187" width="175" height="58" rx="5" class="c-external" style="fill: none" stroke-width="1"/>
-          <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(534.5 190) scale(0.6875)">
-            <rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/>
-            <path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>
+        <g id="node-removed" data-node-id="removed" data-node-label="Đã giảm / bỏ" tabindex="0" role="button" aria-label="Focus Đã giảm / bỏ, request_line_adjustments, Lifecycle state" aria-pressed="false" data-node-kind="neutral" data-node-sublabel="request_line_adjustments" data-node-tag="lý do từng dòng" data-node-context="Lifecycle state">
+          <title>Đã giảm / bỏ · request_line_adjustments · Lifecycle state · lý do từng dòng</title>
+          <rect x="324.33333333333337" y="202" width="174" height="64" rx="8" class="c-mask"/>
+          <rect x="324.33333333333337" y="202" width="174" height="64" rx="8" class="c-external" data-animate="node" style="--step:4" stroke-width="1.5"/>
+          <rect x="327.33333333333337" y="205" width="168" height="58" rx="5" class="c-external" style="fill: none" stroke-width="1"/>
+          <g aria-hidden="true" data-semantic-sigil="stop" class="semantic-sigil s-external" transform="translate(330.33333333333337 208) scale(0.6875)">
+            <circle cx="8" cy="8" r="5.3"/>
+            <rect x="6.1" y="6.1" width="3.8" height="3.8" rx=".5" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="609.9" y="207" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Bản chốt báo cáo</text>
-          <text data-detail="context" x="619" y="224" class="t-muted" font-size="9" text-anchor="middle">Excel / In trình ký</text>
-          <text data-detail="fine" x="619" y="239" class="t-muted" font-size="8" text-anchor="middle">số cố định</text>
+          <text data-node-label="" data-detail-anchor="" x="411.33333333333337" y="225" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Đã giảm / bỏ</text>
+          <text data-detail="context" x="411.33333333333337" y="242" class="t-muted" font-size="9" text-anchor="middle">request_line_adjustments</text>
+          <text data-detail="fine" x="411.33333333333337" y="257" class="t-muted" font-size="8" text-anchor="middle">lý do từng dòng</text>
+        </g>
+
+        <g id="node-admout" data-node-id="admout" data-node-label="Hủy: ADM hết hàng" tabindex="0" role="button" aria-label="Focus Hủy: ADM hết hàng, không thành nợ, Lifecycle state" aria-pressed="false" data-node-kind="failure" data-node-sublabel="không thành nợ" data-node-tag="cancel_note ADM hết hàng" data-node-context="Lifecycle state">
+          <title>Hủy: ADM hết hàng · không thành nợ · Lifecycle state · cancel_note ADM hết hàng</title>
+          <rect x="542.3333333333334" y="202" width="188" height="64" rx="8" class="c-mask"/>
+          <rect x="542.3333333333334" y="202" width="188" height="64" rx="8" class="c-security" data-animate="node" style="--step:5" stroke-width="1.5"/>
+          <rect x="545.3333333333334" y="205" width="182" height="58" rx="5" class="c-security" style="fill: none" stroke-width="1"/>
+          <g aria-hidden="true" data-semantic-sigil="failure" class="semantic-sigil s-security" transform="translate(548.3333333333334 208) scale(0.6875)">
+            <circle cx="8" cy="8" r="5.3"/>
+            <path d="m5.7 5.7 4.6 4.6m0-4.6-4.6 4.6"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="627.1333333333333" y="225" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Hủy: ADM hết hàng</text>
+          <text data-detail="context" x="636.3333333333334" y="242" class="t-muted" font-size="9" text-anchor="middle">không thành nợ</text>
+          <text data-detail="fine" x="636.3333333333334" y="257" class="t-security" font-size="8" text-anchor="middle">cancel_note ADM hết hàng</text>
+        </g>
+
+        <g id="node-cancelled" data-node-id="cancelled" data-node-label="Hủy nợ" tabindex="0" role="button" aria-label="Focus Hủy nợ, cancelled_qty = phần còn lại, Lifecycle state" aria-pressed="false" data-node-kind="neutral" data-node-sublabel="cancelled_qty = phần còn lại" data-node-tag="4 lý do" data-node-context="Lifecycle state">
+          <title>Hủy nợ · cancelled_qty = phần còn lại · Lifecycle state · 4 lý do</title>
+          <rect x="768.8333333333334" y="358" width="196" height="64" rx="8" class="c-mask"/>
+          <rect x="768.8333333333334" y="358" width="196" height="64" rx="8" class="c-external" data-animate="node" style="--step:7" stroke-width="1.5"/>
+          <rect x="771.8333333333334" y="361" width="190" height="58" rx="5" class="c-external" style="fill: none" stroke-width="1"/>
+          <g aria-hidden="true" data-semantic-sigil="stop" class="semantic-sigil s-external" transform="translate(774.8333333333334 364) scale(0.6875)">
+            <circle cx="8" cy="8" r="5.3"/>
+            <rect x="6.1" y="6.1" width="3.8" height="3.8" rx=".5" class="sigil-fill"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="866.8333333333334" y="381" class="t-primary" font-size="12" font-weight="600" text-anchor="middle">Hủy nợ</text>
+          <text data-detail="context" x="866.8333333333334" y="398" class="t-muted" font-size="9" text-anchor="middle">cancelled_qty = phần còn lại</text>
+          <text data-detail="fine" x="866.8333333333334" y="413" class="t-muted" font-size="8" text-anchor="middle">4 lý do</text>
         </g>
 
         <!-- Transition labels -->
-        <g data-detail="context" data-edge-from="open" data-edge-to="remind" data-edge-label="còn 3 ngày" data-edge-key="0" data-edge-id="open-remind">
-          <rect x="223" y="38" width="72" height="16" rx="4" class="c-mask"/>
-          <text x="259" y="49.5" class="t-edge-emphasis" font-size="10" text-anchor="middle">còn 3 ngày</text>
+        <g data-detail="context" data-edge-from="cart" data-edge-to="waiting" data-edge-label="khóa sổ 00:00" data-edge-key="0" data-edge-id="t-lock">
+          <rect x="273" y="26" width="180" height="28" rx="4" class="c-mask"/>
+          <text x="363" y="37.5" class="t-edge-security" font-size="10" text-anchor="middle">khóa sổ 00:00</text>
+          <text data-detail="fine" x="363" y="49.5" class="t-muted" font-size="9" text-anchor="middle">Lưu sau hạn → 409 PERIOD_LOCKED</text>
         </g>
-        <g data-detail="context" data-edge-from="remind" data-edge-to="locked" data-edge-label="qua hạn" data-edge-key="1" data-edge-id="remind-locked">
-          <rect x="475" y="38" width="54" height="16" rx="4" class="c-mask"/>
-          <text x="502" y="49.5" class="t-edge-security" font-size="10" text-anchor="middle">qua hạn</text>
+        <g data-detail="context" data-edge-from="waiting" data-edge-to="done" data-edge-label="giao đủ" data-edge-key="1" data-edge-id="t-done">
+          <rect x="699" y="38" width="54" height="16" rx="4" class="c-mask"/>
+          <text x="726" y="49.5" class="t-edge-emphasis" font-size="10" text-anchor="middle">giao đủ</text>
         </g>
-        <g data-detail="context" data-edge-from="locked" data-edge-to="delivering" data-edge-label="giao" data-edge-key="2" data-edge-id="locked-delivering">
-          <rect x="714" y="38" width="36" height="16" rx="4" class="c-mask"/>
-          <text x="732" y="49.5" class="t-edge-emphasis" font-size="10" text-anchor="middle">giao</text>
+        <g data-detail="context" data-edge-from="waiting" data-edge-to="owed" data-edge-label="kỳ sau khóa" data-edge-key="2" data-edge-id="t-owed">
+          <rect x="673.8" y="159" width="174" height="28" rx="4" class="c-mask"/>
+          <text x="760.8" y="170.5" class="t-muted" font-size="10" text-anchor="middle">kỳ sau khóa</text>
+          <text data-detail="fine" x="760.8" y="182.5" class="t-muted" font-size="9" text-anchor="middle">Chưa nhận còn lại thành Còn nợ</text>
         </g>
-        <g data-detail="context" data-edge-from="delivering" data-edge-to="done" data-edge-label="đủ" data-edge-key="3" data-edge-id="delivering-done">
-          <rect x="939" y="38" width="24" height="16" rx="4" class="c-mask"/>
-          <text x="951" y="49.5" class="t-edge-emphasis" font-size="10" text-anchor="middle">đủ</text>
+        <g data-detail="context" data-edge-from="waiting" data-edge-to="removed" data-edge-label="Tổng hợp giảm" data-edge-key="3" data-edge-id="t-reduce">
+          <rect x="241.3" y="150" width="164" height="28" rx="4" class="c-mask"/>
+          <text x="323.3" y="161.5" class="t-muted" font-size="10" text-anchor="middle">Tổng hợp giảm</text>
+          <text data-detail="fine" x="323.3" y="173.5" class="t-muted" font-size="9" text-anchor="middle">PUT admin/requests/:id/lines</text>
         </g>
-        <g data-detail="context" data-edge-from="delivering" data-edge-to="owed" data-edge-label="giao thiếu" data-edge-key="4" data-edge-id="delivering-owed">
-          <rect x="771.3" y="130" width="72" height="16" rx="4" class="c-mask"/>
-          <text x="807.3" y="141.5" class="t-muted" font-size="10" text-anchor="middle">giao thiếu</text>
+        <g data-detail="context" data-edge-from="waiting" data-edge-to="admout" data-edge-label="ADM hết hàng" data-edge-key="4" data-edge-id="t-adm">
+          <rect x="486" y="139" width="84" height="16" rx="4" class="c-mask"/>
+          <text x="528" y="150.5" class="t-edge-dashed" font-size="10" text-anchor="middle">ADM hết hàng</text>
         </g>
-        <g data-detail="context" data-edge-from="owed" data-edge-to="delivering" data-edge-label="Giao bổ sung" data-edge-key="5" data-edge-id="owed-delivering">
-          <rect x="881.3" y="130" width="84" height="16" rx="4" class="c-mask"/>
-          <text x="923.3" y="141.5" class="t-muted" font-size="10" text-anchor="middle">Giao bổ sung</text>
+        <g data-detail="context" data-edge-from="owed" data-edge-to="done" data-edge-label="giao bổ sung" data-edge-key="5" data-edge-id="t-more">
+          <rect x="885.8" y="156" width="84" height="16" rx="4" class="c-mask"/>
+          <text x="927.8" y="167.5" class="t-muted" font-size="10" text-anchor="middle">giao bổ sung</text>
         </g>
-        <g data-detail="context" data-edge-from="owed" data-edge-to="cancelled" data-edge-label="Hủy nợ…" data-edge-key="6" data-edge-id="owed-cancelled">
-          <rect x="957.25" y="194" width="54" height="16" rx="4" class="c-mask"/>
-          <text x="984.25" y="205.5" class="t-edge-security" font-size="10" text-anchor="middle">Hủy nợ…</text>
-        </g>
-        <g data-detail="context" data-edge-from="cancelled" data-edge-to="done" data-edge-label="hết nợ" data-edge-key="7" data-edge-id="cancelled-done">
-          <rect x="1103.3" y="130" width="48" height="16" rx="4" class="c-mask"/>
-          <text x="1127.3" y="141.5" class="t-edge-dashed" font-size="10" text-anchor="middle">hết nợ</text>
-        </g>
-        <g data-detail="context" data-edge-from="locked" data-edge-to="snapshot" data-edge-label="chốt" data-edge-key="8" data-edge-id="locked-snapshot">
-          <rect x="577" y="130" width="36" height="16" rx="4" class="c-mask"/>
-          <text x="595" y="141.5" class="t-edge-dashed" font-size="10" text-anchor="middle">chốt</text>
+        <g data-detail="context" data-edge-from="owed" data-edge-to="cancelled" data-edge-label="Hủy nợ" data-edge-key="6" data-edge-id="t-cancel">
+          <rect x="734.8" y="298" width="126" height="28" rx="4" class="c-mask"/>
+          <text x="797.8" y="309.5" class="t-edge-security" font-size="10" text-anchor="middle">Hủy nợ</text>
+          <text data-detail="fine" x="797.8" y="321.5" class="t-muted" font-size="9" text-anchor="middle">K* → 409 NOT_DEBT_YET</text>
         </g>
 
         <!-- Legend -->
         <g data-legend="" data-legend-bridge="">
-          <text x="40" y="274" class="t-primary" font-size="12" font-weight="650">Legend</text>
-          <g data-legend-semantic-kind="start" data-legend-kind="start" data-legend-label="initial state" data-legend-x="40" data-legend-baseline="294" data-legend-width="136">
-            <circle cx="44.5" cy="290.5" r="4.5" style="fill: var(--arrow-emphasis)"/><path d="M 49 290.5 L 58 290.5" class="a-emphasis" stroke-width="1.4"/><path d="M 57 287 L 64 290.5 L 57 294 Z" style="fill: var(--arrow-emphasis)"/>
-            <text x="74" y="294" class="t-muted" font-size="10" font-weight="500">initial state</text>
+          <text x="40" y="448" class="t-primary" font-size="12" font-weight="650">Legend</text>
+          <g data-legend-semantic-kind="start" data-legend-kind="start" data-legend-label="initial state" data-legend-x="40" data-legend-baseline="468" data-legend-width="136">
+            <circle cx="44.5" cy="464.5" r="4.5" style="fill: var(--arrow-emphasis)"/><path d="M 49 464.5 L 58 464.5" class="a-emphasis" stroke-width="1.4"/><path d="M 57 461 L 64 464.5 L 57 468 Z" style="fill: var(--arrow-emphasis)"/>
+            <text x="74" y="468" class="t-muted" font-size="10" font-weight="500">initial state</text>
           </g>
-          <g data-legend-semantic-kind="active" data-legend-kind="active" data-legend-label="active" data-legend-x="198" data-legend-baseline="294" data-legend-width="81">
-            <rect x="198" y="286" width="14" height="9" rx="2" class="c-frontend" stroke-width="1"/>
-            <text x="220" y="294" class="t-muted" font-size="10" font-weight="500">active</text>
+          <g data-legend-semantic-kind="active" data-legend-kind="active" data-legend-label="active" data-legend-x="198" data-legend-baseline="468" data-legend-width="81">
+            <rect x="198" y="460" width="14" height="9" rx="2" class="c-frontend" stroke-width="1"/>
+            <text x="220" y="468" class="t-muted" font-size="10" font-weight="500">active</text>
           </g>
-          <g data-legend-semantic-kind="waiting" data-legend-kind="waiting" data-legend-label="waiting" data-legend-x="301" data-legend-baseline="294" data-legend-width="87">
-            <rect x="301" y="286" width="14" height="9" rx="2" class="c-cloud" stroke-width="1"/>
-            <text x="323" y="294" class="t-muted" font-size="10" font-weight="500">waiting</text>
+          <g data-legend-semantic-kind="waiting" data-legend-kind="waiting" data-legend-label="waiting" data-legend-x="301" data-legend-baseline="468" data-legend-width="87">
+            <rect x="301" y="460" width="14" height="9" rx="2" class="c-cloud" stroke-width="1"/>
+            <text x="323" y="468" class="t-muted" font-size="10" font-weight="500">waiting</text>
           </g>
-          <g data-legend-semantic-kind="decision" data-legend-kind="decision" data-legend-label="decision" data-legend-x="410" data-legend-baseline="294" data-legend-width="93">
-            <rect x="410" y="286" width="14" height="9" rx="2" class="c-database" stroke-width="1"/>
-            <text x="432" y="294" class="t-muted" font-size="10" font-weight="500">decision</text>
+          <g data-legend-semantic-kind="success" data-legend-kind="success" data-legend-label="success" data-legend-x="410" data-legend-baseline="468" data-legend-width="87">
+            <rect x="410" y="460" width="14" height="9" rx="2" class="c-backend" stroke-width="1"/>
+            <text x="432" y="468" class="t-muted" font-size="10" font-weight="500">success</text>
           </g>
-          <g data-legend-semantic-kind="success" data-legend-kind="success" data-legend-label="success" data-legend-x="525" data-legend-baseline="294" data-legend-width="87">
-            <rect x="525" y="286" width="14" height="9" rx="2" class="c-backend" stroke-width="1"/>
-            <text x="547" y="294" class="t-muted" font-size="10" font-weight="500">success</text>
+          <g data-legend-semantic-kind="failure" data-legend-kind="failure" data-legend-label="failure / exit" data-legend-x="519" data-legend-baseline="468" data-legend-width="130">
+            <rect x="519" y="460" width="14" height="9" rx="2" class="c-security" stroke-width="1"/>
+            <text x="541" y="468" class="t-muted" font-size="10" font-weight="500">failure / exit</text>
           </g>
-          <g data-legend-semantic-kind="neutral" data-legend-kind="neutral" data-legend-label="neutral" data-legend-x="634" data-legend-baseline="294" data-legend-width="87">
-            <rect x="634" y="286" width="14" height="9" rx="2" class="c-external" stroke-width="1"/>
-            <text x="656" y="294" class="t-muted" font-size="10" font-weight="500">neutral</text>
+          <g data-legend-semantic-kind="neutral" data-legend-kind="neutral" data-legend-label="neutral" data-legend-x="671" data-legend-baseline="468" data-legend-width="87">
+            <rect x="671" y="460" width="14" height="9" rx="2" class="c-external" stroke-width="1"/>
+            <text x="693" y="468" class="t-muted" font-size="10" font-weight="500">neutral</text>
           </g>
-          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="external" data-legend-x="743" data-legend-baseline="294" data-legend-width="93">
-            <rect x="743" y="286" width="14" height="9" rx="2" class="c-external" stroke-width="1"/>
-            <text x="765" y="294" class="t-muted" font-size="10" font-weight="500">external</text>
-          </g>
-          <g data-legend-semantic-kind="final" data-legend-x="858" data-legend-baseline="294" data-legend-width="93">
-            <rect x="858" y="286" width="14" height="9" rx="2" class="c-external" stroke-width="1"/><rect x="860.5" y="288.5" width="9" height="4" rx="1" class="c-external" style="fill: none" stroke-width="0.8"/>
-            <text x="882" y="294" class="t-muted" font-size="10" font-weight="500">final state</text>
+          <g data-legend-semantic-kind="final" data-legend-x="780" data-legend-baseline="468" data-legend-width="93">
+            <rect x="780" y="460" width="14" height="9" rx="2" class="c-external" stroke-width="1"/><rect x="782.5" y="462.5" width="9" height="4" rx="1" class="c-external" style="fill: none" stroke-width="0.8"/>
+            <text x="804" y="468" class="t-muted" font-size="10" font-weight="500">final state</text>
           </g>
         </g>
       </svg>
@@ -5624,28 +5600,25 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       <div class="card">
         <div class="card-header">
           <div class="card-dot cyan"></div>
-          <h3>Lịch chuông (cron mỗi giờ, phút 5 giờ VN)</h3>
+          <h3>Mốc kỳ</h3>
         </div>
         <ul>
-          <li>Ngày 1: period_open cho mẫu số Tổng hợp</li>
-          <li>lastDay − 2 (còn 3 ngày): reminder cho người chưa có phiếu</li>
-          <li>Ngày khóa (= lastDay + 1): period_locked cho Hành chính; headcount ghi bù nếu trượt</li>
-          <li>Mỗi lần chạy: sắp hết kho (đòi quyền một lần), xóa chuông &gt; 90 ngày</li>
+          <li>K* = kỳ khóa mới nhất (tháng trước kỳ đang mở); phần còn lại của K* là Chưa nhận, của kỳ trước nữa là Còn nợ</li>
+          <li>Khóa sổ = 00:00 ngày lastDay+1 giờ VN; cron chụp headcount_subs một lần</li>
+          <li>Hành chính không thấy số dòng và nhật ký phiếu của kỳ đang mở</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot amber"></div>
-          <h3>Còn nợ và báo cáo</h3>
+          <h3>Giảm và hủy</h3>
         </div>
         <ul>
-          <li>Chỉ giao/hủy nợ khi kỳ của phiếu đã khóa</li>
-          <li>Phần còn lại = qty − đã giao − đã hủy; vào báo cáo kỳ sau dưới cột Nợ kỳ trước</li>
-          <li>Cần mua = phần còn lại kỳ này + nợ kỳ trước − tồn (BR-15)</li>
-          <li>Giao tất cả thiếu kho: dòng đó vào Còn nợ (STOCK_INSUFFICIENT), dòng khác vẫn giao</li>
-          <li>Hủy nợ làm hết nợ nhưng không gửi chuông giao đủ</li>
-          <li>Bản chốt chốt được cả kỳ đang mở; mỗi lần bấm Xuất/In một bản mới, In lại/Tải lại ra số cũ</li>
+          <li>ADM hết hàng: hộp giao giao phần tủ có rồi hủy phần thiếu; dòng chưa giao bị cron hủy khi kỳ sau khóa (arrival.adm_out_settled)</li>
+          <li>Giảm: over_quota · adm_out_of_stock · duplicate · user_left · other (ghi chú ≥ 3 chữ); sàn = đã giao + đã hủy</li>
+          <li>Bỏ hết dòng vẫn giữ phiếu (vẫn tính đã đăng ký); user_left và chủ phiếu đã nghỉ không có chuông</li>
+          <li>Hủy nợ: không cần nữa · người đã nghỉ · ADM hết hàng · khác; không gửi chuông giao đủ</li>
         </ul>
       </div>
 
@@ -5655,8 +5628,9 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           <h3>Không có</h3>
         </div>
         <ul>
-          <li>Hoàn tác đợt giao (FR-44 bỏ khỏi GĐ1)</li>
-          <li>Gửi bù chuông khi cron trượt cả ngày (giả định 3)</li>
+          <li>Tăng số hoặc thêm món sau khóa sổ (LINE_ADD_FORBIDDEN, QTY_INCREASE_FORBIDDEN)</li>
+          <li>Hoàn tác một đợt giao</li>
+          <li>Hủy Chưa nhận của K* bằng Hủy nợ (trừ dòng ADM hết hàng từ hộp giao)</li>
         </ul>
       </div>
     </div>
