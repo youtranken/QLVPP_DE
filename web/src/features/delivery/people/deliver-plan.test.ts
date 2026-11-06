@@ -109,10 +109,30 @@ describe('dialogRows + limitsOf — trần trong hộp', () => {
   });
 });
 
+describe('dialogRows — thứ tự món trong hộp giao', () => {
+  const pen = { name: 'Bút', sort_order: 10 };
+  const paper = { name: 'giấy', sort_order: 10 };
+  it('nợ trước (kỳ cũ trước), rồi trong mỗi kỳ theo thứ tự món chung (nhóm → số thứ tự → tên), ngoài DM cuối; không theo thứ tự đăng ký', () => {
+    const at = (n: number) => `2026-10-01T01:00:0${n}.000000Z`;
+    const p = person({
+      lines: [
+        pLine({ line_id: 'custom', item_id: null, stock_qty: null, name: 'Áo mưa', deliver_cap: 1, sort_order: null, line_at: at(0) }),
+        pLine({ line_id: 'none', item_id: 'i-none', name: 'Lẻ', sort_order: -5, category: null, line_at: at(1) }),
+        pLine({ line_id: 'paper', item_id: 'i-paper', name: 'A4', sort_order: 0, category: paper, line_at: at(2) }),
+        pLine({ line_id: 'pen-b', item_id: 'i-pen-b', name: 'bút bi', sort_order: 10, category: pen, line_at: at(3) }),
+        pLine({ line_id: 'pen-a', item_id: 'i-pen-a', name: 'Ấn', sort_order: 10, category: pen, line_at: at(4) }),
+        pLine({ line_id: 'pen-0', item_id: 'i-pen-0', name: 'Zeta', sort_order: 5, category: pen, line_at: at(5) }),
+        pLine({ line_id: 'debt', period_ym: '2026-09', is_debt: true, item_id: 'i-z', name: 'Zz', sort_order: 99, category: null, line_at: at(6) }),
+      ],
+    });
+    expect(dialogRows(p, priorityOf([p])).map((r) => r.line.line_id)).toEqual(['debt', 'pen-0', 'pen-b', 'pen-a', 'paper', 'none', 'custom']);
+  });
+});
+
 describe('totalsOf / stepsOf — tổng và thứ tự gửi', () => {
   const debt = pLine({ line_id: 'd', period_ym: '2026-09', is_debt: true, item_id: 'i-a4', qty: 4, remaining_qty: 4, stock_qty: 9 });
-  const cur = pLine({ line_id: 'c', qty: 5, remaining_qty: 5, stock_qty: 9 });
-  const adm = pLine({ line_id: 'm', item_id: 'i-clip', qty: 2, remaining_qty: 2, stock_qty: 1, adm_out: true, delivered_qty: 0 });
+  const cur = pLine({ line_id: 'c', name: 'Bút', qty: 5, remaining_qty: 5, stock_qty: 9 });
+  const adm = pLine({ line_id: 'm', item_id: 'i-clip', name: 'Kẹp', qty: 2, remaining_qty: 2, stock_qty: 1, adm_out: true, delivered_qty: 0 });
 
   it('tổng: giao, còn chưa nhận, nợ, số món ADM hủy', () => {
     const p = person({ lines: [cur, adm, debt] });

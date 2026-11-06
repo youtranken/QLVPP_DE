@@ -21,6 +21,8 @@ export function pLine(over: Partial<DeliveryPersonLine> = {}): DeliveryPersonLin
     deliver_cap: null,
     request_at: '2026-10-01T01:00:00.000000Z',
     line_at: '2026-10-01T01:00:00.000000Z',
+    sort_order: 0,
+    category: null,
     ...over,
   };
 }

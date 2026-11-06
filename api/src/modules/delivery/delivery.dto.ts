@@ -141,6 +141,9 @@ export interface DeliveryPersonLine {
   ahead_qty: number; // còn chờ của các dòng cùng món đứng trước (kỳ → lưu phiếu → thêm dòng → id), bỏ người đã nghỉ
   request_at: string; // lần lưu đầu của phiếu (ISO, µs) — thứ tự đăng ký
   line_at: string;
+  // Khóa thứ tự món chung (ITEM_ORDER / compareItems): null = món ngoài DM / chưa nhóm
+  sort_order: number | null;
+  category: { name: string; sort_order: number } | null;
 }
 export interface DeliveryPerson {
   user_sub: string;

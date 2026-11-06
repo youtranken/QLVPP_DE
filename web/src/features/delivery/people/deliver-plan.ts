@@ -1,3 +1,4 @@
+import { compareItems, type ItemOrderKey } from '@/lib/item-order';
 import type { DeliveryPerson, DeliveryPersonLine } from './delivery-people.api';
 import { isOpenLine } from './people-filter';
 
@@ -119,9 +120,15 @@ function rowOf(l: DeliveryPersonLine, active: boolean, pr: Priority | undefined)
   return { line: l, kind: 'give', suggest, held, stockLeft };
 }
 
-// Thứ tự hàng trong hộp cũng là thứ tự gửi: nợ trước (kỳ cũ nhất trước), rồi kỳ này
+// Cùng dãy với ORDER BY của api: món danh mục theo ITEM_ORDER, món ngoài DM sau cùng theo tên
+const orderKeyOfLine = (l: DeliveryPersonLine): ItemOrderKey => ({ id: l.item_id ?? '', name: l.name, sort_order: l.sort_order ?? 0, category: l.category });
+const isCustom = (l: DeliveryPersonLine) => Number(l.item_id === null);
+export const byItemOrder = (a: DeliveryPersonLine, b: DeliveryPersonLine) =>
+  cmp(a.period_ym, b.period_ym) || isCustom(a) - isCustom(b) || compareItems(orderKeyOfLine(a), orderKeyOfLine(b)) || byRegistration(a, b);
+
+// Thứ tự hàng trong hộp cũng là thứ tự gửi: nợ trước (kỳ cũ nhất trước), rồi kỳ này; trong mỗi kỳ theo thứ tự món chung
 export function dialogRows(person: DeliveryPerson, priority: Map<string, Priority>): DialogRow[] {
-  const ordered = person.lines.filter((l) => l.remaining_qty > 0).sort((a, b) => Number(b.is_debt) - Number(a.is_debt) || byRegistration(a, b));
+  const ordered = person.lines.filter((l) => l.remaining_qty > 0).sort((a, b) => Number(b.is_debt) - Number(a.is_debt) || byItemOrder(a, b));
   return ordered.map((l) => rowOf(l, isActive(person), priority.get(l.line_id)));
 }
 

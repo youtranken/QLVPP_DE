@@ -6,6 +6,7 @@ import type { Database } from '../../database/database.module';
 import { PeriodsService } from '../periods/periods.service';
 import { hasItemsSql } from '../reports/sent-snapshot';
 import { addMonths } from '../../common/period';
+import { ITEM_ORDER } from '../catalog/item-order';
 import {
   CUSTOM_ITEM_KEY,
   DEBT_LINE_SQL,
@@ -105,7 +106,9 @@ export class DeliveryPeopleService {
                      AND a.line_key = x.key AND a.kind = 'out') AS adm_out,
              (x.item_id IS NULL AND coalesce(s.ordered, 0) > 0) AS custom_tracked,
              ${DELIVER_CAP} AS deliver_cap, ${READY_NOW} AS ready_now,
-             x.ahead_all AS ahead_qty,
+             x.ahead_all AS ahead_qty, i.sort_order,
+             CASE WHEN c.id IS NULL THEN NULL
+                  ELSE json_build_object('name', c.name, 'sort_order', c.sort_order) END AS category,
              to_char(x.request_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS request_at,
              to_char(x.line_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS line_at
       FROM ranked x
@@ -114,7 +117,10 @@ export class DeliveryPeopleService {
         WHERE rs.period_ym = x.period_ym AND ${hasItemsSql}
         ORDER BY rs.created_at DESC, rs.id DESC LIMIT 1
       ) s ON x.item_id IS NULL
-      ORDER BY x.period_ym, x.line_id
+      LEFT JOIN items i ON i.id = x.item_id
+      LEFT JOIN item_categories c ON c.id = i.category_id
+      ORDER BY x.period_ym, (x.item_id IS NULL), ${ITEM_ORDER},
+               lower(x.name) COLLATE "C", x.request_at, x.line_at, x.line_id
     `);
     return rows;
   }

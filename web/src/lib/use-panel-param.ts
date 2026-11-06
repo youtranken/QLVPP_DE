@@ -55,14 +55,18 @@ export function usePanelParam(name: PanelName, { order = NONE, known, extra = NO
     // Mở bằng đẩy lịch sử thì đóng = lùi lại, để Back sau đó không mở lại panel
     close: () => {
       if (!pushed) return go(cleared(), true, null);
-      selfClose = true;
+      for (const g of guards) g.selfClose = true;
       void navigate(-1);
     },
   };
 }
 
-// Panel tự đóng (đã hỏi hoặc vừa lưu/xóa xong) bằng lùi lịch sử: popstate đó không phải Back của người dùng
-let selfClose = false;
+// Panel tự đóng (đã hỏi hoặc vừa lưu/xóa xong) bằng lùi lịch sử: popstate đó không phải Back của người dùng.
+// Cờ nằm ở từng chặn đang gắn: đóng khi không có chặn nào thì không còn cờ sót lại nuốt Back thật về sau.
+const guards = new Set<{ selfClose: boolean }>();
+
+// Chặn vòng lặp khi tiến lại về mục panel (Back nhiều lần trong lúc hộp hỏi đang mở)
+const MAX_RESTORE_STEPS = 50;
 
 // BrowserRouter không có useBlocker: nghe popstate ở pha capture (trước router) và giữ router đứng yên trong lúc hỏi.
 // Không đẩy lại lịch sử ngay trong popstate (Chrome coi là thao tác không do người dùng); "Ở lại" mới đẩy lại, sau cú bấm.
@@ -76,9 +80,19 @@ export function useDirtyBackGuard(dirty: boolean, ask: () => Promise<boolean>) {
   useEffect(() => {
     let pass = false;
     let asking = false;
+    // Đang tiến lại từng bước về mục panel cũ: router chưa từng rời panel nên mọi bước đều giữ lại
+    let restoring: { url: string; steps: number } | null = null;
+    const me = { selfClose: false };
+    guards.add(me);
     const onPop = (e: PopStateEvent) => {
-      if (selfClose || pass) {
-        selfClose = false;
+      if (restoring) {
+        e.stopImmediatePropagation();
+        if (window.location.href === restoring.url || ++restoring.steps >= MAX_RESTORE_STEPS) restoring = null;
+        else window.history.go(1);
+        return;
+      }
+      if (me.selfClose || pass) {
+        me.selfClose = false;
         pass = false;
         return;
       }
@@ -87,9 +101,10 @@ export function useDirtyBackGuard(dirty: boolean, ask: () => Promise<boolean>) {
       if (asking) return;
       asking = true;
       const panelEntry = entry.current;
+      const listUrl = window.location.href;
       void latest.current.ask().then((ok) => {
         asking = false;
-        if (!ok) return window.history.pushState(panelEntry.state, '', panelEntry.url);
+        if (!ok) return stay(panelEntry, listUrl);
         pass = true;
         window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }));
       });
@@ -99,9 +114,19 @@ export function useDirtyBackGuard(dirty: boolean, ask: () => Promise<boolean>) {
       e.preventDefault();
       e.returnValue = '';
     };
+    // "Ở lại": còn đứng ở mục danh sách → đẩy lại mục panel; Back thêm lần nữa trong lúc hỏi → đi tới đúng mục panel cũ
+    // (mục danh sách và panel phía trước vẫn còn), không đẩy đè làm mất chúng
+    const stay = (panelEntry: { state: unknown; url: string }, listUrl: string) => {
+      const here = window.location.href;
+      if (here === listUrl) return window.history.pushState(panelEntry.state, '', panelEntry.url);
+      if (here === panelEntry.url) return;
+      restoring = { url: panelEntry.url, steps: 0 };
+      window.history.go(1);
+    };
     window.addEventListener('popstate', onPop, true);
     window.addEventListener('beforeunload', onUnload);
     return () => {
+      guards.delete(me);
       window.removeEventListener('popstate', onPop, true);
       window.removeEventListener('beforeunload', onUnload);
     };

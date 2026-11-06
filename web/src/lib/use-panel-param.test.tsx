@@ -1,7 +1,8 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { useState } from 'react';
 import { BrowserRouter, useLocation } from 'react-router-dom';
 import { act, render, screen, userEvent, waitFor } from '@/test/test-utils';
-import { usePanelParam } from '@/lib/use-panel-param';
+import { useDirtyBackGuard, usePanelParam } from '@/lib/use-panel-param';
 
 const ORDER = Array.from({ length: 12 }, (_, i) => `m${i + 1}`);
 
@@ -118,5 +119,94 @@ describe('usePanelParam — lịch sử trình duyệt', () => {
     expect(text('search')).toBe('?item=new&itemCat=c1');
     await click('close');
     await waitFor(() => expect(text('search')).toBe(''));
+  });
+});
+
+// Panel có chặn Back khi đã sửa; hỏi = promise do test quyết định ("Ở lại" = false, "Bỏ" = true)
+function Guarded({ ask }: { ask: () => Promise<boolean> }) {
+  useDirtyBackGuard(true, ask);
+  return null;
+}
+
+function GuardProbe({ ask }: { ask: () => Promise<boolean> }) {
+  const p = usePanelParam('item');
+  const [guard, setGuard] = useState(false);
+  const { search } = useLocation();
+  return (
+    <>
+      <output data-testid="search">{search}</output>
+      <output data-testid="id">{p.id ?? ''}</output>
+      <button type="button" onClick={() => p.open('m1')}>
+        open
+      </button>
+      <button type="button" onClick={p.close}>
+        close
+      </button>
+      <button type="button" onClick={() => setGuard(true)}>
+        guard
+      </button>
+      {p.id && guard && <Guarded ask={ask} />}
+    </>
+  );
+}
+
+function asker() {
+  const answers: ((ok: boolean) => void)[] = [];
+  const ask = vi.fn(() => new Promise<boolean>((r) => answers.push(r)));
+  return { ask, answer: (ok: boolean) => act(async () => answers.shift()!(ok)) };
+}
+
+const settle = () => act(() => new Promise((r) => setTimeout(r, 30)));
+const back = () => act(async () => window.history.back());
+
+describe('useDirtyBackGuard — Back hai lần, tự đóng', () => {
+  it('Back → hộp hỏi → Back lần nữa → "Ở lại": về đúng mục panel, giữ mục danh sách phía sau (Back sau đó về danh sách, không về trang trước)', async () => {
+    window.history.replaceState(null, '', '/admin/home');
+    window.history.pushState(null, '', '/admin/catalog?q=a');
+    const { ask, answer } = asker();
+    render(
+      <BrowserRouter>
+        <GuardProbe ask={ask} />
+      </BrowserRouter>,
+    );
+    await click('guard');
+    await click('open');
+    const length = window.history.length;
+    await back();
+    await waitFor(() => expect(ask).toHaveBeenCalledTimes(1));
+    await back();
+    await settle();
+    expect(window.location.pathname).toBe('/admin/home');
+    await answer(false);
+    await waitFor(() => expect(window.location.search).toBe('?q=a&item=m1'));
+    expect(text('id')).toBe('m1');
+    expect(window.history.length).toBe(length);
+    await back();
+    await waitFor(() => expect(ask).toHaveBeenCalledTimes(2));
+    await answer(true);
+    await waitFor(() => expect(text('id')).toBe(''));
+    expect(window.location.pathname).toBe('/admin/catalog');
+    expect(text('search')).toBe('?q=a');
+  });
+
+  it('panel không có chặn tự đóng (lùi lịch sử) → panel sau có chặn vẫn hỏi khi bấm Back', async () => {
+    window.history.replaceState(null, '', '/admin/catalog');
+    const { ask, answer } = asker();
+    render(
+      <BrowserRouter>
+        <GuardProbe ask={ask} />
+      </BrowserRouter>,
+    );
+    await click('open');
+    await click('close');
+    await waitFor(() => expect(text('id')).toBe(''));
+    await settle();
+    await click('guard');
+    await click('open');
+    await back();
+    await waitFor(() => expect(ask).toHaveBeenCalledTimes(1));
+    expect(text('id')).toBe('m1');
+    await answer(true);
+    await waitFor(() => expect(text('id')).toBe(''));
   });
 });

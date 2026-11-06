@@ -26,6 +26,9 @@ export interface DeliveryPersonLine {
   // Thứ tự đăng ký: kỳ → lần lưu đầu của phiếu → lúc thêm dòng → id
   request_at: string;
   line_at: string;
+  // Khóa thứ tự món chung (compareItems): null = món ngoài DM / chưa nhóm
+  sort_order: number | null;
+  category: { name: string; sort_order: number } | null;
 }
 
 export interface DeliveryPerson {

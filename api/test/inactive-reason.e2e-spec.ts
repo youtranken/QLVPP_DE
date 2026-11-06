@@ -41,12 +41,14 @@ describe('ngừng nhóm/ngừng riêng: inactive_reason, bật lại nhóm chỉ
         [ids],
       )
     ).rows.map((r) => r.active);
-  const lastAudit = async () =>
+  // id là uuid ngẫu nhiên, đồng hồ có thể đứng yên: chọn audit theo loại đếm thay vì "mới nhất"
+  const auditWith = async (count: 'deactivated' | 'reactivated') =>
     (
       await pool().query<{ detail: Record<string, unknown> }>(
         `SELECT detail FROM audit_log WHERE action = 'category.updated' AND object_id = $1
-         ORDER BY id DESC LIMIT 1`,
-        [category],
+           AND detail->'affected_items' ? $2
+         LIMIT 1`,
+        [category, count],
       )
     ).rows[0]?.detail;
 
@@ -100,7 +102,7 @@ describe('ngừng nhóm/ngừng riêng: inactive_reason, bật lại nhóm chỉ
     const hidden = await memberIds();
     for (const id of all) expect(hidden).not.toContain(id);
     expect(await activeFlags(all)).toEqual(before);
-    expect(await lastAudit()).toMatchObject({
+    expect(await auditWith('deactivated')).toMatchObject({
       affected_items: { deactivated: 4, still_inactive: 1 },
     });
 
@@ -113,7 +115,7 @@ describe('ngừng nhóm/ngừng riêng: inactive_reason, bật lại nhóm chỉ
     for (const id of four) expect(back).toContain(id);
     expect(back).not.toContain(a);
     expect(await activeFlags(all)).toEqual(before);
-    expect(await lastAudit()).toMatchObject({
+    expect(await auditWith('reactivated')).toMatchObject({
       affected_items: { reactivated: 4, still_inactive: 1 },
     });
   });

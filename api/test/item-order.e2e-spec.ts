@@ -113,4 +113,14 @@ describe('Một thứ tự món chung ở mọi bề mặt (6 món, 2 nhóm + ch
     );
     expect(onlyMine(plan.rows.map((r) => r.item_id))).toEqual(FIXTURE.expected);
   });
+
+  it('Giao hàng theo người: dòng của một người theo cùng dãy (hộp giao lấy thứ tự này)', async () => {
+    const res = await get<{
+      people: { user_sub: string; lines: { item_id: string | null }[] }[];
+    }>(`/api/admin/periods/${YM}/delivery-people`);
+    const a = res.people.find((p) => p.user_sub === A);
+    expect(onlyMine(a?.lines.map((l) => l.item_id) ?? [])).toEqual(
+      FIXTURE.expected,
+    );
+  });
 });

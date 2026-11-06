@@ -30,6 +30,12 @@ function RowNotes({ r }: { r: ArrivalRow }) {
   ));
 }
 
+function InactiveTag({ reason }: { reason: ArrivalRow['inactive_reason'] }) {
+  const { t } = useTranslation();
+  if (!reason) return null;
+  return <span className="tag tag--outline">{t(reason === 'item' ? 'catalog.categories.byItem' : 'catalog.categories.byGroup')}</span>;
+}
+
 function StatusTag({ r, qty }: { r: ArrivalRow; qty: number }) {
   const { t } = useTranslation();
   if (r.adm_out) return <span className="tag tag--outline">{t('arrivals.admOut.tag')}</span>;
@@ -54,6 +60,7 @@ function ArrivalRowView({ r, draft, busy, onToggleAdm }: RowProps) {
           <span>
             <b>{name}</b>
             <small>{fmt.unit(r.unit)}</small>
+            {!r.usable && <InactiveTag reason={r.inactive_reason} />}
             <RowNotes r={r} />
           </span>
         </div>

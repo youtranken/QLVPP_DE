@@ -18,6 +18,8 @@ export interface ArrivalRow {
   remaining: number;
   stock: number;
   usable: boolean;
+  // Món ngừng vẫn có trong bản in: ngừng riêng hay theo nhóm
+  inactive_reason: 'item' | 'category' | null;
   adm_out: boolean;
   adm_out_final: boolean;
   reduced: number;
@@ -47,6 +49,7 @@ export function toArrivalRows(plan: ArrivalsPlan, added: AdminItem[]): ArrivalRo
     remaining: r.remaining,
     stock: r.stock_qty,
     usable: r.usable,
+    inactive_reason: r.inactive_reason,
     adm_out: r.adm_out,
     adm_out_final: r.adm_out_final,
     reduced: r.reduced_after_snapshot,
@@ -69,6 +72,7 @@ export function toArrivalRows(plan: ArrivalsPlan, added: AdminItem[]): ArrivalRo
       remaining: 0,
       stock: i.stock_qty,
       usable: true,
+      inactive_reason: null,
       adm_out: false,
       adm_out_final: false,
       reduced: 0,

@@ -69,6 +69,21 @@ describe('Hàng về — bảng theo bản in', () => {
     await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
     expect(bodiesOf(f, RECEIPT_URL)[0].lines).toEqual([{ item_id: 'i-off', qty: 3, expected_stock_qty: 1 }]);
   });
+
+  it('món ngừng có trong bản in hiện lý do ngừng: "Ngừng riêng" / "Ngừng theo nhóm"; món đang dùng không có nhãn', async () => {
+    stub({
+      plan: plan([
+        planRow({ item_id: 'i-off', name: 'Món ngừng', usable: false, inactive_reason: 'item', remaining: 3, stock_qty: 1 }),
+        planRow({ item_id: 'i-b', name: 'Kẹp giấy', usable: false, inactive_reason: 'category' }),
+        planRow({ item_id: 'i-a', name: 'Bút bi' }),
+      ]),
+    });
+    await open();
+    const rowOf = async (name: string) => (await screen.findByRole('spinbutton', { name: `Về đợt này: ${name}` })).closest('tr')!;
+    expect(within(await rowOf('Món ngừng')).getByText('Ngừng riêng')).toBeInTheDocument();
+    expect(within(await rowOf('Kẹp giấy')).getByText('Ngừng theo nhóm')).toBeInTheDocument();
+    expect(within(await rowOf('Bút bi')).queryByText(/^Ngừng (riêng|theo nhóm)$/)).not.toBeInTheDocument();
+  });
 });
 
 describe('Hàng về — lọc ?q=&g=&short=1', () => {
