@@ -163,7 +163,8 @@ export class NotificationScheduler
             name_en: item.name_en,
             stock_qty: item.stock_qty,
           },
-          link: '/admin/stock?filter=low',
+          // Tủ / Kho xếp món theo phần trống (thiếu/chờ hàng/sắp hết), không theo tồn → mở thẳng món
+          link: `/admin/stock?${new URLSearchParams({ q: item.name })}`,
           now,
         });
       }

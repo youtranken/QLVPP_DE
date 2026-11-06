@@ -96,6 +96,26 @@ describe('V2D-16 GET /admin/stock — Tủ/Kho theo người đang chờ (e2e)',
     });
   });
 
+  it('người đã nghỉ (status locked) không giữ hàng: chỉ phần của người đang làm vào held/waiting', async () => {
+    const item = await itemWith(1, null);
+    await seedLine(YM, A, { item_id: item, qty: 2 });
+    await seedLine(YM, B, { item_id: item, qty: 3 });
+    await pool().query("UPDATE users SET status = 'locked' WHERE sub = $1", [
+      B,
+    ]);
+    try {
+      expect(await rowOf(item)).toMatchObject({
+        held: 2,
+        waiting: 1,
+        short: 1,
+      });
+    } finally {
+      await pool().query("UPDATE users SET status = 'active' WHERE sub = $1", [
+        B,
+      ]);
+    }
+  });
+
   it('mốc khóa sổ tới ms: .999 dòng kỳ 2026-11 chưa giữ; .000 giữ', async () => {
     const item = await itemWith(0, null);
     await seedLine(YM, A, { item_id: item, qty: 2 });

@@ -1,9 +1,9 @@
 -- Một lần: sort_order = số trên tên ảnh × 10 cho đúng 50 món (khớp theo code); lệch số dòng thì rollback cả khối.
--- Chạy lại cho cùng kết quả (thêm một dòng audit); detail.before giữ số cũ để đảo ngược bằng tay.
+-- Chạy lại cho cùng kết quả (thêm một dòng audit); detail.before giữ số cũ của mọi món (kể cả món ngừng) để đảo ngược bằng tay.
 DO $$
 DECLARE n int; before jsonb;
 BEGIN
-  SELECT jsonb_agg(jsonb_build_object('id', id, 'sort_order', sort_order)) INTO before FROM items WHERE active;
+  SELECT jsonb_agg(jsonb_build_object('id', id, 'sort_order', sort_order)) INTO before FROM items;
   UPDATE items i SET sort_order = m.no * 10, updated_at = now()
   FROM (VALUES
     ('B05',1), ('B04',2), ('B47',3), ('K05',4), ('K04',5), ('B18',6), ('A01',7), ('BIA-CAY',8), ('B17',9), ('B19',10),

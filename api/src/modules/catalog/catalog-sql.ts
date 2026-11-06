@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 
-// FR-50: đã dùng hết 80 % tồn sau lần nhập mua gần nhất; tồn 0 là "Hết hàng", không tính vào đây
+// Sắp hết: đã dùng hết 80 % tồn sau lần nhập mua gần nhất; tồn 0 là "Hết hàng", không tính vào đây
 export const LOW_STOCK_SQL =
   'restock_level > 0 AND stock_qty > 0 AND stock_qty <= floor(restock_level * 0.2)';
 

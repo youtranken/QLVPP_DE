@@ -15,7 +15,7 @@ export interface HeldStock {
   stock_state: HeldStockState;
 }
 
-// Cùng ngưỡng FR-50 với LOW_STOCK_SQL (đã dùng 80 % lần nhập gần nhất) nhưng tính trên phần còn trống
+// Cùng ngưỡng với LOW_STOCK_SQL (đã dùng 80 % lần nhập gần nhất) nhưng tính trên phần còn trống
 const lowLine = (level: number) => Math.floor(level * 0.2);
 
 export function stockStateOf(x: HeldStockInput): HeldStock {

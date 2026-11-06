@@ -119,7 +119,7 @@ export class StockService {
     });
   }
 
-  // Nhập mua đặt lại mốc (FR-50); điều chỉnh + chỉ đặt mốc khi món chưa có (tồn đầu kỳ), không đổi mốc đã có
+  // Nhập mua đặt lại mốc Sắp hết; điều chỉnh + chỉ đặt mốc khi món chưa có (tồn đầu kỳ), không đổi mốc đã có
   async applyChangeWithin(
     tx: Tx,
     itemId: string,

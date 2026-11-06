@@ -98,6 +98,22 @@ describe('ops: sort_order theo số ảnh (khối DO tự kiểm 50 dòng)', () 
     expect(rows[0].detail.before.every((b) => b.sort_order === 3)).toBe(true);
   });
 
+  it('món đã ngừng có mã trong bảng: vẫn được đổi số, detail.before giữ số cũ của nó để đảo ngược', async () => {
+    await seed(PHOTO_CODES.map((p) => p.code));
+    await pool.query(
+      "UPDATE items SET active = false, sort_order = 7 WHERE code = 'T01'",
+    );
+    const id = (
+      await pool.query<{ id: string }>(
+        "SELECT id FROM items WHERE code = 'T01'",
+      )
+    ).rows[0].id;
+    await pool.query(SCRIPT);
+    expect((await sorts()).get('T01')).toBe(500);
+    const before = (await audits()).at(-1)!.detail.before;
+    expect(before).toContainEqual({ id, sort_order: 7 });
+  });
+
   it('51 món (thêm 1 mã lạ) → vẫn 50 dòng đổi, món lạ giữ số cũ', async () => {
     const before = (await audits()).length;
     await seed([...PHOTO_CODES.map((p) => p.code), 'MA-LA']);
