@@ -17,7 +17,8 @@ function WaitingChip({ ym }: { ym: string }) {
   const { t } = useTranslation();
   const request = useMyRequest(ym);
   const k = (request.data?.lines ?? []).filter((l) => counted(l) && l.qty - l.delivered_qty - l.cancelled_qty > 0).length;
-  return k > 0 ? <Chip tone="warn">{t('request.history.delivery.owed', { k })}</Chip> : null;
+  // Chưa biết số dòng (đang tải, lỗi, hoặc 0) vẫn hiện chip chung để trạng thái không biến mất rồi nhảy bố cục
+  return <Chip tone="warn">{k > 0 ? t('request.history.delivery.owed', { k }) : t('request.history.delivery.waiting')}</Chip>;
 }
 
 export function DeliveryTag({ item }: { item: Pick<HistoryItem, 'period_ym' | 'line_count' | 'total_qty' | 'delivered_qty' | 'remaining_qty'> }) {

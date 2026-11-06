@@ -172,6 +172,46 @@ describe('HistoryPage', () => {
     expect(await screen.findByText('Đã hủy 2')).toBeInTheDocument();
   });
 
+  describe('chip "Còn chờ" khi chưa biết số dòng', () => {
+    const owedPage = { items: [item({ period_ym: '2026-10', delivered_qty: 6, remaining_qty: 4 })], next_cursor: null };
+    const withRequest = (respond: () => Promise<Response>) => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn((url: string) => {
+          if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
+          if (url.startsWith('/api/me/issues')) return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }));
+          if (url.startsWith('/api/me/request?ym=')) return respond();
+          return Promise.resolve(jsonResponse(200, owedPage));
+        }),
+      );
+    };
+
+    it('đang tải phiếu: chip chung "Còn chờ nhận" đã có sẵn', async () => {
+      withRequest(() => new Promise<Response>(() => {}));
+      renderApp(makeMe('member'), '/history');
+      const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
+      expect(within(card).getByText('Còn chờ nhận')).toBeInTheDocument();
+    });
+
+    it('phiếu lỗi 500: chip chung vẫn hiện, không văng lỗi', async () => {
+      withRequest(() => Promise.resolve(jsonResponse(500, {})));
+      renderApp(makeMe('member'), '/history');
+      const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
+      expect(await within(card).findByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
+      expect(within(card).getByText('Còn chờ nhận')).toBeInTheDocument();
+    });
+
+    it('đã tải: thay chip chung bằng số dòng "Còn chờ 1 món"', async () => {
+      stub([owedPage], [], {
+        '2026-10': view({ period_ym: '2026-10', is_open: false, lines: [lineView({ id: 'a', item_id: PEN.id, item: facts(PEN), qty: 10, delivered_qty: 6 })] }),
+      });
+      renderApp(makeMe('member'), '/history');
+      const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
+      expect(await within(card).findByText('Còn chờ 1 món')).toBeInTheDocument();
+      expect(within(card).queryByText('Còn chờ nhận')).toBeNull();
+    });
+  });
+
   it('en: dòng món dùng name_en', async () => {
     await setLanguage('en');
     stub(

@@ -38,7 +38,7 @@ const request: Messages<typeof vi> = {
       cancelledAllWhy: 'Cancelled {{n}} — {{reason}}',
       issues: { title: 'Ad hoc pickups' },
       owed: '{{n}} pending',
-      delivery: { done: 'Fully received', owed: '{{k}} still waiting', undelivered: '{{k}} still waiting', cancelled: 'Cancelled', none: 'No order' },
+      delivery: { done: 'Fully received', owed: '{{k}} still waiting', undelivered: '{{k}} still waiting', cancelled: 'Cancelled', waiting: 'Waiting', none: 'No order' },
       line: { full: 'Fully received', got: 'Received {{a}}', part: 'Received {{a}}, waiting {{b}}', wait: 'Waiting {{b}}' },
       subtitle: 'Past monthly orders and what you have received.',
       customCount: {
