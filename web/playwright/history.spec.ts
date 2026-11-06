@@ -143,4 +143,59 @@ test.describe('E2-S6 lịch sử', () => {
       release();
     }
   });
+
+  test('V2D-21 owed across months: Đăng ký nói mọi tháng còn chờ nhận, ≤ 2 chạm tới điều chỉnh của Hành chính trong Lịch sử', async ({ page, request }, info) => {
+    const sub = `pw-owed-${Date.now()}-${info.project.name}`;
+    const headers = { 'x-dev-user-sub': sub, 'x-dev-role': 'member' };
+    seedActiveUser(sub, `PW Chờ nhận ${info.project.name}`);
+    await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...headers } }));
+    const period = await (await request.get('/api/periods/current', { headers })).json();
+    const prevYm = prevYmOf(period.ym);
+    const olderYm = prevYmOf(prevYm);
+    const [pen, tape, glue] = [await seedPwItem(page), await seedPwItem(page), await seedPwItem(page)];
+    const monthOf = (ym: string) => Number(ym.slice(5));
+
+    const release = await acquireLock('prev-period');
+    const created = [olderYm, prevYm].filter((ym) =>
+      psql(`INSERT INTO periods (ym, deadline) VALUES ('${ym}-01', '${ym}-10T17:00:00Z') ON CONFLICT DO NOTHING RETURNING ym`),
+    );
+    psql(`WITH r AS (
+        INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('${olderYm}-01', '${sub}', '${sub}') RETURNING id
+      ) INSERT INTO request_lines (request_id, item_id, qty, delivered_qty) SELECT r.id, '${pen.id}', 3, 1 FROM r`);
+    // Kỳ trước: Hành chính giảm Băng keo 3 → 1 (bản ghi chỉ-thêm như PUT admin/requests/:id/lines ghi)
+    psql(`WITH r AS (
+        INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('${prevYm}-01', '${sub}', '${sub}') RETURNING id
+      ), t AS (
+        INSERT INTO request_lines (request_id, item_id, qty) SELECT r.id, '${tape.id}', 1 FROM r RETURNING id, request_id
+      ), g AS (
+        INSERT INTO request_lines (request_id, item_id, qty, delivered_qty) SELECT r.id, '${glue.id}', 2, 1 FROM r
+      )
+      INSERT INTO request_line_adjustments (batch_id, period_ym, user_sub, request_id, line_id, item_id, name, unit,
+                                            qty_before, qty_after, reason_code, actor_sub, created_at)
+      SELECT gen_random_uuid(), '${prevYm}-01', '${sub}', t.request_id, t.id, '${tape.id}', '${tape.name}', 'cai',
+             3, 1, 'over_quota', 'pw-admin', '${prevYm}-13T02:10:00Z' FROM t`);
+
+    try {
+      await page.goto('/');
+      const notice = page.getByText(/^Bạn còn chờ nhận/);
+      await expect(notice).toHaveText(
+        `Bạn còn chờ nhận Tháng ${monthOf(olderYm)}: ${pen.name} 2 · Tháng ${monthOf(prevYm)}: 2 món. Không cần đăng ký lại.`,
+      );
+      await expect(page.getByText(/\bnợ\b/)).toHaveCount(0);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+
+      const tap = (target: ReturnType<Page['getByRole']>) => (isMobile(info) ? target.tap() : target.click());
+      await tap(page.getByRole('link', { name: 'Xem', exact: true }));
+      await expect(page).toHaveURL(/\/history$/);
+      await tap(page.getByRole('link', { name: new RegExp(`Tháng ${monthOf(prevYm)}/`) }));
+      await expect(page).toHaveURL(new RegExp(`/history/${prevYm}$`));
+      await expect(page.getByText(`Hành chính giảm 3 → 1 cái: Vượt định mức · 09:10 13/${prevYm.slice(5)}`)).toBeVisible();
+      if (isMobile(info)) await expectNoContrastViolations(page);
+    } finally {
+      deleteTestUsers(sub);
+      for (const it of [pen, tape, glue]) await removeTestItem(request, it.id);
+      for (const ym of created) psql(`DELETE FROM periods WHERE ym = '${ym}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${ym}-01')`);
+      release();
+    }
+  });
 });

@@ -39,6 +39,15 @@ describe('giảm số lượng dòng đã có khi món đổi trạng thái sau 
     expect(view(await memberPut(r, 5).expect(200)).lines[0].qty).toBe(5);
   });
 
+  it('tối đa hạ 5 → 4 khi đã lưu 5: lưu lại nguyên 5 → 200; 6 → QTY_EXCEEDS_MAX {max: 4}', async () => {
+    const { item, r } = await seedLine(5, 5);
+    await patchItem(item, { max_qty: 4 });
+    const kept = view(await memberPut(r, 5).expect(200));
+    expect(kept.lines[0].qty).toBe(5);
+    const res = await memberPut(kept, 6).expect(400);
+    expect(res.body).toMatchObject({ code: 'QTY_EXCEEDS_MAX', max: 4 });
+  });
+
   it('member giảm dòng món đã ngừng → ITEM_INACTIVE {line_id}; bỏ dòng → 200, phiếu rỗng bị xóa', async () => {
     const { item, r } = await seedLine(4);
     await patchItem(item, { active: false });

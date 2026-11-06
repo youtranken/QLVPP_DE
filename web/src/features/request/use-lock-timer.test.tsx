@@ -10,7 +10,7 @@ const AT = new Date(DEADLINE).getTime();
 function setup(deadline = DEADLINE) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const spy = vi.spyOn(qc, 'invalidateQueries');
-  vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { ym: '2026-11', deadline, is_open: true, days_left: 1, previous: null }))));
+  vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { ym: '2026-11', deadline, is_open: true, days_left: 1, previous: null, owed: [] }))));
   const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
   return { hook: renderHook(() => useLockTimer(), { wrapper }), spy };
 }

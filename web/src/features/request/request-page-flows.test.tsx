@@ -63,13 +63,14 @@ describe('RequestPage — món ngoài danh mục', () => {
     });
   });
 
-  it('dòng ngoài DM đã lưu, chờ xem → nhãn "Chờ Hành chính xem"; sửa tên gửi id kèm trường riêng', async () => {
+  it('dòng ngoài DM đã lưu, chờ xem, kỳ đang mở → nhãn "Hành chính xem từ 00:00 ngày 11/11" (không "Chờ Hành chính xem"); sửa tên gửi id kèm trường riêng', async () => {
     mockViewport(1280);
     const custom = lineView({ id: 'l-c', custom_name: 'Bìa còng', custom_unit: 'cai', image_file_id: 'f-1', qty: 2, review_status: 'pending' });
     const api = stubRequestApi({ request: view({ lines: [custom] }), put: () => jsonResponse(500, {}) });
     renderApp(makeMe('member'), '/');
     const name = await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByRole('button', { name: 'Sửa Bìa còng' });
-    expect(within(name.closest('li')!).getByText('Chờ Hành chính xem')).toBeInTheDocument();
+    expect(within(name.closest('li')!).getByText('Hành chính xem từ 00:00 ngày 11/11')).toBeInTheDocument();
+    expect(within(name.closest('li')!).queryByText('Chờ Hành chính xem')).toBeNull();
     await userEvent.click(name);
     const edit = await screen.findByRole('dialog', { name: 'Sửa món khác' });
     await userEvent.type(within(edit).getByLabelText('Ghi chú (tùy chọn)'), 'loại dày');

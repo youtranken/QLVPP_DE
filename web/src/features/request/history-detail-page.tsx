@@ -7,6 +7,7 @@ import { LineProgress } from './line-progress';
 import { ItemThumb } from '@/ui/item-thumb';
 import { MemberPage } from '@/shell/member-page';
 import { Chip, ReviewTag } from './history-chip';
+import { AdjustNotes, RemovedAllNote, RemovedLines } from './history-adjustments';
 import './history.m1.css';
 import { YM } from '@/lib/ym';
 
@@ -35,6 +36,7 @@ function DetailLine({ line }: { line: LineView }) {
         {effective && <LineProgress delivered={line.delivered_qty} qty={line.qty} cancelled={line.cancelled_qty} />}
         {effective && owed > 0 && <div className="hs-owed">{t('request.history.owed', { n: owed })}</div>}
         {effective && line.cancelled_qty > 0 && <div className="hs-cancelled">{cancelText}</div>}
+        <AdjustNotes adjustments={line.adjustments} unit={unit} />
       </div>
     </li>
   );
@@ -67,11 +69,15 @@ export function HistoryDetailPage() {
       ) : !request.data ? (
         <EmptyState title={t('request.history.notFound')} />
       ) : (
-        <ul className="hs-list">
-          {request.data.lines.map((l) => (
-            <DetailLine key={l.id} line={l} />
-          ))}
-        </ul>
+        <>
+          {request.data.removed_all && <RemovedAllNote lines={request.data.removed_lines ?? []} />}
+          <ul className="hs-list">
+            {request.data.lines.map((l) => (
+              <DetailLine key={l.id} line={l} />
+            ))}
+            <RemovedLines lines={request.data.removed_lines ?? []} />
+          </ul>
+        </>
       )}
     </MemberPage>
   );

@@ -40,7 +40,7 @@ async function routeAs(page: Page, headers: Record<string, string>) {
 }
 
 test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => {
-  test('E2-S5 món ngoài danh mục: ghi tên, ĐVT, số lượng (không có ô ảnh) → lưu → tải lại thấy "Chờ Hành chính xem"; rời trang khi chưa lưu thì hỏi', async ({
+  test('E2-S5 món ngoài danh mục: ghi tên, ĐVT, số lượng (không có ô ảnh) → lưu → tải lại thấy "Hành chính xem từ 00:00 ngày dd/mm"; rời trang khi chưa lưu thì hỏi', async ({
     page,
   }, info) => {
     const me = memberIdentity(info, 'custom');
@@ -76,7 +76,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
 
       await page.reload();
       await openCart(page, info);
-      await expect(line.getByText('Chờ Hành chính xem')).toBeVisible();
+      await expect(line.getByText(/^Hành chính xem từ 00:00 ngày \d{2}\/\d{2}$/)).toBeVisible();
       await expect(line.locator('img')).toHaveCount(0);
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'custom-saved');

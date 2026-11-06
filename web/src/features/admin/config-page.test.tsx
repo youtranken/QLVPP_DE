@@ -244,7 +244,7 @@ describe('Cấu hình · Thay đổi gần đây', () => {
   });
 
   describe('ngày hạn nói rõ kỳ áp dụng', () => {
-    const JAN = { ym: '2027-01', deadline: '2027-01-10T17:00:00.000Z', is_open: true, days_left: 5, previous: null };
+    const JAN = { ym: '2027-01', deadline: '2027-01-10T17:00:00.000Z', is_open: true, days_left: 5, previous: null, owed: [] };
     const LINE = 'Kỳ tháng 01 (đang mở) vẫn khóa 00:00 ngày 11/01. Áp dụng từ kỳ tháng 02: khóa 00:00 ngày 09/02.';
     const lastDay = () => screen.getByLabelText('Hạn đăng ký (ngày)');
     const openJan = (put?: Parameters<typeof stubConfigApi>[0]) =>

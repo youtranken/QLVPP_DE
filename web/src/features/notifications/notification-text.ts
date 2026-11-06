@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next';
+import { lineAdjustedText } from './line-adjusted-text';
 import type { NotificationView } from './notifications.api';
 
 const ZONE = 'Asia/Ho_Chi_Minh';
@@ -46,6 +47,7 @@ export function notificationText(
   lang: string,
   unitName: (code: string) => string,
 ): string {
+  if (n.topic === 'line_adjusted') return lineAdjustedText(n.params, t, lang, unitName);
   if (!(n.topic in REQUIRED)) return t('notifications.topics.unknown');
   const p = n.params;
   if (!complete(n.topic, p)) return t(`notifications.fallback.${n.topic}`);

@@ -39,7 +39,7 @@ function stubUsers(users: AdminUser[], sync: SyncRoute = () => jsonResponse(200,
       const next = from + size < rows.length ? String(from + size) : null;
       return Promise.resolve(jsonResponse(200, { items, next_cursor: next }));
     }
-    if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 4, previous: null }));
+    if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 4, previous: null, owed: [] }));
     if (url.startsWith('/api/me/notifications')) return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null, unread_count: 0 }));
     return Promise.resolve(jsonResponse(200, []));
   });

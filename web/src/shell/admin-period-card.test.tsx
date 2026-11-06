@@ -14,6 +14,7 @@ const period = (days_left: number): CurrentPeriod => ({
   is_open: true,
   days_left,
   previous: null,
+  owed: [],
 });
 
 afterEach(() => vi.unstubAllGlobals());

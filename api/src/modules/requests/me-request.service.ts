@@ -4,6 +4,8 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import type { RequestIdentity } from '../auth/identity.types';
 import { PeriodsService } from '../periods/periods.service';
+import { withAdjustments } from './member-adjustments';
+import type { MemberRequestView } from './member-adjustments';
 import { invalidPeriod, requestNotFound } from './request-errors';
 import { RequestLinesWriter } from './request-lines.writer';
 import { RequestViewBuilder } from './request-view';
@@ -21,7 +23,7 @@ export class MeRequestService {
     private readonly views: RequestViewBuilder,
   ) {}
 
-  async get(me: RequestIdentity, ym?: string): Promise<RequestView> {
+  async get(me: RequestIdentity, ym?: string): Promise<MemberRequestView> {
     const open = await this.periods.openPeriod(this.db, this.clock.now());
     const target = ym ?? open.ym;
     // 'YYYY-MM' so sánh chuỗi đúng thứ tự thời gian
@@ -33,7 +35,7 @@ export class MeRequestService {
     const view =
       found && (await this.views.build(this.db, found.id, target === open.ym));
     if (!view) throw requestNotFound();
-    return view;
+    return withAdjustments(this.db, view);
   }
 
   async saveLines(

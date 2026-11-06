@@ -4,10 +4,10 @@ import { Icon } from './icon';
 
 export type ThumbSize = 34 | 36 | 40 | 42 | 48 | 96 | 120 | 'card' | 'tile';
 
-// Cỡ co giãn theo ô: card vuông, tile cao 120 (thẻ món nhân viên)
+// Cỡ co giãn theo ô, cả hai khung 1:1 để ảnh một món trông như nhau ở Danh mục và Đăng ký; tile bo nhỏ hơn
 const FLUID = {
   card: { aspectRatio: '1 / 1' as const, height: undefined, radius: undefined, img: undefined },
-  tile: { aspectRatio: undefined, height: 120, radius: 14, img: { width: 'auto', height: '88%' } },
+  tile: { aspectRatio: '1 / 1' as const, height: undefined, radius: 14, img: undefined },
 };
 
 export function ItemThumb({ fileId, alt, tone, size }: { fileId: string | null; alt: string; tone: Tone; size: ThumbSize }) {

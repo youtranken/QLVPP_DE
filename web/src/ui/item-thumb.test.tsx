@@ -30,4 +30,14 @@ describe('ItemThumb', () => {
     rerender(<ItemThumb fileId="f2" alt="a" tone="g1" size={48} />);
     expect(container.querySelector('img[src="/api/files/f2"]')).not.toBeNull();
   });
+  it('thẻ Đăng ký (tile) và thẻ Danh mục (card) cùng món: cùng src, khung 1:1, ảnh object-fit contain', () => {
+    const tile = render(<ItemThumb fileId="f9" alt="" tone="g1" size="tile" />).container;
+    const card = render(<ItemThumb fileId="f9" alt="Bút bi" tone="g1" size="card" />).container;
+    for (const c of [tile, card]) {
+      const img = c.querySelector('img') as HTMLImageElement;
+      expect(img.getAttribute('src')).toBe('/api/files/f9');
+      expect(img.style.objectFit).toBe('contain');
+      expect((img.parentElement as HTMLElement).style.aspectRatio).toBe('1 / 1');
+    }
+  });
 });

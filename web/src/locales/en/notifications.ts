@@ -30,9 +30,17 @@ const notifications: Messages<typeof vi> = {
         rejected: 'Admin rejected the item "{{name}}" ({{month}}).',
         rejectedNote: 'Admin rejected the item "{{name}}" ({{month}}): {{note}}',
       },
+      line_adjusted: {
+        one: 'Admin reduced {{name}} {{before}} → {{after}} {{unit}} ({{month}} request): {{reason}}',
+        removed: 'Admin removed {{name}} ({{before}} {{unit}}) from your {{month}} request: {{reason}}',
+        many: 'Admin reduced {{n}} items in your {{month}} request. See History for reasons.',
+        admOut: "{{name}} ({{qty}} {{unit}}) couldn't be delivered: out of stock at ADM. Order again next month if you still need it.",
+        more: '{{n}} more items — see History.',
+      },
       unknown: 'You have a new notification.',
     },
     fallback: {
+      line_adjusted: 'Admin reduced your request.',
       period_open: 'A new request period is open.',
       reminder: 'You have not registered for this period yet — register before the deadline.',
       period_locked: 'The request period is locked.',

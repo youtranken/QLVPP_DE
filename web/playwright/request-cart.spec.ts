@@ -57,7 +57,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
       await expect(cart.getByText('Đã lưu', { exact: true })).toBeVisible();
       await page.reload();
-      await expect(cart.getByText('Chờ Hành chính xem')).toBeVisible();
+      await expect(cart.getByText(/^Hành chính xem từ 00:00 ngày \d{2}\/\d{2}$/)).toBeVisible();
 
       await grid.getByRole('searchbox', { name: 'Tìm món' }).fill('PW');
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${shortName}`, exact: true }).click();

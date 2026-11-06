@@ -8,7 +8,7 @@ import { makeQueryClient } from '@/lib/api-client';
 import { jsonResponse, render, screen, waitFor } from '@/test/test-utils';
 import { PeriodLockGate } from './period-lock-gate';
 
-const OPEN = { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 3, previous: null };
+const OPEN = { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 3, previous: null, owed: [] };
 const LOCKED = { ym: '2026-10', deadline: '2026-10-10T17:00:00.000Z', is_open: false, registered: 6, headcount: 8, lines_pending_delivery: 0 };
 const OPEN_SUMMARY = { ym: '2026-11', deadline: OPEN.deadline, is_open: true, registered: 3, headcount: 8, lines_pending_delivery: null };
 
