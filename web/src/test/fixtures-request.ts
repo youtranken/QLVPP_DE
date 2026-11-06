@@ -34,6 +34,7 @@ export function lineView(over: Partial<LineView>): LineView {
     review_note: null,
     added_by_admin: false,
     readonly_for_member: false,
+    max_qty: null,
     ...over,
   };
 }

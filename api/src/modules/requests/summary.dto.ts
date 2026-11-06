@@ -6,6 +6,7 @@ export const SUMMARY_FILTERS = [
   'pending_delivery',
   'custom_pending',
   'over_max',
+  'left',
 ] as const;
 export type SummaryFilter = (typeof SUMMARY_FILTERS)[number];
 

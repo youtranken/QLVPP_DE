@@ -103,6 +103,11 @@ export function SummaryPage() {
         }}
       >
         <Segmented label={t('summary.page.view')} value={p.view} options={views} onChange={p.setView} />
+        {data?.is_open === false && p.view === 'person' && (
+          <button type="button" className="flt-chip" aria-pressed={p.filter === 'over_max'} onClick={() => p.toggleFilter('over_max')}>
+            {t('summary.filters.over_max')}
+          </button>
+        )}
       </Toolbar>
       <div className="ct-block">
         {!data ? null : emptyLocked ? (
@@ -129,6 +134,7 @@ export function SummaryPage() {
       {p.requestId && (
         <AdjustDrawer
           requestId={p.requestId}
+          presetReason={p.presetReason}
           onClose={p.closeAdjust}
           onPrev={adjacent.prev ? () => p.stepAdjust(adjacent.prev!) : undefined}
           onNext={adjacent.next ? () => p.stepAdjust(adjacent.next!) : undefined}

@@ -303,3 +303,56 @@ describe('SummaryPage — số món hết hàng', () => {
     expect(card.querySelector('.stat-card__v')).toHaveTextContent(/^—/);
   });
 });
+
+describe('SummaryPage — vượt tối đa, người đã nghỉ (R-D8.20, R-D13.11)', () => {
+  it('kỳ khóa: nút "Vượt tối đa" → filter=over_max lên API + "Đang lọc: Vượt tối đa"; người có dòng vượt có nhãn "Vượt tối đa"', async () => {
+    const f = stubSummaryApi();
+    open('/admin/summary?ym=2026-10');
+    expect(await screen.findByText('Phạm Văn Đức')).toBeInTheDocument();
+    const lan = screen.getByText('Võ Thị Lan').closest('tr')!;
+    expect(within(lan).getByText('Vượt tối đa')).toBeInTheDocument();
+    expect(within(screen.getByText('Phạm Văn Đức').closest('tr')!).queryByText('Vượt tối đa')).toBeNull();
+    const toggle = screen.getByRole('button', { name: 'Vượt tối đa' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await userEvent.click(toggle);
+    expect(search()).toContain('filter=over_max');
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => expect(calledUrls(f).some((u) => u.includes('filter=over_max'))).toBe(true));
+    expect(await screen.findByText('Đang lọc: Vượt tối đa · 3 người')).toBeInTheDocument();
+  });
+
+  it('kỳ mở: không có nút "Vượt tối đa"; ?filter=over_max bị bỏ, không gọi API với filter đó', async () => {
+    const f = stubSummaryApi();
+    open('/admin/summary?ym=2026-11&filter=over_max');
+    await screen.findByText('giao từ 11/11');
+    await waitFor(() => expect(search()).not.toContain('filter='));
+    expect(screen.queryByRole('button', { name: 'Vượt tối đa' })).toBeNull();
+    expect(calledUrls(f).some((u) => u.includes('filter=over_max'))).toBe(false);
+  });
+
+  it('theo món: dòng vượt tối đa có nhãn "Vượt tối đa hiện tại (4)"', async () => {
+    stubSummaryApi();
+    open('/admin/summary?ym=2026-10&view=item');
+    expect(await screen.findByText('Vượt tối đa hiện tại (4)')).toBeInTheDocument();
+    expect(screen.getAllByText(/^Vượt tối đa hiện tại/)).toHaveLength(1);
+  });
+
+  it('?left=1 → lọc người đã nghỉ còn phần chưa nhận; mở phiếu, giảm → lý do chọn sẵn "Người đã nghỉ"', async () => {
+    const f = stubSummaryApi();
+    open('/admin/summary?ym=2026-10&left=1');
+    await waitFor(() => expect(calledUrls(f).some((u) => u.includes('filter=left'))).toBe(true));
+    expect(await screen.findByText('Đang lọc: Người đã nghỉ còn phần chưa nhận · 3 người')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Điều chỉnh phiếu của Võ Thị Lan' }));
+    const drawer = await screen.findByRole('dialog', { name: 'Phiếu của Võ Thị Lan' });
+    await userEvent.click(await within(drawer).findByRole('button', { name: 'Bớt Giấy note vàng' }));
+    expect(within(drawer).getByRole('radio', { name: 'Người đã nghỉ' })).toBeChecked();
+  });
+
+  it('kỳ mở ?left=1 → không lọc, không gọi API filter=left', async () => {
+    const f = stubSummaryApi();
+    open('/admin/summary?ym=2026-11&left=1');
+    await screen.findByText('giao từ 11/11');
+    await waitFor(() => expect(search()).not.toContain('left='));
+    expect(calledUrls(f).some((u) => u.includes('filter=left'))).toBe(false);
+  });
+});

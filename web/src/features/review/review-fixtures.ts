@@ -41,6 +41,7 @@ export function reviewResult(status: LineView['review_status'], over: Partial<Li
       review_note: null,
       added_by_admin: false,
       readonly_for_member: false,
+      max_qty: null,
       ...over,
     },
     request_updated_at: '2026-11-05T08:00:00.000Z',

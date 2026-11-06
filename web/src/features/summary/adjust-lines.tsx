@@ -1,23 +1,16 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useMe } from '@/lib/me';
 import { ItemThumb } from '@/ui/item-thumb';
 import { useAdminItems, useAllCategories, type AdminItem } from '@/features/catalog/catalog.api';
 import { indexCategories } from '@/features/catalog/catalog-rows';
 import type { LineView } from '@/features/request/request.api';
 import { useRequestFormat } from '@/features/request/request-format';
 import { ReviewActions } from '@/features/review/review-actions';
-import { AddLinePicker } from './add-line-picker';
+import { LineReduce } from './adjust-line-reason';
 import { LineRow } from './adjust-line-row';
-import { canRemove, floorOf, type Adjust } from './use-adjust';
+import { canRemove, floorOf, isOverMax, type Adjust } from './use-adjust';
 import type { AdminRequestView } from './summary.api';
-
-// Server cho giảm dòng đã có bất kể max/ngừng; chỉ tăng khi món còn bán và dưới max; món chỉ Hành chính không có trần UI
-function maxOf(l: LineView, item: AdminItem | undefined): number {
-  if (!item?.usable) return l.qty;
-  return item.admin_only ? Infinity : Math.max(l.qty, item.max_qty);
-}
 
 function useLineFacts() {
   const { t } = useTranslation();
@@ -32,15 +25,20 @@ function useLineFacts() {
     if (item?.admin_only) return t('summary.adjust.metaAdminOnly', { unit: u });
     return item ? t('summary.adjust.meta', { unit: u, max: item.max_qty }) : u;
   };
-  return { items: items.data ?? [], byId, toneOf, metaOf, fmt };
+  return { byId, toneOf, metaOf, fmt };
 }
 
-function LineTags({ line, adminOnly }: { line: LineView; adminOnly: boolean }) {
+// Món đã ngừng (hoặc nhóm ngừng) sau khóa sổ vẫn giảm/bỏ được như thường, chỉ gắn nhãn (R-D6.21)
+function LineTags({ line, item }: { line: LineView; item: AdminItem | undefined }) {
   const { t } = useTranslation();
+  const adminOnly = item?.admin_only ?? line.item?.admin_only ?? false;
+  const inactive = line.item?.active === false || item?.usable === false;
   return (
     <>
       {line.added_by_admin && <span className="tag">{t('summary.adjust.addedByAdmin')}</span>}
       {adminOnly && <span className="tag tag--dark">{t('summary.adjust.adminOnly')}</span>}
+      {inactive && <span className="tag">{t('summary.adjust.inactiveItem')}</span>}
+      {isOverMax(line) && <span className="tag tag--warn">{t('warn.W12a', { max: line.max_qty })}</span>}
       {line.delivered_qty > 0 && <span className="tag tag--ok">{t('summary.adjust.delivered', { n: line.delivered_qty })}</span>}
       {line.cancelled_qty > 0 && <span className="tag">{t('summary.adjust.cancelled', { n: line.cancelled_qty })}</span>}
     </>
@@ -60,10 +58,9 @@ function qtyProps(a: Adjust, l: LineView) {
   };
 }
 
-// Dòng ngoài danh mục: review áp dụng ngay (tách khỏi Lưu), số lượng vẫn sửa cùng Lưu
+// Dòng ngoài danh mục: review áp dụng ngay (tách khỏi Lưu), số lượng vẫn giảm cùng Lưu
 function CustomLine({ a, line, ym }: { a: Adjust; line: LineView; ym: string }) {
   const { t } = useTranslation();
-  const me = useMe();
   const fmt = useRequestFormat();
   const name = line.item ? fmt.name(line.item) : (line.custom_name ?? '');
   const unit = fmt.unit(line.item?.unit ?? line.custom_unit);
@@ -73,7 +70,6 @@ function CustomLine({ a, line, ym }: { a: Adjust; line: LineView; ym: string }) 
       name={name}
       meta={line.review_status === 'converted' ? unit : t('summary.adjust.customMeta', { qty: line.qty, unit })}
       thumb={<ItemThumb fileId={line.image_file_id} alt={t('summary.adjust.imageAlt', { name })} tone="g0" size={48} />}
-      max={Math.max(line.qty, me.config.default_max_qty)}
       // Dòng bị từ chối không mua/giao nên sửa số lượng vô nghĩa
       readOnly={line.review_status === 'rejected'}
     >
@@ -84,6 +80,7 @@ function CustomLine({ a, line, ym }: { a: Adjust; line: LineView; ym: string }) 
           {t('summary.adjust.toReview')}
         </Link>
       )}
+      <LineReduce a={a} line={line} unit={unit} />
     </LineRow>
   );
 }
@@ -95,17 +92,18 @@ export function AdjustLines({ a, view }: { a: Adjust; view: AdminRequestView }) 
   const catalog = view.lines.filter((l) => l.review_status === 'n/a');
   const custom = view.lines.filter((l) => l.review_status !== 'n/a');
   const kept = view.lines.filter((l) => !a.removed.includes(l.id));
-  const units = kept.reduce((s, l) => s + a.qtyOf(l), 0) + a.added.reduce((s, x) => s + x.qty, 0);
-  // Mọi dòng còn giữ có món (kể cả converted) chặn trùng như api (DUPLICATE_ITEM)
-  const taken = new Set([...kept.filter((l) => l.item_id).map((l) => l.item_id), ...a.added.map((x) => x.item_id)]);
-  const candidates = f.items.filter((i) => i.usable && !taken.has(i.id));
+  const units = kept.reduce((s, l) => s + a.qtyOf(l), 0);
 
   return (
     <section className="aj-section">
       <div className="aj-section__head">
-        <h3>{t('summary.adjust.heading', { n: kept.length + a.added.length })}</h3>
+        <h3>{t('summary.adjust.heading', { n: kept.length })}</h3>
         <span className="num">{t('summary.adjust.units', { n: units })}</span>
       </div>
+      {/* Khối lý do mở không chuyển focus: chỉ báo bằng vùng aria-live */}
+      <p className="sr-only" aria-live="polite">
+        {a.missing > 0 ? t('summary.adjust.lineReasonRequired') : ''}
+      </p>
       <ul className="aj-lines" aria-label={t('summary.adjust.lines')}>
         {catalog.map((l) => {
           const item = l.item_id ? f.byId.get(l.item_id) : undefined;
@@ -117,36 +115,13 @@ export function AdjustLines({ a, view }: { a: Adjust; view: AdminRequestView }) 
               name={name}
               meta={f.metaOf(l.item?.unit ?? null, item)}
               thumb={<ItemThumb fileId={l.item?.image_file_id ?? null} alt="" tone={f.toneOf(item)} size={48} />}
-              max={maxOf(l, item)}
-              tags={<LineTags line={l} adminOnly={item?.admin_only ?? l.item?.admin_only ?? false} />}
-            />
-          );
-        })}
-        {a.added.map((x) => {
-          const item = f.byId.get(x.item_id);
-          return (
-            <LineRow
-              key={x.key}
-              name={item ? f.fmt.name(item) : x.item_id}
-              meta={f.metaOf(item?.unit ?? null, item)}
-              thumb={<ItemThumb fileId={item?.image_file_id ?? null} alt="" tone={f.toneOf(item)} size={48} />}
-              qty={x.qty}
-              min={1}
-              max={item?.admin_only ? Infinity : (item?.max_qty ?? x.qty)}
-              error={a.errors.lines?.[x.key] || undefined}
-              tags={
-                <>
-                  <span className="tag tag--info">{t('summary.adjust.isNew')}</span>
-                  {item?.admin_only && <span className="tag tag--dark">{t('summary.adjust.adminOnly')}</span>}
-                </>
-              }
-              onQty={(n) => a.edit.setAddedQty(x.key, n)}
-              onRemove={() => a.edit.dropAdded(x.key)}
-            />
+              tags={<LineTags line={l} item={item} />}
+            >
+              {a.isReduced(l) && <LineReduce a={a} line={l} unit={f.fmt.unit(l.item?.unit ?? null)} />}
+            </LineRow>
           );
         })}
       </ul>
-      <AddLinePicker items={candidates} onPick={(i) => a.edit.add(i.id)} />
       {custom.length > 0 && (
         <ul className="aj-lines" aria-label={t('summary.adjust.custom')}>
           {custom.map((l) => (

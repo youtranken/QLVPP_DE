@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { vnLockDate } from '@/lib/format-time';
@@ -12,7 +13,7 @@ import { monthOf } from '@/features/request/request-format';
 import { reviewLinesQuery } from '@/features/review/review.api';
 import { useSendState } from '@/features/send-adm/use-send-state';
 import { lowStockQuery } from '@/features/stock/stock.api';
-import { usePeriodSummary, useUnregistered, type PeriodSummary } from '@/features/summary/summary.api';
+import { useLeftPeople, usePeriodSummary, useUnregistered, type PeriodSummary } from '@/features/summary/summary.api';
 import { CardError, CustomCard, LowStockCard, UnregisteredCard } from './home-cards';
 import { monthSteps } from './month-steps';
 import { MonthSteps } from './month-steps-list';
@@ -42,6 +43,23 @@ function Cards({ ym, summary }: { ym: string; summary: PeriodSummary }) {
           {low.isError ? <CardError onRetry={() => void low.refetch()} /> : lowItems.length > 0 && <LowStockCard items={lowItems} />}
         </div>
       )}
+    </div>
+  );
+}
+
+// W25 (Đ41, R-D13.11): người đã nghỉ còn phần chưa nhận ở kỳ giao → "Xử lý" mở Tổng hợp lọc ?left=1 (lý do giảm chọn sẵn "Người đã nghỉ")
+function LeftReminder({ ym }: { ym: string }) {
+  const { t } = useTranslation();
+  const left = useLeftPeople(ym, true);
+  const people = left.data?.items ?? [];
+  if (people.length === 0) return null;
+  const names = people.map((p) => p.full_name ?? p.email ?? p.user_sub).join(', ');
+  return (
+    <div className="alert alert--warn hm-left">
+      <span>{t('warn.W25', { n: people.length, names })}</span>
+      <Link className="btn btn--sm" to={`/admin/summary?ym=${ym}&left=1`}>
+        {t('home.left.action')}
+      </Link>
     </div>
   );
 }
@@ -104,6 +122,8 @@ function Ready({ currentYm }: { currentYm: string }) {
         </div>
         <MonthSteps steps={registerView ? currentSteps : lockedSteps} onlyFirst={registerView} />
       </section>
+      {/* Đ6: kỳ đang đăng ký không có cảnh báo W nào */}
+      {!registerView && lockedDone && <LeftReminder ym={lockedYm} />}
       <Cards ym={currentYm} summary={current.data} />
     </div>
   );

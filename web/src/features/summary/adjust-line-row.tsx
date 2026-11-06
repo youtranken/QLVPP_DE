@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/ui/icon';
@@ -10,8 +10,8 @@ export interface LineRowProps {
   thumb: ReactNode;
   qty: number;
   min: number;
-  max: number;
-  base?: number;
+  // Số cũ của dòng: sau khóa sổ chỉ giảm, gõ lớn hơn thì kẹp về số này
+  base: number;
   tags?: ReactNode;
   error?: string;
   removed?: boolean;
@@ -24,7 +24,7 @@ export interface LineRowProps {
 
 const cls = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
-function QtyControl({ name, qty, min, max, error, removed, readOnly, errorId, onQty, onRemove, onRestore }: LineRowProps & { errorId: string }) {
+function QtyControl({ name, qty, min, base, error, removed, readOnly, errorId, onQty, onRemove, onRestore, onCapped }: LineRowProps & { errorId: string; onCapped: (v: boolean) => void }) {
   const { t } = useTranslation();
   if (removed) {
     return (
@@ -38,7 +38,20 @@ function QtyControl({ name, qty, min, max, error, removed, readOnly, errorId, on
       {readOnly ? (
         <span className="num aj-line__fixed">{qty}</span>
       ) : (
-        <Stepper value={qty} min={min} max={max} label={name} describedBy={error ? errorId : undefined} invalid={!!error} onChange={onQty} />
+        <Stepper
+          value={qty}
+          min={min}
+          max={base}
+          decreaseOnly
+          label={name}
+          describedBy={error ? errorId : undefined}
+          invalid={!!error}
+          onOverMax={() => onCapped(true)}
+          onChange={(n) => {
+            onCapped(false);
+            onQty(n);
+          }}
+        />
       )}
       {onRemove && (
         <button type="button" className="aj-line__drop" aria-label={t('summary.adjust.remove', { name })} onClick={onRemove}>
@@ -49,12 +62,14 @@ function QtyControl({ name, qty, min, max, error, removed, readOnly, errorId, on
   );
 }
 
-// Dòng đã sửa: badge "Trước khi sửa"; dòng sẽ bỏ: badge đỏ + "Giữ lại" thay chỗ stepper
+// Dòng đã sửa: badge "Trước khi sửa"; dòng sẽ bỏ: badge đỏ + "Giữ lại" thay chỗ ô số
 export function LineRow(props: LineRowProps) {
   const { t } = useTranslation();
   const errorId = useId();
+  // Gõ số lớn hơn số cũ: ô kẹp về số cũ, báo không tăng được tới lần đổi số kế tiếp
+  const [capped, setCapped] = useState(false);
   const { name, meta, thumb, qty, base, tags, error, removed, children } = props;
-  const changed = base !== undefined && !removed && qty !== base;
+  const changed = !removed && qty !== base;
   return (
     <li className={cls('aj-line', changed && 'is-changed', removed && 'is-removed', error && 'has-error')}>
       {thumb}
@@ -66,6 +81,7 @@ export function LineRow(props: LineRowProps) {
           {changed && <span className="tag tag--warn">{t('summary.adjust.was', { n: base })}</span>}
           {removed && <span className="tag tag--danger">{t('summary.adjust.willRemove')}</span>}
         </span>
+        {capped && !removed && <p className="aj-line__hint">{t('summary.adjust.noIncrease')}</p>}
         {error && (
           <p id={errorId} className="aj-line__error">
             {error}
@@ -73,7 +89,7 @@ export function LineRow(props: LineRowProps) {
         )}
       </div>
       <div className="aj-line__qty">
-        <QtyControl {...props} errorId={errorId} />
+        <QtyControl {...props} errorId={errorId} onCapped={setCapped} />
       </div>
       {children && <div className="aj-line__extra">{children}</div>}
     </li>

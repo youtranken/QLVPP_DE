@@ -6,33 +6,44 @@ import { useSingleFlight } from '@/lib/use-single-flight';
 import { useToast } from '@/ui/toast-context';
 import type { LineView } from '@/features/request/request.api';
 import { REVIEW_KEY, type ReviewResult } from '@/features/review/review.api';
+import { useSendState } from '@/features/send-adm/use-send-state';
 import { adjustFailure, isStaleUpdate, type AdjustErrors } from './summary-errors';
-import { SUMMARY_KEY, adminRequestKey, saveAdjust, useAdminRequest, type AdjustBody, type AdjustLineBody, type AdminRequestView } from './summary.api';
+import { SUMMARY_KEY, adminRequestKey, saveAdjust, useAdminRequest, type AdjustBody, type AdjustLineBody, type AdjustReason, type AdminRequestView } from './summary.api';
 
-export interface AddedLine {
-  key: string;
-  item_id: string;
-  qty: number;
+// Nháp lý do của một dòng: giữ cả khi dòng về lại số cũ (khối ẩn) tới khi Lưu/Hủy
+export interface LineReason {
+  code?: AdjustReason;
+  note: string;
 }
 
 interface Draft {
   qty: Record<string, number>;
   removed: string[];
-  added: AddedLine[];
-  reason: string;
+  reasons: Record<string, LineReason>;
   errors: AdjustErrors;
   stale: boolean;
   reloaded: boolean;
 }
 
-const EMPTY: Draft = { qty: {}, removed: [], added: [], reason: '', errors: {}, stale: false, reloaded: false };
+const EMPTY: Draft = { qty: {}, removed: [], reasons: {}, errors: {}, stale: false, reloaded: false };
 
-// Cùng luật isDeletable của api ở chế độ Hành chính: chưa giao, chưa duyệt
-export const canRemove = (l: LineView) =>
-  l.delivered_qty === 0 && (l.review_status === 'n/a' || l.review_status === 'pending');
+export const NOTE_MAX = 200;
+const OTHER_NOTE_MIN = 3;
+// Server đếm ghi chú theo mã điểm sau NFC + trim
+const clean = (note: string) => note.normalize('NFC').trim();
+export const cutNote = (note: string) => [...note].slice(0, NOTE_MAX).join('');
+export const noteLength = (note: string) => [...note].length;
 
-// Không giảm dưới phần đã giao + đã hủy nợ (QTY_BELOW_DELIVERED); qty luôn ≥ 1
+// Bỏ dòng (qty 0) hợp lệ khi chưa giao, chưa hủy nợ — bất kể trạng thái duyệt (R-D6.5)
+export const canRemove = (l: LineView) => l.delivered_qty + l.cancelled_qty === 0;
+
+// Không giảm dưới phần đã giao + đã hủy nợ (QTY_BELOW_DELIVERED); ô số luôn ≥ 1, về 0 bằng nút Bỏ
 export const floorOf = (l: LineView) => Math.max(1, l.delivered_qty + l.cancelled_qty);
+
+// Tối đa/tháng bị hạ sau khi nhân viên lưu: dòng giữ số cũ lớn hơn tối đa hiện tại
+export const isOverMax = (l: LineView) => l.max_qty !== null && l.qty > l.max_qty;
+
+export const reasonComplete = (r: LineReason) => !!r.code && (r.code !== 'other' || noteLength(clean(r.note)) >= OTHER_NOTE_MIN);
 
 const FACTS = ['qty', 'delivered_qty', 'cancelled_qty', 'review_status', 'item_id'] as const;
 
@@ -46,8 +57,6 @@ function othersChanged(before: LineView[], after: LineView[], skip: string): boo
 const withoutError = (d: Draft, key: string): Draft =>
   d.errors.lines?.[key] ? { ...d, errors: { ...d.errors, lines: { ...d.errors.lines, [key]: '' } } } : d;
 
-let addedSeq = 0;
-
 function useDraft(requestId: string) {
   // Nháp gắn với phiếu: ↑/↓ đổi phiếu thì nháp cũ tự bỏ, không cần dựng lại ngăn kéo
   const [state, setState] = useState({ id: requestId, d: EMPTY });
@@ -57,37 +66,36 @@ function useDraft(requestId: string) {
     setQty: (id: string, n: number) => patch((d) => withoutError({ ...d, qty: { ...d.qty, [id]: n } }, id)),
     remove: (id: string) => patch((d) => ({ ...d, removed: [...d.removed, id] })),
     restore: (id: string) => patch((d) => ({ ...d, removed: d.removed.filter((x) => x !== id) })),
-    add: (itemId: string) => patch((d) => ({ ...d, added: [...d.added, { key: `new-${++addedSeq}`, item_id: itemId, qty: 1 }] })),
-    setAddedQty: (key: string, n: number) =>
-      patch((d) => withoutError({ ...d, added: d.added.map((x) => (x.key === key ? { ...x, qty: n } : x)) }, key)),
-    dropAdded: (key: string) => patch((d) => ({ ...d, added: d.added.filter((x) => x.key !== key) })),
+    setReason: (id: string, r: LineReason) => patch((d) => withoutError({ ...d, reasons: { ...d.reasons, [id]: { ...r, note: cutNote(r.note) } } }, id)),
+    // "Dùng cho các món giảm còn lại": chỉ điền dòng giảm chưa chọn lý do, không ghi đè
+    fillReasons: (ids: string[], r: LineReason) =>
+      patch((d) => ({ ...d, reasons: { ...d.reasons, ...Object.fromEntries(ids.map((id) => [id, { ...r }])) } })),
   };
-  // Bản mới thay bản cũ nên số đã sửa không còn đúng chỗ; lý do vẫn dùng lại được
-  const restart = (mark: Partial<Pick<Draft, 'stale' | 'reloaded'>> = {}) => patch((d) => ({ ...EMPTY, reason: d.reason, ...mark }));
+  // Bản mới thay bản cũ nên số đã sửa không còn đúng chỗ; nháp lý do theo dòng vẫn dùng lại được
+  const restart = (mark: Partial<Pick<Draft, 'stale' | 'reloaded'>> = {}) => patch((d) => ({ ...EMPTY, reasons: d.reasons, ...mark }));
   return { draft, patch, edit, restart };
 }
 
 type Patch = (fn: (d: Draft) => Draft) => void;
 
-const qtyIn = (d: Draft) => (l: LineView) => d.qty[l.id] ?? l.qty;
+const qtyIn = (d: Draft) => (l: LineView) => (d.removed.includes(l.id) ? 0 : (d.qty[l.id] ?? l.qty));
 
-const NOTE_MAX = 200;
-// Server đếm ghi chú theo mã điểm sau NFC + trim
-const noteOf = (reason: string) => [...reason.normalize('NFC').trim()].slice(0, NOTE_MAX).join('').trim();
+// Lý do đang hiệu lực của dòng: nháp đã chọn, không thì chọn sẵn (mở từ ?left=1 → Người đã nghỉ; vượt tối đa → Vượt định mức)
+const reasonIn = (d: Draft, preset: AdjustReason | undefined) => (l: LineView): LineReason =>
+  d.reasons[l.id] ?? { code: preset ?? (isOverMax(l) ? 'over_quota' : undefined), note: '' };
 
-// Server đòi mọi dòng kèm expected_qty; bỏ dòng = qty 0; dòng giảm mang lý do chung dưới mã "Khác" tới khi có chọn lý do từng dòng
-function bodyOf(current: AdminRequestView, d: Draft) {
-  const note = noteOf(d.reason);
+// Server đòi mọi dòng kèm expected_qty; bỏ dòng = qty 0; chỉ dòng giảm mang lý do (nháp của dòng không giảm không gửi)
+function bodyOf(current: AdminRequestView, d: Draft, preset: AdjustReason | undefined) {
+  const reasonOf = reasonIn(d, preset);
   const lineOf = (l: LineView): AdjustLineBody => {
-    const qty = d.removed.includes(l.id) ? 0 : qtyIn(d)(l);
-    const reduced = qty < l.qty ? { reason_code: 'other' as const, ...(note ? { reason_note: note } : {}) } : {};
-    return { id: l.id, qty, expected_qty: l.qty, ...reduced };
+    const qty = qtyIn(d)(l);
+    if (qty >= l.qty) return { id: l.id, qty, expected_qty: l.qty };
+    const r = reasonOf(l);
+    const note = clean(r.note);
+    return { id: l.id, qty, expected_qty: l.qty, reason_code: r.code, ...(note ? { reason_note: note } : {}) };
   };
-  const body: AdjustBody = {
-    lines: [...current.lines.map(lineOf), ...d.added.map((a) => ({ item_id: a.item_id, qty: a.qty }))],
-    expected_updated_at: current.updated_at,
-  };
-  return { body, keys: [...current.lines.map((l) => l.id), ...d.added.map((a) => a.key)] };
+  const body: AdjustBody = { lines: current.lines.map(lineOf), expected_updated_at: current.updated_at };
+  return { body, keys: current.lines.map((l) => l.id) };
 }
 
 function useSendAdjust(requestId: string, patch: Patch, onDone: () => void) {
@@ -95,8 +103,8 @@ function useSendAdjust(requestId: string, patch: Patch, onDone: () => void) {
   const { csrfToken } = useMe();
   const qc = useQueryClient();
   const toast = useToast();
-  return async (current: AdminRequestView, d: Draft) => {
-    const { body, keys } = bodyOf(current, d);
+  return async (current: AdminRequestView, d: Draft, preset: AdjustReason | undefined) => {
+    const { body, keys } = bodyOf(current, d, preset);
     patch((x) => ({ ...x, errors: {} }));
     try {
       const res = await saveAdjust(requestId, body, csrfToken);
@@ -133,39 +141,58 @@ function useReviewSync(requestId: string, restart: (mark?: Partial<Pick<Draft, '
   return { query, reviewed, reviewStale, reloadLatest };
 }
 
-export function useAdjust(requestId: string, onDone: () => void) {
+// Bản có hàng đã gửi ADM của kỳ (W11): giảm sau mốc này thì hàng về dư vào kho
+function useSentAt(view: AdminRequestView | undefined) {
+  const send = useSendState(view?.period_ym ?? '', !!view && !view.is_open);
+  return send.state === 'sent' ? (send.sent?.created_at ?? null) : null;
+}
+
+export function useAdjust(requestId: string, onDone: () => void, preset?: AdjustReason) {
   const flight = useSingleFlight();
   const { draft: d, patch, edit, restart } = useDraft(requestId);
   const sync = useReviewSync(requestId, restart);
   const send = useSendAdjust(requestId, patch, onDone);
   const view = sync.query.data;
+  const sentAt = useSentAt(view);
   const qtyOf = qtyIn(d);
-  const changes =
-    d.removed.length + d.added.length + (view?.lines ?? []).filter((l) => !d.removed.includes(l.id) && qtyOf(l) !== l.qty).length;
-  const canSave = changes > 0 && !d.stale && !flight.pending;
+  const reasonOf = reasonIn(d, preset);
+  // Theo thứ tự hiển thị: dòng trong danh mục trước, dòng từng là ngoài DM sau
+  const all = view?.lines ?? [];
+  const lines = [...all.filter((l) => l.review_status === 'n/a'), ...all.filter((l) => l.review_status !== 'n/a')];
+  const reduced = lines.filter((l) => qtyOf(l) < l.qty);
+  const missing = reduced.filter((l) => !reasonComplete(reasonOf(l)));
+  const changes = d.removed.length + lines.filter((l) => !d.removed.includes(l.id) && qtyOf(l) !== l.qty).length;
+  const canSave = changes > 0 && missing.length === 0 && !d.stale && !flight.pending;
+  // "Dùng cho các món giảm còn lại": ở dòng giảm đầu tiên đã đủ lý do, khi còn dòng giảm chưa chọn lý do
+  const source = reduced.find((l) => reasonComplete(reasonOf(l)));
+  const blank = reduced.filter((l) => !reasonOf(l).code);
   return {
     query: sync.query,
     view,
     qtyOf,
+    reasonOf,
+    isReduced: (l: LineView) => qtyOf(l) < l.qty,
     removed: d.removed,
-    added: d.added,
     edit,
-    reason: d.reason,
-    setReason: (v: string) => patch((x) => ({ ...x, reason: v, errors: { ...x.errors, reason: undefined } })),
+    sentAt,
+    missing: missing.length,
+    reuseFrom: source && blank.length > 0 ? source.id : null,
+    reuse: () => {
+      if (source) edit.fillReasons(blank.map((l) => l.id), reasonOf(source));
+    },
     errors: d.errors,
     stale: d.stale,
     reloaded: d.reloaded,
     saving: flight.pending,
-    locked: view ? !view.is_open : false,
     changes,
     canSave,
-    dirty: changes > 0 || d.reason.trim() !== '',
+    dirty: changes > 0,
     reviewed: sync.reviewed,
     reload: () => void sync.query.refetch(),
     reloadLatest: () => void sync.reloadLatest(),
     reviewStale: (lineId: string) => void sync.reviewStale(lineId),
     save: () => void flight.run(async () => {
-      if (view && canSave) await send(view, d);
+      if (view && canSave) await send(view, d, preset);
     }),
   };
 }

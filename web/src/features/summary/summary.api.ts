@@ -2,7 +2,7 @@ import { keepPreviousData, queryOptions, useInfiniteQuery, useQuery } from '@tan
 import { apiFetch } from '@/lib/api-client';
 import type { RequestView } from '@/features/request/request.api';
 
-export type SummaryFilter = 'all' | 'pending_delivery' | 'custom_pending';
+export type SummaryFilter = 'all' | 'pending_delivery' | 'custom_pending' | 'over_max' | 'left';
 
 export interface PeriodSummary {
   ym: string;
@@ -32,6 +32,8 @@ export interface PersonRow {
   delivered_qty: number;
   cancelled_qty: number;
   custom_pending: number;
+  // Có dòng giữ số lớn hơn tối đa/tháng hiện tại (tối đa bị hạ sau khi lưu)
+  over_max: boolean;
   updated_at: string;
 }
 
@@ -42,6 +44,9 @@ export interface ItemSummaryRow {
   unit: string;
   requested_qty: number;
   people: number;
+  // Tối đa/tháng hiện tại; null với dòng ngoài DM
+  max_qty: number | null;
+  over_max: boolean;
 }
 
 export interface UnregisteredUser {
@@ -82,6 +87,15 @@ export function usePersonRows(ym: string | undefined, filter: SummaryFilter, q: 
   });
 }
 
+// Người đã nghỉ còn phần chưa nhận ở kỳ khóa (nhắc W25 ở Tháng này); trang đầu 100 người là đủ để nhắc
+export function useLeftPeople(ym: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...SUMMARY_KEY, ym, 'person', 'left-reminder'],
+    enabled,
+    queryFn: () => apiFetch<{ items: PersonRow[]; next_cursor: string | null }>(`${base(ym)}/requests?by=person&filter=left&limit=${PERSON_PAGE}`),
+  });
+}
+
 export function useItemRows(ym: string | undefined) {
   return useQuery({
     queryKey: [...SUMMARY_KEY, ym, 'item'],
@@ -114,12 +128,15 @@ export function useAdminRequest(id: string, enabled = true) {
   });
 }
 
+export const ADJUST_REASONS = ['over_quota', 'adm_out_of_stock', 'duplicate', 'user_left', 'other'] as const;
+export type AdjustReason = (typeof ADJUST_REASONS)[number];
+
+// Sau khóa sổ chỉ giảm/bỏ: mọi dòng hiện có, kèm số đang thấy; dòng giảm mang lý do riêng
 export interface AdjustLineBody {
-  id?: string;
-  item_id?: string;
+  id: string;
   qty: number;
-  expected_qty?: number;
-  reason_code?: 'other';
+  expected_qty: number;
+  reason_code?: AdjustReason;
   reason_note?: string;
 }
 

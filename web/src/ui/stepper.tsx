@@ -17,6 +17,7 @@ export function Stepper({
   disabled = false,
   onOverMax,
   emptyAsMin = false,
+  decreaseOnly = false,
 }: {
   value: number;
   min?: number;
@@ -32,6 +33,8 @@ export function Stepper({
   onOverMax?: () => void;
   // Xóa trống ô coi như min thay vì giữ số cũ
   emptyAsMin?: boolean;
+  // Chỉ được giảm (Hành chính sau khóa sổ): không có nút +, gõ số lớn hơn thì kẹp về max
+  decreaseOnly?: boolean;
 }) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState<string | null>(null);
@@ -73,14 +76,16 @@ export function Stepper({
         onChange={(e) => type(e.target.value)}
         onBlur={() => setDraft(null)}
       />
-      <button
-        type="button"
-        aria-label={t('common.stepper.increase', { label })}
-        disabled={disabled || value >= max}
-        onClick={() => set(value + 1)}
-      >
-        +
-      </button>
+      {!decreaseOnly && (
+        <button
+          type="button"
+          aria-label={t('common.stepper.increase', { label })}
+          disabled={disabled || value >= max}
+          onClick={() => set(value + 1)}
+        >
+          +
+        </button>
+      )}
     </div>
   );
 }

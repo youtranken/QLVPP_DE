@@ -54,6 +54,9 @@ const home: Messages<typeof vi> = {
     link: {
       viewSent: 'View sent order',
     },
+    left: {
+      action: 'Handle',
+    },
     cta: {
       register: 'View summary',
       send: 'Open Send to ADM',

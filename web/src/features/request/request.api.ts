@@ -39,6 +39,8 @@ export interface LineView {
   review_note: string | null;
   added_by_admin: boolean;
   readonly_for_member: boolean;
+  // Tối đa/tháng hiện tại của món (null với dòng ngoài DM); dòng giữ số cũ lớn hơn → "Vượt tối đa"
+  max_qty: number | null;
 }
 
 export interface RequestView {

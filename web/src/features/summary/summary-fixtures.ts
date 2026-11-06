@@ -43,6 +43,7 @@ export const person = (over: Partial<PersonRow>): PersonRow => ({
   delivered_qty: 0,
   cancelled_qty: 0,
   custom_pending: 0,
+  over_max: false,
   updated_at: '2026-11-05T07:20:00.000Z',
   ...over,
 });
@@ -50,7 +51,7 @@ export const person = (over: Partial<PersonRow>): PersonRow => ({
 export const PEOPLE = [
   person({ request_id: 'r-3', full_name: 'Trần Bình', department: null, line_count: 1, total_qty: 2 }),
   person({ request_id: 'r-1', full_name: 'Phạm Văn Đức', delivered_qty: 4, custom_pending: 1 }),
-  person({ request_id: 'r-2', full_name: 'Võ Thị Lan', user_status: 'locked', line_count: 2, total_qty: 4 }),
+  person({ request_id: 'r-2', full_name: 'Võ Thị Lan', user_status: 'locked', line_count: 2, total_qty: 4, over_max: true }),
 ];
 
 export const CATEGORIES: Category[] = [
@@ -65,10 +66,10 @@ export const SUMMARY_ITEMS = [
 ];
 
 export const ITEM_ROWS: ItemSummaryRow[] = [
-  { key: 'c:tape', item_id: null, name: 'Băng keo 2 mặt', unit: 'cuon', requested_qty: 2, people: 1 },
-  { key: 'i-a4', item_id: 'i-a4', name: 'Giấy A4', unit: 'ram', requested_qty: 25, people: 9 },
-  { key: 'i-pen', item_id: 'i-pen', name: 'Bút bi xanh', unit: 'cay', requested_qty: 40, people: 12 },
-  { key: 'i-note', item_id: 'i-note', name: 'Giấy note', unit: 'loc', requested_qty: 6, people: 3 },
+  { key: 'c:tape', item_id: null, name: 'Băng keo 2 mặt', unit: 'cuon', requested_qty: 2, people: 1, max_qty: null, over_max: false },
+  { key: 'i-a4', item_id: 'i-a4', name: 'Giấy A4', unit: 'ram', requested_qty: 25, people: 9, max_qty: 20, over_max: false },
+  { key: 'i-pen', item_id: 'i-pen', name: 'Bút bi xanh', unit: 'cay', requested_qty: 40, people: 12, max_qty: 4, over_max: true },
+  { key: 'i-note', item_id: 'i-note', name: 'Giấy note', unit: 'loc', requested_qty: 6, people: 3, max_qty: 20, over_max: false },
 ];
 
 export const UNREGISTERED: UnregisteredUser[] = [

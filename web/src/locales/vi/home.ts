@@ -51,6 +51,9 @@ const home = {
     link: {
       viewSent: 'Xem bản đã gửi',
     },
+    left: {
+      action: 'Xử lý',
+    },
     cta: {
       register: 'Xem tổng hợp',
       send: 'Mở Gửi ADM',

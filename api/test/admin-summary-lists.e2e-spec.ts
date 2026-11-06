@@ -173,6 +173,44 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
     );
   });
 
+  it('filter=left: chỉ phiếu của người đã nghỉ còn dòng chưa giao; người nghỉ đã giao đủ / người đang làm còn chờ → không', async () => {
+    const [gone, goneDone, stay] = [
+      f.sub('gone'),
+      f.sub('gone-done'),
+      f.sub('stay'),
+    ];
+    const made: string[] = [];
+    try {
+      for (const [sub, delivered] of [
+        [gone, 0],
+        [goneDone, 2],
+        [stay, 0],
+      ] as const) {
+        await f.addUser(sub, `Y ${sub}`, null, 'Phòng Y');
+        const id = await f.newRequest(sub, 'Phòng Y');
+        made.push(id);
+        await f.addLine(id, {
+          item_id: ids.item,
+          qty: 2,
+          delivered_qty: delivered,
+        });
+      }
+      await f
+        .pool()
+        .query("UPDATE users SET status = 'locked' WHERE sub = ANY($1)", [
+          [gone, goneDone],
+        ]);
+      expect(await requestIds('filter=left')).toEqual([made[0]]);
+    } finally {
+      await f.pool().query('DELETE FROM requests WHERE id = ANY($1)', [made]);
+      await f
+        .pool()
+        .query('DELETE FROM users WHERE sub = ANY($1)', [
+          [gone, goneDone, stay],
+        ]);
+    }
+  });
+
   it('tối đa hạ sau khi lưu: dòng 5 > max 4 → over_max (người + món), lọc "over_max" đúng 1 phiếu; dòng 4 = max 4 → không', async () => {
     const lowered = (
       await f

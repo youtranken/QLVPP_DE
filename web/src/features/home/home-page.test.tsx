@@ -21,6 +21,8 @@ const planOf = (rows: PlanRow[], snapshot: object | null = { id: 's1', kind: 'pr
   makeup: [],
 });
 
+const LEFT_URL = '/api/admin/periods/2026-10/requests?by=person&filter=left&limit=100';
+
 interface Setup {
   locked?: object;
   current?: object;
@@ -31,6 +33,7 @@ interface Setup {
   reviewFails?: boolean;
   unregisteredFails?: boolean;
   low?: { id: string; name: string; name_en: string | null; stock_qty: number }[];
+  left?: string[];
 }
 
 function setup(o: Setup = {}) {
@@ -42,6 +45,7 @@ function setup(o: Setup = {}) {
     '/api/admin/periods/2026-11/unregistered': () => (o.unregisteredFails ? jsonResponse(500, null) : jsonResponse(200, { items: Array.from({ length: o.unregistered ?? 0 }, (_, i) => person(i + 1)) })),
     '/api/admin/review?status=pending': () => (o.reviewFails ? jsonResponse(500, null) : jsonResponse(200, { items: Array.from({ length: o.review ?? 0 }, (_, i) => ({ line_id: `l${i}` })) })),
     '/api/admin/stock/low': () => jsonResponse(200, o.low ?? []),
+    [LEFT_URL]: () => jsonResponse(200, { items: (o.left ?? []).map((name, i) => ({ request_id: `r-${i}`, user_sub: `u-${i}`, full_name: name, user_status: 'locked' })), next_cursor: null }),
   });
 }
 
@@ -212,5 +216,44 @@ describe('Trang Tháng này: đường vào', () => {
     renderApp(makeMe('admin'), '/admin');
     await screen.findByRole('heading', { level: 1, name: 'Chào Nguyễn Văn An' });
     expect(screen.getByTestId('location')).toHaveTextContent('/admin/home');
+  });
+});
+
+describe('Trang Tháng này: nhắc người đã nghỉ còn phần chưa nhận (W25, R-D17.10)', () => {
+  it('kỳ giao có C đã nghỉ còn phần chưa nhận → "1 người đã nghỉ còn phần chưa nhận: C" + "Xử lý" mở Tổng hợp lọc ?left=1', async () => {
+    await open({ left: ['C'] });
+    expect(await screen.findByText('1 người đã nghỉ còn phần chưa nhận: C')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Xử lý' })).toHaveAttribute('href', '/admin/summary?ym=2026-10&left=1');
+  });
+
+  it('2 người → nối tên bằng ", "', async () => {
+    await open({ left: ['C', 'Dũng'] });
+    expect(await screen.findByText('2 người đã nghỉ còn phần chưa nhận: C, Dũng')).toBeInTheDocument();
+  });
+
+  it('không ai → không có dòng nhắc', async () => {
+    const f = setup({});
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/home');
+    await screen.findByRole('list', { name: '4 bước của tháng' });
+    await waitFor(() => expect(f.mock.calls.some(([u]) => u === LEFT_URL)).toBe(true));
+    expect(screen.queryByText(/người đã nghỉ còn phần chưa nhận/)).toBeNull();
+  });
+
+  it('xem kỳ đang đăng ký → 0 cảnh báo W (Đ6)', async () => {
+    await open({ left: ['C'] });
+    await screen.findByText('1 người đã nghỉ còn phần chưa nhận: C');
+    await userEvent.click(screen.getByRole('radio', { name: 'Kỳ đang đăng ký (tháng 11)' }));
+    expect(screen.queryByText(/người đã nghỉ còn phần chưa nhận/)).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Xử lý' })).toBeNull();
+  });
+
+  it('kỳ giao chưa khóa → không gọi danh sách người đã nghỉ', async () => {
+    mockViewport(1280);
+    const f = setup({ locked: { is_open: true }, left: ['C'] });
+    renderApp(makeMe('admin'), '/admin/home');
+    await screen.findByRole('list', { name: '4 bước của tháng' });
+    expect(f.mock.calls.some(([u]) => u === LEFT_URL)).toBe(false);
+    expect(screen.queryByText(/người đã nghỉ/)).toBeNull();
   });
 });

@@ -2,15 +2,12 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormatTime } from '@/lib/format-time';
 import { Drawer, DrawerClose, DrawerTitle } from '@/ui/drawer';
-import { FormField } from '@/ui/form-field';
 import { Icon } from '@/ui/icon';
 import { Loading, LoadError } from '@/ui/load-state';
 import { monthOf } from '@/features/request/request-format';
 import { AdjustLines } from './adjust-lines';
 import { useAdjust, type Adjust } from './use-adjust';
-import type { AdminRequestView } from './summary.api';
-
-const REASON_MAX = 500;
+import type { AdjustReason, AdminRequestView } from './summary.api';
 
 function Header({ view }: { view: AdminRequestView | undefined }) {
   const { t } = useTranslation();
@@ -73,30 +70,6 @@ function Blocks({ a }: { a: Adjust }) {
   );
 }
 
-function ReasonField({ a }: { a: Adjust }) {
-  const { t } = useTranslation();
-  return (
-    <FormField
-      label={t('summary.adjust.reason')}
-      required={a.locked}
-      error={a.errors.reason}
-      hint={t(a.locked ? 'summary.adjust.reasonLocked' : 'summary.adjust.reasonOpen')}
-      counter={{ value: a.reason.length, max: REASON_MAX }}
-    >
-      {(control) => (
-        <textarea
-          {...control}
-          className="aj-reason"
-          value={a.reason}
-          maxLength={REASON_MAX}
-          placeholder={t('summary.adjust.reasonPlaceholder')}
-          onChange={(e) => a.setReason(e.target.value)}
-        />
-      )}
-    </FormField>
-  );
-}
-
 function Footer({ a }: { a: Adjust }) {
   const { t } = useTranslation();
   const at = useFormatTime();
@@ -116,14 +89,16 @@ function Footer({ a }: { a: Adjust }) {
   );
 }
 
-export function AdjustDrawer({ requestId, onClose, onPrev, onNext }: {
+export function AdjustDrawer({ requestId, presetReason, onClose, onPrev, onNext }: {
   requestId: string;
+  // Mở từ lọc người đã nghỉ (?left=1): dòng giảm chọn sẵn lý do "Người đã nghỉ"
+  presetReason?: AdjustReason;
   onClose: () => void;
   onPrev?: () => void;
   onNext?: () => void;
 }) {
   const { t } = useTranslation();
-  const a = useAdjust(requestId, onClose);
+  const a = useAdjust(requestId, onClose, presetReason);
   const view = a.view;
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -146,7 +121,6 @@ export function AdjustDrawer({ requestId, onClose, onPrev, onNext }: {
           {a.query.isError && <LoadError onRetry={a.reload} />}
           {a.query.isPending && <Loading />}
           {view && <AdjustLines a={a} view={view} />}
-          {view && <ReasonField a={a} />}
         </div>
         <Footer a={a} />
       </form>

@@ -68,6 +68,7 @@ function useColumns() {
               <ItemThumb fileId={r.item?.image_file_id ?? null} alt={r.name} tone={r.tone} size={36} />
               <span className="sm-item__name">{r.item ? fmt.name(r.item) : r.name}</span>
               {r.item?.admin_only && <span className="tag tag--dark">{t('summary.table.adminOnly')}</span>}
+              {r.over_max && r.max_qty !== null && <span className="tag tag--warn">{t('warn.W12a', { max: r.max_qty })}</span>}
             </span>
           ),
         },

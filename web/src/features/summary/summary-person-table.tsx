@@ -93,8 +93,12 @@ function useColumns(locked: boolean, stale: boolean, onOpen: (id: string) => voi
       {
         id: 'note',
         header: t('summary.table.note'),
-        cell: ({ row: { original: r } }) =>
-          r.custom_pending > 0 ? <span className="tag tag--warn">{t('summary.table.customPending', { n: r.custom_pending })}</span> : null,
+        cell: ({ row: { original: r } }) => (
+          <>
+            {r.custom_pending > 0 && <span className="tag tag--warn">{t('summary.table.customPending', { n: r.custom_pending })}</span>}
+            {r.over_max && <span className="tag tag--warn">{t('summary.table.overMax')}</span>}
+          </>
+        ),
       },
       { id: 'saved', header: t('summary.table.savedAt'), cell: ({ row }) => <SavedAt iso={row.original.updated_at} /> },
       {

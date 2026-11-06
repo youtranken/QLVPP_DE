@@ -52,7 +52,7 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
   // Mỗi test tự gieo món PW có ảnh qua API (tải ảnh + tạo món) nên dài hơn mặc định 30 s
   test.describe.configure({ timeout: 60_000 });
 
-  test('E9-S2 Điều chỉnh kỳ khóa: cận dưới đã giao, lý do 2/3 ký tự, lưu ra toast', async ({ page, request }, info) => {
+  test('E9-S2 Điều chỉnh kỳ khóa: cận dưới đã giao, lý do từng dòng (Khác 2/3 ký tự), lưu ra toast', async ({ page, request }, info) => {
     const tag = `${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}`;
     const sub = `pw-adj-${tag}`;
     const name = `PW Điều chỉnh ${tag}`;
@@ -86,7 +86,9 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       const drawer = page.getByRole('dialog', { name: `Phiếu của ${name}` });
       await expect(drawer).toBeVisible();
       await expect(drawer.getByText('Đã khóa', { exact: true })).toBeVisible();
-      await expect(drawer.getByText('Kỳ đã khóa. Chỉ Hành chính sửa được, phải ghi lý do; không giảm dưới số đã giao.')).toBeVisible();
+      await expect(drawer.getByText('Kỳ đã khóa. Chỉ giảm hoặc bỏ dòng, mỗi dòng giảm cần lý do; không giảm dưới số đã giao.')).toBeVisible();
+      // Sau khóa sổ không tăng/thêm được (Đ12): không nút +, không "Thêm món"
+      await expect(drawer.getByRole('button', { name: /^(\+|Tăng|Thêm (?!vào danh mục —))/ })).toHaveCount(0);
       expect((await drawer.boundingBox())!.width).toBeCloseTo(isMobile(info) ? 390 : 384, 0);
 
       const lineA = drawer.getByRole('listitem').filter({ hasText: a.name });
@@ -108,17 +110,23 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       await expect(customLine.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button')).toHaveCount(3);
       await expect(customLine.getByRole('link', { name: 'Xem ở Món ngoài danh mục' })).toBeVisible();
 
+      // Mỗi dòng giảm có khối "Vì sao giảm?"; còn dòng thiếu lý do → Lưu vô hiệu
       const save = drawer.getByRole('button', { name: 'Lưu điều chỉnh' });
-      const reasonBox = drawer.getByLabel('Lý do điều chỉnh');
-      await reasonBox.fill('  ab  ');
-      await save.click();
-      await expect(reasonBox).toHaveAttribute('aria-invalid', 'true');
-      await expect(drawer.getByText('Kỳ đã khóa — nhập lý do điều chỉnh (ít nhất 3 ký tự).')).toBeVisible();
+      await expect(save).toBeDisabled();
+      const whyA = lineA.getByRole('radiogroup', { name: 'Vì sao giảm?' });
+      await whyA.getByRole('radio', { name: 'Khác' }).check();
+      const noteA = lineA.getByLabel(/^Ghi thêm/);
+      await noteA.fill('  ab  ');
+      await expect(save).toBeDisabled();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'adjust-locked-reason');
 
       const reason = `abc`;
-      await reasonBox.fill(reason);
+      await noteA.fill(reason);
+      // Dùng cho dòng giảm còn lại (B chưa chọn lý do)
+      await lineA.getByRole('button', { name: 'Dùng cho các món giảm còn lại' }).click();
+      await expect(lineB.getByRole('radio', { name: 'Khác' })).toBeChecked();
+      await expect(save).toBeEnabled();
       await save.click();
       await expect(drawer).toBeHidden();
       await expect(page.getByText(`Đã lưu điều chỉnh phiếu của ${name}`)).toBeVisible();
@@ -160,7 +168,7 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       const line = drawer.getByRole('listitem').filter({ hasText: item.name });
       await expect(line.getByRole('spinbutton')).toHaveValue('5');
       await line.getByRole('button', { name: `Bớt ${item.name}` }).click();
-      await drawer.getByLabel('Lý do điều chỉnh').fill('Giảm theo email');
+      await line.getByRole('radiogroup', { name: 'Vì sao giảm?' }).getByRole('radio', { name: 'Vượt định mức' }).check();
 
       await otherAdminSaves(4);
       await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();
@@ -170,6 +178,54 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       await expect(line.getByRole('spinbutton')).toHaveValue('4');
       await expect(drawer.getByRole('alert')).toHaveCount(0);
     } finally {
+      seed.cleanup();
+      release();
+    }
+  });
+});
+
+// Cảnh báo giảm sau khi gửi ADM (Đ11): kỳ đã có bản → giảm vẫn được, cảnh báo ngay dưới dòng trước khi Lưu
+function insertSentSnapshot(ym: string, item: { id: string; name: string }, qty: number): string {
+  const byItem = [{ key: item.id, item_id: item.id, code: null, name: item.name, name_en: null, unit: 'cai', requested: qty, backlog_prev: 0, stock: 0, need: qty }];
+  const data = { ym, byItem, custom: [], byDepartment: [], issues: [], pending_custom_count: 0, order_qty: { [item.id]: qty } };
+  return psql(`INSERT INTO report_snapshots (period_ym, kind, data, created_by_sub, created_at)
+    VALUES ('${ym}-01', 'print', '${JSON.stringify(data).replace(/'/g, "''")}'::jsonb, 'pw-admin', now()) RETURNING id`);
+}
+
+test.describe('Tổng hợp — giảm sau khi đã gửi ADM (Plan v2-D, Task 12)', () => {
+  test('V2D-12 reduce after sent', async ({ page, request }, info) => {
+    const release = await acquireLock('prev-period');
+    const seed = await seedLockedRequest(request, info, [{ stock: 0, qty: 5 }]);
+    const [item] = seed.items;
+    let snapshotId = '';
+    try {
+      snapshotId = insertSentSnapshot(seed.prevYm, item, 5);
+      await page.goto(`/admin/summary?ym=${seed.prevYm}`);
+      await searchSummaryPeople(page, seed.tag);
+      await page.getByRole('row').filter({ hasText: seed.name }).getByRole('button', { name: 'Điều chỉnh' }).click();
+      const drawer = page.getByRole('dialog', { name: `Phiếu của ${seed.name}` });
+      const line = drawer.getByRole('listitem').filter({ hasText: item.name });
+      await expect(line.getByRole('spinbutton')).toHaveValue('5');
+      await expect(line.getByText(/^Phiếu gửi ADM lúc/)).toHaveCount(0);
+
+      const less = line.getByRole('button', { name: `Bớt ${item.name}` });
+      await less.click();
+      await less.click();
+      await expect(line.getByText(/^Phiếu gửi ADM lúc \d\d:\d\d \d\d\/\d\d đã tính số cũ — giảm bây giờ thì hàng về dư 2 cái vào kho\.$/)).toBeVisible();
+      const save = drawer.getByRole('button', { name: 'Lưu điều chỉnh' });
+      await expect(save).toBeDisabled();
+      await line.getByRole('radiogroup', { name: 'Vì sao giảm?' }).getByRole('radio', { name: 'Vượt định mức' }).check();
+      await expect(save).toBeEnabled();
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await snap(page, info, 'v2d-12-reduce-after-sent');
+
+      await save.click();
+      await expect(drawer).toBeHidden();
+      const logged = psql(`SELECT qty_before || '>' || qty_after || ':' || reason_code
+        FROM request_line_adjustments WHERE request_id = '${seed.requestId}'`);
+      expect(logged).toBe('5>3:over_quota');
+    } finally {
+      if (snapshotId) psql(`DELETE FROM report_snapshots WHERE id = '${snapshotId}'`);
       seed.cleanup();
       release();
     }
