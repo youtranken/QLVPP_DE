@@ -58,7 +58,7 @@ const FILTERS: Record<SummaryFilter, SQL> = {
   over_max: OVER_MAX,
   pending_delivery: sql`count(l.id) FILTER (WHERE ${UNDELIVERED_LINE}) > 0`,
   custom_pending: sql`count(l.id) FILTER (WHERE l.review_status = 'pending') > 0`,
-  // Người đã nghỉ còn phần chưa nhận (W25 → Tổng hợp ?left=1)
+  // Người đã nghỉ còn phần chưa nhận (nhắc ở Tháng này mở Tổng hợp ?left=1)
   left: sql`u.status <> 'active' AND count(l.id) FILTER (WHERE ${UNDELIVERED_LINE}) > 0`,
 };
 const effectiveSum = (col: string) =>

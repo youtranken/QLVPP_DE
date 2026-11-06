@@ -84,8 +84,10 @@ export class CancelRemainingService {
         at: now,
       });
       await this.lines.touchRequest(tx, line.request_id, now);
-      // Người đã nghỉ không đọc chuông nữa
-      if (code !== 'user_left') {
+      if (
+        code !== 'user_left' &&
+        (await this.notifier.ownerActive(line.user_sub))
+      ) {
         await this.notifyOwner(tx, line, result, reason, now);
       }
       return result;

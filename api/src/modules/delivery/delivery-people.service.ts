@@ -46,7 +46,6 @@ const READY_NOW = sql`
   CASE WHEN NOT x.effective OR x.remaining_qty <= 0 THEN false
        WHEN x.user_status <> 'active' THEN false
        WHEN x.item_id IS NULL THEN ${DELIVER_CAP} > 0
-       WHEN x.user_status <> 'active' THEN false
        ELSE coalesce(x.stock_qty, 0) > x.ahead_all END`;
 
 // Đọc-only cho màn "Giao theo người": dòng kỳ ym + nợ các kỳ trước của từng người

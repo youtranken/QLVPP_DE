@@ -7,8 +7,10 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { REASON_NOTE_MAX } from '../requests/adjust-rules';
 import type { CancelledLine } from '../requests/line-delivery.store';
+
+// Thân thô (NFD, khoảng trắng) dài hơn số ký tự đếm được nhiều lần; luật 200 nằm ở cancelNoteOf
+const REASON_RAW_MAX = 1000;
 
 export const DELIVER_QTY_MAX = 9999;
 
@@ -28,7 +30,7 @@ export type CancelReason = (typeof CANCEL_REASONS)[number];
 // Thiếu mã / "Khác" thiếu ghi chú là REASON_REQUIRED (luật ở service), không phải VALIDATION
 export class CancelBody {
   @IsOptional() @IsIn(CANCEL_REASONS) reason_code?: CancelReason;
-  @IsOptional() @IsString() @MaxLength(REASON_NOTE_MAX) reason?: string;
+  @IsOptional() @IsString() @MaxLength(REASON_RAW_MAX) reason?: string;
   @IsInt() @Min(0) expected_delivered_qty!: number;
   // qty đổi sau khi mở hộp thì phần hủy khác số hộp đang hiện
   @IsInt() @Min(1) expected_qty!: number;

@@ -42,7 +42,11 @@ describe('POST admin/lines/:id/cancel-remaining: hộp hủy đã cũ → STALE_
       expected_delivered_qty: 0,
       expected_qty: 5,
     }).expect(409);
-    expect(res.body).toMatchObject({ code: 'STALE_UPDATE', delivered_qty: 3 });
+    expect(res.body).toMatchObject({
+      code: 'STALE_UPDATE',
+      delivered_qty: 3,
+      message: 'Dòng vừa đổi ở nơi khác — tải lại để xem phần còn lại.',
+    });
     expect(await cancelledQty(line.id)).toBe(0);
   });
 

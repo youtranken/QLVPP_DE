@@ -48,14 +48,18 @@ export class LineNotifier {
     });
   }
 
+  // Người đã nghỉ không đọc chuông nữa: mọi chuông điều chỉnh/hủy bỏ qua họ
+  async ownerActive(userSub: string): Promise<boolean> {
+    return (await this.users.findBySub(userSub))?.status === 'active';
+  }
+
   // Gộp theo ngày: params tính lại từ mọi bản ghi trong ngày; lần lưu chỉ có user_left hoặc chủ phiếu đã nghỉ thì không chuông
   async linesAdjusted(
     tx: Tx,
     args: { userSub: string; ym: string; reasons: AdjustReason[]; now: Date },
   ): Promise<void> {
     if (args.reasons.every((r) => r === 'user_left')) return;
-    const owner = await this.users.findBySub(args.userSub);
-    if (owner?.status !== 'active') return;
+    if (!(await this.ownerActive(args.userSub))) return;
     const { day, from, to } = vnDay(args.now);
     const lines = await adjustments.dayBellLines(tx, {
       userSub: args.userSub,

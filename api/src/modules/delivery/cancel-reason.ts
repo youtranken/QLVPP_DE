@@ -1,6 +1,6 @@
-import { normalizeNote } from '../requests/adjust-rules';
+import { REASON_NOTE_MAX, normalizeNote } from '../requests/adjust-rules';
 import { ADM_OUT_NOTE } from './adm-out-cancel';
-import { cancelReasonRequired } from './delivery-errors';
+import { cancelNoteTooLong, cancelReasonRequired } from './delivery-errors';
 import type { CancelBody, CancelReason } from './delivery.dto';
 
 const OTHER_NOTE_MIN = 3;
@@ -20,8 +20,8 @@ export function cancelNoteOf(body: CancelBody): {
   const code = body.reason_code;
   if (!code) throw cancelReasonRequired();
   const extra = normalizeNote(body.reason);
-  if (code === 'other' && [...(extra ?? '')].length < OTHER_NOTE_MIN) {
-    throw cancelReasonRequired();
-  }
+  const length = [...(extra ?? '')].length;
+  if (length > REASON_NOTE_MAX) throw cancelNoteTooLong(REASON_NOTE_MAX);
+  if (code === 'other' && length < OTHER_NOTE_MIN) throw cancelReasonRequired();
   return { code, note: extra ? `${LABELS[code]}: ${extra}` : LABELS[code] };
 }

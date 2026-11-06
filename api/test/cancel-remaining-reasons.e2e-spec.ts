@@ -69,6 +69,45 @@ describe('POST admin/lines/:id/cancel-remaining: lý do có sẵn, chỉ nợ th
     expect(ok.body.line.cancel_note).toBe(`Khác: ${'x'.repeat(200)}`);
   });
 
+  it('ghi chú đếm sau NFC + trim: 200 ký tự + khoảng trắng hai đầu → 200; 200 chữ "ế" gõ dạng NFD → 200; 201 chữ "ế" NFD → 400 VALIDATION {fields: [reason]}', async () => {
+    const nfd = (n: number) => 'ế'.normalize('NFD').repeat(n);
+    const { line } = await debtLine(10);
+    const over = await cancel(
+      line.id,
+      body(line, { reason_code: 'other', reason: nfd(201) }),
+    ).expect(400);
+    expect(over.body).toMatchObject({ code: 'VALIDATION', fields: ['reason'] });
+    expect(await f.lineRow(line.id)).toMatchObject({ cancelled_qty: 0 });
+    const ok = await cancel(
+      line.id,
+      body(line, { reason_code: 'other', reason: nfd(200) }),
+    ).expect(200);
+    expect(ok.body.line.cancel_note).toBe(`Khác: ${'ế'.repeat(200)}`);
+    const { line: padded } = await debtLine(10, 5, f.B);
+    const trimmed = await cancel(
+      padded.id,
+      body(padded, { reason_code: 'other', reason: ` ${'x'.repeat(200)}  ` }),
+    ).expect(200);
+    expect(trimmed.body.line.cancel_note).toBe(`Khác: ${'x'.repeat(200)}`);
+  });
+
+  it('chủ phiếu đã nghỉ: not_needed → 200 nhưng 0 chuông (mọi topic)', async () => {
+    const { line } = await debtLine(10);
+    await f
+      .pool()
+      .query("UPDATE users SET status = 'locked' WHERE sub = $1", [A]);
+    try {
+      await cancel(line.id, body(line, { reason_code: 'not_needed' })).expect(
+        200,
+      );
+      expect(await allBells()).toEqual([]);
+    } finally {
+      await f
+        .pool()
+        .query("UPDATE users SET status = 'active' WHERE sub = $1", [A]);
+    }
+  });
+
   it('not_needed không ghi chú → 200, cancel_note "Người nhận không cần nữa", đúng 1 chuông line_cancelled với lý do đó, audit có reason_code', async () => {
     const { request, line } = await debtLine(10);
     const res = await cancel(

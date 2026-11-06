@@ -23,7 +23,7 @@ export const staleDelivery = (deliveredQty: number) =>
 export const staleCancel = (line: { qty: number; delivered_qty: number }) =>
   new ConflictException({
     code: 'STALE_UPDATE',
-    message: 'Dòng vừa đổi ở nơi khác — tải lại để xem phần còn nợ.',
+    message: 'Dòng vừa đổi ở nơi khác — tải lại để xem phần còn lại.',
     qty: line.qty,
     delivered_qty: line.delivered_qty,
   });
@@ -41,6 +41,13 @@ export const customNotReceived = (available: number) =>
     code: 'CUSTOM_NOT_RECEIVED',
     message: `Hàng ngoài danh mục chưa về đủ — chỉ còn giao được ${available}.`,
     available,
+  });
+
+export const cancelNoteTooLong = (max: number) =>
+  new BadRequestException({
+    code: 'VALIDATION',
+    message: `Ghi chú tối đa ${max} ký tự.`,
+    fields: ['reason'],
   });
 
 export const cancelReasonRequired = () =>
