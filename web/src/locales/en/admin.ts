@@ -66,6 +66,14 @@ const admin: Messages<typeof vi> = {
   audit: {
     title: 'Audit log',
     actions: {
+      arrival: {
+        adm_out_marked: 'Marked out at ADM',
+        adm_out_unmarked: 'Unmarked out at ADM',
+        adm_out_settled: 'Out-at-ADM remainder cancelled at next lock',
+        adm_owed_closed: 'ADM will not deliver',
+        adm_owed_reopened: 'ADM will not deliver — undone',
+        custom_received: 'Off-catalogue item arrived',
+      },
       auth: {
         login: 'Signed in',
         login_denied_group: 'Sign-in denied (not in group)',

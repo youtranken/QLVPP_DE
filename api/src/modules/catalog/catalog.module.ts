@@ -5,9 +5,13 @@ import { FilesModule } from '../files/files.module';
 import { PeriodsModule } from '../periods/periods.module';
 import { UnitsModule } from '../units/units.module';
 import { UsersModule } from '../users/users.module';
+import { AdmOutController } from './adm-out.controller';
+import { AdmOutService } from './adm-out.service';
+import { ArrivalsPlanService } from './arrivals-plan.service';
 import { CatalogService } from './catalog.service';
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
+import { CustomReceiptsService } from './custom-receipts.service';
 import { ITEM_IMAGE_REFERENCE } from './item-image.reference';
 import { ITEM_USAGE_HOOK, ItemUsageRegistry } from './item-usage.hook';
 import { ItemsAdminController } from './items-admin.controller';
@@ -30,6 +34,7 @@ import { StockService } from './stock.service';
     ItemsController,
     ItemsAdminController,
     StockController,
+    AdmOutController,
   ],
   providers: [
     CatalogService,
@@ -37,6 +42,9 @@ import { StockService } from './stock.service';
     StockService,
     StockReceiptService,
     StockQueryService,
+    ArrivalsPlanService,
+    AdmOutService,
+    CustomReceiptsService,
     ItemUsageRegistry,
     { provide: ITEM_USAGE_HOOK, useExisting: ItemUsageRegistry },
   ],

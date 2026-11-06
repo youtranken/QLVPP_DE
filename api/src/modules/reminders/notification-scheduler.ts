@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { ClockService } from '../../common/clock.service';
+import { addMonths } from '../../common/period';
 import { pgSqlState } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
@@ -18,6 +19,7 @@ import type { NotifyInput } from '../notifications/notifications.service';
 import { PeriodsService } from '../periods/periods.service';
 import type { Period } from '../periods/periods.service';
 import { SummaryService } from '../requests/summary.service';
+import { AdmOutSettlement } from './adm-out-settlement';
 import { isLockDay, isPeriodOpenDay, isReminderDay } from './schedule-days';
 
 export interface HourlyResult {
@@ -49,6 +51,7 @@ export class NotificationScheduler
     private readonly notifications: NotificationsService,
     private readonly stock: StockService,
     private readonly config: SystemConfigService,
+    private readonly settlement: AdmOutSettlement,
   ) {}
 
   onApplicationBootstrap(): void {
@@ -121,9 +124,10 @@ export class NotificationScheduler
     if (!period) return 0;
     if (period.headcount === null) {
       const subs = await this.summary.liveSubs(period.ym);
-      await this.db.transaction((tx) =>
-        this.periods.recordHeadcount(period.ym, subs, tx),
-      );
+      await this.db.transaction(async (tx) => {
+        await this.periods.recordHeadcount(period.ym, subs, tx);
+        await this.settlement.settleAdmOut(tx, addMonths(period.ym, -1), now);
+      });
     }
     if (!isLockDay(now, period.deadline)) return 0;
     const { registered, headcount } = await this.summary.people(period.ym);

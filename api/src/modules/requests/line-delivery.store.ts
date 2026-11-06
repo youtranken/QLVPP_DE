@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import type { Tx } from '../../database/database.module';
-import { EFFECTIVE_LINE, REMAINING_QTY } from './line-predicates';
+import { ymToDate } from '../../common/period';
+import {
+  CUSTOM_ITEM_KEY,
+  EFFECTIVE_LINE,
+  REMAINING_QTY,
+  UNDELIVERED_LINE,
+} from './line-predicates';
 import { bumpRequest } from './requests.repo';
 
 export interface LockedLine {
@@ -122,6 +128,17 @@ export class LineDeliveryStore {
       sql`SELECT ${CANCELLED_COLUMNS} FROM request_lines l WHERE l.id = ${lineId}`,
     );
     return { cancelled_now: 0, line: current.rows[0] };
+  }
+
+  // Dòng còn phần chưa giao của một khóa món trong kỳ; thứ tự theo phiếu để khóa cùng chiều lockLine
+  async openLineIds(tx: Tx, ym: string, key: string): Promise<string[]> {
+    const { rows } = await tx.execute<{ id: string }>(sql`
+      SELECT l.id FROM request_lines l JOIN requests r ON r.id = l.request_id
+      WHERE r.period_ym = ${ymToDate(ym)}::date AND ${UNDELIVERED_LINE}
+        AND coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) = ${key}
+      ORDER BY l.request_id, l.id
+    `);
+    return rows.map((r) => r.id);
   }
 
   // Dòng đổi số đã giao = phiếu đổi: tab Điều chỉnh mở với mốc cũ phải nhận STALE_UPDATE

@@ -40,6 +40,7 @@ function scheduler(
       getBool: () => Promise.resolve(true),
       getInt: () => Promise.resolve(3),
     } as unknown as Ctor[6],
+    { settleAdmOut: jest.fn() } as unknown as Ctor[7],
   );
   return { s, periods, notifications };
 }

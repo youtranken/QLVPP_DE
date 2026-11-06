@@ -4,7 +4,13 @@ import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { PeriodsService } from '../periods/periods.service';
-import { REMAINING_QTY, UNDELIVERED_LINE } from '../requests/line-predicates';
+import { hasItemsSql } from '../reports/sent-snapshot';
+import {
+  CUSTOM_ITEM_KEY,
+  EFFECTIVE_LINE,
+  REMAINING_QTY,
+  UNDELIVERED_LINE,
+} from '../requests/line-predicates';
 import type {
   DeliveryPerson,
   DeliveryPersonLine,
@@ -71,25 +77,58 @@ export class DeliveryPeopleService {
     return { ym, people };
   }
 
+  // Dòng ngoài DM có trong bản in của kỳ dòng: trần = hàng đã về − đã giao của khóa, chia theo thứ tự đăng ký
   private async rows(ym: string, now: Date): Promise<Row[]> {
+    const k = `${ym}-01`;
     const { rows } = await this.db.execute<Row>(sql`
-      SELECT r.user_sub, u.full_name, u.department, u.status AS user_status,
-             l.id AS line_id, l.request_id, to_char(r.period_ym, 'YYYY-MM') AS period_ym,
-             (r.period_ym < ${`${ym}-01`}::date) AS is_debt,
-             l.item_id, coalesce(i.name, trim(l.custom_name)) AS name, i.name_en,
-             coalesce(i.unit, trim(l.custom_unit)) AS unit,
-             coalesce(i.image_file_id, l.image_file_id) AS image_file_id,
-             l.qty, l.delivered_qty, l.cancelled_qty, ${REMAINING_QTY} AS remaining_qty,
-             i.stock_qty, l.review_status
-      FROM request_lines l
-      JOIN requests r ON r.id = l.request_id
-      JOIN periods p ON p.ym = r.period_ym
-      JOIN users u ON u.sub = r.user_sub
-      LEFT JOIN items i ON i.id = l.item_id
-      WHERE p.deadline <= ${now.toISOString()}::timestamptz
-        AND ((r.period_ym = ${`${ym}-01`}::date AND l.review_status <> 'rejected')
-          OR (r.period_ym < ${`${ym}-01`}::date AND ${UNDELIVERED_LINE}))
-      ORDER BY r.period_ym, l.id
+      WITH base AS (
+        SELECT r.user_sub, u.full_name, u.department, u.status AS user_status,
+               l.id AS line_id, l.request_id, r.period_ym, r.created_at AS request_at, l.created_at AS line_at,
+               l.item_id, coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) AS key,
+               coalesce(i.name, trim(l.custom_name)) AS name, i.name_en,
+               coalesce(i.unit, trim(l.custom_unit)) AS unit,
+               coalesce(i.image_file_id, l.image_file_id) AS image_file_id,
+               l.qty, l.delivered_qty, l.cancelled_qty, ${REMAINING_QTY} AS remaining_qty,
+               i.stock_qty, l.review_status, ${EFFECTIVE_LINE} AS effective
+        FROM request_lines l
+        JOIN requests r ON r.id = l.request_id
+        JOIN periods p ON p.ym = r.period_ym
+        JOIN users u ON u.sub = r.user_sub
+        LEFT JOIN items i ON i.id = l.item_id
+        WHERE p.deadline <= ${now.toISOString()}::timestamptz
+          AND ((r.period_ym = ${k}::date AND l.review_status <> 'rejected')
+            OR (r.period_ym < ${k}::date AND ${UNDELIVERED_LINE}))
+      ), ranked AS (
+        SELECT b.*,
+               coalesce(sum(CASE WHEN b.effective THEN b.remaining_qty ELSE 0 END) OVER (
+                 PARTITION BY b.period_ym, b.key ORDER BY b.request_at, b.line_at, b.line_id
+                 ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), 0)::int AS ahead
+        FROM base b
+      )
+      SELECT x.user_sub, x.full_name, x.department, x.user_status, x.line_id, x.request_id,
+             to_char(x.period_ym, 'YYYY-MM') AS period_ym, (x.period_ym < ${k}::date) AS is_debt,
+             x.item_id, x.name, x.name_en, x.unit, x.image_file_id, x.qty, x.delivered_qty,
+             x.cancelled_qty, x.remaining_qty, x.stock_qty, x.review_status,
+             EXISTS (SELECT 1 FROM period_adm_out a WHERE a.period_ym = x.period_ym
+                     AND a.line_key = x.key AND a.kind = 'out') AS adm_out,
+             (x.item_id IS NULL AND coalesce(s.ordered, 0) > 0) AS custom_tracked,
+             CASE WHEN x.item_id IS NOT NULL THEN NULL
+                  WHEN coalesce(s.ordered, 0) > 0 THEN LEAST(x.remaining_qty, GREATEST(0,
+                    (SELECT coalesce(sum(c.qty), 0) FROM custom_receipts c
+                     WHERE c.period_ym = x.period_ym AND c.line_key = x.key)
+                    - (SELECT coalesce(sum(l.delivered_qty), 0)
+                       FROM request_lines l JOIN requests r ON r.id = l.request_id
+                       WHERE r.period_ym = x.period_ym AND l.item_id IS NULL
+                         AND ${CUSTOM_ITEM_KEY} = x.key)
+                    - x.ahead))::int
+                  ELSE x.remaining_qty END AS deliver_cap
+      FROM ranked x
+      LEFT JOIN LATERAL (
+        SELECT (rs.data->'order_qty'->>x.key)::int AS ordered FROM report_snapshots rs
+        WHERE rs.period_ym = x.period_ym AND ${hasItemsSql}
+        ORDER BY rs.created_at DESC, rs.id DESC LIMIT 1
+      ) s ON x.item_id IS NULL
+      ORDER BY x.period_ym, x.line_id
     `);
     return rows;
   }

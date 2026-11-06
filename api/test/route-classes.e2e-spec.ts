@@ -9,7 +9,7 @@ import { deliveryFixture } from './delivery.fixture';
 const OPEN = '2026-11';
 const LAST_OPEN_MS = '2026-11-10T16:59:59.999Z';
 const FIRST_LOCKED_MS = '2026-11-10T17:00:00.000Z';
-const METHOD_ORDER = ['GET', 'POST', 'PUT'];
+const METHOD_ORDER = ['GET', 'POST', 'PUT', 'DELETE'];
 
 @Controller('admin/zz-unclassified-probe')
 @Roles('admin')
@@ -64,11 +64,18 @@ describe('phân loại route /admin/* và guard kỳ khóa (e2e)', () => {
     f.at('2026-11-05T03:00:00Z');
   });
 
-  afterEach(() =>
-    pool().query('DELETE FROM report_snapshots WHERE created_by_sub = $1', [
+  afterEach(async () => {
+    await pool().query(
+      'DELETE FROM report_snapshots WHERE created_by_sub = $1',
+      [ADMIN],
+    );
+    await pool().query('DELETE FROM period_adm_out WHERE marked_by = $1', [
       ADMIN,
-    ]),
-  );
+    ]);
+    await pool().query('DELETE FROM custom_receipts WHERE created_by = $1', [
+      ADMIN,
+    ]);
+  });
 
   const pathOf = (route: string) =>
     route
@@ -76,7 +83,8 @@ describe('phân loại route /admin/* và guard kỳ khóa (e2e)', () => {
       .replace(':ym', OPEN)
       .replace(/requests\/:id/, `requests/${ids.request}`)
       .replace(/lines\/:id/, `lines/${ids.customLine}`)
-      .replace(/snapshots\/:id/, `snapshots/${ids.snapshot}`);
+      .replace(/snapshots\/:id/, `snapshots/${ids.snapshot}`)
+      .replace(':line_key', ids.item);
 
   const bodyOf = (route: string): object | undefined => {
     if (route.endsWith('/stock/receipts')) {
@@ -86,6 +94,9 @@ describe('phân loại route /admin/* và guard kỳ khóa (e2e)', () => {
       };
     }
     if (route.endsWith('/snapshots')) return { kind: 'print' };
+    if (route.endsWith('/custom-receipts')) {
+      return { line_key: 'custom:["bìa phân loại", "cai"]', qty: 1 };
+    }
     if (route.endsWith('/lines')) {
       return {
         lines: [{ item_id: ids.item, qty: 1 }],
@@ -104,7 +115,9 @@ describe('phân loại route /admin/* và guard kỳ khóa (e2e)', () => {
   const call = (route: string, role = 'admin') => {
     const [method] = route.split(' ');
     const req = as(
-      http()[method.toLowerCase() as 'get' | 'post' | 'put'](pathOf(route)),
+      http()[method.toLowerCase() as 'get' | 'post' | 'put' | 'delete'](
+        pathOf(route),
+      ),
       ADMIN,
       role,
     );

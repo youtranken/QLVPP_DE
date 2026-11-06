@@ -40,10 +40,10 @@ describe('POST admin/stock/receipts: vai, validate, mã lỗi (Postgres thật)'
     expect((await movements(a)).items[0]).toMatchObject({
       delta: 5,
       reason: 'purchase',
-      note: `Hàng về kỳ ${YM} · đợt 1`,
+      note: `Về bù kỳ ${YM} · đợt 1`,
       actor_sub: ADMIN,
     });
-    expect((await movements(b)).items[0].note).toBe(`Hàng về kỳ ${YM} · đợt 1`);
+    expect((await movements(b)).items[0].note).toBe(`Về bù kỳ ${YM} · đợt 1`);
     const purchases = await auditsOf('stock.purchase', [a, b]);
     expect(purchases.map((p) => p.object_id).sort()).toEqual([a, b].sort());
     expect(purchases.find((p) => p.object_id === a)!.detail).toMatchObject({
@@ -68,10 +68,10 @@ describe('POST admin/stock/receipts: vai, validate, mã lỗi (Postgres thật)'
     });
   });
 
-  it('không có ghi chú: note movement chỉ là "Hàng về kỳ {ym}"', async () => {
+  it('kỳ trước kỳ làm việc, không có ghi chú: note movement chỉ là "Về bù kỳ {ym}"', async () => {
     const a = await newItem(0);
     await receipts({ lines: [line(a)], ym: YM }).expect(200);
-    expect((await movements(a)).items[0].note).toBe(`Hàng về kỳ ${YM}`);
+    expect((await movements(a)).items[0].note).toBe(`Về bù kỳ ${YM}`);
   });
 
   it('nhập đặt lại mốc restock_level và xóa low_stock_notified_at như purchase', async () => {

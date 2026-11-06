@@ -20,6 +20,8 @@ export class DeliverBody {
 // Thiếu/ngắn đều là REASON_REQUIRED (luật trim ≥ 3 ở service), không phải VALIDATION
 export class CancelBody {
   @IsOptional() @IsString() @MaxLength(NOTE_MAX) reason?: string;
+  // Có mã thì không cần lý do chữ: ghi chú hủy cố định "ADM hết hàng"
+  @IsOptional() @IsIn(['adm_out_of_stock']) reason_code?: 'adm_out_of_stock';
   @IsInt() @Min(0) expected_delivered_qty!: number;
   // qty đổi sau khi mở hộp thì phần hủy khác số hộp đang hiện
   @IsInt() @Min(1) expected_qty!: number;
@@ -124,6 +126,9 @@ export interface DeliveryPersonLine {
   remaining_qty: number;
   stock_qty: number | null;
   review_status: 'n/a' | 'pending' | 'accepted' | 'converted';
+  adm_out: boolean; // món/khóa của dòng đánh "ADM hết hàng" cho kỳ của dòng
+  custom_tracked: boolean; // dòng ngoài DM có trong bản in: trần theo hàng đã về
+  deliver_cap: number | null; // null = món danh mục (trần theo tủ ở web)
 }
 export interface DeliveryPerson {
   user_sub: string;

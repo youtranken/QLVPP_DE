@@ -1,5 +1,11 @@
 // Mọi action api ghi vào audit_log; test audit-actions.test.ts quét api/src để không sót
 export const AUDIT_ACTIONS: readonly string[] = [
+  'arrival.adm_out_marked',
+  'arrival.adm_out_settled',
+  'arrival.adm_out_unmarked',
+  'arrival.adm_owed_closed',
+  'arrival.adm_owed_reopened',
+  'arrival.custom_received',
   'auth.login',
   'auth.login_denied_group',
   'auth.login_denied_idp',

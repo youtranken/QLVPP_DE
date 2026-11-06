@@ -28,7 +28,13 @@ describe('V2D-4 changedAfter theo thao tác thật: giao không tính, điều c
     const item = await f.stockItem(10);
     const debt = await seedLine(DEBT_YM, B, { item_id: item, qty: 3 });
     const own = await seedLine(YM, B, { item_id: item, qty: 2 });
-    f.freeze(new Date(Date.now() - 60_000).toISOString());
+    // Audit kỳ (Hàng về) của suite khác trong phút vừa qua không được rơi sau bản chốt
+    const { rows } = await pool().query<{ at: Date }>(
+      `SELECT greatest(now() - interval '60 seconds',
+                       max(created_at) FILTER (WHERE created_at <= now()) + interval '1 millisecond') AS at
+       FROM audit_log WHERE object_type = 'period' AND action LIKE 'arrival.%'`,
+    );
+    f.freeze(rows[0].at.toISOString());
     await f.create(YM, { kind: 'print' }).expect(201);
     f.freeze(new Date().toISOString());
     expect((await sendState(YM)).changed_after).toBe(false);

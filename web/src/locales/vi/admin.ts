@@ -63,6 +63,14 @@ const admin = {
   audit: {
     title: 'Nhật ký',
     actions: {
+      arrival: {
+        adm_out_marked: 'Đánh dấu ADM hết hàng',
+        adm_out_unmarked: 'Bỏ đánh dấu ADM hết hàng',
+        adm_out_settled: 'Tự hủy phần ADM hết hàng lúc khóa sổ kỳ sau',
+        adm_owed_closed: 'ADM không giao nữa',
+        adm_owed_reopened: 'Hoàn tác ADM không giao nữa',
+        custom_received: 'Hàng ngoài danh mục đã về',
+      },
       auth: {
         login: 'Đăng nhập',
         login_denied_group: 'Đăng nhập bị từ chối (không thuộc nhóm)',

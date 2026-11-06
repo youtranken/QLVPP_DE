@@ -9,7 +9,15 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { PeriodsService } from '../periods/periods.service';
 import { LineDeliveryStore } from '../requests/line-delivery.store';
 import type { LockedLine } from '../requests/line-delivery.store';
+import { LineNotifier } from '../requests/line-notifier';
 import { lineNotFound } from '../requests/request-errors';
+import {
+  ADM_OUT_NOTE,
+  ADM_OUT_REASON,
+  admOutCancelDetail,
+  itemNotAdmOut,
+  lineIsAdmOut,
+} from './adm-out-cancel';
 import { cancelReasonRequired, staleCancel } from './delivery-errors';
 import type { CancelBody, CancelResult } from './delivery.dto';
 import { assertDeliverable } from './delivery.service';
@@ -26,6 +34,7 @@ export class CancelRemainingService {
     private readonly catalog: CatalogService,
     private readonly audit: AuditWriterService,
     private readonly notifications: NotificationsService,
+    private readonly notifier: LineNotifier,
   ) {}
 
   async cancelRemaining(
@@ -33,7 +42,8 @@ export class CancelRemainingService {
     body: CancelBody,
     actor: string,
   ): Promise<CancelResult> {
-    const reason = body.reason?.trim() ?? '';
+    const admOut = body.reason_code === ADM_OUT_REASON;
+    const reason = admOut ? ADM_OUT_NOTE : (body.reason?.trim() ?? '');
     if (reason.length < REASON_MIN) throw cancelReasonRequired();
     const now = this.clock.now();
     return this.db.transaction(async (tx) => {
@@ -47,8 +57,26 @@ export class CancelRemainingService {
       ) {
         throw staleCancel(line);
       }
+      if (admOut && !(await lineIsAdmOut(tx, lineId))) throw itemNotAdmOut();
       const result = await this.lines.cancelRemaining(tx, lineId, reason, now);
       if (result.cancelled_now === 0) return result;
+      if (admOut) {
+        await this.audit.appendWithin(tx, {
+          actor,
+          action: 'line.cancel_remaining',
+          objectType: 'request_line',
+          objectId: line.id,
+          detail: admOutCancelDetail(line, result, now),
+        });
+        await this.lines.touchRequest(tx, line.request_id, now);
+        await this.notifier.linesAdjusted(tx, {
+          userSub: line.user_sub,
+          ym: line.period_ym,
+          reasons: [ADM_OUT_REASON],
+          now,
+        });
+        return result;
+      }
       await this.audit.appendWithin(tx, {
         actor,
         action: 'line.cancel_remaining',

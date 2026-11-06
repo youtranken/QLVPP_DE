@@ -29,6 +29,8 @@ interface MovementInput {
   note: string | null;
   recipientSub?: string | null;
   refLineId?: string | null;
+  // Kỳ của hàng về (kỳ bản in hoặc kỳ được về bù); chỉ có ở purchase qua phiếu hàng về
+  receiptYm?: string | null;
   // Giao hàng ghi theo ClockService như line_deliveries; biến động tay giữ now() của DB
   at?: Date;
 }
@@ -119,6 +121,7 @@ export class StockService {
       delta: number;
       reason: 'purchase' | 'adjust';
       note: string | null;
+      receiptYm?: string | null;
     },
     actor: string,
   ): Promise<StockResult> {
@@ -221,9 +224,10 @@ export class StockService {
     m: MovementInput,
   ): Promise<{ id: string }> {
     const { rows } = await tx.execute<{ id: string }>(sql`
-      INSERT INTO stock_movements (item_id, delta, reason, note, recipient_sub, ref_line_id, actor_sub, created_at)
+      INSERT INTO stock_movements (item_id, delta, reason, note, recipient_sub, ref_line_id, actor_sub, receipt_ym, created_at)
       VALUES (${m.itemId}, ${m.delta}, ${m.reason}, ${m.note}, ${m.recipientSub ?? null},
-              ${m.refLineId ?? null}, ${actor}, coalesce(${m.at?.toISOString() ?? null}::timestamptz, now()))
+              ${m.refLineId ?? null}, ${actor}, ${m.receiptYm ? `${m.receiptYm}-01` : null}::date,
+              coalesce(${m.at?.toISOString() ?? null}::timestamptz, now()))
       RETURNING id
     `);
     return rows[0];

@@ -64,6 +64,7 @@ import { SummaryService } from './summary.service';
     RequestLinesWriter,
     RequestViewBuilder,
     LineDeliveryStore,
+    LineNotifier,
     SummaryService,
   ],
 })

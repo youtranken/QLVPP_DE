@@ -29,13 +29,21 @@ export function defaultOrder(r: OrderBasisInput): number {
     : 0;
 }
 
+export interface AdmOwedRow {
+  period_ym: string;
+  key: string;
+  ordered: number;
+  received: number;
+  owed: number;
+}
+
 // ADM giao thiếu kỳ P < ym còn hứa bù: không đặt lại; hết hứa khi kỳ P đánh "ADM hết hàng" hoặc "ADM không giao nữa"
-export async function admOwedByKey(
+export async function admOwedRows(
   ex: Executor,
   ym: string,
-): Promise<Map<string, number>> {
+): Promise<AdmOwedRow[]> {
   const before = ymToDate(ym);
-  const { rows } = await ex.execute<{ key: string; owed: number }>(sql`
+  const { rows } = await ex.execute<AdmOwedRow & Record<string, unknown>>(sql`
     WITH sent AS (
       SELECT DISTINCT ON (period_ym) period_ym, data->'order_qty' AS order_qty
       FROM report_snapshots
@@ -59,7 +67,9 @@ export async function admOwedByKey(
       WHERE ${UNDELIVERED_LINE} AND r.period_ym < ${before}::date
       GROUP BY 1, 2
     )
-    SELECT o.key, sum(LEAST(GREATEST(0, o.qty - coalesce(rc.qty, 0)), coalesce(w.qty, 0)))::int AS owed
+    SELECT to_char(o.period_ym, 'YYYY-MM') AS period_ym, o.key, o.qty AS ordered,
+           coalesce(rc.qty, 0)::int AS received,
+           LEAST(GREATEST(0, o.qty - coalesce(rc.qty, 0)), coalesce(w.qty, 0))::int AS owed
     FROM ordered o
     LEFT JOIN (SELECT period_ym, key, sum(qty) AS qty FROM received GROUP BY 1, 2) rc
       ON rc.period_ym = o.period_ym AND rc.key = o.key
@@ -67,8 +77,19 @@ export async function admOwedByKey(
     WHERE NOT EXISTS (
       SELECT 1 FROM period_adm_out a WHERE a.period_ym = o.period_ym AND a.line_key = o.key
     )
-    GROUP BY o.key`);
-  return new Map(rows.filter((r) => r.owed > 0).map((r) => [r.key, r.owed]));
+    ORDER BY o.period_ym, o.key`);
+  return rows.filter((r) => r.owed > 0);
+}
+
+export async function admOwedByKey(
+  ex: Executor,
+  ym: string,
+): Promise<Map<string, number>> {
+  const owed = new Map<string, number>();
+  for (const r of await admOwedRows(ex, ym)) {
+    owed.set(r.key, (owed.get(r.key) ?? 0) + r.owed);
+  }
+  return owed;
 }
 
 export async function admOwed(

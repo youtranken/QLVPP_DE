@@ -4,6 +4,7 @@ import { SystemConfigModule } from '../config/config.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { PeriodsModule } from '../periods/periods.module';
 import { RequestsModule } from '../requests/requests.module';
+import { AdmOutSettlement } from './adm-out-settlement';
 import { NotificationScheduler } from './notification-scheduler';
 
 // Tách khỏi requests/notifications: cron cần cả hai, đặt ở đâu trong đó cũng thành import vòng
@@ -15,6 +16,6 @@ import { NotificationScheduler } from './notification-scheduler';
     CatalogModule,
     SystemConfigModule,
   ],
-  providers: [NotificationScheduler],
+  providers: [NotificationScheduler, AdmOutSettlement],
 })
 export class RemindersModule {}
