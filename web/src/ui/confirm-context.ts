@@ -30,3 +30,12 @@ export const discardOptions = (t: (key: string) => string): ConfirmOptions => ({
   cancelLabel: t('common.discardKeep'),
   danger: true,
 });
+
+// Panel phủ: hộp chọn giữa hai lựa chọn nên nút thoát là "Ở lại", không phải "Tiếp tục sửa"
+export const panelDiscardOptions = (t: (key: string) => string): ConfirmOptions => ({
+  title: t('common.panel.discardTitle'),
+  message: t('common.discardBody'),
+  confirmLabel: t('common.discardOk'),
+  cancelLabel: t('common.panel.stay'),
+  danger: true,
+});

@@ -48,11 +48,5 @@ export function CodeCell({ code }: { code: string | null }) {
 
 export function StockCell({ row }: { row: CatalogRow }) {
   const { t } = useTranslation();
-  return (
-    <span className="ct-stock">
-      <span className="num">{row.stock_qty}</span>
-      {row.stock_state === 'low' && <span className="tag tag--warn">{t('catalog.list.low')}</span>}
-      {row.stock_state === 'out' && <span className="tag tag--danger">{t('catalog.list.out')}</span>}
-    </span>
-  );
+  return <span className="ct-stock">{t('catalog.card.stock', { n: row.stock_qty })}</span>;
 }

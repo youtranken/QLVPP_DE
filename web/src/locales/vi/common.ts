@@ -25,6 +25,7 @@ const common = {
     discardBody: 'Những gì bạn vừa nhập sẽ mất.',
     discardOk: 'Bỏ thay đổi',
     discardKeep: 'Tiếp tục sửa',
+    panel: { close: '← Đóng', position: '{{i}}/{{n}}', discardTitle: 'Bỏ thay đổi?', stay: 'Ở lại' },
     selectAll: 'Chọn tất cả',
     selectRow: 'Chọn dòng',
     reorder: {

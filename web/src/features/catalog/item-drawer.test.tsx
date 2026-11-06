@@ -170,7 +170,7 @@ describe('Ngăn kéo Thêm món', () => {
 });
 
 describe('Ngăn kéo Sửa món', () => {
-  it('tiêu đề là tên món; PATCH chỉ trường đổi, nút "Lưu thay đổi", chân ghi "1 thay đổi chưa lưu"', async () => {
+  it('tiêu đề là tên món; PATCH chỉ trường đổi, nút "Lưu thay đổi", chân ghi "1 thay đổi chưa lưu"; lưu xong panel ở lại món đó', async () => {
     const f = stubDrawerApi((_url, init) => (init.method === 'PATCH' ? jsonResponse(200, PEN) : undefined));
     const { onClose } = renderDrawer({ item: PEN });
     expect(screen.getByRole('dialog', { name: 'Sửa món Bút bi xanh' })).toBeInTheDocument();
@@ -180,8 +180,10 @@ describe('Ngăn kéo Sửa món', () => {
     await userEvent.type(max, '30');
     expect(screen.getByText('1 thay đổi chưa lưu')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
-    await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(await screen.findByText('Đã lưu Bút bi xanh')).toBeInTheDocument();
     expect(bodyOf(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toEqual({ max_qty: 30 });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Lưu thay đổi' })).toBeEnabled();
   });
 
   it('VALIDATION [max_qty] → lỗi gắn ô Tối đa mỗi tháng; ô số có min 1, max 999', async () => {
@@ -212,10 +214,10 @@ describe('Ngăn kéo Sửa món', () => {
 
   it('món nhập chưa có ảnh: đổi mã → PATCH chỉ {code}, không đòi ảnh (server chỉ chặn khi xóa ảnh)', async () => {
     const f = stubDrawerApi((_url, init) => (init.method === 'PATCH' ? jsonResponse(200, PAPER) : undefined));
-    const { onClose } = renderDrawer({ item: PAPER, items: [PAPER] });
+    renderDrawer({ item: PAPER });
     await userEvent.type(screen.getByLabelText('Mã món'), '-B');
     await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
-    await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
+    await vi.waitFor(() => expect(callsTo(f, `/api/admin/items/${PAPER.id}`, 'PATCH')).toHaveLength(1));
     expect(bodyOf(f, `/api/admin/items/${PAPER.id}`, 'PATCH')).toEqual({ code: 'VPP-001-B' });
     expect(screen.queryByText(/^Cần thêm/)).toBeNull();
   });
@@ -247,8 +249,8 @@ describe('Ngăn kéo Sửa món', () => {
 describe('Ngăn kéo món — chọn nhóm bằng phím', () => {
   it('chỉ nhóm đang chọn nằm trong Tab; →/↓ chọn nhóm kế và chuyển focus, không chuyển món', async () => {
     stubDrawerApi();
-    const onNext = vi.fn();
-    renderDrawer({ item: PEN, onNext });
+    const onStep = vi.fn();
+    renderDrawer({ item: PEN, nav: { index: 0, total: 3, onStep } });
     const group = within(screen.getByRole('radiogroup', { name: 'Nhóm' }));
     const paper = group.getByRole('radio', { name: 'Giấy & sổ' });
     const pen = group.getByRole('radio', { name: 'Bút & viết' });
@@ -261,6 +263,6 @@ describe('Ngăn kéo món — chọn nhóm bằng phím', () => {
     await userEvent.keyboard('{ArrowDown}');
     expect(pen).toHaveAttribute('aria-checked', 'true');
     expect(pen).toHaveFocus();
-    expect(onNext).not.toHaveBeenCalled();
+    expect(onStep).not.toHaveBeenCalled();
   });
 });

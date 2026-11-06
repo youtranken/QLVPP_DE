@@ -63,12 +63,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     }
 
     await openPage(page, 'catalog?view=table', 'Danh mục');
-    const [first, second, third] = await Promise.all(
-      [/^Đang dùng/, /^Sắp hết/, /^Hết hàng/].map(async (name) => (await page.getByRole('button', { name }).boundingBox())!),
-    );
-    expect(Math.round(first.y)).toBe(Math.round(second.y));
-    expect(Math.round(first.width)).toBe(Math.round(second.width));
-    expect(third.y).toBeGreaterThan(first.y + first.height);
+    await expect(page.getByRole('group', { name: 'Trạng thái' }).getByRole('button', { name: /^Đang dùng/ })).toBeVisible();
     await page.getByRole('main').getByRole('button', { name: 'Thêm món', exact: true }).tap();
     const drawer = page.getByRole('dialog', { name: 'Thêm món' });
     await expect(drawer).toBeVisible();

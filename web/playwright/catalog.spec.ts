@@ -86,7 +86,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       const confirm = page.getByRole('dialog', { name: `Ngừng ${itemName}?` });
       await confirm.getByRole('button', { name: 'Ngừng', exact: true }).click();
       await expect(page.getByText(itemName, { exact: true })).toBeHidden();
-      await page.getByRole('switch', { name: /^Hiện món đã ngừng/ }).click();
+      await page.getByRole('group', { name: 'Trạng thái' }).getByRole('button', { name: /^Đã ngừng/ }).click();
       const itemRow = page.getByRole('row').filter({ hasText: itemName });
       await expect(itemRow.getByText('Ngừng', { exact: true })).toBeVisible();
       await expect(itemRow.getByRole('switch', { name: `Mở lại ${itemName}` })).toBeVisible();

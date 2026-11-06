@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { asRole, devHeaders, expectNoContrastViolations, isMobile } from './helpers';
+import { asRole, devHeaders, expectNoContrastViolations, isMobile, removeTestItem, seedPwItem } from './helpers';
 
 const NAV_ORDER = ['Tháng này', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm món', 'Đơn vị tính', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 const LATER = ['Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ', 'Giao hàng (bản cũ)'];
@@ -231,6 +231,80 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
       return !!hit && el.contains(hit);
     });
     expect(onTop).toBe(true);
+  });
+});
+
+// Mọi route trong khung Hành chính (bảng route của spec), kể cả 404
+const FULL_WIDTH_ROUTES = ['home', 'summary', 'send-adm', 'arrivals', 'delivery', 'delivery/classic', 'backlog', 'reports', 'catalog', 'stock', 'review', 'categories', 'units', 'users', 'audit', 'config', 'khong-co-trang'];
+
+const panelAndViewport = (page: Page) =>
+  page.getByRole('main').evaluate((main) => ({ panel: main.firstElementChild!.getBoundingClientRect().width, vw: document.documentElement.clientWidth, scroll: document.scrollingElement!.scrollWidth }));
+
+test.describe('V2D-13 toàn màn hình và panel phủ', () => {
+  asRole('admin');
+
+  test('V2D-13 full width every route', async ({ page }, info) => {
+    test.setTimeout(240_000);
+    for (const width of isMobile(info) ? [390] : [1280, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const path of FULL_WIDTH_ROUTES) {
+        await page.goto(`/admin/${path}`);
+        await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
+        const m = await panelAndViewport(page);
+        if (width === 390) expect(m.scroll, `${path} cuộn ngang ở 390`).toBeLessThanOrEqual(m.vw);
+        else expect(Math.abs(m.panel - (m.vw - 252 - 40)), `${path} ở ${width}: panel ${m.panel}, vw ${m.vw}`).toBeLessThanOrEqual(2);
+      }
+    }
+  });
+
+  test('V2D-13 panel phủ Danh mục: không đẩy lưới, nền mờ phủ sidebar, 767/768, Back và F5, axe 390', async ({ page }, info) => {
+    const item = await seedPwItem(page);
+    try {
+      await page.goto(`/admin/catalog?q=${encodeURIComponent(item.name)}`);
+      const card = page.getByRole('article').filter({ hasText: item.name });
+      await expect(card).toBeVisible();
+      const before = (await card.boundingBox())!;
+      const length = await page.evaluate(() => history.length);
+      await card.getByRole('button', { name: `Sửa ${item.name}` }).click();
+      const panel = page.getByRole('dialog', { name: `Sửa món ${item.name}` });
+      await expect(panel).toBeVisible();
+      expect(await page.evaluate(() => history.length)).toBe(length + 1);
+      expect(await card.boundingBox()).toEqual(before);
+      if (isMobile(info)) {
+        await expect(panel.getByRole('button', { name: '← Đóng' })).toBeVisible();
+        expect(Math.round((await panel.boundingBox())!.width)).toBe(390);
+        await expectNoContrastViolations(page);
+      } else {
+        const onScrim = await page.evaluate(() => {
+          const hit = document.elementFromPoint(10, 10)!;
+          return getComputedStyle(hit).position === 'fixed' && !hit.closest('nav, main, [role="dialog"]');
+        });
+        expect(onScrim, 'điểm (10,10) thuộc nền mờ, không phải sidebar').toBe(true);
+        expect(Math.round((await panel.boundingBox())!.width)).toBe(440);
+        await page.setViewportSize({ width: 767, height: 900 });
+        await expect(panel.getByRole('button', { name: '← Đóng' })).toBeVisible();
+        expect(Math.round((await panel.boundingBox())!.width)).toBe(767);
+        await page.setViewportSize({ width: 768, height: 900 });
+        await expect(panel.getByRole('button', { name: '← Đóng' })).toHaveCount(0);
+        expect(Math.round((await panel.boundingBox())!.width)).toBe(440);
+        await page.setViewportSize({ width: 1280, height: 900 });
+      }
+      await page.goBack();
+      await expect(panel).toBeHidden();
+      expect(new URL(page.url()).searchParams.get('item')).toBeNull();
+      await page.goto(`/admin/catalog?item=${item.id}`);
+      await expect(panel).toBeVisible();
+      await page.reload();
+      await expect(panel).toBeVisible();
+      await panel.getByLabel(/^Tên món/).fill(`${item.name} X`);
+      await page.goBack();
+      await expect(page.getByRole('alertdialog').or(page.getByRole('dialog', { name: 'Bỏ thay đổi?' }))).toBeVisible();
+      expect(new URL(page.url()).searchParams.get('item')).toBe(item.id);
+      await page.getByRole('button', { name: 'Bỏ thay đổi' }).click();
+      await expect(panel).toBeHidden();
+    } finally {
+      await removeTestItem(page.request, item.id);
+    }
   });
 });
 

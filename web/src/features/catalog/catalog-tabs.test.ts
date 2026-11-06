@@ -7,13 +7,13 @@ const rows = toRows([PAPER, PEN, PENCIL, OLD, adminItem({ id: 'i-untracked', sto
 const tabsOf = (id: string) => CATALOG_TABS.filter((t) => inTab(rows.find((r) => r.id === id)!, t));
 
 describe('inTab', () => {
-  it('4 tab theo thứ tự Đang dùng · Sắp hết/hết · Chưa có ảnh · Đã ngừng', () => {
-    expect(CATALOG_TABS).toEqual<CatalogTab[]>(['active', 'low', 'noImage', 'inactive']);
+  it('3 tab theo thứ tự Đang dùng · Chưa có ảnh · Đã ngừng — không còn tab "Sắp hết/hết"', () => {
+    expect(CATALOG_TABS).toEqual<CatalogTab[]>(['active', 'noImage', 'inactive']);
   });
 
-  it('món đang dùng: luôn ở active; low = sắp hết HOẶC hết (stock_state low/out); noImage = thiếu ảnh', () => {
-    expect(tabsOf('i-paper')).toEqual(['active', 'low', 'noImage']);
-    expect(tabsOf('i-pencil')).toEqual(['active', 'low']);
+  it('món đang dùng: luôn ở active, tồn không quyết định tab; noImage = thiếu ảnh', () => {
+    expect(tabsOf('i-paper')).toEqual(['active', 'noImage']);
+    expect(tabsOf('i-pencil')).toEqual(['active']);
     expect(tabsOf('i-pen')).toEqual(['active']);
     expect(tabsOf('i-untracked')).toEqual(['active']);
   });
@@ -24,12 +24,12 @@ describe('inTab', () => {
   });
 
   it('tabCounts đếm đúng từng tab', () => {
-    expect(tabCounts(rows)).toEqual({ active: 4, low: 2, noImage: 1, inactive: 2 });
+    expect(tabCounts(rows)).toEqual({ active: 4, noImage: 1, inactive: 2 });
   });
 });
 
 describe('parseTab', () => {
-  it.each([['low', 'low'], ['noImage', 'noImage'], ['inactive', 'inactive'], ['active', 'active'], [null, 'active'], ['bậy', 'active']])('%s → %s', (raw, tab) => {
+  it.each([['low', 'active'], ['noImage', 'noImage'], ['inactive', 'inactive'], ['active', 'active'], [null, 'active'], ['bậy', 'active']])('%s → %s', (raw, tab) => {
     expect(parseTab(raw)).toBe(tab);
   });
 });

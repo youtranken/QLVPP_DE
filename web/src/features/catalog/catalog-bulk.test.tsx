@@ -102,10 +102,10 @@ describe('Danh mục — hàng loạt', () => {
   });
 
   it('đổi lọc làm 1 món đã chọn bị ẩn → bỏ chọn món đó, "Ngừng" chỉ PATCH món còn thấy', async () => {
-    const f = await openCatalog({ items: ITEMS });
+    const f = await openCatalog({ items: ITEMS.map((i) => (i.id === 'i-pencil' ? { ...i, image_file_id: null, missing_image: true } : i)) });
     await pickPens();
     expect(bulkBar().getByText('2 món đã chọn')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /^Hết hàng/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Chưa có ảnh/ }));
     expect(bulkBar().getByText('1 món đã chọn')).toBeInTheDocument();
     await userEvent.click(bulkBar().getByRole('button', { name: 'Ngừng' }));
     await userEvent.click(within(await screen.findByRole('dialog', { name: 'Ngừng 1 món?' })).getByRole('button', { name: 'Ngừng' }));

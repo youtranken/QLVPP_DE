@@ -88,7 +88,7 @@ describe('Danh mục — công tắc Dùng', () => {
   });
 
   it('"Mở lại Bút xóa cũ" PATCH {active:true} không cần hỏi', async () => {
-    const f = await openCatalog({ items: ITEMS }, '/admin/catalog?inactive=1');
+    const f = await openCatalog({ items: ITEMS }, '/admin/catalog?tab=inactive');
     await userEvent.click(inRow('Bút xóa cũ').getByRole('switch', { name: 'Mở lại Bút xóa cũ' }));
     expect(await screen.findByText('Đã mở lại Bút xóa cũ')).toBeInTheDocument();
     expect(patchCalls(f)).toEqual([{ id: 'i-old', body: { active: true } }]);

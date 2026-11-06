@@ -1,6 +1,6 @@
 [data-shell='admin'] .shell { --side-w: 252px; display: grid; grid-template-columns: var(--side-w) minmax(0, 1fr); min-height: 100vh; background: linear-gradient(160deg, var(--c-shell-a) 0%, var(--c-shell-b) 55%, var(--c-shell-c) 100%); }
 [data-shell='admin'] .shell__main { width: 100%; min-width: 0; padding: 16px 20px 24px; outline: none; }
-[data-shell='admin'] .shell__panel { max-width: 1280px; margin-inline: auto; min-height: calc(100dvh - 40px); padding: 24px; border-radius: var(--r-xl); background: linear-gradient(180deg, var(--c-panel-a) 0%, var(--c-panel-b) 100%); box-shadow: inset 0 1px 0 rgb(255 255 255 / .9); color: var(--c-ink); }
+[data-shell='admin'] .shell__panel { min-width: 0; min-height: calc(100dvh - 40px); padding: 24px; border-radius: var(--r-xl); background: linear-gradient(180deg, var(--c-panel-a) 0%, var(--c-panel-b) 100%); box-shadow: inset 0 1px 0 rgb(255 255 255 / .9); color: var(--c-ink); }
 [data-shell='admin'] .skip-link { background: var(--c-surface); color: var(--c-acc); border-radius: var(--r-sm); box-shadow: var(--e-3); }
 
 [data-shell='admin'] .side { position: sticky; top: 0; z-index: 20; height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; padding: 12px; border-right: 1px solid var(--c-glass-line); background: var(--c-glass); color: var(--c-on-dark-2); }

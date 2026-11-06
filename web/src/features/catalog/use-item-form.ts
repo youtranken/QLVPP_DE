@@ -47,7 +47,8 @@ function useItemDraft(item: AdminItem | null, defaultCategoryId: string | null |
   return { draft, initial, errors, missing, attempt, changes, set, fail };
 }
 
-export function useItemForm({ item, defaultCategoryId, onDone }: { item: AdminItem | null; defaultCategoryId?: string | null; onDone: () => void }) {
+// Sửa món: lưu xong panel ở lại món đó; thêm món và xóa món thì đóng panel
+export function useItemForm({ item, defaultCategoryId, onClose }: { item: AdminItem | null; defaultCategoryId?: string | null; onClose: () => void }) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const refresh = useRefreshCatalog();
@@ -58,10 +59,11 @@ export function useItemForm({ item, defaultCategoryId, onDone }: { item: AdminIt
   const [saving, setSaving] = useState(false);
   const inFlight = useRef(false);
 
-  const finish = (text: string) => {
+  const finish = (text: string, close: boolean) => {
     toast.show({ text, tone: 'ok' });
     void refresh();
-    onDone();
+    if (close) onClose();
+    else setSaving(false);
   };
 
   const submit = async () => {
@@ -69,12 +71,12 @@ export function useItemForm({ item, defaultCategoryId, onDone }: { item: AdminIt
     const miss = missingFields(d.draft, item ? d.initial : null);
     if (miss.length > 0) return d.fail(Object.fromEntries(miss.map((f) => [f, REQUIRED_ERROR[f]])), miss);
     const payload = itemPayload(d.draft, item);
-    if (item && Object.keys(payload).length === 0) return onDone();
+    if (item && Object.keys(payload).length === 0) return;
     inFlight.current = true;
     setSaving(true);
     try {
       await (item ? patchItem(item.id, payload, csrfToken) : createItem(payload, csrfToken));
-      finish(t(item ? 'catalog.drawer.saved' : 'catalog.drawer.added', { name: d.draft.name.trim() }));
+      finish(t(item ? 'catalog.drawer.saved' : 'catalog.drawer.added', { name: d.draft.name.trim() }), !item);
     } catch (error) {
       d.fail(fieldErrors(error, ITEM_ERROR_FIELD, ITEM_FIELDS));
       setSaving(false);
@@ -91,7 +93,7 @@ export function useItemForm({ item, defaultCategoryId, onDone }: { item: AdminIt
     setSaving(true);
     try {
       await deleteItem(item.id, csrfToken);
-      finish(t('catalog.drawer.deleted', { name: item.name }));
+      finish(t('catalog.drawer.deleted', { name: item.name }), true);
     } catch (error) {
       d.fail({ form: catalogErrorKey(error) });
       setSaving(false);

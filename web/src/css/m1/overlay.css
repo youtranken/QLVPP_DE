@@ -1,5 +1,5 @@
 [data-shell='admin'] .modal-backdrop { background: var(--c-scrim); }
-[data-shell='admin'] .modal-backdrop.drawer-backdrop { background: transparent; }
+[data-shell='admin'] .modal-backdrop.drawer-backdrop { background: rgb(14 42 51 / .32); backdrop-filter: blur(2px); }
 [data-shell='admin'] .dialog-viewport { padding: var(--s-4); }
 [data-shell='admin'] .sheet { width: 100%; max-width: 440px; border-radius: var(--r-xl); background: var(--c-surface); box-shadow: var(--e-5); color: var(--c-ink); animation: m1-dialog-in var(--d-3) var(--ease-out); }
 [data-shell='admin'] .sheet-header { display: flex; align-items: flex-start; gap: var(--s-3); padding: 24px 24px 8px; border-bottom: 0; }
@@ -25,9 +25,6 @@
 @keyframes m1-drawer-in { from { transform: translateX(100%); } }
 @keyframes m1-drawer-out { to { transform: translateX(100%); } }
 
-@media (min-width: 1440px) {
-  [data-shell='admin'] .has-drawer { padding-right: var(--drawer-w, 384px); transition: padding-right var(--d-3) var(--ease-out); }
-}
 /* !important: Dialog đặt max-width inline theo prop width/maxWidth, trên điện thoại phải phủ toàn màn */
 @media (max-width: 767px) {
   [data-shell='admin'] .dialog-viewport { place-items: end stretch; padding: 0; }
@@ -44,4 +41,30 @@
   [data-shell='admin'] .drawer .sheet-footer .btn,
   [data-shell='admin'] .drawer-footer .btn { flex: 1 1 auto; min-height: 48px; }
   [data-shell='admin'] .sheet-close { width: var(--hit); height: var(--hit); }
+}
+
+/* Panel phủ: nằm trên nội dung (không đẩy lưới), dưới hộp thoại (z 50) và toast (z 60) */
+[data-shell='admin'] .ovp-backdrop { position: fixed; inset: 0; z-index: 40; background: rgb(14 42 51 / .32); backdrop-filter: blur(2px); animation: ovp-fade 150ms ease-out; }
+[data-shell='admin'] .ovp-viewport { position: fixed; inset: 0; z-index: 40; display: flex; justify-content: flex-end; pointer-events: none; }
+[data-shell='admin'] .ovp { display: flex; flex-direction: column; width: 440px; height: 100%; border-radius: 20px 0 0 20px; background: rgb(255 255 255 / .86); backdrop-filter: blur(16px) saturate(1.2); box-shadow: var(--e-5); color: var(--c-ink); outline: none; pointer-events: auto; animation: ovp-in 200ms ease-out; }
+[data-shell='admin'] .ovp-bar { display: flex; flex-shrink: 0; align-items: center; height: 56px; padding: 0 var(--s-2); border-bottom: 1px solid var(--c-line); }
+[data-shell='admin'] .ovp-back { min-height: var(--hit); }
+[data-shell='admin'] .ovp-head { display: flex; flex-shrink: 0; align-items: center; gap: var(--s-1); min-height: 64px; padding: 0 var(--s-3) 0 var(--s-6); border-bottom: 1px solid var(--c-line); }
+[data-shell='admin'] .ovp-title { flex: 1; min-width: 0; margin: 0; color: var(--c-ink); font: var(--t-h3); overflow-wrap: anywhere; }
+[data-shell='admin'] .ovp-pos { flex: none; padding: 0 var(--s-1); color: var(--c-muted); font: var(--t-cap); }
+[data-shell='admin'] .ovp-icon { width: 36px; padding: 0; }
+[data-shell='admin'] .ovp-body { flex: 1; min-height: 0; overflow: auto; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--s-3); padding: var(--s-4) var(--s-6); }
+[data-shell='admin'] .ovp-foot { position: sticky; bottom: 0; display: flex; flex-shrink: 0; align-items: center; gap: var(--s-2); padding: var(--s-4) var(--s-6); border-top: 1px solid var(--c-line); }
+@keyframes ovp-in { from { transform: translateX(100%); } }
+@keyframes ovp-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  [data-shell='admin'] .ovp, [data-shell='admin'] .ovp-backdrop { animation: none; transition: none; }
+}
+@media (max-width: 767px) {
+  [data-shell='admin'] .ovp { width: 100%; border-radius: 0; }
+  [data-shell='admin'] .ovp-head { padding-left: var(--s-4); }
+  [data-shell='admin'] .ovp-icon { width: var(--hit); height: var(--hit); }
+  [data-shell='admin'] .ovp-body { padding: var(--s-4); }
+  [data-shell='admin'] .ovp-foot { flex-wrap: wrap; padding: var(--s-4) var(--s-4) calc(16px + env(safe-area-inset-bottom)); }
+  [data-shell='admin'] .ovp-foot .btn { flex: 1 1 auto; min-height: 48px; }
 }

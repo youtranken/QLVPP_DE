@@ -29,7 +29,7 @@ describe('Danh mục — chế độ xem', () => {
     expect(cards().length).toBeGreaterThan(0);
   });
 
-  it('?view=table → bảng cũ: thẻ thống kê, thao tác hàng loạt, không lưới', async () => {
+  it('?view=table → bảng: cùng tab trạng thái, thao tác hàng loạt, không lưới', async () => {
     await open(`${GRID}?view=table`);
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.queryByRole('article')).toBeNull();
@@ -49,22 +49,20 @@ describe('Danh mục — chế độ xem', () => {
 });
 
 describe('Danh mục lưới — tab', () => {
-  it('4 tab có số: Đang dùng 3 · Sắp hết/hết 2 · Chưa có ảnh 1 · Đã ngừng 1', async () => {
+  it('3 tab có số: Đang dùng 3 · Chưa có ảnh 1 · Đã ngừng 1; không còn "Sắp hết/hết"', async () => {
     await open();
     expect(tab(/^Đang dùng/)).toHaveTextContent('3');
-    expect(tab(/^Sắp hết\/hết/)).toHaveTextContent('2');
+    expect(screen.queryByRole('button', { name: /^Sắp hết/ })).toBeNull();
     expect(tab(/^Chưa có ảnh/)).toHaveTextContent('1');
     expect(tab(/^Đã ngừng/)).toHaveTextContent('1');
     expect(tab(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('Sắp hết/hết → ?tab=low: giấy (sắp hết) và bút chì (hết), không có bút bi', async () => {
-    await open();
-    await userEvent.click(tab(/^Sắp hết\/hết/));
-    expect(locationSearch()).toBe('?tab=low');
-    expect(screen.getByText('Giấy A4')).toBeInTheDocument();
-    expect(screen.getByText('Bút chì 2B')).toBeInTheDocument();
-    expect(screen.queryByText('Bút bi xanh')).toBeNull();
+  it('liên kết cũ ?tab=low → tab Đang dùng, tham số bị gỡ (replace), đủ 3 món đang dùng', async () => {
+    await open(`${GRID}?tab=low`);
+    await waitFor(() => expect(locationSearch()).toBe(''));
+    expect(tab(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'true');
+    expect(cards()).toHaveLength(3);
   });
 
   it('Đã ngừng chỉ hiện món ngừng; Đang dùng không hiện món ngừng', async () => {
@@ -92,7 +90,6 @@ describe('Danh mục lưới — tab', () => {
 describe('Danh mục lưới — tab rỗng', () => {
   it.each([
     ['inactive', 'Không có món đã ngừng.'],
-    ['low', 'Không có món sắp hết.'],
     ['noImage', 'Món nào cũng đã có ảnh.'],
   ])('tab %s rỗng, không lọc → "%s", không có "Bỏ lọc"', async (t, text) => {
     await open(`${GRID}?tab=${t}`, [PEN]);
@@ -161,5 +158,51 @@ describe('Danh mục lưới — tải và lỗi', () => {
     fail = false;
     await userEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
     await waitFor(() => expect(screen.getAllByRole('article').length).toBeGreaterThan(0));
+  });
+});
+
+describe('Danh mục — một thanh lọc cho lưới và bảng', () => {
+  it('lọc "giay" + nhóm Giấy & sổ ở lưới → đổi sang bảng giữ q/group/tab và cùng kết quả; bảng mở mọi nhóm', async () => {
+    await open(`${GRID}?tab=noImage`, [...ITEMS, adminItem({ id: 'i-note', name: 'Giấy note', category_id: 'c-pen', image_file_id: null, missing_image: true })]);
+    await userEvent.type(screen.getByRole('searchbox'), 'giay');
+    await waitFor(() => expect(locationSearch()).toContain('q=giay'));
+    await userEvent.click(within(screen.getByRole('group', { name: 'Lọc theo nhóm' })).getByRole('button', { name: /^Giấy & sổ/ }));
+    await waitFor(() => expect(cards()).toHaveLength(1));
+    expect(screen.getByText('Giấy A4')).toBeInTheDocument();
+    const before = new URLSearchParams(locationSearch());
+    await userEvent.click(screen.getByRole('button', { name: 'Bảng' }));
+    const after = new URLSearchParams(screen.getByTestId('location-search').textContent ?? '');
+    expect(['q', 'group', 'tab'].map((k) => after.get(k))).toEqual(['q', 'group', 'tab'].map((k) => before.get(k)));
+    expect(['giay', 'c-paper', 'noImage']).toEqual(['q', 'group', 'tab'].map((k) => after.get(k)));
+    expect(screen.getByRole('searchbox')).toHaveValue('giay');
+    expect(within(screen.getByRole('table')).getByText('Giấy A4')).toBeInTheDocument();
+    expect(screen.queryByText('Giấy note')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Thu tất cả' })).toBeInTheDocument();
+  });
+
+  it('bảng mở mọi nhóm ngay lần đầu (không cần bấm "Mở tất cả")', async () => {
+    await open(`${GRID}?view=table`);
+    expect(screen.getByText('Giấy A4')).toBeInTheDocument();
+    expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mở tất cả' })).toBeNull();
+  });
+
+  it('tìm không dấu ở bảng: "BUT CHI" khớp "Bút chì 2B"', async () => {
+    await open(`${GRID}?view=table`);
+    await userEvent.type(screen.getByRole('searchbox'), 'BUT CHI');
+    await waitFor(() => expect(screen.queryByText('Bút bi xanh')).toBeNull());
+    expect(screen.getByText('Bút chì 2B')).toBeInTheDocument();
+  });
+});
+
+describe('Danh mục — tồn chỉ để tham khảo', () => {
+  it.each(['', '?view=table'])('%s: chữ xám "Tủ: 0"/"Tủ: 2", không nhãn đỏ/cam hay "Hết"/"Sắp hết" về tồn', async (search) => {
+    await open(`${GRID}${search}`);
+    expect(screen.getByText('Tủ: 0')).toBeInTheDocument();
+    expect(screen.getByText('Tủ: 2')).toBeInTheDocument();
+    expect(screen.getByText('Tủ: 0').closest('.tag--danger, .tag--warn')).toBeNull();
+    const stockTags = [...document.querySelectorAll('.tag--danger, .tag--warn')].filter((el) => /hết|Còn \d/i.test(el.textContent ?? ''));
+    expect(stockTags).toEqual([]);
+    expect(screen.queryByText(/^(Hết|Hết hàng|Sắp hết)$/)).toBeNull();
   });
 });

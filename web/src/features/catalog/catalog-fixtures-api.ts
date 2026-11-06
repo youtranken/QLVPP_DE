@@ -5,24 +5,13 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import type { AdminItem, Category, ItemPayload } from './catalog.api';
 import { CATEGORIES } from './catalog-fixtures';
-import { OPEN_GROUPS_KEY } from './use-group-collapse';
 
 interface Options {
   items: AdminItem[];
   categories?: Category[];
   patch?: (id: string, body: ItemPayload) => Response | Promise<Response>;
-  // Mặc định trang thu gọn mọi nhóm; phần lớn test cần thấy món nên mở sẵn
-  groupsOpen?: boolean | 'keep';
 }
 
-
-function seedOpenGroups({ items, categories = CATEGORIES, groupsOpen = true }: Options) {
-  if (groupsOpen === 'keep') return;
-  sessionStorage.removeItem(OPEN_GROUPS_KEY);
-  if (!groupsOpen) return;
-  const keys = [...categories.map((c) => c.id), ...items.map((i) => i.category_id ?? 'none'), 'none'];
-  sessionStorage.setItem(OPEN_GROUPS_KEY, JSON.stringify([...new Set(keys)]));
-}
 
 // Server giả giữ trạng thái: PATCH thành công đổi món, lần tải lại trả bản mới
 export function stubCatalog({ items, categories = CATEGORIES, patch }: Options) {
@@ -62,7 +51,6 @@ export const locationSearch = () => {
 
 export async function openCatalog(opts: Options, path = '/admin/catalog', rawUrl = false) {
   mockViewport(1280);
-  seedOpenGroups(opts);
   const fetchMock = stubCatalog(opts);
   renderApp(makeMe('admin'), rawUrl ? path : withTable(path));
   await screen.findByRole('group', { name: 'Lọc theo nhóm', hidden: true });

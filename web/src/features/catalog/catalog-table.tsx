@@ -131,14 +131,9 @@ export function CatalogTable({ rows, index, loading, selection, rowErrors, activ
 
 function GroupAside({ groupKey, name, list, onAdd }: { groupKey: string; name: string; list: CatalogRow[]; onAdd: (id: string) => void }) {
   const { t } = useTranslation();
-  const low = list.filter((r) => r.stock_state === 'low').length;
-  const out = list.filter((r) => r.stock_state === 'out').length;
-  const meta = [t('catalog.list.groupItems', { n: list.length })];
-  if (low > 0) meta.push(t('catalog.list.groupLow', { k: low }));
-  if (out > 0) meta.push(t('catalog.list.groupOut', { h: out }));
   return (
     <>
-      <span className="ct-group-meta">{meta.join(' · ')}</span>
+      <span className="ct-group-meta">{t('catalog.list.groupItems', { n: list.length })}</span>
       {groupKey === NO_GROUP ? (
         <span className="ct-icon-btn" aria-hidden="true" />
       ) : (

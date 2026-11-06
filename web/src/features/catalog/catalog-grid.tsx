@@ -13,13 +13,14 @@ interface Props {
   rows: CatalogRow[];
   index: CategoryIndex;
   loading: boolean;
+  openId?: string | null;
   onEdit: (id: string) => void;
   emptyAction: ReactNode;
   tab: CatalogTab;
   narrowed: boolean;
 }
 
-export function CatalogGrid({ rows, index, loading, onEdit, emptyAction, tab, narrowed }: Props) {
+export function CatalogGrid({ rows, index, loading, openId, onEdit, emptyAction, tab, narrowed }: Props) {
   const { t, i18n } = useTranslation();
   if (loading) return <Skeleton {...CARDS} />;
   if (rows.length === 0 && !narrowed && tab !== 'active') return <EmptyState art="no-match" title={t(`catalog.grid.empty.${tab}`)} />;
@@ -31,7 +32,7 @@ export function CatalogGrid({ rows, index, loading, onEdit, emptyAction, tab, na
   return (
     <div className="ct-grid">
       {rows.map((r) => (
-        <CatalogCard key={r.id} row={r} groupName={groupName(r.group)} onEdit={onEdit} />
+        <CatalogCard key={r.id} row={r} groupName={groupName(r.group)} open={r.id === openId} onEdit={onEdit} />
       ))}
     </div>
   );

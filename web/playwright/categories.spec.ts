@@ -125,11 +125,9 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
 
       await page.goto('/admin/catalog?view=table');
       await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Mở tất cả' })).toBeVisible();
-      await expect(page.getByText(names[0], { exact: true })).toBeHidden();
+      await expect(page.getByRole('button', { name: 'Thu tất cả' })).toBeVisible();
       const head = page.getByRole('row').filter({ hasText: category });
       await expect(head.getByText('Nhóm đang ngừng')).toBeVisible();
-      await head.getByRole('button', { expanded: false }).click();
       const row = page.getByRole('row').filter({ hasText: names[0] });
       await expect(row.getByText('Nhóm đang ngừng')).toBeVisible();
       await expect(row.getByText('PW item EN 1')).toBeVisible();

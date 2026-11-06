@@ -1,12 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, screen, userEvent, within } from '@/test/test-utils';
+import { screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { CATEGORIES, OLD, PAPER, PEN, PENCIL, STRAY, adminItem } from './catalog-fixtures';
 import { inRow, locationSearch, openCatalog, rowOf } from './catalog-fixtures-api';
-import { OPEN_GROUPS_KEY } from './use-group-collapse';
 
 const ITEMS = [PAPER, PEN, PENCIL, OLD];
 const location = locationSearch;
-const card = (name: RegExp) => screen.getByRole('button', { name });
+const tab = (name: RegExp) => screen.getByRole('button', { name });
 const chips = () => within(screen.getByRole('group', { name: 'Lọc theo nhóm' }));
 const groupHead = (name: string) => screen.getByRole('button', { name: `Thêm món vào nhóm ${name}` }).closest('tr') as HTMLElement;
 
@@ -22,47 +21,24 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
     expect(within(screen.getByRole('main')).getByRole('link', { name: 'Nhóm món' })).toHaveAttribute('href', '/admin/categories');
   });
 
-  it('thẻ chỉ đếm món đang dùng: Đang dùng 3 món · 2 nhóm, Sắp hết 1, Hết hàng 1, Thiếu ảnh 1', async () => {
+  it('không còn thẻ thống kê tồn (Sắp hết/Hết hàng); bảng dùng tab trạng thái Đang dùng 3 · Chưa có ảnh 1 · Đã ngừng 1', async () => {
     await openCatalog({ items: ITEMS });
-    expect(card(/^Đang dùng/)).toHaveTextContent('3');
-    expect(card(/^Đang dùng/)).toHaveTextContent('2 nhóm');
-    expect(card(/^Sắp hết/)).toHaveTextContent('1');
-    expect(card(/^Hết hàng/)).toHaveTextContent('1');
-    expect(card(/^Thiếu ảnh/)).toHaveTextContent('đang hiện ảnh tạm');
-    expect(card(/^Thiếu ảnh/)).not.toHaveTextContent('không chọn được');
+    expect(screen.queryByRole('button', { name: /^Sắp hết/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Hết hàng/ })).toBeNull();
+    expect(tab(/^Đang dùng/)).toHaveTextContent('3');
+    expect(tab(/^Chưa có ảnh/)).toHaveTextContent('1');
+    expect(tab(/^Đã ngừng/)).toHaveTextContent('1');
   });
 
-  it('thẻ "Thiếu ảnh" → ?filter=noimage, chỉ món thiếu ảnh, "Đang lọc: Thiếu ảnh · 1"; bấm lại bỏ lọc', async () => {
+  it('tab "Chưa có ảnh" → ?tab=noImage, chỉ món thiếu ảnh; về "Đang dùng" thì hết lọc', async () => {
     await openCatalog({ items: ITEMS });
-    await userEvent.click(card(/^Thiếu ảnh/));
-    expect(location()).toBe('?filter=noimage');
-    expect(card(/^Thiếu ảnh/)).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByText('Đang lọc: Thiếu ảnh · 1')).toBeInTheDocument();
+    await userEvent.click(tab(/^Chưa có ảnh/));
+    expect(location()).toBe('?tab=noImage');
     expect(screen.queryByText('Bút bi xanh')).toBeNull();
     expect(inRow('Giấy A4').getByText('Thiếu ảnh')).toBeInTheDocument();
-    await userEvent.click(card(/^Thiếu ảnh/));
+    await userEvent.click(tab(/^Đang dùng/));
     expect(location()).toBe('');
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
-  });
-
-  it('thẻ "Đang dùng" chỉ aria-pressed khi không có lọc nhóm/tìm/thẻ', async () => {
-    await openCatalog({ items: ITEMS });
-    expect(card(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'true');
-    await userEvent.click(chips().getByRole('button', { name: /^Bút & viết/ }));
-    expect(card(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'false');
-  });
-
-  it.each(['?q=but', '?cat=c-pen', '?filter=low'])('mở với %s → "Đang dùng" không pressed', async (search) => {
-    await openCatalog({ items: ITEMS }, `/admin/catalog${search}`);
-    expect(card(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'false');
-  });
-
-  it('thẻ "Đang dùng" bỏ mọi lọc (filter, nhóm)', async () => {
-    await openCatalog({ items: ITEMS }, '/admin/catalog?filter=out&cat=c-pen');
-    expect(screen.queryByText('Giấy A4')).toBeNull();
-    await userEvent.click(card(/^Đang dùng/));
-    expect(location()).toBe('');
-    expect(screen.getByText('Giấy A4')).toBeInTheDocument();
   });
 
   it('chip nhóm aria-pressed; chọn "Bút & viết" → ?cat=c-pen chỉ còn món nhóm đó; "Tất cả nhóm" trả lại', async () => {
@@ -71,7 +47,7 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
     const pens = chips().getByRole('button', { name: /^Bút & viết/ });
     expect(pens).toHaveTextContent('2');
     await userEvent.click(pens);
-    expect(location()).toBe('?cat=c-pen');
+    expect(location()).toBe('?group=c-pen');
     expect(pens).toHaveAttribute('aria-pressed', 'true');
     expect(chips().getByRole('button', { name: /^Tất cả nhóm/ })).toHaveAttribute('aria-pressed', 'false');
     expect(screen.queryByText('Giấy A4')).toBeNull();
@@ -79,13 +55,11 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
     expect(screen.getByText('Giấy A4')).toBeInTheDocument();
   });
 
-  it('công tắc "Hiện món đã ngừng (1)" → ?inactive=1, món ngừng hiện kèm badge "Ngừng"', async () => {
+  it('tab "Đã ngừng" → ?tab=inactive, món ngừng hiện kèm badge "Ngừng"', async () => {
     await openCatalog({ items: ITEMS });
     expect(screen.queryByText('Bút xóa cũ')).toBeNull();
-    const toggle = screen.getByRole('switch', { name: 'Hiện món đã ngừng (1)' });
-    await userEvent.click(toggle);
-    expect(location()).toBe('?inactive=1');
-    expect(toggle).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(tab(/^Đã ngừng/));
+    expect(location()).toBe('?tab=inactive');
     expect(inRow('Bút xóa cũ').getByText('Ngừng')).toBeInTheDocument();
   });
 
@@ -106,12 +80,13 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
 });
 
 describe('Danh mục — bảng nhóm', () => {
-  it('nhóm theo thứ tự nhóm, tiêu đề "{n} món · {k} sắp hết · {h} hết hàng"', async () => {
+  it('nhóm theo thứ tự nhóm, tiêu đề chỉ "{n} món" (không đếm sắp hết/hết hàng)', async () => {
     await openCatalog({ items: ITEMS });
     const heads = screen.getAllByRole('button', { name: /^Thêm món vào nhóm / }).map((b) => b.getAttribute('aria-label'));
     expect(heads).toEqual(['Thêm món vào nhóm Giấy & sổ', 'Thêm món vào nhóm Bút & viết']);
-    expect(groupHead('Giấy & sổ')).toHaveTextContent('1 món · 1 sắp hết');
-    expect(groupHead('Bút & viết')).toHaveTextContent('2 món · 1 hết hàng');
+    expect(groupHead('Giấy & sổ')).toHaveTextContent('1 món');
+    expect(groupHead('Giấy & sổ')).not.toHaveTextContent('sắp hết');
+    expect(groupHead('Bút & viết')).not.toHaveTextContent('hết hàng');
   });
 
   it('món có category_id lạ → nhóm "Chưa xếp nhóm" ở cuối, không lỗi (Review Focus 5)', async () => {
@@ -126,15 +101,17 @@ describe('Danh mục — bảng nhóm', () => {
     expect(screen.getByRole('checkbox', { name: /^Chọn cả nhóm Chưa xếp nhóm/ })).toBeInTheDocument();
   });
 
-  it('hàng: mã, quy cách, ĐVT, tồn + nhãn trạng thái, badge "Chỉ Hành chính"/"Thiếu ảnh"; mã trống hiện "—"', async () => {
+  it('hàng: mã, quy cách, ĐVT, "Tủ: n" xám không nhãn tồn, badge "Chỉ Hành chính"/"Thiếu ảnh"; mã trống hiện "—"', async () => {
     await openCatalog({ items: ITEMS });
     expect(screen.getByRole('columnheader', { name: 'Mã' })).toBeInTheDocument();
     expect(inRow('Bút bi xanh').getByText('VPP-010')).toBeInTheDocument();
     expect(inRow('Bút bi xanh').getByText('hộp 20 cây')).toBeInTheDocument();
     expect(inRow('Bút bi xanh').getByText('cây')).toBeInTheDocument();
     expect(inRow('Bút chì 2B').getAllByText('—')).toHaveLength(2);
-    expect(inRow('Bút chì 2B').getByText('Hết hàng')).toBeInTheDocument();
-    expect(inRow('Giấy A4').getByText('Sắp hết')).toBeInTheDocument();
+    expect(inRow('Bút chì 2B').getByText('Tủ: 0')).toBeInTheDocument();
+    expect(inRow('Bút chì 2B').queryByText('Hết hàng')).toBeNull();
+    expect(inRow('Giấy A4').getByText('Tủ: 2')).toBeInTheDocument();
+    expect(inRow('Giấy A4').queryByText('Sắp hết')).toBeNull();
     expect(inRow('Giấy A4').getByText('Chỉ Hành chính')).toBeInTheDocument();
     expect(inRow('Bút bi xanh').getByRole('img', { name: 'Bút bi xanh' })).toHaveAttribute('src', '/api/files/f-2');
   });
@@ -175,12 +152,12 @@ describe('Danh mục — bảng nhóm', () => {
     expect(await screen.findByRole('dialog', { name: 'Sửa món Bút bi xanh' })).toBeInTheDocument();
   });
 
-  it('145 món nhập không ảnh, không nhóm: một nhóm "Chưa xếp nhóm", thẻ Thiếu ảnh 145', async () => {
+  it('145 món nhập không ảnh, không nhóm: một nhóm "Chưa xếp nhóm", tab Chưa có ảnh 145', async () => {
     const many = Array.from({ length: 145 }, (_, i) =>
       adminItem({ id: `i-${i}`, name: `Món nhập ${i}`, category_id: null, image_file_id: null, missing_image: true }),
     );
     await openCatalog({ items: many, categories: CATEGORIES });
-    expect(card(/^Thiếu ảnh/)).toHaveTextContent('145');
+    expect(tab(/^Chưa có ảnh/)).toHaveTextContent('145');
     expect(screen.queryAllByRole('button', { name: /^Thêm món vào nhóm / })).toHaveLength(0);
     expect(screen.getAllByText(/^Món nhập \d+$/)).toHaveLength(145);
     // 145 hàng thật: khi cả bộ test chạy song song có thể quá 5 s mặc định
@@ -207,59 +184,26 @@ describe('Danh mục — cột Tên tiếng Anh, nhóm đang ngừng', () => {
 
   it('món tự ngừng trong nhóm ngừng (active=false) chỉ có nhãn "Ngừng"', async () => {
     const both = adminItem({ id: 'i-b', name: 'Bút hỏng', category_id: 'c-old', active: false, usable: false });
-    await openCatalog({ items: [PEN, both] }, '/admin/catalog?inactive=1');
+    await openCatalog({ items: [PEN, both] }, '/admin/catalog?tab=inactive');
     expect(inRow('Bút hỏng').getByText('Ngừng')).toBeInTheDocument();
     expect(inRow('Bút hỏng').queryByText('Nhóm đang ngừng')).toBeNull();
   });
 });
 
-describe('Danh mục — thu gọn nhóm mặc định', () => {
-  const closed = { items: ITEMS, groupsOpen: false };
-
-  it('mở trang lần đầu: mọi nhóm thu gọn, chỉ còn tiêu đề nhóm; nút "Mở tất cả"', async () => {
-    await openCatalog(closed);
-    expect(screen.queryByText('Bút bi xanh')).toBeNull();
-    expect(screen.queryByText('Giấy A4')).toBeNull();
-    expect(groupHead('Bút & viết')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Mở tất cả' })).toBeInTheDocument();
-  });
-
-  it('mở một nhóm → nhớ trong sessionStorage; tải lại trang nhóm đó vẫn mở, nhóm khác vẫn thu', async () => {
-    await openCatalog(closed);
-    await userEvent.click(within(groupHead('Bút & viết')).getByRole('button', { expanded: false }));
+describe('Danh mục — bảng mở mọi nhóm mặc định', () => {
+  it('mở trang: mọi nhóm mở, thấy mọi món; nút là "Thu tất cả"', async () => {
+    await openCatalog({ items: ITEMS });
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
-    expect(JSON.parse(sessionStorage.getItem(OPEN_GROUPS_KEY) ?? '[]')).toEqual(['c-pen']);
-    cleanup();
-    await openCatalog({ ...closed, groupsOpen: 'keep' });
-    expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
-    expect(screen.queryByText('Giấy A4')).toBeNull();
-  });
-
-  it('tìm có kết quả → tự mở nhóm chứa kết quả dù đang thu', async () => {
-    await openCatalog(closed, '/admin/catalog?q=but chi');
-    expect(screen.getByText('Bút chì 2B')).toBeInTheDocument();
-  });
-
-  it('lọc theo nhóm (?cat=) cũng mở nhóm đó', async () => {
-    await openCatalog(closed, '/admin/catalog?cat=c-paper');
     expect(screen.getByText('Giấy A4')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Thu tất cả' })).toBeInTheDocument();
   });
 
-  it('sessionStorage hỏng/không đọc được → vẫn hiện trang, mọi nhóm thu gọn', async () => {
-    const get = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new Error('blocked');
-    });
-    const set = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('blocked');
-    });
-    try {
-      await openCatalog({ ...closed, groupsOpen: false });
-      expect(screen.queryByText('Bút bi xanh')).toBeNull();
-      await userEvent.click(screen.getByRole('button', { name: 'Mở tất cả' }));
-      expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
-    } finally {
-      get.mockRestore();
-      set.mockRestore();
-    }
+  it('thu một nhóm rồi tìm → nhóm thu vẫn thu (người dùng chọn), nhóm khác mở', async () => {
+    await openCatalog({ items: ITEMS });
+    await userEvent.click(within(groupHead('Giấy & sổ')).getByRole('button', { expanded: true }));
+    expect(screen.queryByText('Giấy A4')).toBeNull();
+    await userEvent.type(screen.getByRole('searchbox'), 'but');
+    await waitFor(() => expect(location()).toBe('?q=but'));
+    expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
   });
 });

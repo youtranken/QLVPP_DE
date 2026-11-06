@@ -28,6 +28,7 @@ const common: Messages<typeof vi> = {
     discardBody: 'What you just entered will be lost.',
     discardOk: 'Discard changes',
     discardKeep: 'Keep editing',
+    panel: { close: '← Close', position: '{{i}}/{{n}}', discardTitle: 'Discard changes?', stay: 'Stay' },
     selectAll: 'Select all',
     selectRow: 'Select row',
     reorder: {

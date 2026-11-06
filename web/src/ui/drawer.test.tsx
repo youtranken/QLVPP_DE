@@ -145,22 +145,13 @@ describe('Drawer — trả focus và đẩy nội dung', () => {
     await waitFor(() => expect(opener).toHaveFocus());
   });
 
-  it('≥ 1440 px (1440): mở thêm has-drawer vào #main, đóng thì gỡ', async () => {
-    mockViewport(1440);
-    const { container } = renderWithI18n(<Opener />);
-    const main = container.querySelector('#main')!;
-    expect(main).not.toHaveClass('has-drawer');
-    await userEvent.click(screen.getByRole('button', { name: 'Mở Bút bi xanh' }));
-    expect(main).toHaveClass('has-drawer');
-    await userEvent.click(screen.getByRole('button', { name: 'Hủy' }));
-    expect(main).not.toHaveClass('has-drawer');
-  });
-
-  it('1439 px: phủ lên, không thêm has-drawer', async () => {
-    mockViewport(1439);
+  it.each([1440, 1920])('%i px: phủ lên, không đẩy #main (không has-drawer, không padding-right)', async (w) => {
+    mockViewport(w);
     const { container } = renderWithI18n(<Opener />);
     await userEvent.click(screen.getByRole('button', { name: 'Mở Bút bi xanh' }));
-    expect(container.querySelector('#main')).not.toHaveClass('has-drawer');
+    const main = container.querySelector<HTMLElement>('#main')!;
+    expect(main).not.toHaveClass('has-drawer');
+    expect(main.style.getPropertyValue('--drawer-w')).toBe('');
   });
 
   it('không có #main: mở ngăn vẫn chạy, không lỗi', () => {

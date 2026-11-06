@@ -30,7 +30,7 @@
 [data-shell='admin'] .au-table tr[aria-expanded]:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--c-acc); }
 [data-shell='admin'] .au-table tr[aria-expanded='true'] td { background: var(--c-surface-2); }
 [data-shell='admin'] .table .dt-expanded td { height: auto; padding: var(--s-3) var(--s-4) var(--s-4); background: var(--c-surface-2); }
-[data-shell='admin'] .au-detail { display: grid; gap: var(--s-2); max-width: 880px; min-width: 0; }
+[data-shell='admin'] .au-detail { display: grid; gap: var(--s-2); min-width: 0; }
 [data-shell='admin'] .au-diff { width: 100%; border-collapse: collapse; font: var(--t-sm); }
 [data-shell='admin'] .table .au-diff th, [data-shell='admin'] .table .au-diff td, [data-shell='admin'] .au-diff th, [data-shell='admin'] .au-diff td { height: auto; padding: 8px 8px; border-bottom: 1px solid var(--c-line); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
 [data-shell='admin'] .table .au-diff th { position: static; height: auto; background: none; color: var(--c-ink); font: var(--t-sm); font-weight: 700; white-space: normal; }

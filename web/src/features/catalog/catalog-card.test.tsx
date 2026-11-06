@@ -48,20 +48,22 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Thẻ món dạng lưới', () => {
-  it('hiện nhóm, nhãn tồn, tên, mã · ĐVT · tối đa', async () => {
+  it('hiện nhóm, "Tủ: 10" xám để tham khảo, tên, mã · ĐVT · tối đa', async () => {
     stub();
     renderCard(PEN);
     expect(screen.getByText('Giấy & sổ')).toBeInTheDocument();
-    expect(screen.getByText('Còn 10')).toBeInTheDocument();
+    expect(screen.getByText('Tủ: 10')).toHaveClass('ct-card__stock');
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
     expect(await screen.findByText('VPP-010 · cây · tối đa 10/tháng')).toBeInTheDocument();
     expect(screen.queryByText('Tải ảnh lên')).toBeNull();
   });
 
-  it('hết hàng → nhãn "Hết"', () => {
+  it('tủ 0 → "Tủ: 0" xám, không nhãn "Hết", không .tag--danger/.tag--warn', () => {
     stub();
     renderCard(PENCIL);
-    expect(screen.getByText('Hết')).toBeInTheDocument();
+    expect(screen.getByText('Tủ: 0')).toBeInTheDocument();
+    expect(screen.queryByText('Hết')).toBeNull();
+    expect(document.querySelector('.tag--danger, .tag--warn, .ct-card__stock--out, .ct-card__stock--low')).toBeNull();
   });
 
   it('"Sửa" gọi onEdit với id món', async () => {
