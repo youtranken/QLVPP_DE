@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useState } from 'react';
+import { flushSync } from 'react-dom';
 import { BrowserRouter, useLocation } from 'react-router-dom';
 import { act, render, screen, userEvent, waitFor } from '@/test/test-utils';
 import { useDirtyBackGuard, usePanelParam } from '@/lib/use-panel-param';
@@ -208,5 +209,34 @@ describe('useDirtyBackGuard — Back hai lần, tự đóng', () => {
     expect(text('id')).toBe('m1');
     await answer(true);
     await waitFor(() => expect(text('id')).toBe(''));
+  });
+});
+
+describe('useDirtyBackGuard — thứ tự trình nghe popstate như Chrome', () => {
+  // Chrome gọi trình nghe trên window theo thứ tự đăng ký (capture không đi trước); router đăng ký trước panel.
+  // jsdom cho capture đi trước nên giả router bằng capture đăng ký trước để có đúng thứ tự của Chrome
+  // và React 19 cập nhật đồng bộ trong popstate: panel bị gỡ ngay trong lượt router, trước khi chặn của panel kịp chạy
+  it('router nghe popstate trước và gỡ panel đồng bộ → Back trên panel đã sửa vẫn hỏi, panel còn', async () => {
+    window.history.replaceState(null, '', '/admin/catalog');
+    window.history.pushState(null, '', '/admin/catalog?item=m1');
+    let hide = () => {};
+    const routerFirst = () => flushSync(() => hide());
+    window.addEventListener('popstate', routerFirst, true);
+    function Host({ ask }: { ask: () => Promise<boolean> }) {
+      const [shown, setShown] = useState(true);
+      hide = () => setShown(false);
+      return shown ? <Guarded ask={ask} /> : <output data-testid="gone" />;
+    }
+    const { ask, answer } = asker();
+    try {
+      render(<Host ask={ask} />);
+      await back();
+      await waitFor(() => expect(ask).toHaveBeenCalledTimes(1));
+      expect(screen.queryByTestId('gone')).toBeNull();
+      await answer(false);
+      await waitFor(() => expect(window.location.search).toBe('?item=m1'));
+    } finally {
+      window.removeEventListener('popstate', routerFirst, true);
+    }
   });
 });

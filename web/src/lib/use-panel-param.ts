@@ -68,7 +68,27 @@ const guards = new Set<{ selfClose: boolean }>();
 // Chặn vòng lặp khi tiến lại về mục panel (Back nhiều lần trong lúc hộp hỏi đang mở)
 const MAX_RESTORE_STEPS = 50;
 
-// BrowserRouter không có useBlocker: nghe popstate ở pha capture (trước router) và giữ router đứng yên trong lúc hỏi.
+// Chrome gọi trình nghe trên window theo thứ tự đăng ký (capture không được đi trước), và React 19 cập nhật đồng bộ
+// trong popstate: nếu router nghe trước thì panel bị gỡ (kèm trình nghe của nó) trước khi kịp chặn. Vì vậy một trình
+// nghe chung đăng ký lúc nạp module — trước khi BrowserRouter mount — rồi chuyển cho các chặn đang gắn.
+type PopHandler = (e: PopStateEvent) => boolean;
+const popHandlers = new Set<PopHandler>();
+if (typeof window !== 'undefined') {
+  window.addEventListener(
+    'popstate',
+    (e) => {
+      for (const handle of [...popHandlers]) {
+        if (handle(e)) {
+          e.stopImmediatePropagation();
+          return;
+        }
+      }
+    },
+    true,
+  );
+}
+
+// BrowserRouter không có useBlocker: nghe popstate qua trình nghe chung (trước router) và giữ router đứng yên trong lúc hỏi.
 // Không đẩy lại lịch sử ngay trong popstate (Chrome coi là thao tác không do người dùng); "Ở lại" mới đẩy lại, sau cú bấm.
 export function useDirtyBackGuard(dirty: boolean, ask: () => Promise<boolean>) {
   const latest = useRef({ dirty, ask });
@@ -84,21 +104,20 @@ export function useDirtyBackGuard(dirty: boolean, ask: () => Promise<boolean>) {
     let restoring: { url: string; steps: number } | null = null;
     const me = { selfClose: false };
     guards.add(me);
-    const onPop = (e: PopStateEvent) => {
+    // true = giữ router đứng yên (đang hỏi / đang tiến lại về panel)
+    const onPop: PopHandler = () => {
       if (restoring) {
-        e.stopImmediatePropagation();
         if (window.location.href === restoring.url || ++restoring.steps >= MAX_RESTORE_STEPS) restoring = null;
         else window.history.go(1);
-        return;
+        return true;
       }
       if (me.selfClose || pass) {
         me.selfClose = false;
         pass = false;
-        return;
+        return false;
       }
-      if (!asking && !latest.current.dirty) return;
-      e.stopImmediatePropagation();
-      if (asking) return;
+      if (!asking && !latest.current.dirty) return false;
+      if (asking) return true;
       asking = true;
       const panelEntry = entry.current;
       const listUrl = window.location.href;
@@ -108,6 +127,7 @@ export function useDirtyBackGuard(dirty: boolean, ask: () => Promise<boolean>) {
         pass = true;
         window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }));
       });
+      return true;
     };
     const onUnload = (e: BeforeUnloadEvent) => {
       if (!latest.current.dirty) return;
@@ -123,11 +143,11 @@ export function useDirtyBackGuard(dirty: boolean, ask: () => Promise<boolean>) {
       restoring = { url: panelEntry.url, steps: 0 };
       window.history.go(1);
     };
-    window.addEventListener('popstate', onPop, true);
+    popHandlers.add(onPop);
     window.addEventListener('beforeunload', onUnload);
     return () => {
       guards.delete(me);
-      window.removeEventListener('popstate', onPop, true);
+      popHandlers.delete(onPop);
       window.removeEventListener('beforeunload', onUnload);
     };
   }, []);
