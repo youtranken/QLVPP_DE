@@ -5,6 +5,7 @@ const common = {
     logoLetter: 'V',
   },
   common: {
+    lockPhrase: '00:00 ngày {{day}}',
     loading: 'Đang tải…',
     checkingSession: 'Đang kiểm tra phiên đăng nhập…',
     systemError: 'Không kết nối được máy chủ — thử lại sau ít phút.',

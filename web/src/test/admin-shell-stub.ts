@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import { jsonResponse } from '@/test/test-utils';
 
-export const SHELL_PERIOD = { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 4, previous: null };
+export const SHELL_PERIOD = { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 4, previous: null, owed: [] };
 
 type Route = (init?: RequestInit) => Response;
 

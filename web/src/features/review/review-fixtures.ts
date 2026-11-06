@@ -19,6 +19,9 @@ export function reviewRow(over: Partial<ReviewRow> = {}): ReviewRow {
     previously_accepted: false,
     item_id: null,
     created_at: '2026-11-03T07:20:00.000Z',
+    in_sent_snapshot: null,
+    in_sent_snapshot_qty: null,
+    in_sent_snapshot_at: null,
     ...over,
   };
 }

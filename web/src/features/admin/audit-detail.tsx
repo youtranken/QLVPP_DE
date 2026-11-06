@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { AuditEntry } from './admin.api';
+import type { AuditBatch, AuditEntry } from './admin.api';
 import { changedFields, otherDetail } from './audit-diff';
 import { auditObjectRef } from './audit-object';
 
@@ -9,8 +9,27 @@ type Translate = (key: string, opts?: { defaultValue?: string }) => string;
 // Khóa chưa có nhãn (api thêm trường mới) hiện tên thô thay vì trống
 const fieldLabel = (t: Translate, key: string) => t(`audit.fields.${key}`, { defaultValue: key });
 
+function BatchItems({ batch }: { batch: AuditBatch }) {
+  const { t, i18n } = useTranslation();
+  return (
+    <ul className="au-batch" aria-label={t('audit.batch.items')}>
+      {batch.items.map((i) => (
+        <li key={i.item_id}>{t('audit.batch.line', { name: (i18n.language === 'en' && i.name_en) || i.name, qty: i.qty })}</li>
+      ))}
+    </ul>
+  );
+}
+
 export function AuditDetail({ entry, id }: { entry: AuditEntry; id: string }) {
   const { t } = useTranslation();
+  if (entry.batch) {
+    return (
+      <div id={id} className="au-detail">
+        <BatchItems batch={entry.batch} />
+        <p className="au-muted">{t('audit.detail.eventId', { id: entry.id })}</p>
+      </div>
+    );
+  }
   const d = entry.detail !== null && typeof entry.detail === 'object' ? (entry.detail as Record<string, unknown>) : {};
   const hasSides = 'before' in d || 'after' in d;
   const fields = hasSides ? changedFields(d.before, d.after) : null;

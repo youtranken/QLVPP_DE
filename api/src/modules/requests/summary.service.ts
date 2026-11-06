@@ -95,9 +95,16 @@ export class SummaryService {
     return rows[0].n;
   }
 
-  async unregistered(ym: string): Promise<{ items: UnregisteredUser[] }> {
+  // registered_subs cùng tập S: trang Nhân viên ghi Đã đăng ký/Chưa mà người ngoài S không thành "Đã đăng ký"
+  async unregistered(
+    ym: string,
+  ): Promise<{ items: UnregisteredUser[]; registered_subs: string[] }> {
     await this.assertViewable(ym);
-    return { items: await this.unregisteredRows(ym) };
+    const [items, registered] = await Promise.all([
+      this.unregisteredRows(ym),
+      this.registeredSubs(ym),
+    ]);
+    return { items, registered_subs: registered };
   }
 
   // Người nhận nhắc: cùng tập với danh sách chưa đăng ký, không kiểm kỳ theo đồng hồ (cron truyền now riêng)
@@ -171,6 +178,15 @@ export class SummaryService {
              (SELECT count(*) FROM s WHERE sub NOT IN (SELECT sub FROM owners))::int AS unregistered
     `);
     return rows[0];
+  }
+
+  private async registeredSubs(ym: string): Promise<string[]> {
+    const s = await this.peopleSet(ym);
+    const { rows } = await this.db.execute<{ sub: string }>(sql`
+      WITH ${s.cte}
+      SELECT sub FROM s WHERE sub IN (SELECT sub FROM owners) ORDER BY sub
+    `);
+    return rows.map((r) => r.sub);
   }
 
   private async unregisteredRows(ym: string): Promise<UnregisteredUser[]> {

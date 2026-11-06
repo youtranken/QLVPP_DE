@@ -133,3 +133,33 @@ function toBellLine(r: BellRow): BellLine {
         reason_note: r.reason_note,
       };
 }
+
+export interface MemberAdjustment {
+  line_id: string;
+  name: string;
+  name_en: string | null;
+  unit: string;
+  before: number;
+  after: number;
+  reason_code: AdjustReason;
+  reason_note: string | null;
+  at: string;
+}
+
+export async function requestAdjustments(
+  ex: Executor,
+  requestId: string,
+): Promise<MemberAdjustment[]> {
+  const { rows } = await ex.execute<
+    MemberAdjustment & Record<string, unknown>
+  >(sql`
+    SELECT a.line_id, a.name, i.name_en, a.unit, a.qty_before AS before, a.qty_after AS after,
+           a.reason_code, a.reason_note,
+           to_char(a.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS at
+    FROM request_line_adjustments a
+    LEFT JOIN items i ON i.id = a.item_id
+    WHERE a.request_id = ${requestId}
+    ORDER BY a.created_at, a.id
+  `);
+  return rows;
+}

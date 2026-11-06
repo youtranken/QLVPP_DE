@@ -14,7 +14,8 @@ function build(previousRows: unknown[]) {
     .fn()
     // openPeriod: kỳ mở có deadline > now
     .mockResolvedValueOnce({ rows: [{ ym: '2026-11', deadline }] })
-    .mockResolvedValueOnce({ rows: previousRows });
+    .mockResolvedValueOnce({ rows: previousRows })
+    .mockResolvedValueOnce({ rows: [] });
   const config = { getInt: jest.fn().mockResolvedValue(10) };
   const db = { execute } as never;
   const periods = new PeriodsService(
@@ -41,6 +42,7 @@ describe('CurrentPeriodService.get', () => {
     await expect(service.get('u1', 'member')).resolves.toEqual({
       ...PERIOD_NOV,
       previous: null,
+      owed: [],
     });
     expect(clock.now).toHaveBeenCalledTimes(1);
   });
@@ -61,6 +63,7 @@ describe('CurrentPeriodService.get', () => {
       await expect(service.get('u1', role)).resolves.toEqual({
         ...PERIOD_NOV,
         previous: null,
+        owed: [],
       });
       expect(execute).toHaveBeenCalledTimes(1);
     },

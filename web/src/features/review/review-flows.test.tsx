@@ -48,10 +48,10 @@ describe('ReviewPage — xử lý dòng', () => {
     mockViewport(1280);
     stub(() => jsonResponse(400, { code: 'REASON_REQUIRED' }));
     renderApp(makeMe('admin'), '/admin/review');
-    await open('Băng keo 2 mặt', /^Từ chối —/);
+    await open('Băng keo 2 mặt', /^Không mua —/);
     const dialog = screen.getByRole('dialog');
     await userEvent.type(within(dialog).getByLabelText(/^Lý do từ chối/), 'abc');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Không mua' }));
     await waitFor(() => expect(within(dialog).getByLabelText(/^Lý do từ chối/)).toHaveAttribute('aria-invalid', 'true'));
     expect(within(dialog).getByText('Nhập lý do từ chối (ít nhất 3 ký tự).')).toBeInTheDocument();
   });
@@ -60,14 +60,14 @@ describe('ReviewPage — xử lý dòng', () => {
     mockViewport(1280);
     stub(() => jsonResponse(200, reviewResult('rejected', { review_note: 'Kho còn' })));
     renderApp(makeMe('admin'), '/admin/review');
-    const a = await open('Băng keo 2 mặt', /^Từ chối —/);
+    const a = await open('Băng keo 2 mặt', /^Không mua —/);
     const dialog = screen.getByRole('dialog');
     await userEvent.type(within(dialog).getByLabelText(/^Lý do từ chối/), 'Kho còn');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Không mua' }));
     expect(await within(a).findByText('Đã từ chối')).toBeInTheDocument();
     expect(within(a).getByText('Lý do: Kho còn')).toBeInTheDocument();
     expect(within(a).getByText('vừa xong')).toBeInTheDocument();
-    expect(within(a).queryByRole('button', { name: /^Chấp nhận/ })).toBeNull();
+    expect(within(a).queryByRole('button', { name: /^Mua lần này/ })).toBeNull();
     expect(screen.getByText('Đã từ chối Băng keo 2 mặt')).toBeInTheDocument();
   });
 
@@ -75,10 +75,10 @@ describe('ReviewPage — xử lý dòng', () => {
     mockViewport(1280);
     const fetchMock = stub(() => jsonResponse(200, reviewResult('accepted')));
     renderApp(makeMe('admin'), '/admin/review');
-    const a = await open('Băng keo 2 mặt', /^Chấp nhận —/);
+    const a = await open('Băng keo 2 mặt', /^Mua lần này —/);
     const dialog = screen.getByRole('dialog');
     expect(dialog).toHaveTextContent('Hành chính sẽ mua 2 cái cho phiếu tháng 11 của Phạm Văn Đức.');
-    await userEvent.dblClick(within(dialog).getByRole('button', { name: 'Chấp nhận' }));
+    await userEvent.dblClick(within(dialog).getByRole('button', { name: 'Mua lần này' }));
     expect(await within(a).findByText('Đã chấp nhận')).toBeInTheDocument();
     expect(posts(fetchMock)).toHaveLength(1);
     expect(screen.getByText('Đã chấp nhận Băng keo 2 mặt')).toBeInTheDocument();
@@ -92,9 +92,9 @@ describe('ReviewPage — xử lý dòng', () => {
       return jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' });
     }, () => taken);
     renderApp(makeMe('admin'), '/admin/review');
-    await open('Băng keo 2 mặt', /^Chấp nhận —/);
+    await open('Băng keo 2 mặt', /^Mua lần này —/);
     const dialog = screen.getByRole('dialog');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Chấp nhận' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Mua lần này' }));
     expect(await within(dialog).findByText('Dòng này vừa được xử lý ở nơi khác.')).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Quay lại' }));
     await waitFor(() => expect(screen.queryByRole('article', { name: 'Băng keo 2 mặt' })).toBeNull());
@@ -106,20 +106,20 @@ describe('ReviewPage — xử lý dòng', () => {
     mockViewport(1280);
     stub(() => jsonResponse(500, {}));
     renderApp(makeMe('admin'), '/admin/review');
-    await open('Băng keo 2 mặt', /^Từ chối —/);
+    await open('Băng keo 2 mặt', /^Không mua —/);
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByLabelText(/^Lý do từ chối/)).toHaveAttribute('aria-required', 'true');
     expect(dialog).toHaveTextContent('Lý do từ chối *');
     expect(within(dialog).getByText('Ít nhất 3 ký tự. Viết cho người đăng ký đọc.')).toBeInTheDocument();
     expect(within(dialog).getByRole('button', { name: 'Quay lại' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Từ chối' })).toHaveClass('btn--danger', 'btn--solid');
+    expect(within(dialog).getByRole('button', { name: 'Không mua' })).toHaveClass('btn--danger', 'btn--solid');
   });
 
   it('Chấp nhận: hộp có nút "Quay lại"', async () => {
     mockViewport(1280);
     stub(() => jsonResponse(500, {}));
     renderApp(makeMe('admin'), '/admin/review');
-    await open('Băng keo 2 mặt', /^Chấp nhận —/);
+    await open('Băng keo 2 mặt', /^Mua lần này —/);
     expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Quay lại' })).toBeInTheDocument();
   });
 
@@ -133,8 +133,8 @@ describe('ReviewPage — xử lý dòng', () => {
     renderApp(makeMe('admin'), '/admin/review');
     expect(await screen.findByRole('radio', { name: /^Chờ xem,\s*2$/ })).toBeInTheDocument();
     const before = fetchMock.mock.calls.filter((c) => c[0] === '/api/admin/review?status=pending').length;
-    const a = await open('Băng keo 2 mặt', /^Chấp nhận —/);
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Chấp nhận' }));
+    const a = await open('Băng keo 2 mặt', /^Mua lần này —/);
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Mua lần này' }));
     await within(a).findByText('Đã chấp nhận', { selector: '.tag' });
     expect(await screen.findByRole('radio', { name: /^Chờ xem,\s*1$/ })).toBeInTheDocument();
     await waitFor(() => expect(fetchMock.mock.calls.filter((c) => c[0] === '/api/admin/review?status=pending').length).toBeGreaterThan(before));
@@ -144,12 +144,12 @@ describe('ReviewPage — xử lý dòng', () => {
 
 describe('ReviewPage — Thêm vào danh mục', () => {
   async function openConvert(name = 'Băng keo 2 mặt') {
-    await open(name, /^Thêm vào danh mục —/);
+    await open(name, /^Mua và thêm vào danh mục —/);
     const dialog = screen.getByRole('dialog');
     await within(dialog).findByRole('radio', { name: 'Văn phòng' });
     return dialog;
   }
-  const submit = (d: HTMLElement) => userEvent.click(within(d).getByRole('button', { name: 'Thêm vào danh mục' }));
+  const submit = (d: HTMLElement) => userEvent.click(within(d).getByRole('button', { name: 'Mua và thêm vào danh mục' }));
 
   it('dòng không ảnh: ô "Ảnh món *" bắt buộc; bấm Thêm mà chưa tải → lỗi ở ô ảnh, không gửi', async () => {
     mockViewport(1280);

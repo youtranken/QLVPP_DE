@@ -19,6 +19,7 @@ import { SummaryItemTable } from './summary-item-table';
 import { SummaryPersonTable } from './summary-person-table';
 import { SummaryStats } from './summary-stats';
 import { UnregisteredTable } from './unregistered-table';
+import { OpenPeriodNotice } from './open-period-notice';
 import { usePeriodSummary, type PeriodSummary } from './summary.api';
 import { useRequestOrder } from './use-person-table-rows';
 import { useSummaryParams, type SummaryView } from './use-summary-params';
@@ -93,6 +94,7 @@ export function SummaryPage() {
           ),
         },
       )}
+      <OpenPeriodNotice />
       {summary.isError && <LoadError onRetry={() => void summary.refetch()} />}
       {data && <SummaryStats summary={data} stock={stock} filter={p.filter} onFilter={p.toggleFilter} />}
       <Toolbar
@@ -121,7 +123,7 @@ export function SummaryPage() {
         ) : p.filter === 'unregistered' ? (
           <UnregisteredTable ym={ym} onClearFilter={p.clearFilter} />
         ) : p.view === 'item' ? (
-          <SummaryItemTable ym={ym} q={p.q} lowOnly={p.filter === 'low'} />
+          <SummaryItemTable ym={ym} q={p.q} lowOnly={p.filter === 'low'} item={p.item} onClearItem={p.clearItem} />
         ) : (
           <SummaryPersonTable
             ym={ym}

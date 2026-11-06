@@ -22,6 +22,14 @@ export interface AuditEntry {
   objectLabel?: AuditObjectLabel | null;
   detail: unknown;
   createdAt: string;
+  // Dòng gộp một lần Lưu hàng về
+  batch?: AuditBatch;
+}
+
+export interface AuditBatch {
+  ym: string;
+  units: number;
+  items: { item_id: string; name: string; name_en: string | null; qty: number }[];
 }
 
 export interface AuditFilters {

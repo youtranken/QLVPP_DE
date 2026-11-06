@@ -1,4 +1,4 @@
-/* Thẻ món + lưới (NhanVienPC.dc.html): ô ảnh 120, nhãn nhóm, badge số, nút thêm / stepper */
+/* Thẻ món + lưới (NhanVienPC.dc.html): ô ảnh 1:1, nhãn nhóm, badge số, nút thêm / stepper */
 [data-shell='member'] .rq-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 176px), 1fr)); gap: var(--s-4); }
 [data-shell='member'] .rq-card { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; padding: var(--s-2); border: 0; border-radius: 20px; background: var(--c-surface); box-shadow: 0 4px 16px rgb(var(--sh-ink) / .08); }
 [data-shell='member'] .rq-card.is-picked { box-shadow: inset 0 0 0 2px var(--c-warn-fill), 0 4px 16px rgb(var(--sh-ink) / .08); }

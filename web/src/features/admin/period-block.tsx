@@ -1,23 +1,22 @@
 import { useTranslation } from 'react-i18next';
-import { vnLockDate } from '@/lib/format-time';
+import { langOf } from '@/lib/period-text';
 import { shiftYm } from '@/lib/ym';
 import { FormField } from '@/ui/form-field';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { periodClears, type PeriodDraft } from './config-form';
 import { ConfigSection } from './config-section';
 import { DayInput } from './day-input';
+import { effectiveSentence } from './effective-period';
 import { PeriodPreview } from './period-preview';
 import type { ConfigBlockState } from './use-config-block';
 
 export function PeriodBlock({ state }: { state: ConfigBlockState<PeriodDraft> }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const period = useCurrentPeriod().data;
   const { draft, errors, update } = state;
   const err = (k: keyof PeriodDraft) => (errors[k] ? t(errors[k]) : undefined);
   const set = (k: keyof PeriodDraft) => (v: string) => update((d) => ({ ...d, [k]: v }), periodClears(k));
-  const note = period
-    ? t('config.period.noteLocked', { month: Number(period.ym.slice(5)), date: vnLockDate(period.deadline) })
-    : t('config.period.note');
+  const note = period ? effectiveSentence(t, langOf(i18n.language), period, draft.registration_last_day) : t('config.period.note');
 
   return (
     <ConfigSection title={t('config.period.title')} saveLabel={t('config.period.save')} state={state}>
@@ -65,7 +64,7 @@ export function PeriodBlock({ state }: { state: ConfigBlockState<PeriodDraft> })
           )}
         </FormField>
       </div>
-      <p className="alert">{note}</p>
+      <p className="alert" aria-live="polite">{note}</p>
       {period && <PeriodPreview ym={shiftYm(period.ym, 1)} lastDay={draft.registration_last_day} reminder={draft.reminder_days_left} />}
     </ConfigSection>
   );

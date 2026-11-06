@@ -25,6 +25,8 @@ export interface CartLine {
   added_by_admin: boolean;
   review_status: ReviewStatus | null;
   label: CartLabel;
+  // Tối đa/tháng bị hạ dưới số đã lưu: giữ được số cũ, không tăng thêm
+  lowered: { max: number; qty: number } | null;
 }
 
 export type CustomLineInput = Pick<CartLine, 'custom_name' | 'custom_unit' | 'custom_note' | 'image_file_id' | 'qty'>;
@@ -80,6 +82,7 @@ function fromView(l: LineView, ctx: CartContext): CartLine {
     added_by_admin: l.added_by_admin,
     review_status: l.review_status,
     label,
+    lowered: l.item_id && l.max_qty != null && l.qty > l.max_qty ? { max: l.max_qty, qty: l.qty } : null,
   };
 }
 
@@ -105,6 +108,7 @@ function fromItem(i: MemberItem, qty: number, prior?: CartLine): CartLine {
     added_by_admin: false,
     review_status: base?.review_status ?? 'n/a',
     label: base?.label ?? itemLabel(i),
+    lowered: base?.lowered ?? null,
   };
 }
 
@@ -170,6 +174,7 @@ export function useCart(server: RequestView | null, ctx: CartContext, initial?: 
       added_by_admin: false,
       review_status: 'pending',
       label: { name: c.custom_name ?? '', name_en: null, unit: c.custom_unit, pack_note: null, image_file_id: c.image_file_id, category_id: null },
+      lowered: null,
     };
   };
 

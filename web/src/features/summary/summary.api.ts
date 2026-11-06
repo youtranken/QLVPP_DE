@@ -104,8 +104,9 @@ export function useItemRows(ym: string | undefined) {
   });
 }
 
+// registered_subs: cùng tập người của kỳ, đã có phiếu (api cũ không có → coi như rỗng)
 export const fetchUnregistered = (ym: string) =>
-  apiFetch<{ items: UnregisteredUser[] }>(`${base(ym)}/unregistered`);
+  apiFetch<{ items: UnregisteredUser[]; registered_subs?: string[] }>(`${base(ym)}/unregistered`);
 
 export function useUnregistered(ym: string | undefined) {
   return useQuery({ queryKey: [...SUMMARY_KEY, ym, 'unregistered'], enabled: !!ym, queryFn: () => fetchUnregistered(ym!) });

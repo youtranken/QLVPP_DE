@@ -10,16 +10,15 @@ import type { CartLine } from './use-cart';
 
 const REVIEW_TONE = { pending: 'tag--warn', accepted: 'tag--ok', rejected: 'tag--danger' } as const;
 
-// Nhãn ngoài DM luôn hiện; trạng thái xem chỉ có khi dòng đã lưu
-function CustomTags({ line }: { line: CartLine }) {
+// Nhãn ngoài DM luôn hiện; trạng thái xem chỉ có khi dòng đã lưu. Kỳ đang mở Hành chính chưa xem → nói giờ bắt đầu xem
+function CustomTags({ line, lockAt }: { line: CartLine; lockAt?: string }) {
   const { t } = useTranslation();
   const status = line.id && line.review_status && line.review_status in REVIEW_TONE ? line.review_status : null;
+  const text = status === 'pending' && lockAt ? t('request.cart.review.pendingOpen', { lock: lockAt }) : status && t(`request.cart.review.${status}`);
   return (
     <>
       <span className="tag tag--info">{t('request.cart.custom')}</span>
-      {status && (
-        <span className={`tag ${REVIEW_TONE[status as keyof typeof REVIEW_TONE]}`}>{t(`request.cart.review.${status}`)}</span>
-      )}
+      {status && <span className={`tag ${REVIEW_TONE[status as keyof typeof REVIEW_TONE]}`}>{text}</span>}
     </>
   );
 }
@@ -28,6 +27,7 @@ function CartRow({
   line,
   error,
   tone,
+  lockAt,
   onQty,
   onRemove,
   onEdit,
@@ -35,6 +35,7 @@ function CartRow({
   line: CartLine;
   error?: string;
   tone: Tone;
+  lockAt?: string;
   onQty: (n: number) => void;
   onRemove: () => void;
   onEdit: () => void;
@@ -56,8 +57,11 @@ function CartRow({
           <span className="rq-line-name" title={name}>{name}</span>
         )}
         <span className="rq-line-qty num">{t('request.cart.qty', { qty: line.qty, unit: fmt.unit(line.label.unit) })}</span>
-        {!line.item_id && <CustomTags line={line} />}
+        {!line.item_id && <CustomTags line={line} lockAt={lockAt} />}
         {line.review_status === 'converted' && <span className="tag tag--ok">{t('request.cart.review.converted')}</span>}
+        {line.lowered && !line.readonly && (
+          <span className="rq-line-max">{t('request.cart.loweredMax', line.lowered)}</span>
+        )}
         {line.added_by_admin && (
           <span className="tag" title={t('request.cart.adminAddedHint', { contact })}>
             {t('request.cart.adminAdded')}
@@ -119,6 +123,7 @@ export function CartPanel({
   showSave,
   sheet = false,
   saveLabel,
+  lockAt,
   canSave,
   panelRef,
   onQty,
@@ -138,6 +143,8 @@ export function CartPanel({
   // Trong sheet điện thoại: h2 là tiêu đề dialog, có nút đóng; nút Lưu nằm đáy, ngoài danh sách cuộn
   sheet?: boolean;
   saveLabel: string;
+  // Câu khóa sổ của kỳ đang mở (dòng ngoài DM: "Hành chính xem từ …")
+  lockAt?: string;
   canSave: boolean;
   panelRef: RefObject<HTMLDivElement | null>;
   onQty: (key: string, n: number) => void;
@@ -174,6 +181,7 @@ export function CartPanel({
               line={l}
               error={errors[l.key]}
               tone={groupTone(categories, l.label.category_id)}
+              lockAt={lockAt}
               onQty={(n) => onQty(l.key, n)}
               onRemove={() => onRemove(l.key)}
               onEdit={() => onEdit(l.key)}

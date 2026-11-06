@@ -52,6 +52,7 @@
 [data-shell='member'] .rq-line-stepper button:disabled { color: var(--c-faint); cursor: default; }
 [data-shell='member'] .rq-line-stepper input { width: 100%; min-width: 0; border: 0; background: transparent; text-align: center; font: var(--t-body-l); font-weight: 800; color: var(--c-ink); appearance: textfield; -moz-appearance: textfield; }
 [data-shell='member'] .rq-line-stepper input::-webkit-outer-spin-button, [data-shell='member'] .rq-line-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+[data-shell='member'] .rq-line-max { flex: 1 1 100%; color: var(--c-ink-2); font: var(--t-label); }
 [data-shell='member'] .rq-line-error { grid-column: 1 / -1; margin: 0; color: var(--c-danger); font: var(--t-label); }
 [data-shell='member'] .rq-ghost { width: 100%; min-height: 44px; border: 1px dashed var(--c-cart-dash); border-radius: var(--r-pill); background: transparent; color: var(--c-cart-ink); font: var(--t-label); cursor: pointer; }
 [data-shell='member'] .rq-ghost:hover { background: var(--c-surface); }

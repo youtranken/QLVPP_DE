@@ -17,6 +17,7 @@ async function savePeriodWhileOtherAdminChanged() {
   await retype(screen.getByLabelText('Tên và cách liên hệ Hành chính'), 'chị Hoa');
   await retype(screen.getByLabelText('Hạn đăng ký (ngày)'), '12');
   await userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
+  await userEvent.click(await screen.findByRole('button', { name: 'Lưu hạn mới' }));
   await screen.findByText('Đã lưu Kỳ đăng ký');
   return fetchMock;
 }

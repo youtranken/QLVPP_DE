@@ -21,6 +21,7 @@ const mk = (n: number, over: Partial<CartLine> = {}): CartLine => ({
   added_by_admin: false,
   review_status: null,
   label: { name: `Món ${n}`, name_en: `Item ${n}`, unit: 'cay', pack_note: null, image_file_id: null, category_id: null },
+  lowered: null,
   ...over,
 });
 

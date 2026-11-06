@@ -19,7 +19,7 @@ export const CONFIG = {
   admin_contact: 'chị Bình — Hành chính',
 };
 
-export const PERIOD = { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 9, previous: null };
+export const PERIOD = { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 9, previous: null, owed: [] };
 
 const user = (sub: string, fullName: string, groups: string[]) => ({
   sub,

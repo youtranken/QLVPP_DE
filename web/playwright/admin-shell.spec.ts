@@ -1,8 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { asRole, devHeaders, expectNoContrastViolations, isMobile, removeTestItem, seedPwItem } from './helpers';
 
-const NAV_ORDER = ['Tháng này', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm & đơn vị', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
-const LATER = ['Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ'];
+const NAV_ORDER = ['Tháng này', 'Tổng hợp kỳ', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm & đơn vị', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 const OPEN_MENU = /^(Mở menu quản lý|Open admin menu)$/;
 
 // Bell: topbar on phone, bottom of sidebar (next to avatar) elsewhere
@@ -15,7 +14,7 @@ const sidebarWidth = (page: Page) =>
 test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
   asRole('admin');
 
-  test('E9-S1 shell Hành chính: sidebar 4 nhóm (cột 12 mục + nhóm Xem lại sau thu gọn; menu điện thoại đủ 16), thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
+  test('E9-S1 shell Hành chính: sidebar 3 nhóm, 14 mục theo luồng chuẩn (cột và menu điện thoại như nhau), thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
     await page.goto('/admin/catalog');
     await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
     await expect(bellOf(page, isMobile(info))).toBeVisible();
@@ -24,9 +23,9 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
       await page.getByRole('button', { name: OPEN_MENU }).click();
     }
     const side = page.getByRole('navigation', { name: 'Menu quản lý' });
-    await expect(side.getByRole('group')).toHaveCount(4);
+    await expect(side.getByRole('group')).toHaveCount(3);
     const titles = await side.getByRole('link').evaluateAll((links) => links.map((a) => a.getAttribute('title')));
-    expect(titles).toEqual(isMobile(info) ? [...NAV_ORDER, ...LATER] : NAV_ORDER);
+    expect(titles).toEqual(NAV_ORDER);
     await expect(side.getByRole('link', { name: 'Danh mục món', exact: true })).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('link', { name: /Phiếu của tôi/ })).toHaveCount(0);
     await expect(page.getByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng \d+ · đang mở/ })).toBeVisible();
@@ -163,29 +162,18 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     const logout = (await user.getByRole('button', { name: 'Đăng xuất' }).boundingBox())!;
     expect(bell.y).toBeGreaterThanOrEqual((await name.boundingBox())!.y + 10);
     expect(logout.x + logout.width).toBeLessThanOrEqual(252);
-    await page.setViewportSize({ width: 1280, height: 720 });
-    const nav = page.getByRole('navigation', { name: 'Menu quản lý' });
-    expect(await nav.evaluate((el) => el.scrollHeight - el.clientHeight), '12 mục (nhóm Xem lại sau thu gọn), .side__link 36px, vừa 1280×720, nav không phải cuộn').toBeLessThanOrEqual(1);
   });
 
-  test('v2-B R2: mở nhóm "Xem lại sau" thì nav cuộn được nhưng khối tài khoản vẫn trong màn 1280×720', async ({ page }, info) => {
+  test('V2D-20 14 mục ở 1280×720: nav cuộn được nếu cần, khối tài khoản vẫn trong màn, mục cuối với tới được', async ({ page }, info) => {
     test.skip(isMobile(info), 'chỉ đo ở 1280');
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('/admin/home');
     const nav = page.getByRole('navigation', { name: 'Menu quản lý' });
-    const toggle = nav.getByRole('button', { name: 'Xem lại sau' });
-    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    await expect(nav.getByRole('link', { name: 'Còn nợ' })).toHaveCount(0);
-    await toggle.click();
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    await expect(nav.getByRole('link', { name: 'Còn nợ' })).toBeAttached();
-    const user = page.getByRole('group', { name: 'Tài khoản và ngôn ngữ' });
-    await expect(user).toBeInViewport({ ratio: 1 });
+    await expect(nav.getByRole('group', { name: 'Hằng tháng' }).getByRole('link')).toHaveCount(7);
+    await expect(page.getByRole('group', { name: 'Tài khoản và ngôn ngữ' })).toBeInViewport({ ratio: 1 });
     expect(await nav.evaluate((el) => getComputedStyle(el).overflowY)).toBe('auto');
-    await nav.getByRole('link', { name: 'Còn nợ' }).scrollIntoViewIfNeeded();
-    await expect(nav.getByRole('link', { name: 'Còn nợ' })).toBeInViewport();
-    await page.reload();
-    await expect(page.getByRole('navigation', { name: 'Menu quản lý' }).getByRole('button', { name: 'Xem lại sau' })).toHaveAttribute('aria-expanded', 'true');
+    await nav.getByRole('link', { name: 'Cấu hình' }).scrollIntoViewIfNeeded();
+    await expect(nav.getByRole('link', { name: 'Cấu hình' })).toBeInViewport();
   });
 
   test('E9-S1 khối tài khoản luôn trong màn hình, chuông nổi trên nội dung, số đếm không bị cắt', async ({ page }, info) => {

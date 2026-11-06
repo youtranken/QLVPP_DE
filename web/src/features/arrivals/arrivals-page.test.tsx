@@ -266,7 +266,7 @@ describe('Hàng về — biên ô Về đợt này', () => {
   it('kỳ chưa khóa: thông báo, không bảng', async () => {
     stub({ summary: FUTURE });
     await open();
-    expect(await screen.findByText('Kỳ tháng 10 chưa khóa sổ, mở lại sau 11/10.')).toBeInTheDocument();
+    expect(await screen.findByText('Kỳ tháng 10 chưa khóa sổ — xem được từ 00:00 ngày 11/10.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Lưu hàng về' })).not.toBeInTheDocument();
   });
 

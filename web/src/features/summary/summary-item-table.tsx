@@ -21,7 +21,7 @@ function groupOf(item: AdminItem | undefined, row: ItemSummaryRow, cats: Categor
   return item?.category_id && cats.some((c) => c.id === item.category_id) ? item.category_id : NONE;
 }
 
-function useRows(ym: string, q: string, lowOnly: boolean) {
+function useRows(ym: string, q: string, lowOnly: boolean, only: string | null) {
   const rows = useItemRows(ym);
   const items = useAdminItems();
   const cats = useAllCategories();
@@ -37,10 +37,11 @@ function useRows(ym: string, q: string, lowOnly: boolean) {
         const item = r.item_id ? byId.get(r.item_id) : undefined;
         return { ...r, id: r.key, item, group: groupOf(item, r, catList), tone: groupTone(catList, item?.category_id ?? null) };
       })
+      .filter((r) => !only || r.key === only)
       .filter((r) => !lowOnly || (!!r.item?.usable && (r.item.stock_state === 'low' || r.item.stock_state === 'out')))
       .filter((r) => !q || matchesSearch(r.name, q))
       .sort((a, b) => custom(a) - custom(b) || (custom(a) ? 0 : compareItems(keyOf(a), keyOf(b))));
-  }, [rows.data, items.data, cats.data, q, lowOnly]);
+  }, [rows.data, items.data, cats.data, q, lowOnly, only]);
   return { data, rows, cats: cats.data ?? [] };
 }
 
@@ -86,9 +87,20 @@ function useColumns() {
   );
 }
 
-export function SummaryItemTable({ ym, q, lowOnly }: { ym: string; q: string; lowOnly: boolean }) {
+interface Props {
+  ym: string;
+  q: string;
+  lowOnly: boolean;
+  item: string | null;
+  onClearItem: () => void;
+}
+
+export function SummaryItemTable({ ym, q, lowOnly, item, onClearItem }: Props) {
   const { t, i18n } = useTranslation();
-  const { data, rows, cats } = useRows(ym, q, lowOnly);
+  const fmt = useRequestFormat();
+  const { data, rows, cats } = useRows(ym, q, lowOnly, item);
+  // Món đã lọc không còn trong kỳ: nút vẫn hiện để bỏ lọc
+  const only = item ? data.find((r) => r.key === item) : undefined;
   const columns = useColumns();
   if (rows.isError) return <LoadError onRetry={() => void rows.refetch()} />;
   const groupName = (key: string) => {
@@ -101,12 +113,17 @@ export function SummaryItemTable({ ym, q, lowOnly }: { ym: string; q: string; lo
       <p className="sm-item-note">
         <Link to={`/admin/reports?ym=${ym}`}>{t('summary.table.toReports')}</Link>
       </p>
+      {item && (
+        <button type="button" className="flt-chip" aria-pressed="true" onClick={onClearItem}>
+          {only ? t('summary.table.onlyItem', { name: only.item ? fmt.name(only.item) : only.name }) : t('summary.table.onlyItemGone')}
+        </button>
+      )}
       <DataTable
         data={data}
         columns={columns}
         stackOnMobile
         loading={rows.isPending}
-        emptyText={t(q || lowOnly ? 'summary.page.noItems' : 'summary.table.emptyItems')}
+        emptyText={t(q || lowOnly || item ? 'summary.page.noItems' : 'summary.table.emptyItems')}
         empty={{ art: 'no-match' }}
         groupBy={{
           key: (r) => r.group,

@@ -15,7 +15,8 @@ import { SyncNotice, type SyncState } from './sync-result';
 import { UserDrawer } from './user-drawer';
 import { UsersStats } from './users-stats';
 import { UsersTable, type UserRow } from './users-table';
-import { applyUsersView, departmentsOf, usersStats } from './users-rows';
+import { applyUsersView, departmentsOf, regOf, usersStats } from './users-rows';
+import { useOpenRegistration } from './use-open-registration';
 import { useDirectoryUsers } from './use-all-users';
 import { useUsersParams } from './use-users-params';
 import './directory.m1.css';
@@ -45,8 +46,12 @@ export function UsersPage() {
   const [search, setSearch] = useUrlSearchBox(p.view.q, p.setQ);
   const dir = useDirectoryUsers(p.view.q);
   const sync = useSync();
-  const shownUsers = useMemo(() => applyUsersView(dir.users, p.view, !dir.overflow), [dir.users, p.view, dir.overflow]);
-  const rows = useMemo<UserRow[]>(() => shownUsers.map((u) => ({ ...u, id: u.sub })), [shownUsers]);
+  const reg = useOpenRegistration();
+  const shownUsers = useMemo(() => applyUsersView(dir.users, p.view, !dir.overflow, reg.sets), [dir.users, p.view, dir.overflow, reg.sets]);
+  const rows = useMemo<UserRow[]>(
+    () => shownUsers.map((u) => ({ ...u, id: u.sub, reg: reg.sets ? regOf(u, reg.sets) : undefined })),
+    [shownUsers, reg.sets],
+  );
   const order = useMemo(() => rows.map((r) => r.sub), [rows]);
   const departments = useMemo(() => departmentsOf(dir.users), [dir.users]);
   // Danh bạ còn trang chưa tải thì chưa kết luận người lạ: chỉ gỡ ?person= khi đã có đủ danh sách
@@ -79,13 +84,16 @@ export function UsersPage() {
 
   const { filter } = p.view;
   const openUser = panel.id ? dir.users.find((u) => u.sub === panel.id) : undefined;
-  const target: UserRow | undefined = openUser && { ...openUser, id: openUser.sub };
-  const narrowed = filter !== null || p.view.dept !== '' || p.view.q !== '';
+  const target: UserRow | undefined = openUser && { ...openUser, id: openUser.sub, reg: reg.sets ? regOf(openUser, reg.sets) : undefined };
+  const narrowed = filter !== null || p.view.reg !== null || p.view.dept !== '' || p.view.q !== '';
+  const regCard =
+    reg.month === null ? null : { month: reg.month, count: reg.sets ? reg.sets.unregistered.size : null, pressed: p.view.reg === 'no', onClick: () => p.toggleReg('no') };
   return (
     <div className="ct-page dr-page">
       {header}
       <SyncNotice state={sync.state} onRetry={sync.run} onClose={sync.close} />
-      {!dir.loading && !dir.overflow && <UsersStats stats={usersStats(dir.users)} filter={filter} onFilter={p.toggleFilter} />}
+      {!dir.loading && !dir.overflow && <UsersStats stats={usersStats(dir.users)} filter={filter} onFilter={p.toggleFilter} reg={regCard} />}
+      {reg.failed && <LoadError onRetry={reg.retry} />}
       {dir.overflow && <p role="note" className="alert">{t('users.page.overflow')}</p>}
       <Toolbar search={{ value: search, onChange: setSearch, label: t('users.page.searchLabel'), placeholder: t('users.page.search'), maxLength: MAX_SEARCH }}>
         <Select
@@ -100,9 +108,11 @@ export function UsersPage() {
         <p className="dr-count">{t(dir.overflow ? 'users.page.shownPartial' : 'users.page.shown', { shown: rows.length, total: dir.users.length })}</p>
       )}
       {filter && <FilterNotice label={t(`users.stats.${filter}`)} count={rows.length} onClear={p.clearFilter} />}
+      {p.view.reg && reg.month !== null && <FilterNotice label={t(p.view.reg === 'yes' ? 'users.reg.yes' : 'users.reg.no', { month: reg.month })} count={rows.length} onClear={p.clearReg} />}
       <UsersTable
         rows={rows}
-        loading={dir.loading}
+        regMonth={reg.month}
+        loading={dir.loading || (p.view.reg !== null && !reg.sets && !reg.failed)}
         activeId={target?.id}
         onOpen={open}
         empty={{

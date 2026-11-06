@@ -2,8 +2,6 @@ const arrivals = {
   arrivals: {
     title: 'Hàng về kỳ tháng {{month}}',
     description: 'Nhập số hàng ADM chia về đợt này. Ô đã điền sẵn phần còn lại theo bản in gửi ADM; điền 0 để bỏ qua món chưa về. Lưu xong tủ tự cộng.',
-    unlocked: 'Kỳ tháng {{month}} chưa khóa sổ, mở lại sau {{deadline}}.',
-    unlockedNoDate: 'Kỳ tháng {{month}} chưa khóa sổ.',
     table: {
       label: 'Hàng về theo món',
       item: 'Món',

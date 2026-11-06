@@ -30,9 +30,15 @@ const admin: Messages<typeof vi> = {
       emptyHint: 'Try the name without accents, an email or an employee code. New hires appear after the next sync.',
       more: 'Load more',
     },
+    reg: {
+      no: 'Not signed up for period {{month}}',
+      yes: 'Signed up for period {{month}}',
+      col: 'Period {{month}}',
+      cellYes: 'Signed up',
+      cellNo: 'Not yet',
+    },
     stats: {
       active: 'Active',
-      never: 'Never signed in',
       locked: 'Locked',
       people: 'people',
     },
@@ -134,6 +140,11 @@ const admin: Messages<typeof vi> = {
       emptyHint: 'Widen the date range or pick “Any action” to see more.',
       more: 'Load more',
       end: 'All audit entries in the filtered range are shown.',
+    },
+    batch: {
+      title: 'Arrivals for period {{month}} — {{n}} items, {{u}} units',
+      items: 'Items in this entry',
+      line: '{{name}} · {{qty}}',
     },
     objectType: {
       catalog: 'Catalogue',

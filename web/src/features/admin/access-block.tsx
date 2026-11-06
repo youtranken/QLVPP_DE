@@ -15,13 +15,17 @@ const membersOf = (users: AdminUser[], group: string) => {
   return users.filter((u) => u.groups.some((x) => x.toLowerCase() === g));
 };
 
-export function AccessBlock({ state, authorizedGroups }: { state: ConfigBlockState<AccessDraft>; authorizedGroups: string[] }) {
+const sameGroup = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+export function AccessBlock({ state, saved, authorizedGroups }: { state: ConfigBlockState<AccessDraft>; saved: string; authorizedGroups: string[] }) {
   const { t } = useTranslation();
   const me = useMe();
   const directory = useDirectoryUsers('');
   const ready = !directory.loading && !directory.failed && !directory.overflow;
   const members = ready ? membersOf(directory.users, state.draft.admin_group) : null;
-  const lockout = members !== null && me.role === 'admin' && state.draft.admin_group.trim() !== '' && !members.some((u) => u.sub === me.sub);
+  // Chỉ cảnh báo khi ID đã bị sửa khác giá trị đang dùng; mở trang với nhóm hiện tại thì không
+  const changed = !sameGroup(state.draft.admin_group, saved);
+  const lockout = changed && members !== null && me.role === 'admin' && state.draft.admin_group.trim() !== '' && !members.some((u) => u.sub === me.sub);
 
   return (
     <ConfigSection title={t('config.access.title')} saveLabel={t('config.access.save')} state={state}>

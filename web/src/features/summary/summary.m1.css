@@ -85,3 +85,4 @@
 }
 @media (max-width: 767px) { [data-shell='admin'] .aj-line__drop { width: var(--hit); height: var(--hit); } }
 [data-shell='admin'] .sm-empty-period { margin: 0 0 var(--s-3, 12px); padding: var(--s-4, 16px); border: 1px dashed var(--c-border); border-radius: var(--r-md, 8px); color: var(--c-muted); font: var(--t-body, inherit); text-align: center; }
+[data-shell='admin'] .alert a { color: inherit; text-decoration: underline; }

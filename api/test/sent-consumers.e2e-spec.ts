@@ -44,6 +44,7 @@ describe('V2D-4 hộp hoàn tác đọc bản đã gửi (R-D3.6, R-D17.9)', () 
       expect(await reviewRow(line.id)).toMatchObject({
         in_sent_snapshot: null,
         in_sent_snapshot_qty: null,
+        in_sent_snapshot_at: null,
       });
       const other = await f.stockItem(0);
       await sentWith({ [other]: 0, [key]: 0 });
@@ -64,6 +65,7 @@ describe('V2D-4 hộp hoàn tác đọc bản đã gửi (R-D3.6, R-D17.9)', () 
       expect(await reviewRow(line.id)).toMatchObject({
         in_sent_snapshot: true,
         in_sent_snapshot_qty: 2,
+        in_sent_snapshot_at: '2026-11-11T15:12:00.000Z',
       });
     });
   });

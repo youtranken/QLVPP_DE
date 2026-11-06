@@ -15,6 +15,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { DeliveryModule } from './modules/delivery/delivery.module';
 import { OidcModule } from './modules/auth/oidc.module';
+import { ConfigAdminModule } from './modules/config/config-admin.module';
 import { SystemConfigModule } from './modules/config/config.module';
 import { FilesModule } from './modules/files/files.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -60,6 +61,7 @@ import { UnitsModule } from './modules/units/units.module';
     OidcModule,
     AuthModule,
     SystemConfigModule,
+    ConfigAdminModule,
     FilesModule,
     UnitsModule,
     CatalogModule,

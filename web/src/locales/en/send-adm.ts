@@ -5,8 +5,6 @@ const sendAdm: Messages<typeof vi> = {
   sendAdm: {
     title: 'Send to ADM, {{month}} period',
     description: 'The form follows the ADM department sheet. Print it for the Head of Dept. to sign, then send the Excel for ADM to paste into the department column.',
-    unlocked: 'The {{month}} period is not locked yet, reopens after {{deadline}}.',
-    unlockedNoDate: 'The {{month}} period is not locked yet.',
     actions: { print: 'Print for signing', xlsx: 'Export department Excel' },
     checklist: {
       title: 'Check before sending',
@@ -34,6 +32,7 @@ const sendAdm: Messages<typeof vi> = {
       invalid: 'From 0 to 99,999.',
       outside: 'Off-catalog',
       empty: 'No items to request for this period.',
+      who: 'See who signed up ({{count}})',
       filter: { label: 'Filter by difference', all: 'All', short: 'Short', surplus: 'Extra', ok: 'Enough' },
     },
     order: {

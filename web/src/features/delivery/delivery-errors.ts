@@ -1,4 +1,5 @@
 import { apiErrorCode, apiErrorNumber } from '@/lib/api-error';
+import { lockPhrase } from '@/lib/period-text';
 
 type T = (key: string, opts?: Record<string, unknown>) => string;
 
@@ -48,8 +49,10 @@ const STALE_CODES = new Set(['DELIVER_EXCEEDS_QTY', 'STALE_UPDATE', 'LINE_NOT_RE
 export const isBlockCode = (code: string) => BLOCK_CODES.has(code);
 export const makesViewStale = (code: string) => STALE_CODES.has(code) || BLOCK_CODES.has(code);
 
-export function blockText(code: string, month: number, t: T): string {
-  return t(`delivery.detail.block.${BLOCK_CODES.has(code) ? code : 'UNKNOWN'}`, { month });
+// Kỳ chưa khóa nói giờ mở theo hạn server trả (câu khóa sổ chung), không suy từ tháng của dòng
+export function blockText(code: string, t: T, lang: 'vi' | 'en', deadline?: string): string {
+  if (code === 'PERIOD_NOT_LOCKED' && !deadline) return t('delivery.detail.block.PERIOD_NOT_LOCKED_NODATE');
+  return t(`delivery.detail.block.${BLOCK_CODES.has(code) ? code : 'UNKNOWN'}`, { lockPhrase: deadline ? lockPhrase(deadline, lang) : '' });
 }
 
 export function lineErrorText(f: DeliveryFailure, unit: string, t: T): string {

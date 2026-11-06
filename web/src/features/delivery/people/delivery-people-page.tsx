@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { apiErrorCode } from '@/lib/api-error';
-import { vnLockDate } from '@/lib/format-time';
+import { apiErrorCode, apiErrorString } from '@/lib/api-error';
+import { langOf, lockPhrase } from '@/lib/period-text';
 import { shiftYm } from '@/lib/ym';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlPatch } from '@/lib/use-url-patch';
@@ -11,6 +11,7 @@ import { Icon } from '@/ui/icon';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
+import { OpenPeriodNotice } from '@/features/summary/open-period-notice';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { usePeriodSummary } from '@/features/summary/summary.api';
@@ -36,7 +37,7 @@ function PanelHead({ person }: { person: DeliveryPerson }) {
 }
 
 function PeopleBoard({ ym }: { ym: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [params, update] = useUrlPatch();
   const query = useDeliveryPeople(ym);
   const summary = usePeriodSummary(ym);
@@ -72,8 +73,8 @@ function PeopleBoard({ ym }: { ym: string }) {
 
   if (query.isError) {
     if (apiErrorCode(query.error) !== 'PERIOD_NOT_LOCKED') return <LoadError onRetry={() => void query.refetch()} />;
-    const deadline = summary.data?.deadline;
-    return <EmptyState title={deadline ? t('delivery.people.unlocked', { month, deadline: vnLockDate(deadline) }) : t('delivery.people.unlockedNoDate', { month })} />;
+    const deadline = apiErrorString(query.error, 'deadline') ?? summary.data?.deadline;
+    return <EmptyState title={deadline ? t('summary.gate.unlocked', { month, lockPhrase: lockPhrase(deadline, langOf(i18n.language)) }) : t('summary.gate.unlockedNoDate', { month })} />;
   }
   if (!query.data) return <Loading />;
   if (people.length === 0) return <EmptyState title={t('delivery.people.emptyAll', { month })} />;
@@ -179,6 +180,7 @@ export function DeliveryPeoplePage() {
   return (
     <div className="ct-page">
       <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.delivery')]} title={title} description={t('delivery.people.description')} />
+      <OpenPeriodNotice />
       {current.isError ? <LoadError onRetry={() => void current.refetch()} /> : lockedYm ? <PeopleBoard key={lockedYm} ym={lockedYm} /> : <Loading />}
     </div>
   );

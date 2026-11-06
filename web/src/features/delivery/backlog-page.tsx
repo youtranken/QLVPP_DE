@@ -8,6 +8,7 @@ import { Toolbar } from '@/ui/toolbar';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { shiftYm } from '@/lib/ym';
 import { monthOf } from '@/features/request/request-format';
+import { OpenPeriodNotice } from '@/features/summary/open-period-notice';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { useBacklog, type BacklogBy } from './backlog.api';
 import { BacklogStats } from './backlog-stats';
@@ -62,10 +63,11 @@ export function BacklogPage() {
   return (
     <div className="ct-page">
       <PageHeader
-        crumbs={[t('nav.groups.later'), title]}
+        crumbs={[t('nav.groups.monthly'), title]}
         title={title}
         description={month ? t('delivery.backlog.description', { month }) : undefined}
       />
+      <OpenPeriodNotice />
       {query.isError && <LoadError onRetry={() => void query.refetch()} />}
       {query.isSuccess && <BacklogStats stats={backlogStats(all)} filter={p.filter} onFilter={p.toggleFilter} />}
       <Toolbar>

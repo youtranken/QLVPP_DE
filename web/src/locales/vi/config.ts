@@ -17,8 +17,11 @@ const config = {
     },
     period: {
       title: 'Kỳ đăng ký',
+      effectiveOpen: 'Kỳ tháng {{open}} (đang mở) vẫn khóa {{lock}}.',
+      effectiveNext: 'Áp dụng từ kỳ tháng {{next}}: khóa {{lock}}.',
+      confirmTitle: 'Đổi hạn đăng ký?',
+      confirmOk: 'Lưu hạn mới',
       note: 'Chỉ áp dụng cho kỳ tạo sau; kỳ đang mở giữ hạn cũ.',
-      noteLocked: 'Chỉ áp dụng cho kỳ tạo sau; kỳ đang mở giữ hạn cũ (tháng {{month}} vẫn khóa 00:00 ngày {{date}}).',
       lastDay: 'Hạn đăng ký (ngày)',
       lastDayHint: 'Từ 3 đến 28.',
       lastDayUnit: 'hằng tháng',

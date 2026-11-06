@@ -20,6 +20,7 @@ interface CurrentPeriod {
   is_open: boolean;
   days_left: number;
   previous: { ym: string; delivering: boolean } | null;
+  owed: unknown[];
 }
 
 describe('GET periods/current', () => {
@@ -127,6 +128,7 @@ describe('GET periods/current', () => {
       is_open: true,
       days_left: 1,
       previous: null,
+      owed: [],
     });
   });
 

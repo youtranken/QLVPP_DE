@@ -5,6 +5,7 @@ import { useMe } from '@/lib/me';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { BottomNav } from '@/shell/bottom-nav';
+import { useLockTimer } from '@/features/request/use-lock-timer';
 import { useShellFont } from '@/shell/use-shell-font';
 
 function initials(name: string | null, fallback: string): string {
@@ -17,6 +18,7 @@ export function MemberShell() {
   const me = useMe();
   const narrow = useMediaQuery(NARROW_QUERY);
   useShellFont('member');
+  useLockTimer();
 
   return (
     <div className={`m-shell${narrow ? ' is-narrow' : ''}`}>

@@ -7,11 +7,11 @@ const MONTHS_BACK = 12;
 
 type Scope = 'all' | 'month';
 
-export function ReviewPeriod({ ym, openYm, onChange }: { ym: string; openYm: string | undefined; onChange: (ym: string) => void }) {
+export function ReviewPeriod({ ym, ceilingYm, onChange }: { ym: string; ceilingYm: string | undefined; onChange: (ym: string) => void }) {
   const { t } = useTranslation();
   const scope: Scope = ym ? 'month' : 'all';
   // Kỳ hiện tại chưa tải/lỗi mà URL đã có ?ym= thì vẫn cho xem tháng đó, trần tạm là chính nó
-  const ceiling = openYm ?? (ym || undefined);
+  const ceiling = ceilingYm ?? (ym || undefined);
   const options = [
     { value: 'all' as Scope, label: t('review.allPeriods') },
     { value: 'month' as Scope, label: t('review.byMonth') },

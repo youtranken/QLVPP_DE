@@ -4,6 +4,7 @@ import { ItemThumb } from '@/ui/item-thumb';
 import { useMyRequest, type LineView } from './request.api';
 import { counted, owedQty, useRequestFormat } from './request-format';
 import { Chip, ReviewTag, type ChipTone } from './history-chip';
+import { AdjustNotes } from './history-adjustments';
 
 function LineChips({ line }: { line: LineView }) {
   const { t } = useTranslation();
@@ -42,6 +43,7 @@ function Line({ line }: { line: LineView }) {
       <span className="hs-item-text">
         <span className="hs-item-name">{name}</span>
         <span className="hs-item-qty">{t('request.cart.qty', { qty: line.qty, unit })}</span>
+        <AdjustNotes adjustments={line.adjustments} unit={unit} />
       </span>
       <LineChips line={line} />
     </li>

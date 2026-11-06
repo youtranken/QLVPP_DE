@@ -90,3 +90,7 @@
 @media (max-width: 767px) {
   [data-shell='admin'] .sa-print-note { justify-content: flex-start; margin: 0; text-align: left; }
 }
+[data-shell='admin'] .sa-who { justify-self: start; margin-top: var(--s-1); font: var(--t-sm); font-weight: 700; color: var(--c-acc); }
+@media (max-width: 767px) {
+  [data-shell='admin'] .sa-who { display: inline-flex; align-items: center; min-height: var(--hit); }
+}

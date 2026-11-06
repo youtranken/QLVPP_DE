@@ -11,7 +11,6 @@ export interface AdminPage {
 
 export interface AdminNavGroup {
   labelKey: string;
-  collapsible?: boolean;
   pages: AdminPage[];
 }
 
@@ -20,9 +19,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     labelKey: 'nav.groups.monthly',
     pages: [
       { path: 'home', titleKey: 'nav.home', icon: 'calendar' },
+      { path: 'summary', titleKey: 'nav.summary', icon: 'dash' },
       { path: 'send-adm', titleKey: 'nav.sendAdm', icon: 'printer' },
       { path: 'arrivals', titleKey: 'nav.arrivals', icon: 'pkg' },
       { path: 'delivery', titleKey: 'nav.delivery', icon: 'truck', badge: 'delivery' },
+      { path: 'backlog', titleKey: 'nav.backlog', icon: 'receipt' },
+      { path: 'reports', titleKey: 'nav.reports', icon: 'sheet' },
     ],
   },
   {
@@ -40,15 +42,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { path: 'users', titleKey: 'nav.users', icon: 'users' },
       { path: 'audit', titleKey: 'audit.title', icon: 'scroll' },
       { path: 'config', titleKey: 'config.title', icon: 'sliders' },
-    ],
-  },
-  {
-    labelKey: 'nav.groups.later',
-    collapsible: true,
-    pages: [
-      { path: 'summary', titleKey: 'nav.summary', icon: 'dash' },
-      { path: 'reports', titleKey: 'nav.reports', icon: 'printer' },
-      { path: 'backlog', titleKey: 'nav.backlog', icon: 'receipt' },
     ],
   },
 ];

@@ -38,7 +38,7 @@ export function stubReports(opts: Options = {}) {
   let loads = 0;
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET';
-    if (url === '/api/periods/current') return jsonResponse(200, { ym: opts.currentYm ?? OPEN_YM, deadline: '2026-11-10T17:00:00Z', is_open: true, days_left: 5, previous: null });
+    if (url === '/api/periods/current') return jsonResponse(200, { ym: opts.currentYm ?? OPEN_YM, deadline: '2026-11-10T17:00:00Z', is_open: true, days_left: 5, previous: null, owed: [] });
     if (url === '/api/admin/items') return jsonResponse(200, opts.items ?? REPORT_ITEMS);
     if (url === '/api/item-categories?all=1') return jsonResponse(200, opts.categories ?? REPORT_CATEGORIES);
     if (/^\/api\/admin\/reports\/snapshots\/[^/]+\/export\.xlsx\?lang=(vi|en)$/.test(url)) {

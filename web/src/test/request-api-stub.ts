@@ -10,6 +10,7 @@ export const PERIOD: CurrentPeriod = {
   is_open: true,
   days_left: 4,
   previous: null,
+  owed: [],
 };
 export const PEN = memberItem({ id: 'i-pen', name: 'Bút bi xanh', unit: 'cay', max_qty: 20, category_id: 'c-1' });
 export const NOTE = memberItem({ id: 'i-note', name: 'Giấy note vàng', unit: 'loc', max_qty: 10, category_id: 'c-2' });

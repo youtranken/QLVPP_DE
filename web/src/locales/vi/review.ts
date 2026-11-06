@@ -9,7 +9,6 @@ const review = {
     },
     page: {
       description: 'Món nhân viên tự thêm vào phiếu — xem từng món trước khi mua.',
-      note: 'Chấp nhận: mua riêng lần này · Thêm vào danh mục: ai cũng đặt được từ kỳ sau',
     },
     period: 'Kỳ',
     allPeriods: 'Mọi kỳ',
@@ -21,10 +20,12 @@ const review = {
     empty: {
       pending: 'Không còn món nào chờ xem',
       pendingAction: 'Xem món đã chấp nhận',
+      openHint: 'Món ngoài danh mục của kỳ tháng {{month}} sẽ hiện ở đây từ {{lockPhrase}}.',
       accepted: 'Chưa chấp nhận món nào',
       converted: 'Chưa thêm món nào vào danh mục',
       rejected: 'Chưa từ chối món nào',
     },
+    sentLink: 'Mở Gửi ADM',
     staleNotice: 'Dòng này vừa được xử lý — danh sách đã được làm mới.',
     card: {
       imageAlt: 'Ảnh {{name}} do nhân viên gửi',
@@ -46,9 +47,9 @@ const review = {
     },
     actions: {
       label: 'Xử lý {{name}}',
-      accept: 'Chấp nhận',
-      convert: 'Thêm vào danh mục',
-      reject: 'Từ chối',
+      accept: 'Mua lần này',
+      convert: 'Mua và thêm vào danh mục',
+      reject: 'Không mua',
       named: '{{action}} — {{name}}',
       unitMismatch: 'ĐVT của món trong danh mục khác dòng gốc — kiểm lại số lượng {{qty}}.',
     },
@@ -65,20 +66,20 @@ const review = {
       linked: 'Đã gắn {{name}} vào {{item}}',
     },
     accept: {
-      title: 'Chấp nhận “{{name}}”?',
+      title: 'Mua “{{name}}” lần này?',
       body: 'Dòng được mua và giao như đã đăng ký, không thêm món vào danh mục.',
       bodyFor:
         'Hành chính sẽ mua {{qty}} {{unit}} cho phiếu tháng {{month}} của {{who}}. Món không vào danh mục — tháng sau muốn đặt lại, nhân viên phải thêm lại.',
-      ok: 'Chấp nhận',
+      ok: 'Mua lần này',
     },
     reject: {
-      title: 'Từ chối “{{name}}”',
+      title: 'Không mua “{{name}}”',
       reason: 'Lý do từ chối',
       hint: 'Ít nhất 3 ký tự. Viết cho người đăng ký đọc.',
-      submit: 'Từ chối',
+      submit: 'Không mua',
     },
     convert: {
-      title: 'Thêm “{{name}}” vào danh mục',
+      title: 'Mua “{{name}}” và thêm vào danh mục',
       mode: 'Gắn dòng vào',
       modeNew: 'Món mới',
       modeExisting: 'Món có sẵn',
@@ -94,7 +95,7 @@ const review = {
         'Nhân viên đặt theo «{{from}}», {{item}} tính theo «{{to}}». Số lượng giữ nguyên {{qty}} — kiểm tra lại với {{who}}.',
       whoFallback: 'người đăng ký',
       imageFromStaff: 'Dùng ảnh nhân viên đã gửi làm ảnh món; đổi được ở Danh mục.',
-      submit: 'Thêm vào danh mục',
+      submit: 'Mua và thêm vào danh mục',
     },
     back: 'Quay lại',
     saving: 'Đang lưu…',

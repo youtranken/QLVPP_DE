@@ -19,9 +19,15 @@ const BINH: AdminUser = { ...AN, sub: 'u-binh', fullName: 'Lê Thị Bình', emp
 const CHI: AdminUser = { ...AN, sub: 'u-chi', fullName: 'Trần Chi', employeeCode: 'NV0100', department: 'Phòng Công trình', groups: ['vpp-users'], lastLoginAt: null };
 
 type SyncRoute = () => Response;
+type RegRoute = () => Response;
 
-function stubUsers(users: AdminUser[], sync: SyncRoute = () => jsonResponse(200, { created: 0, updated: 0 })) {
+const REG_URL = '/api/admin/periods/2026-11/unregistered';
+const regOf = (unregistered: AdminUser[], registered: string[]) => () =>
+  jsonResponse(200, { items: unregistered.map((u) => ({ sub: u.sub, full_name: u.fullName, email: u.email, department: u.department })), registered_subs: registered });
+
+function stubUsers(users: AdminUser[], sync: SyncRoute = () => jsonResponse(200, { created: 0, updated: 0 }), reg: RegRoute = regOf([CHI], ['u-an'])) {
   const f = vi.fn((url: string, init?: RequestInit) => {
+    if (url === REG_URL) return Promise.resolve(reg());
     if (url === '/api/admin/directory/sync' && init?.method === 'POST') return Promise.resolve(sync());
     if (url.startsWith('/api/admin/users')) {
       const params = new URL(url, 'http://x').searchParams;
@@ -33,7 +39,7 @@ function stubUsers(users: AdminUser[], sync: SyncRoute = () => jsonResponse(200,
       const next = from + size < rows.length ? String(from + size) : null;
       return Promise.resolve(jsonResponse(200, { items, next_cursor: next }));
     }
-    if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 4, previous: null }));
+    if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 4, previous: null, owed: [] }));
     if (url.startsWith('/api/me/notifications')) return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null, unread_count: 0 }));
     return Promise.resolve(jsonResponse(200, []));
   });
@@ -66,18 +72,17 @@ describe('UsersPage B10', () => {
     expect(screen.queryByText(/Đồng bộ lần cuối/)).toBeNull();
   });
 
-  it('thẻ Đang dùng 2 · Chưa đăng nhập 2 · Đã khóa 1; bấm thẻ lọc đúng và FilterNotice hiện', async () => {
+  it('thẻ Đang dùng 2 · Chưa đăng ký kỳ 11 · Đã khóa 1; bấm thẻ lọc đúng và FilterNotice hiện', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     expect(card(/^Đang dùng/)).toHaveTextContent('2');
-    expect(card(/^Chưa đăng nhập lần nào/)).toHaveTextContent('2');
+    expect(await screen.findByRole('button', { name: /^Chưa đăng ký kỳ 11/ })).toHaveTextContent('1');
+    expect(screen.queryByRole('button', { name: /^Chưa đăng nhập lần nào/ })).toBeNull();
     expect(card(/^Đã khóa/)).toHaveTextContent('1');
     await userEvent.click(card(/^Đã khóa/));
     expect(bodyRows()).toHaveLength(1);
     expect(screen.getByText('Đang lọc: Đã khóa · 1')).toBeInTheDocument();
     expect(card(/^Đã khóa/)).toHaveAttribute('aria-pressed', 'true');
-    await userEvent.click(card(/^Chưa đăng nhập lần nào/));
-    expect(bodyRows()).toHaveLength(2);
     await userEvent.click(card(/^Đang dùng/));
     expect(bodyRows().map((r) => within(r).getByRole('button').textContent)).toEqual(['Phạm Minh Đức', 'Trần Chi']);
     await userEvent.click(screen.getByRole('button', { name: 'Bỏ lọc' }));
@@ -224,4 +229,59 @@ describe('UsersPage B10', () => {
     await waitFor(() => expect(f.mock.calls.some(([u]) => String(u).includes('search=0042'))).toBe(true));
     await waitFor(() => expect(bodyRows()).toHaveLength(1));
   }, 30_000);
+
+  describe('tiến độ đăng ký kỳ đang mở', () => {
+    const EM: AdminUser = { ...CHI, sub: 'u-em', fullName: 'Võ Em', employeeCode: 'NV0300' };
+
+    it('thẻ "Chưa đăng ký kỳ 11: 2 người"; bấm → ?reg=no ra đúng 2 người; cột "Kỳ tháng 11" Đã đăng ký / Chưa / — (ngoài danh sách kỳ), không số món', async () => {
+      stubUsers([AN, BINH, CHI, EM], undefined, regOf([CHI, EM], ['u-an']));
+      await openUsers();
+      const reg = await screen.findByRole('button', { name: /^Chưa đăng ký kỳ 11/ });
+      expect(reg).toHaveTextContent(/^Chưa đăng ký kỳ 112\s*người/);
+      expect(screen.getByRole('columnheader', { name: 'Kỳ tháng 11' })).toBeInTheDocument();
+      const col = (name: string) => within(screen.getByText(name).closest('tr')!).getAllByRole('cell')[3];
+      await waitFor(() => expect(col('Phạm Minh Đức')).toHaveTextContent('Đã đăng ký'));
+      expect(col('Trần Chi')).toHaveTextContent('Chưa');
+      expect(col('Lê Thị Bình')).toHaveTextContent('—');
+      for (const r of bodyRows()) expect(within(r).getAllByRole('cell')[3].textContent).not.toMatch(/\d/);
+      await userEvent.click(reg);
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?reg=no');
+      expect(bodyRows().map((r) => within(r).getAllByRole('button')[0].textContent)).toEqual(['Trần Chi', 'Võ Em']);
+      expect(screen.getByText('Đang lọc: Chưa đăng ký kỳ 11 · 2')).toBeInTheDocument();
+    });
+
+    it('?reg=yes → chỉ người đã đăng ký kỳ đang mở; ?reg=lạ → không lọc', async () => {
+      stubUsers([AN, BINH, CHI, EM], undefined, regOf([CHI, EM], ['u-an']));
+      await openUsers('/admin/users?reg=yes');
+      await waitFor(() => expect(bodyRows()).toHaveLength(1));
+      expect(within(bodyRows()[0]).getByText('Phạm Minh Đức')).toBeInTheDocument();
+      expect(screen.getByText('Đang lọc: Đã đăng ký kỳ 11 · 1')).toBeInTheDocument();
+    });
+
+    it('lỗi tải danh sách đăng ký → thẻ "—", báo lỗi có "Thử lại"; thử lại thành công thì có số', async () => {
+      let fail = true;
+      stubUsers([AN, BINH, CHI], undefined, () => (fail ? jsonResponse(500, { code: 'X' }) : regOf([CHI], ['u-an'])()));
+      await openUsers();
+      const retry = await screen.findByRole('button', { name: 'Thử lại' });
+      expect(screen.getByRole('button', { name: /^Chưa đăng ký kỳ 11/ })).toHaveTextContent('—');
+      fail = false;
+      await userEvent.click(retry);
+      await waitFor(() => expect(screen.getByRole('button', { name: /^Chưa đăng ký kỳ 11/ })).toHaveTextContent('1'));
+    });
+
+    it('ngăn kéo đang mở khi danh sách đăng ký mới về → vẫn mở, cột cập nhật', async () => {
+      let release: () => void = () => undefined;
+      const late = new Promise<void>((r) => (release = r));
+      const f = stubUsers([AN, BINH, CHI]);
+      const base = f.getMockImplementation()!;
+      f.mockImplementation((url: string, init?: RequestInit) => (url === REG_URL ? late.then(() => regOf([CHI], ['u-an'])()) : base(url, init)));
+      await openUsers();
+      await userEvent.click(screen.getByRole('button', { name: 'Phạm Minh Đức' }));
+      expect(await screen.findByRole('dialog', { name: 'Người dùng' })).toBeInTheDocument();
+      release();
+      // Ngăn kéo modal ẩn phần còn lại khỏi cây trợ năng
+      await waitFor(() => expect(screen.getByRole('button', { name: /^Chưa đăng ký kỳ 11/, hidden: true })).toHaveTextContent('1'));
+      expect(screen.getByRole('dialog', { name: 'Người dùng' })).toBeInTheDocument();
+    });
+  });
 });

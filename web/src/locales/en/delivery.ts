@@ -84,7 +84,8 @@ const delivery: Messages<typeof vi> = {
         UNKNOWN: 'Could not deliver — try again.',
       },
       block: {
-        PERIOD_NOT_LOCKED: 'Period not locked yet — deliver after 00:00 on 11/{{month}}.',
+        PERIOD_NOT_LOCKED: 'Period not locked yet — deliver after {{lockPhrase}}.',
+        PERIOD_NOT_LOCKED_NODATE: 'Period not locked yet — cannot deliver.',
         REQUEST_NOT_FOUND: 'Request not found — it may have been deleted.',
         LINE_NOT_FOUND: 'Line is no longer on the request — request reloaded.',
         UNKNOWN: 'Could not deliver — try again.',
@@ -250,8 +251,6 @@ const delivery: Messages<typeof vi> = {
       status: { pending: 'Not yet received', debt: 'Outstanding', done: 'Received' },
       empty: 'Nobody in this group.',
       emptyAll: 'Nobody has goods to collect for month {{month}}.',
-      unlocked: 'The period for month {{month}} is not locked yet. Delivery opens from {{deadline}}.',
-      unlockedNoDate: 'The period for month {{month}} is not locked yet.',
       card: {
         action: 'Deliver…',
         view: 'View',

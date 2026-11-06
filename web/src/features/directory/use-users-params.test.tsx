@@ -15,6 +15,6 @@ describe('useUsersParams', () => {
     const sp = new URLSearchParams(result.current.location.search);
     expect(sp.get('q')).toBe('bình');
     expect(sp.get('status')).toBe('locked');
-    expect(result.current.p.view).toEqual({ filter: 'locked', dept: '', q: 'bình' });
+    expect(result.current.p.view).toEqual({ filter: 'locked', reg: null, dept: '', q: 'bình' });
   });
 });

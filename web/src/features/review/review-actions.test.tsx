@@ -47,9 +47,9 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
     stub(() => jsonResponse(500, {}));
     renderActions();
     expect(within(block()).getAllByRole('button').map((b) => b.textContent)).toEqual([
-      'Chấp nhận',
-      'Thêm vào danh mục',
-      'Từ chối',
+      'Mua lần này',
+      'Mua và thêm vào danh mục',
+      'Không mua',
     ]);
   });
 
@@ -57,9 +57,9 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
     stub(() => jsonResponse(500, {}));
     renderActions();
     expect(within(block()).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual([
-      'Chấp nhận — Băng keo 2 mặt',
-      'Thêm vào danh mục — Băng keo 2 mặt',
-      'Từ chối — Băng keo 2 mặt',
+      'Mua lần này — Băng keo 2 mặt',
+      'Mua và thêm vào danh mục — Băng keo 2 mặt',
+      'Không mua — Băng keo 2 mặt',
     ]);
   });
 
@@ -67,9 +67,9 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
     const result = reviewResult('accepted');
     const fetchMock = stub(() => jsonResponse(200, result));
     const { onDone } = renderActions();
-    await userEvent.click(screen.getByRole('button', { name: 'Chấp nhận — Băng keo 2 mặt' }));
-    const dialog = screen.getByRole('dialog', { name: 'Chấp nhận “Băng keo 2 mặt”?' });
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Chấp nhận' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Mua lần này — Băng keo 2 mặt' }));
+    const dialog = screen.getByRole('dialog', { name: 'Mua “Băng keo 2 mặt” lần này?' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Mua lần này' }));
     await waitFor(() => expect(onDone).toHaveBeenCalledWith(result, expect.objectContaining({ action: expect.any(String) })));
     expect(onDone.mock.calls[0][0].request_updated_at).toBe('2026-11-05T08:00:00.000Z');
     const call = fetchMock.mock.calls.find((c) => c[0] === '/api/admin/lines/l-1/review')!;
@@ -77,16 +77,16 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
     expect(JSON.parse(String(call[1]?.body))).toEqual({ action: 'accept' });
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.getByText('Đã chấp nhận')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Từ chối/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Không mua/ })).toBeNull();
   });
 
   it('Từ chối: lý do trống (hoặc < 3 ký tự) → nút Từ chối vô hiệu; nhập lý do → gửi note, nhãn "Từ chối: <lý do>"', async () => {
     const result = reviewResult('rejected', { review_note: 'Đã có trong kho' });
     const fetchMock = stub(() => jsonResponse(200, result));
     const { onDone } = renderActions();
-    await userEvent.click(screen.getByRole('button', { name: 'Từ chối — Băng keo 2 mặt' }));
-    const dialog = screen.getByRole('dialog', { name: 'Từ chối “Băng keo 2 mặt”' });
-    const submit = within(dialog).getByRole('button', { name: 'Từ chối' });
+    await userEvent.click(screen.getByRole('button', { name: 'Không mua — Băng keo 2 mặt' }));
+    const dialog = screen.getByRole('dialog', { name: 'Không mua “Băng keo 2 mặt”' });
+    const submit = within(dialog).getByRole('button', { name: 'Không mua' });
     expect(submit).toBeDisabled();
     await userEvent.type(within(dialog).getByLabelText(/^Lý do từ chối/), '  ab ');
     expect(submit).toBeDisabled();
@@ -103,10 +103,10 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
   it('REASON_REQUIRED từ server → lỗi gắn vào ô lý do, hộp vẫn mở', async () => {
     stub(() => jsonResponse(400, { code: 'REASON_REQUIRED' }));
     const { onDone } = renderActions();
-    await userEvent.click(screen.getByRole('button', { name: 'Từ chối — Băng keo 2 mặt' }));
-    const dialog = screen.getByRole('dialog', { name: 'Từ chối “Băng keo 2 mặt”' });
+    await userEvent.click(screen.getByRole('button', { name: 'Không mua — Băng keo 2 mặt' }));
+    const dialog = screen.getByRole('dialog', { name: 'Không mua “Băng keo 2 mặt”' });
     await userEvent.type(within(dialog).getByLabelText(/^Lý do từ chối/), 'abc');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Không mua' }));
     expect(await within(dialog).findByText('Nhập lý do từ chối (ít nhất 3 ký tự).')).toBeInTheDocument();
     expect(within(dialog).getByLabelText(/^Lý do từ chối/)).toHaveAttribute('aria-invalid', 'true');
     expect(onDone).not.toHaveBeenCalled();
@@ -115,8 +115,8 @@ describe('ReviewActions — 3 nút mở hộp riêng, áp dụng ngay', () => {
   it('409 LINE_ALREADY_REVIEWED → khối trong hộp (hộp mở); đóng hộp mới gọi onStale để làm mới', async () => {
     stub(() => jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' }));
     const { onDone, onStale } = renderActions();
-    await userEvent.click(screen.getByRole('button', { name: 'Chấp nhận — Băng keo 2 mặt' }));
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Chấp nhận' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Mua lần này — Băng keo 2 mặt' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Mua lần này' }));
     expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent('Dòng này vừa được xử lý ở nơi khác.');
     expect(onStale).not.toHaveBeenCalled();
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Quay lại' }));

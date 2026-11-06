@@ -5,8 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Tháng này', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm & đơn vị', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
-const LATER = ['Tổng hợp kỳ', 'Báo cáo & in', 'Còn nợ'];
+const NAV_ORDER = ['Tháng này', 'Tổng hợp kỳ', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm & đơn vị', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
 const linkLabels = (nav: HTMLElement) =>
@@ -25,12 +24,12 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.queryByRole('navigation', { name: 'Menu quản lý' })).toBeNull();
   });
 
-  it.each(['admin', 'sa'] as const)('role %s: sidebar 4 nhóm, 11 mục (nhóm "Xem lại sau" thu gọn) theo thứ tự SPEC §4.1, mục đang chọn aria-current, không "Phiếu của tôi"', (role) => {
+  it.each(['admin', 'sa'] as const)('role %s: sidebar 3 nhóm, 14 mục theo luồng chuẩn, mục đang chọn aria-current, không "Phiếu của tôi"', (role) => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe(role), '/admin/catalog');
     const side = sideNav();
-    expect(within(side).getAllByRole('group').map((g) => g.getAttribute('aria-label'))).toEqual(['Hằng tháng', 'Danh mục và tủ', 'Quản lý', 'Xem lại sau']);
+    expect(within(side).getAllByRole('group').map((g) => g.getAttribute('aria-label'))).toEqual(['Hằng tháng', 'Danh mục và tủ', 'Quản lý']);
     expect(linkLabels(side)).toEqual(NAV_ORDER);
     expect(within(side).getByRole('link', { name: 'Danh mục món' })).toHaveAttribute('aria-current', 'page');
     expect(within(side).getAllByRole('link').filter((a) => a.hasAttribute('aria-current'))).toHaveLength(1);
@@ -94,14 +93,14 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getByRole('main').querySelector('.shell__panel')).not.toBeNull();
   });
 
-  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 15 mục (menu điện thoại không thu gọn nhóm)', async () => {
+  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 14 mục', async () => {
     mockViewport(767);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
     expect(screen.queryByRole('navigation', { name: 'Menu quản lý' })).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
     const dialog = screen.getByRole('dialog', { name: 'Menu quản lý' });
-    expect(linkLabels(within(dialog).getByRole('navigation', { name: 'Menu quản lý' }))).toEqual([...NAV_ORDER, ...LATER]);
+    expect(linkLabels(within(dialog).getByRole('navigation', { name: 'Menu quản lý' }))).toEqual(NAV_ORDER);
     await userEvent.click(within(dialog).getByRole('link', { name: 'Tủ / Kho' }));
     expect(screen.getByTestId('location')).toHaveTextContent('/admin/stock');
     expect(screen.queryByRole('dialog', { name: 'Menu quản lý' })).toBeNull();

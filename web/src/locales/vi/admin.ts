@@ -27,9 +27,15 @@ const admin = {
       emptyHint: 'Thử tên không dấu, email hoặc mã NV. Người mới vào công ty sẽ có sau lần đồng bộ kế tiếp.',
       more: 'Xem thêm',
     },
+    reg: {
+      no: 'Chưa đăng ký kỳ {{month}}',
+      yes: 'Đã đăng ký kỳ {{month}}',
+      col: 'Kỳ tháng {{month}}',
+      cellYes: 'Đã đăng ký',
+      cellNo: 'Chưa',
+    },
     stats: {
       active: 'Đang dùng',
-      never: 'Chưa đăng nhập lần nào',
       locked: 'Đã khóa',
       people: 'người',
     },
@@ -131,6 +137,11 @@ const admin = {
       emptyHint: 'Nới khoảng ngày hoặc chọn “Mọi hành động” để xem rộng hơn.',
       more: 'Xem thêm',
       end: 'Đã hiện hết nhật ký trong khoảng lọc.',
+    },
+    batch: {
+      title: 'Nhập hàng về kỳ tháng {{month}} — {{n}} món, {{u}} đơn vị',
+      items: 'Các món của lần nhập',
+      line: '{{name}} · {{qty}}',
     },
     objectType: {
       catalog: 'Danh mục',

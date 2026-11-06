@@ -20,8 +20,11 @@ const config: Messages<typeof vi> = {
     },
     period: {
       title: 'Registration period',
+      effectiveOpen: 'Period {{open}} (open) still locks at {{lock}}.',
+      effectiveNext: 'From period {{next}}: locks at {{lock}}.',
+      confirmTitle: 'Change the sign-up deadline?',
+      confirmOk: 'Save new deadline',
       note: 'Applies only to periods created later; the open period keeps its deadline.',
-      noteLocked: 'Applies only to periods created later; the open period keeps its deadline (month {{month}} still locks at 00:00 on {{date}}).',
       lastDay: 'Deadline (day)',
       lastDayHint: 'From 3 to 28.',
       lastDayUnit: 'every month',

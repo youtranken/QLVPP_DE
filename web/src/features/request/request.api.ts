@@ -9,6 +9,31 @@ export interface CurrentPeriod {
   is_open: boolean;
   days_left: number;
   previous: { ym: string; delivering: boolean } | null;
+  // Phần còn chờ nhận của mọi kỳ đã khóa (chỉ nhân viên), cũ trước
+  owed: OwedPeriod[];
+}
+
+export interface OwedPeriod {
+  ym: string;
+  items: number;
+  units: number;
+  lines: { name: string; name_en: string | null; unit: string; qty: number }[];
+}
+
+export type AdjustReason = 'over_quota' | 'adm_out_of_stock' | 'duplicate' | 'other' | 'user_left';
+
+export interface LineAdjustment {
+  before: number;
+  after: number;
+  reason_code: AdjustReason;
+  reason_note: string | null;
+  at: string;
+}
+
+export interface RemovedLine extends Omit<LineAdjustment, 'after'> {
+  name: string;
+  name_en: string | null;
+  unit: string;
 }
 
 export type ReviewStatus = 'n/a' | 'pending' | 'accepted' | 'converted' | 'rejected';
@@ -41,6 +66,8 @@ export interface LineView {
   readonly_for_member: boolean;
   // Tối đa/tháng hiện tại của món (null với dòng ngoài DM); dòng giữ số cũ lớn hơn → "Vượt tối đa"
   max_qty: number | null;
+  // Chỉ GET phiếu của chính mình ở kỳ đã khóa mới có; kỳ mở luôn rỗng
+  adjustments?: LineAdjustment[];
 }
 
 export interface RequestView {
@@ -52,6 +79,8 @@ export interface RequestView {
   updated_at: string;
   is_open: boolean;
   lines: LineView[];
+  removed_lines?: RemovedLine[];
+  removed_all?: boolean;
 }
 
 export interface MemberItem {
@@ -88,9 +117,11 @@ const REQUEST_KEY = ['request'] as const;
 export const HISTORY_KEY = [...REQUEST_KEY, 'history'] as const;
 export const ownRequestKey = (ym: string) => [...REQUEST_KEY, 'mine', ym] as const;
 
+export const CURRENT_PERIOD_KEY = ['periods', 'current'] as const;
+
 export const currentPeriodQuery = () =>
   queryOptions({
-    queryKey: [...REQUEST_KEY, 'period'],
+    queryKey: CURRENT_PERIOD_KEY,
     queryFn: () => apiFetch<CurrentPeriod>('/api/periods/current'),
   });
 

@@ -42,6 +42,8 @@ interface MovementInput {
 interface AuditedMovement extends Omit<MovementInput, 'reason'> {
   reason: 'purchase' | 'adjust' | 'issue';
   tookHeld?: number;
+  // Id dòng audit của một lần Lưu hàng về: Nhật ký gộp các món của lần đó
+  batchId?: string;
 }
 
 export interface LowStockClaim extends Record<string, unknown> {
@@ -128,6 +130,7 @@ export class StockService {
       reason: 'purchase' | 'adjust';
       note: string | null;
       receiptYm?: string | null;
+      batchId?: string;
     },
     actor: string,
   ): Promise<StockResult> {
@@ -280,6 +283,7 @@ export class StockService {
         delta: m.delta,
         note: m.note,
         movement_id: movement.id,
+        ...(m.batchId ? { batch_id: m.batchId } : {}),
         ...(m.reason === 'issue'
           ? { recipient_sub: m.recipientSub, took_held: m.tookHeld ?? 0 }
           : {}),

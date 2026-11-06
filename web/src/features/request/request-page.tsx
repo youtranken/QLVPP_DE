@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
 import { useMe } from '@/lib/me';
+import { langOf, lockPhrase } from '@/lib/period-text';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { Loading, LoadError } from '@/ui/load-state';
 import { CartPanel } from './cart-panel';
@@ -57,7 +58,7 @@ function RequestEditor({
   onLocked: (carry: Carry) => void;
   onCarryUsed: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const me = useMe();
   const fmt = useRequestFormat();
   const narrow = useMediaQuery(NARROW_QUERY);
@@ -134,6 +135,7 @@ function RequestEditor({
     dirty,
     saved: cart.saved ? { time: fmt.time(cart.saved.updated_at), lastDay: fmt.lastDay(period.deadline) } : null,
     saveLabel,
+    lockAt: lockPhrase(period.deadline, langOf(i18n.language)),
     canSave: dirty && !flow.saving,
     panelRef: cartRef,
     onQty: setQty,
@@ -152,7 +154,7 @@ function RequestEditor({
           saved={cart.saved}
           dirty={dirty}
         />
-        <OwedNotice previous={period.previous} />
+        <OwedNotice owed={period.owed} />
       </div>
       <PreviousPeriodCard previous={period.previous} />
       <div className="rq-frame">

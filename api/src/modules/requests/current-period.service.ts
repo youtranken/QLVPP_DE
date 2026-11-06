@@ -4,6 +4,8 @@ import { addMonths, daysLeft } from '../../common/period';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { PeriodsService } from '../periods/periods.service';
+import { owedPeriods } from './owed.repo';
+import type { OwedPeriod } from './owed.repo';
 import * as repo from './requests.repo';
 
 export interface CurrentPeriod {
@@ -12,9 +14,10 @@ export interface CurrentPeriod {
   is_open: true;
   days_left: number;
   previous: { ym: string; delivering: boolean } | null;
+  owed: OwedPeriod[];
 }
 
-// Kỳ đang mở + phiếu kỳ trước của người gọi còn nợ giao không: ghép ở requests để periods không đọc bảng phiếu
+// Kỳ đang mở + phần còn chờ nhận của người gọi: ghép ở requests để periods không đọc bảng phiếu
 @Injectable()
 export class CurrentPeriodService {
   constructor(
@@ -26,13 +29,14 @@ export class CurrentPeriodService {
   async get(userSub: string, role: string): Promise<CurrentPeriod> {
     const now = this.clock.now();
     const period = await this.periods.openPeriod(this.db, now);
+    const member = role === 'member';
     return {
       ym: period.ym,
       deadline: period.deadline.toISOString(),
       is_open: true,
       days_left: daysLeft(now, period.deadline),
-      previous:
-        role === 'member' ? await this.previous(period.ym, userSub) : null,
+      previous: member ? await this.previous(period.ym, userSub) : null,
+      owed: member ? await owedPeriods(this.db, userSub, period.ym) : [],
     };
   }
 

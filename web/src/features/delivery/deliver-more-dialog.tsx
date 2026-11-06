@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { apiErrorCode, apiErrorNumber } from '@/lib/api-error';
+import { apiErrorCode, apiErrorNumber, apiErrorString } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
@@ -11,6 +11,7 @@ import { useToast } from '@/ui/toast-context';
 import type { BacklogLine } from './backlog.api';
 import { useBacklogFormat } from './backlog-format';
 import { deliverLine, deliverMax } from './delivery.api';
+import { langOf } from '@/lib/period-text';
 import { blockText, isBlockCode, lineErrorText, makesViewStale } from './delivery-errors';
 
 interface Props {
@@ -22,7 +23,7 @@ interface Props {
 
 // Dòng ngoài danh mục không có tồn (stock_qty null) nên chỉ giới hạn bởi phần còn lại
 export function DeliverMoreDialog({ line, onDone, onStale, onClose }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { csrfToken } = useMe();
   const toast = useToast();
   const f = useBacklogFormat();
@@ -43,8 +44,7 @@ export function DeliverMoreDialog({ line, onDone, onStale, onClose }: Props) {
     const remaining = apiErrorNumber(err, 'remaining');
     if (code === 'STOCK_INSUFFICIENT') setCap(available ?? 0);
     if (code === 'DELIVER_EXCEEDS_QTY') setCap(remaining ?? 0);
-    const month = Number(line.period_ym.slice(5, 7));
-    setError(isBlockCode(code) ? blockText(code, month, t) : lineErrorText({ code, available, remaining }, unit, t));
+    setError(isBlockCode(code) ? blockText(code, t, langOf(i18n.language), apiErrorString(err, 'deadline')) : lineErrorText({ code, available, remaining }, unit, t));
     if (makesViewStale(code)) onStale();
   };
 
