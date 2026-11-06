@@ -45,30 +45,30 @@ describe('Trang in · phụ lục (B6 cũ)', () => {
     expect(await within(app).findByText('Bản chốt số 1 của kỳ')).toBeInTheDocument();
   });
 
-  it('mọi order_qty = need (kể cả khóa thiếu) → thêm "· Đặt mua mặc định"; một ô khác need → không có', async () => {
-    const app = await openAppendix(snapshotDataFixture({ order_qty: { [PEN_KEY]: 10, [TAPE_KEY]: 5 } }));
-    expect(await within(app).findByText('Bản chốt số 1 của kỳ · Đặt mua mặc định')).toBeInTheDocument();
+  it('mọi order_qty = số gộp (kể cả khóa thiếu) → thêm "· Đề nghị mặc định"; một ô khác số gộp → không có', async () => {
+    const app = await openAppendix(snapshotDataFixture({ order_qty: { [PEN_KEY]: 15, [TAPE_KEY]: 5 } }));
+    expect(await within(app).findByText('Bản chốt số 1 của kỳ · Đề nghị mặc định')).toBeInTheDocument();
   });
 
-  it('bản chốt 0 hàng → chỉ "Bản chốt số 1 của kỳ", không "Đặt mua mặc định"', async () => {
+  it('bản chốt 0 hàng → chỉ "Bản chốt số 1 của kỳ", không "Đề nghị mặc định"', async () => {
     const app = await openAppendix(snapshotDataFixture({ byItem: [], custom: [], byDepartment: [], order_qty: {} }));
     expect(await within(app).findByText('Bản chốt số 1 của kỳ')).toBeInTheDocument();
-    expect(within(app).queryByText(/Đặt mua mặc định/)).not.toBeInTheDocument();
+    expect(within(app).queryByText(/của kỳ · Đề nghị mặc định/)).not.toBeInTheDocument();
   });
 
-  it('một ô Đặt mua khác Cần mua → không có "Đặt mua mặc định"', async () => {
+  it('một ô Đề nghị khác số gộp → không có "Đề nghị mặc định"', async () => {
     const app = await openAppendix();
     expect(await within(app).findByText('Bản chốt số 1 của kỳ')).toBeInTheDocument();
-    expect(within(app).queryByText(/Đặt mua mặc định/)).not.toBeInTheDocument();
+    expect(within(app).queryByText(/của kỳ · Đề nghị mặc định/)).not.toBeInTheDocument();
   });
 
-  it('Phần 1 phẳng theo thứ tự bản chốt: TT · Món · ĐVT · … · Đặt mua · Số người; hàng món không có Số người; nhóm "Ngoài danh mục (đã chấp nhận)" cuối; không nhóm theo danh mục sống', async () => {
+  it('Phần 1 phẳng theo thứ tự bản chốt: TT · Món · ĐVT · … · Tổng cần · Đề nghị · Số người; hàng món không có Số người; nhóm "Ngoài danh mục (đã chấp nhận)" cuối; không nhóm theo danh mục sống', async () => {
     const app = await openAppendix();
     const table = tableIn(app, 'Phần 1 · Tổng hợp theo món');
-    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['TT', 'Món', 'ĐVT', 'Chưa giao kỳ này', 'Nợ kỳ trước', 'Tồn', 'Cần mua', 'Đặt mua', 'Số người']);
+    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['TT', 'Món', 'ĐVT', 'Chưa giao kỳ này', 'Nợ kỳ trước', 'Tồn', 'Tổng cần', 'Đề nghị', 'Số người']);
     const rows = within(table).getAllByRole('row').slice(1);
-    expect(cellsOf(rows[0])).toEqual(['1', 'Bút bi xanh', 'cây', '12', '3', '5', '10', '14', '']);
-    expect(cellsOf(rows[1])).toEqual(['2', 'Hồ dán', 'lọ', '2', '0', '9', '0', '0', '']);
+    expect(cellsOf(rows[0])).toEqual(['1', 'Bút bi xanh', 'cây', '12', '3', '5', '15', '14', '']);
+    expect(cellsOf(rows[1])).toEqual(['2', 'Hồ dán', 'lọ', '2', '0', '9', '2', '0', '']);
     expect(within(rows[2]).getByRole('rowheader')).toHaveTextContent('Ngoài danh mục (đã chấp nhận)');
     expect(cellsOf(rows[3])).toEqual(['3', 'Băng keo 2 mặt', 'cuộn', '4', '1', '—', '5', '5', '2']);
     expect(within(app).queryByText('Bút viết')).not.toBeInTheDocument();

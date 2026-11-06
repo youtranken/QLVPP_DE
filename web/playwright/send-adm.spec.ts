@@ -1,29 +1,11 @@
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, settled, shot } from './helpers';
+import { expect, test, type Page } from '@playwright/test';
+import { acquireLock, asRole, expectNoContrastViolations, isMobile, psql, settled, shot } from './helpers';
+import { confirmIfAsked, openDraft } from './send-adm-flow';
 import { seedLockedRequest, type Seed } from './locked-request';
 
 asRole('admin');
 
 const fitsWidth = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
-
-// Kỳ seed có thể còn món chờ duyệt do dữ liệu dev: hộp hỏi hiện thì bấm nút chốt trong hộp
-async function confirmIfAsked(page: Page, request: APIRequestContext, ym: string, replacing: boolean) {
-  const report = await (await request.get(`/api/admin/reports/${ym}`, { headers: devHeaders('admin') })).json();
-  if (report.pending_custom_count === 0 && !replacing) return;
-  await page.getByRole('dialog').getByRole('button', { name: 'In trình ký' }).click();
-}
-
-// Dữ liệu dev có thể đã có bản gửi của kỳ này: khi đó mở Lập phiếu bằng "Làm bản mới"
-async function openDraft(page: Page) {
-  const newDraft = page.getByRole('button', { name: 'Làm bản mới' });
-  const print = page.getByRole('button', { name: 'In trình ký' });
-  await expect(newDraft.or(print).first()).toBeVisible();
-  if (await newDraft.isVisible()) {
-    await newDraft.click();
-    await page.getByRole('dialog', { name: 'Làm bản mới?' }).getByRole('button', { name: 'Làm bản mới' }).click();
-  }
-  await expect(print).toBeVisible();
-}
 
 test.describe('Gửi ADM (Plan v2-D, Task 6)', () => {
   let run: { release: () => void; since: string; seed?: Seed };

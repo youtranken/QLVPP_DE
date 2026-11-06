@@ -28,13 +28,13 @@ afterEach(async () => {
 });
 
 describe('Tên món theo ngôn ngữ giao diện (name_en khi en và khác rỗng, không thì name)', () => {
-  it('en: Phần 1 "Blue pen"; name_en null/"" → giữ tên Việt; ô "Order Blue pen"', async () => {
+  it('en: Phần 1 "Blue pen"; name_en null/"" → giữ tên Việt', async () => {
     await openIn('en');
     const part1 = await screen.findByRole('region', { name: 'Part 1 · Summary by item' });
-    expect(await within(part1).findByRole('textbox', { name: 'Order Blue pen' })).toBeInTheDocument();
+    expect(await within(part1).findByRole('row', { name: /Blue pen/ })).toBeInTheDocument();
     expect(within(part1).queryByText('Bút bi xanh')).toBeNull();
-    expect(await within(part1).findByRole('textbox', { name: 'Order Hồ dán' })).toBeInTheDocument();
-    expect(await within(part1).findByRole('textbox', { name: 'Order Kẹp giấy' })).toBeInTheDocument();
+    expect(within(part1).getByRole('row', { name: /Hồ dán/ })).toBeInTheDocument();
+    expect(within(part1).getByRole('row', { name: /Kẹp giấy/ })).toBeInTheDocument();
   });
 
   it('en: bảng Xuất lẻ "A4 paper"; item_name_en null/"" → tên Việt', async () => {
@@ -56,7 +56,7 @@ describe('Tên món theo ngôn ngữ giao diện (name_en khi en và khác rỗn
   it('vi: cả ba bảng dùng tên Việt dù có name_en', async () => {
     await openIn('vi');
     const part1 = await screen.findByRole('region', { name: 'Phần 1 · Tổng hợp theo món' });
-    expect(await within(part1).findByRole('textbox', { name: 'Đặt mua Bút bi xanh' })).toBeInTheDocument();
+    expect(await within(part1).findByRole('row', { name: /Bút bi xanh/ })).toBeInTheDocument();
     expect(within(part1).queryByText('Blue pen')).toBeNull();
     const issues = screen.getByRole('region', { name: 'Xuất lẻ trong kỳ' });
     expect(within(issues).getByText('Giấy A4')).toBeInTheDocument();
@@ -65,12 +65,13 @@ describe('Tên món theo ngôn ngữ giao diện (name_en khi en và khác rỗn
     expect(within(detail).getByRole('row', { name: /Phạm Văn Đức/ })).toHaveTextContent('Bút bi xanh');
   });
 
-  it('cột 3 Phần 1 là phần chưa giao: vi "Chưa giao kỳ này", en "Undelivered this period"', async () => {
+  it('cột 3 Phần 1 cùng tên Gửi ADM: vi "Đăng ký", en "Requested"', async () => {
     await openIn('vi');
     const vi = await screen.findByRole('region', { name: 'Phần 1 · Tổng hợp theo món' });
-    expect(within(vi).getAllByRole('columnheader')[2]).toHaveTextContent('Chưa giao kỳ này');
+    await within(vi).findByRole('row', { name: /Bút bi xanh/ });
+    expect(within(vi).getAllByRole('columnheader')[2]).toHaveTextContent('Đăng ký');
     await i18n.changeLanguage('en');
     const en = await screen.findByRole('region', { name: 'Part 1 · Summary by item' });
-    expect(within(en).getAllByRole('columnheader')[2]).toHaveTextContent('Undelivered this period');
+    expect(within(en).getAllByRole('columnheader')[2]).toHaveTextContent('Requested');
   });
 });

@@ -1,3 +1,6 @@
+import type { TFunction } from 'i18next';
+import { formatVnStamp } from '@/lib/format-time';
+
 export type StepKey = 'register' | 'send' | 'arrive' | 'deliver';
 
 export interface StepState {
@@ -7,21 +10,62 @@ export interface StepState {
   value: string;
   progress?: number;
   to: string;
+  changed?: boolean;
+  note?: string;
+  link?: { to: string; label: string };
+}
+
+export interface SendInput {
+  state: 'unsent' | 'no_order' | 'sent';
+  at: string | null;
+  items: number;
+  units: number;
+  changed: boolean;
+}
+
+export interface PlanInput {
+  snapshot: { id: string } | null;
+  rows: { remaining: number; adm_out: boolean; usable: boolean }[];
+  custom: { remaining: number; adm_out: boolean }[];
 }
 
 export interface MonthStepsInput {
   registered: number;
   headcount: number | null;
   isOpen: boolean;
-  snapshots: number;
-  needTotal: number;
-  // Số phiếu Hàng về đã lưu cho kỳ: ADM hay giao thiếu, có phiếu rồi thì bước xong dù còn thiếu
-  receipts: number;
+  send: SendInput | null;
+  plan: PlanInput | null;
   pendingDelivery: number;
 }
 
+const SEND_ADM = '/admin/send-adm';
+
+// Hàng ADM hết hàng và món đã ngừng không chờ về nữa
+function outstanding(plan: PlanInput | null): number {
+  if (!plan) return 0;
+  const rows = plan.rows.filter((r) => !r.adm_out && r.usable).reduce((n, r) => n + r.remaining, 0);
+  return rows + plan.custom.filter((c) => !c.adm_out).reduce((n, c) => n + c.remaining, 0);
+}
+
+function sendStep(send: SendInput | null, t: TFunction) {
+  const time = send?.at ? formatVnStamp(send.at) : '';
+  if (send?.state === 'sent') {
+    const value = send.changed ? t('warn.W6step', { time }) : t('home.value.sent', { time, x: send.items, y: send.units });
+    return { done: true, value, changed: send.changed, note: '', link: { to: SEND_ADM, label: t('home.link.viewSent') } };
+  }
+  if (send?.state === 'no_order') return { done: true, value: t('home.value.noOrder', { time }), changed: false, note: '' };
+  return { done: false, value: t('home.value.sendTodo'), changed: false, note: t('home.note.sendTodo') };
+}
+
+function arriveStep(send: SendInput | null, plan: PlanInput | null, t: TFunction) {
+  if (send?.state === 'no_order') return { done: true, value: t('home.value.noOrderArrive'), note: '' };
+  const left = outstanding(plan);
+  const done = send?.state === 'sent' && !!plan?.snapshot && left === 0;
+  return done ? { done, value: t('home.value.arriveDone'), note: t('home.note.arriveDone') } : { done, value: String(left), note: t('home.note.arriveTodo') };
+}
+
 // Bước hiện tại = bước đầu tiên chưa xong; tất cả xong thì không có bước nào hiện tại
-export function monthSteps(i: MonthStepsInput): StepState[] {
+export function monthSteps(i: MonthStepsInput, t: TFunction): StepState[] {
   const known = i.headcount !== null && i.headcount > 0;
   const steps: Omit<StepState, 'current'>[] = [
     {
@@ -31,8 +75,8 @@ export function monthSteps(i: MonthStepsInput): StepState[] {
       progress: known ? Math.min(100, Math.round((i.registered / i.headcount!) * 100)) : undefined,
       to: '/admin/summary',
     },
-    { key: 'send', done: i.snapshots > 0, value: String(i.snapshots), to: '/admin/send-adm' },
-    { key: 'arrive', done: i.needTotal === 0 || i.receipts > 0, value: String(i.needTotal), to: '/admin/arrivals' },
+    { key: 'send', to: SEND_ADM, ...sendStep(i.send, t) },
+    { key: 'arrive', to: '/admin/arrivals', ...arriveStep(i.send, i.plan, t) },
     { key: 'deliver', done: i.pendingDelivery === 0, value: String(i.pendingDelivery), to: '/admin/delivery' },
   ];
   const first = steps.findIndex((s) => !s.done);

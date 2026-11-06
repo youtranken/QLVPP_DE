@@ -9,14 +9,14 @@ import { IconSprite } from '@/ui/icon-sprite';
 import { useShellFont } from '@/shell/use-shell-font';
 import { monthOf } from '@/features/request/request-format';
 import { useSnapshot, type SnapshotData } from './reports.api';
-import { vnStampParts } from './print-format';
+import { hasItems, vnStampParts } from './print-format';
 import { PrintRequestForm } from './print-request-form';
 import { PrintAppendix } from './print-appendix';
 import './print.m1.css';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function Toolbar({ snap, appendix, onAppendix }: { snap: SnapshotData; appendix: boolean; onAppendix: (on: boolean) => void }) {
+function Toolbar({ snap, appendix, onAppendix, empty }: { snap: SnapshotData; appendix: boolean; onAppendix: (on: boolean) => void; empty: boolean }) {
   const { t } = useTranslation();
   const at = vnStampParts(snap.created_at);
   return (
@@ -32,7 +32,7 @@ function Toolbar({ snap, appendix, onAppendix }: { snap: SnapshotData; appendix:
         <input type="checkbox" checked={appendix} onChange={(e) => onAppendix(e.target.checked)} />
         {t('reports.print.toolbar.appendix')}
       </label>
-      <button type="button" className="btn btn--primary" onClick={() => window.print()}>
+      <button type="button" className="btn btn--primary" disabled={empty} onClick={() => window.print()}>
         <Icon name="printer" size={18} />
         {t('reports.print.toolbar.print')}
       </button>
@@ -40,14 +40,25 @@ function Toolbar({ snap, appendix, onAppendix }: { snap: SnapshotData; appendix:
   );
 }
 
+function EmptySnapshot() {
+  const { t } = useTranslation();
+  return (
+    <p role="status" className="alert pp-empty-snap">
+      {t('reports.print.emptySnapshot')}
+    </p>
+  );
+}
+
 function PrintScreen({ snap }: { snap: SnapshotData }) {
   const [params, update] = useUrlPatch();
   const appendix = params.get('appendix') === '1';
   const onAppendix = (on: boolean) => update({ appendix: on ? '1' : null }, true);
+  // Bản rỗng cũ: không có gì để trình ký
+  const empty = !hasItems(snap);
   return (
     <div className="pp-page">
-      <Toolbar snap={snap} appendix={appendix} onAppendix={onAppendix} />
-      <PrintRequestForm snap={snap} />
+      <Toolbar snap={snap} appendix={appendix} onAppendix={onAppendix} empty={empty} />
+      {empty ? <EmptySnapshot /> : <PrintRequestForm snap={snap} />}
       {appendix && <PrintAppendix snap={snap} />}
     </div>
   );

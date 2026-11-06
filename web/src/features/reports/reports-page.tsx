@@ -1,41 +1,29 @@
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
-import { Icon } from '@/ui/icon';
+import { Link } from 'react-router-dom';
 import { Loading, LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
 import { PageHeader } from '@/ui/page-header';
 import { Toolbar } from '@/ui/toolbar';
-import { useConfirm } from '@/ui/confirm-context';
-import { currentPeriodQuery, useCurrentPeriod, type CurrentPeriod } from '@/features/request/request.api';
+import { shiftYm } from '@/lib/ym';
+import { useCurrentPeriod, type CurrentPeriod } from '@/features/request/request.api';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
-import { useMonthReport, type MonthReport, type SnapshotKind } from './reports.api';
+import { useSendState } from '@/features/send-adm/use-send-state';
+import type { SentSnapshot } from '@/features/send-adm/send-adm.api';
+import { useMonthReport, type MonthReport } from './reports.api';
 import { ReportPart1 } from './report-part1';
 import { ReportIssues } from './report-issues';
 import { ReportPart2 } from './report-part2';
 import { ReportSnapshots } from './report-snapshots';
-import { PendingDialog } from './report-pending-dialog';
-import { useOrderQty } from './use-order-qty';
 import { useReportsParams } from './use-reports-params';
-import { useSnapshotDownload, useTakeSnapshot } from './use-snapshot';
+import { useSnapshotDownload } from './use-snapshot';
 import './reports.m1.css';
 
-function ReportsHeader({ primary, secondary }: { primary?: ReactNode; secondary?: ReactNode }) {
+const NO_FRESH: ReadonlySet<string> = new Set();
+
+function ReportsHeader() {
   const { t } = useTranslation();
   const title = t('nav.reports');
-  return <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('reports.page.description')} primary={primary} secondary={secondary} />;
-}
-
-function TakeButton({ mode: kind, taking, onTake }: { mode: SnapshotKind; taking: SnapshotKind | null; onTake: (kind: SnapshotKind) => void }) {
-  const { t } = useTranslation();
-  const xlsx = kind === 'xlsx';
-  return (
-    <button type="button" className={xlsx ? 'btn' : 'btn btn--primary'} disabled={taking !== null} onClick={() => onTake(kind)}>
-      <Icon name={xlsx ? 'sheet' : 'printer'} size={18} />
-      {taking === kind ? t('reports.page.taking') : t(xlsx ? 'reports.page.exportXlsx' : 'reports.page.print')}
-    </button>
-  );
+  return <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} description={t('reports.page.description')} />;
 }
 
 function MonthRow({ ym, period, onChange }: { ym: string; period: CurrentPeriod; onChange: (ym: string) => void }) {
@@ -58,76 +46,54 @@ function MonthRow({ ym, period, onChange }: { ym: string; period: CurrentPeriod;
   );
 }
 
-function ReportBody({ report, period, onMonth, onInvalidPeriod }: { report: MonthReport; period: CurrentPeriod; onMonth: (ym: string) => void; onInvalidPeriod: () => boolean }) {
+interface BodyProps {
+  report: MonthReport;
+  sent: SentSnapshot | null;
+  period: CurrentPeriod;
+  onMonth: (ym: string) => void;
+}
+
+function ReportBody({ report, sent, period, onMonth }: BodyProps) {
   const { t } = useTranslation();
-  const confirm = useConfirm();
-  const navigate = useNavigate();
-  const qty = useOrderQty(report);
   const files = useSnapshotDownload(report.ym);
-  const snap = useTakeSnapshot(report, qty, files, onInvalidPeriod);
-  const month = monthOf(report.ym);
-  // Nháp Đặt mua thuộc về một kỳ: rời kỳ hoặc rời trang thì hỏi rồi bỏ (component dựng lại theo ym)
-  const canLeave = () =>
-    qty.editedCount === 0 ||
-    confirm({
-      title: t('reports.page.leaveConfirm.title'),
-      message: t('reports.page.leaveConfirm.message', { count: qty.editedCount, month }),
-      confirmLabel: t('reports.page.leaveConfirm.ok'),
-      cancelLabel: t('reports.page.leaveConfirm.cancel'),
-      danger: true,
-    });
-  const changeMonth = async (ym: string) => {
-    if (await canLeave()) onMonth(ym);
-  };
-  const review = async () => {
-    snap.cancel();
-    if (await canLeave()) navigate(`/admin/review?ym=${report.ym}`);
-  };
+  const open = report.ym === period.ym;
   return (
     <div className="ct-page bc-page">
-      <ReportsHeader
-        secondary={<TakeButton mode="xlsx" taking={snap.taking} onTake={snap.take} />}
-        primary={<TakeButton mode="print" taking={snap.taking} onTake={snap.take} />}
-      />
-      <Toolbar lead={<MonthRow ym={report.ym} period={period} onChange={(v) => void changeMonth(v)} />} />
-      {report.ym === period.ym && <p className="alert">{t('reports.page.openNotice', { month })}</p>}
+      <ReportsHeader />
+      <Toolbar lead={<MonthRow ym={report.ym} period={period} onChange={onMonth} />} />
+      {open && <p className="alert">{t('reports.page.openNotice', { month: monthOf(report.ym) })}</p>}
       {report.pending_custom_count > 0 && (
         <p className="alert alert--warn">
           {t('reports.page.pendingNotice', { count: report.pending_custom_count })}{' '}
           <Link to={`/admin/review?ym=${report.ym}`}>{t('reports.page.pendingLink')}</Link>
         </p>
       )}
-      {snap.fixCount > 0 && <p role="alert" className="alert alert--danger">{t('reports.page.fixErrors', { count: snap.fixCount })}</p>}
-      {snap.notice && <p role="alert" className="alert alert--danger">{t(`reports.page.error.${snap.notice}`)}</p>}
-      <ReportPart1 report={report} qty={qty} />
+      <ReportPart1 report={report} sent={sent} editable={report.ym === shiftYm(period.ym, -1)} />
       <ReportIssues issues={report.issues} />
       <ReportPart2 departments={report.byDepartment} />
-      <ReportSnapshots ym={report.ym} fresh={snap.fresh} files={files} />
-      {snap.asking && <PendingDialog count={report.pending_custom_count} onReview={() => void review()} onConfirm={snap.confirm} onCancel={snap.cancel} />}
+      <ReportSnapshots ym={report.ym} fresh={NO_FRESH} files={files} />
     </div>
   );
 }
 
-function ReportForMonth({ ym, period, onMonth, onInvalidPeriod }: { ym: string; period: CurrentPeriod; onMonth: (ym: string) => void; onInvalidPeriod: () => boolean }) {
+// Kỳ đã khóa: Đề nghị theo bản có hàng mới nhất nếu có; kỳ đang mở chưa gửi được nên không hỏi server
+function ReportForMonth({ ym, period, onMonth }: { ym: string; period: CurrentPeriod; onMonth: (ym: string) => void }) {
+  const locked = ym < period.ym;
   const query = useMonthReport(ym);
-  if (query.data) return <ReportBody report={query.data} period={period} onMonth={onMonth} onInvalidPeriod={onInvalidPeriod} />;
+  const send = useSendState(ym, locked);
+  const failed = [query, send.query].filter((q) => q.isError);
+  if (query.data && (!locked || send.query.data)) return <ReportBody report={query.data} sent={send.sent} period={period} onMonth={onMonth} />;
   return (
     <div className="ct-page bc-page">
       <ReportsHeader />
-      {query.isError ? <LoadError onRetry={() => void query.refetch()} /> : <Loading />}
+      {failed.length > 0 ? <LoadError onRetry={() => void Promise.all(failed.map((q) => q.refetch()))} /> : <Loading />}
     </div>
   );
 }
 
 export function ReportsPage() {
   const current = useCurrentPeriod();
-  const qc = useQueryClient();
   const p = useReportsParams(current.data?.ym);
-  // Server nói tháng chưa tới: kỳ mở trên trang đã cũ → tải lại kỳ rồi về tháng mặc định
-  const invalidPeriod = () => {
-    void qc.invalidateQueries({ queryKey: currentPeriodQuery().queryKey });
-    return p.resetMonth();
-  };
   if (!p.ym || !current.data) {
     return (
       <div className="ct-page bc-page">
@@ -136,5 +102,5 @@ export function ReportsPage() {
       </div>
     );
   }
-  return <ReportForMonth key={p.ym} ym={p.ym} period={current.data} onMonth={p.setMonth} onInvalidPeriod={invalidPeriod} />;
+  return <ReportForMonth key={p.ym} ym={p.ym} period={current.data} onMonth={p.setMonth} />;
 }

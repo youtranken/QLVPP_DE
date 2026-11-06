@@ -6,12 +6,11 @@ import { useMe } from '@/lib/me';
 import { shiftYm } from '@/lib/ym';
 import { Loading, LoadError } from '@/ui/load-state';
 import { Segmented } from '@/ui/segmented';
-import { useAdminItems } from '@/features/catalog/catalog.api';
-import { toArrivalRows } from '@/features/arrivals/arrival-rows';
+import { arrivalsPlanQuery } from '@/features/arrivals/arrivals.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
-import { useMonthReport, useSnapshots } from '@/features/reports/reports.api';
 import { reviewLinesQuery } from '@/features/review/review.api';
+import { useSendState } from '@/features/send-adm/use-send-state';
 import { lowStockQuery } from '@/features/stock/stock.api';
 import { usePeriodSummary, useUnregistered, type PeriodSummary } from '@/features/summary/summary.api';
 import { CardError, CustomCard, LowStockCard, UnregisteredCard } from './home-cards';
@@ -54,25 +53,28 @@ function Ready({ currentYm }: { currentYm: string }) {
   const [view, setView] = useState<View>('locked');
   const current = usePeriodSummary(currentYm);
   const locked = usePeriodSummary(lockedYm);
-  const snapshots = useSnapshots(lockedYm);
-  const report = useMonthReport(lockedYm);
-  const items = useAdminItems();
-  const queries = [current, locked, snapshots, report, items];
+  // Gửi ADM và Hàng về chỉ có nghĩa khi kỳ giao đã khóa
+  const lockedDone = locked.data?.is_open === false;
+  const send = useSendState(lockedYm, lockedDone);
+  const plan = useQuery({ ...arrivalsPlanQuery(lockedYm), enabled: lockedDone });
+  const queries = [current, locked, send.query, plan];
   const failed = queries.find((q) => q.isError);
-  if (failed) return <LoadError onRetry={() => void Promise.all(queries.map((q) => q.refetch()))} />;
-  if (!current.data || !locked.data || !snapshots.data || !report.data || !items.data) return <Loading />;
+  if (failed) return <LoadError onRetry={() => void Promise.all(queries.filter((q) => q.isError).map((q) => q.refetch()))} />;
+  if (!current.data || !locked.data || (lockedDone && (!send.query.data || !plan.data))) return <Loading />;
 
-  const lockedSteps = monthSteps({
-    registered: locked.data.registered,
-    headcount: locked.data.headcount,
-    isOpen: locked.data.is_open,
-    snapshots: snapshots.data.items.length,
-    // Cùng tập dòng với trang Hàng về: bỏ món đã ngừng dùng (server không nhập kho cho món đó)
-    needTotal: toArrivalRows(report.data, items.data).reduce((n, r) => n + r.qty, 0),
-    receipts: locked.data.receipts,
-    pendingDelivery: locked.data.lines_pending_delivery ?? 0,
-  });
-  const currentSteps = monthSteps({ registered: current.data.registered, headcount: current.data.headcount, isOpen: current.data.is_open, snapshots: 0, needTotal: 0, receipts: 0, pendingDelivery: 0 });
+  const sent = send.sent;
+  const lockedSteps = monthSteps(
+    {
+      registered: locked.data.registered,
+      headcount: locked.data.headcount,
+      isOpen: locked.data.is_open,
+      send: send.state ? { state: send.state, at: sent?.created_at ?? send.noOrder?.at ?? null, items: sent?.items_count ?? 0, units: sent?.units_total ?? 0, changed: send.changedAfter } : null,
+      plan: plan.data ?? null,
+      pendingDelivery: locked.data.lines_pending_delivery ?? 0,
+    },
+    t,
+  );
+  const currentSteps = monthSteps({ registered: current.data.registered, headcount: current.data.headcount, isOpen: current.data.is_open, send: null, plan: null, pendingDelivery: 0 }, t);
   const registerView = view === 'current';
   const doing = lockedSteps.find((s) => s.current);
   const hero = registerView

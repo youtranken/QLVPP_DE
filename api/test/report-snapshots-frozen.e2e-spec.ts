@@ -1,4 +1,11 @@
+import type ExcelJS from 'exceljs';
 import { snapshotsFixture } from './report-snapshots.fixture';
+
+// Kỳ test dùng chung có thể đã có bản trước với số khác → bản này là bản thay thế, dòng đầu là "Thay thế bản in lúc …"
+const formTitle = (ws: ExcelJS.Worksheet) =>
+  String(ws.getCell('A1').value).startsWith('Thay thế bản in lúc')
+    ? ws.getCell('A2').value
+    : ws.getCell('A1').value;
 
 describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
   const f = snapshotsFixture('snapfrozen');
@@ -42,7 +49,7 @@ describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
       5,
       0,
       4,
-      1,
+      5,
       6,
     ]);
   });
@@ -87,9 +94,7 @@ describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
       'Phiếu đề xuất',
       'Phụ lục',
     ]);
-    expect(wb.worksheets[0].getCell('A1').value).toBe(
-      'Phiếu đề xuất văn phòng phẩm',
-    );
+    expect(formTitle(wb.worksheets[0])).toBe('Phiếu đề xuất văn phòng phẩm');
     expect(wb.worksheets[1].getCell('A1').value).toBe('Món');
   });
 
@@ -101,9 +106,7 @@ describe('Bản chốt đóng băng + export.xlsx (E5-S2)', () => {
       'Phiếu đề xuất',
       'Appendix',
     ]);
-    expect(en.worksheets[0].getCell('A1').value).toBe(
-      'Phiếu đề xuất văn phòng phẩm',
-    );
+    expect(formTitle(en.worksheets[0])).toBe('Phiếu đề xuất văn phòng phẩm');
     expect(en.worksheets[1].getCell('A1').value).toBe('Item');
     expect(en.worksheets[1].getColumn(1).values).toContain('Department');
     const vi = await workbook(await exportXlsx(id, '?lang=vi').expect(200));

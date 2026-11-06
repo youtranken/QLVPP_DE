@@ -20,6 +20,7 @@ function SnapshotItem({ snapshot: s, fresh, files }: { snapshot: SnapshotRow; fr
         <span className="bc-snap__kind">
           <b id={`${id}-kind`}>{t(`reports.snapshots.kind.${s.kind}`)}</b>
           {fresh && <span className="tag tag--ok">{t('reports.snapshots.fresh')}</span>}
+          {s.has_items === false && <span className="tag">{t('reports.snapshots.empty')}</span>}
         </span>
         <span id={`${id}-meta`} className="bc-snap__meta">
           {t('reports.snapshots.meta', { at: formatVnStamp(s.created_at, true), by: s.created_by_name ?? s.created_by_sub })}
@@ -63,7 +64,7 @@ export function ReportSnapshots({ ym, fresh, files }: { ym: string; fresh: Reado
     <ReportSection title={t('reports.snapshots.title')} note={t('reports.snapshots.note')}>
       <DownloadFailure files={files} />
       {query.isError && <LoadError onRetry={() => void query.refetch()} />}
-      {query.isSuccess && items.length === 0 && <p className="bc-empty">{t('reports.snapshots.empty')}</p>}
+      {query.isSuccess && items.length === 0 && <p className="bc-empty">{t('reports.snapshots.none')}</p>}
       {items.length > 0 && (
         <ul className="bc-snaps">
           {items.map((s) => (

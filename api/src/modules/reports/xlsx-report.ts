@@ -67,7 +67,7 @@ function fillByItem(
       r.requested,
       r.backlog_prev,
       r.stock,
-      r.need,
+      wantOf(r),
       order(r),
     ]);
   }
@@ -80,7 +80,7 @@ function fillByItem(
         r.requested,
         r.backlog_prev,
         null,
-        r.need,
+        wantOf(r),
         order(r),
       ]);
     }

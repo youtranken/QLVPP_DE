@@ -14,14 +14,20 @@ async function snap(page: Page, info: TestInfo, name: string) {
 
 const snapshotCount = (ym: string) => Number(psql(`SELECT count(*) FROM report_snapshots WHERE period_ym = '${ym}-01'`));
 
-async function confirmPendingIfAny(page: Page, request: APIRequestContext, ym: string) {
-  const report = await (await request.get(`/api/admin/reports/${ym}`, { headers: devHeaders('admin') })).json();
-  if (report.pending_custom_count === 0) return;
-  await page.getByRole('dialog', { name: /^Còn \d+ món ngoài danh mục chưa xem$/ }).getByRole('button', { name: 'Vẫn chốt' }).click();
-}
-
 const PRINT_URL = /\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print$/;
 const FORM = 'Phiếu đề xuất văn phòng phẩm';
+
+// Báo cáo chỉ đọc: bản chốt tạo qua api (như Gửi ADM gửi), rồi mở trang in riêng của bản đó
+async function printSnapshot(page: Page, request: APIRequestContext, seed: Seed, order: Record<string, number>) {
+  const report = await (await request.get(`/api/admin/reports/${seed.prevYm}`, { headers: devHeaders('admin') })).json();
+  const keyOf = (name: string) => [...report.byItem, ...report.custom].find((r: { name: string }) => r.name === name).key as string;
+  const order_qty = Object.fromEntries(Object.entries(order).map(([name, qty]) => [keyOf(name), qty]));
+  const made = await request.post(`/api/admin/reports/${seed.prevYm}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print', order_qty } });
+  expect(made.ok()).toBe(true);
+  const { id } = (await made.json()) as { id: string };
+  await page.goto(`/admin/reports/snapshots/${id}/print`);
+  return id;
+}
 
 type SignBox = { title: string; title_en: string; name: string };
 
@@ -46,14 +52,6 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     expect((await request.put('/api/admin/config', { headers: devHeaders('admin'), data: { signature_boxes } })).ok()).toBe(true);
   };
 
-  const printFromReports = async (page: Page, request: APIRequestContext, seed: Seed, fill: Record<string, string>) => {
-    await page.goto('/admin/reports');
-    for (const [name, qty] of Object.entries(fill)) await page.getByRole('textbox', { name: `Đặt mua ${name}` }).fill(qty);
-    await page.getByRole('button', { name: 'In trình ký' }).click();
-    await confirmPendingIfAny(page, request, seed.prevYm);
-    await page.goto(await urlOfNewTab(page, PRINT_URL, () => page.getByRole('button', { name: 'Mở bản in' }).click(), devHeaders('admin')));
-    return page.url().split('/').at(-2)!;
-  };
 
   const formTable = (page: Page) => page.getByRole('region', { name: FORM }).getByRole('table');
   const appendix = (page: Page) => page.getByRole('region', { name: /^Phụ lục · Chi tiết tháng / });
@@ -69,7 +67,7 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
       { title: 'Người yêu cầu', title_en: 'Applicant', name: '' },
     ]);
 
-    const snapshotId = await printFromReports(page, request, seed, { [a.name]: '9' });
+    const snapshotId = await printSnapshot(page, request, seed, { [a.name]: 9 });
     expect(snapshotCount(seed.prevYm)).toBe(before + 1);
     await expect(page.getByRole('heading', { level: 1, name: FORM })).toBeVisible();
     await expect(formTable(page).getByRole('row', { name: new RegExp(a.name) }).getByRole('cell').last()).toHaveText('9');
@@ -79,8 +77,8 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await expect(page).toHaveURL(/\?appendix=1$/);
     const frozenRow = () => appendix(page).getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row', { name: new RegExp(a.name) });
     const numbers = async () => (await frozenRow().getByRole('cell').allTextContents()).slice(3, 8);
-    // Chưa giao 5 · Nợ kỳ trước 0 · Tồn 2 · Cần mua 3 · Đặt mua 9
-    const frozen = ['5', '0', '2', '3', '9'];
+    // Chưa giao 5 · Nợ kỳ trước 0 · Tồn 2 · Tổng cần 5 (không trừ tủ) · Đề nghị 9
+    const frozen = ['5', '0', '2', '5', '9'];
     expect(await numbers()).toEqual(frozen);
     await expect(appendix(page).getByText(/^Lập lúc \d{2}:\d{2} ngày \d{2}\/\d{2}\/\d{4} bởi /)).toBeVisible();
     await expect(appendix(page).getByText(`Bản chốt số ${before + 1} của kỳ`)).toBeVisible();
@@ -129,8 +127,8 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await snap(page, info, 'print-reopened');
   });
 
-  test('E9-S4 Phiếu đề xuất D&E: chỉ món đặt mua, ô ký theo cấu hình, bật phụ lục', async ({ page, request }, info) => {
-    // A cần mua 3 nhưng đặt 1 → in; B tồn đủ nên Cần mua 0 → không in ở trang 1, vẫn có ở phụ lục
+  test('E9-S4 Phiếu đề xuất D&E: mọi hàng của bản theo Đề nghị, ô ký theo cấu hình, bật phụ lục', async ({ page, request }, info) => {
+    // A tổng cần 5 nhưng đề nghị 1 → in 1; B tủ 10 vẫn đề nghị mặc định = đăng ký 1 (tủ không trừ) → in 1
     const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }, { stock: 10, qty: 1 }]));
     const [a, b] = seed.items;
     const code = `PW${seed.tag}`.slice(0, 40);
@@ -143,11 +141,13 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     ];
     await setBoxes(request, boxes);
 
-    await printFromReports(page, request, seed, { [a.name]: '1' });
+    await printSnapshot(page, request, seed, { [a.name]: 1 });
     const rowA = formTable(page).getByRole('row', { name: new RegExp(a.name) });
     await expect(rowA).toBeVisible();
     expect((await rowA.getByRole('cell').allTextContents()).slice(1)).toEqual([code, a.name, `PW pen ${seed.tag}`, unit, '1']);
-    await expect(formTable(page).getByRole('row', { name: new RegExp(b.name) })).toHaveCount(0);
+    const rowB = formTable(page).getByRole('row', { name: new RegExp(b.name) });
+    await expect(rowB).toBeVisible();
+    await expect(rowB.getByRole('cell').last()).toHaveText('1');
     const signs = page.getByRole('group', { name: 'Chữ ký' }).getByRole('group');
     await expect(signs).toHaveCount(3);
     expect(await signs.evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')))).toEqual(boxes.map((x) => x.title));

@@ -52,8 +52,8 @@ describe('AdminShell + RequireRole', () => {
     stubShellApi({
       '/api/admin/periods/2026-11/summary': () => jsonResponse(200, { ...kpi, is_open: true }),
       '/api/admin/periods/2026-10/summary': () => jsonResponse(200, kpi),
-      '/api/admin/reports/2026-10/snapshots': () => jsonResponse(200, { items: [] }),
-      '/api/admin/reports/2026-10': () => jsonResponse(200, { byItem: [], custom: [] }),
+      '/api/admin/periods/2026-10/send-state': () => jsonResponse(200, { state: 'unsent', no_order_at: null, no_order_by_name: null, sent: null, changed_after: false, changed_at: null }),
+      '/api/admin/periods/2026-10/arrivals-plan': () => jsonResponse(200, { snapshot: null, batches: [], rows: [], custom: [], makeup: [] }),
     });
     renderApp(makeMe('admin'), '/admin');
     expect(screen.getByTestId('location')).toHaveTextContent('/admin/home');

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import type { SnapshotData, SnapshotRef } from '@/features/reports/reports.api';
+import { arrivalsPlanQuery } from '@/features/arrivals/arrivals.api';
 
 // Bản chốt có hàng mới nhất của kỳ (mọi loại); bản rỗng cũ không bao giờ là bản này
 export interface SentSnapshot {
@@ -25,10 +26,12 @@ export interface SendStateDto {
 
 export const sendStateKey = (ym: string) => ['send-state', ym] as const;
 
-export function useSendStateQuery(ym: string) {
+// Server chỉ trả trạng thái cho kỳ đã khóa: kỳ đang mở thì không gọi
+export function useSendStateQuery(ym: string, enabled = true) {
   return useQuery({
     queryKey: sendStateKey(ym),
     queryFn: () => apiFetch<SendStateDto>(`/api/admin/periods/${ym}/send-state`),
+    enabled,
   });
 }
 
@@ -43,18 +46,9 @@ export const markNoOrder = (ym: string, orderQty: Record<string, number>, csrfTo
 export const clearNoOrder = (ym: string, csrfToken: string | null) =>
   apiFetch<void>(`/api/admin/periods/${ym}/no-order`, { method: 'DELETE', csrfToken });
 
-interface MakeupGroup {
-  ym: string;
-  rows: { key: string; adm_owed: number }[];
-}
-
 // Tháng của phần ADM còn nợ giao theo khóa (cho dòng xám); chỉ tải khi có hàng ADM còn nợ
 export function useAdmOwedMonths(ym: string, enabled: boolean) {
-  const q = useQuery({
-    queryKey: ['arrivals-plan', ym],
-    queryFn: () => apiFetch<{ makeup: MakeupGroup[] }>(`/api/admin/periods/${ym}/arrivals-plan`),
-    enabled,
-  });
+  const q = useQuery({ ...arrivalsPlanQuery(ym), enabled });
   return useMemo(() => {
     const months = new Map<string, string[]>();
     for (const g of q.data?.makeup ?? []) {

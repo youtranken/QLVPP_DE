@@ -113,6 +113,10 @@ export interface SnapshotRow {
   created_at: string;
   created_by_sub: string;
   created_by_name: string | null;
+  // Bản rỗng cũ (mọi Đề nghị = 0): vẫn trong danh sách, nhãn xám
+  has_items?: boolean;
+  items_count?: number;
+  units_total?: number;
 }
 
 export const REPORTS_KEY = ['reports'] as const;

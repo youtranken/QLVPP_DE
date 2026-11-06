@@ -1,4 +1,5 @@
-import { createContext, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { defaultOrder } from '@/lib/report-qty';
 import { ORDER_QTY_MAX, type MonthReport, type ReportCustomRow, type ReportItemRow } from './reports.api';
 
 const DIGITS = /^\d+$/;
@@ -10,10 +11,8 @@ export function parseOrderQty(text: string): number | null {
   return n <= ORDER_QTY_MAX ? n : null;
 }
 
-// Chỉ gửi ô đã sửa: ô để nguyên thì server lấy need tại lúc chốt; luật thật kiểm lại ở server
+// Chỉ gửi ô đã sửa: ô để nguyên thì server lấy số mặc định tại lúc chốt; luật thật kiểm lại ở server
 export type OrderQty = ReturnType<typeof useOrderQty>;
-
-const netNeed = (r: ReportItemRow | ReportCustomRow) => r.need;
 
 interface Options {
   // Số mốc của ô (ô khác mốc = đã sửa); hàm phải ổn định giữa các lần render
@@ -21,7 +20,7 @@ interface Options {
   initial?: Record<string, number>;
 }
 
-export function useOrderQty(report: MonthReport, { baseOf = netNeed, initial }: Options = {}) {
+export function useOrderQty(report: MonthReport, { baseOf = defaultOrder, initial }: Options = {}) {
   const [drafts, setDrafts] = useState<Record<string, string>>(() =>
     Object.fromEntries(Object.entries(initial ?? {}).map(([k, v]) => [k, String(v)])),
   );
@@ -77,5 +76,3 @@ export function useOrderQty(report: MonthReport, { baseOf = netNeed, initial }: 
     dirty: Object.keys(drafts).length > 0,
   };
 }
-
-export const OrderQtyContext = createContext<OrderQty | null>(null);

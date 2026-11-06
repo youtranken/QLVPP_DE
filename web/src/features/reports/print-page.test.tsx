@@ -37,12 +37,42 @@ describe('Trang in · trang 1 Phiếu đề xuất (mẫu D&E)', () => {
     expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['STT No.', 'Mã Code', 'Tên vật dụng', 'Item name', 'ĐVT Unit', 'SL Qty']);
   });
 
-  it('chỉ món order_qty > 0 (0 không in, 1 in), theo thứ tự bản chốt, ngoài DM cuối với Mã "—"; ĐVT tên vi đã chụp', async () => {
+  it('mọi hàng của bản chốt theo thứ tự (Đề nghị 0 vẫn in số 0, 1 in 1), ngoài DM cuối với Mã "—"; ĐVT tên vi đã chụp', async () => {
     openPrint(snapshotDataFixture({ order_qty: { [PEN_KEY]: 1, 'item-glue': 0, [TAPE_KEY]: 5 } }));
     expect(bodyRows(await formTable())).toEqual([
       ['1', 'B31', 'Bút bi xanh', 'Blue pen', 'cây', '1'],
-      ['2', '—', 'Băng keo 2 mặt', '', 'cuộn', '5'],
+      ['2', '—', 'Hồ dán', '', 'lọ', '0'],
+      ['3', '—', 'Băng keo 2 mặt', '', 'cuộn', '5'],
     ]);
+  });
+
+  it('bản có replaces → dòng đầu đậm "Thay thế bản in lúc 09:02 12/12" trên tiêu đề; bản không replaces → không có dòng này', async () => {
+    openPrint(snapshotDataFixture({ replaces: { id: 'old', created_at: '2026-12-12T02:02:00Z' } }));
+    const form = await screen.findByRole('region', { name: 'Phiếu đề xuất văn phòng phẩm' });
+    const line = within(form).getByText('Thay thế bản in lúc 09:02 12/12');
+    expect(line.tagName).toBe('STRONG');
+    expect(line.compareDocumentPosition(within(form).getByRole('heading', { level: 1 })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('bản không có replaces → không có dòng "Thay thế bản in"', async () => {
+    openPrint(snapshotDataFixture());
+    await formTable();
+    expect(screen.queryByText(/^Thay thế bản in lúc/)).toBeNull();
+  });
+
+  it('bản rỗng (mọi Đề nghị 0) → "Bản này không có món nào — không cần trình ký.", nút In vô hiệu, không có tờ phiếu', async () => {
+    openPrint(snapshotDataFixture({ order_qty: { [PEN_KEY]: 0, 'item-glue': 0, [TAPE_KEY]: 0 } }));
+    expect(await screen.findByText('Bản này không có món nào — không cần trình ký.')).toBeInTheDocument();
+    const bar = screen.getByRole('toolbar', { name: 'Thanh công cụ bản in (không in ra giấy)' });
+    expect(within(bar).getByRole('button', { name: 'In' })).toBeDisabled();
+    expect(screen.queryByRole('region', { name: 'Phiếu đề xuất văn phòng phẩm' })).toBeNull();
+  });
+
+  it('bản có hàng (một ô 1, còn lại 0) → nút In bật (hai phía mốc)', async () => {
+    openPrint(snapshotDataFixture({ order_qty: { [PEN_KEY]: 1, 'item-glue': 0, [TAPE_KEY]: 0 } }));
+    const bar = await screen.findByRole('toolbar', { name: 'Thanh công cụ bản in (không in ra giấy)' });
+    expect(within(bar).getByRole('button', { name: 'In' })).toBeEnabled();
+    expect(screen.queryByText('Bản này không có món nào — không cần trình ký.')).toBeNull();
   });
 
   it('giao diện tiếng Anh: trang 1 vẫn song ngữ như mẫu, ĐVT vẫn tên vi', async () => {
@@ -53,15 +83,20 @@ describe('Trang in · trang 1 Phiếu đề xuất (mẫu D&E)', () => {
     expect(bodyRows(table)[0]).toEqual(['1', 'B31', 'Bút bi xanh', 'Blue pen', 'cây', '14']);
   });
 
-  it('bản chốt cũ: thiếu code → "—", thiếu tên ĐVT → lấy tên vi hiện tại của bảng ĐVT; thiếu khóa order_qty → Cần mua', async () => {
+  it('bản chốt cũ: thiếu code → "—", thiếu tên ĐVT → lấy tên vi hiện tại của bảng ĐVT', async () => {
     const base = snapshotDataFixture();
     const old = base.byItem.map(({ code: _c, unit_name: _u, unit_name_en: _e, ...r }) => r);
-    openPrint(snapshotDataFixture({ byItem: old, custom: [], order_qty: {} }));
-    expect(bodyRows(await formTable())).toEqual([['1', '—', 'Bút bi xanh', 'Blue pen', 'cây', '10']]);
+    openPrint(snapshotDataFixture({ byItem: [old[0]], custom: [], order_qty: { [PEN_KEY]: 0, 'item-x': 1 } }));
+    expect(bodyRows(await formTable())).toEqual([['1', '—', 'Bút bi xanh', 'Blue pen', 'cây', '0']]);
   });
 
-  it('không món nào order_qty > 0 → một hàng "Không có món cần đặt mua."', async () => {
-    openPrint(snapshotDataFixture({ order_qty: { [PEN_KEY]: 0, 'item-glue': 0, [TAPE_KEY]: 0 } }));
+  it('bản chốt cũ không có khóa order_qty của hàng → in số gộp 15', async () => {
+    openPrint(snapshotDataFixture({ custom: [], order_qty: { 'item-glue': 1 } }));
+    expect(bodyRows(await formTable())[0]).toEqual(['1', 'B31', 'Bút bi xanh', 'Blue pen', 'cây', '15']);
+  });
+
+  it('bản chốt không có hàng nào → một hàng "Không có món cần đặt mua."', async () => {
+    openPrint(snapshotDataFixture({ byItem: [], custom: [], order_qty: { 'item-gone': 2 } }));
     expect(bodyRows(await formTable())).toEqual([['Không có món cần đặt mua.']]);
   });
 

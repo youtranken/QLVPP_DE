@@ -8,6 +8,7 @@
 [data-shell='admin'] .pp-sheet p { margin: 0; }
 [data-shell='admin'] .pp-form__head { display: grid; gap: var(--s-1); text-align: center; }
 [data-shell='admin'] .pp-form__title { margin: 0; font: var(--t-h3); }
+[data-shell='admin'] .pp-form__replaces { margin: 0; text-align: left; font: var(--t-body); }
 [data-shell='admin'] .pp-form__sub { font-weight: 700; letter-spacing: .04em; }
 [data-shell='admin'] .pp-form__date { margin-top: var(--s-2); }
 

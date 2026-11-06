@@ -12,14 +12,8 @@ function useStepText() {
       case 'register':
         return { value: s.value, note: t(s.done ? 'home.note.registerDone' : 'home.note.registerOpen') };
       case 'send':
-        return { value: t(`home.value.send${state}`), note: s.done ? t('home.note.sendDone', { n: s.value }) : t('home.note.sendTodo') };
       case 'arrive':
-      {
-        // Xong vì đã có phiếu Hàng về nhưng ADM giao thiếu: còn số thiếu thì nói thẳng
-        const short = s.done && Number(s.value) > 0;
-        if (short) return { value: t('home.value.arriveShort', { n: s.value }), note: t('home.note.arriveShort') };
-        return { value: s.done ? t('home.value.arriveDone') : s.value, note: t(`home.note.arrive${state}`) };
-      }
+        return { value: s.value, note: s.note ?? '' };
       case 'deliver':
         return { value: s.done ? t('home.value.deliverDone') : s.value, note: t(`home.note.deliver${state}`) };
     }
@@ -50,7 +44,12 @@ export function MonthSteps({ steps, onlyFirst = false }: Props) {
               <span className="hm-step__name">{t(`home.step.${s.key}`)}</span>
             </div>
             <div className="hm-step__value">{value}</div>
-            <div className="hm-step__note">{note}</div>
+            {note && <div className="hm-step__note">{note}</div>}
+            {s.link && !muted && (
+              <Link className="hm-step__link" to={s.link.to}>
+                {s.link.label}
+              </Link>
+            )}
             {current && (
               <div className="hm-step__go">
                 {s.progress !== undefined && (

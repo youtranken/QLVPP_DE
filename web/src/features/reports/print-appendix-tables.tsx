@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react';
+import { wantOf } from '@/lib/report-qty';
 import { useTranslation } from 'react-i18next';
 import { pickName, type ReportCustomRow, type ReportDepartment, type ReportIssue, type ReportItemRow, type SnapshotData } from './reports.api';
 import { orderOf, useFrozenUnitName, vnStampParts } from './print-format';
@@ -29,7 +30,7 @@ export function Part1Table({ snap }: { snap: SnapshotData }) {
       <td className="pp-r">{r.requested}</td>
       <td className="pp-r">{r.backlog_prev}</td>
       <td className="pp-r">{r.stock ?? '—'}</td>
-      <td className="pp-r">{r.need}</td>
+      <td className="pp-r">{wantOf(r)}</td>
       <td className="pp-r">{orderOf(snap, r)}</td>
       <td className="pp-r">{people ?? ''}</td>
     </tr>

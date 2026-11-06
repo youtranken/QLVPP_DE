@@ -4,9 +4,7 @@ import type { Messages } from '@/locales/messages';
 const reports: Messages<typeof vi> = {
   reports: {
     page: {
-      description: 'What to buy this month, Excel export and the sheet for signing.',
-      exportXlsx: 'Export Excel',
-      print: 'Print for signing',
+      description: 'Order numbers, goods in and deliveries of the month. Print and Excel are in Send to ADM.',
       taking: 'Creating snapshot…',
       month: '{{month}}/{{year}}',
       monthNav: 'Choose report month',
@@ -19,19 +17,6 @@ const reports: Messages<typeof vi> = {
       openNotice: 'The {{month}} period is still open — figures are provisional, based on saved requests.',
       pendingNotice: '{{count}} off-catalogue items not reviewed yet — they are not counted in this report.',
       pendingLink: 'Review pending items',
-      fixErrors: 'Fix {{count}} invalid order quantities before creating a snapshot.',
-      leaveConfirm: {
-        title: 'Discard edited order quantities?',
-        message: 'You edited {{count}} order quantities for month {{month}} without creating a snapshot. Switching month discards them.',
-        ok: 'Discard changes',
-        cancel: 'Keep editing',
-      },
-      pendingDialog: {
-        title: '{{count}} off-catalogue items not reviewed',
-        message: 'These items are not counted in the report. A snapshot created now will not include them.',
-        review: 'Review pending items',
-        ok: 'Snapshot anyway',
-      },
       error: {
         INVALID_PERIOD: 'This month has not started yet, no report can be made.',
         REPORT_CHANGED: 'The report changed and was reloaded — check the order quantities, then create the snapshot again.',
@@ -43,28 +28,26 @@ const reports: Messages<typeof vi> = {
         print: 'Created print for {{month}}/{{year}} · snapshot {{time}}',
         openPrint: 'Open print',
       },
+      sentSource: 'From the order sent {{time}}',
+      draftSource: 'Suggested, not sent',
+      editAtSendAdm: 'Edit order numbers in Send to ADM →',
       how: {
-        title: 'How To buy is calculated',
+        title: 'How Total requested is calculated',
         formula: 'Default order = undelivered this period + carried over. Stock is for reference only. Edit the order cell to reduce.',
-        order: 'Order defaults to To buy. Any cell you edit is saved as edited in the snapshot.',
       },
     },
     part1: {
       title: 'Part 1 · Summary by item',
-      onlyNeed: 'Only items to buy',
-      resetAll: 'Reset all to To buy ({{count}})',
+      onlyNeed: 'Only items with a total requested',
       colName: 'Item',
       colUnit: 'Unit',
       colRequested: 'Undelivered this period',
       colBacklog: 'Owed from last period',
       colStock: 'In stock',
-      colNeed: 'To buy',
+      colNeed: 'Total requested',
       colOrder: 'Order',
+      colReceived: 'Arrived',
       colPeople: 'People',
-      orderLabel: 'Order {{name}}',
-      orderInvalid: 'From 0 to 99,999.',
-      resetNeed: 'Back to To buy ({{need}})',
-      resetNeedLabel: 'Back to To buy ({{need}}) {{name}}',
       groupsFailed: 'Could not load item groups — items are shown under "Uncategorized" for now.',
       retry: 'Try again',
       uncategorized: 'Uncategorized',
@@ -72,7 +55,7 @@ const reports: Messages<typeof vi> = {
       groupItems: '{{count}} items',
       rows: '{{count}} items',
       empty: 'No items requested this month.',
-      emptyNeed: 'Nothing to buy.',
+      emptyNeed: 'No item has a total requested.',
     },
     part2: {
       title: 'Part 2 · Detail by department',
@@ -88,6 +71,7 @@ const reports: Messages<typeof vi> = {
       empty: 'No requests this month.',
     },
     print: {
+      emptySnapshot: 'This copy has no items — no signature needed.',
       toolbar: {
         label: 'Print toolbar (not printed)',
         back: 'Back',
@@ -112,6 +96,8 @@ const reports: Messages<typeof vi> = {
           qtyEn: 'Qty',
         },
         empty: 'Không có món cần đặt mua.',
+        // Tờ phiếu luôn theo mẫu tiếng Việt cho ADM
+        replaces: 'Thay thế bản in lúc {{time}}',
         noCode: '—',
         signGroup: 'Signatures',
         oldSigner: {
@@ -125,7 +111,7 @@ const reports: Messages<typeof vi> = {
         dept: 'Construction Department · Stationery',
         preparedAt: 'Prepared at {{time}} on {{date}} by {{by}}',
         ordinal: 'Snapshot no. {{k}} of the period',
-        ordinalDefault: 'Snapshot no. {{k}} of the period · Default order',
+        ordinalDefault: 'Snapshot no. {{k}} of the period · Default order numbers',
         title: 'Appendix · Detail for {{month}}/{{year}}',
         counts: '{{requests}} requests · {{items}} items requested',
         formula: 'Default order = undelivered this period + carried over. Stock is for reference only. Edit the order cell to reduce.',
@@ -154,7 +140,8 @@ const reports: Messages<typeof vi> = {
       meta: 'Created {{at}} · {{by}}',
       download: 'Download Excel again, created {{at}}',
       reprint: 'Print again, created {{at}}',
-      empty: 'No snapshots yet.',
+      none: 'No snapshots yet.',
+      empty: 'No items',
       retry: 'Try again',
       error: {
         DOWNLOAD_FAILED: 'Could not download the file — try again.',

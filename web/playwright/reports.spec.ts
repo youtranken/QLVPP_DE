@@ -12,7 +12,6 @@ const ExcelJS = createRequire(new URL('../../api/package.json', import.meta.url)
 
 const DOWNLOADS = 'test-results/downloads';
 const PART1 = 'Phần 1 · Tổng hợp theo món';
-const PENDING_DIALOG = /^Còn \d+ món ngoài danh mục chưa xem$/;
 
 const monthLabel = (ym: string) => `Tháng ${Number(ym.slice(5, 7))}/${ym.slice(0, 4)}`;
 const snapshotsOf = async (request: APIRequestContext, ym: string) =>
@@ -59,11 +58,17 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     const month = page.getByRole('group', { name: 'Chọn tháng báo cáo' });
     await expect(month.getByText(monthLabel(seed.prevYm))).toBeVisible();
     await expect(month.getByText('Đã khóa', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Xuất Excel' })).toBeEnabled();
-    await expect(page.getByRole('button', { name: 'In trình ký' })).toBeEnabled();
+    // Báo cáo chỉ đọc: không nút chốt, không ô nhập
+    await expect(page.getByRole('button', { name: /^(Xuất Excel|In trình ký)/ })).toHaveCount(0);
 
     const part1 = page.getByRole('region', { name: PART1 });
-    await expect(part1.getByRole('textbox', { name: `Đặt mua ${a.name}` })).toHaveValue('3');
+    const rowA = part1.getByRole('row').filter({ hasText: a.name });
+    // Đăng ký 5 · Nợ 0 · Tủ 2 · Tổng cần 5 · Đề nghị 5 (theo bản đã gửi, không trừ tủ) · Đã về 0 · Đã giao 0
+    await expect(rowA).toBeVisible();
+    expect((await rowA.getByRole('cell').allTextContents()).slice(2, 9)).toEqual(['5', '0', '2', '5', '5', '0', '0']);
+    await expect(part1.getByRole('textbox')).toHaveCount(0);
+    await expect(part1.getByText(/^Theo bản đã gửi \d{2}:\d{2} \d{2}\/\d{2}$/)).toBeVisible();
+    await expect(part1.getByRole('link', { name: 'Sửa số đề nghị ở Gửi ADM →' })).toHaveAttribute('href', '/admin/send-adm');
     // Món seed không có nhóm → "Chưa xếp nhóm"
     await expect(part1.getByRole('rowheader', { name: /^Chưa xếp nhóm/ })).toBeVisible();
     const issues = page.getByRole('region', { name: 'Xuất lẻ trong kỳ' });
@@ -75,8 +80,8 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     const list = page.getByRole('region', { name: 'Bản chốt' });
     const printed = list.getByRole('listitem').filter({ hasText: 'Bản in' }).first();
     await expect(printed.getByRole('link', { name: /^In lại bản lập/ })).toHaveAttribute('target', '_blank');
-    await part1.getByRole('button', { name: 'Cách tính Cần mua' }).click();
-    await expect(page.getByRole('dialog', { name: 'Cách tính Cần mua' })).toContainText('Cần mua = Chưa giao kỳ này + Nợ kỳ trước − Tồn');
+    await part1.getByRole('button', { name: 'Cách tính Tổng cần' }).click();
+    await expect(page.getByRole('dialog', { name: 'Cách tính Tổng cần' })).toContainText('Đề nghị mặc định = Chưa giao kỳ này + Nợ kỳ trước. Tủ chỉ để tham khảo, không trừ.');
     await page.keyboard.press('Escape');
 
     await expect(month.getByRole('button', { name: 'Tháng sau' })).toBeEnabled();
@@ -84,45 +89,38 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     await shot(page, info, 'reports');
   });
 
-  test('E5-S2 E9-S4 Báo cáo: Đặt mua biên 0/99999/100000, chốt hỏi món chưa xem, Excel tải về và tải lại không tạo bản mới', async ({ page, request }, info) => {
+  test('V2D-7 E5-S2 Báo cáo chỉ đọc theo bản đã gửi, Excel của bản tải về và tải lại không tạo bản mới', async ({ page, request }, info) => {
     const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }]));
     const [a] = seed.items;
     psql(`INSERT INTO request_lines (request_id, custom_name, custom_unit, qty, review_status)
       VALUES ('${seed.requestId}', 'PW chờ xem ${seed.tag}', 'cai', 1, 'pending')`);
-    const before = await snapshotsOf(request, seed.prevYm);
+    const report = await (await request.get(`/api/admin/reports/${seed.prevYm}`, { headers: devHeaders('admin') })).json();
+    const key = report.byItem.find((r: { name: string }) => r.name === a.name).key as string;
     await page.goto('/admin/reports');
-    const order = page.getByRole('textbox', { name: `Đặt mua ${a.name}` });
-    const exportBtn = page.getByRole('button', { name: 'Xuất Excel' });
-    await expect(order).toHaveValue('3');
+    const part1 = page.getByRole('region', { name: PART1 });
+    const rowA = part1.getByRole('row').filter({ hasText: a.name });
+    // Chưa gửi (dev không còn bản gửi của kỳ): Đề nghị = số gộp 5, không trừ tủ 2
+    const state = (await (await request.get(`/api/admin/periods/${seed.prevYm}/send-state`, { headers: devHeaders('admin') })).json()).state;
+    if (state === 'unsent') {
+      await expect(part1.getByText('Gợi ý, chưa gửi')).toBeVisible();
+      await expect(rowA.getByRole('cell').nth(6)).toHaveText('5');
+    }
     await expect(page.getByText(/^Còn \d+ món ngoài danh mục chưa xem — chưa được tính vào báo cáo này\./)).toBeVisible();
 
-    await order.fill('100000');
-    await expect(page.getByText('Từ 0 đến 99 999.')).toBeVisible();
-    await exportBtn.click();
-    await expect(page.getByText('Sửa 1 ô Đặt mua đang lỗi trước khi chốt.')).toBeVisible();
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-    for (const ok of ['99999', '0']) {
-      await order.fill(ok);
-      await expect(order).not.toHaveAttribute('aria-invalid');
-    }
-    await expect(page.getByText('Sửa 1 ô Đặt mua đang lỗi trước khi chốt.')).toHaveCount(0);
+    // Gửi ADM chốt bản Excel với Đề nghị 9 (sửa ở Gửi ADM)
+    const made = await request.post(`/api/admin/reports/${seed.prevYm}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'xlsx', order_qty: { [key]: 9 } } });
+    expect(made.ok()).toBe(true);
+    const before = await snapshotsOf(request, seed.prevYm);
+    await page.reload();
+    await expect(part1.getByText(/^Theo bản đã gửi \d{2}:\d{2} \d{2}\/\d{2}$/)).toBeVisible();
+    await expect(rowA.getByRole('cell').nth(6)).toHaveText('9');
 
-    await exportBtn.click();
-    await page.getByRole('dialog', { name: PENDING_DIALOG }).getByRole('button', { name: 'Xem món chờ' }).click();
-    // Ô Đặt mua đang khác Cần mua (0 ≠ 3) → hỏi như khi đổi tháng
-    await page.getByRole('dialog', { name: 'Bỏ số Đặt mua đã sửa?' }).getByRole('button', { name: 'Bỏ thay đổi' }).click();
-    await expect(page).toHaveURL(new RegExp(`/admin/review\\?ym=${seed.prevYm}$`));
-    expect(await snapshotsOf(request, seed.prevYm)).toBe(before);
-
-    await page.goto(`/admin/reports?ym=${seed.prevYm}`);
-    await order.fill('9');
-    await expect(page.getByRole('button', { name: `Về Cần mua (3) ${a.name}` })).toBeVisible();
+    const list = page.getByRole('region', { name: 'Bản chốt' });
+    const mine = list.getByRole('listitem').filter({ hasText: 'Excel' }).first();
     const downloading = page.waitForEvent('download');
-    await exportBtn.click();
-    await page.getByRole('dialog', { name: PENDING_DIALOG }).getByRole('button', { name: 'Vẫn chốt' }).click();
+    await mine.getByRole('button', { name: /^Tải lại Excel lập/ }).click();
     const download = await downloading;
     expect(download.suggestedFilename()).toBe(`vpp-bao-cao-${seed.prevYm}.xlsx`);
-    await expect(page.getByText(new RegExp(`^Đã xuất Excel ${monthLabel(seed.prevYm).replace('Tháng', 'tháng')} · bản chốt \\d{2}:\\d{2}$`))).toBeVisible();
     const file = `${DOWNLOADS}/${seed.tag}.xlsx`;
     run.files.push(file);
     await saveDownload(download, file);
@@ -133,23 +131,11 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     const formRow = wb.worksheets[0].getRows(1, wb.worksheets[0].rowCount)!.find((r) => r.getCell(3).value === a.name)!;
     expect(formRow.getCell(6).value).toBe(9);
     const sheetRow = wb.worksheets[1].getRows(1, wb.worksheets[1].rowCount)!.find((r) => r.getCell(1).value === a.name)!;
-    expect([sheetRow.getCell(6).value, sheetRow.getCell(7).value]).toEqual([3, 9]);
-    expect(await snapshotsOf(request, seed.prevYm)).toBe(before + 1);
-
-    const list = page.getByRole('region', { name: 'Bản chốt' });
-    const fresh = list.getByRole('listitem').filter({ hasText: 'Mới' });
-    await expect(fresh).toHaveCount(1);
+    // Tổng cần 5 · Đề nghị 9
+    expect([sheetRow.getCell(6).value, sheetRow.getCell(7).value]).toEqual([5, 9]);
+    expect(await snapshotsOf(request, seed.prevYm)).toBe(before);
     if (isMobile(info)) await expectNoContrastViolations(page);
-    await shot(page, info, 'reports-exported');
-
-    const again = page.waitForEvent('download');
-    await fresh.getByRole('button', { name: /^Tải lại Excel lập/ }).click();
-    const second = await again;
-    expect(second.suggestedFilename()).toBe(`vpp-bao-cao-${seed.prevYm}.xlsx`);
-    const file2 = `${DOWNLOADS}/${seed.tag}-again.xlsx`;
-    run.files.push(file2);
-    await saveDownload(second, file2);
-    expect(await snapshotsOf(request, seed.prevYm)).toBe(before + 1);
+    await shot(page, info, 'reports-sent');
   });
 
   test('E9-S4 Báo cáo: kỳ đang mở → 409 PERIOD_NOT_LOCKED {ym, deadline} (chặn ghi bản chốt kiểm ở api e2e report-snapshots)', async ({ request }) => {

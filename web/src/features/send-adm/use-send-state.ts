@@ -1,7 +1,7 @@
 import { useSendStateQuery } from './send-adm.api';
 
-export function useSendState(ym: string) {
-  const query = useSendStateQuery(ym);
+export function useSendState(ym: string, enabled = true) {
+  const query = useSendStateQuery(ym, enabled);
   const d = query.data;
   return {
     query,

@@ -13,7 +13,7 @@ function openPage(path = '/admin/reports') {
 }
 
 const region = (name: string) => screen.findByRole('region', { name });
-const orderCell = (name: string) => screen.findByRole('textbox', { name: `Đặt mua ${name}` });
+const rowOf = async (name: string) => within(await region(PART1)).findByRole('row', { name: new RegExp(name) });
 const PART1 = 'Phần 1 · Tổng hợp theo món';
 
 afterEach(() => {
@@ -25,20 +25,17 @@ describe('ReportsPage — tháng', () => {
   it('cột "Số người" chỉ hiện khi Phần 1 có hàng ngoài danh mục; không có thì ẩn hẳn cột', async () => {
     stubReports({ reports: { '2026-10': reportFixture({ custom: [] }) } });
     openPage();
-    await orderCell('Bút bi xanh');
+    await rowOf('Bút bi xanh');
     expect(within(await region(PART1)).queryByRole('columnheader', { name: 'Số người' })).toBeNull();
   });
 
-  it('Xuất Excel / In trình ký ở đầu trang (phụ trước chính); bộ chọn tháng ở thanh công cụ dưới; chân Phần 1 đếm "3 món"', async () => {
+  it('đầu trang không còn nút chốt; bộ chọn tháng ở thanh công cụ; mô tả mới; chân Phần 1 đếm "3 món"', async () => {
     stubReports();
     openPage();
-    await orderCell('Bút bi xanh');
-    const actions = screen.getByRole('group', { name: 'Thao tác trang' });
-    expect(within(actions).getAllByRole('button').map((b) => b.textContent)).toEqual(['Xuất Excel', 'In trình ký']);
-    const month = screen.getByRole('group', { name: 'Chọn tháng báo cáo' });
-    expect(actions.contains(month)).toBe(false);
-    expect(actions.compareDocumentPosition(month) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(screen.getByText('Số cần mua trong tháng, xuất Excel và in giấy trình ký.')).toBeInTheDocument();
+    await rowOf('Bút bi xanh');
+    expect(screen.queryByRole('group', { name: 'Thao tác trang' })).toBeNull();
+    expect(screen.getByRole('group', { name: 'Chọn tháng báo cáo' })).toBeInTheDocument();
+    expect(screen.getByText('Số đề nghị, hàng đã về và đã giao của tháng. In trình ký và xuất Excel ở Gửi ADM.')).toBeInTheDocument();
     expect(within(await region(PART1)).getByText('3 món', { selector: 'p' })).toBeInTheDocument();
     expect(within(await region(PART1)).getByRole('columnheader', { name: 'Số người' })).toBeInTheDocument();
   });
@@ -46,7 +43,7 @@ describe('ReportsPage — tháng', () => {
   it('lên tới kỳ đang mở (11/2026) rồi "Tháng sau" vô hiệu; badge "Đã khóa" → "Đang mở · hạn 10/11"', async () => {
     stubReports();
     openPage();
-    await orderCell('Bút bi xanh');
+    await rowOf('Bút bi xanh');
     const month = screen.getByRole('group', { name: 'Chọn tháng báo cáo' });
     expect(within(month).getByText('Đã khóa')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
@@ -58,41 +55,10 @@ describe('ReportsPage — tháng', () => {
   it.each(['abc', '2026-13', '1999-12', '2026-1', '2026-12', '2099-01'])('?ym=%s sai hoặc vượt kỳ mở → thay URL bằng kỳ khóa gần nhất, không gọi API với tháng sai', async (bad) => {
     const f = stubReports();
     openPage(`/admin/reports?ym=${bad}`);
-    await orderCell('Bút bi xanh');
+    await rowOf('Bút bi xanh');
     expect(screen.getByText('Tháng 10/2026')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByTestId('location-search')).toHaveTextContent('?ym=2026-10'));
     expect(f.mock.calls.map((c) => String(c[0])).filter((u) => u.startsWith('/api/admin/reports/') && !u.includes('2026-10'))).toEqual([]);
-  });
-
-  it('đổi tháng khi có ô sửa → hỏi "Bỏ số Đặt mua đã sửa?"; "Tiếp tục sửa" giữ tháng và số; "Bỏ thay đổi" sang tháng trước, quay lại thì số về Cần mua', async () => {
-    stubReports();
-    openPage();
-    const pen = await orderCell('Bút bi xanh');
-    await userEvent.clear(pen);
-    await userEvent.type(pen, '7');
-    await userEvent.click(screen.getByRole('button', { name: 'Tháng trước' }));
-    const ask = await screen.findByRole('dialog', { name: 'Bỏ số Đặt mua đã sửa?' });
-    expect(within(ask).getByText('Bạn đã sửa 1 ô Đặt mua của tháng 10 nhưng chưa chốt. Sang tháng khác sẽ bỏ các số này.')).toBeInTheDocument();
-    await userEvent.click(within(ask).getByRole('button', { name: 'Tiếp tục sửa' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(screen.getByText('Tháng 10/2026')).toBeInTheDocument();
-    expect(await orderCell('Bút bi xanh')).toHaveValue('7');
-    await userEvent.click(screen.getByRole('button', { name: 'Tháng trước' }));
-    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Bỏ thay đổi' }));
-    await screen.findByText('Tháng 9/2026');
-    await userEvent.click(screen.getByRole('button', { name: 'Tháng sau' }));
-    expect(screen.queryByRole('dialog')).toBeNull();
-    await screen.findByText('Tháng 10/2026');
-    expect(await orderCell('Bút bi xanh')).toHaveValue('10');
-  });
-
-  it('không sửa ô nào → đổi tháng không hỏi', async () => {
-    stubReports();
-    openPage();
-    await orderCell('Bút bi xanh');
-    await userEvent.click(screen.getByRole('button', { name: 'Tháng trước' }));
-    await waitFor(() => expect(screen.getByTestId('location-search')).toHaveTextContent('?ym=2026-09'));
-    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('báo cáo lỗi 500 → "Không tải được dữ liệu — thử lại." + "Thử lại"', async () => {
@@ -133,10 +99,10 @@ describe('ReportsPage — Phần 1 nhóm theo danh mục', () => {
     expect(at('Chưa xếp nhóm')).toBeLessThan(at('Món đã xóa'));
     expect(at('Chưa xếp nhóm')).toBeLessThan(at('Món không nhóm'));
     expect(at('Món không nhóm')).toBeLessThan(at('Ngoài danh mục'));
-    const tape = (await orderCell('Băng keo 2 mặt')).closest('tr')!;
+    const tape = await rowOf('Băng keo 2 mặt');
     expect(within(tape).getByText('—')).toBeInTheDocument();
-    expect(within(tape).getByText('2')).toBeInTheDocument();
-    expect(within((await orderCell('Bút bi xanh')).closest('tr')!).getByText('Box of 20')).toBeInTheDocument();
+    expect(within(tape).getAllByRole('cell').at(-1)).toHaveTextContent('2');
+    expect(within(await rowOf('Bút bi xanh')).getByText('Box of 20')).toBeInTheDocument();
     expect(within(part1).getByText('6 món')).toBeInTheDocument();
   });
 
@@ -148,25 +114,33 @@ describe('ReportsPage — Phần 1 nhóm theo danh mục', () => {
     expect(within(part1).queryByRole('rowheader', { name: /Bút viết/ })).toBeNull();
   });
 
-  it('"Chỉ món cần mua" → ẩn hàng Cần mua 0 (Hồ dán), bỏ bật thì hiện lại', async () => {
-    stubReports();
+  it('"Chỉ món có Tổng cần" → ẩn hàng Tổng cần 0, giữ hàng Tổng cần 1 (hai phía); bỏ bật thì hiện lại', async () => {
+    const base = reportFixture();
+    const report = reportFixture({ byItem: [base.byItem[0], { ...base.byItem[1], requested: 0, backlog_prev: 0 }], custom: [{ ...base.custom[0], requested: 1, backlog_prev: 0 }] });
+    stubReports({ reports: { '2026-10': report } });
     openPage();
-    await orderCell('Hồ dán');
-    const only = screen.getByRole('checkbox', { name: 'Chỉ món cần mua' });
+    await rowOf('Hồ dán');
+    const only = screen.getByRole('checkbox', { name: 'Chỉ món có Tổng cần' });
     await userEvent.click(only);
-    expect(screen.queryByRole('textbox', { name: 'Đặt mua Hồ dán' })).toBeNull();
-    expect(await orderCell('Bút bi xanh')).toBeInTheDocument();
+    expect(within(await region(PART1)).queryByRole('row', { name: /Hồ dán/ })).toBeNull();
+    expect(await rowOf('Băng keo 2 mặt')).toBeInTheDocument();
     await userEvent.click(only);
-    expect(await orderCell('Hồ dán')).toBeInTheDocument();
+    expect(await rowOf('Hồ dán')).toBeInTheDocument();
   });
 
-  it('tiêu đề cột Phần 1 đúng thứ tự SPEC', async () => {
-    stubReports();
+  it('admin/items lỗi → báo nhỏ trên Phần 1 + "Thử lại", số vẫn hiện; thử lại được thì hết báo', async () => {
+    let fail = true;
+    const f = stubReports();
+    const base = f.getMockImplementation()!;
+    f.mockImplementation(async (url: string, init?: RequestInit) => (url === '/api/admin/items' && fail ? errorResponse(500, 'INTERNAL') : base(url, init)));
     openPage();
     const part1 = await region(PART1);
-    await orderCell('Bút bi xanh');
-    expect(within(part1).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Món', 'ĐVT', 'Chưa giao kỳ này', 'Nợ kỳ trước', 'Tồn', 'Cần mua', 'Đặt mua', 'Số người']);
-    expect(within((await orderCell('Bút bi xanh')).closest('tr')!).getAllByRole('cell')[5]).toHaveTextContent('10');
+    expect(await within(part1).findByText('Chưa tải được nhóm món — các món tạm nằm ở "Chưa xếp nhóm".', {}, { timeout: 4000 })).toBeInTheDocument();
+    expect(within(await rowOf('Bút bi xanh')).getAllByRole('cell')[6]).toHaveTextContent('15');
+    fail = false;
+    await userEvent.click(within(part1).getByRole('button', { name: 'Thử lại' }));
+    await waitFor(() => expect(within(part1).queryByText(/Chưa tải được nhóm món/)).toBeNull());
+    expect(await within(part1).findByRole('rowheader', { name: /Bút viết/ })).toBeInTheDocument();
   });
 });
 
@@ -174,7 +148,7 @@ describe('ReportsPage — Xuất lẻ, Phần 2, Cách tính', () => {
   it('issues rỗng → không có mục "Xuất lẻ trong kỳ"', async () => {
     stubReports();
     openPage();
-    await orderCell('Bút bi xanh');
+    await rowOf('Bút bi xanh');
     expect(screen.queryByRole('region', { name: 'Xuất lẻ trong kỳ' })).toBeNull();
   });
 
@@ -208,29 +182,26 @@ describe('ReportsPage — Xuất lẻ, Phần 2, Cách tính', () => {
     expect(within(detail).queryByRole('row', { name: /Phạm Văn Đức/ })).toBeNull();
   });
 
-  it('"Cách tính Cần mua" là nút (i) ở đầu cột Cần mua, bấm mới hiện công thức; không còn khối riêng cuối trang', async () => {
+  it('"Cách tính Tổng cần" là nút (i) ở đầu cột Tổng cần, bấm mới hiện công thức', async () => {
     stubReports();
     openPage();
     const part1 = await region(PART1);
-    await orderCell('Bút bi xanh');
-    expect(screen.queryByRole('region', { name: 'Cách tính Cần mua' })).toBeNull();
-    const head = within(part1).getByRole('columnheader', { name: /^Cần mua/ });
-    await userEvent.click(within(head).getByRole('button', { name: 'Cách tính Cần mua' }));
-    expect(screen.getByRole('dialog', { name: 'Cách tính Cần mua' })).toHaveTextContent('Đề nghị mặc định = Chưa giao kỳ này + Nợ kỳ trước. Tủ chỉ để tham khảo, không trừ. Muốn bớt thì sửa ô Đề nghị.');
+    await rowOf('Bút bi xanh');
+    const head = within(part1).getByRole('columnheader', { name: /^Tổng cần/ });
+    await userEvent.click(within(head).getByRole('button', { name: 'Cách tính Tổng cần' }));
+    expect(screen.getByRole('dialog', { name: 'Cách tính Tổng cần' })).toHaveTextContent('Đề nghị mặc định = Chưa giao kỳ này + Nợ kỳ trước. Tủ chỉ để tham khảo, không trừ. Muốn bớt thì sửa ô Đề nghị.');
   });
 
-  it('390: không có đầu cột → nút (i) "Cách tính Cần mua" nằm ở công cụ Phần 1, chạm mở công thức; ô Cần mua giữ nhãn', async () => {
+  it('390: không có đầu cột → nút (i) "Cách tính Tổng cần" ở công cụ Phần 1; ô Tổng cần và Đề nghị giữ nhãn', async () => {
     stubReports();
     mockViewport(390);
     renderApp(makeMe('admin'), '/admin/reports');
-    const part1 = await region(PART1);
-    const pen = (await orderCell('Bút bi xanh')).closest('tr')!;
-    expect(within(pen).getAllByRole('cell')[5]).toHaveAttribute('data-label', 'Cần mua');
-    const tips = within(part1).getAllByRole('button', { name: 'Cách tính Cần mua' });
+    const pen = await rowOf('Bút bi xanh');
+    expect(within(pen).getAllByRole('cell')[5]).toHaveAttribute('data-label', 'Tổng cần');
+    expect(within(pen).getAllByRole('cell')[6]).toHaveAttribute('data-label', 'Đề nghị');
+    const tips = within(await region(PART1)).getAllByRole('button', { name: 'Cách tính Tổng cần' });
     expect(tips).toHaveLength(1);
     expect(tips[0].closest('th')).toBeNull();
-    await userEvent.click(tips[0]);
-    expect(screen.getByRole('dialog', { name: 'Cách tính Cần mua' })).toHaveTextContent('Đặt mua mặc định bằng Cần mua.');
   });
 
   it('câu về bản chốt nằm ở mục "Bản chốt", không ở mô tả đầu trang', async () => {

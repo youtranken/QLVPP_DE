@@ -20,6 +20,7 @@ const FORM = {
     'SL\nQty',
   ],
   empty: 'Không có món cần đặt mua.',
+  replaces: 'Thay thế bản in lúc',
   noCode: '—',
   blankName: '……………………',
 } as const;
@@ -53,24 +54,21 @@ export function requestFormRows(
 ): RequestFormRow[] {
   const qty = (r: { key: string; requested: number; backlog_prev: number }) =>
     data.order_qty[r.key] ?? wantOf(r);
-  const items = data.byItem
-    .filter((r) => qty(r) > 0)
-    .map((r) => ({
-      code: r.code || FORM.noCode,
-      name: r.name,
-      name_en: r.name_en ?? '',
-      unit: unitNameOf(r, names, 'vi'),
-      qty: qty(r),
-    }));
-  const custom = data.custom
-    .filter((r) => qty(r) > 0)
-    .map((r) => ({
-      code: FORM.noCode,
-      name: r.name,
-      name_en: '',
-      unit: unitNameOf(r, names, 'vi'),
-      qty: qty(r),
-    }));
+  // Giữ hàng Đề nghị 0 để phiếu khớp bảng Gửi ADM
+  const items = data.byItem.map((r) => ({
+    code: r.code || FORM.noCode,
+    name: r.name,
+    name_en: r.name_en ?? '',
+    unit: unitNameOf(r, names, 'vi'),
+    qty: qty(r),
+  }));
+  const custom = data.custom.map((r) => ({
+    code: FORM.noCode,
+    name: r.name,
+    name_en: '',
+    unit: unitNameOf(r, names, 'vi'),
+    qty: qty(r),
+  }));
   return [...items, ...custom];
 }
 
@@ -82,6 +80,22 @@ export function signatureBoxesOf(data: SnapshotData): SignatureBox[] {
     name: data.signers?.[role] ?? '',
   }));
 }
+
+const VN_STAMP = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit',
+  minute: '2-digit',
+  day: '2-digit',
+  month: '2-digit',
+  hourCycle: 'h23',
+  timeZone: 'Asia/Ho_Chi_Minh',
+});
+
+// "hh:mm dd/mm" giờ VN, ghép từng phần để không phụ thuộc locale
+const vnStamp = (iso: string) => {
+  const parts = VN_STAMP.formatToParts(new Date(iso));
+  const p = (type: string) => parts.find((x) => x.type === type)?.value ?? '';
+  return `${p('hour')}:${p('minute')} ${p('day')}/${p('month')}`;
+};
 
 const vnDay = (iso: string) => {
   const { y, m, d } = vnDate(new Date(iso));
@@ -95,7 +109,7 @@ export function fillRequestForm(
 ): void {
   WIDTHS.forEach((w, i) => (ws.getColumn(i + 1).width = w));
   ws.pageSetup = { paperSize: 9, orientation: 'portrait', fitToWidth: 1 };
-  fillHeading(ws, data.created_at);
+  fillHeading(ws, data);
   const header = ws.addRow([...FORM.header]);
   header.font = { bold: true };
   header.alignment = {
@@ -117,16 +131,24 @@ export function fillRequestForm(
   fillSignatures(ws, signatureBoxesOf(data));
 }
 
-function fillHeading(ws: ExcelJS.Worksheet, createdAt: string): void {
-  ws.addRow([FORM.title]);
-  ws.addRow([FORM.subtitle]);
-  for (const n of [1, 2]) {
-    ws.mergeCells(n, 1, n, WIDTHS.length);
-    ws.getCell(n, 1).alignment = { horizontal: 'center' };
+// Bản thay thế: dòng đầu đậm để ADM bỏ bản in cũ
+function fillHeading(ws: ExcelJS.Worksheet, data: SnapshotData): void {
+  if (data.replaces) {
+    const row = ws.addRow([
+      `${FORM.replaces} ${vnStamp(data.replaces.created_at)}`,
+    ]);
+    ws.mergeCells(row.number, 1, row.number, WIDTHS.length);
+    row.getCell(1).font = { bold: true };
   }
-  ws.getCell('A1').font = { bold: true, size: 14 };
-  ws.addRow([null, null, FORM.date, vnDay(createdAt)]);
-  ws.getCell('C3').alignment = { horizontal: 'right' };
+  const title = ws.addRow([FORM.title]);
+  const subtitle = ws.addRow([FORM.subtitle]);
+  for (const row of [title, subtitle]) {
+    ws.mergeCells(row.number, 1, row.number, WIDTHS.length);
+    row.getCell(1).alignment = { horizontal: 'center' };
+  }
+  title.getCell(1).font = { bold: true, size: 14 };
+  const date = ws.addRow([null, null, FORM.date, vnDay(data.created_at)]);
+  date.getCell(3).alignment = { horizontal: 'right' };
   ws.addRow([]);
 }
 

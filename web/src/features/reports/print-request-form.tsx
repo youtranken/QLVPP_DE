@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SnapshotData } from './reports.api';
+import { formatVnStamp } from '@/lib/format-time';
 import { orderOf, signBoxesOf, useFrozenUnitName, vnStampParts, type SignBox } from './print-format';
 
 const FORM_LANG = 'vi';
@@ -18,12 +19,9 @@ interface FormRow {
 
 function useFormRows(snap: SnapshotData, noCode: string): FormRow[] {
   const unitName = useFrozenUnitName();
-  const items = snap.byItem
-    .filter((r) => orderOf(snap, r) > 0)
-    .map((r) => ({ key: r.key, code: r.code || noCode, name: r.name, nameEn: r.name_en ?? '', unit: unitName(r, FORM_LANG), qty: orderOf(snap, r) }));
-  const custom = snap.custom
-    .filter((r) => orderOf(snap, r) > 0)
-    .map((r) => ({ key: r.key, code: noCode, name: r.name, nameEn: '', unit: unitName(r, FORM_LANG), qty: orderOf(snap, r) }));
+  // Giữ hàng Đề nghị 0 để tờ in khớp bảng Gửi ADM
+  const items = snap.byItem.map((r) => ({ key: r.key, code: r.code || noCode, name: r.name, nameEn: r.name_en ?? '', unit: unitName(r, FORM_LANG), qty: orderOf(snap, r) }));
+  const custom = snap.custom.map((r) => ({ key: r.key, code: noCode, name: r.name, nameEn: '', unit: unitName(r, FORM_LANG), qty: orderOf(snap, r) }));
   return [...items, ...custom];
 }
 
@@ -65,6 +63,11 @@ export function PrintRequestForm({ snap }: { snap: SnapshotData }) {
   return (
     <section className="pp-sheet pp-form" aria-labelledby={titleId}>
       <header className="pp-form__head">
+        {snap.replaces && (
+          <p className="pp-form__replaces">
+            <strong>{t('reports.print.form.replaces', { time: formatVnStamp(snap.replaces.created_at) })}</strong>
+          </p>
+        )}
         <h1 id={titleId} className="pp-form__title">
           {t('reports.print.form.title')}
         </h1>

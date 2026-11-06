@@ -5,35 +5,40 @@ import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
-import { reportFixture } from '@/features/reports/reports-fixtures';
-import { adminItem } from '@/features/summary/adjust-fixtures';
 
 const kpi = (o: object) => ({ ym: '2026-10', deadline: '2026-10-10T17:00:00.000Z', is_open: false, registered: 39, headcount: 40, headcount_source: 'snapshot', unregistered: 0, lines_pending_delivery: 4, custom_pending: 0, low_stock: 0, ...o });
 const person = (i: number) => ({ sub: `u${i}`, full_name: `Người số ${i}`, email: null, department: null });
-const noNeed = reportFixture({ byItem: [], custom: [] });
-const needReport = reportFixture({ byItem: [{ key: 'a', item_id: 'a', name: 'Bút bi xanh', name_en: 'Blue pen', unit: 'cay', requested: 13, backlog_prev: 0, stock: 0, need: 13 }], custom: [] });
+const SENT_AT = '2026-11-05T15:12:00Z';
+const sentSnap = { id: 's1', kind: 'print', created_at: SENT_AT, items_count: 11, units_total: 78, replaces: null, data: {} };
+const sentState = (o: object = {}) => ({ state: 'sent', no_order_at: null, no_order_by_name: null, sent: sentSnap, changed_after: false, changed_at: null, ...o });
+const unsentState = { state: 'unsent', no_order_at: null, no_order_by_name: null, sent: null, changed_after: false, changed_at: null };
+type PlanRow = { remaining: number; adm_out?: boolean; usable?: boolean };
+const planOf = (rows: PlanRow[], snapshot: object | null = { id: 's1', kind: 'print', created_at: SENT_AT }) => ({
+  snapshot,
+  batches: [],
+  rows: rows.map((r, i) => ({ key: `k${i}`, ordered: r.remaining, received: 0, adm_out: false, usable: true, ...r })),
+  custom: [],
+  makeup: [],
+});
 
 interface Setup {
   locked?: object;
   current?: object;
-  snapshots?: number;
-  report?: ReturnType<typeof reportFixture>;
+  send?: object;
+  plan?: ReturnType<typeof planOf>;
   unregistered?: number;
   review?: number;
-  items?: ReturnType<typeof adminItem>[];
   reviewFails?: boolean;
   unregisteredFails?: boolean;
   low?: { id: string; name: string; name_en: string | null; stock_qty: number }[];
 }
 
 function setup(o: Setup = {}) {
-  const snaps = Array.from({ length: o.snapshots ?? 1 }, (_, i) => ({ id: `s${i}`, kind: 'print', created_at: '2026-10-11T01:00:00Z', created_by_sub: 'u', created_by_name: 'x' }));
   return stubShellApi({
     '/api/admin/periods/2026-10/summary': () => jsonResponse(200, kpi(o.locked ?? {})),
     '/api/admin/periods/2026-11/summary': () => jsonResponse(200, kpi({ ym: '2026-11', is_open: true, registered: 32, unregistered: o.unregistered ?? 0, ...o.current })),
-    '/api/admin/reports/2026-10/snapshots': () => jsonResponse(200, { items: snaps }),
-    '/api/admin/reports/2026-10': () => jsonResponse(200, o.report ?? noNeed),
-    '/api/admin/items': () => jsonResponse(200, o.items ?? []),
+    '/api/admin/periods/2026-10/send-state': () => jsonResponse(200, o.send ?? sentState()),
+    '/api/admin/periods/2026-10/arrivals-plan': () => jsonResponse(200, o.plan ?? planOf([{ remaining: 0 }])),
     '/api/admin/periods/2026-11/unregistered': () => (o.unregisteredFails ? jsonResponse(500, null) : jsonResponse(200, { items: Array.from({ length: o.unregistered ?? 0 }, (_, i) => person(i + 1)) })),
     '/api/admin/review?status=pending': () => (o.reviewFails ? jsonResponse(500, null) : jsonResponse(200, { items: Array.from({ length: o.review ?? 0 }, (_, i) => ({ line_id: `l${i}` })) })),
     '/api/admin/stock/low': () => jsonResponse(200, o.low ?? []),
@@ -57,14 +62,14 @@ afterEach(() => {
 
 describe('Trang Tháng này: bước hiện tại và nút đi thẳng', () => {
   it.each([
-    ['đã khóa, chưa có bản chốt', { snapshots: 0, report: needReport }, 'Gửi ADM', 'Mở Gửi ADM', '/admin/send-adm'],
-    ['có bản chốt, cần mua 13', { report: needReport }, 'Hàng về', 'Nhập hàng về', '/admin/arrivals'],
+    ['đã khóa, chưa gửi', { send: unsentState, plan: planOf([{ remaining: 13 }], null) }, 'Gửi ADM', 'Mở Gửi ADM', '/admin/send-adm'],
+    ['đã gửi, còn chờ về 13', { plan: planOf([{ remaining: 13 }]) }, 'Hàng về', 'Nhập hàng về', '/admin/arrivals'],
     ['hàng đủ, còn 4 dòng chờ giao', {}, 'Giao', 'Mở Giao hàng', '/admin/delivery'],
   ] as const)('%s → bước hiện tại và nút dẫn đúng đường', async (_n, setupArg, step, cta, href) => {
     await open(setupArg as Setup);
     expect(within(currentStep()).getByText(step)).toBeInTheDocument();
     expect(within(currentStep()).getByRole('link', { name: cta })).toHaveAttribute('href', href);
-    expect(steps().getAllByRole('link')).toHaveLength(1);
+    expect(steps().getAllByRole('link', { name: /^(Mở|Nhập|Xem tổng hợp)/ })).toHaveLength(1);
   });
 
   it('chuyển sang kỳ đang đăng ký: chỉ bước Đăng ký hoạt động, 3 bước sau mờ "Sau khi khóa sổ"', async () => {
@@ -125,38 +130,59 @@ describe('Trang Tháng này: thẻ việc cần làm', () => {
   });
 });
 
-describe('Trang Tháng này: món ngừng dùng và thẻ lỗi', () => {
-  it('món ngừng dùng còn need > 0 không giữ bước Hàng về: có chờ giao 4 → bước hiện tại là Giao', async () => {
-    const inactive = reportFixture({ byItem: [{ key: 'off', item_id: 'off', name: 'Món ngừng', name_en: null, unit: 'cay', requested: 5, backlog_prev: 0, stock: 0, need: 5 }], custom: [] });
-    await open({ report: inactive, items: [adminItem({ id: 'off', name: 'Món ngừng', active: false })] });
+describe('Trang Tháng này: bước Gửi ADM theo bản có hàng', () => {
+  it('bản có hàng 22:12 05/11 → "Đã gửi 22:12 05/11 · 11 món, 78 đơn vị" + liên kết "Xem bản đã gửi" về Gửi ADM', async () => {
+    await open({});
+    const send = steps().getAllByRole('listitem')[1];
+    expect(within(send).getByText('Đã gửi 22:12 05/11 · 11 món, 78 đơn vị')).toBeInTheDocument();
+    expect(within(send).getByRole('link', { name: 'Xem bản đã gửi' })).toHaveAttribute('href', '/admin/send-adm');
+    expect(within(send).queryByText(/bản chốt/)).toBeNull();
+  });
+
+  it('có thay đổi sau bản → "Đã gửi 22:12 05/11 · có thay đổi sau đó"', async () => {
+    await open({ send: sentState({ changed_after: true, changed_at: '2026-11-06T01:00:00Z' }) });
+    expect(within(steps().getAllByRole('listitem')[1]).getByText('Đã gửi 22:12 05/11 · có thay đổi sau đó')).toBeInTheDocument();
+  });
+
+  it('tháng không cần đề nghị → Gửi ADM và Hàng về xong, bước hiện tại là Giao', async () => {
+    await open({ send: { ...unsentState, state: 'no_order', no_order_at: '2026-11-11T03:15:00Z', no_order_by_name: 'An' } });
+    const [, send, arrive] = steps().getAllByRole('listitem');
+    expect(within(send).getByText('Không cần đề nghị ADM · 10:15 11/11')).toBeInTheDocument();
+    expect(within(arrive).getByText('Không có đơn gửi ADM')).toBeInTheDocument();
     expect(within(currentStep()).getByText('Giao')).toBeInTheDocument();
-    expect(within(currentStep()).getByRole('link', { name: 'Mở Giao hàng' })).toHaveAttribute('href', '/admin/delivery');
   });
 
-  it('cùng món còn dùng (active) với need 5 → bước Hàng về (đối chứng hai phía)', async () => {
-    const active = reportFixture({ byItem: [{ key: 'on', item_id: 'on', name: 'Món dùng', name_en: null, unit: 'cay', requested: 5, backlog_prev: 0, stock: 0, need: 5 }], custom: [] });
-    await open({ report: active, items: [adminItem({ id: 'on', name: 'Món dùng' })] });
-    expect(within(currentStep()).getByText('Hàng về')).toBeInTheDocument();
-  });
-
-  it('R14: còn thiếu 5 nhưng đã có 1 phiếu Hàng về (receipts 1) → bước Hàng về xong, hiện "còn thiếu 5", bước hiện tại là Giao', async () => {
-    const active = reportFixture({ byItem: [{ key: 'on', item_id: 'on', name: 'Món dùng', name_en: null, unit: 'cay', requested: 5, backlog_prev: 0, stock: 0, need: 5 }], custom: [] });
-    await open({ report: active, items: [adminItem({ id: 'on', name: 'Món dùng' })], locked: { receipts: 1 } });
-    expect(within(currentStep()).getByText('Giao')).toBeInTheDocument();
-    const arrive = steps().getAllByRole('listitem')[2];
-    expect(within(arrive).getByText('còn thiếu 5')).toBeInTheDocument();
-  });
-
-  it('R14 (en): "5 short"', async () => {
+  it('en: "Sent 22:12 05/11 · 11 items, 78 units" + "View sent order"', async () => {
     await i18n.changeLanguage('en');
-    const active = reportFixture({ byItem: [{ key: 'on', item_id: 'on', name: 'Món dùng', name_en: null, unit: 'cay', requested: 5, backlog_prev: 0, stock: 0, need: 5 }], custom: [] });
     mockViewport(1280);
-    setup({ report: active, items: [adminItem({ id: 'on', name: 'Món dùng' })], locked: { receipts: 1 } });
+    setup();
     renderApp(makeMe('admin'), '/admin/home');
     const list = await screen.findByRole('list', { name: 'The 4 steps of the month' });
-    expect(within(within(list).getAllByRole('listitem')[2]).getByText('5 short')).toBeInTheDocument();
+    const send = within(list).getAllByRole('listitem')[1];
+    expect(within(send).getByText('Sent 22:12 05/11 · 11 items, 78 units')).toBeInTheDocument();
+    expect(within(send).getByRole('link', { name: 'View sent order' })).toBeInTheDocument();
   });
 
+  it('kỳ giao chưa khóa → không gọi send-state/arrivals-plan (server 409 cho kỳ mở)', async () => {
+    mockViewport(1280);
+    const f = setup({ locked: { is_open: true } });
+    renderApp(makeMe('admin'), '/admin/home');
+    await screen.findByRole('list', { name: '4 bước của tháng' });
+    expect(f.mock.calls.some(([u]) => /send-state|arrivals-plan/.test(String(u)))).toBe(false);
+  });
+});
+
+describe('Trang Tháng này: món ngừng dùng và thẻ lỗi', () => {
+  it('món đã ngừng còn remaining 5 bị bỏ qua: chờ giao 4 → bước hiện tại là Giao; món còn dùng remaining 5 → Hàng về (hai phía)', async () => {
+    await open({ plan: planOf([{ remaining: 5, usable: false }]) });
+    expect(within(currentStep()).getByText('Giao')).toBeInTheDocument();
+  });
+
+  it('món còn dùng remaining 5 → bước Hàng về, giá trị 5', async () => {
+    await open({ plan: planOf([{ remaining: 5 }]) });
+    expect(within(currentStep()).getByText('Hàng về')).toBeInTheDocument();
+    expect(within(currentStep()).getByText('5')).toBeInTheDocument();
+  });
   it('tải món chờ duyệt lỗi → thẻ báo lỗi có "Thử lại"; bấm → tải lại', async () => {
     mockViewport(1280);
     const f = setup({ reviewFails: true });

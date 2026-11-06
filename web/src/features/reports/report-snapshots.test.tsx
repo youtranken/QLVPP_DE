@@ -27,16 +27,21 @@ afterEach(async () => {
 });
 
 describe('Bản chốt — danh sách, tải lại, in lại', () => {
-  it('rỗng → "Chưa có bản chốt nào."; mô tả mục; Xuất xong → bản mới có badge "Mới"', async () => {
+  it('rỗng → "Chưa có bản chốt nào."; mô tả mục', async () => {
     stubReports();
-    captureDownloads();
     openPage();
     const region = await list();
     expect(within(region).getByText(/^Mỗi lần Xuất Excel hoặc In trình ký tạo một bản chốt\./)).toBeInTheDocument();
     expect(await within(region).findByText('Chưa có bản chốt nào.')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Xuất Excel' }));
-    const fresh = await within(region).findByRole('listitem', { name: /Nguyễn Văn An/ });
-    expect(within(fresh).getByText('Mới')).toBeInTheDocument();
+  });
+
+  it('bản rỗng cũ (has_items false) → nhãn xám "Không có món", vẫn có "In lại"; bản có hàng → không nhãn', async () => {
+    stubReports({ snapshots: [snapshotRow({ id: 'snap-e', kind: 'print', has_items: false }), snapshotRow({ id: 'snap-f', kind: 'print', created_at: '2026-10-27T02:30:00Z', has_items: true })] });
+    openPage();
+    const [empty, full] = await within(await list()).findAllByRole('listitem');
+    expect(within(empty).getByText('Không có món')).toBeInTheDocument();
+    expect(within(empty).getByRole('link', { name: /^In lại bản lập/ })).toHaveAttribute('href', '/admin/reports/snapshots/snap-e/print');
+    expect(within(full).queryByText('Không có món')).toBeNull();
   });
 
   it('bản cũ: "Excel", "Lập 09:30 28/10/2026 · Trần Thị Bình", không badge "Mới"; "Tải lại" lưu tệp từ server, không POST', async () => {
@@ -77,19 +82,6 @@ describe('Bản chốt — danh sách, tải lại, in lại', () => {
     expect(within(region).queryByRole('alert')).toBeNull();
     expect(exportsOf(f)).toHaveLength(2);
     expect(postsOf(f)).toEqual([]);
-  });
-
-  it('POST chốt xong nhưng tải 500 → khối lỗi trong mục Bản chốt, bản mới vẫn vào danh sách, không toast thành công', async () => {
-    const f = stubReports({ exportFile: () => errorResponse(500, 'INTERNAL') });
-    captureDownloads();
-    openPage();
-    await screen.findByRole('textbox', { name: 'Đặt mua Bút bi xanh' });
-    await userEvent.click(screen.getByRole('button', { name: 'Xuất Excel' }));
-    const region = await list();
-    expect(await within(region).findByRole('alert')).toHaveTextContent('Không tải được tệp — thử lại.');
-    expect(postsOf(f)).toHaveLength(1);
-    expect(await within(region).findByRole('listitem', { name: /Nguyễn Văn An/ })).toBeInTheDocument();
-    expect(screen.queryByText(/^Đã xuất Excel/)).toBeNull();
   });
 
   it('404 SNAPSHOT_NOT_FOUND → "Không tìm thấy bản chốt này…" trong mục Bản chốt', async () => {

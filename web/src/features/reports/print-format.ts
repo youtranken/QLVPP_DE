@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { formatVnStamp } from '@/lib/format-time';
+import { wantOf } from '@/lib/report-qty';
 import { unitLabel, useUnitNames } from '@/features/units/units.api';
 import type { FrozenUnitName, SnapshotData, SnapshotRow } from './reports.api';
 
@@ -16,11 +17,15 @@ export function vnStampParts(iso: string) {
   return { time, date, dayMonth: date.slice(0, 5) };
 }
 
-export const orderOf = (snap: SnapshotData, row: { key: string; need: number }) => snap.order_qty[row.key] ?? row.need;
+// Bản chốt cũ thiếu khóa → số gộp, như server
+export const orderOf = (snap: SnapshotData, row: { key: string; requested: number; backlog_prev: number }) => snap.order_qty[row.key] ?? wantOf(row);
+
+// Bản có hàng ⇔ có Đề nghị > 0 (cùng vị từ với server)
+export const hasItems = (snap: Pick<SnapshotData, 'order_qty'>) => Object.values(snap.order_qty).some((n) => n > 0);
 
 export function isDefaultOrder(snap: SnapshotData) {
   const rows = [...snap.byItem, ...snap.custom];
-  return rows.length > 0 && rows.every((r) => orderOf(snap, r) === r.need);
+  return rows.length > 0 && rows.every((r) => orderOf(snap, r) === wantOf(r));
 }
 
 // Số thứ tự tính từ bản cũ nhất; danh sách API trả mới trước

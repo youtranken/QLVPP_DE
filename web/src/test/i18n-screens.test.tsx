@@ -90,7 +90,7 @@ describe('Song ngữ các màn Plan 3', () => {
     noVietnamese();
   });
 
-  it('Báo cáo: vi có "Đặt mua" và "In trình ký"; en không còn chữ Việt (bảng, Xuất lẻ, bản chốt)', async () => {
+  it('Báo cáo: vi có "Đề nghị" và "Gợi ý, chưa gửi"; en không còn chữ Việt (bảng, Xuất lẻ, bản chốt)', async () => {
     const report = reportFixture({
       byDepartment: [{ department: 'Inspection Team', people: [{ user_sub: 'u-duc', full_name: 'Pham Van Duc', lines: [{ name: 'Bút bi xanh', name_en: 'Blue pen', unit: 'cay', qty: 12 }] }] }],
       custom: [{ key: 'custom:tape', name: 'Double tape', unit: 'cuon', requested: 4, backlog_prev: 1, stock: null, need: 5, people: 2 }],
@@ -99,10 +99,11 @@ describe('Song ngữ các màn Plan 3', () => {
     });
     stubReports({ reports: { '2026-10': report }, snapshots: [snapshotRow({ created_by_name: 'Tran Thi Binh' })] });
     renderApp(ADMIN, '/admin/reports');
-    expect(await screen.findByRole('button', { name: 'In trình ký' })).toBeInTheDocument();
-    expect(await screen.findByRole('textbox', { name: 'Đặt mua Bút bi xanh' })).toBeInTheDocument();
+    expect(await screen.findByRole('columnheader', { name: 'Đề nghị' })).toBeInTheDocument();
+    expect(screen.getByText('Gợi ý, chưa gửi')).toBeInTheDocument();
     await english();
-    expect(await screen.findByRole('textbox', { name: 'Order Blue pen' })).toBeInTheDocument();
+    expect(await screen.findByText('Suggested, not sent')).toBeInTheDocument();
+    expect(screen.getAllByRole('row', { name: /Blue pen/ }).length).toBeGreaterThan(0);
     expect(await screen.findByText(/Tran Thi Binh/)).toBeInTheDocument();
     noVietnamese();
   });

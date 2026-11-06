@@ -2,6 +2,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { expect, test, type APIRequestContext, type Locator, type Page, type TestInfo } from '@playwright/test';
 import { acquireLock, devHeaders, expectNoContrastViolations, isMobile, psql, settled, urlOfNewTab, openPurchase } from './helpers';
+import { confirmIfAsked, openDraft } from './send-adm-flow';
 import { deliveryMovements, seedMonth, type MonthSeed, type Person } from './p3-seed';
 import { adminPage, newPage, SA_PASSWORD } from './sessions';
 
@@ -23,20 +24,13 @@ async function axe390(page: Page, info: TestInfo) {
   if (isMobile(info)) await expectNoContrastViolations(page);
 }
 
-const PRINT_URL = /\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print$/;
+const PRINT_URL = /\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print(\?.*)?$/;
 const month = (ym: string) => Number(ym.slice(5, 7));
 const rowOf = (lines: Locator, name: string) => lines.getByRole('row').filter({ hasText: name });
-const reportRow = (page: Page, name: string) =>
-  page.getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row').filter({ has: page.getByRole('textbox', { name: `Đặt mua ${name}` }) });
-// Cột: Món · ĐVT · Chưa giao kỳ này · Nợ kỳ trước · Tồn · Cần mua · Đặt mua
+const reportRow = (page: Page, name: string) => page.getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row').filter({ hasText: name });
+// Cột: Món · ĐVT · Đăng ký · Nợ tháng trước · Tủ hiện có · Tổng cần · Đề nghị · [Đã về] · [Đã giao]
 const needCell = (row: Locator) => row.getByRole('cell').nth(5);
-
-// DB dev có thể còn món ngoài danh mục chờ xem của kỳ đó (dữ liệu khác) → hộp nhắc trước khi chốt
-async function confirmPendingIfAny(page: Page, request: APIRequestContext, ym: string) {
-  const report = await (await request.get(`/api/admin/reports/${ym}`, { headers: devHeaders('admin') })).json();
-  if (report.pending_custom_count === 0) return;
-  await page.getByRole('dialog', { name: /^Còn \d+ món ngoài danh mục chưa xem$/ }).getByRole('button', { name: 'Vẫn chốt' }).click();
-}
+const orderCell = (row: Locator) => row.getByRole('cell').nth(6);
 
 async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/delivery/classic');
@@ -78,16 +72,27 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   // Báo cáo kỳ đang mở bị chặn (Hành chính chỉ làm việc trên kỳ đã khóa); cộng nợ kỳ trước vào kỳ sau kiểm ở api e2e reports
   expect((await request.get(`/api/admin/reports/${s.ym}`, { headers: devHeaders('admin') })).status()).toBe(409);
   await admin.goto(`/admin/reports?ym=${s.prevYm}`);
+  // Báo cáo chỉ đọc: Tổng cần = chưa giao + nợ, không trừ tủ; sửa số ở Gửi ADM
   await expect(needCell(reportRow(admin, s.paper.name))).toHaveText('2');
   await expect(needCell(reportRow(admin, s.clip.name))).toHaveText('3');
   await expect(reportRow(admin, s.pen.name)).toHaveCount(0);
-  await admin.getByRole('textbox', { name: `Đặt mua ${s.paper.name}` }).fill('4');
+  await expect(admin.getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('textbox')).toHaveCount(0);
   await axe390(admin, info);
   await snap(admin, info, 'p3-report');
 
+  await admin.getByRole('link', { name: 'Sửa số đề nghị ở Gửi ADM →' }).click();
+  await expect(admin).toHaveURL(/\/admin\/send-adm$/);
+  const replacing = await openDraft(admin);
+  const paper = admin.getByRole('table', { name: 'Số đề nghị theo món' }).getByRole('row').filter({ hasText: s.paper.name });
+  await paper.getByRole('button', { name: 'Sửa số' }).click();
+  await paper.getByRole('spinbutton').fill('4');
+  await admin.getByRole('button', { name: 'In trình ký' }).click();
+  await confirmIfAsked(admin, request, s.prevYm, replacing);
+  await expect(admin.getByText(/^Đã gửi ADM lúc \d\d:\d\d \d\d\/\d\d · /)).toBeVisible();
+
+  // Excel của chính bản vừa gửi, không tạo bản mới
   const downloading = admin.waitForEvent('download');
-  await admin.getByRole('button', { name: 'Xuất Excel' }).click();
-  await confirmPendingIfAny(admin, request, s.prevYm);
+  await admin.getByRole('button', { name: 'Xuất Excel bản này' }).click();
   const download = await downloading;
   expect(download.suggestedFilename()).toBe(`vpp-bao-cao-${s.prevYm}.xlsx`);
   await download.saveAs(file);
@@ -101,10 +106,9 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   const owed = detail.getRows(1, detail.rowCount)!.find((r) => r.getCell(2).value === s.b.name);
   expect([owed?.getCell(3).value, owed?.getCell(4).value]).toEqual([s.clip.name, 3]);
 
-  await admin.getByRole('button', { name: 'In trình ký' }).click();
-  await confirmPendingIfAny(admin, request, s.prevYm);
-  await admin.goto(await urlOfNewTab(admin, PRINT_URL, () => admin.getByRole('button', { name: 'Mở bản in' }).click(), SA_PASSWORD ? undefined : devHeaders('admin')));
-  const snapshotId = admin.url().split('/').at(-2)!;
+  await admin.getByRole('button', { name: 'In lại bản này' }).click();
+  await expect(admin).toHaveURL(PRINT_URL);
+  const snapshotId = new URL(admin.url()).pathname.split('/').at(-2)!;
   await admin.getByRole('checkbox', { name: 'In kèm phụ lục' }).click();
   await expect(admin.getByRole('checkbox', { name: 'In kèm phụ lục' })).toBeChecked();
   await expectFrozenPaper(admin, s);
@@ -115,7 +119,7 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   return snapshotId;
 }
 
-// Đăng ký 2 (phần còn lại) · Nợ kỳ trước 0 · Tồn 0 · Cần mua 2 · Đặt mua 4
+// Chưa giao 2 · Nợ kỳ trước 0 · Tồn 0 · Tổng cần 2 · Đề nghị 4
 async function expectFrozenPaper(admin: Page, s: MonthSeed) {
   const row = admin.getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row', { name: new RegExp(s.paper.name) });
   await expect(row).toBeVisible();
@@ -162,8 +166,9 @@ async function memberSeesDelivered(member: Page, info: TestInfo, s: MonthSeed) {
 
 async function reopenSnapshot(admin: Page, s: MonthSeed, snapshotId: string) {
   await admin.goto(`/admin/reports?ym=${s.prevYm}`);
-  // Kỳ trước đã giao đủ A4 → không còn dòng A4 (Cần mua 0) trong báo cáo sống
-  await expect(reportRow(admin, s.paper.name)).toHaveCount(0);
+  // Kỳ đã gửi: Phần 1 theo bản đã gửi (A4 vẫn có dù đã giao đủ), Đề nghị 4 theo bản, Đã giao 5 sống
+  await expect(orderCell(reportRow(admin, s.paper.name))).toHaveText('4');
+  await expect(reportRow(admin, s.paper.name).getByRole('cell').nth(8)).toHaveText('5');
   await expect(needCell(reportRow(admin, s.clip.name))).toHaveText('3');
   const printed = admin.getByRole('region', { name: 'Bản chốt' }).getByRole('listitem').filter({ hasText: 'Bản in' }).first();
   const reprint = printed.getByRole('link', { name: /^In lại bản lập/ });

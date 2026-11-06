@@ -22,6 +22,8 @@
 [data-shell='admin'] .hm-step[data-state='current'] .hm-step__value { font: var(--t-stat); color: var(--c-on-dark); }
 [data-shell='admin'] .hm-step__note { font: var(--t-sm); color: var(--c-on-dark-2); }
 [data-shell='admin'] .hm-step__go { display: grid; gap: var(--s-3); }
+[data-shell='admin'] .hm-step__link { display: inline-flex; align-items: center; align-self: start; min-height: 44px; font: var(--t-label); font-weight: 600; color: var(--c-on-dark); text-decoration: underline; text-underline-offset: 3px; }
+[data-shell='admin'] .hm-step__link:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 [data-shell='admin'] .hm-bar { height: 6px; border-radius: var(--r-pill); background: var(--c-on-dark-fill); overflow: hidden; }
 [data-shell='admin'] .hm-bar span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--c-bar-fill); }
 [data-shell='admin'] .hm-cta { justify-self: start; border-color: transparent; background: var(--c-bar-fill); color: var(--c-dark); font-weight: 600; }

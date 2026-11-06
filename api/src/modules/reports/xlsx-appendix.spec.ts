@@ -25,7 +25,7 @@ describe('buildWorkbook · sheet 2 Phụ lục', () => {
     ]);
   });
 
-  it('vi: tiêu đề 7 cột, món theo thứ tự, Đặt mua = order_qty', async () => {
+  it('vi: tiêu đề 7 cột, món theo thứ tự, Tổng cần = đăng ký + nợ, Đề nghị = order_qty', async () => {
     const ws = (await open('vi')).worksheets[1];
     expect(values(ws, 1)).toEqual([
       'Món',
@@ -33,11 +33,11 @@ describe('buildWorkbook · sheet 2 Phụ lục', () => {
       'Chưa giao kỳ này',
       'Nợ kỳ trước',
       'Tồn',
-      'Cần mua',
-      'Đặt mua',
+      'Tổng cần',
+      'Đề nghị',
     ]);
-    expect(values(ws, 2)).toEqual(['Bút bi', 'cây', 5, 2, 3, 4, 7]);
-    expect(values(ws, 3)).toEqual(['Kẹp giấy', 'hộp', 5, 2, 3, 1, 1]);
+    expect(values(ws, 2)).toEqual(['Bút bi', 'cây', 5, 2, 3, 7, 7]);
+    expect(values(ws, 3)).toEqual(['Kẹp giấy', 'hộp', 5, 2, 3, 7, 1]);
   });
 
   it('bản chốt cũ chưa lưu tên ĐVT → lấy tên từ bảng units: vi "cây"/"hộp"/"cái", en "stick"/"box"/"piece"; en thiếu name_en dùng tên vi; mã không có hiện mã thô', async () => {
