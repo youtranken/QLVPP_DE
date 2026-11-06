@@ -1,10 +1,10 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { expect, test, type APIRequestContext, type Locator, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, devHeaders, expectNoContrastViolations, isMobile, psql, settled, urlOfNewTab, openPurchase } from './helpers';
+import { acquireLock, devHeaders, expectNoContrastViolations, isMobile, psql, settled, openPurchase } from './helpers';
 import { confirmIfAsked, openDraft } from './send-adm-flow';
 import { deliveryMovements, seedMonth, type MonthSeed, type Person } from './p3-seed';
-import { adminPage, newPage, SA_PASSWORD } from './sessions';
+import { adminPage, newPage } from './sessions';
 
 type Sheet = { name: string; rowCount: number; getRows: (start: number, count: number) => { getCell: (n: number) => { value: unknown } }[] | undefined };
 type Workbook = { xlsx: { readFile: (path: string) => Promise<unknown> }; worksheets: Sheet[] };
@@ -105,7 +105,10 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   const owed = detail.getRows(1, detail.rowCount)!.find((r) => r.getCell(2).value === s.b.name);
   expect([owed?.getCell(3).value, owed?.getCell(4).value]).toEqual([s.clip.name, 3]);
 
+  // Đ5: "In lại bản này" mở hộp in ngay tại trang, không chuyển trang; trang in riêng mở từ Bản chốt
   await admin.getByRole('button', { name: 'In lại bản này' }).click();
+  await expect(admin).toHaveURL(/\/admin\/send-adm$/);
+  await admin.getByRole('region', { name: 'Bản chốt' }).getByRole('link', { name: /^In lại bản lập/ }).first().click();
   await expect(admin).toHaveURL(PRINT_URL);
   const snapshotId = new URL(admin.url()).pathname.split('/').at(-2)!;
   await admin.getByRole('checkbox', { name: 'In kèm phụ lục' }).click();
@@ -194,8 +197,11 @@ async function reopenSnapshot(admin: Page, s: MonthSeed, snapshotId: string) {
   await expect(needCell(reportRow(admin, s.clip.name))).toHaveText('3');
   const printed = admin.getByRole('region', { name: 'Bản chốt' }).getByRole('listitem').filter({ hasText: 'Bản in' }).first();
   const reprint = printed.getByRole('link', { name: /^In lại bản lập/ });
-  await expect(reprint).toHaveAttribute('href', `/admin/reports/snapshots/${snapshotId}/print`);
-  await admin.goto(`${await urlOfNewTab(admin, PRINT_URL, () => reprint.click(), SA_PASSWORD ? undefined : devHeaders('admin'))}?appendix=1`);
+  // In lại: trang in riêng cùng tab (task V2D-19), Quay lại về Báo cáo
+  await expect(reprint).toHaveAttribute('href', `/admin/reports/snapshots/${snapshotId}/print?from=reports`);
+  await reprint.click();
+  await expect(admin).toHaveURL(PRINT_URL);
+  await admin.goto(`${admin.url()}&appendix=1`);
   await expectFrozenPaper(admin, s);
 }
 
@@ -208,7 +214,7 @@ async function cancelClip(admin: Page, info: TestInfo, s: MonthSeed) {
   await line.getByRole('button', { name: `Thao tác khác ${s.glue.name} — ${s.b.name}` }).click();
   await admin.getByRole('menu', { name: `Thao tác khác ${s.glue.name} — ${s.b.name}` }).getByRole('menuitem', { name: 'Hủy nợ' }).click();
   const dialog = admin.getByRole('dialog', { name: `Hủy nợ 3 cái ${s.glue.name} của ${s.b.name}?` });
-  await dialog.getByRole('radio', { name: 'Khác' }).check();
+  await dialog.getByRole('radio', { name: 'Khác', exact: true }).check();
   await dialog.getByRole('textbox', { name: /^Ghi chú/ }).fill('Không mua được');
   await axe390(admin, info);
   await dialog.getByRole('button', { name: 'Hủy nợ', exact: true }).click();

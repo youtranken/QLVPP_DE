@@ -23,10 +23,11 @@ test.describe('Trang Tháng này (Plan v2-B, B6)', () => {
     const n = await links.count();
     expect(n).toBeLessThanOrEqual(1);
     if (n === 1) {
-      const href = await links.first().getAttribute('href');
-      expect(STEP_LINKS).toContain(href);
+      const href = (await links.first().getAttribute('href'))!;
+      // Bước Đăng ký dẫn Tổng hợp kèm ?ym= của kỳ khóa
+      expect(STEP_LINKS).toContain(href.split('?')[0]);
       await links.first().click();
-      await expect(page).toHaveURL(new RegExp(`${href}$`));
+      await expect(page).toHaveURL((url) => `${url.pathname}${url.search}` === href);
     }
   });
 
@@ -51,7 +52,10 @@ test.describe('Trang Tháng này (Plan v2-B, B6)', () => {
 
     await page.getByRole('radio', { name: /^Kỳ đang đăng ký/ }).click();
     await expect(steps(page).getByText('Sau khi khóa sổ')).toHaveCount(3);
-    await expect(steps(page).getByRole('link', { name: 'Xem tổng hợp' })).toHaveAttribute('href', '/admin/summary');
+    // Tổng hợp chỉ xem kỳ đã khóa: bước Đăng ký của kỳ đang mở dẫn tới kỳ khóa gần nhất (tháng trước)
+    const [y, m] = (period.ym as string).split('-').map(Number);
+    const lockedYm = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
+    await expect(steps(page).getByRole('link', { name: 'Xem tổng hợp' })).toHaveAttribute('href', `/admin/summary?ym=${lockedYm}`);
     await expect(steps(page).getByRole('link')).toHaveCount(1);
     await settled(page);
     await shot(page, info, 'home-register');

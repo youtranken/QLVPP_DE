@@ -108,8 +108,10 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       const submit = cancel.getByRole('button', { name: 'Hủy nợ', exact: true });
       await expect(cancel.getByRole('radiogroup', { name: 'Lý do hủy nợ' }).getByRole('radio')).toHaveCount(4);
       await expect(submit).toBeDisabled();
-      await cancel.getByRole('radio', { name: 'Khác' }).check();
-      await expect(reason).toHaveAttribute('maxlength', '200');
+      await cancel.getByRole('radio', { name: 'Khác', exact: true }).check();
+      // Ô cắt theo mã điểm (như server đếm), không dùng maxlength của trình duyệt (đếm UTF-16)
+      await reason.fill('ả'.repeat(201));
+      await expect(reason).toHaveValue('ả'.repeat(200));
       await reason.fill('  ab  ');
       await expect(submit).toBeDisabled();
       await reason.fill('  abc  ');
@@ -142,7 +144,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
     }
   });
 
-  test('V2D-11 Còn nợ chỉ có nợ tháng trước; ?left=1 lọc người đã nghỉ, Hủy nợ qua ⋯ chọn sẵn "Đã nghỉ việc"', async ({ page, request }, info) => {
+  test('V2D-11 Còn nợ chỉ có nợ tháng trước; ?left=1 lọc người đã nghỉ, Hủy nợ qua ⋯ chọn sẵn "Người đã nghỉ"', async ({ page, request }, info) => {
     const release = await acquireLock('prev-period');
     const seeds: Seed[] = [];
     try {
@@ -159,13 +161,13 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await debtRow.getByRole('button', { name: `Thao tác khác ${debt.items[0].name} — ${debt.name}` }).click();
       await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();
       const cancel = page.getByRole('dialog', { name: `Hủy nợ 2 cái ${debt.items[0].name} của ${debt.name}?` });
-      await expect(cancel.getByRole('radio', { name: 'Đã nghỉ việc' })).toBeChecked();
+      await expect(cancel.getByRole('radio', { name: 'Người đã nghỉ' })).toBeChecked();
       await expect(cancel.getByRole('button', { name: 'Quay lại' })).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await cancel.getByRole('button', { name: 'Hủy nợ', exact: true }).click();
       await expect(cancel).toHaveCount(0);
       await expect(debtRow).toHaveCount(0);
-      expect(psql(`SELECT cancelled_qty || '|' || cancel_note FROM request_lines WHERE request_id = '${debt.requestId}'`)).toBe('2|Đã nghỉ việc');
+      expect(psql(`SELECT cancelled_qty || '|' || cancel_note FROM request_lines WHERE request_id = '${debt.requestId}'`)).toBe('2|Người đã nghỉ');
       expect(psql(`SELECT count(*) FROM in_app_notifications WHERE user_sub = '${debt.sub}'`)).toBe('0');
     } finally {
       seeds.forEach((s) => s.cleanup());

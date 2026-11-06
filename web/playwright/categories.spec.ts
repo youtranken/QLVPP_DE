@@ -183,7 +183,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
 
       await panel.getByRole('switch', { name: `Nhóm ${category}` }).click();
       const confirm = page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` });
-      await expect(confirm.getByText(/^2 món trong nhóm sẽ ẩn/)).toBeVisible();
+      await expect(confirm.getByText(/^2 món sẽ ẩn với nhân viên/)).toBeVisible();
       await confirm.getByRole('button', { name: 'Ngừng nhóm' }).click();
       await expect(panel.getByText('Ngừng theo nhóm')).toHaveCount(2);
       await expect(panel.getByText('Ngừng riêng')).toHaveCount(1);

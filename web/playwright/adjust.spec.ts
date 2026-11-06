@@ -115,7 +115,7 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       const save = drawer.getByRole('button', { name: 'Lưu điều chỉnh' });
       await expect(save).toBeDisabled();
       const whyA = lineA.getByRole('radiogroup', { name: 'Vì sao giảm?' });
-      await whyA.getByRole('radio', { name: 'Khác' }).check();
+      await whyA.getByRole('radio', { name: 'Khác', exact: true }).check();
       const noteA = lineA.getByLabel(/^Ghi thêm/);
       await noteA.fill('  ab  ');
       await expect(save).toBeDisabled();
@@ -126,7 +126,7 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       await noteA.fill(reason);
       // Dùng cho dòng giảm còn lại (B chưa chọn lý do)
       await lineA.getByRole('button', { name: 'Dùng cho các món giảm còn lại' }).click();
-      await expect(lineB.getByRole('radio', { name: 'Khác' })).toBeChecked();
+      await expect(lineB.getByRole('radio', { name: 'Khác', exact: true })).toBeChecked();
       await expect(save).toBeEnabled();
       await save.click();
       await expect(drawer).toBeHidden();

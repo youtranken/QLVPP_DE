@@ -33,12 +33,13 @@ const TEXT_MIN = 4.5;
 const BORDER_MIN = 3;
 const DISABLED_MIN = 3;
 const CHANGE_MIN = 1.15;
-// Tổ hợp được khai báo: nút hm-cta/hm-dark chỉ ở dải tối; còn lại mọi nền
+// Tổ hợp được khai báo: nút hm-cta/hm-dark chỉ ở dải tối; nút ghost (trong suốt, chữ tối) không đặt trên dải tối
+// (dải hm-hero chỉ có hm-cta và Segmented); còn lại mọi nền
 const DARK_ONLY: Variant[] = ['hm-cta', 'hm-dark'];
+const LIGHT_ONLY: Variant[] = ['ghost'];
+const placed = (v: Variant, s: Surface) => (DARK_ONLY.includes(v) ? s === 'hero' : !(LIGHT_ONLY.includes(v) && s === 'hero'));
 const combos = (): [Variant, Surface][] =>
-  (Object.keys(VARIANTS) as Variant[]).flatMap((v) =>
-    (Object.keys(SURFACES) as Surface[]).filter((s) => !DARK_ONLY.includes(v) || s === 'hero').map((s): [Variant, Surface] => [v, s]),
-  );
+  (Object.keys(VARIANTS) as Variant[]).flatMap((v) => (Object.keys(SURFACES) as Surface[]).filter((s) => placed(v, s)).map((s): [Variant, Surface] => [v, s]));
 
 type Measure = { bg: string; fg: string; border: string; surface: string; surfaceBg: string };
 
@@ -49,6 +50,10 @@ async function mount(page: Page) {
     ({ variants, surfaces }) => {
       const host = document.createElement('div');
       host.id = 'pw-btn-matrix';
+      // Đo trạng thái cuối: nút có transition nền, getComputedStyle ngay sau khi ép trạng thái còn trả màu cũ
+      const still = document.createElement('style');
+      still.textContent = '#pw-btn-matrix * { transition: none !important; }';
+      host.appendChild(still);
       host.style.cssText = 'position:fixed;inset:0;z-index:99999;overflow:auto;background:#d7eaef;display:grid;gap:8px;padding:8px;align-content:start';
       const shell = document.querySelector("[data-shell='admin']") ?? document.body;
       shell.appendChild(host);

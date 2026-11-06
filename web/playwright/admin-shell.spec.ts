@@ -35,7 +35,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     await page.getByRole('radio', { name: 'English' }).click();
     const sideEn = page.getByRole('navigation', { name: 'Admin menu' });
     await expect(sideEn.getByRole('group', { name: 'Monthly' })).toBeVisible();
-    await expect(sideEn.getByRole('link', { name: 'Categories' })).toBeVisible();
+    await expect(sideEn.getByRole('link', { name: 'Groups & units' })).toBeVisible();
     await expect(page.getByRole('link', { name: /^Current sign-up period: month \d+ · open/ })).toBeVisible();
     await page.getByRole('radio', { name: 'Tiếng Việt' }).click();
     await expect(page.getByRole('navigation', { name: 'Menu quản lý' }).getByRole('group', { name: 'Hằng tháng' })).toBeVisible();
@@ -63,9 +63,9 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
 
   test('v2: số đếm trên mục đang chọn (nền trắng) vẫn đọc được, đạt axe', async ({ page }, info) => {
     test.skip(isMobile(info), 'chỉ đo ở 1280');
-    // Số đếm Giao hàng = số người chưa nhận: giả 5 người (không dòng) cho kỳ khóa gần nhất
+    // Số đếm Giao hàng = số người giao được ngay (deliverable_now): giả 5 người cho kỳ khóa gần nhất
     await page.route('**/api/admin/periods/*/delivery-people', async (route) => {
-      const people = Array.from({ length: 5 }, (_, i) => ({ user_sub: `pw-badge-${i}`, full_name: `PW Badge ${i}`, department: null, user_status: 'active', request_id: null, status: 'pending', owed_lines: 0, open_lines: 0, lines: [] }));
+      const people = Array.from({ length: 5 }, (_, i) => ({ user_sub: `pw-badge-${i}`, full_name: `PW Badge ${i}`, department: null, user_status: 'active', request_id: null, status: 'pending', owed_lines: 0, open_lines: 1, has_pending: true, has_debt: false, deliverable_now: true, lines: [] }));
       await route.fulfill({ status: 200, json: { ym: '2000-01', people } });
     });
     await page.goto('/admin/delivery');
@@ -197,6 +197,8 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     for (const height of [800, 720]) {
       await page.setViewportSize({ width: 1280, height });
       await page.goto('/admin/review');
+      // 14 mục (V2D-20): ở 720 nav tự cuộn, mục cuối vẫn tới được; khối tài khoản không cuộn theo
+      await side.getByRole('link', { name: /^Cấu hình/ }).scrollIntoViewIfNeeded();
       await expect(side.getByRole('link', { name: /^Cấu hình/ })).toBeInViewport({ ratio: 1 });
       await expect(page.getByRole('button', { name: 'Đăng xuất' })).toBeInViewport({ ratio: 1 });
       const clipped = await side.getByRole('link').evaluateAll((links) =>
@@ -251,13 +253,20 @@ test.describe('V2D-13 toàn màn hình và panel phủ', () => {
       await page.goto(`/admin/catalog?q=${encodeURIComponent(item.name)}`);
       const card = page.getByRole('article').filter({ hasText: item.name });
       await expect(card).toBeVisible();
-      const before = (await card.boundingBox())!;
+      // Panel modal làm nền aria-hidden: đo thẻ qua handle DOM giữ từ trước, toạ độ theo trang
+      const cardEl = (await card.elementHandle())!;
+      const pageBox = () =>
+        cardEl.evaluate((el) => {
+          const r = el.getBoundingClientRect();
+          return { x: r.x + window.scrollX, y: r.y + window.scrollY, width: r.width, height: r.height };
+        });
+      const before = await pageBox();
       const length = await page.evaluate(() => history.length);
       await card.getByRole('button', { name: `Sửa ${item.name}` }).click();
       const panel = page.getByRole('dialog', { name: `Sửa món ${item.name}` });
       await expect(panel).toBeVisible();
       expect(await page.evaluate(() => history.length)).toBe(length + 1);
-      expect(await card.boundingBox()).toEqual(before);
+      expect(await pageBox()).toEqual(before);
       if (isMobile(info)) {
         await expect(panel.getByRole('button', { name: '← Đóng' })).toBeVisible();
         expect(Math.round((await panel.boundingBox())!.width)).toBe(390);
@@ -283,6 +292,10 @@ test.describe('V2D-13 toàn màn hình và panel phủ', () => {
       await page.goto(`/admin/catalog?item=${item.id}`);
       await expect(panel).toBeVisible();
       await page.reload();
+      await expect(panel).toBeVisible();
+      // Back sau F5/dán URL là rời tài liệu (chỉ beforeunload, R-D1.6): hỏi "Bỏ thay đổi?" kiểm trên panel mở bằng bấm
+      await page.goto(`/admin/catalog?q=${encodeURIComponent(item.name)}`);
+      await card.getByRole('button', { name: `Sửa ${item.name}` }).click();
       await expect(panel).toBeVisible();
       await panel.getByLabel(/^Tên món/).fill(`${item.name} X`);
       const discard = page.getByRole('dialog', { name: 'Bỏ thay đổi?' });

@@ -92,6 +92,9 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     expect(snapshotCount(seed.prevYm)).toBe(before + 1);
     await expect(page.getByRole('heading', { level: 1, name: FORM })).toBeVisible();
     await expect(formTable(page).getByRole('row', { name: new RegExp(a.name) }).getByRole('cell').last()).toHaveText('9');
+    // Tờ 210mm co theo khung ở 390: không cuộn ngang (trang bị phóng thì thanh công cụ lệch, không bấm được)
+    // (điện thoại nới khung bố cục theo nội dung nên so với bề rộng màn hình, không với innerWidth)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth), 'không cuộn ngang').toBeLessThanOrEqual(page.viewportSize()!.width);
 
     await page.getByRole('checkbox', { name: 'In kèm phụ lục' }).click();
     await expect(page.getByRole('checkbox', { name: 'In kèm phụ lục' })).toBeChecked();
@@ -228,15 +231,12 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await page.getByRole('button', { name: 'In lại bản này' }).click();
     await expect.poll(async () => (await printsOf(page)).length).toBe(2);
     expect(snapshotCount(PRIVATE_YM)).toBe(1);
+    expect(await leftovers(page)).toEqual({ region: true, pageRule: true });
     await page.emulateMedia({ media: 'print' });
     await expect(page.getByRole('heading', { level: 1, name: FORM })).toBeVisible();
     await expect(page.getByRole('heading', { level: 1, name: /^Gửi ADM/ })).toBeHidden();
     await expect(page.getByRole('button', { name: 'In lại bản này' })).toBeHidden();
     await expect(page.getByRole('row', { name: new RegExp(a.name) }).getByRole('cell').last()).toHaveText('4');
-    const pdf = (await page.pdf({ preferCSSPageSize: true })).toString('latin1');
-    const media = /\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]/.exec(pdf);
-    expect(Number(media?.[1])).toBeCloseTo(595.28, 0);
-    expect(Number(media?.[2])).toBeCloseTo(841.89, 0);
     await page.emulateMedia({ media: 'screen' });
     expect(await leftovers(page)).toEqual({ region: true, pageRule: true });
 
@@ -246,6 +246,18 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
     await expect(page).toHaveURL(/\/admin\/home$/);
+    await expect.poll(() => leftovers(page)).toEqual({ region: false, pageRule: false });
+
+    // Khổ giấy: in lại lần nữa rồi xuất PDF theo @page (page.pdf tự phát beforeprint/afterprint → vùng in gỡ sau đó)
+    await page.goBack();
+    await expect(page).toHaveURL(/\/admin\/send-adm$/);
+    await page.getByRole('button', { name: 'In lại bản này' }).click();
+    await expect.poll(async () => (await printsOf(page)).length).toBe(3);
+    expect(snapshotCount(PRIVATE_YM)).toBe(1);
+    const pdf = (await page.pdf({ preferCSSPageSize: true })).toString('latin1');
+    const media = /\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]/.exec(pdf);
+    expect(Number(media?.[1])).toBeCloseTo(595.28, 0);
+    expect(Number(media?.[2])).toBeCloseTo(841.89, 0);
     await expect.poll(() => leftovers(page)).toEqual({ region: false, pageRule: false });
     if (isMobile(info)) await expectNoContrastViolations(page);
   });

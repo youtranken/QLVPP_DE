@@ -71,6 +71,8 @@ test.describe('Giao hàng theo người — mọi lần giao qua hộp xác nh�
       expect(posts, 'mở hộp chưa gửi gì').toEqual([]);
       expect(page.url()).toMatch(/\/admin\/delivery(\?.*)?$/);
       if (isMobile(info)) {
+        // Đo sau hiệu ứng mở (scale .98 → 1), không đo giữa chừng
+        await settled(page);
         const box = await dlgA.boundingBox();
         const vp = page.viewportSize()!;
         expect(Math.round(box!.width), 'tấm đáy toàn rộng').toBe(vp.width);

@@ -118,7 +118,10 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
     const downs = page.getByRole('button', { name: /^Đưa .+ xuống$/ });
     await expect(ups.first()).toBeDisabled();
     await expect(downs.last()).toBeDisabled();
-    await expect(ups.first()).toHaveCSS('opacity', '0.5');
+    // R-D4.2: nút tắt không mờ bằng opacity < .55 — khác nút bật bằng màu chữ/nền riêng của :disabled
+    const look = (b: typeof ups) => b.evaluate((e) => `${getComputedStyle(e).color}|${getComputedStyle(e).backgroundColor}|${getComputedStyle(e).opacity}`);
+    expect(Number((await look(ups.first())).split('|')[2])).toBeGreaterThanOrEqual(0.55);
+    expect(await look(ups.first())).not.toBe(await look(ups.nth(1)));
     await expect(ups.first()).toHaveAttribute('title', 'Đã ở đầu danh sách');
     await expect(ups.nth(1)).toHaveCSS('opacity', '1');
     await expect(page.getByRole('button', { name: 'Lưu thứ tự' })).toBeDisabled();

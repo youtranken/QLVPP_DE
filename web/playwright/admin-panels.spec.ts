@@ -2,7 +2,44 @@ import { expect, test, type Locator, type Page, type TestInfo } from '@playwrigh
 import { asRole, expectNoContrastViolations, isMobile, removeTestItem, seedPwItem } from './helpers';
 
 // Dữ liệu giả cho trang chỉ đọc: không tra người/phiếu/dòng có sẵn của DB dev chung
-const PW_PERSON = { user_sub: 'pw-panel-a', full_name: 'PW Panel An', department: null, user_status: 'active', request_id: null, status: 'pending', owed_lines: 0, open_lines: 0, lines: [] };
+const PW_PERSON_LINE = {
+  line_id: 'pw-line-p1',
+  request_id: 'pw-req-p1',
+  period_ym: '2000-01',
+  is_debt: false,
+  item_id: null,
+  name: 'PW món giao',
+  name_en: null,
+  unit: 'cai',
+  image_file_id: null,
+  qty: 2,
+  delivered_qty: 0,
+  cancelled_qty: 0,
+  remaining_qty: 2,
+  stock_qty: null,
+  review_status: 'accepted',
+  adm_out: false,
+  deliver_cap: 2,
+  request_at: '2000-01-05T07:20:00.000Z',
+  line_at: '2000-01-05T07:20:00.000Z',
+  sort_order: null,
+  category: null,
+};
+// Người còn dòng tháng đang giao: thẻ nằm ở tab mặc định "Chưa nhận"
+const PW_PERSON = {
+  user_sub: 'pw-panel-a',
+  full_name: 'PW Panel An',
+  department: null,
+  user_status: 'active',
+  request_id: 'pw-req-p1',
+  status: 'pending',
+  owed_lines: 0,
+  open_lines: 1,
+  has_pending: true,
+  has_debt: false,
+  deliverable_now: true,
+  lines: [PW_PERSON_LINE],
+};
 const PW_USER = { sub: 'pw-panel-user', fullName: 'PW Panel Người', email: 'pw-panel@example.test', department: 'PW Phòng', status: 'active', employeeCode: null, groups: [], lastLoginAt: null };
 const PW_LINE = {
   line_id: 'pw-line-1',
@@ -80,11 +117,19 @@ async function mockSummary(page: Page) {
 // AC #2/#3: mở panel → lưới phía sau không đổi chỗ/bề rộng; panel nằm trên; nền mờ phủ cả sidebar; 390 rộng hết + "← Đóng"
 async function expectOverlay(page: Page, info: TestInfo, behind: Locator, open: () => Promise<void>, panel: Locator, param: string) {
   await expect(behind).toBeVisible();
-  const before = (await behind.boundingBox())!;
+  // Panel là hộp thoại modal: phần nền bị aria-hidden nên locator theo vai không còn thấy lưới — giữ handle DOM từ trước
+  // Toạ độ theo trang (cộng scroll): bấm nút ở 390 có thể cuộn trang tới nút, không phải lưới bị đẩy
+  const grid = (await behind.elementHandle())!;
+  const pageBox = () =>
+    grid.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return { x: r.x + window.scrollX, y: r.y + window.scrollY, width: r.width, height: r.height };
+    });
+  const before = await pageBox();
   await open();
   await expect(panel).toBeVisible();
   expect(new URL(page.url()).searchParams.has(param), `?${param}= trên URL`).toBe(true);
-  expect(await behind.boundingBox(), 'lưới không bị đẩy/co').toEqual(before);
+  expect(await pageBox(), 'lưới không bị đẩy/co').toEqual(before);
   if (isMobile(info)) {
     await expect(panel.getByRole('button', { name: '← Đóng' })).toBeVisible();
     expect(Math.round((await panel.boundingBox())!.width)).toBe(390);

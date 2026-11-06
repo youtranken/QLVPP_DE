@@ -11,6 +11,12 @@ const TWO_BOXES = [
 
 const block = (page: Page, name: string) => page.getByRole('form', { name });
 const saved = (form: ReturnType<typeof block>) => expect(form.getByRole('status')).toHaveText('Đã lưu.');
+// R-D8.19: đổi sang hạn hợp lệ thì hỏi lại, hộp lặp đúng câu kỳ áp dụng dưới ô
+async function confirmDeadline(page: Page) {
+  const dialog = page.getByRole('dialog', { name: 'Đổi hạn đăng ký?' });
+  await expect(dialog.getByText(/^Kỳ tháng \d+ \(đang mở\) vẫn khóa 00:00 ngày \d\d\/\d\d\. Áp dụng từ kỳ tháng \d+: khóa 00:00 ngày \d\d\/\d\d\.$/)).toBeVisible();
+  await dialog.getByRole('button', { name: 'Lưu hạn mới' }).click();
+}
 const putBody = (page: Page) =>
   page.waitForRequest((r) => r.method() === 'PUT' && new URL(r.url()).pathname === '/api/admin/config').then((r) => r.postDataJSON() as Config);
 
@@ -68,6 +74,7 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await expect(lastDay).toHaveValue('3');
     await expect(period.getByRole('button', { name: 'Lùi một ngày' })).toBeDisabled();
     await period.getByRole('button', { name: 'Lưu kỳ đăng ký' }).click();
+    await confirmDeadline(page);
     await saved(period);
     await expect(period.getByRole('button', { name: 'Chưa có thay đổi' })).toBeDisabled();
     await expect(period.getByText('Chỉ lưu khối này · ghi vào Nhật ký')).toBeVisible();
@@ -79,6 +86,7 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await expect(period.getByRole('list', { name: /^Xem trước lịch tháng/ }).getByRole('listitem').filter({ hasText: 'Ngày hạn (đến 23:59)' })).toContainText('28');
     const onlyPeriod = putBody(page);
     await period.getByRole('button', { name: 'Lưu kỳ đăng ký' }).click();
+    await confirmDeadline(page);
     expect(await onlyPeriod).toEqual({ registration_last_day: 28 });
     await saved(period);
 

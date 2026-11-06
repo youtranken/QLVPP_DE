@@ -1,5 +1,5 @@
 import { mkdirSync } from 'node:fs';
-import { expect, test, type Browser, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type Browser, type Locator, type Page, type TestInfo } from '@playwright/test';
 import { acquireLock, deleteTestUsers, expectNoContrastViolations, isMobile, psql, seedActiveUser, settled } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
 import { newPage } from './sessions';
@@ -28,9 +28,11 @@ async function switchLanguage(page: Page, info: TestInfo, lang: Lang) {
 
 // Vỏ app có tên người đăng nhập và tên ngôn ngữ "Tiếng Việt"; ô dữ liệu (ghi chú xuất lẻ, tên món) là chữ người dùng nhập
 // → chỉ kiểm chữ giao diện: tiêu đề, nút, đầu cột, nhãn trong vùng nội dung chính
-async function expectContentLanguage(page: Page, lang: Lang) {
+// Hộp thoại modal làm main bị aria-hidden (getByRole('main') không còn khớp): khi có hộp mở thì kiểm trong hộp
+async function expectContentLanguage(page: Page, lang: Lang, root: Locator = page.getByRole('main')) {
   await settled(page);
-  const ui = await page.getByRole('main').locator('h1, h2, h3, button, th, label, legend').allInnerTexts();
+  await expect(root).toBeVisible();
+  const ui = await root.locator('h1, h2, h3, button, th, label, legend').allInnerTexts();
   // Nút chọn phiếu mang tên người/phòng ban (dữ liệu, có thể là người demo trong DB dev) — không phải chữ giao diện
   const text = userDataTexts().reduce((t, d) => t.split(d).join(' '), ui.join(' '));
   const words = text.match(/\S*[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]\S*/gi) ?? [];
@@ -63,7 +65,7 @@ test.describe('E6-S4 song ngữ các màn Hành chính của Plan 3', () => {
         await page.getByRole('searchbox').fill(seed.name);
         await page.getByRole('button', { name: new RegExp(`^${lang === 'vi' ? 'Giao…' : 'Deliver…'}, ${seed.name}`) }).click();
         await expect(page.getByRole('button', { name: t.delivery })).toBeVisible();
-        await expectContentLanguage(page, lang);
+        await expectContentLanguage(page, lang, page.getByRole('dialog'));
         if (isMobile(info)) await expectNoContrastViolations(page);
         await snap(page, info, `delivery-${lang}`);
 

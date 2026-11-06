@@ -67,7 +67,9 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     expect((await rowA.getByRole('cell').allTextContents()).slice(2, 9)).toEqual(['5', '0', '2', '5', '5', '0', '0']);
     await expect(part1.getByRole('textbox')).toHaveCount(0);
     await expect(part1.getByText(/^Theo bản đã gửi \d{2}:\d{2} \d{2}\/\d{2}$/)).toBeVisible();
-    await expect(part1.getByRole('link', { name: 'Sửa số đề nghị ở Gửi ADM →' })).toHaveAttribute('href', '/admin/send-adm');
+    // Kỳ riêng 2000-01 cũ hơn kỳ khóa gần nhất: Gửi ADM không mở được kỳ này nên không có liên kết sửa số
+    // (kỳ khóa gần nhất có liên kết — reports-page.test.tsx)
+    await expect(part1.getByRole('link', { name: 'Sửa số đề nghị ở Gửi ADM →' })).toHaveCount(0);
     // Món seed không có nhóm → "Chưa xếp nhóm"
     await expect(part1.getByRole('rowheader', { name: /^Chưa xếp nhóm/ })).toBeVisible();
     const issues = page.getByRole('region', { name: 'Xuất lẻ trong kỳ' });

@@ -90,7 +90,7 @@ async function summaryKpi(request: APIRequestContext, ym: string) {
 }
 
 test.describe('Smoke Plan 2 toàn luồng', () => {
-  test('Plan 2: A đăng ký 2 món + 1 món ngoài DM, B lưu 1 món → kỳ khóa → Hành chính Tổng hợp, sao chép chưa đăng ký có C, bỏ một món khỏi phiếu A có lý do, Thêm vào danh mục → A thấy ở Lịch sử kỳ đó món bị bỏ không còn và "Đã thêm vào danh mục"', async ({
+  test('Plan 2: A đăng ký 2 món + 1 món ngoài DM, B lưu 1 món → kỳ khóa → Hành chính Tổng hợp, sao chép chưa đăng ký có C, bỏ một món khỏi phiếu A có lý do, Thêm vào danh mục → A thấy ở Lịch sử kỳ đó món bị bỏ kèm lý do và "Đã thêm vào danh mục"', async ({
     page,
     browser,
     request,
@@ -139,7 +139,8 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
 
       await page.goto(`/history/${LOCKED_YM}`);
       await expect(page.locator('li', { hasText: x.name })).toBeVisible();
-      await expect(page.locator('li', { hasText: y.name })).toHaveCount(0);
+      // R-D6.11: dòng bị bỏ vẫn hiện ở Lịch sử kèm lý do của Hành chính
+      await expect(page.locator('li', { hasText: y.name }).getByText(/^Hành chính bỏ món này khỏi phiếu \(\d+ cái\): Trùng với phiếu khác$/)).toBeVisible();
       await expect(page.locator('li', { hasText: custom }).getByText('Đã thêm vào danh mục')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'member-a-after');
