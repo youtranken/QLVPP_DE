@@ -18,6 +18,9 @@ import { useReportsParams } from './use-reports-params';
 import { useSnapshotDownload } from './use-snapshot';
 import './reports.m1.css';
 
+// Trang in riêng mở từ đây thì Quay lại về đây
+const SNAPSHOTS_FROM = 'reports' as const;
+
 function ReportsHeader() {
   const { t } = useTranslation();
   const title = t('nav.reports');
@@ -69,7 +72,7 @@ function ReportBody({ report, sent, period, onMonth }: BodyProps) {
       <ReportPart1 report={report} sent={sent} editable={report.ym === shiftYm(period.ym, -1)} />
       <ReportIssues issues={report.issues} />
       <ReportPart2 departments={report.byDepartment} />
-      <ReportSnapshots ym={report.ym} files={files} />
+      <ReportSnapshots ym={report.ym} files={files} from={SNAPSHOTS_FROM} />
     </div>
   );
 }

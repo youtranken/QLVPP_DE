@@ -1,7 +1,9 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, settled, urlOfNewTab } from './helpers';
+import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, settled } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
+import { PRIVATE_YM, clearPrivateSnapshots, openOnPrivatePeriod } from './private-period';
+import { confirmIfAsked, openDraft } from './send-adm-flow';
 
 const SHOTS = '../.superpowers/sdd/2026-10-30-giao-dien-hanh-chinh/task-16-shots';
 
@@ -14,7 +16,7 @@ async function snap(page: Page, info: TestInfo, name: string) {
 
 const snapshotCount = (ym: string) => Number(psql(`SELECT count(*) FROM report_snapshots WHERE period_ym = '${ym}-01'`));
 
-const PRINT_URL = /\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print$/;
+const PRINT_URL = /\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print\?from=reports$/;
 const FORM = 'Phiếu đề xuất văn phòng phẩm';
 
 // Báo cáo chỉ đọc: bản chốt tạo qua api (như Gửi ADM gửi), rồi mở trang in riêng của bản đó
@@ -31,19 +33,37 @@ async function printSnapshot(page: Page, request: APIRequestContext, seed: Seed,
 
 type SignBox = { title: string; title_en: string; name: string };
 
+// Hộp in thật không điều khiển được: thay window.print như Chrome (beforeprint rồi afterprint nếu __after),
+// ghi lại lúc gọi có tờ trình ký trong vùng in ngoài shell và luật @page hay không
+type PrintCall = { sheet: boolean; pageRule: string | null };
+type PrintSpy = { __prints: PrintCall[]; __after: boolean };
+function spyPrint() {
+  const w = window as unknown as PrintSpy;
+  w.__prints = [];
+  w.__after = true;
+  window.print = () => {
+    w.__prints.push({ sheet: !!document.querySelector('body > [data-print-portal] h1'), pageRule: document.head.querySelector('style[data-print-page]')?.textContent ?? null });
+    window.dispatchEvent(new Event('beforeprint'));
+    if (w.__after) window.dispatchEvent(new Event('afterprint'));
+  };
+}
+const printsOf = (page: Page) => page.evaluate(() => (window as unknown as PrintSpy).__prints);
+const leftovers = (page: Page) => page.evaluate(() => ({ region: !!document.querySelector('[data-print-portal]'), pageRule: !!document.head.querySelector('style[data-print-page]') }));
+const PAGE_RULE = '@page { size: A4 portrait; margin: 14mm 14mm 16mm; }';
+const TIP = "Trong hộp in: chọn máy in, khổ A4; tắt 'Đầu trang và chân trang'.";
+
 asRole('admin');
 
 test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa, dev-identity admin)', () => {
-  let run: { releases: (() => void)[]; since: string; seed?: Seed; boxes?: SignBox[] };
+  // Kỳ riêng của PW: bản chốt chỉ có món PW và không thay bản đã gửi của kỳ trước thật trên dev
+  let run: { releases: (() => void)[]; seed?: Seed; boxes?: SignBox[] };
   test.beforeEach(async () => {
-    run = { releases: [await acquireLock('prev-period'), await acquireLock('admin-config')], since: new Date().toISOString() };
+    run = { releases: [await acquireLock('prev-period'), await acquireLock('admin-config')] };
   });
   test.afterEach(async ({ request }) => {
     if (run.boxes) await request.put('/api/admin/config', { headers: devHeaders('admin'), data: { signature_boxes: run.boxes } });
-    if (run.seed) {
-      psql(`DELETE FROM report_snapshots WHERE period_ym = '${run.seed.prevYm}-01' AND created_by_sub = 'pw-admin' AND created_at >= '${run.since}'`);
-      run.seed.cleanup();
-    }
+    clearPrivateSnapshots();
+    run.seed?.cleanup();
     run.releases.forEach((r) => r());
   });
 
@@ -57,7 +77,8 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
   const appendix = (page: Page) => page.getByRole('region', { name: /^Phụ lục · Chi tiết tháng / });
 
   test('E5-S3 E9-S4 Bản in A4: ô ký, số chốt không đổi sau giao thêm, in lại không tạo bản mới', async ({ page, request }, info) => {
-    const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }]));
+    clearPrivateSnapshots();
+    const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }], { ym: PRIVATE_YM }));
     const [a] = seed.items;
     const lineId = psql(`SELECT id FROM request_lines WHERE request_id = '${seed.requestId}'`);
     const before = snapshotCount(seed.prevYm);
@@ -117,19 +138,25 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await setBoxes(request, [{ title: 'PW Đổi sau', title_en: '', name: 'PW Đổi sau' }]);
     await page.goto(`/admin/reports?ym=${seed.prevYm}`);
     const reprint = page.getByRole('region', { name: 'Bản chốt' }).getByRole('link', { name: /^In lại bản lập/ }).first();
-    await expect(reprint).toHaveAttribute('href', `/admin/reports/snapshots/${snapshotId}/print`);
-    await page.goto(`${await urlOfNewTab(page, PRINT_URL, () => reprint.click(), devHeaders('admin'))}?appendix=1`);
+    await expect(reprint).toHaveAttribute('href', `/admin/reports/snapshots/${snapshotId}/print?from=reports`);
+    // In lại: trang in riêng cùng tab, không tự mở hộp in
+    await reprint.click();
+    await expect(page).toHaveURL(PRINT_URL);
+    await page.goto(`${page.url()}&appendix=1`);
     await expect(frozenRow()).toBeVisible();
     expect(await numbers()).toEqual(frozen);
     await expect(page.getByRole('group', { name: 'Chủ quản đơn vị' })).toHaveText(`Chủ quản đơn vịHead of Dept.${head}`);
     await expect(page.getByRole('group', { name: 'Người yêu cầu' })).toHaveText('Người yêu cầuApplicant');
     expect(snapshotCount(seed.prevYm)).toBe(before + 1);
     await snap(page, info, 'print-reopened');
+    await page.getByRole('link', { name: 'Quay lại' }).click();
+    await expect(page).toHaveURL(new RegExp(`/admin/reports\\?ym=${PRIVATE_YM}$`));
   });
 
   test('E9-S4 Phiếu đề xuất D&E: mọi hàng của bản theo Đề nghị, ô ký theo cấu hình, bật phụ lục', async ({ page, request }, info) => {
     // A tổng cần 5 nhưng đề nghị 1 → in 1; B tủ 10 vẫn đề nghị mặc định = đăng ký 1 (tủ không trừ) → in 1
-    const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }, { stock: 10, qty: 1 }]));
+    clearPrivateSnapshots();
+    const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }, { stock: 10, qty: 1 }], { ym: PRIVATE_YM }));
     const [a, b] = seed.items;
     const code = `PW${seed.tag}`.slice(0, 40);
     psql(`UPDATE items SET code = '${code}', name_en = 'PW pen ${seed.tag}' WHERE id = '${a.id}'`);
@@ -171,6 +198,56 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await expect(page.getByRole('checkbox', { name: 'In kèm phụ lục' })).not.toBeChecked();
     await expect(appendix(page)).toHaveCount(0);
     await snap(page, info, 'print-form');
+  });
+
+  test('V2D-19 print in place', async ({ page, request, context }, info) => {
+    clearPrivateSnapshots();
+    const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 0, qty: 4 }], { ym: PRIVATE_YM }));
+    const [a] = seed.items;
+    await openOnPrivatePeriod(page);
+    await page.addInitScript(spyPrint);
+    const tabs: Page[] = [];
+    context.on('page', (p) => tabs.push(p));
+    await page.goto('/admin/send-adm');
+    await openDraft(page);
+    await expect(page.getByText(TIP)).toBeVisible();
+    await expect(page.getByText('Không in kèm phụ lục')).toBeVisible();
+
+    // Lập phiếu: chốt bản rồi mở hộp in ngay tại trang — 1 lần print, URL không đổi, 0 tab mới
+    await page.getByRole('button', { name: 'In trình ký' }).click();
+    await confirmIfAsked(page, request, PRIVATE_YM, false);
+    await expect.poll(() => printsOf(page)).toEqual([{ sheet: true, pageRule: PAGE_RULE }]);
+    await expect(page).toHaveURL(/\/admin\/send-adm$/);
+    expect(tabs).toEqual([]);
+    expect(snapshotCount(PRIVATE_YM)).toBe(1);
+    await expect(page.getByText(/^Đã chốt bản \d\d:\d\d \d\d\/\d\d\. Cần in lại: mở Bản chốt\.$/)).toBeVisible();
+    expect(await leftovers(page)).toEqual({ region: false, pageRule: false });
+
+    // Đã gửi: In lại bản này in từ bản có sẵn, không tạo bản mới; hộp in không đóng (không afterprint) → vùng in còn
+    await page.evaluate(() => void ((window as unknown as PrintSpy).__after = false));
+    await page.getByRole('button', { name: 'In lại bản này' }).click();
+    await expect.poll(async () => (await printsOf(page)).length).toBe(2);
+    expect(snapshotCount(PRIVATE_YM)).toBe(1);
+    await page.emulateMedia({ media: 'print' });
+    await expect(page.getByRole('heading', { level: 1, name: FORM })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /^Gửi ADM/ })).toBeHidden();
+    await expect(page.getByRole('button', { name: 'In lại bản này' })).toBeHidden();
+    await expect(page.getByRole('row', { name: new RegExp(a.name) }).getByRole('cell').last()).toHaveText('4');
+    const pdf = (await page.pdf({ preferCSSPageSize: true })).toString('latin1');
+    const media = /\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]/.exec(pdf);
+    expect(Number(media?.[1])).toBeCloseTo(595.28, 0);
+    expect(Number(media?.[2])).toBeCloseTo(841.89, 0);
+    await page.emulateMedia({ media: 'screen' });
+    expect(await leftovers(page)).toEqual({ region: true, pageRule: true });
+
+    // Rời trang trong app mà không có afterprint → vùng in và @page vẫn được gỡ
+    await page.evaluate(() => {
+      history.pushState({}, '', '/admin/home');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    await expect(page).toHaveURL(/\/admin\/home$/);
+    await expect.poll(() => leftovers(page)).toEqual({ region: false, pageRule: false });
+    if (isMobile(info)) await expectNoContrastViolations(page);
   });
 
   test('E5-S3 id không có bản chốt → trang không tìm thấy', async ({ page }) => {

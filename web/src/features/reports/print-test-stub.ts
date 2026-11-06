@@ -24,6 +24,6 @@ export function openPrint(reply: Response | SnapshotData, opts: Options = {}) {
   });
   vi.stubGlobal('fetch', fetchMock);
   mockViewport(1280);
-  renderApp(makeMe('admin'), `/admin/reports/snapshots/${id}/print${opts.query ?? ''}`);
-  return fetchMock;
+  const view = renderApp(makeMe('admin'), `/admin/reports/snapshots/${id}/print${opts.query ?? ''}`);
+  return Object.assign(fetchMock, { unmount: view.unmount });
 }

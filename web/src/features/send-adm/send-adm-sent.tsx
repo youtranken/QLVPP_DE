@@ -1,19 +1,22 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import { formatVnStamp } from '@/lib/format-time';
 import { activeNeed } from '@/lib/report-qty';
 import { Icon } from '@/ui/icon';
 import { PageHeader } from '@/ui/page-header';
 import type { AdminItem } from '@/features/catalog/catalog.api';
-import { printPath, type MonthReport, type SnapshotData } from '@/features/reports/reports.api';
+import type { MonthReport, SnapshotData } from '@/features/reports/reports.api';
 import { ReportSnapshots } from '@/features/reports/report-snapshots';
 import type { SnapshotDownload } from '@/features/reports/use-snapshot';
+import { PrintNote } from './send-adm-print-note';
 import { useNewDraftConfirm } from './use-send-adm-confirms';
 import { ItemCell } from './send-adm-orders';
 import { basisNeedOf, carryFromSent, sentOrderOf, toOrderRows } from './send-adm-rows';
 import type { SendState } from './use-send-state';
 import type { SentSnapshot } from './send-adm.api';
+
+// Trang in riêng mở từ đây thì Quay lại về đây
+const SNAPSHOTS_FROM = 'send-adm' as const;
 
 interface Props {
   head: { crumbs: string[]; title: string; description: string };
@@ -21,6 +24,7 @@ interface Props {
   items: AdminItem[];
   send: SendState & { sent: SentSnapshot };
   files: SnapshotDownload;
+  printer: { print: (data: SnapshotData) => Promise<unknown>; pending: boolean };
   onNewDraft: (carry: Record<string, number>) => void;
 }
 
@@ -78,9 +82,8 @@ function SentTable({ data, report, items, delivered }: { data: SnapshotData; rep
   );
 }
 
-export function SendAdmSent({ head, report, items, send, files, onNewDraft }: Props) {
+export function SendAdmSent({ head, report, items, send, files, printer, onNewDraft }: Props) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const confirmNew = useNewDraftConfirm();
   const { sent } = send;
   const time = formatVnStamp(sent.created_at);
@@ -99,12 +102,13 @@ export function SendAdmSent({ head, report, items, send, files, onNewDraft }: Pr
           </button>
         }
         primary={
-          <button type="button" className="btn btn--primary" onClick={() => navigate(`${printPath(sent.id)}?from=send-adm`)}>
-            <Icon name="printer" size={18} />
-            {t('sendAdm.sent.reprint')}
+          <button type="button" className="btn btn--primary" disabled={printer.pending} aria-busy={printer.pending || undefined} onClick={() => void printer.print(sent.data)}>
+            {printer.pending ? <span className="spinner sa-spinner" aria-hidden="true" /> : <Icon name="printer" size={18} />}
+            {t(printer.pending ? 'reports.page.preparingPrint' : 'sendAdm.sent.reprint')}
           </button>
         }
       />
+      <PrintNote />
       <p className="alert alert--ok sa-banner">{banner}</p>
       {send.changedAfter && <p className="alert alert--warn">{t('warn.W6banner', { time })}</p>}
       <div className="sa-row">
@@ -113,7 +117,7 @@ export function SendAdmSent({ head, report, items, send, files, onNewDraft }: Pr
         </button>
       </div>
       <SentTable data={sent.data} report={report} items={items} delivered={send.deliveredSince} />
-      <ReportSnapshots ym={report.ym} files={files} />
+      <ReportSnapshots ym={report.ym} files={files} from={SNAPSHOTS_FROM} />
     </div>
   );
 }

@@ -57,9 +57,7 @@ function closureOf(bodies: Map<string, string>, start: Iterable<string>, direct?
 
 const seedingFunctions = (sources: string[]) => closureOf(functionBodies(sources), SEEDERS);
 
-// Bản chốt ở kỳ trước thật làm kỳ dev của chủ hiện "đã gửi" với bản PW → chỉ ghi vào kỳ riêng PRIVATE_YM.
-// print/reports có từ trước luật này, chưa chuyển sang kỳ riêng
-const LEGACY_SNAPSHOT_WRITERS = ['print.spec.ts', 'reports.spec.ts'];
+// Bản chốt ở kỳ trước thật làm kỳ dev của chủ hiện "đã gửi" với bản PW → chỉ ghi vào kỳ riêng PRIVATE_YM
 const SNAPSHOT_WRITE = /INSERT INTO report_snapshots|request\.post\([^)]*\/snapshots`/;
 // Hàm cấp tệp nằm sau test cuối của một khối không thuộc test đó
 const TOP_LEVEL_DECL = /\n(?=(?:export\s+)?(?:async\s+)?function\s|const\s)/;
@@ -118,7 +116,7 @@ describe('chính sách dữ liệu Playwright: chỉ ghi lên dữ liệu PW t�
     expect(realPeriodSnapshotWrites(priv, writers)).toEqual([]);
   });
 
-  it.each(specs.filter((s) => !LEGACY_SNAPSHOT_WRITERS.includes(s.file)).map((s) => [s.file, s]))(
+  it.each(specs.map((s) => [s.file, s]))(
     '%s: test ghi bản chốt chỉ ghi vào kỳ riêng PRIVATE_YM và dọn bằng clearPrivateSnapshots',
     (_f, s) => {
       expect(realPeriodSnapshotWrites(s.text, snapshotWriters)).toEqual([]);

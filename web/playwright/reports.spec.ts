@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { expect, test, type APIRequestContext, type Download } from '@playwright/test';
 import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, shot } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
+import { PRIVATE_YM, clearPrivateSnapshots } from './private-period';
 
 // exceljs là dependency của api: đọc lại tệp tải về bằng đúng thư viện đã ghi nó, không thêm gói cho web
 type Workbook = { xlsx: { readFile: (path: string) => Promise<unknown> }; worksheets: Sheet[] };
@@ -17,10 +18,6 @@ const monthLabel = (ym: string) => `Tháng ${Number(ym.slice(5, 7))}/${ym.slice(
 const snapshotsOf = async (request: APIRequestContext, ym: string) =>
   ((await (await request.get(`/api/admin/reports/${ym}/snapshots`, { headers: devHeaders('admin') })).json()) as { items: unknown[] }).items.length;
 
-// Bản chốt tạo trong lần chạy này; xóa trước kỳ seed vì report_snapshots có FK tới periods
-const dropSnapshots = (ym: string, since: string) =>
-  psql(`DELETE FROM report_snapshots WHERE period_ym = '${ym}-01' AND created_by_sub = 'pw-admin' AND created_at >= '${since}'`);
-
 async function saveDownload(download: Download, file: string) {
   mkdirSync(DOWNLOADS, { recursive: true });
   await download.saveAs(file);
@@ -30,20 +27,22 @@ async function saveDownload(download: Download, file: string) {
 asRole('admin');
 
 test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () => {
-  // Dọn ở afterEach thay vì finally: afterEach vẫn chạy khi test hết giờ
-  let run: { release: () => void; since: string; seed?: Seed; files: string[] };
+  // Dọn ở afterEach thay vì finally: afterEach vẫn chạy khi test hết giờ.
+  // Kỳ riêng của PW: bản chốt không thay bản đã gửi của kỳ trước thật trên dev; xóa bản chốt trước kỳ seed (FK tới periods)
+  let run: { release: () => void; seed?: Seed; files: string[] };
   test.beforeEach(async () => {
-    run = { release: await acquireLock('prev-period'), since: new Date().toISOString(), files: [] };
+    run = { release: await acquireLock('prev-period'), files: [] };
   });
   test.afterEach(() => {
     for (const f of run.files) rmSync(f, { force: true });
-    if (run.seed) dropSnapshots(run.seed.prevYm, run.since);
+    clearPrivateSnapshots();
     run.seed?.cleanup();
     run.release();
   });
 
   test('E5-S4 trang Báo cáo: Phần 1 nhóm, Xuất lẻ trong kỳ, Phần 2 theo phòng ban, Bản chốt', async ({ page, request }, info) => {
-    const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }]));
+    clearPrivateSnapshots();
+    const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }], { ym: PRIVATE_YM }));
     const [a] = seed.items;
     // Phòng ban của Phần 2 lấy từ phiếu (chốt lúc tạo phiếu), seed chung không đặt
     psql(`UPDATE requests SET department = 'PW Phòng giao' WHERE id = '${seed.requestId}'`);
@@ -53,7 +52,7 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     const made = await request.post(`/api/admin/reports/${seed.prevYm}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print' } });
     expect(made.ok()).toBe(true);
 
-    await page.goto('/admin/reports');
+    await page.goto(`/admin/reports?ym=${PRIVATE_YM}`);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Báo cáo & in');
     const month = page.getByRole('group', { name: 'Chọn tháng báo cáo' });
     await expect(month.getByText(monthLabel(seed.prevYm))).toBeVisible();
@@ -79,7 +78,9 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
     await expect(part2.getByRole('row').filter({ hasText: seed.name })).toContainText(`${a.name} 5`);
     const list = page.getByRole('region', { name: 'Bản chốt' });
     const printed = list.getByRole('listitem').filter({ hasText: 'Bản in' }).first();
-    await expect(printed.getByRole('link', { name: /^In lại bản lập/ })).toHaveAttribute('target', '_blank');
+    // In lại: trang in riêng cùng tab, Quay lại về Báo cáo
+    await expect(printed.getByRole('link', { name: /^In lại bản lập/ })).toHaveAttribute('href', /\/print\?from=reports$/);
+    await expect(printed.getByRole('link', { name: /^In lại bản lập/ })).not.toHaveAttribute('target', '_blank');
     await part1.getByRole('button', { name: 'Cách tính Tổng cần' }).click();
     await expect(page.getByRole('dialog', { name: 'Cách tính Tổng cần' })).toContainText('Đề nghị mặc định = Chưa giao kỳ này + Nợ kỳ trước. Tủ chỉ để tham khảo, không trừ.');
     await page.keyboard.press('Escape');
@@ -90,13 +91,14 @@ test.describe('E5 báo cáo (kỳ trước đã khóa, dev-identity admin)', () 
   });
 
   test('V2D-7 E5-S2 Báo cáo chỉ đọc theo bản đã gửi, Excel của bản tải về và tải lại không tạo bản mới', async ({ page, request }, info) => {
-    const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }]));
+    clearPrivateSnapshots();
+    const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }], { ym: PRIVATE_YM }));
     const [a] = seed.items;
     psql(`INSERT INTO request_lines (request_id, custom_name, custom_unit, qty, review_status)
       VALUES ('${seed.requestId}', 'PW chờ xem ${seed.tag}', 'cai', 1, 'pending')`);
     const report = await (await request.get(`/api/admin/reports/${seed.prevYm}`, { headers: devHeaders('admin') })).json();
     const key = report.byItem.find((r: { name: string }) => r.name === a.name).key as string;
-    await page.goto('/admin/reports');
+    await page.goto(`/admin/reports?ym=${PRIVATE_YM}`);
     const part1 = page.getByRole('region', { name: PART1 });
     const rowA = part1.getByRole('row').filter({ hasText: a.name });
     // Chưa gửi (dev không còn bản gửi của kỳ): Đề nghị = số gộp 5, không trừ tủ 2

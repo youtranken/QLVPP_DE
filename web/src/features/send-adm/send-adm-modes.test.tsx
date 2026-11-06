@@ -40,14 +40,15 @@ describe('Gửi ADM — chế độ Đã gửi', () => {
     expect(screen.queryByRole('button', { name: 'In trình ký' })).toBeNull();
   });
 
-  it('"In lại bản này" mở trang in của bản, 0 POST; "Xuất Excel bản này" tải đúng bản, 0 POST', async () => {
+  it('"In lại bản này" in tại chỗ (1 print, không đổi trang), 0 POST; "Xuất Excel bản này" tải đúng bản, 0 POST', async () => {
     const f = setupSendAdm({ report: sendReport([PEN, PAPER]), state: sentState(snap) });
+    const print = vi.spyOn(window, 'print');
     await open();
     await userEvent.click(await screen.findByRole('button', { name: 'Xuất Excel bản này' }));
     await waitFor(() => expect(callsTo(f, 'GET', '/snapshots/snap-old/export.xlsx')).toHaveLength(1));
     await userEvent.click(screen.getByRole('button', { name: 'In lại bản này' }));
-    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/admin/reports/snapshots/snap-old/print'));
-    expect(screen.getByTestId('location-search')).toHaveTextContent('?from=send-adm');
+    await waitFor(() => expect(print).toHaveBeenCalledTimes(1));
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/admin\/send-adm$/);
     expect(callsTo(f, 'POST', '/api/')).toHaveLength(0);
   });
 

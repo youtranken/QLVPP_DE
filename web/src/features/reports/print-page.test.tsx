@@ -146,6 +146,28 @@ describe('Trang in · thanh công cụ và công tắc phụ lục', () => {
     expect(print).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    ['?from=send-adm', '/admin/send-adm'],
+    ['?from=reports', '/admin/reports?ym=2026-10'],
+    ['', '/admin/reports?ym=2026-10'],
+    ['?from=rac', '/admin/reports?ym=2026-10'],
+  ])('Quay lại theo trang đã mở: "%s" → %s; trang in riêng không tự gọi print', async (query, href) => {
+    const print = vi.fn();
+    vi.stubGlobal('print', print);
+    openPrint(snapshotDataFixture(), { query });
+    const bar = await screen.findByRole('toolbar', { name: 'Thanh công cụ bản in (không in ra giấy)' });
+    expect(within(bar).getByRole('link', { name: 'Quay lại' })).toHaveAttribute('href', href);
+    expect(print).not.toHaveBeenCalled();
+  });
+
+  it('trang in riêng chèn @page A4 dọc khi mở, gỡ khi rời trang', async () => {
+    const view = openPrint(snapshotDataFixture());
+    await screen.findByRole('toolbar', { name: 'Thanh công cụ bản in (không in ra giấy)' });
+    expect(document.head.querySelector('style[data-print-page]')).toHaveTextContent('@page { size: A4 portrait; margin: 14mm 14mm 16mm; }');
+    view.unmount();
+    expect(document.head.querySelector('style[data-print-page]')).toBeNull();
+  });
+
   it('không có ?appendix → công tắc "In kèm phụ lục" tắt, không có phụ lục; bật → URL có appendix=1 và hiện phụ lục', async () => {
     openPrint(snapshotDataFixture());
     const toggle = await screen.findByRole('checkbox', { name: 'In kèm phụ lục' });

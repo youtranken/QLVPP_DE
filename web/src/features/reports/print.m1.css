@@ -42,14 +42,21 @@
 [data-shell='admin'] .pp-note { font-style: italic; }
 [data-shell='admin'] .pp-app__foot { margin-top: var(--s-4); text-align: center; color: var(--c-print-muted); }
 
-@page { size: A4 portrait; margin: 14mm; }
+[data-shell='admin'] .pp-portal { display: none; }
+@media screen {
+  [data-shell='admin'] .pp-page .pp-sheet { width: 210mm; max-width: 100%; min-height: 297mm; margin: 0 auto; }
+}
+
 @media print {
   [data-shell='admin'] { background: var(--c-print-paper); }
+  [data-shell='admin']:has(> .pp-portal) > :not(.pp-portal) { display: none !important; }
+  [data-shell='admin'] .pp-portal { display: block; }
   [data-shell='admin'] .pp-toolbar { display: none; }
   [data-shell='admin'] .pp-page { display: block; max-width: none; padding: 0; }
-  [data-shell='admin'] .pp-sheet { padding: 0; box-shadow: none; }
+  [data-shell='admin'] .pp-sheet { padding: 0; box-shadow: none; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   [data-shell='admin'] .pp-appendix { break-before: page; }
   [data-shell='admin'] .pp-sheet thead { display: table-header-group; }
   [data-shell='admin'] .pp-sheet tr { break-inside: avoid; }
+  [data-shell='admin'] .pp-signs { break-inside: avoid; }
   [data-shell='admin'] .pp-group { break-after: avoid; }
 }

@@ -186,12 +186,14 @@ describe('SendAdmPage — số đề nghị và xem trước', () => {
     await waitFor(() => expect(periodCalls()).toBeGreaterThan(before));
   });
 
-  it('In trình ký gọi createSnapshot kind print và báo có link mở bản in', async () => {
+  it('In trình ký gọi createSnapshot kind print rồi mở hộp in tại chỗ, không còn nút "Mở bản in"', async () => {
     const f = setup();
+    const printed = vi.spyOn(window, 'print');
     await open();
     await userEvent.click(print());
     await waitFor(() => expect(postsOf(f).map((p) => p.body.kind)).toEqual(['print']));
-    expect(await screen.findByRole('button', { name: 'Mở bản in' })).toBeInTheDocument();
+    await waitFor(() => expect(printed).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole('button', { name: 'Mở bản in' })).toBeNull();
   });
 
   it('ORDER_EMPTY từ server → báo "Chưa có món nào để đề nghị."', async () => {

@@ -57,7 +57,11 @@ export function stubReports(opts: Options = {}) {
       if (res.ok) {
         const { id } = (await res.json()) as { id: string };
         snapshots.unshift(snapshotRow({ id, kind: body.kind, created_at: NEW_SNAPSHOT_AT, created_by_name: NEW_SNAPSHOT_BY }));
-        return jsonResponse(201, { id, kind: body.kind, created_at: NEW_SNAPSHOT_AT, created_by: { sub: 'u-an', name: NEW_SNAPSHOT_BY } });
+        const created_by = { sub: 'u-an', name: NEW_SNAPSHOT_BY };
+        const report = opts.reports?.[m[1]] ?? reportFixture({ ym: m[1] });
+        // Server trả cả data của bản để In trình ký dựng tờ in tại chỗ
+        const data = { ...report, id, kind: body.kind, period_ym: m[1], order_qty: body.order_qty ?? {}, created_by, created_at: NEW_SNAPSHOT_AT };
+        return jsonResponse(201, { id, kind: body.kind, created_at: NEW_SNAPSHOT_AT, created_by, reused: false, data });
       }
       return res;
     }

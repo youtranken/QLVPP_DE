@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { formatVnStamp } from '@/lib/format-time';
 import { Icon } from '@/ui/icon';
 import { LoadError } from '@/ui/load-state';
@@ -7,7 +8,10 @@ import { printPath, useSnapshots, type SnapshotRow } from './reports.api';
 import { ReportSection } from './report-section';
 import type { SnapshotDownload } from './use-snapshot';
 
-function SnapshotItem({ snapshot: s, files }: { snapshot: SnapshotRow; files: SnapshotDownload }) {
+// Trang đã mở danh sách: trang in riêng dùng để Quay lại đúng chỗ
+export type SnapshotsFrom = 'send-adm' | 'reports';
+
+function SnapshotItem({ snapshot: s, files, from }: { snapshot: SnapshotRow; files: SnapshotDownload; from: SnapshotsFrom }) {
   const { t } = useTranslation();
   const id = useId();
   const at = formatVnStamp(s.created_at);
@@ -30,9 +34,9 @@ function SnapshotItem({ snapshot: s, files }: { snapshot: SnapshotRow; files: Sn
           <Icon name="download" size={18} />
         </button>
       ) : (
-        <a className="btn btn--ghost btn--sm bc-icon-btn" href={printPath(s.id)} target="_blank" rel="noopener" aria-label={t('reports.snapshots.reprint', { at })} title={t('reports.snapshots.reprint', { at })}>
+        <Link className="btn btn--ghost btn--sm bc-icon-btn" to={`${printPath(s.id)}?from=${from}`} aria-label={t('reports.snapshots.reprint', { at })} title={t('reports.snapshots.reprint', { at })}>
           <Icon name="printer" size={18} />
-        </a>
+        </Link>
       )}
     </li>
   );
@@ -55,7 +59,7 @@ function DownloadFailure({ files }: { files: SnapshotDownload }) {
   );
 }
 
-export function ReportSnapshots({ ym, files }: { ym: string; files: SnapshotDownload }) {
+export function ReportSnapshots({ ym, files, from }: { ym: string; files: SnapshotDownload; from: SnapshotsFrom }) {
   const { t } = useTranslation();
   const query = useSnapshots(ym);
   const items = query.data?.items ?? [];
@@ -67,7 +71,7 @@ export function ReportSnapshots({ ym, files }: { ym: string; files: SnapshotDown
       {items.length > 0 && (
         <ul className="bc-snaps">
           {items.map((s) => (
-            <SnapshotItem key={s.id} snapshot={s} files={files} />
+            <SnapshotItem key={s.id} snapshot={s} files={files} from={from} />
           ))}
         </ul>
       )}

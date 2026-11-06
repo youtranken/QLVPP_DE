@@ -11,18 +11,22 @@ import type { AdminItem } from '@/features/catalog/catalog.api';
 import type { SignatureBox } from '@/features/admin/admin.api';
 import { useLeaveGuard } from '@/features/request/use-leave-guard';
 import { useUnitNames } from '@/features/units/units.api';
-import type { MonthReport, SnapshotKind } from '@/features/reports/reports.api';
+import type { MonthReport, SnapshotData, SnapshotKind } from '@/features/reports/reports.api';
 import { ReportSnapshots } from '@/features/reports/report-snapshots';
 import { useOrderQty, type OrderQty } from '@/features/reports/use-order-qty';
 import { useTakeSnapshot, type SnapshotDownload } from '@/features/reports/use-snapshot';
 import type { PeriodSummary } from '@/features/summary/summary.api';
 import { SendAdmChecklist } from './send-adm-checklist';
+import { PrintNote } from './send-adm-print-note';
 import { PrintConfirm } from './send-adm-dialogs';
 import { useLeavePrompt, useNoOrderConfirm } from './use-send-adm-confirms';
 import { SendAdmOrders } from './send-adm-orders';
 import { PreviewButton, type PreviewRow } from './request-form-preview';
 import { orderChanges, orderOf, toOrderRows, type OrderRow } from './send-adm-rows';
 import { markNoOrder, useAdmOwedMonths, useRefreshSendState, type SentSnapshot } from './send-adm.api';
+
+// Trang in riêng mở từ đây thì Quay lại về đây
+const SNAPSHOTS_FROM = 'send-adm' as const;
 
 export interface DraftProps {
   head: { crumbs: string[]; title: string; description: string };
@@ -37,15 +41,18 @@ export interface DraftProps {
   onTaken: () => void;
   onInvalidPeriod: () => boolean;
   files: SnapshotDownload;
+  print: (data: SnapshotData) => Promise<unknown>;
 }
 
 function ActionButton({ mode: kind, disabled, taking, onTake }: { mode: SnapshotKind; disabled: boolean; taking: SnapshotKind | null; onTake: (kind: SnapshotKind) => void }) {
   const { t } = useTranslation();
   const xlsx = kind === 'xlsx';
+  const busy = taking === kind;
+  const label = xlsx ? (busy ? 'reports.page.taking' : 'sendAdm.actions.xlsx') : busy ? 'reports.page.preparingPrint' : 'sendAdm.actions.print';
   return (
-    <button type="button" className={xlsx ? 'btn' : 'btn btn--primary'} disabled={disabled} aria-busy={taking === kind || undefined} onClick={() => onTake(kind)}>
-      <Icon name={xlsx ? 'sheet' : 'printer'} size={18} />
-      {taking === kind ? t('reports.page.taking') : t(xlsx ? 'sendAdm.actions.xlsx' : 'sendAdm.actions.print')}
+    <button type="button" className={xlsx ? 'btn' : 'btn btn--primary'} disabled={disabled} aria-busy={busy || undefined} onClick={() => onTake(kind)}>
+      {busy && !xlsx ? <span className="spinner sa-spinner" aria-hidden="true" /> : <Icon name={xlsx ? 'sheet' : 'printer'} size={18} />}
+      {t(label)}
     </button>
   );
 }
@@ -94,14 +101,14 @@ function previewRows(rows: OrderRow[], qty: OrderQty, unitName: ReturnType<typeo
   return rows.map((r) => ({ key: r.key, code: r.code, name: r.name, name_en: r.name_en, unit: unitName(r.unit, 'vi'), qty: orderOf(qty, r) }));
 }
 
-export function SendAdmDraft({ head, report, items, summary, boxes, sent, carry, onBack, onTaken, onInvalidPeriod, files }: DraftProps) {
+export function SendAdmDraft({ head, report, items, summary, boxes, sent, carry, onBack, onTaken, onInvalidPeriod, files, print }: DraftProps) {
   const { t, i18n } = useTranslation();
   const ask = useConfirm();
   const unitName = useUnitNames();
   const qty = useOrderQty(report, { baseOf: defaultOrder, initial: carry });
   const rows = useDraftRows(report, items);
   const changes = sent ? orderChanges(rows, (r) => orderOf(qty, r), sent.data) : [];
-  const snap = useTakeSnapshot(report, qty, files, onInvalidPeriod, { reuse: true, mustConfirm: report.pending_custom_count > 0 || changes.length > 0, onTaken });
+  const snap = useTakeSnapshot(report, qty, files, onInvalidPeriod, { reuse: true, mustConfirm: report.pending_custom_count > 0 || changes.length > 0, onTaken, print });
   const noOrder = useNoOrder(report.ym, qty);
   const formRows = previewRows(rows, qty, unitName);
   const empty = formRows.every((r) => r.qty === 0);
@@ -119,6 +126,7 @@ export function SendAdmDraft({ head, report, items, summary, boxes, sent, carry,
   return (
     <div className="ct-page sa-page">
       <PageHeader {...head} secondary={<ActionButton mode="xlsx" disabled={blocked} taking={snap.taking} onTake={take} />} primary={<ActionButton mode="print" disabled={blocked} taking={snap.taking} onTake={take} />} />
+      {!empty && <PrintNote />}
       {empty && !sent ? (
         <div className="sa-row">
           <button type="button" className="btn" disabled={noOrder.pending} onClick={() => void noOrder.run()}>
@@ -141,7 +149,7 @@ export function SendAdmDraft({ head, report, items, summary, boxes, sent, carry,
       </div>
       <SendAdmChecklist ym={report.ym} summary={summary} />
       <SendAdmOrders rows={rows} qty={qty} />
-      <ReportSnapshots ym={report.ym} files={files} />
+      <ReportSnapshots ym={report.ym} files={files} from={SNAPSHOTS_FROM} />
       {snap.asking && <PrintConfirm kind={snap.asking} ym={report.ym} pending={report.pending_custom_count} changes={changes} sentAt={sent?.created_at ?? null} onConfirm={snap.confirm} onCancel={snap.cancel} />}
     </div>
   );

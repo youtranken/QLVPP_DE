@@ -5,7 +5,7 @@ import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { useToast } from '@/ui/toast-context';
 import { monthOf } from '@/features/request/request-format';
-import { createSnapshot, downloadSnapshot, printPath, useRefreshSnapshots, useReloadReport, type MonthReport, type SnapshotKind } from './reports.api';
+import { createSnapshot, downloadSnapshot, useRefreshSnapshots, useReloadReport, type MonthReport, type SnapshotData, type SnapshotKind } from './reports.api';
 import { downloadFailure, takeFailure, type DownloadError } from './reports-errors';
 import type { OrderQty } from './use-order-qty';
 
@@ -15,6 +15,8 @@ export interface TakeOptions {
   // Hỏi lại trước khi chốt (mặc định: còn món ngoài danh mục chờ xem)
   mustConfirm?: boolean;
   onTaken?: () => void;
+  // In tại chỗ từ bản server trả về (không mở tab)
+  print?: (data: SnapshotData) => Promise<unknown>;
 }
 
 export type SnapshotDownload = ReturnType<typeof useSnapshotDownload>;
@@ -45,17 +47,12 @@ export function useSnapshotDownload(ym: string) {
 
 const hourOf = (iso: string) => formatVnStamp(iso).split(' ')[0];
 
-function useAnnounce(ym: string, files: SnapshotDownload) {
+function useAnnounceXlsx(ym: string, files: SnapshotDownload) {
   const { t } = useTranslation();
   const toast = useToast();
   const when = { month: monthOf(ym), year: ym.slice(0, 4) };
-  return async (kind: SnapshotKind, id: string, at: string) => {
-    const time = hourOf(at);
-    if (kind === 'print') {
-      const open = () => window.open(printPath(id), '_blank', 'noopener');
-      return toast.show({ text: t('reports.page.toast.print', { ...when, time }), tone: 'ok', action: { label: t('reports.page.toast.openPrint'), onClick: open } });
-    }
-    if (await files.download(id)) toast.show({ text: t('reports.page.toast.xlsx', { ...when, time }), tone: 'ok' });
+  return async (id: string, at: string) => {
+    if (await files.download(id)) toast.show({ text: t('reports.page.toast.xlsx', { ...when, time: hourOf(at) }), tone: 'ok' });
   };
 }
 
@@ -74,7 +71,7 @@ function useRejectFields(ym: string, qty: OrderQty) {
 function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => boolean, opts: TakeOptions) {
   const { csrfToken } = useMe();
   const refresh = useRefreshSnapshots(report.ym);
-  const announce = useAnnounce(report.ym, files);
+  const announceXlsx = useAnnounceXlsx(report.ym, files);
   const rejectFields = useRejectFields(report.ym, qty);
   const flight = useSingleFlight();
   const [notice, setNotice] = useState<'REPORT_CHANGED' | 'UNKNOWN' | 'INVALID_PERIOD' | 'ORDER_EMPTY' | null>(null);
@@ -87,10 +84,11 @@ function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDown
       setRejected(false);
       try {
         const body = { kind, order_qty: qty.edited, ...(opts.reuse ? { reuse_if_unchanged: true } : {}) };
-        const { id, created_at } = await createSnapshot(report.ym, body, csrfToken);
+        const { id, created_at, data } = await createSnapshot(report.ym, body, csrfToken);
         setFresh((s) => new Set(s).add(id));
         void refresh();
-        await announce(kind, id, created_at);
+        if (kind === 'xlsx') await announceXlsx(id, created_at);
+        else if (data) await opts.print?.({ ...data, id, kind });
         opts.onTaken?.();
       } catch (e) {
         const failure = takeFailure(e);

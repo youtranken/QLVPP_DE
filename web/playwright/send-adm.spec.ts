@@ -15,6 +15,16 @@ test.describe('Gửi ADM (Plan v2-D, Task 6)', () => {
     run = { release: await acquireLock('prev-period') };
     clearPrivateSnapshots();
     await openOnPrivatePeriod(page);
+    // In trình ký mở hộp in tại chỗ: thay hộp in thật bằng bộ đếm (như Chrome: beforeprint rồi afterprint)
+    await page.addInitScript(() => {
+      const w = window as unknown as { __printed: number };
+      w.__printed = 0;
+      window.print = () => {
+        w.__printed++;
+        window.dispatchEvent(new Event('beforeprint'));
+        window.dispatchEvent(new Event('afterprint'));
+      };
+    });
   });
   test.afterEach(() => {
     clearPrivateSnapshots();
@@ -66,8 +76,10 @@ test.describe('Gửi ADM (Plan v2-D, Task 6)', () => {
     await expect(page.getByText(/\(thay thế bản \d\d:\d\d \d\d\/\d\d\)$/)).toBeVisible();
     await expect(sentRow).toContainText('13');
 
+    const printed = () => page.evaluate(() => (window as unknown as { __printed: number }).__printed);
+    await expect.poll(printed).toBe(2);
     await page.getByRole('button', { name: 'In lại bản này' }).click();
-    await expect(page).toHaveURL(/\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print\?from=send-adm$/);
-    await expect(page.getByRole('row').filter({ hasText: item.name }).first()).toContainText('13');
+    await expect.poll(printed).toBe(3);
+    await expect(page).toHaveURL(/\/admin\/send-adm$/);
   });
 });

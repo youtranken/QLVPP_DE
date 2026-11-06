@@ -9,6 +9,7 @@ import { useAdminItems } from '@/features/catalog/catalog.api';
 import { currentPeriodQuery, useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { useMonthReport } from '@/features/reports/reports.api';
+import { usePrintInPlace } from '@/features/reports/use-print-in-place';
 import { useSnapshotDownload } from '@/features/reports/use-snapshot';
 import { PeriodLockGate } from '@/features/summary/period-lock-gate';
 import { usePeriodSummary } from '@/features/summary/summary.api';
@@ -36,8 +37,21 @@ function Bare({ ym, children }: { ym: string | undefined; children: ReactNode })
   );
 }
 
-// Chỉ điều phối chế độ: Không cần đề nghị / Đã gửi / Lập phiếu (kể cả đang làm bản mới, chỉ ở trình duyệt)
+type Printer = Pick<ReturnType<typeof usePrintInPlace>, 'print' | 'pending'>;
+
+// Vùng in nằm ở đây, không trong từng chế độ: in xong trang chuyển sang Đã gửi mà vùng in vẫn còn cho lần bấm In lại
 function Board({ ym }: { ym: string }) {
+  const printer = usePrintInPlace();
+  return (
+    <>
+      <Modes ym={ym} printer={printer} />
+      {printer.portal}
+    </>
+  );
+}
+
+// Chỉ điều phối chế độ: Không cần đề nghị / Đã gửi / Lập phiếu (kể cả đang làm bản mới, chỉ ở trình duyệt)
+function Modes({ ym, printer }: { ym: string; printer: Printer }) {
   const qc = useQueryClient();
   const head = useTitle(ym);
   const report = useMonthReport(ym);
@@ -53,7 +67,7 @@ function Board({ ym }: { ym: string }) {
   if (queries.some((q) => q.isError)) return <Bare ym={ym}><LoadError onRetry={() => queries.forEach((q) => void q.refetch())} /></Bare>;
   if (!report.data || !items.data || !config.data || !summary.data || !send.query.data) return <Bare ym={ym}><Loading /></Bare>;
   if (send.noOrder) return <SendAdmNoOrder head={head} ym={ym} noOrder={send.noOrder} />;
-  if (send.sent && !carry) return <SendAdmSent head={head} report={report.data} items={items.data} send={{ ...send, sent: send.sent }} files={files} onNewDraft={setCarry} />;
+  if (send.sent && !carry) return <SendAdmSent head={head} report={report.data} items={items.data} send={{ ...send, sent: send.sent }} files={files} printer={printer} onNewDraft={setCarry} />;
   // Server nói kỳ chưa tới: kỳ hiện hành trên trang đã cũ → tải lại, không có tháng nào khác để về
   const invalidPeriod = () => {
     void qc.invalidateQueries({ queryKey: currentPeriodQuery().queryKey });
@@ -77,6 +91,7 @@ function Board({ ym }: { ym: string }) {
       onTaken={taken}
       onInvalidPeriod={invalidPeriod}
       files={files}
+      print={printer.print}
     />
   );
 }

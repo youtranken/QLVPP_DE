@@ -40,7 +40,7 @@ describe('Bản chốt — danh sách, tải lại, in lại', () => {
     openPage();
     const [empty, full] = await within(await list()).findAllByRole('listitem');
     expect(within(empty).getByText('Không có món')).toBeInTheDocument();
-    expect(within(empty).getByRole('link', { name: /^In lại bản lập/ })).toHaveAttribute('href', '/admin/reports/snapshots/snap-e/print');
+    expect(within(empty).getByRole('link', { name: /^In lại bản lập/ })).toHaveAttribute('href', '/admin/reports/snapshots/snap-e/print?from=reports');
     expect(within(full).queryByText('Không có món')).toBeNull();
   });
 
@@ -101,15 +101,21 @@ describe('Bản chốt — danh sách, tải lại, in lại', () => {
     expect(within(await list()).queryByRole('alert')).toBeNull();
   });
 
-  it('bản in: liên kết "In lại bản lập …" mở trang in ở tab mới, không POST', async () => {
+  it('bản in: liên kết "In lại bản lập …" mở trang in riêng cùng tab (?from=reports), không POST, không gọi print; Báo cáo không có gợi ý hộp in', async () => {
     const f = stubReports({ snapshots: [snapshotRow({ id: 'snap-p', kind: 'print' })] });
+    const print = vi.spyOn(window, 'print');
     openPage();
     const item = await oldItem();
     expect(within(item).getByText('Bản in')).toBeInTheDocument();
     const link = within(item).getByRole('link', { name: 'In lại bản lập 09:30 28/10' });
-    expect(link).toHaveAttribute('href', '/admin/reports/snapshots/snap-p/print');
-    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('href', '/admin/reports/snapshots/snap-p/print?from=reports');
+    expect(link).not.toHaveAttribute('target');
     expect(within(item).queryByRole('button', { name: /^Tải lại/ })).toBeNull();
+    expect(screen.queryByText(/^Trong hộp in:/)).toBeNull();
+    await userEvent.click(link);
+    expect(screen.getByTestId('location')).toHaveTextContent('/admin/reports/snapshots/snap-p/print');
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?from=reports');
+    expect(print).not.toHaveBeenCalled();
     expect(postsOf(f)).toEqual([]);
   });
 
