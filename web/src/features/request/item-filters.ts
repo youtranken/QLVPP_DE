@@ -11,6 +11,9 @@ export interface FilterState {
   onlyPicked: boolean;
 }
 
+// Chip cuối cho món chưa xếp nhóm hoặc nhóm không còn trong danh sách (R-C7)
+export const NO_GROUP = 'none';
+
 export const DEFAULT_FILTER: FilterState = { q: '', group: 'all', sort: 'group', onlyPicked: false };
 
 const SORTS: SortKey[] = ['fav', 'az', 'group'];
@@ -26,9 +29,15 @@ export function parseFilter(params: URLSearchParams, groupIds: string[], default
   const onlyPicked = params.get('picked') === '1';
   const g = params.get('g');
   const fallback = q || onlyPicked ? 'all' : defaultGroup;
-  const group = g === 'all' ? 'all' : g && groupIds.includes(g) ? g : fallback;
+  const group = g === 'all' || g === NO_GROUP ? g : g && groupIds.includes(g) ? g : fallback;
   return { q, group, sort, onlyPicked };
 }
+
+const hasNoGroup = (i: MemberItem, known?: ReadonlySet<string>) =>
+  i.category_id == null || (known != null && !known.has(i.category_id));
+
+const inGroup = (i: MemberItem, group: string, known?: ReadonlySet<string>) =>
+  group === 'all' || (group === NO_GROUP ? hasNoGroup(i, known) : i.category_id === group);
 
 export function applyFilters(
   items: MemberItem[],
@@ -36,11 +45,12 @@ export function applyFilters(
   f: FilterState,
   lang: string,
   favIds?: ReadonlySet<string>,
+  categoryIds?: ReadonlySet<string>,
 ): MemberItem[] {
   const picked = new Set(cart.lines.map((l) => l.key));
   const out = items.filter(
     (i) =>
-      (f.group === 'all' || i.category_id === f.group) &&
+      inGroup(i, f.group, categoryIds) &&
       (!f.onlyPicked || picked.has(i.id)) &&
       (!f.q.trim() || matchesSearch(`${i.name} ${i.name_en ?? ''} ${i.pack_note ?? ''}`, f.q)),
   );
@@ -52,10 +62,13 @@ export function applyFilters(
   return out;
 }
 
-export function groupCounts(items: MemberItem[], categories: Category[], lang: string) {
-  return categories
+export function groupCounts(items: MemberItem[], categories: Category[], lang: string, noneLabel: string) {
+  const known = new Set(categories.map((c) => c.id));
+  const chips = categories
     .map((c) => ({ id: c.id, label: categoryLabel(c, lang), n: items.filter((i) => i.category_id === c.id).length }))
     .filter((g) => g.n > 0);
+  const none = items.filter((i) => hasNoGroup(i, known)).length;
+  return none > 0 ? [...chips, { id: NO_GROUP, label: noneLabel, n: none }] : chips;
 }
 
 // Giá trị khác mặc định mới đưa lên URL; null = xóa khóa

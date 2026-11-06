@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
 import { useMe } from '@/lib/me';
 import { Stepper } from '@/ui/stepper';
-import { ItemThumb } from './item-card';
-import { tintOf, useAdminContact, useRequestFormat } from './request-format';
+import { groupTone, type Tone } from '@/lib/group-tone';
+import { ItemThumb } from '@/ui/item-thumb';
+import { useAdminContact, useRequestFormat } from './request-format';
 import type { CartLine } from './use-cart';
 
 const REVIEW_TONE = { pending: 'tag--warn', accepted: 'tag--ok', rejected: 'tag--danger' } as const;
@@ -26,14 +27,14 @@ function CustomTags({ line }: { line: CartLine }) {
 function CartRow({
   line,
   error,
-  tint,
+  tone,
   onQty,
   onRemove,
   onEdit,
 }: {
   line: CartLine;
   error?: string;
-  tint: string;
+  tone: Tone;
   onQty: (n: number) => void;
   onRemove: () => void;
   onEdit: () => void;
@@ -45,7 +46,7 @@ function CartRow({
   const name = fmt.name(line.label);
   return (
     <li className={`rq-line${error ? ' is-error' : ''}`} data-line-key={line.key} tabIndex={-1}>
-      <ItemThumb name={name} imageId={line.label.image_file_id} tint={tint} className="rq-line-img" />
+      <ItemThumb fileId={line.label.image_file_id} alt="" tone={tone} size={36} />
       <div className="rq-line-main">
         {!line.item_id && !line.readonly ? (
           <button type="button" className="rq-line-name rq-line-link" aria-label={t('request.cart.edit', { name })} onClick={onEdit}>
@@ -134,7 +135,7 @@ export function CartPanel({
               key={l.key}
               line={l}
               error={errors[l.key]}
-              tint={tintOf(l.label.category_id, categories)}
+              tone={groupTone(categories, l.label.category_id)}
               onQty={(n) => onQty(l.key, n)}
               onRemove={() => onRemove(l.key)}
               onEdit={() => onEdit(l.key)}

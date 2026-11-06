@@ -22,6 +22,10 @@ async function snap(page: Page, info: TestInfo, name: string, fullPage = false) 
   await page.screenshot({ path: `${SHOTS}/${name}-${info.project.name}.png`, fullPage });
 }
 
+async function shotTo(page: Page, info: TestInfo, name: string) {
+  await page.screenshot({ path: `../live-real/v2c/task-C4/${name}-${info.project.name}.png`, fullPage: false });
+}
+
 async function createItem(request: APIRequestContext, name: string) {
   const headers = devHeaders('admin');
   const file = await request.post('/api/files', {
@@ -246,6 +250,49 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await expect(page).not.toHaveURL(/q=|picked=|g=/);
       if (isMobile(info)) await expectNoContrastViolations(page);
       await page.evaluate(() => document.fonts.ready);
+    } finally {
+      deleteTestUsers(me.sub);
+      await removeTestItem(request, itemId);
+    }
+  });
+  test('V2C-T4 lưới: 1280 ≥ 4 thẻ một hàng, 390 hai cột; stepper 44px; món không nhóm tới được qua chip "Khác"', async ({ page, request }, info) => {
+    const me = memberIdentity(info);
+    seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
+    await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...me.headers } }));
+    const name = `PW Món không nhóm ${Date.now()}`;
+    const itemId = await createItem(request, name);
+    try {
+      await page.goto('/');
+      const grid = page.getByRole('region', { name: 'Danh mục món' });
+      const chips = grid.getByRole('group', { name: 'Nhóm món' });
+      const cards = grid.getByRole('article');
+      await expect(cards.first()).toBeVisible();
+      const ys: number[] = [];
+      const xs: number[] = [];
+      for (let i = 0; i < 4; i++) {
+        const box = (await cards.nth(i).boundingBox())!;
+        ys.push(Math.round(box.y));
+        xs.push(Math.round(box.x));
+      }
+      if (isMobile(info)) {
+        expect(ys[0]).toBe(ys[1]);
+        expect(ys[2]).toBeGreaterThan(ys[0]);
+        expect(xs[2]).toBe(xs[0]);
+      } else {
+        expect(new Set(ys).size).toBe(1);
+      }
+      // Món không có nhóm: chip cuối "Khác" → URL g=none → món hiện ra và thêm được
+      await chips.getByRole('button').last().click(); // chip "Khác" luôn ở cuối (dev DB còn nhóm thật cũng tên "Khác")
+      await expect(page).toHaveURL(/g=none/);
+      const add = grid.getByRole('button', { name: `Thêm ${name}`, exact: true });
+      await expect(add).toBeVisible();
+      await add.click();
+      const plus = grid.getByRole('button', { name: `Thêm ${name}`, exact: true });
+      const minus = grid.getByRole('button', { name: `Bớt ${name}`, exact: true });
+      for (const b of [plus, minus]) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44 - 0.5);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await page.evaluate(() => document.fonts.ready);
+      await shotTo(page, info, 'order');
     } finally {
       deleteTestUsers(me.sub);
       await removeTestItem(request, itemId);

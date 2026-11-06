@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { CurrentPeriod, RequestView } from './request.api';
 import { monthOf, useRequestFormat } from './request-format';
@@ -7,12 +6,10 @@ export function PeriodHero({
   period,
   saved,
   dirty,
-  action,
 }: {
   period: CurrentPeriod;
   saved: RequestView | null;
   dirty: boolean;
-  action?: ReactNode;
 }) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
@@ -41,7 +38,6 @@ export function PeriodHero({
           <span>{status}</span>
         </p>
       </div>
-      {action}
     </section>
   );
 }

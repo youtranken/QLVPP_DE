@@ -1,10 +1,10 @@
 import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Category } from '@/features/catalog/catalog.api';
+import { categoryLabel, type Category } from '@/features/catalog/catalog.api';
+import { groupTone } from '@/lib/group-tone';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { useUrlPatch } from '@/lib/use-url-patch';
 import type { MemberItem } from './request.api';
-import { tintOf } from './request-format';
 import { FilterBar } from './filter-bar';
 import { applyFilters, CLEAR_PATCH, filterPatch, groupCounts, parseFilter } from './item-filters';
 import { ItemCard } from './item-card';
@@ -30,10 +30,15 @@ export function ItemGrid({
   const { t, i18n } = useTranslation();
   const narrow = useMediaQuery(NARROW_QUERY);
   const [params, patch] = useUrlPatch();
-  const groups = useMemo(() => groupCounts(items, categories, i18n.language), [items, categories, i18n.language]);
+  const groups = useMemo(() => groupCounts(items, categories, i18n.language, t('request.grid.none')), [items, categories, i18n.language, t]);
+  const catInfo = useMemo(
+    () => new Map(categories.map((c) => [c.id, { tone: groupTone(categories, c.id), label: categoryLabel(c, i18n.language) }])),
+    [categories, i18n.language],
+  );
+  const categoryIds = useMemo(() => new Set(categories.map((c) => c.id)), [categories]);
   // Điện thoại: 169 món không đổ hết một trang, mặc định nhóm đầu (R-C2); máy tính mặc định "Tất cả"
   const filter = parseFilter(params, groups.map((g) => g.id), narrow && groups[0] ? groups[0].id : 'all');
-  const visible = applyFilters(items, { lines: [...lineByKey.values()] }, filter, i18n.language, favIds);
+  const visible = applyFilters(items, { lines: [...lineByKey.values()] }, filter, i18n.language, favIds, categoryIds);
   const pickedCount = useMemo(() => items.filter((i) => lineByKey.has(i.id)).length, [items, lineByKey]);
   return (
     <section className="rq-catalog" aria-label={t('request.grid.label')}>
@@ -54,7 +59,8 @@ export function ItemGrid({
             key={item.id}
             item={item}
             line={lineByKey.get(item.id)}
-            tint={tintOf(item.category_id, categories)}
+            tone={catInfo.get(item.category_id ?? '')?.tone ?? 'g0'}
+            groupLabel={catInfo.get(item.category_id ?? '')?.label ?? null}
             onQty={(n) => onQty(item.id, n)}
           />
         ))}

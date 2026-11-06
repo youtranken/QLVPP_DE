@@ -105,6 +105,8 @@ const request = {
       label: 'Danh mục món',
       search: 'Tìm món',
       searchPlaceholder: 'Tìm món…',
+      none: 'Khác',
+      addToCart: 'Thêm vào phiếu',
       categories: 'Nhóm món',
       all: 'Tất cả',
       addOther: 'Thêm món khác',

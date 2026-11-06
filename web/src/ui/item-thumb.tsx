@@ -2,21 +2,22 @@ import { useState, type CSSProperties } from 'react';
 import type { Tone } from '@/lib/group-tone';
 import { Icon } from './icon';
 
-export type ThumbSize = 34 | 36 | 48 | 96 | 120 | 'card';
+export type ThumbSize = 34 | 36 | 48 | 96 | 120 | 'card' | 'tile';
 
 export function ItemThumb({ fileId, alt, tone, size }: { fileId: string | null; alt: string; tone: Tone; size: ThumbSize }) {
   const [failedId, setFailedId] = useState<string | null>(null);
   const showImg = fileId != null && failedId !== fileId;
-  const px = size === 'card' ? undefined : size;
+  const fluid = size === 'card' || size === 'tile';
+  const px = fluid ? undefined : size;
   const box: CSSProperties = {
     display: 'grid',
     placeItems: 'center',
     flex: 'none',
     width: px ?? '100%',
-    height: px,
-    aspectRatio: px ? undefined : '1 / 1',
+    height: size === 'tile' ? 120 : px,
+    aspectRatio: fluid && size !== 'tile' ? '1 / 1' : undefined,
     background: `var(--${tone})`,
-    borderRadius: px !== undefined && px <= 48 ? 'var(--r-sm)' : 'var(--r-lg)',
+    borderRadius: px !== undefined && px <= 48 ? 'var(--r-sm)' : size === 'tile' ? 14 : 'var(--r-lg)',
     overflow: 'hidden',
   };
   if (showImg) {
@@ -27,7 +28,7 @@ export function ItemThumb({ fileId, alt, tone, size }: { fileId: string | null; 
           alt={alt}
           loading="lazy"
           onError={() => setFailedId(fileId)}
-          style={{ width: '78%', height: '78%', objectFit: 'contain', filter: 'drop-shadow(0 8px 12px rgb(var(--sh-ink) / .18))' }}
+          style={{ width: size === 'tile' ? 'auto' : '78%', height: size === 'tile' ? '88%' : '78%', maxWidth: '88%', objectFit: 'contain', filter: 'drop-shadow(0 8px 12px rgb(var(--sh-ink) / .18))' }}
         />
       </span>
     );

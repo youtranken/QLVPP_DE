@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import type { Category } from '@/features/catalog/catalog.api';
 import { useUnitNames } from '@/features/units/units.api';
 import { useMe } from '@/lib/me';
 import type { LineView } from './request.api';
@@ -53,12 +52,4 @@ export function matchesSearch(text: string, query: string): boolean {
   const fold = (s: string) =>
     s.normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/đ/gi, 'd').toLowerCase();
   return fold(text).includes(fold(query.trim()));
-}
-
-const TINTS = ['t1', 't2', 't3', 't4'];
-
-// Ô ảnh thiếu ảnh tô màu theo nhóm (4 màu nhóm món của _SPEC)
-export function tintOf(categoryId: string | null, categories: Category[]): string {
-  const at = categories.findIndex((c) => c.id === categoryId);
-  return TINTS[(at < 0 ? 0 : at) % TINTS.length];
 }

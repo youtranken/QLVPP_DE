@@ -46,11 +46,31 @@ describe('applyFilters', () => {
 
 describe('groupCounts', () => {
   it('đếm theo nhóm, bỏ nhóm không có món, giữ thứ tự nhóm', () => {
-    expect(groupCounts(ITEMS, CATS, 'vi')).toEqual([
+    expect(groupCounts(ITEMS, CATS, 'vi', 'Khác')).toEqual([
       { id: 'g1', label: 'Bút', n: 2 },
       { id: 'g2', label: 'Bìa', n: 1 },
     ]);
-    expect(groupCounts(ITEMS, CATS, 'en')[0].label).toBe('Pens');
+    expect(groupCounts(ITEMS, CATS, 'en', 'Other')[0].label).toBe('Pens');
+  });
+});
+
+describe('nhóm "Khác" (R-C7)', () => {
+  const STRAY = [...ITEMS, item('4', 'Không nhóm', ''), item('5', 'Nhóm đã xóa', 'gone')].map((i) =>
+    i.id === '4' ? { ...i, category_id: null } : i,
+  );
+  const known = new Set(CATS.map((c) => c.id));
+  it('groupCounts thêm chip cuối "none" đếm món không nhóm + nhóm lạ; ẩn khi 0', () => {
+    expect(groupCounts(STRAY, CATS, 'vi', 'Khác').at(-1)).toEqual({ id: 'none', label: 'Khác', n: 2 });
+    expect(groupCounts(STRAY, CATS, 'en', 'Other').at(-1)?.label).toBe('Other');
+    expect(groupCounts(ITEMS, CATS, 'vi', 'Khác').some((g) => g.id === 'none')).toBe(false);
+  });
+  it('applyFilters group=none chỉ giữ món category null hoặc không có trong danh sách nhóm', () => {
+    const f = { ...DEFAULT_FILTER, group: 'none' };
+    expect(ids(applyFilters(STRAY, cart(), f, 'vi', undefined, known))).toEqual(['4', '5']);
+    expect(ids(applyFilters(STRAY, cart(), f, 'vi'))).toEqual(['4']);
+  });
+  it('parseFilter nhận g=none', () => {
+    expect(parseFilter(new URLSearchParams('g=none'), ['g1'], 'all').group).toBe('none');
   });
 });
 

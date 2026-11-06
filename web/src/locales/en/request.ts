@@ -108,6 +108,8 @@ const request: Messages<typeof vi> = {
       label: 'Item catalog',
       search: 'Search items',
       searchPlaceholder: 'Search items…',
+      none: 'Other',
+      addToCart: 'Add to request',
       categories: 'Item groups',
       all: 'All',
       addOther: 'Add another item',
