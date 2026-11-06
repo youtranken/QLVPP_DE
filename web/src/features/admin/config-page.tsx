@@ -8,7 +8,7 @@ import { useCurrentPeriod } from '@/features/request/request.api';
 import { useLeaveGuard } from '@/features/request/use-leave-guard';
 import { useAdminConfig, type AdminConfig } from './admin.api';
 import { AccessBlock } from './access-block';
-import { accessSpec, contactSpec, periodSpec, signersSpec } from './config-form';
+import { accessSpec, contactSpec, periodSpec, signersSpec, wholeIn } from './config-form';
 import { ContactBlock } from './contact-block';
 import { effectiveSentence } from './effective-period';
 import { PeriodBlock } from './period-block';
@@ -45,9 +45,11 @@ function ConfigForm({ config }: { config: AdminConfig }) {
   const { t, i18n } = useTranslation();
   const ask = useConfirm();
   const open = useCurrentPeriod().data;
-  // Hộp xác nhận lặp đúng câu kỳ áp dụng dưới ô hạn; chỉ hỏi khi hạn thật sự đổi
+  // Hộp xác nhận lặp đúng câu kỳ áp dụng dưới ô hạn; chỉ hỏi khi hạn thật sự đổi sang một hạn hợp lệ
+  // (ô sai thì gửi thẳng để server từ chối và gắn lỗi vào ô — không có hạn mới nào để xác nhận)
   const confirmDeadline = async (): Promise<boolean> => {
-    if (!open || period.draft.registration_last_day.trim() === String(config.registration_last_day)) return true;
+    const day = period.draft.registration_last_day.trim();
+    if (!open || day === String(config.registration_last_day) || !wholeIn(day, 3, 28)) return true;
     return ask({
       title: t('config.period.confirmTitle'),
       message: effectiveSentence(t, langOf(i18n.language), open, period.draft.registration_last_day),
