@@ -257,7 +257,7 @@ Bấm Xuất/In: `POST admin/reports/:ym/snapshots {kind, order_qty: {key: n}}` 
 
 - `api-client.ts` (copy QLTS): `apiFetch` gắn `X-CSRF-Token`, 401 → `handleSessionExpired` (tự SSO lại một lần/60 s).
 - Bootstrap: `GET /api/auth/me` → `{sub, role, csrfToken, fullName, department, locale, config: {registration_last_day, default_max_qty}}`. Chưa đăng nhập → màn vào (email → `/api/auth/login?login_hint=`, khác → SA).
-- Hai shell: `MemberShell` (thanh trên) cho `/`, `/history`; `AdminShell` (sidebar M1) cho `/admin/*`; admin/sa vào thẳng `/admin` (không có mục "Phiếu của tôi"); `RequireMember` chuyển admin/sa từ `/`, `/history`, `/history/:ym`, `/me` về `/admin`. `RequireRole` chỉ là ẩn menu; server luôn 403 độc lập.
+- Hai shell: `MemberShell` (thanh trên) cho `/`, `/history`; `AdminShell` (sidebar M1) cho `/admin/*`; admin/sa vào thẳng `/admin` (không có mục "Phiếu của tôi"); `RequireMember` chuyển admin/sa từ `/`, `/history`, `/history/:ym`, `/me` về `/admin`; đường dẫn lạ: nhân viên thấy trang 404 trong khung Nhân viên, admin/sa thấy trang 404 chung (không bị chuyển về `/admin`). `RequireRole` chỉ là ẩn menu; server luôn 403 độc lập.
 - Trạng thái kỳ: FE nhận `deadline` ISO từ server và tự đếm ngược; mọi hành động vẫn do server quyết. Giỏ theo dõi `dirty`; `beforeunload` khi có thay đổi; sau PUT thành công hiển thị `updated_at` của server.
 - Ảnh: nén bằng canvas trước `POST files` (≤ 1600 px, ≤ 1 MB, áp EXIF); dòng ngoài danh mục giữ `file_id` cục bộ để lưu lại được khi mất mạng giữa chừng.
 - i18n: `react-i18next`, locale lưu `localStorage`, tên món dùng `name_en` khi có.

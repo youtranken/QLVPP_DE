@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { useMe } from '@/lib/me';
+import { isAdminRole, useMe } from '@/lib/me';
 import { NotFound } from '@/ui/load-state';
 import { ProfilePage } from '@/features/profile/profile-page';
 import { RequestPage } from '@/features/request/request-page';
@@ -34,6 +34,8 @@ function ForbiddenRoute() {
 }
 
 export function AppRoutes() {
+  // Đường dẫn lạ: nhân viên thấy 404 trong khung Nhân viên; Hành chính/SA rơi xuống 404 chung cuối danh sách (không bị chuyển về /admin)
+  const member = !isAdminRole(useMe().role);
   return (
     <Routes>
       <Route path="/forbidden" element={<ForbiddenRoute />} />
@@ -48,7 +50,7 @@ export function AppRoutes() {
         <Route path="history" element={<HistoryPage />} />
         <Route path="history/:ym" element={<HistoryDetailPage />} />
         <Route path="me" element={<ProfilePage />} />
-        <Route path="*" element={<MemberPage><NotFound /></MemberPage>} />
+        {member && <Route path="*" element={<MemberPage><NotFound /></MemberPage>} />}
       </Route>
       <Route
         path="/admin/reports/snapshots/:id/print"

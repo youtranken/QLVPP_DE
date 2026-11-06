@@ -68,6 +68,7 @@ test.describe('E2-S6 lịch sử', () => {
       await expect(prev.getByText('1 món chờ Hành chính xem · 1 món bị từ chối')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'list');
+      await page.screenshot({ path: `../live-real/v2c/final/history-${info.project.name}.png` });
 
       await open.click();
       await expect(page.getByRole('heading', { level: 1, name: new RegExp(`^Đăng ký văn phòng phẩm tháng ${month}$`) })).toBeVisible();
