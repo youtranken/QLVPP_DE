@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { MemberPage } from '@/shell/member-page';
-import { useCurrentPeriod } from './request.api';
+import { useCurrentPeriod, useMyRequest } from './request.api';
+import { counted } from './request-format';
 import { deliveryState, useMyHistory, type DeliveryState, type HistoryItem } from './history.api';
 import { Chip, type ChipTone } from './history-chip';
 import { LatestLines } from './history-lines';
@@ -11,12 +12,21 @@ import './history.m1.css';
 
 const TONE: Record<DeliveryState, ChipTone> = { done: 'ok', owed: 'warn', undelivered: 'warn', cancelled: 'muted', none: 'muted' };
 
-export function DeliveryTag({ item }: { item: Pick<HistoryItem, 'line_count' | 'total_qty' | 'delivered_qty' | 'remaining_qty'> }) {
+// "Còn chờ k món" đếm DÒNG còn chờ (cùng cách với OwedNotice), nên lấy từ phiếu của tháng đó
+function WaitingChip({ ym }: { ym: string }) {
+  const { t } = useTranslation();
+  const request = useMyRequest(ym);
+  const k = (request.data?.lines ?? []).filter((l) => counted(l) && l.qty - l.delivered_qty - l.cancelled_qty > 0).length;
+  return k > 0 ? <Chip tone="warn">{t('request.history.delivery.owed', { k })}</Chip> : null;
+}
+
+export function DeliveryTag({ item }: { item: Pick<HistoryItem, 'period_ym' | 'line_count' | 'total_qty' | 'delivered_qty' | 'remaining_qty'> }) {
   const { t } = useTranslation();
   const state = deliveryState(item);
+  if (state === 'owed' || state === 'undelivered') return <WaitingChip ym={item.period_ym} />;
   // Chỉ có món chờ/từ chối (total 0) thì không có trạng thái giao; hết phiếu mới là "Không có phiếu"
   if (state === 'none' && item.line_count > 0) return null;
-  return <Chip tone={TONE[state]}>{t(`request.history.delivery.${state}`, { k: item.remaining_qty })}</Chip>;
+  return <Chip tone={TONE[state]}>{t(`request.history.delivery.${state}`)}</Chip>;
 }
 
 const customSummary = (c: HistoryItem['custom']) =>

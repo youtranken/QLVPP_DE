@@ -6,22 +6,11 @@ import { useRequestFormat } from './request-format';
 import { LineProgress } from './line-progress';
 import { ItemThumb } from '@/ui/item-thumb';
 import { MemberPage } from '@/shell/member-page';
-import { Chip } from './history-chip';
+import { Chip, ReviewTag } from './history-chip';
 import './history.m1.css';
 import { YM } from '@/lib/ym';
 
 const EFFECTIVE = ['n/a', 'accepted', 'converted'];
-
-function ReviewTag({ line }: { line: LineView }) {
-  const { t } = useTranslation();
-  const s = line.review_status;
-  if (s === 'n/a') return null;
-  if (s === 'rejected') {
-    const reason = line.review_note?.trim();
-    return <Chip tone="danger">{reason ? t('request.history.review.rejectedWhy', { reason }) : t('request.history.review.rejected')}</Chip>;
-  }
-  return <Chip tone={s === 'pending' ? 'warn' : 'ok'}>{t(`request.history.review.${s}`)}</Chip>;
-}
 
 function DetailLine({ line }: { line: LineView }) {
   const { t } = useTranslation();

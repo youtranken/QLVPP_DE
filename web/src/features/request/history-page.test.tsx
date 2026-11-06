@@ -81,7 +81,14 @@ describe('HistoryPage', () => {
         ],
         next_cursor: null,
       },
-    ]);
+    ], [], {
+      '2026-10': view({ period_ym: '2026-10', is_open: false, lines: [
+        lineView({ id: 'a', item_id: PEN.id, item: facts(PEN), qty: 8, delivered_qty: 4 }),
+        lineView({ id: 'b', item_id: NOTE.id, item: facts(NOTE), qty: 2 }),
+        lineView({ id: 'c', custom_name: 'Kéo', custom_unit: 'cai', qty: 2, delivered_qty: 2, review_status: 'accepted' }),
+      ] }),
+      '2026-08': view({ period_ym: '2026-08', is_open: false, lines: [lineView({ id: 'd', item_id: PEN.id, item: facts(PEN), qty: 10 })] }),
+    });
     renderApp(makeMe('member'), '/history');
     const open = (await screen.findByText('Tháng 11/2026')).closest('a')!;
     expect(open).toHaveAttribute('href', '/');
@@ -89,21 +96,23 @@ describe('HistoryPage', () => {
     const oct = screen.getByText('Tháng 10/2026').closest('a')!;
     expect(oct).toHaveAttribute('href', '/history/2026-10');
     expect(within(oct).getByText('3 loại món · 10 đơn vị')).toBeInTheDocument();
-    expect(within(oct).getByText('Còn chờ 4 món')).toBeInTheDocument();
+    expect(await within(oct).findByText('Còn chờ 2 món')).toBeInTheDocument();
     expect(within(oct).getByText(/1 món chờ Hành chính xem · 2 món đã thêm vào danh mục · 1 món bị từ chối/)).toBeInTheDocument();
     expect(within(screen.getByText('Tháng 9/2026').closest('a')!).getByText('Đã nhận đủ')).toBeInTheDocument();
-    expect(within(screen.getByText('Tháng 8/2026').closest('a')!).getByText('Còn chờ 10 món')).toBeInTheDocument();
+    expect(await within(screen.getByText('Tháng 8/2026').closest('a')!).findByText('Còn chờ 1 món')).toBeInTheDocument();
   });
 
   it.each([
     [{ delivered_qty: 10, remaining_qty: 0 }, 'Đã nhận đủ'],
-    [{ delivered_qty: 6, remaining_qty: 4 }, 'Còn chờ 4 món'],
+    [{ delivered_qty: 6, remaining_qty: 4 }, 'Còn chờ 1 món'],
     [{ total_qty: 0, line_count: 0, delivered_qty: 0, remaining_qty: 0 }, 'Không có phiếu'],
   ])('chip tháng %j → "%s"; kỳ đang mở → "Đang mở"', async (over, chip) => {
-    stub([{ items: [item({ period_ym: '2026-11' }), item({ period_ym: '2026-10', ...over })], next_cursor: null }]);
+    stub([{ items: [item({ period_ym: '2026-11' }), item({ period_ym: '2026-10', ...over })], next_cursor: null }], [], {
+      '2026-10': view({ period_ym: '2026-10', is_open: false, lines: [lineView({ id: 'a', item_id: PEN.id, item: facts(PEN), qty: 10, delivered_qty: 6 })] }),
+    });
     renderApp(makeMe('member'), '/history');
     const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
-    expect(within(card).getByText(chip)).toBeInTheDocument();
+    expect(await within(card).findByText(chip)).toBeInTheDocument();
     expect(within((await screen.findByText('Tháng 11/2026')).closest('li')!).getByText('Đang mở')).toBeInTheDocument();
   });
 
@@ -134,6 +143,33 @@ describe('HistoryPage', () => {
     expect(within(cover).getByText('Đã hủy 3 — Hết hàng')).toBeInTheDocument();
     // chỉ tháng gần nhất có dòng món
     expect(within(screen.getByText('Tháng 9/2026').closest('li')!).queryAllByRole('listitem')).toHaveLength(0);
+  });
+
+  it('dòng ngoài danh mục: "Chờ Hành chính xem" và "Từ chối: lý do" hiện trên dòng, không có chip giao hàng', async () => {
+    stub([{ items: [item({ period_ym: '2026-10', delivered_qty: 1, remaining_qty: 0 })], next_cursor: null }], [], {
+      '2026-10': view({
+        period_ym: '2026-10',
+        is_open: false,
+        lines: [
+          lineView({ id: 'a', custom_name: 'Bìa còng', custom_unit: 'cai', review_status: 'pending' }),
+          lineView({ id: 'b', custom_name: 'Bút lông', custom_unit: 'cai', review_status: 'rejected', review_note: 'Đã có trong kho' }),
+        ],
+      }),
+    });
+    renderApp(makeMe('member'), '/history');
+    const pending = (await screen.findByText('Bìa còng')).closest('li')!;
+    expect(within(pending).getByText('Chờ Hành chính xem')).toBeInTheDocument();
+    const rejected = screen.getByText('Bút lông').closest('li')!;
+    expect(within(rejected).getByText('Từ chối: Đã có trong kho')).toBeInTheDocument();
+    expect(within(rejected).queryByText(/Chờ \d/)).toBeNull();
+  });
+
+  it('dòng hủy hết, không lý do: chip "Đã hủy 2"', async () => {
+    stub([{ items: [item({ period_ym: '2026-10', delivered_qty: 1, remaining_qty: 0 })], next_cursor: null }], [], {
+      '2026-10': view({ period_ym: '2026-10', is_open: false, lines: [lineView({ id: 'a', item_id: PEN.id, item: facts(PEN), qty: 2, cancelled_qty: 2 })] }),
+    });
+    renderApp(makeMe('member'), '/history');
+    expect(await screen.findByText('Đã hủy 2')).toBeInTheDocument();
   });
 
   it('en: dòng món dùng name_en', async () => {

@@ -64,7 +64,7 @@ test.describe('E2-S6 lịch sử', () => {
       await expect(open.getByText('Đang mở')).toBeVisible();
       await expect(open).toHaveAttribute('href', '/');
       const prev = page.getByRole('link', { name: new RegExp(`Tháng ${prevMonth}/`) });
-      await expect(prev.getByText('Còn chờ 2 món')).toBeVisible();
+      await expect(prev.getByText('Còn chờ 1 món')).toBeVisible();
       await expect(prev.getByText('1 món chờ Hành chính xem · 1 món bị từ chối')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'list');
@@ -78,7 +78,7 @@ test.describe('E2-S6 lịch sử', () => {
       await expect(page.getByRole('heading', { level: 1, name: `Phiếu tháng ${prevMonth}/${prevYm.slice(0, 4)}` })).toBeVisible();
       const bars = page.getByRole('progressbar');
       await expect(bars).toHaveCount(2);
-      await expect(page.getByRole('progressbar', { name: 'Đã giao 5 trên 7' })).toBeVisible();
+      await expect(page.getByRole('progressbar', { name: 'Đã nhận 5 trên 7' })).toBeVisible();
       await expect(page.getByText('đã hủy 1')).toBeVisible();
       await expect(page.getByText('Chờ Hành chính xem')).toBeVisible();
       await expect(page.getByText('Từ chối: Đã có trong kho')).toBeVisible();
@@ -131,7 +131,7 @@ test.describe('E2-S6 lịch sử', () => {
 
       await page.getByRole('link', { name: new RegExp(`Tháng ${prevMonth}/`) }).click();
       await expect(page.getByText('đã hủy 2 — Người đã nghỉ')).toBeVisible();
-      const bar = page.getByRole('progressbar', { name: 'Đã giao 3 trên 3' });
+      const bar = page.getByRole('progressbar', { name: 'Đã nhận 3 trên 3' });
       await expect(bar).toHaveAttribute('aria-valuemax', '3');
       if (isMobile(info)) await expectNoContrastViolations(page);
     } finally {

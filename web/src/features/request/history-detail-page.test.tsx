@@ -25,8 +25,8 @@ describe('HistoryDetailPage', () => {
     expect(bars[1]).toHaveAttribute('aria-valuenow', '4');
     expect(screen.getAllByText(/đã hủy/)).toHaveLength(1);
     expect(screen.getByText('đã hủy 2')).toBeInTheDocument();
-    expect(screen.getByText('còn nợ 2')).toBeInTheDocument();
-    expect(screen.getAllByText(/còn nợ/)).toHaveLength(1);
+    expect(screen.getByText('còn chờ 2')).toBeInTheDocument();
+    expect(screen.getAllByText(/còn chờ/)).toHaveLength(1);
   });
 
   it('dòng ngoài DM: nhãn theo trạng thái, lý do từ chối hiển thị, không thanh tiến độ cho dòng chờ/từ chối', async () => {
@@ -87,7 +87,7 @@ describe('HistoryDetailPage', () => {
     expect(bar).toHaveAttribute('aria-valuemax', '3');
     expect(within(bar).getByText('3/3')).toBeInTheDocument();
     expect(screen.getByText('đã hủy 2 — Người đã nghỉ')).toBeInTheDocument();
-    expect(screen.queryByText(/còn nợ/)).toBeNull();
+    expect(screen.queryByText(/còn chờ/)).toBeNull();
   });
 
   it('hủy hết 5: không progressbar, chỉ "Đã hủy 5 — lý do"', async () => {

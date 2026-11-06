@@ -3,11 +3,11 @@ import { LoadError } from '@/ui/load-state';
 import { ItemThumb } from '@/ui/item-thumb';
 import { useMyRequest, type LineView } from './request.api';
 import { counted, useRequestFormat } from './request-format';
-import { Chip, type ChipTone } from './history-chip';
+import { Chip, ReviewTag, type ChipTone } from './history-chip';
 
 function LineChips({ line }: { line: LineView }) {
   const { t } = useTranslation();
-  if (!counted(line)) return null;
+  if (!counted(line)) return <span className="hs-chips"><ReviewTag line={line} /></span>;
   const owed = line.qty - line.delivered_qty - line.cancelled_qty;
   const a = line.delivered_qty;
   const reason = line.cancel_note?.trim();
