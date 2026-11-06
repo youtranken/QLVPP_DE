@@ -72,7 +72,7 @@ describe('Trang in · phụ lục (B6 cũ)', () => {
     expect(within(rows[2]).getByRole('rowheader')).toHaveTextContent('Ngoài danh mục (đã chấp nhận)');
     expect(cellsOf(rows[3])).toEqual(['3', 'Băng keo 2 mặt', 'cuộn', '4', '1', '—', '5', '5', '2']);
     expect(within(app).queryByText('Bút viết')).not.toBeInTheDocument();
-    expect(within(app).getByText('Cần mua = Chưa giao kỳ này + Nợ kỳ trước − Tồn (không âm)')).toBeInTheDocument();
+    expect(within(app).getByText('Đề nghị mặc định = Chưa giao kỳ này + Nợ kỳ trước. Tủ chỉ để tham khảo, không trừ. Muốn bớt thì sửa ô Đề nghị.')).toBeInTheDocument();
   });
 
   it('Xuất lẻ trong kỳ: TT · Món · Người nhận · SL · Lý do · Ngày; không người nhận → "Dùng chung"', async () => {

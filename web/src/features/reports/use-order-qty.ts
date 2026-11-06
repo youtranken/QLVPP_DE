@@ -1,5 +1,5 @@
 import { createContext, useMemo, useState } from 'react';
-import { ORDER_QTY_MAX, type MonthReport } from './reports.api';
+import { ORDER_QTY_MAX, type MonthReport, type ReportCustomRow, type ReportItemRow } from './reports.api';
 
 const DIGITS = /^\d+$/;
 
@@ -13,12 +13,22 @@ export function parseOrderQty(text: string): number | null {
 // Chỉ gửi ô đã sửa: ô để nguyên thì server lấy need tại lúc chốt; luật thật kiểm lại ở server
 export type OrderQty = ReturnType<typeof useOrderQty>;
 
-export function useOrderQty(report: MonthReport) {
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
+const netNeed = (r: ReportItemRow | ReportCustomRow) => r.need;
+
+interface Options {
+  // Số mốc của ô (ô khác mốc = đã sửa); hàm phải ổn định giữa các lần render
+  baseOf?: (r: ReportItemRow | ReportCustomRow) => number;
+  initial?: Record<string, number>;
+}
+
+export function useOrderQty(report: MonthReport, { baseOf = netNeed, initial }: Options = {}) {
+  const [drafts, setDrafts] = useState<Record<string, string>>(() =>
+    Object.fromEntries(Object.entries(initial ?? {}).map(([k, v]) => [k, String(v)])),
+  );
   const [rejected, setRejected] = useState<Set<string>>(() => new Set());
   const needs = useMemo(
-    () => new Map([...report.byItem, ...report.custom].map((r) => [r.key, r.need])),
-    [report],
+    () => new Map([...report.byItem, ...report.custom].map((r) => [r.key, baseOf(r)])),
+    [report, baseOf],
   );
 
   const edited: Record<string, number> = {};

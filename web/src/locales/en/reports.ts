@@ -36,6 +36,7 @@ const reports: Messages<typeof vi> = {
         INVALID_PERIOD: 'This month has not started yet, no report can be made.',
         REPORT_CHANGED: 'The report changed and was reloaded — check the order quantities, then create the snapshot again.',
         UNKNOWN: 'Could not create the snapshot, please try again later.',
+        ORDER_EMPTY: 'Nothing to order yet.',
       },
       toast: {
         xlsx: 'Exported Excel for {{month}}/{{year}} · snapshot {{time}}',
@@ -44,7 +45,7 @@ const reports: Messages<typeof vi> = {
       },
       how: {
         title: 'How To buy is calculated',
-        formula: 'To buy = Undelivered this period + Owed from last period − In stock (not below zero).',
+        formula: 'Default order = undelivered this period + carried over. Stock is for reference only. Edit the order cell to reduce.',
         order: 'Order defaults to To buy. Any cell you edit is saved as edited in the snapshot.',
       },
     },
@@ -127,7 +128,7 @@ const reports: Messages<typeof vi> = {
         ordinalDefault: 'Snapshot no. {{k}} of the period · Default order',
         title: 'Appendix · Detail for {{month}}/{{year}}',
         counts: '{{requests}} requests · {{items}} items requested',
-        formula: 'To buy = Undelivered this period + Owed from last period − In stock (not below zero)',
+        formula: 'Default order = undelivered this period + carried over. Stock is for reference only. Edit the order cell to reduce.',
         colNo: 'No.',
         colDate: 'Date',
         colDepartment: 'Department',

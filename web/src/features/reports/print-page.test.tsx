@@ -28,7 +28,7 @@ describe('Trang in · trang 1 Phiếu đề xuất (mẫu D&E)', () => {
     expect(screen.getByText('STATIONERY REQUEST FORM')).toBeInTheDocument();
     expect(screen.getByText('Date : 28/10/2026')).toBeInTheDocument();
     expect(screen.queryByText('Công ty Phú Mỹ Hưng')).not.toBeInTheDocument();
-    expect(screen.queryByText(/Cần mua = /)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Đề nghị mặc định = /)).not.toBeInTheDocument();
   });
 
   it('bảng đúng 6 cột song ngữ STT No. · Mã Code · Tên vật dụng · Item name · ĐVT Unit · SL Qty', async () => {

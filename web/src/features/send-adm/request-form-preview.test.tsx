@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { renderWithI18n as render, screen, within } from '@/test/test-utils';
-import { RequestFormPreview, type PreviewRow } from './request-form-preview';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { renderWithI18n as render, screen, userEvent, within } from '@/test/test-utils';
+import { PreviewButton, RequestFormPreview, type PreviewRow } from './request-form-preview';
 
 const ROWS: PreviewRow[] = [
   { key: 'a', code: 'B01', name: 'Bút bi', name_en: 'Pen', unit: 'cây', qty: 10 },
@@ -47,5 +47,29 @@ describe('RequestFormPreview', () => {
   it('không có dòng: câu "Không có món cần đặt mua."', () => {
     render(<RequestFormPreview rows={[]} signatureBoxes={BOXES} ym="2026-10" />);
     expect(within(sheet()).getByText('Không có món cần đặt mua.')).toBeInTheDocument();
+  });
+});
+
+describe('PreviewButton — xem trước thu vào nút', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('khung hẹp 400 px: tờ 210 mm thu bằng transform scale(<1), không reflow', async () => {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(400);
+    render(<PreviewButton rows={ROWS} signatureBoxes={BOXES} ym="2026-10" />);
+    expect(screen.queryByRole('region', { name: /Xem trước phiếu/ })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Xem trước bản in' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Xem trước bản in' });
+    const fit = within(dialog).getByTestId('sheet-fit');
+    const scale = Number(/scale\(([\d.]+)\)/.exec(fit.style.transform)?.[1]);
+    expect(scale).toBeGreaterThan(0);
+    expect(scale).toBeLessThan(1);
+    expect(fit.style.width).toBe('210mm');
+  });
+
+  it('khung đủ rộng: scale 1', async () => {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1000);
+    render(<PreviewButton rows={ROWS} signatureBoxes={BOXES} ym="2026-10" />);
+    await userEvent.click(screen.getByRole('button', { name: 'Xem trước bản in' }));
+    expect(within(await screen.findByRole('dialog')).getByTestId('sheet-fit').style.transform).toBe('scale(1)');
   });
 });

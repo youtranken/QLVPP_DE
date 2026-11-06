@@ -1,4 +1,6 @@
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Dialog, DialogCloseButton, DialogTitle } from '@/ui/dialog';
 import { vnStampParts } from '@/features/reports/print-format';
 import { monthOf } from '@/features/request/request-format';
 
@@ -88,5 +90,60 @@ export function RequestFormPreview({ rows, signatureBoxes, ym }: Props) {
         </div>
       </div>
     </section>
+  );
+}
+
+// 210 mm theo px CSS (96 dpi)
+const SHEET_PX = (210 * 96) / 25.4;
+
+// Thu cả tờ bằng transform để bố cục 210 mm không reflow khi khung hẹp
+function FitSheet({ children }: { children: ReactNode }) {
+  const frame = useRef<HTMLDivElement>(null);
+  const sheet = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState({ scale: 1, height: 0 });
+  useLayoutEffect(() => {
+    const el = frame.current;
+    if (!el) return;
+    const fit = () => {
+      const w = el.clientWidth;
+      const scale = w > 0 ? Math.min(1, w / SHEET_PX) : 1;
+      setBox({ scale, height: (sheet.current?.offsetHeight ?? 0) * scale });
+    };
+    fit();
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit);
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, []);
+  return (
+    <div ref={frame} className="sa-fit" style={box.height ? { height: box.height } : undefined}>
+      <div ref={sheet} className="sa-fit__sheet" data-testid="sheet-fit" style={{ width: '210mm', transform: `scale(${box.scale})` }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function PreviewButton(props: Props) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" className="btn btn--ghost" onClick={() => setOpen(true)}>
+        {t('sendAdm.preview.open')}
+      </button>
+      {open && (
+        <Dialog open onOpenChange={setOpen} maxWidth={920} className="sheet sa-preview-dialog">
+          <div className="sheet-header">
+            <DialogTitle className="sheet-title">{t('sendAdm.preview.open')}</DialogTitle>
+            <DialogCloseButton />
+          </div>
+          <div className="sheet-body">
+            <FitSheet>
+              <RequestFormPreview {...props} />
+            </FitSheet>
+          </div>
+        </Dialog>
+      )}
+    </>
   );
 }

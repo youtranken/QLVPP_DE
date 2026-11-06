@@ -6,6 +6,14 @@ import { useSingleFlight } from '@/lib/use-single-flight';
 import { useToast } from '@/ui/toast-context';
 import { monthOf } from '@/features/request/request-format';
 import { createSnapshot, downloadSnapshot, printPath, useRefreshSnapshots, useReloadReport, type MonthReport, type SnapshotKind } from './reports.api';
+
+export interface TakeOptions {
+  // Gửi ADM: số trùng bản có hàng mới nhất cùng loại → server dùng lại bản đó
+  reuse?: boolean;
+  // Hỏi lại trước khi chốt (mặc định: còn món ngoài danh mục chờ xem)
+  mustConfirm?: boolean;
+  onTaken?: () => void;
+}
 import { downloadFailure, takeFailure, type DownloadError } from './reports-errors';
 import type { OrderQty } from './use-order-qty';
 
@@ -63,13 +71,13 @@ function useRejectFields(ym: string, qty: OrderQty) {
   };
 }
 
-function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => boolean) {
+function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => boolean, opts: TakeOptions) {
   const { csrfToken } = useMe();
   const refresh = useRefreshSnapshots(report.ym);
   const announce = useAnnounce(report.ym, files);
   const rejectFields = useRejectFields(report.ym, qty);
   const flight = useSingleFlight();
-  const [notice, setNotice] = useState<'REPORT_CHANGED' | 'UNKNOWN' | 'INVALID_PERIOD' | null>(null);
+  const [notice, setNotice] = useState<'REPORT_CHANGED' | 'UNKNOWN' | 'INVALID_PERIOD' | 'ORDER_EMPTY' | null>(null);
   const [rejected, setRejected] = useState(false);
   const [taking, setTaking] = useState<SnapshotKind | null>(null);
   const [fresh, setFresh] = useState<ReadonlySet<string>>(new Set());
@@ -78,10 +86,12 @@ function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDown
       setTaking(kind);
       setRejected(false);
       try {
-        const { id, created_at } = await createSnapshot(report.ym, { kind, order_qty: qty.edited }, csrfToken);
+        const body = { kind, order_qty: qty.edited, ...(opts.reuse ? { reuse_if_unchanged: true } : {}) };
+        const { id, created_at } = await createSnapshot(report.ym, body, csrfToken);
         setFresh((s) => new Set(s).add(id));
         void refresh();
         await announce(kind, id, created_at);
+        opts.onTaken?.();
       } catch (e) {
         const failure = takeFailure(e);
         // Đã ở tháng mặc định mà vẫn chưa tới (đồng hồ máy chủ lệch) → không có chỗ để về, báo ở đầu trang
@@ -97,8 +107,8 @@ function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDown
 }
 
 // Mỗi lần Xuất/In là một bản chốt mới (quyết định chủ sản phẩm); chỉ gửi ô khác Cần mua, server vẫn kiểm 0–99 999
-export function useTakeSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => boolean) {
-  const sender = usePostSnapshot(report, qty, files, onInvalidPeriod);
+export function useTakeSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => boolean, opts: TakeOptions = {}) {
+  const sender = usePostSnapshot(report, qty, files, onInvalidPeriod, opts);
   const [tried, setTried] = useState(false);
   const [asking, setAsking] = useState<SnapshotKind | null>(null);
   if (tried && qty.errorCount === 0) setTried(false);
@@ -107,7 +117,7 @@ export function useTakeSnapshot(report: MonthReport, qty: OrderQty, files: Snaps
     if (sender.pending) return;
     sender.clearNotice();
     if (qty.errorCount > 0) return setTried(true);
-    if (report.pending_custom_count > 0) return setAsking(kind);
+    if (opts.mustConfirm ?? report.pending_custom_count > 0) return setAsking(kind);
     void sender.post(kind);
   };
 

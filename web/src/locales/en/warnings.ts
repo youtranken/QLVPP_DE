@@ -1,0 +1,48 @@
+import type vi from '@/locales/vi/warnings';
+import type { Messages } from '@/locales/messages';
+
+const warnings: Messages<typeof vi> = {
+  warn: {
+    W1a: 'Enough for everyone who requested',
+    W1b: 'Short {{n}} — {{n}} {{unit}} will not be available to hand out',
+    W1c: '{{n}} extra into stock',
+    W1d: 'Stock already covers it — still {{n}} extra into stock',
+    W2: '{{a}} short · {{b}} extra into stock · {{c}} enough',
+    W3label: 'Discontinued',
+    W3: 'Item discontinued — default order is 0; edit the number to buy it',
+    W4: 'Not counting {{n}} {{unit}} of people who have left',
+    W5: 'Not counting {{n}} {{unit}} owed from month {{m}} — ADM still owes delivery',
+    W6banner: 'Changed after the snapshot of {{time}} — reprint if needed',
+    W6step: 'Sent {{time}} · changed since',
+    W7surplus: 'Sent {{x}} · now needed {{y}} → {{n}} extra into stock',
+    W7short: 'Sent {{x}} · now needed {{y}} → short {{n}}',
+    W8: '{{n}} off-catalog items not reviewed yet; the snapshot will leave them out.',
+    W9: 'Nothing to order yet',
+    W10a: 'The ADM order of {{time}} already has this item ({{n}} {{unit}}) — it will arrive with no one to receive it.',
+    W10b: 'The ADM order of {{time}} does not have this item. After accepting, go to Send to ADM to make a new order and reprint, or buy it separately.',
+    W11: 'The ADM order of {{time}} counted the old number — reducing now leaves {{n}} {{unit}} extra in stock when it arrives.',
+    W12a: 'Above the current maximum ({{max}})',
+    W12b: 'New maximum {{max}} — you can keep {{qty}} but not increase it',
+    W13short: '{{n}} short of the printed order',
+    W13surplus: '{{n}} more than the printed order — into stock',
+    W14row: 'Reduced {{n}} after sending to ADM — the extra goes into stock',
+    W14head: '{{x}} items reduced after sending to ADM — the extra will go into stock',
+    W15: 'This batch differs from the printed order in {{n}} items: {{list}}. The shortfall waits for the next batch.',
+    W16: 'This item is not in the printed ADM order — goes straight into stock',
+    W17: 'ADM out of stock — {{s}} in stock: handed out by request order, the missing {{n}} are cancelled',
+    W18: 'Add {{x}} items, {{y}} units into stock per the printed order of {{time}}.',
+    W19row: 'Stock {{s}} is not enough for {{k}} people waiting for {{q}} — short {{short}}',
+    W19head: '{{n}} items do not have enough stock for people waiting — wait for the next batch',
+    W20short: 'Short {{short}} for people waiting',
+    W20pending: 'Awaiting arrival {{n}}',
+    W21: 'This is held for {{k}} people waiting to receive it.',
+    W21take: 'Issuing {{q}} will take {{x}} {{unit}} that is being held.',
+    W21ok: 'Issue anyway',
+    W22: 'After the count, stock is {{c}}, short {{n}} for people waiting.',
+    W23: 'The ADM order of month {{m}} counted these {{n}} {{unit}} — cancelling leaves the arrival as extra stock.',
+    W24: 'This item is awaiting {{n}} {{unit}} from ADM (printed {{time}}) — after discontinuing, ordered stock can still be received.',
+    W25: '{{n}} people who have left still have items to receive: {{names}}',
+  },
+};
+
+export default warnings;

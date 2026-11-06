@@ -8,12 +8,14 @@ import { AdminSidebar } from '@/shell/admin-sidebar';
 import { AdminTopbar } from '@/shell/admin-topbar';
 import { useForbiddenRole } from '@/shell/use-forbidden-role';
 import { useShellFont } from '@/shell/use-shell-font';
+import { useNumberWheelGuard } from '@/lib/use-number-wheel-guard';
 
 export function AdminShell() {
   const { t } = useTranslation();
   const phone = useMediaQuery(ADMIN_PHONE_QUERY);
   const forbidden = useForbiddenRole();
   useShellFont('admin');
+  useNumberWheelGuard();
 
   return (
     <ToastProvider>

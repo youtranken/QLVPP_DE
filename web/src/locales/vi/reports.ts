@@ -33,6 +33,7 @@ const reports = {
         INVALID_PERIOD: 'Tháng này chưa tới, chưa lập báo cáo được.',
         REPORT_CHANGED: 'Báo cáo đã đổi, đã tải lại — xem lại số Đặt mua rồi chốt lại.',
         UNKNOWN: 'Chưa chốt được, thử lại sau.',
+        ORDER_EMPTY: 'Chưa có món nào để đề nghị.',
       },
       toast: {
         xlsx: 'Đã xuất Excel tháng {{month}}/{{year}} · bản chốt {{time}}',
@@ -41,7 +42,7 @@ const reports = {
       },
       how: {
         title: 'Cách tính Cần mua',
-        formula: 'Cần mua = Chưa giao kỳ này + Nợ kỳ trước − Tồn (không âm).',
+        formula: 'Đề nghị mặc định = Chưa giao kỳ này + Nợ kỳ trước. Tủ chỉ để tham khảo, không trừ. Muốn bớt thì sửa ô Đề nghị.',
         order: 'Đặt mua mặc định bằng Cần mua. Ô nào sửa thì bản chốt lưu số đã sửa của ô đó.',
       },
     },
@@ -124,7 +125,7 @@ const reports = {
         ordinalDefault: 'Bản chốt số {{k}} của kỳ · Đặt mua mặc định',
         title: 'Phụ lục · Chi tiết tháng {{month}}/{{year}}',
         counts: '{{requests}} phiếu · {{items}} món có đăng ký',
-        formula: 'Cần mua = Chưa giao kỳ này + Nợ kỳ trước − Tồn (không âm)',
+        formula: 'Đề nghị mặc định = Chưa giao kỳ này + Nợ kỳ trước. Tủ chỉ để tham khảo, không trừ. Muốn bớt thì sửa ô Đề nghị.',
         colNo: 'TT',
         colDate: 'Ngày',
         colDepartment: 'Phòng ban',

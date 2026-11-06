@@ -216,7 +216,7 @@ describe('ReportsPage — Xuất lẻ, Phần 2, Cách tính', () => {
     expect(screen.queryByRole('region', { name: 'Cách tính Cần mua' })).toBeNull();
     const head = within(part1).getByRole('columnheader', { name: /^Cần mua/ });
     await userEvent.click(within(head).getByRole('button', { name: 'Cách tính Cần mua' }));
-    expect(screen.getByRole('dialog', { name: 'Cách tính Cần mua' })).toHaveTextContent('Cần mua = Chưa giao kỳ này + Nợ kỳ trước − Tồn (không âm).');
+    expect(screen.getByRole('dialog', { name: 'Cách tính Cần mua' })).toHaveTextContent('Đề nghị mặc định = Chưa giao kỳ này + Nợ kỳ trước. Tủ chỉ để tham khảo, không trừ. Muốn bớt thì sửa ô Đề nghị.');
   });
 
   it('390: không có đầu cột → nút (i) "Cách tính Cần mua" nằm ở công cụ Phần 1, chạm mở công thức; ô Cần mua giữ nhãn', async () => {

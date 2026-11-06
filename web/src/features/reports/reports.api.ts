@@ -19,7 +19,12 @@ export interface ReportItemRow extends FrozenUnitName {
   requested: number;
   backlog_prev: number;
   stock: number;
+  /** @deprecated số net cũ, không hiển thị, không là số mặc định */
   need: number;
+  // Bản chốt cũ thiếu ba trường dưới → đọc như số gộp
+  adm_owed?: number;
+  left_excluded?: number;
+  usable?: boolean;
 }
 
 export interface ReportCustomRow extends FrozenUnitName {
@@ -29,8 +34,12 @@ export interface ReportCustomRow extends FrozenUnitName {
   requested: number;
   backlog_prev: number;
   stock: null;
+  /** @deprecated số net cũ, không hiển thị, không là số mặc định */
   need: number;
   people: number;
+  adm_owed?: number;
+  left_excluded?: number;
+  usable?: boolean;
 }
 
 export interface ReportDepartment {
@@ -60,6 +69,27 @@ export interface MonthReport {
   byDepartment: ReportDepartment[];
   issues: ReportIssue[];
   pending_custom_count: number;
+  // Cột sống của kỳ (chỉ báo cáo sống, không có trong bản chốt)
+  progress?: Record<string, KeyProgress>;
+}
+
+export interface KeyProgress {
+  registered: number;
+  delivered: number;
+  received: number;
+}
+
+export interface OrderBasis {
+  requested: number;
+  debt: number;
+  adm_owed: number;
+  left_excluded: number;
+  discontinued: boolean;
+}
+
+export interface SnapshotRef {
+  id: string;
+  created_at: string;
 }
 
 export interface SnapshotData extends MonthReport {
@@ -67,6 +97,8 @@ export interface SnapshotData extends MonthReport {
   kind: SnapshotKind;
   period_ym: string;
   order_qty: Record<string, number>;
+  order_basis?: Record<string, OrderBasis>;
+  replaces?: SnapshotRef;
   signature_boxes?: { title: string; title_en: string; name: string }[];
   signers?: { preparer: string; head: string; approver: string };
   created_by: { sub: string; name: string | null };
@@ -125,8 +157,14 @@ export function useRefreshSnapshots(ym: string) {
   return () => qc.invalidateQueries({ queryKey: snapshotsKey(ym) });
 }
 
-export const createSnapshot = (ym: string, body: { kind: SnapshotKind; order_qty: Record<string, number> }, csrfToken: string | null) =>
-  apiFetch<{ id: string; created_at: string }>(`/api/admin/reports/${ym}/snapshots`, { method: 'POST', body: JSON.stringify(body), csrfToken });
+export interface SnapshotBody {
+  kind: SnapshotKind;
+  order_qty: Record<string, number>;
+  reuse_if_unchanged?: boolean;
+}
+
+export const createSnapshot = (ym: string, body: SnapshotBody, csrfToken: string | null) =>
+  apiFetch<{ id: string; created_at: string; reused?: boolean; data?: SnapshotData }>(`/api/admin/reports/${ym}/snapshots`, { method: 'POST', body: JSON.stringify(body), csrfToken });
 
 export const printPath = (id: string) => `/admin/reports/snapshots/${id}/print`;
 
