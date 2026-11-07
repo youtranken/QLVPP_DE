@@ -242,6 +242,40 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
     }
   });
 
+  test('Tạm ngưng một món bằng nút đỏ cạnh "Sửa" trên thẻ lưới; "Dùng lại" ở tab Đã ngừng', async ({ page, request }, info) => {
+    const name = `PW Tạm ngưng ${Date.now()}-${info.project.name}`;
+    const id = await createItemViaApi(request, name);
+    const patched = () => page.waitForResponse((r) => r.url().endsWith(`/api/admin/items/${id}`) && r.request().method() === 'PATCH');
+    try {
+      await page.goto('/admin/catalog');
+      await page.getByRole('searchbox', { name: /^Tìm trong \d+ món$/ }).fill(name);
+      const card = page.getByRole('article').filter({ hasText: name });
+      const pause = card.getByRole('button', { name: `Tạm ngưng ${name}` });
+      await expect(pause).toHaveText('Tạm ngưng');
+      await expect(card.getByRole('button', { name: `Sửa ${name}` })).toBeVisible();
+      if (isMobile(info)) expect((await pause.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      await shot(page, info, 'catalog-card-pause', false);
+      const off = patched();
+      await pause.click();
+      expect((await off).status()).toBe(200);
+      await expect(page.getByRole('status').filter({ hasText: `Đã ngừng ${name}` })).toBeVisible();
+      await expect(card).toHaveCount(0);
+
+      await page.getByRole('button', { name: /^Đã ngừng/ }).click();
+      await expect(card.getByText('Ngừng riêng')).toBeVisible();
+      const back = card.getByRole('button', { name: `Dùng lại ${name}` });
+      await expect(back).toHaveText('Dùng lại');
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await shot(page, info, 'catalog-card-reactivate', false);
+      const on = patched();
+      await back.click();
+      expect((await on).status()).toBe(200);
+      await expect(card).toHaveCount(0);
+    } finally {
+      await removeTestItem(request, id);
+    }
+  });
+
   test('Lưới: tab Đã ngừng đủ tương phản ở 390 px', async ({ page, request }, info) => {
     // Danh mục dev đã đặt lại (không còn món ngừng): test tự tạo một món "PW …" rồi ngừng nó
     const id = await createItemViaApi(request, `PW Ngừng ${Date.now()}-${info.project.name}`);

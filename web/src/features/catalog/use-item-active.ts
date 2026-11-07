@@ -2,24 +2,24 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { useConfirm } from '@/ui/confirm-context';
-import { Switch } from '@/ui/switch';
 import type { ToastSpec } from '@/ui/toast-context';
 import { patchItem, type AdminItem } from './catalog.api';
 import { rowErrorText } from './catalog-errors';
 import { usePendingArrivalNote } from './pending-arrival-note';
 
-interface Props {
-  item: AdminItem;
+export interface ItemActiveArgs {
+  item: Pick<AdminItem, 'id' | 'active'>;
   name: string;
   groupActive: boolean;
-  hintId?: string;
   refresh: () => Promise<unknown>;
   notify: (toast: ToastSpec) => void;
 }
 
-// Ghi ngay, cập nhật lạc quan; một request mỗi món (bấm lần hai khi đang gửi bị bỏ qua).
-// Tắt món còn hàng ADM đang về thì hỏi trước (kèm khối cam); không còn gì đang về thì tắt luôn.
-export function GroupItemSwitch({ item, name, groupActive, hintId, refresh, notify }: Props) {
+// Ngừng/dùng lại một món (công tắc panel nhóm, panel món, nút thẻ lưới): ghi ngay, cập nhật lạc quan,
+// một request mỗi món (bấm lần hai khi đang gửi bị bỏ qua). Tắt món còn hàng ADM đang về thì hỏi trước
+// (kèm khối cam W24); lỗi tải hàng đang về thì vẫn hỏi (hộp thường); không còn gì đang về thì tắt luôn.
+// Nhóm đã ngừng → khóa (tắt), bật lại nhóm mới đổi được từng món.
+export function useItemActive({ item, name, groupActive, refresh, notify }: ItemActiveArgs) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const confirm = useConfirm();
@@ -35,7 +35,7 @@ export function GroupItemSwitch({ item, name, groupActive, hintId, refresh, noti
   };
 
   const send = async (active: boolean) => {
-    if (busy.current) return;
+    if (busy.current || !groupActive) return;
     busy.current = true;
     setOptimistic(active);
     setError(null);
@@ -55,25 +55,6 @@ export function GroupItemSwitch({ item, name, groupActive, hintId, refresh, noti
   };
 
   const checked = groupActive && (optimistic ?? item.active);
-  const reason = groupActive ? null : item.active ? 'byGroup' : 'byItem';
-  return (
-    <>
-      <span className="gp-row__state">
-        {reason && <span className="tag tag--outline">{t(`catalog.categories.${reason}`)}</span>}
-        <Switch
-          checked={checked}
-          label={name}
-          text={t(checked ? 'catalog.categories.itemActive' : 'catalog.categories.itemInactive')}
-          disabled={!groupActive}
-          describedBy={groupActive ? undefined : hintId}
-          onChange={(next) => void send(next)}
-        />
-      </span>
-      {error && (
-        <span className="gp-row__error" role="alert">
-          {error}
-        </span>
-      )}
-    </>
-  );
+  const reason: 'byGroup' | 'byItem' | null = groupActive ? null : item.active ? 'byGroup' : 'byItem';
+  return { checked, locked: !groupActive, reason, error, send };
 }

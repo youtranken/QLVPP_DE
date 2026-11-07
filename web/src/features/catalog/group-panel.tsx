@@ -13,7 +13,7 @@ import { Switch } from '@/ui/switch';
 import type { Tone } from '@/lib/group-tone';
 import { useUnitNames } from '@/features/units/units.api';
 import { categoryLabel, type AdminItem, type Category } from './catalog.api';
-import { GroupItemSwitch } from './group-item-switch';
+import { ItemActiveSwitch } from './item-active-switch';
 
 const SEARCH_FROM = 13;
 const UNDO_MS = 5000;
@@ -97,7 +97,7 @@ export function GroupPanel({ group, tone, items, loading, loadError, onRetry, bu
                     <span className="gp-row__name">{name}</span>
                     <small className="gp-row__unit">{unitName(item.unit)}</small>
                   </span>
-                  <GroupItemSwitch item={item} name={name} groupActive={group.active} hintId={hintId} refresh={refresh} notify={toast.show} />
+                  <ItemActiveSwitch item={item} name={name} groupActive={group.active} hintId={hintId} refresh={refresh} notify={toast.show} />
                 </li>
               );
             })}

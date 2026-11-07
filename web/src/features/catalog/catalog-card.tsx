@@ -1,10 +1,13 @@
-import type { ChangeEvent } from 'react';
+import { useId, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRequestFormat } from '@/features/request/request-format';
 import { useUnitNames } from '@/features/units/units.api';
 import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
+import { useToast } from '@/ui/toast-context';
+import { useRefreshCatalog } from './catalog.api';
 import type { CatalogRow } from './catalog-rows';
+import { useItemActive } from './use-item-active';
 import { useCardUpload } from './use-card-upload';
 
 function UploadButton({ id, name }: { id: string; name: string }) {
@@ -40,7 +43,48 @@ function UploadButton({ id, name }: { id: string; name: string }) {
   );
 }
 
-export function CatalogCard({ row, groupName, open = false, onEdit }: { row: CatalogRow; groupName: string; open?: boolean; onEdit: (id: string) => void }) {
+// Nút "Tạm ngưng" (đỏ) / "Dùng lại" trên thẻ: cùng hành vi công tắc món trong panel nhóm (W24, khóa khi nhóm ngừng, toast Hoàn tác)
+function ActiveButton({ row, name, groupActive }: { row: CatalogRow; name: string; groupActive: boolean }) {
+  const { t } = useTranslation();
+  const refresh = useRefreshCatalog();
+  const toast = useToast();
+  const hintId = useId();
+  const { checked, locked, error, send } = useItemActive({ item: row, name, groupActive, refresh, notify: toast.show });
+  return (
+    <>
+      <button
+        type="button"
+        className={checked ? 'btn btn--sm btn--danger' : 'btn btn--sm'}
+        aria-label={t(checked ? 'catalog.grid.pauseFor' : 'catalog.grid.reactivateFor', { name })}
+        aria-describedby={locked ? hintId : undefined}
+        disabled={locked}
+        onClick={() => void send(!checked)}
+      >
+        {t(checked ? 'catalog.grid.pause' : 'catalog.categories.reactivate')}
+      </button>
+      {locked && (
+        <small id={hintId} className="ct-card__hint">
+          {t('catalog.categories.enableGroupFirst')}
+        </small>
+      )}
+      {error && (
+        <span role="alert" className="ct-card__error-text ct-card__active-error">
+          {error}
+        </span>
+      )}
+    </>
+  );
+}
+
+interface CardProps {
+  row: CatalogRow;
+  groupName: string;
+  groupActive: boolean;
+  open?: boolean;
+  onEdit: (id: string) => void;
+}
+
+export function CatalogCard({ row, groupName, groupActive, open = false, onEdit }: CardProps) {
   const { t } = useTranslation();
   const unitName = useUnitNames();
   const name = useRequestFormat().name(row);
@@ -59,12 +103,17 @@ export function CatalogCard({ row, groupName, open = false, onEdit }: { row: Cat
       </div>
       <div className="ct-card__body">
         <h3 className="ct-card__name">{name}</h3>
+        {row.inactive_reason === 'item' && <span className="tag tag--outline ct-card__tag">{t('catalog.categories.byItem')}</span>}
+        {row.inactive_reason === 'group' && <span className="tag tag--warn ct-card__tag">{t('catalog.categories.byGroup')}</span>}
         <p className="ct-card__meta">{meta}</p>
         <p className="ct-card__stock">{t('catalog.card.stock', { n: row.stock_qty })}</p>
       </div>
-      <button type="button" className="btn btn--sm ct-card__edit" aria-label={t('catalog.page.editLabel', { name })} onClick={() => onEdit(row.id)}>
-        {t('catalog.page.edit')}
-      </button>
+      <div className="ct-card__actions">
+        <button type="button" className="btn btn--sm" aria-label={t('catalog.page.editLabel', { name })} onClick={() => onEdit(row.id)}>
+          {t('catalog.page.edit')}
+        </button>
+        <ActiveButton row={row} name={name} groupActive={groupActive} />
+      </div>
     </article>
   );
 }

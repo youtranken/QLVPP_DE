@@ -1,12 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { jsonResponse, renderWithI18n, screen, userEvent, waitFor } from '@/test/test-utils';
+import { jsonResponse, renderWithI18n, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { makeMe } from '@/test/fixtures-me';
 import { MeContext } from '@/lib/me';
 import { compressImage } from '@/lib/image-compress';
+import { ConfirmProvider } from '@/ui/confirm-provider';
 import { ToastProvider } from '@/ui/toast-provider';
-import { CATEGORIES, PAPER, PEN, PENCIL } from './catalog-fixtures';
+import { adminItem, CATEGORIES, PAPER, PEN, PENCIL } from './catalog-fixtures';
 import { memberItem } from '@/test/fixtures-request';
 import { ItemCard } from '@/features/request/item-card';
 import { CatalogCard } from './catalog-card';
@@ -29,13 +30,15 @@ function stub(reply: (url: string, init: RequestInit) => Response | undefined = 
 }
 const patches = (f: ReturnType<typeof stub>) => f.mock.calls.filter((c) => (c[1] as RequestInit | undefined)?.method === 'PATCH');
 
-function renderCard(item = PAPER, onEdit = vi.fn()) {
+function renderCard(item = PAPER, onEdit = vi.fn(), groupActive = true) {
   renderWithI18n(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <MeContext.Provider value={makeMe('admin')}>
         <MemoryRouter>
           <ToastProvider>
-            <CatalogCard row={rowOf(item)} groupName="Giấy & sổ" onEdit={onEdit} />
+            <ConfirmProvider>
+              <CatalogCard row={rowOf(item)} groupName="Giấy & sổ" groupActive={groupActive} onEdit={onEdit} />
+            </ConfirmProvider>
           </ToastProvider>
         </MemoryRouter>
       </MeContext.Provider>
@@ -158,5 +161,67 @@ describe('Tải ảnh lên ở thẻ', () => {
     await userEvent.upload(screen.getByLabelText(UPLOAD), new File([new Uint8Array([0])], 'IMG.HEIC', { type: 'image/heic' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Chọn ảnh JPG, PNG hoặc WebP');
     expect(f.mock.calls.map((c) => c[0])).not.toContain('/api/files');
+  });
+});
+
+// Ngừng/Dùng lại ngay trên thẻ lưới: cùng hành vi công tắc món trong panel nhóm/panel món
+describe('Ngừng / Dùng lại ở thẻ', () => {
+  const bodies = (f: ReturnType<typeof stub>) => patches(f).map((c) => JSON.parse(String((c[1] as RequestInit).body)) as unknown);
+
+  it('món đang dùng: nút đỏ "Tạm ngưng" ngay cạnh "Sửa", không nhãn ngừng; bấm (không còn hàng đang về) → PATCH {active:false} không hỏi, toast "Đã ngừng …"', async () => {
+    const f = stub();
+    const onEdit = renderCard(PEN);
+    expect(screen.queryByText('Ngừng riêng')).toBeNull();
+    const stop = screen.getByRole('button', { name: 'Tạm ngưng Bút bi xanh' });
+    expect(stop).toHaveTextContent('Tạm ngưng');
+    expect(stop).toHaveClass('btn--danger');
+    expect(screen.getByRole('button', { name: 'Sửa Bút bi xanh' }).nextElementSibling).toBe(stop);
+    await userEvent.click(stop);
+    await waitFor(() => expect(bodies(f)).toEqual([{ active: false }]));
+    expect(await screen.findByText('Đã ngừng Bút bi xanh')).toBeInTheDocument();
+    expect(onEdit).not.toHaveBeenCalled();
+  });
+
+  it('món ngừng riêng: nhãn "Ngừng riêng", nút "Dùng lại" → PATCH {active:true}', async () => {
+    const f = stub();
+    renderCard(adminItem({ ...PEN, active: false, usable: false, inactive_reason: 'item' }));
+    expect(screen.getByText('Ngừng riêng')).toBeInTheDocument();
+    const back = screen.getByRole('button', { name: 'Dùng lại Bút bi xanh' });
+    expect(back).toHaveTextContent('Dùng lại');
+    expect(back).not.toHaveClass('btn--danger');
+    await userEvent.click(back);
+    await waitFor(() => expect(bodies(f)).toEqual([{ active: true }]));
+  });
+
+  it('nhóm đã ngừng: nhãn "Ngừng theo nhóm", nút vô hiệu kèm gợi ý hiện rõ "Bật lại nhóm để đổi từng món"', () => {
+    stub();
+    renderCard(adminItem({ ...PEN, category_id: 'c-old', usable: false, inactive_reason: 'group' }), vi.fn(), false);
+    expect(screen.getByText('Ngừng theo nhóm')).toBeInTheDocument();
+    const btn = screen.getByRole('button', { name: 'Dùng lại Bút bi xanh' });
+    expect(btn).toBeDisabled();
+    expect(btn).toHaveAccessibleDescription('Bật lại nhóm để đổi từng món');
+    expect(screen.getByText('Bật lại nhóm để đổi từng món')).not.toHaveClass('sr-only');
+  });
+
+  it('W24: còn hàng ADM đang về → hỏi "Ngừng Bút bi xanh?" kèm khối cam; Quay lại → không PATCH', async () => {
+    const f = stub((url) => (url.endsWith('/pending-arrival') ? jsonResponse(200, { remaining: 3, unit: 'cay', snapshot_at: '2026-11-03T02:15:00.000Z' }) : undefined));
+    renderCard(PEN);
+    await userEvent.click(screen.getByRole('button', { name: 'Tạm ngưng Bút bi xanh' }));
+    const ask = await screen.findByRole('dialog', { name: 'Ngừng Bút bi xanh?' });
+    expect(within(ask).getByRole('note')).toHaveTextContent(/đang chờ ADM giao 3 cây/);
+    await userEvent.click(within(ask).getByRole('button', { name: 'Quay lại' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Ngừng Bút bi xanh?' })).toBeNull());
+    expect(patches(f)).toHaveLength(0);
+  });
+
+  it('lỗi tải hàng đang về → vẫn hỏi (hộp thường, không khối cam); Ngừng → PATCH', async () => {
+    const f = stub((url) => (url.endsWith('/pending-arrival') ? jsonResponse(500, { code: 'X' }) : undefined));
+    renderCard(PEN);
+    await userEvent.click(screen.getByRole('button', { name: 'Tạm ngưng Bút bi xanh' }));
+    const ask = await screen.findByRole('dialog', { name: 'Ngừng Bút bi xanh?' });
+    expect(within(ask).queryByRole('note')).toBeNull();
+    expect(patches(f)).toHaveLength(0);
+    await userEvent.click(within(ask).getByRole('button', { name: 'Ngừng' }));
+    await waitFor(() => expect(bodies(f)).toEqual([{ active: false }]));
   });
 });
