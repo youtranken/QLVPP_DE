@@ -5,10 +5,10 @@ import { IconCart, IconHistory, IconUser } from '@/ui/icons';
 const ITEMS = [
   { to: '/', key: 'nav.register', Icon: IconCart },
   { to: '/history', key: 'nav.history', Icon: IconHistory },
-  { to: '/me', key: 'nav.me', Icon: IconUser },
 ];
 
-export function BottomNav() {
+// "Tôi" không đổi trang: mở sheet tài khoản (ngôn ngữ, đăng xuất)
+export function BottomNav({ accountOpen, onAccount }: { accountOpen: boolean; onAccount: () => void }) {
   const { t } = useTranslation();
   return (
     <nav className="bottom-nav" aria-label={t('nav.main')}>
@@ -18,6 +18,10 @@ export function BottomNav() {
           <span>{t(key)}</span>
         </NavLink>
       ))}
+      <button type="button" aria-haspopup="dialog" aria-expanded={accountOpen} onClick={onAccount}>
+        <IconUser />
+        <span>{t('nav.me')}</span>
+      </button>
     </nav>
   );
 }

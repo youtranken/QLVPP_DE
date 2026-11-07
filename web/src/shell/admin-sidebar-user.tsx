@@ -1,9 +1,9 @@
-import { useEffect, useId, useRef, useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { logout } from '@/lib/auth-actions';
 import { initialsOf } from '@/lib/initials';
+import { usePopover } from '@/lib/use-popover';
 import { ADMIN_TABLET_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { Icon } from '@/ui/icon';
@@ -41,31 +41,6 @@ function LogoutButton({ iconOnly = false }: { iconOnly?: boolean }) {
       )}
     </>
   );
-}
-
-function usePopover() {
-  const [open, setOpen] = useState(false);
-  const box = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
-  const panel = useRef<HTMLDivElement>(null);
-  const id = useId();
-  useEffect(() => {
-    if (!open) return;
-    panel.current?.querySelector<HTMLElement>('[aria-checked="true"], button')?.focus();
-    const onPointer = (e: PointerEvent) => {
-      // Chuông nằm trong cùng khối nhưng không thuộc hộp này: bấm chuông cũng là bấm ra ngoài
-      const t = e.target as Node;
-      if (!panel.current?.contains(t) && !trigger.current?.contains(t)) setOpen(false);
-    };
-    document.addEventListener('pointerdown', onPointer);
-    return () => document.removeEventListener('pointerdown', onPointer);
-  }, [open]);
-  const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key !== 'Escape' || !open) return;
-    setOpen(false);
-    trigger.current?.focus();
-  };
-  return { open, setOpen, box, trigger, panel, id, onKeyDown };
 }
 
 // Máy tính bảng: cột 72 chỉ còn avatar, bấm mới hiện đổi ngôn ngữ + đăng xuất.

@@ -224,14 +224,16 @@ describe('RequestPage — kỳ trước đang giao, rời trang', () => {
     await waitFor(() => expect(location()).toBe('/history'));
   });
 
-  it('không có thay đổi → bấm "Tôi" đi thẳng, không hỏi', async () => {
+  it('có thay đổi chưa lưu → bấm "Tôi" mở hộp tài khoản, không đổi trang, không hỏi rời trang', async () => {
     mockViewport(390);
     stubRequestApi();
     renderApp(makeMe('member'), '/');
     await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh');
-    await userEvent.click(screen.getByRole('link', { name: /Tôi/ }));
-    await waitFor(() => expect(location()).toBe('/me'));
-    expect(screen.queryByRole('dialog')).toBeNull();
+    await userEvent.click(within(grid()).getByRole('button', { name: `Thêm vào phiếu: ${PEN.name}` }));
+    await userEvent.click(screen.getByRole('button', { name: /Tôi/ }));
+    expect(await screen.findByRole('dialog', { name: 'Tài khoản' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Rời trang khi chưa lưu?' })).toBeNull();
+    expect(location()).toBe('/');
   });
 });
 

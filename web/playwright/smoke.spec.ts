@@ -5,32 +5,30 @@ import { asRole, expectNoContrastViolations, isMobile, shot } from './helpers';
 test.describe('E0-S9 khung nhân viên (dev-identity member)', () => {
   asRole('member');
 
-  test('E0-S9 member: 390 px thanh dưới 3 mục, Lịch sử/Tôi trong 1 chạm; 1280 px tab trên', async ({ page }, info) => {
+  test('E0-S9 member: 390 px thanh dưới 3 mục (Tôi mở sheet tài khoản), Lịch sử/Tôi trong 1 chạm; 1280 px tab trên, tên ở góc phải mở hộp tài khoản', async ({ page }, info) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1, name: /^Đăng ký văn phòng phẩm tháng \d+$/ })).toBeVisible();
     const bottom = page.getByRole('navigation', { name: 'Điều hướng chính' });
     if (isMobile(info)) {
-      await expect(bottom.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử', 'Tôi']);
+      await expect(bottom.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử']);
+      await expect(bottom.getByRole('button', { name: 'Tôi' })).toBeVisible();
       await expect(page.getByRole('navigation', { name: 'Chuyển trang' })).toHaveCount(0);
       await expectNoContrastViolations(page);
       await shot(page, info, 'member-home');
       await bottom.getByRole('link', { name: 'Lịch sử' }).tap();
       await expect(page.getByRole('heading', { level: 1, name: 'Lịch sử' })).toBeVisible();
       await expectNoContrastViolations(page);
-      await bottom.getByRole('link', { name: 'Tôi' }).tap();
+      await bottom.getByRole('button', { name: 'Tôi' }).tap();
     } else {
       await expect(bottom).toHaveCount(0);
-      await expect(page.getByRole('navigation', { name: 'Chuyển trang' }).getByRole('link')).toHaveText([
-        'Đăng ký',
-        'Lịch sử',
-        'Tôi',
-      ]);
+      await expect(page.getByRole('navigation', { name: 'Chuyển trang' }).getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử']);
       await shot(page, info, 'member-home');
-      await page.getByRole('link', { name: 'Tôi' }).click();
+      await page.getByRole('button', { name: /^Mở tài khoản của / }).click();
     }
-    await expect(page.getByRole('heading', { level: 1, name: 'Tôi' })).toBeVisible();
-    await expect(page.getByText('Nhân viên', { exact: true })).toBeVisible();
-    await expect(page.getByText('Dữ liệu từ PMH ID, không sửa trong app')).toBeVisible();
+    const account = page.getByRole('dialog', { name: 'Tài khoản' });
+    await expect(account).toBeVisible();
+    await expect(account.getByText(/Nhân viên$/)).toBeVisible();
+    await expect(account.getByText('Dữ liệu từ PMH ID, không sửa trong app.')).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'member-me');
   });
@@ -40,10 +38,11 @@ test.describe('E0-S9 khung nhân viên (dev-identity member)', () => {
     const tabs = page.getByRole('navigation', { name: 'Chuyển trang' });
     await page.setViewportSize({ width: 900, height: 800 });
     await page.goto('/');
-    await expect(bottom.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử', 'Tôi']);
+    await expect(bottom.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử']);
+    await expect(bottom.getByRole('button', { name: 'Tôi' })).toBeVisible();
     await expect(tabs).toHaveCount(0);
     await page.setViewportSize({ width: 901, height: 800 });
-    await expect(tabs.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử', 'Tôi']);
+    await expect(tabs.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử']);
     await expect(bottom).toHaveCount(0);
   });
 

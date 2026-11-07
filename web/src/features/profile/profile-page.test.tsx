@@ -21,10 +21,9 @@ describe('Trang Tôi', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Tôi' })).toBeInTheDocument();
     expect(screen.getByText('Nguyễn Văn An')).toBeInTheDocument();
     expect(screen.getByText('an.nguyen@pmh.com.vn')).toBeInTheDocument();
-    expect(screen.getByText('Phòng Công trình')).toBeInTheDocument();
+    expect(screen.getByText('Phòng Công trình · Nhân viên')).toBeInTheDocument();
     expect(screen.getByText('NV0231')).toBeInTheDocument();
-    expect(screen.getByText('Nhân viên')).toBeInTheDocument();
-    expect(screen.getByText('Dữ liệu từ PMH ID, không sửa trong app')).toBeInTheDocument();
+    expect(screen.getByText('Dữ liệu từ PMH ID, không sửa trong app.')).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 
@@ -65,5 +64,14 @@ describe('Trang Tôi', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Chưa đăng xuất được — thử lại.');
     expect(navigateTo).not.toHaveBeenCalled();
     expect(button).toBeEnabled();
+  });
+
+  it('/me vẫn mở được (liên kết cũ) và hiện cùng nội dung AccountContent: Email, Mã nhân viên, Ngôn ngữ, Đăng xuất danger', () => {
+    mockViewport(1280);
+    renderApp(makeMe('member'), '/me');
+    expect(screen.getByText('Email')).toBeInTheDocument();
+    expect(screen.getByText('Mã nhân viên')).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Đăng xuất' })).toHaveClass('btn--danger');
   });
 });

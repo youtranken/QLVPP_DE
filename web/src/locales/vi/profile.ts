@@ -1,13 +1,11 @@
 const profile = {
   profile: {
     title: 'Tôi',
-    account: 'Tài khoản',
-    fullName: 'Họ tên',
+    menu: 'Tài khoản',
+    openMenu: 'Mở tài khoản của {{name}}',
     email: 'Email',
-    department: 'Phòng ban',
     employeeCode: 'Mã nhân viên',
-    dataFromPmhId: 'Dữ liệu từ PMH ID, không sửa trong app',
-    role: 'Vai trò',
+    dataFromPmhId: 'Dữ liệu từ PMH ID, không sửa trong app.',
   },
 };
 

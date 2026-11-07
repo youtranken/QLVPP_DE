@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -12,9 +12,26 @@ describe('MemberShell', () => {
     renderApp(makeMe('member'), '/');
     const nav = screen.getByRole('navigation', { name: 'Điều hướng chính' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((a) => a.textContent)).toEqual(['Đăng ký', 'Lịch sử', 'Tôi']);
-    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/', '/history', '/me']);
+    expect(links.map((a) => a.textContent)).toEqual(['Đăng ký', 'Lịch sử']);
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/', '/history']);
+    expect(within(nav).getByRole('button', { name: 'Tôi' })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Chuyển trang' })).toBeNull();
+  });
+
+  it('390 px: "Tôi" là nút mở sheet "Tài khoản" (không đổi URL); Esc đóng và trả focus về nút "Tôi"', async () => {
+    mockViewport(390);
+    renderApp(makeMe('member'), '/');
+    const nav = screen.getByRole('navigation', { name: 'Điều hướng chính' });
+    const me = within(nav).getByRole('button', { name: 'Tôi' });
+    await userEvent.click(me);
+    const sheet = screen.getByRole('dialog', { name: 'Tài khoản' });
+    expect(sheet).toHaveClass('sheet--bottom');
+    expect(screen.getByTestId('location')).toHaveTextContent('/');
+    expect(within(sheet).getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
+    expect(within(sheet).getByRole('button', { name: 'Đăng xuất' })).toHaveClass('btn--danger');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(me).toHaveFocus();
   });
 
   it('1280 px: banner full-bleed bọc nội dung trong .m-top__in (nền đặc nằm ở banner, nội dung giữ max 1440)', () => {
@@ -27,9 +44,38 @@ describe('MemberShell', () => {
     mockViewport(1280);
     renderApp(makeMe('member'), '/');
     const tabs = screen.getByRole('navigation', { name: 'Chuyển trang' });
-    expect(within(tabs).getAllByRole('link').map((a) => a.textContent)).toEqual(['Đăng ký', 'Lịch sử', 'Tôi']);
+    expect(within(tabs).getAllByRole('link').map((a) => a.textContent)).toEqual(['Đăng ký', 'Lịch sử']);
     expect(screen.queryByRole('navigation', { name: 'Điều hướng chính' })).toBeNull();
-    expect(screen.getByRole('link', { name: 'Tôi' })).toHaveAttribute('href', '/me');
+    expect(screen.queryByRole('link', { name: 'Tôi' })).toBeNull();
+  });
+
+  it('1280 px: bấm tên ở góc phải mở hộp "Tài khoản" có ngôn ngữ và "Đăng xuất"', async () => {
+    mockViewport(1280);
+    renderApp(makeMe('member'), '/');
+    const btn = screen.getByRole('button', { name: 'Mở tài khoản của Nguyễn Văn An' });
+    expect(btn).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(btn);
+    expect(btn).toHaveAttribute('aria-expanded', 'true');
+    const box = screen.getByRole('dialog', { name: 'Tài khoản' });
+    expect(within(box).getByText('Phòng Công trình · Nhân viên')).toBeInTheDocument();
+    expect(within(box).getByText('an.nguyen@pmh.com.vn')).toBeInTheDocument();
+    expect(within(box).getByText('Dữ liệu từ PMH ID, không sửa trong app.')).toBeInTheDocument();
+    expect(within(box).getByRole('button', { name: 'Đăng xuất' })).toHaveClass('btn--danger');
+    expect(within(box).getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
+  });
+
+  it('popover: Esc đóng và trả focus về nút tên; bấm ra ngoài đóng', async () => {
+    mockViewport(1280);
+    renderApp(makeMe('member'), '/');
+    const btn = screen.getByRole('button', { name: 'Mở tài khoản của Nguyễn Văn An' });
+    await userEvent.click(btn);
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog', { name: 'Tài khoản' })).toBeNull();
+    expect(btn).toHaveFocus();
+    await userEvent.click(btn);
+    expect(screen.getByRole('dialog', { name: 'Tài khoản' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('main'));
+    expect(screen.queryByRole('dialog', { name: 'Tài khoản' })).toBeNull();
   });
 
   it.each([
@@ -57,7 +103,6 @@ describe('MemberShell', () => {
     const tabs = screen.getByRole('navigation', { name: 'Chuyển trang' });
     expect(within(tabs).getByRole('link', { name: 'Đăng ký' })).toHaveAttribute('aria-current', 'page');
     expect(within(tabs).getByRole('link', { name: 'Lịch sử' })).not.toHaveAttribute('aria-current');
-    expect(within(tabs).getByRole('link', { name: 'Tôi' })).not.toHaveAttribute('aria-current');
   });
 
   it('1280 px: khối avatar hiện chữ đầu, tên và phòng; 390 px chỉ còn chữ đầu', () => {
@@ -111,7 +156,8 @@ describe('MemberShell', () => {
     expect(screen.getByRole('banner')).toContainElement(screen.getByRole('button', { name: /^Thông báo, \d+ chưa đọc$/ }));
     if (width === 390) {
       const nav = screen.getByRole('navigation', { name: 'Điều hướng chính' });
-      expect(within(nav).getAllByRole('link')).toHaveLength(3);
+      expect(within(nav).getAllByRole('link')).toHaveLength(2);
+      expect(within(nav).getAllByRole('button')).toHaveLength(1);
     }
   });
 });

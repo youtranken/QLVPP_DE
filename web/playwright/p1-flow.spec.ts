@@ -98,15 +98,15 @@ async function memberChecks(page: Page, info: TestInfo, itemName: string, imageI
   await page.goto('/');
   const bottom = page.getByRole('navigation', { name: 'Điều hướng chính' });
   if (isMobile(info)) {
-    await expect(bottom.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử', 'Tôi']);
-    await bottom.getByRole('link', { name: 'Tôi' }).click();
+    await expect(bottom.getByRole('link')).toHaveText(['Đăng ký', 'Lịch sử']);
+    await bottom.getByRole('button', { name: 'Tôi' }).click();
   } else {
     await expect(bottom).toHaveCount(0);
-    await page.getByRole('link', { name: 'Tôi' }).click();
+    await page.getByRole('button', { name: /^Mở tài khoản của / }).click();
   }
-  await expect(page.getByRole('heading', { level: 1, name: 'Tôi' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Tài khoản' })).toBeVisible();
   await page.getByRole('radio', { name: 'English' }).click();
-  await expect(page.getByRole('heading', { level: 1, name: 'Me' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Account' })).toBeVisible();
   if (isMobile(info)) await expectNoContrastViolations(page);
   await shot(page, info, 'p1-member-me-en');
 

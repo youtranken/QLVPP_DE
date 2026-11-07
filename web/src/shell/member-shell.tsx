@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { initialsOf } from '@/lib/initials';
 import { useMe } from '@/lib/me';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { NotificationBell } from '@/features/notifications/notification-bell';
+import { AccountMenu } from '@/shell/account-menu';
 import { BottomNav } from '@/shell/bottom-nav';
 import { useLockTimer } from '@/features/request/use-lock-timer';
 import { useShellFont } from '@/shell/use-shell-font';
@@ -17,8 +19,21 @@ export function MemberShell() {
   const { t } = useTranslation();
   const me = useMe();
   const narrow = useMediaQuery(NARROW_QUERY);
+  const [accountOpen, setAccountOpen] = useState(false);
   useShellFont('member');
   useLockTimer();
+
+  const avatar = (
+    <>
+      <span className="m-avatar__ini" aria-hidden="true">{initials(me.fullName, me.sub)}</span>
+      {!narrow && (
+        <span className="m-avatar__who">
+          <b>{me.fullName ?? me.sub}</b>
+          {me.department && <small>{me.department}</small>}
+        </span>
+      )}
+    </>
+  );
 
   return (
     <div className={`m-shell${narrow ? ' is-narrow' : ''}`}>
@@ -37,26 +52,31 @@ export function MemberShell() {
                 {t('nav.register')}
               </NavLink>
               <NavLink to="/history">{t('nav.history')}</NavLink>
-              <NavLink to="/me">{t('nav.me')}</NavLink>
             </nav>
           )}
           <span className="sp" />
           <NotificationBell />
-          <div className="m-avatar">
-            <span className="m-avatar__ini" aria-hidden="true">{initials(me.fullName, me.sub)}</span>
-            {!narrow && (
-              <span className="m-avatar__who">
-                <b>{me.fullName ?? me.sub}</b>
-                {me.department && <small>{me.department}</small>}
-              </span>
-            )}
-          </div>
+          {narrow ? (
+            <div className="m-avatar">{avatar}</div>
+          ) : (
+            <AccountMenu
+              variant="popover"
+              open={accountOpen}
+              onOpenChange={setAccountOpen}
+              trigger={(p) => (
+                <button type="button" className="m-avatar" aria-label={t('profile.openMenu', { name: me.fullName ?? me.sub })} {...p}>
+                  {avatar}
+                </button>
+              )}
+            />
+          )}
         </div>
       </header>
       <main id="main">
         <Outlet />
       </main>
-      {narrow && <BottomNav />}
+      {narrow && <BottomNav accountOpen={accountOpen} onAccount={() => setAccountOpen(true)} />}
+      {narrow && <AccountMenu variant="sheet" open={accountOpen} onOpenChange={setAccountOpen} />}
     </div>
   );
 }
