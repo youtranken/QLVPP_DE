@@ -39,11 +39,11 @@ function Blocks({ f }: { f: ItemForm }) {
   );
 }
 
-// Toast nằm trong panel (toast chung ngoài hộp bị ẩn khỏi trình đọc màn hình và nút Hoàn tác không bấm tới)
+// Toast nằm trong panel (toast chung ngoài hộp bị ẩn khỏi trình đọc màn hình)
 function ActiveToggle({ item, groupActive, saving, notify }: { item: AdminItem; groupActive: boolean; saving: boolean; notify: (toast: ToastSpec) => void }) {
   const { t } = useTranslation();
   const refresh = useRefreshCatalog();
-  const { checked, locked, send } = useItemActive({ item, name: item.name, groupActive, refresh, notify });
+  const { checked, locked, send } = useItemActive({ item, name: item.name, groupActive, refresh, notify, confirmEach: true });
   const hintId = useId();
   return (
     <>

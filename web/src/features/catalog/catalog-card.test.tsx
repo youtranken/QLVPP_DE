@@ -168,7 +168,7 @@ describe('Tải ảnh lên ở thẻ', () => {
 describe('Ngừng / Dùng lại ở thẻ', () => {
   const bodies = (f: ReturnType<typeof stub>) => patches(f).map((c) => JSON.parse(String((c[1] as RequestInit).body)) as unknown);
 
-  it('món đang dùng: nút "Tạm ngưng" trung tính (btn--quiet-danger, không btn--danger) cạnh "Sửa"; bấm → PATCH {active:false} → toast "Đã tạm ngưng Bút bi xanh" có "Hoàn tác"; Hoàn tác → PATCH {active:true}', async () => {
+  it('món đang dùng: nút "Tạm ngưng" trung tính (btn--quiet-danger, không btn--danger) cạnh "Sửa"; bấm → hỏi "Tạm ngưng Bút bi xanh?" → xác nhận → PATCH {active:false} → toast thường, không "Hoàn tác"', async () => {
     const f = stub();
     const onEdit = renderCard(PEN);
     const stop = screen.getByRole('button', { name: 'Tạm ngưng Bút bi xanh' });
@@ -177,14 +177,17 @@ describe('Ngừng / Dùng lại ở thẻ', () => {
     expect(stop).not.toHaveClass('btn--danger');
     expect(screen.getByRole('button', { name: 'Sửa Bút bi xanh' }).nextElementSibling).toBe(stop);
     await userEvent.click(stop);
+    const ask = await screen.findByRole('dialog', { name: 'Tạm ngưng Bút bi xanh?' });
+    expect(within(ask).getByText('Nhân viên vẫn thấy món nhưng không đặt thêm được. Phiếu đã lưu giữ nguyên.')).toBeInTheDocument();
+    expect(patches(f)).toHaveLength(0);
+    await userEvent.click(within(ask).getByRole('button', { name: 'Tạm ngưng' }));
     await waitFor(() => expect(bodies(f)).toEqual([{ active: false }]));
     expect(await screen.findByText('Đã tạm ngưng Bút bi xanh')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Hoàn tác' }));
-    await waitFor(() => expect(bodies(f)).toEqual([{ active: false }, { active: true }]));
+    expect(screen.queryByRole('button', { name: 'Hoàn tác' })).toBeNull();
     expect(onEdit).not.toHaveBeenCalled();
   });
 
-  it('món tạm ngưng riêng: con dấu "Tạm ngưng", không nhãn "Ngừng riêng", tên không gạch, nút "Dùng lại" → PATCH {active:true}', async () => {
+  it('món tạm ngưng riêng: con dấu "Tạm ngưng", không nhãn "Ngừng riêng", tên không gạch, nút "Dùng lại" → hỏi "Dùng lại Bút bi xanh?"; Quay lại không gửi; xác nhận → PATCH {active:true} + toast', async () => {
     const f = stub();
     renderCard(adminItem({ ...PEN, active: false, usable: false, inactive_reason: 'item' }));
     expect(screen.getByRole('img', { name: 'Tạm ngưng' })).toBeInTheDocument();
@@ -194,7 +197,16 @@ describe('Ngừng / Dùng lại ở thẻ', () => {
     expect(back).toHaveTextContent('Dùng lại');
     expect(back).not.toHaveClass('btn--quiet-danger');
     await userEvent.click(back);
+    let ask = await screen.findByRole('dialog', { name: 'Dùng lại Bút bi xanh?' });
+    expect(within(ask).getByText('Nhân viên đặt được món này trở lại từ kỳ đang mở.')).toBeInTheDocument();
+    await userEvent.click(within(ask).getByRole('button', { name: 'Quay lại' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(patches(f)).toHaveLength(0);
+    await userEvent.click(back);
+    ask = await screen.findByRole('dialog', { name: 'Dùng lại Bút bi xanh?' });
+    await userEvent.click(within(ask).getByRole('button', { name: 'Dùng lại' }));
     await waitFor(() => expect(bodies(f)).toEqual([{ active: true }]));
+    expect(await screen.findByText('Đã dùng lại Bút bi xanh')).toBeInTheDocument();
   });
 
   it('món trong nhóm tạm ngưng: con dấu, không nhãn "Ngừng theo nhóm", "Dùng lại" vô hiệu kèm gợi ý hiện rõ "Bật lại nhóm để đổi từng món"', () => {

@@ -283,7 +283,7 @@ describe('Panel Sửa sản phẩm — đầu, hai khối, chân (Nhóm 1 · m�
     expect(within(dialog).getByRole('heading', { level: 3, name: 'Đặt hàng' })).toBeInTheDocument();
   });
 
-  it('footer: "Tạm ngưng" (btn--quiet-danger) bên trái → PATCH {active:false} + toast "Hoàn tác"; "Xóa" cạnh đó; "Quay lại" và "Lưu" bên phải; thân không còn "Xóa món"', async () => {
+  it('footer: "Tạm ngưng" (btn--quiet-danger) bên trái → hỏi xác nhận → PATCH {active:false} + toast thường (không Hoàn tác); "Xóa" cạnh đó; "Quay lại" và "Lưu" bên phải; thân không còn "Xóa món"', async () => {
     const f = stubDrawerApi((_url, init) => (init.method === 'PATCH' ? jsonResponse(200, PEN) : undefined));
     renderDrawer({ item: PEN, nav });
     expect(screen.queryByRole('button', { name: 'Xóa món' })).toBeNull();
@@ -294,10 +294,12 @@ describe('Panel Sửa sản phẩm — đầu, hai khối, chân (Nhóm 1 · m�
     expect(screen.getByRole('button', { name: 'Quay lại' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Lưu' })).toHaveClass('btn--primary');
     await userEvent.click(pause);
+    const ask = await screen.findByRole('dialog', { name: 'Tạm ngưng Bút bi xanh?' });
+    expect(callsTo(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toHaveLength(0);
+    await userEvent.click(within(ask).getByRole('button', { name: 'Tạm ngưng' }));
     await vi.waitFor(() => expect(bodyOf(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toEqual({ active: false }));
     expect(await screen.findByText('Đã tạm ngưng Bút bi xanh')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Hoàn tác' }));
-    await vi.waitFor(() => expect(callsTo(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toHaveLength(2));
+    expect(screen.queryByRole('button', { name: 'Hoàn tác' })).toBeNull();
   });
 
   it('món tạm ngưng: đầu panel "Tạm ngưng" (đỏ); footer "Dùng lại"', () => {

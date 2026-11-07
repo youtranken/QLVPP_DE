@@ -69,6 +69,10 @@ describe('Danh mục — sửa tối đa/tháng tại chỗ (biên 1/999 vs 0/10
   });
 });
 
+async function confirmIn(title: string, ok: string) {
+  await userEvent.click(within(await screen.findByRole('dialog', { name: title })).getByRole('button', { name: ok }));
+}
+
 describe('Sản phẩm bảng — nút Tạm ngưng / Dùng lại (Nhóm 1 · mục 7)', () => {
   const byGroup = adminItem({ id: 'i-clip', name: 'Kẹp nhóm ngừng', category_id: 'c-old', usable: false, inactive_reason: 'group' });
   const withOld = [...ITEMS, byGroup];
@@ -92,14 +96,23 @@ describe('Sản phẩm bảng — nút Tạm ngưng / Dùng lại (Nhóm 1 · m�
     expect(screen.getByRole('button', { name: 'Thêm món vào nhóm Bút & viết' })).toBeInTheDocument();
   });
 
-  it('"Tạm ngưng Bút bi xanh" là nút trung tính btn--quiet-danger; bấm → PATCH {active:false} không hỏi → toast "Đã tạm ngưng" + "Hoàn tác" → PATCH {active:true}', async () => {
+  it('"Tạm ngưng Bút bi xanh" là nút trung tính btn--quiet-danger; bấm → hỏi "Tạm ngưng Bút bi xanh?" → xác nhận → PATCH {active:false} → toast thường, không "Hoàn tác"', async () => {
     const f = await openCatalog({ items: ITEMS });
     const stop = inRow('Bút bi xanh').getByRole('button', { name: 'Tạm ngưng Bút bi xanh' });
     expect(stop).toHaveClass('btn--quiet-danger');
     await userEvent.click(stop);
+    await confirmIn('Tạm ngưng Bút bi xanh?', 'Tạm ngưng');
     expect(await screen.findByText('Đã tạm ngưng Bút bi xanh')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Hoàn tác' }));
-    await vi.waitFor(() => expect(patchCalls(f)).toEqual([{ id: 'i-pen', body: { active: false } }, { id: 'i-pen', body: { active: true } }]));
+    expect(screen.queryByRole('button', { name: 'Hoàn tác' })).toBeNull();
+    expect(patchCalls(f)).toEqual([{ id: 'i-pen', body: { active: false } }]);
+  });
+
+  it('dòng "Dùng lại Bút xóa cũ" → hỏi "Dùng lại Bút xóa cũ?" → xác nhận → PATCH {active:true} → toast "Đã dùng lại Bút xóa cũ"', async () => {
+    const f = await openCatalog({ items: ITEMS });
+    await userEvent.click(inRow('Bút xóa cũ').getByRole('button', { name: 'Dùng lại Bút xóa cũ' }));
+    await confirmIn('Dùng lại Bút xóa cũ?', 'Dùng lại');
+    expect(await screen.findByText('Đã dùng lại Bút xóa cũ')).toBeInTheDocument();
+    expect(patchCalls(f)).toEqual([{ id: expect.any(String), body: { active: true } }]);
   });
 
   it('W24: Bút bi xanh đang chờ ADM giao 3 cây → hộp hỏi có khối cam; chờ 0 → tạm ngưng luôn', async () => {
@@ -110,6 +123,9 @@ describe('Sản phẩm bảng — nút Tạm ngưng / Dùng lại (Nhóm 1 · m�
     await userEvent.click(dialog.getByRole('button', { name: 'Tạm ngưng' }));
     await vi.waitFor(() => expect(patchCalls(f)).toEqual([{ id: 'i-pen', body: { active: false } }]));
     await userEvent.click(inRow('Giấy A4').getByRole('button', { name: 'Tạm ngưng Giấy A4' }));
+    const plain = within(await screen.findByRole('dialog', { name: 'Tạm ngưng Giấy A4?' }));
+    expect(plain.queryByRole('note')).toBeNull();
+    await userEvent.click(plain.getByRole('button', { name: 'Tạm ngưng' }));
     await vi.waitFor(() => expect(patchCalls(f)).toHaveLength(2));
   });
 
@@ -126,6 +142,7 @@ describe('Sản phẩm bảng — nút Tạm ngưng / Dùng lại (Nhóm 1 · m�
   it('tạm ngưng lỗi → câu lỗi ở hàng, không toast', async () => {
     await openCatalog({ items: ITEMS, patch: () => jsonResponse(404, { code: 'ITEM_NOT_FOUND', message: 'x' }) });
     await userEvent.click(inRow('Bút bi xanh').getByRole('button', { name: 'Tạm ngưng Bút bi xanh' }));
+    await confirmIn('Tạm ngưng Bút bi xanh?', 'Tạm ngưng');
     expect(await inRow('Bút bi xanh').findByText('Món này không còn — tải lại trang.')).toBeInTheDocument();
     expect(screen.queryByText('Đã tạm ngưng Bút bi xanh')).toBeNull();
   });

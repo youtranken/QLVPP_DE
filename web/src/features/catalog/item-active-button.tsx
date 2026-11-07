@@ -6,13 +6,13 @@ import type { CatalogRow } from './catalog-rows';
 import { useItemActive } from './use-item-active';
 
 // Nút "Tạm ngưng" (trung tính, đỏ khi rê/focus) / "Dùng lại" của thẻ lưới và dòng bảng: cùng hành vi công tắc món
-// trong panel nhóm (khóa khi nhóm ngừng, hỏi khi còn hàng đang về, toast Hoàn tác)
+// trong panel nhóm (khóa khi nhóm ngừng) nhưng luôn hỏi xác nhận cả hai chiều
 export function ItemActiveButton({ row, name, groupActive, quietHint = false }: { row: CatalogRow; name: string; groupActive: boolean; quietHint?: boolean }) {
   const { t } = useTranslation();
   const refresh = useRefreshCatalog();
   const toast = useToast();
   const hintId = useId();
-  const { checked, locked, error, send } = useItemActive({ item: row, name, groupActive, refresh, notify: toast.show });
+  const { checked, locked, error, send } = useItemActive({ item: row, name, groupActive, refresh, notify: toast.show, confirmEach: true });
   return (
     <>
       <button

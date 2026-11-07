@@ -13,13 +13,15 @@ export interface ItemActiveArgs {
   groupActive: boolean;
   refresh: () => Promise<unknown>;
   notify: (toast: ToastSpec) => void;
+  // Nút Tạm ngưng/Dùng lại ở trang Sản phẩm (thẻ, dòng, panel): luôn hỏi cả hai chiều, toast thường thay cho Hoàn tác
+  confirmEach?: boolean;
 }
 
 // Ngừng/dùng lại một món (công tắc panel nhóm, panel món, nút thẻ lưới): ghi ngay, cập nhật lạc quan,
 // một request mỗi món (bấm lần hai khi đang gửi bị bỏ qua). Tắt món còn hàng ADM đang về thì hỏi trước
 // (kèm khối cam W24); lỗi tải hàng đang về thì vẫn hỏi (hộp thường); không còn gì đang về thì tắt luôn.
 // Nhóm đã ngừng → khóa (tắt), bật lại nhóm mới đổi được từng món.
-export function useItemActive({ item, name, groupActive, refresh, notify }: ItemActiveArgs) {
+export function useItemActive({ item, name, groupActive, refresh, notify, confirmEach = false }: ItemActiveArgs) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const confirm = useConfirm();
@@ -30,20 +32,24 @@ export function useItemActive({ item, name, groupActive, refresh, notify }: Item
 
   const askStop = async () => {
     const { warning, unknown } = await pendingNote([{ id: item.id, name }], false);
-    if (!warning && !unknown) return true;
+    if (!warning && !unknown && !confirmEach) return true;
     return confirm({ title: t('catalog.list.deactivateTitle', { name }), message: t('catalog.list.deactivateBody'), confirmLabel: t('catalog.bulk.pause'), danger: true, warning });
   };
+  const askResume = () =>
+    !confirmEach || confirm({ title: t('catalog.list.activateTitle', { name }), message: t('catalog.list.activateBody'), confirmLabel: t('catalog.categories.reactivate') });
 
   const send = async (active: boolean) => {
     if (busy.current || !groupActive) return;
     busy.current = true;
-    setOptimistic(active);
+    if (!confirmEach) setOptimistic(active);
     setError(null);
     try {
-      if (!active && !(await askStop())) return;
+      if (!(await (active ? askResume() : askStop()))) return;
+      setOptimistic(active);
       await patchItem(item.id, { active }, csrfToken);
       await refresh();
-      if (!active) {
+      if (confirmEach) notify({ text: t(active ? 'catalog.categories.itemOn' : 'catalog.categories.itemOff', { name }), tone: 'ok' });
+      else if (!active) {
         notify({ text: t('catalog.categories.itemOff', { name }), tone: 'ok', action: { label: t('catalog.categories.undo'), onClick: () => void send(true) } });
       }
     } catch (e) {
