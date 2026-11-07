@@ -28,10 +28,15 @@ export class CategoriesService {
     private readonly audit: AuditWriterService,
   ) {}
 
+  // Member vẫn thấy món của nhóm ngừng (usable=false) nên cần nhãn nhóm đó; nhóm ngừng rỗng thì ẩn
   async list(includeInactive: boolean): Promise<CategoryRow[]> {
     const result = await this.db.execute<CategoryRow>(sql`
       SELECT ${CATEGORY_COLUMNS} FROM item_categories
       WHERE ${includeInactive} OR active
+         OR EXISTS (
+           SELECT 1 FROM items i
+           WHERE i.category_id = item_categories.id AND NOT i.admin_only
+         )
       ORDER BY sort_order, lower(name)
     `);
     return result.rows;

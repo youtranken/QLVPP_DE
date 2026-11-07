@@ -86,6 +86,35 @@ describe('nhóm món ngừng ẩn món trong nhóm (không sửa items.active)',
     expect(await usableOf(A, selfOff)).toBe(false);
   });
 
+  it('GET item-categories: member nhận nhóm ngừng (active=false) khi còn món không admin_only, nhóm ngừng rỗng thì không', async () => {
+    const own = (
+      await pool().query<{ id: string }>(
+        'INSERT INTO item_categories (name, active) VALUES ($1, false) RETURNING id',
+        [`e2e-catoff-own-${SUFFIX}`],
+      )
+    ).rows[0].id;
+    const catsOf = async () =>
+      (
+        (await as(http().get('/api/item-categories'), A, 'member').expect(200))
+          .body as { id: string; active: boolean }[]
+      ).find((c) => c.id === own);
+    expect(await catsOf()).toBeUndefined();
+    const id = await newItem({ max_qty: 10 });
+    await pool().query('UPDATE items SET category_id = $2 WHERE id = $1', [
+      id,
+      own,
+    ]);
+    expect(await catsOf()).toMatchObject({ active: false });
+    await pool().query('UPDATE items SET admin_only = true WHERE id = $1', [
+      id,
+    ]);
+    expect(await catsOf()).toBeUndefined();
+    await pool().query('UPDATE items SET category_id = NULL WHERE id = $1', [
+      id,
+    ]);
+    await pool().query('DELETE FROM item_categories WHERE id = $1', [own]);
+  });
+
   it('GET items có usable: include_inactive_ids và danh sách Hành chính trả món nhóm ngừng với active=true, usable=false; món thường usable=true', async () => {
     const on = await itemInCategory();
     const loose = await newItem();
