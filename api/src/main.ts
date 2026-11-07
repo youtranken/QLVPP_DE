@@ -13,6 +13,7 @@ import {
 } from './database/migration-runner';
 import { assertAuthEnvSafe } from './modules/auth/auth-env';
 import { assertLocalSaConfigured } from './modules/auth/local-sa-env';
+import { assertLocalTestAccountsSafe } from './modules/auth/local-test-accounts-env';
 
 function requiredPort(): number {
   const raw = process.env.PORT ?? '3000';
@@ -43,6 +44,7 @@ async function migrate(): Promise<void> {
 async function bootstrap(): Promise<void> {
   assertAuthEnvSafe(process.env);
   assertLocalSaConfigured(process.env);
+  assertLocalTestAccountsSafe(process.env);
   assertTrustProxyHops(process.env);
   throttlePerMin(process.env, 'THROTTLE_USER_PER_MIN');
   throttlePerMin(process.env, 'THROTTLE_IP_PER_MIN');

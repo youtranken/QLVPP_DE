@@ -12,6 +12,8 @@
 .login-head h2 { font-size: 22px; font-weight: 800; }
 .login-hint { font-size: 14px; color: var(--ink-2); font-weight: 600; line-height: 1.5; }
 .login-hint-form, .login-sa { display: grid; gap: 12px; }
+.login-test { display: grid; gap: 8px; border: 2px dashed var(--warn); background: var(--warn-soft); border-radius: 16px; padding: 16px; margin-top: 8px; }
+.login-test h3 { font-size: 16px; font-weight: 800; }
 .login-foot { border-top: 2px dashed var(--line); padding-top: 16px; margin-top: 8px; }
 @media (max-width: 760px) {
   .login-page { padding: 12px; align-items: start; }

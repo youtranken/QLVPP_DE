@@ -89,6 +89,8 @@ const admin: Messages<typeof vi> = {
         sa_login_failed: 'Fallback account sign-in failed',
         session_expired: 'Session expired',
         session_revoked: 'Session revoked',
+        test_login: 'Test account signed in (dev)',
+        test_login_failed: 'Test account sign-in failed (dev)',
         webhook_rejected: 'Webhook rejected',
       },
       catalog: { imported: 'Catalog imported from Excel' },

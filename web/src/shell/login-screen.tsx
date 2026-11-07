@@ -4,6 +4,7 @@ import { loginWithPmhId } from '@/lib/auth-actions';
 import { LanguageSwitch } from '@/ui/language-switch';
 import { ForbiddenScreen } from '@/shell/forbidden-screen';
 import { SaLoginForm } from '@/shell/sa-login-form';
+import { TestAccountsLogin } from '@/shell/test-accounts-login';
 
 function isForbiddenEntry(): boolean {
   const { pathname, search } = window.location;
@@ -85,6 +86,7 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
               {t('auth.hintToggle')}
             </button>
           )}
+          <TestAccountsLogin />
           <div className="login-foot">
             {saOpen ? (
               <SaLoginForm />

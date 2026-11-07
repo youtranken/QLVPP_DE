@@ -15,6 +15,8 @@ export const AUDIT_ACTIONS: readonly string[] = [
   'auth.sa_login_failed',
   'auth.session_expired',
   'auth.session_revoked',
+  'auth.test_login',
+  'auth.test_login_failed',
   'auth.webhook_rejected',
   'catalog.imported',
   'category.created',

@@ -42,3 +42,13 @@ describe('npm run sa:hash', () => {
     expect(verifyPassword('mat-khau-tty', hash)).toBe(true);
   }, 15000);
 });
+
+describe('npm run local-test:hash (tài khoản thử dev)', () => {
+  it('trỏ cùng script sa-hash → hash cùng thuật toán, dán được vào LOCAL_TEST_ACCOUNTS', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pkg = require('../../../package.json') as {
+      scripts: Record<string, string>;
+    };
+    expect(pkg.scripts['local-test:hash']).toBe(pkg.scripts['sa:hash']);
+  });
+});

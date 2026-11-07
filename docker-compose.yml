@@ -24,6 +24,8 @@ services:
       THROTTLE_USER_PER_MIN: ${THROTTLE_USER_PER_MIN:-}
       LOCAL_SA_USERNAME: ${LOCAL_SA_USERNAME:?LOCAL_SA_USERNAME bắt buộc trong .env}
       LOCAL_SA_PASSWORD_HASH: ${LOCAL_SA_PASSWORD_HASH:?LOCAL_SA_PASSWORD_HASH bắt buộc trong .env (scrypt.saltHex.hashHex)}
+      # Tài khoản thử CHỈ dev; prod để trống (api từ chối khởi động nếu có biến khi NODE_ENV=production)
+      LOCAL_TEST_ACCOUNTS: ${LOCAL_TEST_ACCOUNTS:-}
       FILES_DIR: /data/files
     volumes:
       - filesdata:/data/files

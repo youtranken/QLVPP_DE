@@ -54,6 +54,7 @@ function makeService(opts: {
     audit as never,
     users as never,
     systemConfig as never,
+    { findBySub: () => null } as never,
   );
   return { service, sessions, oidc, audit, users, userRow };
 }

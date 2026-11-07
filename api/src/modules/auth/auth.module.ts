@@ -10,6 +10,8 @@ import { BackchannelLogoutController } from './backchannel-logout.controller';
 import { CsrfGuard } from './csrf.guard';
 import { IdentityGuard } from './identity.guard';
 import { LocalSaService } from './local-sa.service';
+import { LocalTestAccountsService } from './local-test-accounts.service';
+import { LocalTestLoginController } from './local-test-login.controller';
 import { RolesGuard } from './roles.guard';
 import { SessionAuthService } from './session-auth.service';
 import { SessionService } from './session.service';
@@ -20,6 +22,7 @@ import { WebhookController } from './webhook.controller';
   controllers: [
     AuthController,
     AuthMeController,
+    LocalTestLoginController,
     BackchannelLogoutController,
     WebhookController,
   ],
@@ -27,6 +30,7 @@ import { WebhookController } from './webhook.controller';
     SessionService,
     SessionAuthService,
     LocalSaService,
+    LocalTestAccountsService,
     // Thứ tự đăng ký = thứ tự chạy: IP throttle → Identity → CSRF → Roles → user throttle (cần req.user)
     { provide: APP_GUARD, useClass: IpThrottlerGuard },
     { provide: APP_GUARD, useClass: IdentityGuard },

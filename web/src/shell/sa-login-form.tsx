@@ -9,7 +9,15 @@ const ERROR_KEY: Record<Exclude<SaLoginOutcome, 'ok'>, string> = {
   error: 'auth.saError',
 };
 
-export function SaLoginForm() {
+type Props = {
+  login?: (username: string, password: string) => Promise<SaLoginOutcome>;
+  labels?: { username: string; password: string; submit: string };
+};
+
+const SA_LABELS = { username: 'auth.saUsername', password: 'auth.saPassword', submit: 'auth.saSubmit' };
+
+// Dùng chung cho SA "Dành cho IT" và tài khoản thử dev; về '/' rồi RequireRole đưa admin sang /admin
+export function SaLoginForm({ login = saLogin, labels = SA_LABELS }: Props) {
   const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -20,7 +28,7 @@ export function SaLoginForm() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const outcome = await saLogin(username, password);
+    const outcome = await login(username, password);
     if (outcome === 'ok') {
       navigateTo('/');
       return;
@@ -37,7 +45,7 @@ export function SaLoginForm() {
         </p>
       )}
       <label className="field">
-        <span className="field-label">{t('auth.saUsername')}</span>
+        <span className="field-label">{t(labels.username)}</span>
         <input
           name="username"
           type="text"
@@ -50,7 +58,7 @@ export function SaLoginForm() {
         />
       </label>
       <label className="field">
-        <span className="field-label">{t('auth.saPassword')}</span>
+        <span className="field-label">{t(labels.password)}</span>
         <input
           name="password"
           type="password"
@@ -61,7 +69,7 @@ export function SaLoginForm() {
         />
       </label>
       <button type="submit" className="btn btn--lg" disabled={busy}>
-        {t('auth.saSubmit')}
+        {t(labels.submit)}
       </button>
     </form>
   );

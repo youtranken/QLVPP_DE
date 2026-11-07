@@ -1,3 +1,4 @@
+// Dùng chung cho SA (npm run sa:hash) và tài khoản thử dev (npm run local-test:hash).
 // Phân cách '.' thay '$' vì docker-compose diễn giải '$' là biến
 import { randomBytes, scryptSync } from 'node:crypto';
 

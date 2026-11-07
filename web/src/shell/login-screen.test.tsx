@@ -53,12 +53,12 @@ describe('LoginScreen', () => {
   });
 
   it('SA bị khóa (429) → báo tạm khóa; đăng nhập đúng → về /', async () => {
+    const saResponses = [jsonResponse(429, { code: 'SA_LOGIN_LOCKED' }), jsonResponse(200, { ok: true })];
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValueOnce(jsonResponse(429, { code: 'SA_LOGIN_LOCKED' }))
-        .mockResolvedValueOnce(jsonResponse(200, { ok: true })),
+      vi.fn((url: string) =>
+        Promise.resolve(url === '/api/auth/sa-login' ? saResponses.shift()! : jsonResponse(200, { testAccounts: false })),
+      ),
     );
     renderWithI18n(<LoginScreen />);
     await userEvent.click(screen.getByRole('button', { name: 'Dành cho IT' }));
@@ -98,5 +98,57 @@ describe('LoginScreen', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, { admin_contact: '' })));
     renderWithI18n(<LoginScreen />);
     expect(await screen.findByText(/Liên hệ Hành chính phòng Công trình/)).toBeInTheDocument();
+  });
+
+  describe('Tài khoản thử (chỉ bản dev)', () => {
+    const TITLE = 'Tài khoản thử (chỉ bản dev)';
+
+    function stubConfig(config: Response, login?: Response) {
+      const fetchMock = vi.fn((url: string) =>
+        Promise.resolve(url === '/api/auth/config' ? config : (login ?? jsonResponse(500, {}))),
+      );
+      vi.stubGlobal('fetch', fetchMock);
+      return fetchMock;
+    }
+
+    it('api tắt (testAccounts=false) → không có mục tài khoản thử', async () => {
+      const fetchMock = stubConfig(jsonResponse(200, { testAccounts: false }));
+      renderWithI18n(<LoginScreen />);
+      await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/auth/config', undefined));
+      expect(screen.queryByRole('heading', { name: TITLE })).toBeNull();
+      expect(screen.queryByLabelText('Tên tài khoản thử')).toBeNull();
+    });
+
+    it('api lỗi (404 bản cũ / 500) → không có mục tài khoản thử', async () => {
+      const fetchMock = stubConfig(jsonResponse(404, {}));
+      renderWithI18n(<LoginScreen />);
+      await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+      expect(screen.queryByRole('heading', { name: TITLE })).toBeNull();
+    });
+
+    it('api bật → hiện mục có nhãn rõ; đăng nhập đúng gửi /api/auth/test-login rồi về / (RequireRole chia admin/member)', async () => {
+      const fetchMock = stubConfig(jsonResponse(200, { testAccounts: true }), jsonResponse(200, { ok: true }));
+      renderWithI18n(<LoginScreen />);
+      expect(await screen.findByRole('heading', { name: TITLE })).toBeInTheDocument();
+      await userEvent.type(screen.getByLabelText('Tên tài khoản thử'), ' nv.a ');
+      await userEvent.type(screen.getByLabelText('Mật khẩu tài khoản thử'), 'pw');
+      await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập tài khoản thử' }));
+      await vi.waitFor(() => expect(navigateTo).toHaveBeenCalledWith('/'));
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/auth/test-login',
+        expect.objectContaining({ method: 'POST', body: JSON.stringify({ username: 'nv.a', password: 'pw' }) }),
+      );
+    });
+
+    it('api bật, sai mật khẩu (401) → báo sai tài khoản, không chuyển trang', async () => {
+      vi.mocked(navigateTo).mockClear();
+      stubConfig(jsonResponse(200, { testAccounts: true }), jsonResponse(401, { code: 'TEST_LOGIN_INVALID' }));
+      renderWithI18n(<LoginScreen />);
+      await userEvent.type(await screen.findByLabelText('Tên tài khoản thử'), 'hc.test');
+      await userEvent.type(screen.getByLabelText('Mật khẩu tài khoản thử'), 'sai');
+      await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập tài khoản thử' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent('Sai tên tài khoản hoặc mật khẩu.');
+      expect(navigateTo).not.toHaveBeenCalled();
+    });
   });
 });

@@ -56,3 +56,12 @@ describe('khởi động thật: THROTTLE_*_PER_MIN sai', () => {
     );
   }, 60_000);
 });
+
+describe('khởi động thật: LOCAL_TEST_ACCOUNTS chỉ dành cho dev', () => {
+  it('production + LOCAL_TEST_ACCOUNTS → thoát mã 1, từ chối khởi động nêu tên biến', async () => {
+    const res = await boot({ LOCAL_TEST_ACCOUNTS: '[]' });
+    expect(res.code).toBe(1);
+    expect(res.stderr).toMatch(/LOCAL_TEST_ACCOUNTS/);
+    expect(res.stderr).not.toMatch(/Thiếu DATABASE_URL/);
+  }, 60_000);
+});

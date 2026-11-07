@@ -33,7 +33,7 @@ import { SESSION_COOKIE } from './identity.guard';
 import type { AuthedRequest } from './identity.types';
 
 // Dùng req.ip (trust proxy theo số hop), không tự parse XFF trái — client tự đặt được để né lockout.
-function clientIp(req: AuthedRequest): string {
+export function clientIp(req: AuthedRequest): string {
   return req.ip || req.socket.remoteAddress || 'unknown';
 }
 
@@ -58,7 +58,7 @@ function pkceChallenge(verifier: string): string {
 }
 
 // http trên LAN mà ép Secure thì browser bỏ cookie → vòng lặp đăng nhập; localhost được coi là an toàn.
-function cookieSecure(): boolean {
+export function cookieSecure(): boolean {
   const url = new URL(appBaseUrl());
   return (
     url.protocol === 'https:' ||

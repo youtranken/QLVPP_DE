@@ -86,6 +86,8 @@ const admin = {
         sa_login_failed: 'Đăng nhập tài khoản dự phòng sai',
         session_expired: 'Phiên hết hạn',
         session_revoked: 'Phiên bị thu hồi',
+        test_login: 'Đăng nhập tài khoản thử (dev)',
+        test_login_failed: 'Đăng nhập tài khoản thử (dev) sai',
         webhook_rejected: 'Webhook bị từ chối',
       },
       catalog: { imported: 'Nạp danh mục từ Excel' },

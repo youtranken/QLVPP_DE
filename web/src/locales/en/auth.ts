@@ -28,6 +28,13 @@ const auth: Messages<typeof vi> = {
     ssoManual: 'Not redirected? Click here.',
     logout: 'Sign out',
     logoutFailed: 'Could not sign out — try again.',
+    testAccounts: {
+      title: 'Test accounts (dev build only)',
+      hint: 'For use while PMH ID on dev cannot sign anyone in. Not available in production.',
+      username: 'Test account username',
+      password: 'Test account password',
+      submit: 'Sign in with test account',
+    },
     forbidden: {
       title: 'This account is not allowed to use VPP Construction yet',
       body: 'You signed in to PMH ID as {{email}}, but the account is not in a group allowed to use this app. Contact {{admin_contact}} to be added.',

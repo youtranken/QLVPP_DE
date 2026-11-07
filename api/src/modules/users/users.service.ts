@@ -68,6 +68,44 @@ export class UsersService {
       });
   }
 
+  // Tài khoản thử local (chỉ dev): login = active + đúng hồ sơ env, như user thật sau SSO.
+  // groups mang admin_group hiện tại cho vai admin để chuông/danh sách xử như Hành chính thật.
+  async upsertLocalTestAccount(params: {
+    sub: string;
+    fullName: string;
+    email: string | null;
+    department: string | null;
+    role: 'admin' | 'member';
+    groups: string[];
+  }): Promise<void> {
+    const now = new Date();
+    const profile = {
+      fullName: params.fullName,
+      email: params.email,
+      department: params.department,
+      role: params.role,
+      groups: params.groups,
+      status: 'active',
+    };
+    await this.db
+      .insert(usersTable)
+      .values({
+        sub: params.sub,
+        ...profile,
+        firstLoginAt: now,
+        lastLoginAt: now,
+      })
+      .onConflictDoUpdate({
+        target: usersTable.sub,
+        set: {
+          ...profile,
+          lastLoginAt: now,
+          updatedAt: now,
+          firstLoginAt: sql`COALESCE(${usersTable.firstLoginAt}, ${now.toISOString()})`,
+        },
+      });
+  }
+
   async list(
     query: UserListQuery,
   ): Promise<{ items: UserListItem[]; next_cursor: string | null }> {

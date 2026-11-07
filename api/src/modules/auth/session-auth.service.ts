@@ -14,6 +14,8 @@ import {
   LOCAL_SA_IDLE_MS,
   LOCAL_SA_SUB,
 } from './local-sa-env';
+import { LOCAL_TEST_SUB_PREFIX } from './local-test-accounts-env';
+import { LocalTestAccountsService } from './local-test-accounts.service';
 import { OIDC_PROVIDER } from './oidc-provider';
 import type { OidcProvider } from './oidc-provider';
 import { SessionService } from './session.service';
@@ -39,6 +41,7 @@ export class SessionAuthService {
     private readonly audit: AuditWriterService,
     private readonly users: UsersService,
     private readonly systemConfig: SystemConfigService,
+    private readonly testAccounts: LocalTestAccountsService,
   ) {}
 
   resolve(sessionId: string): Promise<RequestIdentity | null> {
@@ -78,6 +81,10 @@ export class SessionAuthService {
       };
     }
 
+    if (session.userSub.startsWith(LOCAL_TEST_SUB_PREFIX)) {
+      return this.resolveLocalTest(sessionId, session.userSub);
+    }
+
     if (!session.claims) {
       return null;
     }
@@ -90,6 +97,26 @@ export class SessionAuthService {
       return this.toIdentity(sessionId, session.claims);
     }
     return this.refreshSession(sessionId, session);
+  }
+
+  // Tài khoản thử local (chỉ dev): vai lấy từ env mỗi request; tắt biến → phiên cũ chết ngay
+  private async resolveLocalTest(
+    sessionId: string,
+    sub: string,
+  ): Promise<RequestIdentity | null> {
+    const account = this.testAccounts.findBySub(sub);
+    if (!account) {
+      await this.expire(sessionId, sub, 'local_test_disabled');
+      return null;
+    }
+    return {
+      sub,
+      role: account.role,
+      devMode: false,
+      sessionId,
+      fullName: account.name,
+      email: account.email ?? undefined,
+    };
   }
 
   private async refreshSession(

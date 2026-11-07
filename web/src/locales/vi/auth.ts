@@ -25,6 +25,13 @@ const auth = {
     ssoManual: 'Không tự chuyển? Bấm vào đây.',
     logout: 'Đăng xuất',
     logoutFailed: 'Chưa đăng xuất được — thử lại.',
+    testAccounts: {
+      title: 'Tài khoản thử (chỉ bản dev)',
+      hint: 'Dùng khi PMH ID bản dev chưa đăng nhập được. Không có trên bản chính thức.',
+      username: 'Tên tài khoản thử',
+      password: 'Mật khẩu tài khoản thử',
+      submit: 'Đăng nhập tài khoản thử',
+    },
     forbidden: {
       title: 'Tài khoản chưa được cấp quyền dùng VPP Công trình',
       body: 'Bạn đã đăng nhập PMH ID bằng {{email}}, nhưng tài khoản chưa thuộc nhóm được dùng ứng dụng này. Liên hệ {{admin_contact}} để được thêm vào nhóm.',

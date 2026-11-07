@@ -10,9 +10,10 @@ export function loginWithPmhId(loginHint?: string): void {
 
 export type SaLoginOutcome = 'ok' | 'invalid' | 'locked' | 'error';
 
-export async function saLogin(username: string, password: string): Promise<SaLoginOutcome> {
+// Đăng nhập không qua SSO (SA, tài khoản thử dev): mode 'sa' = hết phiên thì về màn đăng nhập, không tự SSO lại
+async function postLocalLogin(url: string, username: string, password: string): Promise<SaLoginOutcome> {
   try {
-    const res = await fetch('/api/auth/sa-login', {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: username.trim(), password }),
@@ -27,6 +28,15 @@ export async function saLogin(username: string, password: string): Promise<SaLog
   } catch {
     return 'error';
   }
+}
+
+export function saLogin(username: string, password: string): Promise<SaLoginOutcome> {
+  return postLocalLogin('/api/auth/sa-login', username, password);
+}
+
+// Tài khoản thử — chỉ bản dev (api trả 404 khi tắt)
+export function testAccountLogin(username: string, password: string): Promise<SaLoginOutcome> {
+  return postLocalLogin('/api/auth/test-login', username, password);
 }
 
 // Chỉ quên trạng thái đăng nhập khi server đã hủy phiên; 401 nghĩa là phiên đã mất sẵn
