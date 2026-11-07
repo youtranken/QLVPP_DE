@@ -4,7 +4,7 @@ import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-ut
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
-import { NOTE, PEN, facts, stubRequestApi, view } from '@/test/request-api-stub';
+import { NOTE, PAUSED, PEN, facts, stubRequestApi, view } from '@/test/request-api-stub';
 import { mockViewport } from '@/test/viewport';
 
 afterEach(() => {
@@ -61,5 +61,25 @@ describe('Giỏ — tối đa/tháng bị hạ sau khi lưu', () => {
     stubRequestApi({ request: saved(5), items: [LOWERED, NOTE] });
     renderApp(makeMe('member'), '/');
     expect(await screen.findByText('New max 4 — you can keep 5, not increase')).toBeInTheDocument();
+  });
+});
+
+describe('Giỏ — món/nhóm đã ngừng sau khi lưu (GAP-21, L.17)', () => {
+  const STOPPED = 'Món đã ngừng — Hành chính có thể không mua. Bỏ khỏi phiếu?';
+  const lineOf = async (name: string) => (await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText(name)).closest('li')!;
+
+  it('nhóm ngừng (Bút dạ quang) và món ngừng riêng (Giấy note) → nhãn "Món đã ngừng…" + nút bỏ; món dùng được → không nhãn', async () => {
+    mockViewport(1280);
+    const paused = lineView({ id: 'l-p', item_id: PAUSED.id, item: facts(PAUSED), qty: 2 });
+    const off = lineView({ id: 'l-n', item_id: NOTE.id, item: { ...facts(NOTE), active: false }, qty: 1 });
+    const pen = lineView({ id: 'l-pen', item_id: PEN.id, item: facts(PEN), qty: 1 });
+    stubRequestApi({ request: view({ lines: [paused, off, pen] }), items: [PEN, PAUSED, { ...NOTE, active: false, usable: false }] });
+    renderApp(makeMe('member'), '/');
+    for (const name of ['Bút dạ quang', 'Giấy note vàng']) {
+      const line = await lineOf(name);
+      expect(within(line).getByText(STOPPED)).toBeInTheDocument();
+      expect(within(line).getByRole('button', { name: `Bỏ ${name}` })).toBeEnabled();
+    }
+    expect(within(await lineOf('Bút bi xanh')).queryByText(STOPPED)).toBeNull();
   });
 });

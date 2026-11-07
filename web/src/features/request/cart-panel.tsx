@@ -62,6 +62,7 @@ function CartRow({
         {line.lowered && !line.readonly && line.qty > line.lowered.max && (
           <span className="rq-line-max">{t('request.cart.loweredMax', line.lowered)}</span>
         )}
+        {line.stopped && <span className="rq-line-max">{t('request.cart.stopped')}</span>}
         {line.added_by_admin && (
           <span className="tag" title={t('request.cart.adminAddedHint', { contact })}>
             {t('request.cart.adminAdded')}

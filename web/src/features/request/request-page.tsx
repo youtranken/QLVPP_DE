@@ -72,6 +72,7 @@ function RequestEditor({
   const flow = useSaveFlow(cart, period.ym, refetch, cartRef, {
     initialNotice: carry ? lockedNotice(t, carry, cart.initialReport?.unavailable) : null,
     onLocked,
+    deadline: period.deadline,
   });
   const copy = useCopyPrevious(period.ym, cart, flow);
   // Giỏ mang sang đã vào state lúc mount: bỏ đi để lần mount sau (vd thử tải lại) không áp lần nữa

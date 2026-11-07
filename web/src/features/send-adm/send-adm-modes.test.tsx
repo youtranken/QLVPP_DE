@@ -88,6 +88,27 @@ describe('Gửi ADM — chế độ Đã gửi', () => {
     expect(await rowOf('Bút bi')).toHaveTextContent('Bản gửi 7 · nay cần 5 → dư 2 vào kho');
   });
 
+  it('W7 tính tủ lúc chốt (B32): tủ 4, cần 6 → gửi 2; Hủy nợ 2 → nay cần 4 → "dư 2 vào kho" (4 + 2 − 4), không "thiếu"', async () => {
+    const basis = sentData(sendReport([{ ...PEN, requested: 4, backlog_prev: 2, stock: 4 }]), { kA: 2 });
+    setupSendAdm({ report: sendReport([{ ...PEN, requested: 4, stock: 4 }]), state: sentState(basis, { changed_after: true }) });
+    await open();
+    expect(await rowOf('Bút bi')).toHaveTextContent('Bản gửi 2 · nay cần 4 → dư 2 vào kho');
+  });
+
+  it('W7 tính cả ADM còn nợ lúc chốt: tủ 1, ADM nợ 2, cần 5 → gửi 2; nay cần 7 → "thiếu 2"', async () => {
+    const basis = sentData(sendReport([{ ...PEN, requested: 5, stock: 1, adm_owed: 2 }]), { kA: 2 });
+    setupSendAdm({ report: sendReport([{ ...PEN, requested: 7, stock: 1 }]), state: sentState(basis, { changed_after: true }) });
+    await open();
+    expect(await rowOf('Bút bi')).toHaveTextContent('Bản gửi 2 · nay cần 7 → thiếu 2');
+  });
+
+  it('W7 nhu cầu đổi nhưng vừa đủ: tủ 3, gửi 5, lúc chốt cần 6 → nay cần 8 → "→ đủ cho người đăng ký"', async () => {
+    const basis = sentData(sendReport([{ ...PEN, requested: 6, stock: 3 }]), { kA: 5 });
+    setupSendAdm({ report: sendReport([{ ...PEN, requested: 8, stock: 3 }]), state: sentState(basis, { changed_after: true }) });
+    await open();
+    expect(await rowOf('Bút bi')).toHaveTextContent('Bản gửi 5 · nay cần 8 → đủ cho người đăng ký');
+  });
+
   it('W7 thiếu: bản gửi 3, nay cần 5 → "→ thiếu 2"; không có W1 ở chế độ này', async () => {
     const basis = sentData(sendReport([{ ...PEN, requested: 3 }]), { kA: 3 });
     setupSendAdm({ report: sendReport([{ ...PEN, requested: 5 }]), state: sentState(basis) });

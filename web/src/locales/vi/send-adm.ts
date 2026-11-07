@@ -49,6 +49,7 @@ const sendAdm = {
     sent: {
       banner: 'Đã gửi ADM lúc {{time}} · {{x}} món, {{y}} đơn vị',
       replaces: '(thay thế bản {{time}})',
+      enough: 'Bản gửi {{x}} · nay cần {{y}} → đủ cho người đăng ký',
       reprint: 'In lại bản này',
       excel: 'Xuất Excel bản này',
       newDraft: 'Làm bản mới',

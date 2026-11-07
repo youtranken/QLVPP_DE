@@ -27,6 +27,8 @@ export interface CartLine {
   label: CartLabel;
   // Tối đa/tháng bị hạ dưới số đã lưu: giữ được số cũ, không tăng thêm
   lowered: { max: number; qty: number } | null;
+  // Món (hoặc nhóm) đã ngừng sau khi lưu: Hành chính có thể không mua
+  stopped?: boolean;
 }
 
 export type CustomLineInput = Pick<CartLine, 'custom_name' | 'custom_unit' | 'custom_note' | 'image_file_id' | 'qty'>;
@@ -83,6 +85,7 @@ function fromView(l: LineView, ctx: CartContext): CartLine {
     review_status: l.review_status,
     label,
     lowered: l.item_id && l.max_qty != null && l.qty > l.max_qty ? { max: l.max_qty, qty: l.qty } : null,
+    stopped: !!l.item_id && !l.readonly_for_member && (l.item?.active === false || item?.usable === false),
   };
 }
 
@@ -109,6 +112,7 @@ function fromItem(i: MemberItem, qty: number, prior?: CartLine): CartLine {
     review_status: base?.review_status ?? 'n/a',
     label: base?.label ?? itemLabel(i),
     lowered: base?.lowered ?? null,
+    stopped: base?.stopped,
   };
 }
 

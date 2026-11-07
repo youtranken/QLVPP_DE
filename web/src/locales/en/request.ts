@@ -152,6 +152,7 @@ const request: Messages<typeof vi> = {
       adminAdded: 'Added by Admin',
       adminAddedHint: 'This line was added by Admin — contact {{contact}} to change it.',
       loweredMax: 'New max {{max}} — you can keep {{qty}}, not increase',
+      stopped: 'Item discontinued — Admin may not buy it. Remove it from your order?',
       edit: 'Edit {{name}}',
       review: {
         pendingOpen: 'Admin reviews from {{lock}}',

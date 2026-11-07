@@ -86,7 +86,7 @@ export class RequestLinesWriter {
     const remaining =
       existing.length - plan.deletes.length + plan.inserts.length;
     if (remaining === 0) await repo.deleteRequest(tx, head.id);
-    else await repo.touchRequest(tx, head.id, args.now, owner.department);
+    else await repo.touchRequest(tx, head.id, args.now, owner.department, true);
     const action =
       remaining === 0
         ? 'request.deleted'

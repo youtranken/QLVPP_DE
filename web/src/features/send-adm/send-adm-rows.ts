@@ -1,7 +1,7 @@
 import type { AdminItem } from '@/features/catalog/catalog.api';
 import type { KeyProgress, MonthReport, ReportCustomRow, ReportItemRow, SnapshotData } from '@/features/reports/reports.api';
 import { parseOrderQty, type OrderQty } from '@/features/reports/use-order-qty';
-import { activeNeed, defaultOrder, wantOf } from '@/lib/report-qty';
+import { activeNeed, defaultOrder, diffOf, wantOf } from '@/lib/report-qty';
 
 export interface OrderRow {
   key: string;
@@ -81,6 +81,12 @@ export const sentOrderOf = (data: SentRows, row: ReportItemRow | ReportCustomRow
 export function basisNeedOf(data: SentRows, row: ReportItemRow | ReportCustomRow): number {
   const b = data.order_basis?.[row.key];
   return b ? b.requested + b.debt - b.left_excluded : activeNeed(row);
+}
+
+// Lệch của số đã gửi với cần nay (Đ36): tủ và ADM còn nợ lấy theo lúc chốt — hàng về/giao sau đó đã nằm trong số gửi và cần nay
+export function sentDiff(data: SentRows, row: ReportItemRow | ReportCustomRow, needNow: number): number {
+  const owed = data.order_basis?.[row.key]?.adm_owed ?? row.adm_owed ?? 0;
+  return diffOf({ stock: row.stock ?? 0, order: sentOrderOf(data, row), adm_owed: owed, need: needNow });
 }
 
 // Ô đã sửa ở bản trước (khác số gợi ý lúc chốt) được mang sang bản mới như số đã sửa

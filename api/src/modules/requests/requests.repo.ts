@@ -43,9 +43,9 @@ export async function upsertRequest(
   },
 ): Promise<RequestHead> {
   const { rows } = await tx.execute<RequestHead>(sql`
-    INSERT INTO requests (period_ym, user_sub, department, created_by_sub, updated_at)
+    INSERT INTO requests (period_ym, user_sub, department, created_by_sub, updated_at, saved_at)
     VALUES (${ymToDate(args.ym)}::date, ${args.owner_sub}, ${args.department},
-            ${args.created_by}, ${args.now.toISOString()}::timestamptz)
+            ${args.created_by}, ${args.now.toISOString()}::timestamptz, ${args.now.toISOString()}::timestamptz)
     ON CONFLICT (period_ym, user_sub) DO UPDATE SET updated_at = requests.updated_at
     RETURNING id, (xmax = 0) AS inserted, ${freshness(args.expected)} AS fresh
   `);
@@ -155,15 +155,18 @@ const nextUpdatedAt = (now: Date) =>
   sql`GREATEST(${now.toISOString()}::timestamptz,
                date_trunc('milliseconds', updated_at) + interval '1 millisecond')`;
 
+// memberSave: lần lưu của chính nhân viên → đổi cả saved_at ("Lưu lúc" ở Tổng hợp)
 export async function touchRequest(
   tx: Executor,
   id: string,
   now: Date,
   department: string | null,
+  memberSave = false,
 ): Promise<void> {
+  const saved = memberSave ? sql`, saved_at = ${now.toISOString()}::timestamptz` : sql``;
   await tx.execute(sql`
     UPDATE requests
-    SET updated_at = ${nextUpdatedAt(now)}, department = ${department}
+    SET updated_at = ${nextUpdatedAt(now)}, department = ${department}${saved}
     WHERE id = ${id}
   `);
 }

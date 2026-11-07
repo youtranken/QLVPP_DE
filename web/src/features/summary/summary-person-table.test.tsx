@@ -102,10 +102,11 @@ describe('SummaryPersonTable — bảng theo người', () => {
     expect(onOpen).toHaveBeenLastCalledWith('r-2');
   });
 
-  it('cột "Lưu lúc" hiện giờ:phút theo giờ VN', async () => {
-    renderTable({ rows: [person({ request_id: 'r-5', full_name: 'Giờ Lưu', updated_at: '2020-01-02T07:20:00.000Z' })] });
+  it('cột "Lưu lúc" là giờ nhân viên lưu (saved_at, giờ VN), không phải giờ Hành chính giảm/giao (updated_at)', async () => {
+    renderTable({ rows: [person({ request_id: 'r-5', full_name: 'Giờ Lưu', saved_at: '2020-01-02T07:20:00.000Z', updated_at: '2020-01-11T01:30:00.000Z' })] });
     const row = await rowOf('Giờ Lưu');
     expect(row).toHaveTextContent('02/01 · 14:20');
+    expect(row).not.toHaveTextContent('11/01 · 08:30');
   });
 
   it('"Xem thêm" khi phòng ban trải hai trang → một tiêu đề nhóm', async () => {

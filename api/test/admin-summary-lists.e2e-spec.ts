@@ -17,6 +17,7 @@ interface PersonRow {
   custom_pending: number;
   over_max: boolean;
   updated_at: string;
+  saved_at: string;
 }
 interface ItemRow {
   key: string;
@@ -74,6 +75,7 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
       custom_pending: 1,
       over_max: false,
       updated_at: expect.any(String) as string,
+      saved_at: expect.any(String) as string,
     });
     expect(page.items[2]).toMatchObject({
       request_id: ids.r2,

@@ -30,6 +30,7 @@ export interface PersonRow {
   custom_pending: number;
   over_max: boolean;
   updated_at: string;
+  saved_at: string;
 }
 
 export interface ItemSummaryRow {
@@ -44,8 +45,9 @@ export interface ItemSummaryRow {
   over_max: boolean;
 }
 
-type PersonDbRow = Omit<PersonRow, 'updated_at'> & {
+type PersonDbRow = Omit<PersonRow, 'updated_at' | 'saved_at'> & {
   updated_at: Date | string;
+  saved_at: Date | string;
 } & Record<string, unknown>;
 
 // Khóa sắp xếp: phòng ban NULL xếp cuối (false < true), rồi tên, rồi id cho duy nhất
@@ -85,7 +87,7 @@ export class SummaryListsService {
              ${effectiveSum('l.delivered_qty')} AS delivered_qty,
              ${effectiveSum('l.cancelled_qty')} AS cancelled_qty,
              count(l.id) FILTER (WHERE l.review_status = 'pending')::int AS custom_pending,
-             ${OVER_MAX} AS over_max, r.updated_at
+             ${OVER_MAX} AS over_max, r.updated_at, r.saved_at
       FROM requests r
       JOIN users u ON u.sub = r.user_sub
       LEFT JOIN request_lines l ON l.request_id = r.id
@@ -105,6 +107,7 @@ export class SummaryListsService {
       items: page.map((row) => ({
         ...row,
         updated_at: new Date(row.updated_at).toISOString(),
+        saved_at: new Date(row.saved_at).toISOString(),
       })),
       next_cursor:
         rows.length > query.limit

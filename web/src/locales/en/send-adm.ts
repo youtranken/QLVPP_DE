@@ -52,6 +52,7 @@ const sendAdm: Messages<typeof vi> = {
     sent: {
       banner: 'Sent to ADM at {{time}} · {{x}} items, {{y}} units',
       replaces: '(replaces the copy of {{time}})',
+      enough: 'Sent {{x}} · now needed {{y}} → enough for everyone who requested',
       reprint: 'Reprint this',
       excel: 'Export this to Excel',
       newDraft: 'Make a new order',

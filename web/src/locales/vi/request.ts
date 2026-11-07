@@ -149,6 +149,7 @@ const request = {
       adminAdded: 'Hành chính thêm',
       adminAddedHint: 'Dòng này do Hành chính thêm — cần sửa thì liên hệ {{contact}}.',
       loweredMax: 'Tối đa mới {{max}} — giữ được {{qty}}, không tăng được',
+      stopped: 'Món đã ngừng — Hành chính có thể không mua. Bỏ khỏi phiếu?',
       edit: 'Sửa {{name}}',
       review: {
         pendingOpen: 'Hành chính xem từ {{lock}}',

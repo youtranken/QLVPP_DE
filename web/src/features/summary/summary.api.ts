@@ -35,6 +35,8 @@ export interface PersonRow {
   // Có dòng giữ số lớn hơn tối đa/tháng hiện tại (tối đa bị hạ sau khi lưu)
   over_max: boolean;
   updated_at: string;
+  // Giờ nhân viên lưu phiếu ("Lưu lúc"); updated_at còn đổi theo việc Hành chính làm
+  saved_at: string;
 }
 
 export interface ItemSummaryRow {

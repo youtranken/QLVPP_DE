@@ -34,7 +34,7 @@ const cases = JSON.parse(
 
 describe('số đề nghị mặc định gộp (bảng ca chung api/web)', () => {
   it('bảng có 12 ca', () => {
-    expect(cases.defaultOrder.length + cases.diffOf.length).toBe(12);
+    expect(cases.defaultOrder.length + cases.diffOf.length).toBe(13);
   });
 
   it.each(cases.defaultOrder.map((c) => [c.name, c] as const))(

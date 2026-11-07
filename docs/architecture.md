@@ -92,7 +92,7 @@ Toàn bộ theo QLTS_DE `api/src/modules/auth` (đổi tên cookie `vpp_sid`, `v
 
 Nền (copy QLTS, tên giữ nguyên): `users(sub PK, email, employee_code, full_name, department, groups jsonb, status, role, first_login_at, last_login_at, …)` `sessions`, `audit_log` (append-only bằng trigger, chặn TRUNCATE), `config(key, value jsonb)`, `processed_webhook_events`, `in_app_notifications` (có `event_id`, `UNIQUE (event_id, user_sub)`), `_migrations`. Bảng `files` **viết mới**: `files(id uuid PK, original_name, mime, size_bytes, purpose text CHECK (purpose IN ('item_image','line_image')), uploaded_by_sub, created_at)`; đường dẫn vật lý = `/data/files/<id>.<ext>` suy từ `mime`, không lưu cột `path`.
 
-Riêng VPP: `0100_vpp_catalog.sql` (nhóm, món, kho), `0101_items_restock_level.sql` (mốc sắp hết), `0102_vpp_requests.sql` (kỳ, phiếu, dòng), `0103_periods_ym_first_day.sql` (kỳ ngày 1), `0104_notifications_event_id_text.sql` (`event_id` chuỗi), `0105_vpp_deliveries.sql` (`line_deliveries`, `deliveries`), `0106_vpp_report_snapshots.sql` (bản chốt), `0107_items_drop_min_stock.sql`, `0108_line_deliveries_seq.sql` (`line_deliveries.seq` identity — thứ tự chèn cho lịch sử đợt), `0109`–`0112` (config `admin_group`, ảnh dòng ngoài DM không bắt buộc, bảng `units`, `signature_boxes`), Plan v2-D: `0113_request_line_adjustments.sql`, `0114_period_adm_out.sql`, `0115_stock_movements_receipt_ym.sql`, `0116_periods_headcount_subs.sql`, `0117_custom_receipts.sql`, `0118_periods_no_order.sql`, `0119_audit_log_batch_id.sql` (chỉ mục `audit_log ((detail->>'batch_id'))`). PG18 có sẵn `gen_random_uuid()`; không cần `pgcrypto`/`btree_gist`.
+Riêng VPP: `0100_vpp_catalog.sql` (nhóm, món, kho), `0101_items_restock_level.sql` (mốc sắp hết), `0102_vpp_requests.sql` (kỳ, phiếu, dòng), `0103_periods_ym_first_day.sql` (kỳ ngày 1), `0104_notifications_event_id_text.sql` (`event_id` chuỗi), `0105_vpp_deliveries.sql` (`line_deliveries`, `deliveries`), `0106_vpp_report_snapshots.sql` (bản chốt), `0107_items_drop_min_stock.sql`, `0108_line_deliveries_seq.sql` (`line_deliveries.seq` identity — thứ tự chèn cho lịch sử đợt), `0109`–`0112` (config `admin_group`, ảnh dòng ngoài DM không bắt buộc, bảng `units`, `signature_boxes`), Plan v2-D: `0113_request_line_adjustments.sql`, `0114_period_adm_out.sql`, `0115_stock_movements_receipt_ym.sql`, `0116_periods_headcount_subs.sql`, `0117_custom_receipts.sql`, `0118_periods_no_order.sql`, `0119_audit_log_batch_id.sql` (chỉ mục `audit_log ((detail->>'batch_id'))`), `0120_requests_saved_at.sql` (`requests.saved_at`, backfill từ audit lưu của chính chủ phiếu). PG18 có sẵn `gen_random_uuid()`; không cần `pgcrypto`/`btree_gist`.
 
 ```sql
 item_categories (id uuid PK, name text NOT NULL, name_en text, sort_order int NOT NULL DEFAULT 0,
@@ -124,6 +124,7 @@ periods (ym date PK,                                      -- ngày 1 của thán
 
 requests (id uuid PK, period_ym date NOT NULL REFERENCES periods, user_sub text NOT NULL REFERENCES users,
           department text, note text, created_by_sub text NOT NULL, created_at, updated_at,
+          saved_at timestamptz NOT NULL,  -- lần lưu cuối của chính nhân viên ("Lưu lúc" ở Tổng hợp); updated_at còn đổi theo Hành chính giảm/duyệt/giao
           UNIQUE (period_ym, user_sub))
 
 request_lines (id uuid PK, request_id uuid NOT NULL REFERENCES requests ON DELETE CASCADE,

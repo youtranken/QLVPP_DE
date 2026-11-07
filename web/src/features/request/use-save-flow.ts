@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
+import { shiftYm } from '@/lib/ym';
 import { saveMyLines, useSetMyRequest, type RequestView } from './request.api';
 import { saveFailure } from './request-errors';
 import { monthOf, useAdminContact, useRequestFormat } from './request-format';
 import { carryOf, type Cart, type ReplaceLineInput } from './use-cart';
+import { useAtLock } from './use-lock-timer';
 
 const TOAST_MS = 3000;
 
@@ -20,6 +22,8 @@ export interface SaveFlowOptions {
   // carry = null khi kỳ cũ đã có phiếu lưu (phiếu đó giữ nguyên, không mang thay đổi chưa lưu sang)
   onLocked: (locked: LockedInfo) => void;
   initialNotice?: Notice | null;
+  // Hạn khóa của kỳ đang sửa: tới giờ mà còn thay đổi chưa lưu thì báo như khi lưu bị PERIOD_LOCKED
+  deadline?: string;
 }
 
 // Giỏ ở 390 px nằm dưới lưới: lỗi lưu phải hiện cạnh thanh lưu và đưa focus tới chỗ cần sửa
@@ -94,6 +98,25 @@ export function useSaveFlow(
     toastTimer.current = setTimeout(() => setToast(null), TOAST_MS);
   };
 
+  // Kỳ cũ đã có phiếu lưu thì phiếu đó giữ nguyên; chưa lưu thì giỏ mang sang kỳ mới
+  const locked = (nextYm: string) => {
+    setLineErrors({});
+    setConfirming(false);
+    const info: LockedInfo = {
+      fromYm: ym,
+      nextYm,
+      carry: cart.saved ? null : carryOf(cart.lines),
+      savedTime: cart.saved ? fmt.time(cart.saved.updated_at) : null,
+    };
+    setNotice(lockedNotice(t, info));
+    opts.onLocked(info);
+  };
+
+  // Đang lưu thì để câu trả lời của server quyết định (200 hoặc PERIOD_LOCKED)
+  useAtLock(opts.deadline, () => {
+    if (cart.dirtyCount > 0 && !saving) locked(shiftYm(ym, 1));
+  });
+
   const save = async () => {
     setSaving(true);
     try {
@@ -107,15 +130,7 @@ export function useSaveFlow(
     } catch (e) {
       const failure = saveFailure(e, cart.lines, (k, o) => t(k, { contact, ...o }), ym);
       if (failure.kind === 'locked') {
-        setLineErrors({});
-        const info: LockedInfo = {
-          fromYm: ym,
-          nextYm: failure.nextYm,
-          carry: cart.saved ? null : carryOf(cart.lines),
-          savedTime: cart.saved ? fmt.time(cart.saved.updated_at) : null,
-        };
-        setNotice(lockedNotice(t, info));
-        opts.onLocked(info);
+        locked(failure.nextYm);
       } else if (failure.kind === 'stale') {
         setNotice(null);
         setStale(true);

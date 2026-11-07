@@ -53,6 +53,7 @@
     { "name": "tủ 2, cần 3, đề nghị 1 → đủ (0)", "input": { "stock": 2, "order": 1, "adm_owed": 0, "need": 3 }, "expected": 0 },
     { "name": "tủ 2, cần 3, đề nghị 0 → thiếu 1", "input": { "stock": 2, "order": 0, "adm_owed": 0, "need": 3 }, "expected": -1 },
     { "name": "tủ 2, cần 3, đề nghị 3 → dư 2", "input": { "stock": 2, "order": 3, "adm_owed": 0, "need": 3 }, "expected": 2 },
-    { "name": "tủ 0, cần 10, đề nghị 6, ADM còn nợ 4 → đủ (0)", "input": { "stock": 0, "order": 6, "adm_owed": 4, "need": 10 }, "expected": 0 }
+    { "name": "tủ 0, cần 10, đề nghị 6, ADM còn nợ 4 → đủ (0)", "input": { "stock": 0, "order": 6, "adm_owed": 4, "need": 10 }, "expected": 0 },
+    { "name": "B32 Đã gửi: tủ 4, đã gửi 2, cần nay 4 (sau Hủy nợ 2) → dư 2", "input": { "stock": 4, "order": 2, "adm_owed": 0, "need": 4 }, "expected": 2 }
   ]
 }

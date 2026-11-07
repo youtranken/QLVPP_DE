@@ -12,7 +12,7 @@ import { PrintNote } from './send-adm-print-note';
 import { useNewDraftConfirm } from './use-send-adm-confirms';
 import { ItemCell } from './send-adm-orders';
 import { useRegistrants } from './use-registrants';
-import { basisNeedOf, carryFromSent, sentOrderOf, toOrderRows } from './send-adm-rows';
+import { basisNeedOf, carryFromSent, sentDiff, sentOrderOf, toOrderRows } from './send-adm-rows';
 import type { SendState } from './use-send-state';
 import type { SentSnapshot } from './send-adm.api';
 
@@ -29,14 +29,13 @@ interface Props {
   onNewDraft: (carry: Record<string, number>) => void;
 }
 
-// Cần nay khác cần lúc chốt: so số đã gửi (kể cả số sửa tay) với cần nay
-function W7({ sent, now }: { sent: number; now: number }) {
+// Cần nay khác cần lúc chốt: d = tủ + đã gửi + ADM còn nợ − cần nay (Đ36, cùng diffOf với Lập phiếu)
+function W7({ sent, now, diff }: { sent: number; now: number; diff: number }) {
   const { t } = useTranslation();
-  if (sent === now) return null;
-  const surplus = sent > now;
+  const key = diff > 0 ? 'warn.W7surplus' : diff < 0 ? 'warn.W7short' : 'sendAdm.sent.enough';
   return (
-    <span role="status" className="diff-note" data-tone={surplus ? 'surplus' : 'short'}>
-      {t(surplus ? 'warn.W7surplus' : 'warn.W7short', { x: sent, y: now, n: Math.abs(sent - now) })}
+    <span role="status" className="diff-note" data-tone={diff > 0 ? 'surplus' : diff < 0 ? 'short' : 'ok'}>
+      {t(key, { x: sent, y: now, n: Math.abs(diff) })}
     </span>
   );
 }
@@ -73,7 +72,7 @@ function SentTable({ data, report, items, delivered }: { data: SnapshotData; rep
                 <td className="n" data-label={t('sendAdm.orders.stock')}>{r.stock === null ? '—' : n(r.stock)}</td>
                 <td className="n sa-qty" data-label={t('sendAdm.orders.qty')}>
                   <b className="sa-order__n">{n(qty)}</b>
-                  {now !== basisNeedOf(data, src) && <W7 sent={qty} now={now} />}
+                  {now !== basisNeedOf(data, src) && <W7 sent={qty} now={now} diff={sentDiff(data, src, now)} />}
                 </td>
               </tr>
             );

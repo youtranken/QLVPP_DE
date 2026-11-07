@@ -99,7 +99,7 @@ function useColumns(stale: boolean, onOpen: (id: string) => void) {
           </>
         ),
       },
-      { id: 'saved', header: t('summary.table.savedAt'), cell: ({ row }) => <SavedAt iso={row.original.updated_at} /> },
+      { id: 'saved', header: t('summary.table.savedAt'), cell: ({ row }) => <SavedAt iso={row.original.saved_at} /> },
       {
         id: 'actions',
         header: () => <span className="sr-only">{t('summary.table.actions')}</span>,

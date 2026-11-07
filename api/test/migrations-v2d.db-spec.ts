@@ -12,10 +12,11 @@ import { assertTestDatabase } from './test-database';
 const silent = { log: () => undefined };
 const YM = '2026-10-01';
 
-describe('migration v2-D 0113–0119', () => {
+describe('migration v2-D 0113–0120', () => {
   let pool: Pool;
   let itemId: string;
   const movement: Record<string, string> = {};
+  const request: Record<string, string> = {};
 
   async function code(sql: string, params: unknown[] = []): Promise<string> {
     try {
@@ -55,6 +56,36 @@ describe('migration v2-D 0113–0119', () => {
     return rows[0].id;
   }
 
+  // Phiếu có lần lưu của chính nhân viên rồi Hành chính giảm sau đó; phiếu cũ không có audit của chủ phiếu
+  async function seedSavedAt() {
+    await pool.query(
+      `INSERT INTO users (sub, full_name, status) VALUES ('mig-owner', 'Chủ phiếu', 'active')`,
+    );
+    const add = async (ym: string, created: string, updated: string) =>
+      (
+        await pool.query<{ id: string }>(
+          `INSERT INTO requests (period_ym, user_sub, created_by_sub, created_at, updated_at)
+           VALUES ($1, 'mig-owner', 'mig-owner', $2, $3) RETURNING id`,
+          [ym, created, updated],
+        )
+      ).rows[0].id;
+    await pool.query(
+      `INSERT INTO periods (ym, deadline) VALUES ('2025-01-01', '2025-01-10T17:00:00Z')`,
+    );
+    request.audited = await add(YM, '2026-10-02T01:00:00Z', '2026-10-12T05:00:00Z');
+    request.plain = await add('2025-01-01', '2026-09-03T02:00:00Z', '2026-09-15T05:00:00Z');
+    const audit = (actor: string, action: string, id: string, at: string) =>
+      pool.query(
+        `INSERT INTO audit_log (actor, action, object_type, object_id, created_at)
+         VALUES ($1, $2, 'request', $3, $4)`,
+        [actor, action, id, at],
+      );
+    await audit('mig-owner', 'request.created', request.audited, '2026-10-02T01:00:00Z');
+    await audit('mig-owner', 'request.updated', request.audited, '2026-10-04T08:00:00Z');
+    await audit('pw-admin', 'request.updated', request.audited, '2026-10-12T05:00:00Z');
+    await audit('pw-admin', 'request.updated', request.plain, '2026-09-15T05:00:00Z');
+  }
+
   beforeAll(async () => {
     pool = new Pool({
       connectionString: assertTestDatabase(process.env.DATABASE_URL),
@@ -79,6 +110,7 @@ describe('migration v2-D 0113–0119', () => {
     movement.other = await addMovement('purchase', 2, 'Nhập ngoài kỳ');
     movement.noNote = await addMovement('purchase', 1, null);
     movement.issue = await addMovement('issue', -1, 'Hàng về kỳ 2026-10');
+    await seedSavedAt();
     await runMigrations(pool, resolveMigrationsDir(), silent);
   });
 
@@ -305,5 +337,17 @@ describe('migration v2-D 0113–0119', () => {
     );
     expect(rows[0].def).toContain("((detail ->> 'batch_id'::text))");
     expect(rows[0].def).toContain('IS NOT NULL');
+  });
+
+  it('0120 requests.saved_at: lấy lần lưu cuối của chính chủ phiếu (bỏ lần Hành chính giảm); không có thì created_at; NOT NULL', async () => {
+    const { rows } = await pool.query<{ id: string; saved_at: Date }>(
+      `SELECT id, saved_at FROM requests WHERE user_sub = 'mig-owner'`,
+    );
+    const at = Object.fromEntries(rows.map((r) => [r.id, r.saved_at.toISOString()]));
+    expect(at[request.audited]).toBe('2026-10-04T08:00:00.000Z');
+    expect(at[request.plain]).toBe('2026-09-03T02:00:00.000Z');
+    expect(
+      await code(`UPDATE requests SET saved_at = NULL WHERE id = $1`, [request.plain]),
+    ).toBe('23502');
   });
 });
