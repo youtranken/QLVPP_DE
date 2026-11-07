@@ -147,6 +147,10 @@ function RequestEditor({
     panelRef: cartRef,
     mode,
     onEditStart: () => setEditFrom(savedSeq),
+    onCancelEdit: () => {
+      cart.discard();
+      setEditFrom(null);
+    },
     onQty: setQty,
     onRemove: remove,
     onSave: flow.openConfirm,

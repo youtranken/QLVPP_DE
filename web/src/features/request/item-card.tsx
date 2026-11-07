@@ -57,7 +57,7 @@ export function ItemCard({
           {name}
           {item.pack_note && <span className="rq-card-pack"> · {item.pack_note}</span>}
         </div>
-        <div className="rq-card-unit">{t('request.grid.unitMax', { unit: fmt.unit(item.unit), max: item.max_qty })}</div>
+        <div className="rq-card-unit">{fmt.limit(item.unit, item.max_qty)}</div>
       </div>
       {line?.readonly || (paused && qty > 0) ? (
         <div className="rq-card-locked">

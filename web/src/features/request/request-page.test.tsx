@@ -42,7 +42,7 @@ describe('RequestPage', () => {
     expect(screen.getByText('Chưa lưu phiếu tháng này')).toBeInTheDocument();
     expect(screen.getByText('Chọn món, bấm Lưu phiếu. Bạn sửa được tới 23:59 ngày 10/11, còn 4 ngày.')).toBeInTheDocument();
     expect(await within(grid()).findByText('Bút bi xanh')).toBeInTheDocument();
-    expect(within(grid()).getByText('cây · tối đa 20/tháng')).toBeInTheDocument();
+    expect(within(grid()).getByText('Tối đa 20 cây/tháng')).toBeInTheDocument();
     expect(within(grid()).queryByText('Giấy A4')).toBeNull();
     expect(within(grid()).getByRole('button', { name: /Không thấy món cần\?/ })).toBeInTheDocument();
   });
@@ -344,7 +344,39 @@ describe('RequestPage', () => {
     await within(panel).findByText('Bút bi xanh');
     const button = within(panel).getByRole('button', { name: 'Sửa phiếu' });
     await userEvent.click(button);
-    expect(within(cart()).getByRole('button', { name: 'Lưu phiếu' })).toBe(button);
+    expect(within(cart()).getByRole('button', { name: 'Hủy' })).toBe(button);
+    expect(button).toHaveFocus();
+  });
+
+  it('Sửa phiếu chưa đổi gì: nút chính là "Hủy" (không có nút Lưu vô hiệu); bấm Hủy về chế độ xem, focus ở "Sửa phiếu"', async () => {
+    mockViewport(1280);
+    stubRequestApi({ request: view({ lines: [lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 2 })] }) });
+    renderApp(makeMe('member'), '/');
+    const panel = await screen.findByRole('complementary', { name: 'Phiếu tháng 11' });
+    await within(panel).findByText('Bút bi xanh');
+    await userEvent.click(within(panel).getByRole('button', { name: 'Sửa phiếu' }));
+    const cancel = within(cart()).getByRole('button', { name: 'Hủy' });
+    expect(cancel).toBeEnabled();
+    expect(within(cart()).queryByRole('button', { name: /Lưu/ })).toBeNull();
+    await userEvent.click(cancel);
+    expect(within(cart()).queryByRole('spinbutton')).toBeNull();
+    expect(within(cart()).getByRole('button', { name: 'Sửa phiếu' })).toHaveFocus();
+  });
+
+  it('Sửa phiếu rồi đổi số lượng: "Lưu" bật kèm "Hủy"; Hủy bỏ thay đổi về phiếu đã lưu (2 cây), chế độ xem, focus "Sửa phiếu"', async () => {
+    mockViewport(1280);
+    stubRequestApi({ request: view({ lines: [lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 2 })] }) });
+    renderApp(makeMe('member'), '/');
+    const panel = await screen.findByRole('complementary', { name: 'Phiếu tháng 11' });
+    await within(panel).findByText('Bút bi xanh');
+    await userEvent.click(within(panel).getByRole('button', { name: 'Sửa phiếu' }));
+    await userEvent.click(within(cartLine('Bút bi xanh')).getByRole('button', { name: 'Thêm Bút bi xanh' }));
+    expect(within(cart()).getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' })).toBeEnabled();
+    await userEvent.click(within(cart()).getByRole('button', { name: 'Hủy' }));
+    expect(within(cart()).queryByRole('spinbutton')).toBeNull();
+    expect(within(cartLine('Bút bi xanh')).getByText('2 cây')).toBeInTheDocument();
+    expect(within(cart()).getByText(/^Đã lưu/)).toHaveClass('is-saved');
+    await waitFor(() => expect(within(cart()).getByRole('button', { name: 'Sửa phiếu' })).toHaveFocus());
   });
 
   it('phiếu đã lưu, thêm ở thẻ rồi bỏ dòng đó (dirty về 0) → vẫn chế độ sửa, không quay về xem', async () => {
@@ -354,7 +386,7 @@ describe('RequestPage', () => {
     await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Bút bi xanh');
     await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm vào phiếu: Giấy note vàng' }));
     await userEvent.click(within(cartLine('Giấy note vàng')).getByRole('button', { name: /^Bỏ / }));
-    expect(within(cart()).getByRole('button', { name: 'Lưu phiếu' })).toBeInTheDocument();
+    expect(within(cart()).getByRole('button', { name: 'Hủy' })).toBeInTheDocument();
     expect(within(cart()).queryByRole('button', { name: 'Sửa phiếu' })).toBeNull();
     expect(within(cartLine('Bút bi xanh')).getByRole('spinbutton')).toHaveValue(2);
   });

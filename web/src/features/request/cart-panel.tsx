@@ -1,4 +1,4 @@
-import { useId, type ReactNode, type RefObject } from 'react';
+import { useId, useRef, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
 import { DialogCloseButton, DialogDescription, DialogTitle } from '@/ui/dialog';
@@ -63,7 +63,7 @@ function CartRow({
         <span className="rq-line-qty num">{t('request.cart.qty', { qty: line.qty, unit: fmt.unit(line.label.unit) })}</span>
         {!line.item_id && <CustomTags line={line} lockAt={lockAt} />}
         {line.review_status === 'converted' && <span className="tag tag--ok">{t('request.cart.review.converted')}</span>}
-        {lowered && <span className="rq-line-alert">{t('request.cart.loweredMax', line.lowered!)}</span>}
+        {lowered && <span className="rq-line-alert">{t('request.cart.loweredMax', { max: line.lowered!.max, qty: line.qty })}</span>}
         {line.stopped && <span className="rq-line-alert">{t('request.cart.stopped')}</span>}
         {line.added_by_admin && (
           <span className="tag" title={t('request.cart.adminAddedHint', { contact })}>
@@ -131,6 +131,7 @@ export function CartPanel({
   panelRef,
   mode = 'edit',
   onEditStart,
+  onCancelEdit,
   onQty,
   onRemove,
   onSave,
@@ -155,6 +156,8 @@ export function CartPanel({
   // view = phiếu đã lưu chưa sửa: không ô số lượng, nút chính "Sửa phiếu"
   mode?: 'view' | 'edit';
   onEditStart?: () => void;
+  // Đang sửa phiếu đã lưu: bỏ mọi thay đổi, về chế độ xem
+  onCancelEdit?: () => void;
   onQty: (key: string, n: number) => void;
   onRemove: (key: string) => void;
   onSave: () => void;
@@ -167,6 +170,14 @@ export function CartPanel({
   const isSaved = !!saved && !dirty;
   const viewSaved = mode === 'view' ? saved : null;
   const view = !!viewSaved;
+  const mainRef = useRef<HTMLButtonElement>(null);
+  const canCancel = !view && !!saved && !!onCancelEdit;
+  // Chưa đổi gì thì nút chính là "Hủy" (cùng một nút với "Sửa phiếu" để giữ focus), không để nút Lưu vô hiệu làm ngõ cụt
+  const cancelOnly = canCancel && !dirty;
+  const cancel = () => {
+    onCancelEdit?.();
+    mainRef.current?.focus();
+  };
   return (
     <Root className={`rq-cart${sheet ? ' rq-cart--sheet' : ''}`} labelledBy={sheet ? undefined : titleId} panelRef={panelRef}>
       <div className="rq-cart-head">
@@ -208,11 +219,17 @@ export function CartPanel({
       {showSave && (
         <button
           type="button"
-          className="btn btn--primary btn--xl btn--block rq-cart-save"
-          disabled={!view && !canSave}
-          onClick={view ? onEditStart : onSave}
+          ref={mainRef}
+          className={`btn btn--primary btn--xl btn--block rq-cart-save${cancelOnly ? ' is-cancel' : ''}`}
+          disabled={!view && !cancelOnly && !canSave}
+          onClick={view ? onEditStart : cancelOnly ? cancel : onSave}
         >
-          {view ? t('request.cart.editOrder') : saveLabel}
+          {view ? t('request.cart.editOrder') : cancelOnly ? t('request.cart.cancelEdit') : saveLabel}
+        </button>
+      )}
+      {showSave && canCancel && dirty && (
+        <button type="button" className="btn btn--block rq-cart-cancel" onClick={cancel}>
+          {t('request.cart.cancelEdit')}
         </button>
       )}
       <p className="rq-cart-note">

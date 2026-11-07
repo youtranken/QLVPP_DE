@@ -66,7 +66,11 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       for (const [item, qty] of [[a, 1], [b, 2], [c, 1]] as const) {
         await expect(cart.getByRole('spinbutton', { name: item.name, exact: true })).toHaveValue(String(qty));
       }
-      await expect(page.getByRole('button', { name: 'Lưu phiếu' })).toBeDisabled();
+      // Chưa đổi gì: không có nút Lưu vô hiệu, nút chính là "Hủy" → về chế độ xem, focus ở "Sửa phiếu"
+      await expect(cart.getByRole('button', { name: /^Lưu phiếu$/ })).toHaveCount(0);
+      await cart.getByRole('button', { name: 'Hủy', exact: true }).click();
+      await expect(cart.getByRole('spinbutton')).toHaveCount(0);
+      await expect(cart.getByRole('button', { name: 'Sửa phiếu' })).toBeFocused();
       await closeCart(page, info);
       await search.fill(`PW lưu`);
 

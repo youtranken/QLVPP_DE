@@ -1,7 +1,6 @@
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRequestFormat } from '@/features/request/request-format';
-import { useUnitNames } from '@/features/units/units.api';
 import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
 import { PausedStamp } from '@/ui/paused-stamp';
@@ -52,9 +51,9 @@ interface CardProps {
 
 export function CatalogCard({ row, groupName, groupActive, open = false, onEdit }: CardProps) {
   const { t } = useTranslation();
-  const unitName = useUnitNames();
-  const name = useRequestFormat().name(row);
-  const meta = [row.code, t('request.grid.unitMax', { unit: unitName(row.unit), max: row.max_qty })].filter(Boolean).join(' · ');
+  const fmt = useRequestFormat();
+  const name = fmt.name(row);
+  const meta = [row.code, fmt.limit(row.unit, row.max_qty)].filter(Boolean).join(' · ');
   return (
     <article className={['ct-card', row.usable ? '' : 'is-inactive', open ? 'is-open' : ''].filter(Boolean).join(' ')}>
       <div className="ct-card__tile">

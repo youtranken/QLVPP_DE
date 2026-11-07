@@ -33,7 +33,7 @@ function formattersFor(locale: string) {
 
 // Hạn là mốc 00:00 ngày sau ngày cuối → lùi 1 ms để ra đúng ngày cuối theo giờ VN
 export function useRequestFormat() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const unitName = useUnitNames();
   const { time, day } = formattersFor(i18n.language === 'en' ? 'en-GB' : 'vi-VN');
   return {
@@ -44,6 +44,8 @@ export function useRequestFormat() {
       return `${part('day')}/${part('month')}`;
     },
     unit: (code: string | null) => unitName(code),
+    // Không đặt giới hạn tháng thì chỉ còn đơn vị
+    limit: (code: string | null, max: number | null | undefined) => (max ? t('request.grid.unitMax', { unit: unitName(code), max }) : unitName(code)),
     name: (l: Pick<CartLabel, 'name' | 'name_en'>) => nameIn(l, i18n.language),
   };
 }

@@ -28,7 +28,7 @@ describe('RequestPage — điện thoại ≤ 900: thanh phiếu nổi + sheet p
     expect(within(sheet).queryByRole('spinbutton')).toBeNull();
     await startEditingOrder();
     expect(within(sheet).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(2);
-    expect(within(sheet).getByRole('button', { name: 'Lưu phiếu' })).toBeDisabled();
+    expect(within(sheet).getByRole('button', { name: 'Hủy' })).toBeEnabled();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(opener).toHaveFocus();

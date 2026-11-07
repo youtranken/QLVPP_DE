@@ -59,7 +59,7 @@ describe('Thẻ món dạng lưới', () => {
     expect(screen.getByText('Giấy & sổ')).toBeInTheDocument();
     expect(screen.getByText('Tủ: 10')).toHaveClass('ct-card__stock');
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
-    expect(await screen.findByText('VPP-010 · cây · tối đa 10/tháng')).toBeInTheDocument();
+    expect(await screen.findByText('VPP-010 · Tối đa 10 cây/tháng')).toBeInTheDocument();
     expect(screen.queryByText('Tải ảnh lên')).toBeNull();
   });
 

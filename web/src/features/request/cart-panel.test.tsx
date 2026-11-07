@@ -167,14 +167,20 @@ describe('CartPanel', () => {
         saved: SAVED,
         onEditStart: vi.fn(),
       });
-      expect(within(aside()).getByText('Món đã tạm ngưng. Sản phẩm này có thể không được giao hàng.')).toBeInTheDocument();
-      expect(within(aside()).getByText('Tối đa đã đổi còn 2/tháng. Giữ được 5, không tăng thêm.')).toBeInTheDocument();
+      expect(within(aside()).getByText('Sản phẩm này đã tạm ngưng và không thể đặt hàng.')).toBeInTheDocument();
+      expect(within(aside()).getByText('Hành chính đã đổi tối đa còn 2/tháng. Số lượng 5 vẫn được giữ, không thể tăng thêm.')).toBeInTheDocument();
     });
+  });
+
+  it('tối đa hạ: câu nói số lượng HIỆN TẠI của dòng (17, không phải 19 lúc lưu) và chỉ hiện khi còn vượt tối đa', () => {
+    show({ lines: [mk(1, { qty: 17, max: 19, lowered: { max: 1, qty: 19 } }), mk(2, { qty: 1, max: 19, lowered: { max: 1, qty: 19 } })] });
+    expect(within(aside()).getByText('Hành chính đã đổi tối đa còn 1/tháng. Số lượng 17 vẫn được giữ, không thể tăng thêm.')).toBeInTheDocument();
+    expect(within(within(aside()).getByText('Món 2').closest('li')!).queryByText(/đổi tối đa/)).toBeNull();
   });
 
   it('báo đỏ chỉ một tín hiệu: chữ danger (rq-line-alert), dòng is-alert và không is-error', () => {
     show({ lines: [mk(1, { stopped: true })] });
-    const li = within(aside()).getByText('Món đã tạm ngưng. Sản phẩm này có thể không được giao hàng.');
+    const li = within(aside()).getByText('Sản phẩm này đã tạm ngưng và không thể đặt hàng.');
     expect(li).toHaveClass('rq-line-alert');
     expect(li.closest('li')).toHaveClass('is-alert');
     expect(li.closest('li')).not.toHaveClass('is-error');

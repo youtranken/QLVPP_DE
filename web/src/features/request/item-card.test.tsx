@@ -59,11 +59,16 @@ describe('ItemCard', () => {
     const { container } = renderWithI18n(<ItemCard item={ITEM} line={line(2)} tone="g1" groupLabel="x" onQty={vi.fn()} />);
     expect(container.textContent).not.toMatch(/hết|tồn|sắp hết/i);
   });
-  it('hiện "đvt · tối đa N/tháng" và ghi chú gói; tên đầy đủ nằm ở title', () => {
+  it('hiện "Tối đa N đvt/tháng" (đơn vị trong giới hạn) và ghi chú gói; tên đầy đủ nằm ở title', () => {
     view(undefined);
-    expect(screen.getByText(/tối đa 5\/tháng/)).toBeInTheDocument();
+    expect(screen.getByText('Tối đa 5 cây/tháng')).toBeInTheDocument();
     expect(screen.getByText(/hộp 10/)).toBeInTheDocument();
     expect(screen.getByTitle('Bút bi xanh')).toBeInTheDocument();
+  });
+  it('không có giới hạn tháng → chỉ hiện đơn vị', () => {
+    renderWithI18n(<ItemCard item={{ ...ITEM, max_qty: null as unknown as number }} line={undefined} tone="g1" groupLabel={null} onQty={vi.fn()} />);
+    expect(screen.getByText('cây')).toHaveClass('rq-card-unit');
+    expect(screen.queryByText(/Tối đa/)).toBeNull();
   });
   it('dòng chỉ đọc (Hành chính thêm) → không stepper, không nút thêm', () => {
     view(line(3, { readonly: true, added_by_admin: true }));
@@ -80,6 +85,7 @@ describe('ItemCard — tiếng Anh', () => {
       view(undefined);
       expect(screen.getByText('Blue pen')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Add to order: Blue pen' })).toBeInTheDocument();
+      expect(screen.getByText(/^Max 5 \S+\/month$/)).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage('vi');
     }

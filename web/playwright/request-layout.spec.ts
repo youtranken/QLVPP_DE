@@ -175,6 +175,8 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await expect(card.getByRole('img', { name: 'Tạm ngưng' })).toBeVisible();
       await expect(card.getByRole('button', { name: /Không đặt được/ })).toBeDisabled();
       await expect(card.getByRole('button', { name: `Thêm vào phiếu: ${a.name}`, exact: true })).toHaveCount(0);
+      // Giới hạn tháng một cụm: đơn vị nằm trong "Tối đa N đvt/tháng"
+      await expect(card.getByText(/^Tối đa \d+ \S+\/tháng$/)).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
     } finally {
       await group.cleanup(me.sub);

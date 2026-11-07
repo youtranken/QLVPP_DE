@@ -250,6 +250,8 @@ export function useCart(server: RequestView | null, ctx: CartContext, initial?: 
     lines: lines.map(toInput),
   });
 
+  const discard = () => setLines(base);
+
   const markSaved = (view: RequestView | null) => {
     setSaved(view);
     setLines((view?.lines ?? []).map((l) => fromView(l, ctx)));
@@ -267,6 +269,7 @@ export function useCart(server: RequestView | null, ctx: CartContext, initial?: 
     replaceAll,
     toBody,
     markSaved,
+    discard,
   };
 }
 

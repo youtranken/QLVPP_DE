@@ -145,3 +145,5 @@
 @media (max-width: 900px) {
   [data-shell='member'] .rq-notice, [data-shell='member'] .rq-toast-slot { bottom: calc(142px + env(safe-area-inset-bottom)); }
 }
+[data-shell='member'] .rq-cart-save.is-cancel { background: var(--c-surface); color: var(--c-dark); border-color: var(--c-dark); }
+[data-shell='member'] .rq-cart-cancel { min-height: 44px; font: var(--t-body); font-weight: 700; }
