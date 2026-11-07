@@ -62,7 +62,7 @@ describe('Trang "Danh mục" (2 tab)', () => {
     expect(tabs.getByRole('tab', { name: 'Đơn vị tính' })).toHaveAttribute('aria-selected', 'true');
     expect(tabs.getByRole('tab', { name: 'Nhóm sản phẩm' })).toHaveAttribute('aria-selected', 'false');
     expect(tabs.getByRole('tab', { name: 'Nhóm sản phẩm' })).toHaveAttribute('href', '/admin/categories');
-    expect(screen.getByRole('heading', { level: 2, name: 'Đơn vị tính' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'Đơn vị tính' })).toBeNull();
   });
 
   it('tablist bàn phím: chỉ tab đang mở trong Tab; ←/→ chuyển focus giữa hai tab (vòng), Enter mới đổi trang', async () => {
@@ -87,7 +87,7 @@ describe('Trang "Danh mục" (2 tab)', () => {
     await userEvent.click(within(await screen.findByRole('tablist')).getByRole('tab', { name: 'Nhóm sản phẩm' }));
     expect(where()).toBe('/admin/categories');
     expect(within(screen.getByRole('tablist')).getByRole('tab', { name: 'Nhóm sản phẩm' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('heading', { level: 2, name: 'Nhóm sản phẩm' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'Nhóm sản phẩm' })).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'probe-back' }));
     expect(where()).toBe('/admin/categories/units');
   });

@@ -10,7 +10,6 @@ import { Toolbar } from '@/ui/toolbar';
 import { useReorderMode } from '@/ui/use-reorder-mode';
 import { useAdminItems, useAllCategories, useRefreshCatalog, type AdminItem, type Category } from './catalog.api';
 import { CategoryDialog } from './category-dialog';
-import { CategoryPreview } from './category-preview';
 import { CategoryTable } from './category-table';
 import { GroupPanel } from './group-panel';
 import { SetupHeader } from './setup-page';
@@ -56,7 +55,12 @@ export function CategoriesPage() {
   );
   return (
     <div className="ct-page">
-      <SetupHeader variant="groups" description={t('catalog.categories.description')} primary={add} />
+      <SetupHeader
+        variant="groups"
+        description={t('catalog.categories.description')}
+        primary={add}
+        tabsEnd={!sort.on && list.length > 0 ? <ReorderToggle count={list.length} onStart={sort.start} /> : undefined}
+      />
       {group.error && !panel.id && (
         <p role="alert" className="alert alert--danger">
           {group.error}
@@ -69,31 +73,24 @@ export function CategoriesPage() {
       ) : list.length === 0 ? (
         <EmptyState title={t('catalog.categories.noGroups')} hint={t('catalog.categories.emptyHint')} action={add} />
       ) : (
-        <div className="cg-layout">
-          <div className="ct-block">
+        <div className="ct-block">
+          {sort.on && (
             <Toolbar>
-              {sort.on ? (
-                <ReorderBar dirty={order.dirty} dirtyText={t('catalog.categories.dirty', { n: order.moved })} saving={order.saving} onCancel={() => void sort.cancel()} onSave={() => void sort.save()} />
-              ) : (
-                <div className="toolbar__end">
-                  <ReorderToggle count={list.length} onStart={sort.start} />
-                </div>
-              )}
+              <ReorderBar dirty={order.dirty} dirtyText={t('catalog.categories.dirty', { n: order.moved })} saving={order.saving} onCancel={() => void sort.cancel()} onSave={() => void sort.save()} />
             </Toolbar>
-            <CategoryTable
-              ordered={list}
-              counts={counts.all}
-              countsReady={counts.ready}
-              busy={group.busy || order.saving}
-              sorting={sort.on}
-              onMove={order.move}
-              onMoveTo={order.moveTo}
-              onEdit={setEditing}
-              onToggleActive={(c) => void group.toggle(c)}
-              onOpen={(c) => panel.open(c.id)}
-            />
-          </div>
-          <CategoryPreview ordered={list} />
+          )}
+          <CategoryTable
+            ordered={list}
+            counts={counts.all}
+            countsReady={counts.ready}
+            busy={group.busy || order.saving}
+            sorting={sort.on}
+            onMove={order.move}
+            onMoveTo={order.moveTo}
+            onEdit={setEditing}
+            onToggleActive={(c) => void group.toggle(c)}
+            onOpen={(c) => panel.open(c.id)}
+          />
         </div>
       )}
       {openIndex >= 0 && (

@@ -2,9 +2,7 @@
 [data-shell='admin'] .setup-tab { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: var(--r-pill); color: var(--c-ink-2); font: var(--t-label); text-decoration: none; }
 [data-shell='admin'] .setup-tab[aria-selected='true'] { background: var(--c-sel); color: var(--c-on-sel); box-shadow: none; }
 [data-shell='admin'] .setup-tab:focus-visible { box-shadow: var(--focus); outline: none; }
-[data-shell='admin'] .setup-sub { display: grid; gap: var(--s-1); }
-[data-shell='admin'] .setup-sub h2 { margin: 0; color: var(--c-ink); font: var(--t-h2); }
-[data-shell='admin'] .setup-sub .page-head__desc { margin: 0; }
+[data-shell='admin'] .setup-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); }
 @media (max-width: 767px) {
   [data-shell='admin'] .setup-tab { min-height: var(--hit); padding: 0 12px; }
 }

@@ -79,7 +79,7 @@ describe('Trang Đơn vị tính', () => {
   it('h1 "Danh mục" + tab "Đơn vị tính", lấy GET units?all=1, hiện số món đang dùng và trạng thái từng ĐVT', async () => {
     const f = await open();
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Danh mục');
-    expect(screen.getByRole('heading', { level: 2, name: 'Đơn vị tính' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'Đơn vị tính' })).toBeNull();
     expect(f.mock.calls.map((c) => c[0])).toContain('/api/units?all=1');
     expect(within(rowOf('cái')).getByText('4')).toBeInTheDocument();
   });
@@ -286,7 +286,7 @@ describe('Trang Đơn vị tính', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Đưa hộp lên' }));
     await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Sản phẩm' }));
     await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi?' })).getByRole('button', { name: 'Ở lại' }));
-    expect(screen.getByRole('heading', { level: 2, name: 'Đơn vị tính' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'Đơn vị tính' })).toBeNull();
     expect(names()).toEqual(['hộp', 'cái', 'Cũ']);
   });
 

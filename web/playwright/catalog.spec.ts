@@ -43,7 +43,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await catDialog.getByRole('button', { name: 'Thêm nhóm' }).click();
       await expect(catDialog).toBeHidden();
       const catTable = page.getByRole('table');
-      await expect(catTable.getByRole('button', { name: `Thao tác cho ${category}` })).toBeVisible();
+      await expect(catTable.getByRole('button', { name: `Sửa nhóm ${category}` })).toBeVisible();
       await expect(page.getByRole('button', { name: `Đưa ${category} xuống` })).toHaveCount(0);
       await page.getByRole('button', { name: 'Sắp xếp' }).click();
       await expect(page.getByRole('button', { name: `Đưa ${category} xuống` })).toBeDisabled();
@@ -90,8 +90,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await expect(itemRow.getByRole('button', { name: `Dùng lại ${itemName}` })).toBeVisible();
 
       await page.getByRole('main').getByRole('link', { name: 'Danh mục' }).click();
-      await page.getByRole('button', { name: `Thao tác cho ${category}` }).click();
-      await page.getByRole('menu', { name: `Thao tác cho ${category}` }).getByRole('menuitem', { name: 'Ngừng nhóm' }).click();
+      await page.getByRole('button', { name: `Tạm ngưng nhóm ${category}` }).click();
       const pause = page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` });
       await expect(pause.getByText('0 món sẽ ẩn với nhân viên. Dùng lại nhóm chỉ hiện lại những món này; món đã ngừng riêng vẫn ngừng.')).toBeVisible();
       await pause.getByRole('button', { name: 'Ngừng nhóm' }).click();

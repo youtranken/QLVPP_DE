@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { toneAtRank } from '@/lib/group-tone';
 import { ReorderCell, ReorderHead } from '@/ui/reorder';
-import { RowMenu } from '@/ui/row-menu';
 import { useRowDrag } from '@/ui/use-row-drag';
 import type { Category } from './catalog.api';
 
@@ -18,6 +17,8 @@ interface Props {
   // Hộp "Ngừng nhóm" báo số món sẽ ẩn: chưa tải được món thì không cho mở (tránh "0 món")
   countsReady: boolean;
 }
+
+const nameClass = (c: Category) => (c.active ? 'cg-name__text' : 'cg-name__text cg-name--stopped');
 
 export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onMove, onMoveTo, onEdit, onToggleActive, onOpen }: Props) {
   const { t } = useTranslation();
@@ -49,34 +50,39 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
                 </td>
                 <td className="cg-name">
                   {sorting ? (
-                    <span className="cg-name__text">{c.name}</span>
+                    <span className={nameClass(c)}>{c.name}</span>
                   ) : (
                     <button type="button" className="cg-open" onClick={() => onOpen(c)}>
-                      <span className="cg-name__text">{c.name}</span>
+                      <span className={nameClass(c)}>{c.name}</span>
                     </button>
                   )}
-                  {!c.active && <span className="tag tag--outline">{t('catalog.categories.inactive')}</span>}
+                  {!c.active && <span className="cg-stopped">{t('catalog.categories.inactive')}</span>}
                 </td>
                 <td className="cg-name-en" data-label={t('catalog.categories.colNameEn')}>
-                  <span>{c.name_en ?? t('common.empty')}</span>
+                  <span>{c.name_en}</span>
                 </td>
                 <td className="num r" data-label={t('catalog.categories.colItems')}>
                   {sorting ? (
                     counts.get(c.id) ?? 0
                   ) : (
-                    <button type="button" className="btn btn--ghost btn--sm cg-count" onClick={() => onOpen(c)}>
-                      {t('catalog.categories.itemsCount', { n: counts.get(c.id) ?? 0 })}
+                    <button type="button" className="btn btn--ghost btn--sm cg-count" aria-label={t('catalog.categories.itemsCount', { n: counts.get(c.id) ?? 0 })} onClick={() => onOpen(c)}>
+                      {counts.get(c.id) ?? 0}
                     </button>
                   )}
                 </td>
-                <td className="cg-menu">
-                  <RowMenu
-                    label={t('catalog.categories.menu', { name: c.name })}
-                    items={[
-                      { label: t('catalog.categories.edit'), onSelect: () => onEdit(c) },
-                      { label: t(c.active ? 'catalog.categories.deactivate' : 'catalog.categories.reactivate'), disabled: busy || (c.active && !countsReady), danger: c.active, onSelect: () => onToggleActive(c) },
-                    ]}
-                  />
+                <td className="cg-acts">
+                  <button type="button" className="btn btn--sm" aria-label={t('catalog.categories.editFor', { name: c.name })} onClick={() => onEdit(c)}>
+                    {t('catalog.categories.edit')}
+                  </button>
+                  {c.active ? (
+                    <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('catalog.categories.pauseFor', { name: c.name })} disabled={busy || !countsReady} onClick={() => onToggleActive(c)}>
+                      {t('catalog.categories.pause')}
+                    </button>
+                  ) : (
+                    <button type="button" className="btn btn--sm btn--primary" aria-label={t('catalog.categories.reactivateFor', { name: c.name })} disabled={busy} onClick={() => onToggleActive(c)}>
+                      {t('catalog.categories.reactivate')}
+                    </button>
+                  )}
                 </td>
               </tr>
             );

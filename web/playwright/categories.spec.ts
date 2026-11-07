@@ -36,14 +36,10 @@ function deleteTestCategories() {
   psql(`DELETE FROM item_categories c WHERE c.name LIKE 'PW nhóm %' AND NOT EXISTS (SELECT 1 FROM items i WHERE i.category_id = c.id)`);
 }
 
-const menuButtons = (page: Page) => page.getByRole('table').getByRole('button', { name: /^Thao tác cho / });
+const menuButtons = (page: Page) => page.getByRole('table').getByRole('button', { name: /^Sửa nhóm / });
 const nameOf = (page: Page, i: number | 'last') => (i === 'last' ? menuButtons(page).last() : menuButtons(page).nth(i));
 const toneOf = (page: Page, name: string) =>
-  page.getByRole('row').filter({ has: page.getByRole('button', { name: `Thao tác cho ${name}`, exact: true }) }).locator('[title]:not([aria-hidden="true"])').first();
-const openMenu = async (page: Page, name: string) => {
-  await page.getByRole('button', { name: `Thao tác cho ${name}`, exact: true }).click();
-  return page.getByRole('menu', { name: `Thao tác cho ${name}` });
-};
+  page.getByRole('row').filter({ has: page.getByRole('button', { name: `Sửa nhóm ${name}`, exact: true }) }).locator('[title]:not([aria-hidden="true"])').first();
 
 test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
   asRole('admin');
@@ -59,7 +55,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await createCategory(request, second, 900_010);
       await page.goto('/admin/categories');
       await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
-      await expect(nameOf(page, 'last')).toHaveAttribute('aria-label', `Thao tác cho ${second}`);
+      await expect(nameOf(page, 'last')).toHaveAttribute('aria-label', `Sửa nhóm ${second}`);
       const total = await menuButtons(page).count();
       await expect(toneOf(page, second)).toHaveAttribute('title', TONES[(total - 1) % 7]);
       await expect(toneOf(page, first)).toHaveAttribute('title', TONES[(total - 2) % 7]);
@@ -77,8 +73,8 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect(page.getByRole('button', { name: 'Sắp xếp' })).toBeVisible();
 
       await page.reload();
-      await expect(nameOf(page, 'last')).toHaveAttribute('aria-label', `Thao tác cho ${first}`);
-      await expect(nameOf(page, total - 2)).toHaveAttribute('aria-label', `Thao tác cho ${second}`);
+      await expect(nameOf(page, 'last')).toHaveAttribute('aria-label', `Sửa nhóm ${first}`);
+      await expect(nameOf(page, total - 2)).toHaveAttribute('aria-label', `Sửa nhóm ${second}`);
       await expect(toneOf(page, second)).toHaveAttribute('title', TONES[(total - 2) % 7]);
       await expect(toneOf(page, first)).toHaveAttribute('title', TONES[(total - 1) % 7]);
 
@@ -101,7 +97,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
     }
   });
 
-  test('E9-S5 Nhóm món: menu ⋯ Ngừng nhóm báo số món sẽ ẩn; Danh mục thu gọn mặc định, cột Tên tiếng Anh, nhãn "Nhóm đang ngừng"', async ({ page, request }, info) => {
+  test('Nhóm 1 · mục 8: Tạm ngưng nhóm báo số món sẽ ẩn, tên gạch + "Đã ngừng"; ở Sản phẩm nhóm tự thu gọn, món có nhãn "Tạm ngưng"; Dùng lại nhóm bật lại', async ({ page, request }, info) => {
     const stamp = `${Date.now()}-${info.project.name}`;
     const category = `PW nhóm ${stamp} ngừng`;
     const names = [`PW món ${stamp} 1`, `PW món ${stamp} 2`];
@@ -112,30 +108,37 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       for (const name of names) itemIds.push(await createItem(request, { name, name_en: `PW item EN ${name.slice(-1)}`, category_id: catId }));
 
       await page.goto('/admin/categories');
-      await expect(page.getByRole('row').filter({ hasText: category }).getByRole('switch')).toHaveCount(0);
-      const menu = await openMenu(page, category);
-      await expect(menu.getByRole('menuitem')).toHaveText(['Sửa', 'Ngừng nhóm']);
-      await menu.getByRole('menuitem', { name: 'Ngừng nhóm' }).click();
+      const catRow = page.getByRole('row').filter({ hasText: category });
+      await expect(catRow.getByRole('switch')).toHaveCount(0);
+      await expect(page.getByRole('region', { name: 'Nhân viên sẽ thấy' })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: `Thao tác cho ${category}` })).toHaveCount(0);
+      await expect(catRow.getByRole('button', { name: `Sửa nhóm ${category}` })).toBeVisible();
+      await catRow.getByRole('button', { name: `Tạm ngưng nhóm ${category}` }).click();
       const confirm = page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` });
       await expect(confirm.getByText('2 món sẽ ẩn với nhân viên. Dùng lại nhóm chỉ hiện lại những món này; món đã ngừng riêng vẫn ngừng.')).toBeVisible();
       await shot(page, info, 'categories-pause-confirm', false);
       await confirm.getByRole('button', { name: 'Ngừng nhóm' }).click();
-      await expect(page.getByRole('row').filter({ hasText: category }).getByText('Đã ngừng', { exact: true })).toBeVisible();
+      await expect(catRow.getByText('Đã ngừng', { exact: true })).toBeVisible();
+      expect(await catRow.locator('.cg-name--stopped').evaluate((el) => getComputedStyle(el).textDecorationLine)).toContain('line-through');
+      await expect(page.getByRole('status').filter({ hasText: `Đã tạm ngưng nhóm ${category}` }).getByRole('button', { name: 'Hoàn tác' })).toBeVisible();
       await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
 
       await page.goto('/admin/catalog?view=table');
       await expect(page.getByRole('heading', { level: 1, name: 'Sản phẩm' })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Thu tất cả' })).toBeVisible();
       const head = page.getByRole('row').filter({ hasText: category });
-      await expect(head.getByText('Nhóm đang ngừng')).toBeVisible();
+      await expect(head.getByText('Tạm ngưng cả nhóm')).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: names[0] })).toHaveCount(0);
+      await page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ }).fill(names[0]);
       const row = page.getByRole('row').filter({ hasText: names[0] });
-      await expect(row.getByText('Ngừng theo nhóm')).toBeVisible();
+      await expect(row.getByText('Tạm ngưng', { exact: true })).toBeVisible();
       await expect(row.getByText('PW item EN 1')).toBeVisible();
       if (!isMobile(info)) await expect(page.getByRole('columnheader', { name: 'Tên tiếng Anh' })).toBeVisible();
-      await page.reload();
-      await expect(page.getByRole('row').filter({ hasText: names[1] })).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'catalog-paused-group', false);
+
+      await page.goto('/admin/categories');
+      await catRow.getByRole('button', { name: `Dùng lại nhóm ${category}` }).click();
+      await expect(catRow.getByRole('button', { name: `Tạm ngưng nhóm ${category}` })).toBeVisible();
     } finally {
       for (const id of itemIds) await removeTestItem(request, id);
       deleteTestCategories();
@@ -145,7 +148,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
   test('E9-S5 Nhóm món: Enter trên ▲▼ giữ tiêu điểm ở mũi tên của dòng vừa dời, tới dòng cuối chuyển sang ▲', async ({ page }) => {
     await page.goto('/admin/categories');
     await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
-    await expectReorderArrowKeepsFocus(page, /^Thao tác cho /);
+    await expectReorderArrowKeepsFocus(page, /^Sửa nhóm /);
   });
 
   test('E9-S5 Nhóm món: lỗi tải → "Không tải được dữ liệu — thử lại." và "Thử lại"', async ({ page }) => {

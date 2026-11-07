@@ -38,10 +38,12 @@ export function useGroupToggle(items: AdminItem[] | undefined, refresh: () => Pr
       if (c.active && !(await askDeactivate(c))) return;
       const saved = await patchCategory(c.id, { active: !c.active }, csrfToken);
       const back = saved?.affected_items;
-      notify({
-        text: back ? t('catalog.categories.reactivated', { k: back.reactivated, m: back.still_inactive }) : t('catalog.categories.saved', { name: saved?.name ?? c.name }),
-        tone: 'ok',
-      });
+      const name = saved?.name ?? c.name;
+      if (c.active) {
+        notify({ text: t('catalog.categories.paused', { name }), tone: 'ok', action: { label: t('catalog.categories.undo'), onClick: () => void toggle({ ...c, active: false }, notify) } });
+      } else {
+        notify({ text: back ? t('catalog.categories.reactivated', { k: back.reactivated, m: back.still_inactive }) : t('catalog.categories.saved', { name }), tone: 'ok' });
+      }
       await refresh();
     } catch (e) {
       setError(t(catalogErrorKey(e)));
