@@ -56,7 +56,8 @@ const home = {
       debt: 'Xem nợ tháng trước',
     },
     cta: {
-      register: 'Xem tổng hợp',
+      registerWait: 'Đang chờ chốt kỳ (tháng {{month}})',
+      registerView: 'Xem kỳ (tháng {{month}})',
       send: 'Mở Gửi ADM',
       arrive: 'Nhập hàng về',
       deliver: 'Mở Giao hàng',

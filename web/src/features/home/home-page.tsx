@@ -95,11 +95,11 @@ function Ready({ currentYm }: { currentYm: string }) {
       send: send.state ? { state: send.state, at: sent?.created_at ?? send.noOrder?.at ?? null, items: sent?.items_count ?? 0, units: sent?.units_total ?? 0, changed: send.changedAfter } : null,
       plan: plan.data ?? null,
       pendingDelivery: locked.data.lines_pending_delivery ?? 0,
-      summaryYm: workingYm,
+      ym: workingYm,
     },
     t,
   );
-  const currentSteps = monthSteps({ registered: current.data.registered, headcount: current.data.headcount, isOpen: current.data.is_open, send: null, plan: null, pendingDelivery: 0, summaryYm: workingYm }, t);
+  const currentSteps = monthSteps({ registered: current.data.registered, headcount: current.data.headcount, isOpen: current.data.is_open, send: null, plan: null, pendingDelivery: 0, ym: currentYm }, t);
   const registerView = view === 'current';
   const doing = lockedSteps.find((s) => s.current);
   const hero = registerView

@@ -59,7 +59,8 @@ const home: Messages<typeof vi> = {
       debt: "View last month's debt",
     },
     cta: {
-      register: 'View summary',
+      registerWait: 'Waiting for the period to lock (month {{month}})',
+      registerView: 'View period (month {{month}})',
       send: 'Open Send to ADM',
       arrive: 'Enter goods in',
       deliver: 'Open Delivery',

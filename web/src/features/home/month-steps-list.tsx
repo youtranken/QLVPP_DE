@@ -57,9 +57,15 @@ export function MonthSteps({ steps, onlyFirst = false }: Props) {
                     <span style={{ width: `${s.progress}%` }} />
                   </div>
                 )}
-                <Link className="btn hm-cta" to={s.to}>
-                  {t(`home.cta.${s.key}`)}
-                </Link>
+                {s.waitLabel ? (
+                  <span className="btn hm-cta" aria-disabled="true">
+                    {s.waitLabel}
+                  </span>
+                ) : (
+                  <Link className="btn hm-cta" to={s.to}>
+                    {t(`home.cta.${s.key}`)}
+                  </Link>
+                )}
               </div>
             )}
           </li>

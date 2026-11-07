@@ -91,11 +91,17 @@ describe('Trang Tháng này: bước hiện tại và nút đi thẳng', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'Kỳ đang đăng ký (tháng 11)' }));
     expect(within(currentStep()).getByText('Đăng ký')).toBeInTheDocument();
     expect(within(currentStep()).getByText('32/40')).toBeInTheDocument();
-    // Kỳ mở chưa có Tổng hợp: dẫn tới Tổng hợp của kỳ khóa gần nhất
-    expect(within(currentStep()).getByRole('link', { name: 'Xem tổng hợp' })).toHaveAttribute('href', '/admin/summary?ym=2026-10');
+    // Kỳ mở chưa có Tổng hợp: nút chỉ báo đang chờ chốt, không dẫn sang kỳ khác
+    expect(within(currentStep()).getByText('Đang chờ chốt kỳ (tháng 11)')).toBeInTheDocument();
     expect(steps().getAllByText('Sau khi khóa sổ')).toHaveLength(3);
-    expect(steps().getAllByRole('link')).toHaveLength(1);
+    expect(steps().queryAllByRole('link')).toHaveLength(0);
     expect(screen.getByText('Khóa tự động 00:00 ngày 11/11. Sau đó in phiếu gửi ADM.')).toBeInTheDocument();
+  });
+
+  it('kỳ đã khóa: bước Đăng ký có "Xem kỳ (tháng 10)" dẫn tới Tổng hợp kỳ đó', async () => {
+    await open({});
+    const reg = steps().getAllByRole('listitem')[0]!;
+    expect(within(reg).getByRole('link', { name: 'Xem kỳ (tháng 10)' })).toHaveAttribute('href', '/admin/summary?ym=2026-10');
   });
 
   it('kỳ giao hiện tên món theo ngôn ngữ ở thẻ tủ sắp hết (en dùng name_en)', async () => {

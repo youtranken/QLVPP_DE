@@ -21,12 +21,14 @@
 [data-shell='admin'] .hm-step__value { font: var(--t-h2); letter-spacing: var(--ls-h2); color: var(--c-on-dark-2); }
 [data-shell='admin'] .hm-step[data-state='current'] .hm-step__value { font: var(--t-stat); color: var(--c-on-dark); }
 [data-shell='admin'] .hm-step__note { font: var(--t-sm); color: var(--c-on-dark-2); }
-[data-shell='admin'] .hm-step__go { display: grid; gap: var(--s-3); }
+[data-shell='admin'] .hm-step__go { display: grid; gap: var(--s-3); min-width: 0; }
 [data-shell='admin'] .hm-step__link { display: inline-flex; align-items: center; align-self: start; min-height: 44px; font: var(--t-label); font-weight: 600; color: var(--c-on-dark); text-decoration: underline; text-underline-offset: 3px; }
 [data-shell='admin'] .hm-step__link:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 [data-shell='admin'] .hm-bar { height: 6px; border-radius: var(--r-pill); background: var(--c-on-dark-fill); overflow: hidden; }
 [data-shell='admin'] .hm-bar span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--c-bar-fill); }
 [data-shell='admin'] .hm-cta { --btn-bg: var(--c-bar-fill); --btn-bg-hover: var(--c-cta-hover); --btn-bg-active: var(--c-cta-press); --btn-fg: var(--c-dark); --btn-sh: none; --btn-sh-hover: none; justify-self: start; border-color: transparent; font-weight: 600; }
+/* Kỳ còn mở: nhãn trạng thái, không phải nút */
+[data-shell='admin'] .hm-cta[aria-disabled='true'] { --btn-bg: transparent; --btn-bg-hover: transparent; --btn-bg-active: transparent; --btn-fg: var(--c-on-dark); border-color: var(--c-on-dark-fill); cursor: default; white-space: normal; max-width: 100%; text-align: start; }
 [data-shell='admin'] .hm-cta:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { [data-shell='admin'] .hm-bar span { transition: width .5s ease; } }
 

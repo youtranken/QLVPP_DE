@@ -13,6 +13,8 @@ export interface StepState {
   changed?: boolean;
   note?: string;
   link?: { to: string; label: string };
+  // Kỳ còn mở: nút chỉ báo trạng thái, không bấm được
+  waitLabel?: string;
 }
 
 export interface SendInput {
@@ -36,8 +38,8 @@ export interface MonthStepsInput {
   send: SendInput | null;
   plan: PlanInput | null;
   pendingDelivery: number;
-  // Tổng hợp chỉ xem kỳ đã khóa: bước Đăng ký của cả hai kỳ dẫn tới kỳ khóa gần nhất
-  summaryYm: string;
+  // Kỳ của thẻ này; Tổng hợp chỉ mở được khi kỳ đã khóa
+  ym: string;
 }
 
 const SEND_ADM = '/admin/send-adm';
@@ -69,13 +71,16 @@ function arriveStep(send: SendInput | null, plan: PlanInput | null, t: TFunction
 // Bước hiện tại = bước đầu tiên chưa xong; tất cả xong thì không có bước nào hiện tại
 export function monthSteps(i: MonthStepsInput, t: TFunction): StepState[] {
   const known = i.headcount !== null && i.headcount > 0;
+  const month = Number(i.ym.slice(5, 7));
+  const summary = `/admin/summary?ym=${i.ym}`;
   const steps: Omit<StepState, 'current'>[] = [
     {
       key: 'register',
       done: !i.isOpen,
       value: known ? `${i.registered}/${i.headcount}` : String(i.registered),
       progress: known ? Math.min(100, Math.round((i.registered / i.headcount!) * 100)) : undefined,
-      to: `/admin/summary?ym=${i.summaryYm}`,
+      to: summary,
+      ...(i.isOpen ? { waitLabel: t('home.cta.registerWait', { month }) } : { link: { to: summary, label: t('home.cta.registerView', { month }) } }),
     },
     { key: 'send', to: SEND_ADM, ...sendStep(i.send, t) },
     { key: 'arrive', to: '/admin/arrivals', ...arriveStep(i.send, i.plan, t) },

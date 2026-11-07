@@ -19,7 +19,9 @@ test.describe('Trang Tháng này (Plan v2-B, B6)', () => {
     await shot(page, info, 'home');
     expect(await fitsWidth(page), 'không cuộn ngang').toBe(true);
     if (isMobile(info)) await expectNoContrastViolations(page);
-    const links = steps(page).getByRole('link');
+    // Link phụ "Xem kỳ …" / "Xem bản đã gửi" không phải nút đi thẳng
+    await expect(steps(page).getByRole('listitem').first().getByRole('link', { name: /^Xem kỳ \(tháng \d+\)$/ })).toBeVisible();
+    const links = steps(page).getByRole('link').filter({ hasNotText: /^Xem / });
     const n = await links.count();
     expect(n).toBeLessThanOrEqual(1);
     if (n === 1) {
@@ -52,11 +54,10 @@ test.describe('Trang Tháng này (Plan v2-B, B6)', () => {
 
     await page.getByRole('radio', { name: /^Kỳ đang đăng ký/ }).click();
     await expect(steps(page).getByText('Sau khi khóa sổ')).toHaveCount(3);
-    // Tổng hợp chỉ xem kỳ đã khóa: bước Đăng ký của kỳ đang mở dẫn tới kỳ khóa gần nhất (tháng trước)
-    const [y, m] = (period.ym as string).split('-').map(Number);
-    const lockedYm = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
-    await expect(steps(page).getByRole('link', { name: 'Xem tổng hợp' })).toHaveAttribute('href', `/admin/summary?ym=${lockedYm}`);
-    await expect(steps(page).getByRole('link')).toHaveCount(1);
+    // Kỳ đang mở chưa có Tổng hợp: nút chỉ báo đang chờ chốt, không dẫn sang kỳ khác
+    const month = Number((period.ym as string).slice(5, 7));
+    await expect(steps(page).getByText(`Đang chờ chốt kỳ (tháng ${month})`)).toBeVisible();
+    await expect(steps(page).getByRole('link')).toHaveCount(0);
     await settled(page);
     await shot(page, info, 'home-register');
     if (isMobile(info)) await expectNoContrastViolations(page);
