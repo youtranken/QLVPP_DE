@@ -13,6 +13,7 @@ import { CatalogTable } from './catalog-table';
 import { BulkMaxDialog, BulkMoveDialog } from './bulk-dialogs';
 import { ItemDrawer } from './item-drawer';
 import { useBulkItems } from './use-bulk-items';
+import { bulkScope } from './catalog-bulk-scope';
 import { useGroupToggle } from './use-group-toggle';
 import { useCatalogActions } from './use-catalog-actions';
 import { useCatalogParams } from './use-catalog-params';
@@ -71,16 +72,16 @@ export function CatalogPage() {
     await bulk.run(visible, body, doneText);
     setDialog(null);
   };
+  const scope = useMemo(() => bulkScope(d.rows, bulk.selection.selected, d.index), [d.rows, bulk.selection.selected, d.index]);
   const reactivateSelected = async () => {
-    const picked = d.rows.filter((r) => bulk.selection.selected.has(r.id));
-    const eligible = picked.filter((r) => !r.active).map((r) => r.id);
+    const eligible = scope.resumable.map((r) => r.id);
     if (eligible.length > 0) await bulk.run(eligible, { active: true }, (n) => t('catalog.bulk.reactivated', { n }));
-    // Món chỉ tạm ngưng vì nhóm: không đổi được từng món, bật lại nhóm trước
-    for (const r of picked.filter((x) => x.active && !x.usable)) bulk.setRowError(r.id, t('catalog.categories.enableGroupFirst'));
+    // Món của nhóm tạm ngưng: không đổi được từng món, bật lại nhóm trước
+    for (const r of scope.locked) bulk.setRowError(r.id, t('catalog.categories.enableGroupFirst'));
   };
   const deactivateSelected = async () => {
     // Chỉ món đang dùng được: món đã ngừng riêng hoặc ngừng theo nhóm không PATCH (tránh biến "ngừng theo nhóm" thành "ngừng riêng")
-    const picked = d.rows.filter((r) => bulk.selection.selected.has(r.id) && r.active && r.usable);
+    const picked = scope.pausable;
     if (picked.length === 0) return;
     if (await actions.confirmDeactivateMany(picked.map((r) => ({ id: r.id, name: r.name })))) {
       await bulk.run(picked.map((r) => r.id), { active: false }, (n) => t('catalog.bulk.deactivated', { n }));
@@ -150,7 +151,7 @@ export function CatalogPage() {
           group={p.view.group}
           onGroup={p.setGroup}
           collapse={grid || p.view.q.trim() ? null : { all: allCollapsed, onToggle: () => setCollapsed(allCollapsed ? NO_COLLAPSE : new Set(groupKeys)) }}
-          bulk={grid ? null : { count: bulk.count, pending: bulk.pending, onReactivate: () => void reactivateSelected(), onMax: () => setDialog('max'), onMove: () => setDialog('move'), onPause: () => void deactivateSelected(), onClear: bulk.clear }}
+          bulk={grid ? null : { count: bulk.count, pending: bulk.pending, scope: { pause: scope.pausable.length, resume: scope.resumable.length, locked: scope.locked.length }, onReactivate: () => void reactivateSelected(), onMax: () => setDialog('max'), onMove: () => setDialog('move'), onPause: () => void deactivateSelected(), onClear: bulk.clear }}
         />
         {grid ? (
           <CatalogGrid rows={d.rows} index={d.index} loading={!loaded} openId={panel.id} onEdit={openItem} emptyAction={emptyActions} tab={p.tab} narrowed={p.narrowed} groupBusy={groups.busy} onReactivateGroup={reactivateGroup} />
