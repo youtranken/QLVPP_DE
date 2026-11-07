@@ -18,7 +18,8 @@ export function usePopover(controlled?: { open: boolean; onOpenChange: (open: bo
   const id = useId();
   useEffect(() => {
     if (!open) return;
-    panel.current?.querySelector<HTMLElement>('[aria-checked="true"], button')?.focus();
+    const first = panel.current?.querySelector<HTMLElement>('[aria-checked="true"]') ?? panel.current?.querySelector<HTMLElement>('button');
+    first?.focus();
     const onPointer = (e: PointerEvent) => {
       // Chuông nằm trong cùng khối nhưng không thuộc hộp này: bấm chuông cũng là bấm ra ngoài
       const t = e.target as Node;

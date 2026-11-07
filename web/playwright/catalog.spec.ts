@@ -113,7 +113,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
     deleteTestFiles([imageId]);
     try {
       await page.goto('/admin/catalog?view=table');
-      const search = page.getByRole('searchbox', { name: /^Tìm trong \d+ món$/ });
+      const search = page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ });
       await search.fill(name);
       const row = page.getByRole('row').filter({ hasText: name });
       await expect(row.getByText('Thiếu ảnh', { exact: true })).toBeVisible();
@@ -174,7 +174,7 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
       await expect(drawer).toBeHidden();
       await expect(page.getByRole('status').filter({ hasText: `Đã thêm ${nameA}` })).toBeVisible();
 
-      await page.getByRole('searchbox', { name: /^Tìm trong \d+ món$/ }).fill(stamp);
+      await page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ }).fill(stamp);
       const rowA = page.getByRole('row').filter({ hasText: nameA });
       await expectImageServed(page, rowA.getByRole('img', { name: nameA }));
 
@@ -218,7 +218,7 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
       await page.goto('/admin/catalog');
       await expect(page.getByRole('group', { name: 'Chế độ xem' }).getByRole('button', { name: 'Lưới' })).toHaveAttribute('aria-pressed', 'true');
       await page.getByRole('button', { name: /^Chưa có ảnh/ }).click();
-      await page.getByRole('searchbox', { name: /^Tìm trong \d+ món$/ }).fill(name);
+      await page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ }).fill(name);
       const card = page.getByRole('article').filter({ hasText: name });
       await expect(card.getByText('Tải ảnh lên', { exact: true })).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
@@ -248,7 +248,7 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
     const patched = () => page.waitForResponse((r) => r.url().endsWith(`/api/admin/items/${id}`) && r.request().method() === 'PATCH');
     try {
       await page.goto('/admin/catalog');
-      await page.getByRole('searchbox', { name: /^Tìm trong \d+ món$/ }).fill(name);
+      await page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ }).fill(name);
       const card = page.getByRole('article').filter({ hasText: name });
       const pause = card.getByRole('button', { name: `Tạm ngưng ${name}` });
       await expect(pause).toHaveText('Tạm ngưng');

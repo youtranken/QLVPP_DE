@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
+import i18n from '@/lib/i18n';
 import { mockViewport } from '@/test/viewport';
 
 afterEach(() => vi.unstubAllGlobals());
@@ -32,6 +33,24 @@ describe('MemberShell', () => {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(me).toHaveFocus();
+  });
+
+  it('390 px: ở /me nút "Tôi" được đánh dấu trang hiện tại', () => {
+    mockViewport(390);
+    renderApp(makeMe('member'), '/me');
+    expect(within(screen.getByRole('navigation', { name: 'Điều hướng chính' })).getByRole('button', { name: 'Tôi' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('1280 px: mở hộp tài khoản khi đang English → focus vào "English", không phải "Tiếng Việt"', async () => {
+    mockViewport(1280);
+    await i18n.changeLanguage('en');
+    try {
+      renderApp(makeMe('member'), '/');
+      await userEvent.click(screen.getByRole('button', { name: /^Open account for / }));
+      expect(within(screen.getByRole('dialog', { name: 'Account' })).getByRole('radio', { name: 'English' })).toHaveFocus();
+    } finally {
+      await i18n.changeLanguage('vi');
+    }
   });
 
   it('1280 px: banner full-bleed bọc nội dung trong .m-top__in (nền đặc nằm ở banner, nội dung giữ max 1440)', () => {

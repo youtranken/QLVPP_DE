@@ -30,7 +30,8 @@ test.describe('E6-S1 chuông', () => {
       await expect(bell).toHaveText('2');
       if (isMobile(info)) {
         const nav = page.getByRole('navigation', { name: 'Điều hướng chính' });
-        await expect(nav.getByRole('link')).toHaveCount(3);
+        await expect(nav.getByRole('link')).toHaveCount(2);
+        await expect(nav.getByRole('button', { name: 'Tôi' })).toBeVisible();
       }
 
       await bell.click();

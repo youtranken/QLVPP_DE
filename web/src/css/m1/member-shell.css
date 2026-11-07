@@ -35,6 +35,6 @@
 [data-shell='member'] .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(3, 1fr); padding-bottom: env(safe-area-inset-bottom); height: calc(58px + env(safe-area-inset-bottom)); background: var(--c-shell-a); border-top: 1px solid var(--c-glass-line); }
 [data-shell='member'] .bottom-nav a, [data-shell='member'] .bottom-nav button { display: grid; justify-items: center; align-content: center; gap: 2px; text-decoration: none; min-height: 44px; margin: var(--s-1) var(--s-2); border: 0; background: transparent; cursor: pointer; font-family: inherit; border-radius: var(--r-md); color: var(--c-on-dark-2); font-size: 14px; font-weight: 600; }
 [data-shell='member'] .bottom-nav a[aria-current='page'] { background: var(--c-on-dark-current); color: var(--c-on-dark); }
-[data-shell='member'] .bottom-nav button[aria-expanded='true'] { background: var(--c-on-dark-current); color: var(--c-on-dark); }
+[data-shell='member'] .bottom-nav button[aria-expanded='true'], [data-shell='member'] .bottom-nav button[aria-current='page'] { background: var(--c-on-dark-current); color: var(--c-on-dark); }
 [data-shell='member'] .bottom-nav button:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 [data-shell='member'] .bottom-nav a svg, [data-shell='member'] .bottom-nav button svg { width: 24px; height: 24px; }

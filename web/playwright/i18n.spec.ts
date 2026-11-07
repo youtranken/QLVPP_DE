@@ -181,6 +181,11 @@ test.describe('E6-S4 song ngữ mọi màn PRD §8', () => {
       const member = await englishPage(browser, info, { 'x-dev-user-sub': sub, 'x-dev-role': 'member' });
       pages.push(member);
       for (const path of MEMBER_SCREENS) await check(member, path, () => expect(member.getByRole('heading', { level: 1 })).toBeVisible());
+      await member.goto('/');
+      await member.getByRole('button', { name: isMobile(info) ? 'Me' : /^Open account for / }).click();
+      const account = member.getByRole('dialog', { name: 'Account' });
+      await account.getByRole('radio', { name: 'English' }).click();
+      await expect(account.getByRole('radio', { name: 'English' })).toBeChecked();
 
       const admin = await englishPage(browser, info, { 'x-dev-user-sub': sub, 'x-dev-role': 'admin' });
       pages.push(admin);

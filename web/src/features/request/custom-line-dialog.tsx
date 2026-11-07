@@ -32,6 +32,7 @@ export function CustomLineDialog({
   const unit = chosenUnit ?? baseUnit;
   const [qty, setQty] = useState(initial?.qty ?? 1);
   const [note, setNote] = useState(initial?.custom_note ?? '');
+  const [touched, setTouched] = useState(false);
 
   const line: CustomLineInput = {
     custom_name: name.trim(),
@@ -41,6 +42,7 @@ export function CustomLineDialog({
     qty,
   };
   const hintId = useId();
+  const atMaxId = useId();
   const missing = [
     !line.custom_name && t('request.custom.missingName'),
     !unit && t('request.custom.missingUnit'),
@@ -71,9 +73,9 @@ export function CustomLineDialog({
         <div className="sheet-body rq-custom-form">
           <DialogDescription className="rq-custom-intro">{t('request.custom.intro')}</DialogDescription>
           <FormField label={t('request.custom.name')}>
-            {(p) => <input {...p} className="rq-custom-input" value={name} maxLength={NAME_MAX} autoComplete="off" onChange={(e) => setName(e.target.value)} />}
+            {(p) => <input {...p} className="rq-custom-input" value={name} maxLength={NAME_MAX} autoComplete="off" onChange={(e) => setName(e.target.value)} onBlur={() => setTouched(true)} />}
           </FormField>
-          {missing.length > 0 && (
+          {touched && missing.length > 0 && (
             <p id={hintId} className="ff-hint rq-custom-missing">
               {t('request.custom.missing', { fields: missing.join(', ') })}
             </p>
@@ -86,10 +88,12 @@ export function CustomLineDialog({
               <span className="ff-label" aria-hidden="true">
                 {t('request.custom.qty')}
               </span>
-              <Stepper value={qty} min={1} max={maxQty} label={t('request.custom.qty')} onChange={setQty} />
-              {qty >= maxQty && <span className="rq-custom-atmax">{t('request.custom.atMax', { max: maxQty })}</span>}
+              <Stepper value={qty} min={1} max={maxQty} label={t('request.custom.qty')} describedBy={atMaxId} onChange={setQty} />
             </div>
           </div>
+          <p id={atMaxId} role="status" className="rq-custom-atmax">
+            {qty >= maxQty ? t('request.custom.atMax', { max: maxQty }) : null}
+          </p>
           <FormField label={t('request.custom.note')}>
             {(p) => (
               <textarea
@@ -109,7 +113,7 @@ export function CustomLineDialog({
               {t('request.custom.cancel')}
             </button>
           </DialogClose>
-          <button type="submit" className="btn btn--primary" disabled={!ready} aria-describedby={missing.length ? hintId : undefined}>
+          <button type="submit" className="btn btn--primary" disabled={!ready} aria-describedby={touched && missing.length ? hintId : undefined}>
             {t(initial ? 'request.custom.submitEdit' : 'request.custom.submitAdd')}
           </button>
         </div>

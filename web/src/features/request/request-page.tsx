@@ -118,14 +118,17 @@ function RequestEditor({
   const dirty = cart.dirtyCount > 0;
   // Sửa phiếu chỉ có hiệu lực tới lần lưu kế tiếp (savedSeq đổi thì phiếu về chế độ xem)
   const [editFrom, setEditFrom] = useState<number | null>(null);
+  useEffect(() => setEditFrom(null), [cart.saved]);
   const mode: 'view' | 'edit' = cart.saved && !dirty && editFrom !== savedSeq ? 'view' : 'edit';
   const saveLabel = dirty ? t('request.cart.saveDirty', { n: cart.dirtyCount }) : t('request.cart.save');
   const setQty = (key: string, n: number) => {
     flow.touched(key);
+    setEditFrom(savedSeq);
     cart.setQty(key, n);
   };
   const remove = (key: string) => {
     flow.touched(key);
+    setEditFrom(savedSeq);
     cart.remove(key);
   };
   const addCustom = () => setEditing({});
@@ -197,6 +200,7 @@ function RequestEditor({
           maxQty={me.config.default_max_qty}
           onClose={() => setEditing(null)}
           onSubmit={(line) => {
+            setEditFrom(savedSeq);
             if (editingLine) {
               flow.touched(editingLine.key);
               cart.updateCustom(editingLine.key, line);

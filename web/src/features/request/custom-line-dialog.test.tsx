@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, renderWithI18n, screen, userEvent, within } from '@/test/test-utils';
 import { ConfirmProvider } from '@/ui/confirm-provider';
@@ -48,9 +50,12 @@ describe('CustomLineDialog', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('thiếu tên → gợi ý "Cần thêm: tên món." và nút Thêm vô hiệu (ĐVT đã chọn sẵn)', async () => {
+  it('mở hộp chưa báo lỗi; rời ô Tên khi còn trống → gợi ý "Cần thêm: tên món." và nút Thêm vô hiệu (ĐVT đã chọn sẵn)', async () => {
     setup();
     await screen.findByRole('dialog', { name: 'Thêm món khác' });
+    expect(screen.queryByText('Cần thêm: tên món.')).toBeNull();
+    await userEvent.click(screen.getByLabelText('Tên món'));
+    await userEvent.tab();
     expect(screen.getByText('Cần thêm: tên món.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Thêm vào phiếu' })).toBeDisabled();
   });
@@ -149,6 +154,8 @@ describe('CustomLineDialog', () => {
     setup();
     await screen.findByRole('dialog', { name: 'Thêm món khác' });
     for (const label of ['Tên món', 'Đơn vị tính', 'Ghi chú (tùy chọn)']) expect(screen.getByLabelText(label)).toHaveClass('rq-custom-input');
+    const css = readFileSync(resolve(process.cwd(), 'src/features/request/request.m1.css'), 'utf8');
+    expect(css).toMatch(/\.rq-custom-input \{[^}]*font-size: 16px/);
   });
 
   it('câu mới không chứa " — "', () => {

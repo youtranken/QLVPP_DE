@@ -28,7 +28,7 @@ test.describe('E0-S9 khung nhân viên (dev-identity member)', () => {
     const account = page.getByRole('dialog', { name: 'Tài khoản' });
     await expect(account).toBeVisible();
     await expect(account.getByText(/Nhân viên$/)).toBeVisible();
-    await expect(account.getByText('Dữ liệu từ PMH ID, không sửa trong app.')).toBeVisible();
+    await expect(account.getByText('Dữ liệu từ PMH ID, không sửa trong app.').last()).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'member-me');
   });
@@ -104,8 +104,8 @@ test.describe('E0-S9 màn vào (chưa đăng nhập)', () => {
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'login');
     await page.getByRole('button', { name: 'Dành cho IT' }).click();
-    await expect(page.getByLabel('Tên tài khoản')).toHaveAttribute('type', 'text');
-    await expect(page.getByLabel('Mật khẩu')).toHaveAttribute('type', 'password');
+    await expect(page.getByLabel('Tên tài khoản', { exact: true })).toHaveAttribute('type', 'text');
+    await expect(page.getByLabel('Mật khẩu', { exact: true })).toHaveAttribute('type', 'password');
   });
 
   test('E0-S9 bị chặn quyền (?login=forbidden) → trang "Chưa được cấp quyền"', async ({ page }, info) => {

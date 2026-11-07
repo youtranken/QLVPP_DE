@@ -205,14 +205,14 @@ export function CartPanel({
           + {t('request.cart.addOther')}
         </button>
       )}
-      {showSave && view && (
-        <button type="button" className="btn btn--primary btn--xl btn--block rq-cart-save" onClick={onEditStart}>
-          {t('request.cart.editOrder')}
-        </button>
-      )}
-      {showSave && !view && (
-        <button type="button" className="btn btn--primary btn--xl btn--block rq-cart-save" disabled={!canSave} onClick={onSave}>
-          {saveLabel}
+      {showSave && (
+        <button
+          type="button"
+          className="btn btn--primary btn--xl btn--block rq-cart-save"
+          disabled={!view && !canSave}
+          onClick={view ? onEditStart : onSave}
+        >
+          {view ? t('request.cart.editOrder') : saveLabel}
         </button>
       )}
       <p className="rq-cart-note">

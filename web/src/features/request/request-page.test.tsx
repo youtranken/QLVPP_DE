@@ -336,6 +336,29 @@ describe('RequestPage', () => {
     expect(within(cart()).queryByRole('button', { name: 'Sửa phiếu' })).toBeNull();
   });
 
+  it('"Sửa phiếu" và nút chính sau khi sửa là cùng một nút (giữ focus khi đổi chế độ)', async () => {
+    mockViewport(1280);
+    stubRequestApi({ request: view({ lines: [lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 2 })] }) });
+    renderApp(makeMe('member'), '/');
+    const panel = await screen.findByRole('complementary', { name: 'Phiếu tháng 11' });
+    await within(panel).findByText('Bút bi xanh');
+    const button = within(panel).getByRole('button', { name: 'Sửa phiếu' });
+    await userEvent.click(button);
+    expect(within(cart()).getByRole('button', { name: 'Lưu phiếu' })).toBe(button);
+  });
+
+  it('phiếu đã lưu, thêm ở thẻ rồi bỏ dòng đó (dirty về 0) → vẫn chế độ sửa, không quay về xem', async () => {
+    mockViewport(1280);
+    stubRequestApi({ request: view({ lines: [lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 2 })] }) });
+    renderApp(makeMe('member'), '/');
+    await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Bút bi xanh');
+    await userEvent.click(within(grid()).getByRole('button', { name: 'Thêm vào phiếu: Giấy note vàng' }));
+    await userEvent.click(within(cartLine('Giấy note vàng')).getByRole('button', { name: /^Bỏ / }));
+    expect(within(cart()).getByRole('button', { name: 'Lưu phiếu' })).toBeInTheDocument();
+    expect(within(cart()).queryByRole('button', { name: 'Sửa phiếu' })).toBeNull();
+    expect(within(cartLine('Bút bi xanh')).getByRole('spinbutton')).toHaveValue(2);
+  });
+
   it('món tạm ngưng hiện trong lưới (có dấu), món admin_only vẫn không hiện', async () => {
     mockViewport(1280);
     stubRequestApi({ items: [PEN, PAUSED, A4] });
