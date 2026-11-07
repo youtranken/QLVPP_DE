@@ -58,6 +58,18 @@ export interface UnregisteredUser {
   department: string | null;
 }
 
+export interface RegistrationRow {
+  request_id: string;
+  user_sub: string;
+  full_name: string | null;
+  email: string | null;
+  team: string | null;
+  line_count: number;
+  total_qty: number;
+  custom_count: number;
+  saved_at: string;
+}
+
 export const SUMMARY_KEY = ['admin-summary'] as const;
 const PERSON_PAGE = 100;
 const base = (ym: string) => `/api/admin/periods/${ym}`;
@@ -155,3 +167,21 @@ export const saveAdjust = (id: string, body: AdjustBody, csrfToken: string | nul
     csrfToken,
   });
 
+// Kỳ đang mở chỉ xem: danh sách người đã đăng ký và phiếu từng người, không ghi gì
+export function useRegistrations(ym: string | undefined) {
+  return useQuery({
+    queryKey: [...SUMMARY_KEY, ym, 'registrations'],
+    enabled: !!ym,
+    queryFn: () => apiFetch<{ items: RegistrationRow[] }>(`${base(ym!)}/registrations`),
+  });
+}
+
+export type RegistrationView = RequestView & { team: string | null; user_status: string };
+
+export function useRegistration(ym: string, id: string | undefined) {
+  return useQuery({
+    queryKey: [...SUMMARY_KEY, ym, 'registration', id],
+    enabled: !!id,
+    queryFn: () => apiFetch<RegistrationView>(`${base(ym)}/registrations/${id}`),
+  });
+}

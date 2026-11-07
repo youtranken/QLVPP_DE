@@ -52,6 +52,9 @@
 [data-shell='admin'] .month-switch button:disabled { color: var(--c-faint); cursor: default; }
 [data-shell='admin'] .month-switch button:focus-visible { box-shadow: var(--focus); }
 [data-shell='admin'] .month-switch .month-switch__beyond:disabled { width: auto; padding: 0 var(--s-2); color: var(--c-muted); font: var(--t-micro); font-weight: 700; }
+[data-shell='admin'] .month-switch .month-switch__beyond:not(:disabled) { width: auto; padding: 0 var(--s-3); color: var(--c-ink-2); font: var(--t-micro); font-weight: 700; }
+[data-shell='admin'] .month-switch .month-switch__beyond[aria-pressed='true'],
+[data-shell='admin'] .month-switch .month-switch__beyond[aria-pressed='true']:hover:not(:disabled) { background: var(--c-sel); color: var(--c-on-sel); }
 [data-shell='admin'] .month-switch > span:first-of-type { font: var(--t-label); font-weight: 700; color: var(--c-ink); }
 [data-shell='admin'] .month-switch__status { height: 22px; padding: 0 var(--s-2); border-radius: var(--r-pill); display: inline-flex; align-items: center; font: var(--t-micro); font-weight: 700; }
 [data-shell='admin'] .month-switch__status--ok { background: var(--c-ok-soft); color: var(--c-ok); }

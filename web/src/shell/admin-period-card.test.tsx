@@ -49,7 +49,7 @@ describe('AdminPeriodCard', () => {
     renderCard(period(2));
     const card = screen.getByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng 11 · đang mở/ });
     expect(card).toHaveTextContent('Kỳ tháng 11');
-    expect(card).toHaveAttribute('href', '/admin/summary?ym=2026-10');
+    expect(card).toHaveAttribute('href', '/admin/summary?ym=2026-11');
     expect(card).toHaveTextContent('còn 2 ngày · khóa 00:00 ngày 11/11');
     expect(card).not.toHaveTextContent('Hôm nay là ngày cuối');
   });
@@ -72,7 +72,7 @@ describe('AdminPeriodCard', () => {
     stubSummary(() => jsonResponse(200, { registered: 32, headcount: 40 }));
     renderCard(period(2));
     expect(await screen.findByText('32/40 đã đăng ký')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /32\/40/ })).toHaveAttribute('href', '/admin/summary?ym=2026-10');
+    expect(screen.getByRole('link', { name: /32\/40/ })).toHaveAttribute('href', '/admin/summary?ym=2026-11');
     const bar = screen.getByRole('progressbar');
     expect(bar).toHaveAttribute('aria-valuenow', '32');
     expect(bar).toHaveAttribute('aria-valuemax', '40');
@@ -116,9 +116,9 @@ describe('AdminPeriodCard', () => {
 });
 
 describe('thẻ kỳ dẫn tới Tổng hợp của kỳ khóa gần nhất', () => {
-  it('kỳ mở 2026-11 → href /admin/summary?ym=2026-10', () => {
+  it('kỳ mở 2026-11 → href /admin/summary?ym=2026-11', () => {
     stubSummary(() => jsonResponse(500, { code: 'INTERNAL' }));
     renderCard(period(5));
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/admin/summary?ym=2026-10');
+    expect(screen.getByRole('link')).toHaveAttribute('href', '/admin/summary?ym=2026-11');
   });
 });

@@ -9,11 +9,11 @@ export type PageFilter = PersonFilter | 'low';
 
 const PERSON_FILTERS: readonly string[] = ['unregistered', 'pending_delivery', 'custom_pending', 'over_max', 'left'];
 
-// Chỉ xem kỳ đã khóa: mặc định và trần là kỳ khóa gần nhất; ?ym= sai mẫu, là kỳ mở hoặc tương lai → thay URL, không gọi API với tháng đó
+// Mặc định kỳ khóa gần nhất; trần là kỳ đang mở (chỉ xem); ?ym= sai mẫu hoặc tương lai → thay URL, không gọi API với tháng đó
 export function useSummaryParams(openYm: string | undefined) {
   const [params, update] = useUrlPatch();
   const asked = params.get('ym');
-  const ym = asked && openYm && YM.test(asked) && asked < openYm ? asked : openYm && lockedYm(openYm);
+  const ym = asked && openYm && YM.test(asked) && asked <= openYm ? asked : openYm && lockedYm(openYm);
   // Liên kết cũ/viết tay dùng view=items: hiểu như view=item rồi chuẩn hóa URL
   const askedView = params.get('view');
   const view: SummaryView = askedView === 'item' || askedView === 'items' ? 'item' : 'person';

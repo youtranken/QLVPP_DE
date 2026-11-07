@@ -31,7 +31,7 @@ describe('SummaryPage — đầu trang, tháng, URL', () => {
     expect(await screen.findByText('Không tải được dữ liệu — thử lại.')).toBeInTheDocument();
     expect(screen.queryByText('Đang tải…')).toBeNull();
   });
-  it('đúng một h1 "Tổng hợp kỳ", breadcrumb "Hằng tháng", mô tả; badge "Đã khóa"; › khóa ở kỳ khóa gần nhất, kỳ mở hiện vô hiệu "Đang mở"', async () => {
+  it('đúng một h1 "Tổng hợp kỳ", breadcrumb "Hằng tháng", mô tả; badge "Đã khóa"; › khóa ở kỳ khóa gần nhất, kỳ mở là nút "Đang mở" bấm được', async () => {
     stubSummaryApi();
     open();
     expect(await screen.findByText('Đã khóa')).toBeInTheDocument();
@@ -42,7 +42,9 @@ describe('SummaryPage — đầu trang, tháng, URL', () => {
     expect(screen.getByText('Tháng 10/2026')).toBeInTheDocument();
     const month = screen.getByRole('group', { name: 'Chọn tháng' });
     expect(within(month).getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
-    expect(within(month).getByRole('button', { name: 'Tháng 11/2026 · Đang mở' })).toBeDisabled();
+    const openPeriod = within(month).getByRole('button', { name: 'Tháng 11/2026 · Đang mở' });
+    expect(openPeriod).toBeEnabled();
+    expect(openPeriod).toHaveAttribute('aria-pressed', 'false');
   });
   it('?ym=2099-01 vượt trần → URL thay bằng kỳ khóa gần nhất ?ym=2026-10, không request nào mang 2099-01', async () => {
     const f = stubSummaryApi();
@@ -69,14 +71,7 @@ describe('SummaryPage — đầu trang, tháng, URL', () => {
     expect(screen.getByText('Đã khóa')).toBeInTheDocument();
   });
 
-  it('?ym=2026-11 (kỳ đang mở) → URL thành 2026-10 + dải nhắc "xem được từ 00:00 ngày 11/11"; không gọi API kỳ mở cho danh sách', async () => {
-    const f = stubSummaryApi();
-    open('/admin/summary?ym=2026-11');
-    await waitFor(() => expect(search()).toContain('ym=2026-10'));
-    expect(await screen.findByText(/Kỳ tháng 11 đang mở, xem được từ 00:00 ngày 11\/11\./)).toBeInTheDocument();
-    expect(calledUrls(f).some((u) => u.includes('/2026-11/requests') || u.includes('/2026-11/unregistered'))).toBe(false);
   });
-});
 
 describe('SummaryPage — thẻ lọc', () => {
   it('kỳ khóa: bấm "Dòng chờ giao" → filter=pending_delivery, aria-pressed, "Đang lọc: Còn dòng chờ giao · 3 người"; bấm lại → bỏ', async () => {
@@ -98,14 +93,7 @@ describe('SummaryPage — thẻ lọc', () => {
 
 
 
-  it('?ym=kỳ mở&filter=pending_delivery → về kỳ khóa 2026-10 và giữ lọc chờ giao', async () => {
-    const f = stubSummaryApi();
-    open('/admin/summary?ym=2026-11&filter=pending_delivery');
-    await waitFor(() => expect(search()).toContain('ym=2026-10'));
-    expect(await screen.findByRole('button', { name: /Dòng chờ giao/ })).toHaveAttribute('aria-pressed', 'true');
-    await waitFor(() => expect(calledUrls(f).some((u) => u.includes('/2026-10/requests') && u.includes('filter=pending_delivery'))).toBe(true));
-  });
-  it('kỳ khóa đang lọc chờ giao → ‹ sang kỳ trước vẫn giữ lọc', async () => {
+    it('kỳ khóa đang lọc chờ giao → ‹ sang kỳ trước vẫn giữ lọc', async () => {
     stubSummaryApi();
     open('/admin/summary?ym=2026-10&filter=pending_delivery');
     expect(await screen.findByRole('button', { name: /Dòng chờ giao/ })).toHaveAttribute('aria-pressed', 'true');
@@ -316,14 +304,7 @@ describe('SummaryPage — vượt tối đa, người đã nghỉ (R-D8.20, R-D1
     expect(await screen.findByText('Đang lọc: Vượt tối đa · 3 người')).toBeInTheDocument();
   });
 
-  it('?ym=kỳ mở&filter=over_max → về kỳ khóa 2026-10, nút "Vượt tối đa" bật và lọc lên API', async () => {
-    const f = stubSummaryApi();
-    open('/admin/summary?ym=2026-11&filter=over_max');
-    await waitFor(() => expect(search()).toContain('ym=2026-10'));
-    expect(await screen.findByRole('button', { name: 'Vượt tối đa' })).toHaveAttribute('aria-pressed', 'true');
-    await waitFor(() => expect(calledUrls(f).some((u) => u.includes('/2026-10/requests') && u.includes('filter=over_max'))).toBe(true));
-  });
-  it('theo món: dòng vượt tối đa có nhãn "Vượt tối đa hiện tại (4)"', async () => {
+    it('theo món: dòng vượt tối đa có nhãn "Vượt tối đa hiện tại (4)"', async () => {
     stubSummaryApi();
     open('/admin/summary?ym=2026-10&view=item');
     expect(await screen.findByText('Vượt tối đa hiện tại (4)')).toBeInTheDocument();
@@ -341,10 +322,4 @@ describe('SummaryPage — vượt tối đa, người đã nghỉ (R-D8.20, R-D1
     expect(within(drawer).getByRole('radio', { name: 'Người đã nghỉ' })).toBeChecked();
   });
 
-  it('?ym=kỳ mở&left=1 → về kỳ khóa 2026-10 và lọc người đã nghỉ', async () => {
-    const f = stubSummaryApi();
-    open('/admin/summary?ym=2026-11&left=1');
-    await waitFor(() => expect(search()).toContain('ym=2026-10'));
-    await waitFor(() => expect(calledUrls(f).some((u) => u.includes('/2026-10/requests') && u.includes('filter=left'))).toBe(true));
   });
-});

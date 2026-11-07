@@ -44,4 +44,25 @@ describe('MonthSwitcher', () => {
     expect(open).toHaveTextContent('Đang mở');
     expect(screen.getByRole('button', { name: 'Tháng sau' })).toBeDisabled();
   });
+
+  it('có onBeyond: nút kỳ mở bấm được, gọi onBeyond, aria-pressed theo kỳ đang xem; không có: vẫn disabled như cũ', async () => {
+    const onBeyond = vi.fn();
+    const beyond = { ym: '2026-11', label: 'Đang mở' };
+    const { unmount } = renderWithI18n(
+      <MonthSwitcher value="2026-10" max="2026-10" onChange={() => {}} formatLabel={fmt} labels={labels} beyond={beyond} onBeyond={onBeyond} />,
+    );
+    const button = screen.getByRole('button', { name: 'Tháng 11/2026 · Đang mở' });
+    expect(button).toBeEnabled();
+    expect(button).toHaveAttribute('aria-pressed', 'false');
+    await userEvent.click(button);
+    expect(onBeyond).toHaveBeenCalledTimes(1);
+    unmount();
+    const shown = renderWithI18n(
+      <MonthSwitcher value="2026-11" max="2026-10" onChange={() => {}} formatLabel={fmt} labels={labels} beyond={beyond} onBeyond={onBeyond} />,
+    );
+    expect(screen.getByRole('button', { name: 'Tháng 11/2026 · Đang mở' })).toHaveAttribute('aria-pressed', 'true');
+    shown.unmount();
+    renderWithI18n(<MonthSwitcher value="2026-10" max="2026-10" onChange={() => {}} formatLabel={fmt} labels={labels} beyond={beyond} />);
+    expect(screen.getByRole('button', { name: 'Tháng 11/2026 · Đang mở' })).toBeDisabled();
+  });
 });

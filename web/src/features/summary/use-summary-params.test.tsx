@@ -42,7 +42,17 @@ describe('useSummaryParams — ?item=', () => {
 });
 
 describe('useSummaryParams — chỉ kỳ đã khóa', () => {
-  it.each(['2026-11', '2026-12', 'abc'])('?ym=%s (kỳ mở / tương lai / sai) → kỳ khóa 2026-10, URL thay theo', async (asked) => {
+  it('?ym=2026-11 (kỳ đang mở, chỉ xem) → giữ nguyên, URL không đổi', () => {
+    render(
+      <MemoryRouter initialEntries={['/admin/summary?ym=2026-11']}>
+        <Probe />
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId('ym')).toHaveTextContent('2026-11');
+    expect(screen.getByTestId('search').textContent).toBe('?ym=2026-11');
+  });
+
+  it.each(['2026-12', 'abc'])('?ym=%s (tương lai / sai) → kỳ khóa 2026-10, URL thay theo', async (asked) => {
     render(
       <MemoryRouter initialEntries={[`/admin/summary?ym=${asked}`]}>
         <Probe />

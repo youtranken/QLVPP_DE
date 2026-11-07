@@ -20,6 +20,7 @@ import { SummaryPersonTable } from './summary-person-table';
 import { SummaryStats } from './summary-stats';
 import { UnregisteredTable } from './unregistered-table';
 import { OpenPeriodNotice } from './open-period-notice';
+import { OpenPeriodView } from './open-period-view';
 import { usePeriodSummary } from './summary.api';
 import { useRequestOrder } from './use-person-table-rows';
 import { useSummaryParams, type SummaryView } from './use-summary-params';
@@ -29,13 +30,15 @@ const MAX_SEARCH = 100;
 
 function MonthControl({ ym, openYm, onChange }: { ym: string; openYm: string; onChange: (v: string) => void }) {
   const { t } = useTranslation();
+  const viewingOpen = ym === openYm;
   return (
     <MonthSwitcher
       value={ym}
       max={lockedYm(openYm)}
       onChange={onChange}
-      status={{ tone: 'dark', label: t('summary.page.locked') }}
+      status={viewingOpen ? undefined : { tone: 'dark', label: t('summary.page.locked') }}
       beyond={{ ym: openYm, label: t('summary.page.open') }}
+      onBeyond={() => onChange(openYm)}
       formatLabel={(v) => t('summary.page.month', { month: monthOf(v), year: v.slice(0, 4) })}
       labels={{ group: t('summary.page.monthNav'), prev: t('summary.page.prevMonth'), next: t('summary.page.nextMonth') }}
     />
@@ -52,7 +55,8 @@ export function SummaryPage() {
   const [search, setSearch] = useUrlSearchBox(p.q, p.setQ);
   const phone = useMediaQuery(ADMIN_PHONE_QUERY);
   const personFilter = p.filter === 'low' || p.filter === 'unregistered' ? null : p.filter;
-  const listed = p.view === 'person' && p.filter !== 'unregistered';
+  const viewingOpen = !!p.ym && p.ym === openYm;
+  const listed = !viewingOpen && p.view === 'person' && p.filter !== 'unregistered';
   const requestOpen = new URLSearchParams(useLocation().search).has('request');
   const order = useRequestOrder(p.ym, personFilter, p.q, listed && requestOpen);
   const panel = usePanelParam('request', { order: listed ? order : undefined });
@@ -66,6 +70,16 @@ export function SummaryPage() {
 
   const ym = p.ym;
   const data = summary.data;
+  if (viewingOpen) {
+    return (
+      <div className="ct-page sm-page">
+        {header()}
+        <Toolbar lead={<MonthControl ym={ym} openYm={openYm} onChange={p.setMonth} />} />
+        {summary.isError && <LoadError onRetry={() => void summary.refetch()} />}
+        {data && <OpenPeriodView ym={ym} summary={data} />}
+      </div>
+    );
+  }
   // Kỳ không có phiếu nào: khung trống thay bảng, vẫn kèm danh sách chưa đăng ký
   const emptyLocked = data?.registered === 0;
   // Hết và sắp hết cùng một nguồn (món dùng được), chưa tải xong thì ô ghi "—" thay vì số tạm

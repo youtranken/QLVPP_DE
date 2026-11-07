@@ -10,10 +10,12 @@ interface MonthSwitcherProps {
   status?: { tone: 'ok' | 'dark'; label: string };
   // Kỳ sau trần (kỳ đang mở) hiện vô hiệu kèm nhãn, để người xem biết vì sao không đi tiếp được
   beyond?: { ym: string; label: string };
+  // Có thì nút kỳ sau trần bấm được (kỳ đang mở xem được), aria-pressed khi đang xem đúng kỳ đó
+  onBeyond?: () => void;
 }
 
 // ym dạng 'YYYY-MM' so sánh chuỗi được trực tiếp
-export function MonthSwitcher({ value, onChange, formatLabel, labels, min, max, status, beyond }: MonthSwitcherProps) {
+export function MonthSwitcher({ value, onChange, formatLabel, labels, min, max, status, beyond, onBeyond }: MonthSwitcherProps) {
   return (
     <div className="month-switch" role="group" aria-label={labels.group}>
       <button
@@ -34,7 +36,13 @@ export function MonthSwitcher({ value, onChange, formatLabel, labels, min, max, 
         ›
       </button>
       {beyond && (
-        <button type="button" className="month-switch__beyond" disabled aria-label={`${formatLabel(beyond.ym)} · ${beyond.label}`}>
+        <button
+          type="button"
+          className="month-switch__beyond"
+          disabled={!onBeyond}
+          aria-pressed={onBeyond ? value === beyond.ym : undefined}
+          onClick={onBeyond}
+          aria-label={`${formatLabel(beyond.ym)} · ${beyond.label}`}>
           {beyond.label}
         </button>
       )}

@@ -42,3 +42,9 @@ export function vnSavedAt(iso: string, now: Date = new Date()): { today: boolean
   const [hm, dm] = formatVnStamp(iso).split(' ');
   return { today: DAY_KEY.format(at) === DAY_KEY.format(now), time: hm, date: dm };
 }
+
+// "07/11 11:06": ngày giờ cố định theo giờ VN, không đổi thành "hôm nay"
+export function vnSavedStamp(iso: string): string {
+  const [hm, dm] = formatVnStamp(iso).split(' ');
+  return `${dm} ${hm}`;
+}

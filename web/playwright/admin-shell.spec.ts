@@ -28,7 +28,9 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     expect(titles).toEqual(NAV_ORDER);
     await expect(side.getByRole('link', { name: 'Sản phẩm', exact: true })).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('link', { name: /Phiếu của tôi/ })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng \d+ · đang mở/ })).toBeVisible();
+    const periodCard = page.getByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng \d+ · đang mở/ });
+    await expect(periodCard).toBeVisible();
+    await expect(periodCard).toHaveAttribute('href', /^\/admin\/summary\?ym=\d{4}-\d{2}$/);
     if (isMobile(info)) await expectNoContrastViolations(page);
 
     if (!isMobile(info)) await page.getByRole('button', { name: 'Ngôn ngữ' }).click();

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { asRole, copyUnregisteredList, expectNoContrastViolations, isMobile, psql, searchSummaryPeople, shot } from './helpers';
+import { asRole, copyUnregisteredList, devHeaders, expectNoContrastViolations, isMobile, psql, searchSummaryPeople, shot } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
 
 asRole('admin');
@@ -87,5 +87,38 @@ test.describe('E9-S2 tổng hợp', () => {
     await openPeriod(page);
     await expect(page.getByRole('main').getByText('Không tải được dữ liệu — thử lại.')).toBeVisible();
     await expect(page.getByRole('main').getByRole('button', { name: 'Thử lại' })).toBeVisible();
+  });
+
+  test('Nhóm 1 · Tổng hợp kỳ mở chỉ xem, Xem mở popup, ‹ › chuyển người', async ({ page, request }, info) => {
+    const current = await request.get('/api/periods/current', { headers: devHeaders('admin') });
+    const { ym } = (await current.json()) as { ym: string };
+    const row = (id: string, name: string, team: string | null) => ({
+      request_id: id, user_sub: `pw-${id}`, full_name: name, email: null, team, line_count: 1, total_qty: 2, custom_count: 0, saved_at: '2026-11-07T04:06:00.000Z',
+    });
+    const rows = [row('q-1', 'PW Người một', 'Team Test'), row('q-2', 'PW Người hai', null)];
+    const view = (id: string) => ({
+      id, period_ym: ym, user_sub: `pw-${id}`, full_name: rows.find((r) => r.request_id === id)!.full_name, department: null, updated_at: '2026-11-07T04:06:00.000Z',
+      is_open: true, user_status: 'active', team: null,
+      lines: [{ id: `${id}-l`, item_id: null, item: null, custom_name: 'PW món ngoài', custom_unit: 'cai', custom_note: null, image_file_id: null, qty: 2, delivered_qty: 0, cancelled_qty: 0, cancel_note: null, review_status: 'pending', review_note: null, added_by_admin: false, readonly_for_member: true, max_qty: null }],
+    });
+    await page.route(/\/api\/admin\/periods\/\d{4}-\d{2}\/registrations(\/[\w-]+)?$/, (route) => {
+      const id = /registrations\/([\w-]+)$/.exec(route.request().url())?.[1];
+      return route.fulfill({ status: 200, json: id ? view(id) : { items: rows } });
+    });
+    await openPeriod(page, ym);
+    await expect(page.getByText(/đang nhận đăng ký, chỉ xem/)).toBeVisible();
+    await expect(page.getByRole('link', { name: /Sang Gửi ADM/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Điều chỉnh/ })).toHaveCount(0);
+    if (isMobile(info)) await expectNoContrastViolations(page);
+    await page.getByRole('button', { name: 'Xem phiếu của PW Người một' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Phiếu của PW Người một' });
+    await expect(dialog.getByText('PW món ngoài')).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Người trước' })).toBeDisabled();
+    await dialog.getByRole('button', { name: 'Người sau' }).click();
+    const next = page.getByRole('dialog', { name: 'Phiếu của PW Người hai' });
+    await expect(next.getByRole('button', { name: 'Người sau' })).toBeDisabled();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: 'Xem phiếu của PW Người một' })).toBeFocused();
+    await shot(page, info, 'nhom1-summary-open');
   });
 });
