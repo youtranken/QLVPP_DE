@@ -21,12 +21,15 @@ describe('ngừng nhóm/ngừng riêng: inactive_reason, bật lại nhóm chỉ
       ADMIN,
       'admin',
     ).send({ active });
-  const memberIds = async () =>
-    (
-      (await as(http().get('/api/items'), A).expect(200)).body as {
-        id: string;
-      }[]
-    ).map((i) => i.id);
+  const memberRows = async () =>
+    new Map(
+      (
+        (await as(http().get('/api/items'), A).expect(200)).body as {
+          id: string;
+          usable: boolean;
+        }[]
+      ).map((i) => [i.id, i.usable]),
+    );
   const adminRows = async () =>
     new Map(
       (
@@ -85,7 +88,7 @@ describe('ngừng nhóm/ngừng riêng: inactive_reason, bật lại nhóm chỉ
     expect((await adminRows()).get(viaGroup)?.inactive_reason).toBeNull();
   });
 
-  it('A ngừng riêng + 4 món; ngừng nhóm → nhân viên không thấy 5; bật lại → thấy 4 không có A, trả {reactivated 4, still_inactive 1}; items.active không đổi', async () => {
+  it('A ngừng riêng + 4 món; ngừng nhóm → nhân viên thấy 5 món usable=false; bật lại → 4 usable=true, A usable=false, trả {reactivated 4, still_inactive 1}; items.active không đổi', async () => {
     const a = await inCategory({ active: false });
     const four = [
       await inCategory(),
@@ -99,8 +102,8 @@ describe('ngừng nhóm/ngừng riêng: inactive_reason, bật lại nhóm chỉ
     const off = await patchGroup(false).expect(200);
     expect(off.body).toMatchObject({ id: category, active: false });
     expect(off.body).not.toHaveProperty('affected_items');
-    const hidden = await memberIds();
-    for (const id of all) expect(hidden).not.toContain(id);
+    const paused = await memberRows();
+    for (const id of all) expect(paused.get(id)).toBe(false);
     expect(await activeFlags(all)).toEqual(before);
     expect(await auditWith('deactivated')).toMatchObject({
       affected_items: { deactivated: 4, still_inactive: 1 },
@@ -111,9 +114,9 @@ describe('ngừng nhóm/ngừng riêng: inactive_reason, bật lại nhóm chỉ
       active: true,
       affected_items: { reactivated: 4, still_inactive: 1 },
     });
-    const back = await memberIds();
-    for (const id of four) expect(back).toContain(id);
-    expect(back).not.toContain(a);
+    const back = await memberRows();
+    for (const id of four) expect(back.get(id)).toBe(true);
+    expect(back.get(a)).toBe(false);
     expect(await activeFlags(all)).toEqual(before);
     expect(await auditWith('reactivated')).toMatchObject({
       affected_items: { reactivated: 4, still_inactive: 1 },

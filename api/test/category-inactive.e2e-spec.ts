@@ -28,6 +28,13 @@ describe('nhóm món ngừng ẩn món trong nhóm (không sửa items.active)',
       (await as(http().get(`/api/items${query}`), sub, role).expect(200))
         .body as { id: string; active: boolean }[]
     ).map((i) => i.id);
+  const usableOf = async (sub: string, id: string) =>
+    (
+      (await as(http().get('/api/items'), sub, 'member').expect(200)).body as {
+        id: string;
+        usable: boolean;
+      }[]
+    ).find((i) => i.id === id)?.usable;
   const activeOf = async (id: string) =>
     (
       await pool().query<{ active: boolean }>(
@@ -60,20 +67,23 @@ describe('nhóm món ngừng ẩn món trong nhóm (không sửa items.active)',
 
   beforeEach(() => setCategory(true));
 
-  it('GET items: member không thấy món của nhóm ngừng, Hành chính vẫn thấy; mở lại nhóm → món tự ngừng vẫn ẩn, items.active không đổi', async () => {
+  it('GET items: member thấy món của nhóm ngừng với usable=false, Hành chính vẫn thấy; mở lại nhóm → món tự ngừng vẫn usable=false, items.active không đổi', async () => {
     const on = await itemInCategory();
     const selfOff = await itemInCategory({ active: false });
     expect(await listIds(A, 'member')).toContain(on);
     await setCategory(false);
-    expect(await listIds(A, 'member')).not.toContain(on);
+    expect(await listIds(A, 'member')).toContain(on);
+    expect(await usableOf(A, on)).toBe(false);
     expect(await listIds(ADMIN, 'admin')).toEqual(
       expect.arrayContaining([on, selfOff]),
     );
     expect(await activeOf(on)).toBe(true);
     await setCategory(true);
-    const back = await listIds(A, 'member');
-    expect(back).toContain(on);
-    expect(back).not.toContain(selfOff);
+    expect(await listIds(A, 'member')).toEqual(
+      expect.arrayContaining([on, selfOff]),
+    );
+    expect(await usableOf(A, on)).toBe(true);
+    expect(await usableOf(A, selfOff)).toBe(false);
   });
 
   it('GET items có usable: include_inactive_ids và danh sách Hành chính trả món nhóm ngừng với active=true, usable=false; món thường usable=true', async () => {

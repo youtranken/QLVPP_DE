@@ -76,7 +76,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 - FR-13 Món seed thiếu ảnh hiện placeholder + nhãn "thiếu ảnh" trong trang Danh mục.
 
 ### 6.3 Phiếu đăng ký (Member)
-- FR-20 Trang chủ = phiếu của **kỳ đang mở** (xem §5); phiếu chỉ tồn tại khi đã lưu ≥ 1 dòng. Dải kỳ hiện `days_left` = số ngày lịch còn lại tính cả hôm nay ("Còn 5 ngày", ngày 10 là "Hôm nay là ngày cuối"). Danh mục dạng thẻ ảnh có nút −/+, lọc theo nhóm và tìm tên, giỏ bên phải; nút "Thêm món khác" đặt cạnh ô tìm và là thẻ cuối lưới. Nếu phiếu kỳ trước đang giao, hiện thẻ "Tháng M đang giao · 2/4 món" dẫn tới Lịch sử.
+- FR-20 Trang chủ = phiếu của **kỳ đang mở** (xem §5); phiếu chỉ tồn tại khi đã lưu ≥ 1 dòng. Dải kỳ hiện `days_left` = số ngày lịch còn lại tính cả hôm nay ("Còn 5 ngày", ngày 10 là "Hôm nay là ngày cuối"). Danh mục dạng thẻ ảnh có nút −/+, lọc theo nhóm và tìm tên, giỏ bên phải; món tạm ngưng (ngừng riêng hoặc theo nhóm) vẫn hiện trên lưới với con dấu "Tạm ngưng" và không đặt được, món `admin_only` vẫn ẩn; phiếu đã lưu mở ở chế độ xem, bấm "Sửa phiếu" mới đổi số lượng; nút "Thêm món khác" đặt cạnh ô tìm và là thẻ cuối lưới. Nếu phiếu kỳ trước đang giao, hiện thẻ "Tháng M đang giao · 2/4 món" dẫn tới Lịch sử.
 - FR-21 Giới hạn số lượng mỗi món theo `max_qty` ("tối đa 20/tháng"); món `admin_only` không hiện trong lưới của member; dòng `admin_only` do Hành chính thêm vào phiếu hiện **chỉ đọc** trong giỏ với nhãn "Hành chính thêm" và không bị mất khi member lưu lại.
 - FR-22 Thêm món ngoài danh mục: tên (bắt buộc), **ĐVT (bắt buộc, chọn từ danh sách)**, ghi chú, **nhân viên không tải ảnh** (chốt 2026-10-30; server vẫn nhận ảnh tùy chọn ≤ 5 MB, Hành chính tải ảnh khi chuyển thành món mới), số lượng ≤ `default_max_qty`. Dòng sửa/xóa được trong giỏ trước khi lưu.
 - FR-23 **Lưu đăng ký** → hộp xác nhận liệt kê món ("Quay lại sửa" / "Lưu phiếu") → lưu. Sau lưu: toast "Đã lưu phiếu tháng N" và nhãn trên hero "Đã lưu 14:20 · sửa tiếp đến hết 10/11". Khi có thay đổi chưa lưu: nút đổi thành "2 thay đổi chưa lưu · Lưu"; rời trang có cảnh báo. Lưu danh sách rỗng = xóa phiếu (nếu không dòng nào đã giao/đã duyệt). Nếu phiếu vừa bị Hành chính sửa ở nơi khác → báo "Phiếu vừa được Hành chính cập nhật, tải lại" (không ghi đè âm thầm).
@@ -214,3 +214,13 @@ Hệ thị giác: member kiểu app (Nunito, bo tròn, thẻ ảnh, thương hi�
 | 2026-10-28 | "Sắp hết" = đã dùng 80 % tồn sau lần nhập mua gần nhất (mốc tự tính 20 %); bỏ mức tối thiểu nhập tay. |
 | 2026-10-28 | Có "Xuất lẻ" ngoài phiếu (người mới, dùng chung) từ tồn mua dư; cột "Đặt mua" sửa được trên báo cáo. |
 | 2026-10-28 | Sau review 3 góc nhìn (`review-spec.md`): mô hình kỳ liên tục; phiếu tồn tại khi có dòng; hạn chụp vào kỳ; nhóm theo phòng ban PMH ID (không có trường Tổ); Cần mua gồm nợ kỳ trước trừ tồn + bản chốt báo cáo; hoàn tác đợt giao; hủy nợ; ĐVT chuẩn; member giữ dòng Hành chính thêm; thanh dưới trên điện thoại. |
+
+### Góp ý Nhóm 1 (07/11)
+
+Chủ dự án thử tay kỳ đang mở và chốt các thay đổi sau (thắng mọi nguồn cũ khi mâu thuẫn).
+
+- Nhân viên thấy cả món tạm ngưng trên lưới Đăng ký, có con dấu "Tạm ngưng" chéo, không đặt được (FR-20). `GET /api/items` của nhân viên trả cả món `usable=false`; món `admin_only` vẫn chỉ trả khi được liệt kê trong `include_inactive_ids`. Luật server không đổi: thêm hoặc tăng dòng món ngừng vẫn bị `ITEM_INACTIVE`, giữ nguyên hoặc bỏ dòng vẫn được.
+- Phiếu đã lưu mở ở chế độ xem; "Sửa phiếu" mới mở ô đổi số lượng. Dòng món tạm ngưng hoặc tối đa bị hạ dưới số đã đặt báo đỏ trong phiếu.
+- Tên mục: "Danh mục món" thành "Sản phẩm", "Nhóm & đơn vị" thành "Danh mục". Một nhãn trạng thái duy nhất "Tạm ngưng", hành động ngược lại "Dùng lại".
+- Hộp "Thêm món khác" chọn sẵn đơn vị "cái", đơn vị và số lượng cùng một hàng, bấm nền không đóng hộp.
+- Tài khoản nhân viên mở bằng hộp ở đầu trang (popover máy tính, sheet điện thoại); `/me` giữ làm liên kết cũ.

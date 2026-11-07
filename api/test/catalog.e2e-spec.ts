@@ -227,15 +227,26 @@ describe('catalog: nhóm món, món', () => {
       ).toContain(item.id);
     });
 
-    it('PATCH active=false → member không thấy, ?include_inactive_ids= thấy; audit item.deactivated', async () => {
+    it('PATCH active=false → member vẫn thấy món với usable=false; món admin_only vẫn ẩn; audit item.deactivated', async () => {
       const item = (await createItem(itemBody()).expect(201)).body as Item;
       const patched = await admin(http().patch(`/api/admin/items/${item.id}`))
         .send({ active: false, max_qty: 7 })
         .expect(200);
       expect(patched.body).toMatchObject({ active: false, max_qty: 7 });
+      const seen = (await member(http().get('/api/items')).expect(200))
+        .body as (Item & { usable: boolean })[];
+      expect(seen.find((i) => i.id === item.id)).toMatchObject({
+        active: false,
+        usable: false,
+      });
+      const hidden = (
+        await createItem(itemBody({ admin_only: true, active: false })).expect(
+          201,
+        )
+      ).body as Item;
       expect(
         ids((await member(http().get('/api/items')).expect(200)).body),
-      ).not.toContain(item.id);
+      ).not.toContain(hidden.id);
       const withIds = await member(
         http().get(`/api/items?include_inactive_ids=${item.id}`),
       ).expect(200);

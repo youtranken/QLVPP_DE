@@ -146,7 +146,7 @@ export class CatalogService {
   }
 
   // missing_image: món seed chưa có ảnh để admin biết cần bổ sung
-  // Id được liệt kê vẫn trả dù ngừng/admin_only: để member xem lại dòng cũ trong phiếu của mình
+  // Member thấy cả món tạm ngưng (usable=false) để thẻ hiện con dấu; admin_only vẫn ẩn trừ id được liệt kê (dòng cũ trong phiếu)
   async listFor(
     identity: RequestIdentity,
     includeIds: string[] = [],
@@ -159,7 +159,7 @@ export class CatalogService {
                (image_file_id IS NULL) AS missing_image
         FROM items
         WHERE ${privileged}
-           OR (${ITEM_USABLE_SQL} AND NOT admin_only)
+           OR NOT admin_only
            OR id = ANY(${sql.param(includeIds)}::uuid[])
       ) i
       LEFT JOIN item_categories c ON c.id = i.category_id
