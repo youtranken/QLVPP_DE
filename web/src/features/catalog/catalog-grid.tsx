@@ -1,9 +1,10 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/ui/load-state';
 import { Skeleton } from '@/ui/skeleton';
-import { categoryLabel } from './catalog.api';
+import { categoryLabel, type Category } from './catalog.api';
 import { CatalogCard } from './catalog-card';
+import { StoppedGroupRow } from './stopped-group-row';
 import type { CatalogTab } from './catalog-tabs';
 import type { CatalogRow, CategoryIndex } from './catalog-rows';
 
@@ -18,22 +19,56 @@ interface Props {
   emptyAction: ReactNode;
   tab: CatalogTab;
   narrowed: boolean;
+  groupBusy: boolean;
+  onReactivateGroup: (category: Category) => void;
 }
 
-export function CatalogGrid({ rows, index, loading, openId, onEdit, emptyAction, tab, narrowed }: Props) {
+function sectionsOf(rows: CatalogRow[]) {
+  const map = new Map<string, CatalogRow[]>();
+  for (const r of rows) map.set(r.group, [...(map.get(r.group) ?? []), r]);
+  return [...map.entries()];
+}
+
+export function CatalogGrid({ rows, index, loading, openId, onEdit, emptyAction, tab, narrowed, groupBusy, onReactivateGroup }: Props) {
   const { t, i18n } = useTranslation();
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   if (loading) return <Skeleton {...CARDS} />;
-  if (rows.length === 0 && !narrowed && tab !== 'active') return <EmptyState art="no-match" title={t(`catalog.grid.empty.${tab}`)} />;
+  if (rows.length === 0 && !narrowed && tab !== 'all') return <EmptyState art="no-match" title={t(`catalog.grid.empty.${tab}`)} />;
   if (rows.length === 0) return <EmptyState art="no-match" title={t('catalog.list.emptyTitle')} hint={t('catalog.list.emptyHint')} action={emptyAction} />;
-  const groupName = (key: string) => {
-    const cat = index.byId.get(key);
-    return cat ? categoryLabel(cat, i18n.language) : t('catalog.page.noCategory');
-  };
+  const toggle = (key: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
   return (
-    <div className="ct-grid">
-      {rows.map((r) => (
-        <CatalogCard key={r.id} row={r} groupName={groupName(r.group)} groupActive={index.byId.get(r.group)?.active ?? true} open={r.id === openId} onEdit={onEdit} />
-      ))}
+    <div className="ct-sections">
+      {sectionsOf(rows).map(([key, list]) => {
+        const cat = index.byId.get(key);
+        const name = cat ? categoryLabel(cat, i18n.language) : t('catalog.page.noCategory');
+        const stopped = cat?.active === false;
+        const open = !stopped || narrowed || expanded.has(key);
+        const paused = list.filter((r) => !r.usable).length;
+        return (
+          <section key={key} className="ct-section" aria-label={name}>
+            {stopped && cat ? (
+              <StoppedGroupRow name={name} count={list.length} expanded={open} busy={groupBusy} onToggle={() => toggle(key)} onReactivate={() => onReactivateGroup(cat)} />
+            ) : (
+              <div className="ct-section__head">
+                <h2 className="ct-section__title">{name}</h2>
+                <span className="ct-section__meta">{paused > 0 ? t('catalog.grid.groupHead', { n: list.length, k: paused }) : t('catalog.grid.groupCount', { n: list.length })}</span>
+              </div>
+            )}
+            {open && (
+              <div className="ct-grid">
+                {list.map((r) => (
+                  <CatalogCard key={r.id} row={r} groupName={name} groupActive={cat?.active ?? true} open={r.id === openId} onEdit={onEdit} />
+                ))}
+              </div>
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 }

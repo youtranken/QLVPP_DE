@@ -10,6 +10,7 @@ const VARIANTS = {
   primary: 'btn btn--primary',
   ghost: 'btn btn--ghost',
   danger: 'btn btn--danger',
+  'quiet-danger': 'btn btn--quiet-danger',
   'danger-ghost': 'btn btn--danger-ghost',
   'danger-solid': 'btn btn--danger btn--solid',
   dark: 'btn btn--dark',

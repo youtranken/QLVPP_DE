@@ -31,7 +31,7 @@ export function useItemActive({ item, name, groupActive, refresh, notify }: Item
   const askStop = async () => {
     const { warning, unknown } = await pendingNote([{ id: item.id, name }], false);
     if (!warning && !unknown) return true;
-    return confirm({ title: t('catalog.list.deactivateTitle', { name }), message: t('catalog.list.deactivateBody'), confirmLabel: t('catalog.bulk.deactivate'), danger: true, warning });
+    return confirm({ title: t('catalog.list.deactivateTitle', { name }), message: t('catalog.list.deactivateBody'), confirmLabel: t('catalog.bulk.pause'), danger: true, warning });
   };
 
   const send = async (active: boolean) => {

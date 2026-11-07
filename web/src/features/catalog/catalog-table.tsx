@@ -7,8 +7,9 @@ import type { Selection } from '@/ui/data-table-row';
 import { Icon } from '@/ui/icon';
 import { InlineNumber } from '@/ui/inline-number';
 import { useUnitNames } from '@/features/units/units.api';
-import { categoryLabel } from './catalog.api';
-import { ActiveCell, CodeCell, ItemCell, StockCell, Stop } from './catalog-cells';
+import { categoryLabel, type Category } from './catalog.api';
+import { CodeCell, ItemCell, StockCell, Stop } from './catalog-cells';
+import { ItemActiveButton } from './item-active-button';
 import { rowErrorText } from './catalog-errors';
 import { NO_GROUP, type CatalogRow, type CategoryIndex } from './catalog-rows';
 
@@ -16,7 +17,7 @@ export interface CatalogTableActions {
   onOpen: (id: string) => void;
   onAddToGroup: (categoryId: string) => void;
   onSaveMax: (row: CatalogRow, n: number) => Promise<void>;
-  onToggleActive: (row: CatalogRow) => void;
+  onReactivateGroup: (category: Category) => void;
 }
 
 interface Props extends CatalogTableActions {
@@ -25,6 +26,7 @@ interface Props extends CatalogTableActions {
   loading: boolean;
   selection: Selection;
   rowErrors: Record<string, string>;
+  groupBusy: boolean;
   activeRowId?: string;
   collapsed: ReadonlySet<string>;
   onCollapsedChange: (next: ReadonlySet<string>) => void;
@@ -32,15 +34,14 @@ interface Props extends CatalogTableActions {
 }
 
 // flexRender coi hàm cell là component: cột đổi danh tính thì mọi ô bị dựng lại, ô đang sửa mất số đang gõ
-function useColumns(rowErrors: Record<string, string>, actions: CatalogTableActions) {
+function useColumns(rowErrors: Record<string, string>, actions: CatalogTableActions, index: CategoryIndex) {
   const { t } = useTranslation();
   const unitName = useUnitNames();
-  const latest = useRef({ rowErrors, actions });
-  latest.current = { rowErrors, actions };
+  const latest = useRef({ rowErrors, actions, index });
+  latest.current = { rowErrors, actions, index };
   return useMemo<ColumnDef<CatalogRow, unknown>[]>(() => {
     const onOpen = (id: string) => latest.current.actions.onOpen(id);
     const onSaveMax = (row: CatalogRow, n: number) => latest.current.actions.onSaveMax(row, n);
-    const onToggleActive = (row: CatalogRow) => latest.current.actions.onToggleActive(row);
     const columns: ColumnDef<CatalogRow, unknown>[] = [
       { id: 'code', header: t('catalog.list.colCode'), meta: { className: 'ct-code' }, cell: ({ row }) => <CodeCell code={row.original.code} /> },
       { id: 'item', header: t('catalog.list.colItem'), meta: { className: 'ct-item-cell' }, cell: ({ row }) => <ItemCell row={row.original} error={latest.current.rowErrors[row.original.id]} /> },
@@ -67,7 +68,11 @@ function useColumns(rowErrors: Record<string, string>, actions: CatalogTableActi
       {
         id: 'active',
         header: t('catalog.list.colActive'),
-        cell: ({ row: { original: r } }) => <ActiveCell row={r} onToggle={() => onToggleActive(r)} />,
+        cell: ({ row: { original: r } }) => (
+          <Stop className="ct-active">
+            <ItemActiveButton row={r} name={r.name} groupActive={latest.current.index.byId.get(r.group)?.active ?? true} quietHint />
+          </Stop>
+        ),
       },
       {
         id: 'edit',
@@ -86,13 +91,14 @@ function useColumns(rowErrors: Record<string, string>, actions: CatalogTableActi
   }, [t, unitName]);
 }
 
-export function CatalogTable({ rows, index, loading, selection, rowErrors, activeRowId, collapsed, onCollapsedChange, empty, ...actions }: Props) {
+export function CatalogTable({ rows, index, loading, selection, rowErrors, groupBusy, activeRowId, collapsed, onCollapsedChange, empty, ...actions }: Props) {
   const { t, i18n } = useTranslation();
-  const columns = useColumns(rowErrors, actions);
+  const columns = useColumns(rowErrors, actions, index);
   const groupName = (key: string) => {
     const cat = index.byId.get(key);
     return cat ? categoryLabel(cat, i18n.language) : t('catalog.page.noCategory');
   };
+  const stopped = (key: string) => index.byId.get(key)?.active === false;
   return (
     <DataTable
       data={rows}
@@ -104,7 +110,7 @@ export function CatalogTable({ rows, index, loading, selection, rowErrors, activ
       collapsed={collapsed}
       onCollapsedChange={onCollapsedChange}
       onRowClick={(r) => actions.onOpen(r.id)}
-      rowClassName={(r) => [r.active ? '' : 'is-inactive', rowErrors[r.id] ? 'has-error' : ''].filter(Boolean).join(' ')}
+      rowClassName={(r) => [r.usable ? '' : 'is-inactive', rowErrors[r.id] ? 'has-error' : ''].filter(Boolean).join(' ')}
       emptyText={t('catalog.list.emptyTitle')}
       empty={{ art: 'no-match', ...empty }}
       groupBy={{
@@ -114,23 +120,41 @@ export function CatalogTable({ rows, index, loading, selection, rowErrors, activ
             <span className="ct-group__thumb" aria-hidden="true">
               <Icon name="pkg" size={16} />
             </span>
-            <span className="ct-group__name">{groupName(key)}</span>
-            {index.byId.get(key)?.active === false && <span className="tag tag--warn">{t('catalog.list.groupPaused')}</span>}
+            <span className={stopped(key) ? 'ct-group__name ct-group__name--stopped' : 'ct-group__name'}>{groupName(key)}</span>
+            {stopped(key) && <span className="ct-group__stopped">{t('catalog.grid.groupStopped')}</span>}
           </span>
         ),
-        aside: (key, list) => <GroupAside groupKey={key} name={groupName(key)} list={list} onAdd={actions.onAddToGroup} />,
+        aside: (key, list) => (
+          <GroupAside groupKey={key} name={groupName(key)} list={list} category={index.byId.get(key)} busy={groupBusy} onAdd={actions.onAddToGroup} onReactivate={actions.onReactivateGroup} />
+        ),
       }}
     />
   );
 }
 
-function GroupAside({ groupKey, name, list, onAdd }: { groupKey: string; name: string; list: CatalogRow[]; onAdd: (id: string) => void }) {
+interface AsideProps {
+  groupKey: string;
+  name: string;
+  list: CatalogRow[];
+  category: Category | undefined;
+  busy: boolean;
+  onAdd: (id: string) => void;
+  onReactivate: (category: Category) => void;
+}
+
+function GroupAside({ groupKey, name, list, category, busy, onAdd, onReactivate }: AsideProps) {
   const { t } = useTranslation();
   return (
     <>
       <span className="ct-group-meta">{t('catalog.list.groupItems', { n: list.length })}</span>
       {groupKey === NO_GROUP ? (
         <span className="ct-icon-btn" aria-hidden="true" />
+      ) : category?.active === false ? (
+        <Stop>
+          <button type="button" className="btn btn--sm btn--primary" disabled={busy} onClick={() => onReactivate(category)}>
+            {t('catalog.grid.reactivateGroup')}
+          </button>
+        </Stop>
       ) : (
         <button type="button" className="btn btn--ghost btn--sm ct-icon-btn ct-group-add" aria-label={t('catalog.list.addToGroup', { name })} title={t('catalog.list.addToGroup', { name })} onClick={() => onAdd(groupKey)}>
           <Icon name="plus" size={18} />

@@ -1,20 +1,13 @@
 import { useTranslation } from 'react-i18next';
-import { BulkBar } from '@/ui/bulk-bar';
 import { ALL_GROUPS, GroupChips } from '@/ui/filter/group-chips';
 import { SearchBox } from '@/ui/filter/search-box';
 import { categoryLabel } from './catalog.api';
 import { NO_GROUP, type CategoryIndex } from './catalog-rows';
+import { CatalogBulkBar, type CatalogBulkBarProps } from './catalog-bulk-bar';
 import { CatalogTabBar, ViewSwitch } from './catalog-tab-bar';
 import type { CatalogTab, CatalogViewMode } from './catalog-tabs';
 
-export interface CatalogBulk {
-  count: number;
-  pending: boolean;
-  onMax: () => void;
-  onMove: () => void;
-  onDeactivate: () => void;
-  onClear: () => void;
-}
+export type CatalogBulk = Omit<CatalogBulkBarProps, 'tab'>;
 
 interface Props {
   q: string;
@@ -35,23 +28,6 @@ interface Props {
   bulk: CatalogBulk | null;
 }
 
-function BulkActions({ bulk }: { bulk: CatalogBulk }) {
-  const { t } = useTranslation();
-  return (
-    <BulkBar count={bulk.count} label={t('catalog.stats.items')} onClear={bulk.onClear}>
-      <button type="button" disabled={bulk.pending} onClick={bulk.onMax}>
-        {t('catalog.bulk.max')}
-      </button>
-      <button type="button" disabled={bulk.pending} onClick={bulk.onMove}>
-        {t('catalog.bulk.move')}
-      </button>
-      <button type="button" disabled={bulk.pending} onClick={bulk.onDeactivate}>
-        {t('catalog.bulk.deactivate')}
-      </button>
-    </BulkBar>
-  );
-}
-
 // Nhóm đã ngừng chỉ hiện khi còn món; "Chưa xếp nhóm" chỉ hiện khi có món lạc nhóm
 function useChipGroups(index: CategoryIndex, counts: Map<string, number>) {
   const { t, i18n } = useTranslation();
@@ -66,20 +42,21 @@ export function CatalogFilterBar(p: Props) {
   const label = t('catalog.list.search', { n: p.searchable });
   return (
     <div className="ct-filter">
-      {p.bulk && p.bulk.count > 0 ? (
-        <BulkActions bulk={p.bulk} />
-      ) : (
-        <div className="toolbar">
-          <SearchBox className="flt-search" value={p.q} onChange={p.onSearch} label={label} placeholder={label} />
-          {p.collapse && (
-            <button type="button" className="btn btn--ghost btn--sm" onClick={p.collapse.onToggle}>
-              {t(p.collapse.all ? 'catalog.list.expandAll' : 'catalog.list.collapseAll')}
-            </button>
-          )}
-          <ViewSwitch value={p.mode} onChange={p.onMode} />
+      <div className="toolbar">
+        <SearchBox className="flt-search" value={p.q} onChange={p.onSearch} label={label} placeholder={label} />
+        {p.collapse && (
+          <button type="button" className="btn btn--ghost btn--sm" onClick={p.collapse.onToggle}>
+            {t(p.collapse.all ? 'catalog.list.expandAll' : 'catalog.list.collapseAll')}
+          </button>
+        )}
+        <ViewSwitch value={p.mode} onChange={p.onMode} />
+      </div>
+      {p.tabCounts && (
+        <div className="ct-filter__row">
+          <CatalogTabBar value={p.tab} counts={p.tabCounts} onChange={p.onTab} />
+          {p.bulk && p.bulk.count > 0 && <CatalogBulkBar tab={p.tab} {...p.bulk} />}
         </div>
       )}
-      {p.tabCounts && <CatalogTabBar value={p.tab} counts={p.tabCounts} onChange={p.onTab} />}
       {p.tabCounts && (
         <GroupChips
           className="flt-chips"

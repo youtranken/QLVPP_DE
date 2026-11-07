@@ -17,13 +17,21 @@ interface Options {
 // Server giả giữ trạng thái: PATCH thành công đổi món, lần tải lại trả bản mới
 export function stubCatalog({ items, categories = CATEGORIES, patch, pending = {} }: Options) {
   let list = items.map((i) => ({ ...i }));
+  let cats = categories.map((c) => ({ ...c }));
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     const path = new URL(url, 'http://x').pathname;
     if (path === '/api/admin/items' && !init?.method) return jsonResponse(200, list);
-    if (path === '/api/item-categories') return jsonResponse(200, categories);
+    if (path === '/api/item-categories') return jsonResponse(200, cats);
     const waiting = /^\/api\/admin\/items\/([^/]+)\/pending-arrival$/.exec(path);
     if (waiting && pending[waiting[1]] === 'error') return jsonResponse(500, { code: 'X' });
     if (waiting) return jsonResponse(200, pending[waiting[1]] ?? { remaining: 0 });
+    const cat = /^\/api\/admin\/item-categories\/([^/]+)$/.exec(path);
+    if (cat && init?.method === 'PATCH') {
+      const body = JSON.parse(String(init.body)) as { active?: boolean };
+      cats = cats.map((c) => (c.id === cat[1] ? { ...c, ...body } : c));
+      const name = cats.find((c) => c.id === cat[1])?.name;
+      return jsonResponse(200, { id: cat[1], name, affected_items: { reactivated: 0, still_inactive: 0 } });
+    }
     const id = path.startsWith('/api/admin/items/') ? path.slice('/api/admin/items/'.length) : null;
     if (id && init?.method === 'PATCH') {
       const body = JSON.parse(String(init.body)) as ItemPayload;

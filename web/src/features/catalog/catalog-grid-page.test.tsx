@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import i18n from '@/lib/i18n';
 import { OLD, PAPER, PEN, PENCIL, adminItem } from './catalog-fixtures';
-import { locationSearch, openCatalog } from './catalog-fixtures-api';
+import { locationSearch, openCatalog, patchCalls } from './catalog-fixtures-api';
 
 const ITEMS = [PAPER, PEN, PENCIL, OLD];
 const GRID = '/admin/catalog';
@@ -18,7 +18,7 @@ afterEach(() => {
 describe('Danh mục — chế độ xem', () => {
   it('không có ?view → lưới thẻ (không có bảng), nút Lưới đang bật', async () => {
     await open();
-    expect(cards()).toHaveLength(3);
+    expect(cards()).toHaveLength(4);
     expect(screen.queryByRole('table')).toBeNull();
     expect(screen.getByRole('button', { name: 'Lưới' })).toHaveAttribute('aria-pressed', 'true');
   });
@@ -49,20 +49,21 @@ describe('Danh mục — chế độ xem', () => {
 });
 
 describe('Danh mục lưới — tab', () => {
-  it('3 tab có số: Đang dùng 3 · Chưa có ảnh 1 · Đã ngừng 1; không còn "Sắp hết/hết"', async () => {
+  it('4 tab có số: Tất cả 4 · Đang dùng 3 · Tạm ngưng 1 · Chưa có ảnh 1; không còn "Sắp hết/hết"; Tất cả đang chọn', async () => {
     await open();
+    expect(tab(/^Tất cả \d/)).toHaveTextContent('4');
     expect(tab(/^Đang dùng/)).toHaveTextContent('3');
     expect(screen.queryByRole('button', { name: /^Sắp hết/ })).toBeNull();
     expect(tab(/^Chưa có ảnh/)).toHaveTextContent('1');
-    expect(tab(/^Đã ngừng/)).toHaveTextContent('1');
-    expect(tab(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'true');
+    expect(tab(/^Tạm ngưng \d/)).toHaveTextContent('1');
+    expect(tab(/^Tất cả \d/)).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('liên kết cũ ?tab=low → tab Đang dùng, tham số bị gỡ (replace), đủ 3 món đang dùng', async () => {
+  it('liên kết cũ ?tab=low → tab Tất cả, tham số bị gỡ (replace), đủ 4 món', async () => {
     await open(`${GRID}?tab=low`);
     await waitFor(() => expect(locationSearch()).toBe(''));
-    expect(tab(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'true');
-    expect(cards()).toHaveLength(3);
+    expect(tab(/^Tất cả \d/)).toHaveAttribute('aria-pressed', 'true');
+    expect(cards()).toHaveLength(4);
   });
 
   it.each([
@@ -77,13 +78,13 @@ describe('Danh mục lưới — tab', () => {
     await waitFor(() => expect(locationSearch()).toBe(next));
   });
 
-  it('liên kết cũ ?inactive=1 mở tab Đã ngừng', async () => {
+  it('liên kết cũ ?inactive=1 mở tab Tạm ngưng', async () => {
     await open(`${GRID}?inactive=1`);
-    await waitFor(() => expect(tab(/^Đã ngừng/)).toHaveAttribute('aria-pressed', 'true'));
+    await waitFor(() => expect(tab(/^Tạm ngưng \d/)).toHaveAttribute('aria-pressed', 'true'));
     expect(screen.getByText('Bút xóa cũ')).toBeInTheDocument();
   });
 
-  it('Đã ngừng chỉ hiện món ngừng; Đang dùng không hiện món ngừng', async () => {
+  it('Tạm ngưng chỉ hiện món tạm ngưng; Đang dùng không hiện món tạm ngưng', async () => {
     await open(`${GRID}?tab=inactive`);
     expect(screen.getByText('Bút xóa cũ')).toBeInTheDocument();
     expect(cards()).toHaveLength(1);
@@ -91,15 +92,15 @@ describe('Danh mục lưới — tab', () => {
     expect(screen.queryByText('Bút xóa cũ')).toBeNull();
   });
 
-  it('?tab lạ → Đang dùng', async () => {
+  it('?tab lạ → Tất cả', async () => {
     await open(`${GRID}?tab=xyz`);
-    expect(tab(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'true');
+    expect(tab(/^Tất cả \d/)).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('chip nhóm và ô tìm vẫn lọc trong tab; không có món → "Không có món nào khớp"', async () => {
     await open();
     await userEvent.click(within(screen.getByRole('group', { name: 'Lọc theo nhóm' })).getByRole('button', { name: /^Bút & viết/ }));
-    expect(cards()).toHaveLength(2);
+    expect(cards()).toHaveLength(3);
     await userEvent.type(screen.getByRole('searchbox'), 'zzzz');
     expect(await screen.findByText('Không có món nào khớp')).toBeInTheDocument();
   });
@@ -107,7 +108,7 @@ describe('Danh mục lưới — tab', () => {
 
 describe('Danh mục lưới — tab rỗng', () => {
   it.each([
-    ['inactive', 'Không có món đã ngừng.'],
+    ['inactive', 'Không có sản phẩm tạm ngưng.'],
     ['noImage', 'Món nào cũng đã có ảnh.'],
   ])('tab %s rỗng, không lọc → "%s", không có "Bỏ lọc"', async (t, text) => {
     await open(`${GRID}?tab=${t}`, [PEN]);
@@ -223,5 +224,50 @@ describe('Danh mục — tồn chỉ để tham khảo', () => {
     const stockTags = [...document.querySelectorAll('.tag--danger, .tag--warn')].filter((el) => /hết|Còn \d/i.test(el.textContent ?? ''));
     expect(stockTags).toEqual([]);
     expect(screen.queryByText(/^(Hết|Hết hàng|Sắp hết)$/)).toBeNull();
+  });
+});
+
+describe('Sản phẩm lưới — món và nhóm tạm ngưng tại chỗ (Nhóm 1 · mục 6)', () => {
+  const GROUPED = [
+    PEN,
+    OLD,
+    adminItem({ id: 'i-g1', name: 'Kẹp A', category_id: 'c-old', usable: false, inactive_reason: 'group' }),
+    adminItem({ id: 'i-g2', name: 'Kẹp B', category_id: 'c-old', usable: false, inactive_reason: 'group' }),
+  ];
+
+  it('mặc định tab "Tất cả" đang chọn; món tạm ngưng nằm tại chỗ trong nhóm của nó, có dấu; đầu nhóm "2 sản phẩm · 1 tạm ngưng"', async () => {
+    await open(GRID, GROUPED);
+    expect(tab(/^Tất cả \d/)).toHaveAttribute('aria-pressed', 'true');
+    const pens = screen.getByRole('heading', { name: 'Bút & viết' }).closest('section') as HTMLElement;
+    expect(within(pens).getByText('Bút xóa cũ')).toBeInTheDocument();
+    expect(within(pens).getAllByRole('img', { name: 'Tạm ngưng' })).toHaveLength(1);
+    expect(within(pens).getByText('2 sản phẩm · 1 tạm ngưng')).toBeInTheDocument();
+  });
+
+  it('nhóm tạm ngưng: một dòng "Tạm ngưng cả nhóm · 2 sản phẩm · thu gọn", thẻ ẩn; "Xem 2 sản phẩm" mở thẻ có dấu; "Thu gọn" đóng lại', async () => {
+    await open(GRID, GROUPED);
+    expect(screen.getByText('Tạm ngưng cả nhóm')).toBeInTheDocument();
+    expect(screen.getByText('2 sản phẩm · thu gọn')).toBeInTheDocument();
+    expect(screen.queryByText('Kẹp A')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Xem 2 sản phẩm' }));
+    expect(screen.getByText('Kẹp A')).toBeInTheDocument();
+    expect(screen.getByText('Kẹp B')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Thu gọn' }));
+    expect(screen.queryByText('Kẹp A')).toBeNull();
+  });
+
+  it('"Dùng lại nhóm" → PATCH item-categories/c-old {active:true}; dòng nhóm không có nút "+"', async () => {
+    const f = await open(GRID, GROUPED);
+    const row = screen.getByText('Tạm ngưng cả nhóm').closest('div') as HTMLElement;
+    expect(within(row).queryByRole('button', { name: /^Thêm/ })).toBeNull();
+    await userEvent.click(within(row).getByRole('button', { name: 'Dùng lại nhóm' }));
+    await waitFor(() => expect(patchCalls(f)).toEqual([{ id: 'c-old', body: { active: true } }]));
+  });
+
+  it('tab "Tạm ngưng" gồm cả món tạm ngưng riêng lẫn món của nhóm tạm ngưng', async () => {
+    await open(`${GRID}?tab=inactive`, GROUPED);
+    expect(tab(/^Tạm ngưng/)).toHaveAttribute('aria-pressed', 'true');
+    expect(tab(/^Tạm ngưng/)).toHaveTextContent('3');
+    expect(screen.getByText('Bút xóa cũ')).toBeInTheDocument();
   });
 });

@@ -92,7 +92,7 @@ describe('Panel nhóm (?group=)', () => {
     await waitFor(() => expect(panel().getAllByRole('listitem')).toHaveLength(1));
   });
 
-  it('tắt món → đúng 1 PATCH {active:false} dù bấm nhanh 2 lần; toast "Đã ngừng Kẹp B" + "Hoàn tác" → PATCH {active:true}', async () => {
+  it('tắt món → đúng 1 PATCH {active:false} dù bấm nhanh 2 lần; toast "Đã tạm ngưng Kẹp B" + "Hoàn tác" → PATCH {active:true}', async () => {
     let release = () => {};
     const gate = new Promise<void>((r) => (release = r));
     const f = await openAt('/admin/categories?group=c-1', { mutate: async (url, _m, body) => { if (url.endsWith('/i-b') && body.active === false) await gate; return undefined; } });
@@ -101,7 +101,7 @@ describe('Panel nhóm (?group=)', () => {
     expect(itemSwitch('Kẹp B')).toHaveAttribute('aria-checked', 'false');
     await userEvent.click(itemSwitch('Kẹp B'));
     release();
-    expect(await panel().findByText('Đã ngừng Kẹp B')).toBeInTheDocument();
+    expect(await panel().findByText('Đã tạm ngưng Kẹp B')).toBeInTheDocument();
     expect(mutations(f)).toEqual([['/api/admin/items/i-b', 'PATCH', { active: false }]]);
     expect(screen.queryByRole('dialog', { name: /Ngừng/ })).toBeNull();
     await userEvent.click(panel().getByRole('button', { name: 'Hoàn tác' }));
@@ -120,7 +120,7 @@ describe('Panel nhóm (?group=)', () => {
     expect(mutations(f)).toEqual([]);
     expect(itemSwitch('Kẹp B')).toHaveAttribute('aria-checked', 'true');
     await userEvent.click(itemSwitch('Kẹp B'));
-    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Ngừng Kẹp B?' })).getByRole('button', { name: 'Ngừng' }));
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Ngừng Kẹp B?' })).getByRole('button', { name: 'Tạm ngưng' }));
     await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/items/i-b', 'PATCH', { active: false }]]));
   });
 
@@ -139,7 +139,7 @@ describe('Panel nhóm (?group=)', () => {
     const ask = await screen.findByRole('dialog', { name: 'Ngừng Kẹp C?' });
     expect(within(ask).queryByRole('note')).toBeNull();
     expect(mutations(f)).toEqual([]);
-    await userEvent.click(within(ask).getByRole('button', { name: 'Ngừng' }));
+    await userEvent.click(within(ask).getByRole('button', { name: 'Tạm ngưng' }));
     await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/items/i-c', 'PATCH', { active: false }]]));
   });
 

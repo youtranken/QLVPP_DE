@@ -46,7 +46,7 @@ export function useCatalogParams() {
     narrowed: group !== null || q.trim() !== '',
     itemCategoryId: params.get('itemCat'),
     setMode: (next: CatalogViewMode) => update({ view: next === 'table' ? 'table' : null }),
-    setTab: (next: CatalogTab) => update({ tab: next === 'active' ? null : next }),
+    setTab: (next: CatalogTab) => update({ tab: next === 'all' ? null : next }),
     setGroup: (next: string | null) => update({ group: next }),
     setQ: (next: string) => update({ q: next || null }, true),
     clearAll: () => update({ group: null, q: null }),

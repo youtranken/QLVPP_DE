@@ -1,13 +1,12 @@
-import { useId, type ChangeEvent } from 'react';
+import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRequestFormat } from '@/features/request/request-format';
 import { useUnitNames } from '@/features/units/units.api';
 import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
-import { useToast } from '@/ui/toast-context';
-import { useRefreshCatalog } from './catalog.api';
+import { PausedStamp } from '@/ui/paused-stamp';
 import type { CatalogRow } from './catalog-rows';
-import { useItemActive } from './use-item-active';
+import { ItemActiveButton } from './item-active-button';
 import { useCardUpload } from './use-card-upload';
 
 function UploadButton({ id, name }: { id: string; name: string }) {
@@ -43,39 +42,6 @@ function UploadButton({ id, name }: { id: string; name: string }) {
   );
 }
 
-// Nút "Tạm ngưng" (đỏ) / "Dùng lại" trên thẻ: cùng hành vi công tắc món trong panel nhóm (W24, khóa khi nhóm ngừng, toast Hoàn tác)
-function ActiveButton({ row, name, groupActive }: { row: CatalogRow; name: string; groupActive: boolean }) {
-  const { t } = useTranslation();
-  const refresh = useRefreshCatalog();
-  const toast = useToast();
-  const hintId = useId();
-  const { checked, locked, error, send } = useItemActive({ item: row, name, groupActive, refresh, notify: toast.show });
-  return (
-    <>
-      <button
-        type="button"
-        className={checked ? 'btn btn--sm btn--danger' : 'btn btn--sm'}
-        aria-label={t(checked ? 'catalog.grid.pauseFor' : 'catalog.grid.reactivateFor', { name })}
-        aria-describedby={locked ? hintId : undefined}
-        disabled={locked}
-        onClick={() => void send(!checked)}
-      >
-        {t(checked ? 'catalog.grid.pause' : 'catalog.categories.reactivate')}
-      </button>
-      {locked && (
-        <small id={hintId} className="ct-card__hint">
-          {t('catalog.categories.enableGroupFirst')}
-        </small>
-      )}
-      {error && (
-        <span role="alert" className="ct-card__error-text ct-card__active-error">
-          {error}
-        </span>
-      )}
-    </>
-  );
-}
-
 interface CardProps {
   row: CatalogRow;
   groupName: string;
@@ -90,21 +56,20 @@ export function CatalogCard({ row, groupName, groupActive, open = false, onEdit 
   const name = useRequestFormat().name(row);
   const meta = [row.code, t('request.grid.unitMax', { unit: unitName(row.unit), max: row.max_qty })].filter(Boolean).join(' · ');
   return (
-    <article className={['ct-card', row.active ? '' : 'is-inactive', open ? 'is-open' : ''].filter(Boolean).join(' ')}>
+    <article className={['ct-card', row.usable ? '' : 'is-inactive', open ? 'is-open' : ''].filter(Boolean).join(' ')}>
       <div className="ct-card__tile">
         <ItemThumb fileId={row.image_file_id} alt={name} tone={row.tone} size="card" />
         <span className="ct-card__group">{groupName}</span>
+        {!row.usable && <PausedStamp />}
         {row.image_file_id === null && (
           <div className="ct-card__noimg">
             <span>{t('catalog.grid.noImage')}</span>
-            {row.active && <UploadButton id={row.id} name={name} />}
+            {row.usable && <UploadButton id={row.id} name={name} />}
           </div>
         )}
       </div>
       <div className="ct-card__body">
         <h3 className="ct-card__name">{name}</h3>
-        {row.inactive_reason === 'item' && <span className="tag tag--outline ct-card__tag">{t('catalog.categories.byItem')}</span>}
-        {row.inactive_reason === 'group' && <span className="tag tag--warn ct-card__tag">{t('catalog.categories.byGroup')}</span>}
         <p className="ct-card__meta">{meta}</p>
         <p className="ct-card__stock">{t('catalog.card.stock', { n: row.stock_qty })}</p>
       </div>
@@ -112,7 +77,7 @@ export function CatalogCard({ row, groupName, groupActive, open = false, onEdit 
         <button type="button" className="btn btn--sm" aria-label={t('catalog.page.editLabel', { name })} onClick={() => onEdit(row.id)}>
           {t('catalog.page.edit')}
         </button>
-        <ActiveButton row={row} name={name} groupActive={groupActive} />
+        <ItemActiveButton row={row} name={name} groupActive={groupActive} />
       </div>
     </article>
   );

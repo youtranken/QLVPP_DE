@@ -6,8 +6,8 @@ import { inRow, locationSearch, openCatalog, rowOf } from './catalog-fixtures-ap
 const ITEMS = [PAPER, PEN, PENCIL, OLD];
 const location = locationSearch;
 const tab = (name: RegExp) => screen.getByRole('button', { name });
-const chips = () => within(screen.getByRole('group', { name: 'Lọc theo nhóm' }));
 const groupHead = (name: string) => screen.getByRole('button', { name: `Thêm món vào nhóm ${name}` }).closest('tr') as HTMLElement;
+const chips = () => within(screen.getByRole('group', { name: 'Lọc theo nhóm' }));
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -21,13 +21,14 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
     expect(within(screen.getByRole('main')).getByRole('link', { name: 'Danh mục' })).toHaveAttribute('href', '/admin/categories');
   });
 
-  it('không còn thẻ thống kê tồn (Sắp hết/Hết hàng); bảng dùng tab trạng thái Đang dùng 3 · Chưa có ảnh 1 · Đã ngừng 1', async () => {
+  it('không còn thẻ thống kê tồn (Sắp hết/Hết hàng); bảng dùng tab Tất cả 4 · Đang dùng 3 · Tạm ngưng 1 · Chưa có ảnh 1', async () => {
     await openCatalog({ items: ITEMS });
     expect(screen.queryByRole('button', { name: /^Sắp hết/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /^Hết hàng/ })).toBeNull();
+    expect(tab(/^Tất cả \d/)).toHaveTextContent('4');
     expect(tab(/^Đang dùng/)).toHaveTextContent('3');
     expect(tab(/^Chưa có ảnh/)).toHaveTextContent('1');
-    expect(tab(/^Đã ngừng/)).toHaveTextContent('1');
+    expect(tab(/^Tạm ngưng \d/)).toHaveTextContent('1');
   });
 
   it('tab "Chưa có ảnh" → ?tab=noImage, chỉ món thiếu ảnh; về "Đang dùng" thì hết lọc', async () => {
@@ -36,7 +37,7 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
     expect(location()).toBe('?tab=noImage');
     expect(screen.queryByText('Bút bi xanh')).toBeNull();
     expect(inRow('Giấy A4').getByText('Thiếu ảnh')).toBeInTheDocument();
-    await userEvent.click(tab(/^Đang dùng/));
+    await userEvent.click(tab(/^Tất cả \d/));
     expect(location()).toBe('');
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();
   });
@@ -45,7 +46,7 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
     await openCatalog({ items: ITEMS });
     expect(chips().getByRole('button', { name: /^Tất cả nhóm/ })).toHaveAttribute('aria-pressed', 'true');
     const pens = chips().getByRole('button', { name: /^Bút & viết/ });
-    expect(pens).toHaveTextContent('2');
+    expect(pens).toHaveTextContent('3');
     await userEvent.click(pens);
     expect(location()).toBe('?group=c-pen');
     expect(pens).toHaveAttribute('aria-pressed', 'true');
@@ -55,17 +56,22 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
     expect(screen.getByText('Giấy A4')).toBeInTheDocument();
   });
 
-  it('tab "Đã ngừng" → ?tab=inactive, món ngừng hiện kèm badge "Ngừng riêng"', async () => {
+  it('tab "Tạm ngưng" → ?tab=inactive, chỉ còn món tạm ngưng (nhãn đỏ "Tạm ngưng", không "Ngừng riêng"); "Đang dùng" → ?tab=active ẩn nó', async () => {
     await openCatalog({ items: ITEMS });
+    expect(screen.getByText('Bút xóa cũ')).toBeInTheDocument();
+    await userEvent.click(tab(/^Đang dùng/));
+    expect(location()).toBe('?tab=active');
     expect(screen.queryByText('Bút xóa cũ')).toBeNull();
-    await userEvent.click(tab(/^Đã ngừng/));
+    await userEvent.click(tab(/^Tạm ngưng \d/));
     expect(location()).toBe('?tab=inactive');
-    expect(inRow('Bút xóa cũ').getByText('Ngừng riêng')).toBeInTheDocument();
+    expect(inRow('Bút xóa cũ').getByText('Tạm ngưng')).toBeInTheDocument();
+    expect(inRow('Bút xóa cũ').queryByText('Ngừng riêng')).toBeNull();
+    expect(screen.queryByText('Bút bi xanh')).toBeNull();
   });
 
-  it('ô tìm "Tìm trong 3 sản phẩm" lọc qua ?q=', async () => {
+  it('ô tìm "Tìm trong 4 sản phẩm" lọc qua ?q=', async () => {
     await openCatalog({ items: ITEMS });
-    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm trong 3 sản phẩm' }), 'but chi');
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm trong 4 sản phẩm' }), 'but chi');
     await vi.waitFor(() => expect(location()).toBe('?q=but+chi'));
     expect(screen.queryByText('Bút bi xanh')).toBeNull();
     expect(screen.getByText('Bút chì 2B')).toBeInTheDocument();
@@ -181,21 +187,24 @@ describe('Danh mục — cột Tên tiếng Anh, nhóm đang ngừng', () => {
     expect(inRow('Bút chì 2B').getAllByText('—')).toHaveLength(2);
   });
 
-  it('inactive_reason=group → nhãn "Ngừng theo nhóm", không phải "Ngừng riêng"; tiêu đề nhóm ngừng có nhãn "Nhóm đang ngừng"', async () => {
+  it('nhóm tạm ngưng: thu gọn sẵn, tiêu đề tên gạch + "Tạm ngưng cả nhóm" (không "Nhóm đang ngừng"); mở nhóm → món chỉ có nhãn "Tạm ngưng", không "Ngừng theo nhóm"', async () => {
     const paused = adminItem({ id: 'i-p', name: 'Bút dạ cũ', category_id: 'c-old', usable: false, inactive_reason: 'group' });
     await openCatalog({ items: [PEN, paused] });
-    expect(inRow('Bút dạ cũ').getByText('Ngừng theo nhóm')).toBeInTheDocument();
-    expect(inRow('Bút dạ cũ').queryByText('Ngừng riêng')).toBeNull();
-    expect(inRow('Bút bi xanh').queryByText(/^Ngừng/)).toBeNull();
-    expect(within(groupHead('Nhóm cũ')).getByText('Nhóm đang ngừng')).toBeInTheDocument();
-    expect(within(groupHead('Bút & viết')).queryByText('Nhóm đang ngừng')).toBeNull();
+    expect(screen.queryByText('Bút dạ cũ')).toBeNull();
+    const head = screen.getByText('Tạm ngưng cả nhóm').closest('tr') as HTMLElement;
+    expect(within(head).queryByText('Nhóm đang ngừng')).toBeNull();
+    await userEvent.click(within(head).getByRole('button', { expanded: false }));
+    expect(inRow('Bút dạ cũ').getByText('Tạm ngưng', { selector: '.ct-item__paused' })).toBeInTheDocument();
+    expect(inRow('Bút dạ cũ').queryByText(/^Ngừng/)).toBeNull();
+    expect(inRow('Bút bi xanh').queryByText('Tạm ngưng', { selector: '.ct-item__paused' })).toBeNull();
   });
 
-  it('món ngừng riêng trong nhóm ngừng (inactive_reason=item) chỉ có nhãn "Ngừng riêng"', async () => {
+  it('món tạm ngưng riêng trong nhóm tạm ngưng (tab Tạm ngưng, mở nhóm) chỉ có nhãn "Tạm ngưng"', async () => {
     const both = adminItem({ id: 'i-b', name: 'Bút hỏng', category_id: 'c-old', active: false, usable: false });
     await openCatalog({ items: [PEN, both] }, '/admin/catalog?tab=inactive');
-    expect(inRow('Bút hỏng').getByText('Ngừng riêng')).toBeInTheDocument();
-    expect(inRow('Bút hỏng').queryByText('Ngừng theo nhóm')).toBeNull();
+    await userEvent.click(within(screen.getByText('Tạm ngưng cả nhóm').closest('tr') as HTMLElement).getByRole('button', { expanded: false }));
+    expect(inRow('Bút hỏng').getByText('Tạm ngưng')).toBeInTheDocument();
+    expect(inRow('Bút hỏng').queryByText('Ngừng riêng')).toBeNull();
   });
 });
 

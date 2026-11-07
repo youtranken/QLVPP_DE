@@ -23,4 +23,15 @@ describe('BulkBar', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Bỏ chọn' }));
     expect(onClear).toHaveBeenCalledTimes(1);
   });
+  it('biến thể light: class bulk-bar--light (không nền tối); "Bỏ chọn" là nút ghost', () => {
+    renderWithI18n(<BulkBar count={2} label="món" variant="light" onClear={() => {}} />);
+    expect(screen.getByRole('toolbar')).toHaveClass('bulk-bar--light');
+    expect(screen.getByRole('button', { name: 'Bỏ chọn' })).toHaveClass('btn', 'btn--ghost', 'btn--sm');
+  });
+
+  it('biến thể mặc định vẫn tối, "Bỏ chọn" không phải btn', () => {
+    renderWithI18n(<BulkBar count={2} label="món" onClear={() => {}} />);
+    expect(screen.getByRole('toolbar')).not.toHaveClass('bulk-bar--light');
+    expect(screen.getByRole('button', { name: 'Bỏ chọn' })).not.toHaveClass('btn');
+  });
 });

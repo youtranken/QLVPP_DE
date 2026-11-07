@@ -3,33 +3,40 @@ import { indexCategories, toRows } from './catalog-rows';
 import { CATEGORIES, OLD, PAPER, PEN, PENCIL, adminItem } from './catalog-fixtures';
 import { CATALOG_TABS, inTab, parseTab, tabCounts, type CatalogTab } from './catalog-tabs';
 
-const rows = toRows([PAPER, PEN, PENCIL, OLD, adminItem({ id: 'i-untracked', stock_state: 'untracked' }), adminItem({ id: 'i-old-low', active: false, stock_state: 'low', missing_image: true, image_file_id: null })], indexCategories(CATEGORIES));
+const byGroup = adminItem({ id: 'i-grp', category_id: 'c-old', usable: false, inactive_reason: 'group' });
+const rows = toRows(
+  [PAPER, PEN, PENCIL, OLD, byGroup, adminItem({ id: 'i-untracked', stock_state: 'untracked' }), adminItem({ id: 'i-old-low', active: false, stock_state: 'low', missing_image: true, image_file_id: null })],
+  indexCategories(CATEGORIES),
+);
 const tabsOf = (id: string) => CATALOG_TABS.filter((t) => inTab(rows.find((r) => r.id === id)!, t));
 
 describe('inTab', () => {
-  it('3 tab theo thứ tự Đang dùng · Chưa có ảnh · Đã ngừng — không còn tab "Sắp hết/hết"', () => {
-    expect(CATALOG_TABS).toEqual<CatalogTab[]>(['active', 'noImage', 'inactive']);
+  it('4 tab theo thứ tự Tất cả · Đang dùng · Tạm ngưng · Chưa có ảnh', () => {
+    expect(CATALOG_TABS).toEqual<CatalogTab[]>(['all', 'active', 'inactive', 'noImage']);
   });
 
-  it('món đang dùng: luôn ở active, tồn không quyết định tab; noImage = thiếu ảnh', () => {
-    expect(tabsOf('i-paper')).toEqual(['active', 'noImage']);
-    expect(tabsOf('i-pencil')).toEqual(['active']);
-    expect(tabsOf('i-pen')).toEqual(['active']);
-    expect(tabsOf('i-untracked')).toEqual(['active']);
+  it('món dùng được: ở all và active, tồn không quyết định tab; noImage = dùng được mà thiếu ảnh', () => {
+    expect(tabsOf('i-paper')).toEqual(['all', 'active', 'noImage']);
+    expect(tabsOf('i-pencil')).toEqual(['all', 'active']);
+    expect(tabsOf('i-untracked')).toEqual(['all', 'active']);
   });
 
-  it('món ngừng chỉ ở inactive, dù thiếu ảnh hoặc sắp hết', () => {
-    expect(tabsOf('i-old')).toEqual(['inactive']);
-    expect(tabsOf('i-old-low')).toEqual(['inactive']);
+  it('món tạm ngưng riêng chỉ ở all và inactive, dù thiếu ảnh hoặc sắp hết', () => {
+    expect(tabsOf('i-old')).toEqual(['all', 'inactive']);
+    expect(tabsOf('i-old-low')).toEqual(['all', 'inactive']);
+  });
+
+  it('món còn bật nhưng nhóm tạm ngưng (usable=false) cũng thuộc inactive, không thuộc active', () => {
+    expect(tabsOf('i-grp')).toEqual(['all', 'inactive']);
   });
 
   it('tabCounts đếm đúng từng tab', () => {
-    expect(tabCounts(rows)).toEqual({ active: 4, noImage: 1, inactive: 2 });
+    expect(tabCounts(rows)).toEqual({ all: 7, active: 4, inactive: 3, noImage: 1 });
   });
 });
 
 describe('parseTab', () => {
-  it.each([['low', 'active'], ['noImage', 'noImage'], ['inactive', 'inactive'], ['active', 'active'], [null, 'active'], ['bậy', 'active']])('%s → %s', (raw, tab) => {
+  it.each([['low', 'all'], ['noImage', 'noImage'], ['inactive', 'inactive'], ['active', 'active'], ['all', 'all'], [null, 'all'], ['bậy', 'all']])('%s → %s', (raw, tab) => {
     expect(parseTab(raw)).toBe(tab);
   });
 });
