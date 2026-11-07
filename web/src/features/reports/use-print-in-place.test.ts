@@ -124,6 +124,48 @@ describe('usePrintInPlace: in tại chỗ, không đổi trang', () => {
     expect(screen.getByText('Đã chốt bản 09:30 28/10. Cần in lại: mở Bản chốt.')).toBeInTheDocument();
   });
 
+  it('hộp in mở trễ (beforeprint sau 1.5 s, đã báo bị chặn): toast bị chặn biến mất; không có afterprint, trang lấy lại focus → gỡ vùng in và báo đã chốt', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(window, 'print').mockImplementation(() => void setTimeout(() => window.dispatchEvent(new Event('beforeprint')), 1500));
+    mount();
+    await go();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(screen.getByTestId('result')).toHaveTextContent('blocked');
+    expect(screen.getByText('Bấm để mở hộp in')).toBeInTheDocument();
+    await act(() => vi.advanceTimersByTimeAsync(500));
+    expect(screen.queryByText('Bấm để mở hộp in')).toBeNull();
+    expect(region()).not.toBeNull();
+    act(() => void window.dispatchEvent(new Event('focus')));
+    expect(region()).toBeNull();
+    expect(pageStyle()).toBeNull();
+    expect(screen.getByText('Đã chốt bản 09:30 28/10. Cần in lại: mở Bản chốt.')).toBeInTheDocument();
+  });
+
+  it('hộp in mở trễ rồi có afterprint → gỡ vùng in, toast bị chặn biến mất, báo đã chốt một lần', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(window, 'print').mockImplementation(() => void setTimeout(() => window.dispatchEvent(new Event('beforeprint')), 1500));
+    mount();
+    await go();
+    await act(() => vi.advanceTimersByTimeAsync(1500));
+    act(() => void window.dispatchEvent(new Event('afterprint')));
+    act(() => void window.dispatchEvent(new Event('focus')));
+    expect(region()).toBeNull();
+    expect(screen.queryByText('Bấm để mở hộp in')).toBeNull();
+    expect(screen.getAllByText('Đã chốt bản 09:30 28/10. Cần in lại: mở Bản chốt.')).toHaveLength(1);
+  });
+
+  it('bị chặn, không bao giờ có beforeprint/afterprint: in lần kế gỡ vùng in cũ (chỉ một vùng in, một @page)', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(window, 'print').mockImplementation(() => {});
+    mount();
+    await go();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    await go();
+    expect(document.querySelectorAll('[data-print-portal]')).toHaveLength(1);
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(document.head.querySelectorAll('style[data-print-page]')).toHaveLength(1);
+  });
+
   it('toast bị chặn biến mất khi rời trang (gỡ màn in)', async () => {
     vi.useFakeTimers();
     vi.spyOn(window, 'print').mockImplementation(() => {});

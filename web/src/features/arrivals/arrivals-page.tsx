@@ -213,7 +213,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
           </div>
         </section>
       )}
-      <ArrivalsCustom ym={ym} rows={plan.custom} admBusy={adm.busy} onToggleAdm={(key, on) => void toggleAdm(key, on)} onSaved={afterSide} />
+      <ArrivalsCustom ym={ym} snapshotId={plan.snapshot?.id ?? null} rows={plan.custom} admBusy={adm.busy} onToggleAdm={(key, on) => void toggleAdm(key, on)} onSaved={afterSide} />
       <ArrivalsMakeup groups={plan.makeup} onDone={afterSide} />
       {dialog === 'save' && <SaveConfirm diffs={diffs} pending={saver.pending} onBack={() => setDialog(null)} onSave={() => void doSave()} />}
       {dialog === 'full' && plan.snapshot && (

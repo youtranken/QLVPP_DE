@@ -57,6 +57,15 @@ describe('cardSummary', () => {
     expect(cardSummary(p)).toEqual({ n: 3, u: 18 });
     expect(cardSummary(D)).toEqual({ n: 0, u: 0 });
   });
+
+  it('món ngoài danh mục gộp theo khóa server (tên + ĐVT trim, không phân biệt hoa thường): nợ "Kéo cắt giấy /Cái" + kỳ này " kéo cắt giấy/cái " là 1 món; khác ĐVT là món khác', () => {
+    const custom = (line_id: string, name: string, unit: string, remaining_qty: number) =>
+      pLine({ line_id, item_id: null, name, unit, review_status: 'accepted', remaining_qty });
+    const p = person({
+      lines: [custom('k1', 'Kéo cắt giấy ', 'Cái', 1), custom('k2', ' kéo cắt giấy', 'cái ', 2), custom('k3', 'Kéo cắt giấy', 'hộp', 1)],
+    });
+    expect(cardSummary(p)).toEqual({ n: 2, u: 4 });
+  });
 });
 
 describe('waitingFor', () => {

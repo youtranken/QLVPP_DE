@@ -296,7 +296,7 @@ describe('Về bù kỳ trước', () => {
 });
 
 describe('Món ngoài danh mục', () => {
-  it('khối thu gọn có số; ô "Đã về" → POST custom-receipts với expected_received; khóa custom: mã hóa ở nút ADM hết hàng', async () => {
+  it('khối thu gọn có số; ô "Đã về" → POST custom-receipts với expected_received và snapshot_id bản in đang xem; khóa custom: mã hóa ở nút ADM hết hàng', async () => {
     const key = 'custom:["kéo cắt giấy", "cái"]';
     const admUrl = `/api/admin/periods/2026-10/adm-out/${encodeURIComponent(key)}`;
     const f = stub({ plan: plan(PLAN.rows, { custom: [customRow({ received: 1, remaining: 1 })] }), routes: { [admUrl]: () => jsonResponse(200, {}) } });
@@ -304,7 +304,7 @@ describe('Món ngoài danh mục', () => {
     await userEvent.click(await screen.findByText('Món ngoài danh mục — giao thẳng, không vào tủ (1)'));
     await type(screen.getByRole('spinbutton', { name: 'Đã về đợt này: Kéo cắt giấy' }), '1');
     await userEvent.click(screen.getByRole('button', { name: 'Ghi đã về: Kéo cắt giấy' }));
-    await waitFor(() => expect(bodiesOf(f, CUSTOM_URL)).toEqual([{ line_key: key, qty: 1, expected_received: 1 }]));
+    await waitFor(() => expect(bodiesOf(f, CUSTOM_URL)).toEqual([{ line_key: key, qty: 1, expected_received: 1, snapshot_id: 's-1' }]));
     await userEvent.click(screen.getByRole('button', { name: 'ADM hết hàng: Kéo cắt giấy' }));
     await waitFor(() => expect(callsTo(f, admUrl, 'PUT')).toEqual([admUrl]));
   });

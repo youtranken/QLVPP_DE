@@ -1,23 +1,22 @@
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { apiErrorCode } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { useRefreshAfterLineChange } from '@/features/delivery/people/use-refresh-after-flow';
-import { arrivalsPlanKey, arrivalsPlanQuery, setAdmOut } from './arrivals.api';
+import { arrivalsPlanQuery, setAdmOut } from './arrivals.api';
 
 export const useArrivalsPlan = (ym: string) => useQuery(arrivalsPlanQuery(ym));
 
-// Nhập hàng đổi kế hoạch, tủ, danh sách giao và Còn nợ cùng lúc
-export function useRefreshArrivals(ym: string) {
-  const qc = useQueryClient();
+// Nhập hàng đổi kế hoạch, tủ, danh sách giao và Còn nợ cùng lúc — tập chung đã gồm mọi kế hoạch Hàng về
+export function useRefreshArrivals() {
   const refreshAll = useRefreshAfterLineChange();
-  return () => Promise.all([qc.invalidateQueries({ queryKey: arrivalsPlanKey(ym) }), refreshAll()]).then(() => undefined);
+  return () => refreshAll().then(() => undefined);
 }
 
 // Đánh/bỏ "ADM hết hàng" ghi ngay; trả mã lỗi (nếu có) để trang báo, luôn tải lại kế hoạch
 export function useAdmOutToggle(ym: string) {
   const { csrfToken } = useMe();
-  const refresh = useRefreshArrivals(ym);
+  const refresh = useRefreshArrivals();
   const [busy, setBusy] = useState<ReadonlySet<string>>(new Set());
   const toggle = async (key: string, on: boolean): Promise<string | null> => {
     if (busy.has(key)) return null;

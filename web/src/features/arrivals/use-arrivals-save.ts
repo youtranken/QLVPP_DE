@@ -18,7 +18,7 @@ export type Notice =
 export function useArrivalsSave(ym: string) {
   const { csrfToken } = useMe();
   const flight = useSingleFlight();
-  const refresh = useRefreshArrivals(ym);
+  const refresh = useRefreshArrivals();
   const [notice, setNotice] = useState<Notice>(null);
 
   const fail = (e: unknown) => setNotice({ kind: 'error', code: apiErrorCode(e) ?? 'UNKNOWN', itemId: apiErrorString(e, 'item_id') });

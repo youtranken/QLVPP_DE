@@ -60,9 +60,13 @@ export const waitingFor = (people: DeliveryPerson[], itemId: string, exceptSub: 
 // Dòng chờ duyệt chưa giao được; dòng đã giao đủ không còn gì để giao
 export const isOpenLine = (l: DeliveryPersonLine) => l.review_status !== 'pending' && l.remaining_qty > 0;
 
+// Cùng khóa gộp món ngoài DM của server (CUSTOM_ITEM_KEY: tên + ĐVT trim, không phân biệt hoa thường)
+const itemKeyOf = (l: DeliveryPersonLine) =>
+  l.item_id ?? `custom:${JSON.stringify([l.name.trim().toLowerCase(), l.unit.trim().toLowerCase()])}`;
+
 // Số trên thẻ: số món (nợ + kỳ này cùng món là một) và đơn vị còn giao được (bỏ dòng chờ duyệt)
 export function cardSummary(p: DeliveryPerson): { n: number; u: number } {
   const open = p.lines.filter(isOpenLine);
-  const items = new Set(open.map((l) => l.item_id ?? `${l.name}|${l.unit}`));
+  const items = new Set(open.map(itemKeyOf));
   return { n: items.size, u: open.reduce((s, l) => s + l.remaining_qty, 0) };
 }

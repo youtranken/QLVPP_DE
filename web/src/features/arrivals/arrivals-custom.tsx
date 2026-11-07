@@ -8,6 +8,8 @@ import { postCustomReceipt, type PlanCustomRow } from './arrivals.api';
 
 interface Props {
   ym: string;
+  // Bản in đang xem: server trả STALE_UPDATE nếu đã có bản mới hơn (như Lưu đợt về)
+  snapshotId: string | null;
   rows: PlanCustomRow[];
   admBusy: ReadonlySet<string>;
   onToggleAdm: (key: string, on: boolean) => void;
@@ -15,7 +17,7 @@ interface Props {
 }
 
 // Món ngoài danh mục không vào tủ: chỉ ghi "Đã về" để trần giao của khóa đó theo số thật
-export function ArrivalsCustom({ ym, rows, admBusy, onToggleAdm, onSaved }: Props) {
+export function ArrivalsCustom({ ym, snapshotId, rows, admBusy, onToggleAdm, onSaved }: Props) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const flight = useSingleFlight();
@@ -26,7 +28,7 @@ export function ArrivalsCustom({ ym, rows, admBusy, onToggleAdm, onSaved }: Prop
       const { qty } = parseQty(raw[r.key] ?? '');
       let code: string | null = null;
       try {
-        await postCustomReceipt(ym, { line_key: r.key, qty, expected_received: r.received }, csrfToken);
+        await postCustomReceipt(ym, { line_key: r.key, qty, expected_received: r.received, snapshot_id: snapshotId }, csrfToken);
         setRaw((prev) => ({ ...prev, [r.key]: '' }));
       } catch (e) {
         code = apiErrorCode(e) ?? 'UNKNOWN';

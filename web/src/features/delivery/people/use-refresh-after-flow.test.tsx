@@ -47,13 +47,13 @@ describe('làm mới sau thao tác kho/giao: báo cáo đổi theo (REPORTS_KEY)
 
 describe('mọi luồng đổi dòng phiếu dùng chung một tập làm mới (Tủ, Gửi ADM, Hàng về, Còn nợ, người giao)', () => {
   it.each<[string, () => () => Promise<unknown>]>([
-    ['Hàng về lưu / ADM hết hàng / về bù', () => useRefreshArrivals('2026-10')],
+    ['Hàng về lưu / ADM hết hàng / về bù', () => useRefreshArrivals()],
     ['Hủy nợ ở Còn nợ', () => useRefreshAfterLineChange([['admin-request']])],
     ['Tổng hợp điều chỉnh phiếu', () => useRefreshAfterAdjust()],
     ['duyệt/từ chối dòng ngoài DM', () => useReviewCache().reviewed],
-  ])('%s → stock, send-state, arrivals-plan, backlog, delivery-people', async (_label, hook) => {
+  ])('%s → stock, catalog, send-state, arrivals-plan, backlog, delivery-people', async (_label, hook) => {
     const { wrapper, keys } = setup();
     await renderHook(hook, { wrapper }).result.current();
-    expect(keys()).toEqual(expect.arrayContaining(['stock', 'send-state', 'arrivals-plan', 'backlog', 'admin/delivery-people']));
+    expect(keys()).toEqual(expect.arrayContaining(['stock', 'catalog', 'send-state', 'arrivals-plan', 'backlog', 'admin/delivery-people']));
   });
 });

@@ -57,9 +57,11 @@ function useRegion() {
     clear.current();
     flushSync(() => setSnap(data));
     let style: HTMLStyleElement | null = null;
+    let lateOpen = () => {};
     const done = (printed: boolean) => {
       window.removeEventListener('afterprint', after);
       window.removeEventListener('focus', after);
+      window.removeEventListener('beforeprint', lateOpen);
       style?.remove();
       clear.current = () => {};
       setSnap(null);
@@ -74,8 +76,16 @@ function useRegion() {
         window.addEventListener('afterprint', after);
         window.addEventListener('focus', after);
       },
-      // Hộp in chưa mở: lấy lại focus không có nghĩa đã in — chỉ afterprint, hoặc focus sau khi bấm In ở toast
-      blocked: () => window.removeEventListener('focus', after),
+      // Hộp in chưa mở: lấy lại focus không có nghĩa đã in — chỉ afterprint, hoặc focus sau khi hộp in mở
+      // (trễ hơn 1 s, hoặc bấm In ở toast); hộp mở trễ thì bỏ toast bị chặn
+      blocked: (onLateOpen: () => void) => {
+        window.removeEventListener('focus', after);
+        lateOpen = () => {
+          onLateOpen();
+          window.addEventListener('focus', after);
+        };
+        window.addEventListener('beforeprint', lateOpen);
+      },
       watchFocus: () => window.addEventListener('focus', after),
       drop: () => done(false),
     };
@@ -117,7 +127,7 @@ export function usePrintInPlace() {
       await waitReady(region.ref.current);
       shown.arm();
       if (await openDialog()) return 'printed';
-      shown.blocked();
+      shown.blocked(() => toast.dismiss(blocked));
       toast.show(blocked);
       return 'blocked';
     } catch {

@@ -287,6 +287,18 @@ describe('Cấu hình · Thay đổi gần đây', () => {
       }
     });
 
+    it('hạn 3 không lớn hơn ngày nhắc 3 → không hỏi "Đổi hạn đăng ký?", gửi thẳng để server báo lỗi ở ô; hạn 4 (> 3) → có hỏi', async () => {
+      const fetchMock = openJan(() => configInvalid('registration_last_day'));
+      await openConfig();
+      await retype(lastDay(), '3');
+      await userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
+      await vi.waitFor(() => expect(putBodies(fetchMock)).toEqual([{ registration_last_day: 3 }]));
+      expect(screen.queryByRole('dialog', { name: 'Đổi hạn đăng ký?' })).toBeNull();
+      await retype(lastDay(), '4');
+      await userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
+      expect(await screen.findByRole('dialog', { name: 'Đổi hạn đăng ký?' })).toBeInTheDocument();
+    });
+
     it('ô hạn đang sai (2) → chỉ còn nửa câu kỳ đang mở, không đoán ngày khóa kỳ sau', async () => {
       openJan();
       await openConfig();

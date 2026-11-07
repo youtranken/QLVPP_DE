@@ -26,6 +26,10 @@ const PERIOD_KEYS = ['registration_last_day', 'reminder_days_left', 'default_max
 const PERIOD_LINKED = ['registration_last_day', 'reminder_days_left'] as const;
 export const periodClears = (k: keyof PeriodDraft): readonly string[] => ((PERIOD_LINKED as readonly string[]).includes(k) ? PERIOD_LINKED : [k]);
 
+// Cùng luật server (reminderConflict): ngày nhắc phải nhỏ hơn ngày hạn; ô nhắc chưa là số thì so với số đang lưu
+export const deadlineHitsReminder = (d: PeriodDraft, savedReminder: number) =>
+  Number(d.registration_last_day) <= (isWhole(d.reminder_days_left) ? Number(d.reminder_days_left) : savedReminder);
+
 // Ngày hạn và ngày nhắc gõ tay số nào cũng gửi để server quyết; chỉ chặn ô không phải số
 export const periodSpec: BlockSpec<PeriodDraft> = {
   block: 'period',
