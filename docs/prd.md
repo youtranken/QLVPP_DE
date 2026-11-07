@@ -227,3 +227,15 @@ Chủ dự án thử tay kỳ đang mở và chốt các thay đổi sau (thắn
 - Tài khoản nhân viên mở bằng hộp ở đầu trang (popover máy tính, sheet điện thoại); `/me` giữ làm liên kết cũ.
 - Sản phẩm (Hành chính): tab mặc định "Tất cả"; món tạm ngưng nằm tại chỗ, thẻ lưới có con dấu đỏ chéo "Tạm ngưng" (không gạch tên), dòng bảng và dòng Danh mục gạch tên kèm nhãn đỏ. Nhóm tạm ngưng thu gọn thành một dòng, có "Dùng lại nhóm". Nút "Tạm ngưng" lặp theo thẻ, dòng, panel là nút trung tính, chỉ đỏ khi rê chuột hoặc focus bàn phím; bấm xong có thông báo kèm "Hoàn tác". Thanh thao tác hàng loạt sáng, cùng hàng với tab; tab "Tạm ngưng" chỉ có "Dùng lại" và "Chuyển nhóm". "Dùng lại" hàng loạt bỏ qua món chỉ tạm ngưng vì nhóm của nó (dòng báo "Bật lại nhóm để đổi từng món").
 - Danh mục: bảng đủ bề ngang, nút "Sửa" và "Tạm ngưng" ngay trên dòng (không menu ⋯), bỏ khung xem trước. Panel Sửa sản phẩm chia khối "Thông tin" và "Đặt hàng"; chọn nhóm bằng ô chọn; "Tạm ngưng", "Xóa" ở chân panel.
+
+Vòng 2 (thắng các ý trên khi mâu thuẫn):
+
+- Phiếu nhân viên, tối đa bị hạ: câu "Hành chính đã đổi tối đa còn N/tháng. Số lượng Q vẫn được giữ, không thể tăng thêm.", Q là số lượng hiện tại của dòng, chỉ hiện khi Q còn vượt N.
+- Thẻ món của nhân viên ghi giới hạn một cụm "Tối đa 1 ống/tháng"; món không giới hạn chỉ ghi đơn vị.
+- Sửa phiếu chưa đổi gì: nút chính là "Hủy" (về chế độ xem), không để nút "Lưu phiếu" vô hiệu. Đã đổi: "Lưu phiếu" kèm "Hủy" bỏ mọi thay đổi về phiếu đã lưu.
+- Dòng món tạm ngưng trong phiếu: "Sản phẩm này đã tạm ngưng và không thể đặt hàng."
+- Sản phẩm: "Tạm ngưng" và "Dùng lại" từng món (thẻ, dòng bảng, panel Sửa sản phẩm) đều hỏi xác nhận kèm một câu hệ quả; xong chỉ báo thành công, bỏ "Hoàn tác". Công tắc món trong panel nhóm ở Danh mục giữ như cũ.
+- Thanh lọc Sản phẩm: hàng 1 ô tìm + trạng thái (Tất cả / Đang dùng / Tạm ngưng / Chưa có ảnh, có số) + Lưới/Bảng, cùng cao 40px; hàng 2 chip nhóm nhỏ hơn, một dòng cuộn ngang, "Thu tất cả" ở cuối hàng; thanh hàng loạt là hàng riêng khi có chọn.
+- Thao tác hàng loạt theo nội dung lựa chọn: có món ngừng riêng thì có "Dùng lại (n)", có món đang dùng thì có "Tạm ngưng (n)"; món của nhóm tạm ngưng vẫn phải bật lại nhóm.
+- Tháng này: thẻ món ngoài danh mục ghi tháng của phiếu (món chờ xem chỉ thuộc kỳ đã khóa). Thẻ chưa đăng ký nói rõ cơ sở đếm "a/b người thuộc nhóm dùng app đã đăng ký" (người đang dùng thuộc nhóm PMH ID được phép, không phải cả danh bạ); "Xem tất cả" mở đúng danh sách đó ở Tổng hợp kỳ đang mở.
+- Lối vào kỳ đang mở: bước Đăng ký của kỳ đang mở có nút "Xem đăng ký kỳ tháng N"; Tổng hợp kỳ (mặc định kỳ khóa) có dải mời "Kỳ tháng N đang nhận đăng ký (a/b người)." kèm liên kết đó; kỳ mở có hai danh sách "Đã đăng ký (n)" / "Chưa đăng ký (n)".
