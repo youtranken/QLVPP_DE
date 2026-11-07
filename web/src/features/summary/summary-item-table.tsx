@@ -54,6 +54,7 @@ function StockCell({ row }: { row: Row }) {
       <span className="num">{row.item.stock_qty}</span>
       {state === 'low' && <span className="tag tag--warn">{t('summary.table.low')}</span>}
       {state === 'out' && <span className="tag tag--danger">{t('summary.table.out')}</span>}
+      {state === 'incoming' && <span className="tag tag--outline">{t('summary.table.incoming')}</span>}
     </span>
   );
 }

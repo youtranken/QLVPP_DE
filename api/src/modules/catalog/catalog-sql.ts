@@ -1,23 +1,5 @@
 import { sql } from 'drizzle-orm';
-import type { SQL } from 'drizzle-orm';
-import { heldSql } from './stock-held-sql';
-
-// Phần đang giữ của một món (bảng items không bí danh); truy vấn nhiều món dùng heldJoin + JOINED_HELD để gộp một lần
-const correlatedHeld = (openYm: string): SQL =>
-  sql`coalesce((SELECT h.held FROM (${heldSql(openYm)}) h WHERE h.item_id = items.id), 0)`;
-export const heldJoin = (openYm: string): SQL =>
-  sql`LEFT JOIN (${heldSql(openYm)}) h ON h.item_id = items.id`;
-export const JOINED_HELD = sql.raw('coalesce(h.held, 0)');
-
-// Sắp hết theo phần trống (tồn − đang giữ), cùng luật Tủ (stock-state.ts): còn hàng và trống ≤ 20 % mức;
-// món thiếu cho người chờ (trống < 0) luôn tính, kể cả chưa có mức — ở Tủ là "Thiếu", không bao giờ là "Còn"
-export const lowStockOn = (held: SQL): SQL => sql`(items.stock_qty > 0
-  AND items.stock_qty - ${held} <= CASE WHEN items.restock_level > 0
-      THEN floor(items.restock_level * 0.2) ELSE -1 END)`;
-// Danh sách món sắp hết (Home, KPI, chuông): phần giữ tính một lần cho cả bảng
-export const lowStockItemsSql = (openYm: string, columns: SQL): SQL => sql`
-  SELECT ${columns} FROM items ${heldJoin(openYm)}
-  WHERE items.active AND ${lowStockOn(JOINED_HELD)}`;
+import type { StockState } from './stock-state';
 
 // Món dùng được: món active và nhóm (nếu có) active — ngừng nhóm không sửa items.active
 export const ITEM_USABLE_SQL = sql.raw(
@@ -33,22 +15,18 @@ export const ITEM_INACTIVE_REASON_SQL = sql.raw(
    END`,
 );
 
-export type StockState = 'ok' | 'low' | 'out' | 'untracked';
+export type { StockState };
 
-// Tồn 0 luôn là Hết hàng, kể cả món chưa có mốc nhập mua
-export const itemColumnsOn = (held: SQL): SQL => sql`
+// stock_state không tính ở SQL: điền bằng catalogStates/withStockState (stock-list.ts), cùng nguồn với Tủ
+export const ITEM_COLUMNS = sql.raw(`
   id, code, name, name_en, unit, pack_note, category_id, image_file_id, admin_only, max_qty, stock_qty, restock_level,
-  CASE WHEN stock_qty = 0 THEN 'out' WHEN ${lowStockOn(held)} THEN 'low'
-       WHEN restock_level IS NULL THEN 'untracked' ELSE 'ok' END AS stock_state,
-  active, sort_order`;
-export const itemColumns = (openYm: string): SQL =>
-  itemColumnsOn(correlatedHeld(openYm));
+  active, sort_order`);
 
 export const CATEGORY_COLUMNS = sql.raw(
   'id, name, name_en, sort_order, active',
 );
 
-export interface ItemRow extends Record<string, unknown> {
+export interface ItemDbRow extends Record<string, unknown> {
   id: string;
   code: string | null;
   name: string;
@@ -61,10 +39,11 @@ export interface ItemRow extends Record<string, unknown> {
   max_qty: number;
   stock_qty: number;
   restock_level: number | null;
-  stock_state: StockState;
   active: boolean;
   sort_order: number;
 }
+
+export type ItemRow = ItemDbRow & { stock_state: StockState };
 
 export interface ItemFacts extends Record<string, unknown> {
   id: string;

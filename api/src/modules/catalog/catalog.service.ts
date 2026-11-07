@@ -19,15 +19,17 @@ import { UnitsService } from '../units/units.service';
 import type { CreateItemDto, UpdateItemDto } from './catalog.dto';
 import { definedEntries, pick, setClause } from '../../common/sql-patch';
 import {
-  heldJoin,
-  itemColumns,
-  itemColumnsOn,
+  ITEM_COLUMNS,
   ITEM_INACTIVE_REASON_SQL,
   ITEM_USABLE_SQL,
-  JOINED_HELD,
-  lowStockItemsSql,
 } from './catalog-sql';
-import type { InactiveReason, ItemFacts, ItemRow } from './catalog-sql';
+import type {
+  InactiveReason,
+  ItemDbRow,
+  ItemFacts,
+  ItemRow,
+} from './catalog-sql';
+import { catalogStates, lowStockIds, withStockState } from './stock-list';
 import { ITEM_ORDER, nextItemSortOrder } from './item-order';
 import { ITEM_USAGE_HOOK } from './item-usage.hook';
 import type { ItemUsageHook } from './item-usage.hook';
@@ -92,8 +94,18 @@ export class CatalogService {
     private readonly periods: PeriodsService,
   ) {}
 
-  private async columns(ex: Executor = this.db) {
-    return itemColumns((await this.periods.openPeriod(ex)).ym);
+  // Trạng thái kho theo Tủ (đang giữ, hàng đang về); một món thì chỉ tính món đó
+  private async withState(
+    ex: Executor,
+    rows: ItemDbRow[],
+    itemId: string | null = null,
+  ): Promise<ItemRow[]> {
+    const { openYm, kStar } = await this.periods.stockPeriods(undefined, ex);
+    return withStockState(rows, await catalogStates(ex, openYm, kStar, itemId));
+  }
+
+  private async oneWithState(ex: Executor, row: ItemDbRow): Promise<ItemRow> {
+    return (await this.withState(ex, [row], row.id))[0];
   }
 
   // active ở đây = dùng được (tính cả nhóm); lockCategories chặn đua với tx ngừng nhóm/chuyển nhóm đang chạy
@@ -124,9 +136,11 @@ export class CatalogService {
   }
 
   async countLowStock(): Promise<number> {
-    const { ym } = await this.periods.openPeriod(this.db);
+    const { openYm, kStar } = await this.periods.stockPeriods();
+    const ids = lowStockIds(await catalogStates(this.db, openYm, kStar));
     const { rows } = await this.db.execute<{ n: number }>(sql`
-      SELECT count(*)::int AS n FROM (${lowStockItemsSql(ym, sql`items.id`)}) low
+      SELECT count(*)::int AS n FROM items
+      WHERE active AND id = ANY(${sql.param(ids)}::uuid[])
     `);
     return rows[0].n;
   }
@@ -138,13 +152,12 @@ export class CatalogService {
     includeIds: string[] = [],
   ): Promise<ListedItem[]> {
     const privileged = identity.role === 'admin' || identity.role === 'sa';
-    const { ym } = await this.periods.openPeriod(this.db);
-    const result = await this.db.execute<ListedItem>(sql`
+    const result = await this.db.execute<ListedItem & ItemDbRow>(sql`
       SELECT i.* FROM (
-        SELECT ${itemColumnsOn(JOINED_HELD)}, ${ITEM_USABLE_SQL} AS usable,
+        SELECT ${ITEM_COLUMNS}, ${ITEM_USABLE_SQL} AS usable,
                ${ITEM_INACTIVE_REASON_SQL} AS inactive_reason,
                (image_file_id IS NULL) AS missing_image
-        FROM items ${heldJoin(ym)}
+        FROM items
         WHERE ${privileged}
            OR (${ITEM_USABLE_SQL} AND NOT admin_only)
            OR id = ANY(${sql.param(includeIds)}::uuid[])
@@ -152,7 +165,7 @@ export class CatalogService {
       LEFT JOIN item_categories c ON c.id = i.category_id
       ORDER BY ${ITEM_ORDER}
     `);
-    return result.rows;
+    return this.withState(this.db, result.rows) as Promise<ListedItem[]>;
   }
 
   async create(dto: CreateItemDto, actor: string): Promise<ItemRow> {
@@ -179,11 +192,10 @@ export class CatalogService {
         (await nextItemSortOrder(tx, dto.category_id ?? null)),
       ...definedEntries(dto),
     };
-    const columns = await this.columns(tx);
     const row = await this.mapConstraints(
       async () =>
         (
-          await tx.execute<ItemRow>(sql`
+          await tx.execute<ItemDbRow>(sql`
             INSERT INTO items (${sql.join(
               Object.keys(fields).map((k) => sql.identifier(k)),
               sql`, `,
@@ -192,7 +204,7 @@ export class CatalogService {
               Object.values(fields).map((v) => sql`${v}`),
               sql`, `,
             )})
-            RETURNING ${columns}
+            RETURNING ${ITEM_COLUMNS}
           `)
         ).rows[0],
     );
@@ -203,7 +215,8 @@ export class CatalogService {
       objectId: row.id,
       detail: { after: row },
     });
-    return row;
+    // Món mới chưa ai giữ, chưa có hàng đang về
+    return withStockState([row], new Map())[0];
   }
 
   async update(
@@ -216,14 +229,14 @@ export class CatalogService {
     if ('unit' in patch && !patch.unit) throw unitRequired();
     return this.mapConstraints(() =>
       this.db.transaction(async (tx) => {
-        const columns = await this.columns(tx);
         const before = (
-          await tx.execute<ItemRow>(sql`
-            SELECT ${columns} FROM items WHERE id = ${id} FOR UPDATE
+          await tx.execute<ItemDbRow>(sql`
+            SELECT ${ITEM_COLUMNS} FROM items WHERE id = ${id} FOR UPDATE
           `)
         ).rows[0];
         if (!before) throw itemNotFound();
-        if (Object.keys(patch).length === 0) return before;
+        if (Object.keys(patch).length === 0)
+          return this.oneWithState(tx, before);
         if (
           'category_id' in patch &&
           !('sort_order' in patch) &&
@@ -250,9 +263,9 @@ export class CatalogService {
           );
         }
         const after = (
-          await tx.execute<ItemRow>(sql`
+          await tx.execute<ItemDbRow>(sql`
             UPDATE items SET ${setClause(patch)}, updated_at = now()
-            WHERE id = ${id} RETURNING ${columns}
+            WHERE id = ${id} RETURNING ${ITEM_COLUMNS}
           `)
         ).rows[0];
         const keys = Object.keys(patch);
@@ -266,7 +279,7 @@ export class CatalogService {
           objectId: id,
           detail: { before: pick(before, keys), after: pick(after, keys) },
         });
-        return after;
+        return this.oneWithState(tx, after);
       }),
     );
   }
@@ -275,10 +288,9 @@ export class CatalogService {
     await this.mapConstraints(() =>
       this.db.transaction(async (tx) => {
         if (await this.usage.isUsed(id, tx)) throw itemInUse();
-        const columns = await this.columns(tx);
         const before = (
-          await tx.execute<ItemRow>(sql`
-            DELETE FROM items WHERE id = ${id} RETURNING ${columns}
+          await tx.execute<ItemDbRow>(sql`
+            DELETE FROM items WHERE id = ${id} RETURNING ${ITEM_COLUMNS}
           `)
         ).rows[0];
         if (!before) throw itemNotFound();

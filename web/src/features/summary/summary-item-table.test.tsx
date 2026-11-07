@@ -65,6 +65,16 @@ describe('SummaryItemTable — bảng theo món', () => {
     expect(within(tape).getAllByRole('cell').at(-1)).toHaveTextContent('—');
   });
 
+  it('Tủ "Chờ hàng về" (stock_state incoming) → nhãn "Chờ hàng về", không "Sắp hết"/"Hết hàng"; không vào lọc sắp hết/hết hàng', async () => {
+    const items = SUMMARY_ITEMS.map((i) => (i.id === 'i-pen' ? { ...i, stock_state: 'incoming' as const } : i));
+    stubSummaryApi((url) => (url === '/api/admin/items' ? jsonResponse(200, items) : undefined));
+    renderTable();
+    const pen = await rowOf('Bút bi xanh');
+    expect(within(pen).getByText('Chờ hàng về')).toBeInTheDocument();
+    expect(within(pen).queryByText(/Sắp hết|Hết hàng/)).toBeNull();
+    expect(screen.getByRole('rowheader', { name: /^Bút & viết/ })).not.toHaveTextContent('sắp hết/hết hàng');
+  });
+
   it('lowOnly: chỉ món dùng được có stock_state low hoặc out', async () => {
     stubSummaryApi();
     renderTable({ lowOnly: true });

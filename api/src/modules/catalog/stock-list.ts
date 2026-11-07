@@ -8,8 +8,8 @@ import type { SentSnapshot } from '../reports/sent-snapshot';
 import { orderedFromSnapshot } from './arrivals-plan.service';
 import { ITEM_ORDER } from './item-order';
 import { heldSql } from './stock-held-sql';
-import { stockStateOf } from './stock-state';
-import type { HeldStock } from './stock-state';
+import { catalogStateOf, stockStateOf } from './stock-state';
+import type { HeldStock, StockState } from './stock-state';
 
 interface StockFactsRow extends Record<string, unknown> {
   item_id: string;
@@ -40,15 +40,15 @@ export async function stockFacts(
   const { rows } = await ex.execute<StockFactsRow>(sql`
     SELECT i.id AS item_id, i.stock_qty, i.restock_level,
            coalesce(h.held, 0)::int AS held, coalesce(h.waiting, 0)::int AS waiting,
-           coalesce((SELECT sum(delta) FROM stock_movements m
-                     WHERE m.item_id = i.id AND m.reason = 'purchase'
-                       AND m.receipt_ym = ${k}::date), 0)::int AS received,
-           EXISTS (SELECT 1 FROM period_adm_out a
-                   WHERE a.period_ym = ${k}::date AND a.line_key = i.id::text
-                     AND a.kind = 'out') AS adm_out
+           coalesce(rc.qty, 0)::int AS received, (ao.line_key IS NOT NULL) AS adm_out
     FROM items i
     LEFT JOIN item_categories c ON c.id = i.category_id
     LEFT JOIN (${heldSql(openYm)}) h ON h.item_id = i.id
+    LEFT JOIN (SELECT m.item_id, sum(m.delta) AS qty FROM stock_movements m
+               WHERE m.reason = 'purchase' AND m.receipt_ym = ${k}::date
+               GROUP BY m.item_id) rc ON rc.item_id = i.id
+    LEFT JOIN (SELECT DISTINCT a.line_key FROM period_adm_out a
+               WHERE a.period_ym = ${k}::date AND a.kind = 'out') ao ON ao.line_key = i.id::text
     WHERE ${itemId}::uuid IS NULL OR i.id = ${itemId}::uuid
     ORDER BY ${ITEM_ORDER}`);
   return rows;
@@ -97,8 +97,9 @@ export async function stockList(
   ex: Executor,
   openYm: string,
   kStar: string | null,
+  itemId: string | null = null,
 ): Promise<StockListRow[]> {
-  const facts = await stockFacts(ex, openYm, kStar);
+  const facts = await stockFacts(ex, openYm, kStar, itemId);
   const incoming = incomingByItem(await incomingSources(ex, kStar), facts);
   return facts.map((f) => {
     const input = {
@@ -114,4 +115,31 @@ export async function stockList(
       ...stockStateOf(input),
     };
   });
+}
+
+// Một nguồn cho trạng thái kho ngoài Tủ (Danh mục, Home, KPI, chuông): tính một lần cho cả truy vấn
+export async function catalogStates(
+  ex: Executor,
+  openYm: string,
+  kStar: string | null,
+  itemId: string | null = null,
+): Promise<Map<string, StockState>> {
+  const rows = await stockList(ex, openYm, kStar, itemId);
+  return new Map(rows.map((r) => [r.item_id, catalogStateOf(r.stock_qty, r.stock_state)]));
+}
+
+export const lowStockIds = (states: Map<string, StockState>): string[] =>
+  [...states].filter(([, s]) => s === 'low').map(([id]) => id);
+
+// Hàng vừa xóa không còn trong bảng: tính như không ai giữ, không hàng về
+export function withStockState<T extends { id: string; stock_qty: number; restock_level: number | null }>(
+  rows: T[],
+  states: Map<string, StockState>,
+): (T & { stock_state: StockState })[] {
+  return rows.map((r) => ({
+    ...r,
+    stock_state:
+      states.get(r.id) ??
+      catalogStateOf(r.stock_qty, stockStateOf({ stock_qty: r.stock_qty, held: 0, restock_level: r.restock_level, incoming: 0 }).stock_state),
+  }));
 }

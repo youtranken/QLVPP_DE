@@ -1,4 +1,4 @@
-import { stockStateOf } from './stock-state';
+import { catalogStateOf, stockStateOf } from './stock-state';
 
 const of = (
   stock_qty: number,
@@ -54,5 +54,20 @@ describe('trạng thái Tủ/Kho theo người đang chờ', () => {
 
   it('tủ 0, không ai chờ, có hàng đang về → "none" (xám), không "incoming"', () => {
     expect(of(0, 0, 5, 4).stock_state).toBe('none');
+  });
+});
+
+describe('Danh mục/Home/chuông đọc trạng thái từ Tủ (catalogStateOf)', () => {
+  it.each([
+    [1, 'short', 'low'],
+    [0, 'short', 'out'],
+    [1, 'incoming', 'incoming'],
+    [0, 'incoming', 'incoming'],
+    [0, 'none', 'out'],
+    [5, 'untracked', 'untracked'],
+    [1, 'low', 'low'],
+    [10, 'ok', 'ok'],
+  ] as const)('tủ %i, Tủ "%s" → Danh mục "%s"', (stock, held, expected) => {
+    expect(catalogStateOf(stock, held)).toBe(expected);
   });
 });

@@ -85,6 +85,7 @@ const summary = {
       stock: 'Tồn kho',
       low: 'Sắp hết',
       out: 'Hết hàng',
+      incoming: 'Chờ hàng về',
       adminOnly: 'Chỉ Hành chính',
       groupItems: '{{n}} món',
       groupLow: '{{k}} sắp hết/hết hàng',

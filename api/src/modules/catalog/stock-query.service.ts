@@ -5,10 +5,10 @@ import { decodeTimestampCursor, encodeCursor } from '../../common/cursor';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor } from '../../database/database.module';
 import { PeriodsService } from '../periods/periods.service';
-import { JOINED_HELD, itemColumnsOn, lowStockItemsSql } from './catalog-sql';
+import { ITEM_COLUMNS } from './catalog-sql';
 import { ITEM_ORDER } from './item-order';
-import type { ItemRow } from './catalog-sql';
-import { stockList } from './stock-list';
+import type { ItemDbRow, ItemRow } from './catalog-sql';
+import { catalogStates, lowStockIds, stockList, withStockState } from './stock-list';
 import type { StockListRow } from './stock-list';
 
 export interface Page<T> {
@@ -75,13 +75,17 @@ export class StockQueryService {
   }
 
   async lowStock(now: Date): Promise<ItemRow[]> {
-    const { ym } = await this.periods.openPeriod(this.db, now);
-    const result = await this.db.execute<ItemRow>(sql`
-      SELECT i.* FROM (${lowStockItemsSql(ym, itemColumnsOn(JOINED_HELD))}) i
+    const { openYm, kStar } = await this.periods.stockPeriods(now);
+    const states = await catalogStates(this.db, openYm, kStar);
+    const result = await this.db.execute<ItemDbRow>(sql`
+      SELECT i.* FROM (
+        SELECT ${ITEM_COLUMNS} FROM items
+        WHERE active AND id = ANY(${sql.param(lowStockIds(states))}::uuid[])
+      ) i
       LEFT JOIN item_categories c ON c.id = i.category_id
       ORDER BY ${ITEM_ORDER}
     `);
-    return result.rows;
+    return withStockState(result.rows, states);
   }
 
   // Mới nhất trước; khóa (created_at dạng text đủ micro giây, id) để trang sau không trùng/sót

@@ -88,6 +88,7 @@ const summary: Messages<typeof vi> = {
       stock: 'In stock',
       low: 'Low',
       out: 'Out of stock',
+      incoming: 'Awaiting arrival',
       adminOnly: 'Admin only',
       groupItems: '{{n}} items',
       groupLow: '{{k}} low/out of stock',

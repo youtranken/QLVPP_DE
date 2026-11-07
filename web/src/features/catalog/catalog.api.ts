@@ -10,7 +10,8 @@ export interface Category {
   active: boolean;
 }
 
-export type StockState = 'ok' | 'low' | 'out' | 'untracked';
+// Cùng nguồn với Tủ/Kho: incoming = thiếu cho người chờ nhưng hàng đang về đủ bù (không phải Sắp hết)
+export type StockState = 'ok' | 'low' | 'out' | 'untracked' | 'incoming';
 
 export interface AdminItem {
   id: string;

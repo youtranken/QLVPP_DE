@@ -142,7 +142,7 @@ export class PeriodsService {
 
   // Tủ và hộp ngừng món đọc "Hàng đang về" theo cùng K* = kỳ khóa gần nhất (không suy từ kỳ mở − 1)
   async stockPeriods(
-    now: Date,
+    now: Date = this.clock.now(),
     tx: Executor = this.db,
   ): Promise<{ openYm: string; kStar: string | null }> {
     const open = await this.openPeriod(tx, now);

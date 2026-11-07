@@ -33,3 +33,13 @@ export function stockStateOf(x: HeldStockInput): HeldStock {
   };
   return { free, short, awaiting, stock_state: state() };
 }
+
+export type StockState = 'ok' | 'low' | 'out' | 'untracked' | 'incoming';
+
+// Danh mục, Home và chuông đọc đúng trạng thái Tủ: thiếu cho người chờ là Sắp hết (còn hàng) hoặc Hết hàng (tủ 0);
+// thiếu mà hàng đang về đủ bù là "Chờ hàng về", không bao giờ là Sắp hết
+export function catalogStateOf(stock_qty: number, s: HeldStockState): StockState {
+  if (s === 'short') return stock_qty === 0 ? 'out' : 'low';
+  if (s === 'none') return 'out';
+  return s;
+}
