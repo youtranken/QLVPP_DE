@@ -1,7 +1,6 @@
 /* Kiểu "đang chọn" chung (Nhóm 1): nền --c-sel, chữ --c-on-sel; số đếm trong mục đang chọn dùng --c-sel-count */
 [data-shell='admin'] .ct-chip[aria-pressed='true'] .ct-chip__n,
 [data-shell='admin'] .ct-chip[aria-checked='true'] .ct-chip__n { color: var(--c-sel-count); }
-[data-shell='admin'] .ct-tab[aria-pressed='true'] .ct-tab__n { background: var(--c-on-dark-fill); color: var(--c-sel-count); }
 [data-shell='admin'] .flt-chip[aria-pressed='true'] .flt-cnt { color: var(--c-sel-count); opacity: 1; }
 
 /* Nút nguy hiểm lặp theo thẻ/dòng: trung tính, chỉ đỏ khi rê chuột hoặc lấy focus bàn phím */

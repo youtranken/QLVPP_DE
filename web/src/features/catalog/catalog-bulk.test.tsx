@@ -30,14 +30,14 @@ async function submitMax(value: string) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Danh mục — hàng loạt', () => {
-  it('chọn 2 món → thanh sáng "2 món đã chọn" cùng hàng với tab, ô tìm vẫn hiện; "Bỏ chọn" (ghost) ẩn thanh', async () => {
+  it('chọn 2 món → thanh sáng "2 món đã chọn" ở hàng riêng dưới chip nhóm, ô tìm vẫn hiện; "Bỏ chọn" (ghost) ẩn thanh', async () => {
     await openCatalog({ items: ITEMS });
     await pickPens();
     expect(bulkBar().getByText('2 món đã chọn')).toBeInTheDocument();
     expect(screen.getByRole('searchbox')).toBeInTheDocument();
     const bar = screen.getByRole('toolbar', { name: 'Hành động trên các dòng đã chọn' });
     expect(bar).toHaveClass('bulk-bar--light');
-    expect(bar.parentElement).toBe(screen.getByRole('group', { name: 'Trạng thái' }).parentElement);
+    expect(bar.parentElement).toHaveClass('ct-filter__bulk');
     expect(bulkBar().getByRole('button', { name: 'Bỏ chọn' })).toHaveClass('btn--ghost');
     await userEvent.click(bulkBar().getByRole('button', { name: 'Bỏ chọn' }));
     expect(screen.queryByRole('toolbar', { name: 'Hành động trên các dòng đã chọn' })).toBeNull();
