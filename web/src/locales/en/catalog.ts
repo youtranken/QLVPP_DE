@@ -99,6 +99,7 @@ const catalog: Messages<typeof vi> = {
       saving: 'Saving…',
       code: 'Item code',
       name: 'Product name',
+      itemName: 'Item name',
       nameEn: 'English name',
       unit: 'Unit',
       unitPlaceholder: 'Choose a unit',

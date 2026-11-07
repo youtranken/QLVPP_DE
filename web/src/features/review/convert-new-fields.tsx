@@ -31,7 +31,7 @@ export function ConvertNewFields({ draft, errors, categories, onChange, onUpload
           onBusyChange={onUploadingChange}
         />
       </div>
-      <FormField label={t('catalog.form.name')} required error={err('name')}>
+      <FormField label={t('catalog.form.itemName')} required error={err('name')}>
         {(p) => <input {...p} value={draft.name} onChange={(e) => onChange('name', e.target.value)} />}
       </FormField>
       <FormField label={t('catalog.form.nameEn')} error={err('name_en')}>

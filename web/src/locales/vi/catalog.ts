@@ -96,6 +96,7 @@ const catalog = {
       saving: 'Đang lưu…',
       code: 'Mã món',
       name: 'Tên sản phẩm',
+      itemName: 'Tên món',
       nameEn: 'Tên tiếng Anh',
       unit: 'Đơn vị tính',
       unitPlaceholder: 'Chọn ĐVT',
