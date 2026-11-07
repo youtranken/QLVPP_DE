@@ -112,6 +112,7 @@ export class LocalTestLoginController {
       fullName: account.name,
       email: account.email,
       department: account.department,
+      team: account.team,
       role: account.role,
       groups,
     });
@@ -124,6 +125,7 @@ export class LocalTestLoginController {
         full_name: account.name,
         email: account.email ?? undefined,
         department: account.department ?? undefined,
+        team: account.team ?? undefined,
         groups,
       },
       idToken: null,

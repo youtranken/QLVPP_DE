@@ -58,7 +58,7 @@ export class SummaryService {
   ) {}
 
   // Tiến độ đăng ký xem được cả kỳ mở; chỉ chặn kỳ sau kỳ đang mở
-  private async assertViewable(ym: string): Promise<{ isOpen: boolean }> {
+  async assertViewable(ym: string): Promise<{ isOpen: boolean }> {
     const open = await this.periods.openPeriod(this.db, this.clock.now());
     const state = lockState(ym, open.ym);
     if (state === 'future') throw invalidPeriod();

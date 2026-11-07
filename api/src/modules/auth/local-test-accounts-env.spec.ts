@@ -20,6 +20,7 @@ const ACCOUNTS = JSON.stringify([
     name: 'Nhân viên A (test)',
     email: 'nv.a@test.local',
     department: 'Phòng Test',
+    team: 'Team Test',
   },
 ]);
 
@@ -65,6 +66,7 @@ describe('parseLocalTestAccounts — chỉ bật khi đủ cả hai cờ', () =>
           name: 'HC Test',
           email: null,
           department: null,
+          team: null,
         },
         {
           username: 'nv.a',
@@ -74,9 +76,35 @@ describe('parseLocalTestAccounts — chỉ bật khi đủ cả hai cờ', () =>
           name: 'Nhân viên A (test)',
           email: 'nv.a@test.local',
           department: 'Phòng Test',
+          team: 'Team Test',
         },
       ]);
     }
+  });
+});
+
+describe('team tùy chọn của tài khoản thử', () => {
+  const withTeam = (team: string) =>
+    dev({
+      LOCAL_TEST_ACCOUNTS: JSON.stringify([
+        {
+          username: 'nv.t',
+          password_hash: HASH,
+          role: 'member',
+          sub: 'local-test-t',
+          name: 'NV T',
+          team,
+        },
+      ]),
+    });
+
+  it('team 120 ký tự được; 121 ký tự → từ chối khởi động', () => {
+    expect(
+      parseLocalTestAccounts(withTeam('x'.repeat(120)))![0].team,
+    ).toHaveLength(120);
+    expect(() => parseLocalTestAccounts(withTeam('x'.repeat(121)))).toThrow(
+      /team/,
+    );
   });
 });
 

@@ -18,6 +18,7 @@ export interface PmhIdClaims {
   employee_code?: string;
   full_name?: string;
   department?: string;
+  team?: string;
   groups?: string[];
 }
 
@@ -75,6 +76,7 @@ export class UsersService {
     fullName: string;
     email: string | null;
     department: string | null;
+    team: string | null;
     role: 'admin' | 'member';
     groups: string[];
   }): Promise<void> {
@@ -83,6 +85,7 @@ export class UsersService {
       fullName: params.fullName,
       email: params.email,
       department: params.department,
+      team: params.team,
       role: params.role,
       groups: params.groups,
       status: 'active',
@@ -163,6 +166,7 @@ export class UsersService {
         employeeCode: claims.employee_code ?? null,
         fullName: claims.full_name ?? null,
         department: claims.department ?? null,
+        team: claims.team ?? null,
         groups: claims.groups ?? [],
         firstLoginAt: now,
         lastLoginAt: now,
@@ -174,6 +178,7 @@ export class UsersService {
           employeeCode: claims.employee_code ?? null,
           fullName: claims.full_name ?? null,
           department: claims.department ?? null,
+          team: claims.team ?? null,
           groups: claims.groups ?? [],
           lastLoginAt: now,
           updatedAt: now,

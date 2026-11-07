@@ -1,7 +1,7 @@
 // Tài khoản thử local: CHỈ cho dev khi IdP dev không dùng được. Bật khi AUTH_DEV_MODE=true và NODE_ENV
 // thuộc allowlist dev/test (cùng luật dev-identity); đặt biến ở môi trường khác → từ chối khởi động.
 // Lỗi không bao giờ chép giá trị biến (chứa hash).
-import { isDevAuthActive } from './auth-env';
+import { isDevAuthActive, TEAM_MAX } from './auth-env';
 import type { EnvLike } from './auth-env';
 
 export const LOCAL_TEST_SUB_PREFIX = 'local-test-';
@@ -19,6 +19,7 @@ export interface LocalTestAccount {
   name: string;
   email: string | null;
   department: string | null;
+  team: string | null;
 }
 
 function raw(env: EnvLike): string {
@@ -37,9 +38,14 @@ function text(v: unknown, field: string, i: number, max: number): string {
   return s;
 }
 
-function optional(v: unknown, field: string, i: number): string | null {
+function optional(
+  v: unknown,
+  field: string,
+  i: number,
+  max = 200,
+): string | null {
   if (v === undefined || v === null || v === '') return null;
-  return text(v, field, i, 200);
+  return text(v, field, i, max);
 }
 
 function toAccount(item: unknown, i: number): LocalTestAccount {
@@ -72,6 +78,7 @@ function toAccount(item: unknown, i: number): LocalTestAccount {
     name: text(o.name, 'name', i, 200),
     email: optional(o.email, 'email', i),
     department: optional(o.department, 'department', i),
+    team: optional(o.team, 'team', i, TEAM_MAX),
   };
 }
 

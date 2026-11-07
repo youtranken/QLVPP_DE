@@ -59,6 +59,17 @@ describe('JwtVerifierService — verify offline RS256', () => {
     expect(result.expiresAt!.getTime()).toBeGreaterThan(Date.now());
   });
 
+  it('claim team "  Team Test " → claims.team "Team Test"; thiếu, rỗng hoặc không phải chuỗi → undefined; quá 120 ký tự → cắt còn 120', async () => {
+    const team = async (v: unknown) =>
+      (await verifier.verify(await sign({ team: v }))).claims.team;
+    expect(await team('  Team Test ')).toBe('Team Test');
+    expect(await team('   ')).toBeUndefined();
+    expect(await team(7)).toBeUndefined();
+    expect((await verifier.verify(await sign())).claims.team).toBeUndefined();
+    expect(await team('x'.repeat(121))).toBe('x'.repeat(120));
+    expect(await team('x'.repeat(120))).toBe('x'.repeat(120));
+  });
+
   it('sai audience → fail', async () => {
     const token = await sign({}, { aud: 'app-khac' });
     await expect(verifier.verify(token)).rejects.toThrow();

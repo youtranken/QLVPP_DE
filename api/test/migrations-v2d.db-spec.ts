@@ -12,7 +12,7 @@ import { assertTestDatabase } from './test-database';
 const silent = { log: () => undefined };
 const YM = '2026-10-01';
 
-describe('migration v2-D 0113–0120', () => {
+describe('migration v2-D 0113–0121', () => {
   let pool: Pool;
   let itemId: string;
   const movement: Record<string, string> = {};
@@ -349,5 +349,15 @@ describe('migration v2-D 0113–0120', () => {
     expect(
       await code(`UPDATE requests SET saved_at = NULL WHERE id = $1`, [request.plain]),
     ).toBe('23502');
+  });
+
+  it('0121 users.team text NULL, không default', async () => {
+    const { rows } = await pool.query(
+      `SELECT data_type, is_nullable, column_default FROM information_schema.columns
+       WHERE table_name = 'users' AND column_name = 'team'`,
+    );
+    expect(rows).toEqual([
+      { data_type: 'text', is_nullable: 'YES', column_default: null },
+    ]);
   });
 });

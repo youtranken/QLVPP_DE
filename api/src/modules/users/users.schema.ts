@@ -6,6 +6,7 @@ export const usersTable = pgTable('users', {
   employeeCode: text('employee_code'),
   fullName: text('full_name'),
   department: text('department'),
+  team: text('team'),
   groups: jsonb('groups').notNull().default([]),
   status: text('status').notNull().default('active'),
   role: text('role').notNull().default('member'),

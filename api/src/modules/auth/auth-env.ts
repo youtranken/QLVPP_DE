@@ -18,3 +18,5 @@ export function assertAuthEnvSafe(env: EnvLike): void {
     );
   }
 }
+
+export const TEAM_MAX = 120;

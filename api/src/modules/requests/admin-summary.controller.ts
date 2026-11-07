@@ -4,6 +4,7 @@ import { YmPipe } from '../../common/ym';
 import { Roles } from '../auth/roles.decorator';
 import { uuidParam } from '../catalog/catalog.dto';
 import { PeriodsService } from '../periods/periods.service';
+import { RegistrationsService } from './registrations.service';
 import { SummaryListsService } from './summary-lists.service';
 import { PeriodRequestsQuery } from './summary.dto';
 import { SummaryService } from './summary.service';
@@ -14,6 +15,7 @@ export class AdminSummaryController {
   constructor(
     private readonly summary: SummaryService,
     private readonly lists: SummaryListsService,
+    private readonly registrations: RegistrationsService,
     private readonly periods: PeriodsService,
     private readonly clock: ClockService,
   ) {}
@@ -37,6 +39,19 @@ export class AdminSummaryController {
   @Get('periods/:ym/unregistered')
   unregistered(@Param('ym', YmPipe) ym: string) {
     return this.summary.unregistered(ym);
+  }
+
+  @Get('periods/:ym/registrations')
+  registrationList(@Param('ym', YmPipe) ym: string) {
+    return this.registrations.list(ym);
+  }
+
+  @Get('periods/:ym/registrations/:id')
+  registration(
+    @Param('ym', YmPipe) ym: string,
+    @Param('id', uuidParam) id: string,
+  ) {
+    return this.registrations.one(ym, id);
   }
 
   @Get('requests/:id')

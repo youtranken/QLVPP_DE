@@ -19,6 +19,7 @@ import { LineDeliveryStore } from './line-delivery.store';
 import { LINE_IMAGE_REFERENCE } from './line-image.reference';
 import { MeRequestController } from './me-request.controller';
 import { MeRequestService } from './me-request.service';
+import { RegistrationsService } from './registrations.service';
 import { RequestItemUsageHook } from './request-item-usage.hook';
 import { RequestLinesWriter } from './request-lines.writer';
 import { RequestViewBuilder } from './request-view';
@@ -56,6 +57,7 @@ import { SummaryService } from './summary.service';
     RequestItemUsageHook,
     SummaryService,
     SummaryListsService,
+    RegistrationsService,
     ReviewService,
     LineDeliveryStore,
     LineNotifier,
