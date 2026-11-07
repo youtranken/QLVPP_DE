@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
-import { categoryLabel, useAdminItems, useAllCategories, useRefreshCatalog, type AdminItem } from './catalog.api';
+import { categoryLabel, useAdminItems, useAllCategories, useRefreshCatalog, type AdminItem, type Category } from './catalog.api';
 import { applyView, groupCounts, indexCategories, toRows, type CatalogView, type CategoryIndex } from './catalog-rows';
 import { CatalogFilterBar } from './catalog-filter-bar';
 import { CatalogGrid } from './catalog-grid';
@@ -50,21 +50,25 @@ export function CatalogPage() {
   const stoppedKeys = useMemo(() => pausedGroups(d.index), [d.index]);
   // Chưa chọn gì: nhóm tạm ngưng thu gọn sẵn. Đang tìm thì mở mọi nhóm để kết quả không nằm trong nhóm đang thu; xóa ô tìm thì trả lại như cũ
   const collapsed = p.view.q.trim() ? NO_COLLAPSE : (stored ?? stoppedKeys);
-  const { keepOnly } = bulk;
-  useEffect(() => keepOnly(new Set(d.rows.map((r) => r.id))), [d.rows, keepOnly]);
   const title = t('catalog.title');
   const grid = p.mode === 'grid';
-  const orderedIds = d.rows.map((r) => r.id);
   const groupKeys = useMemo(() => [...new Set(d.rows.map((r) => r.group))], [d.rows]);
   const allCollapsed = groupKeys.length > 0 && groupKeys.every((k) => collapsed.has(k));
   const visible = useMemo(() => (grid ? d.rows : d.rows.filter((r) => !collapsed.has(r.group))).map((r) => r.id), [grid, d.rows, collapsed]);
+  const { keepOnly } = bulk;
+  // Hàng bị lọc hoặc nằm trong nhóm đang thu thì bỏ chọn: mọi thao tác hàng loạt chỉ chạm hàng đang thấy
+  useEffect(() => keepOnly(new Set(visible)), [visible, keepOnly]);
   const panel = usePanelParam('item', { order: visible, known: knownItem(d.items.data), extra: ['itemCat'] });
   const editing = panel.id && panel.id !== 'new' ? d.items.data?.find((i) => i.id === panel.id) : undefined;
   const openItem = (id: string) => panel.open(id);
   const addItem = (categoryId?: string) => panel.open('new', { itemCat: categoryId ?? null });
 
+  const reactivateGroup = (c: Category) => {
+    setCollapsed((prev) => new Set([...(prev ?? stoppedKeys)].filter((k) => k !== c.id)));
+    void groups.toggle(c);
+  };
   const runBulk = async (body: Parameters<typeof bulk.run>[1], doneText: (n: number) => string) => {
-    await bulk.run(orderedIds, body, doneText);
+    await bulk.run(visible, body, doneText);
     setDialog(null);
   };
   const reactivateSelected = async () => {
@@ -75,8 +79,12 @@ export function CatalogPage() {
     for (const r of picked.filter((x) => x.active && !x.usable)) bulk.setRowError(r.id, t('catalog.categories.enableGroupFirst'));
   };
   const deactivateSelected = async () => {
-    const picked = d.rows.filter((r) => bulk.selection.selected.has(r.id)).map((r) => ({ id: r.id, name: r.name }));
-    if (await actions.confirmDeactivateMany(picked)) await bulk.run(orderedIds, { active: false }, (n) => t('catalog.bulk.deactivated', { n }));
+    // Chỉ món đang dùng được: món đã ngừng riêng hoặc ngừng theo nhóm không PATCH (tránh biến "ngừng theo nhóm" thành "ngừng riêng")
+    const picked = d.rows.filter((r) => bulk.selection.selected.has(r.id) && r.active && r.usable);
+    if (picked.length === 0) return;
+    if (await actions.confirmDeactivateMany(picked.map((r) => ({ id: r.id, name: r.name })))) {
+      await bulk.run(picked.map((r) => r.id), { active: false }, (n) => t('catalog.bulk.deactivated', { n }));
+    }
   };
 
   const emptyActions = (
@@ -141,11 +149,11 @@ export function CatalogPage() {
           total={d.base.length}
           group={p.view.group}
           onGroup={p.setGroup}
-          collapse={grid ? null : { all: allCollapsed, onToggle: () => setCollapsed(allCollapsed ? NO_COLLAPSE : new Set(groupKeys)) }}
+          collapse={grid || p.view.q.trim() ? null : { all: allCollapsed, onToggle: () => setCollapsed(allCollapsed ? NO_COLLAPSE : new Set(groupKeys)) }}
           bulk={grid ? null : { count: bulk.count, pending: bulk.pending, onReactivate: () => void reactivateSelected(), onMax: () => setDialog('max'), onMove: () => setDialog('move'), onPause: () => void deactivateSelected(), onClear: bulk.clear }}
         />
         {grid ? (
-          <CatalogGrid rows={d.rows} index={d.index} loading={!loaded} openId={panel.id} onEdit={openItem} emptyAction={emptyActions} tab={p.tab} narrowed={p.narrowed} groupBusy={groups.busy} onReactivateGroup={(c) => void groups.toggle(c)} />
+          <CatalogGrid rows={d.rows} index={d.index} loading={!loaded} openId={panel.id} onEdit={openItem} emptyAction={emptyActions} tab={p.tab} narrowed={p.narrowed} groupBusy={groups.busy} onReactivateGroup={reactivateGroup} />
         ) : (
           <CatalogTable
             rows={d.rows}
@@ -160,7 +168,7 @@ export function CatalogPage() {
             onAddToGroup={addItem}
             onSaveMax={actions.saveMax}
             groupBusy={groups.busy}
-            onReactivateGroup={(c) => void groups.toggle(c)}
+            onReactivateGroup={reactivateGroup}
             empty={{ hint: t('catalog.list.emptyHint'), action: emptyActions }}
           />
         )}

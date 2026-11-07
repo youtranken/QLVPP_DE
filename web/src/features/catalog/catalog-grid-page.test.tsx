@@ -197,7 +197,7 @@ describe('Danh mục — một thanh lọc cho lưới và bảng', () => {
     expect(screen.getByRole('searchbox')).toHaveValue('giay');
     expect(within(screen.getByRole('table')).getByText('Giấy A4')).toBeInTheDocument();
     expect(screen.queryByText('Giấy note')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Thu tất cả' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Thu tất cả' })).toBeNull();
   });
 
   it('bảng mở mọi nhóm ngay lần đầu (không cần bấm "Mở tất cả")', async () => {
@@ -260,7 +260,7 @@ describe('Sản phẩm lưới — món và nhóm tạm ngưng tại chỗ (Nhó
     const f = await open(GRID, GROUPED);
     const row = screen.getByText('Tạm ngưng cả nhóm').closest('div') as HTMLElement;
     expect(within(row).queryByRole('button', { name: /^Thêm/ })).toBeNull();
-    await userEvent.click(within(row).getByRole('button', { name: 'Dùng lại nhóm' }));
+    await userEvent.click(within(row).getByRole('button', { name: /^Dùng lại nhóm/ }));
     await waitFor(() => expect(patchCalls(f)).toEqual([{ id: 'c-old', body: { active: true } }]));
   });
 

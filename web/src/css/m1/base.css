@@ -181,3 +181,9 @@
 [data-shell='admin'] .switch:focus-visible { outline: none; }
 [data-shell='admin'] .switch:focus-visible .switch__track { box-shadow: var(--focus); }
 [data-shell='admin'] .switch:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Thanh hàng loạt cố định ở 390: chừa chỗ cuối trang và nâng toast lên trên thanh */
+@media (max-width: 767px) {
+  [data-shell='admin'] .ct-page:has(.bulk-bar.is-sticky-bottom) { padding-bottom: calc(136px + env(safe-area-inset-bottom)); }
+  [data-shell='admin']:has(.bulk-bar.is-sticky-bottom) .toast-host { bottom: calc(136px + env(safe-area-inset-bottom)); }
+}

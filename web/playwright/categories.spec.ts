@@ -178,7 +178,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       const one = panel.getByRole('switch', { name: names[0], exact: true });
       await one.click();
       await expect(one).toHaveAttribute('aria-checked', 'false');
-      await expect(panel.getByText(`Đã ngừng ${names[0]}`)).toBeVisible();
+      await expect(panel.getByText(`Đã tạm ngưng ${names[0]}`)).toBeVisible();
       await panel.getByRole('button', { name: 'Hoàn tác' }).click();
       await expect(one).toHaveAttribute('aria-checked', 'true');
       await one.click();

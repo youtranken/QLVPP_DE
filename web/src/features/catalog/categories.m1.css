@@ -5,7 +5,7 @@
 [data-shell='admin'] .cg-open { display: inline-flex; align-items: center; min-width: var(--hit); min-height: var(--hit); padding: 0; border: 0; background: transparent; color: var(--c-ink); text-align: left; cursor: pointer; }
 [data-shell='admin'] .cg-open:hover .cg-name__text { color: var(--c-acc); text-decoration: underline; }
 [data-shell='admin'] .cg-open:focus-visible { box-shadow: var(--focus); outline: none; border-radius: var(--r-sm); }
-[data-shell='admin'] .cg-count { min-height: var(--hit); white-space: nowrap; }
+[data-shell='admin'] .cg-count { min-width: var(--hit); min-height: var(--hit); white-space: nowrap; }
 [data-shell='admin'] .gp { display: grid; gap: var(--s-4); }
 [data-shell='admin'] .gp-head { display: grid; gap: var(--s-1); padding-bottom: var(--s-3); border-bottom: 1px solid var(--c-line); }
 [data-shell='admin'] .gp-hint { margin: 0; color: var(--c-muted); font: var(--t-sm); }

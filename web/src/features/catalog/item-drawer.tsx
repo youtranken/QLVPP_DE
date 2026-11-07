@@ -44,16 +44,25 @@ function ActiveToggle({ item, groupActive, saving, notify }: { item: AdminItem; 
   const { t } = useTranslation();
   const refresh = useRefreshCatalog();
   const { checked, locked, send } = useItemActive({ item, name: item.name, groupActive, refresh, notify });
+  const hintId = useId();
   return (
-    <button
-      type="button"
-      className={checked ? 'btn btn--quiet-danger' : 'btn'}
-      aria-label={t(checked ? 'catalog.grid.pauseFor' : 'catalog.grid.reactivateFor', { name: item.name })}
-      disabled={saving || locked}
-      onClick={() => void send(!checked)}
-    >
-      {t(checked ? 'catalog.grid.pause' : 'catalog.categories.reactivate')}
-    </button>
+    <>
+      <button
+        type="button"
+        className={checked ? 'btn btn--quiet-danger' : 'btn'}
+        aria-label={t(checked ? 'catalog.grid.pauseFor' : 'catalog.grid.reactivateFor', { name: item.name })}
+        aria-describedby={locked ? hintId : undefined}
+        disabled={saving || locked}
+        onClick={() => void send(!checked)}
+      >
+        {t(checked ? 'catalog.grid.pause' : 'catalog.categories.reactivate')}
+      </button>
+      {locked && (
+        <small id={hintId} className="ct-active__hint">
+          {t('catalog.categories.enableGroupFirst')}
+        </small>
+      )}
+    </>
   );
 }
 

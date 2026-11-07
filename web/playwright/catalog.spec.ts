@@ -256,7 +256,7 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
       await pause.click();
       expect((await off).status()).toBe(200);
       await expect(page.getByRole('status').filter({ hasText: `Đã tạm ngưng ${name}` })).toBeVisible();
-      await expect(card.getByRole('img', { name: 'Tạm ngưng' })).toBeVisible();
+      await expect(card.getByRole('img', { name: 'Tạm ngưng', exact: true })).toBeVisible();
 
       await page.getByRole('button', { name: /^Tạm ngưng \d/ }).click();
       await expect(card.getByText('Ngừng riêng')).toHaveCount(0);
@@ -336,6 +336,12 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
       await expect(page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ })).toBeVisible();
       if (isMobile(info)) {
         expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe('fixed');
+        const barBox = (await bar.boundingBox())!;
+        const pad = await page.locator('.ct-page').evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
+        expect(pad).toBeGreaterThanOrEqual(barBox.height + 12);
+        const vh = page.viewportSize()!.height;
+        const lift = await page.locator('.toast-host').evaluate((el, h) => h - el.getBoundingClientRect().bottom, vh);
+        expect(lift).toBeGreaterThanOrEqual(barBox.height + 12);
         await expectNoContrastViolations(page);
       }
       await shot(page, info, 'nhom1-catalog-bulk', false);

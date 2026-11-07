@@ -68,7 +68,7 @@ export function RegistrationDialog({ ym, deadline, rows, index, onIndex, onClose
         <div className="rg-head__text">
           <small>{t('summary.open.dialogMeta', { month: monthOf(ym), team: row.team ?? t('common.empty') })}</small>
           <DialogTitle className="sheet-title">{t('summary.open.dialogTitle', { name })}</DialogTitle>
-          {view.data && <small aria-live="polite">{t('summary.open.dialogSaved', { time: vnSavedStamp(row.saved_at), kinds: lines.length, units })}</small>}
+          <small aria-live="polite">{view.data ? t('summary.open.dialogSaved', { time: vnSavedStamp(row.saved_at), kinds: lines.length, units }) : null}</small>
         </div>
         <button type="button" ref={prevRef} className="rg-step" aria-label={t('summary.open.prev')} disabled={index === 0} onClick={() => step(index - 1)}>
           ‹

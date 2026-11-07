@@ -79,7 +79,7 @@ describe('Sản phẩm bảng — nút Tạm ngưng / Dùng lại (Nhóm 1 · m�
     const head = screen.getByText('Tạm ngưng cả nhóm').closest('tr') as HTMLElement;
     expect(within(head).getByText('Nhóm cũ')).toHaveClass('ct-group__name--stopped');
     expect(within(head).queryByRole('button', { name: /^Thêm món vào nhóm/ })).toBeNull();
-    await userEvent.click(within(head).getByRole('button', { name: 'Dùng lại nhóm' }));
+    await userEvent.click(within(head).getByRole('button', { name: /^Dùng lại nhóm/ }));
     await vi.waitFor(() => expect(patchCalls(f)).toEqual([{ id: 'c-old', body: { active: true } }]));
   });
 
@@ -105,7 +105,7 @@ describe('Sản phẩm bảng — nút Tạm ngưng / Dùng lại (Nhóm 1 · m�
   it('W24: Bút bi xanh đang chờ ADM giao 3 cây → hộp hỏi có khối cam; chờ 0 → tạm ngưng luôn', async () => {
     const f = await openCatalog({ items: ITEMS, pending: { 'i-pen': { remaining: 3, unit: 'cay', snapshot_at: '2026-11-03T02:15:00.000Z' } } });
     await userEvent.click(inRow('Bút bi xanh').getByRole('button', { name: 'Tạm ngưng Bút bi xanh' }));
-    const dialog = within(await screen.findByRole('dialog', { name: 'Ngừng Bút bi xanh?' }));
+    const dialog = within(await screen.findByRole('dialog', { name: 'Tạm ngưng Bút bi xanh?' }));
     expect(dialog.getByRole('note')).toHaveTextContent(/^Món này đang chờ ADM giao 3 cây/);
     await userEvent.click(dialog.getByRole('button', { name: 'Tạm ngưng' }));
     await vi.waitFor(() => expect(patchCalls(f)).toEqual([{ id: 'i-pen', body: { active: false } }]));

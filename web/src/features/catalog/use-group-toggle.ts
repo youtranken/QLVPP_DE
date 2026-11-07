@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
 import { useConfirm } from '@/ui/confirm-context';
@@ -15,6 +15,7 @@ export function useGroupToggle(items: AdminItem[] | undefined, refresh: () => Pr
   const toast = useToast();
   const pendingNote = usePendingArrivalNote();
   const [busy, setBusy] = useState(false);
+  const inFlight = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
   const askDeactivate = async (c: Category) => {
@@ -31,7 +32,8 @@ export function useGroupToggle(items: AdminItem[] | undefined, refresh: () => Pr
 
   // notify: panel nhóm đưa toast vào trong panel (toast chung bị ẩn khỏi trình đọc màn hình khi hộp mở)
   const toggle = async (c: Category, notify: (t: ToastSpec) => void = toast.show) => {
-    if (busy) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
     setError(null);
     try {
@@ -48,6 +50,7 @@ export function useGroupToggle(items: AdminItem[] | undefined, refresh: () => Pr
     } catch (e) {
       setError(t(catalogErrorKey(e)));
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   };

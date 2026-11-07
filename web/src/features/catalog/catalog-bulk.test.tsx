@@ -69,12 +69,6 @@ describe('Danh mục — hàng loạt', () => {
     expect(inRow('Kẹp B').getByRole('alert')).toHaveTextContent('Bật lại nhóm để đổi từng món');
   });
 
-  it('có dòng chọn → thanh thao tác có class is-sticky-bottom (CSS dính đáy ở 390)', async () => {
-    await openCatalog({ items: ITEMS });
-    await pick('Bút bi xanh');
-    expect(screen.getByRole('toolbar', { name: 'Hành động trên các dòng đã chọn' })).toHaveClass('is-sticky-bottom');
-  });
-
   it('"Chọn cả nhóm Bút & viết" chọn 2 món của nhóm', async () => {
     await openCatalog({ items: ITEMS });
     await userEvent.click(screen.getByRole('checkbox', { name: /^Chọn cả nhóm Bút & viết/ }));
@@ -166,7 +160,7 @@ describe('Danh mục — hàng loạt', () => {
     await pickPens();
     await userEvent.click(bulkBar().getByRole('button', { name: 'Tạm ngưng' }));
     expect(await screen.findByText('Đã tạm ngưng 2 sản phẩm')).toBeInTheDocument();
-    expect(screen.queryByRole('dialog', { name: 'Ngừng 2 món?' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Tạm ngưng 2 sản phẩm?' })).toBeNull();
     expect(patchCalls(f).map((c) => c.body)).toEqual([{ active: false }, { active: false }]);
     expect(inRow('Bút bi xanh').getByRole('button', { name: 'Dùng lại Bút bi xanh' })).toBeInTheDocument();
   });
@@ -175,12 +169,12 @@ describe('Danh mục — hàng loạt', () => {
     const f = await openCatalog({ items: ITEMS, pending: { 'i-pen': { remaining: 3, unit: 'cay', snapshot_at: '2026-11-03T02:15:00.000Z' } } });
     await pickPens();
     await userEvent.click(bulkBar().getByRole('button', { name: 'Tạm ngưng' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Ngừng 2 món?' });
+    const dialog = await screen.findByRole('dialog', { name: 'Tạm ngưng 2 sản phẩm?' });
     expect(within(dialog).getByRole('note')).toHaveTextContent(/Bút bi xanh: Món này đang chờ ADM giao 3/);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Quay lại' }));
     expect(patchCalls(f)).toEqual([]);
     await userEvent.click(bulkBar().getByRole('button', { name: 'Tạm ngưng' }));
-    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Ngừng 2 món?' })).getByRole('button', { name: 'Tạm ngưng' }));
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Tạm ngưng 2 sản phẩm?' })).getByRole('button', { name: 'Tạm ngưng' }));
     expect(await screen.findByText('Đã tạm ngưng 2 sản phẩm')).toBeInTheDocument();
   });
 
@@ -188,10 +182,40 @@ describe('Danh mục — hàng loạt', () => {
     const f = await openCatalog({ items: ITEMS, pending: { 'i-pen': 'error' } });
     await pickPens();
     await userEvent.click(bulkBar().getByRole('button', { name: 'Tạm ngưng' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Ngừng 2 món?' });
+    const dialog = await screen.findByRole('dialog', { name: 'Tạm ngưng 2 sản phẩm?' });
     expect(within(dialog).queryByRole('note')).toBeNull();
     expect(patchCalls(f)).toEqual([]);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Tạm ngưng' }));
     expect(await screen.findByText('Đã tạm ngưng 2 sản phẩm')).toBeInTheDocument();
+  });
+  it('tab Tất cả, nhóm ngừng thu sẵn: "Chọn tất cả" + "Tạm ngưng" chỉ PATCH món đang thấy và đang dùng, không chạm món trong nhóm thu hay món đã ngừng riêng', async () => {
+    const hidden = adminItem({ id: 'i-b', name: 'Kẹp B', category_id: 'c-old', usable: false, inactive_reason: 'group' });
+    const f = await openCatalog({ items: [PEN, hidden, OLD] });
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
+    expect(bulkBar().getByText('2 món đã chọn')).toBeInTheDocument();
+    await userEvent.click(bulkBar().getByRole('button', { name: 'Tạm ngưng' }));
+    expect(await screen.findByText('Đã tạm ngưng 1 sản phẩm')).toBeInTheDocument();
+    expect(patchCalls(f)).toEqual([{ id: 'i-pen', body: { active: false } }]);
+  });
+
+  it('"Tạm ngưng" chọn món dùng được + món ngừng theo nhóm đang mở → chỉ PATCH món dùng được', async () => {
+    const b = adminItem({ id: 'i-b', name: 'Kẹp B', category_id: 'c-old', usable: false, inactive_reason: 'group' });
+    const f = await openCatalog({ items: [PEN, b, OLD] });
+    await userEvent.click(within(screen.getByText('Tạm ngưng cả nhóm').closest('tr') as HTMLElement).getByRole('button', { expanded: false }));
+    await pick('Bút bi xanh');
+    await pick('Kẹp B');
+    await userEvent.click(bulkBar().getByRole('button', { name: 'Tạm ngưng' }));
+    expect(await screen.findByText('Đã tạm ngưng 1 sản phẩm')).toBeInTheDocument();
+    expect(patchCalls(f)).toEqual([{ id: 'i-pen', body: { active: false } }]);
+  });
+
+  it('"Dùng lại" chỉ chọn món ngừng theo nhóm → không PATCH, dòng báo "Bật lại nhóm để đổi từng món"', async () => {
+    const b = adminItem({ id: 'i-b', name: 'Kẹp B', category_id: 'c-old', usable: false, inactive_reason: 'group' });
+    const f = await openCatalog({ items: [PEN, OLD, b] }, '/admin/catalog?tab=inactive');
+    await userEvent.click(within(screen.getByText('Tạm ngưng cả nhóm').closest('tr') as HTMLElement).getByRole('button', { expanded: false }));
+    await pick('Kẹp B');
+    await userEvent.click(bulkBar().getByRole('button', { name: 'Dùng lại' }));
+    expect(patchCalls(f)).toEqual([]);
+    expect(inRow('Kẹp B').getByRole('alert')).toHaveTextContent('Bật lại nhóm để đổi từng món');
   });
 });

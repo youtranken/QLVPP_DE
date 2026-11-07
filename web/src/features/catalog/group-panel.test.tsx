@@ -113,14 +113,14 @@ describe('Panel nhóm (?group=)', () => {
     const f = await openAt('/admin/categories?group=c-1', { pending: { 'i-b': { remaining: 3, unit: 'cai', snapshot_at: '2026-11-03T02:15:00.000Z' } } });
     await screen.findByRole('dialog', { name: 'Nhóm Kẹp & dán' });
     await userEvent.click(itemSwitch('Kẹp B'));
-    const ask = await screen.findByRole('dialog', { name: 'Ngừng Kẹp B?' });
+    const ask = await screen.findByRole('dialog', { name: 'Tạm ngưng Kẹp B?' });
     expect(within(ask).getByRole('note')).toHaveTextContent(/Món này đang chờ ADM giao 3 cái \(bản in .+\) — ngừng thì vẫn nhập được hàng đã đặt\./);
     await userEvent.click(within(ask).getByRole('button', { name: 'Quay lại' }));
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Ngừng Kẹp B?' })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Tạm ngưng Kẹp B?' })).toBeNull());
     expect(mutations(f)).toEqual([]);
     expect(itemSwitch('Kẹp B')).toHaveAttribute('aria-checked', 'true');
     await userEvent.click(itemSwitch('Kẹp B'));
-    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Ngừng Kẹp B?' })).getByRole('button', { name: 'Tạm ngưng' }));
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Tạm ngưng Kẹp B?' })).getByRole('button', { name: 'Tạm ngưng' }));
     await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/items/i-b', 'PATCH', { active: false }]]));
   });
 
@@ -129,14 +129,14 @@ describe('Panel nhóm (?group=)', () => {
     await screen.findByRole('dialog', { name: 'Nhóm Kẹp & dán' });
     await userEvent.click(itemSwitch('Kẹp C'));
     await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/items/i-c', 'PATCH', { active: false }]]));
-    expect(screen.queryByRole('dialog', { name: 'Ngừng Kẹp C?' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Tạm ngưng Kẹp C?' })).toBeNull();
   });
 
   it('lỗi tải pending-arrival → không biết còn hàng đang về hay không nên vẫn hỏi (hộp thường, không khối cam); Ngừng → PATCH', async () => {
     const f = await openAt('/admin/categories?group=c-1', { pending: { 'i-c': 'error' } });
     await screen.findByRole('dialog', { name: 'Nhóm Kẹp & dán' });
     await userEvent.click(itemSwitch('Kẹp C'));
-    const ask = await screen.findByRole('dialog', { name: 'Ngừng Kẹp C?' });
+    const ask = await screen.findByRole('dialog', { name: 'Tạm ngưng Kẹp C?' });
     expect(within(ask).queryByRole('note')).toBeNull();
     expect(mutations(f)).toEqual([]);
     await userEvent.click(within(ask).getByRole('button', { name: 'Tạm ngưng' }));

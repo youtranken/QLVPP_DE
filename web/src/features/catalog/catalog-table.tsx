@@ -151,7 +151,7 @@ function GroupAside({ groupKey, name, list, category, busy, onAdd, onReactivate 
         <span className="ct-icon-btn" aria-hidden="true" />
       ) : category?.active === false ? (
         <Stop>
-          <button type="button" className="btn btn--sm btn--primary" disabled={busy} onClick={() => onReactivate(category)}>
+          <button type="button" className="btn btn--sm btn--primary" disabled={busy} aria-label={t('catalog.categories.reactivateFor', { name })} onClick={() => onReactivate(category)}>
             {t('catalog.grid.reactivateGroup')}
           </button>
         </Stop>

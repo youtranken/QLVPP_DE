@@ -107,8 +107,10 @@ export function DataTable<T>({
 
   const rows = table.getRowModel().rows;
   const colSpan = table.getAllLeafColumns().length + (selection ? 1 : 0);
-  const picked = selection ? rows.filter((r) => selection.selected.has(r.id)).length : 0;
   const groups = groupBy ? groupRows(rows, groupBy.key) : null;
+  // Chọn tất cả chỉ lấy hàng đang thấy: nhóm đang thu thì người dùng không biết mình chọn món nào
+  const selectable = groupBy ? rows.filter((r) => !collapsed.has(groupBy.key(r.original))) : rows;
+  const picked = selection ? selectable.filter((r) => selection.selected.has(r.id)).length : 0;
   // Mọi nhóm đang thu thì không còn cột nào để đọc: ẩn đầu bảng cho gọn
   const headHidden = (rows.length === 0 && !loading) || (groups !== null && groups.length > 0 && groups.every((g) => collapsed.has(g.key)));
   const toggleGroup = (key: string) => {
@@ -158,11 +160,11 @@ export function DataTable<T>({
                   <th className="sel">
                     <SelectBox
                       label={t('common.selectAll')}
-                      checked={rows.length > 0 && picked === rows.length}
-                      indeterminate={picked > 0 && picked < rows.length}
+                      checked={selectable.length > 0 && picked === selectable.length}
+                      indeterminate={picked > 0 && picked < selectable.length}
                       onChange={(checked) =>
                         selection.onToggleAll(
-                          rows.map((r) => r.id),
+                          selectable.map((r) => r.id),
                           checked,
                         )
                       }
