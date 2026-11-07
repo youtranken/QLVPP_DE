@@ -27,7 +27,7 @@ Chủ dự án thử tay từng nhóm trên dev. Xong một nhóm (sửa hết g
 3. `nv.d`: không đăng ký.
 4. `hc.test` Tháng này → "x/N đã đăng ký"; bước Đăng ký ghi "Đang chờ chốt kỳ (tháng 11)".
 5. `hc.test` Tổng hợp kỳ, chọn tháng 11 (đang mở) → danh sách người đã đăng ký, chỉ xem; "Xem" mở popup phiếu.
-6. `hc.test` Sản phẩm (Lưới): "Tạm ngưng" 1 món → dấu đỏ chéo, tên gạch, vẫn hiện tại chỗ; `nv.a` thấy món có dấu Tạm ngưng, không thêm được, phiếu báo đỏ. Bấm "Dùng lại".
+6. `hc.test` Sản phẩm (Lưới): "Tạm ngưng" 1 món → thẻ có dấu đỏ chéo (không gạch tên), vẫn hiện tại chỗ, nút "Tạm ngưng" chỉ đỏ khi rê chuột, có "Hoàn tác"; `nv.a` thấy món có dấu Tạm ngưng, không thêm được, phiếu báo đỏ. Bấm "Dùng lại".
 7. `hc.test` Sản phẩm (Bảng): tick 1 món hoặc cả nhóm để tạm ngưng; tab Tạm ngưng chỉ có "Dùng lại", "Chuyển nhóm".
 8. `hc.test` Danh mục: tạm ngưng 1 nhóm → nhóm gạch tên + "Đã ngừng"; ở Sản phẩm nhóm tự thu gọn. Bật lại.
 9. `hc.test` Sản phẩm: hạ "Tối đa" thấp hơn số `nv.a` đã đặt → `nv.a` thấy dòng báo đỏ trong phiếu.
