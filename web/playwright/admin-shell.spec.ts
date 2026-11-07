@@ -253,6 +253,8 @@ test.describe('V2D-13 toàn màn hình và panel phủ', () => {
       await page.goto(`/admin/catalog?q=${encodeURIComponent(item.name)}`);
       const card = page.getByRole('article').filter({ hasText: item.name });
       await expect(card).toBeVisible();
+      // Font web (display=swap) về muộn làm hàng chip nhóm xuống 2 dòng (+52px) → chốt bố cục trước khi đo
+      await page.evaluate(() => document.fonts.ready);
       // Panel modal làm nền aria-hidden: đo thẻ qua handle DOM giữ từ trước, toạ độ theo trang
       const cardEl = (await card.elementHandle())!;
       const pageBox = () =>

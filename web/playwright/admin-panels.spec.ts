@@ -87,6 +87,7 @@ const PW_ROW = {
   custom_pending: 0,
   over_max: false,
   updated_at: '2000-01-05T07:20:00.000Z',
+  saved_at: '2000-01-05T07:20:00.000Z',
 };
 
 async function mockDelivery(page: Page) {
@@ -117,6 +118,8 @@ async function mockSummary(page: Page) {
 // AC #2/#3: mở panel → lưới phía sau không đổi chỗ/bề rộng; panel nằm trên; nền mờ phủ cả sidebar; 390 rộng hết + "← Đóng"
 async function expectOverlay(page: Page, info: TestInfo, behind: Locator, open: () => Promise<void>, panel: Locator, param: string) {
   await expect(behind).toBeVisible();
+  // Font web (display=swap) về muộn làm hàng chip xuống dòng khác → chốt bố cục trước khi đo
+  await page.evaluate(() => document.fonts.ready);
   // Panel là hộp thoại modal: phần nền bị aria-hidden nên locator theo vai không còn thấy lưới — giữ handle DOM từ trước
   // Toạ độ theo trang (cộng scroll): bấm nút ở 390 có thể cuộn trang tới nút, không phải lưới bị đẩy
   const grid = (await behind.elementHandle())!;
