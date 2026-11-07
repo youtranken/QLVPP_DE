@@ -136,10 +136,11 @@
 [data-shell='member'] .rq-custom-row { display: grid; grid-template-columns: 1fr auto; gap: var(--s-3); align-items: end; }
 [data-shell='member'] .rq-custom-qty { display: grid; gap: var(--s-2); }
 [data-shell='member'] .rq-custom-form textarea { min-height: 72px; resize: vertical; }
+[data-shell='member'] .rq-custom-input { box-sizing: border-box; width: 100%; min-height: 44px; border-radius: var(--r-md); font-size: 16px; }
+[data-shell='member'] .rq-custom-atmax { color: var(--c-danger); font: var(--t-label); }
 [data-shell='member'] .rq-custom-footer { flex-wrap: wrap; }
-[data-shell='member'] .rq-custom-missing { flex-basis: 100%; text-align: right; margin: 0; }
+[data-shell='member'] .rq-custom-missing { margin: calc(var(--s-2) * -1) 0 0; color: var(--c-danger); }
 /* ≤ 900: phải đứng SAU luật gốc .rq-notice/.rq-toast-slot (cùng độ ưu tiên) — thông báo/toast nằm trên thanh phiếu nổi */
 @media (max-width: 900px) {
-  [data-shell='member'] .rq-custom-row { grid-template-columns: 1fr; }
   [data-shell='member'] .rq-notice, [data-shell='member'] .rq-toast-slot { bottom: calc(142px + env(safe-area-inset-bottom)); }
 }

@@ -56,6 +56,11 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await addOther.click();
       const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
       await dialog.getByLabel('Tên món').fill(name);
+      // Đơn vị chọn sẵn "cái"; bấm nền không đóng hộp, chữ đã gõ còn nguyên
+      await expect(dialog.getByLabel('Đơn vị tính')).toHaveValue('cai');
+      await page.mouse.click(2, 2);
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByLabel('Tên món')).toHaveValue(name);
       await dialog.getByLabel('Đơn vị tính').selectOption('hop');
       await expect(dialog.getByText(/ảnh/i)).toHaveCount(0);
       await expect(dialog.locator('input[type=file]')).toHaveCount(0);

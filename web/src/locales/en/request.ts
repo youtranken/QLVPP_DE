@@ -68,11 +68,11 @@ const request: Messages<typeof vi> = {
     custom: {
       addTitle: 'Add another item',
       editTitle: 'Edit other item',
-      intro: 'Not in the catalog — Admin reviews it before buying.',
+      intro: 'Not in the catalog. Admin reviews it before buying.',
       name: 'Item name',
       unit: 'Unit',
       qty: 'Quantity',
-      qtyHint: 'max {{max}}/month',
+      atMax: 'Reached the {{max}}/month limit',
       note: 'Note (optional)',
       notePlaceholder: 'Size, colour, brand… so the right one is bought',
       missing: 'Still needed: {{fields}}.',

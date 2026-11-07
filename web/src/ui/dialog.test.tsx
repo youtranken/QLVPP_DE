@@ -37,6 +37,32 @@ describe('Dialog dirty guard', () => {
   });
 });
 
+describe('Dialog closeOnOutside', () => {
+  it('closeOnOutside=false: bấm nền không đóng; Esc vẫn đóng', async () => {
+    const onOpenChange = vi.fn();
+    renderWithI18n(
+      <Dialog open onOpenChange={onOpenChange} closeOnOutside={false}>
+        <DialogTitle>T</DialogTitle>
+      </Dialog>,
+    );
+    await userEvent.pointer({ keys: '[MouseLeft]', target: document.querySelector('.modal-backdrop')! });
+    expect(onOpenChange).not.toHaveBeenCalled();
+    await userEvent.keyboard('{Escape}');
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('mặc định (closeOnOutside=true): bấm nền đóng', async () => {
+    const onOpenChange = vi.fn();
+    renderWithI18n(
+      <Dialog open onOpenChange={onOpenChange}>
+        <DialogTitle>T</DialogTitle>
+      </Dialog>,
+    );
+    await userEvent.pointer({ keys: '[MouseLeft]', target: document.querySelector('.modal-backdrop')! });
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+});
+
 describe('DialogCloseButton', () => {
   function CloseHarness({ disabled, onOpenChange }: { disabled?: boolean; onOpenChange: (o: boolean) => void }) {
     return (

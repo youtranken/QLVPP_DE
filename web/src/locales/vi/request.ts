@@ -65,11 +65,11 @@ const request = {
     custom: {
       addTitle: 'Thêm món khác',
       editTitle: 'Sửa món khác',
-      intro: 'Món chưa có trong danh mục — Hành chính sẽ xem trước khi mua.',
+      intro: 'Món chưa có trong danh mục. Hành chính sẽ xem trước khi mua.',
       name: 'Tên món',
       unit: 'Đơn vị tính',
       qty: 'Số lượng',
-      qtyHint: 'tối đa {{max}}/tháng',
+      atMax: 'Đã tới tối đa {{max}}/tháng',
       note: 'Ghi chú (tùy chọn)',
       notePlaceholder: 'Quy cách, màu, hãng… để mua đúng',
       missing: 'Cần thêm: {{fields}}.',

@@ -29,6 +29,7 @@ export function Dialog({
   open,
   onOpenChange,
   dismissible = true,
+  closeOnOutside = true,
   className = 'sheet',
   overlayClassName = 'modal-backdrop',
   viewportClassName = 'dialog-viewport',
@@ -44,6 +45,8 @@ export function Dialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   dismissible?: boolean;
+  // false: bấm nền không đóng (giữ nội dung đang gõ), Esc vẫn đóng và vẫn hỏi "Bỏ thay đổi?" khi dirty
+  closeOnOutside?: boolean;
   className?: string;
   overlayClassName?: string;
   viewportClassName?: string;
@@ -64,6 +67,7 @@ export function Dialog({
   const { t } = useTranslation();
   const askConfirm = useOptionalConfirm();
   const block = dismissible ? undefined : (e: Event) => e.preventDefault();
+  const blockOutside = dismissible && closeOnOutside ? undefined : (e: Event) => e.preventDefault();
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
   const opener = useRef<HTMLElement | null>(null);
   const handleOpenChange = (next: boolean) => {
@@ -84,8 +88,8 @@ export function Dialog({
             className={className}
             style={maxWidth ? { maxWidth } : undefined}
             onEscapeKeyDown={block}
-            onPointerDownOutside={block}
-            onInteractOutside={block}
+            onPointerDownOutside={blockOutside}
+            onInteractOutside={blockOutside}
             onKeyDown={onKeyDown}
             onOpenAutoFocus={(e) => {
               opener.current = openerProp?.current ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
