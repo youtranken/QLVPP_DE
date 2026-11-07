@@ -58,7 +58,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await createCategory(request, first, 900_000);
       await createCategory(request, second, 900_010);
       await page.goto('/admin/categories');
-      await expect(page.getByRole('heading', { level: 1, name: 'Nhóm & đơn vị' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
       await expect(nameOf(page, 'last')).toHaveAttribute('aria-label', `Thao tác cho ${second}`);
       const total = await menuButtons(page).count();
       await expect(toneOf(page, second)).toHaveAttribute('title', TONES[(total - 1) % 7]);
@@ -124,7 +124,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
 
       await page.goto('/admin/catalog?view=table');
-      await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: 'Sản phẩm' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Thu tất cả' })).toBeVisible();
       const head = page.getByRole('row').filter({ hasText: category });
       await expect(head.getByText('Nhóm đang ngừng')).toBeVisible();
@@ -144,7 +144,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
 
   test('E9-S5 Nhóm món: Enter trên ▲▼ giữ tiêu điểm ở mũi tên của dòng vừa dời, tới dòng cuối chuyển sang ▲', async ({ page }) => {
     await page.goto('/admin/categories');
-    await expect(page.getByRole('heading', { level: 1, name: 'Nhóm & đơn vị' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
     await expectReorderArrowKeepsFocus(page, /^Thao tác cho /);
   });
 

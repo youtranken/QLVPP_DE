@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Tháng này', 'Tổng hợp kỳ', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm & đơn vị', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Tháng này', 'Tổng hợp kỳ', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
 const linkLabels = (nav: HTMLElement) =>
@@ -31,18 +31,18 @@ describe('AdminShell + RequireRole', () => {
     const side = sideNav();
     expect(within(side).getAllByRole('group').map((g) => g.getAttribute('aria-label'))).toEqual(['Hằng tháng', 'Danh mục và tủ', 'Quản lý']);
     expect(linkLabels(side)).toEqual(NAV_ORDER);
-    expect(within(side).getByRole('link', { name: 'Danh mục món' })).toHaveAttribute('aria-current', 'page');
+    expect(within(side).getByRole('link', { name: 'Sản phẩm' })).toHaveAttribute('aria-current', 'page');
     expect(within(side).getAllByRole('link').filter((a) => a.hasAttribute('aria-current'))).toHaveLength(1);
     expect(screen.queryByRole('link', { name: /Phiếu của tôi/ })).toBeNull();
-    expect(screen.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Sản phẩm' })).toBeInTheDocument();
   });
 
-  it('"Nhóm & đơn vị" là mục sidebar riêng: /admin/categories đánh dấu mục đó', () => {
+  it('"Danh mục" là mục sidebar riêng: /admin/categories đánh dấu mục đó', () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/categories');
-    expect(within(sideNav()).getByRole('link', { name: 'Nhóm & đơn vị' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('heading', { level: 1, name: 'Nhóm & đơn vị' })).toBeInTheDocument();
+    expect(within(sideNav()).getByRole('link', { name: 'Danh mục' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeInTheDocument();
   });
 
   it('/admin chuyển tới /admin/home (trang Tháng này)', async () => {
@@ -121,7 +121,7 @@ describe('AdminShell: mất vai Hành chính giữa chừng (FORBIDDEN_ROLE)', (
     stubShellApi({ '/api/admin/items': () => jsonResponse(403, { code: 'FORBIDDEN_ROLE', message: 'x' }) });
     renderApp(makeMe('admin'), '/admin/catalog');
     expect(await screen.findByRole('heading', { level: 1, name: 'Trang này dành cho Hành chính.' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { level: 1, name: 'Danh mục' })).toBeNull();
+    expect(screen.queryByRole('heading', { level: 1, name: 'Sản phẩm' })).toBeNull();
     expect(sideNav()).toBeInTheDocument();
     const toastHosts = screen.getAllByRole('status').filter((el) => el.tagName !== 'OUTPUT');
     expect(toastHosts.map((el) => el.textContent)).toEqual(['']);
@@ -134,6 +134,6 @@ describe('AdminShell: mất vai Hành chính giữa chừng (FORBIDDEN_ROLE)', (
     await waitFor(() => expect(f.mock.calls.some(([u]) => String(u).startsWith('/api/admin/items'))).toBe(true));
     await waitFor(() => expect(screen.getAllByRole('alert').length).toBeGreaterThan(0));
     expect(screen.queryByText('Trang này dành cho Hành chính.')).toBeNull();
-    expect(screen.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Sản phẩm' })).toBeInTheDocument();
   });
 });

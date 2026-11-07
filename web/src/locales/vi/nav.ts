@@ -23,7 +23,7 @@ const nav = {
     },
     home: 'Tháng này',
     summary: 'Tổng hợp kỳ',
-    catalog: 'Danh mục món',
+    catalog: 'Sản phẩm',
     stock: 'Tủ / Kho',
     users: 'Nhân viên',
     review: 'Món ngoài danh mục',
@@ -32,7 +32,7 @@ const nav = {
     delivery: 'Giao hàng',
     backlog: 'Còn nợ',
     reports: 'Báo cáo & in',
-    categoriesUnits: 'Nhóm & đơn vị',
+    categoriesUnits: 'Danh mục',
     badge: {
       review: '{{n}} món chờ xem',
       delivery: '{{n}} người chưa nhận',

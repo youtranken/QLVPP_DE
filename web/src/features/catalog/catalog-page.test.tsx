@@ -12,13 +12,13 @@ const groupHead = (name: string) => screen.getByRole('button', { name: `Thêm m�
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Danh mục — đầu trang, thẻ, lọc', () => {
-  it('đúng một h1 "Danh mục" + mô tả; "Nhóm món" tới /admin/categories; nhóm lấy cả nhóm đã ngừng (?all=1)', async () => {
+  it('đúng một h1 "Sản phẩm" + mô tả; "Danh mục" tới /admin/categories; nhóm lấy cả nhóm đã ngừng (?all=1)', async () => {
     const f = await openCatalog({ items: ITEMS });
     expect(f.mock.calls.map((c) => c[0])).toContain('/api/item-categories?all=1');
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Danh mục');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Sản phẩm');
     expect(screen.getByText(/^Nhân viên thấy món theo đúng thứ tự nhóm dưới đây/)).toBeInTheDocument();
-    expect(within(screen.getByRole('main')).getByRole('link', { name: 'Nhóm món' })).toHaveAttribute('href', '/admin/categories');
+    expect(within(screen.getByRole('main')).getByRole('link', { name: 'Danh mục' })).toHaveAttribute('href', '/admin/categories');
   });
 
   it('không còn thẻ thống kê tồn (Sắp hết/Hết hàng); bảng dùng tab trạng thái Đang dùng 3 · Chưa có ảnh 1 · Đã ngừng 1', async () => {
@@ -63,9 +63,9 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
     expect(inRow('Bút xóa cũ').getByText('Ngừng riêng')).toBeInTheDocument();
   });
 
-  it('ô tìm "Tìm trong 3 món" lọc qua ?q=', async () => {
+  it('ô tìm "Tìm trong 3 sản phẩm" lọc qua ?q=', async () => {
     await openCatalog({ items: ITEMS });
-    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm trong 3 món' }), 'but chi');
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm trong 3 sản phẩm' }), 'but chi');
     await vi.waitFor(() => expect(location()).toBe('?q=but+chi'));
     expect(screen.queryByText('Bút bi xanh')).toBeNull();
     expect(screen.getByText('Bút chì 2B')).toBeInTheDocument();
@@ -143,9 +143,9 @@ describe('Danh mục — bảng nhóm', () => {
     expect(add).not.toHaveTextContent('Thêm món vào nhóm');
   });
 
-  it('"Thêm món" mở ngăn kéo ?item=new; "Thêm món vào nhóm" chọn sẵn nhóm; bấm hàng mở ngăn kéo sửa ?item=id', async () => {
+  it('"Thêm sản phẩm" mở ngăn kéo ?item=new; "Thêm món vào nhóm" chọn sẵn nhóm; bấm hàng mở ngăn kéo sửa ?item=id', async () => {
     await openCatalog({ items: ITEMS });
-    await userEvent.click(within(screen.getByRole('main')).getAllByRole('button', { name: 'Thêm món' })[0]);
+    await userEvent.click(within(screen.getByRole('main')).getAllByRole('button', { name: 'Thêm sản phẩm' })[0]);
     expect(location()).toBe('?item=new');
     expect(await screen.findByRole('dialog', { name: 'Thêm món' })).toBeInTheDocument();
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Quay lại' }));

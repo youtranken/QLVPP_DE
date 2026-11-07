@@ -219,11 +219,11 @@ describe('Panel nhóm (?group=)', () => {
     expect(dialog.queryByRole('note')).toBeNull();
   });
 
-  it('nhóm rỗng → "Nhóm chưa có món" + liên kết Danh mục', async () => {
+  it('nhóm rỗng → "Nhóm chưa có món" + liên kết Sản phẩm', async () => {
     await openAt('/admin/categories?group=c-2');
     await screen.findByRole('dialog', { name: 'Nhóm Rỗng' });
     expect(panel().getByText('Nhóm chưa có món')).toBeInTheDocument();
-    expect(panel().getByRole('link', { name: 'Danh mục' })).toHaveAttribute('href', '/admin/catalog');
+    expect(panel().getByRole('link', { name: 'Sản phẩm' })).toHaveAttribute('href', '/admin/catalog');
   });
 
   it('?group= không tồn tại → gỡ khỏi URL, không mở panel', async () => {

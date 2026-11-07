@@ -35,7 +35,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
 
     try {
       await page.goto('/admin/categories');
-      await expect(page.getByRole('heading', { level: 1, name: 'Nhóm & đơn vị' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
       await page.getByRole('button', { name: 'Thêm nhóm' }).click();
       const catDialog = page.getByRole('dialog', { name: 'Thêm nhóm' });
       await catDialog.getByLabel('Tên nhóm').fill(category);
@@ -56,7 +56,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await shot(page, info, 'categories');
 
       await page.goto('/admin/catalog?view=table');
-      await page.getByRole('main').getByRole('button', { name: 'Thêm món', exact: true }).click();
+      await page.getByRole('main').getByRole('button', { name: 'Thêm sản phẩm', exact: true }).click();
       const form = page.getByRole('dialog', { name: 'Thêm món' });
       await form.getByRole('button', { name: 'Thêm món' }).click();
       await expect(form.getByText('Cần thêm: ảnh, tên, ĐVT.')).toBeVisible();
@@ -91,7 +91,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await expect(itemRow.getByText('Ngừng riêng', { exact: true })).toBeVisible();
       await expect(itemRow.getByRole('switch', { name: `Mở lại ${itemName}` })).toBeVisible();
 
-      await page.getByRole('main').getByRole('link', { name: 'Nhóm món' }).click();
+      await page.getByRole('main').getByRole('link', { name: 'Danh mục' }).click();
       await page.getByRole('button', { name: `Thao tác cho ${category}` }).click();
       await page.getByRole('menu', { name: `Thao tác cho ${category}` }).getByRole('menuitem', { name: 'Ngừng nhóm' }).click();
       const pause = page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` });
@@ -157,7 +157,7 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
     const ids: string[] = [];
     try {
       await page.goto('/admin/catalog?view=table');
-      await page.getByRole('main').getByRole('button', { name: 'Thêm món', exact: true }).click();
+      await page.getByRole('main').getByRole('button', { name: 'Thêm sản phẩm', exact: true }).click();
       const drawer = page.getByRole('dialog', { name: 'Thêm món' });
       await drawer.getByLabel('Tên món').fill(nameA);
       await drawer.getByLabel('Đơn vị tính').selectOption({ label: 'cái' });

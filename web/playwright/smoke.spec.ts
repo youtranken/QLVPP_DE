@@ -67,7 +67,7 @@ test.describe('E0-S9 khung Hành chính (dev-identity admin)', () => {
 
   test('E0-S9 admin: /admin/catalog thấy sidebar; đổi en → tiêu đề sidebar đổi', async ({ page }, info) => {
     await page.goto('/admin/catalog');
-    await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Sản phẩm' })).toBeVisible();
     if (isMobile(info)) await page.getByRole('button', { name: 'Mở menu' }).tap();
     const side = page.getByRole('navigation', { name: 'Menu quản lý' });
     await expect(side).toBeVisible();
@@ -79,7 +79,7 @@ test.describe('E0-S9 khung Hành chính (dev-identity admin)', () => {
     await expect(page.getByText('Hằng tháng')).toHaveCount(0);
     // Ngăn menu mở là modal: nội dung phía sau bị ẩn khỏi cây truy cập tới khi đóng
     if (isMobile(info)) await page.keyboard.press('Escape');
-    await expect(page.getByRole('heading', { level: 1, name: 'Catalog' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Products' })).toBeVisible();
   });
 
   test('E9-S0 Hành chính không có phiếu: đăng nhập vào thẳng Tháng này, mở / bị đưa về /admin, sidebar không có Phiếu của tôi', async ({ page }, info) => {

@@ -1,9 +1,9 @@
 const catalog = {
   catalog: {
-    title: 'Danh mục',
+    title: 'Sản phẩm',
     page: {
-      add: 'Thêm món',
-      categoriesLink: 'Nhóm món',
+      add: 'Thêm sản phẩm',
+      categoriesLink: 'Danh mục',
       categoryFilter: 'Lọc theo nhóm',
       allCategories: 'Tất cả nhóm',
       colUnit: 'ĐVT',
@@ -16,7 +16,7 @@ const catalog = {
     },
     list: {
       description: 'Nhân viên thấy món theo đúng thứ tự nhóm dưới đây. Mỗi món cần ảnh để nhân viên chọn bằng mắt.',
-      search: 'Tìm trong {{n}} món',
+      search: 'Tìm trong {{n}} sản phẩm',
       collapseAll: 'Thu tất cả',
       expandAll: 'Mở tất cả',
       colCode: 'Mã',
@@ -171,8 +171,8 @@ const catalog = {
       tonesNote: 'Màu đi theo thứ tự nhóm; từ nhóm thứ 8 thì lặp lại.',
     },
     setup: {
-      title: 'Nhóm & đơn vị',
-      tabGroups: 'Nhóm món',
+      title: 'Danh mục',
+      tabGroups: 'Nhóm sản phẩm',
       tabUnits: 'Đơn vị tính',
     },
     tones: {

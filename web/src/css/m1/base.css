@@ -72,7 +72,7 @@
 
 [data-shell='admin'] .seg-m1 { display: inline-grid; grid-auto-flow: column; gap: 4px; padding: 4px; border-radius: var(--r-md); background: var(--c-surface-2); }
 [data-shell='admin'] .seg-m1 button { display: flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 12px; border: 0; border-radius: var(--r-sm); background: transparent; font: var(--t-label); font-size: 13px; color: var(--c-muted); white-space: nowrap; cursor: pointer; }
-[data-shell='admin'] .seg-m1 button[aria-checked='true'] { background: var(--c-surface); color: var(--c-ink); box-shadow: 0 1px 3px rgb(var(--sh-ink) / 0.14); }
+[data-shell='admin'] .seg-m1 button[aria-checked='true'] { background: var(--c-sel); color: var(--c-on-sel); box-shadow: none; }
 [data-shell='admin'] .seg-m1 button:focus-visible { box-shadow: var(--focus); }
 [data-shell='admin'] .seg-m1 em { font: var(--t-micro); font-style: normal; padding: 1px 8px; border-radius: var(--r-pill); background: var(--g5); color: var(--g5-ink); }
 
@@ -164,7 +164,7 @@
 
 [data-shell='admin'] .seg { display: inline-grid; max-width: 100%; overflow-x: auto; grid-auto-flow: column; gap: 4px; padding: 4px; border: 0; border-radius: var(--r-md); background: var(--c-surface-2); }
 [data-shell='admin'] .seg button { display: flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 12px; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--c-muted); font: var(--t-label); font-size: 13px; white-space: nowrap; }
-[data-shell='admin'] .seg button[aria-checked='true'] { background: var(--c-surface); color: var(--c-ink); box-shadow: 0 1px 3px rgb(var(--sh-ink) / 0.14); }
+[data-shell='admin'] .seg button[aria-checked='true'] { background: var(--c-sel); color: var(--c-on-sel); box-shadow: none; }
 [data-shell='admin'] .seg button:focus-visible { box-shadow: var(--focus); }
 [data-shell='admin'] .seg--sm button { height: 28px; padding: 0 12px; }
 [data-shell='admin'] .seg--block { display: grid; grid-auto-columns: 1fr; }

@@ -161,7 +161,7 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
       await userEvent.click(screen.getByRole('radio', { name: 'English' }));
       const side = screen.getByRole('navigation', { name: 'Admin menu' });
       expect(within(side).getByRole('group', { name: 'Monthly' })).toBeInTheDocument();
-      expect(within(side).getByTitle('Groups & units')).toBeInTheDocument();
+      expect(within(side).getByTitle('Categories')).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage('vi');
     }
@@ -186,12 +186,12 @@ describe('AdminSidebar: đầu và cuối', () => {
     expect(sideNav().compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('nhãn sidebar theo thiết kế: Danh mục món, Tủ / Kho, Nhân viên', async () => {
+  it('nhãn sidebar theo thiết kế: Sản phẩm, Tủ / Kho, Nhân viên', async () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
     await screen.findByRole('navigation', { name: 'Menu quản lý' });
-    for (const t of ['Danh mục món', 'Tủ / Kho', 'Nhân viên']) expect(navLink(t)).toBeInTheDocument();
+    for (const t of ['Sản phẩm', 'Tủ / Kho', 'Nhân viên']) expect(navLink(t)).toBeInTheDocument();
   });
 });
 

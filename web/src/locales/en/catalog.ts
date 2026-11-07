@@ -3,9 +3,9 @@ import type { Messages } from '@/locales/messages';
 
 const catalog: Messages<typeof vi> = {
   catalog: {
-    title: 'Catalog',
+    title: 'Products',
     page: {
-      add: 'Add item',
+      add: 'Add product',
       categoriesLink: 'Categories',
       categoryFilter: 'Filter by category',
       allCategories: 'All categories',
@@ -19,7 +19,7 @@ const catalog: Messages<typeof vi> = {
     },
     list: {
       description: 'Staff see items in exactly the category order below. Every item needs a photo so staff can pick it by sight.',
-      search: 'Search {{n}} items',
+      search: 'Search {{n}} products',
       collapseAll: 'Collapse all',
       expandAll: 'Expand all',
       colCode: 'Code',
@@ -174,8 +174,8 @@ const catalog: Messages<typeof vi> = {
       tonesNote: 'Colours follow category order; from the 8th category they repeat.',
     },
     setup: {
-      title: 'Groups & units',
-      tabGroups: 'Item groups',
+      title: 'Categories',
+      tabGroups: 'Product groups',
       tabUnits: 'Units',
     },
     tones: {

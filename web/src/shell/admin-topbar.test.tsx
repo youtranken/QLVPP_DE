@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Tháng này', 'Tổng hợp kỳ', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm & đơn vị', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Tháng này', 'Tổng hợp kỳ', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 
 const topbar = () => screen.getAllByRole('banner')[0];
 
@@ -19,12 +19,12 @@ function open(path: string) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('AdminTopbar 390 px', () => {
-  it('thanh trên: nút "Mở menu quản lý", tên app "VPP Công trình" (không lặp tiêu đề trang "Danh mục"), dòng phụ kỳ "Kỳ hiện tại: tháng 11 · đang mở", chuông, avatar', async () => {
+  it('thanh trên: nút "Mở menu quản lý", tên app "VPP Công trình" (không lặp tiêu đề trang "Sản phẩm"), dòng phụ kỳ "Kỳ hiện tại: tháng 11 · đang mở", chuông, avatar', async () => {
     open('/admin/catalog');
     const bar = topbar();
     expect(within(bar).getByRole('button', { name: 'Mở menu quản lý' })).toBeInTheDocument();
     expect(within(bar).getByText('VPP Công trình', { exact: true })).toBeInTheDocument();
-    expect(within(bar).queryByText('Danh mục', { exact: true })).toBeNull();
+    expect(within(bar).queryByText('Sản phẩm', { exact: true })).toBeNull();
     expect(await within(bar).findByText('Kỳ hiện tại: tháng 11 · đang mở')).toBeInTheDocument();
     expect(within(bar).getByRole('button', { name: 'Nguyễn Văn An, Hành chính' })).toBeInTheDocument();
     expect(await within(bar).findByRole('button', { name: /^Thông báo/ })).toBeInTheDocument();

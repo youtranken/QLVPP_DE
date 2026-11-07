@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { asRole, devHeaders, expectNoContrastViolations, isMobile, removeTestItem, seedPwItem } from './helpers';
 
-const NAV_ORDER = ['Tháng này', 'Tổng hợp kỳ', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Danh mục món', 'Tủ / Kho', 'Món ngoài danh mục', 'Nhóm & đơn vị', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Tháng này', 'Tổng hợp kỳ', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 const OPEN_MENU = /^(Mở menu quản lý|Open admin menu)$/;
 
 // Bell: topbar on phone, bottom of sidebar (next to avatar) elsewhere
@@ -16,7 +16,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
 
   test('E9-S1 shell Hành chính: sidebar 3 nhóm, 14 mục theo luồng chuẩn (cột và menu điện thoại như nhau), thẻ kỳ, chuông, đổi en đổi nhãn sidebar', async ({ page }, info) => {
     await page.goto('/admin/catalog');
-    await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Sản phẩm' })).toBeVisible();
     await expect(bellOf(page, isMobile(info))).toBeVisible();
     if (isMobile(info)) {
       await expect(page.getByRole('navigation', { name: 'Menu quản lý' })).toHaveCount(0);
@@ -26,7 +26,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     await expect(side.getByRole('group')).toHaveCount(3);
     const titles = await side.getByRole('link').evaluateAll((links) => links.map((a) => a.getAttribute('title')));
     expect(titles).toEqual(NAV_ORDER);
-    await expect(side.getByRole('link', { name: 'Danh mục món', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(side.getByRole('link', { name: 'Sản phẩm', exact: true })).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('link', { name: /Phiếu của tôi/ })).toHaveCount(0);
     await expect(page.getByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng \d+ · đang mở/ })).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
@@ -35,7 +35,7 @@ test.describe('E9-S1 shell Hành chính (dev-identity admin)', () => {
     await page.getByRole('radio', { name: 'English' }).click();
     const sideEn = page.getByRole('navigation', { name: 'Admin menu' });
     await expect(sideEn.getByRole('group', { name: 'Monthly' })).toBeVisible();
-    await expect(sideEn.getByRole('link', { name: 'Groups & units' })).toBeVisible();
+    await expect(sideEn.getByRole('link', { name: 'Categories' })).toBeVisible();
     await expect(page.getByRole('link', { name: /^Current sign-up period: month \d+ · open/ })).toBeVisible();
     await page.getByRole('radio', { name: 'Tiếng Việt' }).click();
     await expect(page.getByRole('navigation', { name: 'Menu quản lý' }).getByRole('group', { name: 'Hằng tháng' })).toBeVisible();

@@ -27,13 +27,13 @@ async function open(path = '/admin/stock', ready = 'Giấy A4', width = 1280) {
 const rowOf = (name: string) => screen.getByText(name).closest('tr')!;
 
 describe('StockPage', () => {
-  it('đúng một h1 "Tủ / Kho" + liên kết "Hàng ADM về? → Hàng về" và "Danh mục"', async () => {
+  it('đúng một h1 "Tủ / Kho" + liên kết "Hàng ADM về? → Hàng về" và "Sản phẩm"', async () => {
     await open();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1, name: 'Tủ / Kho' })).toBeInTheDocument();
     const main = within(screen.getByRole('main'));
     expect(main.getByRole('link', { name: 'Hàng ADM về? → Hàng về' })).toHaveAttribute('href', '/admin/arrivals');
-    expect(main.getByRole('link', { name: 'Danh mục' })).toHaveAttribute('href', '/admin/catalog');
+    expect(main.getByRole('link', { name: 'Sản phẩm' })).toHaveAttribute('href', '/admin/catalog');
   });
 
   it('ô thống kê: Tất cả 6 (ẩn món ngừng tủ 0), Thiếu cho người chờ 1, Chờ hàng về 1, Sắp hết 1, Không có 1', async () => {

@@ -9,7 +9,7 @@
 
 [data-shell='member'] .pf-lang .seg { display: flex; padding: 4px; gap: 4px; border-radius: var(--r-pill); background: var(--c-surface-2); border: 1px solid var(--c-line); }
 [data-shell='member'] .pf-lang .seg button { flex: 1; min-height: 44px; padding: 0 var(--s-4); border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-ink-2); font: var(--t-label); cursor: pointer; }
-[data-shell='member'] .pf-lang .seg button[aria-checked='true'] { background: var(--c-dark); color: var(--c-on-dark); }
+[data-shell='member'] .pf-lang .seg button[aria-checked='true'] { background: var(--c-sel); color: var(--c-on-sel); }
 [data-shell='member'] .pf-lang .seg button:focus-visible { outline: 2px solid var(--c-acc); outline-offset: 2px; }
 
 [data-shell='member'] .pf-logout { min-height: 48px; border-radius: var(--r-pill); border: 1px solid var(--c-danger-line); background: var(--c-surface); color: var(--c-danger); font: var(--t-label); cursor: pointer; }

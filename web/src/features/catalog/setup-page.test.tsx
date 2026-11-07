@@ -46,7 +46,7 @@ const sideNav = () => within(screen.getByRole('navigation', { name: 'Menu quản
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('Trang "Nhóm & đơn vị" (2 tab)', () => {
+describe('Trang "Danh mục" (2 tab)', () => {
   it('/admin/units?x=1 → /admin/categories/units?x=1 (replace): Back về trang trước, không quay lại /admin/units', async () => {
     render(['/admin/catalog', '/admin/units?x=1']);
     await waitFor(() => expect(where()).toBe('/admin/categories/units?x=1'));
@@ -54,14 +54,14 @@ describe('Trang "Nhóm & đơn vị" (2 tab)', () => {
     await waitFor(() => expect(where()).toBe('/admin/catalog'));
   });
 
-  it('h1 "Nhóm & đơn vị", tiêu đề phụ = tên tab; tablist 2 tab là link, tab đang mở aria-selected', async () => {
+  it('h1 "Danh mục", tiêu đề phụ = tên tab; tablist 2 tab là link, tab đang mở aria-selected', async () => {
     render(['/admin/categories/units']);
-    expect(await screen.findByRole('heading', { level: 1, name: 'Nhóm & đơn vị' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Danh mục' })).toBeInTheDocument();
     const tabs = within(screen.getByRole('tablist'));
-    expect(tabs.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Nhóm món', 'Đơn vị tính']);
+    expect(tabs.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Nhóm sản phẩm', 'Đơn vị tính']);
     expect(tabs.getByRole('tab', { name: 'Đơn vị tính' })).toHaveAttribute('aria-selected', 'true');
-    expect(tabs.getByRole('tab', { name: 'Nhóm món' })).toHaveAttribute('aria-selected', 'false');
-    expect(tabs.getByRole('tab', { name: 'Nhóm món' })).toHaveAttribute('href', '/admin/categories');
+    expect(tabs.getByRole('tab', { name: 'Nhóm sản phẩm' })).toHaveAttribute('aria-selected', 'false');
+    expect(tabs.getByRole('tab', { name: 'Nhóm sản phẩm' })).toHaveAttribute('href', '/admin/categories');
     expect(screen.getByRole('heading', { level: 2, name: 'Đơn vị tính' })).toBeInTheDocument();
   });
 
@@ -69,7 +69,7 @@ describe('Trang "Nhóm & đơn vị" (2 tab)', () => {
     render(['/admin/categories/units']);
     const tabs = within(await screen.findByRole('tablist'));
     const units = tabs.getByRole('tab', { name: 'Đơn vị tính' });
-    const groups = tabs.getByRole('tab', { name: 'Nhóm món' });
+    const groups = tabs.getByRole('tab', { name: 'Nhóm sản phẩm' });
     expect(units).toHaveAttribute('tabindex', '0');
     expect(groups).toHaveAttribute('tabindex', '-1');
     units.focus();
@@ -82,23 +82,23 @@ describe('Trang "Nhóm & đơn vị" (2 tab)', () => {
     expect(screen.getByTestId('where')).toHaveTextContent('/admin/categories/units');
   });
 
-  it('bấm tab Nhóm món → /admin/categories (push: Back về tab Đơn vị)', async () => {
+  it('bấm tab Nhóm sản phẩm → /admin/categories (push: Back về tab Đơn vị)', async () => {
     render(['/admin/categories/units']);
-    await userEvent.click(within(await screen.findByRole('tablist')).getByRole('tab', { name: 'Nhóm món' }));
+    await userEvent.click(within(await screen.findByRole('tablist')).getByRole('tab', { name: 'Nhóm sản phẩm' }));
     expect(where()).toBe('/admin/categories');
-    expect(within(screen.getByRole('tablist')).getByRole('tab', { name: 'Nhóm món' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('heading', { level: 2, name: 'Nhóm món' })).toBeInTheDocument();
+    expect(within(screen.getByRole('tablist')).getByRole('tab', { name: 'Nhóm sản phẩm' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('heading', { level: 2, name: 'Nhóm sản phẩm' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'probe-back' }));
     expect(where()).toBe('/admin/categories/units');
   });
 
-  it.each(['/admin/categories', '/admin/categories/units'])('menu có đúng 1 mục "Nhóm & đơn vị", sáng ở %s; không còn mục "Đơn vị tính"/"Nhóm món"', async (path) => {
+  it.each(['/admin/categories', '/admin/categories/units'])('menu có đúng 1 mục "Danh mục", sáng ở %s; không còn mục "Đơn vị tính"/"Nhóm sản phẩm"', async (path) => {
     render([path]);
     await screen.findByRole('tablist');
-    expect(sideNav().getAllByRole('link', { name: 'Nhóm & đơn vị' })).toHaveLength(1);
-    expect(sideNav().getByRole('link', { name: 'Nhóm & đơn vị' })).toHaveAttribute('aria-current', 'page');
+    expect(sideNav().getAllByRole('link', { name: 'Danh mục' })).toHaveLength(1);
+    expect(sideNav().getByRole('link', { name: 'Danh mục' })).toHaveAttribute('aria-current', 'page');
     expect(sideNav().queryByRole('link', { name: 'Đơn vị tính' })).toBeNull();
-    expect(sideNav().queryByRole('link', { name: 'Nhóm món' })).toBeNull();
+    expect(sideNav().queryByRole('link', { name: 'Nhóm sản phẩm' })).toBeNull();
   });
 
   it('?group= trên tab Đơn vị bị bỏ qua: không panel nhóm', async () => {

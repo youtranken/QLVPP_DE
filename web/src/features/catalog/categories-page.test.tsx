@@ -63,11 +63,11 @@ afterEach(() => {
 });
 
 describe('Trang Nhóm món', () => {
-  it('đúng một h1 "Nhóm & đơn vị", tab "Nhóm món", breadcrumb, mô tả; lấy ?all=1 và số món mỗi nhóm', async () => {
+  it('đúng một h1 "Danh mục", tab "Nhóm sản phẩm", breadcrumb, mô tả; lấy ?all=1 và số món mỗi nhóm', async () => {
     const f = await open();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Nhóm & đơn vị');
-    expect(screen.getByRole('heading', { level: 2, name: 'Nhóm món' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Danh mục');
+    expect(screen.getByRole('heading', { level: 2, name: 'Nhóm sản phẩm' })).toBeInTheDocument();
     expect(within(screen.getByRole('navigation', { name: 'Vị trí' })).getByText('Danh mục và tủ')).toBeInTheDocument();
     expect(screen.getByText('Thứ tự nhóm quyết định thứ tự trên trang Đăng ký và màu của từng nhóm.')).toBeInTheDocument();
     expect(f.mock.calls.map((c) => c[0])).toContain('/api/item-categories?all=1');

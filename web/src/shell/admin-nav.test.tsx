@@ -36,4 +36,14 @@ describe('Menu theo luồng chuẩn', () => {
     renderApp(makeMe('admin'), '/admin/home');
     for (const name of ['Tổng hợp kỳ', 'Còn nợ', 'Báo cáo & in']) expect(within(sideNav()).getAllByRole('link', { name })).toHaveLength(1);
   });
+
+  it('sidebar ghi "Sản phẩm" và "Danh mục" (không còn "Danh mục món", "Nhóm & đơn vị")', () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    expect(within(sideNav()).getByRole('link', { name: 'Sản phẩm' })).toHaveAttribute('aria-current', 'page');
+    expect(within(sideNav()).getByRole('link', { name: 'Danh mục' })).toHaveAttribute('href', '/admin/categories');
+    expect(within(sideNav()).queryByText('Danh mục món')).toBeNull();
+    expect(within(sideNav()).queryByText('Nhóm & đơn vị')).toBeNull();
+  });
 });

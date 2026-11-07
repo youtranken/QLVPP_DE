@@ -4,7 +4,7 @@
 [data-shell='admin'] .flt-search input { width: 100%; box-sizing: border-box; min-height: var(--hit); padding: 0 var(--s-4) 0 calc(var(--s-4) + var(--s-6) + var(--s-1)); border: 1px solid var(--c-line-input); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); font: var(--t-body); }
 [data-shell='admin'] .flt-chips { display: flex; flex-wrap: wrap; gap: var(--s-2); min-width: 0; }
 [data-shell='admin'] .flt-chip { display: inline-flex; flex: none; align-items: center; gap: var(--s-2); min-height: var(--hit); padding: 0 var(--s-4); border: 1px solid var(--c-line-input); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); white-space: nowrap; cursor: pointer; }
-[data-shell='admin'] .flt-chip[aria-pressed='true'] { background: var(--c-dark); border-color: var(--c-dark); color: var(--c-on-dark); }
+[data-shell='admin'] .flt-chip[aria-pressed='true'] { background: var(--c-sel); border-color: var(--c-sel); color: var(--c-on-sel); }
 [data-shell='admin'] .flt-cnt { font: var(--t-label); opacity: .8; }
 [data-shell='admin'] .gcb { position: relative; flex: 1 1 260px; max-width: 420px; min-width: 0; }
 [data-shell='admin'] .gcb input { width: 100%; box-sizing: border-box; min-height: var(--hit); padding: 0 var(--s-4); border: 1px solid var(--c-line-input); border-radius: var(--r-md); background: var(--c-surface); color: var(--c-ink); font: var(--t-body); }

@@ -7,7 +7,7 @@ const stock: Messages<typeof vi> = {
       title: 'Stock',
       toArrivals: 'ADM delivery? → Arrivals',
       description: 'Stock per item and every purchase, stocktake and one-off issue. Deliveries deduct stock automatically.',
-      catalogLink: 'Catalog',
+      catalogLink: 'Products',
       search: 'Search by item name',
       emptyTitle: 'No items match',
       emptyHint: 'Try another name or clear the filter to see all items.',

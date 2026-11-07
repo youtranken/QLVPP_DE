@@ -18,6 +18,7 @@
   --c-danger: #A32C1E; --c-danger-soft: #FBE4E1; --c-danger-line: #EDB8B0; --c-danger-tint: #FDF3F1;
   /* nút: nền hover/nhấn của biến thể; đỏ nhạt cách nhau ≥ 1.15, chữ lúc nhấn đậm hơn để giữ ≥ 4.5 */
   --c-danger-hover: #F7CDC7;  --c-danger-press: #F0B7AE;  --c-danger-ink-press: #8A2418;  --c-danger-solid-hover: #8A2418;  --c-danger-solid-press: #71200F;
+  --c-sel: var(--c-dark);  --c-on-sel: var(--c-on-dark);  --c-sel-count: var(--c-on-dark-2);
   --c-dark-press: #0A1F26;  --c-cta-hover: #C4EEF6;  --c-cta-press: #8AD6E5;
   --c-info: #0A5868;   --c-info-soft: #DDF1F5;
   --c-dot: #CF4340;   /* chấm chưa đọc trên chuông */

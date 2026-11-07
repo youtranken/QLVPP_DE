@@ -43,6 +43,11 @@ describe('tương phản token bảng màu v2', () => {
   it.each(PAIRS)('%s trên %s ≥ 4.5', (fg, bg) => {
     expect(contrast(tok(fg), tok(bg))).toBeGreaterThanOrEqual(4.5);
   });
+  it('--c-on-sel trên --c-sel đạt 4.5:1', () => {
+    expect(contrast(tok('--c-on-dark'), tok('--c-dark'))).toBeGreaterThanOrEqual(4.5);
+    expect(css).toMatch(/--c-sel:\s*var\(--c-dark\)/);
+    expect(css).toMatch(/--c-on-sel:\s*var\(--c-on-dark\)/);
+  });
   it.each(DOTS)('chấm kỳ %s trên %s ≥ 3', (fg, bg) => {
     expect(contrast(tok(fg), tok(bg))).toBeGreaterThanOrEqual(3);
   });

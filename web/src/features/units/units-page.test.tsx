@@ -76,9 +76,9 @@ const pick = async (name: string, item: string) => userEvent.click((await openMe
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Trang Đơn vị tính', () => {
-  it('h1 "Nhóm & đơn vị" + tab "Đơn vị tính", lấy GET units?all=1, hiện số món đang dùng và trạng thái từng ĐVT', async () => {
+  it('h1 "Danh mục" + tab "Đơn vị tính", lấy GET units?all=1, hiện số món đang dùng và trạng thái từng ĐVT', async () => {
     const f = await open();
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Nhóm & đơn vị');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Danh mục');
     expect(screen.getByRole('heading', { level: 2, name: 'Đơn vị tính' })).toBeInTheDocument();
     expect(f.mock.calls.map((c) => c[0])).toContain('/api/units?all=1');
     expect(within(rowOf('cái')).getByText('4')).toBeInTheDocument();
@@ -166,8 +166,8 @@ describe('Trang Đơn vị tính', () => {
     await pick('hộp', 'Ngừng');
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Ngừng' }));
     await waitFor(() => expect(within(rowOf('hộp')).getByText('Đã ngừng')).toBeInTheDocument());
-    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Danh mục món' }));
-    await userEvent.click((await screen.findAllByRole('button', { name: 'Thêm món' }))[0]);
+    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Sản phẩm' }));
+    await userEvent.click((await screen.findAllByRole('button', { name: 'Thêm sản phẩm' }))[0]);
     const select = await screen.findByLabelText(/Đơn vị tính/);
     await waitFor(() => expect(within(select).getByRole('option', { name: 'cái' })).toBeInTheDocument());
     expect(within(select).queryByRole('option', { name: 'hộp' })).toBeNull();
@@ -284,7 +284,7 @@ describe('Trang Đơn vị tính', () => {
     await open();
     await sortOn();
     await userEvent.click(screen.getByRole('button', { name: 'Đưa hộp lên' }));
-    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Danh mục món' }));
+    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Sản phẩm' }));
     await userEvent.click(within(screen.getByRole('dialog', { name: 'Bỏ thay đổi?' })).getByRole('button', { name: 'Ở lại' }));
     expect(screen.getByRole('heading', { level: 2, name: 'Đơn vị tính' })).toBeInTheDocument();
     expect(names()).toEqual(['hộp', 'cái', 'Cũ']);

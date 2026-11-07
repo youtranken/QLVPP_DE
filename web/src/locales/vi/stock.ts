@@ -4,7 +4,7 @@ const stock = {
       title: 'Tủ / Kho',
       toArrivals: 'Hàng ADM về? → Hàng về',
       description: 'Tồn kho từng món và mọi lần nhập, kiểm kê, xuất lẻ. Giao hàng tự trừ tồn.',
-      catalogLink: 'Danh mục',
+      catalogLink: 'Sản phẩm',
       search: 'Tìm theo tên món',
       emptyTitle: 'Không có món nào khớp',
       emptyHint: 'Thử tên khác hoặc bỏ bộ lọc để xem tất cả món.',

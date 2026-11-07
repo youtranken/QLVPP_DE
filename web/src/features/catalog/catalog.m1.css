@@ -1,7 +1,7 @@
 [data-shell='admin'] .ct-page { --ct-thumb: 36px; }
 [data-shell='admin'] .ct-chips { display: flex; flex-wrap: wrap; gap: var(--s-2); }
 [data-shell='admin'] .ct-chip { display: inline-flex; align-items: center; gap: var(--s-2); height: 36px; padding: 0 16px; border: 0; border-radius: var(--r-pill); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-ink); font: var(--t-label); cursor: pointer; white-space: nowrap; }
-[data-shell='admin'] .ct-chip[aria-pressed='true'], [data-shell='admin'] .ct-chip[aria-checked='true'] { background: var(--c-acc-soft); box-shadow: inset 0 0 0 2px var(--c-acc); color: var(--c-acc); }
+[data-shell='admin'] .ct-chip[aria-pressed='true'], [data-shell='admin'] .ct-chip[aria-checked='true'] { background: var(--c-sel); color: var(--c-on-sel); box-shadow: none; }
 [data-shell='admin'] .ct-chip:focus-visible { box-shadow: var(--focus); outline: none; }
 [data-shell='admin'] .ct-chip__n { color: var(--c-muted); font: var(--t-cap); }
 [data-shell='admin'] .ct-dot { flex: none; width: 10px; height: 10px; border-radius: var(--r-pill); }
@@ -71,7 +71,7 @@
 [data-shell='admin'] .ct-tabs { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: var(--r-pill); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); justify-self: start; }
 [data-shell='admin'] .ct-tabs--view { margin-left: auto; }
 [data-shell='admin'] .ct-tab { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-ink-2); font: var(--t-label); cursor: pointer; }
-[data-shell='admin'] .ct-tab[aria-pressed='true'] { background: var(--c-acc-soft); box-shadow: inset 0 0 0 2px var(--c-acc); color: var(--c-acc); }
+[data-shell='admin'] .ct-tab[aria-pressed='true'] { background: var(--c-sel); color: var(--c-on-sel); box-shadow: none; }
 [data-shell='admin'] .ct-tab:focus-visible { box-shadow: var(--focus); outline: none; }
 [data-shell='admin'] .ct-tab__n { min-width: 22px; height: 22px; padding: 0 var(--s-2); border-radius: var(--r-pill); background: var(--c-surface-2); color: var(--c-ink-2); font: var(--t-cap); display: inline-flex; align-items: center; justify-content: center; }
 [data-shell='admin'] .ct-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 260px)); gap: var(--s-4); }

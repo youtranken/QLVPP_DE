@@ -26,7 +26,7 @@ const nav: Messages<typeof vi> = {
     },
     home: 'This month',
     summary: 'Period summary',
-    catalog: 'Catalog items',
+    catalog: 'Products',
     stock: 'Cupboard',
     users: 'Staff',
     review: 'Off-catalog items',
@@ -35,7 +35,7 @@ const nav: Messages<typeof vi> = {
     delivery: 'Delivery',
     backlog: 'Outstanding',
     reports: 'Reports & print',
-    categoriesUnits: 'Groups & units',
+    categoriesUnits: 'Categories',
     badge: {
       review: '{{n}} items to review',
       delivery: '{{n}} people waiting',
