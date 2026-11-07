@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Locator, type Page, type TestInfo } from '@playwright/test';
+import { createItemViaApi } from './catalog-helpers';
 import { asRole, devHeaders, deleteTestFiles, expectNoContrastViolations, isMobile, psql, removeTestItem, shot } from './helpers';
 
 // Ảnh đã tải xong thật (không phải icon ảnh vỡ) và GET /api/files/:id trả 200
@@ -83,6 +83,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await shot(page, info, 'catalog');
 
       await page.getByRole('button', { name: `Tạm ngưng ${itemName}` }).click();
+      await page.getByRole('dialog', { name: `Tạm ngưng ${itemName}?` }).getByRole('button', { name: 'Tạm ngưng' }).click();
       await expect(page.getByRole('status').filter({ hasText: `Đã tạm ngưng ${itemName}` })).toBeVisible();
       const itemRow = page.getByRole('row').filter({ hasText: itemName });
       await expect(itemRow.getByText('Tạm ngưng', { exact: true })).toBeVisible();
@@ -123,18 +124,6 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
     }
   });
 });
-
-async function createItemViaApi(request: APIRequestContext, name: string): Promise<string> {
-  const headers = devHeaders('admin');
-  const file = await request.post('/api/files', {
-    headers,
-    multipart: { purpose: 'item_image', file: { name: 'item.png', mimeType: 'image/png', buffer: readFileSync('playwright/fixtures/item.png') } },
-  });
-  expect(file.status()).toBe(201);
-  const res = await request.post('/api/admin/items', { headers, data: { name, unit: 'cai', image_file_id: (await file.json()).id, max_qty: 5 } });
-  expect(res.status()).toBe(201);
-  return (await res.json()).id as string;
-}
 
 async function editMax(page: Page, name: string, from: number, to: number) {
   await page.getByRole('button', { name: `Sửa tối đa/tháng của ${name}, đang là ${from}` }).click();
@@ -254,6 +243,7 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
       await shot(page, info, 'catalog-card-pause', false);
       const off = patched();
       await pause.click();
+      await page.getByRole('dialog', { name: `Tạm ngưng ${name}?` }).getByRole('button', { name: 'Tạm ngưng' }).click();
       expect((await off).status()).toBe(200);
       await expect(page.getByRole('status').filter({ hasText: `Đã tạm ngưng ${name}` })).toBeVisible();
       await expect(card.getByRole('img', { name: 'Tạm ngưng', exact: true })).toBeVisible();
@@ -266,7 +256,9 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
       await shot(page, info, 'catalog-card-reactivate', false);
       const on = patched();
       await back.click();
+      await page.getByRole('dialog', { name: `Dùng lại ${name}?` }).getByRole('button', { name: 'Dùng lại' }).click();
       expect((await on).status()).toBe(200);
+      await expect(page.getByRole('status').filter({ hasText: `Đã dùng lại ${name}` })).toBeVisible();
       await expect(card).toHaveCount(0);
     } finally {
       await removeTestItem(request, id);
@@ -291,91 +283,6 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'catalog-grid-inactive', false);
   }
-
-  test('Nhóm 1 · mục 6: tab Tất cả mặc định, thẻ tạm ngưng có dấu đỏ chéo, nút Tạm ngưng trung tính, bấm xong có Hoàn tác', async ({ page, request }, info) => {
-    const name = `PW Nhóm1 ${Date.now()}-${info.project.name}`;
-    const id = await createItemViaApi(request, name);
-    try {
-      await page.goto('/admin/catalog');
-      await expect(page.getByRole('button', { name: /^Tất cả \d/ })).toHaveAttribute('aria-pressed', 'true');
-      await page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ }).fill(name);
-      const card = page.getByRole('article').filter({ hasText: name });
-      const pause = card.getByRole('button', { name: `Tạm ngưng ${name}` });
-      const idle = await pause.evaluate((el) => getComputedStyle(el).backgroundColor);
-      await pause.hover();
-      await expect.poll(() => pause.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe(idle);
-      await pause.click();
-      const toast = page.getByRole('status').filter({ hasText: `Đã tạm ngưng ${name}` });
-      await expect(toast.getByRole('button', { name: 'Hoàn tác' })).toBeVisible();
-      await expect(card.getByRole('img', { name: 'Tạm ngưng' })).toBeVisible();
-      expect(await card.getByRole('heading', { name }).evaluate((el) => getComputedStyle(el).textDecorationLine)).not.toContain('line-through');
-      await toast.getByRole('button', { name: 'Hoàn tác' }).click();
-      await expect(card.getByRole('img', { name: 'Tạm ngưng' })).toHaveCount(0);
-      if (isMobile(info)) await expectNoContrastViolations(page);
-      await shot(page, info, 'nhom1-catalog-grid', false);
-    } finally {
-      await removeTestItem(request, id);
-    }
-  });
-
-  test('Nhóm 1 · mục 7: tab Tạm ngưng chọn dòng → thanh sáng chỉ Dùng lại, Chuyển nhóm, Bỏ chọn; 390 dính đáy', async ({ page, request }, info) => {
-    const name = `PW Nhóm1 bảng ${Date.now()}-${info.project.name}`;
-    const id = await createItemViaApi(request, name);
-    expect((await request.patch(`/api/admin/items/${id}`, { headers: devHeaders('admin'), data: { active: false } })).ok()).toBe(true);
-    try {
-      await page.goto('/admin/catalog?view=table&tab=inactive');
-      await page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ }).fill(name);
-      const row = page.getByRole('row').filter({ hasText: name });
-      await expect(row.locator('.ct-item__name--paused')).toBeVisible();
-      await row.getByRole('checkbox', { name: 'Chọn dòng' }).check();
-      const bar = page.getByRole('toolbar', { name: 'Hành động trên các dòng đã chọn' });
-      await expect(bar.getByRole('button', { name: 'Dùng lại' })).toBeVisible();
-      await expect(bar.getByRole('button', { name: 'Chuyển nhóm' })).toBeVisible();
-      await expect(bar.getByRole('button', { name: 'Đổi tối đa/tháng' })).toHaveCount(0);
-      await expect(bar.getByRole('button', { name: 'Tạm ngưng' })).toHaveCount(0);
-      await expect(page.getByRole('searchbox', { name: /^Tìm trong \d+ sản phẩm$/ })).toBeVisible();
-      if (isMobile(info)) {
-        expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe('fixed');
-        const barBox = (await bar.boundingBox())!;
-        const pad = await page.locator('.ct-page').evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
-        expect(pad).toBeGreaterThanOrEqual(barBox.height + 12);
-        const vh = page.viewportSize()!.height;
-        const lift = await page.locator('.toast-host').evaluate((el, h) => h - el.getBoundingClientRect().bottom, vh);
-        expect(lift).toBeGreaterThanOrEqual(barBox.height + 12);
-        await expectNoContrastViolations(page);
-      }
-      await shot(page, info, 'nhom1-catalog-bulk', false);
-    } finally {
-      await removeTestItem(request, id);
-    }
-  });
-
-  test('Nhóm 1 · mục 9: panel Sửa sản phẩm có đầu (ảnh, mã · nhóm · vị trí, trạng thái), hai khối, Tạm ngưng + Hoàn tác ở chân', async ({ page, request }, info) => {
-    const name = `PW Nhóm1 panel ${Date.now()}-${info.project.name}`;
-    const id = await createItemViaApi(request, name);
-    try {
-      await page.goto(`/admin/catalog?q=${encodeURIComponent(name)}`);
-      await page.getByRole('button', { name: `Sửa ${name}` }).click();
-      const panel = page.getByRole('dialog', { name: `Sửa món ${name}` });
-      await expect(panel.getByText('Đang dùng', { exact: true })).toBeVisible();
-      await expect(panel.getByRole('heading', { level: 3, name: 'Thông tin' })).toBeVisible();
-      await expect(panel.getByRole('heading', { level: 3, name: 'Đặt hàng' })).toBeVisible();
-      await expect(panel.getByLabel('Nhóm', { exact: true })).toBeVisible();
-      if (isMobile(info)) {
-        expect(await panel.locator('.ovp-bar').count()).toBe(0);
-        await expectNoContrastViolations(page);
-      }
-      await shot(page, info, 'nhom1-item-panel', false);
-      await panel.getByRole('button', { name: `Tạm ngưng ${name}` }).click();
-      const toast = panel.getByRole('status').filter({ hasText: `Đã tạm ngưng ${name}` });
-      await expect(toast.getByRole('button', { name: 'Hoàn tác' })).toBeVisible();
-      await expect(panel.locator('.ct-panel-status')).toHaveText('Tạm ngưng');
-      await toast.getByRole('button', { name: 'Hoàn tác' }).click();
-      await expect(panel.locator('.ct-panel-status')).toHaveText('Đang dùng');
-    } finally {
-      await removeTestItem(request, id);
-    }
-  });
 
   test('E9-S5 Danh mục: lỗi tải → "Không tải được dữ liệu — thử lại." và "Thử lại"', async ({ page }) => {
     await page.route('**/api/admin/items', (route) => route.fulfill({ status: 500, body: '{}' }));
