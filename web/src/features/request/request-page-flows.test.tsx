@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
 import { NOTE, PAUSED, PEN, PERIOD, facts, stubRequestApi, view } from '@/test/request-api-stub';
 import { mockViewport } from '@/test/viewport';
-import { openPhoneCart } from '@/test/request-cart';
+import { openPhoneCart, startEditingOrder } from '@/test/request-cart';
 
 const grid = () => screen.getByRole('region', { name: 'Danh mục món' });
 const cart = () => screen.queryByRole('complementary', { name: 'Phiếu tháng 11' }) ?? screen.getByRole('dialog', { name: 'Phiếu tháng 11' });
@@ -68,7 +68,10 @@ describe('RequestPage — món ngoài danh mục', () => {
     const custom = lineView({ id: 'l-c', custom_name: 'Bìa còng', custom_unit: 'cai', image_file_id: 'f-1', qty: 2, review_status: 'pending' });
     const api = stubRequestApi({ request: view({ lines: [custom] }), put: () => jsonResponse(500, {}) });
     renderApp(makeMe('member'), '/');
-    const name = await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByRole('button', { name: 'Sửa Bìa còng' });
+    const label = await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Bìa còng');
+    expect(within(label.closest('li')!).getByText('Hành chính xem từ 00:00 ngày 11/11')).toBeInTheDocument();
+    await startEditingOrder();
+    const name = within(cart()).getByRole('button', { name: 'Sửa Bìa còng' });
     expect(within(name.closest('li')!).getByText('Hành chính xem từ 00:00 ngày 11/11')).toBeInTheDocument();
     expect(within(name.closest('li')!).queryByText('Chờ Hành chính xem')).toBeNull();
     await userEvent.click(name);
@@ -239,9 +242,9 @@ describe('RequestPage — dòng món đã ngừng', () => {
       request: view({ lines: [lineView({ id: 'l-pen', item_id: PEN.id, item: { ...facts(PEN), active: false }, qty: 3 })] }),
     });
     renderApp(makeMe('member'), '/');
-    const line = within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' }))
-      .getByText('Bút bi xanh')
-      .closest('li')!;
+    await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Bút bi xanh');
+    await startEditingOrder();
+    const line = within(cart()).getByText('Bút bi xanh').closest('li')!;
     expect(within(line).getByRole('button', { name: 'Bớt Bút bi xanh' })).toBeDisabled();
     expect(within(line).getByRole('button', { name: 'Thêm Bút bi xanh' })).toBeDisabled();
     expect(within(line).getByRole('button', { name: 'Bỏ Bút bi xanh' })).toBeEnabled();
@@ -258,12 +261,15 @@ describe('RequestPage — dòng món đã ngừng', () => {
 });
 
 describe('RequestPage — món thuộc nhóm đang ngừng (active, usable=false)', () => {
-  it('không hiện trên lưới chọn món dù món còn active', async () => {
+  it('hiện trên lưới chọn món với dấu "Tạm ngưng", không đặt được', async () => {
     mockViewport(1280);
     stubRequestApi({ items: [PEN, PAUSED] });
     renderApp(makeMe('member'), '/');
     expect(await within(await screen.findByRole('region', { name: 'Danh mục món' })).findByText('Bút bi xanh')).toBeInTheDocument();
-    expect(within(screen.getByRole('region', { name: 'Danh mục món' })).queryByText('Bút dạ quang')).toBeNull();
+    const grid = within(screen.getByRole('region', { name: 'Danh mục món' }));
+    expect(grid.getByText('Bút dạ quang')).toBeInTheDocument();
+    expect(grid.getByRole('img', { name: 'Tạm ngưng' })).toBeInTheDocument();
+    expect(grid.getByRole('button', { name: /Không đặt được/ })).toBeDisabled();
   });
 
   it('dòng đã lưu của món đó: như món đã ngừng — Bớt/Thêm vô hiệu, Bỏ vẫn bấm được', async () => {
@@ -273,9 +279,9 @@ describe('RequestPage — món thuộc nhóm đang ngừng (active, usable=false
       request: view({ lines: [lineView({ id: 'l-paused', item_id: PAUSED.id, item: facts(PAUSED), qty: 3 })] }),
     });
     renderApp(makeMe('member'), '/');
-    const line = within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' }))
-      .getByText('Bút dạ quang')
-      .closest('li')!;
+    await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Bút dạ quang');
+    await startEditingOrder();
+    const line = within(cart()).getByText('Bút dạ quang').closest('li')!;
     expect(within(line).getByRole('button', { name: 'Bớt Bút dạ quang' })).toBeDisabled();
     expect(within(line).getByRole('button', { name: 'Thêm Bút dạ quang' })).toBeDisabled();
     expect(within(line).getByRole('button', { name: 'Bỏ Bút dạ quang' })).toBeEnabled();

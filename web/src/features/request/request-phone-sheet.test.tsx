@@ -5,6 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
 import { NOTE, PEN, facts, stubRequestApi, view } from '@/test/request-api-stub';
 import { mockViewport } from '@/test/viewport';
+import { startEditingOrder } from '@/test/request-cart';
 
 const grid = () => screen.getByRole('region', { name: 'Danh mục món' });
 const saved = () => view({ lines: [lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 2 })] });
@@ -23,6 +24,9 @@ describe('RequestPage — điện thoại ≤ 900: thanh phiếu nổi + sheet p
     expect(screen.queryByRole('complementary', { name: 'Phiếu tháng 11' })).toBeNull();
     await userEvent.click(opener);
     const sheet = await screen.findByRole('dialog', { name: 'Phiếu tháng 11' });
+    expect(within(sheet).getByText('Bút bi xanh')).toBeInTheDocument();
+    expect(within(sheet).queryByRole('spinbutton')).toBeNull();
+    await startEditingOrder();
     expect(within(sheet).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(2);
     expect(within(sheet).getByRole('button', { name: 'Lưu phiếu' })).toBeDisabled();
     await userEvent.keyboard('{Escape}');
@@ -58,6 +62,7 @@ describe('RequestPage — điện thoại ≤ 900: thanh phiếu nổi + sheet p
     renderApp(makeMe('member'), '/');
     await userEvent.click(await screen.findByRole('button', { name: 'Xem phiếu (1 món)' }));
     const sheet = await screen.findByRole('dialog', { name: 'Phiếu tháng 11' });
+    await startEditingOrder();
     await userEvent.click(within(sheet).getByRole('button', { name: 'Thêm Bút bi xanh' }));
     await userEvent.click(within(sheet).getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
     const confirm = await screen.findByRole('dialog', { name: 'Lưu phiếu tháng 11?' });
@@ -73,6 +78,7 @@ describe('RequestPage — điện thoại ≤ 900: thanh phiếu nổi + sheet p
     renderApp(makeMe('member'), '/');
     await userEvent.click(await screen.findByRole('button', { name: 'Xem phiếu (1 món)' }));
     const sheet = await screen.findByRole('dialog', { name: 'Phiếu tháng 11' });
+    await startEditingOrder();
     await userEvent.click(within(sheet).getByRole('button', { name: '+ Thêm món khác' }));
     const dialog = await screen.findByRole('dialog', { name: 'Thêm món khác' });
     await userEvent.type(within(dialog).getByLabelText('Tên món'), 'Bìa còng 7cm');
@@ -135,6 +141,7 @@ describe('RequestPage — điện thoại ≤ 900: thanh phiếu nổi + sheet p
     const opener = await screen.findByRole('button', { name: 'Xem phiếu (1 món)' });
     await userEvent.click(opener);
     const sheet = await screen.findByRole('dialog', { name: 'Phiếu tháng 11' });
+    await startEditingOrder();
     await userEvent.click(within(sheet).getByRole('button', { name: 'Thêm Bút bi xanh' }));
     await userEvent.click(within(sheet).getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));
     await userEvent.click(within(await screen.findByRole('dialog', { name: 'Lưu phiếu tháng 11?' })).getByRole('button', { name: 'Lưu phiếu' }));

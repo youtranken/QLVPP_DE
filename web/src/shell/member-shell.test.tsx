@@ -17,6 +17,12 @@ describe('MemberShell', () => {
     expect(screen.queryByRole('navigation', { name: 'Chuyển trang' })).toBeNull();
   });
 
+  it('1280 px: banner full-bleed bọc nội dung trong .m-top__in (nền đặc nằm ở banner, nội dung giữ max 1440)', () => {
+    mockViewport(1280);
+    renderApp(makeMe('member'), '/');
+    expect(screen.getByRole('banner').querySelector('.m-top__in')).not.toBeNull();
+  });
+
   it('1280 px: tab trên Đăng ký · Lịch sử, không có thanh dưới', () => {
     mockViewport(1280);
     renderApp(makeMe('member'), '/');

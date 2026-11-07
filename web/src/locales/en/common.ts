@@ -8,6 +8,7 @@ const common: Messages<typeof vi> = {
     logoLetter: 'V',
   },
   common: {
+    paused: 'Paused',
     lockPhrase: '00:00 on {{day}}',
     loading: 'Loading…',
     checkingSession: 'Checking your session…',

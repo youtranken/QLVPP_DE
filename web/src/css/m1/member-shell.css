@@ -2,8 +2,9 @@
 [data-shell='member'] .m-shell { min-height: 100vh; background: linear-gradient(160deg, var(--c-shell-a), var(--c-shell-b) 55%, var(--c-shell-c)); color: var(--c-ink); }
 [data-shell='member'] .m-shell .skip-link { background: var(--c-surface); color: var(--c-ink); }
 
-[data-shell='member'] .m-top { display: flex; align-items: center; position: sticky; top: 0; z-index: 10; height: auto; max-width: 1440px; margin: 0 auto; padding: var(--s-3) var(--s-5); gap: 12px 20px; background: transparent; border-bottom: 0; flex-wrap: wrap; }
-[data-shell='member'] .m-shell.is-narrow .m-top { height: auto; padding: var(--s-2) var(--s-4); gap: var(--s-2); flex-wrap: nowrap; background: var(--c-shell-a); max-width: none; }
+[data-shell='member'] .m-top { position: sticky; top: 0; z-index: 10; background: var(--c-shell-a); border-bottom: 0; box-shadow: var(--e-2); }
+[data-shell='member'] .m-top__in { display: flex; align-items: center; max-width: 1440px; margin: 0 auto; padding: var(--s-3) var(--s-5); gap: 12px 20px; flex-wrap: wrap; box-sizing: border-box; }
+[data-shell='member'] .m-shell.is-narrow .m-top__in { padding: var(--s-2) var(--s-4); gap: var(--s-2); flex-wrap: nowrap; max-width: none; }
 [data-shell='member'] .m-logo { display: flex; align-items: center; text-decoration: none; gap: 12px; color: var(--c-on-dark); font-size: 16px; font-weight: 700; }
 [data-shell='member'] .m-logo i { display: grid; place-items: center; font-style: normal; width: 38px; height: 38px; border-radius: 12px; background: var(--c-logo-bg); color: var(--c-ink); font-size: 13px; font-weight: 800; }
 [data-shell='member'] .m-logo:focus-visible, [data-shell='member'] .m-tabs a:focus-visible, [data-shell='member'] .bottom-nav a:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }

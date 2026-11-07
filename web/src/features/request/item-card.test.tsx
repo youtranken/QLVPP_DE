@@ -82,4 +82,22 @@ describe('ItemCard — tiếng Anh', () => {
       await i18n.changeLanguage('vi');
     }
   });
+
+  it('món tạm ngưng (usable=false): có dấu "Tạm ngưng", nút "Không đặt được" vô hiệu, tên không gạch', () => {
+    renderWithI18n(<ItemCard item={{ ...ITEM, usable: false, active: false }} line={undefined} tone="g1" groupLabel={null} paused onQty={vi.fn()} />);
+    expect(screen.getByRole('img', { name: 'Tạm ngưng' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Không đặt được/ })).toBeDisabled();
+    expect(getComputedStyle(screen.getByTitle('Bút bi xanh')).textDecorationLine).not.toContain('line-through');
+  });
+  it('món tạm ngưng đã có trong phiếu (qty 3): dấu + "Đã đăng ký 3", không stepper, không nút thêm', () => {
+    renderWithI18n(<ItemCard item={{ ...ITEM, usable: false, active: false }} line={line(3, { stopped: true })} tone="g1" groupLabel={null} paused onQty={vi.fn()} />);
+    expect(screen.getByRole('img', { name: 'Tạm ngưng' })).toBeInTheDocument();
+    expect(screen.getByText('Đã đăng ký 3')).toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton')).toBeNull();
+    expect(screen.queryByRole('button', { name: /Không đặt được/ })).toBeNull();
+  });
+  it('món dùng được: không có con dấu', () => {
+    view(undefined);
+    expect(screen.queryByRole('img', { name: 'Tạm ngưng' })).toBeNull();
+  });
 });

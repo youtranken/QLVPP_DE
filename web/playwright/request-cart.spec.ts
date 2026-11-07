@@ -55,7 +55,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await dialog.getByRole('button', { name: 'Thêm vào phiếu' }).click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
-      await expect(cart.getByText('Đã lưu', { exact: true })).toBeVisible();
+      await expect(cart.getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
       await page.reload();
       await expect(cart.getByText(/^Hành chính xem từ 00:00 ngày \d{2}\/\d{2}$/)).toBeVisible();
 
@@ -88,8 +88,9 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await page.getByRole('button', { name: '2 thay đổi chưa lưu · Lưu' }).click();
       await shotTo(page, info, 'confirm', 'task-C5');
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
-      await expect(cart.getByText('Đã lưu', { exact: true })).toBeVisible();
-      await expect(cart.getByText(/^Đã lưu lúc \d{2}:\d{2}\. Bạn vẫn sửa được tới hết \d{2}\/\d{2}\.$/)).toBeVisible();
+      await expect(cart.getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
+      await expect(cart.getByText(/^Phiếu đã lưu\. Bấm Sửa phiếu để thêm, bớt\. Sửa được tới hết \d{2}\/\d{2}\.$/)).toBeVisible();
+      await expect(cart.getByRole('button', { name: 'Sửa phiếu' })).toBeVisible();
       await shotTo(page, info, 'after-save', 'task-C5');
     } finally {
       deleteTestUsers(me.sub);

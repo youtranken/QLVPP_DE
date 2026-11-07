@@ -145,4 +145,43 @@ describe('CartPanel', () => {
     show({ lines: [mk(1)], showSave: false });
     expect(within(aside()).queryByRole('button', { name: 'Lưu phiếu' })).toBeNull();
   });
+
+  describe('mode view (phiếu đã lưu, chưa sửa)', () => {
+    const SAVED = { time: '09:41', lastDay: '10/11' };
+    it('không stepper, không nút Bỏ, không "Thêm món khác"; nút chính "Sửa phiếu"; chip "Đã lưu 09:41"; ghi chú đã lưu', async () => {
+      const onEditStart = vi.fn();
+      show({ lines: [mk(1)], mode: 'view', saved: SAVED, onEditStart });
+      expect(screen.queryByRole('spinbutton')).toBeNull();
+      expect(screen.queryByRole('button', { name: /^Bỏ / })).toBeNull();
+      expect(screen.queryByRole('button', { name: /Thêm món khác/ })).toBeNull();
+      expect(within(aside()).getByText('Đã lưu 09:41')).toBeInTheDocument();
+      expect(within(aside()).getByText('Phiếu đã lưu. Bấm Sửa phiếu để thêm, bớt. Sửa được tới hết 10/11.')).toBeInTheDocument();
+      expect(within(aside()).queryByRole('button', { name: 'Lưu phiếu' })).toBeNull();
+      await userEvent.click(screen.getByRole('button', { name: 'Sửa phiếu' }));
+      expect(onEditStart).toHaveBeenCalledOnce();
+    });
+    it('vẫn báo đỏ: món tạm ngưng và tối đa hạ 5 > 2', () => {
+      show({
+        lines: [mk(1, { stopped: true }), mk(2, { qty: 5, lowered: { max: 2, qty: 5 } })],
+        mode: 'view',
+        saved: SAVED,
+        onEditStart: vi.fn(),
+      });
+      expect(within(aside()).getByText('Món đã tạm ngưng. Sản phẩm này có thể không được giao hàng.')).toBeInTheDocument();
+      expect(within(aside()).getByText('Tối đa đã đổi còn 2/tháng. Giữ được 5, không tăng thêm.')).toBeInTheDocument();
+    });
+  });
+
+  it('báo đỏ chỉ một tín hiệu: chữ danger (rq-line-alert), dòng is-alert và không is-error', () => {
+    show({ lines: [mk(1, { stopped: true })] });
+    const li = within(aside()).getByText('Món đã tạm ngưng. Sản phẩm này có thể không được giao hàng.');
+    expect(li).toHaveClass('rq-line-alert');
+    expect(li.closest('li')).toHaveClass('is-alert');
+    expect(li.closest('li')).not.toHaveClass('is-error');
+  });
+
+  it('câu mới không chứa " — "', () => {
+    for (const k of ['request.cart.stopped', 'request.cart.loweredMax', 'request.cart.noteClosed', 'request.cart.editOrder', 'request.grid.paused'])
+      for (const lng of ['vi', 'en']) expect(i18n.t(k, { lng, max: 2, qty: 5, date: '10/11' })).not.toContain(' — ');
+  });
 });

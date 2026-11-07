@@ -46,7 +46,7 @@ async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom
   await expect(dialog).toBeHidden();
   await page.getByRole('button', { name: isMobile(info) ? 'Lưu phiếu' : '3 thay đổi chưa lưu · Lưu' }).click();
   await page.getByRole('dialog', { name: /^Lưu phiếu tháng/ }).getByRole('button', { name: 'Lưu phiếu' }).click();
-  await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
+  await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
   await snap(page, info, 'member-a-saved');
 }
 

@@ -67,12 +67,12 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
 
       const cart = cartOf(page);
       await openCart(page, info);
-      const line = cart.locator('li', { has: page.getByRole('button', { name: `Sửa ${name}` }) });
+      const line = cart.locator('li', { hasText: name });
       await expect(line.getByText('Ngoài danh mục')).toBeVisible();
       await expect(line.getByRole('spinbutton', { name })).toHaveValue('2');
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
+      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
 
       await page.reload();
       await openCart(page, info);
@@ -81,6 +81,8 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'custom-saved');
 
+      // Phiếu đã lưu ở chế độ xem: "Sửa phiếu" mở lại ô số lượng
+      await cart.getByRole('button', { name: 'Sửa phiếu' }).click();
       // Còn thay đổi chưa lưu → link nội bộ (Lịch sử) hỏi trước khi rời
       await line.getByRole('button', { name: `Thêm ${name}` }).click();
       await closeCart(page, info);
@@ -155,9 +157,10 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await expect(cart.getByRole('spinbutton', { name: other.name, exact: true })).toHaveCount(0);
       await page.getByRole('button', { name: /thay đổi chưa lưu · Lưu/ }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
+      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
       await page.reload();
       await openCart(page, info);
+      await cart.getByRole('button', { name: 'Sửa phiếu' }).click();
       await expect(cart.getByRole('spinbutton', { name: nameA, exact: true })).toHaveValue('5');
       await snap(page, info, 'copy-saved');
     } finally {
@@ -255,7 +258,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await add.click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
+      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
       await grid.getByRole('button', { name: `Thêm ${item.name}`, exact: true }).click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();

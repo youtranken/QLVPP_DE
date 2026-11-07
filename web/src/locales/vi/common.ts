@@ -5,6 +5,7 @@ const common = {
     logoLetter: 'V',
   },
   common: {
+    paused: 'Tạm ngưng',
     lockPhrase: '00:00 ngày {{day}}',
     loading: 'Đang tải…',
     checkingSession: 'Đang kiểm tra phiên đăng nhập…',

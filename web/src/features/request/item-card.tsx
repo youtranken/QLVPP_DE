@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Tone } from '@/lib/group-tone';
 import { ItemThumb } from '@/ui/item-thumb';
+import { PausedStamp } from '@/ui/paused-stamp';
 import { Stepper } from '@/ui/stepper';
 import type { MemberItem } from './request.api';
 import { useRequestFormat } from './request-format';
@@ -13,12 +14,14 @@ export function ItemCard({
   line,
   tone,
   groupLabel,
+  paused = false,
   onQty,
 }: {
   item: MemberItem;
   line: CartLine | undefined;
   tone: Tone;
   groupLabel: string | null;
+  paused?: boolean;
   onQty: (n: number) => void;
 }) {
   const { t } = useTranslation();
@@ -38,9 +41,10 @@ export function ItemCard({
     onQty(n);
   };
   return (
-    <article className={`rq-card${qty > 0 ? ' is-picked' : ''}`}>
+    <article className={`rq-card${qty > 0 ? ' is-picked' : ''}${paused ? ' is-paused' : ''}`}>
       <div className="rq-card-tile">
         <ItemThumb fileId={item.image_file_id} alt="" tone={tone} size="tile" />
+        {paused && <PausedStamp />}
         {groupLabel && <span className="rq-card-group">{groupLabel}</span>}
         {qty > 0 && (
           <span className="rq-card-badge" data-testid="pick-badge">
@@ -55,10 +59,14 @@ export function ItemCard({
         </div>
         <div className="rq-card-unit">{t('request.grid.unitMax', { unit: fmt.unit(item.unit), max: item.max_qty })}</div>
       </div>
-      {line?.readonly ? (
+      {line?.readonly || (paused && qty > 0) ? (
         <div className="rq-card-locked">
-          {t(line.added_by_admin ? 'request.grid.adminAdded' : 'request.grid.locked', { qty })}
+          {t(line?.added_by_admin ? 'request.grid.adminAdded' : 'request.grid.locked', { qty })}
         </div>
+      ) : paused ? (
+        <button type="button" className="rq-card-add" aria-label={`${t('request.grid.paused')}: ${name}`} disabled>
+          {t('request.grid.paused')}
+        </button>
       ) : qty === 0 ? (
         <button
           type="button"

@@ -26,29 +26,31 @@ export function MemberShell() {
         {t('common.skipToContent')}
       </a>
       <header className="m-top">
-        <Link to="/" className="m-logo">
-          <i aria-hidden="true">{t('app.logoLetter')}</i>
-          {t('app.title')}
-        </Link>
-        {!narrow && (
-          <nav className="m-tabs" aria-label={t('nav.sections')}>
-            <NavLink to="/" end>
-              {t('nav.register')}
-            </NavLink>
-            <NavLink to="/history">{t('nav.history')}</NavLink>
-            <NavLink to="/me">{t('nav.me')}</NavLink>
-          </nav>
-        )}
-        <span className="sp" />
-        <NotificationBell />
-        <div className="m-avatar">
-          <span className="m-avatar__ini" aria-hidden="true">{initials(me.fullName, me.sub)}</span>
+        <div className="m-top__in">
+          <Link to="/" className="m-logo">
+            <i aria-hidden="true">{t('app.logoLetter')}</i>
+            {t('app.title')}
+          </Link>
           {!narrow && (
-            <span className="m-avatar__who">
-              <b>{me.fullName ?? me.sub}</b>
-              {me.department && <small>{me.department}</small>}
-            </span>
+            <nav className="m-tabs" aria-label={t('nav.sections')}>
+              <NavLink to="/" end>
+                {t('nav.register')}
+              </NavLink>
+              <NavLink to="/history">{t('nav.history')}</NavLink>
+              <NavLink to="/me">{t('nav.me')}</NavLink>
+            </nav>
           )}
+          <span className="sp" />
+          <NotificationBell />
+          <div className="m-avatar">
+            <span className="m-avatar__ini" aria-hidden="true">{initials(me.fullName, me.sub)}</span>
+            {!narrow && (
+              <span className="m-avatar__who">
+                <b>{me.fullName ?? me.sub}</b>
+                {me.department && <small>{me.department}</small>}
+              </span>
+            )}
+          </div>
         </div>
       </header>
       <main id="main">

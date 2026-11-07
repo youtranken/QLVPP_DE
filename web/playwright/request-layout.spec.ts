@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { deleteTestUsers, expectNoContrastViolations, isMobile, removeTestItem, seedActiveUser } from './helpers';
+import { deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, removeTestItem, seedActiveUser } from './helpers';
 import { asNewMember, createItem, createTestGroup, memberIdentity, shotTo } from './request-helpers';
 
 // Bố cục trang Đăng ký, trạng thái tải, thanh lọc, lưới thẻ
@@ -144,6 +144,40 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
     } finally {
       await group.cleanup(me.sub);
       await removeTestItem(request, itemId);
+    }
+  });
+
+  test('Nhóm 1 · đầu trang 1280 nền đặc khi cuộn', async ({ page }, info) => {
+    test.skip(isMobile(info), 'đầu trang nền đặc kiểm ở 1280; 390 đã có nền riêng');
+    await asNewMember(page, info);
+    await page.goto('/');
+    const banner = page.getByRole('banner');
+    await expect(banner).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    const bg = await banner.evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(bg).not.toBe('rgba(0, 0, 0, 0)');
+    expect(bg).not.toBe('transparent');
+    const box = (await banner.boundingBox())!;
+    expect(box.width).toBeGreaterThanOrEqual(page.viewportSize()!.width - 1);
+    await expect(banner).toBeInViewport({ ratio: 1 });
+  });
+
+  test('Nhóm 1 · món tạm ngưng có dấu, không thêm được', async ({ page, request }, info) => {
+    const me = await asNewMember(page, info);
+    const group = await createTestGroup(request, info, 1);
+    const [a] = group.items;
+    try {
+      const off = await request.patch(`/api/admin/items/${a.id}`, { headers: devHeaders('admin'), data: { active: false } });
+      expect(off.status()).toBe(200);
+      await page.goto(`/?g=${group.categoryId}`);
+      const grid = page.getByRole('region', { name: 'Danh mục món' });
+      const card = grid.getByRole('article').filter({ hasText: a.name });
+      await expect(card.getByRole('img', { name: 'Tạm ngưng' })).toBeVisible();
+      await expect(card.getByRole('button', { name: /Không đặt được/ })).toBeDisabled();
+      await expect(card.getByRole('button', { name: `Thêm vào phiếu: ${a.name}`, exact: true })).toHaveCount(0);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+    } finally {
+      await group.cleanup(me.sub);
     }
   });
 });

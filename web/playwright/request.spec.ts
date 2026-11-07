@@ -58,8 +58,11 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await snap(page, info, 'after-save');
 
       await page.reload();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
+      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
       await openCart(page, info);
+      // Phiếu đã lưu mở ở chế độ xem: chưa có ô số lượng cho tới khi bấm "Sửa phiếu"
+      await expect(cart.getByRole('spinbutton')).toHaveCount(0);
+      await cart.getByRole('button', { name: 'Sửa phiếu' }).click();
       for (const [item, qty] of [[a, 1], [b, 2], [c, 1]] as const) {
         await expect(cart.getByRole('spinbutton', { name: item.name, exact: true })).toHaveValue(String(qty));
       }
@@ -75,7 +78,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       const dialog = await leave;
       expect(dialog.type()).toBe('beforeunload');
       await dialog.accept();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
+      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
       await search.fill(`PW lưu`);
 
       // Thiết bị khác sửa phiếu → lưu từ tab này bị STALE_UPDATE
@@ -98,6 +101,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await stale.getByRole('button', { name: 'Tải bản mới nhất' }).click();
       await expect(stale).toBeHidden();
       await openCart(page, info);
+      await cart.getByRole('button', { name: 'Sửa phiếu' }).click();
       await expect(cart.getByRole('spinbutton', { name: c.name, exact: true })).toHaveValue('3');
       await expect(cart.getByRole('spinbutton', { name: a.name, exact: true })).toHaveValue('1');
     } finally {
@@ -121,7 +125,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${itemName}`, exact: true }).click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
-      await expect(page.getByText(/^Đã lưu \d{2}:\d{2}/)).toBeVisible();
+      await expect(page.getByText(/^Đã lưu \d{2}:\d{2} · sửa tiếp/)).toBeVisible();
 
       const off = await request.patch(`/api/admin/items/${itemId}`, { headers: devHeaders('admin'), data: { active: false } });
       expect(off.status()).toBe(200);

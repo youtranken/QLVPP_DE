@@ -81,6 +81,7 @@ export function ItemGrid({
             line={lineByKey.get(item.id)}
             tone={catInfo.get(item.category_id ?? '')?.tone ?? 'g0'}
             groupLabel={catInfo.get(item.category_id ?? '')?.label ?? null}
+            paused={!item.usable}
             onQty={(n) => changeQty(item.id, n)}
           />
         ))}

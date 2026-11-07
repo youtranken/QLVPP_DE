@@ -1,0 +1,2 @@
+/* Con dấu "Tạm ngưng": chéo -18 độ, chỉ ở thẻ (lưới nhân viên và lưới Hành chính) */
+.paused-stamp { position: absolute; z-index: 2; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-18deg); padding: var(--s-1) var(--s-3); border: 3px solid var(--c-danger); border-radius: var(--r-md); background: var(--c-veil-hi); color: var(--c-danger); font: var(--t-label); font-weight: 800; white-space: nowrap; pointer-events: none; }

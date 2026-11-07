@@ -106,7 +106,7 @@ function RequestEditor({
     if (!narrow) setSheetOpen(false);
   }, [narrow]);
 
-  const orderable = useMemo(() => items.filter((i) => i.usable && !i.admin_only), [items]);
+  const visible = useMemo(() => items.filter((i) => !i.admin_only), [items]);
   const lineByKey = useMemo(() => new Map(cart.lines.map((l) => [l.key, l])), [cart.lines]);
   // "Hay dùng trước" = món có trong phiếu kỳ trước (GET, không phải chép lại); không có kỳ trước thì thành thứ tự nhóm
   const previousRequest = useMyRequest(period.previous?.ym);
@@ -116,6 +116,9 @@ function RequestEditor({
   );
   const editingLine = editing?.key ? lineByKey.get(editing.key) : undefined;
   const dirty = cart.dirtyCount > 0;
+  // Sửa phiếu chỉ có hiệu lực tới lần lưu kế tiếp (savedSeq đổi thì phiếu về chế độ xem)
+  const [editFrom, setEditFrom] = useState<number | null>(null);
+  const mode: 'view' | 'edit' = cart.saved && !dirty && editFrom !== savedSeq ? 'view' : 'edit';
   const saveLabel = dirty ? t('request.cart.saveDirty', { n: cart.dirtyCount }) : t('request.cart.save');
   const setQty = (key: string, n: number) => {
     flow.touched(key);
@@ -139,6 +142,8 @@ function RequestEditor({
     lockAt: lockPhrase(period.deadline, langOf(i18n.language)),
     canSave: dirty && !flow.saving,
     panelRef: cartRef,
+    mode,
+    onEditStart: () => setEditFrom(savedSeq),
     onQty: setQty,
     onRemove: remove,
     onSave: flow.openConfirm,
@@ -161,7 +166,7 @@ function RequestEditor({
       <div className="rq-frame">
         <div className="m-panel rq-panel">
           <ItemGrid
-            items={orderable}
+            items={visible}
             categories={categories}
             lineByKey={lineByKey}
             favIds={favIds}

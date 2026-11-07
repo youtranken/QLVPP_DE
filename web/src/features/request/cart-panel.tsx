@@ -28,6 +28,7 @@ function CartRow({
   error,
   tone,
   lockAt,
+  view,
   onQty,
   onRemove,
   onEdit,
@@ -36,6 +37,7 @@ function CartRow({
   error?: string;
   tone: Tone;
   lockAt?: string;
+  view: boolean;
   onQty: (n: number) => void;
   onRemove: () => void;
   onEdit: () => void;
@@ -45,11 +47,13 @@ function CartRow({
   const contact = useAdminContact();
   const errorId = useId();
   const name = fmt.name(line.label);
+  const lowered = !!line.lowered && !line.readonly && line.qty > line.lowered.max;
+  const alert = lowered || !!line.stopped;
   return (
-    <li className={`rq-line${error ? ' is-error' : ''}`} data-line-key={line.key} tabIndex={-1}>
+    <li className={`rq-line${error ? ' is-error' : alert ? ' is-alert' : ''}`} data-line-key={line.key} tabIndex={-1}>
       <ItemThumb fileId={line.label.image_file_id} alt="" tone={tone} size={42} />
       <div className="rq-line-main">
-        {!line.item_id && !line.readonly ? (
+        {!line.item_id && !line.readonly && !view ? (
           <button type="button" className="rq-line-name rq-line-link" aria-label={t('request.cart.edit', { name })} title={name} onClick={onEdit}>
             {name}
           </button>
@@ -59,17 +63,15 @@ function CartRow({
         <span className="rq-line-qty num">{t('request.cart.qty', { qty: line.qty, unit: fmt.unit(line.label.unit) })}</span>
         {!line.item_id && <CustomTags line={line} lockAt={lockAt} />}
         {line.review_status === 'converted' && <span className="tag tag--ok">{t('request.cart.review.converted')}</span>}
-        {line.lowered && !line.readonly && line.qty > line.lowered.max && (
-          <span className="rq-line-max">{t('request.cart.loweredMax', line.lowered)}</span>
-        )}
-        {line.stopped && <span className="rq-line-max">{t('request.cart.stopped')}</span>}
+        {lowered && <span className="rq-line-alert">{t('request.cart.loweredMax', line.lowered!)}</span>}
+        {line.stopped && <span className="rq-line-alert">{t('request.cart.stopped')}</span>}
         {line.added_by_admin && (
           <span className="tag" title={t('request.cart.adminAddedHint', { contact })}>
             {t('request.cart.adminAdded')}
           </span>
         )}
       </div>
-      {!line.readonly && (
+      {!line.readonly && !view && (
         <>
           <Stepper
             className="rq-line-stepper"
@@ -127,6 +129,8 @@ export function CartPanel({
   lockAt,
   canSave,
   panelRef,
+  mode = 'edit',
+  onEditStart,
   onQty,
   onRemove,
   onSave,
@@ -148,6 +152,9 @@ export function CartPanel({
   lockAt?: string;
   canSave: boolean;
   panelRef: RefObject<HTMLDivElement | null>;
+  // view = phiếu đã lưu chưa sửa: không ô số lượng, nút chính "Sửa phiếu"
+  mode?: 'view' | 'edit';
+  onEditStart?: () => void;
   onQty: (key: string, n: number) => void;
   onRemove: (key: string) => void;
   onSave: () => void;
@@ -158,6 +165,8 @@ export function CartPanel({
   const titleId = useId();
   const units = lines.reduce((sum, l) => sum + l.qty, 0);
   const isSaved = !!saved && !dirty;
+  const viewSaved = mode === 'view' ? saved : null;
+  const view = !!viewSaved;
   return (
     <Root className={`rq-cart${sheet ? ' rq-cart--sheet' : ''}`} labelledBy={sheet ? undefined : titleId} panelRef={panelRef}>
       <div className="rq-cart-head">
@@ -166,7 +175,7 @@ export function CartPanel({
           <Summary sheet={sheet}>{t('request.cart.summary', { kinds: lines.length, units })}</Summary>
         </div>
         <span className={`rq-cart-chip${isSaved ? ' is-saved' : ''}`}>
-          {t(isSaved ? 'request.cart.statusSaved' : 'request.cart.statusDirty')}
+          {viewSaved ? t('request.cart.statusSavedAt', { time: viewSaved.time }) : t(isSaved ? 'request.cart.statusSaved' : 'request.cart.statusDirty')}
         </span>
         {sheet && <DialogCloseButton />}
       </div>
@@ -183,6 +192,7 @@ export function CartPanel({
               error={errors[l.key]}
               tone={groupTone(categories, l.label.category_id)}
               lockAt={lockAt}
+              view={view}
               onQty={(n) => onQty(l.key, n)}
               onRemove={() => onRemove(l.key)}
               onEdit={() => onEdit(l.key)}
@@ -190,16 +200,25 @@ export function CartPanel({
           ))}
         </ul>
       )}
-      <button type="button" className="rq-ghost" onClick={onAddCustom}>
-        + {t('request.cart.addOther')}
-      </button>
-      {showSave && (
+      {!view && (
+        <button type="button" className="rq-ghost" onClick={onAddCustom}>
+          + {t('request.cart.addOther')}
+        </button>
+      )}
+      {showSave && view && (
+        <button type="button" className="btn btn--primary btn--xl btn--block rq-cart-save" onClick={onEditStart}>
+          {t('request.cart.editOrder')}
+        </button>
+      )}
+      {showSave && !view && (
         <button type="button" className="btn btn--primary btn--xl btn--block rq-cart-save" disabled={!canSave} onClick={onSave}>
           {saveLabel}
         </button>
       )}
       <p className="rq-cart-note">
-        {saved && !dirty
+        {viewSaved
+          ? t('request.cart.noteClosed', { date: viewSaved.lastDay })
+          : saved && !dirty
           ? t('request.cart.noteSaved', { time: saved.time, date: saved.lastDay })
           : t('request.cart.noteUnsaved')}
       </p>
