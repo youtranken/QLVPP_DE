@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BrowserRouter, useLocation } from 'react-router-dom';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { OverlayPanel } from '@/ui/overlay-panel';
+import { DialogTitle } from '@/ui/dialog';
 import { ConfirmProvider } from '@/ui/confirm-provider';
 import { act, renderWithI18n, screen, userEvent, waitFor } from '@/test/test-utils';
 import { mockViewport } from '@/test/viewport';
@@ -258,5 +259,20 @@ describe('OverlayPanel — nút Back của trình duyệt', () => {
     const clean = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(clean);
     expect(clean.defaultPrevented).toBe(false);
+  });
+
+  it('có head: không vẽ tiêu đề mặc định; DialogTitle trong head đặt tên hộp; 390 không có hàng "← Đóng" riêng nhưng vẫn có nút đóng cùng hàng đầu', () => {
+    mockViewport(390);
+    renderWithI18n(
+      <ConfirmProvider>
+        <OverlayPanel open onClose={vi.fn()} title="Tiêu đề mặc định" head={<DialogTitle>Tiêu đề trong head</DialogTitle>}>
+          <p>thân</p>
+        </OverlayPanel>
+      </ConfirmProvider>,
+    );
+    expect(screen.getByRole('dialog', { name: 'Tiêu đề trong head' })).toBeInTheDocument();
+    expect(screen.queryByText('Tiêu đề mặc định')).toBeNull();
+    expect(document.querySelector('.ovp-bar')).toBeNull();
+    expect(screen.getByRole('button', { name: '← Đóng' }).closest('.ovp-head')).not.toBeNull();
   });
 });

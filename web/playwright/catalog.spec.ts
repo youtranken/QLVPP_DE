@@ -57,14 +57,14 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
 
       await page.goto('/admin/catalog?view=table');
       await page.getByRole('main').getByRole('button', { name: 'Thêm sản phẩm', exact: true }).click();
-      const form = page.getByRole('dialog', { name: 'Thêm món' });
+      const form = page.getByRole('dialog', { name: 'Thêm sản phẩm' });
       await form.getByRole('button', { name: 'Thêm món' }).click();
       await expect(form.getByText('Cần thêm: ảnh, tên, ĐVT.')).toBeVisible();
       await expect(form.getByLabel('Chụp hoặc chọn ảnh')).toHaveAttribute('aria-invalid', 'true');
-      await form.getByLabel('Tên món').fill(itemName);
+      await form.getByLabel('Tên sản phẩm').fill(itemName);
       await form.getByLabel('Đơn vị tính').selectOption({ label: 'hộp' });
       await form.getByLabel('Quy cách').fill('hộp 10 cây');
-      await form.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio', { name: category }).click();
+      await form.getByLabel('Nhóm', { exact: true }).selectOption({ label: category });
       const uploaded = page.waitForResponse((r) => r.url().endsWith('/api/files') && r.request().method() === 'POST');
       await form.getByLabel('Chụp hoặc chọn ảnh').setInputFiles('playwright/fixtures/item.png');
       expect((await uploaded).status()).toBe(201);
@@ -155,8 +155,8 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
     try {
       await page.goto('/admin/catalog?view=table');
       await page.getByRole('main').getByRole('button', { name: 'Thêm sản phẩm', exact: true }).click();
-      const drawer = page.getByRole('dialog', { name: 'Thêm món' });
-      await drawer.getByLabel('Tên món').fill(nameA);
+      const drawer = page.getByRole('dialog', { name: 'Thêm sản phẩm' });
+      await drawer.getByLabel('Tên sản phẩm').fill(nameA);
       await drawer.getByLabel('Đơn vị tính').selectOption({ label: 'cái' });
       await drawer.getByLabel('Tối đa mỗi tháng').fill('5');
       const uploaded = page.waitForResponse((r) => r.url().endsWith('/api/files') && r.request().method() === 'POST');
@@ -230,7 +230,7 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
 
       await page.getByRole('button', { name: `Sửa ${name}` }).click();
       const drawer = page.getByRole('dialog', { name: 'Sửa món' });
-      await expect(drawer.getByLabel('Tên món')).toHaveValue(name);
+      await expect(drawer.getByLabel('Tên sản phẩm')).toHaveValue(name);
       await expect(drawer.getByRole('region', { name: 'Nhân viên sẽ thấy' })).toHaveCount(0);
       await expect(drawer.getByLabel('Thứ tự hiển thị')).toHaveCount(0);
       await shot(page, info, 'catalog-grid-drawer', false);
@@ -339,6 +339,33 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
         await expectNoContrastViolations(page);
       }
       await shot(page, info, 'nhom1-catalog-bulk', false);
+    } finally {
+      await removeTestItem(request, id);
+    }
+  });
+
+  test('Nhóm 1 · mục 9: panel Sửa sản phẩm có đầu (ảnh, mã · nhóm · vị trí, trạng thái), hai khối, Tạm ngưng + Hoàn tác ở chân', async ({ page, request }, info) => {
+    const name = `PW Nhóm1 panel ${Date.now()}-${info.project.name}`;
+    const id = await createItemViaApi(request, name);
+    try {
+      await page.goto(`/admin/catalog?q=${encodeURIComponent(name)}`);
+      await page.getByRole('button', { name: `Sửa ${name}` }).click();
+      const panel = page.getByRole('dialog', { name: `Sửa món ${name}` });
+      await expect(panel.getByText('Đang dùng', { exact: true })).toBeVisible();
+      await expect(panel.getByRole('heading', { level: 3, name: 'Thông tin' })).toBeVisible();
+      await expect(panel.getByRole('heading', { level: 3, name: 'Đặt hàng' })).toBeVisible();
+      await expect(panel.getByLabel('Nhóm', { exact: true })).toBeVisible();
+      if (isMobile(info)) {
+        expect(await panel.locator('.ovp-bar').count()).toBe(0);
+        await expectNoContrastViolations(page);
+      }
+      await shot(page, info, 'nhom1-item-panel', false);
+      await panel.getByRole('button', { name: `Tạm ngưng ${name}` }).click();
+      const toast = panel.getByRole('status').filter({ hasText: `Đã tạm ngưng ${name}` });
+      await expect(toast.getByRole('button', { name: 'Hoàn tác' })).toBeVisible();
+      await expect(panel.locator('.ct-panel-status')).toHaveText('Tạm ngưng');
+      await toast.getByRole('button', { name: 'Hoàn tác' }).click();
+      await expect(panel.locator('.ct-panel-status')).toHaveText('Đang dùng');
     } finally {
       await removeTestItem(request, id);
     }

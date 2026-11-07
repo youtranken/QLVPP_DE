@@ -112,7 +112,7 @@ export function useItemForm({ item, defaultCategoryId, onClose }: { item: AdminI
     }
   };
 
-  return { ...d, dirty: d.changes > 0 && !closing, uploading, saving, setUploading, submit, remove, toastHost: panelToast.host };
+  return { ...d, dirty: d.changes > 0 && !closing, uploading, saving, setUploading, submit, remove, toastHost: panelToast.host, notify: panelToast.show };
 }
 
 export type ItemForm = ReturnType<typeof useItemForm>;

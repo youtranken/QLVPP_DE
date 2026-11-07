@@ -16,14 +16,12 @@ export function ItemFacts({ item }: { item: AdminItem }) {
   const rows = useItemRows(ym);
   const people = rows.data ? (rows.data.items.find((r) => r.item_id === item.id)?.people ?? 0) : null;
   return (
-    <section className="ct-facts">
-      <p className="ct-facts__row">
-        <span>{t('catalog.drawer.stock', { n: item.stock_qty, unit })}</span>
-        <Link className="btn btn--ghost btn--sm" to={`/admin/stock?q=${encodeURIComponent(item.name)}`}>
-          {t('catalog.drawer.openStock')}
-        </Link>
-      </p>
-      {ym && people !== null && <p className="ct-facts__row">{t('catalog.drawer.registered', { month: monthOf(ym), people })}</p>}
-    </section>
+    <p className="ct-facts">
+      <span>{t('catalog.drawer.stock', { n: item.stock_qty, unit })}</span>
+      {ym && people !== null && <span>{t('catalog.drawer.registered', { month: monthOf(ym), people })}</span>}
+      <Link className="ct-facts__link" to={`/admin/stock?q=${encodeURIComponent(item.name)}`}>
+        {t('catalog.drawer.openStock')}
+      </Link>
+    </p>
   );
 }

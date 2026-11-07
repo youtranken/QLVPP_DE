@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
 import { compressImage } from '@/lib/image-compress';
-import { PAPER, PEN } from './catalog-fixtures';
+import { PAPER, PEN, adminItem } from './catalog-fixtures';
 import { bodyOf, callsTo, png, renderDrawer, stubDrawerApi } from './item-drawer-fixtures';
 
 vi.mock('@/lib/image-compress', async (importOriginal) => {
@@ -17,7 +17,7 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 async function fillNew(name = 'Bút chì') {
-  await userEvent.type(screen.getByLabelText(/^Tên món/), name);
+  await userEvent.type(screen.getByLabelText(/^Tên sản phẩm/), name);
   await userEvent.selectOptions(screen.getByLabelText(/^Đơn vị tính/), 'cây');
   await userEvent.upload(screen.getByLabelText(PICK), png());
   await screen.findByRole('img', { name: 'Ảnh món' });
@@ -25,23 +25,23 @@ async function fillNew(name = 'Bút chì') {
 
 const submitAdd = () => userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Thêm món' }));
 
-describe('Ngăn kéo Thêm món', () => {
-  it('là ngăn kéo tên "Thêm món"; gửi thiếu ảnh và tên → "Cần thêm: ảnh, tên.", ô ảnh aria-invalid, không gọi API', async () => {
+describe('Ngăn kéo Thêm sản phẩm', () => {
+  it('là ngăn kéo tên "Thêm sản phẩm"; gửi thiếu ảnh và tên → "Cần thêm: ảnh, tên.", ô ảnh aria-invalid, không gọi API', async () => {
     const f = stubDrawerApi();
     renderDrawer();
-    expect(screen.getByRole('dialog', { name: 'Thêm món' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Thêm sản phẩm' })).toBeInTheDocument();
     await userEvent.selectOptions(screen.getByLabelText(/^Đơn vị tính/), 'cây');
     await submitAdd();
     expect(screen.getByRole('alert')).toHaveTextContent('Cần thêm: ảnh, tên.');
     expect(screen.getByLabelText(PICK)).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByLabelText(/^Tên món/)).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText(/^Tên sản phẩm/)).toHaveAttribute('aria-invalid', 'true');
     expect(f).not.toHaveBeenCalledWith('/api/admin/items', expect.anything());
   });
 
   it('thiếu ĐVT → "Cần thêm: ĐVT." gắn ô Đơn vị tính', async () => {
     stubDrawerApi();
     renderDrawer();
-    await userEvent.type(screen.getByLabelText(/^Tên món/), 'Bút chì');
+    await userEvent.type(screen.getByLabelText(/^Tên sản phẩm/), 'Bút chì');
     await userEvent.upload(screen.getByLabelText(PICK), png());
     await screen.findByRole('img', { name: 'Ảnh món' });
     await submitAdd();
@@ -126,9 +126,9 @@ describe('Ngăn kéo Thêm món', () => {
     stubDrawerApi();
     renderDrawer();
     expect(screen.getByLabelText('Mã món')).toHaveAttribute('maxLength', '40');
-    for (const label of [/^Tên món/, 'Tên tiếng Anh', 'Quy cách']) expect(screen.getByLabelText(label)).toHaveAttribute('maxLength', '120');
-    await userEvent.type(screen.getByLabelText(/^Tên món/), 'a'.repeat(121));
-    expect(screen.getByLabelText(/^Tên món/)).toHaveValue('a'.repeat(120));
+    for (const label of [/^Tên sản phẩm/, 'Tên tiếng Anh', 'Quy cách']) expect(screen.getByLabelText(label)).toHaveAttribute('maxLength', '120');
+    await userEvent.type(screen.getByLabelText(/^Tên sản phẩm/), 'a'.repeat(121));
+    expect(screen.getByLabelText(/^Tên sản phẩm/)).toHaveValue('a'.repeat(120));
   });
 
   it('server trả VALIDATION [name] (tên 121 ký tự) → lỗi ô Tên món', async () => {
@@ -138,21 +138,21 @@ describe('Ngăn kéo Thêm món', () => {
     renderDrawer();
     await fillNew();
     await submitAdd();
-    await vi.waitFor(() => expect(screen.getByLabelText(/^Tên món/)).toHaveAccessibleDescription('Kiểm tra lại giá trị này.'));
+    await vi.waitFor(() => expect(screen.getByLabelText(/^Tên sản phẩm/)).toHaveAccessibleDescription('Kiểm tra lại giá trị này.'));
   });
 
-  it('tạo món: POST kèm ảnh, mã, nhóm chọn bằng chip (sẵn nhóm từ itemCat), tối đa mặc định 20, Chỉ Hành chính → toast, đóng', async () => {
+  it('tạo món: POST kèm ảnh, mã, nhóm chọn bằng ô chọn (sẵn nhóm từ itemCat), tối đa mặc định 20, Chỉ Hành chính → toast, đóng', async () => {
     const f = stubDrawerApi((url, init) => (url === '/api/admin/items' && init.method === 'POST' ? jsonResponse(201, { ...PEN, id: 'i-new' }) : undefined));
     const { onClose } = renderDrawer({ categoryId: 'c-pen' });
-    const group = screen.getByRole('radiogroup', { name: 'Nhóm' });
-    expect(within(group).getByRole('radio', { name: 'Bút & viết' })).toHaveAttribute('aria-checked', 'true');
-    expect(within(group).queryByRole('radio', { name: /Nhóm cũ/ })).toBeNull();
-    await userEvent.click(within(group).getByRole('radio', { name: 'Giấy & sổ' }));
+    const group = screen.getByRole('combobox', { name: 'Nhóm' });
+    expect(group).toHaveValue('c-pen');
+    expect(within(group).queryByRole('option', { name: /Nhóm cũ/ })).toBeNull();
+    await userEvent.selectOptions(group, 'c-paper');
     await fillNew();
     await userEvent.type(screen.getByLabelText('Mã món'), ' VPP-099 ');
     await userEvent.type(screen.getByLabelText('Quy cách'), 'hộp 12 cây');
     expect(screen.getByLabelText(/^Tối đa mỗi tháng/)).toHaveValue(20);
-    await userEvent.click(screen.getByRole('switch', { name: 'Chỉ Hành chính được đặt' }));
+    await userEvent.click(screen.getByRole('switch', { name: 'Chỉ Hành chính đặt' }));
     await submitAdd();
     await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(bodyOf(f, '/api/admin/items', 'POST')).toMatchObject({
@@ -190,21 +190,21 @@ describe('Ngăn kéo Sửa món', () => {
     await userEvent.clear(max);
     await userEvent.type(max, '30');
     expect(screen.getByText('1 thay đổi chưa lưu')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu' }));
     // Toast nằm trong panel: toast chung ngoài hộp bị Radix ẩn khỏi trình đọc màn hình
     expect(await within(screen.getByRole('dialog', { name: 'Sửa món Bút bi xanh' })).findByRole('status')).toHaveTextContent('Đã lưu Bút bi xanh');
     expect(bodyOf(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toEqual({ max_qty: 30 });
     expect(onClose).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Lưu thay đổi' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Lưu' })).toBeEnabled();
   });
 
-  it('sửa món: không có ô "Thứ tự hiển thị" và "Nhân viên sẽ thấy"; đổi nhóm → PATCH chỉ {category_id}, không sort_order', async () => {
+  it('Nhóm là ô chọn (combobox "Nhóm"), đổi nhóm → PATCH chỉ {category_id}, không sort_order', async () => {
     const f = stubDrawerApi((_url, init) => (init.method === 'PATCH' ? jsonResponse(200, PEN) : undefined));
     renderDrawer({ item: PEN });
     expect(screen.queryByLabelText('Thứ tự hiển thị')).toBeNull();
     expect(screen.queryByRole('region', { name: 'Nhân viên sẽ thấy' })).toBeNull();
-    await userEvent.click(within(screen.getByRole('radiogroup', { name: 'Nhóm' })).getByRole('radio', { name: 'Giấy & sổ' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Nhóm' }), 'c-paper');
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu' }));
     await vi.waitFor(() => expect(callsTo(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toHaveLength(1));
     expect(bodyOf(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toEqual({ category_id: 'c-paper' });
   });
@@ -217,21 +217,21 @@ describe('Ngăn kéo Sửa món', () => {
     expect(max).toHaveAttribute('max', '999');
     await userEvent.clear(max);
     await userEvent.type(max, '1000');
-    await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu' }));
     await vi.waitFor(() => expect(max).toHaveAccessibleDescription('Kiểm tra lại giá trị này.'));
   });
 
-  it('CATEGORY_NOT_FOUND → câu lỗi gắn nhóm chip; ITEM_NOT_FOUND → khối đầu thân', async () => {
+  it('CATEGORY_NOT_FOUND → lỗi gắn ô Nhóm; ITEM_NOT_FOUND → khối đầu thân', async () => {
     let code = 'CATEGORY_NOT_FOUND';
     stubDrawerApi((_url, init) => (init.method === 'PATCH' ? jsonResponse(code === 'ITEM_NOT_FOUND' ? 404 : 400, { code, message: 'x' }) : undefined));
     renderDrawer({ item: PEN });
-    await userEvent.click(screen.getByRole('radio', { name: 'Giấy & sổ' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Nhóm' }), 'c-paper');
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu' }));
     await vi.waitFor(() =>
-      expect(screen.getByRole('radiogroup', { name: 'Nhóm' })).toHaveAccessibleDescription('Nhóm này không còn — tải lại trang rồi chọn nhóm khác.'),
+      expect(screen.getByRole('combobox', { name: 'Nhóm' })).toHaveAccessibleDescription('Nhóm này không còn — tải lại trang rồi chọn nhóm khác.'),
     );
     code = 'ITEM_NOT_FOUND';
-    await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Món này không còn — tải lại trang.');
   });
 
@@ -239,7 +239,7 @@ describe('Ngăn kéo Sửa món', () => {
     const f = stubDrawerApi((_url, init) => (init.method === 'PATCH' ? jsonResponse(200, PAPER) : undefined));
     renderDrawer({ item: PAPER });
     await userEvent.type(screen.getByLabelText('Mã món'), '-B');
-    await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu' }));
     await vi.waitFor(() => expect(callsTo(f, `/api/admin/items/${PAPER.id}`, 'PATCH')).toHaveLength(1));
     expect(bodyOf(f, `/api/admin/items/${PAPER.id}`, 'PATCH')).toEqual({ code: 'VPP-001-B' });
     expect(screen.queryByText(/^Cần thêm/)).toBeNull();
@@ -249,7 +249,7 @@ describe('Ngăn kéo Sửa món', () => {
     const f = stubDrawerApi();
     renderDrawer({ item: PEN });
     await userEvent.click(screen.getByRole('button', { name: 'Xóa ảnh' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Lưu' }));
     expect(screen.getByRole('alert')).toHaveTextContent('Cần thêm: ảnh.');
     expect(callsTo(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toHaveLength(0);
   });
@@ -259,7 +259,7 @@ describe('Ngăn kéo Sửa món', () => {
     const f = stubDrawerApi((_url, init) => (init.method === 'PATCH' ? (new Promise<Response>((r) => (release = r)) as unknown as Response) : undefined));
     renderDrawer({ item: PEN });
     await userEvent.type(screen.getByLabelText('Quy cách'), ' mới');
-    const save = screen.getByRole('button', { name: 'Lưu thay đổi' });
+    const save = screen.getByRole('button', { name: 'Lưu' });
     save.click();
     save.click();
     await vi.waitFor(() => expect(callsTo(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toHaveLength(1));
@@ -269,23 +269,60 @@ describe('Ngăn kéo Sửa món', () => {
   });
 });
 
-describe('Ngăn kéo món — chọn nhóm bằng phím', () => {
-  it('chỉ nhóm đang chọn nằm trong Tab; →/↓ chọn nhóm kế và chuyển focus, không chuyển món', async () => {
+describe('Panel Sửa sản phẩm — đầu, hai khối, chân (Nhóm 1 · mục 9)', () => {
+  const nav = { index: 0, total: 36, onStep: vi.fn() };
+
+  it('đầu panel: ảnh, "VPP-010 · Bút & viết · 1/36", tên là tiêu đề hộp, "Đang dùng"; hai khối "Thông tin" và "Đặt hàng"', () => {
     stubDrawerApi();
-    const onStep = vi.fn();
-    renderDrawer({ item: PEN, nav: { index: 0, total: 3, onStep } });
-    const group = within(screen.getByRole('radiogroup', { name: 'Nhóm' }));
-    const paper = group.getByRole('radio', { name: 'Giấy & sổ' });
-    const pen = group.getByRole('radio', { name: 'Bút & viết' });
-    expect(pen).toHaveAttribute('tabindex', '0');
-    expect(paper).toHaveAttribute('tabindex', '-1');
-    pen.focus();
-    await userEvent.keyboard('{ArrowLeft}');
-    expect(paper).toHaveAttribute('aria-checked', 'true');
-    expect(paper).toHaveFocus();
-    await userEvent.keyboard('{ArrowDown}');
-    expect(pen).toHaveAttribute('aria-checked', 'true');
-    expect(pen).toHaveFocus();
-    expect(onStep).not.toHaveBeenCalled();
+    renderDrawer({ item: PEN, nav });
+    const dialog = screen.getByRole('dialog', { name: 'Sửa món Bút bi xanh' });
+    expect(within(dialog).getByText('VPP-010 · Bút & viết · 1/36')).toBeInTheDocument();
+    expect(within(dialog).getByText('Đang dùng')).toBeInTheDocument();
+    expect(dialog.querySelector('.ct-panel-head img')).not.toBeNull();
+    expect(within(dialog).getByRole('heading', { level: 3, name: 'Thông tin' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('heading', { level: 3, name: 'Đặt hàng' })).toBeInTheDocument();
+  });
+
+  it('footer: "Tạm ngưng" (btn--quiet-danger) bên trái → PATCH {active:false} + toast "Hoàn tác"; "Xóa" cạnh đó; "Quay lại" và "Lưu" bên phải; thân không còn "Xóa món"', async () => {
+    const f = stubDrawerApi((_url, init) => (init.method === 'PATCH' ? jsonResponse(200, PEN) : undefined));
+    renderDrawer({ item: PEN, nav });
+    expect(screen.queryByRole('button', { name: 'Xóa món' })).toBeNull();
+    const pause = screen.getByRole('button', { name: 'Tạm ngưng Bút bi xanh' });
+    expect(pause).toHaveClass('btn--quiet-danger');
+    expect(pause.nextElementSibling).toBe(screen.getByRole('button', { name: 'Xóa' }));
+    expect(screen.getByRole('button', { name: 'Xóa' })).toHaveClass('ct-delete');
+    expect(screen.getByRole('button', { name: 'Quay lại' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Lưu' })).toHaveClass('btn--primary');
+    await userEvent.click(pause);
+    await vi.waitFor(() => expect(bodyOf(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toEqual({ active: false }));
+    expect(await screen.findByText('Đã tạm ngưng Bút bi xanh')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Hoàn tác' }));
+    await vi.waitFor(() => expect(callsTo(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toHaveLength(2));
+  });
+
+  it('món tạm ngưng: đầu panel "Tạm ngưng" (đỏ); footer "Dùng lại"', () => {
+    stubDrawerApi();
+    renderDrawer({ item: adminItem({ ...PEN, active: false, usable: false, inactive_reason: 'item' }), nav });
+    const dialog = screen.getByRole('dialog', { name: 'Sửa món Bút bi xanh' });
+    expect(within(dialog).getByText('Tạm ngưng', { selector: '.ct-panel-status' })).toHaveClass('is-paused');
+    expect(within(dialog).getByRole('button', { name: 'Dùng lại Bút bi xanh' })).toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: 'Tạm ngưng Bút bi xanh' })).toBeNull();
+  });
+
+  it('thêm mới: tiêu đề "Thêm sản phẩm", không nút Tạm ngưng/Xóa', () => {
+    stubDrawerApi();
+    renderDrawer();
+    expect(screen.getByRole('dialog', { name: 'Thêm sản phẩm' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Tạm ngưng/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Xóa' })).toBeNull();
+  });
+
+  it('Nhóm và Đơn vị tính cùng một hàng; Tối đa mỗi tháng và "Chỉ Hành chính đặt" cùng một hàng', () => {
+    stubDrawerApi();
+    renderDrawer({ item: PEN });
+    const row = (label: RegExp) => screen.getByLabelText(label).closest('.ct-panel-row');
+    expect(row(/^Nhóm/)).toBe(row(/^Đơn vị tính/));
+    expect(row(/^Mã món/)).toBe(row(/^Quy cách/));
+    expect(row(/^Tối đa mỗi tháng/)).toBe(screen.getByRole('switch', { name: 'Chỉ Hành chính đặt' }).closest('.ct-panel-row'));
   });
 });

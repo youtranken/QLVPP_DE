@@ -37,6 +37,9 @@
 [data-shell='admin'] .ovp-icon { width: 36px; padding: 0; }
 [data-shell='admin'] .ovp-body { flex: 1; min-height: 0; overflow: auto; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--s-3); padding: var(--s-4) var(--s-6); }
 [data-shell='admin'] .ovp-foot { position: sticky; bottom: 0; display: flex; flex-shrink: 0; align-items: center; gap: var(--s-2); padding: var(--s-4) var(--s-6); border-top: 1px solid var(--c-line); }
+[data-shell='admin'] .ovp:has(.ct-panel-form) { background: var(--c-surface); backdrop-filter: none; }
+[data-shell='admin'] .ovp-head--rich { align-items: center; padding-top: var(--s-3); padding-bottom: var(--s-3); }
+[data-shell='admin'] .ovp-back-icon { font-size: 18px; }
 @keyframes ovp-in { from { transform: translateX(100%); } }
 @keyframes ovp-fade { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {

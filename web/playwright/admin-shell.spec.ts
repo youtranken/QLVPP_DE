@@ -301,13 +301,13 @@ test.describe('V2D-13 toàn màn hình và panel phủ', () => {
       await page.goto(`/admin/catalog?q=${encodeURIComponent(item.name)}`);
       await card.getByRole('button', { name: `Sửa ${item.name}` }).click();
       await expect(panel).toBeVisible();
-      await panel.getByLabel(/^Tên món/).fill(`${item.name} X`);
+      await panel.getByLabel(/^Tên sản phẩm/).fill(`${item.name} X`);
       const discard = page.getByRole('dialog', { name: 'Bỏ thay đổi?' });
       await page.goBack();
       await expect(discard).toBeVisible();
       await discard.getByRole('button', { name: 'Ở lại' }).click();
       await expect(panel).toBeVisible();
-      await expect(panel.getByLabel(/^Tên món/)).toHaveValue(`${item.name} X`);
+      await expect(panel.getByLabel(/^Tên sản phẩm/)).toHaveValue(`${item.name} X`);
       expect(new URL(page.url()).searchParams.get('item')).toBe(item.id);
       await page.goBack();
       await expect(discard).toBeVisible();

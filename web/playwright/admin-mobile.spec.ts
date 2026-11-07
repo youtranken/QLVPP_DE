@@ -64,7 +64,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     await openPage(page, 'catalog?view=table', 'Sản phẩm');
     await expect(page.getByRole('group', { name: 'Trạng thái' }).getByRole('button', { name: /^Đang dùng/ })).toBeVisible();
     await page.getByRole('main').getByRole('button', { name: 'Thêm sản phẩm', exact: true }).tap();
-    const drawer = page.getByRole('dialog', { name: 'Thêm món' });
+    const drawer = page.getByRole('dialog', { name: 'Thêm sản phẩm' });
     await expect(drawer).toBeVisible();
     await settled(page);
     expect(Math.round((await drawer.boundingBox())!.width)).toBe(390);
@@ -134,7 +134,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     await openPage(page, 'catalog', 'Sản phẩm');
     await expectTouchTargets(page, 'Sản phẩm');
     await page.getByRole('main').getByRole('button', { name: 'Thêm sản phẩm', exact: true }).tap();
-    await expect(page.getByRole('dialog', { name: 'Thêm món' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Thêm sản phẩm' })).toBeVisible();
     await settled(page);
     await expectNoContrastViolations(page);
 

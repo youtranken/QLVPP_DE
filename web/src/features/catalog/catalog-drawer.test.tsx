@@ -36,12 +36,12 @@ describe('Danh mục — panel phủ món', () => {
     expect(within(drawer).getByRole('button', { name: 'Món trước' })).toBeDisabled();
   });
 
-  it('"Thêm món vào nhóm" → ?item=new&itemCat=, ngăn kéo "Thêm món" chọn sẵn nhóm; Hủy đóng và xóa tham số', async () => {
+  it('"Thêm món vào nhóm" → ?item=new&itemCat=, ngăn kéo "Thêm sản phẩm" chọn sẵn nhóm; Hủy đóng và xóa tham số', async () => {
     await openCatalog({ items: ITEMS });
     await userEvent.click(screen.getByRole('button', { name: 'Thêm món vào nhóm Bút & viết' }));
     expect(location()).toBe('?item=new&itemCat=c-pen');
-    const drawer = await screen.findByRole('dialog', { name: 'Thêm món' });
-    expect(within(drawer).getByRole('radio', { name: 'Bút & viết' })).toHaveAttribute('aria-checked', 'true');
+    const drawer = await screen.findByRole('dialog', { name: 'Thêm sản phẩm' });
+    expect(within(drawer).getByRole('combobox', { name: 'Nhóm' })).toHaveValue('c-pen');
     await userEvent.click(within(drawer).getByRole('button', { name: 'Quay lại' }));
     expect(location()).toBe('');
   });
@@ -51,7 +51,7 @@ describe('Danh mục — panel phủ: URL, focus, không đẩy lưới', () => 
   it('F5/dán URL ?item=<id> mở đúng món, bộ đếm "2/3" theo danh sách đang hiện', async () => {
     await openCatalog({ items: ITEMS }, `/admin/catalog?item=${PEN.id}`);
     const panel = await screen.findByRole('dialog', { name: 'Sửa món Bút bi xanh' });
-    expect(within(panel).getByText('2/3')).toBeInTheDocument();
+    expect(within(panel).getByText(/· 2\/3$/)).toBeInTheDocument();
   });
 
   it.each(['00000000-0000-4000-8000-000000000000', 'rac'])('?item=%s không tồn tại → không panel, tham số bị gỡ, không báo lỗi', async (bad) => {
@@ -80,11 +80,11 @@ describe('Danh mục — panel phủ: URL, focus, không đẩy lưới', () => 
   it('sửa tên rồi ↓ → hỏi; "Ở lại" vẫn món cũ, nháp còn; "Bỏ thay đổi" sang món kề', async () => {
     await openCatalog({ items: ITEMS }, `/admin/catalog?item=${PAPER.id}`);
     const panel = await screen.findByRole('dialog', { name: 'Sửa món Giấy A4' });
-    await userEvent.type(within(panel).getByLabelText(/^Tên món/), ' X');
+    await userEvent.type(within(panel).getByLabelText(/^Tên sản phẩm/), ' X');
     await userEvent.click(within(panel).getByRole('button', { name: 'Món sau' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Ở lại' }));
     expect(location()).toBe(`?item=${PAPER.id}`);
-    expect(within(panel).getByLabelText(/^Tên món/)).toHaveValue('Giấy A4 X');
+    expect(within(panel).getByLabelText(/^Tên sản phẩm/)).toHaveValue('Giấy A4 X');
     await userEvent.click(within(panel).getByRole('button', { name: 'Món sau' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Bỏ thay đổi' }));
     await waitFor(() => expect(location()).toBe(`?item=${PEN.id}`));

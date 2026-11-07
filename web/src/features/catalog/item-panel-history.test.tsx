@@ -51,7 +51,7 @@ async function openPanel(item: AdminItem | null) {
     </MeContext.Provider>,
   );
   await userEvent.click(screen.getByRole('button', { name: 'Mở panel' }));
-  return screen.findByRole('dialog', { name: item ? `Sửa món ${item.name}` : 'Thêm món' });
+  return screen.findByRole('dialog', { name: item ? `Sửa món ${item.name}` : 'Thêm sản phẩm' });
 }
 
 const discardDialog = () => screen.queryByRole('dialog', { name: 'Bỏ thay đổi?' });
@@ -61,7 +61,7 @@ describe('Panel món trong BrowserRouter — tự đóng không vướng chặn 
   it('đã sửa → × → "Bỏ thay đổi": hỏi đúng một lần, panel đóng, URL sạch', async () => {
     stubDrawerApi();
     const panel = await openPanel(PEN);
-    await userEvent.type(within(panel).getByLabelText(/^Tên món/), ' X');
+    await userEvent.type(within(panel).getByLabelText(/^Tên sản phẩm/), ' X');
     await userEvent.click(within(panel).getByRole('button', { name: 'Đóng' }));
     await userEvent.click(within(await screen.findByRole('dialog', { name: 'Bỏ thay đổi?' })).getByRole('button', { name: 'Bỏ thay đổi' }));
     await settle();
@@ -74,12 +74,12 @@ describe('Panel món trong BrowserRouter — tự đóng không vướng chặn 
   it('thêm món đã điền → "Thêm món" thành công: không hỏi, panel đóng, URL sạch', async () => {
     stubDrawerApi((url, init) => (url === '/api/admin/items' && init.method === 'POST' ? jsonResponse(201, { ...PEN, id: 'i-new' }) : undefined));
     const panel = await openPanel(null);
-    await userEvent.type(within(panel).getByLabelText(/^Tên món/), 'Bút chì');
+    await userEvent.type(within(panel).getByLabelText(/^Tên sản phẩm/), 'Bút chì');
     await userEvent.selectOptions(within(panel).getByLabelText(/^Đơn vị tính/), 'cây');
     await userEvent.upload(within(panel).getByLabelText('Chụp hoặc chọn ảnh'), png());
     await within(panel).findByRole('img', { name: 'Ảnh món' });
     await userEvent.click(within(panel).getByRole('button', { name: 'Thêm món' }));
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Thêm món' })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Thêm sản phẩm' })).toBeNull());
     await settle();
     expect(discardDialog()).toBeNull();
     expect(window.location.search).toBe('');
@@ -89,9 +89,9 @@ describe('Panel món trong BrowserRouter — tự đóng không vướng chặn 
   it('đã sửa → "Xóa món" → xác nhận: không hỏi "Bỏ thay đổi?" thêm lần nữa, panel đóng, URL sạch', async () => {
     stubDrawerApi((_url, init) => (init.method === 'DELETE' ? jsonResponse(204, null) : undefined));
     const panel = await openPanel(PEN);
-    await userEvent.type(within(panel).getByLabelText(/^Tên món/), ' X');
-    await userEvent.click(within(panel).getByRole('button', { name: 'Xóa món' }));
-    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Xóa Bút bi xanh?' })).getByRole('button', { name: 'Xóa món' }));
+    await userEvent.type(within(panel).getByLabelText(/^Tên sản phẩm/), ' X');
+    await userEvent.click(within(panel).getByRole('button', { name: 'Xóa' }));
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Xóa Bút bi xanh?' })).getByRole('button', { name: 'Xóa' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: `Sửa món ${PEN.name}` })).toBeNull());
     await settle();
     expect(discardDialog()).toBeNull();
@@ -101,11 +101,11 @@ describe('Panel món trong BrowserRouter — tự đóng không vướng chặn 
   it('đã sửa: Back → "Ở lại" giữ nháp → Back lần nữa hỏi lại → "Bỏ thay đổi" về danh sách', async () => {
     stubDrawerApi();
     const panel = await openPanel(PEN);
-    await userEvent.type(within(panel).getByLabelText(/^Tên món/), ' X');
+    await userEvent.type(within(panel).getByLabelText(/^Tên sản phẩm/), ' X');
     await act(async () => window.history.back());
     await userEvent.click(await screen.findByRole('button', { name: 'Ở lại' }));
     expect(window.location.search).toBe(`?item=${PEN.id}`);
-    expect(within(panel).getByLabelText(/^Tên món/)).toHaveValue(`${PEN.name} X`);
+    expect(within(panel).getByLabelText(/^Tên sản phẩm/)).toHaveValue(`${PEN.name} X`);
     await act(async () => window.history.back());
     await userEvent.click(await screen.findByRole('button', { name: 'Bỏ thay đổi' }));
     await waitFor(() => expect(screen.getByTestId('search').textContent).toBe(''));

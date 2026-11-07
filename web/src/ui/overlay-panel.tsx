@@ -18,6 +18,8 @@ interface Props {
   open: boolean;
   onClose: () => void;
   title: ReactNode;
+  // Thay khối tiêu đề mặc định (DialogTitle nằm trong head); ‹ › và đóng vẫn do panel vẽ cùng hàng
+  head?: ReactNode;
   dirty?: boolean;
   saving?: boolean;
   nav?: PanelNav;
@@ -36,12 +38,12 @@ function stepOf(e: KeyboardEvent<HTMLElement>): 1 | -1 | null {
   return null;
 }
 
-function NavButtons({ nav, can, onStep }: { nav: PanelNav; can: (dir: 1 | -1) => boolean; onStep: (dir: 1 | -1) => void }) {
+function NavButtons({ nav, can, onStep, showPos = true }: { nav: PanelNav; can: (dir: 1 | -1) => boolean; onStep: (dir: 1 | -1) => void; showPos?: boolean }) {
   const { t } = useTranslation();
   const at = nav.index >= 0 ? String(nav.index + 1) : '—';
   return (
     <>
-      <span className="ovp-pos num">{t('common.panel.position', { i: at, n: nav.total })}</span>
+      {showPos && <span className="ovp-pos num">{t('common.panel.position', { i: at, n: nav.total })}</span>}
       <button type="button" className="btn btn--ghost btn--sm ovp-icon" aria-label={nav.prevLabel} disabled={!can(-1)} onClick={() => onStep(-1)}>
         <Icon name="chevup" size={18} />
       </button>
@@ -52,7 +54,7 @@ function NavButtons({ nav, can, onStep }: { nav: PanelNav; can: (dir: 1 | -1) =>
   );
 }
 
-export function OverlayPanel({ open, onClose, title, dirty = false, saving = false, nav, footer, children }: Props) {
+export function OverlayPanel({ open, onClose, title, head, dirty = false, saving = false, nav, footer, children }: Props) {
   const { t } = useTranslation();
   const askConfirm = useOptionalConfirm();
   const phone = useMediaQuery(ADMIN_PHONE_QUERY);
@@ -80,7 +82,7 @@ export function OverlayPanel({ open, onClose, title, dirty = false, saving = fal
       viewportClassName="ovp-viewport"
       onKeyDown={onKeyDown}
     >
-      {phone && (
+      {phone && !head && (
         <div className="ovp-bar">
           <DialogClose asChild>
             <button type="button" className="btn btn--ghost ovp-back" disabled={saving}>
@@ -89,9 +91,16 @@ export function OverlayPanel({ open, onClose, title, dirty = false, saving = fal
           </DialogClose>
         </div>
       )}
-      <div className="ovp-head">
-        <DialogTitle className="ovp-title">{title}</DialogTitle>
-        {nav && <NavButtons nav={nav} can={can} onStep={onStep} />}
+      <div className={head ? 'ovp-head ovp-head--rich' : 'ovp-head'}>
+        {phone && head && (
+          <DialogClose asChild>
+            <button type="button" className="btn btn--ghost btn--sm ovp-icon ovp-back-icon" aria-label={t('common.panel.close')} disabled={saving}>
+              <span aria-hidden="true">←</span>
+            </button>
+          </DialogClose>
+        )}
+        {head ?? <DialogTitle className="ovp-title">{title}</DialogTitle>}
+        {nav && <NavButtons nav={nav} can={can} onStep={onStep} showPos={!head} />}
         {!phone && <DialogCloseButton disabled={saving} />}
       </div>
       <div className="ovp-body">{children}</div>

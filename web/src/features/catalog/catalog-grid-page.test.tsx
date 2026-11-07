@@ -136,7 +136,7 @@ describe('Danh mục lưới — thẻ và ngăn kéo', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Sửa Bút bi xanh' }));
     expect(locationSearch()).toBe('?item=i-pen');
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByLabelText(/^Tên món/)).toHaveValue('Bút bi xanh');
+    expect(within(dialog).getByLabelText(/^Tên sản phẩm/)).toHaveValue('Bút bi xanh');
     expect(within(dialog).queryByRole('region', { name: 'Nhân viên sẽ thấy' })).toBeNull();
   });
 

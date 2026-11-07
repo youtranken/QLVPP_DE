@@ -29,10 +29,10 @@ async function createCategoryAndItem(page: Page, category: string, itemName: str
 
   await page.goto('/admin/catalog');
   await page.getByRole('main').getByRole('button', { name: 'Thêm sản phẩm', exact: true }).click();
-  const form = page.getByRole('dialog', { name: 'Thêm món' });
-  await form.getByLabel('Tên món').fill(itemName);
+  const form = page.getByRole('dialog', { name: 'Thêm sản phẩm' });
+  await form.getByLabel('Tên sản phẩm').fill(itemName);
   await form.getByLabel('Đơn vị tính').selectOption({ label: 'cái' });
-  await form.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio', { name: category }).click();
+  await form.getByLabel('Nhóm', { exact: true }).selectOption({ label: category });
   const uploaded = page.waitForResponse((r) => r.url().endsWith('/api/files') && r.request().method() === 'POST');
   await form.getByLabel('Chụp hoặc chọn ảnh').setInputFiles('playwright/fixtures/item.png');
   const upload = await uploaded;

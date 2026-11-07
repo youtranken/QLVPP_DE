@@ -20,7 +20,7 @@ describe('ItemFacts — số người đăng ký', () => {
         <ItemFacts item={adminItem({ id: 'i-1', name: 'Bút' })} />
       </MemoryRouter>,
     );
-    expect(await screen.findByText('Đăng ký kỳ tháng 10: 3 người')).toBeInTheDocument();
+    expect(await screen.findByText('Kỳ 10: 3 người đăng ký')).toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([u]) => String(u).includes('/2026-11/requests'))).toBe(false);
   });
 });
