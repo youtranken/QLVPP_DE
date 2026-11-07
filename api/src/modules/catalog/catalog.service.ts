@@ -19,10 +19,13 @@ import { UnitsService } from '../units/units.service';
 import type { CreateItemDto, UpdateItemDto } from './catalog.dto';
 import { definedEntries, pick, setClause } from '../../common/sql-patch';
 import {
+  heldJoin,
   itemColumns,
+  itemColumnsOn,
   ITEM_INACTIVE_REASON_SQL,
   ITEM_USABLE_SQL,
-  lowStockSql,
+  JOINED_HELD,
+  lowStockItemsSql,
 } from './catalog-sql';
 import type { InactiveReason, ItemFacts, ItemRow } from './catalog-sql';
 import { ITEM_ORDER, nextItemSortOrder } from './item-order';
@@ -123,7 +126,7 @@ export class CatalogService {
   async countLowStock(): Promise<number> {
     const { ym } = await this.periods.openPeriod(this.db);
     const { rows } = await this.db.execute<{ n: number }>(sql`
-      SELECT count(*)::int AS n FROM items WHERE active AND ${lowStockSql(ym)}
+      SELECT count(*)::int AS n FROM (${lowStockItemsSql(ym, sql`items.id`)}) low
     `);
     return rows[0].n;
   }
@@ -135,13 +138,13 @@ export class CatalogService {
     includeIds: string[] = [],
   ): Promise<ListedItem[]> {
     const privileged = identity.role === 'admin' || identity.role === 'sa';
-    const columns = await this.columns();
+    const { ym } = await this.periods.openPeriod(this.db);
     const result = await this.db.execute<ListedItem>(sql`
       SELECT i.* FROM (
-        SELECT ${columns}, ${ITEM_USABLE_SQL} AS usable,
+        SELECT ${itemColumnsOn(JOINED_HELD)}, ${ITEM_USABLE_SQL} AS usable,
                ${ITEM_INACTIVE_REASON_SQL} AS inactive_reason,
                (image_file_id IS NULL) AS missing_image
-        FROM items
+        FROM items ${heldJoin(ym)}
         WHERE ${privileged}
            OR (${ITEM_USABLE_SQL} AND NOT admin_only)
            OR id = ANY(${sql.param(includeIds)}::uuid[])

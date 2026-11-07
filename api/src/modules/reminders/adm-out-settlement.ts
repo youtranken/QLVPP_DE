@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { ymToDate } from '../../common/period';
-import type { Tx } from '../../database/database.module';
+import type { Executor, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import {
   ADM_OUT_NOTE,
@@ -30,8 +30,11 @@ export class AdmOutSettlement {
   ) {}
 
   // Mọi kỳ trước kỳ khóa mới nhất còn dòng mở của món đánh dấu: cron trượt nhiều tháng vẫn hủy bù
-  async unsettledPeriods(tx: Tx, latestLockedYm: string): Promise<string[]> {
-    const { rows } = await tx.execute<{ ym: string }>(sql`
+  async unsettledPeriods(
+    ex: Executor,
+    latestLockedYm: string,
+  ): Promise<string[]> {
+    const { rows } = await ex.execute<{ ym: string }>(sql`
       SELECT DISTINCT to_char(a.period_ym, 'YYYY-MM') AS ym
       FROM period_adm_out a
       JOIN requests r ON r.period_ym = a.period_ym

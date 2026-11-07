@@ -191,6 +191,63 @@ describe('V2D-4 hộp hoàn tác đọc bản đã gửi (R-D3.6, R-D17.9)', () 
       await pending(item, 'member', A).expect(403);
     });
 
+    it('K* = kỳ khóa gần nhất như Tủ, không suy từ kỳ mở − 1: kỳ 2031-01 khóa có bản đặt 7, không có dòng kỳ 2031-02, mở 2031-04 → pending-arrival 7 = "đang về" của Tủ', async () => {
+      const item = await f.stockItem(0);
+      const gap = ['2031-01-01', '2031-02-01', '2031-03-01', '2031-04-01'];
+      const cleanup = async () => {
+        await pool().query(
+          'DELETE FROM report_snapshots WHERE period_ym = ANY($1::date[])',
+          [gap],
+        );
+        await pool().query(
+          `DELETE FROM periods p WHERE p.ym = ANY($1::date[])
+             AND NOT EXISTS (SELECT 1 FROM requests r WHERE r.period_ym = p.ym)`,
+          [gap],
+        );
+      };
+      await cleanup();
+      try {
+        await pool().query(
+          `INSERT INTO periods (ym, deadline) VALUES ('2031-01-01', '2031-01-10T17:00:00Z')`,
+        );
+        await insertSnapshot(
+          '2031-01',
+          {
+            ym: '2031-01',
+            byItem: [
+              {
+                key: item,
+                item_id: item,
+                name: 'x',
+                unit: 'cay',
+                requested: 7,
+                backlog_prev: 0,
+                stock: 0,
+                need: 0,
+              },
+            ],
+            custom: [],
+            order_qty: { [item]: 7 },
+          },
+          '2031-01-11T02:00:00Z',
+        );
+        f.freeze('2031-03-12T03:00:00Z');
+        const tu = (
+          await f
+            .as(f.http().get('/api/admin/stock'), ADMIN, 'admin')
+            .expect(200)
+        ).body as { item_id: string; incoming: number }[];
+        expect(tu.find((r) => r.item_id === item)?.incoming).toBe(7);
+        expect((await pending(item).expect(200)).body).toEqual({
+          remaining: 7,
+          unit: 'cay',
+          snapshot_at: '2031-01-11T02:00:00.000Z',
+        });
+      } finally {
+        await cleanup();
+      }
+    });
+
     it('ADM còn nợ kỳ trước (bản kỳ 10 đặt 5, A còn chờ 4, chưa về) dù bản kỳ 11 không có món → {remaining 4, snapshot_at = bản kỳ 10}; cộng thêm phần bản kỳ 11 còn chờ', async () => {
       const item = await f.stockItem(0);
       f.freeze('2026-11-12T03:00:00Z');

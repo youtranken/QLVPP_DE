@@ -47,6 +47,20 @@ const LINE_COLUMNS = sql`
 `;
 
 // Dòng còn phần chưa giao của một khóa món trong kỳ; thứ tự theo phiếu để khóa cùng chiều lockLine
+// Kiểm "còn dòng mở không" chỉ cần đếm, không kéo id về
+export async function openLineCount(
+  ex: Executor,
+  ym: string,
+  key: string,
+): Promise<number> {
+  const { rows } = await ex.execute<{ n: number }>(sql`
+    SELECT count(*)::int AS n FROM request_lines l JOIN requests r ON r.id = l.request_id
+    WHERE r.period_ym = ${ymToDate(ym)}::date AND ${UNDELIVERED_LINE}
+      AND coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) = ${key}
+  `);
+  return rows[0].n;
+}
+
 export async function openLineIds(
   ex: Executor,
   ym: string,

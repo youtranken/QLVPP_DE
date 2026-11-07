@@ -117,18 +117,20 @@ export class NotificationScheduler
     });
   }
 
-  // Tập người S và tự hủy ADM hết hàng ghi bù kể cả khi trượt ngày/tháng khóa; chuông chỉ gửi đúng ngày khóa, kỳ 0 phiếu vẫn gửi (0/N)
+  // Tập người S và tự hủy ADM hết hàng ghi bù kể cả khi trượt ngày/tháng khóa; chuông chỉ gửi đúng ngày khóa, kỳ 0 phiếu vẫn gửi (0/N).
+  // Hủy bù lỗi không chặn chuông khóa sổ: giờ sau chạy lại (idempotent)
   private async locked(now: Date): Promise<number> {
     const period = await this.periods.latestLocked(now);
     if (!period) return 0;
-    const subs =
-      period.headcount === null ? await this.summary.liveSubs(period.ym) : null;
-    await this.db.transaction(async (tx) => {
-      if (subs) await this.periods.recordHeadcount(period.ym, subs, tx);
-      for (const ym of await this.settlement.unsettledPeriods(tx, period.ym)) {
-        await this.settlement.settleAdmOut(tx, ym, now);
-      }
-    });
+    if (period.headcount === null) {
+      const subs = await this.summary.liveSubs(period.ym);
+      await this.db.transaction((tx) =>
+        this.periods.recordHeadcount(period.ym, subs, tx),
+      );
+    }
+    await this.step('adm_out_settlement', null, () =>
+      this.settle(period.ym, now),
+    );
     if (!isLockDay(now, period.deadline)) return 0;
     const { registered, headcount } = await this.summary.people(period.ym);
     const { custom_pending } = await this.summary.lineCounts(period.ym);
@@ -142,6 +144,19 @@ export class NotificationScheduler
           ? `/admin/review?ym=${period.ym}`
           : `/admin/summary?ym=${period.ym}`,
       now,
+    });
+  }
+
+  // Đọc trước ngoài tx: giờ thường không có gì để hủy thì không mở tx khóa dòng đánh dấu
+  private async settle(latestYm: string, now: Date): Promise<void> {
+    if (
+      (await this.settlement.unsettledPeriods(this.db, latestYm)).length === 0
+    )
+      return;
+    await this.db.transaction(async (tx) => {
+      for (const ym of await this.settlement.unsettledPeriods(tx, latestYm)) {
+        await this.settlement.settleAdmOut(tx, ym, now);
+      }
     });
   }
 

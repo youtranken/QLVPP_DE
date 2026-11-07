@@ -140,6 +140,16 @@ export class PeriodsService {
       : null;
   }
 
+  // Tủ và hộp ngừng món đọc "Hàng đang về" theo cùng K* = kỳ khóa gần nhất (không suy từ kỳ mở − 1)
+  async stockPeriods(
+    now: Date,
+    tx: Executor = this.db,
+  ): Promise<{ openYm: string; kStar: string | null }> {
+    const open = await this.openPeriod(tx, now);
+    const latest = await this.latestLocked(now, tx);
+    return { openYm: open.ym, kStar: latest?.ym ?? null };
+  }
+
   // Chỉ ghi lần đầu: tập người chụp lúc khóa, chạy lại/đua không ghi đè; trả số đã lưu (bên thua đua nhận số của bên thắng)
   async recordHeadcount(ym: string, subs: string[], tx: Tx): Promise<number> {
     const updated = await tx.execute<{ headcount: number }>(sql`

@@ -19,7 +19,7 @@ describe('V2D-16 Sắp hết theo phần trống ở mọi nơi (e2e)', () => {
     f.freeze(LOCKED_AT);
   });
 
-  const itemWith = async (stock: number, level: number) => {
+  const itemWith = async (stock: number, level: number | null) => {
     const item = await f.stockItem(0);
     await pool().query(
       'UPDATE items SET stock_qty = $2, restock_level = $3 WHERE id = $1',
@@ -32,14 +32,18 @@ describe('V2D-16 Sắp hết theo phần trống ở mọi nơi (e2e)', () => {
   const pick = (ids: string[], mine: string[]) =>
     ids.filter((id) => mine.includes(id)).sort();
 
-  it('tồn 10 giữ 9 mức 20 → Sắp hết; tồn 3 giữ 5 → không (thiếu); tồn 3 không ai giữ → Sắp hết: Home, Tủ, Danh mục, chuông cùng một tập', async () => {
+  it('tồn 10 giữ 9 mức 20 → Sắp hết; tồn 3 giữ 10 (thiếu, kể cả chưa có mức) → Sắp hết ở Home/Danh mục/chuông, "Thiếu" ở Tủ, không bao giờ "Còn"; tồn 3 không ai giữ → Sắp hết; tồn 20 giữ 15 (trống 5 > 4) → không', async () => {
     const x = await itemWith(10, 20);
     const y = await itemWith(3, 20);
     const z = await itemWith(3, 20);
+    const w = await itemWith(3, null);
+    const ok = await itemWith(20, 20);
     await seedLine(YM, A, { item_id: x, qty: 9 });
-    await seedLine(YM, B, { item_id: y, qty: 5 });
-    const mine = [x, y, z];
-    const expected = [x, z].sort();
+    await seedLine(YM, B, { item_id: y, qty: 10 });
+    await seedLine(YM, A, { item_id: w, qty: 10 });
+    await seedLine(YM, B, { item_id: ok, qty: 15 });
+    const mine = [x, y, z, w, ok];
+    const expected = [x, y, z, w].sort();
 
     const home = await get<{ id: string }[]>('/api/admin/stock/low');
     expect(
@@ -51,13 +55,15 @@ describe('V2D-16 Sắp hết theo phần trống ở mọi nơi (e2e)', () => {
 
     const stock =
       await get<{ item_id: string; stock_state: string }[]>('/api/admin/stock');
-    const tu = stock.filter((r) => r.stock_state === 'low');
-    expect(
-      pick(
-        tu.map((r) => r.item_id),
-        mine,
-      ),
-    ).toEqual(expected);
+    const tuState = (id: string) =>
+      stock.find((r) => r.item_id === id)?.stock_state;
+    expect([x, y, z, w, ok].map(tuState)).toEqual([
+      'low',
+      'short',
+      'low',
+      'short',
+      'ok',
+    ]);
 
     const catalog =
       await get<{ id: string; stock_state: string }[]>('/api/admin/items');
@@ -68,6 +74,7 @@ describe('V2D-16 Sắp hết theo phần trống ở mọi nơi (e2e)', () => {
         mine,
       ),
     ).toEqual(expected);
+    expect(catalog.find((i) => i.id === ok)?.stock_state).toBe('ok');
 
     let claimed: string[] = [];
     await f

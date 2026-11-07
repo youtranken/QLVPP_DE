@@ -45,8 +45,8 @@ export class ItemsAdminController {
 
   @Get(':id/pending-arrival')
   async pendingArrival(@Param('id', uuidParam) id: string) {
-    const open = await this.periods.openPeriod(this.db, this.clock.now());
-    return pendingArrival(this.db, id, open.ym);
+    const { openYm, kStar } = await this.periods.stockPeriods(this.clock.now());
+    return pendingArrival(this.db, id, openYm, kStar);
   }
 
   @Patch(':id')

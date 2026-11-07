@@ -74,15 +74,15 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
     expect((await summary()).receipts).toBe(0);
   });
 
-  it('summary: kỳ có headcount_subs đã chụp → đếm theo S (snapshot), danh sách chưa đăng ký lấy từ S; chỉ có headcount cũ không mảng (khóa trước 0116) → giữ số đã chụp', async () => {
+  it('summary: kỳ có headcount_subs đã chụp → đếm theo S (snapshot), danh sách chưa đăng ký lấy từ S; chỉ có headcount cũ không mảng (khóa trước 0116) → tập sống, live', async () => {
     const pool = f.pool();
     await pool.query(
       "UPDATE periods SET headcount = 7 WHERE ym = '2025-06-01'",
     );
     try {
       expect(await summary()).toMatchObject({
-        headcount: 7,
-        headcount_source: 'snapshot',
+        headcount: 3,
+        headcount_source: 'live',
       });
       await pool.query(
         "UPDATE periods SET headcount = 4, headcount_subs = $1::text[] WHERE ym = '2025-06-01'",

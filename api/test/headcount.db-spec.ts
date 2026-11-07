@@ -53,14 +53,15 @@ describe('cron khóa kỳ ghi headcount_subs (Postgres thật)', () => {
     ).toBe(4);
   });
 
-  it('kỳ không có mảng (dữ liệu cũ chỉ có headcount, khóa trước 0116) → giữ headcount đã chụp, headcount_source snapshot', async () => {
+  it('kỳ không có mảng (dữ liệu cũ chỉ có headcount 99, khóa trước 0116) → headcount_source live, đếm theo tập sống, giữ bất biến', async () => {
     await f.q(
       `INSERT INTO periods (ym, deadline, headcount) VALUES ('2006-07-01', '2006-07-10T17:00:00Z', 99)
        ON CONFLICT (ym) DO NOTHING`,
     );
     f.onCleanup(() => f.q("DELETE FROM periods WHERE ym = '2006-07-01'"));
     const people = await f.app().get(SummaryService).people('2006-07');
-    expect(people.headcount_source).toBe('snapshot');
-    expect(people.headcount).toBe(99);
+    expect(people.headcount_source).toBe('live');
+    expect(people.headcount).toBe(4);
+    expect(people.registered + people.unregistered).toBe(people.headcount);
   });
 });

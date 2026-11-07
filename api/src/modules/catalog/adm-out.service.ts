@@ -5,7 +5,7 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { PeriodsService } from '../periods/periods.service';
-import { openLineIds } from '../requests/line-delivery.store';
+import { openLineCount } from '../requests/line-delivery.store';
 import { itemNotFound } from './catalog.service';
 import { lockCustomKey } from './custom-key-lock';
 import type { LineKey } from './line-key';
@@ -48,14 +48,6 @@ const FLAG: Record<Kind, string> = {
   out: 'adm_out',
   owed_closed: 'owed_closed',
 };
-
-export async function openLineCount(
-  ex: Executor,
-  ym: string,
-  key: string,
-): Promise<number> {
-  return (await openLineIds(ex, ym, key)).length;
-}
 
 export async function markedKeys(
   ex: Executor,

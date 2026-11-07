@@ -155,14 +155,6 @@ export class SummaryService {
              (SELECT count(*) FROM s WHERE sub NOT IN (SELECT sub FROM owners))::int AS unregistered,
              (SELECT count(*) FROM owners WHERE sub NOT IN (SELECT sub FROM s))::int AS outside
     `);
-    // Kỳ khóa trước khi có headcount_subs: giữ mẫu số đã đóng băng, đếm đăng ký vẫn sống
-    if (s.frozenHeadcount !== null) {
-      return {
-        ...rows[0],
-        headcount: s.frozenHeadcount,
-        headcount_source: 'snapshot',
-      };
-    }
     return { ...rows[0], headcount_source: s.source };
   }
 
@@ -195,24 +187,16 @@ export class SummaryService {
     return rows;
   }
 
-  private async peopleSet(ym: string): Promise<{
-    cte: SQL;
-    source: 'snapshot' | 'live';
-    frozenHeadcount: number | null;
-  }> {
-    const period = await this.periods.findSnapshot(ym);
-    const subs = period?.headcount_subs ?? null;
-    if (subs === null) {
-      return {
-        cte: await this.liveCte(ym),
-        source: 'live',
-        frozenHeadcount: period?.headcount ?? null,
-      };
-    }
+  // Kỳ khóa trước 0116 chỉ có số headcount, không có danh sách: dùng tập sống (R-D8.17) để giữ bất biến
+  // registered + unregistered = headcount; số đóng băng cũ không tách được ai đã/chưa đăng ký
+  private async peopleSet(
+    ym: string,
+  ): Promise<{ cte: SQL; source: 'snapshot' | 'live' }> {
+    const subs = (await this.periods.findSnapshot(ym))?.headcount_subs ?? null;
+    if (subs === null) return { cte: await this.liveCte(ym), source: 'live' };
     return {
       cte: sql`${ownersCte(ym)}, s AS (SELECT DISTINCT unnest(${sql.param(subs)}::text[]) AS sub)`,
       source: 'snapshot',
-      frozenHeadcount: null,
     };
   }
 

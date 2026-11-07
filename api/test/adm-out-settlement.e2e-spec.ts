@@ -1,5 +1,6 @@
 import { DRIZZLE_DB } from '../src/database/database.module';
 import type { Database } from '../src/database/database.module';
+import { NotificationsService } from '../src/modules/notifications/notifications.service';
 import { AdmOutSettlement } from '../src/modules/reminders/adm-out-settlement';
 import { NotificationScheduler } from '../src/modules/reminders/notification-scheduler';
 import { arrivalsFixture } from './arrivals.fixture';
@@ -137,6 +138,31 @@ describe('V2D-5 tự hủy ADM hết hàng lúc khóa sổ kỳ sau (e2e)', () =
         f.app().get(AdmOutSettlement).settleAdmOut(tx, P, new Date(AT_LOCK)),
       );
     expect(again).toEqual({ lines: 0, units: 0 });
+  });
+
+  it('hủy bù lỗi không chặn chuông khóa sổ: settleAdmOut ném lỗi → vẫn ghi headcount_subs và gửi period_locked; giờ sau chạy lại thì hủy', async () => {
+    const bk = await f.stockItem(0);
+    const l = await f.seedLine(P, A, { item_id: bk, qty: 2 });
+    f.freeze('2005-12-20T03:00:00Z');
+    await markOut(P, bk).expect(200);
+    const settle = jest
+      .spyOn(f.app().get(AdmOutSettlement), 'settleAdmOut')
+      .mockRejectedValueOnce(new Error('boom'));
+    const bell = jest.spyOn(f.app().get(NotificationsService), 'notifyWithin');
+    try {
+      await cron(AT_LOCK);
+      expect(settle).toHaveBeenCalledTimes(1);
+      expect(bell.mock.calls.map(([, input]) => input.eventId)).toContain(
+        `period_locked:${NEXT}`,
+      );
+      expect(await headcountSubs()).toEqual(expect.any(Array));
+      expect((await f.line(l)).cancelled_qty).toBe(0);
+    } finally {
+      settle.mockRestore();
+      bell.mockRestore();
+    }
+    await cron('2006-01-10T18:05:00.000Z');
+    expect((await f.line(l)).cancelled_qty).toBe(2);
   });
 
   it('bỏ đánh dấu trước khóa sổ → lúc khóa không hủy, dòng thành nợ như thường', async () => {

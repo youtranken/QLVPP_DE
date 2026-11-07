@@ -190,20 +190,22 @@ describe('mẫu số Tổng hợp loại người thuộc admin_group (Postgres 
     });
   });
 
-  it('kỳ khóa trước 0116 (headcount đã ghi, headcount_subs NULL) → mẫu số đóng băng headcount, nguồn snapshot; đếm đăng ký vẫn sống', async () => {
+  it('kỳ khóa trước 0116 (headcount 7 đã ghi, headcount_subs NULL) → tập sống, nguồn live (R-D8.17): headcount 1 = registered 1 + unregistered 0, không trả số 7 đóng băng', async () => {
     await addRequest(A, REQ_YM);
     await pool.query(
       'UPDATE periods SET headcount = 7, headcount_subs = NULL WHERE ym = $1::date',
       [`${REQ_YM}-01`],
     );
     try {
-      expect(await summary().people(REQ_YM)).toEqual({
-        headcount: 7,
-        headcount_source: 'snapshot',
+      const people = await summary().people(REQ_YM);
+      expect(people).toEqual({
+        headcount: 1,
+        headcount_source: 'live',
         registered: 1,
         unregistered: 0,
         outside: 0,
       });
+      expect(people.registered + people.unregistered).toBe(people.headcount);
     } finally {
       await pool.query(
         'UPDATE periods SET headcount = NULL WHERE ym = $1::date',

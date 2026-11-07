@@ -1,8 +1,10 @@
 import { sql } from 'drizzle-orm';
 import { ymToDate } from '../../common/period';
 import type { Executor } from '../../database/database.module';
-import { admOwedByKey } from '../reports/order-default';
+import { admOwedRows } from '../reports/order-default';
+import type { AdmOwedRow } from '../reports/order-default';
 import { latestSent } from '../reports/sent-snapshot';
+import type { SentSnapshot } from '../reports/sent-snapshot';
 import { orderedFromSnapshot } from './arrivals-plan.service';
 import { ITEM_ORDER } from './item-order';
 import { heldSql } from './stock-held-sql';
@@ -52,23 +54,39 @@ export async function stockFacts(
   return rows;
 }
 
-// Hàng đang về = phần bản in kỳ K* chưa về (bỏ món ADM hết hàng) + ADM còn nợ giao các kỳ trước
-export async function incomingByItem(
+export interface IncomingSources {
+  sent: SentSnapshot | null;
+  owed: AdmOwedRow[];
+}
+
+// Bản in K* và ADM còn nợ các kỳ trước: đọc một lần, dùng cho cả số đang về lẫn mốc bản in của hộp ngừng món
+export async function incomingSources(
   ex: Executor,
   kStar: string | null,
+): Promise<IncomingSources> {
+  if (!kStar) return { sent: null, owed: [] };
+  return {
+    sent: await latestSent(ex, kStar),
+    owed: await admOwedRows(ex, kStar),
+  };
+}
+
+// Hàng đang về = phần bản in kỳ K* chưa về (bỏ món ADM hết hàng) + ADM còn nợ giao các kỳ trước
+export function incomingByItem(
+  src: IncomingSources,
   facts: StockFactsRow[],
-): Promise<Map<string, number>> {
+): Map<string, number> {
   const incoming = new Map<string, number>();
-  if (!kStar) return incoming;
-  const sent = await latestSent(ex, kStar);
-  const ordered = sent ? orderedFromSnapshot(sent) : new Map<string, number>();
+  const ordered = src.sent
+    ? orderedFromSnapshot(src.sent)
+    : new Map<string, number>();
   for (const f of facts) {
     const plan = f.adm_out
       ? 0
       : Math.max(0, (ordered.get(f.item_id) ?? 0) - f.received);
     if (plan > 0) incoming.set(f.item_id, plan);
   }
-  for (const [key, owed] of await admOwedByKey(ex, kStar)) {
+  for (const { key, owed } of src.owed) {
     if (!key.startsWith('custom:'))
       incoming.set(key, (incoming.get(key) ?? 0) + owed);
   }
@@ -81,7 +99,7 @@ export async function stockList(
   kStar: string | null,
 ): Promise<StockListRow[]> {
   const facts = await stockFacts(ex, openYm, kStar);
-  const incoming = await incomingByItem(ex, kStar, facts);
+  const incoming = incomingByItem(await incomingSources(ex, kStar), facts);
   return facts.map((f) => {
     const input = {
       stock_qty: f.stock_qty,

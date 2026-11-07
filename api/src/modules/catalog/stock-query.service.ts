@@ -5,7 +5,7 @@ import { decodeTimestampCursor, encodeCursor } from '../../common/cursor';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor } from '../../database/database.module';
 import { PeriodsService } from '../periods/periods.service';
-import { itemColumns, lowStockSql } from './catalog-sql';
+import { JOINED_HELD, itemColumnsOn, lowStockItemsSql } from './catalog-sql';
 import { ITEM_ORDER } from './item-order';
 import type { ItemRow } from './catalog-sql';
 import { stockList } from './stock-list';
@@ -29,9 +29,8 @@ export class StockQueryService {
   ) {}
 
   async list(now: Date): Promise<StockListRow[]> {
-    const open = await this.periods.openPeriod(this.db, now);
-    const latest = await this.periods.latestLocked(now);
-    return stockList(this.db, open.ym, latest?.ym ?? null);
+    const { openYm, kStar } = await this.periods.stockPeriods(now);
+    return stockList(this.db, openYm, kStar);
   }
 
   movements(itemId: string, limit: number, cursor?: string) {
@@ -78,10 +77,7 @@ export class StockQueryService {
   async lowStock(now: Date): Promise<ItemRow[]> {
     const { ym } = await this.periods.openPeriod(this.db, now);
     const result = await this.db.execute<ItemRow>(sql`
-      SELECT i.* FROM (
-        SELECT ${itemColumns(ym)} FROM items
-        WHERE active AND ${lowStockSql(ym)}
-      ) i
+      SELECT i.* FROM (${lowStockItemsSql(ym, itemColumnsOn(JOINED_HELD))}) i
       LEFT JOIN item_categories c ON c.id = i.category_id
       ORDER BY ${ITEM_ORDER}
     `);

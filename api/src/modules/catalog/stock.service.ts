@@ -12,7 +12,7 @@ import { ClockService } from '../../common/clock.service';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
-import { lowStockSql } from './catalog-sql';
+import { lowStockItemsSql } from './catalog-sql';
 import { itemNotFound } from './catalog.service';
 import { countDelta, countNote, reasonRequired } from './stock-count';
 import { heldSql } from './stock-held-sql';
@@ -237,7 +237,7 @@ export class StockService {
     const { ym } = await this.periods.openPeriod(tx, now);
     const { rows } = await tx.execute<LowStockClaim>(sql`
       WITH low AS (
-        SELECT id FROM items WHERE active AND ${lowStockSql(ym)}
+        ${lowStockItemsSql(ym, sql`items.id`)}
       ), due AS (
         SELECT id FROM items
         WHERE id IN (SELECT id FROM low) AND low_stock_notified_at IS NULL
