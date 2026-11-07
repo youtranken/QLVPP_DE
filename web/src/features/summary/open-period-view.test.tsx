@@ -52,9 +52,9 @@ describe('OpenPeriodView — Tổng hợp kỳ đang mở, chỉ xem', () => {
     stubSummaryApi(registrationRoute());
     open();
     await screen.findByRole('table');
-    const registered = screen.getByText('Đã đăng ký', { selector: '.stat-card__k' }).closest('.stat-card')!;
+    const registered = screen.getByText('Đã đăng ký', { selector: '.stat-card__k' }).closest<HTMLElement>('.stat-card')!;
     expect(registered).toHaveTextContent(`${OPEN.registered}/${OPEN.headcount}`);
-    const custom = screen.getByText('Món ngoài danh mục', { selector: '.stat-card__k' }).closest('.stat-card')!;
+    const custom = screen.getByText('Món ngoài danh mục', { selector: '.stat-card__k' }).closest<HTMLElement>('.stat-card')!;
     expect(within(custom).getByText('1', { selector: '.stat-card__v' })).toBeInTheDocument();
   });
 
@@ -63,7 +63,7 @@ describe('OpenPeriodView — Tổng hợp kỳ đang mở, chỉ xem', () => {
     open();
     expect(await screen.findByText('Chưa ai đăng ký kỳ này.')).toBeInTheDocument();
     expect(screen.queryByRole('table')).toBeNull();
-    const custom = screen.getByText('Món ngoài danh mục', { selector: '.stat-card__k' }).closest('.stat-card')!;
+    const custom = screen.getByText('Món ngoài danh mục', { selector: '.stat-card__k' }).closest<HTMLElement>('.stat-card')!;
     expect(within(custom).getByText('0', { selector: '.stat-card__v' })).toBeInTheDocument();
   });
 

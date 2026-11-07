@@ -119,7 +119,7 @@ export function ItemDrawer({ item, categories, defaultCategoryId, onClose, nav }
       saving={f.saving}
       nav={nav && { ...nav, prevLabel: t('catalog.drawer.prev'), nextLabel: t('catalog.drawer.next') }}
       head={headOf(item, index, i18n.language, nav)}
-      footer={<Footer f={f} item={item} groupActive={(item?.category_id && index.byId.get(item.category_id)?.active) ?? true} formId={formId} />}
+      footer={<Footer f={f} item={item} groupActive={item?.category_id ? (index.byId.get(item.category_id)?.active ?? true) : true} formId={formId} />}
     >
       <form id={formId} ref={form} className="ct-panel-form" onSubmit={submit} noValidate>
         <Blocks f={f} />

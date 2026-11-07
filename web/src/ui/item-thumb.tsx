@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import type { Tone } from '@/lib/group-tone';
 import { Icon } from './icon';
 
-export type ThumbSize = 34 | 36 | 40 | 42 | 48 | 96 | 120 | 'card' | 'tile';
+export type ThumbSize = 34 | 36 | 40 | 42 | 48 | 56 | 96 | 120 | 'card' | 'tile';
 
 // Cỡ co giãn theo ô, cả hai khung 1:1 để ảnh một món trông như nhau ở Danh mục và Đăng ký; tile bo nhỏ hơn
 const FLUID = {
