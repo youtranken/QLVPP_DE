@@ -68,6 +68,8 @@ describe('JwtVerifierService — verify offline RS256', () => {
     expect((await verifier.verify(await sign())).claims.team).toBeUndefined();
     expect(await team('x'.repeat(121))).toBe('x'.repeat(120));
     expect(await team('x'.repeat(120))).toBe('x'.repeat(120));
+    expect(await team('A\u0000B\u001fC\u007f')).toBe('ABC');
+    expect(await team('\u0000\u0007')).toBeUndefined();
   });
 
   it('sai audience → fail', async () => {

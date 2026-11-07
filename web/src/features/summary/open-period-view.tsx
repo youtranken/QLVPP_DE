@@ -30,7 +30,7 @@ function useColumns(onView: (row: RegistrationRow) => void) {
         header: () => <span className="sr-only">{t('summary.table.actions')}</span>,
         meta: { className: 'r sm-acts' },
         cell: ({ row }) => (
-          <button type="button" className="btn btn--ghost btn--sm" aria-label={t('summary.open.viewFor', { name: nameOf(row.original) })} onClick={() => onView(row.original)}>
+          <button type="button" className="btn btn--ghost btn--sm" data-view-id={row.original.request_id} aria-label={t('summary.open.viewFor', { name: nameOf(row.original) })} onClick={() => onView(row.original)}>
             {t('summary.open.view')}
           </button>
         ),

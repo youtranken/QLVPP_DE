@@ -87,7 +87,9 @@ export class JwtVerifierService {
 
   private toTeam(value: unknown): string | undefined {
     if (typeof value !== 'string') return undefined;
-    return value.trim().slice(0, TEAM_MAX) || undefined;
+    // NUL làm Postgres từ chối text (22021), đăng nhập sẽ 500
+    const clean = value.replace(/[\u0000-\u001f\u007f]/g, '').trim();
+    return Array.from(clean).slice(0, TEAM_MAX).join('').trim() || undefined;
   }
 
   private toClaims(payload: JWTPayload): PmhIdClaims {

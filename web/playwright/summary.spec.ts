@@ -117,8 +117,9 @@ test.describe('E9-S2 tổng hợp', () => {
     await dialog.getByRole('button', { name: 'Người sau' }).click();
     const next = page.getByRole('dialog', { name: 'Phiếu của PW Người hai' });
     await expect(next.getByRole('button', { name: 'Người sau' })).toBeDisabled();
+    await expect(next.getByRole('button', { name: 'Người trước' })).toBeFocused();
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('button', { name: 'Xem phiếu của PW Người một' })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Xem phiếu của PW Người hai' })).toBeFocused();
     await shot(page, info, 'nhom1-summary-open');
   });
 });

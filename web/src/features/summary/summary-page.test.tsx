@@ -70,8 +70,7 @@ describe('SummaryPage — đầu trang, tháng, URL', () => {
     expect(kpi).toHaveTextContent('Phiếu đã đăng ký · lúc khóa');
     expect(screen.getByText('Đã khóa')).toBeInTheDocument();
   });
-
-  });
+});
 
 describe('SummaryPage — thẻ lọc', () => {
   it('kỳ khóa: bấm "Dòng chờ giao" → filter=pending_delivery, aria-pressed, "Đang lọc: Còn dòng chờ giao · 3 người"; bấm lại → bỏ', async () => {
@@ -91,9 +90,7 @@ describe('SummaryPage — thẻ lọc', () => {
     expect(screen.queryByText(/Đang lọc:/)).toBeNull();
   });
 
-
-
-    it('kỳ khóa đang lọc chờ giao → ‹ sang kỳ trước vẫn giữ lọc', async () => {
+  it('kỳ khóa đang lọc chờ giao → ‹ sang kỳ trước vẫn giữ lọc', async () => {
     stubSummaryApi();
     open('/admin/summary?ym=2026-10&filter=pending_delivery');
     expect(await screen.findByRole('button', { name: /Dòng chờ giao/ })).toHaveAttribute('aria-pressed', 'true');
@@ -304,7 +301,7 @@ describe('SummaryPage — vượt tối đa, người đã nghỉ (R-D8.20, R-D1
     expect(await screen.findByText('Đang lọc: Vượt tối đa · 3 người')).toBeInTheDocument();
   });
 
-    it('theo món: dòng vượt tối đa có nhãn "Vượt tối đa hiện tại (4)"', async () => {
+  it('theo món: dòng vượt tối đa có nhãn "Vượt tối đa hiện tại (4)"', async () => {
     stubSummaryApi();
     open('/admin/summary?ym=2026-10&view=item');
     expect(await screen.findByText('Vượt tối đa hiện tại (4)')).toBeInTheDocument();
@@ -321,5 +318,4 @@ describe('SummaryPage — vượt tối đa, người đã nghỉ (R-D8.20, R-D1
     await userEvent.click(await within(drawer).findByRole('button', { name: 'Bớt Giấy note vàng' }));
     expect(within(drawer).getByRole('radio', { name: 'Người đã nghỉ' })).toBeChecked();
   });
-
-  });
+});

@@ -76,6 +76,7 @@ export function SummaryPage() {
         {header()}
         <Toolbar lead={<MonthControl ym={ym} openYm={openYm} onChange={p.setMonth} />} />
         {summary.isError && <LoadError onRetry={() => void summary.refetch()} />}
+        {summary.isPending && <Loading />}
         {data && <OpenPeriodView ym={ym} summary={data} />}
       </div>
     );

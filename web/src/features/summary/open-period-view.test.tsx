@@ -3,7 +3,7 @@ import { screen, userEvent, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
-import { REGISTRATIONS, registrationRoute } from './registration-fixtures';
+import { registrationRoute } from './registration-fixtures';
 import { OPEN, calledUrls, stubSummaryApi } from './summary-fixtures';
 
 const open = (path = '/admin/summary?ym=2026-11') => {
@@ -55,7 +55,7 @@ describe('OpenPeriodView — Tổng hợp kỳ đang mở, chỉ xem', () => {
     const registered = screen.getByText('Đã đăng ký', { selector: '.stat-card__k' }).closest('.stat-card')!;
     expect(registered).toHaveTextContent(`${OPEN.registered}/${OPEN.headcount}`);
     const custom = screen.getByText('Món ngoài danh mục', { selector: '.stat-card__k' }).closest('.stat-card')!;
-    expect(custom).toHaveTextContent('1');
+    expect(within(custom).getByText('1', { selector: '.stat-card__v' })).toBeInTheDocument();
   });
 
   it('0 người → "Chưa ai đăng ký kỳ này.", không bảng, ô custom = 0', async () => {
@@ -63,6 +63,8 @@ describe('OpenPeriodView — Tổng hợp kỳ đang mở, chỉ xem', () => {
     open();
     expect(await screen.findByText('Chưa ai đăng ký kỳ này.')).toBeInTheDocument();
     expect(screen.queryByRole('table')).toBeNull();
+    const custom = screen.getByText('Món ngoài danh mục', { selector: '.stat-card__k' }).closest('.stat-card')!;
+    expect(within(custom).getByText('0', { selector: '.stat-card__v' })).toBeInTheDocument();
   });
 
   it('?ym=2026-11&filter=pending_delivery&request=r-1 → vẫn là kỳ mở chỉ xem, không gọi requests hay admin/requests', async () => {
@@ -88,6 +90,5 @@ describe('OpenPeriodView — Tổng hợp kỳ đang mở, chỉ xem', () => {
     expect(await screen.findByText('Đã khóa')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Tháng 11/2026 · Đang mở' }));
     expect(await screen.findByText('Đã đăng ký (3)')).toBeInTheDocument();
-    expect(REGISTRATIONS).toHaveLength(3);
   });
 });

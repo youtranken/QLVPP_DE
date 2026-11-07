@@ -143,6 +143,19 @@ describe('admin/periods/:ym/registrations (kỳ mở, chỉ đọc)', () => {
     }
   });
 
+  it('biên khóa: 16:59:59.999Z ngày 10 → 2026-12 còn 400; 17:00:00.000Z → 2026-12 thành kỳ mở (200), 2026-11 thành kỳ khóa (vẫn 200)', async () => {
+    await pool().query(
+      `INSERT INTO periods (ym, deadline) VALUES ('2026-11-01', '2026-11-10T17:00:00Z')
+       ON CONFLICT (ym) DO UPDATE SET deadline = EXCLUDED.deadline`,
+    );
+    freeze(LAST_OPEN_MS);
+    const before = await get('/periods/2026-12/registrations').expect(400);
+    expect((before.body as { code: string }).code).toBe('INVALID_PERIOD');
+    freeze('2026-11-10T17:00:00.000Z');
+    await get('/periods/2026-12/registrations').expect(200);
+    await get('/periods/2026-11/registrations').expect(200);
+  });
+
   it('registrations/:id kỳ mở → RequestView chỉ đọc + team, lines đủ', async () => {
     const r = await savedRequestOf(A);
     await pool().query(`UPDATE users SET team = 'Team Test' WHERE sub = $1`, [

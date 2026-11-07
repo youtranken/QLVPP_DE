@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { vnSavedStamp } from '@/lib/format-time';
 import { langOf, lockPhrase } from '@/lib/period-text';
@@ -43,19 +44,36 @@ export function RegistrationDialog({ ym, deadline, rows, index, onIndex, onClose
   const name = row.full_name ?? row.email ?? row.user_sub;
   const lines = view.data?.lines.filter((l) => l.review_status !== 'rejected') ?? [];
   const units = lines.reduce((sum, l) => sum + l.qty, 0);
+  const prevRef = useRef<HTMLButtonElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
+  const stepped = useRef(false);
+  useEffect(() => {
+    if (!stepped.current) return;
+    const a = document.activeElement;
+    if (a === document.body || (a instanceof HTMLButtonElement && a.disabled)) (index === 0 ? nextRef : prevRef).current?.focus();
+  }, [index]);
+  const step = (next: number) => {
+    stepped.current = true;
+    onIndex(next);
+  };
+  const returnToRow = () => {
+    const opener = document.querySelector<HTMLElement>(`[data-view-id="${row.request_id}"]`);
+    opener?.focus();
+    return !!opener;
+  };
   const lock = deadline ? lockPhrase(deadline, langOf(i18n.language)) : '';
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()} maxWidth={560}>
+    <Dialog open onOpenChange={(o) => !o && onClose()} maxWidth={560} onCloseFocus={returnToRow}>
       <div className="sheet-header rg-head">
         <div className="rg-head__text">
           <small>{t('summary.open.dialogMeta', { month: monthOf(ym), team: row.team ?? t('common.empty') })}</small>
           <DialogTitle className="sheet-title">{t('summary.open.dialogTitle', { name })}</DialogTitle>
-          {view.data && <small>{t('summary.open.dialogSaved', { time: vnSavedStamp(row.saved_at), kinds: lines.length, units })}</small>}
+          {view.data && <small aria-live="polite">{t('summary.open.dialogSaved', { time: vnSavedStamp(row.saved_at), kinds: lines.length, units })}</small>}
         </div>
-        <button type="button" className="rg-step" aria-label={t('summary.open.prev')} disabled={index === 0} onClick={() => onIndex(index - 1)}>
+        <button type="button" ref={prevRef} className="rg-step" aria-label={t('summary.open.prev')} disabled={index === 0} onClick={() => step(index - 1)}>
           ‹
         </button>
-        <button type="button" className="rg-step" aria-label={t('summary.open.next')} disabled={index >= rows.length - 1} onClick={() => onIndex(index + 1)}>
+        <button type="button" ref={nextRef} className="rg-step" aria-label={t('summary.open.next')} disabled={index >= rows.length - 1} onClick={() => step(index + 1)}>
           ›
         </button>
         <DialogCloseButton />

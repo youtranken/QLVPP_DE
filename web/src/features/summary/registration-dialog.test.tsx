@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen, userEvent, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
@@ -67,5 +69,29 @@ describe('RegistrationDialog — phiếu một người, chỉ xem', () => {
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(opener).toHaveFocus();
+  });
+
+  it('bấm "Người sau" tới người cuối: nút vừa bấm vô hiệu nhưng focus không rơi ra ngoài, sang "Người trước"', async () => {
+    stubSummaryApi(registrationRoute());
+    const { dialog } = await openDialog('Nhân viên B');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Người sau' }));
+    const last = await screen.findByRole('dialog', { name: 'Phiếu của Nhân viên C' });
+    expect(within(last).getByRole('button', { name: 'Người sau' })).toBeDisabled();
+    expect(within(last).getByRole('button', { name: 'Người trước' })).toHaveFocus();
+  });
+
+  it('đã bấm ‹ › sang người khác: Esc trả focus về "Xem" của người đang hiện, không phải người mở đầu', async () => {
+    stubSummaryApi(registrationRoute());
+    const { dialog } = await openDialog();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Người sau' }));
+    await screen.findByRole('dialog', { name: 'Phiếu của Nhân viên B' });
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Xem phiếu của Nhân viên B' })).toHaveFocus();
+  });
+
+  it('nút ‹ › cao rộng bằng cỡ chạm (class rg-step dùng var(--hit) ở 390)', () => {
+    const css = readFileSync(resolve(__dirname, 'summary.m1.css'), 'utf8');
+    expect(css).toMatch(/@media \(max-width: 767px\)[^}]*\.rg-step\s*\{[^}]*var\(--hit\)/);
   });
 });
