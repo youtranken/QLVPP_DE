@@ -15,13 +15,16 @@ interface UnregisteredProps {
   ym: string;
   deadline: string | null;
   count: number;
+  // Cơ sở đếm: người đang dùng thuộc nhóm PMH ID được phép dùng app (không phải cả danh bạ)
+  registered: number;
+  headcount: number;
   // null = chưa tải xong hoặc lỗi: không vẽ danh sách chip rỗng
   people: UnregisteredUser[] | null;
   failed?: boolean;
   onRetry?: () => void;
 }
 
-export function UnregisteredCard({ ym, deadline, count, people, failed = false, onRetry }: UnregisteredProps) {
+export function UnregisteredCard({ ym, deadline, count, registered, headcount, people, failed = false, onRetry }: UnregisteredProps) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   const copy = useUnregisteredCopy(ym, deadline);
@@ -33,7 +36,7 @@ export function UnregisteredCard({ ym, deadline, count, people, failed = false, 
         <span className="hm-card__ic" aria-hidden="true"><Icon name="users" size={24} /></span>
         <div>
           <h2 id="hm-unreg">{t('home.unregistered.title', { n: count, month: monthOf(ym) })}</h2>
-          {deadline && <p>{t('home.unregistered.hint', { day: fmt.lastDay(deadline).split('/')[0] })}</p>}
+          {deadline && <p>{t('home.unregistered.basis', { registered, headcount, day: fmt.lastDay(deadline).split('/')[0] })}</p>}
         </div>
       </div>
       {people === null && failed && onRetry && <LoadError onRetry={onRetry} />}
@@ -54,18 +57,21 @@ export function UnregisteredCard({ ym, deadline, count, people, failed = false, 
           <Icon name="copy" size={18} />
           {t('home.unregistered.copy')}
         </button>
-        <Link className="btn" to="/admin/summary">{t('home.unregistered.all')}</Link>
+        <Link className="btn" to={`/admin/summary?ym=${ym}&filter=unregistered`}>{t('home.unregistered.all')}</Link>
       </div>
       {copy.feedback}
     </section>
   );
 }
 
-export function CustomCard({ count }: { count: number }) {
+// Món chờ xem thuộc kỳ đã khóa: ghi rõ tháng để không đọc nhầm thành của kỳ đang đăng ký
+export function CustomCard({ count, periods }: { count: number; periods: string[] }) {
   const { t } = useTranslation();
+  const months = periods.map((ym) => `${monthOf(ym)}/${ym.slice(0, 4)}`).join(', ');
   return (
     <section aria-labelledby="hm-custom" className="hm-card hm-card--warn">
       <h2 id="hm-custom">{t('home.custom.title', { n: count })}</h2>
+      {months && <p>{t('home.custom.periods', { months })}</p>}
       <div className="hm-card__actions">
         <Link className="btn hm-btn-dark" to="/admin/review">{t('home.custom.open')}</Link>
       </div>

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { apiErrorCode, apiErrorString } from '@/lib/api-error';
 import { langOf, lockPhrase } from '@/lib/period-text';
 import { lockedYm } from '@/lib/ym';
@@ -8,7 +7,7 @@ import { EmptyFrame } from '@/ui/empty-frame';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
-import { OpenPeriodNotice } from './open-period-notice';
+import { OpenPeriodNotice, OpenRegistrationsLink } from './open-period-notice';
 import { useUnlockedSentence } from './use-unlocked-sentence';
 import { usePeriodSummary } from './summary.api';
 
@@ -31,11 +30,7 @@ export function NoLockedPeriod() {
     <EmptyFrame
       title={t('summary.gate.noneTitle')}
       hint={hint}
-      action={
-        <Link className="btn" to="/admin/home">
-          {t('summary.gate.viewProgress')}
-        </Link>
-      }
+      action={<OpenRegistrationsLink className="btn" ym={open.ym} />}
     />
   );
 }

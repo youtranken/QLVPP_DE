@@ -59,7 +59,7 @@ const home: Messages<typeof vi> = {
       debt: "View last month's debt",
     },
     cta: {
-      registerWait: 'Waiting for the period to lock (month {{month}})',
+      registerOpen: 'View month {{month}} registrations',
       registerView: 'View period (month {{month}})',
       send: 'Open Send to ADM',
       arrive: 'Enter goods in',
@@ -68,7 +68,7 @@ const home: Messages<typeof vi> = {
     progress: '{{value}}% signed up',
     unregistered: {
       title: '{{n}} people have not signed up for month {{month}}',
-      hint: 'Due 23:59 on day {{day}}. Remind early to make the ADM order.',
+      basis: '{{registered}}/{{headcount}} people in the app user groups have signed up. Due 23:59 on day {{day}}.',
       more: 'and {{n}} others',
       copy: 'Copy reminder',
       all: 'See everyone',
@@ -76,6 +76,7 @@ const home: Messages<typeof vi> = {
     custom: {
       title: '{{n}} out-of-catalog items waiting for review',
       open: 'Review waiting items',
+      periods: 'Orders of month {{months}}',
     },
     low: {
       title: '{{n}} items in the cabinet running low',

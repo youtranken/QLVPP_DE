@@ -13,8 +13,8 @@ export interface StepState {
   changed?: boolean;
   note?: string;
   link?: { to: string; label: string };
-  // Kỳ còn mở: nút chỉ báo trạng thái, không bấm được
-  waitLabel?: string;
+  // Chữ riêng cho nút đi thẳng (kỳ còn mở: "Xem đăng ký kỳ tháng N"); không có thì dùng chữ chung của bước
+  cta?: string;
 }
 
 export interface SendInput {
@@ -38,7 +38,7 @@ export interface MonthStepsInput {
   send: SendInput | null;
   plan: PlanInput | null;
   pendingDelivery: number;
-  // Kỳ của thẻ này; Tổng hợp chỉ mở được khi kỳ đã khóa
+  // Kỳ của thẻ này; kỳ còn mở thì Tổng hợp chỉ xem danh sách đăng ký
   ym: string;
 }
 
@@ -80,7 +80,7 @@ export function monthSteps(i: MonthStepsInput, t: TFunction): StepState[] {
       value: known ? `${i.registered}/${i.headcount}` : String(i.registered),
       progress: known ? Math.min(100, Math.round((i.registered / i.headcount!) * 100)) : undefined,
       to: summary,
-      ...(i.isOpen ? { waitLabel: t('home.cta.registerWait', { month }) } : { link: { to: summary, label: t('home.cta.registerView', { month }) } }),
+      ...(i.isOpen ? { cta: t('home.cta.registerOpen', { month }) } : { link: { to: summary, label: t('home.cta.registerView', { month }) } }),
     },
     { key: 'send', to: SEND_ADM, ...sendStep(i.send, t) },
     { key: 'arrive', to: '/admin/arrivals', ...arriveStep(i.send, i.plan, t) },

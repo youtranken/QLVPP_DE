@@ -32,6 +32,13 @@ describe('monthSteps', () => {
     expect(s.map((x) => x.done)).toEqual([false, false, false, false]);
   });
 
+  it('kỳ đang mở 2026-11 → bước Đăng ký có nút thật "Xem đăng ký kỳ tháng 11" tới Tổng hợp kỳ mở (chỉ xem), không còn nhãn chờ', () => {
+    const reg = step({ isOpen: true, ym: '2026-11', send: null, plan: null }, 'register');
+    expect(reg.cta).toBe('Xem đăng ký kỳ tháng 11');
+    expect(reg.to).toBe('/admin/summary?ym=2026-11');
+    expect(reg).not.toHaveProperty('waitLabel');
+  });
+
   it('bản có hàng 22:12 05/11 (11 món, 78 đơn vị) → Gửi ADM xong, "Đã gửi 22:12 05/11 · 11 món, 78 đơn vị", liên kết "Xem bản đã gửi"', () => {
     const s = step({}, 'send');
     expect(s).toMatchObject({ done: true, changed: false, value: 'Đã gửi 22:12 05/11 · 11 món, 78 đơn vị' });

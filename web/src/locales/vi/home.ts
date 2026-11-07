@@ -56,7 +56,7 @@ const home = {
       debt: 'Xem nợ tháng trước',
     },
     cta: {
-      registerWait: 'Đang chờ chốt kỳ (tháng {{month}})',
+      registerOpen: 'Xem đăng ký kỳ tháng {{month}}',
       registerView: 'Xem kỳ (tháng {{month}})',
       send: 'Mở Gửi ADM',
       arrive: 'Nhập hàng về',
@@ -65,7 +65,7 @@ const home = {
     progress: '{{value}}% đã đăng ký',
     unregistered: {
       title: '{{n}} người chưa đăng ký kỳ tháng {{month}}',
-      hint: 'Hạn 23:59 ngày {{day}}. Nhắc sớm để kịp gửi ADM.',
+      basis: '{{registered}}/{{headcount}} người thuộc nhóm dùng app đã đăng ký. Hạn 23:59 ngày {{day}}.',
       more: 'và {{n}} người khác',
       copy: 'Chép tin nhắc',
       all: 'Xem tất cả',
@@ -73,6 +73,7 @@ const home = {
     custom: {
       title: '{{n}} món ngoài danh mục chờ xem',
       open: 'Xem món chờ duyệt',
+      periods: 'Phiếu tháng {{months}}',
     },
     low: {
       title: '{{n}} món trong tủ sắp hết',

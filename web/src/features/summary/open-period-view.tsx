@@ -8,8 +8,12 @@ import { LoadError, Loading } from '@/ui/load-state';
 import { StatCard } from '@/ui/stat-card';
 import { StatRow } from '@/ui/stat-row';
 import { monthOf } from '@/features/request/request-format';
+import { Segmented } from '@/ui/segmented';
 import { RegistrationDialog } from './registration-dialog';
+import { UnregisteredTable } from './unregistered-table';
 import { useRegistrations, type PeriodSummary, type RegistrationRow } from './summary.api';
+
+type OpenList = 'registered' | 'unregistered';
 
 const nameOf = (r: RegistrationRow) => r.full_name ?? r.email ?? r.user_sub;
 
@@ -40,7 +44,15 @@ function useColumns(onView: (row: RegistrationRow) => void) {
   }, [t, onView]);
 }
 
-export function OpenPeriodView({ ym, summary }: { ym: string; summary: PeriodSummary }) {
+interface Props {
+  ym: string;
+  summary: PeriodSummary;
+  // ?filter=unregistered ("Xem tất cả" ở Tháng này): danh sách chưa đăng ký cùng cơ sở đếm với thẻ
+  unregistered?: boolean;
+  onList?: (unregistered: boolean) => void;
+}
+
+export function OpenPeriodView({ ym, summary, unregistered = false, onList }: Props) {
   const { t, i18n } = useTranslation();
   const query = useRegistrations(ym);
   const [viewing, setViewing] = useState<string | null>(null);
@@ -49,6 +61,7 @@ export function OpenPeriodView({ ym, summary }: { ym: string; summary: PeriodSum
   const columns = useColumns(onView);
   const index = rows.findIndex((r) => r.request_id === viewing);
   const custom = rows.reduce((sum, r) => sum + r.custom_count, 0);
+  const list: OpenList = unregistered ? 'unregistered' : 'registered';
   const lock = summary.deadline ? lockPhrase(summary.deadline, langOf(i18n.language)) : '';
   return (
     <>
@@ -60,17 +73,30 @@ export function OpenPeriodView({ ym, summary }: { ym: string; summary: PeriodSum
         <StatCard label={t('summary.open.custom')} icon="pkgplus" value={query.data ? custom : '—'} tone={custom > 0 ? 'warn' : 'neutral'} />
       </StatRow>
       <div className="ct-block">
-        {query.isError ? (
+        <div className="sm-open-tabs">
+          <Segmented<OpenList>
+            label={t('summary.open.listLabel')}
+            value={list}
+            onChange={(v) => onList?.(v === 'unregistered')}
+            options={[
+              { value: 'registered', label: t('summary.open.listTitle', { n: query.data ? rows.length : summary.registered }) },
+              { value: 'unregistered', label: t('summary.open.unregisteredTab', { n: summary.unregistered }) },
+            ]}
+          />
+        </div>
+        {unregistered ? (
+          <>
+            <p className="sm-muted">{t('summary.open.basis')}</p>
+            <UnregisteredTable ym={ym} />
+          </>
+        ) : query.isError ? (
           <LoadError onRetry={() => void query.refetch()} />
         ) : query.isPending ? (
           <Loading />
         ) : rows.length === 0 ? (
           <p className="sm-empty-period">{t('summary.open.empty')}</p>
         ) : (
-          <>
-            <h2 className="sm-list-title">{t('summary.open.listTitle', { n: rows.length })}</h2>
-            <DataTable data={rows} columns={columns} stackOnMobile emptyText={t('summary.open.empty')} />
-          </>
+          <DataTable data={rows} columns={columns} stackOnMobile emptyText={t('summary.open.empty')} />
         )}
       </div>
       {index >= 0 && <RegistrationDialog ym={ym} deadline={summary.deadline} rows={rows} index={index} onIndex={(i) => setViewing(rows[i].request_id)} onClose={() => setViewing(null)} />}

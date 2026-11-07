@@ -52,7 +52,7 @@ function setup(o: Setup = {}) {
     '/api/admin/periods/2026-10/send-state': () => jsonResponse(200, o.send ?? sentState()),
     '/api/admin/periods/2026-10/arrivals-plan': () => jsonResponse(200, o.plan ?? planOf([{ remaining: 0 }])),
     '/api/admin/periods/2026-11/unregistered': () => (o.unregisteredFails ? jsonResponse(500, null) : jsonResponse(200, { items: Array.from({ length: o.unregistered ?? 0 }, (_, i) => person(i + 1)) })),
-    '/api/admin/review?status=pending': () => (o.reviewFails ? jsonResponse(500, null) : jsonResponse(200, { items: Array.from({ length: o.review ?? 0 }, (_, i) => ({ line_id: `l${i}` })) })),
+    '/api/admin/review?status=pending': () => (o.reviewFails ? jsonResponse(500, null) : jsonResponse(200, { items: Array.from({ length: o.review ?? 0 }, (_, i) => ({ line_id: `l${i}`, period_ym: '2026-10' })) })),
     '/api/admin/stock/low': () => jsonResponse(200, o.low ?? []),
     [LEFT_URL]: () => jsonResponse(200, { items: (o.left ?? []).map((name, i) => ({ request_id: `r-${i}`, user_sub: `u-${name}`, full_name: name, user_status: 'locked' })), next_cursor: null }),
     [BACKLOG_URL]: () => jsonResponse(200, { groups: (o.debt ?? []).map(debtGroup) }),
@@ -91,10 +91,11 @@ describe('Trang Tháng này: bước hiện tại và nút đi thẳng', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'Kỳ đang đăng ký (tháng 11)' }));
     expect(within(currentStep()).getByText('Đăng ký')).toBeInTheDocument();
     expect(within(currentStep()).getByText('32/40')).toBeInTheDocument();
-    // Kỳ mở chưa có Tổng hợp: nút chỉ báo đang chờ chốt, không dẫn sang kỳ khác
-    expect(within(currentStep()).getByText('Đang chờ chốt kỳ (tháng 11)')).toBeInTheDocument();
+    // Kỳ mở xem được ở Tổng hợp (chỉ xem): nút là liên kết thật sang danh sách đăng ký kỳ đó
+    expect(within(currentStep()).getByRole('link', { name: 'Xem đăng ký kỳ tháng 11' })).toHaveAttribute('href', '/admin/summary?ym=2026-11');
+    expect(within(currentStep()).queryByText('Đang chờ chốt kỳ (tháng 11)')).toBeNull();
     expect(steps().getAllByText('Sau khi khóa sổ')).toHaveLength(3);
-    expect(steps().queryAllByRole('link')).toHaveLength(0);
+    expect(steps().getAllByRole('link')).toHaveLength(1);
     expect(screen.getByText('Khóa tự động 00:00 ngày 11/11. Sau đó in phiếu gửi ADM.')).toBeInTheDocument();
   });
 
@@ -128,6 +129,13 @@ describe('Trang Tháng này: thẻ việc cần làm', () => {
     expect(within(card).getByRole('button', { name: 'Chép tin nhắc' })).toBeEnabled();
   });
 
+  it('thẻ chưa đăng ký nói rõ cơ sở đếm "32/40 người thuộc nhóm dùng app đã đăng ký"; "Xem tất cả" mở đúng danh sách chưa đăng ký kỳ tháng 11', async () => {
+    await open({ unregistered: 3 });
+    const card = (await screen.findByRole('heading', { name: '3 người chưa đăng ký kỳ tháng 11' })).closest('section')!;
+    expect(within(card).getByText('32/40 người thuộc nhóm dùng app đã đăng ký. Hạn 23:59 ngày 10.')).toBeInTheDocument();
+    expect(within(card).getByRole('link', { name: 'Xem tất cả' })).toHaveAttribute('href', '/admin/summary?ym=2026-11&filter=unregistered');
+  });
+
   it('chip tên tối đa 8 (hai phía): 8 người → 8 chip, không +N; 9 người → 8 chip + "và 1 người khác"', async () => {
     await open({ unregistered: 8 });
     const c8 = (await screen.findByRole('heading', { name: '8 người chưa đăng ký kỳ tháng 11' })).closest('section')!;
@@ -147,6 +155,8 @@ describe('Trang Tháng này: thẻ việc cần làm', () => {
     await open({ review: 1, low: [{ id: 'a', name: 'A', name_en: null, stock_qty: 1 }, { id: 'b', name: 'B', name_en: null, stock_qty: 0 }] });
     const custom = (await screen.findByRole('heading', { name: '1 món ngoài danh mục chờ xem' })).closest('section')!;
     expect(within(custom).getByRole('link', { name: 'Xem món chờ duyệt' })).toHaveAttribute('href', '/admin/review');
+    // Món chờ xem thuộc kỳ đã khóa: thẻ ghi rõ tháng, không đọc nhầm thành của kỳ đang đăng ký
+    expect(within(custom).getByText('Phiếu tháng 10/2026')).toBeInTheDocument();
     const low = (await screen.findByRole('heading', { name: '2 món trong tủ sắp hết' })).closest('section')!;
     expect(within(low).getByRole('link', { name: 'Xem tủ' })).toHaveAttribute('href', '/admin/stock');
   });

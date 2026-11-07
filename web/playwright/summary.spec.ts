@@ -105,7 +105,14 @@ test.describe('E9-S2 tổng hợp', () => {
       const id = /registrations\/([\w-]+)$/.exec(route.request().url())?.[1];
       return route.fulfill({ status: 200, json: id ? view(id) : { items: rows } });
     });
-    await openPeriod(page, ym);
+    // Vòng 2 (7c): mục "Tổng hợp kỳ" (không ?ym) → kỳ khóa, có lời mời sang kỳ đang mở
+    await openPeriod(page);
+    const month = Number(ym.slice(5, 7));
+    const offer = page.getByRole('link', { name: `Xem đăng ký kỳ tháng ${month}` });
+    await expect(offer).toBeVisible();
+    await offer.click();
+    await expect(page).toHaveURL(new RegExp(`ym=${ym}`));
+    await expect(page.getByRole('radio', { name: 'Đã đăng ký (2)' })).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByText(/đang nhận đăng ký, chỉ xem/)).toBeVisible();
     await expect(page.getByRole('link', { name: /Sang Gửi ADM/ })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /Điều chỉnh/ })).toHaveCount(0);

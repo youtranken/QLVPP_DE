@@ -82,6 +82,19 @@ describe('OpenPeriodView — Tổng hợp kỳ đang mở, chỉ xem', () => {
     expect(await screen.findByRole('dialog', { name: 'Phiếu của Nhân viên A' })).toBeInTheDocument();
   });
 
+  it('?ym=2026-11&filter=unregistered ("Xem tất cả" ở Tháng này) → chọn sẵn "Chưa đăng ký (8)", bảng người chưa đăng ký kỳ 11 cùng cơ sở đếm; "Đã đăng ký (3)" quay lại bảng phiếu', async () => {
+    const f = stubSummaryApi(registrationRoute());
+    open('/admin/summary?ym=2026-11&filter=unregistered');
+    const list = await screen.findByRole('radiogroup', { name: 'Danh sách kỳ đang mở' });
+    expect(within(list).getByRole('radio', { name: 'Chưa đăng ký (8)' })).toHaveAttribute('aria-checked', 'true');
+    expect(await screen.findByText('Phạm Thu Hà')).toBeInTheDocument();
+    expect(screen.getByText('Tính trên người thuộc nhóm dùng app (PMH ID), không phải cả danh bạ.')).toBeInTheDocument();
+    expect(calledUrls(f).some((u) => u.includes('/2026-11/unregistered'))).toBe(true);
+    await userEvent.click(within(list).getByRole('radio', { name: 'Đã đăng ký (3)' }));
+    expect(await screen.findByRole('button', { name: 'Xem phiếu của Nhân viên A' })).toBeInTheDocument();
+    expect(screen.getByTestId('location-search').textContent).not.toContain('filter=unregistered');
+  });
+
   it('bấm "Tháng trước" sang kỳ khóa 2026-10, bấm "Đang mở" quay lại kỳ mở', async () => {
     stubSummaryApi(registrationRoute());
     open();

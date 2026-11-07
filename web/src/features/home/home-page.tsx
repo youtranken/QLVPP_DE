@@ -22,21 +22,22 @@ import './home.m1.css';
 
 type View = 'locked' | 'current';
 
-function UnregisteredSection({ ym, deadline, count }: { ym: string; deadline: string | null; count: number }) {
+function UnregisteredSection({ ym, summary }: { ym: string; summary: PeriodSummary }) {
   const people = useUnregistered(ym);
-  return <UnregisteredCard ym={ym} deadline={deadline} count={count} people={people.data?.items ?? null} failed={people.isError} onRetry={() => void people.refetch()} />;
+  return <UnregisteredCard ym={ym} deadline={summary.deadline} count={summary.unregistered} registered={summary.registered} headcount={summary.headcount} people={people.data?.items ?? null} failed={people.isError} onRetry={() => void people.refetch()} />;
 }
 
 function Cards({ ym, summary }: { ym: string; summary: PeriodSummary }) {
   const review = useQuery(reviewLinesQuery('pending', ''));
   const low = useQuery(lowStockQuery());
   const custom = review.data?.items.length ?? 0;
+  const periods = [...new Set((review.data?.items ?? []).map((r) => r.period_ym).filter(Boolean))].sort();
   const lowItems = low.data ?? [];
   if (summary.unregistered === 0 && custom === 0 && !review.isError && lowItems.length === 0 && !low.isError) return null;
   return (
     <div className="hm-cards">
-      {summary.unregistered > 0 && <UnregisteredSection ym={ym} deadline={summary.deadline} count={summary.unregistered} />}
-      {review.isError ? <CardError onRetry={() => void review.refetch()} /> : custom > 0 && <CustomCard count={custom} />}
+      {summary.unregistered > 0 && <UnregisteredSection ym={ym} summary={summary} />}
+      {review.isError ? <CardError onRetry={() => void review.refetch()} /> : custom > 0 && <CustomCard count={custom} periods={periods} />}
       {low.isError ? <CardError onRetry={() => void low.refetch()} /> : lowItems.length > 0 && <LowStockCard items={lowItems} />}
     </div>
   );

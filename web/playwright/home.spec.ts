@@ -54,13 +54,23 @@ test.describe('Trang Tháng này (Plan v2-B, B6)', () => {
 
     await page.getByRole('radio', { name: /^Kỳ đang đăng ký/ }).click();
     await expect(steps(page).getByText('Sau khi khóa sổ')).toHaveCount(3);
-    // Kỳ đang mở chưa có Tổng hợp: nút chỉ báo đang chờ chốt, không dẫn sang kỳ khác
+    // Kỳ đang mở xem được ở Tổng hợp kỳ (chỉ xem): nút là liên kết thật sang danh sách đăng ký
     const month = Number((period.ym as string).slice(5, 7));
-    await expect(steps(page).getByText(`Đang chờ chốt kỳ (tháng ${month})`)).toBeVisible();
-    await expect(steps(page).getByRole('link')).toHaveCount(0);
+    const toOpen = steps(page).getByRole('link', { name: `Xem đăng ký kỳ tháng ${month}` });
+    await expect(toOpen).toHaveAttribute('href', `/admin/summary?ym=${period.ym}`);
+    await expect(steps(page).getByRole('link')).toHaveCount(1);
+    await expect(card.getByText(new RegExp(`^\\d+/\\d+ người thuộc nhóm dùng app đã đăng ký\\.`))).toBeVisible();
     await settled(page);
     await shot(page, info, 'home-register');
     if (isMobile(info)) await expectNoContrastViolations(page);
+
+    // "Xem tất cả" mở đúng danh sách chưa đăng ký của kỳ đang mở
+    await card.getByRole('link', { name: 'Xem tất cả' }).click();
+    await expect(page).toHaveURL(new RegExp(`/admin/summary\\?ym=${period.ym}&filter=unregistered`));
+    await expect(page.getByRole('radio', { name: `Chưa đăng ký (${unreg})` })).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByRole('table').getByText('Người thử 1')).toBeVisible();
+    await page.getByRole('radio', { name: /^Đã đăng ký \(/ }).click();
+    await expect(page.getByRole('radio', { name: /^Đã đăng ký \(/ })).toHaveAttribute('aria-checked', 'true');
 
     unreg = 0;
     await page.goto('/admin/home');

@@ -44,12 +44,12 @@ afterEach(async () => {
 });
 
 describe('PeriodLockGate — trang chỉ-kỳ-khóa', () => {
-  it('có kỳ mở: dải nhắc "xem được từ 00:00 ngày 11/11" + liên kết Xem tiến độ đăng ký, nội dung vẫn hiện', async () => {
+  it('có kỳ mở: dải nhắc "xem được từ 00:00 ngày 11/11" + liên kết "Xem đăng ký kỳ tháng 11" sang Tổng hợp kỳ mở, nội dung vẫn hiện', async () => {
     stub((ym) => jsonResponse(200, ym === '2026-10' ? LOCKED : OPEN_SUMMARY));
     mount(gate());
     expect(await screen.findByText('nội dung trang')).toBeInTheDocument();
     expect(await screen.findByText('Kỳ tháng 11 đang mở, xem được từ 00:00 ngày 11/11.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Xem tiến độ đăng ký' })).toHaveAttribute('href', '/admin/home');
+    expect(screen.getByRole('link', { name: 'Xem đăng ký kỳ tháng 11' })).toHaveAttribute('href', '/admin/summary?ym=2026-11');
   });
 
   it('tiếng Anh: "on 11/11" cùng một hàm lockPhrase', async () => {
@@ -64,7 +64,7 @@ describe('PeriodLockGate — trang chỉ-kỳ-khóa', () => {
     mount(gate());
     expect(await screen.findByText('Chưa có kỳ nào chốt sổ')).toBeInTheDocument();
     expect(await screen.findByText('Kỳ tháng 11 đang nhận đăng ký (3/8 người). Hành chính làm việc từ 00:00 ngày 11/11.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Xem tiến độ đăng ký' })).toHaveAttribute('href', '/admin/home');
+    expect(screen.getByRole('link', { name: 'Xem đăng ký kỳ tháng 11' })).toHaveAttribute('href', '/admin/summary?ym=2026-11');
     expect(screen.queryByText('nội dung trang')).not.toBeInTheDocument();
   });
 

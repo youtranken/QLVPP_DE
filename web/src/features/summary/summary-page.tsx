@@ -77,7 +77,7 @@ export function SummaryPage() {
         <Toolbar lead={<MonthControl ym={ym} openYm={openYm} onChange={p.setMonth} />} />
         {summary.isError && <LoadError onRetry={() => void summary.refetch()} />}
         {summary.isPending && <Loading />}
-        {data && <OpenPeriodView ym={ym} summary={data} />}
+        {data && <OpenPeriodView ym={ym} summary={data} unregistered={p.filter === 'unregistered'} onList={(un) => (un ? p.toggleFilter('unregistered') : p.clearFilter())} />}
       </div>
     );
   }
@@ -105,7 +105,7 @@ export function SummaryPage() {
           ),
         },
       )}
-      <OpenPeriodNotice />
+      <OpenPeriodNotice viewable />
       {summary.isError && <LoadError onRetry={() => void summary.refetch()} />}
       {data && <SummaryStats summary={data} stock={stock} filter={p.filter} onFilter={p.toggleFilter} />}
       <Toolbar
