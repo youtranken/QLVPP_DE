@@ -27,7 +27,6 @@ describe('Chữ: phần chưa giao của tháng đang giao không gọi là nợ
     expect(all['delivery.detail.outOfStock']).toBe('Hết hàng — chưa nhận {{n}}');
     expect(all['delivery.detail.shortWarn']).toBe('{{n}} dòng thiếu kho. Giao phần đang có; phần còn lại chờ hàng về.');
     expect(all['delivery.backlog.description']).toBe('Phần chưa giao của các tháng trước tháng {{month}} — giao bổ sung khi có hàng, hoặc hủy nợ.');
-    expect(all['delivery.people.description']).toBe('Nhân viên đến lấy: tìm tên, kiểm hàng, bấm Giao.');
   });
 
   it('en: một thuật ngữ cho Chưa nhận là "Not yet received", không còn "Not collected"/"not-yet-collected"', () => {

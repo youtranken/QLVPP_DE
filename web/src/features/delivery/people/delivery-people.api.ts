@@ -59,3 +59,15 @@ export const deliveryPeopleQuery = (ym: string | undefined) =>
 export function useDeliveryPeople(ym: string | undefined) {
   return useQuery(deliveryPeopleQuery(ym));
 }
+
+export interface BulkDeliverBody {
+  requests: { request_id: string; lines: { line_id: string; qty: number; expected_delivered_qty: number }[] }[];
+}
+
+export type BulkRequestResult =
+  | { request_id: string; ok: true; delivered_units: number; request_complete: boolean }
+  | { request_id: string; ok: false; code: string; line_id?: string; available?: number; remaining?: number };
+
+// Mỗi phiếu một transaction ở server: HTTP 200 kể cả khi có phiếu lỗi, kết quả theo thứ tự body
+export const deliverBulk = (body: BulkDeliverBody, csrfToken: string | null) =>
+  apiFetch<{ results: BulkRequestResult[] }>('/api/admin/deliveries/bulk', { method: 'POST', body: JSON.stringify(body), csrfToken });

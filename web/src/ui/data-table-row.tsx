@@ -13,12 +13,14 @@ export function SelectBox({
   indeterminate = false,
   label,
   labelledBy,
+  disabled = false,
   onChange,
 }: {
   checked: boolean;
   indeterminate?: boolean;
   label?: string;
   labelledBy?: string;
+  disabled?: boolean;
   onChange: (checked: boolean) => void;
 }) {
   const ref = useRef<HTMLInputElement>(null);
@@ -32,6 +34,7 @@ export function SelectBox({
       aria-label={label}
       aria-labelledby={labelledBy}
       checked={checked}
+      disabled={disabled}
       onChange={(e) => onChange(e.target.checked)}
     />
   );

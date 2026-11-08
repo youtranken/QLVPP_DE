@@ -1,20 +1,9 @@
-[data-shell='admin'] .pp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 232px), 1fr)); gap: var(--s-3); }
 
-[data-shell='admin'] .pp-card { display: grid; gap: var(--s-3); height: 100%; padding: var(--s-4); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
-[data-shell='admin'] .pp-card.is-selected { box-shadow: inset 0 0 0 2px var(--c-acc), var(--e-1); }
-[data-shell='admin'] .pp-card__who { display: flex; align-items: center; gap: var(--s-3); }
-[data-shell='admin'] .pp-card__who h3 { margin: 0; font: var(--t-label); overflow-wrap: anywhere; }
-[data-shell='admin'] .pp-card__who small { display: block; font: var(--t-sm); color: var(--c-muted); }
-[data-shell='admin'] .pp-card__thumbs { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); min-height: 34px; }
-[data-shell='admin'] .pp-card__more { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 var(--s-2); border-radius: var(--r-sm); background: var(--c-surface-2); color: var(--c-ink-2); font: var(--t-micro); }
-[data-shell='admin'] .pp-card__debt { margin: 0; padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); background: var(--c-warn-soft); color: var(--c-warn); font: var(--t-cap); font-weight: 700; }
-[data-shell='admin'] .pp-card__actions { display: flex; gap: var(--s-2); align-self: end; }
-[data-shell='admin'] .pp-card__actions .btn { flex: 1; padding: 0 12px; }
-[data-shell='admin'] .pp-card__actions .btn:disabled { cursor: default; }
 
 [data-shell='admin'] .pp-chip { justify-self: start; padding: var(--s-1) var(--s-3); border-radius: var(--r-pill); font: var(--t-micro); }
 [data-shell='admin'] .pp-chip--pending { background: var(--c-info-soft); color: var(--c-info); }
 [data-shell='admin'] .pp-chip--debt { background: var(--c-warn-soft); color: var(--c-warn); }
+[data-shell='admin'] .pp-chip--short { background: var(--c-warn-soft); color: var(--c-warn); }
 [data-shell='admin'] .pp-chip--done { background: var(--c-ok-soft); color: var(--c-ok); }
 
 [data-shell='admin'] .pp-avatar { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: var(--r-pill); background: var(--c-acc-soft); color: var(--c-acc-hover); font: var(--t-label); font-weight: 800; }
@@ -53,16 +42,9 @@
   [data-shell='admin'] .pp-tabs .seg-m1 em { padding: 1px var(--s-2); }
 }
 [data-shell='admin'] .pp-row__main > :first-child { grid-row: span 2; align-self: start; }
-[data-shell='admin'] .pp-card__sum { margin: 0; font: var(--t-sm); font-weight: 700; color: var(--c-ink); }
 [data-shell='admin'] .pp-tabs__note { display: block; margin-top: var(--s-1); font: var(--t-cap); color: var(--c-ink-2); }
 @media (max-width: 767px) {
   [data-shell='admin'] .pp-toolbar { position: sticky; top: 0; z-index: 2; background: var(--c-page); }
-}
-[data-shell='admin'] .pp-short { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); margin: 0 0 var(--s-3); padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); background: var(--c-warn-soft); color: var(--c-warn); font: var(--t-sm); font-weight: 700; }
-[data-shell='admin'] .pp-short a { color: var(--c-acc); }
-[data-shell='admin'] .pp-row__short { color: var(--c-warn); font: var(--t-cap); }
-@media (max-width: 767px) {
-  [data-shell='admin'] .pp-card__actions .pp-card__view { flex: none; min-height: 44px; padding: 0 var(--s-2); border: 0; background: none; box-shadow: none; color: var(--c-acc); text-decoration: underline; }
 }
 
 [data-shell='admin'] .dd-sub { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-3); margin: var(--s-1) 0 0; font: var(--t-sm); color: var(--c-muted); }
@@ -107,4 +89,25 @@
   [data-shell='admin'] .dd-table td:nth-child(3), [data-shell='admin'] .dd-table td:nth-child(4) { width: auto; text-align: left; }
   [data-shell='admin'] .dd-step { width: 100%; max-width: 200px; }
   [data-shell='admin'] .dd-step button, [data-shell='admin'] .dd-step input { min-height: 44px; }
+}
+
+[data-shell='admin'] .pt-table td.pt-pick, [data-shell='admin'] .pt-table th.pt-pick { width: 40px; text-align: center; }
+[data-shell='admin'] .pt-table td.pt-pick input, [data-shell='admin'] .pt-table th.pt-pick input { width: 18px; height: 18px; accent-color: var(--c-acc); }
+[data-shell='admin'] .pt-table tr.is-picked td { background: var(--c-surface-2); }
+[data-shell='admin'] .pt-person { display: flex; align-items: center; gap: var(--s-2); }
+[data-shell='admin'] .pt-person .pp-avatar { width: 28px; height: 28px; font: var(--t-micro); font-weight: 800; }
+[data-shell='admin'] .pt-status { display: grid; gap: var(--s-1); justify-items: start; }
+[data-shell='admin'] .pt-chips { display: flex; flex-wrap: wrap; gap: var(--s-1); }
+[data-shell='admin'] .pt-debt { color: var(--c-warn); font: var(--t-cap); font-weight: 700; }
+[data-shell='admin'] .pt-table td.pt-acts { white-space: nowrap; }
+[data-shell='admin'] .pt-table td.pt-acts .btn + .btn { margin-left: var(--s-2); }
+[data-shell='admin'] .pt-table td.pt-acts .btn:disabled { cursor: default; }
+[data-shell='admin'] .pt-bulk { display: flex; align-items: center; gap: var(--s-3); margin-left: auto; }
+[data-shell='admin'] .bd-list { display: grid; gap: var(--s-2); margin: 0; padding: 0; list-style: none; }
+[data-shell='admin'] .bd-list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-1) var(--s-3); padding-bottom: var(--s-2); border-bottom: 1px solid var(--c-line); font: var(--t-sm); }
+[data-shell='admin'] .bd-list b { font: var(--t-label); }
+[data-shell='admin'] .bd-left { color: var(--c-warn); font: var(--t-cap); font-weight: 700; }
+@media (max-width: 767px) {
+  [data-shell='admin'] .pt-bulk { position: sticky; bottom: 0; z-index: 2; width: 100%; justify-content: space-between; padding: var(--s-3) 0; background: var(--c-page); }
+  [data-shell='admin'] .pt-bulk .btn--primary { flex: 1; }
 }

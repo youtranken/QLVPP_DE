@@ -5,7 +5,7 @@ import { prevYmOf, stockOf } from './locked-request';
 asRole('admin');
 
 const month = (ym: string) => Number(ym.slice(5, 7));
-const cardOf = (page: Page, name: string) => page.getByRole('heading', { level: 3, name, exact: true }).locator('xpath=ancestor::article');
+const cardOf = (page: Page, name: string) => page.getByRole('row').filter({ has: page.getByText(name, { exact: true }) });
 const fitsWidth = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 const find = (page: Page, text: string) => page.getByRole('searchbox', { name: 'Tìm tên hoặc phòng ban' }).fill(text);
 
@@ -45,7 +45,7 @@ const deliverPosts = (page: Page) => {
 };
 
 test.describe('Giao hàng theo người — mọi lần giao qua hộp xác nhận', () => {
-  test('V2D-10 card opens dialog: A đủ 3, B giao 7 chưa nhận 3, kho cuối 0', async ({ page, request }, info) => {
+  test('V2D-10 row opens dialog: A đủ 3, B giao 7 chưa nhận 3, kho cuối 0', async ({ page, request }, info) => {
     const release = await acquireLock('prev-period');
     const tag = `${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}`;
     const period = await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json();
@@ -106,6 +106,48 @@ test.describe('Giao hàng theo người — mọi lần giao qua hộp xác nh�
       await expect(stillB.getByRole('button', { name: /^Tủ chưa có hàng/ })).toBeDisabled();
       await settled(page);
       if (isMobile(info)) await expectNoContrastViolations(page);
+    } finally {
+      s.cleanup();
+      release();
+    }
+  });
+
+  test('Vòng3-GH chọn 2 phiếu giao một lần, tủ thiếu → phần thiếu chờ; bấm đúp chỉ một lượt', async ({ page, request }, info) => {
+    const release = await acquireLock('prev-period');
+    const tag = `${Date.now().toString(36)}b${isMobile(info) ? 'm' : 'd'}`;
+    const period = await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json();
+    const prevYm = prevYmOf(period.ym);
+    const s = await seedStandard(tag, prevYm);
+    try {
+      // Tủ 5, A cần 3 (đăng ký trước), B cần 10: A đủ, B nhận 2, phần còn lại 8 vẫn chờ
+      const stock = await request.post(`/api/admin/items/${s.pen.id}/stock`, { headers: devHeaders('admin'), data: { delta: 5, reason: 'purchase', note: 'PW nhập tồn' } });
+      expect(stock.ok()).toBe(true);
+      const bulkPosts: string[] = [];
+      page.on('request', (r) => {
+        if (r.method() === 'POST' && r.url().endsWith('/deliveries/bulk')) bulkPosts.push(r.url());
+      });
+      await page.goto('/admin/delivery');
+      await find(page, 'PW Phòng giao');
+      await expect(cardOf(page, s.b.name).getByText('Tủ thiếu 1 món')).toBeVisible();
+      await page.getByRole('checkbox', { name: `Chọn ${s.a.name}` }).check();
+      await page.getByRole('checkbox', { name: `Chọn ${s.b.name}` }).check();
+      await expect(page.getByText(/Đã chọn/)).toHaveCount(0);
+      await settled(page);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await page.getByRole('button', { name: 'Giao 2 phiếu' }).click();
+      const dlg = page.getByRole('dialog', { name: 'Giao 2 phiếu?' });
+      await expect(dlg.getByText('Phần thiếu 8 chờ hàng về')).toBeVisible();
+      await settled(page);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await dlg.getByRole('button', { name: 'Xác nhận giao' }).dblclick();
+      await expect(page.getByText('Đã giao 2 phiếu')).toBeVisible();
+      await expect(dlg).toHaveCount(0);
+      expect(bulkPosts, 'bấm đúp chỉ một lượt').toHaveLength(1);
+      expect(stockOf(s.pen.id)).toBe(0);
+      const delivered = (sub: string) => psql(`SELECT l.delivered_qty || '/' || l.cancelled_qty FROM request_lines l JOIN requests r ON r.id = l.request_id WHERE r.user_sub = '${sub}'`);
+      expect(delivered(s.a.sub)).toBe('3/0');
+      expect(delivered(s.b.sub), 'B nhận 2, phần thiếu không bị hủy').toBe('2/0');
+      await expect(cardOf(page, s.b.name).getByText('Đã giao 2/10')).toBeVisible();
     } finally {
       s.cleanup();
       release();

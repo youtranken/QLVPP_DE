@@ -34,7 +34,12 @@ function stub(s: Stub = {}) {
 
 const callsTo = (f: ReturnType<typeof stub>, url: string) => f.mock.calls.filter(([u]) => u === url);
 const search = () => screen.getByTestId('location-search').textContent ?? '';
-const card = (name: string) => screen.getByRole('heading', { level: 3, name }).closest('article') as HTMLElement;
+const card = (name: string) => screen.getByText(name, { selector: '.pt-person b' }).closest('tr') as HTMLElement;
+const names = () =>
+  screen
+    .getAllByRole('row')
+    .slice(1)
+    .map((r) => within(r).getByRole('checkbox').getAttribute('aria-label')?.replace('Chọn ', ''));
 
 function open(path = '/admin/delivery', width = 1280) {
   mockViewport(width);
@@ -48,7 +53,7 @@ describe('DeliveryPeoplePage — đầu trang và tab', () => {
     const f = stub();
     open();
     expect(await screen.findByRole('heading', { level: 1, name: 'Giao hàng kỳ tháng 10' })).toBeInTheDocument();
-    await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
     // Cùng khóa với huy hiệu sidebar (QueryClient của test staleTime 0 nên có thể tải hai lần); chỉ kỳ khóa gần nhất
     expect(callsTo(f, PEOPLE_URL).length).toBeGreaterThan(0);
     expect(f.mock.calls.filter(([u]) => String(u).includes('delivery-people') && u !== PEOPLE_URL)).toHaveLength(0);
@@ -58,10 +63,10 @@ describe('DeliveryPeoplePage — đầu trang và tab', () => {
   it('số trên tab đúng (B ở cả hai tab): Chưa nhận 2, Còn nợ 2, Đã nhận 1, Tất cả 4; mặc định tab Chưa nhận chỉ có A và B', async () => {
     stub();
     open();
-    await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
     for (const name of ['Chưa nhận, 2', 'Còn nợ, 2', 'Đã nhận, 1', 'Tất cả, 4']) expect(screen.getByRole('radio', { name })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Chưa nhận, 2' })).toBeChecked();
-    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Nguyễn Văn An', 'Lê Thị Bình']);
+    expect(names()).toEqual(['Nguyễn Văn An', 'Lê Thị Bình']);
   });
 
   it('người chỉ có nợ (không phiếu kỳ này) có ở tab Còn nợ với dòng cam "Nợ tháng 9: 1 món"; đổi tab ghi ?tab=debt', async () => {
@@ -69,26 +74,26 @@ describe('DeliveryPeoplePage — đầu trang và tab', () => {
     open();
     await userEvent.click(await screen.findByRole('radio', { name: 'Còn nợ, 2' }));
     expect(search()).toContain('tab=debt');
-    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Lê Thị Bình', 'Trần Minh Khoa']);
+    expect(names()).toEqual(['Lê Thị Bình', 'Trần Minh Khoa']);
     expect(within(card('Trần Minh Khoa')).getByText('Nợ tháng 9: 1 món')).toBeInTheDocument();
   });
 
   it('?tab=done mở thẳng tab Đã nhận; nút thẻ đã nhận là "Đã giao" và vô hiệu', async () => {
     stub();
     open('/admin/delivery?tab=done');
-    expect(await screen.findByRole('heading', { level: 3, name: 'Đỗ Mai Linh' })).toBeInTheDocument();
+    expect(await screen.findByText('Đỗ Mai Linh', { selector: '.pt-person b' })).toBeInTheDocument();
     expect(within(card('Đỗ Mai Linh')).getByRole('button', { name: /^Đã giao/ })).toBeDisabled();
   });
 
   it('từ khóa bỏ dấu "binh" tìm trên mọi tab và ghi ?q=; xóa từ khóa trả về tab', async () => {
     stub();
     open('/admin/delivery?tab=done');
-    await screen.findByRole('heading', { level: 3, name: 'Đỗ Mai Linh' });
+    await screen.findByText('Đỗ Mai Linh', { selector: '.pt-person b' });
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm tên hoặc phòng ban' }), 'binh');
-    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Lê Thị Bình']);
+    expect(names()).toEqual(['Lê Thị Bình']);
     expect(search()).toContain('q=binh');
     await userEvent.clear(screen.getByRole('searchbox', { name: 'Tìm tên hoặc phòng ban' }));
-    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Đỗ Mai Linh']);
+    expect(names()).toEqual(['Đỗ Mai Linh']);
   });
 
   it('không ai khớp → câu rỗng, không vỡ', async () => {
@@ -102,7 +107,7 @@ describe('DeliveryPeoplePage — trang Giao hàng bản cũ đã gỡ', () => {
   it('/admin/delivery/classic?ym=2026-12 → /admin/delivery?ym=2026-12 (thay thế, không thêm lịch sử)', async () => {
     stub();
     open('/admin/delivery/classic?ym=2026-12&request=r-1');
-    await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
     expect(screen.getByTestId('location')).toHaveTextContent(/^\/admin\/delivery$/);
     expect(search()).toBe('?ym=2026-12');
   });
@@ -110,7 +115,7 @@ describe('DeliveryPeoplePage — trang Giao hàng bản cũ đã gỡ', () => {
   it('menu không còn "Giao hàng (bản cũ)"; mã nguồn không còn trang cũ', async () => {
     stub();
     open();
-    await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
     expect(screen.queryByRole('link', { name: 'Giao hàng (bản cũ)' })).toBeNull();
     const routes = readFileSync(resolve(__dirname, '../../../shell/app-routes.tsx'), 'utf8');
     expect(routes).not.toMatch(/delivery-page'/);
@@ -131,11 +136,11 @@ describe('DeliveryPeoplePage — giao thiếu và tủ trống', () => {
   it('người đã nhận một phần tháng đang giao vẫn ở "Chưa nhận", không ở "Còn nợ"', async () => {
     stub({ people: [served, A] });
     open();
-    await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
     expect(screen.getByRole('radio', { name: 'Chưa nhận, 2' })).toBeChecked();
-    expect(screen.getByRole('heading', { level: 3, name: 'Sơn Giao Thiếu' })).toBeInTheDocument();
+    expect(screen.getByText('Sơn Giao Thiếu', { selector: '.pt-person b' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('radio', { name: 'Còn nợ, 0' }));
-    expect(screen.queryByRole('heading', { level: 3, name: 'Sơn Giao Thiếu' })).toBeNull();
+    expect(screen.queryByText('Sơn Giao Thiếu', { selector: '.pt-person b' })).toBeNull();
   });
 
   it('tủ 0 → nút chính vô hiệu "Tủ chưa có hàng"; tủ 0 nhưng có dòng ADM hết hàng → bật "Giao…"; tủ 1 → "Giao…"', async () => {
@@ -144,7 +149,7 @@ describe('DeliveryPeoplePage — giao thiếu và tủ trống', () => {
     const one = person({ user_sub: 'u-o', full_name: 'Oanh Còn Một', lines: [pLine({ line_id: 'lo', item_id: 'i-a4', stock_qty: 1 })] });
     stub({ people: [none, adm, one] });
     open();
-    await screen.findByRole('heading', { level: 3, name: 'Nam Hết Hàng' });
+    await screen.findByText('Nam Hết Hàng', { selector: '.pt-person b' });
     expect(within(card('Nam Hết Hàng')).getByRole('button', { name: /^Tủ chưa có hàng/ })).toBeDisabled();
     expect(within(card('Minh ADM Hết')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
     expect(within(card('Oanh Còn Một')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
@@ -157,7 +162,7 @@ describe('DeliveryPeoplePage — tiến độ trên thẻ', () => {
     const cancelled = person({ user_sub: 'u-x', full_name: 'Xuân Hủy', status: 'debt', lines: [pLine({ line_id: 'lx', qty: 10, delivered_qty: 4, cancelled_qty: 2, remaining_qty: 4, stock_qty: 9 })] });
     stub({ people: [partial, cancelled, A] });
     open('/admin/delivery?tab=all');
-    await screen.findByRole('heading', { level: 3, name: 'Phan Văn Phần' });
+    await screen.findByText('Phan Văn Phần', { selector: '.pt-person b' });
     expect(within(card('Phan Văn Phần')).getByText('Đã giao 7/10')).toBeInTheDocument();
     expect(within(card('Xuân Hủy')).getByText('Đã giao 4/8')).toBeInTheDocument();
     expect(within(card('Nguyễn Văn An')).queryByText(/^Đã giao \d/)).toBeNull();
@@ -179,7 +184,7 @@ describe('DeliveryPeoplePage — nút chính trên thẻ mở hộp giao', () =>
   it('trước đây "Giao đủ" giao thẳng: nay "Giao…" mở hộp, 0 request deliver/deliver-all, URL không đổi', async () => {
     const f = stub();
     open();
-    await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
     const btn = within(card('Nguyễn Văn An')).getByRole('button', { name: 'Giao…, Nguyễn Văn An' });
     await userEvent.click(btn);
     expect(await screen.findByRole('dialog', { name: 'Giao cho Nguyễn Văn An?' })).toBeInTheDocument();
@@ -191,7 +196,7 @@ describe('DeliveryPeoplePage — nút chính trên thẻ mở hộp giao', () =>
   it('thẻ thiếu hàng (B cần 10, tủ 7, A trước 3) → hộp (không mở panel), đề xuất = tủ còn sau người trước (4)', async () => {
     const f = stub();
     open();
-    await screen.findByRole('heading', { level: 3, name: 'Lê Thị Bình' });
+    await screen.findByText('Lê Thị Bình', { selector: '.pt-person b' });
     await userEvent.click(within(card('Lê Thị Bình')).getByRole('button', { name: /^Giao…/ }));
     const dlg = await screen.findByRole('dialog', { name: 'Giao cho Lê Thị Bình?' });
     expect((within(dlg).getByRole('spinbutton', { name: 'Giao lần này: Bút bi xanh' }) as HTMLInputElement).value).toBe('4');
@@ -203,7 +208,7 @@ describe('DeliveryPeoplePage — nút chính trên thẻ mở hộp giao', () =>
   it('cùng món ở hai dòng (nợ 3 + kỳ này 5, tủ 6) → hộp với 3 rồi 3', async () => {
     stub({ people: [SHARED] });
     open();
-    await screen.findByRole('heading', { level: 3, name: 'Sử Chung Món' });
+    await screen.findByText('Sử Chung Món', { selector: '.pt-person b' });
     await userEvent.click(within(card('Sử Chung Món')).getByRole('button', { name: /^Giao…/ }));
     const dlg = await screen.findByRole('dialog');
     expect((within(dlg).getAllByRole('spinbutton') as HTMLInputElement[]).map((i) => i.value)).toEqual(['3', '3']);
@@ -212,7 +217,7 @@ describe('DeliveryPeoplePage — nút chính trên thẻ mở hộp giao', () =>
   it('Xác nhận → deliver từng dòng (không deliver-all), toast, hộp đóng, focus về ô tìm với chữ đã chọn', async () => {
     const f = stub();
     open('/admin/delivery?q=An');
-    await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
     await userEvent.click(within(card('Nguyễn Văn An')).getByRole('button', { name: /^Giao…/ }));
     const dlg = await screen.findByRole('dialog');
     await userEvent.click(within(dlg).getByRole('button', { name: 'Xác nhận giao' }));
@@ -227,7 +232,7 @@ describe('DeliveryPeoplePage — nút chính trên thẻ mở hộp giao', () =>
   it('lỗi một dòng → "Mở chi tiết người" đóng hộp và mở panel người đó', async () => {
     stub({ deliver: () => jsonResponse(409, { code: 'STOCK_INSUFFICIENT', available: 0 }) });
     open('/admin/delivery?tab=debt');
-    await screen.findByRole('heading', { level: 3, name: 'Trần Minh Khoa' });
+    await screen.findByText('Trần Minh Khoa', { selector: '.pt-person b' });
     await userEvent.click(within(card('Trần Minh Khoa')).getByRole('button', { name: /^Giao…/ }));
     const dlg = await screen.findByRole('dialog');
     await userEvent.click(within(dlg).getByRole('button', { name: 'Xác nhận giao' }));
@@ -248,19 +253,22 @@ describe('DeliveryPeoplePage — nút chính trên thẻ mở hộp giao', () =>
   });
 });
 
-describe('DeliveryPeoplePage — W19 đầu trang', () => {
-  it('tủ bút 7 < A + B chờ 13 → "1 món chưa đủ tủ cho người đang chờ — chờ đợt hàng sau" + "Xem ở Tủ / Kho"', async () => {
+describe('DeliveryPeoplePage — tủ thiếu', () => {
+  it('tủ bút 7 < A + B chờ 13 → chip "Tủ thiếu 1 món" ở dòng của A và B; không còn banner đầu trang, không có "Xem ở Tủ / Kho"', async () => {
     stub();
     open();
-    expect(await screen.findByText('1 món chưa đủ tủ cho người đang chờ — chờ đợt hàng sau')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Xem ở Tủ / Kho' })).toHaveAttribute('href', '/admin/stock');
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
+    expect(within(card('Nguyễn Văn An')).getByText('Tủ thiếu 1 món')).toBeInTheDocument();
+    expect(within(card('Lê Thị Bình')).getByText('Tủ thiếu 1 món')).toBeInTheDocument();
+    expect(screen.queryByText(/chưa đủ tủ cho người/)).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Xem ở Tủ / Kho' })).toBeNull();
   });
 
-  it('đủ tủ → không có dòng W19', async () => {
+  it('đủ tủ → không có chip', async () => {
     stub({ people: [A] });
     open();
-    await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
-    expect(screen.queryByText(/chưa đủ tủ/)).toBeNull();
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
+    expect(screen.queryByText(/Tủ thiếu/)).toBeNull();
   });
 });
 
@@ -287,7 +295,7 @@ describe('DeliveryPeoplePage — panel và Người tiếp theo', () => {
   it('?person= không có trong danh sách → không panel, không lỗi, tham số bị gỡ', async () => {
     stub();
     open('/admin/delivery?person=u-nobody&tab=all');
-    await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
     await waitFor(() => expect(search()).toBe('?tab=all'));
     expect(screen.queryByRole('dialog')).toBeNull();
   });
@@ -324,7 +332,7 @@ describe('DeliveryPeoplePage — kỳ chưa khóa và lỗi', () => {
     stub({ locked: false });
     open();
     expect(await screen.findByText('Kỳ tháng 10 chưa khóa sổ — xem được từ 00:00 ngày 11/10.')).toBeInTheDocument();
-    expect(screen.queryByRole('article')).toBeNull();
+    expect(screen.queryByRole('table')).toBeNull();
     expect(screen.queryByRole('button', { name: /^Giao/ })).toBeNull();
   });
 

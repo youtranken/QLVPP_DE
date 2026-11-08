@@ -158,7 +158,7 @@ test.describe('V2D-17b panel phủ ở Giao hàng, Tổng hợp, Tủ / Kho, Nh�
   test('V2D-17b Giao hàng: "Xem" mở panel người ở mọi bề rộng, không còn cột bên', async ({ page }, info) => {
     await mockDelivery(page);
     await page.goto('/admin/delivery');
-    const grid = page.getByRole('list', { name: 'Danh sách người nhận hàng' });
+    const grid = page.getByRole('table').first();
     await expectOverlay(page, info, grid, () => grid.getByRole('button', { name: `Xem ${PW_PERSON.full_name}` }).click(), page.getByRole('dialog', { name: PW_PERSON.full_name }), 'person');
   });
 

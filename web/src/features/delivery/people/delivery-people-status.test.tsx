@@ -15,7 +15,7 @@ function open(people: DeliveryPerson[]) {
   mockViewport(1280);
   renderApp(makeMe('admin'), '/admin/delivery?tab=all');
 }
-const card = (name: string) => screen.getByRole('heading', { level: 3, name }).closest('article') as HTMLElement;
+const card = (name: string) => screen.getByText(name, { selector: '.pt-person b' }).closest('tr') as HTMLElement;
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -27,13 +27,13 @@ describe('DeliveryPeoplePage — Chưa nhận / Còn nợ chồng nhau', () => {
 
   it('không ai có cả hai → không có ghi chú', async () => {
     open([A, C, D]);
-    await screen.findByRole('heading', { level: 3, name: 'Nguyễn Văn An' });
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
     expect(screen.queryByText(/người có cả hai/)).toBeNull();
   });
 });
 
-describe('PersonCard — số trên thẻ', () => {
-  it('thẻ ghi "3 món · 18 đơn vị" (món chưa nhận + nợ còn giao được; nợ + kỳ này cùng bút là 1 món); người đã nhận đủ không có dòng số', async () => {
+describe('PeopleTable — số trên dòng', () => {
+  it('dòng ghi "3 món" và 18 đơn vị (món chưa nhận + nợ còn giao được; nợ + kỳ này cùng bút là 1 món); người đã nhận đủ không có dòng số', async () => {
     const many = person({
       user_sub: 'u-m',
       full_name: 'Mai Nhiều Món',
@@ -46,8 +46,9 @@ describe('PersonCard — số trên thẻ', () => {
       ],
     });
     open([many, D]);
-    await screen.findByRole('heading', { level: 3, name: 'Mai Nhiều Món' });
-    expect(within(card('Mai Nhiều Món')).getByText('3 món · 18 đơn vị')).toBeInTheDocument();
-    expect(within(card('Đỗ Mai Linh')).queryByText(/đơn vị/)).toBeNull();
+    await screen.findByText('Mai Nhiều Món', { selector: '.pt-person b' });
+    const cells = within(card('Mai Nhiều Món')).getAllByRole('cell').map((c) => c.textContent);
+    expect(cells).toEqual(expect.arrayContaining(['3 món', '18']));
+    expect(within(card('Đỗ Mai Linh')).getAllByRole('cell').map((c) => c.textContent)).toEqual(expect.arrayContaining(['0 món', '0']));
   });
 });

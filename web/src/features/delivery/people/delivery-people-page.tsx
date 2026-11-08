@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { Link, Navigate, useLocation } from 'react-router-dom';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode, apiErrorString } from '@/lib/api-error';
 import { langOf, lockPhrase } from '@/lib/period-text';
@@ -17,12 +17,15 @@ import { usePeriodSummary } from '@/features/summary/summary.api';
 import { useDeliveryPeople, type DeliveryPerson } from './delivery-people.api';
 import { filterPeople, overlapCount, tabCounts, type PeopleTab } from './people-filter';
 import { stockShortages } from './deliver-plan';
+import { bulkPlan, type BulkPlan } from './bulk-plan';
+import { BulkDeliverDialog } from './bulk-deliver-dialog';
 import { DeliverDialog } from './deliver-dialog';
-import { PersonAvatar, PersonCard } from './person-card';
+import { PeopleTable, PersonAvatar } from './people-table';
 import { PersonPanel } from './person-panel';
 import { useQuickDeliver } from './use-quick-deliver';
 import './delivery-people.m1.css';
 
+const NO_PEOPLE: DeliveryPerson[] = [];
 const TABS: PeopleTab[] = ['pending', 'debt', 'done', 'all'];
 
 function PanelHead({ person }: { person: DeliveryPerson }) {
@@ -41,7 +44,7 @@ function PeopleBoard({ ym }: { ym: string }) {
   const query = useDeliveryPeople(ym);
   const summary = usePeriodSummary(ym);
   const month = monthOf(ym);
-  const people = query.data?.people ?? [];
+  const people = query.data?.people ?? NO_PEOPLE;
   const asked = params.get('tab');
   const tab: PeopleTab = TABS.find((x) => x === asked) ?? 'pending';
   const q = params.get('q') ?? '';
@@ -59,6 +62,21 @@ function PeopleBoard({ ym }: { ym: string }) {
   const open = (sub: string) => panel.open(sub);
   const quick = useQuickDeliver(people);
   const [confirmFor, setConfirmFor] = useState<string | null>(null);
+  const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
+  // Kế hoạch chụp lúc bấm: làm mới danh sách giữa chừng không đổi số đang gửi
+  const [bulk, setBulk] = useState<BulkPlan | null>(null);
+  const bulkable = useMemo(() => new Set(bulkPlan(people, people).summary.map((s) => s.user_sub)), [people]);
+  const selectable = useCallback((p: DeliveryPerson) => bulkable.has(p.user_sub), [bulkable]);
+  // Người đã rời bộ lọc hoặc không còn gì giao được thì tự rơi khỏi tập chọn
+  const chosen = listed.filter((p) => picked.has(p.user_sub) && bulkable.has(p.user_sub));
+  const toggle = useCallback((sub: string) => setPicked((prev) => (prev.has(sub) ? new Set([...prev].filter((s) => s !== sub)) : new Set([...prev, sub]))), []);
+  const toggleAll = useCallback(
+    (checked: boolean) => {
+      const subs = listed.filter(selectable).map((p) => p.user_sub);
+      setPicked((prev) => (checked ? new Set([...prev, ...subs]) : new Set([...prev].filter((s) => !subs.includes(s)))));
+    },
+    [listed, selectable],
+  );
   const searchRef = useRef<HTMLInputElement>(null);
   // Giao xong: về ô tìm, chọn sẵn chữ để gõ ngay người kế
   const focusSearch = () => {
@@ -80,7 +98,7 @@ function PeopleBoard({ ym }: { ym: string }) {
 
   const counts = tabCounts(people);
   const both = overlapCount(people);
-  const short = stockShortages(people).size;
+  const shortages = stockShortages(people);
   const personPanel = selected && (
     <PersonPanel
       key={selected.user_sub}
@@ -116,29 +134,32 @@ function PeopleBoard({ ym }: { ym: string }) {
           />
           {both > 0 && <small className="pp-tabs__note">{t('delivery.people.overlap', { n: both })}</small>}
         </div>
+        {chosen.length > 0 && (
+          <div className="pt-bulk">
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => setPicked(new Set())}>
+              {t('delivery.bulk.clear')}
+            </button>
+            <button type="button" className="btn btn--primary" onClick={() => setBulk(bulkPlan(chosen, people))}>
+              {t('delivery.bulk.button', { n: chosen.length })}
+            </button>
+          </div>
+        )}
       </div>
-      {short > 0 && (
-        <p className="pp-short">
-          <span>{t('warn.W19head', { n: short })}</span>
-          <Link to="/admin/stock">{t('delivery.people.toStock')}</Link>
-        </p>
-      )}
       {listed.length === 0 ? (
         <EmptyState title={t('delivery.people.empty')} />
       ) : (
-        <div className="pp-grid" role="list" aria-label={t('delivery.people.list')}>
-          {listed.map((p) => (
-            <div role="listitem" key={p.user_sub}>
-              <PersonCard
-                person={p}
-                selected={p.user_sub === selected?.user_sub}
-                canDeliver={quick.canDeliver(p)}
-                onView={() => open(p.user_sub)}
-                onDeliver={() => setConfirmFor(p.user_sub)}
-              />
-            </div>
-          ))}
-        </div>
+        <PeopleTable
+          rows={listed}
+          shortages={shortages}
+          selected={picked}
+          selectable={selectable}
+          canDeliver={quick.canDeliver}
+          activeId={selected?.user_sub}
+          onToggle={toggle}
+          onToggleAll={toggleAll}
+          onView={open}
+          onDeliver={setConfirmFor}
+        />
       )}
       {selected && (
         <OverlayPanel
@@ -150,6 +171,17 @@ function PeopleBoard({ ym }: { ym: string }) {
           <PanelHead person={selected} />
           {personPanel}
         </OverlayPanel>
+      )}
+      {bulk && (
+        <BulkDeliverDialog
+          plan={bulk}
+          people={people}
+          onClose={() => setBulk(null)}
+          onDone={() => {
+            setBulk(null);
+            setPicked(new Set());
+          }}
+        />
       )}
       {confirming && (
         <DeliverDialog
@@ -178,7 +210,7 @@ export function DeliveryPeoplePage() {
   const title = t('delivery.people.title', { month: workingYm ? monthOf(workingYm) : '' }).trim();
   return (
     <div className="ct-page">
-      <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.delivery')]} title={title} description={t('delivery.people.description')} />
+      <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.delivery')]} title={title} />
       {current.isError ? <LoadError onRetry={() => void current.refetch()} /> : workingYm ? <PeopleBoard key={workingYm} ym={workingYm} /> : <Loading />}
     </div>
   );

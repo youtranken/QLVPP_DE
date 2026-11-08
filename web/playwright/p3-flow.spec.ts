@@ -33,7 +33,7 @@ const needCell = (row: Locator) => row.getByRole('cell').nth(5);
 async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/delivery');
   await admin.getByRole('searchbox', { name: 'Tìm tên hoặc phòng ban' }).fill(s.a.name);
-  const card = admin.getByRole('heading', { level: 3, name: s.a.name, exact: true }).locator('xpath=ancestor::article');
+  const card = admin.getByRole('row').filter({ has: admin.getByText(s.a.name, { exact: true }) });
   await card.getByRole('button', { name: `Giao…, ${s.a.name}` }).click();
   const dialog = admin.getByRole('dialog', { name: `Giao cho ${s.a.name}?` });
   // Tủ giấy 3, cần 5: đề xuất 3 và phần thiếu còn ở Chưa nhận
@@ -155,7 +155,7 @@ async function deliverRestOfPaper(admin: Page, info: TestInfo, s: MonthSeed) {
   await purchase(admin, s.paper, 2);
   await admin.goto('/admin/delivery');
   await admin.getByRole('searchbox', { name: 'Tìm tên hoặc phòng ban' }).fill(s.a.name);
-  const card = admin.getByRole('heading', { level: 3, name: s.a.name, exact: true }).locator('xpath=ancestor::article');
+  const card = admin.getByRole('row').filter({ has: admin.getByText(s.a.name, { exact: true }) });
   await card.getByRole('button', { name: `Giao…, ${s.a.name}` }).click();
   const dialog = admin.getByRole('dialog', { name: `Giao cho ${s.a.name}?` });
   await expect(dialog.getByRole('spinbutton', { name: `Giao lần này: ${s.paper.name}` })).toHaveValue('2');
