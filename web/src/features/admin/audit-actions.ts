@@ -8,6 +8,7 @@ export const AUDIT_ACTIONS: readonly string[] = [
   'arrival.custom_received',
   'auth.login',
   'auth.login_denied_idp',
+  'auth.login_denied_revoked',
   'auth.login_failed',
   'auth.logout',
   'auth.sa_login',
@@ -45,6 +46,7 @@ export const AUDIT_ACTIONS: readonly string[] = [
   'unit.deleted',
   'unit.updated',
   'users.directory_sync',
+  'users.role_changed',
 ];
 
 type Translate = (key: string, opts?: { defaultValue?: string }) => string;

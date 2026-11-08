@@ -5,6 +5,7 @@ import { DirectorySyncService } from './directory-sync.service';
 import { DirectorySyncScheduler } from './directory-sync.scheduler';
 import { UsersAdminController } from './users-admin.controller';
 import { UsersController } from './users.controller';
+import { UserAccessService } from './user-access.service';
 import { UsersService } from './users.service';
 
 @Module({
@@ -12,10 +13,11 @@ import { UsersService } from './users.service';
   controllers: [UsersController, UsersAdminController],
   providers: [
     UsersService,
+    UserAccessService,
     DirectorySyncService,
     DirectorySyncScheduler,
     { provide: DIRECTORY_CLIENT, useClass: DirectoryClient },
   ],
-  exports: [UsersService],
+  exports: [UsersService, UserAccessService],
 })
 export class UsersModule {}

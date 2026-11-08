@@ -10,6 +10,7 @@ import {
 import { LOCAL_SA_SUB } from '../src/modules/auth/local-sa-env';
 import { NotificationsService } from '../src/modules/notifications/notifications.service';
 import type { NotifyInput } from '../src/modules/notifications/notifications.service';
+import { UserAccessService } from '../src/modules/users/user-access.service';
 import { UsersService } from '../src/modules/users/users.service';
 import { assertTestDatabase } from './test-database';
 
@@ -54,7 +55,9 @@ describe('NotificationsService — ghi trong savepoint, người nhận admin (P
     pool = new Pool({ connectionString: url });
     await runMigrations(pool, resolveMigrationsDir(), silent);
     db = drizzle(pool);
-    users = new UsersService(db);
+    users = new UsersService(db, new UserAccessService(db), {
+      append: () => Promise.resolve(),
+    } as never);
     service = new NotificationsService(db, users);
     await pool.query(
       `INSERT INTO users (sub, status, role) VALUES

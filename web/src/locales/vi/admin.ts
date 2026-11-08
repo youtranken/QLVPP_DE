@@ -80,6 +80,7 @@ const admin = {
         login: 'Đăng nhập',
         login_denied_group: 'Đăng nhập bị từ chối (không thuộc nhóm)',
         login_denied_idp: 'Đăng nhập bị PMH ID từ chối',
+        login_denied_revoked: 'Đăng nhập bị chặn (vừa bị thu hồi quyền vào VPP)',
         login_failed: 'Đăng nhập lỗi',
         logout: 'Đăng xuất',
         sa_login: 'Đăng nhập tài khoản dự phòng',
@@ -105,7 +106,7 @@ const admin = {
       request: { created: 'Tạo phiếu', updated: 'Sửa phiếu', deleted: 'Xóa phiếu' },
       stock: { adjust: 'Điều chỉnh kho', issue: 'Xuất lẻ', purchase: 'Nhập kho', receipt: 'Hàng về' },
       unit: { created: 'Thêm đơn vị tính', updated: 'Sửa đơn vị tính', deleted: 'Xóa đơn vị tính' },
-      users: { directory_sync: 'Đồng bộ danh bạ' },
+      users: { directory_sync: 'Đồng bộ danh bạ', role_changed: 'Đổi vai theo PMH ID' },
     },
     filters: {
       label: 'Lọc nhật ký',

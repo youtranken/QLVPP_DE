@@ -5,7 +5,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { AuditWriterService } from '../audit/audit-writer.service';
-import { UsersService } from '../users/users.service';
+import { toAppRole, UsersService } from '../users/users.service';
 import { JwtVerifierService } from './jwt-verifier.service';
 import {
   LOCAL_SA_EMAIL,
@@ -21,6 +21,7 @@ import { SessionService } from './session.service';
 import type { SessionRecord } from './session.service';
 import type { RequestIdentity } from './identity.types';
 import type { PmhIdClaims } from '../users/users.service';
+import { TokenContractError } from './token-contract.error';
 
 // Refresh single-flight theo phiên: nhiều tab song song mà refresh nhiều lần sẽ đốt refresh token
 // xoay vòng single-use rồi logout oan. PMH ID sập → giữ phiên, 503 (không biến outage thành logout).
@@ -137,10 +138,21 @@ export class SessionAuthService {
       if (!updated) {
         return null;
       }
+      // Đổi vai trực tiếp trong DB của PMH ID có thể không phát webhook: lấy lại mỗi lần refresh
+      await this.users.applyRole(
+        verified.claims.sub,
+        toAppRole(verified.claims.app_role),
+        'refresh',
+      );
       return this.toIdentity(sessionId, verified.claims);
     } catch (error) {
       if (error instanceof ServiceUnavailableException) {
         throw error;
+      }
+      // Token không mang hợp đồng v3 thì không biết vai: xử như bị thu hồi, không phải PMH ID sập
+      if (error instanceof TokenContractError) {
+        await this.expire(sessionId, session.userSub, 'token_ver');
+        return null;
       }
       if (this.isRevocation(error)) {
         this.logger.log(
@@ -172,13 +184,18 @@ export class SessionAuthService {
   }
 
   // Vai từ users.role trong DB mỗi request (không từ claims phiên): webhook/sync/refresh ghi
-  // role thì request kế có hiệu lực ngay. 'sa' chỉ đến từ phiên local:sa ở doResolve.
+  // role thì request kế có hiệu lực ngay. User không còn active (khóa/xóa/mất quyền vào VPP) thì
+  // hủy phiên ở đây, để sync/webhook chỉ cần đổi status. 'sa' chỉ đến từ phiên local:sa ở doResolve.
   private async toIdentity(
     sessionId: string,
     claims: PmhIdClaims,
-  ): Promise<RequestIdentity> {
+  ): Promise<RequestIdentity | null> {
     const user = await this.users.findBySub(claims.sub);
-    const role = user?.role === 'admin' ? 'admin' : 'member';
+    if (user?.status !== 'active') {
+      await this.expire(sessionId, claims.sub, 'user_inactive');
+      return null;
+    }
+    const role = user.role === 'admin' ? 'admin' : 'member';
     return {
       sub: claims.sub,
       role,

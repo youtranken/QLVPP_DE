@@ -17,14 +17,16 @@ import type { Response } from 'express';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { UsersService } from '../users/users.service';
 import { JwtVerifierService } from './jwt-verifier.service';
+import type { VerifiedAccessToken } from './jwt-verifier.service';
 import { LOCAL_SA_SUB } from './local-sa-env';
 import { LocalSaService } from './local-sa.service';
 import { OIDC_PROVIDER } from './oidc-provider';
-import type { OidcProvider } from './oidc-provider';
+import type { OidcProvider, OidcTokens } from './oidc-provider';
 import { Public } from './public.decorator';
 import { Throttle } from '@nestjs/throttler';
 import { SaLoginDto } from './sa-login.dto';
 import { SessionService } from './session.service';
+import { TokenContractError } from './token-contract.error';
 import { SESSION_COOKIE } from './identity.guard';
 import type { AuthedRequest } from './identity.types';
 
@@ -215,37 +217,62 @@ export class AuthController {
         expectedState: tx.state,
       });
       const verified = await this.jwtVerifier.verify(tokens.accessToken);
-
-      await this.users.upsertFromClaims(verified.claims);
-      const session = await this.sessions.create({
-        userSub: verified.claims.sub,
-        refreshToken: tokens.refreshToken,
-        accessTokenExp: verified.expiresAt,
-        claims: verified.claims,
-        idToken: tokens.idToken,
-      });
-      res.cookie(SESSION_COOKIE, session.id, {
-        httpOnly: true,
-        secure: cookieSecure(),
-        sameSite: 'strict',
-        path: '/',
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-      });
-      await this.audit.append({
-        actor: verified.claims.sub,
-        action: 'auth.login',
-        objectType: 'session',
-        objectId: session.id,
-      });
-      res.redirect('/');
+      res.redirect(await this.openSsoSession(res, tokens, verified));
     } catch (error) {
       await this.audit.append({
         actor: 'system',
         action: 'auth.login_failed',
-        detail: { message: (error as Error).message },
+        detail:
+          error instanceof TokenContractError
+            ? { reason: 'token_ver', ver: error.ver ?? null }
+            : { message: (error as Error).message },
       });
       // Callback là navigation của browser — redirect để FE hiện thông báo thay vì JSON thô
       res.redirect('/?login=failed');
     }
+  }
+
+  // Tạo phiên sau khi token hợp lệ; trả đích redirect
+  private async openSsoSession(
+    res: Response,
+    tokens: OidcTokens,
+    verified: VerifiedAccessToken,
+  ): Promise<string> {
+    const access = await this.users.upsertFromClaims(
+      verified.claims,
+      verified.issuedAt,
+    );
+    if (access === 'revoked') {
+      // PMH ID thu hồi quyền vào VPP sau lúc phát token này → không mở lại, không tạo phiên
+      await this.audit.append({
+        actor: verified.claims.sub,
+        action: 'auth.login_denied_revoked',
+        objectType: 'user',
+        objectId: verified.claims.sub,
+        detail: { iat: verified.issuedAt?.toISOString() ?? null },
+      });
+      return '/?login=forbidden';
+    }
+    const session = await this.sessions.create({
+      userSub: verified.claims.sub,
+      refreshToken: tokens.refreshToken,
+      accessTokenExp: verified.expiresAt,
+      claims: verified.claims,
+      idToken: tokens.idToken,
+    });
+    res.cookie(SESSION_COOKIE, session.id, {
+      httpOnly: true,
+      secure: cookieSecure(),
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+    await this.audit.append({
+      actor: verified.claims.sub,
+      action: 'auth.login',
+      objectType: 'session',
+      objectId: session.id,
+    });
+    return '/';
   }
 }

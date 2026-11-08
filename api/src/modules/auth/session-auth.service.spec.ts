@@ -1,6 +1,7 @@
 import { ServiceUnavailableException } from '@nestjs/common';
 import { SessionAuthService } from './session-auth.service';
 import type { SessionRecord } from './session.service';
+import { TokenContractError } from './token-contract.error';
 
 function makeService(opts: {
   session?: Partial<SessionRecord> | null;
@@ -32,10 +33,18 @@ function makeService(opts: {
     touchLastSeen: jest.fn().mockResolvedValue(undefined),
   };
   const jwtVerifier = {
-    verify: jest.fn().mockResolvedValue({
-      claims: { sub: 'usr_1', full_name: 'Test' },
-      expiresAt: new Date(Date.now() + 300_000),
-    }),
+    verify:
+      opts.verifyImpl ??
+      jest.fn().mockResolvedValue({
+        claims: {
+          sub: 'usr_1',
+          full_name: 'Test',
+          app_role: opts.refreshedAppRole ?? 'member',
+          ver: 3,
+        },
+        expiresAt: new Date(Date.now() + 300_000),
+        issuedAt: new Date(),
+      }),
   };
   const oidc = {
     refresh:
@@ -174,11 +183,99 @@ describe('SessionAuthService — role tính mỗi request từ users.role', () =
     });
     expect((await service.resolve('sid-1'))?.role).toBe('member');
   });
+});
 
-  it('chưa có users row → member', async () => {
-    const { service, users } = makeService({ session: fresh });
-    users.findBySub.mockResolvedValue(null);
+describe('SessionAuthService — refresh ghi vai từ app_role (đổi trong DB IdP không phát webhook)', () => {
+  it('refresh mang app_role admin cho user đang member → applyRole(sub,"admin","refresh") và identity admin', async () => {
+    const { service, users } = makeService({ refreshedAppRole: 'admin' });
+    const result = await service.resolve('sid-1');
+    expect(users.applyRole).toHaveBeenCalledWith('usr_1', 'admin', 'refresh');
+    expect(result?.role).toBe('admin');
+  });
+
+  it('refresh mang app_role member cho user đang admin → applyRole(sub,"member","refresh") và identity member', async () => {
+    const { service, users } = makeService({
+      userRole: 'admin',
+      refreshedAppRole: 'member',
+    });
+    const result = await service.resolve('sid-1');
+    expect(users.applyRole).toHaveBeenCalledWith('usr_1', 'member', 'refresh');
+    expect(result?.role).toBe('member');
+  });
+
+  it('refresh thiếu app_role (hoặc "ADMIN") → member (fail-closed)', async () => {
+    const { service, users } = makeService({
+      userRole: 'admin',
+      refreshedAppRole: 'ADMIN',
+    });
     expect((await service.resolve('sid-1'))?.role).toBe('member');
+    expect(users.applyRole).toHaveBeenCalledWith('usr_1', 'member', 'refresh');
+  });
+
+  it('token còn hạn → không gọi applyRole (vai đã có trong DB)', async () => {
+    const { service, users } = makeService({
+      session: { accessTokenExp: new Date(Date.now() + 60_000) },
+    });
+    await service.resolve('sid-1');
+    expect(users.applyRole).not.toHaveBeenCalled();
+  });
+
+  it('refresh ném TokenContractError → hủy phiên lý do token_ver, trả null (không 503)', async () => {
+    const { service, sessions, audit, users } = makeService({
+      verifyImpl: jest.fn().mockRejectedValue(new TokenContractError(2)),
+    });
+    expect(await service.resolve('sid-1')).toBeNull();
+    expect(sessions.destroy).toHaveBeenCalledWith('sid-1');
+    expect(sessions.updateTokens).not.toHaveBeenCalled();
+    expect(users.applyRole).not.toHaveBeenCalled();
+    expect(audit.append).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'auth.session_expired',
+        detail: { reason: 'token_ver' },
+      }),
+    );
+  });
+});
+
+describe('SessionAuthService — chỉ user active mới có phiên', () => {
+  const fresh = { accessTokenExp: new Date(Date.now() + 60_000) };
+
+  it.each([['no_access'], ['locked'], ['deleted']])(
+    'user status %s → hủy phiên lý do user_inactive, trả null',
+    async (status) => {
+      const { service, sessions, audit } = makeService({
+        session: fresh,
+        userStatus: status,
+      });
+      expect(await service.resolve('sid-1')).toBeNull();
+      expect(sessions.destroy).toHaveBeenCalledWith('sid-1');
+      expect(audit.append).toHaveBeenCalledWith(
+        expect.objectContaining({
+          actor: 'usr_1',
+          action: 'auth.session_expired',
+          detail: { reason: 'user_inactive' },
+        }),
+      );
+    },
+  );
+
+  it('status active → identity bình thường, không hủy phiên', async () => {
+    const { service, sessions } = makeService({ session: fresh });
+    expect((await service.resolve('sid-1'))?.sub).toBe('usr_1');
+    expect(sessions.destroy).not.toHaveBeenCalled();
+  });
+
+  it('chưa có users row → hủy phiên lý do user_inactive', async () => {
+    const { service, users, sessions } = makeService({ session: fresh });
+    users.findBySub.mockResolvedValue(null);
+    expect(await service.resolve('sid-1')).toBeNull();
+    expect(sessions.destroy).toHaveBeenCalledWith('sid-1');
+  });
+
+  it('refresh xong nhưng user đã no_access → null (refresh không mở lại phiên)', async () => {
+    const { service, sessions } = makeService({ userStatus: 'no_access' });
+    expect(await service.resolve('sid-1')).toBeNull();
+    expect(sessions.destroy).toHaveBeenCalledWith('sid-1');
   });
 });
 

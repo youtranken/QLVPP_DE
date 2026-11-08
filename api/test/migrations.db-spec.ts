@@ -221,6 +221,11 @@ describe('migration 0122 PMH ID v3', () => {
   });
 
   afterAll(async () => {
+    // Không để user active của suite này lọt vào mẫu số của suite chạy sau trên cùng DB
+    await pool.query(
+      `DELETE FROM users WHERE sub IN ('u-a', 'u-b', 'u-c', 'u-locked')`,
+    );
+    await pool.query(`DELETE FROM webhook_user_order WHERE sub = 'w-1'`);
     await pool.end();
   });
 
