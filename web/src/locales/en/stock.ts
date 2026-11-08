@@ -5,7 +5,6 @@ const stock: Messages<typeof vi> = {
   stock: {
     page: {
       title: 'Stock',
-      toArrivals: 'ADM delivery? → Arrivals',
       description: 'Stock per item and every purchase, stocktake and one-off issue. Deliveries deduct stock automatically.',
       catalogLink: 'Products',
       search: 'Search by item name',
@@ -63,12 +62,12 @@ const stock: Messages<typeof vi> = {
       primary: 'Issue one item',
     },
     stats: {
+      label: 'Filter by stock status',
       all: 'All',
       short: 'Short for waiting staff',
       incoming: 'Awaiting delivery',
       low: 'Low stock',
       none: 'None',
-      items: 'items',
     },
     dialog: {
       purchaseTitle: 'Off-cycle purchase',

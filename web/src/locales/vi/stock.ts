@@ -2,7 +2,6 @@ const stock = {
   stock: {
     page: {
       title: 'Tủ / Kho',
-      toArrivals: 'Hàng ADM về? → Hàng về',
       description: 'Tồn kho từng món và mọi lần nhập, kiểm kê, xuất lẻ. Giao hàng tự trừ tồn.',
       catalogLink: 'Sản phẩm',
       search: 'Tìm theo tên món',
@@ -60,12 +59,12 @@ const stock = {
       primary: 'Xuất lẻ một món',
     },
     stats: {
+      label: 'Lọc theo tình trạng tồn',
       all: 'Tất cả',
       short: 'Thiếu cho người chờ',
       incoming: 'Chờ hàng về',
       low: 'Sắp hết',
       none: 'Không có',
-      items: 'món',
     },
     dialog: {
       purchaseTitle: 'Nhập ngoài kỳ (tự mua lẻ)',

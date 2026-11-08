@@ -11,7 +11,7 @@ import { IssueDialog } from './issue-dialog';
 import { MovementsDrawer } from './movements-drawer';
 import { PurchaseDialog } from './purchase-dialog';
 import { StockMore } from './stock-more';
-import { StockStats } from './stock-stats';
+import { StockFilterTabs } from './stock-filter-tabs';
 import { StockTable, type StockAction } from './stock-table';
 import { applyStockView, stockStats, type StockFilter, type StockRow } from './stock-rows';
 import { useStockData } from './use-stock-data';
@@ -58,8 +58,9 @@ export function StockInventory({ p }: { p: StockParams }) {
   const emptyKey = filter ? EMPTY_KEY[filter] : 'emptyTitle';
   return (
     <>
-      {d.loaded && <StockStats stats={stockStats(d.rows)} filter={filter} narrowed={filter !== null || p.view.q !== ''} onFilter={p.toggleFilter} onClear={p.clearAll} />}
-      <Toolbar search={{ value: search, onChange: setSearch, label: t('stock.page.search'), placeholder: t('stock.page.search'), maxLength: MAX_SEARCH }} />
+      <Toolbar search={{ value: search, onChange: setSearch, label: t('stock.page.search'), placeholder: t('stock.page.search'), maxLength: MAX_SEARCH }}>
+        {d.loaded && <StockFilterTabs stats={stockStats(d.rows)} filter={filter} onFilter={p.toggleFilter} onClear={p.clearFilter} />}
+      </Toolbar>
       {filter && <FilterNotice label={t(`stock.stats.${filter}`)} count={shown.length} onClear={p.clearFilter} />}
       <StockTable
         rows={page.visible}

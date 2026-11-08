@@ -283,7 +283,14 @@ test.describe('V2D-16 Tủ / Kho theo người đang chờ (dev-identity admin)'
     try {
       await page.goto('/admin/stock');
       await expect(page.getByRole('heading', { level: 1, name: 'Tủ / Kho' })).toBeVisible();
-      await expect(page.getByRole('main').getByRole('link', { name: 'Hàng ADM về? → Hàng về' })).toHaveAttribute('href', '/admin/arrivals');
+      await expect(page.getByRole('link', { name: /Hàng ADM về/ })).toHaveCount(0);
+      const chips = page.getByRole('group', { name: 'Lọc theo tình trạng tồn' });
+      await expect(chips.getByRole('button')).toHaveCount(5);
+      await chips.getByRole('button', { name: /Sắp hết/ }).click();
+      await expect(page).toHaveURL(/filter=low/);
+      await expect(chips.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
+      await chips.getByRole('button', { name: /Sắp hết/ }).click();
+      await expect(page).not.toHaveURL(/filter=/);
       await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(item.name);
       const row = page.getByRole('row').filter({ hasText: item.name });
       await expectStockCell(row, 5);

@@ -25,9 +25,6 @@ export function StockPage() {
         description={t('stock.page.description')}
         secondary={
           <>
-            <Link className="btn btn--ghost" to="/admin/arrivals">
-              {t('stock.page.toArrivals')}
-            </Link>
             <Link className="btn" to="/admin/catalog">
               {t('stock.page.catalogLink')}
             </Link>

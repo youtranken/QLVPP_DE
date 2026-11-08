@@ -23,8 +23,6 @@
 [data-shell='admin'] .sk-title__name { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; color: var(--c-muted); font: var(--t-sm); font-weight: 600; overflow-wrap: anywhere; }
 [data-shell='admin'] .sk-more { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--s-2) var(--s-3); margin-top: var(--s-3); }
 [data-shell='admin'] .sk-more__count { margin: 0; color: var(--c-muted); font: var(--t-sm); }
-/* Ô tìm rộng đúng 2 ô số liệu (lưới 4 cột, khe 12) để thẳng mép với hàng ô */
-@media (min-width: 768px) { [data-shell='admin'] .sk-page .toolbar__search { flex: 0 0 calc(50% - 6px); min-width: 0; max-width: none; } }
 [data-shell='admin'] .sk-issues { display: grid; gap: var(--s-3); }
 [data-shell='admin'] .sk-issues__total { margin: 0; color: var(--c-muted); font: var(--t-sm); font-weight: 600; }
 [data-shell='admin'] .sk-held-note { flex-direction: column; gap: var(--s-1); }

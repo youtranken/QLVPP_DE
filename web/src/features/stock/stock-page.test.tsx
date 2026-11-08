@@ -27,16 +27,16 @@ async function open(path = '/admin/stock', ready = 'Giấy A4', width = 1280) {
 const rowOf = (name: string) => screen.getByText(name).closest('tr')!;
 
 describe('StockPage', () => {
-  it('đúng một h1 "Tủ / Kho" + liên kết "Hàng ADM về? → Hàng về" và "Sản phẩm"', async () => {
+  it('đúng một h1 "Tủ / Kho" + liên kết "Sản phẩm"; không còn liên kết "Hàng ADM về? → Hàng về"', async () => {
     await open();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1, name: 'Tủ / Kho' })).toBeInTheDocument();
     const main = within(screen.getByRole('main'));
-    expect(main.getByRole('link', { name: 'Hàng ADM về? → Hàng về' })).toHaveAttribute('href', '/admin/arrivals');
+    expect(screen.queryByRole('link', { name: /Hàng ADM về/ })).toBeNull();
     expect(main.getByRole('link', { name: 'Sản phẩm' })).toHaveAttribute('href', '/admin/catalog');
   });
 
-  it('ô thống kê: Tất cả 6 (ẩn món ngừng tủ 0), Thiếu cho người chờ 1, Chờ hàng về 1, Sắp hết 1, Không có 1', async () => {
+  it('một hàng chip lọc có số, không còn thẻ số liệu: Tất cả 6 (ẩn món ngừng tủ 0), Thiếu cho người chờ 1, Chờ hàng về 1, Sắp hết 1, Không có 1', async () => {
     await open();
     expect(screen.getByRole('button', { name: /Tất cả/ })).toHaveTextContent('6');
     expect(screen.getByRole('button', { name: /Thiếu cho người chờ/ })).toHaveTextContent('1');
@@ -44,6 +44,17 @@ describe('StockPage', () => {
     expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveTextContent('1');
     expect(screen.getByRole('button', { name: /Không có/ })).toHaveTextContent('1');
     expect(screen.queryByText('Bút xóa cũ')).toBeNull();
+    expect(within(screen.getByRole('group', { name: 'Lọc theo tình trạng tồn' })).getAllByRole('button')).toHaveLength(5);
+  });
+
+  it('bấm "Sắp hết" → ?filter=low, chip aria-pressed; bấm lại → bỏ lọc', async () => {
+    await open();
+    await userEvent.click(screen.getByRole('button', { name: /Sắp hết/ }));
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?filter=low');
+    expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(screen.getByRole('button', { name: /Sắp hết/ }));
+    expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
+    expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('?filter=short chỉ còn món thiếu cho người chờ, thẻ bật; "Bỏ lọc" trả đủ món', async () => {
