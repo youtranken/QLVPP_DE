@@ -12,6 +12,7 @@ import {
 } from '../auth/local-sa-env';
 import {
   inactiveAtFor,
+  LOGIN_REVOKE_SKEW_S,
   toAppRole,
   UserAccessService,
 } from './user-access.service';
@@ -172,46 +173,41 @@ export class UsersService {
 
   // Khóa theo `sub`: email đổi không tạo user mới. PMH ID chỉ cấp token cho người đang được vào VPP
   // nên đăng nhập đưa user về active, trừ khi có thu hồi mới hơn token (đua với thu hồi → 'revoked').
+  // Điều kiện thu hồi xét ngay trong câu upsert trên hàng đã khóa: thu hồi commit giữa chừng không bị
+  // ghi đè thành active; dấu access_revoked chỉ gỡ khi cũ hơn token.
   async upsertFromClaims(
     claims: PmhIdClaims,
     issuedAt: Date | null = null,
   ): Promise<'ok' | 'revoked'> {
-    const revoked = await this.access.revokedSince(claims.sub, issuedAt);
-    const now = new Date();
-    const profile = {
-      email: claims.email ?? null,
-      employeeCode: claims.employee_code ?? null,
-      fullName: claims.full_name ?? null,
-      department: claims.department ?? null,
-      team: claims.team ?? null,
-    };
-    const reopen = { status: 'active', inactiveAt: null };
-    await this.db
-      .insert(usersTable)
-      .values({
-        sub: claims.sub,
-        ...profile,
-        role: toAppRole(claims.app_role),
-        // Dấu thu hồi webhook có trước khi user tồn tại: tạo hồ sơ nhưng không cho vào
-        ...(revoked ? { status: 'no_access', inactiveAt: sql`now()` } : reopen),
-        firstLoginAt: now,
-        lastLoginAt: now,
-      })
-      .onConflictDoUpdate({
-        target: usersTable.sub,
-        set: {
-          ...profile,
-          ...(revoked ? {} : reopen),
-          lastLoginAt: now,
-          updatedAt: now,
-          firstLoginAt: sql`COALESCE(${usersTable.firstLoginAt}, ${now.toISOString()})`,
-        },
-      });
-    await this.applyRole(claims.sub, toAppRole(claims.app_role), 'login');
-    if (revoked) return 'revoked';
+    const now = new Date().toISOString();
+    const role = toAppRole(claims.app_role);
+    const cutoff = sql`(COALESCE(${issuedAt?.toISOString() ?? null}::timestamptz, now())
+      - make_interval(secs => ${LOGIN_REVOKE_SKEW_S}))`;
+    const markNewer = sql`EXISTS (SELECT 1 FROM webhook_user_order w WHERE w.sub = ${claims.sub}
+      AND w.access_revoked AND w.updated_at > ${cutoff})`;
+    const keep = sql`((users.status <> 'active' AND users.inactive_at > ${cutoff}) OR ${markNewer})`;
+    const r = await this.db.execute<{ status: string }>(sql`
+      INSERT INTO users (sub, email, employee_code, full_name, department, team, role, status,
+                         inactive_at, first_login_at, last_login_at)
+      SELECT ${claims.sub}, ${claims.email ?? null}, ${claims.employee_code ?? null},
+             ${claims.full_name ?? null}, ${claims.department ?? null}, ${claims.team ?? null}, ${role},
+             CASE WHEN m.revoked THEN 'no_access' ELSE 'active' END,
+             CASE WHEN m.revoked THEN now() END, ${now}::timestamptz, ${now}::timestamptz
+      FROM (SELECT ${markNewer} AS revoked) m
+      ON CONFLICT (sub) DO UPDATE SET
+        email = excluded.email, employee_code = excluded.employee_code,
+        full_name = excluded.full_name, department = excluded.department, team = excluded.team,
+        status = CASE WHEN ${keep} THEN users.status ELSE 'active' END,
+        inactive_at = CASE WHEN ${keep} THEN users.inactive_at ELSE NULL END,
+        last_login_at = excluded.last_login_at, updated_at = now(),
+        first_login_at = COALESCE(users.first_login_at, excluded.first_login_at)
+      RETURNING status
+    `);
+    await this.applyRole(claims.sub, role, 'login');
+    if (r.rows[0]?.status !== 'active') return 'revoked';
     await this.db.execute(sql`
       UPDATE webhook_user_order SET access_revoked = false, updated_at = now()
-      WHERE sub = ${claims.sub} AND access_revoked
+      WHERE sub = ${claims.sub} AND access_revoked AND updated_at <= ${cutoff}
     `);
     return 'ok';
   }

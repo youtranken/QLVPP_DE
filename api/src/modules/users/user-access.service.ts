@@ -69,19 +69,6 @@ export class UserAccessService {
     private readonly audit: AuditWriterService,
   ) {}
 
-  // Có lần rời active (khóa/xóa/mất quyền) hoặc dấu access_revoked của webhook mới hơn token đăng nhập?
-  // Thiếu iat → so với giờ DB hiện tại. So ở SQL để cả hai mốc cùng đồng hồ DB.
-  async revokedSince(sub: string, iat: Date | null): Promise<boolean> {
-    const r = await this.db.execute<{ revoked: boolean | null }>(sql`
-      SELECT GREATEST(
-        (SELECT inactive_at FROM users WHERE sub = ${sub} AND status <> 'active'),
-        (SELECT updated_at FROM webhook_user_order WHERE sub = ${sub} AND access_revoked)
-      ) > COALESCE(${iat?.toISOString() ?? null}::timestamptz, now())
-          - make_interval(secs => ${LOGIN_REVOKE_SKEW_S}) AS revoked
-    `);
-    return r.rows[0]?.revoked === true;
-  }
-
   // Đổi vai thì audit; không đổi thì không ghi gì (refresh mỗi ≤ 5′ không làm đầy nhật ký)
   async applyRole(
     sub: string,
@@ -136,19 +123,25 @@ export class UserAccessService {
     return true;
   }
 
-  // Chỉ mở no_access (khóa/xóa do PMH ID quyết qua status). Lần thu hồi phải cũ hơn `before`:
-  // danh sách/sự kiện lấy trước một lần thu hồi mới không được mở lại người đó.
+  // Mặc định chỉ mở no_access (khóa/xóa do PMH ID quyết qua status); webhook mở khóa đã hỏi Directory
+  // thì truyền thêm locked/deleted. Lần rời active phải cũ hơn `before`: danh sách/sự kiện lấy trước
+  // một lần thu hồi mới không được mở lại người đó.
   async restoreActive(
     sub: string,
     before: Date,
     source: AccessSource,
     actor: string,
+    from: readonly string[] = ['no_access'],
   ): Promise<boolean> {
     const at = before.toISOString();
+    const fromList = sql.join(
+      from.map((s) => sql`${s}`),
+      sql`, `,
+    );
     const r = await this.db.execute<{ from: string }>(sql`
       UPDATE users u SET status = 'active', inactive_at = NULL, updated_at = now()
       FROM (SELECT sub, status, inactive_at FROM users WHERE sub = ${sub} FOR UPDATE) old
-      WHERE u.sub = old.sub AND old.status = 'no_access'
+      WHERE u.sub = old.sub AND old.status IN (${fromList})
         AND (old.inactive_at IS NULL OR old.inactive_at < ${at}::timestamptz)
         AND NOT EXISTS (SELECT 1 FROM webhook_user_order w WHERE w.sub = u.sub
                         AND w.access_revoked AND w.updated_at >= ${at}::timestamptz)
@@ -225,6 +218,14 @@ export class UserAccessService {
       RETURNING o.sub
     `);
     return r.rows.length === 1;
+  }
+
+  // Giờ DB (cùng nguồn với inactive_at) làm mốc trước khi hỏi Directory
+  async dbNow(): Promise<Date> {
+    const r = await this.db.execute<{ now: Date | string }>(
+      sql`SELECT clock_timestamp() AS now`,
+    );
+    return new Date(r.rows[0].now);
   }
 
   async lookup(sub: string): Promise<LookupResult> {

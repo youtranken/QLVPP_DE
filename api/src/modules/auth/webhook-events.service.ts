@@ -17,6 +17,7 @@ export interface PmhWebhookEventV3 {
 }
 
 const ACTOR = 'system(webhook)';
+const REOPENABLE = ['no_access', 'locked', 'deleted'] as const;
 
 const SEQ_CATEGORY: Record<string, SeqCategory> = {
   'user.access_revoked': 'access',
@@ -51,10 +52,13 @@ export class WebhookEventsService {
   ) {}
 
   async apply(e: PmhWebhookEventV3): Promise<void> {
-    if (
-      PER_APP.has(e.type) &&
-      e.detail?.client_id !== process.env.PMH_CLIENT_ID
-    ) {
+    // Tài khoản cục bộ (local:sa, local-test-*) không thuộc PMH ID: bỏ qua, trả 2xx để PMH ID không retry
+    if (e.user_id.startsWith('local')) {
+      this.logger.warn(`Webhook ${e.type} cho tài khoản cục bộ — bỏ qua`);
+      return;
+    }
+    const client = process.env.PMH_CLIENT_ID;
+    if (PER_APP.has(e.type) && (!client || e.detail?.client_id !== client)) {
       this.logger.log(`Webhook ${e.type} của client khác — bỏ qua`);
       return;
     }
@@ -112,14 +116,7 @@ export class WebhookEventsService {
     const user = await this.users.findBySub(e.user_id);
     if (user) {
       await this.access.applyWebhookProfile(e);
-      if (user.status === 'no_access') {
-        await this.access.restoreActive(
-          e.user_id,
-          eventAt(e),
-          'webhook',
-          ACTOR,
-        );
-      }
+      if (user.status === 'no_access') await this.confirmGranted(e);
       return;
     }
     // Chưa có ở VPP: chỉ tạo khi Directory xác nhận; không được thì sync sau sẽ bắt
@@ -129,8 +126,25 @@ export class WebhookEventsService {
     }
   }
 
+  // Được cấp lại quyền nhưng có thể vẫn đang bị khóa/xóa ở PMH ID: theo Directory như reopen
+  private async confirmGranted(e: PmhWebhookEventV3): Promise<void> {
+    const found = await this.access.lookup(e.user_id);
+    if (found.kind !== 'in') {
+      this.logger.warn(
+        `Webhook ${e.type} ${e.user_id}: Directory chưa xác nhận (${found.kind}) — giữ no_access, sync sau sẽ xét`,
+      );
+      return;
+    }
+    if (found.user.status === 'active') {
+      await this.access.restoreActive(e.user_id, eventAt(e), 'webhook', ACTOR);
+      return;
+    }
+    await this.users.setStatus(e.user_id, found.user.status);
+  }
+
   // Luôn hỏi Directory trước khi mở: người đã mất quyền vào VPP không được về active
   private async reopen(e: PmhWebhookEventV3): Promise<void> {
+    const askedAt = await this.access.dbNow();
     const found = await this.access.lookup(e.user_id);
     if (found.kind === 'out') {
       await this.access.markNoAccess(e.user_id, 'webhook', ACTOR);
@@ -143,6 +157,17 @@ export class WebhookEventsService {
       return;
     }
     await this.access.applyDirectoryUser(found.user, ACTOR);
+    if (found.user.status === 'active') {
+      // Qua restoreActive: có audit, gỡ dấu thu hồi, không mở người bị thu hồi/khóa lại sau lúc hỏi
+      await this.access.restoreActive(
+        e.user_id,
+        askedAt,
+        'webhook',
+        ACTOR,
+        REOPENABLE,
+      );
+      return;
+    }
     await this.users.setStatus(e.user_id, found.user.status);
   }
 
@@ -166,7 +191,9 @@ export class WebhookEventsService {
   }
 }
 
-// `at` thiếu/hỏng → giờ hiện tại: khôi phục khó hơn (an toàn)
+// `at` thiếu/hỏng → giờ hiện tại: điều kiện "thu hồi cũ hơn mốc" gần như luôn đúng, tức khôi phục DỄ
+// hơn; chấp nhận vì seq đã xếp thứ tự và Directory đã xác nhận. `at` theo đồng hồ PMH ID, so với
+// inactive_at theo đồng hồ DB, không có biên lệch giờ.
 function eventAt(e: PmhWebhookEventV3): Date {
   const t = e.at ? Date.parse(e.at) : Number.NaN;
   return Number.isNaN(t) ? new Date() : new Date(t);

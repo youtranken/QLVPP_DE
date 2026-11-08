@@ -3,6 +3,8 @@ import type { PmhWebhookEventV3 } from './webhook-events.service';
 
 const CLIENT = 'client_vpp';
 const AT = '2026-11-08T03:00:00.000Z';
+const ASKED = new Date('2026-11-08T03:00:05.000Z');
+const IN_ACTIVE = { kind: 'in', user: { id: 'u1', status: 'active' } };
 
 function setup(opts: { user?: { status: string } | null } = {}) {
   // seq lớn nhất đã áp theo (sub, loại) — mô phỏng webhook_user_order
@@ -19,6 +21,7 @@ function setup(opts: { user?: { status: string } | null } = {}) {
     markNoAccess: jest.fn().mockResolvedValue(true),
     restoreActive: jest.fn().mockResolvedValue(true),
     lookup: jest.fn().mockResolvedValue({ kind: 'out' }),
+    dbNow: jest.fn().mockResolvedValue(ASKED),
     applyDirectoryUser: jest.fn().mockResolvedValue(undefined),
     applyWebhookProfile: jest.fn().mockResolvedValue(undefined),
     applyRole: jest.fn().mockResolvedValue(true),
@@ -105,8 +108,9 @@ describe('WebhookEventsService', () => {
     },
   );
 
-  it('access_granted cho user đã có, đang no_access → cập nhật hồ sơ rồi restoreActive(sub, at)', async () => {
+  it('access_granted cho user đã có, đang no_access, Directory xác nhận active → cập nhật hồ sơ rồi restoreActive(sub, at)', async () => {
     const { service, access } = setup({ user: { status: 'no_access' } });
+    access.lookup.mockResolvedValue(IN_ACTIVE);
     const e = ev('user.access_granted', '12', {
       department: 'Phòng D&E',
       team: null,
@@ -121,6 +125,58 @@ describe('WebhookEventsService', () => {
       'webhook',
       'system(webhook)',
     );
+  });
+
+  it.each([[{ kind: 'out' }], [{ kind: 'unknown' }]])(
+    'access_granted cho user no_access, Directory %j → giữ no_access, không restore',
+    async (res) => {
+      const { service, access, users } = setup({
+        user: { status: 'no_access' },
+      });
+      access.lookup.mockResolvedValue(res);
+      await service.apply(ev('user.access_granted', '12'));
+      expect(access.restoreActive).not.toHaveBeenCalled();
+      expect(users.setStatus).not.toHaveBeenCalled();
+    },
+  );
+
+  it('locked → access_revoked → access_granted, Directory vẫn báo locked → về locked, không active', async () => {
+    const { service, access, users } = setup({ user: { status: 'no_access' } });
+    access.lookup.mockResolvedValue({
+      kind: 'in',
+      user: { id: 'u1', status: 'locked' },
+    });
+    await service.apply(ev('user.locked', '20', { detail: undefined }));
+    await service.apply(ev('user.access_revoked', '21'));
+    await service.apply(ev('user.access_granted', '22'));
+    expect(access.restoreActive).not.toHaveBeenCalled();
+    expect(users.setStatus).toHaveBeenLastCalledWith('u1', 'locked');
+  });
+
+  it.each([['user.locked'], ['user.access_revoked'], ['user.role_changed']])(
+    '%s cho user_id local:sa / local-test-* → bỏ qua hoàn toàn',
+    async (type) => {
+      const { service, access, users, sessions } = setup();
+      for (const user_id of ['local:sa', 'local-test-admin']) {
+        await service.apply(ev(type, '30', { user_id, app_role: 'member' }));
+      }
+      expect(access.claimSeq).not.toHaveBeenCalled();
+      expect(access.markNoAccess).not.toHaveBeenCalled();
+      expect(access.applyRole).not.toHaveBeenCalled();
+      expect(users.setStatus).not.toHaveBeenCalled();
+      expect(sessions.destroyAllForUser).not.toHaveBeenCalled();
+    },
+  );
+
+  it('PMH_CLIENT_ID không đặt → sự kiện theo app thiếu detail.client_id bị bỏ qua', async () => {
+    delete process.env.PMH_CLIENT_ID;
+    try {
+      const { service, access } = setup();
+      await service.apply(ev('user.access_revoked', '10', { detail: {} }));
+      expect(access.claimSeq).not.toHaveBeenCalled();
+    } finally {
+      process.env.PMH_CLIENT_ID = CLIENT;
+    }
   });
 
   it('access_granted cho user active → chỉ cập nhật hồ sơ, không restore', async () => {
@@ -178,7 +234,7 @@ describe('WebhookEventsService', () => {
   });
 
   it.each([['user.unlocked'], ['user.reactivated']])(
-    '%s: lookup in → hồ sơ + active; out → no_access; unknown → giữ nguyên',
+    '%s: lookup in → hồ sơ + restoreActive (mốc lúc hỏi); out → no_access; unknown → giữ nguyên',
     async (type) => {
       const dirUser = { id: 'u1', status: 'active' };
       const a = setup({ user: { status: 'locked' } });
@@ -188,7 +244,14 @@ describe('WebhookEventsService', () => {
         dirUser,
         'system(webhook)',
       );
-      expect(a.users.setStatus).toHaveBeenCalledWith('u1', 'active');
+      expect(a.access.restoreActive).toHaveBeenCalledWith(
+        'u1',
+        ASKED,
+        'webhook',
+        'system(webhook)',
+        ['no_access', 'locked', 'deleted'],
+      );
+      expect(a.users.setStatus).not.toHaveBeenCalled();
 
       const b = setup({ user: { status: 'locked' } });
       b.access.lookup.mockResolvedValue({ kind: 'out' });
@@ -271,6 +334,7 @@ describe('WebhookEventsService', () => {
   describe('thứ tự theo seq', () => {
     it('access 10 đã áp, access_granted seq 9 tới sau → bỏ qua; seq 11 → áp; groups_changed seq 9 (profile) → vẫn áp', async () => {
       const { service, access } = setup({ user: { status: 'no_access' } });
+      access.lookup.mockResolvedValue(IN_ACTIVE);
       await service.apply(ev('user.access_revoked', '10'));
       await service.apply(ev('user.access_granted', '9'));
       expect(access.setAccessRevokedMark).not.toHaveBeenCalledWith('u1', false);
@@ -292,6 +356,7 @@ describe('WebhookEventsService', () => {
 
   it('at thiếu/không parse được → restoreActive dùng giờ hiện tại', async () => {
     const { service, access } = setup({ user: { status: 'no_access' } });
+    access.lookup.mockResolvedValue(IN_ACTIVE);
     const before = Date.now();
     await service.apply(
       ev('user.access_granted', '20', { at: 'không phải ngày' }),

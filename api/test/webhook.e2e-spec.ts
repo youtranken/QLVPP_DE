@@ -9,6 +9,7 @@ import {
 } from '../src/database/migration-runner';
 import { SessionService } from '../src/modules/auth/session.service';
 import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
+import type { DirectoryClientApi } from '../src/modules/users/directory.client';
 import { directoryStub } from './directory.stub';
 import { UsersService } from '../src/modules/users/users.service';
 import { createTestApp } from './test-app.helper';
@@ -24,6 +25,7 @@ const nextSeq = () => (seqBase += 10n).toString();
 describe('webhook PMH ID qua app thật: lệch giờ, chữ ký v1, event_id lặp', () => {
   let app: INestApplication<App>;
   let pool: Pool;
+  const directory = directoryStub();
   const sub = `e2e-wh-${randomUUID()}`;
   const events: string[] = [];
   const originalSecret = process.env.PMH_WEBHOOK_SECRET;
@@ -77,7 +79,6 @@ describe('webhook PMH ID qua app thật: lệch giờ, chữ ký v1, event_id l�
     await runMigrations(pool, resolveMigrationsDir(), silent);
     process.env.PMH_WEBHOOK_SECRET = SECRET;
     process.env.PMH_CLIENT_ID = CLIENT_ID;
-    const directory = directoryStub();
     app = (await createTestApp(
       [],
       [{ token: DIRECTORY_CLIENT, useValue: directory }],
@@ -224,7 +225,32 @@ describe('webhook PMH ID qua app thật: lệch giờ, chữ ký v1, event_id l�
       await me(cookie).expect(200);
     });
 
-    it('access_granted sau access_revoked (seq lớn hơn) → active; access_granted seq nhỏ hơn tới trễ → vẫn no_access', async () => {
+    it('access_granted sau access_revoked (seq lớn hơn), Directory xác nhận active → active; seq nhỏ hơn tới trễ → vẫn no_access', async () => {
+      const stub = directory as { fetchUser: DirectoryClientApi['fetchUser'] };
+      const unavailable = stub.fetchUser;
+      stub.fetchUser = (id: string) =>
+        Promise.resolve({ id, status: 'active' as const });
+      try {
+        await grantedFlow();
+      } finally {
+        stub.fetchUser = unavailable;
+      }
+    });
+
+    it('access_granted khi Directory không trả lời được → giữ no_access', async () => {
+      const { u } = await freshUser();
+      await send(u, 'user.access_revoked', nextSeq()).expect(200);
+      await send(u, 'user.access_granted', nextSeq()).expect(200);
+      expect(await status(u)).toBe('no_access');
+    });
+
+    it('user_id local:sa (chữ ký hợp lệ) → 200, bỏ qua: SA không bị khóa', async () => {
+      await app.get(UsersService).ensureLocalSa();
+      await send('local:sa', 'user.locked', nextSeq()).expect(200);
+      expect(await status('local:sa')).toBe('active');
+    });
+
+    const grantedFlow = async () => {
       const a = await freshUser();
       const revokeA = nextSeq();
       const grantA = nextSeq();
@@ -239,7 +265,7 @@ describe('webhook PMH ID qua app thật: lệch giờ, chữ ký v1, event_id l�
       await send(b.u, 'user.access_revoked', revokeB).expect(200);
       await send(b.u, 'user.access_granted', grantB).expect(200);
       expect(await status(b.u)).toBe('no_access');
-    });
+    };
 
     it('unlocked khi Directory không trả lời được → giữ nguyên trạng thái', async () => {
       const { u } = await freshUser();
