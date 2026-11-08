@@ -240,3 +240,17 @@ Vòng 2 (thắng các ý trên khi mâu thuẫn):
 - Thao tác hàng loạt theo nội dung lựa chọn: có món ngừng riêng thì có "Dùng lại (n)", có món đang dùng thì có "Tạm ngưng (n)"; món của nhóm tạm ngưng vẫn phải bật lại nhóm.
 - Tháng này: thẻ món ngoài danh mục ghi tháng của phiếu (món chờ xem chỉ thuộc kỳ đã khóa). Thẻ chưa đăng ký nói rõ cơ sở đếm "a/b người thuộc nhóm dùng app đã đăng ký" (người đang dùng thuộc nhóm PMH ID được phép, không phải cả danh bạ); "Xem tất cả" mở đúng danh sách đó ở Tổng hợp kỳ đang mở.
 - Lối vào kỳ đang mở: bước Đăng ký của kỳ đang mở có nút "Xem đăng ký kỳ tháng N"; các trang chỉ-kỳ-khóa không còn băng mời xem kỳ đang mở (chuyển kỳ ở trang Kỳ tháng); kỳ mở có hai danh sách "Đã đăng ký (n)" / "Chưa đăng ký (n)".
+
+### Góp ý vòng 3 Nhóm 2–5 (08/11)
+
+Chủ dự án duyệt mockup "Vòng 3"; các quyết định dưới đây thắng mọi nguồn cũ khi mâu thuẫn (bước thử tay ở `test-manual-nhom.md`).
+
+- Quy tắc của chủ dự án: Hàng về một cột nhập, cột "Còn thiếu" chỉ hiện khi nhập thấp hơn số còn cần, không Hoàn tác; nút giao chỉ ghi "Giao n phiếu"; Kỳ tháng bỏ các chữ lẻ; "Còn nợ" là Hành chính còn nợ nhân viên (không phải ADM nợ Hành chính).
+- D1: lý do điều chỉnh chỉ còn "Không có hàng" (mã `adm_out_of_stock`) và "Khác"; api, CHECK, dữ liệu cũ không đổi, mã cũ giữ nhãn cũ trong lịch sử.
+- D2: dòng vượt tối đa chọn sẵn "Khác" + "Vượt tối đa n"; "Người đã nghỉ" chỉ cho chủ phiếu đã nghỉ (server từ chối `user_left` với người còn làm).
+- D3: giao nhiều phiếu: `POST admin/deliveries/bulk`, mỗi phiếu một transaction, số từng dòng do web tính như hộp giao đơn, kết quả từng phiếu, idempotent qua `expected_delivered_qty`; tủ thiếu thì giao phần có, phần thiếu thành Còn nợ; không tự hủy phần ADM hết hàng.
+- D4: Kỳ tháng bỏ thẻ Món ngoài danh mục chờ duyệt và Sắp hết (đã có huy hiệu ở menu); giữ nhắc người đã nghỉ.
+- D5: Báo cáo & gửi ADM: Đề nghị luôn sửa được ở kỳ khóa gần nhất, khởi tạo từ bản đã gửi; In/Xuất tạo bản mới; bỏ "Lập bản mới", "Xem trước phiếu" và Xuất lẻ (còn ở Tủ / Kho).
+- D6: "Không Hoàn tác" chỉ áp cho bảng Hàng về đợt này; Hoàn tác của "ADM không giao nữa" giữ nguyên.
+- D7: dải nhận hàng của nhân viên theo phiếu kỳ đang giao; kỳ cũ còn chờ là link ngắn trong cùng dải.
+- D8: bỏ Tổng hợp theo món (`view=item`), thay bằng popup "Ai đăng ký món"; link cũ về Kỳ tháng.

@@ -2,7 +2,7 @@
  "schema_version": 1,
  "diagram_type": "sequence",
  "meta": {
-  "title": "VPP — hộp giao và mọi đường giao/hủy (v2-D)",
+  "title": "VPP — giao hàng: hộp giao, giao nhiều phiếu (mỗi phiếu một tx) và mọi đường giao/hủy (vòng 3)",
   "output": "docs/diagrams/vpp-giao-hang.html",
   "locale": "vi",
   "quality_profile": "showcase",
@@ -10,7 +10,7 @@
    "url": "https://github.com/youtranken/QLVPP_DE.git",
    "provider": "github",
    "link_mode": "local-only",
-   "revision": "e5d57874ceec1ebcd998227c71f05088c110d70c"
+   "revision": "65fe03077b62a5ddac8c2a454e59f5ac72c815e3"
   },
   "legend": {
    "entries": {
@@ -36,8 +36,8 @@
   {
    "id": "dlg",
    "type": "frontend",
-   "label": "Hộp giao",
-   "sublabel": "thẻ hoặc panel ?person",
+   "label": "Hộp / bảng",
+   "sublabel": "hộp · giao nhiều",
    "sources": [
     {
      "path": "web/src/features/delivery/people/deliver-dialog.tsx",
@@ -54,7 +54,7 @@
     {
      "path": "web/src/features/delivery/people/deliver-send.ts",
      "line": 27,
-     "end_line": 56,
+     "end_line": 54,
      "label": "sendSteps"
     }
    ]
@@ -113,6 +113,20 @@
      "line": 12,
      "end_line": 29,
      "label": "trần ngoài DM"
+    }
+   ]
+  },
+  {
+   "id": "bsvc",
+   "type": "backend",
+   "label": "BulkDelivery",
+   "sublabel": "một tx mỗi phiếu",
+   "sources": [
+    {
+     "path": "api/src/modules/delivery/bulk-delivery.service.ts",
+     "line": 47,
+     "end_line": 75,
+     "label": "deliver, deliverRequest"
     }
    ]
   },
@@ -192,6 +206,11 @@
    "from": 835,
    "to": 1035,
    "label": "Còn nợ: Giao bổ sung · Hủy nợ"
+  },
+  {
+   "from": 1055,
+   "to": 1350,
+   "label": "Giao n phiếu: mỗi phiếu một tx"
   }
  ],
  "messages": [
@@ -329,6 +348,41 @@
    "y": 1015,
    "label": "200 {line, cancelled_now}",
    "variant": "return"
+  },
+  {
+   "id": "b1",
+   "from": "dlg",
+   "to": "bsvc",
+   "y": 1100,
+   "label": "POST deliveries/bulk {requests:[{request_id, lines}]}",
+   "variant": "emphasis",
+   "note": "n = số người chọn; web chia lô ≤ 100 phiếu; số từng dòng tính như hộp giao"
+  },
+  {
+   "id": "b2",
+   "from": "bsvc",
+   "to": "db",
+   "y": 1160,
+   "label": "mỗi phiếu: BEGIN → FOR UPDATE → UPDATE items",
+   "variant": "security",
+   "note": "tủ thiếu: giao phần có, phần thiếu thành Còn nợ"
+  },
+  {
+   "id": "b3",
+   "from": "bsvc",
+   "to": "notif",
+   "y": 1237,
+   "label": "notifyIfComplete (sau mỗi phiếu)",
+   "variant": "dashed"
+  },
+  {
+   "id": "b4",
+   "from": "bsvc",
+   "to": "dlg",
+   "y": 1295,
+   "label": "200 {results:[{request_id, ok, error?}]}",
+   "variant": "return",
+   "note": "một phiếu lỗi không kéo phiếu khác; PERIOD_NOT_LOCKED trả theo phiếu"
   }
  ],
  "activations": [
@@ -361,6 +415,18 @@
    "from": 920,
    "to": 1020,
    "type": "backend"
+  },
+  {
+   "participant": "bsvc",
+   "from": 1100,
+   "to": 1275,
+   "type": "backend"
+  },
+  {
+   "participant": "dlg",
+   "from": 1095,
+   "to": 1300,
+   "type": "frontend"
   }
  ],
  "cards": [
@@ -388,7 +454,16 @@
    "items": [
     "Mỗi request kèm expected_delivered_qty (và expected_qty khi hủy) → 409 STALE_UPDATE",
     "Phiên hết giữa chừng: các dòng sau đánh dấu \"chưa gửi\"",
-    "Không có route giao cả phiếu (deliver-all đã gỡ)"
+    "Không có route giao cả phiếu (deliver-all đã gỡ); giao nhiều phiếu = bulk, mỗi phiếu một tx"
+   ]
+  },
+  {
+   "dot": "emerald",
+   "title": "Giao nhiều phiếu (bảng Giao hàng)",
+   "items": [
+    "Nút \"Giao n phiếu\": n = số người đang chọn; chỉ dòng kiểu \"giao\", dòng ADM hết hàng vẫn xử lý ở hộp từng người",
+    "Kết quả từng phiếu; lỗi giữa chừng → tải lại danh sách, phiếu chưa gửi ghi \"Chưa gửi\"",
+    "Idempotent nhờ expected_delivered_qty: bấm lần hai nhận STALE_UPDATE thay vì giao đôi"
    ]
   }
  ]

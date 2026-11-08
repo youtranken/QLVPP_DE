@@ -2,7 +2,7 @@
  "schema_version": 1,
  "diagram_type": "architecture",
  "meta": {
-  "title": "VPP — giao diện Hành chính: menu theo luồng chuẩn, panel phủ, module api (v2-D)",
+  "title": "VPP — giao diện Hành chính: 5 mục hằng tháng, route mới + chuyển hướng, panel phủ (vòng 3)",
   "output": "docs/diagrams/vpp-hanh-chinh.html",
   "locale": "vi",
   "quality_profile": "showcase",
@@ -10,7 +10,7 @@
    "url": "https://github.com/youtranken/QLVPP_DE.git",
    "provider": "github",
    "link_mode": "local-only",
-   "revision": "e5d57874ceec1ebcd998227c71f05088c110d70c"
+   "revision": "65fe03077b62a5ddac8c2a454e59f5ac72c815e3"
   }
  },
  "components": [
@@ -88,7 +88,7 @@
    "id": "sidebar",
    "type": "frontend",
    "label": "AdminSidebar ≥ 768",
-   "sublabel": "3 nhóm · 14 mục · thẻ kỳ · đếm",
+   "sublabel": "3 nhóm · 12 mục · thẻ kỳ · đếm",
    "pos": [
     450,
     120
@@ -144,8 +144,8 @@
   {
    "id": "monthly",
    "type": "frontend",
-   "label": "Hằng tháng · 7 trang",
-   "sublabel": "Tháng này → Tổng hợp → … → Báo cáo",
+   "label": "Hằng tháng · 5 mục",
+   "sublabel": "Kỳ tháng → Báo cáo → … → Còn nợ",
    "pos": [
     700,
     214
@@ -161,14 +161,16 @@
      "end_line": 85
     },
     {
-     "path": "web/src/features/send-adm/send-adm.api.ts",
-     "line": 36,
-     "end_line": 52
+     "path": "web/src/features/month/month-page.tsx",
+     "line": 1,
+     "end_line": 20,
+     "label": "MonthPage"
     },
     {
-     "path": "web/src/features/arrivals/arrivals.api.ts",
-     "line": 74,
-     "end_line": 116
+     "path": "web/src/features/reports/report-send-page.tsx",
+     "line": 208,
+     "end_line": 213,
+     "label": "ReportSendPage"
     }
    ]
   },
@@ -233,7 +235,7 @@
    "id": "requests",
    "type": "backend",
    "label": "requests",
-   "sublabel": "admin/periods · review · requests/:id/lines",
+   "sublabel": "periods · review · lines · people",
    "pos": [
     1030,
     100
@@ -264,7 +266,7 @@
    "id": "delivery",
    "type": "backend",
    "label": "delivery",
-   "sublabel": "deliver · cancel-remaining · backlog",
+   "sublabel": "deliver · bulk · cancel · backlog",
    "pos": [
     1030,
     218
@@ -575,8 +577,8 @@
    "dot": "cyan",
    "title": "Menu (ADMIN_NAV, một nguồn cho sidebar và menu sheet)",
    "items": [
-    "Hằng tháng (7): Tháng này · Tổng hợp kỳ · Gửi ADM · Hàng về · Giao hàng · Còn nợ · Báo cáo & in",
-    "Danh mục và tủ (4): Danh mục món · Tủ / Kho · Món ngoài danh mục · Nhóm & đơn vị (/admin/units chuyển sang /admin/categories/units)",
+    "Hằng tháng (5): Kỳ tháng /admin/month · Báo cáo & gửi ADM /admin/reports · Hàng về · Giao hàng · Còn nợ",
+    "Danh mục và tủ (4): Danh mục món · Tủ / Kho · Món ngoài danh mục · Nhóm & đơn vị (/admin/units → /admin/categories/units)",
     "Quản lý (3): Nhân viên · Nhật ký · Cấu hình; đếm: Giao hàng, Tủ / Kho, Món ngoài DM (useAdminBadges)"
    ]
   },
@@ -596,6 +598,16 @@
     "Bản in /admin/reports/snapshots/:id/print qua RequireRole nhưng không bọc AdminShell; Gửi ADM in tại chỗ (PrintPortal)",
     "RequireRole chỉ ẩn giao diện; quyền thật do RolesGuard của api; route kỳ mở → 409 PERIOD_NOT_LOCKED",
     "Hàng về đi qua module catalog (arrivals-plan, adm-out, stock/receipts) dù nằm ở nhóm Hằng tháng"
+   ]
+  },
+  {
+   "dot": "rose",
+   "title": "Route mới và chuyển hướng (RedirectKeepSearch giữ query)",
+   "items": [
+    "/admin (index) → /admin/month (ADMIN_HOME)",
+    "/admin/home và /admin/summary → /admin/month; Tổng hợp theo món (view/item) bỏ, thay bằng popup \"Ai đăng ký món\" ở Báo cáo & gửi ADM",
+    "/admin/send-adm → /admin/reports (Báo cáo và Gửi ADM gộp một trang, Đề nghị sửa ngay trong bảng)",
+    "Chuông period_locked mở /admin/month?ym=<kỳ>; Còn nợ ?filter=left đổi thành ?left=1"
    ]
   }
  ]

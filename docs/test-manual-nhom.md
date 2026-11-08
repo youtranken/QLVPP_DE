@@ -25,8 +25,8 @@ Chủ dự án thử tay từng nhóm trên dev. Xong một nhóm (sửa hết g
 1. `nv.a`: Đăng ký 3–4 món + 1 "Món khác", bấm "Lưu phiếu" → phiếu đã lưu, sửa lại được.
 2. `nv.b`, `nv.c`: đăng ký vài món, ít nhất 1 món trùng `nv.a`.
 3. `nv.d`: không đăng ký.
-4. `hc.test` Tháng này → "x/N đã đăng ký"; bước Đăng ký ghi "Đang chờ chốt kỳ (tháng 11)".
-5. `hc.test` Tổng hợp kỳ, chọn tháng 11 (đang mở) → danh sách người đã đăng ký, chỉ xem; "Xem" mở popup phiếu.
+4. `hc.test` Kỳ tháng → "x/N đã đăng ký"; bước Đăng ký ghi "Đang chờ chốt kỳ (tháng 11)".
+5. `hc.test` Kỳ tháng, chọn tháng 11 (đang mở) → danh sách người đã đăng ký, chỉ xem; "Xem" mở popup phiếu.
 6. `hc.test` Sản phẩm (Lưới): "Tạm ngưng" 1 món → thẻ có dấu đỏ chéo (không gạch tên), vẫn hiện tại chỗ, nút "Tạm ngưng" chỉ đỏ khi rê chuột, có "Hoàn tác"; `nv.a` thấy món có dấu Tạm ngưng, không thêm được, phiếu báo đỏ. Bấm "Dùng lại".
 7. `hc.test` Sản phẩm (Bảng): tick 1 món hoặc cả nhóm để tạm ngưng; tab Tạm ngưng chỉ có "Dùng lại", "Chuyển nhóm".
 8. `hc.test` Danh mục: tạm ngưng 1 nhóm → nhóm gạch tên + "Đã ngừng"; ở Sản phẩm nhóm tự thu gọn. Bật lại.
@@ -37,66 +37,64 @@ Góp ý Nhóm 1 (07/11/2026) → mockup https://claude.ai/artifact/5dwhdPKyhbEJw
 - NV: đầu trang nền đặc; Món khác ĐVT + SL một hàng, ĐVT chọn sẵn "cái", "tối đa" chỉ hiện đỏ khi chạm mức; bỏ tab "Tôi" → hộp tài khoản ở đầu trang; phiếu đã lưu chỉ xem + "Sửa phiếu"; báo đỏ món tạm ngưng / tối đa bị hạ; NV vẫn thấy món tạm ngưng.
 - HC: Tổng hợp kỳ mở chỉ xem (không phần Chưa đăng ký, cột Nhóm = team từ PMH ID, "Xem" mở popup); đổi tên Danh mục món → Sản phẩm, Nhóm & đơn vị → Danh mục; món/nhóm tạm ngưng hiện dấu đỏ, không ẩn, bỏ nhãn "Ngừng riêng"; bảng: lọc + thao tác chung một thanh sáng; nhóm ngưng không có "+"; trang Danh mục gọn; panel Sửa sản phẩm làm lại; dọn nhóm "PW …" trên dev.
 
-## Nhóm 2 · Sau khi khóa kỳ 11
+## Nhóm 2 · Sau khi khóa kỳ 11 (màn Kỳ tháng, vòng 3)
 
-11. `nv.a` Đăng ký → không sửa được phiếu kỳ 11; kỳ 12 đang mở.
-12. `hc.test` Tháng này → thấy số món; bước kế: duyệt món ngoài danh mục.
-13. `hc.test` Món ngoài danh mục: Chấp nhận / Từ chối có lý do / "Thêm vào danh mục" → `nv.a` có chuông + Lịch sử.
-14. `hc.test` Tổng hợp kỳ → "Điều chỉnh" phiếu `nv.b`, giảm 1 dòng có lý do → `nv.b` có chuông, Lịch sử ghi số cũ → mới + lý do.
-15. `hc.test` Tổng hợp kỳ: chế độ "Theo món", "Theo người", các bộ lọc.
+11. `nv.a` Đăng ký → không sửa được phiếu kỳ 11; kỳ 12 đang mở. Màn Đăng ký rộng hết bề ngang; dải "đang giao" ở đầu trang bấm vào mở popup nhận hàng (bảng Món · Được giao · Đã nhận · Tình trạng).
+12. `hc.test` Kỳ tháng (`/admin/month`): dải 4 bước, bảng kẻ ô, chip lọc; không còn chữ lẻ ("n món, n đơn vị", "chưa đủ tủ…"). Menu Hằng tháng chỉ 5 mục: Kỳ tháng · Báo cáo & gửi ADM · Hàng về · Giao hàng · Còn nợ. Gõ tay `/admin`, `/admin/home`, `/admin/summary`, `/admin/send-adm` → chuyển đúng `/admin/month` hoặc `/admin/reports`, giữ `?ym`.
+13. `hc.test` Món ngoài danh mục (menu Tủ và danh mục): Chấp nhận / Từ chối có lý do / "Thêm vào danh mục" → `nv.a` có chuông + Lịch sử.
+14. `hc.test` Kỳ tháng → "Điều chỉnh" phiếu `nv.b`, giảm 1 dòng. Lý do chỉ có "Không có hàng" và "Khác" (Khác bắt ghi chú từ 3 chữ, lỗi hiện dưới ô); dòng vượt tối đa chọn sẵn "Khác" + "Vượt tối đa n". "Người đã nghỉ" chỉ xuất hiện khi chủ phiếu đã nghỉ. `nv.b` có chuông; Lịch sử ghi "Điều chỉnh của Hành chính · tên a thành b · Lý do …".
+15. `hc.test` Kỳ tháng: tìm theo tên hoặc phòng ban, chip lọc; nút "Tháng trước" dừng ở kỳ cũ nhất; chọn kỳ đang mở → chỉ xem (Đã đăng ký / Chưa đăng ký). `?left=1` chỉ liệt kê người đã nghỉ.
 
-## Nhóm 3 · Gửi ADM
+## Nhóm 3 · Báo cáo & gửi ADM
 
-16. Gửi ADM → "Đề nghị" mặc định = đăng ký + nợ tháng trước (không trừ tủ).
-17. Sửa số 1 món → dòng báo đủ / thiếu / dư (có tính tủ).
-18. "Xem ai đăng ký", "Lọc theo lệch số".
-19. Sửa mọi món về 0 → "In trình ký" tắt, hiện "Tháng này không cần đề nghị ADM"; thử rồi đặt lại số.
-20. "In trình ký" → hộp in, A4 có 3 ô ký → băng xanh "Đã gửi ADM lúc …".
-21. "Xuất Excel bản này" → đúng bản vừa gửi.
-22. Giảm 1 dòng ở Tổng hợp sau khi in → cảnh báo "hàng về dư n vào kho"; Gửi ADM "Có thay đổi sau bản chốt".
-23. "Làm bản mới", sửa 1 số, in → liệt kê thay đổi; tờ in "Thay thế bản in lúc …".
+16. `hc.test` Báo cáo & gửi ADM (`/admin/reports`): "Đề nghị" mặc định = đăng ký + nợ tháng trước (không trừ tủ); một dòng trạng thái duy nhất.
+17. Sửa số "Đề nghị" ngay trong bảng 1 món → dòng báo đủ / thiếu / dư (có tính tủ).
+18. Bấm "n người" ở một món → popup "Ai đăng ký món"; kiểm số người khớp, người bị bỏ dòng (về 0) không có trong popup.
+19. Sửa mọi món về 0 → "In trình ký" tắt, hiện "Tháng này không cần đề nghị ADM"; đặt lại số.
+20. "In trình ký" → hộp in, A4 có 3 ô ký → băng xanh "Đã gửi ADM lúc …"; "Xuất Excel" đúng bản vừa gửi.
+21. Sau khi đã gửi: Đề nghị vẫn sửa được (khởi tạo từ bản đã gửi), không còn bước "Lập bản mới"; sửa 1 số rồi In/Xuất → bản mới (tờ in "Thay thế bản in lúc …", liệt kê thay đổi). Rời trang khi còn số chưa lưu → hỏi xác nhận, đếm đúng số món đã gõ.
+22. Giảm 1 dòng ở Kỳ tháng sau khi in → cảnh báo "hàng về dư n vào kho"; trang báo "Có thay đổi sau bản chốt". Các bản đã chốt nằm trong hộp gập "Bản đã lập".
 
 ## Nhóm 4 · Hàng về và Tủ / Kho
 
-24. Hàng về: ô "Về đợt này" điền sẵn theo bản in; chip nhóm, tìm "but bi", "Chỉ món chưa về đủ".
-25. "ADM hết hàng" 1 món → ô về 0 và khóa.
-26. Về ít hơn bản in, ghi chú, "Lưu hàng về" → "Thiếu n so với bản in", Tủ cộng đúng.
-27. Về nhiều hơn + thêm món ngoài bản in → "Dư … vào kho", "nhập thẳng vào tủ"; "Điền lại số gợi ý".
-28. Khối món ngoài danh mục: "Ghi" số đã về → Tủ không đổi.
-29. "Đủ hàng" → "Nhập vào tủ" → Tháng này bước Hàng về "Đủ hàng".
-30. Tủ / Kho, Tồn kho: Trong tủ = Đang giữ + Còn trống.
-31. "Xuất lẻ một món" cho `nv.d` có lý do → Tủ giảm; `nv.d` Lịch sử "Nhận lẻ".
-32. Xuất lẻ quá "Còn trống" → cảnh báo, nút "Vẫn xuất".
-33. ⋯ → "Kiểm kê": đúng tồn → báo khớp; ít hơn → bắt lý do, Sổ cái "Điều chỉnh".
-34. ⋯ → "Nhập ngoài kỳ (tự mua lẻ)" → Tủ tăng, Sổ cái "Nhập mua".
-35. Lọc "Sắp hết" ở Tủ, so với Tháng này và Sản phẩm → cùng danh sách.
+23. Hàng về: một cột nhập "Hàng về", điền sẵn theo bản in; đã về trước ghi nhỏ dưới "Đề nghị"; chip nhóm, tìm "but bi", "Chỉ món chưa về đủ". Nút duy nhất "Lưu hàng về", dòng "Đợt này: n món · u đơn vị".
+24. "ADM hết hàng" 1 món → ô về 0 và khóa.
+25. Nhập thấp hơn số còn cần → mới hiện cột "Còn thiếu" (đủ thì không có cột); ghi chú, "Lưu hàng về" → Tủ cộng đúng. Không có "Hoàn tác", "Đủ hàng", "Đặt lại".
+26. Nhập nhiều hơn + thêm món ngoài bản in → "Dư … vào kho", "nhập thẳng vào tủ".
+27. Khối món ngoài danh mục: "Ghi" số đã về → Tủ không đổi.
+28. Tủ / Kho: một hàng chip có số (Tất cả, Sắp hết, …) cạnh ô tìm; bấm chip lọc đúng, "Tất cả" chỉ bỏ lọc; Trong tủ = Đang giữ + Còn trống. Không còn link "Hàng ADM về?".
+29. "Xuất lẻ một món" cho `nv.d` có lý do → Tủ giảm; `nv.d` Lịch sử "Nhận lẻ"; xuất quá "Còn trống" → cảnh báo, nút "Vẫn xuất".
+30. ⋯ → "Kiểm kê": đúng tồn → báo khớp; ít hơn → bắt lý do, Sổ cái "Điều chỉnh".
+31. ⋯ → "Nhập ngoài kỳ (tự mua lẻ)" → Tủ tăng, Sổ cái "Nhập mua"; lọc "Sắp hết" so với Sản phẩm → cùng danh sách.
 
 ## Nhóm 5 · Giao hàng
 
-36. Giao hàng: tab "Chưa nhận", "Còn nợ", "Đã nhận", "Tất cả"; ô tìm.
-37. Giao đủ cho `nv.a` → chuông "đã được giao đủ".
-38. Giao cho người đăng ký sau ở món tủ không đủ → "Giữ k cho m người đăng ký trước"; người đó còn "Chưa nhận".
-39. Gõ số quá tủ / quá cần → bị chặn "Tối đa n".
-40. Người có món "ADM hết hàng" → giao từ tủ, hủy phần thiếu; NV Lịch sử "Đã hủy — ADM hết hàng", không thành nợ.
-41. Còn nợ (kỳ 10, demo): "Giao bổ sung"; "Hủy nợ" có lý do; "Khác" để trống bị chặn.
-42. Tủ / Kho, Sổ cái: Nhập / Giao / Xuất lẻ, mỗi dòng có "tồn n".
+32. Giao hàng (`/admin/delivery`): bảng người nhận có ô chọn từng dòng, chọn tất cả (điện thoại có ô "Chọn tất cả người giao được"), chip lọc, ô tìm; không còn chữ mô tả đầu trang.
+33. Chọn 2 người → nút ghi đúng "Giao 2 phiếu" (n = số người chọn, không có chữ "Đã chọn … đơn vị"); xác nhận → mỗi phiếu một kết quả, `nv.a` có chuông "đã được giao đủ".
+34. Giao nhiều phiếu khi tủ thiếu → giao phần có, phần thiếu vẫn "Chưa nhận" (kỳ đang giao) rồi thành "Còn nợ"; người đăng ký trước được giữ trước ("Giữ k cho m người đăng ký trước").
+35. Mở một người (hộp giao từng người): gõ số quá tủ / quá cần → bị chặn "Tối đa n".
+36. Người có món "ADM hết hàng" → giao ở hộp từng người, hủy phần thiếu; NV Lịch sử "Đã hủy — ADM hết hàng", không thành nợ. Người chỉ có dòng này không chọn được trong "Giao n phiếu".
+37. Bấm "Giao n phiếu" hai lần liên tiếp (hoặc hai tab) → lần sau báo dữ liệu đã đổi, không giao đôi.
+38. Còn nợ (`/admin/backlog`): nhóm tháng → người → món; đầu trang gọn; "Giao bổ sung"; "Hủy nợ" có lý do; "Khác" để trống bị chặn. `?ym=` tháng không còn nợ → rơi về tháng còn nợ.
+39. `nv.a` Lịch sử (máy tính): danh sách tháng bên trái (nhóm theo năm) + chi tiết phiếu bên phải; tháng không có phiếu không hiện; chi tiết có "Điều chỉnh của Hành chính" và cột Tình trạng, Ghi chú "Nhận hh:mm dd/mm". Điện thoại: danh sách → chạm tháng → chi tiết, "← Lịch sử".
+40. Tủ / Kho, Sổ cái: Nhập / Giao / Xuất lẻ, mỗi dòng có "tồn n".
 
 ## Nhóm 6 · Sang tháng sau (kỳ 12)
 
-43. Giao hàng, Còn nợ → "Chưa nhận" kỳ 11 thành "Còn nợ".
-44. `nv.b` Đăng ký → dải cam "Bạn còn chờ nhận Tháng 11 … Không cần đăng ký lại".
-45. Phần "ADM hết hàng" chưa giao tự hủy, không thành nợ; Nhật ký "Tự hủy …".
-46. Gửi ADM kỳ 12 tự cộng nợ; phần ADM còn nợ giao không bị đề nghị lại.
-47. Hàng về, "Về bù kỳ trước": nhập, "Lưu về bù" → Tủ cộng.
-48. "ADM không giao nữa" → phần NV đang chờ cộng vào đề nghị kỳ 12; thử "Hoàn tác".
-49. Còn nợ, lọc "Của người đã nghỉ" (nhờ Claude đánh dấu 1 nhân viên demo đã nghỉ).
+41. Giao hàng, Còn nợ (nhóm tháng → người → món) → "Chưa nhận" kỳ 11 thành "Còn nợ".
+42. `nv.b` Đăng ký → dải nhận hàng có link ngắn tới các tháng còn chờ nhận ("Không cần đăng ký lại"); không có băng thứ hai.
+43. Phần "ADM hết hàng" chưa giao tự hủy, không thành nợ; Nhật ký "Tự hủy …".
+44. Báo cáo & gửi ADM kỳ 12 tự cộng nợ; phần ADM còn nợ giao không bị đề nghị lại.
+45. Hàng về, "Về bù kỳ trước": nhập, "Lưu về bù" → Tủ cộng.
+46. "ADM không giao nữa" → phần NV đang chờ cộng vào đề nghị kỳ 12; thử "Hoàn tác".
+47. Còn nợ, lọc "Của người đã nghỉ" (nhờ Claude đánh dấu 1 nhân viên demo đã nghỉ).
 
 ## Nhóm 7 · Báo cáo và Nhật ký
 
-50. Báo cáo & in: Phần 1 theo món, Phần 2 theo phòng ban; không sửa số.
-51. "In lại bản lập …" bản cũ → số lúc chốt, không đổi.
-52. Nhật ký, "7 ngày qua" → đủ việc vừa làm, mỗi dòng có "Trước / Sau".
-53. Sổ cái 1 món: tủ đầu + nhập − giao − xuất lẻ ± kiểm kê = tủ cuối.
+48. Báo cáo & gửi ADM, hộp "Bản đã lập": Phần 1 theo món, Phần 2 theo phòng ban của bản đã chốt; không sửa số.
+49. "In lại bản lập …" bản cũ → số lúc chốt, không đổi.
+50. Nhật ký, "7 ngày qua" → đủ việc vừa làm, mỗi dòng có "Trước / Sau".
+51. Sổ cái 1 món: tủ đầu + nhập − giao − xuất lẻ ± kiểm kê = tủ cuối.
 
 ### Chốt thêm (07/11, sau khi soi bằng evondevKit)
 - Nút "Tạm ngưng" trên thẻ/dòng: màu trung tính, chỉ đỏ khi rê chuột; bấm xong có thông báo kèm "Hoàn tác". (Thay cho nút đỏ sẵn.)
