@@ -9,8 +9,11 @@ import { AdjustLines } from './adjust-lines';
 import { useAdjust, type Adjust } from './use-adjust';
 import type { AdjustReason, AdminRequestView } from './summary.api';
 
-function Context({ view }: { view: AdminRequestView }) {
+function Context({ view, a }: { view: AdminRequestView; a: Adjust }) {
   const { t } = useTranslation();
+  const kept = view.lines.filter((l) => !a.removed.includes(l.id));
+  const before = view.lines.reduce((s, l) => s + l.qty, 0);
+  const after = kept.reduce((s, l) => s + a.qtyOf(l), 0);
   return (
     <div className="aj-head__text">
       <small className="drawer-eyebrow">
@@ -20,6 +23,7 @@ function Context({ view }: { view: AdminRequestView }) {
           department: view.department ?? t('summary.adjust.noDepartment'),
         })}
       </small>
+      <small className="aj-head__sub">{t('summary.adjust.subtitle', { n: kept.length, u: before, after })}</small>
       <span className="aj-head__tags">
         <span className={view.is_open ? 'tag tag--ok' : 'tag tag--dark'}>{t(view.is_open ? 'summary.adjust.open' : 'summary.adjust.locked')}</span>
         {view.user_status !== 'active' && <span className="tag tag--outline">{t('summary.adjust.leftCompany')}</span>}
@@ -101,7 +105,7 @@ export function AdjustDrawer({ requestId, presetReason, onClose, nav }: {
       footer={<Footer a={a} formId={formId} />}
     >
       <form id={formId} className="aj-form" onSubmit={submit} noValidate>
-        {view && <Context view={view} />}
+        {view && <Context view={view} a={a} />}
         {view && !view.is_open && !removedAll && <p className="alert alert--warn">{t('summary.adjust.lockedWarn')}</p>}
         <Blocks a={a} />
         {a.query.isError && <LoadError onRetry={a.reload} />}

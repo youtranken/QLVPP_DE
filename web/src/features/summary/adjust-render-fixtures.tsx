@@ -80,7 +80,7 @@ export async function renderDrawer({
       </MemoryRouter>
     </MeContext.Provider>,
   );
-  const drawer = await screen.findByRole('dialog', { name: 'Phiếu của Nguyễn Văn An' });
+  const drawer = await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Nguyễn Văn An' });
   // Dòng "tối đa n/tháng" lấy từ danh mục Hành chính: chờ tải xong
   if (waitItems) await waitFor(() => expect(within(drawer).getAllByText(/tối đa \d+\/tháng/).length).toBeGreaterThan(0));
   return { drawer, onClose };
@@ -89,6 +89,6 @@ export async function renderDrawer({
 export const row = (drawer: HTMLElement, name: string) => within(drawer).getByText(name).closest('li')!;
 export const saveButton = (drawer: HTMLElement) => within(drawer).getByRole('button', { name: 'Lưu điều chỉnh' });
 export const less = (drawer: HTMLElement, name: string) => within(drawer).getByRole('button', { name: `Bớt ${name}` });
-export const reasons = (drawer: HTMLElement, name: string) => within(row(drawer, name)).getByRole('radiogroup', { name: 'Vì sao giảm?' });
+export const reasons = (drawer: HTMLElement, name: string) => within(row(drawer, name)).getByRole('radiogroup', { name: 'Lý do' });
 export const pick = (drawer: HTMLElement, name: string, reason: string) => within(reasons(drawer, name)).getByRole('radio', { name: reason });
 export const noteBox = (drawer: HTMLElement, name: string) => within(row(drawer, name)).getByLabelText(/^Ghi thêm/);

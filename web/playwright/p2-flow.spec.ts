@@ -52,7 +52,7 @@ async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom
 
 async function openDrawer(admin: Page, person: Person) {
   await admin.getByRole('row').filter({ hasText: person.name }).getByRole('button', { name: 'Điều chỉnh' }).click();
-  const drawer = admin.getByRole('dialog', { name: `Phiếu của ${person.name}` });
+  const drawer = admin.getByRole('dialog', { name: `Điều chỉnh phiếu ${person.name}` });
   await expect(drawer.getByText('Đã khóa', { exact: true })).toBeVisible();
   return drawer;
 }
@@ -64,7 +64,7 @@ async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person,
   await drawer.getByRole('button', { name: `Bỏ ${dropped} khỏi phiếu` }).click();
   await snap(admin, info, 'admin-adjust');
   // Lý do riêng từng dòng giảm
-  await drawer.getByRole('listitem').filter({ hasText: dropped }).getByRole('radiogroup', { name: 'Vì sao giảm?' }).getByRole('radio', { name: 'Trùng với phiếu khác' }).check();
+  await drawer.getByRole('listitem').filter({ hasText: dropped }).getByRole('radiogroup', { name: 'Lý do' }).getByRole('radio', { name: 'Không có hàng' }).check();
   await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();
   await expect(drawer).toBeHidden();
 

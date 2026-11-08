@@ -19,12 +19,12 @@ describe('SummaryPage — panel phủ điều chỉnh phiếu ?request=', () => 
     stubSummaryApi((url) => (url === '/api/admin/requests/r-3' ? jsonResponse(200, adminRequest({ id: 'r-3', full_name: 'Trần Bình' })) : undefined));
     open('/admin/summary?ym=2026-10');
     await userEvent.click(await screen.findByText('Võ Thị Lan'));
-    const drawer = await screen.findByRole('dialog', { name: 'Phiếu của Võ Thị Lan' });
+    const drawer = await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Võ Thị Lan' });
     expect(await within(drawer).findByText('2/3')).toBeInTheDocument();
     expect(within(drawer).getByRole('button', { name: 'Phiếu trước' })).toBeEnabled();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Phiếu sau' }));
     await waitFor(() => expect(search()).toContain('request=r-3'));
-    const next = await screen.findByRole('dialog', { name: 'Phiếu của Trần Bình' });
+    const next = await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Trần Bình' });
     expect(within(next).getByText('3/3')).toBeInTheDocument();
     expect(within(next).getByRole('button', { name: 'Phiếu sau' })).toBeDisabled();
     await userEvent.click(within(next).getByRole('button', { name: 'Đóng' }));

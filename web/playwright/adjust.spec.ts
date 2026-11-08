@@ -84,7 +84,7 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       await searchSummaryPeople(page, tag);
       await page.getByRole('row').filter({ hasText: name }).getByRole('button', { name: 'Điều chỉnh' }).click();
 
-      const drawer = page.getByRole('dialog', { name: `Phiếu của ${name}` });
+      const drawer = page.getByRole('dialog', { name: `Điều chỉnh phiếu ${name}` });
       await expect(drawer).toBeVisible();
       await expect(drawer.getByText('Đã khóa', { exact: true })).toBeVisible();
       await expect(drawer.getByText('Kỳ đã khóa. Chỉ giảm hoặc bỏ dòng, mỗi dòng giảm cần lý do; không giảm dưới số đã giao.')).toBeVisible();
@@ -111,10 +111,10 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       await expect(customLine.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button')).toHaveCount(3);
       await expect(customLine.getByRole('link', { name: 'Xem ở Món ngoài danh mục' })).toBeVisible();
 
-      // Mỗi dòng giảm có khối "Vì sao giảm?"; còn dòng thiếu lý do → Lưu vô hiệu
+      // Mỗi dòng giảm có khối "Lý do"; còn dòng thiếu lý do → Lưu vô hiệu
       const save = drawer.getByRole('button', { name: 'Lưu điều chỉnh' });
       await expect(save).toBeDisabled();
-      const whyA = lineA.getByRole('radiogroup', { name: 'Vì sao giảm?' });
+      const whyA = lineA.getByRole('radiogroup', { name: 'Lý do' });
       await whyA.getByRole('radio', { name: 'Khác', exact: true }).check();
       const noteA = lineA.getByLabel(/^Ghi thêm/);
       await noteA.fill('  ab  ');
@@ -165,11 +165,11 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       await page.goto(`/admin/summary?ym=${seed.prevYm}`);
       await searchSummaryPeople(page, seed.tag);
       await page.getByRole('row').filter({ hasText: seed.name }).getByRole('button', { name: 'Điều chỉnh' }).click();
-      const drawer = page.getByRole('dialog', { name: `Phiếu của ${seed.name}` });
+      const drawer = page.getByRole('dialog', { name: `Điều chỉnh phiếu ${seed.name}` });
       const line = drawer.getByRole('listitem').filter({ hasText: item.name });
       await expect(line.getByRole('spinbutton')).toHaveValue('5');
       await line.getByRole('button', { name: `Bớt ${item.name}` }).click();
-      await line.getByRole('radiogroup', { name: 'Vì sao giảm?' }).getByRole('radio', { name: 'Vượt định mức' }).check();
+      await line.getByRole('radiogroup', { name: 'Lý do' }).getByRole('radio', { name: 'Không có hàng' }).check();
 
       await otherAdminSaves(4);
       await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();
@@ -198,7 +198,7 @@ test.describe('Tổng hợp — giảm sau khi đã gửi ADM (Plan v2-D, Task 1
       await page.goto(`/admin/summary?ym=${PRIVATE_YM}`);
       await searchSummaryPeople(page, seed.tag);
       await page.getByRole('row').filter({ hasText: seed.name }).getByRole('button', { name: 'Điều chỉnh' }).click();
-      const drawer = page.getByRole('dialog', { name: `Phiếu của ${seed.name}` });
+      const drawer = page.getByRole('dialog', { name: `Điều chỉnh phiếu ${seed.name}` });
       const line = drawer.getByRole('listitem').filter({ hasText: item.name });
       await expect(line.getByRole('spinbutton')).toHaveValue('5');
       await expect(line.getByText(/^Phiếu gửi ADM lúc/)).toHaveCount(0);
@@ -209,7 +209,7 @@ test.describe('Tổng hợp — giảm sau khi đã gửi ADM (Plan v2-D, Task 1
       await expect(line.getByText(/^Phiếu gửi ADM lúc \d\d:\d\d \d\d\/\d\d đã tính số cũ — giảm bây giờ thì hàng về dư 2 cái vào kho\.$/)).toBeVisible();
       const save = drawer.getByRole('button', { name: 'Lưu điều chỉnh' });
       await expect(save).toBeDisabled();
-      await line.getByRole('radiogroup', { name: 'Vì sao giảm?' }).getByRole('radio', { name: 'Vượt định mức' }).check();
+      await line.getByRole('radiogroup', { name: 'Lý do' }).getByRole('radio', { name: 'Không có hàng' }).check();
       await expect(save).toBeEnabled();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'v2d-12-reduce-after-sent');

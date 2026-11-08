@@ -176,6 +176,7 @@ request_line_adjustments (id uuid PK, batch_id uuid NOT NULL,   -- = id audit re
           qty_before int CHECK (> 0), qty_after int CHECK (>= 0 AND < qty_before),
           reason_code text CHECK (IN ('over_quota','adm_out_of_stock','duplicate','other','user_left')),
           reason_note text (1–200; 'other' bắt buộc ≥ 3), actor_sub text, created_at,
+          -- web vòng 3 chỉ cho chọn 'adm_out_of_stock' (nhãn "Không có hàng"), 'other', và 'user_left' khi chủ phiếu đã nghỉ; mã cũ giữ cho lịch sử
           UNIQUE (batch_id, line_id))                      -- 0113: chỉ-thêm (trigger chặn UPDATE/DELETE/TRUNCATE)
 period_adm_out (period_ym date REFERENCES periods ON DELETE CASCADE, line_key text,   -- item_id::text hoặc 'custom:[tên, đvt]'
           kind text CHECK (IN ('out','owed_closed')), marked_by text, marked_at timestamptz,

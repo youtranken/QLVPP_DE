@@ -46,7 +46,7 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
     expect(await within(drawer).findByText('Đã chấp nhận')).toBeInTheDocument();
     expect(saveButton(drawer)).toBeDisabled();
     await userEvent.click(less(drawer, 'Giấy note vàng'));
-    await userEvent.click(pick(drawer, 'Giấy note vàng', 'Vượt định mức'));
+    await userEvent.click(pick(drawer, 'Giấy note vàng', 'Không có hàng'));
     await userEvent.click(saveButton(drawer));
     await waitFor(() => expect(f.mock.calls.some((c) => c[0] === '/api/admin/requests/r-1/lines')).toBe(true));
     const call = f.mock.calls.find((c) => c[0] === '/api/admin/requests/r-1/lines') as unknown as [string, RequestInit];
@@ -74,7 +74,7 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
     const f = stubAdjust({ views: [adminRequest(), fresh], review: () => jsonResponse(409, { code: 'LINE_ALREADY_REVIEWED' }) });
     const { drawer } = await renderDrawer();
     await userEvent.click(less(drawer, 'Bút bi xanh'));
-    await userEvent.click(pick(drawer, 'Bút bi xanh', 'Trùng với phiếu khác'));
+    await userEvent.click(pick(drawer, 'Bút bi xanh', 'Không có hàng'));
     await userEvent.click(within(drawer).getByRole('button', { name: 'Mua lần này — Băng keo 2 mặt' }));
     const confirm = screen.getByRole('dialog', { name: /Mua “Băng keo 2 mặt” lần này/ });
     await userEvent.click(within(confirm).getByRole('button', { name: 'Mua lần này' }));
@@ -84,7 +84,7 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
     expect(within(drawer).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(10);
     expect(within(drawer).queryByRole('button', { name: 'Tải bản mới nhất' })).toBeNull();
     await userEvent.click(less(drawer, 'Bút bi xanh'));
-    expect(pick(drawer, 'Bút bi xanh', 'Trùng với phiếu khác')).toBeChecked();
+    expect(pick(drawer, 'Bút bi xanh', 'Không có hàng')).toBeChecked();
     expect(saveButton(drawer)).toBeEnabled();
     expect(loadCalls(f)).toHaveLength(2);
   });

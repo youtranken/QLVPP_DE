@@ -181,7 +181,7 @@ describe('SummaryPage — thanh công cụ, bảng, ngăn kéo', () => {
     await userEvent.click(await screen.findByText('Võ Thị Lan'));
     expect(search()).toContain('request=r-2');
     await waitFor(() => expect(calledUrls(f)).toContain('/api/admin/requests/r-2'));
-    const drawer = await screen.findByRole('dialog', { name: 'Phiếu của Võ Thị Lan' });
+    const drawer = await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Võ Thị Lan' });
     await userEvent.click(within(drawer).getByRole('button', { name: 'Đóng' }));
     await waitFor(() => expect(search()).not.toContain('request='));
   });
@@ -232,12 +232,12 @@ describe('SummaryPage — thanh công cụ, bảng, ngăn kéo', () => {
   it('ngăn kéo mở: ↓ sang người kế trong bảng (theo thứ tự hiển thị, nhóm "Chưa có phòng ban" cuối), ↑ về người trước', async () => {
     stubSummaryApi((url) => (url === '/api/admin/requests/r-3' ? jsonResponse(200, adminRequest({ id: 'r-3', full_name: 'Trần Bình' })) : undefined));
     open('/admin/summary?request=r-2');
-    const drawer = await screen.findByRole('dialog', { name: 'Phiếu của Võ Thị Lan' });
+    const drawer = await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Võ Thị Lan' });
     await screen.findByText('Phạm Văn Đức');
     within(drawer).getByRole('button', { name: 'Quay lại' }).focus();
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() => expect(search()).toContain('request=r-3'));
-    expect(await screen.findByRole('dialog', { name: 'Phiếu của Trần Bình' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Trần Bình' })).toBeInTheDocument();
     screen.getByRole('button', { name: 'Quay lại' }).focus();
     await userEvent.keyboard('{ArrowUp}');
     await waitFor(() => expect(search()).toContain('request=r-2'));
@@ -322,7 +322,7 @@ describe('SummaryPage — vượt tối đa, người đã nghỉ (R-D8.20, R-D1
     await waitFor(() => expect(calledUrls(f).some((u) => u.includes('filter=left'))).toBe(true));
     expect(await screen.findByText('Đang lọc: Người đã nghỉ còn phần chưa nhận · 3 người')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Điều chỉnh phiếu của Võ Thị Lan' }));
-    const drawer = await screen.findByRole('dialog', { name: 'Phiếu của Võ Thị Lan' });
+    const drawer = await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Võ Thị Lan' });
     await userEvent.click(await within(drawer).findByRole('button', { name: 'Bớt Giấy note vàng' }));
     expect(within(drawer).getByRole('radio', { name: 'Người đã nghỉ' })).toBeChecked();
   });

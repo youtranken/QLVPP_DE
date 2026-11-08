@@ -15,24 +15,24 @@ function ReviewListProbe() {
 const NOTE = 'Giấy note vàng';
 
 // Hạ Giấy note vàng 3 → 2 với một lý do (và ghi chú nếu có)
-async function reduceNote(drawer: HTMLElement, reason = 'Vượt định mức', note?: string) {
+async function reduceNote(drawer: HTMLElement, reason = 'Không có hàng', note?: string) {
   await userEvent.click(less(drawer, NOTE));
   await userEvent.click(pick(drawer, NOTE, reason));
   if (note !== undefined) await userEvent.type(noteBox(drawer, NOTE), note);
 }
 
 describe('AdjustDrawer — lưu với lý do từng dòng', () => {
-  it('giảm 3 → 2 "Vượt định mức" + ghi chú " ab " → dòng đó gửi reason_code/ghi chú đã trim; dòng khác không lý do; toast + đóng', async () => {
+  it('giảm 3 → 2 "Khác" + ghi chú " abc " → dòng đó gửi reason_code/ghi chú đã trim; dòng khác không lý do; toast + đóng', async () => {
     const f = stubAdjust();
     const { drawer, onClose } = await renderDrawer();
-    await reduceNote(drawer, 'Vượt định mức', ' ab ');
+    await reduceNote(drawer, 'Khác', ' abc ');
     await userEvent.click(saveButton(drawer));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(await screen.findByText('Đã lưu điều chỉnh phiếu của Nguyễn Văn An')).toBeInTheDocument();
     expect(putBody(f)).toEqual({
       lines: [
         { id: 'l-pen', qty: 10, expected_qty: 10 },
-        { id: 'l-note', qty: 2, expected_qty: 3, reason_code: 'over_quota', reason_note: 'ab' },
+        { id: 'l-note', qty: 2, expected_qty: 3, reason_code: 'other', reason_note: 'abc' },
         { id: 'l-tape', qty: 2, expected_qty: 2 },
       ],
       expected_updated_at: '2026-10-05T07:20:00.000Z',
@@ -40,12 +40,11 @@ describe('AdjustDrawer — lưu với lý do từng dòng', () => {
   });
 
   it.each([
-    ['ADM không còn hàng', 'adm_out_of_stock'],
-    ['Trùng với phiếu khác', 'duplicate'],
-    ['Người đã nghỉ', 'user_left'],
-  ])('"%s" không ghi chú → reason_code %s, không reason_note', async (label, code) => {
+    ['Không có hàng', 'adm_out_of_stock', undefined],
+    ['Người đã nghỉ', 'user_left', 'user_left' as const],
+  ])('"%s" không ghi chú → reason_code %s, không reason_note', async (label, code, preset) => {
     const f = stubAdjust();
-    const { drawer } = await renderDrawer();
+    const { drawer } = await renderDrawer({ preset });
     await reduceNote(drawer, label);
     await userEvent.click(saveButton(drawer));
     await waitFor(() => expect(putCalls(f)).toHaveLength(1));
@@ -64,7 +63,7 @@ describe('AdjustDrawer — lưu với lý do từng dòng', () => {
   it('ghi chú dán 150 emoji + 100 chữ → lưu đúng 200 mã điểm', async () => {
     const f = stubAdjust();
     const { drawer, onClose } = await renderDrawer();
-    await reduceNote(drawer);
+    await reduceNote(drawer, 'Khác');
     await userEvent.click(noteBox(drawer, NOTE));
     await userEvent.paste('😀'.repeat(150) + 'x'.repeat(100));
     await userEvent.click(saveButton(drawer));
@@ -77,7 +76,7 @@ describe('AdjustDrawer — lưu với lý do từng dòng', () => {
   it('ghi chú dán 201 chữ "ế" dạng NFD → bộ đếm "200/200" như server (NFC), lưu 200 chữ NFC', async () => {
     const f = stubAdjust();
     const { drawer, onClose } = await renderDrawer();
-    await reduceNote(drawer);
+    await reduceNote(drawer, 'Khác');
     await userEvent.click(noteBox(drawer, NOTE));
     await userEvent.paste('ế'.normalize('NFD').repeat(201));
     expect(within(row(drawer, NOTE)).getByText('200/200')).toBeInTheDocument();
@@ -94,11 +93,11 @@ describe('AdjustDrawer — lưu với lý do từng dòng', () => {
     await userEvent.clear(box);
     await userEvent.type(box, '3');
     await userEvent.click(less(drawer, 'Bút bi xanh'));
-    await userEvent.click(pick(drawer, 'Bút bi xanh', 'Trùng với phiếu khác'));
+    await userEvent.click(pick(drawer, 'Bút bi xanh', 'Không có hàng'));
     await userEvent.click(saveButton(drawer));
     await waitFor(() => expect(putCalls(f)).toHaveLength(1));
     expect(putBody(f).lines).toEqual([
-      { id: 'l-pen', qty: 9, expected_qty: 10, reason_code: 'duplicate' },
+      { id: 'l-pen', qty: 9, expected_qty: 10, reason_code: 'adm_out_of_stock' },
       { id: 'l-note', qty: 3, expected_qty: 3 },
       { id: 'l-tape', qty: 2, expected_qty: 2 },
     ]);
@@ -108,13 +107,13 @@ describe('AdjustDrawer — lưu với lý do từng dòng', () => {
     const f = stubAdjust();
     const { drawer } = await renderDrawer();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Bỏ Giấy note vàng khỏi phiếu' }));
-    await userEvent.click(pick(drawer, NOTE, 'Trùng với phiếu khác'));
+    await userEvent.click(pick(drawer, NOTE, 'Không có hàng'));
     await userEvent.click(saveButton(drawer));
     await waitFor(() => expect(putCalls(f)).toHaveLength(1));
     expect(putBody(f)).toEqual({
       lines: [
         { id: 'l-pen', qty: 10, expected_qty: 10 },
-        { id: 'l-note', qty: 0, expected_qty: 3, reason_code: 'duplicate' },
+        { id: 'l-note', qty: 0, expected_qty: 3, reason_code: 'adm_out_of_stock' },
         { id: 'l-tape', qty: 2, expected_qty: 2 },
       ],
       expected_updated_at: '2026-10-05T07:20:00.000Z',
@@ -127,7 +126,7 @@ describe('AdjustDrawer — lưu với lý do từng dòng', () => {
     expect(saveButton(drawer)).toBeDisabled();
     await userEvent.click(less(drawer, NOTE));
     await userEvent.click(less(drawer, 'Bút bi xanh'));
-    await userEvent.click(pick(drawer, 'Bút bi xanh', 'Vượt định mức'));
+    await userEvent.click(pick(drawer, 'Bút bi xanh', 'Không có hàng'));
     expect(saveButton(drawer)).toBeDisabled();
     await userEvent.click(saveButton(drawer));
     expect(putCalls(f)).toHaveLength(0);
@@ -179,7 +178,7 @@ describe('AdjustDrawer — lỗi server đúng chỗ', () => {
     stubAdjust({ put: () => jsonResponse(400, { code: 'QTY_BELOW_DELIVERED', line_id: 'l-pen', delivered: 3 }) });
     const { drawer, onClose } = await renderDrawer();
     await userEvent.click(less(drawer, 'Bút bi xanh'));
-    await userEvent.click(pick(drawer, 'Bút bi xanh', 'Vượt định mức'));
+    await userEvent.click(pick(drawer, 'Bút bi xanh', 'Không có hàng'));
     await userEvent.click(saveButton(drawer));
     const pen = row(drawer, 'Bút bi xanh');
     expect(await within(pen).findByText('Không ít hơn số đã giao (3).')).toBeInTheDocument();

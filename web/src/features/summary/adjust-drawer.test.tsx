@@ -16,7 +16,7 @@ const facts = (name: string, unit: string, over: { active?: boolean; admin_only?
   admin_only: over.admin_only ?? false,
 });
 
-const REASONS = ['Vượt định mức', 'ADM không còn hàng', 'Trùng với phiếu khác', 'Người đã nghỉ', 'Khác'];
+const REASONS = ['Không có hàng', 'Khác'];
 
 // Giấy note vàng 5 bịch, tối đa hiện tại 4 (đã hạ sau khi nhân viên lưu)
 const overMaxView = () => {
@@ -130,7 +130,7 @@ describe('AdjustDrawer — chỉ giảm sau khóa sổ (R-D6.3)', () => {
 });
 
 describe('AdjustDrawer — khối lý do từng dòng (R-D6.14)', () => {
-  it('chưa giảm → không có khối; giảm 3 → 2 → "Vì sao giảm?" với 5 lựa chọn, báo "Chọn lý do giảm", Lưu vô hiệu tới khi chọn', async () => {
+  it('chưa giảm → không có khối; giảm 3 → 2 → nhóm "Lý do" chỉ 2 lựa chọn "Không có hàng", "Khác" (không còn "Vượt định mức", "Trùng với phiếu khác"), báo "Chọn lý do giảm", Lưu vô hiệu tới khi chọn', async () => {
     stubAdjust();
     const { drawer } = await renderDrawer();
     expect(within(drawer).queryByRole('radiogroup')).toBeNull();
@@ -143,8 +143,9 @@ describe('AdjustDrawer — khối lý do từng dòng (R-D6.14)', () => {
     // Không chuyển focus vào khối vừa mở
     expect(less(drawer, 'Giấy note vàng')).toHaveFocus();
     expect(saveButton(drawer)).toBeDisabled();
-    await userEvent.click(pick(drawer, 'Giấy note vàng', 'Trùng với phiếu khác'));
+    await userEvent.click(pick(drawer, 'Giấy note vàng', 'Không có hàng'));
     expect(saveButton(drawer)).toBeEnabled();
+    expect(within(row(drawer, 'Giấy note vàng')).queryByLabelText(/^Ghi thêm/)).toBeNull();
     expect(within(row(drawer, 'Bút bi xanh')).queryByRole('radiogroup')).toBeNull();
   });
 
@@ -152,15 +153,17 @@ describe('AdjustDrawer — khối lý do từng dòng (R-D6.14)', () => {
     stubAdjust();
     const { drawer } = await renderDrawer();
     await userEvent.click(less(drawer, 'Giấy note vàng'));
-    expect(noteBox(drawer, 'Giấy note vàng')).not.toHaveAttribute('aria-required');
+    expect(within(row(drawer, 'Giấy note vàng')).queryByLabelText(/^Ghi thêm/)).toBeNull();
     await userEvent.click(pick(drawer, 'Giấy note vàng', 'Khác'));
     expect(noteBox(drawer, 'Giấy note vàng')).toHaveAttribute('aria-required', 'true');
-    expect(within(row(drawer, 'Giấy note vàng')).getByText('Chọn "Khác" thì ghi lý do, ít nhất 3 chữ')).toBeInTheDocument();
+    expect(within(row(drawer, 'Giấy note vàng')).getByText('Chọn Khác thì cần ghi lý do.')).toBeInTheDocument();
     expect(saveButton(drawer)).toBeDisabled();
     await userEvent.type(noteBox(drawer, 'Giấy note vàng'), 'ab');
     expect(saveButton(drawer)).toBeDisabled();
     await userEvent.type(noteBox(drawer, 'Giấy note vàng'), 'c');
     expect(saveButton(drawer)).toBeEnabled();
+    expect(within(row(drawer, 'Giấy note vàng')).queryByText('Chọn Khác thì cần ghi lý do.')).toBeNull();
+    expect(within(row(drawer, 'Giấy note vàng')).getByText('Bắt buộc khi chọn Khác. Nhân viên sẽ đọc.')).toBeInTheDocument();
     expect(within(row(drawer, 'Giấy note vàng')).getByText('3/200')).toBeInTheDocument();
   });
 
@@ -168,6 +171,7 @@ describe('AdjustDrawer — khối lý do từng dòng (R-D6.14)', () => {
     stubAdjust();
     const { drawer } = await renderDrawer();
     await userEvent.click(less(drawer, 'Giấy note vàng'));
+    await userEvent.click(pick(drawer, 'Giấy note vàng', 'Khác'));
     await userEvent.click(noteBox(drawer, 'Giấy note vàng'));
     await userEvent.paste('a'.repeat(199));
     expect(within(row(drawer, 'Giấy note vàng')).getByText('199/200')).toBeInTheDocument();
@@ -206,28 +210,29 @@ describe('AdjustDrawer — khối lý do từng dòng (R-D6.14)', () => {
     await userEvent.click(less(drawer, 'Giấy note vàng'));
     await userEvent.click(less(drawer, 'Băng keo 2 mặt'));
     expect(within(drawer).queryByRole('button', { name: 'Dùng cho các món giảm còn lại' })).toBeNull();
-    await userEvent.click(pick(drawer, 'Băng keo 2 mặt', 'Trùng với phiếu khác'));
+    await userEvent.click(pick(drawer, 'Băng keo 2 mặt', 'Không có hàng'));
     await userEvent.click(pick(drawer, 'Bút bi xanh', 'Khác'));
     await userEvent.type(noteBox(drawer, 'Bút bi xanh'), 'Phòng đủ bút');
     expect(within(drawer).getAllByRole('button', { name: 'Dùng cho các món giảm còn lại' })).toHaveLength(1);
     await userEvent.click(within(row(drawer, 'Bút bi xanh')).getByRole('button', { name: 'Dùng cho các món giảm còn lại' }));
     expect(pick(drawer, 'Giấy note vàng', 'Khác')).toBeChecked();
     expect(noteBox(drawer, 'Giấy note vàng')).toHaveValue('Phòng đủ bút');
-    expect(pick(drawer, 'Băng keo 2 mặt', 'Trùng với phiếu khác')).toBeChecked();
+    expect(pick(drawer, 'Băng keo 2 mặt', 'Không có hàng')).toBeChecked();
     expect(within(drawer).queryByRole('button', { name: 'Dùng cho các món giảm còn lại' })).toBeNull();
     expect(saveButton(drawer)).toBeEnabled();
   });
 
-  it('dòng vượt tối đa: nhãn "Vượt tối đa hiện tại (4)"; giảm → chọn sẵn "Vượt định mức", đổi được', async () => {
+  it('dòng vượt tối đa: nhãn "Vượt tối đa hiện tại (4)"; giảm → chọn sẵn "Khác" + ghi chú "Vượt tối đa 4", sửa được', async () => {
     stubAdjust({ views: [overMaxView()] });
     const { drawer } = await renderDrawer();
     expect(within(row(drawer, 'Giấy note vàng')).getByText('Vượt tối đa hiện tại (4)')).toBeInTheDocument();
     expect(within(row(drawer, 'Bút bi xanh')).queryByText(/Vượt tối đa/)).toBeNull();
     await userEvent.click(less(drawer, 'Giấy note vàng'));
-    expect(pick(drawer, 'Giấy note vàng', 'Vượt định mức')).toBeChecked();
+    expect(pick(drawer, 'Giấy note vàng', 'Khác')).toBeChecked();
+    expect(noteBox(drawer, 'Giấy note vàng')).toHaveValue('Vượt tối đa 4');
     expect(saveButton(drawer)).toBeEnabled();
-    await userEvent.click(pick(drawer, 'Giấy note vàng', 'ADM không còn hàng'));
-    expect(pick(drawer, 'Giấy note vàng', 'ADM không còn hàng')).toBeChecked();
+    await userEvent.click(pick(drawer, 'Giấy note vàng', 'Không có hàng'));
+    expect(pick(drawer, 'Giấy note vàng', 'Không có hàng')).toBeChecked();
   });
 
   it('mở từ ?left=1 → dòng giảm chọn sẵn "Người đã nghỉ", không bắt ghi thêm', async () => {
@@ -235,7 +240,7 @@ describe('AdjustDrawer — khối lý do từng dòng (R-D6.14)', () => {
     const { drawer } = await renderDrawer({ preset: 'user_left' });
     await userEvent.click(less(drawer, 'Giấy note vàng'));
     expect(pick(drawer, 'Giấy note vàng', 'Người đã nghỉ')).toBeChecked();
-    expect(noteBox(drawer, 'Giấy note vàng')).not.toHaveAttribute('aria-required');
+    expect(within(row(drawer, 'Giấy note vàng')).queryByLabelText(/^Ghi thêm/)).toBeNull();
     expect(saveButton(drawer)).toBeEnabled();
   });
 });
@@ -252,7 +257,7 @@ describe('AdjustDrawer — giảm sau khi đã gửi ADM (W11, R-D17.6)', () => 
     await userEvent.click(less(drawer, 'Giấy note vàng'));
     expect(await within(row(drawer, 'Giấy note vàng')).findByText(text)).toBeInTheDocument();
     expect(within(row(drawer, 'Bút bi xanh')).queryByText(/Phiếu gửi ADM/)).toBeNull();
-    await userEvent.click(pick(drawer, 'Giấy note vàng', 'Vượt định mức'));
+    await userEvent.click(pick(drawer, 'Giấy note vàng', 'Không có hàng'));
     expect(saveButton(drawer)).toBeEnabled();
   });
 
@@ -275,5 +280,23 @@ describe('AdjustDrawer — món thuộc nhóm đang ngừng (active, usable=fals
     const { drawer } = await renderDrawer();
     expect(less(drawer, 'Giấy nhóm ngừng')).toBeEnabled();
     expect(within(row(drawer, 'Giấy nhóm ngừng')).getByText('Đã ngừng')).toBeInTheDocument();
+  });
+});
+
+describe('AdjustDrawer — lý do theo chủ phiếu', () => {
+  it('chủ phiếu đã nghỉ → thêm "Người đã nghỉ" đứng đầu dù không mở từ ?left=1', async () => {
+    stubAdjust({ views: [adminRequest({ user_status: 'left' })] });
+    const { drawer } = await renderDrawer();
+    await userEvent.click(less(drawer, 'Giấy note vàng'));
+    const radios = within(reasons(drawer, 'Giấy note vàng')).getAllByRole('radio');
+    expect(radios.map((r) => r.closest('label')?.textContent)).toEqual(['Người đã nghỉ', 'Không có hàng', 'Khác']);
+  });
+
+  it('đầu ngăn: "Điều chỉnh phiếu …" + "3 món · 15 đơn vị, sau điều chỉnh 14" khi giảm 1 đơn vị', async () => {
+    stubAdjust();
+    const { drawer } = await renderDrawer();
+    expect(within(drawer).getByText('3 món · 15 đơn vị, sau điều chỉnh 15')).toBeInTheDocument();
+    await userEvent.click(less(drawer, 'Giấy note vàng'));
+    expect(within(drawer).getByText('3 món · 15 đơn vị, sau điều chỉnh 14')).toBeInTheDocument();
   });
 });

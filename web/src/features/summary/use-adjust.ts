@@ -9,14 +9,9 @@ import type { LineView } from '@/features/request/request.api';
 import { REVIEW_KEY, type ReviewResult } from '@/features/review/review.api';
 import { useSendState } from '@/features/send-adm/use-send-state';
 import { useRefreshAfterLineChange } from '@/features/delivery/people/use-refresh-after-flow';
+import { defaultReason, isOverMax, reasonChoices, type LineReason } from './adjust-reasons';
 import { adjustFailure, isStaleUpdate, type AdjustErrors } from './summary-errors';
 import { adminRequestKey, saveAdjust, useAdminRequest, type AdjustBody, type AdjustLineBody, type AdjustReason, type AdminRequestView } from './summary.api';
-
-// Nháp lý do của một dòng: giữ cả khi dòng về lại số cũ (khối ẩn) tới khi Lưu/Hủy
-export interface LineReason {
-  code?: AdjustReason;
-  note: string;
-}
 
 interface Draft {
   qty: Record<string, number>;
@@ -30,7 +25,7 @@ interface Draft {
 const EMPTY: Draft = { qty: {}, removed: [], reasons: {}, errors: {}, stale: false, reloaded: false };
 
 export const NOTE_MAX = 200;
-const OTHER_NOTE_MIN = 3;
+export const OTHER_NOTE_MIN = 3;
 // Server đếm ghi chú theo mã điểm sau NFC + trim
 const clean = (note: string) => note.normalize('NFC').trim();
 
@@ -40,8 +35,7 @@ export const canRemove = (l: LineView) => l.delivered_qty + l.cancelled_qty === 
 // Không giảm dưới phần đã giao + đã hủy nợ (QTY_BELOW_DELIVERED); ô số luôn ≥ 1, về 0 bằng nút Bỏ
 export const floorOf = (l: LineView) => Math.max(1, l.delivered_qty + l.cancelled_qty);
 
-// Tối đa/tháng bị hạ sau khi nhân viên lưu: dòng giữ số cũ lớn hơn tối đa hiện tại
-export const isOverMax = (l: LineView) => l.max_qty !== null && l.qty > l.max_qty;
+export { isOverMax, type LineReason };
 
 export const reasonComplete = (r: LineReason) => !!r.code && (r.code !== 'other' || noteLength(r.note) >= OTHER_NOTE_MIN);
 
@@ -80,13 +74,15 @@ type Patch = (fn: (d: Draft) => Draft) => void;
 
 const qtyIn = (d: Draft) => (l: LineView) => (d.removed.includes(l.id) ? 0 : (d.qty[l.id] ?? l.qty));
 
-// Lý do đang hiệu lực của dòng: nháp đã chọn, không thì chọn sẵn (mở từ ?left=1 → Người đã nghỉ; vượt tối đa → Vượt định mức)
-const reasonIn = (d: Draft, preset: AdjustReason | undefined) => (l: LineView): LineReason =>
-  d.reasons[l.id] ?? { code: preset ?? (isOverMax(l) ? 'over_quota' : undefined), note: '' };
+type Translate = (key: string, opts?: Record<string, unknown>) => string;
+
+// Lý do đang hiệu lực của dòng: nháp đã chọn, không thì chọn sẵn (mở từ ?left=1 → Người đã nghỉ; vượt tối đa → Khác + ghi chú)
+const reasonIn = (d: Draft, preset: AdjustReason | undefined, t: Translate) => (l: LineView): LineReason =>
+  d.reasons[l.id] ?? defaultReason(l, preset, t);
 
 // Server đòi mọi dòng kèm expected_qty; bỏ dòng = qty 0; chỉ dòng giảm mang lý do (nháp của dòng không giảm không gửi)
-function bodyOf(current: AdminRequestView, d: Draft, preset: AdjustReason | undefined) {
-  const reasonOf = reasonIn(d, preset);
+function bodyOf(current: AdminRequestView, d: Draft, preset: AdjustReason | undefined, t: Translate) {
+  const reasonOf = reasonIn(d, preset, t);
   const lineOf = (l: LineView): AdjustLineBody => {
     const qty = qtyIn(d)(l);
     if (qty >= l.qty) return { id: l.id, qty, expected_qty: l.qty };
@@ -109,7 +105,7 @@ function useSendAdjust(requestId: string, patch: Patch, onDone: () => void) {
   const refresh = useRefreshAfterAdjust();
   const toast = useToast();
   return async (current: AdminRequestView, d: Draft, preset: AdjustReason | undefined) => {
-    const { body, keys } = bodyOf(current, d, preset);
+    const { body, keys } = bodyOf(current, d, preset, t);
     patch((x) => ({ ...x, errors: {} }));
     try {
       await saveAdjust(requestId, body, csrfToken);
@@ -150,6 +146,7 @@ function useSentAt(view: AdminRequestView | undefined) {
 }
 
 export function useAdjust(requestId: string, onDone: () => void, preset?: AdjustReason) {
+  const { t } = useTranslation();
   const flight = useSingleFlight();
   const { draft: d, patch, edit, restart } = useDraft(requestId);
   const sync = useReviewSync(requestId, restart);
@@ -157,7 +154,7 @@ export function useAdjust(requestId: string, onDone: () => void, preset?: Adjust
   const view = sync.query.data;
   const sentAt = useSentAt(view);
   const qtyOf = qtyIn(d);
-  const reasonOf = reasonIn(d, preset);
+  const reasonOf = reasonIn(d, preset, t);
   // Theo thứ tự hiển thị: dòng trong danh mục trước, dòng từng là ngoài DM sau
   const all = view?.lines ?? [];
   const lines = [...all.filter((l) => l.review_status === 'n/a'), ...all.filter((l) => l.review_status !== 'n/a')];
@@ -173,6 +170,7 @@ export function useAdjust(requestId: string, onDone: () => void, preset?: Adjust
     view,
     qtyOf,
     reasonOf,
+    choices: reasonChoices({ ownerLeft: !!view && view.user_status !== 'active', preset }),
     isReduced: (l: LineView) => qtyOf(l) < l.qty,
     removed: d.removed,
     edit,
