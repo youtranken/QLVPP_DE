@@ -89,7 +89,14 @@ test.describe('Nhóm 1 · Sản phẩm (dev-identity admin)', () => {
         expect(s.width).toBeGreaterThan(300);
       }
       const chip = chips.getByRole('button').first();
-      expect((await chip.boundingBox())!.height).toBeLessThan(st.height);
+      const chipH = (await chip.boundingBox())!.height;
+      if (isMobile(info)) {
+        // ≤767px: ô trạng thái và chip nhóm cùng nâng lên vùng chạm --hit 44px (vòng 3), nên chip không còn thấp hơn ô trạng thái
+        expect(Math.round(st.height)).toBeGreaterThanOrEqual(44);
+        expect(Math.round(chipH)).toBeGreaterThanOrEqual(44);
+      } else {
+        expect(chipH).toBeLessThan(st.height);
+      }
       expect(c.y).toBeGreaterThan(st.y);
       const tops = await chips.getByRole('button').evaluateAll((els) => new Set(els.map((e) => Math.round(e.getBoundingClientRect().top))).size);
       expect(tops).toBe(1);
