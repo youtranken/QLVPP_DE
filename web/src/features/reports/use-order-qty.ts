@@ -74,5 +74,6 @@ export function useOrderQty(report: MonthReport, { baseOf = defaultOrder, initia
     edited,
     invalid,
     dirty: Object.keys(drafts).length > 0,
+    drafts,
   };
 }

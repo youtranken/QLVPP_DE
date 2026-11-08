@@ -107,7 +107,7 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
   });
   const noOrder = useNoOrder(report.ym, qty);
   const dirty = useDirtyCount(qty, snap.fresh);
-  useLeaveGuard(dirty.count, useLeavePrompt(qty.editedCount));
+  useLeaveGuard(dirty.count, useLeavePrompt(dirty.count));
   const empty = orderRows.length > 0 && orderRows.every((r) => orderOf(qty, r) === 0);
   const blocked = qty.errorCount > 0 || snap.taking !== null || empty || !settled;
   const take = (xlsx: boolean) => {

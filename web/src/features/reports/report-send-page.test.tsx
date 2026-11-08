@@ -228,5 +228,7 @@ describe('Báo cáo & gửi ADM: số khởi tạo từ bản đã gửi không 
     await userEvent.type(box, '4');
     await userEvent.click(screen.getByRole('link', { name: 'Hàng về' }));
     expect(await screen.findByText('Bỏ số Đề nghị vừa sửa?')).toBeInTheDocument();
+    // Hai ô khởi tạo từ bản đã gửi không tính: chỉ ô vừa gõ là thay đổi
+    expect(screen.getByText(/Bạn đã sửa 1 món nhưng chưa In trình ký/)).toBeInTheDocument();
   });
 });

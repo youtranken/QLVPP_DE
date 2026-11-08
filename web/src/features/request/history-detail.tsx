@@ -93,7 +93,7 @@ function Header({ ym, view, level }: { ym: string; view: RequestView; level: 1 |
   const sum = receiveSummary(rows);
   const parts = [
     t('request.history.summary', { kinds: rows.length, units: rows.reduce((n, r) => n + r.registered, 0) }),
-    t('request.history.savedAt', { time: vnSavedStamp(view.updated_at) }),
+    t('request.history.savedAt', { time: vnSavedStamp(view.saved_at) }),
     view.department,
   ].filter(Boolean);
   return (

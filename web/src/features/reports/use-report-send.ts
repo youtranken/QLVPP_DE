@@ -27,18 +27,20 @@ export function changedKeys(report: Pick<MonthReport, 'byItem' | 'custom'>, sent
   return out;
 }
 
-// Sau khi chốt thành công, số đang có thành mốc: rời trang không hỏi nữa cho tới khi sửa tiếp
+const changedDrafts = (base: Record<string, string>, now: Record<string, string>) =>
+  [...new Set([...Object.keys(base), ...Object.keys(now)])].filter((k) => base[k] !== now[k]).length;
+
+// Thay đổi chưa chốt = ô người dùng đã gõ khác mốc. Mốc ban đầu là số khởi tạo từ bản đã gửi (không phải thay đổi);
+// sau khi chốt thành công, số đang có thành mốc. So theo ô đã gõ nên tải lại báo cáo không làm hỏi oan
 export function useDirtyCount(qty: OrderQty, fresh: ReadonlySet<string>) {
-  const sig = `${JSON.stringify(qty.edited)}|${qty.errorCount}`;
-  const sentSig = useRef(sig);
-  // Số khởi tạo từ bản đã gửi không phải thay đổi chưa chốt
-  const [exported, setExported] = useState<string | null>(sig);
+  const taken = useRef(qty.drafts);
+  const [base, setBase] = useState(qty.drafts);
   const [seen, setSeen] = useState(0);
   if (fresh.size !== seen) {
     setSeen(fresh.size);
-    setExported(sentSig.current);
+    setBase(taken.current);
   }
-  return { count: sig === exported ? 0 : qty.editedCount, mark: () => (sentSig.current = sig) };
+  return { count: changedDrafts(base, qty.drafts), mark: () => (taken.current = qty.drafts) };
 }
 
 export function useNoOrder(ym: string, qty: OrderQty) {

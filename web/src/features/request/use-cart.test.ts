@@ -17,6 +17,7 @@ const SERVER: RequestView = {
   full_name: 'Nguyễn Văn An',
   department: 'Phòng Công trình',
   updated_at: '2026-11-03T07:20:00.000Z',
+  saved_at: '2026-11-03T07:20:00.000Z',
   is_open: true,
   lines: [
     lineView({ id: 'l-pen', item_id: PEN.id, item: facts(PEN), qty: 2 }),

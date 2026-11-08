@@ -79,6 +79,8 @@ export interface RequestView {
   full_name: string | null;
   department: string | null;
   updated_at: string;
+  // Giờ nhân viên lưu phiếu lần cuối ("lưu lúc"); updated_at còn đổi theo giao hàng/điều chỉnh
+  saved_at: string;
   is_open: boolean;
   lines: LineView[];
   removed_lines?: RemovedLine[];

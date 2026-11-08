@@ -14,7 +14,9 @@ const PREV = view({
   id: 'r-0',
   period_ym: '2026-10',
   is_open: false,
-  updated_at: '2026-10-07T14:38:00.000Z',
+  // updated_at đổi theo giao hàng/điều chỉnh nên không phải "lưu lúc"
+  updated_at: '2026-10-09T03:00:00.000Z',
+  saved_at: '2026-10-07T14:38:00.000Z',
   lines: [L('1', 'Bút bảng', { delivered_qty: 1 }), L('2', 'Bút bi', { delivered_qty: 1 }), L('3', 'Bút dạ'), L('4', 'Bút kim'), L('5', 'Bút chì')],
   removed_lines: [{ name: 'Bút ghi đĩa', name_en: null, unit: 'cay', before: 1, reason_code: 'adm_out_of_stock', reason_note: null, at: '2026-10-08T01:00:00Z' }],
 });

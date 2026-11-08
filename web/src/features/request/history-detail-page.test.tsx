@@ -22,7 +22,8 @@ describe('HistoryDetailPage', () => {
       L('4', 'Bút kim'),
       L('5', 'Bút chì'),
     ], {
-      updated_at: '2026-11-07T14:38:00.000Z',
+      updated_at: '2026-11-09T03:00:00.000Z',
+      saved_at: '2026-11-07T14:38:00.000Z',
       department: 'Phòng Test',
       removed_lines: [{ name: 'Bút ghi đĩa', name_en: null, unit: 'cay', before: 1, reason_code: 'adm_out_of_stock', reason_note: null, at: '2026-11-08T01:30:00.000Z' }],
     });
