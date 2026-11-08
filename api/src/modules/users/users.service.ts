@@ -10,10 +10,16 @@ import {
   LOCAL_SA_FULL_NAME,
   LOCAL_SA_SUB,
 } from '../auth/local-sa-env';
-import { UserAccessService } from './user-access.service';
-import { usersTable } from './users.schema';
+import {
+  inactiveAtFor,
+  toAppRole,
+  UserAccessService,
+} from './user-access.service';
+import type { AppRole, RoleSource } from './user-access.service';
 
-export type AppRole = 'admin' | 'member';
+export { toAppRole };
+export type { AppRole };
+import { usersTable } from './users.schema';
 
 // Hợp đồng PMH ID v3. Phiên cũ có `groups` trong jsonb claims thì để đó, không đọc.
 export interface PmhIdClaims {
@@ -25,11 +31,6 @@ export interface PmhIdClaims {
   team?: string;
   app_role?: AppRole;
   ver?: number;
-}
-
-// Fail-closed: chỉ đúng chuỗi "admin" mới là Hành chính
-export function toAppRole(v: unknown): AppRole {
-  return v === 'admin' ? 'admin' : 'member';
 }
 
 export interface UserListQuery {
@@ -215,28 +216,8 @@ export class UsersService {
     return 'ok';
   }
 
-  // Đổi vai thì audit; không đổi thì không ghi gì (refresh mỗi ≤ 5′ không làm đầy nhật ký)
-  async applyRole(
-    sub: string,
-    role: AppRole,
-    source: 'login' | 'refresh' | 'webhook' | 'directory',
-  ): Promise<boolean> {
-    const r = await this.db.execute<{ from: string }>(sql`
-      UPDATE users u SET role = ${role}, updated_at = now()
-      FROM (SELECT sub, role AS from_role FROM users WHERE sub = ${sub} FOR UPDATE) old
-      WHERE u.sub = old.sub AND u.role IS DISTINCT FROM ${role}
-      RETURNING old.from_role AS "from"
-    `);
-    const row = r.rows[0];
-    if (!row) return false;
-    await this.audit.append({
-      actor: 'system(pmh-id)',
-      action: 'users.role_changed',
-      objectType: 'user',
-      objectId: sub,
-      detail: { from: row.from, to: role, source },
-    });
-    return true;
+  applyRole(sub: string, role: AppRole, source: RoleSource): Promise<boolean> {
+    return this.access.applyRole(sub, role, source);
   }
 
   async findBySub(sub: string) {
@@ -251,12 +232,7 @@ export class UsersService {
     sub: string,
     status: 'active' | 'locked' | 'deleted',
   ): Promise<void> {
-    // inactive_at = lần rời active đầu tiên (giữ nếu đã không active); đăng nhập so mốc này với iat
-    const inactiveAt =
-      status === 'active'
-        ? null
-        : sql`CASE WHEN ${usersTable.status} = 'active' OR ${usersTable.inactiveAt} IS NULL
-            THEN clock_timestamp() ELSE ${usersTable.inactiveAt} END`;
+    const inactiveAt = inactiveAtFor(status);
     await this.db
       .update(usersTable)
       .set({ status, inactiveAt, updatedAt: new Date() })

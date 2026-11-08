@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { JWTPayload, JWTVerifyGetKey } from 'jose';
 import { toAppRole } from '../users/users.service';
 import type { PmhIdClaims } from '../users/users.service';
-import { TEAM_MAX } from './auth-env';
+import { toLabel } from '../users/profile-label';
 import { TokenContractError } from './token-contract.error';
 
 export const PMH_ID_CLAIMS_VERSION = 3;
@@ -96,22 +96,14 @@ export class JwtVerifierService {
     return { sub: payload.sub };
   }
 
-  // department "" ("Chưa xếp nhóm") và team null đều thành undefined → lưu NULL
-  private toLabel(value: unknown): string | undefined {
-    if (typeof value !== 'string') return undefined;
-    // NUL làm Postgres từ chối text (22021), đăng nhập sẽ 500
-    const clean = value.replace(/[\u0000-\u001f\u007f]/g, '').trim();
-    return Array.from(clean).slice(0, TEAM_MAX).join('').trim() || undefined;
-  }
-
   private toClaims(payload: JWTPayload): PmhIdClaims {
     return {
       sub: payload.sub as string,
       email: payload.email as string | undefined,
       employee_code: payload.employee_code as string | undefined,
       full_name: payload.full_name as string | undefined,
-      department: this.toLabel(payload.department),
-      team: this.toLabel(payload.team),
+      department: toLabel(payload.department),
+      team: toLabel(payload.team),
       app_role: toAppRole(payload.app_role),
       ver: PMH_ID_CLAIMS_VERSION,
     };

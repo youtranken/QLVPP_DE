@@ -12,6 +12,7 @@ import { JwtVerifierService } from '../src/modules/auth/jwt-verifier.service';
 import { OIDC_PROVIDER } from '../src/modules/auth/oidc-provider';
 import { SessionService } from '../src/modules/auth/session.service';
 import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
+import { directoryStub } from './directory.stub';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
 
@@ -125,7 +126,7 @@ describe('callback PMH ID v3: vai từ app_role, đua thu hồi, ver sai, phiên
         { token: OIDC_PROVIDER, useValue: provider },
         {
           token: DIRECTORY_CLIENT,
-          useValue: { fetchUsers: () => Promise.resolve([]) },
+          useValue: directoryStub(),
         },
       ],
     )) as INestApplication<App>;

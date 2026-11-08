@@ -9,6 +9,7 @@ import {
 } from '../src/database/migration-runner';
 import { SessionService } from '../src/modules/auth/session.service';
 import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
+import { directoryStub } from './directory.stub';
 import { UsersService } from '../src/modules/users/users.service';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
@@ -51,7 +52,7 @@ describe('vai Hành chính đọc users.role mỗi request (app_role PMH ID v3)'
       [
         {
           token: DIRECTORY_CLIENT,
-          useValue: { fetchUsers: () => Promise.resolve([]) },
+          useValue: directoryStub(),
         },
       ],
     )) as INestApplication<App>;

@@ -10,6 +10,7 @@ import {
 import { SessionService } from '../src/modules/auth/session.service';
 import { DirectorySyncScheduler } from '../src/modules/users/directory-sync.scheduler';
 import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
+import { directoryStub } from './directory.stub';
 import { UsersService } from '../src/modules/users/users.service';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
@@ -26,9 +27,7 @@ describe('auth e2e', () => {
     await runMigrations(pool, resolveMigrationsDir(), silent);
     process.env.AUTH_DEV_MODE = 'true';
     // Directory giả: sync thành công mà không cần PMH ID thật
-    const directory = {
-      fetchUsers: () => Promise.resolve([]),
-    };
+    const directory = directoryStub();
     app = (await createTestApp(
       [],
       [{ token: DIRECTORY_CLIENT, useValue: directory }],
@@ -128,6 +127,30 @@ describe('auth e2e', () => {
     );
     expect(rows).toHaveLength(1);
     expect(Number(rows[0].value)).toBeGreaterThanOrEqual(before);
+  });
+
+  it('Directory trả danh sách rỗng khi VPP còn user SSO → đối chiếu hủy (empty), không ai bị no_access', async () => {
+    const s = `auth-e2e-empty-${Date.now()}`;
+    await pool.query(
+      `INSERT INTO users (sub, full_name, status) VALUES ($1, $1, 'active')`,
+      [s],
+    );
+    const res = await request(app.getHttpServer())
+      .post('/api/admin/directory/sync')
+      .set('x-dev-user-sub', 'dev-admin')
+      .set('x-dev-role', 'admin')
+      .expect(200);
+    expect(res.body).toMatchObject({
+      no_access: 0,
+      reconcile: 'aborted',
+      reconcile_reason: 'empty',
+    });
+    const { rows } = await pool.query<{ status: string }>(
+      'SELECT status FROM users WHERE sub = $1',
+      [s],
+    );
+    expect(rows[0].status).toBe('active');
+    await pool.query('DELETE FROM users WHERE sub = $1', [s]);
   });
 
   it('POST admin/directory/sync với member → 403', async () => {

@@ -11,6 +11,7 @@ import {
 import { JwtVerifierService } from '../src/modules/auth/jwt-verifier.service';
 import { SessionService } from '../src/modules/auth/session.service';
 import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
+import { directoryStub } from './directory.stub';
 import { UsersService } from '../src/modules/users/users.service';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
@@ -46,9 +47,7 @@ describe('POST backchannel-logout', () => {
     const url = assertTestDatabase(process.env.DATABASE_URL);
     pool = new Pool({ connectionString: url });
     await runMigrations(pool, resolveMigrationsDir(), silent);
-    const directory = {
-      fetchUsers: () => Promise.resolve([]),
-    };
+    const directory = directoryStub();
     app = (await createTestApp(
       [],
       [{ token: DIRECTORY_CLIENT, useValue: directory }],

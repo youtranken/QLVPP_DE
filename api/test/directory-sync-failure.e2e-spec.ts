@@ -13,6 +13,9 @@ import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
 let failure: Error;
 const directory = {
   fetchUsers: () => Promise.reject(failure),
+  fetchUser: () => Promise.reject(failure),
+  requestCount: () => 0,
+  resetCount: () => undefined,
 };
 
 describe('POST admin/directory/sync khi PMH ID lỗi', () => {
@@ -76,5 +79,16 @@ describe('POST admin/directory/sync khi PMH ID lỗi', () => {
     });
     const res = await sync().expect(502);
     expect(res.body.code).toBe('DIRECTORY_AUTH_FAILED');
+  });
+
+  it('PMH ID vẫn 429 sau 3 lần thử → 503 DIRECTORY_RATE_LIMITED, không audit sync', async () => {
+    failure = new ServiceUnavailableException({
+      code: 'DIRECTORY_RATE_LIMITED',
+      message: 'x',
+    });
+    const before = await syncAudits();
+    const res = await sync().expect(503);
+    expect(res.body.code).toBe('DIRECTORY_RATE_LIMITED');
+    expect(await syncAudits()).toBe(before);
   });
 });

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SystemConfigModule } from '../config/config.module';
 import { DirectoryClient, DIRECTORY_CLIENT } from './directory.client';
+import { DirectoryReconcileService } from './directory-reconcile.service';
 import { DirectorySyncService } from './directory-sync.service';
 import { DirectorySyncScheduler } from './directory-sync.scheduler';
 import { UsersAdminController } from './users-admin.controller';
@@ -15,6 +16,7 @@ import { UsersService } from './users.service';
     UsersService,
     UserAccessService,
     DirectorySyncService,
+    DirectoryReconcileService,
     DirectorySyncScheduler,
     { provide: DIRECTORY_CLIENT, useClass: DirectoryClient },
   ],

@@ -55,9 +55,12 @@ describe('NotificationsService — ghi trong savepoint, người nhận admin (P
     pool = new Pool({ connectionString: url });
     await runMigrations(pool, resolveMigrationsDir(), silent);
     db = drizzle(pool);
-    users = new UsersService(db, new UserAccessService(db), {
-      append: () => Promise.resolve(),
-    } as never);
+    const audit = { append: () => Promise.resolve() } as never;
+    users = new UsersService(
+      db,
+      new UserAccessService(db, {} as never, audit),
+      audit,
+    );
     service = new NotificationsService(db, users);
     await pool.query(
       `INSERT INTO users (sub, status, role) VALUES

@@ -56,7 +56,7 @@ export class DirectorySyncScheduler
       )
         return;
       const r = await this.directorySync.sync('system');
-      // Marker chỉ ghi khi thành công: lỗi lúc cài mới mà đẩy mốc thì gate group mở suốt 60′
+      // Marker chỉ ghi khi thành công: lỗi thì thử lại sau RETRY_AFTER_FAILURE_MS thay vì chờ đủ 60′
       await this.config.setDirectorySyncLastAt(new Date());
       this.lastFailureAt = null;
       this.logger.log(

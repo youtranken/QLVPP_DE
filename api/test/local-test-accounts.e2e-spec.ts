@@ -4,6 +4,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { hashPassword } from '../src/modules/auth/local-sa.service';
 import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
+import { directoryStub } from './directory.stub';
 import { DirectorySyncService } from '../src/modules/users/directory-sync.service';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
@@ -32,12 +33,9 @@ const ACCOUNTS = JSON.stringify([
 ]);
 
 // PMH ID chỉ biết một user thật; tài khoản local-test-* không có trong danh bạ
-const directory = {
-  fetchUsers: () =>
-    Promise.resolve([
-      { id: 'pmh-real-e2e', full_name: 'Người thật', status: 'active' },
-    ]),
-};
+const directory = directoryStub([
+  { id: 'pmh-real-e2e', full_name: 'Người thật', status: 'active' },
+]);
 
 const KEYS = [
   'AUTH_DEV_MODE',
