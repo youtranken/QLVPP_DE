@@ -23,13 +23,12 @@ describe('SummaryPage — đầu trang, tháng, URL', () => {
     expect(calledUrls(f).some((u) => u.includes('/2026-11/requests'))).toBe(false);
   });
 
-  it('kỳ khóa (mặc định khi bấm "Tổng hợp kỳ") mời sang kỳ đang mở: "Kỳ tháng 11 đang nhận đăng ký (32/40 người)" + liên kết "Xem đăng ký kỳ tháng 11" → ?ym=2026-11', async () => {
+  it('kỳ khóa: không còn dải mời sang kỳ đang mở ("đang nhận đăng ký", "xem được từ")', async () => {
     stubSummaryApi();
     open();
-    const offer = await screen.findByRole('link', { name: 'Xem đăng ký kỳ tháng 11' });
-    expect(offer).toHaveAttribute('href', '/admin/summary?ym=2026-11');
-    expect(offer.closest('.alert')).toHaveTextContent(/^Kỳ tháng 11 đang nhận đăng ký \(\d+\/\d+ người\)\./);
-    expect(screen.queryByText(/xem được từ/)).toBeNull();
+    expect(await screen.findByText('Đã khóa')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Xem đăng ký kỳ tháng 11' })).toBeNull();
+    expect(screen.queryByText(/đang nhận đăng ký \(|xem được từ/)).toBeNull();
   });
 
   it('danh sách trả 409 PERIOD_NOT_LOCKED → khung lỗi "Không tải được dữ liệu — thử lại.", không quay "Đang tải…" mãi', async () => {

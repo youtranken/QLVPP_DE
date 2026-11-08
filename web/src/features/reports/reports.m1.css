@@ -47,12 +47,6 @@
   [data-shell='admin'] .bc-order__error { text-align: left; }
 }
 [data-shell='admin'] .bc-inline-notice { align-items: center; justify-content: space-between; flex-wrap: wrap; }
-@media (min-width: 768px) {
-  [data-shell='admin'] .bc-grid th, [data-shell='admin'] .bc-grid td { border-bottom-color: var(--c-line-strong); }
-  [data-shell='admin'] .bc-grid thead th { background: var(--c-surface-2); color: var(--c-ink-2); }
-  [data-shell='admin'] .bc-grid th + th, [data-shell='admin'] .bc-grid td + td { border-left: 1px solid var(--c-line-strong); }
-  [data-shell='admin'] .bc-grid .dt-group th { border-top: 1px solid var(--c-line-strong); background: var(--c-surface-sunk); }
-}
 @media print {
   [data-shell='admin'] .bc-section .table-wrap { overflow: visible; border-radius: 0; box-shadow: none; }
   [data-shell='admin'] .bc-grid { border-collapse: collapse; }

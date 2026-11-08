@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Điều chỉnh phiếu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E6A7B}
+.sl{display:flex;justify-content:space-between;align-items:center;color:#FFFFFF;text-decoration:none;font-size:14px;padding:7px 12px;border-radius:10px}
+.sh{color:#C9DEE4;font-size:12px;margin:10px 0 2px;padding-left:4px}
+.on{background:#FFFFFF;color:#0E2A33;font-weight:600}
+.bd{background:#F0A35E;color:#0E2A33;border-radius:999px;font-size:11px;font-weight:700;padding:1px 7px}
+.tw{background:#FFFFFF;border:1px solid #C5DCE2;border-radius:14px;overflow:hidden}
+.g{width:100%;border-collapse:collapse;font-size:13px}
+.g th{background:#EEF5F7;text-align:left;color:#47636C;font-weight:600;font-size:12px;padding:8px 10px;border-right:1px solid #C5DCE2;border-bottom:1px solid #B5CFD7;white-space:nowrap}
+.g td{padding:7px 10px;border-right:1px solid #D6E6EB;border-bottom:1px solid #D6E6EB;vertical-align:middle}
+.g td{white-space:nowrap}
+.g td:first-child{white-space:normal}
+.g th:last-child,.g td:last-child{border-right:0}
+.g tr:last-child td{border-bottom:0}
+.g .grp td{background:#E1E8F0;font-weight:600;color:#2E4675}
+.g .num{text-align:right;font-variant-numeric:tabular-nums}
+.g th.num{text-align:right}
+.mut{color:#47636C}
+.c{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.c-ok{background:#E3F5EE;color:#0D5E46}
+.c-warn{background:#FFF1E2;color:#8A3F06}
+.c-bad{background:#FBE6E3;color:#A32C1E}
+.c-info{background:#DDF1F5;color:#0A5868}
+.c-off{background:#EEF1F3;color:#47636C}
+.b2{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid #B5CFD7;background:#FFFFFF;font:inherit;font-weight:600;font-size:14px;color:#0E2A33;text-decoration:none;white-space:nowrap}
+.b1{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 16px;border-radius:999px;border:0;background:#0E6A7B;font:inherit;font-weight:600;font-size:14px;color:#FFFFFF;white-space:nowrap}
+.lk{color:#0E6A7B;font-weight:600;text-decoration:none;font-size:13px}
+.seg{display:flex;gap:2px;background:#FFFFFF;border:1px solid #D6E6EB;border-radius:999px;padding:3px}
+.seg button{height:30px;padding:0 12px;border:0;border-radius:999px;background:transparent;font:inherit;font-size:13px;color:#0E2A33;white-space:nowrap}
+.seg button[aria-pressed=true]{background:#0E2A33;color:#FFFFFF;font-weight:600}
+.seg .n{display:inline-block;margin-left:6px;font-size:12px;opacity:.75}
+.srch{height:36px;box-sizing:border-box;border:1px solid #B5CFD7;border-radius:999px;background:#FFFFFF;padding:0 14px;display:flex;align-items:center;color:#7A9198;font-size:13px}
+.thb{width:28px;height:28px;border-radius:7px;background:#EEF5F7;flex:none;border:1px solid #D6E6EB}
+.it{display:flex;align-items:center;gap:8px}
+.inp{width:64px;height:30px;box-sizing:border-box;border:1px solid #8FB3BD;border-radius:8px;background:#FFFFFF;text-align:right;padding:0 8px;font:inherit;font-weight:600;font-size:13px;color:#0E2A33}
+
+.row{border:1px solid #D6E6EB;border-radius:14px;padding:8px 12px;display:flex;flex-direction:column;gap:6px;background:#FFFFFF}
+.qty{display:inline-flex;align-items:center;border:1px solid #8FB3BD;border-radius:10px;overflow:hidden;height:34px;background:#FFFFFF}
+.qty button{width:34px;height:34px;border:0;background:#EEF5F7;font:inherit;font-size:18px;color:#0E2A33}
+.qty input{width:52px;height:34px;border:0;border-left:1px solid #B5CFD7;border-right:1px solid #B5CFD7;text-align:center;font:inherit;font-weight:700;font-size:15px;color:#0E2A33;padding:0}
+.rc{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;border:1px solid #B5CFD7;background:#FFFFFF;font:inherit;font-size:13px;color:#0E2A33}
+.rc[aria-pressed=true]{background:#0E2A33;border-color:#0E2A33;color:#FFFFFF;font-weight:600}
+.ti{width:100%;box-sizing:border-box;height:36px;border:1px solid #8FB3BD;border-radius:10px;padding:0 12px;font:inherit;font-size:13px;color:#0E2A33;background:#FFFFFF}
+
+</style>
+</helmet>
+<div style="width:520px;height:820px;box-sizing:border-box;background:#FFFFFF;font-family:'Be Vietnam Pro',system-ui,sans-serif;color:#0E2A33;display:flex;flex-direction:column;border-left:1px solid #D6E6EB">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:16px 18px 10px;border-bottom:1px solid #D6E6EB">
+    <div><div style="font-size:12px;color:#47636C">Kỳ tháng 11 · Team Test</div><h2 style="margin:2px 0 0;font-size:19px">Điều chỉnh phiếu Nhân viên A (test)</h2><div style="font-size:13px;color:#47636C">8 món · 36 đơn vị, sau điều chỉnh 18</div></div>
+    <button type="button" aria-label="Đóng" style="width:36px;height:36px;border:0;background:none;font-size:22px;color:#47636C">×</button>
+  </div>
+  <div style="flex-grow:1;overflow:hidden;padding:12px 18px;display:flex;flex-direction:column;gap:8px;background:#F6FAFB">
+    <div class="row"><div class="it" style="gap:10px"><span class="thb" style="width:36px;height:36px"></span><div style="flex-grow:1;min-width:0"><b style="font-size:14px">Bìa nhựa trong A4 (Bìa lá)</b><div style="font-size:12px;color:#47636C">xấp · tối đa 10/tháng</div><div style="display:flex;gap:6px;margin-top:4px"><span class="c c-warn">Vượt tối đa (10)</span><span class="c c-off">Trước khi sửa: 19</span></div></div><div class="qty"><button type="button" aria-label="Giảm">−</button><input value="10" aria-label="Số lượng"><button type="button" aria-label="Tăng">+</button></div><button type="button" aria-label="Bỏ món" style="width:30px;height:30px;border:0;background:none;color:#47636C;font-size:18px">×</button></div><div style="background:#F6FAFB;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px">
+  <b style="font-size:13px">Lý do</b>
+  <div style="display:flex;gap:6px"><button type="button" class="rc" aria-pressed="false">Không có hàng</button><button type="button" class="rc" aria-pressed="true">Khác</button></div>
+  <input class="ti" value="Vượt tối đa 10 xấp/tháng" aria-label="Lý do">
+  <span style="font-size:12px;color:#47636C">Bắt buộc khi chọn Khác. Nhân viên sẽ đọc.</span>
+</div></div>
+    <div class="row"><div class="it" style="gap:10px"><span class="thb" style="width:36px;height:36px"></span><div style="flex-grow:1;min-width:0"><b style="font-size:14px">Hồ nước chai nhỏ</b><div style="font-size:12px;color:#47636C">chai · tối đa 10/tháng</div><div style="display:flex;gap:6px;margin-top:4px"><span class="c c-off">Trước khi sửa: 1</span></div></div><div class="qty"><button type="button" aria-label="Giảm">−</button><input value="0" aria-label="Số lượng"><button type="button" aria-label="Tăng">+</button></div><button type="button" aria-label="Bỏ món" style="width:30px;height:30px;border:0;background:none;color:#47636C;font-size:18px">×</button></div><div style="background:#F6FAFB;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px">
+  <b style="font-size:13px">Lý do</b>
+  <div style="display:flex;gap:6px"><button type="button" class="rc" aria-pressed="true">Không có hàng</button><button type="button" class="rc" aria-pressed="false">Khác</button></div>
+  <input class="ti" placeholder="Ghi thêm (không bắt buộc)" aria-label="Ghi thêm">
+</div></div>
+    <div class="row"><div class="it" style="gap:10px"><span class="thb" style="width:36px;height:36px"></span><div style="flex-grow:1;min-width:0"><b style="font-size:14px">Kẹp bướm 32</b><div style="font-size:12px;color:#47636C">hộp · tối đa 10/tháng</div><div style="display:flex;gap:6px;margin-top:4px"><span class="c c-off">Trước khi sửa: 10</span></div></div><div class="qty"><button type="button" aria-label="Giảm">−</button><input value="2" aria-label="Số lượng"><button type="button" aria-label="Tăng">+</button></div><button type="button" aria-label="Bỏ món" style="width:30px;height:30px;border:0;background:none;color:#47636C;font-size:18px">×</button></div><div style="background:#F6FAFB;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px">
+  <b style="font-size:13px">Lý do</b>
+  <div style="display:flex;gap:6px"><button type="button" class="rc" aria-pressed="false">Không có hàng</button><button type="button" class="rc" aria-pressed="true">Khác</button></div>
+  <input class="ti" style="border-color:#A32C1E" placeholder="Nhập lý do" aria-label="Lý do" aria-invalid="true">
+  <span style="font-size:12px;color:#A32C1E;font-weight:500">Chọn Khác thì cần ghi lý do.</span>
+</div></div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid #D6E6EB">
+    <button type="button" class="b2">Hủy</button><button type="button" class="b1">Lưu điều chỉnh</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":520,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

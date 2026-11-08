@@ -52,6 +52,7 @@ describe('DeliveryPeoplePage — đầu trang và tab', () => {
     // Cùng khóa với huy hiệu sidebar (QueryClient của test staleTime 0 nên có thể tải hai lần); chỉ kỳ khóa gần nhất
     expect(callsTo(f, PEOPLE_URL).length).toBeGreaterThan(0);
     expect(f.mock.calls.filter(([u]) => String(u).includes('delivery-people') && u !== PEOPLE_URL)).toHaveLength(0);
+    expect(screen.queryByText(/đang mở, xem được từ/)).toBeNull();
   });
 
   it('số trên tab đúng (B ở cả hai tab): Chưa nhận 2, Còn nợ 2, Đã nhận 1, Tất cả 4; mặc định tab Chưa nhận chỉ có A và B', async () => {

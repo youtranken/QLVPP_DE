@@ -11,7 +11,6 @@ import { Icon } from '@/ui/icon';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
-import { OpenPeriodNotice } from '@/features/summary/open-period-notice';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { usePeriodSummary } from '@/features/summary/summary.api';
@@ -180,7 +179,6 @@ export function DeliveryPeoplePage() {
   return (
     <div className="ct-page">
       <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.delivery')]} title={title} description={t('delivery.people.description')} />
-      <OpenPeriodNotice />
       {current.isError ? <LoadError onRetry={() => void current.refetch()} /> : workingYm ? <PeopleBoard key={workingYm} ym={workingYm} /> : <Loading />}
     </div>
   );

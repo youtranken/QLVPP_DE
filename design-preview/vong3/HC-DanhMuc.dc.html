@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Danh mục – nhóm và đơn vị</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sl{display:block;color:#FFFFFF;text-decoration:none;font-size:14px;padding:8px 12px;border-radius:10px}
+.sh{color:#C9DEE4;font-size:12px;margin:10px 0 2px}
+.on{background:#FFFFFF;color:#0E2A33;font-weight:600}
+.tab{height:36px;padding:0 14px;border:0;border-radius:999px;background:transparent;font:inherit;font-size:14px;color:#0E2A33}
+.pill{height:34px;padding:0 12px;border-radius:999px;border:1px solid #B5CFD7;background:#FFFFFF;font:inherit;font-size:13px;color:#0E2A33}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:#47636C;font-weight:500;font-size:13px;padding:8px 12px;border-bottom:1px solid #D6E6EB}
+td{padding:9px 12px;border-bottom:1px solid #D6E6EB}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:10px;vertical-align:-1px}
+</style>
+</helmet>
+<div style="width:1280px;height:820px;box-sizing:border-box;background:#0E3A46;font-family:'Be Vietnam Pro',system-ui,sans-serif;color:#0E2A33;display:flex">
+  <nav style="width:236px;flex:none;padding:12px;display:flex;flex-direction:column;gap:2px" aria-label="Menu">
+    <div class="sh">Danh mục và tủ</div>
+    <a class="sl" href="HC-SanPham-Luoi.dc.html">Sản phẩm</a><a class="sl" href="#">Tủ / Kho</a><a class="sl" href="#">Món ngoài danh mục</a><a class="sl on" href="#">Danh mục</a>
+  </nav>
+  <main style="flex-grow:1;margin:16px 16px 16px 0;background:#E4F0F3;border-radius:28px;padding:24px 28px;display:flex;flex-direction:column;gap:14px;min-width:0;overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end"><div><div style="font-size:13px;color:#47636C">Danh mục và tủ › Danh mục</div><h1 style="margin:4px 0 0;font-size:30px">Danh mục</h1><p style="margin:4px 0 0;font-size:14px;color:#2F4A52">Nhóm sản phẩm và đơn vị tính. Thứ tự nhóm là thứ tự nhân viên thấy khi đăng ký.</p></div><button type="button" style="height:42px;padding:0 18px;border:0;border-radius:999px;background:#0E6A7B;color:#FFFFFF;font:inherit;font-weight:600">Thêm nhóm</button></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <div style="display:flex;gap:2px;background:#FFFFFF;border-radius:999px;padding:3px" role="group" aria-label="Chọn bảng"><button class="tab" type="button" aria-pressed="true" style="background:#0E2A33;color:#FFFFFF;font-weight:600">Nhóm sản phẩm</button><button class="tab" type="button">Đơn vị tính</button></div>
+      <div style="flex-grow:1"></div>
+      <button class="pill" type="button">Sắp xếp thứ tự</button>
+    </div>
+    <div style="background:#FFFFFF;border-radius:20px;padding:6px 8px">
+      <table>
+        <thead><tr><th>Nhóm</th><th>Tên tiếng Anh</th><th style="text-align:right">Sản phẩm</th><th style="text-align:right">Thao tác</th></tr></thead>
+        <tbody>
+          <tr><td><span class="dot" style="background:#2E4675"></span><b>Bút &amp; viết</b></td><td style="color:#47636C">Pens</td><td style="text-align:right"><a href="HC-SanPham-Luoi.dc.html">15</a></td><td style="text-align:right"><button class="pill" type="button">Sửa</button> <button class="pill" type="button" style="color:#A32C1E;border-color:#EDB8B0">Tạm ngưng</button></td></tr>
+          <tr><td><span class="dot" style="background:#3D5A2E"></span><b>Giấy &amp; sổ</b></td><td style="color:#47636C">Paper</td><td style="text-align:right"><a href="#">3</a></td><td style="text-align:right"><button class="pill" type="button">Sửa</button> <button class="pill" type="button" style="color:#A32C1E;border-color:#EDB8B0">Tạm ngưng</button></td></tr>
+          <tr style="background:#FDF3F1"><td><span class="dot" style="background:#76520F"></span><b style="text-decoration:line-through;color:#47636C">Kẹp &amp; dán</b> <span style="color:#A32C1E;font-weight:700;font-size:13px;margin-left:6px">Đã ngừng</span></td><td style="color:#47636C">Clips</td><td style="text-align:right"><a href="#">11</a></td><td style="text-align:right"><button class="pill" type="button">Sửa</button> <button type="button" style="height:34px;padding:0 12px;border-radius:999px;border:0;background:#0E6A7B;color:#FFFFFF;font:inherit;font-weight:600;font-size:13px">Dùng lại</button></td></tr>
+          <tr><td><span class="dot" style="background:#21585A"></span><b>Lưu trữ</b></td><td style="color:#47636C">Storage</td><td style="text-align:right"><a href="#">11</a></td><td style="text-align:right"><button class="pill" type="button">Sửa</button> <button class="pill" type="button" style="color:#A32C1E;border-color:#EDB8B0">Tạm ngưng</button></td></tr>
+          <tr><td><span class="dot" style="background:#8A3A2E"></span><b>Khác</b></td><td style="color:#47636C">Other</td><td style="text-align:right"><a href="#">10</a></td><td style="text-align:right"><button class="pill" type="button">Sửa</button> <button class="pill" type="button" style="color:#A32C1E;border-color:#EDB8B0">Tạm ngưng</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin:0;font-size:13px;color:#2F4A52">Bảng gọn, hết khoảng trống. Bỏ khung "Màu theo thứ tự" (màu đã thấy ở chấm từng dòng). Nhóm đã ngừng: gạch tên, chữ đỏ "Đã ngừng", nút "Dùng lại". Các nhóm "PW nhóm …" do test tự động để lại sẽ được dọn khỏi dev.</p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

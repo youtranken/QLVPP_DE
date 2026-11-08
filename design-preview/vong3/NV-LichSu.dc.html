@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Lịch sử – master detail</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E6A7B}
+.sl{display:flex;justify-content:space-between;align-items:center;color:#FFFFFF;text-decoration:none;font-size:14px;padding:7px 12px;border-radius:10px}
+.sh{color:#C9DEE4;font-size:12px;margin:10px 0 2px;padding-left:4px}
+.on{background:#FFFFFF;color:#0E2A33;font-weight:600}
+.bd{background:#F0A35E;color:#0E2A33;border-radius:999px;font-size:11px;font-weight:700;padding:1px 7px}
+.tw{background:#FFFFFF;border:1px solid #C5DCE2;border-radius:14px;overflow:hidden}
+.g{width:100%;border-collapse:collapse;font-size:13px}
+.g th{background:#EEF5F7;text-align:left;color:#47636C;font-weight:600;font-size:12px;padding:8px 10px;border-right:1px solid #C5DCE2;border-bottom:1px solid #B5CFD7;white-space:nowrap}
+.g td{padding:7px 10px;border-right:1px solid #D6E6EB;border-bottom:1px solid #D6E6EB;vertical-align:middle}
+.g td{white-space:nowrap}
+.g td:first-child{white-space:normal}
+.g th:last-child,.g td:last-child{border-right:0}
+.g tr:last-child td{border-bottom:0}
+.g .grp td{background:#E1E8F0;font-weight:600;color:#2E4675}
+.g .num{text-align:right;font-variant-numeric:tabular-nums}
+.g th.num{text-align:right}
+.mut{color:#47636C}
+.c{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.c-ok{background:#E3F5EE;color:#0D5E46}
+.c-warn{background:#FFF1E2;color:#8A3F06}
+.c-bad{background:#FBE6E3;color:#A32C1E}
+.c-info{background:#DDF1F5;color:#0A5868}
+.c-off{background:#EEF1F3;color:#47636C}
+.b2{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid #B5CFD7;background:#FFFFFF;font:inherit;font-weight:600;font-size:14px;color:#0E2A33;text-decoration:none;white-space:nowrap}
+.b1{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 16px;border-radius:999px;border:0;background:#0E6A7B;font:inherit;font-weight:600;font-size:14px;color:#FFFFFF;white-space:nowrap}
+.lk{color:#0E6A7B;font-weight:600;text-decoration:none;font-size:13px}
+.seg{display:flex;gap:2px;background:#FFFFFF;border:1px solid #D6E6EB;border-radius:999px;padding:3px}
+.seg button{height:30px;padding:0 12px;border:0;border-radius:999px;background:transparent;font:inherit;font-size:13px;color:#0E2A33;white-space:nowrap}
+.seg button[aria-pressed=true]{background:#0E2A33;color:#FFFFFF;font-weight:600}
+.seg .n{display:inline-block;margin-left:6px;font-size:12px;opacity:.75}
+.srch{height:36px;box-sizing:border-box;border:1px solid #B5CFD7;border-radius:999px;background:#FFFFFF;padding:0 14px;display:flex;align-items:center;color:#7A9198;font-size:13px}
+.thb{width:28px;height:28px;border-radius:7px;background:#EEF5F7;flex:none;border:1px solid #D6E6EB}
+.it{display:flex;align-items:center;gap:8px}
+.inp{width:64px;height:30px;box-sizing:border-box;border:1px solid #8FB3BD;border-radius:8px;background:#FFFFFF;text-align:right;padding:0 8px;font:inherit;font-weight:600;font-size:13px;color:#0E2A33}
+
+</style>
+</helmet>
+<div style="width:1280px;height:820px;box-sizing:border-box;background:#0E3A46;font-family:'Be Vietnam Pro',system-ui,sans-serif;color:#0E2A33;display:flex;flex-direction:column">
+  <header style="height:60px;flex:none;background:#0E2A33;display:flex;align-items:center;gap:20px;padding:0 24px">
+    <div style="display:flex;align-items:center;gap:10px;color:#FFFFFF;font-weight:600"><span style="width:32px;height:32px;border-radius:8px;background:#E7F6F9;color:#0E2A33;display:grid;place-items:center;font-weight:700">V</span>VPP Công trình</div>
+    <nav style="display:flex;gap:4px;background:rgba(255,255,255,.1);border-radius:999px;padding:4px"><a href="NV-DangKy-Full.dc.html" style="color:#C9DEE4;border-radius:999px;padding:8px 16px;text-decoration:none;font-size:14px">Đăng ký</a><a href="#" style="background:#FFFFFF;color:#0E2A33;border-radius:999px;padding:8px 16px;text-decoration:none;font-weight:600;font-size:14px">Lịch sử</a></nav>
+    <div style="flex-grow:1"></div>
+    <span style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);display:grid;place-items:center;color:#C9DEE4;font-size:14px" aria-label="Thông báo">●</span>
+    <a href="#" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.1);border-radius:999px;padding:5px 14px 5px 5px;color:#FFFFFF;text-decoration:none"><span style="width:32px;height:32px;border-radius:50%;background:#9FE3F0;color:#0E2A33;display:grid;place-items:center;font-weight:700;font-size:13px">NB</span><span style="font-size:14px;font-weight:600;line-height:1.2">Nhân viên B (test)<br><span style="font-weight:400;font-size:12px;color:#C9DEE4">Phòng Test</span></span></a>
+  </header>
+  <div style="flex-grow:1;display:flex;gap:16px;padding:16px 24px;min-height:0">
+    <aside style="width:280px;flex:none;background:#FFFFFF;border-radius:20px;padding:8px;display:flex;flex-direction:column;gap:2px;overflow:hidden">
+      <div style="padding:8px 10px 0"><h1 style="margin:0;font-size:20px">Lịch sử</h1><div style="font-size:12px;color:#47636C">Phiếu các tháng và tình trạng nhận</div></div>
+      <div style="font-size:12px;font-weight:600;color:#47636C;padding:10px 10px 4px">2026</div><a href="#" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;text-decoration:none;color:inherit;background:transparent"><span><b style="font-size:14px">Tháng 12</b><br><span style="font-size:12px;color:#47636C">2 món · đang mở</span></span><span class="c c-info">Đang mở</span></a><a href="#" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;text-decoration:none;color:inherit;background:#0E2A33;color:#FFFFFF"><span><b style="font-size:14px">Tháng 11</b><br><span style="font-size:12px;color:#C9DEE4">6 món · 6 đơn vị</span></span><span class="c c-warn">Còn chờ 3</span></a><a href="#" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;text-decoration:none;color:inherit;background:transparent"><span><b style="font-size:14px">Tháng 10</b><br><span style="font-size:12px;color:#47636C">4 món · 9 đơn vị</span></span><span class="c c-ok">Đã nhận đủ</span></a><a href="#" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;text-decoration:none;color:inherit;background:transparent"><span><b style="font-size:14px">Tháng 9</b><br><span style="font-size:12px;color:#47636C">3 món · 5 đơn vị</span></span><span class="c c-ok">Đã nhận đủ</span></a><a href="#" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;text-decoration:none;color:inherit;background:transparent"><span><b style="font-size:14px">Tháng 8</b><br><span style="font-size:12px;color:#47636C">Không đăng ký</span></span><span class="c c-off">Không có phiếu</span></a><div style="font-size:12px;font-weight:600;color:#47636C;padding:10px 10px 4px">2025</div><a href="#" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;text-decoration:none;color:inherit;background:transparent"><span><b style="font-size:14px">Tháng 12</b><br><span style="font-size:12px;color:#47636C">5 món · 12 đơn vị</span></span><span class="c c-ok">Đã nhận đủ</span></a><a href="#" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;text-decoration:none;color:inherit;background:transparent"><span><b style="font-size:14px">Tháng 11</b><br><span style="font-size:12px;color:#47636C">2 món · 2 đơn vị</span></span><span class="c c-ok">Đã nhận đủ</span></a>
+    </aside>
+    <section style="flex-grow:1;background:#FFFFFF;border-radius:20px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div><h2 style="margin:0;font-size:20px">Phiếu tháng 11/2026</h2><div style="font-size:13px;color:#47636C;margin-top:2px">6 loại món · 6 đơn vị · lưu lúc 07/11 21:38 · Phòng Test</div></div>
+        <span class="c c-warn" style="font-size:13px;padding:4px 12px">Đang giao · đã nhận 2/5 món</span>
+      </div>
+      <div class="tw"><table class="g">
+        <thead><tr><th>Món</th><th>ĐVT</th><th class="num">Đăng ký</th><th class="num">Được giao</th><th class="num">Đã nhận</th><th>Tình trạng</th><th>Ghi chú</th></tr></thead>
+        <tbody><tr><td><div class="it"><span class="thb"></span><b>Bút bảng Thiên Long</b></div></td><td class="mut">cây</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td><span class="c c-ok">Đã nhận 1/1</span></td><td style="font-size:12px"><span class="mut">Nhận 09:10 08/11</span></td></tr><tr><td><div class="it"><span class="thb"></span><b>Bút bi Thiên Long 027</b></div></td><td class="mut">cây</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td><span class="c c-ok">Đã nhận 1/1</span></td><td style="font-size:12px"><span class="mut">Nhận 09:10 08/11</span></td></tr><tr><td><div class="it"><span class="thb"></span><b style="text-decoration:line-through;color:#47636C">Bút ghi đĩa Thiên Long</b></div></td><td class="mut">cây</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td><span class="c c-off">Không giao</span></td><td style="font-size:12px"><span style="color:#A32C1E">HC bỏ món · Không có hàng</span></td></tr><tr><td><div class="it"><span class="thb"></span><b>Bút dạ quang Thiên Long</b></div></td><td class="mut">cây</td><td class="num">1</td><td class="num">1</td><td class="num">0</td><td><span class="c c-warn">Chờ 1</span></td><td style="font-size:12px"></td></tr><tr><td><div class="it"><span class="thb"></span><b>Bút kim jellitto 0.4</b></div></td><td class="mut">cây</td><td class="num">1</td><td class="num">1</td><td class="num">0</td><td><span class="c c-warn">Chờ 1</span></td><td style="font-size:12px"></td></tr><tr><td><div class="it"><span class="thb"></span><b>Bút chì bấm A255</b></div></td><td class="mut">cây</td><td class="num">1</td><td class="num">1</td><td class="num">0</td><td><span class="c c-warn">Chờ 1</span></td><td style="font-size:12px"></td></tr></tbody>
+      </table></div>
+      <div style="font-size:13px;color:#47636C;display:flex;flex-direction:column;gap:4px">
+        <b style="color:#0E2A33;font-size:13px">Điều chỉnh của Hành chính</b>
+        <span>08/11 08:30 · Bút ghi đĩa Thiên Long 1 thành 0 · Lý do: Không có hàng</span>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

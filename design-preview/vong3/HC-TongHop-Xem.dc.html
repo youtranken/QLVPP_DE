@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Xem phiếu – kỳ đang mở</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ln{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #D6E6EB;font-size:14px}
+.th{width:40px;height:40px;border-radius:10px;background:#EEF5F7;flex:none}
+</style>
+</helmet>
+<div style="width:720px;height:820px;box-sizing:border-box;background:#41616B;font-family:'Be Vietnam Pro',system-ui,sans-serif;color:#0E2A33;padding:40px;display:flex;align-items:flex-start;justify-content:center">
+  <div role="dialog" aria-label="Phiếu của Nhân viên A (test)" style="width:560px;background:#FFFFFF;border-radius:20px;box-shadow:0 16px 40px rgba(0,0,0,.3);display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:20px 22px 12px">
+      <div><div style="font-size:12px;color:#47636C">Kỳ tháng 11 · đang mở · Team Test</div><h2 style="margin:2px 0 0;font-size:20px">Phiếu của Nhân viên A (test)</h2><div style="font-size:13px;color:#47636C">Lưu lúc 07/11 11:06 · 5 món · 23 đơn vị</div></div>
+      <div style="display:flex;gap:6px"><button type="button" aria-label="Người trước" style="width:36px;height:36px;border:1px solid #D6E6EB;border-radius:50%;background:#FFFFFF">‹</button><button type="button" aria-label="Người sau" style="width:36px;height:36px;border:1px solid #D6E6EB;border-radius:50%;background:#FFFFFF">›</button><button type="button" aria-label="Đóng" style="width:36px;height:36px;border:0;background:none;font-size:22px;color:#47636C">×</button></div>
+    </div>
+    <div style="margin:0 22px;background:#DDF1F5;color:#0A5868;border-radius:12px;padding:10px 14px;font-size:13px">Chỉ xem. Nhân viên còn sửa được tới 23:59 ngày 10/11; sau khi khóa kỳ mới điều chỉnh được.</div>
+    <div style="padding:8px 22px">
+      <div class="ln"><span class="th"></span><div style="flex-grow:1"><b>Bút bảng Thiên Long</b><div style="font-size:12px;color:#47636C">Bút &amp; viết</div></div><b>1 cây</b></div>
+      <div class="ln"><span class="th"></span><div style="flex-grow:1"><b>Bút bi Thiên Long 027</b><div style="font-size:12px;color:#47636C">Bút &amp; viết</div></div><b>1 cây</b></div>
+      <div class="ln"><span class="th"></span><div style="flex-grow:1"><b style="text-decoration:line-through;color:#47636C">Bút ghi đĩa Thiên Long</b><div style="font-size:12px;color:#A32C1E;font-weight:600">Tạm ngưng</div></div><b>19 cây</b></div>
+      <div class="ln"><span class="th"></span><div style="flex-grow:1"><b>Bút xóa kéo Plus</b><div style="font-size:12px;color:#47636C">Bút &amp; viết</div></div><b>1 cây</b></div>
+      <div class="ln" style="border-bottom:0"><span class="th"></span><div style="flex-grow:1"><b>Test mon khac</b><div style="font-size:12px;color:#8A3F06">Món ngoài danh mục · chờ Hành chính xem</div></div><b>1 cái</b></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 22px 20px;border-top:1px solid #D6E6EB">
+      <button type="button" style="height:40px;padding:0 16px;border-radius:999px;border:1px solid #B5CFD7;background:#FFFFFF;font:inherit;font-weight:600;font-size:14px">Đóng</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":720,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

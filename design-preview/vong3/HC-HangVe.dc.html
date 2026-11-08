@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Hàng về</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E6A7B}
+.sl{display:flex;justify-content:space-between;align-items:center;color:#FFFFFF;text-decoration:none;font-size:14px;padding:7px 12px;border-radius:10px}
+.sh{color:#C9DEE4;font-size:12px;margin:10px 0 2px;padding-left:4px}
+.on{background:#FFFFFF;color:#0E2A33;font-weight:600}
+.bd{background:#F0A35E;color:#0E2A33;border-radius:999px;font-size:11px;font-weight:700;padding:1px 7px}
+.tw{background:#FFFFFF;border:1px solid #C5DCE2;border-radius:14px;overflow:hidden}
+.g{width:100%;border-collapse:collapse;font-size:13px}
+.g th{background:#EEF5F7;text-align:left;color:#47636C;font-weight:600;font-size:12px;padding:8px 10px;border-right:1px solid #C5DCE2;border-bottom:1px solid #B5CFD7;white-space:nowrap}
+.g td{padding:7px 10px;border-right:1px solid #D6E6EB;border-bottom:1px solid #D6E6EB;vertical-align:middle}
+.g td{white-space:nowrap}
+.g td:first-child{white-space:normal}
+.g th:last-child,.g td:last-child{border-right:0}
+.g tr:last-child td{border-bottom:0}
+.g .grp td{background:#E1E8F0;font-weight:600;color:#2E4675}
+.g .num{text-align:right;font-variant-numeric:tabular-nums}
+.g th.num{text-align:right}
+.mut{color:#47636C}
+.c{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.c-ok{background:#E3F5EE;color:#0D5E46}
+.c-warn{background:#FFF1E2;color:#8A3F06}
+.c-bad{background:#FBE6E3;color:#A32C1E}
+.c-info{background:#DDF1F5;color:#0A5868}
+.c-off{background:#EEF1F3;color:#47636C}
+.b2{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid #B5CFD7;background:#FFFFFF;font:inherit;font-weight:600;font-size:14px;color:#0E2A33;text-decoration:none;white-space:nowrap}
+.b1{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 16px;border-radius:999px;border:0;background:#0E6A7B;font:inherit;font-weight:600;font-size:14px;color:#FFFFFF;white-space:nowrap}
+.lk{color:#0E6A7B;font-weight:600;text-decoration:none;font-size:13px}
+.seg{display:flex;gap:2px;background:#FFFFFF;border:1px solid #D6E6EB;border-radius:999px;padding:3px}
+.seg button{height:30px;padding:0 12px;border:0;border-radius:999px;background:transparent;font:inherit;font-size:13px;color:#0E2A33;white-space:nowrap}
+.seg button[aria-pressed=true]{background:#0E2A33;color:#FFFFFF;font-weight:600}
+.seg .n{display:inline-block;margin-left:6px;font-size:12px;opacity:.75}
+.srch{height:36px;box-sizing:border-box;border:1px solid #B5CFD7;border-radius:999px;background:#FFFFFF;padding:0 14px;display:flex;align-items:center;color:#7A9198;font-size:13px}
+.thb{width:28px;height:28px;border-radius:7px;background:#EEF5F7;flex:none;border:1px solid #D6E6EB}
+.it{display:flex;align-items:center;gap:8px}
+.inp{width:64px;height:30px;box-sizing:border-box;border:1px solid #8FB3BD;border-radius:8px;background:#FFFFFF;text-align:right;padding:0 8px;font:inherit;font-weight:600;font-size:13px;color:#0E2A33}
+
+</style>
+</helmet>
+<div style="width:1280px;height:820px;box-sizing:border-box;background:#0E3A46;font-family:'Be Vietnam Pro',system-ui,sans-serif;color:#0E2A33;display:flex">
+  <nav style="width:220px;flex:none;padding:12px;display:flex;flex-direction:column;gap:2px" aria-label="Menu"><div style="display:flex;align-items:center;gap:10px;color:#FFFFFF;font-weight:600;padding:4px 4px 8px"><span style="width:30px;height:30px;border-radius:8px;background:#E7F6F9;color:#0E2A33;display:grid;place-items:center;font-weight:700">V</span>VPP Công trình</div><div class="sh">Hằng tháng</div><a class="sl" href="HC-KyThang.dc.html"><span>Kỳ tháng</span></a><a class="sl" href="HC-BaoCao-GuiADM.dc.html"><span>Báo cáo & gửi ADM</span></a><a class="sl on" href="HC-HangVe.dc.html"><span>Hàng về</span></a><a class="sl" href="HC-GiaoHang.dc.html"><span>Giao hàng</span></a><a class="sl" href="#"><span>Còn nợ</span></a><div class="sh">Danh mục và tủ</div><a class="sl" href="HC-SanPham-Luoi.dc.html"><span>Sản phẩm</span></a><a class="sl" href="HC-TuKho.dc.html"><span>Tủ / Kho</span><span class="bd">21</span></a><a class="sl" href="#"><span>Món ngoài danh mục</span></a><a class="sl" href="HC-DanhMuc.dc.html"><span>Danh mục</span></a><div class="sh">Quản lý</div><a class="sl" href="#"><span>Nhân viên</span></a><a class="sl" href="#"><span>Nhật ký</span></a><a class="sl" href="#"><span>Cấu hình</span></a><div style="flex-grow:1"></div><div style="display:flex;align-items:center;gap:8px;padding:8px;color:#FFFFFF;font-size:13px"><span style="width:30px;height:30px;border-radius:50%;background:#9FE3F0;color:#0E2A33;display:grid;place-items:center;font-weight:700;font-size:12px">HC</span>HC Test</div></nav>
+  <main style="flex-grow:1;margin:12px 12px 12px 0;background:#E4F0F3;border-radius:24px;padding:18px 22px;display:flex;flex-direction:column;gap:12px;min-width:0;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:10px">
+      <h1 style="margin:0;font-size:24px">Hàng về kỳ tháng 11</h1>
+      <a class="lk" href="HC-BaoCao-GuiADM.dc.html" style="font-weight:500">theo bản gửi ADM 11:50 08/11</a>
+      <div style="flex-grow:1"></div>
+      <span style="font-size:13px;color:#47636C">Đợt này: 4 món · 26 đơn vị</span>
+      <button type="button" class="b2">Thêm món</button><button type="button" class="b1">Lưu hàng về</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="srch" style="width:240px">Tìm món</div>
+      <div class="seg"><button type="button" aria-pressed="true">Tất cả<span class="n">21</span></button><button type="button" aria-pressed="false">Bút &amp; viết<span class="n">10</span></button><button type="button" aria-pressed="false">Giấy &amp; sổ<span class="n">2</span></button><button type="button" aria-pressed="false">Kẹp &amp; dán<span class="n">5</span></button><button type="button" aria-pressed="false">Lưu trữ<span class="n">2</span></button><button type="button" aria-pressed="false">Khác<span class="n">2</span></button></div>
+      <label style="font-size:13px;display:flex;align-items:center;gap:6px;margin-left:auto"><input type="checkbox" style="accent-color:#0E6A7B"> Chỉ món chưa đủ (5)</label>
+    </div>
+    <div style="font-size:12px;color:#47636C;display:flex;gap:14px;align-items:center"><span><span class="c c-warn">Thiếu 5</span> đã lưu</span><span><span style="border:1px dashed #0D5E46;color:#0D5E46;border-radius:999px;padding:1px 8px;font-weight:600">Sau lưu: Đủ</span> khi bấm Lưu hàng về</span><span>Tình trạng = Đã về trước + Hàng về đợt này so với Đề nghị mua</span></div>
+    <div class="tw"><table class="g">
+      <thead><tr><th>Sản phẩm</th><th class="num">Tồn kho</th><th class="num">Đề nghị mua</th><th class="num">Đã về trước</th><th class="num">Hàng về đợt này</th><th>Tình trạng</th><th class="num">Sau nhập kho</th><th></th></tr></thead>
+      <tbody><tr class="grp"><td colspan="8"><span style="display:flex;justify-content:space-between;align-items:center"><span>Bút &amp; viết <span style="font-weight:500;color:#47636C;font-size:12px">· đủ 9/10</span></span><a class="lk" href="#" style="font-size:12px">Điền đủ cả nhóm</a></span></td></tr><tr><td><div class="it"><span class="thb"></span><div><b>Bút bảng Thiên Long</b><div style="font-size:12px;color:#47636C">cây</div></div></div></td><td class="num">8</td><td class="num">8</td><td class="num">8</td><td class="num" style="padding:4px 8px"><input class="inp" value="" placeholder="" aria-label="Hàng về đợt này"></td><td><span class="c c-ok">Đủ</span></td><td class="num"><b>8</b></td><td><a href="#" style="font-size:12px;color:#47636C;text-decoration:none;white-space:nowrap">ADM hết hàng</a></td></tr><tr><td><div class="it"><span class="thb"></span><div><b>Bút ghi đĩa Thiên Long</b><div style="font-size:12px;color:#47636C">cây</div></div></div></td><td class="num">0</td><td class="num">19</td><td class="num">0</td><td class="num" style="padding:4px 8px"><input class="inp" value="" placeholder="" aria-label="Hàng về đợt này"></td><td><span class="c c-warn">Thiếu 19</span></td><td class="num"><b>0</b></td><td><a href="#" style="font-size:12px;color:#47636C;text-decoration:none;white-space:nowrap">ADM hết hàng</a></td></tr><tr><td><div class="it"><span class="thb"></span><div><b>Bút dạ quang Thiên Long</b><div style="font-size:12px;color:#47636C">cây</div></div></div></td><td class="num">3</td><td class="num">3</td><td class="num">3</td><td class="num" style="padding:4px 8px"><input class="inp" value="" placeholder="" aria-label="Hàng về đợt này"></td><td><span class="c c-ok">Đủ</span></td><td class="num"><b>3</b></td><td><a href="#" style="font-size:12px;color:#47636C;text-decoration:none;white-space:nowrap">ADM hết hàng</a></td></tr><tr class="grp"><td colspan="8"><span style="display:flex;justify-content:space-between;align-items:center"><span>Kẹp &amp; dán <span style="font-weight:500;color:#47636C;font-size:12px">· đủ 2/5, sau lưu 4/5</span></span><a class="lk" href="#" style="font-size:12px">Điền đủ cả nhóm</a></span></td></tr><tr style="background:#F7FBFC"><td><div class="it"><span class="thb"></span><div><b>Băng keo si 3,5cm</b><div style="font-size:12px;color:#47636C">cuộn</div></div></div></td><td class="num">0</td><td class="num">5</td><td class="num">0</td><td class="num" style="padding:4px 8px"><input class="inp" value="5" placeholder="" aria-label="Hàng về đợt này"></td><td><span class="c c-warn">Thiếu 5</span><span style="display:inline-block;margin-left:6px;border:1px dashed #0D5E46;color:#0D5E46;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:600;white-space:nowrap">Sau lưu: Đủ</span></td><td class="num"><b>5</b></td><td><a href="#" style="font-size:12px;color:#47636C;text-decoration:none;white-space:nowrap">ADM hết hàng</a></td></tr><tr style="background:#F7FBFC"><td><div class="it"><span class="thb"></span><div><b>Kẹp bướm 32</b><div style="font-size:12px;color:#47636C">hộp</div></div></div></td><td class="num">0</td><td class="num">8</td><td class="num">0</td><td class="num" style="padding:4px 8px"><input class="inp" value="10" placeholder="" aria-label="Hàng về đợt này"></td><td><span class="c c-warn">Thiếu 8</span><span style="display:inline-block;margin-left:6px;border:1px dashed #0A5868;color:#0A5868;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:600;white-space:nowrap">Sau lưu: Dư 2</span></td><td class="num"><b>10</b></td><td><a href="#" style="font-size:12px;color:#47636C;text-decoration:none;white-space:nowrap">ADM hết hàng</a></td></tr><tr><td><div class="it"><span class="thb"></span><div><b>Hồ nước chai nhỏ</b><div style="font-size:12px;color:#47636C">chai</div></div></div></td><td class="num">0</td><td class="num">2</td><td class="num">0</td><td class="num" style="padding:4px 8px"><span class="mut" style="font-size:12px">Không nhập</span></td><td><span class="c c-off">ADM hết hàng</span></td><td class="num"><b>0</b></td><td><a class="lk" href="#" style="font-size:12px">Hoàn tác</a></td></tr><tr class="grp"><td colspan="8"><span style="display:flex;justify-content:space-between;align-items:center"><span>Lưu trữ <span style="font-weight:500;color:#47636C;font-size:12px">· đủ 0/2, sau lưu 1/2</span></span><a class="lk" href="#" style="font-size:12px">Điền đủ cả nhóm</a></span></td></tr><tr style="background:#F7FBFC"><td><div class="it"><span class="thb"></span><div><b>Bìa nhựa trong A4 (Bìa lá)</b><div style="font-size:12px;color:#47636C">xấp</div></div></div></td><td class="num">9</td><td class="num">19</td><td class="num">9</td><td class="num" style="padding:4px 8px"><input class="inp" value="10" placeholder="" aria-label="Hàng về đợt này"></td><td><span class="c c-warn">Thiếu 10</span><span style="display:inline-block;margin-left:6px;border:1px dashed #0D5E46;color:#0D5E46;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:600;white-space:nowrap">Sau lưu: Đủ</span></td><td class="num"><b>19</b></td><td><a href="#" style="font-size:12px;color:#47636C;text-decoration:none;white-space:nowrap">ADM hết hàng</a></td></tr><tr style="background:#F7FBFC"><td><div class="it"><span class="thb"></span><div><b>Bìa trình ký hai mặt</b><div style="font-size:12px;color:#47636C">cái</div></div></div></td><td class="num">1</td><td class="num">3</td><td class="num">1</td><td class="num" style="padding:4px 8px"><input class="inp" value="1" placeholder="" aria-label="Hàng về đợt này"></td><td><span class="c c-warn">Thiếu 2</span><span style="display:inline-block;margin-left:6px;border:1px dashed #8A3F06;color:#8A3F06;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:600;white-space:nowrap">Sau lưu: Thiếu 1</span></td><td class="num"><b>2</b></td><td><a href="#" style="font-size:12px;color:#47636C;text-decoration:none;white-space:nowrap">ADM hết hàng</a></td></tr></tbody>
+    </table></div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

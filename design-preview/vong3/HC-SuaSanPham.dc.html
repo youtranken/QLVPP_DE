@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Sửa sản phẩm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+label{font-size:13px;color:#2F4A52;font-weight:500}
+.in{height:42px;box-sizing:border-box;border:1px solid #7F9AA3;border-radius:12px;padding:0 12px;font:inherit;font-size:14px;color:#0E2A33;background:#FFFFFF;width:100%}
+.f{display:flex;flex-direction:column;gap:5px}
+.sec{background:#FFFFFF;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.sec h3{margin:0;font-size:14px}
+</style>
+</helmet>
+<div style="width:520px;height:820px;box-sizing:border-box;background:#F4FAFB;font-family:'Be Vietnam Pro',system-ui,sans-serif;color:#0E2A33;display:flex;flex-direction:column">
+  <header style="display:flex;gap:12px;align-items:center;padding:16px 18px;border-bottom:1px solid #D6E6EB;background:#FFFFFF">
+    <span style="width:56px;height:56px;border-radius:12px;background:#EEF5F7;display:grid;place-items:center;font-size:11px;color:#47636C">ảnh</span>
+    <div style="flex-grow:1;min-width:0"><div style="font-size:12px;color:#47636C">B23 · Bút &amp; viết · 1/36</div><b style="font-size:17px">Bút bảng Thiên Long</b><div style="font-size:13px;color:#0D5E46;font-weight:600">Đang dùng</div></div>
+    <button type="button" aria-label="Sản phẩm trước" style="width:36px;height:36px;border:1px solid #D6E6EB;border-radius:50%;background:#FFFFFF">‹</button><button type="button" aria-label="Sản phẩm sau" style="width:36px;height:36px;border:1px solid #D6E6EB;border-radius:50%;background:#FFFFFF">›</button><button type="button" aria-label="Đóng" style="width:36px;height:36px;border:0;background:none;font-size:20px">×</button>
+  </header>
+  <div style="flex-grow:1;overflow:hidden;padding:14px 18px;display:flex;flex-direction:column;gap:12px">
+    <div class="sec"><h3>Thông tin</h3>
+      <div class="f"><label for="a">Tên sản phẩm</label><input id="a" class="in" value="Bút bảng Thiên Long"></div>
+      <div class="f"><label for="b">Tên tiếng Anh</label><input id="b" class="in" value="Thien Long Whiteboard (Black)"></div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div class="f"><label for="c">Nhóm</label><select id="c" class="in"><option>Bút &amp; viết</option></select></div><div class="f"><label for="d">Đơn vị tính</label><select id="d" class="in"><option>cây</option></select></div></div>
+      <div class="f"><label for="e">Quy cách (tùy chọn)</label><input id="e" class="in" placeholder="VD: hộp 20 cây"></div>
+    </div>
+    <div class="sec"><h3>Đặt hàng</h3>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:end"><div class="f"><label for="g">Tối đa mỗi tháng</label><input id="g" class="in" value="20"></div><label style="display:flex;gap:8px;align-items:center;height:42px"><input type="checkbox"> Chỉ Hành chính đặt</label></div>
+    </div>
+    <div class="sec" style="flex-direction:row;justify-content:space-between;align-items:center"><div style="font-size:14px">Tồn <b>0 cây</b> · Kỳ 10: <b>1 người</b> đăng ký</div><a href="#" style="font-size:14px;color:#0E6A7B">Xem ở Tủ / Kho</a></div>
+  </div>
+  <footer style="display:flex;gap:8px;align-items:center;padding:12px 18px;border-top:1px solid #D6E6EB;background:#FFFFFF">
+    <button type="button" style="height:42px;padding:0 14px;border-radius:999px;border:0;background:#A32C1E;color:#FFFFFF;font:inherit;font-weight:600;font-size:14px">Tạm ngưng</button>
+    <button type="button" style="height:42px;padding:0 10px;border:0;background:none;color:#A32C1E;font:inherit;font-size:14px;text-decoration:underline">Xóa</button>
+    <div style="flex-grow:1"></div>
+    <button type="button" style="height:42px;padding:0 14px;border-radius:999px;border:1px solid #B5CFD7;background:#FFFFFF;font:inherit;font-size:14px">Quay lại</button>
+    <button type="button" style="height:42px;padding:0 16px;border-radius:999px;border:0;background:#0E6A7B;color:#FFFFFF;font:inherit;font-weight:600;font-size:14px">Lưu</button>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":520,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

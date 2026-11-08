@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Giao hàng</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E6A7B}
+.sl{display:flex;justify-content:space-between;align-items:center;color:#FFFFFF;text-decoration:none;font-size:14px;padding:7px 12px;border-radius:10px}
+.sh{color:#C9DEE4;font-size:12px;margin:10px 0 2px;padding-left:4px}
+.on{background:#FFFFFF;color:#0E2A33;font-weight:600}
+.bd{background:#F0A35E;color:#0E2A33;border-radius:999px;font-size:11px;font-weight:700;padding:1px 7px}
+.tw{background:#FFFFFF;border:1px solid #C5DCE2;border-radius:14px;overflow:hidden}
+.g{width:100%;border-collapse:collapse;font-size:13px}
+.g th{background:#EEF5F7;text-align:left;color:#47636C;font-weight:600;font-size:12px;padding:8px 10px;border-right:1px solid #C5DCE2;border-bottom:1px solid #B5CFD7;white-space:nowrap}
+.g td{padding:7px 10px;border-right:1px solid #D6E6EB;border-bottom:1px solid #D6E6EB;vertical-align:middle}
+.g td{white-space:nowrap}
+.g td:first-child{white-space:normal}
+.g th:last-child,.g td:last-child{border-right:0}
+.g tr:last-child td{border-bottom:0}
+.g .grp td{background:#E1E8F0;font-weight:600;color:#2E4675}
+.g .num{text-align:right;font-variant-numeric:tabular-nums}
+.g th.num{text-align:right}
+.mut{color:#47636C}
+.c{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.c-ok{background:#E3F5EE;color:#0D5E46}
+.c-warn{background:#FFF1E2;color:#8A3F06}
+.c-bad{background:#FBE6E3;color:#A32C1E}
+.c-info{background:#DDF1F5;color:#0A5868}
+.c-off{background:#EEF1F3;color:#47636C}
+.b2{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid #B5CFD7;background:#FFFFFF;font:inherit;font-weight:600;font-size:14px;color:#0E2A33;text-decoration:none;white-space:nowrap}
+.b1{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 16px;border-radius:999px;border:0;background:#0E6A7B;font:inherit;font-weight:600;font-size:14px;color:#FFFFFF;white-space:nowrap}
+.lk{color:#0E6A7B;font-weight:600;text-decoration:none;font-size:13px}
+.seg{display:flex;gap:2px;background:#FFFFFF;border:1px solid #D6E6EB;border-radius:999px;padding:3px}
+.seg button{height:30px;padding:0 12px;border:0;border-radius:999px;background:transparent;font:inherit;font-size:13px;color:#0E2A33;white-space:nowrap}
+.seg button[aria-pressed=true]{background:#0E2A33;color:#FFFFFF;font-weight:600}
+.seg .n{display:inline-block;margin-left:6px;font-size:12px;opacity:.75}
+.srch{height:36px;box-sizing:border-box;border:1px solid #B5CFD7;border-radius:999px;background:#FFFFFF;padding:0 14px;display:flex;align-items:center;color:#7A9198;font-size:13px}
+.thb{width:28px;height:28px;border-radius:7px;background:#EEF5F7;flex:none;border:1px solid #D6E6EB}
+.it{display:flex;align-items:center;gap:8px}
+.inp{width:64px;height:30px;box-sizing:border-box;border:1px solid #8FB3BD;border-radius:8px;background:#FFFFFF;text-align:right;padding:0 8px;font:inherit;font-weight:600;font-size:13px;color:#0E2A33}
+
+</style>
+</helmet>
+<div style="width:1280px;height:820px;box-sizing:border-box;background:#0E3A46;font-family:'Be Vietnam Pro',system-ui,sans-serif;color:#0E2A33;display:flex">
+  <nav style="width:220px;flex:none;padding:12px;display:flex;flex-direction:column;gap:2px" aria-label="Menu"><div style="display:flex;align-items:center;gap:10px;color:#FFFFFF;font-weight:600;padding:4px 4px 8px"><span style="width:30px;height:30px;border-radius:8px;background:#E7F6F9;color:#0E2A33;display:grid;place-items:center;font-weight:700">V</span>VPP Công trình</div><div class="sh">Hằng tháng</div><a class="sl" href="HC-KyThang.dc.html"><span>Kỳ tháng</span></a><a class="sl" href="HC-BaoCao-GuiADM.dc.html"><span>Báo cáo & gửi ADM</span></a><a class="sl" href="HC-HangVe.dc.html"><span>Hàng về</span></a><a class="sl on" href="HC-GiaoHang.dc.html"><span>Giao hàng</span></a><a class="sl" href="#"><span>Còn nợ</span></a><div class="sh">Danh mục và tủ</div><a class="sl" href="HC-SanPham-Luoi.dc.html"><span>Sản phẩm</span></a><a class="sl" href="HC-TuKho.dc.html"><span>Tủ / Kho</span><span class="bd">21</span></a><a class="sl" href="#"><span>Món ngoài danh mục</span></a><a class="sl" href="HC-DanhMuc.dc.html"><span>Danh mục</span></a><div class="sh">Quản lý</div><a class="sl" href="#"><span>Nhân viên</span></a><a class="sl" href="#"><span>Nhật ký</span></a><a class="sl" href="#"><span>Cấu hình</span></a><div style="flex-grow:1"></div><div style="display:flex;align-items:center;gap:8px;padding:8px;color:#FFFFFF;font-size:13px"><span style="width:30px;height:30px;border-radius:50%;background:#9FE3F0;color:#0E2A33;display:grid;place-items:center;font-weight:700;font-size:12px">HC</span>HC Test</div></nav>
+  <main style="flex-grow:1;margin:12px 12px 12px 0;background:#E4F0F3;border-radius:24px;padding:18px 22px;display:flex;flex-direction:column;gap:12px;min-width:0;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:10px">
+      <h1 style="margin:0;font-size:24px;flex-grow:1">Giao hàng kỳ tháng 11</h1>
+      <span style="font-size:13px;color:#8A3F06">3 món chưa đủ tủ cho người chờ · <a class="lk" href="HC-TuKho.dc.html">Xem Tủ / Kho</a></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="srch" style="width:220px">Tìm tên hoặc phòng</div>
+      <div class="seg"><button type="button" aria-pressed="false">Chưa nhận<span class="n">3</span></button><button type="button" aria-pressed="false">Còn nợ<span class="n">5</span></button><button type="button" aria-pressed="false">Đã nhận<span class="n">0</span></button><button type="button" aria-pressed="true">Tất cả<span class="n">8</span></button></div>
+      <div style="flex-grow:1"></div>
+      <span style="font-size:13px;color:#47636C;white-space:nowrap">Đã chọn 2 · 41 đơn vị</span><a class="lk" href="#" style="white-space:nowrap">Bỏ chọn</a>
+      <button type="button" class="b1">Giao 2 phiếu đã chọn</button>
+    </div>
+    <div class="tw"><table class="g">
+      <thead><tr><th style="text-align:center"><input type="checkbox" aria-label="Chọn tất cả" style="accent-color:#0E6A7B;width:16px;height:16px"></th><th>Người</th><th>Phòng</th><th>Kỳ</th><th class="num">Số món</th><th class="num">Đơn vị</th><th>Tình trạng</th><th style="text-align:right">Thao tác</th></tr></thead>
+      <tbody><tr style="background:#F2F8FA"><td style="width:34px;text-align:center"><input type="checkbox" checked="checked" aria-label="Chọn Nhân viên A (test)" style="accent-color:#0E6A7B;width:16px;height:16px"></td><td><div class="it"><span style="width:26px;height:26px;border-radius:50%;background:#DDF1F5;color:#0A5868;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none">NA</span><b>Nhân viên A (test)</b></div></td><td>Phòng Test</td><td>Kỳ 11</td><td class="num">8 món</td><td class="num">36</td><td><span class="c c-info">Chưa nhận</span></td><td style="text-align:right;white-space:nowrap"><a class="lk" href="#" style="margin-right:12px">Xem</a><button type="button" class="b2" style="height:30px;font-size:13px">Giao</button></td></tr><tr style="background:#F2F8FA"><td style="width:34px;text-align:center"><input type="checkbox" checked="checked" aria-label="Chọn Nhân viên B (test)" style="accent-color:#0E6A7B;width:16px;height:16px"></td><td><div class="it"><span style="width:26px;height:26px;border-radius:50%;background:#DDF1F5;color:#0A5868;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none">NB</span><b>Nhân viên B (test)</b></div></td><td>Phòng Test</td><td>Kỳ 11</td><td class="num">5 món</td><td class="num">5</td><td><span class="c c-info">Chưa nhận</span></td><td style="text-align:right;white-space:nowrap"><a class="lk" href="#" style="margin-right:12px">Xem</a><button type="button" class="b2" style="height:30px;font-size:13px">Giao</button></td></tr><tr><td style="width:34px;text-align:center"><input type="checkbox" aria-label="Chọn Nhân viên C (test)" style="accent-color:#0E6A7B;width:16px;height:16px"></td><td><div class="it"><span style="width:26px;height:26px;border-radius:50%;background:#DDF1F5;color:#0A5868;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none">NC</span><b>Nhân viên C (test)</b></div></td><td>Phòng Test</td><td>Kỳ 11</td><td class="num">6 món</td><td class="num">24</td><td><span class="c c-info">Chưa nhận</span> <span class="c c-warn">Tủ thiếu 1 món</span></td><td style="text-align:right;white-space:nowrap"><a class="lk" href="#" style="margin-right:12px">Xem</a><button type="button" class="b2" style="height:30px;font-size:13px">Giao</button></td></tr><tr><td style="width:34px;text-align:center"><input type="checkbox" aria-label="Chọn Nguyễn Văn An (demo)" style="accent-color:#0E6A7B;width:16px;height:16px"></td><td><div class="it"><span style="width:26px;height:26px;border-radius:50%;background:#DDF1F5;color:#0A5868;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none">NA</span><b>Nguyễn Văn An (demo)</b></div></td><td>Kỹ thuật</td><td>Kỳ 10</td><td class="num">2 món</td><td class="num">3</td><td><span class="c c-warn">Còn nợ</span></td><td style="text-align:right;white-space:nowrap"><a class="lk" href="#" style="margin-right:12px">Xem</a><button type="button" class="b2" style="height:30px;font-size:13px">Giao</button></td></tr><tr><td style="width:34px;text-align:center"><input type="checkbox" aria-label="Chọn Hữu Thông" style="accent-color:#0E6A7B;width:16px;height:16px"></td><td><div class="it"><span style="width:26px;height:26px;border-radius:50%;background:#DDF1F5;color:#0A5868;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none">HT</span><b>Hữu Thông</b></div></td><td>Kỹ thuật</td><td>Kỳ 10</td><td class="num">1 món</td><td class="num">2</td><td><span class="c c-warn">Còn nợ</span></td><td style="text-align:right;white-space:nowrap"><a class="lk" href="#" style="margin-right:12px">Xem</a><button type="button" class="b2" style="height:30px;font-size:13px">Giao</button></td></tr><tr><td style="width:34px;text-align:center"><input type="checkbox" aria-label="Chọn Nguyễn Thị Phương Thảo" style="accent-color:#0E6A7B;width:16px;height:16px"></td><td><div class="it"><span style="width:26px;height:26px;border-radius:50%;background:#DDF1F5;color:#0A5868;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none">NT</span><b>Nguyễn Thị Phương Thảo</b></div></td><td>Kế toán</td><td>Kỳ 10</td><td class="num">3 món</td><td class="num">12</td><td><span class="c c-warn">Còn nợ</span></td><td style="text-align:right;white-space:nowrap"><a class="lk" href="#" style="margin-right:12px">Xem</a><button type="button" class="b2" style="height:30px;font-size:13px">Giao</button></td></tr><tr><td style="width:34px;text-align:center"><input type="checkbox" aria-label="Chọn Trần Minh Đức" style="accent-color:#0E6A7B;width:16px;height:16px"></td><td><div class="it"><span style="width:26px;height:26px;border-radius:50%;background:#DDF1F5;color:#0A5868;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none">TĐ</span><b>Trần Minh Đức</b></div></td><td>Dự án Bình Dương</td><td>Kỳ 9</td><td class="num">1 món</td><td class="num">1</td><td><span class="c c-warn">Còn nợ</span></td><td style="text-align:right;white-space:nowrap"><a class="lk" href="#" style="margin-right:12px">Xem</a><button type="button" class="b2" style="height:30px;font-size:13px">Giao</button></td></tr><tr><td style="width:34px;text-align:center"><input type="checkbox" aria-label="Chọn Lê Hoàng Long" style="accent-color:#0E6A7B;width:16px;height:16px"></td><td><div class="it"><span style="width:26px;height:26px;border-radius:50%;background:#DDF1F5;color:#0A5868;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none">LL</span><b>Lê Hoàng Long</b></div></td><td>Dự án Bình Dương</td><td>Kỳ 10</td><td class="num">1 món</td><td class="num">4</td><td><span class="c c-warn">Còn nợ</span></td><td style="text-align:right;white-space:nowrap"><a class="lk" href="#" style="margin-right:12px">Xem</a><button type="button" class="b2" style="height:30px;font-size:13px">Giao</button></td></tr></tbody>
+    </table></div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

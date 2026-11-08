@@ -29,10 +29,7 @@ const summary: Messages<typeof vi> = {
       toSendAdm: 'Go to Send to ADM →',
     },
     gate: {
-      openNotice: 'The month {{month}} period is open and can be viewed from {{lockPhrase}}.',
       viewOpen: 'View month {{month}} registrations',
-      openOffer: 'Month {{month}} is taking registrations ({{registered}}/{{headcount}} people).',
-      openOfferNoCount: 'Month {{month}} is taking registrations.',
       noneTitle: 'No period has been closed yet',
       noneHint: 'The month {{month}} period is taking registrations ({{registered}}/{{headcount}} people). Admin work starts from {{lockPhrase}}.',
       unlocked: 'The month {{month}} period is not locked yet — viewable from {{lockPhrase}}.',

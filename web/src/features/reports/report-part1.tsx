@@ -160,7 +160,7 @@ export function ReportPart1({ report, sent, editable }: Props) {
         data={rows}
         columns={columns}
         stackOnMobile
-        tableClassName="bc-table bc-grid"
+        tableClassName="bc-table grid-table"
         loading={!settled}
         emptyText={t(onlyNeed ? 'reports.part1.emptyNeed' : 'reports.part1.empty')}
         groupBy={{

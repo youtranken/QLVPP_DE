@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Sản phẩm – Lưới</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sl{display:block;color:#FFFFFF;text-decoration:none;font-size:14px;padding:8px 12px;border-radius:10px}
+.sh{color:#C9DEE4;font-size:12px;margin:10px 0 2px}
+.on{background:#FFFFFF;color:#0E2A33;font-weight:600}
+.tab{height:36px;padding:0 14px;border:0;border-radius:999px;background:transparent;font:inherit;font-size:14px;color:#0E2A33}
+.tab b{font-weight:500;color:#47636C;margin-left:6px}
+.card{position:relative;background:#FFFFFF;border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.ph{height:96px;border-radius:12px;background:#EEF5F7;display:flex;align-items:center;justify-content:center;color:#47636C;font-size:12px}
+.acts{display:flex;gap:8px}
+.b{flex:1;height:40px;border-radius:999px;font:inherit;font-size:14px;font-weight:600}
+.edit{border:1px solid #B5CFD7;background:#FFFFFF;color:#0E2A33}
+.stop{border:1px solid #B5CFD7;background:#FFFFFF;color:#0E2A33}
+.stop:hover,.stop.hv{border-color:#A32C1E;background:#A32C1E;color:#FFFFFF}
+.resume{border:0;background:#0E6A7B;color:#FFFFFF}
+.stamp{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) rotate(-18deg);border:3px solid #A32C1E;color:#A32C1E;background:rgba(255,255,255,.9);border-radius:8px;padding:4px 16px;font-size:20px;font-weight:700;white-space:nowrap}
+</style>
+</helmet>
+<div style="width:1280px;height:820px;box-sizing:border-box;background:#0E3A46;font-family:'Be Vietnam Pro',system-ui,sans-serif;color:#0E2A33;display:flex">
+  <nav style="width:236px;flex:none;padding:12px;display:flex;flex-direction:column;gap:2px" aria-label="Menu">
+    <div class="sh">Hằng tháng</div>
+    <a class="sl" href="#">Tháng này</a><a class="sl" href="HC-TongHop-KyMo.dc.html">Tổng hợp kỳ</a><a class="sl" href="#">Gửi ADM</a>
+    <div class="sh">Danh mục và tủ</div>
+    <a class="sl on" href="#">Sản phẩm</a><a class="sl" href="#">Tủ / Kho</a><a class="sl" href="#">Món ngoài danh mục</a><a class="sl" href="HC-DanhMuc.dc.html">Danh mục</a>
+  </nav>
+  <main style="flex-grow:1;margin:16px 16px 16px 0;background:#E4F0F3;border-radius:28px;padding:24px 28px;display:flex;flex-direction:column;gap:14px;min-width:0;overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end"><div><div style="font-size:13px;color:#47636C">Danh mục và tủ › Sản phẩm</div><h1 style="margin:4px 0 0;font-size:30px">Sản phẩm</h1></div><button type="button" style="height:42px;padding:0 18px;border:0;border-radius:999px;background:#0E6A7B;color:#FFFFFF;font:inherit;font-weight:600">Thêm sản phẩm</button></div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <input aria-label="Tìm sản phẩm" placeholder="Tìm trong 50 sản phẩm" style="height:40px;width:240px;border:1px solid #7F9AA3;border-radius:999px;padding:0 14px;font:inherit;font-size:14px">
+      <div style="display:flex;gap:2px;background:#FFFFFF;border-radius:999px;padding:3px" role="group" aria-label="Lọc"><button class="tab" type="button" aria-pressed="true" style="background:#0E2A33;color:#FFFFFF;font-weight:600">Tất cả<b style="color:#C9DEE4">50</b></button><button class="tab" type="button">Đang dùng<b>36</b></button><button class="tab" type="button">Tạm ngưng<b>14</b></button><button class="tab" type="button">Chưa có ảnh<b>0</b></button></div>
+      <div style="flex-grow:1"></div>
+      <div style="display:flex;gap:2px;background:#FFFFFF;border-radius:999px;padding:3px" role="group" aria-label="Kiểu xem"><button class="tab" type="button" aria-pressed="true" style="background:#0E2A33;color:#FFFFFF;font-weight:600">Lưới</button><a class="tab" href="HC-SanPham-Bang.dc.html" style="display:flex;align-items:center;text-decoration:none">Bảng</a></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px"><b style="font-size:16px">Bút &amp; viết</b><span style="font-size:13px;color:#47636C">15 sản phẩm · 2 tạm ngưng</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">
+      <div class="card"><div class="ph">ảnh</div><b style="font-size:14px">Bút bi Thiên Long 027</b><span style="font-size:13px;color:#47636C">cây · tối đa 10/tháng</span><div class="acts"><button class="b edit" type="button">Sửa</button><button class="b stop" type="button">Tạm ngưng</button></div></div>
+      <div class="card"><div class="ph" style="opacity:.55">ảnh</div><b style="font-size:14px;color:#47636C">Bút ghi đĩa Thiên Long</b><span style="font-size:13px;color:#47636C">cây · tối đa 20/tháng</span><div class="acts"><button class="b edit" type="button">Sửa</button><button class="b resume" type="button">Dùng lại</button></div><span class="stamp">Tạm ngưng</span></div>
+      <div class="card"><div class="ph">ảnh</div><b style="font-size:14px">Bút bảng Thiên Long</b><span style="font-size:13px;color:#47636C">cây · tối đa 20/tháng</span><div class="acts"><button class="b edit" type="button">Sửa</button><button class="b stop hv" type="button">Tạm ngưng</button></div></div>
+      <div class="card"><div class="ph" style="opacity:.55">ảnh</div><b style="font-size:14px;color:#47636C">Bút dạ quang Thiên Long</b><span style="font-size:13px;color:#47636C">cây · tối đa 20/tháng</span><div class="acts"><button class="b edit" type="button">Sửa</button><button class="b resume" type="button">Dùng lại</button></div><span class="stamp">Tạm ngưng</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;background:#FDF3F1;border:1px solid #EDB8B0;border-radius:16px;padding:12px 16px">
+      <b style="font-size:16px;text-decoration:line-through;color:#47636C">Kẹp &amp; dán</b>
+      <span style="color:#A32C1E;font-weight:700;font-size:14px">Tạm ngưng cả nhóm</span>
+      <span style="font-size:13px;color:#47636C">11 sản phẩm · thu gọn</span>
+      <div style="flex-grow:1"></div>
+      <button type="button" style="height:36px;padding:0 14px;border-radius:999px;border:1px solid #B5CFD7;background:#FFFFFF;font:inherit;font-size:14px">Xem 11 sản phẩm</button>
+      <button type="button" style="height:36px;padding:0 14px;border-radius:999px;border:0;background:#0E6A7B;color:#FFFFFF;font:inherit;font-weight:600;font-size:14px">Dùng lại nhóm</button>
+    </div>
+    <p style="margin:0;font-size:13px;color:#2F4A52">Sản phẩm tạm ngưng vẫn nằm tại chỗ, có dấu đỏ chéo "Tạm ngưng" (một tín hiệu, không gạch tên). Bỏ nhãn "Ngừng riêng". Nhóm tạm ngưng tự thu gọn thành một dòng. Nút "Tạm ngưng" màu trung tính, chỉ đỏ khi rê chuột (thẻ thứ 3 đang minh họa lúc rê); bấm xong có thông báo kèm "Hoàn tác".</p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

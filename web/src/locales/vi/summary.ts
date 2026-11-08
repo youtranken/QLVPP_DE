@@ -26,10 +26,7 @@ const summary = {
       toSendAdm: 'Sang Gửi ADM →',
     },
     gate: {
-      openNotice: 'Kỳ tháng {{month}} đang mở, xem được từ {{lockPhrase}}.',
       viewOpen: 'Xem đăng ký kỳ tháng {{month}}',
-      openOffer: 'Kỳ tháng {{month}} đang nhận đăng ký ({{registered}}/{{headcount}} người).',
-      openOfferNoCount: 'Kỳ tháng {{month}} đang nhận đăng ký.',
       noneTitle: 'Chưa có kỳ nào chốt sổ',
       noneHint: 'Kỳ tháng {{month}} đang nhận đăng ký ({{registered}}/{{headcount}} người). Hành chính làm việc từ {{lockPhrase}}.',
       unlocked: 'Kỳ tháng {{month}} chưa khóa sổ — xem được từ {{lockPhrase}}.',

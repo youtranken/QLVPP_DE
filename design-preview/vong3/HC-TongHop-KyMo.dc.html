@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Tổng hợp kỳ đang mở</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sl{display:block;color:#FFFFFF;text-decoration:none;font-size:14px;padding:8px 12px;border-radius:10px}
+.sh{color:#C9DEE4;font-size:12px;margin:10px 0 2px}
+.on{background:#FFFFFF;color:#0E2A33;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:#47636C;font-weight:500;font-size:13px;padding:10px 12px;border-bottom:1px solid #D6E6EB}
+td{padding:12px;border-bottom:1px solid #D6E6EB}
+</style>
+</helmet>
+<div style="width:1280px;height:820px;box-sizing:border-box;background:#0E3A46;font-family:'Be Vietnam Pro',system-ui,sans-serif;color:#0E2A33;display:flex">
+  <nav style="width:236px;flex:none;padding:12px;display:flex;flex-direction:column;gap:2px" aria-label="Menu">
+    <div class="sh">Hằng tháng</div>
+    <a class="sl" href="#">Tháng này</a><a class="sl on" href="#">Tổng hợp kỳ</a><a class="sl" href="#">Gửi ADM</a><a class="sl" href="#">Hàng về</a><a class="sl" href="#">Giao hàng</a>
+    <div class="sh">Danh mục và tủ</div>
+    <a class="sl" href="HC-SanPham-Luoi.dc.html">Sản phẩm</a><a class="sl" href="#">Tủ / Kho</a><a class="sl" href="#">Món ngoài danh mục</a><a class="sl" href="HC-DanhMuc.dc.html">Danh mục</a>
+    <div style="flex-grow:1"></div>
+    <a href="#" style="display:block;border:2px solid #9FE3F0;border-radius:14px;padding:12px;color:#FFFFFF;text-decoration:none;font-size:13px"><b style="font-size:14px">Kỳ tháng 11</b><br>4/6 đã đăng ký · khóa 00:00 ngày 11/11</a>
+  </nav>
+  <main style="flex-grow:1;margin:16px 16px 16px 0;background:#E4F0F3;border-radius:28px;padding:28px;display:flex;flex-direction:column;gap:16px;min-width:0">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end"><div><div style="font-size:13px;color:#47636C">Hằng tháng › Tổng hợp kỳ</div><h1 style="margin:4px 0 0;font-size:30px">Tổng hợp kỳ</h1></div>
+      <div style="display:flex;gap:4px;background:#FFFFFF;border-radius:999px;padding:4px" role="group" aria-label="Chọn kỳ"><button type="button" style="height:36px;padding:0 14px;border:0;border-radius:999px;background:transparent;font:inherit">Tháng 10 · Đã khóa</button><button type="button" aria-pressed="true" style="height:36px;padding:0 14px;border:0;border-radius:999px;background:#0E2A33;color:#FFFFFF;font:inherit;font-weight:600">Tháng 11 · Đang mở</button></div></div>
+    <div style="background:#DDF1F5;border-radius:16px;padding:14px 18px;font-size:14px;color:#0A5868"><b>Kỳ tháng 11 đang nhận đăng ký, chỉ xem.</b> Khóa lúc 00:00 ngày 11/11. Sau khi khóa mới điều chỉnh phiếu và gửi ADM được.</div>
+    <div style="display:flex;gap:12px">
+      <div style="background:#FFFFFF;border-radius:16px;padding:14px 18px;flex:1"><div style="font-size:13px;color:#47636C">Đã đăng ký</div><b style="font-size:26px">4/6</b></div>
+      <div style="background:#FFFFFF;border-radius:16px;padding:14px 18px;flex:1"><div style="font-size:13px;color:#47636C">Món ngoài danh mục</div><b style="font-size:26px">1</b> <a href="#" style="font-size:13px">Xem</a></div>
+    </div>
+    <div style="background:#FFFFFF;border-radius:20px;padding:8px 8px 0;flex-grow:1">
+      <div style="padding:8px 8px 4px;font-weight:600">Đã đăng ký (4)</div>
+      <table>
+        <thead><tr><th>Người</th><th>Nhóm (team)</th><th>Số món</th><th>Lưu lúc</th><th style="text-align:right">Thao tác</th></tr></thead>
+        <tbody>
+          <tr><td><b>Nhân viên A (test)</b></td><td>Team Test</td><td>5 món · 23 đơn vị</td><td>07/11 11:06</td><td style="text-align:right"><a href="HC-TongHop-Xem.dc.html" style="display:inline-block;height:34px;line-height:34px;padding:0 12px;border-radius:10px;color:#0E6A7B;font-weight:600;text-decoration:none;font-size:14px">Xem</a></td></tr>
+          <tr><td><b>Nhân viên B (test)</b></td><td>Team Test</td><td>3 món · 6 đơn vị</td><td>07/11 11:20</td><td style="text-align:right"><a href="HC-TongHop-Xem.dc.html" style="display:inline-block;height:34px;line-height:34px;padding:0 12px;border-radius:10px;color:#0E6A7B;font-weight:600;text-decoration:none;font-size:14px">Xem</a></td></tr>
+          <tr><td><b>Nhân viên C (test)</b></td><td>Team Test</td><td>2 món · 4 đơn vị</td><td>07/11 11:31</td><td style="text-align:right"><a href="HC-TongHop-Xem.dc.html" style="display:inline-block;height:34px;line-height:34px;padding:0 12px;border-radius:10px;color:#0E6A7B;font-weight:600;text-decoration:none;font-size:14px">Xem</a></td></tr>
+          <tr><td><b>Nguyễn Văn An (demo)</b></td><td>Kỹ thuật</td><td>4 món · 9 đơn vị</td><td>05/11 09:12</td><td style="text-align:right"><a href="HC-TongHop-Xem.dc.html" style="display:inline-block;height:34px;line-height:34px;padding:0 12px;border-radius:10px;color:#0E6A7B;font-weight:600;text-decoration:none;font-size:14px">Xem</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

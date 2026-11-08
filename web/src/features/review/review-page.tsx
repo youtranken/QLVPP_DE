@@ -8,7 +8,6 @@ import { lockedYm } from '@/lib/ym';
 import { useAdminItems } from '@/features/catalog/catalog.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { REVIEW_FILTERS, useReviewCache, useReviewCounts, useReviewLines, type ReviewBody, type ReviewFilter, type ReviewResult, type ReviewRow } from './review.api';
-import { OpenPeriodNotice } from '@/features/summary/open-period-notice';
 import { ReviewCard } from './review-card';
 import { ReviewEmpty } from './review-empty';
 import { ReviewPeriod } from './review-period';
@@ -72,7 +71,6 @@ export function ReviewPage() {
         title={t('nav.review')}
         description={t('review.page.description')}
       />
-      <OpenPeriodNotice />
       <div className="toolbar">
         <ReviewPeriod ym={p.ym} ceilingYm={current.data && lockedYm(current.data.ym)} onChange={(v) => change(() => p.setMonth(v))} />
       </div>

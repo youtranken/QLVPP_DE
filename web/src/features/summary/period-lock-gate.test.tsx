@@ -44,19 +44,12 @@ afterEach(async () => {
 });
 
 describe('PeriodLockGate — trang chỉ-kỳ-khóa', () => {
-  it('có kỳ mở: dải nhắc "xem được từ 00:00 ngày 11/11" + liên kết "Xem đăng ký kỳ tháng 11" sang Tổng hợp kỳ mở, nội dung vẫn hiện', async () => {
+  it('kỳ khóa: không còn băng "đang mở, xem được từ" phía trên nội dung', async () => {
     stub((ym) => jsonResponse(200, ym === '2026-10' ? LOCKED : OPEN_SUMMARY));
     mount(gate());
     expect(await screen.findByText('nội dung trang')).toBeInTheDocument();
-    expect(await screen.findByText('Kỳ tháng 11 đang mở, xem được từ 00:00 ngày 11/11.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Xem đăng ký kỳ tháng 11' })).toHaveAttribute('href', '/admin/summary?ym=2026-11');
-  });
-
-  it('tiếng Anh: "on 11/11" cùng một hàm lockPhrase', async () => {
-    await i18n.changeLanguage('en');
-    stub((ym) => jsonResponse(200, ym === '2026-10' ? LOCKED : OPEN_SUMMARY));
-    mount(gate());
-    expect(await screen.findByText('The month 11 period is open and can be viewed from 00:00 on 11/11.')).toBeInTheDocument();
+    expect(screen.queryByText(/đang mở, xem được từ/)).toBeNull();
+    expect(screen.queryByRole('link', { name: /Xem đăng ký kỳ tháng/ })).toBeNull();
   });
 
   it('chưa có kỳ nào khóa (deadline null): khung trống "Chưa có kỳ nào chốt sổ" + tiến độ kỳ mở + nút, không nội dung trang', async () => {

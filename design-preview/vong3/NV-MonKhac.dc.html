@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Thêm món khác</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+label{font-size:13px;color:#2F4A52;font-weight:500}
+.in{height:44px;box-sizing:border-box;border:1px solid #7F9AA3;border-radius:12px;padding:0 12px;font:inherit;font-size:15px;color:#0E2A33;background:#FFFFFF;width:100%}
+.step{height:44px;display:flex;align-items:center;justify-content:space-between;background:#EEF5F7;border-radius:999px;padding:0 6px;box-sizing:border-box}
+.step button{width:36px;height:36px;border:0;border-radius:50%;background:#FFFFFF;font:inherit;font-size:18px;color:#0E2A33}
+.dlg{background:#FFFFFF;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:16px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+</style>
+</helmet>
+<div style="width:560px;height:820px;box-sizing:border-box;background:#41616B;font-family:'Be Vietnam Pro',system-ui,sans-serif;color:#0E2A33;padding:24px;display:flex;flex-direction:column;gap:24px">
+  <div class="dlg">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;font-size:20px">Thêm món khác</h2><button type="button" aria-label="Đóng" style="border:0;background:none;font-size:22px;color:#47636C">×</button></div>
+    <p style="margin:0;font-size:14px;color:#2F4A52">Món chưa có trong danh mục — Hành chính sẽ xem trước khi mua.</p>
+    <div style="display:flex;flex-direction:column;gap:6px"><label for="t1">Tên món</label><input id="t1" class="in" value="Test mon khac"></div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:end">
+      <div style="display:flex;flex-direction:column;gap:6px"><label for="u1">Đơn vị tính</label><select id="u1" class="in"><option>cái</option><option>cây</option><option>hộp</option></select></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><label>Số lượng</label><div class="step"><button type="button" aria-label="Bớt">−</button><b>1</b><button type="button" aria-label="Thêm">+</button></div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px"><label for="n1">Ghi chú (tùy chọn)</label><textarea id="n1" class="in" style="height:72px;padding:10px 12px">Test mon khac</textarea></div>
+    <div style="display:flex;justify-content:flex-end;gap:12px"><button type="button" style="height:44px;padding:0 20px;border-radius:999px;border:1px solid #B5CFD7;background:#FFFFFF;font:inherit;font-weight:600">Quay lại</button><button type="button" style="height:44px;padding:0 20px;border-radius:999px;border:0;background:#0E6A7B;color:#FFFFFF;font:inherit;font-weight:600">Thêm vào phiếu</button></div>
+  </div>
+  <div class="dlg">
+    <b style="font-size:14px;color:#2F4A52">Khi bấm + tới 20</b>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:6px"><label for="u2">Đơn vị tính</label><select id="u2" class="in"><option>cái</option></select></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><label>Số lượng</label><div class="step"><button type="button" aria-label="Bớt">−</button><b>20</b><button type="button" aria-label="Thêm" disabled="disabled" style="opacity:.4">+</button></div><span style="font-size:13px;font-weight:600;color:#A32C1E">Đã tới tối đa 20/tháng</span></div>
+    </div>
+    <p style="margin:0;font-size:13px;color:#47636C">Đơn vị tính chọn sẵn "cái", đổi được. Chữ "tối đa" chỉ hiện khi chạm mức. Bấm ra ngoài hộp không đóng hộp, để không mất chữ đã gõ.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":560,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

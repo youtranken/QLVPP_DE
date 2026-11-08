@@ -34,6 +34,7 @@ describe('BacklogPage — đầu trang, thẻ, bộ lọc', () => {
     expect(await screen.findByText('Phần chưa giao của các tháng trước tháng 10 — giao bổ sung khi có hàng, hoặc hủy nợ.')).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Theo món' })).toHaveAttribute('aria-checked', 'true');
     expect(callsTo(f, '/api/admin/backlog?by=item')).toHaveLength(1);
+    expect(screen.queryByText(/đang mở, xem được từ/)).toBeNull();
   });
 
   it('thẻ: tổng còn nợ 6 đơn vị "3 dòng · 3 người"; "Có hàng" đếm cả dòng ngoài danh mục (3), không đếm tồn 0; "Của người đã nghỉ" 1', async () => {

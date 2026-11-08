@@ -1,0 +1,6 @@
+@media (min-width: 768px) {
+  [data-shell='admin'] .grid-table th, [data-shell='admin'] .grid-table td { border-bottom-color: var(--c-line-strong); }
+  [data-shell='admin'] .grid-table thead th { background: var(--c-surface-2); color: var(--c-ink-2); }
+  [data-shell='admin'] .grid-table th + th, [data-shell='admin'] .grid-table td + td { border-left: 1px solid var(--c-line-strong); }
+  [data-shell='admin'] .grid-table .dt-group th { border-top: 1px solid var(--c-line-strong); background: var(--c-surface-sunk); }
+}

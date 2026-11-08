@@ -93,12 +93,12 @@ describe('Báo cáo chỉ đọc', () => {
     expect(within(await part1()).queryByRole('link', { name: /Gửi ADM/ })).toBeNull();
   });
 
-  it('?ym=kỳ đang mở → URL thành kỳ khóa 2026-10 + dải nhắc "xem được từ 00:00 ngày 11/11", không hỏi báo cáo kỳ mở', async () => {
+  it('?ym=kỳ đang mở → URL thành kỳ khóa 2026-10 + không còn dải "đang mở, xem được từ", không hỏi báo cáo kỳ mở', async () => {
     const f = stubReports();
     openPage('/admin/reports?ym=2026-11');
     await rowOf('Bút bi xanh');
     await waitFor(() => expect(screen.getByTestId('location-search')).toHaveTextContent('?ym=2026-10'));
-    expect(screen.getByText(/Kỳ tháng 11 đang mở, xem được từ 00:00 ngày 11\/11\./)).toBeInTheDocument();
+    expect(screen.queryByText(/đang mở, xem được từ/)).toBeNull();
     expect(f.mock.calls.map((c) => String(c[0])).filter((u) => u.startsWith('/api/admin/reports/2026-11'))).toEqual([]);
   });
 

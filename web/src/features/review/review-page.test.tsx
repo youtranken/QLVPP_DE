@@ -169,12 +169,12 @@ describe('ReviewPage — /admin/review', () => {
     expect(within(group).getByRole('button', { name: 'Tháng trước' })).toBeEnabled();
   });
 
-  it.each(['2026-11', '2026-12'])('?ym=%s (kỳ mở hoặc tương lai) → URL thành 2026-10 (replace), gọi API với 2026-10, hiện dải "đang mở"', async (ym) => {
+  it.each(['2026-11', '2026-12'])('?ym=%s (kỳ mở hoặc tương lai) → URL thành 2026-10 (replace), gọi API với 2026-10, không còn dải "đang mở"', async (ym) => {
     mockViewport(1280);
     const fetchMock = stub();
     renderApp(makeMe('admin'), `/admin/review?ym=${ym}`);
-    expect(await screen.findByText('Kỳ tháng 11 đang mở, xem được từ 00:00 ngày 11/11.')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByTestId('location-search')).toHaveTextContent('?ym=2026-10'));
+    expect(screen.queryByText(/đang mở, xem được từ/)).toBeNull();
     await waitFor(() => expect(listUrls(fetchMock)).toContain('/api/admin/review?status=pending&ym=2026-10'));
   });
 });

@@ -6,7 +6,6 @@ import { MonthSwitcher } from '@/ui/month-switcher';
 import { PageHeader } from '@/ui/page-header';
 import { Toolbar } from '@/ui/toolbar';
 import { lockedYm } from '@/lib/ym';
-import { OpenPeriodNotice } from '@/features/summary/open-period-notice';
 import { useUnlockedSentence } from '@/features/summary/use-unlocked-sentence';
 import { useCurrentPeriod, type CurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
@@ -58,7 +57,6 @@ function ReportBody({ report, sent, period, onMonth }: BodyProps) {
   return (
     <div className="ct-page bc-page">
       <ReportsHeader />
-      <OpenPeriodNotice />
       <Toolbar lead={<MonthRow ym={report.ym} period={period} onChange={onMonth} />} />
       {report.pending_custom_count > 0 && (
         <p className="alert alert--warn">

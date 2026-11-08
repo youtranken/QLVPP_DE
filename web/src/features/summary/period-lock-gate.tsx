@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode, apiErrorString } from '@/lib/api-error';
+import { Link } from 'react-router-dom';
 import { langOf, lockPhrase } from '@/lib/period-text';
 import { lockedYm } from '@/lib/ym';
 import { EmptyFrame } from '@/ui/empty-frame';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
-import { OpenPeriodNotice, OpenRegistrationsLink } from './open-period-notice';
 import { useUnlockedSentence } from './use-unlocked-sentence';
 import { usePeriodSummary } from './summary.api';
 
@@ -16,6 +16,15 @@ interface Props {
   // Bọc câu chờ/lỗi/chưa khóa trong khung trang của màn gọi (tiêu đề, lề)
   frame?: (node: ReactNode) => ReactNode;
   children: ReactNode;
+}
+
+export function OpenRegistrationsLink({ ym, className }: { ym: string; className?: string }) {
+  const { t } = useTranslation();
+  return (
+    <Link className={className} to={`/admin/summary?ym=${ym}`}>
+      {t('summary.gate.viewOpen', { month: monthOf(ym) })}
+    </Link>
+  );
 }
 
 export function NoLockedPeriod() {
@@ -54,7 +63,6 @@ export function PeriodLockGate({ ym, frame = (n) => n, children }: Props) {
   } else if (new Date(deadline).getTime() > Date.now()) return <>{frame(<EmptyState title={unlocked(deadline)} />)}</>;
   return (
     <div className="ct-page">
-      <OpenPeriodNotice />
       {children}
     </div>
   );
