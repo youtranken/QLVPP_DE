@@ -82,3 +82,4 @@
 [data-shell='admin'] .rg-line__name.is-paused { color: var(--c-muted); text-decoration: line-through; }
 [data-shell='admin'] .rg-line__paused { font: var(--t-cap); font-weight: 700; color: var(--c-danger); }
 [data-shell='admin'] .rg-line__custom { font: var(--t-cap); color: var(--c-warn); }
+[data-shell='admin'] .sm-group-meta { margin-left: var(--s-3); color: var(--c-muted); font: var(--t-sm); font-weight: 600; }
