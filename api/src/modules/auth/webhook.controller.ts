@@ -23,7 +23,6 @@ import { verifyV2 } from './webhook-signature';
 interface PmhWebhookEvent {
   type: string;
   user_id: string;
-  groups?: string[];
   event_id?: string;
 }
 
@@ -91,8 +90,6 @@ export class WebhookController {
         objectId: event.user_id,
         detail: { event: event.type, sessions_killed: killed, status },
       });
-    } else if (event.type === 'user.groups_changed' && event.groups) {
-      await this.users.updateGroups(event.user_id, event.groups);
     } else {
       this.logger.log(`Webhook event bỏ qua: ${event.type}`);
     }
@@ -127,7 +124,6 @@ export class WebhookController {
       typeof event !== 'object' ||
       typeof event.type !== 'string' ||
       typeof event.user_id !== 'string' ||
-      (event.groups !== undefined && !Array.isArray(event.groups)) ||
       (event.event_id !== undefined && typeof event.event_id !== 'string')
     ) {
       throw new BadRequestException({

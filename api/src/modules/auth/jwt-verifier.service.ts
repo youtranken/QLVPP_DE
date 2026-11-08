@@ -1,11 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import type { JWTPayload, JWTVerifyGetKey } from 'jose';
+import { toAppRole } from '../users/users.service';
 import type { PmhIdClaims } from '../users/users.service';
 import { TEAM_MAX } from './auth-env';
+import { TokenContractError } from './token-contract.error';
+
+export const PMH_ID_CLAIMS_VERSION = 3;
 
 export interface VerifiedAccessToken {
   claims: PmhIdClaims;
   expiresAt: Date | null;
+  issuedAt: Date | null;
 }
 
 @Injectable()
@@ -51,9 +56,15 @@ export class JwtVerifierService {
     if (!payload.exp) {
       throw new Error('Access token thiếu claim `exp`');
     }
+    // Kiểm sau jwtVerify: chỉ tin `ver` khi chữ ký đúng. Token cũ không có app_role → không biết vai
+    if (payload.ver !== PMH_ID_CLAIMS_VERSION) {
+      throw new TokenContractError(payload.ver);
+    }
     return {
       claims: this.toClaims(payload),
       expiresAt: new Date(payload.exp * 1000),
+      issuedAt:
+        typeof payload.iat === 'number' ? new Date(payload.iat * 1000) : null,
     };
   }
 
@@ -85,7 +96,8 @@ export class JwtVerifierService {
     return { sub: payload.sub };
   }
 
-  private toTeam(value: unknown): string | undefined {
+  // department "" ("Chưa xếp nhóm") và team null đều thành undefined → lưu NULL
+  private toLabel(value: unknown): string | undefined {
     if (typeof value !== 'string') return undefined;
     // NUL làm Postgres từ chối text (22021), đăng nhập sẽ 500
     const clean = value.replace(/[\u0000-\u001f\u007f]/g, '').trim();
@@ -98,9 +110,10 @@ export class JwtVerifierService {
       email: payload.email as string | undefined,
       employee_code: payload.employee_code as string | undefined,
       full_name: payload.full_name as string | undefined,
-      department: payload.department as string | undefined,
-      team: this.toTeam(payload.team),
-      groups: (payload.groups as string[] | undefined) ?? [],
+      department: this.toLabel(payload.department),
+      team: this.toLabel(payload.team),
+      app_role: toAppRole(payload.app_role),
+      ver: PMH_ID_CLAIMS_VERSION,
     };
   }
 }

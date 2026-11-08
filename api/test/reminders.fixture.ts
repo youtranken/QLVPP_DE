@@ -6,17 +6,16 @@ import {
   resolveMigrationsDir,
   runMigrations,
 } from '../src/database/migration-runner';
+import { LOCAL_SA_SUB } from '../src/modules/auth/local-sa-env';
 import { NotificationScheduler } from '../src/modules/reminders/notification-scheduler';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
 
 const silent = { log: () => undefined };
 const SAVED_KEYS = [
-  'authorized_groups',
   'registration_last_day',
   'reminder_days_left',
   'low_stock_notify',
-  'admin_group',
 ];
 
 export interface NoteRow {
@@ -70,12 +69,8 @@ async function restoreGlobals(pool: Pool, saved: Globals): Promise<void> {
   );
 }
 
-// Sửa config/kỳ toàn cục an toàn vì e2e chạy maxWorkers 1; gate riêng → mẫu số chỉ gồm người của suite
-async function isolateCalendar(pool: Pool, group: string): Promise<void> {
-  await pool.query(
-    "UPDATE config SET value = $1::jsonb WHERE key = 'authorized_groups'",
-    [JSON.stringify([group])],
-  );
+// Sửa config/kỳ toàn cục an toàn vì e2e chạy maxWorkers 1
+async function isolateCalendar(pool: Pool): Promise<void> {
   await pool.query(
     "UPDATE config SET value = '10' WHERE key = 'registration_last_day'",
   );
@@ -91,25 +86,40 @@ async function isolateCalendar(pool: Pool, group: string): Promise<void> {
   );
 }
 
-async function setupSuite(pool: Pool, group: string) {
+async function setupSuite(pool: Pool, mine: string) {
   await runMigrations(pool, resolveMigrationsDir(), silent);
   const startedAt = (await pool.query<{ now: Date }>('SELECT now() AS now'))
     .rows[0].now;
   const saved = await snapshotGlobals(pool);
-  const adminGroup = (
-    await pool.query<{ value: string }>(
-      "SELECT value FROM config WHERE key = 'admin_group'",
-    )
-  ).rows[0].value;
-  await isolateCalendar(pool, group);
-  return { saved, startedAt, adminGroup };
+  await isolateCalendar(pool);
+  return { saved, startedAt, parked: await parkOthers(pool, mine) };
 }
 
-async function teardownSuite(pool: Pool, mine: string, saved: Globals) {
+// DB test dùng chung: tạm khóa user active của suite khác để mẫu số/người nhận chuông chỉ gồm người của
+// suite (thay cho nhóm riêng của mô hình group cũ); teardown mở lại đúng những người này
+async function parkOthers(pool: Pool, mine: string): Promise<string[]> {
+  const { rows } = await pool.query<{ sub: string }>(
+    `UPDATE users SET status = 'locked'
+     WHERE status = 'active' AND sub <> $1 AND sub NOT LIKE $2 RETURNING sub`,
+    [LOCAL_SA_SUB, mine],
+  );
+  return rows.map((r) => r.sub);
+}
+
+async function teardownSuite(
+  pool: Pool,
+  mine: string,
+  saved: Globals,
+  parked: string[],
+) {
   for (const table of ['in_app_notifications', 'requests']) {
     await pool.query(`DELETE FROM ${table} WHERE user_sub LIKE $1`, [mine]);
   }
   await pool.query('DELETE FROM users WHERE sub LIKE $1', [mine]);
+  await pool.query(
+    "UPDATE users SET status = 'active' WHERE sub = ANY($1) AND status = 'locked'",
+    [parked],
+  );
   await restoreGlobals(pool, saved);
   await pool.end();
 }
@@ -140,10 +150,14 @@ function suiteQueries(q: Query, mine: string) {
     notes,
     recipients: async (eventId: string) =>
       (await notes(eventId)).map((n) => n.user_sub),
-    addUser: (s: string, groups: string[]) =>
+    addUser: (
+      s: string,
+      role: 'admin' | 'member' = 'member',
+      status = 'active',
+    ) =>
       q(
-        `INSERT INTO users (sub, full_name, status, groups) VALUES ($1, $1, 'active', $2::jsonb)`,
-        [s, JSON.stringify(groups)],
+        `INSERT INTO users (sub, full_name, status, role) VALUES ($1, $1, $2, $3)`,
+        [s, status, role],
       ),
     headcount: (ym: string) => periodCol(ym, 'headcount'),
     deadline: async (ym: string) =>
@@ -186,7 +200,6 @@ function suiteActions(
 // App + lịch riêng của suite; kỳ/config toàn cục được chụp trước và trả lại sau
 export function remindersFixture(tag: string) {
   const SUFFIX = `${tag}-${process.pid}-${Date.now().toString(36)}`;
-  const GROUP = `e2e-rem-group-${SUFFIX}`;
   const sub = (n: string) => `e2e-rem-${n}-${SUFFIX}`;
   const mine = `e2e-rem-%-${SUFFIX}`;
   let app: INestApplication<App>;
@@ -204,7 +217,7 @@ export function remindersFixture(tag: string) {
     pool = new Pool({
       connectionString: assertTestDatabase(process.env.DATABASE_URL),
     });
-    ctx = await setupSuite(pool, GROUP);
+    ctx = await setupSuite(pool, mine);
     process.env.AUTH_DEV_MODE = 'true';
     await startApp();
   });
@@ -212,15 +225,13 @@ export function remindersFixture(tag: string) {
   afterAll(async () => {
     await app.close();
     for (const fn of cleanups) await fn();
-    await teardownSuite(pool, mine, ctx.saved);
+    await teardownSuite(pool, mine, ctx.saved, ctx.parked);
     delete process.env.AUTH_DEV_MODE;
   });
 
   return {
     SUFFIX,
-    GROUP,
     sub,
-    adminGroup: () => ctx.adminGroup,
     app: () => app,
     q,
     ...suiteQueries(q, mine),

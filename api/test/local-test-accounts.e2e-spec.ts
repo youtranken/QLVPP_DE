@@ -37,7 +37,6 @@ const directory = {
     Promise.resolve([
       { id: 'pmh-real-e2e', full_name: 'Người thật', status: 'active' },
     ]),
-  fetchGroups: () => Promise.resolve([]),
 };
 
 const KEYS = [
@@ -258,13 +257,13 @@ describe('tài khoản thử local (LOCAL_TEST_ACCOUNTS)', () => {
       await login('hc.e2e', PASS_HC).expect(200);
       await login('nv.e2e', PASS_A).expect(200);
       const before = await pool.query(
-        `SELECT sub, status, full_name, email, department, groups FROM users
+        `SELECT sub, status, full_name, email, department, role FROM users
          WHERE sub = ANY($1) ORDER BY sub`,
         [[SUB_HC, SUB_A]],
       );
       await app.get(DirectorySyncService).sync('system');
       const after = await pool.query(
-        `SELECT sub, status, full_name, email, department, groups FROM users
+        `SELECT sub, status, full_name, email, department, role FROM users
          WHERE sub = ANY($1) ORDER BY sub`,
         [[SUB_HC, SUB_A]],
       );

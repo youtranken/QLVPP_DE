@@ -7,7 +7,6 @@ interface ExistingRow {
   email: string | null;
   employeeCode: string | null;
   fullName: string | null;
-  groups: unknown;
   status: string;
 }
 
@@ -52,26 +51,18 @@ function makeService(opts: {
     fetchUsers: opts.fetchError
       ? jest.fn().mockRejectedValue(opts.fetchError)
       : jest.fn().mockResolvedValue(opts.users ?? []),
-    fetchGroups: jest
-      .fn()
-      .mockResolvedValue([{ id: 'g1', name: 'Developers' }]),
   };
   const audit = { append: jest.fn().mockResolvedValue(undefined) };
-  const systemConfig = {
-    setAuthorizedGroups: jest.fn().mockResolvedValue(undefined),
-  };
   const service = new DirectorySyncService(
     db as never,
     directory,
     audit as never,
-    systemConfig as never,
   );
   return {
     service,
     db,
     directory,
     audit,
-    systemConfig,
     inserted,
     updatedSubs,
   };
@@ -87,7 +78,6 @@ const user = (
   email: `${id}@pmh.com.vn`,
   full_name: `User ${id}`,
   status,
-  groups: ['Developers'],
   ...extra,
 });
 
@@ -96,7 +86,6 @@ const existingOf = (u: DirectoryUser): ExistingRow => ({
   email: u.email ?? null,
   employeeCode: u.employee_code ?? null,
   fullName: u.full_name ?? null,
-  groups: u.groups ?? [],
   status: u.status,
 });
 
@@ -123,37 +112,11 @@ describe('DirectorySyncService', () => {
     );
   });
 
-  it('ghi authorized_groups từ fetchGroups (nguồn gate login 10.2)', async () => {
-    const { service, systemConfig } = makeService({ users: [user('a')] });
-    await service.sync('sa-1');
-    expect(systemConfig.setAuthorizedGroups).toHaveBeenCalledWith([
-      'Developers',
-    ]);
-  });
-
-  it('fetchGroups RỖNG → KHÔNG ghi authorized_groups (tránh tắt gate)', async () => {
-    const { service, systemConfig, directory } = makeService({
-      users: [user('a')],
-    });
-    directory.fetchGroups.mockResolvedValue([]);
-    await service.sync('sa-1');
-    expect(systemConfig.setAuthorizedGroups).not.toHaveBeenCalled();
-  });
-
-  it('sync THẤT BẠI (transaction rollback) → KHÔNG ghi authorized_groups', async () => {
-    const { service, systemConfig } = makeService({
-      users: [user('a')],
-      txError: new Error('boom'),
-    });
-    await expect(service.sync('sa-1')).rejects.toThrow();
-    expect(systemConfig.setAuthorizedGroups).not.toHaveBeenCalled();
-  });
-
   it('record thiếu id → skipped, KHÔNG phá cả đợt; id trùng → khử trùng lặp', async () => {
     const { service, inserted } = makeService({
       users: [
         user('a'),
-        { id: null as unknown as string, status: 'active', groups: [] },
+        { id: null as unknown as string, status: 'active' },
         user('a', 'active', { full_name: 'Bản ghi sau thắng' }),
       ],
     });
@@ -174,7 +137,6 @@ describe('DirectorySyncService', () => {
         {
           id: 'a',
           status: 'locked',
-          groups: ['Developers'],
           employee_code: 'NV-a',
           full_name: 'User a',
         },
@@ -221,10 +183,11 @@ describe('DirectorySyncService', () => {
     );
   });
 
-  it('danh bạ rỗng → 0/0/0, vẫn trả groups', async () => {
-    const { service } = makeService({ users: [] });
+  it('danh bạ rỗng → 0/0/0, không gọi /groups, kết quả không có groups', async () => {
+    const { service, directory } = makeService({ users: [] });
     const result = await service.sync('sa-1');
     expect(result).toMatchObject({ total: 0, created: 0, updated: 0 });
-    expect(result.groups).toHaveLength(1);
+    expect(result).not.toHaveProperty('groups');
+    expect(Object.keys(directory)).toEqual(['fetchUsers']);
   });
 });

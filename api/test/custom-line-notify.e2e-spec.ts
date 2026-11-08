@@ -28,8 +28,8 @@ describe('chuông custom_line_new không còn nguồn: nhân viên lưu kỳ m�
     seededSa =
       (
         await f.pool().query(
-          `INSERT INTO users (sub, full_name, status, groups)
-           VALUES ($1, 'SA', 'active', '["vpp_admin"]'::jsonb) ON CONFLICT (sub) DO NOTHING`,
+          `INSERT INTO users (sub, full_name, status, role)
+           VALUES ($1, 'SA', 'active', 'admin') ON CONFLICT (sub) DO NOTHING`,
           [SA],
         )
       ).rowCount === 1;

@@ -15,8 +15,8 @@ describe('cron khóa kỳ ghi headcount_subs (Postgres thật)', () => {
     ).rows[0];
 
   beforeAll(async () => {
-    for (const u of [U1, U2, U3]) await f.addUser(u, [f.GROUP]);
-    await f.addUser(OUT, ['Nhom_Ngoai']);
+    for (const u of [U1, U2, U3]) await f.addUser(u);
+    await f.addUser(OUT, 'member', 'no_access');
     await f.q(
       `INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('2026-12-01', $1, $1), ('2026-12-01', $2, $2)`,
       [U1, OUT],
@@ -42,9 +42,9 @@ describe('cron khóa kỳ ghi headcount_subs (Postgres thật)', () => {
     });
   });
 
-  it('chạy lại sau khi có người mới vào nhóm → không ghi đè mảng, không đổi headcount', async () => {
+  it('chạy lại sau khi có người mới vào VPP → không ghi đè mảng, không đổi headcount', async () => {
     const before = await period('2026-12');
-    await f.addUser(LATE, [f.GROUP]);
+    await f.addUser(LATE);
     await f.run('2026-12-11T05:00:00.000Z');
     await f.run('2026-12-12T05:00:00.000Z');
     expect(await period('2026-12')).toEqual(before);
@@ -61,6 +61,7 @@ describe('cron khóa kỳ ghi headcount_subs (Postgres thật)', () => {
     f.onCleanup(() => f.q("DELETE FROM periods WHERE ym = '2006-07-01'"));
     const people = await f.app().get(SummaryService).people('2006-07');
     expect(people.headcount_source).toBe('live');
+    // U1, U2, U3, LATE active+member; OUT no_access không có phiếu kỳ này
     expect(people.headcount).toBe(4);
     expect(people.registered + people.unregistered).toBe(people.headcount);
   });

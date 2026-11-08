@@ -5,7 +5,7 @@ describe('reminder_days_left đọc từ config mỗi lần cron chạy', () => 
   const [U1, U2] = ['u1', 'u2'].map(f.sub);
 
   beforeAll(async () => {
-    for (const u of [U1, U2]) await f.addUser(u, [f.GROUP]);
+    for (const u of [U1, U2]) await f.addUser(u);
   });
 
   it('reminder_days_left 5, hạn 00:00 11/12 VN: 23:59:59.999 5/12 VN không nhắc; 00:00 6/12 VN nhắc; 00:00 7/12 VN không thêm', async () => {

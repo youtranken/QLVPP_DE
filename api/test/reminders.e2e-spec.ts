@@ -16,16 +16,17 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
   const AUDIENCE = [U1, U2, U3];
 
   beforeAll(async () => {
-    for (const u of AUDIENCE) await f.addUser(u, ['Khác', f.GROUP]);
-    await f.addUser(OUT, ['Khác']);
-    // Hành chính cùng nhóm được cấp: nhóm admin khác hoa thường vẫn bị loại khỏi mẫu số/chuông kỳ
-    await f.addUser(ADMIN, [f.GROUP, f.adminGroup().toUpperCase()]);
+    for (const u of AUDIENCE) await f.addUser(u);
+    // Mất quyền vào VPP → ngoài mẫu số/chuông kỳ
+    await f.addUser(OUT, 'member', 'no_access');
+    // Hành chính (users.role admin) bị loại khỏi mẫu số/chuông kỳ
+    await f.addUser(ADMIN, 'admin');
     // U1 đã có phiếu kỳ 2026-12 → không nằm trong danh sách nhắc
     await f.q(
       `INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('2026-12-01', $1, $1)`,
       [U1],
     );
-    // Chủ phiếu ngoài tập (người ngoài group có phiếu) → vẫn vào mẫu số chụp lúc khóa
+    // Chủ phiếu ngoài tập (người đã mất quyền có phiếu) → vẫn vào mẫu số chụp lúc khóa
     await f.q(
       `INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('2026-12-01', $1, $2)`,
       [OUT, ADMIN],
@@ -74,7 +75,7 @@ describe('NotificationScheduler.runHourly — kỳ mở, nhắc, kỳ khóa, d�
   });
 
   it('ngày 2 VN (00:00 2/12) người mới vào mẫu số không nhận period_open (không gửi bù)', async () => {
-    await f.addUser(U4, [f.GROUP]);
+    await f.addUser(U4);
     try {
       expect((await f.run('2026-12-01T17:00:00Z')).period_open).toBe(0);
       expect(await f.recipients('period_open:2026-12')).toEqual(AUDIENCE);

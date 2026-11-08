@@ -7,7 +7,6 @@ export const AUDIT_ACTIONS: readonly string[] = [
   'arrival.adm_owed_reopened',
   'arrival.custom_received',
   'auth.login',
-  'auth.login_denied_group',
   'auth.login_denied_idp',
   'auth.login_failed',
   'auth.logout',

@@ -8,14 +8,13 @@ export function lineNotifyFixture(tag: string) {
   const TRIGGER = `line_notify_fail_${process.pid}_${tag.replace(/\W/g, '_')}`;
 
   beforeAll(async () => {
+    await pool().query(`UPDATE users SET role = 'admin' WHERE sub = $1`, [
+      f.ADMIN,
+    ]);
     await pool().query(
-      `UPDATE users SET groups = '["VPP_Admin"]'::jsonb WHERE sub = $1`,
-      [f.ADMIN],
-    );
-    await pool().query(
-      `INSERT INTO users (sub, full_name, department, status, groups) VALUES
-         ($1, 'Hành chính 2', 'Phòng HC', 'active', '["vpp_admin"]'::jsonb),
-         ($2, 'Hành chính nghỉ', 'Phòng HC', 'locked', '["vpp_admin"]'::jsonb)`,
+      `INSERT INTO users (sub, full_name, department, status, role) VALUES
+         ($1, 'Hành chính 2', 'Phòng HC', 'active', 'admin'),
+         ($2, 'Hành chính nghỉ', 'Phòng HC', 'locked', 'admin')`,
       [ADMIN2, LOCKED_ADMIN],
     );
   });

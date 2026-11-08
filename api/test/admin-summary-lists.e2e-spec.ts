@@ -315,7 +315,7 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
     }
   });
 
-  it('Hành chính (cùng gate, thêm "VPP_ADMIN") không vào unregistered/headcount; có phiếu (seed SQL) thì vào registered và headcount, unregistered không đổi', async () => {
+  it('Hành chính (users.role admin) không vào unregistered/headcount; có phiếu (seed SQL) thì vào registered và headcount, unregistered không đổi', async () => {
     const hc = f.sub('hc');
     const summary = async () =>
       (await asAdmin(`/periods/${YM}/summary`).expect(200)).body as {
@@ -333,10 +333,7 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
     await f.addUser(hc, `Hà ${SUFFIX}`, null, 'Phòng HC');
     await f
       .pool()
-      .query(
-        `UPDATE users SET groups = groups || '["VPP_ADMIN"]'::jsonb WHERE sub = $1`,
-        [hc],
-      );
+      .query(`UPDATE users SET role = 'admin' WHERE sub = $1`, [hc]);
     try {
       expect(await unregisteredSubs()).toEqual(before.list);
       expect(await summary()).toEqual(before.summary);

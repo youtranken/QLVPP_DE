@@ -48,8 +48,8 @@ describe('NotificationScheduler.runHourly — sắp hết báo một lần tới
     ).rows[0].at;
 
   beforeAll(async () => {
-    await f.addUser(A1, [f.adminGroup()]);
-    await f.addUser(A2, [f.adminGroup().toUpperCase()]);
+    await f.addUser(A1, 'admin');
+    await f.addUser(A2, 'admin');
   });
 
   f.onCleanup(async () => {
@@ -168,16 +168,18 @@ describe('NotificationScheduler.runHourly — sắp hết báo một lần tới
     ]);
   });
 
-  it('không có admin nhận (admin_group không ai thuộc) → món không bị đánh dấu, có admin lại thì báo', async () => {
+  it('không có admin nhận (không ai active mang role admin) → món không bị đánh dấu, có admin lại thì báo', async () => {
     const id = await newItem('Gôm');
     await purchase(id, 10);
     await issueTo(id, 8);
-    await f.setConfig({ admin_group: `nobody-${f.SUFFIX}` });
+    const setRole = (role: string) =>
+      f.q('UPDATE users SET role = $2 WHERE sub = ANY($1)', [[A1, A2], role]);
+    await setRole('member');
     try {
       await f.run(NOW);
       expect(await notifiedAt(id)).toBeNull();
     } finally {
-      await f.setConfig({ admin_group: f.adminGroup() });
+      await setRole('admin');
     }
     await f.run(NOW);
     expect(await lowEvents(id)).toHaveLength(2);

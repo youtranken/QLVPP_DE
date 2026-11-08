@@ -7,6 +7,7 @@ import {
   resolveMigrationsDir,
   runMigrations,
 } from '../src/database/migration-runner';
+import { LOCAL_SA_SUB } from '../src/modules/auth/local-sa-env';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
 
@@ -17,7 +18,6 @@ const OPEN_PERIOD = '2026-11-01';
 // Dựng app + dữ liệu cho tổng hợp ở một kỳ quá khứ riêng của suite; đăng ký hook jest của suite gọi nó
 export function adminSummaryFixture(ym: string) {
   const SUFFIX = `${process.pid}-${Date.now().toString(36)}`;
-  const GROUP = `E2E-Sum-${SUFFIX}`;
   const sub = (n: string) => `e2e-sum-${n}-${SUFFIX}`;
   const [U1, U2, U3, LOCKED, OUTSIDER] = [
     'u1',
@@ -31,7 +31,8 @@ export function adminSummaryFixture(ym: string) {
   const ids = { item: '', img: '', r1: '', r2: '' };
   let app: INestApplication<App>;
   let pool: Pool;
-  let savedGroups: unknown;
+  // DB test dùng chung: người active+member của suite khác cũng vào tập sống; test so phần chênh
+  let others = 0;
   let savedOpen: { deadline: Date; headcount: number | null } | undefined;
 
   const http = () => request(app.getHttpServer());
@@ -62,12 +63,6 @@ export function adminSummaryFixture(ym: string) {
     image_file_id: ids.img,
     review_status: status,
   });
-  const setGroups = (groups: string[]) =>
-    pool.query(
-      `INSERT INTO config (key, value) VALUES ('authorized_groups', $1::jsonb)
-       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
-      [JSON.stringify(groups)],
-    );
   const addUser = (
     s: string,
     name: string,
@@ -75,9 +70,9 @@ export function adminSummaryFixture(ym: string) {
     dept: string | null,
   ) =>
     pool.query(
-      `INSERT INTO users (sub, full_name, email, department, status, groups)
-       VALUES ($1, $2, $3, $4, 'active', $5::jsonb)`,
-      [s, name, email, dept, JSON.stringify(['Khác', GROUP.toUpperCase()])],
+      `INSERT INTO users (sub, full_name, email, department, status, role)
+       VALUES ($1, $2, $3, $4, 'active', 'member')`,
+      [s, name, email, dept],
     );
 
   beforeAll(async () => {
@@ -85,19 +80,19 @@ export function adminSummaryFixture(ym: string) {
       connectionString: assertTestDatabase(process.env.DATABASE_URL),
     });
     await runMigrations(pool, resolveMigrationsDir(), silent);
-    savedGroups = (
-      await pool.query(
-        "SELECT value FROM config WHERE key = 'authorized_groups'",
+    others = (
+      await pool.query<{ n: number }>(
+        `SELECT count(*)::int AS n FROM users
+         WHERE status = 'active' AND role <> 'admin' AND sub <> $1`,
+        [LOCAL_SA_SUB],
       )
-    ).rows[0]?.value;
+    ).rows[0].n;
     savedOpen = (
       await pool.query(
         'SELECT deadline, headcount FROM periods WHERE ym = $1',
         [OPEN_PERIOD],
       )
     ).rows[0];
-    // Sửa config toàn cục an toàn vì e2e chạy maxWorkers 1; gate riêng → headcount chỉ gồm người của suite
-    await setGroups([GROUP.toLowerCase()]);
     await addUser(U1, `Bình ${SUFFIX}`, `binh.${SUFFIX}@pmh.test`, 'Phòng B');
     await addUser(U2, `An ${SUFFIX}`, `an_${SUFFIX}@pmh.test`, null);
     await addUser(U3, `Chi ${SUFFIX}`, `chi.${SUFFIX}@pmh.test`, 'Phòng A');
@@ -106,10 +101,10 @@ export function adminSummaryFixture(ym: string) {
     await pool.query("UPDATE users SET status = 'locked' WHERE sub = $1", [
       LOCKED,
     ]);
-    await pool.query(
-      `UPDATE users SET groups = '["Khác"]'::jsonb WHERE sub = $1`,
-      [OUTSIDER],
-    );
+    // Mất quyền vào VPP (PMH ID gỡ app) → ngoài tập sống
+    await pool.query("UPDATE users SET status = 'no_access' WHERE sub = $1", [
+      OUTSIDER,
+    ]);
     await pool.query(
       `INSERT INTO periods (ym, deadline) VALUES
          ($1::date, ($1::date + interval '9 days 17 hours') AT TIME ZONE 'UTC'),
@@ -161,9 +156,6 @@ export function adminSummaryFixture(ym: string) {
     await pool.query('DELETE FROM files WHERE id = $1', [ids.img]);
     await pool.query('DELETE FROM items WHERE id = $1', [ids.item]);
     await pool.query('DELETE FROM users WHERE sub LIKE $1', [mine]);
-    await (savedGroups === undefined
-      ? pool.query("DELETE FROM config WHERE key = 'authorized_groups'")
-      : setGroups(savedGroups as string[]));
     await (savedOpen
       ? pool.query(
           'UPDATE periods SET deadline = $2, headcount = $3 WHERE ym = $1',
@@ -190,8 +182,8 @@ export function adminSummaryFixture(ym: string) {
     addLine,
     newRequest,
     addUser,
-    setGroups,
-    groupLower: GROUP.toLowerCase(),
+    others: () => others,
+    mine: (subs: string[]) => subs.filter((x) => x.endsWith(SUFFIX)),
     pool: () => pool,
   };
 }

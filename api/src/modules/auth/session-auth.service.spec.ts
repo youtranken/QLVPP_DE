@@ -6,7 +6,10 @@ function makeService(opts: {
   session?: Partial<SessionRecord> | null;
   refreshImpl?: jest.Mock;
   updateResult?: boolean;
-  userGroups?: unknown;
+  userRole?: string;
+  userStatus?: string;
+  verifyImpl?: jest.Mock;
+  refreshedAppRole?: string;
 }) {
   const session: SessionRecord | null =
     opts.session === null
@@ -16,7 +19,7 @@ function makeService(opts: {
           userSub: 'usr_1',
           refreshToken: 'rt-1',
           accessTokenExp: new Date(Date.now() - 60_000), // hết hạn
-          claims: { sub: 'usr_1', full_name: 'Test', groups: [] },
+          claims: { sub: 'usr_1', full_name: 'Test' },
           csrfToken: 'tok',
           idToken: 'id-token-1',
           lastSeenAt: new Date(),
@@ -30,7 +33,7 @@ function makeService(opts: {
   };
   const jwtVerifier = {
     verify: jest.fn().mockResolvedValue({
-      claims: { sub: 'usr_1', full_name: 'Test', groups: [] },
+      claims: { sub: 'usr_1', full_name: 'Test' },
       expiresAt: new Date(Date.now() + 300_000),
     }),
   };
@@ -42,10 +45,18 @@ function makeService(opts: {
         .mockResolvedValue({ accessToken: 'jwt-moi', refreshToken: 'rt-2' }),
   };
   const audit = { append: jest.fn().mockResolvedValue(undefined) };
-  const userRow = { role: 'member', groups: opts.userGroups ?? [] };
-  const users = { findBySub: jest.fn().mockResolvedValue(userRow) };
-  const systemConfig = {
-    getAdminGroup: jest.fn().mockResolvedValue('vpp-admin'),
+  const userRow = {
+    role: opts.userRole ?? 'member',
+    status: opts.userStatus ?? 'active',
+  };
+  const users = {
+    findBySub: jest.fn().mockResolvedValue(userRow),
+    // applyRole ghi DB thật; ở đây phản ánh vào userRow để toIdentity đọc lại thấy vai mới
+    applyRole: jest.fn((_sub: string, role: string) => {
+      const changed = userRow.role !== role;
+      userRow.role = role;
+      return Promise.resolve(changed);
+    }),
   };
   const service = new SessionAuthService(
     sessions as never,
@@ -53,10 +64,9 @@ function makeService(opts: {
     oidc as never,
     audit as never,
     users as never,
-    systemConfig as never,
     { findBySub: () => null } as never,
   );
-  return { service, sessions, oidc, audit, users, userRow };
+  return { service, sessions, oidc, audit, users, userRow, jwtVerifier };
 }
 
 describe('SessionAuthService — refresh ngầm', () => {
@@ -136,32 +146,32 @@ describe('SessionAuthService — refresh ngầm', () => {
   });
 });
 
-describe('SessionAuthService — role tính mỗi request từ users.groups', () => {
+describe('SessionAuthService — role tính mỗi request từ users.role', () => {
   const fresh = { accessTokenExp: new Date(Date.now() + 60_000) };
 
-  it("users.groups=['vpp-admin'] → identity admin (users.role='member' bị bỏ qua)", async () => {
-    const { service } = makeService({
-      session: fresh,
-      userGroups: ['vpp-admin'],
-    });
+  it("users.role='admin' → identity admin", async () => {
+    const { service } = makeService({ session: fresh, userRole: 'admin' });
     expect((await service.resolve('sid-1'))?.role).toBe('admin');
   });
 
-  it("UPDATE users SET groups='[]' → request kế là member, không cần refresh", async () => {
+  it("UPDATE users SET role='member' → request kế là member, không cần refresh", async () => {
     const { service, oidc, userRow } = makeService({
       session: fresh,
-      userGroups: ['vpp-admin'],
+      userRole: 'admin',
     });
     expect((await service.resolve('sid-1'))?.role).toBe('admin');
-    userRow.groups = [];
+    userRow.role = 'member';
     expect((await service.resolve('sid-1'))?.role).toBe('member');
     expect(oidc.refresh).not.toHaveBeenCalled();
   });
 
-  it("users.role='admin' nhưng groups không có admin_group → member", async () => {
-    const { service, userRow } = makeService({ session: fresh });
-    userRow.role = 'admin';
-    userRow.groups = ['ke-toan'];
+  it('claims phiên mang app_role admin nhưng users.role member → member (vai đọc DB)', async () => {
+    const { service } = makeService({
+      session: {
+        ...fresh,
+        claims: { sub: 'usr_1', app_role: 'admin', ver: 3 },
+      },
+    });
     expect((await service.resolve('sid-1'))?.role).toBe('member');
   });
 

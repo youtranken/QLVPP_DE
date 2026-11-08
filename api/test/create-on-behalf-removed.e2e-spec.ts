@@ -14,7 +14,7 @@ describe('gỡ hẳn "Tạo phiếu hộ": POST /api/admin/requests không còn 
   beforeAll(async () => {
     item = await newItem();
     await pool().query(
-      `INSERT INTO users (sub, full_name, status, groups) VALUES ($1, $2, 'active', '["Phong CT","VPP_ADMIN"]')`,
+      `INSERT INTO users (sub, full_name, status, role) VALUES ($1, $2, 'active', 'admin')`,
       [HC, NAME],
     );
   });
@@ -97,7 +97,7 @@ describe('gỡ hẳn "Tạo phiếu hộ": POST /api/admin/requests không còn 
     ]);
   });
 
-  it('client cũ gửi ?exclude_admin=true → bị lột, 200 có cả người thuộc admin_group', async () => {
+  it('client cũ gửi ?exclude_admin=true → bị lột, 200 có cả Hành chính (role admin)', async () => {
     const res = await as(http().get('/api/admin/users'), ADMIN, 'admin')
       .query({ search: NAME, exclude_admin: 'true' })
       .expect(200);

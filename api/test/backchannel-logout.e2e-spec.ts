@@ -48,7 +48,6 @@ describe('POST backchannel-logout', () => {
     await runMigrations(pool, resolveMigrationsDir(), silent);
     const directory = {
       fetchUsers: () => Promise.resolve([]),
-      fetchGroups: () => Promise.resolve([]),
     };
     app = (await createTestApp(
       [],
@@ -67,7 +66,7 @@ describe('POST backchannel-logout', () => {
         userSub: sub,
         refreshToken: null,
         accessTokenExp: new Date(Date.now() + 10 * 60_000),
-        claims: { sub, full_name: 'BCL E2E', groups: [] },
+        claims: { sub, full_name: 'BCL E2E' },
         idToken: null,
       });
       sessionIds.push(session.id);

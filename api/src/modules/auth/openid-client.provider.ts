@@ -108,7 +108,7 @@ export class OpenidClientProvider implements OidcProvider {
     if (this.m2mToken && this.m2mToken.expiresAt > Date.now() + 30_000) {
       return this.m2mToken.value;
     }
-    // Single-flight: fetchUsers + fetchGroups song song chỉ xin một grant
+    // Single-flight: nhiều lời gọi Directory song song chỉ xin một grant
     if (this.m2mInflight) {
       return this.m2mInflight;
     }

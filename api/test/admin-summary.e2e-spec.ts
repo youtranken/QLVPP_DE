@@ -13,12 +13,13 @@ interface Unregistered {
 describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
   const f = adminSummaryFixture(YM);
   const { U1, U2, U3, LOCKED, OUTSIDER, SUFFIX, ids, asAdmin } = f;
+  // Chỉ người của suite: tập sống còn có người active+member của suite khác (f.others())
   const unregistered = async () =>
     (
       (await asAdmin(`/periods/${YM}/unregistered`).expect(200)).body as {
         items: Unregistered[];
       }
-    ).items;
+    ).items.filter((u) => u.sub.endsWith(SUFFIX));
   const summary = async () =>
     (await asAdmin(`/periods/${YM}/summary`).expect(200)).body as Record<
       string,
@@ -29,7 +30,7 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
       .pool()
       .query('UPDATE users SET status = $2 WHERE sub = $1', [sub, status]);
 
-  it('summary: registered 2/3 (live: active, cùng group không phân biệt hoa thường), KPI theo dòng hiệu lực', async () => {
+  it('summary: registered 2/3 (live: active + member), KPI theo dòng hiệu lực', async () => {
     const lowStock = Number(
       (
         await f.pool().query(
@@ -43,9 +44,9 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
       deadline: '2025-06-10T17:00:00.000Z',
       is_open: false,
       registered: 2,
-      headcount: 3,
+      headcount: 3 + f.others(),
       headcount_source: 'live',
-      unregistered: 1,
+      unregistered: 1 + f.others(),
       outside: 0,
       lines_pending_delivery: 2,
       custom_pending: 1,
@@ -82,7 +83,7 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
     );
     try {
       expect(await summary()).toMatchObject({
-        headcount: 3,
+        headcount: 3 + f.others(),
         headcount_source: 'live',
       });
       await pool.query(
@@ -113,8 +114,8 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
     try {
       expect(await summary()).toMatchObject({
         registered: 2,
-        headcount: 3,
-        unregistered: 1,
+        headcount: 3 + f.others(),
+        unregistered: 1 + f.others(),
       });
       expect((await unregistered()).map((u) => u.sub)).toEqual([U3]);
     } finally {
@@ -122,7 +123,7 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
     }
   });
 
-  it('unregistered = người trong headcount chưa có phiếu (bỏ locked, ngoài group); số trong summary = độ dài danh sách', async () => {
+  it('unregistered = người trong headcount chưa có phiếu (bỏ locked, no_access); số trong summary = độ dài danh sách', async () => {
     expect(await unregistered()).toEqual([
       {
         sub: U3,
@@ -137,28 +138,48 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
     const body = (await asAdmin(`/periods/${YM}/unregistered`).expect(200))
       .body as { items: { sub: string }[]; registered_subs: string[] };
     expect([...body.registered_subs].sort()).toEqual([U1, U2].sort());
-    expect(body.items.map((u) => u.sub)).toEqual([U3]);
+    expect(f.mine(body.items.map((u) => u.sub))).toEqual([U3]);
     for (const outside of [LOCKED, OUTSIDER])
       expect(body.registered_subs).not.toContain(outside);
   });
 
-  it('authorized_groups rỗng → gate tắt: người ngoài group vào tập sống, locked vẫn bị loại', async () => {
-    await f.setGroups([]);
+  it.each([
+    ['no_access', 'OUTSIDER'],
+    ['locked', 'LOCKED'],
+  ])(
+    'biên trạng thái: người đang %s (%s) → về active thì vào tập sống; trở lại thì ra',
+    async (status, name) => {
+      const sub = name === 'OUTSIDER' ? OUTSIDER : LOCKED;
+      await setStatus(sub, 'active');
+      try {
+        expect((await unregistered()).map((u) => u.sub).sort()).toEqual(
+          [U3, sub].sort(),
+        );
+        expect(await summary()).toMatchObject({
+          headcount: 4 + f.others(),
+          unregistered: 2 + f.others(),
+        });
+      } finally {
+        await setStatus(sub, status);
+      }
+      expect((await unregistered()).map((u) => u.sub)).toEqual([U3]);
+    },
+  );
+
+  it('biên vai: U3 member → admin thì ra khỏi tập sống (không có phiếu); về member thì vào lại', async () => {
+    const setRole = (role: string) =>
+      f.pool().query('UPDATE users SET role = $2 WHERE sub = $1', [U3, role]);
+    await setRole('admin');
     try {
-      const list = await unregistered();
-      const subs = list.map((u) => u.sub);
-      expect(subs).toEqual(expect.arrayContaining([U3, OUTSIDER]));
-      expect(subs).not.toContain(LOCKED);
-      expect(subs).not.toContain(U1);
-      const body = await summary();
-      expect(body).toMatchObject({
-        headcount_source: 'live',
-        unregistered: list.length,
+      expect(await unregistered()).toEqual([]);
+      expect(await summary()).toMatchObject({
+        headcount: 2 + f.others(),
+        unregistered: f.others(),
       });
-      expect(body.headcount).toBe(list.length + 2);
     } finally {
-      await f.setGroups([f.groupLower]);
+      await setRole('member');
     }
+    expect((await unregistered()).map((u) => u.sub)).toEqual([U3]);
   });
 
   it('summary kỳ quá khứ chưa có dòng periods → 200 rỗng, deadline null', async () => {

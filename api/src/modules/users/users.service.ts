@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, ilike, ne, or, sql } from 'drizzle-orm';
 import { decodeCursor, encodeCursor } from '../../common/cursor';
 import { escapeLike } from '../../common/sql';
@@ -9,9 +9,11 @@ import {
   LOCAL_SA_FULL_NAME,
   LOCAL_SA_SUB,
 } from '../auth/local-sa-env';
-import { inAdminGroup } from './admin-group.sql';
 import { usersTable } from './users.schema';
 
+export type AppRole = 'admin' | 'member';
+
+// Hợp đồng PMH ID v3. Phiên cũ có `groups` trong jsonb claims thì để đó, không đọc.
 export interface PmhIdClaims {
   sub: string;
   email?: string;
@@ -19,7 +21,13 @@ export interface PmhIdClaims {
   full_name?: string;
   department?: string;
   team?: string;
-  groups?: string[];
+  app_role?: AppRole;
+  ver?: number;
+}
+
+// Fail-closed: chỉ đúng chuỗi "admin" mới là Hành chính
+export function toAppRole(v: unknown): AppRole {
+  return v === 'admin' ? 'admin' : 'member';
 }
 
 export interface UserListQuery {
@@ -34,7 +42,8 @@ export interface UserListItem {
   employeeCode: string | null;
   fullName: string | null;
   department: string | null;
-  groups: unknown;
+  team: string | null;
+  role: AppRole;
   status: string;
   lastLoginAt: Date | null;
 }
@@ -43,8 +52,6 @@ const sortName = sql<string>`coalesce(${usersTable.fullName}, '')`;
 
 @Injectable()
 export class UsersService {
-  private readonly logger = new Logger(UsersService.name);
-
   constructor(@Inject(DRIZZLE_DB) private readonly db: Database) {}
 
   // SA cần users row để thỏa FK created_by_sub; role 'admin' vì CHECK cấm 'sa' — vai thật lấy từ phiên
@@ -70,15 +77,14 @@ export class UsersService {
   }
 
   // Tài khoản thử local (chỉ dev): login = active + đúng hồ sơ env, như user thật sau SSO.
-  // groups mang admin_group hiện tại cho vai admin để chuông/danh sách xử như Hành chính thật.
+  // Ghi role để chuông/mẫu số xử như Hành chính thật; vai của phiên vẫn lấy từ env.
   async upsertLocalTestAccount(params: {
     sub: string;
     fullName: string;
     email: string | null;
     department: string | null;
     team: string | null;
-    role: 'admin' | 'member';
-    groups: string[];
+    role: AppRole;
   }): Promise<void> {
     const now = new Date();
     const profile = {
@@ -87,7 +93,6 @@ export class UsersService {
       department: params.department,
       team: params.team,
       role: params.role,
-      groups: params.groups,
       status: 'active',
     };
     await this.db
@@ -136,7 +141,8 @@ export class UsersService {
         employeeCode: usersTable.employeeCode,
         fullName: usersTable.fullName,
         department: usersTable.department,
-        groups: usersTable.groups,
+        team: usersTable.team,
+        role: usersTable.role,
         status: usersTable.status,
         lastLoginAt: usersTable.lastLoginAt,
       })
@@ -144,7 +150,9 @@ export class UsersService {
       .where(and(...conds))
       .orderBy(sortName, usersTable.sub)
       .limit(query.limit + 1);
-    const items = rows.slice(0, query.limit);
+    const items = rows
+      .slice(0, query.limit)
+      .map((r) => ({ ...r, role: toAppRole(r.role) }));
     const last = items[items.length - 1];
     return {
       items,
@@ -167,7 +175,7 @@ export class UsersService {
         fullName: claims.full_name ?? null,
         department: claims.department ?? null,
         team: claims.team ?? null,
-        groups: claims.groups ?? [],
+        role: toAppRole(claims.app_role),
         firstLoginAt: now,
         lastLoginAt: now,
       })
@@ -179,7 +187,7 @@ export class UsersService {
           fullName: claims.full_name ?? null,
           department: claims.department ?? null,
           team: claims.team ?? null,
-          groups: claims.groups ?? [],
+          role: toAppRole(claims.app_role),
           lastLoginAt: now,
           updatedAt: now,
           firstLoginAt: sql`COALESCE(${usersTable.firstLoginAt}, ${now.toISOString()})`,
@@ -195,19 +203,6 @@ export class UsersService {
     return rows[0] ?? null;
   }
 
-  async updateGroups(sub: string, groups: string[]): Promise<void> {
-    const rows = await this.db
-      .update(usersTable)
-      .set({ groups, updatedAt: new Date() })
-      .where(eq(usersTable.sub, sub))
-      .returning({ sub: usersTable.sub });
-    if (rows.length === 0) {
-      this.logger.warn(
-        `groups_changed cho user chưa có trong DB (sub=${sub}) — bỏ qua, chờ login/sync`,
-      );
-    }
-  }
-
   async setStatus(
     sub: string,
     status: 'active' | 'locked' | 'deleted',
@@ -218,15 +213,11 @@ export class UsersService {
       .where(eq(usersTable.sub, sub));
   }
 
-  // Người nhận chuông admin: SA cục bộ không nhận; so group không phân biệt hoa thường như resolveRole
-  async activeAdminSubs(
-    adminGroup: string,
-    ex: Executor = this.db,
-  ): Promise<string[]> {
+  // Người nhận chuông admin: SA cục bộ không nhận
+  async activeAdminSubs(ex: Executor = this.db): Promise<string[]> {
     const result = await ex.execute<{ sub: string }>(sql`
       SELECT u.sub FROM users u
-      WHERE u.status = 'active' AND u.sub <> ${LOCAL_SA_SUB}
-        AND ${inAdminGroup(sql`u.groups`, adminGroup)}
+      WHERE u.status = 'active' AND u.role = 'admin' AND u.sub <> ${LOCAL_SA_SUB}
       ORDER BY u.sub
     `);
     return result.rows.map((r) => r.sub);

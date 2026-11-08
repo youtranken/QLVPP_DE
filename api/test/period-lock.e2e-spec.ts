@@ -8,8 +8,8 @@ describe('chuông period_locked: số đăng ký từ S, custom_pending, kỳ 0 
   let img = '';
 
   beforeAll(async () => {
-    for (const u of [U1, U2, U3]) await f.addUser(u, [f.GROUP]);
-    await f.addUser(ADMIN, [f.GROUP, f.adminGroup()]);
+    for (const u of [U1, U2, U3]) await f.addUser(u);
+    await f.addUser(ADMIN, 'admin');
     img = (
       await f.q<{ id: string }>(
         `INSERT INTO files (original_name, mime, size_bytes, purpose, uploaded_by_sub)
@@ -28,7 +28,12 @@ describe('chuông period_locked: số đăng ký từ S, custom_pending, kỳ 0 
     const notes = await f.notes('period_locked:2026-12');
     expect(notes.map((n) => n.user_sub)).toEqual([ADMIN]);
     expect(notes[0]).toMatchObject({
-      params: { ym: '2026-12', registered: 0, headcount: 3, custom_pending: 0 },
+      params: {
+        ym: '2026-12',
+        registered: 0,
+        headcount: 3,
+        custom_pending: 0,
+      },
       link: '/admin/month?ym=2026-12',
     });
   });
@@ -49,7 +54,12 @@ describe('chuông period_locked: số đăng ký từ S, custom_pending, kỳ 0 
     expect(await f.notes('period_locked:2027-01')).toEqual([]);
     await f.run('2027-01-10T17:00:00.000Z');
     expect((await f.notes('period_locked:2027-01'))[0]).toMatchObject({
-      params: { ym: '2027-01', registered: 1, headcount: 3, custom_pending: 2 },
+      params: {
+        ym: '2027-01',
+        registered: 1,
+        headcount: 3,
+        custom_pending: 2,
+      },
       link: '/admin/review?ym=2027-01',
     });
   });

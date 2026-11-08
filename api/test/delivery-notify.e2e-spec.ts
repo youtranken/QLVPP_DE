@@ -1,5 +1,4 @@
 import { SessionService } from '../src/modules/auth/session.service';
-import { SystemConfigService } from '../src/modules/config/system-config.service';
 import { UsersService } from '../src/modules/users/users.service';
 import { deliveryFixture } from './delivery.fixture';
 import type { RequestView } from './me-request.fixture';
@@ -145,8 +144,12 @@ describe('POST admin/lines/:id/deliver: chuông giao đủ, audit, updated_at', 
   it('phiên admin thật thiếu X-CSRF-Token → 403 CSRF_TOKEN_INVALID, không giao; có token → 200', async () => {
     const { line } = await lockedLine(10);
     const sub = `e2e-req-csrf-${SUFFIX}`;
-    const groups = [await f.app().get(SystemConfigService).getAdminGroup()];
-    const claims = { sub, full_name: 'E2E Hành chính', groups };
+    const claims = {
+      sub,
+      full_name: 'E2E Hành chính',
+      app_role: 'admin' as const,
+      ver: 3,
+    };
     await f.app().get(UsersService).upsertFromClaims(claims);
     const session = await f
       .app()

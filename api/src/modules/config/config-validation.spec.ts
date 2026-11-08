@@ -8,12 +8,11 @@ const box = (over: Record<string, unknown> = {}) => ({
 });
 
 describe('validateConfigPatch', () => {
-  it('patch hợp lệ đủ khóa → giữ nguyên giá trị, admin_group được trim', () => {
+  it('patch hợp lệ đủ khóa → giữ nguyên giá trị', () => {
     expect(
       validateConfigPatch({
         registration_last_day: 3,
         default_max_qty: 999,
-        admin_group: '  vpp-admin ',
         low_stock_notify: false,
         signature_boxes: [box({ name: 'B' })],
         reminder_days_left: 2,
@@ -24,7 +23,6 @@ describe('validateConfigPatch', () => {
       patch: {
         registration_last_day: 3,
         default_max_qty: 999,
-        admin_group: 'vpp-admin',
         low_stock_notify: false,
         signature_boxes: [box({ name: 'B' })],
         reminder_days_left: 2,
@@ -53,8 +51,8 @@ describe('validateConfigPatch', () => {
     },
   );
 
-  it.each(['', '   ', 42, null])(
-    'admin_group=%p rỗng/không phải chuỗi → field admin_group',
+  it.each([['vpp_admin'], [''], [42]])(
+    'admin_group=%p không còn là khóa cấu hình → field admin_group',
     (value) => {
       expect(validateConfigPatch({ admin_group: value })).toEqual({
         ok: false,
@@ -74,7 +72,7 @@ describe('validateConfigPatch', () => {
     });
   });
 
-  it('authorized_groups chỉ đọc, khóa lạ → field là tên khóa', () => {
+  it('authorized_groups không còn, khóa lạ → field là tên khóa', () => {
     expect(validateConfigPatch({ authorized_groups: ['IT'] })).toEqual({
       ok: false,
       field: 'authorized_groups',

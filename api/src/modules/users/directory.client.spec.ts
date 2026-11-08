@@ -36,9 +36,7 @@ describe('DirectoryClient', () => {
   });
 
   it('mảng phẳng → một vòng, trả đủ user', async () => {
-    fetchMock.mockResolvedValue(
-      jsonResponse([{ id: 'a', status: 'active', groups: [] }]),
-    );
+    fetchMock.mockResolvedValue(jsonResponse([{ id: 'a', status: 'active' }]));
     const users = await client.fetchUsers();
     expect(users).toHaveLength(1);
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -46,7 +44,7 @@ describe('DirectoryClient', () => {
 
   it('API dạng {data} bỏ qua param page (trả mãi cùng dữ liệu) → dừng nhờ dedupe, KHÔNG vòng vô hạn', async () => {
     fetchMock.mockResolvedValue(
-      jsonResponse({ data: [{ id: 'a', status: 'active', groups: [] }] }),
+      jsonResponse({ data: [{ id: 'a', status: 'active' }] }),
     );
     const users = await client.fetchUsers();
     expect(users).toHaveLength(1);
@@ -64,14 +62,14 @@ describe('DirectoryClient', () => {
       status: 200,
       json: () => Promise.reject(new SyntaxError('bad json')),
     });
-    await expect(client.fetchGroups()).rejects.toThrow(
+    await expect(client.fetchUsers()).rejects.toThrow(
       ServiceUnavailableException,
     );
   });
 
   it('401 lần đầu → retry MỘT lần với token force-refresh; vẫn 401 → DIRECTORY_AUTH_FAILED', async () => {
     fetchMock.mockResolvedValue(jsonResponse({}, 401));
-    await expect(client.fetchGroups()).rejects.toThrow(BadGatewayException);
+    await expect(client.fetchUsers()).rejects.toThrow(BadGatewayException);
     expect(oidc.clientCredentialsToken).toHaveBeenCalledTimes(2);
     expect(oidc.clientCredentialsToken).toHaveBeenNthCalledWith(1, false);
     expect(oidc.clientCredentialsToken).toHaveBeenNthCalledWith(2, true);
@@ -80,21 +78,21 @@ describe('DirectoryClient', () => {
   it('401 lần đầu, token mới thành công → trả dữ liệu bình thường', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse({}, 401))
-      .mockResolvedValueOnce(jsonResponse([{ id: 'g1', name: 'Dev' }]));
-    const groups = await client.fetchGroups();
-    expect(groups).toEqual([{ id: 'g1', name: 'Dev' }]);
+      .mockResolvedValueOnce(jsonResponse([{ id: 'u1', status: 'active' }]));
+    const users = await client.fetchUsers();
+    expect(users).toEqual([{ id: 'u1', status: 'active' }]);
   });
 
   it('lỗi mạng → DIRECTORY_UNAVAILABLE', async () => {
     fetchMock.mockRejectedValue(new TypeError('fetch failed'));
-    await expect(client.fetchGroups()).rejects.toThrow(
+    await expect(client.fetchUsers()).rejects.toThrow(
       ServiceUnavailableException,
     );
   });
 
   it('HTTP 500 → DIRECTORY_UNAVAILABLE kèm status', async () => {
     fetchMock.mockResolvedValue(jsonResponse({}, 500));
-    await expect(client.fetchGroups()).rejects.toThrow(
+    await expect(client.fetchUsers()).rejects.toThrow(
       ServiceUnavailableException,
     );
   });

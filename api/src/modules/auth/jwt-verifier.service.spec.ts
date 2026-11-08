@@ -1,5 +1,6 @@
 import * as jose from 'jose';
 import { JwtVerifierService } from './jwt-verifier.service';
+import { TokenContractError } from './token-contract.error';
 
 const ISSUER = 'https://id.test/oidc';
 const CLIENT_ID = 'vpp-test';
@@ -16,7 +17,7 @@ describe('JwtVerifierService — verify offline RS256', () => {
       email: 'an.nguyen@pmh.com.vn',
       full_name: 'Nguyễn Văn An',
       employee_code: 'NV001',
-      groups: ['IT'],
+      ver: 3,
       ...overrides,
     })
       .setProtectedHeader({ alg: 'RS256' })
@@ -53,10 +54,110 @@ describe('JwtVerifierService — verify offline RS256', () => {
       email: 'an.nguyen@pmh.com.vn',
       full_name: 'Nguyễn Văn An',
       employee_code: 'NV001',
-      groups: ['IT'],
+      app_role: 'member',
+      ver: 3,
     });
     expect(result.expiresAt).toBeInstanceOf(Date);
     expect(result.expiresAt!.getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it('token v3 → claims có department, team, app_role, ver; không có groups', async () => {
+    const token = await sign({
+      department: 'Phòng D&E',
+      team: 'Nhóm 2',
+      app_role: 'admin',
+      ver: 3,
+      groups: ['x'],
+    });
+    const { claims } = await verifier.verify(token);
+    expect(claims).toEqual({
+      sub: 'usr_test_01',
+      email: 'an.nguyen@pmh.com.vn',
+      employee_code: 'NV001',
+      full_name: 'Nguyễn Văn An',
+      department: 'Phòng D&E',
+      team: 'Nhóm 2',
+      app_role: 'admin',
+      ver: 3,
+    });
+    expect(claims).not.toHaveProperty('groups');
+  });
+
+  it('department "" (Chưa xếp nhóm) → undefined; team null → undefined', async () => {
+    const { claims } = await verifier.verify(
+      await sign({ department: '', team: null }),
+    );
+    expect(claims.department).toBeUndefined();
+    expect(claims.team).toBeUndefined();
+    const dept = async (v: unknown) =>
+      (await verifier.verify(await sign({ department: v }))).claims.department;
+    expect(await dept('  Phòng D&E ')).toBe('Phòng D&E');
+    expect(await dept('A\u0000B')).toBe('AB');
+  });
+
+  it.each([
+    ['admin', 'admin'],
+    ['member', 'member'],
+    ['ADMIN', 'member'],
+    [undefined, 'member'],
+    [123, 'member'],
+  ])('app_role chỉ "admin" mới là admin: %p → %s', async (v, expected) => {
+    const { claims } = await verifier.verify(await sign({ app_role: v }));
+    expect(claims.app_role).toBe(expected);
+  });
+
+  it('ver 3 được', async () => {
+    await expect(
+      verifier.verify(await sign({ ver: 3 })),
+    ).resolves.toBeDefined();
+  });
+
+  it.each([[2], [4], ['3'], [undefined]])(
+    'ver %p → TokenContractError mang ver gốc',
+    async (ver) => {
+      const err: unknown = await verifier
+        .verify(await sign({ ver }))
+        .catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(TokenContractError);
+      expect((err as TokenContractError).ver).toBe(ver);
+    },
+  );
+
+  it('ver sai nhưng chữ ký sai → lỗi chữ ký, không phải TokenContractError', async () => {
+    const other = await jose.generateKeyPair('RS256');
+    const forged = await new jose.SignJWT({ ver: 2 })
+      .setProtectedHeader({ alg: 'RS256' })
+      .setSubject('usr_test_01')
+      .setIssuer(ISSUER)
+      .setAudience(CLIENT_ID)
+      .setExpirationTime('5m')
+      .sign(other.privateKey);
+    const err: unknown = await verifier.verify(forged).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect(err).not.toBeInstanceOf(TokenContractError);
+  });
+
+  it('issuedAt = iat * 1000; thiếu iat → null', async () => {
+    const iat = Math.floor(Date.now() / 1000) - 10;
+    const withIat = await new jose.SignJWT({ ver: 3 })
+      .setProtectedHeader({ alg: 'RS256' })
+      .setSubject('usr_test_01')
+      .setIssuer(ISSUER)
+      .setAudience(CLIENT_ID)
+      .setIssuedAt(iat)
+      .setExpirationTime('5m')
+      .sign(privateKey);
+    expect((await verifier.verify(withIat)).issuedAt).toEqual(
+      new Date(iat * 1000),
+    );
+    const noIat = await new jose.SignJWT({ ver: 3 })
+      .setProtectedHeader({ alg: 'RS256' })
+      .setSubject('usr_test_01')
+      .setIssuer(ISSUER)
+      .setAudience(CLIENT_ID)
+      .setExpirationTime('5m')
+      .sign(privateKey);
+    expect((await verifier.verify(noIat)).issuedAt).toBeNull();
   });
 
   it('claim team "  Team Test " → claims.team "Team Test"; thiếu, rỗng hoặc không phải chuỗi → undefined; quá 120 ký tự → cắt còn 120', async () => {

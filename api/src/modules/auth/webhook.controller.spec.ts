@@ -7,7 +7,6 @@ const SECRET = 'whsec-test';
 function makeController(alreadyProcessed = false) {
   const sessions = { destroyAllForUser: jest.fn().mockResolvedValue(2) };
   const users = {
-    updateGroups: jest.fn().mockResolvedValue(undefined),
     setStatus: jest.fn().mockResolvedValue(undefined),
   };
   const audit = { append: jest.fn().mockResolvedValue(undefined) };
@@ -90,15 +89,16 @@ describe('WebhookController — HMAC v2 + đá phiên', () => {
     expect(users.setStatus).toHaveBeenCalledWith('usr_9', 'deleted');
   });
 
-  it('user.groups_changed → cập nhật groups, không đá phiên', async () => {
+  it('user.groups_changed (payload v1 có groups) → không đụng users, không đá phiên', async () => {
     const { controller, sessions, users } = makeController();
     const { rawBody, ts, signature } = signedReq({
       type: 'user.groups_changed',
       user_id: 'usr_1',
       groups: ['Kế toán'],
     });
-    await controller.handle({ rawBody } as never, signature, ts);
-    expect(users.updateGroups).toHaveBeenCalledWith('usr_1', ['Kế toán']);
+    const result = await controller.handle({ rawBody } as never, signature, ts);
+    expect(result).toEqual({ ok: true });
+    expect(users.setStatus).not.toHaveBeenCalled();
     expect(sessions.destroyAllForUser).not.toHaveBeenCalled();
   });
 

@@ -15,8 +15,6 @@ const VISIBLE_KEYS = [
   'registration_last_day',
   'reminder_days_left',
   'default_max_qty',
-  'admin_group',
-  'authorized_groups',
   'low_stock_notify',
   'signature_boxes',
   'admin_contact',

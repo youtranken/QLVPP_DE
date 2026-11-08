@@ -31,7 +31,6 @@ describe('webhook PMH ID qua app thật: lệch giờ, chữ ký v1, event_id l�
     return JSON.stringify({
       type,
       user_id: sub,
-      groups: [],
       event_id: eventId,
     });
   };
@@ -53,7 +52,7 @@ describe('webhook PMH ID qua app thật: lệch giờ, chữ ký v1, event_id l�
         userSub: sub,
         refreshToken: null,
         accessTokenExp: new Date(Date.now() + 10 * 60_000),
-        claims: { sub, full_name: 'Webhook E2E', groups: [] },
+        claims: { sub, full_name: 'Webhook E2E' },
         idToken: null,
       })
     ).id;
@@ -68,7 +67,6 @@ describe('webhook PMH ID qua app thật: lệch giờ, chữ ký v1, event_id l�
     process.env.PMH_WEBHOOK_SECRET = SECRET;
     const directory = {
       fetchUsers: () => Promise.resolve([]),
-      fetchGroups: () => Promise.resolve([]),
     };
     app = (await createTestApp(
       [],
@@ -76,7 +74,7 @@ describe('webhook PMH ID qua app thật: lệch giờ, chữ ký v1, event_id l�
     )) as INestApplication<App>;
     await app
       .get(UsersService)
-      .upsertFromClaims({ sub, full_name: 'Webhook E2E', groups: [] });
+      .upsertFromClaims({ sub, full_name: 'Webhook E2E' });
   });
 
   afterAll(async () => {

@@ -8,7 +8,6 @@ export interface ConfigPatch {
   registration_last_day?: number;
   reminder_days_left?: number;
   default_max_qty?: number;
-  admin_group?: string;
   low_stock_notify?: boolean;
   signature_boxes?: SignatureBox[];
   admin_contact?: string;
@@ -29,7 +28,6 @@ const BOX_LIMITS: Record<keyof SignatureBox, { min: number; max: number }> = {
 };
 const BOXES_MIN = 1;
 const BOXES_MAX = 3;
-const NAME_MAX = 200;
 const CONTACT_MAX = 500;
 
 const isIntIn = (v: unknown, min: number, max: number) =>
@@ -43,14 +41,12 @@ const RULES: Record<keyof ConfigPatch, (v: unknown) => boolean> = {
   registration_last_day: (v) => isIntIn(v, 3, 28),
   reminder_days_left: (v) => isIntIn(v, 1, 7),
   default_max_qty: (v) => isIntIn(v, 1, 999),
-  admin_group: (v) => isText(v, NAME_MAX) && v.trim() !== '',
   low_stock_notify: (v) => typeof v === 'boolean',
   signature_boxes: (v) =>
     Array.isArray(v) && v.length >= BOXES_MIN && v.length <= BOXES_MAX,
   admin_contact: (v) => isText(v, CONTACT_MAX),
 };
 
-// authorized_groups không có trong RULES: chỉ directory-sync được ghi
 export function validateConfigPatch(body: unknown): ConfigPatchResult {
   if (!isPlainObject(body) || Object.keys(body).length === 0) {
     return { ok: false, field: 'body' };
@@ -67,7 +63,7 @@ export function validateConfigPatch(body: unknown): ConfigPatchResult {
       if (typeof boxes === 'string') return { ok: false, field: boxes };
       patch[key] = boxes;
     } else {
-      patch[key] = key === 'admin_group' ? (value as string).trim() : value;
+      patch[key] = value;
     }
   }
   return { ok: true, patch };

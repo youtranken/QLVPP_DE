@@ -8,7 +8,6 @@ import {
   runMigrations,
 } from '../src/database/migration-runner';
 import { LOCAL_SA_SUB } from '../src/modules/auth/local-sa-env';
-import { SystemConfigService } from '../src/modules/config/system-config.service';
 import { NotificationsService } from '../src/modules/notifications/notifications.service';
 import type { NotifyInput } from '../src/modules/notifications/notifications.service';
 import { UsersService } from '../src/modules/users/users.service';
@@ -19,16 +18,15 @@ const silent = { log: () => undefined };
 describe('NotificationsService — ghi trong savepoint, người nhận admin (Postgres thật)', () => {
   const SUFFIX = `${process.pid}-${Date.now().toString(36)}`;
   const sub = (k: string) => `db-noti-${k}-${SUFFIX}`;
-  const ADMIN_GROUP = `VPP-Admin-${SUFFIX}`;
   let pool: Pool;
   let db: Database;
   let users: UsersService;
   let service: NotificationsService;
-  // Chỉ khôi phục local:sa khi test đã đụng tới; dòng có sẵn thì trả lại groups + status, không xóa
+  // Chỉ khôi phục local:sa khi test đã đụng tới; dòng có sẵn thì trả lại role + status, không xóa
   let sa:
     | { state: 'untouched' }
     | { state: 'absent' }
-    | { state: 'existed'; groups: unknown; status: string } = {
+    | { state: 'existed'; role: string; status: string } = {
     state: 'untouched',
   };
 
@@ -57,38 +55,32 @@ describe('NotificationsService — ghi trong savepoint, người nhận admin (P
     await runMigrations(pool, resolveMigrationsDir(), silent);
     db = drizzle(pool);
     users = new UsersService(db);
-    const config = {
-      getAdminGroup: () => Promise.resolve(ADMIN_GROUP),
-    } as unknown as SystemConfigService;
-    service = new NotificationsService(db, users, config);
+    service = new NotificationsService(db, users);
     await pool.query(
-      `INSERT INTO users (sub, status, groups) VALUES
-         ($1, 'active', $5), ($2, 'locked', $5), ($3, 'active', $6),
-         ($4, 'active', '{"g": "x"}'), ($7, 'deleted', $5), ($8, 'active', $9)`,
+      `INSERT INTO users (sub, status, role) VALUES
+         ($1, 'active', 'admin'), ($2, 'locked', 'admin'), ($3, 'active', 'member'),
+         ($4, 'no_access', 'admin'), ($5, 'deleted', 'admin'), ($6, 'active', 'admin')`,
       [
         sub('admin'),
         sub('locked'),
         sub('other'),
-        sub('weird'),
-        JSON.stringify([`vpp-admin-${SUFFIX}`]),
-        JSON.stringify([`vpp-admin-${SUFFIX}-x`, 'Staff']),
+        sub('noaccess'),
         sub('deleted'),
         sub('admin2'),
-        JSON.stringify(['Staff', `VPP-ADMIN-${SUFFIX}`]),
       ],
     );
-    const existing = await pool.query<{ groups: unknown; status: string }>(
-      'SELECT groups, status FROM users WHERE sub = $1',
+    const existing = await pool.query<{ role: string; status: string }>(
+      'SELECT role, status FROM users WHERE sub = $1',
       [LOCAL_SA_SUB],
     );
     const row = existing.rows[0];
     sa = row
-      ? { state: 'existed', groups: row.groups, status: row.status }
+      ? { state: 'existed', role: row.role, status: row.status }
       : { state: 'absent' };
     await pool.query(
-      `INSERT INTO users (sub, status, groups) VALUES ($1, 'active', $2)
-       ON CONFLICT (sub) DO UPDATE SET groups = EXCLUDED.groups, status = 'active'`,
-      [LOCAL_SA_SUB, JSON.stringify([`vpp-admin-${SUFFIX}`])],
+      `INSERT INTO users (sub, status, role) VALUES ($1, 'active', 'admin')
+       ON CONFLICT (sub) DO UPDATE SET role = 'admin', status = 'active'`,
+      [LOCAL_SA_SUB],
     );
   });
 
@@ -105,8 +97,8 @@ describe('NotificationsService — ghi trong savepoint, người nhận admin (P
         await pool.query('DELETE FROM users WHERE sub = $1', [LOCAL_SA_SUB]);
       } else if (sa.state === 'existed') {
         await pool.query(
-          'UPDATE users SET groups = $2, status = $3 WHERE sub = $1',
-          [LOCAL_SA_SUB, JSON.stringify(sa.groups), sa.status],
+          'UPDATE users SET role = $2, status = $3 WHERE sub = $1',
+          [LOCAL_SA_SUB, sa.role, sa.status],
         );
       }
     } finally {
@@ -185,18 +177,20 @@ describe('NotificationsService — ghi trong savepoint, người nhận admin (P
     }
   });
 
-  it('activeAdminSubs: active có group (không phân biệt hoa thường) → có; locked/deleted/local:sa/group vpp-admin-x/groups không phải mảng → không', async () => {
-    const subs = await users.activeAdminSubs(ADMIN_GROUP);
+  it('activeAdminSubs: active+admin có; active+member, no_access+admin, locked+admin, deleted+admin, local:sa không', async () => {
+    const subs = await users.activeAdminSubs();
     expect(subs).toEqual(expect.arrayContaining([sub('admin'), sub('admin2')]));
-    for (const k of ['locked', 'deleted', 'other', 'weird']) {
+    for (const k of ['locked', 'deleted', 'other', 'noaccess']) {
       expect(subs).not.toContain(sub(k));
     }
     expect(subs).not.toContain(LOCAL_SA_SUB);
   });
 
-  it('adminRecipients dùng config.admin_group; chạy được trong tx', async () => {
+  it('adminRecipients theo users.role; chạy được trong tx', async () => {
     const subs = await db.transaction((tx) => service.adminRecipients(tx));
-    expect(subs.sort()).toEqual([sub('admin'), sub('admin2')].sort());
+    expect(subs.filter((s) => s.endsWith(SUFFIX)).sort()).toEqual(
+      [sub('admin'), sub('admin2')].sort(),
+    );
   });
 
   it('purgeBefore(cutoff): created_at < cutoff bị xóa, = cutoff giữ lại', async () => {

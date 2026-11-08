@@ -61,7 +61,7 @@ describe('admin/config + public-config', () => {
     expect(res.body).toEqual({ admin_contact: 'Chị Lan — 0901 234 567' });
   });
 
-  it('GET admin/config: member → 403; admin → đủ khóa VPP', async () => {
+  it('GET admin/config: member → 403; admin → đủ khóa VPP, không còn admin_group/authorized_groups', async () => {
     await request(app.getHttpServer())
       .get('/api/admin/config')
       .set('x-dev-user-sub', 'e2e-config-member')
@@ -72,8 +72,6 @@ describe('admin/config + public-config', () => {
     ).expect(200);
     expect(Object.keys(res.body as object).sort()).toEqual([
       'admin_contact',
-      'admin_group',
-      'authorized_groups',
       'default_max_qty',
       'low_stock_notify',
       'registration_last_day',
@@ -101,7 +99,7 @@ describe('admin/config + public-config', () => {
     [{ signers: { head: 'A' } }, 'signers'],
     [{ default_max_qty: 0 }, 'default_max_qty'],
     [{ default_max_qty: 1000 }, 'default_max_qty'],
-    [{ admin_group: '  ' }, 'admin_group'],
+    [{ admin_group: 'x' }, 'admin_group'],
     [{ authorized_groups: ['IT'] }, 'authorized_groups'],
     [{ constructor: 'x' }, 'constructor'],
     [{ toString: 'x' }, 'toString'],
@@ -163,7 +161,7 @@ describe('admin/config + public-config', () => {
       }));
       const res = await put({ signature_boxes: next }).expect(200);
       expect(res.body.signature_boxes).toEqual(next);
-      expect(res.body.admin_group).toBe('vpp_admin');
+      expect(res.body).not.toHaveProperty('admin_group');
       const audit = await pool.query(
         `SELECT object_id, detail FROM audit_log
          WHERE action = 'config.updated' AND actor = $1

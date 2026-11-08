@@ -255,7 +255,7 @@ describe('AuditPage B11', () => {
     await vi.waitFor(() => expect(lastAudit(fetchMock).get('from')).toBe('2026-10-01'));
     expect(lastAudit(fetchMock).get('to')).toBe('2026-10-31');
     await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập bị từ chối' }));
-    await vi.waitFor(() => expect(lastAudit(fetchMock).get('action')).toBe('auth.login_denied_group'));
+    await vi.waitFor(() => expect(lastAudit(fetchMock).get('action')).toBe('auth.login_denied_idp'));
     expect(lastAudit(fetchMock).get('from')).toBe('2026-10-01');
   });
 

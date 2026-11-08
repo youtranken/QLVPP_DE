@@ -4,7 +4,6 @@ import { decodeTimestampCursor, encodeCursor } from '../../common/cursor';
 import { pgSqlState } from '../../common/sql';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor, Tx } from '../../database/database.module';
-import { SystemConfigService } from '../config/system-config.service';
 import { UsersService } from '../users/users.service';
 import type { NotificationTopic } from './notification-events';
 
@@ -67,7 +66,6 @@ export class NotificationsService {
   constructor(
     @Inject(DRIZZLE_DB) private readonly db: Database,
     private readonly users: UsersService,
-    private readonly config: SystemConfigService,
   ) {}
 
   // SAVEPOINT (transaction lồng của drizzle): chuông lỗi không được làm hỏng tx nghiệp vụ
@@ -121,7 +119,7 @@ export class NotificationsService {
   }
 
   async adminRecipients(ex?: Executor): Promise<string[]> {
-    return this.users.activeAdminSubs(await this.config.getAdminGroup(), ex);
+    return this.users.activeAdminSubs(ex);
   }
 
   async list(

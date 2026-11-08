@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import type { AuditFilters } from './admin.api';
 import { quickRanges } from './audit-quick-ranges';
 
-const DENIED_ACTION = 'auth.login_denied_group';
+const DENIED_ACTION = 'auth.login_denied_idp';
 
 export function AuditQuick({ now, applied, onPatch }: { now: Date; applied: AuditFilters; onPatch: (p: Partial<AuditFilters>) => void }) {
   const { t } = useTranslation();

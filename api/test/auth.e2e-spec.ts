@@ -28,7 +28,6 @@ describe('auth e2e', () => {
     // Directory giả: sync thành công mà không cần PMH ID thật
     const directory = {
       fetchUsers: () => Promise.resolve([]),
-      fetchGroups: () => Promise.resolve([]),
     };
     app = (await createTestApp(
       [],

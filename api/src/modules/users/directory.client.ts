@@ -16,19 +16,12 @@ export interface DirectoryUser {
   full_name?: string;
   department?: string;
   status: 'active' | 'locked' | 'deleted';
-  groups: string[];
-}
-
-export interface DirectoryGroup {
-  id: string;
-  name: string;
 }
 
 export const DIRECTORY_CLIENT = 'DIRECTORY_CLIENT';
 
 export interface DirectoryClientApi {
   fetchUsers(): Promise<DirectoryUser[]>;
-  fetchGroups(): Promise<DirectoryGroup[]>;
 }
 
 // Chặn vòng vô hạn nếu API bỏ qua param `page`
@@ -62,11 +55,6 @@ export class DirectoryClient implements DirectoryClientApi {
       }
     }
     return all;
-  }
-
-  async fetchGroups(): Promise<DirectoryGroup[]> {
-    const body = await this.get('/api/v1/groups');
-    return this.extractItems<DirectoryGroup>(body);
   }
 
   private extractItems<T>(body: unknown): T[] {

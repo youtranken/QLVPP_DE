@@ -13,7 +13,7 @@ const CHECK_TICK_MS = 5 * 60_000;
 // Ngắn hơn tick một chút: timer lệch vài ms vẫn để tick kế tiếp thử lại
 const RETRY_AFTER_FAILURE_MS = CHECK_TICK_MS - 30_000;
 
-// Nhịp lấy từ marker trong DB, không từ đồng hồ process: cài mới sync ngay (authorized_groups rỗng = gate mở),
+// Nhịp lấy từ marker trong DB, không từ đồng hồ process: cài mới sync ngay,
 // restart/deploy liên tục không đẩy lùi lần sync kế.
 @Injectable()
 export class DirectorySyncScheduler

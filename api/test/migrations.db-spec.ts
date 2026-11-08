@@ -1,4 +1,11 @@
-import { cp, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import {
+  copyFile,
+  cp,
+  mkdtemp,
+  readdir,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Pool } from 'pg';
@@ -27,7 +34,7 @@ describe('assertTestDatabase — chặn reset nhầm DB không phải *_test', (
   });
 });
 
-describe('migrations nền 0001–0013 + 0100–0121', () => {
+describe('migrations nền 0001–0013 + 0100–0122', () => {
   let pool: Pool;
 
   async function resetSchema(): Promise<void> {
@@ -52,11 +59,11 @@ describe('migrations nền 0001–0013 + 0100–0121', () => {
     await pool.end();
   });
 
-  it('áp đủ 35 migration; chạy lại không áp thêm file nào', async () => {
-    expect(await migrationCount()).toBe(35);
+  it('áp đủ 36 migration; chạy lại không áp thêm file nào', async () => {
+    expect(await migrationCount()).toBe(36);
     const again = await runMigrations(pool, resolveMigrationsDir(), silent);
     expect(again).toEqual([]);
-    expect(await migrationCount()).toBe(35);
+    expect(await migrationCount()).toBe(36);
   });
 
   it('file 0003 đã apply bị sửa nội dung → reject với thông báo checksum', async () => {
@@ -91,27 +98,25 @@ describe('migrations nền 0001–0013 + 0100–0121', () => {
     });
   });
 
-  it('config có seed VPP: registration_last_day=10, admin_group="vpp_admin" và đủ 8 khóa', async () => {
+  it('config có seed VPP: đủ 6 khóa, không còn admin_group/authorized_groups', async () => {
     const { rows } = await pool.query<{ key: string; value: string }>(
       'SELECT key, value::text AS value FROM config',
     );
     const byKey = new Map(rows.map((r) => [r.key, r.value]));
-    expect([...byKey.keys()]).toEqual(
-      expect.arrayContaining([
+    expect([...byKey.keys()].sort()).toEqual(
+      [
         'registration_last_day',
         'default_max_qty',
-        'admin_group',
-        'authorized_groups',
         'low_stock_notify',
         'signature_boxes',
         'reminder_days_left',
         'admin_contact',
-      ]),
+      ].sort(),
     );
-    expect(byKey.get('admin_group')).toBe('"vpp_admin"');
+    expect(byKey.has('admin_group')).toBe(false);
+    expect(byKey.has('authorized_groups')).toBe(false);
     expect(byKey.get('registration_last_day')).toBe('10');
     expect(byKey.get('default_max_qty')).toBe('20');
-    expect(byKey.get('authorized_groups')).toBe('[]');
     expect(byKey.get('low_stock_notify')).toBe('true');
     expect(byKey.has('signers')).toBe(false);
     expect(byKey.get('reminder_days_left')).toBe('3');
@@ -173,5 +178,122 @@ describe('migrations nền 0001–0013 + 0100–0121', () => {
     await expect(
       pool.query("INSERT INTO users (sub, role) VALUES ('sub-2', 'sa')"),
     ).rejects.toMatchObject({ code: '23514' });
+  });
+});
+
+describe('migration 0122 PMH ID v3', () => {
+  let pool: Pool;
+
+  // Dựng DB tới trước 0122 để gieo dữ liệu theo mô hình group cũ, rồi chạy tiếp
+  async function migrateUpTo(lastExclusive: string): Promise<void> {
+    const dir = await mkdtemp(join(tmpdir(), 'vpp-mig-0122-'));
+    try {
+      const all = await readdir(resolveMigrationsDir());
+      for (const f of all.filter(
+        (n) => n.endsWith('.sql') && n < lastExclusive,
+      )) {
+        await copyFile(join(resolveMigrationsDir(), f), join(dir, f));
+      }
+      await runMigrations(pool, dir, silent);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  }
+
+  beforeAll(async () => {
+    pool = new Pool({
+      connectionString: assertTestDatabase(process.env.DATABASE_URL),
+    });
+    await pool.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public');
+    await migrateUpTo('0122');
+    await pool.query(
+      `UPDATE config SET value = '"vpp_admin"' WHERE key = 'admin_group'`,
+    );
+    await pool.query(
+      `INSERT INTO users (sub, groups, role, status, updated_at) VALUES
+         ('u-a', '["VPP_ADMIN"]', 'member', 'active', now()),
+         ('u-b', '["Test_VPP"]', 'admin', 'active', now()),
+         ('u-c', '{"x":1}', 'admin', 'active', now()),
+         ('u-locked', '[]', 'member', 'locked', '2026-10-01T00:00:00Z'),
+         ('local:sa', '[]', 'admin', 'active', now())`,
+    );
+    await runMigrations(pool, resolveMigrationsDir(), silent);
+  });
+
+  afterAll(async () => {
+    await pool.end();
+  });
+
+  it('0122 backfill vai: người có group trùng admin_group (khác hoa thường) → admin; người khác → member; local:sa giữ admin', async () => {
+    const { rows } = await pool.query<{ sub: string; role: string }>(
+      'SELECT sub, role FROM users ORDER BY sub',
+    );
+    expect(Object.fromEntries(rows.map((r) => [r.sub, r.role]))).toEqual({
+      'local:sa': 'admin',
+      'u-a': 'admin',
+      'u-b': 'member',
+      'u-c': 'member',
+      'u-locked': 'member',
+    });
+  });
+
+  it('0122: cột users.groups không còn; có inactive_at, access_checked_at; bảng webhook_user_order (sub PK, seqs jsonb, access_revoked bool, updated_at)', async () => {
+    const cols = await pool.query<{ column_name: string; data_type: string }>(
+      `SELECT column_name, data_type FROM information_schema.columns
+       WHERE table_name = 'users' ORDER BY column_name`,
+    );
+    const users = new Map(cols.rows.map((r) => [r.column_name, r.data_type]));
+    expect(users.has('groups')).toBe(false);
+    expect(users.get('inactive_at')).toBe('timestamp with time zone');
+    expect(users.get('access_checked_at')).toBe('timestamp with time zone');
+
+    const order = await pool.query<{
+      column_name: string;
+      data_type: string;
+      is_nullable: string;
+    }>(
+      `SELECT column_name, data_type, is_nullable FROM information_schema.columns
+       WHERE table_name = 'webhook_user_order' ORDER BY column_name`,
+    );
+    expect(order.rows).toEqual([
+      {
+        column_name: 'access_revoked',
+        data_type: 'boolean',
+        is_nullable: 'NO',
+      },
+      { column_name: 'seqs', data_type: 'jsonb', is_nullable: 'NO' },
+      { column_name: 'sub', data_type: 'text', is_nullable: 'NO' },
+      {
+        column_name: 'updated_at',
+        data_type: 'timestamp with time zone',
+        is_nullable: 'NO',
+      },
+    ]);
+    await pool.query(`INSERT INTO webhook_user_order (sub) VALUES ('w-1')`);
+    const row = await pool.query<{ seqs: unknown; access_revoked: boolean }>(
+      `SELECT seqs, access_revoked FROM webhook_user_order WHERE sub = 'w-1'`,
+    );
+    expect(row.rows[0]).toEqual({ seqs: {}, access_revoked: false });
+    await expect(
+      pool.query(`INSERT INTO webhook_user_order (sub) VALUES ('w-1')`),
+    ).rejects.toMatchObject({ code: '23505' });
+  });
+
+  it('0122: inactive_at = updated_at cho user không active; active → NULL', async () => {
+    const { rows } = await pool.query<{
+      sub: string;
+      inactive_at: Date | null;
+    }>(
+      `SELECT sub, inactive_at FROM users WHERE sub IN ('u-a', 'u-locked') ORDER BY sub`,
+    );
+    expect(rows[0].inactive_at).toBeNull();
+    expect(rows[1].inactive_at).toEqual(new Date('2026-10-01T00:00:00Z'));
+  });
+
+  it('0122: config không còn admin_group/authorized_groups', async () => {
+    const { rows } = await pool.query(
+      `SELECT key FROM config WHERE key IN ('admin_group', 'authorized_groups')`,
+    );
+    expect(rows).toEqual([]);
   });
 });

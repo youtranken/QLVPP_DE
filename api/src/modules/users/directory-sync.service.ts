@@ -8,13 +8,8 @@ import { inArray, sql } from 'drizzle-orm';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
-import { SystemConfigService } from '../config/system-config.service';
 import { DIRECTORY_CLIENT } from './directory.client';
-import type {
-  DirectoryClientApi,
-  DirectoryGroup,
-  DirectoryUser,
-} from './directory.client';
+import type { DirectoryClientApi, DirectoryUser } from './directory.client';
 import { usersTable } from './users.schema';
 
 export interface DirectorySyncResult {
@@ -23,7 +18,6 @@ export interface DirectorySyncResult {
   updated: number;
   unchanged: number;
   skipped: number;
-  groups: DirectoryGroup[];
 }
 
 const SELECT_CHUNK = 5_000;
@@ -39,14 +33,10 @@ export class DirectorySyncService {
     @Inject(DRIZZLE_DB) private readonly db: Database,
     @Inject(DIRECTORY_CLIENT) private readonly directory: DirectoryClientApi,
     private readonly audit: AuditWriterService,
-    private readonly systemConfig: SystemConfigService,
   ) {}
 
   async sync(actor: string): Promise<DirectorySyncResult> {
-    const [rawUsers, groups] = await Promise.all([
-      this.directory.fetchUsers(),
-      this.directory.fetchGroups(),
-    ]);
+    const rawUsers = await this.directory.fetchUsers();
 
     const valid = rawUsers.filter(
       (u) => typeof u.id === 'string' && u.id.length > 0,
@@ -77,7 +67,6 @@ export class DirectorySyncService {
               employeeCode: usersTable.employeeCode,
               fullName: usersTable.fullName,
               department: usersTable.department,
-              groups: usersTable.groups,
               status: usersTable.status,
             })
             .from(usersTable)
@@ -113,7 +102,6 @@ export class DirectorySyncService {
                 employeeCode: u.employee_code ?? null,
                 fullName: u.full_name ?? null,
                 department: u.department ?? null,
-                groups: u.groups ?? [],
                 status: u.status,
               })),
             )
@@ -124,7 +112,6 @@ export class DirectorySyncService {
                 employeeCode: sql`excluded.employee_code`,
                 fullName: sql`excluded.full_name`,
                 department: sql`excluded.department`,
-                groups: sql`excluded.groups`,
                 status: sql`excluded.status`,
                 updatedAt: sql`now()`,
               },
@@ -142,7 +129,6 @@ export class DirectorySyncService {
               employeeCode: pick(user.employee_code, current.employeeCode),
               fullName: pick(user.full_name, current.fullName),
               department: pick(user.department, current.department),
-              groups: user.groups ?? current.groups,
               status: user.status,
               updatedAt: now,
             })
@@ -161,18 +147,6 @@ export class DirectorySyncService {
       });
     }
 
-    // fetchGroups rỗng = không có tín hiệu; ghi đè [] sẽ tắt gate toàn cục
-    const authorizedGroupNames = groups
-      .map((g) => g.name)
-      .filter((n): n is string => typeof n === 'string' && n.length > 0);
-    if (authorizedGroupNames.length > 0) {
-      await this.systemConfig.setAuthorizedGroups(authorizedGroupNames);
-    } else {
-      this.logger.warn(
-        'directory fetchGroups trả rỗng — giữ authorized_groups cũ, KHÔNG ghi đè (tránh tắt gate)',
-      );
-    }
-
     if (deletedSubs.length > 0) {
       // Phiên của user deleted tự chết khi PMH ID thu hồi refresh token
       this.logger.warn(
@@ -186,7 +160,6 @@ export class DirectorySyncService {
       updated,
       unchanged,
       skipped,
-      groups,
     };
     this.logger.log(
       `Directory sync: ${result.total} user, ${created} mới, ${updated} cập nhật, ${unchanged} không đổi, ${skipped} bỏ qua`,
@@ -202,7 +175,6 @@ export class DirectorySyncService {
         unchanged,
         skipped,
         deleted_detected: deletedSubs,
-        groups: groups.map((g) => g.name),
       },
     });
     return result;
@@ -215,7 +187,6 @@ interface ExistingRow {
   employeeCode: string | null;
   fullName: string | null;
   department: string | null;
-  groups: unknown;
   status: string;
 }
 
@@ -241,13 +212,7 @@ function differs(current: ExistingRow, user: DirectoryUser): boolean {
     (user.department ?? null) !== current.department
   )
     return true;
-  if (user.status !== current.status) return true;
-  if (
-    user.groups !== undefined &&
-    JSON.stringify(user.groups ?? []) !== JSON.stringify(current.groups ?? [])
-  )
-    return true;
-  return false;
+  return user.status !== current.status;
 }
 
 function chunks<T>(items: T[], size: number): T[][] {

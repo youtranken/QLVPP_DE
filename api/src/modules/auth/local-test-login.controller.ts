@@ -14,7 +14,6 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { AuditWriterService } from '../audit/audit-writer.service';
-import { SystemConfigService } from '../config/system-config.service';
 import { UsersService } from '../users/users.service';
 import { clientIp, cookieSecure } from './auth.controller';
 import { SESSION_COOKIE } from './identity.guard';
@@ -34,7 +33,6 @@ export class LocalTestLoginController {
     private readonly sessions: SessionService,
     private readonly users: UsersService,
     private readonly audit: AuditWriterService,
-    private readonly config: SystemConfigService,
   ) {}
 
   // Trang đăng nhập đọc khi chưa có phiên — chỉ lộ cờ bật/tắt, không lộ danh sách username
@@ -105,8 +103,6 @@ export class LocalTestLoginController {
   }
 
   private async openSession(account: LocalTestAccount): Promise<string> {
-    const groups =
-      account.role === 'admin' ? [await this.config.getAdminGroup()] : [];
     await this.users.upsertLocalTestAccount({
       sub: account.sub,
       fullName: account.name,
@@ -114,7 +110,6 @@ export class LocalTestLoginController {
       department: account.department,
       team: account.team,
       role: account.role,
-      groups,
     });
     const session = await this.sessions.create({
       userSub: account.sub,
@@ -126,7 +121,6 @@ export class LocalTestLoginController {
         email: account.email ?? undefined,
         department: account.department ?? undefined,
         team: account.team ?? undefined,
-        groups,
       },
       idToken: null,
     });

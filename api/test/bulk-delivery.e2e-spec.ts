@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import { SessionService } from '../src/modules/auth/session.service';
-import { SystemConfigService } from '../src/modules/config/system-config.service';
 import { UsersService } from '../src/modules/users/users.service';
 import { deliveryFixture } from './delivery.fixture';
 import { AFTER_DEADLINE, BEFORE_DEADLINE } from './me-request.fixture';
@@ -228,8 +227,12 @@ describe('POST admin/deliveries/bulk: giao nhiều phiếu, mỗi phiếu một 
   it('phiên thật thiếu X-CSRF-Token → 403 CSRF_TOKEN_INVALID, không giao; có token → 200', async () => {
     const { item, ra } = await pair(10, 2, 2);
     const sub = `e2e-req-csrf-${f.SUFFIX}`;
-    const groups = [await f.app().get(SystemConfigService).getAdminGroup()];
-    const claims = { sub, full_name: 'E2E Hành chính', groups };
+    const claims = {
+      sub,
+      full_name: 'E2E Hành chính',
+      app_role: 'admin' as const,
+      ver: 3,
+    };
     await f.app().get(UsersService).upsertFromClaims(claims);
     const session = await f
       .app()

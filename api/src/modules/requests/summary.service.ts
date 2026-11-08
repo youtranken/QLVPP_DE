@@ -7,10 +7,8 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { LOCAL_SA_SUB } from '../auth/local-sa-env';
 import { CatalogService } from '../catalog/catalog.service';
-import { SystemConfigService } from '../config/system-config.service';
 import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
-import { inAdminGroup } from '../users/admin-group.sql';
 import { UNDELIVERED_LINE } from './line-predicates';
 import { lockState } from '../periods/period-lock';
 import { invalidPeriod, requestNotFound } from './request-errors';
@@ -53,7 +51,6 @@ export class SummaryService {
     @Inject(DRIZZLE_DB) private readonly db: Database,
     private readonly clock: ClockService,
     private readonly periods: PeriodsService,
-    private readonly config: SystemConfigService,
     private readonly catalog: CatalogService,
     private readonly users: UsersService,
     private readonly views: RequestViewBuilder,
@@ -127,7 +124,7 @@ export class SummaryService {
   // "Mọi người" của chuông kỳ mở = mẫu số Tổng hợp
   async audienceSubs(): Promise<string[]> {
     const { rows } = await this.db.execute<{ sub: string }>(sql`
-      SELECT u.sub FROM users u WHERE ${await this.headcountCondition()} ORDER BY u.sub
+      SELECT u.sub FROM users u WHERE ${HEADCOUNT_CONDITION} ORDER BY u.sub
     `);
     return rows.map((r) => r.sub);
   }
@@ -173,7 +170,7 @@ export class SummaryService {
   // Tập sống: người đủ điều kiện ∪ chủ phiếu của kỳ, trừ SA cục bộ — cron ghi tập này lúc khóa
   async liveSubs(ym: string): Promise<string[]> {
     const { rows } = await this.db.execute<{ sub: string }>(sql`
-      WITH ${await this.liveCte(ym)} SELECT sub FROM s ORDER BY sub
+      WITH ${this.liveCte(ym)} SELECT sub FROM s ORDER BY sub
     `);
     return rows.map((r) => r.sub);
   }
@@ -205,33 +202,22 @@ export class SummaryService {
     ym: string,
   ): Promise<{ cte: SQL; source: 'snapshot' | 'live' }> {
     const subs = (await this.periods.findSnapshot(ym))?.headcount_subs ?? null;
-    if (subs === null) return { cte: await this.liveCte(ym), source: 'live' };
+    if (subs === null) return { cte: this.liveCte(ym), source: 'live' };
     return {
       cte: sql`${ownersCte(ym)}, s AS (SELECT DISTINCT unnest(${sql.param(subs)}::text[]) AS sub)`,
       source: 'snapshot',
     };
   }
 
-  private async liveCte(ym: string): Promise<SQL> {
+  private liveCte(ym: string): SQL {
     return sql`${ownersCte(ym)}, s AS (
-      SELECT u.sub FROM users u WHERE ${await this.headcountCondition()}
+      SELECT u.sub FROM users u WHERE ${HEADCOUNT_CONDITION}
       UNION SELECT sub FROM owners)`;
   }
-
-  // Mẫu số sống: người active, không phải SA cục bộ, thuộc group được cấp (gate rỗng = mọi người), trừ Hành chính
-  private async headcountCondition(): Promise<SQL> {
-    const [authorized, adminGroup] = await Promise.all([
-      this.config.getAuthorizedGroups(),
-      this.config.getAdminGroup(),
-    ]);
-    const groups = authorized.map((g) => g.toLowerCase());
-    return sql`u.status = 'active' AND u.sub <> ${LOCAL_SA_SUB}
-      AND (${groups.length === 0} OR (jsonb_typeof(u.groups) = 'array' AND EXISTS (
-        SELECT 1 FROM jsonb_array_elements_text(u.groups) g
-        WHERE lower(g) = ANY(${sql.param(groups)}::text[]))))
-      AND NOT ${inAdminGroup(sql`u.groups`, adminGroup)}`;
-  }
 }
+
+// Mẫu số sống: người active, không phải SA cục bộ, không phải Hành chính (PMH ID đã gác cửa vào VPP)
+const HEADCOUNT_CONDITION: SQL = sql`u.status = 'active' AND u.sub <> ${LOCAL_SA_SUB} AND u.role <> 'admin'`;
 
 // Chủ phiếu của kỳ trừ SA cục bộ (không thuộc danh bạ, không bao giờ vào S)
 const ownersCte = (ym: string) => sql`owners AS (

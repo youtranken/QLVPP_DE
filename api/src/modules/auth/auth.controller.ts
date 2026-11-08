@@ -6,7 +6,6 @@ import {
   HttpException,
   HttpStatus,
   Inject,
-  Logger,
   Post,
   Query,
   Req,
@@ -16,10 +15,7 @@ import {
 import { createHash, randomBytes } from 'node:crypto';
 import type { Response } from 'express';
 import { AuditWriterService } from '../audit/audit-writer.service';
-import { SystemConfigService } from '../config/system-config.service';
-import { AuthorizedGroupsService } from '../users/authorized-groups.service';
 import { UsersService } from '../users/users.service';
-import { intersectsCI } from './group-access';
 import { JwtVerifierService } from './jwt-verifier.service';
 import { LOCAL_SA_SUB } from './local-sa-env';
 import { LocalSaService } from './local-sa.service';
@@ -69,8 +65,6 @@ export function cookieSecure(): boolean {
 
 @Controller('auth')
 export class AuthController {
-  private readonly logger = new Logger(AuthController.name);
-
   constructor(
     @Inject(OIDC_PROVIDER) private readonly oidc: OidcProvider,
     private readonly jwtVerifier: JwtVerifierService,
@@ -78,8 +72,6 @@ export class AuthController {
     private readonly users: UsersService,
     private readonly audit: AuditWriterService,
     private readonly localSa: LocalSaService,
-    private readonly authorizedGroups: AuthorizedGroupsService,
-    private readonly config: SystemConfigService,
   ) {}
 
   @Public()
@@ -198,7 +190,7 @@ export class AuthController {
           'Thiếu cookie giao dịch OIDC (hết hạn 10 phút hoặc cookie bị chặn)',
         );
       }
-      // access_denied = user bị khóa/xóa/gỡ khỏi group — báo không có quyền thay vì thử lại
+      // access_denied = PMH ID không cho vào VPP (khóa/xóa/không được cấp app) — báo không có quyền thay vì thử lại
       const idpError = currentUrl.searchParams.get('error');
       if (idpError) {
         const denied = idpError === 'access_denied';
@@ -223,33 +215,6 @@ export class AuthController {
         expectedState: tx.state,
       });
       const verified = await this.jwtVerifier.verify(tokens.accessToken);
-
-      // authorized_groups rỗng = chưa sync lần nào → gate tắt (fail-open), WARN mỗi login
-      let allowedGroups = await this.authorizedGroups.current();
-      if (allowedGroups.length === 0) {
-        this.logger.warn(
-          'authorized_groups rỗng — gate group TẮT: mọi tài khoản SSO hợp lệ vào được. Chạy directory-sync để bật gate.',
-        );
-      } else if (!intersectsCI(verified.claims.groups, allowedGroups)) {
-        // Self-heal: group mới gán cho client chưa kịp sync → fetch tươi một lần rồi kiểm lại
-        allowedGroups = await this.authorizedGroups.refreshForLogin();
-        if (!intersectsCI(verified.claims.groups, allowedGroups)) {
-          await this.audit.append({
-            actor: verified.claims.sub,
-            action: 'auth.login_denied_group',
-            detail: {
-              groups: verified.claims.groups ?? [],
-              allowed: allowedGroups,
-              reason:
-                (verified.claims.groups?.length ?? 0) === 0
-                  ? 'missing_groups'
-                  : 'no_match',
-            },
-          });
-          res.redirect('/?login=forbidden');
-          return;
-        }
-      }
 
       await this.users.upsertFromClaims(verified.claims);
       const session = await this.sessions.create({

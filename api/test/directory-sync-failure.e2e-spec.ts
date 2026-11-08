@@ -13,7 +13,6 @@ import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
 let failure: Error;
 const directory = {
   fetchUsers: () => Promise.reject(failure),
-  fetchGroups: () => Promise.reject(failure),
 };
 
 describe('POST admin/directory/sync khi PMH ID lỗi', () => {
