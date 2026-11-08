@@ -9,6 +9,7 @@
   "testRegex": ".e2e-spec.ts$",
   "maxWorkers": 1,
   "setupFiles": [
+    "<rootDir>/pmh-env.setup.ts",
     "<rootDir>/e2e-env.setup.ts"
   ],
   "transform": {

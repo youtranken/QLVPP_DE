@@ -1,7 +1,9 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ServiceUnavailableException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/app.setup';
+import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
+import { directoryStub } from './directory.stub';
 
 export interface ProviderOverride {
   token: unknown;
@@ -16,7 +18,11 @@ export async function createTestApp(
     imports: [AppModule],
     controllers: extraControllers,
   });
-  for (const o of overrides) {
+  // Mặc định Directory là stub lỗi: test không bao giờ chạm PMH ID thật, scheduler boot cũng vậy.
+  const all = overrides.some((o) => o.token === DIRECTORY_CLIENT)
+    ? overrides
+    : [{ token: DIRECTORY_CLIENT, useValue: directoryDown() }, ...overrides];
+  for (const o of all) {
     builder = builder.overrideProvider(o.token).useValue(o.useValue);
   }
   const moduleRef = await builder.compile();
@@ -25,4 +31,13 @@ export async function createTestApp(
   configureApp(app);
   await app.init();
   return app;
+}
+
+function directoryDown() {
+  return directoryStub([], {
+    fetchUsers: () =>
+      Promise.reject(
+        new ServiceUnavailableException({ code: 'DIRECTORY_UNAVAILABLE' }),
+      ),
+  });
 }

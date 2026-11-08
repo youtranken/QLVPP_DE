@@ -4,6 +4,7 @@
   "testEnvironment": "node",
   "testRegex": ".db-spec.ts$",
   "testTimeout": 30000,
+  "setupFiles": ["<rootDir>/pmh-env.setup.ts"],
   "transform": {
     "^.+\\.(t|j)s$": [
       "ts-jest",
