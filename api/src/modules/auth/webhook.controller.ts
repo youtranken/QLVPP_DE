@@ -15,36 +15,19 @@ import type { Request } from 'express';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
-import { UsersService } from '../users/users.service';
 import { Public } from './public.decorator';
-import { SessionService } from './session.service';
+import { WebhookEventsService } from './webhook-events.service';
+import type { PmhWebhookEventV3 } from './webhook-events.service';
 import { verifyV2 } from './webhook-signature';
 
-interface PmhWebhookEvent {
-  type: string;
-  user_id: string;
-  event_id?: string;
-}
-
-const KICK_EVENTS = new Set([
-  'user.locked',
-  'user.deleted',
-  'user.password_changed',
-]);
 const DEFAULT_TS_SKEW_SEC = 300;
-
-const STATUS_BY_EVENT: Record<string, 'locked' | 'deleted'> = {
-  'user.locked': 'locked',
-  'user.deleted': 'deleted',
-};
 
 @Controller('webhooks')
 export class WebhookController {
   private readonly logger = new Logger(WebhookController.name);
 
   constructor(
-    private readonly sessions: SessionService,
-    private readonly users: UsersService,
+    private readonly events: WebhookEventsService,
     private readonly audit: AuditWriterService,
     @Inject(DRIZZLE_DB) private readonly db: Database,
   ) {}
@@ -75,25 +58,11 @@ export class WebhookController {
     const event = this.parseEvent(rawBody);
 
     // Kiểm trước, đánh dấu SAU khi xử: crash giữa chừng thì retry xử lại (mọi mutation idempotent)
-    if (event.event_id && (await this.isProcessed(event.event_id))) {
+    if (await this.isProcessed(event.event_id)) {
       return { ok: true, duplicate: true };
     }
-
-    if (KICK_EVENTS.has(event.type)) {
-      const killed = await this.sessions.destroyAllForUser(event.user_id);
-      const status = STATUS_BY_EVENT[event.type];
-      if (status) await this.users.setStatus(event.user_id, status);
-      await this.audit.append({
-        actor: 'system(webhook)',
-        action: 'auth.session_revoked',
-        objectType: 'user',
-        objectId: event.user_id,
-        detail: { event: event.type, sessions_killed: killed, status },
-      });
-    } else {
-      this.logger.log(`Webhook event bỏ qua: ${event.type}`);
-    }
-    if (event.event_id) await this.markProcessed(event.event_id);
+    await this.events.apply(event);
+    await this.markProcessed(event.event_id);
     return { ok: true };
   }
 
@@ -111,27 +80,49 @@ export class WebhookController {
     `);
   }
 
-  private parseEvent(rawBody: Buffer): PmhWebhookEvent {
+  // event_id là seq tăng dần (chuỗi chữ số): bắt buộc, dùng cho chống trùng và thứ tự theo loại
+  private parseEvent(rawBody: Buffer): PmhWebhookEventV3 {
     let parsed: unknown;
     try {
       parsed = JSON.parse(rawBody.toString('utf8'));
     } catch {
       parsed = null;
     }
-    const event = parsed as PmhWebhookEvent | null;
-    if (
-      !event ||
-      typeof event !== 'object' ||
-      typeof event.type !== 'string' ||
-      typeof event.user_id !== 'string' ||
-      (event.event_id !== undefined && typeof event.event_id !== 'string')
-    ) {
+    const e = parsed as Record<string, unknown> | null;
+    const valid =
+      !!e &&
+      typeof e === 'object' &&
+      !Array.isArray(e) &&
+      typeof e.type === 'string' &&
+      typeof e.user_id === 'string' &&
+      e.user_id.length > 0 &&
+      typeof e.event_id === 'string' &&
+      /^\d{1,30}$/.test(e.event_id) &&
+      (e.team === undefined || e.team === null || typeof e.team === 'string') &&
+      (e.detail === undefined ||
+        (typeof e.detail === 'object' &&
+          e.detail !== null &&
+          !Array.isArray(e.detail)));
+    if (!valid) {
       throw new BadRequestException({
         code: 'WEBHOOK_PAYLOAD_INVALID',
         message: 'Payload webhook không đúng định dạng.',
       });
     }
-    return event;
+    const str = (v: unknown) => (typeof v === 'string' ? v : undefined);
+    const detail = e.detail as Record<string, unknown> | undefined;
+    return {
+      type: e.type as string,
+      user_id: e.user_id as string,
+      event_id: e.event_id as string,
+      department: str(e.department),
+      team: e.team as string | null | undefined,
+      app_role: str(e.app_role),
+      detail: detail
+        ? { client_id: str(detail.client_id), change: str(detail.change) }
+        : undefined,
+      at: str(e.at),
+    };
   }
 
   private checkSignature(

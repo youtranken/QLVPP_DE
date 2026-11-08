@@ -16,6 +16,7 @@ import { RolesGuard } from './roles.guard';
 import { SessionAuthService } from './session-auth.service';
 import { SessionService } from './session.service';
 import { WebhookController } from './webhook.controller';
+import { WebhookEventsService } from './webhook-events.service';
 
 @Module({
   imports: [UsersModule, SystemConfigModule],
@@ -31,6 +32,7 @@ import { WebhookController } from './webhook.controller';
     SessionAuthService,
     LocalSaService,
     LocalTestAccountsService,
+    WebhookEventsService,
     // Thứ tự đăng ký = thứ tự chạy: IP throttle → Identity → CSRF → Roles → user throttle (cần req.user)
     { provide: APP_GUARD, useClass: IpThrottlerGuard },
     { provide: APP_GUARD, useClass: IdentityGuard },

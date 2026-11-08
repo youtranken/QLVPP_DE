@@ -106,7 +106,13 @@ const admin = {
       request: { created: 'Tạo phiếu', updated: 'Sửa phiếu', deleted: 'Xóa phiếu' },
       stock: { adjust: 'Điều chỉnh kho', issue: 'Xuất lẻ', purchase: 'Nhập kho', receipt: 'Hàng về' },
       unit: { created: 'Thêm đơn vị tính', updated: 'Sửa đơn vị tính', deleted: 'Xóa đơn vị tính' },
-      users: { directory_sync: 'Đồng bộ danh bạ', role_changed: 'Đổi vai theo PMH ID' },
+      users: {
+        directory_sync: 'Đồng bộ danh bạ',
+        role_changed: 'Đổi vai theo PMH ID',
+        access_revoked: 'Mất quyền vào VPP',
+        access_restored: 'Được cấp lại quyền vào VPP',
+        directory_reconcile_aborted: 'Đối chiếu danh bạ bị hủy',
+      },
     },
     filters: {
       label: 'Lọc nhật ký',

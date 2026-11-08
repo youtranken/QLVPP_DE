@@ -21,6 +21,15 @@ export function toAppRole(v: unknown): AppRole {
   return v === 'admin' ? 'admin' : 'member';
 }
 
+export type SeqCategory = 'access' | 'status' | 'profile';
+
+export interface WebhookProfile {
+  user_id: string;
+  department?: string;
+  team?: string | null;
+  app_role?: string;
+}
+
 export type LookupResult =
   | { kind: 'in'; user: DirectoryUser }
   | { kind: 'out' }
@@ -179,6 +188,43 @@ export class UserAccessService {
     `);
     await this.applyRole(u.id, toAppRole(u.app_role), 'directory');
     this.logger.debug(`applyDirectoryUser ${u.id} (${actor})`);
+  }
+
+  // Hồ sơ từ payload webhook (chỉ user đã có); app_role chỉ ghi khi payload có
+  async applyWebhookProfile(p: WebhookProfile): Promise<void> {
+    const dept = directoryLabel(p.department);
+    const team = directoryLabel(p.team);
+    if (dept !== undefined || team !== undefined) {
+      await this.db.execute(sql`
+        UPDATE users SET
+          department = CASE WHEN ${dept === undefined} THEN department ELSE ${dept ?? null} END,
+          team = CASE WHEN ${team === undefined} THEN team ELSE ${team ?? null} END,
+          updated_at = now()
+        WHERE sub = ${p.user_id}
+      `);
+    }
+    if (p.app_role !== undefined) {
+      await this.applyRole(p.user_id, toAppRole(p.app_role), 'webhook');
+    }
+  }
+
+  // Nhận seq nếu ≥ seq lớn nhất đã áp cùng loại: `=` để retry của chính sự kiện đó (crash trước khi
+  // đánh dấu processed) xử lại được. Không chạm updated_at: mốc đó thuộc dấu access_revoked.
+  async claimSeq(
+    sub: string,
+    category: SeqCategory,
+    seq: bigint,
+  ): Promise<boolean> {
+    const n = seq.toString();
+    const r = await this.db.execute<{ sub: string }>(sql`
+      INSERT INTO webhook_user_order AS o (sub, seqs)
+      VALUES (${sub}, jsonb_build_object(${category}::text, ${n}::numeric))
+      ON CONFLICT (sub) DO UPDATE
+        SET seqs = jsonb_set(o.seqs, ARRAY[${category}::text], to_jsonb(${n}::numeric))
+        WHERE COALESCE((o.seqs ->> ${category}::text)::numeric, -1) <= ${n}::numeric
+      RETURNING o.sub
+    `);
+    return r.rows.length === 1;
   }
 
   async lookup(sub: string): Promise<LookupResult> {

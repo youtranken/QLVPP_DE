@@ -109,7 +109,13 @@ const admin: Messages<typeof vi> = {
       request: { created: 'Request created', updated: 'Request edited', deleted: 'Request deleted' },
       stock: { adjust: 'Stock adjusted', issue: 'Ad-hoc issue', purchase: 'Stock received', receipt: 'Goods arrived' },
       unit: { created: 'Unit added', updated: 'Unit edited', deleted: 'Unit deleted' },
-      users: { directory_sync: 'Directory synced', role_changed: 'Role changed by PMH ID' },
+      users: {
+        directory_sync: 'Directory synced',
+        role_changed: 'Role changed by PMH ID',
+        access_revoked: 'VPP access revoked',
+        access_restored: 'VPP access restored',
+        directory_reconcile_aborted: 'Directory reconciliation aborted',
+      },
     },
     filters: {
       label: 'Filter the audit log',
