@@ -2,7 +2,6 @@ const summary = {
   summary: {
     page: {
       open: 'Đang mở',
-      more: 'Xem thêm',
       noMatch: 'Không có phiếu nào khớp',
       empty: 'Chưa có phiếu nào trong kỳ này.',
       noMatchHint: 'Đổi từ khóa hoặc bỏ lọc để xem lại cả kỳ.',
@@ -90,7 +89,6 @@ const summary = {
       lineNote: 'Ghi thêm (nhân viên sẽ đọc)',
       lineNotePlaceholder: 'Ví dụ: quý này phòng đã đủ bút',
       lineReasonRequired: 'Chọn lý do giảm',
-      lineNoteRequired: 'Chọn "Khác" thì ghi lý do, ít nhất 3 chữ',
       reuseReason: 'Dùng cho các món giảm còn lại',
       changes: '{{n}} thay đổi chưa lưu',
       savedAt: 'Lưu lần cuối {{at}}',

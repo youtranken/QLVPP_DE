@@ -33,7 +33,7 @@ const arrivals = {
     status: { done: 'Đủ', short: 'Thiếu {{n}}', over: 'Dư {{n}}', none: 'Không nhập', adm_out: 'ADM hết hàng', after: 'Sau lưu: {{label}}', legend: 'Chip nền = đã lưu · Chip viền đứt = sau khi bấm Lưu hàng về' },
     noSnapshot: 'Chưa in trình ký gửi ADM — số điền sẵn theo tổng đăng ký + nợ tháng trước',
     noOrder: 'Không có đơn gửi ADM · {{time}}',
-    admOut: { button: 'ADM hết hàng', buttonFor: 'ADM hết hàng: {{name}}', tag: 'ADM hết hàng', final: 'ADM hết hàng · đã xử lý xong', finalFor: 'ADM hết hàng · đã xử lý xong: {{name}}' },
+    admOut: { button: 'ADM hết hàng', buttonFor: 'ADM hết hàng: {{name}}', final: 'ADM hết hàng · đã xử lý xong', finalFor: 'ADM hết hàng · đã xử lý xong: {{name}}' },
     inactiveOrdered: 'Ngừng dùng — đã đặt trong bản in',
     custom: {
       title: 'Món ngoài danh mục — giao thẳng, không vào tủ ({{n}})',

@@ -29,7 +29,6 @@ const request = {
       footer: 'Món còn chờ sẽ giao khi hàng về, không cần đăng ký lại.',
       history: 'Xem lịch sử các tháng',
       close: 'Đóng',
-      loadError: 'Chưa tải được phiếu này.',
     },
     history: {
       title: 'Lịch sử',

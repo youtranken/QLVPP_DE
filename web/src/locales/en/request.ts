@@ -32,7 +32,6 @@ const request: Messages<typeof vi> = {
       footer: 'Items still waiting will be delivered when stock arrives; no need to order again.',
       history: 'View history of all months',
       close: 'Close',
-      loadError: 'Could not load this order.',
     },
     history: {
       title: 'History',

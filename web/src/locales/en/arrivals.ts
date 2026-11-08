@@ -36,7 +36,7 @@ const arrivals: Messages<typeof vi> = {
     status: { done: 'Covered', short: '{{n}} short', over: '{{n}} over', none: 'None entered', adm_out: 'Out at ADM', after: 'After save: {{label}}', legend: 'Filled chip = saved · Dashed chip = after pressing Save arrivals' },
     noSnapshot: 'Not sent to ADM yet — prefilled from requested + carried over',
     noOrder: 'No order sent to ADM · {{time}}',
-    admOut: { button: 'Out at ADM', buttonFor: 'Out at ADM: {{name}}', tag: 'Out at ADM', final: 'Out at ADM · settled', finalFor: 'Out at ADM · settled: {{name}}' },
+    admOut: { button: 'Out at ADM', buttonFor: 'Out at ADM: {{name}}', final: 'Out at ADM · settled', finalFor: 'Out at ADM · settled: {{name}}' },
     inactiveOrdered: 'Discontinued — already ordered on the print',
     custom: {
       title: 'Off-catalogue — delivered directly, not stocked ({{n}})',

@@ -5,7 +5,6 @@ const summary: Messages<typeof vi> = {
   summary: {
     page: {
       open: 'Open',
-      more: 'Load more',
       noMatch: 'No requests match',
       empty: 'No requests in this period yet.',
       noMatchHint: 'Change the search or clear the filter to see the whole period.',
@@ -93,7 +92,6 @@ const summary: Messages<typeof vi> = {
       lineNote: 'Note (the staff member will read this)',
       lineNotePlaceholder: 'e.g. the team already has enough pens this quarter',
       lineReasonRequired: 'Choose a reason',
-      lineNoteRequired: 'For "Other", write a reason (at least 3 characters)',
       reuseReason: 'Use for the other reduced items',
       changes: '{{n}} unsaved changes',
       savedAt: 'Last saved {{at}}',
