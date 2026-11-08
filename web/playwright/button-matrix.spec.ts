@@ -14,13 +14,11 @@ const VARIANTS = {
   'danger-ghost': 'btn btn--danger-ghost',
   'danger-solid': 'btn btn--danger btn--solid',
   dark: 'btn btn--dark',
-  'hm-dark': 'btn hm-btn-dark',
-  'hm-cta': 'btn hm-cta',
 } as const;
 type Variant = keyof typeof VARIANTS;
 const STATES = ['default', 'hover', 'focus', 'active', 'disabled'] as const;
 type State = (typeof STATES)[number];
-// Nền đặt nút: panel sáng, thẻ trắng, dải tối hm-hero, hộp thoại, panel phủ kính
+// Nền đặt nút: panel sáng, thẻ trắng, dải tối, hộp thoại, panel phủ kính
 const SURFACES = {
   panel: 'background: var(--c-surface-2)',
   card: 'background: var(--c-surface)',
@@ -34,9 +32,9 @@ const TEXT_MIN = 4.5;
 const BORDER_MIN = 3;
 const DISABLED_MIN = 3;
 const CHANGE_MIN = 1.15;
-// Tổ hợp được khai báo: nút hm-cta/hm-dark chỉ ở dải tối; nút ghost (trong suốt, chữ tối) không đặt trên dải tối
-// (dải hm-hero chỉ có hm-cta và Segmented); còn lại mọi nền
-const DARK_ONLY: Variant[] = ['hm-cta', 'hm-dark'];
+// Tổ hợp được khai báo: nút ghost (trong suốt, chữ tối) không đặt trên dải tối; còn lại mọi nền.
+// Vòng 3 bỏ dải hm-hero cùng .hm-cta/.hm-btn-dark khỏi trang chủ (Kỳ tháng thay thế), nên không còn biến thể chỉ-ở-dải-tối.
+const DARK_ONLY: Variant[] = [];
 const LIGHT_ONLY: Variant[] = ['ghost'];
 const placed = (v: Variant, s: Surface) => (DARK_ONLY.includes(v) ? s === 'hero' : !(LIGHT_ONLY.includes(v) && s === 'hero'));
 const combos = (): [Variant, Surface][] =>
@@ -175,18 +173,9 @@ test.describe('Ma trận nút admin (R-D4)', () => {
         if (at('active').bg === surf2) fails.push(`${v} x active x ${s}: rơi về --c-surface-2`);
       }
       // Biến thể nền tối: nhấn tối hơn hover
-      if (['danger-solid', 'dark', 'hm-dark'].includes(v) && lum(at('active').bg) >= lum(at('hover').bg)) fails.push(`${v} x active x ${s}: nhấn không tối hơn hover`);
+      if (['danger-solid', 'dark'].includes(v) && lum(at('active').bg) >= lum(at('hover').bg)) fails.push(`${v} x active x ${s}: nhấn không tối hơn hover`);
     }
     expect(fails, fails.join('\n')).toEqual([]);
-  });
-
-  test('.hm-cta trên dải tối: hover = rgb(196, 238, 246), active = rgb(138, 214, 229), không về #F2F8FA', async ({ page }) => {
-    const m = await measureAll(page);
-    const at = (st: State) => m.get(`hm-cta|hero|${st}`) as Measure;
-    expect(at('default').bg).toBe('rgb(159, 227, 240)');
-    expect(at('hover').bg).toBe('rgb(196, 238, 246)');
-    expect(at('active').bg).toBe('rgb(138, 214, 229)');
-    expect(at('hover').bg).not.toBe('rgb(242, 248, 250)');
   });
 
   test('R-D4.6: tổ hợp lạ trong fixture làm ma trận báo lỗi', async ({ page }) => {
