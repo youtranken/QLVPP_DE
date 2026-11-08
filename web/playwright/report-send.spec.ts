@@ -142,14 +142,17 @@ test.describe('Vòng3-BC Báo cáo & gửi ADM', () => {
     await shot(page, info, 'vong3-report-readonly');
   });
 
-  test('Vòng3-BC kỳ đang mở → 409 PERIOD_NOT_LOCKED; lỗi tải báo cáo có "Thử lại"; /admin/send-adm chuyển về /admin/reports', async ({ page, request }) => {
+  test('Vòng3-BC kỳ đang mở → 409 PERIOD_NOT_LOCKED; lỗi tải báo cáo có "Thử lại"; /admin/send-adm chuyển về /admin/reports', async ({ page, request }, info) => {
     const period = await (await request.get('/api/periods/current', { headers: devHeaders('admin') })).json();
     const open = await request.get(`/api/admin/reports/${period.ym}`, { headers: devHeaders('admin') });
     expect(open.status()).toBe(409);
     expect(await open.json()).toMatchObject({ code: 'PERIOD_NOT_LOCKED', ym: period.ym, deadline: period.deadline });
 
+    // Không dựa vào dữ liệu dev: tự tạo kỳ riêng đã khóa có một phiếu, trang mở đúng kỳ đó (DB dev có thể chưa có kỳ khóa nào)
+    run.seed = await seedLockedRequest(request, info, [{ stock: 0, qty: 1 }], { ym: PRIVATE_YM });
+    await openOnPrivatePeriod(page);
     let fail = true;
-    await page.route('**/api/admin/reports/20*', (route) => (fail ? route.fulfill({ status: 500, json: { code: 'INTERNAL', message: 'x' } }) : route.fallback()));
+    await page.route(`**/api/admin/reports/${PRIVATE_YM}`, (route) => (fail ? route.fulfill({ status: 500, json: { code: 'INTERNAL', message: 'x' } }) : route.fallback()));
     await page.goto('/admin/reports');
     await expect(page.getByText('Không tải được dữ liệu — thử lại.')).toBeVisible();
     fail = false;
@@ -157,7 +160,7 @@ test.describe('Vòng3-BC Báo cáo & gửi ADM', () => {
     await expect(page.getByText('Không tải được dữ liệu — thử lại.')).toHaveCount(0);
     await expect(page.getByRole('checkbox', { name: 'Chỉ món có Tổng cần' })).toBeVisible();
 
-    await page.goto('/admin/send-adm?ym=2026-10');
-    await expect(page).toHaveURL(/\/admin\/reports\?ym=2026-10/);
+    await page.goto(`/admin/send-adm?ym=${PRIVATE_YM}`);
+    await expect(page).toHaveURL(new RegExp(`/admin/reports\\?ym=${PRIVATE_YM}$`));
   });
 });
