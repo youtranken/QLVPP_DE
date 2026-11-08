@@ -96,7 +96,10 @@ async function setupSuite(pool: Pool, mine: string) {
 }
 
 // DB test dùng chung: tạm khóa user active của suite khác để mẫu số/người nhận chuông chỉ gồm người của
-// suite (thay cho nhóm riêng của mô hình group cũ); teardown mở lại đúng những người này
+// suite (thay cho nhóm riêng của mô hình group cũ); teardown mở lại đúng những người này.
+// RÀNG BUỘC NGẦM: chỉ an toàn khi các suite chạy tuần tự trên DB test (jest-e2e.json `maxWorkers: 1`,
+// `test:db` `--runInBand`) và không chạy e2e cùng lúc với db trên một DB. Suite chết giữa chừng
+// (Ctrl+C, afterAll lỗi) để lại user suite khác ở `locked` — reset DB test nếu thấy lạ.
 async function parkOthers(pool: Pool, mine: string): Promise<string[]> {
   const { rows } = await pool.query<{ sub: string }>(
     `UPDATE users SET status = 'locked'
@@ -117,7 +120,7 @@ async function teardownSuite(
   }
   await pool.query('DELETE FROM users WHERE sub LIKE $1', [mine]);
   await pool.query(
-    "UPDATE users SET status = 'active' WHERE sub = ANY($1) AND status = 'locked'",
+    "UPDATE users SET status = 'active', inactive_at = NULL WHERE sub = ANY($1) AND status = 'locked'",
     [parked],
   );
   await restoreGlobals(pool, saved);
