@@ -18,11 +18,11 @@ Thành công sau 2 tháng vận hành: ≥ 90 % nhân viên phòng đăng ký đ
 
 | Vai | Ai | Vào bằng | Làm gì |
 |---|---|---|---|
-| **Member** (nhân viên) | Toàn bộ nhân viên phòng Công trình (~40 người) | PMH ID, thuộc group phòng Công trình | Đăng ký món hằng tháng, xem lịch sử, nhận thông báo |
-| **Admin** (Hành chính) | 1–3 người Hành chính của phòng | PMH ID, thuộc group `vpp_admin` | Quản lý VPP: tổng hợp, điều chỉnh, duyệt món ngoài danh mục, giao, kho, danh mục, báo cáo, cấu hình; **không đăng ký VPP cho bản thân** (chốt 2026-10-30) |
+| **Member** (nhân viên) | Toàn bộ nhân viên phòng Công trình (~40 người) | PMH ID cấp quyền vào VPP (theo Phòng/Nhóm, trừ danh sách loại trừ của ứng dụng) | Đăng ký món hằng tháng, xem lịch sử, nhận thông báo |
+| **Admin** (Hành chính) | 1–3 người Hành chính của phòng | Quản trị viên dự án VPP trên PMH ID (`app_role = admin`) | Quản lý VPP: tổng hợp, điều chỉnh, duyệt món ngoài danh mục, giao, kho, danh mục, báo cáo, cấu hình; **không đăng ký VPP cho bản thân** (chốt 2026-10-30) |
 | **SA** (quản trị kỹ thuật) | IT | Tài khoản cục bộ trong `.env` (không qua SSO) | Mọi quyền admin; dùng khi SSO lỗi hoặc cần can thiệp. Vô hình trong danh sách người dùng |
 
-Quyền do app tự suy từ claim `groups` của PMH ID. PMH ID chỉ quyết "ai được vào app"; app quyết "ai là admin".
+Quyền lấy từ claim `app_role` của PMH ID (token `ver: 3`); PMH ID tự gác cửa từng app ("ai được vào VPP") và cấp vai Quản trị viên dự án. App không còn gate theo group.
 
 ## 3. Phạm vi
 
@@ -64,7 +64,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 ## 6. Yêu cầu chức năng
 
 ### 6.1 Đăng nhập và phiên
-- FR-01 Đăng nhập qua PMH ID (OIDC, PKCE) bằng một nút "Đăng nhập bằng tài khoản công ty (PMH ID)", không bắt gõ email (ô email tùy chọn để gợi ý tài khoản). Người ngoài group được cấp bị PMH ID từ chối → trang "Chưa được cấp quyền" nêu lý do, hướng dẫn liên hệ Hành chính (tên từ Cấu hình) và nút *Đăng nhập bằng tài khoản khác*. Đường vào SA là liên kết nhỏ "Dành cho IT".
+- FR-01 Đăng nhập qua PMH ID (OIDC, PKCE) bằng một nút "Đăng nhập bằng tài khoản công ty (PMH ID)", không bắt gõ email (ô email tùy chọn để gợi ý tài khoản). Người PMH ID chưa cấp quyền vào VPP bị PMH ID từ chối → trang "Chưa được cấp quyền" nêu lý do, hướng dẫn liên hệ Hành chính (tên từ Cấu hình) và nút *Đăng nhập bằng tài khoản khác*. Đường vào SA là liên kết nhỏ "Dành cho IT".
 - FR-02 Đăng nhập SA cục bộ bằng tên tài khoản + mật khẩu từ `.env`; khóa 15 phút sau 5 lần sai cùng cặp (IP, tên tài khoản) và 50 lần sai toàn hệ thống; phiên SA hết sau 2 giờ không hoạt động.
 - FR-03 Đăng xuất chỉ rời app (giữ phiên SSO). Phiên bị PMH ID thu hồi (khóa user, hết idle) → app tự đăng xuất; nếu phiên SSO còn sống, vào lại không cần gõ mật khẩu.
 - FR-04 Hồ sơ hiển thị tên, email, mã NV, phòng ban từ PMH ID; không sửa được trong app.
@@ -132,9 +132,9 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 - FR-71 (GĐ2) Email nhắc ngày 1 và ngày 9 qua SMTP.
 
 ### 6.9 Quản trị
-- FR-80 Danh bạ: đồng bộ từ PMH ID (tự động mỗi 60 phút + nút "Đồng bộ ngay"); hiện người thuộc group được cấp, trạng thái, phòng ban (từ PMH ID).
+- FR-80 Danh bạ: đồng bộ từ PMH ID (tự động mỗi 60 phút + nút "Đồng bộ ngay"); hiện người PMH ID cho vào VPP, trạng thái (đang dùng / đã khóa / không còn quyền), Phòng và Nhóm (từ PMH ID); người mất quyền vào VPP được đánh dấu "Không còn quyền" (không xóa lịch sử).
 - FR-81 Nhật ký: mọi thao tác admin và sự kiện xác thực, lọc theo người/hành động/ngày/`self`, chỉ đọc, phân trang.
-- FR-82 Cấu hình: ngày hạn đăng ký (3–28, mặc định 10; **chỉ áp dụng cho kỳ tạo sau**, UI ghi rõ "kỳ đang mở giữ hạn cũ"), số lượng tối đa mặc định (20), tên group admin, tên 3 người ký báo cáo, tên/cách liên hệ Hành chính (hiện ở trang member và trang từ chối).
+- FR-82 Cấu hình: ngày hạn đăng ký (3–28, mặc định 10; **chỉ áp dụng cho kỳ tạo sau**, UI ghi rõ "kỳ đang mở giữ hạn cũ"), số lượng tối đa mặc định (20), khối "Quyền truy cập" chỉ đọc (liệt kê Hành chính hiện tại, do PMH ID cấp), tên 3 người ký báo cáo, tên/cách liên hệ Hành chính (hiện ở trang member và trang từ chối).
 - FR-83 Nhóm người theo **phòng ban lấy từ PMH ID** (claim `department`, đồng bộ qua Directory API); app không có trường "tổ" riêng, chỉ có cột `users.team` (nullable) điền từ claim `team` nếu PMH ID gửi, dùng cho cột Nhóm ở Tổng hợp kỳ mở; không chụp lên phiếu. Tổng hợp, báo cáo, danh sách nhắc đều nhóm theo phòng ban đã chụp trên phiếu (BR-11); thiếu phòng ban → nhóm "Chưa có phòng ban". Nếu thực tế phòng ban quá thô, cân nhắc thêm "Tổ" ở GĐ2.
 
 ### 6.10 Song ngữ
@@ -182,13 +182,13 @@ Hệ thị giác: member kiểu app (Nunito, bo tròn, thẻ ảnh, thương hi�
 
 ## 10. Tiêu chí nghiệm thu giai đoạn 1
 
-1. Nhân viên thuộc group phòng Công trình đăng nhập qua PMH ID và lưu được phiếu có ảnh món ngoài danh mục từ điện thoại; người ngoài group thấy trang "Chưa được cấp quyền".
+1. Nhân viên được PMH ID cấp quyền vào VPP đăng nhập và lưu được phiếu có ảnh món ngoài danh mục từ điện thoại; người chưa được cấp thấy trang "Chưa được cấp quyền".
 2. Với đồng hồ test đặt 23:59:59 ngày 10 lưu được vào kỳ 11; đặt 00:00:00 ngày 11: `GET /periods/current` trả `{ym: 2026-12-01, is_open: true}`, lưu rơi vào kỳ 12, phiếu kỳ 11 chỉ đọc; `days_left` ngày 6 = 5, ngày 10 = 1.
 3. Admin sửa số lượng một phiếu sau hạn → bắt buộc lý do; nhật ký hiện giá trị cũ/mới. Admin thêm dòng `admin_only` trước hạn, member lưu lại → dòng vẫn còn. Giảm dưới số đã giao → `QTY_BELOW_DELIVERED`.
 4. Admin chuyển một món ngoài danh mục thành món mới (có ảnh, ĐVT) → món xuất hiện trong lưới của mọi người ngay (kỳ đang mở); dòng gốc gắn vào món (giữ nguyên bản ghi, không gộp), tồn 0.
 5. Giao 3/5 → dòng xuất hiện ở Còn nợ; bấm giao 2 hai lần liên tiếp → chỉ một lần có hiệu lực; giao thêm 2 → hết nợ; tồn kho trừ đúng 5; cố giao vượt tồn bị chặn.
 6. Đăng ký 5, tồn 2, đã giao 2 → Cần mua = 1; nợ 2 kỳ trước + đăng ký 3 kỳ này, tồn 0 → Cần mua = 5. Xuất Excel 2 sheet và in trang có 3 ô ký (có tên) tạo bản chốt; mở lại bản chốt sau khi giao thêm vẫn ra số cũ.
-7. Khóa user trên PMH ID → phiên app bị hủy trong ≤ 10 s (webhook v2 đúng chữ ký; chữ ký v1 hoặc `ts` lệch > 300 s bị 401); gỡ group `vpp_admin` → request kế tiếp 403.
+7. Khóa user trên PMH ID → phiên app bị hủy trong ≤ 10 s (webhook v2 đúng chữ ký; chữ ký v1 hoặc `ts` lệch > 300 s bị 401); gỡ Quản trị viên dự án (webhook `role_changed`, hoặc tối đa ≤ 5′ qua refresh token) → request kế tiếp 403; thu hồi quyền vào VPP → request kế tiếp 401.
 8. SA cục bộ đăng nhập được khi tắt kết nối tới PMH ID; 5 lần sai từ IP A với tên X không khóa IP B; `req.ip` qua 2 hop proxy là IP máy người dùng.
 9. Danh sách màn hình trong §8 chuyển được vi ↔ en; lint không còn chuỗi cứng; axe không báo lỗi tương phản ở 390 px.
 10. Playwright 390 px: member vào được Lịch sử và Tôi trong ≤ 2 chạm; thấy nút "Thêm món khác" không cần cuộn hết lưới; sau khi lưu thấy nhãn "Đã lưu hh:mm"; member A không tải được ảnh dòng ngoài danh mục của B (403) nhưng tải được ảnh món (200).
@@ -206,7 +206,8 @@ Hệ thị giác: member kiểu app (Nunito, bo tròn, thẻ ảnh, thương hi�
 | 2026-10-28 | Món ngoài danh mục: chấp nhận / thêm vào danh mục / từ chối; ảnh bắt buộc khi tạo món. |
 | 2026-10-28 | Báo cáo 2 phần + 3 ô ký; Excel + In. |
 | 2026-10-28 | Chuông in-app GĐ1, email GĐ2. Member chỉ thấy phiếu mình. |
-| 2026-10-28 | Admin = group PMH ID `vpp_admin`; SA cục bộ từ `.env` như QLTS. |
+| 2026-10-28 | Admin = group PMH ID `vpp_admin`; SA cục bộ từ `.env` như QLTS. (Thay bằng dòng 2026-11-08.) |
+| 2026-11-08 | PMH ID claims v3: bỏ hẳn mô hình group; Hành chính = Quản trị viên dự án VPP (`app_role`), PMH ID tự gác cửa; người mất quyền → "Không còn quyền"; mẫu số = người `active` không phải Hành chính. |
 | 2026-10-30 | Hành chính chỉ quản lý VPP, không đăng ký cho bản thân: `/`, `/history`, `/me` chuyển về `/admin`; `me/request*` và `me/issues` trả 403 `FORBIDDEN_ROLE`; mẫu số, danh sách chưa đăng ký và chuông kỳ loại Hành chính; tạo hộ cho Hành chính → `USER_IS_ADMIN`; phiếu cũ giữ nguyên. |
 | 2026-10-28 | Giao diện: member kiểu app, admin kiểu quản lý, màu `#059669`; khác QLTS và PMH ID. |
 | 2026-10-28 | Song ngữ vi/en từ đầu. |
@@ -238,7 +239,7 @@ Vòng 2 (thắng các ý trên khi mâu thuẫn):
 - Sản phẩm: "Tạm ngưng" và "Dùng lại" từng món (thẻ, dòng bảng, panel Sửa sản phẩm) đều hỏi xác nhận kèm một câu hệ quả; xong chỉ báo thành công, bỏ "Hoàn tác". Công tắc món trong panel nhóm ở Danh mục giữ như cũ.
 - Thanh lọc Sản phẩm: hàng 1 ô tìm + trạng thái (Tất cả / Đang dùng / Tạm ngưng / Chưa có ảnh, có số) + Lưới/Bảng, cùng cao 40px; hàng 2 chip nhóm nhỏ hơn, một dòng cuộn ngang, "Thu tất cả" ở cuối hàng; thanh hàng loạt là hàng riêng khi có chọn.
 - Thao tác hàng loạt theo nội dung lựa chọn: có món ngừng riêng thì có "Dùng lại (n)", có món đang dùng thì có "Tạm ngưng (n)"; món của nhóm tạm ngưng vẫn phải bật lại nhóm.
-- Tháng này: thẻ món ngoài danh mục ghi tháng của phiếu (món chờ xem chỉ thuộc kỳ đã khóa). Thẻ chưa đăng ký nói rõ cơ sở đếm "a/b người thuộc nhóm dùng app đã đăng ký" (người đang dùng thuộc nhóm PMH ID được phép, không phải cả danh bạ); "Xem tất cả" mở đúng danh sách đó ở Tổng hợp kỳ đang mở.
+- Tháng này: thẻ món ngoài danh mục ghi tháng của phiếu (món chờ xem chỉ thuộc kỳ đã khóa). Thẻ chưa đăng ký nói rõ cơ sở đếm "a/b người dùng app đã đăng ký" (người đang dùng, không phải Hành chính, không phải cả danh bạ); "Xem tất cả" mở đúng danh sách đó ở Tổng hợp kỳ đang mở.
 - Lối vào kỳ đang mở: bước Đăng ký của kỳ đang mở có nút "Xem đăng ký kỳ tháng N"; các trang chỉ-kỳ-khóa không còn băng mời xem kỳ đang mở (chuyển kỳ ở trang Kỳ tháng); kỳ mở có hai danh sách "Đã đăng ký (n)" / "Chưa đăng ký (n)".
 
 ### Góp ý vòng 3 Nhóm 2–5 (08/11)

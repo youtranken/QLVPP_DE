@@ -16,20 +16,20 @@ login/callback/me/logout/switch-account, session + refresh single-flight, CSRF, 
 `sa-login`, `sa-hash` script, lockout 5/IP/15′, idle 2 h, boot assert.
 **AC:** thiếu `LOCAL_SA_PASSWORD_HASH` → không khởi động; 5 lần sai cùng (IP, username) → 429, IP khác cùng username vẫn thử được; 50 lần sai toàn cục → 429; đúng → phiên role `sa`; SA không xuất hiện ở `GET /admin/users`; e2e gửi `X-Forwarded-For: 10.0.0.9, 172.18.0.2` với `TRUST_PROXY_HOPS=2` → `req.ip = 10.0.0.9`.
 
-## E0-S5 Vai trò theo group
-Role `admin` khi `claims.groups` chứa `config.admin_group`; `member` mặc định; gate `authorized_groups` + self-heal.
-**AC:** user có group `vpp_admin` → `me.role = admin`; role tính mỗi request từ `users.groups`: cập nhật `users.groups` bỏ group → request kế tiếp 403 không cần refresh; đổi `config.admin_group` → hiệu lực trong ≤ 30 s (cache config); `authorized_groups` rỗng → cảnh báo log, không chặn.
+## E0-S5 Vai trò theo `app_role`
+Role `admin` khi claim `app_role = "admin"` (chỉ đúng chuỗi đó); `member` mặc định; PMH ID tự gác cửa, không có gate group.
+**AC:** user có `app_role = admin` → `me.role = admin`; role tính mỗi request từ `users.role` (ghi từ `app_role` ở login, refresh, webhook `role_changed`, sync): hạ vai → request kế tiếp 403 (webhook) hoặc ≤ 5′ (refresh); `ver !== 3` → login `failed`, refresh hủy phiên; user không `active` → 401.
 
 ## E0-S6 BCL + webhook
 `POST /api/backchannel-logout`, `POST /api/webhooks/pmh-id` (HMAC v2, idempotent).
-**AC:** logout_token hợp lệ → mọi phiên của sub bị hủy; webhook: test vector v2 (secret, `ts`, body → hex) lấy từ `PMH_IDE/docs/integration` pass; chỉ có header v1 `x-pmh-signature` → 401; `ts` lệch 301 s → 401; cùng `event_id` gửi 2 lần → xử lý 1 lần; `user.locked` → `users.status = locked` + phiên bị hủy; `user.groups_changed` → `users.groups` đổi.
+**AC:** logout_token hợp lệ → mọi phiên của sub bị hủy; webhook: test vector v2 (secret, `ts`, body → hex) lấy từ `PMH_IDE/docs/integration` pass; chỉ có header v1 `x-pmh-signature` → 401; `ts` lệch 301 s → 401; cùng `event_id` gửi 2 lần → xử lý 1 lần; `user.locked` → `users.status = locked` + phiên bị hủy; `user.access_revoked` → `users.status = no_access` + phiên bị hủy; `user.role_changed` → `users.role` đổi; sự kiện cũ hơn (seq nhỏ hơn) cùng loại bị bỏ.
 
 ## E0-S7 Danh bạ
 Directory client + sync (60′ + nút), màn Danh bạ.
 **AC:** sync upsert theo `sub`, không đụng `role`; user `deleted` ẩn khỏi danh sách; nút "Đồng bộ ngay" báo số tạo/cập nhật.
 
 ## E0-S8 Nhật ký và cấu hình
-`GET /admin/audit` lọc; `GET|PUT /admin/config` (registration_last_day, default_max_qty, admin_group); seed config.
+`GET /admin/audit` lọc; `GET|PUT /admin/config` (registration_last_day, default_max_qty, …); seed config.
 **AC:** đổi `registration_last_day` → kỳ đã có giữ `deadline` cũ, kỳ tạo sau dùng giá trị mới; giá trị 2 hoặc 29 → `CONFIG_INVALID`; UI ghi "kỳ đang mở giữ hạn cũ"; `signers`, `admin_contact` lưu được; nhật ký ghi `config.updated` với cũ/mới.
 
 ## E0-S9 Khung web

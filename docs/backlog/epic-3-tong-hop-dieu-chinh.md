@@ -2,7 +2,7 @@
 
 ## E3-S1 Tổng hợp kỳ
 `GET /admin/periods/:ym/summary` (KPI), `GET …/requests?by=person|item&filter=`.
-**AC:** KPI đúng số với dữ liệu seed; mẫu số = `periods.headcount` (kỳ khóa) hoặc đếm sống (kỳ mở), cả hai loại người thuộc `admin_group`; `registered` vẫn đếm mọi phiếu của kỳ (phiếu cũ của người nay là Hành chính); lọc "chờ giao" chỉ trả phiếu có dòng hiệu lực chưa đủ (dòng `rejected`/`pending`/đã hủy nợ không tính); nhóm theo `requests.department` ("Chưa có phòng ban" khi NULL); `GET …/unregistered` trả tên + phòng ban, FE có nút sao chép.
+**AC:** KPI đúng số với dữ liệu seed; mẫu số = `periods.headcount` (kỳ khóa) hoặc đếm sống (kỳ mở), cả hai loại người `role = admin` (và chỉ tính `status = active`, khác `local:sa`); `registered` vẫn đếm mọi phiếu của kỳ (phiếu cũ của người nay là Hành chính); lọc "chờ giao" chỉ trả phiếu có dòng hiệu lực chưa đủ (dòng `rejected`/`pending`/đã hủy nợ không tính); nhóm theo `requests.department` ("Chưa có phòng ban" khi NULL); `GET …/unregistered` trả tên + phòng ban, FE có nút sao chép.
 
 ## E3-S2 Trang Tổng hợp kỳ (theo `final/admin.html`)
 KPI bấm-để-lọc, chọn tháng, bảng theo người/món, nhãn trạng thái, nhãn "Người đã nghỉ".
@@ -16,7 +16,7 @@ KPI bấm-để-lọc, chọn tháng, bảng theo người/món, nhãn trạng t
 > Đã gỡ 2026-11-06 (Đ9): Hành chính không tạo phiếu thay nhân viên; route trả 404. Phần dưới giữ làm lịch sử.
 
 `POST /admin/requests {user_sub, ym}` từ danh bạ.
-**AC:** kỳ khóa → `PERIOD_LOCKED`; đã có phiếu → `REQUEST_EXISTS`; người chỉ mở app chưa lưu → tạo hộ thành công; user `locked` → `USER_INACTIVE`; sub lạ → `USER_NOT_FOUND`; người thuộc `admin_group` → 400 `USER_IS_ADMIN` (lỗi hiện tại ô "Người đăng ký"); `created_by_sub` = admin.
+**AC:** kỳ khóa → `PERIOD_LOCKED`; đã có phiếu → `REQUEST_EXISTS`; người chỉ mở app chưa lưu → tạo hộ thành công; user `locked` → `USER_INACTIVE`; sub lạ → `USER_NOT_FOUND`; người `role = admin` → 400 `USER_IS_ADMIN` (lỗi hiện tại ô "Người đăng ký"); `created_by_sub` = admin.
 
 ## E3-S5 Món ngoài danh mục
 `GET /admin/review`, `POST /admin/lines/:id/review {action, note, item}`; trang hàng chờ (ảnh, tên, người, số).
