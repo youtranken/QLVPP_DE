@@ -319,6 +319,24 @@ Theo QLTS với các chỉnh sửa: **`TRUST_PROXY_HOPS`** (env; prod sau EDGE =
 
 Backup hằng đêm (pg_dump + `/data/files`, mã hóa, giữ 30 ngày, fail-closed khi thiếu passphrase); log JSON qua pino; `/api/health` cho EDGE/giám sát (`SELECT 1` qua client riêng hạn 3 s, không dùng pool; mất/treo DB → 503 `{status:'db_unavailable'}`); runbook: mất SSO → SA login; mất secret → admin PMH ID rotate, cập nhật `.env`, recreate `api`.
 
+**Bước bắt buộc TRƯỚC khi deploy PMH ID v3 (migration 0122) lên DB còn cột `users.groups`.** 0122 bỏ gate `authorized_groups` và xóa cột `groups`; người `active` nằm ngoài các nhóm được cấp (sync v2 upsert cả công ty, hoặc vào lúc gate rỗng) sẽ vào mẫu số, nhận chuông, và đối chiếu có thể tự hủy `mass_missing` mãi nếu họ quá nửa. Không sửa 0122 được (runner kiểm checksum, DB dev đã chạy) và sau 0122 không còn `groups` để lọc, nên chạy tay một lần: dừng `api` bản cũ, chạy khối dưới, rồi mới khởi động bản v3. Gate rỗng (`[]`) = mọi người được vào như hành vi cũ → không đổi ai. Người bị chuyển đăng nhập lại được ngay nếu PMH ID còn cấp app (token mới hơn mốc → `active`). Cột `inactive_at` chưa có trước 0122; 0122 tự đặt `inactive_at = updated_at` cho người không `active`.
+
+```sql
+BEGIN;
+CREATE TEMP VIEW v3_out_of_gate AS
+SELECT u.sub FROM users u, config c
+WHERE c.key = 'authorized_groups' AND jsonb_typeof(c.value) = 'array' AND jsonb_array_length(c.value) > 0
+  AND u.status = 'active' AND u.sub NOT LIKE 'local%'
+  AND NOT EXISTS (
+    SELECT 1 FROM jsonb_array_elements_text(
+                    CASE WHEN jsonb_typeof(u.groups) = 'array' THEN u.groups ELSE '[]'::jsonb END) g,
+                  jsonb_array_elements_text(c.value) a
+    WHERE lower(g) = lower(a));
+SELECT count(*) FROM v3_out_of_gate;   -- xem trước số người sẽ chuyển
+UPDATE users SET status = 'no_access', updated_at = now() WHERE sub IN (SELECT sub FROM v3_out_of_gate);
+COMMIT;
+```
+
 ## 16. Danh sách copy-and-trim từ QLTS_DE (đã đối chiếu mã thật)
 
 **api:** `src/main.ts`, `app.setup.ts` (đổi `trust proxy` → `TRUST_PROXY_HOPS`), `net-ipv4-first.ts`, `database/*`, `common/global-exception.filter.ts`, `common/user-throttler.guard.ts`, `common/sql.ts`, `modules/auth/*` (toàn bộ; đổi tên cookie; **sửa webhook sang v2**; `toIdentity` tính role từ groups; local-sa lockout theo (IP, user)), `modules/users/*` (bỏ permissions mượn), `modules/audit/*`, `modules/config/*` (bỏ SMTP/mail-settings ở GĐ1), `scripts/sa-hash.mjs`, `test/test-app.helper.ts`, `test/jest-*.json`. **Không** copy `modules/files` (viết mới, §8).
