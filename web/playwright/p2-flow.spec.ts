@@ -132,16 +132,17 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       admin = undefined;
 
       await page.goto(`/history/${LOCKED_YM}`);
-      await expect(page.locator('li', { hasText: x.name })).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: x.name })).toBeVisible();
       // R-D6.11: dòng bị bỏ vẫn hiện ở Lịch sử kèm lý do của Hành chính
-      await expect(page.locator('li', { hasText: y.name }).getByText(/^Hành chính bỏ món này khỏi phiếu \(\d+ cái\): Không có hàng$/)).toBeVisible();
-      await expect(page.locator('li', { hasText: custom }).getByText('Đã thêm vào danh mục')).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: y.name }).getByText('HC bỏ món · Không có hàng')).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: custom }).getByText('Đã thêm vào danh mục')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'member-a-after');
 
       const nav = page.getByRole('navigation', { name: isMobile(info) ? 'Điều hướng chính' : 'Chuyển trang' });
       await nav.getByRole('link', { name: 'Lịch sử' }).click();
-      await expect(page.getByRole('link', { name: /Tháng 5\/2003/ })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 2, name: '2003', exact: true })).toBeVisible();
+      await expect(page.getByRole('link', { name: /^Tháng 5(?!\d)/ })).toBeVisible();
       await snap(page, info, 'member-a-history');
     } finally {
       await admin?.context().close();

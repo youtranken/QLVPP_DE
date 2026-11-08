@@ -7,29 +7,58 @@ import { PERIOD, PEN, NOTE, facts, stubRequestApi, view } from '@/test/request-a
 
 afterEach(() => vi.unstubAllGlobals());
 
-const past = (lines: ReturnType<typeof lineView>[]) =>
-  stubRequestApi({ others: { '2026-10': view({ period_ym: '2026-10', is_open: false, lines }) } });
+const past = (lines: ReturnType<typeof lineView>[], extra: Partial<ReturnType<typeof view>> = {}) =>
+  stubRequestApi({ others: { '2026-10': view({ period_ym: '2026-10', is_open: false, lines, ...extra }) } });
+
+const L = (id: string, name: string, over: Partial<ReturnType<typeof lineView>> = {}) => lineView({ id, custom_name: name, custom_unit: 'cay', qty: 1, ...over });
+const rowOf = (name: string) => screen.getByRole('rowheader', { name }).closest('tr')!;
 
 describe('HistoryDetailPage', () => {
-  it('mỗi dòng có thanh tiến độ delivered/qty và "đã hủy n"', async () => {
+  it('chi tiết: tiêu đề, phụ đề "6 loại món · 6 đơn vị · lưu lúc 07/11 21:38 · Phòng Test", chip "Đang giao · đã nhận 2/5 món"', async () => {
     past([
-      lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 10, delivered_qty: 6, cancelled_qty: 2 }),
-      lineView({ id: 'l-2', item_id: NOTE.id, item: facts(NOTE), qty: 4, delivered_qty: 4 }),
-    ]);
+      L('1', 'Bút bảng', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }),
+      L('2', 'Bút bi', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }),
+      L('3', 'Bút dạ'),
+      L('4', 'Bút kim'),
+      L('5', 'Bút chì'),
+    ], {
+      updated_at: '2026-11-07T14:38:00.000Z',
+      department: 'Phòng Test',
+      removed_lines: [{ name: 'Bút ghi đĩa', name_en: null, unit: 'cay', before: 1, reason_code: 'adm_out_of_stock', reason_note: null, at: '2026-11-08T01:30:00.000Z' }],
+    });
     renderApp(makeMe('member'), '/history/2026-10');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Phiếu tháng 10/2026' })).toBeInTheDocument();
-    const bars = await screen.findAllByRole('progressbar');
-    expect(bars[0]).toHaveAttribute('aria-valuenow', '6');
-    expect(bars[0]).toHaveAttribute('aria-valuemax', '8');
-    expect(within(bars[0]).getByText('6/8')).toBeInTheDocument();
-    expect(bars[1]).toHaveAttribute('aria-valuenow', '4');
-    expect(screen.getAllByText(/đã hủy/)).toHaveLength(1);
-    expect(screen.getByText('đã hủy 2')).toBeInTheDocument();
-    expect(screen.getByText('còn chờ 2')).toBeInTheDocument();
-    expect(screen.getAllByText(/còn chờ/)).toHaveLength(1);
+    expect(await screen.findByRole('heading', { name: 'Phiếu tháng 10/2026' })).toBeInTheDocument();
+    expect(screen.getByText('6 loại món · 6 đơn vị · lưu lúc 07/11 21:38 · Phòng Test')).toBeInTheDocument();
+    expect(screen.getByText('Đang giao · đã nhận 2/5 món')).toBeInTheDocument();
   });
 
-  it('dòng ngoài DM: nhãn theo trạng thái, lý do từ chối hiển thị, không thanh tiến độ cho dòng chờ/từ chối', async () => {
+  it('bảng Món · ĐVT · Đăng ký · Được giao · Đã nhận · Tình trạng · Ghi chú; ghi chú "Nhận 09:10 08/11" và "HC bỏ món · Không có hàng"', async () => {
+    past([L('1', 'Bút bảng', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }), L('3', 'Bút dạ')], {
+      removed_lines: [{ name: 'Bút ghi đĩa', name_en: null, unit: 'cay', before: 1, reason_code: 'adm_out_of_stock', reason_note: null, at: '2026-11-08T01:30:00.000Z' }],
+    });
+    renderApp(makeMe('member'), '/history/2026-10');
+    for (const h of ['Món', 'ĐVT', 'Đăng ký', 'Được giao', 'Đã nhận', 'Tình trạng', 'Ghi chú']) expect(await screen.findByRole('columnheader', { name: h })).toBeInTheDocument();
+    expect(within(rowOf('Bút bảng')).getByText('Đã nhận 1/1')).toBeInTheDocument();
+    expect(within(rowOf('Bút bảng')).getByText('Nhận 09:10 08/11')).toBeInTheDocument();
+    expect(within(rowOf('Bút dạ')).getByText('Chờ 1')).toBeInTheDocument();
+    expect(within(rowOf('Bút ghi đĩa')).getByText('Không giao')).toBeInTheDocument();
+    expect(within(rowOf('Bút ghi đĩa')).getByText('HC bỏ món · Không có hàng')).toBeInTheDocument();
+  });
+
+  it('khối "Điều chỉnh của Hành chính": "08/11 08:30 · Bút ghi đĩa 1 thành 0 · Lý do: Không có hàng"; lý do cũ over_quota hiện "Vượt định mức"', async () => {
+    past(
+      [L('1', 'Bút bi', { qty: 2, adjustments: [{ before: 3, after: 2, reason_code: 'over_quota', reason_note: null, at: '2026-11-08T02:00:00.000Z' }] })],
+      { removed_lines: [{ name: 'Bút ghi đĩa', name_en: null, unit: 'cay', before: 1, reason_code: 'adm_out_of_stock', reason_note: null, at: '2026-11-08T01:30:00.000Z' }] },
+    );
+    renderApp(makeMe('member'), '/history/2026-10');
+    const box = (await screen.findByRole('heading', { name: 'Điều chỉnh của Hành chính' })).closest('section')!;
+    expect(within(box).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      '08/11 08:30 · Bút ghi đĩa 1 thành 0 · Lý do: Không có hàng',
+      '08/11 09:00 · Bút bi 3 thành 2 · Lý do: Vượt định mức',
+    ]);
+  });
+
+  it('dòng ngoài DM: nhãn theo trạng thái, lý do từ chối hiển thị, dòng chờ/từ chối không có hàng', async () => {
     past([
       lineView({ id: 'a', custom_name: 'Bìa còng', custom_unit: 'cai', review_status: 'pending' }),
       lineView({ id: 'b', custom_name: 'Bút lông', custom_unit: 'cai', review_status: 'accepted', qty: 2, delivered_qty: 1 }),
@@ -41,7 +70,7 @@ describe('HistoryDetailPage', () => {
     expect(screen.getByText('Đã chấp nhận')).toBeInTheDocument();
     expect(screen.getByText('Đã thêm vào danh mục')).toBeInTheDocument();
     expect(screen.getByText('Từ chối: Đã có trong kho')).toBeInTheDocument();
-    expect(screen.getAllByRole('progressbar')).toHaveLength(2);
+    expect(within(rowOf('Kéo')).queryByText(/Chờ \d/)).toBeNull();
   });
 
   it('kỳ đang mở: chuyển về / (không có bản chỉ đọc)', async () => {
@@ -70,7 +99,9 @@ describe('HistoryDetailPage', () => {
         Promise.resolve(
           url === '/api/periods/current'
             ? jsonResponse(200, { ...PERIOD, ym: '2026-09' })
-            : jsonResponse(400, { code: 'INVALID_PERIOD' }),
+            : url.startsWith('/api/me/request?')
+              ? jsonResponse(400, { code: 'INVALID_PERIOD' })
+              : jsonResponse(200, { items: [], next_cursor: null }),
         ),
       ),
     );
@@ -79,35 +110,20 @@ describe('HistoryDetailPage', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('dòng 5 giao 3 hủy 2: thanh trên 3 (aria-valuenow 3, max 3) và "đã hủy 2 — lý do"', async () => {
+  it('dòng 5 giao 3 hủy 2: "Đã nhận 3/3" và ghi chú "đã hủy 2 — lý do"', async () => {
     past([lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 5, delivered_qty: 3, cancelled_qty: 2, cancel_note: 'Người đã nghỉ' })]);
     renderApp(makeMe('member'), '/history/2026-10');
-    const bar = await screen.findByRole('progressbar');
-    expect(bar).toHaveAttribute('aria-valuenow', '3');
-    expect(bar).toHaveAttribute('aria-valuemax', '3');
-    expect(within(bar).getByText('3/3')).toBeInTheDocument();
-    expect(screen.getByText('đã hủy 2 — Người đã nghỉ')).toBeInTheDocument();
-    expect(screen.queryByText(/còn chờ/)).toBeNull();
+    const row = (await screen.findByRole('rowheader', { name: PEN.name })).closest('tr')!;
+    expect(within(row).getByText('Đã nhận 3/3')).toBeInTheDocument();
+    expect(within(row).getByText('đã hủy 2 — Người đã nghỉ')).toBeInTheDocument();
   });
 
-  it('hủy hết 5: không progressbar, chỉ "Đã hủy 5 — lý do"', async () => {
+  it('hủy hết 5: "Không giao" + "Đã hủy 5 — lý do"', async () => {
     past([lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 5, cancelled_qty: 5, cancel_note: 'Hết hàng' })]);
     renderApp(makeMe('member'), '/history/2026-10');
-    expect(await screen.findByText('Đã hủy 5 — Hết hàng')).toBeInTheDocument();
-    expect(screen.queryByRole('progressbar')).toBeNull();
-  });
-
-  it('hủy qty−1: thanh trên 1; hủy 0: thanh trên qty', async () => {
-    past([
-      lineView({ id: 'a', item_id: PEN.id, item: facts(PEN), qty: 5, delivered_qty: 0, cancelled_qty: 4, cancel_note: 'x' }),
-      lineView({ id: 'b', item_id: NOTE.id, item: facts(NOTE), qty: 5, delivered_qty: 2 }),
-    ]);
-    renderApp(makeMe('member'), '/history/2026-10');
-    const bars = await screen.findAllByRole('progressbar');
-    expect(bars[0]).toHaveAttribute('aria-valuemax', '1');
-    expect(bars[0]).toHaveAttribute('aria-valuenow', '0');
-    expect(bars[1]).toHaveAttribute('aria-valuemax', '5');
-    expect(bars[1]).toHaveAttribute('aria-valuenow', '2');
+    const row = (await screen.findByRole('rowheader', { name: PEN.name })).closest('tr')!;
+    expect(within(row).getByText('Không giao')).toBeInTheDocument();
+    expect(within(row).getByText('Đã hủy 5 — Hết hàng')).toBeInTheDocument();
   });
 
   it('lý do hủy rỗng/khoảng trắng → "đã hủy n" không có dấu gạch; hủy hết cũng vậy', async () => {

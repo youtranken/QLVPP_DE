@@ -2,10 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
-import { PERIOD, PEN, NOTE, facts, view } from '@/test/request-api-stub';
+import { PERIOD, PEN, facts, view } from '@/test/request-api-stub';
 import { lineView } from '@/test/fixtures-request';
 import { historyItem as item, issue, stubHistory as stub } from '@/test/history-stub';
 import { setLanguage } from '@/lib/i18n';
+import { mockViewport } from '@/test/viewport';
 import { deliveryState } from './history.api';
 
 afterEach(async () => {
@@ -26,136 +27,87 @@ describe('deliveryState', () => {
   });
 });
 
-describe('HistoryPage', () => {
-  it('liệt kê kỳ: tháng, loại món · đơn vị, trạng thái giao, món ngoài DM; kỳ đang mở dẫn về /', async () => {
-    stub([
-      {
-        items: [
-          item({ period_ym: '2026-11', line_count: 2, total_qty: 3, remaining_qty: 3 }),
-          item({ period_ym: '2026-10', delivered_qty: 6, remaining_qty: 4, owed_line_count: 2, custom: { pending: 1, accepted: 0, converted: 2, rejected: 1 } }),
-          item({ period_ym: '2026-09', delivered_qty: 10, remaining_qty: 0 }),
-          item({ period_ym: '2026-08', owed_line_count: 1 }),
-        ],
-        next_cursor: null,
-      },
-    ], [], {
-      '2026-10': view({ period_ym: '2026-10', is_open: false, lines: [
-        lineView({ id: 'a', item_id: PEN.id, item: facts(PEN), qty: 8, delivered_qty: 4 }),
-        lineView({ id: 'b', item_id: NOTE.id, item: facts(NOTE), qty: 2 }),
-        lineView({ id: 'c', custom_name: 'Kéo', custom_unit: 'cai', qty: 2, delivered_qty: 2, review_status: 'accepted' }),
-      ] }),
-      '2026-08': view({ period_ym: '2026-08', is_open: false, lines: [lineView({ id: 'd', item_id: PEN.id, item: facts(PEN), qty: 10 })] }),
-    });
+const L = (id: string, name: string, over: Partial<ReturnType<typeof lineView>> = {}) => lineView({ id, custom_name: name, custom_unit: 'cay', qty: 1, ...over });
+const NOV = view({
+  period_ym: '2026-11',
+  is_open: false,
+  updated_at: '2026-11-07T14:38:00.000Z',
+  department: 'Phòng Test',
+  lines: [
+    L('1', 'Bút bảng', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }),
+    L('2', 'Bút bi', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }),
+    L('3', 'Bút dạ'),
+    L('4', 'Bút kim'),
+    L('5', 'Bút chì'),
+  ],
+  removed_lines: [{ name: 'Bút ghi đĩa', name_en: null, unit: 'cay', before: 1, reason_code: 'adm_out_of_stock', reason_note: null, at: '2026-11-08T01:30:00.000Z' }],
+});
+const PERIOD_DEC = { ...PERIOD, ym: '2026-12' };
+
+describe('HistoryPage — master–detail', () => {
+  it('1280 /history: trái nhóm "2026", "2025"; mỗi mục "Tháng 11" + "6 món · 6 đơn vị" + chip; phải là phiếu tháng mới nhất đã khóa', async () => {
+    stub(
+      [
+        {
+          items: [
+            item({ period_ym: '2026-12', line_count: 2, total_qty: 3, remaining_qty: 3 }),
+            item({ period_ym: '2026-11', line_count: 6, total_qty: 6, delivered_qty: 3, remaining_qty: 3, owed_line_count: 3 }),
+            item({ period_ym: '2026-10', delivered_qty: 9, remaining_qty: 0 }),
+            item({ period_ym: '2025-12', delivered_qty: 12, remaining_qty: 0 }),
+          ],
+          next_cursor: null,
+        },
+      ],
+      [],
+      { '2026-11': NOV },
+      PERIOD_DEC,
+    );
     renderApp(makeMe('member'), '/history');
-    const open = (await screen.findByText('Tháng 11/2026')).closest('a')!;
-    expect(open).toHaveAttribute('href', '/');
-    expect(within(open).getByText('Đang mở')).toBeInTheDocument();
-    const oct = screen.getByText('Tháng 10/2026').closest('a')!;
-    expect(oct).toHaveAttribute('href', '/history/2026-10');
-    expect(within(oct).getByText('3 loại món · 10 đơn vị')).toBeInTheDocument();
-    expect(await within(oct).findByText('Còn chờ 2 món')).toBeInTheDocument();
-    expect(within(oct).getByText(/1 món chờ Hành chính xem · 2 món đã thêm vào danh mục · 1 món bị từ chối/)).toBeInTheDocument();
-    expect(within(screen.getByText('Tháng 9/2026').closest('a')!).getByText('Đã nhận đủ')).toBeInTheDocument();
-    expect(await within(screen.getByText('Tháng 8/2026').closest('a')!).findByText('Còn chờ 1 món')).toBeInTheDocument();
+    const nav = await screen.findByRole('navigation', { name: 'Lịch sử' });
+    expect(within(nav).getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['2026', '2025']);
+    const nov = within(nav).getByText('Tháng 11').closest('a')!;
+    expect(within(nov).getByText('6 món · 6 đơn vị')).toBeInTheDocument();
+    expect(within(nov).getByText('Còn chờ 3 món')).toBeInTheDocument();
+    expect(nov).toHaveAttribute('aria-current', 'page');
+    expect(nov).toHaveAttribute('href', '/history/2026-11');
+    expect(await screen.findByRole('heading', { level: 2, name: 'Phiếu tháng 11/2026' })).toBeInTheDocument();
   });
 
-  it('phiếu Hành chính đã bỏ hết (removed_all) → chip "Hành chính đã bỏ toàn bộ", không "Không có phiếu"', async () => {
+  it('kỳ đang mở trong danh sách → chip "Đang mở", bấm về trang Đăng ký /', async () => {
+    stub([{ items: [item({ period_ym: '2026-11', line_count: 2, total_qty: 3, remaining_qty: 3 }), item({ period_ym: '2026-10' })], next_cursor: null }]);
+    renderApp(makeMe('member'), '/history');
+    const open = (await screen.findByText('Tháng 11')).closest('a')!;
+    expect(open).toHaveAttribute('href', '/');
+    expect(within(open).getByText('Đang mở')).toBeInTheDocument();
+    expect(screen.getByText('Tháng 10').closest('a')).toHaveAttribute('href', '/history/2026-10');
+  });
+
+  it('liệt kê: chip giao, món ngoài DM, không chèn tháng trống "Không đăng ký"/"Không có phiếu"', async () => {
     stub([
       {
         items: [
-          item({ period_ym: '2026-10', line_count: 0, total_qty: 0, delivered_qty: 0, remaining_qty: 0, removed_all: true }),
-          item({ period_ym: '2026-09', line_count: 0, total_qty: 0, delivered_qty: 0, remaining_qty: 0 }),
+          item({ period_ym: '2026-10', delivered_qty: 6, remaining_qty: 4, owed_line_count: 2, custom: { pending: 1, accepted: 0, converted: 2, rejected: 1 } }),
+          item({ period_ym: '2026-09', delivered_qty: 10, remaining_qty: 0 }),
+          item({ period_ym: '2026-07', owed_line_count: 1 }),
         ],
         next_cursor: null,
       },
     ]);
     renderApp(makeMe('member'), '/history');
-    const oct = (await screen.findByText('Tháng 10/2026')).closest('a')!;
+    const oct = (await screen.findByText('Tháng 10')).closest('a')!;
+    expect(within(oct).getByText('3 món · 10 đơn vị')).toBeInTheDocument();
+    expect(within(oct).getByText('Còn chờ 2 món')).toBeInTheDocument();
+    expect(within(oct).getByText(/1 món chờ Hành chính xem · 2 món đã thêm vào danh mục · 1 món bị từ chối/)).toBeInTheDocument();
+    expect(within(screen.getByText('Tháng 9').closest('a')!).getByText('Đã nhận đủ')).toBeInTheDocument();
+    expect(screen.queryByText('Tháng 8')).toBeNull();
+    expect(screen.queryByText(/Không đăng ký/)).toBeNull();
+  });
+
+  it('phiếu Hành chính đã bỏ hết (removed_all) → chip "Hành chính đã bỏ toàn bộ"', async () => {
+    stub([{ items: [item({ period_ym: '2026-10', line_count: 0, total_qty: 0, delivered_qty: 0, remaining_qty: 0, removed_all: true })], next_cursor: null }]);
+    renderApp(makeMe('member'), '/history');
+    const oct = (await screen.findByText('Tháng 10')).closest('a')!;
     expect(within(oct).getByText('Hành chính đã bỏ toàn bộ')).toBeInTheDocument();
-    expect(within(oct).queryByText('Không có phiếu')).toBeNull();
-    expect(within(screen.getByText('Tháng 9/2026').closest('a')!).getByText('Không có phiếu')).toBeInTheDocument();
-  });
-
-  it('tháng gần nhất đã đóng có dòng món: tên theo ngôn ngữ, số lượng, chip từng dòng, dòng hủy kèm lý do', async () => {
-    stub(
-      [{ items: [item({ period_ym: '2026-11' }), item({ period_ym: '2026-10', delivered_qty: 7, remaining_qty: 2, cancelled_qty: 2 }), item({ period_ym: '2026-09' })], next_cursor: null }],
-      [],
-      {
-        '2026-10': view({
-          period_ym: '2026-10',
-          is_open: false,
-          lines: [
-            lineView({ id: 'a', item_id: PEN.id, item: { ...facts(PEN), name_en: 'Blue pen' }, qty: 4, delivered_qty: 4 }),
-            lineView({ id: 'b', item_id: NOTE.id, item: facts(NOTE), qty: 5, delivered_qty: 2, cancelled_qty: 1 }),
-            lineView({ id: 'c', custom_name: 'Bìa còng', custom_unit: 'cai', qty: 3, cancelled_qty: 3, cancel_note: 'Hết hàng', review_status: 'accepted' }),
-          ],
-        }),
-      },
-    );
-    renderApp(makeMe('member'), '/history');
-    const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
-    const pen = (await within(card).findByText('Bút bi xanh')).closest('li')!;
-    expect(within(pen).getByText('Đã nhận đủ')).toBeInTheDocument();
-    const note = within(card).getByText('Giấy note vàng').closest('li')!;
-    expect(within(note).getByText('Nhận 2, chờ 2')).toBeInTheDocument();
-    expect(within(note).getByText('Đã hủy 1')).toBeInTheDocument();
-    const cover = within(card).getByText('Bìa còng').closest('li')!;
-    expect(within(cover).getByText('Đã hủy 3 — Hết hàng')).toBeInTheDocument();
-    // chỉ tháng gần nhất có dòng món
-    expect(within(screen.getByText('Tháng 9/2026').closest('li')!).queryAllByRole('listitem')).toHaveLength(0);
-  });
-
-  it('dòng ngoài danh mục: "Chờ Hành chính xem" và "Từ chối: lý do" hiện trên dòng, không có chip giao hàng', async () => {
-    stub([{ items: [item({ period_ym: '2026-10', delivered_qty: 1, remaining_qty: 0 })], next_cursor: null }], [], {
-      '2026-10': view({
-        period_ym: '2026-10',
-        is_open: false,
-        lines: [
-          lineView({ id: 'a', custom_name: 'Bìa còng', custom_unit: 'cai', review_status: 'pending' }),
-          lineView({ id: 'b', custom_name: 'Bút lông', custom_unit: 'cai', review_status: 'rejected', review_note: 'Đã có trong kho' }),
-        ],
-      }),
-    });
-    renderApp(makeMe('member'), '/history');
-    const pending = (await screen.findByText('Bìa còng')).closest('li')!;
-    expect(within(pending).getByText('Chờ Hành chính xem')).toBeInTheDocument();
-    const rejected = screen.getByText('Bút lông').closest('li')!;
-    expect(within(rejected).getByText('Từ chối: Đã có trong kho')).toBeInTheDocument();
-    expect(within(rejected).queryByText(/Chờ \d/)).toBeNull();
-  });
-
-  it('dòng hủy hết, không lý do: chip "Đã hủy 2"', async () => {
-    stub([{ items: [item({ period_ym: '2026-10', delivered_qty: 1, remaining_qty: 0 })], next_cursor: null }], [], {
-      '2026-10': view({ period_ym: '2026-10', is_open: false, lines: [lineView({ id: 'a', item_id: PEN.id, item: facts(PEN), qty: 2, cancelled_qty: 2 })] }),
-    });
-    renderApp(makeMe('member'), '/history');
-    expect(await screen.findByText('Đã hủy 2')).toBeInTheDocument();
-  });
-
-  it('en: dòng món dùng name_en', async () => {
-    await setLanguage('en');
-    stub(
-      [{ items: [item({ period_ym: '2026-10', delivered_qty: 4, remaining_qty: 0 })], next_cursor: null }],
-      [],
-      { '2026-10': view({ period_ym: '2026-10', is_open: false, lines: [lineView({ id: 'a', item_id: PEN.id, item: { ...facts(PEN), name_en: 'Blue pen' }, qty: 4, delivered_qty: 4 })] }) },
-    );
-    renderApp(makeMe('member'), '/history');
-    expect(await screen.findByText('Blue pen')).toBeInTheDocument();
-    expect(screen.queryByText('Bút bi xanh')).toBeNull();
-  });
-
-  it('phiếu tháng gần nhất lỗi tải: báo lỗi ngay trong thẻ, có Thử lại, các tháng khác vẫn hiện', async () => {
-    const fetchMock = stub([{ items: [item({ period_ym: '2026-10' }), item({ period_ym: '2026-09' })], next_cursor: null }]);
-    fetchMock.mockImplementation((url: string) => {
-      if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
-      if (url.startsWith('/api/me/issues')) return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }));
-      if (url.startsWith('/api/me/request?ym=')) return Promise.resolve(jsonResponse(500, {}));
-      return Promise.resolve(jsonResponse(200, { items: [item({ period_ym: '2026-10' }), item({ period_ym: '2026-09' })], next_cursor: null }));
-    });
-    renderApp(makeMe('member'), '/history');
-    const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
-    expect(await within(card).findByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
-    expect(screen.getByText('Tháng 9/2026')).toBeInTheDocument();
   });
 
   it('"Xem thêm" tải trang kế theo cursor', async () => {
@@ -165,7 +117,7 @@ describe('HistoryPage', () => {
     ]);
     renderApp(makeMe('member'), '/history');
     await userEvent.click(await screen.findByRole('button', { name: 'Xem thêm' }));
-    expect(await screen.findByText('Tháng 9/2026')).toBeInTheDocument();
+    expect(await screen.findByText('Tháng 9')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith('/api/me/requests?limit=12&cursor=c1', expect.anything());
     expect(screen.queryByRole('button', { name: 'Xem thêm' })).toBeNull();
   });
@@ -185,6 +137,34 @@ describe('HistoryPage', () => {
     expect(screen.queryByText('Chưa có phiếu nào')).toBeNull();
   });
 
+  it('390 /history: chỉ danh sách; bấm Tháng 10 → /history/2026-10 chỉ chi tiết + "← Lịch sử"; quay lại vẫn đủ các tháng đã tải', async () => {
+    mockViewport(390);
+    stub(
+      [{ items: [item({ period_ym: '2026-10', delivered_qty: 1, remaining_qty: 1 }), item({ period_ym: '2026-09' })], next_cursor: null }],
+      [],
+      { '2026-10': view({ period_ym: '2026-10', is_open: false, lines: [L('1', 'Bút bảng', { delivered_qty: 1 })] }) },
+    );
+    renderApp(makeMe('member'), '/history');
+    expect(await screen.findByText('Tháng 10')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Phiếu tháng 10/2026' })).toBeNull();
+    await userEvent.click(screen.getByText('Tháng 10').closest('a')!);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Phiếu tháng 10/2026' })).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Lịch sử' })).toBeNull();
+    await userEvent.click(within(screen.getByRole('main')).getByRole('link', { name: /Lịch sử/ }));
+    expect(await screen.findByText('Tháng 9')).toBeInTheDocument();
+    expect(screen.getByText('Tháng 10')).toBeInTheDocument();
+  });
+
+  it('en: dòng món dùng name_en', async () => {
+    await setLanguage('en');
+    stub([{ items: [item({ period_ym: '2026-10', delivered_qty: 4, remaining_qty: 0 })], next_cursor: null }], [], {
+      '2026-10': view({ period_ym: '2026-10', is_open: false, lines: [lineView({ id: 'a', item_id: PEN.id, item: { ...facts(PEN), name_en: 'Blue pen' }, qty: 4, delivered_qty: 4 })] }),
+    });
+    renderApp(makeMe('member'), '/history');
+    expect(await screen.findByText('Blue pen')).toBeInTheDocument();
+    expect(screen.queryByText('Bút bi xanh')).toBeNull();
+  });
+
   describe('Nhận lẻ', () => {
     it('có 1 mục → hiện tiêu đề, món, số lượng, ngày giờ VN và lý do', async () => {
       stub([{ items: [item({})], next_cursor: null }], [{ items: [issue({})], next_cursor: null }]);
@@ -199,7 +179,7 @@ describe('HistoryPage', () => {
     it('rỗng → không có mục Nhận lẻ', async () => {
       const fetchMock = stub([{ items: [item({})], next_cursor: null }], [{ items: [], next_cursor: null }]);
       renderApp(makeMe('member'), '/history');
-      await screen.findByText('Tháng 10/2026');
+      await screen.findByText('Tháng 10');
       await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/me/issues?limit=10', expect.anything()));
       await new Promise((r) => setTimeout(r, 0));
       expect(screen.queryByRole('heading', { name: 'Nhận lẻ' })).toBeNull();
@@ -246,6 +226,7 @@ describe('HistoryPage', () => {
           if (url.startsWith('/api/me/issues')) {
             return Promise.resolve(calls++ === 0 ? jsonResponse(500, {}) : jsonResponse(200, { items: [issue({})], next_cursor: null }));
           }
+          if (url.startsWith('/api/me/request?ym=')) return Promise.resolve(jsonResponse(404, { code: 'REQUEST_NOT_FOUND' }));
           return Promise.resolve(jsonResponse(200, { items: [item({})], next_cursor: null }));
         }),
       );
@@ -269,6 +250,7 @@ describe('HistoryPage', () => {
             if (n === 1) return Promise.resolve(jsonResponse(500, {}));
             return Promise.resolve(jsonResponse(200, { items: [issue({ id: 'm-2', item_name: 'Kẹp giấy', item_name_en: null })], next_cursor: null }));
           }
+          if (url.startsWith('/api/me/request?ym=')) return Promise.resolve(jsonResponse(404, { code: 'REQUEST_NOT_FOUND' }));
           return Promise.resolve(jsonResponse(200, { items: [item({})], next_cursor: null }));
         }),
       );

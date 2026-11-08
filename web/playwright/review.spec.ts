@@ -92,7 +92,7 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       const mp = await pageAs(browser, info, member);
       // Phiếu kỳ đã khóa: member xem dòng ở Lịch sử kỳ đó, món mới hiện trong lưới kỳ đang mở
       await mp.goto(`/history/${seeded.prevYm}`);
-      const line = mp.locator('li', { hasText: name });
+      const line = mp.getByRole('row').filter({ hasText: name });
       await expect(line.getByText('Đã thêm vào danh mục')).toBeVisible();
       await expect(line.getByText('Ngoài danh mục')).toHaveCount(0);
       await mp.goto('/');

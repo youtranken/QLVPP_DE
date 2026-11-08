@@ -1,0 +1,134 @@
+import { useTranslation } from 'react-i18next';
+import { formatVnStamp, vnSavedStamp } from '@/lib/format-time';
+import { EmptyState, LoadError, Loading } from '@/ui/load-state';
+import { useCurrentPeriod, useMyRequest, type LineView, type RequestView } from './request.api';
+import { AdjustmentsBlock, RemovedAllNote } from './history-adjustments';
+import { Chip, ReviewTag } from './history-chip';
+import { ReceiveStatus } from './receive-dialog';
+import { receiveRows, receiveSummary, type ReceiveRow } from './receive-rows';
+import { useRequestFormat } from './request-format';
+
+function cancelNote(l: LineView, t: ReturnType<typeof useTranslation>['t']): string | null {
+  if (l.cancelled_qty <= 0) return null;
+  const reason = l.cancel_note?.trim();
+  const base = l.cancelled_qty >= l.qty ? 'cancelledAll' : 'cancelled';
+  return reason ? t(`request.history.${base}Why`, { n: l.cancelled_qty, reason }) : t(`request.history.${base}`, { n: l.cancelled_qty });
+}
+
+function NoteCell({ row, line }: { row: ReceiveRow; line: LineView | undefined }) {
+  const { t } = useTranslation();
+  const parts: string[] = [];
+  if (row.reason) parts.push(t('request.history.removedNote', { reason: row.reason }));
+  if (row.received > 0 && row.receivedAt) parts.push(t('request.history.receivedAt', { at: formatVnStamp(row.receivedAt) }));
+  const cancelled = line ? cancelNote(line, t) : null;
+  if (cancelled) parts.push(cancelled);
+  return (
+    <>
+      {parts.map((p, i) => (
+        <span key={p}>
+          {i > 0 && ' · '}
+          {p}
+        </span>
+      ))}
+      {line && <ReviewTag line={line} />}
+    </>
+  );
+}
+
+function Table({ view }: { view: RequestView }) {
+  const { t, i18n } = useTranslation();
+  const fmt = useRequestFormat();
+  const rows = receiveRows(view, t, i18n.language);
+  const lineById = new Map(view.lines.map((l) => [l.id, l]));
+  // Dòng ngoài danh mục còn chờ xem / bị từ chối không có hàng: vẫn liệt kê kèm nhãn của Hành chính
+  const held = view.lines.filter((l) => l.review_status === 'pending' || l.review_status === 'rejected');
+  return (
+    <table className="rq-recv-table hs-table">
+      <thead>
+        <tr>
+          {['colItem', 'colUnit', 'colRegistered', 'colToGive', 'colReceived', 'colStatus'].map((k) => (
+            <th key={k} scope="col">
+              {t(`request.receive.${k}`)}
+            </th>
+          ))}
+          <th scope="col">{t('request.history.colNote')}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr key={r.id}>
+            <th scope="row" className="rq-recv-name">
+              {r.name}
+            </th>
+            <td data-label={t('request.receive.colUnit')}>{fmt.unit(r.unit)}</td>
+            <td data-label={t('request.receive.colRegistered')} className="num">{r.registered}</td>
+            <td data-label={t('request.receive.colToGive')} className="num">{r.toGive}</td>
+            <td data-label={t('request.receive.colReceived')} className="num">{r.received}</td>
+            <td data-label={t('request.receive.colStatus')}><ReceiveStatus row={r} /></td>
+            <td data-label={t('request.history.colNote')} className="hs-note"><NoteCell row={r} line={lineById.get(r.id)} /></td>
+          </tr>
+        ))}
+        {held.map((l) => (
+          <tr key={l.id}>
+            <th scope="row" className="rq-recv-name">
+              {l.custom_name ?? ''}
+            </th>
+            <td data-label={t('request.receive.colUnit')}>{fmt.unit(l.custom_unit)}</td>
+            <td data-label={t('request.receive.colRegistered')} className="num">{l.qty}</td>
+            <td data-label={t('request.receive.colToGive')} className="num">–</td>
+            <td data-label={t('request.receive.colReceived')} className="num">–</td>
+            <td data-label={t('request.receive.colStatus')} />
+            <td data-label={t('request.history.colNote')} className="hs-note"><ReviewTag line={l} /></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function Header({ ym, view, level }: { ym: string; view: RequestView; level: 1 | 2 }) {
+  const { t, i18n } = useTranslation();
+  const Heading = level === 1 ? 'h1' : 'h2';
+  const rows = receiveRows(view, t, i18n.language);
+  const sum = receiveSummary(rows);
+  const parts = [
+    t('request.history.summary', { kinds: rows.length, units: rows.reduce((n, r) => n + r.registered, 0) }),
+    t('request.history.savedAt', { time: vnSavedStamp(view.updated_at) }),
+    view.department,
+  ].filter(Boolean);
+  return (
+    <div className="hs-d-head">
+      <div>
+        <Heading className="hs-d-title">{t('request.history.detailTitle', { month: Number(ym.slice(5)), year: ym.slice(0, 4) })}</Heading>
+        <p className="hs-d-sub">{parts.join(' · ')}</p>
+      </div>
+      {sum.total > 0 && (
+        <Chip tone={sum.waiting > 0 ? 'warn' : 'ok'}>
+          {sum.waiting > 0 ? t('request.history.chipDelivering', { done: sum.done, total: sum.total }) : t('request.history.delivery.done')}
+        </Chip>
+      )}
+    </div>
+  );
+}
+
+// Chi tiết một phiếu đã khóa (cột phải ≥ 901 px, cả trang ở điện thoại)
+export function HistoryDetail({ ym, level = 2 }: { ym: string; level?: 1 | 2 }) {
+  const { t } = useTranslation();
+  const period = useCurrentPeriod();
+  const request = useMyRequest(ym);
+  // Kỳ sau kỳ đang mở chưa thể có phiếu
+  const future = !!period.data && ym > period.data.ym;
+  if (future) return <EmptyState title={t('request.history.notFound')} />;
+  if (request.isPending || period.isPending) return <Loading />;
+  if (request.isError) return <LoadError onRetry={() => void request.refetch()} />;
+  const view = request.data;
+  if (!view) return <EmptyState title={t('request.history.notFound')} />;
+  return (
+    <article className="hs-detail">
+      <Header ym={ym} view={view} level={level} />
+      {view.removed_all && <RemovedAllNote view={view} />}
+      <Table view={view} />
+      <AdjustmentsBlock view={view} />
+    </article>
+  );
+}

@@ -31,17 +31,18 @@ export function stubHistory(
   pages: { items: HistoryItem[]; next_cursor: string | null }[],
   issuePages: { items: MyIssue[]; next_cursor: string | null }[] = [],
   requests: Record<string, ReturnType<typeof view>> = {},
+  period: typeof PERIOD = PERIOD,
 ) {
   let at = 0;
   let issueAt = 0;
   const fetchMock = vi.fn((url: string) => {
-    if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
+    if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, period));
     if (url.startsWith('/api/me/request?ym=')) {
       const found = requests[url.slice('/api/me/request?ym='.length)];
       return Promise.resolve(found ? jsonResponse(200, found) : jsonResponse(404, { code: 'REQUEST_NOT_FOUND' }));
     }
     if (url.startsWith('/api/me/issues')) return Promise.resolve(jsonResponse(200, issuePages[issueAt++] ?? { items: [], next_cursor: null }));
-    if (url.startsWith('/api/me/requests')) return Promise.resolve(jsonResponse(200, pages[at++] ?? { items: [], next_cursor: null }));
+    if (url.startsWith('/api/me/requests')) return Promise.resolve(jsonResponse(200, pages[Math.min(at++, pages.length - 1)] ?? { items: [], next_cursor: null }));
     return Promise.resolve(jsonResponse(500, {}));
   });
   vi.stubGlobal('fetch', fetchMock);

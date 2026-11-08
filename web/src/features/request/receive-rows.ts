@@ -16,6 +16,8 @@ export interface ReceiveRow {
   state: ReceiveState;
   waiting: number;
   note: string | null;
+  // Lý do Hành chính bỏ món (chỉ hàng đã bỏ)
+  reason: string | null;
   receivedAt: string | null;
 }
 
@@ -36,6 +38,7 @@ function lineRow(l: LineView, lang: string): ReceiveRow {
     state,
     waiting: state === 'waiting' ? toGive - received : 0,
     note: null,
+    reason: null,
     receivedAt: l.last_delivered_at,
   };
 }
@@ -43,18 +46,22 @@ function lineRow(l: LineView, lang: string): ReceiveRow {
 // Bảng nhận hàng của một phiếu đã khóa: đăng ký (số gốc) → được giao → đã nhận; món Hành chính bỏ thành "Không giao"
 export function receiveRows(view: RequestView, t: TFunction, lang: string): ReceiveRow[] {
   const rows = view.lines.filter((l) => !skipped(l)).map((l) => lineRow(l, lang));
-  const removed = (view.removed_lines ?? []).map<ReceiveRow>((r) => ({
-    id: `removed-${r.at}-${r.name}`,
-    name: nameIn(r, lang),
-    unit: r.unit,
-    registered: r.before,
-    toGive: 0,
-    received: 0,
-    state: 'none',
-    waiting: 0,
-    note: t('request.receive.removed', { reason: adjustReasonText(t, r.reason_code, r.reason_note) }),
-    receivedAt: null,
-  }));
+  const removed = (view.removed_lines ?? []).map<ReceiveRow>((r) => {
+    const reason = adjustReasonText(t, r.reason_code, r.reason_note);
+    return {
+      id: `removed-${r.at}-${r.name}`,
+      name: nameIn(r, lang),
+      unit: r.unit,
+      registered: r.before,
+      toGive: 0,
+      received: 0,
+      state: 'none',
+      waiting: 0,
+      note: t('request.receive.removed', { reason }),
+      reason,
+      receivedAt: null,
+    };
+  });
   return [...rows, ...removed];
 }
 

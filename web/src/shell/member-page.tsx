@@ -5,15 +5,18 @@ export function MemberPage({
   title,
   subtitle,
   back,
+  wide = false,
   children,
 }: {
   title?: string;
   subtitle?: string;
   back?: ReactNode;
+  // Trang dùng hết bề ngang (Lịch sử master–detail)
+  wide?: boolean;
   children: ReactNode;
 }) {
   return (
-    <div className="m-page m-page--plain">
+    <div className={`m-page m-page--plain${wide ? ' m-page--wide' : ''}`}>
       {(title || back) && (
         <div className="m-head">
           {back}

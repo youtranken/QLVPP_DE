@@ -167,11 +167,12 @@ describe('Song ngữ các màn Plan 3', () => {
         if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, PERIOD));
         if (url.startsWith('/api/me/issues')) return Promise.resolve(jsonResponse(200, { items: [{ id: 'm-1', item_id: 'i-1', item_name: 'Bút bi', item_name_en: 'Ballpoint pen', unit: 'cai', qty: 2, note: 'New hire', created_at: '2026-10-20T03:30:00Z' }], next_cursor: null }));
         if (url.startsWith('/api/me/requests')) return Promise.resolve(jsonResponse(200, { items: [entry], next_cursor: null }));
+        if (url.startsWith('/api/me/request?ym=')) return Promise.resolve(jsonResponse(404, { code: 'REQUEST_NOT_FOUND' }));
         return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null, unread_count: 0 }));
       }),
     );
     renderApp(makeMe('member'), '/history');
-    expect(await screen.findByText('Tháng 10/2026')).toBeInTheDocument();
+    expect(await screen.findByText('Tháng 10')).toBeInTheDocument();
     await english();
     expect(await screen.findByText('Ballpoint pen')).toBeInTheDocument();
     noVietnamese();

@@ -83,7 +83,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 - FR-24 "Chép lại danh sách tháng X" (X = kỳ gần nhất có phiếu, hiện đúng tên tháng): chép vào giỏ (chưa lưu); nếu giỏ đang có dòng → hỏi "Thay giỏ hiện tại?". Bỏ: món đã ngừng, món nay `admin_only`, dòng ngoài danh mục bị từ chối; dòng ngoài danh mục đã chấp nhận/đã thêm danh mục chép thành dòng mới (`pending` / món tương ứng); số lượng vượt `max_qty` mới bị hạ xuống `max_qty`. Báo từng dòng bị bỏ kèm lý do.
 - FR-25 Sau hạn: phiếu chỉ đọc, hiện tiến độ giao từng dòng (đã giao / còn nợ), trạng thái món ngoài danh mục (chờ xem / chấp nhận / đã thêm danh mục / từ chối + lý do).
 - FR-25a (vòng 3) Trang Đăng ký dùng hết bề ngang. Phiếu kỳ trước đang giao chỉ còn **một dải** "Phiếu tháng N đang giao · đã nhận d/t món, còn chờ k" + nút Xem mở popup nhận hàng (bảng Món · ĐVT · Đăng ký · Được giao · Đã nhận · Tình trạng; món Hành chính bỏ hiện "Không giao" + "HC bỏ món: lý do"); các tháng cũ hơn còn chờ là liên kết trong cùng dải. Không còn hai băng "Bạn còn chờ nhận" và thẻ kỳ trước.
-- FR-26 Lịch sử: các kỳ trước với trạng thái giao.
+- FR-26 Lịch sử (vòng 3): master–detail — cột trái nhóm theo năm, mỗi năm các tháng **có phiếu** (tháng không có phiếu bị ẩn, không có dòng "Không đăng ký"), cột phải là phiếu của tháng chọn (mặc định tháng mới nhất đã khóa): bảng Món · ĐVT · Đăng ký · Được giao · Đã nhận · Tình trạng · Ghi chú (giờ nhận, "HC bỏ món · lý do") và khối "Điều chỉnh của Hành chính". Điện thoại: danh sách rồi chi tiết (≤ 2 chạm), quay lại giữ danh sách.
 - FR-27 Member chỉ thấy phiếu của mình.
 - FR-28 Điện thoại (≤ 900 px): thanh điều hướng dưới 3 mục (Đăng ký · Lịch sử · Tôi); Lịch sử và Hồ sơ cách tối đa 2 chạm; thanh dính "N món · Lưu đăng ký".
 

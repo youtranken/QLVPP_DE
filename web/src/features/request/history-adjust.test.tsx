@@ -35,7 +35,7 @@ const past = (over: Partial<RequestView>) =>
   stubRequestApi({ others: { '2026-10': view({ period_ym: '2026-10', is_open: false, ...over }) } });
 
 describe('Lịch sử — điều chỉnh của Hành chính', () => {
-  it('dòng giảm nhiều lần: "Hành chính giảm 5 → 4 …" rồi "4 → 3 …" theo thời gian, kèm giờ VN', async () => {
+  it('dòng giảm nhiều lần: "… 5 thành 4 …" rồi "… 4 thành 3 …" theo thời gian, kèm ngày giờ VN', async () => {
     const pen = { ...facts(PEN), unit: 'cai' };
     past({
       lines: [
@@ -49,22 +49,25 @@ describe('Lịch sử — điều chỉnh của Hành chính', () => {
       ],
     });
     renderApp(makeMe('member'), '/history/2026-10');
-    const notes = await screen.findAllByText(/^Hành chính giảm/);
-    expect(notes.map((n) => n.textContent)).toEqual([
-      'Hành chính giảm 5 → 4 cái: Vượt định mức · 08:00 13/12',
-      'Hành chính giảm 4 → 3 cái: Vượt định mức · 09:10 13/12',
+    const box = (await screen.findByRole('heading', { name: 'Điều chỉnh của Hành chính' })).closest('section')!;
+    expect(within(box).getAllByRole('listitem').map((n) => n.textContent)).toEqual([
+      `13/12 08:00 · ${PEN.name} 5 thành 4 · Lý do: Vượt định mức`,
+      `13/12 09:10 · ${PEN.name} 4 thành 3 · Lý do: Vượt định mức`,
     ]);
+    // Đăng ký lấy số gốc của lần giảm đầu
+    expect(within(screen.getByRole('rowheader', { name: PEN.name }).closest('tr')!).getByText('5')).toBeInTheDocument();
   });
 
-  it('dòng bị bỏ: tên + "Hành chính bỏ món này khỏi phiếu (3 cái): …"; ghi chú <script> hiện nguyên chữ, xuống dòng thành dấu cách', async () => {
+  it('dòng bị bỏ: hàng "Không giao" + khối điều chỉnh; ghi chú <script> hiện nguyên chữ, xuống dòng thành dấu cách', async () => {
     past({
       lines: [lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 2 })],
       removed_lines: [removed({ reason_code: 'other', reason_note: `${SCRIPT}\ndòng 2` })],
     });
     renderApp(makeMe('member'), '/history/2026-10');
-    const text = await screen.findByText(/^Hành chính bỏ món này khỏi phiếu/);
-    expect(text).toHaveTextContent(`Hành chính bỏ món này khỏi phiếu (3 cái): ${SCRIPT} dòng 2`);
-    expect(within(text.closest('li')!).getByText('Kéo cắt')).toBeInTheDocument();
+    const row = (await screen.findByRole('rowheader', { name: 'Kéo cắt' })).closest('tr')!;
+    expect(within(row).getByText('Không giao')).toBeInTheDocument();
+    expect(within(row).getByText(`HC bỏ món · ${SCRIPT} dòng 2`)).toBeInTheDocument();
+    expect(screen.getByText(`13/12 09:10 · Kéo cắt 3 thành 0 · Lý do: ${SCRIPT} dòng 2`)).toBeInTheDocument();
     expect(document.querySelector('script:not([src])')).toBeNull();
   });
 
@@ -87,7 +90,8 @@ describe('Lịch sử — điều chỉnh của Hành chính', () => {
     await i18n.changeLanguage('en');
     past({ lines: [], removed_all: false, removed_lines: [removed({})] });
     renderApp(makeMe('member'), '/history/2026-10');
-    expect(await screen.findByText('Admin removed this item (3 piece): Duplicate of another request')).toBeInTheDocument();
-    expect(screen.getByText('Scissors')).toBeInTheDocument();
+    expect(await screen.findByRole('rowheader', { name: 'Scissors' })).toBeInTheDocument();
+    expect(screen.getByText('Admin removed · Duplicate of another request')).toBeInTheDocument();
+    expect(screen.getByText(/Scissors 3 to 0 · Reason: Duplicate of another request/)).toBeInTheDocument();
   });
 });

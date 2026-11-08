@@ -23,9 +23,9 @@ describe('HistoryPage — chip trạng thái tháng', () => {
       '2026-10': view({ period_ym: '2026-10', is_open: false, lines: [lineView({ id: 'a', item_id: PEN.id, item: facts(PEN), qty: 10, delivered_qty: 6 })] }),
     });
     renderApp(makeMe('member'), '/history');
-    const card = (await screen.findByText('Tháng 10/2026')).closest('li')!;
+    const card = (await screen.findByText('Tháng 10')).closest('li')!;
     expect(await within(card).findByText(chip)).toBeInTheDocument();
-    expect(within((await screen.findByText('Tháng 11/2026')).closest('li')!).getByText('Đang mở')).toBeInTheDocument();
+    expect(within((await screen.findByText('Tháng 11')).closest('li')!).getByText('Đang mở')).toBeInTheDocument();
   });
 
   it('"Còn chờ k món" lấy owed_line_count của danh sách ngay lần vẽ đầu — không GET phiếu từng tháng (chỉ tháng đóng gần nhất)', async () => {
@@ -40,9 +40,9 @@ describe('HistoryPage — chip trạng thái tháng', () => {
       },
     ]);
     renderApp(makeMe('member'), '/history');
-    const sep = (await screen.findByText('Tháng 9/2026')).closest('li')!;
+    const sep = (await screen.findByText('Tháng 9')).closest('li')!;
     expect(within(sep).getByText('Còn chờ 3 món')).toBeInTheDocument();
-    expect(within(screen.getByText('Tháng 8/2026').closest('li')!).getByText('Còn chờ 2 món')).toBeInTheDocument();
+    expect(within(screen.getByText('Tháng 8').closest('li')!).getByText('Còn chờ 2 món')).toBeInTheDocument();
     await waitFor(() => expect(requestGets(fetchMock)).toEqual(['/api/me/request?ym=2026-09']));
   });
 
@@ -57,7 +57,7 @@ describe('HistoryPage — chip trạng thái tháng', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
     renderApp(makeMe('member'), '/history');
-    await screen.findByText('Tháng 11/2026');
+    await screen.findByText('Tháng 11');
     await new Promise((r) => setTimeout(r, 20));
     expect(requestGets(fetchMock)).toEqual([]);
     releasePeriod(jsonResponse(200, PERIOD));

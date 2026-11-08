@@ -63,6 +63,7 @@ export function stubRequestApi(opts: StubOptions = {}) {
       return res(found ? jsonResponse(200, found) : jsonResponse(404, { code: 'REQUEST_NOT_FOUND' }));
     }
     if (url.startsWith('/api/items')) return res(jsonResponse(200, opts.items ?? [PEN, NOTE, CLIP, A4]));
+    if (url.startsWith('/api/me/requests') || url.startsWith('/api/me/issues')) return res(jsonResponse(200, { items: [], next_cursor: null }));
     if (url === '/api/item-categories') return res(jsonResponse(200, CATEGORIES));
     if (url === '/api/me/request/lines' && method === 'PUT' && opts.put) return res(opts.put(init));
     if (url === '/api/me/request/copy-previous' && method === 'POST') {

@@ -61,11 +61,11 @@ test.describe('E2-S6 lịch sử', () => {
         await page.getByRole('navigation', { name: 'Chuyển trang' }).getByRole('link', { name: 'Lịch sử' }).click();
       }
       await expect(page.getByRole('heading', { level: 1, name: 'Lịch sử' })).toBeVisible();
-      const open = page.getByRole('link', { name: new RegExp(`Tháng ${month}/`) });
+      const open = page.getByRole('link', { name: new RegExp(`^Tháng ${month}(?!\\d)`) });
       await expect(open).toBeVisible();
       await expect(open.getByText('Đang mở')).toBeVisible();
       await expect(open).toHaveAttribute('href', '/');
-      const prev = page.getByRole('link', { name: new RegExp(`Tháng ${prevMonth}/`) });
+      const prev = page.getByRole('link', { name: new RegExp(`^Tháng ${prevMonth}(?!\\d)`) });
       await expect(prev.getByText('Còn chờ 1 món')).toBeVisible();
       await expect(prev.getByText('1 món chờ Hành chính xem · 1 món bị từ chối')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
@@ -78,12 +78,12 @@ test.describe('E2-S6 lịch sử', () => {
       await prev.click();
 
       await expect(page).toHaveURL(new RegExp(`/history/${prevYm}$`));
-      await expect(page.getByRole('heading', { level: 1, name: `Phiếu tháng ${prevMonth}/${prevYm.slice(0, 4)}` })).toBeVisible();
-      const bars = page.getByRole('progressbar');
-      await expect(bars).toHaveCount(2);
-      await expect(page.getByRole('progressbar', { name: 'Đã nhận 5 trên 7' })).toBeVisible();
-      await expect(page.getByText('đã hủy 1')).toBeVisible();
-      await expect(page.getByText('Chờ Hành chính xem')).toBeVisible();
+      await expect(page.getByRole('heading', { name: `Phiếu tháng ${prevMonth}/${prevYm.slice(0, 4)}` })).toBeVisible();
+      const rowA = page.getByRole('row').filter({ hasText: a.name });
+      await expect(rowA.getByText('Chờ 2')).toBeVisible();
+      await expect(rowA.getByText('đã hủy 1')).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: b.name }).getByText('Đã nhận 2/2')).toBeVisible();
+      await expect(page.getByText('Chờ Hành chính xem', { exact: true })).toBeVisible();
       await expect(page.getByText('Từ chối: Đã có trong kho')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'detail');
@@ -133,10 +133,9 @@ test.describe('E2-S6 lịch sử', () => {
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'issues');
 
-      await page.getByRole('link', { name: new RegExp(`Tháng ${prevMonth}/`) }).click();
+      await page.getByRole('link', { name: new RegExp(`^Tháng ${prevMonth}(?!\\d)`) }).click();
       await expect(page.getByText('đã hủy 2 — Người đã nghỉ')).toBeVisible();
-      const bar = page.getByRole('progressbar', { name: 'Đã nhận 3 trên 3' });
-      await expect(bar).toHaveAttribute('aria-valuemax', '3');
+      await expect(page.getByRole('row').filter({ hasText: itemName }).getByText('Đã nhận 3/3')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
     } finally {
       psql(`DELETE FROM stock_movements WHERE item_id = '${itemId}'`);
@@ -194,12 +193,62 @@ test.describe('E2-S6 lịch sử', () => {
       const tap = (target: ReturnType<Page['getByRole']>) => (isMobile(info) ? target.tap() : target.click());
       await tap(strip.getByRole('link', { name: `Tháng ${monthOf(prevYm)} còn chờ 2 món` }));
       await expect(page).toHaveURL(new RegExp(`/history/${prevYm}$`));
-      await expect(page.getByText(`Hành chính giảm 3 → 1 cái: Vượt định mức · 09:10 13/${prevYm.slice(5)}`)).toBeVisible();
+      await expect(page.getByText(`13/${prevYm.slice(5)} 09:10 · ${tape.name} 3 thành 1 · Lý do: Vượt định mức`)).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
     } finally {
       deleteTestUsers(sub);
       for (const it of [pen, tape, glue]) await removeTestItem(request, it.id);
       for (const ym of created) psql(`DELETE FROM periods WHERE ym = '${ym}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${ym}-01')`);
+      release();
+    }
+  });
+
+  test('Vòng3-LS master–detail 1280: danh sách năm → tháng bên trái, phiếu bên phải; 390 danh sách → chi tiết ≤ 2 chạm và quay lại giữ danh sách (axe)', async ({ page, request }, info) => {
+    const sub = `pw-hist3-${Date.now()}-${info.project.name}`;
+    const headers = { 'x-dev-user-sub': sub, 'x-dev-role': 'member' };
+    seedActiveUser(sub, `PW Lịch sử ${info.project.name}`);
+    await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...headers } }));
+    const period = await (await request.get('/api/periods/current', { headers })).json();
+    const prevYm = prevYmOf(period.ym);
+    const prevMonth = Number(prevYm.slice(5));
+    const a = await seedPwItem(page);
+    const release = await acquireLock('prev-period');
+    const createdPeriod = psql(
+      `INSERT INTO periods (ym, deadline) VALUES ('${prevYm}-01', '${prevYm}-10T17:00:00Z') ON CONFLICT DO NOTHING RETURNING ym`,
+    );
+    psql(`WITH r AS (
+        INSERT INTO requests (period_ym, user_sub, created_by_sub) VALUES ('${prevYm}-01', '${sub}', '${sub}') RETURNING id
+      ) INSERT INTO request_lines (request_id, item_id, qty, delivered_qty, last_delivered_at)
+        SELECT r.id, '${a.id}', 2, 1, '${prevYm}-08T02:10:00Z' FROM r`);
+    try {
+      await page.goto('/history');
+      await expect(page.getByRole('heading', { level: 1, name: 'Lịch sử' })).toBeVisible();
+      const master = page.getByRole('navigation', { name: 'Lịch sử' });
+      await expect(master.getByRole('heading', { level: 2, name: prevYm.slice(0, 4) })).toBeVisible();
+      const link = master.getByRole('link', { name: new RegExp(`^Tháng ${prevMonth}(?!\\d)`) });
+      await expect(link).toBeVisible();
+      if (isMobile(info)) {
+        await expect(page.getByRole('heading', { name: new RegExp('^Phiếu tháng') })).toHaveCount(0);
+        await expectNoContrastViolations(page);
+        await link.tap();
+        await expect(page).toHaveURL(new RegExp(`/history/${prevYm}$`));
+        await expect(page.getByRole('heading', { level: 1, name: `Phiếu tháng ${prevMonth}/${prevYm.slice(0, 4)}` })).toBeVisible();
+        await expect(master).toHaveCount(0);
+        await expectNoContrastViolations(page);
+        await page.locator('.m-back').tap();
+        await expect(link).toBeVisible();
+      } else {
+        await expect(page.getByRole('heading', { level: 2, name: `Phiếu tháng ${prevMonth}/${prevYm.slice(0, 4)}` })).toBeVisible();
+        await expect(link).toHaveAttribute('aria-current', 'page');
+        const row = page.getByRole('row').filter({ hasText: a.name });
+        await expect(row.getByText('Chờ 1')).toBeVisible();
+        await expect(row.getByText(`Nhận 09:10 08/${prevYm.slice(5)}`)).toBeVisible();
+        await snap(page, info, 'master-detail');
+      }
+    } finally {
+      deleteTestUsers(sub);
+      await removeTestItem(request, a.id);
+      if (createdPeriod) psql(`DELETE FROM periods WHERE ym = '${prevYm}-01' AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = '${prevYm}-01')`);
       release();
     }
   });
