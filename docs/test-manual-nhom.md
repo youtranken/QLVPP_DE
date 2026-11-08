@@ -12,8 +12,8 @@ Chủ dự án thử tay từng nhóm trên dev. Xong một nhóm (sửa hết g
 
 | Nhóm | Nội dung | Trạng thái |
 |---|---|---|
-| 1 | Kỳ 11 đang mở | Đã sửa xong (07/11), chờ chủ dự án thử lại |
-| 2 | Sau khi khóa kỳ 11 | Chưa thử |
+| 1 | Kỳ 11 đang mở | Đạt (08/11, sau 2 vòng sửa) |
+| 2 | Sau khi khóa kỳ 11 | Đang thử (kỳ 11 khóa lúc 00:00 08/11 trên dev) |
 | 3 | Gửi ADM | Chưa thử |
 | 4 | Hàng về và Tủ / Kho | Chưa thử |
 | 5 | Giao hàng | Chưa thử |
