@@ -5,8 +5,6 @@ import { CUSTOM_URL, PLAN, PLAN_URL, RECEIPT_URL, bodiesOf, box, callsTo, open, 
 
 afterEach(() => vi.unstubAllGlobals());
 
-const fullBtn = () => screen.getByRole('button', { name: 'Đủ hàng' });
-
 describe('Lưu — hộp W15 khi khác bản in', () => {
   it('về 3/7 Bút bi và 2/2 Kẹp → hộp liệt kê 1 món; Quay lại → 0 request', async () => {
     const f = stub({ plan: plan([planRow({ item_id: 'i-a', remaining: 7 }), planRow({ item_id: 'i-b', name: 'Kẹp giấy', remaining: 2 })]) });
@@ -98,114 +96,13 @@ describe('Lưu — hộp W15 khi khác bản in', () => {
   });
 });
 
-describe('"Đủ hàng" — hộp W18', () => {
-  const FULL = plan(
-    [
-      planRow({ item_id: 'a', name: 'A', remaining: 6, stock_qty: 1 }),
-      planRow({ item_id: 'b', name: 'B', remaining: 0, received: 10 }),
-      planRow({ item_id: 'c', name: 'C', remaining: 4, stock_qty: 3 }),
-      planRow({ item_id: 'd', name: 'D', remaining: 5, adm_out: true }),
-      planRow({ item_id: 'e', name: 'E', remaining: 2, usable: false }),
-    ],
-    { custom: [customRow({ remaining: 2 })] },
-  );
-
-  it('tóm tắt "Nhập 3 món, 12 đơn vị…" (gồm món ngừng đã đặt) + bỏ qua có số; Xác nhận → 1 POST 3 dòng + ghi ngoài DM; bấm đúp → 1 request', async () => {
-    const f = stub({ plan: FULL });
-    await open();
-    await screen.findByDisplayValue('6');
-    await type(box('A'), '1');
-    await userEvent.click(fullBtn());
-    const dlg = await screen.findByRole('dialog');
-    expect(dlg).toHaveTextContent('Nhập 3 món, 12 đơn vị vào tủ theo bản in 09:05 02/11.');
-    for (const s of ['1 món ADM hết hàng', '1 món đã về đủ', 'Các số đang gõ ở bảng sẽ được thay.']) expect(dlg).toHaveTextContent(s);
-    expect(dlg).not.toHaveTextContent('đã ngừng');
-    expect(dlg).toHaveTextContent('Ghi "Đã về" 1 món ngoài danh mục');
-    const ok = within(dlg).getByRole('button', { name: 'Nhập vào tủ' });
-    await userEvent.dblClick(ok);
-    await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
-    expect(bodiesOf(f, RECEIPT_URL)[0]).toEqual({
-      lines: [
-        { item_id: 'a', qty: 6, expected_stock_qty: 1 },
-        { item_id: 'c', qty: 4, expected_stock_qty: 3 },
-        { item_id: 'e', qty: 2, expected_stock_qty: 0 },
-      ],
-      ym: '2026-10',
-      snapshot_id: 's-1',
-    });
-    await waitFor(() => expect(bodiesOf(f, CUSTOM_URL)).toHaveLength(1));
-    expect(bodiesOf(f, CUSTOM_URL)[0]).toEqual({ line_key: 'custom:["kéo cắt giấy", "cái"]', qty: 2, expected_received: 0, snapshot_id: 's-1' });
-    expect(await screen.findByText('Đã nhập 3 món vào tủ')).toBeInTheDocument();
-  });
-
-  it('chưa có bản chốt → vô hiệu "Chưa in trình ký gửi ADM"', async () => {
-    stub({ plan: plan([planRow({ remaining: 3 })], { snapshot: null }) });
-    await open();
-    await screen.findByDisplayValue('3');
-    expect(fullBtn()).toBeDisabled();
-    expect(screen.getByText('Chưa in trình ký gửi ADM')).toBeInTheDocument();
-  });
-
-  it('có bản, 1 hàng remaining 1 (+ 1 hàng ADM) → bật', async () => {
-    stub({ plan: plan([planRow({ remaining: 1 }), planRow({ item_id: 'x', remaining: 4, adm_out: true })]) });
-    await open();
-    await screen.findByDisplayValue('1');
-    expect(fullBtn()).toBeEnabled();
-  });
-
-  it('Đủ hàng: tủ lưu xong, ghi "Đã về" ngoài DM lỗi 500 → báo rõ phần đã lưu/chưa ghi + toast tủ + tải lại; "Thử lại" chỉ ghi lại món ngoài DM', async () => {
-    let customCalls = 0;
-    const two = plan([planRow({ item_id: 'a', name: 'A', remaining: 6, stock_qty: 1 })], {
-      custom: [customRow({ remaining: 2 }), customRow({ key: 'custom:["ghim", "hộp"]', name: 'Ghim', remaining: 1 })],
-    });
-    const f = stub({
-      plan: two,
-      routes: { [CUSTOM_URL]: () => (++customCalls === 2 ? jsonResponse(500, { code: 'INTERNAL' }) : jsonResponse(201, { received: 1 })) },
-    });
-    await open();
-    await screen.findByDisplayValue('6');
-    await userEvent.click(fullBtn());
-    const before = callsTo(f, PLAN_URL).length;
-    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Nhập vào tủ' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Đã nhập 1 món vào tủ; chưa ghi được "Đã về" cho 1 món ngoài danh mục — bấm Thử lại.');
-    expect(screen.queryByText('Chưa lưu được hàng về. Thử lại sau.')).toBeNull();
-    expect(await screen.findByText('Đã nhập 1 món vào tủ')).toBeInTheDocument();
-    await waitFor(() => expect(callsTo(f, PLAN_URL).length).toBeGreaterThan(before));
-    expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1);
-    await userEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Thử lại' }));
-    await waitFor(() => expect(customCalls).toBe(4));
-    expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1);
-  });
-
-  it('Đủ hàng chỉ còn món ngoài DM, ghi "Đã về" lỗi → báo chưa ghi được, không có "Đã nhập 0 món vào tủ"', async () => {
-    const only = plan([planRow({ item_id: 'a', name: 'A', remaining: 0, received: 10 })], { custom: [customRow({ remaining: 2 })] });
-    stub({ plan: only, routes: { [CUSTOM_URL]: () => jsonResponse(500, { code: 'INTERNAL' }) } });
-    await open();
-    await userEvent.click(await screen.findByRole('button', { name: 'Đủ hàng' }));
-    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Nhập vào tủ' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Chưa ghi được "Đã về" cho 1 món ngoài danh mục — bấm Thử lại.');
-    expect(screen.queryByText(/Đã nhập 0 món/)).toBeNull();
-  });
-
-  it('409 STALE_UPDATE từ "Đủ hàng" → báo và tải lại kế hoạch', async () => {
-    const f = stub({ receipt: () => jsonResponse(409, { code: 'STALE_UPDATE' }) });
-    await open();
-    await screen.findByDisplayValue('6');
-    await userEvent.click(fullBtn());
-    const before = callsTo(f, PLAN_URL).length;
-    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Nhập vào tủ' }));
-    expect(await screen.findByText('Hàng về vừa được ghi ở nơi khác — tải lại.')).toBeInTheDocument();
-    await waitFor(() => expect(callsTo(f, PLAN_URL).length).toBeGreaterThan(before));
-  });
-});
-
 describe('Trạng thái "đã về đủ"', () => {
   const batches = [
     { at: '2026-11-03T03:30:00.000Z', actor_name: 'Lê Bình', items: 1, units: 6, note: 'đợt 2' },
     { at: '2026-11-02T03:00:00.000Z', actor_name: 'Lê Bình', items: 2, units: 14, note: null },
   ];
 
-  it('mọi remaining 0 → khối xong + "Sang Giao hàng →" + danh sách 2 đợt; không bảng số, Đủ hàng vô hiệu', async () => {
+  it('mọi remaining 0 → khối xong + "Sang Giao hàng →" + danh sách 2 đợt; không bảng số', async () => {
     stub({ plan: plan([planRow({ received: 10, remaining: 0 }), planRow({ item_id: 'b', name: 'Kẹp', received: 10, remaining: 0 }), planRow({ item_id: 'x', adm_out: true })], { batches }) });
     await open();
     expect(await screen.findByText('Hàng kỳ tháng 10 đã về đủ — 2 món, 20 đơn vị (nhập lần cuối 10:30 03/11).')).toBeInTheDocument();
@@ -213,9 +110,8 @@ describe('Trạng thái "đã về đủ"', () => {
     const list = screen.getByRole('table', { name: 'Các đợt đã nhập' });
     expect(within(list).getAllByRole('row')).toHaveLength(3);
     expect(list).toHaveTextContent('đợt 2');
-    expect(screen.queryByRole('spinbutton', { name: /Về đợt này/ })).not.toBeInTheDocument();
-    expect(fullBtn()).toBeDisabled();
-    expect(screen.getByText('Đã về đủ theo bản in')).toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton', { name: /Hàng về/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Đủ hàng' })).toBeNull();
     expect(screen.getByRole('combobox', { name: 'Tìm món để thêm' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ADM hết hàng: Bút bi' })).toHaveAttribute('aria-pressed', 'true');
   });

@@ -9,8 +9,6 @@ import { printPath } from '@/features/reports/reports.api';
 import type { ArrivalFilter } from './arrival-rows';
 import type { ArrivalsPlan } from './arrivals.api';
 
-export type FullBlock = 'noSnapshot' | 'noOrder' | 'allDone' | 'sending' | null;
-
 interface Props {
   plan: ArrivalsPlan;
   filter: ArrivalFilter;
@@ -20,14 +18,15 @@ interface Props {
   shown: number;
   shortCount: number;
   reducedCount: number;
-  fullBlock: FullBlock;
+  batch: { items: number; units: number };
+  saveDisabled: boolean;
   candidates: ComboOption[];
   onFilter: (patch: Record<string, string | null>) => void;
-  onFull: () => void;
+  onSave: () => void;
   onAdd: (id: string) => void;
 }
 
-export function ArrivalsToolbar({ plan, filter, groups, counts, total, shown, shortCount, reducedCount, fullBlock, candidates, onFilter, onFull, onAdd }: Props) {
+export function ArrivalsToolbar({ plan, filter, groups, counts, total, shown, shortCount, reducedCount, batch, saveDisabled, candidates, onFilter, onSave, onAdd }: Props) {
   const { t } = useTranslation();
   return (
     <div className="ar-bar">
@@ -42,15 +41,11 @@ export function ArrivalsToolbar({ plan, filter, groups, counts, total, shown, sh
           )}
           {reducedCount > 0 && <p className="ar-warn-text">{t('warn.W14head', { x: reducedCount })}</p>}
         </div>
-        <div className="ar-full">
-          <button type="button" className="btn btn--primary btn--lg" disabled={fullBlock !== null} aria-describedby={fullBlock ? 'ar-full-why' : undefined} onClick={onFull}>
-            {t('arrivals.full.button')}
+        <div className="ar-save">
+          <span className="ar-batch">{t('arrivals.batch', { n: batch.items, u: batch.units })}</span>
+          <button type="button" className="btn btn--primary" disabled={saveDisabled} onClick={onSave}>
+            {t('arrivals.save')}
           </button>
-          {fullBlock && (
-            <small id="ar-full-why" className="ar-full__why">
-              {t(`arrivals.full.${fullBlock}`)}
-            </small>
-          )}
         </div>
       </div>
       <div className="ar-bar__row">
@@ -70,6 +65,7 @@ export function ArrivalsToolbar({ plan, filter, groups, counts, total, shown, sh
         value={filter.g ?? ALL_GROUPS}
         onChange={(g) => onFilter({ g: g === ALL_GROUPS ? null : g })}
       />
+      <p className="ar-legend">{t('arrivals.status.legend')}</p>
       <p className="ar-count" aria-live="polite">
         {t('arrivals.filter.count', { x: shown, y: total })}
       </p>

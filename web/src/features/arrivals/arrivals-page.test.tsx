@@ -13,25 +13,68 @@ const loc = () => screen.getByTestId('location-search').textContent ?? '';
 const rowOf = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
 
 describe('Hàng về — bảng theo bản in', () => {
-  it('cột Đề nghị · Đã về các đợt trước · Tủ hiện có · Về đợt này; điền sẵn = phần còn lại; "Theo bản in hh:mm dd/mm"', async () => {
+  it('cột: Sản phẩm · Tồn kho · Đề nghị mua · Hàng về · Tình trạng · Sau nhập kho; điền sẵn = phần còn lại; link "theo bản gửi ADM hh:mm dd/mm"', async () => {
     stub();
     await open();
     expect(await screen.findByDisplayValue('6')).toBe(box('Bút bi'));
     expect(box('Kẹp giấy')).toHaveValue(10);
-    for (const h of ['Đề nghị', 'Đã về các đợt trước', 'Tủ hiện có', 'Về đợt này', 'Tình trạng', 'Tủ sau khi lưu']) {
-      expect(screen.getByRole('columnheader', { name: h })).toBeInTheDocument();
-    }
-    expect(within(rowOf('Bút bi')).getAllByRole('cell').map((c) => c.textContent)).toEqual(expect.arrayContaining(['10', '4', '2']));
-    expect(screen.getByRole('link', { name: 'Theo bản in 09:05 02/11' })).toHaveAttribute('href', '/admin/reports/snapshots/s-1/print');
+    const heads = screen.getAllByRole('columnheader').map((c) => c.textContent);
+    expect(heads).toEqual(['Món', 'Tồn kho', 'Đề nghị mua', 'Hàng về', 'Tình trạng', 'Sau nhập kho']);
+    expect(heads).not.toContain('Đã về các đợt trước');
+    expect(screen.getByRole('link', { name: 'theo bản gửi ADM 09:05 02/11' })).toHaveAttribute('href', '/admin/reports/snapshots/s-1/print');
   });
 
-  it('gom theo nhóm: đầu nhóm tên · "đã về đủ a/b"', async () => {
+  it('món có đợt trước: dưới số Đề nghị mua có chữ nhỏ "đã về 4"; món chưa về đợt nào không có', async () => {
+    stub();
+    await open();
+    await screen.findByDisplayValue('6');
+    expect(within(rowOf('Bút bi')).getByText('đã về 4')).toBeInTheDocument();
+    expect(within(rowOf('Kẹp giấy')).queryByText(/đã về/)).toBeNull();
+  });
+
+  it('gom theo nhóm: đầu nhóm "đủ a/b, sau lưu c/b" khớp chip: chip nền "Thiếu 6" = đã lưu, chip viền đứt "Sau lưu: Đủ"', async () => {
+    stub();
+    await open();
+    await screen.findByDisplayValue('6');
+    const but = screen.getByRole('rowgroup', { name: 'Bút' });
+    expect(but).toHaveTextContent('đủ 0/1, sau lưu 1/1');
+    const row = within(rowOf('Bút bi'));
+    expect(row.getByText('Thiếu 6')).toHaveClass('tag');
+    expect(row.getByText('Sau lưu: Đủ')).toHaveClass('ar-after-chip');
+    await type(box('Bút bi'), '0');
+    expect(but).toHaveTextContent('đủ 0/1');
+    expect(but).not.toHaveTextContent('sau lưu');
+    expect(row.queryByText(/Sau lưu/)).toBeNull();
+    expect(row.getByText('Thiếu 6')).toBeInTheDocument();
+  });
+
+  it('nhóm đã có món đủ: "đủ 1/2, sau lưu 2/2"; hàng đủ điền 0', async () => {
     stub({ plan: plan([...PLAN.rows, planRow({ item_id: 'i-c', name: 'Bút chì', category_id: 'c-but', received: 10, remaining: 0 })]) });
     await open();
     const but = await screen.findByRole('rowgroup', { name: 'Bút' });
-    expect(but).toHaveTextContent('đã về đủ 1/2');
-    expect(within(but).getByRole('spinbutton', { name: 'Về đợt này: Bút chì' })).toHaveValue(0);
-    expect(screen.getByRole('rowgroup', { name: 'Kẹp & dán' })).toHaveTextContent('đã về đủ 0/1');
+    expect(but).toHaveTextContent('đủ 1/2, sau lưu 2/2');
+    expect(within(but).getByRole('spinbutton', { name: 'Hàng về: Bút chì' })).toHaveValue(0);
+  });
+
+  it('nhập 0 ở một món còn thiếu → hiện cột "Còn thiếu"; sửa lại đủ → cột biến mất', async () => {
+    stub();
+    await open();
+    await screen.findByDisplayValue('6');
+    expect(screen.queryByRole('columnheader', { name: 'Còn thiếu' })).toBeNull();
+    await type(box('Bút bi'), '4');
+    expect(screen.getByRole('columnheader', { name: 'Còn thiếu' })).toBeInTheDocument();
+    expect(within(rowOf('Bút bi')).getAllByRole('cell').map((c) => c.textContent)).toContain('2');
+    await type(box('Bút bi'), '6');
+    expect(screen.queryByRole('columnheader', { name: 'Còn thiếu' })).toBeNull();
+  });
+
+  it('chỉ một nút chính "Lưu hàng về"; không có "Đủ hàng", "Đặt lại", "Điền lại số gợi ý", "Hoàn tác" trong bảng', async () => {
+    stub();
+    await open();
+    await screen.findByDisplayValue('6');
+    expect(screen.getAllByRole('button', { name: 'Lưu hàng về' })).toHaveLength(1);
+    for (const n of ['Đủ hàng', 'Đặt lại', 'Điền lại số gợi ý', 'Hoàn tác']) expect(screen.queryByRole('button', { name: n })).toBeNull();
+    expect(screen.getByText('Đợt này: 2 món · 16 đơn vị')).toBeInTheDocument();
   });
 
   it('chưa có bản chốt: ghi chú số gộp, điền sẵn remaining theo ordered gộp', async () => {
@@ -41,27 +84,26 @@ describe('Hàng về — bảng theo bản in', () => {
     expect(box('Bút bi')).toHaveValue(10);
   });
 
-  it('Tháng này không cần đề nghị ADM: băng "Không có đơn gửi ADM · hh:mm dd/mm", Đủ hàng khóa với lý do, vẫn còn Thêm món khác và Về bù kỳ trước', async () => {
+  it('Tháng này không cần đề nghị ADM: băng "Không có đơn gửi ADM · hh:mm dd/mm", vẫn còn Thêm món khác và Về bù kỳ trước', async () => {
     const makeup = [{ ym: '2026-09', rows: [{ key: 'i-a', item_id: 'i-a', name: 'Bút bi', name_en: null, unit: 'cay', stock_qty: 2, ordered: 7, received: 3, adm_owed: 4 }] }];
     stub({ plan: plan([], { snapshot: null, no_order: { at: '2026-11-12T03:00:00.000Z', by_name: 'Hà' }, makeup }) });
     await open();
     expect(await screen.findByText('Không có đơn gửi ADM · 10:00 12/11')).toBeInTheDocument();
     expect(screen.queryByText(/Chưa in trình ký gửi ADM/)).toBeNull();
-    expect(screen.getByRole('button', { name: 'Đủ hàng' })).toBeDisabled();
-    expect(screen.getByText('Tháng này không cần đề nghị ADM')).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Tìm món để thêm' })).toBeInTheDocument();
     expect(screen.getByText('Về bù kỳ trước (1)')).toBeInTheDocument();
   });
 
-  it('nhãn W13: đủ → "Đủ"; thiếu 1 → "Thiếu 1 so với bản in"; dư 1 → "Dư 1 so với bản in — vào kho"; tủ sau khi lưu đổi theo', async () => {
+  it('chip tình trạng: nhập đủ → không có chip Sau lưu; nhập 9 → "Sau lưu: Thiếu 1"; 11 → "Sau lưu: Dư 1"; sau nhập kho đổi theo', async () => {
     stub();
     await open();
     await screen.findByDisplayValue('6');
-    expect(rowOf('Kẹp giấy')).toHaveTextContent('Đủ');
     await type(box('Kẹp giấy'), '9');
-    expect(rowOf('Kẹp giấy')).toHaveTextContent('Thiếu 1 so với bản in');
+    expect(rowOf('Kẹp giấy')).toHaveTextContent('Sau lưu: Thiếu 1');
+    await type(box('Kẹp giấy'), '10');
+    expect(rowOf('Kẹp giấy')).toHaveTextContent('Sau lưu: Đủ');
     await type(box('Kẹp giấy'), '11');
-    expect(rowOf('Kẹp giấy')).toHaveTextContent('Dư 1 so với bản in — vào kho');
+    expect(rowOf('Kẹp giấy')).toHaveTextContent('Sau lưu: Dư 1');
     expect(within(rowOf('Kẹp giấy')).getAllByRole('cell').at(-1)).toHaveTextContent('11');
   });
 
@@ -91,7 +133,7 @@ describe('Hàng về — bảng theo bản in', () => {
       ]),
     });
     await open();
-    const rowOf = async (name: string) => (await screen.findByRole('spinbutton', { name: `Về đợt này: ${name}` })).closest('tr')!;
+    const rowOf = async (name: string) => (await screen.findByRole('spinbutton', { name: `Hàng về: ${name}` })).closest('tr')!;
     expect(within(await rowOf('Món ngừng')).getByText('Ngừng riêng')).toBeInTheDocument();
     expect(within(await rowOf('Kẹp giấy')).getByText('Ngừng theo nhóm')).toBeInTheDocument();
     expect(within(await rowOf('Bút bi')).queryByText(/^Ngừng (riêng|theo nhóm)$/)).not.toBeInTheDocument();
@@ -107,7 +149,7 @@ describe('Hàng về — lọc ?q=&g=&short=1', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Kẹp & dán 1' }));
     expect(loc()).toContain('g=c-kep');
     expect(screen.getByText('Đang hiện 1/2 món')).toBeInTheDocument();
-    expect(screen.queryByRole('spinbutton', { name: 'Về đợt này: Bút bi' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton', { name: 'Hàng về: Bút bi' })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Tất cả 2' }));
     expect(loc()).not.toContain('g=');
   });
@@ -127,7 +169,7 @@ describe('Hàng về — lọc ?q=&g=&short=1', () => {
     await screen.findByDisplayValue('6');
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm món (không cần dấu)' }), 'kep');
     await waitFor(() => expect(loc()).toContain('q=kep'));
-    expect(screen.queryByRole('spinbutton', { name: 'Về đợt này: Bút bi' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton', { name: 'Hàng về: Bút bi' })).not.toBeInTheDocument();
     expect(box('Kẹp giấy')).toBeInTheDocument();
   });
 
@@ -159,8 +201,8 @@ describe('Hàng về — lọc ?q=&g=&short=1', () => {
   });
 });
 
-describe('Hàng về — Về đủ cả nhóm', () => {
-  it('điền remaining cho hàng của nhóm (gồm món ngừng đã đặt), bỏ qua ADM hết hàng; 0 request; "Bỏ điền cả nhóm" trả số cũ; không có "ADM hết hàng cả nhóm"', async () => {
+describe('Hàng về — Điền đủ cả nhóm', () => {
+  it('điền remaining cho hàng của nhóm (gồm món ngừng đã đặt), bỏ qua ADM hết hàng; 0 request; không có "Bỏ điền" và không có "ADM hết hàng cả nhóm"', async () => {
     const rows = [
       planRow({ item_id: 'k1', name: 'Kẹp 1', category_id: 'c-kep', remaining: 3 }),
       planRow({ item_id: 'k2', name: 'Kẹp 2', category_id: 'c-kep', remaining: 4 }),
@@ -175,14 +217,12 @@ describe('Hàng về — Về đủ cả nhóm', () => {
     await type(box('Kẹp ngừng'), '0');
     const before = f.mock.calls.length;
     const group = screen.getByRole('rowgroup', { name: 'Kẹp & dán' });
-    await userEvent.click(within(group).getByRole('button', { name: 'Về đủ cả nhóm' }));
+    await userEvent.click(within(group).getByRole('button', { name: 'Điền đủ cả nhóm' }));
     expect(box('Kẹp 1')).toHaveValue(3);
     expect(box('Kẹp 2')).toHaveValue(4);
     expect(box('Kẹp 3')).toHaveValue(0);
     expect(box('Kẹp ngừng')).toHaveValue(2);
-    await userEvent.click(within(group).getByRole('button', { name: 'Bỏ điền cả nhóm' }));
-    expect(box('Kẹp 1')).toHaveValue(1);
-    expect(box('Kẹp 2')).toHaveValue(0);
+    expect(within(group).queryByRole('button', { name: /Bỏ điền/ })).toBeNull();
     expect(f.mock.calls.length).toBe(before);
     expect(screen.queryByRole('button', { name: /ADM hết hàng cả nhóm/ })).not.toBeInTheDocument();
   });
@@ -288,7 +328,7 @@ describe('Hàng về — biên ô Về đợt này', () => {
     try {
       mockViewport(1280);
       renderApp(makeMe('admin'), '/admin/arrivals');
-      expect(await screen.findByRole('spinbutton', { name: 'This delivery: Ballpoint pen' })).toBeInTheDocument();
+      expect(await screen.findByRole('spinbutton', { name: 'Arrived: Ballpoint pen' })).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage('vi');
     }

@@ -63,7 +63,7 @@ type Fetch = ReturnType<typeof stub>;
 export const bodiesOf = (f: Fetch, url: string) => f.mock.calls.filter(([u]) => u === url).map(([, init]) => JSON.parse(String((init as RequestInit).body)));
 export const callsTo = (f: Fetch, url: string, method?: string) =>
   f.mock.calls.filter(([u, init]) => String(u).startsWith(url) && (!method || (init as RequestInit | undefined)?.method === method)).map(([u]) => String(u));
-export const box = (name: string) => screen.getByRole('spinbutton', { name: `Về đợt này: ${name}` }) as HTMLInputElement;
+export const box = (name: string) => screen.getByRole('spinbutton', { name: `Hàng về: ${name}` }) as HTMLInputElement;
 export async function type(el: HTMLElement, text: string) {
   await userEvent.clear(el);
   if (text) await userEvent.type(el, text);

@@ -1,17 +1,20 @@
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import type { Tone } from '@/lib/group-tone';
 import { ItemThumb } from '@/ui/item-thumb';
 import { useRequestFormat } from '@/features/request/request-format';
-import { arrivalTag, type ArrivalRow, type ArrivalSection } from './arrival-rows';
+import type { ArrivalRow, ArrivalSection } from './arrival-rows';
+import { afterState, groupCounts, savedState, shortOf, type ArrivalState, type ArrivalStatus } from './arrival-status';
 import type { ArrivalsDraft } from './use-arrivals-draft';
 
 const THUMB_TONE: Tone = 'g0';
-const TAG_CLASS = { short: 'tag--warn', over: 'tag--info', exact: 'tag--ok' } as const;
+const TAG_CLASS: Record<ArrivalState, string> = { short: 'tag--warn', over: 'tag--info', done: 'tag--ok', none: 'tag--outline', adm_out: 'tag--outline' };
 
 interface RowProps {
   r: ArrivalRow;
   draft: ArrivalsDraft;
   busy: boolean;
+  showShort: boolean;
   onToggleAdm: (r: ArrivalRow) => void;
 }
 
@@ -36,15 +39,24 @@ function InactiveTag({ reason }: { reason: ArrivalRow['inactive_reason'] }) {
   return <span className="tag tag--outline">{t(reason === 'item' ? 'catalog.categories.byItem' : 'catalog.categories.byGroup')}</span>;
 }
 
-function StatusTag({ r, qty }: { r: ArrivalRow; qty: number }) {
-  const { t } = useTranslation();
-  if (r.adm_out) return <span className="tag tag--outline">{t('arrivals.admOut.tag')}</span>;
-  const tag = arrivalTag(qty, r.remaining);
-  const text = tag.kind === 'exact' ? t('arrivals.tag.exact') : t(tag.kind === 'short' ? 'warn.W13short' : 'warn.W13surplus', { n: tag.n });
-  return <span className={`tag ${TAG_CLASS[tag.kind]}`}>{text}</span>;
+function stateText(t: TFunction, st: ArrivalStatus) {
+  return t(`arrivals.status.${st.state}`, { n: st.n });
 }
 
-function ArrivalRowView({ r, draft, busy, onToggleAdm }: RowProps) {
+// Chip nền = đã lưu; chip viền đứt = sau khi bấm "Lưu hàng về"
+function StatusTag({ r, qty }: { r: ArrivalRow; qty: number }) {
+  const { t } = useTranslation();
+  const saved = savedState(r);
+  const after = afterState(r, qty);
+  return (
+    <>
+      <span className={`tag ${TAG_CLASS[saved.state]}`}>{stateText(t, saved)}</span>
+      {after && <span className="ar-after-chip">{t('arrivals.status.after', { label: stateText(t, after) })}</span>}
+    </>
+  );
+}
+
+function ArrivalRowView({ r, draft, busy, showShort, onToggleAdm }: RowProps) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   const n = (v: number) => v.toLocaleString('vi-VN');
@@ -65,9 +77,11 @@ function ArrivalRowView({ r, draft, busy, onToggleAdm }: RowProps) {
           </span>
         </div>
       </td>
-      <td className="n" data-label={t('arrivals.table.ordered')}>{n(r.ordered)}</td>
-      <td className="n" data-label={t('arrivals.table.received')}>{n(r.received)}</td>
       <td className="n" data-label={t('arrivals.table.stock')}>{n(r.stock)}</td>
+      <td className="n" data-label={t('arrivals.table.ordered')}>
+        {n(r.ordered)}
+        {r.received > 0 && <small className="ar-received">{t('arrivals.table.receivedSmall', { n: n(r.received) })}</small>}
+      </td>
       <td className="n ar-qty" data-label={t('arrivals.table.qty')}>
         <div className="ar-qty__in">
           <input
@@ -100,6 +114,11 @@ function ArrivalRowView({ r, draft, busy, onToggleAdm }: RowProps) {
           </small>
         )}
       </td>
+      {showShort && (
+        <td className="n" data-label={t('arrivals.table.short')}>
+          {r.adm_out ? '–' : n(shortOf(r, qty))}
+        </td>
+      )}
       <td data-label={t('arrivals.table.status')}>
         <StatusTag r={r} qty={qty} />
       </td>
@@ -112,29 +131,29 @@ interface Props {
   section: ArrivalSection;
   draft: ArrivalsDraft;
   admBusy: ReadonlySet<string>;
+  showShort: boolean;
+  columns: number;
   onToggleAdm: (r: ArrivalRow) => void;
 }
 
-export function ArrivalsGroup({ section, draft, admBusy, onToggleAdm }: Props) {
+export function ArrivalsGroup({ section, draft, admBusy, showShort, columns, onToggleAdm }: Props) {
   const { t } = useTranslation();
-  const counted = section.all.filter((r) => !r.added);
-  const done = counted.filter((r) => r.remaining === 0).length;
-  const filled = draft.filled(section.id);
+  const { done, total, doneAfter } = groupCounts(section.all, draft.qtyOf);
   return (
     <tbody aria-label={section.label}>
       <tr className="ar-ghead">
-        <th colSpan={7} scope="rowgroup">
+        <th colSpan={columns} scope="rowgroup">
           <div className="ar-ghead__in">
             <b>{section.label}</b>
-            <span>· {t('arrivals.group.done', { a: done, b: counted.length })}</span>
-            <button type="button" className="btn btn--sm" onClick={() => (filled ? draft.unfill(section.id) : draft.fill(section.id, section.all))}>
-              {t(filled ? 'arrivals.group.unfill' : 'arrivals.group.fill')}
+            <span>· {doneAfter === done ? t('arrivals.group.done', { a: done, b: total }) : t('arrivals.group.doneAfter', { a: done, b: total, c: doneAfter })}</span>
+            <button type="button" className="btn btn--sm" onClick={() => draft.fill(section.all)}>
+              {t('arrivals.group.fill')}
             </button>
           </div>
         </th>
       </tr>
       {section.rows.map((r) => (
-        <ArrivalRowView key={r.item_id} r={r} draft={draft} busy={admBusy.has(r.item_id)} onToggleAdm={onToggleAdm} />
+        <ArrivalRowView key={r.item_id} r={r} draft={draft} busy={admBusy.has(r.item_id)} showShort={showShort} onToggleAdm={onToggleAdm} />
       ))}
     </tbody>
   );

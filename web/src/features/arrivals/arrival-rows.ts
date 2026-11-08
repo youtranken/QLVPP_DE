@@ -84,14 +84,6 @@ export function toArrivalRows(plan: ArrivalsPlan, added: AdminItem[]): ArrivalRo
 
 export const prefillOf = (r: ArrivalRow) => (r.adm_out || r.added ? 0 : r.remaining);
 
-export type ArrivalTag = { kind: 'exact' | 'short' | 'over'; n: number };
-
-export function arrivalTag(qty: number, remaining: number): ArrivalTag {
-  if (qty < remaining) return { kind: 'short', n: remaining - qty };
-  if (qty > remaining) return { kind: 'over', n: qty - remaining };
-  return { kind: 'exact', n: 0 };
-}
-
 // Món ngừng đã đặt vẫn chờ về như món thường (đã đặt thì phải nhận)
 export const isShort = (r: ArrivalRow) => !r.adm_out && r.received < r.ordered;
 
@@ -114,20 +106,6 @@ export const isFiltering = (f: ArrivalFilter) => f.q !== '' || f.g !== null || f
 
 export function applyArrivalFilter(rows: ArrivalRow[], f: ArrivalFilter, known: ReadonlySet<string>): ArrivalRow[] {
   return rows.filter((r) => (!f.g || groupOf(r, known) === f.g) && (!f.short || isShort(r)) && matches(r, f.q));
-}
-
-// Lô "Đủ hàng": mọi hàng còn lại > 0 trừ ADM hết hàng (món ngừng đã đặt vẫn nhận)
-export function fullBatch(rows: ArrivalRow[]) {
-  const counted = rows.filter((r) => !r.added);
-  const lines = counted.filter((r) => r.remaining > 0 && !r.adm_out);
-  return {
-    lines,
-    units: lines.reduce((n, r) => n + r.remaining, 0),
-    skip: {
-      adm: counted.filter((r) => r.adm_out).length,
-      done: counted.filter((r) => !r.adm_out && r.remaining === 0).length,
-    },
-  };
 }
 
 export function differingRows(rows: ArrivalRow[], qtyOf: (r: ArrivalRow) => number) {

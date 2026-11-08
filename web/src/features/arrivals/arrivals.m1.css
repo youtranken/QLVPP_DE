@@ -37,8 +37,11 @@
 [data-shell='admin'] .ar-source p { margin: 0; }
 [data-shell='admin'] .ar-note-line { color: var(--c-ink-2); }
 [data-shell='admin'] .ar-warn-text { margin: 0; color: var(--c-warn); font: var(--t-label); }
-[data-shell='admin'] .ar-full { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
-[data-shell='admin'] .ar-full__why { color: var(--c-muted); font: var(--t-sm); }
+[data-shell='admin'] .ar-save { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); margin-left: auto; }
+[data-shell='admin'] .ar-batch { color: var(--c-ink-2); font: var(--t-sm); }
+[data-shell='admin'] .ar-legend { margin: 0; color: var(--c-muted); font: var(--t-sm); }
+[data-shell='admin'] .ar-received { display: block; color: var(--c-muted); font: var(--t-sm); font-weight: 400; }
+[data-shell='admin'] .ar-after-chip { display: inline-block; margin-left: var(--s-2); padding: 1px var(--s-2); border: 1px dashed var(--c-ok); border-radius: var(--r-pill); color: var(--c-ok); font: var(--t-cap); font-weight: 700; white-space: nowrap; }
 [data-shell='admin'] .ar-count { margin: 0; color: var(--c-ink-2); font: var(--t-sm); }
 [data-shell='admin'] .ar-nomatch { display: grid; justify-items: center; gap: var(--s-2); padding: var(--s-6) var(--s-4); color: var(--c-ink); text-align: center; }
 [data-shell='admin'] .ar-confirm ul { margin: var(--s-2) 0; padding-left: var(--s-5); display: grid; gap: var(--s-1); }
@@ -84,7 +87,8 @@
   [data-shell='admin'] .ar-batches td[data-label], [data-shell='admin'] .ar-mini td[data-label] { display: grid; gap: 2px; text-align: left; }
   [data-shell='admin'] .ar-batches td[data-label]::before, [data-shell='admin'] .ar-mini td[data-label]::before { content: attr(data-label); font: var(--t-cap); color: var(--c-muted); }
   [data-shell='admin'] .ar-mini td.ar-qty { grid-column: 1 / -1; }
-  [data-shell='admin'] .ar-full, [data-shell='admin'] .ar-full .btn { width: 100%; }
+  [data-shell='admin'] .ar-save, [data-shell='admin'] .ar-save .btn { width: 100%; }
+  [data-shell='admin'] .ar-after-chip { margin-left: 0; margin-top: var(--s-1); }
   [data-shell='admin'] .ar-foot .btn { flex: 1; }
 }
 [data-shell='admin'] .ar-table td[data-label] .tag { justify-self: start; }

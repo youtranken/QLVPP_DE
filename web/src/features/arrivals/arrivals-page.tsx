@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { formatVnStamp } from '@/lib/format-time';
-import { groupCounts } from '@/lib/group-counts';
+import { groupCounts as countByGroup } from '@/lib/group-counts';
 import { useUrlPatch } from '@/lib/use-url-patch';
 import { lockedYm } from '@/lib/ym';
 import { Loading, LoadError } from '@/ui/load-state';
@@ -12,13 +11,13 @@ import { categoryLabel, useAdminItems, useAllCategories } from '@/features/catal
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import { PeriodLockGate } from '@/features/summary/period-lock-gate';
-import { NO_GROUP, applyArrivalFilter, differingRows, fullBatch, groupOf, isAllArrived, isShort, parseArrivalFilter, toArrivalRows } from './arrival-rows';
+import { NO_GROUP, applyArrivalFilter, differingRows, groupOf, isAllArrived, isShort, parseArrivalFilter, toArrivalRows } from './arrival-rows';
 import { ArrivalTable } from './arrival-table';
-import { FullConfirm, SaveConfirm } from './arrivals-confirm';
+import { SaveConfirm } from './arrivals-confirm';
 import { ArrivalsCustom } from './arrivals-custom';
 import { ArrivalsDone } from './arrivals-done';
 import { ArrivalsMakeup } from './arrivals-makeup';
-import { ArrivalsToolbar, type FullBlock } from './arrivals-toolbar';
+import { ArrivalsToolbar } from './arrivals-toolbar';
 import { useAdmOutToggle, useArrivalsPlan } from './use-arrivals-plan';
 import { useArrivalsDraft } from './use-arrivals-draft';
 import { useArrivalsSave, type Notice } from './use-arrivals-save';
@@ -26,7 +25,7 @@ import './arrivals.m1.css';
 
 const CLEAR_FILTER = { q: null, g: null, short: null };
 
-function NoticeLine({ notice, nameOf, onRetry }: { notice: Notice; nameOf: (id: string) => string; onRetry: () => void }) {
+function NoticeLine({ notice, nameOf }: { notice: Notice; nameOf: (id: string) => string }) {
   const { t, i18n } = useTranslation();
   if (!notice) return null;
   if (notice.kind === 'saved') {
@@ -38,26 +37,6 @@ function NoticeLine({ notice, nameOf, onRetry }: { notice: Notice; nameOf: (id: 
         <Link className="btn btn--primary" to="/admin/delivery">
           {t('arrivals.toDelivery')}
         </Link>
-      </div>
-    );
-  }
-  if (notice.kind === 'partial') {
-    return (
-      <div role="alert" className="ar-warn">
-        <span>{t('arrivals.full.partial', { x: notice.x, n: notice.n })}</span>{' '}
-        <button type="button" className="btn btn--sm" onClick={onRetry}>
-          {t('arrivals.full.retry')}
-        </button>
-      </div>
-    );
-  }
-  if (notice.kind === 'customFailed') {
-    return (
-      <div role="alert" className="ar-warn">
-        <span>{t('arrivals.full.customFailed', { n: notice.n })}</span>{' '}
-        <button type="button" className="btn btn--sm" onClick={onRetry}>
-          {t('arrivals.full.retry')}
-        </button>
       </div>
     );
   }
@@ -96,7 +75,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   const adm = useAdmOutToggle(ym);
   const [added, setAdded] = useState<string[]>([]);
   const [note, setNote] = useState('');
-  const [dialog, setDialog] = useState<'save' | 'full' | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
   if (planQ.isError || items.isError || cats.isError) return <LoadError onRetry={() => void Promise.all([planQ.refetch(), items.refetch(), cats.refetch()])} />;
   if (!planQ.data || !items.data || !cats.data) return <Loading />;
@@ -114,15 +93,12 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   // Đã về đủ: chỉ còn bày hàng thêm tay
   const tableRows = done ? rows.filter((r) => r.added) : rows;
   const visible = applyArrivalFilter(tableRows, filter, known);
-  const counts = groupCounts(rows, (r) => groupOf(r, known), NO_GROUP);
+  const counts = countByGroup(rows, (r) => groupOf(r, known), NO_GROUP);
   const groups = [...counts.keys()].map((id) => ({ id, label: labelOf(id) }));
   const sections = groups
     .map((g) => ({ ...g, rows: visible.filter((r) => groupOf(r, known) === g.id), all: tableRows.filter((r) => groupOf(r, known) === g.id) }))
     .filter((s) => s.rows.length > 0);
 
-  const batch = fullBatch(rows);
-  const customLeft = plan.custom.filter((c) => c.remaining > 0 && !c.adm_out);
-  const fullBlock: FullBlock = plan.no_order ? 'noOrder' : !plan.snapshot ? 'noSnapshot' : saver.pending ? 'sending' : batch.lines.length === 0 && customLeft.length === 0 ? 'allDone' : null;
   const toSend = tableRows.filter((r) => !r.adm_out && draft.qtyOf(r) > 0).map((row) => ({ row, qty: draft.qtyOf(row) }));
   const invalid = tableRows.some((r) => draft.errorOf(r));
   const diffs = differingRows(tableRows, draft.qtyOf);
@@ -138,16 +114,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   };
   const doSave = async () => {
     await saver.save(toSend, note, plan.snapshot?.id ?? null, afterSave);
-    setDialog(null);
-  };
-  const runFull = (lines: typeof batch.lines) =>
-    saver.full(lines, customLeft, plan.snapshot?.id ?? null, () => {
-      draft.reset();
-      if (lines.length > 0) toast.show({ text: t('arrivals.full.done', { x: lines.length }), tone: 'ok' });
-    });
-  const doFull = async () => {
-    await runFull(batch.lines);
-    setDialog(null);
+    setConfirming(false);
   };
   const toggleAdm = async (key: string, on: boolean) => {
     const code = await adm.toggle(key, on);
@@ -166,7 +133,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
 
   return (
     <>
-      <NoticeLine notice={saver.notice} nameOf={nameOf} onRetry={() => void runFull([])} />
+      <NoticeLine notice={saver.notice} nameOf={nameOf} />
       <ArrivalsToolbar
         plan={plan}
         filter={filter}
@@ -176,10 +143,11 @@ function ArrivalsBoard({ ym }: { ym: string }) {
         shown={visible.length}
         shortCount={rows.filter(isShort).length}
         reducedCount={rows.filter((r) => r.reduced > 0).length}
-        fullBlock={fullBlock}
+        batch={{ items: toSend.length, units: toSend.reduce((n, l) => n + l.qty, 0) }}
+        saveDisabled={invalid || toSend.length === 0 || saver.pending}
         candidates={candidates}
         onFilter={(patch) => patchUrl(patch, true)}
-        onFull={() => setDialog('full')}
+        onSave={() => (diffs.length > 0 ? setConfirming(true) : void doSave())}
         onAdd={(id) => setAdded((prev) => [...prev, id])}
       />
       {done && <ArrivalsDone plan={plan} ym={ym} admBusy={adm.busy} onToggleAdm={(key, on) => void toggleAdm(key, on)} />}
@@ -204,34 +172,12 @@ function ArrivalsBoard({ ym }: { ym: string }) {
               </label>
               <input id="ar-note" type="text" maxLength={500} placeholder={t('arrivals.note.placeholder')} value={note} onChange={(e) => setNote(e.target.value)} />
             </div>
-            <button type="button" className="btn" onClick={draft.reset}>
-              {t('arrivals.reset')}
-            </button>
-            <button type="button" className="btn btn--primary" disabled={invalid || toSend.length === 0 || saver.pending} onClick={() => (diffs.length > 0 ? setDialog('save') : void doSave())}>
-              {t('arrivals.save')}
-            </button>
           </div>
         </section>
       )}
       <ArrivalsCustom ym={ym} snapshotId={plan.snapshot?.id ?? null} rows={plan.custom} admBusy={adm.busy} onToggleAdm={(key, on) => void toggleAdm(key, on)} onSaved={afterSide} />
       <ArrivalsMakeup groups={plan.makeup} onDone={afterSide} />
-      {dialog === 'save' && <SaveConfirm diffs={diffs} pending={saver.pending} onBack={() => setDialog(null)} onSave={() => void doSave()} />}
-      {dialog === 'full' && plan.snapshot && (
-        <FullConfirm
-          s={{
-            items: batch.lines.length,
-            units: batch.units,
-            time: formatVnStamp(plan.snapshot.created_at),
-            skip: batch.skip,
-            custom: customLeft.length,
-            reduced: batch.lines.filter((r) => r.reduced > 0).length,
-            replacesDraft: draft.typed(rows),
-          }}
-          pending={saver.pending}
-          onBack={() => setDialog(null)}
-          onConfirm={() => void doFull()}
-        />
-      )}
+      {confirming && <SaveConfirm diffs={diffs} pending={saver.pending} onBack={() => setConfirming(false)} onSave={() => void doSave()} />}
     </>
   );
 }
@@ -243,7 +189,7 @@ export function ArrivalsPage() {
   const title = t('arrivals.title', { month: workingYm ? monthOf(workingYm) : '' }).trim();
   return (
     <div className="ct-page">
-      <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.arrivals')]} title={title} description={t('arrivals.description')} />
+      <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.arrivals')]} title={title} />
       {current.isError ? (
         <LoadError onRetry={() => void current.refetch()} />
       ) : workingYm ? (

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { ArrivalRow, ArrivalSection } from './arrival-rows';
+import { showShortColumn } from './arrival-status';
 import { ArrivalsGroup } from './arrivals-group';
 import type { ArrivalsDraft } from './use-arrivals-draft';
 
@@ -10,16 +11,18 @@ interface Props {
   onToggleAdm: (r: ArrivalRow) => void;
 }
 
-const COLUMNS = ['item', 'ordered', 'received', 'stock', 'qty', 'status', 'after'] as const;
-const NUMERIC = new Set<string>(['ordered', 'received', 'stock', 'after']);
+const NUMERIC = new Set<string>(['ordered', 'stock', 'short', 'after']);
 
 export function ArrivalTable({ sections, draft, admBusy, onToggleAdm }: Props) {
   const { t } = useTranslation();
+  const rows = sections.flatMap((s) => s.rows);
+  const showShort = showShortColumn(rows, draft.qtyOf);
+  const columns = ['item', 'stock', 'ordered', 'qty', ...(showShort ? ['short'] : []), 'status', 'after'];
   return (
-    <table className="ar-table" aria-label={t('arrivals.table.label')}>
+    <table className="ar-table grid-table" aria-label={t('arrivals.table.label')}>
       <thead>
         <tr>
-          {COLUMNS.map((c) => (
+          {columns.map((c) => (
             <th key={c} scope="col" className={NUMERIC.has(c) ? 'n' : undefined}>
               {t(`arrivals.table.${c}`)}
             </th>
@@ -27,7 +30,7 @@ export function ArrivalTable({ sections, draft, admBusy, onToggleAdm }: Props) {
         </tr>
       </thead>
       {sections.map((s) => (
-        <ArrivalsGroup key={s.id} section={s} draft={draft} admBusy={admBusy} onToggleAdm={onToggleAdm} />
+        <ArrivalsGroup key={s.id} section={s} draft={draft} admBusy={admBusy} showShort={showShort} columns={columns.length} onToggleAdm={onToggleAdm} />
       ))}
     </table>
   );
