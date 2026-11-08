@@ -1,24 +1,13 @@
 [data-shell='admin'] .bl-head { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-3); min-width: 0; }
 [data-shell='admin'] .bl-head b { font: var(--t-label); }
-[data-shell='admin'] .bl-head small { font: var(--t-sm); font-weight: 600; }
-[data-shell='admin'] .bl-who { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-2); min-width: 0; }
-[data-shell='admin'] .bl-who b { font: var(--t-label); color: var(--c-ink); }
-[data-shell='admin'] .bl-who small, [data-shell='admin'] .bl-owed small { font: var(--t-sm); color: var(--c-muted); }
-[data-shell='admin'] .bl-owed { display: inline-flex; align-items: baseline; gap: var(--s-2); white-space: nowrap; }
+[data-shell='admin'] .bl-head small { font: var(--t-sm); font-weight: 600; color: var(--c-muted); }
+[data-shell='admin'] .bl-item b { font: var(--t-label); color: var(--c-ink); }
 [data-shell='admin'] .bl-owed b { font: var(--t-label); color: var(--c-warn); }
 [data-shell='admin'] .bl-acts { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--s-1); }
 [data-shell='admin'] .bl-icon-btn { width: 36px; padding: 0; }
 @media (min-width: 768px) { [data-shell='admin'] .bl-acts { flex-wrap: nowrap; } }
 [data-shell='admin'] .bl-deliver:disabled { background: var(--c-surface-sunk); }
 @media (max-width: 767px) { [data-shell='admin'] .bl-icon-btn { width: var(--hit); } }
-[data-shell='admin'] .table .dt-group:has(.bl-head[data-tone='g0']) th { background: var(--g0); color: var(--g0-ink); }
-[data-shell='admin'] .table .dt-group:has(.bl-head[data-tone='g1']) th { background: var(--g1); color: var(--g1-ink); }
-[data-shell='admin'] .table .dt-group:has(.bl-head[data-tone='g2']) th { background: var(--g2); color: var(--g2-ink); }
-[data-shell='admin'] .table .dt-group:has(.bl-head[data-tone='g3']) th { background: var(--g3); color: var(--g3-ink); }
-[data-shell='admin'] .table .dt-group:has(.bl-head[data-tone='g4']) th { background: var(--g4); color: var(--g4-ink); }
-[data-shell='admin'] .table .dt-group:has(.bl-head[data-tone='g5']) th { background: var(--g5); color: var(--g5-ink); }
-[data-shell='admin'] .table .dt-group:has(.bl-head[data-tone='g6']) th { background: var(--g6); color: var(--g6-ink); }
-[data-shell='admin'] .table .dt-group:has(.bl-head[data-tone='g7']) th { background: var(--g7); color: var(--g7-ink); }
 
 [data-shell='admin'] .bl-meta { margin: 0 0 var(--s-3); color: var(--c-muted); font: var(--t-sm); }
 [data-shell='admin'] .bl-field { display: grid; gap: var(--s-2); justify-items: start; }
@@ -39,3 +28,11 @@
 [data-shell='admin'] .bl-reasons { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--s-1) var(--s-3); }
 [data-shell='admin'] .bl-reason { display: flex; align-items: center; gap: var(--s-2); min-height: var(--hit); color: var(--c-ink); font: var(--t-body); cursor: pointer; }
 [data-shell='admin'] .bl-reason input { width: 18px; height: 18px; margin: 0; accent-color: var(--c-acc); }
+
+[data-shell='admin'] .bl-bar { flex-wrap: wrap; align-items: center; gap: var(--s-3); }
+[data-shell='admin'] .bl-table .bl-person th { position: static; height: 44px; background: var(--c-surface); color: var(--c-ink); border-bottom: 1px solid var(--c-line); white-space: normal; }
+@media (min-width: 768px) { [data-shell='admin'] .bl-table td.bl-cell-acts { width: 1%; white-space: nowrap; } }
+@media (max-width: 767px) {
+  [data-shell='admin'] .bl-table .bl-person { display: block; padding: 0; border-bottom: 0; }
+  [data-shell='admin'] .bl-table .bl-person th { display: block; height: auto; min-height: 44px; padding: var(--s-2) var(--s-4); }
+}

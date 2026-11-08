@@ -18,7 +18,7 @@ const asIdentity = (page: Page, sub: string, role: 'member' | 'admin') =>
 asRole('admin');
 
 test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () => {
-  test('E4-S3 E9-S3 Còn nợ: thẻ lọc, giao bổ sung tối đa min(nợ, tồn), hủy nợ có lý do, lịch sử đợt giao; member thấy "đã hủy 1" và chuông', async ({
+  test('Vòng3-CN Còn nợ nhóm theo tháng → người → món: công tắc người đã nghỉ, giao bổ sung tối đa min(nợ, tồn), hủy nợ có lý do, lịch sử đợt giao; member thấy "đã hủy 1" và chuông', async ({
     page,
     request,
     browser,
@@ -36,35 +36,32 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       expect(first.ok()).toBe(true);
 
       await page.goto('/admin/backlog');
-      await expect(page.getByRole('radio', { name: 'Theo món' })).toBeChecked();
-      const itemGroup = page.getByRole('rowheader', { name: new RegExp(a.name) });
-      await expect(itemGroup).toContainText('còn 2 cái');
-      await expect(itemGroup).toContainText('Tủ còn 9');
-      await expect(page.getByRole('button', { name: /^Có hàng để giao bổ sung/ })).toBeVisible();
-      await page.getByRole('button', { name: /^Của người đã nghỉ/ }).click();
-      await expect(page).toHaveURL(/filter=left/);
-      await expect(page.getByText(/^Đang lọc: Của người đã nghỉ/)).toBeVisible();
-      await expect(itemGroup).toHaveCount(0);
-      await page.getByRole('button', { name: 'Bỏ lọc' }).click();
-      await expect(itemGroup).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: 'Còn nợ' })).toBeVisible();
+      const row = page.getByRole('row').filter({ hasText: a.name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
+      const group = page.getByRole('row').filter({ hasText: seed.name }).filter({ hasText: 'PW Phòng giao' });
+      await expect(group).toContainText('PW Phòng giao');
+      await expect(page.getByRole('row').filter({ hasText: /^Tháng \d+\/\d{4} · \d+ người · \d+ đơn vị$/ }).first()).toBeVisible();
+      // Cột: Món · ĐVT · Đăng ký · Đã giao · Còn nợ · Tủ còn · Thao tác
+      await expect(row.getByRole('cell').nth(2)).toHaveText('3');
+      await expect(row.getByRole('cell').nth(3)).toHaveText('1');
+      await expect(row.getByRole('cell').nth(4)).toHaveText('2');
+      await expect(row.getByRole('cell').nth(5)).toHaveText('9');
+      const leftSwitch = page.getByRole('switch', { name: /^Chỉ người đã nghỉ/ });
+      await leftSwitch.click();
+      await expect(page).toHaveURL(/left=1/);
+      await expect(row).toHaveCount(0);
+      await leftSwitch.click();
+      await expect(row).toBeVisible();
       psql(`UPDATE users SET status = 'locked' WHERE sub = '${seed.sub}'`);
       try {
-        await page.goto('/admin/backlog?filter=left');
-        const leftRow = page.getByRole('row').filter({ hasText: seed.name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
-        await expect(leftRow.getByText('Người đã nghỉ')).toBeVisible();
+        await page.goto('/admin/backlog?left=1');
+        await expect(group.getByText('Người đã nghỉ')).toBeVisible();
+        await expect(row).toBeVisible();
       } finally {
         psql(`UPDATE users SET status = 'active' WHERE sub = '${seed.sub}'`);
       }
       await page.goto('/admin/backlog');
-
-      await page.getByRole('radio', { name: 'Theo người' }).click();
-      await expect(page).toHaveURL(/\/admin\/backlog\?by=person$/);
-      await expect(page.getByRole('radio', { name: 'Theo người' })).toBeChecked();
-      const group = page.getByRole('rowheader', { name: new RegExp(seed.name) });
-      const row = page.getByRole('row').filter({ hasText: a.name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
-      await expect(group).toContainText('PW Phòng giao');
-      await expect(row.getByText('còn 2 cái')).toBeVisible();
-      await expect(row.getByText('/ đặt 3')).toBeVisible();
+      await expect(row).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'backlog-person');
 
@@ -81,7 +78,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await expect(deliver.getByText('Tồn sau khi giao 8')).toBeVisible();
       await deliver.getByRole('button', { name: 'Giao', exact: true }).click();
       await expect(deliver).toHaveCount(0);
-      await expect(row.getByText('còn 1 cái')).toBeVisible();
+      await expect(row.getByRole('cell').nth(4)).toHaveText('1');
       await expect(page.getByText(`Đã giao bổ sung 1 cái ${a.name} cho ${seed.name}`)).toBeVisible();
       expect(stockOf(a.id)).toBe(8);
 
@@ -154,9 +151,9 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       seeds.push(debt);
       psql(`UPDATE users SET status = 'locked' WHERE sub = '${debt.sub}'`);
       await page.goto('/admin/backlog?left=1');
-      const debtRow = page.getByRole('row').filter({ hasText: debt.name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
+      const debtRow = page.getByRole('row').filter({ hasText: debt.items[0].name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
       await expect(debtRow).toHaveCount(1);
-      await expect(page.getByRole('rowheader', { name: new RegExp(current.items[0].name) })).toHaveCount(0);
+      await expect(page.getByRole('row').filter({ hasText: current.items[0].name })).toHaveCount(0);
       await expect(debtRow.getByRole('button', { name: 'Hủy nợ' })).toHaveCount(0);
       await debtRow.getByRole('button', { name: `Thao tác khác ${debt.items[0].name} — ${debt.name}` }).click();
       await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();

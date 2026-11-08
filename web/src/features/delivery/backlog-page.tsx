@@ -1,18 +1,17 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FilterNotice } from '@/ui/filter-notice';
-import { LoadError } from '@/ui/load-state';
+import { SearchBox } from '@/ui/filter/search-box';
+import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
-import { Segmented } from '@/ui/segmented';
-import { Toolbar } from '@/ui/toolbar';
+import { Select } from '@/ui/select';
+import { Switch } from '@/ui/switch';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { lockedYm } from '@/lib/ym';
-import { monthOf } from '@/features/request/request-format';
 import { useCurrentPeriod } from '@/features/request/request.api';
-import { useBacklog, type BacklogBy } from './backlog.api';
-import { BacklogStats } from './backlog-stats';
-import { BacklogTable, type LineAction } from './backlog-table';
-import { applyFilter, backlogStats, flatten, type BacklogRow } from './backlog-rows';
+import { useBacklog, type BacklogLine } from './backlog.api';
+import { BacklogMonthTable, type LineAction } from './backlog-month-table';
+import { useBacklogFormat } from './backlog-format';
+import { backlogMonths, leftPeople, monthsOf } from './backlog-months';
 import { CancelDialog } from './cancel-dialog';
 import { DeliverMoreDialog } from './deliver-more-dialog';
 import { DeliveriesDrawer } from './deliveries-drawer';
@@ -21,62 +20,70 @@ import { useBacklogParams } from './use-backlog-params';
 import './backlog.m1.css';
 
 // Dòng đang thao tác lấy theo dữ liệu mới nhất; dòng hết nợ (rời danh sách) giữ bản lúc mở để hộp thoại không vỡ
-function useOpenLine(rows: BacklogRow[]) {
-  const [open, setOpen] = useState<{ action: LineAction; line: BacklogRow } | null>(null);
-  const line = open ? (rows.find((r) => r.id === open.line.id) ?? open.line) : null;
+function useOpenLine(lines: BacklogLine[]) {
+  const [open, setOpen] = useState<{ action: LineAction; line: BacklogLine } | null>(null);
+  const line = open ? (lines.find((l) => l.line_id === open.line.line_id) ?? open.line) : null;
   return {
     action: open?.action,
     line,
-    start: (action: LineAction, row: BacklogRow) => setOpen({ action, line: row }),
+    start: (action: LineAction, row: BacklogLine) => setOpen({ action, line: row }),
     close: () => setOpen(null),
   };
 }
 
+const ALL = 'all';
+
 export function BacklogPage() {
   const { t } = useTranslation();
+  const f = useBacklogFormat();
   const p = useBacklogParams();
-  const query = useBacklog(p.by);
+  const query = useBacklog('person');
   const refresh = useRefreshAfterLineChange([['admin-request']]);
-  const all = useMemo(() => flatten(query.data?.groups ?? []), [query.data]);
-  const rows = useMemo(() => applyFilter(all, p.filter), [all, p.filter]);
+  const groups = query.data?.groups;
+  const all = useMemo(() => (groups ?? []).flatMap((g) => g.lines), [groups]);
+  const months = useMemo(() => backlogMonths(groups ?? [], { ym: p.ym, q: p.q, left: p.left }), [groups, p.ym, p.q, p.left]);
+  const visible = useMemo(() => months.flatMap((m) => m.people.flatMap((x) => x.lines)), [months]);
   const open = useOpenLine(all);
-  const order = useMemo(() => rows.map((r) => r.id), [rows]);
+  const order = useMemo(() => visible.map((l) => l.line_id), [visible]);
   // Dòng hết nợ rời danh sách: tham số trỏ tới dòng không còn → gỡ, không mở panel
-  const panel = usePanelParam('line', { order, known: (id) => (query.isSuccess ? all.some((r) => r.id === id) : undefined) });
-  const historyLine = panel.id ? all.find((r) => r.id === panel.id) : undefined;
-  const onAction = (action: LineAction, row: BacklogRow) => (action === 'history' ? panel.open(row.id) : open.start(action, row));
+  const panel = usePanelParam('line', { order, known: (id) => (query.isSuccess ? all.some((l) => l.line_id === id) : undefined) });
+  const historyLine = panel.id ? all.find((l) => l.line_id === panel.id) : undefined;
+  const onAction = (action: LineAction, line: BacklogLine) => (action === 'history' ? panel.open(line.line_id) : open.start(action, line));
   const title = t('delivery.backlog.title');
   const current = useCurrentPeriod();
   const sentYm = current.data?.ym ? lockedYm(current.data.ym) : undefined;
-  const month = sentYm ? monthOf(sentYm) : undefined;
   const reload = () => open.line && void refresh();
   const done = async () => {
     if (open.line) await refresh();
     open.close();
   };
-  const views = [
-    { value: 'item' as BacklogBy, label: t('delivery.backlog.byItem') },
-    { value: 'person' as BacklogBy, label: t('delivery.backlog.byPerson') },
-  ];
+  const monthOptions = [{ value: ALL, label: t('delivery.backlog.allMonths') }, ...monthsOf(groups ?? []).map((ym) => ({ value: ym, label: f.month(ym) }))];
+  const narrowed = p.ym !== null || p.q.trim() !== '' || p.left;
 
   return (
     <div className="ct-page">
-      <PageHeader
-        crumbs={[t('nav.groups.monthly'), title]}
-        title={title}
-        description={month ? t('delivery.backlog.description', { month }) : undefined}
-      />
+      <PageHeader crumbs={[t('nav.groups.monthly'), title]} title={title} />
       {query.isError && <LoadError onRetry={() => void query.refetch()} />}
-      {query.isSuccess && <BacklogStats stats={backlogStats(all)} filter={p.filter} onFilter={p.toggleFilter} />}
-      <Toolbar>
-        <Segmented label={t('delivery.backlog.by')} value={p.by} options={views} onChange={p.setBy} />
-      </Toolbar>
-      {!query.isError && (
-        <div className="ct-block">
-          {p.filter && <FilterNotice label={t(`delivery.backlog.filters.${p.filter}`)} count={rows.length} onClear={p.clearFilter} />}
-          <BacklogTable rows={rows} by={p.by} loading={query.isPending} filtered={p.filter !== null} onAction={onAction} />
+      {query.isSuccess && (
+        <div className="toolbar bl-bar">
+          <Select label={t('delivery.backlog.month')} hideLabel value={p.ym ?? ALL} options={monthOptions} onChange={(v) => p.setYm(v === ALL ? null : v)} />
+          <SearchBox className="flt-search" label={t('delivery.backlog.search')} placeholder={t('delivery.backlog.search')} value={p.q} onChange={p.setQ} />
+          <Switch checked={p.left} text={t('delivery.backlog.leftOnly', { n: leftPeople(groups ?? []) })} onChange={p.toggleLeft} />
         </div>
       )}
+      {query.isPending && <Loading />}
+      {query.isSuccess &&
+        (months.length === 0 ? (
+          <EmptyState
+            title={t(narrowed ? 'delivery.backlog.noMatch' : 'delivery.backlog.empty')}
+            art={narrowed ? 'no-match' : 'no-backlog'}
+            hint={narrowed ? undefined : t('delivery.backlog.emptyHint')}
+          />
+        ) : (
+          <div className="ct-block">
+            <BacklogMonthTable months={months} onAction={onAction} />
+          </div>
+        ))}
       {open.line && open.action === 'deliver' && <DeliverMoreDialog line={open.line} onDone={done} onStale={reload} onClose={open.close} />}
       {open.line && open.action === 'cancel' && (
         <CancelDialog line={open.line} sentYm={sentYm} initialReason={p.cancelReason} onDone={done} onStale={reload} onClose={open.close} />

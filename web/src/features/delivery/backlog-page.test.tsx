@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -10,89 +10,36 @@ const PEN_DUC = backlogLine();
 const PEN_LAN = backlogLine({ line_id: 'l-pen-lan', request_id: 'r-2', user_sub: 'u-lan', full_name: 'Võ Thị Lan', department: null, user_status: 'locked', qty: 1, delivered_qty: 0, remaining_qty: 1 });
 const TAPE = backlogLine({ line_id: 'l-tape', item_id: null, name: 'Băng keo 2 mặt', unit: 'cai', qty: 2, delivered_qty: 0, remaining_qty: 2, stock_qty: null });
 const EMPTY_STOCK = backlogLine({ line_id: 'l-clip', item_id: 'i-clip', name: 'Kẹp giấy', unit: 'hop', qty: 4, delivered_qty: 0, remaining_qty: 4, stock_qty: 0 });
+const SEP = backlogLine({ line_id: 'l-sep', period_ym: '2026-09', request_id: 'r-9', name: 'Giấy A4', item_id: 'i-a4', unit: 'ream', qty: 3, delivered_qty: 0, remaining_qty: 3, stock_qty: 5 });
 
 function openPage(path = '/admin/backlog') {
   mockViewport(1280);
   renderApp(makeMe('admin'), path);
 }
 
+const search = () => screen.getByTestId('location-search').textContent ?? '';
 const bodyRows = () => screen.getAllByRole('row').filter((r) => within(r).queryByRole('button', { name: /^Lịch sử giao/ }));
-const rowOf = (text: string) => bodyRows().find((r) => r.textContent?.includes(text))!;
-const heads = () => screen.getAllByRole('row').filter((r) => r.classList.contains('dt-group'));
-const headOf = (text: string) => heads().find((r) => r.textContent?.includes(text))!;
-const card = (name: RegExp) => screen.getByRole('button', { name });
+const rowOf = (text: string) => bodyRows().find((r) => r.textContent?.includes(text) || within(r).queryAllByRole('button', { name: new RegExp(text) }).length > 0)!;
+const monthHeads = () => screen.getAllByRole('row').filter((r) => r.classList.contains('dt-group'));
+const personRows = () => screen.getAllByRole('row').filter((r) => r.classList.contains('bl-person'));
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('BacklogPage — đầu trang, thẻ, bộ lọc', () => {
-  it('đúng một h1 "Còn nợ" + mô tả theo tháng đang giao (kỳ mở 11 → tháng 10); "Theo món" mặc định, gọi by=item', async () => {
-    const f = stubBacklog([PEN_DUC]);
+describe('BacklogPage — đầu trang gọn', () => {
+  it('đúng một h1 "Còn nợ"; một hàng công cụ: chọn tháng, ô tìm, "Chỉ người đã nghỉ"; không thẻ số liệu, không mô tả, không nút Theo món/Theo người; gọi by=person một lần', async () => {
+    const f = stubBacklog([PEN_DUC, PEN_LAN]);
     openPage();
-    await screen.findByText('Bút bi xanh');
+    await screen.findAllByText('Bút bi xanh', { selector: '.bl-item b' });
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Còn nợ');
-    expect(await screen.findByText('Phần chưa giao của các tháng trước tháng 10 — giao bổ sung khi có hàng, hoặc hủy nợ.')).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: 'Theo món' })).toHaveAttribute('aria-checked', 'true');
-    expect(callsTo(f, '/api/admin/backlog?by=item')).toHaveLength(1);
+    const bar = screen.getByRole('combobox', { name: 'Tháng nợ' }).closest('.toolbar')!;
+    expect(within(bar as HTMLElement).getByRole('searchbox', { name: 'Tìm người hoặc món (không cần dấu)' })).toBeInTheDocument();
+    expect(within(bar as HTMLElement).getByRole('switch', { name: 'Chỉ người đã nghỉ (1)' })).toBeInTheDocument();
+    expect(screen.queryByText('Tổng còn nợ')).toBeNull();
+    expect(screen.queryByText(/Phần chưa giao của các tháng/)).toBeNull();
+    expect(screen.queryByRole('radio', { name: 'Theo món' })).toBeNull();
+    expect(callsTo(f, '/api/admin/backlog?by=person')).toHaveLength(1);
     expect(screen.queryByText(/đang mở, xem được từ/)).toBeNull();
-  });
-
-  it('thẻ: tổng còn nợ 6 đơn vị "3 dòng · 3 người"; "Có hàng" đếm cả dòng ngoài danh mục (3), không đếm tồn 0; "Của người đã nghỉ" 1', async () => {
-    stubBacklog([PEN_DUC, PEN_LAN, TAPE, EMPTY_STOCK]);
-    openPage();
-    await screen.findByText('Bút bi xanh');
-    const total = screen.getByText('Tổng còn nợ').closest('.stat-card')!;
-    expect(total).toHaveTextContent('10');
-    expect(total).toHaveTextContent('4 dòng · 2 người');
-    expect(total.tagName).toBe('DIV');
-    expect(card(/Có hàng để giao bổ sung/)).toHaveTextContent('3');
-    expect(card(/Có hàng để giao bổ sung/).querySelector('.stat-card__sub')).toHaveTextContent(/^có thể giao ngay$/);
-    expect(card(/Của người đã nghỉ/)).toHaveTextContent('1');
-  });
-
-  it('bấm thẻ "Của người đã nghỉ" → ?filter=left, chỉ dòng có nhãn "Người đã nghỉ", thông báo lọc + "Bỏ lọc" trả đủ dòng', async () => {
-    stubBacklog([PEN_DUC, PEN_LAN, TAPE]);
-    openPage();
-    await screen.findByText('Bút bi xanh');
-    await userEvent.click(card(/Của người đã nghỉ/));
-    expect(screen.getByTestId('location-search')).toHaveTextContent('?filter=left');
-    expect(card(/Của người đã nghỉ/)).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByText('Đang lọc: Của người đã nghỉ · 1')).toBeInTheDocument();
-    expect(bodyRows()).toHaveLength(1);
-    expect(within(bodyRows()[0]).getByText('Người đã nghỉ')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Bỏ lọc' }));
-    expect(bodyRows()).toHaveLength(3);
-    expect(screen.getByTestId('location-search')).toHaveTextContent('');
-  });
-
-  it('?filter=available → bỏ dòng tồn 0, giữ dòng ngoài danh mục; bấm lại thẻ → bỏ lọc', async () => {
-    stubBacklog([PEN_DUC, TAPE, EMPTY_STOCK]);
-    openPage('/admin/backlog?filter=available');
-    await screen.findByText('Bút bi xanh');
-    expect(bodyRows()).toHaveLength(2);
-    expect(screen.queryByText('Kẹp giấy')).toBeNull();
-    expect(screen.getByText('Băng keo 2 mặt')).toBeInTheDocument();
-    await userEvent.click(card(/Có hàng để giao bổ sung/));
-    expect(bodyRows()).toHaveLength(3);
-  });
-
-  it('lọc ra không còn dòng → "Không có dòng nào khớp bộ lọc."; không lọc mà trống → "Không còn nợ"', async () => {
-    stubBacklog([PEN_DUC]);
-    openPage('/admin/backlog?filter=left');
-    expect(await screen.findByText('Không có dòng nào khớp bộ lọc.')).toBeInTheDocument();
-    vi.unstubAllGlobals();
-    stubBacklog([]);
-    openPage();
-    expect(await screen.findAllByText('Không còn nợ')).not.toHaveLength(0);
-  });
-
-  it('?filter=lạ và ?by=lạ → bỏ qua (theo món, không lọc)', async () => {
-    stubBacklog([PEN_DUC, PEN_LAN]);
-    openPage('/admin/backlog?by=xyz&filter=abc');
-    await screen.findByText('Bút bi xanh');
-    expect(bodyRows()).toHaveLength(2);
-    expect(screen.getByRole('radio', { name: 'Theo món' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.queryByText(/^Đang lọc/)).toBeNull();
   });
 
   it('tải lỗi → "Không tải được dữ liệu — thử lại." + nút "Thử lại"', async () => {
@@ -100,111 +47,130 @@ describe('BacklogPage — đầu trang, thẻ, bộ lọc', () => {
     openPage();
     expect(await screen.findByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
   });
-});
 
-describe('BacklogPage — nhóm và dòng', () => {
-  it('theo món: tiêu đề nhóm "còn 4 cây", "Tủ còn 10"; cột "Tủ còn" (10); dòng "Phạm Văn Đức · Tổ Giám sát", "Tháng 10/2026", "Còn 3 cây", "/ đặt 5"', async () => {
-    stubBacklog([PEN_DUC, PEN_LAN]);
-    openPage();
-    await screen.findByText('Bút bi xanh');
-    const head = headOf('Bút bi xanh');
-    expect(head).toHaveTextContent('còn 4 cây');
-    expect(head).toHaveTextContent('Tủ còn 10');
-    expect(screen.getByRole('columnheader', { name: 'Tủ còn' })).toBeInTheDocument();
-    expect(screen.queryByRole('columnheader', { name: 'Tồn' })).toBeNull();
-    const row = rowOf('Phạm Văn Đức');
-    expect(within(row).getByRole('cell', { name: '10' })).toBeInTheDocument();
-    expect(row).toHaveTextContent('Tổ Giám sát');
-    expect(row).toHaveTextContent('Tháng 10/2026');
-    expect(row).toHaveTextContent('Còn 3 cây');
-    expect(row).toHaveTextContent('/ đặt 5');
-    expect(within(rowOf('Võ Thị Lan')).getByText('Người đã nghỉ')).toBeInTheDocument();
-    expect(within(row).queryByText('Người đã nghỉ')).toBeNull();
-  });
-
-  it('theo món, nhóm hết hàng: "Hết hàng" chỉ ở tiêu đề (không lặp ở dòng), "Giao bổ sung" vô hiệu, menu ⋯ (chứa Hủy nợ) bấm được; ngoài danh mục không hiện tủ', async () => {
-    stubBacklog([EMPTY_STOCK, TAPE]);
-    openPage();
-    await screen.findByText('Kẹp giấy');
-    expect(headOf('Kẹp giấy')).toHaveTextContent('Hết hàng');
-    expect(headOf('Băng keo 2 mặt')).not.toHaveTextContent(/Tủ còn|Hết hàng/);
-    const clip = bodyRows().find((r) => r.textContent?.includes('Phạm Văn Đức') && r.textContent.includes('Còn 4'))!;
-    expect(within(clip).getByRole('button', { name: 'Giao bổ sung' })).toBeDisabled();
-    expect(within(clip).getByRole('button', { name: 'Thao tác khác Kẹp giấy — Phạm Văn Đức' })).toBeEnabled();
-    expect(within(clip).queryByText('Hết hàng')).toBeNull();
-  });
-
-  it('theo người: "Hết hàng" ở dòng của món hết hàng, không ở tiêu đề người', async () => {
-    stubBacklog([EMPTY_STOCK, PEN_DUC]);
-    openPage('/admin/backlog?by=person');
-    await screen.findByText('Kẹp giấy');
-    expect(headOf('Phạm Văn Đức')).not.toHaveTextContent('Hết hàng');
-    expect(within(rowOf('Kẹp giấy')).getByText('Hết hàng')).toBeInTheDocument();
-    expect(within(rowOf('Bút bi xanh')).queryByText('Hết hàng')).toBeNull();
-  });
-
-  it('theo người: tiêu đề nhóm có phòng ban (hoặc "Chưa có phòng ban") + "Người đã nghỉ"; dòng ghi tên món', async () => {
-    const f = stubBacklog([PEN_DUC, PEN_LAN]);
-    openPage();
-    await screen.findByText('Bút bi xanh');
-    await userEvent.click(screen.getByRole('radio', { name: 'Theo người' }));
-    expect(screen.getByTestId('location-search')).toHaveTextContent('?by=person');
-    await screen.findByText('Chưa có phòng ban');
-    expect(callsTo(f, '/api/admin/backlog?by=person')).toHaveLength(1);
-    expect(headOf('Võ Thị Lan')).toHaveTextContent('Người đã nghỉ');
-    expect(headOf('Phạm Văn Đức')).toHaveTextContent('Tổ Giám sát');
-    expect(headOf('Phạm Văn Đức')).not.toHaveTextContent('Người đã nghỉ');
-    expect(rowOf('Bút bi xanh')).toHaveTextContent('Tháng 10/2026');
-  });
-
-  it('lọc "Của người đã nghỉ": tiêu đề nhóm món vẫn ghi tổng nợ của API (còn 4), dòng chỉ còn người đã nghỉ; nút lịch sử nêu món và người', async () => {
-    stubBacklog([PEN_DUC, PEN_LAN]);
-    openPage('/admin/backlog?filter=left');
-    await screen.findByText('Bút bi xanh');
-    expect(headOf('Bút bi xanh')).toHaveTextContent('còn 4 cây');
-    expect(bodyRows()).toHaveLength(1);
-    expect(within(bodyRows()[0]).getByRole('button', { name: 'Lịch sử giao Bút bi xanh — Võ Thị Lan' })).toBeInTheDocument();
-  });
-
-  it('đổi Theo người giữ bộ lọc đang bật', async () => {
-    stubBacklog([PEN_DUC, PEN_LAN]);
-    openPage('/admin/backlog?filter=left');
-    await screen.findByText('Bút bi xanh');
-    await userEvent.click(screen.getByRole('radio', { name: 'Theo người' }));
-    expect(screen.getByTestId('location-search')).toHaveTextContent('by=person');
-    expect(screen.getByTestId('location-search')).toHaveTextContent('filter=left');
-  });
-});
-
-describe('BacklogPage — bố cục sau rà UX', () => {
-  it('nút "Theo món/Theo người" ở thanh công cụ dưới hàng ô số liệu', async () => {
+  it('không còn nợ → "Không còn nợ"; lọc không khớp → "Không có dòng nào khớp bộ lọc."', async () => {
     stubBacklog([PEN_DUC]);
+    openPage('/admin/backlog?left=1');
+    expect(await screen.findByText('Không có dòng nào khớp bộ lọc.')).toBeInTheDocument();
+    vi.unstubAllGlobals();
+    stubBacklog([]);
     openPage();
-    await screen.findByText('Bút bi xanh');
-    const view = screen.getByRole('radiogroup', { name: 'Nhóm theo' });
-    expect(view.closest('.toolbar')).not.toBeNull();
-    const stats = screen.getByText('Tổng còn nợ').closest('.stat-row')!;
-    expect(stats.compareDocumentPosition(view) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(await screen.findAllByText('Không còn nợ')).not.toHaveLength(0);
+  });
+});
+
+describe('BacklogPage — nhóm tháng → người → món', () => {
+  it('bảng kẻ ô: cột Món · ĐVT · Đăng ký · Đã giao · Còn nợ · Tủ còn · Thao tác; hàng nhóm "Tháng 9/2026 · 1 người · 3 đơn vị" trước "Tháng 10/2026 · 2 người · 4 đơn vị"', async () => {
+    stubBacklog([PEN_DUC, PEN_LAN, SEP]);
+    openPage();
+    await screen.findAllByText('Bút bi xanh', { selector: '.bl-item b' });
+    expect(screen.getByRole('table')).toHaveClass('grid-table');
+    expect(screen.getAllByRole('columnheader').map((c) => c.textContent)).toEqual(['Món', 'ĐVT', 'Đăng ký', 'Đã giao', 'Còn nợ', 'Tủ còn', 'Thao tác']);
+    expect(monthHeads().map((r) => r.textContent)).toEqual(['Tháng 9/2026 · 1 người · 3 đơn vị', 'Tháng 10/2026 · 2 người · 4 đơn vị']);
   });
 
-  it('tồn 0 → "Giao bổ sung" tắt kèm lý do "Hết hàng — nhập mua ở Kho rồi giao"; tồn 1 → bật, không lý do', async () => {
-    stubBacklog([EMPTY_STOCK, backlogLine({ line_id: 'l-one', item_id: 'i-one', name: 'Ghim bấm', stock_qty: 1 })]);
-    openPage('/admin/backlog?by=person');
-    await screen.findByText('Kẹp giấy');
+  it('hàng người: tên + phòng ban (hoặc "Chưa có phòng ban") + "Người đã nghỉ"; dòng món có đăng ký 5, đã giao 2, còn nợ 3, tủ 10', async () => {
+    stubBacklog([PEN_DUC, PEN_LAN]);
+    openPage();
+    await screen.findAllByText('Bút bi xanh', { selector: '.bl-item b' });
+    expect(personRows().find((r) => r.textContent?.includes('Phạm Văn Đức'))).toHaveTextContent('Tổ Giám sát');
+    expect(personRows().find((r) => r.textContent?.includes('Võ Thị Lan'))).toHaveTextContent('Chưa có phòng ban');
+    expect(personRows().find((r) => r.textContent?.includes('Võ Thị Lan'))).toHaveTextContent('Người đã nghỉ');
+    expect(personRows().find((r) => r.textContent?.includes('Phạm Văn Đức'))).not.toHaveTextContent('Người đã nghỉ');
+    const cells = within(rowOf('Phạm Văn Đức')).getAllByRole('cell').map((c) => c.textContent);
+    expect(cells.slice(0, 6)).toEqual(['Bút bi xanh', 'cây', '5', '2', '3', '10']);
+  });
+
+  it('chọn tháng → ?ym=, chỉ còn tháng đó; "Tất cả tháng" bỏ lọc', async () => {
+    stubBacklog([PEN_DUC, SEP]);
+    openPage();
+    await screen.findAllByText('Bút bi xanh', { selector: '.bl-item b' });
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Tháng nợ' }), 'Tháng 9/2026');
+    expect(search()).toContain('ym=2026-09');
+    expect(monthHeads()).toHaveLength(1);
+    expect(screen.queryByText('Bút bi xanh', { selector: '.bl-item b' })).toBeNull();
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Tháng nợ' }), 'Tất cả tháng');
+    expect(search()).not.toContain('ym=');
+    expect(monthHeads()).toHaveLength(2);
+  });
+
+  it('?ym=2026-10 khôi phục; ?ym=lạ bỏ qua', async () => {
+    stubBacklog([PEN_DUC, SEP]);
+    openPage('/admin/backlog?ym=2026-10');
+    await screen.findAllByText('Bút bi xanh', { selector: '.bl-item b' });
+    expect(monthHeads()).toHaveLength(1);
+    vi.unstubAllGlobals();
+    stubBacklog([PEN_DUC, SEP]);
+    openPage('/admin/backlog?ym=xyz');
+    await waitFor(() => expect(monthHeads().length).toBeGreaterThan(0));
+  });
+
+  it('gõ tìm "gap" khớp tên món không dấu → ?q=, một dòng; "duc" khớp người', async () => {
+    stubBacklog([PEN_DUC, SEP, TAPE]);
+    openPage();
+    await screen.findAllByText('Bút bi xanh', { selector: '.bl-item b' });
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người hoặc món (không cần dấu)' }), 'bang keo');
+    await waitFor(() => expect(search()).toContain('q=bang'));
+    await waitFor(() => expect(bodyRows()).toHaveLength(1));
+    expect(bodyRows()[0]).toHaveTextContent('Băng keo 2 mặt');
+  });
+
+  it('công tắc "Chỉ người đã nghỉ" → ?left=1, chỉ người đã nghỉ; bật lại tắt', async () => {
+    stubBacklog([PEN_DUC, PEN_LAN, TAPE]);
+    openPage();
+    await screen.findAllByText('Bút bi xanh', { selector: '.bl-item b' });
+    await userEvent.click(screen.getByRole('switch', { name: 'Chỉ người đã nghỉ (1)' }));
+    expect(search()).toContain('left=1');
+    expect(bodyRows()).toHaveLength(1);
+    expect(personRows()).toHaveLength(1);
+    await userEvent.click(screen.getByRole('switch', { name: 'Chỉ người đã nghỉ (1)' }));
+    expect(search()).not.toContain('left=');
+    expect(bodyRows()).toHaveLength(3);
+  });
+
+  it('?by=item và ?filter=left cũ bị gỡ khỏi URL (thay thế), filter=left thành left=1; vẫn hiển thị theo tháng', async () => {
+    stubBacklog([PEN_DUC, PEN_LAN]);
+    openPage('/admin/backlog?by=item&filter=left');
+    await waitFor(() => expect(search()).toBe('?left=1'));
+    await waitFor(() => expect(bodyRows()).toHaveLength(1));
+    expect(monthHeads()).toHaveLength(1);
+  });
+
+  it('?by=lạ&filter=lạ → gỡ, không lọc', async () => {
+    stubBacklog([PEN_DUC, PEN_LAN]);
+    openPage('/admin/backlog?by=xyz&filter=abc');
+    await screen.findAllByText('Bút bi xanh', { selector: '.bl-item b' });
+    await waitFor(() => expect(search()).toBe(''));
+    expect(bodyRows()).toHaveLength(2);
+  });
+
+  it('tồn 0 → "Giao bổ sung" tắt kèm lý do "Hết hàng — nhập mua ở Kho rồi giao" + nhãn "Hết hàng" ở dòng; tồn 1 → bật, không lý do; ngoài danh mục không hiện tủ', async () => {
+    stubBacklog([EMPTY_STOCK, backlogLine({ line_id: 'l-one', item_id: 'i-one', name: 'Ghim bấm', stock_qty: 1 }), TAPE]);
+    openPage();
+    await screen.findAllByText('Kẹp giấy', { selector: '.bl-item b' });
     const off = within(rowOf('Kẹp giấy')).getByRole('button', { name: 'Giao bổ sung' });
     expect(off).toBeDisabled();
     expect(off).toHaveAttribute('title', 'Hết hàng — nhập mua ở Kho rồi giao');
+    expect(within(rowOf('Kẹp giấy')).getByText('Hết hàng')).toBeInTheDocument();
     const on = within(rowOf('Ghim bấm')).getByRole('button', { name: 'Giao bổ sung' });
     expect(on).toBeEnabled();
     expect(on).not.toHaveAttribute('title');
+    expect(within(rowOf('Băng keo 2 mặt')).getAllByRole('cell')[5]).toHaveTextContent('—');
   });
 
-  it('390: ô còn nợ ghi "Còn 3 cây / đặt 5", không lặp nhãn "Còn nợ" trước số', async () => {
+  it('không có chữ rời rạc ở đầu bảng: mỗi hàng nhóm là một câu liền "… · n người · m đơn vị"', async () => {
+    stubBacklog([PEN_DUC, PEN_LAN]);
+    openPage();
+    await screen.findAllByText('Bút bi xanh', { selector: '.bl-item b' });
+    for (const head of monthHeads()) expect(head.textContent).toMatch(/^Tháng \d+\/\d{4} · \d+ người · \d+ đơn vị$/);
+  });
+
+  it('390: bảng xếp chồng (table-stack), nút "Giao bổ sung" và menu ⋯ cùng một ô thao tác', async () => {
     stubBacklog([PEN_DUC]);
     mockViewport(390);
     renderApp(makeMe('admin'), '/admin/backlog');
-    const owed = (await screen.findByText('Còn 3 cây')).closest('td')!;
-    expect(owed).toHaveTextContent('Còn 3 cây/ đặt 5');
-    expect(owed.getAttribute('data-label') ?? '').toBe('');
+    const more = await screen.findByRole('button', { name: 'Thao tác khác Bút bi xanh — Phạm Văn Đức' });
+    expect(screen.getByRole('table')).toHaveClass('table-stack');
+    expect(more.closest('.bl-acts')).toContainElement(screen.getByRole('button', { name: 'Giao bổ sung' }));
   });
 });

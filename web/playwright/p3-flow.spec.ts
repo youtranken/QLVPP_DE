@@ -53,15 +53,19 @@ async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
   await snap(admin, info, 'p3-delivered-all');
 }
 
+const debtRow = (page: Page, itemName: string) => page.getByRole('row').filter({ hasText: itemName }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
+// Cột: Món · ĐVT · Đăng ký · Đã giao · Còn nợ · Tủ còn · Thao tác
+const owedCell = (row: Locator) => row.getByRole('cell').nth(4);
+
 async function backlogByItem(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/backlog');
-  await expect(admin.getByRole('radio', { name: 'Theo món' })).toBeChecked();
-  await expect(admin.getByRole('rowheader', { name: new RegExp(s.tape.name) })).toContainText('còn 2 cái');
-  await expect(admin.getByRole('rowheader', { name: new RegExp(s.glue.name) })).toContainText('còn 3 cái');
-  await expect(admin.getByRole('rowheader', { name: new RegExp(s.pen.name) })).toHaveCount(0);
+  await expect(admin.getByRole('heading', { level: 1, name: 'Còn nợ' })).toBeVisible();
+  await expect(owedCell(debtRow(admin, s.tape.name))).toHaveText('2');
+  await expect(owedCell(debtRow(admin, s.glue.name))).toHaveText('3');
+  await expect(debtRow(admin, s.pen.name)).toHaveCount(0);
   // Phần thiếu của tháng đang giao (giấy 2 của A, kẹp 3 của B) là Chưa nhận, không phải nợ
-  await expect(admin.getByRole('rowheader', { name: new RegExp(s.paper.name) })).toHaveCount(0);
-  await expect(admin.getByRole('rowheader', { name: new RegExp(s.clip.name) })).toHaveCount(0);
+  await expect(debtRow(admin, s.paper.name)).toHaveCount(0);
+  await expect(debtRow(admin, s.clip.name)).toHaveCount(0);
   await axe390(admin, info);
   await snap(admin, info, 'p3-backlog');
 }
@@ -136,8 +140,8 @@ async function purchaseAndDeliverMore(admin: Page, info: TestInfo, s: MonthSeed)
   await purchase(admin, s.tape, 2);
 
   await admin.goto('/admin/backlog');
-  const group = admin.getByRole('rowheader', { name: new RegExp(s.tape.name) });
-  await admin.getByRole('row').filter({ hasText: s.a.name }).getByRole('button', { name: 'Giao bổ sung' }).click();
+  const group = debtRow(admin, s.tape.name);
+  await group.getByRole('button', { name: 'Giao bổ sung' }).click();
   const dialog = admin.getByRole('dialog', { name: `Giao bổ sung ${s.tape.name} cho ${s.a.name}` });
   await expect(dialog.getByLabel('Số lượng giao')).toHaveValue('2');
   await dialog.getByRole('button', { name: 'Giao', exact: true }).click();
@@ -200,8 +204,8 @@ async function reopenSnapshot(admin: Page, s: MonthSeed, snapshotId: string) {
 
 async function cancelClip(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/backlog');
-  const group = admin.getByRole('rowheader', { name: new RegExp(s.glue.name) });
-  const line = admin.getByRole('row').filter({ hasText: s.b.name });
+  const group = debtRow(admin, s.glue.name);
+  const line = group;
   // "Hủy nợ" nằm trong menu ⋯ của dòng ở mọi bề rộng, không còn nút riêng
   await expect(line.getByRole('button', { name: 'Hủy nợ' })).toHaveCount(0);
   await line.getByRole('button', { name: `Thao tác khác ${s.glue.name} — ${s.b.name}` }).click();

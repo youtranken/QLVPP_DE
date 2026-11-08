@@ -1,20 +1,30 @@
+import { useEffect } from 'react';
 import { useUrlPatch } from '@/lib/use-url-patch';
-import { BACKLOG_BY, parseBy, type BacklogBy, type CancelReason } from './backlog.api';
-import { parseFilter, type BacklogFilter } from './backlog-rows';
+import type { CancelReason } from './backlog.api';
 
+const YM = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+// ?ym= tháng nợ, ?q= tìm, ?left=1 chỉ người đã nghỉ (đến từ nhắc ở Kỳ tháng, Hủy nợ chọn sẵn "Người đã nghỉ").
+// ?by= và ?filter= của bản cũ bị gỡ khỏi URL; filter=left cũ thành left=1
 export function useBacklogParams() {
   const [params, update] = useUrlPatch();
-  const by = parseBy(params.get('by'));
-  // ?left=1 đến từ nhắc người đã nghỉ ở Tháng này: lọc người đã nghỉ và Hủy nợ chọn sẵn "Người đã nghỉ"
-  const left = params.get('left') === '1';
-  const filter = parseFilter(params.get('filter')) ?? (left ? 'left' : null);
+  const asked = params.get('ym');
+  const ym = asked !== null && YM.test(asked) ? asked : null;
+  const oldLeft = params.get('filter') === 'left';
+  const left = params.get('left') === '1' || oldLeft;
+  const legacy = params.has('by') || params.has('filter');
+
+  useEffect(() => {
+    if (legacy) update({ by: null, filter: null, ...(oldLeft ? { left: '1' } : {}) }, true);
+  }, [legacy, oldLeft, update]);
 
   return {
-    by,
-    filter,
+    ym,
+    q: params.get('q') ?? '',
+    left,
     cancelReason: (left ? 'user_left' : undefined) as CancelReason | undefined,
-    setBy: (next: BacklogBy) => update({ by: BACKLOG_BY.includes(next) && next !== 'item' ? next : null }),
-    toggleFilter: (next: BacklogFilter) => update({ filter: filter === next ? null : next, left: null }),
-    clearFilter: () => update({ filter: null, left: null }),
+    setYm: (next: string | null) => update({ ym: next }, true),
+    setQ: (next: string) => update({ q: next || null }, true),
+    toggleLeft: () => update({ left: left ? null : '1' }, true),
   };
 }
