@@ -3,13 +3,13 @@ import { fireEvent, jsonResponse, screen, userEvent, within } from '@/test/test-
 import { makeMe } from '@/test/fixtures-me';
 import { renderApp } from '@/test/render-app';
 import { mockViewport } from '@/test/viewport';
-import { CONFIG, block, configInvalid, openConfig, putBodies, stubConfigApi } from './config-fixtures';
+import { CONFIG, USERS, block, configInvalid, openConfig, putBodies, stubConfigApi } from './config-fixtures';
 
 afterEach(() => vi.unstubAllGlobals());
 
-const group = () => screen.getByLabelText('Nhóm PMH ID của Hành chính');
 const contact = () => screen.getByLabelText('Tên và cách liên hệ Hành chính');
-const saveAccess = () => userEvent.click(screen.getByRole('button', { name: 'Lưu quyền Hành chính' }));
+const access = () => screen.getByRole('region', { name: 'Quyền truy cập' });
+const SAVED_BLOCKS = ['Kỳ đăng ký', 'Ô ký trên phiếu đề xuất', 'Liên hệ & thông báo'];
 
 async function retype(el: HTMLElement, value: string) {
   await userEvent.clear(el);
@@ -17,15 +17,16 @@ async function retype(el: HTMLElement, value: string) {
 }
 
 describe('Cấu hình · trang', () => {
-  it('đầu trang có đúng một h1, mô tả, 4 khối; không còn khối "Lưu thế nào", thay bằng một dòng dưới mỗi nút Lưu', async () => {
+  it('đầu trang có đúng một h1, mô tả, 4 khối (3 khối sửa được + Quyền truy cập chỉ đọc); không còn khối "Lưu thế nào", thay bằng một dòng dưới mỗi nút Lưu', async () => {
     stubConfigApi();
     await openConfig();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1, name: 'Cấu hình' })).toBeInTheDocument();
     expect(screen.getByText('Tham số chung của app, áp dụng cho mọi người dùng.', { exact: true })).toBeInTheDocument();
-    for (const name of ['Kỳ đăng ký', 'Quyền Hành chính', 'Ô ký trên phiếu đề xuất', 'Liên hệ & thông báo']) expect(block(name)).toBeInTheDocument();
+    for (const name of SAVED_BLOCKS) expect(block(name)).toBeInTheDocument();
+    expect(access()).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Lưu thế nào' })).toBeNull();
-    for (const name of ['Kỳ đăng ký', 'Quyền Hành chính', 'Ô ký trên phiếu đề xuất', 'Liên hệ & thông báo']) {
+    for (const name of SAVED_BLOCKS) {
       expect(within(block(name)).getByText('Chỉ lưu khối này · ghi vào Nhật ký')).toBeInTheDocument();
     }
   });
@@ -51,10 +52,10 @@ describe('Cấu hình · trang', () => {
     expect(screen.getByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
   });
 
-  it('chưa sửa gì → cả 4 nút Lưu ghi "Chưa có thay đổi" và vô hiệu, không gửi PUT; đầu trang không có nhãn "khối chưa lưu"', async () => {
+  it('chưa sửa gì → cả 3 nút Lưu ghi "Chưa có thay đổi" và vô hiệu, không gửi PUT; đầu trang không có nhãn "khối chưa lưu"', async () => {
     const fetchMock = stubConfigApi();
     await openConfig();
-    for (const name of ['Kỳ đăng ký', 'Quyền Hành chính', 'Ô ký trên phiếu đề xuất', 'Liên hệ & thông báo']) {
+    for (const name of SAVED_BLOCKS) {
       const button = within(block(name)).getByRole('button', { name: 'Chưa có thay đổi' });
       expect(button).toBeDisabled();
       await userEvent.click(button);
@@ -102,82 +103,32 @@ describe('Cấu hình · trang', () => {
   });
 });
 
-describe('Cấu hình · khối Quyền Hành chính', () => {
-  it('đếm người trong danh bạ thuộc nhóm (không phân biệt hoa thường), nhóm được dùng app chỉ đọc kèm số người', async () => {
+describe('Cấu hình · khối Quyền truy cập (chỉ đọc)', () => {
+  it('liệt kê "Hành chính hiện tại" là người role admin trong danh bạ, không có ô nhập nhóm, không có nút lưu khối này', async () => {
     stubConfigApi();
     await openConfig();
-    expect(await screen.findByText('1 người trong danh bạ thuộc nhóm này')).toBeInTheDocument();
-    const groups = screen.getByRole('list', { name: 'Nhóm PMH ID được dùng app' });
-    expect(within(groups).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['vpp-users · 3', 'cong-trinh · 1']);
-    expect(screen.queryByRole('textbox', { name: 'Nhóm PMH ID được dùng app' })).toBeNull();
-    expect(screen.getByRole('link', { name: 'Mở Danh bạ' })).toHaveAttribute('href', '/admin/users');
+    expect(await within(access()).findByText('Nguyễn Văn An')).toBeInTheDocument();
+    const list = within(access()).getByRole('list', { name: 'Hành chính hiện tại' });
+    expect(within(list).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Nguyễn Văn An']);
+    expect(within(access()).queryByRole('textbox')).toBeNull();
+    expect(within(access()).queryByRole('button')).toBeNull();
+    expect(within(access()).getByText(/Ai được vào VPP do PMH ID quyết định/)).toBeInTheDocument();
+    expect(within(access()).getByRole('link', { name: 'Mở Danh bạ' })).toHaveAttribute('href', '/admin/users');
   });
 
-  it('nhóm mới có 0 người và người đang đăng nhập không thuộc → cảnh báo tự mất quyền nêu tên', async () => {
-    stubConfigApi();
+  it('danh bạ chưa có ai admin → "Chưa thấy ai — chạy “Đồng bộ ngay” ở Danh bạ."', async () => {
+    stubConfigApi(undefined, (url) =>
+      url.startsWith('/api/admin/users?') ? jsonResponse(200, { items: USERS.map((u) => ({ ...u, role: 'member' })), next_cursor: null }) : undefined,
+    );
     await openConfig();
-    await retype(group(), 'nhom-moi');
-    expect(await screen.findByText('0 người trong danh bạ thuộc nhóm này')).toBeInTheDocument();
-    expect(
-      screen.getByText('Nhóm này chưa có người trong danh bạ. Sau khi lưu, Nguyễn Văn An sẽ mất quyền vào trang quản lý từ lần bấm kế tiếp.'),
-    ).toBeInTheDocument();
-    await retype(group(), 'VPP-ADMIN');
-    expect(screen.queryByText(/sẽ mất quyền vào trang quản lý/)).toBeNull();
+    expect(await within(access()).findByText('Chưa thấy ai — chạy “Đồng bộ ngay” ở Danh bạ.')).toBeInTheDocument();
   });
 
-  it('nhóm mới có người nhưng không có người đang đăng nhập → vẫn cảnh báo tự mất quyền; nhóm có mình → không', async () => {
-    stubConfigApi();
-    await openConfig();
-    await retype(group(), 'cong-trinh');
-    expect(await screen.findByText('1 người trong danh bạ thuộc nhóm này')).toBeInTheDocument();
-    expect(
-      screen.getByText('Bạn không thuộc nhóm này. Sau khi lưu, Nguyễn Văn An sẽ mất quyền vào trang quản lý từ lần bấm kế tiếp.'),
-    ).toBeInTheDocument();
-    await retype(group(), 'vpp-users');
-    expect(await screen.findByText('3 người trong danh bạ thuộc nhóm này')).toBeInTheDocument();
-    expect(screen.queryByText(/sẽ mất quyền vào trang quản lý/)).toBeNull();
-  });
-
-  it('SA (không phụ thuộc nhóm) không thấy cảnh báo tự mất quyền', async () => {
-    stubConfigApi();
-    await openConfig(makeMe('sa', { sub: 'sa-local' }));
-    await retype(group(), 'nhom-moi');
-    expect(await screen.findByText('0 người trong danh bạ thuộc nhóm này')).toBeInTheDocument();
-    expect(screen.queryByText(/sẽ mất quyền vào trang quản lý/)).toBeNull();
-  });
-
-  it('không tải được danh bạ → nhắc "Không kiểm được số người trong nhóm — kiểm kỹ trước khi lưu.", không cảnh báo tự mất quyền', async () => {
+  it('không tải được danh bạ → báo chưa tải được, không giả vờ là chưa có ai', async () => {
     stubConfigApi(undefined, (url) => (url.startsWith('/api/admin/users?') ? jsonResponse(500, { code: 'INTERNAL' }) : undefined));
     await openConfig();
-    await retype(group(), 'nhom-moi');
-    expect(await screen.findByText('Không kiểm được số người trong nhóm — kiểm kỹ trước khi lưu.')).toBeInTheDocument();
-    expect(screen.queryByText(/người trong danh bạ thuộc nhóm này/)).toBeNull();
-    expect(screen.queryByText(/sẽ mất quyền vào trang quản lý/)).toBeNull();
-  });
-
-  it('Lưu hỏi xác nhận nguy hiểm "Đổi nhóm Hành chính?"; Quay lại thì không gửi, đồng ý mới gửi admin_group', async () => {
-    const fetchMock = stubConfigApi((body) => jsonResponse(200, { ...CONFIG, ...body }));
-    await openConfig();
-    await retype(group(), 'nhom-moi');
-    await saveAccess();
-    let dialog = await screen.findByRole('dialog', { name: 'Đổi nhóm Hành chính?' });
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Quay lại' }));
-    expect(putBodies(fetchMock)).toHaveLength(0);
-    await saveAccess();
-    dialog = await screen.findByRole('dialog', { name: 'Đổi nhóm Hành chính?' });
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Đổi nhóm' }));
-    await vi.waitFor(() => expect(putBodies(fetchMock)).toEqual([{ admin_group: 'nhom-moi' }]));
-  });
-
-  it('CONFIG_INVALID {field: admin_group} → lỗi gắn ô nhóm Hành chính', async () => {
-    stubConfigApi(() => configInvalid('admin_group'));
-    await openConfig();
-    await retype(group(), 'nhom-moi');
-    await saveAccess();
-    await userEvent.click(await screen.findByRole('button', { name: 'Đổi nhóm' }));
-    await vi.waitFor(() => expect(group()).toHaveAttribute('aria-invalid', 'true'));
-    expect(group()).toHaveAccessibleDescription('Nhập tên nhóm PMH ID (không để trống, tối đa 200 ký tự).');
-    expect(group()).toHaveAttribute('maxLength', '200');
+    expect(await within(access()).findByText('Chưa tải được danh sách Hành chính — mở Danh bạ để xem.')).toBeInTheDocument();
+    expect(within(access()).queryByText(/Chưa thấy ai/)).toBeNull();
   });
 });
 
@@ -305,24 +256,6 @@ describe('Cấu hình · Thay đổi gần đây', () => {
       await retype(lastDay(), '2');
       expect(screen.getByText('Kỳ tháng 01 (đang mở) vẫn khóa 00:00 ngày 11/01.')).toBeInTheDocument();
       expect(screen.queryByText(/Áp dụng từ kỳ tháng 02/)).toBeNull();
-    });
-  });
-
-  describe('cảnh báo nhóm chỉ sau khi đổi ID', () => {
-    const OUTSIDE = { ...CONFIG, admin_group: 'cong-trinh' };
-    const openOutside = () => stubConfigApi(undefined, (url, init) => (url === '/api/admin/config' && !init?.method ? jsonResponse(200, OUTSIDE) : undefined));
-
-    it('mở trang với nhóm đang dùng (mình không thuộc) → không cảnh báo; đổi ID sang nhóm không thuộc → hiện; đổi về giá trị đã lưu → ẩn', async () => {
-      openOutside();
-      mockViewport(1280);
-      renderApp(makeMe('admin'), '/admin/config');
-      await screen.findByDisplayValue('cong-trinh');
-      expect(await screen.findByText('1 người trong danh bạ thuộc nhóm này')).toBeInTheDocument();
-      expect(screen.queryByText(/sẽ mất quyền vào trang quản lý/)).toBeNull();
-      await retype(group(), 'nhom-moi');
-      expect(await screen.findByText(/Sau khi lưu, Nguyễn Văn An sẽ mất quyền vào trang quản lý/)).toBeInTheDocument();
-      await retype(group(), 'cong-trinh');
-      expect(screen.queryByText(/sẽ mất quyền vào trang quản lý/)).toBeNull();
     });
   });
 });

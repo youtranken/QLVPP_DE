@@ -6,7 +6,7 @@
 [data-shell='admin'] .dr-person__name:hover { color: var(--c-acc); text-decoration: underline; }
 [data-shell='admin'] .dr-person__name:focus-visible { box-shadow: var(--focus); outline: none; border-radius: var(--r-sm); }
 [data-shell='admin'] .dr-muted { color: var(--c-muted); font: var(--t-sm); }
-[data-shell='admin'] .dr-groups { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+[data-shell='admin'] .dr-status { display: inline-flex; flex-wrap: wrap; gap: 4px; }
 [data-shell='admin'] .dr-count { margin: 0; color: var(--c-muted); font: var(--t-sm); font-weight: 600; }
 [data-shell='admin'] .dr-more { justify-self: center; }
 [data-shell='admin'] .dr-sync { align-items: center; }

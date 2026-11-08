@@ -87,6 +87,8 @@ describe('LoginScreen', () => {
       screen.getByRole('heading', { name: 'Tài khoản chưa được cấp quyền dùng VPP Công trình' }),
     ).toBeInTheDocument();
     expect(await screen.findByText(/chị Bình \(Hành chính\) — 0909 123 456/)).toBeInTheDocument();
+    expect(screen.getByText(/PMH ID chưa cấp quyền vào VPP Công trình cho tài khoản này/)).toBeInTheDocument();
+    expect(screen.queryByText(/nhóm/i)).toBeNull();
     expect(fetchMock).toHaveBeenCalledWith('/api/public-config', undefined);
     await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập bằng tài khoản khác' }));
     expect(navigateTo).toHaveBeenCalledWith('/api/auth/switch-account');

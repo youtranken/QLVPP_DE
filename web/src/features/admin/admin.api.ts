@@ -51,14 +51,12 @@ export interface AdminConfig {
   registration_last_day: number;
   reminder_days_left: number;
   default_max_qty: number;
-  admin_group: string;
-  authorized_groups: string[];
   low_stock_notify: boolean;
   signature_boxes: SignatureBox[];
   admin_contact: string;
 }
 
-export type ConfigPatch = Partial<Omit<AdminConfig, 'authorized_groups'>>;
+export type ConfigPatch = Partial<AdminConfig>;
 
 export const CONFIG_KEY = ['admin', 'config'] as const;
 const AUDIT_PAGE = 50;

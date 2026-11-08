@@ -29,15 +29,19 @@ export function useUserSearch(search: string) {
   });
 }
 
-export interface AdminUser extends DirectoryUser {
+export interface AdminUser extends Omit<DirectoryUser, 'status'> {
+  status: 'active' | 'locked' | 'no_access';
   employeeCode: string | null;
-  groups: string[];
+  team: string | null;
+  role: 'admin' | 'member';
   lastLoginAt: string | null;
 }
 
 export interface SyncResult {
   created: number;
   updated: number;
+  no_access: number;
+  reconcile: 'ok' | 'skipped' | 'aborted';
 }
 
 export const USERS_PAGE = 200;

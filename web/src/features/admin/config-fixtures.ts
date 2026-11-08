@@ -8,8 +8,6 @@ import type { Me } from '@/lib/me';
 export const CONFIG = {
   registration_last_day: 10,
   default_max_qty: 20,
-  admin_group: 'vpp-admin',
-  authorized_groups: ['vpp-users', 'cong-trinh'],
   low_stock_notify: true,
   reminder_days_left: 3,
   signature_boxes: [
@@ -21,21 +19,22 @@ export const CONFIG = {
 
 export const PERIOD = { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 9, previous: null, owed: [] };
 
-const user = (sub: string, fullName: string, groups: string[]) => ({
+const user = (sub: string, fullName: string, role: 'admin' | 'member', team: string | null) => ({
   sub,
   fullName,
   email: `${sub}@pmh.com.vn`,
   department: 'Phòng Công trình',
   status: 'active',
   employeeCode: null,
-  groups,
+  team,
+  role,
   lastLoginAt: null,
 });
 
 export const USERS = [
-  user('u-admin', 'Nguyễn Văn An', ['VPP-Admin', 'vpp-users']),
-  user('u-ha', 'Phạm Thu Hà', ['vpp-users']),
-  user('u-minh', 'Lê Minh', ['vpp-users', 'cong-trinh']),
+  user('u-admin', 'Nguyễn Văn An', 'admin', 'Admin'),
+  user('u-ha', 'Phạm Thu Hà', 'member', 'QS'),
+  user('u-minh', 'Lê Minh', 'member', null),
 ];
 
 export const RECENT = [
@@ -86,7 +85,7 @@ export const configInvalid = (field: string) => jsonResponse(400, { code: 'CONFI
 export async function openConfig(me: Me = makeMe('admin'), width = 1280) {
   mockViewport(width);
   const view = renderApp(me, '/admin/config');
-  await screen.findByDisplayValue('vpp-admin');
+  await screen.findAllByRole('form');
   return view;
 }
 

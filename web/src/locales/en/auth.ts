@@ -37,9 +37,9 @@ const auth: Messages<typeof vi> = {
     },
     forbidden: {
       title: 'This account is not allowed to use VPP Construction yet',
-      body: 'You signed in to PMH ID as {{email}}, but the account is not in a group allowed to use this app. Contact {{admin_contact}} to be added.',
+      body: 'You signed in to PMH ID as {{email}}, but PMH ID has not granted this account access to VPP Construction. Contact {{admin_contact}} to be granted access.',
       bodyNoEmail:
-        'You signed in to PMH ID, but the account is not in a group allowed to use this app. Contact {{admin_contact}} to be added.',
+        'You signed in to PMH ID, but PMH ID has not granted this account access to VPP Construction. Contact {{admin_contact}} to be granted access.',
       defaultContact: 'the Construction Admin team',
       switchAccount: 'Sign in with another account',
       portal: 'Back to PMH ID',

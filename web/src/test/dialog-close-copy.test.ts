@@ -36,7 +36,7 @@ const BANNED = /^(Hủy|Cancel|Tiếp tục sửa|Keep editing|Quay lại sửa)
 
 describe('Nút đóng hộp thoại là "Quay lại"', () => {
   it('tìm được các chỗ đặt nhãn đóng trong mã (hộp xác nhận + DialogClose)', () => {
-    expect(sites.filter((s) => s.kind === 'cancelLabel').length).toBeGreaterThanOrEqual(8);
+    expect(sites.filter((s) => s.kind === 'cancelLabel').length).toBeGreaterThanOrEqual(7);
     expect(sites.filter((s) => s.kind === 'DialogClose').length).toBeGreaterThanOrEqual(10);
     expect(sites.map((s) => s.key)).toContain('common.cancel');
   });

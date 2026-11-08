@@ -1,7 +1,7 @@
 import { matchesSearch } from '@/features/request/request-format';
 import type { AdminUser } from './directory.api';
 
-export const USERS_FILTERS = ['active', 'locked'] as const;
+export const USERS_FILTERS = ['active', 'locked', 'no_access'] as const;
 export type UsersFilter = (typeof USERS_FILTERS)[number];
 export type RegFilter = 'yes' | 'no';
 
@@ -29,10 +29,11 @@ export function regOf(u: Pick<AdminUser, 'sub'>, sets: RegSets): RegFilter | nul
 const MATCH: Record<UsersFilter, (u: AdminUser) => boolean> = {
   active: (u) => u.status === 'active',
   locked: (u) => u.status === 'locked',
+  no_access: (u) => u.status === 'no_access',
 };
 
 export function usersStats(users: AdminUser[]): Record<UsersFilter, number> {
-  const stats = { active: 0, locked: 0 };
+  const stats = { active: 0, locked: 0, no_access: 0 };
   for (const u of users) for (const f of USERS_FILTERS) if (MATCH[f](u)) stats[f] += 1;
   return stats;
 }
@@ -43,7 +44,7 @@ export function departmentsOf(users: AdminUser[]): string[] {
   return [...set].sort((a, b) => a.localeCompare(b, 'vi'));
 }
 
-const searchText = (u: AdminUser) => [u.fullName, u.email, u.employeeCode, u.sub].filter(Boolean).join(' ');
+const searchText = (u: AdminUser) => [u.fullName, u.email, u.employeeCode, u.team, u.sub].filter(Boolean).join(' ');
 
 // clientSearch=false: server đã lọc theo `search`, trang chỉ lọc thẻ và phòng ban; lọc đăng ký chưa có dữ liệu → chưa ra ai
 export function applyUsersView(users: AdminUser[], view: UsersView, clientSearch: boolean, reg: RegSets | null = null): AdminUser[] {

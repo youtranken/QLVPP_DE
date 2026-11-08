@@ -1,75 +1,43 @@
 import { useId } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useMe } from '@/lib/me';
-import { FormField } from '@/ui/form-field';
 import { useDirectoryUsers } from '@/features/directory/use-all-users';
-import type { AdminUser } from '@/features/directory/directory.api';
-import type { AccessDraft } from './config-form';
-import { ConfigSection } from './config-section';
-import type { ConfigBlockState } from './use-config-block';
+import { nameOf } from '@/features/directory/users-rows';
 
-// So khớp không phân biệt hoa thường, như group-access.ts ở api
-const membersOf = (users: AdminUser[], group: string) => {
-  const g = group.trim().toLowerCase();
-  return users.filter((u) => u.groups.some((x) => x.toLowerCase() === g));
-};
-
-const sameGroup = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
-
-export function AccessBlock({ state, saved, authorizedGroups }: { state: ConfigBlockState<AccessDraft>; saved: string; authorizedGroups: string[] }) {
-  const { t } = useTranslation();
-  const me = useMe();
-  const directory = useDirectoryUsers('');
-  const ready = !directory.loading && !directory.failed && !directory.overflow;
-  const members = ready ? membersOf(directory.users, state.draft.admin_group) : null;
-  // Chỉ cảnh báo khi ID đã bị sửa khác giá trị đang dùng; mở trang với nhóm hiện tại thì không
-  const changed = !sameGroup(state.draft.admin_group, saved);
-  const lockout = changed && members !== null && me.role === 'admin' && state.draft.admin_group.trim() !== '' && !members.some((u) => u.sub === me.sub);
-
-  return (
-    <ConfigSection title={t('config.access.title')} saveLabel={t('config.access.save')} state={state}>
-      <FormField label={t('config.access.adminGroup')} hint={t('config.access.adminGroupHint')} error={state.errors.admin_group ? t(state.errors.admin_group) : undefined}>
-        {(p) => (
-          <input
-            {...p}
-            maxLength={200}
-            value={state.draft.admin_group}
-            onChange={(e) => state.update(() => ({ admin_group: e.target.value }), 'admin_group')}
-          />
-        )}
-      </FormField>
-      {members !== null && <p className="cf-count">{t('config.access.members', { count: members.length })}</p>}
-      {!directory.loading && members === null && <p className="ff-hint">{t('config.access.membersUnknown')}</p>}
-      {lockout && members && <p className="alert alert--warn">{t(members.length === 0 ? 'config.access.selfLockout' : 'config.access.selfLockoutNotMember', { name: me.fullName || t('config.access.you') })}</p>}
-      <AuthorizedGroups groups={authorizedGroups} users={ready ? directory.users : null} />
-    </ConfigSection>
-  );
-}
-
-// Chỉ đồng bộ danh bạ ghi được khóa này (server từ chối khi PUT), nên chỉ hiện để đọc
-function AuthorizedGroups({ groups, users }: { groups: string[]; users: AdminUser[] | null }) {
+// Chỉ đọc: PMH ID quyết định ai được vào và ai là Hành chính; khối này chỉ liệt kê kết quả đã đồng bộ
+export function AccessBlock() {
   const { t } = useTranslation();
   const labelId = useId();
+  const directory = useDirectoryUsers('');
+  const ready = !directory.loading && !directory.failed && !directory.overflow;
+  const admins = ready ? directory.users.filter((u) => u.role === 'admin') : null;
   return (
-    <div className="cf-readonly">
-      <span id={labelId} className="ff-label">
-        {t('config.access.authorizedGroups')}
-      </span>
-      {groups.length > 0 ? (
-        <ul className="cf-tags" aria-labelledby={labelId}>
-          {groups.map((g) => (
-            <li key={g} className="tag">
-              {users ? t('config.access.groupCount', { group: g, count: membersOf(users, g).length }) : g}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>{t('config.access.noGroups')}</p>
-      )}
-      <p className="ff-hint">
-        {t('config.access.authorizedGroupsHint')} <Link to="/admin/users">{t('config.access.openDirectory')}</Link>
-      </p>
-    </div>
+    <section className="cf-block" aria-labelledby={`${labelId}-h`}>
+      <header className="cf-block__head">
+        <h2 id={`${labelId}-h`}>{t('config.access.title')}</h2>
+        <p>{t('config.access.scope')}</p>
+      </header>
+      <div className="cf-block__body cf-readonly">
+        <span id={labelId} className="ff-label">
+          {t('config.access.adminsTitle')}
+        </span>
+        {admins === null ? (
+          !directory.loading && <p className="ff-hint">{t('config.access.adminsUnknown')}</p>
+        ) : admins.length > 0 ? (
+          <ul className="cf-tags" aria-labelledby={labelId}>
+            {admins.map((u) => (
+              <li key={u.sub} className="tag">
+                {nameOf(u)}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>{t('config.access.noAdmins')}</p>
+        )}
+        <p className="ff-hint">
+          {t('config.access.adminsHint')} <Link to="/admin/users">{t('config.access.openDirectory')}</Link>
+        </p>
+      </div>
+    </section>
   );
 }

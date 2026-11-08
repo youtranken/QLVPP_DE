@@ -4,7 +4,13 @@ import { CONFIG, block, openConfig, putBodies, stubConfigApi } from './config-fi
 
 afterEach(() => vi.unstubAllGlobals());
 
-const OTHER_ADMIN = { admin_group: 'nhom-khac', low_stock_notify: false };
+const OTHER_ADMIN = {
+  low_stock_notify: false,
+  signature_boxes: [
+    { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: 'Trần Văn Cả' },
+    { title: 'Người yêu cầu', title_en: 'Applicant', name: 'Lê Thị Bình' },
+  ],
+};
 
 async function retype(el: HTMLElement, value: string) {
   await userEvent.clear(el);
@@ -25,8 +31,8 @@ async function savePeriodWhileOtherAdminChanged() {
 describe('Cấu hình · khối theo cấu hình mới nhất', () => {
   it('khối chưa sửa theo giá trị mới của cấu hình, không bị coi là chưa lưu', async () => {
     await savePeriodWhileOtherAdminChanged();
-    expect(screen.getByLabelText('Nhóm PMH ID của Hành chính')).toHaveValue('nhom-khac');
-    expect(within(block('Quyền Hành chính')).getByRole('button', { name: 'Chưa có thay đổi' })).toBeDisabled();
+    expect(screen.getByDisplayValue('Trần Văn Cả')).toBeInTheDocument();
+    expect(within(block('Ô ký trên phiếu đề xuất')).getByRole('button', { name: 'Chưa có thay đổi' })).toBeDisabled();
     expect(within(block('Liên hệ & thông báo')).getByRole('button', { name: 'Lưu liên hệ' })).toBeEnabled();
   });
 

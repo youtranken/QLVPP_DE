@@ -36,6 +36,15 @@ export function UsersStats({ stats, filter, onFilter, reg }: { stats: Record<Use
         pressed={filter === 'locked'}
         onClick={() => onFilter('locked')}
       />
+      <StatCard
+        label={t('users.stats.no_access')}
+        icon="lock"
+        value={stats.no_access}
+        unit={t('users.stats.people')}
+        tone={stats.no_access > 0 ? 'danger' : 'neutral'}
+        pressed={filter === 'no_access'}
+        onClick={() => onFilter('no_access')}
+      />
     </StatRow>
   );
 }

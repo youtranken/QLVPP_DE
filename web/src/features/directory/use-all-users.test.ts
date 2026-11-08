@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DIRECTORY_FULL_LOAD_MAX, exceedsFullLoad, loadAllUsers } from './use-all-users';
 import type { AdminUser } from './directory.api';
 
-const user = (i: number): AdminUser => ({ sub: `u${i}`, fullName: `N${i}`, email: null, department: null, status: 'active', employeeCode: null, groups: [], lastLoginAt: null });
+const user = (i: number): AdminUser => ({ sub: `u${i}`, fullName: `N${i}`, email: null, department: null, status: 'active', employeeCode: null, team: null, role: 'member', lastLoginAt: null });
 
 function pagesOf(total: number, size = 200) {
   const calls: (string | null)[] = [];

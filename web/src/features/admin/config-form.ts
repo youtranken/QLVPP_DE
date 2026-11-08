@@ -1,6 +1,6 @@
 import type { AdminConfig, ConfigPatch, SignatureBox } from '@/features/admin/admin.api';
 
-export type ConfigBlock = 'period' | 'access' | 'signers' | 'contact';
+export type ConfigBlock = 'period' | 'signers' | 'contact';
 // Khóa = đường dẫn field của CONFIG_INVALID (vd "signature_boxes.1.title"), giá trị = khóa i18n; 'form' = lỗi cả khối
 export type FieldErrors = Record<string, string>;
 
@@ -57,21 +57,6 @@ export const periodSpec: BlockSpec<PeriodDraft> = {
     if (field === 'reminder_days_left' || field === 'default_max_qty') return { [field]: `config.errors.${field}` };
     return UNKNOWN;
   },
-};
-
-export interface AccessDraft {
-  admin_group: string;
-}
-
-export const accessSpec: BlockSpec<AccessDraft> = {
-  block: 'access',
-  fromConfig: (c) => ({ admin_group: c.admin_group }),
-  patchOf: (d, c) => (d.admin_group.trim() === c.admin_group ? {} : { admin_group: d.admin_group.trim() }),
-  validate: (d): FieldErrors => {
-    const v = d.admin_group.trim();
-    return v === '' || v.length > NAME_MAX ? { admin_group: 'config.errors.admin_group' } : {};
-  },
-  errorOf: (field) => (field === 'admin_group' ? { admin_group: 'config.errors.admin_group' } : UNKNOWN),
 };
 
 export interface BoxDraft extends SignatureBox {

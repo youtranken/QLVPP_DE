@@ -9,7 +9,11 @@ export function SyncNotice({ state, onRetry, onClose }: { state: SyncState; onRe
   if (state.kind === 'done') {
     return (
       <div role="status" className="alert alert--ok dr-sync">
-        <span className="dr-sync__text">{t('users.page.syncDone', { created: state.result.created, updated: state.result.updated })}</span>
+        <span className="dr-sync__text">
+          {t('users.page.syncDone', { created: state.result.created, updated: state.result.updated })}
+          {state.result.no_access > 0 && ` ${t('users.page.syncNoAccess', { count: state.result.no_access })}`}
+          {state.result.reconcile === 'aborted' && ` ${t('users.page.syncReconcileAborted')}`}
+        </span>
         <button type="button" className="sheet-close" aria-label={t('users.page.closeNotice')} onClick={onClose}>
           <Icon name="x" size={18} />
         </button>

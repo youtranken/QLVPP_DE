@@ -21,21 +21,7 @@ export function UserAvatar({ user, large = false }: { user: Pick<AdminUser, 'sub
 
 export function StatusBadge({ status }: { status: AdminUser['status'] }) {
   const { t } = useTranslation();
-  return <span className={status === 'locked' ? 'tag tag--danger' : 'tag tag--ok'}>{t(`users.status.${status}`)}</span>;
-}
-
-export function GroupBadges({ groups }: { groups: string[] }) {
-  const { t } = useTranslation();
-  if (groups.length === 0) return <span className="dr-muted">{t('common.empty')}</span>;
-  return (
-    <span className="dr-groups">
-      {groups.map((g) => (
-        <span key={g} className="tag tag--outline">
-          {g}
-        </span>
-      ))}
-    </span>
-  );
+  return <span className={status === 'active' ? 'tag tag--ok' : 'tag tag--danger'}>{t(`users.status.${status}`)}</span>;
 }
 
 export function LastLogin({ iso }: { iso: string | null }) {
@@ -82,8 +68,17 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
         { id: 'code', header: t('users.page.colCode'), cell: ({ row }) => row.original.employeeCode ?? t('common.empty') },
         { id: 'department', header: t('users.page.colDepartment'), cell: ({ row }) => row.original.department ?? t('common.empty') },
         ...(regMonth === null ? [] : [{ id: 'reg', header: t('users.reg.col', { month: regMonth }), cell: ({ row }: { row: { original: UserRow } }) => <RegCell reg={row.original.reg} /> }]),
-        { id: 'groups', header: t('users.page.colGroups'), cell: ({ row }) => <GroupBadges groups={row.original.groups} /> },
-        { id: 'status', header: t('users.page.colStatus'), cell: ({ row }) => <StatusBadge status={row.original.status} /> },
+        { id: 'team', header: t('users.page.colTeam'), cell: ({ row }) => row.original.team ?? t('common.empty') },
+        {
+          id: 'status',
+          header: t('users.page.colStatus'),
+          cell: ({ row }) => (
+            <span className="dr-status">
+              <StatusBadge status={row.original.status} />
+              {row.original.role === 'admin' && <span className="tag tag--outline">{t('users.page.adminTag')}</span>}
+            </span>
+          ),
+        },
         { id: 'lastLogin', header: t('users.page.colLastLogin'), cell: ({ row }) => <LastLogin iso={row.original.lastLoginAt} /> },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
@@ -115,7 +110,7 @@ export function UsersTable({
       empty={{ art: 'no-match', hint: empty.hint, action: empty.action }}
       activeRowId={activeId}
       onRowClick={onOpen}
-      rowClassName={(u) => (u.status === 'locked' ? 'is-inactive' : '')}
+      rowClassName={(u) => (u.status !== 'active' ? 'is-inactive' : '')}
       stackOnMobile
       tableClassName="dr-table"
     />

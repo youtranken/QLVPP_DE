@@ -11,7 +11,7 @@ function stubDirectory(total: number) {
     const cursor = new URL(url, 'http://x').searchParams.get('cursor');
     const from = cursor ? Number(cursor) : 0;
     const to = Math.min(from + 200, total);
-    const items = Array.from({ length: to - from }, (_, i) => ({ sub: `u${from + i}`, fullName: i === 0 && from === 0 ? null : `Người ${from + i}`, email: null, department: null, status: 'active', employeeCode: null, groups: [], lastLoginAt: null }));
+    const items = Array.from({ length: to - from }, (_, i) => ({ sub: `u${from + i}`, fullName: i === 0 && from === 0 ? null : `Người ${from + i}`, email: null, department: null, status: 'active', employeeCode: null, team: null, role: 'member', lastLoginAt: null }));
     return Promise.resolve(jsonResponse(200, { items, next_cursor: to < total ? String(to) : null }));
   });
   vi.stubGlobal('fetch', fetchMock);

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { DialogClose } from '@/ui/dialog';
 import { OverlayPanel, type PanelNav } from '@/ui/overlay-panel';
-import { GroupBadges, LastLogin, StatusBadge, UserAvatar, type UserRow } from './users-table';
+import { LastLogin, StatusBadge, UserAvatar, type UserRow } from './users-table';
 import { nameOf } from './users-rows';
 
 interface Props {
@@ -19,7 +19,7 @@ export function UserDrawer({ user, nav, onClose }: Props) {
     [t('users.drawer.email'), user.email ?? empty],
     [t('users.drawer.code'), user.employeeCode ?? empty],
     [t('users.drawer.department'), user.department ?? empty],
-    [t('users.drawer.groups'), <GroupBadges key="g" groups={user.groups} />],
+    [t('users.drawer.team'), user.team ?? empty],
     [t('users.drawer.status'), <StatusBadge key="s" status={user.status} />],
     [t('users.drawer.lastLogin'), <LastLogin key="l" iso={user.lastLoginAt} />],
   ];
@@ -47,6 +47,11 @@ export function UserDrawer({ user, nav, onClose }: Props) {
       {user.status === 'locked' && (
         <p role="note" className="alert alert--warn">
           {t('users.drawer.lockedWarning')}
+        </p>
+      )}
+      {user.status === 'no_access' && (
+        <p role="note" className="alert alert--warn">
+          {t('users.drawer.noAccessWarning')}
         </p>
       )}
       <dl className="dr-facts">

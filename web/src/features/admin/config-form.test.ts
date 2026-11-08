@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CONFIG } from './config-fixtures';
 import { previewMonth } from './config-calendar';
-import { accessSpec, contactSpec, newBox, periodSpec, signersSpec } from './config-form';
+import { contactSpec, newBox, periodSpec, signersSpec } from './config-form';
 
 const period = (over: Partial<Record<'registration_last_day' | 'reminder_days_left' | 'default_max_qty', string>>) => ({
   ...periodSpec.fromConfig(CONFIG),
@@ -113,13 +113,7 @@ describe('signersSpec', () => {
   });
 });
 
-describe('accessSpec + contactSpec', () => {
-  it('nhóm 200 ký tự qua, 201 hoặc rỗng lỗi', () => {
-    expect(accessSpec.validate({ admin_group: 'a'.repeat(200) })).toEqual({});
-    expect(accessSpec.validate({ admin_group: 'a'.repeat(201) })).toEqual({ admin_group: 'config.errors.admin_group' });
-    expect(accessSpec.validate({ admin_group: ' ' })).toEqual({ admin_group: 'config.errors.admin_group' });
-  });
-
+describe('contactSpec', () => {
   it('liên hệ 500 qua, 501 lỗi; công tắc chỉ gửi khi đổi', () => {
     expect(contactSpec.validate({ admin_contact: 'a'.repeat(500), low_stock_notify: true })).toEqual({});
     expect(contactSpec.validate({ admin_contact: 'a'.repeat(501), low_stock_notify: true })).toEqual({ admin_contact: 'config.errors.admin_contact' });

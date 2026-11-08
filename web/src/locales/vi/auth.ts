@@ -34,9 +34,9 @@ const auth = {
     },
     forbidden: {
       title: 'Tài khoản chưa được cấp quyền dùng VPP Công trình',
-      body: 'Bạn đã đăng nhập PMH ID bằng {{email}}, nhưng tài khoản chưa thuộc nhóm được dùng ứng dụng này. Liên hệ {{admin_contact}} để được thêm vào nhóm.',
+      body: 'Bạn đã đăng nhập PMH ID bằng {{email}}, nhưng PMH ID chưa cấp quyền vào VPP Công trình cho tài khoản này. Liên hệ {{admin_contact}} để được cấp quyền.',
       bodyNoEmail:
-        'Bạn đã đăng nhập PMH ID, nhưng tài khoản chưa thuộc nhóm được dùng ứng dụng này. Liên hệ {{admin_contact}} để được thêm vào nhóm.',
+        'Bạn đã đăng nhập PMH ID, nhưng PMH ID chưa cấp quyền vào VPP Công trình cho tài khoản này. Liên hệ {{admin_contact}} để được cấp quyền.',
       defaultContact: 'Hành chính phòng Công trình',
       switchAccount: 'Đăng nhập bằng tài khoản khác',
       portal: 'Về trang PMH ID',

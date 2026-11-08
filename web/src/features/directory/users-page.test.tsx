@@ -11,12 +11,14 @@ const AN: AdminUser = {
   employeeCode: 'NV0231',
   fullName: 'Phạm Minh Đức',
   department: 'Phòng Công trình',
-  groups: ['vpp-users', 'vpp-admin'],
+  team: 'QS',
+  role: 'admin',
   status: 'active',
   lastLoginAt: '2026-10-27T02:30:00.000Z',
 };
-const BINH: AdminUser = { ...AN, sub: 'u-binh', fullName: 'Lê Thị Bình', employeeCode: 'NV0007', department: 'Phòng Kế toán', groups: [], status: 'locked', lastLoginAt: null };
-const CHI: AdminUser = { ...AN, sub: 'u-chi', fullName: 'Trần Chi', employeeCode: 'NV0100', department: 'Phòng Công trình', groups: ['vpp-users'], lastLoginAt: null };
+const BINH: AdminUser = { ...AN, sub: 'u-binh', fullName: 'Lê Thị Bình', employeeCode: 'NV0007', department: 'Phòng Kế toán', team: null, role: 'member', status: 'locked', lastLoginAt: null };
+const CHI: AdminUser = { ...AN, sub: 'u-chi', fullName: 'Trần Chi', employeeCode: 'NV0100', department: 'Phòng Công trình', team: null, role: 'member', lastLoginAt: null };
+const DUNG: AdminUser = { ...CHI, sub: 'u-dung', fullName: 'Vũ Dũng', employeeCode: 'NV0300', team: 'QS', status: 'no_access' };
 
 type SyncRoute = () => Response;
 type RegRoute = () => Response;
@@ -25,7 +27,7 @@ const REG_URL = '/api/admin/periods/2026-11/unregistered';
 const regOf = (unregistered: AdminUser[], registered: string[]) => () =>
   jsonResponse(200, { items: unregistered.map((u) => ({ sub: u.sub, full_name: u.fullName, email: u.email, department: u.department })), registered_subs: registered });
 
-function stubUsers(users: AdminUser[], sync: SyncRoute = () => jsonResponse(200, { created: 0, updated: 0 }), reg: RegRoute = regOf([CHI], ['u-an'])) {
+function stubUsers(users: AdminUser[], sync: SyncRoute = () => jsonResponse(200, { created: 0, updated: 0, no_access: 0, reconcile: 'ok' }), reg: RegRoute = regOf([CHI], ['u-an'])) {
   const f = vi.fn((url: string, init?: RequestInit) => {
     if (url === REG_URL) return Promise.resolve(reg());
     if (url === '/api/admin/directory/sync' && init?.method === 'POST') return Promise.resolve(sync());
@@ -100,16 +102,18 @@ describe('UsersPage B10', () => {
     expect(screen.getByText('Hiện 1 / 3 người')).toBeInTheDocument();
   });
 
-  it('bảng: avatar chữ đầu, nhóm PMH ID từng nhãn, trạng thái, "Chưa đăng nhập"; không có badge "Mới"', async () => {
+  it('bảng: avatar chữ đầu, cột Nhóm, tag Hành chính, trạng thái, "Chưa đăng nhập"; không có badge "Mới"', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     const an = screen.getByText('Phạm Minh Đức').closest('tr')!;
     expect(within(an).getByText('Phòng Công trình')).toBeInTheDocument();
-    expect(within(an).getByText('vpp-admin')).toBeInTheDocument();
+    expect(within(an).getByText('QS')).toBeInTheDocument();
+    expect(within(an).getByText('Hành chính')).toBeInTheDocument();
     expect(within(an).getByText('Đang dùng')).toBeInTheDocument();
     expect(within(an).getByText('09:30 27/10/2026')).toBeInTheDocument();
     const binh = screen.getByText('Lê Thị Bình').closest('tr')!;
     expect(within(binh).getByText('Đã khóa')).toBeInTheDocument();
+    expect(within(binh).queryByText('Hành chính')).toBeNull();
     expect(within(binh).getByText('Chưa đăng nhập')).toBeInTheDocument();
     expect(screen.queryByText('Mới')).toBeNull();
   });
@@ -130,8 +134,72 @@ describe('UsersPage B10', () => {
     await waitFor(() => expect(bodyRows()).toHaveLength(3));
   });
 
+  it('cột Nhóm: team "QS" hiện QS; team null hiện —', async () => {
+    stubUsers([AN, CHI]);
+    await openUsers();
+    const cells = (name: string) => within(screen.getByText(name).closest('tr')!).getAllByRole('cell');
+    const col = within(screen.getByRole('table')).getAllByRole('columnheader').findIndex((h) => h.textContent === 'Nhóm');
+    expect(col).toBeGreaterThan(-1);
+    expect(cells('Phạm Minh Đức')[col]).toHaveTextContent('QS');
+    expect(cells('Trần Chi')[col]).toHaveTextContent('—');
+  });
+
+  it('người role admin có tag Hành chính, người member thì không', async () => {
+    stubUsers([AN, CHI]);
+    await openUsers();
+    expect(within(screen.getByText('Phạm Minh Đức').closest('tr')!).getByText('Hành chính')).toBeInTheDocument();
+    expect(within(screen.getByText('Trần Chi').closest('tr')!).queryByText('Hành chính')).toBeNull();
+  });
+
+  it('lọc Không còn quyền chỉ còn người no_access, đếm đúng ở thống kê; no_access không tính vào Đang dùng', async () => {
+    stubUsers([AN, BINH, CHI, DUNG]);
+    await openUsers();
+    expect(card(/^Không còn quyền/)).toHaveTextContent('1');
+    expect(card(/^Đang dùng/)).toHaveTextContent('2');
+    await userEvent.click(card(/^Không còn quyền/));
+    expect(bodyRows().map((r) => within(r).getByRole('button').textContent)).toEqual(['Vũ Dũng']);
+    expect(within(bodyRows()[0]).getByText('Không còn quyền')).toBeInTheDocument();
+    expect(screen.getByText('Đang lọc: Không còn quyền · 1')).toBeInTheDocument();
+  });
+
+  it('lọc phòng + tìm theo tên vẫn đúng khi team null; tìm theo team khớp', async () => {
+    stubUsers([AN, BINH, CHI, DUNG]);
+    await openUsers();
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Phòng ban' }), 'Phòng Công trình');
+    expect(bodyRows()).toHaveLength(3);
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người' }), 'Chi');
+    await waitFor(() => expect(bodyRows().map((r) => within(r).getByRole('button').textContent)).toEqual(['Trần Chi']));
+  });
+
+  it('mở người no_access → cảnh báo PMH ID đã thu hồi quyền; người active thì không', async () => {
+    stubUsers([AN, DUNG]);
+    await openUsers('/admin/users?person=u-dung');
+    const drawer = await screen.findByRole('dialog', { name: 'Người dùng' });
+    expect(within(drawer).getByText(/PMH ID đã thu hồi quyền vào VPP của người này/)).toBeInTheDocument();
+    expect(within(drawer).getByText('Nhóm')).toBeInTheDocument();
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Người trước' }));
+    expect(within(await screen.findByRole('dialog', { name: 'Người dùng' })).queryByText(/PMH ID đã thu hồi quyền/)).toBeNull();
+  });
+
+  it('kết quả đồng bộ no_access 2 → dòng "2 người không còn quyền vào VPP."; reconcile ok thì không có cảnh báo', async () => {
+    stubUsers([AN], () => jsonResponse(200, { created: 0, updated: 1, no_access: 2, reconcile: 'ok' }));
+    await openUsers();
+    await userEvent.click(screen.getByRole('button', { name: 'Đồng bộ ngay' }));
+    const notice = (await screen.findByText(/2 người không còn quyền vào VPP\./)).closest('[role="status"]')!;
+    expect(notice).toHaveTextContent('Đã đồng bộ từ PMH ID: 0 người mới, 1 cập nhật.');
+    expect(notice).not.toHaveTextContent('Chưa đối chiếu được');
+  });
+
+  it('no_access 0 → không có dòng không còn quyền; reconcile aborted → cảnh báo chưa đối chiếu được', async () => {
+    stubUsers([AN], () => jsonResponse(200, { created: 0, updated: 0, no_access: 0, reconcile: 'aborted' }));
+    await openUsers();
+    await userEvent.click(screen.getByRole('button', { name: 'Đồng bộ ngay' }));
+    const notice = (await screen.findByText(/Chưa đối chiếu được người vắng khỏi danh bạ PMH ID/)).closest('[role="status"]')!;
+    expect(notice).not.toHaveTextContent('không còn quyền vào VPP');
+  });
+
   it('đồng bộ ok → khối ok "Đã đồng bộ từ PMH ID: 2 người mới, 3 cập nhật." có nút đóng; gửi CSRF', async () => {
-    const f = stubUsers([AN], () => jsonResponse(200, { created: 2, updated: 3 }));
+    const f = stubUsers([AN], () => jsonResponse(200, { created: 2, updated: 3, no_access: 0, reconcile: 'ok' }));
     await openUsers();
     await userEvent.click(screen.getByRole('button', { name: 'Đồng bộ ngay' }));
     const ok = await screen.findByText('Đã đồng bộ từ PMH ID: 2 người mới, 3 cập nhật.');
