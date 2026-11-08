@@ -51,6 +51,9 @@ function makeService(opts: {
     fetchUsers: opts.fetchError
       ? jest.fn().mockRejectedValue(opts.fetchError)
       : jest.fn().mockResolvedValue(opts.users ?? []),
+    fetchUser: jest.fn().mockResolvedValue(null),
+    requestCount: jest.fn().mockReturnValue(1),
+    resetCount: jest.fn(),
   };
   const audit = { append: jest.fn().mockResolvedValue(undefined) };
   const service = new DirectorySyncService(
@@ -188,6 +191,6 @@ describe('DirectorySyncService', () => {
     const result = await service.sync('sa-1');
     expect(result).toMatchObject({ total: 0, created: 0, updated: 0 });
     expect(result).not.toHaveProperty('groups');
-    expect(Object.keys(directory)).toEqual(['fetchUsers']);
+    expect(Object.keys(directory)).not.toContain('fetchGroups');
   });
 });
