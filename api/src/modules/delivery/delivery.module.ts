@@ -5,6 +5,7 @@ import { PeriodsModule } from '../periods/periods.module';
 import { RequestsModule } from '../requests/requests.module';
 import { BacklogController } from './backlog.controller';
 import { BacklogService } from './backlog.service';
+import { BulkDeliveryService } from './bulk-delivery.service';
 import { CancelRemainingService } from './cancel-remaining.service';
 import { DeliveryController } from './delivery.controller';
 import { DeliveryPeopleController } from './delivery-people.controller';
@@ -20,6 +21,7 @@ import { DeliveryService } from './delivery.service';
   ],
   providers: [
     DeliveryService,
+    BulkDeliveryService,
     CancelRemainingService,
     BacklogService,
     DeliveryPeopleService,

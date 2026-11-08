@@ -93,6 +93,25 @@ export class LineDeliveryStore {
     return rows[0] ?? null;
   }
 
+  // Giao nhiều dòng một phiếu: khóa phiếu rồi các dòng theo id; dòng thiếu → caller báo LINE_NOT_FOUND
+  async lockRequestLines(
+    tx: Tx,
+    requestId: string,
+    lineIds: string[],
+  ): Promise<LockedLine[]> {
+    const head = await tx.execute<{ id: string }>(
+      sql`SELECT r.id FROM requests r WHERE r.id = ${requestId} FOR UPDATE`,
+    );
+    if (head.rows.length === 0) return [];
+    const { rows } = await tx.execute<LockedLine & Record<string, unknown>>(sql`
+      SELECT ${LINE_COLUMNS}
+      FROM request_lines l JOIN requests r ON r.id = l.request_id
+      WHERE l.request_id = ${requestId} AND l.id = ANY(${sql.param(lineIds)}::uuid[])
+      ORDER BY l.id FOR UPDATE OF l
+    `);
+    return rows;
+  }
+
   async addDelivered(
     tx: Tx,
     lineId: string,

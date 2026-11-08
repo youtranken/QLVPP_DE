@@ -3,6 +3,8 @@ import { CurrentIdentity } from '../auth/current-identity.decorator';
 import type { RequestIdentity } from '../auth/identity.types';
 import { Roles } from '../auth/roles.decorator';
 import { uuidParam } from '../catalog/catalog.dto';
+import { BulkDeliveryService } from './bulk-delivery.service';
+import { BulkDeliverBody } from './bulk-delivery.dto';
 import { CancelRemainingService } from './cancel-remaining.service';
 import { CancelBody, DeliverBody } from './delivery.dto';
 import { DeliveryService } from './delivery.service';
@@ -13,6 +15,7 @@ export class DeliveryController {
   constructor(
     private readonly service: DeliveryService,
     private readonly cancelService: CancelRemainingService,
+    private readonly bulk: BulkDeliveryService,
   ) {}
 
   // Cập nhật dòng có sẵn → 200 thay vì 201 mặc định của POST
@@ -24,6 +27,15 @@ export class DeliveryController {
     @Body() body: DeliverBody,
   ) {
     return this.service.deliverLine(id, body, admin.sub);
+  }
+
+  @Post('deliveries/bulk')
+  @HttpCode(200)
+  deliverBulk(
+    @CurrentIdentity() admin: RequestIdentity,
+    @Body() body: BulkDeliverBody,
+  ) {
+    return this.bulk.deliver(body, admin.sub);
   }
 
   @Post('lines/:id/cancel-remaining')
