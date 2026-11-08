@@ -21,7 +21,8 @@ export interface RequestRow extends Record<string, unknown> {
 
 const LINE_COLUMNS = sql.raw(
   `id, item_id, custom_name, custom_unit, custom_note, image_file_id, qty, delivered_qty,
-   cancelled_qty, cancel_note, review_status, review_note, added_by_admin`,
+   cancelled_qty, cancel_note, review_status, review_note, added_by_admin,
+   to_char(last_delivered_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS last_delivered_at`,
 );
 // Mốc so expected_updated_at và trả cho client cùng độ chính xác mili giây
 const UPDATED_AT_ISO = sql.raw(
@@ -163,7 +164,9 @@ export async function touchRequest(
   department: string | null,
   memberSave = false,
 ): Promise<void> {
-  const saved = memberSave ? sql`, saved_at = ${now.toISOString()}::timestamptz` : sql``;
+  const saved = memberSave
+    ? sql`, saved_at = ${now.toISOString()}::timestamptz`
+    : sql``;
   await tx.execute(sql`
     UPDATE requests
     SET updated_at = ${nextUpdatedAt(now)}, department = ${department}${saved}

@@ -13,9 +13,8 @@ import { CustomLineDialog } from './custom-line-dialog';
 import { FlowNotice } from './flow-notice';
 import { ItemGrid } from './item-grid';
 import { MobileSaveBar } from './mobile-save-bar';
-import { OwedNotice } from './owed-notice';
 import { PeriodHero } from './period-hero';
-import { PreviousPeriodCard } from './previous-period-card';
+import { ReceiveStrip } from './receive-strip';
 import {
   useCurrentPeriod,
   useMemberCategories,
@@ -167,9 +166,8 @@ function RequestEditor({
           saved={cart.saved}
           dirty={dirty}
         />
-        <OwedNotice owed={period.owed} />
       </div>
-      <PreviousPeriodCard previous={period.previous} />
+      <ReceiveStrip period={period} />
       <div className="rq-frame">
         <div className="m-panel rq-panel">
           <ItemGrid

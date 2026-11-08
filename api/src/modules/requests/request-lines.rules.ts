@@ -21,6 +21,8 @@ export interface LineRow extends LineSnap, LineState {
   cancelled_qty: number;
   cancel_note: string | null;
   review_note: string | null;
+  // ISO UTC; null khi chưa giao lần nào
+  last_delivered_at?: string | null;
 }
 
 const SNAP_KEYS: (keyof LineSnap)[] = [

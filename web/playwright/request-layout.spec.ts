@@ -46,6 +46,20 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await group.cleanup(me.sub);
     }
   });
+  test('Vòng3-ĐK trang Đăng ký dùng hết bề ngang (1280): khung không bị bó 1440, lưới + phiếu chia hết chiều ngang; 390 không tràn ngang', async ({ page }, info) => {
+    const me = await asNewMember(page, info);
+    try {
+      await page.goto('/');
+      await expect(page.getByRole('region', { name: 'Danh mục món' })).toBeVisible();
+      const frame = (await page.locator('.m-page.rq-v2').boundingBox())!;
+      const vw = page.viewportSize()!.width;
+      expect(frame.width).toBeGreaterThanOrEqual(vw - 48);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+    } finally {
+      deleteTestUsers(me.sub);
+    }
+  });
   test('V2C-T2 đang tải/lỗi tải nằm trong khung sáng: /api/me/request 500 → "Thử lại" thấy, không lỗi tương phản (390)', async ({ page }, info) => {
     const me = memberIdentity(info);
     seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);

@@ -35,6 +35,7 @@ export function lineView(over: Partial<LineView>): LineView {
     added_by_admin: false,
     readonly_for_member: false,
     max_qty: null,
+    last_delivered_at: null,
     ...over,
   };
 }

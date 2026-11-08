@@ -136,9 +136,12 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
 
     try {
       await page.goto('/');
-      const card = page.getByRole('link', { name: new RegExp(`Tháng ${prevMonth} đang giao · 1/2 món`) });
-      await expect(card).toBeVisible();
-      await expect(card).toHaveAttribute('href', `/history/${prevYm}`);
+      const strip = page.locator('.rq-recv-strip');
+      await expect(strip).toContainText(`Phiếu tháng ${prevMonth} đang giao · đã nhận 1/2 món, còn chờ 1`);
+      await strip.getByRole('button', { name: 'Xem', exact: true }).click();
+      const receive = page.getByRole('dialog', { name: `Phiếu tháng ${prevMonth}` });
+      await expect(receive.getByRole('link', { name: 'Xem lịch sử các tháng' })).toHaveAttribute('href', `/history/${prevYm}`);
+      await receive.locator('.sheet-footer').getByRole('button', { name: 'Đóng' }).click();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'copy-hero');
 

@@ -184,17 +184,15 @@ test.describe('E2-S6 lịch sử', () => {
 
     try {
       await page.goto('/');
-      const notice = page.getByText(/^Bạn còn chờ nhận/);
-      await expect(notice).toHaveText(
-        `Bạn còn chờ nhận Tháng ${monthOf(olderYm)}: ${pen.name} 2 · Tháng ${monthOf(prevYm)}: 2 món. Không cần đăng ký lại.`,
-      );
+      // Vòng 3: một dải duy nhất, các tháng cũ còn chờ là liên kết
+      const strip = page.locator('.rq-recv-strip');
+      await expect(strip).toHaveCount(1);
+      await expect(strip).toContainText(`Tháng ${monthOf(olderYm)} còn chờ 1 món · Tháng ${monthOf(prevYm)} còn chờ 2 món`);
       await expect(page.getByText(/\bnợ\b/)).toHaveCount(0);
       if (isMobile(info)) await expectNoContrastViolations(page);
 
       const tap = (target: ReturnType<Page['getByRole']>) => (isMobile(info) ? target.tap() : target.click());
-      await tap(page.getByRole('link', { name: 'Xem', exact: true }));
-      await expect(page).toHaveURL(/\/history$/);
-      await tap(page.getByRole('link', { name: new RegExp(`Tháng ${monthOf(prevYm)}/`) }));
+      await tap(strip.getByRole('link', { name: `Tháng ${monthOf(prevYm)} còn chờ 2 món` }));
       await expect(page).toHaveURL(new RegExp(`/history/${prevYm}$`));
       await expect(page.getByText(`Hành chính giảm 3 → 1 cái: Vượt định mức · 09:10 13/${prevYm.slice(5)}`)).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);

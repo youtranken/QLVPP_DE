@@ -66,6 +66,8 @@ export interface LineView {
   readonly_for_member: boolean;
   // Tối đa/tháng hiện tại của món (null với dòng ngoài DM); dòng giữ số cũ lớn hơn → "Vượt tối đa"
   max_qty: number | null;
+  // ISO lần giao gần nhất; null khi chưa giao
+  last_delivered_at: string | null;
   // Chỉ GET phiếu của chính mình ở kỳ đã khóa mới có; kỳ mở luôn rỗng
   adjustments?: LineAdjustment[];
 }

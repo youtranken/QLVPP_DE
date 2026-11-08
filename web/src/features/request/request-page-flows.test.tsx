@@ -3,7 +3,7 @@ import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-ut
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
-import { NOTE, PAUSED, PEN, PERIOD, facts, stubRequestApi, view } from '@/test/request-api-stub';
+import { NOTE, PAUSED, PEN, facts, stubRequestApi, view } from '@/test/request-api-stub';
 import { mockViewport } from '@/test/viewport';
 import { openPhoneCart, startEditingOrder } from '@/test/request-cart';
 
@@ -182,25 +182,7 @@ describe('RequestPage — chép lại tháng trước', () => {
   });
 });
 
-describe('RequestPage — kỳ trước đang giao, rời trang', () => {
-  it('previous.delivering → thẻ "Tháng 10 đang giao · 1/2 món" dẫn tới /history/2026-10', async () => {
-    mockViewport(1280);
-    const prev = view({
-      id: 'r-0',
-      period_ym: '2026-10',
-      is_open: false,
-      lines: [
-        lineView({ id: 'p-1', item_id: PEN.id, item: facts(PEN), qty: 2, delivered_qty: 2 }),
-        lineView({ id: 'p-2', item_id: NOTE.id, item: facts(NOTE), qty: 3, delivered_qty: 1 }),
-        lineView({ id: 'p-3', custom_name: 'Bìa', custom_unit: 'cai', review_status: 'rejected' }),
-      ],
-    });
-    stubRequestApi({ period: { ...PERIOD, previous: { ym: '2026-10', delivering: true } }, others: { '2026-10': prev } });
-    renderApp(makeMe('member'), '/');
-    const card = await screen.findByRole('link', { name: /Tháng 10 đang giao · 1\/2 món/ });
-    expect(card).toHaveAttribute('href', '/history/2026-10');
-  });
-
+describe('RequestPage — rời trang', () => {
   it('có thay đổi chưa lưu → bấm "Lịch sử" ở thanh dưới hỏi trước; Ở lại thì giữ trang, Rời trang thì đi', async () => {
     mockViewport(390);
     stubRequestApi();

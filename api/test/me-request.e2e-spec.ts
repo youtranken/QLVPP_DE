@@ -1,6 +1,6 @@
 import type request from 'supertest';
 import { AFTER_DEADLINE, meRequestFixture } from './me-request.fixture';
-import type { RequestView } from './me-request.fixture';
+import type { LineView, RequestView } from './me-request.fixture';
 
 describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', () => {
   const {
@@ -240,6 +240,32 @@ describe('me/request: lưu phiếu, kỳ, ảnh dòng, xóa món đã dùng', ()
     expect(res.status).toBe(403);
     expect(res.body).toMatchObject({ code: 'FORBIDDEN_ROLE' });
     expect(await requestsOf(SA)).toHaveLength(0);
+  });
+
+  it('kỳ khóa, dòng đã giao lúc 09:10 08/11 → lines[i].last_delivered_at = ISO đó; chưa giao → null', async () => {
+    const [x, y] = [await newItem(), await newItem()];
+    const v1 = view(
+      await save([
+        { item_id: x, qty: 1 },
+        { item_id: y, qty: 1 },
+      ]).expect(200),
+    );
+    await pool().query(
+      `UPDATE request_lines SET delivered_qty = 1, last_delivered_at = '2026-11-08T09:10:00+07:00'
+       WHERE request_id = $1 AND item_id = $2`,
+      [v1.id, x],
+    );
+    at(AFTER_DEADLINE);
+    const got = await as(http().get('/api/me/request?ym=2026-11'), A).expect(
+      200,
+    );
+    const lines = (
+      got.body as { lines: (LineView & { last_delivered_at: string | null })[] }
+    ).lines;
+    expect(lines.find((l) => l.item_id === x)?.last_delivered_at).toBe(
+      '2026-11-08T02:10:00.000Z',
+    );
+    expect(lines.find((l) => l.item_id === y)?.last_delivered_at).toBeNull();
   });
 
   it('Hành chính GET me/request và POST me/request/copy-previous → 403 FORBIDDEN_ROLE; member → 404 như cũ (chưa có phiếu)', async () => {
