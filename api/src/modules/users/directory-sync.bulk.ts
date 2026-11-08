@@ -21,6 +21,7 @@ interface ExistingRow {
   team: string | null;
   status: string;
   role: string;
+  inactiveAt?: Date | null;
 }
 
 // Giá trị sẽ ghi; undefined = nguồn không nói gì → giữ giá trị cũ
@@ -63,6 +64,7 @@ export async function loadExisting(
         team: usersTable.team,
         status: usersTable.status,
         role: usersTable.role,
+        inactiveAt: usersTable.inactiveAt,
       })
       .from(usersTable)
       .where(inArray(usersTable.sub, ids.slice(i, i + SELECT_CHUNK)))
@@ -76,6 +78,7 @@ export async function loadExisting(
 export function classify(
   users: DirectoryUser[],
   existing: Map<string, ExistingRow>,
+  syncStartedAt: Date | null = null,
 ): {
   out: BulkOutcome;
   toInsert: DirectoryUser[];
@@ -100,7 +103,7 @@ export function classify(
       toInsert.push(user);
       continue;
     }
-    const target = targetFor(user, current);
+    const target = targetFor(user, current, syncStartedAt);
     if (current.status === 'no_access' && user.status === 'active') {
       out.reappeared.push(user.id);
     }
@@ -117,9 +120,20 @@ export function classify(
   return { out, toInsert, toUpdate };
 }
 
-function targetFor(user: DirectoryUser, current: ExistingRow): Target {
+// Danh sách lấy trước một lần khóa/xóa (webhook tới sau mốc bắt đầu sync) không được mở lại người đó
+function targetFor(
+  user: DirectoryUser,
+  current: ExistingRow,
+  syncStartedAt: Date | null,
+): Target {
+  const recentlyClosed =
+    (current.status === 'locked' || current.status === 'deleted') &&
+    !!syncStartedAt &&
+    !!current.inactiveAt &&
+    current.inactiveAt >= syncStartedAt;
   const keepNoAccess =
     current.status === 'no_access' && user.status === 'active';
+  const keepCurrent = user.status === 'active' && recentlyClosed;
   return {
     email: user.email,
     employeeCode: user.employee_code,
@@ -127,7 +141,7 @@ function targetFor(user: DirectoryUser, current: ExistingRow): Target {
     department: directoryLabel(user.department),
     team: directoryLabel(user.team),
     role: toAppRole(user.app_role),
-    status: keepNoAccess ? 'no_access' : user.status,
+    status: keepNoAccess || keepCurrent ? current.status : user.status,
   };
 }
 

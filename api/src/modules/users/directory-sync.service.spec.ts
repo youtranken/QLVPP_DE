@@ -180,6 +180,30 @@ describe('DirectorySyncService', () => {
     expect(set.status).toBe('locked');
   });
 
+  it('hai lượt sync chồng nhau (tay + định kỳ) → chạy nối đuôi: lượt sau chỉ gọi Directory khi lượt trước xong; lượt lỗi không chặn lượt sau', async () => {
+    const { service, directory } = makeService({ users: [user('a')] });
+    let release: (v: unknown) => void = () => undefined;
+    directory.fetchUsers
+      .mockImplementationOnce(
+        () =>
+          new Promise((r) => {
+            release = r;
+          }),
+      )
+      .mockRejectedValueOnce(new Error('down'));
+    const first = service.sync('sa-1');
+    const second = service.sync('system');
+    const third = service.sync('system');
+    await new Promise((r) => setImmediate(r));
+    expect(directory.fetchUsers).toHaveBeenCalledTimes(1);
+    expect(directory.resetCount).toHaveBeenCalledTimes(1);
+    release([user('a')]);
+    await expect(first).resolves.toMatchObject({ total: 1 });
+    await expect(second).rejects.toThrow('down');
+    await expect(third).resolves.toMatchObject({ total: 1 });
+    expect(directory.fetchUsers).toHaveBeenCalledTimes(3);
+  });
+
   it('fetch lỗi → KHÔNG mở transaction, KHÔNG audit', async () => {
     const { service, db, audit } = makeService({
       fetchError: new Error('directory down'),

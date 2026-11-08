@@ -38,7 +38,7 @@ export type Sleep = (ms: number) => Promise<void>;
 
 // Trần `limit` của PMH ID: trang đủ 200 nghĩa là còn trang sau
 export const DIRECTORY_PAGE_SIZE = 200;
-// 10 000 user; vượt thì lỗi chứ không coi danh sách là đầy đủ
+// 10 000 user (thêm một lượt hỏi trang rỗng để xác nhận hết); vượt thì lỗi chứ không coi danh sách là đầy đủ
 export const MAX_PAGES = 50;
 export const RATE_LIMIT_RETRIES = 3;
 const RETRY_AFTER_DEFAULT_MS = 5_000;
@@ -95,7 +95,8 @@ export class DirectoryClient implements DirectoryClientApi {
     // include_deleted=true: người đã xóa vẫn hiện là deleted thay vì bị coi là mất quyền
     const all: DirectoryUser[] = [];
     const seen = new Set<string>();
-    for (let page = 0; page < MAX_PAGES; page += 1) {
+    // Trang MAX_PAGES (thứ 51) chỉ để xác nhận đã hết: đúng 10 000 user vẫn đồng bộ được
+    for (let page = 0; page <= MAX_PAGES; page += 1) {
       const offset = page * DIRECTORY_PAGE_SIZE;
       const { body } = await this.get(
         `/api/v1/users?include_deleted=true&limit=${DIRECTORY_PAGE_SIZE}&offset=${offset}`,
@@ -107,6 +108,7 @@ export class DirectoryClient implements DirectoryClientApi {
         );
       }
       const items = body as unknown as DirectoryUser[];
+      if (page === MAX_PAGES && items.length > 0) break;
       const fresh = items.filter((u) => !seen.has(u.id));
       if (items.length > 0 && fresh.length === 0) {
         throw unavailable(
@@ -178,7 +180,9 @@ export class DirectoryClient implements DirectoryClientApi {
     if (
       !isObject(body) ||
       body.statusCode !== 404 ||
-      body.error !== 'Not Found'
+      body.error !== 'Not Found' ||
+      // 404 route sai của chính Nest (cấu hình đường dẫn API lệch) không phải "user mất quyền"
+      (typeof body.message === 'string' && body.message.startsWith('Cannot '))
     ) {
       throw unavailable(
         'Directory API trả 404 không đúng dạng PMH ID — không xác nhận được.',

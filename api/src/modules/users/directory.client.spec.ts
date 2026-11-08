@@ -123,12 +123,18 @@ describe('DirectoryClient', () => {
       expect(urls()).toHaveLength(50);
     });
 
-    it('50 trang đủ + trang 51 cần gọi → DIRECTORY_UNAVAILABLE, không trả danh sách thiếu', async () => {
+    it('đúng 10 000 user (50 trang đầy, trang 51 rỗng) → trả đủ 10 000', async () => {
       serveTotal(50 * 200);
+      await expect(client.fetchUsers()).resolves.toHaveLength(10_000);
+      expect(urls()).toHaveLength(51);
+    });
+
+    it('10 001 user (trang 51 còn người) → DIRECTORY_UNAVAILABLE, không trả danh sách thiếu', async () => {
+      serveTotal(50 * 200 + 1);
       expect(await errorCode(client.fetchUsers())).toBe(
         'DIRECTORY_UNAVAILABLE',
       );
-      expect(urls()).toHaveLength(50);
+      expect(urls()).toHaveLength(51);
     });
 
     it('body {data:[…]} (không phải mảng) → DIRECTORY_UNAVAILABLE', async () => {
@@ -267,6 +273,13 @@ describe('DirectoryClient', () => {
       [{ statusCode: 404 }],
       [{ error: 'Not Found' }],
       [{ statusCode: '404', error: 'Not Found' }],
+      [
+        {
+          statusCode: 404,
+          error: 'Not Found',
+          message: 'Cannot GET /api/v1/userz/u1',
+        },
+      ],
     ])('404 JSON lạ %j → DIRECTORY_UNAVAILABLE', async (body) => {
       fetchMock.mockResolvedValue(jsonResponse(body, 404));
       expect(await errorCode(client.fetchUser('u1'))).toBe(

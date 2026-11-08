@@ -44,7 +44,17 @@ export class DirectorySyncService {
     private readonly reconcile: DirectoryReconcileService,
   ) {}
 
-  async sync(actor: string): Promise<DirectorySyncResult> {
+  private tail: Promise<unknown> = Promise.resolve();
+
+  // Lượt tay và lượt định kỳ chạy nối đuôi, không chồng nhau: bộ đếm ngân sách request không bị
+  // resetCount() lẫn nhau, không vượt hạn mức PMH ID. Người gọi sau vẫn nhận một lượt mới của mình.
+  sync(actor: string): Promise<DirectorySyncResult> {
+    const next = this.tail.then(() => this.run(actor));
+    this.tail = next.catch(() => undefined);
+    return next;
+  }
+
+  private async run(actor: string): Promise<DirectorySyncResult> {
     // Mốc trước khi liệt kê, theo đồng hồ DB (cùng nguồn với inactive_at): thu hồi sau mốc này
     // thì danh sách có thể đã cũ, không được dùng nó để mở lại người đó
     const syncStartedAt = await this.dbNow();
@@ -62,7 +72,7 @@ export class DirectorySyncService {
     }
     const users = [...new Map(valid.map((u) => [u.id, u])).values()];
 
-    const bulk = await this.writeBulk(users);
+    const bulk = await this.writeBulk(users, syncStartedAt);
     for (const c of bulk.roleChanges) {
       await this.audit.append({
         actor: 'system(pmh-id)',
@@ -122,11 +132,14 @@ export class DirectorySyncService {
     });
   }
 
-  private async writeBulk(users: DirectoryUser[]): Promise<BulkOutcome> {
+  private async writeBulk(
+    users: DirectoryUser[],
+    syncStartedAt: Date,
+  ): Promise<BulkOutcome> {
     try {
       return await this.db.transaction(async (tx) => {
         const existing = await loadExisting(tx, users);
-        const plan = classify(users, existing);
+        const plan = classify(users, existing, syncStartedAt);
         return {
           ...plan.out,
           created: await insertNew(tx, plan.toInsert),

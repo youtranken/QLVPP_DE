@@ -271,6 +271,20 @@ describe('Directory sync v3 (Postgres thật, Directory giả)', () => {
     });
   });
 
+  it('webhook khóa xen giữa lúc sync (inactive_at ≥ syncStartedAt), danh sách cũ báo active → giữ locked', async () => {
+    const LATE_LOCK = sub('late-lock');
+    await addUser(LATE_LOCK);
+    scenario.listed = [listed(LATE_LOCK)];
+    scenario.duringFetch = async () => {
+      await q(
+        `UPDATE users SET status = 'locked', inactive_at = clock_timestamp() WHERE sub = $1`,
+        [LATE_LOCK],
+      );
+    };
+    await sync();
+    expect((await userRow(LATE_LOCK)).status).toBe('locked');
+  });
+
   it('no_access mà Directory báo deleted → deleted, giữ mốc inactive_at cũ', async () => {
     const DEL = sub('del');
     await addUser(DEL, 'no_access', `'2026-01-01T00:00:00Z'`);
