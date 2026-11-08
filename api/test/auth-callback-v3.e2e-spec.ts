@@ -259,6 +259,23 @@ describe('callback PMH ID v3: vai từ app_role, đua thu hồi, ver sai, phiên
     expect((await user(s)).status).toBe('no_access');
   });
 
+  it('user đang active + dấu access_revoked mới hơn iat (webhook chưa kịp markNoAccess) → forbidden, không có phiên', async () => {
+    const s = sub('whact');
+    expect((await login(s, { app_role: 'member' })).headers.location).toBe('/');
+    await q(`DELETE FROM sessions WHERE user_sub = $1`, [s]).catch(() => undefined);
+    const iat = (await dbNowSec()) - 60;
+    await q(
+      `INSERT INTO webhook_user_order (sub, access_revoked, updated_at) VALUES ($1, true, now())
+       ON CONFLICT (sub) DO UPDATE SET access_revoked = true, updated_at = now()`,
+      [s],
+    );
+    expect((await user(s)).status).toBe('active');
+    const before = await sessions(s);
+    const res = await login(s, { app_role: 'member' }, iat);
+    expect(res.headers.location).toBe('/?login=forbidden');
+    expect(await sessions(s)).toBe(before);
+  });
+
   it('dấu access_revoked cũ hơn iat − 30 s → đăng nhập được và gỡ dấu', async () => {
     const s = sub('whold');
     await q(
