@@ -28,3 +28,8 @@ export function apiErrorString(e: unknown, key: string): string | undefined {
 export function isForbiddenRole(e: unknown): boolean {
   return e instanceof ApiError && e.status === 403 && apiErrorCode(e) === 'FORBIDDEN_ROLE';
 }
+
+// Phiên hết hạn: 401, hoặc 403 do CSRF (api gửi CSRF_TOKEN_INVALID)
+export function isSessionExpired(e: unknown): boolean {
+  return e instanceof ApiError && (e.status === 401 || (e.status === 403 && apiErrorCode(e) === 'CSRF_TOKEN_INVALID'));
+}

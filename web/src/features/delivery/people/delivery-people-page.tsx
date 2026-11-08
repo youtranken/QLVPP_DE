@@ -11,6 +11,7 @@ import { Icon } from '@/ui/icon';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
+import { SelectBox } from '@/ui/data-table-row';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
 import { usePeriodSummary } from '@/features/summary/summary.api';
@@ -98,6 +99,8 @@ function PeopleBoard({ ym }: { ym: string }) {
 
   const counts = tabCounts(people);
   const both = overlapCount(people);
+  const pickable = listed.filter(selectable);
+  const allPicked = pickable.length > 0 && pickable.every((p) => picked.has(p.user_sub));
   const shortages = stockShortages(people);
   const personPanel = selected && (
     <PersonPanel
@@ -134,13 +137,19 @@ function PeopleBoard({ ym }: { ym: string }) {
           />
           {both > 0 && <small className="pp-tabs__note">{t('delivery.people.overlap', { n: both })}</small>}
         </div>
+        {pickable.length > 0 && (
+          <label className="pt-pickall">
+            <SelectBox checked={allPicked} indeterminate={chosen.length > 0 && !allPicked} label={t('delivery.bulk.pickAllPhone')} onChange={toggleAll} />
+            <span aria-hidden="true">{t('delivery.bulk.pickAllPhone')}</span>
+          </label>
+        )}
         {chosen.length > 0 && (
           <div className="pt-bulk">
             <button type="button" className="btn btn--ghost btn--sm" onClick={() => setPicked(new Set())}>
               {t('delivery.bulk.clear')}
             </button>
             <button type="button" className="btn btn--primary" onClick={() => setBulk(bulkPlan(chosen, people))}>
-              {t('delivery.bulk.button', { n: chosen.length })}
+              {t('delivery.bulk.button', { count: chosen.length })}
             </button>
           </div>
         )}

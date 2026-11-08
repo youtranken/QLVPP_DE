@@ -17,13 +17,21 @@ export interface BulkPlan {
   owners: Record<string, string>;
 }
 
+// Phần thiếu của người: dòng giao một phần + dòng bỏ qua vì tủ hết + dòng ADM hết hàng (bulk không giao); dòng chờ duyệt không tính
+function shortfall(all: ReturnType<typeof dialogRows>, lim: ReturnType<typeof limitsOf>): number {
+  return all
+    .filter((r) => r.kind === 'give' || r.kind === 'adm' || (r.kind === 'skip' && r.reason === 'stock'))
+    .reduce((n, r) => n + r.line.remaining_qty - (r.kind === 'give' ? (lim[r.line.line_id]?.value ?? 0) : 0), 0);
+}
+
 // Số giao của từng dòng đúng như hộp giao từng người: gợi ý theo thứ tự đăng ký (allocateWithPriority) rồi kẹp theo tủ (limitsOf).
 // Chỉ dòng "giao được" (kind give); dòng ADM hết hàng cần hủy phần thiếu nên để hộp giao từng người xử lý — giao nhiều phiếu không hủy gì.
 export function bulkPlan(selected: DeliveryPerson[], people: DeliveryPerson[]): BulkPlan {
   const priority = priorityOf(people);
   const plan: BulkPlan = { body: { requests: [] }, skipped: [], summary: [], owners: {} };
   for (const p of selected) {
-    const rows = dialogRows(p, priority).filter((r) => r.kind === 'give');
+    const all = dialogRows(p, priority);
+    const rows = all.filter((r) => r.kind === 'give');
     const lim = limitsOf(rows, Object.fromEntries(rows.map((r) => [r.line.line_id, r.suggest])));
     const given = rows.filter((r) => (lim[r.line.line_id]?.value ?? 0) > 0);
     if (given.length === 0) {
@@ -43,7 +51,7 @@ export function bulkPlan(selected: DeliveryPerson[], people: DeliveryPerson[]): 
       user_sub: p.user_sub,
       items: new Set(given.map((r) => r.line.item_id ?? r.line.name)).size,
       give,
-      left: given.reduce((n, r) => n + r.line.remaining_qty - lim[r.line.line_id].value, 0),
+      left: shortfall(all, lim),
     });
   }
   return plan;

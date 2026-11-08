@@ -1,14 +1,14 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '@/lib/api-client';
-import { apiErrorCode } from '@/lib/api-error';
+import { isSessionExpired } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { useToast } from '@/ui/toast-context';
 import { lineErrorText } from '../delivery-errors';
 import type { BulkPlan } from './bulk-plan';
-import { deliverBulk, type BulkRequestResult, type DeliveryPerson } from './delivery-people.api';
+import { NOT_SENT } from './deliver-send';
+import { BULK_MAX_REQUESTS, deliverBulk, type BulkDeliverBody, type BulkRequestResult, type DeliveryPerson } from './delivery-people.api';
 import { useRefreshAfterLineChange } from './use-refresh-after-flow';
 
 interface Props {
@@ -35,24 +35,37 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
   const count = plan.summary.length;
   const sending = flight.pending;
 
+  // Chia lô ≤ BULK_MAX_REQUESTS phiếu, gửi lần lượt. Lỗi giữa chừng: có phiếu đã giao nên luôn tải lại danh sách,
+  // gói cũ không dùng lại được (phiếu đã giao sẽ báo "vừa đổi") → chỉ còn nút Đóng, người dùng chọn lại
   const submit = () =>
     flight.run(async () => {
       setError(null);
+      const all: BulkRequestResult[] = [];
+      const batches: BulkDeliverBody['requests'][] = [];
+      for (let i = 0; i < plan.body.requests.length; i += BULK_MAX_REQUESTS) batches.push(plan.body.requests.slice(i, i + BULK_MAX_REQUESTS));
       try {
-        const res = await deliverBulk(plan.body, csrfToken);
-        await refresh();
-        if (res.results.every((r) => r.ok)) {
-          toast.show({ text: t('delivery.bulk.done', { n: count }) });
-          onDone();
-        } else setResults(res.results);
+        for (const requests of batches) all.push(...(await deliverBulk({ requests }, csrfToken)).results);
       } catch (e) {
-        const expired = e instanceof ApiError && (e.status === 401 || (e.status === 403 && apiErrorCode(e) === 'CSRF_INVALID'));
-        setError(t(expired ? 'delivery.confirm.sessionExpired' : 'delivery.confirm.network'));
+        if (isSessionExpired(e) && all.length === 0) {
+          setError(t('delivery.confirm.sessionExpired'));
+          return;
+        }
+        const sent = new Set(all.map((r) => r.request_id));
+        const rest = plan.body.requests.filter((r) => !sent.has(r.request_id));
+        await refresh();
+        setError(t(isSessionExpired(e) ? 'delivery.confirm.sessionExpired' : 'delivery.bulk.interrupted'));
+        setResults([...all, ...rest.map((r) => ({ request_id: r.request_id, ok: false as const, code: NOT_SENT }))]);
+        return;
       }
+      await refresh();
+      if (all.every((r) => r.ok)) {
+        toast.show({ text: t('delivery.bulk.done', { count }) });
+        onDone();
+      } else setResults(all);
     });
 
   const reason = (r: Extract<BulkRequestResult, { ok: false }>) =>
-    r.code === 'STALE_UPDATE' ? t('delivery.bulk.stale') : lineErrorText(r, '', t);
+    r.code === 'STALE_UPDATE' ? t('delivery.bulk.stale') : r.code === NOT_SENT ? t('delivery.confirm.notSent') : lineErrorText(r, '', t);
 
   return (
     <Dialog
@@ -68,13 +81,18 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
     >
       <div className="sheet-header">
         <DialogTitle ref={titleRef} tabIndex={-1} className="sheet-title">
-          {t('delivery.bulk.title', { n: count })}
+          {t('delivery.bulk.title', { count })}
         </DialogTitle>
         <DialogDescription className="sr-only">{t('delivery.bulk.noUndo')}</DialogDescription>
       </div>
       <div className="sheet-body">
         {results ? (
           <div role="status" aria-live="polite" className="dd-results">
+            {error && (
+              <p role="alert" className="dd-expired">
+                {error}
+              </p>
+            )}
             <ul>
               {results.map((r) => (
                 <li key={r.request_id} className={r.ok ? 'is-ok' : 'is-err'}>

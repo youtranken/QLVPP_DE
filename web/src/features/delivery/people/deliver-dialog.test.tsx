@@ -198,7 +198,7 @@ describe('DeliverDialog — gửi', () => {
   const adm = pLine({ line_id: 'm', item_id: 'i-clip', name: 'Kẹp', qty: 2, remaining_qty: 2, stock_qty: 1, adm_out: true });
 
   it('thứ tự: nợ, kỳ này, rồi hủy ADM; 403 CSRF ở request 2 → dừng, "Chưa gửi" + một thông báo hết phiên', async () => {
-    const f = stub((u) => (u.includes('/c/') ? jsonResponse(403, { code: 'CSRF_INVALID' }) : jsonResponse(200, {})));
+    const f = stub((u) => (u.includes('/c/') ? jsonResponse(403, { code: 'CSRF_TOKEN_INVALID' }) : jsonResponse(200, {})));
     const props = open(person({ lines: [adm, cur, debt] }));
     await userEvent.click(confirmBtn());
     await within(dialog()).findByText('Đã giao 4');

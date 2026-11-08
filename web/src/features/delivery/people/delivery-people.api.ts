@@ -68,6 +68,9 @@ export type BulkRequestResult =
   | { request_id: string; ok: true; delivered_units: number; request_complete: boolean }
   | { request_id: string; ok: false; code: string; line_id?: string; available?: number; remaining?: number };
 
+// Giới hạn một lần gọi của server (BULK_MAX_REQUESTS): nhiều hơn thì web chia lô
+export const BULK_MAX_REQUESTS = 100;
+
 // Mỗi phiếu một transaction ở server: HTTP 200 kể cả khi có phiếu lỗi, kết quả theo thứ tự body
 export const deliverBulk = (body: BulkDeliverBody, csrfToken: string | null) =>
   apiFetch<{ results: BulkRequestResult[] }>('/api/admin/deliveries/bulk', { method: 'POST', body: JSON.stringify(body), csrfToken });

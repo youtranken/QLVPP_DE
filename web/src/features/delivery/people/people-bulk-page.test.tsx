@@ -154,8 +154,8 @@ describe('DeliveryPeoplePage — bảng và giao nhiều phiếu', () => {
     expect(screen.queryByRole('button', { name: /^Giao \d+ phiếu/ })).toBeNull();
   });
 
-  it('lỗi mạng khi gửi → báo trong hộp, hộp ở lại, thử lại được', async () => {
-    stub({
+  it('lỗi mạng/máy chủ khi gửi → tải lại danh sách, báo gián đoạn, phiếu chưa gửi ghi "Chưa gửi"; chỉ còn nút Đóng', async () => {
+    const f = stub({
       bulk: () => {
         throw new TypeError('network');
       },
@@ -165,9 +165,59 @@ describe('DeliveryPeoplePage — bảng và giao nhiều phiếu', () => {
     await pick('Nguyễn Văn An');
     await userEvent.click(screen.getByRole('button', { name: 'Giao 1 phiếu' }));
     const dlg = await screen.findByRole('dialog');
+    const before = callsTo(f, PEOPLE_URL).length;
     await userEvent.click(within(dlg).getByRole('button', { name: 'Xác nhận giao' }));
-    expect(await within(dlg).findByRole('alert')).toHaveTextContent('Lỗi mạng');
+    expect(await within(dlg).findByRole('alert')).toHaveTextContent('Gửi bị gián đoạn');
+    expect(within(dlg).getByText('Chưa gửi')).toBeInTheDocument();
+    await waitFor(() => expect(callsTo(f, PEOPLE_URL).length).toBeGreaterThan(before));
+    expect(within(dlg).queryByRole('button', { name: 'Xác nhận giao' })).toBeNull();
+    await userEvent.click(within(dlg).getByRole('button', { name: 'Đóng' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('CSRF hết hạn (403 CSRF_TOKEN_INVALID) → "Phiên đăng nhập đã hết", hộp ở lại, chưa gửi gì', async () => {
+    stubShellApi({
+      '/api/admin/periods/2026-10/summary': () => jsonResponse(200, { lines_pending_delivery: 4, deadline: '2026-10-10T17:00:00.000Z' }),
+      [PEOPLE_URL]: () => jsonResponse(200, { ym: '2026-10', people: PEOPLE }),
+      [BULK_URL]: () => jsonResponse(403, { code: 'CSRF_TOKEN_INVALID' }),
+    });
+    open();
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
+    await pick('Nguyễn Văn An');
+    await userEvent.click(screen.getByRole('button', { name: 'Giao 1 phiếu' }));
+    const dlg = await screen.findByRole('dialog');
+    await userEvent.click(within(dlg).getByRole('button', { name: 'Xác nhận giao' }));
+    expect(await within(dlg).findByRole('alert')).toHaveTextContent('Phiên đăng nhập đã hết');
     expect(within(dlg).getByRole('button', { name: 'Xác nhận giao' })).toBeEnabled();
+  });
+
+  it('nhiều hơn 100 phiếu → chia lô ≤ 100, gửi lần lượt, toast chung', async () => {
+    const many = Array.from({ length: 101 }, (_, i) =>
+      ({
+        ...PEOPLE[0]!,
+        user_sub: `u-m${i}`,
+        full_name: `Người ${i}`,
+        lines: PEOPLE[0]!.lines.map((l) => ({ ...l, line_id: `l-m${i}-${l.line_id}`, request_id: `r-m${i}`, stock_qty: 999 })),
+      }),
+    );
+    const f = stub({ people: many, bulk: (b) => jsonResponse(200, ok(b)) });
+    open();
+    await screen.findByText('Người 0', { selector: '.pt-person b' });
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Giao 101 phiếu' }));
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Xác nhận giao' }));
+    await waitFor(() => expect(callsTo(f, BULK_URL)).toHaveLength(2), { timeout: 10_000 });
+    expect(bodiesOf(f, BULK_URL).map((b) => b.requests.length)).toEqual([100, 1]);
+    expect(await screen.findByText('Đã giao 101 phiếu')).toBeInTheDocument();
+  }, 30_000);
+
+  it('390 px: có ô "Chọn tất cả người giao được" trên thanh công cụ, bấm là chọn mọi người giao được', async () => {
+    stub();
+    open('/admin/delivery', 390);
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Chọn tất cả người giao được' }));
+    expect(screen.getByRole('checkbox', { name: 'Chọn Nguyễn Văn An' })).toBeChecked();
+    expect(screen.getByRole('button', { name: /^Giao \d+ phiếu$/ })).toBeInTheDocument();
   });
 
   it.each([390])('%i px: thanh "Giao n phiếu" có mặt khi đã chọn', async (width) => {

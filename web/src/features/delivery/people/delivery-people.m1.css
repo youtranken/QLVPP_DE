@@ -92,7 +92,11 @@
 }
 
 [data-shell='admin'] .pt-table td.pt-pick, [data-shell='admin'] .pt-table th.pt-pick { width: 40px; text-align: center; }
-[data-shell='admin'] .pt-table td.pt-pick input, [data-shell='admin'] .pt-table th.pt-pick input { width: 18px; height: 18px; accent-color: var(--c-acc); }
+[data-shell='admin'] .pt-table td.pt-pick input, [data-shell='admin'] .pt-table th.pt-pick input { accent-color: var(--c-acc); }
+@media (min-width: 768px) {
+  [data-shell='admin'] .pt-table td.pt-pick input, [data-shell='admin'] .pt-table th.pt-pick input { width: 18px; height: 18px; }
+  [data-shell='admin'] .pt-pickall { display: none; }
+}
 [data-shell='admin'] .pt-table tr.is-picked td { background: var(--c-surface-2); }
 [data-shell='admin'] .pt-person { display: flex; align-items: center; gap: var(--s-2); }
 [data-shell='admin'] .pt-person .pp-avatar { width: 28px; height: 28px; font: var(--t-micro); font-weight: 800; }
@@ -107,7 +111,14 @@
 [data-shell='admin'] .bd-list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-1) var(--s-3); padding-bottom: var(--s-2); border-bottom: 1px solid var(--c-line); font: var(--t-sm); }
 [data-shell='admin'] .bd-list b { font: var(--t-label); }
 [data-shell='admin'] .bd-left { color: var(--c-warn); font: var(--t-cap); font-weight: 700; }
+[data-shell='admin'] .pt-pickall { display: flex; align-items: center; gap: var(--s-2); min-height: var(--hit); font: var(--t-label); cursor: pointer; }
 @media (max-width: 767px) {
+  [data-shell='admin'] .pt-pickall input[type='checkbox'] { appearance: none; display: grid; place-content: center; flex: none; width: var(--hit); height: var(--hit); margin: 0; background: none; }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']::before { content: ''; width: 20px; height: 20px; border: 2px solid var(--c-line-input); border-radius: var(--r-xs); background: var(--c-surface); box-sizing: border-box; }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']:checked::before, [data-shell='admin'] .pt-pickall input[type='checkbox']:indeterminate::before { border-color: var(--c-acc); background: var(--c-acc) center / 14px no-repeat; }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']:checked::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']:indeterminate::before { background-image: linear-gradient(white, white); background-size: 10px 2px; }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']:focus-visible { box-shadow: var(--focus); border-radius: var(--r-sm); }
   [data-shell='admin'] .pt-bulk { position: sticky; bottom: 0; z-index: 2; width: 100%; justify-content: space-between; padding: var(--s-3) 0; background: var(--c-page); }
   [data-shell='admin'] .pt-bulk .btn--primary { flex: 1; }
 }

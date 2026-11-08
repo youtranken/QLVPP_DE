@@ -58,4 +58,17 @@ describe('bulkPlan', () => {
     const pending = person({ user_sub: 'u-w', lines: [pLine({ line_id: 'lw', review_status: 'pending', item_id: null, stock_qty: null })] });
     expect(bulkPlan([none, pending], [none, pending]).skipped.map((s) => s.user_sub)).toEqual(['u-n', 'u-w']);
   });
+
+  it('Phần thiếu tính cả dòng bỏ qua vì tủ hết và dòng ADM hết hàng, không tính dòng chờ duyệt', () => {
+    const p = person({
+      user_sub: 'u-s',
+      lines: [
+        pLine({ line_id: 's1', request_id: 'r-s', item_id: 'i-a', qty: 2, remaining_qty: 2, stock_qty: 9 }),
+        pLine({ line_id: 's2', request_id: 'r-s', item_id: 'i-b', qty: 5, remaining_qty: 5, stock_qty: 0 }),
+        pLine({ line_id: 's3', request_id: 'r-s', item_id: 'i-c', qty: 4, remaining_qty: 4, stock_qty: 9, adm_out: true }),
+        pLine({ line_id: 's4', request_id: 'r-s', item_id: null, qty: 7, remaining_qty: 7, stock_qty: null, review_status: 'pending' }),
+      ],
+    });
+    expect(bulkPlan([p], [p]).summary[0]).toMatchObject({ items: 1, give: 2, left: 9 });
+  });
 });

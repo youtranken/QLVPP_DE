@@ -31,8 +31,8 @@
   [data-shell='admin'] .ct-filter__main .flt-search input { height: var(--hit); min-height: var(--hit); }
   [data-shell='admin'] .ct-filter__main .flt-search svg { top: 13px; }
   [data-shell='admin'] .ct-seg-scroll { flex: 1 1 0; }
-  [data-shell='admin'] .ct-seg { height: var(--hit); }
-  [data-shell='admin'] .ct-seg__opt { height: 36px; padding: 0 var(--s-3); }
+  [data-shell='admin'] .ct-seg { height: var(--hit); padding: 0; }
+  [data-shell='admin'] .ct-seg__opt { height: var(--hit); padding: 0 var(--s-3); }
   [data-shell='admin'] .ct-seg--view { margin-left: 0; }
-  [data-shell='admin'] .ct-gchip { height: 40px; }
+  [data-shell='admin'] .ct-gchip { height: var(--hit); }
 }
