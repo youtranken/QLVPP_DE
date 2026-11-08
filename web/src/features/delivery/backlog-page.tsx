@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SearchBox } from '@/ui/filter/search-box';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
@@ -40,8 +40,16 @@ export function BacklogPage() {
   const query = useBacklog('person');
   const refresh = useRefreshAfterLineChange([['admin-request']]);
   const groups = query.data?.groups;
+  const available = useMemo(() => monthsOf(groups ?? []), [groups]);
+  // ?ym= trỏ tới tháng không còn nợ: nhảy sang tháng đầu còn nợ (hoặc bỏ lọc khi hết nợ)
+  const { ym: askedYm, setYm } = p;
+  const stale = query.isSuccess && askedYm !== null && !available.includes(askedYm);
+  useEffect(() => {
+    if (stale) setYm(available[0] ?? null);
+  }, [stale, available, setYm]);
+  const ymNow = stale ? (available[0] ?? null) : askedYm;
   const all = useMemo(() => (groups ?? []).flatMap((g) => g.lines), [groups]);
-  const months = useMemo(() => backlogMonths(groups ?? [], { ym: p.ym, q: p.q, left: p.left }), [groups, p.ym, p.q, p.left]);
+  const months = useMemo(() => backlogMonths(groups ?? [], { ym: ymNow, q: p.q, left: p.left }), [groups, ymNow, p.q, p.left]);
   const visible = useMemo(() => months.flatMap((m) => m.people.flatMap((x) => x.lines)), [months]);
   const open = useOpenLine(all);
   const order = useMemo(() => visible.map((l) => l.line_id), [visible]);
@@ -57,8 +65,8 @@ export function BacklogPage() {
     if (open.line) await refresh();
     open.close();
   };
-  const monthOptions = [{ value: ALL, label: t('delivery.backlog.allMonths') }, ...monthsOf(groups ?? []).map((ym) => ({ value: ym, label: f.month(ym) }))];
-  const narrowed = p.ym !== null || p.q.trim() !== '' || p.left;
+  const monthOptions = [{ value: ALL, label: t('delivery.backlog.allMonths') }, ...available.map((ym) => ({ value: ym, label: f.month(ym) }))];
+  const narrowed = ymNow !== null || p.q.trim() !== '' || p.left;
 
   return (
     <div className="ct-page">
@@ -66,7 +74,7 @@ export function BacklogPage() {
       {query.isError && <LoadError onRetry={() => void query.refetch()} />}
       {query.isSuccess && (
         <div className="toolbar bl-bar">
-          <Select label={t('delivery.backlog.month')} hideLabel value={p.ym ?? ALL} options={monthOptions} onChange={(v) => p.setYm(v === ALL ? null : v)} />
+          <Select label={t('delivery.backlog.month')} hideLabel value={ymNow ?? ALL} options={monthOptions} onChange={(v) => p.setYm(v === ALL ? null : v)} />
           <SearchBox className="flt-search" label={t('delivery.backlog.search')} placeholder={t('delivery.backlog.search')} value={p.q} onChange={p.setQ} />
           <Switch checked={p.left} text={t('delivery.backlog.leftOnly', { n: leftPeople(groups ?? []) })} onChange={p.toggleLeft} />
         </div>

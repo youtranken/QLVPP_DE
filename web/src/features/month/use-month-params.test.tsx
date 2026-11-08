@@ -50,8 +50,9 @@ describe('useMonthParams', () => {
     expect(setup('/admin/month?ym=2026-10&filter=custom_pending').result.current.p.chip).toBe('noted');
   });
 
-  it('left=1 → presetReason user_left và chip undelivered, giữ left trên URL', async () => {
+  it('left=1 → left=true và chip undelivered, giữ left trên URL', async () => {
     const { result } = setup('/admin/month?ym=2026-10&left=1');
+    expect(result.current.p.left).toBe(true);
     expect(result.current.p.presetReason).toBe('user_left');
     expect(result.current.p.chip).toBe('undelivered');
     expect(result.current.search).toBe('?ym=2026-10&left=1');

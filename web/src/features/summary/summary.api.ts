@@ -18,6 +18,8 @@ export interface PeriodSummary {
   custom_pending: number | null;
   low_stock: number;
   receipts: number;
+  // Kỳ cũ nhất có phiếu; null khi chưa có phiếu nào
+  earliest_ym?: string | null;
 }
 
 export interface PersonRow {

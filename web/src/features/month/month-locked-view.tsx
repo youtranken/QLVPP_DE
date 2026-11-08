@@ -22,13 +22,14 @@ interface Props {
   openYm: string;
   chip: MonthChip;
   q: string;
+  left: boolean;
   presetReason: AdjustReason | undefined;
   onChip: (c: MonthChip) => void;
   onQ: (q: string) => void;
 }
 
 // Kỳ khóa: dải 4 bước, nhắc người đã nghỉ, bảng người; các bước sau Đăng ký chỉ tính cho kỳ khóa gần nhất
-export function MonthLockedView({ ym, openYm, chip, q, presetReason, onChip, onQ }: Props) {
+export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChip, onQ }: Props) {
   const { t } = useTranslation();
   const latest = ym === lockedYm(openYm);
   const summary = usePeriodSummary(ym);
@@ -38,7 +39,8 @@ export function MonthLockedView({ ym, openYm, chip, q, presetReason, onChip, onQ
   const plan = useQuery({ ...arrivalsPlanQuery(ym), enabled: latest });
   const [viewing, setViewing] = useState<string | null>(null);
   const shown = q ? filtered : all;
-  const visible = useMemo(() => shown.rows.filter((r) => matchesChip(r, chip)), [shown.rows, chip]);
+  // ?left=1: chỉ người đã nghỉ (còn phần chưa nhận ở chip "Chưa giao xong")
+  const visible = useMemo(() => shown.rows.filter((r) => matchesChip(r, chip) && (!left || r.user_status !== 'active')), [shown.rows, chip, left]);
   const open = useCallback((r: PersonRow) => setViewing(r.request_id), []);
   const panel = usePanelParam('request', { order: useMemo(() => visible.map((r) => r.request_id), [visible]) });
 
@@ -64,7 +66,7 @@ export function MonthLockedView({ ym, openYm, chip, q, presetReason, onChip, onQ
     <>
       <MonthStrip steps={steps} onlyFirst={!latest} />
       {latest && <MonthLeftReminder ym={ym} />}
-      <MonthChips rows={all.rows} chip={chip} q={q} onChip={onChip} onQ={onQ} />
+      <MonthChips rows={shown.rows} chip={chip} q={q} onChip={onChip} onQ={onQ} />
       {shown.query.isError ? (
         <LoadError onRetry={() => void shown.query.refetch()} />
       ) : (
@@ -72,16 +74,11 @@ export function MonthLockedView({ ym, openYm, chip, q, presetReason, onChip, onQ
           rows={visible}
           loading={shown.query.isPending}
           busy={shown.query.isPlaceholderData}
-          narrowed={Boolean(q) || chip !== 'all'}
+          narrowed={Boolean(q) || chip !== 'all' || left}
           activeId={panel.id ?? undefined}
           onView={open}
           onAdjust={panel.open}
         />
-      )}
-      {shown.query.hasNextPage && (
-        <button type="button" className="btn sm-more" disabled={shown.query.isFetchingNextPage} onClick={() => void shown.query.fetchNextPage()}>
-          {t('summary.page.more')}
-        </button>
       )}
       {index >= 0 && <RegistrationDialog ym={ym} deadline={null} rows={visible} index={index} onIndex={(i) => setViewing(visible[i]!.request_id)} onClose={() => setViewing(null)} />}
       {panel.id && <AdjustDrawer requestId={panel.id} presetReason={presetReason} onClose={panel.close} nav={{ index: panel.index, total: panel.total, onStep: panel.step }} />}

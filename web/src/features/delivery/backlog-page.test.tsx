@@ -105,6 +105,15 @@ describe('BacklogPage — nhóm tháng → người → món', () => {
     await waitFor(() => expect(monthHeads().length).toBeGreaterThan(0));
   });
 
+  it('?ym= trỏ tháng không còn nợ → nhảy sang tháng đầu còn nợ, ô chọn và URL khớp', async () => {
+    stubBacklog([PEN_DUC, SEP]);
+    openPage('/admin/backlog?ym=2026-08');
+    await waitFor(() => expect(search()).toContain('ym=2026-09'));
+    expect(screen.getByRole('combobox', { name: 'Tháng nợ' })).toHaveValue('2026-09');
+    expect(monthHeads()).toHaveLength(1);
+    expect(screen.getByText('Giấy A4', { selector: '.bl-item b' })).toBeInTheDocument();
+  });
+
   it('gõ tìm "gap" khớp tên món không dấu → ?q=, một dòng; "duc" khớp người', async () => {
     stubBacklog([PEN_DUC, SEP, TAPE]);
     openPage();

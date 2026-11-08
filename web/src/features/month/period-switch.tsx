@@ -5,12 +5,14 @@ import { Segmented } from '@/ui/segmented';
 interface Props {
   ym: string;
   openYm: string;
+  // Kỳ cũ nhất có phiếu (null: chưa có kỳ nào; undefined: chưa tải)
+  earliestYm?: string | null;
   onChange: (ym: string) => void;
 }
 
 const monthOf = (ym: string) => Number(ym.slice(5, 7));
 
-export function PeriodSwitch({ ym, openYm, onChange }: Props) {
+export function PeriodSwitch({ ym, openYm, earliestYm, onChange }: Props) {
   const { t } = useTranslation();
   const locked = lockedYm(openYm);
   const options = [
@@ -19,9 +21,10 @@ export function PeriodSwitch({ ym, openYm, onChange }: Props) {
     ...(ym < locked ? [{ value: ym, label: t('month.period.older', { month: monthOf(ym), year: ym.slice(0, 4) }) }] : []),
   ];
   const earlier = shiftYm(ym > locked ? locked : ym, -1);
+  const atStart = earliestYm !== undefined && (earliestYm === null || earlier < earliestYm);
   return (
     <div className="mk-switch">
-      <button type="button" className="btn btn--ghost btn--sm" onClick={() => onChange(earlier)}>
+      <button type="button" className="btn btn--ghost btn--sm" disabled={atStart} onClick={() => onChange(earlier)}>
         <span aria-hidden="true">‹ </span>
         {t('month.period.previous')}
       </button>

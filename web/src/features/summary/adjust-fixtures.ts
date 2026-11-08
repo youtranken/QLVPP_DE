@@ -52,6 +52,7 @@ export function adminRequest(over: Partial<AdminRequestView> = {}): AdminRequest
     full_name: 'Nguyễn Văn An',
     department: 'Tổ Giám sát',
     updated_at: '2026-10-05T07:20:00.000Z',
+    saved_at: '2026-10-05T07:20:00.000Z',
     is_open: false,
     user_status: 'active',
     lines: [

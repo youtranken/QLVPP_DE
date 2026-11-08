@@ -145,13 +145,16 @@ function useSentAt(view: AdminRequestView | undefined) {
   return send.state === 'sent' ? (send.sent?.created_at ?? null) : null;
 }
 
-export function useAdjust(requestId: string, onDone: () => void, preset?: AdjustReason) {
+export function useAdjust(requestId: string, onDone: () => void, presetAsked?: AdjustReason) {
   const { t } = useTranslation();
   const flight = useSingleFlight();
   const { draft: d, patch, edit, restart } = useDraft(requestId);
   const sync = useReviewSync(requestId, restart);
   const send = useSendAdjust(requestId, patch, onDone);
   const view = sync.query.data;
+  // Lý do chọn sẵn (từ ?left=1) chỉ áp cho phiếu của người đã nghỉ thật
+  const ownerLeft = !!view && view.user_status !== 'active';
+  const preset = ownerLeft ? presetAsked : undefined;
   const sentAt = useSentAt(view);
   const qtyOf = qtyIn(d);
   const reasonOf = reasonIn(d, preset, t);
@@ -170,7 +173,7 @@ export function useAdjust(requestId: string, onDone: () => void, preset?: Adjust
     view,
     qtyOf,
     reasonOf,
-    choices: reasonChoices({ ownerLeft: !!view && view.user_status !== 'active', preset }),
+    choices: reasonChoices({ ownerLeft }),
     isReduced: (l: LineView) => qtyOf(l) < l.qty,
     removed: d.removed,
     edit,

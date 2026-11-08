@@ -25,9 +25,6 @@ export interface BacklogFilter {
 
 export const isLeft = (l: Pick<BacklogLine, 'user_status'>) => l.user_status !== 'active';
 
-// Dòng ngoài danh mục không có tồn (null) nên luôn giao bổ sung được
-export const hasStock = (l: Pick<BacklogLine, 'stock_qty'>) => l.stock_qty !== 0;
-
 const nameOf = (l: Pick<BacklogLine, 'full_name' | 'user_sub'>) => l.full_name ?? l.user_sub;
 const sum = (lines: BacklogLine[]) => lines.reduce((n, l) => n + l.remaining_qty, 0);
 const cmpText = (a: string, b: string) => a.localeCompare(b, 'vi');

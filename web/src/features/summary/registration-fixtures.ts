@@ -32,6 +32,7 @@ export function registrationView(id: string): RegistrationView {
     full_name: r.full_name,
     department: 'Phòng Công trình',
     updated_at: r.saved_at,
+    saved_at: r.saved_at,
     is_open: true,
     user_status: 'active',
     team: r.team,

@@ -9,9 +9,8 @@ describe('reasonChoices', () => {
   it('mặc định chỉ hai lý do: Không có hàng, Khác', () => {
     expect(reasonChoices({ ownerLeft: false })).toEqual(['adm_out_of_stock', 'other']);
   });
-  it('chủ phiếu đã nghỉ hoặc mở từ ?left=1 → thêm "Người đã nghỉ" đứng đầu', () => {
+  it('chủ phiếu đã nghỉ → thêm "Người đã nghỉ" đứng đầu', () => {
     expect(reasonChoices({ ownerLeft: true })).toEqual(['user_left', 'adm_out_of_stock', 'other']);
-    expect(reasonChoices({ ownerLeft: false, preset: 'user_left' })[0]).toBe('user_left');
   });
 });
 

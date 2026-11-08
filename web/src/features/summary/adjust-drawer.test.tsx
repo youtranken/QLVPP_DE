@@ -235,13 +235,23 @@ describe('AdjustDrawer — khối lý do từng dòng (R-D6.14)', () => {
     expect(pick(drawer, 'Giấy note vàng', 'Không có hàng')).toBeChecked();
   });
 
-  it('mở từ ?left=1 → dòng giảm chọn sẵn "Người đã nghỉ", không bắt ghi thêm', async () => {
-    stubAdjust({ views: [overMaxView()] });
+  it('mở từ ?left=1 với phiếu của người đã nghỉ → dòng giảm chọn sẵn "Người đã nghỉ", không bắt ghi thêm', async () => {
+    stubAdjust({ views: [{ ...overMaxView(), user_status: 'left' }] });
     const { drawer } = await renderDrawer({ preset: 'user_left' });
     await userEvent.click(less(drawer, 'Giấy note vàng'));
     expect(pick(drawer, 'Giấy note vàng', 'Người đã nghỉ')).toBeChecked();
     expect(within(row(drawer, 'Giấy note vàng')).queryByLabelText(/^Ghi thêm/)).toBeNull();
     expect(saveButton(drawer)).toBeEnabled();
+  });
+});
+
+describe('AdjustDrawer — ?left=1 với người còn làm', () => {
+  it('phiếu của người còn làm: không đưa "Người đã nghỉ" vào lý do, không chọn sẵn', async () => {
+    stubAdjust({ views: [overMaxView()] });
+    const { drawer } = await renderDrawer({ preset: 'user_left' });
+    await userEvent.click(less(drawer, 'Giấy note vàng'));
+    expect(within(row(drawer, 'Giấy note vàng')).queryByLabelText('Người đã nghỉ')).toBeNull();
+    expect(pick(drawer, 'Giấy note vàng', 'Khác')).toBeChecked();
   });
 });
 

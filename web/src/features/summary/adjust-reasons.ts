@@ -13,9 +13,9 @@ type Translate = (key: string, opts?: Record<string, unknown>) => string;
 export const isOverMax = (l: LineView) => l.max_qty !== null && l.qty > l.max_qty;
 
 // "Người đã nghỉ" chỉ hiện khi cần: server không gửi chuông cho người đã nghỉ nên mã này còn nghĩa
-export function reasonChoices({ ownerLeft, preset }: { ownerLeft: boolean; preset?: AdjustReason }): AdjustReason[] {
+export function reasonChoices({ ownerLeft }: { ownerLeft: boolean }): AdjustReason[] {
   const base: AdjustReason[] = ['adm_out_of_stock', 'other'];
-  return ownerLeft || preset === 'user_left' ? ['user_left', ...base] : base;
+  return ownerLeft ? ['user_left', ...base] : base;
 }
 
 export function defaultReason(line: LineView, preset: AdjustReason | undefined, t?: Translate): LineReason {

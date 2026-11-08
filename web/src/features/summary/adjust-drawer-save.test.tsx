@@ -43,7 +43,7 @@ describe('AdjustDrawer — lưu với lý do từng dòng', () => {
     ['Không có hàng', 'adm_out_of_stock', undefined],
     ['Người đã nghỉ', 'user_left', 'user_left' as const],
   ])('"%s" không ghi chú → reason_code %s, không reason_note', async (label, code, preset) => {
-    const f = stubAdjust();
+    const f = stubAdjust({ views: [adminRequest({ user_status: preset ? 'left' : 'active' })] });
     const { drawer } = await renderDrawer({ preset });
     await reduceNote(drawer, label);
     await userEvent.click(saveButton(drawer));

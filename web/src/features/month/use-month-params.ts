@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { YM, lockedYm } from '@/lib/ym';
-import { useUrlPatch, type UrlPatch } from '@/lib/use-url-patch';
 import type { AdjustReason } from '@/features/summary/summary.api';
+import { useUrlPatch, type UrlPatch } from '@/lib/use-url-patch';
 import { MONTH_CHIPS, type MonthChip } from './month-chips';
 
 const isChip = (v: string | null): v is MonthChip => MONTH_CHIPS.includes(v as MonthChip);
@@ -20,7 +20,7 @@ export function useMonthParams(openYm: string | undefined) {
   const asked = params.get('ym');
   const ym = asked && openYm && YM.test(asked) && asked <= openYm ? asked : openYm && lockedYm(openYm);
   const legacy = params.get('filter');
-  // ?left=1 từ nhắc người đã nghỉ: chip "Chưa giao xong" và lý do giảm chọn sẵn "Người đã nghỉ"
+  // ?left=1 từ nhắc người đã nghỉ: chỉ liệt kê người đã nghỉ; phiếu của họ chọn sẵn lý do "Người đã nghỉ"
   const left = params.get('left') === '1' || legacy === 'left';
   const rawChip = params.get('chip');
   const chip: MonthChip = isChip(rawChip) ? rawChip : ((legacy && LEGACY_FILTER[legacy]) || (left ? 'undelivered' : 'all'));
@@ -45,6 +45,7 @@ export function useMonthParams(openYm: string | undefined) {
     ym,
     chip,
     q: params.get('q') ?? '',
+    left,
     presetReason: (left ? 'user_left' : undefined) as AdjustReason | undefined,
     setYm: (next: string) => update({ ym: next, request: null }),
     setChip: (next: MonthChip) => update({ chip: next === 'all' ? null : next, left: null }),
