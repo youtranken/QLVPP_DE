@@ -34,6 +34,7 @@ describe('AppRoutes — chuyển hướng đường cũ của Hành chính (gi�
     ['/admin/summary?ym=2026-10&q=an&request=r1', '/admin/month', '?ym=2026-10&q=an&request=r1'],
     ['/admin/summary?ym=2026-11&left=1', '/admin/month', '?ym=2026-11&left=1'],
     ['/admin/summary?ym=2026-10&filter=pending_delivery', '/admin/month', '?ym=2026-10&chip=undelivered'] /* ?filter cũ đổi thành chip */,
+    ['/admin/send-adm?ym=2026-10', '/admin/reports', '?ym=2026-10'],
     ['/admin/units?x=1', '/admin/categories/units', '?x=1'],
   ])('%s → %s%s', (from, path, query) => {
     mockViewport(1280);

@@ -1,4 +1,4 @@
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUrlPatch } from '@/lib/use-url-patch';
 import { ApiError } from '@/lib/api-client';
@@ -17,16 +17,13 @@ import './print.m1.css';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Quay lại về trang đã mở trang in; thiếu hoặc giá trị lạ → Báo cáo của tháng bản chốt
-function useBackPath(ym: string) {
-  const [params] = useSearchParams();
-  return params.get('from') === 'send-adm' ? '/admin/send-adm' : `/admin/reports?ym=${ym}`;
-}
+// Quay lại luôn về Báo cáo & gửi ADM của tháng bản chốt
+const backPath = (ym: string) => `/admin/reports?ym=${ym}`;
 
 function Toolbar({ snap, appendix, onAppendix, empty }: { snap: SnapshotData; appendix: boolean; onAppendix: (on: boolean) => void; empty: boolean }) {
   const { t } = useTranslation();
   const at = vnStampParts(snap.created_at);
-  const back = useBackPath(snap.period_ym);
+  const back = backPath(snap.period_ym);
   return (
     <div role="toolbar" aria-label={t('reports.print.toolbar.label')} className="pp-toolbar">
       <Link className="btn btn--ghost" to={back}>

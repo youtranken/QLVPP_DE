@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Kỳ tháng', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Kỳ tháng', 'Báo cáo & gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 
 const topbar = () => screen.getAllByRole('banner')[0];
 
@@ -61,7 +61,7 @@ describe('AdminTopbar 390 px', () => {
 });
 
 describe('Menu sheet 390 px', () => {
-  it('tiêu đề "Menu quản lý", "VPP Công trình · Hành chính", nút "Đóng menu", 13 mục, thẻ kỳ, ngôn ngữ, Đăng xuất', async () => {
+  it('tiêu đề "Menu quản lý", "VPP Công trình · Hành chính", nút "Đóng menu", 12 mục, thẻ kỳ, ngôn ngữ, Đăng xuất', async () => {
     open('/admin/catalog');
     await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
     const sheet = screen.getByRole('dialog', { name: 'Menu quản lý' });

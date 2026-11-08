@@ -9,6 +9,7 @@ export const ADMIN_ROUTE_CLASSES: Record<`${Method} ${string}`, RouteClass> = {
   'GET /api/admin/periods/:ym/unregistered': 'open-progress',
   'GET /api/admin/periods/:ym/registrations': 'open-progress',
   'GET /api/admin/periods/:ym/registrations/:id': 'open-progress',
+  'GET /api/admin/periods/:ym/items/:key/people': 'open-progress',
   'GET /api/admin/periods/:ym/requests': 'by-ym',
   'GET /api/admin/periods/:ym/delivery-people': 'by-ym',
   'GET /api/admin/reports/:ym': 'by-ym',

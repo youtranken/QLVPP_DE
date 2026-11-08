@@ -147,7 +147,7 @@ describe('Trang in · thanh công cụ và công tắc phụ lục', () => {
   });
 
   it.each([
-    ['?from=send-adm', '/admin/send-adm'],
+    ['?from=send-adm', '/admin/reports?ym=2026-10'],
     ['?from=reports', '/admin/reports?ym=2026-10'],
     ['', '/admin/reports?ym=2026-10'],
     ['?from=rac', '/admin/reports?ym=2026-10'],

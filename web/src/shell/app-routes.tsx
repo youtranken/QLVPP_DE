@@ -15,10 +15,9 @@ import { ConfigPage } from '@/features/admin/config-page';
 import { MonthPage } from '@/features/month/month-page';
 import { ReviewPage } from '@/features/review/review-page';
 import { ArrivalsPage } from '@/features/arrivals/arrivals-page';
-import { SendAdmPage } from '@/features/send-adm/send-adm-page';
 import { DeliveryClassicRedirect, DeliveryPeoplePage } from '@/features/delivery/people/delivery-people-page';
 import { BacklogPage } from '@/features/delivery/backlog-page';
-import { ReportsPage } from '@/features/reports/reports-page';
+import { ReportSendPage } from '@/features/reports/report-send-page';
 import { PrintPage } from '@/features/reports/print-page';
 import { MemberPage } from '@/shell/member-page';
 import { MemberShell } from '@/shell/member-shell';
@@ -78,11 +77,11 @@ export function AppRoutes() {
         <Route path="summary" element={<RedirectKeepSearch to="/admin/month" />} />
         <Route path="review" element={<ReviewPage />} />
         <Route path="arrivals" element={<ArrivalsPage />} />
-        <Route path="send-adm" element={<SendAdmPage />} />
+        <Route path="send-adm" element={<RedirectKeepSearch to="/admin/reports" />} />
         <Route path="delivery" element={<DeliveryPeoplePage />} />
         <Route path="delivery/classic" element={<DeliveryClassicRedirect />} />
         <Route path="backlog" element={<BacklogPage />} />
-        <Route path="reports" element={<ReportsPage />} />
+        <Route path="reports" element={<ReportSendPage />} />
         <Route path="stock" element={<StockPage />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="categories" element={<CategoriesPage />} />

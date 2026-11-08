@@ -19,11 +19,10 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     labelKey: 'nav.groups.monthly',
     pages: [
       { path: 'month', titleKey: 'nav.month', icon: 'calendar' },
-      { path: 'send-adm', titleKey: 'nav.sendAdm', icon: 'printer' },
+      { path: 'reports', titleKey: 'nav.reports', icon: 'printer' },
       { path: 'arrivals', titleKey: 'nav.arrivals', icon: 'pkg' },
       { path: 'delivery', titleKey: 'nav.delivery', icon: 'truck', badge: 'delivery' },
       { path: 'backlog', titleKey: 'nav.backlog', icon: 'receipt' },
-      { path: 'reports', titleKey: 'nav.reports', icon: 'sheet' },
     ],
   },
   {

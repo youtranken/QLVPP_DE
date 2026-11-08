@@ -171,11 +171,10 @@ describe('Bố cục theo route', () => {
     expect(css).toMatch(/@media \(max-width: 767px\) \{[^}]*\.mk-strip \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   });
 
-  it('Gửi ADM: hai cột minmax(400px, 1fr) (Trước khi gửi · Bản đã chốt), bảng Số đề nghị rộng hết hàng', () => {
-    const css = readFileSync(join(SRC, 'features/send-adm/send-adm.m1.css'), 'utf8');
-    expect(css).toMatch(/\.sa-cols \{[^}]*display: grid; grid-template-columns: repeat\(auto-fit, minmax\(min\(100%, 400px\), 1fr\)\)/);
-    const draft = readFileSync(join(SRC, 'features/send-adm/send-adm-draft.tsx'), 'utf8');
-    expect(draft).toMatch(/<div className="sa-cols">\s*<SendAdmChecklist[^>]*\/>\s*<ReportSnapshots[^>]*\/>\s*<\/div>\s*<SendAdmOrders/);
+  it('Báo cáo & gửi ADM: đầu trang một hàng wrap (h1, tháng, công tắc, nút), 390 nút chiếm cả hàng', () => {
+    const css = readFileSync(join(SRC, 'features/reports/reports.m1.css'), 'utf8');
+    expect(css).toMatch(/\.bc-head \{[^}]*display: flex; flex-wrap: wrap/);
+    expect(css).toMatch(/@media \(max-width: 767px\) \{[^}]*\.bc-head__actions \{ margin-left: 0; width: 100%; \}/);
   });
 });
 

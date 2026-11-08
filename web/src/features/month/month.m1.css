@@ -1,4 +1,4 @@
-[data-shell='admin'] .mk-page { display: grid; gap: var(--s-4); align-content: start; }
+[data-shell='admin'] .mk-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); align-content: start; }
 [data-shell='admin'] .mk-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); }
 [data-shell='admin'] .mk-head h1 { margin: 0; font: var(--t-h1); letter-spacing: -0.02em; }
 [data-shell='admin'] .mk-switch { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }

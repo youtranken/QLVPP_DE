@@ -27,10 +27,9 @@ const nav = {
     users: 'Nhân viên',
     review: 'Món ngoài danh mục',
     arrivals: 'Hàng về',
-    sendAdm: 'Gửi ADM',
     delivery: 'Giao hàng',
     backlog: 'Còn nợ',
-    reports: 'Báo cáo & in',
+    reports: 'Báo cáo & gửi ADM',
     categoriesUnits: 'Danh mục',
     badge: {
       review: '{{n}} món chờ xem',

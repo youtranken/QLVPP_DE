@@ -12,7 +12,7 @@ import { backlogLine } from '@/features/delivery/backlog-fixtures';
 import { stubBacklog } from '@/features/delivery/backlog-test-stub';
 import { person, pLine } from '@/features/delivery/people/people-fixtures';
 import { reportFixture, snapshotDataFixture, snapshotRow, ISSUE } from '@/features/reports/reports-fixtures';
-import { stubReports } from '@/features/reports/reports-test-stub';
+import { setupSendAdm } from '@/features/send-adm/send-adm-fixtures';
 
 const PERSON = { full_name: 'Pham Van Duc', department: 'Inspection Team' };
 
@@ -88,21 +88,21 @@ describe('Song ngữ các màn Plan 3', () => {
     noVietnamese();
   });
 
-  it('Báo cáo: vi có "Đề nghị" và "Gợi ý, chưa gửi"; en không còn chữ Việt (bảng, Xuất lẻ, bản chốt)', async () => {
+  it('Báo cáo & gửi ADM: vi có "Đề nghị" và "Chưa gửi ADM"; en không còn chữ Việt (bảng, các bản đã in / xuất)', async () => {
     const report = reportFixture({
       byDepartment: [{ department: 'Inspection Team', people: [{ user_sub: 'u-duc', full_name: 'Pham Van Duc', lines: [{ name: 'Bút bi xanh', name_en: 'Blue pen', unit: 'cay', qty: 12 }] }] }],
       custom: [{ key: 'custom:tape', name: 'Double tape', unit: 'cuon', requested: 4, backlog_prev: 1, stock: null, need: 5, people: 2 }],
       byItem: reportFixture().byItem.map((r) => ({ ...r, name: r.item_id === 'item-glue' ? 'Hồ dán' : r.name, name_en: r.item_id === 'item-glue' ? 'Glue' : r.name_en })),
       issues: [{ ...ISSUE, reason: 'Weekly meeting' }],
     });
-    stubReports({ reports: { '2026-10': report }, snapshots: [snapshotRow({ created_by_name: 'Tran Thi Binh' })] });
+    setupSendAdm({ report, snapshots: [snapshotRow({ created_by_name: 'Tran Thi Binh', items_count: 2, units_total: 9 })] });
     renderApp(ADMIN, '/admin/reports');
     expect(await screen.findByRole('columnheader', { name: 'Đề nghị' })).toBeInTheDocument();
-    expect(screen.getByText('Gợi ý, chưa gửi')).toBeInTheDocument();
+    expect(screen.getByText('Chưa gửi ADM')).toBeInTheDocument();
     await english();
-    expect(await screen.findByText('Suggested, not sent')).toBeInTheDocument();
+    expect(await screen.findByText('Not sent to ADM yet')).toBeInTheDocument();
     expect(screen.getAllByRole('row', { name: /Blue pen/ }).length).toBeGreaterThan(0);
-    expect(await screen.findByText(/Tran Thi Binh/)).toBeInTheDocument();
+    expect(await screen.findByText(/Printed \/ exported copies \(1\)/)).toBeInTheDocument();
     noVietnamese();
   });
 

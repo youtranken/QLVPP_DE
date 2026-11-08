@@ -3,7 +3,7 @@ import { expect, test, type APIRequestContext, type Page, type TestInfo } from '
 import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, settled } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
 import { PRIVATE_YM, clearPrivateSnapshots, openOnPrivatePeriod } from './private-period';
-import { confirmIfAsked, openDraft } from './send-adm-flow';
+import { confirmIfAsked, openCopies, openEditable } from './report-send-flow';
 
 const SHOTS = '../.superpowers/sdd/2026-10-30-giao-dien-hanh-chinh/task-16-shots';
 
@@ -16,7 +16,7 @@ async function snap(page: Page, info: TestInfo, name: string) {
 
 const snapshotCount = (ym: string) => Number(psql(`SELECT count(*) FROM report_snapshots WHERE period_ym = '${ym}-01'`));
 
-const PRINT_URL = /\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print\?from=reports$/;
+const PRINT_URL = /\/admin\/reports\/snapshots\/[0-9a-f-]{36}\/print$/;
 const FORM = 'Phiếu đề xuất văn phòng phẩm';
 
 // Báo cáo chỉ đọc: bản chốt tạo qua api (như Gửi ADM gửi), rồi mở trang in riêng của bản đó
@@ -140,12 +140,12 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     expect(delivered.ok()).toBe(true);
     await setBoxes(request, [{ title: 'PW Đổi sau', title_en: '', name: 'PW Đổi sau' }]);
     await page.goto(`/admin/reports?ym=${seed.prevYm}`);
-    const reprint = page.getByRole('region', { name: 'Bản chốt' }).getByRole('link', { name: /^In lại bản lập/ }).first();
-    await expect(reprint).toHaveAttribute('href', `/admin/reports/snapshots/${snapshotId}/print?from=reports`);
+    const reprint = (await openCopies(page)).getByRole('link', { name: /^In lại bản lập/ }).first();
+    await expect(reprint).toHaveAttribute('href', `/admin/reports/snapshots/${snapshotId}/print`);
     // In lại: trang in riêng cùng tab, không tự mở hộp in
     await reprint.click();
     await expect(page).toHaveURL(PRINT_URL);
-    await page.goto(`${page.url()}&appendix=1`);
+    await page.goto(`${page.url()}?appendix=1`);
     await expect(frozenRow()).toBeVisible();
     expect(await numbers()).toEqual(frozen);
     await expect(page.getByRole('group', { name: 'Chủ quản đơn vị' })).toHaveText(`Chủ quản đơn vịHead of Dept.${head}`);
@@ -211,8 +211,8 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await page.addInitScript(spyPrint);
     const tabs: Page[] = [];
     context.on('page', (p) => tabs.push(p));
-    await page.goto('/admin/send-adm');
-    await openDraft(page);
+    await page.goto('/admin/reports');
+    await openEditable(page);
     await expect(page.getByText(TIP)).toBeVisible();
     await expect(page.getByText('Không in kèm phụ lục')).toBeVisible();
 
@@ -220,38 +220,38 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await page.getByRole('button', { name: 'In trình ký' }).click();
     await confirmIfAsked(page, request, PRIVATE_YM, false);
     await expect.poll(() => printsOf(page)).toEqual([{ sheet: true, pageRule: PAGE_RULE }]);
-    await expect(page).toHaveURL(/\/admin\/send-adm$/);
+    await expect(page).toHaveURL(/\/admin\/reports/);
     expect(tabs).toEqual([]);
     expect(snapshotCount(PRIVATE_YM)).toBe(1);
     await expect(page.getByText(/^Đã chốt bản \d\d:\d\d \d\d\/\d\d\. Cần in lại: mở Bản chốt\.$/)).toBeVisible();
     expect(await leftovers(page)).toEqual({ region: false, pageRule: false });
 
-    // Đã gửi: In lại bản này in từ bản có sẵn, không tạo bản mới; hộp in không đóng (không afterprint) → vùng in còn
+    // Đã gửi: In lại in từ bản có sẵn, không tạo bản mới; hộp in không đóng (không afterprint) → vùng in còn
     await page.evaluate(() => void ((window as unknown as PrintSpy).__after = false));
-    await page.getByRole('button', { name: 'In lại bản này' }).click();
+    await page.getByRole('button', { name: 'In lại' }).click();
     await expect.poll(async () => (await printsOf(page)).length).toBe(2);
     expect(snapshotCount(PRIVATE_YM)).toBe(1);
     expect(await leftovers(page)).toEqual({ region: true, pageRule: true });
     await page.emulateMedia({ media: 'print' });
     await expect(page.getByRole('heading', { level: 1, name: FORM })).toBeVisible();
-    await expect(page.getByRole('heading', { level: 1, name: /^Gửi ADM/ })).toBeHidden();
-    await expect(page.getByRole('button', { name: 'In lại bản này' })).toBeHidden();
+    await expect(page.getByRole('heading', { level: 1, name: /^Báo cáo & gửi ADM/ })).toBeHidden();
+    await expect(page.getByRole('button', { name: 'In lại' })).toBeHidden();
     await expect(page.getByRole('row', { name: new RegExp(a.name) }).getByRole('cell').last()).toHaveText('4');
     await page.emulateMedia({ media: 'screen' });
     expect(await leftovers(page)).toEqual({ region: true, pageRule: true });
 
     // Rời trang trong app mà không có afterprint → vùng in và @page vẫn được gỡ
     await page.evaluate(() => {
-      history.pushState({}, '', '/admin/home');
+      history.pushState({}, '', '/admin/month');
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
-    await expect(page).toHaveURL(/\/admin\/home$/);
+    await expect(page).toHaveURL(/\/admin\/month/);
     await expect.poll(() => leftovers(page)).toEqual({ region: false, pageRule: false });
 
     // Khổ giấy: in lại lần nữa rồi xuất PDF theo @page (page.pdf tự phát beforeprint/afterprint → vùng in gỡ sau đó)
     await page.goBack();
-    await expect(page).toHaveURL(/\/admin\/send-adm$/);
-    await page.getByRole('button', { name: 'In lại bản này' }).click();
+    await expect(page).toHaveURL(/\/admin\/reports/);
+    await page.getByRole('button', { name: 'In lại' }).click();
     await expect.poll(async () => (await printsOf(page)).length).toBe(3);
     expect(snapshotCount(PRIVATE_YM)).toBe(1);
     const pdf = (await page.pdf({ preferCSSPageSize: true })).toString('latin1');

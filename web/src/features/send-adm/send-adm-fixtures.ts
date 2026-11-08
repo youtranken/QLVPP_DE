@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import { jsonResponse } from '@/test/test-utils';
 import { adminItem } from '@/features/summary/adjust-fixtures';
-import type { MonthReport, SnapshotData } from '@/features/reports/reports.api';
+import type { MonthReport, SnapshotData, SnapshotRow } from '@/features/reports/reports.api';
 import { reportFixture } from '@/features/reports/reports-fixtures';
 import { stubReports } from '@/features/reports/reports-test-stub';
 import type { SendStateDto } from './send-adm.api';
@@ -53,20 +53,27 @@ interface Setup {
   summary?: object;
   // Số người đăng ký từng món (Tổng hợp theo món)
   people?: Record<string, number>;
+  // Route thêm của test (đi trước các route sẵn có)
+  extra?: (url: string) => Response | undefined;
+  snapshots?: SnapshotRow[];
+  // Tùy chọn thêm cho server báo cáo giả (tệp xuất, POST bản chốt)
+  stub?: Parameters<typeof stubReports>[0];
 }
 
 // Server giả cho Gửi ADM: báo cáo + trạng thái gửi (đổi sau POST bản chốt / no-order)
-export function setupSendAdm({ report, state = UNSENT, afterPost, makeup = [], summary, people = {} }: Setup) {
+export function setupSendAdm({ report, state = UNSENT, afterPost, makeup = [], summary, people = {}, extra, snapshots, stub }: Setup) {
   let current = state;
   const items = report.byItem.map((r) => adminItem({ id: r.item_id, name: r.name }));
-  const base = stubReports({ reports: { [YM]: report }, items });
+  const base = stubReports({ ...stub, reports: { [YM]: report }, items, snapshots });
   const f = vi.fn(async (url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET';
+    const more = extra?.(url);
+    if (more) return more;
     if (url === `/api/admin/periods/${YM}/summary`) return jsonResponse(200, { ym: YM, deadline: PAST, unregistered: 0, custom_pending: 0, lines_pending_delivery: 0, ...summary });
     if (url === '/api/admin/config') return jsonResponse(200, { signature_boxes: BOXES });
     if (url === `/api/admin/periods/${YM}/requests?by=item`) return jsonResponse(200, { items: Object.entries(people).map(([key, n]) => ({ key, item_id: key, name: key, unit: 'cay', requested_qty: n, people: n, max_qty: null, over_max: false })) });
     if (url === `/api/admin/periods/${YM}/send-state`) return jsonResponse(200, current);
-    if (url === `/api/admin/periods/${YM}/arrivals-plan`) return jsonResponse(200, { makeup });
+    if (url === `/api/admin/periods/${YM}/arrivals-plan`) return jsonResponse(200, { snapshot: null, no_order: null, batches: [], rows: [], custom: [], makeup });
     if (url === `/api/admin/periods/${YM}/no-order` && method === 'POST') {
       current = { ...UNSENT, state: 'no_order', no_order_at: SENT_AT, no_order_by_name: 'An' };
       return jsonResponse(200, { no_order_at: SENT_AT, no_order_by: 'u' });

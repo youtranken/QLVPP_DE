@@ -5,8 +5,12 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import i18n from '@/lib/i18n';
 import { handleSessionExpired } from '@/lib/session-relogin';
+import { itemRow, sendReport, setupSendAdm } from '@/features/send-adm/send-adm-fixtures';
 import { snapshotRow } from './reports-fixtures';
-import { captureDownloads, errorResponse, exportsOf, postsOf, stubReports } from './reports-test-stub';
+import { captureDownloads, errorResponse, exportsOf, postsOf } from './reports-test-stub';
+
+const REPORT = sendReport([itemRow({ key: 'kA', name: 'Bút bi', requested: 5, need: 5 })]);
+const stubReports = (opts: Parameters<typeof import('./reports-test-stub').stubReports>[0] = {}) => setupSendAdm({ report: REPORT, snapshots: opts.snapshots, stub: opts });
 
 vi.mock('@/lib/session-relogin', () => ({ handleSessionExpired: vi.fn() }));
 
@@ -15,9 +19,14 @@ function openPage() {
   renderApp(makeMe('admin'), '/admin/reports');
 }
 
-const list = (name = 'Bản chốt') => screen.findByRole('region', { name });
-const oldItem = async (name?: string) => within(await list(name)).findByRole('listitem', { name: /Trần Thị Bình/ });
-const reload = () => screen.findByRole('button', { name: 'Tải lại Excel lập 09:30 28/10' });
+// Hộp "Các bản đã in / xuất" gập sẵn: mở ra rồi mới thao tác
+async function list(title = /^Các bản đã in \/ xuất|^Printed \/ exported copies/) {
+  const summary = await screen.findByText(title);
+  const box = summary.closest('details')!;
+  if (!box.hasAttribute('open')) await userEvent.click(summary);
+  return box;
+}
+const reload = async (title?: RegExp) => within(await list(title)).findByRole('button', { name: /^(Tải lại Excel lập 09:30 28\/10|Download Excel again)/ });
 
 afterEach(async () => {
   vi.unstubAllGlobals();
@@ -31,16 +40,16 @@ describe('Bản chốt — danh sách, tải lại, in lại', () => {
     stubReports();
     openPage();
     const region = await list();
-    expect(within(region).getByText('Excel và bản in luôn lấy từ một bản chốt. Số chưa đổi so với bản gần nhất cùng loại thì dùng lại bản đó, không tạo bản mới. Giao thêm sau đó không làm đổi số đã chốt.')).toBeInTheDocument();
+    expect(within(region).getByText('Mỗi lần In hay Xuất Excel, app lưu lại số lúc đó để đối chiếu với ADM. Số chưa đổi thì dùng lại bản cũ.')).toBeInTheDocument();
     expect(await within(region).findByText('Chưa có bản chốt nào.')).toBeInTheDocument();
   });
 
   it('bản rỗng cũ (has_items false) → nhãn xám "Không có món", vẫn có "In lại"; bản có hàng → không nhãn', async () => {
     stubReports({ snapshots: [snapshotRow({ id: 'snap-e', kind: 'print', has_items: false }), snapshotRow({ id: 'snap-f', kind: 'print', created_at: '2026-10-27T02:30:00Z', has_items: true })] });
     openPage();
-    const [empty, full] = await within(await list()).findAllByRole('listitem');
+    const [empty, full] = within(await list()).getAllByRole('row').slice(1);
     expect(within(empty).getByText('Không có món')).toBeInTheDocument();
-    expect(within(empty).getByRole('link', { name: /^In lại bản lập/ })).toHaveAttribute('href', '/admin/reports/snapshots/snap-e/print?from=reports');
+    expect(within(empty).getByRole('link', { name: /^In lại bản lập/ })).toHaveAttribute('href', '/admin/reports/snapshots/snap-e/print');
     expect(within(full).queryByText('Không có món')).toBeNull();
   });
 
@@ -48,9 +57,9 @@ describe('Bản chốt — danh sách, tải lại, in lại', () => {
     const f = stubReports({ snapshots: [snapshotRow()] });
     const downloads = captureDownloads();
     openPage();
-    const item = await oldItem();
-    expect(within(item).getByText('Excel')).toBeInTheDocument();
-    expect(within(item).getByText('Lập 09:30 28/10/2026 · Trần Thị Bình')).toBeInTheDocument();
+    const [item] = within(await list()).getAllByRole('row').slice(1);
+    expect(within(item!).getByText('Excel')).toBeInTheDocument();
+    expect(within(item!).getByText('09:30 28/10/2026')).toBeInTheDocument();
     await userEvent.click(await reload());
     await waitFor(() => expect(downloads.map((d) => d.name)).toEqual(['vpp-bao-cao-2026-10.xlsx']));
     expect(exportsOf(f)).toEqual(['/api/admin/reports/snapshots/snap-old/export.xlsx?lang=vi']);
@@ -101,21 +110,19 @@ describe('Bản chốt — danh sách, tải lại, in lại', () => {
     expect(within(await list()).queryByRole('alert')).toBeNull();
   });
 
-  it('bản in: liên kết "In lại bản lập …" mở trang in riêng cùng tab (?from=reports), không POST, không gọi print; Báo cáo không có gợi ý hộp in', async () => {
+  it('bản in: liên kết "In lại bản lập …" mở trang in riêng cùng tab không POST, không gọi print', async () => {
     const f = stubReports({ snapshots: [snapshotRow({ id: 'snap-p', kind: 'print' })] });
     const print = vi.spyOn(window, 'print');
     openPage();
-    const item = await oldItem();
-    expect(within(item).getByText('Bản in')).toBeInTheDocument();
-    const link = within(item).getByRole('link', { name: 'In lại bản lập 09:30 28/10' });
-    expect(link).toHaveAttribute('href', '/admin/reports/snapshots/snap-p/print?from=reports');
+    const [item] = within(await list()).getAllByRole('row').slice(1);
+    expect(within(item!).getByText('Bản in')).toBeInTheDocument();
+    const link = within(item!).getByRole('link', { name: 'In lại bản lập 09:30 28/10' });
+    expect(link).toHaveAttribute('href', '/admin/reports/snapshots/snap-p/print');
     expect(link).not.toHaveAttribute('target');
-    expect(within(item).queryByRole('button', { name: /^Tải lại/ })).toBeNull();
-    expect(screen.queryByText(/^Trong hộp in:/)).toBeNull();
+    expect(within(item!).queryByRole('button', { name: /^Tải lại/ })).toBeNull();
     await userEvent.click(link);
     expect(screen.getByTestId('location')).toHaveTextContent('/admin/reports/snapshots/snap-p/print');
-    expect(screen.getByTestId('location-search')).toHaveTextContent('?from=reports');
-    expect(print).not.toHaveBeenCalled();
+        expect(print).not.toHaveBeenCalled();
     expect(postsOf(f)).toEqual([]);
   });
 
@@ -124,7 +131,7 @@ describe('Bản chốt — danh sách, tải lại, in lại', () => {
     const downloads = captureDownloads();
     await i18n.changeLanguage('en');
     openPage();
-    await userEvent.click(within(await oldItem('Snapshots')).getByRole('button', { name: /^Download Excel again/ }));
+    await userEvent.click(await reload(/^Printed \/ exported copies/));
     await waitFor(() => expect(downloads).toHaveLength(1));
     expect(exportsOf(f)).toEqual(['/api/admin/reports/snapshots/snap-old/export.xlsx?lang=en']);
   });

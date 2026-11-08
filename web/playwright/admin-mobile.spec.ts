@@ -7,7 +7,7 @@ const PAGES = [
   ['review', 'Món ngoài danh mục'],
   ['delivery', 'Giao hàng'],
   ['backlog', 'Còn nợ'],
-  ['reports', 'Báo cáo & in'],
+  ['reports', 'Báo cáo & gửi ADM'],
   ['stock', 'Tủ / Kho'],
   ['catalog', 'Sản phẩm'],
   ['categories', 'Danh mục'],
