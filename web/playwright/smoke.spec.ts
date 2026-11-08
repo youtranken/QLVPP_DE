@@ -113,7 +113,8 @@ test.describe('E0-S9 màn vào (chưa đăng nhập)', () => {
     await expect(
       page.getByRole('heading', { name: 'Tài khoản chưa được cấp quyền dùng VPP Công trình' }),
     ).toBeVisible();
-    await expect(page.getByText(/Liên hệ .+ để được thêm vào nhóm\./)).toBeVisible();
+    await expect(page.getByText(/Liên hệ .+ để được cấp quyền\./)).toBeVisible();
+    await expect(page.getByText(/PMH ID chưa cấp quyền vào VPP Công trình cho tài khoản này/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Đăng nhập bằng tài khoản khác' })).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'forbidden');

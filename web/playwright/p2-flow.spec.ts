@@ -98,8 +98,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
     const dept = `PW Phòng P2 ${tag}`;
     const [a, b, c]: Person[] = ['a', 'b', 'c'].map((k) => ({ sub: `pw-p2-${k}-${tag}`, name: `PW P2 ${k.toUpperCase()} ${tag}` }));
     const custom = `PW kẹp giấy P2 ${tag}`;
-    // Dev DB có authorized_groups: người seed phải thuộc nhóm được dùng app mới vào danh sách chưa đăng ký
-    for (const p of [a, b, c]) seedActiveUser(p.sub, p.name, 'active', { department: dept, groups: ['Test_VPP'] });
+    for (const p of [a, b, c]) seedActiveUser(p.sub, p.name, 'active', { department: dept });
     const [x, y] = [await seedPwItem(page), await seedPwItem(page)];
     let admin: Page | undefined;
     // Đồng hồ dev không dời được: phiếu lưu ở kỳ mở rồi chuyển sang một kỳ quá khứ riêng (chưa chụp S) để giả lập khóa sổ

@@ -3,6 +3,9 @@ import { asRole, deleteTestUsers, expectNoContrastViolations, isMobile, seedActi
 
 const ACTIVE = { sub: 'pw-dir-active', name: 'PW Danh bạ An' };
 const LOCKED = { sub: 'pw-dir-locked', name: 'PW Danh bạ Bình' };
+const TEAM_QS = { sub: 'pw-dir-qs', name: 'PW Danh bạ Nhóm QS' };
+const TEAM_NONE = { sub: 'pw-dir-noteam', name: 'PW Danh bạ Trực thuộc Phòng' };
+const NO_ACCESS = { sub: 'pw-dir-noaccess', name: 'PW Danh bạ Mất quyền' };
 const SEARCH = 'Tìm người';
 
 const rowOf = (page: Page, name: string) => page.getByRole('row').filter({ hasText: name });
@@ -17,13 +20,13 @@ async function stubSync(page: Page, handler: () => { status: number; body: unkno
 
 test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
   asRole('admin');
-  test.afterAll(() => deleteTestUsers(ACTIVE.sub, LOCKED.sub));
+  test.afterAll(() => deleteTestUsers(ACTIVE.sub, LOCKED.sub, TEAM_QS.sub, TEAM_NONE.sub, NO_ACCESS.sub));
 
   test('E9-S6 Danh bạ: thẻ lọc trạng thái, đồng bộ lỗi PMH ID bảng vẫn còn, ngăn kéo người', async ({ page }, info) => {
     seedActiveUser(ACTIVE.sub, ACTIVE.name);
     seedActiveUser(LOCKED.sub, LOCKED.name, 'locked');
     let fail = true;
-    await stubSync(page, () => (fail ? { status: 503, body: { code: 'SSO_UNAVAILABLE', message: 'x' } } : { status: 200, body: { created: 2, updated: 1 } }));
+    await stubSync(page, () => (fail ? { status: 503, body: { code: 'SSO_UNAVAILABLE', message: 'x' } } : { status: 200, body: { created: 2, updated: 1, no_access: 0, reconcile: 'ok' } }));
     await page.goto('/admin/users');
     await expect(page.getByRole('heading', { level: 1, name: 'Danh bạ' })).toBeVisible();
     await page.getByRole('searchbox', { name: SEARCH }).fill('PW Danh bạ');
@@ -59,6 +62,36 @@ test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
     await shot(page, info, 'admin-users');
     await drawer.getByRole('link', { name: 'Xem nhật ký' }).click();
     await expect(page).toHaveURL(new RegExp(`/admin/audit\\?actor=${LOCKED.sub}`));
+  });
+
+  test('E9-S6 Danh bạ: người team null hiện —, người team QS hiện QS, lọc Không còn quyền đúng người no_access', async ({ page }, info) => {
+    seedActiveUser(TEAM_QS.sub, TEAM_QS.name, 'active', { department: 'PW Phòng', team: 'QS', role: 'admin' });
+    seedActiveUser(TEAM_NONE.sub, TEAM_NONE.name, 'active', { department: 'PW Phòng', team: null });
+    seedActiveUser(NO_ACCESS.sub, NO_ACCESS.name, 'no_access', { department: 'PW Phòng', team: 'QS' });
+    await page.goto('/admin/users');
+    await page.getByRole('searchbox', { name: SEARCH }).fill('PW Danh bạ');
+    const columns = await page.getByRole('columnheader').allTextContents();
+    const teamCol = columns.indexOf('Nhóm');
+    if (!isMobile(info)) {
+      expect(teamCol).toBeGreaterThan(-1);
+      await expect(rowOf(page, TEAM_QS.name).getByRole('cell').nth(teamCol)).toHaveText('QS');
+      await expect(rowOf(page, TEAM_NONE.name).getByRole('cell').nth(teamCol)).toHaveText('—');
+    } else {
+      await expect(rowOf(page, TEAM_QS.name).getByText('QS', { exact: true })).toBeVisible();
+      await expect(rowOf(page, TEAM_NONE.name).getByText('—').first()).toBeVisible();
+    }
+    await expect(rowOf(page, TEAM_QS.name).getByText('Hành chính', { exact: true })).toBeVisible();
+    await expect(rowOf(page, TEAM_NONE.name).getByText('Hành chính', { exact: true })).toHaveCount(0);
+    await expect(rowOf(page, NO_ACCESS.name).getByText('Không còn quyền', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: /^Không còn quyền/ }).click();
+    await expect(page.getByText(/^Đang lọc: Không còn quyền/)).toBeVisible();
+    await expect(rowOf(page, NO_ACCESS.name)).toBeVisible();
+    await expect(rowOf(page, TEAM_QS.name)).toHaveCount(0);
+    await expect(rowOf(page, TEAM_NONE.name)).toHaveCount(0);
+    await page.getByRole('button', { name: NO_ACCESS.name, exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Người dùng' }).getByText(/PMH ID đã thu hồi quyền vào VPP/)).toBeVisible();
+    if (isMobile(info)) await expectNoContrastViolations(page);
   });
 
   test('E9-S6 Danh bạ: ô tìm nhận 200 ký tự, không gõ được ký tự 201', async ({ page }) => {

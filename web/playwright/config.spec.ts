@@ -1,8 +1,10 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, shot } from './helpers';
+import { acquireLock, asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, seedActiveUser, shot } from './helpers';
+
+const PW_ADMIN = { sub: 'pw-cfg-admin', name: 'PW Cấu hình Hành chính' };
 
 type Config = Record<string, unknown>;
-// Mọi khóa test này đổi được; admin_group không bao giờ lưu thật (chỉ mở rồi hủy xác nhận)
+// Mọi khóa test này đổi được; khối Quyền truy cập chỉ đọc nên không có khóa nào bị đổi ngoài danh sách này
 const RESTORED = ['registration_last_day', 'reminder_days_left', 'default_max_qty', 'signature_boxes', 'admin_contact', 'low_stock_notify'];
 const TWO_BOXES = [
   { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: '' },
@@ -37,6 +39,7 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
   });
 
   test.afterAll(async () => {
+    deleteTestUsers(PW_ADMIN.sub);
     try {
       if (api && original) {
         const restore = Object.fromEntries(RESTORED.map((k) => [k, original?.[k]]));
@@ -117,7 +120,7 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await shot(page, info, 'admin-config-m1');
   });
 
-  test('E9-S6 Cấu hình: thêm/xóa ô ký 1–3 lưu cả mảng; đổi nhóm Hành chính hỏi xác nhận rồi hủy', async ({ page }) => {
+  test('E9-S6 Cấu hình: thêm/xóa ô ký 1–3 lưu cả mảng', async ({ page }) => {
     expect((await api!.put('/api/admin/config', { data: { signature_boxes: TWO_BOXES } })).ok()).toBe(true);
     await page.goto('/admin/config');
     const signers = block(page, 'Ô ký trên phiếu đề xuất');
@@ -140,23 +143,17 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await signers.getByRole('button', { name: 'Lưu ô ký' }).click();
     expect(((await one).signature_boxes as unknown[]).length).toBe(1);
     await saved(signers);
+  });
 
-    const access = block(page, 'Quyền Hành chính');
-    await page.getByLabel('Nhóm PMH ID của Hành chính').fill('pw-nhom-khong-ai-thuoc');
-    await expect(access.getByText('0 người trong danh bạ thuộc nhóm này')).toBeVisible();
-    await expect(access.getByText(/sẽ mất quyền vào trang quản lý từ lần bấm kế tiếp/)).toBeVisible();
-    let puts = 0;
-    page.on('request', (r) => {
-      if (r.method() === 'PUT' && new URL(r.url()).pathname === '/api/admin/config') puts++;
-    });
-    await access.getByRole('button', { name: 'Lưu quyền Hành chính' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Đổi nhóm Hành chính?' });
-    await expect(dialog).toBeVisible();
-    await dialog.getByRole('button', { name: 'Quay lại' }).click();
-    await expect(dialog).toBeHidden();
-    expect(puts).toBe(0);
-    await access.getByRole('button', { name: 'Hủy' }).click();
-    await expect(page.getByLabel('Nhóm PMH ID của Hành chính')).toHaveValue(String(original?.admin_group));
+  test('E9-S6 Cấu hình: Quyền truy cập chỉ đọc, liệt kê Hành chính seed (role admin)', async ({ page }) => {
+    seedActiveUser(PW_ADMIN.sub, PW_ADMIN.name, 'active', { team: 'Admin', role: 'admin' });
+    await page.goto('/admin/config');
+    const access = page.getByRole('region', { name: 'Quyền truy cập' });
+    await expect(access.getByRole('list', { name: 'Hành chính hiện tại' }).getByText(PW_ADMIN.name)).toBeVisible();
+    await expect(access.getByRole('textbox')).toHaveCount(0);
+    await expect(access.getByRole('button')).toHaveCount(0);
+    await expect(access.getByText(/Ai được vào VPP do PMH ID quyết định/)).toBeVisible();
+    await expect(access.getByRole('link', { name: 'Mở Danh bạ' })).toHaveAttribute('href', '/admin/users');
   });
 
   test('E9-S6 Cấu hình: lỗi tải → "Không tải được dữ liệu — thử lại." + Thử lại', async ({ page }) => {

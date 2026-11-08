@@ -40,7 +40,7 @@ const PW_PERSON = {
   deliverable_now: true,
   lines: [PW_PERSON_LINE],
 };
-const PW_USER = { sub: 'pw-panel-user', fullName: 'PW Panel Người', email: 'pw-panel@example.test', department: 'PW Phòng', status: 'active', employeeCode: null, groups: [], lastLoginAt: null };
+const PW_USER = { sub: 'pw-panel-user', fullName: 'PW Panel Người', email: 'pw-panel@example.test', department: 'PW Phòng', status: 'active', employeeCode: null, team: null, role: 'member', lastLoginAt: null };
 const PW_LINE = {
   line_id: 'pw-line-1',
   request_id: 'pw-req-1',

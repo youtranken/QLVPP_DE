@@ -85,7 +85,7 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     const guest = await browser.newContext({ baseURL: info.project.use.baseURL });
     const forbidden = await guest.newPage();
     await forbidden.goto('/?login=forbidden');
-    await expect(forbidden.getByText(`Liên hệ ${contact} để được thêm vào nhóm.`)).toBeVisible();
+    await expect(forbidden.getByText(`Liên hệ ${contact} để được cấp quyền.`)).toBeVisible();
     await guest.close();
 
     await page.goto('/admin/audit?action=config.updated');

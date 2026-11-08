@@ -143,15 +143,17 @@ const sqlText = (s: string) => `'${s.replaceAll("'", "''")}'`;
 export function seedActiveUser(
   sub: string,
   fullName: string,
-  status: 'active' | 'locked' = 'active',
-  extra: { department?: string; groups?: string[] } = {},
+  status: 'active' | 'locked' | 'no_access' = 'active',
+  extra: { department?: string; team?: string | null; role?: 'admin' | 'member' } = {},
 ) {
   const department = extra.department ? sqlText(extra.department) : 'NULL';
-  const groups = extra.groups ? `${sqlText(JSON.stringify(extra.groups))}::jsonb` : "'[]'::jsonb";
-  const sql = `INSERT INTO users (sub, full_name, email, status, department, groups)
-    VALUES (${sqlText(sub)}, ${sqlText(fullName)}, ${sqlText(`${sub}@example.test`)}, '${status}', ${department}, ${groups})
-    ON CONFLICT (sub) DO UPDATE SET full_name = EXCLUDED.full_name, status = EXCLUDED.status
-      ${extra.department ? ', department = EXCLUDED.department' : ''}${extra.groups ? ', groups = EXCLUDED.groups' : ''}`;
+  const team = extra.team ? sqlText(extra.team) : 'NULL';
+  const role = extra.role ?? 'member';
+  const inactive = status === 'active' ? 'NULL' : 'now()';
+  const sql = `INSERT INTO users (sub, full_name, email, status, department, team, role, inactive_at)
+    VALUES (${sqlText(sub)}, ${sqlText(fullName)}, ${sqlText(`${sub}@example.test`)}, '${status}', ${department}, ${team}, '${role}', ${inactive})
+    ON CONFLICT (sub) DO UPDATE SET full_name = EXCLUDED.full_name, status = EXCLUDED.status, inactive_at = EXCLUDED.inactive_at,
+      team = EXCLUDED.team, role = EXCLUDED.role${extra.department ? ', department = EXCLUDED.department' : ''}`;
   execFileSync(
     'docker',
     ['compose', 'exec', '-T', 'postgres', 'sh', '-c', 'psql -v ON_ERROR_STOP=1 -q -U "$POSTGRES_USER" -d "$POSTGRES_DB"'],
