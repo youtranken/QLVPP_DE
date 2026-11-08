@@ -164,6 +164,8 @@ describe('auth e2e', () => {
   describe('GET admin/users', () => {
     const lockedSub = `e2e-locked-${randomUUID()}`;
     const deletedSub = `e2e-deleted-${randomUUID()}`;
+    const teamSub = `e2e-team-${randomUUID()}`;
+    const team = `Nhóm-${randomUUID().slice(0, 8)}`;
 
     beforeAll(async () => {
       const users = app.get(UsersService);
@@ -173,6 +175,22 @@ describe('auth e2e', () => {
       await users.setStatus(lockedSub, 'locked');
       await users.upsertFromClaims({ sub: deletedSub });
       await users.setStatus(deletedSub, 'deleted');
+      await users.upsertFromClaims({
+        sub: teamSub,
+        full_name: 'Tên khác',
+        team,
+      });
+    });
+
+    it('search khớp Nhóm (team) ở server, như ô tìm phía web khi danh bạ tràn', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/api/admin/users')
+        .query({ search: team.toLowerCase(), limit: 10 })
+        .set('x-dev-user-sub', 'dev-admin')
+        .set('x-dev-role', 'admin')
+        .expect(200);
+      const body = res.body as { items: Array<{ sub: string }> };
+      expect(body.items.map((u) => u.sub)).toEqual([teamSub]);
     });
 
     it('member → 403 FORBIDDEN_ROLE', async () => {

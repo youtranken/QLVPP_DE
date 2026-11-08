@@ -10,7 +10,7 @@ export function AccessBlock() {
   const labelId = useId();
   const directory = useDirectoryUsers('');
   const ready = !directory.loading && !directory.failed && !directory.overflow;
-  const admins = ready ? directory.users.filter((u) => u.role === 'admin') : null;
+  const admins = ready ? directory.users.filter((u) => u.role === 'admin' && u.status === 'active') : null;
   return (
     <section className="cf-block" aria-labelledby={`${labelId}-h`}>
       <header className="cf-block__head">

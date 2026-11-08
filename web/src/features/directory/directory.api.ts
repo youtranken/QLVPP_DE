@@ -6,7 +6,7 @@ export interface DirectoryUser {
   fullName: string | null;
   email: string | null;
   department: string | null;
-  status: 'active' | 'locked';
+  status: 'active' | 'locked' | 'no_access';
 }
 
 interface Page<T> {

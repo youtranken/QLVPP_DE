@@ -135,6 +135,9 @@ export class UsersService {
         or(
           ilike(usersTable.fullName, pattern),
           ilike(usersTable.email, pattern),
+          // Cùng các trường ô tìm phía web khớp khi lọc tại chỗ (Nhóm, mã NV)
+          ilike(usersTable.employeeCode, pattern),
+          ilike(usersTable.team, pattern),
         )!,
       );
     }
