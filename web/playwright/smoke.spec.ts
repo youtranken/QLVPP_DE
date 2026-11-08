@@ -81,17 +81,17 @@ test.describe('E0-S9 khung Hành chính (dev-identity admin)', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Products' })).toBeVisible();
   });
 
-  test('E9-S0 Hành chính không có phiếu: đăng nhập vào thẳng Tháng này, mở / bị đưa về /admin, sidebar không có Phiếu của tôi', async ({ page }, info) => {
+  test('E9-S0 Hành chính không có phiếu: đăng nhập vào thẳng Kỳ tháng, mở / bị đưa về /admin, sidebar không có Phiếu của tôi', async ({ page }, info) => {
     await page.goto('/');
-    await expect(page).toHaveURL(/\/admin\/home$/);
-    await expect(page.getByRole('heading', { level: 1, name: /^Chào / })).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/month/);
+    await expect(page.getByRole('heading', { level: 1, name: /^Kỳ tháng \d+$/ })).toBeVisible();
     if (isMobile(info)) await page.getByRole('button', { name: 'Mở menu' }).tap();
     await expect(page.getByRole('navigation', { name: 'Menu quản lý' })).toBeVisible();
     await expect(page.getByRole('link', { name: /Phiếu của tôi/ })).toHaveCount(0);
     if (isMobile(info)) await page.keyboard.press('Escape');
     for (const path of ['/history', '/me']) {
       await page.goto(path);
-      await expect(page).toHaveURL(/\/admin\/home$/);
+      await expect(page).toHaveURL(/\/admin\/month/);
     }
   });
 });

@@ -21,7 +21,7 @@ interface Props {
 export function OpenRegistrationsLink({ ym, className }: { ym: string; className?: string }) {
   const { t } = useTranslation();
   return (
-    <Link className={className} to={`/admin/summary?ym=${ym}`}>
+    <Link className={className} to={`/admin/month?ym=${ym}`}>
       {t('summary.gate.viewOpen', { month: monthOf(ym) })}
     </Link>
   );

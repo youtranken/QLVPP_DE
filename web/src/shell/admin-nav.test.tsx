@@ -5,8 +5,8 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const MONTHLY = ['Tháng này', 'Tổng hợp kỳ', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in'];
-const MONTHLY_PATHS = ['/admin/home', '/admin/summary', '/admin/send-adm', '/admin/arrivals', '/admin/delivery', '/admin/backlog', '/admin/reports'];
+const MONTHLY = ['Kỳ tháng', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in'];
+const MONTHLY_PATHS = ['/admin/month', '/admin/send-adm', '/admin/arrivals', '/admin/delivery', '/admin/backlog', '/admin/reports'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
 
@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 describe('Menu theo luồng chuẩn', () => {
-  it.each([1280, 390])('%ipx: nhóm "Hằng tháng" đúng 7 mục theo thứ tự, luôn mở; không còn nhóm "Xem lại sau"', async (width) => {
+  it.each([1280, 390])('%ipx: nhóm "Hằng tháng" đúng 6 mục theo thứ tự, luôn mở; không còn nhóm "Xem lại sau"', async (width) => {
     mockViewport(width);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
@@ -30,11 +30,11 @@ describe('Menu theo luồng chuẩn', () => {
     expect(within(sideNav()).getAllByRole('group').map((g) => g.getAttribute('aria-label'))).toEqual(['Hằng tháng', 'Danh mục và tủ', 'Quản lý']);
   });
 
-  it('Tổng hợp, Còn nợ, Báo cáo mỗi trang xuất hiện đúng một lần trong menu', () => {
+  it('Kỳ tháng, Còn nợ, Báo cáo mỗi trang xuất hiện đúng một lần trong menu', () => {
     mockViewport(1280);
     stubShellApi();
-    renderApp(makeMe('admin'), '/admin/home');
-    for (const name of ['Tổng hợp kỳ', 'Còn nợ', 'Báo cáo & in']) expect(within(sideNav()).getAllByRole('link', { name })).toHaveLength(1);
+    renderApp(makeMe('admin'), '/admin/month');
+    for (const name of ['Kỳ tháng', 'Còn nợ', 'Báo cáo & in']) expect(within(sideNav()).getAllByRole('link', { name })).toHaveLength(1);
   });
 
   it('sidebar ghi "Sản phẩm" và "Danh mục" (không còn "Danh mục món", "Nhóm & đơn vị")', () => {

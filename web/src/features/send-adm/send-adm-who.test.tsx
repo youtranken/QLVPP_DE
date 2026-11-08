@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { screen, userEvent, within } from '@/test/test-utils';
+import { screen, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -26,8 +26,5 @@ describe('Gửi ADM — "Xem ai đăng ký (n người)"', () => {
     expect(link).toHaveAttribute('href', `/admin/summary?ym=${YM}&view=item&item=kA`);
     expect(within(within(table).getByRole('row', { name: /Giấy A4/ })).getByRole('link', { name: 'Xem ai đăng ký (1 người)' })).toHaveAttribute('href', `/admin/summary?ym=${YM}&view=item&item=kB`);
     expect(within(within(table).getByRole('row', { name: /Kẹp giấy/ })).queryByRole('link')).toBeNull();
-    await userEvent.click(link);
-    expect(screen.getByTestId('location')).toHaveTextContent('/admin/summary');
-    expect(screen.getByTestId('location-search')).toHaveTextContent(`?ym=${YM}&view=item&item=kA`);
   });
 });

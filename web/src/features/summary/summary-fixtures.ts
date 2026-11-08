@@ -37,6 +37,8 @@ export const person = (over: Partial<PersonRow>): PersonRow => ({
   full_name: 'Người',
   email: 'x@pmh.com.vn',
   department: 'Phòng Công trình',
+  team: null,
+  adjusted: false,
   user_status: 'active',
   line_count: 3,
   total_qty: 7,

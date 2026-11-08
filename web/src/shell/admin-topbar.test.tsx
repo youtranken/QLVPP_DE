@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Tháng này', 'Tổng hợp kỳ', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Kỳ tháng', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 
 const topbar = () => screen.getAllByRole('banner')[0];
 
@@ -31,7 +31,7 @@ describe('AdminTopbar 390 px', () => {
   });
 
   it('Tổng hợp kỳ đang xem tháng 10 (?ym=2026-10) → dòng phụ vẫn nói rõ "Kỳ hiện tại", không ghi trống "Kỳ tháng 11 đang mở"', async () => {
-    open('/admin/summary?ym=2026-10');
+    open('/admin/month?ym=2026-10');
     expect(await within(topbar()).findByText('Kỳ hiện tại: tháng 11 · đang mở')).toBeInTheDocument();
     expect(within(topbar()).queryByText('Kỳ tháng 11 đang mở')).toBeNull();
   });
@@ -61,7 +61,7 @@ describe('AdminTopbar 390 px', () => {
 });
 
 describe('Menu sheet 390 px', () => {
-  it('tiêu đề "Menu quản lý", "VPP Công trình · Hành chính", nút "Đóng menu", 14 mục, thẻ kỳ, ngôn ngữ, Đăng xuất', async () => {
+  it('tiêu đề "Menu quản lý", "VPP Công trình · Hành chính", nút "Đóng menu", 13 mục, thẻ kỳ, ngôn ngữ, Đăng xuất', async () => {
     open('/admin/catalog');
     await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
     const sheet = screen.getByRole('dialog', { name: 'Menu quản lý' });
@@ -87,11 +87,11 @@ describe('Menu sheet 390 px', () => {
     expect(screen.queryByRole('dialog', { name: 'Menu quản lý' })).toBeNull();
   });
 
-  it('bấm thẻ kỳ trong menu → /admin/summary và đóng menu', async () => {
+  it('bấm thẻ kỳ trong menu → /admin/month và đóng menu', async () => {
     open('/admin/catalog');
     await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
     await userEvent.click(await screen.findByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng 11 · đang mở/ }));
-    expect(screen.getByTestId('location')).toHaveTextContent('/admin/summary');
+    expect(screen.getByTestId('location')).toHaveTextContent('/admin/month');
     expect(screen.queryByRole('dialog', { name: 'Menu quản lý' })).toBeNull();
   });
 });

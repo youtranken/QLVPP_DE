@@ -9,10 +9,13 @@ import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import type { LineView } from '@/features/request/request.api';
 import { useRegistration, type RegistrationRow } from './summary.api';
 
+export type RegistrationTarget = Pick<RegistrationRow, 'request_id' | 'user_sub' | 'full_name' | 'email'> & { saved_at?: string };
+
 interface Props {
   ym: string;
+  // Có hạn = kỳ còn mở (chỉ xem, nhắc hạn); null = kỳ đã khóa
   deadline: string | null;
-  rows: RegistrationRow[];
+  rows: RegistrationTarget[];
   index: number;
   onIndex: (next: number) => void;
   onClose: () => void;
@@ -66,9 +69,9 @@ export function RegistrationDialog({ ym, deadline, rows, index, onIndex, onClose
     <Dialog open onOpenChange={(o) => !o && onClose()} maxWidth={560} onCloseFocus={returnToRow}>
       <div className="sheet-header rg-head">
         <div className="rg-head__text">
-          <small>{t('summary.open.dialogMeta', { month: monthOf(ym), team: row.team ?? t('common.empty') })}</small>
+          <small>{t(deadline ? 'summary.open.dialogMeta' : 'summary.open.dialogMetaLocked', { month: monthOf(ym), team: view.data?.team ?? t('common.empty') })}</small>
           <DialogTitle className="sheet-title">{t('summary.open.dialogTitle', { name })}</DialogTitle>
-          <small aria-live="polite">{view.data ? t('summary.open.dialogSaved', { time: vnSavedStamp(row.saved_at), kinds: lines.length, units }) : null}</small>
+          <small aria-live="polite">{view.data ? t('summary.open.dialogSaved', { time: vnSavedStamp(row.saved_at ?? view.data.updated_at), kinds: lines.length, units }) : null}</small>
         </div>
         <button type="button" ref={prevRef} className="rg-step" aria-label={t('summary.open.prev')} disabled={index === 0} onClick={() => step(index - 1)}>
           ‹
@@ -79,9 +82,11 @@ export function RegistrationDialog({ ym, deadline, rows, index, onIndex, onClose
         <DialogCloseButton />
       </div>
       <div className="sheet-body">
-        <p className="alert" role="status">
-          {t('summary.open.dialogNote', { lockPhrase: lock })}
-        </p>
+        {deadline && (
+          <p className="alert" role="status">
+            {t('summary.open.dialogNote', { lockPhrase: lock })}
+          </p>
+        )}
         {view.isError ? (
           <LoadError onRetry={() => void view.refetch()} />
         ) : view.isPending ? (

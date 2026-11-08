@@ -9,7 +9,7 @@ import {
   isMobile,
   psql,
   removeTestItem,
-  searchSummaryPeople,
+  searchMonthPeople,
   seedActiveUser,
   seedPwItem,
   settled,
@@ -80,9 +80,9 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       )
       SELECT id FROM r`);
     try {
-      await page.goto(`/admin/summary?ym=${prevYm}`);
-      await searchSummaryPeople(page, tag);
-      await page.getByRole('row').filter({ hasText: name }).getByRole('button', { name: 'Điều chỉnh' }).click();
+      await page.goto(`/admin/month?ym=${prevYm}`);
+      await searchMonthPeople(page, tag);
+      await page.getByRole('row').filter({ hasText: name }).getByRole('button', { name: /^Điều chỉnh phiếu của/ }).click();
 
       const drawer = page.getByRole('dialog', { name: `Điều chỉnh phiếu ${name}` });
       await expect(drawer).toBeVisible();
@@ -162,9 +162,9 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       expect(res.status()).toBe(200);
     };
     try {
-      await page.goto(`/admin/summary?ym=${seed.prevYm}`);
-      await searchSummaryPeople(page, seed.tag);
-      await page.getByRole('row').filter({ hasText: seed.name }).getByRole('button', { name: 'Điều chỉnh' }).click();
+      await page.goto(`/admin/month?ym=${seed.prevYm}`);
+      await searchMonthPeople(page, seed.tag);
+      await page.getByRole('row').filter({ hasText: seed.name }).getByRole('button', { name: /^Điều chỉnh phiếu của/ }).click();
       const drawer = page.getByRole('dialog', { name: `Điều chỉnh phiếu ${seed.name}` });
       const line = drawer.getByRole('listitem').filter({ hasText: item.name });
       await expect(line.getByRole('spinbutton')).toHaveValue('5');
@@ -195,9 +195,9 @@ test.describe('Tổng hợp — giảm sau khi đã gửi ADM (Plan v2-D, Task 1
     try {
       const made = await request.post(`/api/admin/reports/${PRIVATE_YM}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print' } });
       expect(made.status()).toBe(201);
-      await page.goto(`/admin/summary?ym=${PRIVATE_YM}`);
-      await searchSummaryPeople(page, seed.tag);
-      await page.getByRole('row').filter({ hasText: seed.name }).getByRole('button', { name: 'Điều chỉnh' }).click();
+      await page.goto(`/admin/month?ym=${PRIVATE_YM}`);
+      await searchMonthPeople(page, seed.tag);
+      await page.getByRole('row').filter({ hasText: seed.name }).getByRole('button', { name: /^Điều chỉnh phiếu của/ }).click();
       const drawer = page.getByRole('dialog', { name: `Điều chỉnh phiếu ${seed.name}` });
       const line = drawer.getByRole('listitem').filter({ hasText: item.name });
       await expect(line.getByRole('spinbutton')).toHaveValue('5');
@@ -218,7 +218,7 @@ test.describe('Tổng hợp — giảm sau khi đã gửi ADM (Plan v2-D, Task 1
       await expect(drawer).toBeHidden();
       const logged = psql(`SELECT qty_before || '>' || qty_after || ':' || reason_code
         FROM request_line_adjustments WHERE request_id = '${seed.requestId}'`);
-      expect(logged).toBe('5>3:over_quota');
+      expect(logged).toBe('5>3:adm_out_of_stock');
     } finally {
       clearPrivateSnapshots();
       seed.cleanup();

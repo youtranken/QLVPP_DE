@@ -2,14 +2,13 @@ import { mkdirSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
 import {
   acquireLock,
-  copyUnregisteredList,
   deleteTestUsers,
   devHeaders,
   expectNoContrastViolations,
   isMobile,
   psql,
   removeTestItem,
-  searchSummaryPeople,
+  searchMonthPeople,
   seedActiveUser,
   seedPwItem,
   settled,
@@ -51,7 +50,7 @@ async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom
 }
 
 async function openDrawer(admin: Page, person: Person) {
-  await admin.getByRole('row').filter({ hasText: person.name }).getByRole('button', { name: 'Điều chỉnh' }).click();
+  await admin.getByRole('row').filter({ hasText: person.name }).getByRole('button', { name: /^Điều chỉnh phiếu của/ }).click();
   const drawer = admin.getByRole('dialog', { name: `Điều chỉnh phiếu ${person.name}` });
   await expect(drawer.getByText('Đã khóa', { exact: true })).toBeVisible();
   return drawer;
@@ -59,7 +58,7 @@ async function openDrawer(admin: Page, person: Person) {
 
 // Kỳ khóa Hành chính chỉ giảm/bỏ: bỏ món y khỏi phiếu A, có lý do
 async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person, custom: string, dropped: string) {
-  await searchSummaryPeople(admin, tag);
+  await searchMonthPeople(admin, tag);
   let drawer = await openDrawer(admin, a);
   await drawer.getByRole('button', { name: `Bỏ ${dropped} khỏi phiếu` }).click();
   await snap(admin, info, 'admin-adjust');
@@ -123,14 +122,9 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       psql(`UPDATE requests SET period_ym = '${LOCKED_YM}-01' WHERE user_sub IN ('${a.sub}', '${b.sub}')`);
 
       admin = await adminPage(browser, info);
-      await admin.goto(`/admin/summary?ym=${LOCKED_YM}`);
-      await expect(admin.getByRole('heading', { level: 1, name: 'Tổng hợp kỳ' })).toBeVisible();
-      await expect(admin.getByRole('button', { name: /Phiếu đã đăng ký/ })).toContainText(`${before.registered + 2}/${before.headcount}`);
-      await copyUnregisteredList(admin, info);
-      await expect(admin.getByText(/^Đã sao chép \d+ người$/)).toBeVisible();
-      const copied = await admin.evaluate(() => navigator.clipboard.readText());
-      expect(copied.split('\n')).toContain(`- ${c.name} (${dept})`);
-      expect(copied).not.toContain(a.name);
+      await admin.goto(`/admin/month?ym=${LOCKED_YM}`);
+      await expect(admin.getByRole('heading', { level: 1, name: /^Kỳ tháng \d+$/ })).toBeVisible();
+      await expect(admin.getByRole('list', { name: '4 bước của tháng' }).getByRole('listitem').first()).toContainText(`${before.registered + 2}/${before.headcount}`);
       if (isMobile(info)) await expectNoContrastViolations(admin);
       await snap(admin, info, 'admin-summary');
       await adminAdjusts(admin, info, tag, a, custom, y.name);
@@ -140,7 +134,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       await page.goto(`/history/${LOCKED_YM}`);
       await expect(page.locator('li', { hasText: x.name })).toBeVisible();
       // R-D6.11: dòng bị bỏ vẫn hiện ở Lịch sử kèm lý do của Hành chính
-      await expect(page.locator('li', { hasText: y.name }).getByText(/^Hành chính bỏ món này khỏi phiếu \(\d+ cái\): Trùng với phiếu khác$/)).toBeVisible();
+      await expect(page.locator('li', { hasText: y.name }).getByText(/^Hành chính bỏ món này khỏi phiếu \(\d+ cái\): Không có hàng$/)).toBeVisible();
       await expect(page.locator('li', { hasText: custom }).getByText('Đã thêm vào danh mục')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'member-a-after');

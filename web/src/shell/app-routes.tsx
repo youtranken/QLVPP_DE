@@ -12,8 +12,7 @@ import { StockPage } from '@/features/stock/stock-page';
 import { UsersPage } from '@/features/directory/users-page';
 import { AuditPage } from '@/features/admin/audit-page';
 import { ConfigPage } from '@/features/admin/config-page';
-import { HomePage } from '@/features/home/home-page';
-import { SummaryPage } from '@/features/summary/summary-page';
+import { MonthPage } from '@/features/month/month-page';
 import { ReviewPage } from '@/features/review/review-page';
 import { ArrivalsPage } from '@/features/arrivals/arrivals-page';
 import { SendAdmPage } from '@/features/send-adm/send-adm-page';
@@ -28,10 +27,10 @@ import { RequireMember, RequireRole } from '@/shell/require-role';
 import { ForbiddenScreen } from '@/shell/forbidden-screen';
 import { ADMIN_HOME } from '@/shell/admin-nav';
 
-// Địa chỉ cũ của trang Đơn vị tính: thay mục lịch sử (Back không quay lại) và giữ query
-function UnitsRedirect() {
+// Địa chỉ cũ chuyển sang trang mới: thay mục lịch sử (Back không quay lại) và giữ nguyên query
+function RedirectKeepSearch({ to }: { to: string }) {
   const { search } = useLocation();
-  return <Navigate to={{ pathname: '/admin/categories/units', search }} replace />;
+  return <Navigate to={{ pathname: to, search }} replace />;
 }
 
 function ForbiddenRoute() {
@@ -74,8 +73,9 @@ export function AppRoutes() {
         }
       >
         <Route index element={<Navigate to={ADMIN_HOME} replace />} />
-        <Route path="home" element={<HomePage />} />
-        <Route path="summary" element={<SummaryPage />} />
+        <Route path="month" element={<MonthPage />} />
+        <Route path="home" element={<RedirectKeepSearch to="/admin/month" />} />
+        <Route path="summary" element={<RedirectKeepSearch to="/admin/month" />} />
         <Route path="review" element={<ReviewPage />} />
         <Route path="arrivals" element={<ArrivalsPage />} />
         <Route path="send-adm" element={<SendAdmPage />} />
@@ -87,7 +87,7 @@ export function AppRoutes() {
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="categories/units" element={<UnitsPage />} />
-        <Route path="units" element={<UnitsRedirect />} />
+        <Route path="units" element={<RedirectKeepSearch to="/admin/categories/units" />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="config" element={<ConfigPage />} />

@@ -47,7 +47,7 @@ describe('AdminSidebar: đếm', () => {
     expect(navLink('Món ngoài danh mục')).toHaveTextContent(shown ? /1/ : /^Món ngoài danh mục$/);
   });
 
-  it('lỗi tải đếm → không có số, sidebar vẫn đủ 14 mục', async () => {
+  it('lỗi tải đếm → không có số, sidebar vẫn đủ 13 mục', async () => {
     mockViewport(1280);
     const f = stubShellApi({
       '/api/admin/review?status=pending': () => jsonResponse(500, null),
@@ -58,7 +58,7 @@ describe('AdminSidebar: đếm', () => {
     await waitFor(() => expect(f.mock.calls.some(([u]) => u === '/api/admin/periods/2026-10/delivery-people')).toBe(true));
     await new Promise((r) => setTimeout(r, 0));
     const links = within(sideNav()).getAllByRole('link');
-    expect(links).toHaveLength(14);
+    expect(links).toHaveLength(13);
     for (const a of links) expect(a.textContent).not.toMatch(/\d/);
   });
 });
@@ -196,7 +196,7 @@ describe('AdminSidebar: đầu và cuối', () => {
 });
 
 describe('AdminSidebar: Tổng hợp, Còn nợ, Báo cáo trong nhóm Hằng tháng', () => {
-  it.each(['/admin/summary', '/admin/reports', '/admin/backlog'])('đang ở %s → mục trong "Hằng tháng" có aria-current, nhóm không cần mở', async (path) => {
+  it.each(['/admin/month', '/admin/reports', '/admin/backlog'])('đang ở %s → mục trong "Hằng tháng" có aria-current, nhóm không cần mở', async (path) => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), path);

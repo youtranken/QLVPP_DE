@@ -22,6 +22,8 @@ export interface PersonRow {
   full_name: string | null;
   email: string | null;
   department: string | null;
+  team: string | null;
+  adjusted: boolean;
   user_status: string;
   line_count: number;
   total_qty: number;
@@ -81,7 +83,8 @@ export class SummaryListsService {
     const after = query.cursor ? parsePersonCursor(query.cursor) : null;
     const like = query.q ? `%${escapeLike(query.q.trim())}%` : null;
     const { rows } = await this.db.execute<PersonDbRow>(sql`
-      SELECT r.id AS request_id, r.user_sub, u.full_name, u.email, r.department,
+      SELECT r.id AS request_id, r.user_sub, u.full_name, u.email, r.department, u.team,
+             EXISTS (SELECT 1 FROM request_line_adjustments a WHERE a.request_id = r.id) AS adjusted,
              u.status AS user_status, count(l.id)::int AS line_count,
              ${effectiveSum('l.qty')} AS total_qty,
              ${effectiveSum('l.delivered_qty')} AS delivered_qty,
@@ -93,7 +96,8 @@ export class SummaryListsService {
       LEFT JOIN request_lines l ON l.request_id = r.id
       LEFT JOIN items i ON i.id = l.item_id
       WHERE r.period_ym = ${ymToDate(ym)}::date
-        AND (${like}::text IS NULL OR u.full_name ILIKE ${like} OR u.email ILIKE ${like})
+        AND (${like}::text IS NULL OR u.full_name ILIKE ${like} OR u.email ILIKE ${like}
+             OR r.department ILIKE ${like})
         AND (${after === null} OR (${PERSON_ORDER}) > (${after?.[0] === '1'}, ${after?.[1] ?? ''},
              ${after?.[2] ?? ''}, ${after?.[3] ?? null}::uuid))
       GROUP BY r.id, u.sub

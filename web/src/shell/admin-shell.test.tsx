@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Tháng này', 'Tổng hợp kỳ', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Kỳ tháng', 'Gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Báo cáo & in', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
 const linkLabels = (nav: HTMLElement) =>
@@ -24,7 +24,7 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.queryByRole('navigation', { name: 'Menu quản lý' })).toBeNull();
   });
 
-  it.each(['admin', 'sa'] as const)('role %s: sidebar 3 nhóm, 14 mục theo luồng chuẩn, mục đang chọn aria-current, không "Phiếu của tôi"', (role) => {
+  it.each(['admin', 'sa'] as const)('role %s: sidebar 3 nhóm, 13 mục theo luồng chuẩn, mục đang chọn aria-current, không "Phiếu của tôi"', (role) => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe(role), '/admin/catalog');
@@ -45,7 +45,7 @@ describe('AdminShell + RequireRole', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeInTheDocument();
   });
 
-  it('/admin chuyển tới /admin/home (trang Tháng này)', async () => {
+  it('/admin chuyển tới /admin/month (trang Kỳ tháng)', async () => {
     mockViewport(1280);
     const kpi = { registered: 30, headcount: 40, is_open: false, unregistered: 0, lines_pending_delivery: 0 };
     stubShellApi({
@@ -55,12 +55,12 @@ describe('AdminShell + RequireRole', () => {
       '/api/admin/periods/2026-10/arrivals-plan': () => jsonResponse(200, { snapshot: null, batches: [], rows: [], custom: [], makeup: [] }),
     });
     renderApp(makeMe('admin'), '/admin');
-    expect(screen.getByTestId('location')).toHaveTextContent('/admin/home');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Chào Nguyễn Văn An' })).toBeInTheDocument();
-    expect(within(sideNav()).getByRole('link', { name: 'Tháng này' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByTestId('location')).toHaveTextContent('/admin/month');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 10' })).toBeInTheDocument();
+    expect(within(sideNav()).getByRole('link', { name: 'Kỳ tháng' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it.each(['/admin/summary', '/admin/config'])('%s tự dựng đầu trang: đúng một h1, shell không dựng h1 riêng', async (path) => {
+  it.each(['/admin/month', '/admin/config'])('%s tự dựng đầu trang: đúng một h1, shell không dựng h1 riêng', async (path) => {
     mockViewport(1280);
     stubShellApi({ '/api/admin/config': () => jsonResponse(500, { code: 'INTERNAL' }) });
     renderApp(makeMe('admin'), path);
@@ -73,7 +73,7 @@ describe('AdminShell + RequireRole', () => {
     stubShellApi({
       '/api/me/notifications?unread=true&limit=1': () => jsonResponse(200, { items: [], next_cursor: null, unread_count: 2 }),
     });
-    const { container } = renderApp(makeMe('admin'), '/admin/summary');
+    const { container } = renderApp(makeMe('admin'), '/admin/month');
     const user = container.querySelector<HTMLElement>('.side__user')!;
     expect(await within(user).findByRole('button', { name: 'Thông báo, 2 chưa đọc' })).toBeInTheDocument();
   });
@@ -81,7 +81,7 @@ describe('AdminShell + RequireRole', () => {
   it('có liên kết "Tới nội dung" trỏ #main, vùng nội dung có id main', () => {
     mockViewport(1280);
     stubShellApi();
-    renderApp(makeMe('admin'), '/admin/summary');
+    renderApp(makeMe('admin'), '/admin/month');
     expect(screen.getByRole('link', { name: 'Tới nội dung' })).toHaveAttribute('href', '#main');
     expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
   });
@@ -89,11 +89,11 @@ describe('AdminShell + RequireRole', () => {
   it('nội dung trang nằm trong khung panel', () => {
     mockViewport(1280);
     stubShellApi();
-    renderApp(makeMe('admin'), '/admin/summary');
+    renderApp(makeMe('admin'), '/admin/month');
     expect(screen.getByRole('main').querySelector('.shell__panel')).not.toBeNull();
   });
 
-  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 14 mục', async () => {
+  it('767 px: không có sidebar, nút "Mở menu quản lý" mở hộp thoại liệt kê đủ 13 mục', async () => {
     mockViewport(767);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');

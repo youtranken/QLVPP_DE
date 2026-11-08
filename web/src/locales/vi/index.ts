@@ -16,9 +16,9 @@ import units from './units';
 import config from './config';
 import arrivals from './arrivals';
 import sendAdm from './send-adm';
-import home from './home';
+import month from './month';
 import warnings from './warnings';
 
-const vi = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review, ...notifications, ...delivery, ...reports, ...units, ...config, ...arrivals, ...sendAdm, ...home, ...warnings };
+const vi = { ...common, ...auth, ...nav, ...catalog, ...stock, ...admin, ...directory, ...profile, ...request, ...summary, ...review, ...notifications, ...delivery, ...reports, ...units, ...config, ...arrivals, ...sendAdm, ...month, ...warnings };
 
 export default vi;

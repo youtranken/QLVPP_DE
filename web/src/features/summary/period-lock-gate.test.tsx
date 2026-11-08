@@ -57,7 +57,7 @@ describe('PeriodLockGate — trang chỉ-kỳ-khóa', () => {
     mount(gate());
     expect(await screen.findByText('Chưa có kỳ nào chốt sổ')).toBeInTheDocument();
     expect(await screen.findByText('Kỳ tháng 11 đang nhận đăng ký (3/8 người). Hành chính làm việc từ 00:00 ngày 11/11.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Xem đăng ký kỳ tháng 11' })).toHaveAttribute('href', '/admin/summary?ym=2026-11');
+    expect(screen.getByRole('link', { name: 'Xem đăng ký kỳ tháng 11' })).toHaveAttribute('href', '/admin/month?ym=2026-11');
     expect(screen.queryByText('nội dung trang')).not.toBeInTheDocument();
   });
 

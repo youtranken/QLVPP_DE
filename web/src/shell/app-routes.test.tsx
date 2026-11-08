@@ -26,3 +26,20 @@ describe('AppRoutes — đường dẫn lạ', () => {
     expect(within(document.body).queryByText('Đăng ký', { selector: 'a' })).toBeNull();
   });
 });
+
+describe('AppRoutes — chuyển hướng đường cũ của Hành chính (giữ nguyên query)', () => {
+  it.each([
+    ['/admin', '/admin/month', ''],
+    ['/admin/home', '/admin/month', ''],
+    ['/admin/summary?ym=2026-10&q=an&request=r1', '/admin/month', '?ym=2026-10&q=an&request=r1'],
+    ['/admin/summary?ym=2026-11&left=1', '/admin/month', '?ym=2026-11&left=1'],
+    ['/admin/summary?ym=2026-10&filter=pending_delivery', '/admin/month', '?ym=2026-10&chip=undelivered'] /* ?filter cũ đổi thành chip */,
+    ['/admin/units?x=1', '/admin/categories/units', '?x=1'],
+  ])('%s → %s%s', (from, path, query) => {
+    mockViewport(1280);
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, {}))));
+    renderApp(makeMe('admin'), from);
+    expect(screen.getByTestId('location').textContent).toBe(path);
+    expect(screen.getByTestId('location-search').textContent).toBe(query);
+  });
+});

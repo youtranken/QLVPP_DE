@@ -18,12 +18,12 @@ async function snap(page: Page, info: TestInfo, name: string) {
 
 // Hành chính không có /me: đổi ngôn ngữ ở đáy sidebar, điện thoại thì trong menu quản lý
 async function switchLanguage(page: Page, info: TestInfo, lang: Lang) {
-  await page.goto('/admin/summary');
+  await page.goto('/admin/month');
   if (isMobile(info)) await page.getByRole('button', { name: /^(Mở menu quản lý|Open admin menu)$/ }).click();
   else await page.getByRole('button', { name: /^(Ngôn ngữ|Language)$/ }).click();
   await page.getByRole('radio', { name: lang === 'en' ? 'English' : 'Tiếng Việt' }).click();
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('heading', { level: 1, name: lang === 'en' ? 'Period summary' : 'Tổng hợp kỳ' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: lang === 'en' ? /^Month \d+$/ : /^Kỳ tháng \d+$/ })).toBeVisible();
 }
 
 // Vỏ app có tên người đăng nhập và tên ngôn ngữ "Tiếng Việt"; ô dữ liệu (ghi chú xuất lẻ, tên món) là chữ người dùng nhập
@@ -148,7 +148,7 @@ async function vietnameseLeftovers(page: Page, data: string[]) {
   return stripped.match(new RegExp(`\\S*${VIETNAMESE.source}\\S*`, 'gi')) ?? [];
 }
 
-const ADMIN_SCREENS = ['/admin/home', '/admin/summary', '/admin/review', '/admin/delivery', '/admin/backlog', '/admin/reports', '/admin/stock', '/admin/catalog', '/admin/categories', '/admin/users', '/admin/audit', '/admin/config'];
+const ADMIN_SCREENS = ['/admin/month', '/admin/review', '/admin/delivery', '/admin/backlog', '/admin/reports', '/admin/stock', '/admin/catalog', '/admin/categories', '/admin/users', '/admin/audit', '/admin/config'];
 const MEMBER_SCREENS = ['/', '/history', '/me'];
 
 async function englishPage(browser: Browser, info: TestInfo, headers?: Record<string, string>) {

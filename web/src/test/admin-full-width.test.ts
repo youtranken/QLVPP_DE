@@ -165,11 +165,10 @@ describe('Bố cục theo route', () => {
     expect(css).toMatch(/\.cf-block:has\(\.cf-box\) \{ grid-column: 1 \/ -1; \}/);
   });
 
-  it('Tháng này: dải bước rộng hết, thẻ xếp lưới repeat(auto-fill, minmax(320px, 1fr)), không còn cột phụ cố định', () => {
-    const css = readFileSync(join(SRC, 'features/home/home.m1.css'), 'utf8');
-    expect(css).toMatch(/\.hm-cards \{[^}]*display: grid; grid-template-columns: repeat\(auto-fill, minmax\(min\(100%, 320px\), 1fr\)\)/);
-    expect(css).not.toMatch(/\.hm-side \{/);
-    expect(css).not.toMatch(/\.hm-card--main \{[^}]*flex:/);
+  it('Kỳ tháng: dải 4 bước một hàng bốn cột, 390 px hai cột; bảng dùng hết bề ngang', () => {
+    const css = readFileSync(join(SRC, 'features/month/month.m1.css'), 'utf8');
+    expect(css).toMatch(/\.mk-strip \{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
+    expect(css).toMatch(/@media \(max-width: 767px\) \{[^}]*\.mk-strip \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   });
 
   it('Gửi ADM: hai cột minmax(400px, 1fr) (Trước khi gửi · Bản đã chốt), bảng Số đề nghị rộng hết hàng', () => {

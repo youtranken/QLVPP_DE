@@ -9,6 +9,8 @@ interface PersonRow {
   full_name: string | null;
   email: string | null;
   department: string | null;
+  team: string | null;
+  adjusted: boolean;
   user_status: string;
   line_count: number;
   total_qty: number;
@@ -54,6 +56,17 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
     );
     r4 = await f.newRequest(TWIN, 'Phòng B');
     await f.addLine(r4, { item_id: ids.item, qty: 1, delivered_qty: 1 });
+    await f
+      .pool()
+      .query('UPDATE users SET team = $2 WHERE sub = $1', [U1, 'Team Test']);
+    await f.pool().query(
+      `INSERT INTO request_line_adjustments
+         (batch_id, period_ym, user_sub, request_id, line_id, item_id, name, unit,
+          qty_before, qty_after, reason_code, actor_sub, created_at)
+       VALUES (gen_random_uuid(), $1::date, $2, $3, gen_random_uuid(), $4, 'x', 'cay',
+               3, 2, 'adm_out_of_stock', $2, now())`,
+      [`${YM}-01`, U1, ids.r1, ids.item],
+    );
   });
 
   it('by=person: sắp theo phòng ban (NULL cuối) rồi tên rồi id; số chỉ tính dòng hiệu lực', async () => {
@@ -67,6 +80,8 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
       full_name: `Bình ${SUFFIX}`,
       email: `binh.${SUFFIX}@pmh.test`,
       department: 'Phòng B',
+      team: 'Team Test',
+      adjusted: true,
       user_status: 'active',
       line_count: 3,
       total_qty: 5,
@@ -86,6 +101,23 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
       cancelled_qty: 0,
       custom_pending: 0,
     });
+  });
+
+  it('by=person: mỗi dòng có team từ users.team và adjusted=true khi phiếu đã có bản ghi điều chỉnh', async () => {
+    const { items } = await people('');
+    expect(items.find((r) => r.user_sub === U1)).toMatchObject({
+      team: 'Team Test',
+      adjusted: true,
+    });
+    expect(items.find((r) => r.user_sub === TWIN)).toMatchObject({
+      team: null,
+      adjusted: false,
+    });
+  });
+
+  it('q khớp phòng ban của phiếu: q=phòng b → chỉ hai người phòng B, người không phòng bị loại', async () => {
+    const ids2 = await requestIds('q=ph%C3%B2ng%20b');
+    expect(ids2.sort()).toEqual([ids.r1, r4].sort());
   });
 
   it('by=person keyset limit=1 qua hai phiếu cùng phòng ban cùng tên không trùng/sót', async () => {

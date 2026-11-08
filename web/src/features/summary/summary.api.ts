@@ -26,6 +26,9 @@ export interface PersonRow {
   full_name: string | null;
   email: string | null;
   department: string | null;
+  team: string | null;
+  // Phiếu đã có bản ghi điều chỉnh của Hành chính
+  adjusted: boolean;
   user_status: string;
   line_count: number;
   total_qty: number;
@@ -119,7 +122,7 @@ export function useItemRows(ym: string | undefined) {
 }
 
 // registered_subs: cùng tập người của kỳ, đã có phiếu (api cũ không có → coi như rỗng)
-export const fetchUnregistered = (ym: string) =>
+const fetchUnregistered = (ym: string) =>
   apiFetch<{ items: UnregisteredUser[]; registered_subs?: string[] }>(`${base(ym)}/unregistered`);
 
 export function useUnregistered(ym: string | undefined) {

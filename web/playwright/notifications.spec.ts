@@ -62,7 +62,7 @@ test.describe('E6-S1 chuông', () => {
     await asIdentity(page, sub, 'admin');
     try {
       seedNotification(sub, 'low_stock', { name: 'PW Bút', name_en: 'PW Pen', stock_qty: 2 }, '/admin/stock?filter=low', `pw:${sub}:1`, 1);
-      await page.goto('/admin/summary');
+      await page.goto('/admin/month');
       // ≥ 768 chuông nằm ở khối người dùng cuối sidebar (Plan v2-A); < 768 ở thanh trên
       const bell = (isMobile(info) ? page.getByRole('banner') : page.getByRole('group', { name: 'Tài khoản và ngôn ngữ' })).getByRole('button', { name: 'Thông báo, 1 chưa đọc' });
       await expect(bell).toBeVisible();

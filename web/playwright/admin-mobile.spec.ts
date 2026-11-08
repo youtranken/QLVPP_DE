@@ -3,8 +3,7 @@ import { acquireLock, asRole, expectNoContrastViolations, expectTouchTargets, se
 import { seedLockedRequest, type Seed } from './locked-request';
 
 const PAGES = [
-  ['home', 'Tháng này'],
-  ['summary', 'Tổng hợp kỳ'],
+  ['month', 'Kỳ tháng'],
   ['review', 'Món ngoài danh mục'],
   ['delivery', 'Giao hàng'],
   ['backlog', 'Còn nợ'],
@@ -19,7 +18,7 @@ const PAGES = [
 
 const overflowOf = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 // Giao hàng theo người ghi tháng vào tiêu đề: "Giao hàng kỳ tháng 10"
-const headingName = (title: string) => (title === 'Giao hàng' ? /^Giao hàng kỳ tháng \d+$/ : title === 'Tháng này' ? /^Chào / : title);
+const headingName = (title: string) => (title === 'Giao hàng' ? /^Giao hàng kỳ tháng \d+$/ : title === 'Kỳ tháng' ? /^Kỳ tháng \d+$/ : title);
 const heading = (page: Page, title: string) => page.getByRole('heading', { level: 1, name: headingName(title), exact: typeof headingName(title) === 'string' });
 const menu = (page: Page) => page.getByRole('dialog', { name: 'Menu quản lý' });
 const MENU_LABEL: Record<string, string> = { 'Danh bạ': 'Nhân viên' }; // nhãn sidebar khác tiêu đề trang
@@ -127,7 +126,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     await expect(menu(page)).toBeVisible();
     await expectNoContrastViolations(page);
 
-    for (const [path, title] of [['home', 'Tháng này'], ['review', 'Món ngoài danh mục'], ['delivery', 'Giao hàng'], ['backlog', 'Còn nợ'], ['categories', 'Danh mục'], ['categories/units', 'Danh mục']] as const) {
+    for (const [path, title] of [['month', 'Kỳ tháng'], ['review', 'Món ngoài danh mục'], ['delivery', 'Giao hàng'], ['backlog', 'Còn nợ'], ['categories', 'Danh mục'], ['categories/units', 'Danh mục']] as const) {
       await openPage(page, path, title);
       await expectTouchTargets(page, title);
     }

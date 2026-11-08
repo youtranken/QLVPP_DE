@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import home from '@/locales/vi/home';
+import month from '@/locales/vi/month';
 import delivery from '@/locales/vi/delivery';
-import homeEn from '@/locales/en/home';
+import monthEn from '@/locales/en/month';
 import deliveryEn from '@/locales/en/delivery';
 
 function strings(node: unknown, path = ''): [string, string][] {
@@ -14,16 +14,13 @@ function strings(node: unknown, path = ''): [string, string][] {
 const FORBIDDEN = [/(?<!không )thành nợ/i, /vào Còn nợ/i, /chuyển sang Còn nợ/i];
 
 describe('Chữ: phần chưa giao của tháng đang giao không gọi là nợ', () => {
-  it('locales vi home + delivery không còn "thành nợ", "vào Còn nợ", "chuyển sang Còn nợ"', () => {
-    const hits = [...strings(home), ...strings(delivery)].filter(([, s]) => FORBIDDEN.some((re) => re.test(s)));
+  it('locales vi month + delivery không còn "thành nợ", "vào Còn nợ", "chuyển sang Còn nợ"', () => {
+    const hits = [...strings(month), ...strings(delivery)].filter(([, s]) => FORBIDDEN.some((re) => re.test(s)));
     expect(hits).toEqual([]);
   });
 
   it('các câu đã đổi đúng nguyên văn', () => {
-    const all = Object.fromEntries([...strings(home), ...strings(delivery)]);
-    expect(all['home.hero.sub.deliver']).toBe(
-      'Hàng đã về. Giao cho từng người; phần chưa đủ hàng còn ở Chưa nhận.',
-    );
+    const all = Object.fromEntries([...strings(month), ...strings(delivery)]);
     expect(all['delivery.page.shortToBacklog']).toBe('{{n}} món thiếu kho — phần thiếu còn ở Chưa nhận');
     expect(all['delivery.page.emptyHint']).toBe('Mọi phiếu tháng {{month}} đã giao đủ. Phần thiếu kho còn ở tab Chưa nhận.');
     expect(all['delivery.page.toBacklog']).toBe('Xem Chưa nhận');
@@ -34,7 +31,7 @@ describe('Chữ: phần chưa giao của tháng đang giao không gọi là nợ
   });
 
   it('en: một thuật ngữ cho Chưa nhận là "Not yet received", không còn "Not collected"/"not-yet-collected"', () => {
-    const hits = [...strings(homeEn), ...strings(deliveryEn)].filter(([, s]) => /not(-| )collected|not-yet-collected/i.test(s));
+    const hits = [...strings(monthEn), ...strings(deliveryEn)].filter(([, s]) => /not(-| )collected|not-yet-collected/i.test(s));
     expect(hits).toEqual([]);
     const all = Object.fromEntries(strings(deliveryEn));
     expect(all['delivery.people.tabs.pending']).toBe('Not yet received');

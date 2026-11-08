@@ -29,7 +29,7 @@ describe('chuông period_locked: số đăng ký từ S, custom_pending, kỳ 0 
     expect(notes.map((n) => n.user_sub)).toEqual([ADMIN]);
     expect(notes[0]).toMatchObject({
       params: { ym: '2026-12', registered: 0, headcount: 3, custom_pending: 0 },
-      link: '/admin/summary?ym=2026-12',
+      link: '/admin/month?ym=2026-12',
     });
   });
 

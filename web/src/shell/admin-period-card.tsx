@@ -18,7 +18,7 @@ export function AdminPeriodCard({ period, onNavigate }: { period: CurrentPeriod;
   const showBar = typeof registered === 'number' && typeof headcount === 'number' && headcount > 0;
   const name = showBar ? t('nav.periodCard.nameWithCount', { month, registered, headcount, detail }) : t('nav.periodCard.name', { month, detail });
   return (
-    <Link to={`/admin/summary?ym=${period.ym}`} className="side__period" data-last={period.days_left <= 1 || undefined} aria-label={name} title={name} onClick={onNavigate}>
+    <Link to={`/admin/month?ym=${period.ym}`} className="side__period" data-last={period.days_left <= 1 || undefined} aria-label={name} title={name} onClick={onNavigate}>
       <span className="side__period-dot" aria-hidden="true" />
       <span className="side__period-text">
         <b>{t('nav.periodCard.title', { month })}</b>

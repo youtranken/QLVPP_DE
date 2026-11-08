@@ -44,21 +44,11 @@ export async function expectTouchTargets(page: Page, where: string) {
 }
 
 // Bảng giữ hàng cũ (mờ, aria-busy) lúc tải kết quả tìm; chờ theo thứ người dùng thấy thay vì bắt một response (từng treo ở 390)
-export async function searchSummaryPeople(page: Page, text: string) {
-  await page.getByRole('searchbox', { name: 'Tìm người, email…' }).fill(text);
+export async function searchMonthPeople(page: Page, text: string) {
+  await page.getByRole('searchbox', { name: 'Tìm người hoặc phòng' }).fill(text);
   await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe(text);
   await expect(page.getByRole('row').filter({ hasText: text }).first()).toBeVisible();
   await expect(page.getByRole('table')).toHaveAttribute('aria-busy', 'false');
-}
-
-// 390: nút chép danh sách nằm trong menu ⋯ ở đầu trang Tổng hợp kỳ
-export async function copyUnregisteredList(page: Page, info: TestInfo) {
-  if (isMobile(info)) {
-    await page.getByRole('button', { name: 'Thao tác khác' }).click();
-    await page.getByRole('menuitem', { name: /^Chép DS chưa đăng ký/ }).click();
-  } else {
-    await page.getByRole('button', { name: /^Chép DS chưa đăng ký/ }).click();
-  }
 }
 
 // Spinner quay vô hạn: finished không bao giờ xong → evaluate treo tới hết giờ test ("browserContext.close: Test ended")

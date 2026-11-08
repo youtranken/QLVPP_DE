@@ -45,7 +45,7 @@ const combos = (): [Variant, Surface][] =>
 type Measure = { bg: string; fg: string; border: string; surface: string; surfaceBg: string };
 
 async function mount(page: Page) {
-  await page.goto('/admin/home');
+  await page.goto('/admin/month');
   await settled(page);
   await page.evaluate(
     ({ variants, surfaces }) => {

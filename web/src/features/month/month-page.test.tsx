@@ -1,0 +1,163 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { renderApp } from '@/test/render-app';
+import { makeMe } from '@/test/fixtures-me';
+import { mockViewport } from '@/test/viewport';
+import { calledUrls, stubMonthApi } from './month-fixtures';
+
+const search = () => screen.getByTestId('location-search').textContent ?? '';
+const open = (path = '/admin/month?ym=2026-10') => {
+  mockViewport(1280);
+  renderApp(makeMe('admin'), path);
+};
+const table = async () => within(await screen.findByRole('table'));
+
+afterEach(() => vi.unstubAllGlobals());
+
+describe('MonthPage: kỳ khóa', () => {
+  it('h1 "Kỳ tháng 10" và dải 4 bước gọn: Đăng ký 4/5 · Gửi ADM 11:50 08/11 · Hàng về 19/21 món · Giao 1/4 phiếu', async () => {
+    stubMonthApi();
+    open();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 10' })).toBeInTheDocument();
+    const steps = await screen.findByRole('list', { name: '4 bước của tháng' });
+    const text = within(steps).getAllByRole('listitem').map((li) => li.textContent);
+    expect(text).toEqual(['Đăng ký4/5', 'Gửi ADM11:50 08/11', 'Hàng về19/21 món', 'Giao1/4 phiếu']);
+  });
+
+  it('bảng: Người · Nhóm · Số món · Tổng · Giao · Ghi chú · Lưu lúc, nhóm theo phòng "Phòng Test · 4 người", "Chưa có phòng · 1 người" cuối', async () => {
+    stubMonthApi();
+    open();
+    const t = await table();
+    const headers = t.getAllByRole('columnheader').map((h) => h.textContent);
+    expect(headers.slice(0, 7)).toEqual(['Người', 'Nhóm', 'Số món', 'Tổng', 'Giao', 'Ghi chú', 'Lưu lúc']);
+    const groups = t.getAllByRole('row').map((r) => r.textContent ?? '').filter((x) => /\d người/.test(x) && !x.includes('Điều chỉnh'));
+    expect(groups[0]).toContain('Phòng Test');
+    expect(groups[0]).toContain('4 người');
+    expect(groups.at(-1)).toContain('Chưa có phòng');
+  });
+
+  it('Ghi chú: "Vượt tối đa", "HC đã điều chỉnh", "Không có gì để giao", "Món ngoài danh mục"', async () => {
+    stubMonthApi();
+    open();
+    const t = await table();
+    expect(t.getAllByText('Vượt tối đa').length).toBe(2);
+    expect(t.getByText('HC đã điều chỉnh')).toBeInTheDocument();
+    expect(t.getByText('Không có gì để giao')).toBeInTheDocument();
+    expect(t.getByText('Món ngoài danh mục')).toBeInTheDocument();
+  });
+
+  it('chip Tất cả 5 · Có ghi chú 4 · Chưa giao xong 3 lọc tại chỗ và ghi ?chip=', async () => {
+    const f = stubMonthApi();
+    open();
+    const t = await table();
+    await userEvent.click(screen.getByRole('button', { name: /Có ghi chú/ }));
+    expect(search()).toContain('chip=noted');
+    await waitFor(() => expect(t.queryByText('Nhân viên E')).toBeNull());
+    expect(t.getByText('Nhân viên A')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Chưa giao xong/ }));
+    expect(search()).toContain('chip=undelivered');
+    await waitFor(() => expect(t.queryByText('Nhân viên E')).toBeNull());
+    expect(t.queryByText('Nguyễn Văn An')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: /Tất cả/ }));
+    expect(search()).not.toContain('chip=');
+    expect(await t.findByText('Nhân viên E')).toBeInTheDocument();
+    // chip lọc ở client: không gọi lại API theo chip
+    expect(calledUrls(f).filter((u) => u.includes('/requests?') && u.includes('chip')).length).toBe(0);
+  });
+
+  it('số trên chip đếm đúng: Tất cả 5, Có ghi chú 4, Chưa giao xong 3', async () => {
+    stubMonthApi();
+    open();
+    await table();
+    expect(screen.getByRole('button', { name: /^Tất cả/ })).toHaveTextContent('5');
+    expect(screen.getByRole('button', { name: /^Có ghi chú/ })).toHaveTextContent('4');
+    expect(screen.getByRole('button', { name: /^Chưa giao xong/ })).toHaveTextContent('3');
+  });
+
+  it('"Xem" mở popup phiếu (RegistrationDialog) với ‹ › theo thứ tự bảng', async () => {
+    stubMonthApi();
+    open();
+    const t = await table();
+    await userEvent.click(t.getByRole('button', { name: 'Xem phiếu của Nhân viên A' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Phiếu của Nhân viên A' });
+    expect(within(dialog).queryByText(/Nhân viên còn sửa được tới/)).toBeNull();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Người sau' }));
+    expect(await screen.findByRole('dialog', { name: 'Phiếu của Nhân viên B' })).toBeInTheDocument();
+  });
+
+  it('"Điều chỉnh" mở AdjustDrawer ?request=<id>; mở từ ?left=1 chọn sẵn Người đã nghỉ', async () => {
+    stubMonthApi();
+    open();
+    const t = await table();
+    await userEvent.click(t.getByRole('button', { name: 'Điều chỉnh phiếu của Nhân viên A' }));
+    await waitFor(() => expect(search()).toContain('request=r-a'));
+    expect(await screen.findByRole('dialog', { name: 'Điều chỉnh phiếu Nhân viên A' })).toBeInTheDocument();
+  });
+
+  it('không có "Chép tin nhắc", không danh sách/tab chưa đăng ký, không chữ "phiếu · … món · … đơn vị"', async () => {
+    stubMonthApi();
+    open();
+    await table();
+    expect(screen.queryByRole('button', { name: /Chép/ })).toBeNull();
+    expect(screen.queryByText(/chưa đăng ký/i)).toBeNull();
+    expect(screen.queryByText(/đơn vị ·|· \d+ món/)).toBeNull();
+  });
+
+  it('tìm "phòng test" gọi API với q và chỉ còn người của phòng đó', async () => {
+    const f = stubMonthApi();
+    open();
+    const t = await table();
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người hoặc phòng' }), 'phòng test');
+    await waitFor(() => expect(calledUrls(f).some((u) => u.includes('q=ph%C3%B2ng+test'))).toBe(true));
+    await waitFor(() => expect(t.queryByRole('button', { name: 'Xem phiếu của Nguyễn Văn An' })).toBeNull());
+  });
+});
+
+describe('MonthPage: chuyển kỳ', () => {
+  it('chọn "Kỳ đang đăng ký (tháng 11)" → bảng chỉ xem (Người · Nhóm · Số món · Tổng · Lưu lúc), dải chỉ bước Đăng ký sáng, URL ?ym=2026-11', async () => {
+    stubMonthApi();
+    open();
+    await table();
+    await userEvent.click(screen.getByRole('radio', { name: 'Kỳ đang đăng ký (tháng 11)' }));
+    await waitFor(() => expect(search()).toContain('ym=2026-11'));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 11' })).toBeInTheDocument();
+    const t = await table();
+    await t.findByText('Nhân viên B');
+    expect(t.getAllByRole('columnheader').map((h) => h.textContent).slice(0, 5)).toEqual(['Người', 'Nhóm', 'Số món', 'Tổng', 'Lưu lúc']);
+    const steps = screen.getByRole('list', { name: '4 bước của tháng' });
+    expect(within(steps).getByText('3/5')).toBeInTheDocument();
+    expect(within(steps).getAllByText('—')).toHaveLength(3);
+  });
+
+  it('‹ Tháng trước → ?ym=2026-09 và hiện nút "Tháng 9/2026" được chọn', async () => {
+    stubMonthApi();
+    open();
+    await table();
+    await userEvent.click(screen.getByRole('button', { name: /Tháng trước/ }));
+    await waitFor(() => expect(search()).toContain('ym=2026-09'));
+    expect(await screen.findByRole('radio', { name: 'Tháng 9/2026' })).toHaveAttribute('aria-checked', 'true');
+  });
+});
+
+describe('MonthPage: người đã nghỉ và 390 px', () => {
+  it('người đã nghỉ còn phần chưa nhận → đúng một dòng W25 với nút Xử lý sang ?left=1', async () => {
+    const left = { ...(await import('./month-fixtures')).PEOPLE[0]!, user_status: 'locked', full_name: 'Võ Thị Lan' };
+    stubMonthApi((url) => (url.includes('filter=left') ? new Response(JSON.stringify({ items: [left], next_cursor: null }), { status: 200, headers: { 'content-type': 'application/json' } }) : undefined));
+    open();
+    await table();
+    const alert = await screen.findByText(/Võ Thị Lan/, { selector: '.mk-left span' });
+    expect(alert).toBeInTheDocument();
+    expect(document.querySelectorAll('.mk-left')).toHaveLength(1);
+    expect(screen.getByRole('link', { name: 'Xử lý' })).toHaveAttribute('href', '/admin/month?ym=2026-10&left=1');
+  });
+
+  it('390: bảng xếp chồng, chip và ô tìm vẫn dùng được', async () => {
+    stubMonthApi();
+    mockViewport(390);
+    renderApp(makeMe('admin'), '/admin/month?ym=2026-10');
+    await table();
+    expect(screen.getByRole('searchbox', { name: 'Tìm người hoặc phòng' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Tất cả/ })).toBeInTheDocument();
+    expect(document.querySelector('.table-wrap, .table')).not.toBeNull();
+  });
+});

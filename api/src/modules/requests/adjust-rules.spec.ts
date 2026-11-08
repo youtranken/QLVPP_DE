@@ -91,13 +91,16 @@ describe('parseAdjustLines: VALIDATION của mã/ghi chú', () => {
     });
   });
 
-  it.each(['over_quota', 'duplicate', 'user_left', 'adm_out_of_stock', 'other'])(
-    'mã cũ %s vẫn hợp lệ (lịch sử và người đã nghỉ)',
-    (code) => {
-      const [a] = parseAdjustLines([{ id: 'a', qty: 1, reason_code: code }]);
-      expect(a.reason_code).toBe(code);
-    },
-  );
+  it.each([
+    'over_quota',
+    'duplicate',
+    'user_left',
+    'adm_out_of_stock',
+    'other',
+  ])('mã cũ %s vẫn hợp lệ (lịch sử và người đã nghỉ)', (code) => {
+    const [a] = parseAdjustLines([{ id: 'a', qty: 1, reason_code: code }]);
+    expect(a.reason_code).toBe(code);
+  });
 
   it('mã lạ "out_of_stock" → VALIDATION lines.reason_code', () => {
     expect(

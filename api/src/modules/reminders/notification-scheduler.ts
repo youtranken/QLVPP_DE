@@ -142,7 +142,7 @@ export class NotificationScheduler
       link:
         custom_pending > 0
           ? `/admin/review?ym=${period.ym}`
-          : `/admin/summary?ym=${period.ym}`,
+          : `/admin/month?ym=${period.ym}`,
       now,
     });
   }
