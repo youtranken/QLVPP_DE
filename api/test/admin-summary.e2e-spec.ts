@@ -51,6 +51,7 @@ describe('admin/periods/:ym/summary, unregistered, admin/requests/:id', () => {
       custom_pending: 1,
       low_stock: lowStock,
       receipts: 0,
+      earliest_ym: expect.any(String),
     });
   });
 

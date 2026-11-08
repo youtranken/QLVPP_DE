@@ -243,7 +243,7 @@ describe('PUT admin/requests/:id/lines: Hành chính chỉ giảm/bỏ dòng, c�
     const before = (await get('periods/2026-11/summary')).body;
     const res = await cut(r, {
       0: { qty: 0, ...over },
-      1: { qty: 0, reason_code: 'user_left' },
+      1: { qty: 0, reason_code: 'adm_out_of_stock' },
     }).expect(200);
     expect(view(res)).toMatchObject({ id: r.id, lines: [] });
     expect((await get(`requests/${r.id}`)).body.lines).toEqual([]);

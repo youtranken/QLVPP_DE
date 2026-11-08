@@ -73,10 +73,11 @@ export class ItemPeopleService {
                (array_agg(a.reason_note ORDER BY a.created_at DESC, a.id DESC))[1] AS reason_note
         FROM request_line_adjustments a
         JOIN requests r ON r.id = a.request_id
-        WHERE r.period_ym = ${period}::date AND a.qty_after = 0
+        WHERE r.period_ym = ${period}::date
           AND NOT EXISTS (SELECT 1 FROM request_lines x WHERE x.id = a.line_id)
           AND (CASE WHEN a.item_id IS NOT NULL THEN a.item_id::text ELSE ${ADJUSTED_KEY} END) = ${key}
         GROUP BY a.request_id, a.line_id
+        HAVING bool_or(a.qty_after = 0)
       ), merged AS (SELECT * FROM cur UNION ALL SELECT * FROM gone)
       SELECT m.request_id, r.user_sub, u.full_name, u.email, u.team,
              sum(m.qty)::int AS qty,

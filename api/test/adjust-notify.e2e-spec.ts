@@ -89,23 +89,38 @@ describe('chuông line_adjusted: một chuông mỗi người mỗi ngày giờ 
     expect(await bellsOf(sub)).toEqual([]);
   });
 
-  it('chỉ dòng user_left → 0 chuông; user_left + over_quota → params chỉ có dòng over_quota', async () => {
+  it('chủ phiếu đã nghỉ giảm bằng user_left (rồi thêm dòng over_quota) → 200, bản ghi có, 0 chuông', async () => {
     const sub = await newOwner();
     const r = await seed([5, 3], sub);
+    await pool().query("UPDATE users SET status = 'locked' WHERE sub = $1", [
+      sub,
+    ]);
     at(AFTER_DEADLINE);
     const left = view(
       await cut(r, { 0: { qty: 1, reason_code: 'user_left' } }).expect(200),
     );
-    expect(await bellsOf(sub)).toEqual([]);
     await cut(left, {
       0: { qty: 0, reason_code: 'user_left' },
       1: { qty: 2, ...over },
     }).expect(200);
-    const bells = await bellsOf(sub);
-    expect(bells).toHaveLength(1);
-    expect(bells[0].params.lines).toMatchObject([
-      { before: 3, after: 2, reason_code: 'over_quota' },
-    ]);
+    expect(await recordsOf(r.id)).toHaveLength(3);
+    expect(await bellsOf(sub)).toEqual([]);
+  });
+
+  it('chủ phiếu còn làm mà gửi reason_code user_left → 400 VALIDATION, phiếu không đổi, 0 bản ghi', async () => {
+    const sub = await newOwner();
+    const r = await seed([5], sub);
+    at(AFTER_DEADLINE);
+    const res = await cut(r, {
+      0: { qty: 1, reason_code: 'user_left' },
+    }).expect(400);
+    expect(res.body).toMatchObject({
+      code: 'VALIDATION',
+      line_id: r.lines[0].id,
+      fields: ['lines.reason_code'],
+    });
+    expect(await recordsOf(r.id)).toHaveLength(0);
+    expect(await bellsOf(sub)).toEqual([]);
   });
 
   it('5 dòng giảm → lines 5, more 0; 6 dòng → lines 5, more 1', async () => {

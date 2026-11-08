@@ -17,6 +17,8 @@ export interface RequestRow extends Record<string, unknown> {
   user_sub: string;
   department: string | null;
   updated_at: string;
+  // Lần lưu cuối của chính nhân viên (updated_at còn đổi theo giao hàng/điều chỉnh)
+  saved_at: string;
 }
 
 const LINE_COLUMNS = sql.raw(
@@ -27,6 +29,9 @@ const LINE_COLUMNS = sql.raw(
 // Mốc so expected_updated_at và trả cho client cùng độ chính xác mili giây
 const UPDATED_AT_ISO = sql.raw(
   `to_char(date_trunc('milliseconds', updated_at) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`,
+);
+const SAVED_AT_ISO = sql.raw(
+  `to_char(date_trunc('milliseconds', saved_at) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`,
 );
 const freshness = (expected: string | undefined) =>
   sql`(date_trunc('milliseconds', updated_at) = ${expected ?? null}::timestamptz)`;
@@ -76,7 +81,7 @@ export async function findRequest(
       : sql`period_ym = ${ymToDate(where.ym)}::date AND user_sub = ${where.user_sub}`;
   const { rows } = await ex.execute<RequestRow>(sql`
     SELECT id, to_char(period_ym, 'YYYY-MM') AS period_ym, user_sub, department,
-           ${UPDATED_AT_ISO} AS updated_at
+           ${UPDATED_AT_ISO} AS updated_at, ${SAVED_AT_ISO} AS saved_at
     FROM requests WHERE ${cond} ${forUpdate ? sql`FOR UPDATE` : sql``}
   `);
   return rows[0] ?? null;

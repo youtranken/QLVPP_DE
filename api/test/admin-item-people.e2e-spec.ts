@@ -34,6 +34,7 @@ describe('GET admin/periods/:ym/items/:key/people', () => {
   const C = f.sub('pc');
   const D = f.sub('pd');
   let own = '';
+  let own2 = '';
   const people = (key: string, role = 'admin', ym = YM) =>
     asAdmin(`/periods/${ym}/items/${encodeURIComponent(key)}/people`, role);
 
@@ -68,7 +69,9 @@ describe('GET admin/periods/:ym/items/:key/people', () => {
     const pool = f.pool();
     cleanup = async () => {
       await pool.query('DELETE FROM request_lines WHERE item_id = $1', [own]);
-      await pool.query('DELETE FROM items WHERE id = $1', [own]);
+      await pool.query('DELETE FROM items WHERE id = ANY($1::uuid[])', [
+        [own, own2].filter(Boolean),
+      ]);
     };
     own = (
       await pool.query<{ id: string }>(
@@ -133,6 +136,52 @@ describe('GET admin/periods/:ym/items/:key/people', () => {
         user_sub: B,
         qty: 0,
         before: 1,
+        reason_code: 'adm_out_of_stock',
+      }),
+    ]);
+  });
+
+  it('dòng giảm 5 → 3 rồi bỏ (3 → 0): trước = 5, requested tính 5, after 0', async () => {
+    own2 = (
+      await f
+        .pool()
+        .query<{ id: string }>(
+          `INSERT INTO items (name, unit, max_qty) VALUES ($1, 'cay', 50) RETURNING id`,
+          [`e2e-people2-${SUFFIX}`],
+        )
+    ).rows[0].id;
+    const E = f.sub('pe');
+    await addUser(E, `Em ${SUFFIX}`, `pe.${SUFFIX}@pmh.test`, 'Phòng A');
+    const re = await newRequest(E, 'Phòng A');
+    const line = '00000000-0000-4000-8000-000000000002';
+    await adjust(
+      E,
+      re,
+      line,
+      { before: 5, after: 3, reason: 'over_quota', at: '2025-08-12T01:00:00Z' },
+      own2,
+      'x',
+    );
+    await adjust(
+      E,
+      re,
+      line,
+      {
+        before: 3,
+        after: 0,
+        reason: 'adm_out_of_stock',
+        at: '2025-08-12T02:00:00Z',
+      },
+      own2,
+      'x',
+    );
+    const body = (await people(own2).expect(200)).body as ItemPeople;
+    expect(body).toMatchObject({ requested: 5, after: 0 });
+    expect(body.people).toEqual([
+      expect.objectContaining({
+        user_sub: E,
+        qty: 0,
+        before: 5,
         reason_code: 'adm_out_of_stock',
       }),
     ]);

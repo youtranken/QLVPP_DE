@@ -11,7 +11,7 @@ import type { AdjustChange, AdjustLine } from './adjust-rules';
 import * as adjustments from './line-adjustments.repo';
 import type { AdjustmentRecord } from './line-adjustments.repo';
 import { LineNotifier } from './line-notifier';
-import { requestNotFound, staleUpdate } from './request-errors';
+import { lineError, requestNotFound, staleUpdate } from './request-errors';
 import { snapOf } from './request-lines.rules';
 import { RequestViewBuilder } from './request-view';
 import type { RequestView } from './request-view';
@@ -50,6 +50,7 @@ export class AdminRequestService {
       // Kỳ của phiếu xác định sau FOR UPDATE, cùng tx
       await this.periods.assertLocked(found.period_ym, now, tx);
       const changes = await this.plan(tx, id, body.expected_updated_at, lines);
+      await this.assertUserLeftReason(found.user_sub, changes);
       if (changes.length === 0) {
         return {
           request: await this.views.build(tx, id, false),
@@ -86,6 +87,21 @@ export class AdminRequestService {
         adjustments: records.map(forAudit),
       };
     });
+  }
+
+  // "Người đã nghỉ" chỉ hợp lệ khi chủ phiếu thật sự đã nghỉ: không thì người còn làm mất chuông báo giảm
+  private async assertUserLeftReason(
+    ownerSub: string,
+    changes: AdjustChange[],
+  ): Promise<void> {
+    const bad = changes.find((c) => c.reason_code === 'user_left');
+    if (!bad || !(await this.notifier.ownerActive(ownerSub))) return;
+    throw lineError(
+      'VALIDATION',
+      'Lý do "Người đã nghỉ" chỉ dùng cho phiếu của người đã nghỉ.',
+      { line_id: bad.before.id },
+      { fields: ['lines.reason_code'] },
+    );
   }
 
   private async plan(

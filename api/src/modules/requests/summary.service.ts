@@ -35,6 +35,8 @@ export interface PeriodSummary extends PeopleCounts {
   custom_pending: number | null;
   low_stock: number;
   receipts: number;
+  // Kỳ cũ nhất có phiếu: chặn "Tháng trước" ở Kỳ tháng
+  earliest_ym: string | null;
 }
 
 export interface UnregisteredUser extends Record<string, unknown> {
@@ -67,13 +69,15 @@ export class SummaryService {
 
   async summary(ym: string): Promise<PeriodSummary> {
     const { isOpen } = await this.assertViewable(ym);
-    const [period, people, lines, lowStock, receipts] = await Promise.all([
-      this.periods.findSnapshot(ym),
-      this.people(ym),
-      isOpen ? null : this.lineCounts(ym),
-      this.catalog.countLowStock(),
-      this.receiptCount(ym),
-    ]);
+    const [period, people, lines, lowStock, receipts, earliest] =
+      await Promise.all([
+        this.periods.findSnapshot(ym),
+        this.people(ym),
+        isOpen ? null : this.lineCounts(ym),
+        this.catalog.countLowStock(),
+        this.receiptCount(ym),
+        this.earliestYm(),
+      ]);
     return {
       ym,
       deadline: period ? period.deadline.toISOString() : null,
@@ -83,7 +87,15 @@ export class SummaryService {
       custom_pending: lines?.custom_pending ?? null,
       low_stock: lowStock,
       receipts,
+      earliest_ym: earliest,
     };
+  }
+
+  private async earliestYm(): Promise<string | null> {
+    const { rows } = await this.db.execute<{ ym: string | null }>(sql`
+      SELECT to_char(min(period_ym), 'YYYY-MM') AS ym FROM requests
+    `);
+    return rows[0].ym;
   }
 
   // Số phiếu Hàng về của kỳ: audit stock.receipt có object_id = ym (chính xác, không suy từ note)
