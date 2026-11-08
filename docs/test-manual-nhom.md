@@ -102,3 +102,11 @@ Góp ý Nhóm 1 (07/11/2026) → mockup https://claude.ai/artifact/5dwhdPKyhbEJw
 - Nút "Tạm ngưng" trên thẻ/dòng: màu trung tính, chỉ đỏ khi rê chuột; bấm xong có thông báo kèm "Hoàn tác". (Thay cho nút đỏ sẵn.)
 - Tài khoản: máy tính bỏ tab "Tôi", bấm tên ở góc phải mở hộp tài khoản; điện thoại giữ 3 mục, bấm "Tôi" mở hộp từ dưới lên.
 - Trong 10 cải thiện toàn dự án, làm luôn cùng Nhóm 1 các mục chạm màn Nhóm 1: (2) một kiểu "đang chọn" trên các màn Nhóm 1, (3) header NV nền đặc, (4) nút nguy hiểm trung tính + Hoàn tác, (5) một nhãn "Tạm ngưng". Các mục còn lại (1, 6, 8, 9, 10) làm thành một đợt riêng sau Nhóm 7; mục (7) bỏ gạch dài gộp vào đợt rà câu chữ cuối cùng.
+
+## Góp ý vòng 3 (08/11, Nhóm 2–5) → mockup "Vòng 3" cùng link
+Chủ dự án duyệt mockup với các chỉnh:
+- Hàng về: gộp "Đã về trước" và "Hàng về đợt này" thành một cột "Hàng về" (nhập số đợt này; đã về trước ghi nhỏ dưới Đề nghị). Chỉ khi nhập thấp hơn số còn cần mới hiện thêm cột "Còn thiếu". Không có Hoàn tác.
+- Giao hàng: bỏ chữ "Đã chọn 2 · 41 đơn vị", nút chỉ ghi "Giao 2 phiếu".
+- Kỳ tháng: bỏ các chữ lẻ ("· 21 món, 143 đơn vị ·", "3 món chưa đủ tủ cho người chờ · Xem Tủ / Kho").
+- Mặc định do Claude chọn (chủ dự án chưa trả lời): giao nhiều phiếu khi tủ thiếu → giao phần có, phần thiếu vào Còn nợ (đúng FR-42/PRD); sửa Đề nghị ngay trong bảng Báo cáo & gửi ADM; Lịch sử NV ẩn tháng không có phiếu.
+- "Còn nợ" = Hành chính còn nợ nhân viên (dòng chưa giao đủ của các kỳ trước), không phải ADM nợ Hành chính.
