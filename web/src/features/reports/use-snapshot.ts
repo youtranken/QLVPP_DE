@@ -5,7 +5,7 @@ import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { useToast } from '@/ui/toast-context';
 import { monthOf } from '@/features/request/request-format';
-import { createSnapshot, downloadSnapshot, useRefreshSnapshots, useReloadReport, type MonthReport, type SnapshotData, type SnapshotKind } from './reports.api';
+import { createSnapshot, downloadSnapshot, previewSnapshot, useRefreshSnapshots, useReloadReport, type MonthReport, type SnapshotData, type SnapshotKind } from './reports.api';
 import { downloadFailure, takeFailure, type DownloadError } from './reports-errors';
 import type { OrderQty } from './use-order-qty';
 
@@ -78,6 +78,14 @@ function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDown
   const [rejected, setRejected] = useState(false);
   const [taking, setTaking] = useState<SnapshotKind | null>(null);
   const [fresh, setFresh] = useState<ReadonlySet<string>>(new Set());
+  const fail = async (e: unknown) => {
+    const failure = takeFailure(e);
+    // Đã ở tháng mặc định mà vẫn chưa tới (đồng hồ máy chủ lệch) → không có chỗ để về, báo ở đầu trang
+    if (failure.kind === 'invalid-period') return void (onInvalidPeriod() || setNotice('INVALID_PERIOD'));
+    if (failure.kind === 'block') return setNotice(failure.code);
+    setRejected(true);
+    setNotice(await rejectFields(failure.fields));
+  };
   const post = (kind: SnapshotKind) =>
     flight.run(async () => {
       setTaking(kind);
@@ -91,17 +99,29 @@ function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDown
         else if (data) await opts.print?.({ ...data, id, kind });
         opts.onTaken?.();
       } catch (e) {
-        const failure = takeFailure(e);
-        // Đã ở tháng mặc định mà vẫn chưa tới (đồng hồ máy chủ lệch) → không có chỗ để về, báo ở đầu trang
-        if (failure.kind === 'invalid-period') return void (onInvalidPeriod() || setNotice('INVALID_PERIOD'));
-        if (failure.kind === 'block') return setNotice(failure.code);
-        setRejected(true);
-        setNotice(await rejectFields(failure.fields));
+        await fail(e);
       } finally {
         setTaking(null);
       }
     });
-  return { post, pending: flight.pending, taking, fresh, notice, rejected, clearNotice: () => setNotice(null) };
+  // Bản xem trước: cùng ô Đề nghị như lúc chốt, lỗi báo cùng chỗ; không lưu gì nên không đổi fresh/danh sách
+  const [previewing, setPreviewing] = useState(false);
+  const preview = async () => {
+    let data: SnapshotData | null = null;
+    await flight.run(async () => {
+      setPreviewing(true);
+      setRejected(false);
+      try {
+        data = (await previewSnapshot(report.ym, { order_qty: qty.edited }, csrfToken)).data;
+      } catch (e) {
+        await fail(e);
+      } finally {
+        setPreviewing(false);
+      }
+    });
+    return data as SnapshotData | null;
+  };
+  return { post, preview, previewing, pending: flight.pending, taking, fresh, notice, rejected, clearNotice: () => setNotice(null) };
 }
 
 // Chỉ gửi ô đã sửa (ô vắng = số mặc định ở server, server vẫn kiểm 0–99 999); reuse → số trùng bản mới nhất cùng loại thì server dùng lại bản đó
@@ -119,8 +139,23 @@ export function useTakeSnapshot(report: MonthReport, qty: OrderQty, files: Snaps
     void sender.post(kind);
   };
 
+  const ready = () => {
+    if (sender.pending) return false;
+    sender.clearNotice();
+    if (qty.errorCount === 0) return true;
+    setTried(true);
+    return false;
+  };
+
   return {
     take,
+    // "Xem tổng kết": dựng bản sẽ in, chưa lưu gì
+    preview: async () => (ready() ? sender.preview() : null),
+    previewing: sender.previewing,
+    // "Đồng ý và in": cảnh báo đã hiện trong hộp xem trước nên chốt luôn, không hỏi lại
+    takeNow: (kind: SnapshotKind) => {
+      if (ready()) void sender.post(kind);
+    },
     taking: sender.taking,
     fresh: sender.fresh,
     notice: sender.notice,

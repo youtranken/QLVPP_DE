@@ -3,7 +3,7 @@ import { jsonResponse } from '@/test/test-utils';
 import type { AdminItem, Category } from '@/features/catalog/catalog.api';
 import type { MonthReport, SnapshotRow } from './reports.api';
 import type { SendStateDto } from '@/features/send-adm/send-adm.api';
-import { NEW_SNAPSHOT_AT, NEW_SNAPSHOT_BY, REPORT_CATEGORIES, REPORT_ITEMS, reportFixture, snapshotRow } from './reports-fixtures';
+import { NEW_SNAPSHOT_AT, NEW_SNAPSHOT_BY, PREVIEW_BOXES, REPORT_CATEGORIES, REPORT_ITEMS, reportFixture, snapshotRow } from './reports-fixtures';
 
 export const OPEN_YM = '2026-11';
 
@@ -13,6 +13,7 @@ interface Options {
   reportLoads?: MonthReport[];
   snapshots?: SnapshotRow[];
   post?: (body: { kind: string; order_qty: Record<string, number> }) => Response | Promise<Response>;
+  preview?: (body: { order_qty?: Record<string, number> }) => Response | Promise<Response>;
   exportFile?: (id: string) => Response;
   items?: AdminItem[];
   categories?: Category[];
@@ -47,6 +48,15 @@ export function stubReports(opts: Options = {}) {
     }
     const ss = /^\/api\/admin\/periods\/(\d{4}-\d{2})\/send-state$/.exec(url);
     if (ss) return jsonResponse(200, opts.sendState?.[ss[1]] ?? UNSENT);
+    // "Xem tổng kết": dựng bản sẽ in, không thêm bản vào danh sách
+    const pv = /^\/api\/admin\/reports\/(\d{4}-\d{2})\/snapshots\/preview$/.exec(url);
+    if (pv && method === 'POST') {
+      const body = JSON.parse(String(init?.body)) as { order_qty?: Record<string, number> };
+      if (opts.preview) return opts.preview(body);
+      const report = opts.reports?.[pv[1]] ?? reportFixture({ ym: pv[1] });
+      const created_by = { sub: 'u-an', name: NEW_SNAPSHOT_BY };
+      return jsonResponse(200, { data: { ...report, id: '', kind: 'print', period_ym: pv[1], order_qty: body.order_qty ?? {}, signature_boxes: PREVIEW_BOXES, created_by, created_at: NEW_SNAPSHOT_AT } });
+    }
     const m = /^\/api\/admin\/reports\/(\d{4}-\d{2})(\/snapshots)?$/.exec(url);
     if (m && !m[2] && opts.reportLoads) return jsonResponse(200, opts.reportLoads[Math.min(loads++, opts.reportLoads.length - 1)]);
     if (m && !m[2]) return jsonResponse(200, opts.reports?.[m[1]] ?? reportFixture({ ym: m[1] }));
@@ -59,7 +69,7 @@ export function stubReports(opts: Options = {}) {
         snapshots.unshift(snapshotRow({ id, kind: body.kind, created_at: NEW_SNAPSHOT_AT, created_by_name: NEW_SNAPSHOT_BY }));
         const created_by = { sub: 'u-an', name: NEW_SNAPSHOT_BY };
         const report = opts.reports?.[m[1]] ?? reportFixture({ ym: m[1] });
-        // Server trả cả data của bản để In trình ký dựng tờ in tại chỗ
+        // Server trả cả data của bản để "Đồng ý và in" dựng tờ in tại chỗ
         const data = { ...report, id, kind: body.kind, period_ym: m[1], order_qty: body.order_qty ?? {}, created_by, created_at: NEW_SNAPSHOT_AT };
         return jsonResponse(201, { id, kind: body.kind, created_at: NEW_SNAPSHOT_AT, created_by, reused: false, data });
       }

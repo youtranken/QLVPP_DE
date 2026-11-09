@@ -115,6 +115,7 @@ const reports: Messages<typeof vi> = {
     send: {
       title: 'Reports & send to ADM',
       excel: 'Export Excel',
+      preview: 'Review summary',
       colWho: 'Who signed up',
       who: '{{count}} people',
       whoLabel: 'See who signed up for {{name}} ({{count}} people)',
@@ -148,6 +149,15 @@ const reports: Messages<typeof vi> = {
       colReason: 'Reason',
       colAt: 'At',
       shared: 'Shared',
+    },
+    preview: {
+      title: 'Summary for {{month}}/{{year}}',
+      sub: '{{items}} items · {{units}} units. Check it before printing for signature.',
+      foot: 'Cancel saves nothing. "Agree and print" saves this copy to Printed copies, then opens the print dialog.',
+      cancel: 'Cancel',
+      confirm: 'Agree and print',
+      print: 'Print',
+      loading: 'Building the preview…',
     },
     snapshots: {
       title: 'Printed / exported copies ({{n}})',

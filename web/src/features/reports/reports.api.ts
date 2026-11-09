@@ -170,6 +170,10 @@ export interface SnapshotBody {
 export const createSnapshot = (ym: string, body: SnapshotBody, csrfToken: string | null) =>
   apiFetch<{ id: string; created_at: string; reused?: boolean; data?: SnapshotData }>(`/api/admin/reports/${ym}/snapshots`, { method: 'POST', body: JSON.stringify(body), csrfToken });
 
+// "Xem tổng kết": server dựng đúng bản sẽ in (tên ĐVT chụp, Đề nghị mặc định, ô ký) mà không lưu gì
+export const previewSnapshot = (ym: string, body: { order_qty: Record<string, number> }, csrfToken: string | null) =>
+  apiFetch<{ data: SnapshotData }>(`/api/admin/reports/${ym}/snapshots/preview`, { method: 'POST', body: JSON.stringify(body), csrfToken });
+
 export const printPath = (id: string) => `/admin/reports/snapshots/${id}/print`;
 
 // Firefox/Safari đọc blob sau click một lúc: thu hồi sớm làm hỏng tải

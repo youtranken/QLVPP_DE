@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   Post,
   Query,
@@ -16,7 +17,7 @@ import type { RequestIdentity } from '../auth/identity.types';
 import { Roles } from '../auth/roles.decorator';
 import { uuidParam } from '../catalog/catalog.dto';
 import { UnitsService } from '../units/units.service';
-import { ExportQuery, SnapshotBody } from './snapshot.dto';
+import { ExportQuery, PreviewBody, SnapshotBody } from './snapshot.dto';
 import { SnapshotsService } from './snapshots.service';
 import { buildWorkbook } from './xlsx-report';
 
@@ -48,6 +49,17 @@ export class SnapshotsController {
     );
     res.status(result.reused ? 200 : 201);
     return result;
+  }
+
+  // "Xem tổng kết": bản sẽ in, không lưu; POST vì mang ô Đề nghị đã sửa
+  @Post(':ym/snapshots/preview')
+  @HttpCode(200)
+  preview(
+    @CurrentIdentity() admin: RequestIdentity,
+    @Param('ym', YmPipe) ym: string,
+    @Body() body: PreviewBody,
+  ) {
+    return this.snapshots.preview(ym, body, admin, this.clock.now());
   }
 
   @Get(':ym/sent')

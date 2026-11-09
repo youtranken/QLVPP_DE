@@ -3,7 +3,8 @@ import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-ut
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
-import { itemRow, sendReport, sentData, sentState, setupSendAdm, YM } from '@/features/send-adm/send-adm-fixtures';
+import { callsTo, itemRow, sendReport, sentData, sentState, setupSendAdm, YM } from '@/features/send-adm/send-adm-fixtures';
+import { errorResponse } from './reports-test-stub';
 import { registrationView } from '@/features/summary/registration-fixtures';
 import { snapshotRow } from './reports-fixtures';
 
@@ -20,12 +21,17 @@ function open(path = '/admin/reports') {
 const table = async () => within((await screen.findAllByRole('table'))[0]!);
 const qtyBox = (name: string) => screen.findByRole('spinbutton', { name: `Đề nghị: ${name}` });
 
+const snapshotPosts = (f: Parameters<typeof callsTo>[0]) => callsTo(f, 'POST', `/api/admin/reports/${YM}/snapshots`).filter((c) => c.url.endsWith('/snapshots'));
+
 const statuses = () => within(screen.getByRole('main')).getAllByRole('status');
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 describe('Báo cáo & gửi ADM: đầu trang và trạng thái', () => {
-  it('một hàng đầu trang: h1, ‹ Tháng 10/2026 ›, công tắc "Chỉ món có Tổng cần", Xuất Excel, In trình ký', async () => {
+  it('một hàng đầu trang: h1, ‹ Tháng 10/2026 ›, công tắc "Chỉ món có Tổng cần", Xuất Excel, Xem tổng kết (không còn "In trình ký")', async () => {
     setupSendAdm({ report: REPORT });
     open();
     expect(await screen.findByRole('heading', { level: 1, name: 'Báo cáo & gửi ADM' })).toBeInTheDocument();
@@ -33,7 +39,8 @@ describe('Báo cáo & gửi ADM: đầu trang và trạng thái', () => {
     expect(await screen.findByText('Tháng 10/2026')).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'Chỉ món có Tổng cần' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Xuất Excel' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'In trình ký' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'In trình ký' })).toBeNull();
   });
 
   it('đã gửi: đúng một dòng trạng thái "Đã gửi ADM 09:02 12/12" kèm "In lại"; không có "21 món, 143 đơn vị"', async () => {
@@ -95,7 +102,7 @@ describe('Báo cáo & gửi ADM: bảng và ô Đề nghị', () => {
     expect(screen.queryByText(/Xuất lẻ/)).toBeNull();
   });
 
-  it('ô Đề nghị: 100000 → lỗi "Tối đa 99.999" gắn ô, Xuất Excel và In trình ký vô hiệu; 99999 hợp lệ → bật lại; biên 0 hợp lệ', async () => {
+  it('ô Đề nghị: 100000 → lỗi "Tối đa 99.999" gắn ô, Xuất Excel và Xem tổng kết vô hiệu; 99999 hợp lệ → bật lại; biên 0 hợp lệ', async () => {
     setupSendAdm({ report: REPORT });
     open();
     const box = await qtyBox('Bút bi');
@@ -104,11 +111,11 @@ describe('Báo cáo & gửi ADM: bảng và ô Đề nghị', () => {
     expect(await screen.findByText('Tối đa 99.999')).toBeInTheDocument();
     expect(box).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByRole('button', { name: 'Xuất Excel' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'In trình ký' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeDisabled();
     await userEvent.clear(box);
     await userEvent.type(box, '99999');
     expect(screen.queryByText('Tối đa 99.999')).toBeNull();
-    expect(screen.getByRole('button', { name: 'In trình ký' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeEnabled();
     await userEvent.clear(box);
     await userEvent.type(box, '0');
     expect(screen.queryByText('Tối đa 99.999')).toBeNull();
@@ -123,26 +130,86 @@ describe('Báo cáo & gửi ADM: bảng và ô Đề nghị', () => {
       await userEvent.type(box, '0');
     }
     expect(await screen.findByRole('button', { name: 'Tháng này không cần đề nghị ADM' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'In trình ký' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeDisabled();
   });
 
-  it('In trình ký gửi order_qty chỉ gồm ô đã sửa (số khác gợi ý) và reuse_if_unchanged', async () => {
+  it('Xem tổng kết → gọi preview với ô đã sửa, hộp có "Phiếu đề xuất văn phòng phẩm" và các hàng; chưa POST bản chốt', async () => {
     const f = setupSendAdm({ report: REPORT });
     open();
     const box = await qtyBox('Bút bi');
     await userEvent.clear(box);
     await userEvent.type(box, '7');
-    await userEvent.click(screen.getByRole('button', { name: 'In trình ký' }));
-    await waitFor(() => expect(f.mock.calls.some((c) => (c[1] as RequestInit | undefined)?.method === 'POST')).toBe(true));
-    const post = f.mock.calls.find((c) => (c[1] as RequestInit | undefined)?.method === 'POST')!;
-    expect(JSON.parse(String((post[1] as RequestInit).body))).toMatchObject({ kind: 'print', order_qty: { kA: 7 }, reuse_if_unchanged: true });
+    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Xem tổng kết tháng 10/2026' });
+    expect(callsTo(f, 'POST', '/snapshots/preview')).toEqual([{ url: `/api/admin/reports/${YM}/snapshots/preview`, body: { order_qty: { kA: 7 } } }]);
+    expect(within(dialog).getByText('2 món · 10 đơn vị. Kiểm tra lại trước khi in trình ký.')).toBeInTheDocument();
+    expect(within(dialog).getByRole('heading', { name: 'Phiếu đề xuất văn phòng phẩm' })).toBeInTheDocument();
+    const rows = within(within(dialog).getByRole('table')).getAllByRole('row');
+    expect(rows.some((r) => r.textContent?.includes('Bút bi') && r.textContent.endsWith('7'))).toBe(true);
+    expect(rows.some((r) => r.textContent?.includes('Giấy A4'))).toBe(true);
+    expect(within(dialog).getByText(/Bấm Hủy thì không lưu bản nào/)).toBeInTheDocument();
+    expect(snapshotPosts(f)).toEqual([]);
   });
 
-  it('có món ngoài DM chờ duyệt → In trình ký hỏi lại (PrintConfirm) trước khi chốt', async () => {
+  it('Hủy → đóng hộp, không POST bản chốt, không mở hộp in, danh sách bản in không đổi', async () => {
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    const f = setupSendAdm({ report: REPORT });
+    open();
+    await qtyBox('Bút bi');
+    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    const dialog = await screen.findByRole('dialog', { name: /Xem tổng kết tháng/ });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Hủy' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(snapshotPosts(f)).toEqual([]);
+    expect(print).not.toHaveBeenCalled();
+    expect(await screen.findByText('Các bản đã in / xuất (0)')).toBeInTheDocument();
+  });
+
+  it('Đồng ý và in → POST bản chốt kind print (ô đã sửa + reuse_if_unchanged) rồi mở hộp in', async () => {
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    const f = setupSendAdm({ report: REPORT });
+    open();
+    const box = await qtyBox('Bút bi');
+    await userEvent.clear(box);
+    await userEvent.type(box, '7');
+    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    const dialog = await screen.findByRole('dialog', { name: /Xem tổng kết tháng/ });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Đồng ý và in' }));
+    await waitFor(() => expect(snapshotPosts(f)).toHaveLength(1));
+    expect(snapshotPosts(f)[0]!.body).toMatchObject({ kind: 'print', order_qty: { kA: 7 }, reuse_if_unchanged: true });
+    await waitFor(() => expect(print).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole('dialog', { name: /Xem tổng kết tháng/ })).toBeNull();
+  });
+
+  it('có món ngoài DM chờ duyệt → cảnh báo W8 nằm trong hộp xem trước, không bật hộp "Chốt phiếu gửi ADM?" riêng', async () => {
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    const f = setupSendAdm({ report: sendReport([PEN, PAPER], { pending_custom_count: 2 }) });
+    open();
+    await qtyBox('Bút bi');
+    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    const dialog = await screen.findByRole('dialog', { name: /Xem tổng kết tháng/ });
+    expect(within(dialog).getByText(/2 món ngoài danh mục/)).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Chốt phiếu gửi ADM?' })).toBeNull();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Đồng ý và in' }));
+    await waitFor(() => expect(snapshotPosts(f)).toHaveLength(1));
+    expect(screen.queryByRole('dialog', { name: 'Chốt phiếu gửi ADM?' })).toBeNull();
+    await waitFor(() => expect(print).toHaveBeenCalled());
+  });
+
+  it('Xem tổng kết lỗi ORDER_EMPTY → báo ở đầu trang, không mở hộp', async () => {
+    setupSendAdm({ report: REPORT, stub: { preview: () => errorResponse(409, 'ORDER_EMPTY') } });
+    open();
+    await qtyBox('Bút bi');
+    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    expect(await screen.findByText('Chưa có món nào để đề nghị.')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('Xuất Excel khi có món ngoài DM chờ duyệt vẫn hỏi lại (PrintConfirm) trước khi chốt', async () => {
     setupSendAdm({ report: sendReport([PEN, PAPER], { pending_custom_count: 2 }) });
     open();
     await qtyBox('Bút bi');
-    await userEvent.click(screen.getByRole('button', { name: 'In trình ký' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xuất Excel' }));
     expect(await screen.findByRole('dialog', { name: 'Chốt phiếu gửi ADM?' })).toBeInTheDocument();
   });
 });
@@ -168,6 +235,33 @@ describe('Báo cáo & gửi ADM: kỳ cũ hơn, ai đăng ký, các bản đã i
     expect(screen.queryByRole('spinbutton')).toBeNull();
     const pen = t.getAllByRole('row').find((r) => r.textContent?.includes('Bút bi'))!;
     expect(within(pen).getAllByRole('cell').some((c) => c.textContent === '9')).toBe(true);
+  });
+
+  it('kỳ cũ hơn: Xem tổng kết mở hộp với bản đã gửi (không gọi preview), nút "In" in thẳng bản đó, không tạo bản', async () => {
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    const older = sendReport([PEN, PAPER], { ym: '2026-09' });
+    const oldSent = sentState(sentData(older, { kA: 9, kB: 4 }, { period_ym: '2026-09' }));
+    const f = setupSendAdm({
+      report: REPORT,
+      extra: (url) => {
+        if (url === '/api/admin/reports/2026-09') return jsonResponse(200, older);
+        if (url === '/api/admin/periods/2026-09/send-state') return jsonResponse(200, oldSent);
+        if (url === '/api/admin/periods/2026-09/summary') return jsonResponse(200, { ym: '2026-09', deadline: '2026-09-10T17:00:00Z', is_open: false, registered: 3, headcount: 3, unregistered: 0, custom_pending: 0, lines_pending_delivery: 0 });
+        if (url.startsWith('/api/admin/periods/2026-09/requests?by=item')) return jsonResponse(200, { items: [] });
+        if (url.startsWith('/api/admin/reports/2026-09/snapshots')) return jsonResponse(200, { items: [] });
+        return undefined;
+      },
+    });
+    open('/admin/reports?ym=2026-09');
+    await table();
+    const btn = await screen.findByRole('button', { name: 'Xem tổng kết' });
+    await waitFor(() => expect(btn).toBeEnabled());
+    await userEvent.click(btn);
+    const dialog = await screen.findByRole('dialog', { name: 'Xem tổng kết tháng 9/2026' });
+    expect(within(dialog).queryByRole('button', { name: 'Đồng ý và in' })).toBeNull();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'In' }));
+    await waitFor(() => expect(print).toHaveBeenCalledTimes(1));
+    expect(f.mock.calls.filter((c) => (c[1] as RequestInit | undefined)?.method === 'POST')).toEqual([]);
   });
 
   it('"3 người" → popup "Ai đăng ký món" (Đăng ký 20 · sau điều chỉnh 19 · Đề nghị) → "Xem phiếu" mở popup phiếu', async () => {

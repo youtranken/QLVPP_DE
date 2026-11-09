@@ -83,7 +83,7 @@ export function setupSendAdm({ report, state = UNSENT, afterPost, makeup = [], s
       return jsonResponse(204, null);
     }
     const res = await base(url, init);
-    if (method === 'POST' && res.ok && afterPost) current = afterPost;
+    if (method === 'POST' && res.ok && afterPost && !url.endsWith('/preview')) current = afterPost;
     return res;
   });
   vi.stubGlobal('fetch', f);

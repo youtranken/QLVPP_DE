@@ -25,7 +25,7 @@ import {
   sameOrder,
 } from './sent-snapshot';
 import type { SentSnapshot } from './sent-snapshot';
-import type { SnapshotBody } from './snapshot.dto';
+import type { PreviewBody, SnapshotBody } from './snapshot.dto';
 import { withUnitNames } from './snapshot-unit-names';
 
 const MAX_ATTEMPTS = 3;
@@ -75,17 +75,10 @@ export class SnapshotsService {
     // Tạo kỳ trước khi mở tx REPEATABLE READ (ảnh dữ liệu không thấy dòng tx khác vừa chèn); kỳ cũ cần dòng cho FK
     await this.periods.assertLocked(ym, now);
     await this.periods.ensurePeriod(ym);
-    const user = await this.users.findBySub(actor.sub);
     const ctx: CreateContext = {
-      ym,
+      ...(await this.contextOf(ym, body, actor, now)),
       body,
       actor: actor.sub,
-      now,
-      signature_boxes: await this.config.get<SignatureBox[]>('signature_boxes'),
-      created_by: {
-        sub: actor.sub,
-        name: user?.fullName ?? actor.fullName ?? null,
-      },
     };
     // Đua với "không cần đề nghị" trên cùng dòng periods → 40001; làm lại thấy cờ đã ghi và tự xóa
     for (let attempt = 1; ; attempt++) {
@@ -107,18 +100,7 @@ export class SnapshotsService {
   ): Promise<CreatedSnapshot> {
     const { ym, body, now, created_by } = ctx;
     const flag = await lockNoOrderFlag(tx, ym);
-    const report = withUnitNames(
-      await this.reports.build(ym, now, tx),
-      await this.units.namesByCode(tx),
-    );
-    const order_qty = resolveOrderQty(report, body.order_qty);
-    if (orderTotals(order_qty).units_total === 0) throw orderEmpty();
-    const content = {
-      ...report,
-      order_qty,
-      order_basis: orderBasisOf([...report.byItem, ...report.custom]),
-      signature_boxes: ctx.signature_boxes,
-    };
+    const content = await this.buildContent(tx, ctx);
     if (body.reuse_if_unchanged) {
       const same = await latestSent(tx, ym, body.kind);
       if (same && sameContent(same.data, content)) {
@@ -132,19 +114,98 @@ export class SnapshotsService {
         };
       }
     }
+    const data = await this.withReplaces(tx, ym, content, created_by, now);
+    const id = await this.insert(tx, ctx, data);
+    if (flag.no_order_at) await clearNoOrderFlag(tx, this.audit, ym, ctx.actor);
+    return {
+      id,
+      kind: body.kind,
+      created_at: data.created_at,
+      created_by,
+      reused: false,
+      data,
+    };
+  }
+
+  // Phần nội dung chung của bản chốt và bản xem trước: báo cáo + tên ĐVT chụp + Đề nghị + ô ký
+  private async buildContent(
+    tx: Tx,
+    ctx: Pick<CreateContext, 'ym' | 'now' | 'signature_boxes'> & {
+      body: Pick<SnapshotBody, 'order_qty'>;
+    },
+  ) {
+    const report = withUnitNames(
+      await this.reports.build(ctx.ym, ctx.now, tx),
+      await this.units.namesByCode(tx),
+    );
+    const order_qty = resolveOrderQty(report, ctx.body.order_qty);
+    if (orderTotals(order_qty).units_total === 0) throw orderEmpty();
+    return {
+      ...report,
+      order_qty,
+      order_basis: orderBasisOf([...report.byItem, ...report.custom]),
+      signature_boxes: ctx.signature_boxes,
+    };
+  }
+
+  private async withReplaces(
+    tx: Tx,
+    ym: string,
+    content: Awaited<ReturnType<SnapshotsService['buildContent']>>,
+    created_by: SnapshotData['created_by'],
+    now: Date,
+  ): Promise<SnapshotData> {
     const prev = await latestSent(tx, ym);
-    const created_at = now.toISOString();
-    const data: SnapshotData = {
+    return {
       ...content,
-      ...(prev && !sameOrder(prev.data.order_qty, order_qty)
+      ...(prev && !sameOrder(prev.data.order_qty, content.order_qty)
         ? { replaces: { id: prev.id, created_at: prev.created_at } }
         : {}),
       created_by,
-      created_at,
+      created_at: now.toISOString(),
     };
-    const id = await this.insert(tx, ctx, data);
-    if (flag.no_order_at) await clearNoOrderFlag(tx, this.audit, ym, ctx.actor);
-    return { id, kind: body.kind, created_at, created_by, reused: false, data };
+  }
+
+  // "Xem tổng kết": dựng đúng bản sẽ in nhưng không ghi gì (không tạo kỳ, không chèn bản, không audit, không đụng cờ)
+  async preview(
+    ym: string,
+    body: PreviewBody,
+    actor: RequestIdentity,
+    now: Date,
+  ): Promise<{ data: SnapshotData }> {
+    await this.periods.assertLocked(ym, now);
+    const ctx = await this.contextOf(ym, body, actor, now);
+    const data = await this.db.transaction(
+      async (tx) =>
+        this.withReplaces(
+          tx,
+          ym,
+          await this.buildContent(tx, ctx),
+          ctx.created_by,
+          now,
+        ),
+      { isolationLevel: 'repeatable read', accessMode: 'read only' },
+    );
+    return { data };
+  }
+
+  private async contextOf(
+    ym: string,
+    body: PreviewBody,
+    actor: RequestIdentity,
+    now: Date,
+  ) {
+    const user = await this.users.findBySub(actor.sub);
+    return {
+      ym,
+      body,
+      now,
+      signature_boxes: await this.config.get<SignatureBox[]>('signature_boxes'),
+      created_by: {
+        sub: actor.sub,
+        name: user?.fullName ?? actor.fullName ?? null,
+      },
+    };
   }
 
   private async insert(

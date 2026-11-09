@@ -2,7 +2,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { expect, test, type APIRequestContext, type Locator, type Page, type TestInfo } from '@playwright/test';
 import { acquireLock, devHeaders, expectNoContrastViolations, isMobile, psql, settled, openPurchase } from './helpers';
-import { confirmIfAsked, openCopies, openEditable } from './report-send-flow';
+import { openCopies, openEditable, previewAndPrint } from './report-send-flow';
 import { deliveryMovements, seedMonth, type MonthSeed, type Person } from './p3-seed';
 import { adminPage, newPage } from './sessions';
 
@@ -81,10 +81,9 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   await axe390(admin, info);
   await snap(admin, info, 'p3-report');
 
-  const replacing = await openEditable(admin);
+  await openEditable(admin);
   await admin.getByRole('spinbutton', { name: `Đề nghị: ${s.paper.name}` }).fill('4');
-  await admin.getByRole('button', { name: 'In trình ký' }).click();
-  await confirmIfAsked(admin, request, s.prevYm, replacing);
+  await previewAndPrint(admin);
   await expect(admin.getByText(/^Đã gửi ADM \d\d:\d\d \d\d\/\d\d/)).toBeVisible();
 
   // Excel của chính bản vừa gửi, không tạo bản mới

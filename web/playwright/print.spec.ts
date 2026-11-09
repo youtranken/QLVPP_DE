@@ -3,7 +3,7 @@ import { expect, test, type APIRequestContext, type Page, type TestInfo } from '
 import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, settled } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
 import { PRIVATE_YM, clearPrivateSnapshots, openOnPrivatePeriod } from './private-period';
-import { confirmIfAsked, openCopies, openEditable } from './report-send-flow';
+import { openCopies, openEditable, previewAndPrint } from './report-send-flow';
 
 const SHOTS = '../.superpowers/sdd/2026-10-30-giao-dien-hanh-chinh/task-16-shots';
 
@@ -218,8 +218,7 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await expect(page.getByText('Không in kèm phụ lục')).toHaveCount(0);
 
     // Lập phiếu: chốt bản rồi mở hộp in ngay tại trang — 1 lần print, URL không đổi, 0 tab mới
-    await page.getByRole('button', { name: 'In trình ký' }).click();
-    await confirmIfAsked(page, request, PRIVATE_YM, false);
+    await previewAndPrint(page);
     await expect.poll(() => printsOf(page)).toEqual([{ sheet: true, pageRule: PAGE_RULE }]);
     await expect(page).toHaveURL(/\/admin\/reports/);
     expect(tabs).toEqual([]);

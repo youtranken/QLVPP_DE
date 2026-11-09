@@ -4,7 +4,7 @@ import { expect, test, type APIRequestContext, type Download, type Page } from '
 import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, settled, shot } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
 import { PRIVATE_YM, clearPrivateSnapshots, openOnPrivatePeriod } from './private-period';
-import { confirmIfAsked, openCopies, openEditable } from './report-send-flow';
+import { openCopies, openEditable, previewAndPrint } from './report-send-flow';
 
 // exceljs là dependency của api: đọc lại tệp tải về bằng đúng thư viện đã ghi nó, không thêm gói cho web
 type Workbook = { xlsx: { readFile: (path: string) => Promise<unknown> }; worksheets: Sheet[] };
@@ -40,11 +40,11 @@ test.describe('Vòng3-BC Báo cáo & gửi ADM', () => {
     run.release();
   });
 
-  test('Vòng3-BC sửa Đề nghị trong bảng → In trình ký → bản mới trong "Các bản đã in / xuất"; bản thay thế liệt kê món đổi', async ({ page, request }, info) => {
+  test('Vòng3-BC sửa Đề nghị trong bảng → Xem tổng kết → Đồng ý và in → bản mới trong "Các bản đã in / xuất"; bản thay thế liệt kê món đổi', async ({ page, request }, info) => {
     const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 0, qty: 13 }], { ym: PRIVATE_YM }));
     const [item] = seed.items;
     await openOnPrivatePeriod(page);
-    // In trình ký mở hộp in tại chỗ: thay hộp in thật bằng bộ đếm (như Chrome: beforeprint rồi afterprint)
+    // Đồng ý và in mở hộp in tại chỗ: thay hộp in thật bằng bộ đếm (như Chrome: beforeprint rồi afterprint)
     await page.addInitScript(() => {
       const w = window as unknown as { __printed: number };
       w.__printed = 0;
@@ -56,14 +56,14 @@ test.describe('Vòng3-BC Báo cáo & gửi ADM', () => {
     });
     await page.goto('/admin/reports');
     await expect(page.getByRole('heading', { level: 1, name: 'Báo cáo & gửi ADM' })).toBeVisible();
-    const replacing = await openEditable(page);
+    await openEditable(page);
     const rowOf = () => page.getByRole('table').first().getByRole('row').filter({ hasText: item.name });
     const qty = () => page.getByRole('spinbutton', { name: `Đề nghị: ${item.name}` });
     await expect(qty()).toHaveValue('13');
     await qty().fill('10');
     await qty().fill('100000');
     await expect(page.getByText('Tối đa 99.999')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'In trình ký' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Xem tổng kết' })).toBeDisabled();
     await qty().fill('10');
     await expect(page.getByText('Tối đa 99.999')).toHaveCount(0);
     await settled(page);
@@ -73,18 +73,27 @@ test.describe('Vòng3-BC Báo cáo & gửi ADM', () => {
       expect(await fitsWidth(page), 'trang không cuộn ngang ở 390').toBe(true);
     }
 
-    await page.getByRole('button', { name: 'In trình ký' }).click();
-    await confirmIfAsked(page, request, seed.prevYm, replacing);
+    // Hủy trong hộp xem trước: không thêm dòng nào vào "Các bản đã in / xuất"
+    const before = await page.locator('details.bc-snaps-box summary').textContent();
+    await page.getByRole('button', { name: 'Xem tổng kết' }).click();
+    const preview = page.getByRole('dialog', { name: /^Xem tổng kết tháng/ });
+    await expect(preview.getByRole('heading', { name: 'Phiếu đề xuất văn phòng phẩm' })).toBeVisible();
+    await preview.getByRole('button', { name: 'Hủy' }).click();
+    await expect(preview).toBeHidden();
+    await expect(page.locator('details.bc-snaps-box summary')).toHaveText(before ?? '');
+    expect(await page.evaluate(() => (window as unknown as { __printed: number }).__printed)).toBe(0);
+
+    await previewAndPrint(page);
     await expect(page.getByText(/^Đã gửi ADM \d\d:\d\d \d\d\/\d\d/)).toBeVisible();
     const copies = await openCopies(page);
     await expect(copies.getByText('Đã gửi ADM', { exact: true })).toBeVisible();
     await expect(page.locator('details.bc-snaps-box summary')).toContainText('Các bản đã in / xuất (1)');
 
     await qty().fill('13');
-    await page.getByRole('button', { name: 'In trình ký' }).click();
-    const replace = page.getByRole('dialog', { name: /^Bản mới thay thế bản in lúc/ });
+    await page.getByRole('button', { name: 'Xem tổng kết' }).click();
+    const replace = page.getByRole('dialog', { name: /^Xem tổng kết tháng/ });
     await expect(replace.getByRole('listitem').filter({ hasText: item.name })).toHaveText(`${item.name} 10 → 13`);
-    await replace.getByRole('button', { name: 'In trình ký' }).click();
+    await replace.getByRole('button', { name: 'Đồng ý và in' }).click();
     await expect(page.locator('details.bc-snaps-box summary')).toContainText('Các bản đã in / xuất (2)');
     await expect(rowOf().getByRole('spinbutton')).toHaveValue('13');
     const printed = () => page.evaluate(() => (window as unknown as { __printed: number }).__printed);

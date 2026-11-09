@@ -12,6 +12,11 @@ export class SnapshotBody {
   @IsOptional() @IsBoolean() reuse_if_unchanged?: boolean;
 }
 
+// Xem trước bản in: cùng ô Đề nghị như lúc tạo bản, không có kind/reuse vì không lưu gì
+export class PreviewBody {
+  @IsOptional() @IsObject() order_qty?: Record<string, unknown>;
+}
+
 export class NoOrderBody {
   @IsOptional() @IsObject() order_qty?: Record<string, unknown>;
 }

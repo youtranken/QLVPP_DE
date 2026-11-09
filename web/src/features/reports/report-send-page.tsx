@@ -22,7 +22,8 @@ import { ReportItemTable, type ItemTableRow } from './report-item-table';
 import { part1Rows } from './report-part1-rows';
 import { ReportSnapshots } from './report-snapshots';
 import { ReportStatusLine } from './report-status-line';
-import { useMonthReport, type MonthReport, type SnapshotKind } from './reports.api';
+import { useMonthReport, type MonthReport, type SnapshotData, type SnapshotKind } from './reports.api';
+import { SummaryPreviewDialog } from './summary-preview-dialog';
 import { useOrderQty } from './use-order-qty';
 import { usePrintInPlace } from './use-print-in-place';
 import { useChangedKeys, useDirtyCount, useNoOrder, initialFromSent } from './use-report-send';
@@ -49,10 +50,11 @@ function Heading({ ym, openYm, onMonth, children }: { ym: string; openYm: string
   );
 }
 
-function ActionButton({ xlsx, disabled, taking, onTake }: { xlsx: boolean; disabled: boolean; taking: SnapshotKind | null; onTake: (xlsx: boolean) => void }) {
+function ActionButton({ xlsx, disabled, taking, previewing = false, onTake }: { xlsx: boolean; disabled: boolean; taking: SnapshotKind | null; previewing?: boolean; onTake: (xlsx: boolean) => void }) {
   const { t } = useTranslation();
-  const busy = taking === (xlsx ? 'xlsx' : 'print');
-  const label = xlsx ? (busy ? 'reports.page.taking' : 'reports.send.excel') : busy ? 'reports.page.preparingPrint' : 'sendAdm.actions.print';
+  // Nút in giờ là "Xem tổng kết": bận khi đang dựng bản xem hoặc đang chốt bản in sau "Đồng ý và in"
+  const busy = xlsx ? taking === 'xlsx' : previewing || taking === 'print';
+  const label = xlsx ? (busy ? 'reports.page.taking' : 'reports.send.excel') : previewing ? 'reports.preview.loading' : busy ? 'reports.page.preparingPrint' : 'reports.send.preview';
   return (
     <button type="button" className={xlsx ? 'btn' : 'btn btn--primary'} disabled={disabled} aria-busy={busy || undefined} onClick={() => onTake(xlsx)}>
       {busy && !xlsx ? <span className="spinner sa-spinner" aria-hidden="true" /> : <Icon name={xlsx ? 'sheet' : 'printer'} size={18} />}
@@ -108,17 +110,29 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
   const dirty = useDirtyCount(qty, snap.fresh);
   useLeaveGuard(dirty.count, useLeavePrompt(dirty.count));
   const empty = orderRows.length > 0 && orderRows.every((r) => orderOf(qty, r) === 0);
-  const blocked = qty.errorCount > 0 || snap.taking !== null || empty || !settled;
-  const take = (xlsx: boolean) => {
+  const blocked = qty.errorCount > 0 || snap.taking !== null || snap.previewing || empty || !settled;
+  // Hộp "Xem tổng kết": bản dựng ở server (kỳ đang lập) hoặc bản đã gửi (tháng cũ); Hủy không lưu gì
+  const [preview, setPreview] = useState<SnapshotData | null>(null);
+  const take = async (xlsx: boolean) => {
+    if (xlsx) {
+      dirty.mark();
+      return snap.take('xlsx');
+    }
+    const data = await snap.preview();
+    if (data) setPreview(data);
+  };
+  const agree = () => {
+    setPreview(null);
+    if (!editable) return void (sent && printer.print(sent.data));
     dirty.mark();
-    snap.take(xlsx ? 'xlsx' : 'print');
+    snap.takeNow('print');
   };
   const visible = onlyNeed ? tableRows.filter((r) => r.n.want > 0) : tableRows;
-  const openSent = (xlsx: boolean) => (sent ? (xlsx ? void files.run(sent.id) : void printer.print(sent.data)) : undefined);
+  const openSent = (xlsx: boolean) => (sent ? (xlsx ? void files.run(sent.id) : setPreview(sent.data)) : undefined);
   const actions = editable ? (
     <>
-      <ActionButton xlsx disabled={blocked} taking={snap.taking} onTake={take} />
-      <ActionButton xlsx={false} disabled={blocked} taking={snap.taking} onTake={take} />
+      <ActionButton xlsx disabled={blocked} taking={snap.taking} onTake={(x) => void take(x)} />
+      <ActionButton xlsx={false} disabled={blocked} taking={snap.taking} previewing={snap.previewing} onTake={(x) => void take(x)} />
     </>
   ) : (
     <>
@@ -168,6 +182,18 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
       />
       <ReportSnapshots ym={report.ym} files={files} />
       {whoKey && <ItemPeopleDialog ym={report.ym} itemKey={whoKey} order={tableRows.find((r) => r.id === whoKey)?.order ?? 0} onClose={() => setWhoKey(null)} />}
+      {preview && (
+        <SummaryPreviewDialog
+          snap={preview}
+          ym={report.ym}
+          mode={editable ? 'confirm' : 'print'}
+          pending={report.pending_custom_count}
+          changes={changes}
+          sentAt={sent?.created_at ?? null}
+          onConfirm={agree}
+          onCancel={() => setPreview(null)}
+        />
+      )}
       {snap.asking && <PrintConfirm kind={snap.asking} ym={report.ym} pending={report.pending_custom_count} changes={changes} sentAt={sent?.created_at ?? null} onConfirm={snap.confirm} onCancel={snap.cancel} />}
     </div>
   );

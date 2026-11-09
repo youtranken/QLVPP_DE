@@ -99,3 +99,9 @@ export const PRINT_UNITS: Unit[] = [
   { code: 'cuon', name: 'cuộn', name_en: 'roll', sort_order: 3, active: true },
   { code: 'ram', name: 'ram', name_en: 'ream', sort_order: 4, active: true },
 ];
+
+// Ô ký của bản xem trước giả (server thật lấy từ cấu hình signature_boxes)
+export const PREVIEW_BOXES = [
+  { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: '' },
+  { title: 'Người yêu cầu', title_en: 'Applicant', name: '' },
+];

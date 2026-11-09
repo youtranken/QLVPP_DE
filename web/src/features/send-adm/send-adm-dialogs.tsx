@@ -25,6 +25,22 @@ function ChangeList({ changes, sentAt }: { changes: OrderChange[]; sentAt: strin
   );
 }
 
+// Cảnh báo trước khi chốt, dùng chung cho hộp hỏi lại (Excel) và hộp Xem tổng kết: món đổi sau bản đã gửi, món ngoài DM chờ duyệt
+export function SnapshotWarnings({ ym, pending, changes, sentAt }: { ym: string; pending: number; changes: OrderChange[]; sentAt: string | null }) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {sentAt !== null && changes.length > 0 && <ChangeList changes={changes} sentAt={sentAt} />}
+      {pending > 0 && (
+        <div className="sa-w8">
+          <p>{t('warn.W8', { n: pending })}</p>
+          <Link to={`/admin/review?status=pending&ym=${ym}`}>{t('sendAdm.confirm.review')}</Link>
+        </div>
+      )}
+    </>
+  );
+}
+
 interface PrintConfirmProps {
   kind: SnapshotKind;
   ym: string;
@@ -48,13 +64,7 @@ export function PrintConfirm({ kind, ym, pending, changes, sentAt, onConfirm, on
       <div className="sheet-body sa-confirm">
         <DialogDescription asChild>
           <div>
-            {replacing && <ChangeList changes={changes} sentAt={sentAt} />}
-            {pending > 0 && (
-              <div className="sa-w8">
-                <p>{t('warn.W8', { n: pending })}</p>
-                <Link to={`/admin/review?status=pending&ym=${ym}`}>{t('sendAdm.confirm.review')}</Link>
-              </div>
-            )}
+            <SnapshotWarnings ym={ym} pending={pending} changes={changes} sentAt={sentAt} />
           </div>
         </DialogDescription>
       </div>

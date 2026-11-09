@@ -111,6 +111,7 @@ const reports = {
     send: {
       title: 'Báo cáo & gửi ADM',
       excel: 'Xuất Excel',
+      preview: 'Xem tổng kết',
       colWho: 'Ai đăng ký',
       who: '{{count}} người',
       whoLabel: 'Xem ai đăng ký {{name}} ({{count}} người)',
@@ -144,6 +145,15 @@ const reports = {
       colReason: 'Lý do',
       colAt: 'Lúc',
       shared: 'Dùng chung',
+    },
+    preview: {
+      title: 'Xem tổng kết tháng {{month}}/{{year}}',
+      sub: '{{items}} món · {{units}} đơn vị. Kiểm tra lại trước khi in trình ký.',
+      foot: 'Bấm Hủy thì không lưu bản nào. "Đồng ý và in" lưu bản này vào Các bản đã in rồi mở hộp in.',
+      cancel: 'Hủy',
+      confirm: 'Đồng ý và in',
+      print: 'In',
+      loading: 'Đang dựng bản xem…',
     },
     snapshots: {
       title: 'Các bản đã in / xuất ({{n}})',
