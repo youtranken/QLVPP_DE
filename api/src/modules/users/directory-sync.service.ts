@@ -230,8 +230,7 @@ export class DirectorySyncService {
 }
 
 function describeError(error: unknown): { code: string; message: string } {
-  const res =
-    error instanceof HttpException ? error.getResponse() : undefined;
+  const res = error instanceof HttpException ? error.getResponse() : undefined;
   const body =
     typeof res === 'object' && res !== null
       ? (res as { code?: unknown; message?: unknown })
@@ -244,5 +243,8 @@ function describeError(error: unknown): { code: string; message: string } {
       : error instanceof Error
         ? error.message
         : String(error);
-  return { code, message: Array.from(raw).slice(0, ERROR_MESSAGE_MAX).join('') };
+  return {
+    code,
+    message: Array.from(raw).slice(0, ERROR_MESSAGE_MAX).join(''),
+  };
 }

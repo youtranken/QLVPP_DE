@@ -299,10 +299,7 @@ describe('DirectoryReconcileService', () => {
     // canary không bị ghi lại; chỉ 2 người vắng
     expect(access.applyDirectoryUser).toHaveBeenCalledTimes(2);
     expect(access.applyDirectoryUser).toHaveBeenCalledWith(detail('u9'), 'sa');
-    expect(access.applyDirectoryUser).toHaveBeenCalledWith(
-      detail('u10'),
-      'sa',
-    );
+    expect(access.applyDirectoryUser).toHaveBeenCalledWith(detail('u10'), 'sa');
     expect(access.applyDirectoryStatus).not.toHaveBeenCalled();
     // active nhưng VPP đang locked → mở theo restoreActive (có mốc bắt đầu sync, có audit)
     expect(access.restoreActive).toHaveBeenCalledWith(
