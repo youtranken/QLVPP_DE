@@ -131,6 +131,8 @@ async function expectFrozenPaper(admin: Page, s: MonthSeed) {
 async function purchase(admin: Page, item: { name: string }, qty: number) {
   await admin.goto('/admin/stock');
   await admin.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(item.name);
+  // Ô tìm ghi ?q= sau một nhịp: mở menu trước đó thì bảng lọc lại, menu đóng mất (hay gặp ở 390)
+  await expect(admin).toHaveURL(/[?&]q=/);
   await openPurchase(admin, admin.getByRole('row').filter({ hasText: item.name }));
   const dialog = admin.getByRole('dialog', { name: `Nhập ngoài kỳ (tự mua lẻ) ${item.name}` });
   await dialog.getByLabel('Số lượng nhập').fill(String(qty));
