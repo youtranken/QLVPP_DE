@@ -253,6 +253,26 @@ describe('Nhận hàng — "Nhận đủ hàng" theo nhóm', () => {
     expect(box('Bút 1')).toHaveValue(2);
   });
 
+  it('món thêm bằng "Thêm món khác" chưa gõ số không bị bỏ khi nhóm của nó "Nhận đủ hàng"; ghi chú đi theo đợt vừa lưu rồi xóa', async () => {
+    const f = stub();
+    await open();
+    await screen.findByDisplayValue('6');
+    const combo = screen.getByRole('combobox', { name: 'Tìm món để thêm' });
+    await userEvent.click(combo);
+    await userEvent.type(combo, 'buom');
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    expect(box('Kẹp bướm')).toHaveValue(0);
+    await userEvent.type(screen.getByLabelText('Ghi chú cho đợt này (không bắt buộc)'), 'đợt 1');
+    await userEvent.click(groupBtn('Kẹp & dán'));
+    await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
+    const body = bodiesOf(f, RECEIPT_URL)[0];
+    expect(body.lines.map((l: { item_id: string }) => l.item_id)).toEqual(['i-b']);
+    expect(body.note).toBe('đợt 1');
+    expect(await screen.findByText('Đã nhập 1 món vào tủ.')).toBeInTheDocument();
+    expect(box('Kẹp bướm')).toHaveValue(0);
+    expect(screen.getByLabelText('Ghi chú cho đợt này (không bắt buộc)')).toHaveValue('');
+  });
+
   it('nhóm mọi ô 0 → nút nhóm tắt; nhóm chỉ còn dòng đủ hoặc ADM hết hàng → ô tick tắt, không nút nhóm', async () => {
     stub({ plan: plan([BUT, planRow({ item_id: 'k5', name: 'Kẹp đủ', category_id: 'c-kep', ordered: 2, received: 2, remaining: 0 }), planRow({ item_id: 'k3', name: 'Kẹp 3', category_id: 'c-kep', adm_out: true })]) });
     await open();
