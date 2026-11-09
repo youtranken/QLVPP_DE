@@ -111,12 +111,13 @@ function ArrivalsBoard({ ym }: { ym: string }) {
     .filter((i) => i.usable && !shown.has(i.id))
     .map((i) => ({ id: i.id, label: fmt.name(i), group: labelOf(groupOf(i, known)), search: [i.name, i.name_en, i.code].filter(Boolean).join(' ') }));
 
-  // Lưu ngay, không hỏi xác nhận: chỉ xóa số đã gõ và món thêm của đúng các dòng vừa gửi (món thêm chưa gõ số vẫn ở lại),
-  // bỏ tick các nhóm vừa lưu; ghi chú đã đi theo đợt vừa lưu nên xóa để không gắn lại vào đợt sau
+  // Lưu ngay, không hỏi xác nhận: xóa số đã gõ của các nhóm vừa lưu (ô gõ 0 về lại phần còn thiếu cho đợt sau),
+  // chỉ bỏ món thêm của đúng các dòng vừa gửi (món thêm chưa gõ số vẫn ở lại), bỏ tick các nhóm vừa lưu;
+  // ghi chú đã đi theo đợt vừa lưu nên xóa để không gắn lại vào đợt sau
   const receive = (groupIds: ReadonlySet<string>, lines: { row: ArrivalRow; qty: number }[]) =>
     saver.save(lines, note, plan.snapshot?.id ?? null, () => {
       const saved = new Set(lines.map((l) => l.row.item_id));
-      draft.clearMany([...saved]);
+      draft.clearMany(rowsOfGroups(groupIds).map((r) => r.item_id));
       setNote('');
       setAdded((prev) => prev.filter((id) => !saved.has(id)));
       setPicked((prev) => new Set([...prev].filter((id) => !groupIds.has(id))));

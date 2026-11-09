@@ -253,6 +253,21 @@ describe('Nhận hàng — "Nhận đủ hàng" theo nhóm', () => {
     expect(box('Bút 1')).toHaveValue(2);
   });
 
+  it('lưu thiếu rồi lưu nốt: món gõ 0 trong nhóm vừa lưu về lại số điền sẵn (phần còn thiếu), lần "Nhận đủ hàng" sau nhận cả món đó', async () => {
+    const f = stub({ plan: plan([BUT, ...KEP]) });
+    await open();
+    await screen.findByDisplayValue('6');
+    await type(box('Kẹp 2'), '0');
+    await userEvent.click(groupBtn('Kẹp & dán'));
+    await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
+    expect(bodiesOf(f, RECEIPT_URL)[0].lines.map((l: { item_id: string }) => l.item_id)).toEqual(['k1', 'k4']);
+    expect(await screen.findByText('Đã nhập 2 món vào tủ.')).toBeInTheDocument();
+    await waitFor(() => expect(box('Kẹp 2')).toHaveValue(4));
+    await userEvent.click(groupBtn('Kẹp & dán'));
+    await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(2));
+    expect(bodiesOf(f, RECEIPT_URL)[1].lines.map((l: { item_id: string }) => l.item_id)).toContain('k2');
+  });
+
   it('món thêm bằng "Thêm món khác" chưa gõ số không bị bỏ khi nhóm của nó "Nhận đủ hàng"; ghi chú đi theo đợt vừa lưu rồi xóa', async () => {
     const f = stub();
     await open();
