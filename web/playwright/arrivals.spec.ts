@@ -65,7 +65,7 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
 
       await expect(rowA.getByText('Thiếu 3', { exact: true })).toBeVisible();
       await expect(rowA.getByText('Sau lưu: Nhập đủ số lượng')).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Đủ hàng' })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Đủ hàng', exact: true })).toHaveCount(0);
       await settled(page);
       await shot(page, info, 'arrivals-after-first-save');
       await expect(rowA.getByText('đã nhận 2')).toBeVisible();

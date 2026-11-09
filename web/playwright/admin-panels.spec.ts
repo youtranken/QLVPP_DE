@@ -164,7 +164,8 @@ test.describe('V2D-17b panel phủ ở Giao hàng, Tổng hợp, Tủ / Kho, Nh�
 
   test('V2D-17b Tổng hợp: bấm người mở panel điều chỉnh phiếu', async ({ page }, info) => {
     await mockSummary(page);
-    await page.goto('/admin/month');
+    // Không ym thì trang mở kỳ đang giao (hoặc kỳ đăng ký khi kỳ giao rỗng) — ghim kỳ khóa giả để mock khớp
+    await page.goto('/admin/month?ym=2000-01');
     const table = page.getByRole('table').first();
     await expectOverlay(page, info, table, () => page.getByRole('button', { name: `Điều chỉnh phiếu của ${PW_ROW.full_name}` }).click(), page.getByRole('dialog', { name: 'Điều chỉnh phiếu' }), 'request');
   });
