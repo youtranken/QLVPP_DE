@@ -12,11 +12,12 @@ interface Props {
   reprinting?: boolean;
 }
 
+// Nằm trên hàng tiêu đề, ngay trước Xuất Excel (vòng 4 mục 9), chấm tròn theo tone
 export function ReportStatusLine({ send, rowsChanged, pendingCustom, ym, onReprint, reprinting = false }: Props) {
   const { t } = useTranslation();
   const { tone, parts } = reportStatus(send, rowsChanged, pendingCustom, t);
   return (
-    <p className="bc-status" role="status" data-tone={tone}>
+    <span className="bc-status bc-status--inline" role="status" data-tone={tone}>
       {parts.map((p, i) => (
         <span key={i}>{i > 0 && ' · '}{p}</span>
       ))}
@@ -34,6 +35,6 @@ export function ReportStatusLine({ send, rowsChanged, pendingCustom, ym, onRepri
           </button>
         </>
       )}
-    </p>
+    </span>
   );
 }

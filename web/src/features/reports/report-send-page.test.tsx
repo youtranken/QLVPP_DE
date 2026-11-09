@@ -47,6 +47,19 @@ describe('Báo cáo & gửi ADM: đầu trang và trạng thái', () => {
     expect(screen.queryByText(/\d+ món, \d+ đơn vị/)).toBeNull();
   });
 
+  it('trạng thái nằm trên hàng tiêu đề, ngay trước nút Xuất Excel; không còn dòng "Không in kèm phụ lục" / hướng dẫn hộp in', async () => {
+    setupSendAdm({ report: REPORT, state: SENT });
+    open();
+    await qtyBox('Bút bi');
+    const status = statuses()[0]!;
+    const head = screen.getByRole('heading', { level: 1, name: 'Báo cáo & gửi ADM' }).parentElement!;
+    expect(head).toContainElement(status);
+    const excel = screen.getByRole('button', { name: 'Xuất Excel' });
+    expect(status.compareDocumentPosition(excel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByText('Không in kèm phụ lục')).toBeNull();
+    expect(screen.queryByText(/Trong hộp in/)).toBeNull();
+  });
+
   it('có món đổi sau bản đã gửi → dòng trạng thái "có 1 món đổi sau bản này" và nhãn "Đổi sau bản in" ở đúng hàng', async () => {
     const changed = sendReport([PEN, itemRow({ key: 'kB', name: 'Giấy A4', requested: 4, need: 4 })]);
     setupSendAdm({ report: changed, state: sentState(sentData(REPORT, { kA: 5, kB: 3 })) });

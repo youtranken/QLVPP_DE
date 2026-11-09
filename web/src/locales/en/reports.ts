@@ -22,8 +22,6 @@ const reports: Messages<typeof vi> = {
       printFailed: 'Snapshot {{time}} saved, but the print could not be opened.',
       printBlocked: 'Click to open the print dialog',
       printedToast: 'Snapshot {{time}} saved. To reprint, open Snapshots.',
-      noAppendix: 'Appendix not included',
-      printTip: 'In the print dialog: choose the printer and A4; turn off "Headers and footers".',
       how: {
         title: 'How Total requested is calculated',
         formula: 'Default order = undelivered this period + carried over. Stock is for reference only. Edit the order cell to reduce.',

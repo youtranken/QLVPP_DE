@@ -17,7 +17,6 @@ import { useRegistrants } from '@/features/send-adm/use-registrants';
 import { useLeavePrompt } from '@/features/send-adm/use-send-adm-confirms';
 import { useSendState } from '@/features/send-adm/use-send-state';
 import { PeriodLockGate } from '@/features/summary/period-lock-gate';
-import { PrintNote } from '@/features/send-adm/send-adm-print-note';
 import { ItemPeopleDialog } from './item-people-dialog';
 import { ReportItemTable, type ItemTableRow } from './report-item-table';
 import { part1Rows } from './report-part1-rows';
@@ -135,10 +134,11 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
           <input type="checkbox" checked={onlyNeed} onChange={(e) => setOnlyNeed(e.target.checked)} />
           {t('reports.part1.onlyNeed')}
         </label>
-        <div className="bc-head__actions">{actions}</div>
+        <div className="bc-head__actions">
+          <ReportStatusLine send={send} rowsChanged={changed.size} pendingCustom={report.pending_custom_count} ym={report.ym} onReprint={sent ? () => void printer.print(sent.data) : undefined} reprinting={printer.pending} />
+          {actions}
+        </div>
       </Heading>
-      <ReportStatusLine send={send} rowsChanged={changed.size} pendingCustom={report.pending_custom_count} ym={report.ym} onReprint={sent ? () => void printer.print(sent.data) : undefined} reprinting={printer.pending} />
-      {!empty && <PrintNote />}
       {empty && editable && send.state !== 'sent' && send.state !== 'no_order' && (
         <p className="bc-row">
           <button type="button" className="btn" disabled={noOrder.pending} onClick={() => void noOrder.run()}>

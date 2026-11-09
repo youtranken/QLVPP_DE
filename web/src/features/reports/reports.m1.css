@@ -33,11 +33,16 @@
 [data-shell='admin'] .bc-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); align-content: start; }
 [data-shell='admin'] .bc-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-4); }
 [data-shell='admin'] .bc-head h1 { margin: 0; font: var(--t-h1); letter-spacing: -0.02em; }
-[data-shell='admin'] .bc-head__actions { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-left: auto; }
+[data-shell='admin'] .bc-head__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin-left: auto; }
 [data-shell='admin'] .bc-status { margin: 0; padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); font: var(--t-body); }
 [data-shell='admin'] .bc-status[data-tone='ok'] { background: var(--c-ok-soft); }
 [data-shell='admin'] .bc-status[data-tone='warn'] { background: var(--c-warn-soft); }
 [data-shell='admin'] .bc-status a { color: inherit; font-weight: 700; text-decoration: underline; }
+[data-shell='admin'] .bc-status--inline { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s-1); padding: 0 var(--s-2) 0 0; background: none; box-shadow: none; font: var(--t-sm); font-weight: 600; color: var(--c-ink-2); }
+[data-shell='admin'] .bc-status--inline[data-tone] { background: none; }
+[data-shell='admin'] .bc-status--inline::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c-muted); }
+[data-shell='admin'] .bc-status--inline[data-tone='ok']::before { background: var(--c-ok); }
+[data-shell='admin'] .bc-status--inline[data-tone='warn']::before { background: var(--c-warn); }
 [data-shell='admin'] .bc-row { margin: 0; }
 [data-shell='admin'] .bc-snaps-box { border-radius: var(--r-md); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); padding: var(--s-3) var(--s-4); }
 [data-shell='admin'] .bc-snaps-box > summary { min-height: var(--hit); display: flex; align-items: center; font: var(--t-label); cursor: pointer; }

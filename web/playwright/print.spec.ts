@@ -213,8 +213,9 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     context.on('page', (p) => tabs.push(p));
     await page.goto('/admin/reports');
     await openEditable(page);
-    await expect(page.getByText(TIP)).toBeVisible();
-    await expect(page.getByText('Không in kèm phụ lục')).toBeVisible();
+    // Vòng 4 mục 9: bỏ dòng hướng dẫn hộp in / "Không in kèm phụ lục"
+    await expect(page.getByText(TIP)).toHaveCount(0);
+    await expect(page.getByText('Không in kèm phụ lục')).toHaveCount(0);
 
     // Lập phiếu: chốt bản rồi mở hộp in ngay tại trang — 1 lần print, URL không đổi, 0 tab mới
     await page.getByRole('button', { name: 'In trình ký' }).click();

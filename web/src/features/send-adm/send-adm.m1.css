@@ -8,8 +8,4 @@
 [data-shell='admin'] .sa-w8 p { margin: 0; }
 [data-shell='admin'] .sa-w8 a { font-weight: 600; color: var(--c-warn); }
 
-[data-shell='admin'] .sa-print-note { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--s-1) var(--s-3); margin: calc(-1 * var(--s-2)) 0 0; font: var(--t-sm); color: var(--c-muted); text-align: right; }
 [data-shell='admin'] .sa-spinner { width: 18px; height: 18px; border: 2px solid transparent; border-top-color: currentColor; border-right-color: currentColor; }
-@media (max-width: 767px) {
-  [data-shell='admin'] .sa-print-note { justify-content: flex-start; margin: 0; text-align: left; }
-}

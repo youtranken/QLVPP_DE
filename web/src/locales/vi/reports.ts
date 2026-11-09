@@ -19,8 +19,6 @@ const reports = {
       printFailed: 'Đã chốt bản {{time}} nhưng chưa mở được bản in.',
       printBlocked: 'Bấm để mở hộp in',
       printedToast: 'Đã chốt bản {{time}}. Cần in lại: mở Bản chốt.',
-      noAppendix: 'Không in kèm phụ lục',
-      printTip: "Trong hộp in: chọn máy in, khổ A4; tắt 'Đầu trang và chân trang'.",
       how: {
         title: 'Cách tính Tổng cần',
         formula: 'Đề nghị mặc định = Chưa giao kỳ này + Nợ kỳ trước. Tủ chỉ để tham khảo, không trừ. Muốn bớt thì sửa ô Đề nghị.',
