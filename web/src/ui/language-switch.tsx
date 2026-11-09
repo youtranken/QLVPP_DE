@@ -15,7 +15,8 @@ export function LanguageSwitch({ className = '', short = false }: { className?: 
           role="radio"
           aria-checked={current === lang}
           lang={lang}
-          aria-label={t(`common.languages.${lang}`)}
+          // Tên truy cập bắt đầu bằng chữ đang hiện (WCAG 2.5.3): "VI – Tiếng Việt"; bản đầy đủ thì chính chữ hiện là tên
+          aria-label={short ? `${t(`common.languages.${lang}Short`)} – ${t(`common.languages.${lang}`)}` : undefined}
           onClick={() => void setLanguage(lang)}
         >
           {t(`common.languages.${lang}${short ? 'Short' : ''}`)}

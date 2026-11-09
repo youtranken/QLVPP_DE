@@ -45,8 +45,8 @@ describe('MemberShell', () => {
     renderApp(makeMe('member'), '/');
     const banner = screen.getByRole('banner');
     const group = within(banner).getByRole('radiogroup', { name: 'Ngôn ngữ' });
-    expect(within(group).getByRole('radio', { name: 'Tiếng Việt' })).toHaveTextContent('VI');
-    expect(within(group).getByRole('radio', { name: 'English' })).toHaveTextContent('EN');
+    expect(within(group).getByRole('radio', { name: 'VI – Tiếng Việt' })).toHaveTextContent('VI');
+    expect(within(group).getByRole('radio', { name: 'EN – English' })).toHaveTextContent('EN');
     const bell = within(banner).getByRole('button', { name: /^Thông báo/ });
     expect(group.compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });

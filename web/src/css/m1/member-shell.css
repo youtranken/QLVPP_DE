@@ -15,7 +15,7 @@
 [data-shell='member'] .m-tabs a[aria-current='page'] { background: var(--c-surface); color: var(--c-ink); }
 
 [data-shell='member'] .m-top .m-lang { background: var(--c-glass); border: 1px solid var(--c-glass-line); }
-[data-shell='member'] .m-top .m-lang button { min-height: 36px; color: var(--c-on-dark-2); box-shadow: none; }
+[data-shell='member'] .m-top .m-lang button { min-height: 44px; min-width: 44px; color: var(--c-on-dark-2); box-shadow: none; }
 [data-shell='member'] .m-top .m-lang button[aria-checked='true'] { background: var(--c-surface); color: var(--c-ink); }
 [data-shell='member'] .m-top .m-lang button:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 
