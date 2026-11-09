@@ -11,7 +11,8 @@ const request = {
       unsaved: 'Có thay đổi chưa lưu.',
     },
     receive: {
-      strip: 'Phiếu tháng {{month}} đang giao · đã nhận {{done}}/{{total}} món, còn chờ {{waiting}}',
+      stripHead: 'Phiếu tháng {{month}} đã chốt',
+      strip: 'không sửa được nữa · đang giao: đã nhận {{done}}/{{total}} món, còn chờ {{waiting}}',
       view: 'Xem',
       older: 'Tháng {{month}} còn chờ {{k}} món',
       title: 'Phiếu tháng {{month}}',

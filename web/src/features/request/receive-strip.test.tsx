@@ -29,10 +29,11 @@ async function open(period: CurrentPeriod = DELIVERING, width = 1280) {
 }
 
 describe('ReceiveStrip — dải phiếu đang giao', () => {
-  it('đúng một dải "Phiếu tháng 10 đang giao · đã nhận 2/5 món, còn chờ 3" + nút Xem; không còn hai băng cũ', async () => {
+  it('đúng một dải "Phiếu tháng 10 đã chốt · không sửa được nữa · đang giao: đã nhận 2/5 món, còn chờ 3" + nút Xem; không còn hai băng cũ', async () => {
     await open();
-    expect(await screen.findByText('Phiếu tháng 10 đang giao · đã nhận 2/5 món, còn chờ 3')).toBeInTheDocument();
-    expect(screen.getAllByText(/đang giao/)).toHaveLength(1);
+    const strip = await screen.findByText('Phiếu tháng 10 đã chốt');
+    expect(strip.tagName).toBe('B');
+    expect(strip.parentElement).toHaveTextContent('Phiếu tháng 10 đã chốt · không sửa được nữa · đang giao: đã nhận 2/5 món, còn chờ 3');
     expect(screen.queryByText(/Bạn còn chờ nhận/)).toBeNull();
     expect(screen.getByRole('button', { name: 'Xem' })).toBeInTheDocument();
   });
@@ -62,7 +63,7 @@ describe('ReceiveStrip — dải phiếu đang giao', () => {
     await open({ ...DELIVERING, owed: [{ ym: '2026-09', items: 2, units: 3, lines: [] }] });
     const link = await screen.findByRole('link', { name: 'Tháng 9 còn chờ 2 món' });
     expect(link).toHaveAttribute('href', '/history/2026-09');
-    expect(await screen.findAllByText(/Phiếu tháng 10 đang giao/)).toHaveLength(1);
+    expect(await screen.findAllByText('Phiếu tháng 10 đã chốt')).toHaveLength(1);
   });
 
   it('chỉ có nợ tháng cũ (kỳ trước đã xong) → dải chỉ gồm liên kết, không có nút Xem', async () => {

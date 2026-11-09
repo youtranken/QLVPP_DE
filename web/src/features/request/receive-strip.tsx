@@ -20,7 +20,11 @@ export function ReceiveStrip({ period }: { period: CurrentPeriod }) {
     <div className="rq-recv-strip">
       <span className="rq-recv-dot" aria-hidden="true" />
       <p>
-        {main && t('request.receive.strip', { month: monthOf(prev), ...sum })}
+        {main && (
+          <>
+            <b>{t('request.receive.stripHead', { month: monthOf(prev) })}</b> · {t('request.receive.strip', sum)}
+          </>
+        )}
         {older.map((o, i) => (
           <span key={o.ym}>
             {(main || i > 0) && ' · '}

@@ -14,7 +14,8 @@ const request: Messages<typeof vi> = {
       unsaved: 'You have unsaved changes.',
     },
     receive: {
-      strip: 'Month {{month}} order being delivered · received {{done}}/{{total}} items, {{waiting}} still waiting',
+      stripHead: 'Month {{month}} order is closed',
+      strip: 'can no longer be changed · delivering: received {{done}}/{{total}} items, {{waiting}} still waiting',
       view: 'View',
       older: 'Month {{month}}: {{k}} items still waiting',
       title: 'Month {{month}} order',
