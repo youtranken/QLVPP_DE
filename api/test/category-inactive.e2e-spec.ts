@@ -279,19 +279,30 @@ describe('nhóm món ngừng ẩn món trong nhóm (không sửa items.active)',
     }
   });
 
-  it('dòng cũ món trong nhóm ngừng, kỳ đã khóa: Hành chính giao 2 → 200, tồn 5 → 3', async () => {
+  // Mục 7 vòng 4: dòng món tạm ngưng chưa giao không được tính → không giao được tới khi bật lại nhóm
+  it('dòng cũ món trong nhóm ngừng, kỳ đã khóa: giao 2 → 409, tồn giữ 5; bật lại nhóm → giao 2 → 200, tồn 5 → 3', async () => {
     const item = await itemInCategory();
     await pool().query('UPDATE items SET stock_qty = 5 WHERE id = $1', [item]);
     const r = view(await save([{ item_id: item, qty: 2 }]).expect(200));
     await setCategory(false);
     f.at(AFTER_DEADLINE);
-    const res = await as(
-      http().post(`/api/admin/lines/${r.lines[0].id}/deliver`),
-      ADMIN,
-      'admin',
-    )
-      .send({ qty: 2, expected_delivered_qty: 0 })
-      .expect(200);
+    const deliver = () =>
+      as(
+        http().post(`/api/admin/lines/${r.lines[0].id}/deliver`),
+        ADMIN,
+        'admin',
+      ).send({ qty: 2, expected_delivered_qty: 0 });
+    await deliver().expect(409);
+    expect(
+      (
+        await pool().query<{ stock_qty: number }>(
+          'SELECT stock_qty FROM items WHERE id = $1',
+          [item],
+        )
+      ).rows[0].stock_qty,
+    ).toBe(5);
+    await setCategory(true);
+    const res = await deliver().expect(200);
     expect(res.body).toMatchObject({ stock_qty: 3 });
     await pool().query('DELETE FROM line_deliveries WHERE line_id = $1', [
       r.lines[0].id,
