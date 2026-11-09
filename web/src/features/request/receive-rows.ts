@@ -3,7 +3,8 @@ import { adjustReasonText } from '@/lib/adjust-reason';
 import type { LineView, RequestView } from './request.api';
 import { nameIn } from './request-format';
 
-export type ReceiveState = 'received' | 'waiting' | 'none';
+// paused: món đang tạm ngưng, dòng chưa giao gì — không tính (cùng luật server), bật lại món thì tính lại
+export type ReceiveState = 'received' | 'waiting' | 'none' | 'paused';
 
 export interface ReceiveRow {
   id: string;
@@ -24,10 +25,14 @@ export interface ReceiveRow {
 // Dòng còn chờ Hành chính xem / bị từ chối không giao nên không có hàng trong bảng nhận
 const skipped = (l: LineView) => l.review_status === 'pending' || l.review_status === 'rejected';
 
+// Cùng luật SUSPENDED_LINE của server: item.active = món và nhóm đều đang dùng
+export const isSuspendedLine = (l: LineView) => l.item?.active === false && l.delivered_qty === 0;
+
 function lineRow(l: LineView, lang: string): ReceiveRow {
-  const toGive = l.qty - l.cancelled_qty;
+  const paused = isSuspendedLine(l);
+  const toGive = paused ? 0 : l.qty - l.cancelled_qty;
   const received = l.delivered_qty;
-  const state: ReceiveState = toGive <= 0 ? 'none' : received >= toGive ? 'received' : 'waiting';
+  const state: ReceiveState = paused ? 'paused' : toGive <= 0 ? 'none' : received >= toGive ? 'received' : 'waiting';
   return {
     id: l.id,
     name: l.item ? nameIn(l.item, lang) : (l.custom_name ?? ''),
