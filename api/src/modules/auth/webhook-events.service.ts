@@ -129,8 +129,8 @@ export class WebhookEventsService {
     }
   }
 
-  // Payload không mang tên/email: hỏi Directory rồi áp hồ sơ (giữ status). Người chưa có ở VPP hoặc
-  // Directory không xác nhận → bỏ, sync định kỳ sẽ thêm/xét.
+  // Payload không mang tên/email: hỏi Directory rồi áp hồ sơ (giữ status, giữ vai — vai chỉ theo
+  // user.role_changed). Người chưa có ở VPP hoặc Directory không xác nhận → bỏ, sync định kỳ sẽ thêm/xét.
   private async profileUpdated(e: PmhWebhookEventV3): Promise<void> {
     if (!(await this.users.findBySub(e.user_id))) return;
     const found = await this.access.lookup(e.user_id);
@@ -140,7 +140,7 @@ export class WebhookEventsService {
       );
       return;
     }
-    await this.access.applyDirectoryUser(found.user, ACTOR);
+    await this.access.applyDirectoryUser(found.user, ACTOR, { role: false });
   }
 
   // Được cấp lại quyền nhưng có thể vẫn đang bị khóa/xóa ở PMH ID: theo Directory như reopen

@@ -189,7 +189,13 @@ export class UserAccessService {
   }
 
   // Hồ sơ + vai từ Directory; người mới nhận status Directory báo, người cũ giữ status (người gọi quyết)
-  async applyDirectoryUser(u: DirectoryUser, actor: string): Promise<void> {
+  // `role: false`: không đụng vai (user.updated — vai chỉ theo user.role_changed, tránh bản chi tiết
+  // lấy trước một role_changed tới xen giữa cấp lại Hành chính)
+  async applyDirectoryUser(
+    u: DirectoryUser,
+    actor: string,
+    opts: { role?: boolean } = {},
+  ): Promise<void> {
     if (u.id.startsWith('local')) return;
     const dept = directoryLabel(u.department);
     const team = directoryLabel(u.team);
@@ -207,7 +213,9 @@ export class UserAccessService {
         team = CASE WHEN ${team === undefined} THEN users.team ELSE excluded.team END,
         updated_at = now()
     `);
-    await this.applyRole(u.id, toAppRole(u.app_role), 'directory');
+    if (opts.role !== false) {
+      await this.applyRole(u.id, toAppRole(u.app_role), 'directory');
+    }
     this.logger.debug(`applyDirectoryUser ${u.id} (${actor})`);
   }
 

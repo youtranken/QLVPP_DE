@@ -290,6 +290,42 @@ describe('webhook PMH ID qua app thật: lệch giờ, chữ ký v1, event_id l�
       await me(cookie).expect(200);
     });
 
+    it('user.updated không đổi vai dù Directory trả app_role khác (vai chỉ theo user.role_changed — tránh bản tin cũ cấp lại Hành chính)', async () => {
+      const { u } = await freshUser();
+      const before = (
+        await pool.query<{ role: string }>(
+          'SELECT role FROM users WHERE sub = $1',
+          [u],
+        )
+      ).rows[0].role;
+      const stub = directory as { fetchUser: DirectoryClientApi['fetchUser'] };
+      const unavailable = stub.fetchUser;
+      stub.fetchUser = (id: string) =>
+        Promise.resolve({
+          id,
+          status: 'active' as const,
+          full_name: 'Tên Cũ Trễ',
+          app_role: before === 'admin' ? 'member' : 'admin',
+        });
+      try {
+        await send(u, 'user.updated', nextSeq(), {
+          department: undefined,
+          team: undefined,
+          app_role: undefined,
+          detail: undefined,
+        }).expect(200);
+      } finally {
+        stub.fetchUser = unavailable;
+      }
+      const row = (
+        await pool.query<{ role: string; full_name: string }>(
+          'SELECT role, full_name FROM users WHERE sub = $1',
+          [u],
+        )
+      ).rows[0];
+      expect(row).toEqual({ role: before, full_name: 'Tên Cũ Trễ' });
+    });
+
     const grantedFlow = async () => {
       const a = await freshUser();
       const revokeA = nextSeq();

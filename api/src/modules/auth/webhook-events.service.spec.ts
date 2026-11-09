@@ -324,9 +324,11 @@ describe('WebhookEventsService', () => {
     await service.apply(ev('user.updated', '7', { detail: undefined }));
     expect(access.claimSeq).toHaveBeenCalledWith('u1', 'profile', 7n);
     expect(access.lookup).toHaveBeenCalledWith('u1');
+    // Vai chỉ theo user.role_changed: bản chi tiết lấy trước có thể cũ hơn role_changed tới xen giữa
     expect(access.applyDirectoryUser).toHaveBeenCalledWith(
       fresh,
       'system(webhook)',
+      { role: false },
     );
     expect(users.setStatus).not.toHaveBeenCalled();
     expect(access.markNoAccess).not.toHaveBeenCalled();
