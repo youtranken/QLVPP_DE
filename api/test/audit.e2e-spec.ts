@@ -8,6 +8,7 @@ import {
 } from '../src/database/migration-runner';
 import { encodeCursor } from '../src/common/cursor';
 import { AuditWriterService } from '../src/modules/audit/audit-writer.service';
+import { hashPassword } from '../src/modules/auth/local-sa.service';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
 
@@ -203,5 +204,82 @@ describe('GET admin/audit', () => {
       .set('x-dev-user-sub', 'dev-admin')
       .set('x-dev-role', 'admin')
       .expect(200);
+  });
+});
+
+// Chuẩn PMH ID §7: SA local ẩn khỏi trang Người dùng nhưng nhật ký vẫn ghi tên SA
+describe('GET admin/audit — thao tác của SA local vẫn hiện tên SA', () => {
+  const USER = 'sa-audit-e2e';
+  const PASS = 'break-glass-audit-e2e';
+  let app: INestApplication<App>;
+  const saved = {
+    user: process.env.LOCAL_SA_USERNAME,
+    hash: process.env.LOCAL_SA_PASSWORD_HASH,
+    dev: process.env.AUTH_DEV_MODE,
+  };
+  const restore = (key: string, value: string | undefined) => {
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  };
+
+  beforeAll(async () => {
+    assertTestDatabase(process.env.DATABASE_URL);
+    process.env.LOCAL_SA_USERNAME = USER;
+    process.env.LOCAL_SA_PASSWORD_HASH = hashPassword(PASS);
+    process.env.AUTH_DEV_MODE = 'true';
+    app = (await createTestApp()) as INestApplication<App>;
+  });
+
+  afterAll(async () => {
+    await app.close();
+    restore('LOCAL_SA_USERNAME', saved.user);
+    restore('LOCAL_SA_PASSWORD_HASH', saved.hash);
+    restore('AUTH_DEV_MODE', saved.dev);
+  });
+
+  it('SA đăng nhập rồi lưu cấu hình → admin xem nhật ký thấy actorName "SSA (nội bộ)" ở cả hai dòng', async () => {
+    const login = await request(app.getHttpServer())
+      .post('/api/auth/sa-login')
+      .send({ username: USER, password: PASS })
+      .expect(200);
+    const cookie = (login.headers['set-cookie'] as unknown as string[]).join(
+      ';',
+    );
+    const sid = /vpp_sid=([^;]+)/.exec(cookie)?.[1];
+    const me = await request(app.getHttpServer())
+      .get('/api/auth/me')
+      .set('Cookie', `vpp_sid=${sid}`)
+      .expect(200);
+    const csrf = (me.body as { csrfToken: string }).csrfToken;
+    const current = await request(app.getHttpServer())
+      .get('/api/admin/config')
+      .set('Cookie', `vpp_sid=${sid}`)
+      .expect(200);
+    // Ghi lại đúng giá trị đang có: có dòng nhật ký config.updated mà không đổi cấu hình
+    await request(app.getHttpServer())
+      .put('/api/admin/config')
+      .set('Cookie', `vpp_sid=${sid}`)
+      .set('X-CSRF-Token', csrf)
+      .send({
+        admin_contact: (current.body as { admin_contact: string })
+          .admin_contact,
+      })
+      .expect(200);
+    for (const action of ['auth.sa_login', 'config.updated']) {
+      const res = await request(app.getHttpServer())
+        .get('/api/admin/audit')
+        .query({ actor: 'local:sa', action })
+        .set('x-dev-user-sub', 'dev-admin')
+        .set('x-dev-role', 'admin')
+        .expect(200);
+      const items = (
+        res.body as { items: Array<{ actor: string; actorName: string }> }
+      ).items;
+      expect(items.length).toBeGreaterThan(0);
+      expect(items[0]).toMatchObject({
+        actor: 'local:sa',
+        actorName: 'SSA (nội bộ)',
+      });
+    }
   });
 });
