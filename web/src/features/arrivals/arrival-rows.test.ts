@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AdminItem } from '@/features/catalog/catalog.api';
-import { applyArrivalFilter, differingRows, isAllArrived, isShort, parseArrivalFilter, parseQty, prefillOf, toArrivalRows } from './arrival-rows';
+import { applyArrivalFilter, isAllArrived, isReceivedFull, isShort, parseArrivalFilter, parseQty, prefillOf, receivableLines, toArrivalRows } from './arrival-rows';
 import { customRow, plan, planRow } from './arrivals-fixtures';
 
 const item = (over: Partial<AdminItem>): AdminItem => ({ id: 'i-x', code: 'X9', name: 'Món thêm', name_en: null, unit: 'cai', category_id: null, image_file_id: null, stock_qty: 4, active: true, usable: true, ...over }) as AdminItem;
@@ -42,11 +42,29 @@ describe('isShort — "Chỉ món chưa về đủ"', () => {
   });
 });
 
-describe('differingRows — hộp W15', () => {
-  it('liệt kê hàng có qty ≠ remaining; bỏ hàng ADM hết hàng và hàng thêm', () => {
-    const rows = toArrivalRows(plan([planRow({ item_id: 'a', remaining: 7 }), planRow({ item_id: 'b', remaining: 2 }), planRow({ item_id: 'c', remaining: 3, adm_out: true })]), [item({})]);
-    const qty: Record<string, number> = { a: 3, b: 2, c: 0, 'i-x': 5 };
-    expect(differingRows(rows, (r) => qty[r.item_id]).map((d) => [d.row.item_id, d.qty])).toEqual([['a', 3]]);
+describe('isReceivedFull — dòng đã nhận đủ (khóa ở UI)', () => {
+  const r = (over: Parameters<typeof planRow>[0]) => toArrivalRows(plan([planRow(over)]), [])[0];
+  it('received ≥ ordered > 0 → khóa; còn thiếu → mở; ordered 0 → mở; hàng thêm → mở; dòng khóa điền sẵn 0', () => {
+    expect(isReceivedFull(r({ ordered: 10, received: 10, remaining: 0 }))).toBe(true);
+    expect(isReceivedFull(r({ ordered: 10, received: 11, remaining: 0 }))).toBe(true);
+    expect(isReceivedFull(r({ ordered: 10, received: 9, remaining: 1 }))).toBe(false);
+    expect(isReceivedFull(r({ ordered: 0, received: 0, remaining: 0 }))).toBe(false);
+    expect(isReceivedFull(toArrivalRows(plan([]), [item({})])[0])).toBe(false);
+    expect(prefillOf(r({ ordered: 10, received: 10, remaining: 3 }))).toBe(0);
+  });
+});
+
+describe('receivableLines — dòng gửi khi "Nhận đủ hàng"', () => {
+  it('bỏ ADM hết hàng, dòng đã nhận đủ và số 0; giữ hàng thêm có số', () => {
+    const rows = toArrivalRows(
+      plan([planRow({ item_id: 'a', remaining: 7 }), planRow({ item_id: 'b', remaining: 2 }), planRow({ item_id: 'c', remaining: 3, adm_out: true }), planRow({ item_id: 'd', received: 10, remaining: 0 })]),
+      [item({})],
+    );
+    const qty: Record<string, number> = { a: 3, b: 0, c: 3, d: 2, 'i-x': 5 };
+    expect(receivableLines(rows, (r) => qty[r.item_id]).map((d) => [d.row.item_id, d.qty])).toEqual([
+      ['a', 3],
+      ['i-x', 5],
+    ]);
   });
 });
 
@@ -87,7 +105,8 @@ describe('parseQty — biên ô Về đợt này', () => {
     ['99999', 99999, null],
     ['100000', 0, 'max'],
     ['-1', 0, 'invalid'],
-    ['', 0, 'invalid'],
+    ['', 0, null],
+    ['  ', 0, null],
     ['1.5', 0, 'invalid'],
   ])('%j → qty %i lỗi %s', (raw, qty, error) => {
     expect(parseQty(raw)).toEqual({ qty, error });

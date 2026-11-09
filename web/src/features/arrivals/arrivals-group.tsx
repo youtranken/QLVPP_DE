@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { Tone } from '@/lib/group-tone';
 import { ItemThumb } from '@/ui/item-thumb';
 import { useRequestFormat } from '@/features/request/request-format';
-import type { ArrivalRow, ArrivalSection } from './arrival-rows';
+import { isReceivable, isReceivedFull, type ArrivalRow, type ArrivalSection } from './arrival-rows';
 import { afterState, groupCounts, savedState, shortOf, type ArrivalState, type ArrivalStatus } from './arrival-status';
 import type { ArrivalsDraft } from './use-arrivals-draft';
 
@@ -43,7 +43,7 @@ function stateText(t: TFunction, st: ArrivalStatus) {
   return t(`arrivals.status.${st.state}`, { n: st.n });
 }
 
-// Chip nền = đã lưu; chip viền đứt = sau khi bấm "Lưu hàng về"
+// Chip nền = đã lưu; chip viền đứt = sau khi bấm "Nhận đủ hàng"
 function StatusTag({ r, qty }: { r: ArrivalRow; qty: number }) {
   const { t } = useTranslation();
   const saved = savedState(r);
@@ -64,6 +64,8 @@ function ArrivalRowView({ r, draft, busy, showShort, onToggleAdm }: RowProps) {
   const error = draft.errorOf(r);
   const qty = draft.qtyOf(r);
   const errId = `ar-err-${r.item_id}`;
+  // Đã nhận đủ: khóa ô ở UI, sai thì chỉnh ở Tủ / Kho
+  const locked = isReceivedFull(r);
   return (
     <tr className={r.adm_out ? 'ar-row--out' : undefined}>
       <td className="ar-item">
@@ -83,31 +85,36 @@ function ArrivalRowView({ r, draft, busy, showShort, onToggleAdm }: RowProps) {
         {r.received > 0 && <small className="ar-received">{t('arrivals.table.receivedSmall', { n: n(r.received) })}</small>}
       </td>
       <td className="n ar-qty" data-label={t('arrivals.table.qty')}>
-        <div className="ar-qty__in">
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            aria-label={t('arrivals.table.qtyLabel', { name })}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? errId : undefined}
-            disabled={r.adm_out}
-            value={draft.textOf(r)}
-            onChange={(e) => draft.change(r.item_id, e.target.value)}
-          />
-          {!r.added && (
-            <button
-              type="button"
-              className="ar-adm"
-              aria-pressed={r.adm_out}
-              aria-label={t(r.adm_out_final ? 'arrivals.admOut.finalFor' : 'arrivals.admOut.buttonFor', { name })}
-              disabled={r.adm_out_final || busy}
-              onClick={() => onToggleAdm(r)}
-            >
-              {t(r.adm_out_final ? 'arrivals.admOut.final' : 'arrivals.admOut.button')}
-            </button>
-          )}
-        </div>
+        {locked ? (
+          <span className="ar-full">✓ {t('arrivals.table.fullLocked')}</span>
+        ) : (
+          <div className="ar-qty__in">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              aria-label={t('arrivals.table.qtyLabel', { name })}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? errId : undefined}
+              disabled={r.adm_out}
+              value={draft.textOf(r)}
+              onChange={(e) => draft.change(r.item_id, e.target.value)}
+              onBlur={() => draft.blur(r.item_id)}
+            />
+            {!r.added && (
+              <button
+                type="button"
+                className="ar-adm"
+                aria-pressed={r.adm_out}
+                aria-label={t(r.adm_out_final ? 'arrivals.admOut.finalFor' : 'arrivals.admOut.buttonFor', { name })}
+                disabled={r.adm_out_final || busy}
+                onClick={() => onToggleAdm(r)}
+              >
+                {t(r.adm_out_final ? 'arrivals.admOut.final' : 'arrivals.admOut.button')}
+              </button>
+            )}
+          </div>
+        )}
         {error && (
           <small id={errId} className="ar-err">
             {t(`arrivals.errors.${error}`)}
@@ -127,28 +134,49 @@ function ArrivalRowView({ r, draft, busy, showShort, onToggleAdm }: RowProps) {
   );
 }
 
+export interface GroupPick {
+  picked: boolean;
+  // Có lỗi ô số hoặc không còn dòng nào > 0 hay đang lưu: nút nhóm tắt
+  canReceive: boolean;
+  onPick: (on: boolean) => void;
+  onReceive: () => void;
+}
+
 interface Props {
   section: ArrivalSection;
   draft: ArrivalsDraft;
   admBusy: ReadonlySet<string>;
   showShort: boolean;
   columns: number;
+  pick: GroupPick;
   onToggleAdm: (r: ArrivalRow) => void;
 }
 
-export function ArrivalsGroup({ section, draft, admBusy, showShort, columns, onToggleAdm }: Props) {
+export function ArrivalsGroup({ section, draft, admBusy, showShort, columns, pick, onToggleAdm }: Props) {
   const { t } = useTranslation();
   const { done, total, doneAfter } = groupCounts(section.all, draft.qtyOf);
+  // Mọi dòng đã nhận đủ hoặc ADM hết hàng: không còn gì để nhận
+  const open = section.all.some(isReceivable);
   return (
     <tbody aria-label={section.label}>
       <tr className="ar-ghead">
         <th colSpan={columns} scope="rowgroup">
           <div className="ar-ghead__in">
+            <input
+              type="checkbox"
+              className="ar-pick"
+              aria-label={t('arrivals.group.pick', { name: section.label })}
+              checked={open && pick.picked}
+              disabled={!open}
+              onChange={(e) => pick.onPick(e.target.checked)}
+            />
             <b>{section.label}</b>
             <span>· {doneAfter === done ? t('arrivals.group.done', { a: done, b: total }) : t('arrivals.group.doneAfter', { a: done, b: total, c: doneAfter })}</span>
-            <button type="button" className="btn btn--sm" onClick={() => draft.fill(section.all)}>
-              {t('arrivals.group.fill')}
-            </button>
+            {open && (
+              <button type="button" className="btn btn--sm" disabled={!pick.canReceive} onClick={pick.onReceive}>
+                {t('arrivals.group.receive')}
+              </button>
+            )}
           </div>
         </th>
       </tr>

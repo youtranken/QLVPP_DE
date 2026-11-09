@@ -18,7 +18,7 @@ interface Props {
   shown: number;
   shortCount: number;
   reducedCount: number;
-  batch: { items: number; units: number };
+  batch: { groups: number; items: number };
   saveDisabled: boolean;
   candidates: ComboOption[];
   onFilter: (patch: Record<string, string | null>) => void;
@@ -42,9 +42,9 @@ export function ArrivalsToolbar({ plan, filter, groups, counts, total, shown, sh
           {reducedCount > 0 && <p className="ar-warn-text">{t('warn.W14head', { x: reducedCount })}</p>}
         </div>
         <div className="ar-save">
-          <span className="ar-batch">{t('arrivals.batch', { n: batch.items, u: batch.units })}</span>
+          <span className="ar-batch">{t('arrivals.batchPicked', { g: batch.groups, n: batch.items })}</span>
           <button type="button" className="btn btn--primary" disabled={saveDisabled} onClick={onSave}>
-            {t('arrivals.save')}
+            {t('arrivals.receivePicked', { n: batch.groups })}
           </button>
         </div>
       </div>

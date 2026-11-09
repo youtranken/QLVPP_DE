@@ -1,19 +1,20 @@
 import { useTranslation } from 'react-i18next';
 import type { ArrivalRow, ArrivalSection } from './arrival-rows';
 import { showShortColumn } from './arrival-status';
-import { ArrivalsGroup } from './arrivals-group';
+import { ArrivalsGroup, type GroupPick } from './arrivals-group';
 import type { ArrivalsDraft } from './use-arrivals-draft';
 
 interface Props {
   sections: ArrivalSection[];
   draft: ArrivalsDraft;
   admBusy: ReadonlySet<string>;
+  pickOf: (groupId: string) => GroupPick;
   onToggleAdm: (r: ArrivalRow) => void;
 }
 
 const NUMERIC = new Set<string>(['ordered', 'stock', 'short', 'after']);
 
-export function ArrivalTable({ sections, draft, admBusy, onToggleAdm }: Props) {
+export function ArrivalTable({ sections, draft, admBusy, pickOf, onToggleAdm }: Props) {
   const { t } = useTranslation();
   const rows = sections.flatMap((s) => s.rows);
   const showShort = showShortColumn(rows, draft.qtyOf);
@@ -30,7 +31,7 @@ export function ArrivalTable({ sections, draft, admBusy, onToggleAdm }: Props) {
         </tr>
       </thead>
       {sections.map((s) => (
-        <ArrivalsGroup key={s.id} section={s} draft={draft} admBusy={admBusy} showShort={showShort} columns={columns.length} onToggleAdm={onToggleAdm} />
+        <ArrivalsGroup key={s.id} section={s} draft={draft} admBusy={admBusy} showShort={showShort} columns={columns.length} pick={pickOf(s.id)} onToggleAdm={onToggleAdm} />
       ))}
     </table>
   );

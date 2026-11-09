@@ -7,8 +7,15 @@ asRole('admin');
 
 const fitsWidth = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
-test.describe('Hàng về theo bản in (Plan v2-D, Task 8)', () => {
-  test('Vòng3-HV lưu thiếu rồi lưu nốt: chip Sau lưu thành chip nền, đầu nhóm khớp dòng, cột Còn thiếu', async ({ page, request }, info) => {
+// Tick mọi nhóm đang hiện (đã lọc theo tag của seed) rồi bấm "Nhận đủ hàng (n nhóm)": lưu ngay, không hộp xác nhận
+async function receivePicked(page: Page) {
+  const boxes = page.getByRole('checkbox', { name: /^Chọn nhóm / });
+  for (const box of await boxes.all()) if (await box.isEnabled()) await box.check();
+  await page.getByRole('button', { name: /^Nhận đủ hàng \(\d+ nhóm\)$/ }).click();
+}
+
+test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
+  test('Vòng3-HV lưu thiếu rồi lưu nốt: chip Sau lưu thành chip nền, đầu nhóm khớp dòng, cột Còn thiếu; Nhận đủ hàng theo nhóm đã tick, không hộp xác nhận', async ({ page, request }, info) => {
     // Kỳ riêng của PW: bản in thật của server (chỉ món PW), không ghi vào kỳ trước thật trên dev
     const release = await acquireLock('prev-period');
     clearPrivateSnapshots();
@@ -30,14 +37,14 @@ test.describe('Hàng về theo bản in (Plan v2-D, Task 8)', () => {
       await expect(page.getByRole('heading', { level: 1, name: `Nhận hàng kỳ tháng ${Number(seed.prevYm.slice(5))}` })).toBeVisible();
       await expect(page.getByRole('link', { name: /^theo bản gửi ADM / })).toBeVisible();
       await expect(page.getByText(/^Đang hiện 2\/\d+ món$/)).toBeVisible();
-      const boxA = page.getByRole('spinbutton', { name: `Hàng về: ${a.name}` });
-      const boxB = page.getByRole('spinbutton', { name: `Hàng về: ${b.name}` });
+      const boxA = page.getByRole('spinbutton', { name: `Nhận đợt này: ${a.name}` });
+      const boxB = page.getByRole('spinbutton', { name: `Nhận đợt này: ${b.name}` });
       await expect(boxA).toHaveValue('5');
       await expect(boxB).toHaveValue('3');
 
       const rowA = page.getByRole('row').filter({ hasText: a.name });
       await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toHaveCount(0);
-      await expect(rowA.getByText('Sau lưu: Đủ')).toBeVisible();
+      await expect(rowA.getByText('Sau lưu: Nhập đủ số lượng')).toBeVisible();
       await boxA.fill('2');
       await boxB.fill('0');
       await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toBeVisible();
@@ -50,23 +57,19 @@ test.describe('Hàng về theo bản in (Plan v2-D, Task 8)', () => {
         expect(await fitsWidth(page), 'trang không cuộn ngang ở 390').toBe(true);
       }
 
-      await page.getByRole('button', { name: 'Lưu hàng về' }).click();
-      const w15 = page.getByRole('dialog');
-      await expect(w15).toContainText('Đợt này khác bản in ở 2 món');
-      await expect(w15).toContainText(`${a.name}: về 2 / còn 5`);
-      await settled(page);
-      await shot(page, info, 'arrivals-w15');
-      await w15.getByRole('button', { name: 'Lưu hàng về' }).click();
+      await receivePicked(page);
+      await expect(page.getByRole('dialog')).toHaveCount(0);
       await expect(page.getByText('Đã nhập 1 món vào tủ.')).toBeVisible();
       expect(stockOf(a.id)).toBe(2);
       await expect(boxA).toHaveValue('3');
 
       await expect(rowA.getByText('Thiếu 3', { exact: true })).toBeVisible();
-      await expect(rowA.getByText('Sau lưu: Đủ')).toBeVisible();
+      await expect(rowA.getByText('Sau lưu: Nhập đủ số lượng')).toBeVisible();
       await expect(page.getByRole('button', { name: 'Đủ hàng' })).toHaveCount(0);
       await settled(page);
       await shot(page, info, 'arrivals-after-first-save');
-      await page.getByRole('button', { name: 'Lưu hàng về' }).click();
+      await expect(rowA.getByText('đã nhận 2')).toBeVisible();
+      await receivePicked(page);
       await expect(page.getByText('Đã nhập 2 món vào tủ.')).toBeVisible();
       await expect(page.getByText(/^Hàng kỳ tháng \d+ đã về đủ/)).toBeVisible();
       expect(stockOf(a.id)).toBe(5);

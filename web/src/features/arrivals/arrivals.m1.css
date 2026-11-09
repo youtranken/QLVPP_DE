@@ -39,14 +39,13 @@
 [data-shell='admin'] .ar-warn-text { margin: 0; color: var(--c-warn); font: var(--t-label); }
 [data-shell='admin'] .ar-save { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); margin-left: auto; }
 [data-shell='admin'] .ar-batch { color: var(--c-ink-2); font: var(--t-sm); }
-[data-shell='admin'] .ar-received { display: block; color: var(--c-muted); font: var(--t-sm); font-weight: 400; }
+[data-shell='admin'] .ar-received { display: block; color: var(--c-danger); font: var(--t-sm); font-weight: 400; }
+[data-shell='admin'] .ar-full { display: inline-block; color: var(--c-ok); font: var(--t-label); white-space: nowrap; }
+[data-shell='admin'] .ar-pick { width: 20px; height: 20px; margin: 0; accent-color: var(--c-acc); cursor: pointer; }
+[data-shell='admin'] .ar-pick:disabled { cursor: default; }
 [data-shell='admin'] .ar-after-chip { display: inline-block; margin-left: var(--s-2); padding: 1px var(--s-2); border: 1px dashed var(--c-ok); border-radius: var(--r-pill); color: var(--c-ok); font: var(--t-cap); font-weight: 700; white-space: nowrap; }
 [data-shell='admin'] .ar-count { margin: 0; color: var(--c-ink-2); font: var(--t-sm); }
 [data-shell='admin'] .ar-nomatch { display: grid; justify-items: center; gap: var(--s-2); padding: var(--s-6) var(--s-4); color: var(--c-ink); text-align: center; }
-[data-shell='admin'] .ar-confirm ul { margin: var(--s-2) 0; padding-left: var(--s-5); display: grid; gap: var(--s-1); }
-[data-shell='admin'] .ar-confirm li, [data-shell='admin'] .ar-confirm p { overflow-wrap: anywhere; }
-[data-shell='admin'] .ar-confirm p { margin: 0; }
-[data-shell='admin'] .ar-confirm__more { list-style: none; color: var(--c-muted); }
 [data-shell='admin'] .ar-done__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-4); border-radius: var(--r-md); background: var(--c-ok-soft); color: var(--c-ok); font: var(--t-label); }
 [data-shell='admin'] .ar-done__head p { margin: 0; flex: 1 1 280px; }
 [data-shell='admin'] .ar-outlist { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--s-2); }

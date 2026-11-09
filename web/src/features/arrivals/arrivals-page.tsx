@@ -11,9 +11,8 @@ import { categoryLabel, useAdminItems, useAllCategories } from '@/features/catal
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import { PeriodLockGate } from '@/features/summary/period-lock-gate';
-import { NO_GROUP, applyArrivalFilter, differingRows, groupOf, isAllArrived, isShort, parseArrivalFilter, toArrivalRows } from './arrival-rows';
+import { NO_GROUP, applyArrivalFilter, groupOf, isAllArrived, isShort, isReceivable, parseArrivalFilter, receivableLines, toArrivalRows, type ArrivalRow } from './arrival-rows';
 import { ArrivalTable } from './arrival-table';
-import { SaveConfirm } from './arrivals-confirm';
 import { ArrivalsCustom } from './arrivals-custom';
 import { ArrivalsDone } from './arrivals-done';
 import { ArrivalsMakeup } from './arrivals-makeup';
@@ -75,7 +74,8 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   const adm = useAdmOutToggle(ym);
   const [added, setAdded] = useState<string[]>([]);
   const [note, setNote] = useState('');
-  const [confirming, setConfirming] = useState(false);
+  // Nhóm đã tick cho nút "Nhận đủ hàng (n nhóm)" trên thanh
+  const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
 
   if (planQ.isError || items.isError || cats.isError) return <LoadError onRetry={() => void Promise.all([planQ.refetch(), items.refetch(), cats.refetch()])} />;
   if (!planQ.data || !items.data || !cats.data) return <Loading />;
@@ -99,22 +99,42 @@ function ArrivalsBoard({ ym }: { ym: string }) {
     .map((g) => ({ ...g, rows: visible.filter((r) => groupOf(r, known) === g.id), all: tableRows.filter((r) => groupOf(r, known) === g.id) }))
     .filter((s) => s.rows.length > 0);
 
-  const toSend = tableRows.filter((r) => !r.adm_out && draft.qtyOf(r) > 0).map((row) => ({ row, qty: draft.qtyOf(row) }));
-  const invalid = tableRows.some((r) => draft.errorOf(r));
-  const diffs = differingRows(tableRows, draft.qtyOf);
+  // Theo mọi dòng của nhóm (không theo lọc): nhóm đã tick vẫn lưu khi đang bị lọc ẩn
+  const rowsOfGroups = (ids: ReadonlySet<string>) => tableRows.filter((r) => ids.has(groupOf(r, known)));
+  const hasError = (rs: ArrivalRow[]) => rs.some((r) => draft.errorOf(r));
+  // Nhóm đã tick nhưng không còn dòng nhận được (vừa lưu đủ, ADM hết hàng) không tính
+  const pickedIds = new Set([...picked].filter((id) => rowsOfGroups(new Set([id])).some(isReceivable)));
+  const pickedRows = rowsOfGroups(pickedIds);
+  const toSend = receivableLines(pickedRows, draft.qtyOf);
   const shown = new Set(rows.map((r) => r.item_id));
   const candidates = items.data
     .filter((i) => i.usable && !shown.has(i.id))
     .map((i) => ({ id: i.id, label: fmt.name(i), group: labelOf(groupOf(i, known)), search: [i.name, i.name_en, i.code].filter(Boolean).join(' ') }));
 
-  const afterSave = () => {
-    draft.reset();
-    setNote('');
-    setAdded([]);
-  };
-  const doSave = async () => {
-    await saver.save(toSend, note, plan.snapshot?.id ?? null, afterSave);
-    setConfirming(false);
+  // Lưu ngay, không hỏi xác nhận: chỉ xóa số đã gõ, món thêm và tick của các nhóm vừa lưu
+  const receive = (groupIds: ReadonlySet<string>, lines: { row: ArrivalRow; qty: number }[]) =>
+    saver.save(lines, note, plan.snapshot?.id ?? null, () => {
+      const saved = new Set(rowsOfGroups(groupIds).map((r) => r.item_id));
+      draft.clearMany([...saved]);
+      setNote('');
+      setAdded((prev) => prev.filter((id) => !saved.has(id)));
+      setPicked((prev) => new Set([...prev].filter((id) => !groupIds.has(id))));
+    });
+  const pickOf = (id: string) => {
+    const rs = rowsOfGroups(new Set([id]));
+    const lines = receivableLines(rs, draft.qtyOf);
+    return {
+      picked: picked.has(id),
+      canReceive: lines.length > 0 && !hasError(rs) && !saver.pending,
+      onPick: (on: boolean) =>
+        setPicked((prev) => {
+          const next = new Set(prev);
+          if (on) next.add(id);
+          else next.delete(id);
+          return next;
+        }),
+      onReceive: () => void receive(new Set([id]), lines),
+    };
   };
   const toggleAdm = async (key: string, on: boolean) => {
     const code = await adm.toggle(key, on);
@@ -143,11 +163,11 @@ function ArrivalsBoard({ ym }: { ym: string }) {
         shown={visible.length}
         shortCount={rows.filter(isShort).length}
         reducedCount={rows.filter((r) => r.reduced > 0).length}
-        batch={{ items: toSend.length, units: toSend.reduce((n, l) => n + l.qty, 0) }}
-        saveDisabled={invalid || toSend.length === 0 || saver.pending}
+        batch={{ groups: pickedIds.size, items: toSend.length }}
+        saveDisabled={hasError(pickedRows) || toSend.length === 0 || saver.pending}
         candidates={candidates}
         onFilter={(patch) => patchUrl(patch, true)}
-        onSave={() => (diffs.length > 0 ? setConfirming(true) : void doSave())}
+        onSave={() => void receive(pickedIds, toSend)}
         onAdd={(id) => setAdded((prev) => [...prev, id])}
       />
       {done && <ArrivalsDone plan={plan} ym={ym} admBusy={adm.busy} onToggleAdm={(key, on) => void toggleAdm(key, on)} />}
@@ -163,7 +183,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
               </button>
             </div>
           ) : (
-            <ArrivalTable sections={sections} draft={draft} admBusy={adm.busy} onToggleAdm={(r) => void toggleAdm(r.item_id, !r.adm_out)} />
+            <ArrivalTable sections={sections} draft={draft} admBusy={adm.busy} pickOf={pickOf} onToggleAdm={(r) => void toggleAdm(r.item_id, !r.adm_out)} />
           )}
           <div className="ar-foot">
             <div className="field">
@@ -177,7 +197,6 @@ function ArrivalsBoard({ ym }: { ym: string }) {
       )}
       <ArrivalsCustom ym={ym} snapshotId={plan.snapshot?.id ?? null} rows={plan.custom} admBusy={adm.busy} onToggleAdm={(key, on) => void toggleAdm(key, on)} onSaved={afterSide} />
       <ArrivalsMakeup groups={plan.makeup} onDone={afterSide} />
-      {confirming && <SaveConfirm diffs={diffs} pending={saver.pending} onBack={() => setConfirming(false)} onSave={() => void doSave()} />}
     </>
   );
 }

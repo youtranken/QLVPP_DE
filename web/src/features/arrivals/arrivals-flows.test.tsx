@@ -1,30 +1,31 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { customRow, plan, planRow } from './arrivals-fixtures';
-import { CUSTOM_URL, PLAN, PLAN_URL, RECEIPT_URL, bodiesOf, box, callsTo, open, saveBtn, stub, type } from './arrivals-test-fixtures';
+import { CUSTOM_URL, PLAN, PLAN_URL, RECEIPT_URL, bodiesOf, box, callsTo, groupBtn, open, receiveAll, stub, type } from './arrivals-test-fixtures';
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('Lưu — hộp W15 khi khác bản in', () => {
-  it('về 3/7 Bút bi và 2/2 Kẹp → hộp liệt kê 1 món; Quay lại → 0 request', async () => {
+describe('Nhận đủ hàng — lưu ngay, không hộp xác nhận', () => {
+  it('nhận 3/7 Bút bi → không hộp "khác bản in", 1 request gửi đúng 3', async () => {
     const f = stub({ plan: plan([planRow({ item_id: 'i-a', remaining: 7 }), planRow({ item_id: 'i-b', name: 'Kẹp giấy', remaining: 2 })]) });
     await open();
     await screen.findByDisplayValue('7');
     await type(box('Bút bi'), '3');
-    await userEvent.click(saveBtn());
-    const dlg = await screen.findByRole('dialog');
-    expect(dlg).toHaveTextContent('Đợt này khác bản in ở 1 món: Bút bi: về 3 / còn 7. Phần thiếu chờ đợt sau.');
-    await userEvent.click(within(dlg).getByRole('button', { name: 'Quay lại' }));
+    await userEvent.click(groupBtn('Bút'));
+    await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(0);
+    expect(bodiesOf(f, RECEIPT_URL)[0].lines).toEqual([
+      { item_id: 'i-a', qty: 3, expected_stock_qty: 0 },
+      { item_id: 'i-b', qty: 2, expected_stock_qty: 0 },
+    ]);
   });
 
-  it('khớp hết → 0 hộp, 1 request đúng body (expected_stock_qty = tủ, ym kỳ khóa, ghi chú)', async () => {
+  it('tick hai nhóm → 0 hộp, 1 request đúng body (expected_stock_qty = tủ, ym kỳ khóa, ghi chú)', async () => {
     const f = stub();
     await open();
     await screen.findByDisplayValue('6');
     await userEvent.type(screen.getByRole('textbox', { name: 'Ghi chú cho đợt này (không bắt buộc)' }), 'đợt 2');
-    await userEvent.click(saveBtn());
+    await receiveAll();
     await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(bodiesOf(f, RECEIPT_URL)[0]).toEqual({
@@ -39,27 +40,12 @@ describe('Lưu — hộp W15 khi khác bản in', () => {
     expect(await screen.findByText('Đã nhập 2 món vào tủ.')).toBeInTheDocument();
   });
 
-  it('12 món khác → 8 dòng + "và 4 món khác"', async () => {
-    const rows = Array.from({ length: 12 }, (_, i) => planRow({ item_id: `m${i}`, name: `Món ${i + 1}`, remaining: 5 }));
-    stub({ plan: plan(rows) });
-    await open();
-    await screen.findAllByDisplayValue('5');
-    for (let i = 1; i <= 12; i++) await type(box(`Món ${i}`), '1');
-    await userEvent.click(saveBtn());
-    const dlg = await screen.findByRole('dialog');
-    expect(within(dlg).getAllByRole('listitem')).toHaveLength(9);
-    expect(dlg).toHaveTextContent('Đợt này khác bản in ở 12 món');
-    expect(within(dlg).getByText('và 4 món khác')).toBeInTheDocument();
-    expect(dlg).toHaveTextContent('Món 8: về 1 / còn 5');
-    expect(dlg).not.toHaveTextContent('Món 9: về');
-  });
-
   it('409 STALE_UPDATE → "Hàng về vừa được ghi ở nơi khác — tải lại." và tải lại kế hoạch', async () => {
     const f = stub({ receipt: () => jsonResponse(409, { code: 'STALE_UPDATE', item_id: 'i-a' }) });
     await open();
     await screen.findByDisplayValue('6');
     const before = callsTo(f, PLAN_URL).length;
-    await userEvent.click(saveBtn());
+    await receiveAll();
     expect(await screen.findByRole('alert')).toHaveTextContent('Hàng về vừa được ghi ở nơi khác — tải lại.');
     await waitFor(() => expect(callsTo(f, PLAN_URL).length).toBeGreaterThan(before));
   });
@@ -70,28 +56,27 @@ describe('Lưu — hộp W15 khi khác bản in', () => {
     await screen.findByDisplayValue('6');
     await type(box('Bút bi'), '4');
     await type(box('Kẹp giấy'), '10');
-    await userEvent.click(saveBtn());
-    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Lưu hàng về' }));
+    await receiveAll();
     expect(await screen.findByRole('alert')).toHaveTextContent('Hàng về vừa được ghi ở nơi khác — tải lại.');
     expect(box('Bút bi')).toHaveValue(4);
   });
 
-  it('mọi ô 0 → "Lưu hàng về" vô hiệu; một ô 1 → bật (hai phía mốc)', async () => {
+  it('mọi ô của nhóm 0 → "Nhận đủ hàng" của nhóm vô hiệu; một ô 1 → bật (hai phía mốc)', async () => {
     stub();
     await open();
     await screen.findByDisplayValue('6');
-    await type(box('Bút bi'), '0');
     await type(box('Kẹp giấy'), '0');
-    expect(saveBtn()).toBeDisabled();
+    expect(groupBtn('Kẹp & dán')).toBeDisabled();
+    expect(groupBtn('Bút')).toBeEnabled();
     await type(box('Kẹp giấy'), '1');
-    expect(saveBtn()).toBeEnabled();
+    expect(groupBtn('Kẹp & dán')).toBeEnabled();
   });
 
   it('404 ITEM_NOT_FOUND → báo tên món', async () => {
     stub({ receipt: () => jsonResponse(404, { code: 'ITEM_NOT_FOUND', item_id: 'i-a' }) });
     await open();
     await screen.findByDisplayValue('6');
-    await userEvent.click(saveBtn());
+    await receiveAll();
     expect(await screen.findByRole('alert')).toHaveTextContent('Bút bi');
   });
 });
@@ -110,7 +95,7 @@ describe('Trạng thái "đã về đủ"', () => {
     const list = screen.getByRole('table', { name: 'Các đợt đã nhập' });
     expect(within(list).getAllByRole('row')).toHaveLength(3);
     expect(list).toHaveTextContent('đợt 2');
-    expect(screen.queryByRole('spinbutton', { name: /Hàng về/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton', { name: /Nhận đợt này/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Đủ hàng' })).toBeNull();
     expect(screen.getByRole('combobox', { name: 'Tìm món để thêm' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ADM hết hàng: Bút bi' })).toHaveAttribute('aria-pressed', 'true');

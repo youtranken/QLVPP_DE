@@ -82,7 +82,17 @@ export function toArrivalRows(plan: ArrivalsPlan, added: AdminItem[]): ArrivalRo
   return rows;
 }
 
-export const prefillOf = (r: ArrivalRow) => (r.adm_out || r.added ? 0 : r.remaining);
+// Đã nhận đủ theo Đề nghị mua: khóa ô ở UI (sai thì chỉnh ở Tủ / Kho); server vẫn cho nhận dư
+export const isReceivedFull = (r: ArrivalRow) => !r.added && r.ordered > 0 && r.received >= r.ordered;
+
+export const prefillOf = (r: ArrivalRow) => (r.adm_out || r.added || isReceivedFull(r) ? 0 : r.remaining);
+
+// Dòng còn nhận được: không ADM hết hàng, chưa nhận đủ
+export const isReceivable = (r: ArrivalRow) => !r.adm_out && !isReceivedFull(r);
+
+// Dòng gửi khi bấm "Nhận đủ hàng": ô chưa gõ = phần còn thiếu, ô đã gõ = đúng số, ADM hết hàng và dòng khóa bỏ qua
+export const receivableLines = (rows: ArrivalRow[], qtyOf: (r: ArrivalRow) => number) =>
+  rows.filter((r) => isReceivable(r) && qtyOf(r) > 0).map((row) => ({ row, qty: qtyOf(row) }));
 
 // Món ngừng đã đặt vẫn chờ về như món thường (đã đặt thì phải nhận)
 export const isShort = (r: ArrivalRow) => !r.adm_out && r.received < r.ordered;
@@ -108,10 +118,6 @@ export function applyArrivalFilter(rows: ArrivalRow[], f: ArrivalFilter, known: 
   return rows.filter((r) => (!f.g || groupOf(r, known) === f.g) && (!f.short || isShort(r)) && matches(r, f.q));
 }
 
-export function differingRows(rows: ArrivalRow[], qtyOf: (r: ArrivalRow) => number) {
-  return rows.filter((r) => !r.adm_out && !r.added && qtyOf(r) !== r.remaining).map((row) => ({ row, qty: qtyOf(row) }));
-}
-
 export function isAllArrived(plan: ArrivalsPlan): boolean {
   if (!plan.snapshot) return false;
   return plan.rows.every((r) => r.remaining === 0 || r.adm_out) && plan.custom.every((c) => c.remaining === 0 || c.adm_out);
@@ -120,6 +126,8 @@ export function isAllArrived(plan: ArrivalsPlan): boolean {
 export type QtyError = 'invalid' | 'max' | null;
 
 export function parseQty(raw: string): { qty: number; error: QtyError } {
+  // Ô trống = 0 (blur sẽ ghi lại "0"), không báo lỗi
+  if (raw.trim() === '') return { qty: 0, error: null };
   if (!/^-?\d+$/.test(raw.trim())) return { qty: 0, error: 'invalid' };
   const n = Number(raw);
   if (n < 0) return { qty: 0, error: 'invalid' };

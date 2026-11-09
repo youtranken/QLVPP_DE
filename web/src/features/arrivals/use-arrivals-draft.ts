@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { parseQty, prefillOf, type ArrivalRow } from './arrival-rows';
 
-// Số đang gõ của từng hàng (trình duyệt); thiếu thì lấy số điền sẵn. "Điền đủ cả nhóm" chỉ điền, không có bước hoàn tác
+// Số đang gõ của từng hàng (trình duyệt); thiếu thì lấy số điền sẵn (phần còn thiếu)
 export function useArrivalsDraft() {
   const [raw, setRaw] = useState<Record<string, string>>({});
 
@@ -10,20 +10,17 @@ export function useArrivalsDraft() {
   const errorOf = (r: ArrivalRow) => (r.adm_out ? null : parseQty(textOf(r)).error);
 
   const change = (id: string, value: string) => setRaw((prev) => ({ ...prev, [id]: value }));
-  const clear = (id: string) =>
+  // Xóa trống rồi rời ô: ghi lại "0" thay vì báo lỗi
+  const blur = (id: string) => setRaw((prev) => (prev[id] !== undefined && prev[id].trim() === '' ? { ...prev, [id]: '0' } : prev));
+  const clearMany = (ids: string[]) =>
     setRaw((prev) => {
       const next = { ...prev };
-      delete next[id];
+      for (const id of ids) delete next[id];
       return next;
     });
-  const reset = () => setRaw({});
+  const clear = (id: string) => clearMany([id]);
 
-  const fill = (rows: ArrivalRow[]) => {
-    const targets = rows.filter((r) => !r.adm_out);
-    setRaw((prev) => ({ ...prev, ...Object.fromEntries(targets.map((r) => [r.item_id, String(r.remaining)])) }));
-  };
-
-  return { textOf, qtyOf, errorOf, change, clear, reset, fill };
+  return { textOf, qtyOf, errorOf, change, blur, clear, clearMany };
 }
 
 export type ArrivalsDraft = ReturnType<typeof useArrivalsDraft>;

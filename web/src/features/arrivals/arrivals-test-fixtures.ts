@@ -1,4 +1,4 @@
-import { jsonResponse, screen, userEvent } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -63,12 +63,20 @@ type Fetch = ReturnType<typeof stub>;
 export const bodiesOf = (f: Fetch, url: string) => f.mock.calls.filter(([u]) => u === url).map(([, init]) => JSON.parse(String((init as RequestInit).body)));
 export const callsTo = (f: Fetch, url: string, method?: string) =>
   f.mock.calls.filter(([u, init]) => String(u).startsWith(url) && (!method || (init as RequestInit | undefined)?.method === method)).map(([u]) => String(u));
-export const box = (name: string) => screen.getByRole('spinbutton', { name: `Hàng về: ${name}` }) as HTMLInputElement;
+export const box = (name: string) => screen.getByRole('spinbutton', { name: `Nhận đợt này: ${name}` }) as HTMLInputElement;
 export async function type(el: HTMLElement, text: string) {
   await userEvent.clear(el);
   if (text) await userEvent.type(el, text);
 }
-export const saveBtn = () => screen.getByRole('button', { name: 'Lưu hàng về' });
+// Nút trên thanh: "Nhận đủ hàng (n nhóm)" cho các nhóm đã tick
+export const pickedBtn = () => screen.getByRole('button', { name: /^Nhận đủ hàng \(\d+ nhóm\)$/ });
+export const pickBox = (group: string) => screen.getByRole('checkbox', { name: `Chọn nhóm ${group}` });
+export const groupBtn = (group: string) => within(screen.getByRole('rowgroup', { name: group })).getByRole('button', { name: 'Nhận đủ hàng' });
+// Tick mọi nhóm rồi bấm nút trên thanh: lưu mọi dòng còn nhận được
+export async function receiveAll(groups = ['Bút', 'Kẹp & dán']) {
+  for (const g of groups) await userEvent.click(pickBox(g));
+  await userEvent.click(pickedBtn());
+}
 
 export async function open(path = '/admin/arrivals', width = 1280) {
   mockViewport(width);
