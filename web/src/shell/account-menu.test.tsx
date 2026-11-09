@@ -28,7 +28,6 @@ describe('AccountMenu', () => {
     expect(within(box).getByText('Nguyễn Văn An')).toBeInTheDocument();
     expect(within(box).getByText('Phòng Công trình · Nhân viên')).toBeInTheDocument();
     expect(within(box).getByText('NV0231')).toBeInTheDocument();
-    expect(within(box).getByText('Dữ liệu từ PMH ID, không sửa trong app.')).toBeInTheDocument();
   });
 
   it('popover: bấm nút lần nữa đóng; Esc đóng và trả focus về nút', async () => {
@@ -59,6 +58,6 @@ describe('AccountMenu', () => {
 
   it('câu mới không chứa " — "', async () => {
     const { default: i18n } = await import('@/lib/i18n');
-    for (const lng of ['vi', 'en']) for (const k of ['profile.menu', 'profile.openMenu', 'profile.dataFromPmhId']) expect(i18n.t(k, { lng, name: 'A' })).not.toContain(' — ');
+    for (const lng of ['vi', 'en']) for (const k of ['profile.menu', 'profile.openMenu']) expect(i18n.t(k, { lng, name: 'A' })).not.toContain(' — ');
   });
 });

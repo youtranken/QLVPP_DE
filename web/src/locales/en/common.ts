@@ -91,6 +91,8 @@ const common: Messages<typeof vi> = {
       short: 'EN',
       vi: 'Tiếng Việt',
       en: 'English',
+      viShort: 'VI',
+      enShort: 'EN',
     },
   },
 };

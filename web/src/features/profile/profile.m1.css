@@ -12,13 +12,6 @@
 [data-shell='member'] .acct-kv > div { display: flex; justify-content: space-between; gap: var(--s-3); padding: var(--s-1) 0; font: var(--t-body); }
 [data-shell='member'] .acct-kv dt { color: var(--c-ink-2); }
 [data-shell='member'] .acct-kv dd { margin: 0; font-weight: 700; color: var(--c-ink); overflow-wrap: anywhere; text-align: right; }
-[data-shell='member'] .acct-source { margin: 0; font: var(--t-body); color: var(--c-ink-2); }
-[data-shell='member'] .acct-lang { display: grid; gap: var(--s-2); padding-top: var(--s-3); border-top: 1px solid var(--c-line); }
-[data-shell='member'] .acct-lang__t { font: var(--t-label); color: var(--c-ink-2); }
-[data-shell='member'] .acct-lang .seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: fit-content; min-width: 200px; padding: 4px; gap: 4px; border-radius: var(--r-pill); background: var(--c-surface-2); border: 0; }
-[data-shell='member'] .acct-lang .seg button { min-height: 44px; padding: 0 var(--s-4); border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-ink-2); font: var(--t-label); cursor: pointer; }
-[data-shell='member'] .acct-lang .seg button[aria-checked='true'] { background: var(--c-sel); color: var(--c-on-sel); }
-[data-shell='member'] .acct-lang .seg button:focus-visible { outline: 2px solid var(--c-acc); outline-offset: 2px; }
 [data-shell='member'] .acct .btn--danger.acct-logout { min-height: 44px; border: 0; border-radius: var(--r-pill); background: var(--c-danger-soft); color: var(--c-danger); font: var(--t-label); cursor: pointer; }
 [data-shell='member'] .acct .btn--danger.acct-logout:hover:not(:disabled) { background: var(--c-danger-hover); }
 [data-shell='member'] .acct .btn--danger.acct-logout:disabled { opacity: .6; cursor: default; }

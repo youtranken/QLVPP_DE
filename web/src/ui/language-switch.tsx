@@ -3,7 +3,7 @@ import { setLanguage, type Lang } from '@/lib/i18n';
 
 const LANGS: Lang[] = ['vi', 'en'];
 
-export function LanguageSwitch({ className = '' }: { className?: string }) {
+export function LanguageSwitch({ className = '', short = false }: { className?: string; short?: boolean }) {
   const { t, i18n } = useTranslation();
   const current = i18n.language === 'en' ? 'en' : 'vi';
   return (
@@ -15,9 +15,10 @@ export function LanguageSwitch({ className = '' }: { className?: string }) {
           role="radio"
           aria-checked={current === lang}
           lang={lang}
+          aria-label={t(`common.languages.${lang}`)}
           onClick={() => void setLanguage(lang)}
         >
-          {t(`common.languages.${lang}`)}
+          {t(`common.languages.${lang}${short ? 'Short' : ''}`)}
         </button>
       ))}
     </div>

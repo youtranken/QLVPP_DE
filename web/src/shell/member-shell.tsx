@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { initialsOf } from '@/lib/initials';
 import { useMe } from '@/lib/me';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
+import { LanguageSwitch } from '@/ui/language-switch';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { AccountMenu } from '@/shell/account-menu';
 import { BottomNav } from '@/shell/bottom-nav';
@@ -55,6 +56,7 @@ export function MemberShell() {
             </nav>
           )}
           <span className="sp" />
+          <LanguageSwitch short className="seg--sm m-lang" />
           <NotificationBell />
           {narrow ? (
             <div className="m-avatar">{avatar}</div>

@@ -8,7 +8,6 @@ const profile: Messages<typeof vi> = {
     openMenu: 'Open account for {{name}}',
     email: 'Email',
     employeeCode: 'Employee ID',
-    dataFromPmhId: 'Data comes from PMH ID and cannot be edited in the app.',
   },
 };
 

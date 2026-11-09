@@ -3,7 +3,7 @@
 [data-shell='member'] .m-shell .skip-link { background: var(--c-surface); color: var(--c-ink); }
 
 [data-shell='member'] .m-top { position: sticky; top: 0; z-index: 10; background: var(--c-shell-a); border-bottom: 0; box-shadow: var(--e-2); }
-[data-shell='member'] .m-top__in { display: flex; align-items: center; max-width: 1440px; margin: 0 auto; padding: var(--s-3) var(--s-5); gap: 12px 20px; flex-wrap: wrap; box-sizing: border-box; }
+[data-shell='member'] .m-top__in { display: flex; align-items: center; padding: var(--s-3) var(--s-5); gap: 12px 20px; flex-wrap: wrap; box-sizing: border-box; }
 [data-shell='member'] .m-shell.is-narrow .m-top__in { padding: var(--s-2) var(--s-4); gap: var(--s-2); flex-wrap: nowrap; max-width: none; }
 [data-shell='member'] .m-logo { display: flex; align-items: center; text-decoration: none; gap: 12px; color: var(--c-on-dark); font-size: 16px; font-weight: 700; }
 [data-shell='member'] .m-logo i { display: grid; place-items: center; font-style: normal; width: 38px; height: 38px; border-radius: 12px; background: var(--c-logo-bg); color: var(--c-ink); font-size: 13px; font-weight: 800; }
@@ -13,6 +13,11 @@
 [data-shell='member'] .m-tabs a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s-4); border-radius: var(--r-pill); text-decoration: none; color: var(--c-on-dark-2); font-size: 14px; font-weight: 600; }
 [data-shell='member'] .m-tabs a:hover { background: var(--c-on-dark-hover); color: var(--c-on-dark); }
 [data-shell='member'] .m-tabs a[aria-current='page'] { background: var(--c-surface); color: var(--c-ink); }
+
+[data-shell='member'] .m-top .m-lang { background: var(--c-glass); border: 1px solid var(--c-glass-line); }
+[data-shell='member'] .m-top .m-lang button { min-height: 36px; color: var(--c-on-dark-2); box-shadow: none; }
+[data-shell='member'] .m-top .m-lang button[aria-checked='true'] { background: var(--c-surface); color: var(--c-ink); }
+[data-shell='member'] .m-top .m-lang button:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
 
 [data-shell='member'] .m-top .notif-btn { width: 44px; height: 44px; border-radius: var(--r-pill); border: 1px solid var(--c-glass-line); background: var(--c-on-dark-fill); color: var(--c-on-dark-2); }
 [data-shell='member'] .m-top .notif-btn:hover { background: var(--c-on-dark-fill); color: var(--c-on-dark); }

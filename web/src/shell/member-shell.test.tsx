@@ -28,7 +28,7 @@ describe('MemberShell', () => {
     const sheet = screen.getByRole('dialog', { name: 'Tài khoản' });
     expect(sheet).toHaveClass('sheet--bottom');
     expect(screen.getByTestId('location')).toHaveTextContent('/');
-    expect(within(sheet).getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
+    expect(within(sheet).queryByRole('radiogroup')).toBeNull();
     expect(within(sheet).getByRole('button', { name: 'Đăng xuất' })).toHaveClass('btn--danger');
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
@@ -41,16 +41,15 @@ describe('MemberShell', () => {
     expect(within(screen.getByRole('navigation', { name: 'Điều hướng chính' })).getByRole('button', { name: 'Tôi' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('1280 px: mở hộp tài khoản khi đang English → focus vào "English", không phải "Tiếng Việt"', async () => {
-    mockViewport(1280);
-    await i18n.changeLanguage('en');
-    try {
-      renderApp(makeMe('member'), '/');
-      await userEvent.click(screen.getByRole('button', { name: /^Open account for / }));
-      expect(within(screen.getByRole('dialog', { name: 'Account' })).getByRole('radio', { name: 'English' })).toHaveFocus();
-    } finally {
-      await i18n.changeLanguage('vi');
-    }
+  it.each([390, 1280])('%i px: header có nút đổi ngôn ngữ VI/EN đứng trước chuông', (width) => {
+    mockViewport(width);
+    renderApp(makeMe('member'), '/');
+    const banner = screen.getByRole('banner');
+    const group = within(banner).getByRole('radiogroup', { name: 'Ngôn ngữ' });
+    expect(within(group).getByRole('radio', { name: 'Tiếng Việt' })).toHaveTextContent('VI');
+    expect(within(group).getByRole('radio', { name: 'English' })).toHaveTextContent('EN');
+    const bell = within(banner).getByRole('button', { name: /^Thông báo/ });
+    expect(group.compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('1280 px: banner full-bleed bọc nội dung trong .m-top__in (nền đặc nằm ở banner, nội dung giữ max 1440)', () => {
@@ -68,7 +67,7 @@ describe('MemberShell', () => {
     expect(screen.queryByRole('link', { name: 'Tôi' })).toBeNull();
   });
 
-  it('1280 px: bấm tên ở góc phải mở hộp "Tài khoản" có ngôn ngữ và "Đăng xuất"', async () => {
+  it('1280 px: bấm tên ở góc phải mở hộp "Tài khoản" có "Đăng xuất"', async () => {
     mockViewport(1280);
     renderApp(makeMe('member'), '/');
     const btn = screen.getByRole('button', { name: 'Mở tài khoản của Nguyễn Văn An' });
@@ -78,9 +77,9 @@ describe('MemberShell', () => {
     const box = screen.getByRole('dialog', { name: 'Tài khoản' });
     expect(within(box).getByText('Phòng Công trình · Nhân viên')).toBeInTheDocument();
     expect(within(box).getByText('an.nguyen@pmh.com.vn')).toBeInTheDocument();
-    expect(within(box).getByText('Dữ liệu từ PMH ID, không sửa trong app.')).toBeInTheDocument();
+    expect(within(box).queryByText(/PMH ID/)).toBeNull();
     expect(within(box).getByRole('button', { name: 'Đăng xuất' })).toHaveClass('btn--danger');
-    expect(within(box).getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
+    expect(within(box).queryByRole('radiogroup')).toBeNull();
   });
 
   it('popover: Esc đóng và trả focus về nút tên; bấm ra ngoài đóng', async () => {

@@ -88,6 +88,8 @@ const common = {
       short: 'VI',
       vi: 'Tiếng Việt',
       en: 'English',
+      viShort: 'VI',
+      enShort: 'EN',
     },
   },
 };

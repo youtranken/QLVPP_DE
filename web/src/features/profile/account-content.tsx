@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { logout } from '@/lib/auth-actions';
 import { initialsOf } from '@/lib/initials';
 import { useMe } from '@/lib/me';
-import { LanguageSwitch } from '@/ui/language-switch';
 import './profile.m1.css';
 
 // Nội dung tài khoản dùng chung cho hộp ở đầu trang (máy tính), sheet điện thoại và trang /me
@@ -43,11 +42,6 @@ export function AccountContent() {
           </div>
         ))}
       </dl>
-      <p className="acct-source">{t('profile.dataFromPmhId')}</p>
-      <div className="acct-lang">
-        <span className="acct-lang__t">{t('common.languages.label')}</span>
-        <LanguageSwitch />
-      </div>
       {failed && (
         <p role="alert" className="pf-alert">
           {t('auth.logoutFailed')}

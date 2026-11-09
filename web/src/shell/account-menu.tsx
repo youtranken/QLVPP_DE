@@ -54,7 +54,7 @@ export function AccountMenu(props: Props) {
         </DialogTitle>
         <DialogCloseButton />
       </div>
-      <DialogDescription className="sr-only">{t('profile.dataFromPmhId')}</DialogDescription>
+      <DialogDescription className="sr-only">{t('profile.menu')}</DialogDescription>
       <AccountContent />
     </Dialog>
   );

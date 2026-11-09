@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { screen, userEvent } from '@/test/test-utils';
+import { screen, userEvent, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -23,18 +23,8 @@ describe('Trang Tôi', () => {
     expect(screen.getByText('an.nguyen@pmh.com.vn')).toBeInTheDocument();
     expect(screen.getByText('Phòng Công trình · Nhân viên')).toBeInTheDocument();
     expect(screen.getByText('NV0231')).toBeInTheDocument();
-    expect(screen.getByText('Dữ liệu từ PMH ID, không sửa trong app.')).toBeInTheDocument();
+    expect(screen.queryByText(/PMH ID/)).toBeNull();
     expect(screen.queryByRole('textbox')).toBeNull();
-  });
-
-  it('đổi sang English → nhãn đổi và lưu lựa chọn', async () => {
-    mockViewport(390);
-    renderApp(makeMe('member'), '/me');
-    await userEvent.click(screen.getByRole('radio', { name: 'English' }));
-    expect(await screen.findByRole('heading', { level: 1, name: 'Me' })).toBeInTheDocument();
-    expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument();
-    expect(localStorage.getItem('vpp_lang')).toBe('en');
-    expect(document.documentElement.lang).toBe('en');
   });
 
   it('Đăng xuất gửi POST /api/auth/logout kèm X-CSRF-Token rồi về /', async () => {
@@ -66,12 +56,12 @@ describe('Trang Tôi', () => {
     expect(button).toBeEnabled();
   });
 
-  it('/me vẫn mở được (liên kết cũ) và hiện cùng nội dung AccountContent: Email, Mã nhân viên, Ngôn ngữ, Đăng xuất danger', () => {
+  it('/me vẫn mở được (liên kết cũ) và hiện cùng nội dung AccountContent: Email, Mã nhân viên, Đăng xuất danger', () => {
     mockViewport(1280);
     renderApp(makeMe('member'), '/me');
     expect(screen.getByText('Email')).toBeInTheDocument();
     expect(screen.getByText('Mã nhân viên')).toBeInTheDocument();
-    expect(screen.getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
+    expect(within(screen.getByRole('main')).queryByRole('radiogroup')).toBeNull();
     expect(screen.getByRole('button', { name: 'Đăng xuất' })).toHaveClass('btn--danger');
   });
 });
