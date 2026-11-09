@@ -2,7 +2,10 @@ import { sql } from 'drizzle-orm';
 import { ymToDate } from '../../common/period';
 import type { Executor } from '../../database/database.module';
 import { ITEM_ORDER } from './item-order';
-import { CUSTOM_ITEM_KEY, UNDELIVERED_LINE } from '../requests/line-predicates';
+import {
+  CUSTOM_ITEM_KEY,
+  OPEN_LINE_ANY_STATUS,
+} from '../requests/line-predicates';
 
 export interface ItemFactsRow {
   item_id: string;
@@ -56,7 +59,7 @@ export async function itemFacts(
            EXISTS (SELECT 1 FROM period_adm_out a
                    WHERE a.period_ym = ${k}::date AND a.line_key = i.id::text AND a.kind = 'out') AS adm_out,
            (SELECT count(*) FROM request_lines l JOIN requests r ON r.id = l.request_id
-            WHERE l.item_id = i.id AND r.period_ym = ${k}::date AND ${UNDELIVERED_LINE})::int AS open_lines,
+            WHERE l.item_id = i.id AND r.period_ym = ${k}::date AND ${OPEN_LINE_ANY_STATUS})::int AS open_lines,
            coalesce((SELECT sum(a.qty_before - a.qty_after) FROM request_line_adjustments a
                      WHERE a.item_id = i.id AND a.period_ym <= ${k}::date
                        AND a.created_at > ${snapshotAt}::timestamptz), 0)::int AS reduced_after_snapshot
@@ -88,7 +91,7 @@ export async function customFacts(
            EXISTS (SELECT 1 FROM period_adm_out a
                    WHERE a.period_ym = ${k}::date AND a.line_key = keys.key AND a.kind = 'out') AS adm_out,
            (SELECT count(*) FROM request_lines l JOIN requests r ON r.id = l.request_id
-            WHERE l.item_id IS NULL AND r.period_ym = ${k}::date AND ${UNDELIVERED_LINE}
+            WHERE l.item_id IS NULL AND r.period_ym = ${k}::date AND ${OPEN_LINE_ANY_STATUS}
               AND ${CUSTOM_ITEM_KEY} = keys.key)::int AS open_lines
     FROM keys`);
   return new Map(rows.map(({ key, ...rest }) => [key, rest]));

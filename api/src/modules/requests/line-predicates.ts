@@ -18,6 +18,8 @@ export const REMAINING_QTY = sql.raw(
   '(l.qty - l.delivered_qty - l.cancelled_qty)',
 );
 export const UNDELIVERED_LINE = sql`(${EFFECTIVE_LINE} AND ${REMAINING_QTY} > 0)`;
+// Dòng còn mở KHÔNG xét tạm ngưng: chỉ cho kiểm "ADM hết hàng" (đánh/bỏ dấu, chốt) để món đánh dấu rồi tạm ngưng không bị kẹt
+export const OPEN_LINE_ANY_STATUS = sql`(l.review_status IN ('n/a', 'accepted', 'converted') AND ${REMAINING_QTY} > 0)`;
 // Còn nợ = phần chưa giao của kỳ trước tháng đang giao; phần còn lại của chính tháng đó là "Chưa nhận"
 export const DEBT_LINE_SQL = (latestLockedYm: string): SQL =>
   sql`(${UNDELIVERED_LINE} AND r.period_ym < ${ymToDate(latestLockedYm)}::date)`;

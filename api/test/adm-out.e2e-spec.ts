@@ -117,6 +117,41 @@ describe('V2D-5 ADM hết hàng theo kỳ: PUT/DELETE adm-out, nhập hàng về
       expect((await f.rowOf(YM, item))?.adm_out_final).toBe(true);
     });
 
+    it('món tạm ngưng sau khi đánh dấu (dòng chưa giao vẫn là dòng mở) → chưa chốt, DELETE 204, nhận hàng 200; món đã đặt đang tạm ngưng vẫn PUT 200', async () => {
+      const item = await f.stockItem(0);
+      const other = await f.stockItem(0);
+      await f.seedLine(YM, A, { item_id: item, qty: 2 });
+      await f.seedLine(YM, B, { item_id: other, qty: 1 });
+      await f.insertSnapshot(
+        YM,
+        {
+          ym: YM,
+          byItem: [
+            { key: item, item_id: item },
+            { key: other, item_id: other },
+          ],
+          custom: [],
+          order_qty: { [item]: 2, [other]: 1 },
+        },
+        '2026-11-11T03:00:00Z',
+      );
+      await markOut(YM, item).expect(200);
+      await pool().query(
+        'UPDATE items SET active = false WHERE id = ANY($1::uuid[])',
+        [[item, other]],
+      );
+      expect((await f.rowOf(YM, item))?.adm_out_final).toBe(false);
+      await unmarkOut(YM, item).expect(204);
+      expect((await f.rowOf(YM, item))?.adm_out).toBe(false);
+      await receipts({
+        ym: YM,
+        lines: [{ item_id: item, qty: 2, expected_stock_qty: 0 }],
+      }).expect(200);
+      expect(await f.stockOf(item)).toBe(2);
+      await markOut(YM, other).expect(200);
+      expect((await f.rowOf(YM, other))?.adm_out).toBe(true);
+    });
+
     it('kỳ sau khóa sổ (R-D11.12): .999 → PUT 200; .000 → PUT và DELETE 409 ADM_OUT_FINAL, không audit', async () => {
       await f.ensurePeriod(OLD);
       await f.ensurePeriod(OLD_NEXT);

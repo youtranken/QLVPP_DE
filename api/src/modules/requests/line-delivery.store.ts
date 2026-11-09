@@ -5,6 +5,7 @@ import { ymToDate } from '../../common/period';
 import {
   CUSTOM_ITEM_KEY,
   EFFECTIVE_LINE,
+  OPEN_LINE_ANY_STATUS,
   REMAINING_QTY,
   UNDELIVERED_LINE,
 } from './line-predicates';
@@ -47,7 +48,7 @@ const LINE_COLUMNS = sql`
 `;
 
 // Dòng còn phần chưa giao của một khóa món trong kỳ; thứ tự theo phiếu để khóa cùng chiều lockLine
-// Kiểm "còn dòng mở không" chỉ cần đếm, không kéo id về
+// Kiểm "còn dòng mở không" chỉ cần đếm, không kéo id về; dùng cho ADM hết hàng nên tính cả dòng món tạm ngưng
 export async function openLineCount(
   ex: Executor,
   ym: string,
@@ -55,7 +56,7 @@ export async function openLineCount(
 ): Promise<number> {
   const { rows } = await ex.execute<{ n: number }>(sql`
     SELECT count(*)::int AS n FROM request_lines l JOIN requests r ON r.id = l.request_id
-    WHERE r.period_ym = ${ymToDate(ym)}::date AND ${UNDELIVERED_LINE}
+    WHERE r.period_ym = ${ymToDate(ym)}::date AND ${OPEN_LINE_ANY_STATUS}
       AND coalesce(l.item_id::text, ${CUSTOM_ITEM_KEY}) = ${key}
   `);
   return rows[0].n;
