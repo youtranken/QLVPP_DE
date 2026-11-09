@@ -30,6 +30,9 @@ function setup(opts: {
     }),
     markNoAccess: jest.fn().mockResolvedValue(true),
     touchChecked: jest.fn().mockResolvedValue(undefined),
+    applyDirectoryUser: jest.fn().mockResolvedValue(undefined),
+    applyDirectoryStatus: jest.fn().mockResolvedValue(true),
+    restoreActive: jest.fn().mockResolvedValue(false),
   };
   const audit = { append: jest.fn().mockResolvedValue(undefined) };
   const service = new DirectoryReconcileService(
@@ -281,17 +284,56 @@ describe('DirectoryReconcileService', () => {
     expect(r).toEqual({ no_access: 2, unconfirmed: 1, reconcile: 'ok' });
   });
 
-  it('lookup trả in (danh sách và chi tiết lệch nhau) → không đánh dấu', async () => {
+  it('lookup trả in (danh sách và chi tiết lệch nhau) → không đánh dấu, cập nhật hồ sơ theo dữ liệu trả về', async () => {
     const s = scenario(10, 2);
+    const detail = (sub: string) =>
+      ({ id: sub, status: 'active', full_name: `Tên ${sub}` }) as DirectoryUser;
     const { service, access } = setup({
       ...s,
-      lookup: (sub) => ({ kind: 'in', user: listedUser(sub) }),
+      lookup: (sub) => ({ kind: 'in', user: detail(sub) }),
     });
     const r = await service.run(s.listed, START, 'sa');
     expect(r).toEqual({ no_access: 0, unconfirmed: 0, reconcile: 'ok' });
     expect(access.markNoAccess).not.toHaveBeenCalled();
     expect(access.touchChecked).toHaveBeenCalledTimes(2);
+    // canary không bị ghi lại; chỉ 2 người vắng
+    expect(access.applyDirectoryUser).toHaveBeenCalledTimes(2);
+    expect(access.applyDirectoryUser).toHaveBeenCalledWith(detail('u9'), 'sa');
+    expect(access.applyDirectoryUser).toHaveBeenCalledWith(
+      detail('u10'),
+      'sa',
+    );
+    expect(access.applyDirectoryStatus).not.toHaveBeenCalled();
+    // active nhưng VPP đang locked → mở theo restoreActive (có mốc bắt đầu sync, có audit)
+    expect(access.restoreActive).toHaveBeenCalledWith(
+      'u9',
+      START,
+      'directory',
+      'sa',
+      ['locked'],
+    );
   });
+
+  it.each(['locked', 'deleted'] as const)(
+    'lookup trả in với status %s → áp hồ sơ rồi đặt status đó',
+    async (status) => {
+      const s = scenario(10, 1);
+      const { service, access } = setup({
+        ...s,
+        lookup: (sub) => ({
+          kind: 'in',
+          user: listedUser(sub, sub === 'u1' ? 'active' : status),
+        }),
+      });
+      await service.run(s.listed, START, 'sa');
+      expect(access.applyDirectoryUser).toHaveBeenCalledWith(
+        listedUser('u10', status),
+        'sa',
+      );
+      expect(access.applyDirectoryStatus).toHaveBeenCalledWith('u10', status);
+      expect(access.restoreActive).not.toHaveBeenCalled();
+    },
+  );
 
   it('markNoAccess trả false (đã đổi xen giữa) → không đếm', async () => {
     const s = scenario(10, 2);

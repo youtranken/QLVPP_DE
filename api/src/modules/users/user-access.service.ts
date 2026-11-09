@@ -183,6 +183,23 @@ export class UserAccessService {
     this.logger.debug(`applyDirectoryUser ${u.id} (${actor})`);
   }
 
+  // Khoá/xoá theo Directory cho người đang active|locked; người đã no_access giữ nguyên (thu hồi xen giữa)
+  async applyDirectoryStatus(
+    sub: string,
+    status: 'locked' | 'deleted',
+  ): Promise<boolean> {
+    const r = await this.db.execute<{ sub: string }>(sql`
+      UPDATE users SET status = ${status},
+        inactive_at = CASE WHEN status = 'active' OR inactive_at IS NULL
+                           THEN clock_timestamp() ELSE inactive_at END,
+        updated_at = now()
+      WHERE sub = ${sub} AND status IN ('active', 'locked') AND status <> ${status}
+        AND sub NOT LIKE 'local%'
+      RETURNING sub
+    `);
+    return r.rows.length === 1;
+  }
+
   // Hồ sơ từ payload webhook (chỉ user đã có); app_role chỉ ghi khi payload có
   async applyWebhookProfile(p: WebhookProfile): Promise<void> {
     const dept = directoryLabel(p.department);

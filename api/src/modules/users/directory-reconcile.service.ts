@@ -88,10 +88,12 @@ export class DirectoryReconcileService {
         }
         continue;
       }
-      // `in`: danh sách và chi tiết lệch nhau — lượt sau xét lại
+      if (r.kind === 'in') {
+        await this.applyFound(r.user, syncStartedAt, actor);
+        continue;
+      }
       if (
-        r.kind === 'out' &&
-        (await this.access.markNoAccess(sub, 'directory', actor, syncStartedAt))
+        await this.access.markNoAccess(sub, 'directory', actor, syncStartedAt)
       ) {
         marked += 1;
       }
@@ -108,6 +110,27 @@ export class DirectoryReconcileService {
       reconcile: stopped ? 'aborted' : 'ok',
       ...(stopped ? { reconcile_reason: 'rate_limited' as const } : {}),
     };
+  }
+
+  // Vắng danh sách nhưng chi tiết trả 200: còn quyền vào VPP → áp hồ sơ + status theo dữ liệu trả về.
+  // Mở khoá chỉ qua restoreActive (mốc bắt đầu sync, có audit); không bao giờ mở no_access ở đây.
+  private async applyFound(
+    user: DirectoryUser,
+    syncStartedAt: Date,
+    actor: string,
+  ): Promise<void> {
+    await this.access.applyDirectoryUser(user, actor);
+    if (user.status === 'active') {
+      await this.access.restoreActive(
+        user.id,
+        syncStartedAt,
+        'directory',
+        actor,
+        ['locked'],
+      );
+      return;
+    }
+    await this.access.applyDirectoryStatus(user.id, user.status);
   }
 
   private async abort(

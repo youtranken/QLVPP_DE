@@ -15,12 +15,17 @@ const scenario: {
   gone: Set<string>;
   duringFetch?: () => Promise<void>;
   fail?: Error;
-} = { listed: [], gone: new Set() };
+  // Chi tiết GET /users/:id trả 200 riêng cho từng id (mặc định {id, status: active})
+  details: Map<string, DirectoryUser>;
+  // Số request coi như đã tiêu thêm cho các trang danh bạ (thử ngân sách 48)
+  extraPages: number;
+} = { listed: [], gone: new Set(), details: new Map(), extraPages: 0 };
 
 describe('Directory sync v3 (Postgres thật, Directory giả)', () => {
   let app: INestApplication;
   let pool: Pool;
   let requests = 0;
+  let asked: string[] = [];
   const P = `dsync-${Date.now()}-`;
   const sub = (s: string) => `${P}${s}`;
   const q = <T extends object = Record<string, unknown>>(
@@ -34,7 +39,7 @@ describe('Directory sync v3 (Postgres thật, Directory giả)', () => {
     },
     requestCount: () => requests,
     fetchUsers: async (): Promise<DirectoryUser[]> => {
-      requests += 1;
+      requests += 1 + scenario.extraPages;
       await scenario.duringFetch?.();
       if (scenario.fail) throw scenario.fail;
       const mine = new Set(scenario.listed.map((u) => u.id));
@@ -59,8 +64,11 @@ describe('Directory sync v3 (Postgres thật, Directory giả)', () => {
     },
     fetchUser: (id: string): Promise<DirectoryUser | null> => {
       requests += 1;
+      asked.push(id);
       return Promise.resolve(
-        scenario.gone.has(id) ? null : { id, status: 'active' },
+        scenario.gone.has(id)
+          ? null
+          : (scenario.details.get(id) ?? { id, status: 'active' }),
       );
     },
   };
@@ -114,6 +122,9 @@ describe('Directory sync v3 (Postgres thật, Directory giả)', () => {
     scenario.gone = new Set();
     scenario.duringFetch = undefined;
     scenario.fail = undefined;
+    scenario.details = new Map();
+    scenario.extraPages = 0;
+    asked = [];
   });
 
   afterAll(async () => {
@@ -293,6 +304,94 @@ describe('Directory sync v3 (Postgres thật, Directory giả)', () => {
     const row = await userRow(DEL);
     expect(row.status).toBe('deleted');
     expect(row.inactive_at?.toISOString()).toBe('2026-01-01T00:00:00.000Z');
+  });
+
+  // Người của các ca trước (cùng tiền tố) ra khỏi tập đối chiếu: ca dưới chỉ xét đúng người của mình
+  const retireEarlierUsers = () =>
+    q(
+      `UPDATE users SET status = 'deleted', inactive_at = now()
+       WHERE sub LIKE $1 AND status IN ('active','locked')`,
+      [`${P}%`],
+    );
+
+  it('vắng danh sách nhưng GET /users/:id trả 200 → cập nhật hồ sơ theo dữ liệu trả về; status locked → locked', async () => {
+    await retireEarlierUsers();
+    const [CANARY, FRESH, LOCKED] = [
+      sub('r200-canary'),
+      sub('r200-fresh'),
+      sub('r200-locked'),
+    ];
+    await addUser(FRESH);
+    await addUser(LOCKED);
+    await q(`UPDATE users SET department = 'Cũ', team = 'Cũ' WHERE sub = $1`, [
+      FRESH,
+    ]);
+    scenario.listed = [listed(CANARY)];
+    scenario.details = new Map([
+      [
+        FRESH,
+        {
+          id: FRESH,
+          status: 'active',
+          full_name: 'Tên Mới',
+          email: 'ten.moi@pmh.com.vn',
+          department: 'Phòng Mới',
+          team: null,
+          app_role: 'member',
+        },
+      ],
+      [LOCKED, { id: LOCKED, status: 'locked', app_role: 'member' }],
+    ]);
+    const r = await sync();
+    expect(r).toMatchObject({ reconcile: 'ok', no_access: 0 });
+    const fresh = await q<Record<string, unknown>>(
+      'SELECT full_name, email, department, team, status FROM users WHERE sub = $1',
+      [FRESH],
+    );
+    expect(fresh.rows[0]).toEqual({
+      full_name: 'Tên Mới',
+      email: 'ten.moi@pmh.com.vn',
+      department: 'Phòng Mới',
+      team: null,
+      status: 'active',
+    });
+    const locked = await userRow(LOCKED);
+    expect(locked.status).toBe('locked');
+    expect(locked.inactive_at).not.toBeNull();
+  });
+
+  it('hết ngân sách 48 request → mỗi lượt hỏi người có access_checked_at NULL/cũ nhất trước, lượt sau hỏi người kế', async () => {
+    await retireEarlierUsers();
+    const CANARY = sub('fair-canary');
+    const [A, B, C] = [sub('fair-c'), sub('fair-a'), sub('fair-b')];
+    await addUser(A);
+    await addUser(B);
+    await addUser(C);
+    // A chưa hỏi lần nào (NULL), B hỏi lâu nhất, C hỏi gần hơn; tên sub ngược thứ tự để không trùng sắp theo sub
+    await q(
+      `UPDATE users SET access_checked_at = '2026-01-01T00:00:00Z' WHERE sub = $1`,
+      [B],
+    );
+    await q(
+      `UPDATE users SET access_checked_at = '2026-06-01T00:00:00Z' WHERE sub = $1`,
+      [C],
+    );
+    scenario.listed = [listed(CANARY)];
+    // 1 trang + 45 trang giả + canary = 47 → chỉ còn đúng 1 lần hỏi từng người
+    scenario.extraPages = 45;
+    const round = async () => {
+      asked = [];
+      const r = await sync();
+      // Lần hỏi đầu luôn là canary (người active đầu danh sách, có thể của suite khác)
+      return { r, probed: asked.slice(1) };
+    };
+    const r1 = await round();
+    expect(r1.probed).toEqual([A]);
+    expect(r1.r).toMatchObject({ reconcile: 'ok', unconfirmed: 2 });
+    expect((await round()).probed).toEqual([B]);
+    expect((await round()).probed).toEqual([C]);
+    // Cả ba đã hỏi: người hỏi lâu nhất (A, lượt 1) quay lại đầu hàng
+    expect((await round()).probed).toEqual([A]);
   });
 
   it('local:sa và local-test-* vắng danh sách → không bị hỏi, không đổi', async () => {
