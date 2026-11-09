@@ -27,6 +27,13 @@ services:
       # Tài khoản thử CHỈ dev; prod để trống (api từ chối khởi động nếu có biến khi NODE_ENV=production)
       LOCAL_TEST_ACCOUNTS: ${LOCAL_TEST_ACCOUNTS:-}
       FILES_DIR: /data/files
+      # Email báo Hành chính (người mất quyền còn việc dở); thiếu HOST/FROM = tắt email, chuông vẫn chạy
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
     volumes:
       - filesdata:/data/files
     depends_on:
