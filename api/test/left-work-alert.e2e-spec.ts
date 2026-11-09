@@ -9,6 +9,7 @@ import {
 } from '../src/database/migration-runner';
 import { MailOutbox } from '../src/modules/mail/mail-outbox';
 import { MAIL_TRANSPORT } from '../src/modules/mail/mail-transport';
+import { NotificationsService } from '../src/modules/notifications/notifications.service';
 import { PeriodsService } from '../src/modules/periods/periods.service';
 import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
 import type { DirectoryUser } from '../src/modules/users/directory.client';
@@ -346,6 +347,50 @@ describe('Báo Hành chính khi người mất quyền còn việc dở (mục 6
     expect((await audits(sub, 'users.left_no_work')).rows[0].detail).toEqual({
       reason: 'locked',
       open_request: true,
+    });
+  });
+
+  it('còn việc dở nhưng không có Hành chính active → vẫn ghi nhật ký left_with_work (notified 0), không email', async () => {
+    const sub = await newUser('noadmin');
+    await catalogLine(await request_(sub, LOCKED_YM), 2);
+    const spy = jest
+      .spyOn(app.get(NotificationsService), 'adminRecipients')
+      .mockResolvedValueOnce([]);
+    try {
+      await webhook('user.locked', sub);
+    } finally {
+      spy.mockRestore();
+    }
+    expect((await alerts(sub)).rows).toHaveLength(0);
+    expect(await mailsFor(sub)).toHaveLength(0);
+    const audit = (await audits(sub, 'users.left_with_work')).rows;
+    expect(audit).toHaveLength(1);
+    expect(audit[0].detail).toMatchObject({
+      reason: 'locked',
+      owed_lines: 1,
+      notified: 0,
+      notify_error: 'no_active_admin',
+    });
+  });
+
+  it('ghi chuông lỗi → vẫn ghi nhật ký left_with_work (notified 0), không email', async () => {
+    const sub = await newUser('bellfail');
+    await catalogLine(await request_(sub, LOCKED_YM), 2);
+    const spy = jest
+      .spyOn(app.get(NotificationsService), 'notifyWithin')
+      .mockResolvedValueOnce(0);
+    try {
+      await webhook('user.locked', sub);
+    } finally {
+      spy.mockRestore();
+    }
+    expect((await alerts(sub)).rows).toHaveLength(0);
+    expect(await mailsFor(sub)).toHaveLength(0);
+    const audit = (await audits(sub, 'users.left_with_work')).rows;
+    expect(audit).toHaveLength(1);
+    expect(audit[0].detail).toMatchObject({
+      notified: 0,
+      notify_error: 'notification_write_failed',
     });
   });
 

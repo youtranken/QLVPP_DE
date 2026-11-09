@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { ClockService } from '../../common/clock.service';
 import { ymToDate } from '../../common/period';
@@ -46,6 +46,8 @@ async function pendingWork(tx: Tx, sub: string, openYm: string): Promise<Work> {
 // không còn việc → chỉ nhật ký. event_id gắn mốc rời active → một lần mỗi lần mất quyền.
 @Injectable()
 export class LeftWorkAlertService implements OnModuleInit {
+  private readonly logger = new Logger(LeftWorkAlertService.name);
+
   constructor(
     @Inject(DRIZZLE_DB) private readonly db: Database,
     private readonly access: UserAccessService,
@@ -98,15 +100,27 @@ export class LeftWorkAlertService implements OnModuleInit {
       }
       const admins = await this.notifications.adminRecipients(tx);
       const link = leftWorkLink(sub, params);
+      const eventId = eventIds.leftWork(sub, user.inactive_ms);
       const inserted = await this.notifications.notifyWithin(tx, {
-        eventId: eventIds.leftWork(sub, user.inactive_ms),
+        eventId,
         recipients: admins,
         topic: 'user_left_with_work',
         params: { ...params },
         link,
         now,
       });
-      if (inserted === 0) return null;
+      let notifyError: string | null = null;
+      if (inserted === 0) {
+        // 0 dòng: đã báo lần này rồi (event_id trùng) → thôi; còn lại là không ai nhận / ghi chuông lỗi
+        // → vẫn ghi nhật ký để việc dở không mất dấu
+        const seen = await tx.execute(sql`
+          SELECT 1 FROM in_app_notifications WHERE event_id = ${eventId} LIMIT 1
+        `);
+        if (seen.rows.length > 0) return null;
+        notifyError =
+          admins.length === 0 ? 'no_active_admin' : 'notification_write_failed';
+        this.logger.warn({ msg: 'left_work_unnotified', reason: notifyError });
+      }
       await this.audit.appendWithin(tx, {
         actor: ACTOR,
         action: 'users.left_with_work',
@@ -118,8 +132,10 @@ export class LeftWorkAlertService implements OnModuleInit {
           pending_lines: work.pending_lines,
           open_request: work.open_request,
           notified: inserted,
+          ...(notifyError ? { notify_error: notifyError } : {}),
         },
       });
+      if (notifyError) return null;
       const emails = await tx.execute<{ email: string }>(sql`
         SELECT DISTINCT email FROM users
         WHERE sub = ANY(${sql.param(admins)}::text[]) AND nullif(trim(email), '') IS NOT NULL
