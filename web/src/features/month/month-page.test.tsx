@@ -3,7 +3,8 @@ import { screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
-import { calledUrls, stubMonthApi } from './month-fixtures';
+import { jsonResponse } from '@/test/test-utils';
+import { LOCKED, calledUrls, stubMonthApi } from './month-fixtures';
 
 const search = () => screen.getByTestId('location-search').textContent ?? '';
 const open = (path = '/admin/month?ym=2026-10') => {
@@ -110,6 +111,41 @@ describe('MonthPage: kỳ khóa', () => {
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người hoặc phòng' }), 'phòng test');
     await waitFor(() => expect(calledUrls(f).some((u) => u.includes('q=ph%C3%B2ng+test'))).toBe(true));
     await waitFor(() => expect(t.queryByRole('button', { name: 'Xem phiếu của Nguyễn Văn An' })).toBeNull());
+  });
+});
+
+describe('MonthPage: kỳ mặc định khi URL không có ym', () => {
+  const lockedSummary = (over: Partial<typeof LOCKED>) => (url: string) =>
+    url === '/api/admin/periods/2026-10/summary' ? jsonResponse(200, { ...LOCKED, ...over }) : undefined;
+
+  it('kỳ khóa còn dòng chưa giao → mở kỳ khóa ?ym=2026-10', async () => {
+    stubMonthApi();
+    open('/admin/month');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 10' })).toBeInTheDocument();
+    await waitFor(() => expect(search()).toBe('?ym=2026-10'));
+  });
+
+  it('kỳ khóa không có phiếu (registered=0) → mở kỳ đang đăng ký ?ym=2026-11', async () => {
+    stubMonthApi(lockedSummary({ registered: 0, lines_pending_delivery: 0 }));
+    open('/admin/month');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 11' })).toBeInTheDocument();
+    await waitFor(() => expect(search()).toBe('?ym=2026-11'));
+  });
+
+  it('kỳ khóa đã giao xong (lines_pending_delivery=0) → mở kỳ đang đăng ký', async () => {
+    stubMonthApi(lockedSummary({ lines_pending_delivery: 0 }));
+    open('/admin/month');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 11' })).toBeInTheDocument();
+    await waitFor(() => expect(search()).toBe('?ym=2026-11'));
+  });
+
+  it('có ?ym= → giữ nguyên, không hỏi tổng kết kỳ khóa để chọn mặc định', async () => {
+    const f = stubMonthApi(lockedSummary({ lines_pending_delivery: 0 }));
+    open('/admin/month?ym=2026-11');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 11' })).toBeInTheDocument();
+    await table();
+    expect(search()).toBe('?ym=2026-11');
+    expect(calledUrls(f)).not.toContain('/api/admin/periods/2026-10/summary');
   });
 });
 

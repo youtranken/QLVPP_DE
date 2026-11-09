@@ -47,7 +47,8 @@ describe('AdminShell + RequireRole', () => {
 
   it('/admin chuyển tới /admin/month (trang Kỳ tháng)', async () => {
     mockViewport(1280);
-    const kpi = { registered: 30, headcount: 40, is_open: false, unregistered: 0, lines_pending_delivery: 0 };
+    // Kỳ khóa còn dòng chưa giao → mặc định mở kỳ khóa
+    const kpi = { registered: 30, headcount: 40, is_open: false, unregistered: 0, lines_pending_delivery: 3 };
     stubShellApi({
       '/api/admin/periods/2026-11/summary': () => jsonResponse(200, { ...kpi, is_open: true }),
       '/api/admin/periods/2026-10/summary': () => jsonResponse(200, kpi),

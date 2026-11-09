@@ -2,23 +2,54 @@ import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useMonthParams } from './use-month-params';
+import { pickDefaultYm, useMonthParams } from './use-month-params';
 
 function wrapper(initial: string) {
   return ({ children }: { children: ReactNode }) => <MemoryRouter initialEntries={[initial]}>{children}</MemoryRouter>;
 }
 
-function setup(initial: string, openYm = '2026-11') {
+// null = trang chưa tính xong kỳ mặc định (tham số mặc định của JS nuốt undefined)
+function setup(initial: string, openYm = '2026-11', defaultYm: string | null = '2026-10') {
   return renderHook(
     () => {
-      const p = useMonthParams(openYm);
+      const p = useMonthParams(openYm, defaultYm ?? undefined);
       return { p, search: useLocation().search };
     },
     { wrapper: wrapper(initial) },
   );
 }
 
+describe('pickDefaultYm', () => {
+  it('kỳ khóa còn dòng chưa giao → kỳ khóa', () => {
+    expect(pickDefaultYm('2026-11', { registered: 4, lines_pending_delivery: 3 })).toBe('2026-10');
+  });
+  it('kỳ khóa không có phiếu (registered=0) → kỳ đang đăng ký', () => {
+    expect(pickDefaultYm('2026-11', { registered: 0, lines_pending_delivery: 0 })).toBe('2026-11');
+  });
+  it('kỳ khóa đã giao xong (lines_pending_delivery=0) → kỳ đang đăng ký', () => {
+    expect(pickDefaultYm('2026-11', { registered: 4, lines_pending_delivery: 0 })).toBe('2026-11');
+  });
+});
+
 describe('useMonthParams', () => {
+  it('không có ?ym, chưa có kỳ mặc định → ym chưa có và không ghi URL', () => {
+    const { result } = setup('/admin/month', '2026-11', null);
+    expect(result.current.p.ym).toBeUndefined();
+    expect(result.current.search).toBe('');
+  });
+
+  it('không có ?ym, kỳ mặc định là kỳ đang đăng ký → ghi ?ym=2026-11', async () => {
+    const { result } = setup('/admin/month', '2026-11', '2026-11');
+    expect(result.current.p.ym).toBe('2026-11');
+    await waitFor(() => expect(result.current.search).toBe('?ym=2026-11'));
+  });
+
+  it('có ?ym= → giữ nguyên, không theo kỳ mặc định', () => {
+    const { result } = setup('/admin/month?ym=2026-10', '2026-11', '2026-11');
+    expect(result.current.p.ym).toBe('2026-10');
+    expect(result.current.search).toBe('?ym=2026-10');
+  });
+
   it('không có ?ym → kỳ khóa gần nhất 2026-10 và ghi vào URL (replace)', async () => {
     const { result } = setup('/admin/month');
     expect(result.current.p.ym).toBe('2026-10');

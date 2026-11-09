@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
+import { lockedYm } from '@/lib/ym';
 import { Loading, LoadError } from '@/ui/load-state';
 import { usePeriodSummary } from '@/features/summary/summary.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
@@ -6,7 +8,7 @@ import { monthOf } from '@/features/request/request-format';
 import { MonthLockedView } from './month-locked-view';
 import { MonthOpenView } from './month-open-view';
 import { PeriodSwitch } from './period-switch';
-import { useMonthParams } from './use-month-params';
+import { isAskedYm, pickDefaultYm, useMonthParams } from './use-month-params';
 import '@/features/summary/summary.m1.css';
 import './month.m1.css';
 
@@ -14,7 +16,12 @@ export function MonthPage() {
   const { t } = useTranslation();
   const current = useCurrentPeriod();
   const openYm = current.data?.ym;
-  const p = useMonthParams(openYm);
+  // Chỉ hỏi kỳ khóa khi URL chưa có ym hợp lệ; lỗi thì về kỳ khóa như trước
+  const [params] = useSearchParams();
+  const probeYm = openYm && !isAskedYm(params.get('ym'), openYm) ? lockedYm(openYm) : undefined;
+  const probe = usePeriodSummary(probeYm);
+  const defaultYm = !openYm ? undefined : probe.data ? pickDefaultYm(openYm, probe.data) : probe.isError ? lockedYm(openYm) : undefined;
+  const p = useMonthParams(openYm, defaultYm);
   const summary = usePeriodSummary(p.ym);
   if (current.isError) return <LoadError onRetry={() => void current.refetch()} />;
   if (!p.ym || !openYm) return <Loading />;

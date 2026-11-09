@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { YM, lockedYm } from '@/lib/ym';
-import type { AdjustReason } from '@/features/summary/summary.api';
+import type { AdjustReason, PeriodSummary } from '@/features/summary/summary.api';
 import { useUrlPatch, type UrlPatch } from '@/lib/use-url-patch';
 import { MONTH_CHIPS, type MonthChip } from './month-chips';
 
@@ -14,11 +14,20 @@ const LEGACY_FILTER: Record<string, MonthChip | undefined> = {
   custom_pending: 'noted',
 };
 
-// Mặc định kỳ khóa gần nhất; trần là kỳ đang mở (chỉ xem); ?ym= sai mẫu hoặc tương lai → thay URL, không gọi API với tháng đó
-export function useMonthParams(openYm: string | undefined) {
+// ?ym= hợp lệ: đúng mẫu và không quá kỳ đang mở (kỳ mở chỉ xem)
+export const isAskedYm = (asked: string | null, openYm: string | undefined): asked is string =>
+  !!asked && !!openYm && YM.test(asked) && asked <= openYm;
+
+// Kỳ mặc định khi URL không có ym: kỳ khóa gần nhất đang giao; kỳ đó không có phiếu hoặc đã giao xong → kỳ đang đăng ký
+export function pickDefaultYm(openYm: string, locked: Pick<PeriodSummary, 'registered' | 'lines_pending_delivery'>): string {
+  return locked.registered === 0 || !locked.lines_pending_delivery ? openYm : lockedYm(openYm);
+}
+
+// defaultYm do trang tính (pickDefaultYm); chưa có thì ym undefined (trang chờ). ?ym= sai mẫu hoặc tương lai → thay URL, không gọi API với tháng đó
+export function useMonthParams(openYm: string | undefined, defaultYm: string | undefined) {
   const [params, update] = useUrlPatch();
   const asked = params.get('ym');
-  const ym = asked && openYm && YM.test(asked) && asked <= openYm ? asked : openYm && lockedYm(openYm);
+  const ym = isAskedYm(asked, openYm) ? asked : openYm && defaultYm;
   const legacy = params.get('filter');
   // ?left=1 từ nhắc người đã nghỉ: chỉ liệt kê người đã nghỉ; phiếu của họ chọn sẵn lý do "Người đã nghỉ"
   const left = params.get('left') === '1' || legacy === 'left';
