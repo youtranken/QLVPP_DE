@@ -60,5 +60,6 @@ export const ADMIN_ROUTE_CLASSES: Record<`${Method} ${string}`, RouteClass> = {
   'PATCH /api/admin/units/:code': 'none',
   'DELETE /api/admin/units/:code': 'none',
   'POST /api/admin/directory/sync': 'none',
+  'GET /api/admin/directory/status': 'none',
   'GET /api/admin/users': 'none',
 };

@@ -9,6 +9,7 @@ import {
 } from '../src/database/migration-runner';
 import { SessionService } from '../src/modules/auth/session.service';
 import { DirectorySyncScheduler } from '../src/modules/users/directory-sync.scheduler';
+import { DirectorySyncService } from '../src/modules/users/directory-sync.service';
 import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
 import { directoryStub } from './directory.stub';
 import { UsersService } from '../src/modules/users/users.service';
@@ -156,6 +157,53 @@ describe('auth e2e', () => {
   it('POST admin/directory/sync với member → 403', async () => {
     await request(app.getHttpServer())
       .post('/api/admin/directory/sync')
+      .set('x-dev-user-sub', 'dev-member')
+      .set('x-dev-role', 'member')
+      .expect(403);
+  });
+
+  it('lượt bấm tay thành công → ghi mốc + số người, xóa lỗi gần nhất; GET admin/directory/status trả đúng; tick định kỳ ngay sau không chạy lại', async () => {
+    await pool.query("DELETE FROM config WHERE key = 'directory_sync_last_at'");
+    await pool.query(
+      `INSERT INTO config (key, value) VALUES ('directory_sync_last_error', $1::jsonb)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+      [JSON.stringify({ at: Date.now() - 60_000, code: 'X', message: 'y' })],
+    );
+    const before = Date.now();
+    const res = await request(app.getHttpServer())
+      .post('/api/admin/directory/sync')
+      .set('x-dev-user-sub', 'dev-admin')
+      .set('x-dev-role', 'admin')
+      .expect(200);
+    const st = await request(app.getHttpServer())
+      .get('/api/admin/directory/status')
+      .set('x-dev-user-sub', 'dev-admin')
+      .set('x-dev-role', 'admin')
+      .expect(200);
+    expect(Object.keys(st.body as object).sort()).toEqual([
+      'last_at',
+      'last_error',
+      'last_total',
+    ]);
+    expect(st.body).toMatchObject({
+      last_total: (res.body as { total: number }).total,
+      last_error: null,
+    });
+    expect(
+      Date.parse((st.body as { last_at: string }).last_at),
+    ).toBeGreaterThanOrEqual(before);
+    const spy = jest.spyOn(app.get(DirectorySyncService), 'sync');
+    try {
+      await app.get(DirectorySyncScheduler).tick();
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('GET admin/directory/status với member → 403', async () => {
+    await request(app.getHttpServer())
+      .get('/api/admin/directory/status')
       .set('x-dev-user-sub', 'dev-member')
       .set('x-dev-role', 'member')
       .expect(403);

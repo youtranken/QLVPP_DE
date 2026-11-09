@@ -47,6 +47,20 @@ describe('POST admin/directory/sync khi PMH ID lỗi', () => {
       .set('x-dev-user-sub', 'dev-admin')
       .set('x-dev-role', 'admin');
 
+  const failedAudits = async () =>
+    (
+      await pool.query<{ actor: string; detail: { code: string } }>(
+        `SELECT actor, detail FROM audit_log
+         WHERE action = 'users.directory_sync_failed' ORDER BY id`,
+      )
+    ).rows;
+
+  const status = () =>
+    request(app.getHttpServer())
+      .get('/api/admin/directory/status')
+      .set('x-dev-user-sub', 'dev-admin')
+      .set('x-dev-role', 'admin');
+
   const syncAudits = async () =>
     Number(
       (
@@ -56,15 +70,46 @@ describe('POST admin/directory/sync khi PMH ID lỗi', () => {
       ).rows[0].count,
     );
 
-  it('PMH ID không liên lạc được → 503 DIRECTORY_UNAVAILABLE, không audit, app vẫn sống', async () => {
+  it('PMH ID không liên lạc được → 503 DIRECTORY_UNAVAILABLE, audit users.directory_sync_failed (không audit sync thành công), app vẫn sống', async () => {
     failure = new ServiceUnavailableException({
       code: 'DIRECTORY_UNAVAILABLE',
-      message: 'x',
+      message: 'Không liên lạc được PMH ID.',
     });
     const before = await syncAudits();
+    const failedBefore = (await failedAudits()).length;
+    const lastAtBefore = (
+      await pool.query(
+        "SELECT value FROM config WHERE key = 'directory_sync_last_at'",
+      )
+    ).rows;
+    const startedAt = Date.now();
     const res = await sync().expect(503);
     expect(res.body.code).toBe('DIRECTORY_UNAVAILABLE');
     expect(await syncAudits()).toBe(before);
+    const failed = await failedAudits();
+    expect(failed).toHaveLength(failedBefore + 1);
+    expect(failed[failed.length - 1]).toEqual({
+      actor: 'dev-admin',
+      detail: { code: 'DIRECTORY_UNAVAILABLE' },
+    });
+    // Lỗi gần nhất vào config; mốc thành công giữ nguyên
+    const st = (await status().expect(200)).body as {
+      last_error: { at: string; code: string; message: string } | null;
+    };
+    expect(st.last_error).toMatchObject({
+      code: 'DIRECTORY_UNAVAILABLE',
+      message: 'Không liên lạc được PMH ID.',
+    });
+    expect(Date.parse(st.last_error!.at)).toBeGreaterThanOrEqual(
+      startedAt - 1000,
+    );
+    expect(
+      (
+        await pool.query(
+          "SELECT value FROM config WHERE key = 'directory_sync_last_at'",
+        )
+      ).rows,
+    ).toEqual(lastAtBefore);
     await request(app.getHttpServer())
       .get('/api/admin/users')
       .set('x-dev-user-sub', 'dev-admin')
@@ -79,9 +124,13 @@ describe('POST admin/directory/sync khi PMH ID lỗi', () => {
     });
     const res = await sync().expect(502);
     expect(res.body.code).toBe('DIRECTORY_AUTH_FAILED');
+    const failed = await failedAudits();
+    expect(failed[failed.length - 1].detail).toEqual({
+      code: 'DIRECTORY_AUTH_FAILED',
+    });
   });
 
-  it('PMH ID vẫn 429 sau 3 lần thử → 503 DIRECTORY_RATE_LIMITED, không audit sync', async () => {
+  it('PMH ID vẫn 429 sau 3 lần thử → 503 DIRECTORY_RATE_LIMITED, không audit sync thành công', async () => {
     failure = new ServiceUnavailableException({
       code: 'DIRECTORY_RATE_LIMITED',
       message: 'x',
@@ -90,5 +139,12 @@ describe('POST admin/directory/sync khi PMH ID lỗi', () => {
     const res = await sync().expect(503);
     expect(res.body.code).toBe('DIRECTORY_RATE_LIMITED');
     expect(await syncAudits()).toBe(before);
+    expect((await failedAudits()).at(-1)?.detail).toEqual({
+      code: 'DIRECTORY_RATE_LIMITED',
+    });
+    expect(
+      ((await status().expect(200)).body as { last_error: { code: string } })
+        .last_error.code,
+    ).toBe('DIRECTORY_RATE_LIMITED');
   });
 });

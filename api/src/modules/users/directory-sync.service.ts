@@ -1,4 +1,5 @@
 import {
+  HttpException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -8,6 +9,7 @@ import { sql } from 'drizzle-orm';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
+import { SystemConfigService } from '../config/system-config.service';
 import { DIRECTORY_CLIENT } from './directory.client';
 import type { DirectoryClientApi, DirectoryUser } from './directory.client';
 import {
@@ -20,6 +22,11 @@ import type { BulkOutcome } from './directory-sync.bulk';
 import { DirectoryReconcileService } from './directory-reconcile.service';
 import type { ReconcileResult } from './directory-reconcile.service';
 import { UserAccessService } from './user-access.service';
+
+// Lượt bấm tay lỗi thì ghi nhật ký; lượt định kỳ lỗi chỉ ghi config (tránh đầy nhật ký khi PMH ID sập)
+export type SyncTrigger = 'manual' | 'scheduled';
+
+const ERROR_MESSAGE_MAX = 200;
 
 export interface DirectorySyncResult extends ReconcileResult {
   total: number;
@@ -42,16 +49,64 @@ export class DirectorySyncService {
     private readonly audit: AuditWriterService,
     private readonly access: UserAccessService,
     private readonly reconcile: DirectoryReconcileService,
+    private readonly config: SystemConfigService,
   ) {}
 
   private tail: Promise<unknown> = Promise.resolve();
 
   // Lượt tay và lượt định kỳ chạy nối đuôi, không chồng nhau: bộ đếm ngân sách request không bị
   // resetCount() lẫn nhau, không vượt hạn mức PMH ID. Người gọi sau vẫn nhận một lượt mới của mình.
-  sync(actor: string): Promise<DirectorySyncResult> {
-    const next = this.tail.then(() => this.run(actor));
+  sync(
+    actor: string,
+    trigger: SyncTrigger = 'scheduled',
+  ): Promise<DirectorySyncResult> {
+    const next = this.tail.then(() => this.runRecorded(actor, trigger));
     this.tail = next.catch(() => undefined);
     return next;
+  }
+
+  // Kết quả lượt vào config (mục 3 chuẩn PMH ID): thành công → mốc + số người; lỗi → lỗi gần nhất
+  private async runRecorded(
+    actor: string,
+    trigger: SyncTrigger,
+  ): Promise<DirectorySyncResult> {
+    let result: DirectorySyncResult;
+    try {
+      result = await this.run(actor);
+    } catch (error) {
+      await this.recordFailure(error, actor, trigger);
+      throw error;
+    }
+    await this.config.recordDirectorySyncSuccess(new Date(), result.total);
+    return result;
+  }
+
+  private async recordFailure(
+    error: unknown,
+    actor: string,
+    trigger: SyncTrigger,
+  ): Promise<void> {
+    const { code, message } = describeError(error);
+    try {
+      await this.config.recordDirectorySyncError({
+        at: new Date(),
+        code,
+        message,
+      });
+      if (trigger === 'manual') {
+        await this.audit.append({
+          actor,
+          action: 'users.directory_sync_failed',
+          objectType: 'users',
+          detail: { code },
+        });
+      }
+    } catch (e) {
+      // Không che lỗi gốc của lượt
+      this.logger.warn(
+        `Không ghi được kết quả lượt sync lỗi: ${(e as Error).message}`,
+      );
+    }
   }
 
   private async run(actor: string): Promise<DirectorySyncResult> {
@@ -147,7 +202,8 @@ export class DirectorySyncService {
         };
       });
     } catch (error) {
-      this.logger.error(
+      // WARN: lượt định kỳ ghi ERROR một lần mỗi đợt sự cố ở scheduler
+      this.logger.warn(
         `Directory sync thất bại (đã rollback): ${(error as Error).message}`,
       );
       throw new InternalServerErrorException({
@@ -171,4 +227,22 @@ export class DirectorySyncService {
     }
     return now;
   }
+}
+
+function describeError(error: unknown): { code: string; message: string } {
+  const res =
+    error instanceof HttpException ? error.getResponse() : undefined;
+  const body =
+    typeof res === 'object' && res !== null
+      ? (res as { code?: unknown; message?: unknown })
+      : {};
+  const code =
+    typeof body.code === 'string' ? body.code : 'DIRECTORY_SYNC_FAILED';
+  const raw =
+    typeof body.message === 'string'
+      ? body.message
+      : error instanceof Error
+        ? error.message
+        : String(error);
+  return { code, message: Array.from(raw).slice(0, ERROR_MESSAGE_MAX).join('') };
 }

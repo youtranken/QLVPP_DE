@@ -1,4 +1,7 @@
-import { InternalServerErrorException } from '@nestjs/common';
+import {
+  InternalServerErrorException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { DirectorySyncService } from './directory-sync.service';
 import type { DirectoryUser } from './directory.client';
 
@@ -79,15 +82,21 @@ function makeService(opts: {
       .fn()
       .mockResolvedValue({ no_access: 0, unconfirmed: 0, reconcile: 'ok' }),
   };
+  const config = {
+    recordDirectorySyncSuccess: jest.fn().mockResolvedValue(undefined),
+    recordDirectorySyncError: jest.fn().mockResolvedValue(undefined),
+  };
   const service = new DirectorySyncService(
     db as never,
     directory,
     audit as never,
     access as never,
     reconcile as never,
+    config as never,
   );
   return {
     service,
+    config,
     access,
     reconcile,
     db,
@@ -244,6 +253,87 @@ describe('DirectorySyncService', () => {
     expect(result).toMatchObject({ total: 0, created: 0, updated: 0 });
     expect(result).not.toHaveProperty('groups');
     expect(Object.keys(directory)).not.toContain('fetchGroups');
+  });
+});
+
+describe('DirectorySyncService — ghi kết quả lượt vào config, audit lượt tay lỗi', () => {
+  it('lượt thành công (tay hay định kỳ) → ghi mốc + số người, không ghi lỗi', async () => {
+    const { service, config } = makeService({
+      users: [user('a'), user('b')],
+    });
+    const before = Date.now();
+    await service.sync('sa-1', 'manual');
+    expect(config.recordDirectorySyncSuccess).toHaveBeenCalledTimes(1);
+    const [at, total] = config.recordDirectorySyncSuccess.mock.calls[0] as [
+      Date,
+      number,
+    ];
+    expect(at.getTime()).toBeGreaterThanOrEqual(before);
+    expect(total).toBe(2);
+    expect(config.recordDirectorySyncError).not.toHaveBeenCalled();
+    await service.sync('system', 'scheduled');
+    expect(config.recordDirectorySyncSuccess).toHaveBeenCalledTimes(2);
+  });
+
+  it('lượt định kỳ lỗi → ghi lỗi gần nhất {at, code, message}, không ghi mốc, không audit', async () => {
+    const { service, config, audit } = makeService({
+      fetchError: new ServiceUnavailableException({
+        code: 'DIRECTORY_UNAVAILABLE',
+        message: 'Không liên lạc được PMH ID.',
+      }),
+    });
+    await expect(service.sync('system', 'scheduled')).rejects.toThrow(
+      ServiceUnavailableException,
+    );
+    expect(config.recordDirectorySyncSuccess).not.toHaveBeenCalled();
+    expect(config.recordDirectorySyncError).toHaveBeenCalledWith({
+      at: expect.any(Date) as Date,
+      code: 'DIRECTORY_UNAVAILABLE',
+      message: 'Không liên lạc được PMH ID.',
+    });
+    expect(audit.append).not.toHaveBeenCalled();
+  });
+
+  it('lượt bấm tay lỗi → audit users.directory_sync_failed {code} với actor, vẫn ném lỗi gốc', async () => {
+    const { service, audit } = makeService({
+      fetchError: new ServiceUnavailableException({
+        code: 'DIRECTORY_RATE_LIMITED',
+        message: 'x',
+      }),
+    });
+    await expect(service.sync('sa-1', 'manual')).rejects.toThrow(
+      ServiceUnavailableException,
+    );
+    expect(audit.append).toHaveBeenCalledTimes(1);
+    expect(audit.append).toHaveBeenCalledWith({
+      actor: 'sa-1',
+      action: 'users.directory_sync_failed',
+      objectType: 'users',
+      detail: { code: 'DIRECTORY_RATE_LIMITED' },
+    });
+  });
+
+  it('lỗi không phải HttpException → code DIRECTORY_SYNC_FAILED, message cắt ≤ 200 ký tự', async () => {
+    const { service, config } = makeService({
+      fetchError: new Error('x'.repeat(500)),
+    });
+    await expect(service.sync('system', 'scheduled')).rejects.toThrow();
+    const arg = config.recordDirectorySyncError.mock.calls[0][0] as {
+      code: string;
+      message: string;
+    };
+    expect(arg.code).toBe('DIRECTORY_SYNC_FAILED');
+    expect(arg.message.length).toBeLessThanOrEqual(200);
+  });
+
+  it('ghi lỗi vào config cũng hỏng → vẫn ném lỗi gốc của lượt', async () => {
+    const { service, config } = makeService({
+      fetchError: new Error('directory down'),
+    });
+    config.recordDirectorySyncError.mockRejectedValue(new Error('db down'));
+    await expect(service.sync('system', 'scheduled')).rejects.toThrow(
+      'directory down',
+    );
   });
 });
 

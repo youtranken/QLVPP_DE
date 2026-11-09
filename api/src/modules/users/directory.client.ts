@@ -219,7 +219,8 @@ export class DirectoryClient implements DirectoryClientApi {
       if (error instanceof ServiceUnavailableException) {
         throw error;
       }
-      this.logger.error(`Lấy token M2M thất bại: ${(error as Error).message}`);
+      // WARN từng lần gọi; ERROR một lần mỗi đợt sự cố do scheduler ghi
+      this.logger.warn(`Lấy token M2M thất bại: ${(error as Error).message}`);
       throw new BadGatewayException({
         code: 'DIRECTORY_AUTH_FAILED',
         message:
@@ -233,7 +234,7 @@ export class DirectoryClient implements DirectoryClientApi {
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       });
     } catch (error) {
-      this.logger.error(
+      this.logger.warn(
         `Directory API không liên lạc được: ${(error as Error).message}`,
       );
       throw unavailable(

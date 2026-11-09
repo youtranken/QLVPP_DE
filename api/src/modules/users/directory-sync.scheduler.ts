@@ -22,6 +22,7 @@ export class DirectorySyncScheduler
   private readonly logger = new Logger(DirectorySyncScheduler.name);
   private running: Promise<void> | null = null;
   private lastFailureAt: number | null = null;
+  private incidentSince: number | null = null;
 
   constructor(
     private readonly config: SystemConfigService,
@@ -55,16 +56,29 @@ export class DirectorySyncScheduler
         Date.now() - this.lastFailureAt < RETRY_AFTER_FAILURE_MS
       )
         return;
-      const r = await this.directorySync.sync('system');
-      // Marker chỉ ghi khi thành công: lỗi thì thử lại sau RETRY_AFTER_FAILURE_MS thay vì chờ đủ 60′
-      await this.config.setDirectorySyncLastAt(new Date());
+      // Mốc directory_sync_last_at do DirectorySyncService ghi khi thành công (cả lượt bấm tay)
+      const r = await this.directorySync.sync('system', 'scheduled');
+      if (this.incidentSince !== null) {
+        this.logger.log(
+          `sync định kỳ: đã đồng bộ lại sau sự cố từ ${new Date(this.incidentSince).toISOString()}`,
+        );
+      }
       this.lastFailureAt = null;
+      this.incidentSince = null;
       this.logger.log(
         `sync định kỳ: total=${r.total} +${r.created} ~${r.updated}`,
       );
     } catch (e) {
       this.lastFailureAt = Date.now();
-      this.logger.error(`sync định kỳ lỗi: ${(e as Error).message}`);
+      // Một dòng ERROR mỗi đợt sự cố; các lần thử lại sau đó (5′/lần) chỉ DEBUG
+      if (this.incidentSince === null) {
+        this.incidentSince = this.lastFailureAt;
+        this.logger.error(`sync định kỳ lỗi: ${(e as Error).message}`);
+      } else {
+        this.logger.debug(
+          `sync định kỳ vẫn lỗi (thử lại): ${(e as Error).message}`,
+        );
+      }
     }
   }
 }

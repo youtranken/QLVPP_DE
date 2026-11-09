@@ -12,9 +12,9 @@ import { assertTestDatabase } from './test-database';
 const silent = { log: () => undefined };
 const BOX = { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: '' };
 const ADMIN_SUB = 'e2e-config-admin';
-// Marker runtime do auth e2e chạy song song xóa/ghi; không thuộc phạm vi PUT admin/config
+// Kết quả lượt đồng bộ danh bạ (mốc, số người, lỗi gần nhất) do sync ghi; không thuộc phạm vi PUT admin/config
 const EDITABLE_CONFIG_SQL =
-  "SELECT key, value FROM config WHERE key <> 'directory_sync_last_at' ORDER BY key";
+  "SELECT key, value FROM config WHERE key NOT LIKE 'directory\\_sync\\_%' ORDER BY key";
 
 describe('admin/config + public-config', () => {
   let app: INestApplication<App>;
