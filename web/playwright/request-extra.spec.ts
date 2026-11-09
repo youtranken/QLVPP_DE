@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, cartOf, closeCart, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, openCart, psql, removeTestItem, seedActiveUser, seedPwItem } from './helpers';
+import { acquireLock, cartOf, closeCart, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, openCart, psql, removeTestItem, seedActiveUser, seedPwItem, skipNewPeriodPopup } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-12-shots';
 const FIXTURE = 'playwright/fixtures/item.png';
@@ -40,6 +40,9 @@ async function routeAs(page: Page, headers: Record<string, string>) {
 }
 
 test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => {
+  // Popup kỳ mới (vòng 4) phủ trang Đăng ký của nhân viên chưa lưu phiếu: spec này không thử popup
+  test.beforeEach(({ page }) => skipNewPeriodPopup(page));
+
   test('E2-S5 món ngoài danh mục: ghi tên, ĐVT, số lượng (không có ô ảnh) → lưu → tải lại thấy "Hành chính xem từ 00:00 ngày dd/mm"; rời trang khi chưa lưu thì hỏi', async ({
     page,
   }, info) => {

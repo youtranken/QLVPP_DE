@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, deleteTestUsers, expectNoContrastViolations, isMobile, psql, removeTestItem, seedActiveUser, seedPwItem } from './helpers';
+import { acquireLock, deleteTestUsers, expectNoContrastViolations, isMobile, psql, removeTestItem, seedActiveUser, seedPwItem, skipNewPeriodPopup } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-13-shots';
 
@@ -18,6 +18,9 @@ const prevYmOf = (ym: string) => {
 };
 
 test.describe('E2-S6 lịch sử', () => {
+  // Popup kỳ mới (vòng 4) phủ trang Đăng ký của nhân viên chưa lưu phiếu: spec này không thử popup
+  test.beforeEach(({ page }) => skipNewPeriodPopup(page));
+
   test('E2-S6 lịch sử: bottom nav ≤ 2 chạm, kỳ đang mở về /, kỳ cũ có tiến độ và nhãn ngoài danh mục', async ({ page, request }, info) => {
     const sub = `pw-hist-${Date.now()}-${info.project.name}`;
     const headers = { 'x-dev-user-sub': sub, 'x-dev-role': 'member' };

@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { deleteTestUsers, expectNoContrastViolations, isMobile, psql, seedActiveUser } from './helpers';
+import { deleteTestUsers, expectNoContrastViolations, isMobile, psql, seedActiveUser, skipNewPeriodPopup } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-29-vpp-gd1-p3-giao-bao-cao/task-10-shots';
 
@@ -17,6 +17,9 @@ const asIdentity = (page: Page, sub: string, role: 'member' | 'admin') =>
   page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), 'x-dev-user-sub': sub, 'x-dev-role': role } }));
 
 test.describe('E6-S1 chuông', () => {
+  // Popup kỳ mới (vòng 4) phủ trang Đăng ký của nhân viên chưa lưu phiếu: spec này không thử popup
+  test.beforeEach(({ page }) => skipNewPeriodPopup(page));
+
   test('E6-S1 chuông: member thấy huy hiệu 2, bấm một mục thì đánh dấu đã đọc và về trang đích', async ({ page }, info) => {
     const sub = `pw-notif-m-${Date.now()}-${info.project.name}`;
     seedActiveUser(sub, `PW Chuông ${info.project.name}`);
