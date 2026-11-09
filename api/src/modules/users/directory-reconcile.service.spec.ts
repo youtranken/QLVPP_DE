@@ -332,6 +332,40 @@ describe('DirectoryReconcileService', () => {
     },
   );
 
+  it.each([
+    ['id khác người được hỏi', (sub: string) => listedUser(`${sub}-khac`)],
+    [
+      'status lạ',
+      (sub: string) =>
+        ({ id: sub, status: 'suspended' }) as unknown as DirectoryUser,
+    ],
+  ])(
+    'lookup trả 200 nhưng %s → coi là lỗi với người đó, giữ nguyên, hỏi tiếp',
+    async (_label, bad) => {
+      const s = scenario(10, 3);
+      const { service, access } = setup({
+        ...s,
+        lookup: (sub) =>
+          sub === 'u1'
+            ? { kind: 'in', user: listedUser('u1') }
+            : sub === 'u8'
+              ? { kind: 'in', user: bad(sub) }
+              : { kind: 'out' },
+      });
+      const r = await service.run(s.listed, START, 'sa');
+      expect(r).toEqual({ no_access: 2, unconfirmed: 1, reconcile: 'ok' });
+      expect(access.applyDirectoryUser).not.toHaveBeenCalled();
+      expect(access.applyDirectoryStatus).not.toHaveBeenCalled();
+      expect(access.restoreActive).not.toHaveBeenCalled();
+      expect(access.markNoAccess).not.toHaveBeenCalledWith(
+        'u8',
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+      );
+    },
+  );
+
   it('markNoAccess trả false (đã đổi xen giữa) → không đếm', async () => {
     const s = scenario(10, 2);
     const { service, access } = setup(s);

@@ -21,6 +21,11 @@ export const RUN_REQUEST_BUDGET = 48;
 export const MASS_MIN = 5;
 // Lỗi khiến mọi lần hỏi sau cũng hỏng → dừng, để lượt sau
 const STOP_CODES = new Set(['DIRECTORY_RATE_LIMITED', 'DIRECTORY_AUTH_FAILED']);
+const KNOWN_STATUSES: ReadonlySet<string> = new Set([
+  'active',
+  'locked',
+  'deleted',
+]);
 
 // Directory chỉ liệt kê người đang được vào VPP: người vắng danh sách phải hỏi từng người
 // (404 đúng dạng PMH ID) mới được đánh dấu no_access. Mọi dấu hiệu bất thường → hủy cả lượt.
@@ -89,6 +94,12 @@ export class DirectoryReconcileService {
         continue;
       }
       if (r.kind === 'in') {
+        // 200 nhưng không phải người được hỏi / status lạ → coi như lỗi với người này, giữ nguyên
+        if (r.user.id !== sub || !KNOWN_STATUSES.has(r.user.status)) {
+          failed += 1;
+          this.logger.warn({ msg: 'reconcile_detail_mismatch' });
+          continue;
+        }
         await this.applyFound(r.user, syncStartedAt, actor);
         continue;
       }
