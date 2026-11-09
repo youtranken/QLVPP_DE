@@ -6,7 +6,7 @@ export interface DirectoryUser {
   fullName: string | null;
   email: string | null;
   department: string | null;
-  status: 'active' | 'locked' | 'no_access';
+  status: 'active' | 'locked' | 'no_access' | 'deleted';
 }
 
 interface Page<T> {
@@ -30,7 +30,7 @@ export function useUserSearch(search: string) {
 }
 
 export interface AdminUser extends Omit<DirectoryUser, 'status'> {
-  status: 'active' | 'locked' | 'no_access';
+  status: 'active' | 'locked' | 'no_access' | 'deleted';
   employeeCode: string | null;
   team: string | null;
   role: 'admin' | 'member';
@@ -46,8 +46,9 @@ export interface SyncResult {
 
 export const USERS_PAGE = 200;
 
-export function fetchUsersPage(search: string, cursor: string | null): Promise<Page<AdminUser>> {
+export function fetchUsersPage(search: string, cursor: string | null, status?: 'deleted'): Promise<Page<AdminUser>> {
   const params = new URLSearchParams({ limit: String(USERS_PAGE) });
+  if (status) params.set('status', status);
   if (search) params.set('search', search);
   if (cursor) params.set('cursor', cursor);
   return apiFetch(`/api/admin/users?${params}`);
@@ -55,3 +56,11 @@ export function fetchUsersPage(search: string, cursor: string | null): Promise<P
 
 export const syncDirectory = (csrfToken: string | null) =>
   apiFetch<SyncResult>('/api/admin/directory/sync', { method: 'POST', csrfToken });
+
+export interface DirectorySyncStatus {
+  last_at: string | null;
+  last_total: number | null;
+  last_error: { at: string; code: string; message: string } | null;
+}
+
+export const fetchSyncStatus = () => apiFetch<DirectorySyncStatus>('/api/admin/directory/status');

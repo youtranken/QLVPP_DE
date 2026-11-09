@@ -1,8 +1,10 @@
 import { matchesSearch } from '@/features/request/request-format';
 import type { AdminUser } from './directory.api';
 
+// Ba thẻ thống kê; 'deleted' chỉ là bộ lọc xem người đã xoá (ẩn mặc định, không có thẻ)
 export const USERS_FILTERS = ['active', 'locked', 'no_access'] as const;
-export type UsersFilter = (typeof USERS_FILTERS)[number];
+export type StatFilter = (typeof USERS_FILTERS)[number];
+export type UsersFilter = StatFilter | 'deleted';
 export type RegFilter = 'yes' | 'no';
 
 export interface UsersView {
@@ -18,7 +20,7 @@ export interface RegSets {
   unregistered: ReadonlySet<string>;
 }
 
-export const parseUsersFilter = (raw: string | null): UsersFilter | null => (USERS_FILTERS.includes(raw as UsersFilter) ? (raw as UsersFilter) : null);
+export const parseUsersFilter = (raw: string | null): UsersFilter | null => (raw === 'deleted' || USERS_FILTERS.includes(raw as StatFilter) ? (raw as UsersFilter) : null);
 export const parseRegFilter = (raw: string | null): RegFilter | null => (raw === 'yes' || raw === 'no' ? raw : null);
 
 export function regOf(u: Pick<AdminUser, 'sub'>, sets: RegSets): RegFilter | null {
@@ -30,9 +32,10 @@ const MATCH: Record<UsersFilter, (u: AdminUser) => boolean> = {
   active: (u) => u.status === 'active',
   locked: (u) => u.status === 'locked',
   no_access: (u) => u.status === 'no_access',
+  deleted: (u) => u.status === 'deleted',
 };
 
-export function usersStats(users: AdminUser[]): Record<UsersFilter, number> {
+export function usersStats(users: AdminUser[]): Record<StatFilter, number> {
   const stats = { active: 0, locked: 0, no_access: 0 };
   for (const u of users) for (const f of USERS_FILTERS) if (MATCH[f](u)) stats[f] += 1;
   return stats;

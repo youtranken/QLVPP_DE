@@ -37,8 +37,8 @@ describe('users-rows', () => {
     expect(departmentsOf([...USERS, u('d')])).toEqual(['Phòng Công trình', 'Phòng Kế toán']);
   });
 
-  it('parseUsersFilter chỉ nhận active|locked|no_access; parseRegFilter chỉ yes|no', () => {
-    expect(['active', 'never', 'locked', 'no_access', 'x', null].map(parseUsersFilter)).toEqual(['active', null, 'locked', 'no_access', null, null]);
+  it('parseUsersFilter chỉ nhận active|locked|no_access|deleted; parseRegFilter chỉ yes|no', () => {
+    expect(['active', 'never', 'locked', 'no_access', 'deleted', 'x', null].map(parseUsersFilter)).toEqual(['active', null, 'locked', 'no_access', 'deleted', null, null]);
     expect(['yes', 'no', 'YES', '', null].map(parseRegFilter)).toEqual(['yes', 'no', null, null, null]);
   });
 

@@ -36,6 +36,17 @@ export function useDirectoryNames() {
   return useQuery({ ...allUsersQuery, select: (all: LoadedUsers) => new Map(all.items.map((u) => [u.sub, userLabel(u)])) });
 }
 
+// Người đã xoá ẩn khỏi danh bạ mặc định: chỉ tải khi bộ lọc "Đã xoá" đang bật
+export function useDeletedUsers(enabled: boolean) {
+  const q = useQuery({
+    queryKey: ['users', 'admin-deleted'],
+    queryFn: () => loadAllUsers((c) => fetchUsersPage('', c, 'deleted')),
+    enabled,
+    staleTime: 60_000,
+  });
+  return { users: q.data?.items ?? [], loading: enabled && q.isPending, failed: q.isError, retry: () => void q.refetch() };
+}
+
 export function useDirectoryUsers(search: string) {
   const all = useQuery(allUsersQuery);
   const overflow = all.data?.overflow ?? false;

@@ -11,7 +11,13 @@ const admin: Messages<typeof vi> = {
       hint: 'Pulls fresh data from PMH ID.',
       sync: 'Sync now',
       syncing: 'Syncing…',
-      autoSync: 'Automatic every 60 min',
+      syncStatusOk: 'PMH ID directory updated at {{at}}',
+      syncStatusNever: 'PMH ID directory not synced yet',
+      syncStatusFailed: 'Could not read the PMH ID directory at {{at}}, showing the copy from {{prev}}. {{reason}}',
+      syncStatusFailedFirst: 'Could not read the PMH ID directory at {{at}}. {{reason}}',
+      viewLabel: 'Show people',
+      viewCurrent: 'In the directory',
+      viewDeleted: 'Deleted',
       syncDone: 'Synced from PMH ID: {{created}} new, {{updated}} updated.',
       syncNoAccess: '{{count}} people no longer have access to VPP.',
       syncReconcileAborted: 'Could not check who is missing from the PMH ID directory — it will be retried on the next sync.',
@@ -43,7 +49,8 @@ const admin: Messages<typeof vi> = {
     stats: {
       active: 'Active',
       locked: 'Locked',
-      no_access: 'No longer has access',
+      no_access: 'No access',
+      deleted: 'Deleted',
       people: 'people',
     },
     drawer: {
@@ -64,12 +71,14 @@ const admin: Messages<typeof vi> = {
     status: {
       active: 'Active',
       locked: 'Locked',
-      no_access: 'No longer has access',
+      no_access: 'No access',
+      deleted: 'Deleted',
     },
     errors: {
       SSO_UNAVAILABLE: 'Cannot reach PMH ID — try again in a few minutes.',
       DIRECTORY_UNAVAILABLE: 'Cannot reach PMH ID — try again in a few minutes.',
       DIRECTORY_AUTH_FAILED: 'PMH ID refused directory access — ask IT to check the configuration.',
+      DIRECTORY_RATE_LIMITED: 'PMH ID is rate-limiting directory reads — try again in a few minutes.',
       DIRECTORY_SYNC_FAILED: 'The sync did not finish — try again in a few minutes.',
       UNKNOWN: 'Could not sync — try again in a few minutes.',
     },
@@ -121,6 +130,7 @@ const admin: Messages<typeof vi> = {
         access_revoked: 'VPP access revoked',
         access_restored: 'VPP access restored',
         directory_reconcile_aborted: 'Directory reconciliation aborted',
+        directory_sync_failed: 'Directory sync failed',
       },
     },
     filters: {

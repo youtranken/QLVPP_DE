@@ -20,6 +20,8 @@
 [data-shell='admin'] .dr-audit-link { justify-self: start; }
 [data-shell='admin'] .dr-person__email { overflow-wrap: anywhere; }
 [data-shell='admin'] .dr-auto { color: var(--c-muted); font: var(--t-sm); white-space: nowrap; }
+[data-shell='admin'] .dr-auto--status { white-space: normal; }
+[data-shell='admin'] .dr-auto--status[data-failed] { color: var(--c-danger, var(--c-muted)); }
 /* 390: thẻ người là lưới 2 cột nhãn/giá trị (nhãn 12 px), tên chiếm cả hàng */
 @media (max-width: 767px) {
   [data-shell='admin'] .dr-table.table-stack tbody tr:not(.dt-group) { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--s-2) var(--s-3); }

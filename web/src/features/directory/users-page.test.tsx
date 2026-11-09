@@ -27,8 +27,17 @@ const REG_URL = '/api/admin/periods/2026-11/unregistered';
 const regOf = (unregistered: AdminUser[], registered: string[]) => () =>
   jsonResponse(200, { items: unregistered.map((u) => ({ sub: u.sub, full_name: u.fullName, email: u.email, department: u.department })), registered_subs: registered });
 
-function stubUsers(users: AdminUser[], sync: SyncRoute = () => jsonResponse(200, { created: 0, updated: 0, no_access: 0, reconcile: 'ok' }), reg: RegRoute = regOf([CHI], ['u-an'])) {
+type SyncStatus = { last_at: string | null; last_total: number | null; last_error: { at: string; code: string; message: string } | null };
+const NEVER: SyncStatus = { last_at: null, last_total: null, last_error: null };
+
+function stubUsers(
+  users: AdminUser[],
+  sync: SyncRoute = () => jsonResponse(200, { created: 0, updated: 0, no_access: 0, reconcile: 'ok' }),
+  reg: RegRoute = regOf([CHI], ['u-an']),
+  status: () => SyncStatus = () => NEVER,
+) {
   const f = vi.fn((url: string, init?: RequestInit) => {
+    if (url === '/api/admin/directory/status') return Promise.resolve(jsonResponse(200, status()));
     if (url === REG_URL) return Promise.resolve(reg());
     if (url === '/api/admin/directory/sync' && init?.method === 'POST') return Promise.resolve(sync());
     if (url.startsWith('/api/admin/users')) {
@@ -36,7 +45,8 @@ function stubUsers(users: AdminUser[], sync: SyncRoute = () => jsonResponse(200,
       const search = params.get('search') ?? '';
       const from = Number(params.get('cursor') ?? 0);
       const size = Number(params.get('limit') ?? 50);
-      const rows = users.filter((u) => (u.fullName ?? '').includes(search));
+      const wantDeleted = params.get('status') === 'deleted';
+      const rows = users.filter((u) => (u.status === 'deleted') === wantDeleted && (u.fullName ?? '').includes(search));
       const items = rows.slice(from, from + size);
       const next = from + size < rows.length ? String(from + size) : null;
       return Promise.resolve(jsonResponse(200, { items, next_cursor: next }));
@@ -60,17 +70,21 @@ const bodyRows = () => within(screen.getByRole('table')).getAllByRole('row').sli
 
 afterEach(() => vi.unstubAllGlobals());
 
+const DEL: AdminUser = { ...CHI, sub: 'u-del', fullName: 'Hà Đã Xoá', employeeCode: 'NV0999', status: 'deleted' };
+const OK_AT = '2026-11-09T07:05:00.000Z'; // 14:05 giờ VN
+const ERR_AT = '2026-11-09T08:05:00.000Z'; // 15:05 giờ VN
+
 describe('UsersPage B10', () => {
-  it('tự dựng đầu trang: mô tả, "Đồng bộ ngay" kèm chữ nhỏ "Tự động mỗi 60 phút" đứng ngay trước nhóm thao tác (không nằm trong nhóm); cài đặt không thành ô số liệu; đúng một h1', async () => {
+  it('tự dựng đầu trang: mô tả, "Đồng bộ ngay" kèm dòng trạng thái đồng bộ đứng ngay trước nhóm thao tác (không nằm trong nhóm); cài đặt không thành ô số liệu; đúng một h1', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     expect(screen.getAllByRole('heading', { level: 1, name: 'Danh bạ' })).toHaveLength(1);
     expect(screen.getByText('Người dùng đồng bộ từ PMH ID. Thông tin cá nhân sửa ở PMH ID, không sửa trong app.')).toBeInTheDocument();
     expect(screen.queryByText('Đồng bộ tự động')).toBeNull();
     const actions = screen.getByRole('group', { name: 'Thao tác trang' });
-    expect(within(actions).queryByText('Tự động mỗi 60 phút')).toBeNull();
+    expect(screen.queryByText('Tự động mỗi 60 phút')).toBeNull();
     expect(within(actions).getByRole('button', { name: 'Đồng bộ ngay' })).toBeInTheDocument();
-    expect(screen.getByText('Tự động mỗi 60 phút').nextElementSibling).toBe(actions);
+    expect((await screen.findByText('Chưa đồng bộ danh bạ PMH ID')).nextElementSibling).toBe(actions);
     expect(screen.queryByText(/Đồng bộ lần cuối/)).toBeNull();
   });
 
@@ -151,15 +165,15 @@ describe('UsersPage B10', () => {
     expect(within(screen.getByText('Trần Chi').closest('tr')!).queryByText('Hành chính')).toBeNull();
   });
 
-  it('lọc Không còn quyền chỉ còn người no_access, đếm đúng ở thống kê; no_access không tính vào Đang dùng', async () => {
+  it('lọc Mất quyền chỉ còn người no_access, đếm đúng ở thống kê; no_access không tính vào Đang dùng', async () => {
     stubUsers([AN, BINH, CHI, DUNG]);
     await openUsers();
-    expect(card(/^Không còn quyền/)).toHaveTextContent('1');
+    expect(card(/^Mất quyền/)).toHaveTextContent('1');
     expect(card(/^Đang dùng/)).toHaveTextContent('2');
-    await userEvent.click(card(/^Không còn quyền/));
+    await userEvent.click(card(/^Mất quyền/));
     expect(bodyRows().map((r) => within(r).getByRole('button').textContent)).toEqual(['Vũ Dũng']);
-    expect(within(bodyRows()[0]).getByText('Không còn quyền')).toBeInTheDocument();
-    expect(screen.getByText('Đang lọc: Không còn quyền · 1')).toBeInTheDocument();
+    expect(within(bodyRows()[0]).getByText('Mất quyền')).toBeInTheDocument();
+    expect(screen.getByText('Đang lọc: Mất quyền · 1')).toBeInTheDocument();
   });
 
   it('lọc phòng + tìm theo tên vẫn đúng khi team null; tìm theo team khớp', async () => {
@@ -351,5 +365,57 @@ describe('UsersPage B10', () => {
       await waitFor(() => expect(screen.getByRole('button', { name: /^Chưa đăng ký kỳ 11/, hidden: true })).toHaveTextContent('1'));
       expect(screen.getByRole('dialog', { name: 'Người dùng' })).toBeInTheDocument();
     });
+  });
+  it('dòng trạng thái: cập nhật lúc 14:05 09/11 (giờ VN)', async () => {
+    stubUsers([AN], undefined, undefined, () => ({ last_at: OK_AT, last_total: 5, last_error: null }));
+    await openUsers();
+    expect(await screen.findByText('Danh bạ PMH ID cập nhật lúc 14:05 09/11')).toBeInTheDocument();
+  });
+
+  it('dòng trạng thái: lỗi mới hơn → "Không đọc được … lúc 15:05 09/11, đang hiện bản 14:05 09/11" + lý do theo mã (kể cả giới hạn tần suất)', async () => {
+    stubUsers([AN], undefined, undefined, () => ({ last_at: OK_AT, last_total: 5, last_error: { at: ERR_AT, code: 'DIRECTORY_RATE_LIMITED', message: 'x' } }));
+    await openUsers();
+    expect(await screen.findByText(/^Không đọc được danh bạ PMH ID lúc 15:05 09\/11, đang hiện bản 14:05 09\/11\. PMH ID đang giới hạn tần suất/)).toBeInTheDocument();
+  });
+
+  it('dòng trạng thái: lỗi cũ hơn lần thành công thì chỉ hiện bản cập nhật; chưa từng đồng bộ mà lỗi → không có "đang hiện bản"', async () => {
+    stubUsers([AN], undefined, undefined, () => ({ last_at: ERR_AT, last_total: 5, last_error: { at: OK_AT, code: 'DIRECTORY_UNAVAILABLE', message: 'x' } }));
+    await openUsers();
+    expect(await screen.findByText('Danh bạ PMH ID cập nhật lúc 15:05 09/11')).toBeInTheDocument();
+    cleanup();
+    stubUsers([AN], undefined, undefined, () => ({ last_at: null, last_total: null, last_error: { at: ERR_AT, code: 'MA_LA', message: 'x' } }));
+    await openUsers();
+    expect(await screen.findByText(/^Không đọc được danh bạ PMH ID lúc 15:05 09\/11\. Chưa đồng bộ được/)).toBeInTheDocument();
+    expect(screen.queryByText(/đang hiện bản/)).toBeNull();
+  });
+
+  it('bấm Đồng bộ ngay xong (thành công hay lỗi) thì tải lại dòng trạng thái', async () => {
+    let n = 0;
+    const f = stubUsers([AN], () => jsonResponse(502, { code: 'DIRECTORY_UNAVAILABLE', message: 'x' }), undefined, () => (++n > 1 ? { last_at: null, last_total: null, last_error: { at: ERR_AT, code: 'DIRECTORY_UNAVAILABLE', message: 'x' } } : NEVER));
+    await openUsers();
+    await screen.findByText('Chưa đồng bộ danh bạ PMH ID');
+    await userEvent.click(screen.getByRole('button', { name: 'Đồng bộ ngay' }));
+    expect(await screen.findByText(/^Không đọc được danh bạ PMH ID lúc 15:05 09\/11/)).toBeInTheDocument();
+    expect(f.mock.calls.filter(([u]) => u === '/api/admin/directory/status')).toHaveLength(2);
+  });
+
+  it('người đã xoá ẩn mặc định; chọn "Đã xoá" mới thấy, nhãn Đã xoá, và quay lại thì ẩn', async () => {
+    stubUsers([AN, BINH, DEL]);
+    await openUsers();
+    expect(screen.queryByText('Hà Đã Xoá')).toBeNull();
+    const view = screen.getByRole('combobox', { name: 'Hiện người' });
+    await userEvent.selectOptions(view, 'deleted');
+    expect(await screen.findByText('Hà Đã Xoá')).toBeInTheDocument();
+    expect(bodyRows()).toHaveLength(1);
+    expect(within(bodyRows()[0]).getByText('Đã xoá')).toBeInTheDocument();
+    await userEvent.selectOptions(view, '');
+    await waitFor(() => expect(screen.queryByText('Hà Đã Xoá')).toBeNull());
+    expect(screen.getByText('Phạm Minh Đức')).toBeInTheDocument();
+  });
+
+  it('chưa đăng nhập: last_login_at rỗng hiện "Chưa đăng nhập"; người khoá hiện "Đã khóa"', async () => {
+    stubUsers([AN, BINH]);
+    await openUsers();
+    expect(within(screen.getByText('Lê Thị Bình').closest('tr')!).getByText('Chưa đăng nhập')).toBeInTheDocument();
   });
 });

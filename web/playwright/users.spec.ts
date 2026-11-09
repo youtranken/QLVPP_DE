@@ -64,7 +64,7 @@ test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
     await expect(page).toHaveURL(new RegExp(`/admin/audit\\?actor=${LOCKED.sub}`));
   });
 
-  test('E9-S6 Danh bạ: người team null hiện —, người team QS hiện QS, lọc Không còn quyền đúng người no_access', async ({ page }, info) => {
+  test('E9-S6 Danh bạ: người team null hiện —, người team QS hiện QS, lọc Mất quyền đúng người no_access', async ({ page }, info) => {
     seedActiveUser(TEAM_QS.sub, TEAM_QS.name, 'active', { department: 'PW Phòng', team: 'QS', role: 'admin' });
     seedActiveUser(TEAM_NONE.sub, TEAM_NONE.name, 'active', { department: 'PW Phòng', team: null });
     seedActiveUser(NO_ACCESS.sub, NO_ACCESS.name, 'no_access', { department: 'PW Phòng', team: 'QS' });
@@ -82,10 +82,10 @@ test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
     }
     await expect(rowOf(page, TEAM_QS.name).getByText('Hành chính', { exact: true })).toBeVisible();
     await expect(rowOf(page, TEAM_NONE.name).getByText('Hành chính', { exact: true })).toHaveCount(0);
-    await expect(rowOf(page, NO_ACCESS.name).getByText('Không còn quyền', { exact: true })).toBeVisible();
+    await expect(rowOf(page, NO_ACCESS.name).getByText('Mất quyền', { exact: true })).toBeVisible();
 
-    await page.getByRole('button', { name: /^Không còn quyền/ }).click();
-    await expect(page.getByText(/^Đang lọc: Không còn quyền/)).toBeVisible();
+    await page.getByRole('button', { name: /^Mất quyền/ }).click();
+    await expect(page.getByText(/^Đang lọc: Mất quyền/)).toBeVisible();
     await expect(rowOf(page, NO_ACCESS.name)).toBeVisible();
     await expect(rowOf(page, TEAM_QS.name)).toHaveCount(0);
     await expect(rowOf(page, TEAM_NONE.name)).toHaveCount(0);

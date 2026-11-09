@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { StatCard } from '@/ui/stat-card';
 import { StatRow } from '@/ui/stat-row';
-import type { UsersFilter } from './users-rows';
+import type { StatFilter, UsersFilter } from './users-rows';
 
 interface RegCard {
   month: number;
@@ -11,7 +11,7 @@ interface RegCard {
   onClick: () => void;
 }
 
-export function UsersStats({ stats, filter, onFilter, reg }: { stats: Record<UsersFilter, number>; filter: UsersFilter | null; onFilter: (f: UsersFilter) => void; reg: RegCard | null }) {
+export function UsersStats({ stats, filter, onFilter, reg }: { stats: Record<StatFilter, number>; filter: UsersFilter | null; onFilter: (f: StatFilter) => void; reg: RegCard | null }) {
   const { t } = useTranslation();
   return (
     <StatRow>

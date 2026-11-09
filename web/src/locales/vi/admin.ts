@@ -8,7 +8,13 @@ const admin = {
       hint: 'Lấy dữ liệu mới từ PMH ID.',
       sync: 'Đồng bộ ngay',
       syncing: 'Đang đồng bộ…',
-      autoSync: 'Tự động mỗi 60 phút',
+      syncStatusOk: 'Danh bạ PMH ID cập nhật lúc {{at}}',
+      syncStatusNever: 'Chưa đồng bộ danh bạ PMH ID',
+      syncStatusFailed: 'Không đọc được danh bạ PMH ID lúc {{at}}, đang hiện bản {{prev}}. {{reason}}',
+      syncStatusFailedFirst: 'Không đọc được danh bạ PMH ID lúc {{at}}. {{reason}}',
+      viewLabel: 'Hiện người',
+      viewCurrent: 'Đang trong danh bạ',
+      viewDeleted: 'Đã xoá',
       syncDone: 'Đã đồng bộ từ PMH ID: {{created}} người mới, {{updated}} cập nhật.',
       syncNoAccess: '{{count}} người không còn quyền vào VPP.',
       syncReconcileAborted: 'Chưa đối chiếu được người vắng khỏi danh bạ PMH ID — sẽ thử lại ở lần đồng bộ sau.',
@@ -40,7 +46,8 @@ const admin = {
     stats: {
       active: 'Đang dùng',
       locked: 'Đã khóa',
-      no_access: 'Không còn quyền',
+      no_access: 'Mất quyền',
+      deleted: 'Đã xoá',
       people: 'người',
     },
     drawer: {
@@ -61,12 +68,14 @@ const admin = {
     status: {
       active: 'Đang dùng',
       locked: 'Đã khóa',
-      no_access: 'Không còn quyền',
+      no_access: 'Mất quyền',
+      deleted: 'Đã xoá',
     },
     errors: {
       SSO_UNAVAILABLE: 'Không liên lạc được PMH ID — thử lại sau ít phút.',
       DIRECTORY_UNAVAILABLE: 'Không liên lạc được PMH ID — thử lại sau ít phút.',
       DIRECTORY_AUTH_FAILED: 'PMH ID từ chối quyền đọc danh bạ — báo IT kiểm tra cấu hình.',
+      DIRECTORY_RATE_LIMITED: 'PMH ID đang giới hạn tần suất đọc danh bạ — thử lại sau ít phút.',
       DIRECTORY_SYNC_FAILED: 'Đồng bộ chưa xong — thử lại sau ít phút.',
       UNKNOWN: 'Chưa đồng bộ được — thử lại sau ít phút.',
     },
@@ -118,6 +127,7 @@ const admin = {
         access_revoked: 'Mất quyền vào VPP',
         access_restored: 'Được cấp lại quyền vào VPP',
         directory_reconcile_aborted: 'Hủy đối chiếu danh bạ',
+        directory_sync_failed: 'Đồng bộ danh bạ lỗi',
       },
     },
     filters: {

@@ -13,6 +13,7 @@ export function useUsersParams() {
     view,
     setQ: (next: string) => update({ q: next || null }, true),
     setDept: (next: string) => update({ dept: next || null }, true),
+    setFilter: (next: UsersFilter | null) => update({ status: next }),
     toggleFilter: (f: UsersFilter) => update({ status: filter === f ? null : f }),
     toggleReg: (r: RegFilter) => update({ reg: reg === r ? null : r }),
     clearFilter: () => update({ status: null }),
