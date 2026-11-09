@@ -57,10 +57,16 @@ describe('NewPeriodDialog', () => {
     expect(screen.queryByRole('dialog', { name: TITLE })).toBeNull();
   });
 
-  it('không có kỳ trước → không hiện', async () => {
+  it('không có phiếu kỳ trước (người mới / bỏ kỳ) → vẫn hiện một lần: chỉ tiêu đề + hạn chót, không dòng kỳ trước', async () => {
     open({ period: { ...WITH_PREV, previous: null } });
-    await screen.findByRole('region', { name: 'Danh mục món' });
-    expect(screen.queryByRole('dialog', { name: TITLE })).toBeNull();
+    const dlg = await screen.findByRole('dialog', { name: TITLE });
+    expect(within(dlg).queryByText(/đã chốt/)).toBeNull();
+    expect(within(dlg).getByText(/^Hạn đăng ký tháng 12 là/)).toBeInTheDocument();
+    expect(within(dlg).getByText('23:59 ngày 10/12').tagName).toBe('B');
+    expect(within(dlg).queryByText(/^Phiếu tháng 11/)).toBeNull();
+    await userEvent.click(within(dlg).getByRole('button', { name: 'Đăng ký tháng 12' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: TITLE })).toBeNull());
+    expect(localStorage.getItem('vpp_newperiod_seen:u-member:2026-12')).not.toBeNull();
   });
 
   it('không có phiếu tháng trước → không có dòng "Phiếu tháng 11"; không có from_ym → không có nút chép', async () => {

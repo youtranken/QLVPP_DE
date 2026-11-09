@@ -100,6 +100,7 @@ const request = {
       eyebrow: 'Kỳ tháng {{prev}} đã chốt',
       title: 'Giờ bạn đặt văn phòng phẩm cho tháng {{month}}',
       body: 'Phiếu tháng {{prev}} không sửa được nữa, Hành chính đang chuẩn bị giao. Hạn đăng ký tháng {{month}} là <b>23:59 ngày {{date}}</b>.',
+      bodyFirst: 'Hạn đăng ký tháng {{month}} là <b>23:59 ngày {{date}}</b>.',
       prevLine: 'Phiếu tháng {{prev}}: {{n}} món, đã nhận {{done}}',
       viewPrev: 'Xem phiếu',
       start: 'Đăng ký tháng {{month}}',

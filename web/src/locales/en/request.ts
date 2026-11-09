@@ -103,6 +103,7 @@ const request: Messages<typeof vi> = {
       eyebrow: 'Month {{prev}} is closed',
       title: 'Time to order office supplies for month {{month}}',
       body: 'The month {{prev}} order can no longer be changed; Admin is preparing delivery. The deadline for month {{month}} is <b>23:59 on {{date}}</b>.',
+      bodyFirst: 'The deadline for month {{month}} is <b>23:59 on {{date}}</b>.',
       prevLine: 'Month {{prev}} order: {{n}} items, {{done}} received',
       viewPrev: 'View order',
       start: 'Order for month {{month}}',
