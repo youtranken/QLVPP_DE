@@ -197,8 +197,32 @@ describe('WebhookController — HMAC v2, parse v3, chống trùng', () => {
     );
   });
 
-  it('WEBHOOK_TS_SKEW_SEC=600 → ts lệch 400 s vẫn nhận', async () => {
+  it('WEBHOOK_TS_SKEW_SEC=600 không nới được: ts lệch 400 s vẫn 401 skew (trần 300)', async () => {
     process.env.WEBHOOK_TS_SKEW_SEC = '600';
+    try {
+      const { controller, events, audit } = makeController();
+      const rawBody = Buffer.from(
+        JSON.stringify({
+          type: 'user.locked',
+          user_id: 'usr_1',
+          event_id: '1',
+        }),
+      );
+      const ts = String(Math.floor(Date.now() / 1000) - 400);
+      await expect(
+        controller.handle({ rawBody } as never, signV2(rawBody, ts), ts),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(events.apply).not.toHaveBeenCalled();
+      expect(audit.append).toHaveBeenCalledWith(
+        expect.objectContaining({ detail: { reason: 'skew' } }),
+      );
+    } finally {
+      delete process.env.WEBHOOK_TS_SKEW_SEC;
+    }
+  });
+
+  it('WEBHOOK_TS_SKEW_SEC=60 thu hẹp được: ts lệch 120 s → 401, lệch 30 s → nhận', async () => {
+    process.env.WEBHOOK_TS_SKEW_SEC = '60';
     try {
       const { controller, events } = makeController();
       const rawBody = Buffer.from(
@@ -208,9 +232,17 @@ describe('WebhookController — HMAC v2, parse v3, chống trùng', () => {
           event_id: '1',
         }),
       );
-      const ts = String(Math.floor(Date.now() / 1000) - 400);
-      await controller.handle({ rawBody } as never, signV2(rawBody, ts), ts);
-      expect(events.apply).toHaveBeenCalled();
+      const old = String(Math.floor(Date.now() / 1000) - 120);
+      await expect(
+        controller.handle({ rawBody } as never, signV2(rawBody, old), old),
+      ).rejects.toThrow(UnauthorizedException);
+      const fresh = String(Math.floor(Date.now() / 1000) - 30);
+      await controller.handle(
+        { rawBody } as never,
+        signV2(rawBody, fresh),
+        fresh,
+      );
+      expect(events.apply).toHaveBeenCalledTimes(1);
     } finally {
       delete process.env.WEBHOOK_TS_SKEW_SEC;
     }

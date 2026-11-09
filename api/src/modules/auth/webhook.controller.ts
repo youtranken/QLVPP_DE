@@ -20,7 +20,7 @@ import { WebhookEventsService } from './webhook-events.service';
 import type { PmhWebhookEventV3 } from './webhook-events.service';
 import { verifyV2 } from './webhook-signature';
 
-const DEFAULT_TS_SKEW_SEC = 300;
+const MAX_TS_SKEW_SEC = 300;
 
 @Controller('webhooks')
 export class WebhookController {
@@ -150,7 +150,10 @@ export class WebhookController {
   }
 }
 
+// Chuẩn PMH ID: cửa sổ tối đa 300 s; env chỉ được thu hẹp, không nới
 function webhookSkewSec(): number {
   const n = Number(process.env.WEBHOOK_TS_SKEW_SEC);
-  return Number.isInteger(n) && n > 0 ? n : DEFAULT_TS_SKEW_SEC;
+  return Number.isInteger(n) && n > 0
+    ? Math.min(n, MAX_TS_SKEW_SEC)
+    : MAX_TS_SKEW_SEC;
 }
