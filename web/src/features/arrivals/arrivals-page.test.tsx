@@ -296,10 +296,13 @@ describe('Hàng về — ADM hết hàng', () => {
     expect(box('Bút bi')).toBeEnabled();
   });
 
-  it('W17: hàng ADM hết hàng có tủ hiện câu chia từ tủ', async () => {
-    stub({ plan: plan([planRow({ item_id: 'i-a', remaining: 5, stock_qty: 2, adm_out: true }), PLAN.rows[1]]) });
+  it('dòng ADM hết hàng chưa nhận đủ: dưới tên chỉ ghi "ADM hết hàng – tủ còn x", kể cả tủ 0', async () => {
+    stub({ plan: plan([planRow({ item_id: 'i-a', remaining: 5, stock_qty: 2, adm_out: true }), planRow({ item_id: 'i-b', name: 'Kẹp giấy', category_id: 'c-kep', remaining: 3, stock_qty: 0, adm_out: true }), planRow({ item_id: 'i-c', name: 'Bút chì' })]) });
     await open();
-    expect(await screen.findByText('ADM hết hàng — tủ còn 2: khi giao chia từ tủ theo thứ tự đăng ký, phần thiếu 3 hủy')).toBeInTheDocument();
+    await screen.findByDisplayValue('10');
+    expect(within(rowOf('Bút bi')).getByText('ADM hết hàng – tủ còn 2')).toHaveClass('ar-note');
+    expect(within(rowOf('Kẹp giấy')).getByText('ADM hết hàng – tủ còn 0')).toBeInTheDocument();
+    expect(screen.queryByText(/hủy/)).toBeNull();
   });
 
   it('đã xử lý xong → nút khóa "ADM hết hàng · đã xử lý xong"; lỗi ADM_OUT_FINAL → báo lỗi, tải lại kế hoạch', async () => {

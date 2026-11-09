@@ -175,20 +175,32 @@ describe('DeliverDialog — gợi ý theo người đăng ký trước', () => {
 });
 
 describe('DeliverDialog — ADM hết hàng', () => {
-  it('tủ 2: B (trước) cần 1; A cần 2 → đề xuất 1 + "ADM hết hàng — tủ còn 1: giao từ tủ, hủy phần thiếu 1"; Xác nhận → giao 1 rồi hủy', async () => {
+  it('tủ 2: B (trước) cần 1; A cần 2 → đề xuất 1 + "ADM hết hàng – tủ còn 1"; Xác nhận → giao 1 rồi hủy', async () => {
     const f = stub();
     const B = person({ user_sub: 'B', full_name: 'Bình', lines: [pLine({ line_id: 'b', qty: 1, remaining_qty: 1, stock_qty: 2, adm_out: true, request_at: '2026-10-01T07:00:00.000000Z' })] });
     const A = person({ user_sub: 'A', lines: [pLine({ line_id: 'a', qty: 2, remaining_qty: 2, stock_qty: 2, adm_out: true, request_at: '2026-10-01T08:00:00.000000Z' })] });
     const done = open(A, { people: [A, B] });
-    expect(within(dialog()).getByRole('heading', { name: 'ADM hết hàng — giao từ tủ, hủy phần thiếu' })).toBeInTheDocument();
+    expect(within(dialog()).getByRole('heading', { name: 'ADM hết hàng, số lượng sẽ trừ trong Tủ / Kho' })).toBeInTheDocument();
     expect(spin('Bút bi xanh').value).toBe('1');
-    expect(within(dialog()).getByText('ADM hết hàng — tủ còn 1: giao từ tủ, hủy phần thiếu 1')).toBeInTheDocument();
+    expect(within(dialog()).getByText('ADM hết hàng – tủ còn 1')).toBeInTheDocument();
+    expect(within(dialog()).getByText('ADM hết hàng – tủ còn 1').closest('tr')).not.toHaveClass('dd-row--none');
     await userEvent.click(confirmBtn());
     await waitFor(() => expect(done.onDone).toHaveBeenCalled());
     expect(posts(f)).toEqual([
       ['/api/admin/lines/a/deliver', { qty: 1, expected_delivered_qty: 0 }],
       ['/api/admin/lines/a/cancel-remaining', { reason_code: 'adm_out_of_stock', expected_delivered_qty: 1, expected_qty: 2 }],
     ]);
+  });
+});
+
+describe('DeliverDialog — ADM hết hàng, tủ không còn', () => {
+  it('dòng ADM hết hàng tủ 0 → "ADM hết hàng – tủ còn 0", cả dòng tô đỏ (dd-row--none); dòng giao thường không tô', async () => {
+    stub();
+    const A = person({ lines: [pLine({ line_id: 'c', qty: 1, remaining_qty: 1, stock_qty: 3 }), pLine({ line_id: 'm', item_id: 'i-clip', name: 'Kẹp', qty: 2, remaining_qty: 2, stock_qty: 0, adm_out: true })] });
+    open(A);
+    const note = within(dialog()).getByText('ADM hết hàng – tủ còn 0');
+    expect(note.closest('tr')).toHaveClass('dd-row--none');
+    expect(spin('Bút bi xanh').closest('tr')).not.toHaveClass('dd-row--none');
   });
 });
 

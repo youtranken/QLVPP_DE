@@ -24,7 +24,7 @@ function RowNotes({ r }: { r: ArrivalRow }) {
     r.reduced > 0 && t('warn.W14row', { n: r.reduced }),
     r.added && t('warn.W16'),
     !r.usable && t('arrivals.inactiveOrdered'),
-    r.adm_out && r.stock > 0 && t('warn.W17', { s: r.stock, n: Math.max(0, r.remaining - r.stock) }),
+    r.adm_out && !isReceivedFull(r) && t('arrivals.admOutStock', { s: r.stock }),
   ].filter((n): n is string => Boolean(n));
   return notes.map((n) => (
     <small key={n} className="ar-note">

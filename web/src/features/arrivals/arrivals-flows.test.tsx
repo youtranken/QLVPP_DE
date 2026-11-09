@@ -99,6 +99,7 @@ describe('Trạng thái "đã về đủ"', () => {
     expect(screen.queryByRole('button', { name: 'Đủ hàng' })).toBeNull();
     expect(screen.getByRole('combobox', { name: 'Tìm món để thêm' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ADM hết hàng: Bút bi' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('ADM hết hàng – tủ còn 0')).toBeInTheDocument();
   });
 
   it('còn 1 hàng remaining 1 → bảng thường, không khối xong', async () => {

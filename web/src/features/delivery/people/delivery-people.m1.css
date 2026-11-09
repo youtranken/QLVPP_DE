@@ -69,6 +69,8 @@
 [data-shell='admin'] .dd-group h3 { margin: 0 0 var(--s-2); font: var(--t-label); color: var(--c-ink-2); }
 [data-shell='admin'] .dd-group--adm { padding: var(--s-3); border-radius: var(--r-md); background: var(--c-warn-soft); }
 [data-shell='admin'] .dd-group--adm h3 { color: var(--c-warn); }
+[data-shell='admin'] .dd-row--none td { background: var(--c-danger-soft); color: var(--c-danger); }
+[data-shell='admin'] .dd-row--none .dd-item__text b, [data-shell='admin'] .dd-row--none .dd-item__text small, [data-shell='admin'] .dd-row--none .dd-item__text .dd-warn { color: var(--c-danger); }
 [data-shell='admin'] .dd-group--skip { color: var(--c-muted); }
 [data-shell='admin'] .dd-group--skip ul { display: grid; gap: var(--s-1); margin: 0; padding: 0; list-style: none; font: var(--t-sm); }
 [data-shell='admin'] .dd-group--skip li { display: flex; flex-wrap: wrap; gap: var(--s-2); }

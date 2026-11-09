@@ -26,7 +26,6 @@ const warnings = {
     W14head: '{{x}} món đã giảm sau khi gửi ADM — phần dư sẽ vào tủ',
     W15: 'Đợt này khác bản in ở {{n}} món: {{list}}. Phần thiếu chờ đợt sau.',
     W16: 'Món này không có trong bản in gửi ADM — nhập thẳng vào tủ',
-    W17: 'ADM hết hàng — tủ còn {{s}}: khi giao chia từ tủ theo thứ tự đăng ký, phần thiếu {{n}} hủy',
     W18: 'Nhập {{x}} món, {{y}} đơn vị vào tủ theo bản in {{time}}.',
     W19row: 'Tủ {{s}} không đủ cho {{k}} người đang chờ {{q}} — thiếu {{short}}',
     W19head: '{{n}} món chưa đủ tủ cho người đang chờ — chờ đợt hàng sau',

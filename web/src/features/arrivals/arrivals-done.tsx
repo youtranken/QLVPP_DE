@@ -53,7 +53,7 @@ function OutList({ rows, admBusy, onToggleAdm }: { rows: PlanRow[]; admBusy: Rea
         <li key={r.key}>
           <span>
             <b>{fmt.name(r)}</b>
-            {r.stock_qty > 0 && <small className="ar-note">{t('warn.W17', { s: r.stock_qty, n: Math.max(0, r.remaining - r.stock_qty) })}</small>}
+            {r.received < r.ordered && <small className="ar-note">{t('arrivals.admOutStock', { s: r.stock_qty })}</small>}
           </span>
           <button
             type="button"

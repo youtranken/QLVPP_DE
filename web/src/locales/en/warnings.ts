@@ -29,7 +29,6 @@ const warnings: Messages<typeof vi> = {
     W14head: '{{x}} items reduced after sending to ADM — the extra will go into stock',
     W15: 'This batch differs from the printed order in {{n}} items: {{list}}. The shortfall waits for the next batch.',
     W16: 'This item is not in the printed ADM order — goes straight into stock',
-    W17: 'ADM out of stock — {{s}} in stock: handed out by request order, the missing {{n}} are cancelled',
     W18: 'Add {{x}} items, {{y}} units into stock per the printed order of {{time}}.',
     W19row: 'Stock {{s}} is not enough for {{k}} people waiting for {{q}} — short {{short}}',
     W19head: '{{n}} items do not have enough stock for people waiting — wait for the next batch',

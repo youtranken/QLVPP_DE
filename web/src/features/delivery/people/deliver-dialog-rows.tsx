@@ -44,15 +44,16 @@ function LineRow({ row, limit, disabled, waiting, shortage, onChange }: { row: D
   const name = fmt.name(l);
   const rest = l.remaining_qty - limit.value;
   const tag = row.kind === 'give' && rest > 0 ? t(l.is_debt ? 'delivery.confirm.oweTag' : 'delivery.confirm.leftTag', { n: rest }) : null;
+  // ADM hết hàng mà tủ không còn: giao 0, tô đỏ cả dòng để khi giao biết bỏ ra
   return (
-    <tr>
+    <tr className={row.kind === 'adm' && limit.cap === 0 ? 'dd-row--none' : undefined}>
       <td className="dd-item">
         <ItemThumb fileId={l.image_file_id} alt="" tone="g0" size={42} />
         <span className="dd-item__text">
           <b>{name}</b>
           {l.is_debt && <span className="dd-debt">{t('delivery.confirm.debtTag', { month: monthOf(l.period_ym) })}</span>}
           <Meta row={row} waiting={waiting} shortage={shortage} />
-          {row.kind === 'adm' && <small className="dd-warn">{t('delivery.confirm.admLine', { s: row.stockLeft, n: rest })}</small>}
+          {row.kind === 'adm' && <small className="dd-warn">{t('delivery.confirm.admLine', { s: row.stockLeft })}</small>}
         </span>
       </td>
       <td className="num">{l.remaining_qty}</td>
@@ -111,7 +112,7 @@ function Table({ rows, limits, hiddenHead, ...rest }: RowsProps & { hiddenHead?:
   );
 }
 
-// Nhóm hàng giao, nhóm ADM hết hàng (giao từ tủ, hủy phần thiếu) và nhóm không giao lần này
+// Nhóm hàng giao, nhóm ADM hết hàng (trừ trong Tủ / Kho, phần thiếu hủy) và nhóm không giao lần này
 export function DeliverRows(props: RowsProps) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();

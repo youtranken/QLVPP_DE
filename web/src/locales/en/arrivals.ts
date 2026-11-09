@@ -38,6 +38,7 @@ const arrivals: Messages<typeof vi> = {
     noSnapshot: 'Not sent to ADM yet — prefilled from requested + carried over',
     noOrder: 'No order sent to ADM · {{time}}',
     admOut: { button: 'Out at ADM', buttonFor: 'Out at ADM: {{name}}', final: 'Out at ADM · settled', finalFor: 'Out at ADM · settled: {{name}}' },
+    admOutStock: 'Out at ADM – {{s}} in stock',
     inactiveOrdered: 'Discontinued — already ordered on the print',
     custom: {
       title: 'Off-catalogue — delivered directly, not stocked ({{n}})',
