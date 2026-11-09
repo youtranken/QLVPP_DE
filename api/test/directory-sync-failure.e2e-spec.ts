@@ -51,7 +51,7 @@ describe('POST admin/directory/sync khi PMH ID lỗi', () => {
     (
       await pool.query<{ actor: string; detail: { code: string } }>(
         `SELECT actor, detail FROM audit_log
-         WHERE action = 'users.directory_sync_failed' ORDER BY id`,
+         WHERE action = 'users.directory_sync_failed' ORDER BY created_at, id`,
       )
     ).rows;
 
