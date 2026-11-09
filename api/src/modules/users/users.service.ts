@@ -38,6 +38,7 @@ export interface UserListQuery {
   search?: string;
   limit: number;
   cursor?: string;
+  status?: 'deleted';
 }
 
 export interface UserListItem {
@@ -126,7 +127,9 @@ export class UsersService {
     query: UserListQuery,
   ): Promise<{ items: UserListItem[]; next_cursor: string | null }> {
     const conds = [
-      ne(usersTable.status, 'deleted'),
+      query.status === 'deleted'
+        ? eq(usersTable.status, 'deleted')
+        : ne(usersTable.status, 'deleted'),
       ne(usersTable.sub, LOCAL_SA_SUB),
     ];
     if (query.search) {
@@ -189,7 +192,10 @@ export class UsersService {
     const markNewer = sql`EXISTS (SELECT 1 FROM webhook_user_order w WHERE w.sub = ${claims.sub}
       AND w.access_revoked AND w.updated_at > ${cutoff})`;
     const keep = sql`((users.status <> 'active' AND users.inactive_at > ${cutoff}) OR ${markNewer})`;
-    const r = await this.db.execute<{ status: string; revoked_mark: boolean }>(sql`
+    const r = await this.db.execute<{
+      status: string;
+      revoked_mark: boolean;
+    }>(sql`
       INSERT INTO users (sub, email, employee_code, full_name, department, team, role, status,
                          inactive_at, first_login_at, last_login_at)
       SELECT ${claims.sub}, ${claims.email ?? null}, ${claims.employee_code ?? null},
@@ -208,7 +214,8 @@ export class UsersService {
     `);
     await this.applyRole(claims.sub, role, 'login');
     // Dấu thu hồi mới hơn token mà status chưa kịp đổi (webhook ghi dấu rồi mới markNoAccess) vẫn là 'revoked'
-    if (r.rows[0]?.status !== 'active' || r.rows[0]?.revoked_mark) return 'revoked';
+    if (r.rows[0]?.status !== 'active' || r.rows[0]?.revoked_mark)
+      return 'revoked';
     await this.db.execute(sql`
       UPDATE webhook_user_order SET access_revoked = false, updated_at = now()
       WHERE sub = ${claims.sub} AND access_revoked AND updated_at <= ${cutoff}

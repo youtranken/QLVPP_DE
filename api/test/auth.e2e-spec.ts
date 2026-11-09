@@ -241,6 +241,27 @@ describe('auth e2e', () => {
       expect(body.items.map((u) => u.sub)).toEqual([teamSub]);
     });
 
+    it('status=deleted chỉ trả người đã xóa (không có locked, không có local:sa); status lạ → 400', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/api/admin/users')
+        .query({ status: 'deleted', limit: 200 })
+        .set('x-dev-user-sub', 'dev-admin')
+        .set('x-dev-role', 'admin')
+        .expect(200);
+      const body = res.body as {
+        items: Array<{ sub: string; status: string }>;
+      };
+      expect(body.items.map((u) => u.sub)).toContain(deletedSub);
+      expect(body.items.every((u) => u.status === 'deleted')).toBe(true);
+      expect(body.items.map((u) => u.sub)).not.toContain('local:sa');
+      await request(app.getHttpServer())
+        .get('/api/admin/users')
+        .query({ status: 'locked' })
+        .set('x-dev-user-sub', 'dev-admin')
+        .set('x-dev-role', 'admin')
+        .expect(400);
+    });
+
     it('member → 403 FORBIDDEN_ROLE', async () => {
       const res = await request(app.getHttpServer())
         .get('/api/admin/users')

@@ -1,6 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { Type } from 'class-transformer';
 import {
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -29,6 +30,11 @@ class ListUsersQueryDto {
   @IsString()
   @MaxLength(1000)
   cursor?: string;
+
+  // Mặc định ẩn người đã xóa; status=deleted chỉ trả người đã xóa (bộ lọc "Đã xoá" ở trang Người dùng)
+  @IsOptional()
+  @IsIn(['deleted'])
+  status?: 'deleted';
 }
 
 @Controller('admin/users')
@@ -42,6 +48,7 @@ export class UsersAdminController {
       search: query.search,
       limit: query.limit,
       cursor: query.cursor,
+      status: query.status,
     });
   }
 }
