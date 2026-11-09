@@ -17,6 +17,7 @@ import {
   lineAlreadyReviewed,
   lineNotFound,
   rejectReasonRequired,
+  staleUpdate,
 } from './request-errors';
 import type { LineRow } from './request-lines.rules';
 import { toLineView } from './request-view';
@@ -140,6 +141,16 @@ export class ReviewService {
       if (!before) throw lineNotFound();
       const ym = await this.periods.assertLineLocked(tx, lineId, now);
       if (before.review_status !== 'pending') throw lineAlreadyReviewed();
+      if (
+        body.expected_updated_at !== undefined &&
+        !(await repo.requestFresh(
+          tx,
+          before.request_id,
+          body.expected_updated_at,
+        ))
+      ) {
+        throw staleUpdate();
+      }
       const item =
         body.action === 'convert'
           ? await this.targetItem(tx, before, body.item!, admin.sub)

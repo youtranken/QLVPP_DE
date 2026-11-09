@@ -45,10 +45,12 @@ export interface NewItemInput {
   admin_only: boolean;
 }
 
-export type ReviewBody =
+// expected_updated_at: mốc phiếu đang xem (ngăn Điều chỉnh) → phiếu đã đổi ở nơi khác thì STALE_UPDATE
+export type ReviewBody = { expected_updated_at?: string } & (
   | { action: 'accept'; note?: string }
   | { action: 'reject'; note: string }
-  | { action: 'convert'; note?: string; item: { existing_id: string } | NewItemInput };
+  | { action: 'convert'; note?: string; item: { existing_id: string } | NewItemInput }
+);
 
 export interface ReviewedItem {
   id: string;

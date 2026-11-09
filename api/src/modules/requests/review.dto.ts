@@ -12,7 +12,7 @@ import {
 } from 'class-validator';
 import { Name, OptionalText } from '../../common/dto-fields';
 import { UnitCode } from '../units/units.dto';
-import { NOTE_MAX } from './request.dto';
+import { NOTE_MAX, UpdatedAtStamp } from './request.dto';
 
 export const REVIEW_STATUSES = [
   'pending',
@@ -52,4 +52,6 @@ export class ReviewBody {
   @ValidateNested()
   @Type(() => ReviewItemInput)
   item?: ReviewItemInput;
+  // Ngăn Điều chỉnh gửi mốc phiếu đang xem: phiếu đã đổi ở nơi khác → STALE_UPDATE, không duyệt
+  @IsOptional() @UpdatedAtStamp() expected_updated_at?: string;
 }

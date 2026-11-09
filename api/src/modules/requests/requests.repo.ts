@@ -271,6 +271,18 @@ export async function setReview(
 }
 
 // Dòng đổi trạng thái = phiếu đổi: tab đang mở với mốc cũ phải nhận STALE_UPDATE
+// Phiếu (đã khóa dòng) còn đúng mốc client đang xem
+export async function requestFresh(
+  tx: Executor,
+  id: string,
+  expected: string,
+): Promise<boolean> {
+  const { rows } = await tx.execute<{ fresh: boolean }>(
+    sql`SELECT ${freshness(expected)} AS fresh FROM requests WHERE id = ${id}`,
+  );
+  return rows[0]?.fresh ?? false;
+}
+
 export async function bumpRequest(
   tx: Executor,
   id: string,

@@ -115,12 +115,18 @@ function useSendAdjust(requestId: string, patch: Patch, onDone: () => void, sync
     for (const l of current.lines.filter(isPending)) {
       const drop = d.removed.includes(l.id);
       try {
-        const r = await reviewLine(l.id, drop ? { action: 'reject', note: t('summary.adjust.removedNote') } : { action: 'accept' }, csrfToken);
+        // Mốc phiếu đang xem (rồi mốc review trước trả về): phiếu đổi ở nơi khác sau khi mở ngăn → STALE_UPDATE, không duyệt
+        const stamp = { expected_updated_at: view.updated_at };
+        const r = await reviewLine(l.id, drop ? { action: 'reject', note: t('summary.adjust.removedNote'), ...stamp } : { action: 'accept', ...stamp }, csrfToken);
         sync.reviewed(r);
         view = { ...view, updated_at: r.request_updated_at, lines: view.lines.map((x) => (x.id === r.line.id ? r.line : x)) };
         // Đã "Không mua" thì dòng không còn bỏ bằng số nữa
         if (drop) patch((x) => ({ ...x, removed: x.removed.filter((id) => id !== l.id) }));
       } catch (e) {
+        if (isStaleUpdate(e)) {
+          patch((x) => ({ ...x, stale: true }));
+          return null;
+        }
         patch((x) => ({ ...x, errors: { lines: { [l.id]: t(reviewErrorKey(e) ?? 'review.errors.UNKNOWN') } } }));
         if (isStaleReview(e)) void sync.reviewStale(l.id);
         return null;

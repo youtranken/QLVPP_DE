@@ -18,7 +18,7 @@ import { UnitCode } from '../units/units.dto';
 
 export const NOTE_MAX = 500;
 
-const UpdatedAtStamp = () => (target: object, key: string) => {
+export const UpdatedAtStamp = () => (target: object, key: string) => {
   IsISO8601({ strict: true })(target, key);
   Matches(STAMP_FROM_2000, { message: `${key} phải có năm ≥ 2000` })(
     target,

@@ -140,6 +140,27 @@ describe('admin/review: hàng chờ, nhận, từ chối', () => {
     await adjust(stamp).expect(200);
   });
 
+  it('expected_updated_at (ngăn Điều chỉnh): mốc cũ → 409 STALE_UPDATE, dòng vẫn pending, không audit; mốc đúng → 200', async () => {
+    const { line } = await customLine();
+    const got = await getMine();
+    const stale = await review(line.id, {
+      action: 'accept',
+      expected_updated_at: '2001-01-01T00:00:00.000Z',
+    });
+    expect(stale.status).toBe(409);
+    expect(stale.body.code).toBe('STALE_UPDATE');
+    expect((await lineRow(line.id)).review_status).toBe('pending');
+    const audit = await pool().query(
+      "SELECT 1 FROM audit_log WHERE action = 'line.review' AND object_id = $1",
+      [line.id],
+    );
+    expect(audit.rows).toHaveLength(0);
+    await review(line.id, {
+      action: 'accept',
+      expected_updated_at: got.updated_at,
+    }).expect(200);
+  });
+
   it('GET admin/review: lọc theo status/ym; previously_accepted theo người + tên chuẩn hóa ở kỳ trước', async () => {
     await pool().query(
       `INSERT INTO periods (ym, deadline) VALUES ('2026-10-01', '2026-10-10T17:00:00Z')
