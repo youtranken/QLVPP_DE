@@ -14,7 +14,7 @@ const sendAdm = {
     },
     leave: {
       title: 'Bỏ số Đề nghị vừa sửa?',
-      body: 'Bạn đã sửa {{n}} món nhưng chưa In trình ký. Rời trang sẽ mất các số này.',
+      body: 'Bạn đã sửa {{n}} món nhưng chưa Xem tổng kết và bấm Đồng ý và in. Rời trang sẽ mất các số này.',
       stay: 'Ở lại',
       discard: 'Bỏ thay đổi',
     },

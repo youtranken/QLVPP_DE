@@ -99,7 +99,7 @@ function bodyOf(current: AdminRequestView, d: Draft, preset: AdjustReason | unde
   return { body, keys: current.lines.map((l) => l.id) };
 }
 
-// Giảm phiếu đổi phần đang giữ ở Tủ, Gửi ADM (W6/W15), Hàng về (W14), Còn nợ; bỏ/sửa dòng ngoài DM đổi hàng chờ của Món ngoài danh mục
+// Giảm phiếu đổi phần đang giữ ở Tủ, Gửi ADM (W6), Hàng về (W14), Còn nợ; bỏ/sửa dòng ngoài DM đổi hàng chờ của Món ngoài danh mục
 export function useRefreshAfterAdjust() {
   return useRefreshAfterLineChange([REVIEW_KEY]);
 }

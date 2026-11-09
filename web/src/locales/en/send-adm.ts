@@ -17,7 +17,7 @@ const sendAdm: Messages<typeof vi> = {
     },
     leave: {
       title: 'Discard edited order numbers?',
-      body: "You edited {{n}} items but haven't printed. Leaving will lose them.",
+      body: "You edited {{n}} items but haven't opened Review summary and tapped Agree and print. Leaving will lose them.",
       stay: 'Stay',
       discard: 'Discard changes',
     },

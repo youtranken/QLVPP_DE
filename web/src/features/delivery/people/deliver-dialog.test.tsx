@@ -112,14 +112,14 @@ describe('DeliverDialog — trần stepper', () => {
   it('tổng 0, không dòng ADM → Xác nhận vô hiệu; tủ 0 mọi món → câu "Tủ chưa có hàng…"', async () => {
     stub();
     open(person({ lines: [pLine({ stock_qty: 0 })] }));
-    expect(await within(dialog()).findByText('Tủ chưa có hàng cho món nào — ghi Hàng về trước.')).toBeInTheDocument();
+    expect(await within(dialog()).findByText('Tủ chưa có hàng cho món nào — ghi Nhận hàng trước.')).toBeInTheDocument();
     expect(confirmBtn()).toBeDisabled();
   });
 
   it('tủ 0 mọi món + 1 dòng chờ duyệt → vẫn liệt kê dòng chờ duyệt ở "Không giao lần này"', async () => {
     stub();
     open(person({ lines: [pLine({ stock_qty: 0 }), pLine({ line_id: 'rv', item_id: null, name: 'Kéo cắt', review_status: 'pending', stock_qty: null })] }));
-    expect(await within(dialog()).findByText('Tủ chưa có hàng cho món nào — ghi Hàng về trước.')).toBeInTheDocument();
+    expect(await within(dialog()).findByText('Tủ chưa có hàng cho món nào — ghi Nhận hàng trước.')).toBeInTheDocument();
     expect(within(dialog()).getByText('Kéo cắt')).toBeInTheDocument();
   });
 

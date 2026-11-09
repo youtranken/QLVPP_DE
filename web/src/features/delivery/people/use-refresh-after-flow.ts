@@ -7,7 +7,7 @@ import { useRefreshStock } from '@/features/stock/stock.api';
 import { DELIVERY_PEOPLE_KEY } from './delivery-people.api';
 
 // Mọi thao tác đổi dòng phiếu hay tồn (giảm phiếu, giao, Hủy nợ, duyệt, ADM hết hàng, Hàng về) làm mới cùng một tập:
-// Tổng hợp/đếm sidebar, danh sách người giao, Còn nợ, trạng thái Gửi ADM (W6/W15), kế hoạch Hàng về (W14), tồn + báo cáo.
+// Tổng hợp/đếm sidebar, danh sách người giao, Còn nợ, trạng thái Gửi ADM (W6), kế hoạch Hàng về (W14), tồn + báo cáo.
 // Phần riêng của từng luồng (vd phiếu đang mở) truyền qua extraKeys.
 export function useRefreshAfterLineChange(extraKeys: readonly (readonly unknown[])[] = []) {
   const qc = useQueryClient();

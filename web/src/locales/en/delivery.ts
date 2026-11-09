@@ -145,7 +145,7 @@ const delivery: Messages<typeof vi> = {
       sumOwe: 'Deliver {{give}} · {{left}} not yet received',
       sumDebt: ' · {{debt}} owed from earlier months',
       sumCancel: 'Cancel {{n}} out-of-stock items',
-      noStock: 'Nothing in stock for these items — record arrivals first.',
+      noStock: 'Nothing in stock for these items — record them in Receiving first.',
       reserved: '{{k}} kept for {{m}} earlier requests',
       leftUser: 'No longer with the company — deliver only if someone collects',
       noUndo: "Confirming can't be undone. If it's wrong, fix the count in Stock with a reason.",

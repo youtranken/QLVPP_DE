@@ -142,7 +142,7 @@ const delivery = {
       sumOwe: 'Giao {{give}} · còn {{left}} chưa nhận',
       sumDebt: ' · nợ tháng trước {{debt}}',
       sumCancel: 'Hủy {{n}} món ADM hết hàng',
-      noStock: 'Tủ chưa có hàng cho món nào — ghi Hàng về trước.',
+      noStock: 'Tủ chưa có hàng cho món nào — ghi Nhận hàng trước.',
       reserved: 'Giữ {{k}} cho {{m}} người đăng ký trước',
       leftUser: 'Người đã nghỉ — giao chỉ khi có người nhận thay',
       noUndo: 'Bấm Xác nhận là không sửa được. Nếu lỡ nhầm, vào Tủ / Kho để chỉnh số, ghi lý do.',
