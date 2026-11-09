@@ -323,7 +323,7 @@ describe('Báo cáo & gửi ADM: số khởi tạo từ bản đã gửi không 
     open();
     const box = await qtyBox('Bút bi');
     expect(box).toHaveValue(9);
-    await userEvent.click(screen.getByRole('link', { name: 'Hàng về' }));
+    await userEvent.click(screen.getByRole('link', { name: 'Nhận hàng' }));
     expect(screen.queryByRole('dialog', { name: /Bỏ số Đề nghị vừa sửa/ })).toBeNull();
   });
 
@@ -333,7 +333,7 @@ describe('Báo cáo & gửi ADM: số khởi tạo từ bản đã gửi không 
     const box = await qtyBox('Bút bi');
     await userEvent.clear(box);
     await userEvent.type(box, '4');
-    await userEvent.click(screen.getByRole('link', { name: 'Hàng về' }));
+    await userEvent.click(screen.getByRole('link', { name: 'Nhận hàng' }));
     expect(await screen.findByText('Bỏ số Đề nghị vừa sửa?')).toBeInTheDocument();
     // Hai ô khởi tạo từ bản đã gửi không tính: chỉ ô vừa gõ là thay đổi
     expect(screen.getByText(/Bạn đã sửa 1 món nhưng chưa In trình ký/)).toBeInTheDocument();

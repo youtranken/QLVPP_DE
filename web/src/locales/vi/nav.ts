@@ -26,7 +26,7 @@ const nav = {
     stock: 'Tủ / Kho',
     users: 'Nhân viên',
     review: 'Món ngoài danh mục',
-    arrivals: 'Hàng về',
+    arrivals: 'Nhận hàng',
     delivery: 'Giao hàng',
     backlog: 'Còn nợ',
     reports: 'Báo cáo & gửi ADM',

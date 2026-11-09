@@ -1,6 +1,6 @@
 const arrivals = {
   arrivals: {
-    title: 'Hàng về kỳ tháng {{month}}',
+    title: 'Nhận hàng kỳ tháng {{month}}',
     table: {
       label: 'Hàng về theo món',
       item: 'Món',
@@ -30,7 +30,7 @@ const arrivals = {
     group: { done: 'đủ {{a}}/{{b}}', doneAfter: 'đủ {{a}}/{{b}}, sau lưu {{c}}/{{b}}', fill: 'Điền đủ cả nhóm', none: 'Chưa xếp nhóm' },
     source: 'theo bản gửi ADM {{time}}',
     batch: 'Đợt này: {{n}} món · {{u}} đơn vị',
-    status: { done: 'Đủ', short: 'Thiếu {{n}}', over: 'Dư {{n}}', none: 'Không nhập', adm_out: 'ADM hết hàng', after: 'Sau lưu: {{label}}', legend: 'Chip nền = đã lưu · Chip viền đứt = sau khi bấm Lưu hàng về' },
+    status: { done: 'Đủ', short: 'Thiếu {{n}}', over: 'Dư {{n}}', none: 'Không nhập', adm_out: 'ADM hết hàng', after: 'Sau lưu: {{label}}' },
     noSnapshot: 'Chưa in trình ký gửi ADM — số điền sẵn theo tổng đăng ký + nợ tháng trước',
     noOrder: 'Không có đơn gửi ADM · {{time}}',
     admOut: { button: 'ADM hết hàng', buttonFor: 'ADM hết hàng: {{name}}', final: 'ADM hết hàng · đã xử lý xong', finalFor: 'ADM hết hàng · đã xử lý xong: {{name}}' },

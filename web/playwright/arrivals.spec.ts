@@ -27,7 +27,7 @@ test.describe('Hàng về theo bản in (Plan v2-D, Task 8)', () => {
       expect(made.status()).toBe(201);
       await openOnPrivatePeriod(page);
       await page.goto(`/admin/arrivals?q=${encodeURIComponent(seed.tag)}`);
-      await expect(page.getByRole('heading', { level: 1, name: `Hàng về kỳ tháng ${Number(seed.prevYm.slice(5))}` })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: `Nhận hàng kỳ tháng ${Number(seed.prevYm.slice(5))}` })).toBeVisible();
       await expect(page.getByRole('link', { name: /^theo bản gửi ADM / })).toBeVisible();
       await expect(page.getByText(/^Đang hiện 2\/\d+ món$/)).toBeVisible();
       const boxA = page.getByRole('spinbutton', { name: `Hàng về: ${a.name}` });

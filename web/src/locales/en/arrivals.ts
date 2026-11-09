@@ -3,7 +3,7 @@ import type { Messages } from '@/locales/messages';
 
 const arrivals: Messages<typeof vi> = {
   arrivals: {
-    title: 'Goods arriving, {{month}} period',
+    title: 'Receiving · month {{month}}',
     table: {
       label: 'Goods arriving by item',
       item: 'Item',
@@ -33,7 +33,7 @@ const arrivals: Messages<typeof vi> = {
     group: { done: 'covered {{a}}/{{b}}', doneAfter: 'covered {{a}}/{{b}}, after save {{c}}/{{b}}', fill: 'Fill whole group', none: 'Ungrouped' },
     source: 'from the ADM print {{time}}',
     batch: 'This batch: {{n}} items · {{u}} units',
-    status: { done: 'Covered', short: '{{n}} short', over: '{{n}} over', none: 'None entered', adm_out: 'Out at ADM', after: 'After save: {{label}}', legend: 'Filled chip = saved · Dashed chip = after pressing Save arrivals' },
+    status: { done: 'Covered', short: '{{n}} short', over: '{{n}} over', none: 'None entered', adm_out: 'Out at ADM', after: 'After save: {{label}}' },
     noSnapshot: 'Not sent to ADM yet — prefilled from requested + carried over',
     noOrder: 'No order sent to ADM · {{time}}',
     admOut: { button: 'Out at ADM', buttonFor: 'Out at ADM: {{name}}', final: 'Out at ADM · settled', finalFor: 'Out at ADM · settled: {{name}}' },

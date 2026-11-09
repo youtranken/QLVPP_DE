@@ -65,7 +65,6 @@ export function ArrivalsToolbar({ plan, filter, groups, counts, total, shown, sh
         value={filter.g ?? ALL_GROUPS}
         onChange={(g) => onFilter({ g: g === ALL_GROUPS ? null : g })}
       />
-      <p className="ar-legend">{t('arrivals.status.legend')}</p>
       <p className="ar-count" aria-live="polite">
         {t('arrivals.filter.count', { x: shown, y: total })}
       </p>

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { asRole, devHeaders, expectNoContrastViolations, isMobile, removeTestItem, seedPwItem } from './helpers';
 
-const NAV_ORDER = ['Kỳ tháng', 'Báo cáo & gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Kỳ tháng', 'Báo cáo & gửi ADM', 'Nhận hàng', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 const OPEN_MENU = /^(Mở menu quản lý|Open admin menu)$/;
 
 // Bell: topbar on phone, bottom of sidebar (next to avatar) elsewhere

@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const MONTHLY = ['Kỳ tháng', 'Báo cáo & gửi ADM', 'Hàng về', 'Giao hàng', 'Còn nợ'];
+const MONTHLY = ['Kỳ tháng', 'Báo cáo & gửi ADM', 'Nhận hàng', 'Giao hàng', 'Còn nợ'];
 const MONTHLY_PATHS = ['/admin/month', '/admin/reports', '/admin/arrivals', '/admin/delivery', '/admin/backlog'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });

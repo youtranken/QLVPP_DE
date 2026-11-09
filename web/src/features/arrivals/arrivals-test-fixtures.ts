@@ -73,5 +73,5 @@ export const saveBtn = () => screen.getByRole('button', { name: 'Lưu hàng về
 export async function open(path = '/admin/arrivals', width = 1280) {
   mockViewport(width);
   renderApp(makeMe('admin'), path);
-  await screen.findByRole('heading', { level: 1, name: 'Hàng về kỳ tháng 10' });
+  await screen.findByRole('heading', { level: 1, name: 'Nhận hàng kỳ tháng 10' });
 }
