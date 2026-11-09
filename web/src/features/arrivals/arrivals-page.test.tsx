@@ -90,7 +90,7 @@ describe('Hàng về — bảng theo bản in', () => {
   it('chưa có bản chốt: ghi chú số gộp, điền sẵn remaining theo ordered gộp', async () => {
     stub({ plan: plan([planRow({ item_id: 'i-a', ordered: 10, remaining: 10, stock_qty: 5 })], { snapshot: null }) });
     await open();
-    expect(await screen.findByText('Chưa in trình ký gửi ADM — số điền sẵn theo tổng đăng ký + nợ tháng trước')).toBeInTheDocument();
+    expect(await screen.findByText('Chưa chốt bản gửi ADM (Xem tổng kết) — số điền sẵn theo tổng đăng ký + nợ tháng trước')).toBeInTheDocument();
     expect(box('Bút bi')).toHaveValue(10);
   });
 
@@ -99,7 +99,7 @@ describe('Hàng về — bảng theo bản in', () => {
     stub({ plan: plan([], { snapshot: null, no_order: { at: '2026-11-12T03:00:00.000Z', by_name: 'Hà' }, makeup }) });
     await open();
     expect(await screen.findByText('Không có đơn gửi ADM · 10:00 12/11')).toBeInTheDocument();
-    expect(screen.queryByText(/Chưa in trình ký gửi ADM/)).toBeNull();
+    expect(screen.queryByText(/Chưa chốt bản gửi ADM/)).toBeNull();
     expect(screen.getByRole('combobox', { name: 'Tìm món để thêm' })).toBeInTheDocument();
     expect(screen.getByText('Về bù kỳ trước (1)')).toBeInTheDocument();
   });

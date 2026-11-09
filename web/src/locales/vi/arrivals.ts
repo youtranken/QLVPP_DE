@@ -32,7 +32,7 @@ const arrivals = {
     source: 'theo bản gửi ADM {{time}}',
     batchPicked: 'Đã chọn {{g}} nhóm · {{n}} món',
     status: { done: 'Nhập đủ số lượng', short: 'Thiếu {{n}}', over: 'Dư {{n}}', none: 'Không nhập', adm_out: 'ADM hết hàng', after: 'Sau lưu: {{label}}' },
-    noSnapshot: 'Chưa in trình ký gửi ADM — số điền sẵn theo tổng đăng ký + nợ tháng trước',
+    noSnapshot: 'Chưa chốt bản gửi ADM (Xem tổng kết) — số điền sẵn theo tổng đăng ký + nợ tháng trước',
     noOrder: 'Không có đơn gửi ADM · {{time}}',
     admOut: { button: 'ADM hết hàng', buttonFor: 'ADM hết hàng: {{name}}', final: 'ADM hết hàng · đã xử lý xong', finalFor: 'ADM hết hàng · đã xử lý xong: {{name}}' },
     admOutStock: 'ADM hết hàng – tủ còn {{s}}',
