@@ -19,7 +19,7 @@
 [data-shell='member'] .rq-card-stepper input { width: 100%; min-width: 0; border: 0; background: transparent; text-align: center; font-size: 16px; font-weight: 800; color: var(--c-ink); appearance: textfield; -moz-appearance: textfield; }
 [data-shell='member'] .rq-card-stepper input::-webkit-outer-spin-button, [data-shell='member'] .rq-card-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 [data-shell='member'] .rq-card-locked { margin: 0 4px 4px; min-height: 44px; display: grid; place-items: center; border-radius: 999px; background: var(--c-surface-2); color: var(--c-ink-2); font: var(--t-label); }
-[data-shell='member'] .rq-card-locked.is-paused { background: var(--c-danger); color: #fff; }
+[data-shell='member'] .rq-card-locked.is-paused { background: var(--c-danger); color: var(--c-on-dark); }
 [data-shell='member'] .rq-card-add.rq-card-add--paused:disabled { color: var(--c-danger); opacity: 1; }
 [data-shell='member'] .rq-card-more { align-items: center; justify-content: center; gap: var(--s-2); min-height: 200px; border: 2px dashed var(--c-line); background: transparent; box-shadow: none; text-align: center; color: var(--c-ink-2); font: var(--t-label); cursor: pointer; }
 [data-shell='member'] .rq-card-more:hover { border-color: var(--c-ink-2); }

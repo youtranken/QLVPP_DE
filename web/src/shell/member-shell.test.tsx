@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
-import i18n from '@/lib/i18n';
 import { mockViewport } from '@/test/viewport';
 
 afterEach(() => vi.unstubAllGlobals());
