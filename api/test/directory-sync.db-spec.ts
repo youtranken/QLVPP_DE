@@ -4,7 +4,12 @@ import { SessionAuthService } from '../src/modules/auth/session-auth.service';
 import { SessionService } from '../src/modules/auth/session.service';
 import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
 import type { DirectoryUser } from '../src/modules/users/directory.client';
+import { DirectorySyncScheduler } from '../src/modules/users/directory-sync.scheduler';
 import { DirectorySyncService } from '../src/modules/users/directory-sync.service';
+import {
+  resolveMigrationsDir,
+  runMigrations,
+} from '../src/database/migration-runner';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
 
@@ -111,10 +116,17 @@ describe('Directory sync v3 (Postgres thật, Directory giả)', () => {
     pool = new Pool({
       connectionString: assertTestDatabase(process.env.DATABASE_URL),
     });
+    // Schema test mới tinh (chạy trước mọi spec khác) vẫn có bảng
+    await runMigrations(pool, resolveMigrationsDir(), {
+      log: () => undefined,
+    });
     app = await createTestApp(
       [],
       [{ token: DIRECTORY_CLIENT, useValue: directory }],
     );
+    // Chờ lượt định kỳ lúc khởi động (schema mới chưa có mốc → nó chạy) xong trước khi vào ca đầu:
+    // nếu không, nó nối đuôi lượt của ca 1 và chạy chen vào ca 2 với kịch bản của ca 2
+    await app.get(DirectorySyncScheduler).tick();
   });
 
   beforeEach(() => {
@@ -176,6 +188,8 @@ describe('Directory sync v3 (Postgres thật, Directory giả)', () => {
     const auth = app.get(SessionAuthService);
     expect(await auth.resolve(session.id)).not.toBeNull();
     scenario.gone = new Set([GONE]);
+    // Canary riêng: schema mới tinh không có user của suite khác để làm canary
+    scenario.listed = [listed(sub('gone-canary'))];
     const r = await sync();
     expect(r).toMatchObject({ no_access: 1, reconcile: 'ok' });
     const row = await userRow(GONE);
