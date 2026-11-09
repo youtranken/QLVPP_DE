@@ -60,11 +60,11 @@ export function ItemCard({
         <div className="rq-card-unit">{fmt.limit(item.unit, item.max_qty)}</div>
       </div>
       {line?.readonly || (paused && qty > 0) ? (
-        <div className="rq-card-locked">
+        <div className={`rq-card-locked${paused && qty > 0 && !line?.readonly ? ' is-paused' : ''}`}>
           {t(line?.added_by_admin ? 'request.grid.adminAdded' : 'request.grid.locked', { qty })}
         </div>
       ) : paused ? (
-        <button type="button" className="rq-card-add" aria-label={`${t('request.grid.paused')}: ${name}`} disabled>
+        <button type="button" className="rq-card-add rq-card-add--paused" aria-label={`${t('request.grid.paused')}: ${name}`} disabled>
           {t('request.grid.paused')}
         </button>
       ) : qty === 0 ? (

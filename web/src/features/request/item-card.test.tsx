@@ -103,6 +103,14 @@ describe('ItemCard — tiếng Anh', () => {
     expect(screen.queryByRole('spinbutton')).toBeNull();
     expect(screen.queryByRole('button', { name: /Không đặt được/ })).toBeNull();
   });
+  it('món tạm ngưng đã đăng ký → ô "Đã đăng ký 2" có class is-paused', () => {
+    renderWithI18n(<ItemCard item={{ ...ITEM, usable: false, active: false }} line={line(2, { stopped: true })} tone="g1" groupLabel={null} paused onQty={vi.fn()} />);
+    expect(screen.getByText('Đã đăng ký 2')).toHaveClass('is-paused');
+  });
+  it('món tạm ngưng chưa đặt → nút "Không đặt được" có class rq-card-add--paused', () => {
+    renderWithI18n(<ItemCard item={{ ...ITEM, usable: false, active: false }} line={undefined} tone="g1" groupLabel={null} paused onQty={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /Không đặt được/ })).toHaveClass('rq-card-add--paused');
+  });
   it('món dùng được: không có con dấu', () => {
     view(undefined);
     expect(screen.queryByRole('img', { name: 'Tạm ngưng' })).toBeNull();
