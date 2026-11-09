@@ -42,6 +42,8 @@ export interface BulkOutcome {
   deleted: string[];
   reappeared: string[];
   roleChanges: { sub: string; from: string; to: string }[];
+  // Rời active trong lượt này (báo Admin việc dở sau khi commit)
+  lost: { sub: string; status: 'locked' | 'deleted' }[];
 }
 
 export type Tx = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -91,6 +93,7 @@ export function classify(
     deleted: [],
     reappeared: [],
     roleChanges: [],
+    lost: [],
   };
   const toInsert: DirectoryUser[] = [];
   const toUpdate: { sub: string; target: Target }[] = [];
@@ -113,6 +116,12 @@ export function classify(
         from: current.role,
         to: target.role,
       });
+    }
+    if (
+      current.status === 'active' &&
+      (target.status === 'locked' || target.status === 'deleted')
+    ) {
+      out.lost.push({ sub: user.id, status: target.status });
     }
     if (differs(current, target)) toUpdate.push({ sub: user.id, target });
     else out.unchanged += 1;

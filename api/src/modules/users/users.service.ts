@@ -235,15 +235,21 @@ export class UsersService {
     return rows[0] ?? null;
   }
 
+  // Rời active (khoá/xoá) → báo người nghe mất quyền; đổi giữa các trạng thái không active thì không
   async setStatus(
     sub: string,
     status: 'active' | 'locked' | 'deleted',
   ): Promise<void> {
-    const inactiveAt = inactiveAtFor(status);
-    await this.db
-      .update(usersTable)
-      .set({ status, inactiveAt, updatedAt: new Date() })
-      .where(eq(usersTable.sub, sub));
+    const inactiveAt = inactiveAtFor(status) ?? sql`NULL`;
+    const r = await this.db.execute<{ from: string }>(sql`
+      UPDATE users SET status = ${status}, inactive_at = ${inactiveAt}, updated_at = now()
+      FROM (SELECT sub AS old_sub, status AS from_status FROM users WHERE sub = ${sub} FOR UPDATE) old
+      WHERE users.sub = old.old_sub
+      RETURNING old.from_status AS "from"
+    `);
+    if (r.rows[0]?.from === 'active' && status !== 'active') {
+      await this.access.accessLost(sub, status);
+    }
   }
 
   // Người nhận chuông admin: SA cục bộ không nhận

@@ -19,6 +19,11 @@ describe('eventIds — công thức event_id §9 (+F5)', () => {
       'low_stock:i:0',
     ],
     ['lineCancelled', eventIds.lineCancelled('l1', 3), 'line_cancelled:l1:3'],
+    [
+      'leftWork',
+      eventIds.leftWork('sub-1', '1762650000123'),
+      'left-work:sub-1:1762650000123',
+    ],
   ])('%s → %s', (_name, actual, expected) => {
     expect(actual).toBe(expected);
   });

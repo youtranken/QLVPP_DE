@@ -7,7 +7,8 @@ export type NotificationTopic =
   | 'custom_line_new'
   | 'low_stock'
   | 'line_cancelled'
-  | 'line_adjusted';
+  | 'line_adjusted'
+  | 'user_left_with_work';
 
 // event_id tất định (§9): UNIQUE (event_id, user_sub) chống gửi trùng khi cron/tx chạy lại
 export const eventIds = {
@@ -25,4 +26,7 @@ export const eventIds = {
   // Một chuông mỗi người mỗi kỳ mỗi ngày giờ VN: các lần giảm trong ngày ghi đè cùng dòng
   lineAdjusted: (sub: string, ym: string, vnDay: string) =>
     `line_adjusted:${sub}:${ym}:${vnDay}`,
+  // Một lần mỗi lần mất quyền: mốc rời active (inactive_at, ms) đổi khi được cấp lại rồi mất lần nữa
+  leftWork: (sub: string, inactiveAtMs: string) =>
+    `left-work:${sub}:${inactiveAtMs}`,
 };

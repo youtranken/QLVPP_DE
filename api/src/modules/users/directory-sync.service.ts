@@ -137,6 +137,7 @@ export class DirectorySyncService {
         detail: { from: c.from, to: c.to, source: 'directory' },
       });
     }
+    for (const l of bulk.lost) await this.access.accessLost(l.sub, l.status);
     let restored = 0;
     for (const sub of bulk.reappeared) {
       if (

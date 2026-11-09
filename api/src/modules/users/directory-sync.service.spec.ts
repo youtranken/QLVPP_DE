@@ -76,7 +76,10 @@ function makeService(opts: {
     resetCount: jest.fn(),
   };
   const audit = { append: jest.fn().mockResolvedValue(undefined) };
-  const access = { restoreActive: jest.fn().mockResolvedValue(true) };
+  const access = {
+    restoreActive: jest.fn().mockResolvedValue(true),
+    accessLost: jest.fn().mockResolvedValue(undefined),
+  };
   const reconcile = {
     run: jest
       .fn()
@@ -245,6 +248,25 @@ describe('DirectorySyncService', () => {
         detail: expect.objectContaining({ deleted_detected: ['a'] }),
       }),
     );
+  });
+
+  it('người đang active bị khoá/xoá → accessLost sau bulk; locked → deleted (cùng lần mất quyền) thì không', async () => {
+    const a = user('a');
+    const b = user('b');
+    const c = user('c', 'locked');
+    const { service, access } = makeService({
+      users: [
+        { ...a, status: 'locked' },
+        { ...b, status: 'deleted' },
+        { ...c, status: 'deleted' },
+      ],
+      existingRows: [existingOf(a), existingOf(b), existingOf(c)],
+    });
+    await service.sync('sa-1');
+    expect(access.accessLost.mock.calls).toEqual([
+      ['a', 'locked'],
+      ['b', 'deleted'],
+    ]);
   });
 
   it('danh bạ rỗng → 0/0/0, không gọi /groups, kết quả không có groups', async () => {

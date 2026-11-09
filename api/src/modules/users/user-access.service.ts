@@ -23,6 +23,13 @@ export function toAppRole(v: unknown): AppRole {
 
 export type SeqCategory = 'access' | 'status' | 'profile';
 
+export type LostStatus = 'locked' | 'deleted' | 'no_access';
+// Gọi sau khi người đó rời active (đã commit); lỗi của listener không được làm gãy webhook/sync
+export type AccessLostListener = (
+  sub: string,
+  status: LostStatus,
+) => Promise<void>;
+
 export interface WebhookProfile {
   user_id: string;
   department?: string;
@@ -62,12 +69,32 @@ function errorCode(error: unknown): string | undefined {
 @Injectable()
 export class UserAccessService {
   private readonly logger = new Logger(UserAccessService.name);
+  private readonly lostListeners: AccessLostListener[] = [];
 
   constructor(
     @Inject(DRIZZLE_DB) private readonly db: Database,
     @Inject(DIRECTORY_CLIENT) private readonly directory: DirectoryClientApi,
     private readonly audit: AuditWriterService,
   ) {}
+
+  // Người nghe đăng ký lúc khởi động (báo Admin việc dở ở NotificationsModule — tránh import vòng)
+  onAccessLost(listener: AccessLostListener): void {
+    this.lostListeners.push(listener);
+  }
+
+  // Chỉ gọi cho lần rời active → locked/deleted/no_access (mọi đường: webhook, sync, đối chiếu).
+  // locked → deleted/no_access vẫn là cùng một lần mất quyền nên không gọi lại.
+  async accessLost(sub: string, status: LostStatus): Promise<void> {
+    for (const listener of this.lostListeners) {
+      try {
+        await listener(sub, status);
+      } catch (error) {
+        this.logger.warn(
+          `Xử lý mất quyền của ${sub} lỗi: ${(error as Error).message}`,
+        );
+      }
+    }
+  }
 
   // Đổi vai thì audit; không đổi thì không ghi gì (refresh mỗi ≤ 5′ không làm đầy nhật ký)
   async applyRole(
@@ -120,6 +147,7 @@ export class UserAccessService {
       objectId: sub,
       detail: { source, from: row.from },
     });
+    if (row.from === 'active') await this.accessLost(sub, 'no_access');
     return true;
   }
 
@@ -188,16 +216,20 @@ export class UserAccessService {
     sub: string,
     status: 'locked' | 'deleted',
   ): Promise<boolean> {
-    const r = await this.db.execute<{ sub: string }>(sql`
-      UPDATE users SET status = ${status},
-        inactive_at = CASE WHEN status = 'active' OR inactive_at IS NULL
-                           THEN clock_timestamp() ELSE inactive_at END,
+    const r = await this.db.execute<{ from: string }>(sql`
+      UPDATE users u SET status = ${status},
+        inactive_at = CASE WHEN old.status = 'active' OR old.inactive_at IS NULL
+                           THEN clock_timestamp() ELSE old.inactive_at END,
         updated_at = now()
-      WHERE sub = ${sub} AND status IN ('active', 'locked') AND status <> ${status}
-        AND sub NOT LIKE 'local%'
-      RETURNING sub
+      FROM (SELECT sub, status, inactive_at FROM users WHERE sub = ${sub} FOR UPDATE) old
+      WHERE u.sub = old.sub AND old.status IN ('active', 'locked') AND old.status <> ${status}
+        AND u.sub NOT LIKE 'local%'
+      RETURNING old.status AS "from"
     `);
-    return r.rows.length === 1;
+    const row = r.rows[0];
+    if (!row) return false;
+    if (row.from === 'active') await this.accessLost(sub, status);
+    return true;
   }
 
   // Hồ sơ từ payload webhook (chỉ user đã có); app_role chỉ ghi khi payload có
