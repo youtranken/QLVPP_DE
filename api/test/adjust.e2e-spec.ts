@@ -108,6 +108,31 @@ describe('PUT admin/requests/:id/lines: Hành chính chỉ giảm/bỏ dòng, c�
     ]);
   });
 
+  it("bấm X bỏ dòng với lý do 'removed' → 200, bản ghi reason_code 'removed'; 'removed' khi còn số → 400 REASON_REQUIRED", async () => {
+    const r = await seed([5, 2]);
+    at(AFTER_DEADLINE);
+    const partial = await cut(r, {
+      1: { qty: 1, reason_code: 'removed' },
+    }).expect(400);
+    expect(partial.body).toMatchObject({
+      code: 'REASON_REQUIRED',
+      line_id: r.lines[1].id,
+    });
+    const res = await cut(r, { 0: { qty: 0, reason_code: 'removed' } }).expect(
+      200,
+    );
+    expect(view(res).lines.map((l) => l.id)).toEqual([r.lines[1].id]);
+    expect(await recordsOf(r.id)).toMatchObject([
+      {
+        line_id: r.lines[0].id,
+        qty_before: 5,
+        qty_after: 0,
+        reason_code: 'removed',
+        reason_note: null,
+      },
+    ]);
+  });
+
   it('kỳ mở: 16:59:59.999Z ngày 10 → 409 PERIOD_NOT_LOCKED, 0 bản ghi; 17:00:00.000Z → 200', async () => {
     const r = await seed([5]);
     freeze('2026-11-10T16:59:59.999Z');

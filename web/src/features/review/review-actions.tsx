@@ -32,11 +32,13 @@ export interface ReviewContext {
   month: number;
 }
 
-export function ReviewActions({ line, context, sent, hideStatus = false, onDone, onStale }: {
+// 'adjust' (ngăn Điều chỉnh): mặc định mua lần này nên chỉ còn "Thêm vào danh mục" và "Không mua"
+export function ReviewActions({ line, context, sent, hideStatus = false, variant = 'full', onDone, onStale }: {
   line: ReviewableLine;
   sent?: SentInfo;
   context?: ReviewContext;
   hideStatus?: boolean;
+  variant?: 'full' | 'adjust';
   onDone: (result: ReviewResult, body: ReviewBody) => void;
   onStale?: () => void;
 }) {
@@ -104,6 +106,23 @@ export function ReviewActions({ line, context, sent, hideStatus = false, onDone,
       )}
       {status !== 'pending' ? (
         hideStatus ? null : <ReviewStatusTag status={status} note={note} />
+      ) : variant === 'adjust' ? (
+        <>
+          <p className="rv-default">{t('summary.adjust.customDefault')}</p>
+          <div className="rv-buttons rv-buttons--pair">
+            <button
+              type="button"
+              className="btn btn--sm"
+              aria-label={t('review.actions.named', { action: t('summary.adjust.addToCatalog'), name })}
+              onClick={() => setOpen('convert')}
+            >
+              {t('summary.adjust.addToCatalog')}
+            </button>
+            <button type="button" className="btn btn--sm btn--danger-ghost" aria-label={named('reject')} onClick={() => setOpen('reject')}>
+              {t('review.actions.reject')}
+            </button>
+          </div>
+        </>
       ) : (
         <div className="rv-buttons">
           <button type="button" className="btn btn--sm" aria-label={named('accept')} onClick={() => setOpen('accept')}>

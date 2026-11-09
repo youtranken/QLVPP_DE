@@ -108,8 +108,10 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
       await expect(lineB.getByText('Trước khi sửa: 3')).toBeVisible();
 
       const customLine = drawer.getByRole('listitem').filter({ hasText: custom });
-      await expect(customLine.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button')).toHaveCount(3);
-      await expect(customLine.getByRole('link', { name: 'Xem ở Món ngoài danh mục' })).toBeVisible();
+      // Mặc định mua lần này: chỉ còn "Thêm vào danh mục" và "Không mua"; Lưu sẽ duyệt mua dòng này
+      await expect(customLine.getByText('Mặc định: mua lần này. Chỉ bấm khi muốn khác:')).toBeVisible();
+      await expect(customLine.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button')).toHaveCount(2);
+      await expect(customLine.getByRole('link')).toHaveCount(0);
 
       // Mỗi dòng giảm có khối "Lý do"; còn dòng thiếu lý do → Lưu vô hiệu
       const save = drawer.getByRole('button', { name: 'Lưu điều chỉnh' });

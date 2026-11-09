@@ -20,7 +20,7 @@ export interface OwedPeriod {
   lines: { name: string; name_en: string | null; unit: string; qty: number }[];
 }
 
-export type AdjustReason = 'over_quota' | 'adm_out_of_stock' | 'duplicate' | 'other' | 'user_left';
+export type AdjustReason = 'over_quota' | 'adm_out_of_stock' | 'duplicate' | 'other' | 'user_left' | 'removed';
 
 export interface LineAdjustment {
   before: number;

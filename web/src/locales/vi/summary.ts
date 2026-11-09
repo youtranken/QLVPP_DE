@@ -77,10 +77,11 @@ const summary = {
       remove: 'Bỏ {{name}} khỏi phiếu',
       restore: 'Giữ lại',
       restoreLabel: 'Giữ lại {{name}}',
-      toReview: 'Xem ở Món ngoài danh mục',
+      customDefault: 'Mặc định: mua lần này. Chỉ bấm khi muốn khác:',
+      addToCatalog: 'Thêm vào danh mục',
+      removedNote: 'Hành chính bỏ khỏi phiếu',
       customNote: '“{{note}}”',
       imageAlt: 'Ảnh {{name}}',
-      inactiveItem: 'Đã ngừng',
       noIncrease: 'Không tăng được sau khóa sổ',
       reasonLabel: 'Lý do',
       otherHint: 'Bắt buộc khi chọn Khác. Nhân viên sẽ đọc.',
@@ -120,6 +121,7 @@ const summary = {
     duplicate: 'Trùng với phiếu khác',
     user_left: 'Người đã nghỉ',
     other: 'Khác',
+    removed: 'Hành chính bỏ khỏi phiếu',
   },
 };
 

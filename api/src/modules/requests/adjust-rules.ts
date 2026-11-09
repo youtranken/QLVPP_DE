@@ -8,6 +8,8 @@ export const ADJUST_REASONS = [
   'duplicate',
   'user_left',
   'other',
+  // Hành chính bấm X bỏ cả dòng: chỉ hợp lệ khi về 0
+  'removed',
 ] as const;
 export type AdjustReason = (typeof ADJUST_REASONS)[number];
 export const REASON_NOTE_MAX = 200;
@@ -182,6 +184,13 @@ function withReason(change: Pending): AdjustChange {
   const code = change.reason_code;
   if (code === null) {
     throw lineError('REASON_REQUIRED', 'Chọn lý do giảm.', ref);
+  }
+  if (code === 'removed' && change.after !== 0) {
+    throw lineError(
+      'REASON_REQUIRED',
+      '"Bỏ khỏi phiếu" chỉ dùng khi bỏ cả dòng.',
+      ref,
+    );
   }
   if (otherNoteTooShort(code, change.reason_note)) {
     throw lineError(

@@ -80,10 +80,11 @@ const summary: Messages<typeof vi> = {
       remove: 'Remove {{name}} from request',
       restore: 'Keep',
       restoreLabel: 'Keep {{name}}',
-      toReview: 'View in Off-catalog items',
+      customDefault: 'Default: buy this time. Only click to choose otherwise:',
+      addToCatalog: 'Add to catalog',
+      removedNote: 'Removed by Admin',
       customNote: '“{{note}}”',
       imageAlt: 'Photo of {{name}}',
-      inactiveItem: 'Discontinued',
       noIncrease: 'Cannot increase after the period is locked',
       reasonLabel: 'Reason',
       otherHint: 'Required when you choose Other. The employee will read it.',
@@ -123,6 +124,7 @@ const summary: Messages<typeof vi> = {
     duplicate: 'Duplicate of another request',
     user_left: 'No longer with the company',
     other: 'Other',
+    removed: 'Removed by Admin',
   },
 };
 

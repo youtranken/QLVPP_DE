@@ -6,10 +6,11 @@ import { cutNote, noteLength } from '@/lib/note-text';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { useToast } from '@/ui/toast-context';
 import type { LineView } from '@/features/request/request.api';
-import { REVIEW_KEY, type ReviewResult } from '@/features/review/review.api';
+import { REVIEW_KEY, reviewLine, type ReviewResult } from '@/features/review/review.api';
+import { isStaleReview, reviewErrorKey } from '@/features/review/review-errors';
 import { useSendState } from '@/features/send-adm/use-send-state';
 import { useRefreshAfterLineChange } from '@/features/delivery/people/use-refresh-after-flow';
-import { defaultReason, isOverMax, reasonChoices, type LineReason } from './adjust-reasons';
+import { defaultReason, isOverMax, reasonChoices, removedReason, type LineReason } from './adjust-reasons';
 import { adjustFailure, isStaleUpdate, type AdjustErrors } from './summary-errors';
 import { adminRequestKey, saveAdjust, useAdminRequest, type AdjustBody, type AdjustLineBody, type AdjustReason, type AdminRequestView } from './summary.api';
 
@@ -76,9 +77,13 @@ const qtyIn = (d: Draft) => (l: LineView) => (d.removed.includes(l.id) ? 0 : (d.
 
 type Translate = (key: string, opts?: Record<string, unknown>) => string;
 
-// Lý do đang hiệu lực của dòng: nháp đã chọn, không thì chọn sẵn (mở từ ?left=1 → Người đã nghỉ; vượt tối đa → Khác + ghi chú)
+// Lý do đang hiệu lực của dòng: dòng bấm X bỏ → "removed" (hoặc lý do chọn sẵn); nháp đã chọn, không thì chọn sẵn
+// (mở từ ?left=1 → Người đã nghỉ; vượt tối đa → Khác + ghi chú)
 const reasonIn = (d: Draft, preset: AdjustReason | undefined, t: Translate) => (l: LineView): LineReason =>
-  d.reasons[l.id] ?? defaultReason(l, preset, t);
+  d.removed.includes(l.id) ? removedReason(preset) : (d.reasons[l.id] ?? defaultReason(l, preset, t));
+
+// Dòng ngoài DM chờ duyệt: mặc định mua lần này (Lưu duyệt "accept"), bấm X → "Không mua" (reject)
+const isPending = (l: LineView) => l.review_status === 'pending';
 
 // Server đòi mọi dòng kèm expected_qty; bỏ dòng = qty 0; chỉ dòng giảm mang lý do (nháp của dòng không giảm không gửi)
 function bodyOf(current: AdminRequestView, d: Draft, preset: AdjustReason | undefined, t: Translate) {
@@ -99,20 +104,47 @@ export function useRefreshAfterAdjust() {
   return useRefreshAfterLineChange([REVIEW_KEY]);
 }
 
-function useSendAdjust(requestId: string, patch: Patch, onDone: () => void) {
+function useSendAdjust(requestId: string, patch: Patch, onDone: () => void, sync: { reviewed: (r: ReviewResult) => void; reviewStale: (lineId: string) => Promise<void> }) {
   const { t } = useTranslation();
   const { csrfToken } = useMe();
   const refresh = useRefreshAfterAdjust();
   const toast = useToast();
+  // Duyệt tuần tự dòng chờ duyệt trước khi lưu số: lỗi thì dừng, báo ở dòng; trả bản phiếu đã vá updated_at
+  const settlePending = async (current: AdminRequestView, d: Draft): Promise<AdminRequestView | null> => {
+    let view = current;
+    for (const l of current.lines.filter(isPending)) {
+      const drop = d.removed.includes(l.id);
+      try {
+        const r = await reviewLine(l.id, drop ? { action: 'reject', note: t('summary.adjust.removedNote') } : { action: 'accept' }, csrfToken);
+        sync.reviewed(r);
+        view = { ...view, updated_at: r.request_updated_at, lines: view.lines.map((x) => (x.id === r.line.id ? r.line : x)) };
+        // Đã "Không mua" thì dòng không còn bỏ bằng số nữa
+        if (drop) patch((x) => ({ ...x, removed: x.removed.filter((id) => id !== l.id) }));
+      } catch (e) {
+        patch((x) => ({ ...x, errors: { lines: { [l.id]: t(reviewErrorKey(e) ?? 'review.errors.UNKNOWN') } } }));
+        if (isStaleReview(e)) void sync.reviewStale(l.id);
+        return null;
+      }
+    }
+    return view;
+  };
   return async (current: AdminRequestView, d: Draft, preset: AdjustReason | undefined) => {
-    const { body, keys } = bodyOf(current, d, preset, t);
     patch((x) => ({ ...x, errors: {} }));
+    const reviewing = current.lines.some(isPending);
+    const view = await settlePending(current, d);
+    if (!view) {
+      if (reviewing) void refresh();
+      return;
+    }
+    const rejected = new Set(current.lines.filter((l) => isPending(l) && d.removed.includes(l.id)).map((l) => l.id));
+    const { body, keys } = bodyOf(view, { ...d, removed: d.removed.filter((id) => !rejected.has(id)) }, preset, t);
     try {
       await saveAdjust(requestId, body, csrfToken);
       void refresh();
       toast.show({ text: t('summary.adjust.saved', { name: current.full_name ?? current.user_sub }), tone: 'ok' });
       onDone();
     } catch (e) {
+      if (reviewing) void refresh();
       patch((x) => (isStaleUpdate(e) ? { ...x, stale: true } : { ...x, errors: adjustFailure(e, keys, t) }));
     }
   };
@@ -150,7 +182,7 @@ export function useAdjust(requestId: string, onDone: () => void, presetAsked?: A
   const flight = useSingleFlight();
   const { draft: d, patch, edit, restart } = useDraft(requestId);
   const sync = useReviewSync(requestId, restart);
-  const send = useSendAdjust(requestId, patch, onDone);
+  const send = useSendAdjust(requestId, patch, onDone, sync);
   const view = sync.query.data;
   // Lý do chọn sẵn (từ ?left=1) chỉ áp cho phiếu của người đã nghỉ thật
   const ownerLeft = !!view && view.user_status !== 'active';
@@ -161,10 +193,13 @@ export function useAdjust(requestId: string, onDone: () => void, presetAsked?: A
   // Theo thứ tự hiển thị: dòng trong danh mục trước, dòng từng là ngoài DM sau
   const all = view?.lines ?? [];
   const lines = [...all.filter((l) => l.review_status === 'n/a'), ...all.filter((l) => l.review_status !== 'n/a')];
-  const reduced = lines.filter((l) => qtyOf(l) < l.qty);
+  // Dòng bấm X tự mang lý do "removed": không đòi chọn lý do, không làm nguồn "Dùng cho các món giảm còn lại"
+  const reduced = lines.filter((l) => qtyOf(l) < l.qty && !d.removed.includes(l.id));
   const missing = reduced.filter((l) => !reasonComplete(reasonOf(l)));
   const changes = d.removed.length + lines.filter((l) => !d.removed.includes(l.id) && qtyOf(l) !== l.qty).length;
-  const canSave = changes > 0 && missing.length === 0 && !d.stale && !flight.pending;
+  // Dòng chờ duyệt còn giữ: Lưu duyệt "mua lần này" nên Lưu bật được dù chưa đổi số (chân ngăn, hỏi bỏ nháp vẫn chỉ tính sửa của người dùng)
+  const pendingKept = lines.filter((l) => isPending(l) && !d.removed.includes(l.id)).length;
+  const canSave = changes + pendingKept > 0 && missing.length === 0 && !d.stale && !flight.pending;
   // "Dùng cho các món giảm còn lại": ở dòng giảm đầu tiên đã đủ lý do, khi còn dòng giảm chưa chọn lý do
   const source = reduced.find((l) => reasonComplete(reasonOf(l)));
   const blank = reduced.filter((l) => !reasonOf(l).code);

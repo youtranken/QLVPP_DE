@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { lineView } from '@/test/fixtures-request';
-import { defaultReason, reasonChoices } from './adjust-reasons';
+import { defaultReason, reasonChoices, removedReason } from './adjust-reasons';
 
 const t = (key: string, opts?: Record<string, unknown>) => (key === 'summary.adjust.overMaxNote' ? `Vượt tối đa ${opts?.max}` : key);
 const overMaxLine = (qty: number, max: number) => ({ ...lineView({}), qty, max_qty: max });
@@ -27,5 +27,14 @@ describe('defaultReason', () => {
   });
   it('dòng thường chưa chọn lý do', () => {
     expect(defaultReason({ ...lineView({}), max_qty: null }, undefined, t)).toEqual({ code: undefined, note: '' });
+  });
+});
+
+describe('removedReason', () => {
+  it('dòng bấm X bỏ → "removed", không ghi chú', () => {
+    expect(removedReason(undefined)).toEqual({ code: 'removed', note: '' });
+  });
+  it('mở từ ?left=1 → "user_left"', () => {
+    expect(removedReason('user_left')).toEqual({ code: 'user_left', note: '' });
   });
 });

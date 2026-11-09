@@ -16,6 +16,9 @@ export interface LineRowProps {
   error?: string;
   removed?: boolean;
   readOnly?: boolean;
+  // Món tạm ngưng: tên gạch ngang + chữ đỏ "Tạm ngưng" thay dòng phụ; muted = không còn được tính (số cũng gạch)
+  paused?: boolean;
+  muted?: boolean;
   onQty: (n: number) => void;
   onRemove?: () => void;
   onRestore?: () => void;
@@ -24,7 +27,7 @@ export interface LineRowProps {
 
 const cls = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
-function QtyControl({ name, qty, min, base, error, removed, readOnly, errorId, onQty, onRemove, onRestore, onCapped }: LineRowProps & { errorId: string; onCapped: (v: boolean) => void }) {
+function QtyControl({ name, qty, min, base, error, removed, readOnly, muted, errorId, onQty, onRemove, onRestore, onCapped }: LineRowProps & { errorId: string; onCapped: (v: boolean) => void }) {
   const { t } = useTranslation();
   if (removed) {
     return (
@@ -36,7 +39,7 @@ function QtyControl({ name, qty, min, base, error, removed, readOnly, errorId, o
   return (
     <>
       {readOnly ? (
-        <span className="num aj-line__fixed">{qty}</span>
+        <span className={cls('num aj-line__fixed', muted && 'is-muted')}>{qty}</span>
       ) : (
         <Stepper
           value={qty}
@@ -69,14 +72,14 @@ export function LineRow(props: LineRowProps) {
   const errorId = useId();
   // Gõ số lớn hơn số cũ: ô kẹp về số cũ, báo không tăng được tới lần đổi số kế tiếp
   const [capped, setCapped] = useState(false);
-  const { name, meta, thumb, qty, base, tags, error, removed, children } = props;
+  const { name, meta, thumb, qty, base, tags, error, removed, paused, children } = props;
   const changed = !removed && qty !== base;
   return (
     <li className={cls('aj-line', changed && 'is-changed', removed && 'is-removed', error && 'has-error')}>
       {thumb}
       <div className="aj-line__main">
-        <span className="aj-line__name">{name}</span>
-        <small className="aj-line__meta">{meta}</small>
+        <span className={cls('aj-line__name', paused && 'is-paused')}>{name}</span>
+        {paused ? <small className="aj-line__paused">{t('common.paused')}</small> : <small className="aj-line__meta">{meta}</small>}
         <span className="aj-line__tags">
           {tags}
           {changed && <span className="tag tag--warn">{t('summary.adjust.was', { n: base })}</span>}

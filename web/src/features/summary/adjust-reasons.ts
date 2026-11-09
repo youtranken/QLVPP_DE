@@ -23,3 +23,8 @@ export function defaultReason(line: LineView, preset: AdjustReason | undefined, 
   if (isOverMax(line) && t) return { code: 'other', note: t('summary.adjust.overMaxNote', { max: line.max_qty }) };
   return { code: undefined, note: '' };
 }
+
+// Dòng bấm X bỏ cả dòng: không hỏi lý do; gửi "removed", hoặc lý do chọn sẵn (?left=1 → Người đã nghỉ)
+export function removedReason(preset: AdjustReason | undefined): LineReason {
+  return { code: preset ?? 'removed', note: '' };
+}

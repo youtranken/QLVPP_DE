@@ -150,6 +150,20 @@ describe('planAdjust: thứ tự lỗi và lý do', () => {
     ).toMatchObject({ code: 'REASON_REQUIRED', line_id: 'a' });
   });
 
+  it('removed khi bỏ cả dòng (qty 0) → ok; removed khi còn qty>0 → REASON_REQUIRED', () => {
+    expect(
+      planAdjust(existing, [
+        line({ qty: 0, reason_code: 'removed' }),
+        keepB,
+      ]).map((c) => [c.before.id, c.after, c.reason_code]),
+    ).toEqual([['a', 0, 'removed']]);
+    expect(
+      body(() =>
+        planAdjust(existing, [line({ qty: 4, reason_code: 'removed' }), keepB]),
+      ),
+    ).toMatchObject({ status: 400, code: 'REASON_REQUIRED', line_id: 'a' });
+  });
+
   it('dòng không đổi số kèm lý do → không thành thay đổi', () => {
     expect(
       planAdjust(existing, [

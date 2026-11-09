@@ -148,7 +148,7 @@ export function useAdminRequest(id: string, enabled = true) {
   });
 }
 
-export const ADJUST_REASONS = ['over_quota', 'adm_out_of_stock', 'duplicate', 'user_left', 'other'] as const;
+export const ADJUST_REASONS = ['over_quota', 'adm_out_of_stock', 'duplicate', 'user_left', 'other', 'removed'] as const;
 export type AdjustReason = (typeof ADJUST_REASONS)[number];
 
 // Sau khóa sổ chỉ giảm/bỏ: mọi dòng hiện có, kèm số đang thấy; dòng giảm mang lý do riêng

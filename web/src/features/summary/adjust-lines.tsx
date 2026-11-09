@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ItemThumb } from '@/ui/item-thumb';
 import { useAdminItems, useAllCategories, type AdminItem } from '@/features/catalog/catalog.api';
@@ -28,16 +27,18 @@ function useLineFacts() {
   return { byId, toneOf, metaOf, fmt };
 }
 
-// Món đã ngừng (hoặc nhóm ngừng) sau khóa sổ vẫn giảm/bỏ được như thường, chỉ gắn nhãn
+// Món tạm ngưng (món hoặc nhóm ngừng)
+const isPaused = (line: LineView, item: AdminItem | undefined) => line.item?.active === false || item?.usable === false;
+// Dòng món tạm ngưng chưa giao gì không được tính vào kỳ (server cùng luật) → chỉ đọc, không bỏ được; đã giao một phần thì sửa như thường
+const notCounted = (line: LineView, item: AdminItem | undefined) => isPaused(line, item) && line.delivered_qty === 0;
+
 function LineTags({ line, item }: { line: LineView; item: AdminItem | undefined }) {
   const { t } = useTranslation();
   const adminOnly = item?.admin_only ?? line.item?.admin_only ?? false;
-  const inactive = line.item?.active === false || item?.usable === false;
   return (
     <>
       {line.added_by_admin && <span className="tag">{t('summary.adjust.addedByAdmin')}</span>}
       {adminOnly && <span className="tag tag--dark">{t('summary.adjust.adminOnly')}</span>}
-      {inactive && <span className="tag">{t('summary.adjust.inactiveItem')}</span>}
       {isOverMax(line) && <span className="tag tag--warn">{t('warn.W12a', { max: line.max_qty })}</span>}
       {line.delivered_qty > 0 && <span className="tag tag--ok">{t('summary.adjust.delivered', { n: line.delivered_qty })}</span>}
       {line.cancelled_qty > 0 && <span className="tag">{t('summary.adjust.cancelled', { n: line.cancelled_qty })}</span>}
@@ -58,12 +59,14 @@ function qtyProps(a: Adjust, l: LineView) {
   };
 }
 
-// Dòng ngoài danh mục: review áp dụng ngay (tách khỏi Lưu), số lượng vẫn giảm cùng Lưu
-function CustomLine({ a, line, ym }: { a: Adjust; line: LineView; ym: string }) {
+// Dòng ngoài danh mục: "Thêm vào danh mục"/"Không mua" áp dụng ngay; còn chờ duyệt thì Lưu mặc định mua lần này
+function CustomLine({ a, line }: { a: Adjust; line: LineView }) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   const name = line.item ? fmt.name(line.item) : (line.custom_name ?? '');
   const unit = fmt.unit(line.item?.unit ?? line.custom_unit);
+  // Dòng sẽ bỏ: chỉ còn "Sẽ bỏ khỏi phiếu" + "Giữ lại"
+  const removed = a.removed.includes(line.id);
   return (
     <LineRow
       {...qtyProps(a, line)}
@@ -74,13 +77,10 @@ function CustomLine({ a, line, ym }: { a: Adjust; line: LineView; ym: string }) 
       readOnly={line.review_status === 'rejected'}
     >
       {line.custom_note && <p className="aj-line__note">{t('summary.adjust.customNote', { note: line.custom_note })}</p>}
-      <ReviewActions key={line.id} line={{ ...line, custom_name: name }} onDone={a.reviewed} onStale={() => a.reviewStale(line.id)} />
-      {line.review_status === 'pending' && (
-        <Link className="aj-line__link" to={`/admin/review?status=pending&ym=${ym}`}>
-          {t('summary.adjust.toReview')}
-        </Link>
+      {!removed && (
+        <ReviewActions key={line.id} variant="adjust" line={{ ...line, custom_name: name }} onDone={a.reviewed} onStale={() => a.reviewStale(line.id)} />
       )}
-      <LineReduce a={a} line={line} unit={unit} />
+      {a.isReduced(line) && !removed && <LineReduce a={a} line={line} unit={unit} />}
     </LineRow>
   );
 }
@@ -91,7 +91,9 @@ export function AdjustLines({ a, view }: { a: Adjust; view: AdminRequestView }) 
   // Dòng từng là món ngoài DM (kể cả đã duyệt) vẫn ở danh sách riêng để thấy kết quả review
   const catalog = view.lines.filter((l) => l.review_status === 'n/a');
   const custom = view.lines.filter((l) => l.review_status !== 'n/a');
-  const kept = view.lines.filter((l) => !a.removed.includes(l.id));
+  const itemOf = (l: LineView) => (l.item_id ? f.byId.get(l.item_id) : undefined);
+  // Khớp Số món/Tổng ở bảng kỳ: bỏ dòng sẽ xóa, dòng không mua, dòng món tạm ngưng không được tính
+  const kept = view.lines.filter((l) => !a.removed.includes(l.id) && l.review_status !== 'rejected' && !notCounted(l, itemOf(l)));
   const units = kept.reduce((s, l) => s + a.qtyOf(l), 0);
 
   return (
@@ -106,18 +108,23 @@ export function AdjustLines({ a, view }: { a: Adjust; view: AdminRequestView }) 
       </p>
       <ul className="aj-lines" aria-label={t('summary.adjust.lines')}>
         {catalog.map((l) => {
-          const item = l.item_id ? f.byId.get(l.item_id) : undefined;
+          const item = itemOf(l);
           const name = l.item ? f.fmt.name(l.item) : '';
+          const muted = notCounted(l, item);
+          const removed = a.removed.includes(l.id);
           return (
             <LineRow
               key={l.id}
               {...qtyProps(a, l)}
+              {...(muted ? { readOnly: true, onRemove: undefined } : {})}
+              paused={isPaused(l, item)}
+              muted={muted}
               name={name}
               meta={f.metaOf(l.item?.unit ?? null, item)}
               thumb={<ItemThumb fileId={l.item?.image_file_id ?? null} alt="" tone={f.toneOf(item)} size={48} />}
               tags={<LineTags line={l} item={item} />}
             >
-              {a.isReduced(l) && <LineReduce a={a} line={l} unit={f.fmt.unit(l.item?.unit ?? null)} />}
+              {a.isReduced(l) && !removed && <LineReduce a={a} line={l} unit={f.fmt.unit(l.item?.unit ?? null)} />}
             </LineRow>
           );
         })}
@@ -125,7 +132,7 @@ export function AdjustLines({ a, view }: { a: Adjust; view: AdminRequestView }) 
       {custom.length > 0 && (
         <ul className="aj-lines" aria-label={t('summary.adjust.custom')}>
           {custom.map((l) => (
-            <CustomLine key={l.id} a={a} line={l} ym={view.period_ym} />
+            <CustomLine key={l.id} a={a} line={l} />
           ))}
         </ul>
       )}

@@ -93,7 +93,7 @@ describe('AdjustDrawer — chỉ giảm sau khóa sổ (R-D6.3)', () => {
     expect(within(row(drawer, 'Giấy note vàng')).queryByText('Sẽ bỏ khỏi phiếu')).toBeNull();
   });
 
-  it('món đã ngừng: nhãn "Đã ngừng", vẫn giảm được; món chỉ Hành chính: "Chỉ Hành chính", "ram · Hành chính đặt"', async () => {
+  it('món tạm ngưng chưa giao: tên gạch ngang + "Tạm ngưng", chỉ đọc (không ô số, không X), không tính vào đầu mục; món chỉ Hành chính: "Chỉ Hành chính", "ram · Hành chính đặt"', async () => {
     stubAdjust({
       views: [
         adminRequest({
@@ -106,8 +106,16 @@ describe('AdjustDrawer — chỉ giảm sau khóa sổ (R-D6.3)', () => {
       ],
     });
     const { drawer } = await renderDrawer();
-    expect(within(row(drawer, 'Giấy cũ')).getByText('Đã ngừng')).toBeInTheDocument();
-    expect(less(drawer, 'Giấy cũ')).toBeEnabled();
+    const old = row(drawer, 'Giấy cũ');
+    expect(within(old).getByText('Giấy cũ')).toHaveClass('aj-line__name', 'is-paused');
+    expect(within(old).getByText('Tạm ngưng')).toBeInTheDocument();
+    expect(within(old).queryByText('Đã ngừng')).toBeNull();
+    expect(within(old).queryByRole('spinbutton')).toBeNull();
+    expect(within(old).queryByRole('button', { name: 'Bỏ Giấy cũ khỏi phiếu' })).toBeNull();
+    expect(within(old).getByText('5')).toHaveClass('is-muted');
+    // 4 dòng được tính: bút 10, note 3, băng keo 2 (chờ duyệt = mặc định mua), A4 40
+    expect(within(drawer).getByText('Món trong phiếu · 4 dòng')).toBeInTheDocument();
+    expect(within(drawer).getByText('55 đơn vị')).toBeInTheDocument();
     const a4 = row(drawer, 'Giấy A4 Double A');
     expect(within(a4).getByText('Chỉ Hành chính')).toBeInTheDocument();
     expect(within(a4).getByText('ram · Hành chính đặt')).toBeInTheDocument();
@@ -190,17 +198,21 @@ describe('AdjustDrawer — khối lý do từng dòng (R-D6.14)', () => {
     await userEvent.clear(box);
     await userEvent.type(box, '3');
     expect(within(row(drawer, 'Giấy note vàng')).queryByRole('radiogroup')).toBeNull();
-    expect(saveButton(drawer)).toBeDisabled();
+    // Còn dòng ngoài DM chờ duyệt → Lưu vẫn bật (mặc định mua lần này)
+    expect(saveButton(drawer)).toBeEnabled();
     await userEvent.click(less(drawer, 'Giấy note vàng'));
     expect(pick(drawer, 'Giấy note vàng', 'Khác')).toBeChecked();
     expect(noteBox(drawer, 'Giấy note vàng')).toHaveValue('An báo nhầm');
   });
 
-  it('bấm Bỏ dòng cũng mở khối lý do', async () => {
+  it('bấm X bỏ dòng → không có khối Lý do, chỉ "Sẽ bỏ khỏi phiếu" + "Giữ lại"', async () => {
     stubAdjust();
     const { drawer } = await renderDrawer();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Bỏ Giấy note vàng khỏi phiếu' }));
-    expect(reasons(drawer, 'Giấy note vàng')).toBeInTheDocument();
+    const note = row(drawer, 'Giấy note vàng');
+    expect(within(note).queryByRole('radiogroup', { name: 'Lý do' })).toBeNull();
+    expect(within(note).getByText('Sẽ bỏ khỏi phiếu')).toBeInTheDocument();
+    expect(within(note).getByRole('button', { name: 'Giữ lại Giấy note vàng' })).toBeInTheDocument();
   });
 
   it('"Dùng cho các món giảm còn lại" ở dòng giảm đầu tiên đã có lý do: chỉ điền dòng chưa chọn, không ghi đè', async () => {
@@ -281,15 +293,27 @@ describe('AdjustDrawer — giảm sau khi đã gửi ADM (W11, R-D17.6)', () => 
 });
 
 describe('AdjustDrawer — món thuộc nhóm đang ngừng (active, usable=false)', () => {
-  it('dòng đã có của món đó: chỉ giảm/bỏ, nhãn "Đã ngừng"', async () => {
+  it('dòng chưa giao của món đó: "Tạm ngưng", chỉ đọc; dòng đã giao một phần vẫn giảm được', async () => {
     const paused = adminItem({ id: 'i-paused', name: 'Giấy nhóm ngừng', usable: false });
     stubAdjust({
       items: [...ADMIN_ITEMS, paused],
-      views: [adminRequest({ lines: [...adminRequest().lines, lineView({ id: 'l-paused', item_id: 'i-paused', item: facts('Giấy nhóm ngừng', 'cai'), qty: 4 })] })],
+      views: [
+        adminRequest({
+          lines: [
+            ...adminRequest().lines,
+            lineView({ id: 'l-paused', item_id: 'i-paused', item: facts('Giấy nhóm ngừng', 'cai'), qty: 4 }),
+            lineView({ id: 'l-part', item_id: 'i-old', item: facts('Giấy cũ', 'cai', { active: false }), qty: 4, delivered_qty: 1 }),
+          ],
+        }),
+      ],
     });
     const { drawer } = await renderDrawer();
-    expect(less(drawer, 'Giấy nhóm ngừng')).toBeEnabled();
-    expect(within(row(drawer, 'Giấy nhóm ngừng')).getByText('Đã ngừng')).toBeInTheDocument();
+    const groupOff = row(drawer, 'Giấy nhóm ngừng');
+    expect(within(groupOff).getByText('Tạm ngưng')).toBeInTheDocument();
+    expect(within(groupOff).queryByRole('spinbutton')).toBeNull();
+    const part = row(drawer, 'Giấy cũ');
+    expect(within(part).getByText('Tạm ngưng')).toBeInTheDocument();
+    expect(less(drawer, 'Giấy cũ')).toBeEnabled();
   });
 });
 

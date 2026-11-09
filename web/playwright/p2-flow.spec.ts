@@ -56,19 +56,11 @@ async function openDrawer(admin: Page, person: Person) {
   return drawer;
 }
 
-// Kỳ khóa Hành chính chỉ giảm/bỏ: bỏ món y khỏi phiếu A, có lý do
+// Kỳ khóa Hành chính: thêm món ngoài DM vào danh mục (áp dụng ngay), rồi bấm X bỏ món y (lý do tự là "removed") và Lưu
 async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person, custom: string, dropped: string) {
   await searchMonthPeople(admin, tag);
-  let drawer = await openDrawer(admin, a);
-  await drawer.getByRole('button', { name: `Bỏ ${dropped} khỏi phiếu` }).click();
-  await snap(admin, info, 'admin-adjust');
-  // Lý do riêng từng dòng giảm
-  await drawer.getByRole('listitem').filter({ hasText: dropped }).getByRole('radiogroup', { name: 'Lý do' }).getByRole('radio', { name: 'Không có hàng' }).check();
-  await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();
-  await expect(drawer).toBeHidden();
-
-  drawer = await openDrawer(admin, a);
-  await drawer.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button', { name: `Mua và thêm vào danh mục — ${custom}` }).click();
+  const drawer = await openDrawer(admin, a);
+  await drawer.getByRole('group', { name: `Xử lý ${custom}` }).getByRole('button', { name: `Thêm vào danh mục — ${custom}` }).click();
   const convert = admin.getByRole('dialog', { name: `Mua “${custom}” và thêm vào danh mục` });
   await convert.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
   // Dòng Món khác không có ảnh → món mới phải có ảnh mới chọn ở đây
@@ -78,7 +70,11 @@ async function adminAdjusts(admin: Page, info: TestInfo, tag: string, a: Person,
   await expect(convert).toBeHidden();
   await expect(drawer.getByText('Đã thêm vào danh mục')).toBeVisible();
   await snap(admin, info, 'admin-converted');
-  await admin.keyboard.press('Escape');
+  await drawer.getByRole('button', { name: `Bỏ ${dropped} khỏi phiếu` }).click();
+  // Bỏ cả dòng: không hỏi lý do, chỉ "Sẽ bỏ khỏi phiếu" + "Giữ lại"
+  await expect(drawer.getByRole('listitem').filter({ hasText: dropped }).getByRole('radiogroup')).toHaveCount(0);
+  await snap(admin, info, 'admin-adjust');
+  await drawer.getByRole('button', { name: 'Lưu điều chỉnh' }).click();
   await expect(drawer).toBeHidden();
 }
 
@@ -133,7 +129,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       await page.goto(`/history/${LOCKED_YM}`);
       await expect(page.getByRole('row').filter({ hasText: x.name })).toBeVisible();
       // R-D6.11: dòng bị bỏ vẫn hiện ở Lịch sử kèm lý do của Hành chính
-      await expect(page.getByRole('row').filter({ hasText: y.name }).getByText('HC bỏ món · Không có hàng')).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: y.name }).getByText('HC bỏ món · Hành chính bỏ khỏi phiếu')).toBeVisible();
       await expect(page.getByRole('row').filter({ hasText: custom }).getByText('Đã thêm vào danh mục')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'member-a-after');

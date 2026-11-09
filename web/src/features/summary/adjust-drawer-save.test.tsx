@@ -35,7 +35,8 @@ describe('AdjustDrawer — lưu với lý do từng dòng', () => {
         { id: 'l-note', qty: 2, expected_qty: 3, reason_code: 'other', reason_note: 'abc' },
         { id: 'l-tape', qty: 2, expected_qty: 2 },
       ],
-      expected_updated_at: '2026-10-05T07:20:00.000Z',
+      // Dòng ngoài DM chờ duyệt được duyệt mua trước → PUT theo request_updated_at của lần duyệt
+      expected_updated_at: '2026-11-05T08:00:00.000Z',
     });
   });
 
@@ -103,25 +104,33 @@ describe('AdjustDrawer — lưu với lý do từng dòng', () => {
     ]);
   });
 
-  it('bỏ dòng → qty 0 + lý do của dòng (mọi dòng có mặt)', async () => {
-    const f = stubAdjust();
+  it('bấm X bỏ dòng → không chọn lý do, gửi qty 0 + reason_code "removed" (mọi dòng có mặt)', async () => {
+    const f = stubAdjust({ views: [adminRequest({ lines: adminRequest().lines.slice(0, 2) })] });
     const { drawer } = await renderDrawer();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Bỏ Giấy note vàng khỏi phiếu' }));
-    await userEvent.click(pick(drawer, NOTE, 'Không có hàng'));
+    expect(within(row(drawer, NOTE)).queryByRole('radiogroup')).toBeNull();
     await userEvent.click(saveButton(drawer));
     await waitFor(() => expect(putCalls(f)).toHaveLength(1));
     expect(putBody(f)).toEqual({
       lines: [
         { id: 'l-pen', qty: 10, expected_qty: 10 },
-        { id: 'l-note', qty: 0, expected_qty: 3, reason_code: 'adm_out_of_stock' },
-        { id: 'l-tape', qty: 2, expected_qty: 2 },
+        { id: 'l-note', qty: 0, expected_qty: 3, reason_code: 'removed' },
       ],
       expected_updated_at: '2026-10-05T07:20:00.000Z',
     });
   });
 
-  it('chưa sửa gì → Lưu vô hiệu; còn dòng giảm thiếu lý do → Lưu vô hiệu, không PUT', async () => {
-    const f = stubAdjust();
+  it('mở từ ?left=1 (chủ phiếu đã nghỉ) → bấm X gửi reason_code "user_left"', async () => {
+    const f = stubAdjust({ views: [adminRequest({ user_status: 'left', lines: adminRequest().lines.slice(0, 2) })] });
+    const { drawer } = await renderDrawer({ preset: 'user_left' });
+    await userEvent.click(within(drawer).getByRole('button', { name: 'Bỏ Giấy note vàng khỏi phiếu' }));
+    await userEvent.click(saveButton(drawer));
+    await waitFor(() => expect(putCalls(f)).toHaveLength(1));
+    expect(putBody(f).lines[1]).toEqual({ id: 'l-note', qty: 0, expected_qty: 3, reason_code: 'user_left' });
+  });
+
+  it('chưa sửa gì (không dòng chờ duyệt) → Lưu vô hiệu; còn dòng giảm thiếu lý do → Lưu vô hiệu, không PUT', async () => {
+    const f = stubAdjust({ views: [adminRequest({ lines: adminRequest().lines.slice(0, 2) })] });
     const { drawer } = await renderDrawer();
     expect(saveButton(drawer)).toBeDisabled();
     await userEvent.click(less(drawer, NOTE));
