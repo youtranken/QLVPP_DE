@@ -29,6 +29,7 @@ const SEQ_CATEGORY: Record<string, SeqCategory> = {
   'user.reactivated': 'status',
   'user.groups_changed': 'profile',
   'user.role_changed': 'profile',
+  'user.updated': 'profile',
 };
 
 // Chỉ nói về quyền vào một app cụ thể: phải đúng client của VPP
@@ -100,6 +101,8 @@ export class WebhookEventsService {
         return this.reopen(e);
       case 'user.groups_changed':
         return this.access.applyWebhookProfile(e);
+      case 'user.updated':
+        return this.profileUpdated(e);
       case 'user.role_changed':
         // Không hủy phiên: vai đọc DB mỗi request; PMH ID tự gửi BCL khi gỡ Quản trị viên dự án
         await this.access.applyRole(
@@ -124,6 +127,20 @@ export class WebhookEventsService {
     if (found.kind === 'in') {
       await this.access.applyDirectoryUser(found.user, ACTOR);
     }
+  }
+
+  // Payload không mang tên/email: hỏi Directory rồi áp hồ sơ (giữ status). Người chưa có ở VPP hoặc
+  // Directory không xác nhận → bỏ, sync định kỳ sẽ thêm/xét.
+  private async profileUpdated(e: PmhWebhookEventV3): Promise<void> {
+    if (!(await this.users.findBySub(e.user_id))) return;
+    const found = await this.access.lookup(e.user_id);
+    if (found.kind !== 'in') {
+      this.logger.warn(
+        `Webhook ${e.type} ${e.user_id}: Directory chưa xác nhận (${found.kind}) — giữ nguyên, sync sau sẽ xét`,
+      );
+      return;
+    }
+    await this.access.applyDirectoryUser(found.user, ACTOR);
   }
 
   // Được cấp lại quyền nhưng có thể vẫn đang bị khóa/xóa ở PMH ID: theo Directory như reopen

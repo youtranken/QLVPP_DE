@@ -250,6 +250,46 @@ describe('webhook PMH ID qua app thật: lệch giờ, chữ ký v1, event_id l�
       expect(await status('local:sa')).toBe('active');
     });
 
+    it('user.updated → hồ sơ theo Directory (tên/email/Phòng/Nhóm), status và phiên giữ nguyên', async () => {
+      const { u, cookie } = await freshUser();
+      const stub = directory as { fetchUser: DirectoryClientApi['fetchUser'] };
+      const unavailable = stub.fetchUser;
+      stub.fetchUser = (id: string) =>
+        Promise.resolve({
+          id,
+          status: 'active' as const,
+          full_name: 'Tên Đổi Mới',
+          email: 'doi.moi@pmh.com.vn',
+          department: 'Kế toán',
+          team: 'Thuế',
+          app_role: 'member',
+        });
+      try {
+        await send(u, 'user.updated', nextSeq(), {
+          department: undefined,
+          team: undefined,
+          app_role: undefined,
+          detail: undefined,
+        }).expect(200);
+      } finally {
+        stub.fetchUser = unavailable;
+      }
+      const row = (
+        await pool.query<Record<string, string | null>>(
+          'SELECT full_name, email, department, team, status FROM users WHERE sub = $1',
+          [u],
+        )
+      ).rows[0];
+      expect(row).toEqual({
+        full_name: 'Tên Đổi Mới',
+        email: 'doi.moi@pmh.com.vn',
+        department: 'Kế toán',
+        team: 'Thuế',
+        status: 'active',
+      });
+      await me(cookie).expect(200);
+    });
+
     const grantedFlow = async () => {
       const a = await freshUser();
       const revokeA = nextSeq();

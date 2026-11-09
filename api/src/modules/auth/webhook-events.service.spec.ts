@@ -310,6 +310,50 @@ describe('WebhookEventsService', () => {
     expect(access.applyWebhookProfile).toHaveBeenCalledWith(e);
   });
 
+  it('user.updated, user đã có → hỏi Directory rồi applyDirectoryUser (tên/email/Phòng/Nhóm), giữ status', async () => {
+    const { service, access, users, sessions } = setup();
+    const fresh = {
+      id: 'u1',
+      status: 'active',
+      full_name: 'Tên mới',
+      email: 'moi@pmh.com.vn',
+      department: 'Kế toán',
+      team: null,
+    };
+    access.lookup.mockResolvedValue({ kind: 'in', user: fresh });
+    await service.apply(ev('user.updated', '7', { detail: undefined }));
+    expect(access.claimSeq).toHaveBeenCalledWith('u1', 'profile', 7n);
+    expect(access.lookup).toHaveBeenCalledWith('u1');
+    expect(access.applyDirectoryUser).toHaveBeenCalledWith(
+      fresh,
+      'system(webhook)',
+    );
+    expect(users.setStatus).not.toHaveBeenCalled();
+    expect(access.markNoAccess).not.toHaveBeenCalled();
+    expect(sessions.destroyAllForUser).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['out', { kind: 'out' }],
+    ['unknown', { kind: 'unknown', code: 'DIRECTORY_UNAVAILABLE' }],
+  ])(
+    'user.updated, Directory trả %s → không đổi gì (sync sau sẽ xét)',
+    async (_k, found) => {
+      const { service, access } = setup();
+      access.lookup.mockResolvedValue(found);
+      await service.apply(ev('user.updated', '7'));
+      expect(access.applyDirectoryUser).not.toHaveBeenCalled();
+      expect(access.markNoAccess).not.toHaveBeenCalled();
+    },
+  );
+
+  it('user.updated cho người chưa có ở VPP → không hỏi Directory, không tạo (sync sẽ thêm)', async () => {
+    const { service, access } = setup({ user: null });
+    await service.apply(ev('user.updated', '7'));
+    expect(access.lookup).not.toHaveBeenCalled();
+    expect(access.applyDirectoryUser).not.toHaveBeenCalled();
+  });
+
   it.each([
     ['admin', 'admin'],
     ['ADMIN', 'member'],
