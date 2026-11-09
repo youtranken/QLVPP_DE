@@ -76,6 +76,31 @@ describe('WebhookController — HMAC v2, parse v3, chống trùng', () => {
     );
   });
 
+  it('detail: null (PMH ID gửi cho user.locked/unlocked) → nhận, detail coi như không có', async () => {
+    const { controller, events } = makeController();
+    // Nguyên văn gói 12575 IDP dev gửi 09/11 (VPP từng trả 400)
+    const { rawBody, ts, signature } = signedReq({
+      at: '2026-11-09T11:46:48.932Z',
+      team: 'Reno',
+      type: 'user.locked',
+      detail: null,
+      user_id: '5125fd84-4782-4548-80e1-608a3e547bcb',
+      app_role: 'member',
+      event_id: '12575',
+      department: 'Phòng D&E',
+    });
+    await expect(
+      controller.handle({ rawBody } as never, signature, ts),
+    ).resolves.toEqual({ ok: true });
+    expect(events.apply).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'user.locked',
+        event_id: '12575',
+        detail: undefined,
+      }),
+    );
+  });
+
   it('event_id đã xử → lần 2 trả {duplicate:true}, KHÔNG xử lại', async () => {
     const { controller, events } = makeController(true);
     const { rawBody, ts, signature } = signedReq({

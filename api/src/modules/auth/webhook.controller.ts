@@ -99,10 +99,10 @@ export class WebhookController {
       typeof e.event_id === 'string' &&
       /^\d{1,30}$/.test(e.event_id) &&
       (e.team === undefined || e.team === null || typeof e.team === 'string') &&
+      // PMH ID gửi "detail": null cho sự kiện không có chi tiết (user.locked/unlocked…)
       (e.detail === undefined ||
-        (typeof e.detail === 'object' &&
-          e.detail !== null &&
-          !Array.isArray(e.detail)));
+        e.detail === null ||
+        (typeof e.detail === 'object' && !Array.isArray(e.detail)));
     if (!valid) {
       throw new BadRequestException({
         code: 'WEBHOOK_PAYLOAD_INVALID',
