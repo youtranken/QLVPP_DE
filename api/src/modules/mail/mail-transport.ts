@@ -44,6 +44,19 @@ export function smtpConfigFromEnv(env: Env): SmtpConfig | null {
   };
 }
 
+// Timeout hữu hạn: mặc định nodemailer (socket 10 phút) khiến SMTP treo giữ thư — và lúc tắt app — rất lâu
+export function smtpTransportOptions(cfg: SmtpConfig) {
+  return {
+    host: cfg.host,
+    port: cfg.port,
+    secure: cfg.secure,
+    auth: cfg.user ? { user: cfg.user, pass: cfg.pass } : undefined,
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
+  };
+}
+
 // Gọi một lần lúc khởi động (factory của MailModule) → WARN "chưa cấu hình" đúng một lần
 export function createSmtpTransport(env: Env, logger: Log): MailTransport {
   const cfg = smtpConfigFromEnv(env);
@@ -54,12 +67,7 @@ export function createSmtpTransport(env: Env, logger: Log): MailTransport {
     return { enabled: false, send: () => Promise.resolve() };
   }
   // createTransport không kết nối; kết nối mở khi sendMail
-  const transporter = createTransport({
-    host: cfg.host,
-    port: cfg.port,
-    secure: cfg.secure,
-    auth: cfg.user ? { user: cfg.user, pass: cfg.pass } : undefined,
-  });
+  const transporter = createTransport(smtpTransportOptions(cfg));
   logger.log(`Email bật qua SMTP ${cfg.host}:${cfg.port}`);
   return {
     enabled: true,

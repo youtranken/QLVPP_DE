@@ -1,4 +1,8 @@
-import { createSmtpTransport, smtpConfigFromEnv } from './mail-transport';
+import {
+  createSmtpTransport,
+  smtpConfigFromEnv,
+  smtpTransportOptions,
+} from './mail-transport';
 import { MailOutbox } from './mail-outbox';
 import type { MailTransport } from './mail-transport';
 
@@ -58,7 +62,61 @@ describe('createSmtpTransport', () => {
   });
 });
 
+describe('smtpTransportOptions', () => {
+  it('đặt timeout kết nối/chào/socket hữu hạn (không dùng mặc định 10 phút của nodemailer)', () => {
+    const cfg = smtpConfigFromEnv(FULL)!;
+    expect(smtpTransportOptions(cfg)).toEqual({
+      host: 'smtp.example.test',
+      port: 465,
+      secure: true,
+      auth: { user: 'bot@example.test', pass: 's3cret-pass' },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000,
+    });
+    expect(smtpTransportOptions({ ...cfg, user: '' }).auth).toBeUndefined();
+  });
+});
+
 describe('MailOutbox', () => {
+  it('tắt app: chờ thư đang gửi tối đa shutdownMs rồi thôi, WARN số thư bỏ dở', async () => {
+    jest.useFakeTimers();
+    try {
+      const warn = jest.fn();
+      const hang: MailTransport = {
+        enabled: true,
+        send: () => new Promise<void>(() => undefined),
+      };
+      const outbox = new MailOutbox(hang, { warn }, 10_000);
+      outbox.enqueue({ to: ['a@x'], subject: 's', text: 't' });
+      let done = false;
+      const p = outbox.onModuleDestroy().then(() => {
+        done = true;
+      });
+      await jest.advanceTimersByTimeAsync(9_999);
+      expect(done).toBe(false);
+      await jest.advanceTimersByTimeAsync(1);
+      await p;
+      expect(done).toBe(true);
+      expect(warn).toHaveBeenCalledWith(
+        expect.objectContaining({ msg: 'mail_shutdown_timeout', pending: 1 }),
+      );
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('tắt app khi không có thư đang gửi → xong ngay, không WARN', async () => {
+    const warn = jest.fn();
+    const outbox = new MailOutbox(
+      { enabled: true, send: () => Promise.resolve() },
+      { warn },
+    );
+    outbox.enqueue({ to: ['a@x'], subject: 's', text: 't' });
+    await outbox.onModuleDestroy();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it('gửi lỗi chỉ log WARN (không ném, không lộ địa chỉ/nội dung); idle() chờ hết', async () => {
     const warn = jest.fn();
     const transport: MailTransport = {

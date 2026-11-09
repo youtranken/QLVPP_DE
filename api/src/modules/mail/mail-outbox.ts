@@ -10,6 +10,7 @@ export class MailOutbox implements OnModuleDestroy {
   constructor(
     private readonly transport: MailTransport,
     private readonly logger: Log,
+    private readonly shutdownMs = 10_000,
   ) {}
 
   enqueue(msg: MailMessage): void {
@@ -30,12 +31,28 @@ export class MailOutbox implements OnModuleDestroy {
     this.inFlight.add(p);
   }
 
-  // Test chờ thư gửi xong; tắt app cũng chờ để không bỏ dở
+  // Test chờ thư gửi xong
   async idle(): Promise<void> {
     while (this.inFlight.size > 0) await Promise.all([...this.inFlight]);
   }
 
-  onModuleDestroy(): Promise<void> {
-    return this.idle();
+  // Tắt app: chờ thư đang gửi nhưng có hạn (SMTP treo không được giữ shutdown tới lúc bị SIGKILL)
+  async onModuleDestroy(): Promise<void> {
+    if (this.inFlight.size === 0) return;
+    let timer: NodeJS.Timeout | undefined;
+    const timedOut = new Promise<boolean>((resolve) => {
+      timer = setTimeout(() => resolve(true), this.shutdownMs);
+    });
+    const gaveUp = await Promise.race([
+      this.idle().then(() => false),
+      timedOut,
+    ]);
+    clearTimeout(timer);
+    if (gaveUp) {
+      this.logger.warn({
+        msg: 'mail_shutdown_timeout',
+        pending: this.inFlight.size,
+      });
+    }
   }
 }
