@@ -1,7 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { deleteTestUsers, expectNoContrastViolations, isMobile, seedActiveUser } from './helpers';
+import { deleteTestUsers, expectNoContrastViolations, isMobile, seedActiveUser, skipNewPeriodPopup } from './helpers';
 
 test.describe('V2C-T7 hộp tài khoản nhân viên', () => {
+  // Popup kỳ mới (vòng 4) phủ trang Đăng ký của nhân viên chưa lưu phiếu: spec này không thử popup
+  test.beforeEach(({ page }) => skipNewPeriodPopup(page));
+
   test('V2C-T7 Tài khoản: hộp ở đầu trang (1280 bấm tên, 390 bấm "Tôi" mở sheet), đổi ngôn ngữ, đăng xuất đạt 44px ở 390, axe sạch', async ({ page }, info) => {
     const sub = `pw-me-${Date.now()}-${info.project.name}`;
     const name = `PW Tôi ${info.project.name}`;
@@ -23,19 +26,25 @@ test.describe('V2C-T7 hộp tài khoản nhân viên', () => {
       await expect(box.getByText(name)).toBeVisible();
       if (isMobile(info)) {
         await expect(page).toHaveURL(/\/$/);
-        for (const target of [box.getByRole('radio', { name: 'English' }), box.getByRole('button', { name: 'Đăng xuất' })]) {
-          expect((await target.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-        }
+        expect((await box.getByRole('button', { name: 'Đăng xuất' }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
         await expectNoContrastViolations(page);
       }
-      await box.getByRole('radio', { name: 'English' }).click();
-      const en = page.getByRole('dialog', { name: 'Account' });
-      await expect(en).toBeVisible();
-      if (isMobile(info)) await expectNoContrastViolations(page);
-      await en.getByRole('radio', { name: 'Tiếng Việt' }).click();
-      await expect(page.getByRole('dialog', { name: 'Tài khoản' })).toBeVisible();
+      // Vòng 4: hộp tài khoản bỏ phần ngôn ngữ — đổi ngôn ngữ ở nút VI/EN trên đầu trang
+      await expect(box.getByRole('radio')).toHaveCount(0);
       await page.keyboard.press('Escape');
-      await expect(page.getByRole('dialog', { name: 'Tài khoản' })).toBeHidden();
+      await expect(box).toBeHidden();
+      const header = page.getByRole('banner');
+      const en = header.getByRole('radio', { name: 'EN – English' });
+      if (isMobile(info)) expect((await en.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      await en.click();
+      await expect(header.getByRole('radio', { name: 'EN – English' })).toHaveAttribute('aria-checked', 'true');
+      if (isMobile(info)) await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: 'Me' }).click();
+      else await page.getByRole('button', { name: `Open account for ${name}` }).click();
+      await expect(page.getByRole('dialog', { name: 'Account' })).toBeVisible();
+      if (isMobile(info)) await expectNoContrastViolations(page);
+      await page.keyboard.press('Escape');
+      await header.getByRole('radio', { name: 'VI – Tiếng Việt' }).click();
+      await expect(header.getByRole('radio', { name: 'VI – Tiếng Việt' })).toHaveAttribute('aria-checked', 'true');
     } finally {
       deleteTestUsers(sub);
     }
