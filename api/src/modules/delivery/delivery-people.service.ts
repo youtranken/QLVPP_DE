@@ -14,6 +14,7 @@ import {
   EFFECTIVE_LINE,
   lockedPeriod,
   REMAINING_QTY,
+  SUSPENDED_LINE,
 } from '../requests/line-predicates';
 import type {
   DeliveryPerson,
@@ -44,7 +45,7 @@ const baseCte = (ym: string, openYm: string) => sql`base AS (
   JOIN requests r ON r.id = l.request_id
   JOIN users u ON u.sub = r.user_sub
   LEFT JOIN items i ON i.id = l.item_id
-  WHERE ${lockedPeriod(openYm)}
+  WHERE ${lockedPeriod(openYm)} AND NOT ${SUSPENDED_LINE}
     AND ((r.period_ym = ${ymToDate(ym)}::date AND l.review_status <> 'rejected')
       OR ${DEBT_LINE_SQL(ym)}))`;
 

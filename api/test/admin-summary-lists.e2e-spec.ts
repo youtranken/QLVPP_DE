@@ -83,7 +83,8 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
       team: 'Team Test',
       adjusted: true,
       user_status: 'active',
-      line_count: 3,
+      // dòng ngoài DM đang chờ duyệt không tính vào Số món
+      line_count: 2,
       total_qty: 5,
       delivered_qty: 3,
       cancelled_qty: 2,
@@ -95,7 +96,8 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
     expect(page.items[2]).toMatchObject({
       request_id: ids.r2,
       department: null,
-      line_count: 3,
+      // dòng bị từ chối không tính vào Số món
+      line_count: 2,
       total_qty: 6,
       delivered_qty: 0,
       cancelled_qty: 0,

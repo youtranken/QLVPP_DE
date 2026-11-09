@@ -76,10 +76,11 @@ describe('V2D-4 số đề nghị mặc định gộp khi chốt (R-D13.1–R-D1
     expect(data.order_qty[custom.key]).toBe(2);
   });
 
-  it('món ngừng có 3 đăng ký → mặc định 0, discontinued; sửa 3 → bản lưu 3; nhóm ngừng cũng 0', async () => {
+  // Dòng món ngừng chưa giao gì không còn được tính (mục 7 vòng 4) → dùng dòng đã giao 1 phần để còn hàng trong báo cáo
+  it('món ngừng có dòng đã giao 1/4 (còn 3) → mặc định 0, discontinued; sửa 3 → bản lưu 3; nhóm ngừng cũng 0', async () => {
     const item = await eightPlusTwo(0);
     const off = await f.stockItem(0);
-    await seedLine(YM, B, { item_id: off, qty: 3 });
+    await seedLine(YM, B, { item_id: off, qty: 4, delivered_qty: 1 });
     await pool().query('UPDATE items SET active = false WHERE id = $1', [off]);
     expect(row(await f.build(YM), off)).toMatchObject({ usable: false });
     const first = await printOk();

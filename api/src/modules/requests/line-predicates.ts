@@ -2,9 +2,16 @@ import { sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import { ymToDate } from '../../common/period';
 
-// Dòng hiệu lực (cần mua/giao) của bảng request_lines bí danh `l`; pending/rejected không tính
+// Dòng của món đang tạm ngưng (món hoặc nhóm active=false) và chưa giao gì; bật lại món thì tính lại ngay.
+// Subquery tương quan chỉ dùng bí danh `l` nên nơi dùng không phải JOIN thêm items/item_categories
+const SUSPENDED_LINE_SQL = `(l.item_id IS NOT NULL AND l.delivered_qty = 0 AND EXISTS (
+  SELECT 1 FROM items si LEFT JOIN item_categories sc ON sc.id = si.category_id
+  WHERE si.id = l.item_id AND NOT (si.active AND coalesce(sc.active, true))))`;
+export const SUSPENDED_LINE = sql.raw(SUSPENDED_LINE_SQL);
+// Dòng hiệu lực (cần mua/giao) của bảng request_lines bí danh `l`: pending/rejected không tính,
+// dòng món tạm ngưng chưa giao cũng không tính (đã giao một phần thì vẫn tính để giữ lịch sử giao)
 export const EFFECTIVE_LINE = sql.raw(
-  `l.review_status IN ('n/a', 'accepted', 'converted')`,
+  `(l.review_status IN ('n/a', 'accepted', 'converted') AND NOT ${SUSPENDED_LINE_SQL})`,
 );
 // Định nghĩa duy nhất "phần còn lại" phía SQL; remainingOf (delivery) là bản TS của cùng công thức
 export const REMAINING_QTY = sql.raw(

@@ -114,12 +114,23 @@ describe('GET admin/reports/:ym — Tổng theo món (BR-15)', () => {
     });
   });
 
-  it('món đã ngừng còn nợ vẫn hiện; hàng báo cáo không mang cờ active (không dùng)', async () => {
+  it('món đã ngừng chưa giao gì không còn trong báo cáo; giao 1 rồi ngừng → vẫn hiện, không mang cờ active', async () => {
     const item = await stockItem(0);
+    const partial = await stockItem(0);
     await seedLine('2026-11', A, { item_id: item, qty: 2 });
-    await pool().query('UPDATE items SET active = false WHERE id = $1', [item]);
-    const row = itemRow(await build('2026-11'), item);
-    expect(row).toMatchObject({ requested: 2, need: 2 });
+    await seedLine('2026-11', A, {
+      item_id: partial,
+      qty: 3,
+      delivered_qty: 1,
+    });
+    await pool().query(
+      'UPDATE items SET active = false WHERE id = ANY($1::uuid[])',
+      [[item, partial]],
+    );
+    const r = await build('2026-11');
+    expect(itemRow(r, item)).toBeUndefined();
+    const row = itemRow(r, partial);
+    expect(row).toMatchObject({ requested: 2, need: 2, usable: false });
     expect(row).not.toHaveProperty('active');
   });
 

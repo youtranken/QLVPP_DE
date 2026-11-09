@@ -4,6 +4,7 @@ import { ymToDate } from '../../common/period';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { UsersService } from '../users/users.service';
+import { SUSPENDED_LINE } from './line-predicates';
 import { requestNotFound } from './request-errors';
 import { RequestViewBuilder } from './request-view';
 import type { RequestView } from './request-view';
@@ -49,6 +50,7 @@ export class RegistrationsService {
       FROM requests r
       JOIN users u ON u.sub = r.user_sub
       LEFT JOIN request_lines l ON l.request_id = r.id AND l.review_status <> 'rejected'
+        AND NOT ${SUSPENDED_LINE}
       WHERE r.period_ym = ${ymToDate(ym)}::date
       GROUP BY r.id, u.sub
       ORDER BY r.saved_at, r.id

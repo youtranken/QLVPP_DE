@@ -85,7 +85,7 @@ export class SummaryListsService {
     const { rows } = await this.db.execute<PersonDbRow>(sql`
       SELECT r.id AS request_id, r.user_sub, u.full_name, u.email, r.department, u.team,
              EXISTS (SELECT 1 FROM request_line_adjustments a WHERE a.request_id = r.id) AS adjusted,
-             u.status AS user_status, count(l.id)::int AS line_count,
+             u.status AS user_status, count(l.id) FILTER (WHERE ${EFFECTIVE_LINE})::int AS line_count,
              ${effectiveSum('l.qty')} AS total_qty,
              ${effectiveSum('l.delivered_qty')} AS delivered_qty,
              ${effectiveSum('l.cancelled_qty')} AS cancelled_qty,
