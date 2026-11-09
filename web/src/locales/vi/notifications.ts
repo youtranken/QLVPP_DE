@@ -34,6 +34,18 @@ const notifications = {
         admOut: '{{name}} ({{qty}} {{unit}}) không giao được: ADM hết hàng. Tháng sau cần thì đăng ký lại.',
         more: 'Còn {{n}} món khác — xem trong Lịch sử.',
       },
+      user_left_with_work: {
+        locked: '{{name}} bị khoá nhưng còn {{work}}.',
+        deleted: '{{name}} bị xoá nhưng còn {{work}}.',
+        no_access: '{{name}} mất quyền vào VPP nhưng còn {{work}}.',
+        owed_one: '{{count}} món chưa nhận ({{months}})',
+        owed_other: '{{count}} món chưa nhận ({{months}})',
+        months_one: '{{count}} tháng',
+        months_other: '{{count}} tháng',
+        pending_one: '{{count}} món ngoài danh mục chờ duyệt',
+        pending_other: '{{count}} món ngoài danh mục chờ duyệt',
+        open: 'Có phiếu kỳ đang mở.',
+      },
       unknown: 'Bạn có thông báo mới.',
     },
     fallback: {
@@ -46,6 +58,7 @@ const notifications = {
       line_cancelled: 'Hành chính đã hủy phần còn chờ nhận của một món.',
       custom_line_new: 'Có món ngoài danh mục mới cần xem.',
       line_review: 'Hành chính đã xem món ngoài danh mục của bạn.',
+      user_left_with_work: 'Một người mất quyền vào VPP nhưng còn việc dở.',
     },
   },
 };

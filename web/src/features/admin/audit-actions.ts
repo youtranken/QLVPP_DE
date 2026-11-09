@@ -50,6 +50,8 @@ export const AUDIT_ACTIONS: readonly string[] = [
   'users.directory_reconcile_aborted',
   'users.directory_sync_failed',
   'users.directory_sync',
+  'users.left_no_work',
+  'users.left_with_work',
   'users.role_changed',
 ];
 

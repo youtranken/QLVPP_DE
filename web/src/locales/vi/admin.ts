@@ -128,6 +128,8 @@ const admin = {
         access_restored: 'Được cấp lại quyền vào VPP',
         directory_reconcile_aborted: 'Hủy đối chiếu danh bạ',
         directory_sync_failed: 'Đồng bộ danh bạ lỗi',
+        left_no_work: 'Mất quyền, không còn việc dở',
+        left_with_work: 'Mất quyền, còn việc dở — đã báo Hành chính',
       },
     },
     filters: {

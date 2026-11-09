@@ -37,6 +37,18 @@ const notifications: Messages<typeof vi> = {
         admOut: "{{name}} ({{qty}} {{unit}}) couldn't be delivered: out of stock at ADM. Order again next month if you still need it.",
         more: '{{n}} more items — see History.',
       },
+      user_left_with_work: {
+        locked: '{{name}} was locked but still has {{work}}.',
+        deleted: '{{name}} was deleted but still has {{work}}.',
+        no_access: '{{name}} lost access to VPP but still has {{work}}.',
+        owed_one: '{{count}} undelivered item ({{months}})',
+        owed_other: '{{count}} undelivered items ({{months}})',
+        months_one: '{{count}} month',
+        months_other: '{{count}} months',
+        pending_one: '{{count}} off-catalog item awaiting review',
+        pending_other: '{{count}} off-catalog items awaiting review',
+        open: 'Has a request in the open period.',
+      },
       unknown: 'You have a new notification.',
     },
     fallback: {
@@ -49,6 +61,7 @@ const notifications: Messages<typeof vi> = {
       line_cancelled: 'Admin cancelled the remaining quantity of an item.',
       custom_line_new: 'There is a new off-catalog item to review.',
       line_review: 'Admin reviewed your off-catalog item.',
+      user_left_with_work: 'Someone lost access to VPP but still has pending work.',
     },
   },
 };

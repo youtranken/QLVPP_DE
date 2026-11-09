@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next';
+import { leftWorkText } from './left-work-text';
 import { lineAdjustedText } from './line-adjusted-text';
 import type { NotificationView } from './notifications.api';
 
@@ -48,6 +49,7 @@ export function notificationText(
   unitName: (code: string) => string,
 ): string {
   if (n.topic === 'line_adjusted') return lineAdjustedText(n.params, t, lang, unitName);
+  if (n.topic === 'user_left_with_work') return leftWorkText(n.params, t);
   if (!(n.topic in REQUIRED)) return t('notifications.topics.unknown');
   const p = n.params;
   if (!complete(n.topic, p)) return t(`notifications.fallback.${n.topic}`);

@@ -24,6 +24,7 @@ const SAMPLES: NotificationView[] = [
   n('line_review', { ym: '2026-11', action: 'accepted', name: 'Bìa còng' }),
   n('line_review', { ym: '2026-11', action: 'rejected', name: 'Bìa còng', note: 'Đã có trong kho' }),
   n('line_review', { ym: '2026-11', action: 'converted', name: 'Bìa còng', item_name: 'Bìa còng A4', item_name_en: 'A4 ring binder' }),
+  n('user_left_with_work', { name: 'Bìa còng', reason: 'locked', owed_lines: 3, owed_months: 2, pending_lines: 1, open_request: true }),
 ];
 
 const unitNameIn = (lang: string) => (code: string) => {

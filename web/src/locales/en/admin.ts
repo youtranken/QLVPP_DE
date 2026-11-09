@@ -131,6 +131,8 @@ const admin: Messages<typeof vi> = {
         access_restored: 'VPP access restored',
         directory_reconcile_aborted: 'Directory reconciliation aborted',
         directory_sync_failed: 'Directory sync failed',
+        left_no_work: 'Lost access, no pending work',
+        left_with_work: 'Lost access with pending work — admins notified',
       },
     },
     filters: {
