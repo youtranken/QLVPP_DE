@@ -336,6 +336,19 @@ describe('Báo Hành chính khi người mất quyền còn việc dở (mục 6
     });
   });
 
+  it('món ngoài danh mục chờ duyệt ở kỳ đang mở → không tính việc dở (Duyệt món chỉ hiện kỳ đã khoá), chỉ nhật ký', async () => {
+    const sub = await newUser('opencustom');
+    await customPending(await request_(sub, openYm));
+    await webhook('user.locked', sub);
+    expect((await alerts(sub)).rows).toHaveLength(0);
+    expect(await mailsFor(sub)).toHaveLength(0);
+    expect((await audits(sub, 'users.left_with_work')).rows).toHaveLength(0);
+    expect((await audits(sub, 'users.left_no_work')).rows[0].detail).toEqual({
+      reason: 'locked',
+      open_request: true,
+    });
+  });
+
   it('được mở lại rồi mất quyền lần nữa → báo lần mới (event_id khác)', async () => {
     const sub = await newUser('again');
     await catalogLine(await request_(sub, LOCKED_YM), 1);

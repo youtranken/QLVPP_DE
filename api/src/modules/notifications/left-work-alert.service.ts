@@ -25,13 +25,14 @@ interface Work extends Record<string, unknown> {
 }
 
 // Việc dở (quyết định 1): dòng còn tính mà chưa giao hết ở kỳ đã khoá + món ngoài danh mục chờ duyệt.
-// Phiếu kỳ đang mở chỉ nhắc trong nội dung.
+// Phiếu kỳ đang mở (kể cả món ngoài danh mục chờ duyệt — Duyệt món chỉ hiện kỳ đã khoá) chỉ nhắc trong nội dung.
 async function pendingWork(tx: Tx, sub: string, openYm: string): Promise<Work> {
-  const owed = sql`(${lockedPeriod(openYm)} AND ${UNDELIVERED_LINE})`;
+  const locked = lockedPeriod(openYm);
+  const owed = sql`(${locked} AND ${UNDELIVERED_LINE})`;
   const { rows } = await tx.execute<Work>(sql`
     SELECT count(*) FILTER (WHERE ${owed})::int AS owed_lines,
            count(DISTINCT r.period_ym) FILTER (WHERE ${owed})::int AS owed_months,
-           count(*) FILTER (WHERE l.review_status = 'pending')::int AS pending_lines,
+           count(*) FILTER (WHERE l.review_status = 'pending' AND ${locked})::int AS pending_lines,
            coalesce(bool_or(r.period_ym = ${ymToDate(openYm)}::date
                             AND l.review_status <> 'rejected'), false) AS open_request
     FROM requests r
