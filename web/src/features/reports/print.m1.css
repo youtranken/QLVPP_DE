@@ -8,10 +8,12 @@
 [data-shell='admin'] .pp-sheet { display: grid; gap: var(--s-3); padding: var(--s-7) var(--s-6); background: var(--c-print-paper); color: var(--c-print-ink); box-shadow: var(--e-1); font: var(--t-sm); overflow-wrap: anywhere; }
 [data-shell='admin'] .pp-sheet p { margin: 0; }
 [data-shell='admin'] .pp-form__head { display: grid; gap: var(--s-1); text-align: center; }
+/* Ít món vừa 1 trang A4 (mục tiêu 20 món + ô ký): hàng phiếu thấp, chữ 13px ≈ 10pt */
+[data-shell='admin'] .pp-form__table td { padding-block: 1mm; line-height: 1.3; }
 [data-shell='admin'] .pp-form__title { margin: 0; font: var(--t-h3); }
 [data-shell='admin'] .pp-form__replaces { margin: 0; text-align: left; font: var(--t-body); }
 [data-shell='admin'] .pp-form__sub { font-weight: 700; letter-spacing: .04em; }
-[data-shell='admin'] .pp-form__date { margin-top: var(--s-2); }
+[data-shell='admin'] .pp-form__date { margin-top: var(--s-1); }
 
 [data-shell='admin'] .pp-table { width: 100%; border-collapse: collapse; font: var(--t-sm); }
 [data-shell='admin'] .pp-table th,
@@ -27,9 +29,9 @@
 [data-shell='admin'] .pp-empty { text-align: center; font-style: italic; }
 [data-shell='admin'] .pp-group th { font-weight: 700; }
 
-[data-shell='admin'] .pp-signs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--s-4); margin-top: var(--s-6); break-inside: avoid; }
+[data-shell='admin'] .pp-signs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--s-4); margin-top: var(--s-4); break-inside: avoid; }
 [data-shell='admin'] .pp-sign { display: flex; flex-direction: column; align-items: center; text-align: center; }
-[data-shell='admin'] .pp-sign__space { height: 22mm; }
+[data-shell='admin'] .pp-sign__space { height: 16mm; }
 [data-shell='admin'] .pp-sign__name { min-height: 1.4em; }
 [data-shell='admin'] .pp-sign__name--blank { width: 70%; border-bottom: 1px dotted var(--c-print-ink); }
 

@@ -22,11 +22,12 @@ const formTable = async () => within(await screen.findByRole('region', { name: '
 const bodyRows = (table: HTMLElement) => within(table).getAllByRole('row').slice(1).map((r) => within(r).getAllByRole('cell').map((c) => c.textContent));
 
 describe('Trang in · trang 1 Phiếu đề xuất (mẫu D&E)', () => {
-  it('đầu tờ: "Phiếu đề xuất văn phòng phẩm", "STATIONERY REQUEST FORM", "Date : dd/MM/yyyy" theo giờ VN; không tiêu đề công ty, không công thức', async () => {
-    openPrint(snapshotDataFixture({ created_at: '2026-10-27T17:00:00Z' }));
+  it('đầu tờ: "Phiếu đề xuất văn phòng phẩm", "STATIONERY REQUEST FORM", "Date : MM/YYYY" của kỳ (không phải ngày lập); không tiêu đề công ty, không công thức', async () => {
+    openPrint(snapshotDataFixture({ created_at: '2026-11-02T17:00:00Z' }));
     expect(await screen.findByRole('heading', { level: 1, name: 'Phiếu đề xuất văn phòng phẩm' })).toBeInTheDocument();
     expect(screen.getByText('STATIONERY REQUEST FORM')).toBeInTheDocument();
-    expect(screen.getByText('Date : 28/10/2026')).toBeInTheDocument();
+    expect(screen.getByText('Date : 10/2026')).toBeInTheDocument();
+    expect(screen.queryByText(/Date : \d\d\/\d\d\/\d{4}/)).toBeNull();
     expect(screen.queryByText('Công ty Phú Mỹ Hưng')).not.toBeInTheDocument();
     expect(screen.queryByText(/Đề nghị mặc định = /)).not.toBeInTheDocument();
   });
@@ -117,20 +118,38 @@ describe('Trang in · trang 1 Phiếu đề xuất (mẫu D&E)', () => {
     expect(within(boxes[1]).getByTestId('sign-dots')).toBeInTheDocument();
   });
 
-  it.each([1, 3])('%i ô ký trong bản chốt → đúng %i ô', async (n) => {
+  it.each([
+    [1, 1],
+    [2, 2],
+    [3, 2],
+  ])('%i ô ký trong bản chốt → in %i ô (tối đa 2 ô đầu)', async (n, shown) => {
     const boxes = ['A', 'B', 'C'].slice(0, n).map((x) => ({ title: `Ô ${x}`, title_en: '', name: x }));
     openPrint(snapshotDataFixture({ signature_boxes: boxes }));
-    expect(within(await screen.findByRole('group', { name: 'Chữ ký' })).getAllByRole('group')).toHaveLength(n);
+    const printed = within(await screen.findByRole('group', { name: 'Chữ ký' })).getAllByRole('group');
+    expect(printed.map((b) => b.getAttribute('aria-label'))).toEqual(['Ô A', 'Ô B', 'Ô C'].slice(0, shown));
   });
 
-  it.each(['vi', 'en'])('bản chốt cũ chỉ có signers, giao diện %s → 3 ô song ngữ như mẫu (vi + dòng en), tên từ bản chốt, không in "undefined"', async (lang) => {
+  it('cấu hình 3 ô có "Duyệt" → chỉ in "Chủ quản đơn vị" và "Người yêu cầu"', async () => {
+    const boxes = [
+      { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: '' },
+      { title: 'Người yêu cầu', title_en: 'Applicant', name: '' },
+      { title: 'Duyệt', title_en: 'Approved by', name: '' },
+    ];
+    openPrint(snapshotDataFixture({ signature_boxes: boxes }));
+    const sign = await screen.findByRole('group', { name: 'Chữ ký' });
+    expect(within(sign).getAllByRole('group').map((b) => b.getAttribute('aria-label'))).toEqual(['Chủ quản đơn vị', 'Người yêu cầu']);
+    expect(sign).not.toHaveTextContent('Duyệt');
+  });
+
+  it.each(['vi', 'en'])('bản chốt cũ chỉ có signers, giao diện %s → 2 ô song ngữ theo mẫu (Chủ quản đơn vị ← head, Người yêu cầu ← preparer), bỏ Duyệt, không in "undefined"', async (lang) => {
     await i18n.changeLanguage(lang);
     openPrint(snapshotDataFixture({ signature_boxes: undefined, signers: { preparer: 'Lê Thị Hoa', head: '', approver: 'Đỗ Minh Châu' } }));
     const sign = await screen.findByRole('group', { name: lang === 'en' ? 'Signatures' : 'Chữ ký' });
     const boxes = within(sign).getAllByRole('group');
-    expect(boxes.map((b) => b.getAttribute('aria-label'))).toEqual(['Người lập', 'Trưởng phòng', 'Duyệt']);
-    expect(boxes.map((b) => b.textContent)).toEqual(['Người lậpPrepared byLê Thị Hoa', 'Trưởng phòngHead of Dept.', 'DuyệtApproved byĐỗ Minh Châu']);
+    expect(boxes.map((b) => b.getAttribute('aria-label'))).toEqual(['Chủ quản đơn vị', 'Người yêu cầu']);
+    expect(boxes.map((b) => b.textContent)).toEqual(['Chủ quản đơn vịHead of Dept.', 'Người yêu cầuApplicantLê Thị Hoa']);
     expect(document.body.textContent).not.toContain('undefined');
+    expect(document.body.textContent).not.toContain('Đỗ Minh Châu');
   });
 });
 

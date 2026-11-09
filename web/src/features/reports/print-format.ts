@@ -10,7 +10,12 @@ export interface SignBox {
   name: string;
 }
 
-const OLD_SIGNERS = ['preparer', 'head', 'approver'] as const;
+// Mẫu D&E chỉ có 2 chỗ ký: Chủ quản đơn vị (trái), Người yêu cầu (phải); bản cũ ánh xạ như migration 0112
+const OLD_SIGNERS = ['head', 'preparer'] as const;
+const MAX_SIGN_BOXES = 2;
+
+// "Date : MM/YYYY" của kỳ trên tờ in: '2026-11' → '11/2026'
+export const periodLabel = (ym: string) => `${ym.slice(5, 7)}/${ym.slice(0, 4)}`;
 
 export function vnStampParts(iso: string) {
   const [time, date] = formatVnStamp(iso, true).split(' ');
@@ -37,9 +42,9 @@ export function snapshotOrdinal(list: SnapshotRow[] | undefined, id: string): nu
   return index < 0 ? null : list!.length - index;
 }
 
-// Bản chốt trước 0112 chỉ có signers: in 3 ô với chức danh cũ song ngữ, trùng Excel (OLD_SIGNER_TITLES)
+// Tờ in chỉ 2 ô ký: cấu hình nhiều hơn (vd thêm "Duyệt") thì lấy 2 ô đầu; bản trước 0112 chỉ có signers → head/preparer, bỏ approver
 export function signBoxesOf(snap: SnapshotData, oldTitle: (role: string) => Omit<SignBox, 'name'>): SignBox[] {
-  if (snap.signature_boxes) return snap.signature_boxes;
+  if (snap.signature_boxes) return snap.signature_boxes.slice(0, MAX_SIGN_BOXES);
   return OLD_SIGNERS.map((role) => ({ ...oldTitle(role), name: snap.signers?.[role] ?? '' }));
 }
 

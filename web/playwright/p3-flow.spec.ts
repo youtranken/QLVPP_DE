@@ -113,7 +113,10 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   await expectFrozenPaper(admin, s);
   await expect(admin.getByText(/^Lập lúc \d{2}:\d{2} ngày \d{2}\/\d{2}\/\d{4} bởi .+/)).toBeVisible();
   const signs = admin.getByRole('group', { name: 'Chữ ký' });
-  for (const b of s.signatureBoxes) await expect(signs.getByRole('group', { name: b.title })).toHaveText(`${b.title}${b.title_en}${b.name}`);
+  // Tờ in chỉ 2 ô ký đầu của cấu hình (vòng 4 mục 11): ô thứ 3 "Duyệt" không in
+  await expect(signs.getByRole('group')).toHaveCount(2);
+  for (const b of s.signatureBoxes.slice(0, 2)) await expect(signs.getByRole('group', { name: b.title })).toHaveText(`${b.title}${b.title_en}${b.name}`);
+  await expect(signs.getByRole('group', { name: 'Duyệt' })).toHaveCount(0);
   await snap(admin, info, 'p3-print');
   return snapshotId;
 }

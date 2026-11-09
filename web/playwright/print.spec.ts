@@ -156,7 +156,7 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await expect(page).toHaveURL(new RegExp(`/admin/reports\\?ym=${PRIVATE_YM}$`));
   });
 
-  test('E9-S4 Phiếu đề xuất D&E: mọi hàng của bản theo Đề nghị, ô ký theo cấu hình, bật phụ lục', async ({ page, request }, info) => {
+  test('E9-S4 Phiếu đề xuất D&E: mọi hàng của bản theo Đề nghị, 2 ô ký đầu của cấu hình, bật phụ lục', async ({ page, request }, info) => {
     // A tổng cần 5 nhưng đề nghị 1 → in 1; B tủ 10 vẫn đề nghị mặc định = đăng ký 1 (tủ không trừ) → in 1
     clearPrivateSnapshots();
     const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }, { stock: 10, qty: 1 }], { ym: PRIVATE_YM }));
@@ -179,8 +179,10 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await expect(rowB).toBeVisible();
     await expect(rowB.getByRole('cell').last()).toHaveText('1');
     const signs = page.getByRole('group', { name: 'Chữ ký' }).getByRole('group');
-    await expect(signs).toHaveCount(3);
-    expect(await signs.evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')))).toEqual(boxes.map((x) => x.title));
+    // Cấu hình 3 ô có "Duyệt" → tờ in chỉ 2 ô đầu (vòng 4 mục 11)
+    await expect(signs).toHaveCount(2);
+    expect(await signs.evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')))).toEqual(['Chủ quản đơn vị', 'Người yêu cầu']);
+    await expect(page.getByRole('group', { name: 'Chữ ký' })).not.toContainText('Duyệt');
     await expect(appendix(page)).toHaveCount(0);
 
     psql(`UPDATE items SET name = name || ' đổi', code = NULL WHERE id = '${a.id}'`);

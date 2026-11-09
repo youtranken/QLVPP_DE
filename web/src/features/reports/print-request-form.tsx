@@ -2,7 +2,7 @@ import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SnapshotData } from './reports.api';
 import { formatVnStamp } from '@/lib/format-time';
-import { keepsZeroRows, orderOf, signBoxesOf, useFrozenUnitName, vnStampParts, type SignBox } from './print-format';
+import { keepsZeroRows, orderOf, periodLabel, signBoxesOf, useFrozenUnitName, type SignBox } from './print-format';
 
 const FORM_LANG = 'vi';
 const COLUMNS = ['no', 'code', 'name', 'nameEn', 'unit', 'qty'] as const;
@@ -72,7 +72,7 @@ export function PrintRequestForm({ snap }: { snap: SnapshotData }) {
           {t('reports.print.form.title')}
         </h1>
         <p className="pp-form__sub">{t('reports.print.form.subtitle')}</p>
-        <p className="pp-form__date">{t('reports.print.form.date', { date: vnStampParts(snap.created_at).date })}</p>
+        <p className="pp-form__date">{t('reports.print.form.date', { date: periodLabel(snap.period_ym ?? snap.ym) })}</p>
       </header>
       <table className="pp-table pp-form__table">
         <thead>

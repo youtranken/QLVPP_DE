@@ -92,9 +92,8 @@ const reports: Messages<typeof vi> = {
         noCode: '—',
         signGroup: 'Signatures',
         oldSigner: {
-          preparer: { title: 'Người lập', titleEn: 'Prepared by' },
-          head: { title: 'Trưởng phòng', titleEn: 'Head of Dept.' },
-          approver: { title: 'Duyệt', titleEn: 'Approved by' },
+          head: { title: 'Chủ quản đơn vị', titleEn: 'Head of Dept.' },
+          preparer: { title: 'Người yêu cầu', titleEn: 'Applicant' },
         },
       },
       appendix: {
