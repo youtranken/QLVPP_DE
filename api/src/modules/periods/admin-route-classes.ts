@@ -14,6 +14,7 @@ export const ADMIN_ROUTE_CLASSES: Record<`${Method} ${string}`, RouteClass> = {
   'GET /api/admin/periods/:ym/delivery-people': 'by-ym',
   'GET /api/admin/reports/:ym': 'by-ym',
   'POST /api/admin/reports/:ym/snapshots': 'by-ym',
+  'POST /api/admin/reports/:ym/snapshots/preview': 'by-ym',
   'GET /api/admin/reports/:ym/snapshots': 'by-ym',
   'GET /api/admin/reports/:ym/sent': 'by-ym',
   'GET /api/admin/periods/:ym/send-state': 'by-ym',
