@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { deleteTestUsers, devHeaders, psql, removeTestItem, seedActiveUser } from './helpers';
+import { deleteTestUsers, devHeaders, psql, removeTestItem, seedActiveUser, skipNewPeriodPopup } from './helpers';
 
 // Mỗi lần chạy một người riêng: phiếu là 1 người/kỳ nên hai viewport không được dùng chung danh tính
 export function memberIdentity(info: TestInfo) {
@@ -12,6 +12,7 @@ export function memberIdentity(info: TestInfo) {
 export async function asNewMember(page: Page, info: TestInfo) {
   const me = memberIdentity(info);
   seedActiveUser(me.sub, `PW Nhân viên ${info.project.name}`);
+  await skipNewPeriodPopup(page);
   await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...me.headers } }));
   return me;
 }

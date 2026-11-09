@@ -1,5 +1,5 @@
 import { expect, type Browser, type TestInfo } from '@playwright/test';
-import { devHeaders } from './helpers';
+import { devHeaders, skipNewPeriodPopup } from './helpers';
 
 const SA_USERNAME = process.env.PW_SA_USERNAME ?? 'sa';
 export const SA_PASSWORD = process.env.PW_SA_PASSWORD;
@@ -8,6 +8,7 @@ export async function newPage(browser: Browser, info: TestInfo, headers?: Record
   const { viewport, hasTouch, isMobile: mobile, baseURL } = info.project.use;
   const ctx = await browser.newContext({ baseURL, viewport, hasTouch, isMobile: mobile });
   const page = await ctx.newPage();
+  await skipNewPeriodPopup(page);
   if (headers) await page.route('**/api/**', (route) => route.continue({ headers: { ...route.request().headers(), ...headers } }));
   return page;
 }

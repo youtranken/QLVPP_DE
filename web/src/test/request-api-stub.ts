@@ -48,12 +48,21 @@ export interface StubOptions {
   put?: Handler;
   copy?: Handler;
   items?: MemberItem[];
+  // Mặc định coi như NV đã xem popup kỳ mới (kẻo nó chặn mọi thao tác trong test); false để test chính popup
+  newPeriodSeen?: boolean;
+}
+
+export function markNewPeriodSeen(sub: string, ym: string, seen = true) {
+  const key = `vpp_newperiod_seen:${sub}:${ym}`;
+  if (seen) localStorage.setItem(key, '1');
+  else localStorage.removeItem(key);
 }
 
 // fetch giả cho trang Đăng ký: mỗi URL một câu trả lời, còn lại 500
 export function stubRequestApi(opts: StubOptions = {}) {
   let current = opts.request ?? null;
   let period = opts.period ?? PERIOD;
+  markNewPeriodSeen('u-member', period.ym, opts.newPeriodSeen ?? true);
   const fetchMock = vi.fn((url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET';
     const res = (r: Response) => Promise.resolve(r);
@@ -80,6 +89,7 @@ export function stubRequestApi(opts: StubOptions = {}) {
     },
     setPeriod: (p: CurrentPeriod) => {
       period = p;
+      markNewPeriodSeen('u-member', p.ym, opts.newPeriodSeen ?? true);
     },
     putBody: (nth = 0) => {
       const calls = fetchMock.mock.calls.filter(([u, i]) => u === '/api/me/request/lines' && i?.method === 'PUT');

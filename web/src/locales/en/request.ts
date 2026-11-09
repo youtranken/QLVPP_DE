@@ -99,6 +99,14 @@ const request: Messages<typeof vi> = {
       submitEdit: 'Save changes',
       cancel: 'Back',
     },
+    newPeriod: {
+      eyebrow: 'Month {{prev}} is closed',
+      title: 'Time to order office supplies for month {{month}}',
+      body: 'The month {{prev}} order can no longer be changed; Admin is preparing delivery. The deadline for month {{month}} is <b>23:59 on {{date}}</b>.',
+      prevLine: 'Month {{prev}} order: {{n}} items, {{done}} received',
+      viewPrev: 'View order',
+      start: 'Order for month {{month}}',
+    },
     copy: {
       askTitle: 'Replace your current cart?',
       askBody: 'Your cart has {{n}} items. Copying the month {{month}} list replaces them (nothing is saved until you tap Save order).',

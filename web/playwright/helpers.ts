@@ -6,8 +6,19 @@ import { expect, test, type APIRequestContext, type Locator, type Page, type Tes
 
 // Header dev-identity chỉ gắn cho /api: gắn toàn cục (extraHTTPHeaders) làm request font Google
 // thành CORS có header lạ và bị từ chối → trang rơi về font hệ thống
+// Popup kỳ mới (hiện một lần mỗi người mỗi kỳ) chặn thao tác: coi mọi khóa vpp_newperiod_seen:* là đã xem
+export async function skipNewPeriodPopup(page: Page) {
+  await page.addInitScript(() => {
+    const get = Storage.prototype.getItem;
+    Storage.prototype.getItem = function (k: string) {
+      return k.startsWith('vpp_newperiod_seen:') ? '1' : get.call(this, k);
+    };
+  });
+}
+
 export function asRole(role: 'member' | 'admin' | 'sa') {
   test.beforeEach(async ({ page }) => {
+    await skipNewPeriodPopup(page);
     await page.route('**/api/**', (route) =>
       route.continue({
         headers: { ...route.request().headers(), 'x-dev-user-sub': `pw-${role}`, 'x-dev-role': role },

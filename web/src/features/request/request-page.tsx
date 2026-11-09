@@ -12,6 +12,7 @@ import { CopyPreviousButton, CopySummaryDialog } from './copy-previous-dialog';
 import { CustomLineDialog } from './custom-line-dialog';
 import { FlowNotice } from './flow-notice';
 import { ItemGrid } from './item-grid';
+import { NewPeriodDialog } from './new-period-dialog';
 import { MobileSaveBar } from './mobile-save-bar';
 import { PeriodHero } from './period-hero';
 import { ReceiveStrip } from './receive-strip';
@@ -168,6 +169,7 @@ function RequestEditor({
         />
       </div>
       <ReceiveStrip period={period} />
+      <NewPeriodDialog period={period} saved={!!cart.saved} copyFromYm={copy.fromYm} onCopy={() => void copy.run()} />
       <div className="rq-frame">
         <div className="m-panel rq-panel">
           <ItemGrid
