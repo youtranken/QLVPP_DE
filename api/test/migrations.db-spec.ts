@@ -34,7 +34,7 @@ describe('assertTestDatabase — chặn reset nhầm DB không phải *_test', (
   });
 });
 
-describe('migrations nền 0001–0013 + 0100–0123', () => {
+describe('migrations nền 0001–0013 + 0100–0124', () => {
   let pool: Pool;
 
   async function resetSchema(): Promise<void> {
@@ -59,11 +59,11 @@ describe('migrations nền 0001–0013 + 0100–0123', () => {
     await pool.end();
   });
 
-  it('áp đủ 37 migration; chạy lại không áp thêm file nào', async () => {
-    expect(await migrationCount()).toBe(37);
+  it('áp đủ 38 migration; chạy lại không áp thêm file nào', async () => {
+    expect(await migrationCount()).toBe(38);
     const again = await runMigrations(pool, resolveMigrationsDir(), silent);
     expect(again).toEqual([]);
-    expect(await migrationCount()).toBe(37);
+    expect(await migrationCount()).toBe(38);
   });
 
   it('file 0003 đã apply bị sửa nội dung → reject với thông báo checksum', async () => {
