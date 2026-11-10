@@ -35,3 +35,7 @@ export interface OidcProvider {
   ): Promise<string | null>;
   clientCredentialsToken(forceRefresh?: boolean): Promise<string>;
 }
+
+// Hạn giờ (giây) cho mỗi lời gọi HTTP tới PMH ID qua openid-client (discovery, token, refresh,
+// client_credentials). PMH ID treo không giữ request/hàng đợi lưu ngôn ngữ mãi; hết giờ = lỗi mạng.
+export const IDP_HTTP_TIMEOUT_SEC = 10;

@@ -10,6 +10,7 @@ import type {
   OidcProvider,
   OidcTokens,
 } from './oidc-provider';
+import { IDP_HTTP_TIMEOUT_SEC } from './oidc-provider';
 
 @Injectable()
 export class OpenidClientProvider implements OidcProvider {
@@ -48,6 +49,8 @@ export class OpenidClientProvider implements OidcProvider {
         undefined,
         // PMH ID nhận client_secret_basic (v6 mặc định là _post → token endpoint từ chối)
         lib.ClientSecretBasic(process.env.PMH_CLIENT_SECRET),
+        // gán luôn cho cấu hình ⇒ mọi lời gọi sau (token/refresh) cũng có hạn giờ (mặc định 30 s)
+        { timeout: IDP_HTTP_TIMEOUT_SEC },
       );
       this.lib = lib;
       this.config = config;

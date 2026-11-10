@@ -47,6 +47,32 @@ describe('IdpLocaleClient', () => {
     });
   });
 
+  it('fetch có hạn giờ (≤ 10 s); hết giờ (TimeoutError) xử như lỗi mạng → unavailable', async () => {
+    const timeoutSpy = jest.spyOn(AbortSignal, 'timeout');
+    try {
+      const fetchFn = jest
+        .fn()
+        .mockRejectedValue(
+          new DOMException(
+            'The operation was aborted due to timeout',
+            'TimeoutError',
+          ),
+        );
+      global.fetch = fetchFn;
+      await expect(
+        new IdpLocaleClient().putLocale('at', 'en'),
+      ).resolves.toEqual({ ok: false, reason: 'unavailable' });
+      const init = fetchFn.mock.calls[0][1] as RequestInit;
+      expect(init.signal).toBeInstanceOf(AbortSignal);
+      expect(timeoutSpy).toHaveBeenCalledTimes(1);
+      const ms = timeoutSpy.mock.calls[0][0];
+      expect(ms).toBeGreaterThan(0);
+      expect(ms).toBeLessThanOrEqual(10_000);
+    } finally {
+      timeoutSpy.mockRestore();
+    }
+  });
+
   it('IP sai định dạng → không gửi header X-PMH-User-IP', async () => {
     const fetchFn = stubFetch(200, '{"locale":"vi"}');
     await new IdpLocaleClient().putLocale('at', 'vi', {
