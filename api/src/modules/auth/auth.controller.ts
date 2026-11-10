@@ -20,6 +20,7 @@ import { JwtVerifierService } from './jwt-verifier.service';
 import type { VerifiedAccessToken } from './jwt-verifier.service';
 import { LOCAL_SA_SUB } from './local-sa-env';
 import { LocalSaService } from './local-sa.service';
+import { parseUiLocales } from './locale';
 import { OIDC_PROVIDER } from './oidc-provider';
 import type { OidcProvider, OidcTokens } from './oidc-provider';
 import { Public } from './public.decorator';
@@ -133,6 +134,7 @@ export class AuthController {
   async login(
     @Res() res: Response,
     @Query('login_hint') loginHint?: string,
+    @Query('ui_locales') uiLocales?: string,
   ): Promise<void> {
     const codeVerifier = randomBytes(32).toString('base64url');
     const state = randomBytes(16).toString('base64url');
@@ -141,6 +143,8 @@ export class AuthController {
       state,
       codeChallenge: pkceChallenge(codeVerifier),
       loginHint: sanitizeLoginHint(loginHint),
+      // Ngôn ngữ app đang dùng (docs 7a) — chỉ vi|en; lạ/thiếu → không gửi
+      uiLocales: parseUiLocales(uiLocales),
     });
     res.cookie(OIDC_TX_COOKIE, JSON.stringify({ codeVerifier, state }), {
       httpOnly: true,
@@ -158,6 +162,7 @@ export class AuthController {
   async switchAccount(
     @Req() req: AuthedRequest,
     @Res() res: Response,
+    @Query('ui_locales') uiLocales?: string,
   ): Promise<void> {
     // Guard đã lọc cookie không phải UUID (Postgres ném 22P02 → 500)
     const sid = req.user?.sessionId;
@@ -169,7 +174,11 @@ export class AuthController {
     }
     res.clearCookie(SESSION_COOKIE);
     // post_logout_redirect_uri phải khớp hệt app_url đã khai với PMH ID
-    const logoutUrl = await this.oidc.buildLogoutUrl(appBaseUrl(), idTokenHint);
+    const logoutUrl = await this.oidc.buildLogoutUrl(
+      appBaseUrl(),
+      idTokenHint,
+      parseUiLocales(uiLocales),
+    );
     // Không có end_session thì không về /api/auth/login: phiên SSO còn sống sẽ lặp forbidden
     res.redirect(logoutUrl ?? '/?login=failed');
   }

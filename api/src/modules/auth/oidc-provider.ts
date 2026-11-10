@@ -12,6 +12,8 @@ export interface AuthUrlRequest {
   state: string;
   codeChallenge: string;
   loginHint?: string;
+  // Ngôn ngữ app đang dùng (docs 7a) — chỉ quyết định trang PMH ID hiển thị
+  uiLocales?: string;
 }
 
 export interface CodeExchangeRequest {
@@ -29,6 +31,7 @@ export interface OidcProvider {
   buildLogoutUrl(
     postLogoutRedirectUri: string,
     idTokenHint?: string | null,
+    uiLocales?: string,
   ): Promise<string | null>;
   clientCredentialsToken(forceRefresh?: boolean): Promise<string>;
 }

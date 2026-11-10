@@ -2,6 +2,7 @@ import { INestApplication, ServiceUnavailableException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/app.setup';
+import { IDP_LOCALE_CLIENT } from '../src/modules/auth/idp-locale.client';
 import { MAIL_TRANSPORT } from '../src/modules/mail/mail-transport';
 import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
 import { directoryStub } from './directory.stub';
@@ -30,6 +31,18 @@ export async function createTestApp(
     ...(has(MAIL_TRANSPORT)
       ? []
       : [{ token: MAIL_TRANSPORT, useValue: fakeMailTransport() }]),
+    // Đặt ngôn ngữ PMH ID: mặc định "không liên lạc được" — không bao giờ ra mạng thật
+    ...(has(IDP_LOCALE_CLIENT)
+      ? []
+      : [
+          {
+            token: IDP_LOCALE_CLIENT,
+            useValue: {
+              putLocale: () =>
+                Promise.resolve({ ok: false, reason: 'unavailable' }),
+            },
+          },
+        ]),
     ...overrides,
   ];
   for (const o of all) {

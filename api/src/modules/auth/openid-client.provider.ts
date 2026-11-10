@@ -71,6 +71,7 @@ export class OpenidClientProvider implements OidcProvider {
       code_challenge: req.codeChallenge,
       code_challenge_method: 'S256',
       ...(req.loginHint ? { login_hint: req.loginHint } : {}),
+      ...(req.uiLocales ? { ui_locales: req.uiLocales } : {}),
     });
     return url.href;
   }
@@ -131,12 +132,14 @@ export class OpenidClientProvider implements OidcProvider {
   async buildLogoutUrl(
     postLogoutRedirectUri: string,
     idTokenHint?: string | null,
+    uiLocales?: string,
   ): Promise<string | null> {
     try {
       const { lib, config } = await this.getConfig();
       const url = lib.buildEndSessionUrl(config, {
         post_logout_redirect_uri: postLogoutRedirectUri,
         ...(idTokenHint ? { id_token_hint: idTokenHint } : {}),
+        ...(uiLocales ? { ui_locales: uiLocales } : {}),
       });
       return url.href;
     } catch {
