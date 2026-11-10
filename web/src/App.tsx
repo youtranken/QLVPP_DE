@@ -1,6 +1,6 @@
 import { BrowserRouter } from 'react-router-dom';
 import { MeContext } from '@/lib/me';
-import { SSO_LOGIN_URL } from '@/lib/session-relogin';
+import { ssoLoginUrl } from '@/lib/session-relogin';
 import { ConfirmProvider } from '@/ui/confirm-provider';
 import { EntryError, EntryLoading, SsoRedirecting } from '@/shell/entry-states';
 import { LoginScreen } from '@/shell/login-screen';
@@ -12,7 +12,7 @@ export default function App() {
 
   if (auth.kind === 'loading') return <EntryLoading />;
   if (auth.kind === 'error') return <EntryError onRetry={() => window.location.reload()} />;
-  if (auth.kind === 'redirecting') return <SsoRedirecting href={SSO_LOGIN_URL} />;
+  if (auth.kind === 'redirecting') return <SsoRedirecting href={ssoLoginUrl()} />;
   if (auth.kind === 'anonymous') return <LoginScreen sessionExpired={auth.expired} ssoDown={auth.ssoDown} />;
 
   return (

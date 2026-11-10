@@ -1,11 +1,14 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderWithI18n, screen, userEvent } from '@/test/test-utils';
-import { setLanguage } from '@/lib/i18n';
+import { applySignedInLanguage, resetLanguageStateForTest, setLanguage } from '@/lib/i18n';
 import { LanguageSwitch } from './language-switch';
 
 afterEach(async () => {
+  resetLanguageStateForTest();
+  vi.unstubAllGlobals();
   await setLanguage('vi');
   localStorage.clear();
+  sessionStorage.clear();
 });
 
 describe('LanguageSwitch', () => {
@@ -24,5 +27,18 @@ describe('LanguageSwitch', () => {
     unmount();
     renderWithI18n(<LanguageSwitch />);
     expect(screen.getByRole('radio', { name: 'English' })).toHaveTextContent(/^English$/);
+  });
+
+  it('phiên SSO: bấm "EN" → giao diện đổi ngay + gọi PUT /api/auth/me/locale {locale:"en"}', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(new Response('{"locale":"en","saved":true}', { status: 200 }));
+    vi.stubGlobal('fetch', fetchFn);
+    await applySignedInLanguage({ locale: 'vi', localeUpdatedAt: null, csrfToken: 'c1', serverTime: Date.now() });
+    renderWithI18n(<LanguageSwitch short />);
+    await userEvent.click(screen.getByRole('radio', { name: 'VI – Tiếng Việt' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'EN – English' }));
+    expect(document.documentElement.lang).toBe('en');
+    const puts = fetchFn.mock.calls.filter(([url]) => url === '/api/auth/me/locale');
+    expect(puts).toHaveLength(2);
+    expect(JSON.parse(String((puts[1][1] as RequestInit).body))).toMatchObject({ locale: 'en', seq: 2 });
   });
 });

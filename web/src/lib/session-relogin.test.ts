@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   EXPIRED_URL,
   RELOGIN_COOLDOWN_MS,
-  SSO_LOGIN_URL,
   authMode,
   beginRelogin,
   expiryTarget,
@@ -10,13 +9,20 @@ import {
   isSafeReturnTo,
   rememberAuth,
   shouldAutoRelogin,
+  ssoLoginUrl,
+  switchAccountUrl,
   takeReturnTo,
 } from '@/lib/session-relogin';
+
+const SSO_LOGIN_URL = '/api/auth/login?ui_locales=vi';
 
 const T0 = 1_000_000_000_000;
 
 describe('session-relogin — chặn lặp + returnTo', () => {
-  beforeEach(() => sessionStorage.clear());
+  beforeEach(() => {
+    sessionStorage.clear();
+    localStorage.clear();
+  });
 
   it('chưa từng đăng nhập trong tab → không tự SSO, về màn login', () => {
     expect(shouldAutoRelogin(T0)).toBe(false);
@@ -87,5 +93,18 @@ describe('session-relogin — chặn lặp + returnTo', () => {
     ['', false],
   ])('isSafeReturnTo(%j) = %s', (v, ok) => {
     expect(isSafeReturnTo(v)).toBe(ok);
+  });
+});
+
+describe('ui_locales = ngôn ngữ app đang dùng (docs 7a)', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('mặc định vi; vpp_lang=en → en cho cả login, login_hint và switch-account', () => {
+    expect(ssoLoginUrl()).toBe('/api/auth/login?ui_locales=vi');
+    localStorage.setItem('vpp_lang', 'en');
+    expect(ssoLoginUrl()).toBe('/api/auth/login?ui_locales=en');
+    expect(ssoLoginUrl(' a@pmh.com.vn ')).toBe('/api/auth/login?login_hint=a%40pmh.com.vn&ui_locales=en');
+    expect(switchAccountUrl()).toBe('/api/auth/switch-account?ui_locales=en');
+    expect(beginRelogin('/', T0)).toBe('/api/auth/login?ui_locales=en');
   });
 });

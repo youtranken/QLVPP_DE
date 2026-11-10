@@ -39,7 +39,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     window.history.replaceState(null, '', '/history?ym=2026-11');
     renderWithI18n(<App />);
     expect(await screen.findByText('Đang chuyển sang PMH ID…')).toBeInTheDocument();
-    expect(navigateTo).toHaveBeenCalledWith('/api/auth/login');
+    expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?ui_locales=vi');
     expect(sessionStorage.getItem('vpp.auth.returnTo')).toBe('/history?ym=2026-11');
   });
 
@@ -76,7 +76,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     window.history.replaceState(null, '', '/?sso=1');
     renderWithI18n(<App />);
     expect(await screen.findByText('Đang chuyển sang PMH ID…')).toBeInTheDocument();
-    expect(navigateTo).toHaveBeenCalledWith('/api/auth/login');
+    expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?ui_locales=vi');
   });
 
   it('?login=forbidden → trang chưa được cấp quyền, không tự SSO', async () => {

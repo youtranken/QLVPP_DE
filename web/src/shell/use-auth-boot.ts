@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
 import { ApiError } from '@/lib/api-client';
 import { apiErrorCode } from '@/lib/api-error';
+import { applySignedInLanguage } from '@/lib/i18n';
 import type { Me } from '@/lib/me';
 import { cameFromPortal } from '@/lib/pmh-portal';
 import { navigateTo } from '@/lib/navigate';
 import {
-  SSO_LOGIN_URL,
   authMode,
   forgetAuth,
   isRedirecting,
   rememberAuth,
   shouldAutoRelogin,
+  ssoLoginUrl,
   startRelogin,
   takeReturnTo,
 } from '@/lib/session-relogin';
@@ -49,7 +50,7 @@ function onUnauthenticated(): AuthState | null {
     return { kind: 'redirecting' };
   }
   if (cameFromPortal()) {
-    navigateTo(SSO_LOGIN_URL);
+    navigateTo(ssoLoginUrl());
     return { kind: 'redirecting' };
   }
   const expired = q.get('session') === 'expired' || authMode() !== null;
@@ -70,7 +71,12 @@ export function useAuthBoot(): AuthState {
     let cancelled = false;
     fetch('/api/auth/me')
       .then(async (res): Promise<AuthState | null> => {
-        if (res.ok) return onAuthenticated((await res.json()) as Me);
+        if (res.ok) {
+          const me = (await res.json()) as Me;
+          // Ngôn ngữ theo tài khoản PMH ID trước khi vẽ app (không nháy ngôn ngữ cũ)
+          await applySignedInLanguage(me, { serverDate: res.headers?.get('date') });
+          return onAuthenticated(me);
+        }
         if (res.status === 401) return onUnauthenticated();
         if (await isSsoUnavailable(res)) return { kind: 'anonymous', expired: false, ssoDown: true };
         return { kind: 'error' };

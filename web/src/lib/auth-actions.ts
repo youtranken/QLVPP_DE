@@ -1,11 +1,8 @@
 import { navigateTo } from '@/lib/navigate';
-import { SSO_LOGIN_URL, forgetAuth, rememberAuth } from '@/lib/session-relogin';
-
-export const SWITCH_ACCOUNT_URL = '/api/auth/switch-account';
+import { forgetAuth, rememberAuth, ssoLoginUrl, switchAccountUrl } from '@/lib/session-relogin';
 
 export function loginWithPmhId(loginHint?: string): void {
-  const hint = loginHint?.trim();
-  navigateTo(hint ? `${SSO_LOGIN_URL}?login_hint=${encodeURIComponent(hint)}` : SSO_LOGIN_URL);
+  navigateTo(ssoLoginUrl(loginHint));
 }
 
 export type SaLoginOutcome = 'ok' | 'invalid' | 'locked' | 'error';
@@ -58,5 +55,5 @@ export async function logout(csrfToken: string | null): Promise<boolean> {
 // Bị chặn quyền: phải qua end_session của PMH ID, nếu không phiên SSO còn sống sẽ lặp lại forbidden
 export function switchAccount(): void {
   forgetAuth();
-  navigateTo(SWITCH_ACCOUNT_URL);
+  navigateTo(switchAccountUrl());
 }

@@ -18,7 +18,7 @@ describe('LoginScreen', () => {
     await userEvent.click(
       screen.getByRole('button', { name: 'Đăng nhập bằng tài khoản công ty (PMH ID)' }),
     );
-    expect(navigateTo).toHaveBeenCalledWith('/api/auth/login');
+    expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?ui_locales=vi');
     expect(
       screen.getByText('Bạn sẽ được đưa sang trang đăng nhập chung của công ty rồi quay lại đây.'),
     ).toBeInTheDocument();
@@ -29,7 +29,7 @@ describe('LoginScreen', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Gợi ý tài khoản (tùy chọn)' }));
     await userEvent.type(screen.getByLabelText('Email công ty'), 'an.nguyen@pmh.com.vn');
     await userEvent.click(screen.getByRole('button', { name: 'Tiếp tục với PMH ID' }));
-    expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?login_hint=an.nguyen%40pmh.com.vn');
+    expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?login_hint=an.nguyen%40pmh.com.vn&ui_locales=vi');
   });
 
   it('"Dành cho IT" mở ô username type=text + mật khẩu; 401 → báo sai tài khoản', async () => {
@@ -91,7 +91,7 @@ describe('LoginScreen', () => {
     expect(screen.queryByText(/nhóm/i)).toBeNull();
     expect(fetchMock).toHaveBeenCalledWith('/api/public-config', undefined);
     await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập bằng tài khoản khác' }));
-    expect(navigateTo).toHaveBeenCalledWith('/api/auth/switch-account');
+    expect(navigateTo).toHaveBeenCalledWith('/api/auth/switch-account?ui_locales=vi');
     expect(screen.getByRole('link', { name: 'Về trang PMH ID' })).toBeInTheDocument();
   });
 

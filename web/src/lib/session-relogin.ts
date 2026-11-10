@@ -1,7 +1,27 @@
 // Phiên SSO PMH ID thường còn sống khi phiên VPP hết → tự SSO lại tối đa 1 lần/60 s (trừ SA/đã đăng xuất)
+import { currentLanguage } from '@/lib/lang-pref';
 import { navigateTo } from '@/lib/navigate';
 
 export const SSO_LOGIN_URL = '/api/auth/login';
+export const SWITCH_ACCOUNT_URL = '/api/auth/switch-account';
+
+// Luôn kèm `ui_locales` = ngôn ngữ app đang dùng (docs 7a) — PMH ID chỉ dùng để HIỂN THỊ trang của
+// nó, không ghi vào tài khoản
+function withUiLocales(base: string, params = new URLSearchParams()): string {
+  params.set('ui_locales', currentLanguage());
+  return `${base}?${params.toString()}`;
+}
+
+// URL bắt đầu SSO PMH ID (kèm login_hint nếu có)
+export function ssoLoginUrl(loginHint?: string): string {
+  const hint = loginHint?.trim();
+  return withUiLocales(SSO_LOGIN_URL, new URLSearchParams(hint ? { login_hint: hint } : {}));
+}
+
+// "Đăng nhập bằng tài khoản khác" — end_session PMH ID cùng ngôn ngữ app
+export function switchAccountUrl(): string {
+  return withUiLocales(SWITCH_ACCOUNT_URL);
+}
 export const EXPIRED_URL = '/?session=expired';
 export const RELOGIN_COOLDOWN_MS = 60_000;
 
@@ -73,7 +93,7 @@ export function beginRelogin(currentPath: string, now = Date.now()): string {
   set(ATTEMPT_KEY, String(now));
   if (isSafeReturnTo(currentPath) && currentPath !== '/') set(RETURN_KEY, currentPath);
   else del(RETURN_KEY);
-  return SSO_LOGIN_URL;
+  return ssoLoginUrl();
 }
 
 export function expiryTarget(currentPath: string, now = Date.now()): string {

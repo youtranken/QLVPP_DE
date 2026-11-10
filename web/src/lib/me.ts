@@ -10,7 +10,10 @@ export interface Me {
   email: string | null;
   department: string | null;
   employeeCode: string | null;
+  // Claim `locale` của tài khoản PMH ID; null = phiên không có PMH ID (SA local, tài khoản thử, dev)
   locale: 'vi' | 'en' | null;
+  localeUpdatedAt?: number | null;
+  serverTime?: number;
   devMode?: boolean;
   config: {
     registration_last_day: number;
