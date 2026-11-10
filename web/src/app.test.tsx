@@ -113,6 +113,28 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     expect(sessionStorage.getItem('vpp.auth.returnTo')).toBeNull();
   });
 
+  it('/me phiên SSO có locale "en" (claim PMH ID) → app vẽ bằng tiếng Anh, nhớ vpp_lang=en (docs 7a)', async () => {
+    localStorage.removeItem('vpp_lang');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) =>
+        Promise.resolve(
+          url === '/api/auth/me'
+            ? jsonResponse(200, makeMe('member', { locale: 'en', localeUpdatedAt: null, serverTime: Date.now() }))
+            : jsonResponse(200, { items: [], next_cursor: null }),
+        ),
+      ),
+    );
+    renderWithI18n(<App />);
+    await vi.waitFor(() => expect(document.documentElement.lang).toBe('en'));
+    expect(localStorage.getItem('vpp_lang')).toBe('en');
+    const { setLanguage, resetLanguageStateForTest } = await import('@/lib/i18n');
+    resetLanguageStateForTest();
+    await setLanguage('vi');
+    sessionStorage.clear();
+    localStorage.removeItem('vpp_lang');
+  });
+
   it('/api/auth/me lỗi 500 → báo lỗi hệ thống + Thử lại', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(500, {})));
     renderWithI18n(<App />);
