@@ -83,6 +83,31 @@ describe('LocaleSyncService (docs 7a)', () => {
     expect(sessionAuth.refreshNow).toHaveBeenCalledTimes(1);
   });
 
+  it('mốc locale_updated_at của phiên lấy TRƯỚC khi gọi PMH ID (thay đổi mới hơn ở PMH ID không bị coi là cũ hơn)', async () => {
+    const start = 1_800_000_000_000;
+    const now = jest.spyOn(Date, 'now').mockReturnValue(start + 900);
+    try {
+      const api: IdpLocaleApi = {
+        putLocale: (_t, locale) => {
+          // PUT + 401→refresh→thử lại mất vài giây
+          now.mockReturnValue(start + 7_400);
+          return Promise.resolve({ ok: true, locale });
+        },
+      };
+      const { service, sessions } = makeService(api);
+      await expect(service.save('sid-1', 'en')).resolves.toMatchObject({
+        saved: true,
+      });
+      expect(sessions.setSessionLocale).toHaveBeenCalledWith(
+        'sid-1',
+        'en',
+        Math.floor(start / 1000),
+      );
+    } finally {
+      now.mockRestore();
+    }
+  });
+
   it('401 → refresh rồi thử lại bằng token mới → saved:true (refresh lần nữa sau khi lưu)', async () => {
     const idp = fakeIdp([
       { ok: false, reason: 'unauthorized' },

@@ -121,16 +121,16 @@ export class LocaleSyncService {
     if (queue.latest !== mine) {
       return { locale, saved: false, reason: 'superseded' };
     }
+    // Mốc lấy TRƯỚC khi gọi PMH ID: PMH ID ghi mốc của nó trong lúc PUT nên mốc này ≤ mốc PMH ID
+    // (khi hai đồng hồ khớp). Đồng hồ VPP nhanh hơn chỉ còn lệch đúng độ lệch đồng hồ, không cộng
+    // thêm thời gian PUT/refresh ⇒ thay đổi sau đó ở PMH ID (mốc ≥) thắng ở lần refresh kế.
+    const startedSec = Math.floor(Date.now() / 1000);
     let result: LocaleSaveResult;
     try {
       result = await this.putWithRetry(sessionId, locale, userIp);
       if (result.saved) {
         queue.dirty = true;
-        await this.sessions.setSessionLocale(
-          sessionId,
-          locale,
-          Math.floor(Date.now() / 1000),
-        );
+        await this.sessions.setSessionLocale(sessionId, locale, startedSec);
       }
     } catch (error) {
       this.logger.warn(`Lưu ngôn ngữ PMH ID lỗi: ${(error as Error).name}`);
