@@ -106,7 +106,7 @@ export class SessionAuthService {
     if (stillValid) {
       return this.toIdentity(sessionId, session.claims);
     }
-    return this.refreshSession(sessionId, session);
+    return this.refreshSession(sessionId);
   }
 
   // Tài khoản thử local (chỉ dev): vai lấy từ env mỗi request; tắt biến → phiên cũ chết ngay
@@ -131,9 +131,8 @@ export class SessionAuthService {
 
   private async refreshSession(
     sessionId: string,
-    session: SessionRecord,
   ): Promise<RequestIdentity | null> {
-    const claims = await this.refreshTokensOnce(sessionId, session);
+    const claims = await this.refreshTokensOnce(sessionId);
     return claims ? this.toIdentity(sessionId, claims) : null;
   }
 
@@ -147,19 +146,16 @@ export class SessionAuthService {
     if (!session || !isPmhSession(session)) {
       return null;
     }
-    const claims = await this.refreshTokensOnce(sessionId, session);
+    const claims = await this.refreshTokensOnce(sessionId);
     return claims ? this.sessions.find(sessionId) : null;
   }
 
-  private refreshTokensOnce(
-    sessionId: string,
-    session: SessionRecord,
-  ): Promise<PmhIdClaims | null> {
+  private refreshTokensOnce(sessionId: string): Promise<PmhIdClaims | null> {
     const existing = this.refreshing.get(sessionId);
     if (existing) {
       return existing;
     }
-    const promise = this.doRefreshTokens(sessionId, session).finally(() =>
+    const promise = this.doRefreshTokens(sessionId).finally(() =>
       this.refreshing.delete(sessionId),
     );
     this.refreshing.set(sessionId, promise);
@@ -168,10 +164,13 @@ export class SessionAuthService {
 
   private async doRefreshTokens(
     sessionId: string,
-    stale: SessionRecord,
   ): Promise<PmhIdClaims | null> {
-    // Đọc lại: lượt refresh trước có thể vừa xoay refresh token
-    const session = (await this.sessions.find(sessionId)) ?? stale;
+    // Đọc lại: lượt refresh trước có thể vừa xoay refresh token. Phiên vừa bị xóa (logout,
+    // back-channel) ⇒ dừng: không xin PMH ID bộ token mới bằng refresh token cũ
+    const session = await this.sessions.find(sessionId);
+    if (!session) {
+      return null;
+    }
     if (!session.refreshToken) {
       await this.expire(sessionId, session.userSub, 'no_refresh_token');
       return null;

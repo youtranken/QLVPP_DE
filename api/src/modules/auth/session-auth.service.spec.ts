@@ -381,4 +381,34 @@ describe('SessionAuthService — refreshNow (lưu ngôn ngữ PMH ID)', () => {
     await expect(service.refreshNow('sid-1')).resolves.toBeNull();
     expect(sessions.destroy).toHaveBeenCalledWith('sid-1');
   });
+
+  it('phiên vừa bị xóa (logout/back-channel) giữa lúc đọc và refresh → null, KHÔNG gọi PMH ID bằng refresh token cũ', async () => {
+    const { service, sessions, oidc } = makeService({
+      session: { accessTokenExp: new Date(Date.now() + 60_000) },
+    });
+    // lần đọc thứ nhất (refreshNow) còn phiên; lần đọc lại trong doRefreshTokens đã mất
+    const original = await sessions.find('sid-1');
+    sessions.find.mockReset();
+    sessions.find.mockResolvedValueOnce(original).mockResolvedValue(null);
+    await expect(service.refreshNow('sid-1')).resolves.toBeNull();
+    expect(oidc.refresh).not.toHaveBeenCalled();
+    expect(sessions.updateTokens).not.toHaveBeenCalled();
+  });
+
+  it('PMH ID treo → refresh hết thời gian (TimeoutError) xử như lỗi mạng: ném 503, GIỮ phiên', async () => {
+    const { service, sessions } = makeService({
+      refreshImpl: jest
+        .fn()
+        .mockRejectedValue(
+          new DOMException(
+            'The operation was aborted due to timeout',
+            'TimeoutError',
+          ),
+        ),
+    });
+    await expect(service.refreshNow('sid-1')).rejects.toThrow(
+      ServiceUnavailableException,
+    );
+    expect(sessions.destroy).not.toHaveBeenCalled();
+  });
 });
