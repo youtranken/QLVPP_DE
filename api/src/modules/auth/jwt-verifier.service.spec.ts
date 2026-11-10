@@ -83,6 +83,22 @@ describe('JwtVerifierService — verify offline RS256', () => {
     expect(claims).not.toHaveProperty('groups');
   });
 
+  it('locale + locale_updated_at (docs 7a): en-US → en, lạ → vi, thiếu → bỏ trống', async () => {
+    const a = await verifier.verify(
+      await sign({ locale: 'en-US', locale_updated_at: 1_762_000_000 }),
+    );
+    expect(a.claims.locale).toBe('en');
+    expect(a.claims.locale_updated_at).toBe(1_762_000_000);
+    const b = await verifier.verify(
+      await sign({ locale: 'fr', locale_updated_at: null }),
+    );
+    expect(b.claims.locale).toBe('vi');
+    expect(b.claims.locale_updated_at).toBeUndefined();
+    const c = await verifier.verify(await sign());
+    expect(c.claims.locale).toBeUndefined();
+    expect(c.claims.locale_updated_at).toBeUndefined();
+  });
+
   it('department "" (Chưa xếp nhóm) → undefined; team null → undefined', async () => {
     const { claims } = await verifier.verify(
       await sign({ department: '', team: null }),

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID, randomBytes } from 'node:crypto';
-import { eq, lt, sql } from 'drizzle-orm';
+import { and, eq, lt, sql } from 'drizzle-orm';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import type { PmhIdClaims } from '../users/users.service';
@@ -11,6 +11,7 @@ export interface SessionRecord {
   id: string;
   userSub: string;
   refreshToken: string | null;
+  accessToken: string | null;
   accessTokenExp: Date | null;
   claims: PmhIdClaims | null;
   csrfToken: string;
@@ -25,6 +26,7 @@ export class SessionService {
   async create(params: {
     userSub: string;
     refreshToken: string | null;
+    accessToken?: string | null;
     accessTokenExp: Date | null;
     claims: PmhIdClaims;
     idToken: string | null;
@@ -34,6 +36,7 @@ export class SessionService {
       id: randomUUID(),
       userSub: params.userSub,
       refreshToken: params.refreshToken,
+      accessToken: params.accessToken ?? null,
       accessTokenExp: params.accessTokenExp,
       claims: params.claims,
       csrfToken: randomBytes(32).toString('hex'),
@@ -50,6 +53,7 @@ export class SessionService {
       id: randomUUID(),
       userSub: LOCAL_SA_SUB,
       refreshToken: null,
+      accessToken: null,
       accessTokenExp: null,
       claims: null,
       csrfToken: randomBytes(32).toString('hex'),
@@ -87,6 +91,7 @@ export class SessionService {
       id: row.id,
       userSub: row.userSub,
       refreshToken: row.refreshToken,
+      accessToken: row.accessToken,
       accessTokenExp: row.accessTokenExp,
       claims: row.claims as PmhIdClaims | null,
       csrfToken: row.csrfToken,
@@ -95,28 +100,59 @@ export class SessionService {
     };
   }
 
-  // false = phiên đã bị xóa giữa chừng (webhook/BCL đá)
+  // false = phiên đã bị xóa giữa chừng (webhook/BCL đá).
+  // Ngôn ngữ (docs 7a): token mới mang claim cũ hơn lựa chọn vừa lưu trong phiên (refresh chạy song
+  // song với PUT /api/me/locale) thì giữ locale/locale_updated_at của phiên — mốc mới hơn thắng.
   async updateTokens(
     id: string,
     params: {
       refreshToken: string | null;
+      accessToken?: string | null;
       accessTokenExp: Date | null;
       claims: PmhIdClaims;
       idToken: string | null;
     },
   ): Promise<boolean> {
+    const incoming = JSON.stringify(params.claims);
+    const newAt = params.claims.locale_updated_at ?? null;
     const rows = await this.db
       .update(sessionsTable)
       .set({
         refreshToken: params.refreshToken,
+        accessToken: params.accessToken ?? null,
         accessTokenExp: params.accessTokenExp,
-        claims: params.claims,
+        claims: sql`CASE
+          WHEN (${sessionsTable.claims}->>'locale_updated_at') IS NOT NULL
+           AND (${sessionsTable.claims}->>'locale_updated_at')::bigint
+               > COALESCE(${newAt}::bigint, -1)
+          THEN ${incoming}::jsonb || jsonb_build_object(
+            'locale', ${sessionsTable.claims}->'locale',
+            'locale_updated_at', ${sessionsTable.claims}->'locale_updated_at')
+          ELSE ${incoming}::jsonb END`,
         idToken: params.idToken,
         lastSeenAt: new Date(),
       })
       .where(eq(sessionsTable.id, id))
       .returning({ id: sessionsTable.id });
     return rows.length > 0;
+  }
+
+  // Lưu được ngôn ngữ vào PMH ID → claims phiên mang ngay giá trị mới (không chờ refresh), để /me
+  // không nhảy về claim cũ trong phiên dù refresh sau đó lỗi. Chỉ phiên SSO (claims không null).
+  async setSessionLocale(
+    id: string,
+    locale: 'vi' | 'en',
+    atSec: number,
+  ): Promise<void> {
+    await this.db
+      .update(sessionsTable)
+      .set({
+        claims: sql`${sessionsTable.claims} || jsonb_build_object(
+          'locale', ${locale}::text, 'locale_updated_at', ${atSec}::bigint)`,
+      })
+      .where(
+        and(eq(sessionsTable.id, id), sql`${sessionsTable.claims} IS NOT NULL`),
+      );
   }
 
   async destroy(id: string): Promise<void> {

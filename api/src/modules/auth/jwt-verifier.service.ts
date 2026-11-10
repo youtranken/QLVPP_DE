@@ -3,6 +3,7 @@ import type { JWTPayload, JWTVerifyGetKey } from 'jose';
 import { toAppRole } from '../users/users.service';
 import type { PmhIdClaims } from '../users/users.service';
 import { toLabel } from '../users/profile-label';
+import { normalizeLocale, normalizeLocaleUpdatedAt } from './locale';
 import { TokenContractError } from './token-contract.error';
 
 export const PMH_ID_CLAIMS_VERSION = 3;
@@ -97,6 +98,7 @@ export class JwtVerifierService {
   }
 
   private toClaims(payload: JWTPayload): PmhIdClaims {
+    const localeUpdatedAt = normalizeLocaleUpdatedAt(payload.locale_updated_at);
     return {
       sub: payload.sub as string,
       email: payload.email as string | undefined,
@@ -106,6 +108,12 @@ export class JwtVerifierService {
       team: toLabel(payload.team),
       app_role: toAppRole(payload.app_role),
       ver: PMH_ID_CLAIMS_VERSION,
+      // docs 7a: có nhưng lạ → vi; thiếu → bỏ trống (/me coi như vi)
+      locale:
+        payload.locale === undefined || payload.locale === null
+          ? undefined
+          : normalizeLocale(payload.locale),
+      locale_updated_at: localeUpdatedAt ?? undefined,
     };
   }
 }

@@ -32,6 +32,10 @@ export interface PmhIdClaims {
   team?: string;
   app_role?: AppRole;
   ver?: number;
+  // Ngôn ngữ tài khoản PMH ID (docs 7a) — chỉ là bản sao claim trong phiên, KHÔNG lưu vào bảng users
+  locale?: 'vi' | 'en';
+  // Giây epoch lần đặt ngôn ngữ gần nhất; thiếu = chưa từng đặt / token cũ
+  locale_updated_at?: number;
 }
 
 export interface UserListQuery {

@@ -19,6 +19,7 @@ function makeService(opts: {
           id: 'sid-1',
           userSub: 'usr_1',
           refreshToken: 'rt-1',
+          accessToken: 'at-1',
           accessTokenExp: new Date(Date.now() - 60_000), // hết hạn
           claims: { sub: 'usr_1', full_name: 'Test' },
           csrfToken: 'tok',
@@ -325,5 +326,59 @@ describe('SessionAuthService — SA cục bộ idle 2 giờ', () => {
         detail: { reason: 'local_sa_idle' },
       }),
     );
+  });
+});
+
+describe('SessionAuthService — refreshNow (lưu ngôn ngữ PMH ID)', () => {
+  it('token còn hạn vẫn refresh; lưu access token mới; trả phiên đọc lại', async () => {
+    const { service, oidc, sessions } = makeService({
+      session: { accessTokenExp: new Date(Date.now() + 60_000) },
+    });
+    const result = await service.refreshNow('sid-1');
+    expect(oidc.refresh).toHaveBeenCalledTimes(1);
+    expect(sessions.updateTokens).toHaveBeenCalledWith(
+      'sid-1',
+      expect.objectContaining({ accessToken: 'jwt-moi', refreshToken: 'rt-2' }),
+    );
+    expect(result?.id).toBe('sid-1');
+  });
+
+  it('chạy cùng lúc với refresh của resolve() → dùng chung MỘT lượt refresh', async () => {
+    let resolveRefresh!: (v: unknown) => void;
+    const refreshImpl = jest.fn().mockReturnValue(
+      new Promise((r) => {
+        resolveRefresh = r;
+      }),
+    );
+    const { service, oidc } = makeService({ refreshImpl });
+    const a = service.resolve('sid-1');
+    const b = service.refreshNow('sid-1');
+    await new Promise((r) => setImmediate(r));
+    resolveRefresh({ accessToken: 'jwt-moi', refreshToken: 'rt-2' });
+    await Promise.all([a, b]);
+    expect(oidc.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['SA local', { userSub: 'local:sa', claims: null }],
+    ['tài khoản thử dev', { userSub: 'local-test-an' }],
+  ])('%s → null, không gọi PMH ID', async (_n, session) => {
+    const { service, oidc } = makeService({
+      session: session,
+    });
+    await expect(service.refreshNow('sid-1')).resolves.toBeNull();
+    expect(oidc.refresh).not.toHaveBeenCalled();
+  });
+
+  it('PMH ID từ chối (invalid_grant) → null, phiên bị hủy', async () => {
+    const { service, sessions } = makeService({
+      refreshImpl: jest
+        .fn()
+        .mockRejectedValue(
+          Object.assign(new Error('x'), { error: 'invalid_grant' }),
+        ),
+    });
+    await expect(service.refreshNow('sid-1')).resolves.toBeNull();
+    expect(sessions.destroy).toHaveBeenCalledWith('sid-1');
   });
 });

@@ -23,6 +23,15 @@ import type { RequestIdentity } from './identity.types';
 import type { PmhIdClaims } from '../users/users.service';
 import { TokenContractError } from './token-contract.error';
 
+// Phiên SSO PMH ID (có token PMH ID) — không phải SA local, tài khoản thử dev
+export function isPmhSession(session: SessionRecord): boolean {
+  return (
+    session.claims !== null &&
+    session.userSub !== LOCAL_SA_SUB &&
+    !session.userSub.startsWith(LOCAL_TEST_SUB_PREFIX)
+  );
+}
+
 // Refresh single-flight theo phiên: nhiều tab song song mà refresh nhiều lần sẽ đốt refresh token
 // xoay vòng single-use rồi logout oan. PMH ID sập → giữ phiên, 503 (không biến outage thành logout).
 @Injectable()
@@ -32,6 +41,9 @@ export class SessionAuthService {
     string,
     Promise<RequestIdentity | null>
   >();
+  // Một lượt refresh token / phiên dùng chung cho resolve() và refreshNow() — refresh token xoay
+  // vòng single-use, hai lượt chồng nhau thì lượt sau invalid_grant → logout oan
+  private readonly refreshing = new Map<string, Promise<PmhIdClaims | null>>();
 
   constructor(
     private readonly sessions: SessionService,
@@ -121,6 +133,45 @@ export class SessionAuthService {
     sessionId: string,
     session: SessionRecord,
   ): Promise<RequestIdentity | null> {
+    const claims = await this.refreshTokensOnce(sessionId, session);
+    return claims ? this.toIdentity(sessionId, claims) : null;
+  }
+
+  /**
+   * Refresh NGAY dù access token còn hạn (lưu ngôn ngữ PMH ID: 401 → refresh rồi thử lại; lưu xong →
+   * refresh để claims phiên mang locale mới). Dùng chung single-flight với resolve(). Trả phiên sau
+   * refresh; null = phiên không còn / không phải SSO / PMH ID từ chối (phiên đã bị hủy). PMH ID sập → ném.
+   */
+  async refreshNow(sessionId: string): Promise<SessionRecord | null> {
+    const session = await this.sessions.find(sessionId);
+    if (!session || !isPmhSession(session)) {
+      return null;
+    }
+    const claims = await this.refreshTokensOnce(sessionId, session);
+    return claims ? this.sessions.find(sessionId) : null;
+  }
+
+  private refreshTokensOnce(
+    sessionId: string,
+    session: SessionRecord,
+  ): Promise<PmhIdClaims | null> {
+    const existing = this.refreshing.get(sessionId);
+    if (existing) {
+      return existing;
+    }
+    const promise = this.doRefreshTokens(sessionId, session).finally(() =>
+      this.refreshing.delete(sessionId),
+    );
+    this.refreshing.set(sessionId, promise);
+    return promise;
+  }
+
+  private async doRefreshTokens(
+    sessionId: string,
+    stale: SessionRecord,
+  ): Promise<PmhIdClaims | null> {
+    // Đọc lại: lượt refresh trước có thể vừa xoay refresh token
+    const session = (await this.sessions.find(sessionId)) ?? stale;
     if (!session.refreshToken) {
       await this.expire(sessionId, session.userSub, 'no_refresh_token');
       return null;
@@ -130,6 +181,7 @@ export class SessionAuthService {
       const verified = await this.jwtVerifier.verify(tokens.accessToken);
       const updated = await this.sessions.updateTokens(sessionId, {
         refreshToken: tokens.refreshToken,
+        accessToken: tokens.accessToken,
         accessTokenExp: verified.expiresAt,
         claims: verified.claims,
         // refresh có thể không phát id_token mới → giữ cái lúc login
@@ -144,7 +196,7 @@ export class SessionAuthService {
         toAppRole(verified.claims.app_role),
         'refresh',
       );
-      return this.toIdentity(sessionId, verified.claims);
+      return verified.claims;
     } catch (error) {
       if (error instanceof ServiceUnavailableException) {
         throw error;

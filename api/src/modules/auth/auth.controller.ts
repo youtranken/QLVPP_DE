@@ -256,6 +256,7 @@ export class AuthController {
     const session = await this.sessions.create({
       userSub: verified.claims.sub,
       refreshToken: tokens.refreshToken,
+      accessToken: tokens.accessToken,
       accessTokenExp: verified.expiresAt,
       claims: verified.claims,
       idToken: tokens.idToken,
