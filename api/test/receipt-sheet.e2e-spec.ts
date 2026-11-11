@@ -68,9 +68,10 @@ describe('V2D-5 nhập Hàng về kèm snapshot_id của bản in đang xem (e2e
     await receive(item, 2).expect(200);
   });
 
-  it('client chưa thấy bản (snapshot_id null) mà nay đã có bản → 409; chưa có bản thật → 200', async () => {
+  it('client chưa thấy bản (snapshot_id null) mà nay đã có bản → 409 STALE_UPDATE; chưa có bản thật → 409 REPORT_NOT_SENT (chưa gửi NCC thì không nhận)', async () => {
     const item = await f.stockItem(0);
-    await receive(item, 0, null).expect(200);
+    const notSent = await receive(item, 0, null).expect(409);
+    expect(notSent.body).toMatchObject({ code: 'REPORT_NOT_SENT', ym: YM });
     const a = await insertSnapshot(
       YM,
       sheet({ [item]: 3 }),
@@ -113,6 +114,12 @@ describe('V2D-5 nhập Hàng về kèm snapshot_id của bản in đang xem (e2e
       item,
       rows[0].id,
     ]);
+    // Kỳ đã gửi NCC (bản in không có món này)
+    await insertSnapshot(
+      YM,
+      sheet({ 'custom:["khác","cai"]': 1 }),
+      '2026-11-11T03:00:00Z',
+    );
     try {
       const res = await receive(item, 0).expect(404);
       expect(res.body).toMatchObject({ code: 'ITEM_NOT_FOUND', item_id: item });
