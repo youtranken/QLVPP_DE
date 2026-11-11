@@ -5,8 +5,10 @@ import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { useToast } from '@/ui/toast-context';
+import { useRequestFormat } from '@/features/request/request-format';
 import { lineErrorText } from '../delivery-errors';
-import type { BulkPlan } from './bulk-plan';
+import { withRejects, type BulkPlan } from './bulk-plan';
+import { DeliverPendingConfirm } from './deliver-pending-confirm';
 import { NOT_SENT } from './deliver-send';
 import { BULK_MAX_REQUESTS, deliverBulk, type BulkDeliverBody, type BulkRequestResult, type DeliveryPerson } from './delivery-people.api';
 import { useRefreshAfterLineChange } from './use-refresh-after-flow';
@@ -34,6 +36,10 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
   const [error, setError] = useState<string | null>(null);
   const count = plan.summary.length;
   const sending = flight.pending;
+  const fmt = useRequestFormat();
+  // Còn món ngoài danh mục chờ duyệt: hỏi lại trước, rồi gửi kèm reject_line_ids như hộp giao từng người
+  const [asking, setAsking] = useState(false);
+  const body = withRejects(plan.body, plan.pending);
 
   // Chia lô ≤ BULK_MAX_REQUESTS phiếu, gửi lần lượt. Lỗi giữa chừng: có phiếu đã giao nên luôn tải lại danh sách,
   // gói cũ không dùng lại được (phiếu đã giao sẽ báo "vừa đổi") → chỉ còn nút Đóng, người dùng chọn lại
@@ -42,7 +48,7 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
       setError(null);
       const all: BulkRequestResult[] = [];
       const batches: BulkDeliverBody['requests'][] = [];
-      for (let i = 0; i < plan.body.requests.length; i += BULK_MAX_REQUESTS) batches.push(plan.body.requests.slice(i, i + BULK_MAX_REQUESTS));
+      for (let i = 0; i < body.requests.length; i += BULK_MAX_REQUESTS) batches.push(body.requests.slice(i, i + BULK_MAX_REQUESTS));
       try {
         for (const requests of batches) all.push(...(await deliverBulk({ requests }, csrfToken)).results);
       } catch (e) {
@@ -51,7 +57,7 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
           return;
         }
         const sent = new Set(all.map((r) => r.request_id));
-        const rest = plan.body.requests.filter((r) => !sent.has(r.request_id));
+        const rest = body.requests.filter((r) => !sent.has(r.request_id));
         await refresh();
         setError(t(isSessionExpired(e) ? 'delivery.confirm.sessionExpired' : 'delivery.bulk.interrupted'));
         setResults([...all, ...rest.map((r) => ({ request_id: r.request_id, ok: false as const, code: NOT_SENT }))]);
@@ -137,12 +143,23 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
                 {t('delivery.confirm.cancel')}
               </button>
             </DialogClose>
-            <button type="button" className="btn btn--primary" disabled={sending} aria-busy={sending} onClick={() => void submit()}>
+            <button type="button" className="btn btn--primary" disabled={sending} aria-busy={sending} onClick={() => (plan.pending.length > 0 ? setAsking(true) : void submit())}>
               {sending ? t('delivery.confirm.sending') : t('delivery.confirm.ok')}
             </button>
           </>
         )}
       </div>
+      {asking && (
+        <DeliverPendingConfirm
+          title={t('delivery.bulk.title', { count })}
+          names={plan.pending.map((l) => fmt.name(l))}
+          onCancel={() => setAsking(false)}
+          onConfirm={() => {
+            setAsking(false);
+            void submit();
+          }}
+        />
+      )}
     </Dialog>
   );
 }
