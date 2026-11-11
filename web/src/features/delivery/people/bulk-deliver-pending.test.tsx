@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, renderWithI18n, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { MeContext } from '@/lib/me';
 import { makeMe } from '@/test/fixtures-me';
+import { ConfirmProvider } from '@/ui/confirm-provider';
 import { ToastProvider } from '@/ui/toast-provider';
 import { BulkDeliverDialog } from './bulk-deliver-dialog';
 import { bulkPlan } from './bulk-plan';
@@ -12,11 +13,18 @@ import { person, pLine } from './people-fixtures';
 const URL = '/api/admin/deliveries/bulk';
 const ASK = /^Món ngoài danh mục chưa duyệt:/;
 
-function stub() {
+// fail: request_id trả lỗi STOCK_INSUFFICIENT, còn lại ok
+function stub(fail = new Set<string>()) {
   const f = vi.fn((url: string, init?: RequestInit) => {
     if (String(url) !== URL) return Promise.resolve(jsonResponse(200, {}));
-    const body = JSON.parse(String(init?.body)) as { requests: { request_id: string }[] };
-    return Promise.resolve(jsonResponse(200, { results: body.requests.map((r) => ({ request_id: r.request_id, ok: true, delivered_units: 1, request_complete: false })) }));
+    const body = JSON.parse(String(init?.body)) as { requests: { request_id: string; lines: unknown[] }[] };
+    return Promise.resolve(
+      jsonResponse(200, {
+        results: body.requests.map((r) =>
+          fail.has(r.request_id) ? { request_id: r.request_id, ok: false, code: 'STOCK_INSUFFICIENT', available: 0 } : { request_id: r.request_id, ok: true, delivered_units: r.lines.length, request_complete: false },
+        ),
+      }),
+    );
   });
   vi.stubGlobal('fetch', f);
   return f;
@@ -29,7 +37,9 @@ function open(people: DeliveryPerson[]) {
     <MeContext.Provider value={makeMe('admin')}>
       <MemoryRouter>
         <ToastProvider>
-          <BulkDeliverDialog plan={bulkPlan(people, people)} people={people} {...props} />
+          <ConfirmProvider>
+            <BulkDeliverDialog plan={bulkPlan(people, people)} people={people} {...props} />
+          </ConfirmProvider>
         </ToastProvider>
       </MemoryRouter>
     </MeContext.Provider>,
@@ -70,6 +80,51 @@ describe('BulkDeliverDialog — món ngoài danh mục chưa duyệt', () => {
         ],
       },
     ]);
+  });
+
+  // A: nợ tháng 9 ở phiếu r-a0 + phiếu tháng này r-a1 chỉ còn món chờ; B giao bình thường
+  const withDebt = () =>
+    person({
+      user_sub: 'A',
+      full_name: 'A',
+      request_id: 'r-a1',
+      lines: [pLine({ line_id: 'd', request_id: 'r-a0', period_ym: '2026-09', is_debt: true, item_id: 'i-a4', name: 'Giấy A4', qty: 1, remaining_qty: 1, stock_qty: 9 }), custom(1, 'r-a1')],
+    });
+  const confirmAll = async () => {
+    await userEvent.click(screen.getByRole('button', { name: 'Xác nhận giao' }));
+    await userEvent.click(within(await screen.findByRole('dialog', { description: ASK })).getByRole('button', { name: 'Xác nhận giao' }));
+  };
+
+  it('phiếu chỉ có món chờ đi sau, khi phiếu nợ của cùng người đã giao xong; kết quả gộp một dòng mỗi người, không có dòng "Đã giao 0"', async () => {
+    const f = stub(new Set(['r-b']));
+    open([withDebt(), giver('B', 'r-b')]);
+    await confirmAll();
+    const status = await screen.findByRole('status');
+    expect(bodies(f)).toEqual([
+      { requests: [{ request_id: 'r-a0', lines: [{ line_id: 'd', qty: 1, expected_delivered_qty: 0 }] }] },
+      { requests: [{ request_id: 'r-a1', lines: [], reject_line_ids: ['rv1'] }, { request_id: 'r-b', lines: [{ line_id: 'l-B', qty: 3, expected_delivered_qty: 0 }] }] },
+    ]);
+    const rows = within(status).getAllByRole('listitem');
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent('AĐã giao 1 · 1 món ghi Không mua');
+    expect(rows[0]).toHaveClass('is-ok');
+    expect(rows[1]).toHaveClass('is-err');
+    expect(within(status).queryByText('Đã giao 0')).toBeNull();
+  });
+
+  it('phiếu nợ của người đó giao lỗi → không gửi phần ghi Không mua, dòng kết quả nói rõ; người khác không ảnh hưởng', async () => {
+    const f = stub(new Set(['r-a0']));
+    open([withDebt(), giver('B', 'r-b', [custom(2)])]);
+    await confirmAll();
+    const status = await screen.findByRole('status');
+    expect(bodies(f)).toEqual([
+      { requests: [{ request_id: 'r-a0', lines: [{ line_id: 'd', qty: 1, expected_delivered_qty: 0 }] }] },
+      { requests: [{ request_id: 'r-b', lines: [{ line_id: 'l-B', qty: 3, expected_delivered_qty: 0 }], reject_line_ids: ['rv2'] }] },
+    ]);
+    const rows = within(status).getAllByRole('listitem');
+    expect(rows[0]).toHaveClass('is-err');
+    expect(rows[0]).toHaveTextContent('Chưa ghi Không mua vì có món giao lỗi');
+    expect(rows[1]).toHaveTextContent('BĐã giao 1 · 1 món ghi Không mua');
   });
 
   it('không có món chờ → không hỏi lại', async () => {

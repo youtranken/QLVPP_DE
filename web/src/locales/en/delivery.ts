@@ -27,7 +27,7 @@ const delivery: Messages<typeof vi> = {
         LINE_REJECTED: 'Line was just rejected — not delivered.',
         CUSTOM_NOT_RECEIVED: 'Off-catalogue goods not fully in — only {{available}} {{unit}} can be delivered.',
         ITEM_NOT_ADM_OUT: 'Item is not marked "Out at supplier" — the shortfall cannot be cancelled yet.',
-        PENDING_CUSTOM: 'This off-catalog item was just approved or rejected elsewhere — open delivery again.',
+        REJECT_LINES_STALE: 'This off-catalog item was just approved or rejected elsewhere — open delivery again.',
         UNKNOWN: 'Could not deliver — try again.',
       },
       block: {
@@ -161,6 +161,7 @@ const delivery: Messages<typeof vi> = {
       done: 'Delivered {{n}}',
       cancelledAdm: 'Cancelled (out of stock at the supplier)',
       rejected: 'Marked Do not buy',
+      rejectSkipped: 'Not marked Do not buy because a delivery failed',
       abort: 'Cancel',
       network: 'Network error',
       notSent: 'Not sent',
@@ -182,6 +183,7 @@ const delivery: Messages<typeof vi> = {
       done_other: 'Delivered {{count}} requests',
       interrupted: 'Sending was interrupted midway — the list was reloaded. Select the requests not yet delivered and deliver them again.',
       stale: 'Request changed — reload',
+      rejected: '{{k}} items marked Do not buy',
     },
     people: {
       title: 'Deliveries for {{month}}',

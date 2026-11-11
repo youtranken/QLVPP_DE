@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bulkPlan, withRejects } from './bulk-plan';
+import { bulkPlan } from './bulk-plan';
 import { person, pLine } from './people-fixtures';
 
 // Tủ bút 3: A (đăng ký trước) cần 2, C cần 4
@@ -72,7 +72,7 @@ describe('bulkPlan', () => {
     expect(bulkPlan([p], [p]).summary[0]).toMatchObject({ items: 1, give: 2, left: 9 });
   });
 
-  it('món ngoài danh mục chờ duyệt của người được giao vào plan.pending; người không giao gì thì không; withRejects gắn reject_line_ids theo phiếu (phiếu chỉ có món chờ → lines rỗng)', () => {
+  it('món ngoài danh mục chờ duyệt của người được giao vào plan.pending; người không giao gì thì không', () => {
     const rv = pLine({ line_id: 'rv', request_id: 'r-a', item_id: null, name: 'Kéo', review_status: 'pending', stock_qty: null });
     const rvDebt = pLine({ line_id: 'rv2', request_id: 'r-new', item_id: null, name: 'Hồ', review_status: 'pending', stock_qty: null });
     const pa = person({ user_sub: 'u-a', full_name: 'A', lines: [...a.lines, rv, rvDebt] });
@@ -80,10 +80,5 @@ describe('bulkPlan', () => {
     const plan = bulkPlan([pa, idle], [pa, idle]);
     expect(plan.pending.map((l) => l.line_id).sort()).toEqual(['rv', 'rv2']);
     expect(plan.owners['r-new']).toBe('u-a');
-    expect(withRejects(plan.body, plan.pending).requests).toEqual([
-      { request_id: 'r-a', lines: [{ line_id: 'la', qty: 2, expected_delivered_qty: 0 }], reject_line_ids: ['rv'] },
-      { request_id: 'r-new', lines: [], reject_line_ids: ['rv2'] },
-    ]);
-    expect(withRejects(plan.body, []).requests).toEqual(plan.body.requests);
   });
 });

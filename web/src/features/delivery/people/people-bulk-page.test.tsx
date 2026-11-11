@@ -146,7 +146,9 @@ describe('DeliveryPeoplePage — bảng và giao nhiều phiếu', () => {
     const status = await within(dlg).findByRole('status');
     expect(status).toHaveTextContent('Nguyễn Văn An');
     expect(status).toHaveTextContent('Đã giao 3');
-    expect(within(status).getAllByText('Phiếu vừa đổi — tải lại')).toHaveLength(2);
+    // Hai phiếu của Bình gộp một dòng, cùng lý do chỉ nói một lần
+    expect(within(status).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(status).getAllByText('Phiếu vừa đổi — tải lại')).toHaveLength(1);
     expect(within(dlg).queryByRole('button', { name: 'Xác nhận giao' })).toBeNull();
     await waitFor(() => expect(callsTo(f, PEOPLE_URL).length).toBeGreaterThan(before));
     await userEvent.click(within(dlg).getByRole('button', { name: 'Đóng' }));

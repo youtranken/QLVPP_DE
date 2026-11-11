@@ -5,12 +5,12 @@ import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { useToast } from '@/ui/toast-context';
-import { useRequestFormat } from '@/features/request/request-format';
 import { lineErrorText } from '../delivery-errors';
-import { withRejects, type BulkPlan } from './bulk-plan';
-import { DeliverPendingConfirm } from './deliver-pending-confirm';
+import type { BulkPlan } from './bulk-plan';
+import { byPerson, sendBulk, type PersonResult } from './bulk-send';
 import { NOT_SENT } from './deliver-send';
-import { BULK_MAX_REQUESTS, deliverBulk, type BulkDeliverBody, type BulkRequestResult, type DeliveryPerson } from './delivery-people.api';
+import type { BulkRequestResult, DeliveryPerson } from './delivery-people.api';
+import { useAskThenSubmit } from './use-ask-reject';
 import { useRefreshAfterLineChange } from './use-refresh-after-flow';
 
 interface Props {
@@ -32,46 +32,43 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
   const refresh = useRefreshAfterLineChange([['admin-request']]);
   const flight = useSingleFlight();
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const [results, setResults] = useState<BulkRequestResult[] | null>(null);
+  const [results, setResults] = useState<PersonResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const count = plan.summary.length;
   const sending = flight.pending;
-  const fmt = useRequestFormat();
-  // Còn món ngoài danh mục chờ duyệt: hỏi lại trước, rồi gửi kèm reject_line_ids như hộp giao từng người
-  const [asking, setAsking] = useState(false);
-  const body = withRejects(plan.body, plan.pending);
 
-  // Chia lô ≤ BULK_MAX_REQUESTS phiếu, gửi lần lượt. Lỗi giữa chừng: có phiếu đã giao nên luôn tải lại danh sách,
-  // gói cũ không dùng lại được (phiếu đã giao sẽ báo "vừa đổi") → chỉ còn nút Đóng, người dùng chọn lại
+  // Lỗi giữa chừng: có phiếu đã giao nên luôn tải lại danh sách, gói cũ không dùng lại được (phiếu đã giao sẽ báo "vừa đổi")
+  // → chỉ còn nút Đóng, người dùng chọn lại
   const submit = () =>
     flight.run(async () => {
       setError(null);
-      const all: BulkRequestResult[] = [];
-      const batches: BulkDeliverBody['requests'][] = [];
-      for (let i = 0; i < body.requests.length; i += BULK_MAX_REQUESTS) batches.push(body.requests.slice(i, i + BULK_MAX_REQUESTS));
-      try {
-        for (const requests of batches) all.push(...(await deliverBulk({ requests }, csrfToken)).results);
-      } catch (e) {
-        if (isSessionExpired(e) && all.length === 0) {
-          setError(t('delivery.confirm.sessionExpired'));
-          return;
-        }
-        const sent = new Set(all.map((r) => r.request_id));
-        const rest = body.requests.filter((r) => !sent.has(r.request_id));
-        await refresh();
-        setError(t(isSessionExpired(e) ? 'delivery.confirm.sessionExpired' : 'delivery.bulk.interrupted'));
-        setResults([...all, ...rest.map((r) => ({ request_id: r.request_id, ok: false as const, code: NOT_SENT }))]);
+      const { sent, error: e } = await sendBulk(plan, csrfToken);
+      if (e && isSessionExpired(e) && sent.every((s) => s.result.ok === false && s.result.code === NOT_SENT)) {
+        setError(t('delivery.confirm.sessionExpired'));
         return;
       }
       await refresh();
-      if (all.every((r) => r.ok)) {
+      if (e) setError(t(isSessionExpired(e) ? 'delivery.confirm.sessionExpired' : 'delivery.bulk.interrupted'));
+      const rows = byPerson(sent, plan.owners);
+      if (!e && rows.every((r) => r.ok)) {
         toast.show({ text: t('delivery.bulk.done', { count }) });
         onDone();
-      } else setResults(all);
+      } else setResults(rows);
     });
+  // Còn món ngoài danh mục chờ duyệt: hỏi lại trước, rồi gửi kèm reject_line_ids như hộp giao từng người
+  const ask = useAskThenSubmit(plan.pending, t('delivery.bulk.title', { count }), () => void submit());
 
   const reason = (r: Extract<BulkRequestResult, { ok: false }>) =>
     r.code === 'STALE_UPDATE' ? t('delivery.bulk.stale') : r.code === NOT_SENT ? t('delivery.confirm.notSent') : lineErrorText(r, '', t);
+  const text = (r: PersonResult) =>
+    [
+      r.units > 0 && t('delivery.confirm.done', { n: r.units }),
+      r.rejected > 0 && t('delivery.bulk.rejected', { k: r.rejected }),
+      ...new Set(r.failures.map(reason)),
+      r.skippedRejects > 0 && t('delivery.confirm.rejectSkipped'),
+    ]
+      .filter(Boolean)
+      .join(' · ');
 
   return (
     <Dialog
@@ -101,10 +98,10 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
             )}
             <ul>
               {results.map((r) => (
-                <li key={r.request_id} className={r.ok ? 'is-ok' : 'is-err'}>
+                <li key={r.user_sub} className={r.ok ? 'is-ok' : 'is-err'}>
                   <span aria-hidden="true">{r.ok ? '✓' : '✗'}</span>
-                  <b>{nameOf(people, plan.owners[r.request_id])}</b>
-                  <span>{r.ok ? t('delivery.confirm.done', { n: r.delivered_units }) : reason(r)}</span>
+                  <b>{nameOf(people, r.user_sub)}</b>
+                  <span>{text(r)}</span>
                 </li>
               ))}
             </ul>
@@ -143,23 +140,12 @@ export function BulkDeliverDialog({ plan, people, onClose, onDone }: Props) {
                 {t('delivery.confirm.cancel')}
               </button>
             </DialogClose>
-            <button type="button" className="btn btn--primary" disabled={sending} aria-busy={sending} onClick={() => (plan.pending.length > 0 ? setAsking(true) : void submit())}>
+            <button type="button" className="btn btn--primary" disabled={sending} aria-busy={sending} onClick={ask}>
               {sending ? t('delivery.confirm.sending') : t('delivery.confirm.ok')}
             </button>
           </>
         )}
       </div>
-      {asking && (
-        <DeliverPendingConfirm
-          title={t('delivery.bulk.title', { count })}
-          names={plan.pending.map((l) => fmt.name(l))}
-          onCancel={() => setAsking(false)}
-          onConfirm={() => {
-            setAsking(false);
-            void submit();
-          }}
-        />
-      )}
     </Dialog>
   );
 }

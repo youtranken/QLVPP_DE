@@ -4,6 +4,7 @@ import { cancelRemaining } from '../backlog.api';
 import { deliverLine } from '../delivery.api';
 import type { Step } from './deliver-plan';
 import { deliverBulk, type BulkDeliverBody, type DeliveryPersonLine } from './delivery-people.api';
+import { REJECT_SKIPPED, withRejects } from './with-rejects';
 
 export type LineOutcome =
   | { ok: true; kind: 'delivered'; qty: number }
@@ -70,24 +71,28 @@ async function sendWithRejects(requestId: string, delivers: Deliver[], rejects: 
   }
 }
 
-// Tuần tự, mỗi dòng một request có expected_*; lỗi một dòng không chặn dòng sau, trừ khi phiên đã hết.
-// rejects: món ngoài danh mục chờ duyệt mà hộp đã hỏi lại — phiếu của chúng đi đường giao nhiều phiếu, sau các dòng giao lẻ
+interface Group {
+  request_id: string;
+  steps: Deliver[];
+  reject_line_ids?: string[];
+}
+
+// Tuần tự theo đúng thứ tự hộp (nợ trước, kỳ cũ trước), mỗi dòng một request có expected_*; lỗi một dòng không chặn dòng sau,
+// trừ khi phiên đã hết. rejects: món chờ duyệt hộp đã hỏi lại — đi cùng các dòng giao của chính phiếu đó (một transaction);
+// người này đã có món giao lỗi thì không ghi Không mua
 export async function sendSteps(steps: Step[], csrfToken: string | null, rejects: DeliveryPersonLine[] = []): Promise<SendResult> {
   const result: SendResult = { lines: [], expired: false };
   const failed = new Set<string>();
-  const withRejects = new Set(rejects.map((l) => l.request_id));
-  const bundled = (step: Step): step is Deliver => step.kind === 'deliver' && withRejects.has(step.line.request_id);
   const record = (lines: SentLine[]) => {
     for (const s of lines) {
       result.lines.push(s);
       if (!s.outcome.ok) failed.add(s.lineId);
     }
   };
-  const single = steps.filter((s) => s.kind === 'deliver' && !withRejects.has(s.line.request_id));
-  const cancels = steps.filter((s) => s.kind === 'cancel');
+  const notSent = (lines: { line_id: string }[], code = NOT_SENT) => record(lines.map((l) => ({ lineId: l.line_id, outcome: { ok: false, code } })));
   const runSingle = async (step: Step) => {
     const lineId = step.line.line_id;
-    if (result.expired) return record([{ lineId, outcome: { ok: false, code: NOT_SENT } }]);
+    if (result.expired) return notSent([step.line]);
     // Giao phần từ tủ lỗi thì không hủy phần còn lại: số đã giao chưa chắc
     if (step.kind === 'cancel' && failed.has(lineId)) return;
     try {
@@ -98,18 +103,30 @@ export async function sendSteps(steps: Step[], csrfToken: string | null, rejects
       record([{ lineId, outcome: failure(e, result.expired) }]);
     }
   };
-  for (const step of single) await runSingle(step);
-  for (const requestId of withRejects) {
-    const delivers = steps.filter(bundled).filter((d) => d.line.request_id === requestId);
-    const mine = rejects.filter((l) => l.request_id === requestId);
-    if (result.expired) {
-      record([...delivers.map((d) => d.line), ...mine].map((l) => ({ lineId: l.line_id, outcome: { ok: false, code: NOT_SENT } })));
-      continue;
-    }
-    const sent = await sendWithRejects(requestId, delivers, mine, csrfToken);
-    result.expired = sent.expired;
-    record(sent.lines);
+  // Dòng cùng phiếu nằm liền nhau trong hộp (xếp theo kỳ)
+  const groups: Group[] = [];
+  for (const step of steps) {
+    if (step.kind !== 'deliver') continue;
+    const last = groups.at(-1);
+    if (last?.request_id === step.line.request_id) last.steps.push(step);
+    else groups.push({ request_id: step.line.request_id, steps: [step] });
   }
-  for (const step of cancels) await runSingle(step);
+  const planned = withRejects(groups, rejects, (id) => ({ request_id: id, steps: [] }), () => 'person');
+  for (const g of planned) {
+    const mine = rejects.filter((l) => g.reject_line_ids?.includes(l.line_id));
+    if (mine.length === 0) {
+      for (const step of g.steps) await runSingle(step);
+    } else if (result.expired) {
+      notSent([...g.steps.map((d) => d.line), ...mine]);
+    } else if (failed.size > 0) {
+      for (const step of g.steps) await runSingle(step);
+      notSent(mine, REJECT_SKIPPED);
+    } else {
+      const sent = await sendWithRejects(g.request_id, g.steps, mine, csrfToken);
+      result.expired = sent.expired;
+      record(sent.lines);
+    }
+  }
+  for (const step of steps) if (step.kind === 'cancel') await runSingle(step);
   return result;
 }

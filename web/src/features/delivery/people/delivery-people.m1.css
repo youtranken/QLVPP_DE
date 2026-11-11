@@ -79,7 +79,6 @@
 [data-shell='admin'] .dd-group--adm h3 { color: var(--c-warn); }
 [data-shell='admin'] .dd-nogive { font: var(--t-cap); font-weight: 700; color: var(--c-warn); }
 [data-shell='admin'] .dd-nogive b { color: var(--c-danger); white-space: nowrap; }
-[data-shell='admin'] .dd-pending { margin: 0; padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--c-warn-soft); color: var(--c-warn); font: var(--t-label); }
 [data-shell='admin'] .dd-group--skip { color: var(--c-muted); }
 [data-shell='admin'] .dd-group--skip ul { display: grid; gap: var(--s-1); margin: 0; padding: 0; list-style: none; font: var(--t-sm); }
 [data-shell='admin'] .dd-group--skip li { display: flex; flex-wrap: wrap; gap: var(--s-2); }

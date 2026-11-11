@@ -33,6 +33,8 @@ const sites: Site[] = walk(SRC).flatMap((file) => {
 // Lựa chọn thật (không phải nút đóng): ở lại trang, giữ giỏ hiện có
 const CHOICES = new Set(['Ở lại', 'Giữ giỏ', 'Đóng, xem giỏ của tôi']);
 const BANNED = /^(Hủy|Cancel|Tiếp tục sửa|Keep editing|Quay lại sửa)$/;
+// Hỏi lại trước khi giao sẽ ghi Không mua: chủ sản phẩm chọn nút "Hủy" (hủy lần giao này) theo mockup, không phải nút đóng thường
+const EXEMPT = new Set(['delivery.confirm.abort']);
 
 describe('Nút đóng hộp thoại là "Quay lại"', () => {
   it('tìm được các chỗ đặt nhãn đóng trong mã (hộp xác nhận + DialogClose)', () => {
@@ -43,7 +45,7 @@ describe('Nút đóng hộp thoại là "Quay lại"', () => {
 
   it('mọi cancelLabel là "Quay lại"/"Back" (trừ lựa chọn ở lại/giữ giỏ)', () => {
     const bad = sites
-      .filter((s) => s.kind === 'cancelLabel')
+      .filter((s) => s.kind === 'cancelLabel' && !EXEMPT.has(s.key))
       .filter((s) => {
         const v = get(vi as unknown as Tree, s.key);
         return !CHOICES.has(String(v)) && (v !== 'Quay lại' || get(en as unknown as Tree, s.key) !== 'Back');
@@ -54,6 +56,7 @@ describe('Nút đóng hộp thoại là "Quay lại"', () => {
 
   it('không nút đóng nào là "Hủy"/"Cancel"/"Tiếp tục sửa"/"Keep editing"', () => {
     const bad = sites
+      .filter((s) => !EXEMPT.has(s.key))
       .filter((s) => BANNED.test(String(get(vi as unknown as Tree, s.key))) || BANNED.test(String(get(en as unknown as Tree, s.key))))
       .map((s) => `${s.file}: ${s.key}`);
     expect(bad).toEqual([]);

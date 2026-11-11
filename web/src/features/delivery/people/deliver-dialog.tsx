@@ -10,9 +10,10 @@ import { lineErrorText } from '../delivery-errors';
 import type { DeliveryPerson, DeliveryPersonLine } from './delivery-people.api';
 import { dialogRows, limitsOf, priorityFor, stepsOf, stockShortages, totalsOf, type Totals } from './deliver-plan';
 import { DeliverRows } from './deliver-dialog-rows';
-import { DeliverPendingConfirm } from './deliver-pending-confirm';
 import { NETWORK, NOT_SENT, sendSteps, type SendResult, type SentLine } from './deliver-send';
 import { waitingIndex } from './people-filter';
+import { useAskThenSubmit } from './use-ask-reject';
+import { REJECT_SKIPPED } from './with-rejects';
 import { useRefreshAfterLineChange } from './use-refresh-after-flow';
 
 export interface DeliverDialogProps {
@@ -44,6 +45,7 @@ function Results({ result, lineOf }: { result: SendResult | null; lineOf: (id: s
   const text = ({ lineId, outcome: o }: SentLine) => {
     if (o.ok) return o.kind === 'delivered' ? t('delivery.confirm.done', { n: o.qty }) : o.kind === 'rejected' ? t('delivery.confirm.rejected') : t('delivery.confirm.cancelledAdm');
     if (o.code === NOT_SENT) return t('delivery.confirm.notSent');
+    if (o.code === REJECT_SKIPPED) return t('delivery.confirm.rejectSkipped');
     if (o.code === NETWORK) return t('delivery.confirm.network');
     return lineErrorText(o, fmt.unit(lineOf(lineId)?.unit ?? null), t);
   };
@@ -84,8 +86,6 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
   const [result, setResult] = useState<SendResult | null>(null);
   // Món ngoài danh mục chờ duyệt đang hiện trong hộp: giao sẽ ghi Không mua đúng các món này, phải hỏi lại trước
   const pending = snap.rows.filter((r) => r.reason === 'review').map((r) => r.line);
-  const [asking, setAsking] = useState(false);
-  const fmt = useRequestFormat();
   const limits = useMemo(() => limitsOf(snap.rows, values), [snap.rows, values]);
   const totals = totalsOf(snap.rows, limits);
   const name = person.full_name ?? person.user_sub;
@@ -105,6 +105,7 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
       });
       onDone();
     });
+  const ask = useAskThenSubmit(pending, t('delivery.confirm.title', { name }), () => void submit());
 
   // Enter giữ lâu lặp keydown: chỉ một lần nhấn mới được tính
   const blockRepeat = (e: KeyboardEvent<HTMLButtonElement>) => {
@@ -180,24 +181,13 @@ export function DeliverDialog({ person, people, initial, next, onNext, onClose, 
               aria-busy={sending}
               aria-describedby={sumId}
               onKeyDown={blockRepeat}
-              onClick={() => (pending.length > 0 ? setAsking(true) : void submit())}
+              onClick={ask}
             >
               {sending ? t('delivery.confirm.sending') : t('delivery.confirm.ok')}
             </button>
           </>
         )}
       </div>
-      {asking && (
-        <DeliverPendingConfirm
-          title={t('delivery.confirm.title', { name })}
-          names={pending.map((l) => fmt.name(l))}
-          onCancel={() => setAsking(false)}
-          onConfirm={() => {
-            setAsking(false);
-            void submit();
-          }}
-        />
-      )}
     </Dialog>
   );
 }

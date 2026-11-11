@@ -24,7 +24,7 @@ const delivery = {
         LINE_REJECTED: 'Dòng vừa bị từ chối — không giao.',
         CUSTOM_NOT_RECEIVED: 'Hàng ngoài danh mục chưa về đủ — chỉ giao được {{available}} {{unit}}.',
         ITEM_NOT_ADM_OUT: 'Món chưa được đánh dấu NCC hết hàng — chưa hủy được phần thiếu.',
-        PENDING_CUSTOM: 'Món ngoài danh mục vừa được duyệt hoặc từ chối ở nơi khác — mở lại hộp giao.',
+        REJECT_LINES_STALE: 'Món ngoài danh mục vừa được duyệt hoặc từ chối ở nơi khác — mở lại hộp giao.',
         UNKNOWN: 'Không giao được — thử lại.',
       },
       block: {
@@ -158,6 +158,7 @@ const delivery = {
       done: 'Đã giao {{n}}',
       cancelledAdm: 'Đã hủy (NCC hết hàng)',
       rejected: 'Đã ghi Không mua',
+      rejectSkipped: 'Chưa ghi Không mua vì có món giao lỗi',
       abort: 'Hủy',
       network: 'Lỗi mạng',
       notSent: 'Chưa gửi',
@@ -179,6 +180,7 @@ const delivery = {
       done_other: 'Đã giao {{count}} phiếu',
       interrupted: 'Gửi bị gián đoạn giữa chừng — danh sách đã tải lại. Phiếu nào chưa giao thì chọn lại rồi giao lần nữa.',
       stale: 'Phiếu vừa đổi — tải lại',
+      rejected: '{{k}} món ghi Không mua',
     },
     people: {
       title: 'Giao hàng kỳ tháng {{month}}',

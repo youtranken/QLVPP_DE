@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, renderWithI18n, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { MeContext } from '@/lib/me';
 import { makeMe } from '@/test/fixtures-me';
+import { ConfirmProvider } from '@/ui/confirm-provider';
 import { ToastProvider } from '@/ui/toast-provider';
 import type { DeliveryPerson } from './delivery-people.api';
 import { DeliverDialog } from './deliver-dialog';
@@ -28,7 +29,9 @@ function open(p: DeliveryPerson) {
     <MeContext.Provider value={makeMe('admin')}>
       <MemoryRouter>
         <ToastProvider>
-          <DeliverDialog person={p} people={[p]} {...props} />
+          <ConfirmProvider>
+            <DeliverDialog person={p} people={[p]} {...props} />
+          </ConfirmProvider>
         </ToastProvider>
       </MemoryRouter>
     </MeContext.Provider>,
@@ -85,10 +88,10 @@ describe('DeliverDialog — món ngoài danh mục chưa duyệt', () => {
     ]);
   });
 
-  it('phiếu lỗi PENDING_CUSTOM (món vừa được duyệt nơi khác) → hộp ở lại, ✗ món đó với lý do, dòng cùng phiếu "Chưa gửi"', async () => {
+  it('phiếu lỗi REJECT_LINES_STALE (món vừa được duyệt nơi khác) → hộp ở lại, ✗ món đó với lý do, dòng cùng phiếu "Chưa gửi"', async () => {
     stub((u, b) =>
       u === BULK
-        ? jsonResponse(200, { results: [{ request_id: (b.requests as { request_id: string }[])[0].request_id, ok: false, code: 'PENDING_CUSTOM', line_id: 'rv1' }] })
+        ? jsonResponse(200, { results: [{ request_id: (b.requests as { request_id: string }[])[0].request_id, ok: false, code: 'REJECT_LINES_STALE', line_id: 'rv1' }] })
         : jsonResponse(200, {}),
     );
     const props = open(person({ lines: [cur, pendingA] }));
@@ -99,6 +102,30 @@ describe('DeliverDialog — món ngoài danh mục chưa duyệt', () => {
     expect(within(status).getByText('Dây rút nhựa 20cm')).toBeInTheDocument();
     expect(within(status).getByText('Chưa gửi')).toBeInTheDocument();
     expect(props.onDone).not.toHaveBeenCalled();
+  });
+
+  it('dòng nợ (phiếu khác, đi trước) giao lỗi → không gửi phần ghi Không mua; món chờ báo chưa ghi Không mua', async () => {
+    const f = stub((u) => (u === '/api/admin/lines/d/deliver' ? jsonResponse(409, { code: 'STOCK_INSUFFICIENT', available: 0 }) : OK(u, {})));
+    const props = open(person({ lines: [debt, pendingA] }));
+    await userEvent.click(confirmBtn());
+    await userEvent.click(within(ask()).getByRole('button', { name: 'Xác nhận giao' }));
+    const status = await within(main()).findByRole('status');
+    expect(posts(f)).toEqual([['/api/admin/lines/d/deliver', { qty: 1, expected_delivered_qty: 0 }]]);
+    await within(status).findByText('Chưa ghi Không mua vì có món giao lỗi');
+    expect(props.onDone).not.toHaveBeenCalled();
+  });
+
+  it('dòng nợ giao lỗi, phiếu tháng này còn dòng giao → dòng đó giao từng dòng như cũ, không kèm reject_line_ids', async () => {
+    const f = stub((u) => (u === '/api/admin/lines/d/deliver' ? jsonResponse(409, { code: 'STOCK_INSUFFICIENT', available: 0 }) : OK(u, {})));
+    open(person({ lines: [debt, cur, pendingA] }));
+    await userEvent.click(confirmBtn());
+    await userEvent.click(within(ask()).getByRole('button', { name: 'Xác nhận giao' }));
+    const status = await within(main()).findByRole('status');
+    expect(posts(f)).toEqual([
+      ['/api/admin/lines/d/deliver', { qty: 1, expected_delivered_qty: 0 }],
+      ['/api/admin/lines/c/deliver', { qty: 2, expected_delivered_qty: 0 }],
+    ]);
+    await within(status).findByText('Chưa ghi Không mua vì có món giao lỗi');
   });
 
   it('không có món chờ duyệt → không hỏi lại, giao từng dòng như cũ', async () => {
