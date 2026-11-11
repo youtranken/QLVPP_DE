@@ -25,6 +25,7 @@ describe('POST admin/deliveries/bulk: reject_line_ids', () => {
     auditOf,
     custom,
     customLine,
+    deliver,
     deliveriesOf,
     freeze,
     http,
@@ -145,7 +146,26 @@ describe('POST admin/deliveries/bulk: reject_line_ids', () => {
     expect(await deliveredBells()).toEqual([]);
   });
 
-  it('dòng trong reject_line_ids vừa được duyệt → PENDING_CUSTOM kèm line_id, cả phiếu rollback (không giao)', async () => {
+  it('phiếu đã giao hết món danh mục, chỉ ghi Không mua món chờ → phiếu đủ nhưng không chuông "đã giao" (lần này không giao gì)', async () => {
+    const { request, cat, pending } = await mixed('Băng keo giấy');
+    await deliver(cat.id, { qty: 2, expected_delivered_qty: 0 }).expect(200);
+    const before = (await deliveredBells()).length;
+    const res = await results({
+      requests: [
+        { request_id: request.id, lines: [], reject_line_ids: [pending.id] },
+      ],
+    });
+    expect(res[0]).toEqual({
+      request_id: request.id,
+      ok: true,
+      delivered_units: 0,
+      request_complete: true,
+    });
+    expect((await lineOf(pending.id)).review_status).toBe('rejected');
+    expect(await deliveredBells()).toHaveLength(before);
+  });
+
+  it('dòng trong reject_line_ids vừa được duyệt → REJECT_LINES_STALE kèm line_id, cả phiếu rollback (không giao)', async () => {
     const { item, request, cat, pending } = await mixed('Kéo lớn');
     await review(pending.id, { action: 'accept' }).expect(200);
     const res = await results({
@@ -159,7 +179,7 @@ describe('POST admin/deliveries/bulk: reject_line_ids', () => {
     });
     expect(res[0]).toMatchObject({
       ok: false,
-      code: 'PENDING_CUSTOM',
+      code: 'REJECT_LINES_STALE',
       line_id: pending.id,
     });
     expect(await stockOf(item)).toBe(10);
@@ -167,7 +187,7 @@ describe('POST admin/deliveries/bulk: reject_line_ids', () => {
     expect((await lineOf(pending.id)).review_status).toBe('accepted');
   });
 
-  it('reject_line_ids là món danh mục → PENDING_CUSTOM, không ghi gì', async () => {
+  it('reject_line_ids là món danh mục → REJECT_LINES_STALE, không ghi gì', async () => {
     const { item, request, cat } = await mixed('Bút xoá');
     const res = await results({
       requests: [
@@ -176,7 +196,7 @@ describe('POST admin/deliveries/bulk: reject_line_ids', () => {
     });
     expect(res[0]).toMatchObject({
       ok: false,
-      code: 'PENDING_CUSTOM',
+      code: 'REJECT_LINES_STALE',
       line_id: cat.id,
     });
     expect(await stockOf(item)).toBe(10);
@@ -269,6 +289,24 @@ describe('POST admin/deliveries/bulk: reject_line_ids', () => {
         },
         ['requests.0.reject_line_ids'],
       );
+    });
+
+    it('đúng 200 reject_line_ids → qua kiểm DTO (kết quả theo phiếu, không 400)', async () => {
+      const request_id = id();
+      const res = await results({
+        requests: [
+          {
+            request_id,
+            lines: [],
+            reject_line_ids: Array.from({ length: 200 }, id),
+          },
+        ],
+      });
+      expect(res[0]).toMatchObject({
+        request_id,
+        ok: false,
+        code: 'LINE_NOT_FOUND',
+      });
     });
 
     it('reject_line_ids trùng nhau hoặc trùng dòng giao → 400 {requests}', async () => {

@@ -20,6 +20,14 @@ export const staleDelivery = (deliveredQty: number) =>
     delivered_qty: deliveredQty,
   });
 
+// Món ngoài danh mục hộp giao định ghi Không mua đã được duyệt/từ chối ở nơi khác: mở lại hộp để thấy danh sách mới
+export const rejectLinesStale = () =>
+  new ConflictException({
+    code: 'REJECT_LINES_STALE',
+    message:
+      'Món ngoài danh mục chờ duyệt của phiếu vừa thay đổi — mở lại hộp giao.',
+  });
+
 export const staleCancel = (line: { qty: number; delivered_qty: number }) =>
   new ConflictException({
     code: 'STALE_UPDATE',

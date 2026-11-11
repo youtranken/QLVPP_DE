@@ -10,7 +10,7 @@ import type { Database, Tx } from '../../database/database.module';
 import { PeriodsService } from '../periods/periods.service';
 import { LineDeliveryStore } from '../requests/line-delivery.store';
 import type { LockedLine } from '../requests/line-delivery.store';
-import { lineNotFound, pendingCustomChanged } from '../requests/request-errors';
+import { lineNotFound } from '../requests/request-errors';
 import { ReviewWriter } from '../requests/review-writer';
 import type {
   BulkDeliverBody,
@@ -20,7 +20,7 @@ import type {
   BulkRequestResult,
 } from './bulk-delivery.dto';
 import { assertDeliverable, DeliveryService } from './delivery.service';
-import { staleDelivery } from './delivery-errors';
+import { rejectLinesStale, staleDelivery } from './delivery-errors';
 
 const KNOWN_FIELDS = ['available', 'remaining'] as const;
 
@@ -99,11 +99,13 @@ export class BulkDeliveryService {
       }, line.id);
     }
     // Ghi Không mua trước khi giao: phiếu chỉ được tính "đủ" khi không còn dòng chờ
-    await this.reviews.rejectLinesWithin(tx, req.request_id, rejectIds, {
-      actor,
-      ym,
-      now,
-    });
+    await this.guard(() =>
+      this.reviews.rejectLinesWithin(tx, req.request_id, rejectIds, {
+        actor,
+        ym,
+        now,
+      }),
+    );
     let units = 0;
     for (const { line, want } of todo) {
       await this.guard(
@@ -113,7 +115,11 @@ export class BulkDeliveryService {
       units += want.qty;
     }
     await this.lines.touchRequest(tx, req.request_id, now);
-    const complete = await this.delivery.notifyIfComplete(tx, locked[0], now);
+    // Chuông "đã giao đủ" chỉ khi lần này thật sự giao; chỉ ghi Không mua thì không báo
+    const complete =
+      units > 0
+        ? await this.delivery.notifyIfComplete(tx, locked[0], now)
+        : await this.lines.isComplete(tx, req.request_id);
     return { delivered_units: units, request_complete: complete };
   }
 
@@ -182,10 +188,7 @@ function assertStillPending(
     return l.review_status === 'pending' && l.item_id === null;
   };
   const changed = rejectIds.find((id) => !pending(id));
-  if (changed) {
-    const left = rejectIds.filter(pending).length;
-    throw new RequestFailure(pendingCustomChanged(left), changed);
-  }
+  if (changed) throw new RequestFailure(rejectLinesStale(), changed);
 }
 
 function assertDistinct(requests: BulkRequest[]): void {
