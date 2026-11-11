@@ -42,8 +42,8 @@ export interface DeliveryFailure {
 // Trang Giao hàng: lỗi khối ở đầu chi tiết, còn lại gắn vào dòng; mã làm bản phiếu cũ thì tải lại phiếu
 const BLOCK_CODES = new Set(['PERIOD_NOT_LOCKED', 'REQUEST_NOT_FOUND', 'LINE_NOT_FOUND']);
 const DELIVER_CODES = ['STOCK_INSUFFICIENT', 'DELIVER_EXCEEDS_QTY', 'STALE_UPDATE', 'LINE_NOT_REVIEWED', 'LINE_REJECTED'];
-// Hộp giao: dòng ngoài DM giao vượt số đã về; hủy phần thiếu ADM khi khóa vừa bỏ đánh dấu
-const LINE_CODES = new Set([...DELIVER_CODES, 'CUSTOM_NOT_RECEIVED', 'ITEM_NOT_ADM_OUT']);
+// Hộp giao: dòng ngoài DM giao vượt số đã về; hủy phần thiếu NCC khi khóa vừa bỏ đánh dấu; món chờ duyệt vừa được xử lý nơi khác
+const LINE_CODES = new Set([...DELIVER_CODES, 'CUSTOM_NOT_RECEIVED', 'ITEM_NOT_ADM_OUT', 'PENDING_CUSTOM']);
 const STALE_CODES = new Set(['DELIVER_EXCEEDS_QTY', 'STALE_UPDATE', 'LINE_NOT_REVIEWED', 'LINE_REJECTED']);
 
 export const isBlockCode = (code: string) => BLOCK_CODES.has(code);

@@ -61,7 +61,8 @@ export function useDeliveryPeople(ym: string | undefined) {
 }
 
 export interface BulkDeliverBody {
-  requests: { request_id: string; lines: { line_id: string; qty: number; expected_delivered_qty: number }[] }[];
+  // reject_line_ids: món ngoài danh mục chờ duyệt mà hộp giao đã hiện, ghi Không mua cùng transaction với phiếu
+  requests: { request_id: string; lines: { line_id: string; qty: number; expected_delivered_qty: number }[]; reject_line_ids?: string[] }[];
 }
 
 export type BulkRequestResult =

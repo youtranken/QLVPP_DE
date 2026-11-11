@@ -18,6 +18,7 @@ const warnings: Messages<typeof vi> = {
     W7short: 'Sent {{x}} · now needed {{y}} → short {{n}}',
     W8: '{{n}} off-catalog items are not approved yet. Finalizing this copy will mark them as Do not buy:',
     W8more: '(and {{k}} more)',
+    W8deliver: 'Off-catalog items not approved yet: {{names}}. Delivering will mark them as Do not buy.',
     W9: 'Nothing to order yet',
     W10a: 'The supplier order of {{time}} already has this item ({{n}} {{unit}}) — it will arrive with no one to receive it.',
     W10b: 'The supplier order of {{time}} does not have this item. After accepting, go to Reports & send to supplier to make a new order and reprint, or buy it separately.',
