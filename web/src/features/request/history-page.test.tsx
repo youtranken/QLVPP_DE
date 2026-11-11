@@ -173,6 +173,46 @@ describe('HistoryPage — master–detail', () => {
     expect(screen.getByText('Phiếu sẽ hiện ở đây sau ngày khóa đăng ký.')).toBeInTheDocument();
   });
 
+  it('số món, đơn vị và chip giao theo khối catalog của API (món ngoài DM đã duyệt không cộng vào)', async () => {
+    stub([
+      {
+        items: [
+          item({
+            period_ym: '2026-10',
+            line_count: 4,
+            total_qty: 9,
+            delivered_qty: 0,
+            remaining_qty: 9,
+            owed_line_count: 3,
+            custom: { pending: 0, accepted: 2, converted: 0, rejected: 0 },
+            catalog: { line_count: 2, qty: 4, delivered_qty: 4, remaining_qty: 0, owed_line_count: 0 },
+          }),
+        ],
+        next_cursor: null,
+      },
+    ]);
+    renderApp(makeMe('member'), '/history');
+    const oct = (await screen.findByText('Tháng 10')).closest('a')!;
+    expect(within(oct).getByText('2 món · 4 đơn vị')).toBeInTheDocument();
+    expect(within(oct).getByText('Đã nhận đủ')).toBeInTheDocument();
+    expect(within(oct).getByText('2 món đã chấp nhận')).toBeInTheDocument();
+  });
+
+  it('1280: trang đầu chưa có tháng đã chốt nhưng còn trang sau → lời nhắc chọn tháng, không khẳng định "chưa có phiếu đã chốt"', async () => {
+    stub(
+      [
+        { items: [item({ period_ym: '2026-12', line_count: 2, total_qty: 3, remaining_qty: 3 })], next_cursor: 'c1' },
+        { items: [item({ period_ym: '2026-11' })], next_cursor: null },
+      ],
+      [],
+      {},
+      PERIOD_DEC,
+    );
+    renderApp(makeMe('member'), '/history');
+    expect(await screen.findByText('Chọn một tháng ở danh sách bên trái để xem phiếu.')).toBeInTheDocument();
+    expect(screen.queryByText('Chưa có phiếu nào đã chốt.')).toBeNull();
+  });
+
   it('en: dòng món dùng name_en', async () => {
     await setLanguage('en');
     stub([{ items: [item({ period_ym: '2026-10', delivered_qty: 4, remaining_qty: 0 })], next_cursor: null }], [], {

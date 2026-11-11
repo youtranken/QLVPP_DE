@@ -20,11 +20,13 @@ export function HistoryLayout({ ym }: { ym?: string }) {
   const period = useCurrentPeriod();
   const items = history.data?.pages.flatMap((p) => p.items) ?? [];
   const isOpen = (v: string) => !!period.data?.is_open && period.data.ym === v;
-  // Chưa biết kỳ đang mở thì chưa chọn tháng mặc định (tránh GET thừa phiếu kỳ đang mở)
-  const latestClosed = period.isPending ? undefined : items.find((i) => !isOpen(i.period_ym) && i.line_count > 0)?.period_ym;
+  const closed = items.filter((i) => !isOpen(i.period_ym));
+  // Chưa biết kỳ đang mở thì chưa chọn tháng mặc định (tránh GET thừa phiếu kỳ đang mở).
+  // Điện thoại (không có ym) chỉ có danh sách: không chọn sẵn, nên không tháng nào bị tô như đang xem
+  const latestClosed = period.isPending || narrow ? undefined : closed.find((i) => i.line_count > 0 || i.removed_all)?.period_ym;
   const selected = ym ?? latestClosed;
-  // Điện thoại chỉ có danh sách: không tô sẵn tháng nào như đang chọn
-  const marked = narrow ? ym : selected;
+  // "Chưa có phiếu đã chốt" chỉ khi chắc chắn: không trang nào còn chưa tải và không có tháng đã chốt nào
+  const noClosed = closed.length === 0 && !history.hasNextPage;
 
   if (narrow && ym) {
     const back = (
@@ -59,7 +61,7 @@ export function HistoryLayout({ ym }: { ym?: string }) {
   ) : (
     <HistoryMaster
       items={items}
-      selected={marked}
+      selected={selected}
       isOpen={isOpen}
       hasMore={!!history.hasNextPage}
       loadingMore={history.isFetchingNextPage}
@@ -78,8 +80,10 @@ export function HistoryLayout({ ym }: { ym?: string }) {
               <HistoryDetail ym={selected} />
             ) : period.isPending ? (
               <Loading />
-            ) : (
+            ) : noClosed ? (
               <EmptyState title={t('request.history.noClosed')} hint={t('request.history.noClosedHint')} />
+            ) : (
+              <EmptyState title={t('request.history.pickMonth')} />
             )}
           </div>
         </div>

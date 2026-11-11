@@ -13,8 +13,14 @@ export interface HistoryItem {
   owed_line_count: number;
   // Hành chính bỏ hết dòng của phiếu (phiếu vẫn giữ, 0 dòng)
   removed_all?: boolean;
-  custom: { pending: number; accepted: number; converted: number; rejected: number };
+  custom: Record<CustomStatus, number>;
+  // Cùng các số nhưng chỉ món trong danh mục, không tạm ngưng: Lịch sử đếm "N món · U đơn vị" và chip giao theo đây
+  catalog: { line_count: number; qty: number; delivered_qty: number; remaining_qty: number; owed_line_count: number };
 }
+
+// Trạng thái của dòng ngoài danh mục — một danh sách cho cả cột trái và chi tiết phiếu
+export const CUSTOM_STATUSES = ['pending', 'accepted', 'converted', 'rejected'] as const;
+export type CustomStatus = (typeof CUSTOM_STATUSES)[number];
 
 interface HistoryPage {
   items: HistoryItem[];

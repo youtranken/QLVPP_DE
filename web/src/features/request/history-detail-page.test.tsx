@@ -39,6 +39,20 @@ describe('HistoryDetailPage', () => {
     expect(await screen.findByText(/^1 loại món · 2 đơn vị · 1 sản phẩm ngoài danh mục, chờ phê duyệt/)).toBeInTheDocument();
   });
 
+  it('đầu chi tiết: món ngoài DM đã duyệt và món tạm ngưng chưa giao không vào số món/đơn vị/chip giao', async () => {
+    past(
+      [
+        L('1', 'Bút bảng', { qty: 2, delivered_qty: 2 }),
+        L('2', 'Bìa còng', { qty: 3, review_status: 'accepted' }),
+        L('3', 'Bút dạ', { qty: 4, item_id: 'i-3', item: { name: 'Bút dạ', name_en: null, unit: 'cay', pack_note: null, image_file_id: null, active: false, admin_only: false } }),
+      ],
+      { saved_at: '2026-11-07T14:38:00.000Z', department: null },
+    );
+    renderApp(makeMe('member'), '/history/2026-10');
+    expect(await screen.findByText(/^1 loại món · 2 đơn vị · 1 món đã chấp nhận/)).toBeInTheDocument();
+    expect(screen.getByText('Đã nhận đủ')).toBeInTheDocument();
+  });
+
   it('bảng Món · ĐVT · Đăng ký · Được giao · Đã nhận · Tình trạng · Ghi chú; ghi chú "Nhận 09:10 08/11" và "Adm D&E bỏ món · Không có hàng"', async () => {
     past([L('1', 'Bút bảng', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }), L('3', 'Bút dạ')], {
       removed_lines: [{ name: 'Bút ghi đĩa', name_en: null, unit: 'cay', before: 1, reason_code: 'adm_out_of_stock', reason_note: null, at: '2026-11-08T01:30:00.000Z' }],

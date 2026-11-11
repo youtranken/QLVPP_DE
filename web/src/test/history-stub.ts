@@ -3,17 +3,31 @@ import type { HistoryItem, MyIssue } from '@/features/request/history.api';
 import { PERIOD, view } from '@/test/request-api-stub';
 import { jsonResponse } from '@/test/test-utils';
 
-export const historyItem = (over: Partial<HistoryItem>): HistoryItem => ({
-  period_ym: '2026-10',
-  line_count: 3,
-  total_qty: 10,
-  delivered_qty: 0,
-  remaining_qty: 10,
-  cancelled_qty: 0,
-  owed_line_count: 0,
-  custom: { pending: 0, accepted: 0, converted: 0, rejected: 0 },
-  ...over,
-});
+// catalog mặc định suy từ các số tổng (coi như không có món ngoài DM hiệu lực); test cần tách thì truyền catalog riêng
+export const historyItem = (over: Partial<HistoryItem>): HistoryItem => {
+  const base = {
+    period_ym: '2026-10',
+    line_count: 3,
+    total_qty: 10,
+    delivered_qty: 0,
+    remaining_qty: 10,
+    cancelled_qty: 0,
+    owed_line_count: 0,
+    custom: { pending: 0, accepted: 0, converted: 0, rejected: 0 },
+    ...over,
+  };
+  const customLines = base.custom.pending + base.custom.accepted + base.custom.converted + base.custom.rejected;
+  return {
+    catalog: {
+      line_count: Math.max(0, base.line_count - customLines),
+      qty: base.total_qty,
+      delivered_qty: base.delivered_qty,
+      remaining_qty: base.remaining_qty,
+      owed_line_count: base.owed_line_count,
+    },
+    ...base,
+  };
+};
 
 export const issue = (over: Partial<MyIssue>): MyIssue => ({
   id: 'm-1',
