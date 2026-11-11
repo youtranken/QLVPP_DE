@@ -339,6 +339,6 @@ test.describe('E9-S1 trang member giữ giao diện cũ', () => {
     await expect(page.getByRole('navigation', { name: 'Menu quản lý' })).toHaveCount(0);
     await expect.poll(() => page.evaluate(() => document.body.dataset.shell)).toBe('member');
     expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(244, 247, 245)');
-    expect(await page.evaluate(() => getComputedStyle(document.body).fontFamily)).toContain('Nunito');
+    expect(await page.evaluate(() => getComputedStyle(document.body).fontFamily)).toContain('Be Vietnam Pro');
   });
 });

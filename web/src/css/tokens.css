@@ -1,12 +1,12 @@
-/* VPP Công trình — token chung (thương hiệu xanh ngọc lục). Member: Nunito, bo tròn, thẻ ảnh. Admin: IBM Plex Sans, gọn, bảng. */
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&family=Nunito:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+/* VPP Công trình — token chung. Cả hai khung + màn đăng nhập dùng chung một font: Be Vietnam Pro. */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&display=swap');
 :root {
   --brand: #059669; --brand-deep: #047857; --brand-soft: #e6f6ef; --brand-ink: #065f46; --brand-line: #a7e3c8;
   --bg: #f4f7f5; --card: #ffffff; --card-2: #f7faf8; --ink: #14231c; --ink-2: #51645b; --ink-3: #667a70; --line: #dfe7e2; --line-2: #c9d5ce;
   --ok: #047857; --ok-soft: #d1fae5; --warn: #b45309; --warn-soft: #fef3c7; --danger: #b91c1c; --danger-soft: #fee2e2; --info: #1d4ed8; --info-soft: #dbeafe;
   --t1: #e0f2fe; --t1-ink: #0369a1; --t2: #fef3c7; --t2-ink: #b45309; --t3: #d1fae5; --t3-ink: #047857; --t4: #ede9fe; --t4-ink: #6d28d9;
   --side: #0f2a21; --side-ink: #b7cfc4;
-  --font-app: Nunito, system-ui, -apple-system, "Segoe UI", sans-serif; --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-app: 'Be Vietnam Pro', system-ui, -apple-system, "Segoe UI", sans-serif;
   --ring: 0 0 0 3px rgba(5,150,105,.35);
 }
 * { box-sizing: border-box; } body { margin: 0; color: var(--ink); background: var(--bg); line-height: 1.45; -webkit-font-smoothing: antialiased; }

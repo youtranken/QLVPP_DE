@@ -1,4 +1,4 @@
-/* Font Google (Nunito, IBM Plex Sans) nạp ở đầu tokens.css; đây chọn font theo khung đang mở */
+/* Font Google (Be Vietnam Pro) nạp ở đầu tokens.css; cả khung Nhân viên, Quản lý và màn đăng nhập dùng chung */
 body { font-family: var(--font-app); font-size: 15px; min-height: 100vh; }
 body[data-shell='admin'] { font-size: 14px; }
 a { color: var(--brand-ink); }
