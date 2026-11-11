@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { BulkBar } from '@/ui/bulk-bar';
 import { renderWithI18n, screen, userEvent } from '@/test/test-utils';
 
@@ -33,5 +33,55 @@ describe('BulkBar', () => {
     renderWithI18n(<BulkBar count={2} label="món" onClear={() => {}} />);
     expect(screen.getByRole('toolbar')).not.toHaveClass('bulk-bar--light');
     expect(screen.getByRole('button', { name: 'Bỏ chọn' })).not.toHaveClass('btn');
+  });
+});
+
+describe('BulkBar sticky: chừa chỗ ở đáy khung trang', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    delete document.body.dataset.shell;
+    document.body.style.removeProperty('--bulkbar-h');
+  });
+
+  const heightByClass = () =>
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (this: HTMLElement) {
+      return this.classList.contains('tall') ? 80 : 40;
+    });
+
+  it('sticky → đặt --bulkbar-h trên phần tử khung (data-shell), không trên <html>; gỡ bar thì gỡ biến', () => {
+    heightByClass();
+    document.body.dataset.shell = 'admin';
+    const { unmount } = renderWithI18n(<BulkBar sticky count={2} label="món" onClear={() => {}} />);
+    expect(screen.getByRole('toolbar')).toHaveClass('is-sticky-bottom');
+    expect(document.body.style.getPropertyValue('--bulkbar-h')).toBe('60px');
+    expect(document.documentElement.style.getPropertyValue('--bulkbar-h')).toBe('');
+    unmount();
+    expect(document.body.style.getPropertyValue('--bulkbar-h')).toBe('');
+  });
+
+  it('không sticky → không đặt biến, dù className có chữ is-sticky-bottom', () => {
+    renderWithI18n(<BulkBar count={2} label="món" className="is-sticky-bottom" onClear={() => {}} />);
+    expect(document.body.style.getPropertyValue('--bulkbar-h')).toBe('');
+  });
+
+  it('hai bar sticky: biến = bar cao nhất; gỡ một bar (bất kể thứ tự) thì biến theo bar còn lại', () => {
+    heightByClass();
+    function Two({ a, b }: { a: boolean; b: boolean }) {
+      return (
+        <>
+          {a && <BulkBar sticky className="tall" count={1} label="món" onClear={() => {}} />}
+          {b && <BulkBar sticky count={1} label="món" onClear={() => {}} />}
+        </>
+      );
+    }
+    const { rerender } = renderWithI18n(<Two a b />);
+    expect(document.body.style.getPropertyValue('--bulkbar-h')).toBe('100px');
+    rerender(<Two a={false} b />);
+    expect(document.body.style.getPropertyValue('--bulkbar-h')).toBe('60px');
+    rerender(<Two a b />);
+    rerender(<Two a b={false} />);
+    expect(document.body.style.getPropertyValue('--bulkbar-h')).toBe('100px');
+    rerender(<Two a={false} b={false} />);
+    expect(document.body.style.getPropertyValue('--bulkbar-h')).toBe('');
   });
 });

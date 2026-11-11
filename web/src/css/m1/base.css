@@ -191,9 +191,9 @@
 [data-shell='admin'] .switch:focus-visible .switch__track { box-shadow: var(--focus); }
 [data-shell='admin'] .switch:disabled { opacity: .6; cursor: not-allowed; }
 
-/* Thanh hàng loạt cố định ở 390 (B0.18): BulkBar đặt --bulkbar-h = khoảng nó chiếm ở đáy; khung trang chừa đúng chừng đó,
-   cuộn tới ô đang focus cũng chừa (scroll-padding ở css/base.css), toast nâng lên trên thanh */
+/* Thanh hàng loạt cố định ở 390: BulkBar sticky đặt --bulkbar-h (khoảng nó chiếm ở đáy) trên phần tử khung.
+   Khung trang chừa chỗ ở m1/shell.css; ở đây: cuộn tới ô đang focus cũng chừa, toast nâng lên trên thanh */
 @media (max-width: 767px) {
-  [data-shell='admin'] .shell__main { padding-bottom: calc(var(--s-2) + var(--bulkbar-h, 0px) + env(safe-area-inset-bottom)); }
+  [data-shell='admin'] .shell__main * { scroll-margin-bottom: var(--bulkbar-h, 0px); }
   [data-shell='admin']:has(.bulk-bar.is-sticky-bottom) .toast-host { bottom: calc(var(--bulkbar-h, 0px) + env(safe-area-inset-bottom)); }
 }

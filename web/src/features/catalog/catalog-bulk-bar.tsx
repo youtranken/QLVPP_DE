@@ -19,7 +19,7 @@ export interface CatalogBulkBarProps {
 export function CatalogBulkBar({ tab, count, pending, scope, onReactivate, onMove, onMax, onPause, onClear }: CatalogBulkBarProps) {
   const { t } = useTranslation();
   return (
-    <BulkBar count={count} label={t('catalog.stats.items')} variant="light" className="is-sticky-bottom" onClear={onClear}>
+    <BulkBar count={count} label={t('catalog.stats.items')} variant="light" sticky onClear={onClear}>
       {scope.resume > 0 && (
         <button type="button" className="btn btn--sm btn--primary" disabled={pending} onClick={onReactivate}>
           {t('catalog.bulk.reactivateN', { n: scope.resume })}

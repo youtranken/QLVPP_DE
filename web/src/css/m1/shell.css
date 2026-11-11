@@ -126,8 +126,9 @@
   [data-shell='admin'] .page-head__crumbs { display: none; }
   [data-shell='admin'] .page-head { gap: var(--s-3); margin-bottom: var(--s-4); }
   [data-shell='admin'] .page-head h1 + .page-head__desc { margin-top: 2px; }
-  /* B0.18: bỏ 88px cố định — chỉ chừa vùng an toàn iPhone; thanh hàng loạt tự chừa qua --bulkbar-h (m1/base.css) */
-  [data-shell='admin'] .shell__main { padding: 8px 8px calc(var(--s-2) + env(safe-area-inset-bottom)); }
+  /* Chừa vùng an toàn iPhone + khoảng thanh hàng loạt đang dính đáy (BulkBar sticky đặt --bulkbar-h trên khung).
+     Chỉ khai báo ở đây: shell.css nạp sau m1/base.css nên khai báo padding nơi khác sẽ bị shorthand này đè */
+  [data-shell='admin'] .shell__main { padding: 8px 8px calc(var(--s-2) + var(--bulkbar-h, 0px) + env(safe-area-inset-bottom)); }
   [data-shell='admin'] .shell__panel { min-height: 0; padding: 16px; border-radius: var(--r-lg); }
 }
 
