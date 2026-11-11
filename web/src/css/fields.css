@@ -64,7 +64,7 @@ html, [data-shell] * { scrollbar-width: thin; }
 [data-shell] .qty-input { position: relative; display: inline-grid; align-items: center; }
 [data-shell] .qty-input button { display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: var(--c-ink-2); cursor: pointer; }
 [data-shell] .qty-input button:disabled { color: var(--c-muted); opacity: .45; cursor: not-allowed; }
-[data-shell] .qty-input[data-layout='spin'] > input { padding-right: 30px; }
+[data-shell] .qty-input[data-layout='spin'] > input { padding-right: var(--s-7); }
 [data-shell] .qty-input__spin { position: absolute; top: 2px; right: 2px; bottom: 2px; display: grid; grid-template-rows: 1fr 1fr; width: 24px; border-left: 1px solid var(--c-line); }
 [data-shell] .qty-input__spin button { width: 24px; min-height: 0; }
 [data-shell] .qty-input__spin button:first-child { border-radius: 0 var(--r-sm) 0 0; }
