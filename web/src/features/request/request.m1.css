@@ -65,6 +65,14 @@
 [data-shell='member'] .rq-line-qty { padding: 0; border-radius: 0; background: none; font: var(--t-body); font-weight: 500; color: var(--c-cart-ink); }
 [data-shell='member'] .rq-line-x { grid-column: 3; grid-row: 1; width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--c-ink-2); font: var(--t-h3); cursor: pointer; }
 [data-shell='member'] .rq-line-x:hover { background: var(--c-surface-2); }
+[data-shell='member'] .rq-line-x { display: grid; place-items: center; }
+[data-shell='member'] .rq-line-x:focus-visible, [data-shell='member'] .rq-notice button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; box-shadow: none; }
+/* Nhãn trong phiếu cùng bảng màu v2 với nhãn ở Lịch sử (.tag chung còn dùng màu cũ) */
+[data-shell='member'] .rq-line .tag { display: inline-flex; align-items: center; height: auto; min-height: 22px; padding: 2px 8px; border-radius: var(--r-pill); background: var(--c-surface-2); color: var(--c-ink-2); font: var(--t-micro); white-space: normal; overflow-wrap: anywhere; }
+[data-shell='member'] .rq-line .tag--ok { background: var(--c-ok-soft); color: var(--c-ok); }
+[data-shell='member'] .rq-line .tag--warn { background: var(--c-warn-soft); color: var(--c-warn); }
+[data-shell='member'] .rq-line .tag--danger { background: var(--c-danger-soft); color: var(--c-danger); }
+[data-shell='member'] .rq-line .tag--info { background: var(--c-info-soft); color: var(--c-info); }
 [data-shell='member'] .rq-line-stepper { grid-column: 2 / 4; grid-row: 2; justify-self: start; display: grid; grid-template-columns: 44px 56px 44px; align-items: center; height: 44px; border-radius: var(--r-pill); background: var(--c-surface-2); overflow: hidden; }
 [data-shell='member'] .rq-line-stepper button { height: 44px; border: 0; background: transparent; color: var(--c-ink); font: var(--t-h3); font-weight: 800; cursor: pointer; }
 [data-shell='member'] .rq-line-stepper button:disabled { color: var(--c-faint); cursor: default; }
@@ -114,12 +122,24 @@
 @media (prefers-reduced-motion: reduce) { [data-shell='member'] .rq-sheet { animation: none; } }
 
 /* Hộp Lưu phiếu v2: bo 24, "Quay lại" trắng, "Lưu phiếu" tối */
-[data-shell='member'] .rq-dialog { border-radius: 24px; background: var(--c-surface); }
+/* width 100%: .sheet chung kẹp 520px, hộp rộng hơn (Nhận hàng 760) phải theo maxWidth riêng của nó */
+[data-shell='member'] .rq-dialog { width: 100%; border-radius: 24px; background: var(--c-surface); }
+[data-shell='member'] .rq-dialog .sheet-close { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; color: var(--c-ink-2); cursor: pointer; }
+[data-shell='member'] .rq-dialog .sheet-close:hover:not(:disabled) { background: var(--c-surface-2); color: var(--c-ink); }
+[data-shell='member'] .rq-dialog .sheet-close:focus-visible { outline: 2px solid var(--c-ink); outline-offset: 2px; box-shadow: none; }
 [data-shell='member'] .rq-dialog .sheet-title { font: var(--t-h2); color: var(--c-ink); }
 [data-shell='member'] .rq-dialog .sheet-footer { gap: var(--s-3); }
 [data-shell='member'] .rq-dialog .sheet-footer .btn { flex: 1; min-height: 48px; border: 1px solid var(--c-line); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); }
 [data-shell='member'] .rq-dialog .sheet-footer .btn--primary { background: var(--c-dark); border-color: var(--c-dark); color: var(--c-on-dark); }
 [data-shell='member'] .rq-dialog .sheet-footer .btn:disabled { opacity: .6; }
+[data-shell='member'] .rq-dialog .sheet-footer .btn:hover:not(:disabled) { background: var(--c-surface-hover); border-color: var(--c-ink-2); }
+[data-shell='member'] .rq-dialog .sheet-footer .btn--primary:hover:not(:disabled) { background: var(--c-ink-2); border-color: var(--c-ink-2); }
+[data-shell='member'] .rq-dialog .sheet-footer .btn:focus-visible { outline: 2px solid var(--c-dark); outline-offset: 2px; box-shadow: none; }
+/* Điện thoại: hai nút chữ dài (en "View history of all months" + "Close") không đủ một hàng → xuống hàng cả nút, không gãy chữ trong nút */
+@media (max-width: 767px) {
+  [data-shell='member'] .rq-dialog .sheet-footer { flex-wrap: wrap; }
+  [data-shell='member'] .rq-dialog .sheet-footer .btn { flex: 1 1 auto; }
+}
 
 @media (min-width: 901px) {
   /* Máy tính: ảnh · tên đủ rộng (tối đa 2 dòng) · ×, bộ chỉnh gọn 34px nằm dưới tên; Lưu phiếu vẫn trong màn 1280x800 */
@@ -139,10 +159,11 @@
 [data-shell='member'] .rq-copy svg { width: 18px; height: 18px; flex: none; }
 [data-shell='member'] .rq-notice { position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%); z-index: 60; width: min(560px, calc(100% - 28px)); box-sizing: border-box; display: flex; align-items: flex-start; gap: var(--s-3); padding: var(--s-3) var(--s-3) var(--s-3) var(--s-4); border-radius: 14px; border: 2px solid var(--c-danger); background: var(--c-danger-soft); color: var(--c-danger); font: var(--t-label); box-shadow: 0 10px 30px rgb(var(--sh-ink) / .2); }
 [data-shell='member'] .rq-notice span { flex: 1; }
-[data-shell='member'] .rq-notice button { flex: none; width: 44px; height: 44px; margin: -8px -8px -8px 0; border: 0; border-radius: 50%; background: transparent; color: inherit; font-weight: 800; cursor: pointer; }
+[data-shell='member'] .rq-notice button { flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin: -8px -8px -8px 0; border: 0; border-radius: 50%; background: transparent; color: inherit; font-weight: 800; cursor: pointer; }
 [data-shell='member'] .rq-notice--info { background: var(--c-info-soft); color: var(--c-info); border-color: var(--c-info); }
-[data-shell='member'] .rq-toast-slot { position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%); z-index: 60; pointer-events: none; }
-[data-shell='member'] .rq-toast { display: block; padding: var(--s-3) var(--s-5); border-radius: var(--r-pill); background: var(--c-dark); color: var(--c-on-dark); font: var(--t-label); font-weight: 800; box-shadow: 0 10px 30px rgb(var(--sh-ink) / .25); white-space: nowrap; }
+/* Toast dài xuống dòng trong bề ngang màn thay vì tràn ra ngoài ở 360 */
+[data-shell='member'] .rq-toast-slot { position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%); z-index: 60; width: max-content; max-width: calc(100vw - 32px); pointer-events: none; }
+[data-shell='member'] .rq-toast { display: block; padding: var(--s-3) var(--s-5); border-radius: var(--r-pill); background: var(--c-dark); color: var(--c-on-dark); font: var(--t-label); font-weight: 800; box-shadow: 0 10px 30px rgb(var(--sh-ink) / .25); text-align: center; }
 [data-shell='member'] .rq-confirm-table { width: 100%; border-collapse: collapse; color: var(--c-ink); }
 [data-shell='member'] .rq-confirm-table td { padding: var(--s-2) 0; border-bottom: 1px solid var(--c-line); font-weight: 600; }
 [data-shell='member'] .rq-confirm-table td:last-child { text-align: right; font-weight: 800; white-space: nowrap; padding-left: var(--s-3); }

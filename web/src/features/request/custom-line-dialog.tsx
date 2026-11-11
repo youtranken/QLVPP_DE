@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { UnitSelect } from '@/features/units/unit-select';
 import { unitsQuery } from '@/features/units/units.api';
-import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
+import { Dialog, DialogClose, DialogCloseButton, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { FormField } from '@/ui/form-field';
 import { Stepper } from '@/ui/stepper';
 import type { CustomLineInput } from './use-cart';
@@ -60,15 +60,11 @@ export function CustomLineDialog({
   };
 
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()} dirty={dirty} closeOnOutside={false} className="sheet" maxWidth={520}>
+    <Dialog open onOpenChange={(o) => !o && onClose()} dirty={dirty} closeOnOutside={false} className="sheet rq-dialog" maxWidth={520}>
       <form onSubmit={submit} noValidate>
         <div className="sheet-header">
           <DialogTitle className="sheet-title">{t(initial ? 'request.custom.editTitle' : 'request.custom.addTitle')}</DialogTitle>
-          <DialogClose asChild>
-            <button type="button" className="sheet-close" aria-label={t('common.close')}>
-              ✕
-            </button>
-          </DialogClose>
+          <DialogCloseButton />
         </div>
         <div className="sheet-body rq-custom-form">
           <DialogDescription className="rq-custom-intro">{t('request.custom.intro')}</DialogDescription>
