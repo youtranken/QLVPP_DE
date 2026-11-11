@@ -67,7 +67,10 @@ describe('Món ngoài danh mục chưa duyệt khi chốt kỳ', () => {
     const id = await pendingLine(B, 'kep-giay');
     const live = (await build('2026-11')) as unknown as {
       pending_custom: { line_id: string; name: string }[];
+      pending_custom_count: number;
     };
+    // Số đếm và danh sách tên cùng một nguồn
+    expect(live.pending_custom_count).toBe(live.pending_custom.length);
     expect(live.pending_custom).toContainEqual({
       line_id: id,
       name: customName('kep-giay'),

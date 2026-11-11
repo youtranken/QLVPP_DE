@@ -75,11 +75,17 @@ export class ReportsService {
       pending_custom: PendingCustomLine[];
     }
   > {
-    const report = await this.build(ym, now);
+    // Ba truy vấn độc lập: chạy song song; số món chờ lấy từ chính danh sách tên để hai con số không lệch nhau
+    const [report, progress, pending] = await Promise.all([
+      this.build(ym, now),
+      periodProgress(this.db, ym),
+      pendingCustomLines(this.db, ym),
+    ]);
     return {
       ...report,
-      progress: await periodProgress(this.db, ym),
-      pending_custom: await pendingCustomLines(this.db, ym),
+      progress,
+      pending_custom: pending,
+      pending_custom_count: pending.length,
     };
   }
 }
