@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { reviewNoteText } from '@/lib/review-note';
@@ -49,14 +49,22 @@ export function buildDetail(entry: AuditEntry, shown: (key: string) => boolean, 
 // Dòng chỉ mở được khi có thứ để xem: đăng nhập, phiên bị thu hồi… không có trường nào đọc được thì không có mũi tên
 export function useAuditHasDetail(): (entry: AuditEntry) => boolean {
   const { t, i18n } = useTranslation();
-  return useCallback(
-    (entry: AuditEntry) => {
-      if (entry.batch) return entry.batch.items.length > 0;
-      // Tên người chỉ cần cho chữ hiển thị, không đổi việc có hay không — khỏi tải danh bạ cho cả trang
-      const r = makeReadable(t, (k) => i18n.exists(k), (sub) => sub);
-      const m = buildDetail(entry, r.shown, r.value);
-      return m.fields.length + m.hidden.length + m.rest.length > 0;
-    },
-    [t, i18n],
-  );
+  return useMemo(() => {
+    // Bảng hỏi cho cả ô mũi tên lẫn props dòng mỗi lần vẽ: tính một lần cho mỗi dòng nhật ký
+    const seen = new WeakMap<AuditEntry, boolean>();
+    // Tên người chỉ cần cho chữ hiển thị, không đổi việc có hay không — khỏi tải danh bạ cho cả trang
+    const r = makeReadable(t, (k) => i18n.exists(k), (sub) => sub);
+    return (entry: AuditEntry) => {
+      let has = seen.get(entry);
+      if (has === undefined) {
+        if (entry.batch) has = entry.batch.items.length > 0;
+        else {
+          const m = buildDetail(entry, r.shown, r.value);
+          has = m.fields.length + m.hidden.length + m.rest.length > 0;
+        }
+        seen.set(entry, has);
+      }
+      return has;
+    };
+  }, [t, i18n]);
 }
