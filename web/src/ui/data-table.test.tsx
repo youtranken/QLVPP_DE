@@ -43,6 +43,8 @@ describe('DataTable', () => {
     const table = screen.getByRole('table');
     expect(table).toHaveClass('table--fixed');
     expect([...table.querySelectorAll('colgroup > col')].map((c) => (c as HTMLElement).style.width)).toEqual(['', '12%', '56px']);
+    // tên 12rem + cột % 6rem + 56px 3.5rem
+    expect(table.style.getPropertyValue('--dt-min')).toBe('21.5rem');
     unmount();
     renderWithI18n(<DataTable data={DATA} columns={COLUMNS} emptyText="Trống" />);
     expect(screen.getByRole('table')).not.toHaveClass('table--fixed');

@@ -29,11 +29,14 @@
 
 @media (min-width: 768px) {
   [data-shell='admin'] .cg-table .cg-tone-cell { width: 1%; }
-  [data-shell='admin'] .cg-col-reorder { width: 88px; }
-  [data-shell='admin'] .cg-col-tone { width: 64px; }
+  [data-shell='admin'] .cg-col-reorder { width: 5.5rem; }
+  [data-shell='admin'] .cg-col-tone { width: 4rem; }
   [data-shell='admin'] .cg-col-en { width: 30%; }
-  [data-shell='admin'] .cg-col-items { width: 12%; }
-  [data-shell='admin'] .cg-col-acts { width: 232px; }
+  [data-shell='admin'] .cg-col-items { width: 6rem; }
+  [data-shell='admin'] .cg-col-acts { width: 14.5rem; }
+  /* Tổng tối thiểu các cột (tên 12rem, tên EN 6rem): hẹp hơn thì cuộn ngang, không đè nút */
+  [data-shell='admin'] .cg-table.table--fixed { min-width: 42.5rem; }
+  [data-shell='admin'] .cg-table.table--fixed:has(.cg-col-reorder) { min-width: 48rem; }
 }
 [data-shell='admin'] .cg-search { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); flex: 1 1 320px; justify-content: flex-end; }
 [data-shell='admin'] .cg-search .toolbar { flex: 1 1 240px; }

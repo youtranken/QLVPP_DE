@@ -66,14 +66,14 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
             </span>
           ),
         },
-        { id: 'code', header: t('users.page.colCode'), meta: { width: '9%' }, cell: ({ row }) => row.original.employeeCode ?? t('common.empty') },
-        { id: 'department', header: t('users.page.colDepartment'), meta: { width: '14%' }, cell: ({ row }) => row.original.department ?? t('common.empty') },
-        ...(regMonth === null ? [] : [{ id: 'reg', header: t('users.reg.col', { month: regMonth }), meta: { width: '11%' }, cell: ({ row }: { row: { original: UserRow } }) => <RegCell reg={row.original.reg} /> }]),
-        { id: 'team', header: t('users.page.colTeam'), meta: { width: '10%' }, cell: ({ row }) => row.original.team ?? t('common.empty') },
+        { id: 'code', header: t('users.page.colCode'), meta: { width: '5.5rem' }, cell: ({ row }) => row.original.employeeCode ?? t('common.empty') },
+        { id: 'department', header: t('users.page.colDepartment'), meta: { width: '7rem' }, cell: ({ row }) => row.original.department ?? t('common.empty') },
+        ...(regMonth === null ? [] : [{ id: 'reg', header: t('users.reg.col', { month: regMonth }), meta: { width: '7.5rem' }, cell: ({ row }: { row: { original: UserRow } }) => <RegCell reg={row.original.reg} /> }]),
+        { id: 'team', header: t('users.page.colTeam'), meta: { width: '5.5rem' }, cell: ({ row }) => row.original.team ?? t('common.empty') },
         {
           id: 'status',
           header: t('users.page.colStatus'),
-          meta: { width: '15%' },
+          meta: { width: '8rem' },
           cell: ({ row }) => (
             <span className="dr-status">
               <StatusBadge status={row.original.status} />
@@ -81,7 +81,7 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
             </span>
           ),
         },
-        { id: 'lastLogin', header: t('users.page.colLastLogin'), meta: { width: '15%' }, cell: ({ row }) => <LastLogin iso={row.original.lastLoginAt} /> },
+        { id: 'lastLogin', header: t('users.page.colLastLogin'), meta: { width: '7.5rem' }, cell: ({ row }) => <LastLogin iso={row.original.lastLoginAt} /> },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
   }, [t, onOpen, regMonth]);

@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import { fixedMinWidth } from './fixed-min-width';
 import { useTranslation } from 'react-i18next';
 import {
   flexRender,
@@ -113,7 +114,7 @@ export function DataTable<T>({
   const rows = table.getRowModel().rows;
   const leafColumns = table.getVisibleLeafColumns();
   const fixed = leafColumns.some((c) => c.columnDef.meta?.width);
-  const colSpan = table.getAllLeafColumns().length + (selection ? 1 : 0);
+  const colSpan = leafColumns.length + (selection ? 1 : 0);
   const groups = groupBy ? groupRows(rows, groupBy.key) : null;
   // Chọn tất cả chỉ lấy hàng đang thấy: nhóm đang thu thì người dùng không biết mình chọn món nào
   const selectable = groupBy ? rows.filter((r) => !collapsed.has(groupBy.key(r.original))) : rows;
@@ -159,6 +160,7 @@ export function DataTable<T>({
             .join(' ')}
           data-density={density}
           aria-busy={busy}
+          style={fixed ? ({ '--dt-min': `${fixedMinWidth(leafColumns.map((c) => c.columnDef.meta?.width), !!selection)}rem` } as CSSProperties) : undefined}
         >
           {fixed && (
             <colgroup>

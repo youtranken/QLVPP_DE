@@ -90,15 +90,15 @@ function useColumns(groupName: (r: StockRow) => string, onAction: (a: StockActio
           </span>
         ),
       },
-      { id: 'unit', header: t('stock.page.colUnit'), meta: { width: '10%' }, cell: ({ row }) => unitName(row.original.unit) },
-      { id: 'stock', header: t('stock.page.colStock'), meta: { className: 'num r', width: '9%' }, cell: ({ row }) => <b>{row.original.stock_qty}</b> },
-      { id: 'held', header: t('stock.page.colHeld'), meta: { className: 'num r', width: '9%' }, cell: ({ row }) => row.original.held },
-      { id: 'free', header: t('stock.page.colFree'), meta: { className: 'num r', width: '9%' }, cell: ({ row }) => row.original.free },
-      { id: 'status', header: t('stock.page.colStatus'), meta: { width: '16%' }, cell: ({ row }) => <StockBadge row={row.original} /> },
+      { id: 'unit', header: t('stock.page.colUnit'), meta: { width: '4.5rem' }, cell: ({ row }) => unitName(row.original.unit) },
+      { id: 'stock', header: t('stock.page.colStock'), meta: { className: 'num r', width: '5rem' }, cell: ({ row }) => <b>{row.original.stock_qty}</b> },
+      { id: 'held', header: t('stock.page.colHeld'), meta: { className: 'num r', width: '6.5rem' }, cell: ({ row }) => row.original.held },
+      { id: 'free', header: t('stock.page.colFree'), meta: { className: 'num r', width: '5.5rem' }, cell: ({ row }) => row.original.free },
+      { id: 'status', header: t('stock.page.colStatus'), meta: { width: '9rem' }, cell: ({ row }) => <StockBadge row={row.original} /> },
       {
         id: 'actions',
         header: () => <span className="sr-only">{t('stock.page.colActions')}</span>,
-        meta: { className: 'sk-actions', width: '64px' },
+        meta: { className: 'sk-actions', width: '4rem' },
         cell: ({ row: { original: r } }) => <RowActions row={r} onAction={onAction} />,
       },
     ];

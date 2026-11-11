@@ -22,8 +22,14 @@
 [data-shell='admin'] .table .sel { width: 40px; }
 /* Bảng đặt bề rộng cột (DataTable meta.width → colgroup): cột giữ nguyên chỗ khi đổi tab/lọc, không co giãn theo nội dung */
 @media (min-width: 768px) {
-  [data-shell='admin'] .table--fixed { table-layout: fixed; }
+  [data-shell='admin'] .table--fixed { table-layout: fixed; min-width: var(--dt-min, 0); }
   [data-shell='admin'] .table--fixed td { overflow-wrap: anywhere; }
+  /* Cột hẹp thì tiêu đề xuống dòng trong cột của nó, không tràn sang cột bên */
+  [data-shell='admin'] .table--fixed th { white-space: normal; overflow-wrap: break-word; line-height: 1.25; padding-block: var(--s-1); }
+}
+/* Màn vừa: bảng có nhóm vẫn có thể rộng hơn khung — cuộn ngang (mất đầu nhóm dính) còn hơn cắt cột */
+@media (min-width: 768px) and (max-width: 1279px) {
+  [data-shell='admin'] .table-wrap:has(.table--fixed) { overflow-x: auto; }
 }
 [data-shell='admin'] .table input[type='checkbox'] { width: 20px; height: 20px; margin: 0; accent-color: var(--c-acc); cursor: pointer; }
 [data-shell='admin'] .table .reorder-col { width: 1%; padding-block: 2px; white-space: nowrap; }

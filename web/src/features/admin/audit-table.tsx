@@ -35,13 +35,13 @@ function useColumns(canOpen: (e: AuditEntry) => boolean) {
       {
         id: 'time',
         header: t('audit.page.colTime'),
-        meta: { className: 'au-nowrap', width: '11%' },
+        meta: { className: 'au-nowrap', width: '6.5rem' },
         cell: ({ row }) => timeFmt.format(new Date(row.original.createdAt)),
       },
       {
         id: 'actor',
         header: t('audit.page.colActor'),
-        meta: { width: '24%' },
+        meta: { width: '20%' },
         cell: ({ row: { original: e } }) => {
           // Tiến trình máy ghi actor "system(…)": hiện chữ thường, không lộ mã
           const name = e.actorName ?? (e.actor.startsWith('system') ? t('audit.filters.system') : e.actor);
@@ -72,7 +72,7 @@ function useColumns(canOpen: (e: AuditEntry) => boolean) {
       {
         id: 'detail',
         header: () => <span className="sr-only">{t('audit.page.colDetail')}</span>,
-        meta: { className: 'au-detail-col', width: '48px' },
+        meta: { className: 'au-detail-col', width: '3rem' },
         cell: ({ row }) => (canOpen(row.original) ? <span className="au-chev"><Icon name="chev" size={18} /></span> : null),
       },
     ];
