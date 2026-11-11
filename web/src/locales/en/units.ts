@@ -22,6 +22,7 @@ const units: Messages<typeof vi> = {
       menu: 'Actions for {{name}}',
       edit: 'Edit',
       deactivate: 'Pause',
+      inactive: 'Paused',
       deactivateTitle: 'Pause unit “{{name}}”?',
       deactivateBody: 'The unit is hidden from the picker when adding items and “Other item”. Old items and requests keep its name.',
       reactivate: 'Use again',

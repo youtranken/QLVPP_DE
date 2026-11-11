@@ -104,6 +104,22 @@ describe('AuditPage B11', () => {
     expect(r).toHaveAttribute('aria-expanded', 'true');
   });
 
+  it('trường đổi không có nhãn vẫn báo bằng câu thường: "Ảnh đã đổi", "Đổi nhóm sang <tên>", "Có thay đổi khác"; không "Không có trường nào khác nhau", không mã', async () => {
+    const detail = { before: { image_file_id: 'aaaa0000-1111-4222-8333-444455556666', category_id: 'c-1', meta: { a: 1 } }, after: { image_file_id: 'bbbb0000-1111-4222-8333-444455556666', category_id: 'c-2', meta: { a: 2 } } };
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url.startsWith('/api/admin/audit')) return Promise.resolve(jsonResponse(200, { items: [row('h1', { detail })], next_cursor: null }));
+      if (url.startsWith('/api/item-categories')) return Promise.resolve(jsonResponse(200, [{ id: 'c-2', name: 'Bút & viết', name_en: null, sort_order: 1, active: true }]));
+      return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }));
+    }));
+    await openAudit();
+    await userEvent.click(within(entryRow('Lê Thị Bình')).getByText('Sửa cấu hình'));
+    expect(await screen.findByText('Đổi nhóm sang Bút & viết')).toBeInTheDocument();
+    expect(screen.getByText('Ảnh đã đổi')).toBeInTheDocument();
+    expect(screen.getByText('Có thay đổi khác')).toBeInTheDocument();
+    expect(screen.queryByText('Không có trường nào khác nhau.')).toBeNull();
+    expect(screen.queryByText(/aaaa0000|bbbb0000|c-2|meta/)).toBeNull();
+  });
+
   it('cột Đối tượng hiện tên khi before/after có name/custom_name; không có thì tên loại tiếng Việt, không mã', async () => {
     const items = [
       row('n1', { objectType: 'item', objectId: '0b6f1c2e-1111-4222-8333-444455556666', detail: { before: null, after: { name: 'Bút bi xanh' } } }),

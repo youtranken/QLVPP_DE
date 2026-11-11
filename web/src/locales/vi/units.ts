@@ -19,6 +19,7 @@ const units = {
       menu: 'Thao tác cho {{name}}',
       edit: 'Sửa',
       deactivate: 'Tạm ngưng',
+      inactive: 'Tạm ngưng',
       deactivateTitle: 'Tạm ngưng đơn vị “{{name}}”?',
       deactivateBody: 'Đơn vị sẽ ẩn khỏi ô chọn khi thêm món và “Món khác”. Món và phiếu cũ vẫn hiện đúng tên.',
       reactivate: 'Dùng lại',

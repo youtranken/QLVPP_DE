@@ -41,6 +41,7 @@
 [data-shell='admin'] .table .au-diff thead th { color: var(--c-muted); font-weight: 600; }
 [data-shell='admin'] .au-pairs { display: grid; gap: 4px; margin: 0; font: var(--t-sm); }
 [data-shell='admin'] .au-pairs > div { display: grid; grid-template-columns: 160px 1fr; gap: var(--s-2); }
+[data-shell='admin'] .au-hidden { margin: 0; padding-inline-start: var(--s-5); font: var(--t-sm); }
 [data-shell='admin'] .au-pairs dt { color: var(--c-muted); font-weight: 600; }
 [data-shell='admin'] .au-pairs dd { margin: 0; overflow-wrap: anywhere; }
 @media (min-width: 1500px) {

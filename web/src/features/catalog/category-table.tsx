@@ -60,7 +60,7 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
                       <span className={nameClass(c)}>{c.name}</span>
                     </button>
                   )}
-                  {!c.active && <span className="tag tag--outline cg-stopped">{t('catalog.categories.pause')}</span>}
+                  {!c.active && <span className="tag tag--outline cg-stopped">{t('catalog.categories.inactive')}</span>}
                 </td>
                 {c.name_en ? (
                   <td className="cg-name-en" data-label={t('catalog.categories.colNameEn')}>

@@ -70,8 +70,9 @@ export function useAdminItems() {
 }
 
 // ?all=1 để món thuộc nhóm đã ngừng vẫn hiện đúng tên nhóm
-export function useAllCategories() {
+export function useAllCategories(enabled = true) {
   return useQuery({
+    enabled,
     queryKey: CATEGORIES_KEY,
     queryFn: () => apiFetch<Category[]>('/api/item-categories?all=1'),
   });

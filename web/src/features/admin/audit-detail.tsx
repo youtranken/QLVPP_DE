@@ -1,9 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { useDirectoryNames } from '@/features/directory/use-all-users';
+import { usePersonName } from '@/features/directory/use-all-users';
+import { categoryLabel, useAllCategories } from '@/features/catalog/catalog.api';
 import type { AuditBatch, AuditEntry } from './admin.api';
-import { changedFields, isTechnicalKey, otherDetail, readableValue } from './audit-diff';
-
-type Translate = ReturnType<typeof useTranslation>['t'];
+import { changedFields, hiddenChanges, isTechnicalKey, otherDetail, readableValue, type HiddenChange } from './audit-diff';
 
 function BatchItems({ batch }: { batch: AuditBatch }) {
   const { t, i18n } = useTranslation();
@@ -19,20 +18,30 @@ function BatchItems({ batch }: { batch: AuditBatch }) {
 // Chỉ trường đã có nhãn tiếng Việt mới hiện: khóa lạ api thêm sau này không lộ tên thô ra cho người dùng
 function useReadable() {
   const { t, i18n } = useTranslation();
-  const names = useDirectoryNames();
+  const personName = usePersonName();
   const shown = (key: string) => !isTechnicalKey(key) && i18n.exists(`audit.fields.${key}`);
   const value = (key: string, raw: string | null, original: unknown): string | null | undefined => {
     if (raw === null) return null;
-    if (key.endsWith('_sub') && typeof original === 'string') return names.data?.get(original) ?? personOf(t, original);
+    if (key.endsWith('_sub') && typeof original === 'string') return personName(original);
     if (typeof original === 'boolean') return t(original ? 'audit.detail.yes' : 'audit.detail.no');
     return readableValue(original);
   };
   return { shown, value, label: (key: string) => t(`audit.fields.${key}`) };
 }
 
-const personOf = (t: Translate, sub: string) => (sub.startsWith('system') ? t('audit.filters.system') : t('audit.detail.someone'));
-
 const sideOf = (side: unknown, key: string): unknown => (side !== null && typeof side === 'object' ? (side as Record<string, unknown>)[key] : undefined);
+
+function HiddenLine({ change }: { change: HiddenChange }) {
+  const { t, i18n } = useTranslation();
+  const categories = useAllCategories(change.kind === 'category' && change.id !== null);
+  if (change.kind === 'image') return <li>{t('audit.detail.imageChanged')}</li>;
+  if (change.kind === 'category') {
+    const list = Array.isArray(categories.data) ? categories.data : [];
+    const c = change.id ? list.find((x) => x.id === change.id) : undefined;
+    return <li>{c ? t('audit.detail.categoryTo', { name: categoryLabel(c, i18n.language) }) : t('audit.detail.categoryChanged')}</li>;
+  }
+  return <li>{t('audit.detail.otherChanged')}</li>;
+}
 
 export function AuditDetail({ entry, id }: { entry: AuditEntry; id: string }) {
   const { t } = useTranslation();
@@ -46,10 +55,12 @@ export function AuditDetail({ entry, id }: { entry: AuditEntry; id: string }) {
   }
   const d = entry.detail !== null && typeof entry.detail === 'object' ? (entry.detail as Record<string, unknown>) : {};
   const hasSides = 'before' in d || 'after' in d;
-  const fields = (hasSides ? (changedFields(d.before, d.after) ?? []) : [])
-    .filter((f) => r.shown(f.key))
-    .map((f) => ({ key: f.key, before: r.value(f.key, f.before, sideOf(d.before, f.key)), after: r.value(f.key, f.after, sideOf(d.after, f.key)) }))
-    .filter((f) => f.before !== undefined && f.after !== undefined);
+  const changed = hasSides ? (changedFields(d.before, d.after) ?? []) : [];
+  const readable = changed.map((f) =>
+    r.shown(f.key) ? { key: f.key, before: r.value(f.key, f.before, sideOf(d.before, f.key)), after: r.value(f.key, f.after, sideOf(d.after, f.key)) } : null,
+  );
+  const fields = readable.filter((f): f is { key: string; before: string | null; after: string | null } => f !== null && f.before !== undefined && f.after !== undefined);
+  const hidden = hiddenChanges(changed.filter((f) => !fields.some((x) => x.key === f.key)).map((f) => ({ key: f.key, after: sideOf(d.after, f.key) })));
   const rest = otherDetail(entry.detail)
     .filter((x) => r.shown(x.key))
     .map((x) => ({ key: x.key, value: r.value(x.key, x.value, d[x.key]) }))
@@ -76,7 +87,14 @@ export function AuditDetail({ entry, id }: { entry: AuditEntry; id: string }) {
           </tbody>
         </table>
       )}
-      {hasSides && fields.length === 0 && rest.length === 0 && <p className="au-muted">{t('audit.detail.noChange')}</p>}
+      {hidden.length > 0 && (
+        <ul className="au-hidden">
+          {hidden.map((c) => (
+            <HiddenLine key={c.kind} change={c} />
+          ))}
+        </ul>
+      )}
+      {hasSides && changed.length === 0 && rest.length === 0 && <p className="au-muted">{t('audit.detail.noChange')}</p>}
       {rest.length > 0 && (
         <dl className="au-pairs">
           {rest.map((x) => (

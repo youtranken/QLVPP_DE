@@ -203,9 +203,12 @@ const admin = {
       before: 'Trước',
       after: 'Sau',
       noChange: 'Không có trường nào khác nhau.',
+      imageChanged: 'Ảnh đã đổi',
+      categoryTo: 'Đổi nhóm sang {{name}}',
+      categoryChanged: 'Đổi nhóm',
+      otherChanged: 'Có thay đổi khác',
       yes: 'Có',
       no: 'Không',
-      someone: 'Người dùng cũ',
     },
     fields: {
       action: 'Hành động',

@@ -284,6 +284,19 @@ describe('Trang Nhóm món — ô tìm và bảng gọn', () => {
     expect(await screen.findByText('Không có nhóm nào khớp')).toBeInTheDocument();
   });
 
+  it('đang lọc "i" (2/3 nhóm): panel nhóm đếm "2/2" và ↑/↓ chỉ đi qua các nhóm đang hiện', async () => {
+    await open();
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm nhóm (không cần dấu)' }), 'i');
+    expect(await screen.findByText('Đang hiện 2/3 nhóm')).toBeInTheDocument();
+    await userEvent.click(within(rowOf('Bút & viết')).getByRole('button', { name: 'Món trong nhóm (4)' }));
+    const panel = await screen.findByRole('dialog', { name: 'Nhóm Bút & viết' });
+    expect(within(panel).getByText('2/2')).toBeInTheDocument();
+    expect(within(panel).getByRole('button', { name: 'Nhóm sau' })).toBeDisabled();
+    await userEvent.click(within(panel).getByRole('button', { name: 'Nhóm trước' }));
+    expect(await screen.findByRole('dialog', { name: 'Nhóm Giấy & sổ' })).toBeInTheDocument();
+    expect(within(screen.getByRole('dialog', { name: 'Nhóm Giấy & sổ' })).getByText('1/2')).toBeInTheDocument();
+  });
+
   it('nút Sửa/Tạm ngưng nằm trong ô td.acts > .acts__in (đường kẻ hàng liền, ô co vừa nút)', async () => {
     await open();
     const edit = within(rowOf('Bút & viết')).getByRole('button', { name: 'Sửa nhóm Bút & viết' });

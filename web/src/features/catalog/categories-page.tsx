@@ -46,13 +46,18 @@ export function CategoriesPage() {
   const [q, setQ] = useState('');
   const group = useGroupToggle(items.data, refresh);
   const list = order.ordered;
-  const ids = useMemo(() => list.map((c) => c.id), [list]);
-  const panel = usePanelParam('group', { order: ids, known: (id) => (categories.isSuccess ? ids.includes(id) : undefined) });
-  const openIndex = panel.id ? list.findIndex((c) => c.id === panel.id) : -1;
   // Đang sắp xếp thì cần thấy đủ nhóm: bỏ lọc
   const query = sort.on ? '' : q.trim();
   const visible = (c: Category) => !query || matchesSearch([c.name, c.name_en].filter(Boolean).join(' '), query);
-  const shown = query ? list.filter(visible).length : list.length;
+  // ↑/↓ trong panel và bộ đếm x/y đi theo đúng các dòng đang hiện sau khi lọc
+  const shownIds = list.filter(visible).map((c) => c.id);
+  const shownKey = shownIds.join(',');
+  const shownOrder = useMemo(() => (shownKey ? shownKey.split(',') : []), [shownKey]);
+  const allIds = useMemo(() => list.map((c) => c.id), [list]);
+  const panel = usePanelParam('group', { order: shownOrder, known: (id) => (categories.isSuccess ? allIds.includes(id) : undefined) });
+  // Vị trí màu theo thứ tự đầy đủ, không theo danh sách đã lọc
+  const openIndex = panel.id ? list.findIndex((c) => c.id === panel.id) : -1;
+  const shown = shownIds.length;
   const tools = !sort.on && list.length > 0 && (
     <div className="cg-search">
       <Toolbar search={{ value: q, onChange: setQ, label: t('catalog.categories.search'), placeholder: t('catalog.categories.search'), maxLength: 100 }} />
@@ -128,6 +133,7 @@ export function CategoriesPage() {
           onToggleGroup={(c, notify) => void group.toggle(c, notify)}
           onClose={panel.close}
           refresh={refresh}
+          nav={{ index: panel.index, total: panel.total, onStep: panel.step }}
         />
       )}
       {adding && <CategoryDialog categories={list} onClose={() => setAdding(false)} />}

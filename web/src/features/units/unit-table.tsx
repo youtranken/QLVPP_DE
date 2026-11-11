@@ -47,7 +47,7 @@ export function UnitTable({ ordered, busy, sorting, onMove, onMoveTo, onEdit, on
                 {sorting && <ReorderCell index={i} count={ordered.length} name={u.name} disabled={busy} onMove={onMove} />}
                 <td className="un-name">
                   <span className="un-name__text">{u.name}</span>
-                  {!u.active && <span className="tag tag--outline">{t('units.page.deactivate')}</span>}
+                  {!u.active && <span className="tag tag--outline">{t('units.page.inactive')}</span>}
                 </td>
                 {u.name_en ? (
                   <td className="un-name-en" data-label={t('units.page.colNameEn')}>

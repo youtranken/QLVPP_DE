@@ -6,7 +6,7 @@ import { matches } from '@/lib/search';
 import { SearchBox } from '@/ui/filter/search-box';
 import { ItemThumb } from '@/ui/item-thumb';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
-import { OverlayPanel } from '@/ui/overlay-panel';
+import { OverlayPanel, type PanelNav } from '@/ui/overlay-panel';
 import { usePanelToast } from '@/ui/panel-toast';
 import type { ToastSpec } from '@/ui/toast-context';
 import { Switch } from '@/ui/switch';
@@ -30,6 +30,7 @@ interface Props {
   onToggleGroup: (c: Category, notify: (t: ToastSpec) => void) => void;
   onClose: () => void;
   refresh: () => Promise<unknown>;
+  nav?: Omit<PanelNav, 'prevLabel' | 'nextLabel'>;
 }
 
 function useGroupItems(group: Category, items: AdminItem[]) {
@@ -41,7 +42,7 @@ function useGroupItems(group: Category, items: AdminItem[]) {
   }, [group, items]);
 }
 
-export function GroupPanel({ group, tone, items, loading, loadError, onRetry, busy, error, onToggleGroup, onClose, refresh }: Props) {
+export function GroupPanel({ group, tone, items, loading, loadError, onRetry, busy, error, onToggleGroup, onClose, refresh, nav }: Props) {
   const { t, i18n } = useTranslation();
   const unitName = useUnitNames();
   const hintId = useId();
@@ -51,7 +52,13 @@ export function GroupPanel({ group, tone, items, loading, loadError, onRetry, bu
   const shown = all.filter((i) => matches(i, q));
   const title = t('catalog.categories.panelTitle', { name: categoryLabel(group, i18n.language) });
   return (
-    <OverlayPanel open onClose={onClose} title={title} saving={busy}>
+    <OverlayPanel
+      open
+      onClose={onClose}
+      title={title}
+      saving={busy}
+      nav={nav && { ...nav, prevLabel: t('catalog.categories.prevGroup'), nextLabel: t('catalog.categories.nextGroup') }}
+    >
       <div className="gp">
         <div className="gp-head">
           <Switch
