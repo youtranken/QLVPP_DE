@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, settled, shot } from './helpers';
+import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, settled, shot, pendingConfirm } from './helpers';
 import { seedLockedRequest, stockOf } from './locked-request';
 import { PRIVATE_YM, clearPrivateSnapshots, openOnPrivatePeriod } from './private-period';
 
@@ -30,7 +30,7 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
     );
     const [a, b] = seed.items;
     try {
-      const made = await request.post(`/api/admin/reports/${PRIVATE_YM}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print' } });
+      const made = await request.post(`/api/admin/reports/${PRIVATE_YM}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print', ...(await pendingConfirm(request, PRIVATE_YM)) } });
       expect(made.status()).toBe(201);
       await openOnPrivatePeriod(page);
       await page.goto(`/admin/arrivals?q=${encodeURIComponent(seed.tag)}`);

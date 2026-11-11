@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { expect, test, type APIRequestContext, type Download, type Page } from '@playwright/test';
-import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, settled, shot } from './helpers';
+import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, settled, shot, pendingConfirm } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
 import { PRIVATE_YM, clearPrivateSnapshots, openOnPrivatePeriod } from './private-period';
 import { openCopies, openEditable, previewAndPrint } from './report-send-flow';
@@ -61,11 +61,15 @@ test.describe('Vòng3-BC Báo cáo & gửi NCC', () => {
     const qty = () => page.getByRole('spinbutton', { name: `Đề nghị: ${item.name}` });
     await expect(qty()).toHaveValue('13');
     await qty().fill('10');
-    await qty().fill('100000');
-    await expect(page.getByText('Tối đa 99.999')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Xem tổng kết' })).toBeDisabled();
+    // Biên 1000 nhận, 1001 báo "Tối đa 1.000" ở đúng ô; nút vẫn bấm được, bấm thì nhảy về ô lỗi
+    await qty().fill('1000');
+    await expect(page.getByText('Tối đa 1.000')).toHaveCount(0);
+    await qty().fill('1001');
+    await expect(page.getByText('Tối đa 1.000')).toBeVisible();
+    await page.getByRole('button', { name: 'Xem tổng kết' }).click();
+    await expect(qty()).toBeFocused();
     await qty().fill('10');
-    await expect(page.getByText('Tối đa 99.999')).toHaveCount(0);
+    await expect(page.getByText('Tối đa 1.000')).toHaveCount(0);
     await settled(page);
     await shot(page, info, 'vong3-report-send');
     if (isMobile(info)) {
@@ -110,7 +114,7 @@ test.describe('Vòng3-BC Báo cáo & gửi NCC', () => {
     psql(`UPDATE requests SET department = 'PW Phòng giao' WHERE id = '${seed.requestId}'`);
     const report = await (await request.get(`/api/admin/reports/${seed.prevYm}`, { headers: devHeaders('admin') })).json();
     const key = report.byItem.find((r: { name: string }) => r.name === a.name).key as string;
-    const made = await request.post(`/api/admin/reports/${PRIVATE_YM}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'xlsx', order_qty: { [key]: 9 } } });
+    const made = await request.post(`/api/admin/reports/${PRIVATE_YM}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'xlsx', order_qty: { [key]: 9 }, ...(await pendingConfirm(request, PRIVATE_YM)) } });
     expect(made.ok()).toBe(true);
     const before = await snapshotsOf(request, seed.prevYm);
 

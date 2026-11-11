@@ -13,6 +13,7 @@ import {
   seedActiveUser,
   seedPwItem,
   settled,
+  pendingConfirm,
 } from './helpers';
 import { seedLockedRequest } from './locked-request';
 import { PRIVATE_YM, clearPrivateSnapshots } from './private-period';
@@ -195,7 +196,7 @@ test.describe('Tổng hợp — giảm sau khi đã gửi NCC (Plan v2-D, Task 1
     const seed = await seedLockedRequest(request, info, [{ stock: 0, qty: 5 }], { ym: PRIVATE_YM });
     const [item] = seed.items;
     try {
-      const made = await request.post(`/api/admin/reports/${PRIVATE_YM}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print' } });
+      const made = await request.post(`/api/admin/reports/${PRIVATE_YM}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print', ...(await pendingConfirm(request, PRIVATE_YM)) } });
       expect(made.status()).toBe(201);
       await page.goto(`/admin/month?ym=${PRIVATE_YM}`);
       await searchMonthPeople(page, seed.tag);

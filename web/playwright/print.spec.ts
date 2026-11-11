@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, settled } from './helpers';
+import { acquireLock, asRole, devHeaders, expectNoContrastViolations, isMobile, psql, settled, pendingConfirm } from './helpers';
 import { seedLockedRequest, type Seed } from './locked-request';
 import { PRIVATE_YM, clearPrivateSnapshots, openOnPrivatePeriod } from './private-period';
 import { openCopies, openEditable, previewAndPrint } from './report-send-flow';
@@ -24,7 +24,7 @@ async function printSnapshot(page: Page, request: APIRequestContext, ym: string,
   const report = await (await request.get(`/api/admin/reports/${ym}`, { headers: devHeaders('admin') })).json();
   const keyOf = (name: string) => [...report.byItem, ...report.custom].find((r: { name: string }) => r.name === name).key as string;
   const order_qty = Object.fromEntries(Object.entries(order).map(([name, qty]) => [keyOf(name), qty]));
-  const made = await request.post(`/api/admin/reports/${ym}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print', order_qty } });
+  const made = await request.post(`/api/admin/reports/${ym}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print', order_qty, ...(await pendingConfirm(request, ym)) } });
   expect(made.ok()).toBe(true);
   const { id } = (await made.json()) as { id: string };
   await page.goto(`/admin/reports/snapshots/${id}/print`);

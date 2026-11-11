@@ -93,6 +93,13 @@ export async function urlOfNewTab(page: Page, expected: RegExp, open: () => Prom
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
 // psql trong container postgres dev; trả stdout (-tA) để đọc giá trị RETURNING
+// Chốt bản qua api: phải xác nhận đúng số món ngoài danh mục đang chờ (server ghi Không mua cho các món đó)
+export async function pendingConfirm(request: APIRequestContext, ym: string) {
+  const report = (await (await request.get(`/api/admin/reports/${ym}`, { headers: devHeaders('admin') })).json()) as { pending_custom_count: number };
+  const n = report.pending_custom_count;
+  return n > 0 ? { reject_pending_custom: true, expected_pending: n } : { expected_pending: 0 };
+}
+
 export function psql(sql: string): string {
   return execFileSync(
     'docker',
