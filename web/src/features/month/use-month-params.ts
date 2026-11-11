@@ -18,9 +18,10 @@ const LEGACY_FILTER: Record<string, MonthChip | undefined> = {
 export const isAskedYm = (asked: string | null, openYm: string | undefined): asked is string =>
   !!asked && !!openYm && YM.test(asked) && asked <= openYm;
 
-// Kỳ mặc định khi URL không có ym: kỳ khóa gần nhất đang giao; kỳ đó không có phiếu hoặc đã giao xong → kỳ đang đăng ký
+// Kỳ mặc định khi URL không có ym: kỳ khóa gần nhất đang giao; kỳ đó không còn dòng chưa giao (không có phiếu hoặc đã giao xong)
+// → kỳ đang đăng ký. Không dựa vào registered: số đó đếm theo danh sách chụp lúc khóa, người ngoài danh sách vẫn có phiếu cần giao
 export function pickDefaultYm(openYm: string, locked: Pick<PeriodSummary, 'registered' | 'lines_pending_delivery'>): string {
-  return locked.registered === 0 || !locked.lines_pending_delivery ? openYm : lockedYm(openYm);
+  return locked.lines_pending_delivery ? lockedYm(openYm) : openYm;
 }
 
 // defaultYm do trang tính (pickDefaultYm); chưa có thì ym undefined (trang chờ). ?ym= sai mẫu hoặc tương lai → thay URL, không gọi API với tháng đó

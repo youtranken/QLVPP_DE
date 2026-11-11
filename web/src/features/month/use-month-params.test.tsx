@@ -29,6 +29,9 @@ describe('pickDefaultYm', () => {
   it('kỳ khóa đã giao xong (lines_pending_delivery=0) → kỳ đang đăng ký', () => {
     expect(pickDefaultYm('2026-11', { registered: 4, lines_pending_delivery: 0 })).toBe('2026-11');
   });
+  it('chỉ người ngoài danh sách chụp lúc khóa có phiếu (registered=0) nhưng còn dòng chưa giao → kỳ khóa', () => {
+    expect(pickDefaultYm('2026-11', { registered: 0, lines_pending_delivery: 2 })).toBe('2026-10');
+  });
 });
 
 describe('useMonthParams', () => {
