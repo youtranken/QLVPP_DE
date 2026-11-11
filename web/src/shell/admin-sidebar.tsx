@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -11,15 +12,28 @@ import { useAdminBadges } from '@/shell/use-admin-badges';
 
 const ALL_PATHS = ADMIN_NAV.flatMap((g) => g.pages.map((p) => p.path));
 
-function SideLink({ page, count, onNavigate }: { page: AdminPage; count?: number; onNavigate?: () => void }) {
+// Nhãn bị cắt "…" (tên dài, cột đủ chữ hay menu điện thoại) → rê chuột thấy tên đầy đủ; nhãn vừa thì không title thừa
+function titleIfTruncated(e: MouseEvent<HTMLAnchorElement>, label: string): void {
+  const el = e.currentTarget.querySelector<HTMLElement>('.side__label');
+  if (el && el.scrollWidth > el.clientWidth) e.currentTarget.title = label;
+  else e.currentTarget.removeAttribute('title');
+}
+
+function SideLink({ page, count, collapsed, onNavigate }: { page: AdminPage; count?: number; collapsed: boolean; onNavigate?: () => void }) {
   const { t } = useTranslation();
   const label = t(page.titleKey);
   // Mục là tiền tố của mục khác thì chỉ khớp đúng đường dẫn để hai mục không sáng chung
   const end = ALL_PATHS.some((p) => p.startsWith(`${page.path}/`));
-  // B0.9: chỉ cột thu gọn (768–1279, ẩn chữ) mới cần tooltip; cột đủ chữ và menu điện thoại thì title là thừa
-  const collapsed = useMediaQuery(ADMIN_TABLET_QUERY) && !onNavigate;
   return (
-    <NavLink to={`/admin/${page.path}`} end={end} title={collapsed ? label : undefined} className="side__link" onClick={onNavigate}>
+    <NavLink
+      to={`/admin/${page.path}`}
+      end={end}
+      // Cột thu gọn ẩn chữ → luôn có title
+      title={collapsed ? label : undefined}
+      onMouseEnter={collapsed ? undefined : (e) => titleIfTruncated(e, label)}
+      className="side__link"
+      onClick={onNavigate}
+    >
       <Icon name={page.icon} />
       <span className="side__label">{label}</span>
       {!!count && page.badge && (
@@ -40,12 +54,14 @@ export function AdminSidebar({ variant = 'side', onNavigate }: { variant?: 'side
   const badges = useAdminBadges();
   const period = useQuery(currentPeriodQuery());
   const hasPeriod = typeof period.data?.ym === 'string' && typeof period.data.deadline === 'string';
+  // Cột thu gọn (768–1279) chỉ ở cột trái; menu điện thoại luôn đủ chữ
+  const collapsed = useMediaQuery(ADMIN_TABLET_QUERY) && variant === 'side';
   return (
     <div className="side" data-variant={variant}>
       <nav className="side__nav" aria-label={t('nav.adminMenu')}>
         {ADMIN_NAV.map((g) => {
           const links = g.pages.map((p) => (
-            <SideLink key={p.path} page={p} count={p.badge ? badges[p.badge] : undefined} onNavigate={onNavigate} />
+            <SideLink key={p.path} page={p} count={p.badge ? badges[p.badge] : undefined} collapsed={collapsed} onNavigate={onNavigate} />
           ));
           return (
             <div key={g.labelKey} className="side__group" role="group" aria-label={t(g.labelKey)}>

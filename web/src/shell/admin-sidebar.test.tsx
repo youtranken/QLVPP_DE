@@ -8,7 +8,7 @@ import { stubShellApi } from '@/test/admin-shell-stub';
 
 const rows = (n: number) => ({ items: Array.from({ length: n }, (_, i) => ({ id: `l${i}` })) });
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
-// Tên đọc = nhãn mục (+ ", n …" khi có số); title chỉ còn ở cột thu gọn (B0.9)
+// Tên đọc = nhãn mục (+ ", n …" khi có số); title chỉ ở cột thu gọn hoặc khi nhãn bị cắt
 const byLabel = (label: string) => (name: string) => name === label || name.startsWith(`${label},`);
 const navLink = (label: string) => within(sideNav()).getByRole('link', { name: byLabel(label) });
 
@@ -204,5 +204,67 @@ describe('AdminSidebar: Tổng hợp, Còn nợ, Báo cáo trong nhóm Hằng th
     renderApp(makeMe('admin'), path);
     const monthly = within(await screen.findByRole('navigation', { name: 'Menu quản lý' })).getByRole('group', { name: 'Hằng tháng' });
     expect(within(monthly).getAllByRole('link').filter((a) => a.hasAttribute('aria-current'))).toHaveLength(1);
+  });
+});
+
+describe('AdminSidebar: tên đầy đủ khi nhãn bị cắt', () => {
+  const TABLET = '(min-width: 768px) and (max-width: 1279px)';
+
+  function stubWidth(width: number) {
+    const subs = { add: 0, remove: 0 };
+    vi.stubGlobal('matchMedia', (query: string) => {
+      const max = /max-width:\s*(\d+)px/.exec(query);
+      const min = /min-width:\s*(\d+)px/.exec(query);
+      const matches = !query.includes('prefers-reduced-motion') && (!max || width <= Number(max[1])) && (!min || width >= Number(min[1]));
+      return {
+        matches,
+        media: query,
+        onchange: null,
+        addEventListener: () => {
+          if (query === TABLET) subs.add++;
+        },
+        removeEventListener: () => {
+          if (query === TABLET) subs.remove++;
+        },
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => false,
+      };
+    });
+    return subs;
+  }
+
+  it('cột thu gọn (768–1279): mọi mục có title = nhãn', async () => {
+    stubWidth(1024);
+    stubShellApi({});
+    renderApp(makeMe('admin'), '/admin/catalog');
+    await waitFor(() => expect(navLink('Danh mục')).toHaveAttribute('title', 'Danh mục'));
+  });
+
+  it('cột đủ chữ (≥ 1280): rê chuột lên mục có nhãn bị cắt → title = tên đầy đủ; nhãn vừa thì không title', async () => {
+    stubWidth(1440);
+    stubShellApi({});
+    renderApp(makeMe('admin'), '/admin/catalog');
+    const long = navLink('Món ngoài danh mục');
+    const short = navLink('Danh mục');
+    const label = (a: HTMLElement) => a.querySelector<HTMLElement>('.side__label')!;
+    Object.defineProperty(label(long), 'scrollWidth', { configurable: true, value: 220 });
+    Object.defineProperty(label(long), 'clientWidth', { configurable: true, value: 140 });
+    Object.defineProperty(label(short), 'scrollWidth', { configurable: true, value: 60 });
+    Object.defineProperty(label(short), 'clientWidth', { configurable: true, value: 140 });
+    await userEvent.hover(long);
+    expect(long).toHaveAttribute('title', 'Món ngoài danh mục');
+    await userEvent.hover(short);
+    expect(short).not.toHaveAttribute('title');
+  });
+
+  it('truy vấn cột thu gọn chỉ nghe một lần cho cả menu (không mỗi mục một lần, không nghe lại mỗi lần vẽ)', async () => {
+    const subs = stubWidth(1440);
+    stubShellApi({ '/api/admin/review?status=pending': () => jsonResponse(200, rows(3)) });
+    renderApp(makeMe('admin'), '/admin/catalog');
+    await waitFor(() => expect(navLink('Món ngoài danh mục')).toHaveTextContent('3'));
+    // AdminSidebar + khối người dùng cuối cột
+    expect(subs.add).toBe(2);
+    expect(subs.remove).toBe(0);
   });
 });
