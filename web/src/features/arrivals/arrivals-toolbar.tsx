@@ -18,7 +18,8 @@ interface Props {
   shown: number;
   shortCount: number;
   reducedCount: number;
-  batch: { groups: number; items: number };
+  // partial: có nhóm đã tick không nhận đủ được → nút ghi "Nhận hàng"
+  batch: { groups: number; items: number; partial: boolean };
   saveDisabled: boolean;
   candidates: ComboOption[];
   onFilter: (patch: Record<string, string | null>) => void;
@@ -44,14 +45,14 @@ export function ArrivalsToolbar({ plan, filter, groups, counts, total, shown, sh
         <div className="ar-save">
           <span className="ar-batch">{t('arrivals.batchPicked', { g: batch.groups, n: batch.items })}</span>
           <button type="button" className="btn btn--primary" disabled={saveDisabled} onClick={onSave}>
-            {t('arrivals.receivePicked', { n: batch.groups })}
+            {t(batch.partial ? 'arrivals.receivePickedPartial' : 'arrivals.receivePicked', { n: batch.groups })}
           </button>
         </div>
       </div>
       <div className="ar-bar__row">
         <SearchBox className="flt-search" label={t('arrivals.filter.search')} placeholder={t('arrivals.filter.search')} value={filter.q} onChange={(q) => onFilter({ q: q || null })} />
         <Switch checked={filter.short} text={t('arrivals.filter.short', { n: shortCount })} onChange={(on) => onFilter({ short: on ? '1' : null })} />
-        <GroupedCombobox options={candidates} onPick={onAdd} label={t('arrivals.add.search')} placeholder={t('arrivals.add.search')} noMatch={t('arrivals.add.noMatch')} />
+        <GroupedCombobox options={candidates} onPick={onAdd} label={t('arrivals.add.search')} placeholder={t('arrivals.add.placeholder')} noMatch={t('arrivals.add.noMatch')} />
       </div>
       <GroupChips
         className="flt-chips"

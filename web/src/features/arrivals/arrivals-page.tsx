@@ -12,6 +12,7 @@ import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import { PeriodLockGate } from '@/features/summary/period-lock-gate';
 import { NO_GROUP, applyArrivalFilter, groupOf, isAllArrived, isShort, isReceivable, parseArrivalFilter, receivableLines, toArrivalRows, type ArrivalRow } from './arrival-rows';
+import { partialReceive } from './arrival-status';
 import { ArrivalTable } from './arrival-table';
 import { ArrivalsCustom } from './arrivals-custom';
 import { ArrivalsDone } from './arrivals-done';
@@ -74,7 +75,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   const adm = useAdmOutToggle(ym);
   const [added, setAdded] = useState<string[]>([]);
   const [note, setNote] = useState('');
-  // Nhóm đã tick cho nút "Nhận đủ hàng (n nhóm)" trên thanh
+  // Nhóm đã tick cho nút "Nhận đủ hàng / Nhận hàng (n nhóm)" trên thanh
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
 
   if (planQ.isError || items.isError || cats.isError) return <LoadError onRetry={() => void Promise.all([planQ.refetch(), items.refetch(), cats.refetch()])} />;
@@ -165,7 +166,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
         shown={visible.length}
         shortCount={rows.filter(isShort).length}
         reducedCount={rows.filter((r) => r.reduced > 0).length}
-        batch={{ groups: pickedIds.size, items: toSend.length }}
+        batch={{ groups: pickedIds.size, items: toSend.length, partial: partialReceive(pickedRows, draft.qtyOf) }}
         saveDisabled={hasError(pickedRows) || toSend.length === 0 || saver.pending}
         candidates={candidates}
         onFilter={(patch) => patchUrl(patch, true)}

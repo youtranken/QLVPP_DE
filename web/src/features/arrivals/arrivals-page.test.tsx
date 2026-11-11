@@ -32,32 +32,31 @@ describe('Hàng về — bảng theo bản in', () => {
     expect(within(rowOf('Kẹp giấy')).queryByText(/đã nhận/)).toBeNull();
   });
 
-  it('gom theo nhóm: đầu nhóm "sản phẩm a/b, sau lưu c/b" khớp chip: chip nền "Thiếu 6" = đã lưu, chip viền đứt "Sau lưu: Nhập đủ số lượng"', async () => {
+  it('gom theo nhóm: đầu nhóm "sản phẩm a/b" theo số đã lưu, không "sau lưu"; chip "Thiếu 6" = đã lưu, không chip "Sau lưu"', async () => {
     stub();
     await open();
     await screen.findByDisplayValue('6');
     const but = screen.getByRole('rowgroup', { name: 'Bút' });
-    expect(but).toHaveTextContent('sản phẩm 0/1, sau lưu 1/1');
-    const row = within(rowOf('Bút bi'));
-    expect(row.getByText('Thiếu 6')).toHaveClass('tag');
-    expect(row.getByText('Sau lưu: Nhập đủ số lượng')).toHaveClass('ar-after-chip');
-    await type(box('Bút bi'), '0');
     expect(but).toHaveTextContent('sản phẩm 0/1');
     expect(but).not.toHaveTextContent('sau lưu');
+    const row = within(rowOf('Bút bi'));
+    expect(row.getByText('Thiếu 6')).toHaveClass('tag');
     expect(row.queryByText(/Sau lưu/)).toBeNull();
+    await type(box('Bút bi'), '0');
     expect(row.getByText('Thiếu 6')).toBeInTheDocument();
   });
 
-  it('nhóm đã có món đủ: "sản phẩm 1/2, sau lưu 2/2"; dòng đã nhận đủ khóa: "✓ Đã nhận đủ", không ô số, không nút NCC, chip "Nhập đủ số lượng"', async () => {
+  it('nhóm đã có món đủ: "sản phẩm 1/2"; dòng đã nhận đủ khóa: "✓ Đã nhận đủ", không ô số, không nút NCC, chip "Nhận đủ hàng"', async () => {
     stub({ plan: plan([...PLAN.rows, planRow({ item_id: 'i-c', name: 'Bút chì', category_id: 'c-but', received: 10, remaining: 0 })]) });
     await open();
     const but = await screen.findByRole('rowgroup', { name: 'Bút' });
-    expect(but).toHaveTextContent('sản phẩm 1/2, sau lưu 2/2');
+    expect(but).toHaveTextContent('sản phẩm 1/2');
+    expect(but).not.toHaveTextContent('sau lưu');
     const row = within(rowOf('Bút chì'));
     expect(row.getByText('✓ Đã nhận đủ')).toBeInTheDocument();
     expect(row.queryByRole('spinbutton')).toBeNull();
     expect(row.queryByRole('button', { name: /NCC hết hàng/ })).toBeNull();
-    expect(row.getByText('Nhập đủ số lượng', { selector: '.tag' })).toBeInTheDocument();
+    expect(row.getByText('Nhận đủ hàng', { selector: '.tag' })).toBeInTheDocument();
     expect(box('Bút bi')).toBeEnabled();
   });
 
@@ -104,16 +103,20 @@ describe('Hàng về — bảng theo bản in', () => {
     expect(screen.getByText('Về bù kỳ trước (1)')).toBeInTheDocument();
   });
 
-  it('chip tình trạng: nhập 9 → "Sau lưu: Thiếu 1"; 11 → "Sau lưu: Dư 1"; sau nhập kho đổi theo', async () => {
+  it('cột Tình trạng: gõ 9/10 → chữ đỏ "Nhập 9 · NCC còn nợ 1" (không chip); gõ đủ 10 → giữ "Thiếu 10"; gõ 11 → chip "Dư 1"; sau nhập kho đổi theo', async () => {
     stub();
     await open();
     await screen.findByDisplayValue('6');
     await type(box('Kẹp giấy'), '9');
-    expect(rowOf('Kẹp giấy')).toHaveTextContent('Sau lưu: Thiếu 1');
+    const row = within(rowOf('Kẹp giấy'));
+    expect(row.getByText('Nhập 9 · NCC còn nợ 1')).toHaveClass('ar-owe');
+    expect(row.queryByText('Thiếu 10')).toBeNull();
     await type(box('Kẹp giấy'), '10');
-    expect(rowOf('Kẹp giấy')).toHaveTextContent('Sau lưu: Nhập đủ số lượng');
+    expect(row.getByText('Thiếu 10')).toHaveClass('tag');
+    expect(row.queryByText(/còn nợ/)).toBeNull();
     await type(box('Kẹp giấy'), '11');
-    expect(rowOf('Kẹp giấy')).toHaveTextContent('Sau lưu: Dư 1');
+    expect(row.getByText('Dư 1')).toHaveClass('tag');
+    expect(row.queryByText(/Thiếu|Sau lưu/)).toBeNull();
     expect(within(rowOf('Kẹp giấy')).getAllByRole('cell').at(-1)).toHaveTextContent('11');
   });
 
@@ -279,7 +282,7 @@ describe('Hàng về — biên ô Về đợt này', () => {
     stub({ summary: FUTURE });
     await open();
     expect(await screen.findByText('Kỳ tháng 10 chưa khóa sổ — xem được từ 00:00 ngày 11/10.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Nhận đủ hàng/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Nhận (đủ )?hàng/ })).not.toBeInTheDocument();
   });
 
   it('giao diện tiếng Anh: tên món theo name_en', async () => {

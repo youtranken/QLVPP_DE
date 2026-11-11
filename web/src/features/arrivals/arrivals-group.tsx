@@ -5,7 +5,7 @@ import type { Tone } from '@/lib/group-tone';
 import { ItemThumb } from '@/ui/item-thumb';
 import { useRequestFormat } from '@/features/request/request-format';
 import { isReceivable, isReceivedFull, type ArrivalRow, type ArrivalSection } from './arrival-rows';
-import { afterState, groupCounts, savedState, shortOf, type ArrivalState, type ArrivalStatus } from './arrival-status';
+import { groupCounts, partialReceive, shortOf, statusCell, type ArrivalState, type ArrivalStatus } from './arrival-status';
 import type { ArrivalsDraft } from './use-arrivals-draft';
 
 const THUMB_TONE: Tone = 'g0';
@@ -44,17 +44,12 @@ function stateText(t: TFunction, st: ArrivalStatus) {
   return t(`arrivals.status.${st.state}`, { n: st.n });
 }
 
-// Chip nền = đã lưu; chip viền đứt = sau khi bấm "Nhận đủ hàng"
+// Gõ thiếu: một dòng chữ đỏ (không phải chip) báo phần NCC còn nợ; còn lại là chip trạng thái
 function StatusTag({ r, qty }: { r: ArrivalRow; qty: number }) {
   const { t } = useTranslation();
-  const saved = savedState(r);
-  const after = afterState(r, qty);
-  return (
-    <>
-      <span className={`tag ${TAG_CLASS[saved.state]}`}>{stateText(t, saved)}</span>
-      {after && <span className="ar-after-chip">{t('arrivals.status.after', { label: stateText(t, after) })}</span>}
-    </>
-  );
+  const cell = statusCell(r, qty);
+  if (cell.kind === 'owe') return <span className="ar-owe">{t('arrivals.status.owe', { qty: cell.qty, n: cell.n })}</span>;
+  return <span className={`tag ${TAG_CLASS[cell.status.state]}`}>{stateText(t, cell.status)}</span>;
 }
 
 function ArrivalRowView({ r, draft, busy, showShort, onToggleAdm }: RowProps) {
@@ -158,7 +153,8 @@ interface Props {
 
 export function ArrivalsGroup({ section, draft, admBusy, showShort, columns, pick, onToggleAdm }: Props) {
   const { t } = useTranslation();
-  const { done, total, doneAfter } = groupCounts(section.all, draft.qtyOf);
+  const { done, total } = groupCounts(section.all);
+  const partial = partialReceive(section.all, draft.qtyOf);
   // Mọi dòng đã nhận đủ hoặc ADM hết hàng: không còn gì để nhận
   const open = section.all.some(isReceivable);
   return (
@@ -175,10 +171,16 @@ export function ArrivalsGroup({ section, draft, admBusy, showShort, columns, pic
               onChange={(e) => pick.onPick(e.target.checked)}
             />
             <b>{section.label}</b>
-            <span>· {doneAfter === done ? t('arrivals.group.done', { a: done, b: total }) : t('arrivals.group.doneAfter', { a: done, b: total, c: doneAfter })}</span>
+            <span>· {t('arrivals.group.done', { a: done, b: total })}</span>
             {open && (
-              <button type="button" className="btn btn--sm" disabled={!pick.canReceive} onClick={pick.onReceive}>
-                {t('arrivals.group.receive')}
+              <button
+                type="button"
+                className="btn btn--sm"
+                aria-label={t(partial ? 'arrivals.group.receiveFor' : 'arrivals.group.receiveFullFor', { name: section.label })}
+                disabled={!pick.canReceive}
+                onClick={pick.onReceive}
+              >
+                {t(partial ? 'arrivals.group.receive' : 'arrivals.group.receiveFull')}
               </button>
             )}
           </div>

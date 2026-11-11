@@ -1,4 +1,4 @@
-import type { ArrivalRow } from './arrival-rows';
+import { isReceivedFull, type ArrivalRow } from './arrival-rows';
 
 export type ArrivalState = 'done' | 'short' | 'over' | 'none' | 'adm_out';
 export interface ArrivalStatus {
@@ -21,22 +21,26 @@ export function savedState(r: ArrivalRow): ArrivalStatus {
   return compare(r.ordered, r.received);
 }
 
-// Trạng thái sau khi bấm Lưu: null khi chưa nhập gì hoặc không đổi so với đã lưu (không vẽ chip "Sau lưu")
-export function afterState(r: ArrivalRow, qty: number): ArrivalStatus | null {
-  if (qty === 0 || r.adm_out) return null;
-  const next = compare(r.ordered, r.received + qty);
+export type StatusCell = { kind: 'tag'; status: ArrivalStatus } | { kind: 'owe'; qty: number; n: number };
+
+// Cột Tình trạng theo số đang gõ: gõ thiếu thì báo phần NCC còn nợ, gõ dư thì báo dư ngay;
+// gõ vừa đủ thì giữ chip đã lưu — trạng thái chỉ đổi khi bấm Nhận
+export function statusCell(r: ArrivalRow, qty: number): StatusCell {
   const saved = savedState(r);
-  return next.state === saved.state && next.n === saved.n ? null : next;
+  if (r.adm_out || qty === 0) return { kind: 'tag', status: saved };
+  const short = Math.max(0, r.ordered - r.received);
+  if (qty < short) return { kind: 'owe', qty, n: short - qty };
+  if (r.received + qty > r.ordered) return { kind: 'tag', status: { state: 'over', n: r.received + qty - r.ordered } };
+  return { kind: 'tag', status: saved };
 }
 
-export function groupCounts(rows: ArrivalRow[], qtyOf: (r: ArrivalRow) => number): { done: number; total: number; doneAfter: number } {
+// Nhóm không nhận đủ được: có món NCC hết hàng hoặc ô gõ ít hơn phần còn thiếu → nút ghi "Nhận hàng"
+export const partialReceive = (rows: ArrivalRow[], qtyOf: (r: ArrivalRow) => number): boolean =>
+  rows.some((r) => !r.added && (r.adm_out || (!isReceivedFull(r) && qtyOf(r) < r.ordered - r.received)));
+
+export function groupCounts(rows: ArrivalRow[]): { done: number; total: number } {
   const counted = rows.filter((r) => !r.added);
-  const isDone = (s: ArrivalStatus) => FINISHED.has(s.state);
-  return {
-    total: counted.length,
-    done: counted.filter((r) => isDone(savedState(r))).length,
-    doneAfter: counted.filter((r) => isDone(afterState(r, qtyOf(r)) ?? savedState(r))).length,
-  };
+  return { total: counted.length, done: counted.filter((r) => FINISHED.has(savedState(r).state)).length };
 }
 
 // Cột "Còn thiếu" chỉ khi có dòng nhập thấp hơn phần còn lại; ADM hết hàng không tính thiếu

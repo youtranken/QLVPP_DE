@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { plan, planRow } from './arrivals-fixtures';
-import { PLAN, PLAN_URL, RECEIPT_URL, bodiesOf, box, callsTo, groupBtn, open, pickBox, pickedBtn, stub, type } from './arrivals-test-fixtures';
+import { GROUP_BTN, PLAN, PLAN_URL, RECEIPT_URL, bodiesOf, box, callsTo, groupBtn, open, pickBox, pickedBtn, stub, type } from './arrivals-test-fixtures';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -89,7 +89,7 @@ describe('Nhận hàng — "Nhận đủ hàng" theo nhóm', () => {
     await open();
     await screen.findByDisplayValue('6');
     expect(pickBox('Kẹp & dán')).toBeDisabled();
-    expect(within(screen.getByRole('rowgroup', { name: 'Kẹp & dán' })).queryByRole('button', { name: 'Nhận đủ hàng' })).toBeNull();
+    expect(within(screen.getByRole('rowgroup', { name: 'Kẹp & dán' })).queryByRole('button', { name: GROUP_BTN })).toBeNull();
     await type(box('Bút 1'), '0');
     expect(groupBtn('Bút')).toBeDisabled();
   });

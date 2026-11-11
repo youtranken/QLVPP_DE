@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ArrivalRow } from './arrival-rows';
-import { afterState, groupCounts, savedState, shortOf, showShortColumn } from './arrival-status';
+import { groupCounts, partialReceive, savedState, shortOf, showShortColumn, statusCell } from './arrival-status';
 
 const row = (over: Partial<ArrivalRow> = {}): ArrivalRow => ({
   item_id: 'a',
@@ -23,41 +23,55 @@ const row = (over: Partial<ArrivalRow> = {}): ArrivalRow => ({
   ...over,
 });
 
-describe('trạng thái đã lưu và sau lưu', () => {
-  it('Bìa nhựa: đề nghị 19, đã về 9, nhập 10 → saved short 10, after done', () => {
-    const r = row({ ordered: 19, received: 9 });
-    expect(savedState(r)).toEqual({ state: 'short', n: 10 });
-    expect(afterState(r, 10)).toEqual({ state: 'done', n: 0 });
-  });
-
-  it('Kẹp bướm: đề nghị 8, nhập 10 → after over 2', () => {
-    const r = row({ ordered: 8, received: 0 });
-    expect(afterState(r, 10)).toEqual({ state: 'over', n: 2 });
-  });
-
-  it('Bìa trình ký: đề nghị 3, đã về 1, nhập 1 → after short 1', () => {
-    const r = row({ ordered: 3, received: 1 });
-    expect(afterState(r, 1)).toEqual({ state: 'short', n: 1 });
-  });
-
-  it('biên: received+qty = ordered → done; = ordered−1 → short 1; = ordered+1 → over 1', () => {
-    const r = row({ ordered: 5, received: 2 });
-    expect(afterState(r, 3)?.state).toBe('done');
-    expect(afterState(r, 2)).toEqual({ state: 'short', n: 1 });
-    expect(afterState(r, 4)).toEqual({ state: 'over', n: 1 });
-  });
-
-  it('qty 0 → afterState null; trùng đã lưu → null', () => {
-    expect(afterState(row({ ordered: 5, received: 2 }), 0)).toBeNull();
-    expect(afterState(row({ ordered: 5, received: 5 }), 0)).toBeNull();
-    expect(afterState(row({ ordered: 5, received: 0 }), 5)).not.toBeNull();
-  });
-
-  it('NCC hết hàng thắng; chưa đề nghị chưa về là none', () => {
+describe('trạng thái đã lưu', () => {
+  it('đề nghị 19, đã về 9 → short 10; đủ → done; dư → over; NCC hết hàng thắng; chưa đề nghị chưa về là none', () => {
+    expect(savedState(row({ ordered: 19, received: 9 }))).toEqual({ state: 'short', n: 10 });
+    expect(savedState(row({ ordered: 5, received: 5 }))).toEqual({ state: 'done', n: 0 });
+    expect(savedState(row({ ordered: 8, received: 10 }))).toEqual({ state: 'over', n: 2 });
     expect(savedState(row({ adm_out: true }))).toEqual({ state: 'adm_out', n: 0 });
-    expect(afterState(row({ adm_out: true }), 3)).toBeNull();
     expect(savedState(row({ ordered: 0, received: 0, added: true }))).toEqual({ state: 'none', n: 0 });
-    expect(savedState(row({ ordered: 4, received: 0 }))).toEqual({ state: 'short', n: 4 });
+  });
+});
+
+describe('statusCell — cột Tình trạng theo số đang gõ', () => {
+  it('gõ ít hơn phần còn thiếu → dòng chữ "Nhập qty · NCC còn nợ n" (đề nghị 5, gõ 3 → nợ 2)', () => {
+    expect(statusCell(row({ ordered: 5, received: 0 }), 3)).toEqual({ kind: 'owe', qty: 3, n: 2 });
+    expect(statusCell(row({ ordered: 20, received: 10 }), 9)).toEqual({ kind: 'owe', qty: 9, n: 1 });
+  });
+
+  it('chưa gõ (0) → chip đã lưu "Thiếu n"', () => {
+    expect(statusCell(row({ ordered: 5, received: 0 }), 0)).toEqual({ kind: 'tag', status: { state: 'short', n: 5 } });
+  });
+
+  it('gõ đúng phần còn thiếu → vẫn chip đã lưu, đổi khi bấm Nhận', () => {
+    expect(statusCell(row({ ordered: 20, received: 10 }), 10)).toEqual({ kind: 'tag', status: { state: 'short', n: 10 } });
+  });
+
+  it('gõ dư (đề nghị 8, gõ 10) → chip "Dư 2", không còn "Thiếu 8"', () => {
+    expect(statusCell(row({ ordered: 8, received: 0 }), 10)).toEqual({ kind: 'tag', status: { state: 'over', n: 2 } });
+    expect(statusCell(row({ ordered: 5, received: 2 }), 4)).toEqual({ kind: 'tag', status: { state: 'over', n: 1 } });
+  });
+
+  it('NCC hết hàng → chip NCC hết hàng dù có số', () => {
+    expect(statusCell(row({ adm_out: true }), 3)).toEqual({ kind: 'tag', status: { state: 'adm_out', n: 0 } });
+  });
+});
+
+describe('partialReceive — nút "Nhận hàng" thay "Nhận đủ hàng"', () => {
+  it('mọi dòng gõ đủ phần còn thiếu → false', () => {
+    const rows = [row({ item_id: 'a', ordered: 5 }), row({ item_id: 'b', ordered: 3, received: 3 })];
+    expect(partialReceive(rows, (r) => r.remaining)).toBe(false);
+  });
+
+  it('một dòng gõ ít hơn phần còn thiếu (kể cả 0) → true', () => {
+    const rows = [row({ item_id: 'a', ordered: 5 }), row({ item_id: 'b', ordered: 4, remaining: 4 })];
+    expect(partialReceive(rows, (r) => (r.item_id === 'b' ? 3 : 5))).toBe(true);
+    expect(partialReceive(rows, (r) => (r.item_id === 'b' ? 0 : 5))).toBe(true);
+  });
+
+  it('có món NCC hết hàng → true; dòng đã nhận đủ và món thêm tay không tính', () => {
+    expect(partialReceive([row({ adm_out: true })], () => 0)).toBe(true);
+    expect(partialReceive([row({ ordered: 5, received: 5 }), row({ item_id: 'x', ordered: 0, added: true })], () => 0)).toBe(false);
   });
 });
 
@@ -66,23 +80,15 @@ describe('groupCounts', () => {
     row({ item_id: '1', ordered: 3, received: 3 }),
     row({ item_id: '2', ordered: 2, received: 2 }),
     row({ item_id: '3', ordered: 5, received: 0 }),
-    row({ item_id: '4', ordered: 5, received: 0 }),
-    row({ item_id: '5', ordered: 5, received: 0 }),
     row({ item_id: 'x', ordered: 0, received: 0, added: true }),
   ];
 
-  it('Kẹp & dán → {done:2,total:5,doneAfter:4} (không tính hàng thêm tay)', () => {
-    const qty: Record<string, number> = { '3': 5, '4': 5, '5': 2, x: 9 };
-    expect(groupCounts(kep, (r) => qty[r.item_id] ?? 0)).toEqual({ done: 2, total: 5, doneAfter: 4 });
-  });
-
-  it('Lưu trữ → {done:0,total:2,doneAfter:1}', () => {
-    const rows = [row({ item_id: 'a', ordered: 4 }), row({ item_id: 'b', ordered: 4 })];
-    expect(groupCounts(rows, (r) => (r.item_id === 'a' ? 4 : 0))).toEqual({ done: 0, total: 2, doneAfter: 1 });
+  it('Kẹp & dán → {done:2,total:3} theo số đã lưu (không tính hàng thêm tay, không đếm "sau lưu")', () => {
+    expect(groupCounts(kep)).toEqual({ done: 2, total: 3 });
   });
 
   it('NCC hết hàng tính là xong', () => {
-    expect(groupCounts([row({ adm_out: true })], () => 0)).toEqual({ done: 1, total: 1, doneAfter: 1 });
+    expect(groupCounts([row({ adm_out: true })])).toEqual({ done: 1, total: 1 });
   });
 });
 

@@ -1,5 +1,5 @@
 [data-shell='admin'] .ar-card { display: grid; gap: var(--s-4); padding: var(--s-5); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
-[data-shell='admin'] .ar-saved { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-4) var(--s-5); border-radius: var(--r-lg); background: var(--c-ok-soft); color: var(--c-ok); font: var(--t-body); }
+[data-shell='admin'] .ar-saved { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-4) var(--s-5); border-radius: var(--r-lg); background: var(--c-warn-soft); color: var(--c-ink); font: var(--t-body); }
 [data-shell='admin'] .ar-warn { margin: 0; padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--c-warn-soft); color: var(--c-warn); font: var(--t-label); }
 [data-shell='admin'] .ar-empty, [data-shell='admin'] .ar-outside { margin: 0; color: var(--c-muted); font: var(--t-sm); }
 
@@ -25,6 +25,9 @@
 [data-shell='admin'] .ar-adm { min-height: var(--hit); padding: 0 var(--s-3); border: 1px solid var(--c-line-input); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink-2); font: var(--t-cap); font-weight: 700; white-space: nowrap; cursor: pointer; }
 [data-shell='admin'] .ar-adm[aria-pressed='true'] { background: var(--c-dark); border-color: var(--c-dark); color: var(--c-on-dark); }
 [data-shell='admin'] .ar-adm:disabled { cursor: default; opacity: .7; }
+[data-shell='admin'] .ar-adm:not(:disabled):not([aria-pressed='true']):hover { background: var(--c-surface-hover); }
+[data-shell='admin'] .ar-adm[aria-pressed='true']:not(:disabled):hover { background: var(--c-dark-press); border-color: var(--c-dark-press); }
+[data-shell='admin'] .ar-adm:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell='admin'] .ar-row--out td { color: var(--c-muted); }
 [data-shell='admin'] .ar-note { display: block; margin-top: var(--s-1); color: var(--c-muted); font: var(--t-sm); overflow-wrap: anywhere; }
 [data-shell='admin'] .ar-ghead th { position: sticky; top: 0; z-index: 1; padding: var(--s-2) var(--s-3); background: var(--c-surface-2); border-bottom: 1px solid var(--c-line); text-align: left; white-space: normal; }
@@ -39,11 +42,12 @@
 [data-shell='admin'] .ar-warn-text { margin: 0; color: var(--c-warn); font: var(--t-label); }
 [data-shell='admin'] .ar-save { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); margin-left: auto; }
 [data-shell='admin'] .ar-batch { color: var(--c-ink-2); font: var(--t-sm); }
-[data-shell='admin'] .ar-received { display: block; color: var(--c-danger); font: var(--t-sm); font-weight: 400; }
+[data-shell='admin'] .ar-received { display: block; color: var(--c-danger); font: var(--t-sm); font-weight: 400; white-space: nowrap; }
+/* Gõ thiếu: chữ đỏ một dòng, không phải chip */
+[data-shell='admin'] .ar-owe { color: var(--c-danger); font: var(--t-cap); font-weight: 600; white-space: nowrap; }
 [data-shell='admin'] .ar-full { display: inline-block; color: var(--c-ok); font: var(--t-label); white-space: nowrap; }
 [data-shell='admin'] .ar-pick { width: 20px; height: 20px; margin: 0; accent-color: var(--c-acc); cursor: pointer; }
 [data-shell='admin'] .ar-pick:disabled { cursor: default; }
-[data-shell='admin'] .ar-after-chip { display: inline-block; margin-left: var(--s-2); padding: 1px var(--s-2); border: 1px dashed var(--c-ok); border-radius: var(--r-pill); color: var(--c-ok); font: var(--t-cap); font-weight: 700; white-space: nowrap; }
 [data-shell='admin'] .ar-count { margin: 0; color: var(--c-ink-2); font: var(--t-sm); }
 [data-shell='admin'] .ar-nomatch { display: grid; justify-items: center; gap: var(--s-2); padding: var(--s-6) var(--s-4); color: var(--c-ink); text-align: center; }
 [data-shell='admin'] .ar-done__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-4); border-radius: var(--r-md); background: var(--c-ok-soft); color: var(--c-ok); font: var(--t-label); }
@@ -58,6 +62,12 @@
 [data-shell='admin'] .ar-fold:not([open]) { padding-block: var(--s-3); }
 [data-shell='admin'] .ar-fold summary { min-height: var(--hit); display: flex; align-items: center; color: var(--c-ink); font: var(--t-label); cursor: pointer; }
 [data-shell='admin'] .ar-closed { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin: 0; color: var(--c-ink-2); font: var(--t-sm); }
+
+/* Máy tính: ô số và nút NCC cùng một hàng, số trong ô bảng không rơi dòng */
+@media (min-width: 768px) {
+  [data-shell='admin'] .ar-qty__in { flex-wrap: nowrap; }
+  [data-shell='admin'] .ar-table td.n { white-space: nowrap; }
+}
 
 @media (max-width: 767px) {
   [data-shell='admin'] .ar-card { padding: var(--s-4); }
@@ -86,7 +96,6 @@
   [data-shell='admin'] .ar-batches td[data-label]::before, [data-shell='admin'] .ar-mini td[data-label]::before { content: attr(data-label); font: var(--t-cap); color: var(--c-muted); }
   [data-shell='admin'] .ar-mini td.ar-qty { grid-column: 1 / -1; }
   [data-shell='admin'] .ar-save, [data-shell='admin'] .ar-save .btn { width: 100%; }
-  [data-shell='admin'] .ar-after-chip { margin-left: 0; margin-top: var(--s-1); }
   [data-shell='admin'] .ar-foot .btn { flex: 1; }
 }
 [data-shell='admin'] .ar-table td[data-label] .tag { justify-self: start; }

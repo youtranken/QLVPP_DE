@@ -7,15 +7,15 @@ asRole('admin');
 
 const fitsWidth = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
-// Tick mọi nhóm đang hiện (đã lọc theo tag của seed) rồi bấm "Nhận đủ hàng (n nhóm)": lưu ngay, không hộp xác nhận
+// Tick mọi nhóm đang hiện (đã lọc theo tag của seed) rồi bấm "Nhận đủ hàng / Nhận hàng (n nhóm)": lưu ngay, không hộp xác nhận
 async function receivePicked(page: Page) {
   const boxes = page.getByRole('checkbox', { name: /^Chọn nhóm / });
   for (const box of await boxes.all()) if (await box.isEnabled()) await box.check();
-  await page.getByRole('button', { name: /^Nhận đủ hàng \(\d+ nhóm\)$/ }).click();
+  await page.getByRole('button', { name: /^Nhận (đủ )?hàng \(\d+ nhóm\)$/ }).click();
 }
 
 test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
-  test('Vòng3-HV lưu thiếu rồi lưu nốt: chip Sau lưu thành chip nền, đầu nhóm khớp dòng, cột Còn thiếu; Nhận đủ hàng theo nhóm đã tick, không hộp xác nhận', async ({ page, request }, info) => {
+  test('Vòng3-HV lưu thiếu rồi lưu nốt: gõ thiếu ra chữ "Nhập n · NCC còn nợ m", chip theo số đã lưu, cột Còn thiếu; nút nhóm "Nhận hàng"/"Nhận đủ hàng", không hộp xác nhận', async ({ page, request }, info) => {
     // Kỳ riêng của PW: bản in thật của server (chỉ món PW), không ghi vào kỳ trước thật trên dev
     const release = await acquireLock('prev-period');
     clearPrivateSnapshots();
@@ -44,12 +44,12 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
 
       const rowA = page.getByRole('row').filter({ hasText: a.name });
       await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toHaveCount(0);
-      await expect(rowA.getByText('Sau lưu: Nhập đủ số lượng')).toBeVisible();
+      await expect(rowA.getByText('Thiếu 5', { exact: true })).toBeVisible();
       await boxA.fill('2');
       await boxB.fill('0');
       await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toBeVisible();
-      await expect(rowA.getByText('Thiếu 5', { exact: true })).toBeVisible();
-      await expect(rowA.getByText('Sau lưu: Thiếu 3')).toBeVisible();
+      await expect(rowA.getByText('Nhập 2 · NCC còn nợ 3')).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Nhận hàng: / })).toBeVisible();
       await settled(page);
       await shot(page, info, 'arrivals-partial');
       if (isMobile(info)) {
@@ -64,7 +64,7 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       await expect(boxA).toHaveValue('3');
 
       await expect(rowA.getByText('Thiếu 3', { exact: true })).toBeVisible();
-      await expect(rowA.getByText('Sau lưu: Nhập đủ số lượng')).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Nhận đủ hàng: / })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Đủ hàng', exact: true })).toHaveCount(0);
       await settled(page);
       await shot(page, info, 'arrivals-after-first-save');
