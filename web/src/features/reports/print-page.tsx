@@ -1,6 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useUrlPatch } from '@/lib/use-url-patch';
 import { ApiError } from '@/lib/api-client';
 import { apiErrorCode } from '@/lib/api-error';
 import { LoadError, Loading, NotFound } from '@/ui/load-state';
@@ -11,7 +10,6 @@ import { monthOf } from '@/features/request/request-format';
 import { useSnapshot, type SnapshotData } from './reports.api';
 import { hasItems, vnStampParts } from './print-format';
 import { PrintRequestForm } from './print-request-form';
-import { PrintAppendix } from './print-appendix';
 import { usePageStyle } from './print-page-style';
 import './print.m1.css';
 
@@ -20,7 +18,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Quay lại luôn về Báo cáo & gửi ADM của tháng bản chốt
 const backPath = (ym: string) => `/admin/reports?ym=${ym}`;
 
-function Toolbar({ snap, appendix, onAppendix, empty }: { snap: SnapshotData; appendix: boolean; onAppendix: (on: boolean) => void; empty: boolean }) {
+function Toolbar({ snap, empty }: { snap: SnapshotData; empty: boolean }) {
   const { t } = useTranslation();
   const at = vnStampParts(snap.created_at);
   const back = backPath(snap.period_ym);
@@ -33,10 +31,6 @@ function Toolbar({ snap, appendix, onAppendix, empty }: { snap: SnapshotData; ap
       <span className="pp-toolbar__text">
         {t('reports.print.toolbar.summary', { month: monthOf(snap.period_ym), year: snap.period_ym.slice(0, 4), at: `${at.time} ${at.dayMonth}` })}
       </span>
-      <label className="pp-switch">
-        <input type="checkbox" checked={appendix} onChange={(e) => onAppendix(e.target.checked)} />
-        {t('reports.print.toolbar.appendix')}
-      </label>
       <button type="button" className="btn btn--primary" disabled={empty} onClick={() => window.print()}>
         <Icon name="printer" size={18} />
         {t('reports.print.toolbar.print')}
@@ -54,17 +48,14 @@ function EmptySnapshot() {
   );
 }
 
+// Bản in chỉ có Phiếu đề xuất; phụ lục chi tiết chỉ còn trong Excel (link cũ ?appendix=1 bị bỏ qua)
 function PrintScreen({ snap }: { snap: SnapshotData }) {
-  const [params, update] = useUrlPatch();
-  const appendix = params.get('appendix') === '1';
-  const onAppendix = (on: boolean) => update({ appendix: on ? '1' : null }, true);
   // Bản rỗng cũ: không có gì để trình ký
   const empty = !hasItems(snap);
   return (
     <div className="pp-page">
-      <Toolbar snap={snap} appendix={appendix} onAppendix={onAppendix} empty={empty} />
+      <Toolbar snap={snap} empty={empty} />
       {empty ? <EmptySnapshot /> : <PrintRequestForm snap={snap} />}
-      {appendix && <PrintAppendix snap={snap} />}
     </div>
   );
 }

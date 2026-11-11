@@ -187,24 +187,12 @@ describe('Trang in · thanh công cụ và công tắc phụ lục', () => {
     expect(document.head.querySelector('style[data-print-page]')).toBeNull();
   });
 
-  it('không có ?appendix → công tắc "In kèm phụ lục" tắt, không có phụ lục; bật → URL có appendix=1 và hiện phụ lục', async () => {
-    openPrint(snapshotDataFixture());
-    const toggle = await screen.findByRole('checkbox', { name: 'In kèm phụ lục' });
-    expect(toggle).not.toBeChecked();
-    expect(screen.queryByRole('region', { name: 'Phụ lục · Chi tiết tháng 10/2026' })).not.toBeInTheDocument();
-    await userEvent.click(toggle);
-    expect(await screen.findByRole('region', { name: 'Phụ lục · Chi tiết tháng 10/2026' })).toBeInTheDocument();
-    expect(screen.getByTestId('location-search')).toHaveTextContent('?appendix=1');
-  });
-
-  it('?appendix=1 → công tắc bật, có phụ lục; tắt → bỏ khỏi URL và mất phụ lục', async () => {
+  it('không còn công tắc "In kèm phụ lục"; link cũ ?appendix=1 vẫn mở được, chỉ có Phiếu đề xuất', async () => {
     openPrint(snapshotDataFixture(), { query: '?appendix=1' });
-    expect(await screen.findByRole('region', { name: 'Phụ lục · Chi tiết tháng 10/2026' })).toBeInTheDocument();
-    const toggle = screen.getByRole('checkbox', { name: 'In kèm phụ lục' });
-    expect(toggle).toBeChecked();
-    await userEvent.click(toggle);
-    expect(screen.queryByRole('region', { name: 'Phụ lục · Chi tiết tháng 10/2026' })).not.toBeInTheDocument();
-    expect(screen.getByTestId('location-search')).toHaveTextContent(/^$/);
+    await screen.findByRole('toolbar', { name: 'Thanh công cụ bản in (không in ra giấy)' });
+    expect(screen.queryByRole('checkbox', { name: 'In kèm phụ lục' })).toBeNull();
+    expect(screen.queryByRole('region', { name: /Phụ lục/ })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Phiếu đề xuất văn phòng phẩm' })).toBeInTheDocument();
   });
 });
 

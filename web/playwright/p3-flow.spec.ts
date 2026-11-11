@@ -108,10 +108,8 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   await (await openCopies(admin)).getByRole('link', { name: /^In lại bản lập/ }).first().click();
   await expect(admin).toHaveURL(PRINT_URL);
   const snapshotId = new URL(admin.url()).pathname.split('/').at(-2)!;
-  await admin.getByRole('checkbox', { name: 'In kèm phụ lục' }).click();
-  await expect(admin.getByRole('checkbox', { name: 'In kèm phụ lục' })).toBeChecked();
+  await expect(admin.getByRole('checkbox', { name: 'In kèm phụ lục' })).toHaveCount(0);
   await expectFrozenPaper(admin, s);
-  await expect(admin.getByText(/^Lập lúc \d{2}:\d{2} ngày \d{2}\/\d{2}\/\d{4} bởi .+/)).toBeVisible();
   const signs = admin.getByRole('group', { name: 'Chữ ký' });
   // Tờ in chỉ 2 ô ký đầu của cấu hình (vòng 4 mục 11): ô thứ 3 "Duyệt" không in
   await expect(signs.getByRole('group')).toHaveCount(2);
@@ -121,11 +119,11 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   return snapshotId;
 }
 
-// Chưa giao 2 · Nợ kỳ trước 0 · Tồn 0 · Tổng cần 2 · Đề nghị 4
+// Phiếu đề xuất giữ Đề nghị 4 đã chốt (phụ lục chi tiết chỉ còn trong Excel)
 async function expectFrozenPaper(admin: Page, s: MonthSeed) {
-  const row = admin.getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row', { name: new RegExp(s.paper.name) });
+  const row = admin.getByRole('region', { name: 'Phiếu đề xuất văn phòng phẩm' }).getByRole('row', { name: new RegExp(s.paper.name) });
   await expect(row).toBeVisible();
-  expect((await row.getByRole('cell').allTextContents()).slice(3, 8)).toEqual(['2', '0', '0', '2', '4']);
+  await expect(row.getByRole('cell').last()).toHaveText('4');
 }
 
 async function purchase(admin: Page, item: { name: string }, qty: number) {
@@ -202,7 +200,6 @@ async function reopenSnapshot(admin: Page, s: MonthSeed, snapshotId: string) {
   await expect(reprint).toHaveAttribute('href', `/admin/reports/snapshots/${snapshotId}/print`);
   await reprint.click();
   await expect(admin).toHaveURL(PRINT_URL);
-  await admin.goto(`${admin.url()}?appendix=1`);
   await expectFrozenPaper(admin, s);
 }
 

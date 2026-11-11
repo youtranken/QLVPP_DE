@@ -74,7 +74,6 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
 
 
   const formTable = (page: Page) => page.getByRole('region', { name: FORM }).getByRole('table');
-  const appendix = (page: Page) => page.getByRole('region', { name: /^Phụ lục · Chi tiết tháng / });
 
   test('E5-S3 E9-S4 Bản in A4: ô ký, số chốt không đổi sau giao thêm, in lại không tạo bản mới', async ({ page, request }, info) => {
     clearPrivateSnapshots();
@@ -96,16 +95,13 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     // (điện thoại nới khung bố cục theo nội dung nên so với bề rộng màn hình, không với innerWidth)
     expect(await page.evaluate(() => document.documentElement.scrollWidth), 'không cuộn ngang').toBeLessThanOrEqual(page.viewportSize()!.width);
 
-    await page.getByRole('checkbox', { name: 'In kèm phụ lục' }).click();
-    await expect(page.getByRole('checkbox', { name: 'In kèm phụ lục' })).toBeChecked();
-    await expect(page).toHaveURL(/\?appendix=1$/);
-    const frozenRow = () => appendix(page).getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row', { name: new RegExp(a.name) });
-    const numbers = async () => (await frozenRow().getByRole('cell').allTextContents()).slice(3, 8);
-    // Chưa giao 5 · Nợ kỳ trước 0 · Tồn 2 · Tổng cần 5 (không trừ tủ) · Đề nghị 9
-    const frozen = ['5', '0', '2', '5', '9'];
+    // Bản in chỉ có Phiếu đề xuất (phụ lục chỉ còn trong Excel): không còn công tắc "In kèm phụ lục"
+    await expect(page.getByRole('checkbox', { name: 'In kèm phụ lục' })).toHaveCount(0);
+    const frozenRow = () => formTable(page).getByRole('row', { name: new RegExp(a.name) });
+    // Đề nghị đã chốt 9 không đổi sau giao thêm
+    const numbers = async () => (await frozenRow().getByRole('cell').allTextContents()).slice(-1);
+    const frozen = ['9'];
     expect(await numbers()).toEqual(frozen);
-    await expect(appendix(page).getByText(/^Lập lúc \d{2}:\d{2} ngày \d{2}\/\d{2}\/\d{4} bởi /)).toBeVisible();
-    await expect(appendix(page).getByText(`Bản chốt số ${before + 1} của kỳ`)).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
     await snap(page, info, 'print-screen');
 
@@ -123,12 +119,11 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     expect(clipped).toEqual([]);
     expect(await formTable(page).locator('thead').evaluate((el) => getComputedStyle(el).display)).toBe('table-header-group');
     expect(await frozenRow().evaluate((el) => getComputedStyle(el).breakInside)).toBe('avoid');
-    expect(await appendix(page).evaluate((el) => getComputedStyle(el).breakBefore)).toBe('page');
     const pdfPath = `${SHOTS}/print-${info.project.name}.pdf`;
     const pdf = await page.pdf({ format: 'A4', path: pdfPath, preferCSSPageSize: true });
     const text = pdf.toString('latin1');
     expect(text.startsWith('%PDF')).toBe(true);
-    expect(text.match(/\/Type\s*\/Page[^s]/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect(text.match(/\/Type\s*\/Page[^s]/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
     // A4 dọc = 595 × 842 pt
     const media = /\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]/.exec(text);
     expect(Number(media?.[1])).toBeCloseTo(595.28, 0);
@@ -145,7 +140,6 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     // In lại: trang in riêng cùng tab, không tự mở hộp in
     await reprint.click();
     await expect(page).toHaveURL(PRINT_URL);
-    await page.goto(`${page.url()}?appendix=1`);
     await expect(frozenRow()).toBeVisible();
     expect(await numbers()).toEqual(frozen);
     await expect(page.getByRole('group', { name: 'Chủ quản đơn vị' })).toHaveText(`Chủ quản đơn vịHead of Dept.${head}`);
@@ -156,7 +150,7 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await expect(page).toHaveURL(new RegExp(`/admin/reports\\?ym=${PRIVATE_YM}$`));
   });
 
-  test('E9-S4 Phiếu đề xuất D&E: mọi hàng của bản theo Đề nghị, 2 ô ký đầu của cấu hình, bật phụ lục', async ({ page, request }, info) => {
+  test('E9-S4 Phiếu đề xuất D&E: mọi hàng của bản theo Đề nghị, 2 ô ký đầu của cấu hình, không còn phụ lục trên bản in', async ({ page, request }, info) => {
     // A tổng cần 5 nhưng đề nghị 1 → in 1; B tủ 10 vẫn đề nghị mặc định = đăng ký 1 (tủ không trừ) → in 1
     clearPrivateSnapshots();
     const seed = (run.seed = await seedLockedRequest(request, info, [{ stock: 2, qty: 5 }, { stock: 10, qty: 1 }], { ym: PRIVATE_YM }));
@@ -183,25 +177,18 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     await expect(signs).toHaveCount(2);
     expect(await signs.evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')))).toEqual(['Chủ quản đơn vị', 'Người yêu cầu']);
     await expect(page.getByRole('group', { name: 'Chữ ký' })).not.toContainText('Duyệt');
-    await expect(appendix(page)).toHaveCount(0);
+    await expect(page.getByRole('region', { name: /^Phụ lục/ })).toHaveCount(0);
 
     psql(`UPDATE items SET name = name || ' đổi', code = NULL WHERE id = '${a.id}'`);
     await page.reload();
     await expect(rowA.getByRole('cell').nth(1)).toHaveText(code);
     await expect(rowA.getByRole('cell').nth(2)).toHaveText(a.name);
 
-    await page.getByRole('checkbox', { name: 'In kèm phụ lục' }).click();
-    await expect(page.getByRole('checkbox', { name: 'In kèm phụ lục' })).toBeChecked();
-    await expect(page).toHaveURL(/\?appendix=1$/);
-    await expect(appendix(page).getByRole('region', { name: 'Phần 1 · Tổng hợp theo món' }).getByRole('row', { name: new RegExp(b.name) })).toBeVisible();
-    await page.reload();
-    await expect(page.getByRole('checkbox', { name: 'In kèm phụ lục' })).toBeChecked();
-    await expect(appendix(page)).toBeVisible();
+    // Link cũ ?appendix=1 vẫn mở được, bị bỏ qua
+    await page.goto(`${page.url()}?appendix=1`);
+    await expect(rowB).toBeVisible();
+    await expect(page.getByRole('region', { name: /^Phụ lục/ })).toHaveCount(0);
     if (isMobile(info)) await expectNoContrastViolations(page);
-    await snap(page, info, 'print-form-appendix');
-    await page.getByRole('checkbox', { name: 'In kèm phụ lục' }).click();
-    await expect(page.getByRole('checkbox', { name: 'In kèm phụ lục' })).not.toBeChecked();
-    await expect(appendix(page)).toHaveCount(0);
     await snap(page, info, 'print-form');
   });
 

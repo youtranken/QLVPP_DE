@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { formatVnStamp } from '@/lib/format-time';
 import { wantOf } from '@/lib/report-qty';
 import { unitLabel, useUnitNames } from '@/features/units/units.api';
-import type { FrozenUnitName, SnapshotData, SnapshotRow } from './reports.api';
+import type { FrozenUnitName, SnapshotData } from './reports.api';
 
 export interface SignBox {
   title: string;
@@ -30,17 +30,6 @@ export const keepsZeroRows = (snap: Pick<SnapshotData, 'order_basis'>) => snap.o
 
 // Bản có hàng ⇔ có Đề nghị > 0 (cùng vị từ với server)
 export const hasItems = (snap: Pick<SnapshotData, 'order_qty'>) => Object.values(snap.order_qty).some((n) => n > 0);
-
-export function isDefaultOrder(snap: SnapshotData) {
-  const rows = [...snap.byItem, ...snap.custom];
-  return rows.length > 0 && rows.every((r) => orderOf(snap, r) === wantOf(r));
-}
-
-// Số thứ tự tính từ bản cũ nhất; danh sách API trả mới trước
-export function snapshotOrdinal(list: SnapshotRow[] | undefined, id: string): number | null {
-  const index = list?.findIndex((s) => s.id === id) ?? -1;
-  return index < 0 ? null : list!.length - index;
-}
 
 // Tờ in chỉ 2 ô ký: cấu hình nhiều hơn (vd thêm "Duyệt") thì lấy 2 ô đầu; bản trước 0112 chỉ có signers → head/preparer, bỏ approver
 export function signBoxesOf(snap: SnapshotData, oldTitle: (role: string) => Omit<SignBox, 'name'>): SignBox[] {

@@ -68,7 +68,6 @@ const reports: Messages<typeof vi> = {
         label: 'Print toolbar (not printed)',
         back: 'Back',
         summary: 'Printout for {{month}}/{{year}} · snapshot {{at}} · A4 portrait',
-        appendix: 'Include appendix',
         print: 'Print',
       },
       form: {
@@ -96,20 +95,6 @@ const reports: Messages<typeof vi> = {
           head: { title: 'Chủ quản đơn vị', titleEn: 'Head of Dept.' },
           preparer: { title: 'Người yêu cầu', titleEn: 'Applicant' },
         },
-      },
-      appendix: {
-        org: 'Phu My Hung Corporation',
-        dept: 'Construction Department · Stationery',
-        preparedAt: 'Prepared at {{time}} on {{date}} by {{by}}',
-        ordinal: 'Snapshot no. {{k}} of the period',
-        ordinalDefault: 'Snapshot no. {{k}} of the period · Default order numbers',
-        title: 'Appendix · Detail for {{month}}/{{year}}',
-        counts: '{{requests}} requests · {{items}} items requested',
-        formula: 'Default order = undelivered this period + carried over. Stock is for reference only. Edit the order cell to reduce.',
-        colNo: 'No.',
-        colDate: 'Date',
-        colDepartment: 'Department',
-        footer: 'VPP Construction · Snapshot prepared {{at}} — figures do not change with later deliveries',
       },
     },
     send: {

@@ -106,7 +106,7 @@ describe('Song ngữ các màn Plan 3', () => {
     noVietnamese();
   });
 
-  it('Trang in: en — thanh công cụ và phụ lục không còn chữ Việt (trang 1 Phiếu đề xuất song ngữ theo mẫu D&E)', async () => {
+  it('Trang in: en — thanh công cụ không còn chữ Việt (trang 1 Phiếu đề xuất song ngữ theo mẫu D&E)', async () => {
     const data = snapshotDataFixture({
       ...reportFixture({
         byDepartment: [{ department: 'Inspection Team', people: [{ user_sub: 'u-duc', full_name: 'Pham Van Duc', lines: [{ name: 'Bút bi xanh', name_en: 'Blue pen', unit: 'cay', qty: 12 }] }] }],
@@ -121,12 +121,11 @@ describe('Song ngữ các màn Plan 3', () => {
     });
     const reply = (url: string) => (url.includes('/snapshots/') ? data : url === '/api/units' ? [] : { items: [snapshotRow({ id: data.id })], next_cursor: null, unread_count: 0 });
     vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(jsonResponse(200, reply(url)))));
-    renderApp(ADMIN, `/admin/reports/snapshots/${data.id}/print?appendix=1`);
-    expect(await screen.findByRole('region', { name: 'Phụ lục · Chi tiết tháng 10/2026' })).toBeInTheDocument();
+    renderApp(ADMIN, `/admin/reports/snapshots/${data.id}/print`);
+    expect(await screen.findByRole('toolbar', { name: 'Thanh công cụ bản in (không in ra giấy)' })).toBeInTheDocument();
     await english();
-    const appendix = await screen.findByRole('region', { name: 'Appendix · Detail for 10/2026' });
-    await screen.findByText('Snapshot no. 1 of the period');
-    const words = [screen.getByRole('toolbar'), appendix].flatMap((el) => el.textContent?.match(VIETNAMESE_WORD) ?? []);
+    const toolbar = await screen.findByRole('toolbar', { name: /Print toolbar/ });
+    const words = [toolbar].flatMap((el) => el.textContent?.match(VIETNAMESE_WORD) ?? []);
     expect(words).toEqual([]);
   });
 

@@ -65,7 +65,6 @@ const reports = {
         label: 'Thanh công cụ bản in (không in ra giấy)',
         back: 'Quay lại',
         summary: 'Bản in tháng {{month}}/{{year}} · bản chốt {{at}} · A4 dọc',
-        appendix: 'In kèm phụ lục',
         print: 'In',
       },
       form: {
@@ -92,20 +91,6 @@ const reports = {
           head: { title: 'Chủ quản đơn vị', titleEn: 'Head of Dept.' },
           preparer: { title: 'Người yêu cầu', titleEn: 'Applicant' },
         },
-      },
-      appendix: {
-        org: 'Công ty Phú Mỹ Hưng',
-        dept: 'Phòng Công trình · Văn phòng phẩm',
-        preparedAt: 'Lập lúc {{time}} ngày {{date}} bởi {{by}}',
-        ordinal: 'Bản chốt số {{k}} của kỳ',
-        ordinalDefault: 'Bản chốt số {{k}} của kỳ · Đề nghị mặc định',
-        title: 'Phụ lục · Chi tiết tháng {{month}}/{{year}}',
-        counts: '{{requests}} phiếu · {{items}} món có đăng ký',
-        formula: 'Đề nghị mặc định = Chưa giao kỳ này + Nợ kỳ trước. Tủ chỉ để tham khảo, không trừ. Muốn bớt thì sửa ô Đề nghị.',
-        colNo: 'TT',
-        colDate: 'Ngày',
-        colDepartment: 'Phòng ban',
-        footer: 'VPP Công trình · Bản chốt lập {{at}} — số liệu không đổi khi giao thêm',
       },
     },
     send: {
