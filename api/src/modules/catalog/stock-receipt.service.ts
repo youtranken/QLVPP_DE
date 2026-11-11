@@ -10,7 +10,7 @@ import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Tx } from '../../database/database.module';
 import { addMonths } from '../../common/period';
-import { latestSent } from '../reports/sent-snapshot';
+import { latestSent, reportNotSent } from '../reports/sent-snapshot';
 import { itemAdmOut, markedKeys } from './adm-out.service';
 import { ITEM_USABLE_SQL } from './catalog-sql';
 import { assertLatestSheet } from './receipt-sheet';
@@ -51,6 +51,8 @@ export class StockReceiptService {
     const note = `${await this.notePrefix(body.ym, now)}${body.note ? ` · ${body.note}` : ''}`;
     return this.db.transaction(async (tx) => {
       await this.stock.lockItemsWithin(tx, ids);
+      // Hàng của kỳ chỉ về sau khi đã gửi NCC; nhập ngoài kỳ đi đường Tủ/Kho, không qua đây
+      if (!(await latestSent(tx, body.ym))) throw reportNotSent(body.ym);
       await assertLatestSheet(tx, body.ym, body.snapshot_id);
       await this.assertReceivable(tx, body.ym, lines);
       // Dòng gộp ghi trước để từng món mang id của nó (batch_id) — Nhật ký hiện một lần Lưu thành một dòng.

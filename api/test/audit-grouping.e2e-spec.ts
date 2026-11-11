@@ -1,3 +1,4 @@
+import { markSent } from './sent-snapshot.helper';
 import { stockFixture } from './stock.fixture';
 
 interface AuditItem {
@@ -23,6 +24,7 @@ describe('Nhật ký gộp một lần Lưu hàng về thành một dòng', () =
   const f = stockFixture();
   const YM = '2024-06';
   const ACTOR = `e2e-audit-batch-${process.pid}-${Date.now().toString(36)}`;
+  beforeAll(() => markSent(f.pool(), YM));
   const asActor = (req: ReturnType<ReturnType<typeof f.http>['get']>) =>
     req.set('x-dev-user-sub', ACTOR).set('x-dev-role', 'admin');
   const receive = (lines: { item_id: string; qty: number }[]) =>

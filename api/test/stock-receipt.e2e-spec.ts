@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { markSent } from './sent-snapshot.helper';
 import { ADMIN, stockFixture } from './stock.fixture';
 
 describe('POST admin/stock/receipts: vai, validate, mã lỗi (Postgres thật)', () => {
@@ -12,6 +13,9 @@ describe('POST admin/stock/receipts: vai, validate, mã lỗi (Postgres thật)'
     item_id,
     qty,
     expected_stock_qty,
+  });
+  beforeAll(async () => {
+    for (const ym of [YM, '2025-12']) await markSent(f.pool(), ym);
   });
   const auditsOf = async (action: string, ids: string[]) =>
     (
@@ -225,4 +229,83 @@ describe('POST admin/stock/receipts: vai, validate, mã lỗi (Postgres thật)'
       await receipts({ lines: [line(a)], ym }).expect(400);
     },
   );
+
+  describe('kỳ chưa gửi NCC báo cáo → không nhận hàng kỳ đó', () => {
+    // Kỳ quá khứ riêng, chưa có bản chốt có hàng
+    const NOT_SENT = '2024-02';
+    const noOrderYm = '2024-01';
+    beforeAll(async () => {
+      // Lần chạy trước đã "gửi" kỳ này ở ca cuối: dọn để suite chạy lại được
+      await f
+        .pool()
+        .query(
+          "DELETE FROM report_snapshots WHERE period_ym IN ('2024-01-01', '2024-02-01')",
+        );
+      await f.pool().query(
+        `INSERT INTO periods (ym, deadline) VALUES ('2024-02-01', '2024-02-10'), ('2024-01-01', '2024-01-10')
+         ON CONFLICT (ym) DO NOTHING`,
+      );
+      await f
+        .pool()
+        .query(
+          "UPDATE periods SET no_order_at = now(), no_order_by = $1 WHERE ym = '2024-01-01'",
+          [ADMIN],
+        );
+    });
+
+    it('chưa có bản chốt có hàng → 409 REPORT_NOT_SENT kèm ym, không cộng tồn, không movement', async () => {
+      const a = await newItem(2);
+      const res = await receipts({
+        lines: [line(a, 3, 2)],
+        ym: NOT_SENT,
+      }).expect(409);
+      expect(res.body).toMatchObject({ code: 'REPORT_NOT_SENT', ym: NOT_SENT });
+      expect((await qtyOf(a)).stock_qty).toBe(2);
+      expect((await movements(a)).items).toEqual([]);
+    });
+
+    it('chỉ có bản chốt rỗng (không món nào) vẫn là chưa gửi → 409', async () => {
+      await f.pool().query(
+        `INSERT INTO report_snapshots (period_ym, kind, data, created_by_sub, created_at)
+         VALUES ('2024-02-01', 'print', '{"order_qty": {"x": 0}, "byItem": [], "custom": []}'::jsonb, $1, now())`,
+        [ADMIN],
+      );
+      const a = await newItem(0);
+      const res = await receipts({ lines: [line(a)], ym: NOT_SENT }).expect(
+        409,
+      );
+      expect(res.body.code).toBe('REPORT_NOT_SENT');
+    });
+
+    it('kỳ "Không cần đề nghị" (không có đơn gửi NCC) → 409 REPORT_NOT_SENT: không có hàng kỳ đó để nhận', async () => {
+      const a = await newItem(0);
+      const res = await receipts({ lines: [line(a)], ym: noOrderYm }).expect(
+        409,
+      );
+      expect(res.body.code).toBe('REPORT_NOT_SENT');
+    });
+
+    it('snapshot_id null (client thấy chưa có bản) cũng → REPORT_NOT_SENT, không phải STALE_UPDATE', async () => {
+      const a = await newItem(0);
+      const res = await receipts({
+        lines: [line(a)],
+        ym: NOT_SENT,
+        snapshot_id: null,
+      }).expect(409);
+      expect(res.body.code).toBe('REPORT_NOT_SENT');
+    });
+
+    it('nhập ngoài kỳ ở Tủ/Kho (POST admin/items/:id/stock) không bị chặn', async () => {
+      const a = await newItem(0);
+      await f.stock(a, { delta: 4, reason: 'purchase' }).expect(201);
+      expect((await qtyOf(a)).stock_qty).toBe(4);
+    });
+
+    it('gửi NCC xong → nhận được', async () => {
+      await markSent(f.pool(), NOT_SENT);
+      const a = await newItem(0);
+      await receipts({ lines: [line(a, 2, 0)], ym: NOT_SENT }).expect(200);
+      expect((await qtyOf(a)).stock_qty).toBe(2);
+    });
+  });
 });

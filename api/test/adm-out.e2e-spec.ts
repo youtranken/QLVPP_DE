@@ -228,6 +228,20 @@ describe('V2D-5 ADM hết hàng theo kỳ: PUT/DELETE adm-out, nhập hàng về
       const out = await f.stockItem(0);
       const ok = await f.stockItem(0);
       await f.seedLine(YM, A, { item_id: out, qty: 2 });
+      // Nhận hàng kỳ chỉ được khi kỳ đã gửi NCC
+      await f.insertSnapshot(
+        YM,
+        {
+          ym: YM,
+          byItem: [
+            { key: out, item_id: out },
+            { key: ok, item_id: ok },
+          ],
+          custom: [],
+          order_qty: { [out]: 2, [ok]: 2 },
+        },
+        '2026-11-11T03:00:00Z',
+      );
       await markOut(YM, out).expect(200);
       const res = await receipts({
         ym: YM,

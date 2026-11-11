@@ -65,6 +65,16 @@ export function noSentSnapshot(): NotFoundException {
   });
 }
 
+// Nhận hàng của kỳ khi chưa có bản gửi NCC (chưa chốt, hoặc "Không cần đề nghị"): hàng nào về cũng không khớp đơn nào
+export function reportNotSent(ym: string): ConflictException {
+  return new ConflictException({
+    code: 'REPORT_NOT_SENT',
+    message:
+      'Chưa gửi NCC báo cáo kỳ này — vào Báo cáo & gửi NCC để chốt trước khi nhận hàng.',
+    ym,
+  });
+}
+
 export function orderEmpty(): ConflictException {
   return new ConflictException({
     code: 'ORDER_EMPTY',

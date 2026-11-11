@@ -10,6 +10,7 @@ import {
   runMigrations,
 } from '../src/database/migration-runner';
 import { StockService } from '../src/modules/catalog/stock.service';
+import { markSent, SENT_HELPER_SUB } from './sent-snapshot.helper';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
 
@@ -119,6 +120,7 @@ describe('Thứ tự khóa items: nhập hàng nhiều món không deadlock vớ
           [LOCKED_YM],
         )
       ).rowCount === 1;
+    await markSent(pool, LOCKED_YM.slice(0, 7));
     await pool.query(
       `INSERT INTO users (sub, department, status)
        SELECT s, 'Phòng CT', 'active' FROM unnest($1::text[]) AS s`,
@@ -158,6 +160,10 @@ describe('Thứ tự khóa items: nhập hàng nhiều món không deadlock vớ
       [OWNER, MEMBER],
     ]);
     if (createdPeriod) {
+      await pool.query(
+        'DELETE FROM report_snapshots WHERE period_ym = $1 AND created_by_sub = $2',
+        [LOCKED_YM, SENT_HELPER_SUB],
+      );
       await pool
         .query(
           'DELETE FROM periods WHERE ym = $1 AND NOT EXISTS (SELECT 1 FROM requests WHERE period_ym = $1)',

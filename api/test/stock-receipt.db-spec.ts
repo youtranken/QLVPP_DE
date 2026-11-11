@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { markSent } from './sent-snapshot.helper';
 import { stockFixture } from './stock.fixture';
 
 const YM = '2024-06';
@@ -6,6 +7,7 @@ const YM = '2024-06';
 describe('POST admin/stock/receipts: tất cả hoặc không, đồng thời (Postgres thật)', () => {
   const f = stockFixture();
   const { http, admin, qtyOf, newItem } = f;
+  beforeAll(() => markSent(f.pool(), YM));
   const receipts = (body: object) =>
     admin(http().post('/api/admin/stock/receipts')).send(body);
   const line = (item_id: string, qty: number, expected_stock_qty: number) => ({
