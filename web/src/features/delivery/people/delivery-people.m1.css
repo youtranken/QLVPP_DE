@@ -127,20 +127,19 @@
 }
 [data-shell='admin'] .pt-person { cursor: pointer; }
 @media (max-width: 767px) {
-  /* Thẻ người: ô chọn cùng hàng với tên, nhãn bao cả tên để vùng bấm cao 44px */
+  /* Thẻ người: ô chọn cùng hàng với tên, nhãn bao cả tên; ô chọn tự vẽ 20px trong vùng chạm 44px như ô Chọn tất cả */
   [data-shell='admin'] .table-stack.pt-table td.pt-pick:first-child { flex: none; }
   [data-shell='admin'] .table-stack.pt-table td.pt-pick + td { flex: 1 1 calc(100% - 56px); }
   [data-shell='admin'] .table-stack.pt-table td.pt-pick + td::before { display: none !important; }
   [data-shell='admin'] .pt-table .pt-person { flex: 1; min-height: var(--hit); }
-  [data-shell='admin'] .pt-table td.pt-pick input { width: 20px; height: 20px; margin: 12px; }
 }
 @media (max-width: 767px) {
-  [data-shell='admin'] .pt-pickall input[type='checkbox'] { appearance: none; display: grid; place-content: center; flex: none; width: var(--hit); height: var(--hit); margin: 0; background: none; }
-  [data-shell='admin'] .pt-pickall input[type='checkbox']::before { content: ''; width: 20px; height: 20px; border: 2px solid var(--c-line-input); border-radius: var(--r-xs); background: var(--c-surface); box-sizing: border-box; }
-  [data-shell='admin'] .pt-pickall input[type='checkbox']:checked::before, [data-shell='admin'] .pt-pickall input[type='checkbox']:indeterminate::before { border-color: var(--c-acc); background: var(--c-acc) center / 14px no-repeat; }
-  [data-shell='admin'] .pt-pickall input[type='checkbox']:checked::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
-  [data-shell='admin'] .pt-pickall input[type='checkbox']:indeterminate::before { background-image: linear-gradient(white, white); background-size: 10px 2px; }
-  [data-shell='admin'] .pt-pickall input[type='checkbox']:focus-visible { box-shadow: var(--focus); border-radius: var(--r-sm); }
+  [data-shell='admin'] .pt-pickall input[type='checkbox'], [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox'] { appearance: none; display: grid; place-content: center; flex: none; width: var(--hit); height: var(--hit); margin: 0; background: none; }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']::before, [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox']::before { content: ''; width: 20px; height: 20px; border: 2px solid var(--c-line-input); border-radius: var(--r-xs); background: var(--c-surface); box-sizing: border-box; }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']:checked::before, [data-shell='admin'] .pt-pickall input[type='checkbox']:indeterminate::before, [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox']:checked::before, [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox']:indeterminate::before { border-color: var(--c-acc); background: var(--c-acc) center / 14px no-repeat; }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']:checked::before, [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox']:checked::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']:indeterminate::before, [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox']:indeterminate::before { background-image: linear-gradient(white, white); background-size: 10px 2px; }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']:focus-visible, [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox']:focus-visible { box-shadow: var(--focus); border-radius: var(--r-sm); }
   [data-shell='admin'] .pt-bulk { position: sticky; bottom: 0; z-index: 2; width: 100%; justify-content: space-between; padding: var(--s-3) 0; background: var(--c-page); }
   [data-shell='admin'] .pt-bulk .btn--primary { flex: 1; }
 }
