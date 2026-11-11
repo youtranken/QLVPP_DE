@@ -145,6 +145,11 @@
   [data-shell='member'] .rq-line-stepper { grid-column: 2 / 4; grid-row: 2; justify-self: start; grid-template-columns: 32px 36px 32px; height: 34px; }
   [data-shell='member'] .rq-line-stepper button { height: 34px; }
   [data-shell='member'] .rq-line-x { grid-column: 3; grid-row: 1; width: 32px; height: 32px; }
+  /* Dòng có nhãn (ngoài danh mục, chờ xem): khối tên + nhãn dùng cả bề ngang dưới nút ×, để nhãn dài vẫn một dòng
+     và phiếu 3 dòng không phải cuộn; tên chừa chỗ cho nút × ở góc trên */
+  [data-shell='member'] .rq-line:has(.tag) .rq-line-main { grid-column: 2 / 4; }
+  [data-shell='member'] .rq-line:has(.tag) .rq-line-name { padding-right: calc(32px + var(--s-2)); }
+  [data-shell='member'] .rq-line:has(.tag) .rq-line-x { position: relative; z-index: 1; align-self: start; }
 }
 
 /* Thành phần dùng chung của luồng Đăng ký: nút chép lại, thông báo, toast, hộp thoại */
