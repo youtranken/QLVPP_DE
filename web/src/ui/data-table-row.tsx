@@ -37,6 +37,7 @@ export interface Selection {
 }
 
 export function SelectBox({
+  id,
   checked,
   indeterminate = false,
   label,
@@ -44,6 +45,8 @@ export function SelectBox({
   disabled = false,
   onChange,
 }: {
+  // Cho <label htmlFor> ở ô khác (vd tên người) nới vùng bấm
+  id?: string;
   checked: boolean;
   indeterminate?: boolean;
   label?: string;
@@ -58,6 +61,7 @@ export function SelectBox({
   return (
     <input
       ref={ref}
+      id={id}
       type="checkbox"
       aria-label={label}
       aria-labelledby={labelledBy}

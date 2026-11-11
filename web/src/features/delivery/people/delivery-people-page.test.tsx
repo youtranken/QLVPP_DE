@@ -292,6 +292,25 @@ describe('DeliveryPeoplePage — panel và Người tiếp theo', () => {
     expect(search()).toContain('person=u-b');
   });
 
+  it('dòng tổng và nút "Giao…" nằm ở chân panel (khe footer dính đáy), không trong thân cuộn', async () => {
+    stub();
+    open('/admin/delivery?person=u-a');
+    const dlg = await screen.findByRole('dialog', { name: 'Nguyễn Văn An' });
+    const btn = within(dlg).getByRole('button', { name: 'Giao…' });
+    expect(btn.closest('.ovp-foot')).not.toBeNull();
+    expect(btn.closest('.ovp-body')).toBeNull();
+    expect(dlg.querySelector('.ovp-foot .pp-sum')).toHaveTextContent(/^Giao \d+/);
+    expect(dlg.querySelector('.pp-foot')).toBeNull();
+  });
+
+  it('390 px: bấm tên người cũng chọn người đó (nhãn bao tên)', async () => {
+    stub();
+    open('/admin/delivery', 390);
+    const name = await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
+    await userEvent.click(name);
+    expect(screen.getByRole('checkbox', { name: 'Chọn Nguyễn Văn An' })).toBeChecked();
+  });
+
   it('?person= không có trong danh sách → không panel, không lỗi, tham số bị gỡ', async () => {
     stub();
     open('/admin/delivery?person=u-nobody&tab=all');

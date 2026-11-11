@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ItemThumb } from '@/ui/item-thumb';
 import { Stepper } from '@/ui/stepper';
@@ -36,54 +36,79 @@ function Meta({ row, waiting, shortage }: { row: DialogRow } & Pick<RowsProps, '
   );
 }
 
-function LineRow({ row, limit, disabled, waiting, shortage, onChange }: { row: DialogRow; limit: Limit } & Omit<RowsProps, 'rows' | 'limits'>) {
+// Phần NCC hết hàng không giao: chỉ cụm "Không giao n" tô đỏ, lý do đi kèm màu thường
+function NoGive({ n }: { n: number }) {
+  const { t } = useTranslation();
+  return (
+    <span className="dd-nogive">
+      <b>{t('delivery.confirm.noGive', { n })}</b> {t('delivery.confirm.noGiveWhy')}
+    </span>
+  );
+}
+
+// Cột "Còn lại sau lần này": dòng giao còn thiếu ghi Chưa nhận/Nợ; dòng NCC hết hàng có giao một phần ghi phần không giao
+function leftOf(row: DialogRow, limit: Limit, t: (k: string, o?: Record<string, unknown>) => string): ReactNode {
+  const rest = row.line.remaining_qty - limit.value;
+  if (rest <= 0) return null;
+  if (row.kind === 'give') return <span className="dd-left">{t(row.line.is_debt ? 'delivery.confirm.oweTag' : 'delivery.confirm.leftTag', { n: rest })}</span>;
+  if (row.kind === 'adm' && limit.cap > 0) return <NoGive n={rest} />;
+  return null;
+}
+
+function LineRow({ row, limit, disabled, waiting, shortage, showLeft, onChange }: { row: DialogRow; limit: Limit; showLeft: boolean } & Omit<RowsProps, 'rows' | 'limits'>) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   const [over, setOver] = useState(false);
   const l = row.line;
   const name = fmt.name(l);
-  const rest = l.remaining_qty - limit.value;
-  const tag = row.kind === 'give' && rest > 0 ? t(l.is_debt ? 'delivery.confirm.oweTag' : 'delivery.confirm.leftTag', { n: rest }) : null;
-  // ADM hết hàng mà tủ không còn: giao 0, tô đỏ cả dòng để khi giao biết bỏ ra
+  // NCC hết hàng mà tủ không còn: không có ô số, câu "Không giao n" chiếm luôn cột còn lại
+  const noStockAdm = row.kind === 'adm' && limit.cap === 0;
   return (
-    <tr className={row.kind === 'adm' && limit.cap === 0 ? 'dd-row--none' : undefined}>
+    <tr>
       <td className="dd-item">
         <ItemThumb fileId={l.image_file_id} alt="" tone="g0" size={42} />
         <span className="dd-item__text">
           <b>{name}</b>
           {l.is_debt && <span className="dd-debt">{t('delivery.confirm.debtTag', { month: monthOf(l.period_ym) })}</span>}
           <Meta row={row} waiting={waiting} shortage={shortage} />
-          {row.kind === 'adm' && <small className="dd-warn">{t('delivery.confirm.admLine', { s: row.stockLeft })}</small>}
         </span>
       </td>
       <td className="num">{l.remaining_qty}</td>
-      <td>
-        {limit.cap > 0 ? (
-          <Stepper
-            className="dd-step"
-            value={limit.value}
-            min={0}
-            max={limit.cap}
-            disabled={disabled}
-            emptyAsMin
-            label={t('delivery.confirm.qty', { name })}
-            onOverMax={() => setOver(true)}
-            onChange={(n) => {
-              setOver(false);
-              onChange(l.line_id, n);
-            }}
-          />
-        ) : (
-          <span className="dd-none">{t(limit.taken ? 'delivery.people.panel.allocatedAbove' : 'delivery.people.panel.outOfStock')}</span>
-        )}
-        {over && <small className="dd-max">{t('delivery.confirm.max', { n: limit.cap })}</small>}
-      </td>
-      <td>{tag && <span className="dd-left">{tag}</span>}</td>
+      {noStockAdm ? (
+        <td colSpan={showLeft ? 2 : 1}>
+          <NoGive n={l.remaining_qty} />
+        </td>
+      ) : (
+        <>
+          <td>
+            {limit.cap > 0 ? (
+              <Stepper
+                className="dd-step"
+                value={limit.value}
+                min={0}
+                max={limit.cap}
+                disabled={disabled}
+                emptyAsMin
+                label={t('delivery.confirm.qty', { name })}
+                onOverMax={() => setOver(true)}
+                onChange={(n) => {
+                  setOver(false);
+                  onChange(l.line_id, n);
+                }}
+              />
+            ) : (
+              <span className="dd-none">{t(limit.taken ? 'delivery.people.panel.allocatedAbove' : 'delivery.people.panel.outOfStock')}</span>
+            )}
+            {over && <small className="dd-max">{t('delivery.confirm.max', { n: limit.cap })}</small>}
+          </td>
+          {showLeft && <td>{leftOf(row, limit, t)}</td>}
+        </>
+      )}
     </tr>
   );
 }
 
-function Head({ hidden = false }: { hidden?: boolean }) {
+function Head({ hidden = false, showLeft }: { hidden?: boolean; showLeft: boolean }) {
   const { t } = useTranslation();
   return (
     <thead className={hidden ? 'sr-only' : undefined}>
@@ -93,42 +118,51 @@ function Head({ hidden = false }: { hidden?: boolean }) {
           {t('delivery.confirm.cols.need')}
         </th>
         <th scope="col">{t('delivery.confirm.cols.now')}</th>
-        <th scope="col">{t('delivery.confirm.cols.left')}</th>
+        {showLeft && <th scope="col">{t('delivery.confirm.cols.left')}</th>}
       </tr>
     </thead>
   );
 }
 
-function Table({ rows, limits, hiddenHead, ...rest }: RowsProps & { hiddenHead?: boolean }) {
+// Bảng hàng giao và bảng NCC hết hàng dùng chung cột để số thẳng hàng
+function Table({ rows, limits, hiddenHead, showLeft, ...rest }: RowsProps & { hiddenHead?: boolean; showLeft: boolean }) {
   return (
-    <table className="dd-table">
-      <Head hidden={hiddenHead} />
+    <table className={showLeft ? 'dd-table' : 'dd-table dd-table--noleft'}>
+      <colgroup>
+        <col />
+        <col className="dd-col-need" />
+        <col className="dd-col-now" />
+        {showLeft && <col className="dd-col-left" />}
+      </colgroup>
+      <Head hidden={hiddenHead} showLeft={showLeft} />
       <tbody>
         {rows.map((r) => (
-          <LineRow key={r.line.line_id} row={r} limit={limits[r.line.line_id]} {...rest} />
+          <LineRow key={r.line.line_id} row={r} limit={limits[r.line.line_id]} showLeft={showLeft} {...rest} />
         ))}
       </tbody>
     </table>
   );
 }
 
-// Nhóm hàng giao, nhóm ADM hết hàng (trừ trong Tủ / Kho, phần thiếu hủy) và nhóm không giao lần này
+// Nhóm hàng giao, nhóm NCC hết hàng (giao phần tủ có, phần thiếu hủy) và nhóm không giao lần này
 export function DeliverRows(props: RowsProps) {
   const { t } = useTranslation();
   const fmt = useRequestFormat();
   const give = props.rows.filter((r) => r.kind === 'give');
   const adm = props.rows.filter((r) => r.kind === 'adm');
+  // Cột "Còn lại sau lần này" chỉ ẩn khi mọi dòng của cả hai bảng đều trống
+  const showLeft = [...give, ...adm].some((r) => leftOf(r, props.limits[r.line.line_id], t) !== null);
   const skip = props.rows.filter((r) => r.kind === 'skip');
   const noStock = give.length === 0 && skip.some((r) => r.reason === 'stock');
   // Tủ trống thay cả danh sách thiếu hàng bằng một câu; dòng chờ duyệt vẫn phải hiện
   const skipShown = noStock ? skip.filter((r) => r.reason === 'review') : skip;
   return (
     <div className="dd-rows">
-      {noStock ? <p className="dd-nostock">{t('delivery.confirm.noStock')}</p> : give.length > 0 && <Table {...props} rows={give} />}
+      {noStock ? <p className="dd-nostock">{t('delivery.confirm.noStock')}</p> : give.length > 0 && <Table {...props} rows={give} showLeft={showLeft} />}
       {adm.length > 0 && (
         <section className="dd-group dd-group--adm">
           <h3>{t('delivery.confirm.admOut')}</h3>
-          <Table {...props} rows={adm} hiddenHead={give.length > 0} />
+          <Table {...props} rows={adm} hiddenHead={give.length > 0} showLeft={showLeft} />
         </section>
       )}
       {skipShown.length > 0 && (

@@ -54,6 +54,8 @@ const useCtx = () => {
   return v;
 };
 const nameOf = (r: DeliveryPerson) => r.full_name ?? r.user_sub;
+// Ô chọn và tên người nối bằng label: điện thoại bấm cả tên cũng chọn (vùng bấm đủ 44px)
+const pickId = (r: DeliveryPerson) => `pt-pick-${encodeURIComponent(r.user_sub)}`;
 
 function StatusCell({ person }: { person: DeliveryPerson }) {
   const { t } = useTranslation();
@@ -93,6 +95,7 @@ function PickCell({ person }: { person: DeliveryPerson }) {
   const { selected, selectable, onToggle } = useCtx();
   return (
     <SelectBox
+      id={pickId(person)}
       checked={selected.has(person.user_sub)}
       disabled={!selectable(person)}
       label={t('delivery.bulk.pick', { name: nameOf(person) })}
@@ -133,10 +136,10 @@ function useColumns() {
         id: 'person',
         header: t('delivery.people.cols.person'),
         cell: ({ row: { original: r } }) => (
-          <span className="pt-person">
+          <label className="pt-person" htmlFor={pickId(r)}>
             <PersonAvatar name={nameOf(r)} />
             <b>{nameOf(r)}</b>
-          </span>
+          </label>
         ),
       },
       { id: 'dept', header: t('delivery.people.cols.dept'), cell: ({ row }) => row.original.department ?? t('delivery.people.card.noDepartment') },

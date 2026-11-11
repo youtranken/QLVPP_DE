@@ -29,13 +29,17 @@
 [data-shell='admin'] .pp-row__review a { color: var(--c-acc); font-weight: 700; }
 [data-shell='admin'] .pp-row__warn { margin-top: var(--s-2); padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); background: var(--c-warn-soft); color: var(--c-warn); font: var(--t-cap); }
 [data-shell='admin'] .pp-row__err { margin: var(--s-2) 0 0; color: var(--c-danger); font: var(--t-cap); font-weight: 700; }
-[data-shell='admin'] .pp-foot { position: sticky; bottom: 0; display: grid; gap: var(--s-2); padding: var(--s-3) 0 0; background: var(--c-surface); }
-[data-shell='admin'] .pp-sum { margin: 0; font: var(--t-body); color: var(--c-ink-2); }
-[data-shell='admin'] .pp-foot .btn { min-height: 52px; font: var(--t-body-l); font-weight: 700; }
-[data-shell='admin'] .pp-foot .btn:disabled { cursor: default; }
+/* Dòng tổng và nút Giao… nằm trong chân OverlayPanel (dính đáy, viền trên) */
+[data-shell='admin'] .pp-sum { flex: 1 1 200px; margin: 0; font: var(--t-body); color: var(--c-ink-2); }
+[data-shell='admin'] .pp-deliver { min-height: 52px; font: var(--t-body-l); font-weight: 700; }
+[data-shell='admin'] .pp-deliver:disabled { cursor: default; }
 [data-shell='admin'] .pp-done { margin: 0; padding: var(--s-4); border-radius: var(--r-md); background: var(--c-ok-soft); color: var(--c-ok); font: var(--t-label); }
 [data-shell='admin'] .pp-card__progress { margin: 0; font: var(--t-sm); font-weight: 700; color: var(--c-ink-2); }
-[data-shell='admin'] .pp-tabs { min-width: 0; max-width: 100%; overflow-x: auto; }
+[data-shell='admin'] .pp-tabs { min-width: 0; max-width: 100%; }
+/* Tab cuộn ngang: mép phải mờ khi còn tab khuất (ScrollFade đặt data-more) */
+[data-shell='admin'] .pp-tabs__scroll { min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+[data-shell='admin'] .pp-tabs__scroll::-webkit-scrollbar { display: none; }
+[data-shell='admin'] .pp-tabs__scroll[data-more] { mask-image: linear-gradient(to right, black calc(100% - 40px), transparent); }
 @media (max-width: 767px) {
   [data-shell='admin'] .pp-tabs .seg-m1 { display: flex; width: 100%; gap: 0; }
   [data-shell='admin'] .pp-tabs .seg-m1 button { flex: 1; padding: 0 var(--s-1); gap: var(--s-1); font: var(--t-cap); }
@@ -44,7 +48,7 @@
 [data-shell='admin'] .pp-row__main > :first-child { grid-row: span 2; align-self: start; }
 [data-shell='admin'] .pp-tabs__note { display: block; margin-top: var(--s-1); font: var(--t-cap); color: var(--c-ink-2); }
 @media (max-width: 767px) {
-  [data-shell='admin'] .pp-toolbar { position: sticky; top: 0; z-index: 2; background: var(--c-page); }
+  [data-shell='admin'] .dp-toolbar { position: sticky; top: 0; z-index: 2; background: var(--c-page); }
 }
 
 [data-shell='admin'] .dd-sub { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-3); margin: var(--s-1) 0 0; font: var(--t-sm); color: var(--c-muted); }
@@ -53,9 +57,13 @@
 [data-shell='admin'] .dd-table { width: 100%; border-collapse: collapse; }
 [data-shell='admin'] .dd-table th { padding: var(--s-2); border-bottom: 1px solid var(--c-line); font: var(--t-cap); color: var(--c-ink-2); text-align: left; }
 [data-shell='admin'] .dd-table td { padding: var(--s-2); border-bottom: 1px solid var(--c-line); vertical-align: top; font: var(--t-sm); }
-[data-shell='admin'] .dd-table th:nth-child(2), [data-shell='admin'] .dd-table td:nth-child(2) { width: 72px; text-align: right; }
-[data-shell='admin'] .dd-table th:nth-child(3), [data-shell='admin'] .dd-table td:nth-child(3) { width: 144px; }
-[data-shell='admin'] .dd-table th:nth-child(4), [data-shell='admin'] .dd-table td:nth-child(4) { width: 112px; }
+[data-shell='admin'] .dd-table th:nth-child(2), [data-shell='admin'] .dd-table td:nth-child(2) { text-align: right; }
+/* Bảng hàng giao và bảng NCC hết hàng chung bề rộng cột (colgroup + table-layout fixed) để số thẳng hàng */
+[data-shell='admin'] .dd-table { table-layout: fixed; }
+[data-shell='admin'] .dd-col-need { width: 72px; }
+[data-shell='admin'] .dd-col-now { width: 144px; }
+[data-shell='admin'] .dd-col-left { width: 152px; }
+[data-shell='admin'] .dd-table--noleft .dd-col-now { width: 208px; }
 [data-shell='admin'] .dd-item { display: flex; gap: var(--s-3); }
 [data-shell='admin'] .dd-item__text { display: grid; gap: 2px; min-width: 0; }
 [data-shell='admin'] .dd-item__text b { font: var(--t-label); overflow-wrap: anywhere; }
@@ -69,8 +77,9 @@
 [data-shell='admin'] .dd-group h3 { margin: 0 0 var(--s-2); font: var(--t-label); color: var(--c-ink-2); }
 [data-shell='admin'] .dd-group--adm { padding: var(--s-3); border-radius: var(--r-md); background: var(--c-warn-soft); }
 [data-shell='admin'] .dd-group--adm h3 { color: var(--c-warn); }
-[data-shell='admin'] .dd-row--none td { background: var(--c-danger-soft); color: var(--c-danger); }
-[data-shell='admin'] .dd-row--none .dd-item__text b, [data-shell='admin'] .dd-row--none .dd-item__text small, [data-shell='admin'] .dd-row--none .dd-item__text .dd-warn { color: var(--c-danger); }
+[data-shell='admin'] .dd-nogive { font: var(--t-cap); font-weight: 700; color: var(--c-warn); }
+[data-shell='admin'] .dd-nogive b { color: var(--c-danger); white-space: nowrap; }
+[data-shell='admin'] .dd-pending { margin: 0; padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--c-warn-soft); color: var(--c-warn); font: var(--t-label); }
 [data-shell='admin'] .dd-group--skip { color: var(--c-muted); }
 [data-shell='admin'] .dd-group--skip ul { display: grid; gap: var(--s-1); margin: 0; padding: 0; list-style: none; font: var(--t-sm); }
 [data-shell='admin'] .dd-group--skip li { display: flex; flex-wrap: wrap; gap: var(--s-2); }
@@ -97,7 +106,6 @@
 [data-shell='admin'] .pt-table td.pt-pick input, [data-shell='admin'] .pt-table th.pt-pick input { accent-color: var(--c-acc); }
 @media (min-width: 768px) {
   [data-shell='admin'] .pt-table td.pt-pick input, [data-shell='admin'] .pt-table th.pt-pick input { width: 18px; height: 18px; }
-  [data-shell='admin'] .pt-pickall { display: none; }
 }
 [data-shell='admin'] .pt-table tr.is-picked td { background: var(--c-surface-2); }
 [data-shell='admin'] .pt-person { display: flex; align-items: center; gap: var(--s-2); }
@@ -114,6 +122,19 @@
 [data-shell='admin'] .bd-list b { font: var(--t-label); }
 [data-shell='admin'] .bd-left { color: var(--c-warn); font: var(--t-cap); font-weight: 700; }
 [data-shell='admin'] .pt-pickall { display: flex; align-items: center; gap: var(--s-2); min-height: var(--hit); font: var(--t-label); cursor: pointer; }
+/* Máy tính đã có ô "Chọn tất cả" ở đầu bảng: ẩn ô của điện thoại (đặt sau luật display:flex để không bị viết đè) */
+@media (min-width: 768px) {
+  [data-shell='admin'] .pt-pickall { display: none; }
+}
+[data-shell='admin'] .pt-person { cursor: pointer; }
+@media (max-width: 767px) {
+  /* Thẻ người: ô chọn cùng hàng với tên, nhãn bao cả tên để vùng bấm cao 44px */
+  [data-shell='admin'] .table-stack.pt-table td.pt-pick:first-child { flex: none; }
+  [data-shell='admin'] .table-stack.pt-table td.pt-pick + td { flex: 1 1 calc(100% - 56px); }
+  [data-shell='admin'] .table-stack.pt-table td.pt-pick + td::before { display: none !important; }
+  [data-shell='admin'] .pt-table .pt-person { flex: 1; min-height: var(--hit); }
+  [data-shell='admin'] .pt-table td.pt-pick input { width: 20px; height: 20px; margin: 12px; }
+}
 @media (max-width: 767px) {
   [data-shell='admin'] .pt-pickall input[type='checkbox'] { appearance: none; display: grid; place-content: center; flex: none; width: var(--hit); height: var(--hit); margin: 0; background: none; }
   [data-shell='admin'] .pt-pickall input[type='checkbox']::before { content: ''; width: 20px; height: 20px; border: 2px solid var(--c-line-input); border-radius: var(--r-xs); background: var(--c-surface); box-sizing: border-box; }

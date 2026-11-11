@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiErrorCode, apiErrorString } from '@/lib/api-error';
@@ -12,6 +12,7 @@ import { SearchClear } from '@/ui/search-clear';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
+import { ScrollFade } from '@/ui/filter/scroll-fade';
 import { SelectBox } from '@/ui/data-table-row';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf } from '@/features/request/request-format';
@@ -80,6 +81,12 @@ function PeopleBoard({ ym }: { ym: string }) {
     [listed, selectable],
   );
   const searchRef = useRef<HTMLInputElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const loaded = !!query.data;
+  // Tab đang chọn khuất bên phải (điện thoại, mở bằng link ?tab=) thì tự cuộn vào tầm nhìn
+  useEffect(() => {
+    tabsRef.current?.querySelector('[aria-checked="true"]')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }, [tab, loaded]);
   // Giao xong: về ô tìm, chọn sẵn chữ để gõ ngay người kế
   const focusSearch = () => {
     const input = searchRef.current;
@@ -113,11 +120,23 @@ function PeopleBoard({ ym }: { ym: string }) {
       onNext={open}
       onDelivered={panel.close}
       focusAfter={focusSearch}
+      frame={(body, footer) => (
+        <OverlayPanel
+          open
+          onClose={panel.close}
+          title={selected.full_name ?? selected.user_sub}
+          nav={{ index: panel.index, total: panel.total, onStep: panel.step, prevLabel: t('delivery.people.panel.prevPerson'), nextLabel: t('delivery.people.panel.nextPerson') }}
+          footer={footer}
+        >
+          <PanelHead person={selected} />
+          {body}
+        </OverlayPanel>
+      )}
     />
   );
   return (
     <>
-      <div className="toolbar pp-toolbar">
+      <div className="toolbar dp-toolbar">
         <div className="toolbar__search">
           <Icon name="search" size={18} />
           <input
@@ -130,13 +149,15 @@ function PeopleBoard({ ym }: { ym: string }) {
           />
           <SearchClear value={q} onClear={() => update({ q: null }, true)} inputRef={searchRef} />
         </div>
-        <div className="pp-tabs">
-          <Segmented
-            label={t('delivery.people.filter')}
-            value={tab}
-            options={TABS.map((x) => ({ value: x, label: t(`delivery.people.tabs.${x}`), count: counts[x] }))}
-            onChange={(v) => update({ tab: v === 'pending' ? null : v })}
-          />
+        <div className="pp-tabs" ref={tabsRef}>
+          <ScrollFade className="pp-tabs__scroll">
+            <Segmented
+              label={t('delivery.people.filter')}
+              value={tab}
+              options={TABS.map((x) => ({ value: x, label: t(`delivery.people.tabs.${x}`), count: counts[x] }))}
+              onChange={(v) => update({ tab: v === 'pending' ? null : v })}
+            />
+          </ScrollFade>
           {both > 0 && <small className="pp-tabs__note">{t('delivery.people.overlap', { n: both })}</small>}
         </div>
         {pickable.length > 0 && (
@@ -172,17 +193,7 @@ function PeopleBoard({ ym }: { ym: string }) {
           onDeliver={setConfirmFor}
         />
       )}
-      {selected && (
-        <OverlayPanel
-          open
-          onClose={panel.close}
-          title={selected.full_name ?? selected.user_sub}
-          nav={{ index: panel.index, total: panel.total, onStep: panel.step, prevLabel: t('delivery.people.panel.prevPerson'), nextLabel: t('delivery.people.panel.nextPerson') }}
-        >
-          <PanelHead person={selected} />
-          {personPanel}
-        </OverlayPanel>
-      )}
+      {personPanel}
       {bulk && (
         <BulkDeliverDialog
           plan={bulk}

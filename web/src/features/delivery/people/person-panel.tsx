@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { monthOf } from '@/features/request/request-format';
 import type { DeliveryPerson } from './delivery-people.api';
@@ -16,11 +16,20 @@ export interface PersonPanelProps {
   // Giao hết thành công từ panel: đóng cả hộp lẫn panel
   onDelivered?: () => void;
   focusAfter?: () => boolean;
+  // Khung chứa (OverlayPanel của trang): dòng tổng + nút Giao… đặt vào khe footer để dính đáy panel
+  frame?: (body: ReactNode, footer: ReactNode) => ReactNode;
 }
+
+const inline = (body: ReactNode, footer: ReactNode) => (
+  <>
+    {body}
+    {footer}
+  </>
+);
 
 const NO_WAIT = { people: 0, qty: 0 };
 
-export function PersonPanel({ ym, person, people, next, onNext, onDelivered, focusAfter }: PersonPanelProps) {
+export function PersonPanel({ ym, person, people, next, onNext, onDelivered, focusAfter, frame = inline }: PersonPanelProps) {
   const { t } = useTranslation();
   const [qtys, setQtys] = useState<Record<string, number>>({});
   const [confirming, setConfirming] = useState(false);
@@ -37,10 +46,21 @@ export function PersonPanel({ ym, person, people, next, onNext, onDelivered, foc
     { key: 'month', title: t('delivery.people.panel.monthGroup', { month: monthOf(ym) }), rows: plan.rows.filter((r) => !r.line.is_debt) },
   ].filter((g) => g.rows.length > 0);
 
-  if (person.status === 'done') return <p className="pp-done">{t('delivery.people.panel.done')}</p>;
+  if (person.status === 'done') return frame(<p className="pp-done">{t('delivery.people.panel.done')}</p>, null);
 
   const name = person.full_name ?? person.user_sub;
-  return (
+  const footer = (
+    <>
+      <p className="pp-sum">
+        {totals.left > 0 ? t('delivery.people.panel.sumOwe', { give: totals.give, left: totals.left }) : t('delivery.people.panel.sum', { give: totals.give })}
+        {totals.debt > 0 && t('delivery.people.panel.sumDebt', { debt: totals.debt })}
+      </p>
+      <button type="button" className="btn btn--primary pp-deliver" disabled={totals.give === 0 && totals.cancel === 0} onClick={() => setConfirming(true)}>
+        {t('delivery.people.panel.deliver')}
+      </button>
+    </>
+  );
+  const body = (
     <section className="pp-panel" aria-label={t('delivery.people.panel.label', { name })}>
       {groups.map((g) => (
         <section key={g.key} className={`pp-group pp-group--${g.key}`}>
@@ -62,15 +82,6 @@ export function PersonPanel({ ym, person, people, next, onNext, onDelivered, foc
           </ul>
         </section>
       ))}
-      <footer className="pp-foot">
-        <p className="pp-sum">
-          {totals.left > 0 ? t('delivery.people.panel.sumOwe', { give: totals.give, left: totals.left }) : t('delivery.people.panel.sum', { give: totals.give })}
-          {totals.debt > 0 && t('delivery.people.panel.sumDebt', { debt: totals.debt })}
-        </p>
-        <button type="button" className="btn btn--primary" disabled={totals.give === 0 && totals.cancel === 0} onClick={() => setConfirming(true)}>
-          {t('delivery.people.panel.deliver')}
-        </button>
-      </footer>
       {confirming && (
         <DeliverDialog
           person={person}
@@ -90,4 +101,5 @@ export function PersonPanel({ ym, person, people, next, onNext, onDelivered, foc
       )}
     </section>
   );
+  return frame(body, footer);
 }

@@ -57,8 +57,9 @@ describe('DeliverDialog — mở hộp', () => {
     const title = await screen.findByRole('heading', { name: 'Giao cho Nguyễn Văn An?' });
     await waitFor(() => expect(title).toHaveFocus());
     expect(title).toHaveAttribute('tabindex', '-1');
+    // Giao đủ mọi dòng: cột "Còn lại sau lần này" trống hết nên ẩn
     const heads = within(dialog()).getAllByRole('columnheader');
-    expect(heads.map((h) => h.textContent)).toEqual(['Món', 'Cần giao', 'Giao lần này', 'Còn lại sau lần này']);
+    expect(heads.map((h) => h.textContent)).toEqual(['Món', 'Cần giao', 'Giao lần này']);
     heads.forEach((h) => expect(h).toHaveAttribute('scope', 'col'));
     expect(within(dialog()).getByText('Bấm Xác nhận là không sửa được. Nếu lỡ nhầm, vào Tủ / Kho để chỉnh số, ghi lý do.')).toBeInTheDocument();
     expect(posts(f)).toEqual([]);
@@ -70,6 +71,7 @@ describe('DeliverDialog — mở hộp', () => {
     const debt = pLine({ line_id: 'd', period_ym: '2026-09', is_debt: true, item_id: 'i-a4', name: 'Giấy A4', qty: 4, remaining_qty: 4, stock_qty: 9 });
     open(person({ lines: [cur, debt] }), { initial: { c: 3 } });
     const rowOf = (name: string) => within(dialog()).getByRole('cell', { name: new RegExp(name) }).closest('tr') as HTMLElement;
+    expect(within(dialog()).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Món', 'Cần giao', 'Giao lần này', 'Còn lại sau lần này']);
     expect(within(rowOf('Bút bi xanh')).getByText('Chưa nhận 2')).toBeInTheDocument();
     expect(within(rowOf('Giấy A4')).getByText('Nợ tháng 9')).toBeInTheDocument();
     expect(within(rowOf('Giấy A4')).queryByText(/^Nợ \d/)).toBeNull();
@@ -175,15 +177,17 @@ describe('DeliverDialog — gợi ý theo người đăng ký trước', () => {
 });
 
 describe('DeliverDialog — NCC hết hàng', () => {
-  it('tủ 2: B (trước) cần 1; A cần 2 → đề xuất 1 + "NCC hết hàng – tủ còn 1"; Xác nhận → giao 1 rồi hủy', async () => {
+  it('tủ 2: B (trước) cần 1; A cần 2 → đề xuất 1 + "Không giao 1 · NCC hết hàng" (chỉ "Không giao 1" đỏ); Xác nhận → giao 1 rồi hủy', async () => {
     const f = stub();
     const B = person({ user_sub: 'B', full_name: 'Bình', lines: [pLine({ line_id: 'b', qty: 1, remaining_qty: 1, stock_qty: 2, adm_out: true, request_at: '2026-10-01T07:00:00.000000Z' })] });
     const A = person({ user_sub: 'A', lines: [pLine({ line_id: 'a', qty: 2, remaining_qty: 2, stock_qty: 2, adm_out: true, request_at: '2026-10-01T08:00:00.000000Z' })] });
     const done = open(A, { people: [A, B] });
-    expect(within(dialog()).getByRole('heading', { name: 'NCC hết hàng, số lượng sẽ trừ trong Tủ / Kho' })).toBeInTheDocument();
+    expect(within(dialog()).getByRole('heading', { name: 'NCC hết hàng, không giao phần còn thiếu' })).toBeInTheDocument();
     expect(spin('Bút bi xanh').value).toBe('1');
-    expect(within(dialog()).getByText('NCC hết hàng – tủ còn 1')).toBeInTheDocument();
-    expect(within(dialog()).getByText('NCC hết hàng – tủ còn 1').closest('tr')).not.toHaveClass('dd-row--none');
+    const noGive = within(dialog()).getByText('Không giao 1');
+    expect(noGive.tagName).toBe('B');
+    expect(noGive.closest('.dd-nogive')).toHaveTextContent('Không giao 1 · NCC hết hàng');
+    expect(within(dialog()).queryByText(/tủ còn/)).toBeNull();
     await userEvent.click(confirmBtn());
     await waitFor(() => expect(done.onDone).toHaveBeenCalled());
     expect(posts(f)).toEqual([
@@ -194,13 +198,16 @@ describe('DeliverDialog — NCC hết hàng', () => {
 });
 
 describe('DeliverDialog — NCC hết hàng, tủ không còn', () => {
-  it('dòng NCC hết hàng tủ 0 → "NCC hết hàng – tủ còn 0", cả dòng tô đỏ (dd-row--none); dòng giao thường không tô', async () => {
+  it('dòng NCC hết hàng tủ 0 → không ô số, một câu "Không giao 2 · NCC hết hàng"; không tô nền đỏ cả dòng; cột "Còn lại" ẩn khi mọi dòng trống', async () => {
     stub();
     const A = person({ lines: [pLine({ line_id: 'c', qty: 1, remaining_qty: 1, stock_qty: 3 }), pLine({ line_id: 'm', item_id: 'i-clip', name: 'Kẹp', qty: 2, remaining_qty: 2, stock_qty: 0, adm_out: true })] });
     open(A);
-    const note = within(dialog()).getByText('NCC hết hàng – tủ còn 0');
-    expect(note.closest('tr')).toHaveClass('dd-row--none');
-    expect(spin('Bút bi xanh').closest('tr')).not.toHaveClass('dd-row--none');
+    const row = within(dialog()).getByText('Không giao 2').closest('tr') as HTMLElement;
+    expect(within(row).queryByRole('spinbutton')).toBeNull();
+    expect(row).toHaveTextContent('Không giao 2 · NCC hết hàng');
+    expect(row.className).toBe('');
+    // Bảng NCC hết hàng có đầu cột ẩn (sr-only) cùng 3 cột với bảng giao
+    expect(within(dialog()).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Món', 'Cần giao', 'Giao lần này', 'Món', 'Cần giao', 'Giao lần này']);
   });
 });
 
