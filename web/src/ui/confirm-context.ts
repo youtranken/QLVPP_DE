@@ -8,6 +8,8 @@ export type ConfirmOptions = {
   danger?: boolean;
   // Khối cảnh báo cam không chặn: nút chính vẫn bấm được
   warning?: ReactNode;
+  // Lời hỏi là cảnh báo (vd sắp ghi Không mua): hiện nền cam và focus sẵn ở nút hủy để Enter không lỡ tay xác nhận
+  caution?: boolean;
 };
 
 export type ConfirmFn = (o: ConfirmOptions) => Promise<boolean>;

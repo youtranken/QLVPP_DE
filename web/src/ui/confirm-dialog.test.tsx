@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ConfirmDialog } from '@/ui/confirm-dialog';
-import { renderWithI18n, screen, userEvent, within } from '@/test/test-utils';
+import { renderWithI18n, screen, userEvent, waitFor, within } from '@/test/test-utils';
 
 function renderConfirm(danger: boolean, onConfirm = vi.fn()) {
   renderWithI18n(
@@ -39,5 +39,15 @@ describe('ConfirmDialog — nút đóng chung', () => {
     const close = within(dialog).getByRole('button', { name: 'Đóng' });
     expect(close.querySelector('svg path')).not.toBeNull();
     expect(close).not.toHaveTextContent('✕');
+  });
+});
+
+describe('ConfirmDialog — caution', () => {
+  it('lời hỏi nền cam (vẫn là mô tả của hộp), focus sẵn ở nút hủy', async () => {
+    renderWithI18n(<ConfirmDialog title="Giao cho An?" message="Sẽ ghi Không mua: Pin sạc AA." confirmLabel="Xác nhận giao" cancelLabel="Hủy" caution onConfirm={vi.fn()} onCancel={vi.fn()} />);
+    const dialog = screen.getByRole('dialog', { name: 'Giao cho An?' });
+    expect(dialog).toHaveAccessibleDescription('Sẽ ghi Không mua: Pin sạc AA.');
+    expect(within(dialog).getByText('Sẽ ghi Không mua: Pin sạc AA.')).toHaveClass('alert--warn');
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Hủy' })).toHaveFocus());
   });
 });

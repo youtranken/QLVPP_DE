@@ -1,13 +1,13 @@
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatVnStamp } from '@/lib/format-time';
+import { pendingNames } from '@/lib/pending-names';
 import { Dialog, DialogCloseButton, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { useRequestFormat } from '@/features/request/request-format';
 import type { SnapshotKind } from '@/features/reports/reports.api';
 import type { OrderChange } from './send-adm-rows';
 
 const MAX_CHANGES = 10;
-const MAX_PENDING_NAMES = 5;
 
 function ChangeList({ changes, sentAt }: { changes: OrderChange[]; sentAt: string }) {
   const { t } = useTranslation();
@@ -29,8 +29,7 @@ function ChangeList({ changes, sentAt }: { changes: OrderChange[]; sentAt: strin
 // Chốt bản ghi Không mua cho món ngoài danh mục còn chờ: nói trước tên món (tối đa 5)
 export function PendingCustomWarning({ pending, names }: { pending: number; names: string[] }) {
   const { t } = useTranslation();
-  const shown = names.slice(0, MAX_PENDING_NAMES);
-  const more = pending - shown.length;
+  const { shown, more } = pendingNames(names, pending);
   return (
     <div className="sa-w8">
       <p>{t('warn.W8', { n: pending })}</p>
