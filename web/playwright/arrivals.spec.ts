@@ -87,4 +87,33 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       release();
     }
   });
+
+  test('Vòng6 kỳ chưa gửi NCC báo cáo: Nhận hàng chỉ hiện lời nhắn + lối sang Báo cáo & gửi NCC, không ô nhận; API trả 409 REPORT_NOT_SENT', async ({ page, request }, info) => {
+    const release = await acquireLock('prev-period');
+    clearPrivateSnapshots();
+    const seed = await seedLockedRequest(request, info, [{ stock: 0, qty: 2 }], { ym: PRIVATE_YM });
+    const [a] = seed.items;
+    try {
+      await openOnPrivatePeriod(page);
+      await page.goto('/admin/arrivals');
+      const month = Number(seed.prevYm.slice(5));
+      await expect(page.getByText(`Chưa gửi NCC báo cáo tháng ${month}. Vào Báo cáo & gửi NCC để chốt trước khi nhận hàng.`)).toBeVisible();
+      await expect(page.getByRole('main').getByRole('link', { name: 'Báo cáo & gửi NCC', exact: true }).last()).toHaveAttribute('href', '/admin/reports');
+      await expect(page.getByRole('spinbutton', { name: /^Nhận đợt này: / })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: /^Nhận (đủ )?hàng/ })).toHaveCount(0);
+      const res = await request.post('/api/admin/stock/receipts', {
+        headers: devHeaders('admin'),
+        data: { ym: PRIVATE_YM, lines: [{ item_id: a.id, qty: 1, expected_stock_qty: 0 }] },
+      });
+      expect(res.status()).toBe(409);
+      expect((await res.json()).code).toBe('REPORT_NOT_SENT');
+      expect(stockOf(a.id)).toBe(0);
+      await settled(page);
+      await shot(page, info, 'arrivals-not-sent');
+    } finally {
+      clearPrivateSnapshots();
+      seed.cleanup();
+      release();
+    }
+  });
 });
