@@ -6,9 +6,8 @@
 /* Một hàng ở mọi bề ngang: thanh trên xuống 2 dòng thì cao hơn chỗ chừa (top của phiếu dính) và đè lên lưới */
 [data-shell='member'] .m-top__in { display: flex; align-items: center; padding: var(--s-3) var(--s-5); gap: 12px 20px; flex-wrap: nowrap; box-sizing: border-box; }
 [data-shell='member'] .m-shell.is-narrow .m-top__in { padding: var(--s-2) var(--s-4); gap: var(--s-2); flex-wrap: nowrap; max-width: none; }
-[data-shell='member'] .m-logo { display: flex; align-items: center; text-decoration: none; gap: 12px; color: var(--c-on-dark); font-size: 16px; font-weight: 700; }
-/* Tên app không gãy dòng; máy quá hẹp thì rút "…" thay vì đẩy chuông/ảnh đại diện ra ngoài */
-[data-shell='member'] .m-logo { min-width: 0; white-space: nowrap; }
+/* Tên app không gãy dòng; thanh trên chật thì logo là phần co lại ("…") thay vì đẩy chuông/ảnh đại diện ra ngoài */
+[data-shell='member'] .m-logo { display: flex; align-items: center; min-width: 0; white-space: nowrap; text-decoration: none; gap: 12px; color: var(--c-on-dark); font-size: 16px; font-weight: 700; }
 [data-shell='member'] .m-logo i { flex: none; }
 [data-shell='member'] .m-logo__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 [data-shell='member'] .m-shell.is-narrow .m-logo { gap: var(--s-2); font-size: 14px; }
@@ -16,8 +15,8 @@
 [data-shell='member'] .m-logo i { display: grid; place-items: center; font-style: normal; width: 38px; height: 38px; border-radius: 12px; background: var(--c-logo-bg); color: var(--c-ink); font-size: 13px; font-weight: 800; }
 [data-shell='member'] .m-logo:focus-visible, [data-shell='member'] .m-tabs a:focus-visible, [data-shell='member'] .bottom-nav a:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 
-[data-shell='member'] .m-tabs { display: flex; margin-left: 0; gap: 4px; padding: 4px; border-radius: var(--r-pill); background: var(--c-glass); border: 1px solid var(--c-glass-line); }
-[data-shell='member'] .m-tabs a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s-4); border-radius: var(--r-pill); text-decoration: none; color: var(--c-on-dark-2); font-size: 14px; font-weight: 600; }
+[data-shell='member'] .m-tabs { display: flex; flex: none; margin-left: 0; gap: 4px; padding: 4px; border-radius: var(--r-pill); background: var(--c-glass); border: 1px solid var(--c-glass-line); }
+[data-shell='member'] .m-tabs a { display: inline-flex; align-items: center; white-space: nowrap; min-height: 44px; padding: 0 var(--s-4); border-radius: var(--r-pill); text-decoration: none; color: var(--c-on-dark-2); font-size: 14px; font-weight: 600; }
 [data-shell='member'] .m-tabs a:hover { background: var(--c-on-dark-hover); color: var(--c-on-dark); }
 [data-shell='member'] .m-tabs a[aria-current='page'] { background: var(--c-surface); color: var(--c-ink); }
 
@@ -55,8 +54,17 @@
 /* Nút trên nền tối đều có hover */
 [data-shell='member'] .bottom-nav a:not([aria-current='page']):hover, [data-shell='member'] .bottom-nav button:not([aria-expanded='true']):not([aria-current='page']):hover { background: var(--c-on-dark-hover); color: var(--c-on-dark); }
 [data-shell='member'] .m-top .m-lang button[aria-checked='false']:hover { background: var(--c-on-dark-hover); color: var(--c-on-dark); }
-/* Bảng thông báo trên điện thoại: nằm dưới thanh trên (cao ~70px vì nút ngôn ngữ 44px), nút "Đọc hết" đủ 44px để chạm */
+/* Bảng thông báo trên điện thoại: neo ngay dưới thanh trên thật (.m-top dính nên là khối chứa), không đoán chiều cao;
+   nút "Đọc hết" đủ 44px để chạm */
 @media (max-width: 900px) {
-  [data-shell='member'] .notif-panel { top: calc(72px + var(--s-1)); }
+  [data-shell='member'] .m-top .notif-panel { position: absolute; top: calc(100% + var(--s-1)); left: var(--s-2); right: var(--s-2); }
   [data-shell='member'] .notif-all { min-height: 44px; padding: 0 var(--s-2); }
 }
+
+/* Nhãn khung nhân viên theo bảng màu v2 (cùng màu nhãn Lịch sử); .tag chung ở tokens.css còn màu cũ.
+   Cho xuống dòng vì phiếu trên điện thoại hẹp, nhãn trạng thái ngoài DM dài */
+[data-shell='member'] .tag { display: inline-flex; align-items: center; height: auto; min-height: 22px; padding: 2px 8px; border-radius: var(--r-pill); background: var(--c-surface-2); color: var(--c-ink-2); font: var(--t-micro); white-space: normal; overflow-wrap: anywhere; }
+[data-shell='member'] .tag--ok { background: var(--c-ok-soft); color: var(--c-ok); }
+[data-shell='member'] .tag--warn { background: var(--c-warn-soft); color: var(--c-warn); }
+[data-shell='member'] .tag--danger { background: var(--c-danger-soft); color: var(--c-danger); }
+[data-shell='member'] .tag--info { background: var(--c-info-soft); color: var(--c-info); }

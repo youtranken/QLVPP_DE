@@ -35,7 +35,7 @@ describe('RequestPage — focus sau lưu / chép / lỗi dòng (≤ 900)', () =>
       copy: () => jsonResponse(200, { from_ym: '2026-10', lines: [{ item_id: PEN.id, qty: 3 }], skipped: [], capped: [], previously_accepted: [] }),
     });
     renderApp(makeMe('member'), '/');
-    const copy = await screen.findByRole('button', { name: 'Chép lại tháng 10' });
+    const copy = await screen.findByRole('button', { name: 'Chép lại danh sách tháng 10' });
     await userEvent.click(copy);
     expect(await screen.findByText('Đã chép danh sách tháng 10 — kiểm tra rồi bấm Lưu phiếu')).toBeInTheDocument();
     await new Promise((r) => setTimeout(r, 20));

@@ -46,7 +46,7 @@ export function FilterBar({ filter, groups, total, shown, pickedCount, canFav = 
           value={filter.q}
           onChange={(q) => onChange({ q })}
         />
-        {/* Hai cặp chỉ là nhóm bố cục cho điện thoại (3 hàng); máy tính bỏ khung (display: contents) */}
+        {/* Hai cặp chỉ là nhóm bố cục cho điện thoại; máy tính bỏ khung (display: contents) */}
         <div className="rq-f-pair">
           <label className="rq-f-sort">
             <span className="sr-only">{t('request.grid.sort')}</span>
