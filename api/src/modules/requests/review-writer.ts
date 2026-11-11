@@ -114,6 +114,21 @@ export class ReviewWriter {
     });
   }
 
+  // Giao hàng ghi Không mua đúng các dòng chờ mà hộp giao đã hiện; người gọi đã khóa phiếu và kiểm dòng còn chờ
+  async rejectLinesWithin(
+    tx: Tx,
+    requestId: string,
+    lineIds: string[],
+    r: { actor: string; ym: string; now: Date },
+  ): Promise<number> {
+    if (lineIds.length === 0) return 0;
+    const lines = await repo.lockPendingLinesOf(tx, requestId, lineIds);
+    if (lines.length !== lineIds.length)
+      throw pendingCustomChanged(lines.length);
+    for (const line of lines) await this.rejectWithin(tx, line, r);
+    return lines.length;
+  }
+
   // Chốt kỳ không để món ngoài danh mục treo: client phải xác nhận đúng số món đang thấy, lệch → 409 PENDING_CUSTOM
   async rejectPendingWithin(
     tx: Tx,

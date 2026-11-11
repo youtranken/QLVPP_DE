@@ -10,7 +10,8 @@ import type { Database, Tx } from '../../database/database.module';
 import { PeriodsService } from '../periods/periods.service';
 import { LineDeliveryStore } from '../requests/line-delivery.store';
 import type { LockedLine } from '../requests/line-delivery.store';
-import { lineNotFound } from '../requests/request-errors';
+import { lineNotFound, pendingCustomChanged } from '../requests/request-errors';
+import { ReviewWriter } from '../requests/review-writer';
 import type {
   BulkDeliverBody,
   BulkDeliverResult,
@@ -41,6 +42,7 @@ export class BulkDeliveryService {
     private readonly periods: PeriodsService,
     private readonly lines: LineDeliveryStore,
     private readonly delivery: DeliveryService,
+    private readonly reviews: ReviewWriter,
   ) {}
 
   // Mỗi phiếu một transaction: một phiếu lỗi không kéo phiếu khác, kết quả trả theo thứ tự body
@@ -78,14 +80,15 @@ export class BulkDeliveryService {
     actor: string,
     now: Date,
   ): Promise<{ delivered_units: number; request_complete: boolean }> {
-    const ids = req.lines.map((l) => l.line_id);
+    const rejectIds = req.reject_line_ids ?? [];
+    const ids = [...req.lines.map((l) => l.line_id), ...rejectIds];
     const locked = await this.lines.lockRequestLines(tx, req.request_id, ids);
     const byId = new Map(locked.map((l) => [l.id, l]));
     const missing = ids.find((id) => !byId.has(id));
     if (missing) throw new RequestFailure(lineNotFound(), missing);
-    await this.guard(() =>
-      this.periods.assertLocked(locked[0].period_ym, now, tx),
-    );
+    const ym = locked[0].period_ym;
+    await this.guard(() => this.periods.assertLocked(ym, now, tx));
+    assertStillPending(rejectIds, byId);
     const todo = orderForLocking(req.lines, byId);
     for (const { line, want } of todo) {
       await this.guard(() => {
@@ -95,6 +98,12 @@ export class BulkDeliveryService {
         }
       }, line.id);
     }
+    // Ghi Không mua trước khi giao: phiếu chỉ được tính "đủ" khi không còn dòng chờ
+    await this.reviews.rejectLinesWithin(tx, req.request_id, rejectIds, {
+      actor,
+      ym,
+      now,
+    });
     let units = 0;
     for (const { line, want } of todo) {
       await this.guard(
@@ -163,11 +172,31 @@ function orderForLocking(
     });
 }
 
+// Hộp giao chỉ gửi món ngoài danh mục đang chờ; dòng đã được duyệt/từ chối trong lúc đó → client mở lại hộp
+function assertStillPending(
+  rejectIds: string[],
+  byId: Map<string, LockedLine>,
+): void {
+  const pending = (id: string) => {
+    const l = byId.get(id)!;
+    return l.review_status === 'pending' && l.item_id === null;
+  };
+  const changed = rejectIds.find((id) => !pending(id));
+  if (changed) {
+    const left = rejectIds.filter(pending).length;
+    throw new RequestFailure(pendingCustomChanged(left), changed);
+  }
+}
+
 function assertDistinct(requests: BulkRequest[]): void {
   const ids = new Set<string>();
   for (const r of requests) {
-    const lineIds = new Set(r.lines.map((l) => l.line_id));
-    if (ids.has(r.request_id) || lineIds.size !== r.lines.length) {
+    const all = [
+      ...r.lines.map((l) => l.line_id),
+      ...(r.reject_line_ids ?? []),
+    ];
+    const lineIds = new Set(all);
+    if (ids.has(r.request_id) || lineIds.size !== all.length) {
       throw new BadRequestException({
         code: 'VALIDATION',
         message: 'Phiếu hoặc dòng bị lặp trong yêu cầu.',

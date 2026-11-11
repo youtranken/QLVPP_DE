@@ -322,6 +322,22 @@ export async function requestOwner(
   return rows[0];
 }
 
+// Dòng chờ của một phiếu theo id; người gọi đã khóa phiếu rồi các dòng (requests → request_lines)
+export async function lockPendingLinesOf(
+  tx: Executor,
+  requestId: string,
+  lineIds: string[],
+): Promise<(LineRow & { request_id: string })[]> {
+  const { rows } = await tx.execute<
+    LineRow & { request_id: string } & Record<string, unknown>
+  >(sql`
+    SELECT ${LINE_COLUMNS}, request_id FROM request_lines
+    WHERE request_id = ${requestId} AND review_status = 'pending'
+      AND id = ANY(${sql.param(lineIds)}::uuid[])
+    ORDER BY id FOR UPDATE`);
+  return rows;
+}
+
 // Dòng ngoài danh mục còn chờ của kỳ, khóa requests → request_lines theo id (cùng chiều mọi đường ghi)
 export async function lockPendingLines(
   tx: Executor,
