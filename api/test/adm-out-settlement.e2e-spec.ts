@@ -91,7 +91,7 @@ describe('V2D-5 tự hủy ADM hết hàng lúc khóa sổ kỳ sau (e2e)', () =
       qty: 3,
       delivered_qty: 1,
       cancelled_qty: 2,
-      cancel_note: 'ADM hết hàng',
+      cancel_note: 'NCC hết hàng',
     });
     expect((await f.line(leftLine)).cancelled_qty).toBe(1);
     expect((await f.line(keep)).cancelled_qty).toBe(0);
@@ -187,7 +187,7 @@ describe('V2D-5 tự hủy ADM hết hàng lúc khóa sổ kỳ sau (e2e)', () =
     await cron(LATER_LOCK);
     expect(await f.line(l)).toMatchObject({
       cancelled_qty: 2,
-      cancel_note: 'ADM hết hàng',
+      cancel_note: 'NCC hết hàng',
     });
     expect((await settled(bk)).map((r) => r.detail)).toEqual([
       { period_ym: P, line_key: bk, lines: 1, units: 2 },

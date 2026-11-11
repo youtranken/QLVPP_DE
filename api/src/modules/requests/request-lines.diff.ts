@@ -219,7 +219,7 @@ function assertUnitChoosable(
 function assertOrderable(item: ItemFacts, ref: LineRef): void {
   if (!item.active) throw lineError('ITEM_INACTIVE', 'Món đã ngừng.', ref);
   if (item.admin_only) {
-    throw lineError('ADMIN_ONLY_ITEM', 'Món chỉ Hành chính đặt được.', ref);
+    throw lineError('ADMIN_ONLY_ITEM', 'Món chỉ Adm D&E đặt được.', ref);
   }
 }
 

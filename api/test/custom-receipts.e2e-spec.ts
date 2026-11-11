@@ -198,7 +198,7 @@ describe('V2D-5 hàng ngoài danh mục đã về: custom-receipts, trần giao 
       .expect(200);
     expect(await f.line(first)).toMatchObject({
       cancelled_qty: 1,
-      cancel_note: 'ADM hết hàng',
+      cancel_note: 'NCC hết hàng',
     });
   });
 

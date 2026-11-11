@@ -264,7 +264,7 @@ describe('V2D-5 ADM hết hàng theo kỳ: PUT/DELETE adm-out, nhập hàng về
       await cancelAdm(l, 3).expect(200);
       expect(await f.line(l)).toMatchObject({
         cancelled_qty: 3,
-        cancel_note: 'ADM hết hàng',
+        cancel_note: 'NCC hết hàng',
       });
       expect(await f.bellsOf('line_cancelled')).toEqual([]);
       const [bell] = await f.bellsOf('line_adjusted');

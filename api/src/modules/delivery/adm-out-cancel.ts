@@ -7,13 +7,14 @@ import type {
 } from '../requests/line-delivery.store';
 import { CUSTOM_ITEM_KEY } from '../requests/line-predicates';
 
-export const ADM_OUT_NOTE = 'ADM hết hàng';
+// Chữ hiện cho người dùng (lý do hủy, Lịch sử); dòng cũ trong DB giữ chữ lúc ghi
+export const ADM_OUT_NOTE = 'NCC hết hàng';
 export const ADM_OUT_REASON = 'adm_out_of_stock';
 
 export const itemNotAdmOut = () =>
   new ConflictException({
     code: 'ITEM_NOT_ADM_OUT',
-    message: 'Món của dòng này chưa đánh "ADM hết hàng" cho kỳ của dòng.',
+    message: 'Món của dòng này chưa đánh "NCC hết hàng" cho kỳ của dòng.',
   });
 
 // Đánh dấu theo kỳ của chính dòng: dòng nợ kỳ khác cùng món không bị ảnh hưởng.

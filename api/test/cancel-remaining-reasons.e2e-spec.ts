@@ -157,7 +157,7 @@ describe('POST admin/lines/:id/cancel-remaining: lý do có sẵn, chỉ nợ th
       line.id,
       body(line, { reason_code: 'adm_out_of_stock' }),
     ).expect(200);
-    expect(res.body.line.cancel_note).toBe('ADM hết hàng');
+    expect(res.body.line.cancel_note).toBe('NCC hết hàng');
     expect(await bellsOf('line_cancelled')).toHaveLength(1);
   });
 

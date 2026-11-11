@@ -83,7 +83,7 @@ export function orderNotEmpty(): ConflictException {
 export function alreadySent(): ConflictException {
   return new ConflictException({
     code: 'ALREADY_SENT',
-    message: 'Kỳ này đã có bản gửi ADM.',
+    message: 'Kỳ này đã có bản gửi NCC.',
   });
 }
 

@@ -34,13 +34,13 @@ export const admOutFinal = (
 // Kỳ sau đã khóa thì việc tự hủy lúc khóa sổ đã chạy: đổi dấu lúc này không còn ai xử lý (R-D11.12)
 const settledFinal = () =>
   admOutFinal(
-    'Kỳ sau đã khóa sổ — "ADM hết hàng" của kỳ này đã xử lý xong, không đổi được nữa.',
+    'Kỳ sau đã khóa sổ — "NCC hết hàng" của kỳ này đã xử lý xong, không đổi được nữa.',
   );
 
 export const itemAdmOut = (key: string) =>
   new ConflictException({
     code: 'ITEM_ADM_OUT',
-    message: 'Món này đang đánh "ADM hết hàng" — bỏ đánh dấu trước khi nhập.',
+    message: 'Món này đang đánh "NCC hết hàng" — bỏ đánh dấu trước khi nhập.',
     item_id: key,
   });
 

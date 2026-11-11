@@ -17,7 +17,7 @@ export class UnitsController {
     if (identity.role !== 'admin' && identity.role !== 'sa') {
       throw new ForbiddenException({
         code: 'FORBIDDEN_ROLE',
-        message: 'Chỉ Hành chính xem được mức sử dụng ĐVT.',
+        message: 'Chỉ Adm D&E xem được mức sử dụng ĐVT.',
       });
     }
     return this.units.listWithUsage();

@@ -21,7 +21,7 @@ export function lockPhraseVi(deadline: Date): string {
 export const periodNotLocked = (open: { ym: string; deadline: Date }) =>
   new ConflictException({
     code: 'PERIOD_NOT_LOCKED',
-    message: `Kỳ ${open.ym} đang mở — Hành chính làm việc từ ${lockPhraseVi(open.deadline)}.`,
+    message: `Kỳ ${open.ym} đang mở — Adm D&E làm việc từ ${lockPhraseVi(open.deadline)}.`,
     ym: open.ym,
     deadline: open.deadline.toISOString(),
   });
