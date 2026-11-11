@@ -1,6 +1,34 @@
 import { useEffect, useRef, type HTMLAttributes } from 'react';
 import { useTranslation } from 'react-i18next';
-import { flexRender, type Row } from '@tanstack/react-table';
+import { flexRender, type Cell, type CellContext, type Row } from '@tanstack/react-table';
+
+function columnLabel<T>(cell: Cell<T, unknown>): string {
+  const h = cell.column.columnDef.header;
+  return cell.column.columnDef.meta?.label ?? (typeof h === 'string' ? h : '');
+}
+
+// Cột dữ liệu dùng ô mặc định (không tự vẽ) mà không có giá trị. Ô tự vẽ trả null thì CSS (table.css)
+// vẽ "—" ở dạng bảng; cột không tên (nút, icon) để trống như cũ
+function isBlank<T>(cell: Cell<T, unknown>): boolean {
+  if (cell.column.columnDef.cell !== EmptyAwareCell || !cell.column.accessorFn) return false;
+  const v = cell.getValue();
+  return columnLabel(cell) !== '' && (v === null || v === undefined || v === '');
+}
+
+// Ô mặc định của DataTable (defaultColumn.cell): như ô mặc định của TanStack, ô trống hiện "—" + chữ ẩn "Chưa có"
+export function EmptyAwareCell<T>({ cell, renderValue }: CellContext<T, unknown>) {
+  const { t } = useTranslation();
+  if (isBlank(cell)) {
+    return (
+      <>
+        <span aria-hidden="true">{t('common.empty')}</span>
+        <span className="sr-only">{t('common.emptyCell')}</span>
+      </>
+    );
+  }
+  const v = renderValue();
+  return v == null ? null : String(v);
+}
 
 export interface Selection {
   selected: Set<string>;
@@ -75,28 +103,11 @@ export function BodyRow<T>({
           />
         </td>
       )}
-      {row.getVisibleCells().map((cell) => {
-        const h = cell.column.columnDef.header;
-        const label = cell.column.columnDef.meta?.label ?? (typeof h === 'string' ? h : '');
-        // B0.19: cột dữ liệu dùng ô mặc định (không tự vẽ) mà không có giá trị → "—" + chữ ẩn "Chưa có".
-        // Ô tự vẽ trả null thì CSS (table.css) vẽ "—" ở dạng bảng; cột không tên (nút, icon) để trống như cũ
-        const defaultCell = cell.column.columnDef.cell === cell.getContext().table._getDefaultColumnDef().cell;
-        const value = defaultCell && cell.column.accessorFn ? cell.getValue() : 0;
-        const blank = label !== '' && (value === null || value === undefined || value === '');
-        const content = blank ? null : flexRender(cell.column.columnDef.cell, cell.getContext());
-        return (
-          <td key={cell.id} className={cell.column.columnDef.meta?.className} data-label={label} data-empty={blank || undefined}>
-            {blank ? (
-              <>
-                <span aria-hidden="true">{t('common.empty')}</span>
-                <span className="sr-only">{t('common.emptyCell')}</span>
-              </>
-            ) : (
-              content
-            )}
-          </td>
-        );
-      })}
+      {row.getVisibleCells().map((cell) => (
+        <td key={cell.id} className={cell.column.columnDef.meta?.className} data-label={columnLabel(cell)} data-empty={isBlank(cell) || undefined}>
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </td>
+      ))}
     </tr>
   );
 }

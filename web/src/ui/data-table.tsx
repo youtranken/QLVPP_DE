@@ -16,7 +16,7 @@ import {
 import { EmptyState, Loading } from '@/ui/load-state';
 import type { EmptyArtKind } from '@/ui/empty-art';
 import { GroupHeaderRow, type GroupBy, type RowGroup } from '@/ui/data-table-group';
-import { BodyRow, SelectBox, type RowProps, type Selection } from '@/ui/data-table-row';
+import { BodyRow, EmptyAwareCell, SelectBox, type RowProps, type Selection } from '@/ui/data-table-row';
 import { SearchClear } from '@/ui/search-clear';
 
 declare module '@tanstack/react-table' {
@@ -90,6 +90,7 @@ export function DataTable<T>({
   const table = useReactTable({
     data,
     columns,
+    defaultColumn: { cell: EmptyAwareCell },
     state: { sorting, globalFilter },
     onSortingChange,
     onGlobalFilterChange: setGlobalFilter,

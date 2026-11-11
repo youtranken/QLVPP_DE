@@ -205,7 +205,7 @@ describe('DataTable', () => {
   });
 });
 
-describe('DataTable ô trống (B0.19)', () => {
+describe('DataTable ô trống', () => {
   it('ô dữ liệu không có giá trị → td[data-empty] hiện "—" (aria-hidden) + chữ ẩn "Chưa có"; cột không tên để trống', () => {
     const cols: ColumnDef<{ name: string; note?: string }>[] = [
       { accessorKey: 'name', header: 'Tên' },
@@ -234,5 +234,13 @@ describe('DataTable ô trống (B0.19)', () => {
     const note = within(screen.getAllByRole('row')[1]).getAllByRole('cell')[1];
     expect(note).not.toHaveAttribute('data-empty');
     expect(within(note).getByRole('button', { name: 'Thêm ghi chú' })).toBeInTheDocument();
+  });
+
+  it('nhận ô mặc định qua defaultColumn, không dò API riêng của TanStack', async () => {
+    const { readFileSync } = await import('node:fs');
+    const row = readFileSync(`${process.cwd()}/src/ui/data-table-row.tsx`, 'utf8');
+    const table = readFileSync(`${process.cwd()}/src/ui/data-table.tsx`, 'utf8');
+    expect(row).not.toContain('_getDefaultColumnDef');
+    expect(table).toContain('defaultColumn: { cell: EmptyAwareCell }');
   });
 });
