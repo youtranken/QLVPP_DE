@@ -45,7 +45,7 @@ export function MemberShell() {
         <div className="m-top__in">
           <Link to="/" className="m-logo">
             <i aria-hidden="true">{t('app.logoLetter')}</i>
-            {t('app.title')}
+            <span className="m-logo__name">{t('app.title')}</span>
           </Link>
           {!narrow && (
             <nav className="m-tabs" aria-label={t('nav.sections')}>

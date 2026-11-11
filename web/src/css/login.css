@@ -21,4 +21,7 @@
   .login-hero { padding: 24px 24px; }
   .login-hero h1 { font-size: 24px; }
   .login-panel { padding: 24px 24px; }
+  /* Điện thoại: liên kết chữ và nút VI/EN đủ 44px để chạm */
+  .login-panel .link-btn { min-height: 44px; }
+  .login-head .seg button { height: 44px; min-width: 44px; }
 }
