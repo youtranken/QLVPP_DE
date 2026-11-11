@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 
-// Số dòng đang hiện + "Đang lọc … · Bỏ lọc" đứng cuối hàng lọc (căn phải) thay vì chiếm một hàng riêng trên bảng.
-// Điện thoại: tự xuống một hàng riêng dưới ô lọc.
+// Dòng đếm riêng một hàng đẩy bảng xuống và tách xa bộ lọc sinh ra nó; nằm cuối hàng lọc thì đọc liền với điều kiện lọc
 export function ListMeta({ children }: { children: ReactNode }) {
   return <div className="list-meta">{children}</div>;
 }
