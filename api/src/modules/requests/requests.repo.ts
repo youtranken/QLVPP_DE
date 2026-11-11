@@ -328,17 +328,19 @@ export async function lockPendingLines(
   ym: string,
 ): Promise<(LineRow & { request_id: string })[]> {
   const k = ymToDate(ym);
-  await tx.execute(sql`
+  const locked = await tx.execute<{ id: string } & Record<string, unknown>>(sql`
     SELECT r.id FROM requests r
     WHERE r.period_ym = ${k}::date AND EXISTS (
       SELECT 1 FROM request_lines l WHERE l.request_id = r.id AND l.review_status = 'pending')
     ORDER BY r.id FOR UPDATE`);
+  const ids = locked.rows.map((r) => r.id);
+  if (ids.length === 0) return [];
+  // Chỉ dòng của đúng các phiếu vừa khóa: giữ thứ tự khóa requests → request_lines
   const { rows } = await tx.execute<
     LineRow & { request_id: string } & Record<string, unknown>
   >(sql`
     SELECT ${LINE_COLUMNS}, request_id FROM request_lines
-    WHERE review_status = 'pending'
-      AND request_id IN (SELECT id FROM requests WHERE period_ym = ${k}::date)
+    WHERE review_status = 'pending' AND request_id = ANY(${sql.param(ids)}::uuid[])
     ORDER BY id FOR UPDATE`);
   return rows;
 }
