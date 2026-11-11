@@ -28,7 +28,16 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
   const drag = useRowDrag(onMoveTo);
   return (
     <div className="table-wrap">
-      <table className={`table table-stack cg-table${sorting ? ' is-sorting' : ''}`}>
+      <table className={`table table-stack table--fixed cg-table${sorting ? ' is-sorting' : ''}`}>
+        {/* Bề rộng cột cố định: lọc theo tên không làm cột nhảy chỗ; tên nhóm nhận phần còn lại */}
+        <colgroup>
+          {sorting && <col className="cg-col-reorder" />}
+          <col className="cg-col-tone" />
+          <col />
+          <col className="cg-col-en" />
+          <col className="cg-col-items" />
+          <col className="cg-col-acts" />
+        </colgroup>
         <thead>
           <tr>
             {sorting && <ReorderHead />}

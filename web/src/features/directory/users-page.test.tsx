@@ -4,6 +4,7 @@ import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import type { AdminUser } from './directory.api';
+import { expectFixedColumns } from '@/test/fixed-columns';
 
 const AN: AdminUser = {
   sub: 'u-an',
@@ -88,11 +89,11 @@ describe('UsersPage B10', () => {
     expect(screen.queryByText(/Đồng bộ lần cuối/)).toBeNull();
   });
 
-  it('thẻ Đang dùng 2 · Chưa đăng ký kỳ 11 · Đã khóa 1; bấm thẻ lọc đúng và FilterNotice hiện', async () => {
+  it('thẻ Đang dùng 2 · Chưa đăng ký tháng 11 · Đã khóa 1; bấm thẻ lọc đúng và FilterNotice hiện', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     expect(card(/^Đang dùng/)).toHaveTextContent('2');
-    expect(await screen.findByRole('button', { name: /^Chưa đăng ký kỳ 11/ })).toHaveTextContent('1');
+    expect(await screen.findByRole('button', { name: /^Chưa đăng ký tháng 11/ })).toHaveTextContent('1');
     expect(screen.queryByRole('button', { name: /^Chưa đăng nhập lần nào/ })).toBeNull();
     expect(card(/^Đã khóa/)).toHaveTextContent('1');
     await userEvent.click(card(/^Đã khóa/));
@@ -117,6 +118,8 @@ describe('UsersPage B10', () => {
     await userEvent.selectOptions(select, 'Phòng Kế toán');
     expect(bodyRows()).toHaveLength(1);
     expect(screen.getByText('Hiện 1 / 3 người')).toBeInTheDocument();
+    // Cột cố định bề rộng: đổi lọc không làm cột nhảy chỗ
+    expectFixedColumns(screen.getByRole('table'));
   });
 
   it('bảng: avatar chữ đầu, cột Nhóm, tag Adm D&E, trạng thái, "Chưa đăng nhập"; không có badge "Mới"', async () => {
@@ -318,12 +321,12 @@ describe('UsersPage B10', () => {
   describe('tiến độ đăng ký kỳ đang mở', () => {
     const EM: AdminUser = { ...CHI, sub: 'u-em', fullName: 'Võ Em', employeeCode: 'NV0300' };
 
-    it('thẻ "Chưa đăng ký kỳ 11: 2 người"; bấm → ?reg=no ra đúng 2 người; cột "Kỳ tháng 11" Đã đăng ký / Chưa / — (ngoài danh sách kỳ), không số món', async () => {
+    it('thẻ "Chưa đăng ký tháng 11: 2 người"; bấm → ?reg=no ra đúng 2 người; cột "Tháng 11" Đã đăng ký / Chưa / — (ngoài danh sách kỳ), không số món', async () => {
       stubUsers([AN, BINH, CHI, EM], undefined, regOf([CHI, EM], ['u-an']));
       await openUsers();
-      const reg = await screen.findByRole('button', { name: /^Chưa đăng ký kỳ 11/ });
-      expect(reg).toHaveTextContent(/^Chưa đăng ký kỳ 112\s*người/);
-      expect(screen.getByRole('columnheader', { name: 'Kỳ tháng 11' })).toBeInTheDocument();
+      const reg = await screen.findByRole('button', { name: /^Chưa đăng ký tháng 11/ });
+      expect(reg).toHaveTextContent(/^Chưa đăng ký tháng 112\s*người/);
+      expect(screen.getByRole('columnheader', { name: 'Tháng 11' })).toBeInTheDocument();
       const col = (name: string) => within(screen.getByText(name).closest('tr')!).getAllByRole('cell')[3];
       await waitFor(() => expect(col('Phạm Minh Đức')).toHaveTextContent('Đã đăng ký'));
       expect(col('Trần Chi')).toHaveTextContent('Chưa');
@@ -332,7 +335,7 @@ describe('UsersPage B10', () => {
       await userEvent.click(reg);
       expect(screen.getByTestId('location-search')).toHaveTextContent('?reg=no');
       expect(bodyRows().map((r) => within(r).getAllByRole('button')[0].textContent)).toEqual(['Trần Chi', 'Võ Em']);
-      expect(screen.getByText('Đang lọc: Chưa đăng ký kỳ 11 · 2')).toBeInTheDocument();
+      expect(screen.getByText('Đang lọc: Chưa đăng ký tháng 11 · 2')).toBeInTheDocument();
     });
 
     it('?reg=yes → chỉ người đã đăng ký kỳ đang mở; ?reg=lạ → không lọc', async () => {
@@ -340,7 +343,7 @@ describe('UsersPage B10', () => {
       await openUsers('/admin/users?reg=yes');
       await waitFor(() => expect(bodyRows()).toHaveLength(1));
       expect(within(bodyRows()[0]).getByText('Phạm Minh Đức')).toBeInTheDocument();
-      expect(screen.getByText('Đang lọc: Đã đăng ký kỳ 11 · 1')).toBeInTheDocument();
+      expect(screen.getByText('Đang lọc: Đã đăng ký tháng 11 · 1')).toBeInTheDocument();
     });
 
     it('lỗi tải danh sách đăng ký → thẻ "—", báo lỗi có "Thử lại"; thử lại thành công thì có số', async () => {
@@ -348,10 +351,10 @@ describe('UsersPage B10', () => {
       stubUsers([AN, BINH, CHI], undefined, () => (fail ? jsonResponse(500, { code: 'X' }) : regOf([CHI], ['u-an'])()));
       await openUsers();
       const retry = await screen.findByRole('button', { name: 'Thử lại' });
-      expect(screen.getByRole('button', { name: /^Chưa đăng ký kỳ 11/ })).toHaveTextContent('—');
+      expect(screen.getByRole('button', { name: /^Chưa đăng ký tháng 11/ })).toHaveTextContent('—');
       fail = false;
       await userEvent.click(retry);
-      await waitFor(() => expect(screen.getByRole('button', { name: /^Chưa đăng ký kỳ 11/ })).toHaveTextContent('1'));
+      await waitFor(() => expect(screen.getByRole('button', { name: /^Chưa đăng ký tháng 11/ })).toHaveTextContent('1'));
     });
 
     it('ngăn kéo đang mở khi danh sách đăng ký mới về → vẫn mở, cột cập nhật', async () => {
@@ -365,7 +368,7 @@ describe('UsersPage B10', () => {
       expect(await screen.findByRole('dialog', { name: 'Người dùng' })).toBeInTheDocument();
       release();
       // Ngăn kéo modal ẩn phần còn lại khỏi cây trợ năng
-      await waitFor(() => expect(screen.getByRole('button', { name: /^Chưa đăng ký kỳ 11/, hidden: true })).toHaveTextContent('1'));
+      await waitFor(() => expect(screen.getByRole('button', { name: /^Chưa đăng ký tháng 11/, hidden: true })).toHaveTextContent('1'));
       expect(screen.getByRole('dialog', { name: 'Người dùng' })).toBeInTheDocument();
     });
   });

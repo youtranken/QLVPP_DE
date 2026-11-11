@@ -3,6 +3,7 @@ import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
+import { expectFixedColumns } from '@/test/fixed-columns';
 
 const row = (id: string, over: Record<string, unknown> = {}) => ({
   id,
@@ -57,6 +58,7 @@ describe('AuditPage B11', () => {
     expect(screen.getByText('2+ dòng nhật ký')).toBeInTheDocument();
     // Dòng đếm nằm cuối hàng chip Nhanh, không chiếm hàng riêng trên bảng
     expect(screen.getByText('2+ dòng nhật ký').closest('.au-quick-row .list-meta')).not.toBeNull();
+    expectFixedColumns(screen.getAllByRole('table')[0]);
   });
 
   it('nhóm theo ngày VN: 16:59:59.999 UTC cùng ngày, 17:00:00.000 UTC sang nhóm ngày mới', async () => {

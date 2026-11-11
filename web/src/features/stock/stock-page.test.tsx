@@ -4,6 +4,7 @@ import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { callsTo, facts, item, stubStockApi } from './stock-fixtures';
+import { expectFixedColumns } from '@/test/fixed-columns';
 
 const LOW_BELL = {
   id: 'n-low',
@@ -68,6 +69,7 @@ describe('StockPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /Sắp hết/ }));
     expect(screen.getByTestId('location-search')).toHaveTextContent('?filter=low');
     expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
+    expectFixedColumns(screen.getByRole('table'));
     await userEvent.click(screen.getByRole('button', { name: /Sắp hết/ }));
     expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
     expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'false');

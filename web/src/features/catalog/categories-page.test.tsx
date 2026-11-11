@@ -6,6 +6,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import type { Category } from './catalog.api';
 import { adminItem } from './catalog-fixtures';
+import { expectFixedColumns } from '@/test/fixed-columns';
 
 const CATS: Category[] = [
   { id: 'c-1', name: 'Giấy & sổ', name_en: 'Paper', sort_order: 10, active: true },
@@ -278,6 +279,7 @@ describe('Trang Nhóm món — ô tìm và bảng gọn', () => {
     expect(screen.getByText('Đang hiện 3/3 nhóm').closest('.cg-search > .list-meta')).not.toBeNull();
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm nhóm (không cần dấu)' }), 'but');
     expect(await screen.findByText('Đang hiện 1/3 nhóm')).toBeInTheDocument();
+    expectFixedColumns(screen.getByRole('table'), { cssWidths: true });
     expect(within(rowOf('Bút & viết')).getByTitle('rêu')).toBeInTheDocument();
     expect(screen.queryByText('Giấy & sổ')).toBeNull();
     await userEvent.clear(screen.getByRole('searchbox', { name: 'Tìm nhóm (không cần dấu)' }));

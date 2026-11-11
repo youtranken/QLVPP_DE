@@ -24,6 +24,9 @@ declare module '@tanstack/react-table' {
     className?: string;
     tip?: string;
     label?: string;
+    // Bề rộng cột cố định (vd '12%', '56px'): có ở bất kỳ cột nào → bảng table-layout: fixed, cột không đổi chỗ khi đổi tab/lọc.
+    // Cột chữ chính để trống → nhận phần còn lại
+    width?: string;
   }
 }
 
@@ -108,6 +111,8 @@ export function DataTable<T>({
   });
 
   const rows = table.getRowModel().rows;
+  const leafColumns = table.getVisibleLeafColumns();
+  const fixed = leafColumns.some((c) => c.columnDef.meta?.width);
   const colSpan = table.getAllLeafColumns().length + (selection ? 1 : 0);
   const groups = groupBy ? groupRows(rows, groupBy.key) : null;
   // Chọn tất cả chỉ lấy hàng đang thấy: nhóm đang thu thì người dùng không biết mình chọn món nào
@@ -149,12 +154,20 @@ export function DataTable<T>({
       )}
       <div className="table-wrap">
         <table
-          className={['table', tableClassName, stackOnMobile ? 'table-stack' : '']
+          className={['table', tableClassName, stackOnMobile ? 'table-stack' : '', fixed ? 'table--fixed' : '']
             .filter(Boolean)
             .join(' ')}
           data-density={density}
           aria-busy={busy}
         >
+          {fixed && (
+            <colgroup>
+              {selection && <col className="sel" />}
+              {leafColumns.map((c) => (
+                <col key={c.id} style={c.columnDef.meta?.width ? { width: c.columnDef.meta.width } : undefined} />
+              ))}
+            </colgroup>
+          )}
           <thead hidden={headHidden}>
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>

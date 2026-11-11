@@ -33,6 +33,22 @@ function rowNames(): (string | null)[] {
 }
 
 describe('DataTable', () => {
+  it('meta.width ở một cột → table--fixed + colgroup đủ cột (cột không đặt để trống); không cột nào đặt → không colgroup', () => {
+    const cols: ColumnDef<Row>[] = [
+      { accessorKey: 'name', header: 'Tên' },
+      { accessorKey: 'qty', header: 'SL', meta: { width: '12%' } },
+      { id: 'act', header: 'Hành động', meta: { width: '56px' }, cell: () => <button>x</button> },
+    ];
+    const { unmount } = renderWithI18n(<DataTable data={DATA} columns={cols} emptyText="Trống" />);
+    const table = screen.getByRole('table');
+    expect(table).toHaveClass('table--fixed');
+    expect([...table.querySelectorAll('colgroup > col')].map((c) => (c as HTMLElement).style.width)).toEqual(['', '12%', '56px']);
+    unmount();
+    renderWithI18n(<DataTable data={DATA} columns={COLUMNS} emptyText="Trống" />);
+    expect(screen.getByRole('table')).not.toHaveClass('table--fixed');
+    expect(screen.getByRole('table').querySelector('colgroup')).toBeNull();
+  });
+
   it('rowProps gắn thuộc tính lên dòng dữ liệu (dòng mở rộng bằng bàn phím: tabIndex, aria-expanded, onKeyDown)', async () => {
     const onKeyDown = vi.fn();
     renderWithI18n(<DataTable data={DATA} columns={COLUMNS} emptyText="Trống" rowProps={(r) => ({ tabIndex: 0, 'aria-expanded': r.name === 'apple', onKeyDown })} />);

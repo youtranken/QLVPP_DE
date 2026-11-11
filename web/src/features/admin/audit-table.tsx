@@ -34,12 +34,13 @@ function useColumns(canOpen: (e: AuditEntry) => boolean) {
       {
         id: 'time',
         header: t('audit.page.colTime'),
-        meta: { className: 'au-nowrap' },
+        meta: { className: 'au-nowrap', width: '11%' },
         cell: ({ row }) => timeFmt.format(new Date(row.original.createdAt)),
       },
       {
         id: 'actor',
         header: t('audit.page.colActor'),
+        meta: { width: '24%' },
         cell: ({ row: { original: e } }) => {
           // Tiến trình máy ghi actor "system(…)": hiện chữ thường, không lộ mã
           const name = e.actorName ?? (e.actor.startsWith('system') ? t('audit.filters.system') : e.actor);
@@ -56,6 +57,7 @@ function useColumns(canOpen: (e: AuditEntry) => boolean) {
       {
         id: 'action',
         header: t('audit.page.colAction'),
+        meta: { width: '22%' },
         cell: ({ row: { original: e } }) => {
           const label = e.batch ? t('audit.batch.title', { month: monthOf(e.batch.ym), n: e.batch.items.length, u: e.batch.units }) : auditActionLabel(t, e.action);
           return <span className="au-action">{label}</span>;
@@ -69,7 +71,7 @@ function useColumns(canOpen: (e: AuditEntry) => boolean) {
       {
         id: 'detail',
         header: () => <span className="sr-only">{t('audit.page.colDetail')}</span>,
-        meta: { className: 'au-detail-col' },
+        meta: { className: 'au-detail-col', width: '48px' },
         cell: ({ row }) => (canOpen(row.original) ? <span className="au-chev"><Icon name="chev" size={18} /></span> : null),
       },
     ];

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { CATEGORIES, OLD, PAPER, PEN, PENCIL, STRAY, adminItem } from './catalog-fixtures';
 import { inRow, locationSearch, openCatalog, rowOf } from './catalog-fixtures-api';
+import { expectFixedColumns } from '@/test/fixed-columns';
 
 const ITEMS = [PAPER, PEN, PENCIL, OLD];
 const location = locationSearch;
@@ -37,6 +38,7 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
     expect(location()).toBe('?tab=noImage');
     expect(screen.queryByText('Bút bi xanh')).toBeNull();
     expect(inRow('Giấy A4').getByText('Thiếu ảnh')).toBeInTheDocument();
+    expectFixedColumns(screen.getByRole('table'));
     await userEvent.click(tab(/^Tất cả \d/));
     expect(location()).toBe('');
     expect(screen.getByText('Bút bi xanh')).toBeInTheDocument();

@@ -20,6 +20,11 @@
 [data-shell='admin'] .table th[aria-sort] .th-sort { color: var(--c-ink); }
 [data-shell='admin'] .table .th-sort:focus-visible { border-radius: var(--r-xs); box-shadow: var(--focus); }
 [data-shell='admin'] .table .sel { width: 40px; }
+/* Bảng đặt bề rộng cột (DataTable meta.width → colgroup): cột giữ nguyên chỗ khi đổi tab/lọc, không co giãn theo nội dung */
+@media (min-width: 768px) {
+  [data-shell='admin'] .table--fixed { table-layout: fixed; }
+  [data-shell='admin'] .table--fixed td { overflow-wrap: anywhere; }
+}
 [data-shell='admin'] .table input[type='checkbox'] { width: 20px; height: 20px; margin: 0; accent-color: var(--c-acc); cursor: pointer; }
 [data-shell='admin'] .table .reorder-col { width: 1%; padding-block: 2px; white-space: nowrap; }
 [data-shell='admin'] .reorder-ctl { display: inline-flex; align-items: center; gap: var(--s-1); vertical-align: middle; }
