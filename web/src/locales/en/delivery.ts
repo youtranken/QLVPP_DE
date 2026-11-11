@@ -162,7 +162,7 @@ const delivery: Messages<typeof vi> = {
       cancelledAdm: 'Cancelled (out of stock at the supplier)',
       rejected: 'Marked Do not buy',
       rejectSkipped: 'Not marked Do not buy because a delivery failed',
-      abort: 'Cancel',
+      abort: 'Back',
       network: 'Network error',
       notSent: 'Not sent',
       sessionExpired: 'Your session expired — reload and continue.',

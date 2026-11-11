@@ -159,7 +159,7 @@ const delivery = {
       cancelledAdm: 'Đã hủy (NCC hết hàng)',
       rejected: 'Đã ghi Không mua',
       rejectSkipped: 'Chưa ghi Không mua vì có món giao lỗi',
-      abort: 'Hủy',
+      abort: 'Quay lại',
       network: 'Lỗi mạng',
       notSent: 'Chưa gửi',
       sessionExpired: 'Phiên đăng nhập đã hết — tải lại trang rồi tiếp tục giao.',

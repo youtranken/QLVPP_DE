@@ -52,16 +52,16 @@ const debt = pLine({ line_id: 'd', request_id: 'r-0', period_ym: '2026-09', is_d
 afterEach(() => vi.unstubAllGlobals());
 
 describe('DeliverDialog — món ngoài danh mục chưa duyệt', () => {
-  it('bấm Xác nhận giao → hỏi lại: liệt kê tên món, focus ở Hủy, hộp có mô tả; chưa gửi gì; Hủy → về hộp giao, không gửi', async () => {
+  it('bấm Xác nhận giao → hỏi lại: liệt kê tên món, focus ở Quay lại, hộp có mô tả; chưa gửi gì; Quay lại → về hộp giao, không gửi', async () => {
     const f = stub();
     open(person({ lines: [cur, pendingA, pendingB] }));
     await userEvent.click(confirmBtn());
     const box = await screen.findByRole('dialog', { description: /^Món ngoài danh mục chưa duyệt:/ });
     expect(box).toHaveAccessibleName('Giao cho Nguyễn Văn An?');
     expect(box).toHaveAccessibleDescription('Món ngoài danh mục chưa duyệt: Dây rút nhựa 20cm, Pin sạc AA. Giao sẽ ghi Không mua cho các món này.');
-    await waitFor(() => expect(within(box).getByRole('button', { name: 'Hủy' })).toHaveFocus());
+    await waitFor(() => expect(within(box).getByRole('button', { name: 'Quay lại' })).toHaveFocus());
     expect(posts(f)).toEqual([]);
-    await userEvent.click(within(box).getByRole('button', { name: 'Hủy' }));
+    await userEvent.click(within(box).getByRole('button', { name: 'Quay lại' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { description: /^Món ngoài danh mục chưa duyệt:/ })).toBeNull());
     expect(main()).toBeInTheDocument();
     expect(posts(f)).toEqual([]);
