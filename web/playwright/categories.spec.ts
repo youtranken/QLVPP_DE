@@ -39,7 +39,8 @@ function deleteTestCategories() {
 const menuButtons = (page: Page) => page.getByRole('table').getByRole('button', { name: /^Sửa nhóm / });
 const nameOf = (page: Page, i: number | 'last') => (i === 'last' ? menuButtons(page).last() : menuButtons(page).nth(i));
 const toneOf = (page: Page, name: string) =>
-  page.getByRole('row').filter({ has: page.getByRole('button', { name: `Sửa nhóm ${name}`, exact: true }) }).locator('[title]:not([aria-hidden="true"])').first();
+  // Chấm màu là trang trí (aria-hidden), tên màu nằm ở title của chấm
+  page.getByRole('row').filter({ has: page.getByRole('button', { name: `Sửa nhóm ${name}`, exact: true }) }).locator('.cg-dot[title]').first();
 
 test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
   asRole('admin');

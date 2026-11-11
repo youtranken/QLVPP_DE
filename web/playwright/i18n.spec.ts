@@ -138,7 +138,8 @@ async function vietnameseLeftovers(page: Page, data: string[]) {
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     for (let n = walker.nextNode(); n; n = walker.nextNode()) {
       const el = n.parentElement;
-      if (!el || el.closest('td, [role=cell], script, style, [hidden], [aria-hidden=true]')) continue;
+      // Xem trước ô ký ở Cấu hình là bản sao tờ in (chức danh song ngữ cố định theo mẫu D&E), không phải chữ giao diện
+      if (!el || el.closest('td, [role=cell], script, style, [hidden], [aria-hidden=true], .cf-sign-preview__paper')) continue;
       if (el.checkVisibility && !el.checkVisibility()) continue;
       out.push(n.textContent ?? '');
     }

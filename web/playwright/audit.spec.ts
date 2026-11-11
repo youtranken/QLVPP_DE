@@ -2,9 +2,10 @@ import { expect, test } from '@playwright/test';
 import { asRole, auditRows, expectNoContrastViolations, isMobile, openAuditDetail, psql, shot } from './helpers';
 
 // 12:00 UTC: xa mốc ngày VN; mốc ngày kiểm ở e2e api
-// audit_log chỉ thêm, không xóa được: dùng người giả cố định + ngày xa quá khứ, gieo một lần (idempotent) thay vì xóa sau test
-const FULL = { actor: 'pw-audit-full', day: '2001-03-15', rows: 51 };
-const EXACT = { actor: 'pw-audit-exact', day: '2001-03-16', rows: 50 };
+// audit_log chỉ thêm, không xóa được: dùng người giả cố định + ngày xa quá khứ, gieo một lần (idempotent) thay vì xóa sau test.
+// Đổi dạng dòng gieo thì đổi tên người giả (hậu tố -v2): dòng dạng cũ của lần chạy trước còn mãi trong DB dev
+const FULL = { actor: 'pw-audit-full-v2', day: '2001-03-15', rows: 51 };
+const EXACT = { actor: 'pw-audit-exact-v2', day: '2001-03-16', rows: 50 };
 const PAGE_SIZE = 50;
 
 function seed({ actor, day, rows }: { actor: string; day: string; rows: number }) {

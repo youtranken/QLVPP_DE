@@ -69,7 +69,7 @@ test.describe('Nhóm 1 · Sản phẩm (dev-identity admin)', () => {
     }
   });
 
-  test('Nhóm 1 vòng 2 · thanh lọc: hàng 1 tìm + trạng thái + Lưới/Bảng cùng cao 40px; chip nhóm một dòng; chọn món ngừng riêng ở tab Tất cả có "Dùng lại (n)"', async ({ page, request }, info) => {
+  test('Nhóm 1 vòng 2 · thanh lọc: hàng 1 tìm + trạng thái cùng cao 40px, Lưới/Bảng cuối hàng chip nhóm; chip nhóm một dòng; chọn món ngừng riêng ở tab Tất cả có "Dùng lại (n)"', async ({ page, request }, info) => {
     const name = `PW Vòng2 ${Date.now()}-${info.project.name}`;
     const id = await createItemViaApi(request, name);
     expect((await request.patch(`/api/admin/items/${id}`, { headers: devHeaders('admin'), data: { active: false } })).ok()).toBe(true);
@@ -84,8 +84,10 @@ test.describe('Nhóm 1 · Sản phẩm (dev-identity admin)', () => {
       if (!isMobile(info)) {
         for (const box of [s, st, v]) expect(Math.round(box.height)).toBe(40);
         expect(Math.abs(s.y - st.y)).toBeLessThanOrEqual(1);
-        expect(Math.abs(st.y - v.y)).toBeLessThanOrEqual(1);
-        expect(v.x).toBeGreaterThan(st.x);
+        // Lưới/Bảng nằm cuối hàng chip nhóm (hàng 2), không ở hàng tìm
+        expect(v.y).toBeGreaterThan(st.y);
+        expect(Math.abs(v.y + v.height / 2 - (c.y + c.height / 2))).toBeLessThanOrEqual(4);
+        expect(v.x).toBeGreaterThan(c.x);
       } else {
         expect(s.width).toBeGreaterThan(300);
       }
