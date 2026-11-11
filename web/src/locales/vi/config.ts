@@ -68,7 +68,11 @@ const config = {
       nameHint: 'Để trống thì in dòng chấm để ký tay.',
       add: 'Thêm ô ký',
       remove: 'Xóa ô ký',
-      preview: 'Xem trước ô ký',
+      removeN: 'Xóa ô ký {{n}}',
+      removeNamed: 'Xóa ô ký {{n}} · {{title}}',
+      notPrinted: 'Phiếu chỉ in {{n}} ô đầu',
+      full: 'Đã đủ {{n}} ô in trên phiếu.',
+      preview: 'Xem trước chân phiếu',
       save: 'Lưu ô ký',
     },
     contact: {

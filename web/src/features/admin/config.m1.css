@@ -50,11 +50,17 @@
 [data-shell='admin'] .cf-box legend { float: left; grid-column: 1 / -1; width: 100%; padding: 0; font: var(--t-label); color: var(--c-ink); }
 [data-shell='admin'] .cf-box .ff input { width: 100%; }
 [data-shell='admin'] .cf-box__remove { grid-column: 1 / -1; justify-self: end; color: var(--c-danger); }
-[data-shell='admin'] .cf-box__add { justify-self: start; }
-[data-shell='admin'] .cf-sign-preview { width: 100%; table-layout: fixed; border-collapse: collapse; background: var(--c-print-paper); color: var(--c-print-ink); border-radius: var(--r-md); }
-[data-shell='admin'] .cf-sign-preview th, [data-shell='admin'] .cf-sign-preview td { padding: var(--s-3); text-align: center; overflow-wrap: anywhere; }
-[data-shell='admin'] .cf-sign-preview th { font: var(--t-label); }
-[data-shell='admin'] .cf-sign-preview td { height: 72px; vertical-align: bottom; font: var(--t-sm); color: var(--c-print-muted); }
+[data-shell='admin'] .cf-box__add-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); }
+[data-shell='admin'] .cf-box__full { font: var(--t-sm); color: var(--c-muted); }
+/* Ô từ thứ 3: không in lên phiếu nên hiện mờ (vẫn sửa/xóa được) */
+[data-shell='admin'] .cf-box--off { background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); }
+[data-shell='admin'] .cf-box--off legend { color: var(--c-muted); }
+[data-shell='admin'] .cf-box--off .ff input { color: var(--c-muted); }
+[data-shell='admin'] .cf-box__off { display: inline-block; margin-left: var(--s-2); padding: 0 var(--s-2); border-radius: var(--r-sm); background: var(--c-warn-soft); color: var(--c-warn); font: var(--t-cap); font-weight: 600; }
+[data-shell='admin'] .cf-sign-preview { display: grid; gap: var(--s-2); }
+[data-shell='admin'] .cf-sign-preview__label { margin: 0; justify-self: end; font: var(--t-label); color: var(--c-ink-2); }
+[data-shell='admin'] .cf-sign-preview__paper { padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--c-print-paper); color: var(--c-print-ink); box-shadow: inset 0 0 0 1px var(--c-line); font: var(--t-sm); }
+[data-shell='admin'] .cf-sign-preview__paper .pp-signs { margin-top: 0; }
 [data-shell='admin'] .cf-switch { display: grid; gap: var(--s-1); justify-items: start; }
 [data-shell='admin'] .cf-switch p { margin: 0; }
 [data-shell='admin'] .cf-aside { display: grid; gap: var(--s-4); position: sticky; top: var(--s-4); }

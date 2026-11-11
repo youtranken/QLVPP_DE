@@ -120,25 +120,25 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await shot(page, info, 'admin-config-m1');
   });
 
-  test('E9-S6 Cấu hình: thêm/xóa ô ký 1–3 lưu cả mảng', async ({ page }) => {
-    expect((await api!.put('/api/admin/config', { data: { signature_boxes: TWO_BOXES } })).ok()).toBe(true);
+  test('E9-S6 Cấu hình: ô ký khớp phiếu 2 ô — Thêm tắt ở 2 ô, ô 3 cũ mờ, xem trước chân phiếu, xóa còn 1 ô', async ({ page }, info) => {
+    // Cấu hình cũ 3 ô (đặt qua API): Cấu hình hiện ô 3 mờ để sửa hoặc xóa, phiếu chỉ in 2 ô đầu
+    expect((await api!.put('/api/admin/config', { data: { signature_boxes: [...TWO_BOXES, { title: 'PW Duyệt', title_en: '', name: 'a'.repeat(200) }] } })).ok()).toBe(true);
     await page.goto('/admin/config');
     const signers = block(page, 'Ô ký trên phiếu đề xuất');
-    await signers.getByRole('button', { name: 'Thêm ô ký' }).click();
-    await expect(signers.getByRole('button', { name: 'Thêm ô ký' })).toHaveCount(0);
+    await expect(signers.getByRole('button', { name: 'Thêm ô ký' })).toBeDisabled();
+    await expect(signers.getByText('Đã đủ 2 ô in trên phiếu.')).toBeVisible();
     const third = signers.getByRole('group', { name: /^Ô ký 3/ });
-    await third.getByRole('textbox', { name: /^Chức danh( \*)?$/ }).fill('PW Duyệt');
-    await third.getByLabel('Người ký').fill('a'.repeat(200));
-    const sent = putBody(page);
-    await signers.getByRole('button', { name: 'Lưu ô ký' }).click();
-    expect(((await sent).signature_boxes as unknown[]).length).toBe(3);
-    await saved(signers);
-    await expect(signers.getByRole('table', { name: 'Xem trước ô ký' }).getByRole('columnheader')).toHaveCount(3);
+    await expect(third.getByText('Phiếu chỉ in 2 ô đầu')).toBeVisible();
+    const preview = signers.getByRole('region', { name: 'Xem trước chân phiếu' }).getByRole('group', { name: 'Chữ ký' });
+    await expect(preview.getByRole('group')).toHaveCount(2);
+    await expect(preview.getByRole('group', { name: 'PW Duyệt' })).toHaveCount(0);
+    if (isMobile(info)) await expectNoContrastViolations(page);
+    await shot(page, info, 'admin-config-signers');
 
-    await third.getByRole('button', { name: 'Xóa ô ký' }).click();
-    await signers.getByRole('group', { name: /^Ô ký 2/ }).getByRole('button', { name: 'Xóa ô ký' }).click();
-    await expect(signers.getByRole('group')).toHaveCount(1);
-    await expect(signers.getByRole('button', { name: 'Xóa ô ký' })).toHaveCount(0);
+    await third.getByRole('button', { name: /^Xóa ô ký 3/ }).click();
+    await signers.getByRole('group', { name: /^Ô ký 2/ }).getByRole('button', { name: /^Xóa ô ký 2/ }).click();
+    await expect(signers.getByRole('button', { name: /^Xóa ô ký/ })).toHaveCount(0);
+    await expect(signers.getByRole('button', { name: 'Thêm ô ký' })).toBeEnabled();
     const one = putBody(page);
     await signers.getByRole('button', { name: 'Lưu ô ký' }).click();
     expect(((await one).signature_boxes as unknown[]).length).toBe(1);

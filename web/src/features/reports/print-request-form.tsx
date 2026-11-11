@@ -35,7 +35,8 @@ function ColumnHead({ col }: { col: (typeof COLUMNS)[number] }) {
   );
 }
 
-function SignBoxes({ boxes }: { boxes: SignBox[] }) {
+// Dùng chung với phần xem trước ở Cấu hình: thấy đúng chân phiếu sẽ in
+export function SignBoxes({ boxes }: { boxes: SignBox[] }) {
   const { t } = useTranslation();
   return (
     <div role="group" aria-label={t('reports.print.form.signGroup')} className="pp-signs">

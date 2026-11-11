@@ -12,7 +12,7 @@ export interface SignBox {
 
 // Mẫu D&E chỉ có 2 chỗ ký: Chủ quản đơn vị (trái), Người yêu cầu (phải); bản cũ ánh xạ như migration 0112
 const OLD_SIGNERS = ['head', 'preparer'] as const;
-const MAX_SIGN_BOXES = 2;
+export const MAX_SIGN_BOXES = 2;
 
 // "Date : MM/YYYY" của kỳ trên tờ in: '2026-11' → '11/2026'
 export const periodLabel = (ym: string) => `${ym.slice(5, 7)}/${ym.slice(0, 4)}`;

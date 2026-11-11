@@ -71,7 +71,11 @@ const config: Messages<typeof vi> = {
       nameHint: 'Leave empty to print a dotted line for a handwritten signature.',
       add: 'Add signature box',
       remove: 'Remove signature box',
-      preview: 'Signature box preview',
+      removeN: 'Remove signature box {{n}}',
+      removeNamed: 'Remove signature box {{n}} · {{title}}',
+      notPrinted: 'Only the first {{n}} boxes are printed',
+      full: 'The form already prints {{n}} boxes.',
+      preview: 'Footer preview',
       save: 'Save signature boxes',
     },
     contact: {
