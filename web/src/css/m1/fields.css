@@ -57,5 +57,5 @@ html, [data-shell] * { scrollbar-width: thin; }
 /* Chữ 16px trên điện thoại (B4.1, B12.6, B0.5): iOS tự phóng to khi focus ô dưới 16px. Một luật cho mọi ô nhập;
    chỉ đổi cỡ chữ, không đổi chiều cao. :not(#…) nâng specificity để thắng luật `font:` của từng màn nạp sau (CSS theo trang) */
 @media (max-width: 767px) {
-  [data-shell] :is(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea):not(#vpp-16px) { font-size: max(16px, 1em); }
+  [data-shell] :is(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea):not(#vpp-16px) { font-size: max(16px, 100%); }
 }
