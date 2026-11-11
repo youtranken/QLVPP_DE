@@ -1,20 +1,8 @@
-import { forwardRef, useCallback, useEffect, useRef, type FocusEvent, type InputHTMLAttributes } from 'react';
+import { forwardRef, type InputHTMLAttributes } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { Icon } from './icon';
-
-// select() gọi thẳng trong focus bị iOS/Android bỏ (con trỏ đặt sau khi focus xong) → đợi một khung hình
-export function useSelectOnFocus() {
-  const frame = useRef(0);
-  useEffect(() => () => cancelAnimationFrame(frame.current), []);
-  return useCallback((e: FocusEvent<HTMLInputElement>) => {
-    const el = e.currentTarget;
-    cancelAnimationFrame(frame.current);
-    frame.current = requestAnimationFrame(() => {
-      if (document.activeElement === el) el.select();
-    });
-  }, []);
-}
+import { useSelectOnFocus } from './use-select-on-focus';
 
 type NativeProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type' | 'min' | 'max'>;
 
