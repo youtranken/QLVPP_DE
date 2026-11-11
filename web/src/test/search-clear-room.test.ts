@@ -69,3 +69,20 @@ describe('ô tìm có nút X chừa chỗ bên phải, không bị luật của 
     for (const r of rules) expect(gt(mine, specificity(r.selector)), `${r.selector} (${r.file})`).toBeGreaterThan(0);
   });
 });
+
+// Playwright đo vùng chạm bằng hộp thật của nút (không tính ::after): hộp nút phải 44×44, vòng 28px vẽ ở phần tử con
+describe('nút X ô tìm đủ vùng chạm 44×44 ở điện thoại', () => {
+  const base = readFileSync(join(SRC, 'css/base.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const rule = (sel: string) => new RegExp(`(?:^|\\n)${sel.replace(/[.]/g, '\\.')}\\s*\\{([^}]*)\\}`).exec(base)?.[1] ?? '';
+
+  it('hộp .search-clear rộng và cao 44px, không dựa vào pseudo-element', () => {
+    const body = rule('.search-clear');
+    expect(body).toMatch(/(^|;)\s*width:\s*44px/);
+    expect(body).toMatch(/(^|;)\s*height:\s*44px/);
+    expect(base).not.toMatch(/\.search-clear::after/);
+  });
+
+  it('vòng tròn 28px nằm ở .search-clear-dot', () => {
+    expect(rule('.search-clear-dot')).toMatch(/width:\s*28px/);
+  });
+});

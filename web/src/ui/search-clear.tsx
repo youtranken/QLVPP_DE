@@ -24,7 +24,9 @@ export function SearchClear({ value, onClear, inputRef, className }: Props) {
         inputRef?.current?.focus();
       }}
     >
-      <Icon name="x" size={16} />
+      <span className="search-clear-dot" aria-hidden="true">
+        <Icon name="x" size={16} />
+      </span>
     </button>
   );
 }

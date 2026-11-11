@@ -32,6 +32,8 @@ describe('SearchClear', () => {
     const clear = screen.getByRole('button', { name: 'Xóa chữ tìm' });
     expect(clear).toHaveAttribute('type', 'button');
     expect(clear).toHaveClass('search-clear');
+    // Vòng tròn vẽ ở phần tử con, hộp nút là vùng chạm 44×44
+    expect(clear.querySelector('.search-clear-dot')).not.toBeNull();
     await userEvent.click(clear);
     expect(box).toHaveValue('');
     expect(screen.queryByRole('button', { name: 'Xóa chữ tìm' })).toBeNull();
