@@ -11,6 +11,7 @@ const month: Messages<typeof vi> = {
       open: 'Sign-up period (month {{month}})',
       older: 'Month {{month}}/{{year}}',
       previous: 'Previous month',
+      previousLabel: 'Previous month: {{month}}/{{year}}',
     },
     steps: {
       label: 'Steps of the month',

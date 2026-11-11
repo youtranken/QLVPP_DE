@@ -17,6 +17,9 @@
 @media (max-width: 767px) {
   [data-shell='admin'] .mk-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   [data-shell='admin'] .mk-switch, [data-shell='admin'] .mk-switch .seg-m1 { width: 100%; }
-  [data-shell='admin'] .mk-switch .seg-m1 { grid-auto-flow: row; }
+  /* Hai nút kỳ cùng một hàng (chữ được xuống dòng), vùng bấm 44px */
+  [data-shell='admin'] .mk-switch .seg-m1 { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+  [data-shell='admin'] .mk-switch .seg-m1 button { height: auto; min-height: var(--hit); padding-block: var(--s-1); white-space: normal; text-align: center; }
+  [data-shell='admin'] .mk-prev { min-height: var(--hit); }
   [data-shell='admin'] .mk-left .btn { min-height: var(--hit); }
 }

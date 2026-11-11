@@ -25,7 +25,13 @@ export function PeriodSwitch({ ym, openYm, earliestYm, onChange }: Props) {
   const atStart = earliestYm !== undefined && (earliestYm === null || earlier < earliestYm);
   return (
     <div className="mk-switch">
-      <button type="button" className="btn btn--ghost btn--sm" disabled={atStart} onClick={() => onChange(earlier)}>
+      <button
+        type="button"
+        className="btn btn--ghost btn--sm mk-prev"
+        disabled={atStart}
+        aria-label={t('month.period.previousLabel', { month: monthOf(earlier), year: earlier.slice(0, 4) })}
+        onClick={() => onChange(earlier)}
+      >
         <Icon name="chevl" size={16} />
         {t('month.period.previous')}
       </button>

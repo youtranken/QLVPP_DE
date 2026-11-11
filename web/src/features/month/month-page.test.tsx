@@ -169,9 +169,11 @@ describe('MonthPage: chuyển kỳ', () => {
     stubMonthApi();
     open();
     await table();
-    await userEvent.click(screen.getByRole('button', { name: /Tháng trước/ }));
+    // Nhãn đọc kèm tháng sẽ tới (chữ thấy được đứng đầu nhãn)
+    await userEvent.click(screen.getByRole('button', { name: 'Tháng trước: tháng 9/2026' }));
     await waitFor(() => expect(search()).toContain('ym=2026-09'));
     expect(await screen.findByRole('radio', { name: 'Tháng 9/2026' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('button', { name: 'Tháng trước: tháng 8/2026' })).toBeInTheDocument();
   });
 });
 

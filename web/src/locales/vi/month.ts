@@ -8,6 +8,7 @@ const month = {
       open: 'Kỳ đang đăng ký (tháng {{month}})',
       older: 'Tháng {{month}}/{{year}}',
       previous: 'Tháng trước',
+      previousLabel: 'Tháng trước: tháng {{month}}/{{year}}',
     },
     steps: {
       label: 'Các bước của tháng',
