@@ -100,9 +100,17 @@ export function ImageField({
           {fileInput(t('catalog.form.imagePick'))}
         </label>
       )}
-      <p id={noteId} className={shownError ? 'ff-error' : 'ff-hint'}>
-        {shownError ?? t('catalog.form.imageHint')}
-      </p>
+      {/* Lỗi tải ảnh xảy ra ngoài lúc bấm Lưu: phần tử mới role=alert để trình đọc màn hình đọc ngay.
+          Lỗi từ form (prop error) đã có hộp tóm tắt đầu form báo, không đọc trùng */}
+      {shownError ? (
+        <p key="error" id={noteId} role={localError ? 'alert' : undefined} className="ff-error">
+          {shownError}
+        </p>
+      ) : (
+        <p key="hint" id={noteId} className="ff-hint">
+          {t('catalog.form.imageHint')}
+        </p>
+      )}
     </fieldset>
   );
 }
