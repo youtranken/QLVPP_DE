@@ -121,3 +121,11 @@ input[type='search']::-webkit-search-decoration { -webkit-appearance: none; appe
   :focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
   :where(input, select, textarea):focus { outline: 2px solid CanvasText; }
 }
+
+/* B0.18: html là khung cuộn nên scroll-padding đặt ở đây (css/m1 chỉ nhận selector có phạm vi shell).
+   Admin 390: thanh hàng loạt cố định đặt --bulkbar-h; member: Tab tới ô dưới thanh "Xem phiếu/Lưu phiếu" + thanh dưới
+   thì trang cuộn chừa đủ chỗ (thanh dưới 58 + lề 12 + thanh phiếu ~64) */
+@media (max-width: 767px) {
+  html { scroll-padding-bottom: var(--bulkbar-h, 0px); }
+}
+html:has(body[data-shell='member'] .rq-bar) { scroll-padding-bottom: calc(58px + 12px + 64px + env(safe-area-inset-bottom)); }

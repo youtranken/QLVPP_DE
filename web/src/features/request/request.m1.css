@@ -169,5 +169,3 @@
 [data-shell='member'] .rq-np-prev a { margin-left: auto; color: var(--c-acc); font: var(--t-label); text-decoration: none; }
 [data-shell='member'] .rq-np-prev a:hover { text-decoration: underline; }
 [data-shell='member'] .rq-newperiod .sheet-footer { justify-content: flex-end; flex-wrap: wrap; }
-/* B0.18: Tab tới ô nằm dưới thanh "Xem phiếu/Lưu phiếu" + thanh dưới thì trang cuộn chừa đủ chỗ (thanh dưới 58 + lề 12 + thanh phiếu ~64) */
-html:has(body[data-shell='member'] .rq-bar) { scroll-padding-bottom: calc(58px + 12px + 64px + env(safe-area-inset-bottom)); }

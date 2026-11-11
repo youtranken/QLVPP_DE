@@ -59,12 +59,12 @@ describe('StockTable — Tủ/Kho theo người đang chờ', () => {
     ]);
   });
 
-  it('"Xuất lẻ" trong ⋯ vô hiệu khi tủ 0 (title "Hết hàng — nhập mua trước"), bật khi tủ 6', async () => {
+  it('"Xuất lẻ" trong ⋯ vô hiệu khi tủ 0 (lý do "Hết hàng — nhập mua trước" hiện dưới mục), bật khi tủ 6', async () => {
     await open();
     await userEvent.click(within(rowOf('Kẹp giấy')).getByRole('button', { name: 'Thao tác khác cho Kẹp giấy' }));
     const out = within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Xuất lẻ' });
     expect(out).toHaveAttribute('aria-disabled', 'true');
-    expect(out).toHaveAttribute('title', 'Hết hàng — nhập mua trước');
+    expect(out).toHaveAccessibleDescription('Hết hàng — nhập mua trước');
     await userEvent.keyboard('{Escape}');
     await userEvent.click(within(rowOf('Giấy A4')).getByRole('button', { name: 'Thao tác khác cho Giấy A4' }));
     expect(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Xuất lẻ' })).not.toHaveAttribute('aria-disabled');

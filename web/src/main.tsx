@@ -19,7 +19,7 @@ import '@/css/m1/row-menu.css';
 import '@/css/m1/member-shell.css';
 import '@/css/m1/member-page.css';
 import '@/css/m1/stamp.css';
-import '@/css/m1/fields.css';
+import '@/css/fields.css';
 import '@/lib/i18n';
 import App from '@/App.tsx';
 import { queryClient } from '@/lib/api-client';
