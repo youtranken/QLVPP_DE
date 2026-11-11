@@ -27,6 +27,22 @@ async function open(path = '/admin/stock', ready = 'Giấy A4', width = 1280) {
 const rowOf = (name: string) => screen.getByText(name).closest('tr')!;
 
 describe('StockPage', () => {
+  it('tải tồn lỗi: vẫn có bộ chuyển Tồn kho/Xuất lẻ (1280 và 390) để sang tab Xuất lẻ', async () => {
+    for (const width of [1280, 390]) {
+      mockViewport(width);
+      stubStockApi((url) => {
+        const path = url.split('?')[0];
+        if (path === '/api/admin/stock') return jsonResponse(500, { code: 'X', message: 'x' });
+        return path === '/api/admin/issues' ? jsonResponse(200, []) : undefined;
+      });
+      const { unmount } = renderApp(makeMe('admin'), '/admin/stock');
+      expect(await screen.findByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('radio', { name: 'Xuất lẻ' }));
+      expect(await screen.findByRole('button', { name: 'Xuất lẻ một món' })).toBeInTheDocument();
+      unmount();
+    }
+  });
+
   it('đúng một h1 "Tủ / Kho" + liên kết "Sản phẩm"; không còn liên kết "Hàng NCC về? → Hàng về"', async () => {
     await open();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);

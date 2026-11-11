@@ -14,6 +14,8 @@ export interface StockMovement {
   recipient_sub: string | null;
   // Chủ phiếu của dòng giao (sổ kho không ghi người nhận cho dòng giao)
   delivered_to_sub?: string | null;
+  // Kỳ của lần hàng về (YYYY-MM); null với nhập ngoài kỳ và các loại khác
+  receipt_ym?: string | null;
   created_at: string;
 }
 

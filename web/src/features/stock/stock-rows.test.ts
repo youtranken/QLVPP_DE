@@ -27,8 +27,11 @@ describe('stock-rows', () => {
     expect(stockStats(rows())).toEqual({ all: 6, incoming: 2, low: 1, none: 1 });
   });
 
-  it('tình trạng hiện: món tạm ngưng → "paused" dù còn người chờ; short/incoming → "incoming"', () => {
-    expect(stockViewOf({ usable: false, stock_state: 'short' })).toBe('paused');
+  it('tình trạng hiện: món tạm ngưng còn người chờ vẫn "incoming" (khớp số trên menu trái); tạm ngưng không ai chờ → "paused"', () => {
+    expect(stockViewOf({ usable: false, stock_state: 'short' })).toBe('incoming');
+    expect(stockViewOf({ usable: false, stock_state: 'incoming' })).toBe('incoming');
+    expect(stockViewOf({ usable: false, stock_state: 'none' })).toBe('paused');
+    expect(stockViewOf({ usable: false, stock_state: 'ok' })).toBe('paused');
     expect(stockViewOf({ usable: true, stock_state: 'short' })).toBe('incoming');
     expect(stockViewOf({ usable: true, stock_state: 'incoming' })).toBe('incoming');
     expect(stockViewOf({ usable: true, stock_state: 'none' })).toBe('none');

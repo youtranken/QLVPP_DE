@@ -32,7 +32,7 @@ describe('MovementsDrawer — Lịch sử nhập xuất', () => {
     stubApi({
       first: [
         move('m-2', { delta: -3, reason: 'issue', note: 'Người mới', recipient_sub: 'u-binh' }),
-        move('m-1', { delta: 10, note: 'Hàng về kỳ 2026-10' }),
+        move('m-1', { delta: 10, note: 'Hàng về kỳ 2026-10', receipt_ym: '2026-10' }),
       ],
     });
     show(7);
@@ -51,7 +51,7 @@ describe('MovementsDrawer — Lịch sử nhập xuất', () => {
   it('câu theo loại: dùng chung, giao cho chủ phiếu, hoàn, điều chỉnh, nhập ngoài kỳ; về bù giữ phần ghi chú sau dấu ·', async () => {
     stubApi({
       first: [
-        move('m-6', { delta: 4, note: 'Về bù kỳ 2026-09 · ADM giao thiếu' }),
+        move('m-6', { delta: 4, note: 'Về bù kỳ 2026-09 · ADM giao thiếu', receipt_ym: '2026-09' }),
         move('m-5', { delta: 2, note: 'Đơn số 12' }),
         move('m-4', { delta: -1, reason: 'adjust', note: 'Hộp rơi' }),
         move('m-3', { delta: 2, reason: 'return' }),

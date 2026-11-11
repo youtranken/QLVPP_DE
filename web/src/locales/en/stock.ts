@@ -108,8 +108,6 @@ const stock: Messages<typeof vi> = {
       day: '{{date}}',
       metaNote: '{{actor}} · “{{note}}”',
       after: 'left {{qty}}',
-      someone: 'Former user',
-      system: 'System (automatic)',
       tags: {
         purchase: 'In',
         adjust: 'Adjustment',

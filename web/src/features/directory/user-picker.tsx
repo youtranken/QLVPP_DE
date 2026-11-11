@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { userLabel, type DirectoryUser } from '@/features/directory/directory.api';
 import { useDirectoryUsers } from '@/features/directory/use-all-users';
 import { matchesSearch } from '@/features/request/request-format';
+import { searchText } from '@/features/directory/users-rows';
 import { SearchClear } from '@/ui/search-clear';
 import '@/features/directory/user-picker.css';
 
@@ -12,14 +13,12 @@ const SHOWN = 8;
 
 const describe = (u: DirectoryUser) => [userLabel(u), u.department ?? u.email].filter(Boolean).join(' · ');
 
-// Danh bạ vừa tải hết thì lọc tại chỗ bằng hàm bỏ dấu (Hành chính quen gõ "nguyen van an"); danh bạ quá lớn thì server đã lọc
-function usePickerResults(search: string, allowLocked: boolean) {
-  const d = useDirectoryUsers(search);
+// Danh bạ vừa tải hết thì lọc tại chỗ bằng hàm bỏ dấu, cùng bộ trường với trang Danh bạ; danh bạ quá lớn thì server đã lọc.
+// Người đã khóa không chọn được ở Xuất lẻ nên không hiện; lọc Nhật ký vẫn tìm được người đã nghỉ
+function usePickerResults(search: string, allowLocked: boolean, enabled: boolean) {
+  const d = useDirectoryUsers(search, enabled);
   const q = search.trim();
-  const hit = (u: DirectoryUser) => d.overflow || matchesSearch([u.fullName, u.email, u.department].filter(Boolean).join(' '), q);
-  // Người đã khóa không chọn được ở Xuất lẻ nên không hiện; lọc Nhật ký vẫn tìm được người đã nghỉ
-  const usable = (u: DirectoryUser) => allowLocked || u.status === 'active';
-  const items = q === '' && !d.overflow ? d.users.filter(usable) : d.users.filter((u) => usable(u) && hit(u));
+  const items = d.users.filter((u) => (allowLocked || u.status === 'active') && (d.overflow || q === '' || matchesSearch(searchText(u), q)));
   return { items: items.slice(0, SHOWN), loading: d.loading };
 }
 
@@ -56,8 +55,8 @@ export function UserPicker({
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
-  const users = usePickerResults(search, allowLocked);
   const listing = resultsWhenEmpty || search.trim() !== '';
+  const users = usePickerResults(search, allowLocked, listing);
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(text), SEARCH_DEBOUNCE_MS);
@@ -108,7 +107,7 @@ export function UserPicker({
               {!users.loading && users.items.length === 0 && <li className="user-picker-empty">{t('directory.picker.empty')}</li>}
               {users.items.map((u) => (
                 <li key={u.sub}>
-                  <button type="button" disabled={!allowLocked && u.status !== 'active'} onClick={() => onChange(u)}>
+                  <button type="button" onClick={() => onChange(u)}>
                     <b>{userLabel(u)}</b>
                     {u.status === 'active' && badge?.(u)}
                     <small>

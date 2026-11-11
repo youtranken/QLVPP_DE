@@ -69,7 +69,7 @@ export const move = (id: string, over: Record<string, unknown>) => ({
 export const USERS = {
   items: [
     { sub: 'u-hc', fullName: 'Phạm Hành Chính', email: null, department: null, status: 'active' },
-    { sub: 'u-binh', fullName: 'Trần Thị Bình', email: 'binh@pmh.com.vn', department: 'Giám sát', status: 'active' },
+    { sub: 'u-binh', fullName: 'Trần Thị Bình', email: 'binh@pmh.com.vn', department: 'Giám sát', status: 'active', employeeCode: 'NV042', team: 'Ca sáng' },
     { sub: 'u-cuong', fullName: 'Lê Văn Cường', email: 'cuong@pmh.com.vn', department: null, status: 'locked' },
   ],
   next_cursor: null,

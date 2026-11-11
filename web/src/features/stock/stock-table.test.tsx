@@ -75,4 +75,11 @@ describe('StockTable — Tủ/Kho theo người đang chờ', () => {
     expect(within(rowOf('Bút xóa cũ')).getByText('Tạm ngưng')).toHaveClass('tag');
     expect(within(rowOf('Bút xóa cũ')).queryByText('Ngừng riêng')).toBeNull();
   });
+
+  it('món tạm ngưng còn người chờ: "Chờ hàng về 2" đỏ (NCC không giao thêm) kèm nhãn trung tính "Tạm ngưng"', async () => {
+    await open(1280, STOCK.map((f) => (f.item_id === 'i-3' ? facts('i-3', { stock_qty: 0, free: 0, held: 2, awaiting: 2, waiting: 1, stock_state: 'incoming' }) : f)));
+    const row = within(rowOf('Bút xóa cũ'));
+    expect(row.getByText('Chờ hàng về 2')).toHaveClass('tag--danger');
+    expect(row.getByText('Tạm ngưng')).toHaveClass('tag', 'tag--outline');
+  });
 });

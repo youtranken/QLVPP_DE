@@ -25,9 +25,10 @@ export type StockStatus = 'paused' | 'incoming' | Exclude<StockRow['stock_state'
 
 // Tình trạng hiện ở Tủ/Kho: món tạm ngưng chỉ ghi "Tạm ngưng"; có người chờ phiếu đã chốt mà tủ chưa đủ là "Chờ hàng về"
 // (dù hàng NCC đang về có đủ bù hay không — thiếu thật thì tô đỏ ở nhãn)
+// Món tạm ngưng mà vẫn có người chờ thì vẫn là "Chờ hàng về" (cùng đếm với số trên menu trái), chỉ kèm nhãn Tạm ngưng
 export function stockViewOf(r: Pick<StockRow, 'usable' | 'stock_state'>): StockStatus {
-  if (!r.usable) return 'paused';
   if (r.stock_state === 'short' || r.stock_state === 'incoming') return 'incoming';
+  if (!r.usable) return 'paused';
   return r.stock_state;
 }
 

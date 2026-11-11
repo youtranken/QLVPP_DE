@@ -47,8 +47,14 @@ export function StockInventory({ p, end }: { p: StockParams; end?: ReactNode }) 
   const ledger = usePanelParam('item', { order: shown.map((r) => r.id), known: (id) => (d.loaded ? d.rows.some((r) => r.id === id) : undefined) });
   const { open: openLedger } = ledger;
   const onAction = useCallback((action: StockAction, r: StockRow) => (action === 'ledger' ? openLedger(r.id) : setOpen({ action, id: r.id })), [openLedger]);
+  // Tải tồn lỗi vẫn giữ bộ chuyển Tồn kho/Xuất lẻ để sang tab kia được
   if (d.failed) {
-    return <LoadError onRetry={d.retry} />;
+    return (
+      <>
+        {end && <div className="toolbar">{end}</div>}
+        <LoadError onRetry={d.retry} />
+      </>
+    );
   }
 
   const target = open ? d.rows.find((r) => r.id === open.id) : undefined;

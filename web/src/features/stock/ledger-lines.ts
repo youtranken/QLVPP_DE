@@ -10,18 +10,14 @@ export interface Receipt {
   rest: string | null;
 }
 
-// Hàng về theo bản in ghi ghi chú máy "Hàng về kỳ 2026-11" / "Về bù kỳ 2026-10 · <ghi chú>"; đọc lại ở web để dòng cũ cũng hiện thành chữ thường
-const RECEIPT_NOTES: [Receipt['kind'], RegExp][] = [
-  ['arrival', /^Hàng về kỳ (\d{4}-\d{2})(?: · ([\s\S]*))?$/],
-  ['makeup', /^Về bù kỳ (\d{4}-\d{2})(?: · ([\s\S]*))?$/],
-];
+// Dòng hàng về nhận ra bằng receipt_ym; ghi chú máy chỉ còn dùng để biết "về bù" và tách phần ghi chú người gõ
+const MAKEUP_NOTE = /^Về bù kỳ /;
+const MACHINE_PREFIX = /^(?:Hàng về kỳ|Về bù kỳ) \d{4}-\d{2}(?: · )?/;
 
-export function receiptOf(note: string | null): Receipt | null {
-  for (const [kind, re] of RECEIPT_NOTES) {
-    const m = note ? re.exec(note) : null;
-    if (m) return { kind, ym: m[1], rest: m[2]?.trim() || null };
-  }
-  return null;
+export function receiptOf(m: Pick<StockMovement, 'receipt_ym' | 'note'>): Receipt | null {
+  if (!m.receipt_ym) return null;
+  const note = m.note ?? '';
+  return { kind: MAKEUP_NOTE.test(note) ? 'makeup' : 'arrival', ym: m.receipt_ym, rest: note.replace(MACHINE_PREFIX, '').trim() || null };
 }
 
 export interface LedgerLine {

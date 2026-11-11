@@ -11,6 +11,7 @@
 [data-shell='admin'] .sk-balance__n { font: var(--t-h1); }
 [data-shell='admin'] .sk-balance b.sk-balance__free { color: var(--c-ok); }
 [data-shell='admin'] .sk-balance__badge { margin-left: auto; align-self: center; }
+[data-shell='admin'] .sk-badges { display: inline-flex; flex-wrap: wrap; gap: var(--s-1); }
 [data-shell='admin'] .sk-empty { margin: 0; color: var(--c-muted); }
 [data-shell='admin'] .sk-ledger-day { display: grid; }
 [data-shell='admin'] .sk-ledger__day { margin: 0 0 var(--s-1); color: var(--c-muted); font: var(--t-cap); font-weight: 700; }

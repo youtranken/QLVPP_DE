@@ -12,6 +12,11 @@ const directory: Messages<typeof vi> = {
       locked: 'locked',
       change: 'Change person',
     },
+    person: {
+      loading: '…',
+      former: 'Former user',
+      system: 'System (automatic)',
+    },
   },
 };
 

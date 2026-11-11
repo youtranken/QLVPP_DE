@@ -105,8 +105,6 @@ const stock = {
       day: 'Ngày {{date}}',
       metaNote: '{{actor}} · “{{note}}”',
       after: 'còn {{qty}}',
-      someone: 'Người dùng cũ',
-      system: 'Hệ thống (tự động)',
       tags: {
         purchase: 'Nhập',
         adjust: 'Điều chỉnh',

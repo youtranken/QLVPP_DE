@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { OverlayPanel, type PanelNav } from '@/ui/overlay-panel';
 import { LoadError, Loading } from '@/ui/load-state';
-import { useDirectoryNames } from '@/features/directory/use-all-users';
+import { usePersonName } from '@/features/directory/use-all-users';
 import { useUnitName } from '@/features/units/units.api';
 import { monthOf } from '@/features/request/request-format';
 import { useMovements, type StockMovement } from './stock.api';
@@ -48,7 +48,7 @@ function useSentence(unit: string, nameOf: (sub: string) => string): Sentence {
     const qty = Math.abs(m.delta);
     switch (m.reason) {
       case 'purchase': {
-        const r = receiptOf(m.note);
+        const r = receiptOf(m);
         if (!r) return { text: t('stock.ledger.text.purchaseOutside', { qty, unit }), note: m.note };
         return { text: t(`stock.ledger.text.${r.kind}`, { qty, unit, month: monthOf(r.ym) }), note: r.rest };
       }
@@ -105,9 +105,7 @@ export function MovementsDrawer({ item, groupName, onAction, onClose, nav }: Pro
   const { t } = useTranslation();
   const unit = useUnitName(item.unit);
   const movements = useMovements(item.id);
-  const names = useDirectoryNames();
-  // Người thao tác là tiến trình máy ("system…") hoặc đã rời danh bạ: không hiện mã kỹ thuật
-  const nameOf = (sub: string) => names.data?.get(sub) ?? (sub.startsWith('system') ? t('stock.ledger.system') : t('stock.ledger.someone'));
+  const nameOf = usePersonName();
   const sentence = useSentence(unit, nameOf);
   const dayLabel = useDayLabel();
   const rows = movements.data?.pages.flatMap((p) => p.items) ?? [];

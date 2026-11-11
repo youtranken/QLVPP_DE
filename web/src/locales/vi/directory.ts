@@ -9,6 +9,11 @@ const directory = {
       locked: 'đã khóa',
       change: 'Đổi người',
     },
+    person: {
+      loading: '…',
+      former: 'Người dùng cũ',
+      system: 'Hệ thống (tự động)',
+    },
   },
 };
 

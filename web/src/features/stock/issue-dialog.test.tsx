@@ -95,6 +95,8 @@ describe('IssueDialog', () => {
     await userEvent.type(screen.getByLabelText(/^Lý do/), 'Người mới vào giữa kỳ');
     const search = screen.getByRole('searchbox', { name: /Tìm người nhận/ });
     expect(search).toHaveAttribute('placeholder', 'Gõ tên hoặc email để tìm');
+    // Chưa gõ thì chưa kéo danh bạ về
+    expect(f.mock.calls.some((c) => String(c[0]).startsWith('/api/admin/users'))).toBe(false);
     expect(screen.queryByRole('list', { name: 'Kết quả tìm người' })).toBeNull();
     await userEvent.type(search, 'cuong');
     expect(await screen.findByText('Không tìm thấy ai.')).toBeInTheDocument();
@@ -109,6 +111,17 @@ describe('IssueDialog', () => {
     await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(mutationCall(f, URL).body).toEqual({ qty: 1, recipient_sub: 'u-binh', reason: 'Người mới vào giữa kỳ' });
     expect(await screen.findByText('Đã xuất lẻ 1 ram Giấy A4 cho Trần Thị Bình')).toBeInTheDocument();
+  });
+
+  it('tìm theo cùng bộ trường với trang Danh bạ: mã nhân viên "nv042", nhóm "ca sang", phòng "giam sat" đều ra Trần Thị Bình', async () => {
+    stubMutation(jsonResponse(201, {}));
+    wrap(<IssueDialog item={makeRow(5)} onClose={vi.fn()} />);
+    const search = screen.getByRole('searchbox', { name: /Tìm người nhận/ });
+    for (const q of ['nv042', 'ca sang', 'giam sat']) {
+      await userEvent.clear(search);
+      await userEvent.type(search, q);
+      expect(await screen.findByRole('button', { name: /Trần Thị Bình/ })).toBeInTheDocument();
+    }
   });
 
   it('chưa chọn người nhận và không "Dùng chung" → lỗi ở ô Người nhận, không gọi API', async () => {

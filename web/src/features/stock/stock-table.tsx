@@ -31,10 +31,18 @@ export function StockBadge({ row }: { row: Pick<StockRow, 'usable' | 'stock_stat
     untracked: t('stock.state.untracked'),
     ok: t('stock.state.ok', { n: row.free }),
   };
-  const uncovered = status === 'incoming' && row.short > 0;
-  return (
-    <span className={uncovered ? 'tag tag--danger' : BADGE_CLASS[status]} title={uncovered ? t('warn.W20short', { short: row.short }) : undefined}>
+  // Món đã tạm ngưng thì Nhà cung cấp không giao thêm: người đang chờ chắc chắn chưa có hàng, nên cũng đỏ
+  const uncovered = status === 'incoming' && (row.short > 0 || !row.usable);
+  const badge = (
+    <span className={uncovered ? 'tag tag--danger' : BADGE_CLASS[status]} title={uncovered && row.short > 0 ? t('warn.W20short', { short: row.short }) : undefined}>
       {text[status]}
+    </span>
+  );
+  if (status !== 'incoming' || row.usable) return badge;
+  return (
+    <span className="sk-badges">
+      {badge}
+      <span className="tag tag--outline">{t('stock.state.paused')}</span>
     </span>
   );
 }
