@@ -38,9 +38,9 @@ const admin = {
       more: 'Xem thêm',
     },
     reg: {
-      no: 'Chưa đăng ký kỳ {{month}}',
-      yes: 'Đã đăng ký kỳ {{month}}',
-      col: 'Kỳ tháng {{month}}',
+      no: 'Chưa đăng ký tháng {{month}}',
+      yes: 'Đã đăng ký tháng {{month}}',
+      col: 'Tháng {{month}}',
       cellYes: 'Đã đăng ký',
       cellNo: 'Chưa',
     },

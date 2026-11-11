@@ -41,9 +41,9 @@ const admin: Messages<typeof vi> = {
       more: 'Load more',
     },
     reg: {
-      no: 'Not signed up for period {{month}}',
-      yes: 'Signed up for period {{month}}',
-      col: 'Period {{month}}',
+      no: 'Not signed up for month {{month}}',
+      yes: 'Signed up for month {{month}}',
+      col: 'Month {{month}}',
       cellYes: 'Signed up',
       cellNo: 'Not yet',
     },
