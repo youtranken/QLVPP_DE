@@ -36,6 +36,18 @@ describe('V2D-5 ADM hết hàng theo kỳ: PUT/DELETE adm-out, nhập hàng về
     (await f.auditRows('arrival.adm_out_unmarked', YM)).filter(
       (r) => r.detail.line_key === key,
     );
+  // Kế hoạch Nhận hàng chỉ có dòng khi kỳ đã gửi NCC
+  const sentWith = (item: string) =>
+    f.insertSnapshot(
+      YM,
+      {
+        ym: YM,
+        byItem: [{ key: item, item_id: item }],
+        custom: [],
+        order_qty: { [item]: 2 },
+      },
+      '2026-11-11T03:00:00Z',
+    );
   const settle = (lineId: string) =>
     pool().query('UPDATE request_lines SET delivered_qty = qty WHERE id = $1', [
       lineId,
@@ -67,6 +79,7 @@ describe('V2D-5 ADM hết hàng theo kỳ: PUT/DELETE adm-out, nhập hàng về
         [item],
       );
       expect(rows[0].active).toBe(true);
+      await sentWith(item);
       expect((await f.rowOf(YM, item))?.adm_out).toBe(true);
     });
 
@@ -93,6 +106,7 @@ describe('V2D-5 ADM hết hàng theo kỳ: PUT/DELETE adm-out, nhập hàng về
           after: { adm_out: false },
         },
       ]);
+      await sentWith(item);
       expect((await f.rowOf(YM, item))?.adm_out).toBe(false);
     });
 

@@ -103,7 +103,7 @@ describe('V2D-5 GET /admin/periods/:ym/arrivals-plan — Hàng về theo bản i
     });
   });
 
-  it('chưa có bản (hoặc chỉ bản rỗng): snapshot null, ordered = đăng ký 8 + nợ 2 = 10, không trừ tủ 5', async () => {
+  it('chưa có bản (hoặc chỉ bản rỗng): snapshot null, không có dòng nào để nhận (rows/custom rỗng)', async () => {
     const item = await f.stockItem(5);
     await f.seedLine(YM, A, { item_id: item, qty: 8 });
     await f.seedLine('2026-10', B, { item_id: item, qty: 2 });
@@ -114,35 +114,22 @@ describe('V2D-5 GET /admin/periods/:ym/arrivals-plan — Hàng về theo bản i
     );
     const p = await plan(YM);
     expect(p.snapshot).toBeNull();
+    expect(p.rows).toEqual([]);
     expect(p.custom).toEqual([]);
-    expect(p.rows.find((r) => r.item_id === item)).toMatchObject({
-      ordered: 10,
-      received: 0,
-      remaining: 10,
-      stock_qty: 5,
-      usable: true,
-      adm_out: false,
-      adm_out_final: false,
-      reduced_after_snapshot: 0,
-    });
   });
 
-  it('Tháng này không cần đề nghị ADM (cờ no_order, không bản): rows chỉ còn món đã về kỳ này (ordered 0), custom rỗng, có no_order {at, by_name}', async () => {
+  it('Tháng này không cần đề nghị ADM (cờ no_order, không bản): rows/custom rỗng, có no_order {at, by_name}', async () => {
     const item = await f.stockItem(5);
-    const came = await f.stockItem(0);
     await f.seedLine(YM, A, { item_id: item, qty: 8 });
     await f.noOrder(YM, { order_qty: { [item]: 0 } }).expect(200);
-    await purchase(came, 2, YM, '2026-11-12T02:00:00Z');
     const p = await plan(YM);
     expect(p.snapshot).toBeNull();
     expect(p.no_order).toEqual({
       at: LOCKED_AT_ISO,
       by_name: expect.any(String),
     });
+    expect(p.rows).toEqual([]);
     expect(p.custom).toEqual([]);
-    expect(p.rows.map((r) => [r.item_id, r.ordered, r.received])).toEqual([
-      [came, 0, 2],
-    ]);
   });
 
   it('chưa có bản, không cờ → no_order null', async () => {

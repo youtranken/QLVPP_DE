@@ -3,7 +3,6 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Executor } from '../../database/database.module';
 import { PeriodsService } from '../periods/periods.service';
 import { admOwedRows } from '../reports/order-default';
-import { itemDemand } from '../reports/report-queries';
 import { wantOf } from '../reports/report-need';
 import { noOrderOf } from '../reports/no-order-flag';
 import type { NoOrderMark } from '../reports/no-order-flag';
@@ -60,7 +59,8 @@ export interface ArrivalsPlan {
 const remainingOf = (ordered: number, received: number) =>
   Math.max(0, ordered - received);
 
-// Đọc-only: số Đề nghị theo bản có hàng mới nhất; chưa có bản → số gộp (không trừ tủ)
+// Đọc-only: số Đề nghị theo bản có hàng mới nhất. Chưa gửi NCC (kể cả "không cần đề nghị") → không có dòng để nhận:
+// nhận hàng bị chặn (409 REPORT_NOT_SENT), trang chỉ cần snapshot/no_order + về bù kỳ trước
 @Injectable()
 export class ArrivalsPlanService {
   constructor(
@@ -71,39 +71,34 @@ export class ArrivalsPlanService {
   async plan(ym: string, now: Date): Promise<ArrivalsPlan> {
     await this.periods.assertLocked(ym, now);
     const sent = await latestSent(this.db, ym);
-    const noOrder = sent ? null : await noOrderOf(this.db, ym);
-    const ordered = sent
-      ? orderedFromSnapshot(sent)
-      : noOrder
-        ? new Map<string, number>()
-        : await this.orderedFromDemand(ym);
+    const makeup = await this.makeup(ym);
+    if (!sent) {
+      return {
+        snapshot: null,
+        no_order: await noOrderOf(this.db, ym),
+        batches: await receiptBatches(this.db, ym),
+        rows: [],
+        custom: [],
+        makeup,
+      };
+    }
+    const ordered = orderedFromSnapshot(sent);
     const facts = await itemFacts(
       this.db,
       ym,
       [...ordered.keys()],
-      sent?.created_at ?? null,
+      sent.created_at,
     );
     return {
-      snapshot: sent
-        ? { id: sent.id, kind: sent.kind, created_at: sent.created_at }
-        : null,
-      no_order: noOrder,
+      snapshot: { id: sent.id, kind: sent.kind, created_at: sent.created_at },
+      no_order: null,
       batches: await receiptBatches(this.db, ym),
       rows: facts
         .map((f) => toRow(f, ordered.get(f.item_id) ?? 0))
         .filter((r) => r.usable || r.ordered > 0),
-      custom: sent ? await this.customRows(ym, sent) : [],
-      makeup: await this.makeup(ym),
+      custom: await this.customRows(ym, sent),
+      makeup,
     };
-  }
-
-  private async orderedFromDemand(ym: string): Promise<Map<string, number>> {
-    const demand = await itemDemand(this.db, ym);
-    return new Map(
-      demand
-        .filter((d) => d.usable && wantOf(d) > 0)
-        .map((d) => [d.item_id, wantOf(d)]),
-    );
   }
 
   private async customRows(

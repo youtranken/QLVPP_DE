@@ -10,10 +10,10 @@ import { ClockService } from '../../common/clock.service';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Tx } from '../../database/database.module';
 import { addMonths } from '../../common/period';
-import { latestSent, reportNotSent } from '../reports/sent-snapshot';
+import { reportNotSent, type SentSnapshot } from '../reports/sent-snapshot';
 import { itemAdmOut, markedKeys } from './adm-out.service';
 import { ITEM_USABLE_SQL } from './catalog-sql';
-import { assertLatestSheet } from './receipt-sheet';
+import { assertLatestSheet, sheetWithin } from './receipt-sheet';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { PeriodsService } from '../periods/periods.service';
 import type { ReceiptBody } from './stock.dto';
@@ -52,9 +52,10 @@ export class StockReceiptService {
     return this.db.transaction(async (tx) => {
       await this.stock.lockItemsWithin(tx, ids);
       // Hàng của kỳ chỉ về sau khi đã gửi NCC; nhập ngoài kỳ đi đường Tủ/Kho, không qua đây
-      if (!(await latestSent(tx, body.ym))) throw reportNotSent(body.ym);
-      await assertLatestSheet(tx, body.ym, body.snapshot_id);
-      await this.assertReceivable(tx, body.ym, lines);
+      const sent = await sheetWithin(tx, body.ym);
+      if (!sent) throw reportNotSent(body.ym);
+      assertLatestSheet(sent, body.snapshot_id);
+      await this.assertReceivable(tx, body.ym, sent, lines);
       // Dòng gộp ghi trước để từng món mang id của nó (batch_id) — Nhật ký hiện một lần Lưu thành một dòng.
       // Ghi kèm tên lúc Lưu để Nhật ký vẫn đọc được khi món bị xóa sau này
       const names = await this.namesWithin(tx, ids);
@@ -122,6 +123,7 @@ export class StockReceiptService {
   private async assertReceivable(
     tx: Tx,
     ym: string,
+    sent: SentSnapshot,
     lines: ReceiptBody['lines'],
   ): Promise<void> {
     const ids = lines.map((l) => l.item_id);
@@ -134,7 +136,7 @@ export class StockReceiptService {
       FROM items WHERE id = ANY(${sql.param(ids)}::uuid[])
     `);
     const current = new Map(rows.map((r) => [r.id, r]));
-    const ordered = (await latestSent(tx, ym))?.data.order_qty ?? {};
+    const ordered = sent.data.order_qty;
     for (const l of lines) {
       const item = current.get(l.item_id);
       if (!item || (!item.usable && !((ordered[l.item_id] ?? 0) > 0))) {

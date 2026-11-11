@@ -56,7 +56,7 @@ export interface PlanBatch {
   note: string | null;
 }
 
-// Kế hoạch Hàng về theo bản có hàng mới nhất (chưa có bản → số gộp)
+// Kế hoạch Hàng về theo bản có hàng mới nhất; chưa gửi NCC thì rows/custom rỗng, chỉ còn về bù kỳ trước
 export interface ArrivalsPlan {
   snapshot: { id: string; kind: string; created_at: string } | null;
   no_order: { at: string; by_name: string | null } | null;

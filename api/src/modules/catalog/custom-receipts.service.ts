@@ -10,11 +10,10 @@ import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { PeriodsService } from '../periods/periods.service';
-import { latestSent } from '../reports/sent-snapshot';
 import { itemAdmOut, markedKeys } from './adm-out.service';
 import { customReceived, lockCustomKey } from './custom-key-lock';
 import { invalidLineKey, parseLineKey } from './line-key';
-import { assertLatestSheet } from './receipt-sheet';
+import { assertLatestSheet, sheetWithin } from './receipt-sheet';
 import type { CustomReceiptBody } from './stock.dto';
 
 export interface CustomReceiptResult {
@@ -58,8 +57,8 @@ export class CustomReceiptsService {
     if (!lk || lk.item_id) throw invalidLineKey();
     await this.periods.assertLocked(ym, now);
     return this.db.transaction(async (tx) => {
-      await assertLatestSheet(tx, ym, body.snapshot_id);
-      const sent = await latestSent(tx, ym);
+      const sent = await sheetWithin(tx, ym);
+      assertLatestSheet(sent, body.snapshot_id);
       if (!sent || !((sent.data.order_qty[lk.key] ?? 0) > 0)) {
         throw notInPrint();
       }
