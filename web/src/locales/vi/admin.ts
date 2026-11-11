@@ -202,7 +202,6 @@ const admin = {
       field: 'Trường',
       before: 'Trước',
       after: 'Sau',
-      noChange: 'Không có trường nào khác nhau.',
       imageChanged: 'Ảnh đã đổi',
       categoryTo: 'Đổi nhóm sang {{name}}',
       categoryChanged: 'Đổi nhóm',

@@ -7,7 +7,7 @@ import { Icon } from '@/ui/icon';
 import type { GroupBy } from '@/ui/data-table-group';
 import type { AuditEntry } from './admin.api';
 import { auditActionLabel } from './audit-actions';
-import { AuditDetail } from './audit-detail';
+import { AuditDetail, useAuditHasDetail } from './audit-detail';
 import { auditObjectText } from './audit-object';
 import { vnDayKey } from './audit-quick-ranges';
 import { monthOf } from '@/features/request/request-format';
@@ -27,7 +27,7 @@ function ObjectCell({ entry: e }: { entry: AuditEntry }) {
   return <span className="au-object">{auditObjectText(t, e)}</span>;
 }
 
-function useColumns() {
+function useColumns(canOpen: (e: AuditEntry) => boolean) {
   const { t } = useTranslation();
   return useMemo<ColumnDef<AuditEntry, unknown>[]>(() => {
     const columns: ColumnDef<AuditEntry, unknown>[] = [
@@ -70,15 +70,16 @@ function useColumns() {
         id: 'detail',
         header: () => <span className="sr-only">{t('audit.page.colDetail')}</span>,
         meta: { className: 'au-detail-col' },
-        cell: () => <span className="au-chev"><Icon name="chev" size={18} /></span>,
+        cell: ({ row }) => (canOpen(row.original) ? <span className="au-chev"><Icon name="chev" size={18} /></span> : null),
       },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
-  }, [t]);
+  }, [t, canOpen]);
 }
 
-// Cả dòng là nút mở/thu chi tiết; dòng không còn phần tử bấm nào khác nên không lồng tương tác
-function useRowToggle() {
+// Cả dòng là nút mở/thu chi tiết; dòng không còn phần tử bấm nào khác nên không lồng tương tác.
+// Dòng không có chi tiết là dòng thường: không tab tới, không aria-expanded, bấm không làm gì
+function useRowToggle(canOpen: (e: AuditEntry) => boolean) {
   const baseId = useId();
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
   const toggle = useCallback((id: string) => {
@@ -92,19 +93,22 @@ function useRowToggle() {
   const detailId = useCallback((id: string) => `${baseId}-${id}`, [baseId]);
   const hintId = `${baseId}-hint`;
   const rowProps = useCallback(
-    (e: AuditEntry) => ({
-      tabIndex: 0,
-      'aria-describedby': hintId,
-      'aria-expanded': open.has(e.id),
-      'aria-controls': open.has(e.id) ? detailId(e.id) : undefined,
-      onClick: () => toggle(e.id),
-      onKeyDown: (ev: KeyboardEvent<HTMLTableRowElement>) => {
-        if (ev.target !== ev.currentTarget || (ev.key !== 'Enter' && ev.key !== ' ')) return;
-        ev.preventDefault();
-        toggle(e.id);
-      },
-    }),
-    [open, toggle, detailId, hintId],
+    (e: AuditEntry) =>
+      canOpen(e)
+        ? {
+            tabIndex: 0,
+            'aria-describedby': hintId,
+            'aria-expanded': open.has(e.id),
+            'aria-controls': open.has(e.id) ? detailId(e.id) : undefined,
+            onClick: () => toggle(e.id),
+            onKeyDown: (ev: KeyboardEvent<HTMLTableRowElement>) => {
+              if (ev.target !== ev.currentTarget || (ev.key !== 'Enter' && ev.key !== ' ')) return;
+              ev.preventDefault();
+              toggle(e.id);
+            },
+          }
+        : {},
+    [open, toggle, detailId, hintId, canOpen],
   );
   return { open, detailId, hintId, rowProps };
 }
@@ -129,9 +133,10 @@ function useDayGroups(): GroupBy<AuditEntry> {
 
 export function AuditTable({ rows, loading, empty }: { rows: AuditEntry[]; loading: boolean; empty: { title: string; hint?: string; action?: ReactNode } }) {
   const { t } = useTranslation();
-  const columns = useColumns();
+  const canOpen = useAuditHasDetail();
+  const columns = useColumns(canOpen);
   const groupBy = useDayGroups();
-  const { open, detailId, hintId, rowProps } = useRowToggle();
+  const { open, detailId, hintId, rowProps } = useRowToggle(canOpen);
   return (
     <>
       <span id={hintId} hidden>
@@ -144,7 +149,7 @@ export function AuditTable({ rows, loading, empty }: { rows: AuditEntry[]; loadi
         emptyText={empty.title}
         empty={{ art: 'no-match', hint: empty.hint, action: empty.action }}
         groupBy={groupBy}
-        expandedRow={(e) => (open.has(e.id) ? <AuditDetail entry={e} id={detailId(e.id)} /> : null)}
+        expandedRow={(e) => (open.has(e.id) && canOpen(e) ? <AuditDetail entry={e} id={detailId(e.id)} /> : null)}
         rowProps={rowProps}
         tableClassName="au-table"
         stackOnMobile

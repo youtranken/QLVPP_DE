@@ -205,7 +205,6 @@ const admin: Messages<typeof vi> = {
       field: 'Field',
       before: 'Before',
       after: 'After',
-      noChange: 'No fields differ.',
       imageChanged: 'Image changed',
       categoryTo: 'Moved to group {{name}}',
       categoryChanged: 'Group changed',

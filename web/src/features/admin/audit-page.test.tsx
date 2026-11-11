@@ -104,6 +104,33 @@ describe('AuditPage B11', () => {
     expect(r).toHaveAttribute('aria-expanded', 'true');
   });
 
+  it('dòng không có gì để xem (đăng nhập, phiên bị thu hồi, sửa mà không trường nào đổi) không có mũi tên, không mở được; dòng có chi tiết dùng cùng một mũi tên', async () => {
+    const items = [
+      row('s1', { action: 'auth.session_revoked', actorName: 'Hệ thống', detail: { session_id: 'aaaa0000-1111-4222-8333-444455556666' } }),
+      row('s2', { action: 'auth.login', actorName: 'Võ Hợp Đồng', detail: null }),
+      row('s3', { actorName: 'Phạm Không Đổi', detail: { before: { admin_contact: 'x' }, after: { admin_contact: 'x' } } }),
+      row('s4', { actorName: 'Lê Có Đổi' }),
+    ];
+    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items, next_cursor: null } : { items: [], next_cursor: null }))));
+    await openAudit();
+    for (const name of ['Hệ thống', 'Võ Hợp Đồng', 'Phạm Không Đổi']) {
+      const r = entryRow(name);
+      expect(r).not.toHaveAttribute('aria-expanded');
+      expect(r).not.toHaveAttribute('tabindex');
+      expect(r.querySelector('.au-chev')).toBeNull();
+      await userEvent.click(r);
+      expect(r).not.toHaveAttribute('aria-expanded');
+    }
+    const n = bodyRows().length;
+    await userEvent.click(entryRow('Hệ thống'));
+    expect(bodyRows()).toHaveLength(n);
+    const open = entryRow('Lê Có Đổi');
+    expect(open.querySelector('.au-chev')).not.toBeNull();
+    expect(open).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(open);
+    expect(open).toHaveAttribute('aria-expanded', 'true');
+  });
+
   it('trường đổi không có nhãn vẫn báo bằng câu thường: "Ảnh đã đổi", "Đổi nhóm sang <tên>", "Có thay đổi khác"; không "Không có trường nào khác nhau", không mã', async () => {
     const detail = { before: { image_file_id: 'aaaa0000-1111-4222-8333-444455556666', category_id: 'c-1', meta: { a: 1 } }, after: { image_file_id: 'bbbb0000-1111-4222-8333-444455556666', category_id: 'c-2', meta: { a: 2 } } };
     vi.stubGlobal('fetch', vi.fn((url: string) => {
