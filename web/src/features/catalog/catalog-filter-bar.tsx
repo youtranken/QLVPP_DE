@@ -30,7 +30,7 @@ interface Props {
   bulk: CatalogBulk | null;
 }
 
-// Hàng 1: tìm + trạng thái + cách xem (cùng cao 40px); hàng 2: chip nhóm nhẹ hơn, cuộn ngang; thanh hàng loạt hàng riêng khi có chọn
+// Hàng 1: tìm + trạng thái; hàng 2: chip nhóm cuộn ngang, cách xem Lưới/Bảng ở cuối (tách khỏi tab trạng thái cùng kiểu cho khỏi lẫn); hàng loạt hàng riêng khi có chọn
 // Nhóm đã ngừng chỉ hiện khi còn món; "Chưa xếp nhóm" chỉ hiện khi có món lạc nhóm
 function useChipGroups(index: CategoryIndex, counts: Map<string, number>) {
   const { t, i18n } = useTranslation();
@@ -52,10 +52,9 @@ export function CatalogFilterBar(p: Props) {
             <CatalogTabBar value={p.tab} counts={p.tabCounts} onChange={p.onTab} />
           </ScrollFade>
         )}
-        <ViewSwitch value={p.mode} onChange={p.onMode} />
       </div>
-      {p.tabCounts && (
-        <div className="ct-filter__groups">
+      <div className="ct-filter__groups">
+        {p.tabCounts && (
           <ScrollFade className="ct-gchips-scroll">
             <GroupChips
               className="ct-gchips"
@@ -70,13 +69,16 @@ export function CatalogFilterBar(p: Props) {
               onChange={(id) => p.onGroup(id === ALL_GROUPS ? null : id)}
             />
           </ScrollFade>
-          {p.collapse && (
-            <button type="button" className="btn btn--ghost btn--sm ct-filter__collapse" onClick={p.collapse.onToggle}>
-              {t(p.collapse.all ? 'catalog.list.expandAll' : 'catalog.list.collapseAll')}
-            </button>
-          )}
+        )}
+        {p.tabCounts && p.collapse && (
+          <button type="button" className="btn btn--ghost btn--sm ct-filter__collapse" onClick={p.collapse.onToggle}>
+            {t(p.collapse.all ? 'catalog.list.expandAll' : 'catalog.list.collapseAll')}
+          </button>
+        )}
+        <div className="ct-filter__view">
+          <ViewSwitch value={p.mode} onChange={p.onMode} />
         </div>
-      )}
+      </div>
       {p.tabCounts && p.bulk && p.bulk.count > 0 && (
         <div className="ct-filter__bulk">
           <CatalogBulkBar tab={p.tab} {...p.bulk} />

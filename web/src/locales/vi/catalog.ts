@@ -142,6 +142,9 @@ const catalog = {
       saved: 'Đã lưu {{name}}',
     },
     categories: {
+      search: 'Tìm nhóm (không cần dấu)',
+      shown: 'Đang hiện {{shown}}/{{total}} nhóm',
+      noMatch: 'Không có nhóm nào khớp',
       description: 'Nhóm sản phẩm và đơn vị tính. Thứ tự nhóm là thứ tự nhân viên thấy khi đăng ký.',
       add: 'Thêm nhóm',
       addTitle: 'Thêm nhóm',
@@ -164,7 +167,6 @@ const catalog = {
       reactivateFor: 'Dùng lại nhóm {{name}}',
       paused: 'Đã tạm ngưng nhóm {{name}}',
       edit: 'Sửa',
-      inactive: 'Đã ngừng',
       deactivate: 'Ngừng nhóm',
       reactivate: 'Dùng lại',
       deactivateTitle: 'Ngừng nhóm “{{name}}”?',

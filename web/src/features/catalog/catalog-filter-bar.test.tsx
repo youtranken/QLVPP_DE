@@ -48,16 +48,19 @@ const css = () => readFileSync(resolve(process.cwd(), 'src/features/catalog/cata
 const rule = (selector: string) => css().split('\n').find((l) => l.startsWith(`[data-shell='admin'] ${selector} {`)) ?? '';
 
 describe('Thanh lọc Sản phẩm (góp ý vòng 2, ảnh 6)', () => {
-  it('hàng 1 theo thứ tự: ô tìm → trạng thái (Tất cả/Đang dùng/Tạm ngưng/Chưa có ảnh kèm số) → Lưới/Bảng', () => {
+  it('hàng 1: ô tìm → trạng thái (Tất cả/Đang dùng/Tạm ngưng/Chưa có ảnh kèm số); Lưới/Bảng tách xuống cuối hàng chip nhóm cho khỏi lẫn với tab trạng thái', () => {
     show();
     const search = screen.getByRole('searchbox', { name: 'Tìm trong 66 sản phẩm' });
     const status = screen.getByRole('group', { name: 'Trạng thái' });
     const view = screen.getByRole('group', { name: 'Chế độ xem' });
     const row = search.closest('.ct-filter__main');
     expect(row).not.toBeNull();
-    expect(row!.contains(status) && row!.contains(view)).toBe(true);
+    expect(row!.contains(status)).toBe(true);
+    expect(row!.contains(view)).toBe(false);
+    expect(view.closest('.ct-filter__groups')).not.toBeNull();
+    const chips = screen.getByRole('group', { name: 'Lọc theo nhóm' });
+    expect(chips.compareDocumentPosition(view) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(search.compareDocumentPosition(status) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(status.compareDocumentPosition(view) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(status).getAllByRole('button').map((b) => b.textContent)).toEqual(['Tất cả 66', 'Đang dùng 65', 'Tạm ngưng 1', 'Chưa có ảnh 8']);
   });
 

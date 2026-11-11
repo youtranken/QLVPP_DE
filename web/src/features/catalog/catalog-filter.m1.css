@@ -1,4 +1,4 @@
-/* Thanh lọc Sản phẩm: hàng 1 = tìm + trạng thái + cách xem (cùng cao 40px); hàng 2 = chip nhóm nhẹ hơn (32px), cuộn ngang; hàng loạt hàng riêng */
+/* Thanh lọc Sản phẩm: hàng 1 = tìm + trạng thái (cùng cao 40px); hàng 2 = chip nhóm nhẹ hơn (32px) cuộn ngang + cách xem ở cuối; hàng loạt hàng riêng */
 [data-shell='admin'] .ct-filter { display: grid; gap: var(--s-3); min-width: 0; }
 [data-shell='admin'] .ct-filter__main { display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
 [data-shell='admin'] .ct-filter__main .flt-search { flex: 1 1 240px; max-width: none; min-width: 200px; }
@@ -12,7 +12,7 @@
 [data-shell='admin'] .ct-seg__opt[aria-pressed='true'] { background: var(--c-surface); color: var(--c-ink); box-shadow: 0 0 0 1px rgb(var(--sh-ink) / .06), 0 1px 2px rgb(var(--sh-ink) / .1), 0 2px 6px -2px rgb(var(--sh-ink) / .16); }
 [data-shell='admin'] .ct-seg__opt:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell='admin'] .ct-seg__n { color: var(--c-muted); font: var(--t-cap); }
-[data-shell='admin'] .ct-seg--view { margin-left: auto; }
+[data-shell='admin'] .ct-filter__view { flex: none; margin-left: auto; }
 [data-shell='admin'] .ct-filter__groups { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
 [data-shell='admin'] .ct-gchips-scroll { flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 [data-shell='admin'] .ct-seg-scroll[data-more], [data-shell='admin'] .ct-gchips-scroll[data-more] { mask-image: linear-gradient(to right, black calc(100% - 40px), transparent); }
@@ -33,6 +33,8 @@
   [data-shell='admin'] .ct-seg-scroll { flex: 1 1 0; }
   [data-shell='admin'] .ct-seg { height: var(--hit); padding: 0; }
   [data-shell='admin'] .ct-seg__opt { height: var(--hit); padding: 0 var(--s-3); }
-  [data-shell='admin'] .ct-seg--view { margin-left: 0; }
+  [data-shell='admin'] .ct-filter__groups { flex-wrap: wrap; }
+  [data-shell='admin'] .ct-gchips-scroll { flex-basis: 100%; }
+  [data-shell='admin'] .ct-filter__view { flex: 1 1 100%; order: -1; margin-left: 0; }
   [data-shell='admin'] .ct-gchip { height: var(--hit); }
 }

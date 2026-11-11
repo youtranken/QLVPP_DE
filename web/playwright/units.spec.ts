@@ -62,7 +62,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
       expect(inUse).toBeDefined();
       await expect(page.getByRole('main').getByRole('switch')).toHaveCount(0);
       const used = await menuItems(page, inUse!.name);
-      expect(used.labels).toEqual(['Sửa', 'Ngừng']);
+      expect(used.labels).toEqual(['Sửa', 'Tạm ngưng']);
       await page.keyboard.press('Escape');
       const blocked = await request.delete(`/api/admin/units/${inUse!.code}`, { headers: devHeaders('admin') });
       expect(blocked.status()).toBe(409);
@@ -76,7 +76,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
       await expect(page.getByRole('status').filter({ hasText: `Đã thêm đơn vị tính ${name}` })).toBeVisible();
       await expect(rowOf(page, name)).toHaveCount(1);
       const fresh = await menuItems(page, name);
-      expect(fresh.labels).toEqual(['Sửa', 'Ngừng', 'Xóa']);
+      expect(fresh.labels).toEqual(['Sửa', 'Tạm ngưng', 'Xóa']);
       await page.keyboard.press('Escape');
 
       await page.getByRole('main').getByRole('button', { name: 'Thêm đơn vị tính' }).click();
@@ -92,9 +92,9 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
 
       expect(await memberOtherItemUnits(browser, info, sub, name)).toBe(1);
 
-      await (await menuItems(page, name)).menu.getByRole('menuitem', { name: 'Ngừng' }).click();
-      await page.getByRole('dialog', { name: `Ngừng đơn vị “${name}”?` }).getByRole('button', { name: 'Ngừng', exact: true }).click();
-      await expect(rowOf(page, name).getByText('Đã ngừng', { exact: true })).toBeVisible();
+      await (await menuItems(page, name)).menu.getByRole('menuitem', { name: 'Tạm ngưng' }).click();
+      await page.getByRole('dialog', { name: `Tạm ngưng đơn vị “${name}”?` }).getByRole('button', { name: 'Tạm ngưng', exact: true }).click();
+      await expect(rowOf(page, name).getByText('Tạm ngưng', { exact: true })).toBeVisible();
       expect((await menuItems(page, name)).labels).toEqual(['Sửa', 'Dùng lại', 'Xóa']);
       await page.keyboard.press('Escape');
       await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);

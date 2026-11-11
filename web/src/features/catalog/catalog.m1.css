@@ -119,3 +119,6 @@
 [data-shell='admin'] .ct-switch-row { display: flex; align-items: center; gap: var(--s-2); min-height: var(--hit); }
 [data-shell='admin'] .ct-foot-left { display: flex; align-items: center; gap: var(--s-2); }
 [data-shell='admin'] .ct-bulk__hint { color: var(--c-muted); font: var(--t-cap); }
+@media (min-width: 768px) {
+  [data-shell='admin'] .ct-switch-row .switch { white-space: nowrap; }
+}

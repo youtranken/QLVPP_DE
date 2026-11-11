@@ -97,7 +97,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
     }
   });
 
-  test('Nhóm 1 · mục 8: Tạm ngưng nhóm báo số món sẽ ẩn, tên gạch + "Đã ngừng"; ở Sản phẩm nhóm tự thu gọn, món có nhãn "Tạm ngưng"; Dùng lại nhóm bật lại', async ({ page, request }, info) => {
+  test('Nhóm 1 · mục 8: Tạm ngưng nhóm báo số món sẽ ẩn, tên gạch + "Tạm ngưng"; ở Sản phẩm nhóm tự thu gọn, món có nhãn "Tạm ngưng"; Dùng lại nhóm bật lại', async ({ page, request }, info) => {
     const stamp = `${Date.now()}-${info.project.name}`;
     const category = `PW nhóm ${stamp} ngừng`;
     const names = [`PW món ${stamp} 1`, `PW món ${stamp} 2`];
@@ -118,7 +118,7 @@ test.describe('E9-S5 Nhóm món M1 (dev-identity admin)', () => {
       await expect(confirm.getByText('2 món sẽ ẩn với nhân viên. Dùng lại nhóm chỉ hiện lại những món này; món đã ngừng riêng vẫn ngừng.')).toBeVisible();
       await shot(page, info, 'categories-pause-confirm', false);
       await confirm.getByRole('button', { name: 'Ngừng nhóm' }).click();
-      await expect(catRow.getByText('Đã ngừng', { exact: true })).toBeVisible();
+      await expect(catRow.getByText('Tạm ngưng', { exact: true })).toBeVisible();
       expect(await catRow.locator('.cg-name--stopped').evaluate((el) => getComputedStyle(el).textDecorationLine)).toContain('line-through');
       await expect(page.getByRole('status').filter({ hasText: `Đã tạm ngưng nhóm ${category}` }).getByRole('button', { name: 'Hoàn tác' })).toBeVisible();
       await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);

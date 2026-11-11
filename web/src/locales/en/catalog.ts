@@ -145,6 +145,9 @@ const catalog: Messages<typeof vi> = {
       saved: 'Saved {{name}}',
     },
     categories: {
+      search: 'Search groups (accents optional)',
+      shown: 'Showing {{shown}}/{{total}} groups',
+      noMatch: 'No group matches',
       description: 'Product groups and units. Group order is the order staff see when they register.',
       add: 'Add category',
       addTitle: 'Add category',
@@ -167,7 +170,6 @@ const catalog: Messages<typeof vi> = {
       reactivateFor: 'Use group again {{name}}',
       paused: 'Paused group {{name}}',
       edit: 'Edit',
-      inactive: 'Retired',
       deactivate: 'Retire category',
       reactivate: 'Use again',
       deactivateTitle: 'Retire “{{name}}”?',
