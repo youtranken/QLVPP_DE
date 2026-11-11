@@ -41,7 +41,7 @@ Tầng test theo loại code:
 - [ ] Mọi giới hạn mà task chạm tới có test biên hai phía theo phễu (TDD mục 6); report liệt kê bảng biên → tầng test.
 - [ ] `npm test`, `npm run test:e2e`, `npm run test:db` (api) và `npm test`, `npm run lint`, `npm run build` (web) đều pass, output sạch (không warning lạ, không `console.error` rơi vãi).
 - [ ] Luật nghiệp vụ ép ở server/CSDL, UI chỉ hỗ trợ; không có luật chỉ tồn tại trên FE.
-- [ ] Mọi chuỗi UI qua i18n (`vi` + `en`), không chuỗi cứng trong component; câu chữ theo `_SPEC.md` mục "Câu chữ" (gọi admin là **Hành chính**, "Chép lại danh sách tháng X", "Lưu phiếu", "Quay lại sửa").
+- [ ] Mọi chuỗi UI qua i18n (`vi` + `en`), không chuỗi cứng trong component; câu chữ theo `_SPEC.md` mục "Câu chữ" (gọi admin là **Adm D&E** thay cho "Hành chính", gọi bên cung cấp là **Nhà cung cấp** / **NCC** thay cho "ADM" — chủ dự án chốt 11/11/2026; "Chép lại danh sách tháng X", "Lưu phiếu", "Quay lại sửa").
 - [ ] Mutate có audit (`AuditWriterService`) với before/after khi sửa dữ liệu; GET không audit.
 - [ ] Thao tác thay đổi dữ liệu là idempotent hoặc có `expected_*`/`ON CONFLICT` như architecture §6 quy định.
 - [ ] Không lộ secret, không log `code/state/login_hint/logout_token`, không log body webhook.
