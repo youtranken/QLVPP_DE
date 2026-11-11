@@ -7,6 +7,8 @@ export const ICON_PATHS = {
   check: "<path d=\"M20 6 9 17l-5-5\"/>",
   chev: "<path d=\"m6 9 6 6 6-6\"/>",
   chevup: "<path d=\"m18 15-6-6-6 6\"/>",
+  chevl: "<path d=\"m15 18-6-6 6-6\"/>",
+  chevr: "<path d=\"m9 18 6-6-6-6\"/>",
   clipboard: "<rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\"/><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"/><path d=\"M12 11h4M12 16h4M8 11h.01M8 16h.01\"/>",
   clock: "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 6v6l4 2\"/>",
   copy: "<rect x=\"8\" y=\"8\" width=\"14\" height=\"14\" rx=\"2\"/><path d=\"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2\"/>",

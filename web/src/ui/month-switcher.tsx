@@ -1,4 +1,5 @@
 import { shiftYm } from '@/lib/ym';
+import { Icon } from '@/ui/icon';
 
 interface MonthSwitcherProps {
   value: string;
@@ -24,7 +25,7 @@ export function MonthSwitcher({ value, onChange, formatLabel, labels, min, max, 
         disabled={min !== undefined && value <= min}
         onClick={() => onChange(shiftYm(value, -1))}
       >
-        ‹
+        <Icon name="chevl" size={18} />
       </button>
       <span aria-live="polite">{formatLabel(value)}</span>
       <button
@@ -33,7 +34,7 @@ export function MonthSwitcher({ value, onChange, formatLabel, labels, min, max, 
         disabled={max !== undefined && value >= max}
         onClick={() => onChange(shiftYm(value, 1))}
       >
-        ›
+        <Icon name="chevr" size={18} />
       </button>
       {beyond && (
         <button

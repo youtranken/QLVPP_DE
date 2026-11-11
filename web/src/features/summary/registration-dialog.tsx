@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { vnSavedStamp } from '@/lib/format-time';
 import { langOf, lockPhrase } from '@/lib/period-text';
 import { Dialog, DialogCloseButton, DialogTitle } from '@/ui/dialog';
+import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
 import { Loading, LoadError } from '@/ui/load-state';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
@@ -74,10 +75,10 @@ export function RegistrationDialog({ ym, deadline, rows, index, onIndex, onClose
           <small aria-live="polite">{view.data ? t('summary.open.dialogSaved', { time: vnSavedStamp(row.saved_at ?? view.data.saved_at), kinds: lines.length, units }) : null}</small>
         </div>
         <button type="button" ref={prevRef} className="rg-step" aria-label={t('summary.open.prev')} disabled={index === 0} onClick={() => step(index - 1)}>
-          ‹
+          <Icon name="chevl" size={18} />
         </button>
         <button type="button" ref={nextRef} className="rg-step" aria-label={t('summary.open.next')} disabled={index >= rows.length - 1} onClick={() => step(index + 1)}>
-          ›
+          <Icon name="chevr" size={18} />
         </button>
         <DialogCloseButton />
       </div>

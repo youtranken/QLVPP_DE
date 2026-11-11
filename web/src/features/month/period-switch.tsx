@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { lockedYm, shiftYm } from '@/lib/ym';
 import { Segmented } from '@/ui/segmented';
+import { Icon } from '@/ui/icon';
 
 interface Props {
   ym: string;
@@ -25,7 +26,7 @@ export function PeriodSwitch({ ym, openYm, earliestYm, onChange }: Props) {
   return (
     <div className="mk-switch">
       <button type="button" className="btn btn--ghost btn--sm" disabled={atStart} onClick={() => onChange(earlier)}>
-        <span aria-hidden="true">‹ </span>
+        <Icon name="chevl" size={16} />
         {t('month.period.previous')}
       </button>
       <Segmented label={t('month.period.label')} value={ym} options={options} onChange={onChange} />

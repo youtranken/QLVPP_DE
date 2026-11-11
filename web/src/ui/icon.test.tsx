@@ -27,9 +27,9 @@ describe('Icon nét', () => {
 });
 
 describe('IconSprite', () => {
-  it('có đủ 45 symbol u-* và ẩn', () => {
+  it('có đủ 47 symbol u-* và ẩn', () => {
     const { container } = render(<IconSprite />);
     expect(container.querySelector('svg')!.style.display).toBe('none');
-    expect(container.querySelectorAll('symbol[id^="u-"]')).toHaveLength(45);
+    expect(container.querySelectorAll('symbol[id^="u-"]')).toHaveLength(47);
   });
 });
