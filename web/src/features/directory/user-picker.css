@@ -10,3 +10,11 @@
 .user-picker-list small { color: var(--ink-3); font-size: 12.5px; }
 .user-picker-empty { padding: 10px; color: var(--ink-3); }
 .user-picker-chosen { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 6px 6px 10px; border: 1px solid var(--brand); border-radius: 6px; background: var(--brand-soft); font-weight: 500; }
+.user-picker-field { position: relative; display: grid; gap: 6px; }
+/* Máy tính: kết quả nổi dưới ô tìm, không đẩy các ô sau xuống; điện thoại: nằm trong luồng vì danh sách nổi bị cắt trong hộp */
+@media (min-width: 768px) {
+  .user-picker-field .user-picker-list { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px); max-height: 320px; background: var(--c-surface, var(--card)); box-shadow: var(--e-2, 0 8px 24px rgb(0 0 0 / .12)); }
+}
+@media (max-width: 767px) {
+  .user-picker-field .user-picker-list { max-height: 50dvh; }
+}
