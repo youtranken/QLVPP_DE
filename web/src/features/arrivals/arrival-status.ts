@@ -36,11 +36,10 @@ export function statusCell(r: ArrivalRow, qty: number): StatusCell {
 
 // Nhóm không nhận đủ được: có món NCC hết hàng hoặc ô gõ ít hơn phần còn thiếu → nút ghi "Nhận hàng"
 export const partialReceive = (rows: ArrivalRow[], qtyOf: (r: ArrivalRow) => number): boolean =>
-  rows.some((r) => !r.added && (r.adm_out || (!isReceivedFull(r) && qtyOf(r) < r.ordered - r.received)));
+  rows.some((r) => r.adm_out || (!isReceivedFull(r) && qtyOf(r) < r.ordered - r.received));
 
 export function groupCounts(rows: ArrivalRow[]): { done: number; total: number } {
-  const counted = rows.filter((r) => !r.added);
-  return { total: counted.length, done: counted.filter((r) => FINISHED.has(savedState(r).state)).length };
+  return { total: rows.length, done: rows.filter((r) => FINISHED.has(savedState(r).state)).length };
 }
 
 // Cột "Còn thiếu" chỉ khi có dòng nhập thấp hơn phần còn lại; ADM hết hàng không tính thiếu

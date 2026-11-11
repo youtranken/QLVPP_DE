@@ -57,12 +57,13 @@ describe('Nhận hàng — nhãn "Nhận đủ hàng" / "Nhận hàng"', () => {
     expect(groupBtn('Kẹp & dán')).toHaveAccessibleName('Nhận đủ hàng: Kẹp & dán');
   });
 
-  it('ô thêm món: placeholder "+ Thêm món vào đợt nhận này", nhãn khác ô tìm', async () => {
+  it('không còn ô "+ Thêm món vào đợt nhận này"; dòng đếm "Đang hiện x/y món" ở cuối hàng tìm', async () => {
     stub();
     await open();
     await screen.findByDisplayValue('6');
-    const combo = screen.getByRole('combobox', { name: 'Tìm món để thêm' });
-    expect(combo).toHaveAttribute('placeholder', '+ Thêm món vào đợt nhận này');
-    expect(screen.getByRole('searchbox', { name: 'Tìm món (không cần dấu)' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).toBeNull();
+    expect(screen.queryByText(/Thêm món vào đợt nhận này/)).toBeNull();
+    const search = screen.getByRole('searchbox', { name: 'Tìm món (không cần dấu)' });
+    expect(screen.getByText(/^Đang hiện \d+\/\d+ món$/).closest('.ar-bar__row')).toBe(search.closest('.ar-bar__row'));
   });
 });

@@ -29,7 +29,6 @@ const warnings: Messages<typeof vi> = {
     W13surplus: '{{n}} more than the printed order — into stock',
     W14row: 'Reduced {{n}} after sending to supplier — the extra goes into stock',
     W14head: '{{x}} items reduced after sending to supplier — the extra will go into stock',
-    W16: 'This item is not in the printed supplier order — goes straight into stock',
     W18: 'Add {{x}} items, {{y}} units into stock per the printed order of {{time}}.',
     W19row: 'Stock {{s}} is not enough for {{k}} people waiting for {{q}} — short {{short}}',
     W19head: '{{n}} items do not have enough stock for people waiting — wait for the next batch',

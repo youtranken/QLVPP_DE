@@ -1,5 +1,4 @@
 import { matches } from '@/lib/search';
-import type { AdminItem } from '@/features/catalog/catalog.api';
 import type { ArrivalsPlan } from './arrivals.api';
 
 export const ARRIVAL_QTY_MAX = 99999;
@@ -23,8 +22,6 @@ export interface ArrivalRow {
   adm_out: boolean;
   adm_out_final: boolean;
   reduced: number;
-  // Thêm bằng "Thêm món khác": không có trong bản in
-  added: boolean;
 }
 
 export interface ArrivalSection {
@@ -35,8 +32,8 @@ export interface ArrivalSection {
   all: ArrivalRow[];
 }
 
-export function toArrivalRows(plan: ArrivalsPlan, added: AdminItem[]): ArrivalRow[] {
-  const rows: ArrivalRow[] = plan.rows.map((r) => ({
+export function toArrivalRows(plan: ArrivalsPlan): ArrivalRow[] {
+  return plan.rows.map((r) => ({
     item_id: r.item_id,
     code: r.code,
     name: r.name,
@@ -53,39 +50,13 @@ export function toArrivalRows(plan: ArrivalsPlan, added: AdminItem[]): ArrivalRo
     adm_out: r.adm_out,
     adm_out_final: r.adm_out_final,
     reduced: r.reduced_after_snapshot,
-    added: false,
   }));
-  const known = new Set(rows.map((r) => r.item_id));
-  for (const i of added) {
-    if (known.has(i.id)) continue;
-    known.add(i.id);
-    rows.push({
-      item_id: i.id,
-      code: i.code,
-      name: i.name,
-      name_en: i.name_en,
-      unit: i.unit,
-      category_id: i.category_id,
-      image_file_id: i.image_file_id,
-      ordered: 0,
-      received: 0,
-      remaining: 0,
-      stock: i.stock_qty,
-      usable: true,
-      inactive_reason: null,
-      adm_out: false,
-      adm_out_final: false,
-      reduced: 0,
-      added: true,
-    });
-  }
-  return rows;
 }
 
 // Đã nhận đủ theo Đề nghị mua: khóa ô ở UI (sai thì chỉnh ở Tủ / Kho); server vẫn cho nhận dư
-export const isReceivedFull = (r: ArrivalRow) => !r.added && r.ordered > 0 && r.received >= r.ordered;
+export const isReceivedFull = (r: ArrivalRow) => r.ordered > 0 && r.received >= r.ordered;
 
-export const prefillOf = (r: ArrivalRow) => (r.adm_out || r.added || isReceivedFull(r) ? 0 : r.remaining);
+export const prefillOf = (r: ArrivalRow) => (r.adm_out || isReceivedFull(r) ? 0 : r.remaining);
 
 // Dòng còn nhận được: không ADM hết hàng, chưa nhận đủ
 export const isReceivable = (r: ArrivalRow) => !r.adm_out && !isReceivedFull(r);

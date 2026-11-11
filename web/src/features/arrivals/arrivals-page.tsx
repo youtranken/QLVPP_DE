@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { groupCounts as countByGroup } from '@/lib/group-counts';
 import { useUrlPatch } from '@/lib/use-url-patch';
 import { lockedYm } from '@/lib/ym';
+import { formatVnStamp } from '@/lib/format-time';
 import { Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { useToast } from '@/ui/toast-context';
-import { categoryLabel, useAdminItems, useAllCategories } from '@/features/catalog/catalog.api';
+import { categoryLabel, useAllCategories } from '@/features/catalog/catalog.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import { PeriodLockGate } from '@/features/summary/period-lock-gate';
@@ -62,25 +63,37 @@ function NoticeLine({ notice, nameOf }: { notice: Notice; nameOf: (id: string) =
   );
 }
 
+function NotSentGate({ ym, noOrderAt }: { ym: string; noOrderAt: string | null }) {
+  const { t } = useTranslation();
+  const month = monthOf(ym);
+  return (
+    <section role="status" className="ar-card ar-gate">
+      <p>{noOrderAt ? t('arrivals.gate.noOrder', { month, time: formatVnStamp(noOrderAt) }) : t('arrivals.gate.notSent', { month })}</p>
+      <Link className="btn btn--primary" to="/admin/reports">
+        {t('arrivals.gate.toReports')}
+      </Link>
+    </section>
+  );
+}
+
 function ArrivalsBoard({ ym }: { ym: string }) {
   const { t, i18n } = useTranslation();
   const fmt = useRequestFormat();
   const toast = useToast();
   const planQ = useArrivalsPlan(ym);
-  const items = useAdminItems();
   const cats = useAllCategories();
   const [params, patchUrl] = useUrlPatch();
   const draft = useArrivalsDraft();
   const saver = useArrivalsSave(ym);
   const adm = useAdmOutToggle(ym);
-  const [added, setAdded] = useState<string[]>([]);
   const [note, setNote] = useState('');
   // Nhóm đã tick cho nút "Nhận đủ hàng / Nhận hàng (n nhóm)" trên thanh
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
 
-  if (planQ.isError || items.isError || cats.isError) return <LoadError onRetry={() => void Promise.all([planQ.refetch(), items.refetch(), cats.refetch()])} />;
-  if (!planQ.data || !items.data || !cats.data) return <Loading />;
+  if (planQ.isError || cats.isError) return <LoadError onRetry={() => void Promise.all([planQ.refetch(), cats.refetch()])} />;
+  if (!planQ.data || !cats.data) return <Loading />;
   const plan = planQ.data;
+  const snapshot = plan.snapshot;
   const filter = parseArrivalFilter(params);
   const catById = new Map(cats.data.map((c) => [c.id, c]));
   const known = new Set(catById.keys());
@@ -89,10 +102,10 @@ function ArrivalsBoard({ ym }: { ym: string }) {
     return c ? categoryLabel(c, i18n.language) : t('arrivals.group.none');
   };
 
-  const rows = toArrivalRows(plan, added.flatMap((id) => items.data.filter((i) => i.id === id)));
+  const rows = toArrivalRows(plan);
   const done = isAllArrived(plan);
-  // Đã về đủ: chỉ còn bày hàng thêm tay
-  const tableRows = done ? rows.filter((r) => r.added) : rows;
+  // Đã nhận xong: không bày bảng số 0, chỉ còn khối tổng kết
+  const tableRows = done ? [] : rows;
   const visible = applyArrivalFilter(tableRows, filter, known);
   const counts = countByGroup(rows, (r) => groupOf(r, known), NO_GROUP);
   const groups = [...counts.keys()].map((id) => ({ id, label: labelOf(id) }));
@@ -107,20 +120,14 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   const pickedIds = new Set([...picked].filter((id) => rowsOfGroups(new Set([id])).some(isReceivable)));
   const pickedRows = rowsOfGroups(pickedIds);
   const toSend = receivableLines(pickedRows, draft.qtyOf);
-  const shown = new Set(rows.map((r) => r.item_id));
-  const candidates = items.data
-    .filter((i) => i.usable && !shown.has(i.id))
-    .map((i) => ({ id: i.id, label: fmt.name(i), group: labelOf(groupOf(i, known)), search: [i.name, i.name_en, i.code].filter(Boolean).join(' ') }));
 
   // Lưu ngay, không hỏi xác nhận: xóa số đã gõ của các nhóm vừa lưu (ô gõ 0 về lại phần còn thiếu cho đợt sau),
-  // chỉ bỏ món thêm của đúng các dòng vừa gửi (món thêm chưa gõ số vẫn ở lại), bỏ tick các nhóm vừa lưu;
+  // bỏ tick các nhóm vừa lưu;
   // ghi chú đã đi theo đợt vừa lưu nên xóa để không gắn lại vào đợt sau
   const receive = (groupIds: ReadonlySet<string>, lines: { row: ArrivalRow; qty: number }[]) =>
     saver.save(lines, note, plan.snapshot?.id ?? null, () => {
-      const saved = new Set(lines.map((l) => l.row.item_id));
       draft.clearMany(rowsOfGroups(groupIds).map((r) => r.item_id));
       setNote('');
-      setAdded((prev) => prev.filter((id) => !saved.has(id)));
       setPicked((prev) => new Set([...prev].filter((id) => !groupIds.has(id))));
     });
   const pickOf = (id: string) => {
@@ -154,11 +161,23 @@ function ArrivalsBoard({ ym }: { ym: string }) {
     return r ? fmt.name(r) : id;
   };
 
+  // Chưa gửi NCC (hoặc tháng không cần đề nghị): không có đơn nào để đối chiếu hàng về → không cho nhận.
+  // Về bù kỳ trước vẫn nhận được vì kỳ đó đã gửi
+  if (!snapshot) {
+    return (
+      <>
+        <NoticeLine notice={saver.notice} nameOf={nameOf} />
+        <NotSentGate ym={ym} noOrderAt={plan.no_order?.at ?? null} />
+        <ArrivalsMakeup groups={plan.makeup} onDone={afterSide} />
+      </>
+    );
+  }
+
   return (
     <>
       <NoticeLine notice={saver.notice} nameOf={nameOf} />
       <ArrivalsToolbar
-        plan={plan}
+        snapshot={snapshot}
         filter={filter}
         groups={groups}
         counts={counts}
@@ -168,10 +187,8 @@ function ArrivalsBoard({ ym }: { ym: string }) {
         reducedCount={rows.filter((r) => r.reduced > 0).length}
         batch={{ groups: pickedIds.size, items: toSend.length, partial: partialReceive(pickedRows, draft.qtyOf) }}
         saveDisabled={hasError(pickedRows) || toSend.length === 0 || saver.pending}
-        candidates={candidates}
         onFilter={(patch) => patchUrl(patch, true)}
         onSave={() => void receive(pickedIds, toSend)}
-        onAdd={(id) => setAdded((prev) => [...prev, id])}
       />
       {done && <ArrivalsDone plan={plan} ym={ym} admBusy={adm.busy} onToggleAdm={(key, on) => void toggleAdm(key, on)} />}
       {(!done || tableRows.length > 0) && (

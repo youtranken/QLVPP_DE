@@ -2,15 +2,16 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatVnStamp } from '@/lib/format-time';
 import { GroupChips, ALL_GROUPS, type ChipGroup } from '@/ui/filter/group-chips';
-import { GroupedCombobox, type ComboOption } from '@/ui/filter/grouped-combobox';
 import { SearchBox } from '@/ui/filter/search-box';
+import { ListMeta } from '@/ui/list-meta';
 import { Switch } from '@/ui/switch';
 import { printPath } from '@/features/reports/reports.api';
 import type { ArrivalFilter } from './arrival-rows';
 import type { ArrivalsPlan } from './arrivals.api';
 
 interface Props {
-  plan: ArrivalsPlan;
+  // Bảng nhận chỉ hiện khi kỳ đã gửi NCC: luôn có bản in làm nguồn
+  snapshot: NonNullable<ArrivalsPlan['snapshot']>;
   filter: ArrivalFilter;
   groups: ChipGroup[];
   counts: ReadonlyMap<string, number>;
@@ -21,25 +22,17 @@ interface Props {
   // partial: có nhóm đã tick không nhận đủ được → nút ghi "Nhận hàng"
   batch: { groups: number; items: number; partial: boolean };
   saveDisabled: boolean;
-  candidates: ComboOption[];
   onFilter: (patch: Record<string, string | null>) => void;
   onSave: () => void;
-  onAdd: (id: string) => void;
 }
 
-export function ArrivalsToolbar({ plan, filter, groups, counts, total, shown, shortCount, reducedCount, batch, saveDisabled, candidates, onFilter, onSave, onAdd }: Props) {
+export function ArrivalsToolbar({ snapshot, filter, groups, counts, total, shown, shortCount, reducedCount, batch, saveDisabled, onFilter, onSave }: Props) {
   const { t } = useTranslation();
   return (
     <div className="ar-bar">
       <div className="ar-bar__row">
         <div className="ar-source">
-          {plan.snapshot ? (
-            <Link to={printPath(plan.snapshot.id)}>{t('arrivals.source', { time: formatVnStamp(plan.snapshot.created_at) })}</Link>
-          ) : plan.no_order ? (
-            <p className="ar-note-line">{t('arrivals.noOrder', { time: formatVnStamp(plan.no_order.at) })}</p>
-          ) : (
-            <p className="ar-note-line">{t('arrivals.noSnapshot')}</p>
-          )}
+          <Link to={printPath(snapshot.id)}>{t('arrivals.source', { time: formatVnStamp(snapshot.created_at) })}</Link>
           {reducedCount > 0 && <p className="ar-warn-text">{t('warn.W14head', { x: reducedCount })}</p>}
         </div>
         <div className="ar-save">
@@ -52,7 +45,11 @@ export function ArrivalsToolbar({ plan, filter, groups, counts, total, shown, sh
       <div className="ar-bar__row">
         <SearchBox className="flt-search" label={t('arrivals.filter.search')} placeholder={t('arrivals.filter.search')} value={filter.q} onChange={(q) => onFilter({ q: q || null })} />
         <Switch checked={filter.short} text={t('arrivals.filter.short', { n: shortCount })} onChange={(on) => onFilter({ short: on ? '1' : null })} />
-        <GroupedCombobox options={candidates} onPick={onAdd} label={t('arrivals.add.search')} placeholder={t('arrivals.add.placeholder')} noMatch={t('arrivals.add.noMatch')} />
+        <ListMeta>
+          <p className="ar-count" aria-live="polite">
+            {t('arrivals.filter.count', { x: shown, y: total })}
+          </p>
+        </ListMeta>
       </div>
       <GroupChips
         className="flt-chips"
@@ -66,9 +63,6 @@ export function ArrivalsToolbar({ plan, filter, groups, counts, total, shown, sh
         value={filter.g ?? ALL_GROUPS}
         onChange={(g) => onFilter({ g: g === ALL_GROUPS ? null : g })}
       />
-      <p className="ar-count" aria-live="polite">
-        {t('arrivals.filter.count', { x: shown, y: total })}
-      </p>
     </div>
   );
 }

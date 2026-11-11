@@ -26,7 +26,6 @@ const warnings = {
     W13surplus: 'Dư {{n}} so với bản in — vào kho',
     W14row: 'Đã giảm {{n}} sau khi gửi NCC — phần dư vào tủ',
     W14head: '{{x}} món đã giảm sau khi gửi NCC — phần dư sẽ vào tủ',
-    W16: 'Món này không có trong bản in gửi NCC — nhập thẳng vào tủ',
     W18: 'Nhập {{x}} món, {{y}} đơn vị vào tủ theo bản in {{time}}.',
     W19row: 'Tủ {{s}} không đủ cho {{k}} người đang chờ {{q}} — thiếu {{short}}',
     W19head: '{{n}} món chưa đủ tủ cho người đang chờ — chờ đợt hàng sau',

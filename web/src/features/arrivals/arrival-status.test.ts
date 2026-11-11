@@ -19,7 +19,6 @@ const row = (over: Partial<ArrivalRow> = {}): ArrivalRow => ({
   adm_out: false,
   adm_out_final: false,
   reduced: 0,
-  added: false,
   ...over,
 });
 
@@ -29,7 +28,7 @@ describe('trạng thái đã lưu', () => {
     expect(savedState(row({ ordered: 5, received: 5 }))).toEqual({ state: 'done', n: 0 });
     expect(savedState(row({ ordered: 8, received: 10 }))).toEqual({ state: 'over', n: 2 });
     expect(savedState(row({ adm_out: true }))).toEqual({ state: 'adm_out', n: 0 });
-    expect(savedState(row({ ordered: 0, received: 0, added: true }))).toEqual({ state: 'none', n: 0 });
+    expect(savedState(row({ ordered: 0, received: 0 }))).toEqual({ state: 'none', n: 0 });
   });
 });
 
@@ -69,9 +68,9 @@ describe('partialReceive — nút "Nhận hàng" thay "Nhận đủ hàng"', () 
     expect(partialReceive(rows, (r) => (r.item_id === 'b' ? 0 : 5))).toBe(true);
   });
 
-  it('có món NCC hết hàng → true; dòng đã nhận đủ và món thêm tay không tính', () => {
+  it('có món NCC hết hàng → true; dòng đã nhận đủ không tính', () => {
     expect(partialReceive([row({ adm_out: true })], () => 0)).toBe(true);
-    expect(partialReceive([row({ ordered: 5, received: 5 }), row({ item_id: 'x', ordered: 0, added: true })], () => 0)).toBe(false);
+    expect(partialReceive([row({ ordered: 5, received: 5 })], () => 0)).toBe(false);
   });
 });
 
@@ -80,10 +79,9 @@ describe('groupCounts', () => {
     row({ item_id: '1', ordered: 3, received: 3 }),
     row({ item_id: '2', ordered: 2, received: 2 }),
     row({ item_id: '3', ordered: 5, received: 0 }),
-    row({ item_id: 'x', ordered: 0, received: 0, added: true }),
   ];
 
-  it('Kẹp & dán → {done:2,total:3} theo số đã lưu (không tính hàng thêm tay, không đếm "sau lưu")', () => {
+  it('Kẹp & dán → {done:2,total:3} theo số đã lưu (không đếm "sau lưu")', () => {
     expect(groupCounts(kep)).toEqual({ done: 2, total: 3 });
   });
 

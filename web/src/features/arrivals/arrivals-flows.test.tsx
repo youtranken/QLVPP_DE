@@ -87,17 +87,35 @@ describe('Trạng thái "đã về đủ"', () => {
     { at: '2026-11-02T03:00:00.000Z', actor_name: 'Lê Bình', items: 2, units: 14, note: null },
   ];
 
+  it('mọi món về đủ, không món NCC hết hàng → "đã về đủ"', async () => {
+    stub({ plan: plan([planRow({ received: 10, remaining: 0 }), planRow({ item_id: 'b', name: 'Kẹp', received: 10, remaining: 0 })], { batches }) });
+    await open();
+    expect(await screen.findByText('Hàng kỳ tháng 10 đã về đủ — 2 món, 20 đơn vị (nhập lần cuối 10:30 03/11).')).toBeInTheDocument();
+  });
+
+  it('nhận xong nhưng có món NCC hết hàng còn thiếu (cả món ngoài DM) → không ghi "đã về đủ", ghi số món NCC hết hàng', async () => {
+    stub({
+      plan: plan([planRow({ received: 10, remaining: 0 }), planRow({ item_id: 'b', name: 'Kẹp', received: 10, remaining: 0 }), planRow({ item_id: 'x', adm_out: true })], {
+        batches,
+        custom: [customRow({ ordered: 2, received: 0, remaining: 2, adm_out: true })],
+      }),
+    });
+    await open();
+    expect(await screen.findByText('Đã nhận xong kỳ tháng 10 — 2 món, 20 đơn vị · 2 món NCC hết hàng (nhập lần cuối 10:30 03/11).')).toBeInTheDocument();
+    expect(screen.queryByText(/đã về đủ/)).toBeNull();
+  });
+
   it('mọi remaining 0 → khối xong + "Sang Giao hàng →" + danh sách 2 đợt; không bảng số', async () => {
     stub({ plan: plan([planRow({ received: 10, remaining: 0 }), planRow({ item_id: 'b', name: 'Kẹp', received: 10, remaining: 0 }), planRow({ item_id: 'x', adm_out: true })], { batches }) });
     await open();
-    expect(await screen.findByText('Hàng kỳ tháng 10 đã về đủ — 2 món, 20 đơn vị (nhập lần cuối 10:30 03/11).')).toBeInTheDocument();
+    expect(await screen.findByText(/^Đã nhận xong kỳ tháng 10 — 2 món, 20 đơn vị · 1 món NCC hết hàng/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Sang Giao hàng →' })).toHaveAttribute('href', '/admin/delivery');
     const list = screen.getByRole('table', { name: 'Các đợt đã nhập' });
     expect(within(list).getAllByRole('row')).toHaveLength(3);
     expect(list).toHaveTextContent('đợt 2');
     expect(screen.queryByRole('spinbutton', { name: /Nhận đợt này/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Đủ hàng' })).toBeNull();
-    expect(screen.getByRole('combobox', { name: 'Tìm món để thêm' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).toBeNull();
     expect(screen.getByRole('button', { name: 'NCC hết hàng: Bút bi' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText('NCC hết hàng – tủ còn 0')).toBeInTheDocument();
   });

@@ -77,10 +77,13 @@ export function ArrivalsDone({ plan, ym, admBusy, onToggleAdm }: DoneProps) {
   const got = plan.rows.filter((r) => r.received > 0);
   const units = got.reduce((n, r) => n + r.received, 0);
   const last = plan.batches[0]?.at;
+  // "Đã về đủ" chỉ khi không món nào NCC hết hàng mà còn thiếu (món ngoài DM cũng tính)
+  const outShort = [...plan.rows, ...plan.custom].filter((r) => r.adm_out && r.received < r.ordered).length;
+  const vars = { month: monthOf(ym), x: got.length, y: units, out: outShort, time: last ? formatVnStamp(last) : t('common.empty') };
   return (
     <section className="ar-card ar-done">
       <div role="status" className="ar-done__head">
-        <p>{t('arrivals.done.title', { month: monthOf(ym), x: got.length, y: units, time: last ? formatVnStamp(last) : t('common.empty') })}</p>
+        <p>{t(outShort > 0 ? 'arrivals.done.titleOut' : 'arrivals.done.title', vars)}</p>
         <Link className="btn btn--primary" to="/admin/delivery">
           {t('arrivals.done.next')}
         </Link>

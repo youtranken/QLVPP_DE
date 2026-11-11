@@ -68,6 +68,7 @@ const common = {
       PENDING_CUSTOM: 'Danh sách món chờ duyệt vừa thay đổi, xem lại rồi xác nhận.',
       ORDER_NOT_EMPTY: 'Tổng đề nghị ở máy chủ đã lớn hơn 0 — tải lại trang rồi lập phiếu.',
       ALREADY_SENT: 'Kỳ này đã có bản gửi NCC — tải lại trang để xem.',
+      REPORT_NOT_SENT: 'Kỳ này chưa gửi NCC báo cáo — vào Báo cáo & gửi NCC để chốt trước khi nhận hàng.',
       ITEM_ADM_OUT: 'Món này đang đánh "NCC hết hàng" — bỏ đánh dấu trước khi nhập.',
       ADM_OUT_FINAL: 'Các dòng của món này đã giao/hủy xong — không bỏ đánh dấu được nữa.',
       ADM_OUT_NOTHING_OPEN: 'Không còn ai chờ món này trong kỳ.',

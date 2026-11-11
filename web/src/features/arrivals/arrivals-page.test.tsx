@@ -86,20 +86,28 @@ describe('Hàng về — bảng theo bản in', () => {
     for (const n of ['Lưu hàng về', 'Điền đủ cả nhóm', 'Đủ hàng', 'Đặt lại', 'Điền lại số gợi ý', 'Hoàn tác']) expect(screen.queryByRole('button', { name: n })).toBeNull();
   });
 
-  it('chưa có bản chốt: ghi chú số gộp, điền sẵn remaining theo ordered gộp', async () => {
-    stub({ plan: plan([planRow({ item_id: 'i-a', ordered: 10, remaining: 10, stock_qty: 5 })], { snapshot: null }) });
+  it('chưa gửi NCC báo cáo tháng: lời nhắn + lối sang Báo cáo & gửi NCC; không ô nhận, không nút nhận, không thanh lọc', async () => {
+    const makeup = [{ ym: '2026-09', rows: [{ key: 'i-a', item_id: 'i-a', name: 'Bút bi', name_en: null, unit: 'cay', stock_qty: 2, ordered: 7, received: 3, adm_owed: 4 }] }];
+    stub({ plan: plan([planRow({ item_id: 'i-a', ordered: 10, remaining: 10, stock_qty: 5 })], { snapshot: null, makeup }) });
     await open();
-    expect(await screen.findByText('Chưa chốt bản gửi NCC (Xem tổng kết) — số điền sẵn theo tổng đăng ký + nợ tháng trước')).toBeInTheDocument();
-    expect(box('Bút bi')).toHaveValue(10);
+    const gate = await screen.findByText('Chưa gửi NCC báo cáo tháng 10. Vào Báo cáo & gửi NCC để chốt trước khi nhận hàng.');
+    expect(gate.closest('[role="status"]')).not.toBeNull();
+    expect(within(gate.closest('section')!).getByRole('link', { name: 'Báo cáo & gửi NCC' })).toHaveAttribute('href', '/admin/reports');
+    expect(screen.queryByRole('spinbutton', { name: /Nhận đợt này/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Nhận đủ hàng|^Nhận hàng/ })).toBeNull();
+    expect(screen.queryByRole('searchbox')).toBeNull();
+    expect(screen.queryByLabelText('Ghi chú cho đợt này (không bắt buộc)')).toBeNull();
+    // Về bù kỳ trước (kỳ đó đã gửi) vẫn nhận được
+    expect(screen.getByText('Về bù kỳ trước (1)')).toBeInTheDocument();
   });
 
-  it('Tháng này không cần đề nghị NCC: băng "Không có đơn gửi NCC · hh:mm dd/mm", vẫn còn Thêm món khác và Về bù kỳ trước', async () => {
+  it('tháng "Không cần đề nghị": không có hàng kỳ này để nhận — lời nhắn có giờ đánh dấu, không ô nhận; Về bù kỳ trước vẫn còn', async () => {
     const makeup = [{ ym: '2026-09', rows: [{ key: 'i-a', item_id: 'i-a', name: 'Bút bi', name_en: null, unit: 'cay', stock_qty: 2, ordered: 7, received: 3, adm_owed: 4 }] }];
-    stub({ plan: plan([], { snapshot: null, no_order: { at: '2026-11-12T03:00:00.000Z', by_name: 'Hà' }, makeup }) });
+    stub({ plan: plan([planRow({ ordered: 0, remaining: 0 })], { snapshot: null, no_order: { at: '2026-11-12T03:00:00.000Z', by_name: 'Hà' }, makeup }) });
     await open();
-    expect(await screen.findByText('Không có đơn gửi NCC · 10:00 12/11')).toBeInTheDocument();
-    expect(screen.queryByText(/Chưa chốt bản gửi NCC/)).toBeNull();
-    expect(screen.getByRole('combobox', { name: 'Tìm món để thêm' })).toBeInTheDocument();
+    expect(await screen.findByText('Tháng 10 không có đơn gửi NCC (10:00 12/11) — không có hàng kỳ này để nhận.')).toBeInTheDocument();
+    expect(screen.queryByText(/Chưa gửi NCC báo cáo/)).toBeNull();
+    expect(screen.queryByRole('spinbutton', { name: /Nhận đợt này/ })).toBeNull();
     expect(screen.getByText('Về bù kỳ trước (1)')).toBeInTheDocument();
   });
 
@@ -225,23 +233,6 @@ describe('Hàng về — lọc ?q=&g=&short=1', () => {
       { item_id: 'i-a', qty: 5, expected_stock_qty: 2 },
       { item_id: 'i-b', qty: 10, expected_stock_qty: 0 },
     ]);
-  });
-});
-
-describe('Hàng về — Thêm món khác (GroupedCombobox)', () => {
-  it('gõ "kep" → ↓ Enter thêm Kẹp bướm; hàng thêm điền 0 + W16; món ngừng và món đã có không là ứng viên', async () => {
-    stub();
-    await open();
-    await screen.findByDisplayValue('6');
-    const combo = screen.getByRole('combobox', { name: 'Tìm món để thêm' });
-    await userEvent.click(combo);
-    expect(screen.queryByRole('option', { name: 'Món ngừng' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: 'Bút bi' })).not.toBeInTheDocument();
-    await userEvent.type(combo, 'kep');
-    expect(within(screen.getByRole('group', { name: 'Kẹp & dán' })).getByRole('option', { name: 'Kẹp bướm' })).toBeInTheDocument();
-    await userEvent.keyboard('{ArrowDown}{Enter}');
-    expect(box('Kẹp bướm')).toHaveValue(0);
-    expect(screen.getByText('Món này không có trong bản in gửi NCC — nhập thẳng vào tủ')).toBeInTheDocument();
   });
 });
 

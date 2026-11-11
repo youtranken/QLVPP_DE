@@ -71,6 +71,7 @@ const common: Messages<typeof vi> = {
       PENDING_CUSTOM: 'The list of items awaiting review just changed. Check it and confirm again.',
       ORDER_NOT_EMPTY: 'The server order total is now above 0 — reload the page, then prepare the form.',
       ALREADY_SENT: 'This period already has a form sent to the supplier — reload the page to see it.',
+      REPORT_NOT_SENT: 'This month has not been sent to the supplier yet — finalise it in Reports & send to supplier before receiving goods.',
       ITEM_ADM_OUT: 'This item is marked out at supplier — unmark it first.',
       ADM_OUT_FINAL: "All lines for this item are settled — can't unmark.",
       ADM_OUT_NOTHING_OPEN: 'Nobody is waiting for this item this period.',

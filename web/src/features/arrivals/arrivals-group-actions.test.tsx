@@ -64,15 +64,10 @@ describe('Nhận hàng — "Nhận đủ hàng" theo nhóm', () => {
     expect(bodiesOf(f, RECEIPT_URL)[1].lines.map((l: { item_id: string }) => l.item_id)).toContain('k2');
   });
 
-  it('món thêm bằng "Thêm món khác" chưa gõ số không bị bỏ khi nhóm của nó "Nhận đủ hàng"; ghi chú đi theo đợt vừa lưu rồi xóa', async () => {
+  it('ghi chú đi theo đợt vừa lưu rồi xóa', async () => {
     const f = stub();
     await open();
     await screen.findByDisplayValue('6');
-    const combo = screen.getByRole('combobox', { name: 'Tìm món để thêm' });
-    await userEvent.click(combo);
-    await userEvent.type(combo, 'buom');
-    await userEvent.keyboard('{ArrowDown}{Enter}');
-    expect(box('Kẹp bướm')).toHaveValue(0);
     await userEvent.type(screen.getByLabelText('Ghi chú cho đợt này (không bắt buộc)'), 'đợt 1');
     await userEvent.click(groupBtn('Kẹp & dán'));
     await waitFor(() => expect(bodiesOf(f, RECEIPT_URL)).toHaveLength(1));
@@ -80,7 +75,6 @@ describe('Nhận hàng — "Nhận đủ hàng" theo nhóm', () => {
     expect(body.lines.map((l: { item_id: string }) => l.item_id)).toEqual(['i-b']);
     expect(body.note).toBe('đợt 1');
     expect(await screen.findByText('Đã nhập 1 món vào tủ.')).toBeInTheDocument();
-    expect(box('Kẹp bướm')).toHaveValue(0);
     expect(screen.getByLabelText('Ghi chú cho đợt này (không bắt buộc)')).toHaveValue('');
   });
 

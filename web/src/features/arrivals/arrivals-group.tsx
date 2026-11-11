@@ -23,7 +23,6 @@ function RowNotes({ r }: { r: ArrivalRow }) {
   const { t } = useTranslation();
   const notes = [
     r.reduced > 0 && t('warn.W14row', { n: r.reduced }),
-    r.added && t('warn.W16'),
     !r.usable && t('arrivals.inactiveOrdered'),
     r.adm_out && !isReceivedFull(r) && t('arrivals.admOutStock', { s: r.stock }),
   ].filter((n): n is string => Boolean(n));
@@ -100,18 +99,16 @@ function ArrivalRowView({ r, draft, busy, showShort, onToggleAdm }: RowProps) {
               onFocus={selectAll}
               onBlur={() => draft.blur(r.item_id)}
             />
-            {!r.added && (
-              <button
-                type="button"
-                className="ar-adm"
-                aria-pressed={r.adm_out}
-                aria-label={t(r.adm_out_final ? 'arrivals.admOut.finalFor' : 'arrivals.admOut.buttonFor', { name })}
-                disabled={r.adm_out_final || busy}
-                onClick={() => onToggleAdm(r)}
-              >
-                {t(r.adm_out_final ? 'arrivals.admOut.final' : 'arrivals.admOut.button')}
-              </button>
-            )}
+            <button
+              type="button"
+              className="ar-adm"
+              aria-pressed={r.adm_out}
+              aria-label={t(r.adm_out_final ? 'arrivals.admOut.finalFor' : 'arrivals.admOut.buttonFor', { name })}
+              disabled={r.adm_out_final || busy}
+              onClick={() => onToggleAdm(r)}
+            >
+              {t(r.adm_out_final ? 'arrivals.admOut.final' : 'arrivals.admOut.button')}
+            </button>
           </div>
         )}
         {error && (
