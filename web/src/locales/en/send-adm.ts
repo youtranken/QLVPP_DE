@@ -3,7 +3,7 @@ import type { Messages } from '@/locales/messages';
 
 const sendAdm: Messages<typeof vi> = {
   sendAdm: {
-    actions: { print: 'Print for signing', xlsx: 'Export department Excel' },
+    actions: { print: 'Review summary', xlsx: 'Export department Excel' },
     orders: {
       title: 'Quantities to request',
       item: 'Item',
@@ -22,15 +22,15 @@ const sendAdm: Messages<typeof vi> = {
       discard: 'Discard changes',
     },
     noOrder: {
-      action: 'No ADM order needed this month',
-      title: 'No ADM order needed this month?',
-      body: 'Stock already covers everyone who requested. The Send to ADM and Arrivals steps will count as done; you can still make an order later.',
+      action: 'No supplier order needed this month',
+      title: 'No supplier order needed this month?',
+      body: 'Stock already covers everyone who requested. The Send to supplier and Receiving steps will count as done; you can still make an order later.',
       back: 'Back',
       ok: 'Confirm',
       failed: 'Could not save, try again later.',
     },
     confirm: {
-      title: 'Save the ADM order?',
+      title: 'Save the supplier order?',
       replaceTitle: 'This replaces the copy printed at {{time}}',
       changes: 'Changed from the copy of {{time}}:',
       change: '{{name}} {{x}} → {{y}}',

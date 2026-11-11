@@ -116,18 +116,18 @@ describe('UsersPage B10', () => {
     expect(screen.getByText('Hiện 1 / 3 người')).toBeInTheDocument();
   });
 
-  it('bảng: avatar chữ đầu, cột Nhóm, tag Hành chính, trạng thái, "Chưa đăng nhập"; không có badge "Mới"', async () => {
+  it('bảng: avatar chữ đầu, cột Nhóm, tag Adm D&E, trạng thái, "Chưa đăng nhập"; không có badge "Mới"', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     const an = screen.getByText('Phạm Minh Đức').closest('tr')!;
     expect(within(an).getByText('Phòng Công trình')).toBeInTheDocument();
     expect(within(an).getByText('QS')).toBeInTheDocument();
-    expect(within(an).getByText('Hành chính')).toBeInTheDocument();
+    expect(within(an).getByText('Adm D&E')).toBeInTheDocument();
     expect(within(an).getByText('Đang dùng')).toBeInTheDocument();
     expect(within(an).getByText('09:30 27/10/2026')).toBeInTheDocument();
     const binh = screen.getByText('Lê Thị Bình').closest('tr')!;
     expect(within(binh).getByText('Đã khóa')).toBeInTheDocument();
-    expect(within(binh).queryByText('Hành chính')).toBeNull();
+    expect(within(binh).queryByText('Adm D&E')).toBeNull();
     expect(within(binh).getByText('Chưa đăng nhập')).toBeInTheDocument();
     expect(screen.queryByText('Mới')).toBeNull();
   });
@@ -158,11 +158,11 @@ describe('UsersPage B10', () => {
     expect(cells('Trần Chi')[col]).toHaveTextContent('—');
   });
 
-  it('người role admin có tag Hành chính, người member thì không', async () => {
+  it('người role admin có tag Adm D&E, người member thì không', async () => {
     stubUsers([AN, CHI]);
     await openUsers();
-    expect(within(screen.getByText('Phạm Minh Đức').closest('tr')!).getByText('Hành chính')).toBeInTheDocument();
-    expect(within(screen.getByText('Trần Chi').closest('tr')!).queryByText('Hành chính')).toBeNull();
+    expect(within(screen.getByText('Phạm Minh Đức').closest('tr')!).getByText('Adm D&E')).toBeInTheDocument();
+    expect(within(screen.getByText('Trần Chi').closest('tr')!).queryByText('Adm D&E')).toBeNull();
   });
 
   it('lọc Mất quyền chỉ còn người no_access, đếm đúng ở thống kê; no_access không tính vào Đang dùng', async () => {

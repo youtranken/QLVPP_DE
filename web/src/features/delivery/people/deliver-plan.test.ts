@@ -84,7 +84,7 @@ describe('dialogRows + limitsOf — trần trong hộp', () => {
     if (s === 5) expect(limitsOf(rows, { d: 1 }).c.cap).toBe(3);
   });
 
-  it('dòng chờ xem → nhóm không giao (review); tủ 0 → không giao (stock); dòng ADM hết hàng → nhóm adm', () => {
+  it('dòng chờ xem → nhóm không giao (review); tủ 0 → không giao (stock); dòng NCC hết hàng → nhóm adm', () => {
     const rows = rowsFor([
       pLine({ line_id: 'r', item_id: null, stock_qty: null, review_status: 'pending' }),
       pLine({ line_id: 's', item_id: 'i-a4', stock_qty: 0 }),
@@ -134,14 +134,14 @@ describe('totalsOf / stepsOf — tổng và thứ tự gửi', () => {
   const cur = pLine({ line_id: 'c', name: 'Bút', qty: 5, remaining_qty: 5, stock_qty: 9 });
   const adm = pLine({ line_id: 'm', item_id: 'i-clip', name: 'Kẹp', qty: 2, remaining_qty: 2, stock_qty: 1, adm_out: true, delivered_qty: 0 });
 
-  it('tổng: giao, còn chưa nhận, nợ, số món ADM hủy', () => {
+  it('tổng: giao, còn chưa nhận, nợ, số món NCC hủy', () => {
     const p = person({ lines: [cur, adm, debt] });
     const rows = dialogRows(p, priorityOf([p]));
     const lim = limitsOf(rows, { c: 3, d: 4 });
     expect(totalsOf(rows, lim)).toEqual({ give: 8, left: 2, debt: 0, cancel: 1 });
   });
 
-  it('thứ tự: nợ trước, kỳ này, rồi hủy ADM (expected_delivered = đã giao + lần này)', () => {
+  it('thứ tự: nợ trước, kỳ này, rồi hủy NCC (expected_delivered = đã giao + lần này)', () => {
     const p = person({ lines: [cur, adm, debt] });
     const rows = dialogRows(p, priorityOf([p]));
     const steps = stepsOf(rows, limitsOf(rows, {}));

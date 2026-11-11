@@ -20,7 +20,7 @@ describe('PageHeader', () => {
     expect(within(screen.getByRole('group', { name: 'Thao tác trang' })).getAllByRole('button')).toHaveLength(1);
   });
   it('mô tả một dòng: khi bị cắt vẫn đọc đủ qua title', () => {
-    const long = 'Số cần mua trong tháng, xuất Excel và in giấy trình ký cho Hành chính.';
+    const long = 'Số cần mua trong tháng, xuất Excel và in giấy trình ký cho Adm D&E.';
     renderWithI18n(<PageHeader crumbs={[]} title="T" description={long} />);
     expect(screen.getByText(long)).toHaveAttribute('title', long);
   });

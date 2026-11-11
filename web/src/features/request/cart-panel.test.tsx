@@ -114,17 +114,17 @@ describe('CartPanel', () => {
     expect(within(within(aside()).getByText('Món 1').closest('li')!).queryByText('Vượt mức tối đa')).toBeNull();
   });
 
-  it('dòng ngoài danh mục: nhãn + trạng thái xem + bấm tên để sửa; dòng Hành chính thêm chỉ đọc không stepper', async () => {
+  it('dòng ngoài danh mục: nhãn + trạng thái xem + bấm tên để sửa; dòng Adm D&E thêm chỉ đọc không stepper', async () => {
     const custom = mk(3, { item_id: null, id: 'L3', review_status: 'pending', custom_name: 'Giấy lạ', label: { ...mk(3).label, name: 'Giấy lạ' } });
     const admin = mk(4, { readonly: true, added_by_admin: true });
     const fns = show({ lines: [custom, admin] });
     expect(within(aside()).getByText('Ngoài danh mục')).toBeInTheDocument();
-    expect(within(aside()).getByText('Chờ Hành chính xem')).toBeInTheDocument();
+    expect(within(aside()).getByText('Sản phẩm ngoài danh mục, chờ phê duyệt')).toBeInTheDocument();
     await userEvent.click(within(aside()).getByRole('button', { name: 'Sửa Giấy lạ' }));
     expect(fns.onEdit).toHaveBeenCalledWith('k3');
     const li = within(aside()).getByText('Món 4').closest('li')!;
     expect(within(li).queryByRole('spinbutton')).toBeNull();
-    expect(within(li).getByText('Hành chính thêm')).toBeInTheDocument();
+    expect(within(li).getByText('Adm D&E thêm')).toBeInTheDocument();
   });
 
   it('en: tên theo ngôn ngữ, tiêu đề và chip tiếng Anh', async () => {
@@ -168,13 +168,13 @@ describe('CartPanel', () => {
         onEditStart: vi.fn(),
       });
       expect(within(aside()).getByText('Sản phẩm này đã tạm ngưng và không thể đặt hàng.')).toBeInTheDocument();
-      expect(within(aside()).getByText('Hành chính đã đổi tối đa còn 2/tháng. Số lượng 5 vẫn được giữ, không thể tăng thêm.')).toBeInTheDocument();
+      expect(within(aside()).getByText('Adm D&E đã đổi tối đa còn 2/tháng. Số lượng 5 vẫn được giữ, không thể tăng thêm.')).toBeInTheDocument();
     });
   });
 
   it('tối đa hạ: câu nói số lượng HIỆN TẠI của dòng (17, không phải 19 lúc lưu) và chỉ hiện khi còn vượt tối đa', () => {
     show({ lines: [mk(1, { qty: 17, max: 19, lowered: { max: 1, qty: 19 } }), mk(2, { qty: 1, max: 19, lowered: { max: 1, qty: 19 } })] });
-    expect(within(aside()).getByText('Hành chính đã đổi tối đa còn 1/tháng. Số lượng 17 vẫn được giữ, không thể tăng thêm.')).toBeInTheDocument();
+    expect(within(aside()).getByText('Adm D&E đã đổi tối đa còn 1/tháng. Số lượng 17 vẫn được giữ, không thể tăng thêm.')).toBeInTheDocument();
     expect(within(within(aside()).getByText('Món 2').closest('li')!).queryByText(/đổi tối đa/)).toBeNull();
   });
 

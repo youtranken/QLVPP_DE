@@ -7,15 +7,15 @@ const sent = { state: 'sent' as const, sent: { created_at: '2026-11-08T04:50:00Z
 
 describe('reportStatus', () => {
   it('đã gửi, không đổi → ok, một phần', () => {
-    expect(reportStatus(sent, 0, 0, t)).toEqual({ tone: 'ok', parts: ['Đã gửi ADM 11:50 08/11'] });
+    expect(reportStatus(sent, 0, 0, t)).toEqual({ tone: 'ok', parts: ['Đã gửi NCC 11:50 08/11'] });
   });
   it('đã gửi, ranh: 0 món đổi không nói đổi; 1 món đổi → cảnh báo', () => {
-    expect(reportStatus(sent, 1, 0, t)).toEqual({ tone: 'warn', parts: ['Đã gửi ADM 11:50 08/11', 'có 1 món đổi sau bản này'] });
+    expect(reportStatus(sent, 1, 0, t)).toEqual({ tone: 'warn', parts: ['Đã gửi NCC 11:50 08/11', 'có 1 món đổi sau bản này'] });
   });
   it('chưa gửi + món ngoài DM chờ duyệt', () => {
-    expect(reportStatus({ state: 'unsent', sent: null, noOrder: null }, 0, 2, t)).toEqual({ tone: 'warn', parts: ['Chưa gửi ADM', '2 món ngoài danh mục chờ duyệt'] });
+    expect(reportStatus({ state: 'unsent', sent: null, noOrder: null }, 0, 2, t)).toEqual({ tone: 'warn', parts: ['Chưa gửi NCC', '2 món ngoài danh mục chờ duyệt'] });
   });
   it('không cần đề nghị', () => {
-    expect(reportStatus({ state: 'no_order', sent: null, noOrder: { at: '2026-11-08T04:50:00Z', by: null } }, 0, 0, t).parts).toEqual(['Không cần đề nghị ADM 11:50 08/11']);
+    expect(reportStatus({ state: 'no_order', sent: null, noOrder: { at: '2026-11-08T04:50:00Z', by: null } }, 0, 0, t).parts).toEqual(['Không cần đề nghị NCC 11:50 08/11']);
   });
 });

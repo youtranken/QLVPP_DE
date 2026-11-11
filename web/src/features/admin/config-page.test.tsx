@@ -7,7 +7,7 @@ import { CONFIG, USERS, block, configInvalid, openConfig, putBodies, stubConfigA
 
 afterEach(() => vi.unstubAllGlobals());
 
-const contact = () => screen.getByLabelText('Tên và cách liên hệ Hành chính');
+const contact = () => screen.getByLabelText('Tên và cách liên hệ Adm D&E');
 const access = () => screen.getByRole('region', { name: 'Quyền truy cập' });
 const SAVED_BLOCKS = ['Kỳ đăng ký', 'Ô ký trên phiếu đề xuất', 'Liên hệ & thông báo'];
 
@@ -104,11 +104,11 @@ describe('Cấu hình · trang', () => {
 });
 
 describe('Cấu hình · khối Quyền truy cập (chỉ đọc)', () => {
-  it('liệt kê "Hành chính hiện tại" là người role admin trong danh bạ, không có ô nhập nhóm, không có nút lưu khối này', async () => {
+  it('liệt kê "Adm D&E hiện tại" là người role admin trong danh bạ, không có ô nhập nhóm, không có nút lưu khối này', async () => {
     stubConfigApi();
     await openConfig();
     expect(await within(access()).findByText('Nguyễn Văn An')).toBeInTheDocument();
-    const list = within(access()).getByRole('list', { name: 'Hành chính hiện tại' });
+    const list = within(access()).getByRole('list', { name: 'Adm D&E hiện tại' });
     expect(within(list).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Nguyễn Văn An']);
     expect(within(access()).queryByRole('textbox')).toBeNull();
     expect(within(access()).queryByRole('button')).toBeNull();
@@ -127,7 +127,7 @@ describe('Cấu hình · khối Quyền truy cập (chỉ đọc)', () => {
   it('không tải được danh bạ → báo chưa tải được, không giả vờ là chưa có ai', async () => {
     stubConfigApi(undefined, (url) => (url.startsWith('/api/admin/users?') ? jsonResponse(500, { code: 'INTERNAL' }) : undefined));
     await openConfig();
-    expect(await within(access()).findByText('Chưa tải được danh sách Hành chính — mở Danh bạ để xem.')).toBeInTheDocument();
+    expect(await within(access()).findByText('Chưa tải được danh sách Adm D&E — mở Danh bạ để xem.')).toBeInTheDocument();
     expect(within(access()).queryByText(/Chưa thấy ai/)).toBeNull();
   });
 });
@@ -147,7 +147,7 @@ describe('Cấu hình · khối Liên hệ & thông báo', () => {
     const fetchMock = stubConfigApi((body) => jsonResponse(200, { ...CONFIG, ...body }));
     await openConfig();
     expect(await screen.findByText('Hiện có 2 món sắp hết.')).toBeInTheDocument();
-    const toggle = screen.getByRole('switch', { name: 'Báo Hành chính khi món sắp hết' });
+    const toggle = screen.getByRole('switch', { name: 'Báo Adm D&E khi món sắp hết' });
     expect(toggle).toHaveAttribute('aria-checked', 'true');
     await userEvent.click(toggle);
     await userEvent.click(screen.getByRole('button', { name: 'Lưu liên hệ' }));
@@ -179,7 +179,7 @@ describe('Cấu hình · Thay đổi gần đây', () => {
     stubConfigApi();
     await openConfig();
     const recent = screen.getByRole('region', { name: 'Thay đổi gần đây' });
-    expect(await within(recent).findByText('Đã đổi: Liên hệ Hành chính')).toBeInTheDocument();
+    expect(await within(recent).findByText('Đã đổi: Liên hệ Adm D&E')).toBeInTheDocument();
     expect(within(recent).getByText('Đã đổi: Ngày hạn đăng ký')).toBeInTheDocument();
   });
 

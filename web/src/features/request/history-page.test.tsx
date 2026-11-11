@@ -97,17 +97,17 @@ describe('HistoryPage — master–detail', () => {
     const oct = (await screen.findByText('Tháng 10')).closest('a')!;
     expect(within(oct).getByText('3 món · 10 đơn vị')).toBeInTheDocument();
     expect(within(oct).getByText('Còn chờ 2 món')).toBeInTheDocument();
-    expect(within(oct).getByText(/1 món chờ Hành chính xem · 2 món đã thêm vào danh mục · 1 món bị từ chối/)).toBeInTheDocument();
+    expect(within(oct).getByText(/1 sản phẩm ngoài danh mục, chờ phê duyệt · 2 món đã thêm vào danh mục · 1 món bị từ chối/)).toBeInTheDocument();
     expect(within(screen.getByText('Tháng 9').closest('a')!).getByText('Đã nhận đủ')).toBeInTheDocument();
     expect(screen.queryByText('Tháng 8')).toBeNull();
     expect(screen.queryByText(/Không đăng ký/)).toBeNull();
   });
 
-  it('phiếu Hành chính đã bỏ hết (removed_all) → chip "Hành chính đã bỏ toàn bộ"', async () => {
+  it('phiếu Adm D&E đã bỏ hết (removed_all) → chip "Adm D&E đã bỏ toàn bộ"', async () => {
     stub([{ items: [item({ period_ym: '2026-10', line_count: 0, total_qty: 0, delivered_qty: 0, remaining_qty: 0, removed_all: true })], next_cursor: null }]);
     renderApp(makeMe('member'), '/history');
     const oct = (await screen.findByText('Tháng 10')).closest('a')!;
-    expect(within(oct).getByText('Hành chính đã bỏ toàn bộ')).toBeInTheDocument();
+    expect(within(oct).getByText('Adm D&E đã bỏ toàn bộ')).toBeInTheDocument();
   });
 
   it('"Xem thêm" tải trang kế theo cursor', async () => {

@@ -33,7 +33,7 @@ describe('RegistrationDialog — phiếu một người, chỉ xem', () => {
     expect(await within(dialog).findByText('Kỳ tháng 11 · đang mở · —')).toBeInTheDocument();
   });
 
-  it('hiện dòng món + số; món tạm ngưng có chữ "Tạm ngưng"; dòng ngoài danh mục ghi "chờ Hành chính xem"; dòng bị từ chối không hiện; không ô sửa số', async () => {
+  it('hiện dòng món + số; món tạm ngưng có chữ "Tạm ngưng"; dòng ngoài danh mục ghi "chờ Adm D&E xem"; dòng bị từ chối không hiện; không ô sửa số', async () => {
     stubSummaryApi(registrationRoute());
     const { dialog } = await openDialog();
     expect(await within(dialog).findByText('Bút bi xanh')).toBeInTheDocument();
@@ -41,7 +41,7 @@ describe('RegistrationDialog — phiếu một người, chỉ xem', () => {
     expect(within(paused).getByText('Tạm ngưng')).toBeInTheDocument();
     expect(paused).toHaveTextContent('19');
     const custom = within(dialog).getByText('Test mon khac').closest('li')!;
-    expect(custom).toHaveTextContent('Món ngoài danh mục · chờ Hành chính xem');
+    expect(custom).toHaveTextContent('Sản phẩm ngoài danh mục, chờ phê duyệt');
     expect(within(dialog).queryByText('Món bị từ chối')).toBeNull();
     expect(within(dialog).queryByRole('spinbutton')).toBeNull();
     expect(within(dialog).queryByRole('textbox')).toBeNull();

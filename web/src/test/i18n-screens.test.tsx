@@ -88,7 +88,7 @@ describe('Song ngữ các màn Plan 3', () => {
     noVietnamese();
   });
 
-  it('Báo cáo & gửi ADM: vi có "Đề nghị" và "Chưa gửi ADM"; en không còn chữ Việt (bảng, các bản đã in / xuất)', async () => {
+  it('Báo cáo & gửi NCC: vi có "Đề nghị" và "Chưa gửi NCC"; en không còn chữ Việt (bảng, các bản đã in / xuất)', async () => {
     const report = reportFixture({
       byDepartment: [{ department: 'Inspection Team', people: [{ user_sub: 'u-duc', full_name: 'Pham Van Duc', lines: [{ name: 'Bút bi xanh', name_en: 'Blue pen', unit: 'cay', qty: 12 }] }] }],
       custom: [{ key: 'custom:tape', name: 'Double tape', unit: 'cuon', requested: 4, backlog_prev: 1, stock: null, need: 5, people: 2 }],
@@ -98,9 +98,9 @@ describe('Song ngữ các màn Plan 3', () => {
     setupSendAdm({ report, snapshots: [snapshotRow({ created_by_name: 'Tran Thi Binh', items_count: 2, units_total: 9 })] });
     renderApp(ADMIN, '/admin/reports');
     expect(await screen.findByRole('columnheader', { name: 'Đề nghị' })).toBeInTheDocument();
-    expect(screen.getByText('Chưa gửi ADM')).toBeInTheDocument();
+    expect(screen.getByText('Chưa gửi NCC')).toBeInTheDocument();
     await english();
-    expect(await screen.findByText('Not sent to ADM yet')).toBeInTheDocument();
+    expect(await screen.findByText('Not sent to supplier yet')).toBeInTheDocument();
     expect(screen.getAllByRole('row', { name: /Blue pen/ }).length).toBeGreaterThan(0);
     expect(await screen.findByText(/Printed \/ exported copies \(1\)/)).toBeInTheDocument();
     noVietnamese();

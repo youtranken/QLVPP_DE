@@ -33,7 +33,7 @@ describe('HistoryDetailPage', () => {
     expect(screen.getByText('Đang giao · đã nhận 2/5 món')).toBeInTheDocument();
   });
 
-  it('bảng Món · ĐVT · Đăng ký · Được giao · Đã nhận · Tình trạng · Ghi chú; ghi chú "Nhận 09:10 08/11" và "HC bỏ món · Không có hàng"', async () => {
+  it('bảng Món · ĐVT · Đăng ký · Được giao · Đã nhận · Tình trạng · Ghi chú; ghi chú "Nhận 09:10 08/11" và "Adm D&E bỏ món · Không có hàng"', async () => {
     past([L('1', 'Bút bảng', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }), L('3', 'Bút dạ')], {
       removed_lines: [{ name: 'Bút ghi đĩa', name_en: null, unit: 'cay', before: 1, reason_code: 'adm_out_of_stock', reason_note: null, at: '2026-11-08T01:30:00.000Z' }],
     });
@@ -43,16 +43,16 @@ describe('HistoryDetailPage', () => {
     expect(within(rowOf('Bút bảng')).getByText('Nhận 09:10 08/11')).toBeInTheDocument();
     expect(within(rowOf('Bút dạ')).getByText('Chờ 1')).toBeInTheDocument();
     expect(within(rowOf('Bút ghi đĩa')).getByText('Không giao')).toBeInTheDocument();
-    expect(within(rowOf('Bút ghi đĩa')).getByText('HC bỏ món · Không có hàng')).toBeInTheDocument();
+    expect(within(rowOf('Bút ghi đĩa')).getByText('Adm D&E bỏ món · Không có hàng')).toBeInTheDocument();
   });
 
-  it('khối "Điều chỉnh của Hành chính": "08/11 08:30 · Bút ghi đĩa 1 thành 0 · Lý do: Không có hàng"; lý do cũ over_quota hiện "Vượt định mức"', async () => {
+  it('khối "Điều chỉnh của Adm D&E": "08/11 08:30 · Bút ghi đĩa 1 thành 0 · Lý do: Không có hàng"; lý do cũ over_quota hiện "Vượt định mức"', async () => {
     past(
       [L('1', 'Bút bi', { qty: 2, adjustments: [{ before: 3, after: 2, reason_code: 'over_quota', reason_note: null, at: '2026-11-08T02:00:00.000Z' }] })],
       { removed_lines: [{ name: 'Bút ghi đĩa', name_en: null, unit: 'cay', before: 1, reason_code: 'adm_out_of_stock', reason_note: null, at: '2026-11-08T01:30:00.000Z' }] },
     );
     renderApp(makeMe('member'), '/history/2026-10');
-    const box = (await screen.findByRole('heading', { name: 'Điều chỉnh của Hành chính' })).closest('section')!;
+    const box = (await screen.findByRole('heading', { name: 'Điều chỉnh của Adm D&E' })).closest('section')!;
     expect(within(box).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
       '08/11 08:30 · Bút ghi đĩa 1 thành 0 · Lý do: Không có hàng',
       '08/11 09:00 · Bút bi 3 thành 2 · Lý do: Vượt định mức',
@@ -67,7 +67,7 @@ describe('HistoryDetailPage', () => {
       lineView({ id: 'd', custom_name: 'Kéo', custom_unit: 'cai', review_status: 'rejected', review_note: 'Đã có trong kho' }),
     ]);
     renderApp(makeMe('member'), '/history/2026-10');
-    expect(await screen.findByText('Chờ Hành chính xem')).toBeInTheDocument();
+    expect(await screen.findByText('Sản phẩm ngoài danh mục, chờ phê duyệt')).toBeInTheDocument();
     expect(screen.getByText('Đã chấp nhận')).toBeInTheDocument();
     expect(screen.getByText('Đã thêm vào danh mục')).toBeInTheDocument();
     expect(screen.getByText('Từ chối: Đã có trong kho')).toBeInTheDocument();

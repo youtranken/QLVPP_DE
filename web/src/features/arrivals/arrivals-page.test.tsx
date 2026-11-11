@@ -13,7 +13,7 @@ const loc = () => screen.getByTestId('location-search').textContent ?? '';
 const rowOf = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
 
 describe('Hàng về — bảng theo bản in', () => {
-  it('cột: Sản phẩm · Tồn kho · Đề nghị mua · Nhận đợt này · Tình trạng · Sau nhập kho; điền sẵn = phần còn lại; link "theo bản gửi ADM hh:mm dd/mm"', async () => {
+  it('cột: Sản phẩm · Tồn kho · Đề nghị mua · Nhận đợt này · Tình trạng · Sau nhập kho; điền sẵn = phần còn lại; link "theo bản gửi NCC hh:mm dd/mm"', async () => {
     stub();
     await open();
     expect(await screen.findByDisplayValue('6')).toBe(box('Bút bi'));
@@ -21,7 +21,7 @@ describe('Hàng về — bảng theo bản in', () => {
     const heads = screen.getAllByRole('columnheader').map((c) => c.textContent);
     expect(heads).toEqual(['Món', 'Tồn kho', 'Đề nghị mua', 'Nhận đợt này', 'Tình trạng', 'Sau nhập kho']);
     expect(heads).not.toContain('Đã về các đợt trước');
-    expect(screen.getByRole('link', { name: 'theo bản gửi ADM 09:05 02/11' })).toHaveAttribute('href', '/admin/reports/snapshots/s-1/print');
+    expect(screen.getByRole('link', { name: 'theo bản gửi NCC 09:05 02/11' })).toHaveAttribute('href', '/admin/reports/snapshots/s-1/print');
   });
 
   it('món có đợt trước: dưới số Đề nghị mua có chữ nhỏ đỏ "đã nhận 4" (class ar-received); món chưa nhận đợt nào không có', async () => {
@@ -48,7 +48,7 @@ describe('Hàng về — bảng theo bản in', () => {
     expect(row.getByText('Thiếu 6')).toBeInTheDocument();
   });
 
-  it('nhóm đã có món đủ: "sản phẩm 1/2, sau lưu 2/2"; dòng đã nhận đủ khóa: "✓ Đã nhận đủ", không ô số, không nút ADM, chip "Nhập đủ số lượng"', async () => {
+  it('nhóm đã có món đủ: "sản phẩm 1/2, sau lưu 2/2"; dòng đã nhận đủ khóa: "✓ Đã nhận đủ", không ô số, không nút NCC, chip "Nhập đủ số lượng"', async () => {
     stub({ plan: plan([...PLAN.rows, planRow({ item_id: 'i-c', name: 'Bút chì', category_id: 'c-but', received: 10, remaining: 0 })]) });
     await open();
     const but = await screen.findByRole('rowgroup', { name: 'Bút' });
@@ -56,7 +56,7 @@ describe('Hàng về — bảng theo bản in', () => {
     const row = within(rowOf('Bút chì'));
     expect(row.getByText('✓ Đã nhận đủ')).toBeInTheDocument();
     expect(row.queryByRole('spinbutton')).toBeNull();
-    expect(row.queryByRole('button', { name: /ADM hết hàng/ })).toBeNull();
+    expect(row.queryByRole('button', { name: /NCC hết hàng/ })).toBeNull();
     expect(row.getByText('Nhập đủ số lượng', { selector: '.tag' })).toBeInTheDocument();
     expect(box('Bút bi')).toBeEnabled();
   });
@@ -90,16 +90,16 @@ describe('Hàng về — bảng theo bản in', () => {
   it('chưa có bản chốt: ghi chú số gộp, điền sẵn remaining theo ordered gộp', async () => {
     stub({ plan: plan([planRow({ item_id: 'i-a', ordered: 10, remaining: 10, stock_qty: 5 })], { snapshot: null }) });
     await open();
-    expect(await screen.findByText('Chưa chốt bản gửi ADM (Xem tổng kết) — số điền sẵn theo tổng đăng ký + nợ tháng trước')).toBeInTheDocument();
+    expect(await screen.findByText('Chưa chốt bản gửi NCC (Xem tổng kết) — số điền sẵn theo tổng đăng ký + nợ tháng trước')).toBeInTheDocument();
     expect(box('Bút bi')).toHaveValue(10);
   });
 
-  it('Tháng này không cần đề nghị ADM: băng "Không có đơn gửi ADM · hh:mm dd/mm", vẫn còn Thêm món khác và Về bù kỳ trước', async () => {
+  it('Tháng này không cần đề nghị NCC: băng "Không có đơn gửi NCC · hh:mm dd/mm", vẫn còn Thêm món khác và Về bù kỳ trước', async () => {
     const makeup = [{ ym: '2026-09', rows: [{ key: 'i-a', item_id: 'i-a', name: 'Bút bi', name_en: null, unit: 'cay', stock_qty: 2, ordered: 7, received: 3, adm_owed: 4 }] }];
     stub({ plan: plan([], { snapshot: null, no_order: { at: '2026-11-12T03:00:00.000Z', by_name: 'Hà' }, makeup }) });
     await open();
-    expect(await screen.findByText('Không có đơn gửi ADM · 10:00 12/11')).toBeInTheDocument();
-    expect(screen.queryByText(/Chưa chốt bản gửi ADM/)).toBeNull();
+    expect(await screen.findByText('Không có đơn gửi NCC · 10:00 12/11')).toBeInTheDocument();
+    expect(screen.queryByText(/Chưa chốt bản gửi NCC/)).toBeNull();
     expect(screen.getByRole('combobox', { name: 'Tìm món để thêm' })).toBeInTheDocument();
     expect(screen.getByText('Về bù kỳ trước (1)')).toBeInTheDocument();
   });
@@ -120,8 +120,8 @@ describe('Hàng về — bảng theo bản in', () => {
   it('W14: hàng giảm sau khi gửi có nhãn, đầu trang đếm món', async () => {
     stub({ plan: plan([planRow({ item_id: 'i-a', reduced_after_snapshot: 3 }), planRow({ item_id: 'i-b', name: 'Kẹp giấy' })]) });
     await open();
-    expect(await screen.findByText('Đã giảm 3 sau khi gửi ADM — phần dư vào tủ')).toBeInTheDocument();
-    expect(screen.getByText('1 món đã giảm sau khi gửi ADM — phần dư sẽ vào tủ')).toBeInTheDocument();
+    expect(await screen.findByText('Đã giảm 3 sau khi gửi NCC — phần dư vào tủ')).toBeInTheDocument();
+    expect(screen.getByText('1 món đã giảm sau khi gửi NCC — phần dư sẽ vào tủ')).toBeInTheDocument();
   });
 
   it('món ngừng có trong bản in: ô nhập được + nhãn "Ngừng dùng — đã đặt trong bản in"; Lưu gửi món đó', async () => {
@@ -222,7 +222,7 @@ describe('Nhận hàng — "Nhận đủ hàng" theo nhóm', () => {
   ];
   const BUT = planRow({ item_id: 'b1', name: 'Bút 1', category_id: 'c-but', remaining: 6, stock_qty: 1 });
 
-  it('tick nhóm Kẹp → "Nhận đủ hàng (1 nhóm)"; bấm → 1 POST chỉ dòng nhóm Kẹp: ô chưa gõ = phần còn thiếu, ô đã gõ = đúng số, bỏ ADM hết hàng và dòng đủ; không hộp xác nhận; xong bỏ tick', async () => {
+  it('tick nhóm Kẹp → "Nhận đủ hàng (1 nhóm)"; bấm → 1 POST chỉ dòng nhóm Kẹp: ô chưa gõ = phần còn thiếu, ô đã gõ = đúng số, bỏ NCC hết hàng và dòng đủ; không hộp xác nhận; xong bỏ tick', async () => {
     const f = stub({ plan: plan([BUT, ...KEP]) });
     await open();
     await screen.findByDisplayValue('6');
@@ -288,7 +288,7 @@ describe('Nhận hàng — "Nhận đủ hàng" theo nhóm', () => {
     expect(screen.getByLabelText('Ghi chú cho đợt này (không bắt buộc)')).toHaveValue('');
   });
 
-  it('nhóm mọi ô 0 → nút nhóm tắt; nhóm chỉ còn dòng đủ hoặc ADM hết hàng → ô tick tắt, không nút nhóm', async () => {
+  it('nhóm mọi ô 0 → nút nhóm tắt; nhóm chỉ còn dòng đủ hoặc NCC hết hàng → ô tick tắt, không nút nhóm', async () => {
     stub({ plan: plan([BUT, planRow({ item_id: 'k5', name: 'Kẹp đủ', category_id: 'c-kep', ordered: 2, received: 2, remaining: 0 }), planRow({ item_id: 'k3', name: 'Kẹp 3', category_id: 'c-kep', adm_out: true })]) });
     await open();
     await screen.findByDisplayValue('6');
@@ -299,7 +299,7 @@ describe('Nhận hàng — "Nhận đủ hàng" theo nhóm', () => {
   });
 });
 
-describe('Hàng về — ADM hết hàng', () => {
+describe('Hàng về — NCC hết hàng', () => {
   const ADM_URL = '/api/admin/periods/2026-10/adm-out/';
 
   it('bấm → 1 PUT, aria-pressed, ô 0 + khóa + nhãn xám; bấm lại → 1 DELETE, ô về số điền sẵn', async () => {
@@ -316,14 +316,14 @@ describe('Hàng về — ADM hết hàng', () => {
     await open();
     await screen.findByDisplayValue('6');
     await type(box('Bút bi'), '4');
-    const btn = screen.getByRole('button', { name: 'ADM hết hàng: Bút bi' });
+    const btn = screen.getByRole('button', { name: 'NCC hết hàng: Bút bi' });
     expect(btn).toHaveAttribute('aria-pressed', 'false');
     await userEvent.click(btn);
     await waitFor(() => expect(btn).toHaveAttribute('aria-pressed', 'true'));
     expect(callsTo(f, ADM_URL, 'PUT')).toEqual([`${ADM_URL}i-a`]);
     expect(box('Bút bi')).toHaveValue(0);
     expect(box('Bút bi')).toBeDisabled();
-    expect(within(rowOf('Bút bi')).getByText('ADM hết hàng', { selector: '.tag' })).toBeInTheDocument();
+    expect(within(rowOf('Bút bi')).getByText('NCC hết hàng', { selector: '.tag' })).toBeInTheDocument();
     await userEvent.click(btn);
     await waitFor(() => expect(btn).toHaveAttribute('aria-pressed', 'false'));
     expect(callsTo(f, ADM_URL, 'DELETE')).toHaveLength(1);
@@ -331,24 +331,24 @@ describe('Hàng về — ADM hết hàng', () => {
     expect(box('Bút bi')).toBeEnabled();
   });
 
-  it('dòng ADM hết hàng chưa nhận đủ: dưới tên chỉ ghi "ADM hết hàng – tủ còn x", kể cả tủ 0', async () => {
+  it('dòng NCC hết hàng chưa nhận đủ: dưới tên chỉ ghi "NCC hết hàng – tủ còn x", kể cả tủ 0', async () => {
     stub({ plan: plan([planRow({ item_id: 'i-a', remaining: 5, stock_qty: 2, adm_out: true }), planRow({ item_id: 'i-b', name: 'Kẹp giấy', category_id: 'c-kep', remaining: 3, stock_qty: 0, adm_out: true }), planRow({ item_id: 'i-c', name: 'Bút chì' })]) });
     await open();
     await screen.findByDisplayValue('10');
-    expect(within(rowOf('Bút bi')).getByText('ADM hết hàng – tủ còn 2')).toHaveClass('ar-note');
-    expect(within(rowOf('Kẹp giấy')).getByText('ADM hết hàng – tủ còn 0')).toBeInTheDocument();
+    expect(within(rowOf('Bút bi')).getByText('NCC hết hàng – tủ còn 2')).toHaveClass('ar-note');
+    expect(within(rowOf('Kẹp giấy')).getByText('NCC hết hàng – tủ còn 0')).toBeInTheDocument();
     expect(screen.queryByText(/hủy/)).toBeNull();
   });
 
-  it('đã xử lý xong → nút khóa "ADM hết hàng · đã xử lý xong"; lỗi ADM_OUT_FINAL → báo lỗi, tải lại kế hoạch', async () => {
+  it('đã xử lý xong → nút khóa "NCC hết hàng · đã xử lý xong"; lỗi ADM_OUT_FINAL → báo lỗi, tải lại kế hoạch', async () => {
     const f = stub({
       plan: plan([planRow({ item_id: 'i-a', adm_out: true, adm_out_final: true }), planRow({ item_id: 'i-b', name: 'Kẹp giấy', adm_out: true }), planRow({ item_id: 'i-c', name: 'Bút chì', remaining: 2 })]),
       routes: { [ADM_URL]: () => jsonResponse(409, { code: 'ADM_OUT_FINAL' }) },
     });
     await open();
-    expect(await screen.findByRole('button', { name: 'ADM hết hàng · đã xử lý xong: Bút bi' })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: 'NCC hết hàng · đã xử lý xong: Bút bi' })).toBeDisabled();
     const before = callsTo(f, PLAN_URL).length;
-    await userEvent.click(screen.getByRole('button', { name: 'ADM hết hàng: Kẹp giấy' }));
+    await userEvent.click(screen.getByRole('button', { name: 'NCC hết hàng: Kẹp giấy' }));
     expect(await screen.findByText('Các dòng của món này đã giao/hủy xong — không bỏ đánh dấu được nữa.')).toBeInTheDocument();
     await waitFor(() => expect(callsTo(f, PLAN_URL).length).toBeGreaterThan(before));
   });
@@ -367,7 +367,7 @@ describe('Hàng về — Thêm món khác (GroupedCombobox)', () => {
     expect(within(screen.getByRole('group', { name: 'Kẹp & dán' })).getByRole('option', { name: 'Kẹp bướm' })).toBeInTheDocument();
     await userEvent.keyboard('{ArrowDown}{Enter}');
     expect(box('Kẹp bướm')).toHaveValue(0);
-    expect(screen.getByText('Món này không có trong bản in gửi ADM — nhập thẳng vào tủ')).toBeInTheDocument();
+    expect(screen.getByText('Món này không có trong bản in gửi NCC — nhập thẳng vào tủ')).toBeInTheDocument();
   });
 });
 

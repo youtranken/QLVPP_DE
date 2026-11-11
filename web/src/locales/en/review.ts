@@ -28,7 +28,7 @@ const review: Messages<typeof vi> = {
       converted: 'No item added to the catalog yet',
       rejected: 'No item rejected yet',
     },
-    sentLink: 'Open Send to ADM',
+    sentLink: 'Open Reports & send to supplier',
     staleNotice: 'This line was just handled — the list has been refreshed.',
     card: {
       imageAlt: 'Photo of {{name}} sent by staff',
@@ -72,7 +72,7 @@ const review: Messages<typeof vi> = {
       title: 'Buy “{{name}}” this once?',
       body: 'The line is bought and delivered as requested; no catalog item is created.',
       bodyFor:
-        'Admin will buy {{qty}} {{unit}} for {{who}}’s request of month {{month}}. The item is not added to the catalog — next month staff must add it again.',
+        'D&E Admin will buy {{qty}} {{unit}} for {{who}}’s request of month {{month}}. The item is not added to the catalog — next month staff must add it again.',
       ok: 'Buy this once',
     },
     reject: {

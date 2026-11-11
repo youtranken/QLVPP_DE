@@ -10,7 +10,7 @@ const nav = {
     mobile: {
       openMenu: 'Mở menu quản lý',
       menuTitle: 'Menu quản lý',
-      menuBrand: 'VPP Công trình · Hành chính',
+      menuBrand: 'VPP Công trình · Adm D&E',
       closeMenu: 'Đóng menu',
       avatar: '{{name}}, {{role}}',
       lockedMonth: 'Tháng {{month}}/{{year}} · đã khóa',
@@ -29,7 +29,7 @@ const nav = {
     arrivals: 'Nhận hàng',
     delivery: 'Giao hàng',
     backlog: 'Còn nợ',
-    reports: 'Báo cáo & gửi ADM',
+    reports: 'Báo cáo & gửi NCC',
     categoriesUnits: 'Danh mục',
     badge: {
       review: '{{n}} món chờ xem',

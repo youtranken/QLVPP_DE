@@ -70,10 +70,10 @@ describe('ItemCard', () => {
     expect(screen.getByText('cây')).toHaveClass('rq-card-unit');
     expect(screen.queryByText(/Tối đa/)).toBeNull();
   });
-  it('dòng chỉ đọc (Hành chính thêm) → không stepper, không nút thêm', () => {
+  it('dòng chỉ đọc (Adm D&E thêm) → không stepper, không nút thêm', () => {
     view(line(3, { readonly: true, added_by_admin: true }));
     expect(screen.queryByRole('button', { name: /Thêm/ })).toBeNull();
-    expect(screen.getByText('Hành chính thêm · 3')).toBeInTheDocument();
+    expect(screen.getByText('Adm D&E thêm · 3')).toBeInTheDocument();
   });
 });
 

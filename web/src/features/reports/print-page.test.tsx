@@ -47,7 +47,7 @@ describe('Trang in · trang 1 Phiếu đề xuất (mẫu D&E)', () => {
     ]);
   });
 
-  it('bản cũ không có order_basis: in lại không thêm hàng Đề nghị 0 (giữ như tờ đã gửi ADM)', async () => {
+  it('bản cũ không có order_basis: in lại không thêm hàng Đề nghị 0 (giữ như tờ đã gửi NCC)', async () => {
     openPrint(snapshotDataFixture({ order_qty: { [PEN_KEY]: 1, 'item-glue': 0, [TAPE_KEY]: 5 } }));
     expect(bodyRows(await formTable())).toEqual([
       ['1', 'B31', 'Bút bi xanh', 'Blue pen', 'cây', '1'],

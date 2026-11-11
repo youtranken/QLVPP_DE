@@ -109,12 +109,12 @@ describe('Panel nhóm (?group=)', () => {
     await waitFor(() => expect(mutations(f).at(-1)).toEqual(['/api/admin/items/i-b', 'PATCH', { active: true }]));
   });
 
-  it('tắt món đang chờ ADM giao 3 → hỏi "Ngừng Kẹp B?" kèm khối cam; Quay lại → không PATCH, vẫn "Đang dùng"; Ngừng → PATCH', async () => {
+  it('tắt món đang chờ NCC giao 3 → hỏi "Ngừng Kẹp B?" kèm khối cam; Quay lại → không PATCH, vẫn "Đang dùng"; Ngừng → PATCH', async () => {
     const f = await openAt('/admin/categories?group=c-1', { pending: { 'i-b': { remaining: 3, unit: 'cai', snapshot_at: '2026-11-03T02:15:00.000Z' } } });
     await screen.findByRole('dialog', { name: 'Nhóm Kẹp & dán' });
     await userEvent.click(itemSwitch('Kẹp B'));
     const ask = await screen.findByRole('dialog', { name: 'Tạm ngưng Kẹp B?' });
-    expect(within(ask).getByRole('note')).toHaveTextContent(/Món này đang chờ ADM giao 3 cái \(bản in .+\) — ngừng thì vẫn nhập được hàng đã đặt\./);
+    expect(within(ask).getByRole('note')).toHaveTextContent(/Món này đang chờ NCC giao 3 cái \(bản in .+\) — ngừng thì vẫn nhập được hàng đã đặt\./);
     await userEvent.click(within(ask).getByRole('button', { name: 'Quay lại' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Tạm ngưng Kẹp B?' })).toBeNull());
     expect(mutations(f)).toEqual([]);
@@ -198,14 +198,14 @@ describe('Panel nhóm (?group=)', () => {
     expect(screen.queryByRole('dialog', { name: /^Dùng lại nhóm/ })).toBeNull();
   });
 
-  it('W24: ngừng nhóm có món đang chờ ADM giao 3 → khối cam trong hộp, không chặn nút "Ngừng nhóm"; không chờ → không khối', async () => {
+  it('W24: ngừng nhóm có món đang chờ NCC giao 3 → khối cam trong hộp, không chặn nút "Ngừng nhóm"; không chờ → không khối', async () => {
     const f = await openAt('/admin/categories?group=c-1', { pending: { 'i-c': { remaining: 3, unit: 'cai', snapshot_at: '2026-11-03T02:15:00.000Z' } } });
     await screen.findByRole('dialog', { name: 'Nhóm Kẹp & dán' });
     await userEvent.click(panel().getByRole('switch', { name: 'Nhóm Kẹp & dán' }));
     const dialog = within(await screen.findByRole('dialog', { name: 'Ngừng nhóm “Kẹp & dán”?' }));
     const note = dialog.getByRole('note');
     expect(note).toHaveTextContent('Kẹp C');
-    expect(note).toHaveTextContent(/Món này đang chờ ADM giao 3 cái \(bản in .+\) — ngừng thì vẫn nhập được hàng đã đặt\./);
+    expect(note).toHaveTextContent(/Món này đang chờ NCC giao 3 cái \(bản in .+\) — ngừng thì vẫn nhập được hàng đã đặt\./);
     expect(f.mock.calls.map((c) => c[0])).not.toContain('/api/admin/items/i-a/pending-arrival');
     await userEvent.click(dialog.getByRole('button', { name: 'Ngừng nhóm' }));
     await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/item-categories/c-1', 'PATCH', { active: false }]]));

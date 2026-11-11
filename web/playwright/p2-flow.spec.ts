@@ -89,7 +89,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
   // Popup kỳ mới (vòng 4) phủ trang Đăng ký của A chưa lưu phiếu: smoke này không thử popup
   test.beforeEach(({ page }) => skipNewPeriodPopup(page));
 
-  test('Plan 2: A đăng ký 2 món + 1 món ngoài DM, B lưu 1 món → kỳ khóa → Hành chính Tổng hợp, sao chép chưa đăng ký có C, bỏ một món khỏi phiếu A có lý do, Thêm vào danh mục → A thấy ở Lịch sử kỳ đó món bị bỏ kèm lý do và "Đã thêm vào danh mục"', async ({
+  test('Plan 2: A đăng ký 2 món + 1 món ngoài DM, B lưu 1 món → kỳ khóa → Adm D&E Tổng hợp, sao chép chưa đăng ký có C, bỏ một món khỏi phiếu A có lý do, Thêm vào danh mục → A thấy ở Lịch sử kỳ đó món bị bỏ kèm lý do và "Đã thêm vào danh mục"', async ({
     page,
     browser,
     request,
@@ -133,7 +133,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       await page.goto(`/history/${LOCKED_YM}`);
       await expect(page.getByRole('row').filter({ hasText: x.name })).toBeVisible();
       // R-D6.11: dòng bị bỏ vẫn hiện ở Lịch sử kèm lý do của Hành chính
-      await expect(page.getByRole('row').filter({ hasText: y.name }).getByText('HC bỏ món · Hành chính bỏ khỏi phiếu')).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: y.name }).getByText('Adm D&E bỏ món · Adm D&E bỏ khỏi phiếu')).toBeVisible();
       await expect(page.getByRole('row').filter({ hasText: custom }).getByText('Đã thêm vào danh mục')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'member-a-after');

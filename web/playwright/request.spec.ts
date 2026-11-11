@@ -114,7 +114,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
     }
   });
 
-  test('E2-S5 lỗi theo dòng: Hành chính ngừng món đang có trong phiếu → lưu → thông báo thấy ngay, focus dòng lỗi', async ({
+  test('E2-S5 lỗi theo dòng: Adm D&E ngừng món đang có trong phiếu → lưu → thông báo thấy ngay, focus dòng lỗi', async ({
     page,
     request,
   }, info) => {

@@ -40,7 +40,7 @@ describe('Bản chốt — danh sách, tải lại, in lại', () => {
     stubReports();
     openPage();
     const region = await list();
-    expect(within(region).getByText('Mỗi lần In hay Xuất Excel, app lưu lại số lúc đó để đối chiếu với ADM. Số chưa đổi thì dùng lại bản cũ.')).toBeInTheDocument();
+    expect(within(region).getByText('Mỗi lần In hay Xuất Excel, app lưu lại số lúc đó để đối chiếu với NCC. Số chưa đổi thì dùng lại bản cũ.')).toBeInTheDocument();
     expect(await within(region).findByText('Chưa có bản chốt nào.')).toBeInTheDocument();
   });
 

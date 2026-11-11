@@ -14,7 +14,7 @@ const row = (over: Partial<Parameters<typeof chipOf>[0]> = {}) => ({
 describe('chipOf: Có ghi chú', () => {
   it.each([
     ['vượt tối đa', { over_max: true }],
-    ['HC đã điều chỉnh', { adjusted: true }],
+    ['Adm D&E đã điều chỉnh', { adjusted: true }],
     ['món ngoài DM chờ xem', { custom_pending: 1 }],
     ['không có gì để giao (tổng 0)', { total_qty: 0 }],
   ])('%s → noted', (_n, over) => {

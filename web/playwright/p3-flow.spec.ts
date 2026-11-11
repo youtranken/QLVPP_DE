@@ -226,7 +226,7 @@ async function cancelClip(admin: Page, info: TestInfo, s: MonthSeed) {
 async function memberSeesCancelled(member: Page, info: TestInfo, s: MonthSeed) {
   await member.goto(`/history/${s.debtYm}`);
   await expect(member.getByText(/^đã hủy 3 — Khác: Không mua được$/i)).toBeVisible();
-  await openBell(member, `Hành chính hủy phần còn chờ nhận 3 cái ${s.glue.name} (tháng ${month(s.debtYm)}): Khác: Không mua được`);
+  await openBell(member, `Adm D&E hủy phần còn chờ nhận 3 cái ${s.glue.name} (tháng ${month(s.debtYm)}): Khác: Không mua được`);
   await axe390(member, info);
   await snap(member, info, 'p3-member-b');
 }

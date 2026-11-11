@@ -71,7 +71,7 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
   });
 
   it('bấm X ở dòng pending → chỉ "Sẽ bỏ khỏi phiếu" + "Giữ lại"; Lưu gửi review reject (ghi chú cố định) rồi PUT, dòng đó không đổi số', async () => {
-    const f = stubAdjust({ review: () => jsonResponse(200, reviewResult('rejected', { id: 'l-tape', review_note: 'Hành chính bỏ khỏi phiếu' })) });
+    const f = stubAdjust({ review: () => jsonResponse(200, reviewResult('rejected', { id: 'l-tape', review_note: 'Adm D&E bỏ khỏi phiếu' })) });
     const { drawer, onClose } = await renderDrawer();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Bỏ Băng keo 2 mặt khỏi phiếu' }));
     const tape = row(drawer, 'Băng keo 2 mặt');
@@ -82,7 +82,7 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
     await userEvent.click(saveButton(drawer));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(order(f)).toEqual([REVIEW, PUT]);
-    expect(reviewBodies(f)).toEqual([{ action: 'reject', note: 'Hành chính bỏ khỏi phiếu', expected_updated_at: '2026-10-05T07:20:00.000Z' }]);
+    expect(reviewBodies(f)).toEqual([{ action: 'reject', note: 'Adm D&E bỏ khỏi phiếu', expected_updated_at: '2026-10-05T07:20:00.000Z' }]);
     const call = f.mock.calls.find((c) => c[0] === PUT) as unknown as [string, RequestInit];
     expect(JSON.parse(String(call[1].body)).lines[2]).toEqual({ id: 'l-tape', qty: 2, expected_qty: 2 });
   });

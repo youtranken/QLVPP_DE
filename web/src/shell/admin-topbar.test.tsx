@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Kỳ tháng', 'Báo cáo & gửi ADM', 'Nhận hàng', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Kỳ tháng', 'Báo cáo & gửi NCC', 'Nhận hàng', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 
 const topbar = () => screen.getAllByRole('banner')[0];
 
@@ -26,7 +26,7 @@ describe('AdminTopbar 390 px', () => {
     expect(within(bar).getByText('VPP Công trình', { exact: true })).toBeInTheDocument();
     expect(within(bar).queryByText('Sản phẩm', { exact: true })).toBeNull();
     expect(await within(bar).findByText('Kỳ hiện tại: tháng 11 · đang mở')).toBeInTheDocument();
-    expect(within(bar).getByRole('button', { name: 'Nguyễn Văn An, Hành chính' })).toBeInTheDocument();
+    expect(within(bar).getByRole('button', { name: 'Nguyễn Văn An, Adm D&E' })).toBeInTheDocument();
     expect(await within(bar).findByRole('button', { name: /^Thông báo/ })).toBeInTheDocument();
   });
 
@@ -49,7 +49,7 @@ describe('AdminTopbar 390 px', () => {
 
   it('chạm avatar mở menu, chọn "Kho" → /admin/stock (2 chạm)', async () => {
     open('/admin/delivery');
-    const avatar = within(topbar()).getByRole('button', { name: 'Nguyễn Văn An, Hành chính' });
+    const avatar = within(topbar()).getByRole('button', { name: 'Nguyễn Văn An, Adm D&E' });
     expect(avatar).toHaveAttribute('aria-expanded', 'false');
     expect(avatar).toHaveAccessibleDescription('Mở menu quản lý');
     await userEvent.click(avatar);
@@ -61,12 +61,12 @@ describe('AdminTopbar 390 px', () => {
 });
 
 describe('Menu sheet 390 px', () => {
-  it('tiêu đề "Menu quản lý", "VPP Công trình · Hành chính", nút "Đóng menu", 12 mục, thẻ kỳ, ngôn ngữ, Đăng xuất', async () => {
+  it('tiêu đề "Menu quản lý", "VPP Công trình · Adm D&E", nút "Đóng menu", 12 mục, thẻ kỳ, ngôn ngữ, Đăng xuất', async () => {
     open('/admin/catalog');
     await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
     const sheet = screen.getByRole('dialog', { name: 'Menu quản lý' });
     expect(within(sheet).getByRole('heading', { name: 'Menu quản lý' })).toBeInTheDocument();
-    expect(within(sheet).getByText('VPP Công trình · Hành chính')).toBeInTheDocument();
+    expect(within(sheet).getByText('VPP Công trình · Adm D&E')).toBeInTheDocument();
     const nav = within(sheet).getByRole('navigation', { name: 'Menu quản lý' });
     expect(within(nav).getAllByRole('link').map((a) => a.querySelector('.side__label')?.textContent)).toEqual(NAV_ORDER);
     expect(within(nav).getAllByRole('link').every((a) => !a.hasAttribute('title'))).toBe(true);

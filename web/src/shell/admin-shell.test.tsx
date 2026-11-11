@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Kỳ tháng', 'Báo cáo & gửi ADM', 'Nhận hàng', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Kỳ tháng', 'Báo cáo & gửi NCC', 'Nhận hàng', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
 const linkLabels = (nav: HTMLElement) =>
@@ -116,12 +116,12 @@ describe('AdminShell + RequireRole', () => {
   });
 });
 
-describe('AdminShell: mất vai Hành chính giữa chừng (FORBIDDEN_ROLE)', () => {
-  it('API trả 403 FORBIDDEN_ROLE trên /admin/catalog → "Trang này dành cho Hành chính.", không màn trắng, không toast', async () => {
+describe('AdminShell: mất vai Adm D&E giữa chừng (FORBIDDEN_ROLE)', () => {
+  it('API trả 403 FORBIDDEN_ROLE trên /admin/catalog → "Trang này dành cho Adm D&E.", không màn trắng, không toast', async () => {
     mockViewport(1280);
     stubShellApi({ '/api/admin/items': () => jsonResponse(403, { code: 'FORBIDDEN_ROLE', message: 'x' }) });
     renderApp(makeMe('admin'), '/admin/catalog');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Trang này dành cho Hành chính.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Trang này dành cho Adm D&E.' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { level: 1, name: 'Sản phẩm' })).toBeNull();
     expect(sideNav()).toBeInTheDocument();
     const toastHosts = screen.getAllByRole('status').filter((el) => el.tagName !== 'OUTPUT');
@@ -134,7 +134,7 @@ describe('AdminShell: mất vai Hành chính giữa chừng (FORBIDDEN_ROLE)', (
     renderApp(makeMe('admin'), '/admin/catalog');
     await waitFor(() => expect(f.mock.calls.some(([u]) => String(u).startsWith('/api/admin/items'))).toBe(true));
     await waitFor(() => expect(screen.getAllByRole('alert').length).toBeGreaterThan(0));
-    expect(screen.queryByText('Trang này dành cho Hành chính.')).toBeNull();
+    expect(screen.queryByText('Trang này dành cho Adm D&E.')).toBeNull();
     expect(screen.getByRole('heading', { level: 1, name: 'Sản phẩm' })).toBeInTheDocument();
   });
 });

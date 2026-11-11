@@ -24,7 +24,7 @@ describe('làm mới sau thao tác kho/giao: báo cáo đổi theo (REPORTS_KEY)
     expect(keys()).toContain('reports');
   });
 
-  it('useRefreshAfterLineChange: một tập khóa — Tổng hợp, người giao, Còn nợ, trạng thái Gửi ADM, Hàng về, tồn, báo cáo + khóa thêm của luồng', async () => {
+  it('useRefreshAfterLineChange: một tập khóa — Tổng hợp, người giao, Còn nợ, trạng thái Gửi NCC, Hàng về, tồn, báo cáo + khóa thêm của luồng', async () => {
     const { wrapper, keys } = setup();
     await renderHook(() => useRefreshAfterLineChange([['admin-request']]), { wrapper }).result.current();
     expect(keys()).toEqual(
@@ -32,7 +32,7 @@ describe('làm mới sau thao tác kho/giao: báo cáo đổi theo (REPORTS_KEY)
     );
   });
 
-  it('làm bản mới / không cần đề nghị ở Gửi ADM → Hàng về của kỳ tải lại kế hoạch', async () => {
+  it('làm bản mới / không cần đề nghị ở Gửi NCC → Hàng về của kỳ tải lại kế hoạch', async () => {
     const { wrapper, keys } = setup();
     await renderHook(() => useRefreshSendState('2026-10'), { wrapper }).result.current();
     expect(keys()).toEqual(expect.arrayContaining(['send-state/2026-10', 'arrivals-plan/2026-10']));
@@ -45,9 +45,9 @@ describe('làm mới sau thao tác kho/giao: báo cáo đổi theo (REPORTS_KEY)
   });
 });
 
-describe('mọi luồng đổi dòng phiếu dùng chung một tập làm mới (Tủ, Gửi ADM, Hàng về, Còn nợ, người giao)', () => {
+describe('mọi luồng đổi dòng phiếu dùng chung một tập làm mới (Tủ, Gửi NCC, Hàng về, Còn nợ, người giao)', () => {
   it.each<[string, () => () => Promise<unknown>]>([
-    ['Hàng về lưu / ADM hết hàng / về bù', () => useRefreshArrivals()],
+    ['Hàng về lưu / NCC hết hàng / về bù', () => useRefreshArrivals()],
     ['Hủy nợ ở Còn nợ', () => useRefreshAfterLineChange([['admin-request']])],
     ['Tổng hợp điều chỉnh phiếu', () => useRefreshAfterAdjust()],
     ['duyệt/từ chối dòng ngoài DM', () => useReviewCache().reviewed],

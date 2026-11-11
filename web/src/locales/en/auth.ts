@@ -6,7 +6,7 @@ const auth: Messages<typeof vi> = {
     brand: 'Phu My Hung · Construction Dept.',
     brandBadge: 'PMH',
     heroTitle: 'Order office supplies every month',
-    heroBody: 'Pick items, set quantities, save your request. The Admin team collects, buys and delivers to your desk.',
+    heroBody: 'Pick items, set quantities, save your request. D&E Admin collects, buys and delivers to your desk.',
     heading: 'Sign in',
     primary: 'Sign in with your company account (PMH ID)',
     primaryHint: 'You will be taken to the company sign-in page and brought back here.',
@@ -40,7 +40,7 @@ const auth: Messages<typeof vi> = {
       body: 'You signed in to PMH ID as {{email}}, but PMH ID has not granted this account access to VPP Construction. Contact {{admin_contact}} to be granted access.',
       bodyNoEmail:
         'You signed in to PMH ID, but PMH ID has not granted this account access to VPP Construction. Contact {{admin_contact}} to be granted access.',
-      defaultContact: 'the Construction Admin team',
+      defaultContact: 'D&E Admin',
       switchAccount: 'Sign in with another account',
       portal: 'Back to PMH ID',
     },

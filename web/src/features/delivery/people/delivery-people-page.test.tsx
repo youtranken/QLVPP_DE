@@ -143,15 +143,15 @@ describe('DeliveryPeoplePage — giao thiếu và tủ trống', () => {
     expect(screen.queryByText('Sơn Giao Thiếu', { selector: '.pt-person b' })).toBeNull();
   });
 
-  it('tủ 0 → nút chính vô hiệu "Tủ chưa có hàng"; tủ 0 nhưng có dòng ADM hết hàng → bật "Giao…"; tủ 1 → "Giao…"', async () => {
+  it('tủ 0 → nút chính vô hiệu "Tủ chưa có hàng"; tủ 0 nhưng có dòng NCC hết hàng → bật "Giao…"; tủ 1 → "Giao…"', async () => {
     const none = person({ user_sub: 'u-n', full_name: 'Nam Hết Hàng', lines: [pLine({ line_id: 'ln', stock_qty: 0 })] });
-    const adm = person({ user_sub: 'u-m', full_name: 'Minh ADM Hết', lines: [pLine({ line_id: 'lm', item_id: 'i-clip', stock_qty: 0, adm_out: true })] });
+    const adm = person({ user_sub: 'u-m', full_name: 'Minh NCC Hết', lines: [pLine({ line_id: 'lm', item_id: 'i-clip', stock_qty: 0, adm_out: true })] });
     const one = person({ user_sub: 'u-o', full_name: 'Oanh Còn Một', lines: [pLine({ line_id: 'lo', item_id: 'i-a4', stock_qty: 1 })] });
     stub({ people: [none, adm, one] });
     open();
     await screen.findByText('Nam Hết Hàng', { selector: '.pt-person b' });
     expect(within(card('Nam Hết Hàng')).getByRole('button', { name: /^Tủ chưa có hàng/ })).toBeDisabled();
-    expect(within(card('Minh ADM Hết')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
+    expect(within(card('Minh NCC Hết')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
     expect(within(card('Oanh Còn Một')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
   });
 });

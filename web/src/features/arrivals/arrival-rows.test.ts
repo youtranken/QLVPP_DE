@@ -19,7 +19,7 @@ describe('toArrivalRows — nguồn theo bản in', () => {
 });
 
 describe('prefillOf — điền sẵn "Về đợt này"', () => {
-  it('= remaining (không bao giờ need net); ADM hết hàng → 0; hàng thêm → 0', () => {
+  it('= remaining (không bao giờ need net); NCC hết hàng → 0; hàng thêm → 0', () => {
     expect(prefillOf(toArrivalRows(plan([planRow({ ordered: 10, received: 4, remaining: 6, stock_qty: 9 })]), [])[0])).toBe(6);
     expect(prefillOf(toArrivalRows(plan([planRow({ adm_out: true })]), [])[0])).toBe(0);
     expect(prefillOf(toArrivalRows(plan([]), [item({})])[0])).toBe(0);
@@ -33,7 +33,7 @@ describe('prefillOf — điền sẵn "Về đợt này"', () => {
 
 describe('isShort — "Chỉ món chưa về đủ"', () => {
   const r = (over: Parameters<typeof planRow>[0]) => toArrivalRows(plan([planRow(over)]), [])[0];
-  it('received 9/10 → có; 10/10 → không; 11/10 → không; ADM hết hàng → không; món ngừng đã đặt còn thiếu → có (đã đặt thì phải nhận)', () => {
+  it('received 9/10 → có; 10/10 → không; 11/10 → không; NCC hết hàng → không; món ngừng đã đặt còn thiếu → có (đã đặt thì phải nhận)', () => {
     expect(isShort(r({ received: 9 }))).toBe(true);
     expect(isShort(r({ received: 10 }))).toBe(false);
     expect(isShort(r({ received: 11 }))).toBe(false);
@@ -55,7 +55,7 @@ describe('isReceivedFull — dòng đã nhận đủ (khóa ở UI)', () => {
 });
 
 describe('receivableLines — dòng gửi khi "Nhận đủ hàng"', () => {
-  it('bỏ ADM hết hàng, dòng đã nhận đủ và số 0; giữ hàng thêm có số', () => {
+  it('bỏ NCC hết hàng, dòng đã nhận đủ và số 0; giữ hàng thêm có số', () => {
     const rows = toArrivalRows(
       plan([planRow({ item_id: 'a', remaining: 7 }), planRow({ item_id: 'b', remaining: 2 }), planRow({ item_id: 'c', remaining: 3, adm_out: true }), planRow({ item_id: 'd', received: 10, remaining: 0 })]),
       [item({})],
@@ -69,7 +69,7 @@ describe('receivableLines — dòng gửi khi "Nhận đủ hàng"', () => {
 });
 
 describe('isAllArrived — trạng thái "đã về đủ"', () => {
-  it('mọi remaining 0 (1 hàng ADM, 1 ngừng đã về) → đủ; 1 hàng remaining 1 → chưa; món ngừng còn 2 → chưa; chưa có bản → chưa; ngoài DM còn 1 → chưa', () => {
+  it('mọi remaining 0 (1 hàng NCC, 1 ngừng đã về) → đủ; 1 hàng remaining 1 → chưa; món ngừng còn 2 → chưa; chưa có bản → chưa; ngoài DM còn 1 → chưa', () => {
     const done = [planRow({ remaining: 0, received: 10 }), planRow({ item_id: 'b', adm_out: true }), planRow({ item_id: 'c', usable: false, remaining: 0, received: 10 })];
     expect(isAllArrived(plan([...done, planRow({ item_id: 'e', usable: false, remaining: 2 })]))).toBe(false);
     expect(isAllArrived(plan(done))).toBe(true);

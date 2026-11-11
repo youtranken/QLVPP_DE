@@ -38,7 +38,7 @@ async function uploadLineImage(request: APIRequestContext, headers: Record<strin
 }
 
 test.describe('E3-S5 món ngoài danh mục', () => {
-  test('E3-S5 món ngoài danh mục: member lưu dòng ngoài DM → Hành chính "Thêm vào danh mục" món mới → member thấy "Đã thêm vào danh mục" và món mới trong lưới', async ({
+  test('E3-S5 món ngoài danh mục: member lưu dòng ngoài DM → Adm D&E "Thêm vào danh mục" món mới → member thấy "Đã thêm vào danh mục" và món mới trong lưới', async ({
     page,
     browser,
     request,
@@ -109,7 +109,7 @@ test.describe('E3-S5 món ngoài danh mục', () => {
     }
   });
 
-  test('E3-S5 từ chối có lý do: Hành chính nhập lý do riêng → member xem lịch sử thấy "Từ chối: <lý do>"', async ({
+  test('E3-S5 từ chối có lý do: Adm D&E nhập lý do riêng → member xem lịch sử thấy "Từ chối: <lý do>"', async ({
     page,
     browser,
     request,
@@ -118,7 +118,7 @@ test.describe('E3-S5 món ngoài danh mục', () => {
     const sub = `pw-rvj-${stamp}`;
     const member = { 'x-dev-user-sub': sub, 'x-dev-role': 'member' };
     const name = `PW kéo lớn ${stamp}`;
-    const reason = 'Kho còn kéo, nhận tại Hành chính';
+    const reason = 'Kho còn kéo, nhận tại Adm D&E';
     seedActiveUser(sub, `PW Từ chối ${info.project.name}`);
     const period = await (await request.get('/api/periods/current', { headers: member })).json();
     const prevYm = prevYmOf(period.ym);

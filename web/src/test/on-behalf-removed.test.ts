@@ -35,7 +35,7 @@ describe('gỡ "Tạo phiếu hộ" — quét mã', () => {
     expect(existsSync(join(ROOT, 'api/test/summary-headcount.db-spec.ts'))).toBe(true);
   });
 
-  it('docs/prd.md, architecture.md, map.md không còn POST admin/requests và cờ loại Hành chính', () => {
+  it('docs/prd.md, architecture.md, map.md không còn POST admin/requests và cờ loại Adm D&E', () => {
     const docs = ['docs/prd.md', 'docs/architecture.md', 'docs/map.md'].filter((d) => {
       const text = readFileSync(join(ROOT, d), 'utf8');
       return /POST\s+\/?(api\/)?admin\/requests(?![/\w])/.test(text) || text.includes(EXCLUDE_FLAG);

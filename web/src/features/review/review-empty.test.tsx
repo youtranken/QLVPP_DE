@@ -92,7 +92,7 @@ describe('Món ngoài danh mục — trạng thái trống', () => {
     stub({ locked: jsonResponse(200, { ym: '2026-10', deadline: null, is_open: false, registered: 0, headcount: 0 }) });
     renderApp(makeMe('admin'), '/admin/review');
     expect(await screen.findByRole('heading', { level: 2, name: 'Chưa có kỳ nào chốt sổ' })).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText('Kỳ tháng 11 đang nhận đăng ký (3/8 người). Hành chính làm việc từ 00:00 ngày 11/11.')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Kỳ tháng 11 đang nhận đăng ký (3/8 người). Adm D&E làm việc từ 00:00 ngày 11/11.')).toBeInTheDocument());
     expect(within(document.querySelector<HTMLElement>('.empty-state')!).getByRole('link', { name: 'Xem đăng ký kỳ tháng 11' })).toHaveAttribute('href', '/admin/month?ym=2026-11');
     expect(screen.queryByText('Không còn món nào chờ xem')).toBeNull();
   });

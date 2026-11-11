@@ -3,7 +3,7 @@ const auth = {
     brand: 'Phú Mỹ Hưng · Phòng Công trình',
     brandBadge: 'PMH',
     heroTitle: 'Đăng ký văn phòng phẩm hằng tháng',
-    heroBody: 'Chọn món, ghi số lượng, lưu phiếu. Hành chính tổng hợp, mua và giao tận bàn.',
+    heroBody: 'Chọn món, ghi số lượng, lưu phiếu. Adm D&E tổng hợp, mua và giao tận bàn.',
     heading: 'Đăng nhập',
     primary: 'Đăng nhập bằng tài khoản công ty (PMH ID)',
     primaryHint: 'Bạn sẽ được đưa sang trang đăng nhập chung của công ty rồi quay lại đây.',
@@ -37,7 +37,7 @@ const auth = {
       body: 'Bạn đã đăng nhập PMH ID bằng {{email}}, nhưng PMH ID chưa cấp quyền vào VPP Công trình cho tài khoản này. Liên hệ {{admin_contact}} để được cấp quyền.',
       bodyNoEmail:
         'Bạn đã đăng nhập PMH ID, nhưng PMH ID chưa cấp quyền vào VPP Công trình cho tài khoản này. Liên hệ {{admin_contact}} để được cấp quyền.',
-      defaultContact: 'Hành chính phòng Công trình',
+      defaultContact: 'Adm D&E',
       switchAccount: 'Đăng nhập bằng tài khoản khác',
       portal: 'Về trang PMH ID',
     },

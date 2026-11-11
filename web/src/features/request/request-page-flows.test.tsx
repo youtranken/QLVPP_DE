@@ -63,17 +63,17 @@ describe('RequestPage — món ngoài danh mục', () => {
     });
   });
 
-  it('dòng ngoài DM đã lưu, chờ xem, kỳ đang mở → nhãn "Hành chính xem từ 00:00 ngày 11/11" (không "Chờ Hành chính xem"); sửa tên gửi id kèm trường riêng', async () => {
+  it('dòng ngoài DM đã lưu, chờ xem, kỳ đang mở → nhãn "Adm D&E xem từ 00:00 ngày 11/11" (không "Chờ Adm D&E xem"); sửa tên gửi id kèm trường riêng', async () => {
     mockViewport(1280);
     const custom = lineView({ id: 'l-c', custom_name: 'Bìa còng', custom_unit: 'cai', image_file_id: 'f-1', qty: 2, review_status: 'pending' });
     const api = stubRequestApi({ request: view({ lines: [custom] }), put: () => jsonResponse(500, {}) });
     renderApp(makeMe('member'), '/');
     const label = await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Bìa còng');
-    expect(within(label.closest('li')!).getByText('Hành chính xem từ 00:00 ngày 11/11')).toBeInTheDocument();
+    expect(within(label.closest('li')!).getByText('Adm D&E xem từ 00:00 ngày 11/11')).toBeInTheDocument();
     await startEditingOrder();
     const name = within(cart()).getByRole('button', { name: 'Sửa Bìa còng' });
-    expect(within(name.closest('li')!).getByText('Hành chính xem từ 00:00 ngày 11/11')).toBeInTheDocument();
-    expect(within(name.closest('li')!).queryByText('Chờ Hành chính xem')).toBeNull();
+    expect(within(name.closest('li')!).getByText('Adm D&E xem từ 00:00 ngày 11/11')).toBeInTheDocument();
+    expect(within(name.closest('li')!).queryByText('Sản phẩm ngoài danh mục, chờ phê duyệt')).toBeNull();
     await userEvent.click(name);
     const edit = await screen.findByRole('dialog', { name: 'Sửa món khác' });
     await userEvent.type(within(edit).getByLabelText('Ghi chú (tùy chọn)'), 'loại dày');
@@ -86,7 +86,7 @@ describe('RequestPage — món ngoài danh mục', () => {
     ]);
   });
 
-  it('dòng đã được Hành chính thêm vào danh mục (converted) → tên món mới, nhãn "Đã thêm vào danh mục"', async () => {
+  it('dòng đã được Adm D&E thêm vào danh mục (converted) → tên món mới, nhãn "Đã thêm vào danh mục"', async () => {
     mockViewport(1280);
     const converted = lineView({
       id: 'l-v',
@@ -114,13 +114,13 @@ describe('RequestPage — chép lại tháng trước', () => {
     expect(screen.queryByRole('button', { name: /Chép lại danh sách tháng/ })).toBeNull();
   });
 
-  it('giỏ rỗng → điền thẳng (chưa lưu) + hộp tóm tắt "Đã bỏ: Giấy A4 — chỉ Hành chính đặt"; lưu gửi dòng ngoài DM kèm ảnh cũ', async () => {
+  it('giỏ rỗng → điền thẳng (chưa lưu) + hộp tóm tắt "Đã bỏ: Giấy A4 — chỉ Adm D&E đặt"; lưu gửi dòng ngoài DM kèm ảnh cũ', async () => {
     mockViewport(1280);
     const api = stubRequestApi({ copy: () => jsonResponse(200, COPY), put: () => jsonResponse(500, {}) });
     renderApp(makeMe('member'), '/');
     await userEvent.click(await screen.findByRole('button', { name: 'Chép lại danh sách tháng 10' }));
     const summary = await screen.findByRole('dialog', { name: 'Đã chép danh sách tháng 10' });
-    expect(within(summary).getByText('Đã bỏ: Giấy A4 — chỉ Hành chính đặt')).toBeInTheDocument();
+    expect(within(summary).getByText('Đã bỏ: Giấy A4 — chỉ Adm D&E đặt')).toBeInTheDocument();
     await userEvent.click(within(summary).getByRole('button', { name: 'Đã hiểu' }));
     expect(within(cart()).getByRole('spinbutton', { name: 'Bút bi xanh' })).toHaveValue(20);
     expect(within(cart()).getByRole('button', { name: 'Sửa Bìa còng 7cm' })).toBeInTheDocument();
@@ -136,7 +136,7 @@ describe('RequestPage — chép lại tháng trước', () => {
     });
   });
 
-  it('giỏ có dòng Hành chính thêm cùng món → chép bỏ món đó (không trùng id), tóm tắt "Hành chính đã thêm món này"', async () => {
+  it('giỏ có dòng Adm D&E thêm cùng món → chép bỏ món đó (không trùng id), tóm tắt "Adm D&E đã thêm món này"', async () => {
     mockViewport(1280);
     const admin = lineView({ id: 'l-a', item_id: PEN.id, item: facts(PEN), qty: 1, added_by_admin: true, readonly_for_member: true });
     const api = stubRequestApi({
@@ -147,7 +147,7 @@ describe('RequestPage — chép lại tháng trước', () => {
     renderApp(makeMe('member'), '/');
     await userEvent.click(await screen.findByRole('button', { name: 'Chép lại danh sách tháng 10' }));
     const summary = await screen.findByRole('dialog', { name: 'Đã chép danh sách tháng 10' });
-    expect(within(summary).getByText('Đã bỏ: Bút bi xanh — Hành chính đã thêm món này')).toBeInTheDocument();
+    expect(within(summary).getByText('Đã bỏ: Bút bi xanh — Adm D&E đã thêm món này')).toBeInTheDocument();
     await userEvent.click(within(summary).getByRole('button', { name: 'Đã hiểu' }));
     expect(within(cart()).getAllByText('Bút bi xanh')).toHaveLength(1);
     await userEvent.click(screen.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }));

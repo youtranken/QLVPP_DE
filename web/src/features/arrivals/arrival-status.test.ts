@@ -53,7 +53,7 @@ describe('trạng thái đã lưu và sau lưu', () => {
     expect(afterState(row({ ordered: 5, received: 0 }), 5)).not.toBeNull();
   });
 
-  it('ADM hết hàng thắng; chưa đề nghị chưa về là none', () => {
+  it('NCC hết hàng thắng; chưa đề nghị chưa về là none', () => {
     expect(savedState(row({ adm_out: true }))).toEqual({ state: 'adm_out', n: 0 });
     expect(afterState(row({ adm_out: true }), 3)).toBeNull();
     expect(savedState(row({ ordered: 0, received: 0, added: true }))).toEqual({ state: 'none', n: 0 });
@@ -81,7 +81,7 @@ describe('groupCounts', () => {
     expect(groupCounts(rows, (r) => (r.item_id === 'a' ? 4 : 0))).toEqual({ done: 0, total: 2, doneAfter: 1 });
   });
 
-  it('ADM hết hàng tính là xong', () => {
+  it('NCC hết hàng tính là xong', () => {
     expect(groupCounts([row({ adm_out: true })], () => 0)).toEqual({ done: 1, total: 1, doneAfter: 1 });
   });
 });
@@ -94,7 +94,7 @@ describe('cột Còn thiếu', () => {
     expect(showShortColumn(rows, (r) => (r.item_id === 'b' ? 2 : 5))).toBe(true);
   });
 
-  it('ADM hết hàng không tính thiếu; shortOf = phần còn thiếu sau nhập', () => {
+  it('NCC hết hàng không tính thiếu; shortOf = phần còn thiếu sau nhập', () => {
     expect(showShortColumn([row({ adm_out: true })], () => 0)).toBe(false);
     expect(shortOf(row({ ordered: 10, received: 4 }), 2)).toBe(4);
     expect(shortOf(row({ ordered: 10, received: 4 }), 9)).toBe(0);

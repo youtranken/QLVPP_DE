@@ -7,7 +7,7 @@ import { PERIOD } from '@/test/request-api-stub';
 import { reviewRow } from './review-fixtures';
 
 const AT = '2026-11-11T15:12:00.000Z';
-const W10B = 'Phiếu gửi ADM lúc 22:12 11/11 chưa có món này. Sau khi chấp nhận, vào Gửi ADM để làm bản mới và in lại, hoặc tự mua riêng.';
+const W10B = 'Phiếu gửi NCC lúc 22:12 11/11 chưa có món này. Sau khi chấp nhận, vào Báo cáo & gửi NCC để làm bản mới và in lại, hoặc tự mua riêng.';
 
 function mount(sent: { in_sent_snapshot: boolean | null; in_sent_snapshot_qty: number | null; in_sent_snapshot_at: string | null }) {
   vi.stubGlobal(
@@ -30,12 +30,12 @@ async function openDialog(button: string) {
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('W10b — mua món chưa có trong phiếu gửi ADM', () => {
-  it.each(['Mua lần này', 'Mua và thêm vào danh mục'])('in_sent_snapshot false → hộp "%s" có W10b và liên kết Mở Gửi ADM', async (button) => {
+describe('W10b — mua món chưa có trong phiếu gửi NCC', () => {
+  it.each(['Mua lần này', 'Mua và thêm vào danh mục'])('in_sent_snapshot false → hộp "%s" có W10b và liên kết Mở Báo cáo & gửi NCC', async (button) => {
     mount({ in_sent_snapshot: false, in_sent_snapshot_qty: 0, in_sent_snapshot_at: AT });
     const dialog = await openDialog(button);
-    expect(within(dialog).getByRole('note')).toHaveTextContent(W10B + ' Mở Gửi ADM');
-    expect(within(dialog).getByRole('link', { name: 'Mở Gửi ADM' })).toHaveAttribute('href', '/admin/send-adm');
+    expect(within(dialog).getByRole('note')).toHaveTextContent(W10B + ' Mở Báo cáo & gửi NCC');
+    expect(within(dialog).getByRole('link', { name: 'Mở Báo cáo & gửi NCC' })).toHaveAttribute('href', '/admin/send-adm');
   });
 
   it.each([
@@ -54,11 +54,11 @@ describe('W10b — mua món chưa có trong phiếu gửi ADM', () => {
   });
 });
 
-describe('W10a — bỏ món đã tính vào phiếu gửi ADM', () => {
+describe('W10a — bỏ món đã tính vào phiếu gửi NCC', () => {
   it('"Không mua" khi in_sent_snapshot_qty > 0 → W10a có số và ĐVT, nút chính vẫn là "Không mua"', async () => {
     mount({ in_sent_snapshot: true, in_sent_snapshot_qty: 2, in_sent_snapshot_at: AT });
     const dialog = await openDialog('Không mua');
-    expect(within(dialog).getByRole('note')).toHaveTextContent('Phiếu gửi ADM lúc 22:12 11/11 đã có món này (2 cái) — hàng về sẽ không có người nhận.');
+    expect(within(dialog).getByRole('note')).toHaveTextContent('Phiếu gửi NCC lúc 22:12 11/11 đã có món này (2 cái) — hàng về sẽ không có người nhận.');
     await userEvent.type(within(dialog).getByRole('textbox'), 'Đã có trong kho');
     expect(within(dialog).getByRole('button', { name: 'Không mua' })).toBeEnabled();
   });

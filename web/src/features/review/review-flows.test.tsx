@@ -77,7 +77,7 @@ describe('ReviewPage — xử lý dòng', () => {
     renderApp(makeMe('admin'), '/admin/review');
     const a = await open('Băng keo 2 mặt', /^Mua lần này —/);
     const dialog = screen.getByRole('dialog');
-    expect(dialog).toHaveTextContent('Hành chính sẽ mua 2 cái cho phiếu tháng 11 của Phạm Văn Đức.');
+    expect(dialog).toHaveTextContent('Adm D&E sẽ mua 2 cái cho phiếu tháng 11 của Phạm Văn Đức.');
     await userEvent.dblClick(within(dialog).getByRole('button', { name: 'Mua lần này' }));
     expect(await within(a).findByText('Đã chấp nhận')).toBeInTheDocument();
     expect(posts(fetchMock)).toHaveLength(1);

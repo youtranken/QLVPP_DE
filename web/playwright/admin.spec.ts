@@ -63,7 +63,7 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     page,
     browser,
   }, info) => {
-    const contact = `PW Hành chính ${info.project.name} ${Date.now()}`;
+    const contact = `PW Adm D&E ${info.project.name} ${Date.now()}`;
     await page.goto('/admin/config');
     await expect(page.getByRole('heading', { level: 1, name: 'Cấu hình' })).toBeVisible();
     // R-D8.19: dòng sống nói kỳ đang mở giữ hạn cũ, hạn mới áp từ kỳ sau
@@ -76,7 +76,7 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     await expect(page.getByText('Nhập số từ 3 đến 28.')).toBeVisible();
 
     const contactForm = page.getByRole('form', { name: 'Liên hệ & thông báo' });
-    await page.getByLabel('Tên và cách liên hệ Hành chính').fill(contact);
+    await page.getByLabel('Tên và cách liên hệ Adm D&E').fill(contact);
     await contactForm.getByRole('button', { name: 'Lưu liên hệ' }).click();
     await expect(contactForm.getByRole('status')).toHaveText('Đã lưu.');
     if (isMobile(info)) await expectNoContrastViolations(page);
@@ -93,7 +93,7 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     const entry = auditRows(page).first();
     const detail = await openAuditDetail(page, entry);
     const diff = detail.getByRole('table');
-    const changed = diff.getByRole('row').filter({ has: page.getByRole('rowheader', { name: 'Liên hệ Hành chính', exact: true }) });
+    const changed = diff.getByRole('row').filter({ has: page.getByRole('rowheader', { name: 'Liên hệ Adm D&E', exact: true }) });
     await expect(changed.getByRole('cell').last()).toHaveText(contact);
     await detail.getByText('Chi tiết kỹ thuật').click();
     await expect(detail.getByText(`Sau: {"admin_contact":"${contact}"}`)).toBeVisible();

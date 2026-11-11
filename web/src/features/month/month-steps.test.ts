@@ -25,7 +25,7 @@ describe('monthSteps (dải gọn của Kỳ tháng)', () => {
     ]);
   });
 
-  it('kỳ khóa: Đăng ký "4/5", Gửi ADM "11:50 08/11", Hàng về "19/21 món", Giao "0/4 phiếu"', () => {
+  it('kỳ khóa: Đăng ký "4/5", Gửi NCC "11:50 08/11", Hàng về "19/21 món", Giao "0/4 phiếu"', () => {
     const rows = [...Array(19).fill({ remaining: 0 }), { remaining: 3 }, { remaining: 1 }];
     const s = steps({ plan: plan(rows), deliver: { done: 0, total: 4 } });
     expect(s.map((x) => x.value)).toEqual(['4/5', '11:50 08/11', '19/21 món', '0/4 phiếu']);
@@ -38,17 +38,17 @@ describe('monthSteps (dải gọn của Kỳ tháng)', () => {
     expect(currentOf(s)).toEqual(['register']);
   });
 
-  it('chưa gửi → Gửi ADM "Chưa gửi" là bước hiện tại; Hàng về chưa có kế hoạch ghi "—"', () => {
+  it('chưa gửi → Gửi NCC "Chưa gửi" là bước hiện tại; Hàng về chưa có kế hoạch ghi "—"', () => {
     const s = steps({ send: unsent, plan: null, deliver: { done: 0, total: 4 } });
     expect(currentOf(s)).toEqual(['send']);
     expect(s[1]!.value).toBe('Chưa gửi');
     expect(s[2]!.value).toBe('—');
   });
 
-  it('không cần đề nghị → Gửi ADM và Hàng về cùng xong', () => {
+  it('không cần đề nghị → Gửi NCC và Hàng về cùng xong', () => {
     const s = steps({ send: { state: 'no_order', at: SENT_AT }, plan: null });
     expect(s[1]).toMatchObject({ done: true, value: 'Không cần đề nghị' });
-    expect(s[2]).toMatchObject({ done: true, value: 'Không có đơn gửi ADM' });
+    expect(s[2]).toMatchObject({ done: true, value: 'Không có đơn gửi NCC' });
   });
 
   it('ranh Hàng về: còn thiếu 1 món → chưa xong; hết sạch → xong', () => {
@@ -72,7 +72,7 @@ describe('monthSteps (dải gọn của Kỳ tháng)', () => {
 });
 
 describe('arrivalProgress', () => {
-  it('ADM hết hàng tính là xong; món ngoài DM đếm chung', () => {
+  it('NCC hết hàng tính là xong; món ngoài DM đếm chung', () => {
     expect(arrivalProgress(plan([{ remaining: 2, adm_out: true }, { remaining: 2 }], [{ remaining: 0 }]))).toEqual({ done: 2, total: 3 });
   });
 });

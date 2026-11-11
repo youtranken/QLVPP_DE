@@ -14,7 +14,7 @@ export const CONFIG = {
     { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: '' },
     { title: 'Người yêu cầu', title_en: 'Applicant', name: 'Lê Thị Bình' },
   ],
-  admin_contact: 'chị Bình — Hành chính',
+  admin_contact: 'chị Bình — Adm D&E',
 };
 
 export const PERIOD = { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 9, previous: null, owed: [] };

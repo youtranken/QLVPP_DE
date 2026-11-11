@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const MONTHLY = ['Kỳ tháng', 'Báo cáo & gửi ADM', 'Nhận hàng', 'Giao hàng', 'Còn nợ'];
+const MONTHLY = ['Kỳ tháng', 'Báo cáo & gửi NCC', 'Nhận hàng', 'Giao hàng', 'Còn nợ'];
 const MONTHLY_PATHS = ['/admin/month', '/admin/reports', '/admin/arrivals', '/admin/delivery', '/admin/backlog'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
@@ -30,11 +30,11 @@ describe('Menu theo luồng chuẩn', () => {
     expect(within(sideNav()).getAllByRole('group').map((g) => g.getAttribute('aria-label'))).toEqual(['Hằng tháng', 'Danh mục và tủ', 'Quản lý']);
   });
 
-  it('Kỳ tháng, Còn nợ, Báo cáo & gửi ADM mỗi trang xuất hiện đúng một lần trong menu', () => {
+  it('Kỳ tháng, Còn nợ, Báo cáo & gửi NCC mỗi trang xuất hiện đúng một lần trong menu', () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/month');
-    for (const name of ['Kỳ tháng', 'Còn nợ', 'Báo cáo & gửi ADM']) expect(within(sideNav()).getAllByRole('link', { name })).toHaveLength(1);
+    for (const name of ['Kỳ tháng', 'Còn nợ', 'Báo cáo & gửi NCC']) expect(within(sideNav()).getAllByRole('link', { name })).toHaveLength(1);
   });
 
   it('sidebar ghi "Sản phẩm" và "Danh mục" (không còn "Danh mục món", "Nhóm & đơn vị")', () => {

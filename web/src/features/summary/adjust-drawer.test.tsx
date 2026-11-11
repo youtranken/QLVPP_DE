@@ -93,7 +93,7 @@ describe('AdjustDrawer — chỉ giảm sau khóa sổ (R-D6.3)', () => {
     expect(within(row(drawer, 'Giấy note vàng')).queryByText('Sẽ bỏ khỏi phiếu')).toBeNull();
   });
 
-  it('món tạm ngưng chưa giao: tên gạch ngang + "Tạm ngưng", chỉ đọc (không ô số, không X), không tính vào đầu mục; món chỉ Hành chính: "Chỉ Hành chính", "ram · Hành chính đặt"', async () => {
+  it('món tạm ngưng chưa giao: tên gạch ngang + "Tạm ngưng", chỉ đọc (không ô số, không X), không tính vào đầu mục; món chỉ Adm D&E: "Chỉ Adm D&E", "ram · Adm D&E đặt"', async () => {
     stubAdjust({
       views: [
         adminRequest({
@@ -117,8 +117,8 @@ describe('AdjustDrawer — chỉ giảm sau khóa sổ (R-D6.3)', () => {
     expect(within(drawer).getByText('Món trong phiếu · 4 dòng')).toBeInTheDocument();
     expect(within(drawer).getByText('55 đơn vị')).toBeInTheDocument();
     const a4 = row(drawer, 'Giấy A4 Double A');
-    expect(within(a4).getByText('Chỉ Hành chính')).toBeInTheDocument();
-    expect(within(a4).getByText('ram · Hành chính đặt')).toBeInTheDocument();
+    expect(within(a4).getByText('Chỉ Adm D&E')).toBeInTheDocument();
+    expect(within(a4).getByText('ram · Adm D&E đặt')).toBeInTheDocument();
   });
 
   it('Quay lại sau khi sửa → hỏi "Bỏ thay đổi?"; Ở lại giữ ngăn, Bỏ thay đổi đóng; chân ngăn đếm thay đổi', async () => {
@@ -267,18 +267,18 @@ describe('AdjustDrawer — ?left=1 với người còn làm', () => {
   });
 });
 
-describe('AdjustDrawer — giảm sau khi đã gửi ADM (W11, R-D17.6)', () => {
+describe('AdjustDrawer — giảm sau khi đã gửi NCC (W11, R-D17.6)', () => {
   it('kỳ đã có bản: hạ 5 → 3 → W11 ngay dưới dòng trước khi Lưu, n = 2; không chặn Lưu', async () => {
     const view = adminRequest();
     view.lines[1] = { ...view.lines[1], qty: 5 };
     stubAdjust({ views: [view], send: SENT });
     const { drawer } = await renderDrawer();
-    const text = 'Phiếu gửi ADM lúc 22:12 05/11 đã tính số cũ — giảm bây giờ thì hàng về dư 2 bịch vào kho.';
+    const text = 'Phiếu gửi NCC lúc 22:12 05/11 đã tính số cũ — giảm bây giờ thì hàng về dư 2 bịch vào kho.';
     expect(within(drawer).queryByText(text)).toBeNull();
     await userEvent.click(less(drawer, 'Giấy note vàng'));
     await userEvent.click(less(drawer, 'Giấy note vàng'));
     expect(await within(row(drawer, 'Giấy note vàng')).findByText(text)).toBeInTheDocument();
-    expect(within(row(drawer, 'Bút bi xanh')).queryByText(/Phiếu gửi ADM/)).toBeNull();
+    expect(within(row(drawer, 'Bút bi xanh')).queryByText(/Phiếu gửi NCC/)).toBeNull();
     await userEvent.click(pick(drawer, 'Giấy note vàng', 'Không có hàng'));
     expect(saveButton(drawer)).toBeEnabled();
   });
@@ -288,7 +288,7 @@ describe('AdjustDrawer — giảm sau khi đã gửi ADM (W11, R-D17.6)', () => 
     const { drawer } = await renderDrawer();
     await userEvent.click(less(drawer, 'Giấy note vàng'));
     await waitFor(() => expect(reasons(drawer, 'Giấy note vàng')).toBeInTheDocument());
-    expect(within(drawer).queryByText(/Phiếu gửi ADM/)).toBeNull();
+    expect(within(drawer).queryByText(/Phiếu gửi NCC/)).toBeNull();
   });
 });
 

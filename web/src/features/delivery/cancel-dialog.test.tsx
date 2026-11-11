@@ -10,7 +10,7 @@ import { backlogLine } from './backlog-fixtures';
 
 const CANCEL_URL = '/api/admin/lines/l-pen/cancel-remaining';
 const TITLE = 'Hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức?';
-const W23 = 'Phiếu gửi ADM tháng 10 đã tính 2 cây này — hủy thì hàng về dư vào kho.';
+const W23 = 'Phiếu gửi NCC tháng 10 đã tính 2 cây này — hủy thì hàng về dư vào kho.';
 
 function stub(respond: () => Response | Promise<Response> = () => jsonResponse(200, { cancelled_now: 3 })) {
   const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
@@ -52,7 +52,7 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
     renderDialog();
     expect(screen.getByRole('dialog', { name: TITLE })).toBeInTheDocument();
     const radios = within(reasons()).getAllByRole('radio');
-    expect(radios.map((r) => r.closest('label')?.textContent)).toEqual(['ADM hết hàng', 'Người nhận không cần nữa', 'Người đã nghỉ', 'Khác']);
+    expect(radios.map((r) => r.closest('label')?.textContent)).toEqual(['NCC hết hàng', 'Người nhận không cần nữa', 'Người đã nghỉ', 'Khác']);
     expect(radios.every((r) => !(r as HTMLInputElement).checked)).toBe(true);
     expect(screen.getByText('Nhân viên sẽ thấy lý do trong Lịch sử.')).toBeInTheDocument();
     const footer = screen.getByRole('button', { name: 'Quay lại' }).parentElement!;
@@ -72,10 +72,10 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
     expect((posts(f)[0][1].headers as Record<string, string>)['X-CSRF-Token']).toBe('csrf-1');
   });
 
-  it('lý do khác "Khác" (ADM hết hàng): ghi chú không bắt buộc, gửi kèm ghi chú đã trim', async () => {
+  it('lý do khác "Khác" (NCC hết hàng): ghi chú không bắt buộc, gửi kèm ghi chú đã trim', async () => {
     const f = stub();
     renderDialog();
-    await pick('ADM hết hàng');
+    await pick('NCC hết hàng');
     expect(noteBox()).not.toBeRequired();
     setNote('  Đổi mẫu ');
     await userEvent.click(submit());
@@ -118,7 +118,7 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
     expect(submit()).toBeEnabled();
   });
 
-  it('W23: counted_in_snapshot_qty 2 → khối cam "Phiếu gửi ADM tháng 10 đã tính 2 cây này — …", không chặn Hủy nợ', async () => {
+  it('W23: counted_in_snapshot_qty 2 → khối cam "Phiếu gửi NCC tháng 10 đã tính 2 cây này — …", không chặn Hủy nợ', async () => {
     stub();
     renderDialog({ line: { counted_in_snapshot_qty: 2 } });
     expect(screen.getByText(W23)).toHaveClass('alert--warn');
@@ -129,7 +129,7 @@ describe('CancelDialog — Hủy nợ với lý do có sẵn', () => {
   it.each([0, null])('W23: counted_in_snapshot_qty %p → không có khối', (n) => {
     stub();
     renderDialog({ line: { counted_in_snapshot_qty: n } });
-    expect(screen.queryByText(/^Phiếu gửi ADM tháng/)).toBeNull();
+    expect(screen.queryByText(/^Phiếu gửi NCC tháng/)).toBeNull();
   });
 
   it('"Quay lại" đóng hộp, không gửi', async () => {

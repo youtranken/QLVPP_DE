@@ -16,13 +16,13 @@ const table = async () => within(await screen.findByRole('table'));
 afterEach(() => vi.unstubAllGlobals());
 
 describe('MonthPage: kỳ khóa', () => {
-  it('h1 "Kỳ tháng 10" và dải 4 bước gọn: Đăng ký 4/5 · Gửi ADM 11:50 08/11 · Hàng về 19/21 món · Giao 1/4 phiếu', async () => {
+  it('h1 "Kỳ tháng 10" và dải 4 bước gọn: Đăng ký 4/5 · Gửi NCC 11:50 08/11 · Nhận hàng 19/21 món · Giao 1/4 phiếu', async () => {
     stubMonthApi();
     open();
     expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 10' })).toBeInTheDocument();
-    const steps = await screen.findByRole('list', { name: '4 bước của tháng' });
+    const steps = await screen.findByRole('list', { name: 'Các bước của tháng' });
     const text = within(steps).getAllByRole('listitem').map((li) => li.textContent);
-    expect(text).toEqual(['Đăng ký4/5', 'Gửi ADM11:50 08/11', 'Hàng về19/21 món', 'Giao1/4 phiếu']);
+    expect(text).toEqual(['Đăng ký4/5', 'Gửi NCC11:50 08/11', 'Nhận hàng19/21 món', 'Giao1/4 phiếu']);
   });
 
   it('bảng: Người · Nhóm · Số món · Tổng · Giao · Ghi chú · Lưu lúc, nhóm theo phòng "Phòng Test · 4 người", "Chưa có phòng · 1 người" cuối', async () => {
@@ -37,12 +37,12 @@ describe('MonthPage: kỳ khóa', () => {
     expect(groups.at(-1)).toContain('Chưa có phòng');
   });
 
-  it('Ghi chú: "Vượt tối đa", "HC đã điều chỉnh", "Không có gì để giao", "Món ngoài danh mục"', async () => {
+  it('Ghi chú: "Vượt tối đa", "Adm D&E đã điều chỉnh", "Không có gì để giao", "Món ngoài danh mục"', async () => {
     stubMonthApi();
     open();
     const t = await table();
     expect(t.getAllByText('Vượt tối đa').length).toBe(2);
-    expect(t.getByText('HC đã điều chỉnh')).toBeInTheDocument();
+    expect(t.getByText('Adm D&E đã điều chỉnh')).toBeInTheDocument();
     expect(t.getByText('Không có gì để giao')).toBeInTheDocument();
     expect(t.getByText('Món ngoài danh mục')).toBeInTheDocument();
   });
@@ -160,7 +160,7 @@ describe('MonthPage: chuyển kỳ', () => {
     const t = await table();
     await t.findByText('Nhân viên B');
     expect(t.getAllByRole('columnheader').map((h) => h.textContent).slice(0, 5)).toEqual(['Người', 'Nhóm', 'Số món', 'Tổng', 'Lưu lúc']);
-    const steps = screen.getByRole('list', { name: '4 bước của tháng' });
+    const steps = screen.getByRole('list', { name: 'Các bước của tháng' });
     expect(within(steps).getByText('3/5')).toBeInTheDocument();
     expect(within(steps).getAllByText('—')).toHaveLength(3);
   });

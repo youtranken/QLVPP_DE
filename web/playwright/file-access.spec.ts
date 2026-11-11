@@ -5,7 +5,7 @@ import { deleteTestUsers, devHeaders, removeTestItem, seedActiveUser } from './h
 const PNG = readFileSync('playwright/fixtures/item.png');
 
 test.describe('PRD §10.10 quyền đọc ảnh', () => {
-  test('member A mở ảnh dòng của B → 404 FILE_NOT_FOUND; A mở ảnh dòng của chính mình, B → 200; Hành chính kỳ đang mở → 404; ảnh món đang bán → A 200', async ({ request }, info) => {
+  test('member A mở ảnh dòng của B → 404 FILE_NOT_FOUND; A mở ảnh dòng của chính mình, B → 200; Adm D&E kỳ đang mở → 404; ảnh món đang bán → A 200', async ({ request }, info) => {
     const suffix = `${Date.now()}-${info.project.name}`;
     const a = { 'x-dev-user-sub': `pw-fa-a-${suffix}`, 'x-dev-role': 'member' };
     const b = { 'x-dev-user-sub': `pw-fa-b-${suffix}`, 'x-dev-role': 'member' };

@@ -27,7 +27,7 @@ async function open(path = '/admin/stock', ready = 'Giấy A4', width = 1280) {
 const rowOf = (name: string) => screen.getByText(name).closest('tr')!;
 
 describe('StockPage', () => {
-  it('đúng một h1 "Tủ / Kho" + liên kết "Sản phẩm"; không còn liên kết "Hàng ADM về? → Hàng về"', async () => {
+  it('đúng một h1 "Tủ / Kho" + liên kết "Sản phẩm"; không còn liên kết "Hàng NCC về? → Hàng về"', async () => {
     await open();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1, name: 'Tủ / Kho' })).toBeInTheDocument();

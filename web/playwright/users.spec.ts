@@ -80,8 +80,8 @@ test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
       await expect(rowOf(page, TEAM_QS.name).getByText('QS', { exact: true })).toBeVisible();
       await expect(rowOf(page, TEAM_NONE.name).getByText('—').first()).toBeVisible();
     }
-    await expect(rowOf(page, TEAM_QS.name).getByText('Hành chính', { exact: true })).toBeVisible();
-    await expect(rowOf(page, TEAM_NONE.name).getByText('Hành chính', { exact: true })).toHaveCount(0);
+    await expect(rowOf(page, TEAM_QS.name).getByText('Adm D&E', { exact: true })).toBeVisible();
+    await expect(rowOf(page, TEAM_NONE.name).getByText('Adm D&E', { exact: true })).toHaveCount(0);
     await expect(rowOf(page, NO_ACCESS.name).getByText('Mất quyền', { exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: /^Mất quyền/ }).click();

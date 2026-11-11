@@ -16,7 +16,7 @@ const row = (id: string, over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-const BINH = { sub: 'u-binh', fullName: 'Lê Thị Bình', email: 'binh@pmh.com.vn', department: 'Hành chính', status: 'locked' };
+const BINH = { sub: 'u-binh', fullName: 'Lê Thị Bình', email: 'binh@pmh.com.vn', department: 'Adm D&E', status: 'locked' };
 const audit400 = (fields: string[]) => jsonResponse(400, { statusCode: 400, code: 'VALIDATION', message: 'x', fields });
 
 function stubApi() {

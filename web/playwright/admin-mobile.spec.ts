@@ -7,7 +7,7 @@ const PAGES = [
   ['review', 'Món ngoài danh mục'],
   ['delivery', 'Giao hàng'],
   ['backlog', 'Còn nợ'],
-  ['reports', 'Báo cáo & gửi ADM'],
+  ['reports', 'Báo cáo & gửi NCC'],
   ['stock', 'Tủ / Kho'],
   ['catalog', 'Sản phẩm'],
   ['categories', 'Danh mục'],
@@ -37,11 +37,11 @@ async function expectNoHorizontalScroll(page: Page, where: string) {
   await expect.poll(() => overflowOf(page), { message: `cuộn ngang ở ${where}` }).toBeLessThanOrEqual(0);
 }
 
-test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
+test.describe('E9-S7 Adm D&E 390 px (dev-identity admin)', () => {
   asRole('admin');
   test.skip(({ isMobile: phone }) => !phone, 'Bố cục điện thoại chỉ kiểm ở 390 px');
 
-  test('E9-S7 Hành chính 390: menu sheet ≤ 2 chạm, không cuộn ngang mọi trang', async ({ page }) => {
+  test('E9-S7 Adm D&E 390: menu sheet ≤ 2 chạm, không cuộn ngang mọi trang', async ({ page }) => {
     test.setTimeout(120_000);
     await openPage(page, PAGES[0][0], PAGES[0][1]);
     for (let i = 0; i < PAGES.length; i++) {
@@ -116,7 +116,7 @@ test.describe('E9-S7 Hành chính 390 px (dev-identity admin)', () => {
     }
   });
 
-  test('E9-S7 axe 390 các màn Hành chính', async ({ page }) => {
+  test('E9-S7 axe 390 các màn Adm D&E', async ({ page }) => {
     test.setTimeout(120_000);
     for (const [path, title] of PAGES) {
       await openPage(page, path, title);

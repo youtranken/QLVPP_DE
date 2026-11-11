@@ -157,7 +157,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
   });
 });
 
-describe('Hành chính không có phiếu — route nhân viên chuyển về /admin', () => {
+describe('Adm D&E không có phiếu — route nhân viên chuyển về /admin', () => {
   beforeEach(() => {
     mockViewport(1280);
     vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})));
@@ -176,13 +176,13 @@ describe('Hành chính không có phiếu — route nhân viên chuyển về /a
     expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
   });
 
-  it('sidebar Hành chính không có "Phiếu của tôi"', () => {
+  it('sidebar Adm D&E không có "Phiếu của tôi"', () => {
     renderApp(makeMe('admin'), '/admin/month');
     expect(screen.getByRole('navigation', { name: 'Menu quản lý' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Phiếu của tôi/ })).toBeNull();
   });
 
-  it('đăng nhập lại về returnTo là route nhân viên mà người là Hành chính → /admin', async () => {
+  it('đăng nhập lại về returnTo là route nhân viên mà người là Adm D&E → /admin', async () => {
     vi.resetModules();
     sessionStorage.clear();
     sessionStorage.setItem('vpp.auth.returnTo', '/history?x=1');

@@ -59,7 +59,7 @@ test.describe('E6-S1 chuông', () => {
     }
   });
 
-  test('E6-S1 chuông: Hành chính thấy chuông trong shell quản lý, bấm thông báo về trang Kho', async ({ page }, info) => {
+  test('E6-S1 chuông: Adm D&E thấy chuông trong shell quản lý, bấm thông báo về trang Kho', async ({ page }, info) => {
     const sub = `pw-notif-a-${Date.now()}-${info.project.name}`;
     seedActiveUser(sub, `PW Chuông Admin ${info.project.name}`);
     await asIdentity(page, sub, 'admin');

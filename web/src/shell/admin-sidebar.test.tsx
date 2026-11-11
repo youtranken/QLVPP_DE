@@ -86,7 +86,7 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
     renderApp(makeMe('admin'), '/admin/catalog');
     expect(await screen.findByRole('link', { name: /Kỳ đăng ký hiện tại: tháng 11 · đang mở/ })).toHaveTextContent('còn 4 ngày');
     expect(screen.getByText('Nguyễn Văn An')).toBeInTheDocument();
-    expect(screen.getAllByText('Hành chính').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Adm D&E').length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'Đăng xuất' })).toBeInTheDocument();
   });
 

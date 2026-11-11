@@ -16,7 +16,7 @@ const text = (params: Record<string, unknown>, lang: 'vi' | 'en') =>
 
 const FULL = { name: 'Nguyễn Văn A', reason: 'locked', owed_lines: 3, owed_months: 2, pending_lines: 1, open_request: true };
 
-describe('chuông user_left_with_work (Hành chính)', () => {
+describe('chuông user_left_with_work (Adm D&E)', () => {
   it('vi/en đủ: ai, vì sao, còn gì, có phiếu kỳ đang mở', () => {
     expect(text(FULL, 'vi')).toBe(
       'Nguyễn Văn A bị khoá nhưng còn 3 món chưa nhận (2 tháng), 1 món ngoài danh mục chờ duyệt. Có phiếu kỳ đang mở.',

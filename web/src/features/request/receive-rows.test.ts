@@ -25,10 +25,10 @@ describe('receiveRows / receiveSummary — phiếu 6 món theo NV-NhanHang-Popup
   );
   const byName = (n: string) => all.find((r) => r.name === n)!;
 
-  it('đã nhận 1/1, chờ 1, và món Hành chính bỏ thành "Không giao" kèm ghi chú', () => {
+  it('đã nhận 1/1, chờ 1, và món Adm D&E bỏ thành "Không giao" kèm ghi chú', () => {
     expect(byName('Bút bảng')).toMatchObject({ registered: 1, toGive: 1, received: 1, state: 'received', receivedAt: '2026-11-08T02:10:00.000Z' });
     expect(byName('Bút dạ quang')).toMatchObject({ toGive: 1, received: 0, state: 'waiting', waiting: 1 });
-    expect(byName('Bút ghi đĩa Thiên Long')).toMatchObject({ registered: 1, toGive: 0, state: 'none', note: 'HC bỏ món: Không có hàng' });
+    expect(byName('Bút ghi đĩa Thiên Long')).toMatchObject({ registered: 1, toGive: 0, state: 'none', note: 'Adm D&E bỏ món: Không có hàng' });
   });
 
   it('tóm tắt đếm theo món có toGive > 0: 2/5, còn chờ 3', () => {
@@ -72,6 +72,6 @@ describe('receiveRows — biên', () => {
 
   it('lý do cũ over_quota vẫn có nhãn', () => {
     const [r] = rows([], [{ ...REMOVED, reason_code: 'over_quota' }]);
-    expect(r.note).toBe('HC bỏ món: Vượt định mức');
+    expect(r.note).toBe('Adm D&E bỏ món: Vượt định mức');
   });
 });

@@ -115,7 +115,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await search.fill(name);
       const row = page.getByRole('row').filter({ hasText: name });
       await expect(row.getByText('Thiếu ảnh', { exact: true })).toBeVisible();
-      await expect(row.getByText('Chỉ Hành chính')).toBeVisible();
+      await expect(row.getByText('Chỉ Adm D&E')).toBeVisible();
       await search.fill('');
       await expect(page.getByText('Bút bi xanh')).toBeHidden();
       await shot(page, info, 'catalog-seed', false);

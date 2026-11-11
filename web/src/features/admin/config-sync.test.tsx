@@ -20,7 +20,7 @@ async function retype(el: HTMLElement, value: string) {
 async function savePeriodWhileOtherAdminChanged() {
   const fetchMock = stubConfigApi((body) => jsonResponse(200, { ...CONFIG, ...OTHER_ADMIN, ...body }));
   await openConfig();
-  await retype(screen.getByLabelText('Tên và cách liên hệ Hành chính'), 'chị Hoa');
+  await retype(screen.getByLabelText('Tên và cách liên hệ Adm D&E'), 'chị Hoa');
   await retype(screen.getByLabelText('Hạn đăng ký (ngày)'), '12');
   await userEvent.click(screen.getByRole('button', { name: 'Lưu kỳ đăng ký' }));
   await userEvent.click(await screen.findByRole('button', { name: 'Lưu hạn mới' }));
@@ -38,8 +38,8 @@ describe('Cấu hình · khối theo cấu hình mới nhất', () => {
 
   it('khối đang sửa giữ ô người dùng đã đổi, ô khác theo cấu hình mới; Lưu chỉ gửi ô đã đổi', async () => {
     const fetchMock = await savePeriodWhileOtherAdminChanged();
-    expect(screen.getByLabelText('Tên và cách liên hệ Hành chính')).toHaveValue('chị Hoa');
-    expect(screen.getByRole('switch', { name: 'Báo Hành chính khi món sắp hết' })).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByLabelText('Tên và cách liên hệ Adm D&E')).toHaveValue('chị Hoa');
+    expect(screen.getByRole('switch', { name: 'Báo Adm D&E khi món sắp hết' })).toHaveAttribute('aria-checked', 'false');
     await userEvent.click(screen.getByRole('button', { name: 'Lưu liên hệ' }));
     await vi.waitFor(() => expect(putBodies(fetchMock)).toHaveLength(2));
     expect(putBodies(fetchMock)[1]).toEqual({ admin_contact: 'chị Hoa' });

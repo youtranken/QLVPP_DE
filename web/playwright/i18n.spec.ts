@@ -40,7 +40,7 @@ async function expectContentLanguage(page: Page, lang: Lang, root: Locator = pag
   else expect(words.length).toBeGreaterThan(0);
 }
 
-test.describe('E6-S4 song ngữ các màn Hành chính của Plan 3', () => {
+test.describe('E6-S4 song ngữ các màn Adm D&E của Plan 3', () => {
   test('E6-S4 Giao hàng, Còn nợ, Báo cáo, Lịch sử, chuông: en không còn chữ Việt trong nội dung, axe 390 sạch ở cả vi và en', async ({ page, browser }, info) => {
     // 5 màn × 2 ngôn ngữ + trang Nhân viên riêng cho Lịch sử
     test.setTimeout(90_000);
@@ -59,7 +59,7 @@ test.describe('E6-S4 song ngữ các màn Hành chính của Plan 3', () => {
 
       for (const lang of ['vi', 'en'] as const) {
         await switchLanguage(page, info, lang);
-        const t = lang === 'vi' ? { delivery: 'Xác nhận giao', backlog: 'Còn nợ', reports: 'Báo cáo & gửi ADM', bell: 'Thông báo' } : { delivery: 'Confirm delivery', backlog: 'Outstanding', reports: 'Reports & send to ADM', bell: 'Notifications' };
+        const t = lang === 'vi' ? { delivery: 'Xác nhận giao', backlog: 'Còn nợ', reports: 'Báo cáo & gửi NCC', bell: 'Thông báo' } : { delivery: 'Confirm delivery', backlog: 'Outstanding', reports: 'Reports & send to supplier', bell: 'Notifications' };
 
         await page.goto('/admin/delivery');
         await page.getByRole('searchbox').fill(seed.name);
@@ -158,7 +158,7 @@ async function englishPage(browser: Browser, info: TestInfo, headers?: Record<st
 }
 
 test.describe('E6-S4 song ngữ mọi màn PRD §8', () => {
-  test('E6-S4 en: Đăng nhập, Chưa được cấp quyền, mọi màn member và Hành chính không còn chữ Việt ngoài dữ liệu người dùng', async ({ browser }, info) => {
+  test('E6-S4 en: Đăng nhập, Chưa được cấp quyền, mọi màn member và Adm D&E không còn chữ Việt ngoài dữ liệu người dùng', async ({ browser }, info) => {
     test.setTimeout(120_000);
     const sub = `pw-i18n-all-${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}`;
     seedActiveUser(sub, `PW i18n ${sub}`);

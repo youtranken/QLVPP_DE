@@ -5,7 +5,7 @@ import { seedLockedRequest, type Seed } from './locked-request';
 asRole('admin');
 
 const fitsWidth = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
-const steps = (page: Page) => page.getByRole('list', { name: /^(4 bước của tháng|The 4 steps of the month)$/ });
+const steps = (page: Page) => page.getByRole('list', { name: /^(Các bước của tháng|Steps of the month)$/ });
 
 async function openMonth(page: Page, ym?: string) {
   await page.goto(ym ? `/admin/month?ym=${ym}` : '/admin/month');
@@ -20,7 +20,7 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
     await expect(page.getByRole('heading', { level: 1, name: /^Kỳ tháng \d+$/ })).toBeVisible();
     const items = steps(page).getByRole('listitem');
     await expect(items).toHaveCount(4);
-    for (const [i, name] of ['Đăng ký', 'Gửi ADM', 'Hàng về', 'Giao'].entries()) await expect(items.nth(i)).toContainText(name);
+    for (const [i, name] of ['Đăng ký', 'Gửi NCC', 'Nhận hàng', 'Giao'].entries()) await expect(items.nth(i)).toContainText(name);
     await expect(page.getByRole('button', { name: /^Tất cả/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Có ghi chú/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Chưa giao xong/ })).toBeVisible();
@@ -114,7 +114,7 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
     await page.addInitScript(() => localStorage.setItem('vpp_lang', 'en'));
     await page.goto('/admin/month');
     await expect(page.getByRole('heading', { level: 1, name: /^Month \d+$/ })).toBeVisible();
-    for (const name of ['Sign-up', 'Send to ADM', 'Goods in', 'Delivery']) await expect(steps(page).getByText(name, { exact: true })).toBeVisible();
+    for (const name of ['Sign-up', 'Send to supplier', 'Receiving', 'Delivery']) await expect(steps(page).getByText(name, { exact: true })).toBeVisible();
   });
 });
 

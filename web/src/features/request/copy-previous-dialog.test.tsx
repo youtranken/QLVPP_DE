@@ -26,15 +26,15 @@ describe('CopySummaryDialog', () => {
     );
     const dialog = await screen.findByRole('dialog', { name: 'Đã chép danh sách tháng 10' });
     for (const text of [
-      'Đã bỏ: Giấy A4 — chỉ Hành chính đặt',
+      'Đã bỏ: Giấy A4 — chỉ Adm D&E đặt',
       'Đã bỏ: Bút dạ cũ — món đã ngừng',
-      'Đã bỏ: Kéo lớn — do Hành chính thêm',
-      'Đã bỏ: Bìa lỗ — Hành chính không nhận',
+      'Đã bỏ: Kéo lớn — do Adm D&E thêm',
+      'Đã bỏ: Bìa lỗ — Adm D&E không nhận',
       'Đã bỏ: Kẹp lạ — đơn vị tính đã ngừng dùng',
       'Đã giảm: Bút bi xanh từ 30 xuống 20 (tối đa mỗi tháng)',
-      'Đã bỏ: Kẹp giấy — Hành chính đã thêm món này',
+      'Đã bỏ: Kẹp giấy — Adm D&E đã thêm món này',
       '1 món không còn đặt được đã bị bỏ.',
-      'Bìa còng 7cm — tháng trước Hành chính đã nhận, chép lại thành món ngoài danh mục để Hành chính xem lại',
+      'Bìa còng 7cm — tháng trước Adm D&E đã nhận, chép lại thành món ngoài danh mục để Adm D&E xem lại',
     ]) {
       expect(within(dialog).getByText(text)).toBeInTheDocument();
     }

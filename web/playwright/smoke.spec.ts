@@ -60,7 +60,7 @@ test.describe('E0-S9 khung nhân viên (dev-identity member)', () => {
   });
 });
 
-test.describe('E0-S9 khung Hành chính (dev-identity admin)', () => {
+test.describe('E0-S9 khung Adm D&E (dev-identity admin)', () => {
   asRole('admin');
 
   test('E0-S9 admin: /admin/catalog thấy sidebar; đổi en → tiêu đề sidebar đổi', async ({ page }, info) => {
@@ -80,7 +80,7 @@ test.describe('E0-S9 khung Hành chính (dev-identity admin)', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Products' })).toBeVisible();
   });
 
-  test('E9-S0 Hành chính không có phiếu: đăng nhập vào thẳng Kỳ tháng, mở / bị đưa về /admin, sidebar không có Phiếu của tôi', async ({ page }, info) => {
+  test('E9-S0 Adm D&E không có phiếu: đăng nhập vào thẳng Kỳ tháng, mở / bị đưa về /admin, sidebar không có Phiếu của tôi', async ({ page }, info) => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/admin\/month/);
     await expect(page.getByRole('heading', { level: 1, name: /^Kỳ tháng \d+$/ })).toBeVisible();

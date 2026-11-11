@@ -226,12 +226,12 @@ describe('Ngừng / Dùng lại ở thẻ', () => {
     expect(screen.queryByRole('img', { name: 'Tạm ngưng' })).toBeNull();
   });
 
-  it('W24: còn hàng ADM đang về → hỏi "Ngừng Bút bi xanh?" kèm khối cam; Quay lại → không PATCH', async () => {
+  it('W24: còn hàng NCC đang về → hỏi "Ngừng Bút bi xanh?" kèm khối cam; Quay lại → không PATCH', async () => {
     const f = stub((url) => (url.endsWith('/pending-arrival') ? jsonResponse(200, { remaining: 3, unit: 'cay', snapshot_at: '2026-11-03T02:15:00.000Z' }) : undefined));
     renderCard(PEN);
     await userEvent.click(screen.getByRole('button', { name: 'Tạm ngưng Bút bi xanh' }));
     const ask = await screen.findByRole('dialog', { name: 'Tạm ngưng Bút bi xanh?' });
-    expect(within(ask).getByRole('note')).toHaveTextContent(/đang chờ ADM giao 3 cây/);
+    expect(within(ask).getByRole('note')).toHaveTextContent(/đang chờ NCC giao 3 cây/);
     await userEvent.click(within(ask).getByRole('button', { name: 'Quay lại' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Tạm ngưng Bút bi xanh?' })).toBeNull());
     expect(patches(f)).toHaveLength(0);

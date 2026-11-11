@@ -34,7 +34,7 @@ const removed = (over: Partial<RemovedLine>): RemovedLine => ({
 const past = (over: Partial<RequestView>) =>
   stubRequestApi({ others: { '2026-10': view({ period_ym: '2026-10', is_open: false, ...over }) } });
 
-describe('Lịch sử — điều chỉnh của Hành chính', () => {
+describe('Lịch sử — điều chỉnh của Adm D&E', () => {
   it('dòng giảm nhiều lần: "… 5 thành 4 …" rồi "… 4 thành 3 …" theo thời gian, kèm ngày giờ VN', async () => {
     const pen = { ...facts(PEN), unit: 'cai' };
     past({
@@ -49,7 +49,7 @@ describe('Lịch sử — điều chỉnh của Hành chính', () => {
       ],
     });
     renderApp(makeMe('member'), '/history/2026-10');
-    const box = (await screen.findByRole('heading', { name: 'Điều chỉnh của Hành chính' })).closest('section')!;
+    const box = (await screen.findByRole('heading', { name: 'Điều chỉnh của Adm D&E' })).closest('section')!;
     expect(within(box).getAllByRole('listitem').map((n) => n.textContent)).toEqual([
       `13/12 08:00 · ${PEN.name} 5 thành 4 · Lý do: Vượt định mức`,
       `13/12 09:10 · ${PEN.name} 4 thành 3 · Lý do: Vượt định mức`,
@@ -66,12 +66,12 @@ describe('Lịch sử — điều chỉnh của Hành chính', () => {
     renderApp(makeMe('member'), '/history/2026-10');
     const row = (await screen.findByRole('rowheader', { name: 'Kéo cắt' })).closest('tr')!;
     expect(within(row).getByText('Không giao')).toBeInTheDocument();
-    expect(within(row).getByText(`HC bỏ món · ${SCRIPT} dòng 2`)).toBeInTheDocument();
+    expect(within(row).getByText(`Adm D&E bỏ món · ${SCRIPT} dòng 2`)).toBeInTheDocument();
     expect(screen.getByText(`13/12 09:10 · Kéo cắt 3 thành 0 · Lý do: ${SCRIPT} dòng 2`)).toBeInTheDocument();
     expect(document.querySelector('script:not([src])')).toBeNull();
   });
 
-  it('phiếu bị bỏ toàn bộ: "Hành chính đã bỏ toàn bộ: <các lý do khác nhau nối \'; \'>"', async () => {
+  it('phiếu bị bỏ toàn bộ: "Adm D&E đã bỏ toàn bộ: <các lý do khác nhau nối \'; \'>"', async () => {
     past({
       lines: [],
       removed_all: true,
@@ -82,7 +82,7 @@ describe('Lịch sử — điều chỉnh của Hành chính', () => {
       ],
     });
     renderApp(makeMe('member'), '/history/2026-10');
-    expect(await screen.findByText('Hành chính đã bỏ toàn bộ: Trùng với phiếu khác; Vượt định mức')).toBeInTheDocument();
+    expect(await screen.findByText('Adm D&E đã bỏ toàn bộ: Trùng với phiếu khác; Vượt định mức')).toBeInTheDocument();
     expect(screen.queryByText('Không có phiếu tháng này')).toBeNull();
   });
 
@@ -91,7 +91,7 @@ describe('Lịch sử — điều chỉnh của Hành chính', () => {
     past({ lines: [], removed_all: false, removed_lines: [removed({})] });
     renderApp(makeMe('member'), '/history/2026-10');
     expect(await screen.findByRole('rowheader', { name: 'Scissors' })).toBeInTheDocument();
-    expect(screen.getByText('Admin removed · Duplicate of another request')).toBeInTheDocument();
+    expect(screen.getByText('D&E Admin removed · Duplicate of another request')).toBeInTheDocument();
     expect(screen.getByText(/Scissors 3 to 0 · Reason: Duplicate of another request/)).toBeInTheDocument();
   });
 });

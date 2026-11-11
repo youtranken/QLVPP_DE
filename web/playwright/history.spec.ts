@@ -70,7 +70,7 @@ test.describe('E2-S6 lịch sử', () => {
       await expect(open).toHaveAttribute('href', '/');
       const prev = page.getByRole('link', { name: new RegExp(`^Tháng ${prevMonth}(?!\\d)`) });
       await expect(prev.getByText('Còn chờ 1 món')).toBeVisible();
-      await expect(prev.getByText('1 món chờ Hành chính xem · 1 món bị từ chối')).toBeVisible();
+      await expect(prev.getByText('1 sản phẩm ngoài danh mục, chờ phê duyệt · 1 món bị từ chối')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'list');
       await page.screenshot({ path: `../live-real/v2c/final/history-${info.project.name}.png` });
@@ -86,7 +86,7 @@ test.describe('E2-S6 lịch sử', () => {
       await expect(rowA.getByText('Chờ 2')).toBeVisible();
       await expect(rowA.getByText('đã hủy 1')).toBeVisible();
       await expect(page.getByRole('row').filter({ hasText: b.name }).getByText('Đã nhận 2/2')).toBeVisible();
-      await expect(page.getByText('Chờ Hành chính xem', { exact: true })).toBeVisible();
+      await expect(page.getByText('Sản phẩm ngoài danh mục, chờ phê duyệt', { exact: true })).toBeVisible();
       await expect(page.getByText('Từ chối: Đã có trong kho')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'detail');
@@ -150,7 +150,7 @@ test.describe('E2-S6 lịch sử', () => {
   });
 
   // Hai kỳ quá khứ riêng của spec (không phải kỳ trước thật của dev); owed liệt kê mọi kỳ đã khóa nên kỳ cũ vẫn hiện
-  test('V2D-21 owed across months: Đăng ký nói mọi tháng còn chờ nhận, ≤ 2 chạm tới điều chỉnh của Hành chính trong Lịch sử', async ({ page, request }, info) => {
+  test('V2D-21 owed across months: Đăng ký nói mọi tháng còn chờ nhận, ≤ 2 chạm tới điều chỉnh của Adm D&E trong Lịch sử', async ({ page, request }, info) => {
     const sub = `pw-owed-${Date.now()}-${info.project.name}`;
     const headers = { 'x-dev-user-sub': sub, 'x-dev-role': 'member' };
     seedActiveUser(sub, `PW Chờ nhận ${info.project.name}`);

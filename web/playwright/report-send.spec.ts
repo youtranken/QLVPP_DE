@@ -26,7 +26,7 @@ async function saveDownload(download: Download, file: string) {
 
 asRole('admin');
 
-test.describe('Vòng3-BC Báo cáo & gửi ADM', () => {
+test.describe('Vòng3-BC Báo cáo & gửi NCC', () => {
   // Kỳ riêng của PW: bản chốt chỉ có món PW và không thay bản đã gửi của kỳ trước thật trên dev
   let run: { release: () => void; seed?: Seed; files: string[] };
   test.beforeEach(async () => {
@@ -55,7 +55,7 @@ test.describe('Vòng3-BC Báo cáo & gửi ADM', () => {
       };
     });
     await page.goto('/admin/reports');
-    await expect(page.getByRole('heading', { level: 1, name: 'Báo cáo & gửi ADM' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' })).toBeVisible();
     await openEditable(page);
     const rowOf = () => page.getByRole('table').first().getByRole('row').filter({ hasText: item.name });
     const qty = () => page.getByRole('spinbutton', { name: `Đề nghị: ${item.name}` });
@@ -86,7 +86,7 @@ test.describe('Vòng3-BC Báo cáo & gửi ADM', () => {
     await previewAndPrint(page);
     await expect(page.getByText(/^Đã gửi ADM \d\d:\d\d \d\d\/\d\d/)).toBeVisible();
     const copies = await openCopies(page);
-    await expect(copies.getByText('Đã gửi ADM', { exact: true })).toBeVisible();
+    await expect(copies.getByText('Đã gửi NCC', { exact: true })).toBeVisible();
     await expect(page.locator('details.bc-snaps-box summary')).toContainText('Các bản đã in / xuất (1)');
 
     await qty().fill('13');
@@ -115,7 +115,7 @@ test.describe('Vòng3-BC Báo cáo & gửi ADM', () => {
     const before = await snapshotsOf(request, seed.prevYm);
 
     await page.goto(`/admin/reports?ym=${PRIVATE_YM}`);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Báo cáo & gửi ADM');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Báo cáo & gửi NCC');
     await expect(page.getByRole('group', { name: 'Chọn tháng báo cáo' }).getByText(monthLabel(seed.prevYm))).toBeVisible();
     const rowA = page.getByRole('table').first().getByRole('row').filter({ hasText: a.name });
     await expect(rowA).toBeVisible();

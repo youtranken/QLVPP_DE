@@ -41,7 +41,7 @@ describe('Tên món theo ngôn ngữ giao diện (name_en khi en và khác rỗn
     expect(table.queryByText('Blue pen')).toBeNull();
   });
 
-  it('cột 3 cùng tên ở Gửi ADM cũ: vi "Đăng ký", en "Requested"', async () => {
+  it('cột 3 cùng tên ở Gửi NCC cũ: vi "Đăng ký", en "Requested"', async () => {
     await openIn('vi');
     const vi = within((await screen.findAllByRole('table'))[0]!);
     await vi.findByRole('row', { name: /Bút bi xanh/ });

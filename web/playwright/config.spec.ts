@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { acquireLock, asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, seedActiveUser, shot } from './helpers';
 
-const PW_ADMIN = { sub: 'pw-cfg-admin', name: 'PW Cấu hình Hành chính' };
+const PW_ADMIN = { sub: 'pw-cfg-admin', name: 'PW Cấu hình Adm D&E' };
 
 type Config = Record<string, unknown>;
 // Mọi khóa test này đổi được; khối Quyền truy cập chỉ đọc nên không có khóa nào bị đổi ngoài danh sách này
@@ -100,7 +100,7 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await expect(reminder).toHaveValue('2');
 
     const contact = block(page, 'Liên hệ & thông báo');
-    const contactBox = page.getByLabel('Tên và cách liên hệ Hành chính');
+    const contactBox = page.getByLabel('Tên và cách liên hệ Adm D&E');
     await contactBox.fill('');
     await contactBox.pressSequentially(`PW ${info.project.name} `.padEnd(501, 'x'), { delay: 0 });
     await expect(contactBox).toHaveValue(`PW ${info.project.name} `.padEnd(500, 'x'));
@@ -145,11 +145,11 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await saved(signers);
   });
 
-  test('E9-S6 Cấu hình: Quyền truy cập chỉ đọc, liệt kê Hành chính seed (role admin)', async ({ page }) => {
+  test('E9-S6 Cấu hình: Quyền truy cập chỉ đọc, liệt kê Adm D&E seed (role admin)', async ({ page }) => {
     seedActiveUser(PW_ADMIN.sub, PW_ADMIN.name, 'active', { team: 'Admin', role: 'admin' });
     await page.goto('/admin/config');
     const access = page.getByRole('region', { name: 'Quyền truy cập' });
-    await expect(access.getByRole('list', { name: 'Hành chính hiện tại' }).getByText(PW_ADMIN.name)).toBeVisible();
+    await expect(access.getByRole('list', { name: 'Adm D&E hiện tại' }).getByText(PW_ADMIN.name)).toBeVisible();
     await expect(access.getByRole('textbox')).toHaveCount(0);
     await expect(access.getByRole('button')).toHaveCount(0);
     await expect(access.getByText(/Ai được vào VPP do PMH ID quyết định/)).toBeVisible();

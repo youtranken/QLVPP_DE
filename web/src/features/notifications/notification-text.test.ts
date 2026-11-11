@@ -46,13 +46,13 @@ describe('notificationText', () => {
   });
 
   it('line_cancelled: tên món và đơn vị theo ngôn ngữ', () => {
-    expect(notificationText(SAMPLES[5], vi, 'vi')).toBe('Hành chính hủy phần còn chờ nhận 2 hộp Bút bi xanh (tháng 11): Hết hàng');
-    expect(notificationText(SAMPLES[5], en, 'en')).toBe('Admin cancelled the remaining 2 box of Blue pen (November): Hết hàng');
+    expect(notificationText(SAMPLES[5], vi, 'vi')).toBe('Adm D&E hủy phần còn chờ nhận 2 hộp Bút bi xanh (tháng 11): Hết hàng');
+    expect(notificationText(SAMPLES[5], en, 'en')).toBe('D&E Admin cancelled the remaining 2 box of Blue pen (November): Hết hàng');
   });
 
   it('line_review có/không ghi chú chọn đúng câu', () => {
-    expect(notificationText(SAMPLES[7], vi, 'vi')).toBe('Hành chính đã chấp nhận món "Bìa còng" (tháng 11).');
-    expect(notificationText(SAMPLES[8], vi, 'vi')).toBe('Hành chính từ chối món "Bìa còng" (tháng 11): Đã có trong kho');
+    expect(notificationText(SAMPLES[7], vi, 'vi')).toBe('Adm D&E đã chấp nhận món "Bìa còng" (tháng 11).');
+    expect(notificationText(SAMPLES[8], vi, 'vi')).toBe('Adm D&E từ chối món "Bìa còng" (tháng 11): Đã có trong kho');
     expect(notificationText(SAMPLES[9], en, 'en')).toBe('The item "Bìa còng" (November) was added to the catalog as A4 ring binder.');
   });
 
@@ -91,10 +91,10 @@ describe('notificationText', () => {
       ['low_stock', { name: 'Bút' }, 'Có món sắp hết kho.', 'An item is running low.'],
       ['low_stock', { stock_qty: 2 }, 'Có món sắp hết kho.', 'An item is running low.'],
       ['request_delivered', {}, 'Phiếu của bạn đã được giao đủ.', 'Your request has been fully delivered.'],
-      ['line_cancelled', { ym: '2026-11', qty: 2 }, 'Hành chính đã hủy phần còn chờ nhận của một món.', 'Admin cancelled the remaining quantity of an item.'],
+      ['line_cancelled', { ym: '2026-11', qty: 2 }, 'Adm D&E đã hủy phần còn chờ nhận của một món.', 'D&E Admin cancelled the remaining quantity of an item.'],
       ['custom_line_new', { ym: '2026-11', person: 'An' }, 'Có món ngoài danh mục mới cần xem.', 'There is a new off-catalog item to review.'],
-      ['line_review', { action: 'accepted', name: 'Bìa' }, 'Hành chính đã xem món ngoài danh mục của bạn.', 'Admin reviewed your off-catalog item.'],
-      ['line_review', { ym: '2026-11', action: 'converted', name: 'Bìa' }, 'Hành chính đã xem món ngoài danh mục của bạn.', 'Admin reviewed your off-catalog item.'],
+      ['line_review', { action: 'accepted', name: 'Bìa' }, 'Adm D&E đã xem món ngoài danh mục của bạn.', 'D&E Admin reviewed your off-catalog item.'],
+      ['line_review', { ym: '2026-11', action: 'converted', name: 'Bìa' }, 'Adm D&E đã xem món ngoài danh mục của bạn.', 'D&E Admin reviewed your off-catalog item.'],
       ['period_open', { ym: 'abc', deadline: '2026-11-10T17:00:00.000Z' }, 'Kỳ đăng ký mới đã mở.', 'A new request period is open.'],
     ];
     it.each(cases)('%s %j', (topic, params, viText, enText) => {
@@ -115,7 +115,7 @@ describe('notificationText', () => {
 
     it('line_cancelled thiếu lý do → câu kết thúc bằng dấu chấm, không có ": " treo', () => {
       const text = notificationText(n('line_cancelled', { ym: '2026-11', name: 'Bút bi xanh', unit: 'hop', qty: 2 }), vi, 'vi');
-      expect(text).toBe('Hành chính hủy phần còn chờ nhận 2 hộp Bút bi xanh (tháng 11).');
+      expect(text).toBe('Adm D&E hủy phần còn chờ nhận 2 hộp Bút bi xanh (tháng 11).');
     });
   });
 });

@@ -141,7 +141,7 @@ describe('Ngăn kéo Thêm sản phẩm', () => {
     await vi.waitFor(() => expect(screen.getByLabelText(/^Tên sản phẩm/)).toHaveAccessibleDescription('Kiểm tra lại giá trị này.'));
   });
 
-  it('tạo món: POST kèm ảnh, mã, nhóm chọn bằng ô chọn (sẵn nhóm từ itemCat), tối đa mặc định 20, Chỉ Hành chính → toast, đóng', async () => {
+  it('tạo món: POST kèm ảnh, mã, nhóm chọn bằng ô chọn (sẵn nhóm từ itemCat), tối đa mặc định 20, Chỉ Adm D&E → toast, đóng', async () => {
     const f = stubDrawerApi((url, init) => (url === '/api/admin/items' && init.method === 'POST' ? jsonResponse(201, { ...PEN, id: 'i-new' }) : undefined));
     const { onClose } = renderDrawer({ categoryId: 'c-pen' });
     const group = screen.getByRole('combobox', { name: 'Nhóm' });
@@ -152,7 +152,7 @@ describe('Ngăn kéo Thêm sản phẩm', () => {
     await userEvent.type(screen.getByLabelText('Mã món'), ' VPP-099 ');
     await userEvent.type(screen.getByLabelText('Quy cách'), 'hộp 12 cây');
     expect(screen.getByLabelText(/^Tối đa mỗi tháng/)).toHaveValue(20);
-    await userEvent.click(screen.getByRole('switch', { name: 'Chỉ Hành chính đặt' }));
+    await userEvent.click(screen.getByRole('switch', { name: 'Chỉ Adm D&E đặt' }));
     await submitAdd();
     await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(bodyOf(f, '/api/admin/items', 'POST')).toMatchObject({
@@ -319,12 +319,12 @@ describe('Panel Sửa sản phẩm — đầu, hai khối, chân (Nhóm 1 · m�
     expect(screen.queryByRole('button', { name: 'Xóa' })).toBeNull();
   });
 
-  it('Nhóm và Đơn vị tính cùng một hàng; Tối đa mỗi tháng và "Chỉ Hành chính đặt" cùng một hàng', () => {
+  it('Nhóm và Đơn vị tính cùng một hàng; Tối đa mỗi tháng và "Chỉ Adm D&E đặt" cùng một hàng', () => {
     stubDrawerApi();
     renderDrawer({ item: PEN });
     const row = (label: RegExp) => screen.getByLabelText(label).closest('.ct-panel-row');
     expect(row(/^Nhóm/)).toBe(row(/^Đơn vị tính/));
     expect(row(/^Mã món/)).toBe(row(/^Quy cách/));
-    expect(row(/^Tối đa mỗi tháng/)).toBe(screen.getByRole('switch', { name: 'Chỉ Hành chính đặt' }).closest('.ct-panel-row'));
+    expect(row(/^Tối đa mỗi tháng/)).toBe(screen.getByRole('switch', { name: 'Chỉ Adm D&E đặt' }).closest('.ct-panel-row'));
   });
 });

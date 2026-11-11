@@ -85,7 +85,7 @@ describe('CustomLineDialog', () => {
     await userEvent.click(plus);
     expect(screen.getByRole('spinbutton', { name: 'Số lượng' })).toHaveValue(20);
     expect(plus).toBeDisabled();
-    expect(screen.getByText('Đã tới tối đa 20/tháng')).toBeInTheDocument();
+    expect(screen.getByText('Tối đa 20/tháng')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ qty: 20 }));
   });
@@ -124,7 +124,7 @@ describe('CustomLineDialog', () => {
     await screen.findByRole('dialog', { name: 'Sửa món khác' });
     expect(screen.queryByText(/tối đa/i)).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Thêm Số lượng' }));
-    expect(screen.getByText('Đã tới tối đa 20/tháng')).toHaveClass('rq-custom-atmax');
+    expect(screen.getByText('Tối đa 20/tháng')).toHaveClass('rq-custom-atmax');
     expect(screen.getByRole('button', { name: 'Thêm Số lượng' })).toBeDisabled();
     await userEvent.click(screen.getByRole('button', { name: 'Bớt Số lượng' }));
     expect(screen.queryByText(/tối đa/i)).toBeNull();

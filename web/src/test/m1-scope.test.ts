@@ -59,7 +59,7 @@ function selectors(css: string): string[] {
   return out;
 }
 
-describe('M1 CSS chỉ nằm trong phạm vi Hành chính', () => {
+describe('M1 CSS chỉ nằm trong phạm vi Adm D&E', () => {
   const files = m1Files();
 
   it('có ít nhất base.css để kiểm', () => {

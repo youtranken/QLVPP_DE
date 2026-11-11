@@ -130,7 +130,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
         await bell.click();
         const month = Number(seed.prevYm.slice(5, 7));
         await expect(
-          member.getByRole('dialog', { name: 'Thông báo' }).getByText(`Hành chính hủy phần còn chờ nhận 1 cái ${a.name} (tháng ${month}): Khác: abc`),
+          member.getByRole('dialog', { name: 'Thông báo' }).getByText(`Adm D&E hủy phần còn chờ nhận 1 cái ${a.name} (tháng ${month}): Khác: abc`),
         ).toBeVisible();
       } finally {
         await member.close();

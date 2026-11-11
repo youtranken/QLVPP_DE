@@ -130,7 +130,7 @@ describe('useCart', () => {
     expect(cart.current.toBody().lines).toEqual([]);
   });
 
-  it('món chuyển sang chỉ Hành chính sau khi lưu: stepper khóa min = max = số đang có', () => {
+  it('món chuyển sang chỉ Adm D&E sau khi lưu: stepper khóa min = max = số đang có', () => {
     const LOCKED = memberItem({ id: 'i-lock', name: 'Mực in', max_qty: 10, admin_only: true });
     const server: RequestView = { ...SERVER, lines: [lineView({ id: 'l-lock', item_id: LOCKED.id, item: facts(LOCKED), qty: 4 })] };
     const cart = renderHook(() =>
@@ -149,7 +149,7 @@ describe('useCart', () => {
     expect(cart.current.lines[0].qty).toBe(8);
   });
 
-  it('carryOf: bỏ dòng Hành chính thêm và dòng bị từ chối, bỏ id; giỏ mới khởi tạo từ carry đều là dòng mới', () => {
+  it('carryOf: bỏ dòng Adm D&E thêm và dòng bị từ chối, bỏ id; giỏ mới khởi tạo từ carry đều là dòng mới', () => {
     const rejected = lineView({ id: 'l-r', custom_name: 'Bìa', custom_unit: 'cai', image_file_id: 'f-1', review_status: 'rejected', readonly_for_member: true });
     const custom = lineView({ id: 'l-c', custom_name: 'Kéo', custom_unit: 'cai', image_file_id: 'f-2', qty: 2, review_status: 'pending' });
     const old = render({ ...SERVER, lines: [...SERVER.lines, rejected, custom] });
@@ -164,7 +164,7 @@ describe('useCart', () => {
     expect(next.current.dirtyCount).toBe(3);
   });
 
-  it('replaceAll: món trùng dòng chỉ đọc (Hành chính thêm) bị bỏ và báo, không lấy id dòng chỉ đọc; món không còn đặt được đếm riêng', () => {
+  it('replaceAll: món trùng dòng chỉ đọc (Adm D&E thêm) bị bỏ và báo, không lấy id dòng chỉ đọc; món không còn đặt được đếm riêng', () => {
     const OLD = memberItem({ id: 'i-old', name: 'Bút dạ cũ', active: false });
     const items = new Map([...ITEMS, [OLD.id, OLD]]);
     const cart = renderHook(() => useCart(SERVER, { ym: '2026-11', items, defaultMax: 20 })).result;

@@ -147,7 +147,7 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
     }
   });
 
-  test('E9-S2 Điều chỉnh: Hành chính khác lưu trước → STALE_UPDATE, "Tải bản mới nhất" lấy số mới', async ({ page, request }, info) => {
+  test('E9-S2 Điều chỉnh: Adm D&E khác lưu trước → STALE_UPDATE, "Tải bản mới nhất" lấy số mới', async ({ page, request }, info) => {
     const release = await acquireLock('prev-period');
     const seed = await seedLockedRequest(request, info, [{ stock: 5, qty: 5 }]);
     const [item] = seed.items;
@@ -187,7 +187,7 @@ test.describe('E3-S3 điều chỉnh phiếu kỳ khóa (M1)', () => {
   });
 });
 
-test.describe('Tổng hợp — giảm sau khi đã gửi ADM (Plan v2-D, Task 12)', () => {
+test.describe('Tổng hợp — giảm sau khi đã gửi NCC (Plan v2-D, Task 12)', () => {
   test('V2D-12 reduce after sent', async ({ page, request }, info) => {
     // Kỳ riêng của PW dùng chung với Gửi ADM/Hàng về (cùng xóa bản chốt kỳ riêng) nên vẫn giữ khóa
     const release = await acquireLock('prev-period');

@@ -115,11 +115,11 @@ describe('Sản phẩm bảng — nút Tạm ngưng / Dùng lại (Nhóm 1 · m�
     expect(patchCalls(f)).toEqual([{ id: expect.any(String), body: { active: true } }]);
   });
 
-  it('W24: Bút bi xanh đang chờ ADM giao 3 cây → hộp hỏi có khối cam; chờ 0 → tạm ngưng luôn', async () => {
+  it('W24: Bút bi xanh đang chờ NCC giao 3 cây → hộp hỏi có khối cam; chờ 0 → tạm ngưng luôn', async () => {
     const f = await openCatalog({ items: ITEMS, pending: { 'i-pen': { remaining: 3, unit: 'cay', snapshot_at: '2026-11-03T02:15:00.000Z' } } });
     await userEvent.click(inRow('Bút bi xanh').getByRole('button', { name: 'Tạm ngưng Bút bi xanh' }));
     const dialog = within(await screen.findByRole('dialog', { name: 'Tạm ngưng Bút bi xanh?' }));
-    expect(dialog.getByRole('note')).toHaveTextContent(/^Món này đang chờ ADM giao 3 cây/);
+    expect(dialog.getByRole('note')).toHaveTextContent(/^Món này đang chờ NCC giao 3 cây/);
     await userEvent.click(dialog.getByRole('button', { name: 'Tạm ngưng' }));
     await vi.waitFor(() => expect(patchCalls(f)).toEqual([{ id: 'i-pen', body: { active: false } }]));
     await userEvent.click(inRow('Giấy A4').getByRole('button', { name: 'Tạm ngưng Giấy A4' }));

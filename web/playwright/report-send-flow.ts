@@ -14,7 +14,7 @@ export async function previewAndPrint(page: Page) {
 export async function openEditable(page: Page): Promise<boolean> {
   await expect(page.getByRole('button', { name: 'Xem tổng kết' })).toBeVisible();
   await expect(page.getByRole('main').getByRole('status').first()).toBeVisible();
-  return (await page.getByRole('main').getByRole('status').first().textContent())?.startsWith('Đã gửi ADM') ?? false;
+  return (await page.getByRole('main').getByRole('status').first().textContent())?.startsWith('Đã gửi NCC') ?? false;
 }
 
 // Hộp "Các bản đã in / xuất" gập sẵn: mở ra rồi trả về hộp

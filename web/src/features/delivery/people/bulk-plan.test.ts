@@ -36,7 +36,7 @@ describe('bulkPlan', () => {
     expect(owners).toEqual({ 'r-t0': 'u-t', 'r-t1': 'u-t' });
   });
 
-  it('dòng ADM hết hàng không vào body và không có bước hủy (bulk không hủy)', () => {
+  it('dòng NCC hết hàng không vào body và không có bước hủy (bulk không hủy)', () => {
     const adm = person({ user_sub: 'u-m', lines: [pLine({ line_id: 'lm', request_id: 'r-m', item_id: 'i-x', stock_qty: 5, adm_out: true })] });
     const { body, skipped } = bulkPlan([adm], [adm]);
     expect(body.requests).toEqual([]);
@@ -59,7 +59,7 @@ describe('bulkPlan', () => {
     expect(bulkPlan([none, pending], [none, pending]).skipped.map((s) => s.user_sub)).toEqual(['u-n', 'u-w']);
   });
 
-  it('Phần thiếu tính cả dòng bỏ qua vì tủ hết và dòng ADM hết hàng, không tính dòng chờ duyệt', () => {
+  it('Phần thiếu tính cả dòng bỏ qua vì tủ hết và dòng NCC hết hàng, không tính dòng chờ duyệt', () => {
     const p = person({
       user_sub: 'u-s',
       lines: [

@@ -80,13 +80,13 @@ describe('LoginScreen', () => {
     at('/?login=forbidden');
     const fetchMock = vi
       .fn()
-      .mockResolvedValue(jsonResponse(200, { admin_contact: 'chị Bình (Hành chính) — 0909 123 456' }));
+      .mockResolvedValue(jsonResponse(200, { admin_contact: 'chị Bình (Adm D&E) — 0909 123 456' }));
     vi.stubGlobal('fetch', fetchMock);
     renderWithI18n(<LoginScreen />);
     expect(
       screen.getByRole('heading', { name: 'Tài khoản chưa được cấp quyền dùng VPP Công trình' }),
     ).toBeInTheDocument();
-    expect(await screen.findByText(/chị Bình \(Hành chính\) — 0909 123 456/)).toBeInTheDocument();
+    expect(await screen.findByText(/chị Bình \(Adm D&E\) — 0909 123 456/)).toBeInTheDocument();
     expect(screen.getByText(/PMH ID chưa cấp quyền vào VPP Công trình cho tài khoản này/)).toBeInTheDocument();
     expect(screen.queryByText(/nhóm/i)).toBeNull();
     expect(fetchMock).toHaveBeenCalledWith('/api/public-config', undefined);
@@ -95,11 +95,11 @@ describe('LoginScreen', () => {
     expect(screen.getByRole('link', { name: 'Về trang PMH ID' })).toBeInTheDocument();
   });
 
-  it('forbidden khi admin_contact rỗng → dùng "Hành chính phòng Công trình", không để trống', async () => {
+  it('forbidden khi admin_contact rỗng → dùng "Adm D&E", không để trống', async () => {
     at('/?login=forbidden');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, { admin_contact: '' })));
     renderWithI18n(<LoginScreen />);
-    expect(await screen.findByText(/Liên hệ Hành chính phòng Công trình/)).toBeInTheDocument();
+    expect(await screen.findByText(/Liên hệ Adm D&E/)).toBeInTheDocument();
   });
 
   describe('Tài khoản thử (chỉ bản dev)', () => {

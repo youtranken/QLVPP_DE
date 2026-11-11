@@ -17,7 +17,7 @@ const common = {
     notFoundTitle: 'Không tìm thấy trang',
     notFoundHint: 'Trang bạn tìm không tồn tại hoặc đã được chuyển.',
     backHome: 'Về trang chủ',
-    noPermission: 'Trang này dành cho Hành chính.',
+    noPermission: 'Trang này dành cho Adm D&E.',
     skipToContent: 'Tới nội dung',
     confirmTitle: 'Xác nhận',
     confirmOk: 'Đồng ý',
@@ -63,8 +63,8 @@ const common = {
     },
     errors: {
       ORDER_NOT_EMPTY: 'Tổng đề nghị ở máy chủ đã lớn hơn 0 — tải lại trang rồi lập phiếu.',
-      ALREADY_SENT: 'Kỳ này đã có bản gửi ADM — tải lại trang để xem.',
-      ITEM_ADM_OUT: 'Món này đang đánh "ADM hết hàng" — bỏ đánh dấu trước khi nhập.',
+      ALREADY_SENT: 'Kỳ này đã có bản gửi NCC — tải lại trang để xem.',
+      ITEM_ADM_OUT: 'Món này đang đánh "NCC hết hàng" — bỏ đánh dấu trước khi nhập.',
       ADM_OUT_FINAL: 'Các dòng của món này đã giao/hủy xong — không bỏ đánh dấu được nữa.',
       ADM_OUT_NOTHING_OPEN: 'Không còn ai chờ món này trong kỳ.',
     },
@@ -82,7 +82,7 @@ const common = {
     emptyCell: 'Chưa có',
     roles: {
       member: 'Nhân viên',
-      admin: 'Hành chính',
+      admin: 'Adm D&E',
       sa: 'Quản trị kỹ thuật',
     },
     languages: {

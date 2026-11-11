@@ -20,7 +20,7 @@ const common: Messages<typeof vi> = {
     notFoundTitle: 'Page not found',
     notFoundHint: 'The page you are looking for does not exist or has moved.',
     backHome: 'Back to home',
-    noPermission: 'This page is for the Admin team.',
+    noPermission: 'This page is for D&E Admin.',
     skipToContent: 'Skip to content',
     confirmTitle: 'Confirm',
     confirmOk: 'OK',
@@ -66,8 +66,8 @@ const common: Messages<typeof vi> = {
     },
     errors: {
       ORDER_NOT_EMPTY: 'The server order total is now above 0 — reload the page, then prepare the form.',
-      ALREADY_SENT: 'This period already has a form sent to ADM — reload the page to see it.',
-      ITEM_ADM_OUT: 'This item is marked out at ADM — unmark it first.',
+      ALREADY_SENT: 'This period already has a form sent to the supplier — reload the page to see it.',
+      ITEM_ADM_OUT: 'This item is marked out at supplier — unmark it first.',
       ADM_OUT_FINAL: "All lines for this item are settled — can't unmark.",
       ADM_OUT_NOTHING_OPEN: 'Nobody is waiting for this item this period.',
     },
@@ -85,7 +85,7 @@ const common: Messages<typeof vi> = {
     emptyCell: 'None yet',
     roles: {
       member: 'Staff',
-      admin: 'Admin team',
+      admin: 'D&E Admin',
       sa: 'Technical admin',
     },
     languages: {

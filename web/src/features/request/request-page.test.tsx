@@ -34,7 +34,7 @@ describe('RequestPage', () => {
     expect(retry.closest('.m-panel')).not.toBeNull();
   });
 
-  it('chưa có phiếu: hero "Đăng ký văn phòng phẩm tháng 11", còn 4 ngày, "Chưa lưu phiếu tháng này"; món chỉ Hành chính không hiện', async () => {
+  it('chưa có phiếu: hero "Đăng ký văn phòng phẩm tháng 11", còn 4 ngày, "Chưa lưu phiếu tháng này"; món chỉ Adm D&E không hiện', async () => {
     mockViewport(1280);
     stubRequestApi();
     renderApp(makeMe('member'), '/');
@@ -132,7 +132,7 @@ describe('RequestPage', () => {
     expect(within(cartLine('Giấy note vàng')).getByRole('spinbutton')).toHaveValue(2);
   });
 
-  it('dòng Hành chính thêm: nhãn "Hành chính thêm", không có nút −/+/×', async () => {
+  it('dòng Adm D&E thêm: nhãn "Adm D&E thêm", không có nút −/+/×', async () => {
     mockViewport(1280);
     stubRequestApi({
       request: view({
@@ -143,9 +143,9 @@ describe('RequestPage', () => {
     });
     renderApp(makeMe('member'), '/');
     const line = (await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Giấy A4')).closest('li')!;
-    expect(within(line).getByText('Hành chính thêm')).toHaveAttribute(
+    expect(within(line).getByText('Adm D&E thêm')).toHaveAttribute(
       'title',
-      'Dòng này do Hành chính thêm — cần sửa thì liên hệ chị Bình — Hành chính.',
+      'Dòng này do Adm D&E thêm — cần sửa thì liên hệ chị Bình — Adm D&E.',
     );
     expect(within(line).queryAllByRole('button')).toEqual([]);
     expect(within(line).getByText('2 ram')).toBeInTheDocument();
@@ -213,7 +213,7 @@ describe('RequestPage', () => {
     expect(within(cartLine('Bút bi xanh')).getByRole('spinbutton')).toHaveValue(3);
   });
 
-  it('dòng chỉ xem được, chưa cấu hình liên hệ → câu "liên hệ Hành chính"', async () => {
+  it('dòng chỉ xem được, chưa cấu hình liên hệ → câu "liên hệ Adm D&E"', async () => {
     mockViewport(1280);
     stubRequestApi({
       request: view({ lines: [lineView({ id: 'l-a', item_id: A4.id, item: facts(A4), qty: 2, added_by_admin: true, readonly_for_member: true })] }),
@@ -221,7 +221,7 @@ describe('RequestPage', () => {
     const me = makeMe('member');
     renderApp({ ...me, config: { ...me.config, admin_contact: ' ' } }, '/');
     const line = (await within(await screen.findByRole('complementary', { name: 'Phiếu tháng 11' })).findByText('Giấy A4')).closest('li')!;
-    expect(within(line).getByText('Hành chính thêm')).toHaveAttribute('title', 'Dòng này do Hành chính thêm — cần sửa thì liên hệ Hành chính.');
+    expect(within(line).getByText('Adm D&E thêm')).toHaveAttribute('title', 'Dòng này do Adm D&E thêm — cần sửa thì liên hệ Adm D&E.');
   });
 
   it('phiếu đã lưu mở trang → mode view (không stepper); "Sửa phiếu" mở ô số lượng; thêm ở thẻ tự sang mode edit', async () => {

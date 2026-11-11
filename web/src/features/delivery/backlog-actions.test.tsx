@@ -89,11 +89,11 @@ describe('BacklogPage — thao tác trên dòng', () => {
     expect(JSON.parse(String(callsTo(f, '/api/admin/lines/l-pen/cancel-remaining')[0][1]?.body))).toEqual({ reason_code: 'not_needed', expected_delivered_qty: 2, expected_qty: 5 });
   });
 
-  it('W23: dòng có counted_in_snapshot_qty 2 → hộp Hủy nợ có "Phiếu gửi ADM tháng 10 đã tính 2 cây này — hủy thì hàng về dư vào kho." (tháng đang giao)', async () => {
+  it('W23: dòng có counted_in_snapshot_qty 2 → hộp Hủy nợ có "Phiếu gửi NCC tháng 10 đã tính 2 cây này — hủy thì hàng về dư vào kho." (tháng đang giao)', async () => {
     stubBacklog([{ ...PEN_DUC, counted_in_snapshot_qty: 2 }]);
     openPage();
     await openCancel('Phạm Văn Đức');
-    expect(screen.getByText('Phiếu gửi ADM tháng 10 đã tính 2 cây này — hủy thì hàng về dư vào kho.')).toBeInTheDocument();
+    expect(screen.getByText('Phiếu gửi NCC tháng 10 đã tính 2 cây này — hủy thì hàng về dư vào kho.')).toBeInTheDocument();
   });
 
   it('?left=1 → chỉ dòng người đã nghỉ; mở Hủy nợ thì "Người đã nghỉ" chọn sẵn, gửi user_left', async () => {

@@ -109,7 +109,7 @@ describe('DeliverDialog — trần stepper', () => {
     expect(within(dialog()).getByText('Chưa nhận 4')).toBeInTheDocument();
   });
 
-  it('tổng 0, không dòng ADM → Xác nhận vô hiệu; tủ 0 mọi món → câu "Tủ chưa có hàng…"', async () => {
+  it('tổng 0, không dòng NCC → Xác nhận vô hiệu; tủ 0 mọi món → câu "Tủ chưa có hàng…"', async () => {
     stub();
     open(person({ lines: [pLine({ stock_qty: 0 })] }));
     expect(await within(dialog()).findByText('Tủ chưa có hàng cho món nào — ghi Nhận hàng trước.')).toBeInTheDocument();
@@ -123,11 +123,11 @@ describe('DeliverDialog — trần stepper', () => {
     expect(within(dialog()).getByText('Kéo cắt')).toBeInTheDocument();
   });
 
-  it('tổng 0 nhưng có 1 dòng ADM hết hàng → Xác nhận bật, tổng có "Hủy 1 món ADM hết hàng"', async () => {
+  it('tổng 0 nhưng có 1 dòng NCC hết hàng → Xác nhận bật, tổng có "Hủy 1 món NCC hết hàng"', async () => {
     stub();
     open(person({ lines: [pLine({ stock_qty: 0 }), pLine({ line_id: 'm', item_id: 'i-clip', stock_qty: 0, adm_out: true })] }));
     expect(confirmBtn()).toBeEnabled();
-    expect(within(dialog()).getByText(/Hủy 1 món ADM hết hàng/)).toBeInTheDocument();
+    expect(within(dialog()).getByText(/Hủy 1 món NCC hết hàng/)).toBeInTheDocument();
   });
 });
 
@@ -174,16 +174,16 @@ describe('DeliverDialog — gợi ý theo người đăng ký trước', () => {
   });
 });
 
-describe('DeliverDialog — ADM hết hàng', () => {
-  it('tủ 2: B (trước) cần 1; A cần 2 → đề xuất 1 + "ADM hết hàng – tủ còn 1"; Xác nhận → giao 1 rồi hủy', async () => {
+describe('DeliverDialog — NCC hết hàng', () => {
+  it('tủ 2: B (trước) cần 1; A cần 2 → đề xuất 1 + "NCC hết hàng – tủ còn 1"; Xác nhận → giao 1 rồi hủy', async () => {
     const f = stub();
     const B = person({ user_sub: 'B', full_name: 'Bình', lines: [pLine({ line_id: 'b', qty: 1, remaining_qty: 1, stock_qty: 2, adm_out: true, request_at: '2026-10-01T07:00:00.000000Z' })] });
     const A = person({ user_sub: 'A', lines: [pLine({ line_id: 'a', qty: 2, remaining_qty: 2, stock_qty: 2, adm_out: true, request_at: '2026-10-01T08:00:00.000000Z' })] });
     const done = open(A, { people: [A, B] });
-    expect(within(dialog()).getByRole('heading', { name: 'ADM hết hàng, số lượng sẽ trừ trong Tủ / Kho' })).toBeInTheDocument();
+    expect(within(dialog()).getByRole('heading', { name: 'NCC hết hàng, số lượng sẽ trừ trong Tủ / Kho' })).toBeInTheDocument();
     expect(spin('Bút bi xanh').value).toBe('1');
-    expect(within(dialog()).getByText('ADM hết hàng – tủ còn 1')).toBeInTheDocument();
-    expect(within(dialog()).getByText('ADM hết hàng – tủ còn 1').closest('tr')).not.toHaveClass('dd-row--none');
+    expect(within(dialog()).getByText('NCC hết hàng – tủ còn 1')).toBeInTheDocument();
+    expect(within(dialog()).getByText('NCC hết hàng – tủ còn 1').closest('tr')).not.toHaveClass('dd-row--none');
     await userEvent.click(confirmBtn());
     await waitFor(() => expect(done.onDone).toHaveBeenCalled());
     expect(posts(f)).toEqual([
@@ -193,12 +193,12 @@ describe('DeliverDialog — ADM hết hàng', () => {
   });
 });
 
-describe('DeliverDialog — ADM hết hàng, tủ không còn', () => {
-  it('dòng ADM hết hàng tủ 0 → "ADM hết hàng – tủ còn 0", cả dòng tô đỏ (dd-row--none); dòng giao thường không tô', async () => {
+describe('DeliverDialog — NCC hết hàng, tủ không còn', () => {
+  it('dòng NCC hết hàng tủ 0 → "NCC hết hàng – tủ còn 0", cả dòng tô đỏ (dd-row--none); dòng giao thường không tô', async () => {
     stub();
     const A = person({ lines: [pLine({ line_id: 'c', qty: 1, remaining_qty: 1, stock_qty: 3 }), pLine({ line_id: 'm', item_id: 'i-clip', name: 'Kẹp', qty: 2, remaining_qty: 2, stock_qty: 0, adm_out: true })] });
     open(A);
-    const note = within(dialog()).getByText('ADM hết hàng – tủ còn 0');
+    const note = within(dialog()).getByText('NCC hết hàng – tủ còn 0');
     expect(note.closest('tr')).toHaveClass('dd-row--none');
     expect(spin('Bút bi xanh').closest('tr')).not.toHaveClass('dd-row--none');
   });
@@ -209,7 +209,7 @@ describe('DeliverDialog — gửi', () => {
   const cur = pLine({ line_id: 'c', qty: 5, remaining_qty: 5, stock_qty: 9 });
   const adm = pLine({ line_id: 'm', item_id: 'i-clip', name: 'Kẹp', qty: 2, remaining_qty: 2, stock_qty: 1, adm_out: true });
 
-  it('thứ tự: nợ, kỳ này, rồi hủy ADM; 403 CSRF ở request 2 → dừng, "Chưa gửi" + một thông báo hết phiên', async () => {
+  it('thứ tự: nợ, kỳ này, rồi hủy NCC; 403 CSRF ở request 2 → dừng, "Chưa gửi" + một thông báo hết phiên', async () => {
     const f = stub((u) => (u.includes('/c/') ? jsonResponse(403, { code: 'CSRF_TOKEN_INVALID' }) : jsonResponse(200, {})));
     const props = open(person({ lines: [adm, cur, debt] }));
     await userEvent.click(confirmBtn());
@@ -218,7 +218,7 @@ describe('DeliverDialog — gửi', () => {
     expect(posts(f).map(([u]) => u)).toEqual(['/api/admin/lines/d/deliver', '/api/admin/lines/c/deliver']);
     expect(within(status).getByText('Đã giao 4')).toBeInTheDocument();
     expect(within(status).getAllByText('Chưa gửi').length).toBeGreaterThan(0);
-    expect(within(dialog()).getAllByText('Phiên đăng nhập đã hết — tải lại trang rồi giao tiếp.')).toHaveLength(1);
+    expect(within(dialog()).getAllByText('Phiên đăng nhập đã hết — tải lại trang rồi tiếp tục giao.')).toHaveLength(1);
     expect(props.onDone).not.toHaveBeenCalled();
   });
 

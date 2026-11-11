@@ -86,7 +86,7 @@ function violation(cap: Cap): string | null {
   return value && value[2] === limit[2] && Number(value[1]) <= Number(limit[1]) ? null : `${where} > ${group.limit}`;
 }
 
-describe('Hành chính toàn màn hình', () => {
+describe('Adm D&E toàn màn hình', () => {
   it('không khối/trang nào chặn bề rộng ngoài danh sách cho phép (A4, ô nhập ≤ 480, văn xuôi 72ch, trạng thái trống ≤ 480, hộp thoại/panel)', () => {
     const bad = adminCssFiles()
       .flatMap((f) => widthCaps(f, readFileSync(f, 'utf8')))
@@ -171,7 +171,7 @@ describe('Bố cục theo route', () => {
     expect(css).toMatch(/@media \(max-width: 767px\) \{[^}]*\.mk-strip \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   });
 
-  it('Báo cáo & gửi ADM: đầu trang một hàng wrap (h1, tháng, công tắc, nút), 390 nút chiếm cả hàng', () => {
+  it('Báo cáo & gửi NCC: đầu trang một hàng wrap (h1, tháng, công tắc, nút), 390 nút chiếm cả hàng', () => {
     const css = readFileSync(join(SRC, 'features/reports/reports.m1.css'), 'utf8');
     expect(css).toMatch(/\.bc-head \{[^}]*display: flex; flex-wrap: wrap/);
     expect(css).toMatch(/@media \(max-width: 767px\) \{[^}]*\.bc-head__actions \{ margin-left: 0; width: 100%; \}/);

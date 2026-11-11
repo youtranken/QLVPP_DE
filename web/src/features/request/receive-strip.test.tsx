@@ -47,7 +47,7 @@ describe('ReceiveStrip — dải phiếu đang giao', () => {
     expect(within(dlg).getAllByText('Đã nhận 1/1')).toHaveLength(2);
     expect(within(dlg).getAllByText('Chờ 1')).toHaveLength(3);
     expect(within(dlg).getByText('Không giao')).toBeInTheDocument();
-    expect(within(dlg).getByText('HC bỏ món: Không có hàng')).toBeInTheDocument();
+    expect(within(dlg).getByText('Adm D&E bỏ món: Không có hàng')).toBeInTheDocument();
     expect(within(dlg).getByText('Món còn chờ sẽ giao khi hàng về, không cần đăng ký lại.')).toBeInTheDocument();
     expect(within(dlg).getByRole('link', { name: 'Xem lịch sử các tháng' })).toHaveAttribute('href', '/history/2026-10');
   });

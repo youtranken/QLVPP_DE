@@ -155,7 +155,7 @@ describe('Danh mục — hàng loạt', () => {
     expect(patchCalls(f).map((c) => c.body)).toEqual([{ category_id: 'c-paper' }, { category_id: 'c-paper' }]);
   });
 
-  it('"Ngừng" khi không món nào chờ ADM giao → không hỏi, PATCH {active:false} từng món, toast', async () => {
+  it('"Ngừng" khi không món nào chờ NCC giao → không hỏi, PATCH {active:false} từng món, toast', async () => {
     const f = await openCatalog({ items: ITEMS });
     await pickPens();
     await userEvent.click(bulkBar().getByRole('button', { name: /^Tạm ngưng \(\d+\)$/ }));
@@ -165,12 +165,12 @@ describe('Danh mục — hàng loạt', () => {
     expect(inRow('Bút bi xanh').getByRole('button', { name: 'Dùng lại Bút bi xanh' })).toBeInTheDocument();
   });
 
-  it('"Ngừng" có Bút bi xanh chờ ADM giao 3 → hỏi "Ngừng 2 món?" kèm khối cam ghi tên món; Quay lại → không PATCH', async () => {
+  it('"Ngừng" có Bút bi xanh chờ NCC giao 3 → hỏi "Ngừng 2 món?" kèm khối cam ghi tên món; Quay lại → không PATCH', async () => {
     const f = await openCatalog({ items: ITEMS, pending: { 'i-pen': { remaining: 3, unit: 'cay', snapshot_at: '2026-11-03T02:15:00.000Z' } } });
     await pickPens();
     await userEvent.click(bulkBar().getByRole('button', { name: /^Tạm ngưng \(\d+\)$/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Tạm ngưng 2 sản phẩm?' });
-    expect(within(dialog).getByRole('note')).toHaveTextContent(/Bút bi xanh: Món này đang chờ ADM giao 3/);
+    expect(within(dialog).getByRole('note')).toHaveTextContent(/Bút bi xanh: Món này đang chờ NCC giao 3/);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Quay lại' }));
     expect(patchCalls(f)).toEqual([]);
     await userEvent.click(bulkBar().getByRole('button', { name: /^Tạm ngưng \(\d+\)$/ }));

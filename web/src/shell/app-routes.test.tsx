@@ -27,7 +27,7 @@ describe('AppRoutes — đường dẫn lạ', () => {
   });
 });
 
-describe('AppRoutes — chuyển hướng đường cũ của Hành chính (giữ nguyên query)', () => {
+describe('AppRoutes — chuyển hướng đường cũ của Adm D&E (giữ nguyên query)', () => {
   it.each([
     ['/admin', '/admin/month', ''],
     ['/admin/home', '/admin/month', ''],

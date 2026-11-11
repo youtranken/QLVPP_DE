@@ -30,11 +30,11 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Báo cáo & gửi ADM: đầu trang và trạng thái', () => {
+describe('Báo cáo & gửi NCC: đầu trang và trạng thái', () => {
   it('một hàng đầu trang: h1, ‹ Tháng 10/2026 ›, công tắc "Chỉ món có Tổng cần", Xuất Excel, Xem tổng kết (không còn "In trình ký")', async () => {
     setupSendAdm({ report: REPORT });
     open();
-    expect(await screen.findByRole('heading', { level: 1, name: 'Báo cáo & gửi ADM' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' })).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(await screen.findByText('Tháng 10/2026')).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'Chỉ món có Tổng cần' })).toBeInTheDocument();
@@ -43,13 +43,13 @@ describe('Báo cáo & gửi ADM: đầu trang và trạng thái', () => {
     expect(screen.queryByRole('button', { name: 'In trình ký' })).toBeNull();
   });
 
-  it('đã gửi: đúng một dòng trạng thái "Đã gửi ADM 09:02 12/12" kèm "In lại"; không có "21 món, 143 đơn vị"', async () => {
+  it('đã gửi: đúng một dòng trạng thái "Đã gửi NCC 09:02 12/12" kèm "In lại"; không có "21 món, 143 đơn vị"', async () => {
     setupSendAdm({ report: REPORT, state: SENT });
     open();
     await screen.findByRole('spinbutton', { name: 'Đề nghị: Bút bi' });
     const status = statuses();
     expect(status).toHaveLength(1);
-    expect(status[0]).toHaveTextContent('Đã gửi ADM 09:02 12/12');
+    expect(status[0]).toHaveTextContent('Đã gửi NCC 09:02 12/12');
     expect(within(status[0]!).getByRole('button', { name: 'In lại' })).toBeInTheDocument();
     expect(screen.queryByText(/\d+ món, \d+ đơn vị/)).toBeNull();
   });
@@ -59,7 +59,7 @@ describe('Báo cáo & gửi ADM: đầu trang và trạng thái', () => {
     open();
     await qtyBox('Bút bi');
     const status = statuses()[0]!;
-    const head = screen.getByRole('heading', { level: 1, name: 'Báo cáo & gửi ADM' }).parentElement!;
+    const head = screen.getByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' }).parentElement!;
     expect(head).toContainElement(status);
     const excel = screen.getByRole('button', { name: 'Xuất Excel' });
     expect(status.compareDocumentPosition(excel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -78,18 +78,18 @@ describe('Báo cáo & gửi ADM: đầu trang và trạng thái', () => {
     expect(within(rows.find((r) => r.textContent?.includes('Bút bi'))!).queryByText('Đổi sau bản in')).toBeNull();
   });
 
-  it('chưa gửi: "Chưa gửi ADM"; có món ngoài DM chờ duyệt → thêm "2 món ngoài danh mục chờ duyệt · Xem"', async () => {
+  it('chưa gửi: "Chưa gửi NCC"; có món ngoài DM chờ duyệt → thêm "2 món ngoài danh mục chờ duyệt · Xem"', async () => {
     setupSendAdm({ report: sendReport([PEN, PAPER], { pending_custom_count: 2 }) });
     open();
-    await screen.findByText('Chưa gửi ADM');
+    await screen.findByText('Chưa gửi NCC');
     const status = statuses()[0]!;
-    expect(status).toHaveTextContent('Chưa gửi ADM');
+    expect(status).toHaveTextContent('Chưa gửi NCC');
     expect(status).toHaveTextContent('2 món ngoài danh mục chờ duyệt');
     expect(within(status).getByRole('link', { name: 'Xem' })).toHaveAttribute('href', `/admin/review?status=pending&ym=${YM}`);
   });
 });
 
-describe('Báo cáo & gửi ADM: bảng và ô Đề nghị', () => {
+describe('Báo cáo & gửi NCC: bảng và ô Đề nghị', () => {
   it('bảng kẻ ô: Món · ĐVT · Đăng ký · Nợ tháng trước · Tủ hiện có · Tổng cần · Đề nghị · Ai đăng ký; hàng nhóm "… · 2 món"; không còn Phần 2 hay Bản chốt', async () => {
     setupSendAdm({ report: REPORT, people: { kA: 3, kB: 1 } });
     open();
@@ -121,7 +121,7 @@ describe('Báo cáo & gửi ADM: bảng và ô Đề nghị', () => {
     expect(screen.queryByText('Tối đa 99.999')).toBeNull();
   });
 
-  it('mọi Đề nghị = 0 và chưa gửi → nút "Tháng này không cần đề nghị ADM", Xuất/In vô hiệu', async () => {
+  it('mọi Đề nghị = 0 và chưa gửi → nút "Tháng này không cần đề nghị NCC", Xuất/In vô hiệu', async () => {
     setupSendAdm({ report: REPORT });
     open();
     for (const name of ['Bút bi', 'Giấy A4']) {
@@ -129,7 +129,7 @@ describe('Báo cáo & gửi ADM: bảng và ô Đề nghị', () => {
       await userEvent.clear(box);
       await userEvent.type(box, '0');
     }
-    expect(await screen.findByRole('button', { name: 'Tháng này không cần đề nghị ADM' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Tháng này không cần đề nghị NCC' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeDisabled();
   });
 
@@ -181,7 +181,7 @@ describe('Báo cáo & gửi ADM: bảng và ô Đề nghị', () => {
     expect(screen.queryByRole('dialog', { name: /Xem tổng kết tháng/ })).toBeNull();
   });
 
-  it('có món ngoài DM chờ duyệt → cảnh báo W8 nằm trong hộp xem trước, không bật hộp "Chốt phiếu gửi ADM?" riêng', async () => {
+  it('có món ngoài DM chờ duyệt → cảnh báo W8 nằm trong hộp xem trước, không bật hộp "Chốt phiếu gửi NCC?" riêng', async () => {
     const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
     const f = setupSendAdm({ report: sendReport([PEN, PAPER], { pending_custom_count: 2 }) });
     open();
@@ -189,10 +189,10 @@ describe('Báo cáo & gửi ADM: bảng và ô Đề nghị', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
     const dialog = await screen.findByRole('dialog', { name: /Xem tổng kết tháng/ });
     expect(within(dialog).getByText(/2 món ngoài danh mục/)).toBeInTheDocument();
-    expect(screen.queryByRole('dialog', { name: 'Chốt phiếu gửi ADM?' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Chốt phiếu gửi NCC?' })).toBeNull();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Đồng ý và in' }));
     await waitFor(() => expect(snapshotPosts(f)).toHaveLength(1));
-    expect(screen.queryByRole('dialog', { name: 'Chốt phiếu gửi ADM?' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Chốt phiếu gửi NCC?' })).toBeNull();
     await waitFor(() => expect(print).toHaveBeenCalled());
   });
 
@@ -210,11 +210,11 @@ describe('Báo cáo & gửi ADM: bảng và ô Đề nghị', () => {
     open();
     await qtyBox('Bút bi');
     await userEvent.click(screen.getByRole('button', { name: 'Xuất Excel' }));
-    expect(await screen.findByRole('dialog', { name: 'Chốt phiếu gửi ADM?' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Chốt phiếu gửi NCC?' })).toBeInTheDocument();
   });
 });
 
-describe('Báo cáo & gửi ADM: kỳ cũ hơn, ai đăng ký, các bản đã in', () => {
+describe('Báo cáo & gửi NCC: kỳ cũ hơn, ai đăng ký, các bản đã in', () => {
   it('kỳ cũ hơn: Đề nghị chỉ đọc, lấy order_qty của bản đã gửi', async () => {
     const older = sendReport([PEN, PAPER], { ym: '2026-09' });
     const oldSent = sentState(sentData(older, { kA: 9, kB: 4 }, { period_ym: '2026-09' }));
@@ -289,13 +289,13 @@ describe('Báo cáo & gửi ADM: kỳ cũ hơn, ai đăng ký, các bản đã i
     await userEvent.click(await screen.findByRole('button', { name: /Xem ai đăng ký Bút bi \(3 người\)/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Bút bi' });
     expect(await within(dialog).findByText('Đăng ký 20 cây · sau điều chỉnh 19 · Đề nghị 5')).toBeInTheDocument();
-    expect(within(dialog).getByText('HC bỏ: Không có hàng')).toBeInTheDocument();
+    expect(within(dialog).getByText('Adm D&E bỏ: Không có hàng')).toBeInTheDocument();
     expect(within(dialog).getByText('Tổng sau điều chỉnh')).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Xem phiếu của Nhân viên C' }));
     expect(await screen.findByRole('dialog', { name: 'Phiếu của Nhân viên C' })).toBeInTheDocument();
   });
 
-  it('"Các bản đã in / xuất (2)" gập sẵn; mở ra: Lúc · Loại · Món · Đơn vị, "Đã gửi ADM" ở bản mới nhất có hàng, "Tải lại"', async () => {
+  it('"Các bản đã in / xuất (2)" gập sẵn; mở ra: Lúc · Loại · Món · Đơn vị, "Đã gửi NCC" ở bản mới nhất có hàng, "Tải lại"', async () => {
     const rows = [
       snapshotRow({ id: 's-new', kind: 'print', created_at: '2026-10-28T04:50:00Z', items_count: 21, units_total: 143, has_items: true }),
       snapshotRow({ id: 's-old', kind: 'xlsx', created_at: '2026-10-28T03:12:00Z', items_count: 21, units_total: 141, has_items: true }),
@@ -311,13 +311,13 @@ describe('Báo cáo & gửi ADM: kỳ cũ hơn, ai đăng ký, các bản đã i
     const t = within(within(box).getByRole('table'));
     expect(t.getAllByRole('columnheader').map((h) => h.textContent).slice(0, 4)).toEqual(['Lúc', 'Loại', 'Món', 'Đơn vị']);
     const [newest, oldest] = t.getAllByRole('row').slice(1);
-    expect(within(newest!).getByText('Đã gửi ADM')).toBeInTheDocument();
-    expect(within(oldest!).queryByText('Đã gửi ADM')).toBeNull();
+    expect(within(newest!).getByText('Đã gửi NCC')).toBeInTheDocument();
+    expect(within(oldest!).queryByText('Đã gửi NCC')).toBeNull();
     expect(within(oldest!).getByRole('button', { name: /Tải lại Excel/ })).toBeInTheDocument();
   });
 });
 
-describe('Báo cáo & gửi ADM: số khởi tạo từ bản đã gửi không bị coi là chưa chốt', () => {
+describe('Báo cáo & gửi NCC: số khởi tạo từ bản đã gửi không bị coi là chưa chốt', () => {
   it('kỳ đã gửi với Đề nghị khác gợi ý: rời trang không hỏi; sửa thêm một ô thì hỏi "Bỏ số Đề nghị vừa sửa?"', async () => {
     setupSendAdm({ report: REPORT, state: sentState(sentData(REPORT, { kA: 9, kB: 3 })) });
     open();

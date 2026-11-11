@@ -25,7 +25,7 @@ const review = {
       converted: 'Chưa thêm món nào vào danh mục',
       rejected: 'Chưa từ chối món nào',
     },
-    sentLink: 'Mở Gửi ADM',
+    sentLink: 'Mở Báo cáo & gửi NCC',
     staleNotice: 'Dòng này vừa được xử lý — danh sách đã được làm mới.',
     card: {
       imageAlt: 'Ảnh {{name}} do nhân viên gửi',
@@ -69,7 +69,7 @@ const review = {
       title: 'Mua “{{name}}” lần này?',
       body: 'Dòng được mua và giao như đã đăng ký, không thêm món vào danh mục.',
       bodyFor:
-        'Hành chính sẽ mua {{qty}} {{unit}} cho phiếu tháng {{month}} của {{who}}. Món không vào danh mục — tháng sau muốn đặt lại, nhân viên phải thêm lại.',
+        'Adm D&E sẽ mua {{qty}} {{unit}} cho phiếu tháng {{month}} của {{who}}. Món không vào danh mục — tháng sau muốn đặt lại, nhân viên phải thêm lại.',
       ok: 'Mua lần này',
     },
     reject: {
