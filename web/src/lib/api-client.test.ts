@@ -3,7 +3,7 @@ import { apiFetch, apiFetchBlob, ApiError, makeQueryClient } from '@/lib/api-cli
 import { handleSessionExpired } from '@/lib/session-relogin';
 import { jsonResponse } from '@/test/test-utils';
 
-vi.mock('@/lib/session-relogin', () => ({ handleSessionExpired: vi.fn() }));
+vi.mock('@/lib/session-relogin', () => ({ handleSessionExpired: vi.fn(), isLoggingOut: () => false }));
 
 describe('apiFetch', () => {
   it('trả JSON khi ok', async () => {

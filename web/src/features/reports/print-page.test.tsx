@@ -10,7 +10,7 @@ import { PEN_KEY, SNAPSHOT_ID, TAPE_KEY, snapshotDataFixture } from './reports-f
 import { errorResponse } from './reports-test-stub';
 import { openPrint } from './print-test-stub';
 
-vi.mock('@/lib/session-relogin', () => ({ handleSessionExpired: vi.fn() }));
+vi.mock('@/lib/session-relogin', () => ({ handleSessionExpired: vi.fn(), isLoggingOut: () => false }));
 
 afterEach(async () => {
   vi.unstubAllGlobals();

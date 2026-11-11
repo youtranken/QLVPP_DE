@@ -1,6 +1,6 @@
 import { queryClient } from '@/lib/api-client';
 import { navigateTo } from '@/lib/navigate';
-import { forgetAuth, rememberAuth, ssoLoginUrl, switchAccountUrl } from '@/lib/session-relogin';
+import { beginLogout, endLogout, forgetAuth, rememberAuth, ssoLoginUrl, switchAccountUrl } from '@/lib/session-relogin';
 
 export function loginWithPmhId(loginHint?: string): void {
   navigateTo(ssoLoginUrl(loginHint));
@@ -39,16 +39,22 @@ export function testAccountLogin(username: string, password: string): Promise<Sa
 
 // Chỉ quên trạng thái đăng nhập khi server đã hủy phiên; 401 nghĩa là phiên đã mất sẵn
 export async function logout(csrfToken: string | null): Promise<boolean> {
+  // Bật cờ trước khi gọi server: 401 của truy vấn đang bay (fetch không hủy được) không được kéo sang trang hết phiên / SSO lại
+  beginLogout();
   try {
     const res = await fetch('/api/auth/logout', {
       method: 'POST',
       headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
     });
-    if (!res.ok && res.status !== 401) return false;
+    if (!res.ok && res.status !== 401) {
+      endLogout();
+      return false;
+    }
   } catch {
+    endLogout();
     return false;
   }
-  // B0.21: dọn cache ở MỘT chỗ — hủy truy vấn đang chạy (chuông đếm, danh sách…) để không có 401 muộn kéo đi đăng nhập lại
+  // Dọn cache ở một chỗ; truy vấn còn gắn trên màn không gửi lại request vì cờ đăng xuất (api-client)
   await queryClient.cancelQueries();
   queryClient.clear();
   forgetAuth();

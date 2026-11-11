@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { handleSessionExpired } from '@/lib/session-relogin';
+import { handleSessionExpired, isLoggingOut } from '@/lib/session-relogin';
 
 export class ApiError extends Error {
   status: number;
@@ -15,6 +15,8 @@ export class ApiError extends Error {
 // 401 xử lý tập trung (tự SSO lại một lần) thay vì mỗi màn tự redirect
 async function send(path: string, init: RequestInit & { csrfToken?: string | null } = {}): Promise<Response> {
   const { csrfToken, headers, body, ...rest } = init;
+  // Đang đăng xuất: truy vấn còn gắn trên màn (polling, focus lại) sau khi xóa cache không gửi request nữa
+  if (isLoggingOut()) throw new ApiError(401, null);
   const res = await fetch(path, {
     ...rest,
     body,

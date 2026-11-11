@@ -122,8 +122,25 @@ export function startRelogin(): void {
   navigateTo(beginRelogin(pathname + search + hash));
 }
 
+// Đang/đã đăng xuất: truy vấn đang bay (chuông đếm…) không hủy được fetch, trả 401 muộn — không được
+// kéo sang trang hết phiên hay SSO lại, trang tự về '/' sau khi đăng xuất xong
+let loggingOut = false;
+
+export function beginLogout(): void {
+  loggingOut = true;
+}
+
+// Server từ chối đăng xuất → phiên còn, 401 sau đó lại là hết phiên thật
+export function endLogout(): void {
+  loggingOut = false;
+}
+
+export function isLoggingOut(): boolean {
+  return loggingOut;
+}
+
 export function handleSessionExpired(): void {
-  if (redirecting) return;
+  if (redirecting || loggingOut) return;
   redirecting = true;
   const { pathname, search, hash } = window.location;
   navigateTo(expiryTarget(pathname + search + hash));
