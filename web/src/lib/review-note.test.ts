@@ -11,11 +11,11 @@ describe('ghi chú duyệt món ngoài danh mục', () => {
     expect(reviewNoteText('auto:not_approved', en)).toBe('This item was not approved for purchase this month. You can register it again later');
   });
 
-  it('ghi chú gõ tay giữ nguyên; rỗng → null; mã lạ → null (không lộ mã)', () => {
+  it('ghi chú gõ tay giữ nguyên; rỗng → null; mã auto: lạ → hiện nguyên ghi chú (không nuốt mất lý do)', () => {
     expect(reviewNoteText(' Đã có trong kho ', vi)).toBe('Đã có trong kho');
     expect(reviewNoteText(null, vi)).toBeNull();
     expect(reviewNoteText('  ', vi)).toBeNull();
-    expect(reviewNoteText('auto:xyz', vi)).toBeNull();
+    expect(reviewNoteText('auto:xyz', vi)).toBe('auto:xyz');
     expect(reviewReasonText('xyz', vi)).toBeNull();
   });
 });

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { reviewNoteText } from '@/lib/review-note';
 import type { AuditBatch, AuditEntry } from './admin.api';
 import { changedFields, otherDetail } from './audit-diff';
 import { auditObjectRef } from './audit-object';
@@ -19,6 +20,9 @@ function BatchItems({ batch }: { batch: AuditBatch }) {
     </ul>
   );
 }
+
+// Ghi chú duyệt lưu mã lý do app tự ghi (auto:<mã>): hiện câu dễ đọc, dữ liệu gốc vẫn ở phần kỹ thuật
+const cellText = (t: Translate, key: string, v: string | null) => (key === 'review_note' && v ? (reviewNoteText(v, t) ?? v) : v);
 
 export function AuditDetail({ entry, id }: { entry: AuditEntry; id: string }) {
   const { t } = useTranslation();
@@ -49,8 +53,8 @@ export function AuditDetail({ entry, id }: { entry: AuditEntry; id: string }) {
             {fields.map((f) => (
               <tr key={f.key}>
                 <th scope="row">{fieldLabel(t, f.key)}</th>
-                <td>{f.before ?? t('common.empty')}</td>
-                <td>{f.after ?? t('common.empty')}</td>
+                <td>{cellText(t, f.key, f.before) ?? t('common.empty')}</td>
+                <td>{cellText(t, f.key, f.after) ?? t('common.empty')}</td>
               </tr>
             ))}
           </tbody>
