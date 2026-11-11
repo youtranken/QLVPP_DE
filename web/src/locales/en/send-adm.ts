@@ -14,6 +14,7 @@ const sendAdm: Messages<typeof vi> = {
       qty: 'Order',
       qtyLabel: 'Request: {{name}}',
       invalid: 'Max 1,000',
+      invalidSent: 'The sent copy has this number; the max is now 1,000, please fix',
       overMax: 'Over 1,000, please check',
     },
     leave: {

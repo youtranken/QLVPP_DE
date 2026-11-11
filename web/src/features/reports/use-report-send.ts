@@ -7,7 +7,7 @@ import { basisNeedOf } from '@/features/send-adm/send-adm-rows';
 import { markNoOrder, useRefreshSendState, type SentSnapshot } from '@/features/send-adm/send-adm.api';
 import { useNoOrderConfirm } from '@/features/send-adm/use-send-adm-confirms';
 import { PendingCustomWarning, type PendingCustom } from '@/features/send-adm/send-adm-dialogs';
-import { pendingConfirmOf, type MonthReport, type SnapshotData } from './reports.api';
+import { pendingConfirmOf, useReloadReport, type MonthReport, type SnapshotData } from './reports.api';
 import type { OrderQty } from './use-order-qty';
 
 // Đề nghị khởi tạo từ bản đã gửi: mọi khóa của bản (khóa vắng ở báo cáo sống bị bỏ qua)
@@ -50,6 +50,7 @@ export function useNoOrder(report: MonthReport, qty: OrderQty, pending: PendingC
   const { csrfToken } = useMe();
   const ask = useNoOrderConfirm();
   const refresh = useRefreshSendState(ym);
+  const reloadReport = useReloadReport(ym);
   const flight = useSingleFlight();
   const [failed, setFailed] = useState<string | null>(null);
   const run = () =>
@@ -57,10 +58,16 @@ export function useNoOrder(report: MonthReport, qty: OrderQty, pending: PendingC
       const warning = pending.count > 0 ? createElement(PendingCustomWarning, { pending: pending.count, names: pending.names }) : undefined;
       if (!(await ask(warning))) return;
       setFailed(null);
+      const confirm = pendingConfirmOf(report);
       try {
-        await markNoOrder(ym, qty.edited, pendingConfirmOf(report), csrfToken);
+        await markNoOrder(ym, qty.edited, confirm, csrfToken);
+        // Món chờ vừa thành Không mua: tải lại để số/tên món chờ trên trang hết cũ
+        if (confirm.reject_pending_custom) void reloadReport();
       } catch (e) {
-        setFailed(apiErrorCode(e) ?? 'UNKNOWN');
+        const code = apiErrorCode(e) ?? 'UNKNOWN';
+        setFailed(code);
+        // Danh sách món chờ vừa đổi: tải lại để lần hỏi sau hiện đúng tên
+        if (code === 'PENDING_CUSTOM') void reloadReport();
       }
       await refresh();
     });

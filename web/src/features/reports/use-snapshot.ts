@@ -68,17 +68,14 @@ function useRejectFields(ym: string, qty: OrderQty) {
   };
 }
 
-function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => boolean, opts: TakeOptions) {
-  const { csrfToken } = useMe();
-  const refresh = useRefreshSnapshots(report.ym);
-  const announceXlsx = useAnnounceXlsx(report.ym, files);
-  const rejectFields = useRejectFields(report.ym, qty);
-  const reloadReport = useReloadReport(report.ym);
-  const flight = useSingleFlight();
-  const [notice, setNotice] = useState<'REPORT_CHANGED' | 'INVALID_PERIOD' | BlockCode | null>(null);
+type Notice = 'REPORT_CHANGED' | 'INVALID_PERIOD' | BlockCode;
+
+// Lỗi chốt/xem trước báo cùng một chỗ; danh sách món chờ đổi (409) thì tải lại báo cáo để cảnh báo hiện đúng tên mới
+function useSnapshotFailure(ym: string, qty: OrderQty, onInvalidPeriod: () => boolean) {
+  const rejectFields = useRejectFields(ym, qty);
+  const reloadReport = useReloadReport(ym);
+  const [notice, setNotice] = useState<Notice | null>(null);
   const [rejected, setRejected] = useState(false);
-  const [taking, setTaking] = useState<SnapshotKind | null>(null);
-  const [fresh, setFresh] = useState<ReadonlySet<string>>(new Set());
   const fail = async (e: unknown): Promise<BlockCode | null> => {
     const failure = takeFailure(e);
     // Đã ở tháng mặc định mà vẫn chưa tới (đồng hồ máy chủ lệch) → không có chỗ để về, báo ở đầu trang
@@ -88,7 +85,6 @@ function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDown
     }
     if (failure.kind === 'block') {
       setNotice(failure.code);
-      // Danh sách món chờ đã đổi: tải lại để cảnh báo hiện đúng tên mới
       if (failure.code === 'PENDING_CUSTOM') await reloadReport();
       return failure.code;
     }
@@ -96,67 +92,99 @@ function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDown
     setNotice(await rejectFields(failure.fields));
     return null;
   };
-  // Trả mã lỗi chặn (nếu có) để hộp hỏi lại giữ mở khi danh sách món chờ vừa đổi
-  const post = async (kind: SnapshotKind) => {
-    let failed: BlockCode | null = null;
-    await flight.run(async () => {
-      setTaking(kind);
-      setRejected(false);
-      try {
-        const body = { kind, order_qty: qty.edited, ...pendingConfirmOf(report), ...(opts.reuse ? { reuse_if_unchanged: true } : {}) };
-        const { id, created_at, data } = await createSnapshot(report.ym, body, csrfToken);
-        setFresh((s) => new Set(s).add(id));
-        void refresh();
-        if (kind === 'xlsx') await announceXlsx(id, created_at);
-        else if (data) await opts.print?.({ ...data, id, kind });
-        opts.onTaken?.();
-      } catch (e) {
-        failed = await fail(e);
-      } finally {
-        setTaking(null);
-      }
-    });
-    return failed as BlockCode | null;
-  };
-  // Bản xem trước: cùng ô Đề nghị như lúc chốt, lỗi báo cùng chỗ; không lưu gì nên không đổi fresh/danh sách
+  return { fail, notice, rejected, clearNotice: () => setNotice(null), clearRejected: () => setRejected(false) };
+}
+
+// Bản xem trước: cùng ô Đề nghị như lúc chốt, lỗi báo cùng chỗ; không lưu gì nên không đổi fresh/danh sách
+function usePreview(ym: string, qty: OrderQty, flight: ReturnType<typeof useSingleFlight>, failure: ReturnType<typeof useSnapshotFailure>) {
+  const { csrfToken } = useMe();
   const [previewing, setPreviewing] = useState(false);
   const preview = async () => {
     let data: SnapshotData | null = null;
     await flight.run(async () => {
       setPreviewing(true);
-      setRejected(false);
+      failure.clearRejected();
       try {
-        data = (await previewSnapshot(report.ym, { order_qty: qty.edited }, csrfToken)).data;
+        data = (await previewSnapshot(ym, { order_qty: qty.edited }, csrfToken)).data;
       } catch (e) {
-        await fail(e);
+        await failure.fail(e);
       } finally {
         setPreviewing(false);
       }
     });
     return data as SnapshotData | null;
   };
-  return { post, preview, previewing, pending: flight.pending, taking, fresh, notice, rejected, clearNotice: () => setNotice(null) };
+  return { preview, previewing };
 }
 
-// Chỉ gửi ô đã sửa (ô vắng = số mặc định ở server, server vẫn kiểm 0–99 999); reuse → số trùng bản mới nhất cùng loại thì server dùng lại bản đó
-export function useTakeSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => boolean, opts: TakeOptions = {}) {
-  const sender = usePostSnapshot(report, qty, files, onInvalidPeriod, opts);
-  const [tried, setTried] = useState(false);
+function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => boolean, opts: TakeOptions) {
+  const { csrfToken } = useMe();
+  const refresh = useRefreshSnapshots(report.ym);
+  const announceXlsx = useAnnounceXlsx(report.ym, files);
+  const reloadReport = useReloadReport(report.ym);
+  const flight = useSingleFlight();
+  const failure = useSnapshotFailure(report.ym, qty, onInvalidPeriod);
+  const { preview, previewing } = usePreview(report.ym, qty, flight, failure);
+  const [taking, setTaking] = useState<SnapshotKind | null>(null);
+  const [fresh, setFresh] = useState<ReadonlySet<string>>(new Set());
+  // Trả mã lỗi chặn (nếu có) để hộp hỏi lại giữ mở khi danh sách món chờ vừa đổi
+  const post = async (kind: SnapshotKind) => {
+    let failed: BlockCode | null = null;
+    await flight.run(async () => {
+      setTaking(kind);
+      failure.clearRejected();
+      try {
+        const confirm = pendingConfirmOf(report);
+        const body = { kind, order_qty: qty.edited, ...confirm, ...(opts.reuse ? { reuse_if_unchanged: true } : {}) };
+        const { id, created_at, data } = await createSnapshot(report.ym, body, csrfToken);
+        setFresh((s) => new Set(s).add(id));
+        void refresh();
+        // Món chờ vừa thành Không mua: tải lại để số/tên món chờ trên trang hết cũ
+        if (confirm.reject_pending_custom) void reloadReport();
+        if (kind === 'xlsx') await announceXlsx(id, created_at);
+        else if (data) await opts.print?.({ ...data, id, kind });
+        opts.onTaken?.();
+      } catch (e) {
+        failed = await failure.fail(e);
+      } finally {
+        setTaking(null);
+      }
+    });
+    return failed as BlockCode | null;
+  };
+  return { post, preview, previewing, pending: flight.pending, taking, fresh, notice: failure.notice, rejected: failure.rejected, clearNotice: failure.clearNotice };
+}
+
+type Sender = ReturnType<typeof usePostSnapshot>;
+
+// Hộp hỏi lại mở tới khi chốt xong; danh sách món chờ vừa đổi (409) thì giữ hộp, báo đỏ trong hộp
+function useConfirmAsk(sender: Sender) {
   const [asking, setAsking] = useState<SnapshotKind | null>(null);
   const [conflict, setConflict] = useState(false);
-  if (tried && qty.errorCount === 0) setTried(false);
-
-  const take = (kind: SnapshotKind) => {
-    if (sender.pending) return;
-    sender.clearNotice();
-    if (qty.errorCount > 0) return setTried(true);
-    if (opts.mustConfirm ?? report.pending_custom_count > 0) {
-      setConflict(false);
-      return setAsking(kind);
-    }
-    void sender.post(kind);
+  const close = () => {
+    setConflict(false);
+    setAsking(null);
   };
+  const confirm = async () => {
+    if (!asking) return;
+    const failed = await sender.post(asking);
+    if (failed !== 'PENDING_CUSTOM') return close();
+    sender.clearNotice();
+    setConflict(true);
+  };
+  const open = (kind: SnapshotKind) => {
+    setConflict(false);
+    setAsking(kind);
+  };
+  return { asking, conflict, confirm, cancel: close, open };
+}
 
+// Chỉ gửi ô đã sửa (ô vắng = số mặc định ở server, server kiểm 0–1000); reuse → số trùng bản mới nhất cùng loại thì server dùng lại bản đó
+export function useTakeSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDownload, onInvalidPeriod: () => boolean, opts: TakeOptions = {}) {
+  const sender = usePostSnapshot(report, qty, files, onInvalidPeriod, opts);
+  const ask = useConfirmAsk(sender);
+  const [tried, setTried] = useState(false);
+  if (tried && qty.errorCount === 0) setTried(false);
   const ready = () => {
     if (sender.pending) return false;
     sender.clearNotice();
@@ -164,38 +192,25 @@ export function useTakeSnapshot(report: MonthReport, qty: OrderQty, files: Snaps
     setTried(true);
     return false;
   };
-
   return {
-    take,
+    take: (kind: SnapshotKind) => {
+      if (!ready()) return;
+      if (opts.mustConfirm ?? report.pending_custom_count > 0) return ask.open(kind);
+      void sender.post(kind);
+    },
     // "Xem tổng kết": dựng bản sẽ in, chưa lưu gì
     preview: async () => (ready() ? sender.preview() : null),
     previewing: sender.previewing,
     // "Đồng ý và in": cảnh báo đã hiện trong hộp xem trước nên chốt luôn, không hỏi lại
-    takeNow: (kind: SnapshotKind) => {
-      if (ready()) void sender.post(kind);
-    },
+    takeNow: (kind: SnapshotKind) => void (ready() && sender.post(kind)),
     taking: sender.taking,
     fresh: sender.fresh,
     notice: sender.notice,
     fixCount: tried || sender.rejected ? qty.errorCount : 0,
-    asking,
-    conflict,
+    asking: ask.asking,
+    conflict: ask.conflict,
     confirming: sender.pending,
-    // Hộp hỏi lại mở tới khi chốt xong; danh sách món chờ vừa đổi (409) thì giữ hộp, báo đỏ trong hộp
-    confirm: async () => {
-      const kind = asking;
-      if (!kind) return;
-      const failed = await sender.post(kind);
-      if (failed === 'PENDING_CUSTOM') {
-        sender.clearNotice();
-        return setConflict(true);
-      }
-      setConflict(false);
-      setAsking(null);
-    },
-    cancel: () => {
-      setConflict(false);
-      setAsking(null);
-    },
+    confirm: ask.confirm,
+    cancel: ask.cancel,
   };
 }

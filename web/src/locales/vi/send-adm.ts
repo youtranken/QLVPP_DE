@@ -11,6 +11,7 @@ const sendAdm = {
       qty: 'Đề nghị',
       qtyLabel: 'Đề nghị: {{name}}',
       invalid: 'Tối đa 1.000',
+      invalidSent: 'Bản đã gửi ghi số này; nay tối đa 1.000, sửa lại',
       overMax: 'Vượt 1.000, kiểm lại',
     },
     leave: {

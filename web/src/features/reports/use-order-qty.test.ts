@@ -98,15 +98,37 @@ describe('useOrderQty — ô Đề nghị', () => {
     expect(result.current.edited).toEqual({});
   });
 
-  it('số khởi tạo từ bản đã gửi > 1000 mà người dùng chưa sửa → không đỏ; người dùng gõ 1500 → đỏ, gõ lại 1000 → hết đỏ', () => {
+  it('số khởi tạo từ bản đã gửi > 1000 khác mặc định sống (sẽ gửi đi) → đỏ kèm lý do "bản đã gửi"; gõ 1000 → hết đỏ, gửi 1000', () => {
     const { result } = renderHook(() => useOrderQty(report, { initial: { [PEN]: 1200 } }));
-    expect(result.current.hasError(PEN)).toBe(false);
-    expect(result.current.overMax(PEN)).toBe(true);
-    act(() => result.current.set(PEN, '1500'));
     expect(result.current.hasError(PEN)).toBe(true);
+    expect(result.current.errorOf(PEN)).toBe('sent');
     expect(result.current.overMax(PEN)).toBe(false);
+    expect(result.current.errorCount).toBe(1);
+    expect(result.current.invalid).toBe(true);
+    expect(result.current.edited).toEqual({});
+    act(() => result.current.set(PEN, '1500'));
+    expect(result.current.errorOf(PEN)).toBe('max');
     act(() => result.current.set(PEN, '1000'));
     expect(result.current.hasError(PEN)).toBe(false);
-    expect(result.current.overMax(PEN)).toBe(false);
+    expect(result.current.edited).toEqual({ [PEN]: 1000 });
+  });
+
+  it('số > 1000 bằng đúng mặc định sống (không gửi đi) → chỉ ghi chú vàng, kể cả khởi tạo từ bản đã gửi hay người dùng gõ lại đúng số đó', () => {
+    const big = { ...report, byItem: [{ ...report.byItem[0], requested: 1200, backlog_prev: 0, adm_owed: 0, left_excluded: 0 }] };
+    const { result } = renderHook(() => useOrderQty(big, { initial: { [PEN]: 1200 } }));
+    expect(result.current.hasError(PEN)).toBe(false);
+    expect(result.current.overMax(PEN)).toBe(true);
+    act(() => result.current.set(PEN, '1300'));
+    expect(result.current.errorOf(PEN)).toBe('max');
+    act(() => result.current.set(PEN, '1200'));
+    expect(result.current.hasError(PEN)).toBe(false);
+    expect(result.current.overMax(PEN)).toBe(true);
+    expect(result.current.edited).toEqual({});
+  });
+
+  it('ô sai dạng → lỗi "invalid"', () => {
+    const { result } = setup();
+    act(() => result.current.set(PEN, 'abc'));
+    expect(result.current.errorOf(PEN)).toBe('invalid');
   });
 });

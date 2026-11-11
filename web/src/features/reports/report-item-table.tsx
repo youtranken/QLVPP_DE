@@ -7,6 +7,7 @@ import { categoryLabel, type Category } from '@/features/catalog/catalog.api';
 import { useUnitNames } from '@/features/units/units.api';
 import { CUSTOM_GROUP, NONE_GROUP, part1Name, type Part1Row } from './report-part1-rows';
 import { ReportOrderInput } from './report-order-input';
+import type { OrderError } from './use-order-qty';
 
 export interface ItemTableRow extends Part1Row {
   // Số Đề nghị đang hiện: ô nhập (kỳ khóa gần nhất) hoặc số của bản đã gửi (kỳ cũ hơn)
@@ -21,7 +22,7 @@ interface Props {
   empty: string;
   editable: boolean;
   value: (key: string) => string;
-  hasError: (key: string) => boolean;
+  errorOf: (key: string) => OrderError | null;
   overMax: (key: string) => boolean;
   onEdit: (key: string, text: string) => void;
   people: ReadonlyMap<string, number>;
@@ -31,7 +32,7 @@ interface Props {
 interface OrderBinding {
   editable: boolean;
   value: (key: string) => string;
-  hasError: (key: string) => boolean;
+  errorOf: (key: string) => OrderError | null;
   overMax: (key: string) => boolean;
   onEdit: (key: string, text: string) => void;
 }
@@ -43,7 +44,7 @@ function OrderCell({ row }: { row: ItemTableRow }) {
   const { i18n } = useTranslation();
   const b = useContext(OrderBind)!;
   if (!b.editable) return <b>{row.order}</b>;
-  return <ReportOrderInput name={part1Name(row, i18n.language)} value={b.value(row.id)} error={b.hasError(row.id)} overMax={b.overMax(row.id)} onChange={(text) => b.onEdit(row.id, text)} />;
+  return <ReportOrderInput name={part1Name(row, i18n.language)} value={b.value(row.id)} error={b.errorOf(row.id)} overMax={b.overMax(row.id)} onChange={(text) => b.onEdit(row.id, text)} />;
 }
 
 function useGroupName(cats: Category[]) {
@@ -55,7 +56,7 @@ function useGroupName(cats: Category[]) {
   };
 }
 
-export function ReportItemTable({ rows, cats, loading, empty, editable, value, hasError, overMax, onEdit, people, onPeople }: Props) {
+export function ReportItemTable({ rows, cats, loading, empty, editable, value, errorOf, overMax, onEdit, people, onPeople }: Props) {
   const { t, i18n } = useTranslation();
   const unitName = useUnitNames();
   const groupName = useGroupName(cats);
@@ -121,7 +122,7 @@ export function ReportItemTable({ rows, cats, loading, empty, editable, value, h
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
   }, [t, i18n.language, unitName, people, onPeople]);
-  const binding = useMemo(() => ({ editable, value, hasError, overMax, onEdit }), [editable, value, hasError, overMax, onEdit]);
+  const binding = useMemo(() => ({ editable, value, errorOf, overMax, onEdit }), [editable, value, errorOf, overMax, onEdit]);
   return (
     <OrderBind.Provider value={binding}>
       <DataTable

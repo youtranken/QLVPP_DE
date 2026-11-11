@@ -26,6 +26,7 @@ import { useMonthReport, type MonthReport, type SnapshotData, type SnapshotKind 
 import { SummaryPreviewDialog } from './summary-preview-dialog';
 import { useOrderQty } from './use-order-qty';
 import { usePrintInPlace } from './use-print-in-place';
+import { useFocusOrderError } from './use-focus-order-error';
 import { useChangedKeys, useDirtyCount, useNoOrder, initialFromSent } from './use-report-send';
 import { useReportsParams } from './use-reports-params';
 import { useSnapshotDownload, useTakeSnapshot } from './use-snapshot';
@@ -61,12 +62,6 @@ function ActionButton({ xlsx, disabled, taking, previewing = false, onTake }: { 
       {t(label)}
     </button>
   );
-}
-
-function focusFirstOrderError() {
-  const box = document.querySelector<HTMLInputElement>('.bc-table input[aria-invalid="true"]');
-  box?.scrollIntoView?.({ block: 'center' });
-  box?.focus();
 }
 
 interface BodyProps {
@@ -121,8 +116,9 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
   const blocked = snap.taking !== null || snap.previewing || empty || !settled;
   // Hộp "Xem tổng kết": bản dựng ở server (kỳ đang lập) hoặc bản đã gửi (tháng cũ); Hủy không lưu gì
   const [preview, setPreview] = useState<SnapshotData | null>(null);
+  const orderError = useFocusOrderError(onlyNeed, setOnlyNeed, qty.errorCount);
   const take = async (xlsx: boolean) => {
-    if (qty.errorCount > 0) focusFirstOrderError();
+    if (qty.errorCount > 0) orderError.go();
     if (xlsx) {
       dirty.mark();
       return snap.take('xlsx');
@@ -167,7 +163,8 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
         </p>
       )}
       {noOrder.failed && <p role="alert" className="alert alert--danger">{i18n.exists(`common.errors.${noOrder.failed}`) ? t(`common.errors.${noOrder.failed}`) : t('sendAdm.noOrder.failed')}</p>}
-      {snap.notice && <p role="alert" className="alert alert--danger">{t(`reports.page.error.${snap.notice}`)}</p>}
+      {orderError.lost && <p role="alert" className="alert alert--danger">{t('reports.page.fixCells', { count: qty.errorCount })}</p>}
+      {snap.notice && <p role="alert" className="alert alert--danger">{t(snap.notice === 'PENDING_CUSTOM' ? 'common.errors.PENDING_CUSTOM' : `reports.page.error.${snap.notice}`)}</p>}
       {(items.isError || cats.isError) && (
         <p className="alert alert--warn bc-inline-notice">
           {t('reports.part1.groupsFailed')}
@@ -181,7 +178,7 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
         empty={t(onlyNeed ? 'reports.part1.emptyNeed' : 'reports.part1.empty')}
         editable={editable}
         value={qty.value}
-        hasError={qty.hasError}
+        errorOf={qty.errorOf}
         overMax={qty.overMax}
         onEdit={qty.set}
         people={people}

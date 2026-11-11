@@ -6,12 +6,13 @@ const reports = {
       monthNav: 'Chọn tháng báo cáo',
       prevMonth: 'Tháng trước',
       nextMonth: 'Tháng sau',
+      fixCells_one: 'Còn {{count}} ô Đề nghị cần sửa trước khi chốt.',
+      fixCells_other: 'Còn {{count}} ô Đề nghị cần sửa trước khi chốt.',
       error: {
         INVALID_PERIOD: 'Tháng này chưa tới, chưa lập báo cáo được.',
         REPORT_CHANGED: 'Báo cáo đã đổi, đã tải lại — xem lại số Đề nghị rồi chốt lại.',
         UNKNOWN: 'Chưa chốt được, thử lại sau.',
         ORDER_EMPTY: 'Chưa có món nào để đề nghị.',
-        PENDING_CUSTOM: 'Danh sách món ngoài danh mục vừa thay đổi. Mở lại Xem tổng kết.',
       },
       toast: {
         xlsx: 'Đã xuất Excel tháng {{month}}/{{year}} · bản chốt {{time}}',

@@ -19,7 +19,6 @@ const SPEC: Record<string, string> = {
   W7short: 'Bản gửi {{x}} · nay cần {{y}} → thiếu {{n}}',
   W8: 'Còn {{n}} món ngoài danh mục chưa duyệt. Chốt bản này sẽ ghi Không mua cho:',
   W8more: '(và {{k}} món nữa)',
-  W8changed: 'Danh sách món ngoài danh mục vừa thay đổi. Mở lại Xem tổng kết.',
   W9: 'Chưa có món nào để đề nghị',
   W10a: 'Phiếu gửi NCC lúc {{time}} đã có món này ({{n}} {{unit}}) — hàng về sẽ không có người nhận.',
   W10b: 'Phiếu gửi NCC lúc {{time}} chưa có món này. Sau khi chấp nhận, vào Báo cáo & gửi NCC để làm bản mới và in lại, hoặc tự mua riêng.',

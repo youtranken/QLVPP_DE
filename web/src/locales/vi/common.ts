@@ -65,6 +65,7 @@ const common = {
       clear: 'Bỏ lọc',
     },
     errors: {
+      PENDING_CUSTOM: 'Danh sách món chờ duyệt vừa thay đổi, xem lại rồi xác nhận.',
       ORDER_NOT_EMPTY: 'Tổng đề nghị ở máy chủ đã lớn hơn 0 — tải lại trang rồi lập phiếu.',
       ALREADY_SENT: 'Kỳ này đã có bản gửi NCC — tải lại trang để xem.',
       ITEM_ADM_OUT: 'Món này đang đánh "NCC hết hàng" — bỏ đánh dấu trước khi nhập.',

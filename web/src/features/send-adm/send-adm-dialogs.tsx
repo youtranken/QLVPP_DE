@@ -58,7 +58,7 @@ export function SnapshotWarnings({ pending, changes, sentAt, conflict = false }:
     <>
       {conflict && (
         <p role="alert" className="alert alert--danger">
-          {t('warn.W8changed')}
+          {t('common.errors.PENDING_CUSTOM')}
         </p>
       )}
       {sentAt !== null && changes.length > 0 && <ChangeList changes={changes} sentAt={sentAt} />}

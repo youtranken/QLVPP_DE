@@ -12,6 +12,8 @@ export function parseOrderQty(text: string): number | null {
 
 // Chỉ gửi ô đã sửa: ô để nguyên thì server lấy số mặc định tại lúc chốt; luật thật kiểm lại ở server
 export type OrderQty = ReturnType<typeof useOrderQty>;
+// invalid: sai dạng; max: người dùng gõ vượt trần; sent: số lấy từ bản đã gửi vượt trần và sẽ gửi đi
+export type OrderError = 'invalid' | 'max' | 'sent';
 
 interface Options {
   // Số mốc của ô (ô khác mốc = đã sửa); hàm phải ổn định giữa các lần render
@@ -30,10 +32,13 @@ export function useOrderQty(report: MonthReport, { baseOf = defaultOrder, initia
     [report, baseOf],
   );
 
-  // Ô người dùng đã gõ: sai dạng hoặc vượt trần là lỗi; số khởi tạo/mặc định vượt trần chỉ là ghi chú
-  const badText = (key: string, text: string) => {
-    const n = parseOrderQty(text);
-    return n === null || (touched.has(key) && n > ORDER_QTY_MAX);
+  // Đúng luật server: số sẽ gửi đi (khác mặc định sống) mà vượt trần là lỗi; bằng mặc định thì không gửi, chỉ ghi chú vàng
+  const draftError = (key: string): OrderError | null => {
+    if (!(key in drafts)) return null;
+    const n = parseOrderQty(drafts[key]);
+    if (n === null) return 'invalid';
+    if (n > ORDER_QTY_MAX && n !== needs.get(key)) return touched.has(key) ? 'max' : 'sent';
+    return null;
   };
   const edited: Record<string, number> = {};
   let invalid = rejected.size > 0;
@@ -41,10 +46,11 @@ export function useOrderQty(report: MonthReport, { baseOf = defaultOrder, initia
     // Dòng đã rời báo cáo sau khi tải lại: nháp của nó không còn ô để hiện, không gửi
     if (!needs.has(key)) continue;
     const n = parseOrderQty(text);
-    if (n === null || badText(key, text)) invalid = true;
+    if (n === null || draftError(key)) invalid = true;
     else if (n !== needs.get(key)) edited[key] = n;
   }
-  const draftInvalid = (key: string) => key in drafts && badText(key, drafts[key]);
+  const draftInvalid = (key: string) => draftError(key) !== null;
+  const errorOf = (key: string): OrderError | null => draftError(key) ?? (rejected.has(key) ? 'max' : null);
   const valueOf = (key: string) => drafts[key] ?? String(needs.get(key) ?? 0);
   const isEdited = (key: string) => key in edited || draftInvalid(key);
   const hasError = (key: string) => rejected.has(key) || draftInvalid(key);
@@ -85,6 +91,7 @@ export function useOrderQty(report: MonthReport, { baseOf = defaultOrder, initia
     },
     isEdited,
     hasError,
+    errorOf,
     // Số hệ thống (mặc định/bản đã gửi) vượt trần mà người dùng chưa gõ: không chặn, chỉ nhắc kiểm lại
     overMax: (key: string) => !hasError(key) && (parseOrderQty(valueOf(key)) ?? 0) > ORDER_QTY_MAX,
     editedCount: keys.filter(isEdited).length,

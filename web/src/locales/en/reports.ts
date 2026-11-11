@@ -9,12 +9,13 @@ const reports: Messages<typeof vi> = {
       monthNav: 'Choose report month',
       prevMonth: 'Previous month',
       nextMonth: 'Next month',
+      fixCells_one: '{{count}} Order cell needs fixing before you finalize.',
+      fixCells_other: '{{count}} Order cells need fixing before you finalize.',
       error: {
         INVALID_PERIOD: 'This month has not started yet, no report can be made.',
         REPORT_CHANGED: 'The report changed and was reloaded — check the order quantities, then create the snapshot again.',
         UNKNOWN: 'Could not create the snapshot, please try again later.',
         ORDER_EMPTY: 'Nothing to order yet.',
-        PENDING_CUSTOM: 'The list of off-catalog items just changed. Open Review summary again.',
       },
       toast: {
         xlsx: 'Exported Excel for {{month}}/{{year}} · snapshot {{time}}',

@@ -18,7 +18,17 @@ const qtyBox = (name: string) => screen.findByRole('spinbutton', { name: `Đề 
 
 const snapshotPosts = (f: Parameters<typeof callsTo>[0]) => callsTo(f, 'POST', `/api/admin/reports/${YM}/snapshots`).filter((c) => c.url.endsWith('/snapshots'));
 
+const reportLoads = (f: Parameters<typeof callsTo>[0]) => f.mock.calls.filter((c) => c[0] === `/api/admin/reports/${YM}`).length;
+
 const PENDING6 = ['Dây rút', 'Sổ tay', 'Bút lông', 'Kệ tài liệu', 'Pin sạc', 'Ghim bấm'].map((name, i) => ({ line_id: `l${i}`, name }));
+
+async function zeroAll() {
+  for (const name of ['Bút bi', 'Giấy A4']) {
+    const box = await qtyBox(name);
+    await userEvent.clear(box);
+    await userEvent.type(box, '0');
+  }
+}
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -62,7 +72,7 @@ describe('Báo cáo & gửi NCC: món ngoài danh mục chờ khi chốt bản',
     expect(snapshotPosts(f)[0]!.body).not.toHaveProperty('reject_pending_custom');
   });
 
-  it('Đồng ý và in bị 409 PENDING_CUSTOM → báo "Danh sách món ngoài danh mục vừa thay đổi. Mở lại Xem tổng kết." và tải lại báo cáo', async () => {
+  it('Đồng ý và in bị 409 PENDING_CUSTOM → báo "Danh sách món chờ duyệt vừa thay đổi, xem lại rồi xác nhận." và tải lại báo cáo', async () => {
     const f = setupSendAdm({ report: sendReport([PEN, PAPER], { pending_custom_count: 1, pending_custom: PENDING6.slice(0, 1) }), stub: { post: () => errorResponse(409, 'PENDING_CUSTOM') } });
     open();
     await qtyBox('Bút bi');
@@ -71,7 +81,7 @@ describe('Báo cáo & gửi NCC: món ngoài danh mục chờ khi chốt bản',
     await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
     const dialog = await screen.findByRole('dialog', { name: /Xem tổng kết tháng/ });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Đồng ý và in' }));
-    expect(await screen.findByText('Danh sách món ngoài danh mục vừa thay đổi. Mở lại Xem tổng kết.')).toBeInTheDocument();
+    expect(await screen.findByText('Danh sách món chờ duyệt vừa thay đổi, xem lại rồi xác nhận.')).toBeInTheDocument();
     await waitFor(() => expect(loads()).toBeGreaterThan(before));
   });
 
@@ -105,7 +115,7 @@ describe('Báo cáo & gửi NCC: món ngoài danh mục chờ khi chốt bản',
     await userEvent.click(screen.getByRole('button', { name: 'Xuất Excel' }));
     const dialog = await screen.findByRole('dialog', { name: 'Chốt phiếu gửi NCC?' });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Xuất Excel mẫu phòng' }));
-    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Danh sách món ngoài danh mục vừa thay đổi. Mở lại Xem tổng kết.');
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Danh sách món chờ duyệt vừa thay đổi, xem lại rồi xác nhận.');
   });
 
   it('Không cần đề nghị khi còn món chờ: hộp xác nhận kèm danh sách sẽ ghi Không mua; xác nhận gửi cờ + expected_pending', async () => {
@@ -123,5 +133,41 @@ describe('Báo cáo & gửi NCC: món ngoài danh mục chờ khi chốt bản',
     await userEvent.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));
     await waitFor(() => expect(callsTo(f, 'POST', `/api/admin/periods/${YM}/no-order`)).toHaveLength(1));
     expect(callsTo(f, 'POST', `/api/admin/periods/${YM}/no-order`)[0]!.body).toMatchObject({ reject_pending_custom: true, expected_pending: 1 });
+  });
+  it('Xuất Excel có ghi Không mua thành công → tải lại báo cáo sống (số/tên món chờ hết cũ)', async () => {
+    const f = setupSendAdm({ report: sendReport([PEN, PAPER], { pending_custom_count: 2, pending_custom: PENDING6.slice(0, 2) }) });
+    open();
+    await qtyBox('Bút bi');
+    const before = reportLoads(f);
+    await userEvent.click(screen.getByRole('button', { name: 'Xuất Excel' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Chốt phiếu gửi NCC?' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Xuất Excel mẫu phòng' }));
+    await waitFor(() => expect(snapshotPosts(f)).toHaveLength(1));
+    await waitFor(() => expect(reportLoads(f)).toBeGreaterThan(before));
+  });
+
+  it('Không cần đề nghị có ghi Không mua thành công → tải lại báo cáo sống', async () => {
+    const f = setupSendAdm({ report: sendReport([PEN, PAPER], { pending_custom_count: 1, pending_custom: PENDING6.slice(0, 1) }) });
+    open();
+    await zeroAll();
+    const before = reportLoads(f);
+    await userEvent.click(screen.getByRole('button', { name: 'Tháng này không cần đề nghị NCC' }));
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Tháng này không cần đề nghị NCC?' })).getByRole('button', { name: 'Xác nhận' }));
+    await waitFor(() => expect(callsTo(f, 'POST', `/api/admin/periods/${YM}/no-order`)).toHaveLength(1));
+    await waitFor(() => expect(reportLoads(f)).toBeGreaterThan(before));
+  });
+
+  it('Không cần đề nghị bị 409 PENDING_CUSTOM → báo "Danh sách món chờ duyệt vừa thay đổi, xem lại rồi xác nhận." và tải lại báo cáo', async () => {
+    const f = setupSendAdm({
+      report: sendReport([PEN, PAPER], { pending_custom_count: 1, pending_custom: PENDING6.slice(0, 1) }),
+      extra: (url) => (url === `/api/admin/periods/${YM}/no-order` ? errorResponse(409, 'PENDING_CUSTOM') : undefined),
+    });
+    open();
+    await zeroAll();
+    const before = reportLoads(f);
+    await userEvent.click(screen.getByRole('button', { name: 'Tháng này không cần đề nghị NCC' }));
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Tháng này không cần đề nghị NCC?' })).getByRole('button', { name: 'Xác nhận' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Danh sách món chờ duyệt vừa thay đổi, xem lại rồi xác nhận.');
+    await waitFor(() => expect(reportLoads(f)).toBeGreaterThan(before));
   });
 });

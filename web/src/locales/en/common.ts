@@ -68,6 +68,7 @@ const common: Messages<typeof vi> = {
       clear: 'Clear filter',
     },
     errors: {
+      PENDING_CUSTOM: 'The list of items awaiting review just changed. Check it and confirm again.',
       ORDER_NOT_EMPTY: 'The server order total is now above 0 — reload the page, then prepare the form.',
       ALREADY_SENT: 'This period already has a form sent to the supplier — reload the page to see it.',
       ITEM_ADM_OUT: 'This item is marked out at supplier — unmark it first.',
