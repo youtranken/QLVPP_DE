@@ -6,7 +6,7 @@ import { Icon } from '@/ui/icon';
 import { useUnitName } from '@/features/units/units.api';
 import { REASON_MAX } from './stock-input';
 
-// Tên món có thể rất dài: tiêu đề ngắn, tên làm phụ đề cắt 2 dòng; khoảng trắng giữ tên truy cập "Kiểm kê <món>"
+// Tên món có thể rất dài: tiêu đề ngắn, tên làm phụ đề cắt 2 dòng; khoảng trắng giữ tên truy cập "Xuất lẻ <món>"
 export function StockTitle({ title, name }: { title: string; name: string }) {
   return (
     <>
@@ -18,13 +18,12 @@ export function StockTitle({ title, name }: { title: string; name: string }) {
   );
 }
 
-export function StockDialogShell({ title, itemName, itemUnit, stockQty, after, preview, dirty, saving, submitLabel, submitDisabled, formError, onSubmit, onClose, children }: {
+export function StockDialogShell({ title, itemName, itemUnit, stockQty, after, dirty, saving, submitLabel, submitDisabled, formError, onSubmit, onClose, children }: {
   title: string;
   itemName: string;
   itemUnit: string;
   stockQty?: number;
   after?: number | null;
-  preview?: string | null;
   dirty: boolean;
   saving: boolean;
   submitLabel: string;
@@ -57,7 +56,7 @@ export function StockDialogShell({ title, itemName, itemUnit, stockQty, after, p
           {stockQty !== undefined && (
             <p className="sk-now">
               <span>{t('stock.dialog.current', { qty: stockQty, unit })}</span>
-              {preview ? <b>{preview}</b> : after != null && <b>{t('stock.dialog.after', { qty: after })}</b>}
+              {after != null && <b>{t('stock.dialog.after', { qty: after })}</b>}
             </p>
           )}
           {formError && (
@@ -82,10 +81,8 @@ export function StockDialogShell({ title, itemName, itemUnit, stockQty, after, p
   );
 }
 
-export function QtyField({ label, hint, value, error, autoFocus, min, max, onChange }: {
+export function QtyField({ label, hint, value, error, autoFocus, onChange }: {
   label: string;
-  min?: number;
-  max?: number;
   hint?: string;
   value: string;
   error?: string;
@@ -94,7 +91,7 @@ export function QtyField({ label, hint, value, error, autoFocus, min, max, onCha
 }) {
   return (
     <FormField label={label} hint={hint} error={error} required>
-      {(c) => <input {...c} className="a-input num" type="number" inputMode="numeric" step={1} min={min} max={max} autoFocus={autoFocus} value={value} onChange={(e) => onChange(e.target.value)} />}
+      {(c) => <input {...c} className="a-input num" type="number" inputMode="numeric" step={1} autoFocus={autoFocus} value={value} onChange={(e) => onChange(e.target.value)} />}
     </FormField>
   );
 }

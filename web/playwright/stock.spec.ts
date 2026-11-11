@@ -5,7 +5,7 @@ import { seedLockedRequest } from './locked-request';
 
 const RECIPIENT = { sub: 'pw-recipient', name: 'PW Người nhận' };
 
-async function rowAction(row: Locator, itemName: string, action: 'Kiểm kê' | 'Xuất lẻ' | 'Sổ cái' | 'Nhập ngoài kỳ (tự mua lẻ)') {
+async function rowAction(row: Locator, itemName: string, action: 'Xuất lẻ' | 'Lịch sử nhập xuất' | 'Nhập ngoài kỳ (tự mua lẻ)') {
   await row.getByRole('button', { name: `Thao tác khác cho ${itemName}` }).click();
   await row.page().getByRole('menuitem', { name: action }).click();
 }
@@ -28,11 +28,11 @@ async function createItem(request: APIRequestContext, name: string) {
   return (await item.json()).id as string;
 }
 
-test.describe('E1-S4 Tủ / Kho: nhập, kiểm kê, xuất lẻ, sổ cái (dev-identity admin)', () => {
+test.describe('E1-S4 Tủ / Kho: nhập, xuất lẻ, lịch sử nhập xuất (dev-identity admin)', () => {
   asRole('admin');
   test.afterAll(() => deleteTestUsers(RECIPIENT.sub));
 
-  test('E1-S4 nhập 10 → tồn 10; xuất lẻ 3 cho người trong danh bạ → tồn 7; sổ cái hiện 2 dòng; còn 2 → Sắp hết, 0 không ai chờ → Không có', async ({
+  test('E1-S4 nhập 10 → tồn 10; xuất lẻ 3 cho người trong danh bạ → tồn 7; lịch sử nhập xuất hiện 2 dòng; còn 2 → Sắp hết, 0 không ai chờ → Không có', async ({
     page,
     request,
   }, info) => {
@@ -79,13 +79,14 @@ test.describe('E1-S4 Tủ / Kho: nhập, kiểm kê, xuất lẻ, sổ cái (dev
       await expect(issue).toBeHidden();
       await expectStockCell(row, 7);
 
-      await rowAction(row, itemName, 'Sổ cái');
-      const ledger = page.getByRole('dialog', { name: `Sổ cái ${itemName}` });
+      await rowAction(row, itemName, 'Lịch sử nhập xuất');
+      const ledger = page.getByRole('dialog', { name: `Lịch sử nhập xuất ${itemName}` });
       await expect(ledger.getByRole('listitem')).toHaveCount(2);
-      await expect(ledger.getByText(`Xuất lẻ · ${RECIPIENT.name}`)).toBeVisible();
-      await expect(ledger.getByText('Người mới vào giữa kỳ')).toBeVisible();
-      await expect(ledger.getByRole('listitem').getByText('Nhập mua', { exact: true })).toBeVisible();
-      await expect(ledger.getByText('Đơn PW')).toBeVisible();
+      await expect(ledger.getByRole('listitem').nth(0)).toContainText(`Xuất lẻ 3 cái cho ${RECIPIENT.name}`);
+      await expect(ledger.getByRole('listitem').nth(0)).toContainText('“Người mới vào giữa kỳ”');
+      await expect(ledger.getByRole('listitem').nth(1)).toContainText('Nhập ngoài kỳ 10 cái');
+      await expect(ledger.getByRole('listitem').nth(1)).toContainText('“Đơn PW”');
+      await expect(ledger.getByText(/Tồn\s*7/)).toBeVisible();
       await shot(page, info, 'stock-ledger', false);
       await page.keyboard.press('Escape');
       await expect(ledger).toBeHidden();
@@ -114,7 +115,7 @@ test.describe('E1-S4 Tủ / Kho: nhập, kiểm kê, xuất lẻ, sổ cái (dev
 test.describe('E9-S5 Tủ / Kho M1 (dev-identity admin)', () => {
   asRole('admin');
 
-  test('E9-S5 Kho: nhập 10, xuất lẻ 3 rồi 4 bị chặn, sổ cái tồn sau từng dòng', async ({ page, request }, info) => {
+  test('E9-S5 Kho: nhập 10, xuất lẻ 3 rồi 4 bị chặn, lịch sử nhập xuất có tồn sau từng dòng', async ({ page, request }, info) => {
     const itemName = `PW kho M1 ${Date.now()}-${info.project.name}`;
     const itemId = await createItem(request, itemName);
     try {
@@ -141,13 +142,13 @@ test.describe('E9-S5 Tủ / Kho M1 (dev-identity admin)', () => {
       await expectStockCell(row, 7);
 
       const ledgerOf = async () => {
-        await rowAction(row, itemName, 'Sổ cái');
-        return page.getByRole('dialog', { name: `Sổ cái ${itemName}` });
+        await rowAction(row, itemName, 'Lịch sử nhập xuất');
+        return page.getByRole('dialog', { name: `Lịch sử nhập xuất ${itemName}` });
       };
       const ledger = await ledgerOf();
       await expect(ledger.getByRole('listitem')).toHaveCount(2);
-      await expect(ledger.getByRole('listitem').nth(0).getByText('tồn 7')).toBeVisible();
-      await expect(ledger.getByRole('listitem').nth(1).getByText('tồn 10')).toBeVisible();
+      await expect(ledger.getByRole('listitem').nth(0).getByText('còn 7')).toBeVisible();
+      await expect(ledger.getByRole('listitem').nth(1).getByText('còn 10')).toBeVisible();
       if (info.project.name === 'mobile-390') await expectNoContrastViolations(page);
       await page.keyboard.press('Escape');
       await expect(ledger).toBeHidden();
@@ -175,50 +176,19 @@ test.describe('E9-S5 Tủ / Kho M1 (dev-identity admin)', () => {
     }
   });
 
-  test('E9-S5 Kho: kiểm kê tồn 10 đếm 12 → "Tồn 10 → 12 (+2)", sổ cái "Điều chỉnh"; tồn đổi ở nơi khác → báo tồn mới, không tự lưu', async ({ page, request }, info) => {
-    const itemName = `PW kiểm kê ${Date.now()}-${info.project.name}`;
+  test('Kho: không còn Kiểm kê ở menu ⋯ lẫn chân Lịch sử nhập xuất', async ({ page, request }, info) => {
+    const itemName = `PW không kiểm kê ${Date.now()}-${info.project.name}`;
     const itemId = await createItem(request, itemName);
-    const purchaseApi = (delta: number) =>
-      request.post(`/api/admin/items/${itemId}/stock`, { headers: devHeaders('admin'), data: { delta, reason: 'purchase', note: null } });
     try {
-      expect((await purchaseApi(10)).status()).toBe(201);
       await page.goto('/admin/stock');
       await page.getByRole('searchbox', { name: 'Tìm theo tên món' }).fill(itemName);
       const row = page.getByRole('row').filter({ hasText: itemName });
-      await expectStockCell(row, 10);
-
-      await rowAction(row, itemName, 'Kiểm kê');
-      const dialog = page.getByRole('dialog', { name: `Kiểm kê ${itemName}` });
-      await expect(dialog.getByText('Tồn hiện tại 10')).toBeVisible();
-      const save = dialog.getByRole('button', { name: 'Lưu kiểm kê' });
-      await expect(save).toBeDisabled();
-      await dialog.getByLabel('Số đếm thực tế').fill('10');
-      await expect(save).toBeDisabled();
-      await dialog.getByLabel('Số đếm thực tế').fill('12');
-      await expect(dialog.getByText('Tồn 10 → 12 (+2)')).toBeVisible();
-      await dialog.getByLabel('Lý do').fill('PW kiểm kê cuối tháng');
-      await shot(page, info, 'stock-count-dialog', false);
-      await save.click();
-      await expect(dialog).toBeHidden();
-      await expectStockCell(row, 12);
-
-      await rowAction(row, itemName, 'Kiểm kê');
-      await dialog.getByLabel('Số đếm thực tế').fill('11');
-      await dialog.getByLabel('Lý do').fill('PW hàng hỏng');
-      expect((await purchaseApi(3)).status()).toBe(201);
-      await save.click();
-      await expect(dialog.getByRole('alert')).toHaveText(/Tồn vừa đổi thành 15 .* ở nơi khác — đếm lại rồi lưu\./);
-      await expect(dialog.getByText('Tồn 15 → 11 (−4)')).toBeVisible();
-      await save.click();
-      await expect(dialog).toBeHidden();
-      await expectStockCell(row, 11);
-
-      await rowAction(row, itemName, 'Sổ cái');
-      const ledger = page.getByRole('dialog', { name: `Sổ cái ${itemName}` });
-      await expect(ledger.getByRole('listitem')).toHaveCount(4);
-      await expect(ledger.getByRole('listitem').nth(0).getByText('Điều chỉnh')).toBeVisible();
-      await expect(ledger.getByRole('listitem').nth(0).getByText('PW hàng hỏng')).toBeVisible();
-      if (info.project.name === 'mobile-390') await expectNoContrastViolations(page);
+      await row.getByRole('button', { name: `Thao tác khác cho ${itemName}` }).click();
+      await expect(page.getByRole('menuitem', { name: 'Kiểm kê' })).toHaveCount(0);
+      await page.getByRole('menuitem', { name: 'Lịch sử nhập xuất' }).click();
+      const ledger = page.getByRole('dialog', { name: `Lịch sử nhập xuất ${itemName}` });
+      await expect(ledger.getByRole('button', { name: 'Kiểm kê' })).toHaveCount(0);
+      await expect(ledger.getByText('Chưa có lần nhập xuất nào.')).toBeVisible();
     } finally {
       await removeTestItem(request, itemId);
     }
@@ -277,7 +247,7 @@ test.describe('E9-S5 Tủ / Kho M1 (dev-identity admin)', () => {
 test.describe('V2D-16 Tủ / Kho theo người đang chờ (dev-identity admin)', () => {
   asRole('admin');
 
-  test('V2D-16 held stock: tủ 5 giữ 4 → Trong tủ 5 · Đang giữ 4 · Còn trống 1; xuất 3 "Vẫn xuất" → Thiếu 2 cho người chờ; kiểm kê cảnh báo', async ({ page, request }, info) => {
+  test('V2D-16 held stock: tủ 5 giữ 4 → Trong tủ 5 · Đang giữ 4 · Còn trống 1; xuất 3 "Vẫn xuất" → Chờ hàng về 2 (đỏ)', async ({ page, request }, info) => {
     const seed = await seedLockedRequest(request, info, [{ stock: 5, qty: 4 }]);
     const item = seed.items[0];
     try {
@@ -285,7 +255,7 @@ test.describe('V2D-16 Tủ / Kho theo người đang chờ (dev-identity admin)'
       await expect(page.getByRole('heading', { level: 1, name: 'Tủ / Kho' })).toBeVisible();
       await expect(page.getByRole('link', { name: /Hàng ADM về/ })).toHaveCount(0);
       const chips = page.getByRole('group', { name: 'Lọc theo tình trạng tồn' });
-      await expect(chips.getByRole('button')).toHaveCount(5);
+      await expect(chips.getByRole('button')).toHaveCount(4);
       await chips.getByRole('button', { name: /Sắp hết/ }).click();
       await expect(page).toHaveURL(/filter=low/);
       await expect(chips.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
@@ -314,17 +284,9 @@ test.describe('V2D-16 Tủ / Kho theo người đang chờ (dev-identity admin)'
       await issue.getByRole('button', { name: 'Vẫn xuất' }).click();
       await expect(issue).toBeHidden();
       await expectStockCell(row, 2);
-      await expect(row.getByText('Thiếu 2 cho người chờ')).toBeVisible();
+      await expect(row.getByText('Chờ hàng về 2')).toBeVisible();
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'v2d16-stock-short', false);
-
-      await rowAction(row, item.name, 'Kiểm kê');
-      const count = page.getByRole('dialog', { name: `Kiểm kê ${item.name}` });
-      await count.getByLabel('Số đếm thực tế').fill('1');
-      await expect(count.getByRole('note')).toHaveText('Sau kiểm kê tủ còn 1, thiếu 3 cho người đang chờ.');
-      await count.getByRole('button', { name: 'Quay lại' }).click();
-      await page.getByRole('dialog', { name: 'Bỏ thay đổi?' }).getByRole('button', { name: 'Bỏ thay đổi', exact: true }).click();
-      await expect(count).toBeHidden();
 
       await page.getByRole('radio', { name: 'Xuất lẻ' }).click();
       await expect(page.getByRole('button', { name: 'Xuất lẻ một món' })).toBeVisible();

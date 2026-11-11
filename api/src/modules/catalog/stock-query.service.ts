@@ -35,9 +35,16 @@ export class StockQueryService {
 
   movements(itemId: string, limit: number, cursor?: string) {
     return this.page(
+      // Dòng giao không ghi người nhận ở sổ kho: lấy chủ phiếu qua dòng phiếu để Lịch sử nhập xuất viết "Giao … cho <tên>"
+      // receipt_ym (kỳ của lần hàng về) để web viết "Hàng về tháng …" mà không phải đọc lại ghi chú máy
       sql`SELECT m.id, m.delta, m.reason, m.note, m.actor_sub, m.recipient_sub,
+                 rq.user_sub AS delivered_to_sub,
+                 to_char(m.receipt_ym, 'YYYY-MM') AS receipt_ym,
                  m.created_at, m.created_at::text AS cursor_ts
-          FROM stock_movements m WHERE m.item_id = ${itemId}`,
+          FROM stock_movements m
+          LEFT JOIN request_lines rl ON rl.id = m.ref_line_id
+          LEFT JOIN requests rq ON rq.id = rl.request_id
+          WHERE m.item_id = ${itemId}`,
       limit,
       cursor,
     );

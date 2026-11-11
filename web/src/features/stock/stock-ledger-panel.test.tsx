@@ -13,20 +13,20 @@ async function open(path: string, width = 1280) {
   renderApp(makeMe('admin'), path);
 }
 
-describe('Tủ / Kho — sổ cái là panel phủ ?item=', () => {
+describe('Tủ / Kho — lịch sử nhập xuất là panel phủ ?item=', () => {
   it('bấm tên món → ?item=<id>, panel có bộ đếm; Đóng gỡ tham số', async () => {
     await open('/admin/stock');
-    await userEvent.click(await screen.findByRole('button', { name: 'Mở sổ cái Giấy A4' }));
-    const panel = await screen.findByRole('dialog', { name: 'Sổ cái Giấy A4' });
+    await userEvent.click(await screen.findByRole('button', { name: 'Xem lịch sử nhập xuất Giấy A4' }));
+    const panel = await screen.findByRole('dialog', { name: 'Lịch sử nhập xuất Giấy A4' });
     expect(search()).toContain('item=i-1');
     expect(within(panel).getByText(/^\d+\/\d+$/)).toBeInTheDocument();
     await userEvent.click(within(panel).getByRole('button', { name: 'Đóng' }));
     await waitFor(() => expect(search()).not.toContain('item='));
   });
 
-  it('F5 với ?item=i-1 → mở đúng sổ cái', async () => {
+  it('F5 với ?item=i-1 → mở đúng lịch sử nhập xuất', async () => {
     await open('/admin/stock?item=i-1');
-    expect(await screen.findByRole('dialog', { name: 'Sổ cái Giấy A4' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Lịch sử nhập xuất Giấy A4' })).toBeInTheDocument();
   });
 
   it('?item=<id lạ> → không mở panel, gỡ tham số, giữ tham số khác', async () => {
@@ -36,14 +36,15 @@ describe('Tủ / Kho — sổ cái là panel phủ ?item=', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('"Kiểm kê" ở chân panel mở hộp trên panel; đóng hộp thì panel vẫn mở', async () => {
+  it('"Xuất lẻ" ở chân panel mở hộp trên panel; đóng hộp thì panel vẫn mở', async () => {
     await open('/admin/stock?item=i-1');
-    const panel = await screen.findByRole('dialog', { name: 'Sổ cái Giấy A4' });
-    await userEvent.click(within(panel).getByRole('button', { name: 'Kiểm kê' }));
-    expect(await screen.findByRole('dialog', { name: 'Kiểm kê Giấy A4' })).toBeInTheDocument();
+    const panel = await screen.findByRole('dialog', { name: 'Lịch sử nhập xuất Giấy A4' });
+    expect(within(panel).queryByRole('button', { name: 'Kiểm kê' })).toBeNull();
+    await userEvent.click(within(panel).getByRole('button', { name: 'Xuất lẻ' }));
+    expect(await screen.findByRole('dialog', { name: 'Xuất lẻ Giấy A4' })).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Kiểm kê Giấy A4' })).toBeNull());
-    expect(screen.getByRole('dialog', { name: 'Sổ cái Giấy A4' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Xuất lẻ Giấy A4' })).toBeNull());
+    expect(screen.getByRole('dialog', { name: 'Lịch sử nhập xuất Giấy A4' })).toBeInTheDocument();
     expect(search()).toContain('item=i-1');
   });
 });

@@ -72,6 +72,7 @@ export function IssueDialog({ item, choices = [], onClose }: { item?: StockRow; 
           error={errors.recipient}
           hint={recipient ? undefined : t('stock.dialog.needRecipient')}
           required
+          resultsWhenEmpty={false}
           onChange={(u) => { setRecipient(u); clear('recipient'); }}
         />
       )}

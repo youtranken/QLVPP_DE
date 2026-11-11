@@ -7,12 +7,10 @@ import { discardOptions, useConfirm } from '@/ui/confirm-context';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { useLeaveGuard } from '@/features/request/use-leave-guard';
 import { useAdminConfig, type AdminConfig } from './admin.api';
-import { AccessBlock } from './access-block';
 import { contactSpec, deadlineHitsReminder, periodSpec, signersSpec, wholeIn } from './config-form';
 import { ContactBlock } from './contact-block';
 import { effectiveSentence } from './effective-period';
 import { PeriodBlock } from './period-block';
-import { RecentChanges } from './recent-changes';
 import { SignatureBoxesBlock } from './signature-boxes-block';
 import { useConfigBlock } from './use-config-block';
 import './config.m1.css';
@@ -76,16 +74,10 @@ function ConfigForm({ config }: { config: AdminConfig }) {
         title={title}
         description={t('config.page.description')}
       />
-      <div className="cf-layout">
-        <div className="cf-blocks">
-          <PeriodBlock state={period} />
-          <AccessBlock />
-          <SignatureBoxesBlock state={signers} />
-          <ContactBlock state={contact} />
-        </div>
-        <aside className="cf-aside">
-          <RecentChanges />
-        </aside>
+      <div className="cf-blocks">
+        <PeriodBlock state={period} />
+        <SignatureBoxesBlock state={signers} />
+        <ContactBlock state={contact} />
       </div>
     </div>
   );

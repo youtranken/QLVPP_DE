@@ -95,7 +95,7 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       const pause = page.getByRole('dialog', { name: `Ngừng nhóm “${category}”?` });
       await expect(pause.getByText('0 món sẽ ẩn với nhân viên. Dùng lại nhóm chỉ hiện lại những món này; món đã ngừng riêng vẫn ngừng.')).toBeVisible();
       await pause.getByRole('button', { name: 'Ngừng nhóm' }).click();
-      await expect(page.getByRole('row').filter({ hasText: category }).getByText('Đã ngừng', { exact: true })).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: category }).getByText('Tạm ngưng', { exact: true })).toBeVisible();
     } finally {
       await cleanupCatalog(request, itemName, category);
     }

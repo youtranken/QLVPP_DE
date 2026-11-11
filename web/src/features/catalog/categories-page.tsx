@@ -7,6 +7,7 @@ import { discardOptions } from '@/ui/confirm-context';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { ReorderBar, ReorderToggle } from '@/ui/reorder';
 import { Toolbar } from '@/ui/toolbar';
+import { matchesSearch } from '@/features/request/request-format';
 import { useReorderMode } from '@/ui/use-reorder-mode';
 import { useAdminItems, useAllCategories, useRefreshCatalog, type AdminItem, type Category } from './catalog.api';
 import { CategoryDialog } from './category-dialog';
@@ -42,11 +43,27 @@ export function CategoriesPage() {
   useLeaveGuard(sort.on ? order.moved : 0, leavePrompt);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
+  const [q, setQ] = useState('');
   const group = useGroupToggle(items.data, refresh);
   const list = order.ordered;
-  const ids = useMemo(() => list.map((c) => c.id), [list]);
-  const panel = usePanelParam('group', { order: ids, known: (id) => (categories.isSuccess ? ids.includes(id) : undefined) });
+  // Đang sắp xếp thì cần thấy đủ nhóm: bỏ lọc
+  const query = sort.on ? '' : q.trim();
+  const visible = (c: Category) => !query || matchesSearch([c.name, c.name_en].filter(Boolean).join(' '), query);
+  // ↑/↓ trong panel và bộ đếm x/y đi theo đúng các dòng đang hiện sau khi lọc
+  const shownIds = list.filter(visible).map((c) => c.id);
+  const shownKey = shownIds.join(',');
+  const shownOrder = useMemo(() => (shownKey ? shownKey.split(',') : []), [shownKey]);
+  const allIds = useMemo(() => list.map((c) => c.id), [list]);
+  const panel = usePanelParam('group', { order: shownOrder, known: (id) => (categories.isSuccess ? allIds.includes(id) : undefined) });
+  // Vị trí màu theo thứ tự đầy đủ, không theo danh sách đã lọc
   const openIndex = panel.id ? list.findIndex((c) => c.id === panel.id) : -1;
+  const shown = shownIds.length;
+  const tools = !sort.on && list.length > 0 && (
+    <div className="cg-search">
+      <Toolbar search={{ value: q, onChange: setQ, label: t('catalog.categories.search'), placeholder: t('catalog.categories.search'), maxLength: 100 }} />
+      <ReorderToggle count={list.length} onStart={sort.start} />
+    </div>
+  );
 
   const add = (
     <button type="button" className={sort.on ? 'btn' : 'btn btn--primary'} onClick={() => setAdding(true)}>
@@ -59,7 +76,7 @@ export function CategoriesPage() {
         variant="groups"
         description={t('catalog.categories.description')}
         primary={add}
-        tabsEnd={!sort.on && list.length > 0 ? <ReorderToggle count={list.length} onStart={sort.start} /> : undefined}
+        tabsEnd={tools || undefined}
       />
       {group.error && !panel.id && (
         <p role="alert" className="alert alert--danger">
@@ -79,18 +96,28 @@ export function CategoriesPage() {
               <ReorderBar dirty={order.dirty} dirtyText={t('catalog.categories.dirty', { n: order.moved })} saving={order.saving} onCancel={() => void sort.cancel()} onSave={() => void sort.save()} />
             </Toolbar>
           )}
-          <CategoryTable
-            ordered={list}
-            counts={counts.all}
-            countsReady={counts.ready}
-            busy={group.busy || order.saving}
-            sorting={sort.on}
-            onMove={order.move}
-            onMoveTo={order.moveTo}
-            onEdit={setEditing}
-            onToggleActive={(c) => void group.toggle(c)}
-            onOpen={(c) => panel.open(c.id)}
-          />
+          {!sort.on && (
+            <p className="cg-shown" role="status">
+              {t('catalog.categories.shown', { shown, total: list.length })}
+            </p>
+          )}
+          {shown === 0 ? (
+            <EmptyState art="no-match" title={t('catalog.categories.noMatch')} />
+          ) : (
+            <CategoryTable
+              visible={query ? visible : undefined}
+              ordered={list}
+              counts={counts.all}
+              countsReady={counts.ready}
+              busy={group.busy || order.saving}
+              sorting={sort.on}
+              onMove={order.move}
+              onMoveTo={order.moveTo}
+              onEdit={setEditing}
+              onToggleActive={(c) => void group.toggle(c)}
+              onOpen={(c) => panel.open(c.id)}
+            />
+          )}
         </div>
       )}
       {openIndex >= 0 && (
@@ -106,6 +133,7 @@ export function CategoriesPage() {
           onToggleGroup={(c, notify) => void group.toggle(c, notify)}
           onClose={panel.close}
           refresh={refresh}
+          nav={{ index: panel.index, total: panel.total, onStep: panel.step }}
         />
       )}
       {adding && <CategoryDialog categories={list} onClose={() => setAdding(false)} />}

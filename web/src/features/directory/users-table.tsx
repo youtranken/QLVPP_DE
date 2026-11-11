@@ -97,7 +97,7 @@ export function UsersTable({
   rows: UserRow[];
   loading: boolean;
   activeId?: string;
-  empty: { title: string; hint: string; action: ReactNode };
+  empty: { title: string; hint?: string; action: ReactNode };
   onOpen: (u: UserRow) => void;
 }) {
   const columns = useColumns(onOpen, regMonth);

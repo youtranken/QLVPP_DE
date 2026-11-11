@@ -5,10 +5,13 @@ describe('POST admin/lines/:id/deliver: giao một dòng', () => {
   const f = deliveryFixture('deliver');
   const {
     A,
+    ADMIN,
+    as,
     customLine,
     deliver,
     deliveriesOf,
     freeze,
+    http,
     lockedLine,
     movementsOf,
     review,
@@ -35,6 +38,17 @@ describe('POST admin/lines/:id/deliver: giao một dòng', () => {
     expect(await deliveriesOf(line.id)).toEqual([
       { qty: 3, movement_id: body.movement_id },
     ]);
+    const ledger = await as(
+      http().get(`/api/admin/items/${item}/movements`),
+      ADMIN,
+      'admin',
+    ).expect(200);
+    expect(ledger.body.items[0]).toMatchObject({
+      id: body.movement_id,
+      reason: 'delivery',
+      recipient_sub: null,
+      delivered_to_sub: A,
+    });
   });
 
   it('giờ của movement giao = giờ ClockService (như line_deliveries, last_delivered_at), không phải now() DB', async () => {

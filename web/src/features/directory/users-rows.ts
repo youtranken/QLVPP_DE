@@ -47,7 +47,8 @@ export function departmentsOf(users: AdminUser[]): string[] {
   return [...set].sort((a, b) => a.localeCompare(b, 'vi'));
 }
 
-const searchText = (u: AdminUser) => [u.fullName, u.email, u.employeeCode, u.team, u.sub].filter(Boolean).join(' ');
+// Danh bạ và ô chọn người (Xuất lẻ, lọc Nhật ký) tìm cùng một bộ trường, gõ không dấu vẫn ra
+export const searchText = (u: AdminUser) => [u.fullName, u.email, u.department, u.employeeCode, u.team, u.sub].filter(Boolean).join(' ');
 
 // clientSearch=false: server đã lọc theo `search`, trang chỉ lọc thẻ và phòng ban; lọc đăng ký chưa có dữ liệu → chưa ra ai
 export function applyUsersView(users: AdminUser[], view: UsersView, clientSearch: boolean, reg: RegSets | null = null): AdminUser[] {

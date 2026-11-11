@@ -12,6 +12,10 @@ export interface StockMovement {
   note: string | null;
   actor_sub: string;
   recipient_sub: string | null;
+  // Chủ phiếu của dòng giao (sổ kho không ghi người nhận cho dòng giao)
+  delivered_to_sub?: string | null;
+  // Kỳ của lần hàng về (YYYY-MM); null với nhập ngoài kỳ và các loại khác
+  receipt_ym?: string | null;
   created_at: string;
 }
 
@@ -24,12 +28,6 @@ export interface StockChangeBody {
   delta: number;
   reason: 'purchase';
   note: string | null;
-}
-
-export interface StockCountBody {
-  counted_qty: number;
-  expected_stock_qty: number;
-  note: string;
 }
 
 export interface IssueBody {
@@ -125,13 +123,6 @@ export function useRefreshStock() {
 
 export const changeStock = (itemId: string, body: StockChangeBody, csrfToken: string | null) =>
   apiFetch<{ stock_qty: number }>(`/api/admin/items/${itemId}/stock`, {
-    method: 'POST',
-    body: JSON.stringify(body),
-    csrfToken,
-  });
-
-export const countStock = (itemId: string, body: StockCountBody, csrfToken: string | null) =>
-  apiFetch<{ stock_qty: number }>(`/api/admin/items/${itemId}/stock/count`, {
     method: 'POST',
     body: JSON.stringify(body),
     csrfToken,

@@ -11,13 +11,6 @@ const config: Messages<typeof vi> = {
       leaveBody: 'Unsaved: {{blocks}}.',
       saved: '{{block}} saved',
     },
-    recent: {
-      title: 'Recent changes',
-      row: '{{time}} · {{who}}',
-      changed: 'Changed: {{keys}}',
-      empty: 'Nothing saved yet.',
-      viewAll: 'View in Audit log',
-    },
     period: {
       title: 'Registration period',
       effectiveOpen: 'Period {{open}} (open) still locks at {{lock}}.',
@@ -51,15 +44,6 @@ const config: Messages<typeof vi> = {
       locked: 'Locked · D&E Admin delivers',
       weekdays: 'Mon,Tue,Wed,Thu,Fri,Sat,Sun',
     },
-    access: {
-      title: 'Access',
-      scope: 'Who can use VPP is decided by PMH ID (by Department/Team and the app exclusion list).',
-      adminsTitle: 'Current Admins',
-      adminsHint: 'The D&E Admin role is granted by PMH ID (VPP project administrator). To add or remove people, ask the PMH ID administrators — it takes effect within minutes.',
-      noAdmins: 'Nobody yet — run “Sync now” in the Directory.',
-      adminsUnknown: 'Could not load the D&E Admin list — open the Directory to see it.',
-      openDirectory: 'Open Directory',
-    },
     signers: {
       title: 'Signature boxes on the request form',
       hint: 'Titles and names printed at the foot of the printout. Printed snapshots keep the old names.',
@@ -79,10 +63,11 @@ const config: Messages<typeof vi> = {
       save: 'Save signature boxes',
     },
     contact: {
-      title: 'Contact & notifications',
+      title: 'D&E Admin contact and low-stock alerts',
       adminContact: 'D&E Admin name and contact',
       adminContactHint: 'Shown on the Me page and the “not authorized” page. e.g. Ms Binh — D&E Admin, ext. 123.',
       lowStock: 'Notify D&E Admin when items run low',
+      lowStockHint: 'When on, the app sends D&E Admin a bell notification when an item drops below its low-stock level.',
       lowStockCount: 'Items running low now: {{count}}.',
       save: 'Save contact',
     },

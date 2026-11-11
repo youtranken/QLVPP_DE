@@ -6,12 +6,12 @@ import { ItemThumb } from '@/ui/item-thumb';
 import { RowMenu, type RowMenuItem } from '@/ui/row-menu';
 import { useUnitNames } from '@/features/units/units.api';
 import type { ReactNode } from 'react';
-import type { StockRow } from './stock-rows';
+import { stockViewOf, type StockRow, type StockStatus } from './stock-rows';
 
-export type StockAction = 'purchase' | 'count' | 'issue' | 'ledger';
+export type StockAction = 'purchase' | 'issue' | 'ledger';
 
-const BADGE_CLASS: Record<StockRow['stock_state'], string> = {
-  short: 'tag tag--danger',
+const BADGE_CLASS: Record<StockStatus, string> = {
+  paused: 'tag tag--outline',
   incoming: 'tag tag--outline',
   none: 'tag tag--outline',
   low: 'tag tag--warn',
@@ -19,18 +19,32 @@ const BADGE_CLASS: Record<StockRow['stock_state'], string> = {
   ok: 'tag tag--ok',
 };
 
-// Đỏ chỉ khi người đang chờ thiếu hàng (đã tính hàng đang về); tủ 0 không ai cần chỉ xám
-export function StockBadge({ row }: { row: Pick<StockRow, 'stock_state' | 'short' | 'awaiting' | 'free'> }) {
+// Đỏ chỉ khi hàng NCC đang về không đủ bù cho người chờ; tủ 0 không ai cần chỉ xám
+export function StockBadge({ row }: { row: Pick<StockRow, 'usable' | 'stock_state' | 'short' | 'awaiting' | 'free'> }) {
   const { t } = useTranslation();
-  const text: Record<StockRow['stock_state'], string> = {
-    short: t('warn.W20short', { short: row.short }),
-    incoming: t('warn.W20pending', { n: row.awaiting }),
+  const status = stockViewOf(row);
+  const text: Record<StockStatus, string> = {
+    paused: t('stock.state.paused'),
+    incoming: t('warn.W20pending', { n: row.short + row.awaiting }),
     none: t('stock.state.none'),
     low: t('stock.state.low'),
     untracked: t('stock.state.untracked'),
     ok: t('stock.state.ok', { n: row.free }),
   };
-  return <span className={BADGE_CLASS[row.stock_state]}>{text[row.stock_state]}</span>;
+  // Món đã tạm ngưng thì Nhà cung cấp không giao thêm: người đang chờ chắc chắn chưa có hàng, nên cũng đỏ
+  const uncovered = status === 'incoming' && (row.short > 0 || !row.usable);
+  const badge = (
+    <span className={uncovered ? 'tag tag--danger' : BADGE_CLASS[status]} title={uncovered && row.short > 0 ? t('warn.W20short', { short: row.short }) : undefined}>
+      {text[status]}
+    </span>
+  );
+  if (status !== 'incoming' || row.usable) return badge;
+  return (
+    <span className="sk-badges">
+      {badge}
+      <span className="tag tag--outline">{t('stock.state.paused')}</span>
+    </span>
+  );
 }
 
 export function IssueButton({ item, onClick, className }: { item: Pick<StockRow, 'stock_qty'>; onClick: () => void; className: string }) {
@@ -47,18 +61,11 @@ function RowActions({ row: r, onAction }: { row: StockRow; onAction: (a: StockAc
   const { t } = useTranslation();
   const empty = r.stock_qty <= 0;
   const items: RowMenuItem[] = [
-    { label: t('stock.page.count'), onSelect: () => onAction('count', r) },
     { label: t('stock.page.issue'), disabled: empty, title: empty ? t('stock.page.issueDisabled') : undefined, onSelect: () => onAction('issue', r) },
     { label: t('stock.page.ledger'), onSelect: () => onAction('ledger', r) },
     { label: t('stock.actions.buyOutside'), onSelect: () => onAction('purchase', r) },
   ];
   return <RowMenu label={t('stock.page.more', { name: r.name })} items={items} />;
-}
-
-function InactiveTag({ reason }: { reason: StockRow['inactive_reason'] }) {
-  const { t } = useTranslation();
-  if (!reason) return null;
-  return <span className="tag tag--outline">{t(reason === 'item' ? 'catalog.categories.byItem' : 'catalog.categories.byGroup')}</span>;
 }
 
 function useColumns(groupName: (r: StockRow) => string, onAction: (a: StockAction, r: StockRow) => void) {
@@ -77,7 +84,7 @@ function useColumns(groupName: (r: StockRow) => string, onAction: (a: StockActio
                 {r.name}
               </button>
               <small className="sk-item__note">
-                {[groupName(r), r.pack_note].filter(Boolean).join(' · ')} <InactiveTag reason={r.inactive_reason} />
+                {[groupName(r), r.pack_note].filter(Boolean).join(' · ')}
               </small>
             </span>
           </span>

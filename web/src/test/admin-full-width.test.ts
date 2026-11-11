@@ -10,6 +10,8 @@ const ALLOWED: Record<string, { selectors: string[]; limit?: string }> = {
   field: { selectors: ['.toolbar__search', '.flt-search', '.gcb', '.dd-step'], limit: '480px' },
   prose: { selectors: ['.page-sub', '.au-muted', '.au-pairs'], limit: '72ch' },
   emptyState: { selectors: ['.empty-state__body'], limit: '480px' },
+  // Cấu hình một cột và bảng Trước/Sau của Nhật ký: giãn hết 1400px thì câu và ô nhập quá dài, mắt phải nhìn rất xa
+  readable: { selectors: ['.cf-blocks', '.au-diff'], limit: '760px' },
   overlay: { selectors: ['.sheet', '.sa-preview-dialog', '.ovp', '.side .notif-panel', '.toast-host'] },
   column: { selectors: ['.ct-code', '.ct-name-en', '.dv-give__out'], limit: '280px' },
   // Nhãn nhóm nằm đè trên ảnh thẻ: chặn theo % của thẻ, không phải khối bố cục
@@ -159,10 +161,10 @@ describe('Adm D&E toàn màn hình', () => {
 });
 
 describe('Bố cục theo route', () => {
-  it('Cấu hình: khối xếp auto-fill minmax(420px) (một khối lẻ không kéo hết hàng), khối ô ký chiếm cả hàng; < 420 một cột', () => {
+  it('Cấu hình: các khối một cột, căn trái, rộng tối đa 760px; không còn cột phụ bên phải', () => {
     const css = readFileSync(join(SRC, 'features/admin/config.m1.css'), 'utf8');
-    expect(css).toMatch(/\.cf-blocks \{[^}]*grid-template-columns: repeat\(auto-fill, minmax\(min\(100%, 420px\), 1fr\)\)/);
-    expect(css).toMatch(/\.cf-block:has\(\.cf-box\) \{ grid-column: 1 \/ -1; \}/);
+    expect(css).toMatch(/\.cf-blocks \{[^}]*max-inline-size: 760px/);
+    expect(css).not.toMatch(/\.cf-layout|\.cf-aside/);
   });
 
   it('Kỳ tháng: dải 4 bước một hàng bốn cột, 390 px hai cột; bảng dùng hết bề ngang', () => {

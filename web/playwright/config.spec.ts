@@ -1,10 +1,10 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { acquireLock, asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, seedActiveUser, shot } from './helpers';
+import { acquireLock, asRole, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, shot } from './helpers';
 
 const PW_ADMIN = { sub: 'pw-cfg-admin', name: 'PW Cấu hình Adm D&E' };
 
 type Config = Record<string, unknown>;
-// Mọi khóa test này đổi được; khối Quyền truy cập chỉ đọc nên không có khóa nào bị đổi ngoài danh sách này
+// Mọi khóa test này đổi được; ngoài danh sách này không khóa nào bị đổi
 const RESTORED = ['registration_last_day', 'reminder_days_left', 'default_max_qty', 'signature_boxes', 'admin_contact', 'low_stock_notify'];
 const TWO_BOXES = [
   { title: 'Chủ quản đơn vị', title_en: 'Head of Dept.', name: '' },
@@ -99,23 +99,21 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await period.getByRole('button', { name: 'Hủy' }).click();
     await expect(reminder).toHaveValue('2');
 
-    const contact = block(page, 'Liên hệ & thông báo');
+    const contact = block(page, 'Liên hệ Adm D&E và báo sắp hết hàng');
     const contactBox = page.getByLabel('Tên và cách liên hệ Adm D&E');
     await contactBox.fill('');
     await contactBox.pressSequentially(`PW ${info.project.name} `.padEnd(501, 'x'), { delay: 0 });
     await expect(contactBox).toHaveValue(`PW ${info.project.name} `.padEnd(500, 'x'));
     await expect(contact.getByText('500/500')).toBeVisible();
-    const recent = page.getByRole('region', { name: 'Thay đổi gần đây' });
     const before = ((await (await api!.get('/api/admin/audit?action=config.updated&limit=1')).json()) as { items: { id: string }[] }).items[0]?.id;
     const onlyContact = putBody(page);
-    const refetched = page.waitForResponse((r) => r.url().includes('/api/admin/audit?action=config.updated') && r.request().method() === 'GET');
     await contact.getByRole('button', { name: 'Lưu liên hệ' }).click();
     expect(Object.keys(await onlyContact)).toEqual(['admin_contact']);
     await saved(contact);
-    const latest = ((await (await refetched).json()) as { items: { id: string; objectId: string }[] }).items[0];
+    const latest = ((await (await api!.get('/api/admin/audit?action=config.updated&limit=1')).json()) as { items: { id: string; objectId: string }[] }).items[0];
     expect(latest.objectId).toBe('admin_contact');
     expect(latest.id).not.toBe(before);
-    await expect(recent.getByRole('listitem').first()).toContainText(' · ');
+    await expect(page.getByRole('region', { name: 'Thay đổi gần đây' })).toHaveCount(0);
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'admin-config-m1');
   });
@@ -145,15 +143,11 @@ test.describe('E9-S6 Cấu hình M1 (dev-identity admin)', () => {
     await saved(signers);
   });
 
-  test('E9-S6 Cấu hình: Quyền truy cập chỉ đọc, liệt kê Adm D&E seed (role admin)', async ({ page }) => {
-    seedActiveUser(PW_ADMIN.sub, PW_ADMIN.name, 'active', { team: 'Admin', role: 'admin' });
+  test('E9-S6 Cấu hình: không còn khối Quyền truy cập / Thay đổi gần đây; các khối một cột', async ({ page }) => {
     await page.goto('/admin/config');
-    const access = page.getByRole('region', { name: 'Quyền truy cập' });
-    await expect(access.getByRole('list', { name: 'Adm D&E hiện tại' }).getByText(PW_ADMIN.name)).toBeVisible();
-    await expect(access.getByRole('textbox')).toHaveCount(0);
-    await expect(access.getByRole('button')).toHaveCount(0);
-    await expect(access.getByText(/Ai được vào VPP do PMH ID quyết định/)).toBeVisible();
-    await expect(access.getByRole('link', { name: 'Mở Danh bạ' })).toHaveAttribute('href', '/admin/users');
+    await expect(block(page, 'Kỳ đăng ký')).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Quyền truy cập' })).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Thay đổi gần đây' })).toHaveCount(0);
   });
 
   test('E9-S6 Cấu hình: lỗi tải → "Không tải được dữ liệu — thử lại." + Thử lại', async ({ page }) => {

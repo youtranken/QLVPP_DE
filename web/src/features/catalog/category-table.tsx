@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { toneAtRank } from '@/lib/group-tone';
 import { ReorderCell, ReorderHead } from '@/ui/reorder';
 import { useRowDrag } from '@/ui/use-row-drag';
+import { EmptyCell } from '@/ui/empty-cell';
 import type { Category } from './catalog.api';
 
 interface Props {
@@ -16,11 +17,13 @@ interface Props {
   onOpen: (c: Category) => void;
   // Hộp "Ngừng nhóm" báo số món sẽ ẩn: chưa tải được món thì không cho mở (tránh "0 món")
   countsReady: boolean;
+  // Ô tìm chỉ ẩn hàng, không bỏ khỏi danh sách: màu nhóm theo thứ hạng trong toàn bộ danh sách
+  visible?: (c: Category) => boolean;
 }
 
 const nameClass = (c: Category) => (c.active ? 'cg-name__text' : 'cg-name__text cg-name--stopped');
 
-export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onMove, onMoveTo, onEdit, onToggleActive, onOpen }: Props) {
+export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onMove, onMoveTo, onEdit, onToggleActive, onOpen, visible }: Props) {
   const { t } = useTranslation();
   const drag = useRowDrag(onMoveTo);
   return (
@@ -29,24 +32,25 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
         <thead>
           <tr>
             {sorting && <ReorderHead />}
-            <th>{t('catalog.categories.colTone')}</th>
+            <th className="cg-tone-cell">{t('catalog.categories.colTone')}</th>
             <th>{t('catalog.categories.colName')}</th>
             <th>{t('catalog.categories.colNameEn')}</th>
             <th className="num r">{t('catalog.categories.colItems')}</th>
-            <th>
+            <th className="acts">
               <span className="sr-only">{t('catalog.categories.colActions')}</span>
             </th>
           </tr>
         </thead>
         <tbody>
           {ordered.map((c, i) => {
+            if (visible && !visible(c)) return null;
             const tone = toneAtRank(i);
             const dragProps = sorting && !busy ? drag(i) : undefined;
             return (
               <tr key={c.id} {...dragProps} className={[c.active ? '' : 'is-inactive', dragProps?.className ?? ''].filter(Boolean).join(' ') || undefined}>
                 {sorting && <ReorderCell index={i} count={ordered.length} name={c.name} disabled={busy} onMove={onMove} />}
                 <td className="cg-tone-cell">
-                  <span className="ct-dot cg-dot" style={{ background: `var(--${tone}-ink)` }} title={t(`catalog.tones.${tone}`)} />
+                  <span className="ct-dot cg-dot" aria-hidden="true" style={{ background: `var(--${tone}-ink)` }} title={t(`catalog.tones.${tone}`)} />
                 </td>
                 <td className="cg-name">
                   {sorting ? (
@@ -56,11 +60,15 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
                       <span className={nameClass(c)}>{c.name}</span>
                     </button>
                   )}
-                  {!c.active && <span className="cg-stopped">{t('catalog.categories.inactive')}</span>}
+                  {!c.active && <span className="tag tag--outline cg-stopped">{t('catalog.categories.inactive')}</span>}
                 </td>
-                <td className="cg-name-en" data-label={t('catalog.categories.colNameEn')}>
-                  <span>{c.name_en}</span>
-                </td>
+                {c.name_en ? (
+                  <td className="cg-name-en" data-label={t('catalog.categories.colNameEn')}>
+                    <span>{c.name_en}</span>
+                  </td>
+                ) : (
+                  <EmptyCell className="cg-name-en" label={t('catalog.categories.colNameEn')} />
+                )}
                 <td className="num r" data-label={t('catalog.categories.colItems')}>
                   {sorting ? (
                     counts.get(c.id) ?? 0
@@ -70,19 +78,21 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
                     </button>
                   )}
                 </td>
-                <td className="cg-acts">
-                  <button type="button" className="btn btn--sm" aria-label={t('catalog.categories.editFor', { name: c.name })} onClick={() => onEdit(c)}>
-                    {t('catalog.categories.edit')}
-                  </button>
-                  {c.active ? (
-                    <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('catalog.categories.pauseFor', { name: c.name })} disabled={busy || !countsReady} onClick={() => onToggleActive(c)}>
-                      {t('catalog.categories.pause')}
+                <td className="acts">
+                  <div className="acts__in">
+                    <button type="button" className="btn btn--sm" aria-label={t('catalog.categories.editFor', { name: c.name })} onClick={() => onEdit(c)}>
+                      {t('catalog.categories.edit')}
                     </button>
-                  ) : (
-                    <button type="button" className="btn btn--sm btn--primary" aria-label={t('catalog.categories.reactivateFor', { name: c.name })} disabled={busy} onClick={() => onToggleActive(c)}>
-                      {t('catalog.categories.reactivate')}
-                    </button>
-                  )}
+                    {c.active ? (
+                      <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('catalog.categories.pauseFor', { name: c.name })} disabled={busy || !countsReady} onClick={() => onToggleActive(c)}>
+                        {t('catalog.categories.pause')}
+                      </button>
+                    ) : (
+                      <button type="button" className="btn btn--sm btn--primary" aria-label={t('catalog.categories.reactivateFor', { name: c.name })} disabled={busy} onClick={() => onToggleActive(c)}>
+                        {t('catalog.categories.reactivate')}
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             );

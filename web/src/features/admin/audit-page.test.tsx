@@ -73,7 +73,7 @@ describe('AuditPage B11', () => {
     expect(groups[1]).toHaveTextContent('2 dòng');
   });
 
-  it('cả dòng bấm được (không còn nút "Xem"): dòng có aria-expanded, Enter mở hàng chi tiết chiếm đủ cột, Space đóng; nhãn trường qua i18n, JSON thô ẩn trong "Chi tiết kỹ thuật"', async () => {
+  it('cả dòng bấm được (không còn nút "Xem"): dòng có aria-expanded, Enter mở hàng chi tiết chiếm đủ cột, Space đóng; chỉ trường có nhãn i18n, không mã sự kiện/khóa thô/JSON', async () => {
     const detail = { before: { stock_qty: 3, qty: 1, odd_key: 'a' }, after: { stock_qty: 7, qty: 1, odd_key: 'b' }, note: 'đếm lại' };
     vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items: [row('evt-1', { detail })], next_cursor: null } : { items: [], next_cursor: null }))));
     await openAudit();
@@ -85,24 +85,39 @@ describe('AuditPage B11', () => {
     r.focus();
     await userEvent.keyboard('{Enter}');
     expect(r).toHaveAttribute('aria-expanded', 'true');
-    const detailCell = screen.getByText('Mã sự kiện #evt-1').closest('td')!;
+    const detailCell = screen.getByText('Ghi chú').closest('td')!;
     expect(r).toHaveAttribute('aria-controls', detailCell.firstElementChild!.id);
     expect(detailCell).toHaveAttribute('colspan', '5');
     const diff = within(within(detailCell).getByRole('table'));
     expect(diff.getByRole('rowheader', { name: 'Tồn kho' })).toBeInTheDocument();
-    expect(diff.getByRole('rowheader', { name: 'odd_key' })).toBeInTheDocument();
+    expect(diff.queryByRole('rowheader', { name: 'odd_key' })).toBeNull();
     expect(diff.queryByRole('rowheader', { name: 'Số lượng' })).toBeNull();
     expect(diff.getByText('3')).toBeInTheDocument();
     expect(diff.getByText('7')).toBeInTheDocument();
     expect(within(detailCell).getByText('Ghi chú')).toBeInTheDocument();
-    const tech = within(detailCell).getByText('Chi tiết kỹ thuật').closest('details')!;
-    expect(tech).not.toHaveAttribute('open');
-    expect(within(tech).getByText('Trước: {"stock_qty":3,"qty":1,"odd_key":"a"}')).not.toBeVisible();
+    expect(within(detailCell).getByText('đếm lại')).toBeInTheDocument();
+    expect(within(detailCell).queryByText(/Mã sự kiện|Chi tiết kỹ thuật|evt-1|stock_qty/)).toBeNull();
     await userEvent.keyboard(' ');
     expect(r).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByText('Mã sự kiện #evt-1')).toBeNull();
+    expect(screen.queryByText('đếm lại')).toBeNull();
     await userEvent.click(within(r).getByText('Sửa cấu hình'));
     expect(r).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('trường đổi không có nhãn vẫn báo bằng câu thường: "Ảnh đã đổi", "Đổi nhóm sang <tên>", "Có thay đổi khác"; không "Không có trường nào khác nhau", không mã', async () => {
+    const detail = { before: { image_file_id: 'aaaa0000-1111-4222-8333-444455556666', category_id: 'c-1', meta: { a: 1 } }, after: { image_file_id: 'bbbb0000-1111-4222-8333-444455556666', category_id: 'c-2', meta: { a: 2 } } };
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url.startsWith('/api/admin/audit')) return Promise.resolve(jsonResponse(200, { items: [row('h1', { detail })], next_cursor: null }));
+      if (url.startsWith('/api/item-categories')) return Promise.resolve(jsonResponse(200, [{ id: 'c-2', name: 'Bút & viết', name_en: null, sort_order: 1, active: true }]));
+      return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }));
+    }));
+    await openAudit();
+    await userEvent.click(within(entryRow('Lê Thị Bình')).getByText('Sửa cấu hình'));
+    expect(await screen.findByText('Đổi nhóm sang Bút & viết')).toBeInTheDocument();
+    expect(screen.getByText('Ảnh đã đổi')).toBeInTheDocument();
+    expect(screen.getByText('Có thay đổi khác')).toBeInTheDocument();
+    expect(screen.queryByText('Không có trường nào khác nhau.')).toBeNull();
+    expect(screen.queryByText(/aaaa0000|bbbb0000|c-2|meta/)).toBeNull();
   });
 
   it('cột Đối tượng hiện tên khi before/after có name/custom_name; không có thì tên loại tiếng Việt, không mã', async () => {
@@ -119,7 +134,7 @@ describe('AuditPage B11', () => {
     expect(screen.queryByText(/12345678/)).toBeNull();
   });
 
-  it('cột Đối tượng dùng objectLabel của api: tên món, "Phiếu tháng 11/2026 · chủ phiếu", dòng phiếu, bản chốt, kỳ; null → tên loại; mã chỉ ở hàng chi tiết, không ở bảng hay tooltip', async () => {
+  it('cột Đối tượng dùng objectLabel của api: tên món, "Phiếu tháng 11/2026 · chủ phiếu", dòng phiếu, bản chốt, kỳ; null → tên loại; mã không hiện ở bảng, tooltip hay hàng chi tiết', async () => {
     const itemId = 'c419efd8-1111-4222-8333-444455556666';
     const owner = 'Trần Văn Cường';
     const items = [
@@ -142,7 +157,8 @@ describe('AuditPage B11', () => {
     expect(screen.getByText('Phiên đăng nhập')).toBeInTheDocument();
     expect(screen.queryByText(/1e004b5e/)).toBeNull();
     await userEvent.click(item);
-    expect(screen.getByText(`Mã đối tượng: item · ${itemId}`)).toBeInTheDocument();
+    expect(screen.getByRole('rowheader', { name: 'Tồn kho' })).toBeInTheDocument();
+    expect(screen.queryByText(/Mã đối tượng|c419efd8/)).toBeNull();
   });
 
   it('"Xem thêm" tải trang kế bằng cursor; hết trang → thông báo "Đã hiện hết…" và không còn nút', async () => {
@@ -286,7 +302,7 @@ describe('AuditPage B11', () => {
     expect(screen.queryByText('Đã hiện hết nhật ký trong khoảng lọc.')).toBeNull();
   });
 
-  it('mã hành động api mới hơn web hiện mã thô; nhãn đã biết chỉ hiện nhãn, mã gốc ở hàng chi tiết; không có before/after → cặp khóa–giá trị', async () => {
+  it('mã hành động api mới hơn web hiện mã thô; nhãn đã biết chỉ hiện nhãn, mã gốc không hiện cả ở hàng chi tiết; không có before/after → cặp nhãn–giá trị', async () => {
     vi.stubGlobal('fetch', vi.fn((url: string) =>
       Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items: [row('a1', { action: 'future.thing' }), row('a2', { action: 'line.delivered', detail: { ip: '10.0.0.5' } })], next_cursor: null } : { items: [], next_cursor: null })),
     ));
@@ -296,7 +312,7 @@ describe('AuditPage B11', () => {
     expect(within(screen.getAllByRole('table')[0]).getByText('Giao hàng')).toBeInTheDocument();
     expect(within(screen.getAllByRole('table')[0]).queryByText('line.delivered')).toBeNull();
     await userEvent.click(within(screen.getAllByRole('table')[0]).getByText('Giao hàng'));
-    expect(screen.getByText('Mã hành động: line.delivered')).toBeInTheDocument();
+    expect(screen.queryByText(/line\.delivered|Mã hành động/)).toBeNull();
     expect(screen.getByText('Địa chỉ IP')).toBeInTheDocument();
     expect(screen.getByText('10.0.0.5')).toBeInTheDocument();
     expect(bodyRows().length).toBeGreaterThan(2);

@@ -36,14 +36,13 @@ export function ContactBlock({ state }: { state: ConfigBlockState<ContactDraft> 
         <Switch
           checked={draft.low_stock_notify}
           text={t('config.contact.lowStock')}
-          describedBy={low.data ? countId : undefined}
+          describedBy={countId}
           onChange={(next) => update((d) => ({ ...d, low_stock_notify: next }))}
         />
-        {low.data && (
-          <p id={countId} className="ff-hint">
-            {t('config.contact.lowStockCount', { count: low.data.length })}
-          </p>
-        )}
+        <p id={countId} className="ff-hint">
+          {t('config.contact.lowStockHint')}
+          {low.data && <> {t('config.contact.lowStockCount', { count: low.data.length })}</>}
+        </p>
       </div>
     </ConfigSection>
   );

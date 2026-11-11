@@ -87,7 +87,12 @@ export function UnitsPage() {
   const list = order.ordered;
   return (
     <div className="ct-page">
-      <SetupHeader variant="units" description={t('units.page.description')} primary={add} />
+      <SetupHeader
+        variant="units"
+        description={t('units.page.description')}
+        primary={add}
+        tabsEnd={!sort.on && list.length > 0 ? <ReorderToggle count={list.length} onStart={sort.start} /> : undefined}
+      />
       {actionError && (
         <p role="alert" className="alert alert--danger">
           {actionError}
@@ -101,15 +106,11 @@ export function UnitsPage() {
         <EmptyState title={t('units.page.empty')} hint={t('units.page.emptyHint')} action={add} />
       ) : (
         <div className="ct-block un-block">
-          <Toolbar>
-            {sort.on ? (
+          {sort.on && (
+            <Toolbar>
               <ReorderBar dirty={order.dirty} dirtyText={t('units.page.dirty', { n: order.moved })} saving={order.saving} onCancel={() => void sort.cancel()} onSave={() => void sort.save()} />
-            ) : (
-              <div className="toolbar__end">
-                <ReorderToggle count={list.length} onStart={sort.start} />
-              </div>
-            )}
-          </Toolbar>
+            </Toolbar>
+          )}
           <UnitTable
             ordered={list}
             busy={busy || order.saving}

@@ -87,18 +87,41 @@ describe('IssueDialog', () => {
     });
   });
 
-  it('chọn người từ danh bạ → gửi recipient_sub, toast có tên người; người đã khóa không chọn được', async () => {
+  it('chưa gõ thì không liệt kê ai; gõ không dấu "binh" → gợi ý Trần Thị Bình kèm phòng; người đã khóa không hiện; chọn → gửi recipient_sub, toast có tên', async () => {
     const f = stubMutation(jsonResponse(201, { stock_qty: 4 }));
     const onClose = vi.fn();
     wrap(<IssueDialog item={makeRow(5)} onClose={onClose} />);
     await userEvent.type(screen.getByLabelText(/^Số lượng/), '1');
     await userEvent.type(screen.getByLabelText(/^Lý do/), 'Người mới vào giữa kỳ');
-    expect(await screen.findByRole('button', { name: /Lê Văn Cường/ })).toBeDisabled();
-    await userEvent.click(screen.getByRole('button', { name: /Trần Thị Bình/ }));
+    const search = screen.getByRole('searchbox', { name: /Tìm người nhận/ });
+    expect(search).toHaveAttribute('placeholder', 'Gõ tên hoặc email để tìm');
+    // Chưa gõ thì chưa kéo danh bạ về
+    expect(f.mock.calls.some((c) => String(c[0]).startsWith('/api/admin/users'))).toBe(false);
+    expect(screen.queryByRole('list', { name: 'Kết quả tìm người' })).toBeNull();
+    await userEvent.type(search, 'cuong');
+    expect(await screen.findByText('Không tìm thấy ai.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Lê Văn Cường/ })).toBeNull();
+    await userEvent.clear(search);
+    await userEvent.type(search, 'binh');
+    const binh = await screen.findByRole('button', { name: /Trần Thị Bình/ });
+    expect(binh).toHaveTextContent('Giám sát');
+    expect(screen.getByText('1 người khớp')).toBeInTheDocument();
+    await userEvent.click(binh);
     await userEvent.click(screen.getByRole('button', { name: 'Xuất' }));
     await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(mutationCall(f, URL).body).toEqual({ qty: 1, recipient_sub: 'u-binh', reason: 'Người mới vào giữa kỳ' });
     expect(await screen.findByText('Đã xuất lẻ 1 ram Giấy A4 cho Trần Thị Bình')).toBeInTheDocument();
+  });
+
+  it('tìm theo cùng bộ trường với trang Danh bạ: mã nhân viên "nv042", nhóm "ca sang", phòng "giam sat" đều ra Trần Thị Bình', async () => {
+    stubMutation(jsonResponse(201, {}));
+    wrap(<IssueDialog item={makeRow(5)} onClose={vi.fn()} />);
+    const search = screen.getByRole('searchbox', { name: /Tìm người nhận/ });
+    for (const q of ['nv042', 'ca sang', 'giam sat']) {
+      await userEvent.clear(search);
+      await userEvent.type(search, q);
+      expect(await screen.findByRole('button', { name: /Trần Thị Bình/ })).toBeInTheDocument();
+    }
   });
 
   it('chưa chọn người nhận và không "Dùng chung" → lỗi ở ô Người nhận, không gọi API', async () => {
@@ -128,6 +151,7 @@ describe('IssueDialog', () => {
     wrap(<IssueDialog item={makeRow(5)} onClose={vi.fn()} />);
     await userEvent.type(screen.getByLabelText(/^Số lượng/), '1');
     await userEvent.type(screen.getByLabelText(/^Lý do/), 'x');
+    await userEvent.type(screen.getByRole('searchbox', { name: /Tìm người nhận/ }), 'Bình');
     await userEvent.click(await screen.findByRole('button', { name: /Trần Thị Bình/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Xuất' }));
     const picker = await screen.findByRole('searchbox', { name: /Tìm người nhận/ });

@@ -84,9 +84,9 @@ describe('Trang Đơn vị tính', () => {
     expect(within(rowOf('cái')).getByText('4')).toBeInTheDocument();
   });
 
-  it('chip chỉ cho ĐVT "Đã ngừng"; ĐVT đang dùng không có chip "Đang dùng"; không còn cột Trạng thái', async () => {
+  it('chip chỉ cho ĐVT "Tạm ngưng"; ĐVT đang dùng không có chip "Đang dùng"; không còn cột Trạng thái', async () => {
     await open();
-    expect(within(rowOf('Cũ')).getByText('Đã ngừng')).toBeInTheDocument();
+    expect(within(rowOf('Cũ')).getByText('Tạm ngưng')).toBeInTheDocument();
     expect(table().queryByText('Đang dùng')).toBeNull();
     expect(table().queryByRole('columnheader', { name: 'Trạng thái' })).toBeNull();
   });
@@ -96,18 +96,18 @@ describe('Trang Đơn vị tính', () => {
     expect(screen.getByText('Danh sách đơn vị để chọn khi thêm món hoặc ghi Món khác.')).toBeInTheDocument();
   });
 
-  it('trạng thái chỉ một chỗ: chip "Đã ngừng", không còn công tắc hay nút chữ "Xóa …" trong bảng', async () => {
+  it('trạng thái chỉ một chỗ: chip "Tạm ngưng", không còn công tắc hay nút chữ "Xóa …" trong bảng', async () => {
     await open();
     expect(table().queryAllByRole('switch')).toHaveLength(0);
     expect(table().queryByRole('button', { name: /^Xóa/ })).toBeNull();
   });
 
-  it('menu ⋯: ĐVT đang dùng có món → "Sửa", "Ngừng" (không có Xóa); chưa dùng → thêm "Xóa"; đã ngừng → "Dùng lại"', async () => {
+  it('menu ⋯: ĐVT đang dùng có món → "Sửa", "Tạm ngưng" (không có Xóa); chưa dùng → thêm "Xóa"; đã ngừng → "Dùng lại"', async () => {
     await open();
     const items = async (name: string) => (await openMenu(name)).getAllByRole('menuitem').map((m) => m.textContent);
-    expect(await items('cái')).toEqual(['Sửa', 'Ngừng']);
+    expect(await items('cái')).toEqual(['Sửa', 'Tạm ngưng']);
     await userEvent.keyboard('{Escape}');
-    expect(await items('hộp')).toEqual(['Sửa', 'Ngừng', 'Xóa']);
+    expect(await items('hộp')).toEqual(['Sửa', 'Tạm ngưng', 'Xóa']);
     await userEvent.keyboard('{Escape}');
     expect(await items('Cũ')).toEqual(['Sửa', 'Dùng lại', 'Xóa']);
   });
@@ -129,14 +129,14 @@ describe('Trang Đơn vị tính', () => {
     expect(document.querySelector('.toast--danger')).not.toBeNull();
   });
 
-  it('menu "Ngừng" hỏi xác nhận rồi PATCH {active:false}; "Dùng lại" Cũ xác nhận rồi {active:true}; Hủy thì không gọi API', async () => {
+  it('menu "Tạm ngưng" hỏi xác nhận rồi PATCH {active:false}; "Dùng lại" Cũ xác nhận rồi {active:true}; Hủy thì không gọi API', async () => {
     const f = await open();
-    await pick('cái', 'Ngừng');
+    await pick('cái', 'Tạm ngưng');
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Quay lại' }));
     expect(mutations(f)).toHaveLength(0);
-    await pick('cái', 'Ngừng');
-    expect(screen.getByRole('dialog', { name: 'Ngừng đơn vị “cái”?' })).toBeInTheDocument();
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Ngừng' }));
+    await pick('cái', 'Tạm ngưng');
+    expect(screen.getByRole('dialog', { name: 'Tạm ngưng đơn vị “cái”?' })).toBeInTheDocument();
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Tạm ngưng' }));
     await waitFor(() => expect(mutations(f)).toEqual([['/api/admin/units/cai', 'PATCH', { active: false }]]));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     await pick('Cũ', 'Dùng lại');
@@ -147,8 +147,8 @@ describe('Trang Đơn vị tính', () => {
 
   it('lỗi khác UNIT_IN_USE khi ngừng/xóa → khối role=alert (không toast danger); UNIT_NOT_FOUND còn tải lại danh sách', async () => {
     const f = await open((_u, method) => (method === 'PATCH' ? jsonResponse(404, { code: 'UNIT_NOT_FOUND', message: 'x' }) : undefined));
-    await pick('cái', 'Ngừng');
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Ngừng' }));
+    await pick('cái', 'Tạm ngưng');
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Tạm ngưng' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Đơn vị này không còn — tải lại trang.');
     expect(document.querySelector('.toast--danger')).toBeNull();
     await waitFor(() => expect(f.mock.calls.filter((c) => c[0] === '/api/units?all=1').length).toBeGreaterThan(1));
@@ -163,9 +163,9 @@ describe('Trang Đơn vị tính', () => {
 
   it('ngừng ĐVT xong, mở Danh mục > Thêm món trong cùng phiên: ô Đơn vị tính không còn ĐVT đó', async () => {
     await open();
-    await pick('hộp', 'Ngừng');
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Ngừng' }));
-    await waitFor(() => expect(within(rowOf('hộp')).getByText('Đã ngừng')).toBeInTheDocument());
+    await pick('hộp', 'Tạm ngưng');
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Tạm ngưng' }));
+    await waitFor(() => expect(within(rowOf('hộp')).getByText('Tạm ngưng')).toBeInTheDocument());
     await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Sản phẩm' }));
     await userEvent.click((await screen.findAllByRole('button', { name: 'Thêm sản phẩm' }))[0]);
     const select = await screen.findByLabelText(/Đơn vị tính/);

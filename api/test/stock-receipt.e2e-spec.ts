@@ -41,6 +41,7 @@ describe('POST admin/stock/receipts: vai, validate, mã lỗi (Postgres thật)'
       delta: 5,
       reason: 'purchase',
       note: `Về bù kỳ ${YM} · đợt 1`,
+      receipt_ym: YM,
       actor_sub: ADMIN,
     });
     expect((await movements(b)).items[0].note).toBe(`Về bù kỳ ${YM} · đợt 1`);
