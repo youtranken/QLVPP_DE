@@ -8,8 +8,7 @@ const read = (p: string) => readFileSync(resolve(__dirname, '..', p), 'utf8');
 function phoneBlocks(css: string): string[] {
   const out: string[] = [];
   const re = /@media \(max-width: 767px\) \{/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(css))) {
+  while (re.exec(css)) {
     let depth = 1;
     let i = re.lastIndex;
     for (; i < css.length && depth > 0; i++) {

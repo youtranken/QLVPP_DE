@@ -97,7 +97,7 @@ describe('ô tìm dùng .search-wrap nhận luật chừa chỗ nút X khi chữ
 
   it('DataTable', async () => {
     document.body.dataset.shell = 'admin';
-    renderWithI18n(<DataTable data={[{ id: 1, name: 'Bút' }]} columns={[{ accessorKey: 'name', header: 'Tên' }]} searchPlaceholder="Tìm trong bảng" />);
+    renderWithI18n(<DataTable data={[{ id: 1, name: 'Bút' }]} columns={[{ accessorKey: 'name', header: 'Tên' }]} searchPlaceholder="Tìm trong bảng" emptyText="Trống" />);
     const box = screen.getByRole('searchbox', { name: 'Tìm trong bảng' });
     await userEvent.type(box, LONG);
     expect(screen.getByRole('button', { name: 'Xóa chữ tìm' })).toBeInTheDocument();
