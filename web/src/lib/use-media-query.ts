@@ -1,9 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react';
 
 export const NARROW_QUERY = '(max-width: 900px)';
-// Điện thoại (cả hai khung): dưới 768 px
-export const PHONE_QUERY = '(max-width: 767px)';
-export const ADMIN_PHONE_QUERY = PHONE_QUERY;
+export const ADMIN_PHONE_QUERY = '(max-width: 767px)';
 export const ADMIN_TABLET_QUERY = '(min-width: 768px) and (max-width: 1279px)';
 
 function mql(query: string): MediaQueryList | null {

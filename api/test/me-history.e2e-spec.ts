@@ -10,6 +10,7 @@ interface HistoryItem {
   owed_line_count: number;
   removed_all: boolean;
   custom: Record<string, number>;
+  catalog: Record<string, number>;
 }
 interface HistoryPage {
   items: HistoryItem[];
@@ -253,6 +254,14 @@ describe('me/request/copy-previous và me/requests (lịch sử)', () => {
           owed_line_count: 2,
           removed_all: false,
           custom: { pending: 1, accepted: 1, converted: 1, rejected: 1 },
+          // chỉ món trong DM từ đầu (x): y đã "converted" và Bìa "accepted" vẫn là món ngoài DM
+          catalog: {
+            line_count: 1,
+            qty: 10,
+            delivered_qty: 4,
+            remaining_qty: 5,
+            owed_line_count: 1,
+          },
         },
         {
           period_ym: '2026-09',
@@ -264,6 +273,13 @@ describe('me/request/copy-previous và me/requests (lịch sử)', () => {
           owed_line_count: 0,
           removed_all: false,
           custom: { pending: 0, accepted: 0, converted: 0, rejected: 0 },
+          catalog: {
+            line_count: 1,
+            qty: 2,
+            delivered_qty: 2,
+            remaining_qty: 0,
+            owed_line_count: 0,
+          },
         },
       ]);
 
