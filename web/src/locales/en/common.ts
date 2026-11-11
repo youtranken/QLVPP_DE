@@ -54,6 +54,9 @@ const common: Messages<typeof vi> = {
       invalid: 'Enter a valid number.',
       hint: 'Enter to save · Esc to cancel',
     },
+    reviewReason: {
+      not_approved: 'This item was not approved for purchase this month. You can register it again later',
+    },
     stepper: {
       decrease: 'Decrease {{label}}',
       increase: 'Increase {{label}}',

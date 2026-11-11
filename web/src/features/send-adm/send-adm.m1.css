@@ -9,3 +9,4 @@
 [data-shell='admin'] .sa-w8 a { font-weight: 600; color: var(--c-warn); }
 
 [data-shell='admin'] .sa-spinner { width: 18px; height: 18px; border: 2px solid transparent; border-top-color: currentColor; border-right-color: currentColor; }
+[data-shell='admin'] .sa-w8 ul { margin: 0; padding-left: var(--s-5); font-weight: 700; }

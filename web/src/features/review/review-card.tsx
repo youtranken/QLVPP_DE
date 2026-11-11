@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUnitName } from '@/features/units/units.api';
 import { useFormatTime } from '@/lib/format-time';
+import { reviewNoteText } from '@/lib/review-note';
 import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
 import type { ReviewBody, ReviewResult, ReviewRow } from './review.api';
@@ -59,7 +60,7 @@ export function ReviewCard({ row, name, onDone, onStale }: {
         {(status === 'accepted' || status === 'converted' || status === 'rejected') && (
           <div className="rv-card__decision">
             <span className={`tag tag--${BADGE_TONE[status]}`}>{t(`review.card.badge.${status}`)}</span>
-            <span>{t(`review.card.decision.${status}`, { reason: note?.trim() ?? '' })}</span>
+            <span>{t(`review.card.decision.${status}`, { reason: reviewNoteText(note, t) ?? '' })}</span>
             {done && <em className="rv-card__when">{t('review.card.justNow')}</em>}
           </div>
         )}

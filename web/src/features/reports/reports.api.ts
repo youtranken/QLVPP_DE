@@ -70,6 +70,8 @@ export interface MonthReport {
   byDepartment: ReportDepartment[];
   issues: ReportIssue[];
   pending_custom_count: number;
+  // Tên món ngoài danh mục còn chờ (chỉ báo cáo sống): cảnh báo lúc chốt sẽ ghi Không mua
+  pending_custom?: { line_id: string; name: string }[];
   // Cột sống của kỳ (chỉ báo cáo sống, không có trong bản chốt)
   progress?: Record<string, KeyProgress>;
 }
@@ -162,7 +164,16 @@ export function useRefreshSnapshots(ym: string) {
   return () => qc.invalidateQueries({ queryKey: snapshotsKey(ym) });
 }
 
-export interface SnapshotBody {
+// Chốt bản/không cần đề nghị: xác nhận đúng số món ngoài danh mục đang chờ (server ghi Không mua; lệch → 409 PENDING_CUSTOM)
+export interface PendingConfirm {
+  reject_pending_custom?: true;
+  expected_pending: number;
+}
+
+export const pendingConfirmOf = (report: Pick<MonthReport, 'pending_custom_count'>): PendingConfirm =>
+  report.pending_custom_count > 0 ? { reject_pending_custom: true, expected_pending: report.pending_custom_count } : { expected_pending: 0 };
+
+export interface SnapshotBody extends PendingConfirm {
   kind: SnapshotKind;
   order_qty: Record<string, number>;
   reuse_if_unchanged?: boolean;

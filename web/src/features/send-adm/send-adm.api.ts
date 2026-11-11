@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import type { SnapshotData, SnapshotRef } from '@/features/reports/reports.api';
+import type { PendingConfirm, SnapshotData, SnapshotRef } from '@/features/reports/reports.api';
 import { arrivalsPlanKey, arrivalsPlanQuery } from '@/features/arrivals/arrivals.api';
 
 // Bản chốt có hàng mới nhất của kỳ (mọi loại); bản rỗng cũ không bao giờ là bản này
@@ -45,8 +45,8 @@ export function useRefreshSendState(ym: string) {
     Promise.all([qc.invalidateQueries({ queryKey: sendStateKey(ym) }), qc.invalidateQueries({ queryKey: arrivalsPlanKey(ym) })]).then(() => undefined);
 }
 
-export const markNoOrder = (ym: string, orderQty: Record<string, number>, csrfToken: string | null) =>
-  apiFetch<{ no_order_at: string }>(`/api/admin/periods/${ym}/no-order`, { method: 'POST', body: JSON.stringify({ order_qty: orderQty }), csrfToken });
+export const markNoOrder = (ym: string, orderQty: Record<string, number>, pending: PendingConfirm, csrfToken: string | null) =>
+  apiFetch<{ no_order_at: string }>(`/api/admin/periods/${ym}/no-order`, { method: 'POST', body: JSON.stringify({ order_qty: orderQty, ...pending }), csrfToken });
 
 export const clearNoOrder = (ym: string, csrfToken: string | null) =>
   apiFetch<void>(`/api/admin/periods/${ym}/no-order`, { method: 'DELETE', csrfToken });

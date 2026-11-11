@@ -11,6 +11,7 @@ const reports = {
         REPORT_CHANGED: 'Báo cáo đã đổi, đã tải lại — xem lại số Đề nghị rồi chốt lại.',
         UNKNOWN: 'Chưa chốt được, thử lại sau.',
         ORDER_EMPTY: 'Chưa có món nào để đề nghị.',
+        PENDING_CUSTOM: 'Danh sách món ngoài danh mục vừa thay đổi. Mở lại Xem tổng kết.',
       },
       toast: {
         xlsx: 'Đã xuất Excel tháng {{month}}/{{year}} · bản chốt {{time}}',
@@ -120,8 +121,8 @@ const reports = {
         changed: 'có {{n}} món đổi sau bản này',
         unsent: 'Chưa gửi NCC',
         noOrder: 'Không cần đề nghị NCC {{time}}',
-        custom: '{{n}} món ngoài danh mục chờ duyệt',
         customLink: 'Xem',
+        customLabel: 'Xem {{n}} món ngoài danh mục chờ duyệt',
         reprint: 'In lại',
       },
       people: {
@@ -148,7 +149,7 @@ const reports = {
     preview: {
       title: 'Xem tổng kết tháng {{month}}/{{year}}',
       sub: '{{items}} món · {{units}} đơn vị. Kiểm tra lại trước khi in trình ký.',
-      foot: 'Bấm Hủy thì không lưu bản nào. "Đồng ý và in" lưu bản này vào Các bản đã in rồi mở hộp in.',
+      foot: 'Bấm Hủy thì không lưu bản này.',
       cancel: 'Hủy',
       confirm: 'Đồng ý và in',
       print: 'In',

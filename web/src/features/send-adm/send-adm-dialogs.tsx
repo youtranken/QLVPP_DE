@@ -1,5 +1,5 @@
+import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { formatVnStamp } from '@/lib/format-time';
 import { Dialog, DialogCloseButton, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { useRequestFormat } from '@/features/request/request-format';
@@ -7,6 +7,7 @@ import type { SnapshotKind } from '@/features/reports/reports.api';
 import type { OrderChange } from './send-adm-rows';
 
 const MAX_CHANGES = 10;
+const MAX_PENDING_NAMES = 5;
 
 function ChangeList({ changes, sentAt }: { changes: OrderChange[]; sentAt: string }) {
   const { t } = useTranslation();
@@ -25,38 +26,75 @@ function ChangeList({ changes, sentAt }: { changes: OrderChange[]; sentAt: strin
   );
 }
 
-// Cảnh báo trước khi chốt, dùng chung cho hộp hỏi lại (Excel) và hộp Xem tổng kết: món đổi sau bản đã gửi, món ngoài DM chờ duyệt
-export function SnapshotWarnings({ ym, pending, changes, sentAt }: { ym: string; pending: number; changes: OrderChange[]; sentAt: string | null }) {
+// Chốt bản ghi Không mua cho món ngoài danh mục còn chờ: nói trước tên món (tối đa 5)
+export function PendingCustomWarning({ pending, names }: { pending: number; names: string[] }) {
+  const { t } = useTranslation();
+  const shown = names.slice(0, MAX_PENDING_NAMES);
+  const more = pending - shown.length;
+  return (
+    <div className="sa-w8">
+      <p>{t('warn.W8', { n: pending })}</p>
+      {shown.length > 0 && (
+        <ul>
+          {shown.map((name, i) => (
+            <li key={i}>{name}</li>
+          ))}
+        </ul>
+      )}
+      {more > 0 && <p>{t('warn.W8more', { k: more })}</p>}
+    </div>
+  );
+}
+
+export interface PendingCustom {
+  count: number;
+  names: string[];
+}
+
+// Cảnh báo trước khi chốt, dùng chung cho hộp hỏi lại (Excel) và hộp Xem tổng kết: món đổi sau bản đã gửi, món ngoài DM sẽ ghi Không mua
+export function SnapshotWarnings({ pending, changes, sentAt, conflict = false }: { pending: PendingCustom; changes: OrderChange[]; sentAt: string | null; conflict?: boolean }) {
   const { t } = useTranslation();
   return (
     <>
-      {sentAt !== null && changes.length > 0 && <ChangeList changes={changes} sentAt={sentAt} />}
-      {pending > 0 && (
-        <div className="sa-w8">
-          <p>{t('warn.W8', { n: pending })}</p>
-          <Link to={`/admin/review?status=pending&ym=${ym}`}>{t('sendAdm.confirm.review')}</Link>
-        </div>
+      {conflict && (
+        <p role="alert" className="alert alert--danger">
+          {t('warn.W8changed')}
+        </p>
       )}
+      {sentAt !== null && changes.length > 0 && <ChangeList changes={changes} sentAt={sentAt} />}
+      {pending.count > 0 && <PendingCustomWarning pending={pending.count} names={pending.names} />}
     </>
   );
 }
 
 interface PrintConfirmProps {
   kind: SnapshotKind;
-  ym: string;
-  pending: number;
+  pending: PendingCustom;
   changes: OrderChange[];
   sentAt: string | null;
+  busy?: boolean;
+  conflict?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-// Hỏi lại trước khi chốt: bản thay thế (liệt kê món đổi số) và/hoặc còn món ngoài danh mục chưa xem (không chặn)
-export function PrintConfirm({ kind, ym, pending, changes, sentAt, onConfirm, onCancel }: PrintConfirmProps) {
+// Hỏi lại trước khi chốt: bản thay thế (liệt kê món đổi số) và/hoặc còn món ngoài danh mục chưa duyệt (sẽ ghi Không mua)
+export function PrintConfirm({ kind, pending, changes, sentAt, busy = false, conflict = false, onConfirm, onCancel }: PrintConfirmProps) {
   const { t } = useTranslation();
+  const back = useRef<HTMLButtonElement>(null);
   const replacing = sentAt !== null && changes.length > 0;
   return (
-    <Dialog open onOpenChange={(o) => !o && onCancel()} maxWidth={520}>
+    <Dialog
+      open
+      onOpenChange={(o) => !o && !busy && onCancel()}
+      dismissible={!busy}
+      maxWidth={520}
+      // Chốt ghi Không mua cho món chờ: focus sẵn ở nút lùi, không ở nút chốt
+      onOpenAutoFocus={(e) => {
+        e.preventDefault();
+        back.current?.focus();
+      }}
+    >
       <div className="sheet-header">
         <DialogTitle className="sheet-title">{replacing ? t('sendAdm.confirm.replaceTitle', { time: formatVnStamp(sentAt) }) : t('sendAdm.confirm.title')}</DialogTitle>
         <DialogCloseButton />
@@ -64,15 +102,15 @@ export function PrintConfirm({ kind, ym, pending, changes, sentAt, onConfirm, on
       <div className="sheet-body sa-confirm">
         <DialogDescription asChild>
           <div>
-            <SnapshotWarnings ym={ym} pending={pending} changes={changes} sentAt={sentAt} />
+            <SnapshotWarnings pending={pending} changes={changes} sentAt={sentAt} conflict={conflict} />
           </div>
         </DialogDescription>
       </div>
       <div className="sheet-footer">
-        <button type="button" className="btn" onClick={onCancel}>
+        <button ref={back} type="button" className="btn" disabled={busy} onClick={onCancel}>
           {t('sendAdm.confirm.back')}
         </button>
-        <button type="button" className="btn btn--primary" onClick={onConfirm}>
+        <button type="button" className="btn btn--primary" disabled={busy} aria-busy={busy || undefined} onClick={onConfirm}>
           {t(kind === 'xlsx' ? 'sendAdm.actions.xlsx' : 'sendAdm.actions.print')}
         </button>
       </div>

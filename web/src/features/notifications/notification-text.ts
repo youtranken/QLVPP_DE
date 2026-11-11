@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next';
+import { reviewReasonText } from '@/lib/review-note';
 import { leftWorkText } from './left-work-text';
 import { lineAdjustedText } from './line-adjusted-text';
 import type { NotificationView } from './notifications.api';
@@ -65,7 +66,8 @@ export function notificationText(
     reason: str(p.reason),
     person: str(p.person) || t('notifications.someone'),
     item: pick(lang, p.item_name, p.item_name_en),
-    note: str(p.note),
+    // Lý do app tự ghi đi bằng mã để dịch theo ngôn ngữ người đọc
+    note: p.note_code ? (reviewReasonText(str(p.note_code), t) ?? '') : str(p.note),
   };
   if (n.topic === 'period_locked' && Number(p.custom_pending) > 0) {
     return t('notifications.topics.period_lockedCustom', { ...base, custom: str(p.custom_pending) });

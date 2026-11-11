@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useConfirm, type ConfirmOptions } from '@/ui/confirm-context';
 
@@ -13,5 +13,6 @@ export function useLeavePrompt(n: number): ConfirmOptions {
 export function useNoOrderConfirm() {
   const { t } = useTranslation();
   const ask = useConfirm();
-  return () => ask({ title: t('sendAdm.noOrder.title'), message: t('sendAdm.noOrder.body'), confirmLabel: t('sendAdm.noOrder.ok'), cancelLabel: t('sendAdm.noOrder.back') });
+  return (warning?: ReactNode) =>
+    ask({ title: t('sendAdm.noOrder.title'), message: t('sendAdm.noOrder.body'), confirmLabel: t('sendAdm.noOrder.ok'), cancelLabel: t('sendAdm.noOrder.back'), warning });
 }

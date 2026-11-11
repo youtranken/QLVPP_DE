@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { createElement, useMemo, useRef, useState } from 'react';
 import { activeNeed } from '@/lib/report-qty';
 import { apiErrorCode } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
@@ -6,7 +6,8 @@ import { useSingleFlight } from '@/lib/use-single-flight';
 import { basisNeedOf } from '@/features/send-adm/send-adm-rows';
 import { markNoOrder, useRefreshSendState, type SentSnapshot } from '@/features/send-adm/send-adm.api';
 import { useNoOrderConfirm } from '@/features/send-adm/use-send-adm-confirms';
-import type { MonthReport, SnapshotData } from './reports.api';
+import { PendingCustomWarning, type PendingCustom } from '@/features/send-adm/send-adm-dialogs';
+import { pendingConfirmOf, type MonthReport, type SnapshotData } from './reports.api';
 import type { OrderQty } from './use-order-qty';
 
 // Đề nghị khởi tạo từ bản đã gửi: mọi khóa của bản (khóa vắng ở báo cáo sống bị bỏ qua)
@@ -43,7 +44,9 @@ export function useDirtyCount(qty: OrderQty, fresh: ReadonlySet<string>) {
   return { count: changedDrafts(base, qty.drafts), mark: () => (taken.current = qty.drafts) };
 }
 
-export function useNoOrder(ym: string, qty: OrderQty) {
+// Không cần đề nghị cũng chốt kỳ: món ngoài danh mục còn chờ được ghi Không mua như khi chốt bản
+export function useNoOrder(report: MonthReport, qty: OrderQty, pending: PendingCustom) {
+  const ym = report.ym;
   const { csrfToken } = useMe();
   const ask = useNoOrderConfirm();
   const refresh = useRefreshSendState(ym);
@@ -51,10 +54,11 @@ export function useNoOrder(ym: string, qty: OrderQty) {
   const [failed, setFailed] = useState<string | null>(null);
   const run = () =>
     flight.run(async () => {
-      if (!(await ask())) return;
+      const warning = pending.count > 0 ? createElement(PendingCustomWarning, { pending: pending.count, names: pending.names }) : undefined;
+      if (!(await ask(warning))) return;
       setFailed(null);
       try {
-        await markNoOrder(ym, qty.edited, csrfToken);
+        await markNoOrder(ym, qty.edited, pendingConfirmOf(report), csrfToken);
       } catch (e) {
         setFailed(apiErrorCode(e) ?? 'UNKNOWN');
       }

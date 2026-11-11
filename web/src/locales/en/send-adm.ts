@@ -36,7 +36,6 @@ const sendAdm: Messages<typeof vi> = {
       changes: 'Changed from the copy of {{time}}:',
       change: '{{name}} {{x}} → {{y}}',
       more: 'and {{n}} more items',
-      review: 'View off-catalog items',
       back: 'Back',
     },
   },

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { reviewNoteText } from '@/lib/review-note';
 import type { LineView } from './request.api';
 
 export type ChipTone = 'ok' | 'warn' | 'muted' | 'open' | 'danger';
@@ -15,7 +16,7 @@ export function ReviewTag({ line }: { line: LineView }) {
   const s = line.review_status;
   if (s === 'n/a') return null;
   if (s === 'rejected') {
-    const reason = line.review_note?.trim();
+    const reason = reviewNoteText(line.review_note, t);
     return <Chip tone="danger">{reason ? t('request.history.review.rejectedWhy', { reason }) : t('request.history.review.rejected')}</Chip>;
   }
   return <Chip tone={s === 'pending' ? 'warn' : 'ok'}>{t(`request.history.review.${s}`)}</Chip>;

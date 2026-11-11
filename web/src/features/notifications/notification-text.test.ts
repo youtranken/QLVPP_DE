@@ -56,6 +56,16 @@ describe('notificationText', () => {
     expect(notificationText(SAMPLES[9], en, 'en')).toBe('The item "Bìa còng" (November) was added to the catalog as A4 ring binder.');
   });
 
+  it('line_review app tự ghi Không mua: lý do đi bằng note_code, dịch theo ngôn ngữ người đọc', () => {
+    const auto = n('line_review', { ym: '2026-11', action: 'rejected', name: 'Bìa còng', note_code: 'not_approved' });
+    expect(notificationText(auto, vi, 'vi')).toBe('Adm D&E từ chối món "Bìa còng" (tháng 11): Sản phẩm không được duyệt mua tháng này. Bạn có thể đăng ký lại sau');
+    expect(notificationText(auto, en, 'en')).toBe('D&E Admin rejected the item "Bìa còng" (November): This item was not approved for purchase this month. You can register it again later');
+  });
+
+  it('line_review note_code lạ → câu từ chối không lý do', () => {
+    expect(notificationText(n('line_review', { ym: '2026-11', action: 'rejected', name: 'Bìa còng', note_code: 'xyz' }), vi, 'vi')).toBe('Adm D&E từ chối món "Bìa còng" (tháng 11).');
+  });
+
   it('custom_line_new thiếu tên người → "Một người"', () => {
     expect(notificationText(n('custom_line_new', { ym: '2026-11', name: 'X', person: null }), vi, 'vi')).toBe(
       'Một người thêm món ngoài danh mục "X" (tháng 11).',

@@ -5,8 +5,8 @@ import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
 import { useToast } from '@/ui/toast-context';
 import { monthOf } from '@/features/request/request-format';
-import { createSnapshot, downloadSnapshot, previewSnapshot, useRefreshSnapshots, useReloadReport, type MonthReport, type SnapshotData, type SnapshotKind } from './reports.api';
-import { downloadFailure, takeFailure, type DownloadError } from './reports-errors';
+import { createSnapshot, downloadSnapshot, pendingConfirmOf, previewSnapshot, useRefreshSnapshots, useReloadReport, type MonthReport, type SnapshotData, type SnapshotKind } from './reports.api';
+import { downloadFailure, takeFailure, type BlockCode, type DownloadError } from './reports-errors';
 import type { OrderQty } from './use-order-qty';
 
 export interface TakeOptions {
@@ -73,25 +73,37 @@ function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDown
   const refresh = useRefreshSnapshots(report.ym);
   const announceXlsx = useAnnounceXlsx(report.ym, files);
   const rejectFields = useRejectFields(report.ym, qty);
+  const reloadReport = useReloadReport(report.ym);
   const flight = useSingleFlight();
-  const [notice, setNotice] = useState<'REPORT_CHANGED' | 'UNKNOWN' | 'INVALID_PERIOD' | 'ORDER_EMPTY' | null>(null);
+  const [notice, setNotice] = useState<'REPORT_CHANGED' | 'INVALID_PERIOD' | BlockCode | null>(null);
   const [rejected, setRejected] = useState(false);
   const [taking, setTaking] = useState<SnapshotKind | null>(null);
   const [fresh, setFresh] = useState<ReadonlySet<string>>(new Set());
-  const fail = async (e: unknown) => {
+  const fail = async (e: unknown): Promise<BlockCode | null> => {
     const failure = takeFailure(e);
     // Đã ở tháng mặc định mà vẫn chưa tới (đồng hồ máy chủ lệch) → không có chỗ để về, báo ở đầu trang
-    if (failure.kind === 'invalid-period') return void (onInvalidPeriod() || setNotice('INVALID_PERIOD'));
-    if (failure.kind === 'block') return setNotice(failure.code);
+    if (failure.kind === 'invalid-period') {
+      if (!onInvalidPeriod()) setNotice('INVALID_PERIOD');
+      return null;
+    }
+    if (failure.kind === 'block') {
+      setNotice(failure.code);
+      // Danh sách món chờ đã đổi: tải lại để cảnh báo hiện đúng tên mới
+      if (failure.code === 'PENDING_CUSTOM') await reloadReport();
+      return failure.code;
+    }
     setRejected(true);
     setNotice(await rejectFields(failure.fields));
+    return null;
   };
-  const post = (kind: SnapshotKind) =>
-    flight.run(async () => {
+  // Trả mã lỗi chặn (nếu có) để hộp hỏi lại giữ mở khi danh sách món chờ vừa đổi
+  const post = async (kind: SnapshotKind) => {
+    let failed: BlockCode | null = null;
+    await flight.run(async () => {
       setTaking(kind);
       setRejected(false);
       try {
-        const body = { kind, order_qty: qty.edited, ...(opts.reuse ? { reuse_if_unchanged: true } : {}) };
+        const body = { kind, order_qty: qty.edited, ...pendingConfirmOf(report), ...(opts.reuse ? { reuse_if_unchanged: true } : {}) };
         const { id, created_at, data } = await createSnapshot(report.ym, body, csrfToken);
         setFresh((s) => new Set(s).add(id));
         void refresh();
@@ -99,11 +111,13 @@ function usePostSnapshot(report: MonthReport, qty: OrderQty, files: SnapshotDown
         else if (data) await opts.print?.({ ...data, id, kind });
         opts.onTaken?.();
       } catch (e) {
-        await fail(e);
+        failed = await fail(e);
       } finally {
         setTaking(null);
       }
     });
+    return failed as BlockCode | null;
+  };
   // Bản xem trước: cùng ô Đề nghị như lúc chốt, lỗi báo cùng chỗ; không lưu gì nên không đổi fresh/danh sách
   const [previewing, setPreviewing] = useState(false);
   const preview = async () => {
@@ -129,13 +143,17 @@ export function useTakeSnapshot(report: MonthReport, qty: OrderQty, files: Snaps
   const sender = usePostSnapshot(report, qty, files, onInvalidPeriod, opts);
   const [tried, setTried] = useState(false);
   const [asking, setAsking] = useState<SnapshotKind | null>(null);
+  const [conflict, setConflict] = useState(false);
   if (tried && qty.errorCount === 0) setTried(false);
 
   const take = (kind: SnapshotKind) => {
     if (sender.pending) return;
     sender.clearNotice();
     if (qty.errorCount > 0) return setTried(true);
-    if (opts.mustConfirm ?? report.pending_custom_count > 0) return setAsking(kind);
+    if (opts.mustConfirm ?? report.pending_custom_count > 0) {
+      setConflict(false);
+      return setAsking(kind);
+    }
     void sender.post(kind);
   };
 
@@ -161,11 +179,23 @@ export function useTakeSnapshot(report: MonthReport, qty: OrderQty, files: Snaps
     notice: sender.notice,
     fixCount: tried || sender.rejected ? qty.errorCount : 0,
     asking,
-    confirm: () => {
+    conflict,
+    confirming: sender.pending,
+    // Hộp hỏi lại mở tới khi chốt xong; danh sách món chờ vừa đổi (409) thì giữ hộp, báo đỏ trong hộp
+    confirm: async () => {
       const kind = asking;
+      if (!kind) return;
+      const failed = await sender.post(kind);
+      if (failed === 'PENDING_CUSTOM') {
+        sender.clearNotice();
+        return setConflict(true);
+      }
+      setConflict(false);
       setAsking(null);
-      if (kind) void sender.post(kind);
     },
-    cancel: () => setAsking(null),
+    cancel: () => {
+      setConflict(false);
+      setAsking(null);
+    },
   };
 }

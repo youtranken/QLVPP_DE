@@ -70,3 +70,4 @@
   [data-shell='admin'] .bc-preview__body { padding: var(--s-3); }
   [data-shell='admin'] .bc-preview__sheet .pp-sheet { zoom: 0.45; }
 }
+[data-shell='admin'] .bc-reprint { display: inline-flex; align-items: center; gap: var(--s-1); }

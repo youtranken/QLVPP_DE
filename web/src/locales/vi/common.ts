@@ -51,6 +51,9 @@ const common = {
       invalid: 'Nhập một số hợp lệ.',
       hint: 'Enter lưu · Esc bỏ',
     },
+    reviewReason: {
+      not_approved: 'Sản phẩm không được duyệt mua tháng này. Bạn có thể đăng ký lại sau',
+    },
     stepper: {
       decrease: 'Bớt {{label}}',
       increase: 'Thêm {{label}}',

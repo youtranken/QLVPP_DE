@@ -33,7 +33,6 @@ const sendAdm = {
       changes: 'Đổi so với bản {{time}}:',
       change: '{{name}} {{x}} → {{y}}',
       more: 'và {{n}} món khác',
-      review: 'Xem món ngoài danh mục',
       back: 'Quay lại',
     },
   },

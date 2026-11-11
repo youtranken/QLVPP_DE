@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUnitName } from '@/features/units/units.api';
 import { useMe } from '@/lib/me';
+import { reviewNoteText } from '@/lib/review-note';
 import { ConfirmDialog } from '@/ui/confirm-dialog';
 import type { LineView } from '@/features/request/request.api';
 import { reviewLine, useReviewCache, type ReviewBody, type ReviewResult, type ReviewableLine } from './review.api';
@@ -19,7 +20,7 @@ type Open = 'accept' | 'convert' | 'reject' | null;
 export function ReviewStatusTag({ status, note }: { status: LineView['review_status']; note: string | null }) {
   const { t } = useTranslation();
   if (status === 'rejected') {
-    const reason = note?.trim();
+    const reason = reviewNoteText(note, t);
     return <span className={reason ? 'tag tag--danger tag--wrap' : 'tag tag--danger'}>{reason ? t('review.status.rejectedWhy', { reason }) : t('review.status.rejected')}</span>;
   }
   if (status !== 'accepted' && status !== 'converted') return null;

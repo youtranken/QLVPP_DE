@@ -112,7 +112,8 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
     onTaken: () => void qc.invalidateQueries({ queryKey: ['send-state'] }),
     print: printer.print,
   });
-  const noOrder = useNoOrder(report.ym, qty);
+  const pending = useMemo(() => ({ count: report.pending_custom_count, names: (report.pending_custom ?? []).map((p) => p.name) }), [report]);
+  const noOrder = useNoOrder(report, qty, pending);
   const dirty = useDirtyCount(qty, snap.fresh);
   useLeaveGuard(dirty.count, useLeavePrompt(dirty.count));
   const empty = orderRows.length > 0 && orderRows.every((r) => orderOf(qty, r) === 0);
@@ -196,14 +197,16 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
           snap={preview}
           ym={report.ym}
           mode={editable ? 'confirm' : 'print'}
-          pending={report.pending_custom_count}
+          pending={pending}
           changes={changes}
           sentAt={sent?.created_at ?? null}
           onConfirm={agree}
           onCancel={() => setPreview(null)}
         />
       )}
-      {snap.asking && <PrintConfirm kind={snap.asking} ym={report.ym} pending={report.pending_custom_count} changes={changes} sentAt={sent?.created_at ?? null} onConfirm={snap.confirm} onCancel={snap.cancel} />}
+      {snap.asking && (
+        <PrintConfirm kind={snap.asking} pending={pending} changes={changes} sentAt={sent?.created_at ?? null} busy={snap.confirming} conflict={snap.conflict} onConfirm={() => void snap.confirm()} onCancel={snap.cancel} />
+      )}
     </div>
   );
 }

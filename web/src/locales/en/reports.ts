@@ -14,6 +14,7 @@ const reports: Messages<typeof vi> = {
         REPORT_CHANGED: 'The report changed and was reloaded — check the order quantities, then create the snapshot again.',
         UNKNOWN: 'Could not create the snapshot, please try again later.',
         ORDER_EMPTY: 'Nothing to order yet.',
+        PENDING_CUSTOM: 'The list of off-catalog items just changed. Open Review summary again.',
       },
       toast: {
         xlsx: 'Exported Excel for {{month}}/{{year}} · snapshot {{time}}',
@@ -124,8 +125,8 @@ const reports: Messages<typeof vi> = {
         changed: '{{n}} items changed since this copy',
         unsent: 'Not sent to supplier yet',
         noOrder: 'No order needed from the supplier {{time}}',
-        custom: '{{n}} off-catalogue items awaiting review',
         customLink: 'View',
+        customLabel: 'View {{n}} off-catalog items awaiting approval',
         reprint: 'Print again',
       },
       people: {
@@ -152,7 +153,7 @@ const reports: Messages<typeof vi> = {
     preview: {
       title: 'Summary for {{month}}/{{year}}',
       sub: '{{items}} items · {{units}} units. Check it before printing for signature.',
-      foot: 'Cancel saves nothing. "Agree and print" saves this copy to Printed copies, then opens the print dialog.',
+      foot: 'Cancel does not save this copy.',
       cancel: 'Cancel',
       confirm: 'Agree and print',
       print: 'Print',
