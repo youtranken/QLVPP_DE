@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Dialog, DialogCloseButton, DialogTitle } from '@/ui/dialog';
 import { ConfirmProvider } from '@/ui/confirm-provider';
-import { renderWithI18n, screen, userEvent } from '@/test/test-utils';
+import { renderWithI18n, screen, userEvent, waitFor } from '@/test/test-utils';
 
 function Harness({ dirty, onOpenChange }: { dirty: boolean; onOpenChange: (o: boolean) => void }) {
   return (
@@ -93,7 +93,7 @@ describe('DialogCloseButton', () => {
   });
 });
 
-describe('Dialog lồng (D23)', () => {
+describe('Dialog lồng', () => {
   it('hộp mở sau nằm sau trong DOM và được đánh dấu data-stacked; hộp đầu không; Esc chỉ đóng hộp trên', async () => {
     const outer = vi.fn();
     const inner = vi.fn();
@@ -127,5 +127,38 @@ describe('Dialog lồng (D23)', () => {
     expect(z('.modal-backdrop')).toBe('50');
     expect(z('.dialog-viewport')).toBe('50');
     expect(css).not.toContain('rgba(20, 35, 28, .45)');
+  });
+});
+
+describe('Dialog lồng: chỉ đếm hộp modal', () => {
+  it('popover role=dialog không modal (bảng thông báo, menu tài khoản) đang mở → hộp không bị đánh dấu chồng', () => {
+    renderWithI18n(
+      <>
+        <div role="dialog" aria-label="Thông báo" />
+        <Dialog open onOpenChange={() => {}}>
+          <DialogTitle>Hộp</DialogTitle>
+        </Dialog>
+      </>,
+    );
+    expect(screen.getByRole('dialog', { name: 'Hộp' })).not.toHaveAttribute('data-stacked');
+  });
+
+  it('hộp dưới đóng trong khi hộp trên còn mở → hộp trên bỏ đánh dấu chồng', async () => {
+    function Two({ outer }: { outer: boolean }) {
+      return (
+        <>
+          <Dialog open={outer} onOpenChange={() => {}}>
+            <DialogTitle>Hộp dưới</DialogTitle>
+          </Dialog>
+          <Dialog open onOpenChange={() => {}}>
+            <DialogTitle>Hộp trên</DialogTitle>
+          </Dialog>
+        </>
+      );
+    }
+    const { rerender } = renderWithI18n(<Two outer />);
+    expect(screen.getByRole('dialog', { name: 'Hộp trên', hidden: true })).toHaveAttribute('data-stacked');
+    rerender(<Two outer={false} />);
+    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Hộp trên' })).not.toHaveAttribute('data-stacked'));
   });
 });

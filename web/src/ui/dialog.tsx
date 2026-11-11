@@ -1,5 +1,5 @@
 import * as RD from '@radix-ui/react-dialog';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { KeyboardEvent, ReactNode, RefObject, SVGProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { discardOptions, useOptionalConfirm } from '@/ui/confirm-context';
@@ -22,6 +22,26 @@ export function DialogCloseButton({ disabled = false }: { disabled?: boolean }) 
         </svg>
       </button>
     </RD.Close>
+  );
+}
+
+// Hộp modal mở/đóng/gắn vào DOM → các hộp đang mở tính lại "có hộp modal nào nằm dưới mình không"
+// (popover không modal như bảng thông báo, menu tài khoản cũng có role=dialog nên không đếm theo role)
+let modalsVersion = 0;
+const modalListeners = new Set<() => void>();
+function modalsChanged(): void {
+  modalsVersion++;
+  modalListeners.forEach((l) => l());
+}
+function subscribeModals(l: () => void): () => void {
+  modalListeners.add(l);
+  return () => modalListeners.delete(l);
+}
+const modalsSnapshot = () => modalsVersion;
+
+function hasModalBelow(me: HTMLElement): boolean {
+  return Array.from(document.querySelectorAll('[data-modal-sheet][data-state="open"]')).some(
+    (el) => el !== me && !!(el.compareDocumentPosition(me) & Node.DOCUMENT_POSITION_FOLLOWING),
   );
 }
 
@@ -70,14 +90,19 @@ export function Dialog({
   const blockOutside = dismissible && closeOnOutside ? undefined : (e: Event) => e.preventDefault();
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
   const opener = useRef<HTMLElement | null>(null);
-  const content = useRef<HTMLDivElement>(null);
-  // D23: hộp mở khi đã có hộp khác đang mở → đánh dấu để CSS thêm viền tách lớp (z-index bằng nhau, thứ tự DOM quyết định lớp trên)
+  // Hộp nằm trên một hộp modal khác đang mở → đánh dấu để CSS thêm viền tách lớp (z-index bằng nhau, thứ tự DOM quyết định lớp trên)
+  const [content, setContent] = useState<HTMLDivElement | null>(null);
   const [stacked, setStacked] = useState(false);
+  const modals = useSyncExternalStore(subscribeModals, modalsSnapshot, modalsSnapshot);
+  const live = open && content !== null;
   useLayoutEffect(() => {
-    if (!open) return;
-    const others = Array.from(document.querySelectorAll('[role="dialog"]')).filter((el) => el !== content.current);
-    setStacked(others.length > 0);
-  }, [open]);
+    if (!live) return;
+    modalsChanged();
+    return modalsChanged;
+  }, [live]);
+  useLayoutEffect(() => {
+    setStacked(live && content !== null && hasModalBelow(content));
+  }, [live, content, modals]);
   const handleOpenChange = (next: boolean) => {
     if (next || !dirty || !askConfirm) {
       onOpenChange(next);
@@ -93,7 +118,8 @@ export function Dialog({
         <RD.Overlay className={overlayClassName} />
         <div className={viewportClassName}>
           <RD.Content
-            ref={content}
+            ref={setContent}
+            data-modal-sheet=""
             data-stacked={stacked || undefined}
             className={className}
             style={maxWidth ? { maxWidth } : undefined}
