@@ -84,7 +84,7 @@ test.describe('Vòng3-BC Báo cáo & gửi NCC', () => {
     expect(await page.evaluate(() => (window as unknown as { __printed: number }).__printed)).toBe(0);
 
     await previewAndPrint(page);
-    await expect(page.getByText(/^Đã gửi ADM \d\d:\d\d \d\d\/\d\d/)).toBeVisible();
+    await expect(page.getByText(/^Đã gửi NCC \d\d:\d\d \d\d\/\d\d/)).toBeVisible();
     const copies = await openCopies(page);
     await expect(copies.getByText('Đã gửi NCC', { exact: true })).toBeVisible();
     await expect(page.locator('details.bc-snaps-box summary')).toContainText('Các bản đã in / xuất (1)');

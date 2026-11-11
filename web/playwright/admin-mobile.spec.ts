@@ -105,7 +105,7 @@ test.describe('E9-S7 Adm D&E 390 px (dev-identity admin)', () => {
 
       for (const [path, title] of PAGES) {
         await page.goto('/admin/delivery');
-        await page.getByRole('button', { name: /, Hành chính$/ }).tap();
+        await page.getByRole('button', { name: /, Adm D&E$/ }).tap();
         await menuLink(page, title).tap();
         await expect(page).toHaveURL(new RegExp(`/admin/${path}`));
         await expect(heading(page, title)).toBeVisible();

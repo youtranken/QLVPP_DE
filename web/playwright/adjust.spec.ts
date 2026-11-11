@@ -203,12 +203,12 @@ test.describe('Tổng hợp — giảm sau khi đã gửi NCC (Plan v2-D, Task 1
       const drawer = page.getByRole('dialog', { name: `Điều chỉnh phiếu ${seed.name}` });
       const line = drawer.getByRole('listitem').filter({ hasText: item.name });
       await expect(line.getByRole('spinbutton')).toHaveValue('5');
-      await expect(line.getByText(/^Phiếu gửi ADM lúc/)).toHaveCount(0);
+      await expect(line.getByText(/^Phiếu gửi NCC lúc/)).toHaveCount(0);
 
       const less = line.getByRole('button', { name: `Bớt ${item.name}` });
       await less.click();
       await less.click();
-      await expect(line.getByText(/^Phiếu gửi ADM lúc \d\d:\d\d \d\d\/\d\d đã tính số cũ — giảm bây giờ thì hàng về dư 2 cái vào kho\.$/)).toBeVisible();
+      await expect(line.getByText(/^Phiếu gửi NCC lúc \d\d:\d\d \d\d\/\d\d đã tính số cũ — giảm bây giờ thì hàng về dư 2 cái vào kho\.$/)).toBeVisible();
       const save = drawer.getByRole('button', { name: 'Lưu điều chỉnh' });
       await expect(save).toBeDisabled();
       await line.getByRole('radiogroup', { name: 'Lý do' }).getByRole('radio', { name: 'Không có hàng' }).check();

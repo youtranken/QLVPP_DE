@@ -84,7 +84,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
 
       await page.reload();
       await openCart(page, info);
-      await expect(line.getByText(/^Hành chính xem từ 00:00 ngày \d{2}\/\d{2}$/)).toBeVisible();
+      await expect(line.getByText(/^Adm D&E xem từ 00:00 ngày \d{2}\/\d{2}$/)).toBeVisible();
       await expect(line.locator('img')).toHaveCount(0);
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'custom-saved');

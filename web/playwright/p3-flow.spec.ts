@@ -84,7 +84,7 @@ async function reportAndSnapshot(admin: Page, info: TestInfo, s: MonthSeed, requ
   await openEditable(admin);
   await admin.getByRole('spinbutton', { name: `Đề nghị: ${s.paper.name}` }).fill('4');
   await previewAndPrint(admin);
-  await expect(admin.getByText(/^Đã gửi ADM \d\d:\d\d \d\d\/\d\d/)).toBeVisible();
+  await expect(admin.getByText(/^Đã gửi NCC \d\d:\d\d \d\d\/\d\d/)).toBeVisible();
 
   // Excel của chính bản vừa gửi, không tạo bản mới
   const downloading = admin.waitForEvent('download');
