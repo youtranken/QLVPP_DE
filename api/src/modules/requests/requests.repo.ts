@@ -21,7 +21,7 @@ export interface RequestRow extends Record<string, unknown> {
   saved_at: string;
 }
 
-const LINE_COLUMNS = sql.raw(
+export const LINE_COLUMNS = sql.raw(
   `id, item_id, custom_name, custom_unit, custom_note, image_file_id, qty, delivered_qty,
    cancelled_qty, cancel_note, review_status, review_note, added_by_admin,
    to_char(last_delivered_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS last_delivered_at`,
@@ -224,52 +224,6 @@ export async function imagesOnOwnerLines(
   return new Set(rows.map((r) => r.id));
 }
 
-// Review: khóa phiếu trước rồi dòng — cùng thứ tự với writer (requests → request_lines)
-export async function lockLineForReview(
-  tx: Executor,
-  lineId: string,
-): Promise<(LineRow & { request_id: string }) | null> {
-  const head = await tx.execute<{ id: string }>(sql`
-    SELECT r.id FROM requests r JOIN request_lines l ON l.request_id = r.id
-    WHERE l.id = ${lineId} FOR UPDATE OF r
-  `);
-  if (head.rows.length === 0) return null;
-  const { rows } = await tx.execute<
-    LineRow & { request_id: string } & Record<string, unknown>
-  >(sql`
-    SELECT ${LINE_COLUMNS}, request_id FROM request_lines WHERE id = ${lineId} FOR UPDATE
-  `);
-  return rows[0] ?? null;
-}
-
-// itemId có → convert: CHECK request_lines_item_review_ck đòi custom_* NULL khi có item_id, ảnh giữ lại
-export async function setReview(
-  tx: Executor,
-  lineId: string,
-  r: {
-    status: string;
-    note: string | null;
-    itemId: string | null;
-    by: string;
-    now: Date;
-  },
-): Promise<LineRow | null> {
-  const at = r.now.toISOString();
-  const { rows } = await tx.execute<LineRow & Record<string, unknown>>(sql`
-    UPDATE request_lines
-    SET review_status = ${r.status}, review_note = ${r.note},
-        item_id = coalesce(${r.itemId}::uuid, item_id),
-        custom_name = CASE WHEN ${r.itemId}::uuid IS NULL THEN custom_name END,
-        custom_unit = CASE WHEN ${r.itemId}::uuid IS NULL THEN custom_unit END,
-        custom_note = CASE WHEN ${r.itemId}::uuid IS NULL THEN custom_note END,
-        reviewed_by_sub = ${r.by}, reviewed_at = ${at}::timestamptz,
-        updated_at = ${at}::timestamptz
-    WHERE id = ${lineId} AND review_status = 'pending'
-    RETURNING ${LINE_COLUMNS}
-  `);
-  return rows[0] ?? null;
-}
-
 // Dòng đổi trạng thái = phiếu đổi: tab đang mở với mốc cũ phải nhận STALE_UPDATE
 // Phiếu (đã khóa dòng) còn đúng mốc client đang xem
 export async function requestFresh(
@@ -320,43 +274,4 @@ export async function requestOwner(
     SELECT user_sub, to_char(period_ym, 'YYYY-MM') AS ym FROM requests WHERE id = ${requestId}
   `);
   return rows[0];
-}
-
-// Dòng chờ của một phiếu theo id; người gọi đã khóa phiếu rồi các dòng (requests → request_lines)
-export async function lockPendingLinesOf(
-  tx: Executor,
-  requestId: string,
-  lineIds: string[],
-): Promise<(LineRow & { request_id: string })[]> {
-  const { rows } = await tx.execute<
-    LineRow & { request_id: string } & Record<string, unknown>
-  >(sql`
-    SELECT ${LINE_COLUMNS}, request_id FROM request_lines
-    WHERE request_id = ${requestId} AND review_status = 'pending'
-      AND id = ANY(${sql.param(lineIds)}::uuid[])
-    ORDER BY id FOR UPDATE`);
-  return rows;
-}
-
-// Dòng ngoài danh mục còn chờ của kỳ, khóa requests → request_lines theo id (cùng chiều mọi đường ghi)
-export async function lockPendingLines(
-  tx: Executor,
-  ym: string,
-): Promise<(LineRow & { request_id: string })[]> {
-  const k = ymToDate(ym);
-  const locked = await tx.execute<{ id: string } & Record<string, unknown>>(sql`
-    SELECT r.id FROM requests r
-    WHERE r.period_ym = ${k}::date AND EXISTS (
-      SELECT 1 FROM request_lines l WHERE l.request_id = r.id AND l.review_status = 'pending')
-    ORDER BY r.id FOR UPDATE`);
-  const ids = locked.rows.map((r) => r.id);
-  if (ids.length === 0) return [];
-  // Chỉ dòng của đúng các phiếu vừa khóa: giữ thứ tự khóa requests → request_lines
-  const { rows } = await tx.execute<
-    LineRow & { request_id: string } & Record<string, unknown>
-  >(sql`
-    SELECT ${LINE_COLUMNS}, request_id FROM request_lines
-    WHERE review_status = 'pending' AND request_id = ANY(${sql.param(ids)}::uuid[])
-    ORDER BY id FOR UPDATE`);
-  return rows;
 }

@@ -21,6 +21,7 @@ import type { LineRow } from './request-lines.rules';
 import { toLineView } from './request-view';
 import type { LineView } from './request-view';
 import * as repo from './requests.repo';
+import { lockLineForReview } from './review-lines.repo';
 import { ReviewWriter } from './review-writer';
 import type {
   ReviewBody,
@@ -118,7 +119,7 @@ export class ReviewService {
     if (body.action === 'convert') assertOneTarget(body.item);
     const now = this.clock.now();
     return this.db.transaction(async (tx) => {
-      const before = await repo.lockLineForReview(tx, lineId);
+      const before = await lockLineForReview(tx, lineId);
       if (!before) throw lineNotFound();
       const ym = await this.periods.assertLineLocked(tx, lineId, now);
       if (before.review_status !== 'pending') throw lineAlreadyReviewed();

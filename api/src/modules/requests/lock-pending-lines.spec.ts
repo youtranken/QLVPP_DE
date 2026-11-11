@@ -1,7 +1,7 @@
 import { PgDialect } from 'drizzle-orm/pg-core';
 import type { SQL } from 'drizzle-orm';
 import type { Executor } from '../../database/database.module';
-import { lockPendingLines } from './requests.repo';
+import { lockPendingLines } from './review-lines.repo';
 
 const dialect = new PgDialect();
 

@@ -6,6 +6,7 @@ import { LineNotifier } from './line-notifier';
 import { lineAlreadyReviewed, pendingCustomChanged } from './request-errors';
 import type { LineRow } from './request-lines.rules';
 import * as repo from './requests.repo';
+import * as reviewRepo from './review-lines.repo';
 import type { ReviewAction } from './review.dto';
 
 export type LockedLine = LineRow & { request_id: string };
@@ -59,7 +60,7 @@ export class ReviewWriter {
     r: ApplyReview,
   ): Promise<{ after: LineRow; updatedAt: string }> {
     const lineId = before.id;
-    const after = await repo.setReview(tx, lineId, {
+    const after = await reviewRepo.setReview(tx, lineId, {
       status: STATUS_OF[r.action],
       note: r.note,
       itemId: r.item?.id ?? null,
@@ -114,19 +115,16 @@ export class ReviewWriter {
     });
   }
 
-  // Giao hàng ghi Không mua đúng các dòng chờ mà hộp giao đã hiện; người gọi đã khóa phiếu và kiểm dòng còn chờ
+  // Giao hàng ghi Không mua đúng các dòng chờ mà hộp giao đã hiện; người gọi đã khóa phiếu rồi các dòng và kiểm còn chờ
   async rejectLinesWithin(
     tx: Tx,
     requestId: string,
     lineIds: string[],
     r: { actor: string; ym: string; now: Date },
-  ): Promise<number> {
-    if (lineIds.length === 0) return 0;
-    const lines = await repo.lockPendingLinesOf(tx, requestId, lineIds);
-    if (lines.length !== lineIds.length)
-      throw pendingCustomChanged(lines.length);
+  ): Promise<void> {
+    if (lineIds.length === 0) return;
+    const lines = await reviewRepo.linesOf(tx, requestId, lineIds);
     for (const line of lines) await this.rejectWithin(tx, line, r);
-    return lines.length;
   }
 
   // Chốt kỳ không để món ngoài danh mục treo: client phải xác nhận đúng số món đang thấy, lệch → 409 PENDING_CUSTOM
@@ -136,7 +134,7 @@ export class ReviewWriter {
     confirm: PendingConfirm,
     r: { actor: string; now: Date },
   ): Promise<number> {
-    const lines = await repo.lockPendingLines(tx, ym);
+    const lines = await reviewRepo.lockPendingLines(tx, ym);
     const expected = confirm.expected_pending;
     const confirmed =
       lines.length === 0
