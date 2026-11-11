@@ -9,7 +9,7 @@ export function SentNote({ sent, kind, unit }: { sent: SentInfo & { at: string }
   if (kind === 'skip') return <>{t('warn.W10a', { time, n: sent.qty, unit })}</>;
   return (
     <>
-      {t('warn.W10b', { time })} <Link to="/admin/send-adm">{t('review.sentLink')}</Link>
+      {t('warn.W10b', { time })} <Link to={sent.ym ? `/admin/reports?ym=${sent.ym}` : '/admin/reports'}>{t('review.sentLink')}</Link>
     </>
   );
 }

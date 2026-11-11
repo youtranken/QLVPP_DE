@@ -35,7 +35,7 @@ describe('W10b — mua món chưa có trong phiếu gửi NCC', () => {
     mount({ in_sent_snapshot: false, in_sent_snapshot_qty: 0, in_sent_snapshot_at: AT });
     const dialog = await openDialog(button);
     expect(within(dialog).getByRole('note')).toHaveTextContent(W10B + ' Mở Báo cáo & gửi NCC');
-    expect(within(dialog).getByRole('link', { name: 'Mở Báo cáo & gửi NCC' })).toHaveAttribute('href', '/admin/send-adm');
+    expect(within(dialog).getByRole('link', { name: 'Mở Báo cáo & gửi NCC' })).toHaveAttribute('href', `/admin/reports?ym=${reviewRow({}).period_ym.slice(0, 7)}`);
   });
 
   it.each([
