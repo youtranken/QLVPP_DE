@@ -13,7 +13,8 @@ const sendAdm: Messages<typeof vi> = {
       need: 'Total requested',
       qty: 'Order',
       qtyLabel: 'Request: {{name}}',
-      invalid: 'Max 99,999',
+      invalid: 'Max 1,000',
+      overMax: 'Over 1,000, please check',
     },
     leave: {
       title: 'Discard edited order numbers?',

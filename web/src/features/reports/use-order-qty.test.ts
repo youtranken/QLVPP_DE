@@ -35,7 +35,7 @@ describe('useOrderQty — ô Đề nghị', () => {
 
   it.each([
     ['0', 0],
-    ['99999', 99999],
+    ['1000', 1000],
   ])('biên hợp lệ "%s" → gửi %d', (text, n) => {
     const { result } = setup();
     act(() => result.current.set(PEN, text));
@@ -43,7 +43,7 @@ describe('useOrderQty — ô Đề nghị', () => {
     expect(result.current.edited).toEqual({ [PEN]: n });
   });
 
-  it.each(['-1', '100000', '1.5', '', 'abc'])('"%s" → lỗi tại ô, không gửi, cả bảng invalid', (text) => {
+  it.each(['-1', '1001', '1.5', '', 'abc'])('"%s" → lỗi tại ô, không gửi, cả bảng invalid', (text) => {
     const { result } = setup();
     act(() => result.current.set(PEN, text));
     expect(result.current.hasError(PEN)).toBe(true);
@@ -75,7 +75,7 @@ describe('useOrderQty — ô Đề nghị', () => {
 
   it('đếm ô: errorCount gồm ô gõ sai + ô server từ chối; editedCount gồm ô khác số gợi ý và ô sai; resetAll về số gợi ý hết', () => {
     const { result } = setup();
-    act(() => result.current.set(PEN, '100000'));
+    act(() => result.current.set(PEN, '1001'));
     act(() => result.current.set(TAPE, '7'));
     expect(result.current.errorCount).toBe(1);
     expect(result.current.editedCount).toBe(2);
@@ -86,5 +86,27 @@ describe('useOrderQty — ô Đề nghị', () => {
     expect(result.current.editedCount).toBe(0);
     expect(result.current.dirty).toBe(false);
     expect(result.current.value(TAPE)).toBe(String(defaultOrder(report.custom[0])));
+  });
+
+  it('số mặc định hệ thống > 1000: không đỏ, không kẹp, không chặn; chỉ đánh dấu vượt trần để hiện ghi chú vàng', () => {
+    const big = { ...report, byItem: [{ ...report.byItem[0], requested: 1200, backlog_prev: 0, adm_owed: 0, left_excluded: 0 }] };
+    const { result } = renderHook(() => useOrderQty(big));
+    expect(result.current.value(PEN)).toBe('1200');
+    expect(result.current.hasError(PEN)).toBe(false);
+    expect(result.current.overMax(PEN)).toBe(true);
+    expect(result.current.errorCount).toBe(0);
+    expect(result.current.edited).toEqual({});
+  });
+
+  it('số khởi tạo từ bản đã gửi > 1000 mà người dùng chưa sửa → không đỏ; người dùng gõ 1500 → đỏ, gõ lại 1000 → hết đỏ', () => {
+    const { result } = renderHook(() => useOrderQty(report, { initial: { [PEN]: 1200 } }));
+    expect(result.current.hasError(PEN)).toBe(false);
+    expect(result.current.overMax(PEN)).toBe(true);
+    act(() => result.current.set(PEN, '1500'));
+    expect(result.current.hasError(PEN)).toBe(true);
+    expect(result.current.overMax(PEN)).toBe(false);
+    act(() => result.current.set(PEN, '1000'));
+    expect(result.current.hasError(PEN)).toBe(false);
+    expect(result.current.overMax(PEN)).toBe(false);
   });
 });

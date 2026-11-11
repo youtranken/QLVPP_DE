@@ -19,15 +19,19 @@
 [data-shell='admin'] .bc-table td.bc-order-col { padding-top: 8px; padding-bottom: 8px; }
 [data-shell='admin'] .bc-table tr.has-error td { background: var(--c-danger-tint); }
 [data-shell='admin'] .bc-order { display: inline-grid; grid-template-columns: auto auto; justify-content: end; align-items: center; gap: 4px var(--s-2); }
-[data-shell='admin'] .bc-order__input { grid-column: 2; width: 96px; height: 36px; padding: 0 12px; border: 0; border-radius: var(--r-md); box-shadow: inset 0 0 0 1px var(--c-line-input); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); text-align: right; }
+[data-shell='admin'] .bc-order__box { grid-column: 2; }
+[data-shell='admin'] .bc-order__input { width: 96px; height: 36px; padding: 0 12px; border: 0; border-radius: var(--r-md); box-shadow: inset 0 0 0 1px var(--c-line-input); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); text-align: right; }
 [data-shell='admin'] .bc-order.is-edited .bc-order__input { background: var(--c-warn-soft); }
 [data-shell='admin'] input.bc-order__input:focus { outline: none; box-shadow: var(--focus-field); }
 [data-shell='admin'] input.bc-order__input[aria-invalid='true'] { box-shadow: inset 0 0 0 2px var(--c-danger); }
 [data-shell='admin'] .bc-order__error { grid-column: 1 / -1; margin: 0; font: var(--t-sm); color: var(--c-danger); text-align: right; }
+[data-shell='admin'] .bc-order__over { grid-column: 1 / -1; justify-self: end; margin: 0; padding: 0 var(--s-2); border-radius: var(--r-sm); background: var(--c-warn-soft); color: var(--c-warn); font: var(--t-cap); font-weight: 600; }
 [data-shell='admin'] .bc-snap-error { align-items: center; flex-wrap: wrap; }
 @media (max-width: 767px) {
   [data-shell='admin'] .bc-order { justify-content: start; }
   [data-shell='admin'] .bc-order__error { text-align: left; }
+  [data-shell='admin'] .bc-order__over { justify-self: start; }
+  [data-shell='admin'] .bc-order__input { width: 100%; }
 }
 [data-shell='admin'] .bc-inline-notice { align-items: center; justify-content: space-between; flex-wrap: wrap; }
 [data-shell='admin'] .bc-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); align-content: start; }

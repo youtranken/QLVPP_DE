@@ -102,23 +102,51 @@ describe('Báo cáo & gửi NCC: bảng và ô Đề nghị', () => {
     expect(screen.queryByText(/Xuất lẻ/)).toBeNull();
   });
 
-  it('ô Đề nghị: 100000 → lỗi "Tối đa 99.999" gắn ô, Xuất Excel và Xem tổng kết vô hiệu; 99999 hợp lệ → bật lại; biên 0 hợp lệ', async () => {
-    setupSendAdm({ report: REPORT });
+  it('ô Đề nghị: gõ 1001 → lỗi "Tối đa 1.000" gắn ô; bấm Xem tổng kết không dựng bản mà đưa con trỏ về ô lỗi; 1000 hợp lệ; biên 0 hợp lệ', async () => {
+    const f = setupSendAdm({ report: REPORT });
     open();
     const box = await qtyBox('Bút bi');
     await userEvent.clear(box);
-    await userEvent.type(box, '100000');
-    expect(await screen.findByText('Tối đa 99.999')).toBeInTheDocument();
+    await userEvent.type(box, '1001');
+    expect(await screen.findByText('Tối đa 1.000')).toBeInTheDocument();
     expect(box).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByRole('button', { name: 'Xuất Excel' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Xem tổng kết' }));
+    expect(box).toHaveFocus();
+    expect(callsTo(f, 'POST', `/api/admin/reports/${YM}/snapshots/preview`)).toHaveLength(0);
+    await userEvent.click(screen.getByRole('button', { name: 'Xuất Excel' }));
+    expect(snapshotPosts(f)).toHaveLength(0);
     await userEvent.clear(box);
-    await userEvent.type(box, '99999');
-    expect(screen.queryByText('Tối đa 99.999')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeEnabled();
+    await userEvent.type(box, '1000');
+    expect(screen.queryByText('Tối đa 1.000')).toBeNull();
+    expect(box).not.toHaveAttribute('aria-invalid');
     await userEvent.clear(box);
     await userEvent.type(box, '0');
-    expect(screen.queryByText('Tối đa 99.999')).toBeNull();
+    expect(screen.queryByText('Tối đa 1.000')).toBeNull();
+  });
+
+  it('số mặc định hệ thống > 1000: giữ nguyên số, không đỏ, ghi chú vàng "Vượt 1.000, kiểm lại", Xem tổng kết vẫn bấm được', async () => {
+    const BIG = itemRow({ key: 'kC', name: 'Giấy photo', requested: 1200, need: 1200 });
+    setupSendAdm({ report: sendReport([BIG]) });
+    open();
+    const box = await qtyBox('Giấy photo');
+    expect(box).toHaveValue(1200);
+    expect(box).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByText('Vượt 1.000, kiểm lại')).toBeInTheDocument();
+    expect(screen.queryByText('Tối đa 1.000')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeEnabled();
+  });
+
+  it('ô Đề nghị có ▲▼ (nút không nhận Tab), ▲ ở 1000 tắt', async () => {
+    setupSendAdm({ report: REPORT });
+    open();
+    const box = await qtyBox('Bút bi');
+    const up = screen.getByRole('button', { name: 'Thêm Bút bi' });
+    expect(up).toHaveAttribute('tabindex', '-1');
+    await userEvent.click(up);
+    expect(box).toHaveValue(6);
+    await userEvent.clear(box);
+    await userEvent.type(box, '1000');
+    expect(up).toBeDisabled();
   });
 
   it('mọi Đề nghị = 0 và chưa gửi → nút "Tháng này không cần đề nghị NCC", Xuất/In vô hiệu', async () => {

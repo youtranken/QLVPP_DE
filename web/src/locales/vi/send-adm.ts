@@ -10,7 +10,8 @@ const sendAdm = {
       need: 'Tổng cần',
       qty: 'Đề nghị',
       qtyLabel: 'Đề nghị: {{name}}',
-      invalid: 'Tối đa 99.999',
+      invalid: 'Tối đa 1.000',
+      overMax: 'Vượt 1.000, kiểm lại',
     },
     leave: {
       title: 'Bỏ số Đề nghị vừa sửa?',

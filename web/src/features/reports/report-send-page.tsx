@@ -63,6 +63,12 @@ function ActionButton({ xlsx, disabled, taking, previewing = false, onTake }: { 
   );
 }
 
+function focusFirstOrderError() {
+  const box = document.querySelector<HTMLInputElement>('.bc-table input[aria-invalid="true"]');
+  box?.scrollIntoView?.({ block: 'center' });
+  box?.focus();
+}
+
 interface BodyProps {
   report: MonthReport;
   openYm: string;
@@ -110,10 +116,12 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
   const dirty = useDirtyCount(qty, snap.fresh);
   useLeaveGuard(dirty.count, useLeavePrompt(dirty.count));
   const empty = orderRows.length > 0 && orderRows.every((r) => orderOf(qty, r) === 0);
-  const blocked = qty.errorCount > 0 || snap.taking !== null || snap.previewing || empty || !settled;
+  // Ô lỗi không làm tắt nút: bấm thì đưa con trỏ về ô lỗi đầu tiên (chặn chốt, không chặn tìm lỗi)
+  const blocked = snap.taking !== null || snap.previewing || empty || !settled;
   // Hộp "Xem tổng kết": bản dựng ở server (kỳ đang lập) hoặc bản đã gửi (tháng cũ); Hủy không lưu gì
   const [preview, setPreview] = useState<SnapshotData | null>(null);
   const take = async (xlsx: boolean) => {
+    if (qty.errorCount > 0) focusFirstOrderError();
     if (xlsx) {
       dirty.mark();
       return snap.take('xlsx');
@@ -176,6 +184,7 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
         editable={editable}
         value={qty.value}
         hasError={qty.hasError}
+        overMax={qty.overMax}
         onEdit={qty.set}
         people={people}
         onPeople={setWhoKey}

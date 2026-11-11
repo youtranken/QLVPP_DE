@@ -1,37 +1,44 @@
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
-import { parseOrderQty } from './use-order-qty';
+import { QtyInput } from '@/ui/qty-input';
+import { ORDER_QTY_MAX } from './reports.api';
 
 interface Props {
   name: string;
   value: string;
   error: boolean;
+  // Số hệ thống vượt trần, người dùng chưa gõ: ghi chú vàng, không chặn
+  overMax?: boolean;
   onChange: (text: string) => void;
 }
 
-// Ô Đề nghị luôn là ô nhập có viền; lỗi gắn đúng ô (0…99.999)
-export function ReportOrderInput({ name, value, error, onChange }: Props) {
+// Ô Đề nghị: ▲▼ trong ô (điện thoại "− số +"), lỗi gắn đúng ô (0…1.000)
+export function ReportOrderInput({ name, value, error, overMax = false, onChange }: Props) {
   const { t } = useTranslation();
-  const errId = useId();
-  const invalid = error || parseOrderQty(value) === null;
+  const noteId = useId();
+  const noted = error || overMax;
   return (
     <span className="bc-order">
-      <input
-        type="number"
-        inputMode="numeric"
-        min={0}
-        autoComplete="off"
+      <QtyInput
         className="bc-order__input"
+        wrapClassName="bc-order__box"
         value={value}
-        aria-label={t('sendAdm.orders.qtyLabel', { name })}
-        aria-invalid={invalid ? true : undefined}
-        aria-describedby={invalid ? errId : undefined}
-        onChange={(e) => onChange(e.target.value)}
-        onWheel={(e) => e.currentTarget.blur()}
+        label={t('sendAdm.orders.qtyLabel', { name })}
+        name={name}
+        max={ORDER_QTY_MAX}
+        steppers
+        invalid={error}
+        aria-describedby={noted ? noteId : undefined}
+        onChange={onChange}
       />
-      {invalid && (
-        <small id={errId} className="bc-order__error">
+      {error && (
+        <small id={noteId} className="bc-order__error">
           {t('sendAdm.orders.invalid')}
+        </small>
+      )}
+      {!error && overMax && (
+        <small id={noteId} className="bc-order__over">
+          {t('sendAdm.orders.overMax')}
         </small>
       )}
     </span>

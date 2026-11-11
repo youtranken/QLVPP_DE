@@ -1,7 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch, apiFetchBlob } from '@/lib/api-client';
 
-export const ORDER_QTY_MAX = 99999;
+// Trần ô Đề nghị người dùng gõ (khớp API)
+export const ORDER_QTY_MAX = 1000;
 
 // Tên ĐVT chụp lúc chốt; báo cáo sống và bản chốt cũ không có
 export interface FrozenUnitName {
