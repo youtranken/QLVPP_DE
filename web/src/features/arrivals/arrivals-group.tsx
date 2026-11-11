@@ -1,5 +1,6 @@
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
+import { useSelectOnFocus } from '@/ui/use-select-on-focus';
 import type { Tone } from '@/lib/group-tone';
 import { ItemThumb } from '@/ui/item-thumb';
 import { useRequestFormat } from '@/features/request/request-format';
@@ -58,6 +59,8 @@ function StatusTag({ r, qty }: { r: ArrivalRow; qty: number }) {
 
 function ArrivalRowView({ r, draft, busy, showShort, onToggleAdm }: RowProps) {
   const { t } = useTranslation();
+  // Bấm vào ô thì tô hết số để gõ đè
+  const selectAll = useSelectOnFocus();
   const fmt = useRequestFormat();
   const n = (v: number) => v.toLocaleString('vi-VN');
   const name = fmt.name(r);
@@ -99,6 +102,7 @@ function ArrivalRowView({ r, draft, busy, showShort, onToggleAdm }: RowProps) {
               disabled={r.adm_out}
               value={draft.textOf(r)}
               onChange={(e) => draft.change(r.item_id, e.target.value)}
+              onFocus={selectAll}
               onBlur={() => draft.blur(r.item_id)}
             />
             {!r.added && (

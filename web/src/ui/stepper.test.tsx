@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { renderWithI18n, screen, userEvent } from '@/test/test-utils';
+import { act, renderWithI18n, screen, userEvent } from '@/test/test-utils';
 import { Stepper } from '@/ui/stepper';
 
 function Controlled({ start, max, onChange }: { start: number; max: number; onChange?: (n: number) => void }) {
@@ -19,6 +19,15 @@ function Controlled({ start, max, onChange }: { start: number; max: number; onCh
 }
 
 describe('Stepper', () => {
+  it('bấm vào ô số thì tô hết số (Giao hàng gõ đè, không phải xóa trước)', async () => {
+    renderWithI18n(<Controlled start={3} max={5} />);
+    const input = screen.getByRole('spinbutton', { name: 'Bút bi' }) as HTMLInputElement;
+    const select = vi.spyOn(input, 'select');
+    await userEvent.click(input);
+    await act(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    expect(select).toHaveBeenCalled();
+  });
+
   it('nút có aria-label theo nhãn; + tăng, − giảm', async () => {
     renderWithI18n(<Controlled start={1} max={5} />);
     await userEvent.click(screen.getByRole('button', { name: 'Thêm Bút bi' }));

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSelectOnFocus } from './use-select-on-focus';
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 
@@ -38,6 +39,7 @@ export function Stepper({
 }) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState<string | null>(null);
+  const selectAll = useSelectOnFocus();
   const set = (n: number) => {
     const next = clamp(n, min, max);
     if (next !== value) onChange(next);
@@ -74,6 +76,7 @@ export function Stepper({
         disabled={disabled}
         value={draft ?? value}
         onChange={(e) => type(e.target.value)}
+        onFocus={selectAll}
         onBlur={() => setDraft(null)}
       />
       {!decreaseOnly && (

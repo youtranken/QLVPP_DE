@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSelectOnFocus } from '@/ui/use-select-on-focus';
 import { apiErrorCode } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
@@ -19,6 +20,8 @@ interface Props {
 // Món ngoài danh mục không vào tủ: chỉ ghi "Đã về" để trần giao của khóa đó theo số thật
 export function ArrivalsCustom({ ym, snapshotId, rows, admBusy, onToggleAdm, onSaved }: Props) {
   const { t } = useTranslation();
+  // Bấm vào ô thì tô hết số để gõ đè
+  const selectAll = useSelectOnFocus();
   const { csrfToken } = useMe();
   const flight = useSingleFlight();
   const [raw, setRaw] = useState<Record<string, string>>({});
@@ -58,7 +61,7 @@ export function ArrivalsCustom({ ym, snapshotId, rows, admBusy, onToggleAdm, onS
                 <td className="n" data-label={t('arrivals.custom.received')}>{r.received}</td>
                 <td className="ar-qty" data-label={t('arrivals.table.qty')}>
                   <div className="ar-qty__in">
-                    <input type="number" inputMode="numeric" min={0} aria-label={t('arrivals.custom.qtyLabel', { name: r.name })} disabled={r.adm_out} value={text} onChange={(e) => setRaw((prev) => ({ ...prev, [r.key]: e.target.value }))} />
+                    <input type="number" inputMode="numeric" min={0} onFocus={selectAll} aria-label={t('arrivals.custom.qtyLabel', { name: r.name })} disabled={r.adm_out} value={text} onChange={(e) => setRaw((prev) => ({ ...prev, [r.key]: e.target.value }))} />
                     <button type="button" className="btn btn--sm" aria-label={t('arrivals.custom.saveLabel', { name: r.name })} disabled={r.adm_out || error !== null || qty < 1 || flight.pending} onClick={() => void save(r)}>
                       {t('arrivals.custom.save')}
                     </button>

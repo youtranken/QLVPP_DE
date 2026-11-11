@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { act, jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -147,6 +147,19 @@ describe('Hàng về — bảng theo bản in', () => {
     expect(within(await rowOf('Món ngừng')).getByText('Ngừng riêng')).toBeInTheDocument();
     expect(within(await rowOf('Kẹp giấy')).getByText('Ngừng theo nhóm')).toBeInTheDocument();
     expect(within(await rowOf('Bút bi')).queryByText(/^Ngừng (riêng|theo nhóm)$/)).not.toBeInTheDocument();
+  });
+});
+
+describe('Hàng về — ô Nhận đợt này', () => {
+  it('bấm vào ô thì tô hết số (gõ đè), không có nút ▲▼', async () => {
+    stub();
+    await open();
+    const input = (await screen.findByDisplayValue('6')) as HTMLInputElement;
+    const select = vi.spyOn(input, 'select');
+    await userEvent.click(input);
+    await act(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    expect(select).toHaveBeenCalled();
+    expect(within(input.closest('td')!).queryByRole('button', { name: /^Thêm / })).toBeNull();
   });
 });
 

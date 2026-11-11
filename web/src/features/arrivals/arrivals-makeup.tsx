@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSelectOnFocus } from '@/ui/use-select-on-focus';
 import { apiErrorCode } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { useSingleFlight } from '@/lib/use-single-flight';
@@ -56,6 +57,8 @@ async function saveMakeup(groups: PlanMakeupGroup[], qtyOf: (ym: string, r: Plan
 
 export function ArrivalsMakeup({ groups, onDone }: Props) {
   const { t } = useTranslation();
+  // Bấm vào ô thì tô hết số để gõ đè
+  const selectAll = useSelectOnFocus();
   const fmt = useRequestFormat();
   const { csrfToken } = useMe();
   const flight = useSingleFlight();
@@ -135,7 +138,7 @@ export function ArrivalsMakeup({ groups, onDone }: Props) {
                     <td className="n" data-label={t('arrivals.makeup.owed')}>{r.adm_owed}</td>
                     <td className="ar-qty" data-label={t('arrivals.makeup.qty')}>
                       <div className="ar-qty__in">
-                        <input type="number" inputMode="numeric" min={0} aria-label={t('arrivals.makeup.qtyLabel', label)} aria-invalid={parsed(g.ym, r).error ? true : undefined} value={raw[id] ?? '0'} onChange={(e) => setRaw((p) => ({ ...p, [id]: e.target.value }))} />
+                        <input type="number" inputMode="numeric" min={0} onFocus={selectAll} aria-label={t('arrivals.makeup.qtyLabel', label)} aria-invalid={parsed(g.ym, r).error ? true : undefined} value={raw[id] ?? '0'} onChange={(e) => setRaw((p) => ({ ...p, [id]: e.target.value }))} />
                         <button type="button" className="ar-adm" aria-label={t('arrivals.makeup.closeLabel', label)} disabled={flight.pending} onClick={() => void close(g.ym, r)}>
                           {t('arrivals.makeup.close')}
                         </button>
