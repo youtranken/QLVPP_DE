@@ -1,7 +1,7 @@
 /* Vòng 5 — luật nền dùng chung cho CẢ HAI khung (nhân viên + quản lý). Nạp sau cùng trong main.tsx.
    Specificity tính sẵn để thắng luật riêng từng màn có cùng thuộc tính; không đổi bố cục, chỉ đổi phần ghi trong từng mục. */
 
-/* B0.3: checkbox / radio màu nhấn của app, 18px trên máy tính, 20px ở điện thoại; nhãn bọc ngoài đủ vùng chạm 44 */
+/* Checkbox / radio màu nhấn của app, 18px trên máy tính, 20px ở điện thoại; nhãn bọc ngoài đủ vùng chạm 44 */
 [data-shell] input:is([type='checkbox'], [type='radio']) { accent-color: var(--c-acc); }
 [data-shell] :where(input[type='checkbox'], input[type='radio']) { width: 18px; height: 18px; }
 @media (max-width: 767px) {
@@ -9,7 +9,7 @@
   [data-shell] label:has(> input:is([type='checkbox'], [type='radio'])) { min-height: var(--hit); }
 }
 
-/* B0.4: ô chọn gốc của trình duyệt dùng cùng mũi tên với .select (icon chev, 16px, màu --c-muted); danh sách xổ ra giữ của trình duyệt */
+/* Ô chọn gốc của trình duyệt dùng cùng mũi tên với .select (icon chev, 16px, màu --c-muted); danh sách xổ ra giữ của trình duyệt */
 [data-shell] select:not([multiple], .select__box > select) {
   appearance: none;
   padding-right: var(--s-8);
@@ -24,10 +24,10 @@
   [data-shell] .select svg { display: none; }
 }
 
-/* B0.5: ô nhập nhiều dòng — lề trong, chỉ kéo dọc, cao tối thiểu 88 */
+/* Ô nhập nhiều dòng — lề trong, chỉ kéo dọc, cao tối thiểu 88 */
 [data-shell] textarea:not([hidden]) { padding: var(--s-3) var(--s-4); resize: vertical; min-height: 88px; }
 
-/* B0.6: hộp gập dùng chung — chevron 16px (vẽ bằng CSS nên không bị đọc), dòng tóm tắt cao tối thiểu 44, có vòng focus */
+/* Hộp gập dùng chung — chevron 16px (vẽ bằng CSS nên không bị đọc), dòng tóm tắt cao tối thiểu 44, có vòng focus */
 [data-shell] .disclosure > summary { display: flex; align-items: center; gap: var(--s-2); min-height: var(--hit); list-style: none; cursor: pointer; border-radius: var(--r-xs); }
 [data-shell] .disclosure > summary::-webkit-details-marker { display: none; }
 [data-shell] .disclosure > summary::before {
@@ -45,16 +45,16 @@
 [data-shell] .disclosure > summary:focus-visible { outline: none; box-shadow: var(--focus); }
 @media (forced-colors: active) { [data-shell] .disclosure > summary::before { background: CanvasText; } }
 
-/* B0.7: thanh cuộn mảnh theo màu viền (Chrome ≥ 121 bỏ qua ::-webkit-scrollbar khi có scrollbar-color) */
+/* Thanh cuộn mảnh theo màu viền (Chrome ≥ 121 bỏ qua ::-webkit-scrollbar khi có scrollbar-color) */
 :root { scrollbar-color: var(--c-line-strong) transparent; }
 html, [data-shell] * { scrollbar-width: thin; }
 [data-shell='admin'] :is(.side, .side__nav, .side-sheet) { scrollbar-color: rgb(255 255 255 / .2) transparent; }
 
-/* B0.8: chữ gợi ý và vùng bôi đen theo bảng màu */
+/* Chữ gợi ý và vùng bôi đen theo bảng màu */
 [data-shell] ::placeholder { color: var(--c-muted); opacity: 1; }
 [data-shell] ::selection { background: var(--c-cta-hover); color: var(--c-ink); }
 
-/* Chữ 16px trên điện thoại (B4.1, B12.6, B0.5): iOS tự phóng to khi focus ô dưới 16px. Một luật cho mọi ô nhập;
+/* Chữ 16px trên điện thoại: iOS tự phóng to khi focus ô dưới 16px. Một luật cho mọi ô nhập;
    chỉ đổi cỡ chữ, không đổi chiều cao. :not(#…) nâng specificity để thắng luật `font:` của từng màn nạp sau (CSS theo trang) */
 @media (max-width: 767px) {
   [data-shell] :is(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea):not(#vpp-16px) { font-size: max(16px, 100%); }

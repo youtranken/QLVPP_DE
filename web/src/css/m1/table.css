@@ -84,6 +84,6 @@
   [data-shell='admin'] .table-stack.is-sorting tbody tr:not(.dt-group) { position: relative; min-height: calc(var(--hit) * 2 + 24px); align-content: center; padding-left: calc(var(--hit) + 16px); }
   [data-shell='admin'] .table-stack.is-sorting tbody td.reorder-col { position: absolute; top: 50%; left: 8px; width: auto; transform: translateY(-50%); }
 }
-/* B0.19: ô tự vẽ trả về rỗng ở cột có tên → "—" mờ (chữ thay thế rỗng: đọc màn hình bỏ qua); dạng thẻ ≤767 vẫn ẩn ô trống */
+/* Ô tự vẽ trả về rỗng ở cột có tên → "—" mờ (chữ thay thế rỗng: đọc màn hình bỏ qua); dạng thẻ ≤767 vẫn ẩn ô trống */
 [data-shell='admin'] .table td[data-label]:not([data-label='']):not([data-empty]):empty::before { content: '—'; content: '—' / ''; color: var(--c-muted); }
 [data-shell='admin'] .table td[data-empty] > [aria-hidden='true'] { color: var(--c-muted); }

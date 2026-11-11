@@ -111,7 +111,7 @@ export function RowMenu({ label, items }: { label: string; items: RowMenuItem[] 
       {open && (
         <div ref={menu} id={id} role="menu" aria-label={label} className="row-menu" style={style} onKeyDown={onMenuKey}>
           {items.map((item, i) => {
-            // B0.9: lý do mục bị tắt hiện thành dòng chữ nhỏ ngay trong mục (không chỉ nằm trong title), đọc qua aria-describedby
+            // Lý do mục bị tắt hiện thành dòng chữ nhỏ ngay trong mục (không chỉ nằm trong title), đọc qua aria-describedby
             const hint = item.disabled && item.title ? `${id}-hint-${i}` : undefined;
             return (
               <button

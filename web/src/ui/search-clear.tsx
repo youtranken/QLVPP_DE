@@ -10,7 +10,7 @@ interface Props {
   className?: string;
 }
 
-// B0.1: nút X riêng của app trong ô tìm (✕ của Chrome đã ẩn ở base.css); chỉ hiện khi có chữ
+// Nút X riêng của app trong ô tìm (✕ của Chrome đã ẩn ở base.css); chỉ hiện khi có chữ
 export function SearchClear({ value, onClear, inputRef, className }: Props) {
   const { t } = useTranslation();
   if (value === '') return null;

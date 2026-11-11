@@ -19,7 +19,7 @@ function Harness({ initial = '' }: { initial?: string }) {
   );
 }
 
-describe('SearchClear (B0.1)', () => {
+describe('SearchClear', () => {
   it('ô trống → không có nút xóa', () => {
     renderWithI18n(<Harness />);
     expect(screen.queryByRole('button', { name: 'Xóa chữ tìm' })).toBeNull();

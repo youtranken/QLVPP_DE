@@ -17,6 +17,6 @@
 @media (max-width: 767px) { [data-shell='admin'] .info-tip__btn { width: var(--hit); height: var(--hit); margin: 0; } }
 @media print { [data-shell='admin'] .info-tip { display: none; } }
 [data-shell='admin'] .info-tip__btn--text { gap: var(--s-2); grid-auto-flow: column; width: auto; height: var(--hit); margin: 0; padding: 0 var(--s-3); font: var(--t-sm); font-weight: 600; color: var(--c-ink-2); }
-/* B0.9: mục bị tắt có lý do hiện ngay dưới nhãn */
+/* Mục bị tắt có lý do hiện ngay dưới nhãn */
 [data-shell='admin'] .row-menu__item[aria-describedby] { padding-block: var(--s-2); white-space: normal; }
 [data-shell='admin'] .row-menu__hint { display: block; width: 28ch; white-space: normal; margin-top: 2px; font: var(--t-cap); color: var(--c-muted); }

@@ -13,12 +13,12 @@
 
 [data-shell='admin'] .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s-5); margin-bottom: var(--s-6); }
 [data-shell='admin'] .page-head__crumbs { display: flex; gap: var(--s-2); list-style: none; margin: 0 0 var(--s-1); padding: 0; font: var(--t-cap); color: var(--c-muted); }
-/* T11: dấu ngăn cách dùng cùng kiểu chevron với Icon (vẽ bằng mask, không bị đọc) */
+/* Dấu ngăn cách dùng cùng kiểu chevron với Icon (vẽ bằng mask, không bị đọc) */
 [data-shell='admin'] .page-head__crumbs li { display: inline-flex; align-items: center; }
 [data-shell='admin'] .page-head__crumbs li + li::before { content: ''; width: 12px; height: 12px; margin-right: var(--s-2); background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E") center / 12px 12px no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E") center / 12px 12px no-repeat; }
 [data-shell='admin'] .page-head h1 { margin: 0; font: var(--t-h1); letter-spacing: -0.02em; color: var(--c-ink); }
 [data-shell='admin'] .page-head__text { flex: 1 1 0; min-width: 0; }
-/* B0.17: câu mô tả tối đa 2 dòng ở mọi cỡ màn (trước chỉ 1 dòng … trên máy tính) */
+/* Câu mô tả tối đa 2 dòng ở mọi cỡ màn (trước chỉ 1 dòng … trên máy tính) */
 [data-shell='admin'] .page-head__desc { display: -webkit-box; margin: var(--s-1) 0 0; overflow: hidden; font: var(--t-body); color: var(--c-muted); white-space: normal; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 [data-shell='admin'] .page-head__actions { display: flex; align-items: center; gap: var(--s-2); flex-shrink: 0; }
 [data-shell='admin'] .page-head__side { display: flex; align-items: center; gap: var(--s-2); flex-shrink: 0; }
@@ -70,7 +70,7 @@
 [data-shell='admin'] .toolbar__end { display: flex; align-items: center; gap: var(--s-2); margin-left: auto; }
 [data-shell='admin'] .toolbar__search { flex: 1; max-width: 420px; min-width: 200px; display: flex; align-items: center; gap: 12px; height: var(--ctl-h, var(--hit)); padding: 0 8px 0 16px; border-radius: var(--r-pill); background: var(--c-surface-2); box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-muted); }
 [data-shell='admin'] .toolbar__search:focus-within { background: var(--c-surface); box-shadow: var(--focus-field); }
-/* B0.1: khung đã có vòng :focus-within — ô bên trong không vẽ thêm ô vuông */
+/* Khung đã có vòng :focus-within — ô bên trong không vẽ thêm ô vuông */
 [data-shell='admin'] .toolbar__search input:focus { box-shadow: none; }
 [data-shell='admin'] .toolbar__search input { flex: 1; min-width: 0; border: 0; outline: 0; box-shadow: none; background: transparent; font: var(--t-body); color: var(--c-ink); }
 
@@ -79,7 +79,7 @@
 [data-shell='admin'] .seg-m1 button[aria-checked='true'] { background: var(--c-sel); color: var(--c-on-sel); box-shadow: none; }
 [data-shell='admin'] .seg-m1 button:focus-visible { box-shadow: var(--focus); }
 [data-shell='admin'] .seg-m1 em { font: var(--t-micro); font-style: normal; padding: 1px 8px; border-radius: var(--r-pill); background: var(--g5); color: var(--g5-ink); }
-/* B0.15: số 0 trên tab là trung tính, không mang nền đỏ đất như số cần xử lý */
+/* Số 0 trên tab là trung tính, không mang nền đỏ đất như số cần xử lý */
 [data-shell='admin'] .seg-m1 em[data-zero] { background: var(--c-surface-2); color: var(--c-muted); box-shadow: inset 0 0 0 1px var(--c-line); }
 [data-shell='admin'] .seg-m1 button[aria-checked='true'] em[data-zero] { background: transparent; color: var(--c-on-dark-2); box-shadow: inset 0 0 0 1px var(--c-on-dark-fill); }
 
@@ -159,7 +159,7 @@
 [data-shell='admin'] .tag--g5 { background: var(--g5); color: var(--g5-ink); }
 [data-shell='admin'] .tag--g6 { background: var(--g6); color: var(--g6-ink); }
 [data-shell='admin'] .tag--g7 { background: var(--g7); color: var(--g7-ink); }
-/* B0.20: tag chứa lý do dài — xuống dòng, cao tự động, bo nhỏ hơn khi nhiều dòng */
+/* Tag chứa lý do dài — xuống dòng, cao tự động, bo nhỏ hơn khi nhiều dòng */
 [data-shell='admin'] .tag--wrap { height: auto; min-height: 22px; padding-block: 2px; border-radius: var(--r-sm); white-space: normal; overflow-wrap: anywhere; line-height: 1.35; }
 
 [data-shell='admin'] .alert { display: flex; gap: 12px; margin: 0; padding: 12px 16px; border-radius: var(--r-md); background: var(--c-info-soft); color: var(--c-info); font: var(--t-sm); font-weight: 600; }
