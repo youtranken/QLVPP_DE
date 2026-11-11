@@ -16,7 +16,6 @@ const arrivals: Messages<typeof vi> = {
       qtyLabel: 'Received now: {{name}}',
       receivedSmall: '{{n}} received',
       fullLocked: 'Fully received',
-      empty: 'Nothing needs receiving. Use Add another item if goods arrived outside the list.',
     },
     errors: {
       invalid: 'Enter a whole number, 0 or more',

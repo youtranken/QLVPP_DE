@@ -104,17 +104,38 @@ function ArrivalsBoard({ ym }: { ym: string }) {
 
   const rows = toArrivalRows(plan);
   const done = isAllArrived(plan);
-  // Đã nhận xong: không bày bảng số 0, chỉ còn khối tổng kết
-  const tableRows = done ? [] : rows;
-  const visible = applyArrivalFilter(tableRows, filter, known);
+  const nameOf = (id: string) => {
+    const r = rows.find((x) => x.item_id === id);
+    return r ? fmt.name(r) : id;
+  };
+
+  const afterSide = async (code: string | null, saved?: number, failedYm?: string) => {
+    saver.setNotice(failedYm ? { kind: 'makeup', ym: failedYm, code: code ?? 'UNKNOWN' } : code ? { kind: 'error', code } : null);
+    if ((!code || failedYm) && saved) toast.show({ text: t('arrivals.makeup.saved', { n: saved }), tone: 'ok' });
+    await saver.refresh();
+  };
+
+  // Chưa gửi NCC (hoặc tháng không cần đề nghị): không có đơn nào để đối chiếu hàng về → không cho nhận.
+  // Về bù kỳ trước vẫn nhận được vì kỳ đó đã gửi
+  if (!snapshot) {
+    return (
+      <>
+        <NoticeLine notice={saver.notice} nameOf={nameOf} />
+        <NotSentGate ym={ym} noOrderAt={plan.no_order?.at ?? null} />
+        <ArrivalsMakeup groups={plan.makeup} onDone={afterSide} />
+      </>
+    );
+  }
+
+  const visible = applyArrivalFilter(rows, filter, known);
   const counts = countByGroup(rows, (r) => groupOf(r, known), NO_GROUP);
   const groups = [...counts.keys()].map((id) => ({ id, label: labelOf(id) }));
   const sections = groups
-    .map((g) => ({ ...g, rows: visible.filter((r) => groupOf(r, known) === g.id), all: tableRows.filter((r) => groupOf(r, known) === g.id) }))
+    .map((g) => ({ ...g, rows: visible.filter((r) => groupOf(r, known) === g.id), all: rows.filter((r) => groupOf(r, known) === g.id) }))
     .filter((s) => s.rows.length > 0);
 
   // Theo mọi dòng của nhóm (không theo lọc): nhóm đã tick vẫn lưu khi đang bị lọc ẩn
-  const rowsOfGroups = (ids: ReadonlySet<string>) => tableRows.filter((r) => ids.has(groupOf(r, known)));
+  const rowsOfGroups = (ids: ReadonlySet<string>) => rows.filter((r) => ids.has(groupOf(r, known)));
   const hasError = (rs: ArrivalRow[]) => rs.some((r) => draft.errorOf(r));
   // Nhóm đã tick nhưng không còn dòng nhận được (vừa lưu đủ, ADM hết hàng) không tính
   const pickedIds = new Set([...picked].filter((id) => rowsOfGroups(new Set([id])).some(isReceivable)));
@@ -125,7 +146,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   // bỏ tick các nhóm vừa lưu;
   // ghi chú đã đi theo đợt vừa lưu nên xóa để không gắn lại vào đợt sau
   const receive = (groupIds: ReadonlySet<string>, lines: { row: ArrivalRow; qty: number }[]) =>
-    saver.save(lines, note, plan.snapshot?.id ?? null, () => {
+    saver.save(lines, note, snapshot.id, () => {
       draft.clearMany(rowsOfGroups(groupIds).map((r) => r.item_id));
       setNote('');
       setPicked((prev) => new Set([...prev].filter((id) => !groupIds.has(id))));
@@ -151,27 +172,6 @@ function ArrivalsBoard({ ym }: { ym: string }) {
     draft.clear(key);
     saver.setNotice(code ? { kind: 'error', code } : null);
   };
-  const afterSide = async (code: string | null, saved?: number, failedYm?: string) => {
-    saver.setNotice(failedYm ? { kind: 'makeup', ym: failedYm, code: code ?? 'UNKNOWN' } : code ? { kind: 'error', code } : null);
-    if ((!code || failedYm) && saved) toast.show({ text: t('arrivals.makeup.saved', { n: saved }), tone: 'ok' });
-    await saver.refresh();
-  };
-  const nameOf = (id: string) => {
-    const r = rows.find((x) => x.item_id === id);
-    return r ? fmt.name(r) : id;
-  };
-
-  // Chưa gửi NCC (hoặc tháng không cần đề nghị): không có đơn nào để đối chiếu hàng về → không cho nhận.
-  // Về bù kỳ trước vẫn nhận được vì kỳ đó đã gửi
-  if (!snapshot) {
-    return (
-      <>
-        <NoticeLine notice={saver.notice} nameOf={nameOf} />
-        <NotSentGate ym={ym} noOrderAt={plan.no_order?.at ?? null} />
-        <ArrivalsMakeup groups={plan.makeup} onDone={afterSide} />
-      </>
-    );
-  }
 
   return (
     <>
@@ -191,11 +191,10 @@ function ArrivalsBoard({ ym }: { ym: string }) {
         onSave={() => void receive(pickedIds, toSend)}
       />
       {done && <ArrivalsDone plan={plan} ym={ym} admBusy={adm.busy} onToggleAdm={(key, on) => void toggleAdm(key, on)} />}
-      {(!done || tableRows.length > 0) && (
+      {/* Đã nhận xong: không bày bảng số 0, chỉ còn khối tổng kết */}
+      {!done && (
         <section className="ar-card">
-          {tableRows.length === 0 ? (
-            <p className="ar-empty">{t('arrivals.table.empty')}</p>
-          ) : visible.length === 0 ? (
+          {visible.length === 0 ? (
             <div className="ar-nomatch">
               <b>{t('arrivals.filter.none')}</b>
               <button type="button" className="btn" onClick={() => patchUrl(CLEAR_FILTER, true)}>
@@ -215,7 +214,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
           </div>
         </section>
       )}
-      <ArrivalsCustom ym={ym} snapshotId={plan.snapshot?.id ?? null} rows={plan.custom} admBusy={adm.busy} onToggleAdm={(key, on) => void toggleAdm(key, on)} onSaved={afterSide} />
+      <ArrivalsCustom ym={ym} snapshotId={snapshot.id} rows={plan.custom} admBusy={adm.busy} onToggleAdm={(key, on) => void toggleAdm(key, on)} onSaved={afterSide} />
       <ArrivalsMakeup groups={plan.makeup} onDone={afterSide} />
     </>
   );

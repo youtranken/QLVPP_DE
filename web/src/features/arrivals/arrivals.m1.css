@@ -1,7 +1,7 @@
 [data-shell='admin'] .ar-card { display: grid; gap: var(--s-4); padding: var(--s-5); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
 [data-shell='admin'] .ar-saved { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-4) var(--s-5); border-radius: var(--r-lg); background: var(--c-warn-soft); color: var(--c-ink); font: var(--t-body); }
 [data-shell='admin'] .ar-warn { margin: 0; padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--c-warn-soft); color: var(--c-warn); font: var(--t-label); }
-[data-shell='admin'] .ar-empty, [data-shell='admin'] .ar-outside { margin: 0; color: var(--c-muted); font: var(--t-sm); }
+[data-shell='admin'] .ar-outside { margin: 0; color: var(--c-muted); font: var(--t-sm); }
 
 [data-shell='admin'] .ar-table { width: 100%; border-collapse: collapse; }
 [data-shell='admin'] .ar-table th { padding: var(--s-3); border-bottom: 1px solid var(--c-line); font: var(--t-cap); font-weight: 700; color: var(--c-muted); text-align: left; }

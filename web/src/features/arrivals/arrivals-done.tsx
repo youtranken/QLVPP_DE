@@ -74,11 +74,13 @@ function OutList({ rows, admBusy, onToggleAdm }: { rows: PlanRow[]; admBusy: Rea
 export function ArrivalsDone({ plan, ym, admBusy, onToggleAdm }: DoneProps) {
   const { t } = useTranslation();
   const out = plan.rows.filter((r) => r.adm_out);
-  const got = plan.rows.filter((r) => r.received > 0);
+  // Món trong danh mục và ngoài DM đếm chung một tập: số món, đơn vị và "NCC hết hàng" cộng lại khớp nhau
+  const all = [...plan.rows, ...plan.custom];
+  const got = all.filter((r) => r.received > 0);
   const units = got.reduce((n, r) => n + r.received, 0);
   const last = plan.batches[0]?.at;
-  // "Đã về đủ" chỉ khi không món nào NCC hết hàng mà còn thiếu (món ngoài DM cũng tính)
-  const outShort = [...plan.rows, ...plan.custom].filter((r) => r.adm_out && r.received < r.ordered).length;
+  // "Đã về đủ" chỉ khi không món nào NCC hết hàng mà còn thiếu
+  const outShort = all.filter((r) => r.adm_out && r.received < r.ordered).length;
   const vars = { month: monthOf(ym), x: got.length, y: units, out: outShort, time: last ? formatVnStamp(last) : t('common.empty') };
   return (
     <section className="ar-card ar-done">

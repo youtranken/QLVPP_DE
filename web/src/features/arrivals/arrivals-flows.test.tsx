@@ -97,11 +97,12 @@ describe('Trạng thái "đã về đủ"', () => {
     stub({
       plan: plan([planRow({ received: 10, remaining: 0 }), planRow({ item_id: 'b', name: 'Kẹp', received: 10, remaining: 0 }), planRow({ item_id: 'x', adm_out: true })], {
         batches,
-        custom: [customRow({ ordered: 2, received: 0, remaining: 2, adm_out: true })],
+        custom: [customRow({ ordered: 3, received: 1, remaining: 2, adm_out: true })],
       }),
     });
     await open();
-    expect(await screen.findByText('Đã nhận xong kỳ tháng 10 — 2 món, 20 đơn vị · 2 món NCC hết hàng (nhập lần cuối 10:30 03/11).')).toBeInTheDocument();
+    // Món ngoài DM đã về 1 tính vào cùng tập với món trong danh mục: 3 món, 21 đơn vị
+    expect(await screen.findByText('Đã nhận xong kỳ tháng 10 — 3 món, 21 đơn vị · 2 món NCC hết hàng (nhập lần cuối 10:30 03/11).')).toBeInTheDocument();
     expect(screen.queryByText(/đã về đủ/)).toBeNull();
   });
 

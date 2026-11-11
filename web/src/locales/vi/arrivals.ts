@@ -13,7 +13,6 @@ const arrivals = {
       qtyLabel: 'Nhận đợt này: {{name}}',
       receivedSmall: 'đã nhận {{n}}',
       fullLocked: 'Đã nhận đủ',
-      empty: 'Không có món nào cần nhập. Dùng Thêm món khác nếu hàng về ngoài danh sách.',
     },
     errors: {
       invalid: 'Nhập số nguyên từ 0 trở lên',
