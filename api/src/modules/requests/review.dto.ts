@@ -5,6 +5,7 @@ import {
   IsInt,
   IsOptional,
   IsUUID,
+  Matches,
   Max,
   Min,
   ValidateIf,
@@ -47,7 +48,10 @@ export class ReviewItemInput {
 
 export class ReviewBody {
   @IsIn(REVIEW_ACTIONS) action!: ReviewAction;
-  @OptionalText(NOTE_MAX) note?: string | null;
+  // "auto:<mã>" dành cho lý do app tự ghi (web dịch theo mã): ghi chú gõ tay không được mạo danh
+  @OptionalText(NOTE_MAX)
+  @Matches(/^(?!\s*auto:)/i)
+  note?: string | null;
   @IsOptional()
   @ValidateNested()
   @Type(() => ReviewItemInput)

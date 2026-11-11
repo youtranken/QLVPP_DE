@@ -108,6 +108,25 @@ describe('admin/review: hàng chờ, nhận, từ chối', () => {
     });
   });
 
+  it.each(['auto:not_approved', '  AUTO:xyz', 'auto:'])(
+    'note gõ tay bắt đầu bằng "auto:" (dành cho lý do app tự ghi) → 400 VALIDATION {fields: [note]}, dòng vẫn pending: %j',
+    async (note) => {
+      const { line } = await customLine();
+      const res = await review(line.id, { action: 'reject', note }).expect(400);
+      expect(res.body).toMatchObject({ code: 'VALIDATION', fields: ['note'] });
+      expect((await lineRow(line.id)).review_status).toBe('pending');
+    },
+  );
+
+  it('note có "auto:" ở giữa câu vẫn nhận', async () => {
+    const { line } = await customLine();
+    const res = await review(line.id, {
+      action: 'reject',
+      note: 'Hết hàng, xem auto: sau',
+    }).expect(200);
+    expect(res.body.line.review_note).toBe('Hết hàng, xem auto: sau');
+  });
+
   it('review đổi updated_at phiếu: ngăn Điều chỉnh giữ mốc cũ lưu → 409 STALE_UPDATE; request_updated_at khớp DB', async () => {
     const { line } = await customLine();
     const got = await getMine();
