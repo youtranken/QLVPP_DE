@@ -115,7 +115,9 @@ input[type='search']::-webkit-search-decoration { -webkit-appearance: none; appe
 /* Ô tìm có icon kính lúp nằm tuyệt đối bên trái (SearchBox): nút xóa nằm tuyệt đối bên phải, ô chừa chỗ */
 .search-box-x { position: absolute; top: 50%; right: var(--s-2); transform: translateY(-50%); }
 .search-wrap { position: relative; display: block; }
-.search-wrap > input { width: 100%; padding-right: calc(var(--s-7) + var(--s-3)); }
+.search-wrap > input { width: 100%; }
+/* Chừa chỗ nút X: phải thắng luật padding của chính ô (.table-search, .a-input có phạm vi shell = 0,2,0) */
+[data-shell] .search-wrap > input[type='search'] { padding-right: calc(var(--s-7) + var(--s-3)); }
 /* B0.2: chế độ tương phản cao (Windows) không vẽ box-shadow → dùng outline hệ thống */
 @media (forced-colors: active) {
   :focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }

@@ -1,9 +1,11 @@
 import { useRef, useState } from 'react';
-import { describe, expect, it, vi } from 'vitest';
-import { renderWithI18n, screen, userEvent, waitFor } from '@/test/test-utils';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { jsonResponse, renderWithI18n, screen, userEvent, waitFor } from '@/test/test-utils';
 import { SearchClear } from '@/ui/search-clear';
 import { Toolbar } from '@/ui/toolbar';
 import { SearchBox } from '@/ui/filter/search-box';
+import { DataTable } from '@/ui/data-table';
+import { UserPicker } from '@/features/directory/user-picker';
 import i18n from '@/lib/i18n';
 
 function Harness({ initial = '' }: { initial?: string }) {
@@ -80,5 +82,35 @@ describe('SearchClear (B0.1)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Xóa chữ tìm' }));
     expect(screen.getByRole('searchbox', { name: 'Tìm món' })).toHaveValue('');
     await waitFor(() => expect(screen.getByLabelText('q')).toHaveTextContent(/^$/));
+  });
+});
+
+// Luật chừa chỗ nút X ở css/base.css; độ ưu tiên so với luật của ô kiểm ở test/search-clear-room.test.ts
+const ROOM = "[data-shell] .search-wrap > input[type='search']";
+const LONG = 'giấy in A4 định lượng 80gsm loại dày cho máy in laser văn phòng';
+
+describe('ô tìm dùng .search-wrap nhận luật chừa chỗ nút X khi chữ dài', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete document.body.dataset.shell;
+  });
+
+  it('DataTable', async () => {
+    document.body.dataset.shell = 'admin';
+    renderWithI18n(<DataTable data={[{ id: 1, name: 'Bút' }]} columns={[{ accessorKey: 'name', header: 'Tên' }]} searchPlaceholder="Tìm trong bảng" />);
+    const box = screen.getByRole('searchbox', { name: 'Tìm trong bảng' });
+    await userEvent.type(box, LONG);
+    expect(screen.getByRole('button', { name: 'Xóa chữ tìm' })).toBeInTheDocument();
+    expect(box.matches(ROOM)).toBe(true);
+  });
+
+  it('UserPicker', async () => {
+    document.body.dataset.shell = 'admin';
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(200, { items: [], next_cursor: null }))));
+    renderWithI18n(<UserPicker label="Người nhận" searchLabel="Tìm người nhận" value={null} onChange={vi.fn()} />);
+    const box = screen.getByRole('searchbox', { name: 'Tìm người nhận' });
+    await userEvent.type(box, LONG);
+    expect(screen.getByRole('button', { name: 'Xóa chữ tìm' })).toBeInTheDocument();
+    expect(box.matches(ROOM)).toBe(true);
   });
 });
