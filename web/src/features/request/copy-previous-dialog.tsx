@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { Dialog, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { IconDocCopy } from '@/ui/icons';
 import { monthOf } from './request-format';
@@ -6,10 +7,12 @@ import type { CopySummary } from './use-copy-previous';
 
 export function CopyPreviousButton({ fromYm, busy, onClick }: { fromYm: string; busy: boolean; onClick: () => void }) {
   const { t } = useTranslation();
+  // Điện thoại: nút chỉ còn nửa hàng, chữ đầy đủ sẽ gãy 2 dòng
+  const phone = useMediaQuery(PHONE_QUERY);
   return (
     <button type="button" className="rq-copy" disabled={busy} onClick={onClick}>
       <IconDocCopy />
-      {t('request.grid.copy', { month: monthOf(fromYm) })}
+      <span className="rq-copy-label">{t(phone ? 'request.grid.copyShort' : 'request.grid.copy', { month: monthOf(fromYm) })}</span>
     </button>
   );
 }

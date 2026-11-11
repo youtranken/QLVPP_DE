@@ -140,7 +140,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
     try {
       await page.goto('/');
       const strip = page.locator('.rq-recv-strip');
-      await expect(strip).toContainText(`Phiếu tháng ${prevMonth} đã chốt · không sửa được nữa · đang giao: đã nhận 1/2 món, còn chờ 1`);
+      await expect(strip).toContainText(`Phiếu tháng ${prevMonth} đã chốt · đã nhận 1/2 món`);
       await strip.getByRole('button', { name: 'Xem', exact: true }).click();
       const receive = page.getByRole('dialog', { name: `Phiếu tháng ${prevMonth}` });
       await expect(receive.getByRole('link', { name: 'Xem lịch sử các tháng' })).toHaveAttribute('href', `/history/${prevYm}`);
@@ -153,7 +153,8 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${other.name}`, exact: true }).click();
       await snap(page, info, 'copy-before');
 
-      await page.getByRole('button', { name: `Chép lại danh sách tháng ${prevMonth}` }).click();
+      // Điện thoại (< 768) nút ghi gọn "Chép lại tháng N"
+      await page.getByRole('button', { name: new RegExp(`^Chép lại (danh sách )?tháng ${prevMonth}$`) }).click();
       const ask = page.getByRole('dialog', { name: 'Thay giỏ hiện tại?' });
       await ask.getByRole('button', { name: 'Thay giỏ' }).click();
       const summary = page.getByRole('dialog', { name: `Đã chép danh sách tháng ${prevMonth}` });

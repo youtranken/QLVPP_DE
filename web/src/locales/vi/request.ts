@@ -12,7 +12,7 @@ const request = {
     },
     receive: {
       stripHead: 'Phiếu tháng {{month}} đã chốt',
-      strip: 'không sửa được nữa · đang giao: đã nhận {{done}}/{{total}} món, còn chờ {{waiting}}',
+      strip: 'đã nhận {{done}}/{{total}} món',
       view: 'Xem',
       older: 'Tháng {{month}} còn chờ {{k}} món',
       title: 'Phiếu tháng {{month}}',
@@ -155,6 +155,7 @@ const request = {
       emptyHint: 'Thử từ khóa khác, hoặc gửi đề nghị món mới cho Adm D&E.',
       clear: 'Xóa bộ lọc',
       copy: 'Chép lại danh sách tháng {{month}}',
+      copyShort: 'Chép lại tháng {{month}}',
       picked: 'Đã chọn',
       sort: 'Sắp xếp',
       sortFav: 'Hay dùng trước',

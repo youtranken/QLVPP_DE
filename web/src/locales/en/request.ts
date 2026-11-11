@@ -15,7 +15,7 @@ const request: Messages<typeof vi> = {
     },
     receive: {
       stripHead: 'Month {{month}} order is closed',
-      strip: 'can no longer be changed · delivering: received {{done}}/{{total}} items, {{waiting}} still waiting',
+      strip: 'received {{done}}/{{total}} items',
       view: 'View',
       older: 'Month {{month}}: {{k}} items still waiting',
       title: 'Month {{month}} order',
@@ -158,6 +158,7 @@ const request: Messages<typeof vi> = {
       emptyHint: 'Try another keyword, or send D&E Admin a request for a new item.',
       clear: 'Clear filters',
       copy: 'Copy the month {{month}} list',
+      copyShort: 'Copy month {{month}}',
       picked: 'Selected',
       sort: 'Sort',
       sortFav: 'Most used first',
