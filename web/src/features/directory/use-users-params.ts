@@ -14,8 +14,9 @@ export function useUsersParams() {
     setQ: (next: string) => update({ q: next || null }, true),
     setDept: (next: string) => update({ dept: next || null }, true),
     setFilter: (next: UsersFilter | null) => update({ status: next }),
-    toggleFilter: (f: UsersFilter) => update({ status: filter === f ? null : f }),
-    toggleReg: (r: RegFilter) => update({ reg: reg === r ? null : r }),
+    // Thẻ lọc chỉ chọn một: bật thẻ này thì tắt thẻ kia (hai thẻ cùng bật gần như luôn ra 0 người)
+    toggleFilter: (f: UsersFilter) => update({ status: filter === f ? null : f, reg: null }),
+    toggleReg: (r: RegFilter) => update({ reg: reg === r ? null : r, status: null }),
     clearFilter: () => update({ status: null }),
     clearReg: () => update({ reg: null }),
     clearAll: () => update({ status: null, reg: null, dept: null, q: null }),

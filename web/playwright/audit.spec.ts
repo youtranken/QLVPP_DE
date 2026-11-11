@@ -10,7 +10,7 @@ const PAGE_SIZE = 50;
 function seed({ actor, day, rows }: { actor: string; day: string; rows: number }) {
   psql(`INSERT INTO audit_log (actor, action, object_type, object_id, detail, created_at)
     SELECT '${actor}', 'config.updated', 'config', 'pw_marker',
-      jsonb_build_object('before', jsonb_build_object('pw_marker', 'cu-' || g, 'giu_nguyen', 'x'), 'after', jsonb_build_object('pw_marker', 'moi-' || g, 'giu_nguyen', 'x')),
+      jsonb_build_object('before', jsonb_build_object('admin_contact', 'cu-' || g, 'pw_marker', 'x1', 'name', 'x'), 'after', jsonb_build_object('admin_contact', 'moi-' || g, 'pw_marker', 'x2', 'name', 'x')),
       timestamptz '${day} 12:00:00+00' + (g || ' seconds')::interval
     FROM generate_series(1, ${rows}) g
     WHERE NOT EXISTS (SELECT 1 FROM audit_log WHERE actor = '${actor}')`);
@@ -37,22 +37,22 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
     const first = bodyRows(page).first();
     const detail = await openAuditDetail(page, first);
     const diff = detail.getByRole('table');
-    await expect(diff.getByRole('rowheader', { name: 'pw_marker' })).toBeVisible();
-    await expect(diff.getByRole('rowheader', { name: 'giu_nguyen' })).toHaveCount(0);
+    await expect(diff.getByRole('rowheader', { name: 'Liên hệ Adm D&E' })).toBeVisible();
+    // Khóa chưa có nhãn (pw_marker) và khóa không đổi (name) không hiện
+    await expect(diff.getByRole('rowheader', { name: 'pw_marker' })).toHaveCount(0);
+    await expect(diff.getByRole('rowheader', { name: 'Tên' })).toHaveCount(0);
     await expect(diff.getByRole('cell', { name: 'cu-50', exact: true })).toBeVisible();
     await expect(diff.getByRole('cell', { name: 'moi-50', exact: true })).toBeVisible();
-    await expect(detail.getByText(/Mã sự kiện #/)).toBeVisible();
-    await expect(detail.getByText('Mã hành động: config.updated')).toBeVisible();
+    await expect(detail.getByText(/Mã sự kiện #/)).toHaveCount(0);
+    await expect(detail.getByText(/Mã hành động/)).toHaveCount(0);
     await expect(first.getByText('Sửa cấu hình')).toBeVisible();
     await expect(first.getByText('config.updated')).toHaveCount(0);
-    await expect(detail.getByText(/^Sau: /)).toBeHidden();
-    await detail.getByText('Chi tiết kỹ thuật').click();
-    await expect(detail.getByText(/^Sau: \{.*"pw_marker":"moi-50"/)).toBeVisible();
+    await expect(detail.getByText('Chi tiết kỹ thuật')).toHaveCount(0);
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'admin-audit');
     await first.press(' ');
     await expect(detail).toHaveCount(0);
-    await expect(page.getByText(/Mã sự kiện #/)).toHaveCount(0);
+    await expect(page.getByRole('cell', { name: 'moi-50', exact: true })).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Hôm nay', exact: true }).click();
     const today = vnToday();

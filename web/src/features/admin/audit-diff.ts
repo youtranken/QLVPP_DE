@@ -38,3 +38,18 @@ export function auditObjectName(detail: unknown): string | null {
   if (!isObject(detail)) return null;
   return nameIn(detail.after) ?? nameIn(detail.before);
 }
+
+// Mã máy (uuid, mã biến động kho, ảnh, bản chốt…) không có nghĩa với người đọc nhật ký: không hiện
+const TECHNICAL = new Set(['id', 'ids', 'item_id', 'request_id', 'category_id', 'movement_id', 'image_file_id', 'snapshot_id', 'batch_id', 'line_id', 'ref_line_id', 'file_id']);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export const isTechnicalKey = (key: string) => TECHNICAL.has(key) || key.endsWith('_id') || key.endsWith('_ids');
+
+// Giá trị đọc được bằng mắt: danh sách chữ/số nối bằng dấu phẩy; object lồng hoặc mã uuid coi như kỹ thuật (undefined = bỏ dòng)
+export function readableValue(v: unknown): string | null | undefined {
+  if (v == null) return null;
+  if (typeof v === 'string') return UUID.test(v) ? undefined : v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  if (Array.isArray(v) && v.every((x) => x == null || ['string', 'number'].includes(typeof x))) return v.filter((x) => x != null).join(', ');
+  return undefined;
+}

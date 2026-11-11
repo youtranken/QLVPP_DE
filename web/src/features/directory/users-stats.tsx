@@ -14,7 +14,7 @@ interface RegCard {
 export function UsersStats({ stats, filter, onFilter, reg }: { stats: Record<StatFilter, number>; filter: UsersFilter | null; onFilter: (f: StatFilter) => void; reg: RegCard | null }) {
   const { t } = useTranslation();
   return (
-    <StatRow>
+    <StatRow label={t('users.stats.label')}>
       <StatCard label={t('users.stats.active')} icon="users" value={stats.active} unit={t('users.stats.people')} pressed={filter === 'active'} onClick={() => onFilter('active')} />
       {reg && (
         <StatCard

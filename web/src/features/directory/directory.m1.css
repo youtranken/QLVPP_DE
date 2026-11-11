@@ -29,3 +29,12 @@
   [data-shell='admin'] .dr-table.table-stack td:first-child { display: flex; }
   [data-shell='admin'] .dr-table.table-stack td[data-label]:not([data-label=''])::before { font: var(--t-cap); }
 }
+/* "Hiện x/y" và "Đang lọc … Bỏ lọc" chung một hàng, không mỗi dòng một khoảng 24 */
+[data-shell='admin'] .dr-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-3); min-height: 32px; }
+@media (min-width: 768px) {
+  [data-shell='admin'] .dr-table td:first-child { min-width: 240px; }
+}
+@media (max-width: 767px) {
+  [data-shell='admin'] .dr-page .toolbar .select { flex: 1 1 100%; }
+  [data-shell='admin'] .dr-page .toolbar .select select { width: 100%; }
+}

@@ -2,14 +2,6 @@ import type { TFunction } from 'i18next';
 import type { AuditEntry } from './admin.api';
 import { auditObjectName } from './audit-diff';
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SHORT_ID = 8;
-
-const shortId = (id: string) => (UUID.test(id) ? `${id.slice(0, SHORT_ID)}…` : id);
-
-export const auditObjectRef = (e: AuditEntry, short = false) =>
-  [e.objectType, e.objectId && (short ? shortId(e.objectId) : e.objectId)].filter(Boolean).join(' · ');
-
 const monthOf = (ym: string) => ({ month: Number(ym.slice(5, 7)), year: ym.slice(0, 4) });
 
 function fromLabel(t: TFunction, e: AuditEntry): string | null {
@@ -23,12 +15,12 @@ function fromLabel(t: TFunction, e: AuditEntry): string | null {
   return l.name;
 }
 
-// Không tra được tên (đã xóa): tên loại tiếng Việt; loại lạ (api mới hơn web) ghi "—", không hiện khóa thô — mã ở hàng chi tiết
+// Không tra được tên (đã xóa): tên loại tiếng Việt; loại lạ (api mới hơn web) ghi "—", không hiện khóa thô
 function fallback(t: TFunction, e: AuditEntry): string {
   return (e.objectType && t(`audit.objectType.${e.objectType}`, { defaultValue: '' })) || t('common.empty');
 }
 
-// Ưu tiên tên api tra lúc đọc (đối tượng còn), rồi tên ghi trong detail; mã đầy đủ chỉ ở hàng chi tiết
+// Ưu tiên tên api tra lúc đọc (đối tượng còn), rồi tên ghi trong detail
 export function auditObjectText(t: TFunction, e: AuditEntry): string {
   return fromLabel(t, e) ?? auditObjectName(e.detail) ?? fallback(t, e);
 }

@@ -41,7 +41,8 @@ function useColumns() {
         id: 'actor',
         header: t('audit.page.colActor'),
         cell: ({ row: { original: e } }) => {
-          const name = e.actorName ?? e.actor;
+          // Tiến trình máy ghi actor "system(…)": hiện chữ thường, không lộ mã
+          const name = e.actorName ?? (e.actor.startsWith('system') ? t('audit.filters.system') : e.actor);
           return (
             <span className="au-person">
               <span className="au-avatar" aria-hidden="true">

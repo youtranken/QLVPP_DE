@@ -99,6 +99,8 @@ export function UsersPage() {
   const { filter } = p.view;
   const openUser = panel.id ? list.find((u) => u.sub === panel.id) : undefined;
   const target: UserRow | undefined = openUser && { ...openUser, id: openUser.sub, reg: reg.sets ? regOf(openUser, reg.sets) : undefined };
+  // Rỗng chỉ vì thẻ lọc (không gõ tìm): câu gợi ý "thử tên không dấu" không đúng chỗ
+  const byChip = (filter !== null || p.view.reg !== null) && p.view.q === '';
   const narrowed = filter !== null || p.view.reg !== null || p.view.dept !== '' || p.view.q !== '';
   const regCard =
     reg.month === null ? null : { month: reg.month, count: reg.sets ? reg.sets.unregistered.size : null, pressed: p.view.reg === 'no', onClick: () => p.toggleReg('no') };
@@ -128,11 +130,17 @@ export function UsersPage() {
           ]}
         />
       </Toolbar>
-      {!dir.loading && (
-        <p className="dr-count">{t(dir.overflow && !showDeleted ? 'users.page.shownPartial' : 'users.page.shown', { shown: rows.length, total: list.length })}</p>
+      {(!dir.loading || filter || (p.view.reg && reg.month !== null)) && (
+        <div className="dr-meta">
+          {!dir.loading && (
+            <p className="dr-count" role="status">
+              {t(dir.overflow && !showDeleted ? 'users.page.shownPartial' : 'users.page.shown', { shown: rows.length, total: list.length })}
+            </p>
+          )}
+          {filter && <FilterNotice label={t(`users.stats.${filter}`)} count={rows.length} onClear={p.clearFilter} />}
+          {p.view.reg && reg.month !== null && <FilterNotice label={t(p.view.reg === 'yes' ? 'users.reg.yes' : 'users.reg.no', { month: reg.month })} count={rows.length} onClear={p.clearReg} />}
+        </div>
       )}
-      {filter && <FilterNotice label={t(`users.stats.${filter}`)} count={rows.length} onClear={p.clearFilter} />}
-      {p.view.reg && reg.month !== null && <FilterNotice label={t(p.view.reg === 'yes' ? 'users.reg.yes' : 'users.reg.no', { month: reg.month })} count={rows.length} onClear={p.clearReg} />}
       <UsersTable
         rows={rows}
         regMonth={reg.month}
@@ -140,8 +148,8 @@ export function UsersPage() {
         activeId={target?.id}
         onOpen={open}
         empty={{
-          title: t('users.page.empty'),
-          hint: t('users.page.emptyHint'),
+          title: t(byChip ? 'users.page.emptyFilter' : 'users.page.empty'),
+          hint: byChip ? undefined : t('users.page.emptyHint'),
           action: narrowed ? (
             <button type="button" className="btn" onClick={() => { setSearch(''); p.clearAll(); }}>
               {t('common.filter.clear')}
