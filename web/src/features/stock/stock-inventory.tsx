@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
@@ -6,7 +6,6 @@ import { FilterNotice } from '@/ui/filter-notice';
 import { LoadError } from '@/ui/load-state';
 import { Toolbar } from '@/ui/toolbar';
 import { categoryLabel } from '@/features/catalog/catalog.api';
-import { CountStockDialog } from './count-stock-dialog';
 import { IssueDialog } from './issue-dialog';
 import { MovementsDrawer } from './movements-drawer';
 import { PurchaseDialog } from './purchase-dialog';
@@ -27,9 +26,9 @@ interface Open {
   id: string;
 }
 
-const EMPTY_KEY: Record<StockFilter, string> = { short: 'emptyShort', incoming: 'emptyIncoming', low: 'emptyLow', none: 'emptyNone' };
+const EMPTY_KEY: Record<StockFilter, string> = { incoming: 'emptyIncoming', low: 'emptyLow', none: 'emptyNone' };
 
-export function StockInventory({ p }: { p: StockParams }) {
+export function StockInventory({ p, end }: { p: StockParams; end?: ReactNode }) {
   const { t, i18n } = useTranslation();
   const d = useStockData();
   const [search, setSearch] = useUrlSearchBox(p.view.q, p.setQ);
@@ -44,7 +43,7 @@ export function StockInventory({ p }: { p: StockParams }) {
   const { filter } = p.view;
   const shown = applyStockView(d.rows, p.view);
   const page = useShownLimit(shown, `${filter ?? ''}|${p.view.q}`);
-  // Sổ cái là panel phủ ?item=; Nhập/Kiểm kê/Xuất lẻ từ chân panel mở hộp trên panel, panel giữ nguyên
+  // Lịch sử nhập xuất là panel phủ ?item=; Nhập/Xuất lẻ từ chân panel mở hộp trên panel, panel giữ nguyên
   const ledger = usePanelParam('item', { order: shown.map((r) => r.id), known: (id) => (d.loaded ? d.rows.some((r) => r.id === id) : undefined) });
   const { open: openLedger } = ledger;
   const onAction = useCallback((action: StockAction, r: StockRow) => (action === 'ledger' ? openLedger(r.id) : setOpen({ action, id: r.id })), [openLedger]);
@@ -59,6 +58,7 @@ export function StockInventory({ p }: { p: StockParams }) {
   return (
     <>
       <Toolbar search={{ value: search, onChange: setSearch, label: t('stock.page.search'), placeholder: t('stock.page.search'), maxLength: MAX_SEARCH }}>
+        {end}
         {d.loaded && <StockFilterTabs stats={stockStats(d.rows)} filter={filter} onFilter={p.toggleFilter} onClear={p.clearFilter} />}
       </Toolbar>
       {filter && <FilterNotice label={t(`stock.stats.${filter}`)} count={shown.length} onClear={p.clearFilter} />}
@@ -89,7 +89,6 @@ export function StockInventory({ p }: { p: StockParams }) {
         />
       )}
       {target && open?.action === 'purchase' && <PurchaseDialog item={target} onClose={close} />}
-      {target && open?.action === 'count' && <CountStockDialog item={target} onClose={close} />}
       {target && open?.action === 'issue' && <IssueDialog item={target} onClose={close} />}
     </>
   );

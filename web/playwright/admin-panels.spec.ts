@@ -192,13 +192,13 @@ test.describe('V2D-17b panel phủ ở Giao hàng, Tổng hợp, Tủ / Kho, Nh�
     await expectOverlay(page, info, table, open, page.getByRole('dialog', { name: `Lịch sử giao ${PW_LINE.full_name}` }), 'line');
   });
 
-  test('V2D-17b Tủ / Kho: tên món mở panel sổ cái; F5 với ?item= mở lại đúng món', async ({ page }, info) => {
+  test('V2D-17b Tủ / Kho: tên món mở panel lịch sử nhập xuất; F5 với ?item= mở lại đúng món', async ({ page }, info) => {
     const item = await seedPwItem(page, { stock: 3 });
     try {
       await page.goto(`/admin/stock?q=${encodeURIComponent(item.name)}`);
       const table = page.getByRole('table').first();
-      const ledger = page.getByRole('dialog', { name: `Sổ cái ${item.name}` });
-      await expectOverlay(page, info, table, () => page.getByRole('button', { name: `Mở sổ cái ${item.name}` }).click(), ledger, 'item');
+      const ledger = page.getByRole('dialog', { name: `Lịch sử nhập xuất ${item.name}` });
+      await expectOverlay(page, info, table, () => page.getByRole('button', { name: `Xem lịch sử nhập xuất ${item.name}` }).click(), ledger, 'item');
       await page.goto(`/admin/stock?item=${item.id}`);
       await expect(ledger).toBeVisible();
     } finally {

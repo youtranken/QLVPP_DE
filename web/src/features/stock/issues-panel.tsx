@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -40,7 +40,7 @@ function useColumns() {
   }, [t, i18n.language, unitName]);
 }
 
-export function IssuesPanel({ ym, onYmChange }: { ym: string; onYmChange: (ym: string) => void }) {
+export function IssuesPanel({ ym, onYmChange, end }: { ym: string; onYmChange: (ym: string) => void; end?: ReactNode }) {
   const { t } = useTranslation();
   const q = useQuery(issuesQuery(ym));
   const columns = useColumns();
@@ -57,6 +57,7 @@ export function IssuesPanel({ ym, onYmChange }: { ym: string; onYmChange: (ym: s
           labels={{ group: t('stock.issues.monthNav'), prev: t('stock.issues.prevMonth'), next: t('stock.issues.nextMonth') }}
         />
         {q.isSuccess && <p className="sk-issues__total">{t('stock.issues.total', { n: rows.length, units })}</p>}
+        {end}
       </div>
       {q.isError ? (
         <LoadError onRetry={() => void q.refetch()} />

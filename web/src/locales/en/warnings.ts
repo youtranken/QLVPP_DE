@@ -36,7 +36,6 @@ const warnings: Messages<typeof vi> = {
     W21: 'This is held for {{k}} people waiting to receive it.',
     W21take: 'Issuing {{q}} will take {{x}} {{unit}} that is being held.',
     W21ok: 'Issue anyway',
-    W22: 'After the count, stock is {{c}}, short {{n}} for people waiting.',
     W23: 'The supplier order of month {{m}} counted these {{n}} {{unit}} — cancelling leaves the arrival as extra stock.',
     W24: 'This item is awaiting {{n}} {{unit}} from the supplier (printed {{time}}) — after discontinuing, ordered stock can still be received.',
     W25: '{{n}} people who have left still have items to receive: {{names}}',

@@ -24,9 +24,9 @@ describe('StockTable — Tủ/Kho theo người đang chờ', () => {
     expect(cells('Giấy A4')).toEqual(expect.arrayContaining(['6', '4', '2', 'Sắp hết']));
   });
 
-  it('trạng thái: Thiếu 3 cho người chờ · Chờ hàng về 5 · Không có · Không theo dõi · Còn 7; không chữ "Đủ dùng"', async () => {
+  it('trạng thái: Chờ hàng về 3 (hàng về chưa đủ bù) · Chờ hàng về 5 · Không có · Không theo dõi · Còn 7; không chữ "Đủ dùng"', async () => {
     await open();
-    expect(within(rowOf('Bìa còng')).getByText('Thiếu 3 cho người chờ')).toBeInTheDocument();
+    expect(within(rowOf('Bìa còng')).getByText('Chờ hàng về 3')).toHaveAttribute('title', 'Thiếu 3 cho người chờ');
     expect(within(rowOf('Bút chì')).getByText('Chờ hàng về 5')).toBeInTheDocument();
     expect(within(rowOf('Kẹp giấy')).getByText('Không có')).toBeInTheDocument();
     expect(within(rowOf('Ghim bấm')).getByText('Không theo dõi')).toBeInTheDocument();
@@ -35,26 +35,26 @@ describe('StockTable — Tủ/Kho theo người đang chờ', () => {
     expect(screen.queryByText('Hết hàng')).toBeNull();
   });
 
-  it('đỏ chỉ ở hàng có người chờ mà thiếu (short > 0): tủ 0 không ai cần không đỏ', async () => {
+  it('đỏ chỉ ở hàng hàng NCC về không đủ bù cho người chờ (short > 0): tủ 0 không ai cần, hàng về đủ bù không đỏ', async () => {
     await open();
     const red = document.querySelectorAll('tbody .tag--danger');
-    expect([...red].map((t) => t.textContent)).toEqual(['Thiếu 3 cho người chờ']);
+    expect([...red].map((t) => t.textContent)).toEqual(['Chờ hàng về 3']);
   });
 
-  it('dòng không có nút "Nhập mua"; ⋯ = Kiểm kê · Xuất lẻ · Sổ cái · Nhập ngoài kỳ (tự mua lẻ) và mở hộp cùng tiêu đề', async () => {
+  it('dòng không có nút "Nhập mua"; ⋯ = Xuất lẻ · Lịch sử nhập xuất · Nhập ngoài kỳ (tự mua lẻ) (không còn Kiểm kê) và mở hộp cùng tiêu đề', async () => {
     await open();
     expect(screen.queryByRole('button', { name: 'Nhập mua' })).toBeNull();
     await userEvent.click(within(rowOf('Giấy A4')).getByRole('button', { name: 'Thao tác khác cho Giấy A4' }));
     const items = within(screen.getByRole('menu')).getAllByRole('menuitem');
-    expect(items.map((i) => i.textContent)).toEqual(['Kiểm kê', 'Xuất lẻ', 'Sổ cái', 'Nhập ngoài kỳ (tự mua lẻ)']);
-    await userEvent.click(items[3]);
+    expect(items.map((i) => i.textContent)).toEqual(['Xuất lẻ', 'Lịch sử nhập xuất', 'Nhập ngoài kỳ (tự mua lẻ)']);
+    await userEvent.click(items[2]);
     expect(await screen.findByRole('dialog', { name: 'Nhập ngoài kỳ (tự mua lẻ) Giấy A4' })).toBeInTheDocument();
   });
 
   it('390: cùng menu ⋯, không nút nào khác trên hàng', async () => {
     await open(390);
     expect(within(rowOf('Giấy A4')).getAllByRole('button').map((b) => b.getAttribute('aria-label') ?? b.textContent)).toEqual([
-      'Mở sổ cái Giấy A4',
+      'Xem lịch sử nhập xuất Giấy A4',
       'Thao tác khác cho Giấy A4',
     ]);
   });
@@ -70,8 +70,9 @@ describe('StockTable — Tủ/Kho theo người đang chờ', () => {
     expect(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Xuất lẻ' })).not.toHaveAttribute('aria-disabled');
   });
 
-  it('món ngừng riêng còn tủ 2 vẫn hiện, kèm nhãn "Ngừng riêng"', async () => {
+  it('món tạm ngưng còn tủ 2 vẫn hiện, tình trạng "Tạm ngưng" (không nhãn ngừng trùng ở tên)', async () => {
     await open(1280, STOCK.map((f) => (f.item_id === 'i-3' ? facts('i-3', { stock_qty: 2, free: 2 }) : f)));
-    expect(within(rowOf('Bút xóa cũ')).getByText('Ngừng riêng')).toBeInTheDocument();
+    expect(within(rowOf('Bút xóa cũ')).getByText('Tạm ngưng')).toHaveClass('tag');
+    expect(within(rowOf('Bút xóa cũ')).queryByText('Ngừng riêng')).toBeNull();
   });
 });

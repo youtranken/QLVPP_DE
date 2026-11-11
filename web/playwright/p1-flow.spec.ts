@@ -67,11 +67,11 @@ async function stockFlow(page: Page, itemName: string) {
   await expectStockCell(row, 7);
 
   await row.getByRole('button', { name: `Thao tác khác cho ${itemName}` }).click();
-  await page.getByRole('menuitem', { name: 'Sổ cái' }).click();
-  const ledger = page.getByRole('dialog', { name: `Sổ cái ${itemName}` });
+  await page.getByRole('menuitem', { name: 'Lịch sử nhập xuất' }).click();
+  const ledger = page.getByRole('dialog', { name: `Lịch sử nhập xuất ${itemName}` });
   await expect(ledger.getByRole('listitem')).toHaveCount(2);
-  await expect(ledger.getByText(`Xuất lẻ · ${RECIPIENT.name}`)).toBeVisible();
-  await expect(ledger.getByRole('listitem').getByText('Nhập mua', { exact: true })).toBeVisible();
+  await expect(ledger.getByRole('listitem').nth(0)).toContainText(`cho ${RECIPIENT.name}`);
+  await expect(ledger.getByRole('listitem').nth(1).locator('.tag')).toHaveText('Nhập');
 }
 
 async function saveSigner(page: Page, preparer: string) {
@@ -142,7 +142,7 @@ async function cleanup(admin: APIRequestContext, t: { itemName: string; category
 }
 
 test.describe('Smoke Plan 1 toàn luồng', () => {
-  test('Plan 1: SA tạo nhóm, món có ảnh, nhập 10, xuất lẻ 3, sổ cái 2 dòng, lưu người ký, đăng xuất → nhân viên thấy khung, đổi en, tải được ảnh món, bị chặn trang quản lý', async ({
+  test('Plan 1: SA tạo nhóm, món có ảnh, nhập 10, xuất lẻ 3, lịch sử nhập xuất 2 dòng, lưu người ký, đăng xuất → nhân viên thấy khung, đổi en, tải được ảnh món, bị chặn trang quản lý', async ({
     page,
     playwright,
   }, info) => {

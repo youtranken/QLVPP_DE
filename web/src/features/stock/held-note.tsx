@@ -12,16 +12,6 @@ export function IssueHeldNote({ waiting, qty, took, unit }: { waiting: number; q
   );
 }
 
-export function CountHeldNote({ counted, held }: { counted: number; held: number }) {
-  const { t } = useTranslation();
-  if (counted >= held) return null;
-  return (
-    <p role="note" className="alert alert--warn">
-      {t('warn.W22', { c: counted, n: held - counted })}
-    </p>
-  );
-}
-
 export function ItemPicker({ choices, value, onChange }: { choices: StockRow[]; value: string; onChange: (id: string) => void }) {
   const { t } = useTranslation();
   return (

@@ -8,9 +8,9 @@ interface Props {
   onClear: () => void;
 }
 
-const FILTERS: StockFilter[] = ['short', 'incoming', 'low', 'none'];
+const FILTERS: StockFilter[] = ['incoming', 'low', 'none'];
 
-// Một hàng chip lọc có số: Tất cả · Thiếu cho người chờ · Chờ hàng về · Sắp hết · Không có
+// Một hàng chip lọc có số: Tất cả · Chờ hàng về · Sắp hết · Không có
 export function StockFilterTabs({ stats, filter, onFilter, onClear }: Props) {
   const { t } = useTranslation();
   return (

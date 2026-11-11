@@ -58,6 +58,8 @@
 [data-shell='admin'] .month-switch .month-switch__beyond[aria-pressed='true'],
 [data-shell='admin'] .month-switch .month-switch__beyond[aria-pressed='true']:hover:not(:disabled) { background: var(--c-sel); color: var(--c-on-sel); }
 [data-shell='admin'] .month-switch > span:first-of-type { font: var(--t-label); font-weight: 700; color: var(--c-ink); }
+/* admin.css cũ kẻ vạch hai bên nhãn tháng; khung pill không cần vạch */
+[data-shell='admin'] .month-switch span { border-inline: 0; }
 [data-shell='admin'] .month-switch__status { height: 22px; padding: 0 var(--s-2); border-radius: var(--r-pill); display: inline-flex; align-items: center; font: var(--t-micro); font-weight: 700; }
 [data-shell='admin'] .month-switch__status--ok { background: var(--c-ok-soft); color: var(--c-ok); }
 [data-shell='admin'] .month-switch__status--dark { background: var(--c-dark); color: var(--c-on-dark); }
@@ -99,3 +101,9 @@
 [data-shell='admin'] .empty-state__body { display: grid; justify-items: center; gap: var(--s-3); width: 100%; max-width: 480px; text-align: center; }
 [data-shell='admin'] .empty-state__title { margin: 0; font: var(--t-h3); color: var(--c-ink); }
 [data-shell='admin'] .empty-state__hint { margin: 0; font: var(--t-body); color: var(--c-muted); }
+/* Ô nút cuối bảng: nút bọc trong div để đường kẻ hàng liền qua ô; máy tính co ô vừa nút, dạng thẻ ≤767 giữ chiều ngang của thẻ */
+[data-shell='admin'] .acts__in { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--s-2); }
+@media (min-width: 768px) {
+  [data-shell='admin'] .table td.acts, [data-shell='admin'] .table th.acts { width: 1%; white-space: nowrap; }
+  [data-shell='admin'] .table td.acts .acts__in { flex-wrap: nowrap; }
+}

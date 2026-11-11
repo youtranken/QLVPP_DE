@@ -33,7 +33,6 @@ const warnings = {
     W21: 'Phần này đang giữ cho {{k}} người chờ nhận.',
     W21take: 'Xuất {{q}} sẽ lấy {{x}} {{unit}} đang giữ.',
     W21ok: 'Vẫn xuất',
-    W22: 'Sau kiểm kê tủ còn {{c}}, thiếu {{n}} cho người đang chờ.',
     W23: 'Phiếu gửi NCC tháng {{m}} đã tính {{n}} {{unit}} này — hủy thì hàng về dư vào kho.',
     W24: 'Món này đang chờ NCC giao {{n}} {{unit}} (bản in {{time}}) — ngừng thì vẫn nhập được hàng đã đặt.',
     W25: '{{n}} người đã nghỉ còn phần chưa nhận: {{names}}',

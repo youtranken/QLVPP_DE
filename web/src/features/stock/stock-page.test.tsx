@@ -36,15 +36,15 @@ describe('StockPage', () => {
     expect(main.getByRole('link', { name: 'Sản phẩm' })).toHaveAttribute('href', '/admin/catalog');
   });
 
-  it('một hàng chip lọc có số, không còn thẻ số liệu: Tất cả 6 (ẩn món ngừng tủ 0), Thiếu cho người chờ 1, Chờ hàng về 1, Sắp hết 1, Không có 1', async () => {
+  it('một hàng chip lọc có số: Tất cả 6 (ẩn món ngừng tủ 0), Chờ hàng về 2 (gộp thiếu cho người chờ), Sắp hết 1, Không có 1', async () => {
     await open();
     expect(screen.getByRole('button', { name: /Tất cả/ })).toHaveTextContent('6');
-    expect(screen.getByRole('button', { name: /Thiếu cho người chờ/ })).toHaveTextContent('1');
-    expect(screen.getByRole('button', { name: /Chờ hàng về/ })).toHaveTextContent('1');
+    expect(screen.queryByRole('button', { name: /Thiếu cho người chờ/ })).toBeNull();
+    expect(screen.getByRole('button', { name: /Chờ hàng về/ })).toHaveTextContent('2');
     expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveTextContent('1');
     expect(screen.getByRole('button', { name: /Không có/ })).toHaveTextContent('1');
     expect(screen.queryByText('Bút xóa cũ')).toBeNull();
-    expect(within(screen.getByRole('group', { name: 'Lọc theo tình trạng tồn' })).getAllByRole('button')).toHaveLength(5);
+    expect(within(screen.getByRole('group', { name: 'Lọc theo tình trạng tồn' })).getAllByRole('button')).toHaveLength(4);
   });
 
   it('bấm "Sắp hết" → ?filter=low, chip aria-pressed; bấm lại → bỏ lọc', async () => {
@@ -57,11 +57,12 @@ describe('StockPage', () => {
     expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('?filter=short chỉ còn món thiếu cho người chờ, thẻ bật; "Bỏ lọc" trả đủ món', async () => {
-    await open('/admin/stock?filter=short', 'Bìa còng');
+  it('?filter=incoming chỉ còn món có người chờ mà tủ chưa đủ, thẻ bật; "Bỏ lọc" trả đủ món', async () => {
+    await open('/admin/stock?filter=incoming', 'Bìa còng');
     expect(screen.queryByText('Giấy A4')).toBeNull();
-    expect(screen.getByRole('button', { name: /Thiếu cho người chờ/ })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByText(/Đang lọc: Thiếu cho người chờ · 1/)).toBeInTheDocument();
+    expect(screen.getByText('Bút chì')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Chờ hàng về/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText(/Đang lọc: Chờ hàng về · 2/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Bỏ lọc' }));
     expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
     expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
@@ -100,40 +101,40 @@ describe('StockPage', () => {
     expect(await screen.findByText('Giấy A4', {}, { timeout: 3000 })).toBeInTheDocument();
   });
 
-  it('menu ⋯ dùng được bằng bàn phím: Enter mở và focus "Kiểm kê", ↓ sang "Xuất lẻ", Esc đóng và trả focus về nút; Enter trên "Kiểm kê" mở hộp "Kiểm kê Bút bi xanh"', async () => {
+  it('menu ⋯ dùng được bằng bàn phím: Enter mở và focus "Xuất lẻ", ↓ sang "Lịch sử nhập xuất", Esc đóng và trả focus về nút; Enter trên "Xuất lẻ" mở hộp "Xuất lẻ Bút bi xanh"', async () => {
     await open();
     const more = within(rowOf('Bút bi xanh')).getByRole('button', { name: 'Thao tác khác cho Bút bi xanh' });
     expect(more).toHaveAttribute('aria-haspopup', 'menu');
     more.focus();
     await userEvent.keyboard('{Enter}');
     expect(more).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('menuitem', { name: 'Kiểm kê' })).toHaveFocus();
-    await userEvent.keyboard('{ArrowDown}');
     expect(screen.getByRole('menuitem', { name: 'Xuất lẻ' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(screen.getByRole('menuitem', { name: 'Lịch sử nhập xuất' })).toHaveFocus();
     await userEvent.keyboard('{End}');
     expect(screen.getByRole('menuitem', { name: 'Nhập ngoài kỳ (tự mua lẻ)' })).toHaveFocus();
     await userEvent.keyboard('{ArrowDown}');
-    expect(screen.getByRole('menuitem', { name: 'Kiểm kê' })).toHaveFocus();
+    expect(screen.getByRole('menuitem', { name: 'Xuất lẻ' })).toHaveFocus();
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('menu')).toBeNull();
     expect(more).toHaveFocus();
     await userEvent.keyboard('{Enter}');
     await userEvent.keyboard('{Enter}');
-    expect(await screen.findByRole('dialog', { name: 'Kiểm kê Bút bi xanh' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Xuất lẻ Bút bi xanh' })).toBeInTheDocument();
   });
 
-  it('bấm ⋯ → "Xuất lẻ" mở hộp "Xuất lẻ Bút bi xanh"; ⋯ → "Sổ cái" và bấm tên món đều mở sổ cái', async () => {
+  it('bấm ⋯ → "Xuất lẻ" mở hộp "Xuất lẻ Bút bi xanh"; ⋯ → "Lịch sử nhập xuất" và bấm tên món đều mở lịch sử', async () => {
     await open();
     await userEvent.click(within(rowOf('Bút bi xanh')).getByRole('button', { name: 'Thao tác khác cho Bút bi xanh' }));
     await userEvent.click(screen.getByRole('menuitem', { name: 'Xuất lẻ' }));
     expect(await screen.findByRole('dialog', { name: 'Xuất lẻ Bút bi xanh' })).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
     await userEvent.click(within(rowOf('Giấy A4')).getByRole('button', { name: 'Thao tác khác cho Giấy A4' }));
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Sổ cái' }));
-    expect(await screen.findByRole('dialog', { name: 'Sổ cái Giấy A4' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Lịch sử nhập xuất' }));
+    expect(await screen.findByRole('dialog', { name: 'Lịch sử nhập xuất Giấy A4' })).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
-    await userEvent.click(screen.getByRole('button', { name: 'Mở sổ cái Giấy A4' }));
-    expect(await screen.findByRole('dialog', { name: 'Sổ cái Giấy A4' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Xem lịch sử nhập xuất Giấy A4' }));
+    expect(await screen.findByRole('dialog', { name: 'Lịch sử nhập xuất Giấy A4' })).toBeInTheDocument();
   });
 
   it('lỗi tải Tủ/Kho → "Thử lại" gọi lại; thành công thì hiện bảng', async () => {

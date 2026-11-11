@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { indexCategories, toRows } from '@/features/catalog/catalog-rows';
-import { applyStockView, balancesAfter, shortCount, stockStats, toStockRows } from './stock-rows';
+import { applyStockView, balancesAfter, shortCount, stockStats, toStockRows, stockViewOf } from './stock-rows';
 import { CATEGORIES, facts, ITEMS, STOCK } from './stock-fixtures';
 
 const byId = (list = STOCK) => new Map(list.map((f) => [f.item_id, f]));
@@ -23,13 +23,19 @@ describe('stock-rows', () => {
     expect(rows(STOCK.filter((f) => f.item_id !== 'i-2')).map((r) => r.id)).not.toContain('i-2');
   });
 
-  it('ô thống kê: tất cả 6, Thiếu cho người chờ 1, Chờ hàng về 1, Sắp hết 1, Không có 1', () => {
-    expect(stockStats(rows())).toEqual({ all: 6, short: 1, incoming: 1, low: 1, none: 1 });
+  it('ô thống kê: tất cả 6, Chờ hàng về 2 (gồm cả món hàng về chưa đủ bù), Sắp hết 1, Không có 1', () => {
+    expect(stockStats(rows())).toEqual({ all: 6, incoming: 2, low: 1, none: 1 });
+  });
+
+  it('tình trạng hiện: món tạm ngưng → "paused" dù còn người chờ; short/incoming → "incoming"', () => {
+    expect(stockViewOf({ usable: false, stock_state: 'short' })).toBe('paused');
+    expect(stockViewOf({ usable: true, stock_state: 'short' })).toBe('incoming');
+    expect(stockViewOf({ usable: true, stock_state: 'incoming' })).toBe('incoming');
+    expect(stockViewOf({ usable: true, stock_state: 'none' })).toBe('none');
   });
 
   it('lọc theo trạng thái mới; tìm không dấu', () => {
-    expect(applyStockView(rows(), { filter: 'short', q: '' }).map((r) => r.name)).toEqual(['Bìa còng']);
-    expect(applyStockView(rows(), { filter: 'incoming', q: '' }).map((r) => r.name)).toEqual(['Bút chì']);
+    expect(applyStockView(rows(), { filter: 'incoming', q: '' }).map((r) => r.name).sort()).toEqual(['Bìa còng', 'Bút chì']);
     expect(applyStockView(rows(), { filter: 'none', q: '' }).map((r) => r.name)).toEqual(['Kẹp giấy']);
     expect(applyStockView(rows(), { filter: null, q: 'but bi' }).map((r) => r.name)).toEqual(['Bút bi xanh']);
   });
