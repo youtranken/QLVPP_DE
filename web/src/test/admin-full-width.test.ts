@@ -169,6 +169,12 @@ describe('Bố cục theo route', () => {
     expect(css).not.toMatch(/\.cf-layout|\.cf-aside/);
   });
 
+  it('Bảng cột cố định: tiêu đề (cả cột số th.r vốn nowrap) xuống dòng trong cột; bảng có bề rộng tối thiểu --dt-min', () => {
+    const css = readFileSync(join(SRC, 'css/m1/table.css'), 'utf8');
+    expect(css).toMatch(/\.table\.table--fixed th\.r \{ white-space: normal;/);
+    expect(css).toMatch(/\.table--fixed \{ table-layout: fixed; min-width: var\(--dt-min, 0\); \}/);
+  });
+
   it('Kỳ tháng: dải 4 bước một hàng bốn cột, 390 px hai cột; bảng dùng hết bề ngang', () => {
     const css = readFileSync(join(SRC, 'features/month/month.m1.css'), 'utf8');
     expect(css).toMatch(/\.mk-strip \{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);

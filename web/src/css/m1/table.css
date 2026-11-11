@@ -25,7 +25,7 @@
   [data-shell='admin'] .table--fixed { table-layout: fixed; min-width: var(--dt-min, 0); }
   [data-shell='admin'] .table--fixed td { overflow-wrap: anywhere; }
   /* Cột hẹp thì tiêu đề xuống dòng trong cột của nó, không tràn sang cột bên */
-  [data-shell='admin'] .table--fixed th { white-space: normal; overflow-wrap: break-word; line-height: 1.25; padding-block: var(--s-1); }
+  [data-shell='admin'] .table--fixed th, [data-shell='admin'] .table.table--fixed th.r { white-space: normal; overflow-wrap: break-word; line-height: 1.25; padding-block: var(--s-1); }
 }
 /* Màn vừa: bảng có nhóm vẫn có thể rộng hơn khung — cuộn ngang (mất đầu nhóm dính) còn hơn cắt cột */
 @media (min-width: 768px) and (max-width: 1279px) {
