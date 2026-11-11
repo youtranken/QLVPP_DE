@@ -94,6 +94,8 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
     browser,
     request,
   }, info) => {
+    // Hai trình duyệt + tải ảnh: chạy riêng đã ~24 s, sát mức 30 s mặc định khi máy bận
+    test.setTimeout(90_000);
     const tag = `${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}`;
     const dept = `PW Phòng P2 ${tag}`;
     const [a, b, c]: Person[] = ['a', 'b', 'c'].map((k) => ({ sub: `pw-p2-${k}-${tag}`, name: `PW P2 ${k.toUpperCase()} ${tag}` }));
@@ -123,7 +125,7 @@ test.describe('Smoke Plan 2 toàn luồng', () => {
       admin = await adminPage(browser, info);
       await admin.goto(`/admin/month?ym=${LOCKED_YM}`);
       await expect(admin.getByRole('heading', { level: 1, name: /^Kỳ tháng \d+$/ })).toBeVisible();
-      await expect(admin.getByRole('list', { name: '4 bước của tháng' }).getByRole('listitem').first()).toContainText(`${before.registered + 2}/${before.headcount}`);
+      await expect(admin.getByRole('list', { name: 'Các bước của tháng' }).getByRole('listitem').first()).toContainText(`${before.registered + 2}/${before.headcount}`);
       if (isMobile(info)) await expectNoContrastViolations(admin);
       await snap(admin, info, 'admin-summary');
       await adminAdjusts(admin, info, tag, a, custom, y.name);

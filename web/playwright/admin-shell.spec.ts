@@ -24,8 +24,9 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     }
     const side = page.getByRole('navigation', { name: 'Menu quản lý' });
     await expect(side.getByRole('group')).toHaveCount(3);
-    const titles = await side.getByRole('link').evaluateAll((links) => links.map((a) => a.getAttribute('title')));
-    expect(titles).toEqual(NAV_ORDER);
+    // title chỉ còn ở cột thu gọn hoặc khi nhãn bị cắt: đọc chữ nhãn của từng mục
+    const labels = await side.getByRole('link').evaluateAll((links) => links.map((a) => a.querySelector('.side__label')?.textContent?.trim()));
+    expect(labels).toEqual(NAV_ORDER);
     await expect(side.getByRole('link', { name: 'Sản phẩm', exact: true })).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('link', { name: /Phiếu của tôi/ })).toHaveCount(0);
     const periodCard = page.getByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng \d+ · đang mở/ });

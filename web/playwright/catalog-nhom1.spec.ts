@@ -55,7 +55,8 @@ test.describe('Nhóm 1 · Sản phẩm (dev-identity admin)', () => {
       if (isMobile(info)) {
         expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe('fixed');
         const barBox = (await bar.boundingBox())!;
-        const pad = await page.locator('.ct-page').evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
+        // Khung trang (.shell__main) chừa chỗ thanh qua --bulkbar-h, không còn chừa riêng ở .ct-page
+        const pad = await page.locator('.shell__main').evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
         expect(pad).toBeGreaterThanOrEqual(barBox.height + 12);
         const vh = page.viewportSize()!.height;
         const lift = await page.locator('.toast-host').evaluate((el, h) => h - el.getBoundingClientRect().bottom, vh);
