@@ -98,6 +98,7 @@ describe('UsersPage B10', () => {
     await userEvent.click(card(/^Đã khóa/));
     expect(bodyRows()).toHaveLength(1);
     expect(screen.getByText('Đang lọc: Đã khóa · 1')).toBeInTheDocument();
+    expect(screen.getByText('Đang lọc: Đã khóa · 1').closest('.list-meta')).toBe(screen.getByText(/^Hiện \d/).closest('.list-meta'));
     expect(card(/^Đã khóa/)).toHaveAttribute('aria-pressed', 'true');
     await userEvent.click(card(/^Đang dùng/));
     expect(bodyRows().map((r) => within(r).getByRole('button').textContent)).toEqual(['Phạm Minh Đức', 'Trần Chi']);
@@ -109,6 +110,8 @@ describe('UsersPage B10', () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     expect(screen.getByText('Hiện 3 / 3 người')).toBeInTheDocument();
+    // Dòng đếm nằm cuối hàng lọc (căn phải), không chiếm hàng riêng trên bảng
+    expect(screen.getByText('Hiện 3 / 3 người').closest('.toolbar > .list-meta')).not.toBeNull();
     const select = screen.getByRole('combobox', { name: 'Phòng ban' });
     expect(within(select).getAllByRole('option').map((o) => o.textContent)).toEqual(['Mọi phòng ban', 'Phòng Công trình', 'Phòng Kế toán']);
     await userEvent.selectOptions(select, 'Phòng Kế toán');

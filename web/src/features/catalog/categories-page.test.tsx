@@ -275,6 +275,7 @@ describe('Trang Nhóm món — ô tìm và bảng gọn', () => {
   it('ô tìm lọc tên vi/en không cần dấu; "Đang hiện x/y nhóm" là role=status; màu nhóm giữ theo vị trí khi lọc', async () => {
     await open();
     expect(screen.getByText('Đang hiện 3/3 nhóm')).toHaveAttribute('role', 'status');
+    expect(screen.getByText('Đang hiện 3/3 nhóm').closest('.cg-search > .list-meta')).not.toBeNull();
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm nhóm (không cần dấu)' }), 'but');
     expect(await screen.findByText('Đang hiện 1/3 nhóm')).toBeInTheDocument();
     expect(within(rowOf('Bút & viết')).getByTitle('rêu')).toBeInTheDocument();

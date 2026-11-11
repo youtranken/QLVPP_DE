@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiErrorFields } from '@/lib/api-error';
 import { FilterNotice } from '@/ui/filter-notice';
+import { ListMeta } from '@/ui/list-meta';
 import { LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { useAuditLog } from './admin.api';
@@ -29,9 +30,15 @@ export function AuditPage() {
     <div className="ct-page">
       <PageHeader crumbs={[t('nav.groups.system'), title]} title={title} description={t('audit.page.description')} />
       <AuditFilterBar key={`${filters.actor}|${filters.action}|${filters.from}|${filters.to}`} applied={filters} serverError={serverError} onApply={p.apply} onClear={p.clear} />
-      <AuditQuick now={new Date()} applied={filters} onPatch={p.patch} />
-      {!audit.isPending && !audit.isError && <p className="au-count">{count}</p>}
-      {narrowed && !audit.isError && <FilterNotice label={t('audit.page.filterLabel')} count={rows.length} onClear={p.clear} />}
+      <div className="au-quick-row">
+        <AuditQuick now={new Date()} applied={filters} onPatch={p.patch} />
+        {!audit.isError && (!audit.isPending || narrowed) && (
+          <ListMeta>
+            {!audit.isPending && <p className="au-count">{count}</p>}
+            {narrowed && <FilterNotice label={t('audit.page.filterLabel')} count={rows.length} onClear={p.clear} />}
+          </ListMeta>
+        )}
+      </div>
       {fieldError ? null : audit.isError ? (
         <LoadError onRetry={() => void audit.refetch()} />
       ) : (

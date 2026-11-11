@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
 import { FilterNotice } from '@/ui/filter-notice';
+import { ListMeta } from '@/ui/list-meta';
 import { LoadError } from '@/ui/load-state';
 import { Toolbar } from '@/ui/toolbar';
 import { categoryLabel } from '@/features/catalog/catalog.api';
@@ -66,8 +67,12 @@ export function StockInventory({ p, end }: { p: StockParams; end?: ReactNode }) 
       <Toolbar search={{ value: search, onChange: setSearch, label: t('stock.page.search'), placeholder: t('stock.page.search'), maxLength: MAX_SEARCH }}>
         {end}
         {d.loaded && <StockFilterTabs stats={stockStats(d.rows)} filter={filter} onFilter={p.toggleFilter} onClear={p.clearFilter} />}
+        {filter && (
+          <ListMeta>
+            <FilterNotice label={t(`stock.stats.${filter}`)} count={shown.length} onClear={p.clearFilter} />
+          </ListMeta>
+        )}
       </Toolbar>
-      {filter && <FilterNotice label={t(`stock.stats.${filter}`)} count={shown.length} onClear={p.clearFilter} />}
       <StockTable
         rows={page.visible}
         loading={!d.loaded}

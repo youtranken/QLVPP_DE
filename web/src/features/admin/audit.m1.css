@@ -10,6 +10,7 @@
 [data-shell='admin'] .au-filter-actions { align-self: end; }
 [data-shell='admin'] .au-filter-actions { display: flex; gap: var(--s-2); }
 [data-shell='admin'] .au-filters .btn--primary, [data-shell='admin'] .au-filters .btn--primary:hover { box-shadow: none; }
+[data-shell='admin'] .au-quick-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); }
 [data-shell='admin'] .au-quick { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
 [data-shell='admin'] .au-chip { display: inline-flex; align-items: center; height: 36px; padding: 0 16px; border: 0; border-radius: var(--r-pill); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-ink); font: var(--t-label); cursor: pointer; white-space: nowrap; }
 [data-shell='admin'] .au-chip:hover:not([aria-pressed='true']) { background: var(--c-surface-hover); box-shadow: inset 0 0 0 1px var(--c-line-strong); }

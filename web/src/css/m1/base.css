@@ -59,6 +59,9 @@
 @media (hover: none) { [data-shell='admin'] .stat-card__hint { display: none; } }
 
 [data-shell='admin'] .filter-notice { display: flex; align-items: center; gap: var(--s-3); font: var(--t-sm); color: var(--c-ink-2); }
+/* Dòng đếm kết quả nằm cuối hàng lọc, căn phải; hẹp thì xuống hàng riêng (luật trong khối 767 dưới) */
+[data-shell='admin'] .list-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--s-1) var(--s-3); min-height: 32px; margin-left: auto; }
+[data-shell='admin'] .list-meta > p { margin: 0; }
 
 [data-shell='admin'] .toolbar { --ctl-h: 40px; display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-3); }
 [data-shell='admin'] .toolbar .btn,
@@ -95,6 +98,7 @@
   [data-shell='admin'] .toolbar__search { flex: 1 1 140px; min-width: 140px; max-width: none; }
   [data-shell='admin'] .toolbar__search input { font: var(--t-body-l); }
   [data-shell='admin'] .toolbar__end { flex: 1 1 100%; margin-left: 0; }
+  [data-shell='admin'] .list-meta { flex: 1 1 100%; justify-content: flex-start; margin-left: 0; }
   [data-shell='admin'] .toolbar__end > .btn--primary { flex: 1 1 auto; }
   [data-shell='admin'] .toolbar .seg-m1, [data-shell='admin'] .toolbar .seg { padding: 0; }
   [data-shell='admin'] .toolbar .seg-m1 button, [data-shell='admin'] .toolbar .seg button { height: var(--ctl-h); }

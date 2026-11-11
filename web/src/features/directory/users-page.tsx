@@ -5,6 +5,7 @@ import { useMe } from '@/lib/me';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
 import { FilterNotice } from '@/ui/filter-notice';
+import { ListMeta } from '@/ui/list-meta';
 import { LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { Select } from '@/ui/select';
@@ -129,18 +130,18 @@ export function UsersPage() {
             { value: DELETED, label: t('users.page.viewDeleted') },
           ]}
         />
+        {(!dir.loading || filter || (p.view.reg && reg.month !== null)) && (
+          <ListMeta>
+            {!dir.loading && (
+              <p className="dr-count" role="status">
+                {t(dir.overflow && !showDeleted ? 'users.page.shownPartial' : 'users.page.shown', { shown: rows.length, total: list.length })}
+              </p>
+            )}
+            {filter && <FilterNotice label={t(`users.stats.${filter}`)} count={rows.length} onClear={p.clearFilter} />}
+            {p.view.reg && reg.month !== null && <FilterNotice label={t(p.view.reg === 'yes' ? 'users.reg.yes' : 'users.reg.no', { month: reg.month })} count={rows.length} onClear={p.clearReg} />}
+          </ListMeta>
+        )}
       </Toolbar>
-      {(!dir.loading || filter || (p.view.reg && reg.month !== null)) && (
-        <div className="dr-meta">
-          {!dir.loading && (
-            <p className="dr-count" role="status">
-              {t(dir.overflow && !showDeleted ? 'users.page.shownPartial' : 'users.page.shown', { shown: rows.length, total: list.length })}
-            </p>
-          )}
-          {filter && <FilterNotice label={t(`users.stats.${filter}`)} count={rows.length} onClear={p.clearFilter} />}
-          {p.view.reg && reg.month !== null && <FilterNotice label={t(p.view.reg === 'yes' ? 'users.reg.yes' : 'users.reg.no', { month: reg.month })} count={rows.length} onClear={p.clearReg} />}
-        </div>
-      )}
       <UsersTable
         rows={rows}
         regMonth={reg.month}

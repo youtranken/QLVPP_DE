@@ -55,6 +55,8 @@ describe('AuditPage B11', () => {
     expect(screen.getByText(/Chỉ xem — không sửa hay xóa được/)).toBeInTheDocument();
     expect(screen.getAllByText('10:05:00')).toHaveLength(2);
     expect(screen.getByText('2+ dòng nhật ký')).toBeInTheDocument();
+    // Dòng đếm nằm cuối hàng chip Nhanh, không chiếm hàng riêng trên bảng
+    expect(screen.getByText('2+ dòng nhật ký').closest('.au-quick-row .list-meta')).not.toBeNull();
   });
 
   it('nhóm theo ngày VN: 16:59:59.999 UTC cùng ngày, 17:00:00.000 UTC sang nhóm ngày mới', async () => {

@@ -6,6 +6,7 @@ import { useLeaveGuard } from '@/features/request/use-leave-guard';
 import { discardOptions } from '@/ui/confirm-context';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { ReorderBar, ReorderToggle } from '@/ui/reorder';
+import { ListMeta } from '@/ui/list-meta';
 import { Toolbar } from '@/ui/toolbar';
 import { matchesSearch } from '@/features/request/request-format';
 import { useReorderMode } from '@/ui/use-reorder-mode';
@@ -61,6 +62,11 @@ export function CategoriesPage() {
   const tools = !sort.on && list.length > 0 && (
     <div className="cg-search">
       <Toolbar search={{ value: q, onChange: setQ, label: t('catalog.categories.search'), placeholder: t('catalog.categories.search'), maxLength: 100 }} />
+      <ListMeta>
+        <p className="cg-shown" role="status">
+          {t('catalog.categories.shown', { shown, total: list.length })}
+        </p>
+      </ListMeta>
       <ReorderToggle count={list.length} onStart={sort.start} />
     </div>
   );
@@ -95,11 +101,6 @@ export function CategoriesPage() {
             <Toolbar>
               <ReorderBar dirty={order.dirty} dirtyText={t('catalog.categories.dirty', { n: order.moved })} saving={order.saving} onCancel={() => void sort.cancel()} onSave={() => void sort.save()} />
             </Toolbar>
-          )}
-          {!sort.on && (
-            <p className="cg-shown" role="status">
-              {t('catalog.categories.shown', { shown, total: list.length })}
-            </p>
           )}
           {shown === 0 ? (
             <EmptyState art="no-match" title={t('catalog.categories.noMatch')} />
