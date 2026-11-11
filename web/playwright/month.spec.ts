@@ -14,21 +14,27 @@ async function openMonth(page: Page, ym?: string) {
 }
 
 test.describe('Vòng3-KT Kỳ tháng', () => {
-  test('Vòng3-KT /admin vào Kỳ tháng: dải 4 bước gọn, chip lọc, bảng kẻ ô, không cuộn ngang', async ({ page }, info) => {
-    await page.goto('/admin');
-    await expect(page).toHaveURL(/\/admin\/month/);
-    await expect(page.getByRole('heading', { level: 1, name: /^Kỳ tháng \d+$/ })).toBeVisible();
-    const items = steps(page).getByRole('listitem');
-    await expect(items).toHaveCount(4);
-    for (const [i, name] of ['Đăng ký', 'Gửi NCC', 'Nhận hàng', 'Giao'].entries()) await expect(items.nth(i)).toContainText(name);
-    await expect(page.getByRole('button', { name: /^Tất cả/ })).toBeVisible();
-    await expect(page.getByRole('button', { name: /^Có ghi chú/ })).toBeVisible();
-    await expect(page.getByRole('button', { name: /^Chưa giao xong/ })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Chép/ })).toHaveCount(0);
-    await settled(page);
-    await shot(page, info, 'vong3-month');
-    expect(await fitsWidth(page), 'không cuộn ngang').toBe(true);
-    if (isMobile(info)) await expectNoContrastViolations(page);
+  test('Vòng3-KT /admin vào Kỳ tháng: dải 4 bước gọn, chip lọc, bảng kẻ ô, không cuộn ngang', async ({ page, request }, info) => {
+    // Tự seed kỳ đã khóa (tháng đang giao): dữ liệu dev có thể chỉ còn kỳ đang mở, khi đó /admin rơi vào kỳ đăng ký không có chip
+    const seed: Seed = await seedLockedRequest(request, info, [{ stock: 5, qty: 1 }]);
+    try {
+      await page.goto('/admin');
+      await expect(page).toHaveURL(/\/admin\/month/);
+      await expect(page.getByRole('heading', { level: 1, name: `Kỳ tháng ${Number(seed.prevYm.slice(5))}` })).toBeVisible();
+      const items = steps(page).getByRole('listitem');
+      await expect(items).toHaveCount(4);
+      for (const [i, name] of ['Đăng ký', 'Gửi NCC', 'Nhận hàng', 'Giao'].entries()) await expect(items.nth(i)).toContainText(name);
+      await expect(page.getByRole('button', { name: /^Tất cả/ })).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Có ghi chú/ })).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Chưa giao xong/ })).toBeVisible();
+      await expect(page.getByRole('button', { name: /Chép/ })).toHaveCount(0);
+      await settled(page);
+      await shot(page, info, 'vong3-month');
+      expect(await fitsWidth(page), 'không cuộn ngang').toBe(true);
+      if (isMobile(info)) await expectNoContrastViolations(page);
+    } finally {
+      seed.cleanup();
+    }
   });
 
   test('Vòng3-KT chip Chưa giao xong lọc, Xem mở popup phiếu, Điều chỉnh mở ?request=', async ({ page, request }, info) => {
