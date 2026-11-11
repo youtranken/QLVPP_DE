@@ -40,7 +40,9 @@ export function NewPeriodDialog({ period, saved, copyFromYm, onCopy }: Props) {
       <div className="sheet-header">
         <div>
           {prev && <p className="rq-np-eyebrow">{t('request.newPeriod.eyebrow', { prev })}</p>}
-          <DialogTitle className="sheet-title">{t('request.newPeriod.title', { month })}</DialogTitle>
+          <DialogTitle className="sheet-title">
+            <Trans i18nKey="request.newPeriod.title" values={{ month }} components={{ hl: <em className="rq-np-hl" /> }} />
+          </DialogTitle>
         </div>
       </div>
       <div className="sheet-body">
@@ -48,7 +50,7 @@ export function NewPeriodDialog({ period, saved, copyFromYm, onCopy }: Props) {
           <Trans
             i18nKey={prev ? 'request.newPeriod.body' : 'request.newPeriod.bodyFirst'}
             values={{ prev, month, date: fmt.lastDay(period.deadline) }}
-            components={{ b: <b /> }}
+            components={{ hl: <em className="rq-np-hl" />, b: <b className="rq-np-hl" /> }}
           />
         </DialogDescription>
         {sum && prevYm && (

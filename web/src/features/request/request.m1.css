@@ -184,6 +184,8 @@
 [data-shell='member'] .rq-cart-save.is-cancel { background: var(--c-surface); color: var(--c-dark); border-color: var(--c-dark); }
 [data-shell='member'] .rq-cart-cancel { min-height: 44px; font: var(--t-body); font-weight: 700; }
 [data-shell='member'] .rq-np-eyebrow { margin: 0 0 var(--s-1); color: var(--c-ink-2); font: var(--t-body); }
+/* Tháng mới và hạn chót là thứ người dùng phải nhớ: tô màu cảnh báo cho nổi giữa câu */
+[data-shell='member'] .rq-np-hl { color: var(--c-danger); font-style: normal; }
 [data-shell='member'] .rq-np-prev { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3); border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface-2); color: var(--c-ink); font: var(--t-body); }
 [data-shell='member'] .rq-np-prev a { margin-left: auto; color: var(--c-acc); font: var(--t-label); text-decoration: none; }
 [data-shell='member'] .rq-np-prev a:hover { text-decoration: underline; }

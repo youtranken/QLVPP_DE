@@ -101,9 +101,9 @@ const request = {
     },
     newPeriod: {
       eyebrow: 'Kỳ tháng {{prev}} đã chốt',
-      title: 'Giờ bạn đặt văn phòng phẩm cho tháng {{month}}',
-      body: 'Phiếu tháng {{prev}} không sửa được nữa, Adm D&E đang chuẩn bị giao. Hạn đăng ký tháng {{month}} là <b>23:59 ngày {{date}}</b>.',
-      bodyFirst: 'Hạn đăng ký tháng {{month}} là <b>23:59 ngày {{date}}</b>.',
+      title: 'Giờ bạn đặt văn phòng phẩm cho <hl>tháng {{month}}</hl>',
+      body: 'Phiếu tháng {{prev}} không sửa được nữa, Adm D&E đang chuẩn bị giao. Hạn đăng ký <hl>tháng {{month}}</hl> là <b>23:59 ngày {{date}}</b>.',
+      bodyFirst: 'Hạn đăng ký <hl>tháng {{month}}</hl> là <b>23:59 ngày {{date}}</b>.',
       prevLine: 'Phiếu tháng {{prev}}: {{n}} món, đã nhận {{done}}',
       viewPrev: 'Xem phiếu',
       start: 'Đăng ký tháng {{month}}',

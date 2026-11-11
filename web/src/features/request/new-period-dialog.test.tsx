@@ -31,6 +31,8 @@ describe('NewPeriodDialog', () => {
     const dlg = await screen.findByRole('dialog', { name: TITLE });
     expect(within(dlg).getByText('Kỳ tháng 11 đã chốt')).toBeInTheDocument();
     expect(within(dlg).getByText('23:59 ngày 10/12').tagName).toBe('B');
+    // Tháng mới (ở tiêu đề và câu hạn) + giờ/ngày hạn tô màu cảnh báo
+    expect([...dlg.querySelectorAll('.rq-np-hl')].map((n) => n.textContent)).toEqual(['tháng 12', 'tháng 12', '23:59 ngày 10/12']);
     expect(await within(dlg).findByText('Phiếu tháng 11: 2 món, đã nhận 1')).toBeInTheDocument();
     expect(within(dlg).getByRole('link', { name: 'Xem phiếu' })).toHaveAttribute('href', '/history/2026-11');
     await userEvent.click(within(dlg).getByRole('button', { name: 'Đăng ký tháng 12' }));
@@ -61,7 +63,7 @@ describe('NewPeriodDialog', () => {
     open({ period: { ...WITH_PREV, previous: null } });
     const dlg = await screen.findByRole('dialog', { name: TITLE });
     expect(within(dlg).queryByText(/đã chốt/)).toBeNull();
-    expect(within(dlg).getByText(/^Hạn đăng ký tháng 12 là/)).toBeInTheDocument();
+    expect(within(dlg).getByText((_, el) => el?.tagName === 'P' && el.textContent === 'Hạn đăng ký tháng 12 là 23:59 ngày 10/12.')).toBeInTheDocument();
     expect(within(dlg).getByText('23:59 ngày 10/12').tagName).toBe('B');
     expect(within(dlg).queryByText(/^Phiếu tháng 11/)).toBeNull();
     await userEvent.click(within(dlg).getByRole('button', { name: 'Đăng ký tháng 12' }));
