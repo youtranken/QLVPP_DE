@@ -12,7 +12,7 @@
 [data-shell='admin'] .side__link { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; height: 36px; padding: 0 8px; border-radius: var(--r-sm); color: var(--c-on-dark-2); font: var(--t-label); font-weight: 600; text-decoration: none; white-space: nowrap; }
 [data-shell='admin'] .side__link > svg { flex: none; }
 [data-shell='admin'] .side__label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-[data-shell='admin'] .side__link:hover { background: rgb(255 255 255 / .08); color: var(--c-on-dark); }
+[data-shell='admin'] .side__link:hover { background: var(--c-on-dark-hover); color: var(--c-on-dark); }
 [data-shell='admin'] .side__link:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 [data-shell='admin'] .side__link[aria-current='page'] { background: var(--c-surface); color: var(--c-ink); font-weight: 800; }
 [data-shell='admin'] .side__cnt { display: inline-grid; flex: none; place-items: center; min-width: 20px; height: 20px; margin-left: auto; padding: 0 8px; border-radius: var(--r-pill); background: rgb(255 255 255 / .14); color: var(--c-on-dark); font: var(--t-micro); }
@@ -21,7 +21,7 @@
 [data-shell='admin'] .side__cnt[data-badge='review'] { background: var(--c-warn-fill); color: var(--c-ink); }
 
 [data-shell='admin'] .side__period { flex: none; display: flex; gap: 12px; margin-top: 4px; padding: 4px 12px; border-radius: var(--r-md); border: 1px solid var(--c-glass-line); background: var(--c-glass); color: var(--c-on-dark); font: var(--t-cap); font-weight: 500; text-decoration: none; }
-[data-shell='admin'] .side__period:hover { background: rgb(255 255 255 / .08); }
+[data-shell='admin'] .side__period:hover { background: var(--c-on-dark-hover); }
 [data-shell='admin'] .side__period:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 [data-shell='admin'] .side__period b { display: block; font: var(--t-label); }
 [data-shell='admin'] .side__period .progress { display: flex; flex-direction: column-reverse; gap: 4px; margin: 2px 0 4px; }
@@ -44,7 +44,7 @@
 [data-shell='admin'] .side__tools .side__error { flex-basis: 100%; }
 [data-shell='admin'] .side__tools .side__icon-btn, [data-shell='admin'] .side__tools .notif .notif-btn { width: 32px; height: 32px; }
 [data-shell='admin'] .side__icon-btn { display: grid; place-items: center; flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-on-dark-2); cursor: pointer; }
-[data-shell='admin'] .side__icon-btn:hover:not(:disabled) { background: rgb(255 255 255 / .08); color: var(--c-on-dark); }
+[data-shell='admin'] .side__icon-btn:hover:not(:disabled) { background: var(--c-on-dark-hover); color: var(--c-on-dark); }
 [data-shell='admin'] .side__icon-btn[aria-expanded='true'] { background: rgb(255 255 255 / .14); color: var(--c-on-dark); }
 [data-shell='admin'] .side__icon-btn:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 [data-shell='admin'] .side__lang-btn { font-size: 12px; font-weight: 700; letter-spacing: .04em; }
@@ -56,14 +56,14 @@
 [data-shell='admin'] .side__who-text b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-label); font-size: 13px; color: var(--c-on-dark); }
 [data-shell='admin'] .side__who-text small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t-cap); color: var(--c-on-dark-2); }
 [data-shell='admin'] .side__logout { padding: 0 12px; color: inherit; }
-[data-shell='admin'] .side__logout:hover:not(:disabled) { background: rgb(255 255 255 / .08); }
+[data-shell='admin'] .side__logout:hover:not(:disabled) { background: var(--c-on-dark-hover); }
 [data-shell='admin'] .side__acct { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 [data-shell='admin'] .side__error { margin: 0; font: var(--t-cap); color: var(--c-on-dark); }
 
 [data-shell='admin'] .side .notif-btn,
 [data-shell='admin'] .topbar .notif-btn { width: var(--hit); height: var(--hit); border-radius: var(--r-pill); color: var(--c-on-dark-2); }
 [data-shell='admin'] .side .notif-btn:hover,
-[data-shell='admin'] .topbar .notif-btn:hover { background: rgb(255 255 255 / .08); color: var(--c-on-dark); }
+[data-shell='admin'] .topbar .notif-btn:hover { background: var(--c-on-dark-hover); color: var(--c-on-dark); }
 [data-shell='admin'] .side .notif-btn:focus-visible,
 [data-shell='admin'] .topbar .notif-btn:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 [data-shell='admin'] .side .notif-btn svg,
@@ -126,7 +126,8 @@
   [data-shell='admin'] .page-head__crumbs { display: none; }
   [data-shell='admin'] .page-head { gap: var(--s-3); margin-bottom: var(--s-4); }
   [data-shell='admin'] .page-head h1 + .page-head__desc { margin-top: 2px; }
-  [data-shell='admin'] .shell__main { padding: 8px 8px calc(88px + env(safe-area-inset-bottom)); }
+  /* B0.18: bỏ 88px cố định — chỉ chừa vùng an toàn iPhone; thanh hàng loạt tự chừa qua --bulkbar-h (m1/base.css) */
+  [data-shell='admin'] .shell__main { padding: 8px 8px calc(var(--s-2) + env(safe-area-inset-bottom)); }
   [data-shell='admin'] .shell__panel { min-height: 0; padding: 16px; border-radius: var(--r-lg); }
 }
 
@@ -140,3 +141,6 @@
   [data-shell='admin'] .shell__main { padding: 0; }
   [data-shell='admin'] .shell__panel { min-height: 0; padding: 0; border-radius: 0; background: none; box-shadow: none; }
 }
+/* B0.16: nút trên nền tối đều có hover */
+[data-shell='admin'] .topbar__menu:hover, [data-shell='admin'] .topbar__avatar:hover, [data-shell='admin'] .side-sheet__close:hover { background: var(--c-on-dark-hover); }
+[data-shell='admin'] button.side__avatar:hover { box-shadow: 0 0 0 2px var(--c-on-dark-hover); }

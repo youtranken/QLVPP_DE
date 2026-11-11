@@ -2,6 +2,7 @@
 [data-shell='admin'] .ct-chips { display: flex; flex-wrap: wrap; gap: var(--s-2); }
 [data-shell='admin'] .ct-chip { display: inline-flex; align-items: center; gap: var(--s-2); height: 36px; padding: 0 16px; border: 0; border-radius: var(--r-pill); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-ink); font: var(--t-label); cursor: pointer; white-space: nowrap; }
 [data-shell='admin'] .ct-chip[aria-pressed='true'], [data-shell='admin'] .ct-chip[aria-checked='true'] { background: var(--c-sel); color: var(--c-on-sel); box-shadow: none; }
+[data-shell='admin'] .ct-chip:hover:not([aria-pressed='true'], [aria-checked='true']) { background: var(--c-surface-hover); box-shadow: inset 0 0 0 1px var(--c-line-strong); }
 [data-shell='admin'] .ct-chip:focus-visible { box-shadow: var(--focus); outline: none; }
 [data-shell='admin'] .ct-chip__n { color: var(--c-muted); font: var(--t-cap); }
 [data-shell='admin'] .ct-dot { flex: none; width: 10px; height: 10px; border-radius: var(--r-pill); }

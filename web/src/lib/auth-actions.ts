@@ -1,3 +1,4 @@
+import { queryClient } from '@/lib/api-client';
 import { navigateTo } from '@/lib/navigate';
 import { forgetAuth, rememberAuth, ssoLoginUrl, switchAccountUrl } from '@/lib/session-relogin';
 
@@ -47,6 +48,9 @@ export async function logout(csrfToken: string | null): Promise<boolean> {
   } catch {
     return false;
   }
+  // B0.21: dọn cache ở MỘT chỗ — hủy truy vấn đang chạy (chuông đếm, danh sách…) để không có 401 muộn kéo đi đăng nhập lại
+  await queryClient.cancelQueries();
+  queryClient.clear();
   forgetAuth();
   navigateTo('/');
   return true;

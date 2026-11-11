@@ -77,7 +77,9 @@
 [data-shell='admin'] .rg-head__text small { font: var(--t-cap); color: var(--c-muted); }
 [data-shell='admin'] .rg-step { width: 36px; height: 36px; border: 0; border-radius: var(--r-pill); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line-input); color: var(--c-ink-2); font: var(--t-body-l); cursor: pointer; }
 [data-shell='admin'] .rg-step:hover:not(:disabled) { background: var(--c-surface-hover); }
-[data-shell='admin'] .rg-step:disabled { color: var(--c-faint); cursor: default; }
+[data-shell='admin'] .rg-step { display: inline-grid; place-items: center; padding: 0; }
+/* B0.14: nút tắt theo quy ước .btn:disabled — đổi màu, không mờ đi như nút hỏng */
+[data-shell='admin'] .rg-step:disabled { background: var(--c-surface-2); box-shadow: none; color: var(--c-muted); cursor: not-allowed; }
 [data-shell='admin'] .rg-step:focus-visible { box-shadow: var(--focus); }
 [data-shell='admin'] .rg-lines { list-style: none; margin: 0; padding: 0; display: grid; }
 [data-shell='admin'] .rg-line { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: var(--s-3) 0; border-bottom: 1px solid var(--c-line); }

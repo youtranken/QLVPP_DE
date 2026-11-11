@@ -7,7 +7,7 @@
 [data-shell='member'] .rq-f-search:has(.search-clear) input { padding-right: calc(var(--s-7) + var(--s-3)); }
 [data-shell='member'] .rq-f-sort select { min-height: 44px; padding: 0 var(--s-3); border-radius: var(--r-pill); border: 1px solid var(--c-line-input); background: var(--c-surface); color: var(--c-ink); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 [data-shell='member'] .rq-f-chip { display: inline-flex; flex: none; align-items: center; gap: var(--s-2); min-height: 44px; padding: 0 var(--s-4); border-radius: var(--r-pill); border: 1px solid var(--c-line-input); background: var(--c-surface); color: var(--c-ink); font-family: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; }
-[data-shell='member'] .rq-f-chip:hover { border-color: var(--c-dark); }
+[data-shell='member'] .rq-f-chip:hover:not([aria-pressed='true']) { background: var(--c-surface-hover); border-color: var(--c-dark); }
 [data-shell='member'] .rq-f-chip[aria-pressed='true'] { background: var(--c-sel); border-color: var(--c-sel); color: var(--c-on-sel); }
 [data-shell='member'] .rq-f-cnt { font-size: 14px; font-weight: 700; opacity: .75; }
 [data-shell='member'] .rq-f-add { min-height: 44px; padding: 0 var(--s-4); border-radius: var(--r-pill); border: 1px dashed var(--c-line-strong); background: transparent; color: var(--c-ink); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }

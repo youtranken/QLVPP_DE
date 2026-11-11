@@ -11,7 +11,7 @@ const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' }
 const linkLabels = (nav: HTMLElement) =>
   within(nav)
     .getAllByRole('link')
-    .map((a) => a.getAttribute('title'));
+    .map((a) => a.querySelector('.side__label')?.textContent);
 
 afterEach(() => vi.unstubAllGlobals());
 

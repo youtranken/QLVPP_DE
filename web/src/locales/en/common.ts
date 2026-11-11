@@ -82,6 +82,7 @@ const common: Messages<typeof vi> = {
       toggleGroup: 'Collapse/expand group',
     },
     empty: '—',
+    emptyCell: 'None yet',
     roles: {
       member: 'Staff',
       admin: 'Admin team',

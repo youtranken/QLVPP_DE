@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { useMe } from '@/lib/me';
+import { useContext } from 'react';
+import { MeContext, useMe } from '@/lib/me';
 
 export interface NotificationView {
   id: string;
@@ -22,8 +23,11 @@ const PAGE = 20;
 const POLL_MS = 60_000;
 
 export function useUnreadCount(): number {
+  // B0.21: chỉ đếm khi đã có phiên (sau đăng xuất / ngoài khung đăng nhập thì không gọi)
+  const me = useContext(MeContext);
   const q = useQuery({
     queryKey: [...NOTIFICATIONS_KEY, 'unread'],
+    enabled: !!me,
     queryFn: () => apiFetch<NotificationPage>('/api/me/notifications?unread=true&limit=1'),
     refetchInterval: POLL_MS,
     refetchOnWindowFocus: true,

@@ -20,7 +20,7 @@ export function ReviewStatusTag({ status, note }: { status: LineView['review_sta
   const { t } = useTranslation();
   if (status === 'rejected') {
     const reason = note?.trim();
-    return <span className="tag tag--danger">{reason ? t('review.status.rejectedWhy', { reason }) : t('review.status.rejected')}</span>;
+    return <span className={reason ? 'tag tag--danger tag--wrap' : 'tag tag--danger'}>{reason ? t('review.status.rejectedWhy', { reason }) : t('review.status.rejected')}</span>;
   }
   if (status !== 'accepted' && status !== 'converted') return null;
   return <span className="tag tag--ok">{t(`review.status.${status}`)}</span>;

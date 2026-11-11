@@ -79,6 +79,7 @@ const common = {
       toggleGroup: 'Thu/mở nhóm',
     },
     empty: '—',
+    emptyCell: 'Chưa có',
     roles: {
       member: 'Nhân viên',
       admin: 'Hành chính',

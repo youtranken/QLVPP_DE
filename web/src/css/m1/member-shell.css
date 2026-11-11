@@ -43,3 +43,6 @@
 [data-shell='member'] .bottom-nav button[aria-expanded='true'], [data-shell='member'] .bottom-nav button[aria-current='page'] { background: var(--c-on-dark-current); color: var(--c-on-dark); }
 [data-shell='member'] .bottom-nav button:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 [data-shell='member'] .bottom-nav a svg, [data-shell='member'] .bottom-nav button svg { width: 24px; height: 24px; }
+/* B0.16: nút trên nền tối đều có hover */
+[data-shell='member'] .bottom-nav a:not([aria-current='page']):hover, [data-shell='member'] .bottom-nav button:not([aria-expanded='true'], [aria-current='page']):hover { background: var(--c-on-dark-hover); color: var(--c-on-dark); }
+[data-shell='member'] .m-top .m-lang button[aria-checked='false']:hover { background: var(--c-on-dark-hover); color: var(--c-on-dark); }

@@ -43,12 +43,13 @@
 [data-shell='admin'] .stepper { display: inline-grid; grid-template-columns: 28px minmax(32px, auto) 28px; align-items: center; height: 32px; padding: 0 2px; border-radius: var(--r-pill); background: var(--c-surface-2); }
 [data-shell='admin'] .stepper button { position: relative; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; line-height: 1; border: 0; border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); box-shadow: var(--e-1); cursor: pointer; }
 [data-shell='admin'] .stepper button::after { content: ''; position: absolute; inset: -8px; }
-[data-shell='admin'] .stepper button:disabled { color: var(--c-faint); box-shadow: none; background: transparent; cursor: default; }
+/* B0.14: nút +/− tắt đổi màu (muted, viền mảnh) thay vì gần như biến mất */
+[data-shell='admin'] .stepper button:disabled { color: var(--c-muted); box-shadow: inset 0 0 0 1px var(--c-line); background: transparent; cursor: not-allowed; }
 [data-shell='admin'] .stepper button:focus-visible { box-shadow: var(--focus); }
 [data-shell='admin'] .stepper input { width: 100%; min-width: 0; border: 0; background: transparent; text-align: center; font: var(--t-label); font-weight: 700; color: var(--c-ink); appearance: textfield; }
 
 [data-shell='admin'] .month-switch { display: inline-flex; align-items: center; gap: var(--s-2); height: 36px; padding: 0 var(--s-1); border: 0; border-radius: var(--r-pill); background: var(--c-surface); box-shadow: var(--e-1); }
-[data-shell='admin'] .month-switch button { width: 32px; height: 32px; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-ink-2); cursor: pointer; }
+[data-shell='admin'] .month-switch button { display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-ink-2); cursor: pointer; }
 [data-shell='admin'] .month-switch button:hover:not(:disabled) { background: var(--c-surface-hover); }
 [data-shell='admin'] .month-switch button:disabled { color: var(--c-faint); cursor: default; }
 [data-shell='admin'] .month-switch button:focus-visible { box-shadow: var(--focus); }
@@ -70,7 +71,7 @@
   [data-shell='admin'] .inline-number { min-height: var(--hit); }
 }
 
-[data-shell='admin'] .empty { display: grid; justify-items: center; gap: var(--s-2); padding: var(--s-8) var(--s-4); text-align: center; color: var(--c-muted); }
+[data-shell='admin'] .empty { display: grid; justify-items: center; gap: var(--s-2); padding: var(--s-6) var(--s-4); text-align: center; color: var(--c-muted); }
 [data-shell='admin'] .empty-title { font: var(--t-h3); color: var(--c-ink); }
 [data-shell='admin'] .empty-hint { font: var(--t-body); }
 [data-shell='admin'] .load-error { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-4); border-radius: var(--r-md); background: var(--c-danger-soft); box-shadow: inset 0 0 0 1px var(--c-danger-line); color: var(--c-danger); min-height: 64px; }
@@ -94,7 +95,7 @@
 [data-shell='admin'] .diff-note[data-tone='surplus'] { color: var(--c-muted); }
 [data-shell='admin'] input[type='number'] { appearance: textfield; -moz-appearance: textfield; }
 [data-shell='admin'] input[type='number']::-webkit-outer-spin-button, [data-shell='admin'] input[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-[data-shell='admin'] .empty-state { display: grid; place-items: center; width: 100%; min-height: 320px; padding: var(--s-7); border-radius: var(--r-lg); background: rgb(255 255 255 / 0.6); }
+[data-shell='admin'] .empty-state { display: grid; place-items: center; width: 100%; min-height: 200px; padding: var(--s-7); border-radius: var(--r-lg); background: rgb(255 255 255 / 0.6); }
 [data-shell='admin'] .empty-state__body { display: grid; justify-items: center; gap: var(--s-3); width: 100%; max-width: 480px; text-align: center; }
 [data-shell='admin'] .empty-state__title { margin: 0; font: var(--t-h3); color: var(--c-ink); }
 [data-shell='admin'] .empty-state__hint { margin: 0; font: var(--t-body); color: var(--c-muted); }

@@ -12,7 +12,7 @@
 .notif-item + .notif-item { border-top: 1px solid var(--line); }
 .notif-item > button { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 12px 14px; }
 .notif-item > button:hover { background: var(--card-2); }
-.notif-item.is-unread { background: var(--brand-soft); }
+.notif-item.is-unread { background: var(--c-acc-tint); }
 .notif-item.is-unread .notif-text { font-weight: 800; }
 .notif-text { display: block; color: var(--ink); font-size: 14px; }
 .notif-time { display: block; margin-top: 2px; color: var(--ink-2); font-size: 12px; }

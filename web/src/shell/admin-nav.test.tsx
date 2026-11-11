@@ -23,7 +23,7 @@ describe('Menu theo luồng chuẩn', () => {
     if (width === 390) await userEvent.click(await screen.findByRole('button', { name: 'Mở menu quản lý' }));
     const monthly = within(await screen.findByRole('navigation', { name: 'Menu quản lý' })).getByRole('group', { name: 'Hằng tháng' });
     const links = within(monthly).getAllByRole('link');
-    expect(links.map((a) => a.getAttribute('title'))).toEqual(MONTHLY);
+    expect(links.map((a) => a.querySelector('.side__label')?.textContent)).toEqual(MONTHLY);
     expect(links.map((a) => a.getAttribute('href'))).toEqual(MONTHLY_PATHS);
     expect(within(sideNav()).queryByRole('group', { name: 'Xem lại sau' })).toBeNull();
     expect(within(sideNav()).queryByRole('button', { name: 'Xem lại sau' })).toBeNull();

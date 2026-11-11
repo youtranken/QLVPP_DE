@@ -68,7 +68,7 @@
   [data-shell='admin'] .table-stack tbody tr:not(.dt-group) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 16px; border-bottom: 1px solid var(--c-line); }
   [data-shell='admin'] .table-stack tbody tr:not(.dt-group):last-child { border-bottom: 0; }
   [data-shell='admin'] .table-stack td { display: inline-flex; flex: 0 1 auto; align-items: center; gap: 8px; min-width: 0; max-width: 100%; height: auto; padding: 0; border: 0; text-align: left; }
-  [data-shell='admin'] .table-stack td:empty { display: none; }
+  [data-shell='admin'] .table-stack td:empty, [data-shell='admin'] .table-stack td[data-empty] { display: none; }
   [data-shell='admin'] .table-stack td.sel { flex: none; width: auto; }
   [data-shell='admin'] .table-stack td:first-child:not(.sel),
   [data-shell='admin'] .table-stack td.sel + td,
@@ -84,3 +84,6 @@
   [data-shell='admin'] .table-stack.is-sorting tbody tr:not(.dt-group) { position: relative; min-height: calc(var(--hit) * 2 + 24px); align-content: center; padding-left: calc(var(--hit) + 16px); }
   [data-shell='admin'] .table-stack.is-sorting tbody td.reorder-col { position: absolute; top: 50%; left: 8px; width: auto; transform: translateY(-50%); }
 }
+/* B0.19: ô tự vẽ trả về rỗng ở cột có tên → "—" mờ (chữ thay thế rỗng: đọc màn hình bỏ qua); dạng thẻ ≤767 vẫn ẩn ô trống */
+[data-shell='admin'] .table td[data-label]:not([data-label=''], [data-empty]):empty::before { content: '—'; content: '—' / ''; color: var(--c-muted); }
+[data-shell='admin'] .table td[data-empty] > [aria-hidden='true'] { color: var(--c-muted); }

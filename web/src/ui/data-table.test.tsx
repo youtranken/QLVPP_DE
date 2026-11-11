@@ -204,3 +204,35 @@ describe('DataTable', () => {
     expect(within(rows[1]).getAllByRole('cell')[0]).toHaveTextContent('apple');
   });
 });
+
+describe('DataTable ô trống (B0.19)', () => {
+  it('ô dữ liệu không có giá trị → td[data-empty] hiện "—" (aria-hidden) + chữ ẩn "Chưa có"; cột không tên để trống', () => {
+    const cols: ColumnDef<{ name: string; note?: string }>[] = [
+      { accessorKey: 'name', header: 'Tên' },
+      { accessorKey: 'note', header: 'Ghi chú' },
+      { id: 'act', header: '', cell: () => null },
+    ];
+    renderWithI18n(<DataTable data={[{ name: 'Bút' }, { name: 'Giấy', note: 'A4' }]} columns={cols} emptyText="Trống" />);
+    const [first, second] = screen.getAllByRole('row').slice(1);
+    const note = within(first).getAllByRole('cell')[1];
+    expect(note).toHaveAttribute('data-empty');
+    expect(within(note).getByText('—')).toHaveAttribute('aria-hidden', 'true');
+    expect(within(note).getByText('Chưa có')).toHaveClass('sr-only');
+    const act = within(first).getAllByRole('cell')[2];
+    expect(act).not.toHaveAttribute('data-empty');
+    expect(act).toBeEmptyDOMElement();
+    expect(within(second).getAllByRole('cell')[1]).toHaveTextContent('A4');
+    expect(within(second).getAllByRole('cell')[1]).not.toHaveAttribute('data-empty');
+  });
+
+  it('ô tự vẽ (cell riêng) giữ nguyên nội dung kể cả khi giá trị trống', () => {
+    const cols: ColumnDef<{ name: string; note?: string }>[] = [
+      { accessorKey: 'name', header: 'Tên' },
+      { accessorKey: 'note', header: 'Ghi chú', cell: () => <button type="button">Thêm ghi chú</button> },
+    ];
+    renderWithI18n(<DataTable data={[{ name: 'Bút' }]} columns={cols} emptyText="Trống" />);
+    const note = within(screen.getAllByRole('row')[1]).getAllByRole('cell')[1];
+    expect(note).not.toHaveAttribute('data-empty');
+    expect(within(note).getByRole('button', { name: 'Thêm ghi chú' })).toBeInTheDocument();
+  });
+});
