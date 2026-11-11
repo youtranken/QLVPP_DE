@@ -92,3 +92,40 @@ describe('DialogCloseButton', () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 });
+
+describe('Dialog lồng (D23)', () => {
+  it('hộp mở sau nằm sau trong DOM và được đánh dấu data-stacked; hộp đầu không; Esc chỉ đóng hộp trên', async () => {
+    const outer = vi.fn();
+    const inner = vi.fn();
+    renderWithI18n(
+      <Dialog open onOpenChange={outer}>
+        <DialogTitle>Hộp ngoài</DialogTitle>
+        <Dialog open onOpenChange={inner}>
+          <DialogTitle>Hộp trong</DialogTitle>
+        </Dialog>
+      </Dialog>,
+    );
+    const [first, second] = screen.getAllByRole('dialog', { hidden: true });
+    expect(first).toHaveAccessibleName('Hộp ngoài');
+    expect(second).toHaveAccessibleName('Hộp trong');
+    // Cùng z-index → thứ tự DOM quyết định lớp trên: lớp mờ + khung của hộp trong đứng sau hộp ngoài
+    expect(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    expect(backdrops).toHaveLength(2);
+    expect(first.compareDocumentPosition(backdrops[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(first).not.toHaveAttribute('data-stacked');
+    expect(second).toHaveAttribute('data-stacked');
+    await userEvent.keyboard('{Escape}');
+    expect(inner).toHaveBeenCalledWith(false);
+    expect(outer).not.toHaveBeenCalled();
+  });
+
+  it('base.css: .modal-backdrop và .dialog-viewport cùng z-index 50, lớp mờ không còn màu xanh rêu cũ', async () => {
+    const { readFileSync } = await import('node:fs');
+    const css = readFileSync(`${process.cwd()}/src/css/base.css`, 'utf8');
+    const z = (sel: string) => new RegExp(`^\\${sel} \\{[^}]*z-index: (\\d+)`, 'm').exec(css)?.[1];
+    expect(z('.modal-backdrop')).toBe('50');
+    expect(z('.dialog-viewport')).toBe('50');
+    expect(css).not.toContain('rgba(20, 35, 28, .45)');
+  });
+});

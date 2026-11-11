@@ -54,15 +54,25 @@ a { color: var(--brand-ink); }
 /* Thẻ "Sắp có" cho màn của Plan sau */
 
 /* Dialog (Radix) */
-.modal-backdrop { position: fixed; inset: 0; background: rgba(20, 35, 28, .45); z-index: 50; }
-.dialog-viewport { position: fixed; inset: 0; display: grid; place-items: center; padding: 16px; z-index: 51; pointer-events: none; }
-.sheet { pointer-events: auto; width: min(520px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: var(--card); border-radius: 18px; box-shadow: 0 20px 60px rgba(20, 35, 28, .2); }
+/* D23 + B0.10: lớp mờ và khung hộp CÙNG z-index 50 — hộp mở sau nằm sau trong DOM nên tự nằm trên, bao nhiêu tầng cũng đúng.
+   Màu lớp mờ theo .ovp-backdrop (thay xanh rêu cũ rgba(20,35,28,.45)) */
+.modal-backdrop { position: fixed; inset: 0; background: rgb(14 42 51 / .32); z-index: 50; }
+.dialog-viewport { position: fixed; inset: 0; display: grid; place-items: center; padding: 16px; z-index: 50; pointer-events: none; }
+.sheet { pointer-events: auto; width: min(520px, 100%); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow: auto; background: var(--card); border-radius: 18px; box-shadow: 0 20px 60px rgba(20, 35, 28, .2); }
 .sheet-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px 8px; }
 .sheet-title { flex: 1; font-size: 18px; font-weight: 800; }
 .sheet-close { width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--ink-2); }
 .sheet-close:hover { background: var(--card-2); }
 .sheet-body { padding: 8px 20px 16px; display: grid; gap: 12px; color: var(--ink-2); }
-.sheet-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px 16px; }
+.sheet-footer { position: sticky; bottom: 0; display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px 16px; background: var(--c-surface); }
+/* Hộp mở chồng lên hộp khác: thêm viền mảnh để tách khỏi hộp bên dưới */
+.sheet[data-stacked] { box-shadow: 0 0 0 1px var(--c-line-strong), var(--e-5); }
+@media (max-width: 767px) {
+  .sheet-footer { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+  /* Nút X giữ hình, chỉ nới vùng bấm */
+  .sheet-close { position: relative; }
+  .sheet-close::after { content: ''; position: absolute; inset: -6px; }
+}
 
 /* Bảng dùng chung */
 .table-wrap { overflow-x: auto; }

@@ -8,6 +8,9 @@
 [data-shell='admin'] .sheet-close:focus-visible { box-shadow: var(--focus); }
 [data-shell='admin'] .sheet-body { display: grid; gap: var(--s-3); padding: 8px 24px; color: var(--c-ink-2); font: var(--t-body); }
 [data-shell='admin'] .sheet-footer { display: flex; align-items: center; justify-content: flex-end; gap: var(--s-2); padding: 16px 24px 24px; border-top: 0; }
+[data-shell='admin'] .sheet[data-stacked] { box-shadow: 0 0 0 1px var(--c-line-strong), var(--e-5); }
+/* B0.11: nút ghost trong chân hộp ("Hủy", "Ở lại", "Quay lại") có viền mảnh để không trông như chữ trơn */
+[data-shell='admin'] .sheet-footer .btn--ghost { --btn-sh: inset 0 0 0 1px var(--c-line-strong); --btn-sh-hover: inset 0 0 0 1px var(--c-line-strong); --btn-bg-hover: var(--c-surface-hover); }
 @keyframes m1-dialog-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
 
 [data-shell='admin'] .drawer-eyebrow { display: block; color: var(--c-muted); font: var(--t-cap); }
@@ -16,7 +19,7 @@
 /* !important: Dialog đặt max-width inline theo prop width/maxWidth, trên điện thoại phải phủ toàn màn */
 @media (max-width: 767px) {
   [data-shell='admin'] .dialog-viewport { place-items: end stretch; padding: 0; }
-  [data-shell='admin'] .sheet { max-width: none !important; max-height: 92vh; border-radius: var(--r-xl) var(--r-xl) 0 0; }
+  [data-shell='admin'] .sheet { max-width: none !important; max-height: 92vh; max-height: 92dvh; border-radius: var(--r-xl) var(--r-xl) 0 0; }
   [data-shell='admin'] .sheet::before { content: ''; display: block; width: 40px; height: 4px; margin: 8px auto 0; border-radius: var(--r-pill); background: var(--c-line-strong); }
   [data-shell='admin'] .sheet .sheet-header { padding-top: 12px; }
   [data-shell='admin'] .sheet .sheet-footer { position: sticky; bottom: 0; flex-wrap: wrap; padding-bottom: calc(16px + env(safe-area-inset-bottom)); background: var(--c-surface); }

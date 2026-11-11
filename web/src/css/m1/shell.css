@@ -86,7 +86,7 @@
 [data-shell='admin'] .topbar__avatar { display: grid; place-items: center; flex: none; width: var(--hit); height: var(--hit); padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; cursor: pointer; }
 [data-shell='admin'] .topbar__avatar-face { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--r-pill); background: var(--g2); color: var(--g2-ink); font: var(--t-cap); font-weight: 800; }
 [data-shell='admin'] .topbar__avatar:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
-[data-shell='admin'] .side-sheet-viewport { position: fixed; inset: 0; z-index: 51; display: flex; pointer-events: none; }
+[data-shell='admin'] .side-sheet-viewport { position: fixed; inset: 0; z-index: 50; display: flex; pointer-events: none; }
 [data-shell='admin'] .side-sheet { display: flex; flex-direction: column; width: min(320px, 88vw); height: 100%; padding-top: env(safe-area-inset-top); background: linear-gradient(160deg, var(--c-shell-a) 0%, var(--c-shell-b) 100%); color: var(--c-on-dark-2); pointer-events: auto; box-shadow: var(--e-5); outline: none; animation: m1-side-in var(--d-3) var(--ease-out); }
 [data-shell='admin'] .side-sheet__head { display: flex; align-items: center; gap: 12px; padding: 12px 8px 8px 20px; border-bottom: 1px solid var(--c-glass-line); }
 [data-shell='admin'] .side-sheet__head .side__logo { display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--r-sm); background: var(--c-logo-bg); color: var(--c-ink); }

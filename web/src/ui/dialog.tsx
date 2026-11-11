@@ -1,5 +1,5 @@
 import * as RD from '@radix-ui/react-dialog';
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode, RefObject, SVGProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { discardOptions, useOptionalConfirm } from '@/ui/confirm-context';
@@ -70,6 +70,14 @@ export function Dialog({
   const blockOutside = dismissible && closeOnOutside ? undefined : (e: Event) => e.preventDefault();
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
   const opener = useRef<HTMLElement | null>(null);
+  const content = useRef<HTMLDivElement>(null);
+  // D23: hộp mở khi đã có hộp khác đang mở → đánh dấu để CSS thêm viền tách lớp (z-index bằng nhau, thứ tự DOM quyết định lớp trên)
+  const [stacked, setStacked] = useState(false);
+  useLayoutEffect(() => {
+    if (!open) return;
+    const others = Array.from(document.querySelectorAll('[role="dialog"]')).filter((el) => el !== content.current);
+    setStacked(others.length > 0);
+  }, [open]);
   const handleOpenChange = (next: boolean) => {
     if (next || !dirty || !askConfirm) {
       onOpenChange(next);
@@ -85,6 +93,8 @@ export function Dialog({
         <RD.Overlay className={overlayClassName} />
         <div className={viewportClassName}>
           <RD.Content
+            ref={content}
+            data-stacked={stacked || undefined}
             className={className}
             style={maxWidth ? { maxWidth } : undefined}
             onEscapeKeyDown={block}

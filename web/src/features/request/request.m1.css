@@ -103,7 +103,7 @@
 
 /* Sheet phiếu (≤ 900): bo trên 28, cuộn danh sách, nút Lưu ở đáy, chừa vùng an toàn */
 [data-shell='member'] .rq-sheet-backdrop { background: var(--c-scrim); }
-[data-shell='member'] .rq-sheet-viewport { position: fixed; inset: 0; z-index: 51; display: flex; align-items: flex-end; pointer-events: none; }
+[data-shell='member'] .rq-sheet-viewport { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; pointer-events: none; }
 [data-shell='member'] .rq-sheet { pointer-events: auto; width: 100%; max-height: min(88dvh, calc(100dvh - 24px)); display: flex; flex-direction: column; border-radius: 28px 28px 0 0; background: var(--c-cart); border-top: 1px solid var(--c-cart-line); box-shadow: 0 -18px 40px rgb(var(--sh-ink) / .25); color: var(--c-ink); overflow: hidden; animation: rq-sheet-in var(--d-3) var(--ease-out); }
 [data-shell='member'] .rq-cart--sheet { position: static; flex: 1 1 auto; max-width: none; max-height: none; min-height: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; padding: var(--s-5) var(--s-4) calc(var(--s-4) + env(safe-area-inset-bottom)); }
 [data-shell='member'] .rq-cart--sheet .rq-lines { flex: 1 1 auto; max-height: none; overscroll-behavior: contain; }
