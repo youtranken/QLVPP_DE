@@ -55,6 +55,7 @@ const common = {
       decrease: 'Bớt {{label}}',
       increase: 'Thêm {{label}}',
     },
+    searchClear: 'Xóa chữ tìm',
     filter: {
       hint: 'Lọc',
       active: 'Đang lọc: {{label}} · {{count}}',

@@ -2,8 +2,9 @@
 [data-shell='member'] .rq-f { display: flex; flex-direction: column; gap: var(--s-3); padding-bottom: var(--s-3); min-width: 0; }
 [data-shell='member'] .rq-f-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
 [data-shell='member'] .rq-f-search { position: relative; flex: 1 1 280px; max-width: 440px; min-width: 0; display: block; }
-[data-shell='member'] .rq-f-search svg { position: absolute; left: 16px; top: 14px; width: 18px; height: 18px; color: var(--c-ink-2); }
+[data-shell='member'] .rq-f-search > svg { position: absolute; left: 16px; top: 14px; width: 18px; height: 18px; color: var(--c-ink-2); }
 [data-shell='member'] .rq-f-search input { width: 100%; box-sizing: border-box; min-height: 46px; padding: 0 var(--s-4) 0 calc(var(--s-4) + var(--s-6) + var(--s-1)); border-radius: var(--r-pill); border: 1px solid var(--c-line-input); background: var(--c-surface); color: var(--c-ink); font-family: inherit; font-size: 14px; font-weight: 500; }
+[data-shell='member'] .rq-f-search:has(.search-clear) input { padding-right: calc(var(--s-7) + var(--s-3)); }
 [data-shell='member'] .rq-f-sort select { min-height: 44px; padding: 0 var(--s-3); border-radius: var(--r-pill); border: 1px solid var(--c-line-input); background: var(--c-surface); color: var(--c-ink); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 [data-shell='member'] .rq-f-chip { display: inline-flex; flex: none; align-items: center; gap: var(--s-2); min-height: 44px; padding: 0 var(--s-4); border-radius: var(--r-pill); border: 1px solid var(--c-line-input); background: var(--c-surface); color: var(--c-ink); font-family: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; }
 [data-shell='member'] .rq-f-chip:hover { border-color: var(--c-dark); }
@@ -16,9 +17,8 @@
 [data-shell='member'] .rq-f-empty { display: flex; flex-direction: column; align-items: center; gap: var(--s-1); padding: var(--s-8) var(--s-4); border-radius: 20px; background: var(--c-veil); color: var(--c-ink); text-align: center; }
 [data-shell='member'] .rq-f-empty span { color: var(--c-ink-2); font-size: 14px; }
 [data-shell='member'] .rq-f-clear { min-height: 44px; margin-top: var(--s-3); padding: 0 var(--s-5); border: 0; border-radius: var(--r-pill); background: var(--c-dark); color: var(--c-on-dark); font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
-[data-shell='member'] .rq-f button:focus-visible,
-[data-shell='member'] .rq-f input:focus-visible,
-[data-shell='member'] .rq-f select:focus-visible { outline: 2px solid var(--c-dark); outline-offset: 2px; }
+[data-shell='member'] .rq-f button:focus-visible { outline: 2px solid var(--c-dark); outline-offset: 2px; box-shadow: none; }
+/* Ô tìm / ô chọn: vòng focus chung của ô nhập (base.css), không dùng outline đen */
 
 @media (max-width: 900px) {
   [data-shell='member'] .rq-f-search { flex-basis: 100%; max-width: none; }

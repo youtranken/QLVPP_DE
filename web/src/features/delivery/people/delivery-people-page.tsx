@@ -8,6 +8,7 @@ import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlPatch } from '@/lib/use-url-patch';
 import { OverlayPanel } from '@/ui/overlay-panel';
 import { Icon } from '@/ui/icon';
+import { SearchClear } from '@/ui/search-clear';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
@@ -127,6 +128,7 @@ function PeopleBoard({ ym }: { ym: string }) {
             value={q}
             onChange={(e) => update({ q: e.target.value || null }, true)}
           />
+          <SearchClear value={q} onClear={() => update({ q: null }, true)} inputRef={searchRef} />
         </div>
         <div className="pp-tabs">
           <Segmented

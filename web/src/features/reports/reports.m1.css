@@ -21,8 +21,8 @@
 [data-shell='admin'] .bc-order { display: inline-grid; grid-template-columns: auto auto; justify-content: end; align-items: center; gap: 4px var(--s-2); }
 [data-shell='admin'] .bc-order__input { grid-column: 2; width: 96px; height: 36px; padding: 0 12px; border: 0; border-radius: var(--r-md); box-shadow: inset 0 0 0 1px var(--c-line-input); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); text-align: right; }
 [data-shell='admin'] .bc-order.is-edited .bc-order__input { background: var(--c-warn-soft); }
-[data-shell='admin'] .bc-order__input:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--c-acc), 0 0 0 3px var(--c-acc-soft); }
-[data-shell='admin'] .bc-order__input[aria-invalid='true'] { box-shadow: inset 0 0 0 2px var(--c-danger); }
+[data-shell='admin'] input.bc-order__input:focus { outline: none; box-shadow: var(--focus-field); }
+[data-shell='admin'] input.bc-order__input[aria-invalid='true'] { box-shadow: inset 0 0 0 2px var(--c-danger); }
 [data-shell='admin'] .bc-order__error { grid-column: 1 / -1; margin: 0; font: var(--t-sm); color: var(--c-danger); text-align: right; }
 [data-shell='admin'] .bc-snap-error { align-items: center; flex-wrap: wrap; }
 @media (max-width: 767px) {

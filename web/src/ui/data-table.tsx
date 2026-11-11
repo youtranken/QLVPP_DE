@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -17,6 +17,7 @@ import { EmptyState, Loading } from '@/ui/load-state';
 import type { EmptyArtKind } from '@/ui/empty-art';
 import { GroupHeaderRow, type GroupBy, type RowGroup } from '@/ui/data-table-group';
 import { BodyRow, SelectBox, type RowProps, type Selection } from '@/ui/data-table-row';
+import { SearchClear } from '@/ui/search-clear';
 
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -248,18 +249,23 @@ function groupRows<T>(rows: Row<T>[], keyOf: (row: T) => string): RowGroup<T>[] 
 // Debounce 200 ms để không lọc lại mỗi phím trên bảng lớn
 function SearchBox({ onChange, placeholder }: { onChange: (v: string) => void; placeholder: string }) {
   const [text, setText] = useState('');
+  const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const id = setTimeout(() => onChange(text), 200);
     return () => clearTimeout(id);
   }, [text, onChange]);
   return (
-    <input
-      className="table-search"
-      type="search"
-      value={text}
-      placeholder={placeholder}
-      aria-label={placeholder}
-      onChange={(e) => setText(e.target.value)}
-    />
+    <span className="search-wrap table-search-wrap">
+      <input
+        ref={ref}
+        className="table-search"
+        type="search"
+        value={text}
+        placeholder={placeholder}
+        aria-label={placeholder}
+        onChange={(e) => setText(e.target.value)}
+      />
+      <SearchClear className="search-box-x" value={text} onClear={() => setText('')} inputRef={ref} />
+    </span>
   );
 }

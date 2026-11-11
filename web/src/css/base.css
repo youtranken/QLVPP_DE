@@ -30,7 +30,7 @@ a { color: var(--brand-ink); }
 .field { display: grid; gap: 8px; }
 .field-label { font-weight: 800; font-size: 14px; }
 .field input { width: 100%; height: 48px; padding: 0 16px; border: 2px solid var(--line); border-radius: 12px; background: var(--card); font-size: 16px; font-weight: 600; }
-.field input:focus { border-color: var(--brand); }
+.field input:focus { border-color: var(--c-acc); box-shadow: var(--focus-field-halo); }
 
 /* Nhóm chọn dạng viên (ngôn ngữ) */
 .seg { display: inline-flex; padding: 4px; gap: 2px; border-radius: 999px; background: var(--card-2); border: 1px solid var(--line); }
@@ -89,3 +89,25 @@ a { color: var(--brand-ink); }
 .entry-card.is-warn .entry-ic { background: var(--warn-soft); color: var(--warn); }
 .entry-card.is-danger .entry-ic { background: var(--danger-soft); color: var(--danger); }
 .entry-actions { width: 100%; display: grid; gap: 12px; margin-top: 4px; }
+
+/* ===== Vòng 5 — nền chung (B0) ===== */
+/* B0.1: một vòng focus cho mọi ô nhập. Ô có border 1px: viền teal + 1px inset = 2px; ô vẽ viền bằng box-shadow tự khai --focus-field */
+:is([data-shell], .login-page, .entry-page) :is(input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='color']), select, textarea):focus { outline: none; border-color: var(--c-acc); box-shadow: var(--focus-field-bordered); }
+/* Ô số nằm trong viên − số + (không border): vòng vẽ bên trong */
+:is([data-shell]) :is(.stepper, .rq-card-stepper, .rq-line-stepper) input:focus { border-radius: var(--r-sm); box-shadow: var(--focus-field); }
+/* B0.1: ẩn ✕ và phần trang trí của Chrome trong ô tìm — app có nút xóa riêng (ui/search-clear) */
+input[type='search']::-webkit-search-cancel-button,
+input[type='search']::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
+.search-clear { position: relative; display: grid; place-items: center; flex: none; width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--r-pill); background: var(--c-acc-soft); color: var(--c-ink-2); cursor: pointer; }
+.search-clear:hover { background: var(--c-cta-hover); color: var(--c-acc); }
+.search-clear:focus-visible { outline: none; box-shadow: var(--focus); }
+.search-clear::after { content: ''; position: absolute; inset: -8px; }
+/* Ô tìm có icon kính lúp nằm tuyệt đối bên trái (SearchBox): nút xóa nằm tuyệt đối bên phải, ô chừa chỗ */
+.search-box-x { position: absolute; top: 50%; right: var(--s-2); transform: translateY(-50%); }
+.search-wrap { position: relative; display: block; }
+.search-wrap > input { width: 100%; padding-right: calc(var(--s-7) + var(--s-3)); }
+/* B0.2: chế độ tương phản cao (Windows) không vẽ box-shadow → dùng outline hệ thống */
+@media (forced-colors: active) {
+  :focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
+  :where(input, select, textarea):focus { outline: 2px solid CanvasText; }
+}

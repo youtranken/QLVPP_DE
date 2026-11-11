@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Icon } from '@/ui/icon';
+import { SearchClear } from '@/ui/search-clear';
 
 interface SearchProps {
   value: string;
@@ -44,6 +45,7 @@ export function Toolbar({ lead, search, children }: { lead?: ReactNode; search?:
             value={search.value}
             onChange={(e) => search.onChange(e.target.value)}
           />
+          <SearchClear value={search.value} onClear={() => search.onChange('')} inputRef={ref} />
         </label>
       )}
       {children}

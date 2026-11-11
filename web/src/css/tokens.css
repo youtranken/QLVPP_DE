@@ -7,7 +7,7 @@
   --t1: #e0f2fe; --t1-ink: #0369a1; --t2: #fef3c7; --t2-ink: #b45309; --t3: #d1fae5; --t3-ink: #047857; --t4: #ede9fe; --t4-ink: #6d28d9;
   --side: #0f2a21; --side-ink: #b7cfc4;
   --font-app: 'Be Vietnam Pro', system-ui, -apple-system, "Segoe UI", sans-serif;
-  --ring: 0 0 0 3px rgba(5,150,105,.35);
+  --ring: var(--focus); /* B0.2: nút, chip, link dùng chung vòng --focus của bảng màu v2 */
 }
 * { box-sizing: border-box; } body { margin: 0; color: var(--ink); background: var(--bg); line-height: 1.45; -webkit-font-smoothing: antialiased; }
 h1, h2, h3, p { margin: 0; } button, input, textarea, select { font: inherit; color: inherit; } button { cursor: pointer; }

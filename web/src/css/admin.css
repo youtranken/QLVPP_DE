@@ -1,6 +1,6 @@
 /* Trang quản lý: thanh công cụ + khung bảng + form gọn (bo 6/8) */
 .a-input, .ff input, .ff select { height: 32px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--card); min-width: 0; }
-.ff input:focus, .ff select:focus, .a-input:focus { border-color: var(--brand); }
+.ff input:focus, .ff select:focus, .a-input:focus { border-color: var(--c-acc); }
 .a-check-inline { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); }
 .table th.r, .table td.r { text-align: right; }
 .table tr.is-inactive td { color: var(--ink-3); }

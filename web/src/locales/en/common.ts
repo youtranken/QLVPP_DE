@@ -58,6 +58,7 @@ const common: Messages<typeof vi> = {
       decrease: 'Decrease {{label}}',
       increase: 'Increase {{label}}',
     },
+    searchClear: 'Clear search',
     filter: {
       hint: 'Filter',
       active: 'Filtering: {{label}} · {{count}}',

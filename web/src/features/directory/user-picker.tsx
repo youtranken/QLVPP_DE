@@ -1,7 +1,8 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { userLabel, useUserSearch, type DirectoryUser } from '@/features/directory/directory.api';
+import { SearchClear } from '@/ui/search-clear';
 import '@/features/directory/user-picker.css';
 
 const SEARCH_DEBOUNCE_MS = 250;
@@ -39,6 +40,7 @@ export function UserPicker({
   const noteId = `${id}-note`;
   const note = error ?? hint;
   const [text, setText] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
   const users = useUserSearch(search.trim());
 
@@ -62,23 +64,27 @@ export function UserPicker({
         </div>
       ) : (
         <>
-          <input
-            className="a-input"
-            type="search"
-            aria-label={searchLabel}
-            placeholder={t('directory.picker.searchHint')}
-            aria-describedby={note ? noteId : undefined}
-            aria-invalid={error ? true : undefined}
-            aria-required={required || undefined}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            // Ô tìm hay nằm trong form khác (xuất lẻ): Enter không tự gửi form, chỉ form nào muốn mới nhận qua onEnter
-            onKeyDown={(e) => {
-              if (e.key !== 'Enter') return;
-              e.preventDefault();
-              onEnter?.();
-            }}
-          />
+          <span className="search-wrap">
+            <input
+              ref={inputRef}
+              className="a-input"
+              type="search"
+              aria-label={searchLabel}
+              placeholder={t('directory.picker.searchHint')}
+              aria-describedby={note ? noteId : undefined}
+              aria-invalid={error ? true : undefined}
+              aria-required={required || undefined}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              // Ô tìm hay nằm trong form khác (xuất lẻ): Enter không tự gửi form, chỉ form nào muốn mới nhận qua onEnter
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                onEnter?.();
+              }}
+            />
+            <SearchClear className="search-box-x" value={text} onClear={() => setText('')} inputRef={inputRef} />
+          </span>
           {(resultsWhenEmpty || search.trim() !== '') && (
             <ul className="user-picker-list" aria-label={t('directory.picker.results')} aria-busy={users.isFetching}>
               {users.data?.items.length === 0 && <li className="user-picker-empty">{t('directory.picker.empty')}</li>}

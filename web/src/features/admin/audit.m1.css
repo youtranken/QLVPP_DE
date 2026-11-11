@@ -1,6 +1,6 @@
 [data-shell='admin'] .au-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); align-items: start; padding: var(--s-4); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); }
 [data-shell='admin'] .au-filters input[type='text'], [data-shell='admin'] .au-filters select { width: 100%; min-height: var(--hit); padding: 0 12px; border-radius: var(--r-md); border: 1px solid var(--c-line-input); background: var(--c-surface); color: var(--c-ink); font: var(--t-body); }
-[data-shell='admin'] .au-filters input:focus-visible, [data-shell='admin'] .au-filters select:focus-visible { outline: none; border-color: var(--c-acc); box-shadow: 0 0 0 3px var(--c-acc-soft); }
+[data-shell='admin'] .au-filters input:focus, [data-shell='admin'] .au-filters select:focus { outline: none; border-color: var(--c-acc); box-shadow: var(--focus-field-bordered); }
 [data-shell='admin'] .au-actor, [data-shell='admin'] .au-action-field, [data-shell='admin'] .au-filter-actions { grid-column: span 2; }
 [data-shell='admin'] .au-action-field .select__box { display: flex; }
 [data-shell='admin'] .au-filters .select select { padding-right: var(--s-7); appearance: none; }
