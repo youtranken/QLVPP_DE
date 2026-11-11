@@ -160,7 +160,7 @@ export function ReviewActions({ line, context, sent, hideStatus = false, variant
         />
       )}
       {open === 'convert' && (
-        <ConvertDialog line={line} who={context?.who} warning={sentWarning('buy')} onSubmit={(item) => send({ action: 'convert', item })} onClose={close} />
+        <ConvertDialog line={line} warning={sentWarning('buy')} onSubmit={(item) => send({ action: 'convert', item })} onClose={close} />
       )}
       {open === 'reject' && (
         <RejectDialog name={name} warning={sentWarning('skip')} onSubmit={(n) => send({ action: 'reject', note: n })} onClose={close} />

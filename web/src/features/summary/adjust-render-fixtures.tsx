@@ -22,6 +22,8 @@ export const SENT = {
   sent: { id: 's-1', kind: 'print', created_at: '2026-11-05T15:12:00.000Z', items_count: 3, units_total: 15, replaces: null, data: {} },
 };
 
+export const ADJUST_CATEGORY = { id: 'c-1', name: 'Văn phòng', name_en: null, sort_order: 0, active: true };
+
 export function stubAdjust({
   views = [adminRequest()],
   items = ADMIN_ITEMS,
@@ -40,6 +42,7 @@ export function stubAdjust({
     if (url === '/api/admin/requests/r-1') return jsonResponse(200, views[Math.min(loads++, views.length - 1)]);
     if (url === '/api/admin/requests/r-1/lines') return put(JSON.parse(String(init?.body)));
     if (url === '/api/admin/items') return jsonResponse(200, items);
+    if (url.startsWith('/api/item-categories')) return jsonResponse(200, [ADJUST_CATEGORY]);
     if (url === '/api/admin/lines/l-tape/review') return review();
     if (url === '/api/admin/periods/2026-10/send-state') return jsonResponse(200, send);
     return jsonResponse(200, []);

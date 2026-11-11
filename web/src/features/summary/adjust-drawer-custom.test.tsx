@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { reviewResult } from '@/features/review/review-fixtures';
 import { adminRequest } from './adjust-fixtures';
-import { less, loadCalls, pick, renderDrawer, row, saveButton, stubAdjust } from './adjust-render-fixtures';
+import { ADJUST_CATEGORY, less, loadCalls, pick, renderDrawer, row, saveButton, stubAdjust } from './adjust-render-fixtures';
+
+const CATEGORY = ADJUST_CATEGORY.name;
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -87,14 +89,13 @@ describe('AdjustDrawer — món ngoài danh mục', () => {
     expect(JSON.parse(String(call[1].body)).lines[2]).toEqual({ id: 'l-tape', qty: 2, expected_qty: 2 });
   });
 
-  it('Thêm vào danh mục (món có sẵn) → dòng bỏ nhãn "ngoài danh mục" ngay, không tải lại phiếu', async () => {
+  it('Thêm vào danh mục → dòng bỏ nhãn "ngoài danh mục" ngay, không tải lại phiếu', async () => {
     const clip = facts('Kẹp giấy 33 mm', 'hop');
     const f = stubAdjust({ review: () => jsonResponse(200, reviewResult('converted', { id: 'l-tape', item_id: 'i-clip', item: clip })) });
     const { drawer } = await renderDrawer();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Thêm vào danh mục — Băng keo 2 mặt' }));
-    const dialog = screen.getByRole('dialog', { name: 'Mua “Băng keo 2 mặt” và thêm vào danh mục' });
-    await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
-    await userEvent.click(await within(dialog).findByRole('button', { name: /Kẹp giấy 33 mm/ }));
+    const dialog = screen.getByRole('dialog', { name: 'Sản phẩm mới' });
+    await userEvent.click(await within(dialog).findByRole('radio', { name: CATEGORY }));
     await userEvent.click(within(dialog).getByRole('button', { name: 'Mua và thêm vào danh mục' }));
     expect(await within(drawer).findByText('Đã thêm vào danh mục')).toBeInTheDocument();
     expect(within(drawer).queryByText(/ngoài danh mục$/)).toBeNull();

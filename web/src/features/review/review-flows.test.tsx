@@ -190,20 +190,16 @@ describe('ReviewPage — Thêm vào danh mục', () => {
     expect(within(dialog).queryByRole('alert')).toBeNull();
   });
 
-  it('món có sẵn khác ĐVT → cảnh báo đúng câu; thành công → thẻ "Đã thêm vào danh mục" + toast', async () => {
+  it('tiêu đề hộp "Sản phẩm mới"; thành công → thẻ "Đã thêm vào danh mục"', async () => {
     mockViewport(1280);
-    stub(() => jsonResponse(200, reviewResult('converted', { item_id: 'i-2' }, { unit_mismatch: true })));
+    stub(() => jsonResponse(200, reviewResult('converted')));
     renderApp(makeMe('admin'), '/admin/review');
     const dialog = await openConvert();
-    await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
-    await userEvent.click(within(dialog).getByRole('button', { name: /Băng keo trong/ }));
-    expect(
-      within(dialog).getByText('Nhân viên đặt theo «cái», Băng keo trong tính theo «cuộn». Số lượng giữ nguyên 2 — kiểm tra lại với Phạm Văn Đức.'),
-    ).toBeInTheDocument();
+    expect(dialog).toHaveAccessibleName('Sản phẩm mới');
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'Văn phòng' }));
     await submit(dialog);
     const a = await card('Băng keo 2 mặt');
     expect(await within(a).findByText('Đã thêm vào danh mục')).toBeInTheDocument();
-    expect(screen.getByText(/^Đã gắn Băng keo 2 mặt vào Băng keo trong/)).toBeInTheDocument();
   });
 
   it('hộp 520: nhãn * ở Tên món, Đơn vị tính, Tối đa mỗi tháng, Nhóm; Nhóm là chip có chấm tông nhóm', async () => {
@@ -222,18 +218,5 @@ describe('ReviewPage — Thêm vào danh mục', () => {
     expect(chip.querySelector('[data-tone]')).toHaveAttribute('data-tone', 'g1');
     await userEvent.click(chip);
     expect(chip).toHaveAttribute('aria-checked', 'true');
-  });
-
-  it('món có sẵn: ô tìm lọc danh sách; mỗi dòng có "tính theo {ĐVT} · {nhóm}"', async () => {
-    mockViewport(1280);
-    stub(() => jsonResponse(200, reviewResult('converted')));
-    renderApp(makeMe('admin'), '/admin/review');
-    const dialog = await openConvert();
-    await userEvent.click(within(dialog).getByRole('radio', { name: 'Món có sẵn' }));
-    const row = within(dialog).getByRole('button', { name: /Băng keo trong/ });
-    expect(row).toHaveTextContent('tính theo cuộn · Văn phòng');
-    await userEvent.type(within(dialog).getByRole('searchbox', { name: 'Tìm món trong danh mục' }), 'zzz');
-    expect(within(dialog).queryByRole('button', { name: /Băng keo trong/ })).toBeNull();
-    expect(within(dialog).getByText('Không có món khớp')).toBeInTheDocument();
   });
 });

@@ -72,7 +72,7 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       await snap(page, info, 'review-list');
 
       await card.getByRole('button', { name: /^Mua và thêm vào danh mục —/ }).click();
-      const dialog = page.getByRole('dialog', { name: `Mua “${name}” và thêm vào danh mục` });
+      const dialog = page.getByRole('dialog', { name: 'Sản phẩm mới' });
       await expect(dialog.getByLabel('Tên món')).toHaveValue(name);
       await expect(dialog.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
       await dialog.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
@@ -208,7 +208,7 @@ test.describe('E9-S2 món ngoài danh mục', () => {
 
       const convert = async (n: string) => {
         await cardOf(n).getByRole('button', { name: /^Mua và thêm vào danh mục —/ }).click();
-        const dialog = page.getByRole('dialog', { name: `Mua “${n}” và thêm vào danh mục` });
+        const dialog = page.getByRole('dialog', { name: 'Sản phẩm mới' });
         await dialog.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
         await expect(dialog.getByRole('group', { name: 'Ảnh món' })).toContainText('*');
         await dialog.getByRole('button', { name: 'Mua và thêm vào danh mục', exact: true }).click();
