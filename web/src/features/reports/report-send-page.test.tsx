@@ -39,10 +39,43 @@ describe('Báo cáo & gửi NCC: đầu trang và trạng thái', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' })).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(await screen.findByText('Tháng 10/2026')).toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: 'Chỉ món có Tổng cần' })).toBeInTheDocument();
+    // Công tắc Switch dùng chung (giống Nhận hàng), không còn checkbox trình duyệt
+    const only = screen.getByRole('switch', { name: 'Chỉ món có Tổng cần' });
+    expect(only).toHaveAttribute('aria-checked', 'false');
+    expect(screen.queryByRole('checkbox', { name: 'Chỉ món có Tổng cần' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Xuất Excel' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'In trình ký' })).toBeNull();
+  });
+
+  it('bật "Chỉ món có Tổng cần" → chỉ còn hàng có Tổng cần > 0', async () => {
+    setupSendAdm({ report: sendReport([PEN, itemRow({ key: 'kZ', name: 'Kẹp giấy', requested: 0, need: 0 })]) });
+    open();
+    expect(await qtyBox('Kẹp giấy')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('switch', { name: 'Chỉ món có Tổng cần' }));
+    expect(screen.getByRole('switch', { name: 'Chỉ món có Tổng cần' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.queryByRole('spinbutton', { name: 'Đề nghị: Kẹp giấy' })).toBeNull();
+    expect(screen.getByRole('spinbutton', { name: 'Đề nghị: Bút bi' })).toBeInTheDocument();
+  });
+
+  it('dấu "·" giữa các phần trạng thái chỉ để nhìn (aria-hidden), không đứng lẻ đầu dòng khi xuống dòng', async () => {
+    setupSendAdm({ report: REPORT, state: SENT });
+    open();
+    await qtyBox('Bút bi');
+    const status = statuses()[0]!;
+    const seps = status.querySelectorAll('.bc-status__sep');
+    expect(seps.length).toBeGreaterThan(0);
+    seps.forEach((s) => expect(s).toHaveAttribute('aria-hidden', 'true'));
+  });
+
+  it('lúc đang tải: đầu trang cùng khung h1 với lúc tải xong (không breadcrumb) để tiêu đề không nhảy', async () => {
+    setupSendAdm({ report: REPORT });
+    open();
+    const h1 = screen.getByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' });
+    expect(h1.parentElement).toHaveClass('bc-head');
+    expect(screen.queryByRole('navigation', { name: /breadcrumb|Đường dẫn/i })).toBeNull();
+    await qtyBox('Bút bi');
+    expect(screen.getByRole('heading', { level: 1, name: 'Báo cáo & gửi NCC' }).parentElement).toHaveClass('bc-head');
   });
 
   it('đã gửi: đúng một dòng trạng thái "Đã gửi NCC 09:02 12/12" kèm "In lại"; không có "21 món, 143 đơn vị"', async () => {

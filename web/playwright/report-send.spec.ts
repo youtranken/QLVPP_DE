@@ -167,7 +167,7 @@ test.describe('Vòng3-BC Báo cáo & gửi NCC', () => {
     fail = false;
     await page.getByRole('button', { name: 'Thử lại' }).click();
     await expect(page.getByText('Không tải được dữ liệu — thử lại.')).toHaveCount(0);
-    await expect(page.getByRole('checkbox', { name: 'Chỉ món có Tổng cần' })).toBeVisible();
+    await expect(page.getByRole('switch', { name: 'Chỉ món có Tổng cần' })).toBeVisible();
 
     await page.goto(`/admin/send-adm?ym=${PRIVATE_YM}`);
     await expect(page).toHaveURL(new RegExp(`/admin/reports\\?ym=${PRIVATE_YM}$`));

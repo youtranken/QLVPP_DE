@@ -6,7 +6,7 @@ import { lockedYm } from '@/lib/ym';
 import { Icon } from '@/ui/icon';
 import { Loading, LoadError } from '@/ui/load-state';
 import { MonthSwitcher } from '@/ui/month-switcher';
-import { PageHeader } from '@/ui/page-header';
+import { Switch } from '@/ui/switch';
 import { useAdminItems, useAllCategories } from '@/features/catalog/catalog.api';
 import { currentPeriodQuery, useCurrentPeriod, type CurrentPeriod } from '@/features/request/request.api';
 import { useLeaveGuard } from '@/features/request/use-leave-guard';
@@ -153,10 +153,7 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
   return (
     <div className="bc-page">
       <Heading ym={report.ym} openYm={openYm} onMonth={onMonth}>
-        <label className="bc-switch">
-          <input type="checkbox" checked={onlyNeed} onChange={(e) => setOnlyNeed(e.target.checked)} />
-          {t('reports.part1.onlyNeed')}
-        </label>
+        <Switch checked={onlyNeed} text={t('reports.part1.onlyNeed')} onChange={setOnlyNeed} />
         <div className="bc-head__actions">
           <ReportStatusLine send={send} rowsChanged={changed.size} pendingCustom={report.pending_custom_count} ym={report.ym} onReprint={sent ? () => void printer.print(sent.data) : undefined} reprinting={printer.pending} />
           {actions}
@@ -215,7 +212,10 @@ function Frame({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   return (
     <div className="ct-page bc-page">
-      <PageHeader crumbs={[t('nav.groups.monthly'), t('reports.send.title')]} title={t('reports.send.title')} />
+      {/* Cùng khung đầu trang với lúc tải xong: tiêu đề không nhảy */}
+      <div className="bc-head">
+        <h1>{t('reports.send.title')}</h1>
+      </div>
       {children}
     </div>
   );

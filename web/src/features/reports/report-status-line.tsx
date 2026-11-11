@@ -13,6 +13,13 @@ interface Props {
   reprinting?: boolean;
 }
 
+// Dấu chấm chỉ để nhìn; điện thoại ẩn đi (dùng khoảng cách) để không đứng lẻ đầu dòng khi xuống dòng
+const Sep = () => (
+  <span className="bc-status__sep" aria-hidden="true">
+    ·
+  </span>
+);
+
 // Nằm trên hàng tiêu đề, ngay trước Xuất Excel (vòng 4 mục 9), chấm tròn theo tone
 export function ReportStatusLine({ send, rowsChanged, pendingCustom, ym, onReprint, reprinting = false }: Props) {
   const { t } = useTranslation();
@@ -20,11 +27,14 @@ export function ReportStatusLine({ send, rowsChanged, pendingCustom, ym, onRepri
   return (
     <span className="bc-status bc-status--inline" role="status" data-tone={tone}>
       {parts.map((p, i) => (
-        <span key={i}>{i > 0 && ' · '}{p}</span>
+        <span key={i}>
+          {i > 0 && <Sep />}
+          {p}
+        </span>
       ))}
       {pendingCustom > 0 && (
         <>
-          {' · '}
+          <Sep />
           <Link to={`/admin/review?status=pending&ym=${ym}`} aria-label={t('reports.send.status.customLabel', { n: pendingCustom })}>
             {t('reports.send.status.customLink')}
           </Link>
@@ -32,7 +42,7 @@ export function ReportStatusLine({ send, rowsChanged, pendingCustom, ym, onRepri
       )}
       {send.state === 'sent' && onReprint && (
         <>
-          {' · '}
+          <Sep />
           <button type="button" className="sa-link bc-reprint" disabled={reprinting} onClick={onReprint}>
             <Icon name="rotateccw" size={16} />
             {t('reports.send.status.reprint')}

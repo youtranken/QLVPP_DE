@@ -22,6 +22,8 @@
 [data-shell='admin'] .pp-bi { display: block; }
 [data-shell='admin'] .pp-form__table th:nth-child(1) { width: 7%; }
 [data-shell='admin'] .pp-form__table th:nth-child(2) { width: 12%; }
+/* Mã món không bẻ dòng (cột tự nới theo mã dài nhất) */
+[data-shell='admin'] .pp-form__table td:nth-child(2) { white-space: nowrap; overflow-wrap: normal; }
 [data-shell='admin'] .pp-form__table th:nth-child(5) { width: 10%; }
 [data-shell='admin'] .pp-form__table th:nth-child(6) { width: 8%; }
 [data-shell='admin'] .pp-empty { text-align: center; font-style: italic; }

@@ -59,10 +59,8 @@ export function SummaryPreviewDialog({ snap, ym, mode, pending = NO_PENDING, cha
             <SnapshotWarnings pending={pending} changes={changes} sentAt={sentAt} />
           </div>
         )}
-        <div className="bc-preview__frame">
-          <div className="bc-preview__sheet">
-            <PrintRequestForm snap={snap} />
-          </div>
+        <div className="bc-preview__sheet">
+          <PrintRequestForm snap={snap} />
         </div>
       </div>
       <div className="sheet-footer bc-preview__foot">

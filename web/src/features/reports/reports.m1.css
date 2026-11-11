@@ -1,8 +1,6 @@
 [data-shell='admin'] .bc-page > .alert a { color: inherit; font-weight: 800; text-decoration: underline; }
 [data-shell='admin'] .bc-section__note { margin: 0; font: var(--t-sm); color: var(--c-muted); }
 [data-shell='admin'] .bc-section__note a { color: var(--c-acc); font-weight: 700; }
-[data-shell='admin'] .bc-switch { display: inline-flex; align-items: center; gap: var(--s-2); min-height: var(--hit); font: var(--t-sm); font-weight: 600; color: var(--c-ink-2); cursor: pointer; }
-[data-shell='admin'] .bc-switch input { width: 20px; height: 20px; margin: 0; accent-color: var(--c-acc); }
 [data-shell='admin'] .bc-item { display: grid; gap: 2px; min-width: 0; }
 [data-shell='admin'] .bc-item__name { font: var(--t-label); color: var(--c-ink); overflow-wrap: anywhere; }
 [data-shell='admin'] .bc-item__note { font: var(--t-sm); color: var(--c-muted); }
@@ -35,7 +33,8 @@
 }
 [data-shell='admin'] .bc-inline-notice { align-items: center; justify-content: space-between; flex-wrap: wrap; }
 [data-shell='admin'] .bc-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); align-content: start; }
-[data-shell='admin'] .bc-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-4); }
+/* min-height: lúc đang tải (chỉ có h1) cao bằng lúc có hàng nút, tiêu đề không nhảy */
+[data-shell='admin'] .bc-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-4); min-height: var(--hit); }
 [data-shell='admin'] .bc-head h1 { margin: 0; font: var(--t-h1); letter-spacing: -0.02em; }
 [data-shell='admin'] .bc-head__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin-left: auto; }
 [data-shell='admin'] .bc-status { margin: 0; padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); font: var(--t-body); }
@@ -51,19 +50,31 @@
 [data-shell='admin'] .bc-snaps-box { border-radius: var(--r-md); background: var(--c-surface); box-shadow: inset 0 0 0 1px var(--c-line); padding: var(--s-3) var(--s-4); }
 [data-shell='admin'] .bc-snaps-box > summary { min-height: var(--hit); display: flex; align-items: center; font: var(--t-label); cursor: pointer; }
 [data-shell='admin'] .bc-snaps-box[open] > summary { margin-bottom: var(--s-2); }
+[data-shell='admin'] .bc-status__sep { color: var(--c-muted); }
+@media (min-width: 768px) {
+  /* Cột cuối ("Ai đăng ký") không dính sát mép phải bảng */
+  [data-shell='admin'] .bc-table th:last-child,
+  [data-shell='admin'] .bc-table td:last-child { padding-right: var(--s-4); }
+}
 @media (max-width: 767px) {
   [data-shell='admin'] .bc-head__actions { margin-left: 0; width: 100%; }
+  /* Xuống dòng thì dấu "·" đứng lẻ đầu dòng: bỏ dấu, tách bằng khoảng cách */
+  [data-shell='admin'] .bc-status__sep { display: none; }
+  [data-shell='admin'] .bc-status--inline { gap: var(--s-1) var(--s-3); }
 }
 [data-shell='admin'] .bc-scroll { max-width: 100%; overflow-x: auto; }
 
-/* Hộp "Xem tổng kết": tờ A4 thu nhỏ (lề 14mm như @page), thân cuộn, chân cố định */
+/* Hộp "Xem tổng kết": tờ A4 thu nhỏ (lề 14mm như @page); một vùng cuộn duy nhất (khung cảnh báo cuộn cùng tờ), chân cố định */
 [data-shell='admin'] .bc-preview { display: flex; flex-direction: column; max-height: calc(100vh - 32px); overflow: hidden; }
 [data-shell='admin'] .bc-preview__titles { flex: 1; min-width: 0; display: grid; gap: var(--s-1); }
 [data-shell='admin'] .bc-preview__sub { margin: 0; color: var(--c-muted); font: var(--t-sm); }
 [data-shell='admin'] .bc-preview__body { flex: 1 1 auto; min-height: 0; overflow: auto; display: grid; gap: var(--s-3); align-content: start; padding: var(--s-4) var(--s-6); border-block: 1px solid var(--c-line); background: var(--c-surface-2); }
-[data-shell='admin'] .bc-preview__frame { overflow-x: auto; }
 [data-shell='admin'] .bc-preview__sheet { width: max-content; margin: 0 auto; }
-[data-shell='admin'] .bc-preview__sheet .pp-sheet { width: 210mm; min-height: 297mm; padding: 14mm; zoom: 0.62; }
+/* Zoom theo cỡ màn (CSS tĩnh): 0.95 vừa hộp 900px ở ≥1024; 0.8 ở 768–1023 để không tràn ngang */
+[data-shell='admin'] .bc-preview__sheet .pp-sheet { width: 210mm; min-height: 297mm; padding: 14mm; zoom: 0.95; }
+@media (max-width: 1023px) {
+  [data-shell='admin'] .bc-preview__sheet .pp-sheet { zoom: 0.8; }
+}
 [data-shell='admin'] .bc-preview__foot { flex-wrap: wrap; }
 [data-shell='admin'] .bc-preview__note { flex: 1 1 260px; margin: 0; color: var(--c-muted); font: var(--t-sm); }
 @media (max-width: 767px) {
