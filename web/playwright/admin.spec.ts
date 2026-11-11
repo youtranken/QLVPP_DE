@@ -75,7 +75,7 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     await expect(day).toHaveAttribute('aria-invalid', 'true');
     await expect(page.getByText('Nhập số từ 3 đến 28.')).toBeVisible();
 
-    const contactForm = page.getByRole('form', { name: 'Liên hệ & thông báo' });
+    const contactForm = page.getByRole('form', { name: 'Liên hệ Adm D&E và báo sắp hết hàng' });
     await page.getByLabel('Tên và cách liên hệ Adm D&E').fill(contact);
     await contactForm.getByRole('button', { name: 'Lưu liên hệ' }).click();
     await expect(contactForm.getByRole('status')).toHaveText('Đã lưu.');
@@ -95,9 +95,7 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     const diff = detail.getByRole('table');
     const changed = diff.getByRole('row').filter({ has: page.getByRole('rowheader', { name: 'Liên hệ Adm D&E', exact: true }) });
     await expect(changed.getByRole('cell').last()).toHaveText(contact);
-    await detail.getByText('Chi tiết kỹ thuật').click();
-    await expect(detail.getByText(`Sau: {"admin_contact":"${contact}"}`)).toBeVisible();
-    await expect(detail.getByText('Trước: {"admin_contact":')).toBeVisible();
+    await expect(detail.getByText('Chi tiết kỹ thuật')).toHaveCount(0);
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'admin-audit');
   });

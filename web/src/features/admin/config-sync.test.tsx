@@ -33,7 +33,7 @@ describe('Cấu hình · khối theo cấu hình mới nhất', () => {
     await savePeriodWhileOtherAdminChanged();
     expect(screen.getByDisplayValue('Trần Văn Cả')).toBeInTheDocument();
     expect(within(block('Ô ký trên phiếu đề xuất')).getByRole('button', { name: 'Chưa có thay đổi' })).toBeDisabled();
-    expect(within(block('Liên hệ & thông báo')).getByRole('button', { name: 'Lưu liên hệ' })).toBeEnabled();
+    expect(within(block('Liên hệ Adm D&E và báo sắp hết hàng')).getByRole('button', { name: 'Lưu liên hệ' })).toBeEnabled();
   });
 
   it('khối đang sửa giữ ô người dùng đã đổi, ô khác theo cấu hình mới; Lưu chỉ gửi ô đã đổi', async () => {

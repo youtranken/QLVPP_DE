@@ -8,13 +8,6 @@ const config = {
       leaveBody: 'Chưa lưu: {{blocks}}.',
       saved: 'Đã lưu {{block}}',
     },
-    recent: {
-      title: 'Thay đổi gần đây',
-      row: '{{time}} · {{who}}',
-      changed: 'Đã đổi: {{keys}}',
-      empty: 'Chưa có lần lưu nào.',
-      viewAll: 'Xem trong Nhật ký',
-    },
     period: {
       title: 'Kỳ đăng ký',
       effectiveOpen: 'Kỳ tháng {{open}} (đang mở) vẫn khóa {{lock}}.',
@@ -48,15 +41,6 @@ const config = {
       locked: 'Đã khóa · Adm D&E giao hàng',
       weekdays: 'T2,T3,T4,T5,T6,T7,CN',
     },
-    access: {
-      title: 'Quyền truy cập',
-      scope: 'Ai được vào VPP do PMH ID quyết định (theo Phòng/Nhóm và danh sách loại trừ của ứng dụng).',
-      adminsTitle: 'Adm D&E hiện tại',
-      adminsHint: 'Vai Adm D&E do PMH ID cấp (Quản trị viên dự án VPP). Muốn thêm hoặc bớt người, nhờ quản trị PMH ID — có hiệu lực trong vài phút.',
-      noAdmins: 'Chưa thấy ai — chạy “Đồng bộ ngay” ở Danh bạ.',
-      adminsUnknown: 'Chưa tải được danh sách Adm D&E — mở Danh bạ để xem.',
-      openDirectory: 'Mở Danh bạ',
-    },
     signers: {
       title: 'Ô ký trên phiếu đề xuất',
       hint: 'Chức danh và tên in sẵn ở chân bản in. Bản chốt đã in giữ tên cũ.',
@@ -72,10 +56,11 @@ const config = {
       save: 'Lưu ô ký',
     },
     contact: {
-      title: 'Liên hệ & thông báo',
+      title: 'Liên hệ Adm D&E và báo sắp hết hàng',
       adminContact: 'Tên và cách liên hệ Adm D&E',
       adminContactHint: 'Hiện ở trang Tôi và trang “Chưa được cấp quyền”. VD: chị Bình — Adm D&E, máy lẻ 123.',
       lowStock: 'Báo Adm D&E khi món sắp hết',
+      lowStockHint: 'Bật thì app gửi thông báo chuông cho Adm D&E khi một món xuống dưới mức sắp hết.',
       lowStockCount: 'Hiện có {{count}} món sắp hết.',
       save: 'Lưu liên hệ',
     },
