@@ -10,6 +10,7 @@ import {
   detailLines,
   itemDemand,
   pendingCustomCount,
+  pendingCustomLines,
   periodProgress,
 } from './report-queries';
 import type {
@@ -17,6 +18,7 @@ import type {
   DetailLine,
   ItemDemand,
   KeyProgress,
+  PendingCustomLine,
 } from './report-queries';
 import type {
   MonthReport,
@@ -62,13 +64,23 @@ export class ReportsService {
     };
   }
 
-  // Báo cáo sống (không vào bản chốt): cột Đăng ký/Đã giao/Đã về để đối chiếu với bản đã gửi
+  // Báo cáo sống (không vào bản chốt): cột Đăng ký/Đã giao/Đã về để đối chiếu với bản đã gửi,
+  // tên món ngoài danh mục còn chờ cho cảnh báo lúc chốt
   async live(
     ym: string,
     now: Date,
-  ): Promise<MonthReport & { progress: Record<string, KeyProgress> }> {
+  ): Promise<
+    MonthReport & {
+      progress: Record<string, KeyProgress>;
+      pending_custom: PendingCustomLine[];
+    }
+  > {
     const report = await this.build(ym, now);
-    return { ...report, progress: await periodProgress(this.db, ym) };
+    return {
+      ...report,
+      progress: await periodProgress(this.db, ym),
+      pending_custom: await pendingCustomLines(this.db, ym),
+    };
   }
 }
 

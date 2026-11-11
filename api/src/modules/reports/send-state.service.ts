@@ -6,6 +6,7 @@ import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
 import { PeriodsService } from '../periods/periods.service';
+import { ReviewWriter } from '../requests/review-writer';
 import { changedAt, deliveredSince } from './changed-after';
 import { clearNoOrderFlag, lockNoOrderFlag, noOrderOf } from './no-order-flag';
 import { resolveOrderQty } from './order-qty';
@@ -36,6 +37,7 @@ export class SendStateService {
     private readonly periods: PeriodsService,
     private readonly reports: ReportsService,
     private readonly audit: AuditWriterService,
+    private readonly reviews: ReviewWriter,
   ) {}
 
   async state(ym: string, now: Date): Promise<SendState> {
@@ -74,6 +76,10 @@ export class SendStateService {
       const report = await this.reports.build(ym, now, tx);
       const order = resolveOrderQty(report, body.order_qty);
       if (orderTotals(order).units_total > 0) throw orderNotEmpty();
+      await this.reviews.rejectPendingWithin(tx, ym, body, {
+        actor: actor.sub,
+        now,
+      });
       if (flag.no_order_at && flag.no_order_by) {
         return { no_order_at: flag.no_order_at, no_order_by: flag.no_order_by };
       }

@@ -7,6 +7,7 @@ import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
 import { SystemConfigService } from '../config/system-config.service';
 import { PeriodsService } from '../periods/periods.service';
+import { ReviewWriter } from '../requests/review-writer';
 import { UnitsService } from '../units/units.service';
 import { UsersService } from '../users/users.service';
 import { pgSqlState } from '../../common/sql';
@@ -64,6 +65,7 @@ export class SnapshotsService {
     private readonly users: UsersService,
     private readonly units: UnitsService,
     private readonly audit: AuditWriterService,
+    private readonly reviews: ReviewWriter,
   ) {}
 
   async create(
@@ -100,6 +102,10 @@ export class SnapshotsService {
   ): Promise<CreatedSnapshot> {
     const { ym, body, now, created_by } = ctx;
     const flag = await lockNoOrderFlag(tx, ym);
+    await this.reviews.rejectPendingWithin(tx, ym, body, {
+      actor: ctx.actor,
+      now,
+    });
     const content = await this.buildContent(tx, ctx);
     if (body.reuse_if_unchanged) {
       const same = await latestSent(tx, ym, body.kind);

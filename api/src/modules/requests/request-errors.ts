@@ -118,3 +118,11 @@ export function constraintError(error: unknown): HttpException | null {
     violation && CONSTRAINT_ERRORS[`${violation.code}:${violation.constraint}`];
   return mapped ? mapped() : null;
 }
+
+export const pendingCustomChanged = (pending: number) =>
+  new ConflictException({
+    code: 'PENDING_CUSTOM',
+    message:
+      'Danh sách món ngoài danh mục chưa duyệt vừa thay đổi. Mở lại Xem tổng kết.',
+    pending,
+  });

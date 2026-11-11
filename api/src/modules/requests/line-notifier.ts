@@ -15,6 +15,7 @@ export interface ReviewedLine {
   customName: string | null;
   action: 'accepted' | 'converted' | 'rejected';
   note: string | null;
+  noteCode?: string;
   item?: ItemFacts;
   now: Date;
 }
@@ -42,6 +43,7 @@ export class LineNotifier {
           ? { item_name: l.item.name, item_name_en: l.item.name_en }
           : {}),
         ...(l.note ? { note: l.note } : {}),
+        ...(l.noteCode ? { note_code: l.noteCode } : {}),
       },
       link: `/history/${owner.ym}`,
       now: l.now,

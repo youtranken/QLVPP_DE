@@ -121,6 +121,25 @@ export async function pendingCustomCount(
   return rows[0].n;
 }
 
+export interface PendingCustomLine {
+  line_id: string;
+  name: string;
+}
+
+// Tên món ngoài danh mục còn chờ của kỳ cho cảnh báo lúc chốt (chỉ báo cáo sống, không vào bản chốt)
+export async function pendingCustomLines(
+  db: Executor,
+  ym: string,
+): Promise<PendingCustomLine[]> {
+  const { rows } = await db.execute<Row<PendingCustomLine>>(sql`
+    SELECT l.id AS line_id, trim(l.custom_name) AS name
+    FROM request_lines l JOIN requests r ON r.id = l.request_id
+    WHERE l.review_status = 'pending' AND r.period_ym = ${ymToDate(ym)}::date
+    ORDER BY lower(trim(l.custom_name)), l.id
+  `);
+  return rows;
+}
+
 export interface KeyProgress {
   registered: number;
   delivered: number;

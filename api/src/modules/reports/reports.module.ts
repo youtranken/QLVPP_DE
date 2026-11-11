@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { CatalogModule } from '../catalog/catalog.module';
 import { SystemConfigModule } from '../config/config.module';
 import { PeriodsModule } from '../periods/periods.module';
+import { RequestsModule } from '../requests/requests.module';
 import { UnitsModule } from '../units/units.module';
 import { UsersModule } from '../users/users.module';
 import { NoOrderController } from './no-order.controller';
@@ -15,6 +16,7 @@ import { SnapshotsService } from './snapshots.service';
   imports: [
     CatalogModule,
     PeriodsModule,
+    RequestsModule,
     SystemConfigModule,
     UnitsModule,
     UsersModule,

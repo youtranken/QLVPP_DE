@@ -321,3 +321,24 @@ export async function requestOwner(
   `);
   return rows[0];
 }
+
+// Dòng ngoài danh mục còn chờ của kỳ, khóa requests → request_lines theo id (cùng chiều mọi đường ghi)
+export async function lockPendingLines(
+  tx: Executor,
+  ym: string,
+): Promise<(LineRow & { request_id: string })[]> {
+  const k = ymToDate(ym);
+  await tx.execute(sql`
+    SELECT r.id FROM requests r
+    WHERE r.period_ym = ${k}::date AND EXISTS (
+      SELECT 1 FROM request_lines l WHERE l.request_id = r.id AND l.review_status = 'pending')
+    ORDER BY r.id FOR UPDATE`);
+  const { rows } = await tx.execute<
+    LineRow & { request_id: string } & Record<string, unknown>
+  >(sql`
+    SELECT ${LINE_COLUMNS}, request_id FROM request_lines
+    WHERE review_status = 'pending'
+      AND request_id IN (SELECT id FROM requests WHERE period_ym = ${k}::date)
+    ORDER BY id FOR UPDATE`);
+  return rows;
+}

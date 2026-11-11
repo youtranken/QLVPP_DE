@@ -4,7 +4,6 @@ import { ClockService } from '../../common/clock.service';
 import { ymToDate } from '../../common/period';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database, Tx } from '../../database/database.module';
-import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
 import type { CreateItemDto } from '../catalog/catalog.dto';
 import type { ItemFacts, ItemRow } from '../catalog/catalog-sql';
@@ -12,7 +11,6 @@ import { CatalogService, itemNotFound } from '../catalog/catalog.service';
 import { PeriodsService } from '../periods/periods.service';
 import { hasItemsSql } from '../reports/sent-snapshot';
 import { CUSTOM_ITEM_KEY, lockedPeriod } from './line-predicates';
-import { LineNotifier } from './line-notifier';
 import {
   lineAlreadyReviewed,
   lineNotFound,
@@ -23,8 +21,8 @@ import type { LineRow } from './request-lines.rules';
 import { toLineView } from './request-view';
 import type { LineView } from './request-view';
 import * as repo from './requests.repo';
+import { ReviewWriter } from './review-writer';
 import type {
-  ReviewAction,
   ReviewBody,
   ReviewItemInput,
   ReviewListQuery,
@@ -53,8 +51,6 @@ export interface ReviewRow {
   in_sent_snapshot_at: string | null;
 }
 
-type ReviewedAction = 'accepted' | 'converted' | 'rejected';
-
 export interface ReviewResult {
   line: LineView;
   request_updated_at: string;
@@ -62,28 +58,13 @@ export interface ReviewResult {
   unit_mismatch?: boolean;
 }
 
-const STATUS_OF: Record<ReviewAction, string> = {
-  accept: 'accepted',
-  convert: 'converted',
-  reject: 'rejected',
-};
-const AUDIT_KEYS = [
-  'review_status',
-  'review_note',
-  'item_id',
-  'custom_name',
-  'custom_unit',
-  'custom_note',
-] as const;
-
 @Injectable()
 export class ReviewService {
   constructor(
     @Inject(DRIZZLE_DB) private readonly db: Database,
     private readonly clock: ClockService,
     private readonly catalog: CatalogService,
-    private readonly audit: AuditWriterService,
-    private readonly notifier: LineNotifier,
+    private readonly writer: ReviewWriter,
     private readonly periods: PeriodsService,
   ) {}
 
@@ -155,44 +136,21 @@ export class ReviewService {
         body.action === 'convert'
           ? await this.targetItem(tx, before, body.item!, admin.sub)
           : undefined;
-      const after = await repo.setReview(tx, lineId, {
-        status: STATUS_OF[body.action],
-        note: note ?? (item ? `Từ: ${before.custom_name}` : null),
-        itemId: item?.id ?? null,
-        by: admin.sub,
-        now,
-      });
-      // Không xảy ra khi đã khóa ở trên; giữ để điều kiện pending là luật của chính câu UPDATE
-      if (!after) throw lineAlreadyReviewed();
-      const updatedAt = await repo.bumpRequest(tx, before.request_id, now);
-      await this.audit.appendWithin(tx, {
-        actor: admin.sub,
-        action: 'line.review',
-        objectType: 'request_line',
-        objectId: lineId,
-        detail: {
-          ym,
-          action: body.action,
-          before: pickReview(before),
-          after: pickReview(after),
-          ...(item ? { item_id: item.id } : {}),
-        },
-        at: now,
-      });
-      const facts = item
-        ? await this.catalog.itemFacts([item.id], tx)
-        : new Map<string, ItemFacts>();
       // Món có sẵn hay món mới đều trả cùng hình ItemFacts
-      const target = item ? facts.get(item.id)! : undefined;
-      await this.notifier.reviewed(tx, {
-        lineId,
-        requestId: before.request_id,
-        customName: before.custom_name,
-        action: after.review_status as ReviewedAction,
-        note,
+      const target = item
+        ? (await this.catalog.itemFacts([item.id], tx)).get(item.id)!
+        : undefined;
+      const { after, updatedAt } = await this.writer.applyWithin(tx, before, {
+        action: body.action,
+        note: note ?? (item ? `Từ: ${before.custom_name}` : null),
         item: target,
+        actor: admin.sub,
+        ym,
         now,
       });
+      const facts = new Map<string, ItemFacts>(
+        target ? [[target.id, target]] : [],
+      );
       return {
         line: toLineView(after, facts),
         request_updated_at: updatedAt,
@@ -264,8 +222,4 @@ function assertOneTarget(item: ReviewItemInput | undefined): void {
       fields: item ? mixed.map((k) => `item.${k}`) : ['item'],
     });
   }
-}
-
-function pickReview(line: LineRow): Record<string, unknown> {
-  return Object.fromEntries(AUDIT_KEYS.map((k) => [k, line[k]]));
 }

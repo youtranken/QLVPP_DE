@@ -26,6 +26,7 @@ import { RequestLinesWriter } from './request-lines.writer';
 import { RequestViewBuilder } from './request-view';
 import { UnitsModule } from '../units/units.module';
 import { ReviewController } from './review.controller';
+import { ReviewWriter } from './review-writer';
 import { ReviewService } from './review.service';
 import { SummaryListsService } from './summary-lists.service';
 import { SummaryService } from './summary.service';
@@ -61,10 +62,12 @@ import { SummaryService } from './summary.service';
     RegistrationsService,
     ItemPeopleService,
     ReviewService,
+    ReviewWriter,
     LineDeliveryStore,
     LineNotifier,
   ],
   exports: [
+    ReviewWriter,
     RequestLinesWriter,
     RequestViewBuilder,
     LineDeliveryStore,
