@@ -53,6 +53,15 @@ describe('phân loại route /admin/* và guard kỳ khóa (e2e)', () => {
     ids.itemLine = r.lines.find((l) => l.item_id)!.id;
     ids.customLine = r.lines.find((l) => !l.item_id)!.id;
     freeze(FIRST_LOCKED_MS);
+    const pending = (
+      (
+        await as(
+          http().get(`/api/admin/reports/${OPEN}`),
+          ADMIN,
+          'admin',
+        ).expect(200)
+      ).body as { pending_custom_count: number }
+    ).pending_custom_count;
     ids.snapshot = (
       (
         await as(
@@ -60,10 +69,20 @@ describe('phân loại route /admin/* và guard kỳ khóa (e2e)', () => {
           ADMIN,
           'admin',
         )
-          .send({ kind: 'xlsx' })
+          .send({
+            kind: 'xlsx',
+            reject_pending_custom: true,
+            expected_pending: pending,
+          })
           .expect(201)
       ).body as { id: string }
     ).id;
+    // Chốt bản ghi Không mua cho dòng ngoài DM; các ca sau cần dòng còn chờ duyệt
+    await pool().query(
+      `UPDATE request_lines SET review_status = 'pending', review_note = NULL, reviewed_by_sub = NULL, reviewed_at = NULL
+       WHERE id = $1`,
+      [ids.customLine],
+    );
     f.at('2026-11-05T03:00:00Z');
   });
 

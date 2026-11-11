@@ -155,13 +155,14 @@ describe('V2D-4 changedAfter qua endpoint thật, đồng hồ đứng (R-X.1, R
 
   it('line.review (duyệt dòng ngoài danh mục)', async () => {
     await base();
+    // Chốt bản ghi Không mua cho dòng còn chờ → gieo dòng chờ sau bản (SQL thẳng, không audit)
+    await snapshotAtT();
     const lines: string[] = [];
     for (const n of ['Bìa 1', 'Bìa 2', 'Bìa 3']) {
       lines.push(
         await seedLine(YM, A, f.customCols(f.customName(n), 1, 'pending')),
       );
     }
-    await snapshotAtT();
     await boundary(
       lines.map((l) => () => f.review(l, { action: 'accept' }).expect(200)),
     );

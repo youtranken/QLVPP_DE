@@ -94,6 +94,7 @@ describe('GET admin/reports/:ym — chi tiết phòng ban, xuất lẻ, kỳ h�
       custom: [],
       byDepartment: [],
       issues: [],
+      pending_custom: [],
       pending_custom_count: 0,
       progress: {},
     });
