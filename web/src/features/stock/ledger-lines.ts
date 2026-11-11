@@ -10,14 +10,17 @@ export interface Receipt {
   rest: string | null;
 }
 
-// Dòng hàng về nhận ra bằng receipt_ym; ghi chú máy chỉ còn dùng để biết "về bù" và tách phần ghi chú người gõ
-const MAKEUP_NOTE = /^Về bù kỳ /;
+// Dòng hàng về nhận ra bằng receipt_ym; ghi chú máy chỉ còn dùng để biết "về bù" và tách phần ghi chú người gõ.
+// Dòng "Về bù kỳ" ghi trước khi có cột receipt_ym (migration chỉ điền lại cho "Hàng về kỳ") thì lấy kỳ từ chính tiền tố này
+const MAKEUP_NOTE = /^Về bù kỳ (\d{4}-\d{2})/;
 const MACHINE_PREFIX = /^(?:Hàng về kỳ|Về bù kỳ) \d{4}-\d{2}(?: · )?/;
 
 export function receiptOf(m: Pick<StockMovement, 'receipt_ym' | 'note'>): Receipt | null {
-  if (!m.receipt_ym) return null;
   const note = m.note ?? '';
-  return { kind: MAKEUP_NOTE.test(note) ? 'makeup' : 'arrival', ym: m.receipt_ym, rest: note.replace(MACHINE_PREFIX, '').trim() || null };
+  const makeup = MAKEUP_NOTE.exec(note);
+  const ym = m.receipt_ym ?? makeup?.[1];
+  if (!ym) return null;
+  return { kind: makeup ? 'makeup' : 'arrival', ym, rest: note.replace(MACHINE_PREFIX, '').trim() || null };
 }
 
 export interface LedgerLine {
