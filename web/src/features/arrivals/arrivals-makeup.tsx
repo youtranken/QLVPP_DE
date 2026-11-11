@@ -100,7 +100,7 @@ export function ArrivalsMakeup({ groups, onDone }: Props) {
     });
   const cols = ['month', 'item', 'ordered', 'received', 'owed', 'qty'] as const;
   return (
-    <details className="ar-card ar-fold">
+    <details className="ar-card ar-fold disclosure">
       <summary>{t('arrivals.makeup.title', { n: count })}</summary>
       {closed && (
         <p role="status" className="ar-closed">

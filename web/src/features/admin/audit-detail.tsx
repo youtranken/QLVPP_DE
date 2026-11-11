@@ -68,7 +68,7 @@ export function AuditDetail({ entry, id }: { entry: AuditEntry; id: string }) {
         </dl>
       )}
       {hasSides && (
-        <details className="au-json">
+        <details className="au-json disclosure">
           <summary>{t('audit.detail.technical')}</summary>
           {'before' in d && <code>{t('audit.page.before', { json: compact(d.before) })}</code>}
           {'after' in d && <code>{t('audit.page.after', { json: compact(d.after) })}</code>}

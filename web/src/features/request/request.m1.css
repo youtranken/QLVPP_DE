@@ -24,7 +24,7 @@
 [data-shell='member'] .rq-recv-dot { width: 10px; height: 10px; flex: none; border-radius: 50%; background: var(--c-bar-fill); }
 [data-shell='member'] .rq-recv-open { flex: none; min-height: 44px; padding: 0 var(--s-4); border: 1px solid var(--c-glass-line); border-radius: var(--r-pill); background: transparent; color: var(--c-on-dark); font: var(--t-label); cursor: pointer; }
 [data-shell='member'] .rq-recv-open:hover { background: var(--c-on-dark-hover); }
-[data-shell='member'] .rq-recv-strip a:focus-visible, [data-shell='member'] .rq-recv-open:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; }
+[data-shell='member'] .rq-recv-strip a:focus-visible, [data-shell='member'] .rq-recv-open:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; box-shadow: none; }
 [data-shell='member'] .rq-recv-sub { margin: var(--s-1) 0 0; color: var(--c-ink-2); font: var(--t-body); }
 [data-shell='member'] .rq-recv-table { width: 100%; border-collapse: collapse; font: var(--t-body); color: var(--c-ink); }
 [data-shell='member'] .rq-recv-table th, [data-shell='member'] .rq-recv-table td { padding: var(--s-2) var(--s-3); border: 1px solid var(--c-line); text-align: left; }
@@ -94,7 +94,7 @@
 /* Thanh phiếu nổi (NhanVien.dc.html): viên thuốc tối nằm trên thanh dưới 3 mục */
 [data-shell='member'] .rq-bar { position: fixed; z-index: 19; display: flex; align-items: center; left: 14px; right: 14px; bottom: calc(58px + 12px + env(safe-area-inset-bottom)); gap: var(--s-3); padding: var(--s-2) var(--s-2) var(--s-2) 20px; border-radius: var(--r-pill); background: var(--c-dark); color: var(--c-on-dark); box-shadow: 0 14px 30px rgb(var(--sh-ink) / .35); }
 [data-shell='member'] .rq-bar-open { flex: 1 1 auto; min-width: 0; min-height: 44px; display: grid; align-content: center; gap: 2px; padding: 0; border: 0; background: transparent; color: var(--c-on-dark); text-align: left; cursor: pointer; }
-[data-shell='member'] .rq-bar-open:focus-visible, [data-shell='member'] .rq-bar-save:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; border-radius: var(--r-pill); }
+[data-shell='member'] .rq-bar-open:focus-visible, [data-shell='member'] .rq-bar-save:focus-visible { outline: 2px solid var(--c-on-dark); outline-offset: 2px; border-radius: var(--r-pill); box-shadow: none; }
 [data-shell='member'] .rq-bar-title { font: var(--t-label); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 [data-shell='member'] .rq-bar-sub { font: var(--t-body); line-height: 1.3; color: var(--c-on-dark-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 [data-shell='member'] .rq-bar-save { flex: 0 1 auto; max-width: 50%; min-height: 44px; display: grid; align-content: center; justify-items: center; padding: 2px 16px; border: 0; border-radius: var(--r-pill); background: var(--c-bar-fill); color: var(--c-dark); font: var(--t-body-l); font-weight: 700; line-height: 1.2; white-space: nowrap; cursor: pointer; }
@@ -108,7 +108,7 @@
 [data-shell='member'] .rq-cart--sheet { position: static; flex: 1 1 auto; max-width: none; max-height: none; min-height: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; padding: var(--s-5) var(--s-4) calc(var(--s-4) + env(safe-area-inset-bottom)); }
 [data-shell='member'] .rq-cart--sheet .rq-lines { flex: 1 1 auto; max-height: none; overscroll-behavior: contain; }
 [data-shell='member'] .rq-cart--sheet .sheet-close { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; color: var(--c-ink-2); }
-[data-shell='member'] .rq-cart--sheet .sheet-close:focus-visible { outline: 2px solid var(--c-ink); outline-offset: 2px; }
+[data-shell='member'] .rq-cart--sheet .sheet-close:focus-visible { outline: 2px solid var(--c-ink); outline-offset: 2px; box-shadow: none; }
 [data-shell='member'] .rq-sheet .rq-notice { position: static; transform: none; width: auto; margin: var(--s-3) var(--s-4) 0; }
 @keyframes rq-sheet-in { from { transform: translateY(24px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { [data-shell='member'] .rq-sheet { animation: none; } }
@@ -152,7 +152,7 @@
 [data-shell='member'] .rq-custom-intro { color: var(--c-ink-2); font-weight: 600; }
 [data-shell='member'] .rq-custom-row { display: grid; grid-template-columns: 1fr auto; gap: var(--s-3); align-items: end; }
 [data-shell='member'] .rq-custom-qty { display: grid; gap: var(--s-2); }
-[data-shell='member'] .rq-custom-form textarea { min-height: 72px; resize: vertical; }
+[data-shell='member'] .rq-custom-form textarea { min-height: 88px; padding: var(--s-3) var(--s-4); resize: vertical; }
 [data-shell='member'] .rq-custom-input { box-sizing: border-box; width: 100%; min-height: 44px; border-radius: var(--r-md); font-size: 16px; }
 [data-shell='member'] .rq-custom-atmax { margin: calc(var(--s-2) * -1) 0 0; color: var(--c-danger); font: var(--t-label); }
 [data-shell='member'] .rq-custom-atmax:empty { display: none; }

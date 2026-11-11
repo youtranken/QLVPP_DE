@@ -110,20 +110,31 @@ export function RowMenu({ label, items }: { label: string; items: RowMenuItem[] 
       </button>
       {open && (
         <div ref={menu} id={id} role="menu" aria-label={label} className="row-menu" style={style} onKeyDown={onMenuKey}>
-          {items.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              role="menuitem"
-              tabIndex={-1}
-              className={item.danger ? 'row-menu__item row-menu__item--danger' : 'row-menu__item'}
-              aria-disabled={item.disabled || undefined}
-              title={item.title}
-              onClick={() => select(item)}
-            >
-              {item.label}
-            </button>
-          ))}
+          {items.map((item, i) => {
+            // B0.9: lý do mục bị tắt hiện thành dòng chữ nhỏ ngay trong mục (không chỉ nằm trong title), đọc qua aria-describedby
+            const hint = item.disabled && item.title ? `${id}-hint-${i}` : undefined;
+            return (
+              <button
+                key={item.label}
+                type="button"
+                role="menuitem"
+                tabIndex={-1}
+                className={item.danger ? 'row-menu__item row-menu__item--danger' : 'row-menu__item'}
+                aria-disabled={item.disabled || undefined}
+                aria-label={hint ? item.label : undefined}
+                aria-describedby={hint}
+                title={hint ? undefined : item.title}
+                onClick={() => select(item)}
+              >
+                {item.label}
+                {hint && (
+                  <small id={hint} className="row-menu__hint">
+                    {item.title}
+                  </small>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </>

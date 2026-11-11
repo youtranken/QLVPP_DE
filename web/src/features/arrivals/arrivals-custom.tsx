@@ -36,7 +36,7 @@ export function ArrivalsCustom({ ym, snapshotId, rows, admBusy, onToggleAdm, onS
       await onSaved(code);
     });
   return (
-    <details className="ar-card ar-fold">
+    <details className="ar-card ar-fold disclosure">
       <summary>{t('arrivals.custom.title', { n: rows.length })}</summary>
       <table className="ar-mini">
         <thead>

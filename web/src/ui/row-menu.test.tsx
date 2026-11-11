@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RowMenu } from './row-menu';
 
@@ -61,12 +61,14 @@ describe('RowMenu', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  it('mục vô hiệu: aria-disabled, giữ title giải thích, bấm không gọi onSelect và menu vẫn mở', async () => {
+  it('mục vô hiệu: aria-disabled, lý do hiện thành chữ nhỏ trong mục + aria-describedby, bấm không gọi onSelect và menu vẫn mở', async () => {
     const { trigger, stop } = setup({ disabledTitle: 'Đang dùng' });
     await userEvent.click(trigger);
     const item = screen.getByRole('menuitem', { name: 'Ngừng' });
     expect(item).toHaveAttribute('aria-disabled', 'true');
-    expect(item).toHaveAttribute('title', 'Đang dùng');
+    expect(item).toHaveAccessibleDescription('Đang dùng');
+    expect(within(item).getByText('Đang dùng')).toHaveClass('row-menu__hint');
+    expect(item).not.toHaveAttribute('title');
     await userEvent.click(item);
     expect(stop).not.toHaveBeenCalled();
     expect(screen.getByRole('menu')).toBeInTheDocument();

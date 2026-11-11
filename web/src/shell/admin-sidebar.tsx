@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/ui/icon';
+import { ADMIN_TABLET_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { currentPeriodQuery } from '@/features/request/request.api';
 import { ADMIN_NAV, type AdminPage } from '@/shell/admin-nav';
 import { AdminPeriodCard } from '@/shell/admin-period-card';
@@ -15,8 +16,10 @@ function SideLink({ page, count, onNavigate }: { page: AdminPage; count?: number
   const label = t(page.titleKey);
   // Mục là tiền tố của mục khác thì chỉ khớp đúng đường dẫn để hai mục không sáng chung
   const end = ALL_PATHS.some((p) => p.startsWith(`${page.path}/`));
+  // B0.9: chỉ cột thu gọn (768–1279, ẩn chữ) mới cần tooltip; cột đủ chữ và menu điện thoại thì title là thừa
+  const collapsed = useMediaQuery(ADMIN_TABLET_QUERY) && !onNavigate;
   return (
-    <NavLink to={`/admin/${page.path}`} end={end} title={label} className="side__link" onClick={onNavigate}>
+    <NavLink to={`/admin/${page.path}`} end={end} title={collapsed ? label : undefined} className="side__link" onClick={onNavigate}>
       <Icon name={page.icon} />
       <span className="side__label">{label}</span>
       {!!count && page.badge && (

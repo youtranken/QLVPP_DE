@@ -99,7 +99,7 @@ export function ReportSnapshots({
   const items = query.data?.items ?? [];
   const sentId = items.find((s) => s.has_items !== false)?.id;
   return (
-    <details className="bc-snaps-box">
+    <details className="bc-snaps-box disclosure">
       <summary>
         {t("reports.snapshots.title", {
           n: query.isSuccess ? items.length : "…",

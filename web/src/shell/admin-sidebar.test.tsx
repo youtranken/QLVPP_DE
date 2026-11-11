@@ -8,7 +8,9 @@ import { stubShellApi } from '@/test/admin-shell-stub';
 
 const rows = (n: number) => ({ items: Array.from({ length: n }, (_, i) => ({ id: `l${i}` })) });
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
-const navLink = (title: string) => within(sideNav()).getByTitle(title);
+// Tên đọc = nhãn mục (+ ", n …" khi có số); title chỉ còn ở cột thu gọn (B0.9)
+const byLabel = (label: string) => (name: string) => name === label || name.startsWith(`${label},`);
+const navLink = (label: string) => within(sideNav()).getByRole('link', { name: byLabel(label) });
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -161,7 +163,7 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
       await userEvent.click(screen.getByRole('radio', { name: 'English' }));
       const side = screen.getByRole('navigation', { name: 'Admin menu' });
       expect(within(side).getByRole('group', { name: 'Monthly' })).toBeInTheDocument();
-      expect(within(side).getByTitle('Categories')).toBeInTheDocument();
+      expect(within(side).getByRole('link', { name: byLabel('Categories') })).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage('vi');
     }

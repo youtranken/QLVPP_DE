@@ -15,7 +15,7 @@
 [data-shell='member'] .acct .btn--danger.acct-logout { min-height: 44px; border: 0; border-radius: var(--r-pill); background: var(--c-danger-soft); color: var(--c-danger); font: var(--t-label); cursor: pointer; }
 [data-shell='member'] .acct .btn--danger.acct-logout:hover:not(:disabled) { background: var(--c-danger-hover); }
 [data-shell='member'] .acct .btn--danger.acct-logout:disabled { opacity: .6; cursor: default; }
-[data-shell='member'] .acct .btn--danger.acct-logout:focus-visible { outline: 2px solid var(--c-danger); outline-offset: 2px; }
+[data-shell='member'] .acct .btn--danger.acct-logout:focus-visible { outline: 2px solid var(--c-danger); outline-offset: 2px; box-shadow: none; }
 [data-shell='member'] .acct-sheet { pointer-events: auto; width: 100%; max-width: none; max-height: min(88dvh, calc(100dvh - 24px)); overflow: auto; box-sizing: border-box; padding: var(--s-4) var(--s-4) calc(var(--s-4) + env(safe-area-inset-bottom)); border-radius: 28px 28px 0 0; background: var(--c-surface); box-shadow: var(--e-5); }
 [data-shell='member'] .acct-sheet__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s-2); }
 [data-shell='member'] .acct-sheet__head h2 { margin: 0; font: var(--t-h2); color: var(--c-ink); }

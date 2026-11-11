@@ -1,0 +1,61 @@
+/* Vòng 5 — luật nền dùng chung cho CẢ HAI khung (nhân viên + quản lý). Nạp sau cùng trong main.tsx.
+   Specificity tính sẵn để thắng luật riêng từng màn có cùng thuộc tính; không đổi bố cục, chỉ đổi phần ghi trong từng mục. */
+
+/* B0.3: checkbox / radio màu nhấn của app, 18px trên máy tính, 20px ở điện thoại; nhãn bọc ngoài đủ vùng chạm 44 */
+[data-shell] input:is([type='checkbox'], [type='radio']) { accent-color: var(--c-acc); }
+[data-shell] :where(input[type='checkbox'], input[type='radio']) { width: 18px; height: 18px; }
+@media (max-width: 767px) {
+  [data-shell] :where(input[type='checkbox'], input[type='radio']) { width: 20px; height: 20px; }
+  [data-shell] label:has(> input:is([type='checkbox'], [type='radio'])) { min-height: var(--hit); }
+}
+
+/* B0.4: ô chọn gốc của trình duyệt dùng cùng mũi tên với .select (icon chev, 16px, màu --c-muted); danh sách xổ ra giữ của trình duyệt */
+[data-shell] select:not([multiple], .select__box > select) {
+  appearance: none;
+  padding-right: var(--s-8);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2347636C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--s-3) center;
+  background-size: 16px 16px;
+}
+@media (forced-colors: active) {
+  [data-shell] select:not([multiple], .select__box > select) { appearance: auto; background-image: none; }
+  [data-shell] .select select { appearance: auto; }
+  [data-shell] .select svg { display: none; }
+}
+
+/* B0.5: ô nhập nhiều dòng — lề trong, chỉ kéo dọc, cao tối thiểu 88 */
+[data-shell] textarea:not([hidden]) { padding: var(--s-3) var(--s-4); resize: vertical; min-height: 88px; }
+
+/* B0.6: hộp gập dùng chung — chevron 16px (vẽ bằng CSS nên không bị đọc), dòng tóm tắt cao tối thiểu 44, có vòng focus */
+[data-shell] .disclosure > summary { display: flex; align-items: center; gap: var(--s-2); min-height: var(--hit); list-style: none; cursor: pointer; border-radius: var(--r-xs); }
+[data-shell] .disclosure > summary::-webkit-details-marker { display: none; }
+[data-shell] .disclosure > summary::before {
+  content: '';
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / 16px 16px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / 16px 16px no-repeat;
+  transform: rotate(-90deg);
+  transition: transform var(--d-1) var(--ease-out);
+}
+[data-shell] .disclosure[open] > summary::before { transform: none; }
+[data-shell] .disclosure > summary:focus-visible { outline: none; box-shadow: var(--focus); }
+@media (forced-colors: active) { [data-shell] .disclosure > summary::before { background: CanvasText; } }
+
+/* B0.7: thanh cuộn mảnh theo màu viền (Chrome ≥ 121 bỏ qua ::-webkit-scrollbar khi có scrollbar-color) */
+:root { scrollbar-color: var(--c-line-strong) transparent; }
+html, [data-shell] * { scrollbar-width: thin; }
+[data-shell='admin'] :is(.side, .side__nav, .side-sheet) { scrollbar-color: rgb(255 255 255 / .2) transparent; }
+
+/* B0.8: chữ gợi ý và vùng bôi đen theo bảng màu */
+[data-shell] ::placeholder { color: var(--c-muted); opacity: 1; }
+[data-shell] ::selection { background: var(--c-cta-hover); color: var(--c-ink); }
+
+/* Chữ 16px trên điện thoại (B4.1, B12.6, B0.5): iOS tự phóng to khi focus ô dưới 16px. Một luật cho mọi ô nhập;
+   chỉ đổi cỡ chữ, không đổi chiều cao. :not(#…) nâng specificity để thắng luật `font:` của từng màn nạp sau (CSS theo trang) */
+@media (max-width: 767px) {
+  [data-shell] :is(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea):not(#vpp-16px) { font-size: max(16px, 1em); }
+}

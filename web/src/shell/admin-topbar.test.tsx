@@ -68,7 +68,8 @@ describe('Menu sheet 390 px', () => {
     expect(within(sheet).getByRole('heading', { name: 'Menu quản lý' })).toBeInTheDocument();
     expect(within(sheet).getByText('VPP Công trình · Hành chính')).toBeInTheDocument();
     const nav = within(sheet).getByRole('navigation', { name: 'Menu quản lý' });
-    expect(within(nav).getAllByRole('link').map((a) => a.getAttribute('title'))).toEqual(NAV_ORDER);
+    expect(within(nav).getAllByRole('link').map((a) => a.querySelector('.side__label')?.textContent)).toEqual(NAV_ORDER);
+    expect(within(nav).getAllByRole('link').every((a) => !a.hasAttribute('title'))).toBe(true);
     expect(await within(sheet).findByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng 11 · đang mở/ })).toBeInTheDocument();
     expect(within(sheet).getByRole('radio', { name: 'English' })).toBeInTheDocument();
     expect(within(sheet).getByRole('button', { name: 'Đăng xuất' })).toBeInTheDocument();
@@ -80,7 +81,7 @@ describe('Menu sheet 390 px', () => {
     open('/admin/catalog');
     await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
     const sheet = screen.getByRole('dialog', { name: 'Menu quản lý' });
-    const link = within(sheet).getByTitle(label);
+    const link = within(sheet).getByRole('link', { name: (n) => n === label || n.startsWith(`${label},`) });
     const href = link.getAttribute('href');
     await userEvent.click(link);
     expect(screen.getByTestId('location')).toHaveTextContent(href!);
