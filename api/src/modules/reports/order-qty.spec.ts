@@ -40,14 +40,22 @@ describe('resolveOrderQty', () => {
     });
   });
 
-  it('biên: 0 và 99999 nhận', () => {
-    expect(resolveOrderQty(report, { [A4]: 0, [CUSTOM]: 99999 })).toEqual({
+  it('biên: 0 và 1000 nhận', () => {
+    expect(resolveOrderQty(report, { [A4]: 0, [CUSTOM]: 1000 })).toEqual({
       [A4]: 0,
-      [CUSTOM]: 99999,
+      [CUSTOM]: 1000,
     });
   });
 
-  it.each([[-1], [100000], [1.5], ['7'], [null], [Number.NaN]])(
+  it('số mặc định hệ thống trên 1000 không bị kẹp, không bị chặn', () => {
+    const big = {
+      ...report,
+      byItem: [{ ...report.byItem[0], requested: 1500, backlog_prev: 0 }],
+    };
+    expect(resolveOrderQty(big)[A4]).toBe(1500);
+  });
+
+  it.each([[-1], [1001], [100000], [1.5], ['7'], [null], [Number.NaN]])(
     'biên: %p → VALIDATION fields order_qty.<key>',
     (v) => {
       expect(fieldsOf({ [A4]: v })).toMatchObject({

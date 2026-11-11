@@ -70,9 +70,9 @@ describe('POST admin/reports/:ym/snapshots — bản chốt (E5-S2)', () => {
     expect(s.order_qty[ghim.key]).toBe(4);
   });
 
-  it('biên order_qty: 0 và 99999 → 201', async () => {
+  it('biên order_qty: 0 và 1000 → 201', async () => {
     const { item } = await twoItems();
-    for (const n of [0, 99999]) {
+    for (const n of [0, 1000]) {
       const s = await snapshot(
         (await createOk('2026-11', { kind: 'xlsx', order_qty: { [item]: n } }))
           .id,
@@ -85,7 +85,7 @@ describe('POST admin/reports/:ym/snapshots — bản chốt (E5-S2)', () => {
     ['-1', -1],
     ['1.5', 1.5],
     ['chuỗi "7"', '7'],
-    ['100000', 100000],
+    ['1001', 1001],
     ['null', null],
   ])(
     'biên order_qty: %s → 400 VALIDATION fields order_qty.<key>',

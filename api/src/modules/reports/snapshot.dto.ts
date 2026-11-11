@@ -1,7 +1,8 @@
 import { IsBoolean, IsIn, IsObject, IsOptional } from 'class-validator';
 import type { XlsxLang } from './xlsx-labels';
 
-export const ORDER_QTY_MAX = 99999;
+// Ô Đề nghị người dùng gõ; số mặc định hệ thống tính ra vượt trần vẫn giữ nguyên (không kẹp ngầm)
+export const ORDER_QTY_MAX = 1000;
 
 export class SnapshotBody {
   @IsIn(['xlsx', 'print']) kind!: 'xlsx' | 'print';
