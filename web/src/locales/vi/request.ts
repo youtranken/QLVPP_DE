@@ -12,7 +12,7 @@ const request = {
     },
     receive: {
       stripHead: 'Phiếu tháng {{month}} đã chốt',
-      strip: 'không sửa được nữa · đang giao: đã nhận {{done}}/{{total}} món, còn chờ {{waiting}}',
+      strip: 'đã nhận {{done}}/{{total}} món',
       view: 'Xem',
       older: 'Tháng {{month}} còn chờ {{k}} món',
       title: 'Phiếu tháng {{month}}',
@@ -43,6 +43,9 @@ const request = {
       toRegister: 'Về trang Đăng ký',
       notFound: 'Không có phiếu tháng này',
       monthShort: 'Tháng {{month}}',
+      noClosed: 'Chưa có phiếu nào đã chốt.',
+      noClosedHint: 'Phiếu sẽ hiện ở đây sau ngày khóa đăng ký.',
+      pickMonth: 'Chọn một tháng ở danh sách bên trái để xem phiếu.',
       masterSum: '{{kinds}} món · {{units}} đơn vị',
       savedAt: 'lưu lúc {{time}}',
       chipDelivering: 'Đang giao · đã nhận {{done}}/{{total}} món',

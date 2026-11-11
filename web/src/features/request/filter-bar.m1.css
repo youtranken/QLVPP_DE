@@ -1,7 +1,8 @@
 /* Thanh lọc trang Đăng ký (NhanVienPC.dc.html): tìm, sắp xếp, Đã chọn, chép lại, chip nhóm có số */
 [data-shell='member'] .rq-f { display: flex; flex-direction: column; gap: var(--s-3); padding-bottom: var(--s-3); min-width: 0; }
 [data-shell='member'] .rq-f-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
-[data-shell='member'] .rq-f-search { position: relative; flex: 1 1 280px; max-width: 440px; min-width: 0; display: block; }
+/* Gốc 140 và trần 360: cả hàng (tìm · sắp xếp · Đã chọn · Thêm món khác · Chép lại) vừa một dòng ở 1280 (panel ~840px), ô tìm giãn phần còn lại */
+[data-shell='member'] .rq-f-search { position: relative; flex: 1 1 140px; max-width: 360px; min-width: 0; display: block; }
 [data-shell='member'] .rq-f-search > svg { position: absolute; left: 16px; top: 14px; width: 18px; height: 18px; color: var(--c-ink-2); }
 [data-shell='member'] .rq-f-search input { width: 100%; box-sizing: border-box; min-height: 46px; padding: 0 var(--s-4) 0 calc(var(--s-4) + var(--s-6) + var(--s-1)); border-radius: var(--r-pill); border: 1px solid var(--c-line-input); background: var(--c-surface); color: var(--c-ink); font-family: inherit; font-size: 14px; font-weight: 500; }
 [data-shell='member'] .rq-f-search:has(.search-clear) input { padding-right: calc(var(--s-7) + var(--s-3)); }
@@ -12,6 +13,8 @@
 [data-shell='member'] .rq-f-cnt { font-size: 14px; font-weight: 700; opacity: .75; }
 [data-shell='member'] .rq-f-add { min-height: 44px; padding: 0 var(--s-4); border-radius: var(--r-pill); border: 1px dashed var(--c-line-strong); background: transparent; color: var(--c-ink); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 [data-shell='member'] .rq-f-copy { margin-left: auto; }
+[data-shell='member'] .rq-f-pair { display: contents; }
+[data-shell='member'] .rq-f-add, [data-shell='member'] .rq-copy { white-space: nowrap; }
 [data-shell='member'] .rq-f-chips { display: flex; gap: var(--s-2); flex-wrap: wrap; min-width: 0; }
 [data-shell='member'] .rq-f-count { margin: 0; color: var(--c-ink-2); font-size: 14px; }
 [data-shell='member'] .rq-f-empty { display: flex; flex-direction: column; align-items: center; gap: var(--s-1); padding: var(--s-8) var(--s-4); border-radius: 20px; background: var(--c-veil); color: var(--c-ink); text-align: center; }
@@ -27,4 +30,18 @@
   [data-shell='member'] .rq-f-copy { margin-left: 0; flex: 1 1 100%; }
   [data-shell='member'] .rq-f-copy .rq-copy { width: 100%; justify-content: center; }
   [data-shell='member'] .rq-f-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--s-3)); padding: 0 var(--s-3); }
+}
+
+/* Điện thoại: ô tìm / Sắp xếp (giãn) + Đã chọn / Thêm món khác + Chép lại.
+   Hàng cuối flex-wrap với chữ đầy đủ: đủ chỗ thì hai nút chung một hàng (giãn theo nội dung), không đủ (360–430) thì "Chép lại danh sách tháng N"
+   xuống một hàng riêng rộng hết — không bao giờ gãy chữ trong nút */
+@media (max-width: 767px) {
+  [data-shell='member'] .rq-f-row { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+  [data-shell='member'] .rq-f-search { flex: none; }
+  [data-shell='member'] .rq-f-pair { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
+  [data-shell='member'] .rq-f-pair--act { flex-wrap: wrap; }
+  [data-shell='member'] .rq-f-sort { flex: 1 1 0; min-width: 0; }
+  [data-shell='member'] .rq-f-sort select { width: 100%; }
+  [data-shell='member'] .rq-f-pair--act > * { flex: 1 1 auto; }
+  [data-shell='member'] .rq-f-copy { display: flex; flex-basis: auto; }
 }

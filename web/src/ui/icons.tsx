@@ -65,3 +65,14 @@ export const IconBell = (p: IconProps) => (
     <path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7M10 20a2 2 0 0 0 4 0" />
   </svg>
 );
+// Khung nhân viên không nạp IconSprite: dấu đóng và mũi tên vẽ thẳng tại chỗ
+export const IconX = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="M18 6 6 18M6 6l12 12" />
+  </svg>
+);
+export const IconChevronRight = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="m9 6 6 6-6 6" />
+  </svg>
+);

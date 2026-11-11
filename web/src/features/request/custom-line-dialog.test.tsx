@@ -158,6 +158,17 @@ describe('CustomLineDialog', () => {
     expect(css).toMatch(/\.rq-custom-input \{[^}]*font-size: 16px/);
   });
 
+  it('cùng kiểu hộp nhân viên (rq-dialog); nút đóng là icon SVG có tên "Đóng", không còn ký tự ✕', async () => {
+    const { onClose } = setup();
+    const dialog = await screen.findByRole('dialog', { name: 'Thêm món khác' });
+    expect(dialog).toHaveClass('sheet', 'rq-dialog');
+    const close = within(dialog).getByRole('button', { name: 'Đóng' });
+    expect(close.textContent).toBe('');
+    expect(close.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    await userEvent.click(close);
+    expect(onClose).toHaveBeenCalled();
+  });
+
   it('câu mới không chứa " — "', () => {
     for (const lng of ['vi', 'en']) for (const k of ['request.custom.intro', 'request.custom.atMax']) expect(i18n.t(k, { lng, max: 20 })).not.toContain(' — ');
   });

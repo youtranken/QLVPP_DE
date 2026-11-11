@@ -46,23 +46,28 @@ export function FilterBar({ filter, groups, total, shown, pickedCount, canFav = 
           value={filter.q}
           onChange={(q) => onChange({ q })}
         />
-        <label className="rq-f-sort">
-          <span className="sr-only">{t('request.grid.sort')}</span>
-          <select value={filter.sort} onChange={(e) => onChange({ sort: e.target.value as SortKey })}>
-            {SORT_KEYS.filter(([key]) => canFav || key !== 'fav').map(([key, label]) => (
-              <option key={key} value={key}>
-                {t(label)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="button" className="rq-f-chip" aria-pressed={filter.onlyPicked} onClick={() => onChange({ onlyPicked: !filter.onlyPicked })}>
-          {t('request.grid.picked')} <span className="rq-f-cnt">{pickedCount}</span>
-        </button>
-        <button type="button" className="rq-f-add" onClick={onAddCustom}>
-          + {t('request.grid.addOther')}
-        </button>
-        {copy && <span className="rq-f-copy">{copy}</span>}
+        {/* Hai cặp chỉ là nhóm bố cục cho điện thoại; máy tính bỏ khung (display: contents) */}
+        <div className="rq-f-pair">
+          <label className="rq-f-sort">
+            <span className="sr-only">{t('request.grid.sort')}</span>
+            <select value={filter.sort} onChange={(e) => onChange({ sort: e.target.value as SortKey })}>
+              {SORT_KEYS.filter(([key]) => canFav || key !== 'fav').map(([key, label]) => (
+                <option key={key} value={key}>
+                  {t(label)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="button" className="rq-f-chip" aria-pressed={filter.onlyPicked} onClick={() => onChange({ onlyPicked: !filter.onlyPicked })}>
+            {t('request.grid.picked')} <span className="rq-f-cnt">{pickedCount}</span>
+          </button>
+        </div>
+        <div className="rq-f-pair rq-f-pair--act">
+          <button type="button" className="rq-f-add" onClick={onAddCustom}>
+            + {t('request.grid.addOther')}
+          </button>
+          {copy && <span className="rq-f-copy">{copy}</span>}
+        </div>
       </div>
       <GroupChips
         className="rq-f-chips"

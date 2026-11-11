@@ -159,7 +159,7 @@ describe('Song ngữ các màn Plan 3', () => {
   });
 
   it('Lịch sử: en không còn chữ Việt (kỳ, trạng thái giao, nhận lẻ)', async () => {
-    const entry = { period_ym: '2026-10', line_count: 3, total_qty: 10, delivered_qty: 6, remaining_qty: 4, cancelled_qty: 0, custom: { pending: 1, accepted: 0, converted: 2, rejected: 1 } };
+    const entry = { period_ym: '2026-10', line_count: 3, total_qty: 10, delivered_qty: 6, remaining_qty: 4, cancelled_qty: 0, custom: { pending: 1, accepted: 0, converted: 2, rejected: 1 }, catalog: { line_count: 3, qty: 10, delivered_qty: 6, remaining_qty: 4, owed_line_count: 1 } };
     vi.stubGlobal(
       'fetch',
       vi.fn((url: string) => {

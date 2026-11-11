@@ -5,7 +5,8 @@ import { useCurrentPeriod, useMyRequest, type LineView, type RequestView } from 
 import { AdjustmentsBlock, RemovedAllNote } from './history-adjustments';
 import { Chip, ReviewTag } from './history-chip';
 import { ReceiveStatus } from './receive-dialog';
-import { receiveRows, receiveSummary, type ReceiveRow } from './receive-rows';
+import { isSuspendedLine, receiveRows, receiveSummary, type ReceiveRow } from './receive-rows';
+import { CUSTOM_STATUSES } from './history.api';
 import { useRequestFormat } from './request-format';
 
 function cancelNote(l: LineView, t: ReturnType<typeof useTranslation>['t']): string | null {
@@ -89,10 +90,15 @@ function Table({ view }: { view: RequestView }) {
 function Header({ ym, view, level }: { ym: string; view: RequestView; level: 1 | 2 }) {
   const { t, i18n } = useTranslation();
   const Heading = level === 1 ? 'h1' : 'h2';
-  const rows = receiveRows(view, t, i18n.language);
-  const sum = receiveSummary(rows);
+  // Một luật với cột trái (catalog của API): chỉ dòng món trong danh mục, không tạm ngưng, số lượng hiện tại
+  // (sau điều chỉnh của Adm D&E); món ngoài danh mục ghi phần riêng, không cộng vào số món/đơn vị/chip giao
+  const catalog = view.lines.filter((l) => l.review_status === 'n/a' && !isSuspendedLine(l));
+  const catalogIds = new Set(catalog.map((l) => l.id));
+  const sum = receiveSummary(receiveRows(view, t, i18n.language).filter((r) => catalogIds.has(r.id)));
+  const custom = CUSTOM_STATUSES.map((k) => ({ k, n: view.lines.filter((l) => l.review_status === k).length })).filter((c) => c.n > 0);
   const parts = [
-    t('request.history.summary', { kinds: rows.length, units: rows.reduce((n, r) => n + r.registered, 0) }),
+    t('request.history.summary', { kinds: catalog.length, units: catalog.reduce((n, l) => n + l.qty, 0) }),
+    ...custom.map((c) => t(`request.history.customCount.${c.k}`, { n: c.n })),
     t('request.history.savedAt', { time: vnSavedStamp(view.saved_at) }),
     view.department,
   ].filter(Boolean);

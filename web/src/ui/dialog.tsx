@@ -1,25 +1,22 @@
 import * as RD from '@radix-ui/react-dialog';
 import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
-import type { KeyboardEvent, ReactNode, RefObject, SVGProps } from 'react';
+import type { KeyboardEvent, ReactNode, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { discardOptions, useOptionalConfirm } from '@/ui/confirm-context';
 import { DialogPortalContext } from '@/ui/dialog-portal';
-
-const X_STROKE: SVGProps<SVGSVGElement> = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' };
+import { IconX } from '@/ui/icons';
 
 export const DialogTitle = RD.Title;
 export const DialogDescription = RD.Description;
 export const DialogClose = RD.Close;
 
-// Tự vẽ X thay vì dùng sprite: hộp xác nhận còn mở trong khung nhân viên, nơi không có IconSprite
+// IconX vẽ tại chỗ thay vì dùng sprite: hộp xác nhận còn mở trong khung nhân viên, nơi không có IconSprite
 export function DialogCloseButton({ disabled = false }: { disabled?: boolean }) {
   const { t } = useTranslation();
   return (
     <RD.Close asChild>
       <button type="button" className="sheet-close" aria-label={t('common.close')} disabled={disabled}>
-        <svg width={20} height={20} viewBox="0 0 24 24" aria-hidden="true" focusable={false} {...X_STROKE}>
-          <path d="M18 6 6 18M6 6l12 12" />
-        </svg>
+        <IconX width={20} height={20} strokeWidth={2} focusable={false} />
       </button>
     </RD.Close>
   );

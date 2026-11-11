@@ -15,7 +15,7 @@ const request: Messages<typeof vi> = {
     },
     receive: {
       stripHead: 'Month {{month}} order is closed',
-      strip: 'can no longer be changed · delivering: received {{done}}/{{total}} items, {{waiting}} still waiting',
+      strip: 'received {{done}}/{{total}} items',
       view: 'View',
       older: 'Month {{month}}: {{k}} items still waiting',
       title: 'Month {{month}} order',
@@ -46,6 +46,9 @@ const request: Messages<typeof vi> = {
       toRegister: 'Go to Register',
       notFound: 'No order for this month',
       monthShort: 'Month {{month}}',
+      noClosed: 'No locked orders yet.',
+      noClosedHint: 'Orders appear here after the registration deadline.',
+      pickMonth: 'Pick a month on the left to see its order.',
       masterSum: '{{kinds}} items · {{units}} units',
       savedAt: 'saved {{time}}',
       chipDelivering: 'Being delivered · received {{done}}/{{total}} items',

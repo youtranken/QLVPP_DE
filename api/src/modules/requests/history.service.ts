@@ -7,6 +7,7 @@ import { YM } from '../../common/ym';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import {
+  CATALOG_LINE,
   EFFECTIVE_LINE,
   REMAINING_QTY,
   UNDELIVERED_LINE,
@@ -29,18 +30,38 @@ export interface HistoryItem {
     converted: number;
     rejected: number;
   };
+  // Cùng các số trên nhưng chỉ dòng món trong danh mục, không tạm ngưng (CATALOG_LINE): Lịch sử
+  // đếm "N món · U đơn vị" và chip giao theo một luật, món ngoài DM chỉ hiện ở dòng custom
+  catalog: {
+    line_count: number;
+    qty: number;
+    delivered_qty: number;
+    remaining_qty: number;
+    owed_line_count: number;
+  };
 }
 
-type HistoryRow = Omit<HistoryItem, 'custom'> & {
-  pending: number;
-  accepted: number;
-  converted: number;
-  rejected: number;
+type CatalogColumns = {
+  cat_line_count: number;
+  cat_qty: number;
+  cat_delivered_qty: number;
+  cat_remaining_qty: number;
+  cat_owed_line_count: number;
 };
+
+type HistoryRow = Omit<HistoryItem, 'custom' | 'catalog'> &
+  CatalogColumns & {
+    pending: number;
+    accepted: number;
+    converted: number;
+    rejected: number;
+  };
 
 // Chỉ dòng hiệu lực → total = delivered + cancelled + remaining; pending/rejected đếm riêng ở custom
 const effective = (expr: SQL) =>
   sql`coalesce(sum(${expr}) FILTER (WHERE ${EFFECTIVE_LINE}), 0)::int`;
+const catalog = (expr: SQL) =>
+  sql`coalesce(sum(${expr}) FILTER (WHERE ${CATALOG_LINE}), 0)::int`;
 const count = (status: string) =>
   sql`count(*) FILTER (WHERE l.review_status = ${status})::int`;
 
@@ -69,7 +90,12 @@ export class HistoryService {
                SELECT 1 FROM request_line_adjustments a WHERE a.request_id = r.id
              )) AS removed_all,
              ${count('pending')} AS pending, ${count('accepted')} AS accepted,
-             ${count('converted')} AS converted, ${count('rejected')} AS rejected
+             ${count('converted')} AS converted, ${count('rejected')} AS rejected,
+             count(l.id) FILTER (WHERE ${CATALOG_LINE})::int AS cat_line_count,
+             ${catalog(sql`l.qty`)} AS cat_qty,
+             ${catalog(sql`l.delivered_qty`)} AS cat_delivered_qty,
+             ${catalog(REMAINING_QTY)} AS cat_remaining_qty,
+             count(l.id) FILTER (WHERE ${CATALOG_LINE} AND ${REMAINING_QTY} > 0)::int AS cat_owed_line_count
       FROM requests r LEFT JOIN request_lines l ON l.request_id = r.id
       WHERE r.user_sub = ${userSub}
         AND (${after === null} OR r.period_ym < ${after ? ymToDate(after) : null}::date)
@@ -79,18 +105,38 @@ export class HistoryService {
     `);
     const page = rows.slice(0, limit);
     return {
-      items: page.map(
-        ({ pending, accepted, converted, rejected, ...rest }) => ({
-          ...rest,
-          custom: { pending, accepted, converted, rejected },
-        }),
-      ),
+      items: page.map(toItem),
       next_cursor:
         rows.length > limit
           ? encodeCursor([page[page.length - 1].period_ym])
           : null,
     };
   }
+}
+
+export function toItem({
+  pending,
+  accepted,
+  converted,
+  rejected,
+  cat_line_count,
+  cat_qty,
+  cat_delivered_qty,
+  cat_remaining_qty,
+  cat_owed_line_count,
+  ...rest
+}: HistoryRow): HistoryItem {
+  return {
+    ...rest,
+    custom: { pending, accepted, converted, rejected },
+    catalog: {
+      line_count: cat_line_count,
+      qty: cat_qty,
+      delivered_qty: cat_delivered_qty,
+      remaining_qty: cat_remaining_qty,
+      owed_line_count: cat_owed_line_count,
+    },
+  };
 }
 
 function parseCursor(raw: string): string {

@@ -140,7 +140,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
     try {
       await page.goto('/');
       const strip = page.locator('.rq-recv-strip');
-      await expect(strip).toContainText(`Phiếu tháng ${prevMonth} đã chốt · không sửa được nữa · đang giao: đã nhận 1/2 món, còn chờ 1`);
+      await expect(strip).toContainText(`Phiếu tháng ${prevMonth} đã chốt · đã nhận 1/2 món`);
       await strip.getByRole('button', { name: 'Xem', exact: true }).click();
       const receive = page.getByRole('dialog', { name: `Phiếu tháng ${prevMonth}` });
       await expect(receive.getByRole('link', { name: 'Xem lịch sử các tháng' })).toHaveAttribute('href', `/history/${prevYm}`);

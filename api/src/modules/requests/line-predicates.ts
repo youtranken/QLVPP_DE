@@ -13,6 +13,11 @@ export const SUSPENDED_LINE = sql.raw(SUSPENDED_LINE_SQL);
 export const EFFECTIVE_LINE = sql.raw(
   `(l.review_status IN ('n/a', 'accepted', 'converted') AND NOT ${SUSPENDED_LINE_SQL})`,
 );
+// Dòng món trong danh mục từ đầu (không phải món ngoài DM, kể cả đã duyệt/đã thêm vào DM) và không tạm ngưng:
+// Lịch sử nhân viên chỉ đếm số món/đơn vị/tình trạng giao trên các dòng này, món ngoài DM ghi dòng riêng
+export const CATALOG_LINE = sql.raw(
+  `(l.review_status = 'n/a' AND NOT ${SUSPENDED_LINE_SQL})`,
+);
 // Định nghĩa duy nhất "phần còn lại" phía SQL; remainingOf (delivery) là bản TS của cùng công thức
 export const REMAINING_QTY = sql.raw(
   '(l.qty - l.delivered_qty - l.cancelled_qty)',
