@@ -86,7 +86,8 @@ describe('HistoryPage — master–detail', () => {
     stub([
       {
         items: [
-          item({ period_ym: '2026-10', delivered_qty: 6, remaining_qty: 4, owed_line_count: 2, custom: { pending: 1, accepted: 0, converted: 2, rejected: 1 } }),
+          // line_count đếm cả 4 dòng ngoài danh mục; số món chỉ còn 3 món trong danh mục
+          item({ period_ym: '2026-10', line_count: 7, delivered_qty: 6, remaining_qty: 4, owed_line_count: 2, custom: { pending: 1, accepted: 0, converted: 2, rejected: 1 } }),
           item({ period_ym: '2026-09', delivered_qty: 10, remaining_qty: 0 }),
           item({ period_ym: '2026-07', owed_line_count: 1 }),
         ],
@@ -153,6 +154,23 @@ describe('HistoryPage — master–detail', () => {
     await userEvent.click(within(screen.getByRole('main')).getByRole('link', { name: /Lịch sử/ }));
     expect(await screen.findByText('Tháng 9')).toBeInTheDocument();
     expect(screen.getByText('Tháng 10')).toBeInTheDocument();
+  });
+
+  it('390 /history: không tô sẵn tháng mới nhất (không aria-current), mỗi tháng có dấu › ẩn với trình đọc', async () => {
+    mockViewport(390);
+    stub([{ items: [item({ period_ym: '2026-10', delivered_qty: 1, remaining_qty: 1 }), item({ period_ym: '2026-09' })], next_cursor: null }]);
+    renderApp(makeMe('member'), '/history');
+    const oct = (await screen.findByText('Tháng 10')).closest('a')!;
+    expect(oct).not.toHaveAttribute('aria-current');
+    expect(screen.getByText('Tháng 9').closest('a')).not.toHaveAttribute('aria-current');
+    expect(oct.querySelector('svg.hs-m-chev')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('1280: chỉ có phiếu kỳ đang mở (chưa chốt) → khung phải báo "Chưa có phiếu nào đã chốt."', async () => {
+    stub([{ items: [item({ period_ym: '2026-12', line_count: 2, total_qty: 3, remaining_qty: 3 })], next_cursor: null }], [], {}, PERIOD_DEC);
+    renderApp(makeMe('member'), '/history');
+    expect(await screen.findByText('Chưa có phiếu nào đã chốt.')).toBeInTheDocument();
+    expect(screen.getByText('Phiếu sẽ hiện ở đây sau ngày khóa đăng ký.')).toBeInTheDocument();
   });
 
   it('en: dòng món dùng name_en', async () => {

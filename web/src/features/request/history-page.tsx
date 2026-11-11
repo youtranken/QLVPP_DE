@@ -23,6 +23,8 @@ export function HistoryLayout({ ym }: { ym?: string }) {
   // Chưa biết kỳ đang mở thì chưa chọn tháng mặc định (tránh GET thừa phiếu kỳ đang mở)
   const latestClosed = period.isPending ? undefined : items.find((i) => !isOpen(i.period_ym) && i.line_count > 0)?.period_ym;
   const selected = ym ?? latestClosed;
+  // Điện thoại chỉ có danh sách: không tô sẵn tháng nào như đang chọn
+  const marked = narrow ? ym : selected;
 
   if (narrow && ym) {
     const back = (
@@ -57,7 +59,7 @@ export function HistoryLayout({ ym }: { ym?: string }) {
   ) : (
     <HistoryMaster
       items={items}
-      selected={selected}
+      selected={marked}
       isOpen={isOpen}
       hasMore={!!history.hasNextPage}
       loadingMore={history.isFetchingNextPage}
@@ -71,7 +73,15 @@ export function HistoryLayout({ ym }: { ym?: string }) {
       {split ? (
         <div className="hs-split">
           {master}
-          <div className="hs-pane">{selected ? <HistoryDetail ym={selected} /> : period.isPending ? <Loading /> : null}</div>
+          <div className="hs-pane">
+            {selected ? (
+              <HistoryDetail ym={selected} />
+            ) : period.isPending ? (
+              <Loading />
+            ) : (
+              <EmptyState title={t('request.history.noClosed')} hint={t('request.history.noClosedHint')} />
+            )}
+          </div>
         </div>
       ) : (
         master

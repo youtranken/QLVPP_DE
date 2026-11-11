@@ -43,6 +43,8 @@ const request = {
       toRegister: 'Về trang Đăng ký',
       notFound: 'Không có phiếu tháng này',
       monthShort: 'Tháng {{month}}',
+      noClosed: 'Chưa có phiếu nào đã chốt.',
+      noClosedHint: 'Phiếu sẽ hiện ở đây sau ngày khóa đăng ký.',
       masterSum: '{{kinds}} món · {{units}} đơn vị',
       savedAt: 'lưu lúc {{time}}',
       chipDelivering: 'Đang giao · đã nhận {{done}}/{{total}} món',

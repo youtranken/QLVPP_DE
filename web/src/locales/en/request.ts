@@ -46,6 +46,8 @@ const request: Messages<typeof vi> = {
       toRegister: 'Go to Register',
       notFound: 'No order for this month',
       monthShort: 'Month {{month}}',
+      noClosed: 'No locked orders yet.',
+      noClosedHint: 'Orders appear here after the registration deadline.',
       masterSum: '{{kinds}} items · {{units}} units',
       savedAt: 'saved {{time}}',
       chipDelivering: 'Being delivered · received {{done}}/{{total}} items',

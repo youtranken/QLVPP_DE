@@ -86,13 +86,20 @@ function Table({ view }: { view: RequestView }) {
   );
 }
 
+const CUSTOM_STATUSES = ['pending', 'accepted', 'converted', 'rejected'] as const;
+
 function Header({ ym, view, level }: { ym: string; view: RequestView; level: 1 | 2 }) {
   const { t, i18n } = useTranslation();
   const Heading = level === 1 ? 'h1' : 'h2';
   const rows = receiveRows(view, t, i18n.language);
   const sum = receiveSummary(rows);
+  // Đếm như cột trái: chỉ món trong danh mục còn trong phiếu; món ngoài danh mục ghi một phần riêng
+  const catalogIds = new Set(view.lines.filter((l) => l.review_status === 'n/a').map((l) => l.id));
+  const kinds = catalogIds.size;
+  const custom = CUSTOM_STATUSES.map((k) => ({ k, n: view.lines.filter((l) => l.review_status === k).length })).filter((c) => c.n > 0);
   const parts = [
-    t('request.history.summary', { kinds: rows.length, units: rows.reduce((n, r) => n + r.registered, 0) }),
+    t('request.history.summary', { kinds, units: rows.reduce((n, r) => (catalogIds.has(r.id) ? n + r.registered : n), 0) }),
+    ...custom.map((c) => t(`request.history.customCount.${c.k}`, { n: c.n })),
     t('request.history.savedAt', { time: vnSavedStamp(view.saved_at) }),
     view.department,
   ].filter(Boolean);
