@@ -118,7 +118,8 @@ html, [data-shell] * { scrollbar-width: thin; }
 [data-shell] .date-range__box { display: flex; width: 100%; }
 [data-shell] .date-range__trigger::after { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") center / 16px 16px no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
 [data-shell] .date-range__trigger[aria-expanded='true']::after { transform: none; }
-[data-shell] .cal-pop { z-index: 60; padding: var(--s-3); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-2); }
+/* max-height do popoverFit đặt (không cao quá màn): màn thấp hơn lịch thì cuộn trong lịch, không bị cắt */
+[data-shell] .cal-pop { z-index: 60; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain; padding: var(--s-3); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-2); }
 [data-shell] .cal { display: grid; gap: var(--s-2); width: 296px; max-width: calc(100vw - var(--s-7)); }
 [data-shell] .cal__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
 [data-shell] .cal__title { font: var(--t-label); color: var(--c-ink); text-transform: capitalize; }

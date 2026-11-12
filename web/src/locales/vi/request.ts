@@ -149,6 +149,9 @@ const request = {
       missingTitle: 'Không thấy món cần?',
       missingAction: 'Thêm tại đây',
       unitMax: 'Tối đa {{max}} {{unit}}/tháng',
+      // Thẻ món: tách phần "/tháng" để thẻ hẹp (360) ẩn nó khỏi mắt mà vẫn đọc cho trình đọc màn hình
+      unitMaxHead: 'Tối đa {{max}} {{unit}}',
+      unitMaxPer: '/tháng',
       adminAdded: 'Adm D&E thêm · {{qty}}',
       locked: 'Đã đăng ký {{qty}}',
       paused: 'Không đặt được',

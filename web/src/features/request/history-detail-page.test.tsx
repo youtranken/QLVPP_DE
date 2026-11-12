@@ -66,7 +66,7 @@ describe('HistoryDetailPage', () => {
     expect(within(rowOf('Bút ghi đĩa')).getByText('Adm D&E bỏ món · Không có hàng')).toBeInTheDocument();
   });
 
-  it('bảng chi tiết có colgroup khớp số cột (cột Ghi chú bỏ thì col cũng bỏ), chỉ cột Món không đặt bề rộng: đổi tháng thì cột không co giãn theo chữ', async () => {
+  it('bảng chi tiết có colgroup khớp số cột, chỉ cột Món không đặt bề rộng: đổi tháng thì cột không co giãn theo chữ', async () => {
     past([L('1', 'Bút bảng')]);
     renderApp(makeMe('member'), '/history/2026-10');
     const table = (await screen.findByRole('columnheader', { name: 'Món' })).closest('table')!;
@@ -76,20 +76,23 @@ describe('HistoryDetailPage', () => {
     expect(cols[0]!.className).toBe('');
   });
 
-  it('ô Ghi chú trống không ghi gì (thẻ không còn "Ghi chú:" trơ trọi); cả cột trống thì bỏ cột', async () => {
+  it('ô Ghi chú trống hiện "—" (bảng) và mang data-empty để dạng thẻ ẩn cả ô, không còn "Ghi chú:" trơ trọi', async () => {
     past([L('1', 'Bút bảng', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }), L('3', 'Bút dạ')]);
     renderApp(makeMe('member'), '/history/2026-10');
     expect(await screen.findByRole('columnheader', { name: 'Ghi chú' })).toBeInTheDocument();
     const empty = rowOf('Bút dạ').querySelector('td.hs-note')!;
-    expect(empty).toBeEmptyDOMElement();
+    expect(empty).toHaveAttribute('data-empty');
+    expect(empty).toHaveTextContent('—');
+    expect(rowOf('Bút bảng').querySelector('td.hs-note')).not.toHaveAttribute('data-empty');
   });
 
-  it('không dòng nào có ghi chú → không có cột Ghi chú', async () => {
+  it('tháng không có ghi chú nào vẫn giữ cột Ghi chú (cùng số cột, cùng colgroup với tháng có ghi chú → đổi tháng không dời cột)', async () => {
     past([L('1', 'Bút bảng'), L('3', 'Bút dạ')]);
     renderApp(makeMe('member'), '/history/2026-10');
-    expect(await screen.findByRole('columnheader', { name: 'Tình trạng' })).toBeInTheDocument();
-    expect(screen.queryByRole('columnheader', { name: 'Ghi chú' })).toBeNull();
-    expect(document.querySelector('td.hs-note')).toBeNull();
+    expect(await screen.findByRole('columnheader', { name: 'Ghi chú' })).toBeInTheDocument();
+    const table = screen.getByRole('columnheader', { name: 'Món' }).closest('table')!;
+    expect([...table.querySelectorAll(':scope > colgroup > col')].map((c) => c.className)).toEqual(['', 'hs-c-unit', 'hs-c-reg', 'hs-c-give', 'hs-c-recv', 'hs-c-st', 'hs-c-note']);
+    expect([...document.querySelectorAll('td.hs-note')].every((td) => td.hasAttribute('data-empty'))).toBe(true);
   });
 
   it('khối "Điều chỉnh của Adm D&E": "08/11 08:30 · Bút ghi đĩa 1 thành 0 · Lý do: Không có hàng"; lý do cũ over_quota hiện "Vượt định mức"', async () => {

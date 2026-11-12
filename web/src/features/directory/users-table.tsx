@@ -60,6 +60,8 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
         {
           id: 'name',
           header: t('users.page.colName'),
+          // Sàn 13rem (208px): ở 768 bảng chạm sàn, tên "Hoàng Nộp Hồ Sơ 1" vẫn một dòng
+          meta: { minWidth: '13rem' },
           cell: ({ row: { original: u } }) => (
             <span className="dr-person">
               <UserAvatar user={u} />
@@ -93,8 +95,10 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
         },
         { id: 'code', header: t('users.page.colCode'), meta: { width: '5.5rem' }, cell: ({ row }) => <Clip text={row.original.employeeCode} line /> },
         { id: 'department', header: t('users.page.colDepartment'), meta: { width: '6.5rem' }, cell: ({ row }) => <Clip text={row.original.department} /> },
-        ...(regMonth === null ? [] : [{ id: 'reg', header: t('users.reg.col', { month: regMonth }), meta: { width: '7.5rem' }, cell: ({ row }: { row: { original: UserRow } }) => <RegCell reg={row.original.reg} /> }]),
-        { id: 'team', header: t('users.page.colTeam'), meta: { width: '5.5rem' }, cell: ({ row }) => <Clip text={row.original.team} line /> },
+        // Tháng vừa khít chữ dài nhất ("Đã đăng ký" 84px + đệm 24), Nhóm bớt 4px: ở 1024 bảng chỉ rộng 54rem nên mỗi px
+        // cột khác lấy từ cột Họ tên — hai cột này nhường lại 16px cho Họ tên giữ 208px
+        ...(regMonth === null ? [] : [{ id: 'reg', header: t('users.reg.col', { month: regMonth }), meta: { width: '6.75rem' }, cell: ({ row }: { row: { original: UserRow } }) => <RegCell reg={row.original.reg} /> }]),
+        { id: 'team', header: t('users.page.colTeam'), meta: { width: '5.25rem' }, cell: ({ row }) => <Clip text={row.original.team} line /> },
         {
           id: 'status',
           header: t('users.page.colStatus'),

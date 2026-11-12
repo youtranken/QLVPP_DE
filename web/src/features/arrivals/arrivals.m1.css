@@ -83,7 +83,10 @@
   [data-shell='admin'] .ar-col-stock { width: 5rem; }
   /* Cột số hẹp vừa số (tiêu đề xuống 2 dòng): nhường chỗ cho cột Món — tên món không gãy 3–4 dòng */
   [data-shell='admin'] .ar-col-ordered { width: 5.5rem; }
-  [data-shell='admin'] .ar-col-qty { width: 15rem; }
+  /* Ô số 72px vẫn đủ 4 chữ số (không có nút tăng/giảm); ô + nút "NCC hết hàng"/"Out at supplier" (111px) + đệm vừa 13.75rem —
+     phần bớt ra trả cho cột Món để tên món thường còn 1–2 dòng ở 1280 */
+  [data-shell='admin'] .ar-col-qty { width: 13.75rem; }
+  [data-shell='admin'] .ar-table .ar-qty__in input { width: 4.5rem; }
   [data-shell='admin'] .ar-col-short { width: 5.5rem; }
   [data-shell='admin'] .ar-col-status { width: 9rem; }
   [data-shell='admin'] .ar-col-after { width: 5.5rem; }

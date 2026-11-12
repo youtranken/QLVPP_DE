@@ -140,6 +140,8 @@ function PeriodCell({ person }: { person: DeliveryPerson }) {
 }
 
 // Bề rộng cột cố định (DataTable → table--fixed): đổi tab Chưa nhận/Còn nợ/Tất cả thì cột không nhảy theo chữ trong ô.
+// Cột Tháng vừa "Tháng 12"/"September" (73px) một dòng cộng đệm 24px; bù phần lớn từ Phòng (vừa "Phòng D&E"/"Department")
+// và Thao tác (25.5% vẫn đủ 235px cho hai nút một hàng ở 1280) để cột Người không hẹp thêm.
 // Thao tác theo % để ở 1280 đủ "Xem" + "Tủ chưa có hàng" một hàng; ở 1024 hẹp hơn thì nút sau xuống dòng thay vì bảng cuộn ngang
 function useColumns() {
   const { t } = useTranslation();
@@ -156,12 +158,12 @@ function useColumns() {
           </label>
         ),
       },
-      { id: 'dept', header: t('delivery.people.cols.dept'), meta: { width: '7rem' }, cell: ({ row }) => row.original.department ?? t('delivery.people.card.noDepartment') },
-      { id: 'period', header: t('delivery.people.cols.period'), meta: { width: '4.5rem' }, cell: ({ row }) => <PeriodCell person={row.original} /> },
+      { id: 'dept', header: t('delivery.people.cols.dept'), meta: { width: '6.125rem' }, cell: ({ row }) => row.original.department ?? t('delivery.people.card.noDepartment') },
+      { id: 'period', header: t('delivery.people.cols.period'), meta: { width: '6.125rem' }, cell: ({ row }) => <PeriodCell person={row.original} /> },
       { id: 'items', header: t('delivery.people.cols.items'), meta: { className: 'num r', width: '4.5rem' }, cell: ({ row }) => t('delivery.people.itemsCount', { n: cardSummary(row.original).n }) },
       { id: 'units', header: t('delivery.people.cols.units'), meta: { className: 'num r', width: '4rem' }, cell: ({ row }) => cardSummary(row.original).u },
       { id: 'status', header: t('delivery.people.cols.status'), meta: { width: '9.5rem' }, cell: ({ row }) => <StatusCell person={row.original} /> },
-      { id: 'actions', header: () => <span className="r">{t('delivery.people.cols.actions')}</span>, meta: { className: 'r pt-acts', label: '', width: '26%' }, cell: ({ row }) => <ActionsCell person={row.original} /> },
+      { id: 'actions', header: () => <span className="r">{t('delivery.people.cols.actions')}</span>, meta: { className: 'r pt-acts', label: '', width: '25.5%' }, cell: ({ row }) => <ActionsCell person={row.original} /> },
     ];
     return cols.map((c) => ({ ...c, enableSorting: false }));
   }, [t]);

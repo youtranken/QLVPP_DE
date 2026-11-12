@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { formatVnStamp, vnSavedStamp } from '@/lib/format-time';
+import { EmptyValue } from '@/ui/empty-cell';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { useCurrentPeriod, useMyRequest, type LineView, type RequestView } from './request.api';
 import { AdjustmentsBlock, RemovedAllNote } from './history-adjustments';
@@ -53,8 +54,8 @@ function Table({ view }: { view: RequestView }) {
   const lineById = new Map(view.lines.map((l) => [l.id, l]));
   // Dòng ngoài danh mục còn chờ xem / bị từ chối không có hàng: vẫn liệt kê kèm nhãn của Hành chính
   const held = view.lines.filter((l) => l.review_status === 'pending' || l.review_status === 'rejected');
-  // Cả cột Ghi chú trống thì bỏ cột (bảng máy tính); ô trống lẻ không ghi gì, dạng thẻ ẩn luôn nhãn "Ghi chú:" (td:empty)
-  const notes = held.length > 0 || rows.some((r) => hasNote(r, lineById.get(r.id), t));
+  // Cột Ghi chú luôn có (bỏ cột khi cả tháng trống làm mọi cột dời khi đổi tháng); ô trống hiện "—" như mọi ô trống khác,
+  // dạng thẻ điện thoại ẩn cả ô (td[data-empty]) để không còn nhãn "Ghi chú:" trơ trọi
   return (
     <table className="rq-recv-table hs-table">
       {/* Bề rộng cột đặt ở history.m1.css (theo bề rộng màn): đổi tháng thì cột không co giãn theo chữ, cột Món nhận phần còn lại */}
@@ -65,8 +66,7 @@ function Table({ view }: { view: RequestView }) {
         <col className="hs-c-give" />
         <col className="hs-c-recv" />
         <col className="hs-c-st" />
-        {/* Cột Ghi chú bị bỏ khi cả tháng không có ghi chú — colgroup phải bỏ theo để số col khớp số cột */}
-        {notes && <col className="hs-c-note" />}
+        <col className="hs-c-note" />
       </colgroup>
       <thead>
         <tr>
@@ -75,7 +75,7 @@ function Table({ view }: { view: RequestView }) {
               {t(`request.receive.${k}`)}
             </th>
           ))}
-          {notes && <th scope="col">{t('request.history.colNote')}</th>}
+          <th scope="col">{t('request.history.colNote')}</th>
         </tr>
       </thead>
       <tbody>
@@ -89,7 +89,15 @@ function Table({ view }: { view: RequestView }) {
             <td data-label={t('request.receive.colToGive')} className="num">{r.toGive}</td>
             <td data-label={t('request.receive.colReceived')} className="num">{r.received}</td>
             <td data-label={t('request.receive.colStatus')}><ReceiveStatus row={r} /></td>
-            {notes && <td data-label={t('request.history.colNote')} className="hs-note">{hasNote(r, lineById.get(r.id), t) && <NoteCell row={r} line={lineById.get(r.id)} />}</td>}
+            {hasNote(r, lineById.get(r.id), t) ? (
+              <td data-label={t('request.history.colNote')} className="hs-note">
+                <NoteCell row={r} line={lineById.get(r.id)} />
+              </td>
+            ) : (
+              <td data-label={t('request.history.colNote')} className="hs-note" data-empty="">
+                <EmptyValue />
+              </td>
+            )}
           </tr>
         ))}
         {held.map((l) => (

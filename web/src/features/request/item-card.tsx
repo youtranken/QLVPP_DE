@@ -57,7 +57,18 @@ export function ItemCard({
           {name}
           {item.pack_note && <span className="rq-card-pack"> · {item.pack_note}</span>}
         </div>
-        <div className="rq-card-unit">{fmt.limit(item.unit, item.max_qty)}</div>
+        {/* Thẻ 2 cột ở 360 chỉ ~125px: "Tối đa 10 cây/tháng" gãy hai dòng ở mọi thẻ. Giữ đơn vị (10 cây khác 10 hộp), còn
+            "/tháng" thì trang Đăng ký theo tháng đã nói — thẻ hẹp ẩn nó khỏi mắt (rq-card-per), trình đọc vẫn đọc đủ */}
+        <div className="rq-card-unit">
+          {item.max_qty ? (
+            <>
+              {t('request.grid.unitMaxHead', { max: item.max_qty, unit: fmt.unit(item.unit) })}
+              <span className="rq-card-per">{t('request.grid.unitMaxPer')}</span>
+            </>
+          ) : (
+            fmt.unit(item.unit)
+          )}
+        </div>
       </div>
       {line?.readonly || (paused && qty > 0) ? (
         <div className={`rq-card-locked${paused && qty > 0 && !line?.readonly ? ' is-paused' : ''}`}>

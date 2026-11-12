@@ -6,4 +6,9 @@ describe('fixedMinWidth', () => {
     expect(fixedMinWidth([undefined, '5.5rem', '64px', '15%'], false)).toBe(27.5);
     expect(fixedMinWidth([undefined, '3.3rem'], true)).toBe(18.5);
   });
+
+  it('cột chữ chính có sàn riêng (Danh bạ: Họ tên 13rem) thì cộng sàn đó thay 12rem', () => {
+    expect(fixedMinWidth([undefined, '5.5rem'], false, ['13rem', undefined])).toBe(18.5);
+    expect(fixedMinWidth([undefined, '5.5rem'], false, [undefined, undefined])).toBe(17.5);
+  });
 });
