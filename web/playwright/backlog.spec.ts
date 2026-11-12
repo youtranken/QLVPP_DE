@@ -164,7 +164,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
     }
   });
 
-  test('V2D-11 Còn nợ chỉ có nợ tháng trước; ?left=1 lọc người đã nghỉ, Hủy nợ qua ⋯ chọn sẵn "Người đã nghỉ"', async ({ page, request }, info) => {
+  test('V2D-11 Còn nợ chỉ có nợ tháng trước; ?left=1 lọc người đã nghỉ, Hủy nợ (nút chữ ở máy tính, ⋯ ở điện thoại) chọn sẵn "Người đã nghỉ"', async ({ page, request }, info) => {
     const release = await acquireLock('prev-period');
     const seeds: Seed[] = [];
     try {
@@ -177,9 +177,15 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       const debtRow = page.getByRole('row').filter({ hasText: debt.items[0].name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
       await expect(debtRow).toHaveCount(1);
       await expect(page.getByRole('row').filter({ hasText: current.items[0].name })).toHaveCount(0);
-      await expect(debtRow.getByRole('button', { name: 'Hủy nợ' })).toHaveCount(0);
-      await debtRow.getByRole('button', { name: `Thao tác khác ${debt.items[0].name} — ${debt.name}` }).click();
-      await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();
+      // Máy tính: "Hủy nợ" là nút chữ trên dòng; điện thoại: nằm trong menu ⋯
+      if (isMobile(info)) {
+        await expect(debtRow.getByRole('button', { name: /^Hủy nợ/ })).toHaveCount(0);
+        await debtRow.getByRole('button', { name: `Thao tác khác ${debt.items[0].name} — ${debt.name}` }).click();
+        await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();
+      } else {
+        await expect(debtRow.getByRole('button', { name: /^Thao tác khác/ })).toHaveCount(0);
+        await debtRow.getByRole('button', { name: `Hủy nợ ${debt.items[0].name} — ${debt.name}`, exact: true }).click();
+      }
       const cancel = page.getByRole('dialog', { name: `Hủy nợ 2 cái ${debt.items[0].name} của ${debt.name}?` });
       await expect(cancel.getByRole('radio', { name: 'Người đã nghỉ' })).toBeChecked();
       await expect(cancel.getByRole('button', { name: 'Quay lại' })).toBeVisible();
