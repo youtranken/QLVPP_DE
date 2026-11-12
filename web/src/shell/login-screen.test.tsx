@@ -16,7 +16,7 @@ describe('LoginScreen', () => {
     const { container } = renderWithI18n(<LoginScreen />);
     expect(container.querySelector('input[type=email]')).toBeNull();
     await userEvent.click(
-      screen.getByRole('button', { name: 'Đăng nhập bằng tài khoản công ty (PMH ID)' }),
+      screen.getByRole('button', { name: 'Đăng nhập bằng tài khoản công ty (PMH\u00a0ID)' }),
     );
     expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?ui_locales=vi');
     expect(

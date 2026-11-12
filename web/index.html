@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Be Vietnam Pro: tải file font ngay khi đọc HTML (không đợi JS/CSS bundle mới biết cần font), để chữ không hiện bằng
+      font dự phòng ~5s rồi nhảy dòng. Nạp sẵn cỡ 500 (chữ thân) và 800 (tiêu đề, nút đăng nhập), đủ 3 bộ chữ tiếng Việt
+      cần (latin, latin-ext cho Ă Đ Ơ Ư, vietnamese cho dấu). Đường dẫn khớp bản CSS Google hiện tại (v12): Google đổi
+      phiên bản thì cập nhật lại, nếu không trình duyệt chỉ tải thừa chứ không lỗi. Các cỡ khác dùng font dự phòng đã
+      chỉnh cỡ (tokens.css) trong lúc chờ.
+    -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/bevietnampro/v12/QdVMSTAyLFyeg_IDWvOJmVES_HTEJm81Rb0.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/bevietnampro/v12/QdVMSTAyLFyeg_IDWvOJmVES_HTEJm87Rb0bcw.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/bevietnampro/v12/QdVMSTAyLFyeg_IDWvOJmVES_HTEJm86Rb0bcw.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/bevietnampro/v12/QdVMSTAyLFyeg_IDWvOJmVES_HSQI281Rb0.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/bevietnampro/v12/QdVMSTAyLFyeg_IDWvOJmVES_HSQI287Rb0bcw.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/bevietnampro/v12/QdVMSTAyLFyeg_IDWvOJmVES_HSQI286Rb0bcw.woff2" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&display=swap" />
     <title>VPP Công trình</title>
   </head>
   <body>
