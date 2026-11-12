@@ -290,6 +290,24 @@ describe('admin/periods/:ym/requests — theo người, theo món', () => {
     }
   });
 
+  // Cột "Ai đăng ký" của Báo cáo ghép số người theo key dòng báo cáo; kỳ cũ (không phải kỳ khóa gần nhất) vẫn phải có người
+  it('kỳ cũ: mọi dòng món của báo cáo có số người ở by=item cùng key (cột "Ai đăng ký")', async () => {
+    const report = (await asAdmin(`/reports/${YM}`).expect(200)).body as {
+      byItem: { key: string; requested: number }[];
+    };
+    const items = (
+      (await asAdmin(`/periods/${YM}/requests?by=item`).expect(200)).body as {
+        items: ItemRow[];
+      }
+    ).items;
+    const people = new Map(items.map((i) => [i.key, i.people]));
+    expect(report.byItem.length).toBeGreaterThan(0);
+    for (const row of report.byItem.filter((r) => r.requested > 0)) {
+      expect(people.get(row.key)).toBeGreaterThan(0);
+    }
+    expect(people.get(ids.item)).toBe(3);
+  });
+
   it('phiếu 1 dòng qty 5 giao 3 hủy 2 → PersonRow {total_qty: 5, delivered_qty: 3, cancelled_qty: 2}', async () => {
     const solo = f.sub('solo');
     await f.addUser(

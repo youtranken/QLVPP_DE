@@ -25,7 +25,8 @@ interface Props {
   errorOf: (key: string) => OrderError | null;
   overMax: (key: string) => boolean;
   onEdit: (key: string, text: string) => void;
-  people: ReadonlyMap<string, number>;
+  // null = chưa có số (đang tải/lỗi): ô hiện "…" thay "—" để không đọc thành "không ai đăng ký"
+  people: ReadonlyMap<string, number> | null;
   onPeople: (key: string) => void;
 }
 
@@ -109,6 +110,14 @@ export function ReportItemTable({ rows, cats, loading, empty, editable, value, e
         header: t('reports.send.colWho'),
         meta: { label: t('reports.send.colWho') },
         cell: ({ row: { original: r } }) => {
+          if (!people) {
+            return (
+              <span className="sm-muted" aria-busy="true">
+                <span aria-hidden="true">…</span>
+                <span className="sr-only">{t('reports.send.whoLoading')}</span>
+              </span>
+            );
+          }
           const n = people.get(r.id);
           return n ? (
             <button type="button" className="sa-link" aria-label={t('reports.send.whoLabel', { name: part1Name(r, i18n.language), count: n })} onClick={() => onPeople(r.id)}>

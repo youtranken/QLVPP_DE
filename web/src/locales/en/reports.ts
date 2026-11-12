@@ -104,6 +104,8 @@ const reports: Messages<typeof vi> = {
       excel: 'Export Excel',
       preview: 'Review summary',
       colWho: 'Who signed up',
+      whoLoading: 'Loading sign-ups',
+      whoFailed: "Couldn't load who signed up for each item.",
       who: '{{count}} people',
       whoLabel: 'See who signed up for {{name}} ({{count}} people)',
       changedTag: 'Changed since print',

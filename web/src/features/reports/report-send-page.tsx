@@ -82,7 +82,7 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
   const items = useAdminItems();
   const cats = useAllCategories();
   const files = useSnapshotDownload(report.ym);
-  const people = useRegistrants(report.ym);
+  const registrants = useRegistrants(report.ym);
   const sent = send.sent;
   const qty = useOrderQty(report, { baseOf: defaultOrder, initial: editable ? initialFromSent(sent?.data) : undefined });
   const changed = useChangedKeys(report, editable ? sent : null, send.settledSince);
@@ -174,6 +174,12 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
           <button type="button" className="btn btn--sm" onClick={retry}>{t('reports.part1.retry')}</button>
         </p>
       )}
+      {registrants.failed && (
+        <p className="alert alert--warn bc-inline-notice">
+          {t('reports.send.whoFailed')}
+          <button type="button" className="btn btn--sm" onClick={registrants.retry}>{t('reports.part1.retry')}</button>
+        </p>
+      )}
       <ReportItemTable
         rows={visible}
         cats={cats.data ?? []}
@@ -184,7 +190,7 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
         errorOf={qty.errorOf}
         overMax={qty.overMax}
         onEdit={qty.set}
-        people={people}
+        people={registrants.map}
         onPeople={setWhoKey}
       />
       <ReportSnapshots ym={report.ym} files={files} />
