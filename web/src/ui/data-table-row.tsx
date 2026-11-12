@@ -43,6 +43,7 @@ export function SelectBox({
   label,
   labelledBy,
   disabled = false,
+  title,
   onChange,
 }: {
   // Cho <label htmlFor> ở ô khác (vd tên người) nới vùng bấm
@@ -52,6 +53,8 @@ export function SelectBox({
   label?: string;
   labelledBy?: string;
   disabled?: boolean;
+  // Lý do ô bị khóa (di chuột thấy), để người dùng không phải đoán
+  title?: string;
   onChange: (checked: boolean) => void;
 }) {
   const ref = useRef<HTMLInputElement>(null);
@@ -67,6 +70,7 @@ export function SelectBox({
       aria-labelledby={labelledBy}
       checked={checked}
       disabled={disabled}
+      title={title}
       onChange={(e) => onChange(e.target.checked)}
     />
   );

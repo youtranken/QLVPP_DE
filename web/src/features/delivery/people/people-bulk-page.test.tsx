@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 import type { DeliveryPerson } from './delivery-people.api';
-import { PEOPLE } from './people-fixtures';
+import { PEOPLE, pLine, person } from './people-fixtures';
 
 const PEOPLE_URL = '/api/admin/periods/2026-10/delivery-people';
 const BULK_URL = '/api/admin/deliveries/bulk';
@@ -38,6 +38,19 @@ const pick = (name: string) => userEvent.click(screen.getByRole('checkbox', { na
 const ok = (body: unknown) => ({ results: (body as { requests: { request_id: string }[] }).requests.map((r) => ({ request_id: r.request_id, ok: true, delivered_units: 1, request_complete: false })) });
 
 describe('DeliveryPeoplePage — bảng và giao nhiều phiếu', () => {
+  it('tủ chưa có hàng cho ai: "Chọn tất cả" khóa kèm lý do; ô từng dòng khóa và ghi lý do trong title', async () => {
+    const empty = [person({ lines: [pLine({ stock_qty: 0 })] }), person({ user_sub: 'u-b', full_name: 'Lê Thị Bình', request_id: 'r-2', lines: [pLine({ line_id: 'l-2', request_id: 'r-2', stock_qty: 0 })] })];
+    stub({ people: empty });
+    open();
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
+    const all = screen.getByRole('checkbox', { name: 'Chọn tất cả' });
+    expect(all).toBeDisabled();
+    expect(all).toHaveAttribute('title', expect.stringContaining('tủ chưa có hàng'));
+    const row = screen.getByRole('checkbox', { name: 'Chọn Nguyễn Văn An' });
+    expect(row).toBeDisabled();
+    expect(row).toHaveAttribute('title', 'Chưa giao được — tủ chưa có hàng cho phiếu này');
+  });
+
   it('bảng kẻ ô: ☐ · Người · Phòng · Kỳ · Số món · Đơn vị · Tình trạng · Thao tác; mỗi dòng có Xem và Giao…; tab Chưa nhận 2 · Còn nợ 2 · Đã nhận 1 · Tất cả 4', async () => {
     stub();
     open();

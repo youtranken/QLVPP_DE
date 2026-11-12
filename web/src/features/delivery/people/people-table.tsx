@@ -87,7 +87,18 @@ function PickHeader() {
   const pickable = rows.filter(selectable);
   const all = pickable.length > 0 && pickable.every((r) => selected.has(r.user_sub));
   const some = pickable.some((r) => selected.has(r.user_sub));
-  return <SelectBox checked={all} indeterminate={some && !all} label={t('delivery.bulk.pickAll')} onChange={onToggleAll} />;
+  // Không dòng nào chọn được (tủ chưa có hàng / đã giao xong) thì "Chọn tất cả" cũng khóa, kèm lý do
+  const none = pickable.length === 0;
+  return (
+    <SelectBox
+      checked={all}
+      indeterminate={some && !all}
+      disabled={none}
+      title={none ? t('delivery.bulk.pickAllNone') : undefined}
+      label={t('delivery.bulk.pickAll')}
+      onChange={onToggleAll}
+    />
+  );
 }
 
 function PickCell({ person }: { person: DeliveryPerson }) {
@@ -98,6 +109,7 @@ function PickCell({ person }: { person: DeliveryPerson }) {
       id={pickId(person)}
       checked={selected.has(person.user_sub)}
       disabled={!selectable(person)}
+      title={selectable(person) ? undefined : t(person.status === 'done' ? 'delivery.bulk.pickDone' : 'delivery.bulk.pickNoStock')}
       label={t('delivery.bulk.pick', { name: nameOf(person) })}
       onChange={() => onToggle(person.user_sub)}
     />
