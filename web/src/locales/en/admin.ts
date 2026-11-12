@@ -141,6 +141,7 @@ const admin: Messages<typeof vi> = {
       label: 'Filter the audit log',
       actor: 'Actor',
       actorSearch: 'Find actor',
+      actorHint: 'Name or email',
       system: 'System (automatic)',
       action: 'Action',
       anyAction: 'Any action',

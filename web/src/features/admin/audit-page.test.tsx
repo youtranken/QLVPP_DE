@@ -284,6 +284,14 @@ describe('AuditPage B11', () => {
     expect(rangeBox()).toHaveTextContent('Từ 01/10/2026');
   });
 
+  it('ô tìm người thực hiện dùng gợi ý ngắn "Tên hoặc email" (câu mặc định bị cắt khi cả thanh lọc nằm một hàng)', async () => {
+    stubApi();
+    await openAudit('/admin/audit');
+    const form = screen.getByRole('form', { name: 'Lọc nhật ký' });
+    expect(within(form).getByPlaceholderText('Tên hoặc email')).toBeInTheDocument();
+    expect(within(form).queryByPlaceholderText('Gõ tên hoặc email để tìm')).toBeNull();
+  });
+
   it('chip "Hôm nay" lúc 23:30 UTC gửi from = to = ngày kế tiếp theo giờ VN', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-10-28T23:30:00.000Z'));

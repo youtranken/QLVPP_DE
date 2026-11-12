@@ -26,6 +26,7 @@ function usePickerResults(search: string, allowLocked: boolean, enabled: boolean
 export function UserPicker({
   label,
   searchLabel,
+  placeholder,
   value,
   error,
   hint,
@@ -38,6 +39,8 @@ export function UserPicker({
 }: {
   label: string;
   searchLabel: string;
+  // Chỗ hẹp (thanh lọc một hàng) cần gợi ý ngắn hơn câu mặc định để không bị cắt
+  placeholder?: string;
   value: DirectoryUser | null;
   error?: string;
   hint?: string;
@@ -84,7 +87,7 @@ export function UserPicker({
               className="a-input"
               type="search"
               aria-label={searchLabel}
-              placeholder={t('directory.picker.searchHint')}
+              placeholder={placeholder ?? t('directory.picker.searchHint')}
               aria-describedby={note ? noteId : undefined}
               aria-invalid={error ? true : undefined}
               aria-required={required || undefined}
