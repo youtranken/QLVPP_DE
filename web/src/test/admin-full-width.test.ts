@@ -13,7 +13,7 @@ const ALLOWED: Record<string, { selectors: string[]; limit?: string }> = {
   // Bảng Trước/Sau của Nhật ký: giãn hết 1400px thì mắt phải nhìn rất xa
   readable: { selectors: ['.au-diff'], limit: '760px' },
   // Lớp nổi của ô chọn/lịch: chặn theo bề ngang màn hình để không tràn ở 390
-  overlay: { selectors: ['.sheet', '.sa-preview-dialog', '.ovp', '.side .notif-panel', '.toast-host', '[data-shell] .lb-list', '[data-shell] .cal'] },
+  overlay: { selectors: ['.sheet', '.sa-preview-dialog', '.ovp', '.side .notif-panel', '.toast-host', '[data-shell] .lb-list', '[data-shell] .cal', '[data-shell] .mp'] },
   column: { selectors: ['.ct-code', '.ct-name-en', '.dv-give__out'], limit: '280px' },
   // Nhãn nhóm nằm đè trên ảnh thẻ: chặn theo % của thẻ, không phải khối bố cục
   photoBadge: { selectors: ['.ct-card__group'], limit: '62%' },

@@ -150,6 +150,25 @@ html, [data-shell] * { scrollbar-width: thin; }
 [data-shell] .cal__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); min-height: 36px; padding-top: var(--s-2); border-top: 1px solid var(--c-line); }
 [data-shell] .cal__step { color: var(--c-ink-2); font: var(--t-sm); font-variant-numeric: tabular-nums; }
 @media (max-width: 767px) { [data-shell] .cal__day { height: var(--hit); } }
+/* Bảng chọn năm-tháng (ui/month-picker): đầu năm ‹ › như lịch, lưới 3×4; ô cao cố định để có/không nhãn trạng thái lưới không nhảy */
+[data-shell] .mp { display: grid; gap: var(--s-2); width: 300px; max-width: calc(100vw - var(--s-7)); }
+[data-shell] .mp__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
+[data-shell] .mp__year { font: var(--t-label); color: var(--c-ink); font-variant-numeric: tabular-nums; }
+[data-shell] .mp__grid { display: grid; gap: var(--s-1); }
+[data-shell] .mp__row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-1); }
+[data-shell] .mp__cell { display: grid; min-width: 0; }
+[data-shell] .mp__month { display: grid; align-content: center; justify-items: center; gap: 2px; min-width: 0; min-height: 52px; padding: var(--s-1); border: 0; border-radius: var(--r-md); background: transparent; color: var(--c-ink); font: var(--t-body); text-align: center; cursor: pointer; }
+[data-shell] .mp__month:hover:not(:disabled, [aria-current]) { background: var(--c-surface-2); }
+[data-shell] .mp__month[aria-current] { background: var(--c-acc); color: var(--c-on-acc); font: var(--t-label); }
+[data-shell] .mp__month:disabled { color: var(--c-faint); cursor: not-allowed; }
+[data-shell] .mp__month:focus-visible { outline: none; box-shadow: var(--focus-choice); }
+[data-shell] .mp__name { white-space: nowrap; }
+[data-shell] .mp__mark { display: inline-flex; align-items: center; gap: var(--s-1); max-width: 100%; font: var(--t-micro); color: var(--c-muted); white-space: nowrap; }
+[data-shell] .mp__mark::before { content: ''; flex: none; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+[data-shell] .mp__mark--locked { color: var(--c-acc); }
+[data-shell] .mp__mark--open { color: var(--c-warn); }
+[data-shell] .mp__month[aria-current] .mp__mark { color: inherit; }
+@media (forced-colors: active) { [data-shell] .mp__month[aria-current] { outline: 2px solid Highlight; } }
 @media (forced-colors: active) {
   [data-shell] .date-range__trigger::after, [data-shell] .cal__chev { background: CanvasText; }
   [data-shell] .cal__day[data-edge] { outline: 2px solid Highlight; }

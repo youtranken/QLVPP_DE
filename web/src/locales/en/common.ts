@@ -92,6 +92,14 @@ const common: Messages<typeof vi> = {
       summary: '{{n}} days · {{from}} – {{to}}',
       clear: 'Clear dates',
     },
+    monthPicker: {
+      dialog: 'Pick year and month',
+      open: 'click to pick year and month',
+      prevYear: 'Previous year',
+      nextYear: 'Next year',
+      month: '{{month, MonthName}}',
+      monthYear: '{{month, MonthName}} {{year}}',
+    },
     table: {
       breadcrumb: 'Breadcrumb',
       bulkLabel: 'Actions for selected rows',

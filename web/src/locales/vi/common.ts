@@ -89,6 +89,14 @@ const common = {
       summary: '{{n}} ngày · {{from}} – {{to}}',
       clear: 'Xóa ngày',
     },
+    monthPicker: {
+      dialog: 'Chọn năm-tháng',
+      open: 'bấm để chọn năm-tháng',
+      prevYear: 'Năm trước',
+      nextYear: 'Năm sau',
+      month: 'Tháng {{month}}',
+      monthYear: 'Tháng {{month}}/{{year}}',
+    },
     table: {
       breadcrumb: 'Vị trí',
       bulkLabel: 'Hành động trên các dòng đã chọn',
