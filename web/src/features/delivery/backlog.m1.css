@@ -29,6 +29,11 @@
 
 [data-shell='admin'] .bl-bar { flex-wrap: wrap; align-items: center; gap: var(--s-3); }
 [data-shell='admin'] .bl-summary { margin: 0; color: var(--c-ink-2); font: var(--t-sm); font-weight: 600; }
+/* Tóm tắt kỳ không co lại để nhường chỗ (co thì chữ bị cắt/xuống dòng giữa cụm): thiếu chỗ thì cả cụm xuống một dòng riêng,
+   vẫn canh phải như khi nằm cuối hàng; dài hơn cả một dòng thì max-width cho chữ tự xuống dòng thay vì tràn khỏi khung */
+/* Chữ chạm đúng mép thẻ bảng nhìn như bị cắt: lùi vào bằng đệm ô bảng (12px) để mép chữ thẳng hàng với chữ trong bảng */
+[data-shell='admin'] .bl-bar > .list-meta { flex: 0 0 auto; box-sizing: border-box; max-width: 100%; margin-left: auto; padding-right: var(--s-3); justify-content: flex-end; }
+[data-shell='admin'] .bl-bar .bl-summary { text-align: right; }
 [data-shell='admin'] .bl-table .bl-person th { position: static; height: 44px; background: var(--c-surface); color: var(--c-ink); border-bottom: 1px solid var(--c-line); white-space: normal; }
 @media (min-width: 768px) { [data-shell='admin'] .bl-table td.bl-cell-acts { width: 1%; white-space: nowrap; } }
 @media (max-width: 767px) {

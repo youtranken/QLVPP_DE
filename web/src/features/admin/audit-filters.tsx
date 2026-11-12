@@ -53,45 +53,49 @@ export function AuditFilterBar({ applied, serverError, onApply, onClear }: Props
     if (!invalid) onApply(draft);
   };
 
-  // Một hàng: người thực hiện (kèm nút bật "Hệ thống") · hành động · khoảng ngày · Lọc / Xóa lọc; hẹp thì xuống hàng
+  // Một hàng: người thực hiện (kèm nút bật "Hệ thống") · hành động · khoảng ngày · Lọc / Xóa lọc; hẹp thì xuống hàng theo cụm.
+  // Lưới nằm trong form để CSS hỏi bề rộng form (container query) chứ không hỏi cửa sổ: thanh bên rộng/thu gọn đổi chỗ trống
   return (
     <form ref={formRef} className="au-filters" lang={i18n.language} aria-label={t('audit.filters.label')} onSubmit={submit} noValidate>
-      <div className="au-actor">
-        <UserPicker
-          label={t('audit.filters.actor')}
-          searchLabel={t('audit.filters.actorSearch')}
-          value={actor}
-          allowLocked
-          resultsWhenEmpty={false}
-          onChange={(u) => set({ actor: u?.sub ?? '' })}
-          onEnter={() => formRef.current?.requestSubmit()}
-        />
-        {/* Nút bật/tắt: bật thì lọc việc hệ thống tự làm, chọn một người thì nút tự tắt */}
-        <button type="button" className="au-system" aria-pressed={system} onClick={() => set({ actor: system ? '' : SYSTEM_ACTOR })}>
-          {t('audit.filters.system')}
-        </button>
-      </div>
-      <div className="au-action-field">
-        <Select label={t('audit.filters.action')} stacked value={draft.action} options={actionOptions} onChange={(v) => set({ action: v })} />
-      </div>
-      <div className="au-dates">
-        <DateRangeField
-          label={t('audit.filters.dates')}
-          value={{ from: draft.from, to: draft.to }}
-          error={dateError}
-          onChange={(r) => {
-            setRangeError(false);
-            set(r);
-          }}
-        />
-      </div>
-      <div className="au-filter-actions">
-        <button type="submit" className="btn btn--primary">
-          {t('audit.filters.apply')}
-        </button>
-        <button type="button" className="btn btn--ghost" onClick={onClear}>
-          {t('audit.filters.clear')}
-        </button>
+      <div className="au-filters__grid">
+        <div className="au-actor">
+          <UserPicker
+            label={t('audit.filters.actor')}
+            searchLabel={t('audit.filters.actorSearch')}
+            placeholder={t('audit.filters.actorHint')}
+            value={actor}
+            allowLocked
+            resultsWhenEmpty={false}
+            onChange={(u) => set({ actor: u?.sub ?? '' })}
+            onEnter={() => formRef.current?.requestSubmit()}
+          />
+          {/* Nút bật/tắt: bật thì lọc việc hệ thống tự làm, chọn một người thì nút tự tắt */}
+          <button type="button" className="au-system" aria-pressed={system} onClick={() => set({ actor: system ? '' : SYSTEM_ACTOR })}>
+            {t('audit.filters.system')}
+          </button>
+        </div>
+        <div className="au-action-field">
+          <Select label={t('audit.filters.action')} stacked value={draft.action} options={actionOptions} onChange={(v) => set({ action: v })} />
+        </div>
+        <div className="au-dates">
+          <DateRangeField
+            label={t('audit.filters.dates')}
+            value={{ from: draft.from, to: draft.to }}
+            error={dateError}
+            onChange={(r) => {
+              setRangeError(false);
+              set(r);
+            }}
+          />
+        </div>
+        <div className="au-filter-actions">
+          <button type="submit" className="btn btn--primary">
+            {t('audit.filters.apply')}
+          </button>
+          <button type="button" className="btn btn--ghost" onClick={onClear}>
+            {t('audit.filters.clear')}
+          </button>
+        </div>
       </div>
     </form>
   );

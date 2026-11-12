@@ -138,6 +138,7 @@ const admin = {
       label: 'Lọc nhật ký',
       actor: 'Người thực hiện',
       actorSearch: 'Tìm người thực hiện',
+      actorHint: 'Tên hoặc email',
       system: 'Hệ thống (tự động)',
       action: 'Hành động',
       anyAction: 'Mọi hành động',

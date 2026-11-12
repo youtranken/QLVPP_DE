@@ -104,4 +104,32 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
     await expect(page.getByRole('main').getByText('Không tải được dữ liệu — thử lại.')).toBeVisible();
     await expect(page.getByRole('main').getByRole('button', { name: 'Thử lại' })).toBeVisible();
   });
+
+  test('Vòng8 Nhật ký: thanh lọc một hàng ở 1280 (người + Hệ thống, Hành động, khoảng ngày, Lọc/Xóa lọc), gợi ý ô tìm người không bị cắt', async ({ page }, info) => {
+    test.skip(isMobile(info), 'một hàng chỉ đòi ở màn rộng');
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(`/admin/audit?from=2026-11-01&to=2026-11-12`);
+    const bar = page.getByRole('form', { name: 'Lọc nhật ký' });
+    await expect(bar.getByRole('button', { name: 'Lọc', exact: true })).toBeVisible();
+    const tops = await bar.locator('.au-filters__grid > *').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+    expect(tops).toHaveLength(4);
+    expect(new Set(tops).size, `mọi cụm cùng một hàng: ${tops.join(',')}`).toBe(1);
+    const filter = bar.getByRole('button', { name: 'Lọc', exact: true });
+    const clear = bar.getByRole('button', { name: 'Xóa lọc', exact: true });
+    const sys = bar.getByRole('button', { name: 'Hệ thống (tự động)' });
+    const [f, c, y] = await Promise.all([filter.boundingBox(), clear.boundingBox(), sys.boundingBox()]);
+    expect(Math.round(f!.y)).toBe(Math.round(c!.y));
+    expect(Math.round(f!.y)).toBe(Math.round(y!.y));
+    // Gợi ý "Tên hoặc email" vừa trọn ô (input không tự báo tràn placeholder nên đo bằng canvas)
+    const fits = await bar.getByPlaceholder('Tên hoặc email').evaluate((el: HTMLInputElement) => {
+      const cs = getComputedStyle(el);
+      const ctx = document.createElement('canvas').getContext('2d')!;
+      ctx.font = cs.font;
+      return ctx.measureText(el.placeholder).width <= el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    });
+    expect(fits).toBe(true);
+    // Khoảng ngày đầy đủ hiện trọn trong ô
+    const range = bar.getByText('01/11/2026 – 12/11/2026');
+    expect(await range.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+  });
 });
