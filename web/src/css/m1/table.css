@@ -19,19 +19,39 @@
 [data-shell='admin'] .table .th-sort { display: inline-flex; align-items: center; gap: var(--s-1); border: 0; background: none; padding: 0; color: inherit; font: inherit; cursor: pointer; }
 [data-shell='admin'] .table th[aria-sort] .th-sort { color: var(--c-ink); }
 [data-shell='admin'] .table .th-sort:focus-visible { border-radius: var(--r-xs); box-shadow: var(--focus); }
-[data-shell='admin'] .table .sel { width: 40px; }
 /* Bảng đặt bề rộng cột (DataTable meta.width → colgroup): cột giữ nguyên chỗ khi đổi tab/lọc, không co giãn theo nội dung */
 @media (min-width: 768px) {
   [data-shell='admin'] .table--fixed { table-layout: fixed; min-width: var(--dt-min, 0); }
-  [data-shell='admin'] .table--fixed td { overflow-wrap: anywhere; }
+  /* break-word (không phải anywhere): chỉ bẻ từ khi một từ dài hơn cả cột; anywhere còn hạ bề rộng tối thiểu của ô con
+     (flex/grid) xuống một chữ cái nên tên, email gãy giữa từ dù cột còn chỗ */
+  [data-shell='admin'] .table--fixed td { overflow-wrap: break-word; }
   /* Cột hẹp thì tiêu đề xuống dòng trong cột của nó, không tràn sang cột bên */
   [data-shell='admin'] .table--fixed th, [data-shell='admin'] .table.table--fixed th.r { white-space: normal; overflow-wrap: break-word; line-height: 1.25; padding-block: var(--s-1); }
 }
-/* Màn vừa: bảng có nhóm vẫn có thể rộng hơn khung — cuộn ngang (mất đầu nhóm dính) còn hơn cắt cột */
+/* Màn vừa: bảng (có nhóm hay không, cột cố định hay tự co) vẫn có thể rộng hơn khung — cuộn ngang (mất đầu nhóm dính)
+   còn hơn cắt mất cột Thao tác. Khung có nhóm ở trên để clip cho đầu nhóm dính theo trang, nên phải trả lại cuộn ở đây */
 @media (min-width: 768px) and (max-width: 1279px) {
-  [data-shell='admin'] .table-wrap:has(.table--fixed) { overflow-x: auto; }
+  [data-shell='admin'] .table-wrap:has(.table--fixed), [data-shell='admin'] .table-wrap:has(.dt-group) { overflow-x: auto; }
 }
-[data-shell='admin'] .table input[type='checkbox'] { width: 20px; height: 20px; margin: 0; accent-color: var(--c-acc); cursor: pointer; }
+/* Ô chọn trong mọi bảng quản lý (.table của DataTable, bảng Nhận hàng…; cả máy tính lẫn điện thoại): chính ô là vùng bấm 44px trong suốt, ô vuông vẽ bằng ::before ở giữa.
+   Máy tính: margin âm trả lại đúng chỗ của ô 18px nên hàng không cao thêm, cột chọn rộng 44px để vùng bấm không lấn cột bên */
+[data-shell='admin'] table input[type='checkbox'] { --cb-box: 18px; appearance: none; display: inline-grid; place-content: center; flex: none; box-sizing: border-box; width: var(--hit); height: var(--hit); margin: calc((var(--cb-box) - var(--hit)) / 2); padding: 0; border: 0; border-radius: var(--r-sm); background: none; vertical-align: middle; cursor: pointer; }
+[data-shell='admin'] table input[type='checkbox']::before { content: ''; box-sizing: border-box; width: var(--cb-box); height: var(--cb-box); border: 1.5px solid var(--c-line-input); border-radius: var(--r-xs); background: var(--c-surface) center / 12px 12px no-repeat; transition: border-color var(--d-1) var(--ease-out), background-color var(--d-1) var(--ease-out); }
+[data-shell='admin'] table input[type='checkbox']:not(:checked):not(:indeterminate):not(:disabled):hover::before { border-color: var(--c-ink-2); }
+[data-shell='admin'] table input[type='checkbox']:checked::before, [data-shell='admin'] table input[type='checkbox']:indeterminate::before { border-color: var(--c-acc); background-color: var(--c-acc); }
+[data-shell='admin'] table input[type='checkbox']:checked::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+[data-shell='admin'] table input[type='checkbox']:indeterminate::before { background-image: linear-gradient(var(--c-on-acc), var(--c-on-acc)); background-size: 10px 2px; }
+[data-shell='admin'] table input[type='checkbox']:disabled { cursor: not-allowed; }
+[data-shell='admin'] table input[type='checkbox']:disabled::before { border-color: var(--c-line-strong); background-color: var(--c-surface-2); }
+[data-shell='admin'] table input[type='checkbox']:checked:disabled::before, [data-shell='admin'] table input[type='checkbox']:indeterminate:disabled::before { background-color: var(--c-line-strong); }
+/* Vòng focus ôm ô vuông, không ôm cả vùng bấm 44px */
+[data-shell='admin'] table input[type='checkbox']:focus-visible { outline: none; box-shadow: none; }
+[data-shell='admin'] table input[type='checkbox']:focus-visible::before { box-shadow: var(--focus-choice); }
+[data-shell='admin'] .table .sel { width: var(--hit); padding-inline: 0; text-align: center; }
+@media (forced-colors: active) {
+  [data-shell='admin'] table input[type='checkbox'] { appearance: auto; width: 18px; height: 18px; margin: 0; }
+  [data-shell='admin'] table input[type='checkbox']::before { content: none; }
+}
 [data-shell='admin'] .table .reorder-col { width: 1%; padding-block: 2px; white-space: nowrap; }
 [data-shell='admin'] .reorder-ctl { display: inline-flex; align-items: center; gap: var(--s-1); vertical-align: middle; }
 [data-shell='admin'] .reorder-ctl__grip { width: 16px; color: var(--c-muted); font: var(--t-label); letter-spacing: -0.3em; cursor: grab; user-select: none; }
@@ -51,13 +71,9 @@
   [data-shell='admin'] .reorder-bar { padding: 12px; }
   [data-shell='admin'] .reorder-bar__text { flex: 1 1 100%; }
   [data-shell='admin'] .reorder-bar .btn { flex: 1 1 0; }
-  [data-shell='admin'] .table input[type='checkbox'] { appearance: none; display: grid; place-content: center; width: var(--hit); height: var(--hit); border: 0; border-radius: var(--r-sm); background: none; }
-  [data-shell='admin'] .table input[type='checkbox']::before { content: ''; width: 20px; height: 20px; border: 2px solid var(--c-line-input); border-radius: var(--r-xs); background: var(--c-surface); box-sizing: border-box; }
-  [data-shell='admin'] .table input[type='checkbox']:checked::before, [data-shell='admin'] .table input[type='checkbox']:indeterminate::before { border-color: var(--c-acc); background: var(--c-acc) center / 14px no-repeat; }
-  [data-shell='admin'] .table input[type='checkbox']:checked::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
-  [data-shell='admin'] .table input[type='checkbox']:indeterminate::before { background-image: linear-gradient(white, white); background-size: 10px 2px; }
-  [data-shell='admin'] .table input[type='checkbox']:focus-visible { box-shadow: var(--focus); border-radius: var(--r-sm); }
-  [data-shell='admin'] .table input[type='checkbox']:disabled::before { opacity: 0.4; }
+  /* Thẻ: ô 20px, vùng bấm 44px chiếm chỗ thật (không bù margin) */
+  [data-shell='admin'] table input[type='checkbox'] { --cb-box: 20px; margin: 0; }
+  [data-shell='admin'] table input[type='checkbox']::before { border-width: 2px; background-size: 14px 14px; }
 }
 
 [data-shell='admin'] .table .dt-group th { top: 36px; z-index: 1; height: 52px; padding: 8px 12px; border-bottom: 1px solid rgb(var(--sh-ink) / 0.06); background: var(--c-surface-2); color: var(--c-ink); font: var(--t-label); font-size: 14px; font-weight: 800; white-space: normal; }
@@ -98,3 +114,11 @@
 /* Ô tự vẽ trả về rỗng ở cột có tên → "—" mờ (chữ thay thế rỗng: đọc màn hình bỏ qua); dạng thẻ ≤767 vẫn ẩn ô trống */
 [data-shell='admin'] .table td[data-label]:not([data-label='']):not([data-empty]):empty::before { content: '—'; content: '—' / ''; color: var(--c-muted); }
 [data-shell='admin'] .table td[data-empty] > [aria-hidden='true'] { color: var(--c-muted); }
+/* Mã, email, tên phòng không có chỗ ngắt (vd "e2e-groupa-jest-adminInScope"): cắt bằng "…" ở cuối dòng thay vì gãy
+   giữa từ; đặt title đủ chữ trên phần tử. Chữ có dấu cách vẫn xuống dòng bình thường */
+[data-shell='admin'] .cell-clip { display: block; max-width: 100%; overflow: hidden; overflow-wrap: normal; text-overflow: ellipsis; }
+[data-shell='admin'] .cell-clip--line { white-space: nowrap; }
+@media (max-width: 767px) {
+  /* Dạng thẻ đủ chỗ cho một dòng: vẫn cắt nhưng không bắt buộc khối */
+  [data-shell='admin'] .table-stack .cell-clip { display: inline-block; }
+}
