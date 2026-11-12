@@ -4,7 +4,7 @@ import type { Category } from '@/features/catalog/catalog.api';
 import { DialogCloseButton, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { Stepper } from '@/ui/stepper';
 import { groupTone, type Tone } from '@/lib/group-tone';
-import { IconX } from '@/ui/icons';
+import { Icon } from '@/ui/icon';
 import { ItemThumb } from '@/ui/item-thumb';
 import { useAdminContact, useRequestFormat } from './request-format';
 import type { CartLine } from './use-cart';
@@ -85,7 +85,7 @@ function CartRow({
             invalid={!!error}
           />
           <button type="button" className="rq-line-x" aria-label={t('request.cart.remove', { name })} onClick={onRemove}>
-            <IconX width={18} height={18} />
+            <Icon name="x" size={18} />
           </button>
         </>
       )}
