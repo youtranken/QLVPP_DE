@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { EmptyCell } from '@/ui/empty-cell';
+import { MissingEnCell } from '@/ui/missing-en-cell';
 import { ReorderCell, ReorderHead } from '@/ui/reorder';
 import { RowMenu, type RowMenuItem } from '@/ui/row-menu';
 import { useRowDrag } from '@/ui/use-row-drag';
@@ -54,7 +54,7 @@ export function UnitTable({ ordered, busy, sorting, onMove, onMoveTo, onEdit, on
                     <span>{u.name_en}</span>
                   </td>
                 ) : (
-                  <EmptyCell className="un-name-en" label={t('units.page.colNameEn')} />
+                  <MissingEnCell className="un-name-en" label={t('units.page.colNameEn')} />
                 )}
                 <td className="num r un-count" data-label={t('units.page.colItems')}>
                   {u.item_count}

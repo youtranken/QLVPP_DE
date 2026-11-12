@@ -18,3 +18,12 @@ describe('UnitTable chế độ Sắp xếp', () => {
     expect(screen.getAllByRole('row', { name: /cái/ }).at(-1)).toHaveAttribute('draggable', 'true');
   });
 });
+
+describe('UnitTable: ĐVT thiếu tên tiếng Anh', () => {
+  it('name_en trống → nhắc "Thiếu tên EN"; có tên thì hiện tên, không nhắc', () => {
+    renderWithI18n(<UnitTable ordered={[U('xap', 'xấp'), { ...U('cai', 'cái'), name_en: 'piece' }]} busy={false} sorting={false} onMove={noop} onMoveTo={noop} onEdit={noop} onToggleActive={noop} onDelete={noop} />);
+    expect(screen.getAllByText('Thiếu tên EN')).toHaveLength(1);
+    expect(screen.getByRole('row', { name: /xấp/ })).toHaveTextContent('Thiếu tên EN');
+    expect(screen.getByRole('row', { name: /cái/ })).toHaveTextContent('piece');
+  });
+});

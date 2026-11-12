@@ -79,14 +79,11 @@ describe('Trang Nhóm món', () => {
     for (const name of ['Giấy & sổ', 'Bút & viết', 'Cũ']) expect(rowOf(name).querySelector('.cg-dot')).not.toBeNull();
   });
 
-  it('cột Sản phẩm là số "4" bấm mở panel nhóm; tên tiếng Anh rỗng → "—" mờ + chữ ẩn "Chưa có" (td[data-empty])', async () => {
+  it('cột Sản phẩm là số "4" bấm mở panel nhóm; tên tiếng Anh rỗng → nhắc "Thiếu tên EN" (giao diện EN sẽ hiện chữ Việt)', async () => {
     await open();
     const count = within(rowOf('Bút & viết')).getByRole('button', { name: 'Món trong nhóm (4)' });
     expect(count).toHaveTextContent(/^4$/);
-    const dash = within(rowOf('Bút & viết')).getByText('—');
-    expect(dash).toHaveAttribute('aria-hidden', 'true');
-    expect(dash.closest('td')).toHaveAttribute('data-empty');
-    expect(within(dash.closest('td')!).getByText('Chưa có')).toHaveClass('sr-only');
+    expect(within(rowOf('Bút & viết')).getByText('Thiếu tên EN')).toHaveClass('tag--warn');
     expect(table().getByRole('columnheader', { name: 'Sản phẩm' })).toBeInTheDocument();
     await userEvent.click(count);
     expect(await screen.findByRole('dialog', { name: /Bút & viết/ })).toBeInTheDocument();
