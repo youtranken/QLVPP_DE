@@ -184,7 +184,8 @@ function RequestEditor({
         </div>
         {!narrow && <CartPanel {...cartProps} showSave />}
       </div>
-      {narrow && (
+      {/* Giỏ trống và không có gì để lưu: bỏ thanh nổi, trả chỗ cho lưới món (thanh dưới vẫn còn) */}
+      {narrow && (cart.lines.length > 0 || dirty) && (
         <MobileSaveBar
           count={cart.lines.length}
           units={cart.lines.reduce((sum, l) => sum + l.qty, 0)}

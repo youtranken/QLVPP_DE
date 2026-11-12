@@ -17,6 +17,21 @@
 [data-shell='member'] .rq-f-pair { display: contents; }
 [data-shell='member'] .rq-f-add, [data-shell='member'] .rq-copy { white-space: nowrap; }
 [data-shell='member'] .rq-f-chips { display: flex; gap: var(--s-2); flex-wrap: wrap; min-width: 0; }
+[data-shell='member'] .rq-f-chiprow { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
+[data-shell='member'] .rq-f-chiprow > .rq-f-copy { flex: none; margin-left: 0; }
+[data-shell='member'] .rq-f-scroll { flex: 1 1 0; min-width: 0; }
+/* ≤ 1180: chip một hàng cuộn ngang. Đệm dọc 4px (bù margin âm) để vòng focus của chip không bị khung cuộn cắt */
+@media (max-width: 1180px) {
+  [data-shell='member'] .rq-f-scroll { overflow-x: auto; scrollbar-width: none; margin-block: -4px; padding-block: 4px; }
+  [data-shell='member'] .rq-f-scroll::-webkit-scrollbar { display: none; }
+  [data-shell='member'] .rq-f-scroll[data-more] { mask-image: linear-gradient(to right, black calc(100% - 32px), transparent); }
+  [data-shell='member'] .rq-f-chips { flex-wrap: nowrap; width: max-content; }
+}
+/* Màn vừa dùng chuột: hiện thanh cuộn mảnh để kéo tới chip khuất (điện thoại vuốt được nên vẫn ẩn) */
+@media (min-width: 901px) and (max-width: 1180px) {
+  [data-shell='member'] .rq-f-scroll { scrollbar-width: thin; padding-bottom: var(--s-2); }
+  [data-shell='member'] .rq-f-scroll::-webkit-scrollbar { display: block; height: 6px; }
+}
 [data-shell='member'] .rq-f-count { margin: 0; color: var(--c-ink-2); font-size: 14px; }
 [data-shell='member'] .rq-f-empty { display: flex; flex-direction: column; align-items: center; gap: var(--s-1); padding: var(--s-8) var(--s-4); border-radius: 20px; background: var(--c-veil); color: var(--c-ink); text-align: center; }
 [data-shell='member'] .rq-f-empty span { color: var(--c-ink-2); font-size: 14px; }
@@ -30,7 +45,7 @@
   [data-shell='member'] .rq-f-search input, [data-shell='member'] .rq-f-sort .lb-trigger { font-size: 16px; }
   [data-shell='member'] .rq-f-copy { margin-left: 0; flex: 1 1 100%; }
   [data-shell='member'] .rq-f-copy .rq-copy { width: 100%; justify-content: center; }
-  [data-shell='member'] .rq-f-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--s-3)); padding: 0 var(--s-3); }
+  [data-shell='member'] .rq-f-scroll { margin-inline: calc(-1 * var(--s-3)); padding-inline: var(--s-3); }
 }
 
 /* Điện thoại: ô tìm / Sắp xếp (giãn) + Đã chọn / Thêm món khác + Chép lại.

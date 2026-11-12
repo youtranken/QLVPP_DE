@@ -1,6 +1,8 @@
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 import { renderWithI18n as render, screen, userEvent } from '@/test/test-utils';
+import { mockViewport } from '@/test/viewport';
 import { FilterBar } from './filter-bar';
 import { DEFAULT_FILTER, type FilterState } from './item-filters';
 
@@ -9,7 +11,7 @@ const GROUPS = [
   { id: 'g2', label: 'Giấy', n: 2 },
 ];
 
-function Harness({ shown = 6 }: { shown?: number }) {
+function Harness({ shown = 6, copy }: { shown?: number; copy?: ReactNode }) {
   const [f, setF] = useState<FilterState>(DEFAULT_FILTER);
   return (
     <FilterBar
@@ -18,6 +20,7 @@ function Harness({ shown = 6 }: { shown?: number }) {
       total={6}
       shown={shown}
       pickedCount={3}
+      copy={copy}
       onChange={(p) => setF({ ...f, ...p })}
       onClear={() => setF(DEFAULT_FILTER)}
       onAddCustom={() => undefined}
@@ -58,5 +61,20 @@ describe('FilterBar', () => {
     render(<Harness />);
     expect(screen.getByRole('searchbox', { name: 'Tìm món' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Sắp xếp' })).toHaveTextContent('Theo nhóm');
+  });
+
+  it.each([
+    [1024, 'cuối hàng chip'],
+    [1280, 'hàng trên'],
+  ])('%i px: nút "Chép lại" nằm ở %s; "+ Thêm món khác" luôn ở hàng trên; chip nằm trong khung cuộn', (width) => {
+    mockViewport(width);
+    render(<Harness copy={<button type="button">Chép lại danh sách tháng 12</button>} />);
+    const copy = screen.getByRole('button', { name: 'Chép lại danh sách tháng 12' });
+    const add = screen.getByRole('button', { name: '+ Thêm món khác' });
+    const chips = screen.getByRole('group', { name: 'Nhóm món' });
+    expect(add.closest('.rq-f-row')).not.toBeNull();
+    expect(chips.parentElement).toHaveClass('rq-f-scroll');
+    if (width === 1024) expect(copy.closest('.rq-f-chiprow')).not.toBeNull();
+    else expect(copy.closest('.rq-f-row')).not.toBeNull();
   });
 });
