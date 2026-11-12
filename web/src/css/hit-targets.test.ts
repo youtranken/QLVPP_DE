@@ -17,6 +17,10 @@ describe('vùng bấm', () => {
     expect(css).not.toMatch(new RegExp(`\\.${name}\\s*\\{[^}]*position:\\s*relative`));
   });
 
+  it('Danh bạ: email đứng trên lớp phủ của nút tên (L3 vòng 8) — không thì title và bôi đen email không tới được', () => {
+    expect(read('features/directory/directory.m1.css')).toMatch(/\.dr-person__email\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*1/);
+  });
+
   it('Stepper chung: ô số giữa cao bằng hàng (sm 32 / md 44, điện thoại 44); không còn mũi tên ▲▼ 24×16 hay dáng riêng của Cấu hình', () => {
     expect(read('css/fields.css')).toMatch(/\[data-shell\] \.stepper > input\s*\{\s*align-self:\s*stretch/);
     const states = read('css/m1/states.css');

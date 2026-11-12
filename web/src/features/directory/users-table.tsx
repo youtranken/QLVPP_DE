@@ -75,7 +75,18 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
                 >
                   {nameOf(u)}
                 </button>
-                {u.email && <small className="dr-muted dr-person__email cell-clip cell-clip--line" title={u.email}>{u.email}</small>}
+                {u.email && (
+                  <small
+                    className="dr-muted dr-person__email cell-clip cell-clip--line"
+                    title={u.email}
+                    // Vừa bôi đen email để chép thì cú bấm đó không mở panel (dòng có onRowClick)
+                    onClick={(e) => {
+                      if (window.getSelection()?.toString()) e.stopPropagation();
+                    }}
+                  >
+                    {u.email}
+                  </small>
+                )}
               </span>
             </span>
           ),
