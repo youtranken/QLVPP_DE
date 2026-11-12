@@ -28,8 +28,11 @@ function probeFocused(): { label: string; ring: boolean; clippedBy: string | nul
   const rest = getComputedStyle(el);
   const restShadow = rest.boxShadow;
   const restBorder = rest.borderColor;
+  // Ô chọn trong bảng vẽ vòng trên ô vuông ::before (vùng bấm 44px lớn hơn ô): đọc cả bóng của giả phần tử
+  const restPseudo = getComputedStyle(el, '::before').boxShadow;
   el.focus({ preventScroll: true });
-  const ring = outline > 0 || (shadow !== '' && shadow !== restShadow) || borderFocused !== restBorder;
+  const pseudo = getComputedStyle(el, '::before').boxShadow;
+  const ring = outline > 0 || (shadow !== '' && shadow !== restShadow) || borderFocused !== restBorder || (pseudo !== 'none' && pseudo !== restPseudo);
   // Độ loe ra ngoài của vòng: spread lớn nhất của các bóng không inset; bóng inset thì nằm trong phần tử
   let outset = outline;
   for (const part of shadow.split(/,(?![^(]*\))/)) {
@@ -48,8 +51,12 @@ function probeFocused(): { label: string; ring: boolean; clippedBy: string | nul
     const b = p.getBoundingClientRect();
     // Cho lệch 0.5px do làm tròn
     const cut = (ps.overflowX !== 'visible' && (want.left < b.left - 0.5 || want.right > b.right + 0.5)) || (ps.overflowY !== 'visible' && (want.top < b.top - 0.5 || want.bottom > b.bottom + 0.5));
-    // Phần tử nằm khuất trong khung cuộn (chưa cuộn tới) không phải lỗi vòng: trình duyệt cuộn vào khi focus
-    if (cut && r.right > b.left && r.left < b.right && r.bottom > b.top && r.top < b.bottom) {
+    // Phần tử nằm khuất trong khung cuộn (chưa cuộn tới) không phải lỗi vòng: trình duyệt cuộn vào khi focus.
+    // Chrome cũng không cuộn mục còn lộ một phần (chip cuối hàng cuộn ngang): chính mục bị mép khung cuộn che một phần
+    // là chuyện vị trí cuộn (người dùng vuốt được), không phải vòng vẽ thiếu — chỉ xét vòng khi cả mục nằm trọn trong khung
+    const scrolls = /auto|scroll/.test(ps.overflowX + ps.overflowY);
+    const inside = r.left >= b.left - 0.5 && r.right <= b.right + 0.5 && r.top >= b.top - 0.5 && r.bottom <= b.bottom + 0.5;
+    if (cut && r.right > b.left && r.left < b.right && r.bottom > b.top && r.top < b.bottom && (inside || !scrolls)) {
       clippedBy = `${p.tagName.toLowerCase()}.${String(p.className).trim().split(/\s+/).join('.')}`;
       break;
     }
@@ -60,6 +67,9 @@ function probeFocused(): { label: string; ring: boolean; clippedBy: string | nul
 async function walk(page: Page, where: string): Promise<Finding[]> {
   const found: Finding[] = [];
   const seen = new Set<string>();
+  // Nút/ô có transition box-shadow/border: đọc ngay sau Tab sẽ ra giá trị đang chuyển (bằng lúc thường) → báo nhầm
+  // "không có vòng". Tắt chuyển động để đọc đúng kiểu cuối của lúc focus và lúc thường.
+  await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; animation: none !important; }' });
   await page.locator('body').click({ position: { x: 1, y: 1 } });
   for (let i = 0; i < STEPS; i++) {
     await page.keyboard.press('Tab');
@@ -87,7 +97,7 @@ const ADMIN_PAGES: [string, string][] = [
   ['/admin/review', 'Món ngoài danh mục'],
   ['/admin/categories', 'Danh mục'],
   ['/admin/categories/units', 'Danh mục'],
-  ['/admin/users', 'Nhân viên'],
+  ['/admin/users', 'Danh bạ'],
   ['/admin/audit', 'Nhật ký'],
   ['/admin/config', 'Cấu hình'],
 ];
