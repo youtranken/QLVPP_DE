@@ -195,7 +195,7 @@ const delivery: Messages<typeof vi> = {
       shortChip: 'Short {{n}} items',
       period: '{{month, MonthName}}',
       itemsCount: '{{n}} items',
-      cols: { person: 'Person', dept: 'Department', period: 'Period', items: 'Items', units: 'Units', status: 'Status', actions: 'Actions' },
+      cols: { person: 'Person', dept: 'Department', period: 'Month', items: 'Items', units: 'Units', status: 'Status', actions: 'Actions' },
       overlap: '{{n}} in both',
       searchLabel: 'Search name or department',
       searchPlaceholder: 'Search name or department',

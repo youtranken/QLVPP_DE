@@ -193,7 +193,7 @@ const delivery = {
       shortChip: 'Tủ thiếu {{n}} món',
       period: 'Tháng {{month}}',
       itemsCount: '{{n}} món',
-      cols: { person: 'Người', dept: 'Phòng', period: 'Kỳ', items: 'Số món', units: 'Đơn vị', status: 'Tình trạng', actions: 'Thao tác' },
+      cols: { person: 'Người', dept: 'Phòng', period: 'Tháng', items: 'Số món', units: 'Đơn vị', status: 'Tình trạng', actions: 'Thao tác' },
       searchLabel: 'Tìm tên hoặc phòng ban',
       searchPlaceholder: 'Tìm tên hoặc phòng ban',
       filter: 'Lọc theo trạng thái',
