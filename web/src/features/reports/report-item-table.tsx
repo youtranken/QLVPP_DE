@@ -62,13 +62,15 @@ export function ReportItemTable({ rows, cats, loading, empty, editable, value, e
   const groupName = useGroupName(cats);
   const columns = useMemo<ColumnDef<ItemTableRow, unknown>[]>(() => {
     const col = (k: string) => t(`sendAdm.orders.${k}`);
-    const num = (id: 'registered' | 'backlog' | 'stock' | 'want', header: string): ColumnDef<ItemTableRow, unknown> => ({
+    const num = (id: 'registered' | 'backlog' | 'stock', header: string, width: string): ColumnDef<ItemTableRow, unknown> => ({
       id,
       header,
-      meta: { className: 'num r', label: header },
+      meta: { className: 'num r', label: header, width },
       cell: ({ row }) => row.original.n[id] ?? '—',
     });
     const need = col('need');
+    // Bề rộng cột cố định: tháng đang sửa có ô nhập Đề nghị, tháng cũ chỉ có số — không cố định thì đổi tháng cả bảng dời.
+    // Tổng tối thiểu vừa 1024; hẹp hơn thì khung cuộn ngang (css/m1/table.css)
     const columns: ColumnDef<ItemTableRow, unknown>[] = [
       {
         id: 'name',
@@ -81,13 +83,13 @@ export function ReportItemTable({ rows, cats, loading, empty, editable, value, e
           </span>
         ),
       },
-      { id: 'unit', header: t('reports.part1.colUnit'), cell: ({ row }) => unitName(row.original.row.unit) },
-      num('registered', col('registered')),
-      num('backlog', col('backlog')),
-      num('stock', col('stock')),
+      { id: 'unit', header: t('reports.part1.colUnit'), meta: { width: '4.5rem' }, cell: ({ row }) => unitName(row.original.row.unit) },
+      num('registered', col('registered'), '5rem'),
+      num('backlog', col('backlog'), '5.5rem'),
+      num('stock', col('stock'), '6rem'),
       {
         id: 'want',
-        meta: { className: 'num r', label: need },
+        meta: { className: 'num r', label: need, width: '6rem' },
         cell: ({ row }) => row.original.n.want,
         header: () => (
           <>
@@ -101,13 +103,13 @@ export function ReportItemTable({ rows, cats, loading, empty, editable, value, e
       {
         id: 'order',
         header: col('qty'),
-        meta: { className: 'num r bc-order-col', label: col('qty') },
+        meta: { className: 'num r bc-order-col', label: col('qty'), width: '8.5rem' },
         cell: ({ row }) => <OrderCell row={row.original} />,
       },
       {
         id: 'who',
         header: t('reports.send.colWho'),
-        meta: { label: t('reports.send.colWho') },
+        meta: { label: t('reports.send.colWho'), width: '6.5rem' },
         cell: ({ row: { original: r } }) => {
           const n = people.get(r.id);
           return n ? (
