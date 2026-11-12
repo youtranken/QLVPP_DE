@@ -41,8 +41,9 @@
 [data-shell='admin'] .pp-tabs__scroll::-webkit-scrollbar { display: none; }
 [data-shell='admin'] .pp-tabs__scroll[data-more] { mask-image: linear-gradient(to right, black calc(100% - 40px), transparent); }
 @media (max-width: 767px) {
-  [data-shell='admin'] .pp-tabs .seg-m1 { display: flex; width: 100%; gap: 0; }
-  [data-shell='admin'] .pp-tabs .seg-m1 button { flex: 1; padding: 0 var(--s-1); gap: var(--s-1); font: var(--t-cap); }
+  /* Đủ chỗ thì bốn tab chia đều cả hàng; 360 không đủ thì giữ đệm 12px và cuộn ngang (mép mờ của ScrollFade), không ép chữ chạm mép viên */
+  [data-shell='admin'] .pp-tabs .seg-m1 { display: flex; width: max-content; min-width: 100%; gap: 0; }
+  [data-shell='admin'] .pp-tabs .seg-m1 button { flex: 1 0 auto; padding: 0 var(--s-3); gap: var(--s-1); font: var(--t-cap); }
   [data-shell='admin'] .pp-tabs .seg-m1 em { padding: 1px var(--s-2); }
 }
 [data-shell='admin'] .pp-row__main > :first-child { grid-row: span 2; align-self: start; }

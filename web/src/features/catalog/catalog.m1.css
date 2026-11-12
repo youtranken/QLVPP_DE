@@ -92,6 +92,14 @@
 [data-shell='admin'] .ct-active__error { color: var(--c-danger); font: var(--t-cap); font-weight: 600; }
 @media (max-width: 767px) {
   [data-shell='admin'] .ct-page .toolbar__search { flex: 1 1 100%; }
+  /* Điện thoại: 2 cột (một cột ảnh lớn làm trang dài ~24.000px cho 50 món); hai nút xếp dọc cho đủ chữ */
+  [data-shell='admin'] .ct-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3); }
+  [data-shell='admin'] .ct-card { padding: var(--s-2); gap: var(--s-2); }
+  [data-shell='admin'] .ct-card__body { padding: 0 var(--s-1); }
+  [data-shell='admin'] .ct-card__actions { margin: auto var(--s-1) var(--s-1); }
+  [data-shell='admin'] .ct-card__actions > .btn { flex: 1 1 100%; }
+  /* Thẻ đã nằm dưới tiêu đề nhóm: nhãn nhóm trên ảnh chỉ lặp lại */
+  [data-shell='admin'] .ct-card__group { display: none; }
 }
 [data-shell='admin'] .w24-list { display: grid; gap: var(--s-1); margin: 0; padding: 0; list-style: none; }
 [data-shell='admin'] .ct-section { display: grid; gap: var(--s-3); min-width: 0; }

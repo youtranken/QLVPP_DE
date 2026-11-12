@@ -44,6 +44,13 @@
 [data-shell='admin'] .cf-legend li[data-kind='locked']::before { background: var(--c-surface-2); box-shadow: inset 0 0 0 1px var(--c-line-strong); }
 [data-shell='admin'] .cf-preview__hint { margin: 0; font: var(--t-cap); color: var(--c-muted); }
 [data-shell='admin'] .cf-box { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr); gap: var(--s-3); align-items: start; margin: 0; padding: var(--s-4); border: 0; border-radius: var(--r-md); background: var(--c-surface-2); min-width: 0; }
+/* Ba ô một hàng: mỗi ô (nhãn · ô nhập · gợi ý) chia hàng chung (subgrid) nên nhãn xuống dòng không đẩy lệch ô nhập bên cạnh */
+[data-shell='admin'] .cf-box > .ff { grid-row: span 3; grid-template-rows: subgrid; row-gap: 4px; }
+/* Thẻ hẹp (nửa màn ở ≥1280, hay màn nhỏ): ba ô một hàng bị cắt chữ → xếp một cột theo bề ngang thẻ, không theo màn */
+[data-shell='admin'] .cf-block { container: cf-block / inline-size; }
+@container cf-block (max-width: 720px) {
+  [data-shell='admin'] .cf-box { grid-template-columns: minmax(0, 1fr); }
+}
 [data-shell='admin'] .cf-box legend { float: left; grid-column: 1 / -1; width: 100%; padding: 0; font: var(--t-label); color: var(--c-ink); }
 [data-shell='admin'] .cf-box .ff input { width: 100%; }
 [data-shell='admin'] .cf-box__remove { grid-column: 1 / -1; justify-self: end; color: var(--c-danger); }

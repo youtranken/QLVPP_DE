@@ -33,7 +33,7 @@ export function PageHeader({ crumbs, title, description, sub, primary, secondary
           </nav>
         )}
         <h1>{title}</h1>
-        {description && <p className="page-head__desc" title={description}>{description}</p>}
+        {description && <p className="page-head__desc">{description}</p>}
         {sub && <p className="page-head__sub">{sub}</p>}
       </div>
       {note ? (
