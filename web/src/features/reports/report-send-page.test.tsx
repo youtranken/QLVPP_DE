@@ -265,6 +265,12 @@ describe('Báo cáo & gửi NCC: kỳ cũ hơn, ai đăng ký, các bản đã i
     expect(await screen.findByText('Chưa tải được ai đăng ký từng món.', {}, { timeout: 4000 })).toBeInTheDocument();
     const cells = await whoCells();
     for (const c of cells) expect(c).not.toHaveTextContent('—');
+    // L2 vòng 8: lỗi thì ô thôi báo "đang tải" (không aria-busy, không "Đang tải số người"), hiện "?" + chữ ẩn "Chưa tải được"
+    for (const c of cells) {
+      expect(c.querySelector('[aria-busy]')).toBeNull();
+      expect(c).not.toHaveTextContent('Đang tải số người');
+      expect(c).toHaveTextContent('?Chưa tải được số người');
+    }
   });
 
   it('kỳ cũ hơn: Xem tổng kết mở hộp với bản đã gửi (không gọi preview), nút "In" in thẳng bản đó, không tạo bản', async () => {

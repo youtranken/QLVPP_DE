@@ -105,6 +105,7 @@ const reports: Messages<typeof vi> = {
       preview: 'Review summary',
       colWho: 'Who signed up',
       whoLoading: 'Loading sign-ups',
+      whoUnknown: 'Sign-ups not loaded',
       whoFailed: "Couldn't load who signed up for each item.",
       who: '{{count}} people',
       whoLabel: 'See who signed up for {{name}} ({{count}} people)',

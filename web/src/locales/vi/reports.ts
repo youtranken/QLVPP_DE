@@ -101,6 +101,7 @@ const reports = {
       preview: 'Xem tổng kết',
       colWho: 'Ai đăng ký',
       whoLoading: 'Đang tải số người',
+      whoUnknown: 'Chưa tải được số người',
       whoFailed: 'Chưa tải được ai đăng ký từng món.',
       who: '{{count}} người',
       whoLabel: 'Xem ai đăng ký {{name}} ({{count}} người)',
