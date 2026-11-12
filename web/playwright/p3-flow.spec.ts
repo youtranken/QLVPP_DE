@@ -48,7 +48,7 @@ async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
   await expect(dialog).toHaveCount(0);
   expect(deliveryMovements(s.paper.id)).toBe('-3');
   expect(deliveryMovements(s.pen.id)).toBe('-2');
-  // Món ngoài DM đã duyệt, chưa có bản gửi ADM: giao cùng lượt, không trừ kho
+  // Món ngoài DM đã duyệt và đã về (seed ghi nhận 1): giao cùng lượt, không trừ kho
   expect(psql(`SELECT delivered_qty FROM request_lines WHERE custom_name = '${s.custom}'`)).toBe('1');
   await snap(admin, info, 'p3-delivered-all');
 }
