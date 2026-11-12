@@ -39,7 +39,7 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     const sideEn = page.getByRole('navigation', { name: 'Admin menu' });
     await expect(sideEn.getByRole('group', { name: 'Monthly' })).toBeVisible();
     await expect(sideEn.getByRole('link', { name: 'Categories' })).toBeVisible();
-    await expect(page.getByRole('link', { name: /^Current sign-up period: month \d+ · open/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /^Current sign-up period: (January|February|March|April|May|June|July|August|September|October|November|December) · open/ })).toBeVisible();
     await page.getByRole('radio', { name: 'Tiếng Việt' }).click();
     await expect(page.getByRole('navigation', { name: 'Menu quản lý' }).getByRole('group', { name: 'Hằng tháng' })).toBeVisible();
   });

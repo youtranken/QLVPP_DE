@@ -119,7 +119,7 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
   test('Vòng3-KT đổi sang English thì tên bước đổi theo', async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('vpp_lang', 'en'));
     await page.goto('/admin/month');
-    await expect(page.getByRole('heading', { level: 1, name: /^Month \d+$/ })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /^(January|February|March|April|May|June|July|August|September|October|November|December) period$/ })).toBeVisible();
     for (const name of ['Sign-up', 'Send to supplier', 'Receiving', 'Delivery']) await expect(steps(page).getByText(name, { exact: true })).toBeVisible();
   });
 });
