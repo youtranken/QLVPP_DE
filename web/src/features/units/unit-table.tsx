@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { EmptyCell } from '@/ui/empty-cell';
 import { ReorderCell, ReorderHead } from '@/ui/reorder';
-import { RowMenu, type RowMenuItem } from '@/ui/row-menu';
 import { useRowDrag } from '@/ui/use-row-drag';
 import type { AdminUnit } from './units.api';
 
@@ -14,32 +13,38 @@ interface Props {
   onEdit: (u: AdminUnit) => void;
   onToggleActive: (u: AdminUnit) => void;
   onDelete: (u: AdminUnit) => void;
+  // Ô tìm chỉ ẩn hàng, không bỏ khỏi danh sách: thứ tự sắp xếp tính trên toàn bộ
+  visible?: (u: AdminUnit) => boolean;
 }
 
-export function UnitTable({ ordered, busy, sorting, onMove, onMoveTo, onEdit, onToggleActive, onDelete }: Props) {
+export function UnitTable({ ordered, busy, sorting, onMove, onMoveTo, onEdit, onToggleActive, onDelete, visible }: Props) {
   const { t } = useTranslation();
   const drag = useRowDrag(onMoveTo);
-  const menuItems = (u: AdminUnit): RowMenuItem[] => [
-    { label: t('units.page.edit'), onSelect: () => onEdit(u) },
-    { label: t(u.active ? 'units.page.deactivate' : 'units.page.reactivate'), disabled: busy, onSelect: () => onToggleActive(u) },
-    ...(u.in_use ? [] : [{ label: t('units.page.delete'), disabled: busy, danger: true, onSelect: () => onDelete(u) }]),
-  ];
   return (
     <div className="table-wrap">
-      <table className={`table table-stack un-table${sorting ? ' is-sorting' : ''}`}>
+      <table className={`table table-stack table--fixed un-table${sorting ? ' is-sorting' : ''}`}>
+        {/* Bề rộng cột cố định như bảng Nhóm: lọc theo tên không làm cột nhảy chỗ; tên nhận phần còn lại */}
+        <colgroup>
+          {sorting && <col className="un-col-reorder" />}
+          <col />
+          <col className="un-col-en" />
+          <col className="un-col-items" />
+          <col className="un-col-acts" />
+        </colgroup>
         <thead>
           <tr>
             {sorting && <ReorderHead />}
             <th>{t('units.page.colName')}</th>
             <th>{t('units.page.colNameEn')}</th>
             <th className="num r">{t('units.page.colItems')}</th>
-            <th>
+            <th className="acts">
               <span className="sr-only">{t('units.page.colActions')}</span>
             </th>
           </tr>
         </thead>
         <tbody>
           {ordered.map((u, i) => {
+            if (visible && !visible(u)) return null;
             const dragProps = sorting && !busy ? drag(i) : undefined;
             const cls = [u.active ? '' : 'is-inactive', dragProps?.className ?? ''].filter(Boolean).join(' ') || undefined;
             return (
@@ -59,9 +64,26 @@ export function UnitTable({ ordered, busy, sorting, onMove, onMoveTo, onEdit, on
                 <td className="num r un-count" data-label={t('units.page.colItems')}>
                   {u.item_count}
                 </td>
-                <td className="un-menu acts">
+                <td className="acts">
+                  {/* Cùng mẫu nút chữ với tab Nhóm (Sửa · Tạm ngưng/Dùng lại), thêm Xóa khi chưa món nào dùng */}
                   <div className="acts__in">
-                    <RowMenu label={t('units.page.menu', { name: u.name })} items={menuItems(u)} />
+                    <button type="button" className="btn btn--sm" aria-label={t('units.page.editFor', { name: u.name })} onClick={() => onEdit(u)}>
+                      {t('units.page.edit')}
+                    </button>
+                    {u.active ? (
+                      <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('units.page.deactivateFor', { name: u.name })} disabled={busy} onClick={() => onToggleActive(u)}>
+                        {t('units.page.deactivate')}
+                      </button>
+                    ) : (
+                      <button type="button" className="btn btn--sm btn--primary" aria-label={t('units.page.reactivateFor', { name: u.name })} disabled={busy} onClick={() => onToggleActive(u)}>
+                        {t('units.page.reactivate')}
+                      </button>
+                    )}
+                    {!u.in_use && (
+                      <button type="button" className="btn btn--sm btn--quiet-danger" aria-label={t('units.page.deleteFor', { name: u.name })} disabled={busy} onClick={() => onDelete(u)}>
+                        {t('units.page.delete')}
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

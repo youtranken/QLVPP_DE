@@ -38,14 +38,10 @@ async function memberOtherItemUnits(browser: Browser, info: TestInfo, sub: strin
   }
 }
 
-const menuButton = (page: Page, name: string) => page.getByRole('button', { name: `Thao tác cho ${name}`, exact: true });
-const rowOf = (page: Page, name: string) => page.getByRole('row').filter({ has: menuButton(page, name) });
-async function menuItems(page: Page, name: string) {
-  await menuButton(page, name).click();
-  const menu = page.getByRole('menu', { name: `Thao tác cho ${name}` });
-  const labels = await menu.getByRole('menuitem').allTextContents();
-  return { menu, labels };
-}
+// Thao tác là nút chữ trên dòng như tab Nhóm (Sửa · Tạm ngưng/Dùng lại · Xóa), không còn menu ⋯
+const editButton = (page: Page, name: string) => page.getByRole('button', { name: `Sửa ${name}`, exact: true });
+const rowOf = (page: Page, name: string) => page.getByRole('row').filter({ has: editButton(page, name) });
+const actionLabels = (page: Page, name: string) => rowOf(page, name).getByRole('button').allTextContents();
 
 test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
   asRole('admin');
@@ -61,9 +57,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
       const inUse = (await listUnits(request)).find((u) => u.in_use);
       expect(inUse).toBeDefined();
       await expect(page.getByRole('main').getByRole('switch')).toHaveCount(0);
-      const used = await menuItems(page, inUse!.name);
-      expect(used.labels).toEqual(['Sửa', 'Tạm ngưng']);
-      await page.keyboard.press('Escape');
+      expect(await actionLabels(page, inUse!.name)).toEqual(['Sửa', 'Tạm ngưng']);
       const blocked = await request.delete(`/api/admin/units/${inUse!.code}`, { headers: devHeaders('admin') });
       expect(blocked.status()).toBe(409);
       expect(((await blocked.json()) as { code: string }).code).toBe('UNIT_IN_USE');
@@ -75,9 +69,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
       await expect(dialog).toBeHidden();
       await expect(page.getByRole('status').filter({ hasText: `Đã thêm đơn vị tính ${name}` })).toBeVisible();
       await expect(rowOf(page, name)).toHaveCount(1);
-      const fresh = await menuItems(page, name);
-      expect(fresh.labels).toEqual(['Sửa', 'Tạm ngưng', 'Xóa']);
-      await page.keyboard.press('Escape');
+      expect(await actionLabels(page, name)).toEqual(['Sửa', 'Tạm ngưng', 'Xóa']);
 
       await page.getByRole('main').getByRole('button', { name: 'Thêm đơn vị tính' }).click();
       await dialog.getByLabel(/Tên đơn vị/).fill(name.toLowerCase());
@@ -92,11 +84,10 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
 
       expect(await memberOtherItemUnits(browser, info, sub, name)).toBe(1);
 
-      await (await menuItems(page, name)).menu.getByRole('menuitem', { name: 'Tạm ngưng' }).click();
+      await rowOf(page, name).getByRole('button', { name: `Tạm ngưng ${name}`, exact: true }).click();
       await page.getByRole('dialog', { name: `Tạm ngưng đơn vị “${name}”?` }).getByRole('button', { name: 'Tạm ngưng', exact: true }).click();
       await expect(rowOf(page, name).getByText('Tạm ngưng', { exact: true })).toBeVisible();
-      expect((await menuItems(page, name)).labels).toEqual(['Sửa', 'Dùng lại', 'Xóa']);
-      await page.keyboard.press('Escape');
+      expect(await actionLabels(page, name)).toEqual(['Sửa', 'Dùng lại', 'Xóa']);
       await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
       expect(await memberOtherItemUnits(browser, info, sub, name)).toBe(0);
       if (isMobile(info)) await expectNoContrastViolations(page);
@@ -111,7 +102,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Thứ tự' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /^Đưa / })).toHaveCount(0);
-    const names = () => page.getByRole('table').getByRole('button', { name: /^Thao tác cho / }).evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
+    const names = () => page.getByRole('table').getByRole('button', { name: /^Sửa / }).evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
     const before = await names();
     await page.getByRole('button', { name: 'Sắp xếp' }).click();
     const ups = page.getByRole('button', { name: /^Đưa .+ lên$/ });
@@ -143,7 +134,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
   test('E9-S5b Đơn vị tính: Enter trên ▲▼ giữ tiêu điểm ở mũi tên của dòng vừa dời, tới dòng cuối chuyển sang ▲', async ({ page }) => {
     await page.goto('/admin/categories/units');
     await expect(page.getByRole('heading', { level: 1, name: 'Danh mục' })).toBeVisible();
-    await expectReorderArrowKeepsFocus(page, /^Thao tác cho /);
+    await expectReorderArrowKeepsFocus(page, /^Sửa /);
   });
 
   test('E9-S5b Đơn vị tính: lỗi tải → "Không tải được dữ liệu — thử lại." và "Thử lại"', async ({ page }) => {

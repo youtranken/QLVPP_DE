@@ -5,11 +5,13 @@ import { useMe } from '@/lib/me';
 import { useLeaveGuard } from '@/features/request/use-leave-guard';
 import { discardOptions, useConfirm } from '@/ui/confirm-context';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
+import { ListMeta } from '@/ui/list-meta';
 import { ReorderBar, ReorderToggle } from '@/ui/reorder';
 import { useToast } from '@/ui/toast-context';
 import { Toolbar } from '@/ui/toolbar';
 import { useReorderMode } from '@/ui/use-reorder-mode';
 import { SetupHeader } from '@/features/catalog/setup-page';
+import { matchesSearch } from '@/features/request/request-format';
 import { UnitDialog } from './unit-dialog';
 import { unitErrorKey } from './unit-errors';
 import { UnitTable } from './unit-table';
@@ -32,6 +34,7 @@ export function UnitsPage() {
   const [editing, setEditing] = useState<AdminUnit | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [q, setQ] = useState('');
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true);
@@ -85,14 +88,25 @@ export function UnitsPage() {
     </button>
   );
   const list = order.ordered;
+  // Đang sắp xếp thì cần thấy đủ đơn vị: bỏ lọc
+  const query = sort.on ? '' : q.trim();
+  const visible = (u: AdminUnit) => !query || matchesSearch([u.name, u.name_en].filter(Boolean).join(' '), query);
+  const shown = list.filter(visible).length;
+  // Cùng khung thanh công cụ với tab Nhóm (ô tìm · đếm · Sắp xếp): đổi tab không làm nút đổi chỗ
+  const tools = !sort.on && list.length > 0 && (
+    <div className="setup-tools">
+      <Toolbar search={{ value: q, onChange: setQ, label: t('units.page.search'), placeholder: t('units.page.search'), maxLength: 40 }} />
+      <ListMeta>
+        <p className="setup-shown" role="status">
+          {t('units.page.shown', { shown, total: list.length })}
+        </p>
+      </ListMeta>
+      <ReorderToggle count={list.length} onStart={sort.start} />
+    </div>
+  );
   return (
     <div className="ct-page">
-      <SetupHeader
-        variant="units"
-        description={t('units.page.description')}
-        primary={add}
-        tabsEnd={!sort.on && list.length > 0 ? <ReorderToggle count={list.length} onStart={sort.start} /> : undefined}
-      />
+      <SetupHeader variant="units" description={t('units.page.description')} primary={add} tabsEnd={tools || undefined} />
       {actionError && (
         <p role="alert" className="alert alert--danger">
           {actionError}
@@ -111,16 +125,21 @@ export function UnitsPage() {
               <ReorderBar dirty={order.dirty} dirtyText={t('units.page.dirty', { n: order.moved })} saving={order.saving} onCancel={() => void sort.cancel()} onSave={() => void sort.save()} />
             </Toolbar>
           )}
-          <UnitTable
-            ordered={list}
-            busy={busy || order.saving}
-            sorting={sort.on}
-            onMove={order.move}
-            onMoveTo={order.moveTo}
-            onEdit={setEditing}
-            onToggleActive={(u) => void toggleActive(u)}
-            onDelete={(u) => void remove(u)}
-          />
+          {shown === 0 ? (
+            <EmptyState art="no-match" title={t('units.page.noMatch')} />
+          ) : (
+            <UnitTable
+              visible={query ? visible : undefined}
+              ordered={list}
+              busy={busy || order.saving}
+              sorting={sort.on}
+              onMove={order.move}
+              onMoveTo={order.moveTo}
+              onEdit={setEditing}
+              onToggleActive={(u) => void toggleActive(u)}
+              onDelete={(u) => void remove(u)}
+            />
+          )}
         </div>
       )}
       {adding && <UnitDialog onClose={() => setAdding(false)} />}
