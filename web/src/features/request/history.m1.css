@@ -42,6 +42,7 @@
 [data-shell='member'] .hs-d-sub { margin: var(--s-1) 0 0; font: var(--t-body); color: var(--c-muted); }
 [data-shell='member'] .hs-note { color: var(--c-ink-2); }
 [data-shell='member'] .hs-note .hs-chip { margin-left: var(--s-1); }
+[data-shell='member'] .hs-note[data-empty] > [aria-hidden='true'] { color: var(--c-muted); }
 [data-shell='member'] .hs-adjust-box { display: grid; gap: var(--s-2); padding: var(--s-4); border-radius: var(--r-md); background: var(--c-warn-soft); }
 [data-shell='member'] .hs-adjust-title { margin: 0; font: var(--t-label); color: var(--c-warn); }
 [data-shell='member'] .hs-owed { font: var(--t-label); color: var(--c-muted); }

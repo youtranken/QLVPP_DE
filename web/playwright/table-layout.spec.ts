@@ -28,6 +28,8 @@ async function expectSameBox(page: Page, base: Box, where: string, selector?: st
   const now = await tableBox(page, selector);
   // Lọc ra rỗng thì bảng ẩn đầu cột: không có gì để so
   if (!now) return;
+  // Cột ẩn/hiện theo dữ liệu (Lịch sử từng bỏ cột Ghi chú khi cả tháng trống) cũng là cột dời chỗ
+  expect(now.xs.length, `${where}: số cột`).toBe(base.xs.length);
   for (const [i, x] of base.xs.entries()) {
     expect(Math.abs(now.xs[i] - x), `${where}: cột ${i} dời ngang`).toBeLessThanOrEqual(2);
     expect(Math.abs(now.ws[i] - base.ws[i]), `${where}: cột ${i} đổi bề rộng`).toBeLessThanOrEqual(2);
@@ -132,9 +134,10 @@ test.describe('Bảng quản lý', () => {
   }
 });
 
-// Lịch sử của nhân viên: tháng có ghi chú dài (từ chối, đã hủy) và tháng chỉ có số phải cùng cột (bảng tự co từng lệch 83px)
+// Lịch sử của nhân viên: tháng có ghi chú dài (từ chối, đã hủy) và tháng chỉ có số phải cùng cột (bảng tự co từng lệch 83px;
+// sau đó ẩn cột Ghi chú khi cả tháng trống làm cột dời 104–144px). Tháng trống ghi chú vẫn có cột, ô hiện "—";
+// dạng thẻ (390) không hiện nhãn "Ghi chú:" trơ trọi
 test('Vòng8 Lịch sử: đổi tháng không dời cột bảng chi tiết', async ({ page, request }, info) => {
-  test.skip(isMobile(info), '390 bảng chi tiết xếp thẻ');
   await skipNewPeriodPopup(page);
   const sub = `pw-tl-${Date.now()}-${info.project.name}`;
   seedActiveUser(sub, `PW Bảng lịch sử ${info.project.name}`);
@@ -151,9 +154,19 @@ test('Vòng8 Lịch sử: đổi tháng không dời cột bảng chi tiết', a
     INSERT INTO request_lines (request_id, custom_name, custom_unit, qty, review_status, review_note)
     SELECT r.id, 'PW Bìa còng lưng rất dài cho cột Món', 'cai', 3, 'rejected', 'Đã có trong kho, nhận ở quầy Adm D&E' FROM r`);
   try {
+    if (isMobile(info)) {
+      await page.goto(`/history/${ymA}`);
+      await expect(page.locator('.hs-table')).toBeVisible();
+      // Tháng A không có ghi chú: thẻ không có dòng "Ghi chú:" nào thấy được
+      const shownNotes = await page.locator('.hs-table td.hs-note').evaluateAll((tds) => tds.filter((td) => td.getClientRects().length > 0).length);
+      expect(shownNotes, '390: ô Ghi chú trống bị ẩn khỏi thẻ').toBe(0);
+      return;
+    }
     for (const width of [1440, 1280, 1024]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(`/history/${ymA}`);
+      await expect(page.getByRole('columnheader', { name: 'Ghi chú' }), `${width}px tháng không ghi chú vẫn có cột Ghi chú`).toBeVisible();
+      await expect(page.locator('.hs-table td.hs-note').first()).toHaveText(/—/);
       await expect(page.locator('.hs-table')).toBeVisible();
       const base = await tableBox(page, '.hs-table');
       expect(base, `${width}px tháng ${ymA} có bảng`).not.toBeNull();

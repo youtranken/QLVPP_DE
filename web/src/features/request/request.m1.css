@@ -45,8 +45,8 @@
   [data-shell='member'] .rq-recv-table th.rq-recv-name { grid-column: 1 / -1; }
   [data-shell='member'] .rq-recv-table td.num { text-align: left; }
   [data-shell='member'] .rq-recv-table td::before { content: attr(data-label) ': '; color: var(--c-muted); font: var(--t-sm); }
-  /* Ô không có giá trị (vd Ghi chú trống): ẩn cả nhãn, không để "Ghi chú:" trơ trọi trên thẻ */
-  [data-shell='member'] .rq-recv-table td:empty { display: none; }
+  /* Ô không có giá trị (vd Ghi chú trống — bảng máy tính hiện "—"): thẻ ẩn cả ô, không để "Ghi chú:" trơ trọi */
+  [data-shell='member'] .rq-recv-table td:empty, [data-shell='member'] .rq-recv-table td[data-empty] { display: none; }
 }
 
 [data-shell='member'] .rq-frame { display: flex; flex-wrap: wrap; gap: var(--s-4); align-items: flex-start; }
