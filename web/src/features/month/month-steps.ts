@@ -57,7 +57,7 @@ export function monthSteps(i: MonthStepsInput, t: TFunction): StepState[] {
   const deliver = i.deliver ?? { done: 0, total: 0 };
   const steps: Omit<StepState, 'current'>[] = [
     { key: 'register', done: !i.isOpen, value: known ? `${i.registered}/${i.headcount}` : String(i.registered), to: `/admin/month?ym=${i.ym}` },
-    { key: 'send', to: '/admin/reports', ...sendValue(i.send, t) },
+    { key: 'send', to: `/admin/reports?ym=${i.ym}`, ...sendValue(i.send, t) },
     { key: 'arrive', to: '/admin/arrivals', ...arriveValue(i.send, i.plan, t) },
     { key: 'deliver', done: deliver.done === deliver.total, value: t('month.value.deliver', deliver), to: '/admin/delivery' },
   ];

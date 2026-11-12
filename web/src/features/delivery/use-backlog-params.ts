@@ -26,5 +26,6 @@ export function useBacklogParams() {
     setYm: (next: string | null) => update({ ym: next }, true),
     setQ: (next: string) => update({ q: next || null }, true),
     toggleLeft: () => update({ left: left ? null : '1' }, true),
+    clearAll: () => update({ ym: null, q: null, left: null }, true),
   };
 }

@@ -234,7 +234,9 @@ describe('AuditPage B11', () => {
     const last = lastAudit(fetchMock);
     expect([last.get('action'), last.get('from'), last.get('to')]).toEqual(['config.updated', '2026-10-01', '2026-10-28']);
     expect(screen.getByTestId('location-search')).toHaveTextContent('actor=u-binh&action=config.updated&from=2026-10-01&to=2026-10-28');
-    expect(screen.getByText(/Đang lọc: Bộ lọc nhật ký/)).toBeInTheDocument();
+    // Một nút "Xóa lọc" cho việc bỏ lọc (ở thanh lọc), không hàng "Đang lọc …" thứ hai
+    expect(screen.queryByText(/Đang lọc:/)).toBeNull();
+    expect(screen.getAllByRole('button', { name: 'Xóa lọc' })).toHaveLength(1);
   });
 
   it('Danh bạ dẫn tới ?actor=<sub>: gọi api với actor đó ngay khi vào và hiện tên người', async () => {

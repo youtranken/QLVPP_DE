@@ -39,11 +39,11 @@ test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
     await expect(page.getByText(/^Đang lọc: Đã khóa/)).toBeVisible();
     await expect(rowOf(page, LOCKED.name)).toBeVisible();
     await expect(rowOf(page, ACTIVE.name)).toHaveCount(0);
-    await page.getByRole('button', { name: 'Bỏ lọc' }).click();
+    await page.getByRole('button', { name: 'Xóa lọc' }).click();
     await page.getByRole('button', { name: /^Đang dùng/ }).click();
     await expect(rowOf(page, ACTIVE.name)).toBeVisible();
     await expect(rowOf(page, LOCKED.name)).toHaveCount(0);
-    await page.getByRole('button', { name: 'Bỏ lọc' }).click();
+    await page.getByRole('button', { name: 'Xóa lọc' }).click();
 
     await page.getByRole('button', { name: 'Đồng bộ ngay' }).click();
     const alert = page.getByRole('alert');

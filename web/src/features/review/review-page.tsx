@@ -62,7 +62,7 @@ export function ReviewPage() {
     const n = counts[f];
     return f === 'pending' && p.status === 'pending' && n !== undefined ? n - stillListed : n;
   };
-  const tabs = REVIEW_FILTERS.map((f) => ({ value: f, label: t(`review.filters.${f}`), count: countOf(f) }));
+  const tabs = REVIEW_FILTERS.map((f) => ({ value: f, label: t(`review.filters.${f}`), count: countOf(f), urgent: f === 'pending' }));
 
   return (
     <div className="ct-page">
@@ -89,7 +89,7 @@ export function ReviewPage() {
       ) : list.isPending ? (
         <Loading />
       ) : list.data.items.length === 0 ? (
-        <ReviewEmpty status={p.status} onSeeAccepted={() => change(() => p.setStatus('accepted'))} />
+        <ReviewEmpty status={p.status} ym={p.ym} acceptedCount={counts.accepted} onSeeAccepted={() => change(() => p.setStatus('accepted'))} />
       ) : (
         <div className="rv-grid">
           {list.data.items.map((row) => (

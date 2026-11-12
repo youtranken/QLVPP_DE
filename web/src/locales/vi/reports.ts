@@ -100,6 +100,8 @@ const reports = {
       excel: 'Xuất Excel',
       preview: 'Xem tổng kết',
       colWho: 'Ai đăng ký',
+      whoLoading: 'Đang tải số người',
+      whoFailed: 'Chưa tải được ai đăng ký từng món.',
       who: '{{count}} người',
       whoLabel: 'Xem ai đăng ký {{name}} ({{count}} người)',
       changedTag: 'Đổi sau bản in',

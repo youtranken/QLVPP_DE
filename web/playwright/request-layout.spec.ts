@@ -74,7 +74,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
     } finally {
       deleteTestUsers(me.sub);
     }
-  });  test('V2C-T3 lọc: tìm + Đã chọn + Xóa bộ lọc', async ({ page, request }, info) => {
+  });  test('V2C-T3 lọc: tìm + Đã chọn + Xóa lọc', async ({ page, request }, info) => {
     const me = await asNewMember(page, info);
     const stamp = Date.now();
     const name = `PW Bút lọc ${stamp}`;
@@ -106,7 +106,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await expect(grid.getByRole('spinbutton', { name, exact: true })).toHaveValue('1');
       await grid.getByRole('searchbox', { name: 'Tìm món' }).fill('khong co mon nay');
       await expect(grid.getByText('Không có món phù hợp')).toBeVisible();
-      await grid.getByRole('button', { name: 'Xóa bộ lọc' }).click();
+      await grid.getByRole('button', { name: 'Xóa lọc' }).click();
       await expect(grid.getByRole('searchbox', { name: 'Tìm món' })).toHaveValue('');
       await expect(picked).toHaveAttribute('aria-pressed', 'false');
       await expect(page).not.toHaveURL(/q=|picked=|g=/);

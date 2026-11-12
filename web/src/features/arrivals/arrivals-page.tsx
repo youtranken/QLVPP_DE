@@ -5,6 +5,7 @@ import { groupCounts as countByGroup } from '@/lib/group-counts';
 import { useUrlPatch } from '@/lib/use-url-patch';
 import { lockedYm } from '@/lib/ym';
 import { formatVnStamp } from '@/lib/format-time';
+import { EmptyFrame } from '@/ui/empty-frame';
 import { Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { useToast } from '@/ui/toast-context';
@@ -194,12 +195,7 @@ function ArrivalsBoard({ ym }: { ym: string }) {
       {!done && (
         <section className="ar-card">
           {visible.length === 0 ? (
-            <div className="ar-nomatch">
-              <b>{t('arrivals.filter.none')}</b>
-              <button type="button" className="btn" onClick={() => patchUrl(CLEAR_FILTER, true)}>
-                {t('arrivals.filter.clear')}
-              </button>
-            </div>
+            <EmptyFrame flush variant="no-match" title={t('arrivals.filter.none')} onClear={() => patchUrl(CLEAR_FILTER, true)} />
           ) : (
             <ArrivalTable sections={sections} draft={draft} admBusy={adm.busy} pickOf={pickOf} onToggleAdm={(r) => void toggleAdm(r.item_id, !r.adm_out)} />
           )}

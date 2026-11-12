@@ -232,6 +232,41 @@ describe('Báo cáo & gửi NCC: kỳ cũ hơn, ai đăng ký, các bản đã i
     expect(within(pen).getAllByRole('cell').some((c) => c.textContent === '9')).toBe(true);
   });
 
+  const olderSetup = (byItem: () => Response) => {
+    const older = sendReport([PEN, PAPER], { ym: '2026-09' });
+    const oldSent = sentState(sentData(older, { kA: 9, kB: 4 }, { period_ym: '2026-09' }));
+    setupSendAdm({
+      report: REPORT,
+      extra: (url) => {
+        if (url === '/api/admin/reports/2026-09') return jsonResponse(200, older);
+        if (url === '/api/admin/periods/2026-09/send-state') return jsonResponse(200, oldSent);
+        if (url.startsWith('/api/admin/periods/2026-09/requests?by=item')) return byItem();
+        if (url.startsWith('/api/admin/reports/2026-09/snapshots')) return jsonResponse(200, { items: [] });
+        return undefined;
+      },
+    });
+    open('/admin/reports?ym=2026-09');
+  };
+  const whoCells = async () => {
+    const t = await table();
+    await waitFor(() => expect(t.getAllByRole('row').some((r) => r.textContent?.includes('Giấy A4'))).toBe(true));
+    return ['Bút bi', 'Giấy A4'].map((n) => t.getAllByRole('row').find((r) => r.textContent?.includes(n))!.lastElementChild!);
+  };
+
+  it('kỳ cũ hơn: cột "Ai đăng ký" có số người theo key của bản đã gửi; món không ai đăng ký mới là "—"', async () => {
+    olderSetup(() => jsonResponse(200, { items: [{ key: 'kA', item_id: 'kA', name: 'Bút bi', unit: 'cay', requested_qty: 5, people: 3, max_qty: 5, over_max: false }] }));
+    const [pen, paper] = await whoCells();
+    await waitFor(() => expect(pen).toHaveTextContent('3 người'));
+    expect(paper).toHaveTextContent('—');
+  });
+
+  it('kỳ cũ hơn: tải số người lỗi → báo "Chưa tải được ai đăng ký" + Thử lại, ô không hiện "—"', async () => {
+    olderSetup(() => jsonResponse(429, { code: 'TOO_MANY_REQUESTS' }));
+    expect(await screen.findByText('Chưa tải được ai đăng ký từng món.', {}, { timeout: 4000 })).toBeInTheDocument();
+    const cells = await whoCells();
+    for (const c of cells) expect(c).not.toHaveTextContent('—');
+  });
+
   it('kỳ cũ hơn: Xem tổng kết mở hộp với bản đã gửi (không gọi preview), nút "In" in thẳng bản đó, không tạo bản', async () => {
     const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
     const older = sendReport([PEN, PAPER], { ym: '2026-09' });

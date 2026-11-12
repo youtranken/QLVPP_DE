@@ -29,6 +29,17 @@ describe('Segmented', () => {
     expect(screen.getByText('0')).toHaveAttribute('data-zero');
     expect(screen.getByText('1')).not.toHaveAttribute('data-zero');
   });
+  it('chỉ tab cần xử lý (urgent) có số > 0 mới tô đỏ (data-urgent); "Tất cả 3", "Đã chấp nhận 1" trung tính', () => {
+    const counts = [
+      { value: 'p', label: 'Chờ xem', count: 2, urgent: true },
+      { value: 'z', label: 'Chờ khác', count: 0, urgent: true },
+      { value: 'a', label: 'Đã chấp nhận', count: 1 },
+      { value: 't', label: 'Tất cả', count: 3 },
+    ];
+    renderWithI18n(<Segmented label="x" value="t" options={counts} onChange={() => {}} />);
+    expect(screen.getByText('2')).toHaveAttribute('data-urgent');
+    for (const n of ['0', '1', '3']) expect(screen.getByText(n)).not.toHaveAttribute('data-urgent');
+  });
   it('ArrowRight từ mục cuối quay về mục đầu và gọi onChange', async () => {
     const onChange = vi.fn();
     renderWithI18n(<Segmented label="x" value="c" options={opts} onChange={onChange} />);

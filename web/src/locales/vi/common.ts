@@ -59,10 +59,12 @@ const common = {
       increase: 'Thêm {{label}}',
     },
     searchClear: 'Xóa chữ tìm',
+    missingEn: 'Thiếu tên EN',
+    missingEnHint: 'Giao diện tiếng Anh sẽ hiện tên tiếng Việt cho tới khi có tên tiếng Anh.',
     filter: {
       hint: 'Lọc',
       active: 'Đang lọc: {{label}} · {{count}}',
-      clear: 'Bỏ lọc',
+      clear: 'Xóa lọc',
     },
     errors: {
       PENDING_CUSTOM: 'Danh sách món chờ duyệt vừa thay đổi, xem lại rồi xác nhận.',

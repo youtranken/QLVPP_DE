@@ -47,6 +47,15 @@ describe('MonthPage: kỳ khóa', () => {
     expect(t.getByText('Món ngoài danh mục')).toBeInTheDocument();
   });
 
+  it('Ghi chú trống → "—" (ô có nhãn ở dạng thẻ không để trống)', async () => {
+    stubMonthApi();
+    open();
+    const t = await table();
+    const row = t.getByText('Nhân viên E').closest('tr')!;
+    expect(row.querySelector('.mk-notes')).toBeNull();
+    expect(within(row).getAllByRole('cell').some((c) => c.textContent === '—Chưa có')).toBe(true);
+  });
+
   it('chip Tất cả 5 · Có ghi chú 4 · Chưa giao xong 3 lọc tại chỗ và ghi ?chip=', async () => {
     const f = stubMonthApi();
     open();
@@ -111,6 +120,21 @@ describe('MonthPage: kỳ khóa', () => {
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người hoặc phòng' }), 'phòng test');
     await waitFor(() => expect(calledUrls(f).some((u) => u.includes('q=ph%C3%B2ng+test'))).toBe(true));
     await waitFor(() => expect(t.queryByRole('button', { name: 'Xem phiếu của Nguyễn Văn An' })).toBeNull());
+  });
+});
+
+describe('MonthPage: kỳ cũ (không phải kỳ khóa gần nhất)', () => {
+  it('?ym=2026-09: dải vẫn đủ 4 bước từ dữ liệu thật, không bước nào "—", Gửi NCC dẫn tới báo cáo đúng tháng', async () => {
+    const f = stubMonthApi();
+    open('/admin/month?ym=2026-09');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 9' })).toBeInTheDocument();
+    const steps = await screen.findByRole('list', { name: 'Các bước của tháng' });
+    await waitFor(() => expect(within(steps).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Đăng ký4/5', 'Gửi NCC11:50 08/11', 'Nhận hàng19/21 món', 'Giao1/4 phiếu']));
+    expect(within(steps).queryByText('—')).toBeNull();
+    expect(within(steps).getByRole('link', { name: /Gửi NCC/ })).toHaveAttribute('href', '/admin/reports?ym=2026-09');
+    const urls = calledUrls(f);
+    expect(urls).toContain('/api/admin/periods/2026-09/send-state');
+    expect(urls).toContain('/api/admin/periods/2026-09/arrivals-plan');
   });
 });
 

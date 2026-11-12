@@ -1,14 +1,42 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import { EmptyArt, type EmptyArtKind } from '@/ui/empty-art';
+
+// "no-match": có dữ liệu nhưng bộ lọc/tìm không ra → luôn kính lúp, nút Xóa lọc khi có onClear.
+// "empty": chưa có dữ liệu → hình riêng của màn (mặc định tờ phiếu trống), không bao giờ kính lúp,
+// để người dùng phân biệt "lọc sai" với "chưa có gì" chỉ qua một cái nhìn
+export type EmptyVariant = 'no-match' | 'empty';
+
+export interface EmptyFrameProps {
+  variant?: EmptyVariant;
+  title: string;
+  hint?: string;
+  // Hình riêng cho biến thể "empty": tên trong bộ empty-art hoặc một minh họa tự vẽ
+  art?: EmptyArtKind | ReactNode;
+  action?: ReactNode;
+  onClear?: () => void;
+  // Trong bảng (DataTable): bảng đã là thẻ nên bỏ nền thẻ, tiêu đề không là heading
+  flush?: boolean;
+}
 
 // Khung trống chung của trang quản trị: rộng hết vùng danh sách, khối chữ tối đa 480 px căn giữa
-export function EmptyFrame({ art, title, hint, action }: { art?: ReactNode; title: string; hint?: string; action?: ReactNode }) {
+export function EmptyFrame({ variant = 'empty', title, hint, art, action, onClear, flush = false }: EmptyFrameProps) {
+  const { t } = useTranslation();
+  const kind: EmptyArtKind | null = variant === 'no-match' ? 'no-match' : typeof art === 'string' ? (art as EmptyArtKind) : art ? null : 'no-request';
+  const picture = kind ? <EmptyArt kind={kind} /> : art;
+  const clear =
+    variant === 'no-match' && onClear ? (
+      <button type="button" className="btn" onClick={onClear}>
+        {t('common.filter.clear')}
+      </button>
+    ) : null;
   return (
-    <div className="empty-state">
+    <div className={flush ? 'empty-state empty-state--flush' : 'empty-state'} data-variant={variant}>
       <div className="empty-state__body">
-        {art}
-        <h2 className="empty-state__title">{title}</h2>
+        {picture}
+        {flush ? <p className="empty-state__title">{title}</p> : <h2 className="empty-state__title">{title}</h2>}
         {hint && <p className="empty-state__hint">{hint}</p>}
-        {action}
+        {clear ?? action}
       </div>
     </div>
   );

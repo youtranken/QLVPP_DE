@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { EmptyValue } from '@/ui/empty-cell';
 import { Dialog, DialogCloseButton, DialogTitle } from "@/ui/dialog";
 import { Loading, LoadError } from "@/ui/load-state";
 import { RegistrationDialog } from "@/features/summary/registration-dialog";
@@ -18,7 +19,7 @@ const nameOf = (p: ItemPerson) => p.full_name ?? p.email ?? p.user_sub;
 
 function Note({ person }: { person: ItemPerson }) {
   const { t } = useTranslation();
-  if (!person.reason_code) return null;
+  if (!person.reason_code) return <EmptyValue />;
   const reason = person.reason_note
     ? `${t(`adjustReason.${person.reason_code}`)}: ${person.reason_note}`
     : t(`adjustReason.${person.reason_code}`);

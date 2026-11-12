@@ -19,7 +19,7 @@ describe('monthSteps (dải gọn của Kỳ tháng)', () => {
   it('đúng 4 bước theo thứ tự, mỗi bước là link sang trang của nó', () => {
     expect(steps().map((s) => [s.key, s.to])).toEqual([
       ['register', '/admin/month?ym=2026-11'],
-      ['send', '/admin/reports'],
+      ['send', '/admin/reports?ym=2026-11'],
       ['arrive', '/admin/arrivals'],
       ['deliver', '/admin/delivery'],
     ]);

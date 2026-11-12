@@ -108,7 +108,7 @@ describe('AdminPeriodCard', () => {
     await i18n.changeLanguage('en');
     try {
       renderCard(period(2));
-      expect(screen.getByRole('link', { name: /^Current sign-up period: month 11 · open/ })).toHaveTextContent('2 days left · locks 00:00 on 11/11');
+      expect(screen.getByRole('link', { name: /^Current sign-up period: November · open/ })).toHaveTextContent('2 days left · locks 00:00 on 11/11');
     } finally {
       await i18n.changeLanguage('vi');
     }

@@ -14,8 +14,8 @@ import {
   type RowData,
   type SortingState,
 } from '@tanstack/react-table';
-import { EmptyState, Loading } from '@/ui/load-state';
-import type { EmptyArtKind } from '@/ui/empty-art';
+import { Loading } from '@/ui/load-state';
+import { EmptyFrame, type EmptyFrameProps } from '@/ui/empty-frame';
 import { GroupHeaderRow, type GroupBy, type RowGroup } from '@/ui/data-table-group';
 import { BodyRow, EmptyAwareCell, SelectBox, type RowProps, type Selection } from '@/ui/data-table-row';
 import { SearchClear } from '@/ui/search-clear';
@@ -35,7 +35,8 @@ interface DataTableProps<T> {
   data: T[];
   columns: ColumnDef<T, unknown>[];
   emptyText: string;
-  empty?: { art?: EmptyArtKind; hint?: string; action?: ReactNode };
+  // Ô trống của bảng: cùng EmptyFrame với trang (biến thể "no-match" = kính lúp + Xóa lọc)
+  empty?: Omit<EmptyFrameProps, 'title' | 'flush'>;
   loading?: boolean;
   searchPlaceholder?: string;
   initialSort?: SortingState;
@@ -224,7 +225,7 @@ export function DataTable<T>({
             {rows.length === 0 ? (
               <tr>
                 <td colSpan={colSpan}>
-                  {loading ? <Loading /> : <EmptyState title={emptyText} {...empty} />}
+                  {loading ? <Loading /> : <EmptyFrame flush title={emptyText} {...empty} />}
                 </td>
               </tr>
             ) : groups && groupBy ? (

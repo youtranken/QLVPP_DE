@@ -7,10 +7,10 @@ describe('FilterNotice', () => {
     renderWithI18n(<FilterNotice label="Sắp hết" count={4} onClear={() => {}} />);
     expect(screen.getByText('Đang lọc: Sắp hết · 4')).toBeInTheDocument();
   });
-  it('bấm Bỏ lọc gọi onClear', async () => {
+  it('bấm Xóa lọc gọi onClear', async () => {
     const onClear = vi.fn();
     renderWithI18n(<FilterNotice label="x" count={0} onClear={onClear} />);
-    await userEvent.click(screen.getByRole('button', { name: 'Bỏ lọc' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
     expect(onClear).toHaveBeenCalledTimes(1);
   });
   it('count là chuỗi có đơn vị: "Đang lọc: Còn dòng chờ giao · 3 người"', () => {

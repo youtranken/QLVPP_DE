@@ -232,10 +232,10 @@ describe('Hàng về — lọc ?q=&g=&short=1', () => {
     expect(box('Kẹp giấy')).toBeInTheDocument();
   });
 
-  it('không khớp → "Không có món khớp" + "Xóa lọc"', async () => {
+  it('không khớp → "Không có món nào khớp" + "Xóa lọc"', async () => {
     stub();
     await open('/admin/arrivals?q=zzz');
-    expect(await screen.findByText('Không có món khớp')).toBeInTheDocument();
+    expect(await screen.findByText('Không có món nào khớp')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
     expect(box('Bút bi')).toBeInTheDocument();
     expect(loc()).toBe('');

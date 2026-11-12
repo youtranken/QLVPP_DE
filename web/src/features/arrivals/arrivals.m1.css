@@ -59,7 +59,6 @@
 /* Ô chọn nhóm: dáng và vùng bấm 44px chung với ô chọn trong bảng (css/m1/table.css) */
 [data-shell='admin'] .ar-pick:disabled { cursor: default; }
 [data-shell='admin'] .ar-count { margin: 0; color: var(--c-ink-2); font: var(--t-sm); }
-[data-shell='admin'] .ar-nomatch { display: grid; justify-items: center; gap: var(--s-2); padding: var(--s-6) var(--s-4); color: var(--c-ink); text-align: center; }
 [data-shell='admin'] .ar-done__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-4); border-radius: var(--r-md); background: var(--c-ok-soft); color: var(--c-ok); font: var(--t-label); }
 /* Kỳ chưa gửi NCC: thay bảng nhận bằng một lời nhắn + lối sang Báo cáo & gửi NCC */
 [data-shell='admin'] .ar-gate { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); background: var(--c-warn-soft); color: var(--c-ink); font: var(--t-body); }

@@ -19,11 +19,11 @@ const review: Messages<typeof vi> = {
     monthNav: 'Choose month',
     prevMonth: 'Previous month',
     nextMonth: 'Next month',
-    month: 'Month {{month}}/{{year}}',
+    month: '{{month, MonthName}} {{year}}',
     empty: {
       pending: 'Nothing left to review',
       pendingAction: 'See accepted items',
-      openHint: 'Off-catalog items of the month {{month}} period will show up here from {{lockPhrase}}.',
+      openHint: 'Off-catalog items of the {{month, monthName}} period will show up here from {{lockPhrase}}.',
       accepted: 'No item accepted yet',
       converted: 'No item added to the catalog yet',
       rejected: 'No item rejected yet',
@@ -72,7 +72,7 @@ const review: Messages<typeof vi> = {
       title: 'Buy “{{name}}” this once?',
       body: 'The line is bought and delivered as requested; no catalog item is created.',
       bodyFor:
-        'D&E Admin will buy {{qty}} {{unit}} for {{who}}’s request of month {{month}}. The item is not added to the catalog — next month staff must add it again.',
+        'D&E Admin will buy {{qty}} {{unit}} for {{who}}’s request of {{month, monthName}}. The item is not added to the catalog — next month staff must add it again.',
       ok: 'Buy this once',
     },
     reject: {

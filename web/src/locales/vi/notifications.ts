@@ -36,7 +36,7 @@ const notifications = {
       },
       user_left_with_work: {
         locked: '{{name}} bị khoá nhưng còn {{work}}.',
-        deleted: '{{name}} bị xoá nhưng còn {{work}}.',
+        deleted: '{{name}} bị xóa nhưng còn {{work}}.',
         no_access: '{{name}} mất quyền vào VPP nhưng còn {{work}}.',
         owed_one: '{{count}} món chưa nhận ({{months}})',
         owed_other: '{{count}} món chưa nhận ({{months}})',

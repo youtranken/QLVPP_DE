@@ -5,7 +5,7 @@ import type { StepState } from './month-steps';
 
 interface Props {
   steps: StepState[];
-  // Kỳ đang đăng ký (hoặc kỳ cũ): chỉ bước Đăng ký có số, các bước sau mờ đi
+  // Kỳ đang đăng ký: chỉ bước Đăng ký có số, các bước sau mờ đi
   onlyFirst?: boolean;
 }
 

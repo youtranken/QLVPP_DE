@@ -135,4 +135,15 @@ void i18n
   })
   .then(() => applyDocumentLanguage(currentLanguage()));
 
+// Bản tiếng Anh gọi tháng bằng tên ("January") thay "month 1": chuỗi en dùng {{month, monthName}} giữa câu,
+// {{month, MonthName}} đầu câu. Giá trị không phải số tháng 1–12 thì giữ kiểu cũ "month x" để không mất nghĩa
+const MONTH_NAME = new Intl.DateTimeFormat('en-GB', { month: 'long', timeZone: 'UTC' });
+export function monthName(value: unknown, capital = false): string {
+  const n = Number(value);
+  if (Number.isInteger(n) && n >= 1 && n <= 12) return MONTH_NAME.format(new Date(Date.UTC(2000, n - 1, 1)));
+  return `${capital ? 'Month' : 'month'} ${String(value)}`;
+}
+i18n.services.formatter?.add('monthName', (value) => monthName(value));
+i18n.services.formatter?.add('MonthName', (value) => monthName(value, true));
+
 export default i18n;

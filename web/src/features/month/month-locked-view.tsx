@@ -28,15 +28,16 @@ interface Props {
   onQ: (q: string) => void;
 }
 
-// Kỳ khóa: dải 4 bước, nhắc người đã nghỉ, bảng người; các bước sau Đăng ký chỉ tính cho kỳ khóa gần nhất
+// Kỳ khóa: dải 4 bước, nhắc người đã nghỉ (chỉ kỳ khóa gần nhất), bảng người.
+// Kỳ cũ vẫn tính đủ 4 bước từ dữ liệu thật (send-state, arrivals-plan nhận mọi kỳ đã khóa): "—" đọc như chưa làm gì
 export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChip, onQ }: Props) {
   const { t } = useTranslation();
   const latest = ym === lockedYm(openYm);
   const summary = usePeriodSummary(ym);
   const all = usePersonTableRows(ym, '');
   const filtered = usePersonTableRows(q ? ym : undefined, q);
-  const send = useSendState(ym, latest);
-  const plan = useQuery({ ...arrivalsPlanQuery(ym), enabled: latest });
+  const send = useSendState(ym);
+  const plan = useQuery(arrivalsPlanQuery(ym));
   const [viewing, setViewing] = useState<string | null>(null);
   const shown = q ? filtered : all;
   // ?left=1: chỉ người đã nghỉ (còn phần chưa nhận ở chip "Chưa giao xong")
@@ -44,9 +45,9 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
   const open = useCallback((r: PersonRow) => setViewing(r.request_id), []);
   const panel = usePanelParam('request', { order: useMemo(() => visible.map((r) => r.request_id), [visible]) });
 
-  const failed = [summary, all.query, ...(latest ? [send.query, plan] : [])].find((x) => 'isError' in x && x.isError);
+  const failed = [summary, all.query, send.query, plan].find((x) => 'isError' in x && x.isError);
   if (failed) return <LoadError onRetry={() => void failed.refetch()} />;
-  if (!summary.data || (latest && (!send.query.data || !plan.data))) return <Loading />;
+  if (!summary.data || !send.query.data || !plan.data) return <Loading />;
 
   const people = all.rows.filter((r) => r.total_qty > 0);
   const steps = monthSteps(
@@ -54,7 +55,7 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
       registered: summary.data.registered,
       headcount: summary.data.headcount,
       isOpen: false,
-      send: latest && send.state ? { state: send.state, at: send.sent?.created_at ?? send.noOrder?.at ?? null } : null,
+      send: send.state ? { state: send.state, at: send.sent?.created_at ?? send.noOrder?.at ?? null } : null,
       plan: plan.data ?? null,
       deliver: { done: people.filter((r) => r.delivered_qty + r.cancelled_qty >= r.total_qty).length, total: people.length },
       ym,
@@ -64,7 +65,7 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
   const index = visible.findIndex((r) => r.request_id === viewing);
   return (
     <>
-      <MonthStrip steps={steps} onlyFirst={!latest} />
+      <MonthStrip steps={steps} />
       {latest && <MonthLeftReminder ym={ym} />}
       <MonthChips rows={shown.rows} chip={chip} q={q} onChip={onChip} onQ={onQ} />
       {shown.query.isError ? (
@@ -78,6 +79,10 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
           activeId={panel.id ?? undefined}
           onView={open}
           onAdjust={panel.open}
+          onClear={() => {
+            onChip('all');
+            onQ('');
+          }}
         />
       )}
       {index >= 0 && <RegistrationDialog ym={ym} deadline={null} rows={visible} index={index} onIndex={(i) => setViewing(visible[i]!.request_id)} onClose={() => setViewing(null)} />}

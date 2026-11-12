@@ -16,13 +16,23 @@ function cancelNote(l: LineView, t: ReturnType<typeof useTranslation>['t']): str
   return reason ? t(`request.history.${base}Why`, { n: l.cancelled_qty, reason }) : t(`request.history.${base}`, { n: l.cancelled_qty });
 }
 
-function NoteCell({ row, line }: { row: ReceiveRow; line: LineView | undefined }) {
-  const { t } = useTranslation();
+type T = ReturnType<typeof useTranslation>['t'];
+
+function noteParts(row: ReceiveRow, line: LineView | undefined, t: T): string[] {
   const parts: string[] = [];
   if (row.reason) parts.push(t('request.history.removedNote', { reason: row.reason }));
   if (row.received > 0 && row.receivedAt) parts.push(t('request.history.receivedAt', { at: formatVnStamp(row.receivedAt) }));
   const cancelled = line ? cancelNote(line, t) : null;
   if (cancelled) parts.push(cancelled);
+  return parts;
+}
+
+// Ô Ghi chú có gì để hiện: dòng chữ hoặc nhãn duyệt món ngoài danh mục (ReviewTag trả null cho món trong danh mục)
+const hasNote = (row: ReceiveRow, line: LineView | undefined, t: T) => noteParts(row, line, t).length > 0 || (!!line && line.review_status !== 'n/a');
+
+function NoteCell({ row, line }: { row: ReceiveRow; line: LineView | undefined }) {
+  const { t } = useTranslation();
+  const parts = noteParts(row, line, t);
   return (
     <>
       {parts.map((p, i) => (
@@ -43,6 +53,8 @@ function Table({ view }: { view: RequestView }) {
   const lineById = new Map(view.lines.map((l) => [l.id, l]));
   // Dòng ngoài danh mục còn chờ xem / bị từ chối không có hàng: vẫn liệt kê kèm nhãn của Hành chính
   const held = view.lines.filter((l) => l.review_status === 'pending' || l.review_status === 'rejected');
+  // Cả cột Ghi chú trống thì bỏ cột (bảng máy tính); ô trống lẻ không ghi gì, dạng thẻ ẩn luôn nhãn "Ghi chú:" (td:empty)
+  const notes = held.length > 0 || rows.some((r) => hasNote(r, lineById.get(r.id), t));
   return (
     <table className="rq-recv-table hs-table">
       {/* Bề rộng cột đặt ở history.m1.css (theo bề rộng màn): đổi tháng thì cột không co giãn theo chữ, cột Món nhận phần còn lại */}
@@ -53,7 +65,8 @@ function Table({ view }: { view: RequestView }) {
         <col className="hs-c-give" />
         <col className="hs-c-recv" />
         <col className="hs-c-st" />
-        <col className="hs-c-note" />
+        {/* Cột Ghi chú bị bỏ khi cả tháng không có ghi chú — colgroup phải bỏ theo để số col khớp số cột */}
+        {notes && <col className="hs-c-note" />}
       </colgroup>
       <thead>
         <tr>
@@ -62,7 +75,7 @@ function Table({ view }: { view: RequestView }) {
               {t(`request.receive.${k}`)}
             </th>
           ))}
-          <th scope="col">{t('request.history.colNote')}</th>
+          {notes && <th scope="col">{t('request.history.colNote')}</th>}
         </tr>
       </thead>
       <tbody>
@@ -76,7 +89,7 @@ function Table({ view }: { view: RequestView }) {
             <td data-label={t('request.receive.colToGive')} className="num">{r.toGive}</td>
             <td data-label={t('request.receive.colReceived')} className="num">{r.received}</td>
             <td data-label={t('request.receive.colStatus')}><ReceiveStatus row={r} /></td>
-            <td data-label={t('request.history.colNote')} className="hs-note"><NoteCell row={r} line={lineById.get(r.id)} /></td>
+            {notes && <td data-label={t('request.history.colNote')} className="hs-note">{hasNote(r, lineById.get(r.id), t) && <NoteCell row={r} line={lineById.get(r.id)} />}</td>}
           </tr>
         ))}
         {held.map((l) => (

@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { toneAtRank } from '@/lib/group-tone';
 import { ReorderCell, ReorderHead } from '@/ui/reorder';
 import { useRowDrag } from '@/ui/use-row-drag';
-import { EmptyCell } from '@/ui/empty-cell';
+import { MissingEnCell } from '@/ui/missing-en-cell';
 import type { Category } from './catalog.api';
 
 interface Props {
@@ -76,7 +76,7 @@ export function CategoryTable({ ordered, counts, countsReady, busy, sorting, onM
                     <span>{c.name_en}</span>
                   </td>
                 ) : (
-                  <EmptyCell className="cg-name-en" label={t('catalog.categories.colNameEn')} />
+                  <MissingEnCell className="cg-name-en" label={t('catalog.categories.colNameEn')} />
                 )}
                 <td className="num r" data-label={t('catalog.categories.colItems')}>
                   {sorting ? (
