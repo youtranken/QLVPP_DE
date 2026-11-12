@@ -107,6 +107,12 @@ export interface DialogRow {
   stockLeft: number;
 }
 
+// Món ngoài DM đã duyệt mà hàng chưa về (trần 0): nằm ở bảng giao để theo dõi nhưng không giao được
+export const isNotReceived = (r: Pick<DialogRow, 'reason'>) => r.reason === 'notReceived';
+// Một luật "giao được" cho nút thẻ, hộp, panel, giao nhiều phiếu: dòng giao từ tủ/hàng đã về, hoặc dòng NCC hết hàng (hủy phần thiếu).
+// Dòng chờ duyệt, tủ hết, chưa về không tính
+export const isDeliverable = (r: DialogRow) => r.kind === 'adm' || (r.kind === 'give' && !isNotReceived(r));
+
 const customCap = (l: DeliveryPersonLine) => Math.max(0, Math.min(l.remaining_qty, l.deliver_cap ?? l.remaining_qty));
 
 function rowOf(l: DeliveryPersonLine, active: boolean, pr: Priority | undefined): DialogRow {

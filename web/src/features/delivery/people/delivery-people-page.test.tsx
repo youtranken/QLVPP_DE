@@ -154,6 +154,16 @@ describe('DeliveryPeoplePage — giao thiếu và tủ trống', () => {
     expect(within(card('Minh NCC Hết')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
     expect(within(card('Oanh Còn Một')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
   });
+
+  it('chỉ còn món ngoài DM đã duyệt chưa về hàng (deliver_cap 0) → nút chính vô hiệu như tủ trống; đã về 1 → "Giao…"', async () => {
+    const wait = person({ user_sub: 'u-w', full_name: 'Vy Chờ Hàng', lines: [pLine({ line_id: 'lw', item_id: null, stock_qty: null, name: 'Bìa còng', review_status: 'accepted', deliver_cap: 0 })] });
+    const got = person({ user_sub: 'u-g', full_name: 'Giang Có Hàng', lines: [pLine({ line_id: 'lg', item_id: null, stock_qty: null, name: 'Bìa còng', review_status: 'accepted', deliver_cap: 1 })] });
+    stub({ people: [wait, got] });
+    open();
+    await screen.findByText('Vy Chờ Hàng', { selector: '.pt-person b' });
+    expect(within(card('Vy Chờ Hàng')).getByRole('button', { name: /^Tủ chưa có hàng/ })).toBeDisabled();
+    expect(within(card('Giang Có Hàng')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
+  });
 });
 
 describe('DeliveryPeoplePage — tiến độ trên thẻ', () => {

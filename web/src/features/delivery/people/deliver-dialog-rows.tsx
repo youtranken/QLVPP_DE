@@ -4,7 +4,7 @@ import { ItemThumb } from '@/ui/item-thumb';
 import { Stepper } from '@/ui/stepper';
 import { monthOf, useRequestFormat } from '@/features/request/request-format';
 import type { DeliveryPersonLine } from './delivery-people.api';
-import type { DialogRow, Limit, Shortage } from './deliver-plan';
+import { isDeliverable, isNotReceived, type DialogRow, type Limit, type Shortage } from './deliver-plan';
 import type { Waiting } from './people-filter';
 
 export interface RowsProps {
@@ -63,7 +63,7 @@ function LineRow({ row, limit, disabled, waiting, shortage, showLeft, onChange }
   const name = fmt.name(l);
   // NCC hết hàng mà tủ không còn: không có ô số, câu "Không giao n" chiếm luôn cột còn lại
   const noStockAdm = row.kind === 'adm' && limit.cap === 0;
-  const notReceived = row.reason === 'notReceived';
+  const notReceived = isNotReceived(row);
   return (
     <tr className={notReceived ? 'dd-row--off' : undefined}>
       <td className="dd-item">
@@ -154,12 +154,21 @@ export function DeliverRows(props: RowsProps) {
   // Cột "Còn lại sau lần này" chỉ ẩn khi mọi dòng của cả hai bảng đều trống
   const showLeft = [...give, ...adm].some((r) => leftOf(r, props.limits[r.line.line_id], t) !== null);
   const skip = props.rows.filter((r) => r.kind === 'skip');
-  const noStock = give.length === 0 && skip.some((r) => r.reason === 'stock');
+  const waiting = give.filter(isNotReceived);
+  // Không dòng nào giao được (tủ trống, món ngoài DM chưa về): một câu thay bảng, món chưa về vẫn liệt kê bên dưới để theo dõi
+  const noStock = !give.some(isDeliverable) && (waiting.length > 0 || skip.some((r) => r.reason === 'stock'));
   // Tủ trống thay cả danh sách thiếu hàng bằng một câu; dòng chờ duyệt vẫn phải hiện
   const skipShown = noStock ? skip.filter((r) => r.reason === 'review') : skip;
   return (
     <div className="dd-rows">
-      {noStock ? <p className="dd-nostock">{t('delivery.confirm.noStock')}</p> : give.length > 0 && <Table {...props} rows={give} showLeft={showLeft} />}
+      {noStock ? (
+        <>
+          <p className="dd-nostock">{t('delivery.confirm.noStock')}</p>
+          {waiting.length > 0 && <Table {...props} rows={waiting} showLeft={showLeft} />}
+        </>
+      ) : (
+        give.length > 0 && <Table {...props} rows={give} showLeft={showLeft} />
+      )}
       {adm.length > 0 && (
         <section className="dd-group dd-group--adm">
           <h3>{t('delivery.confirm.admOut')}</h3>

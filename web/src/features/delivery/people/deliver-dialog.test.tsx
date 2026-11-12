@@ -148,6 +148,17 @@ describe('DeliverDialog — trần stepper', () => {
     expect(within(dialog()).getByText(/Giao 5 · còn 2 chưa nhận/)).toBeInTheDocument();
   });
 
+  it('tủ trống + món ngoài DM chưa về → vẫn gọn "Tủ chưa có hàng…", món chưa về liệt kê bên dưới (mờ, "Chưa nhận hàng"); Xác nhận tắt', async () => {
+    stub();
+    open(person({ lines: [pLine({ stock_qty: 0 }), pLine({ line_id: 'wait', item_id: null, stock_qty: null, name: '#%$#', review_status: 'accepted', qty: 1, remaining_qty: 1, deliver_cap: 0, sort_order: null })] }));
+    expect(await within(dialog()).findByText('Tủ chưa có hàng cho món nào — ghi Nhận hàng trước.')).toBeInTheDocument();
+    const waitRow = within(dialog()).getByRole('row', { name: /#%\$#/ });
+    expect(waitRow).toHaveClass('dd-row--off');
+    expect(within(waitRow).getByText('Chưa nhận hàng')).toBeInTheDocument();
+    expect(within(dialog()).queryByRole('row', { name: /Bút bi xanh/ })).toBeNull();
+    expect(confirmBtn()).toBeDisabled();
+  });
+
   it('tổng 0 nhưng có 1 dòng NCC hết hàng → Xác nhận bật, tổng có "Hủy 1 món NCC hết hàng"', async () => {
     stub();
     open(person({ lines: [pLine({ stock_qty: 0 }), pLine({ line_id: 'm', item_id: 'i-clip', stock_qty: 0, adm_out: true })] }));

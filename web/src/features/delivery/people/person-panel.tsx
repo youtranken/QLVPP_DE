@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { monthOf } from '@/features/request/request-format';
 import type { DeliveryPerson } from './delivery-people.api';
-import { dialogRows, limitsOf, priorityFor, stockShortages, totalsOf } from './deliver-plan';
+import { dialogRows, isNotReceived, limitsOf, priorityFor, stockShortages, totalsOf } from './deliver-plan';
 import { DeliverDialog } from './deliver-dialog';
 import { waitingIndex } from './people-filter';
 import { PersonLineRow } from './person-line-row';
@@ -66,17 +66,18 @@ export function PersonPanel({ ym, person, people, next, onNext, onDelivered, foc
         <section key={g.key} className={`pp-group pp-group--${g.key}`}>
           <h3>{g.title}</h3>
           <ul>
-            {g.rows.map(({ line: l }) => (
+            {g.rows.map((row) => (
               <PersonLineRow
-                key={l.line_id}
-                line={l}
-                value={limits[l.line_id]?.value ?? 0}
-                max={limits[l.line_id]?.cap ?? 0}
-                taken={limits[l.line_id]?.taken ?? false}
-                waiting={l.item_id ? plan.waitingOn(l.item_id, person.user_sub) : NO_WAIT}
-                shortage={l.item_id ? plan.shortages.get(l.item_id) : undefined}
+                key={row.line.line_id}
+                line={row.line}
+                notReceived={isNotReceived(row)}
+                value={limits[row.line.line_id]?.value ?? 0}
+                max={limits[row.line.line_id]?.cap ?? 0}
+                taken={limits[row.line.line_id]?.taken ?? false}
+                waiting={row.line.item_id ? plan.waitingOn(row.line.item_id, person.user_sub) : NO_WAIT}
+                shortage={row.line.item_id ? plan.shortages.get(row.line.item_id) : undefined}
                 disabled={confirming}
-                onChange={(n) => setQtys((q) => ({ ...q, [l.line_id]: n }))}
+                onChange={(n) => setQtys((q) => ({ ...q, [row.line.line_id]: n }))}
               />
             ))}
           </ul>
