@@ -36,10 +36,21 @@
 [data-shell='admin'] .ar-ghead__in .btn { margin-left: auto; }
 /* Một bề rộng cho cả "Nhận hàng" lẫn "Nhận đủ hàng": đổi chữ không đẩy đầu nhóm */
 [data-shell='admin'] .ar-ghead__btn { min-width: 8.75rem; justify-content: center; }
-[data-shell='admin'] .ar-bar { display: grid; gap: var(--s-3); min-width: 0; }
+[data-shell='admin'] .ar-bar { container: ar-bar / inline-size; display: grid; gap: var(--s-3); min-width: 0; }
 [data-shell='admin'] .ar-note-line { color: var(--c-ink-2); }
 [data-shell='admin'] .ar-warn-text { margin: 0; color: var(--c-warn); font: var(--t-label); }
-[data-shell='admin'] .ar-save { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); }
+[data-shell='admin'] .ar-save { display: flex; align-items: center; gap: var(--s-3); }
+/* Ô cuối hàng giữ đúng cao một nút dù đang hiện dòng đếm hay nút nhận hàng loạt: đổi qua lại không làm hàng cao/thấp đi */
+[data-shell='admin'] .ar-tools > .list-meta { min-height: var(--ctl-h); }
+/* Khoảng hẹp vừa (máy tính bảng): hàng ô tìm chỉ đủ chỗ cho dòng đếm, không đủ cho chữ + nút nhận hàng loạt → ô cuối luôn
+   xuống một dòng riêng canh phải ở CẢ hai trạng thái, để tick không bỗng đẩy nó (và bảng) xuống; màn điện thoại đã có luật riêng. 840px ≈ ô tìm 260 + công tắc
+   + "Đã chọn … · Nhận đủ hàng (n nhóm)" + khe, đo thật ở bản tiếng Việt */
+@media (min-width: 768px) {
+  [data-shell='admin'] .ar-count--picked { display: none; }
+  @container ar-bar (max-width: 840px) {
+    [data-shell='admin'] .ar-tools > .list-meta { flex: 1 1 100%; justify-content: flex-end; }
+  }
+}
 [data-shell='admin'] .ar-batch { color: var(--c-ink-2); font: var(--t-sm); }
 [data-shell='admin'] .ar-received { display: block; color: var(--c-danger); font: var(--t-sm); font-weight: 400; white-space: nowrap; }
 /* Gõ thiếu: chữ đỏ một dòng, không phải chip */
@@ -114,7 +125,11 @@
   [data-shell='admin'] .ar-batches td[data-label], [data-shell='admin'] .ar-mini td[data-label] { display: grid; gap: 2px; text-align: left; }
   [data-shell='admin'] .ar-batches td[data-label]::before, [data-shell='admin'] .ar-mini td[data-label]::before { content: attr(data-label); font: var(--t-cap); color: var(--c-muted); }
   [data-shell='admin'] .ar-mini td.ar-qty { grid-column: 1 / -1; }
-  [data-shell='admin'] .ar-save, [data-shell='admin'] .ar-save .btn { width: 100%; }
+  /* Màn hẹp không còn chỗ cho chữ + nút trên hàng đếm: thanh nhận hàng loạt nổi ở đáy màn (như thanh chọn hàng loạt chung),
+     nằm ngoài dòng chảy nên không đẩy bảng; chừa đáy thẻ để thanh không che ô ghi chú */
+  [data-shell='admin'] .ar-save { position: fixed; left: var(--s-4); right: var(--s-4); bottom: calc(env(safe-area-inset-bottom) + var(--s-3)); z-index: 5; justify-content: space-between; padding: 4px 4px 4px 16px; border-radius: var(--r-md); background: var(--c-surface); box-shadow: var(--e-2), inset 0 0 0 1px var(--c-line); }
+  [data-shell='admin'] .ar-save .btn { flex: none; }
+  [data-shell='admin']:has(.ar-save) .ar-card { margin-bottom: calc(var(--hit) + var(--s-6)); }
   [data-shell='admin'] .ar-foot .btn { flex: 1; }
 }
 [data-shell='admin'] .ar-table td[data-label] .tag { justify-self: start; }

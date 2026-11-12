@@ -92,12 +92,21 @@ describe('Hàng về — bảng theo bản in', () => {
     await screen.findByDisplayValue('6');
     expect(screen.queryByRole('button', { name: /^Nhận (đủ )?hàng \(\d+ nhóm\)$/ })).toBeNull();
     expect(screen.queryByText(/^Đã chọn \d+ nhóm/)).toBeNull();
+    const slot = screen.getByText(/^Đang hiện \d+\/\d+ món$/).closest('.list-meta');
     await userEvent.click(pickBox('Kẹp & dán'));
+    // Thế chỗ dòng đếm ngay trong ô cuối hàng tìm (không thêm hàng mới đẩy bảng xuống; màn rộng CSS ẩn dòng đếm); bỏ tick thì về như cũ
+    expect(screen.getByText(/^Đang hiện \d+\/\d+ món$/)).toHaveClass('ar-count--picked');
+    expect(pickedBtn().closest('.list-meta')).toBe(slot);
+    expect(screen.getByText('Đã chọn 1 nhóm · 1 món').closest('.list-meta')).toBe(slot);
     expect(pickedBtn().closest('.toolbar')).toContainElement(screen.getByRole('searchbox', { name: /Tìm món/ }));
     expect(pickedBtn()).toHaveAccessibleName('Nhận đủ hàng (1 nhóm)');
     expect(pickedBtn()).toBeEnabled();
     expect(screen.getByText('Đã chọn 1 nhóm · 1 món')).toBeInTheDocument();
     for (const n of ['Lưu hàng về', 'Điền đủ cả nhóm', 'Đủ hàng', 'Đặt lại', 'Điền lại số gợi ý', 'Hoàn tác']) expect(screen.queryByRole('button', { name: n })).toBeNull();
+    await userEvent.click(pickBox('Kẹp & dán'));
+    expect(screen.getByText(/^Đang hiện \d+\/\d+ món$/).closest('.list-meta')).toBe(slot);
+    expect(screen.getByText(/^Đang hiện \d+\/\d+ món$/)).not.toHaveClass('ar-count--picked');
+    expect(screen.queryByText(/^Đã chọn \d+ nhóm/)).toBeNull();
   });
 
   it('chưa gửi NCC báo cáo tháng: lời nhắn + lối sang Báo cáo & gửi NCC; không ô nhận, không nút nhận, không thanh lọc', async () => {
