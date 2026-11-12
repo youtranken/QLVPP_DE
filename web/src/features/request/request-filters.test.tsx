@@ -44,6 +44,16 @@ describe('RequestPage — thanh lọc', () => {
     expect(screen.getByTestId('location-search').textContent).toBe('?g=all');
   });
 
+  it('lọc một nhóm → thẻ không còn nhãn nhóm (cùng nhóm cả, lặp vô ích); "Tất cả" thì có lại', async () => {
+    mockViewport(1280);
+    stubRequestApi();
+    await open();
+    expect(grid().querySelectorAll('.rq-card-group').length).toBeGreaterThan(0);
+    await userEvent.click(screen.getByRole('button', { name: 'Bút & viết 1' }));
+    await waitFor(() => expect(names()).toEqual(['Bút bi xanh']));
+    expect(grid().querySelectorAll('.rq-card-group')).toHaveLength(0);
+  });
+
   it('390 px: có từ khóa mà không có g → tìm trên mọi nhóm', async () => {
     mockViewport(390);
     stubRequestApi();
