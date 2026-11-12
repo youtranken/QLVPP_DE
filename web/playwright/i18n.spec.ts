@@ -185,9 +185,11 @@ test.describe('E6-S4 song ngữ mọi màn PRD §8', () => {
       const member = await englishPage(browser, info, { 'x-dev-user-sub': sub, 'x-dev-role': 'member' });
       pages.push(member);
       for (const path of MEMBER_SCREENS) await check(member, path, () => expect(member.getByRole('heading', { level: 1 })).toBeVisible());
-      // Vòng 4: đổi ngôn ngữ ở nút VI/EN trên đầu trang (hộp tài khoản không còn phần ngôn ngữ)
-      await member.goto('/');
-      const en = member.getByRole('banner').getByRole('radio', { name: 'EN – English' });
+      // Máy tính: đổi ngôn ngữ ở nút VI/EN trên đầu trang; điện thoại: thanh trên không còn VI/EN, đổi ở trang Tôi
+      await member.goto(isMobile(info) ? '/me' : '/');
+      const en = isMobile(info)
+        ? member.getByRole('main').getByRole('radio', { name: 'English', exact: true })
+        : member.getByRole('banner').getByRole('radio', { name: 'EN – English' });
       await en.click();
       await expect(en).toBeChecked();
 

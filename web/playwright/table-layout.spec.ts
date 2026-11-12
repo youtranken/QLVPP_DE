@@ -65,6 +65,8 @@ test.describe('Bảng quản lý', () => {
   for (const width of [768, 900, 1024]) {
     test(`Vòng8 ${width}px: không bảng nào bị cắt trong khung không cuộn được`, async ({ page }, info) => {
       test.skip(isMobile(info), '390 xếp bảng thành thẻ');
+      // 10 trang tải lần lượt: 30 giây mặc định sát nút khi máy bận
+      test.setTimeout(90_000);
       await page.setViewportSize({ width, height: 900 });
       for (const route of ROUTES) {
         await page.goto(route);

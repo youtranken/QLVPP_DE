@@ -56,6 +56,8 @@ test.describe('Nút không gãy dòng (360/390/1280)', () => {
     test(`${width}px: trang Đăng ký, đăng nhập và các trang Adm D&E`, async ({ page }, info) => {
       // Mỗi bề rộng chạy một lần (ở project khớp loại máy), tự đặt khổ
       test.skip(isMobile(info) !== width < 768, 'khổ này chạy ở project còn lại');
+      // 9 trang, mỗi trang chờ mạng lặng: 30 giây mặc định sát nút khi máy bận
+      test.setTimeout(90_000);
       await page.setViewportSize({ width, height: 800 });
       const found: string[] = [];
 

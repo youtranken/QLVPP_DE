@@ -32,9 +32,11 @@ async function memberOtherItemUnits(browser: Browser, info: TestInfo, sub: strin
     await addOther.click();
     const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
     // Ô ĐVT là Listbox: mở danh sách rồi đếm lựa chọn
+    // Danh sách mở ra cũng mang nhãn "Đơn vị tính": đọc aria-controls của nút trước khi mở
     const unit = dialog.getByLabel('Đơn vị tính');
+    const listId = await unit.getAttribute('aria-controls');
     await unit.click();
-    const list = page.locator(`[id="${await unit.getAttribute('aria-controls')}"]`);
+    const list = page.locator(`[id="${listId}"]`);
     await expect(list.getByRole('option', { name: 'hộp', exact: true })).toHaveCount(1);
     return await list.getByRole('option', { name }).count();
   } finally {
