@@ -4,11 +4,12 @@ const month = {
     search: 'Tìm người hoặc phòng',
     period: {
       label: 'Chọn kỳ',
-      locked: 'Kỳ đang giao (tháng {{month}})',
-      open: 'Kỳ đang đăng ký (tháng {{month}})',
-      older: 'Tháng {{month}}/{{year}}',
-      previous: 'Tháng trước',
-      previousLabel: 'Tháng trước: tháng {{month}}/{{year}}',
+      month: 'Tháng {{month}}/{{year}}',
+      prev: 'Tháng trước',
+      next: 'Tháng sau',
+      status: { locked: 'Đang giao', open: 'Đang đăng ký', past: 'Đã qua' },
+      toOpen: 'Tháng {{month}} đang đăng ký',
+      toLocked: 'Tháng {{month}} đang giao',
     },
     steps: {
       label: 'Các bước của tháng',

@@ -90,7 +90,7 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
       return route.fulfill({ status: 200, json: id ? view(id) : { items: rows } });
     });
     await openMonth(page);
-    await page.getByRole('radio', { name: /^Kỳ đang đăng ký/ }).click();
+    await page.getByRole('button', { name: /^Tháng \d+ đang đăng ký$/ }).click();
     await expect(page).toHaveURL(new RegExp(`ym=${ym}`));
     await expect(page.getByRole('row').filter({ hasText: 'PW Người một' })).toBeVisible();
     await expect(steps(page).getByText('—')).toHaveCount(3);

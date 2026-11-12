@@ -174,11 +174,12 @@ describe('MonthPage: kỳ mặc định khi URL không có ym', () => {
 });
 
 describe('MonthPage: chuyển kỳ', () => {
-  it('chọn "Kỳ đang đăng ký (tháng 11)" → bảng chỉ xem (Người · Nhóm · Số món · Tổng · Lưu lúc), dải chỉ bước Đăng ký sáng, URL ?ym=2026-11', async () => {
+  it('link "Tháng 11 đang đăng ký →" → bảng chỉ xem (Người · Nhóm · Số món · Tổng · Lưu lúc), dải chỉ bước Đăng ký sáng, URL ?ym=2026-11', async () => {
     stubMonthApi();
     open();
     await table();
-    await userEvent.click(screen.getByRole('radio', { name: 'Kỳ đang đăng ký (tháng 11)' }));
+    expect(screen.getByText('Đang giao')).toHaveClass('tag');
+    await userEvent.click(screen.getByRole('button', { name: 'Tháng 11 đang đăng ký' }));
     await waitFor(() => expect(search()).toContain('ym=2026-11'));
     expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 11' })).toBeInTheDocument();
     const t = await table();
@@ -189,15 +190,29 @@ describe('MonthPage: chuyển kỳ', () => {
     expect(within(steps).getAllByText('—')).toHaveLength(3);
   });
 
-  it('‹ Tháng trước → ?ym=2026-09 và hiện nút "Tháng 9/2026" được chọn', async () => {
+  it('‹ → ?ym=2026-09, nhãn "Tháng 9/2026", chip "Đã qua", link sang kỳ đăng ký', async () => {
     stubMonthApi();
     open();
     await table();
-    // Nhãn đọc kèm tháng sẽ tới (chữ thấy được đứng đầu nhãn)
-    await userEvent.click(screen.getByRole('button', { name: 'Tháng trước: tháng 9/2026' }));
+    const group = screen.getByRole('group', { name: 'Chọn kỳ' });
+    await userEvent.click(within(group).getByRole('button', { name: 'Tháng trước' }));
     await waitFor(() => expect(search()).toContain('ym=2026-09'));
-    expect(await screen.findByRole('radio', { name: 'Tháng 9/2026' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByRole('button', { name: 'Tháng trước: tháng 8/2026' })).toBeInTheDocument();
+    expect(await within(group).findByText('Tháng 9/2026')).toBeInTheDocument();
+    expect(screen.getByText('Đã qua')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tháng 11 đang đăng ký' })).toBeInTheDocument();
+  });
+
+  it('bấm nhãn tháng → bảng năm-tháng; chọn kỳ đăng ký đi thẳng ?ym=2026-11, focus về nhãn', async () => {
+    stubMonthApi();
+    open();
+    await table();
+    await userEvent.click(screen.getByRole('button', { name: /^Tháng 10\/2026, / }));
+    const dialog = screen.getByRole('dialog', { name: 'Chọn năm-tháng' });
+    expect(within(dialog).getByRole('button', { name: 'Tháng 12/2026' })).toBeDisabled();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Tháng 11/2026 · Đang đăng ký' }));
+    await waitFor(() => expect(search()).toContain('ym=2026-11'));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 11' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Tháng 11\/2026, / })).toHaveFocus();
   });
 });
 

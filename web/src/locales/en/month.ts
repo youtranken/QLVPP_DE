@@ -7,11 +7,12 @@ const month: Messages<typeof vi> = {
     search: 'Search people or departments',
     period: {
       label: 'Choose period',
-      locked: 'Delivering period ({{month, monthName}})',
-      open: 'Sign-up period ({{month, monthName}})',
-      older: '{{month, MonthName}} {{year}}',
-      previous: 'Previous month',
-      previousLabel: 'Previous month: {{month}}/{{year}}',
+      month: '{{month, MonthName}} {{year}}',
+      prev: 'Previous month',
+      next: 'Next month',
+      status: { locked: 'Delivering', open: 'Signing up', past: 'Past' },
+      toOpen: '{{month, MonthName}} sign-up',
+      toLocked: '{{month, MonthName}} delivery',
     },
     steps: {
       label: 'Steps of the month',
