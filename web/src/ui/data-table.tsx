@@ -28,6 +28,8 @@ declare module '@tanstack/react-table' {
     // Bề rộng cột cố định (vd '12%', '56px'): có ở bất kỳ cột nào → bảng table-layout: fixed, cột không đổi chỗ khi đổi tab/lọc.
     // Cột chữ chính để trống → nhận phần còn lại
     width?: string;
+    // Sàn của cột chữ chính (không đặt width), rem; mặc định 12rem — bảng chạm sàn ở màn vừa thì cột này giữ đúng bề rộng này
+    minWidth?: string;
   }
 }
 
@@ -161,7 +163,7 @@ export function DataTable<T>({
             .join(' ')}
           data-density={density}
           aria-busy={busy}
-          style={fixed ? ({ '--dt-min': `${fixedMinWidth(leafColumns.map((c) => c.columnDef.meta?.width), !!selection)}rem` } as CSSProperties) : undefined}
+          style={fixed ? ({ '--dt-min': `${fixedMinWidth(leafColumns.map((c) => c.columnDef.meta?.width), !!selection, leafColumns.map((c) => c.columnDef.meta?.minWidth))}rem` } as CSSProperties) : undefined}
         >
           {fixed && (
             <colgroup>
