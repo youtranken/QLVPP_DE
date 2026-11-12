@@ -19,10 +19,10 @@ describe('PageHeader', () => {
     renderWithI18n(<PageHeader crumbs={[]} title="T" primary={<button>Xuất</button>} />);
     expect(within(screen.getByRole('group', { name: 'Thao tác trang' })).getAllByRole('button')).toHaveLength(1);
   });
-  it('mô tả một dòng: khi bị cắt vẫn đọc đủ qua title', () => {
+  it('mô tả hiện đủ câu (không cắt dòng nên không cần title nhắc lại)', () => {
     const long = 'Số cần mua trong tháng, xuất Excel và in giấy trình ký cho Adm D&E.';
     renderWithI18n(<PageHeader crumbs={[]} title="T" description={long} />);
-    expect(screen.getByText(long)).toHaveAttribute('title', long);
+    expect(screen.getByText(long)).not.toHaveAttribute('title');
   });
   it('không nút, không mô tả, không crumbs → không nhóm thao tác, không nav', () => {
     renderWithI18n(<PageHeader crumbs={[]} title="T" />);

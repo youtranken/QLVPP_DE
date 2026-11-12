@@ -10,8 +10,11 @@ describe('AppRoutes — đường dẫn lạ', () => {
   it('member mở /xyz → trang 404 nằm trong khung Nhân viên v2 (thanh dưới, panel sáng)', () => {
     mockViewport(390);
     renderApp(makeMe('member'), '/xyz');
+    // Khung trang chuẩn: tiêu đề ở đầu trang (như mọi trang nhân viên), panel sáng chứa gợi ý + nút về trang chủ; chỉ một h1
     const heading = screen.getByRole('heading', { level: 1, name: 'Không tìm thấy trang' });
-    expect(heading.closest('.m-panel')).not.toBeNull();
+    expect(heading.closest('.m-head')).not.toBeNull();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('link', { name: 'Về trang chủ' }).closest('.m-panel')).not.toBeNull();
     expect(screen.getByRole('navigation', { name: 'Điều hướng chính' })).toBeInTheDocument();
     expect(screen.getByTestId('location').textContent).toBe('/xyz');
   });

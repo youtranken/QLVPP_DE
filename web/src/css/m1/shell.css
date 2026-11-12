@@ -42,6 +42,12 @@
 [data-shell='admin'] .side__who .side__error { flex-basis: 100%; }
 [data-shell='admin'] .side__tools { flex: 1 0 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0 4px; margin-top: -4px; }
 [data-shell='admin'] .side__tools .side__error { flex-basis: 100%; }
+/* Menu điện thoại màn thấp: tên co lại (cắt …), VI/EN và nút đăng xuất cùng hàng với avatar */
+[data-shell='admin'] .side__user[data-layout='low'] .side__who { flex-wrap: nowrap; }
+[data-shell='admin'] .side__user[data-layout='low'] .side__who-text { flex: 1 1 0; }
+[data-shell='admin'] .side__tools--low { flex: none; margin-top: 0; gap: var(--s-1); }
+[data-shell='admin'] .side__tools--low .seg button { min-width: var(--hit); height: var(--hit); padding: 0 var(--s-2); }
+[data-shell='admin'] .side__tools--low .side__icon-btn { width: var(--hit); height: var(--hit); }
 [data-shell='admin'] .side__tools .side__icon-btn, [data-shell='admin'] .side__tools .notif .notif-btn { width: 32px; height: 32px; }
 [data-shell='admin'] .side__icon-btn { display: grid; place-items: center; flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-on-dark-2); cursor: pointer; }
 [data-shell='admin'] .side__icon-btn:hover:not(:disabled) { background: var(--c-on-dark-hover); color: var(--c-on-dark); }

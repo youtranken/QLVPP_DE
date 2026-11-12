@@ -8,7 +8,8 @@ const auth: Messages<typeof vi> = {
     heroTitle: 'Order office supplies every month',
     heroBody: 'Pick items, set quantities, save your request. D&E Admin collects, buys and delivers to your desk.',
     heading: 'Sign in',
-    primary: 'Sign in with your company account (PMH ID)',
+    // Khoảng trắng không ngắt: "ID)" không đứng lẻ một mình ở dòng hai của nút
+    primary: 'Sign in with your company account (PMH\u00a0ID)',
     primaryHint: 'You will be taken to the company sign-in page and brought back here.',
     hintToggle: 'Suggest an account (optional)',
     hintLabel: 'Company email',

@@ -55,7 +55,7 @@ export function AccountMenu(props: Props) {
         <DialogCloseButton />
       </div>
       <DialogDescription className="sr-only">{t('profile.menu')}</DialogDescription>
-      <AccountContent />
+      <AccountContent language />
     </Dialog>
   );
 }

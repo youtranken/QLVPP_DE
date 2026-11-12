@@ -115,10 +115,12 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
         return;
       }
       // chip nhóm: một hàng, cuộn ngang (không xuống dòng)
+      // khung cuộn là cha của nhóm chip (ScrollFade: mép phải mờ khi còn chip khuất)
       const chips = grid.getByRole('group').first();
       const row = await chips.evaluate((el) => {
         const tops = new Set([...el.querySelectorAll('button')].map((b) => Math.round(b.getBoundingClientRect().top)));
-        return { overflowX: getComputedStyle(el).overflowX, lines: tops.size, scrolls: el.scrollWidth > el.clientWidth };
+        const scroller = el.parentElement!;
+        return { overflowX: getComputedStyle(scroller).overflowX, lines: tops.size, scrolls: scroller.scrollWidth > scroller.clientWidth };
       });
       expect(row.overflowX).toBe('auto');
       expect(row.lines).toBe(1);
@@ -128,8 +130,8 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       expect(Math.abs(b2.x - b0.x)).toBeLessThan(2);
       expect(b2.y).toBeGreaterThan(b0.y);
 
-      // thanh nổi: trống → "Xem phiếu (0 món)", nút Lưu phiếu vô hiệu
-      await expect(page.getByRole('button', { name: 'Xem phiếu (0 món)' })).toBeVisible();
+      // thanh nổi: giỏ trống, chưa có gì để lưu → không có thanh; thêm món thì hiện
+      await expect(page.locator('.rq-bar')).toHaveCount(0);
       await adds.first().click();
       await adds.nth(1).click();
       const open = page.getByRole('button', { name: 'Xem phiếu (2 món)' });

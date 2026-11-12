@@ -80,3 +80,8 @@
   [data-shell='admin'] .bc-preview__sheet .pp-sheet { zoom: 0.45; }
 }
 [data-shell='admin'] .bc-reprint { display: inline-flex; align-items: center; gap: var(--s-1); }
+/* Hộp "Ai đăng ký" dạng thẻ: dòng tổng là một hàng chữ, không phải tiêu đề cột dính đầu */
+@media (max-width: 767px) {
+  [data-shell='admin'] .bc-people .bc-people__total th { position: static; height: auto; padding: 0; border: 0; background: none; color: var(--c-ink); font: var(--t-label); white-space: normal; }
+  [data-shell='admin'] .bc-people .bc-people__total td { margin-left: auto; }
+}

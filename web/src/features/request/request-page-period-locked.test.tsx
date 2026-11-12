@@ -83,9 +83,9 @@ describe('RequestPage: kỳ khóa giữa chừng (PERIOD_LOCKED)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Phiếu tháng 11 đã khóa lúc 00:00. Phiếu đã lưu lúc 14:20 vẫn giữ và sẽ được giao; thay đổi chưa lưu không kịp áp dụng. Phiếu tháng 12 đã mở.',
     );
-    await openPhoneCart(12);
-    expect(within(cart(false, 12)).getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu” ở món cần dùng/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Lưu phiếu' })).toBeDisabled();
+    // Kỳ mới giỏ trống, không có gì để lưu: thanh phiếu nổi không hiện (không nút Xem phiếu / Lưu phiếu)
+    expect(screen.queryByRole('button', { name: /^Xem phiếu \(/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Lưu phiếu$/ })).toBeNull();
   });
 
   it('PERIOD_LOCKED thiếu next_ym ở tháng 12 → "phiếu tháng 1" (sang năm mới, không có "tháng 13")', async () => {

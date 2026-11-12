@@ -10,6 +10,8 @@
 .login-panel { padding: 40px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
 .login-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .login-head h2 { font-size: 22px; font-weight: 800; }
+/* Nút chính dài: hai dòng cân nhau thay vì một dòng đầy + vài chữ lẻ */
+.login-panel .btn--xl { text-wrap: balance; }
 .login-hint { font-size: 14px; color: var(--ink-2); font-weight: 600; line-height: 1.5; }
 .login-hint-form, .login-sa { display: grid; gap: 12px; }
 .login-test { display: grid; gap: 8px; border: 2px dashed var(--warn); background: var(--warn-soft); border-radius: 16px; padding: 16px; margin-top: 8px; }

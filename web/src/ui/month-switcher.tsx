@@ -19,23 +19,26 @@ interface MonthSwitcherProps {
 export function MonthSwitcher({ value, onChange, formatLabel, labels, min, max, status, beyond, onBeyond }: MonthSwitcherProps) {
   return (
     <div className="month-switch" role="group" aria-label={labels.group}>
-      <button
-        type="button"
-        aria-label={labels.prev}
-        disabled={min !== undefined && value <= min}
-        onClick={() => onChange(shiftYm(value, -1))}
-      >
-        <Icon name="chevl" size={18} />
-      </button>
-      <span aria-live="polite">{formatLabel(value)}</span>
-      <button
-        type="button"
-        aria-label={labels.next}
-        disabled={max !== undefined && value >= max}
-        onClick={() => onChange(shiftYm(value, 1))}
-      >
-        <Icon name="chevr" size={18} />
-      </button>
+      {/* Khung viên ‹ tháng ›: máy tính "display: contents" (cả cụm một viên); điện thoại là viên riêng để nhãn kỳ mở dài nằm ngoài, viên không gãy dòng */}
+      <div className="month-switch__pill">
+        <button
+          type="button"
+          aria-label={labels.prev}
+          disabled={min !== undefined && value <= min}
+          onClick={() => onChange(shiftYm(value, -1))}
+        >
+          <Icon name="chevl" size={18} />
+        </button>
+        <span aria-live="polite">{formatLabel(value)}</span>
+        <button
+          type="button"
+          aria-label={labels.next}
+          disabled={max !== undefined && value >= max}
+          onClick={() => onChange(shiftYm(value, 1))}
+        >
+          <Icon name="chevr" size={18} />
+        </button>
+      </div>
       {beyond && (
         <button
           type="button"
