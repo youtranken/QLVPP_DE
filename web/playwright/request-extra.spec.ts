@@ -282,8 +282,13 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       );
       await expect(alert).toBeInViewport();
       await snap(page, info, 'period-locked-saved');
-      await openCart(page, info);
-      await expect(page.getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu”/)).toBeAttached();
+      if (isMobile(info)) {
+        // Giỏ trống: thanh "Xem phiếu (n)" ở đáy điện thoại ẩn hẳn — không mang giỏ sang kỳ mới
+        await expect(page.getByRole('button', { name: /^Xem phiếu \(/ })).toHaveCount(0);
+      } else {
+        await openCart(page, info);
+        await expect(page.getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu”/)).toBeAttached();
+      }
     } finally {
       deleteTestUsers(me.sub);
       await removeTestItem(request, item.id);
