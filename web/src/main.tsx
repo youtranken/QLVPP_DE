@@ -20,6 +20,7 @@ import '@/css/m1/member-shell.css';
 import '@/css/m1/member-page.css';
 import '@/css/m1/stamp.css';
 import '@/css/fields.css';
+import '@/css/focus.css';
 import '@/lib/i18n';
 import App from '@/App.tsx';
 import { queryClient } from '@/lib/api-client';

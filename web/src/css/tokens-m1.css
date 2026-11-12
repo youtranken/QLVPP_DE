@@ -89,6 +89,8 @@
   --focus: 0 0 0 3px var(--c-surface), 0 0 0 5px var(--c-acc);
   /* Checkbox / radio: vòng sát ô, theo đúng bo của ô */
   --focus-choice: 0 0 0 2px var(--c-surface), 0 0 0 4px var(--c-acc);
+  /* Mục nằm trong khung cuộn/khung cắt: vòng vẽ vào trong (teal ngoài, trắng trong) để overflow không cắt mất */
+  --focus-inset: inset 0 0 0 2px var(--c-acc), inset 0 0 0 4px var(--c-surface);
   /* Vòng focus DUY NHẤT cho mọi ô nhập: viền teal 2px + quầng nhạt 3px.
      --focus-field cho ô vẽ viền bằng box-shadow (không border); ô có border 1px dùng --focus-field-bordered kèm border-color: var(--c-acc) — nhìn y hệt */
   --focus-field-halo: 0 0 0 3px var(--c-acc-soft);
