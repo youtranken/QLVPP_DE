@@ -46,6 +46,7 @@ export const SENT_STATE = {
   changed_after: false,
   changed_at: null,
   delivered_since: {},
+  adm_cancelled_since: {},
 };
 
 type Route = (url: string) => Response | undefined;

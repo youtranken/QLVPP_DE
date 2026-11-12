@@ -82,7 +82,7 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
   const people = useRegistrants(report.ym);
   const sent = send.sent;
   const qty = useOrderQty(report, { baseOf: defaultOrder, initial: editable ? initialFromSent(sent?.data) : undefined });
-  const changed = useChangedKeys(report, editable ? sent : null, send.deliveredSince);
+  const changed = useChangedKeys(report, editable ? sent : null, send.settledSince);
   const [onlyNeed, setOnlyNeed] = useState(false);
   const [whoKey, setWhoKey] = useState<string | null>(null);
   const settled = !items.isPending && !cats.isPending;

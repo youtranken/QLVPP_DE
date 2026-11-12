@@ -24,6 +24,8 @@ export interface SendStateDto {
   changed_at: string | null;
   // Đã giao (người đang làm việc) sau bản theo khóa
   delivered_since: Record<string, number>;
+  // Đã hủy vì NCC hết hàng sau bản theo khóa (cùng điều kiện dòng như delivered_since)
+  adm_cancelled_since: Record<string, number>;
 }
 
 export const SEND_STATE_KEY = ['send-state'] as const;

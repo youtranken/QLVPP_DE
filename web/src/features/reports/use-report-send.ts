@@ -13,8 +13,9 @@ import type { OrderQty } from './use-order-qty';
 // Đề nghị khởi tạo từ bản đã gửi: mọi khóa của bản (khóa vắng ở báo cáo sống bị bỏ qua)
 export const initialFromSent = (sent: SnapshotData | undefined): Record<string, number> | undefined => sent?.order_qty;
 
-// Món đã đổi sau bản đã gửi: cần nay + phần đã giao sau bản ≠ cần lúc chốt, món mới có, món đã rời báo cáo
-export function changedKeys(report: Pick<MonthReport, 'byItem' | 'custom'>, sent: SentSnapshot | null, delivered: Record<string, number>): Set<string> {
+// Món đã đổi sau bản đã gửi: cần nay + phần đã xong sau bản (giao, hủy vì NCC hết hàng) ≠ cần lúc chốt, món mới có.
+// Món rời báo cáo sống (mọi dòng đã giao/hủy hết) chỉ tính đổi khi phần đã xong không bù đủ cần lúc chốt — nhận rồi giao hết hàng kỳ này không phải thay đổi đơn
+export function changedKeys(report: Pick<MonthReport, 'byItem' | 'custom'>, sent: SentSnapshot | null, settled: Record<string, number>): Set<string> {
   const out = new Set<string>();
   if (!sent) return out;
   const was = new Map([...sent.data.byItem, ...sent.data.custom].map((r) => [r.key, r]));
@@ -22,9 +23,9 @@ export function changedKeys(report: Pick<MonthReport, 'byItem' | 'custom'>, sent
   for (const r of [...report.byItem, ...report.custom]) {
     live.add(r.key);
     const old = was.get(r.key);
-    if (!old || activeNeed(r) + (delivered[r.key] ?? 0) !== basisNeedOf(sent.data, old)) out.add(r.key);
+    if (!old || activeNeed(r) + (settled[r.key] ?? 0) !== basisNeedOf(sent.data, old)) out.add(r.key);
   }
-  for (const [key] of was) if (!live.has(key) && (sent.data.order_qty[key] ?? 0) > 0) out.add(key);
+  for (const [key, old] of was) if (!live.has(key) && (sent.data.order_qty[key] ?? 0) > 0 && (settled[key] ?? 0) !== basisNeedOf(sent.data, old)) out.add(key);
   return out;
 }
 
@@ -74,6 +75,6 @@ export function useNoOrder(report: MonthReport, qty: OrderQty, pending: PendingC
   return { run, pending: flight.pending, failed };
 }
 
-export function useChangedKeys(report: MonthReport, sent: SentSnapshot | null, delivered: Record<string, number>) {
-  return useMemo(() => changedKeys(report, sent, delivered), [report, sent, delivered]);
+export function useChangedKeys(report: MonthReport, sent: SentSnapshot | null, settled: Record<string, number>) {
+  return useMemo(() => changedKeys(report, sent, settled), [report, sent, settled]);
 }
