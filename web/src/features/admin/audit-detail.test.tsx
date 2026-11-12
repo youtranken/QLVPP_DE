@@ -28,3 +28,12 @@ describe('AuditDetail — ghi chú duyệt', () => {
     expect(within(row).getByText('Đã có trong kho')).toBeInTheDocument();
   });
 });
+
+describe('AuditDetail — giá trị rỗng', () => {
+  it('"Phát hiện đã xóa" với danh sách rỗng → "—", không để nhãn trơ trọi', () => {
+    const sync: AuditEntry = { ...entry('x'), action: 'directory.sync', objectType: null, objectId: null, detail: { created: 0, updated: 2, deleted_detected: [] } };
+    renderWithI18n(<AuditDetail entry={sync} id="d" />);
+    const dd = screen.getByText('Phát hiện đã xóa').nextElementSibling!;
+    expect(dd).toHaveTextContent('—');
+  });
+});

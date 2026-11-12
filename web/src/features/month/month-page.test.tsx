@@ -47,6 +47,15 @@ describe('MonthPage: kỳ khóa', () => {
     expect(t.getByText('Món ngoài danh mục')).toBeInTheDocument();
   });
 
+  it('Ghi chú trống → "—" (ô có nhãn ở dạng thẻ không để trống)', async () => {
+    stubMonthApi();
+    open();
+    const t = await table();
+    const row = t.getByText('Nhân viên E').closest('tr')!;
+    expect(row.querySelector('.mk-notes')).toBeNull();
+    expect(within(row).getAllByRole('cell').some((c) => c.textContent === '—Chưa có')).toBe(true);
+  });
+
   it('chip Tất cả 5 · Có ghi chú 4 · Chưa giao xong 3 lọc tại chỗ và ghi ?chip=', async () => {
     const f = stubMonthApi();
     open();

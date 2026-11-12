@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { EmptyValue } from '@/ui/empty-cell';
 import type { ColumnDef } from '@tanstack/react-table';
 import { vnSavedAt } from '@/lib/format-time';
 import { DataTable } from '@/ui/data-table';
@@ -30,6 +31,7 @@ function DeliveryCell({ row }: { row: PersonRow }) {
 
 function Notes({ row }: { row: PersonRow }) {
   const { t } = useTranslation();
+  if (!row.over_max && !row.adjusted && row.total_qty !== 0 && row.custom_pending === 0) return <EmptyValue />;
   return (
     <span className="mk-notes">
       {row.over_max && <span className="tag tag--warn">{t('month.notes.overMax')}</span>}
