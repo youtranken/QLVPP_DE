@@ -114,6 +114,21 @@ describe('MonthPage: kỳ khóa', () => {
   });
 });
 
+describe('MonthPage: kỳ cũ (không phải kỳ khóa gần nhất)', () => {
+  it('?ym=2026-09: dải vẫn đủ 4 bước từ dữ liệu thật, không bước nào "—", Gửi NCC dẫn tới báo cáo đúng tháng', async () => {
+    const f = stubMonthApi();
+    open('/admin/month?ym=2026-09');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 9' })).toBeInTheDocument();
+    const steps = await screen.findByRole('list', { name: 'Các bước của tháng' });
+    await waitFor(() => expect(within(steps).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Đăng ký4/5', 'Gửi NCC11:50 08/11', 'Nhận hàng19/21 món', 'Giao1/4 phiếu']));
+    expect(within(steps).queryByText('—')).toBeNull();
+    expect(within(steps).getByRole('link', { name: /Gửi NCC/ })).toHaveAttribute('href', '/admin/reports?ym=2026-09');
+    const urls = calledUrls(f);
+    expect(urls).toContain('/api/admin/periods/2026-09/send-state');
+    expect(urls).toContain('/api/admin/periods/2026-09/arrivals-plan');
+  });
+});
+
 describe('MonthPage: kỳ mặc định khi URL không có ym', () => {
   const lockedSummary = (over: Partial<typeof LOCKED>) => (url: string) =>
     url === '/api/admin/periods/2026-10/summary' ? jsonResponse(200, { ...LOCKED, ...over }) : undefined;
