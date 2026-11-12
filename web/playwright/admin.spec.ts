@@ -67,7 +67,7 @@ test.describe('E0-S8 Nhật ký và cấu hình (dev-identity admin)', () => {
     await page.goto('/admin/config');
     await expect(page.getByRole('heading', { level: 1, name: 'Cấu hình' })).toBeVisible();
     // R-D8.19: dòng sống nói kỳ đang mở giữ hạn cũ, hạn mới áp từ kỳ sau
-    await expect(page.getByText(/^Kỳ tháng \d+ \(đang mở\) vẫn khóa 00:00 ngày \d\d\/\d\d\. Áp dụng từ kỳ tháng \d+: khóa/)).toBeVisible();
+    await expect(page.getByText(/^Kỳ tháng \d+ \(đang mở\) vẫn khóa 00:00\sngày\s\d\d\/\d\d\. Áp dụng từ kỳ tháng \d+: khóa/)).toBeVisible();
 
     const day = page.getByLabel('Hạn đăng ký (ngày)');
     await day.fill('29');
