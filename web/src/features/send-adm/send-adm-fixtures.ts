@@ -37,7 +37,7 @@ export function sentData(report: MonthReport, order_qty: Record<string, number>,
   return { ...report, id: 'snap-old', kind: 'print', period_ym: YM, order_qty, created_by: { sub: 'u', name: 'An' }, created_at: SENT_AT, ...over };
 }
 
-export const UNSENT: SendStateDto = { state: 'unsent', no_order_at: null, no_order_by_name: null, sent: null, changed_after: false, changed_at: null, delivered_since: {}, adm_cancelled_since: {} };
+export const UNSENT: SendStateDto = { state: 'unsent', no_order_at: null, no_order_by_name: null, sent: null, changed_after: false, changed_at: null, settled_since: {} };
 
 export function sentState(data: SnapshotData, over: Partial<SendStateDto> = {}): SendStateDto {
   const qty = Object.values(data.order_qty).filter((n) => n > 0);

@@ -11,7 +11,7 @@ export function stubShellApi(over: Record<string, Route> = {}, fallback: Route =
     '/api/periods/current': () => jsonResponse(200, SHELL_PERIOD),
     '/api/admin/review?status=pending': () => jsonResponse(200, { items: [] }),
     '/api/admin/periods/2026-10/summary': () => jsonResponse(200, { lines_pending_delivery: 0 }),
-    '/api/admin/periods/2026-10/send-state': () => jsonResponse(200, { state: 'unsent', no_order_at: null, no_order_by_name: null, sent: null, changed_after: false, changed_at: null, delivered_since: {}, adm_cancelled_since: {} }),
+    '/api/admin/periods/2026-10/send-state': () => jsonResponse(200, { state: 'unsent', no_order_at: null, no_order_by_name: null, sent: null, changed_after: false, changed_at: null, settled_since: {} }),
     '/api/admin/periods/2026-10/arrivals-plan': () => jsonResponse(200, { snapshot: null, no_order: null, batches: [], rows: [], custom: [], makeup: [] }),
     '/api/admin/stock': () => jsonResponse(200, []),
     '/api/me/notifications?unread=true&limit=1': () => jsonResponse(200, { items: [], next_cursor: null, unread_count: 0 }),
