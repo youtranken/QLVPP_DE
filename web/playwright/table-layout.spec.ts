@@ -14,7 +14,27 @@ interface Box {
 
 // x, bề rộng từng tiêu đề cột và đỉnh bảng (tính cả cuộn) của bảng đầu tiên; null khi không có bảng hay bảng rỗng (đầu cột ẩn)
 async function tableBox(page: Page, selector = 'table'): Promise<Box | null> {
-  await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
+  await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
+  // Ngay sau goto trang có thể chưa mount hoặc dữ liệu phụ (hàng chip lọc, cột Đăng ký tháng) còn đang về: đo tới khi hai lần
+  // liên tiếp (cách 250ms) như nhau — dời cột/đẩy bảng thật vẫn còn ở trạng thái cuối nên vẫn bắt được
+  let last = '';
+  let box: Box | null = null;
+  await expect
+    .poll(
+      async () => {
+        await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
+        box = await measure(page, selector);
+        const same = JSON.stringify(box) === last;
+        last = JSON.stringify(box);
+        return same;
+      },
+      { intervals: [250], timeout: 10_000 },
+    )
+    .toBe(true);
+  return box;
+}
+
+function measure(page: Page, selector: string): Promise<Box | null> {
   return page.evaluate((sel) => {
     const table = [...document.querySelectorAll<HTMLTableElement>(sel)].find((t) => t.getClientRects().length > 0);
     const ths = table ? [...(table.querySelector(':scope > thead > tr')?.children ?? [])] : [];
