@@ -85,7 +85,7 @@ describe('Món ngoài danh mục — trạng thái trống', () => {
     mockViewport(1280);
     stub();
     renderApp(makeMe('admin'), '/admin/review');
-    expect(await screen.findByText('Off-catalog items of the month 11 period will show up here from 00:00 on 11/11.')).toBeInTheDocument();
+    expect(await screen.findByText('Off-catalog items of the November period will show up here from 00:00 on 11/11.')).toBeInTheDocument();
   });
 
   it.each([

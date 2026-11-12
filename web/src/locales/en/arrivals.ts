@@ -3,7 +3,7 @@ import type { Messages } from '@/locales/messages';
 
 const arrivals: Messages<typeof vi> = {
   arrivals: {
-    title: 'Receiving · month {{month}}',
+    title: 'Receiving · {{month, monthName}}',
     table: {
       label: 'Goods arriving by item',
       item: 'Item',
@@ -27,7 +27,7 @@ const arrivals: Messages<typeof vi> = {
       all: 'All',
       short: 'Only items not fully received ({{n}})',
       count: 'Showing {{x}}/{{y}} items',
-      none: 'No matching items',
+      none: 'No items match',
     },
     group: {
       done: 'items {{a}}/{{b}}',
@@ -43,15 +43,15 @@ const arrivals: Messages<typeof vi> = {
     batchPicked: 'Selected {{g}} groups · {{n}} items',
     status: { done: 'Received in full', short: '{{n}} short', over: '{{n}} over', none: 'None entered', adm_out: 'Out at supplier', oweIn: 'Entered: {{qty}}', oweLeft: 'Supplier still owes: {{n}}' },
     gate: {
-      notSent: 'The month {{month}} report has not been sent to the supplier yet. Go to Reports & send to supplier to finalise it before receiving goods.',
-      noOrder: 'No supplier order for month {{month}} ({{time}}) — there are no goods to receive for this month.',
+      notSent: 'The {{month, monthName}} report has not been sent to the supplier yet. Go to Reports & send to supplier to finalise it before receiving goods.',
+      noOrder: 'No supplier order for {{month, monthName}} ({{time}}) — there are no goods to receive for this month.',
       toReports: 'Reports & send to supplier',
     },
     admOut: { button: 'Out at supplier', buttonFor: 'Out at supplier: {{name}}', final: 'Out at supplier · settled', finalFor: 'Out at supplier · settled: {{name}}' },
     admOutStock: 'Out at supplier – {{s}} in stock',
     inactiveOrdered: 'Discontinued — already ordered on the print',
     custom: {
-      title: 'Off-catalogue — delivered directly, not stocked ({{n}})',
+      title: 'Off-catalog — delivered directly, not stocked ({{n}})',
       item: 'Item',
       ordered: 'Ordered',
       received: 'Received',
@@ -60,7 +60,7 @@ const arrivals: Messages<typeof vi> = {
       saveLabel: 'Record received: {{name}}',
     },
     makeup: {
-      failed: 'Could not save make-up for month {{month}} — its numbers are kept so you can save again.',
+      failed: 'Could not save make-up for {{month, monthName}} — its numbers are kept so you can save again.',
       title: 'Make-up for earlier periods ({{n}})',
       month: 'Month',
       item: 'Item',
@@ -77,8 +77,8 @@ const arrivals: Messages<typeof vi> = {
       saved: 'Added make-up for {{n}} items to stock',
     },
     done: {
-      title: 'Month {{month}} has fully arrived — {{x}} items, {{y}} units (last recorded {{time}}).',
-      titleOut: 'Finished receiving month {{month}} — {{x}} items, {{y}} units · {{out}} items out at supplier (last recorded {{time}}).',
+      title: '{{month, MonthName}} has fully arrived — {{x}} items, {{y}} units (last recorded {{time}}).',
+      titleOut: 'Finished receiving {{month, monthName}} — {{x}} items, {{y}} units · {{out}} items out at supplier (last recorded {{time}}).',
       next: 'Go to Delivery →',
     },
     batches: { title: 'Recorded deliveries', at: 'Time', actor: 'Recorded by', items: 'Items', units: 'Units', note: 'Note' },
@@ -90,7 +90,7 @@ const arrivals: Messages<typeof vi> = {
     toDelivery: 'Delivery',
     stale: 'Arrivals were just recorded elsewhere — reloading.',
     saveFailed: 'Could not save the arrivals. Try again later.',
-    itemMissing: '{{name}} is no longer an active catalogue item, so it cannot be received. Check and save again.',
+    itemMissing: '{{name}} is no longer an active catalog item, so it cannot be received. Check and save again.',
   },
 };
 

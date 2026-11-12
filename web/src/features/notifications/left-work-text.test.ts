@@ -28,7 +28,7 @@ describe('chuông user_left_with_work (Adm D&E)', () => {
 
   it('lý do xoá / mất quyền; phần bằng 0 không in; số ít en', () => {
     expect(text({ ...FULL, reason: 'deleted', pending_lines: 0, open_request: false }, 'vi')).toBe(
-      'Nguyễn Văn A bị xoá nhưng còn 3 món chưa nhận (2 tháng).',
+      'Nguyễn Văn A bị xóa nhưng còn 3 món chưa nhận (2 tháng).',
     );
     expect(text({ ...FULL, reason: 'no_access', owed_lines: 0, owed_months: 0, open_request: false }, 'vi')).toBe(
       'Nguyễn Văn A mất quyền vào VPP nhưng còn 1 món ngoài danh mục chờ duyệt.',

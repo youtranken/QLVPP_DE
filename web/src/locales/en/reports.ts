@@ -9,7 +9,7 @@ const reports: Messages<typeof vi> = {
       monthNav: 'Choose report month',
       prevMonth: 'Previous month',
       nextMonth: 'Next month',
-      openNotReady: 'Month {{month}} still registering — report after {{lockPhrase}}',
+      openNotReady: '{{month, MonthName}} still registering — report after {{lockPhrase}}',
       fixCells_one: '{{count}} Order cell needs fixing before you finalize.',
       fixCells_other: '{{count}} Order cells need fixing before you finalize.',
       error: {
@@ -45,7 +45,7 @@ const reports: Messages<typeof vi> = {
       groupsFailed: 'Could not load item groups — items are shown under "Uncategorized" for now.',
       retry: 'Try again',
       uncategorized: 'Uncategorized',
-      custom: 'Off-catalogue (accepted)',
+      custom: 'Off-catalog (accepted)',
       groupItems: '{{count}} items',
       rows: '{{count}} items',
       empty: 'No items requested this month.',

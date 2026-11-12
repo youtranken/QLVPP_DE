@@ -187,7 +187,7 @@ const delivery = {
       title: 'Giao hàng kỳ tháng {{month}}',
       overlap: '{{n}} người có cả hai',
       shortChip: 'Tủ thiếu {{n}} món',
-      period: 'Kỳ {{month}}',
+      period: 'Tháng {{month}}',
       itemsCount: '{{n}} món',
       cols: { person: 'Người', dept: 'Phòng', period: 'Kỳ', items: 'Số món', units: 'Đơn vị', status: 'Tình trạng', actions: 'Thao tác' },
       searchLabel: 'Tìm tên hoặc phòng ban',

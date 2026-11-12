@@ -99,7 +99,7 @@ describe('UsersPage B10', () => {
     await userEvent.click(card(/^Đã khóa/));
     expect(bodyRows()).toHaveLength(1);
     expect(screen.getByText('Đang lọc: Đã khóa · 1')).toBeInTheDocument();
-    expect(screen.getByText('Đang lọc: Đã khóa · 1').closest('.list-meta')).toBe(screen.getByText(/^Hiện \d/).closest('.list-meta'));
+    expect(screen.getByText('Đang lọc: Đã khóa · 1').closest('.list-meta')).toBe(screen.getByText(/^Đang hiện \d/).closest('.list-meta'));
     expect(card(/^Đã khóa/)).toHaveAttribute('aria-pressed', 'true');
     await userEvent.click(card(/^Đang dùng/));
     expect(bodyRows().map((r) => within(r).getByRole('button').textContent)).toEqual(['Phạm Minh Đức', 'Trần Chi']);
@@ -110,14 +110,14 @@ describe('UsersPage B10', () => {
   it('lọc phòng ban dẫn xuất từ danh bạ; "Hiện n / tổng người"', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
-    expect(screen.getByText('Hiện 3 / 3 người')).toBeInTheDocument();
+    expect(screen.getByText('Đang hiện 3/3 người')).toBeInTheDocument();
     // Dòng đếm nằm cuối hàng lọc (căn phải), không chiếm hàng riêng trên bảng
-    expect(screen.getByText('Hiện 3 / 3 người').closest('.toolbar > .list-meta')).not.toBeNull();
+    expect(screen.getByText('Đang hiện 3/3 người').closest('.toolbar > .list-meta')).not.toBeNull();
     const select = screen.getByRole('combobox', { name: 'Phòng ban' });
     expect(await optionLabels(select)).toEqual(['Mọi phòng ban', 'Phòng Công trình', 'Phòng Kế toán']);
     await pickOption(select, 'Phòng Kế toán');
     expect(bodyRows()).toHaveLength(1);
-    expect(screen.getByText('Hiện 1 / 3 người')).toBeInTheDocument();
+    expect(screen.getByText('Đang hiện 1/3 người')).toBeInTheDocument();
     // Cột cố định bề rộng: đổi lọc không làm cột nhảy chỗ
     expectFixedColumns(screen.getByRole('table'));
   });
@@ -405,15 +405,15 @@ describe('UsersPage B10', () => {
     expect(f.mock.calls.filter(([u]) => u === '/api/admin/directory/status')).toHaveLength(2);
   });
 
-  it('người đã xoá ẩn mặc định; chọn "Đã xoá" mới thấy, nhãn Đã xoá, và quay lại thì ẩn', async () => {
+  it('người đã xóa ẩn mặc định; chọn "Đã xóa" mới thấy, nhãn Đã xóa, và quay lại thì ẩn', async () => {
     stubUsers([AN, BINH, DEL]);
     await openUsers();
     expect(screen.queryByText('Hà Đã Xoá')).toBeNull();
     const view = screen.getByRole('combobox', { name: 'Hiện người' });
-    await pickOption(view, 'Đã xoá');
+    await pickOption(view, 'Đã xóa');
     expect(await screen.findByText('Hà Đã Xoá')).toBeInTheDocument();
     expect(bodyRows()).toHaveLength(1);
-    expect(within(bodyRows()[0]).getByText('Đã xoá')).toBeInTheDocument();
+    expect(within(bodyRows()[0]).getByText('Đã xóa')).toBeInTheDocument();
     await pickOption(view, 'Đang trong danh bạ');
     await waitFor(() => expect(screen.queryByText('Hà Đã Xoá')).toBeNull());
     expect(screen.getByText('Phạm Minh Đức')).toBeInTheDocument();

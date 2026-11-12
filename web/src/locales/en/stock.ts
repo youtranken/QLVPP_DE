@@ -4,7 +4,7 @@ import type { Messages } from '@/locales/messages';
 const stock: Messages<typeof vi> = {
   stock: {
     page: {
-      title: 'Stock',
+      title: 'Cupboard',
       description: 'Stock per item and every purchase and one-off issue. Deliveries deduct stock automatically.',
       catalogLink: 'Products',
       search: 'Search by item name',
@@ -116,8 +116,8 @@ const stock: Messages<typeof vi> = {
         return: 'Return',
       },
       text: {
-        arrival: 'Received {{qty}} {{unit}} · Arrival for month {{month}}',
-        makeup: 'Received {{qty}} {{unit}} · Make-up for month {{month}}',
+        arrival: 'Received {{qty}} {{unit}} · Arrival for {{month, monthName}}',
+        makeup: 'Received {{qty}} {{unit}} · Make-up for {{month, monthName}}',
         purchaseOutside: 'Bought outside the cycle {{qty}} {{unit}}',
         adjust: 'Stock adjustment',
         issue: 'Issued {{qty}} {{unit}} to {{name}}',

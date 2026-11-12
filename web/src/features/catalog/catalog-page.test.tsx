@@ -109,16 +109,16 @@ describe('Danh mục — bảng nhóm', () => {
     expect(screen.getByRole('checkbox', { name: /^Chọn cả nhóm Chưa xếp nhóm/ })).toBeInTheDocument();
   });
 
-  it('hàng: mã, quy cách, ĐVT, "Tủ: n" xám không nhãn tồn, badge "Chỉ Adm D&E"/"Thiếu ảnh"; mã trống hiện "—"', async () => {
+  it('hàng: mã, quy cách, ĐVT, số tồn xám (cột đã có tiêu đề, không lặp "Tủ:"), badge "Chỉ Adm D&E"/"Thiếu ảnh"; mã trống hiện "—"', async () => {
     await openCatalog({ items: ITEMS });
     expect(screen.getByRole('columnheader', { name: 'Mã' })).toBeInTheDocument();
     expect(inRow('Bút bi xanh').getByText('VPP-010')).toBeInTheDocument();
     expect(inRow('Bút bi xanh').getByText('hộp 20 cây')).toBeInTheDocument();
     expect(inRow('Bút bi xanh').getByText('cây')).toBeInTheDocument();
     expect(inRow('Bút chì 2B').getAllByText('—')).toHaveLength(2);
-    expect(inRow('Bút chì 2B').getByText('Tủ: 0')).toBeInTheDocument();
+    expect(inRow('Bút chì 2B').getByText('0', { selector: '.ct-stock' })).toBeInTheDocument();
     expect(inRow('Bút chì 2B').queryByText('Hết hàng')).toBeNull();
-    expect(inRow('Giấy A4').getByText('Tủ: 2')).toBeInTheDocument();
+    expect(inRow('Giấy A4').getByText('2', { selector: '.ct-stock' })).toBeInTheDocument();
     expect(inRow('Giấy A4').queryByText('Sắp hết')).toBeNull();
     expect(inRow('Giấy A4').getByText('Chỉ Adm D&E')).toBeInTheDocument();
     expect(inRow('Bút bi xanh').getByRole('img', { name: 'Bút bi xanh' })).toHaveAttribute('src', '/api/files/f-2');

@@ -22,7 +22,8 @@ export interface EmptyFrameProps {
 // Khung trống chung của trang quản trị: rộng hết vùng danh sách, khối chữ tối đa 480 px căn giữa
 export function EmptyFrame({ variant = 'empty', title, hint, art, action, onClear, flush = false }: EmptyFrameProps) {
   const { t } = useTranslation();
-  const picture = variant === 'no-match' ? <EmptyArt kind="no-match" /> : typeof art === 'string' ? <EmptyArt kind={art as EmptyArtKind} /> : (art ?? <EmptyArt kind="no-request" />);
+  const kind: EmptyArtKind | null = variant === 'no-match' ? 'no-match' : typeof art === 'string' ? (art as EmptyArtKind) : art ? null : 'no-request';
+  const picture = kind ? <EmptyArt kind={kind} /> : art;
   const clear =
     variant === 'no-match' && onClear ? (
       <button type="button" className="btn" onClick={onClear}>

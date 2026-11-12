@@ -23,7 +23,7 @@ async function switchLanguage(page: Page, info: TestInfo, lang: Lang) {
   else await page.getByRole('button', { name: /^(Ngôn ngữ|Language)$/ }).click();
   await page.getByRole('radio', { name: lang === 'en' ? 'English' : 'Tiếng Việt' }).click();
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('heading', { level: 1, name: lang === 'en' ? /^Month \d+$/ : /^Kỳ tháng \d+$/ })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: lang === 'en' ? /^[A-Z][a-z]+ period$/ : /^Kỳ tháng \d+$/ })).toBeVisible();
 }
 
 // Vỏ app có tên người đăng nhập và tên ngôn ngữ "Tiếng Việt"; ô dữ liệu (ghi chú xuất lẻ, tên món) là chữ người dùng nhập

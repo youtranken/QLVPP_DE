@@ -216,11 +216,17 @@ describe('Danh mục — một thanh lọc cho lưới và bảng', () => {
 });
 
 describe('Danh mục — tồn chỉ để tham khảo', () => {
-  it.each(['', '?view=table'])('%s: chữ xám "Tủ: 0"/"Tủ: 2", không nhãn đỏ/cam hay "Hết"/"Sắp hết" về tồn', async (search) => {
+  it.each([
+    ['', 'Tủ: 0', 'Tủ: 2'],
+    // Bảng có cột "Tồn kho": ô chỉ ghi số, không lặp chữ "Tủ:"
+    ['?view=table', '0', '2'],
+  ])('%s: chữ xám "%s"/"%s", không nhãn đỏ/cam hay "Hết"/"Sắp hết" về tồn', async (search, zero, two) => {
     await open(`${GRID}${search}`);
-    expect(screen.getByText('Tủ: 0')).toBeInTheDocument();
-    expect(screen.getByText('Tủ: 2')).toBeInTheDocument();
-    expect(screen.getByText('Tủ: 0').closest('.tag--danger, .tag--warn')).toBeNull();
+    const sel = { selector: '.ct-stock, .ct-card__stock' };
+    expect(screen.getByText(zero, sel)).toBeInTheDocument();
+    expect(screen.getByText(two, sel)).toBeInTheDocument();
+    expect(screen.getByText(zero, sel).closest('.tag--danger, .tag--warn')).toBeNull();
+    expect(screen.queryByText(/^Tủ: /, { selector: 'td *' })).toBeNull();
     const stockTags = [...document.querySelectorAll('.tag--danger, .tag--warn')].filter((el) => /hết|Còn \d/i.test(el.textContent ?? ''));
     expect(stockTags).toEqual([]);
     expect(screen.queryByText(/^(Hết|Hết hàng|Sắp hết)$/)).toBeNull();

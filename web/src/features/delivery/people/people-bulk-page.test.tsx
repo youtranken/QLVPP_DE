@@ -44,8 +44,8 @@ describe('DeliveryPeoplePage — bảng và giao nhiều phiếu', () => {
     await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
     expect(screen.getAllByRole('columnheader').map((c) => c.textContent)).toEqual(['', 'Người', 'Phòng', 'Kỳ', 'Số món', 'Đơn vị', 'Tình trạng', 'Thao tác']);
     expect(screen.getByRole('table')).toHaveClass('grid-table');
-    expect(within(card('Nguyễn Văn An')).getByText('Kỳ 10')).toBeInTheDocument();
-    expect(within(card('Lê Thị Bình')).getByText('Kỳ 9')).toBeInTheDocument();
+    expect(within(card('Nguyễn Văn An')).getByText('Tháng 10')).toBeInTheDocument();
+    expect(within(card('Lê Thị Bình')).getByText('Tháng 9')).toBeInTheDocument();
     for (const n of ['Xem Nguyễn Văn An', 'Giao…, Nguyễn Văn An']) expect(screen.getByRole('button', { name: n })).toBeInTheDocument();
   });
 

@@ -34,7 +34,7 @@ describe('effectiveSentence — câu kỳ áp dụng của hạn mới', () => {
 
   it('en', () => {
     expect(effectiveSentence(i18n.getFixedT('en'), 'en', { ym: '2027-01', deadline: '2027-01-10T17:00:00.000Z' }, '8')).toBe(
-      'Period 01 (open) still locks at 00:00 on 11/01. From period 02: locks at 00:00 on 09/02.',
+      'January period (open) still locks at 00:00 on 11/01. From February: locks at 00:00 on 09/02.',
     );
   });
 });

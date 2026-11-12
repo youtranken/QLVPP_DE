@@ -62,6 +62,8 @@ const common: Messages<typeof vi> = {
       increase: 'Increase {{label}}',
     },
     searchClear: 'Clear search',
+    missingEn: 'Missing EN name',
+    missingEnHint: 'The English interface shows the Vietnamese name until an English name is added.',
     filter: {
       hint: 'Filter',
       active: 'Filtering: {{label}} · {{count}}',
