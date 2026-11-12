@@ -152,6 +152,9 @@ const request: Messages<typeof vi> = {
       missingTitle: 'Can’t find what you need?',
       missingAction: 'Add it here',
       unitMax: 'Max {{max}} {{unit}}/month',
+      // Thẻ món: tách phần "/tháng" để thẻ hẹp (360) ẩn nó khỏi mắt mà vẫn đọc cho trình đọc màn hình
+      unitMaxHead: 'Max {{max}} {{unit}}',
+      unitMaxPer: '/month',
       adminAdded: 'Added by D&E Admin · {{qty}}',
       paused: 'Not available',
       locked: 'Ordered {{qty}}',
