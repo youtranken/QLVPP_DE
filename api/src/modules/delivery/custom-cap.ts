@@ -6,10 +6,10 @@ import {
   lockCustomKey,
 } from '../catalog/custom-key-lock';
 import type { LockedLine } from '../requests/line-delivery.store';
-import { latestSent } from '../reports/sent-snapshot';
 import { customNotReceived } from './delivery-errors';
 
-// Khóa ngoài DM có trong bản in của kỳ dòng: giao không vượt Σ đã về − Σ đã giao của khóa (R-D11.21); thứ tự đăng ký chỉ là gợi ý ở danh sách
+// Món ngoài DM chỉ giao sau khi hàng về (chủ app vòng 7, kể cả khóa duyệt sau khi gửi NCC — chưa có trong bản thì chưa nhận được):
+// giao không vượt Σ đã về − Σ đã giao của khóa trong kỳ dòng (R-D11.21); thứ tự đăng ký chỉ là gợi ý ở danh sách
 export async function assertCustomReceived(
   tx: Tx,
   line: LockedLine,
@@ -17,8 +17,6 @@ export async function assertCustomReceived(
 ): Promise<void> {
   if (line.item_id) return;
   const key = await lineKeyOf(tx, line.id);
-  const sent = await latestSent(tx, line.period_ym);
-  if (!((sent?.data.order_qty[key] ?? 0) > 0)) return;
   await lockCustomKey(tx, line.period_ym, key);
   const available = Math.max(
     0,

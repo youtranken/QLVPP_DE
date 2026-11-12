@@ -59,6 +59,9 @@ async function clearDeliveries(pool: Pool, suffix: string): Promise<void> {
   await pool.query('DELETE FROM in_app_notifications WHERE user_sub LIKE $1', [
     mine,
   ]);
+  await pool.query('DELETE FROM custom_receipts WHERE created_by LIKE $1', [
+    mine,
+  ]);
 }
 
 export function deliveryFixture(tag: string) {
@@ -144,6 +147,16 @@ export function deliveryFixture(tag: string) {
     freeze(AFTER_DEADLINE);
     return { item, request, line: request.lines[0] };
   };
+  // Món ngoài DM chỉ giao sau khi hàng về: ghi "đã về" thẳng cho khóa của dòng trong kỳ dòng (bỏ qua luồng bản gửi NCC)
+  const receiveCustom = (lineId: string, qty: number) =>
+    pool().query(
+      `INSERT INTO custom_receipts (period_ym, line_key, qty, created_by, created_at)
+       SELECT r.period_ym,
+              'custom:' || jsonb_build_array(lower(trim(l.custom_name)), lower(trim(l.custom_unit)))::text,
+              $2, r.user_sub, now()
+       FROM request_lines l JOIN requests r ON r.id = l.request_id WHERE l.id = $1`,
+      [lineId, qty],
+    );
   const debtLine = async (stock: number, qty = 5, sub = A) => {
     const seeded = await lockedLine(stock, qty, sub);
     freeze(DEBT_AT);
@@ -163,5 +176,6 @@ export function deliveryFixture(tag: string) {
     notificationsOf,
     lockedLine,
     debtLine,
+    receiveCustom,
   };
 }

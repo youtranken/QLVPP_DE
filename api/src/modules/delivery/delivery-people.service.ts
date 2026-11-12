@@ -79,13 +79,13 @@ const CUSTOM_FACTS_CTE = sql`custom_periods AS (
   GROUP BY 1, 2
 )`;
 
-// Trần gợi ý theo thứ tự đăng ký (ahead); server ép tổng ở custom-cap.ts khi giao
+// Món ngoài DM: trần = đã về − đã giao của khóa − phần giữ cho người đăng ký trước (ahead), có trong bản gửi hay không
+// (chưa về thì 0); server ép tổng ở custom-cap.ts khi giao
 const CAPPED_CTE = sql`capped AS (
   SELECT x.*, (x.item_id IS NULL AND coalesce(s.ordered, 0) > 0) AS custom_tracked,
          CASE WHEN x.item_id IS NOT NULL THEN NULL
-              WHEN coalesce(s.ordered, 0) > 0 THEN LEAST(x.remaining_qty, GREATEST(0,
-                coalesce(rc.qty, 0) - coalesce(dv.qty, 0) - x.ahead))::int
-              ELSE x.remaining_qty END AS deliver_cap
+              ELSE LEAST(x.remaining_qty, GREATEST(0,
+                coalesce(rc.qty, 0) - coalesce(dv.qty, 0) - x.ahead))::int END AS deliver_cap
   FROM ranked x
   LEFT JOIN LATERAL (SELECT (st.order_qty->>x.key)::int AS ordered FROM sent st
                      WHERE st.period_ym = x.period_ym) s ON x.item_id IS NULL
@@ -120,7 +120,7 @@ export class DeliveryPeopleService {
     return { ym, people: groupPeople(ym, rows) };
   }
 
-  // Dòng ngoài DM có trong bản in của kỳ dòng: trần = hàng đã về − đã giao của khóa, chia theo thứ tự đăng ký
+  // Dòng ngoài DM: trần = hàng đã về − đã giao của khóa, chia theo thứ tự đăng ký
   private async rows(ym: string, openYm: string): Promise<Row[]> {
     const current = ymToDate(addMonths(openYm, -1));
     const { rows } = await this.db.execute<Row>(sql`

@@ -161,6 +161,7 @@ describe('POST admin/lines/:id/deliver: giao một dòng', () => {
   it('accepted (ngoài DM) giao 2 → không movement, movement_id null, stock_qty null; có line_deliveries', async () => {
     const { line } = await customLine();
     await review(line.id, { action: 'accept' }).expect(200);
+    await f.receiveCustom(line.id, 2);
     freeze('2026-11-12T03:00:00Z');
     const res = await deliver(line.id, {
       qty: 2,
