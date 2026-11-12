@@ -6,7 +6,7 @@ const reports = {
       monthNav: 'Chọn tháng báo cáo',
       prevMonth: 'Tháng trước',
       nextMonth: 'Tháng sau',
-      openNotReady: 'Tháng {{month}} đang đăng ký — báo cáo sau khi khóa {{date}}',
+      openNotReady: 'Tháng {{month}} đang đăng ký — báo cáo sau {{lockPhrase}}',
       fixCells_one: 'Còn {{count}} ô Đề nghị cần sửa trước khi chốt.',
       fixCells_other: 'Còn {{count}} ô Đề nghị cần sửa trước khi chốt.',
       error: {

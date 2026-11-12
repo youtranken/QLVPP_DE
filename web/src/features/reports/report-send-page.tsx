@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { defaultOrder } from '@/lib/report-qty';
-import { formatVnStamp } from '@/lib/format-time';
+import { langOf, lockPhrase } from '@/lib/period-text';
 import { lockedYm } from '@/lib/ym';
 import { Icon } from '@/ui/icon';
 import { Loading, LoadError } from '@/ui/load-state';
@@ -36,9 +36,8 @@ import './reports.m1.css';
 
 // Nhãn cạnh nút › (tắt): nói rõ kỳ đang mở còn đăng ký, chưa báo cáo được tới khi khóa
 function Heading({ ym, open, onMonth, children }: { ym: string; open: CurrentPeriod; onMonth: (ym: string) => void; children?: React.ReactNode }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const openYm = open.ym;
-  const lockDay = formatVnStamp(open.deadline).split(' ')[1];
   return (
     <div className="bc-head">
       <h1>{t('reports.send.title')}</h1>
@@ -46,7 +45,7 @@ function Heading({ ym, open, onMonth, children }: { ym: string; open: CurrentPer
         value={ym}
         max={lockedYm(openYm)}
         onChange={onMonth}
-        beyond={{ ym: openYm, label: t('reports.page.openNotReady', { month: monthOf(openYm), date: lockDay }) }}
+        beyond={{ ym: openYm, label: t('reports.page.openNotReady', { month: monthOf(openYm), lockPhrase: lockPhrase(open.deadline, langOf(i18n.language)) }) }}
         formatLabel={(v) => t('reports.page.month', { month: monthOf(v), year: v.slice(0, 4) })}
         labels={{ group: t('reports.page.monthNav'), prev: t('reports.page.prevMonth'), next: t('reports.page.nextMonth') }}
       />
