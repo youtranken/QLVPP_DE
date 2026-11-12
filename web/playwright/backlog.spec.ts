@@ -42,6 +42,21 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await expect(group).toContainText('PW Phòng giao');
       // Tóm tắt kỳ nằm cuối thanh công cụ (một tháng: "Tháng m/yyyy · …"; nhiều tháng: "n tháng · …" và mỗi tháng một dải tiêu đề)
       await expect(page.getByRole('status').filter({ hasText: /^(Tháng \d+\/\d{4}|\d+ tháng) · \d+ người · \d+ đơn vị$/ })).toBeVisible();
+      // Tóm tắt không bao giờ bị cắt: thiếu chỗ thì xuống một dòng riêng canh phải (đo ở các bề rộng hay gặp, rồi trả lại khung cũ)
+      const summary = page.locator('.bl-summary');
+      const vp = page.viewportSize();
+      for (const width of isMobile(info) ? [390, 360] : [1024, 1280, 1440]) {
+        await page.setViewportSize({ width, height: vp?.height ?? 800 });
+        const fit = await summary.evaluate((el) => {
+          const bar = el.closest('.bl-bar')!.getBoundingClientRect();
+          const box = el.getBoundingClientRect();
+          return { inside: el.scrollWidth <= el.clientWidth, right: Math.round(box.right), barRight: Math.round(bar.right), barSW: el.closest('.bl-bar')!.scrollWidth, barCW: el.closest('.bl-bar')!.clientWidth };
+        });
+        expect(fit.inside, `tóm tắt không tràn chính nó ở ${width}`).toBe(true);
+        expect(fit.right, `tóm tắt không lố mép phải thanh công cụ ở ${width}`).toBeLessThanOrEqual(fit.barRight);
+        expect(fit.barSW, `thanh công cụ không tràn ở ${width}`).toBeLessThanOrEqual(fit.barCW);
+      }
+      if (vp) await page.setViewportSize(vp);
       // Cột: Món · ĐVT · Đăng ký · Đã giao · Còn nợ · Tủ còn · Thao tác
       await expect(row.getByRole('cell').nth(2)).toHaveText('3');
       await expect(row.getByRole('cell').nth(3)).toHaveText('1');
