@@ -96,6 +96,9 @@ export function Listbox<T extends string>({
   const typeahead = useTypeahead(options);
   const selectedIndex = options.findIndex((o) => o.value === value);
   const selected = selectedIndex >= 0 ? options[selectedIndex] : null;
+  // Giá trị lạ (không khớp lựa chọn nào) mà không có placeholder: hiện lựa chọn đầu như <select> cũ, không để nút trống trơn.
+  // Nơi nào giá trị lạ có nghĩa (lọc theo URL) thì tự thêm lựa chọn cho nó, như Danh bạ với ?dept=
+  const shownLabel = selected?.label ?? placeholder ?? options[0]?.label ?? '';
   const labelledBy = aria['aria-label'] ? undefined : (aria['aria-labelledby'] ?? (idProp ? fieldLabelId(idProp) : undefined));
 
   const { refs, floatingStyles } = useFloating({
@@ -226,8 +229,8 @@ export function Listbox<T extends string>({
         onClick={() => (open ? setOpen(false) : show(selectedIndex))}
         onKeyDown={onKeyDown}
       >
-        <span className="lb-trigger__value" data-placeholder={selected ? undefined : ''}>
-          {selected?.label ?? placeholder ?? ''}
+        <span className="lb-trigger__value" data-placeholder={!selected && placeholder !== undefined ? '' : undefined}>
+          {shownLabel}
         </span>
       </button>
       {children}

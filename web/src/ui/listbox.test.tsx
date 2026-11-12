@@ -44,6 +44,12 @@ describe('Listbox — combobox chỉ-chọn', () => {
     expect(box()).toHaveTextContent('Chọn món');
   });
 
+  it('L5 vòng 8: giá trị lạ, không có placeholder → hiện lựa chọn đầu như <select> cũ (không để nút trống), không tô màu placeholder', () => {
+    renderWithI18n(<Harness initial="khong-con" />);
+    expect(box()).toHaveTextContent('Giấy A4');
+    expect(box().querySelector('[data-placeholder]')).toBeNull();
+  });
+
   it('bàn phím: ↓ mở ở mục đang chọn, ↓↓ bỏ qua mục tắt, Enter chọn và đóng; focus ở lại nút', async () => {
     const onChange = vi.fn();
     renderWithI18n(<Harness onChange={onChange} />);
