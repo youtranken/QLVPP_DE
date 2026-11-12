@@ -18,8 +18,8 @@ import { ArrivalTable } from './arrival-table';
 import { ArrivalsCustom } from './arrivals-custom';
 import { ArrivalsDone } from './arrivals-done';
 import { ArrivalsMakeup } from './arrivals-makeup';
-import { ArrivalsToolbar } from './arrivals-toolbar';
-import { useAdmOutToggle, useArrivalsPlan } from './use-arrivals-plan';
+import { ArrivalsSource, ArrivalsToolbar } from './arrivals-toolbar';
+import { useAdmOutToggle, useArrivalsPlan, useArrivalsPlanCached } from './use-arrivals-plan';
 import { useArrivalsDraft } from './use-arrivals-draft';
 import { useArrivalsSave, type Notice } from './use-arrivals-save';
 import './arrivals.m1.css';
@@ -177,7 +177,6 @@ function ArrivalsBoard({ ym }: { ym: string }) {
     <>
       <NoticeLine notice={saver.notice} nameOf={nameOf} />
       <ArrivalsToolbar
-        snapshot={snapshot}
         filter={filter}
         groups={groups}
         counts={counts}
@@ -220,6 +219,12 @@ function ArrivalsBoard({ ym }: { ym: string }) {
   );
 }
 
+// Đọc kế hoạch từ bộ nhớ đệm (bảng bên dưới mới tải): dòng nguồn chỉ hiện khi kỳ đã có bản gửi NCC
+function HeaderSource({ ym }: { ym: string }) {
+  const snapshot = useArrivalsPlanCached(ym).data?.snapshot;
+  return snapshot ? <ArrivalsSource snapshot={snapshot} /> : null;
+}
+
 export function ArrivalsPage() {
   const { t } = useTranslation();
   const current = useCurrentPeriod();
@@ -227,7 +232,7 @@ export function ArrivalsPage() {
   const title = t('arrivals.title', { month: workingYm ? monthOf(workingYm) : '' }).trim();
   return (
     <div className="ct-page">
-      <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.arrivals')]} title={title} />
+      <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.arrivals')]} title={title} sub={workingYm ? <HeaderSource ym={workingYm} /> : undefined} />
       {current.isError ? (
         <LoadError onRetry={() => void current.refetch()} />
       ) : workingYm ? (

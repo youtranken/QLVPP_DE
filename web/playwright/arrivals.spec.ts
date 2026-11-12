@@ -35,7 +35,10 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       await openOnPrivatePeriod(page);
       await page.goto(`/admin/arrivals?q=${encodeURIComponent(seed.tag)}`);
       await expect(page.getByRole('heading', { level: 1, name: `Nhận hàng kỳ tháng ${Number(seed.prevYm.slice(5))}` })).toBeVisible();
-      await expect(page.getByRole('link', { name: /^theo bản gửi NCC / })).toBeVisible();
+      await expect(page.getByText(/^Theo bản gửi NCC lúc .+ · Xem bản in$/)).toBeVisible();
+      await expect(page.getByRole('link', { name: 'Xem bản in', exact: true })).toBeVisible();
+      // Chưa chọn nhóm nào: không có dòng "Đã chọn …" và nút nhận hàng loạt
+      await expect(page.getByText(/^Đã chọn \d+ nhóm/)).toHaveCount(0);
       await expect(page.getByText(/^Đang hiện 2\/\d+ món$/)).toBeVisible();
       const boxA = page.getByRole('spinbutton', { name: `Nhận đợt này: ${a.name}` });
       const boxB = page.getByRole('spinbutton', { name: `Nhận đợt này: ${b.name}` });

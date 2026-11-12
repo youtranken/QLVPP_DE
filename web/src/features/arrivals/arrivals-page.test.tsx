@@ -14,7 +14,7 @@ const loc = () => screen.getByTestId('location-search').textContent ?? '';
 const rowOf = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
 
 describe('Hàng về — bảng theo bản in', () => {
-  it('cột: Sản phẩm · Tồn kho · Đề nghị mua · Nhận đợt này · Còn thiếu · Tình trạng · Sau nhập kho; điền sẵn = phần còn lại; link "theo bản gửi NCC hh:mm dd/mm"', async () => {
+  it('cột: Sản phẩm · Tồn kho · Đề nghị mua · Nhận đợt này · Còn thiếu · Tình trạng · Sau nhập kho; điền sẵn = phần còn lại; dòng phụ dưới tiêu đề "Theo bản gửi NCC lúc hh:mm dd/mm · Xem bản in" (chỉ "Xem bản in" là link)', async () => {
     stub();
     await open();
     expect(await screen.findByDisplayValue('6')).toBe(box('Bút bi'));
@@ -22,7 +22,9 @@ describe('Hàng về — bảng theo bản in', () => {
     const heads = screen.getAllByRole('columnheader').map((c) => c.textContent);
     expect(heads).toEqual(['Món', 'Tồn kho', 'Đề nghị mua', 'Nhận đợt này', 'Còn thiếu', 'Tình trạng', 'Sau nhập kho']);
     expect(heads).not.toContain('Đã về các đợt trước');
-    expect(screen.getByRole('link', { name: 'theo bản gửi NCC 09:05 02/11' })).toHaveAttribute('href', '/admin/reports/snapshots/s-1/print');
+    const sub = screen.getByText((_, el) => el?.classList.contains('page-head__sub') ?? false);
+    expect(sub).toHaveTextContent('Theo bản gửi NCC lúc 09:05 02/11 · Xem bản in');
+    expect(within(sub).getByRole('link', { name: 'Xem bản in' })).toHaveAttribute('href', '/admin/reports/snapshots/s-1/print');
   });
 
   it('món có đợt trước: dưới số Đề nghị mua có chữ nhỏ đỏ "đã nhận 4" (class ar-received); món chưa nhận đợt nào không có', async () => {
@@ -84,14 +86,14 @@ describe('Hàng về — bảng theo bản in', () => {
     expect(groupBtn('Bút')).toHaveClass('ar-ghead__btn');
   });
 
-  it('thanh trên: "Nhận đủ hàng (0 nhóm)" tắt khi chưa tick; tick → "(1 nhóm)" + "Đã chọn 1 nhóm · 1 món"; không còn "Lưu hàng về", "Điền đủ cả nhóm", "Đặt lại", "Hoàn tác"', async () => {
+  it('chưa tick nhóm: không có dòng "Đã chọn…" và nút nhận hàng loạt; tick → "Nhận đủ hàng (1 nhóm)" + "Đã chọn 1 nhóm · 1 món" ngay trên hàng ô tìm; không còn "Lưu hàng về", "Điền đủ cả nhóm", "Đặt lại", "Hoàn tác"', async () => {
     stub();
     await open();
     await screen.findByDisplayValue('6');
-    expect(pickedBtn()).toHaveAccessibleName('Nhận đủ hàng (0 nhóm)');
-    expect(pickedBtn()).toBeDisabled();
-    expect(screen.getByText('Đã chọn 0 nhóm · 0 món')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Nhận (đủ )?hàng \(\d+ nhóm\)$/ })).toBeNull();
+    expect(screen.queryByText(/^Đã chọn \d+ nhóm/)).toBeNull();
     await userEvent.click(pickBox('Kẹp & dán'));
+    expect(pickedBtn().closest('.toolbar')).toContainElement(screen.getByRole('searchbox', { name: /Tìm món/ }));
     expect(pickedBtn()).toHaveAccessibleName('Nhận đủ hàng (1 nhóm)');
     expect(pickedBtn()).toBeEnabled();
     expect(screen.getByText('Đã chọn 1 nhóm · 1 món')).toBeInTheDocument();

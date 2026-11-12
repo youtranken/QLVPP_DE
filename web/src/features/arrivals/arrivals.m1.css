@@ -36,13 +36,10 @@
 [data-shell='admin'] .ar-ghead__in .btn { margin-left: auto; }
 /* Một bề rộng cho cả "Nhận hàng" lẫn "Nhận đủ hàng": đổi chữ không đẩy đầu nhóm */
 [data-shell='admin'] .ar-ghead__btn { min-width: 8.75rem; justify-content: center; }
-[data-shell='admin'] .ar-bar { display: grid; gap: var(--s-2); min-width: 0; }
-[data-shell='admin'] .ar-bar__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); min-width: 0; }
-[data-shell='admin'] .ar-source { display: grid; gap: var(--s-1); min-width: 0; font: var(--t-body); }
-[data-shell='admin'] .ar-source p { margin: 0; }
+[data-shell='admin'] .ar-bar { display: grid; gap: var(--s-3); min-width: 0; }
 [data-shell='admin'] .ar-note-line { color: var(--c-ink-2); }
 [data-shell='admin'] .ar-warn-text { margin: 0; color: var(--c-warn); font: var(--t-label); }
-[data-shell='admin'] .ar-save { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); margin-left: auto; }
+[data-shell='admin'] .ar-save { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); }
 [data-shell='admin'] .ar-batch { color: var(--c-ink-2); font: var(--t-sm); }
 [data-shell='admin'] .ar-received { display: block; color: var(--c-danger); font: var(--t-sm); font-weight: 400; white-space: nowrap; }
 /* Gõ thiếu: chữ đỏ một dòng, không phải chip */

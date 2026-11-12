@@ -36,7 +36,8 @@ const arrivals = {
       pick: 'Chọn nhóm {{name}}',
       none: 'Chưa xếp nhóm',
     },
-    source: 'theo bản gửi NCC {{time}}',
+    sourceAt: 'Theo bản gửi NCC lúc {{time}}',
+    sourcePrint: 'Xem bản in',
     batchPicked: 'Đã chọn {{g}} nhóm · {{n}} món',
     status: { done: 'Nhận đủ hàng', short: 'Thiếu {{n}}', over: 'Dư {{n}}', none: 'Không nhập', adm_out: 'NCC hết hàng', oweIn: 'Nhập: {{qty}}', oweLeft: 'NCC còn nợ: {{n}}' },
     gate: {

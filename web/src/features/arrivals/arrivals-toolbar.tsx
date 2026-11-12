@@ -10,8 +10,6 @@ import type { ArrivalFilter } from './arrival-rows';
 import type { ArrivalsPlan } from './arrivals.api';
 
 interface Props {
-  // Bảng nhận chỉ hiện khi kỳ đã gửi NCC: luôn có bản in làm nguồn
-  snapshot: NonNullable<ArrivalsPlan['snapshot']>;
   filter: ArrivalFilter;
   groups: ChipGroup[];
   counts: ReadonlyMap<string, number>;
@@ -26,23 +24,23 @@ interface Props {
   onSave: () => void;
 }
 
-export function ArrivalsToolbar({ snapshot, filter, groups, counts, total, shown, shortCount, reducedCount, batch, saveDisabled, onFilter, onSave }: Props) {
+// Dòng phụ dưới tiêu đề: nguồn đối chiếu là bản in đã gửi NCC; chỉ cụm "Xem bản in" là liên kết
+export function ArrivalsSource({ snapshot }: { snapshot: NonNullable<ArrivalsPlan['snapshot']> }) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {t('arrivals.sourceAt', { time: formatVnStamp(snapshot.created_at) })} · <Link to={printPath(snapshot.id)}>{t('arrivals.sourcePrint')}</Link>
+    </>
+  );
+}
+
+export function ArrivalsToolbar({ filter, groups, counts, total, shown, shortCount, reducedCount, batch, saveDisabled, onFilter, onSave }: Props) {
   const { t } = useTranslation();
   return (
     <div className="ar-bar">
-      <div className="ar-bar__row">
-        <div className="ar-source">
-          <Link to={printPath(snapshot.id)}>{t('arrivals.source', { time: formatVnStamp(snapshot.created_at) })}</Link>
-          {reducedCount > 0 && <p className="ar-warn-text">{t('warn.W14head', { x: reducedCount })}</p>}
-        </div>
-        <div className="ar-save">
-          <span className="ar-batch">{t('arrivals.batchPicked', { g: batch.groups, n: batch.items })}</span>
-          <button type="button" className="btn btn--primary" disabled={saveDisabled} onClick={onSave}>
-            {t(batch.partial ? 'arrivals.receivePickedPartial' : 'arrivals.receivePicked', { n: batch.groups })}
-          </button>
-        </div>
-      </div>
-      <div className="ar-bar__row">
+      {reducedCount > 0 && <p className="ar-warn-text">{t('warn.W14head', { x: reducedCount })}</p>}
+      {/* Chọn nhóm rồi mới hiện trạng thái chọn + nút nhận hàng loạt, cùng hàng với ô tìm: không chiếm một hàng trống */}
+      <div className="toolbar ar-tools">
         <SearchBox className="flt-search" label={t('arrivals.filter.search')} placeholder={t('arrivals.filter.search')} value={filter.q} onChange={(q) => onFilter({ q: q || null })} />
         <Switch checked={filter.short} text={t('arrivals.filter.short', { n: shortCount })} onChange={(on) => onFilter({ short: on ? '1' : null })} />
         <ListMeta>
@@ -50,6 +48,14 @@ export function ArrivalsToolbar({ snapshot, filter, groups, counts, total, shown
             {t('arrivals.filter.count', { x: shown, y: total })}
           </p>
         </ListMeta>
+        {batch.groups > 0 && (
+          <div className="ar-save">
+            <span className="ar-batch">{t('arrivals.batchPicked', { g: batch.groups, n: batch.items })}</span>
+            <button type="button" className="btn btn--primary" disabled={saveDisabled} onClick={onSave}>
+              {t(batch.partial ? 'arrivals.receivePickedPartial' : 'arrivals.receivePicked', { n: batch.groups })}
+            </button>
+          </div>
+        )}
       </div>
       <GroupChips
         className="flt-chips"

@@ -39,7 +39,8 @@ const arrivals: Messages<typeof vi> = {
       pick: 'Select group {{name}}',
       none: 'Ungrouped',
     },
-    source: 'from the supplier print {{time}}',
+    sourceAt: 'Based on the supplier print sent {{time}}',
+    sourcePrint: 'View print',
     batchPicked: 'Selected {{g}} groups · {{n}} items',
     status: { done: 'Received in full', short: '{{n}} short', over: '{{n}} over', none: 'None entered', adm_out: 'Out at supplier', oweIn: 'Entered: {{qty}}', oweLeft: 'Supplier still owes: {{n}}' },
     gate: {
