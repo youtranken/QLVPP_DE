@@ -6,6 +6,7 @@ import { mockViewport } from '@/test/viewport';
 import { callsTo, itemRow, sendReport, sentData, sentState, setupSendAdm, YM } from '@/features/send-adm/send-adm-fixtures';
 import { registrationView } from '@/features/summary/registration-fixtures';
 import { snapshotRow } from './reports-fixtures';
+import { expectFixedColumns } from '@/test/fixed-columns';
 
 const PEN = itemRow({ key: 'kA', name: 'Bút bi', requested: 5, need: 5 });
 const PAPER = itemRow({ key: 'kB', name: 'Giấy A4', requested: 3, need: 3 });
@@ -331,5 +332,14 @@ describe('Báo cáo & gửi NCC: số khởi tạo từ bản đã gửi không 
     expect(await screen.findByText('Bỏ số Đề nghị vừa sửa?')).toBeInTheDocument();
     // Hai ô khởi tạo từ bản đã gửi không tính: chỉ ô vừa gõ là thay đổi
     expect(screen.getByText(/Bạn đã sửa 1 món nhưng chưa Xem tổng kết và bấm Đồng ý và in/)).toBeInTheDocument();
+  });
+});
+
+describe('Báo cáo & gửi NCC: cột cố định', () => {
+  it('bảng món cố định bề rộng cột: tháng có ô nhập Đề nghị và tháng chỉ có số cùng một bố cục cột', async () => {
+    setupSendAdm({ report: REPORT });
+    open();
+    await qtyBox('Bút bi');
+    expectFixedColumns((await screen.findAllByRole('table'))[0]!);
   });
 });

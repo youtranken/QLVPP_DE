@@ -56,7 +56,7 @@
 /* Gõ thiếu: chữ đỏ một dòng, không phải chip */
 [data-shell='admin'] .ar-owe { display: grid; color: var(--c-danger); font: var(--t-cap); font-weight: 600; }
 [data-shell='admin'] .ar-full { display: inline-block; color: var(--c-ok); font: var(--t-label); white-space: nowrap; }
-[data-shell='admin'] .ar-pick { width: 20px; height: 20px; margin: 0; accent-color: var(--c-acc); cursor: pointer; }
+/* Ô chọn nhóm: dáng và vùng bấm 44px chung với ô chọn trong bảng (css/m1/table.css) */
 [data-shell='admin'] .ar-pick:disabled { cursor: default; }
 [data-shell='admin'] .ar-count { margin: 0; color: var(--c-ink-2); font: var(--t-sm); }
 [data-shell='admin'] .ar-nomatch { display: grid; justify-items: center; gap: var(--s-2); padding: var(--s-6) var(--s-4); color: var(--c-ink); text-align: center; }
@@ -82,11 +82,12 @@
   /* Tổng tối thiểu vừa thẻ ở 1280 có sidebar (thẻ ~880px): trang không cuộn ngang */
   [data-shell='admin'] .ar-table.table--fixed { min-width: 54rem; }
   [data-shell='admin'] .ar-col-stock { width: 5rem; }
-  [data-shell='admin'] .ar-col-ordered { width: 6.5rem; }
+  /* Cột số hẹp vừa số (tiêu đề xuống 2 dòng): nhường chỗ cho cột Món — tên món không gãy 3–4 dòng */
+  [data-shell='admin'] .ar-col-ordered { width: 5.5rem; }
   [data-shell='admin'] .ar-col-qty { width: 15rem; }
   [data-shell='admin'] .ar-col-short { width: 5.5rem; }
   [data-shell='admin'] .ar-col-status { width: 9rem; }
-  [data-shell='admin'] .ar-col-after { width: 6rem; }
+  [data-shell='admin'] .ar-col-after { width: 5.5rem; }
   /* Nhãn "NCC hết hàng · đã xử lý xong" dài hơn nút thường: xuống dòng trong cột thay vì tràn */
   [data-shell='admin'] .ar-table .ar-adm { white-space: normal; line-height: 1.2; }
   [data-shell='admin'] .ar-qty__in { flex-wrap: nowrap; }

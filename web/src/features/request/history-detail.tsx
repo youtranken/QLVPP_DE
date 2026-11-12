@@ -45,6 +45,16 @@ function Table({ view }: { view: RequestView }) {
   const held = view.lines.filter((l) => l.review_status === 'pending' || l.review_status === 'rejected');
   return (
     <table className="rq-recv-table hs-table">
+      {/* Bề rộng cột đặt ở history.m1.css (theo bề rộng màn): đổi tháng thì cột không co giãn theo chữ, cột Món nhận phần còn lại */}
+      <colgroup>
+        <col />
+        <col className="hs-c-unit" />
+        <col className="hs-c-reg" />
+        <col className="hs-c-give" />
+        <col className="hs-c-recv" />
+        <col className="hs-c-st" />
+        <col className="hs-c-note" />
+      </colgroup>
       <thead>
         <tr>
           {['colItem', 'colUnit', 'colRegistered', 'colToGive', 'colReceived', 'colStatus'].map((k) => (

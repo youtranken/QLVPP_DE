@@ -7,8 +7,9 @@
 [data-shell='admin'] .ct-chip__n { color: var(--c-muted); font: var(--t-cap); }
 [data-shell='admin'] .ct-dot { flex: none; width: 10px; height: 10px; border-radius: var(--r-pill); }
 [data-shell='admin'] .ct-chips--wrap .ct-chip { max-width: 100%; height: auto; min-height: 36px; padding: 8px 16px; white-space: normal; overflow-wrap: anywhere; text-align: left; }
-[data-shell='admin'] .ct-code { width: 120px; max-width: 120px; color: var(--c-muted); font: var(--t-sm); white-space: nowrap; }
-[data-shell='admin'] .ct-code__text { display: block; overflow: hidden; text-overflow: ellipsis; }
+/* Mã món đọc đủ: xuống dòng ở dấu "-" (BUT-KIM-/JELLITTO-04) thay vì cắt "BUT-…"; đoạn dài nhất giữa hai dấu "-" vừa cột */
+[data-shell='admin'] .ct-code { color: var(--c-muted); font: var(--t-sm); }
+[data-shell='admin'] .ct-code__text { display: block; overflow-wrap: break-word; }
 [data-shell='admin'] .ct-item-cell { min-width: 220px; }
 [data-shell='admin'] .ct-name-en { min-width: 140px; max-width: 220px; color: var(--c-ink-2); font: var(--t-sm); overflow-wrap: anywhere; }
 [data-shell='admin'] .ct-page .inline-number__hint { white-space: nowrap; }

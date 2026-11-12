@@ -138,6 +138,19 @@ describe('UsersPage B10', () => {
     expect(screen.queryByText('Mới')).toBeNull();
   });
 
+  it('mã NV, nhóm, email, phòng ban cắt "…" kèm title đủ chữ (không gãy giữa từ trong cột hẹp)', async () => {
+    stubUsers([AN, BINH, CHI]);
+    await openUsers();
+    const an = screen.getByText('Phạm Minh Đức').closest('tr')!;
+    for (const text of ['NV0231', 'QS', 'an.nguyen@pmh.com.vn']) {
+      const el = within(an).getByText(text);
+      expect(el).toHaveClass('cell-clip', 'cell-clip--line');
+      expect(el).toHaveAttribute('title', text);
+    }
+    expect(within(an).getByText('Phòng Công trình')).toHaveClass('cell-clip');
+    expect(within(an).getByText('Phòng Công trình')).toHaveAttribute('title', 'Phòng Công trình');
+  });
+
   it('ô tìm giới hạn 200 ký tự; gõ lọc không dấu theo tên/mã NV; rỗng → "Bỏ lọc"', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();

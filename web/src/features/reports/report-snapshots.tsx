@@ -115,7 +115,16 @@ export function ReportSnapshots({
       )}
       {items.length > 0 && (
         <div className="bc-scroll">
-          <table className="table grid-table bc-table" aria-describedby={id}>
+          {/* Cột cố định: đổi tháng (số món, đơn vị khác độ dài) thì cột không dời */}
+          <table className="table grid-table bc-table table--fixed" aria-describedby={id}>
+            <colgroup>
+              <col />
+              <col style={{ width: "9rem" }} />
+              <col style={{ width: "4.5rem" }} />
+              <col style={{ width: "4.5rem" }} />
+              <col style={{ width: "12rem" }} />
+              <col style={{ width: "8rem" }} />
+            </colgroup>
             <thead>
               <tr>
                 <th scope="col">{t("reports.snapshots.colAt")}</th>

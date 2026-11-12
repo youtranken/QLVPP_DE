@@ -66,11 +66,16 @@ export function StockInventory({ p, end }: { p: StockParams; end?: ReactNode }) 
     <>
       <Toolbar search={{ value: search, onChange: setSearch, label: t('stock.page.search'), placeholder: t('stock.page.search'), maxLength: MAX_SEARCH }}>
         {end}
-        {d.loaded && <StockFilterTabs stats={stockStats(d.rows)} filter={filter} onFilter={p.toggleFilter} onClear={p.clearFilter} />}
-        {filter && (
-          <ListMeta>
-            <FilterNotice label={t(`stock.stats.${filter}`)} count={shown.length} onClear={p.clearFilter} />
-          </ListMeta>
+        {/* Hàng "Đang lọc" nằm cùng hàng chip (chip chỉ dài nửa hàng): bật lọc không chèn thêm hàng đẩy bảng xuống */}
+        {d.loaded && (
+          <div className="sk-filter-row">
+            <StockFilterTabs stats={stockStats(d.rows)} filter={filter} onFilter={p.toggleFilter} onClear={p.clearFilter} />
+            {filter && (
+              <ListMeta>
+                <FilterNotice label={t(`stock.stats.${filter}`)} count={shown.length} onClear={p.clearFilter} />
+              </ListMeta>
+            )}
+          </div>
         )}
       </Toolbar>
       <StockTable

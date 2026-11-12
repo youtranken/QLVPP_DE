@@ -37,6 +37,18 @@ function RegCell({ reg }: { reg: RegFilter | null | undefined }) {
   return <span className={reg === 'yes' ? 'tag tag--ok' : 'tag tag--warn'}>{t(reg === 'yes' ? 'users.reg.cellYes' : 'users.reg.cellNo')}</span>;
 }
 
+// Mã NV, nhóm, phòng ban có thể là một chuỗi dài không dấu cách: cắt "…" kèm title thay vì gãy từng mẩu.
+// line: mã và nhóm luôn một dòng (gãy ở dấu "-" thành 4 dòng cũng khó đọc như gãy giữa từ)
+function Clip({ text, line = false }: { text: string | null | undefined; line?: boolean }) {
+  const { t } = useTranslation();
+  if (!text) return <>{t('common.empty')}</>;
+  return (
+    <span className={line ? 'cell-clip cell-clip--line' : 'cell-clip'} title={text}>
+      {text}
+    </span>
+  );
+}
+
 // Cột cố định bề rộng (tên nhận phần còn lại): đổi tab/lọc không làm cột nhảy chỗ.
 // Cột chỉ phụ thuộc tháng: dữ liệu đăng ký về sau đổi hàng chứ không đổi cột (đổi cột dựng lại bảng, panel đang mở bị đóng)
 function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
@@ -61,15 +73,15 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
                 >
                   {nameOf(u)}
                 </button>
-                {u.email && <small className="dr-muted dr-person__email">{u.email}</small>}
+                {u.email && <small className="dr-muted dr-person__email cell-clip cell-clip--line" title={u.email}>{u.email}</small>}
               </span>
             </span>
           ),
         },
-        { id: 'code', header: t('users.page.colCode'), meta: { width: '5.5rem' }, cell: ({ row }) => row.original.employeeCode ?? t('common.empty') },
-        { id: 'department', header: t('users.page.colDepartment'), meta: { width: '7rem' }, cell: ({ row }) => row.original.department ?? t('common.empty') },
+        { id: 'code', header: t('users.page.colCode'), meta: { width: '5.5rem' }, cell: ({ row }) => <Clip text={row.original.employeeCode} line /> },
+        { id: 'department', header: t('users.page.colDepartment'), meta: { width: '6.5rem' }, cell: ({ row }) => <Clip text={row.original.department} /> },
         ...(regMonth === null ? [] : [{ id: 'reg', header: t('users.reg.col', { month: regMonth }), meta: { width: '7.5rem' }, cell: ({ row }: { row: { original: UserRow } }) => <RegCell reg={row.original.reg} /> }]),
-        { id: 'team', header: t('users.page.colTeam'), meta: { width: '5.5rem' }, cell: ({ row }) => row.original.team ?? t('common.empty') },
+        { id: 'team', header: t('users.page.colTeam'), meta: { width: '5.5rem' }, cell: ({ row }) => <Clip text={row.original.team} line /> },
         {
           id: 'status',
           header: t('users.page.colStatus'),
@@ -81,7 +93,7 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
             </span>
           ),
         },
-        { id: 'lastLogin', header: t('users.page.colLastLogin'), meta: { width: '7.5rem' }, cell: ({ row }) => <LastLogin iso={row.original.lastLoginAt} /> },
+        { id: 'lastLogin', header: t('users.page.colLastLogin'), meta: { width: '9rem' }, cell: ({ row }) => <LastLogin iso={row.original.lastLoginAt} /> },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
   }, [t, onOpen, regMonth]);
