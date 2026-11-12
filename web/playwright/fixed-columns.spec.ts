@@ -50,6 +50,17 @@ for (const c of CASES) {
   });
 }
 
+// 1280 có sidebar: bảng cột cố định không được đẩy cả trang cuộn ngang
+for (const c of CASES) {
+  test(`Vòng7 ${c.name} 1280px: trang không cuộn ngang`, async ({ page }, info) => {
+    test.skip(isMobile(info), '390 xếp bảng thành thẻ');
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(c.base);
+    await headerXs(page);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}
+
 // Màn vừa 768–1024: cột hẹp không được đẩy tiêu đề hay nút tràn sang cột bên (bảng hẹp hơn tổng tối thiểu thì cuộn ngang)
 for (const width of [768, 1024]) {
   for (const c of CASES) {
@@ -105,6 +116,8 @@ test('Vòng7 Nhận hàng: cột đứng yên khi gõ thiếu/đủ và khi nút
       await expect(box).toHaveValue('5');
       const base = await xs();
       expect(base).toHaveLength(7);
+      // Bảng rộng hơn thẻ thì cuộn trong thẻ, trang không cuộn ngang (1280 có sidebar: bảng vừa thẻ)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${width}px trang không cuộn ngang`).toBe(true);
       await box.fill('2');
       await expect(page.getByText('NCC còn nợ: 3', { exact: true })).toBeVisible();
       await expect(page.getByRole('button', { name: /^Nhận hàng: / })).toBeVisible();
