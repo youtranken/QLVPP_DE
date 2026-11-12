@@ -32,7 +32,10 @@ function Actions({ line, phone, onAction }: { line: BacklogLine; phone: boolean;
           <button type="button" className="btn btn--sm btn--ghost bl-icon-btn" aria-label={label} title={label} onClick={() => onAction('history', line)}>
             <Icon name="history" size={18} />
           </button>
-          <RowMenu label={t('delivery.backlog.moreOf', who)} items={[cancel]} />
+          {/* Chỉ một thao tác phụ: nút chữ thấy ngay, không giấu sau menu ⋯ một mục */}
+          <button type="button" className="btn btn--sm btn--ghost bl-cancel" aria-label={t('delivery.backlog.cancelOf', who)} onClick={() => onAction('cancel', line)}>
+            {t('delivery.backlog.cancel')}
+          </button>
         </>
       )}
     </span>

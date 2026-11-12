@@ -79,6 +79,7 @@ const delivery: Messages<typeof vi> = {
       moreOf: 'More actions {{name}} — {{person}}',
       historyOf: 'Delivery history {{name}} — {{person}}',
       cancel: 'Cancel debt',
+      cancelOf: 'Cancel debt {{name}} — {{person}}',
       deliver: {
         title: 'Deliver more {{name}} to {{person}}',
         meta: 'Month {{month}} · {{r}} {{unit}} owed',
