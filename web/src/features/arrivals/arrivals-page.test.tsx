@@ -3,6 +3,7 @@ import { act, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
+import { expectFixedColumns } from '@/test/fixed-columns';
 import i18n from '@/lib/i18n';
 import { plan, planRow } from './arrivals-fixtures';
 import { FUTURE, PLAN, RECEIPT_URL, bodiesOf, box, groupBtn, open, pickBox, pickedBtn, stub, type } from './arrivals-test-fixtures';
@@ -13,13 +14,13 @@ const loc = () => screen.getByTestId('location-search').textContent ?? '';
 const rowOf = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
 
 describe('Hàng về — bảng theo bản in', () => {
-  it('cột: Sản phẩm · Tồn kho · Đề nghị mua · Nhận đợt này · Tình trạng · Sau nhập kho; điền sẵn = phần còn lại; link "theo bản gửi NCC hh:mm dd/mm"', async () => {
+  it('cột: Sản phẩm · Tồn kho · Đề nghị mua · Nhận đợt này · Còn thiếu · Tình trạng · Sau nhập kho; điền sẵn = phần còn lại; link "theo bản gửi NCC hh:mm dd/mm"', async () => {
     stub();
     await open();
     expect(await screen.findByDisplayValue('6')).toBe(box('Bút bi'));
     expect(box('Kẹp giấy')).toHaveValue(10);
     const heads = screen.getAllByRole('columnheader').map((c) => c.textContent);
-    expect(heads).toEqual(['Món', 'Tồn kho', 'Đề nghị mua', 'Nhận đợt này', 'Tình trạng', 'Sau nhập kho']);
+    expect(heads).toEqual(['Món', 'Tồn kho', 'Đề nghị mua', 'Nhận đợt này', 'Còn thiếu', 'Tình trạng', 'Sau nhập kho']);
     expect(heads).not.toContain('Đã về các đợt trước');
     expect(screen.getByRole('link', { name: 'theo bản gửi NCC 09:05 02/11' })).toHaveAttribute('href', '/admin/reports/snapshots/s-1/print');
   });
@@ -46,30 +47,41 @@ describe('Hàng về — bảng theo bản in', () => {
     expect(row.getByText('Thiếu 6')).toBeInTheDocument();
   });
 
-  it('nhóm đã có món đủ: "sản phẩm 1/2"; dòng đã nhận đủ khóa: "✓ Đã nhận đủ", không ô số, không nút NCC, chip "Nhận đủ hàng"', async () => {
+  it('nhóm đã có món đủ: "sản phẩm 1/2"; dòng đã nhận đủ khóa: "✓ Đã nhận", không ô số, không nút NCC, chip "Nhận đủ hàng"', async () => {
     stub({ plan: plan([...PLAN.rows, planRow({ item_id: 'i-c', name: 'Bút chì', category_id: 'c-but', received: 10, remaining: 0 })]) });
     await open();
     const but = await screen.findByRole('rowgroup', { name: 'Bút' });
     expect(but).toHaveTextContent('sản phẩm 1/2');
     expect(but).not.toHaveTextContent('sau lưu');
     const row = within(rowOf('Bút chì'));
-    expect(row.getByText('✓ Đã nhận đủ')).toBeInTheDocument();
+    expect(row.getByText('✓ Đã nhận')).toBeInTheDocument();
     expect(row.queryByRole('spinbutton')).toBeNull();
     expect(row.queryByRole('button', { name: /NCC hết hàng/ })).toBeNull();
     expect(row.getByText('Nhận đủ hàng', { selector: '.tag' })).toBeInTheDocument();
     expect(box('Bút bi')).toBeEnabled();
   });
 
-  it('nhập 0 ở một món còn thiếu → hiện cột "Còn thiếu"; sửa lại đủ → cột biến mất', async () => {
+  it('cột "Còn thiếu" luôn có: gõ đủ → "—", gõ thiếu → số thiếu; bảng cột cố định (gõ số, đổi nút nhóm không làm cột nhảy)', async () => {
     stub();
     await open();
     await screen.findByDisplayValue('6');
-    expect(screen.queryByRole('columnheader', { name: 'Còn thiếu' })).toBeNull();
-    await type(box('Bút bi'), '4');
+    expectFixedColumns(screen.getByRole('table', { name: 'Hàng về theo món' }), { cssWidths: true });
+    const shortCell = () => within(rowOf('Bút bi')).getAllByRole('cell')[4];
     expect(screen.getByRole('columnheader', { name: 'Còn thiếu' })).toBeInTheDocument();
-    expect(within(rowOf('Bút bi')).getAllByRole('cell').map((c) => c.textContent)).toContain('2');
+    expect(shortCell()).toHaveTextContent('—');
+    await type(box('Bút bi'), '4');
+    expect(shortCell()).toHaveTextContent('2');
     await type(box('Bút bi'), '6');
-    expect(screen.queryByRole('columnheader', { name: 'Còn thiếu' })).toBeNull();
+    expect(shortCell()).toHaveTextContent('—');
+    expect(screen.getByRole('columnheader', { name: 'Còn thiếu' })).toBeInTheDocument();
+  });
+
+  it('chip "NCC hết hàng" ở cột Tình trạng là chip nhỏ (tag--sm); nút nhóm có bề rộng cố định (ar-ghead__btn) cho cả hai chữ', async () => {
+    stub({ plan: plan([...PLAN.rows, planRow({ item_id: 'i-x', name: 'Giấy than', category_id: 'c-but', adm_out: true })]) });
+    await open();
+    await screen.findByDisplayValue('6');
+    expect(within(rowOf('Giấy than')).getByText('NCC hết hàng', { selector: '.tag' })).toHaveClass('tag--sm');
+    expect(groupBtn('Bút')).toHaveClass('ar-ghead__btn');
   });
 
   it('thanh trên: "Nhận đủ hàng (0 nhóm)" tắt khi chưa tick; tick → "(1 nhóm)" + "Đã chọn 1 nhóm · 1 món"; không còn "Lưu hàng về", "Điền đủ cả nhóm", "Đặt lại", "Hoàn tác"', async () => {
@@ -111,13 +123,15 @@ describe('Hàng về — bảng theo bản in', () => {
     expect(screen.getByText('Về bù kỳ trước (1)')).toBeInTheDocument();
   });
 
-  it('cột Tình trạng: gõ 9/10 → chữ đỏ "Nhập 9 · NCC còn nợ 1" (không chip); gõ đủ 10 → giữ "Thiếu 10"; gõ 11 → chip "Dư 1"; sau nhập kho đổi theo', async () => {
+  it('cột Tình trạng: gõ 9/10 → chữ đỏ hai dòng "Nhập: 9" / "NCC còn nợ: 1" (không chip); gõ đủ 10 → giữ "Thiếu 10"; gõ 11 → chip "Dư 1"; sau nhập kho đổi theo', async () => {
     stub();
     await open();
     await screen.findByDisplayValue('6');
     await type(box('Kẹp giấy'), '9');
     const row = within(rowOf('Kẹp giấy'));
-    expect(row.getByText('Nhập 9 · NCC còn nợ 1')).toHaveClass('ar-owe');
+    const owe = row.getByText('NCC còn nợ: 1').parentElement!;
+    expect(owe).toHaveClass('ar-owe');
+    expect([...owe.children].map((c) => c.textContent)).toEqual(['Nhập: 9', 'NCC còn nợ: 1']);
     expect(row.queryByText('Thiếu 10')).toBeNull();
     await type(box('Kẹp giấy'), '10');
     expect(row.getByText('Thiếu 10')).toHaveClass('tag');

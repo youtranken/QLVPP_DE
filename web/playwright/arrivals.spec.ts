@@ -15,7 +15,7 @@ async function receivePicked(page: Page) {
 }
 
 test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
-  test('Vòng3-HV lưu thiếu rồi lưu nốt: gõ thiếu ra chữ "Nhập n · NCC còn nợ m", chip theo số đã lưu, cột Còn thiếu; nút nhóm "Nhận hàng"/"Nhận đủ hàng", không hộp xác nhận', async ({ page, request }, info) => {
+  test('Vòng3-HV lưu thiếu rồi lưu nốt: gõ thiếu ra hai dòng "Nhập: n" / "NCC còn nợ: m", chip theo số đã lưu, cột Còn thiếu luôn có; nút nhóm "Nhận hàng"/"Nhận đủ hàng", không hộp xác nhận', async ({ page, request }, info) => {
     // Kỳ riêng của PW: bản in thật của server (chỉ món PW), không ghi vào kỳ trước thật trên dev
     const release = await acquireLock('prev-period');
     clearPrivateSnapshots();
@@ -43,12 +43,13 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       await expect(boxB).toHaveValue('3');
 
       const rowA = page.getByRole('row').filter({ hasText: a.name });
-      await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toHaveCount(0);
+      await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toBeVisible();
       await expect(rowA.getByText('Thiếu 5', { exact: true })).toBeVisible();
       await boxA.fill('2');
       await boxB.fill('0');
       await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toBeVisible();
-      await expect(rowA.getByText('Nhập 2 · NCC còn nợ 3')).toBeVisible();
+      await expect(rowA.getByText('Nhập: 2', { exact: true })).toBeVisible();
+      await expect(rowA.getByText('NCC còn nợ: 3', { exact: true })).toBeVisible();
       await expect(page.getByRole('button', { name: /^Nhận hàng: / })).toBeVisible();
       await settled(page);
       await shot(page, info, 'arrivals-partial');

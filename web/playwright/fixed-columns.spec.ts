@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { asRole, isMobile } from './helpers';
+import { acquireLock, asRole, devHeaders, isMobile, pendingConfirm } from './helpers';
+import { seedLockedRequest } from './locked-request';
+import { PRIVATE_YM, clearPrivateSnapshots, openOnPrivatePeriod } from './private-period';
 
 // Bảng có tab/chip/ô lọc: đổi lọc không được làm cột nhảy chỗ (lỗi Danh bạ vòng 6 lọt review vì không ai đo).
 // Đo x của từng tiêu đề cột ở trạng thái gốc rồi so với mọi trạng thái lọc; chỉ desktop (390 bảng xếp thẻ)
@@ -80,3 +82,40 @@ for (const width of [768, 1024]) {
     });
   }
 }
+
+// Nhận hàng: gõ thiếu (chữ "Nhập/NCC còn nợ", số Còn thiếu), nút nhóm đổi "Nhận đủ hàng" ↔ "Nhận hàng" — cột không được nhảy.
+// Kỳ riêng của PW với bản gửi NCC thật; không bấm "NCC hết hàng" vì nút đó ghi xuống server
+test('Vòng7 Nhận hàng: cột đứng yên khi gõ thiếu/đủ và khi nút nhóm đổi chữ', async ({ page, request }, info) => {
+  test.skip(isMobile(info), '390 xếp bảng thành thẻ');
+  const release = await acquireLock('prev-period');
+  clearPrivateSnapshots();
+  const seed = await seedLockedRequest(request, info, [{ stock: 0, qty: 5 }, { stock: 0, qty: 3 }], { ym: PRIVATE_YM });
+  const [a] = seed.items;
+  try {
+    const made = await request.post(`/api/admin/reports/${PRIVATE_YM}/snapshots`, { headers: devHeaders('admin'), data: { kind: 'print', ...(await pendingConfirm(request, PRIVATE_YM)) } });
+    expect(made.status()).toBe(201);
+    await openOnPrivatePeriod(page);
+    for (const width of [1280, 1024]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/admin/arrivals?q=${encodeURIComponent(seed.tag)}`);
+      const table = page.getByRole('table', { name: 'Hàng về theo món' });
+      await expect(table).toBeVisible();
+      const xs = () => table.locator(':scope > thead > tr').first().locator('th').evaluateAll((ths) => ths.map((th) => Math.round(th.getBoundingClientRect().left)));
+      const box = page.getByRole('spinbutton', { name: `Nhận đợt này: ${a.name}` });
+      await expect(box).toHaveValue('5');
+      const base = await xs();
+      expect(base).toHaveLength(7);
+      await box.fill('2');
+      await expect(page.getByText('NCC còn nợ: 3', { exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Nhận hàng: / })).toBeVisible();
+      expect(await xs(), `${width}px gõ thiếu`).toEqual(base);
+      await box.fill('5');
+      await expect(page.getByRole('button', { name: /^Nhận đủ hàng: / })).toBeVisible();
+      expect(await xs(), `${width}px gõ đủ lại`).toEqual(base);
+    }
+  } finally {
+    clearPrivateSnapshots();
+    seed.cleanup();
+    release();
+  }
+});

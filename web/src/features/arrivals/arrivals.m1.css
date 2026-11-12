@@ -34,6 +34,8 @@
 [data-shell='admin'] .ar-ghead__in { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); color: var(--c-ink); font: var(--t-label); }
 [data-shell='admin'] .ar-ghead__in span { color: var(--c-muted); font: var(--t-sm); }
 [data-shell='admin'] .ar-ghead__in .btn { margin-left: auto; }
+/* Một bề rộng cho cả "Nhận hàng" lẫn "Nhận đủ hàng": đổi chữ không đẩy đầu nhóm */
+[data-shell='admin'] .ar-ghead__btn { min-width: 8.75rem; justify-content: center; }
 [data-shell='admin'] .ar-bar { display: grid; gap: var(--s-2); min-width: 0; }
 [data-shell='admin'] .ar-bar__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); min-width: 0; }
 [data-shell='admin'] .ar-source { display: grid; gap: var(--s-1); min-width: 0; font: var(--t-body); }
@@ -44,7 +46,7 @@
 [data-shell='admin'] .ar-batch { color: var(--c-ink-2); font: var(--t-sm); }
 [data-shell='admin'] .ar-received { display: block; color: var(--c-danger); font: var(--t-sm); font-weight: 400; white-space: nowrap; }
 /* Gõ thiếu: chữ đỏ một dòng, không phải chip */
-[data-shell='admin'] .ar-owe { color: var(--c-danger); font: var(--t-cap); font-weight: 600; white-space: nowrap; }
+[data-shell='admin'] .ar-owe { display: grid; color: var(--c-danger); font: var(--t-cap); font-weight: 600; }
 [data-shell='admin'] .ar-full { display: inline-block; color: var(--c-ok); font: var(--t-label); white-space: nowrap; }
 [data-shell='admin'] .ar-pick { width: 20px; height: 20px; margin: 0; accent-color: var(--c-acc); cursor: pointer; }
 [data-shell='admin'] .ar-pick:disabled { cursor: default; }
@@ -68,8 +70,23 @@
 
 /* Máy tính: ô số và nút NCC cùng một hàng, số trong ô bảng không rơi dòng */
 @media (min-width: 768px) {
+  /* Bề rộng cột cố định (table--fixed): cột Món nhận phần còn lại; bảng hẹp hơn tổng thì card cuộn ngang */
+  [data-shell='admin'] .ar-table.table--fixed { min-width: 62rem; }
+  [data-shell='admin'] .ar-col-stock { width: 5.5rem; }
+  [data-shell='admin'] .ar-col-ordered { width: 7rem; }
+  [data-shell='admin'] .ar-col-qty { width: 15.5rem; }
+  [data-shell='admin'] .ar-col-short { width: 6rem; }
+  [data-shell='admin'] .ar-col-status { width: 9.5rem; }
+  [data-shell='admin'] .ar-col-after { width: 6.5rem; }
+  /* Nhãn "NCC hết hàng · đã xử lý xong" dài hơn nút thường: xuống dòng trong cột thay vì tràn */
+  [data-shell='admin'] .ar-table .ar-adm { white-space: normal; line-height: 1.2; }
   [data-shell='admin'] .ar-qty__in { flex-wrap: nowrap; }
   [data-shell='admin'] .ar-table td.n { white-space: nowrap; }
+}
+
+/* Màn vừa: bảng rộng hơn khung thì cuộn ngang (mất đầu nhóm dính) còn hơn ép cột */
+@media (min-width: 768px) and (max-width: 1279px) {
+  [data-shell='admin'] .ar-scroll { overflow-x: auto; }
 }
 
 @media (max-width: 767px) {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ArrivalRow } from './arrival-rows';
-import { groupCounts, partialReceive, savedState, shortOf, showShortColumn, statusCell } from './arrival-status';
+import { groupCounts, partialReceive, savedState, shortOf, statusCell } from './arrival-status';
 
 const row = (over: Partial<ArrivalRow> = {}): ArrivalRow => ({
   item_id: 'a',
@@ -33,7 +33,7 @@ describe('trạng thái đã lưu', () => {
 });
 
 describe('statusCell — cột Tình trạng theo số đang gõ', () => {
-  it('gõ ít hơn phần còn thiếu → dòng chữ "Nhập qty · NCC còn nợ n" (đề nghị 5, gõ 3 → nợ 2)', () => {
+  it('gõ ít hơn phần còn thiếu → chữ "Nhập: qty" / "NCC còn nợ: n" (đề nghị 5, gõ 3 → nợ 2)', () => {
     expect(statusCell(row({ ordered: 5, received: 0 }), 3)).toEqual({ kind: 'owe', qty: 3, n: 2 });
     expect(statusCell(row({ ordered: 20, received: 10 }), 9)).toEqual({ kind: 'owe', qty: 9, n: 1 });
   });
@@ -91,15 +91,7 @@ describe('groupCounts', () => {
 });
 
 describe('cột Còn thiếu', () => {
-  it('false khi mọi hàng nhập đủ; true khi một hàng nhập thiếu 1', () => {
-    const rows = [row({ item_id: 'a', ordered: 5 }), row({ item_id: 'b', ordered: 5, received: 2 })];
-    const full = (r: ArrivalRow) => r.remaining;
-    expect(showShortColumn(rows, full)).toBe(false);
-    expect(showShortColumn(rows, (r) => (r.item_id === 'b' ? 2 : 5))).toBe(true);
-  });
-
   it('NCC hết hàng không tính thiếu; shortOf = phần còn thiếu sau nhập', () => {
-    expect(showShortColumn([row({ adm_out: true })], () => 0)).toBe(false);
     expect(shortOf(row({ ordered: 10, received: 4 }), 2)).toBe(4);
     expect(shortOf(row({ ordered: 10, received: 4 }), 9)).toBe(0);
     expect(shortOf(row({ adm_out: true }), 0)).toBe(0);

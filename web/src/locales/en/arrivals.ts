@@ -15,7 +15,7 @@ const arrivals: Messages<typeof vi> = {
       after: 'After stocking',
       qtyLabel: 'Received now: {{name}}',
       receivedSmall: '{{n}} received',
-      fullLocked: 'Fully received',
+      fullLocked: 'Received',
     },
     errors: {
       invalid: 'Enter a whole number, 0 or more',
@@ -41,7 +41,7 @@ const arrivals: Messages<typeof vi> = {
     },
     source: 'from the supplier print {{time}}',
     batchPicked: 'Selected {{g}} groups · {{n}} items',
-    status: { done: 'Received in full', short: '{{n}} short', over: '{{n}} over', none: 'None entered', adm_out: 'Out at supplier', owe: 'Entered {{qty}} · supplier still owes {{n}}' },
+    status: { done: 'Received in full', short: '{{n}} short', over: '{{n}} over', none: 'None entered', adm_out: 'Out at supplier', oweIn: 'Entered: {{qty}}', oweLeft: 'Supplier still owes: {{n}}' },
     gate: {
       notSent: 'The month {{month}} report has not been sent to the supplier yet. Go to Reports & send to supplier to finalise it before receiving goods.',
       noOrder: 'No supplier order for month {{month}} ({{time}}) — there are no goods to receive for this month.',
