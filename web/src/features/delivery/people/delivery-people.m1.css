@@ -73,6 +73,9 @@
 [data-shell='admin'] .dd-max { display: block; margin-top: var(--s-1); font: var(--t-cap); }
 [data-shell='admin'] .dd-step { width: 132px; }
 [data-shell='admin'] .dd-none { font: var(--t-cap); font-weight: 700; color: var(--c-danger); }
+/* Món ngoài DM chưa về hàng: vẫn ở bảng giao để theo dõi, nhưng mờ đi vì chưa giao được */
+[data-shell='admin'] .dd-row--off td { color: var(--c-muted); }
+[data-shell='admin'] .dd-row--off .dd-none { color: var(--c-muted); }
 [data-shell='admin'] .dd-left { color: var(--c-warn); font: var(--t-cap); font-weight: 700; }
 [data-shell='admin'] .dd-group h3 { margin: 0 0 var(--s-2); font: var(--t-label); color: var(--c-ink-2); }
 [data-shell='admin'] .dd-group--adm { padding: var(--s-3); border-radius: var(--r-md); background: var(--c-warn-soft); }

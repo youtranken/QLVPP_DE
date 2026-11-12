@@ -34,7 +34,8 @@ function Control({ line, value, max, taken, disabled, onChange }: Pick<Props, 'l
       </span>
     );
   }
-  if (max <= 0) return <span className="pp-row__oos">{t(taken ? 'delivery.people.panel.allocatedAbove' : 'delivery.people.panel.outOfStock')}</span>;
+  // Món ngoài DM không có tủ: trần 0 nghĩa là hàng chưa về
+  if (max <= 0) return <span className="pp-row__oos">{t(line.item_id === null ? 'delivery.people.panel.notReceived' : taken ? 'delivery.people.panel.allocatedAbove' : 'delivery.people.panel.outOfStock')}</span>;
   return <Stepper className="pp-row__step" value={value} min={0} max={max} disabled={disabled} label={t('delivery.people.panel.qty', { name })} onChange={onChange} />;
 }
 

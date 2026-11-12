@@ -129,6 +129,15 @@ describe('PersonPanel — biên stepper', () => {
     expect(screen.getByText('Tủ hết món này')).toBeInTheDocument();
     expect(deliverBtn()).toBeDisabled();
   });
+
+  it('món ngoài DM đã duyệt chưa nhận hàng (deliver_cap 0) → "Chưa nhận hàng", không stepper', () => {
+    stub();
+    open(person({ lines: [pLine({ item_id: null, stock_qty: null, name: '#%$#', review_status: 'accepted', remaining_qty: 1, deliver_cap: 0 })] }));
+    expect(screen.queryByRole('spinbutton')).toBeNull();
+    expect(screen.getByText('Chưa nhận hàng')).toBeInTheDocument();
+    expect(screen.queryByText('Tủ hết món này')).toBeNull();
+    expect(deliverBtn()).toBeDisabled();
+  });
 });
 
 describe('PersonPanel — tồn chia theo món', () => {

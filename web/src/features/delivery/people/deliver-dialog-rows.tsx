@@ -63,8 +63,9 @@ function LineRow({ row, limit, disabled, waiting, shortage, showLeft, onChange }
   const name = fmt.name(l);
   // NCC hết hàng mà tủ không còn: không có ô số, câu "Không giao n" chiếm luôn cột còn lại
   const noStockAdm = row.kind === 'adm' && limit.cap === 0;
+  const notReceived = row.reason === 'notReceived';
   return (
-    <tr>
+    <tr className={notReceived ? 'dd-row--off' : undefined}>
       <td className="dd-item">
         <ItemThumb fileId={l.image_file_id} alt="" tone="g0" size={42} />
         <span className="dd-item__text">
@@ -97,7 +98,7 @@ function LineRow({ row, limit, disabled, waiting, shortage, showLeft, onChange }
                 }}
               />
             ) : (
-              <span className="dd-none">{t(limit.taken ? 'delivery.people.panel.allocatedAbove' : 'delivery.people.panel.outOfStock')}</span>
+              <span className="dd-none">{t(notReceived ? 'delivery.people.panel.notReceived' : limit.taken ? 'delivery.people.panel.allocatedAbove' : 'delivery.people.panel.outOfStock')}</span>
             )}
             {over && <small className="dd-max">{t('delivery.confirm.max', { n: limit.cap })}</small>}
           </td>

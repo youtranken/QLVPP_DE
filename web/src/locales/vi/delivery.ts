@@ -219,6 +219,7 @@ const delivery = {
         needNoStock: 'Cần {{n}}',
         outOfStock: 'Tủ hết món này',
         allocatedAbove: 'Đã dành hết cho dòng trên',
+        notReceived: 'Chưa nhận hàng',
         pendingReview: 'Chờ duyệt',
         reviewLink: 'Xem',
         qty: 'Giao {{name}}',

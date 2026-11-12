@@ -222,6 +222,7 @@ const delivery: Messages<typeof vi> = {
         needNoStock: 'Needs {{n}}',
         outOfStock: 'Out of stock',
         allocatedAbove: 'All allocated to the line above',
+        notReceived: 'Not received yet',
         pendingReview: 'Awaiting review',
         reviewLink: 'Review',
         qty: 'Deliver {{name}}',

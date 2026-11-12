@@ -107,6 +107,15 @@ describe('dialogRows + limitsOf — trần trong hộp', () => {
     const rows = rowsFor([pLine({ line_id: 'k', item_id: null, stock_qty: null, remaining_qty: 4, deliver_cap: 1 })]);
     expect(limitsOf(rows, {}).k).toMatchObject({ cap: 1, value: 1 });
   });
+
+  it('món ngoài DM đã duyệt chưa nhận hàng (deliver_cap 0) → vẫn ở bảng giao (give, notReceived), trần 0, phần còn lại tính chưa nhận', () => {
+    const rows = rowsFor([pLine({ line_id: 'k', item_id: null, stock_qty: null, review_status: 'accepted', remaining_qty: 2, deliver_cap: 0 })]);
+    expect(rows[0]).toMatchObject({ kind: 'give', reason: 'notReceived', suggest: 0 });
+    const lim = limitsOf(rows, { k: 2 });
+    expect(lim.k).toMatchObject({ cap: 0, value: 0 });
+    expect(totalsOf(rows, lim)).toEqual({ give: 0, left: 2, debt: 0, cancel: 0 });
+    expect(stepsOf(rows, lim)).toEqual([]);
+  });
 });
 
 describe('dialogRows — thứ tự món trong hộp giao', () => {
