@@ -122,6 +122,21 @@ describe('UsersPage B10', () => {
     expectFixedColumns(screen.getByRole('table'));
   });
 
+  it('L5 vòng 8: ?dept=<phòng không còn ai> → viên lọc hiện đúng tên phòng (không trống), giữ tham số, bảng rỗng có Xóa lọc', async () => {
+    stubUsers([AN, BINH, CHI]);
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/users?dept=Phòng cũ');
+    const select = await screen.findByRole('combobox', { name: 'Phòng ban' });
+    await waitFor(() => expect(screen.getByText(/^Đang hiện 0\/3/)).toBeInTheDocument());
+    expect(select).toHaveTextContent('Phòng cũ');
+    expect(await optionLabels(select)).toEqual(['Mọi phòng ban', 'Phòng Công trình', 'Phòng Kế toán', 'Phòng cũ']);
+    await userEvent.keyboard('{Escape}');
+    expect(screen.getByTestId('location-search')).toHaveTextContent('dept=');
+    await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
+    expect(select).toHaveTextContent('Mọi phòng ban');
+    expect(bodyRows()).toHaveLength(3);
+  });
+
   it('bảng: avatar chữ đầu, cột Nhóm, tag Adm D&E, trạng thái, "Chưa đăng nhập"; không có badge "Mới"', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
@@ -285,6 +300,19 @@ describe('UsersPage B10', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Phạm Minh Đức' }));
     await userEvent.click(within(await screen.findByRole('dialog', { name: 'Người dùng' })).getAllByRole('button', { name: 'Đóng' })[1]);
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Người dùng' })).toBeNull());
+  });
+
+  it('L3 vòng 8: email nằm trên lớp phủ của nút tên — có title đầy đủ; bấm email mở panel, nhưng vừa bôi đen email thì không mở', async () => {
+    stubUsers([AN]);
+    await openUsers();
+    const email = screen.getByText('an.nguyen@pmh.com.vn');
+    expect(email).toHaveAttribute('title', 'an.nguyen@pmh.com.vn');
+    const sel = vi.spyOn(window, 'getSelection').mockReturnValue({ toString: () => 'an.nguyen' } as Selection);
+    await userEvent.click(email);
+    expect(screen.queryByRole('dialog', { name: 'Người dùng' })).toBeNull();
+    sel.mockRestore();
+    await userEvent.click(email);
+    expect(await screen.findByRole('dialog', { name: 'Người dùng' })).toBeInTheDocument();
   });
 
   it('?person=<sub lạ> → không mở panel, gỡ tham số; ?person=u-binh → mở đúng người (F5/dán URL)', async () => {

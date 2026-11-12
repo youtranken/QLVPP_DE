@@ -64,6 +64,10 @@ export function UsersPage() {
   );
   const order = useMemo(() => rows.map((r) => r.sub), [rows]);
   const departments = useMemo(() => departmentsOf(list), [list]);
+  // ?dept= không có trong danh sách đang tải (phòng không còn ai, hay đang xem Đã xoá): vẫn hiện đúng tên phòng đang lọc trên viên,
+  // không gỡ tham số — danh sách phòng dẫn xuất từ người đang tải (đổi theo tìm kiếm khi danh bạ quá lớn, theo Đã xoá) nên
+  // "không thấy" chưa chắc là sai; bảng rỗng đã có nút Xóa lọc
+  const deptOptions = p.view.dept && !departments.includes(p.view.dept) ? [...departments, p.view.dept] : departments;
   // Danh bạ còn trang chưa tải thì chưa kết luận người lạ: chỉ gỡ ?person= khi đã có đủ danh sách
   const known = (sub: string) => (list.some((u) => u.sub === sub) ? true : dir.loading || deleted.loading || (!showDeleted && dir.hasMore) ? undefined : false);
   const panel = usePanelParam('person', { order, known });
@@ -118,7 +122,7 @@ export function UsersPage() {
           hideLabel
           value={p.view.dept}
           onChange={p.setDept}
-          options={[{ value: '', label: t('users.page.allDepts') }, ...departments.map((d) => ({ value: d, label: d }))]}
+          options={[{ value: '', label: t('users.page.allDepts') }, ...deptOptions.map((d) => ({ value: d, label: d }))]}
         />
         <Select
           label={t('users.page.viewLabel')}

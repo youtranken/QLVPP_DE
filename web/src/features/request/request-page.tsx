@@ -33,6 +33,9 @@ import { useLeaveGuard } from './use-leave-guard';
 import { lockedNotice, useSaveFlow, type LockedInfo } from './use-save-flow';
 import '@/features/request/request.m1.css';
 
+// Chỗ đặt focus khi nút đang giữ focus (thanh lưu nổi) biến mất: tiêu đề trang (h1 tabIndex -1), không phải ô tìm món (bật bàn phím điện thoại)
+const focusPageHeading = () => document.getElementById('rq-hero-title')?.focus();
+
 // Kỳ đang sửa vừa khóa (PERIOD_LOCKED): editor của kỳ mới nhận giỏ mang sang (nếu có) và câu báo
 type Carry = LockedInfo;
 
@@ -99,7 +102,8 @@ function RequestEditor({
     if (savedSeq === 0 || !narrowRef.current) return;
     const target = sheetOpenRef.current ? openerRef : barSaveRef;
     setSheetOpen(false);
-    const id = setTimeout(() => target.current?.focus(), 0);
+    // Lưu phiếu đã bớt hết dòng: thanh nổi đã gỡ (ref null) → focus tiêu đề trang, không rơi về <body>
+    const id = setTimeout(() => (target.current ? target.current.focus() : focusPageHeading()), 0);
     return () => clearTimeout(id);
   }, [savedSeq]);
   useEffect(() => {
@@ -198,7 +202,20 @@ function RequestEditor({
           onSave={flow.openConfirm}
         />
       )}
-      {sheetShown && <CartSheet {...cartProps} opener={openerRef} onOpenChange={setSheetOpen} notice={<FlowNotice flow={flow} />} />}
+      {sheetShown && (
+        <CartSheet
+          {...cartProps}
+          opener={openerRef}
+          // Xóa hết dòng trong sheet (giỏ trống, không còn gì để lưu) thì thanh nổi — chỗ có nút mở — đã gỡ: đóng sheet focus tiêu đề trang
+          onCloseFocus={() => {
+            if (openerRef.current?.isConnected) return false;
+            focusPageHeading();
+            return true;
+          }}
+          onOpenChange={setSheetOpen}
+          notice={<FlowNotice flow={flow} />}
+        />
+      )}
       {editing && (
         <CustomLineDialog
           initial={editingLine}

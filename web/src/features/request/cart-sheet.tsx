@@ -18,13 +18,15 @@ export function CartSheet({
   onOpenChange,
   notice,
   opener,
+  onCloseFocus,
   ...panel
-}: PanelProps & { onOpenChange: (open: boolean) => void; notice: ReactNode; opener: RefObject<HTMLElement | null> }) {
+}: PanelProps & { onOpenChange: (open: boolean) => void; notice: ReactNode; opener: RefObject<HTMLElement | null>; onCloseFocus?: () => boolean }) {
   return (
     <Dialog
       open
       onOpenChange={onOpenChange}
       opener={opener}
+      onCloseFocus={onCloseFocus}
       className="rq-sheet"
       overlayClassName="modal-backdrop rq-sheet-backdrop"
       viewportClassName="rq-sheet-viewport"

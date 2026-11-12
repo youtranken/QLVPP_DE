@@ -27,6 +27,8 @@ interface Props {
   onEdit: (key: string, text: string) => void;
   // null = chưa có số (đang tải/lỗi): ô hiện "…" thay "—" để không đọc thành "không ai đăng ký"
   people: ReadonlyMap<string, number> | null;
+  // Tải số người lỗi (banner phía trên đã báo, có nút Thử lại): ô thôi báo "đang tải"
+  peopleFailed?: boolean;
   onPeople: (key: string) => void;
 }
 
@@ -57,7 +59,7 @@ function useGroupName(cats: Category[]) {
   };
 }
 
-export function ReportItemTable({ rows, cats, loading, empty, editable, value, errorOf, overMax, onEdit, people, onPeople }: Props) {
+export function ReportItemTable({ rows, cats, loading, empty, editable, value, errorOf, overMax, onEdit, people, peopleFailed = false, onPeople }: Props) {
   const { t, i18n } = useTranslation();
   const unitName = useUnitNames();
   const groupName = useGroupName(cats);
@@ -112,6 +114,15 @@ export function ReportItemTable({ rows, cats, loading, empty, editable, value, e
         header: t('reports.send.colWho'),
         meta: { label: t('reports.send.colWho'), width: '6.5rem' },
         cell: ({ row: { original: r } }) => {
+          // Lỗi: "?" không aria-busy. Không dùng "—" vì ở cột này "—" nghĩa là không ai đăng ký
+          if (!people && peopleFailed) {
+            return (
+              <span className="sm-muted">
+                <span aria-hidden="true">?</span>
+                <span className="sr-only">{t('reports.send.whoUnknown')}</span>
+              </span>
+            );
+          }
           if (!people) {
             return (
               <span className="sm-muted" aria-busy="true">
@@ -132,7 +143,7 @@ export function ReportItemTable({ rows, cats, loading, empty, editable, value, e
       },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
-  }, [t, i18n.language, unitName, people, onPeople]);
+  }, [t, i18n.language, unitName, people, peopleFailed, onPeople]);
   const binding = useMemo(() => ({ editable, value, errorOf, overMax, onEdit }), [editable, value, errorOf, overMax, onEdit]);
   return (
     <OrderBind.Provider value={binding}>

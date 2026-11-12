@@ -191,6 +191,7 @@ function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps)
         overMax={qty.overMax}
         onEdit={qty.set}
         people={registrants.map}
+        peopleFailed={registrants.failed}
         onPeople={setWhoKey}
       />
       <ReportSnapshots ym={report.ym} files={files} />
