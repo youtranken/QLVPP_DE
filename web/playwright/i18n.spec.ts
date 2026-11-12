@@ -32,7 +32,10 @@ async function switchLanguage(page: Page, info: TestInfo, lang: Lang) {
 async function expectContentLanguage(page: Page, lang: Lang, root: Locator = page.getByRole('main')) {
   await settled(page);
   await expect(root).toBeVisible();
-  const ui = await root.locator('h1, h2, h3, button, th, label, legend').allInnerTexts();
+  // Bỏ phần aria-hidden (avatar chữ cái đầu tên người — dữ liệu người dùng, không phải chữ giao diện)
+  const ui = await root.locator('h1, h2, h3, button, th, label, legend').evaluateAll((els) =>
+    els.map((el) => [...el.querySelectorAll<HTMLElement>('[aria-hidden="true"]')].reduce((t, n) => (n.innerText ? t.replace(n.innerText, ' ') : t), (el as HTMLElement).innerText)),
+  );
   // Nút chọn phiếu mang tên người/phòng ban (dữ liệu, có thể là người demo trong DB dev) — không phải chữ giao diện
   const text = userDataTexts().reduce((t, d) => t.split(d).join(' '), ui.join(' '));
   const words = text.match(/\S*[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]\S*/gi) ?? [];
