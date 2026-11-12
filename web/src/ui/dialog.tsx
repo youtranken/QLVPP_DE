@@ -129,6 +129,9 @@ export function Dialog({
             onPointerDownOutside={blockOutside}
             onInteractOutside={blockOutside}
             onKeyDown={onKeyDown}
+            // Hộp mở từ trong một form khác (hộp "Sản phẩm mới" trong ngăn Điều chỉnh): sự kiện submit của React nổi qua portal
+            // tới form tổ tiên và gửi luôn form đó — dừng ở mép hộp, form của chính hộp vẫn nhận trước
+            onSubmit={(e) => e.stopPropagation()}
             onOpenAutoFocus={(e) => {
               opener.current = openerProp?.current ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
               onOpenAutoFocus?.(e);

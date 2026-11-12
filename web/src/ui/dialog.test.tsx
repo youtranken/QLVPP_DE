@@ -162,3 +162,25 @@ describe('Dialog lồng: chỉ đếm hộp modal', () => {
     await waitFor(() => expect(screen.getByRole('dialog', { name: 'Hộp trên' })).not.toHaveAttribute('data-stacked'));
   });
 });
+
+describe('Dialog nằm trong form khác', () => {
+  // React cho sự kiện submit nổi qua portal tới form tổ tiên: hộp "Sản phẩm mới" trong ngăn Điều chỉnh từng làm Lưu cả ngăn
+  // (gửi thêm lượt duyệt "mua" chạy đua với lượt "Thêm vào danh mục" → LINE_ALREADY_REVIEWED)
+  it('gửi form trong hộp không gửi form bên ngoài', async () => {
+    const outer = vi.fn((e: { preventDefault: () => void }) => e.preventDefault());
+    const inner = vi.fn((e: { preventDefault: () => void }) => e.preventDefault());
+    renderWithI18n(
+      <form onSubmit={outer}>
+        <Dialog open onOpenChange={() => undefined}>
+          <DialogTitle>Sản phẩm mới</DialogTitle>
+          <form onSubmit={inner}>
+            <button type="submit">Mua và thêm vào danh mục</button>
+          </form>
+        </Dialog>
+      </form>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Mua và thêm vào danh mục' }));
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+  });
+});
