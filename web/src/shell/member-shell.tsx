@@ -27,12 +27,10 @@ export function MemberShell() {
   const avatar = (
     <>
       <span className="m-avatar__ini" aria-hidden="true">{initials(me.fullName, me.sub)}</span>
-      {!narrow && (
-        <span className="m-avatar__who">
-          <b>{me.fullName ?? me.sub}</b>
-          {me.department && <small>{me.department}</small>}
-        </span>
-      )}
+      <span className="m-avatar__who">
+        <b>{me.fullName ?? me.sub}</b>
+        {me.department && <small>{me.department}</small>}
+      </span>
     </>
   );
 
@@ -56,11 +54,10 @@ export function MemberShell() {
             </nav>
           )}
           <span className="sp" />
-          <LanguageSwitch short className="seg--sm m-lang" />
+          {/* ≤ 900: ngôn ngữ và tài khoản nằm ở "Tôi" (thanh dưới), thanh trên chỉ còn tên app + chuông để tên app không bị cắt */}
+          {!narrow && <LanguageSwitch short className="seg--sm m-lang" />}
           <NotificationBell />
-          {narrow ? (
-            <div className="m-avatar">{avatar}</div>
-          ) : (
+          {!narrow && (
             <AccountMenu
               variant="popover"
               open={accountOpen}

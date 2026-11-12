@@ -27,6 +27,14 @@ describe('Trang Tôi', () => {
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 
+  it('có đổi ngôn ngữ (thanh trên điện thoại không còn VI/EN): chọn English thì trang đổi sang tiếng Anh', async () => {
+    mockViewport(390);
+    renderApp(makeMe('member'), '/me');
+    const group = within(screen.getByRole('main')).getByRole('radiogroup', { name: 'Ngôn ngữ' });
+    await userEvent.click(within(group).getByRole('radio', { name: 'English' }));
+    expect(await screen.findByRole('radiogroup', { name: 'Language' })).toBeInTheDocument();
+  });
+
   it('Đăng xuất gửi POST /api/auth/logout kèm X-CSRF-Token rồi về /', async () => {
     mockViewport(390);
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, { ok: true }));
@@ -61,7 +69,7 @@ describe('Trang Tôi', () => {
     renderApp(makeMe('member'), '/me');
     expect(screen.getByText('Email')).toBeInTheDocument();
     expect(screen.getByText('Mã nhân viên')).toBeInTheDocument();
-    expect(within(screen.getByRole('main')).queryByRole('radiogroup')).toBeNull();
+    expect(within(screen.getByRole('main')).getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Đăng xuất' })).toHaveClass('btn--danger');
   });
 });

@@ -7,7 +7,7 @@ export function ProfilePage() {
   return (
     <MemberPage title={t('profile.title')}>
       <section className="pf-card">
-        <AccountContent />
+        <AccountContent language />
       </section>
     </MemberPage>
   );
