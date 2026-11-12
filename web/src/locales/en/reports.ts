@@ -9,6 +9,7 @@ const reports: Messages<typeof vi> = {
       monthNav: 'Choose report month',
       prevMonth: 'Previous month',
       nextMonth: 'Next month',
+      openNotReady: 'Month {{month}} still registering — report after it locks {{date}}',
       fixCells_one: '{{count}} Order cell needs fixing before you finalize.',
       fixCells_other: '{{count}} Order cells need fixing before you finalize.',
       error: {

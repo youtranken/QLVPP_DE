@@ -70,6 +70,8 @@
   [data-shell='admin'] .month-switch { flex-wrap: wrap; max-width: 100%; height: auto; min-height: var(--hit); padding: 0; }
   [data-shell='admin'] .month-switch__status { margin: 0 var(--s-2) var(--s-1); }
   [data-shell='admin'] .month-switch button { flex: none; width: var(--hit); height: var(--hit); }
+  /* Nhãn kỳ đang mở dài ("Tháng n đang đăng ký — báo cáo sau khi khóa d/m"): xuống hàng riêng, gói chữ trong khung */
+  [data-shell='admin'] .month-switch .month-switch__beyond { flex: 1 1 100%; height: auto; min-height: var(--hit); white-space: normal; text-align: left; }
   [data-shell='admin'] .inline-number { min-height: var(--hit); }
 }
 

@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { defaultOrder } from '@/lib/report-qty';
+import { formatVnStamp } from '@/lib/format-time';
 import { lockedYm } from '@/lib/ym';
 import { Icon } from '@/ui/icon';
 import { Loading, LoadError } from '@/ui/load-state';
@@ -33,8 +34,11 @@ import { useSnapshotDownload, useTakeSnapshot } from './use-snapshot';
 import '@/features/send-adm/send-adm.m1.css';
 import './reports.m1.css';
 
-function Heading({ ym, openYm, onMonth, children }: { ym: string; openYm: string; onMonth: (ym: string) => void; children?: React.ReactNode }) {
+// Nhãn cạnh nút › (tắt): nói rõ kỳ đang mở còn đăng ký, chưa báo cáo được tới khi khóa
+function Heading({ ym, open, onMonth, children }: { ym: string; open: CurrentPeriod; onMonth: (ym: string) => void; children?: React.ReactNode }) {
   const { t } = useTranslation();
+  const openYm = open.ym;
+  const lockDay = formatVnStamp(open.deadline).split(' ')[1];
   return (
     <div className="bc-head">
       <h1>{t('reports.send.title')}</h1>
@@ -42,7 +46,7 @@ function Heading({ ym, openYm, onMonth, children }: { ym: string; openYm: string
         value={ym}
         max={lockedYm(openYm)}
         onChange={onMonth}
-        beyond={{ ym: openYm, label: t('summary.page.open') }}
+        beyond={{ ym: openYm, label: t('reports.page.openNotReady', { month: monthOf(openYm), date: lockDay }) }}
         formatLabel={(v) => t('reports.page.month', { month: monthOf(v), year: v.slice(0, 4) })}
         labels={{ group: t('reports.page.monthNav'), prev: t('reports.page.prevMonth'), next: t('reports.page.nextMonth') }}
       />
@@ -66,13 +70,13 @@ function ActionButton({ xlsx, disabled, taking, previewing = false, onTake }: { 
 
 interface BodyProps {
   report: MonthReport;
-  openYm: string;
+  open: CurrentPeriod;
   editable: boolean;
   onMonth: (ym: string) => void;
   printer: ReturnType<typeof usePrintInPlace>;
 }
 
-function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProps) {
+function ReportSendBody({ report, open, editable, onMonth, printer }: BodyProps) {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const send = useSendState(report.ym);
@@ -148,7 +152,7 @@ function ReportSendBody({ report, openYm, editable, onMonth, printer }: BodyProp
   const retry = () => [items, cats].forEach((q) => q.isError && void q.refetch());
   return (
     <div className="bc-page">
-      <Heading ym={report.ym} openYm={openYm} onMonth={onMonth}>
+      <Heading ym={report.ym} open={open} onMonth={onMonth}>
         <Switch checked={onlyNeed} text={t('reports.part1.onlyNeed')} onChange={setOnlyNeed} />
         <div className="bc-head__actions">
           <ReportStatusLine send={send} rowsChanged={changed.size} pendingCustom={report.pending_custom_count} ym={report.ym} onReprint={sent ? () => void printer.print(sent.data) : undefined} reprinting={printer.pending} />
@@ -228,7 +232,7 @@ function ReportForMonth({ ym, period, onMonth }: { ym: string; period: CurrentPe
     <PeriodLockGate ym={ym} frame={frame}>
       {query.data && send.query.data ? (
         <>
-          <ReportSendBody report={query.data} openYm={period.ym} editable={ym === lockedYm(period.ym)} onMonth={onMonth} printer={printer} />
+          <ReportSendBody report={query.data} open={period} editable={ym === lockedYm(period.ym)} onMonth={onMonth} printer={printer} />
           {printer.portal}
         </>
       ) : failed.length > 0 ? (

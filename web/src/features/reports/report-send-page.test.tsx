@@ -43,6 +43,11 @@ describe('Báo cáo & gửi NCC: đầu trang và trạng thái', () => {
     expect(screen.getByRole('button', { name: 'Xuất Excel' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'In trình ký' })).toBeNull();
+    // Cạnh nút › (tắt): kỳ đang mở ghi rõ còn đăng ký, báo cáo sau khi khóa — không còn "Đang mở" dễ hiểu nhầm là báo cáo được
+    const beyond = screen.getByRole('button', { name: /đang đăng ký/ });
+    expect(beyond).toHaveTextContent('Tháng 11 đang đăng ký — báo cáo sau khi khóa 11/11');
+    expect(beyond).toBeDisabled();
+    expect(screen.queryByText('Đang mở')).toBeNull();
   });
 
   it('bật "Chỉ món có Tổng cần" → chỉ còn hàng có Tổng cần > 0', async () => {

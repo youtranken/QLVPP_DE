@@ -4,7 +4,6 @@ import type { Messages } from '@/locales/messages';
 const summary: Messages<typeof vi> = {
   summary: {
     page: {
-      open: 'Open',
       noMatch: 'No requests match',
       empty: 'No requests in this period yet.',
       noMatchHint: 'Change the search or clear the filter to see the whole period.',
