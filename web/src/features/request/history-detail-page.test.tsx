@@ -66,6 +66,22 @@ describe('HistoryDetailPage', () => {
     expect(within(rowOf('Bút ghi đĩa')).getByText('Adm D&E bỏ món · Không có hàng')).toBeInTheDocument();
   });
 
+  it('ô Ghi chú trống không ghi gì (thẻ không còn "Ghi chú:" trơ trọi); cả cột trống thì bỏ cột', async () => {
+    past([L('1', 'Bút bảng', { delivered_qty: 1, last_delivered_at: '2026-11-08T02:10:00.000Z' }), L('3', 'Bút dạ')]);
+    renderApp(makeMe('member'), '/history/2026-10');
+    expect(await screen.findByRole('columnheader', { name: 'Ghi chú' })).toBeInTheDocument();
+    const empty = rowOf('Bút dạ').querySelector('td.hs-note')!;
+    expect(empty).toBeEmptyDOMElement();
+  });
+
+  it('không dòng nào có ghi chú → không có cột Ghi chú', async () => {
+    past([L('1', 'Bút bảng'), L('3', 'Bút dạ')]);
+    renderApp(makeMe('member'), '/history/2026-10');
+    expect(await screen.findByRole('columnheader', { name: 'Tình trạng' })).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Ghi chú' })).toBeNull();
+    expect(document.querySelector('td.hs-note')).toBeNull();
+  });
+
   it('khối "Điều chỉnh của Adm D&E": "08/11 08:30 · Bút ghi đĩa 1 thành 0 · Lý do: Không có hàng"; lý do cũ over_quota hiện "Vượt định mức"', async () => {
     past(
       [L('1', 'Bút bi', { qty: 2, adjustments: [{ before: 3, after: 2, reason_code: 'over_quota', reason_note: null, at: '2026-11-08T02:00:00.000Z' }] })],
