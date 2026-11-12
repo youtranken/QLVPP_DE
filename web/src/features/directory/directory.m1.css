@@ -5,6 +5,9 @@
 [data-shell='admin'] .dr-person__name { padding: 0; border: 0; background: none; color: var(--c-ink); font: var(--t-label); text-align: left; overflow-wrap: anywhere; cursor: pointer; }
 [data-shell='admin'] .dr-person__name:hover { color: var(--c-acc); text-decoration: underline; }
 [data-shell='admin'] .dr-person__name:focus-visible { box-shadow: var(--focus); outline: none; border-radius: var(--r-sm); }
+/* Tên chỉ cao một dòng chữ (18px): lớp phủ của nút trải hết ô Người (avatar + tên + email) để cả ô là vùng bấm */
+[data-shell='admin'] .table td:has(> .dr-person) { position: relative; }
+[data-shell='admin'] .dr-person__name::after { content: ''; position: absolute; inset: 0; }
 [data-shell='admin'] .dr-muted { color: var(--c-muted); font: var(--t-sm); }
 [data-shell='admin'] .dr-status { display: inline-flex; flex-wrap: wrap; gap: 4px; }
 [data-shell='admin'] .dr-count { margin: 0; color: var(--c-muted); font: var(--t-sm); font-weight: 600; }
