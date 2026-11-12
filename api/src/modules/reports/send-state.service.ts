@@ -7,7 +7,7 @@ import { AuditWriterService } from '../audit/audit-writer.service';
 import type { RequestIdentity } from '../auth/identity.types';
 import { PeriodsService } from '../periods/periods.service';
 import { ReviewWriter } from '../requests/review-writer';
-import { admCancelledSince, changedAt, deliveredSince } from './changed-after';
+import { changedAt, settledSince } from './changed-after';
 import { clearNoOrderFlag, lockNoOrderFlag, noOrderOf } from './no-order-flag';
 import { resolveOrderQty } from './order-qty';
 import { ReportsService } from './reports.service';
@@ -27,8 +27,8 @@ export interface SendState {
   sent: SentSnapshot | null;
   changed_after: boolean;
   changed_at: string | null;
-  delivered_since: Record<string, number>;
-  adm_cancelled_since: Record<string, number>;
+  // Đã giao + đã hủy vì NCC hết hàng sau bản, theo khóa (changed-after.ts)
+  settled_since: Record<string, number>;
 }
 
 @Injectable()
@@ -46,11 +46,12 @@ export class SendStateService {
     const sent = await latestSent(this.db, ym);
     const flag = await noOrderOf(this.db, ym);
     const since = sent ? new Date(sent.created_at) : null;
-    const changed = since ? await changedAt(this.db, ym, since) : null;
-    const delivered = since ? await deliveredSince(this.db, ym, since) : {};
-    const admCancelled = since
-      ? await admCancelledSince(this.db, ym, since)
-      : {};
+    const [changed, settled] = since
+      ? await Promise.all([
+          changedAt(this.db, ym, since),
+          settledSince(this.db, ym, since),
+        ])
+      : [null, {}];
     return {
       state: sent ? 'sent' : flag ? 'no_order' : 'unsent',
       no_order_at: flag?.at ?? null,
@@ -58,8 +59,7 @@ export class SendStateService {
       sent,
       changed_after: changed !== null,
       changed_at: changed?.toISOString() ?? null,
-      delivered_since: delivered,
-      adm_cancelled_since: admCancelled,
+      settled_since: settled,
     };
   }
 
