@@ -79,6 +79,10 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
           activeId={panel.id ?? undefined}
           onView={open}
           onAdjust={panel.open}
+          onClear={() => {
+            onChip('all');
+            onQ('');
+          }}
         />
       )}
       {index >= 0 && <RegistrationDialog ym={ym} deadline={null} rows={visible} index={index} onIndex={(i) => setViewing(visible[i]!.request_id)} onClose={() => setViewing(null)} />}

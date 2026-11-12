@@ -125,7 +125,7 @@ export function StockTable({ rows, activeRowId, loading, groupName, onAction, em
       loading={loading}
       activeRowId={activeRowId}
       emptyText={empty.title}
-      empty={{ art: 'no-match', hint: empty.hint, action: empty.action }}
+      empty={{ variant: 'no-match', hint: empty.hint, action: empty.action }}
     />
   );
 }

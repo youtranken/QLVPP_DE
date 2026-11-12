@@ -41,5 +41,5 @@ export function MonthOpenTable({ ym, onView }: Props) {
   );
   if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
   if (query.isPending) return <Loading />;
-  return <DataTable data={rows} columns={columns} stackOnMobile emptyText={t('summary.open.empty')} tableClassName="grid-table" />;
+  return <DataTable data={rows} columns={columns} stackOnMobile emptyText={t('summary.open.empty')} empty={{ art: 'no-request' }} tableClassName="grid-table" />;
 }

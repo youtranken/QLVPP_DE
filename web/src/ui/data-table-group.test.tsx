@@ -143,7 +143,7 @@ describe('DataTable — hàng active, mật độ, rỗng', () => {
         data={[]}
         columns={COLUMNS}
         emptyText="Không có món nào khớp"
-        empty={{ art: 'no-match', hint: 'Thử từ khóa khác.', action: <button type="button">Bỏ lọc</button> }}
+        empty={{ variant: 'no-match', hint: 'Thử từ khóa khác.', action: <button type="button">Bỏ lọc</button> }}
       />,
     );
     expect(screen.getByText('Không có món nào khớp')).toBeInTheDocument();

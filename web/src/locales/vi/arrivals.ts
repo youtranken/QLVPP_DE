@@ -25,7 +25,6 @@ const arrivals = {
       short: 'Chỉ món chưa về đủ ({{n}})',
       count: 'Đang hiện {{x}}/{{y}} món',
       none: 'Không có món khớp',
-      clear: 'Xóa lọc',
     },
     group: {
       done: 'sản phẩm {{a}}/{{b}}',

@@ -89,7 +89,7 @@ export function ReviewPage() {
       ) : list.isPending ? (
         <Loading />
       ) : list.data.items.length === 0 ? (
-        <ReviewEmpty status={p.status} onSeeAccepted={() => change(() => p.setStatus('accepted'))} />
+        <ReviewEmpty status={p.status} ym={p.ym} acceptedCount={counts.accepted} onSeeAccepted={() => change(() => p.setStatus('accepted'))} />
       ) : (
         <div className="rv-grid">
           {list.data.items.map((row) => (

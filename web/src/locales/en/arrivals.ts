@@ -28,7 +28,6 @@ const arrivals: Messages<typeof vi> = {
       short: 'Only items not fully received ({{n}})',
       count: 'Showing {{x}}/{{y}} items',
       none: 'No matching items',
-      clear: 'Clear filters',
     },
     group: {
       done: 'items {{a}}/{{b}}',

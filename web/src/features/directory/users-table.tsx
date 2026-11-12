@@ -109,7 +109,7 @@ export function UsersTable({
       columns={columns}
       loading={loading}
       emptyText={empty.title}
-      empty={{ art: 'no-match', hint: empty.hint, action: empty.action }}
+      empty={{ variant: 'no-match', hint: empty.hint, action: empty.action }}
       activeRowId={activeId}
       onRowClick={onOpen}
       rowClassName={(u) => (u.status !== 'active' ? 'is-inactive' : '')}

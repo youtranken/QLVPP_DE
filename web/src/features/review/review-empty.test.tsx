@@ -9,7 +9,7 @@ import { reviewRow } from './review-fixtures';
 
 const ACCEPTED = [reviewRow({ line_id: 'l-9', custom_name: 'Kéo', review_status: 'accepted' })];
 
-function stub(over: { period?: () => Response; locked?: Response } = {}) {
+function stub(over: { period?: () => Response; locked?: Response; accepted?: unknown[] } = {}) {
   vi.stubGlobal(
     'fetch',
     vi.fn((url: string) => {
@@ -18,7 +18,7 @@ function stub(over: { period?: () => Response; locked?: Response } = {}) {
         return Promise.resolve(over.locked ?? jsonResponse(200, { ym: '2026-10', deadline: '2026-10-10T17:00:00.000Z', is_open: false, registered: 6, headcount: 8 }));
       }
       if (url === '/api/admin/periods/2026-11/summary') return Promise.resolve(jsonResponse(200, { ym: '2026-11', deadline: PERIOD.deadline, is_open: true, registered: 3, headcount: 8 }));
-      if (url.startsWith('/api/admin/review')) return Promise.resolve(jsonResponse(200, { items: url.includes('status=accepted') ? ACCEPTED : [] }));
+      if (url.startsWith('/api/admin/review')) return Promise.resolve(jsonResponse(200, { items: url.includes('status=accepted') ? (over.accepted ?? ACCEPTED) : [] }));
       return Promise.resolve(jsonResponse(200, []));
     }),
   );
@@ -52,6 +52,24 @@ describe('Món ngoài danh mục — trạng thái trống', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Xem món đã chấp nhận' }));
     expect(await screen.findByRole('radio', { name: /^Đã chấp nhận/ })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByTestId('location-search')).toHaveTextContent('status=accepted');
+  });
+
+  it('đang xem một tháng (?ym=2026-10): không dòng phụ về kỳ đang đăng ký (câu đó nói tháng khác)', async () => {
+    mockViewport(1280);
+    stub();
+    renderApp(makeMe('admin'), '/admin/review?ym=2026-10');
+    expect(await screen.findByRole('heading', { level: 2, name: 'Không còn món nào chờ xem' })).toBeInTheDocument();
+    expect(screen.queryByText(/sẽ hiện ở đây từ/)).toBeNull();
+    expect(await screen.findByRole('button', { name: 'Xem món đã chấp nhận' })).toBeInTheDocument();
+  });
+
+  it('tab Đã chấp nhận đang 0 → không hiện nút "Xem món đã chấp nhận"', async () => {
+    mockViewport(1280);
+    stub({ accepted: [] });
+    renderApp(makeMe('admin'), '/admin/review');
+    expect(await screen.findByRole('heading', { level: 2, name: 'Không còn món nào chờ xem' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('radio', { name: /^Đã chấp nhận/ })).toHaveTextContent('0'));
+    expect(screen.queryByRole('button', { name: 'Xem món đã chấp nhận' })).toBeNull();
   });
 
   it('kỳ hiện tại lỗi → không dòng phụ nhưng vẫn có tiêu đề', async () => {

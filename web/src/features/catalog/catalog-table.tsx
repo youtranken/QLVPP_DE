@@ -113,7 +113,7 @@ export function CatalogTable({ rows, index, loading, selection, rowErrors, group
       onRowClick={(r) => actions.onOpen(r.id)}
       rowClassName={(r) => [r.usable ? '' : 'is-inactive', rowErrors[r.id] ? 'has-error' : ''].filter(Boolean).join(' ')}
       emptyText={t('catalog.list.emptyTitle')}
-      empty={{ art: 'no-match', ...empty }}
+      empty={{ variant: 'no-match', ...empty }}
       groupBy={{
         key: (r) => r.group,
         header: (key, list) => (

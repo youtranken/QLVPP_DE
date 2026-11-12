@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SearchBox } from '@/ui/filter/search-box';
-import { EmptyState, Loading, LoadError } from '@/ui/load-state';
+import { EmptyFrame } from '@/ui/empty-frame';
+import { Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { ListMeta } from '@/ui/list-meta';
 import { Select } from '@/ui/select';
@@ -92,10 +93,12 @@ export function BacklogPage() {
       {query.isPending && <Loading />}
       {query.isSuccess &&
         (months.length === 0 ? (
-          <EmptyState
+          <EmptyFrame
+            variant={narrowed ? 'no-match' : 'empty'}
             title={t(narrowed ? 'delivery.backlog.noMatch' : 'delivery.backlog.empty')}
-            art={narrowed ? 'no-match' : 'no-backlog'}
+            art="no-backlog"
             hint={narrowed ? undefined : t('delivery.backlog.emptyHint')}
+            onClear={p.clearAll}
           />
         ) : (
           <div className="ct-block">

@@ -109,3 +109,5 @@
   [data-shell='admin'] .table td.acts, [data-shell='admin'] .table th.acts { width: 1%; white-space: nowrap; }
   [data-shell='admin'] .table td.acts .acts__in { flex-wrap: nowrap; }
 }
+/* EmptyFrame trong bảng: bảng đã là thẻ nên bỏ nền thẻ thứ hai */
+[data-shell='admin'] .empty-state--flush { min-height: 0; padding: var(--s-6) var(--s-4); border-radius: 0; background: none; }
