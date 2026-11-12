@@ -66,6 +66,16 @@ describe('HistoryDetailPage', () => {
     expect(within(rowOf('Bút ghi đĩa')).getByText('Adm D&E bỏ món · Không có hàng')).toBeInTheDocument();
   });
 
+  it('bảng chi tiết có colgroup đủ 7 cột, chỉ cột Món không đặt bề rộng: đổi tháng thì cột không co giãn theo chữ', async () => {
+    past([L('1', 'Bút bảng')]);
+    renderApp(makeMe('member'), '/history/2026-10');
+    const table = (await screen.findByRole('columnheader', { name: 'Món' })).closest('table')!;
+    const cols = [...table.querySelectorAll(':scope > colgroup > col')];
+    expect(cols).toHaveLength(table.querySelectorAll('thead th').length);
+    expect(cols.filter((c) => !c.className)).toHaveLength(1);
+    expect(cols[0]!.className).toBe('');
+  });
+
   it('khối "Điều chỉnh của Adm D&E": "08/11 08:30 · Bút ghi đĩa 1 thành 0 · Lý do: Không có hàng"; lý do cũ over_quota hiện "Vượt định mức"', async () => {
     past(
       [L('1', 'Bút bi', { qty: 2, adjustments: [{ before: 3, after: 2, reason_code: 'over_quota', reason_note: null, at: '2026-11-08T02:00:00.000Z' }] })],
