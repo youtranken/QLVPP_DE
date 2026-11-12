@@ -6,7 +6,8 @@ const common = {
   },
   common: {
     paused: 'Tạm ngưng',
-    lockPhrase: '00:00 ngày {{day}}',
+    // Khoảng trắng không ngắt: cụm giờ khóa sổ không bị gãy làm hai dòng (khối Kỳ tháng ở sidebar)
+    lockPhrase: '00:00\u00a0ngày\u00a0{{day}}',
     loading: 'Đang tải…',
     checkingSession: 'Đang kiểm tra phiên đăng nhập…',
     systemError: 'Không kết nối được máy chủ — thử lại sau ít phút.',

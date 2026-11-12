@@ -9,7 +9,8 @@ const common: Messages<typeof vi> = {
   },
   common: {
     paused: 'Paused',
-    lockPhrase: '00:00 on {{day}}',
+    // Khoảng trắng không ngắt: cụm giờ khóa sổ không bị gãy làm hai dòng (khối Kỳ tháng ở sidebar)
+    lockPhrase: '00:00\u00a0on\u00a0{{day}}',
     loading: 'Loading…',
     checkingSession: 'Checking your session…',
     systemError: 'Cannot reach the server — try again in a few minutes.',

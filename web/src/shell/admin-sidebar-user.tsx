@@ -4,7 +4,7 @@ import { useMe } from '@/lib/me';
 import { logout } from '@/lib/auth-actions';
 import { initialsOf } from '@/lib/initials';
 import { usePopover } from '@/lib/use-popover';
-import { ADMIN_TABLET_QUERY, useMediaQuery } from '@/lib/use-media-query';
+import { ADMIN_TABLET_QUERY, SHORT_SCREEN_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { Icon } from '@/ui/icon';
 import { LanguageSwitch } from '@/ui/language-switch';
@@ -45,18 +45,21 @@ function LogoutButton({ iconOnly = false }: { iconOnly?: boolean }) {
 
 // Máy tính bảng: cột 72 chỉ còn avatar, bấm mới hiện đổi ngôn ngữ + đăng xuất.
 // Cột 252 (compact): một hàng để 12 mục vừa 1280×720 — đăng xuất là nút biểu tượng, ngôn ngữ sau nút "Ngôn ngữ".
+// Menu điện thoại màn thấp (≤ 700px cao): cùng một hàng tên · VI/EN · nút đăng xuất biểu tượng, chân menu thấp đi ~50px.
 export function AdminSidebarUser({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation();
   const me = useMe();
   const tablet = useMediaQuery(ADMIN_TABLET_QUERY);
+  const short = useMediaQuery(SHORT_SCREEN_QUERY);
   const row = compact && !tablet;
+  const low = !compact && !tablet && short;
   const { open, setOpen, box, trigger, panel, id, onKeyDown } = usePopover();
   const name = me.fullName ?? me.sub;
   const initials = initialsOf(name);
   const popover = { ref: panel, id };
   const toggle = { ref: trigger, 'aria-expanded': open, 'aria-controls': open ? id : undefined, onClick: () => setOpen((v) => !v) };
   return (
-    <div ref={box} className="side__user" role="group" aria-label={t('nav.userMenu')} data-layout={row ? 'row' : undefined} onKeyDown={onKeyDown}>
+    <div ref={box} className="side__user" role="group" aria-label={t('nav.userMenu')} data-layout={row ? 'row' : low ? 'low' : undefined} onKeyDown={onKeyDown}>
       <div className="side__who">
         {tablet ? (
           <button type="button" className="side__avatar" title={name} aria-label={t('nav.userMenu')} {...toggle}>
@@ -72,6 +75,12 @@ export function AdminSidebarUser({ compact = false }: { compact?: boolean }) {
           <small>{t(`common.roles.${me.role}`)}</small>
         </span>
         {compact && !row && <NotificationBell />}
+        {low && (
+          <div className="side__tools side__tools--low">
+            <LanguageSwitch short />
+            <LogoutButton iconOnly />
+          </div>
+        )}
         {row && (
           <div className="side__tools">
             <NotificationBell />
@@ -88,7 +97,8 @@ export function AdminSidebarUser({ compact = false }: { compact?: boolean }) {
               <LanguageSwitch />
             </div>
           )
-        : (!tablet || open) && (
+        : !low &&
+          (!tablet || open) && (
             <div className="side__acct" {...(tablet ? popover : {})}>
               <LanguageSwitch />
               <LogoutButton />
