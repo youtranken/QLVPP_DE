@@ -38,7 +38,7 @@ describe('Chữ: phần chưa giao của tháng đang giao không gọi là nợ
 
   it('en theo bảng chữ của spec (Hủy nợ, Tủ còn, NOT_DEBT_YET)', () => {
     const all = Object.fromEntries(strings(deliveryEn));
-    expect(all['delivery.backlog.cancelDialog.title']).toBe('Write off {{n}} {{unit}} {{name}} for {{person}}?');
+    expect(all['delivery.backlog.cancelDialog.title']).toBe('Write off <hl>{{n}} {{unit}} {{name}}</hl> for {{person}}?');
     expect(all['delivery.backlog.cols.stock']).toBe('In stock');
     expect(all['delivery.backlog.stock']).toBe('In stock {{n}}');
     expect(all['delivery.backlog.cancelDialog.block.NOT_DEBT_YET']).toBe('This is still pending for the current month — reduce it in Summary instead.');

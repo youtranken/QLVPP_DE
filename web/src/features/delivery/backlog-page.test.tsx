@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, waitFor, within, pickOption } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -21,6 +21,8 @@ const search = () => screen.getByTestId('location-search').textContent ?? '';
 const bodyRows = () => screen.getAllByRole('row').filter((r) => within(r).queryByRole('button', { name: /^Lịch sử giao/ }));
 const rowOf = (text: string) => bodyRows().find((r) => r.textContent?.includes(text) || within(r).queryAllByRole('button', { name: new RegExp(text) }).length > 0)!;
 const monthHeads = () => screen.getAllByRole('row').filter((r) => r.classList.contains('dt-group'));
+// Tóm tắt kỳ cuối thanh công cụ (thay dải tháng khi chỉ có một tháng)
+const summary = () => screen.getByText((_, el) => el?.classList.contains('bl-summary') ?? false);
 const personRows = () => screen.getAllByRole('row').filter((r) => r.classList.contains('bl-person'));
 
 afterEach(() => vi.unstubAllGlobals());
@@ -67,6 +69,18 @@ describe('BacklogPage — nhóm tháng → người → món', () => {
     expect(screen.getByRole('table')).toHaveClass('grid-table');
     expect(screen.getAllByRole('columnheader').map((c) => c.textContent)).toEqual(['Món', 'ĐVT', 'Đăng ký', 'Đã giao', 'Còn nợ', 'Tủ còn', 'Thao tác']);
     expect(monthHeads().map((r) => r.textContent)).toEqual(['Tháng 9/2026 · 1 người · 3 đơn vị', 'Tháng 10/2026 · 2 người · 4 đơn vị']);
+    // Nhiều tháng: thanh công cụ tóm tắt cả hai, người nợ ở hai tháng chỉ đếm một lần
+    expect(summary()).toHaveTextContent('2 tháng · 2 người · 7 đơn vị');
+    expect(summary().closest('.toolbar')).not.toBeNull();
+  });
+
+  it('chỉ một tháng: không có dải tháng trên bảng, tóm tắt "Tháng 10/2026 · 2 người · 4 đơn vị" nằm cuối thanh công cụ', async () => {
+    stubBacklog([PEN_DUC, PEN_LAN]);
+    openPage();
+    await screen.findAllByText('Bút bi xanh', { selector: '.bl-item b' });
+    expect(monthHeads()).toHaveLength(0);
+    expect(summary()).toHaveTextContent('Tháng 10/2026 · 2 người · 4 đơn vị');
+    expect(summary().closest('.list-meta')?.parentElement).toHaveClass('toolbar');
   });
 
   it('hàng người: tên + phòng ban (hoặc "Chưa có phòng ban") + "Người đã nghỉ"; dòng món có đăng ký 5, đã giao 2, còn nợ 3, tủ 10', async () => {
@@ -85,11 +99,12 @@ describe('BacklogPage — nhóm tháng → người → món', () => {
     stubBacklog([PEN_DUC, SEP]);
     openPage();
     await screen.findAllByText('Bút bi xanh', { selector: '.bl-item b' });
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Tháng nợ' }), 'Tháng 9/2026');
+    await pickOption(screen.getByRole('combobox', { name: 'Tháng nợ' }), 'Tháng 9/2026');
     expect(search()).toContain('ym=2026-09');
-    expect(monthHeads()).toHaveLength(1);
+    expect(monthHeads()).toHaveLength(0);
+    expect(summary()).toHaveTextContent(/^Tháng 9\/2026 · /);
     expect(screen.queryByText('Bút bi xanh', { selector: '.bl-item b' })).toBeNull();
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Tháng nợ' }), 'Tất cả tháng');
+    await pickOption(screen.getByRole('combobox', { name: 'Tháng nợ' }), 'Tất cả tháng');
     expect(search()).not.toContain('ym=');
     expect(monthHeads()).toHaveLength(2);
   });
@@ -98,7 +113,7 @@ describe('BacklogPage — nhóm tháng → người → món', () => {
     stubBacklog([PEN_DUC, SEP]);
     openPage('/admin/backlog?ym=2026-10');
     await screen.findAllByText('Bút bi xanh', { selector: '.bl-item b' });
-    expect(monthHeads()).toHaveLength(1);
+    expect(summary()).toHaveTextContent(/^Tháng 10\/2026 · /);
     vi.unstubAllGlobals();
     stubBacklog([PEN_DUC, SEP]);
     openPage('/admin/backlog?ym=xyz');
@@ -109,8 +124,8 @@ describe('BacklogPage — nhóm tháng → người → món', () => {
     stubBacklog([PEN_DUC, SEP]);
     openPage('/admin/backlog?ym=2026-08');
     await waitFor(() => expect(search()).toContain('ym=2026-09'));
-    expect(screen.getByRole('combobox', { name: 'Tháng nợ' })).toHaveValue('2026-09');
-    expect(monthHeads()).toHaveLength(1);
+    expect(screen.getByRole('combobox', { name: 'Tháng nợ' })).toHaveTextContent('Tháng 9/2026');
+    expect(summary()).toHaveTextContent(/^Tháng 9\/2026 · /);
     expect(screen.getByText('Giấy A4', { selector: '.bl-item b' })).toBeInTheDocument();
   });
 
@@ -142,7 +157,7 @@ describe('BacklogPage — nhóm tháng → người → món', () => {
     openPage('/admin/backlog?by=item&filter=left');
     await waitFor(() => expect(search()).toBe('?left=1'));
     await waitFor(() => expect(bodyRows()).toHaveLength(1));
-    expect(monthHeads()).toHaveLength(1);
+    expect(summary()).toHaveTextContent(/^Tháng \d+\/2026 · 1 người/);
   });
 
   it('?by=lạ&filter=lạ → gỡ, không lọc', async () => {

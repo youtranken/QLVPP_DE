@@ -57,6 +57,7 @@ const delivery: Messages<typeof vi> = {
       leftOnly: 'Only people who left ({{n}})',
       tableLabel: 'Outstanding by month, person, item',
       monthHead: '{{month}} · {{people}} people · {{units}} units',
+      summaryAll: '{{months}} months · {{people}} people · {{units}} units',
       cols: {
         item: 'Item',
         unit: 'Unit',
@@ -89,7 +90,7 @@ const delivery: Messages<typeof vi> = {
         done: 'Delivered {{qty}} {{unit}} {{name}} to {{person}}',
       },
       cancelDialog: {
-        title: 'Write off {{n}} {{unit}} {{name}} for {{person}}?',
+        title: 'Write off <hl>{{n}} {{unit}} {{name}}</hl> for {{person}}?',
         reason: 'Reason for cancelling',
         reasons: {
           adm_out_of_stock: 'Supplier out of stock',

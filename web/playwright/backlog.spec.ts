@@ -40,7 +40,8 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       const row = page.getByRole('row').filter({ hasText: a.name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
       const group = page.getByRole('row').filter({ hasText: seed.name }).filter({ hasText: 'PW Phòng giao' });
       await expect(group).toContainText('PW Phòng giao');
-      await expect(page.getByRole('row').filter({ hasText: /^Tháng \d+\/\d{4} · \d+ người · \d+ đơn vị$/ }).first()).toBeVisible();
+      // Tóm tắt kỳ nằm cuối thanh công cụ (một tháng: "Tháng m/yyyy · …"; nhiều tháng: "n tháng · …" và mỗi tháng một dải tiêu đề)
+      await expect(page.getByRole('status').filter({ hasText: /^(Tháng \d+\/\d{4}|\d+ tháng) · \d+ người · \d+ đơn vị$/ })).toBeVisible();
       // Cột: Món · ĐVT · Đăng ký · Đã giao · Còn nợ · Tủ còn · Thao tác
       await expect(row.getByRole('cell').nth(2)).toHaveText('3');
       await expect(row.getByRole('cell').nth(3)).toHaveText('1');

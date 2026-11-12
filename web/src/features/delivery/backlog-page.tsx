@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { SearchBox } from '@/ui/filter/search-box';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
+import { ListMeta } from '@/ui/list-meta';
 import { Select } from '@/ui/select';
 import { Switch } from '@/ui/switch';
 import { usePanelParam } from '@/lib/use-panel-param';
@@ -11,7 +12,7 @@ import { useCurrentPeriod } from '@/features/request/request.api';
 import { useBacklog, type BacklogLine } from './backlog.api';
 import { BacklogMonthTable, type LineAction } from './backlog-month-table';
 import { useBacklogFormat } from './backlog-format';
-import { backlogMonths, leftPeople, monthsOf } from './backlog-months';
+import { backlogMonths, leftPeople, monthsOf, peopleIn, unitsIn } from './backlog-months';
 import { CancelDialog } from './cancel-dialog';
 import { DeliverMoreDialog } from './deliver-more-dialog';
 import { DeliveriesDrawer } from './deliveries-drawer';
@@ -77,6 +78,15 @@ export function BacklogPage() {
           <Select label={t('delivery.backlog.month')} hideLabel value={ymNow ?? ALL} options={monthOptions} onChange={(v) => p.setYm(v === ALL ? null : v)} />
           <SearchBox className="flt-search" label={t('delivery.backlog.search')} placeholder={t('delivery.backlog.search')} value={p.q} onChange={p.setQ} />
           <Switch checked={p.left} text={t('delivery.backlog.leftOnly', { n: leftPeople(groups ?? []) })} onChange={p.toggleLeft} />
+          {months.length > 0 && (
+            <ListMeta>
+              <p className="bl-summary" role="status">
+                {months.length === 1
+                  ? t('delivery.backlog.monthHead', { month: f.month(months[0].ym), people: months[0].people.length, units: months[0].owed_units })
+                  : t('delivery.backlog.summaryAll', { months: months.length, people: peopleIn(months), units: unitsIn(months) })}
+              </p>
+            </ListMeta>
+          )}
         </div>
       )}
       {query.isPending && <Loading />}

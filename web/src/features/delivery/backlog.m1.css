@@ -25,11 +25,10 @@
 [data-shell='admin'] .bl-cancelled { margin: var(--s-3) 0 0; padding: var(--s-3); border-radius: var(--r-md); background: var(--c-warn-soft); color: var(--c-ink); font: var(--t-sm); }
 
 [data-shell='admin'] .bl-cancel { display: grid; gap: var(--s-3); }
-[data-shell='admin'] .bl-reasons { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--s-1) var(--s-3); }
-[data-shell='admin'] .bl-reason { display: flex; align-items: center; gap: var(--s-2); min-height: var(--hit); color: var(--c-ink); font: var(--t-body); cursor: pointer; }
-[data-shell='admin'] .bl-reason input { width: 18px; height: 18px; margin: 0; accent-color: var(--c-acc); }
+[data-shell='admin'] .bl-cancel-what { color: var(--c-danger); }
 
 [data-shell='admin'] .bl-bar { flex-wrap: wrap; align-items: center; gap: var(--s-3); }
+[data-shell='admin'] .bl-summary { margin: 0; color: var(--c-ink-2); font: var(--t-sm); font-weight: 600; }
 [data-shell='admin'] .bl-table .bl-person th { position: static; height: 44px; background: var(--c-surface); color: var(--c-ink); border-bottom: 1px solid var(--c-line); white-space: normal; }
 @media (min-width: 768px) { [data-shell='admin'] .bl-table td.bl-cell-acts { width: 1%; white-space: nowrap; } }
 @media (max-width: 767px) {

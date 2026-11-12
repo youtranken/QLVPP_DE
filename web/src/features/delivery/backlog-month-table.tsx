@@ -102,11 +102,14 @@ export function BacklogMonthTable({ months, onAction }: { months: BacklogMonth[]
         </thead>
         {months.map((m) => (
           <tbody key={m.ym}>
+            {/* Một tháng thì dòng tóm tắt đã nằm trên thanh công cụ; nhiều tháng mới cần dải tháng ngăn từng nhóm */}
+            {months.length > 1 && (
             <tr className="dt-group">
               <th scope="rowgroup" colSpan={COLUMNS.length}>
                 {t('delivery.backlog.monthHead', { month: f.month(m.ym), people: m.people.length, units: m.owed_units })}
               </th>
             </tr>
+            )}
             {m.people.map((p) => (
               <PersonRows key={p.user_sub} person={p} phone={phone} onAction={onAction} />
             ))}

@@ -54,6 +54,7 @@ const delivery = {
       leftOnly: 'Chỉ người đã nghỉ ({{n}})',
       tableLabel: 'Còn nợ theo tháng, người, món',
       monthHead: '{{month}} · {{people}} người · {{units}} đơn vị',
+      summaryAll: '{{months}} tháng · {{people}} người · {{units}} đơn vị',
       cols: {
         item: 'Món',
         unit: 'ĐVT',
@@ -86,7 +87,7 @@ const delivery = {
         done: 'Đã giao bổ sung {{qty}} {{unit}} {{name}} cho {{person}}',
       },
       cancelDialog: {
-        title: 'Hủy nợ {{n}} {{unit}} {{name}} của {{person}}?',
+        title: 'Hủy nợ <hl>{{n}} {{unit}} {{name}}</hl> của {{person}}?',
         reason: 'Lý do hủy nợ',
         reasons: {
           adm_out_of_stock: 'NCC hết hàng',
