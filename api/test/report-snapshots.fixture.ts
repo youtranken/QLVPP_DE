@@ -28,6 +28,7 @@ export interface SendState {
   changed_after: boolean;
   changed_at: string | null;
   delivered_since: Record<string, number>;
+  adm_cancelled_since: Record<string, number>;
 }
 
 export interface SnapshotListItem {
