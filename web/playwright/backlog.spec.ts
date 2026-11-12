@@ -47,13 +47,17 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       const vp = page.viewportSize();
       for (const width of isMobile(info) ? [390, 360] : [1024, 1280, 1440]) {
         await page.setViewportSize({ width, height: vp?.height ?? 800 });
+        // Đo nét chữ (Range trên text node) chứ không đo hộp phần tử: chữ chạm mép thẻ bảng thì mắt thấy như bị cắt
         const fit = await summary.evaluate((el) => {
-          const bar = el.closest('.bl-bar')!.getBoundingClientRect();
-          const box = el.getBoundingClientRect();
-          return { inside: el.scrollWidth <= el.clientWidth, right: Math.round(box.right), barRight: Math.round(bar.right), barSW: el.closest('.bl-bar')!.scrollWidth, barCW: el.closest('.bl-bar')!.clientWidth };
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          const textRight = Math.max(...[...range.getClientRects()].map((r) => r.right));
+          const table = document.querySelector('.bl-table')!.getBoundingClientRect();
+          const bar = el.closest('.bl-bar')!;
+          return { inside: el.scrollWidth <= el.clientWidth, gap: table.right - textRight, barSW: bar.scrollWidth, barCW: bar.clientWidth };
         });
         expect(fit.inside, `tóm tắt không tràn chính nó ở ${width}`).toBe(true);
-        expect(fit.right, `tóm tắt không lố mép phải thanh công cụ ở ${width}`).toBeLessThanOrEqual(fit.barRight);
+        expect(fit.gap, `mép chữ tóm tắt lùi ≥ 12px so với mép phải thẻ bảng ở ${width}`).toBeGreaterThanOrEqual(11.5);
         expect(fit.barSW, `thanh công cụ không tràn ở ${width}`).toBeLessThanOrEqual(fit.barCW);
       }
       if (vp) await page.setViewportSize(vp);
