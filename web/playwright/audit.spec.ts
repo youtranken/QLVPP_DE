@@ -63,16 +63,20 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
 
     await page.getByRole('button', { name: 'Xóa lọc', exact: true }).first().click();
     await expect(page.getByText(/^Đang lọc:/)).toHaveCount(0);
-    await page.getByLabel('Từ ngày').fill('31/02/2026');
-    await page.getByRole('button', { name: 'Lọc', exact: true }).click();
-    await expect(page.getByLabel('Từ ngày')).toHaveAccessibleDescription('Ngày không hợp lệ — nhập dd/mm/yyyy.');
-    await page.getByLabel('Từ ngày').fill('20/10/2026');
-    await page.getByLabel('Đến ngày').fill('19/10/2026');
+    // Khoảng ngày là một ô mở lịch (không gõ được ngày sai); URL có to < from → báo lỗi ở ô, không gọi API
+    await page.goto('/admin/audit?from=2026-10-20&to=2026-10-19');
+    await page.waitForLoadState('networkidle');
     const before = calls;
     await page.getByRole('button', { name: 'Lọc', exact: true }).click();
-    await expect(page.getByLabel('Đến ngày')).toHaveAccessibleDescription('“Đến ngày” phải bằng hoặc sau “Từ ngày”.');
+    const range = page.getByRole('button', { name: /^Khoảng ngày/ });
+    await expect(range).toHaveAccessibleDescription('Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.');
     expect(calls).toBe(before);
-    await page.getByLabel('Đến ngày').fill('20/10/2026');
+    await range.click();
+    const cal = page.getByRole('dialog', { name: 'Khoảng ngày' });
+    await cal.locator('[data-day="2026-10-20"]').click();
+    await cal.locator('[data-day="2026-10-20"]').click();
+    await expect(cal).toHaveCount(0);
+    await expect(range).toHaveAccessibleName('Khoảng ngày 20/10/2026 – 20/10/2026');
     await page.getByRole('button', { name: 'Lọc', exact: true }).click();
     await expect(page).toHaveURL(/from=2026-10-20&to=2026-10-20/);
   });

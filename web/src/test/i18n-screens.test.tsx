@@ -1,6 +1,6 @@
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, renderWithI18n, screen, userEvent, within } from '@/test/test-utils';
+import { jsonResponse, renderWithI18n, screen, userEvent, within, optionLabels } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -192,7 +192,9 @@ describe('Song ngữ các màn Plan 3', () => {
     expect(within(table).getByText('Delivered')).toBeInTheDocument();
     expect(within(table).queryByText('line.delivered')).toBeNull();
     expect(within(table).getByText('Backlog cancelled')).toBeInTheDocument();
-    expect(document.querySelector('select option[value="line.cancel_remaining"]')).toHaveTextContent('Backlog cancelled');
+    expect(await optionLabels(screen.getByRole('combobox', { name: 'Action' }))).toContain('Backlog cancelled');
+    await userEvent.click(screen.getByRole('button', { name: /^Date range/ }));
+    expect(screen.getByRole('dialog', { name: 'Date range' })).toBeInTheDocument();
     noVietnamese();
   });
 });

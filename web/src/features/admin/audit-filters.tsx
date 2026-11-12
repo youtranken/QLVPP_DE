@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DateField } from '@/ui/date-field';
+import { DateRangeField } from '@/ui/date-range-field';
 import { Select } from '@/ui/select';
 import type { DirectoryUser } from '@/features/directory/directory.api';
 import { useDirectoryNames } from '@/features/directory/use-all-users';
@@ -34,17 +34,11 @@ export function AuditFilterBar({ applied, serverError, onApply, onClear }: Props
   const { t, i18n } = useTranslation();
   const [draft, setDraft] = useState(applied);
   const [rangeError, setRangeError] = useState(false);
-  const [badDates, setBadDates] = useState({ from: false, to: false });
-  const [showBad, setShowBad] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
-  const actor = useActorUser(draft.actor);
-  const set = (k: keyof AuditFilters, v: string) => setDraft((d) => ({ ...d, [k]: v }));
-  const setDate = (k: 'from' | 'to') => (iso: string | null) => {
-    setBadDates((b) => ({ ...b, [k]: iso === null }));
-    setShowBad(false);
-    if (iso !== null) set(k, iso);
-  };
-  const dateError = (k: 'from' | 'to') => (showBad && badDates[k] ? t('common.dateField.invalid') : serverError[k] ? t('audit.filters.dateInvalid') : undefined);
+  const system = draft.actor === SYSTEM_ACTOR;
+  const actor = useActorUser(system ? '' : draft.actor);
+  const set = (patch: Partial<AuditFilters>) => setDraft((d) => ({ ...d, ...patch }));
+  const dateError = rangeError ? t('audit.filters.rangeInvalid') : serverError.from || serverError.to ? t('audit.filters.dateInvalid') : undefined;
   const known = AUDIT_ACTIONS.includes(draft.action);
   const actionOptions = [
     { value: '', label: t('audit.filters.anyAction') },
@@ -54,13 +48,12 @@ export function AuditFilterBar({ applied, serverError, onApply, onClear }: Props
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    setShowBad(true);
-    if (badDates.from || badDates.to) return;
     const invalid = dateRangeInvalid(draft.from, draft.to);
     setRangeError(invalid);
     if (!invalid) onApply(draft);
   };
 
+  // Một hàng: người thực hiện (kèm nút bật "Hệ thống") · hành động · khoảng ngày · Lọc / Xóa lọc; hẹp thì xuống hàng
   return (
     <form ref={formRef} className="au-filters" lang={i18n.language} aria-label={t('audit.filters.label')} onSubmit={submit} noValidate>
       <div className="au-actor">
@@ -70,20 +63,28 @@ export function AuditFilterBar({ applied, serverError, onApply, onClear }: Props
           value={actor}
           allowLocked
           resultsWhenEmpty={false}
-          onChange={(u) => set('actor', u?.sub ?? '')}
+          onChange={(u) => set({ actor: u?.sub ?? '' })}
           onEnter={() => formRef.current?.requestSubmit()}
         />
-        {!draft.actor && (
-          <button type="button" className="btn au-system" onClick={() => set('actor', SYSTEM_ACTOR)}>
-            {t('audit.filters.system')}
-          </button>
-        )}
+        {/* Nút bật/tắt: bật thì lọc việc hệ thống tự làm, chọn một người thì nút tự tắt */}
+        <button type="button" className="au-system" aria-pressed={system} onClick={() => set({ actor: system ? '' : SYSTEM_ACTOR })}>
+          {t('audit.filters.system')}
+        </button>
       </div>
       <div className="au-action-field">
-        <Select label={t('audit.filters.action')} stacked value={draft.action} options={actionOptions} onChange={(v) => set('action', v)} />
+        <Select label={t('audit.filters.action')} stacked value={draft.action} options={actionOptions} onChange={(v) => set({ action: v })} />
       </div>
-      <DateField label={t('audit.filters.from')} value={draft.from} error={dateError('from')} onChange={setDate('from')} />
-      <DateField label={t('audit.filters.to')} value={draft.to} error={dateError('to') ?? (rangeError ? t('audit.filters.rangeInvalid') : undefined)} onChange={setDate('to')} />
+      <div className="au-dates">
+        <DateRangeField
+          label={t('audit.filters.dates')}
+          value={{ from: draft.from, to: draft.to }}
+          error={dateError}
+          onChange={(r) => {
+            setRangeError(false);
+            set(r);
+          }}
+        />
+      </div>
       <div className="au-filter-actions">
         <button type="submit" className="btn btn--primary">
           {t('audit.filters.apply')}

@@ -146,9 +146,10 @@ const admin: Messages<typeof vi> = {
       anyAction: 'Any action',
       from: 'From',
       to: 'To',
+      dates: 'Date range',
       apply: 'Filter',
       clear: 'Clear filters',
-      rangeInvalid: '“To” must be on or after “From”.',
+      rangeInvalid: 'The end date must be on or after the start date.',
       dateInvalid: 'Invalid date.',
     },
     page: {

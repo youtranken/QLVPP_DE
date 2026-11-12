@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, within, pickOption } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -35,6 +35,24 @@ function stubApi() {
 
 const auditUrls = (m: ReturnType<typeof stubApi>) =>
   m.mock.calls.map(([u]) => new URL(String(u), 'http://x')).filter((u) => u.pathname === '/api/admin/audit');
+
+// Ô khoảng ngày (lịch tự dựng): mở lịch, lùi/tiến tới tháng của ngày, bấm ngày đầu rồi ngày cuối
+async function pickRange(from: string, to: string) {
+  await userEvent.click(screen.getByRole('button', { name: /^Khoảng ngày/ }));
+  const dialog = screen.getByRole('dialog', { name: 'Khoảng ngày' });
+  for (const day of [from, to]) {
+    for (let i = 0; i < 48; i++) {
+      const cell = dialog.querySelector<HTMLElement>(`[data-day="${day}"]:not([data-out])`);
+      if (cell) {
+        await userEvent.click(cell);
+        break;
+      }
+      const any = dialog.querySelector<HTMLElement>('[data-day]:not([data-out])')!.dataset.day!;
+      await userEvent.click(within(dialog).getByRole('button', { name: any > day ? 'Tháng trước' : 'Tháng sau' }));
+    }
+  }
+}
+const rangeBox = () => screen.getByRole('button', { name: /^Khoảng ngày/ });
 
 async function openAudit(path = '/admin/audit') {
   mockViewport(1280);
@@ -209,9 +227,8 @@ describe('AuditPage B11', () => {
     await openAudit();
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người thực hiện' }), 'Bình');
     await userEvent.click(await screen.findByRole('button', { name: /Lê Thị Bình/ }));
-    await userEvent.selectOptions(screen.getByLabelText('Hành động'), 'Sửa cấu hình');
-    await userEvent.type(screen.getByLabelText('Từ ngày'), '01/10/2026');
-    await userEvent.type(screen.getByLabelText('Đến ngày'), '28/10/2026');
+    await pickOption(screen.getByLabelText('Hành động'), 'Sửa cấu hình');
+    await pickRange('2026-10-01', '2026-10-28');
     await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
     await vi.waitFor(() => expect(lastAudit(fetchMock).get('actor')).toBe('u-binh'));
     const last = lastAudit(fetchMock);
@@ -241,45 +258,30 @@ describe('AuditPage B11', () => {
   it('Enter trong ô tìm người áp dụng bộ lọc đang nhập', async () => {
     const fetchMock = stubApi();
     await openAudit();
-    await userEvent.selectOptions(screen.getByLabelText('Hành động'), 'Thêm món');
+    await pickOption(screen.getByLabelText('Hành động'), 'Thêm món');
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người thực hiện' }), 'Bình{Enter}');
     await vi.waitFor(() => expect(lastAudit(fetchMock).get('action')).toBe('item.created'));
   });
 
-  it('"Đến ngày" sớm hơn "Từ ngày" 1 ngày → lỗi gắn ô, không gọi lại api; bằng nhau → gọi api', async () => {
+  it('URL có "đến" sớm hơn "từ" 1 ngày → bấm Lọc báo lỗi gắn ô khoảng ngày, không gọi lại api; chọn lại một ngày → gọi api', async () => {
     const fetchMock = stubApi();
-    await openAudit();
+    await openAudit('/admin/audit?from=2026-10-20&to=2026-10-19');
     const before = auditUrls(fetchMock).length;
-    await userEvent.type(screen.getByLabelText('Từ ngày'), '20/10/2026');
-    await userEvent.type(screen.getByLabelText('Đến ngày'), '19/10/2026');
     await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
-    expect(screen.getByLabelText('Đến ngày')).toHaveAccessibleDescription('“Đến ngày” phải bằng hoặc sau “Từ ngày”.');
+    expect(rangeBox()).toHaveAccessibleDescription('Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.');
     expect(auditUrls(fetchMock)).toHaveLength(before);
-    await userEvent.clear(screen.getByLabelText('Đến ngày'));
-    await userEvent.type(screen.getByLabelText('Đến ngày'), '20/10/2026');
+    await pickRange('2026-10-20', '2026-10-20');
+    expect(rangeBox()).not.toHaveAccessibleDescription();
     await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
     await vi.waitFor(() => expect(lastAudit(fetchMock).get('to')).toBe('2026-10-20'));
     expect(lastAudit(fetchMock).get('from')).toBe('2026-10-20');
   });
 
-  it('ô ngày dd/mm/yyyy: "31/02/2026" ở Từ ngày → bấm Lọc báo lỗi tại ô, không gọi api; 29/02/2028 gửi from=2028-02-29', async () => {
-    const fetchMock = stubApi();
-    await openAudit();
-    const before = auditUrls(fetchMock).length;
-    await userEvent.type(screen.getByLabelText('Từ ngày'), '31/02/2026');
-    await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
-    expect(screen.getByLabelText('Từ ngày')).toHaveAccessibleDescription('Ngày không hợp lệ — nhập dd/mm/yyyy.');
-    expect(auditUrls(fetchMock)).toHaveLength(before);
-    await userEvent.clear(screen.getByLabelText('Từ ngày'));
-    await userEvent.type(screen.getByLabelText('Từ ngày'), '29/02/2028');
-    await userEvent.click(screen.getByRole('button', { name: 'Lọc' }));
-    await vi.waitFor(() => expect(lastAudit(fetchMock).get('from')).toBe('2028-02-29'));
-  });
-
-  it('?from=2026-10-01 trong URL hiện "01/10/2026" ở ô Từ ngày', async () => {
+  it('khoảng ngày là một ô mở lịch, không có ô gõ ngày hay input date; ?from=2026-10-01 hiện "Từ 01/10/2026"', async () => {
     stubApi();
     await openAudit('/admin/audit?from=2026-10-01');
-    expect(screen.getByLabelText('Từ ngày')).toHaveValue('01/10/2026');
+    expect(document.querySelector('input[type="date"], input[placeholder="dd/mm/yyyy"]')).toBeNull();
+    expect(rangeBox()).toHaveTextContent('Từ 01/10/2026');
   });
 
   it('chip "Hôm nay" lúc 23:30 UTC gửi from = to = ngày kế tiếp theo giờ VN', async () => {
@@ -306,11 +308,11 @@ describe('AuditPage B11', () => {
     expect(lastAudit(fetchMock).get('from')).toBe('2026-10-01');
   });
 
-  it('api trả VALIDATION fields [to] → lỗi gắn ô "Đến ngày", không hiện lỗi tải chung', async () => {
+  it('api trả VALIDATION fields [to] → lỗi gắn ô khoảng ngày, không hiện lỗi tải chung', async () => {
     vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(url.startsWith('/api/admin/audit') ? audit400(['to']) : jsonResponse(200, { items: [], next_cursor: null }))));
     mockViewport(1280);
     renderApp(makeMe('admin'), '/admin/audit?to=2026-02-30');
-    await vi.waitFor(() => expect(screen.getByLabelText('Đến ngày')).toHaveAccessibleDescription('Ngày không hợp lệ.'));
+    await vi.waitFor(() => expect(rangeBox()).toHaveAccessibleDescription('Ngày không hợp lệ.'));
     expect(screen.queryByText('Không tải được dữ liệu — thử lại.')).toBeNull();
   });
 
@@ -328,8 +330,8 @@ describe('AuditPage B11', () => {
     renderApp(makeMe('admin'), '/admin/audit?action=future.thing');
     expect(await screen.findByText('Không có dòng nhật ký nào khớp bộ lọc.')).toBeInTheDocument();
     expect(screen.getByText(/Nới khoảng ngày/)).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Hành động' })).toHaveValue('future.thing');
-    expect(screen.getByRole('combobox', { name: 'Hành động' }).closest('label')).toHaveClass('select', 'select--stacked');
+    expect(screen.getByRole('combobox', { name: 'Hành động' })).toHaveTextContent('future.thing');
+    expect(screen.getByRole('combobox', { name: 'Hành động' }).closest('.select')).toHaveClass('select', 'select--stacked');
     expect(screen.queryByText('Đã hiện hết nhật ký trong khoảng lọc.')).toBeNull();
   });
 

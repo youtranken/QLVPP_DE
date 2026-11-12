@@ -143,9 +143,10 @@ const admin = {
       anyAction: 'Mọi hành động',
       from: 'Từ ngày',
       to: 'Đến ngày',
+      dates: 'Khoảng ngày',
       apply: 'Lọc',
       clear: 'Xóa lọc',
-      rangeInvalid: '“Đến ngày” phải bằng hoặc sau “Từ ngày”.',
+      rangeInvalid: 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
       dateInvalid: 'Ngày không hợp lệ.',
     },
     page: {
