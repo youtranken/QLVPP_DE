@@ -84,6 +84,7 @@ function LineRow({ row, limit, disabled, waiting, shortage, showLeft, onChange }
           <td>
             {limit.cap > 0 ? (
               <Stepper
+                size="sm"
                 className="dd-step"
                 value={limit.value}
                 min={0}

@@ -46,6 +46,7 @@ function QtyControl({ name, qty, min, base, error, removed, readOnly, muted, err
           min={min}
           max={base}
           decreaseOnly
+          size="sm"
           className="aj-qty"
           label={name}
           describedBy={error ? errorId : undefined}

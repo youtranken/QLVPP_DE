@@ -79,6 +79,7 @@ export function DeliverMoreDialog({ line, onDone, onStale, onClose }: Props) {
           <div className="bl-field">
             <span className="ff-label">{t('delivery.backlog.deliver.qty')}</span>
             <Stepper
+              size="sm"
               value={qty}
               min={1}
               max={Math.max(max, 1)}

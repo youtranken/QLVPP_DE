@@ -34,19 +34,26 @@
 [data-shell='admin'] .inline-number:hover { background: var(--c-surface-hover); }
 [data-shell='admin'] .inline-number:focus-visible { box-shadow: var(--focus); }
 [data-shell='admin'] .inline-number-edit { display: inline-grid; gap: 2px; justify-items: end; }
-[data-shell='admin'] .inline-number__input { width: 72px; height: 36px; padding: 0 var(--s-2); text-align: right; border: 0; border-radius: var(--r-sm); background: var(--c-surface); color: var(--c-ink); font: var(--t-body); box-shadow: var(--focus-field); outline: none; }
-[data-shell='admin'] input.inline-number__input:focus { box-shadow: var(--focus-field); }
-[data-shell='admin'] input.inline-number__input[aria-invalid='true'] { box-shadow: inset 0 0 0 2px var(--c-danger), 0 0 0 4px var(--c-danger-soft); }
+/* Đang sửa: ô số nằm trong Stepper chung cỡ sm (viền đỏ khi lỗi do .stepper.is-invalid) */
+[data-shell='admin'] .inline-number-edit .stepper { width: 128px; }
 [data-shell='admin'] .inline-number__hint { font: var(--t-micro); color: var(--c-muted); }
 [data-shell='admin'] .inline-number__error { display: inline-flex; align-items: center; gap: 4px; font: var(--t-sm); color: var(--c-danger); }
 
-[data-shell='admin'] .stepper { display: inline-grid; grid-template-columns: 28px minmax(32px, auto) 28px; align-items: center; height: 32px; padding: 0 2px; border-radius: var(--r-pill); background: var(--c-surface-2); }
-[data-shell='admin'] .stepper button { position: relative; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; line-height: 1; border: 0; border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); box-shadow: var(--e-1); cursor: pointer; }
-[data-shell='admin'] .stepper button::after { content: ''; position: absolute; inset: -8px; }
+/* Stepper chung (ui/stepper): viên nền, nút tròn nổi bên trong, ô số cao bằng cả hàng. --stp-h là chiều cao hàng:
+   sm 32px (bảng, hộp dày), md 44px (form); điện thoại mọi cỡ 44px (khối @media dưới) */
+[data-shell='admin'] .stepper { --stp-h: var(--hit); display: inline-grid; grid-template-columns: var(--stp-h) minmax(40px, 1fr) var(--stp-h); align-items: center; height: var(--stp-h); border-radius: var(--r-pill); background: var(--c-surface-2); }
+[data-shell='admin'] .stepper[data-size='sm'] { --stp-h: 32px; }
+[data-shell='admin'] .stepper[data-dec-only] { grid-template-columns: var(--stp-h) minmax(40px, 1fr); }
+[data-shell='admin'] .stepper.is-invalid { box-shadow: inset 0 0 0 2px var(--c-danger); }
+[data-shell='admin'] .stepper button { position: relative; display: grid; place-items: center; width: calc(var(--stp-h) - 4px); height: calc(var(--stp-h) - 4px); margin: 2px; padding: 0; line-height: 1; border: 0; border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); font-size: 16px; box-shadow: var(--e-1); cursor: pointer; }
+/* Cỡ sm: nút 28px, vùng chạm nới ra 44px bằng lớp phủ */
+[data-shell='admin'] .stepper[data-size='sm'] button::after { content: ''; position: absolute; inset: -8px; }
 /* Nút +/− tắt đổi màu (muted, viền mảnh) thay vì gần như biến mất */
 [data-shell='admin'] .stepper button:disabled { color: var(--c-muted); box-shadow: inset 0 0 0 1px var(--c-line); background: transparent; cursor: not-allowed; }
 [data-shell='admin'] .stepper button:focus-visible { box-shadow: var(--focus); }
-[data-shell='admin'] .stepper input { width: 100%; min-width: 0; border: 0; background: transparent; text-align: center; font: var(--t-label); font-weight: 700; color: var(--c-ink); appearance: textfield; }
+[data-shell='admin'] .stepper input,
+[data-shell='admin'] .ff .stepper input { width: 100%; min-width: 0; height: var(--stp-h); min-height: 0; padding: 0 var(--s-1); border: 0; border-radius: var(--r-sm); background: transparent; text-align: center; font: var(--t-label); font-weight: 700; color: var(--c-ink); appearance: textfield; }
+[data-shell='admin'] .stepper input::-webkit-outer-spin-button, [data-shell='admin'] .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 [data-shell='admin'] .month-switch { display: inline-flex; align-items: center; gap: var(--s-2); height: 36px; padding: 0 var(--s-1); border: 0; border-radius: var(--r-pill); background: var(--c-surface); box-shadow: var(--e-1); }
 [data-shell='admin'] .month-switch button { display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-ink-2); cursor: pointer; }
@@ -64,9 +71,10 @@
 [data-shell='admin'] .month-switch__status--ok { background: var(--c-ok-soft); color: var(--c-ok); }
 [data-shell='admin'] .month-switch__status--dark { background: var(--c-dark); color: var(--c-on-dark); }
 @media (max-width: 767px) {
-  [data-shell='admin'] .stepper { grid-template-columns: var(--hit) minmax(32px, auto) var(--hit); height: var(--hit); }
-  [data-shell='admin'] .stepper button { width: var(--hit); height: var(--hit); }
-  [data-shell='admin'] .stepper button::after { content: none; }
+  /* Điện thoại: cỡ sm cũng 44px thật (lớp phủ không tính khi chạm cạnh), nút sát mép viên */
+  [data-shell='admin'] .stepper[data-size='sm'] { --stp-h: var(--hit); }
+  [data-shell='admin'] .stepper button { width: var(--stp-h); height: var(--stp-h); margin: 0; }
+  [data-shell='admin'] .stepper[data-size='sm'] button::after { content: none; }
   [data-shell='admin'] .month-switch { flex-wrap: wrap; max-width: 100%; height: auto; min-height: var(--hit); padding: 0; }
   [data-shell='admin'] .month-switch__status { margin: 0 var(--s-2) var(--s-1); }
   [data-shell='admin'] .month-switch button { flex: none; width: var(--hit); height: var(--hit); }

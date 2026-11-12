@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { apiErrorString } from '@/lib/api-error';
 import { ApiError } from '@/lib/api-client';
 import { Icon } from '@/ui/icon';
+import { StepperFrame } from '@/ui/stepper';
 
 export function InlineNumber({
   value,
@@ -67,6 +68,15 @@ export function InlineNumber({
     }
   };
 
+  // Nút − / + chỉ đổi số nháp; Enter (hoặc rời ô) mới lưu như khi gõ tay
+  const step = (d: 1 | -1) => {
+    const n = Number(draft);
+    const next = (Number.isFinite(n) && draft?.trim() ? n : value) + d;
+    setDraft(String(Math.min(max ?? Infinity, Math.max(min ?? -Infinity, next))));
+    setError(null);
+  };
+  const cur = Number(draft);
+
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -86,24 +96,37 @@ export function InlineNumber({
   }
   return (
     <span className="inline-number-edit">
-      <input
-        ref={input}
-        autoFocus
-        type="number"
-        inputMode="numeric"
-        className="inline-number__input num"
-        aria-label={label}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
-        min={min}
-        max={max}
-        value={draft}
-        readOnly={busy}
-        aria-busy={busy || undefined}
-        onBlur={() => Number(draft) === value && !busy && close()}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={onKeyDown}
-      />
+      <StepperFrame
+        size="sm"
+        invalid={!!error}
+        disabled={busy}
+        decLabel={t('common.stepper.decrease', { label })}
+        incLabel={t('common.stepper.increase', { label })}
+        canDec={min === undefined || !(cur <= min)}
+        canInc={max === undefined || !(cur >= max)}
+        // Bấm nút không làm ô mất focus: rời ô khi chưa đổi số là đóng chế độ sửa
+        holdFocus
+        onStep={step}
+      >
+        <input
+          ref={input}
+          autoFocus
+          type="number"
+          inputMode="numeric"
+          className="inline-number__input num"
+          aria-label={label}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          min={min}
+          max={max}
+          value={draft}
+          readOnly={busy}
+          aria-busy={busy || undefined}
+          onBlur={() => Number(draft) === value && !busy && close()}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={onKeyDown}
+        />
+      </StepperFrame>
       <span className="inline-number__hint">{t('common.inline.hint')}</span>
       {error && (
         <span id={errorId} className="inline-number__error">

@@ -98,22 +98,8 @@ html, [data-shell] * { scrollbar-width: thin; }
   [data-shell] :is(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea):not(#vpp-16px) { font-size: max(16px, 100%); }
 }
 
-/* Ô số có nút tăng/giảm (ui/qty-input): máy tính ▲▼ dọc trong viền ô (cột 24px, số không bị che), điện thoại "− số +" kiểu .stepper 44px */
-[data-shell] .qty-input { position: relative; display: inline-grid; align-items: center; }
-[data-shell] .qty-input button { display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: var(--c-ink-2); cursor: pointer; }
-[data-shell] .qty-input button:disabled { color: var(--c-muted); opacity: .45; cursor: not-allowed; }
-[data-shell] .qty-input[data-layout='spin'] > input { padding-right: var(--s-7); }
-[data-shell] .qty-input__spin { position: absolute; top: 2px; right: 2px; bottom: 2px; display: grid; grid-template-rows: 1fr 1fr; width: 24px; border-left: 1px solid var(--c-line); }
-[data-shell] .qty-input__spin button { width: 24px; min-height: 0; }
-[data-shell] .qty-input__spin button:first-child { border-radius: 0 var(--r-sm) 0 0; }
-[data-shell] .qty-input__spin button:last-child { border-radius: 0 0 var(--r-sm) 0; }
-[data-shell] .qty-input__spin button:not(:disabled):hover { background: var(--c-surface-2); color: var(--c-ink); }
-[data-shell] .qty-input[data-layout='stepper'] { grid-template-columns: var(--hit) minmax(56px, auto) var(--hit); gap: var(--s-1); padding: 2px; border-radius: var(--r-pill); background: var(--c-surface-2); }
-[data-shell] .qty-input[data-layout='stepper'] button { width: var(--hit); height: var(--hit); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); font: var(--t-label); font-weight: 700; box-shadow: var(--e-1); }
-[data-shell] .qty-input[data-layout='stepper'] button:disabled { background: transparent; box-shadow: inset 0 0 0 1px var(--c-line); opacity: 1; }
-[data-shell] .qty-input[data-layout='stepper'] > input { width: 100%; min-width: 0; height: var(--hit); padding: 0 var(--s-1); border: 0; background: transparent; box-shadow: none; text-align: center; font-weight: 700; }
-[data-shell] .qty-input[data-layout='stepper'] > input:focus { border-radius: var(--r-sm); box-shadow: var(--focus-field); }
-[data-shell] .qty-input[data-layout='stepper'].is-invalid { box-shadow: inset 0 0 0 2px var(--c-danger); }
+/* Ô số giữa của mọi Stepper (ui/stepper) cao bằng cả hàng: bấm vào để gõ trúng như nút − / + (khung nhân viên tự đặt cỡ hàng) */
+[data-shell] .stepper > input { align-self: stretch; height: auto; }
 
 /* Danh sách lựa chọn (ui/choice-list): một khối viền, các hàng chia bằng vạch mảnh; hàng đang chọn nền nhấn nhạt + chữ đậm.
    Focus bàn phím vẽ vòng trong mép hàng, ô tròn không có vòng riêng (một vòng cho một lựa chọn) */

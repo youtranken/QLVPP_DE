@@ -16,4 +16,16 @@ describe('vùng bấm', () => {
     // Nút không tự làm mốc, không thì lớp phủ co về đúng dòng chữ
     expect(css).not.toMatch(new RegExp(`\\.${name}\\s*\\{[^}]*position:\\s*relative`));
   });
+
+  it('Stepper chung: ô số giữa cao bằng hàng (sm 32 / md 44, điện thoại 44); không còn mũi tên ▲▼ 24×16 hay dáng riêng của Cấu hình', () => {
+    expect(read('css/fields.css')).toMatch(/\[data-shell\] \.stepper > input\s*\{\s*align-self:\s*stretch/);
+    const states = read('css/m1/states.css');
+    expect(states).toMatch(/\.stepper\[data-size='sm'\]\s*\{\s*--stp-h:\s*32px/);
+    expect(states).toMatch(/\.stepper input,[^{]*\{[^}]*height:\s*var\(--stp-h\)/);
+    expect(states).toMatch(/@media \(max-width: 767px\)[\s\S]*\.stepper\[data-size='sm'\]\s*\{\s*--stp-h:\s*var\(--hit\)/);
+    for (const f of ['css/fields.css', 'features/admin/config.m1.css', 'features/summary/summary.m1.css', 'features/reports/reports.m1.css']) {
+      const css = read(f);
+      expect(css).not.toMatch(/qty-input__spin|\.cf-adjust button|\.aj-line \.stepper/);
+    }
+  });
 });
