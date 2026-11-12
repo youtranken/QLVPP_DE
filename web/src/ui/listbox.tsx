@@ -1,7 +1,8 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
-import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/react';
+import { autoUpdate, useFloating } from '@floating-ui/react';
 import { foldVi } from '@/lib/search';
+import { popoverFit } from './popover-fit';
 
 export interface ListboxOption<T extends string = string> {
   value: T;
@@ -106,18 +107,14 @@ export function Listbox<T extends string>({
     strategy: 'fixed',
     placement: 'bottom-start',
     whileElementsMounted: autoUpdate,
-    middleware: [
-      offset(GAP),
-      flip({ padding: EDGE }),
-      shift({ padding: EDGE }),
-      size({
-        padding: EDGE,
-        apply({ rects, availableHeight, elements }) {
-          elements.floating.style.minWidth = `${rects.reference.width}px`;
-          elements.floating.style.maxHeight = `${Math.max(120, Math.min(MAX_LIST_H, availableHeight))}px`;
-        },
-      }),
-    ],
+    middleware: popoverFit({
+      gap: GAP,
+      edge: EDGE,
+      apply({ rects, availableHeight, elements }) {
+        elements.floating.style.minWidth = `${rects.reference.width}px`;
+        elements.floating.style.maxHeight = `${Math.max(120, Math.min(MAX_LIST_H, availableHeight))}px`;
+      },
+    }),
   });
 
   useEffect(() => {

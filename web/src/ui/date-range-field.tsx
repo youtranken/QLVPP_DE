@@ -1,8 +1,9 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { autoUpdate, flip, offset, shift, useFloating } from '@floating-ui/react';
+import { autoUpdate, useFloating } from '@floating-ui/react';
 import { isoToDmy } from '@/lib/dmy-date';
+import { popoverFit } from './popover-fit';
 
 export interface DayRange {
   from: string;
@@ -67,7 +68,8 @@ export function DateRangeField({ label, value, error, onChange }: { label: strin
     strategy: 'fixed',
     placement: 'bottom-start',
     whileElementsMounted: autoUpdate,
-    middleware: [offset(6), flip({ padding: 8 }), shift({ padding: 8 })],
+    // Lịch cao ~430px: ở 390×800 phía nào của ô cũng thiếu chỗ — popoverFit đẩy vào màn thay vì để mất hàng tháng
+    middleware: popoverFit(),
   });
   useOutside(open, () => [refs.floating.current, button.current], () => setOpen(false));
 
