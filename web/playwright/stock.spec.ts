@@ -232,7 +232,7 @@ test.describe('E9-S5 Tủ / Kho M1 (dev-identity admin)', () => {
     await page.goto('/admin/stock?filter=low');
     await expect(page.getByRole('button', { name: /^Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByText(/^Đang lọc: Sắp hết/)).toBeVisible();
-    await page.getByRole('button', { name: 'Bỏ lọc' }).click();
+    await page.getByRole('button', { name: 'Xóa lọc' }).click();
     await expect(page).not.toHaveURL(/filter=/);
   });
 

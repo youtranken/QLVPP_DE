@@ -79,10 +79,10 @@ describe('Danh mục — đầu trang, thẻ, lọc', () => {
     expect(screen.getByText('Bút chì 2B')).toBeInTheDocument();
   });
 
-  it('không món nào khớp → "Không có món nào khớp" + "Bỏ lọc" trả lại bảng', async () => {
+  it('không món nào khớp → "Không có món nào khớp" + "Xóa lọc" trả lại bảng', async () => {
     await openCatalog({ items: ITEMS }, '/admin/catalog?q=khongco');
     expect(await screen.findByText('Không có món nào khớp')).toBeInTheDocument();
-    await userEvent.click(within(screen.getByRole('table')).getByRole('button', { name: 'Bỏ lọc' }));
+    await userEvent.click(within(screen.getByRole('table')).getByRole('button', { name: 'Xóa lọc' }));
     expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
   });
 });

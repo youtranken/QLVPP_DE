@@ -103,7 +103,7 @@ describe('UsersPage B10', () => {
     expect(card(/^Đã khóa/)).toHaveAttribute('aria-pressed', 'true');
     await userEvent.click(card(/^Đang dùng/));
     expect(bodyRows().map((r) => within(r).getByRole('button').textContent)).toEqual(['Phạm Minh Đức', 'Trần Chi']);
-    await userEvent.click(screen.getByRole('button', { name: 'Bỏ lọc' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
     expect(bodyRows()).toHaveLength(3);
   });
 
@@ -138,7 +138,7 @@ describe('UsersPage B10', () => {
     expect(screen.queryByText('Mới')).toBeNull();
   });
 
-  it('ô tìm giới hạn 200 ký tự; gõ lọc không dấu theo tên/mã NV; rỗng → "Bỏ lọc"', async () => {
+  it('ô tìm giới hạn 200 ký tự; gõ lọc không dấu theo tên/mã NV; rỗng → "Xóa lọc"', async () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     const box = screen.getByRole('searchbox', { name: 'Tìm người' });
@@ -150,7 +150,7 @@ describe('UsersPage B10', () => {
     await userEvent.type(box, 'zzzz');
     expect(await screen.findByText('Không có ai khớp tìm kiếm.')).toBeInTheDocument();
     expect(screen.getByText(/Người mới vào công ty sẽ có sau lần đồng bộ kế tiếp/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Bỏ lọc' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
     await waitFor(() => expect(bodyRows()).toHaveLength(3));
   });
 

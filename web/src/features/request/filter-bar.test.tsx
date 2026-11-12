@@ -44,12 +44,12 @@ describe('FilterBar', () => {
     expect(screen.getByText('6 món khớp bộ lọc')).toBeInTheDocument();
   });
 
-  it('rỗng: thông báo + "Xóa bộ lọc" trả về mặc định', async () => {
+  it('rỗng: thông báo + "Xóa lọc" trả về mặc định', async () => {
     render(<Harness shown={0} />);
     await userEvent.click(screen.getByRole('button', { name: 'Giấy 2' }));
     await userEvent.click(screen.getByRole('button', { name: 'Đã chọn 3' }));
     expect(screen.getByText('Không có món phù hợp')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Xóa bộ lọc' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
     expect(screen.getByRole('button', { name: 'Tất cả 6' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Đã chọn 3' })).toHaveAttribute('aria-pressed', 'false');
   });

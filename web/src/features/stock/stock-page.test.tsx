@@ -75,13 +75,13 @@ describe('StockPage', () => {
     expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('?filter=incoming chỉ còn món có người chờ mà tủ chưa đủ, thẻ bật; "Bỏ lọc" trả đủ món', async () => {
+  it('?filter=incoming chỉ còn món có người chờ mà tủ chưa đủ, thẻ bật; "Xóa lọc" trả đủ món', async () => {
     await open('/admin/stock?filter=incoming', 'Bìa còng');
     expect(screen.queryByText('Giấy A4')).toBeNull();
     expect(screen.getByText('Bút chì')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Chờ hàng về/ })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText(/Đang lọc: Chờ hàng về · 2/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Bỏ lọc' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
     expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
     expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
   });

@@ -62,7 +62,7 @@ const common = {
     filter: {
       hint: 'Lọc',
       active: 'Đang lọc: {{label}} · {{count}}',
-      clear: 'Bỏ lọc',
+      clear: 'Xóa lọc',
     },
     errors: {
       PENDING_CUSTOM: 'Danh sách món chờ duyệt vừa thay đổi, xem lại rồi xác nhận.',

@@ -154,7 +154,7 @@ const request = {
       paused: 'Không đặt được',
       emptyTitle: 'Không có món phù hợp',
       emptyHint: 'Thử từ khóa khác, hoặc gửi đề nghị món mới cho Adm D&E.',
-      clear: 'Xóa bộ lọc',
+      clear: 'Xóa lọc',
       copy: 'Chép lại danh sách tháng {{month}}',
       picked: 'Đã chọn',
       sort: 'Sắp xếp',

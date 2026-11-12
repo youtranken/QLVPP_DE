@@ -110,17 +110,17 @@ describe('Danh mục lưới — tab rỗng', () => {
   it.each([
     ['inactive', 'Không có sản phẩm tạm ngưng.'],
     ['noImage', 'Món nào cũng đã có ảnh.'],
-  ])('tab %s rỗng, không lọc → "%s", không có "Bỏ lọc"', async (t, text) => {
+  ])('tab %s rỗng, không lọc → "%s", không có "Xóa lọc"', async (t, text) => {
     await open(`${GRID}?tab=${t}`, [PEN]);
     expect(screen.getByText(text)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Bỏ lọc' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Xóa lọc' })).toBeNull();
     expect(screen.queryByText('Không có món nào khớp')).toBeNull();
   });
 
-  it('tab rỗng nhưng đang tìm → vẫn "Không có món nào khớp" kèm "Bỏ lọc"', async () => {
+  it('tab rỗng nhưng đang tìm → vẫn "Không có món nào khớp" kèm "Xóa lọc"', async () => {
     await open(`${GRID}?tab=inactive&q=zz`, [PEN]);
     expect(screen.getByText('Không có món nào khớp')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Bỏ lọc' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Xóa lọc' })).toBeInTheDocument();
   });
 });
 
