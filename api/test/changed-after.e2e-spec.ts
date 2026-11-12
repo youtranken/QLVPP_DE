@@ -188,6 +188,43 @@ describe('V2D-4 changedAfter qua endpoint thật, đồng hồ đứng (R-X.1, R
     );
   });
 
+  // Hủy phần thiếu vì NCC hết hàng là hệ quả của nhận/giao hàng kỳ này, không đổi đơn: web cộng lại vào cần nay như phần đã giao
+  it('adm_cancelled_since: hủy NCC hết hàng sau bản trên dòng có trong căn cứ → cộng theo khóa; hủy cùng mốc bản hoặc dòng vào sau bản không cộng', async () => {
+    await base();
+    const item = await f.stockItem(1);
+    const line = await seedLine(YM, A, { item_id: item, qty: 3 });
+    const same = await seedLine(YM, B, { item_id: item, qty: 2 });
+    // Dòng có trong căn cứ lúc chốt: tạo trước bản (seed mang giờ thật, bản chốt ở năm 2000)
+    await pool().query(
+      'UPDATE request_lines SET created_at = $2::timestamptz WHERE id = ANY($1::uuid[])',
+      [[line, same], iso(T - 60_000)],
+    );
+    const other = await f.stockItem(0);
+    // Dòng vào sau bản (giờ thật > bản chốt năm 2000), món khác cùng NCC hết hàng: không có trong căn cứ
+    const late = await seedLine(YM, B, { item_id: other, qty: 4 });
+    await f.markOut(YM, item).expect(200);
+    await f.markOut(YM, other).expect(200);
+    await snapshotAtT();
+    const cancel = (id: string, delivered: number, qty: number) =>
+      f
+        .cancel(id, {
+          reason_code: 'adm_out_of_stock',
+          expected_delivered_qty: delivered,
+          expected_qty: qty,
+        })
+        .expect(200);
+    await at(T, () => cancel(same, 0, 2));
+    expect((await sendState(YM)).adm_cancelled_since).toEqual({});
+    await at(T + 1, async () => {
+      await f.deliver(line, { qty: 1, expected_delivered_qty: 0 }).expect(200);
+      await cancel(line, 1, 3);
+      await cancel(late, 0, 4);
+    });
+    const state = await sendState(YM);
+    expect(state.delivered_since).toEqual({ [item]: 1 });
+    expect(state.adm_cancelled_since).toEqual({ [item]: 2 });
+  });
+
   it('arrival.adm_out_marked', async () => {
     await base();
     const lines = await itemLines(3);
