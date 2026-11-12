@@ -57,7 +57,8 @@
 [data-shell='admin'] .month-switch .month-switch__beyond:not(:disabled) { width: auto; padding: 0 var(--s-3); color: var(--c-ink-2); font: var(--t-micro); font-weight: 700; }
 [data-shell='admin'] .month-switch .month-switch__beyond[aria-pressed='true'],
 [data-shell='admin'] .month-switch .month-switch__beyond[aria-pressed='true']:hover:not(:disabled) { background: var(--c-sel); color: var(--c-on-sel); }
-[data-shell='admin'] .month-switch > span:first-of-type { font: var(--t-label); font-weight: 700; color: var(--c-ink); }
+[data-shell='admin'] .month-switch__pill { display: contents; }
+[data-shell='admin'] .month-switch__pill > span { font: var(--t-label); font-weight: 700; color: var(--c-ink); }
 /* admin.css cũ kẻ vạch hai bên nhãn tháng; khung pill không cần vạch */
 [data-shell='admin'] .month-switch span { border-inline: 0; }
 [data-shell='admin'] .month-switch__status { height: 22px; padding: 0 var(--s-2); border-radius: var(--r-pill); display: inline-flex; align-items: center; font: var(--t-micro); font-weight: 700; }
@@ -67,11 +68,13 @@
   [data-shell='admin'] .stepper { grid-template-columns: var(--hit) minmax(32px, auto) var(--hit); height: var(--hit); }
   [data-shell='admin'] .stepper button { width: var(--hit); height: var(--hit); }
   [data-shell='admin'] .stepper button::after { content: none; }
-  [data-shell='admin'] .month-switch { flex-wrap: wrap; max-width: 100%; height: auto; min-height: var(--hit); padding: 0; }
-  [data-shell='admin'] .month-switch__status { margin: 0 var(--s-2) var(--s-1); }
+  /* Điện thoại: khung ngoài trong suốt, chỉ cụm ‹ tháng › là viên (một dòng); nhãn kỳ mở và trạng thái nằm ngoài viên, xuống hàng khi chật */
+  [data-shell='admin'] .month-switch { flex-wrap: wrap; max-width: 100%; height: auto; min-height: var(--hit); padding: 0; background: none; box-shadow: none; border-radius: 0; overflow: visible; }
+  [data-shell='admin'] .month-switch__pill { display: inline-flex; flex: none; align-items: center; gap: var(--s-1); border-radius: var(--r-pill); background: var(--c-surface); box-shadow: var(--e-1); }
+  [data-shell='admin'] .month-switch__pill > span { white-space: nowrap; }
   [data-shell='admin'] .month-switch button { flex: none; width: var(--hit); height: var(--hit); }
-  /* Nhãn kỳ đang mở dài ("Tháng n đang đăng ký — báo cáo sau 00:00 ngày d/m"): xuống hàng riêng, gói chữ trong khung */
-  [data-shell='admin'] .month-switch .month-switch__beyond { flex: 1 1 100%; height: auto; min-height: var(--hit); white-space: normal; text-align: left; }
+  /* Nhãn kỳ đang mở dài ("Tháng n đang đăng ký — báo cáo sau 00:00 ngày d/m"): hàng riêng dưới viên, chữ gói tự nhiên */
+  [data-shell='admin'] .month-switch .month-switch__beyond { flex: 1 1 100%; width: auto; height: auto; min-height: var(--hit); padding: 0 var(--s-2); border-radius: var(--r-md); white-space: normal; text-align: left; }
   [data-shell='admin'] .inline-number { min-height: var(--hit); }
 }
 

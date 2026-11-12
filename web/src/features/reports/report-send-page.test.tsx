@@ -285,6 +285,11 @@ describe('Báo cáo & gửi NCC: kỳ cũ hơn, ai đăng ký, các bản đã i
     expect(await within(dialog).findByText('Đăng ký 20 cây · sau điều chỉnh 19 · Đề nghị 5')).toBeInTheDocument();
     expect(within(dialog).getByText('Adm D&E bỏ: Không có hàng')).toBeInTheDocument();
     expect(within(dialog).getByText('Tổng sau điều chỉnh')).toBeInTheDocument();
+    // < 768 bảng thành thẻ như bảng trang: mỗi ô có nhãn cột (data-label), ô ghi chú rỗng để CSS ẩn ở thẻ / hiện "—" ở bảng
+    const table = within(dialog).getByRole('table');
+    expect(table).toHaveClass('table-stack');
+    const cells = within(within(dialog).getAllByRole('row')[1]!).getAllByRole('cell');
+    expect(cells.map((c) => c.getAttribute('data-label'))).toEqual([null, 'Nhóm', 'Số lượng', 'Ghi chú', null]);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Xem phiếu của Nhân viên C' }));
     expect(await screen.findByRole('dialog', { name: 'Phiếu của Nhân viên C' })).toBeInTheDocument();
   });
