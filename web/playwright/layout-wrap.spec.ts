@@ -143,6 +143,8 @@ test.describe('Điện thoại và màn vừa: khối không bị cắt (vòng 8
 
   test('Kỳ tháng: viên ‹ tháng › một dòng; điện thoại chip + link xuống dưới viên; bảng năm-tháng nằm trọn màn; đổi kỳ bảng không xô', async ({ page }, info) => {
     test.skip(isMobile(info), 'tự đặt đủ 5 bề rộng, chạy một lần ở dự án máy tính');
+    // 5 bề rộng × 3 lần tải trang chờ mạng lặng + mở bảng năm-tháng: quá 30 giây mặc định
+    test.setTimeout(120_000);
     await as(page, 'admin');
     const open = (await (await page.request.get('/api/periods/current', { headers: devHeaders('admin') })).json()) as { ym: string };
     const locked = prevYmOf(open.ym);
