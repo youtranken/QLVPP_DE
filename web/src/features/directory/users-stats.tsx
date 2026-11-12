@@ -38,10 +38,11 @@ export function UsersStats({ stats, filter, onFilter, reg }: { stats: Record<Sta
       />
       <StatCard
         label={t('users.stats.no_access')}
-        icon="lock"
+        icon="x"
         value={stats.no_access}
         unit={t('users.stats.people')}
-        tone={stats.no_access > 0 ? 'danger' : 'neutral'}
+        // Mất quyền là việc của PMH ID (gỡ app), không phải tài khoản bị khóa: màu khác Đã khóa để hai thẻ không lẫn
+        tone="info"
         pressed={filter === 'no_access'}
         onClick={() => onFilter('no_access')}
       />

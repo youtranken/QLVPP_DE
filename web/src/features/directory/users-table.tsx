@@ -21,7 +21,9 @@ export function UserAvatar({ user, large = false }: { user: Pick<AdminUser, 'sub
 
 export function StatusBadge({ status }: { status: AdminUser['status'] }) {
   const { t } = useTranslation();
-  return <span className={status === 'active' ? 'tag tag--ok' : 'tag tag--danger'}>{t(`users.status.${status}`)}</span>;
+  // Cùng màu với thẻ số ở đầu trang: Đã khóa đỏ, Mất quyền (PMH ID gỡ app) xanh thông tin
+  const tone = status === 'active' ? 'tag--ok' : status === 'no_access' ? 'tag--info' : 'tag--danger';
+  return <span className={`tag ${tone}`}>{t(`users.status.${status}`)}</span>;
 }
 
 export function LastLogin({ iso }: { iso: string | null }) {

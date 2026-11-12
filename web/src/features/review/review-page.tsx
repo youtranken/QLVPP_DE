@@ -62,7 +62,7 @@ export function ReviewPage() {
     const n = counts[f];
     return f === 'pending' && p.status === 'pending' && n !== undefined ? n - stillListed : n;
   };
-  const tabs = REVIEW_FILTERS.map((f) => ({ value: f, label: t(`review.filters.${f}`), count: countOf(f) }));
+  const tabs = REVIEW_FILTERS.map((f) => ({ value: f, label: t(`review.filters.${f}`), count: countOf(f), urgent: f === 'pending' }));
 
   return (
     <div className="ct-page">

@@ -5,6 +5,9 @@ interface Option<T extends string> {
   label: string;
   ariaLabel?: string;
   count?: number;
+  // Tab cần người xử lý (Chờ xem, Chưa nhận…): số khác 0 tô đỏ đất. Tab khác (Tất cả, Đã chấp nhận) số trung tính —
+  // tô đỏ mọi số thì đỏ mất nghĩa "cần làm"
+  urgent?: boolean;
 }
 
 interface Props<T extends string> {
@@ -39,7 +42,7 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
           onKeyDown={(e) => move(e, i)}
         >
           {o.label}
-          {o.count !== undefined && <em className="num" data-zero={o.count === 0 || undefined}>{o.count}</em>}
+          {o.count !== undefined && <em className="num" data-zero={o.count === 0 || undefined} data-urgent={(o.urgent && o.count > 0) || undefined}>{o.count}</em>}
         </button>
       ))}
     </div>
