@@ -92,9 +92,19 @@ describe('luật vòng focus', () => {
     expect(audit).not.toMatch(/\.au-filters \.btn--primary(:hover)?\s*[,{]/);
   });
 
+  it('link "Tới nội dung" của khung quản lý có vòng focus dù luật riêng đặt bóng nổi', () => {
+    expect(read('css/m1/shell.css')).toMatch(/\[data-shell='admin'\] \.skip-link:focus-visible\s*\{\s*box-shadow:\s*var\(--e-3\),\s*var\(--focus\)/);
+  });
+
+  it('Nhận hàng ở điện thoại (bảng thành thẻ): bỏ khung cuộn ngang để vòng focus ô số/nút sát mép không bị cắt', () => {
+    const css = read('features/arrivals/arrivals.m1.css');
+    const phone = css.slice(css.indexOf('@media (max-width: 767px)'));
+    expect(phone).toMatch(/\.ar-scroll\s*\{\s*overflow:\s*visible/);
+  });
+
   it('khung cuộn/khung cắt: một luật chung vẽ vòng focus vào trong, nạp sau mọi CSS chung', () => {
     const focus = read('css/focus.css');
-    for (const box of ['.rv-tabs', '.pp-tabs__scroll', '.month-switch', '.flt-chips', '.seg-m1', '.ct-chips']) expect(focus).toContain(box);
+    for (const box of ['.rv-tabs', '.pp-tabs__scroll', '.month-switch', '.flt-chips', '.seg-m1', '.ct-chips', '.ct-seg-scroll', '.ct-gchips-scroll', '.au-quick', '.rq-f-scroll']) expect(focus).toContain(box);
     expect(focus).toMatch(/:focus-visible\s*\{[^}]*box-shadow:\s*var\(--focus-inset\)/);
     expect(read('css/tokens-m1.css')).toMatch(/--focus-inset:\s*inset/);
     const imports = [...read('main.tsx').matchAll(/import '(@\/css\/[^']+\.css)'/g)].map((m) => m[1]);

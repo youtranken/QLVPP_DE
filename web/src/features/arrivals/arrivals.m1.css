@@ -104,6 +104,9 @@
 
 @media (max-width: 767px) {
   [data-shell='admin'] .ar-card { padding: var(--s-4); }
+  /* Điện thoại: bảng xếp thành thẻ món, không còn gì tràn ngang — bỏ khung cuộn để vòng focus của ô số/nút sát mép
+     không bị cắt và đầu nhóm dính lại như trước */
+  [data-shell='admin'] .ar-scroll { overflow: visible; }
   [data-shell='admin'] .ar-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   [data-shell='admin'] .ar-table, [data-shell='admin'] .ar-table tbody { display: block; }
   [data-shell='admin'] .ar-table tr { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2) var(--s-3); padding: var(--s-3) 0; border-bottom: 1px solid var(--c-line); }
