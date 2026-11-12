@@ -31,8 +31,12 @@ async function memberOtherItemUnits(browser: Browser, info: TestInfo, sub: strin
     await expect(addOther).toBeInViewport();
     await addOther.click();
     const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
-    await expect(dialog.getByLabel('Đơn vị tính').locator('option', { hasText: /^hộp$/ })).toHaveCount(1);
-    return await dialog.getByLabel('Đơn vị tính').locator('option', { hasText: name }).count();
+    // Ô ĐVT là Listbox: mở danh sách rồi đếm lựa chọn
+    const unit = dialog.getByLabel('Đơn vị tính');
+    await unit.click();
+    const list = page.locator(`[id="${await unit.getAttribute('aria-controls')}"]`);
+    await expect(list.getByRole('option', { name: 'hộp', exact: true })).toHaveCount(1);
+    return await list.getByRole('option', { name }).count();
   } finally {
     await page.context().close();
   }
