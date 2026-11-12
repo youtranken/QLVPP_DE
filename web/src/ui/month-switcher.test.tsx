@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { renderWithI18n, screen, userEvent } from '@/test/test-utils';
+import { renderWithI18n, screen, userEvent, within } from '@/test/test-utils';
 import { MonthSwitcher } from '@/ui/month-switcher';
 
 const labels = { group: 'Chọn tháng', prev: 'Tháng trước', next: 'Tháng sau' };
@@ -64,5 +64,52 @@ describe('MonthSwitcher', () => {
     shown.unmount();
     renderWithI18n(<MonthSwitcher value="2026-10" max="2026-10" onChange={() => {}} formatLabel={fmt} labels={labels} beyond={beyond} />);
     expect(screen.getByRole('button', { name: 'Tháng 11/2026 · Đang mở' })).toBeDisabled();
+  });
+
+  it('bấm nhãn tháng mở bảng năm-tháng; chọn tháng xa đi thẳng tới đó, bảng đóng, focus về nhãn', async () => {
+    const onChange = vi.fn();
+    renderWithI18n(<MonthSwitcher value="2026-12" min="2026-01" max="2027-01" onChange={onChange} formatLabel={fmt} labels={labels} />);
+    const label = screen.getByRole('button', { name: 'Tháng 12/2026, bấm để chọn năm-tháng' });
+    expect(label).toHaveAttribute('aria-haspopup', 'dialog');
+    await userEvent.click(label);
+    expect(label).toHaveAttribute('aria-expanded', 'true');
+    const dialog = screen.getByRole('dialog', { name: 'Chọn năm-tháng' });
+    // Trần/sàn của trang áp vào bảng: tháng sau trần tắt
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Năm sau' }));
+    expect(within(dialog).getByRole('button', { name: 'Tháng 2/2027' })).toBeDisabled();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Tháng 1/2027' }));
+    expect(onChange).toHaveBeenCalledWith('2027-01');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(label).toHaveFocus();
+  });
+
+  it('Esc đóng bảng và trả focus về nhãn tháng; chọn lại đúng tháng đang xem thì không gọi onChange', async () => {
+    const onChange = vi.fn();
+    renderWithI18n(<MonthSwitcher value="2026-12" onChange={onChange} formatLabel={fmt} labels={labels} />);
+    const label = screen.getByRole('button', { name: /^Tháng 12\/2026, / });
+    await userEvent.click(label);
+    expect(screen.getByRole('button', { name: 'Tháng 12/2026' })).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(label).toHaveFocus();
+    await userEvent.click(label);
+    await userEvent.keyboard('{Enter}');
+    expect(onChange).not.toHaveBeenCalled();
+    expect(label).toHaveFocus();
+  });
+
+  it('bấm ra ngoài thì đóng bảng; ‹ › vẫn đi từng tháng', async () => {
+    const onChange = vi.fn();
+    renderWithI18n(
+      <>
+        <MonthSwitcher value="2026-12" onChange={onChange} formatLabel={fmt} labels={labels} />
+        <p>ngoài</p>
+      </>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: /^Tháng 12\/2026, / }));
+    await userEvent.click(screen.getByText('ngoài'));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Tháng trước' }));
+    expect(onChange).toHaveBeenCalledWith('2026-11');
   });
 });

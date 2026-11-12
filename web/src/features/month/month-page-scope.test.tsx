@@ -44,20 +44,20 @@ describe('MonthPage: nạp đủ mọi trang người', () => {
   });
 });
 
-describe('MonthPage: ‹ Tháng trước dừng ở kỳ cũ nhất', () => {
+describe('MonthPage: ‹ dừng ở kỳ cũ nhất', () => {
   const withEarliest = (ym: string) => stubMonthApi((url) => (/\/summary$/.test(url) ? jsonResponse(200, { ...LOCKED, earliest_ym: ym }) : undefined));
 
   it('kỳ đang xem là kỳ cũ nhất có phiếu → nút bị tắt', async () => {
     withEarliest('2026-10');
     open();
     await table();
-    await waitFor(() => expect(screen.getByRole('button', { name: /Tháng trước/ })).toBeDisabled());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Tháng trước' })).toBeDisabled());
   });
 
   it('còn kỳ cũ hơn → nút bấm được', async () => {
     withEarliest('2026-08');
     open();
     await table();
-    await waitFor(() => expect(screen.getByRole('button', { name: /Tháng trước/ })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Tháng trước' })).toBeEnabled());
   });
 });

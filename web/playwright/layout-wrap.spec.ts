@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { devHeaders, isMobile, skipNewPeriodPopup } from './helpers';
+import { prevYmOf } from './locked-request';
 
 // Chặn tái phát rà soát vòng 8 (điện thoại, màn vừa, đăng nhập): chữ trong nút không gãy dòng, các khối không bị cắt.
 // Chỉ đọc: mọi request /api khác GET bị chặn trước khi tới server.
@@ -31,8 +32,7 @@ async function wrappedButtons(page: Page) {
       const blocks = [...el.children].filter((c) => ['block', 'flex', 'grid'].includes(getComputedStyle(c).display));
       if (blocks.length >= 2) continue;
       // Nút chính màn đăng nhập được phép 2 dòng cân nhau (kiểm riêng bên dưới). Tên món/người dạng nút (…__name) là chữ dài tự nhiên.
-      // Nút kỳ ở Kỳ tháng (.mk-switch) đang chờ chủ dự án chọn mockup: chưa chặn ở đây.
-      if (el.matches('.btn--xl, .month-switch__beyond, [class*="__name"]') || el.closest('.mk-switch')) continue;
+      if (el.matches('.btn--xl, .month-switch__beyond, [class*="__name"]')) continue;
       // Chỉ chữ đang hiện: bỏ chữ trong .sr-only (nhãn ẩn của ô chọn nằm ngoài dòng, không phải gãy dòng)
       const tops = new Set<number>();
       const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
@@ -138,6 +138,39 @@ test.describe('Điện thoại và màn vừa: khối không bị cắt (vòng 8
       });
       expect(m.pillH, `${width}px`).toBeLessThanOrEqual(48);
       expect(m.noteBelow, `${width}px`).toBe(true);
+    }
+  });
+
+  test('Kỳ tháng: viên ‹ tháng › một dòng; điện thoại chip + link xuống dưới viên; bảng năm-tháng nằm trọn màn; đổi kỳ bảng không xô', async ({ page }, info) => {
+    test.skip(isMobile(info), 'tự đặt đủ 5 bề rộng, chạy một lần ở dự án máy tính');
+    await as(page, 'admin');
+    const open = (await (await page.request.get('/api/periods/current', { headers: devHeaders('admin') })).json()) as { ym: string };
+    const locked = prevYmOf(open.ym);
+    for (const width of [360, 390, 768, 1024, 1280]) {
+      await page.setViewportSize({ width, height: 800 });
+      const tops: number[] = [];
+      for (const ym of [locked, open.ym, locked]) {
+        await settle(page, `/admin/month?ym=${ym}`);
+        const m = await page.locator('.mk-switch').evaluate((el) => {
+          const pill = el.querySelector('.month-switch__label')!.closest('.month-switch')!.getBoundingClientRect();
+          const chip = el.querySelector('.mk-switch__status')!.getBoundingClientRect();
+          const jump = el.querySelector('.mk-switch__jump')!.getBoundingClientRect();
+          return { pillH: pill.height, chipBelow: chip.top >= pill.bottom - 1, jumpBelow: jump.top >= pill.bottom - 1, strip: document.querySelector('.mk-strip')!.getBoundingClientRect().top, sw: document.documentElement.scrollWidth };
+        });
+        expect(m.pillH, `${width}px`).toBeLessThanOrEqual(48);
+        expect(m.sw, `${width}px`).toBeLessThanOrEqual(width);
+        if (width < 768) expect([m.chipBelow, m.jumpBelow], `${width}px`).toEqual([true, true]);
+        tops.push(m.strip);
+      }
+      // Dải bước (ngay trên bảng) đứng yên khi chuyển kỳ đang giao ↔ kỳ đăng ký
+      expect(new Set(tops).size, `${width}px`).toBe(1);
+      await page.locator('.month-switch__label').click();
+      const pop = await page.getByRole('dialog', { name: 'Chọn năm-tháng' }).boundingBox();
+      expect(pop!.x).toBeGreaterThanOrEqual(0);
+      expect(pop!.x + pop!.width).toBeLessThanOrEqual(width);
+      expect(pop!.y + pop!.height).toBeLessThanOrEqual(800);
+      await page.keyboard.press('Escape');
+      await expect(page.locator('.month-switch__label')).toBeFocused();
     }
   });
 

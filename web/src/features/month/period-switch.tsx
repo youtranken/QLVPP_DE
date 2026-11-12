@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { lockedYm, shiftYm } from '@/lib/ym';
-import { Segmented } from '@/ui/segmented';
-import { Icon } from '@/ui/icon';
+import { lockedYm } from '@/lib/ym';
+import { MonthSwitcher } from '@/ui/month-switcher';
+import type { MonthMark, MonthTone } from '@/ui/month-picker';
+import { periodFloor } from './use-month-params';
 
 interface Props {
   ym: string;
@@ -12,30 +13,35 @@ interface Props {
 }
 
 const monthOf = (ym: string) => Number(ym.slice(5, 7));
+const TAG: Record<MonthTone, string> = { locked: 'tag tag--brand', open: 'tag tag--warn', past: 'tag' };
 
+// Cùng kiểu ‹ Tháng 12/2026 › với Báo cáo; chip cho biết tháng đang xem ở bước nào, link chữ nhảy sang kỳ sống còn lại
 export function PeriodSwitch({ ym, openYm, earliestYm, onChange }: Props) {
   const { t } = useTranslation();
   const locked = lockedYm(openYm);
-  const options = [
-    { value: locked, label: t('month.period.locked', { month: monthOf(locked) }) },
-    { value: openYm, label: t('month.period.open', { month: monthOf(openYm) }) },
-    ...(ym < locked ? [{ value: ym, label: t('month.period.older', { month: monthOf(ym), year: ym.slice(0, 4) }) }] : []),
-  ];
-  const earlier = shiftYm(ym > locked ? locked : ym, -1);
-  const atStart = earliestYm !== undefined && (earliestYm === null || earlier < earliestYm);
+  const floor = periodFloor(openYm, earliestYm);
+  const toneOf = (v: string): MonthTone => (v === openYm ? 'open' : v === locked ? 'locked' : 'past');
+  const markOf = (v: string): MonthMark | undefined => (v > openYm || (floor !== undefined && v < floor) ? undefined : { tone: toneOf(v), label: t(`month.period.status.${toneOf(v)}`) });
+  const tone = toneOf(ym);
+  // Đang xem kỳ đăng ký thì link về kỳ đang giao; còn lại (đang giao, đã qua) link sang kỳ đăng ký
+  const target = tone === 'open' ? locked : openYm;
   return (
     <div className="mk-switch">
-      <button
-        type="button"
-        className="btn btn--ghost btn--sm mk-prev"
-        disabled={atStart}
-        aria-label={t('month.period.previousLabel', { month: monthOf(earlier), year: earlier.slice(0, 4) })}
-        onClick={() => onChange(earlier)}
-      >
-        <Icon name="chevl" size={16} />
-        {t('month.period.previous')}
+      <MonthSwitcher
+        value={ym}
+        min={floor}
+        max={openYm}
+        onChange={onChange}
+        markOf={markOf}
+        formatLabel={(v) => t('month.period.month', { month: monthOf(v), year: v.slice(0, 4) })}
+        labels={{ group: t('month.period.label'), prev: t('month.period.prev'), next: t('month.period.next') }}
+      />
+      <span className={`mk-switch__status ${TAG[tone]}`}>{t(`month.period.status.${tone}`)}</span>
+      <button type="button" className="mk-switch__jump" onClick={() => onChange(target)}>
+        {tone === 'open' && <span aria-hidden="true">←</span>}
+        {t(tone === 'open' ? 'month.period.toLocked' : 'month.period.toOpen', { month: monthOf(target) })}
+        {tone !== 'open' && <span aria-hidden="true">→</span>}
       </button>
-      <Segmented label={t('month.period.label')} value={ym} options={options} onChange={onChange} />
     </div>
   );
 }
