@@ -37,7 +37,7 @@ function Control({ line, value, max, taken, notReceived, disabled, onChange }: P
     );
   }
   if (max <= 0) return <span className="pp-row__oos">{t(notReceived ? 'delivery.people.panel.notReceived' : taken ? 'delivery.people.panel.allocatedAbove' : 'delivery.people.panel.outOfStock')}</span>;
-  return <Stepper className="pp-row__step" value={value} min={0} max={max} disabled={disabled} label={t('delivery.people.panel.qty', { name })} onChange={onChange} />;
+  return <Stepper size="sm" className="pp-row__step" value={value} min={0} max={max} disabled={disabled} label={t('delivery.people.panel.qty', { name })} onChange={onChange} />;
 }
 
 export function PersonLineRow({ line, value, max, taken, notReceived, waiting, shortage, disabled, onChange }: Props) {

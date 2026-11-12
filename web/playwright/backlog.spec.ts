@@ -116,10 +116,13 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await snap(page, info, 'backlog-history');
       await drawer.getByRole('button', { name: 'Đóng' }).click();
 
-      // Hủy nợ chỉ nằm trong menu ⋯ của dòng ở mọi bề rộng
-      await expect(row.getByRole('button', { name: 'Hủy nợ' })).toHaveCount(0);
-      await row.getByRole('button', { name: `Thao tác khác ${a.name} — ${seed.name}` }).click();
-      await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();
+      // Máy tính: "Hủy nợ" là nút chữ phụ trên dòng; điện thoại: nằm trong menu ⋯
+      if (isMobile(info)) {
+        await row.getByRole('button', { name: `Thao tác khác ${a.name} — ${seed.name}` }).click();
+        await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();
+      } else {
+        await row.getByRole('button', { name: `Hủy nợ ${a.name} — ${seed.name}` }).click();
+      }
       const cancel = page.getByRole('dialog', { name: `Hủy nợ 1 cái ${a.name} của ${seed.name}?` });
       const reason = cancel.getByRole('textbox', { name: /^Ghi chú/ });
       const submit = cancel.getByRole('button', { name: 'Hủy nợ', exact: true });

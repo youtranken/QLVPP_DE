@@ -3,6 +3,12 @@
 [data-shell='admin'] .setup-tab[aria-selected='true'] { background: var(--c-sel); color: var(--c-on-sel); box-shadow: none; }
 [data-shell='admin'] .setup-tab:focus-visible { box-shadow: var(--focus); outline: none; }
 [data-shell='admin'] .setup-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); }
+/* Thanh công cụ chung của hai tab (ô tìm · đếm · Sắp xếp): cùng khung nên đổi tab không làm nút Sắp xếp đổi chỗ */
+[data-shell='admin'] .setup-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); flex: 1 1 320px; justify-content: flex-end; }
+[data-shell='admin'] .setup-tools .toolbar { flex: 1 1 240px; }
+[data-shell='admin'] .setup-shown { margin: 0; color: var(--c-muted); font: var(--t-sm); font-weight: 600; }
 @media (max-width: 767px) {
   [data-shell='admin'] .setup-tab { min-height: var(--hit); padding: 0 12px; }
+  /* Điện thoại: dòng đếm xuống hàng cuối, sau nút Sắp xếp */
+  [data-shell='admin'] .setup-tools .list-meta { order: 1; }
 }

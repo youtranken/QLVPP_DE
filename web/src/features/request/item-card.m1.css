@@ -23,6 +23,8 @@
 [data-shell='member'] .rq-card-add.rq-card-add--paused:disabled { color: var(--c-danger); opacity: 1; }
 [data-shell='member'] .rq-card-more { align-items: center; justify-content: center; gap: var(--s-2); min-height: 200px; border: 2px dashed var(--c-line); background: transparent; box-shadow: none; text-align: center; color: var(--c-ink-2); font: var(--t-label); cursor: pointer; }
 [data-shell='member'] .rq-card-more:hover { border-color: var(--c-ink-2); }
+/* box-shadow: none ở trên đè vòng focus chung — trả lại như mọi thẻ khác */
+[data-shell='member'] .rq-card-more:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell='member'] .rq-card-more b { color: var(--c-ink); font-weight: 800; }
 [data-shell='member'] .rq-card-more-ic { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: var(--c-surface-2); font-size: 28px; font-weight: 800; }
 @media (max-width: 900px) {

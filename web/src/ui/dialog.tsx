@@ -4,19 +4,18 @@ import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, RefObject } from '
 import { useTranslation } from 'react-i18next';
 import { discardOptions, useOptionalConfirm } from '@/ui/confirm-context';
 import { DialogPortalContext } from '@/ui/dialog-portal';
-import { IconX } from '@/ui/icons';
+import { Icon } from '@/ui/icon';
 
 export const DialogTitle = RD.Title;
 export const DialogDescription = RD.Description;
 export const DialogClose = RD.Close;
 
-// IconX vẽ tại chỗ thay vì dùng sprite: hộp xác nhận còn mở trong khung nhân viên, nơi không có IconSprite
 export function DialogCloseButton({ disabled = false }: { disabled?: boolean }) {
   const { t } = useTranslation();
   return (
     <RD.Close asChild>
       <button type="button" className="sheet-close" aria-label={t('common.close')} disabled={disabled}>
-        <IconX width={20} height={20} strokeWidth={2} focusable={false} />
+        <Icon name="x" size={20} />
       </button>
     </RD.Close>
   );

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { IconChevronRight } from '@/ui/icons';
+import { Icon } from '@/ui/icon';
 import { CUSTOM_STATUSES, type HistoryItem } from './history.api';
 import { Chip } from './history-chip';
 import { DeliveryTag } from './history-delivery-tag';
@@ -19,7 +19,7 @@ function MasterItem({ item, open, selected }: { item: HistoryItem; open: boolean
         <span className="hs-sum">{t('request.history.masterSum', { kinds: item.catalog.line_count, units: item.catalog.qty })}</span>
         {open ? <Chip tone="open">{t('request.history.open')}</Chip> : <DeliveryTag item={item} />}
         {custom.length > 0 && <span className="hs-custom">{custom.map((c) => t(`request.history.customCount.${c.key}`, { n: c.n })).join(' · ')}</span>}
-        <IconChevronRight className="hs-m-chev" width={18} height={18} />
+        <Icon name="chevr" className="hs-m-chev" size={18} />
       </Link>
     </li>
   );

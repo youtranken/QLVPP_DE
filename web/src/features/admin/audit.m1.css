@@ -29,7 +29,8 @@
 [data-shell='admin'] .au-system:hover:not([aria-pressed='true']) { background: var(--c-surface-hover); box-shadow: inset 0 0 0 1px var(--c-dark); }
 [data-shell='admin'] .au-system[aria-pressed='true'] { background: var(--c-sel); box-shadow: none; color: var(--c-on-sel); }
 [data-shell='admin'] .au-system:focus-visible { outline: none; box-shadow: var(--focus); }
-[data-shell='admin'] .au-filters .btn--primary, [data-shell='admin'] .au-filters .btn--primary:hover { box-shadow: none; }
+/* Bỏ bóng nút Lọc nhưng chừa lúc focus: không thì đè vòng .btn:focus-visible, Tab tới Lọc không thấy gì */
+[data-shell='admin'] .au-filters .btn--primary:not(:focus-visible) { box-shadow: none; }
 [data-shell='admin'] .au-quick-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); }
 /* Dòng đếm + "Đang lọc" luôn một hàng riêng dưới chip Nhanh: lọc thì hàng dài thêm nhưng bảng không bị đẩy xuống */
 [data-shell='admin'] .au-quick-row > .list-meta { flex: 1 1 100%; min-height: 36px; }

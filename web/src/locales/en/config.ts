@@ -31,6 +31,8 @@ const config: Messages<typeof vi> = {
       defaultMax: 'Max per item',
       defaultMaxHint: 'Suggested for new items, 1–999.',
       defaultMaxUnit: 'units/month',
+      defaultMaxDown: 'One unit less',
+      defaultMaxUp: 'One unit more',
       save: 'Save registration period',
     },
     preview: {

@@ -76,6 +76,7 @@ const delivery = {
       moreOf: 'Thao tác khác {{name}} — {{person}}',
       historyOf: 'Lịch sử giao {{name}} — {{person}}',
       cancel: 'Hủy nợ',
+      cancelOf: 'Hủy nợ {{name}} — {{person}}',
       deliver: {
         title: 'Giao bổ sung {{name}} cho {{person}}',
         meta: 'Tháng {{month}} · Còn nợ {{r}} {{unit}}',
@@ -172,6 +173,9 @@ const delivery = {
       pick: 'Chọn {{name}}',
       pickAllPhone: 'Chọn tất cả người giao được',
       pickAll: 'Chọn tất cả',
+      pickAllNone: 'Chưa có người nào giao được ngay — tủ chưa có hàng hoặc đã giao xong',
+      pickNoStock: 'Chưa giao được — tủ chưa có hàng cho phiếu này',
+      pickDone: 'Đã giao xong',
       title_one: 'Giao {{count}} phiếu?',
       title_other: 'Giao {{count}} phiếu?',
       line: '{{n}} món · {{u}} đơn vị',

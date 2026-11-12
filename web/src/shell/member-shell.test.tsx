@@ -3,6 +3,7 @@ import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-ut
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
+import { stubRequestApi } from '@/test/request-api-stub';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -176,5 +177,17 @@ describe('MemberShell', () => {
       expect(within(nav).getAllByRole('link')).toHaveLength(2);
       expect(within(nav).getAllByRole('button')).toHaveLength(1);
     }
+  });
+  it.each([390, 1280])('%i px: mọi <use href> trong khung nhân viên trỏ tới một symbol có thật (nút xóa ô tìm có dấu ×)', async (w) => {
+    mockViewport(w);
+    stubRequestApi();
+    renderApp(makeMe('member'), '/');
+    const search = await screen.findByRole('searchbox', { name: 'Tìm món' });
+    await userEvent.type(search, 'xyz');
+    const uses = [...document.querySelectorAll('use')];
+    expect(uses.length).toBeGreaterThan(0);
+    const missing = uses.map((u) => u.getAttribute('href') ?? '').filter((href) => !href.startsWith('#') || !document.getElementById(href.slice(1)));
+    expect(missing).toEqual([]);
+    expect(document.querySelector('.search-clear use')?.getAttribute('href')).toBe('#u-x');
   });
 });

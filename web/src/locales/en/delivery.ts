@@ -79,6 +79,7 @@ const delivery: Messages<typeof vi> = {
       moreOf: 'More actions {{name}} — {{person}}',
       historyOf: 'Delivery history {{name}} — {{person}}',
       cancel: 'Cancel debt',
+      cancelOf: 'Cancel debt {{name}} — {{person}}',
       deliver: {
         title: 'Deliver more {{name}} to {{person}}',
         meta: 'Month {{month}} · {{r}} {{unit}} owed',
@@ -175,6 +176,9 @@ const delivery: Messages<typeof vi> = {
       pick: 'Select {{name}}',
       pickAllPhone: 'Select everyone deliverable',
       pickAll: 'Select all',
+      pickAllNone: 'Nobody can be delivered right now — the cabinet has no stock or everything is delivered',
+      pickNoStock: 'Can’t deliver yet — no stock in the cabinet for this request',
+      pickDone: 'Already delivered',
       title_one: 'Deliver {{count}} request?',
       title_other: 'Deliver {{count}} requests?',
       line: '{{n}} items · {{u}} units',

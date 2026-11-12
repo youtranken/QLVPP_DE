@@ -207,10 +207,13 @@ async function cancelClip(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/backlog');
   const group = debtRow(admin, s.glue.name);
   const line = group;
-  // "Hủy nợ" nằm trong menu ⋯ của dòng ở mọi bề rộng, không còn nút riêng
-  await expect(line.getByRole('button', { name: 'Hủy nợ' })).toHaveCount(0);
-  await line.getByRole('button', { name: `Thao tác khác ${s.glue.name} — ${s.b.name}` }).click();
-  await admin.getByRole('menu', { name: `Thao tác khác ${s.glue.name} — ${s.b.name}` }).getByRole('menuitem', { name: 'Hủy nợ' }).click();
+  // Máy tính: "Hủy nợ" là nút chữ phụ trên dòng; điện thoại: nằm trong menu ⋯ (cùng "Lịch sử giao")
+  if (isMobile(info)) {
+    await line.getByRole('button', { name: `Thao tác khác ${s.glue.name} — ${s.b.name}` }).click();
+    await admin.getByRole('menu', { name: `Thao tác khác ${s.glue.name} — ${s.b.name}` }).getByRole('menuitem', { name: 'Hủy nợ' }).click();
+  } else {
+    await line.getByRole('button', { name: `Hủy nợ ${s.glue.name} — ${s.b.name}` }).click();
+  }
   const dialog = admin.getByRole('dialog', { name: `Hủy nợ 3 cái ${s.glue.name} của ${s.b.name}?` });
   await dialog.getByRole('radio', { name: 'Khác', exact: true }).check();
   await dialog.getByRole('textbox', { name: /^Ghi chú/ }).fill('Không mua được');

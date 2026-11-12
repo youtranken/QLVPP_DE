@@ -100,4 +100,17 @@ describe('Stepper min/max', () => {
     expect(screen.getByRole('button', { name: 'Thêm Bút bi' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Bớt Bút bi' })).toBeDisabled();
   });
+  it('một khung cho mọi cỡ: "− số +" trong .stepper, data-size md mặc định / sm khi chọn; chỉ giảm thì không có nút +', () => {
+    const { unmount } = renderWithI18n(<Stepper value={2} max={5} label="Bút bi" onChange={() => {}} />);
+    const frame = screen.getByRole('spinbutton', { name: 'Bút bi' }).closest('.stepper')!;
+    expect(frame).toHaveAttribute('data-size', 'md');
+    expect(Array.from(frame.children).map((c) => c.getAttribute('aria-label') ?? c.tagName)).toEqual(['Bớt Bút bi', 'Bút bi', 'Thêm Bút bi']);
+    unmount();
+    renderWithI18n(<Stepper size="sm" decreaseOnly invalid value={2} max={5} label="Bút bi" onChange={() => {}} />);
+    const sm = screen.getByRole('spinbutton', { name: 'Bút bi' }).closest('.stepper')!;
+    expect(sm).toHaveAttribute('data-size', 'sm');
+    expect(sm).toHaveAttribute('data-dec-only');
+    expect(sm).toHaveClass('is-invalid');
+    expect(screen.queryByRole('button', { name: 'Thêm Bút bi' })).toBeNull();
+  });
 });

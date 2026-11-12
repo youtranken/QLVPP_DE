@@ -57,7 +57,7 @@ describe('Báo cáo & gửi NCC: ô Đề nghị', () => {
     expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeEnabled();
   });
 
-  it('ô Đề nghị có ▲▼ (nút không nhận Tab), ▲ ở 1000 tắt', async () => {
+  it('ô Đề nghị là Stepper − / + (nút không nhận Tab), + ở 1000 tắt', async () => {
     setupSendAdm({ report: REPORT });
     open();
     const box = await qtyBox('Bút bi');

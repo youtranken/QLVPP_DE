@@ -28,6 +28,8 @@ const config = {
       defaultMax: 'Tối đa mỗi món',
       defaultMaxHint: 'Gợi ý cho món mới, 1–999.',
       defaultMaxUnit: 'đơn vị/tháng',
+      defaultMaxDown: 'Bớt một đơn vị',
+      defaultMaxUp: 'Thêm một đơn vị',
       save: 'Lưu kỳ đăng ký',
     },
     preview: {

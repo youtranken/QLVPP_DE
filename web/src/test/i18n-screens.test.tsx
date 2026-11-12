@@ -75,15 +75,12 @@ describe('Song ngữ các màn Plan 3', () => {
     stubBacklog([line, backlogLine({ line_id: 'l-lan', user_sub: 'u-lan', full_name: 'Vo Thi Lan', department: null, user_status: 'locked' })]);
     renderApp(ADMIN, '/admin/backlog');
     expect(await screen.findByRole('heading', { level: 1, name: 'Còn nợ' })).toBeInTheDocument();
-    await userEvent.click((await screen.findAllByRole('button', { name: /^Thao tác khác/ }))[0]);
-    expect(screen.getByRole('menuitem', { name: 'Hủy nợ' })).toBeInTheDocument();
-    await userEvent.keyboard('{Escape}');
+    expect((await screen.findAllByRole('button', { name: /^Hủy nợ / }))[0]).toHaveTextContent('Hủy nợ');
     await english();
     expect(await screen.findByRole('heading', { level: 1, name: 'Outstanding' })).toBeInTheDocument();
     expect(await screen.findAllByText('Blue pen')).not.toHaveLength(0);
     noVietnamese();
-    await userEvent.click(screen.getAllByRole('button', { name: /^More actions/ })[0]);
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Cancel debt' }));
+    await userEvent.click(screen.getAllByRole('button', { name: /^Cancel debt / })[0]);
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
     noVietnamese();
   });

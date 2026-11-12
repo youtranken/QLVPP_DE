@@ -1,0 +1,7 @@
+/* Vòng focus ngoài (--focus, 5px) bị cắt khi mục nằm trong khung overflow:auto/hidden (tab cuộn ngang, chip lọc cuộn
+   ở điện thoại, viên chọn tháng, nhóm chọn dạng viên đặt trong các khung đó). Một luật chung: mục trong các khung này
+   vẽ vòng vào trong. Nạp sau cùng để thắng các luật :focus-visible riêng (cùng độ ưu tiên) của từng khung. */
+[data-shell] :is(.rv-tabs, .pp-tabs__scroll, .month-switch, .flt-chips, .ct-chips, .seg-m1) :is(button, a, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-inset);
+}

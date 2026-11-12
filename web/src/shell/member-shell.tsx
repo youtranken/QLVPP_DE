@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { initialsOf } from '@/lib/initials';
 import { useMe } from '@/lib/me';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
+import { IconSprite } from '@/ui/icon-sprite';
 import { LanguageSwitch } from '@/ui/language-switch';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { AccountMenu } from '@/shell/account-menu';
@@ -38,6 +39,8 @@ export function MemberShell() {
 
   return (
     <div className={`m-shell${narrow ? ' is-narrow' : ''}`}>
+      {/* Mọi <Icon> (nút xóa ô tìm, ảnh dự phòng của món, toast, hộp thoại) trỏ vào sprite này */}
+      <IconSprite />
       <a className="skip-link" href="#main">
         {t('common.skipToContent')}
       </a>

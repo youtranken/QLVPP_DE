@@ -34,10 +34,10 @@ describe('ConfirmDialog — M1', () => {
 });
 
 describe('ConfirmDialog — nút đóng chung', () => {
-  it('nút "Đóng" là biểu tượng SVG tự vẽ (trang nhân viên không có sprite), không phải ký tự ✕', () => {
+  it('nút "Đóng" là biểu tượng × từ sprite (cả hai khung đều gắn IconSprite), không phải ký tự ✕', () => {
     const dialog = renderConfirm(false);
     const close = within(dialog).getByRole('button', { name: 'Đóng' });
-    expect(close.querySelector('svg path')).not.toBeNull();
+    expect(close.querySelector('svg use')?.getAttribute('href')).toBe('#u-x');
     expect(close).not.toHaveTextContent('✕');
   });
 });

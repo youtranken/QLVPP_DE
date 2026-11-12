@@ -36,6 +36,8 @@ a { color: var(--brand-ink); }
 .seg { display: inline-flex; padding: 4px; gap: 2px; border-radius: 999px; background: var(--card-2); border: 1px solid var(--line); }
 .seg button { border: 0; background: transparent; height: 34px; padding: 0 16px; border-radius: 999px; font-weight: 700; color: var(--ink-2); }
 .seg button[aria-checked='true'] { background: var(--card); color: var(--brand-ink); box-shadow: 0 1px 3px rgb(var(--sh-ink) / .12); }
+/* Bóng của mục đang chọn (dòng trên) đè vòng focus chung: Tab tới "Tiếng Việt" không thấy gì */
+.seg button:focus-visible, .seg button[aria-checked='true']:focus-visible { box-shadow: var(--focus); }
 .seg--sm button { height: 28px; padding: 0 12px; font-size: 13px; }
 .seg--block { display: flex; } .seg--block button { flex: 1; height: 42px; }
 

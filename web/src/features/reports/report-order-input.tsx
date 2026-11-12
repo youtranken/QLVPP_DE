@@ -13,7 +13,7 @@ interface Props {
   onChange: (text: string) => void;
 }
 
-// Ô Đề nghị: ▲▼ trong ô (điện thoại "− số +"), lỗi gắn đúng ô (0…1.000)
+// Ô Đề nghị: Stepper cỡ sm chung "− số +", lỗi gắn đúng ô (0…1.000)
 export function ReportOrderInput({ name, value, error, overMax = false, onChange }: Props) {
   const { t } = useTranslation();
   const noteId = useId();
