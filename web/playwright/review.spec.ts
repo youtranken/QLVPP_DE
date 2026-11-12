@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Browser, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, psql, removeTestItem, seedActiveUser, waitForImageLoaded } from './helpers';
+import { acquireLock, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, psql, removeTestItem, seedActiveUser, waitForImageLoaded, pickOption } from './helpers';
 import { seedLockedCustomLines } from './locked-request';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-16-shots';
@@ -76,10 +76,10 @@ test.describe('E3-S5 món ngoài danh mục', () => {
       await expect(dialog.getByLabel('Tên món')).toHaveValue(name);
       await expect(dialog.getByRole('img', { name: 'Ảnh món' })).toBeVisible();
       await dialog.getByRole('radiogroup', { name: 'Nhóm' }).getByRole('radio').first().click();
-      await dialog.getByLabel('Đơn vị tính').selectOption('hop');
+      await pickOption(dialog.getByRole('combobox', { name: 'Đơn vị tính' }), 'hộp');
       await expect(dialog.getByText('ĐVT khác dòng gốc (cái) — số lượng 2 sẽ tính theo ĐVT mới.')).toBeVisible();
       await snap(page, info, 'convert-dialog');
-      await dialog.getByLabel('Đơn vị tính').selectOption('cai');
+      await pickOption(dialog.getByRole('combobox', { name: 'Đơn vị tính' }), 'cái');
       await dialog.getByRole('button', { name: 'Mua và thêm vào danh mục', exact: true }).click();
       await expect(dialog).toBeHidden();
       await expect(card.getByText('Đã thêm vào danh mục')).toBeVisible();

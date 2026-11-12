@@ -87,6 +87,8 @@
   --ease-in: cubic-bezier(.4, 0, 1, 1);
   --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
   --focus: 0 0 0 3px var(--c-surface), 0 0 0 5px var(--c-acc);
+  /* Checkbox / radio: vòng sát ô, theo đúng bo của ô */
+  --focus-choice: 0 0 0 2px var(--c-surface), 0 0 0 4px var(--c-acc);
   /* Vòng focus DUY NHẤT cho mọi ô nhập: viền teal 2px + quầng nhạt 3px.
      --focus-field cho ô vẽ viền bằng box-shadow (không border); ô có border 1px dùng --focus-field-bordered kèm border-color: var(--c-acc) — nhìn y hệt */
   --focus-field-halo: 0 0 0 3px var(--c-acc-soft);

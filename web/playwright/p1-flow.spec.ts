@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, devHeaders, expectNoContrastViolations, expectStockCell, isMobile, seedActiveUser, shot, openPurchase } from './helpers';
+import { acquireLock, devHeaders, expectNoContrastViolations, expectStockCell, isMobile, seedActiveUser, shot, openPurchase, pickOption } from './helpers';
 
 const SA_USERNAME = process.env.PW_SA_USERNAME ?? 'sa';
 const SA_PASSWORD = process.env.PW_SA_PASSWORD;
@@ -31,8 +31,8 @@ async function createCategoryAndItem(page: Page, category: string, itemName: str
   await page.getByRole('main').getByRole('button', { name: 'Thêm sản phẩm', exact: true }).click();
   const form = page.getByRole('dialog', { name: 'Thêm sản phẩm' });
   await form.getByLabel('Tên sản phẩm').fill(itemName);
-  await form.getByLabel('Đơn vị tính').selectOption({ label: 'cái' });
-  await form.getByLabel('Nhóm', { exact: true }).selectOption({ label: category });
+  await pickOption(form.getByRole('combobox', { name: 'Đơn vị tính' }), 'cái');
+  await pickOption(form.getByRole('combobox', { name: 'Nhóm', exact: true }), category);
   const uploaded = page.waitForResponse((r) => r.url().endsWith('/api/files') && r.request().method() === 'POST');
   await form.getByLabel('Chụp hoặc chọn ảnh').setInputFiles('playwright/fixtures/item.png');
   const upload = await uploaded;

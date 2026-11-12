@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { cartOf, deleteTestUsers, expectNoContrastViolations, isMobile, removeTestItem } from './helpers';
+import { cartOf, deleteTestUsers, expectNoContrastViolations, isMobile, removeTestItem, pickOption } from './helpers';
 import { asNewMember, createItem, createTestGroup, shotTo } from './request-helpers';
 
 // Phiếu cam (1280) và sheet phiếu + thanh nổi (390)
@@ -51,7 +51,7 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await grid.getByRole('button', { name: '+ Thêm món khác' }).click();
       const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
       await dialog.getByLabel('Tên món').fill(`PW món lạ ${Date.now()}`);
-      await dialog.getByLabel('Đơn vị tính').selectOption('hop');
+      await pickOption(dialog.getByRole('combobox', { name: 'Đơn vị tính' }), 'hộp');
       await dialog.getByRole('button', { name: 'Thêm vào phiếu' }).click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();

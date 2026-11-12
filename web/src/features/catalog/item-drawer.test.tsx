@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, within, pickOption, optionLabels } from '@/test/test-utils';
 import { compressImage } from '@/lib/image-compress';
 import { PAPER, PEN, adminItem } from './catalog-fixtures';
 import { bodyOf, callsTo, png, renderDrawer, stubDrawerApi } from './item-drawer-fixtures';
@@ -18,7 +18,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 async function fillNew(name = 'Bút chì') {
   await userEvent.type(screen.getByLabelText(/^Tên sản phẩm/), name);
-  await userEvent.selectOptions(screen.getByLabelText(/^Đơn vị tính/), 'cây');
+  await pickOption(screen.getByLabelText(/^Đơn vị tính/), 'cây');
   await userEvent.upload(screen.getByLabelText(PICK), png());
   await screen.findByRole('img', { name: 'Ảnh món' });
 }
@@ -30,7 +30,7 @@ describe('Ngăn kéo Thêm sản phẩm', () => {
     const f = stubDrawerApi();
     renderDrawer();
     expect(screen.getByRole('dialog', { name: 'Thêm sản phẩm' })).toBeInTheDocument();
-    await userEvent.selectOptions(screen.getByLabelText(/^Đơn vị tính/), 'cây');
+    await pickOption(screen.getByLabelText(/^Đơn vị tính/), 'cây');
     await submitAdd();
     expect(screen.getByRole('alert')).toHaveTextContent('Cần thêm: ảnh, tên.');
     expect(screen.getByLabelText(PICK)).toHaveAttribute('aria-invalid', 'true');
@@ -145,9 +145,9 @@ describe('Ngăn kéo Thêm sản phẩm', () => {
     const f = stubDrawerApi((url, init) => (url === '/api/admin/items' && init.method === 'POST' ? jsonResponse(201, { ...PEN, id: 'i-new' }) : undefined));
     const { onClose } = renderDrawer({ categoryId: 'c-pen' });
     const group = screen.getByRole('combobox', { name: 'Nhóm' });
-    expect(group).toHaveValue('c-pen');
-    expect(within(group).queryByRole('option', { name: /Nhóm cũ/ })).toBeNull();
-    await userEvent.selectOptions(group, 'c-paper');
+    expect(group).toHaveTextContent('Bút & viết');
+    expect((await optionLabels(group)).some((l) => /Nhóm cũ/.test(l))).toBe(false);
+    await pickOption(group, 'Giấy & sổ');
     await fillNew();
     await userEvent.type(screen.getByLabelText('Mã món'), ' VPP-099 ');
     await userEvent.type(screen.getByLabelText('Quy cách'), 'hộp 12 cây');
@@ -203,7 +203,7 @@ describe('Ngăn kéo Sửa món', () => {
     renderDrawer({ item: PEN });
     expect(screen.queryByLabelText('Thứ tự hiển thị')).toBeNull();
     expect(screen.queryByRole('region', { name: 'Nhân viên sẽ thấy' })).toBeNull();
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Nhóm' }), 'c-paper');
+    await pickOption(screen.getByRole('combobox', { name: 'Nhóm' }), 'Giấy & sổ');
     await userEvent.click(screen.getByRole('button', { name: 'Lưu' }));
     await vi.waitFor(() => expect(callsTo(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toHaveLength(1));
     expect(bodyOf(f, `/api/admin/items/${PEN.id}`, 'PATCH')).toEqual({ category_id: 'c-paper' });
@@ -225,7 +225,7 @@ describe('Ngăn kéo Sửa món', () => {
     let code = 'CATEGORY_NOT_FOUND';
     stubDrawerApi((_url, init) => (init.method === 'PATCH' ? jsonResponse(code === 'ITEM_NOT_FOUND' ? 404 : 400, { code, message: 'x' }) : undefined));
     renderDrawer({ item: PEN });
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Nhóm' }), 'c-paper');
+    await pickOption(screen.getByRole('combobox', { name: 'Nhóm' }), 'Giấy & sổ');
     await userEvent.click(screen.getByRole('button', { name: 'Lưu' }));
     await vi.waitFor(() =>
       expect(screen.getByRole('combobox', { name: 'Nhóm' })).toHaveAccessibleDescription('Nhóm này không còn — tải lại trang rồi chọn nhóm khác.'),

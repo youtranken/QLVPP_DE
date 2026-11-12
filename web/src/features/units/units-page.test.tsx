@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { fireEvent, jsonResponse, screen, userEvent, waitFor, within, optionLabels } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -168,9 +168,9 @@ describe('Trang Đơn vị tính', () => {
     await waitFor(() => expect(within(rowOf('hộp')).getByText('Tạm ngưng')).toBeInTheDocument());
     await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Sản phẩm' }));
     await userEvent.click((await screen.findAllByRole('button', { name: 'Thêm sản phẩm' }))[0]);
-    const select = await screen.findByLabelText(/Đơn vị tính/);
-    await waitFor(() => expect(within(select).getByRole('option', { name: 'cái' })).toBeInTheDocument());
-    expect(within(select).queryByRole('option', { name: 'hộp' })).toBeNull();
+    const select = await screen.findByRole('combobox', { name: /Đơn vị tính/ });
+    await waitFor(async () => expect(await optionLabels(select)).toContain('cái'));
+    expect(await optionLabels(select)).not.toContain('hộp');
   });
 
   it('menu "Sửa" mở hộp "Sửa đơn vị tính" điền sẵn; UNIT_EXISTS → lỗi tại ô Tên; lưu chỉ gửi trường đổi', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { act, jsonResponse, renderHook, screen, waitFor, within } from '@/test/test-utils';
+import { act, jsonResponse, renderHook, screen, waitFor, optionLabels } from '@/test/test-utils';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { I18nextProvider } from 'react-i18next';
@@ -37,35 +37,28 @@ afterEach(async () => {
 });
 
 describe('UnitSelect', () => {
-  it('chỉ hiện ĐVT server trả (đang dùng) theo đúng thứ tự API, sau ô "Chọn"', async () => {
+  it('chỉ hiện ĐVT server trả (đang dùng) theo đúng thứ tự API; chưa chọn thì nút hiện "Chọn ĐVT"', async () => {
     const { wrapper } = withServer([unit('thung', 'thùng'), unit('cai', 'cái'), unit('goi', 'gói')]);
     render(<UnitSelect aria-label="ĐVT" value="" onValueChange={() => undefined} />, { wrapper });
     const select = screen.getByRole('combobox', { name: 'ĐVT' });
-    await waitFor(() => expect(within(select).getAllByRole('option')).toHaveLength(4));
-    expect(within(select).getAllByRole('option').map((o) => o.textContent)).toEqual([
-      i18n.t('catalog.form.unitPlaceholder'),
-      'thùng',
-      'cái',
-      'gói',
-    ]);
+    // Chưa chọn: nút hiện chữ gợi ý "Chọn ĐVT" (không phải một mục trong danh sách)
+    expect(select).toHaveTextContent(i18n.t('catalog.form.unitPlaceholder'));
+    await waitFor(async () => expect(await optionLabels(select)).toEqual(['thùng', 'cái', 'gói']));
   });
 
   it('dòng/món cũ đang giữ ĐVT đã ngừng: ô chọn vẫn giữ lựa chọn đó (hiện tên) ở cuối, không có ĐVT ngừng khác', async () => {
     const { wrapper } = withServer([unit('cai', 'cái'), unit('thung', 'thùng', { active: false }), unit('bao', 'bao', { active: false })]);
     render(<UnitSelect aria-label="ĐVT" value="thung" onValueChange={() => undefined} />, { wrapper });
     const select = screen.getByRole('combobox', { name: 'ĐVT' });
-    await waitFor(() => expect(within(select).getAllByRole('option')).toHaveLength(3));
-    expect(within(select).getAllByRole('option').map((o) => o.getAttribute('value'))).toEqual(['', 'cai', 'thung']);
-    expect(select).toHaveValue('thung');
-    expect(within(select).getAllByRole('option')[2]).toHaveTextContent('thùng');
+    await waitFor(async () => expect(await optionLabels(select)).toEqual(['cái', 'thùng']));
+    expect(select).toHaveTextContent('thùng');
   });
 
   it('ĐVT đã ngừng (active=false) server vẫn trả nhưng không có trong ô chọn', async () => {
     const { wrapper } = withServer([unit('cai', 'cái'), unit('thung', 'thùng', { active: false })]);
     render(<UnitSelect aria-label="ĐVT" value="" onValueChange={() => undefined} />, { wrapper });
     const select = screen.getByRole('combobox', { name: 'ĐVT' });
-    await waitFor(() => expect(within(select).getAllByRole('option')).toHaveLength(2));
-    expect(within(select).queryByRole('option', { name: 'thùng' })).toBeNull();
+    await waitFor(async () => expect(await optionLabels(select)).toEqual(['cái']));
   });
 
   it('UI tiếng Anh: nhãn là name_en, thiếu name_en thì dùng tên vi', async () => {
@@ -73,8 +66,7 @@ describe('UnitSelect', () => {
     const { wrapper } = withServer([unit('cai', 'cái', { name_en: 'piece' }), unit('goi', 'gói')]);
     render(<UnitSelect aria-label="Unit" value="" onValueChange={() => undefined} />, { wrapper });
     const select = screen.getByRole('combobox', { name: 'Unit' });
-    await waitFor(() => expect(within(select).getAllByRole('option')).toHaveLength(3));
-    expect(within(select).getAllByRole('option').slice(1).map((o) => o.textContent)).toEqual(['piece', 'gói']);
+    await waitFor(async () => expect(await optionLabels(select)).toEqual(['piece', 'gói']));
   });
 });
 

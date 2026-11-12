@@ -13,6 +13,7 @@ import {
   seedPwItem,
   settled,
   skipNewPeriodPopup,
+  pickOption,
 } from './helpers';
 import { adminPage } from './sessions';
 
@@ -41,7 +42,7 @@ async function memberRegisters(page: Page, info: TestInfo, items: Item[], custom
   await grid.getByRole('button', { name: '+ Thêm món khác' }).click();
   const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
   await dialog.getByLabel('Tên món').fill(custom);
-  await dialog.getByLabel('Đơn vị tính').selectOption('cai');
+  await pickOption(dialog.getByRole('combobox', { name: 'Đơn vị tính' }), 'cái');
   await dialog.getByRole('button', { name: 'Thêm vào phiếu' }).click();
   await expect(dialog).toBeHidden();
   await page.getByRole('button', { name: isMobile(info) ? 'Lưu phiếu' : '3 thay đổi chưa lưu · Lưu' }).click();

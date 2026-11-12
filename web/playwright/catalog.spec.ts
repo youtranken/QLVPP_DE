@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext, type Locator, type Page, type TestInfo } from '@playwright/test';
 import { createItemViaApi } from './catalog-helpers';
-import { asRole, devHeaders, deleteTestFiles, expectNoContrastViolations, isMobile, psql, removeTestItem, shot } from './helpers';
+import { asRole, devHeaders, deleteTestFiles, expectNoContrastViolations, isMobile, psql, removeTestItem, shot, pickOption } from './helpers';
 
 // Ảnh đã tải xong thật (không phải icon ảnh vỡ) và GET /api/files/:id trả 200
 async function expectImageServed(page: Page, img: Locator) {
@@ -62,9 +62,9 @@ test.describe('E1-S3 Danh mục và Nhóm món (dev-identity admin)', () => {
       await expect(form.getByText('Cần thêm: ảnh, tên, ĐVT.')).toBeVisible();
       await expect(form.getByLabel('Chụp hoặc chọn ảnh')).toHaveAttribute('aria-invalid', 'true');
       await form.getByLabel('Tên sản phẩm').fill(itemName);
-      await form.getByLabel('Đơn vị tính').selectOption({ label: 'hộp' });
+      await pickOption(form.getByRole('combobox', { name: 'Đơn vị tính' }), 'hộp');
       await form.getByLabel('Quy cách').fill('hộp 10 cây');
-      await form.getByLabel('Nhóm', { exact: true }).selectOption({ label: category });
+      await pickOption(form.getByRole('combobox', { name: 'Nhóm', exact: true }), category);
       const uploaded = page.waitForResponse((r) => r.url().endsWith('/api/files') && r.request().method() === 'POST');
       await form.getByLabel('Chụp hoặc chọn ảnh').setInputFiles('playwright/fixtures/item.png');
       expect((await uploaded).status()).toBe(201);
@@ -146,7 +146,7 @@ test.describe('E9-S5 Danh mục M1 (dev-identity admin)', () => {
       await page.getByRole('main').getByRole('button', { name: 'Thêm sản phẩm', exact: true }).click();
       const drawer = page.getByRole('dialog', { name: 'Thêm sản phẩm' });
       await drawer.getByLabel('Tên sản phẩm').fill(nameA);
-      await drawer.getByLabel('Đơn vị tính').selectOption({ label: 'cái' });
+      await pickOption(drawer.getByRole('combobox', { name: 'Đơn vị tính' }), 'cái');
       await drawer.getByLabel('Tối đa mỗi tháng').fill('5');
       const uploaded = page.waitForResponse((r) => r.url().endsWith('/api/files') && r.request().method() === 'POST');
       await drawer.getByLabel('Chụp hoặc chọn ảnh').setInputFiles('playwright/fixtures/item.png');

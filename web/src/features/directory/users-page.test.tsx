@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { cleanup, jsonResponse, screen, userEvent, waitFor, within, pickOption, optionLabels } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -114,8 +114,8 @@ describe('UsersPage B10', () => {
     // Dòng đếm nằm cuối hàng lọc (căn phải), không chiếm hàng riêng trên bảng
     expect(screen.getByText('Hiện 3 / 3 người').closest('.toolbar > .list-meta')).not.toBeNull();
     const select = screen.getByRole('combobox', { name: 'Phòng ban' });
-    expect(within(select).getAllByRole('option').map((o) => o.textContent)).toEqual(['Mọi phòng ban', 'Phòng Công trình', 'Phòng Kế toán']);
-    await userEvent.selectOptions(select, 'Phòng Kế toán');
+    expect(await optionLabels(select)).toEqual(['Mọi phòng ban', 'Phòng Công trình', 'Phòng Kế toán']);
+    await pickOption(select, 'Phòng Kế toán');
     expect(bodyRows()).toHaveLength(1);
     expect(screen.getByText('Hiện 1 / 3 người')).toBeInTheDocument();
     // Cột cố định bề rộng: đổi lọc không làm cột nhảy chỗ
@@ -185,7 +185,7 @@ describe('UsersPage B10', () => {
   it('lọc phòng + tìm theo tên vẫn đúng khi team null; tìm theo team khớp', async () => {
     stubUsers([AN, BINH, CHI, DUNG]);
     await openUsers();
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Phòng ban' }), 'Phòng Công trình');
+    await pickOption(screen.getByRole('combobox', { name: 'Phòng ban' }), 'Phòng Công trình');
     expect(bodyRows()).toHaveLength(3);
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm người' }), 'Chi');
     await waitFor(() => expect(bodyRows().map((r) => within(r).getByRole('button').textContent)).toEqual(['Trần Chi']));
@@ -410,11 +410,11 @@ describe('UsersPage B10', () => {
     await openUsers();
     expect(screen.queryByText('Hà Đã Xoá')).toBeNull();
     const view = screen.getByRole('combobox', { name: 'Hiện người' });
-    await userEvent.selectOptions(view, 'deleted');
+    await pickOption(view, 'Đã xoá');
     expect(await screen.findByText('Hà Đã Xoá')).toBeInTheDocument();
     expect(bodyRows()).toHaveLength(1);
     expect(within(bodyRows()[0]).getByText('Đã xoá')).toBeInTheDocument();
-    await userEvent.selectOptions(view, '');
+    await pickOption(view, 'Đang trong danh bạ');
     await waitFor(() => expect(screen.queryByText('Hà Đã Xoá')).toBeNull());
     expect(screen.getByText('Phạm Minh Đức')).toBeInTheDocument();
   });

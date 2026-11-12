@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { screen, userEvent, waitFor, within, optionLabels } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
@@ -92,8 +92,8 @@ describe('RequestPage — thanh lọc', () => {
     stubRequestApi();
     const { unmount } = renderApp(makeMe('member'), '/?sort=fav');
     const none = await screen.findByRole('combobox', { name: 'Sắp xếp' });
-    expect(within(none).getAllByRole('option').map((o) => o.textContent)).toEqual(['Tên A → Z', 'Theo nhóm']);
-    expect(none).toHaveValue('group');
+    expect(await optionLabels(none)).toEqual(['Tên A → Z', 'Theo nhóm']);
+    expect(none).toHaveTextContent('Theo nhóm');
     unmount();
     stubRequestApi({
       period: { ...PERIOD, previous: { ym: '2026-10', delivering: false } },
@@ -101,14 +101,14 @@ describe('RequestPage — thanh lọc', () => {
     });
     renderApp(makeMe('member'), '/');
     const sort = await screen.findByRole('combobox', { name: 'Sắp xếp' });
-    await waitFor(() => expect(within(sort).getAllByRole('option').map((o) => o.textContent)).toEqual(['Hay dùng trước', 'Tên A → Z', 'Theo nhóm']));
+    await waitFor(async () => expect(await optionLabels(sort)).toEqual(['Hay dùng trước', 'Tên A → Z', 'Theo nhóm']));
   });
 
   it('sort=xyz trên URL → "Theo nhóm"; không có món khớp → thông báo rỗng', async () => {
     mockViewport(1280);
     stubRequestApi();
     await open('/?sort=xyz');
-    expect(screen.getByRole('combobox', { name: 'Sắp xếp' })).toHaveValue('group');
+    expect(screen.getByRole('combobox', { name: 'Sắp xếp' })).toHaveTextContent('Theo nhóm');
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm món' }), 'khong co');
     expect(await screen.findByText('Không có món phù hợp')).toBeInTheDocument();
   });

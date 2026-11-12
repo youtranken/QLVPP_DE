@@ -57,6 +57,6 @@ describe('FilterBar', () => {
   it('có ô tìm và ô sắp xếp có tên', () => {
     render(<Harness />);
     expect(screen.getByRole('searchbox', { name: 'Tìm món' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Sắp xếp' })).toHaveValue('group');
+    expect(screen.getByRole('combobox', { name: 'Sắp xếp' })).toHaveTextContent('Theo nhóm');
   });
 });

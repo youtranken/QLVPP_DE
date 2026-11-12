@@ -1,6 +1,6 @@
 import * as RD from '@radix-ui/react-dialog';
 import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
-import type { KeyboardEvent, ReactNode, RefObject } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { discardOptions, useOptionalConfirm } from '@/ui/confirm-context';
 import { DialogPortalContext } from '@/ui/dialog-portal';
@@ -70,7 +70,7 @@ export function Dialog({
   maxWidth?: number;
   // Form đang sửa dở: đóng bằng Esc/bấm nền/✕ phải hỏi "Bỏ thay đổi?" trước
   dirty?: boolean;
-  onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
+  onKeyDown?: (e: ReactKeyboardEvent<HTMLDivElement>) => void;
   // Mở không qua Trigger nên Radix không biết trả focus về đâu: mặc định trả về phần tử đang focus lúc mở; nơi tự quản focus sau khi đóng thì để false
   returnFocus?: boolean;
   // Nút mở cố định (hộp có thể tự mở khi focus đang ở phần tử sắp biến mất): đóng thì focus về đây thay vì phần tử đang focus lúc mở
@@ -84,6 +84,12 @@ export function Dialog({
   const { t } = useTranslation();
   const askConfirm = useOptionalConfirm();
   const block = dismissible ? undefined : (e: Event) => e.preventDefault();
+  // Esc đang dành cho lớp nổi bên trong hộp (danh sách ô chọn, lịch): lớp đó tự đóng, hộp giữ nguyên
+  const onEscape = (e: KeyboardEvent) => {
+    const at = document.activeElement;
+    if (at?.closest('[aria-haspopup][aria-expanded="true"], [data-esc-layer]')) e.preventDefault();
+    else block?.(e);
+  };
   const blockOutside = dismissible && closeOnOutside ? undefined : (e: Event) => e.preventDefault();
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -120,7 +126,7 @@ export function Dialog({
             data-stacked={stacked || undefined}
             className={className}
             style={maxWidth ? { maxWidth } : undefined}
-            onEscapeKeyDown={block}
+            onEscapeKeyDown={onEscape}
             onPointerDownOutside={blockOutside}
             onInteractOutside={blockOutside}
             onKeyDown={onKeyDown}

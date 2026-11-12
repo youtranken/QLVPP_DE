@@ -51,7 +51,7 @@
   [data-shell='admin'] .reorder-bar { padding: 12px; }
   [data-shell='admin'] .reorder-bar__text { flex: 1 1 100%; }
   [data-shell='admin'] .reorder-bar .btn { flex: 1 1 0; }
-  [data-shell='admin'] .table input[type='checkbox'] { appearance: none; display: grid; place-content: center; width: var(--hit); height: var(--hit); background: none; }
+  [data-shell='admin'] .table input[type='checkbox'] { appearance: none; display: grid; place-content: center; width: var(--hit); height: var(--hit); border: 0; border-radius: var(--r-sm); background: none; }
   [data-shell='admin'] .table input[type='checkbox']::before { content: ''; width: 20px; height: 20px; border: 2px solid var(--c-line-input); border-radius: var(--r-xs); background: var(--c-surface); box-sizing: border-box; }
   [data-shell='admin'] .table input[type='checkbox']:checked::before, [data-shell='admin'] .table input[type='checkbox']:indeterminate::before { border-color: var(--c-acc); background: var(--c-acc) center / 14px no-repeat; }
   [data-shell='admin'] .table input[type='checkbox']:checked::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }

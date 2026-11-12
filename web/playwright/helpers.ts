@@ -298,3 +298,10 @@ export async function waitForImageLoaded(page: Page, img: Locator, fileId: strin
   await response;
   await expect.poll(() => img.evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth > 0), { timeout: timeoutMs }).toBe(true);
 }
+
+// Ô chọn tự dựng (ui/listbox, thay <select>): mở danh sách rồi bấm mục theo tên hiện
+export async function pickOption(box: Locator, name: string | RegExp) {
+  await box.click();
+  const id = await box.getAttribute('aria-controls');
+  await box.page().locator(`[id="${id}"]`).getByRole('option', { name, exact: typeof name === 'string' }).click();
+}

@@ -3,6 +3,7 @@ import { FormField } from '@/ui/form-field';
 import { InfoTip } from '@/ui/info-tip';
 import { Switch } from '@/ui/switch';
 import { UnitSelect } from '@/features/units/unit-select';
+import { Listbox } from '@/ui/listbox';
 import type { FieldErrors } from './catalog-errors';
 import type { CategoryIndex } from './catalog-rows';
 import { categoryLabel } from './catalog.api';
@@ -48,14 +49,18 @@ export function ItemFields({
   const group = (
     <FormField label={t('catalog.form.category')} error={err('category_id')}>
       {(p) => (
-        <select {...p} value={draft.category_id} onChange={(e) => onChange('category_id', e.target.value)}>
-          <option value="">{t('catalog.page.noCategory')}</option>
-          {groups.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.active ? categoryLabel(c, i18n.language) : t('catalog.form.inactiveCategory', { name: categoryLabel(c, i18n.language) })}
-            </option>
-          ))}
-        </select>
+        <Listbox
+          {...p}
+          value={draft.category_id}
+          onChange={(v) => onChange('category_id', v)}
+          options={[
+            { value: '', label: t('catalog.page.noCategory') },
+            ...groups.map((c) => ({
+              value: c.id,
+              label: c.active ? categoryLabel(c, i18n.language) : t('catalog.form.inactiveCategory', { name: categoryLabel(c, i18n.language) }),
+            })),
+          ]}
+        />
       )}
     </FormField>
   );

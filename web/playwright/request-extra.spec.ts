@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, cartOf, closeCart, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, openCart, psql, removeTestItem, seedActiveUser, seedPwItem, skipNewPeriodPopup } from './helpers';
+import { acquireLock, cartOf, closeCart, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, openCart, psql, removeTestItem, seedActiveUser, seedPwItem, skipNewPeriodPopup, pickOption } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-12-shots';
 const FIXTURE = 'playwright/fixtures/item.png';
@@ -60,11 +60,11 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
       await dialog.getByLabel('Tên món').fill(name);
       // Đơn vị chọn sẵn "cái"; bấm nền không đóng hộp, chữ đã gõ còn nguyên
-      await expect(dialog.getByLabel('Đơn vị tính')).toHaveValue('cai');
+      await expect(dialog.getByRole('combobox', { name: 'Đơn vị tính' })).toHaveText('cái');
       await page.mouse.click(2, 2);
       await expect(dialog).toBeVisible();
       await expect(dialog.getByLabel('Tên món')).toHaveValue(name);
-      await dialog.getByLabel('Đơn vị tính').selectOption('hop');
+      await pickOption(dialog.getByRole('combobox', { name: 'Đơn vị tính' }), 'hộp');
       await expect(dialog.getByText(/ảnh/i)).toHaveCount(0);
       await expect(dialog.locator('input[type=file]')).toHaveCount(0);
       await expect(dialog.getByRole('button', { name: 'Thêm vào phiếu' })).toBeEnabled();

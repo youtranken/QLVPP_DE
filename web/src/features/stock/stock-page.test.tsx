@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, waitFor, within, pickOption, optionLabels } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -275,8 +275,8 @@ describe('StockPage', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ một món' }));
       const dialog = await screen.findByRole('dialog', { name: /^Xuất lẻ/ });
       const pick = within(dialog).getByRole('combobox', { name: /^Món/ });
-      expect(within(pick).queryByRole('option', { name: 'Kẹp giấy' })).toBeNull();
-      await userEvent.selectOptions(pick, within(pick).getByRole('option', { name: 'Giấy A4' }));
+      expect(await optionLabels(pick)).not.toContain('Kẹp giấy');
+      await pickOption(pick, 'Giấy A4');
       expect(within(dialog).getByText('Tồn hiện tại 6 ram')).toBeInTheDocument();
     });
 

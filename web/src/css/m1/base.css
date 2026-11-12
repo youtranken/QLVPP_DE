@@ -20,6 +20,8 @@
 [data-shell='admin'] .page-head__text { flex: 1 1 0; min-width: 0; }
 /* Câu mô tả tối đa 2 dòng ở mọi cỡ màn (trước chỉ 1 dòng … trên máy tính) */
 [data-shell='admin'] .page-head__desc { display: -webkit-box; margin: var(--s-1) 0 0; overflow: hidden; font: var(--t-body); color: var(--c-muted); white-space: normal; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+[data-shell='admin'] .page-head__sub { margin: var(--s-1) 0 0; font: var(--t-sm); color: var(--c-muted); }
+[data-shell='admin'] .page-head__sub a { color: var(--c-acc); font-weight: 600; text-underline-offset: 2px; }
 [data-shell='admin'] .page-head__actions { display: flex; align-items: center; gap: var(--s-2); flex-shrink: 0; }
 [data-shell='admin'] .page-head__side { display: flex; align-items: center; gap: var(--s-2); flex-shrink: 0; }
 @media (max-width: 767px) {
@@ -107,13 +109,7 @@
 [data-shell='admin'] .select { display: inline-flex; align-items: center; gap: var(--s-2); max-width: 100%; }
 [data-shell='admin'] .select__label { font: var(--t-cap); font-weight: 700; color: var(--c-ink-2); white-space: nowrap; }
 [data-shell='admin'] .select--stacked { display: grid; gap: var(--s-1); width: 100%; }
-[data-shell='admin'] .select--stacked select { width: 100%; }
-[data-shell='admin'] .select__box { position: relative; display: inline-flex; align-items: center; min-width: 0; }
-[data-shell='admin'] .select select { min-width: 160px; max-width: 100%; height: var(--ctl-h, 40px); padding: 0 var(--s-7) 0 var(--s-4); border: 0; border-radius: var(--r-pill); background: var(--c-surface-2); box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-ink); font: var(--t-body); appearance: none; cursor: pointer; }
-[data-shell='admin'] .select select:focus { outline: none; box-shadow: var(--focus-field); }
-[data-shell='admin'] .select select:disabled { opacity: .5; cursor: not-allowed; }
-[data-shell='admin'] .select svg { position: absolute; right: var(--s-3); color: var(--c-muted); pointer-events: none; }
-@media (max-width: 767px) { [data-shell='admin'] .select select { height: var(--hit); font-size: 16px; } }
+[data-shell='admin'] .select--stacked .lb { width: 100%; }
 
 [data-shell='admin'] .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); height: var(--hit); padding: 0 16px; border: 0; border-radius: var(--r-pill); background: var(--btn-bg, var(--c-surface)); box-shadow: var(--btn-sh, inset 0 0 0 1px var(--c-line)); color: var(--btn-fg, var(--c-ink)); font: var(--t-label); white-space: nowrap; text-decoration: none; cursor: pointer; transition: background var(--d-1) var(--ease-out), box-shadow var(--d-1) var(--ease-out), transform var(--d-1) var(--ease-out); }
 /* Luật gốc chỉ ĐỌC biến: biến thể chỉ khai --btn-bg/-hover/-active/--btn-fg (+ --btn-sh*), không viết lại :hover/:active */

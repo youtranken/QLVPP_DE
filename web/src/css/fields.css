@@ -1,27 +1,65 @@
 /* Vòng 5 — luật nền dùng chung cho CẢ HAI khung (nhân viên + quản lý). Nạp sau cùng trong main.tsx.
    Specificity tính sẵn để thắng luật riêng từng màn có cùng thuộc tính; không đổi bố cục, chỉ đổi phần ghi trong từng mục. */
 
-/* Checkbox / radio màu nhấn của app, 18px trên máy tính, 20px ở điện thoại; nhãn bọc ngoài đủ vùng chạm 44 */
-[data-shell] input:is([type='checkbox'], [type='radio']) { accent-color: var(--c-acc); }
-[data-shell] :where(input[type='checkbox'], input[type='radio']) { width: 18px; height: 18px; }
+/* Checkbox / radio tự vẽ theo màu nhấn, 18px trên máy tính, 20px ở điện thoại; nhãn bọc ngoài đủ vùng chạm 44.
+   Ô gốc của trình duyệt nhận cả height/padding của luật ô nhập (.ff input) nên vòng focus thành hình bầu dục; tự vẽ thì
+   cỡ, bo và vòng focus nằm ở một chỗ. :where giữ specificity thấp để luật riêng (ô trong bảng, chip ẩn ô) vẫn đè được cỡ */
+[data-shell] input:where([type='checkbox'], [type='radio']) {
+  appearance: none; flex: none; align-self: center; box-sizing: border-box; width: 18px; height: 18px; min-height: 0; margin: 0; padding: 0;
+  border: 1.5px solid var(--c-line-input); border-radius: var(--r-xs); background: var(--c-surface) center / 12px 12px no-repeat;
+  cursor: pointer; transition: border-color var(--d-1) var(--ease-out), background-color var(--d-1) var(--ease-out), border-width var(--d-1) var(--ease-out);
+}
+[data-shell] input:where([type='radio']) { border-radius: 50%; }
+[data-shell] input:where([type='checkbox'], [type='radio']):where(:not(:checked, :indeterminate, :disabled)):hover { border-color: var(--c-ink-2); }
+/* Radio đã chọn: viền dày màu nhấn, lõi trắng chính là chấm */
+[data-shell] input:where([type='radio']):checked { border: 5px solid var(--c-acc); }
+[data-shell] input:where([type='checkbox']):is(:checked, :indeterminate) { border-color: var(--c-acc); background-color: var(--c-acc); }
+[data-shell] input:where([type='checkbox']):checked { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+[data-shell] input:where([type='checkbox']):indeterminate { background-image: linear-gradient(var(--c-on-acc), var(--c-on-acc)); background-size: 10px 2px; }
+[data-shell] input:where([type='checkbox'], [type='radio']):disabled { border-color: var(--c-line-strong); background-color: var(--c-surface-2); cursor: not-allowed; }
+[data-shell] input:where([type='checkbox']):is(:checked, :indeterminate):disabled { border-color: var(--c-line-strong); background-color: var(--c-line-strong); }
+[data-shell] input:where([type='radio']):checked:disabled { border-color: var(--c-line-strong); background-color: var(--c-surface); }
+/* Vòng focus ôm sát ô (bo theo ô), mảnh hơn vòng của nút để không to hơn chính ô */
+[data-shell] input:where([type='checkbox'], [type='radio']):focus-visible { outline: none; box-shadow: var(--focus-choice); }
 @media (max-width: 767px) {
-  [data-shell] :where(input[type='checkbox'], input[type='radio']) { width: 20px; height: 20px; }
+  [data-shell] input:where([type='checkbox'], [type='radio']) { width: 20px; height: 20px; }
+  [data-shell] input:where([type='checkbox']) { background-size: 14px 14px; }
+  [data-shell] input:where([type='radio']):checked { border-width: 6px; }
   [data-shell] label:has(> input:is([type='checkbox'], [type='radio'])) { min-height: var(--hit); }
 }
+@media (forced-colors: active) {
+  [data-shell] input:where([type='checkbox'], [type='radio']) { appearance: auto; }
+}
 
-/* Ô chọn gốc của trình duyệt dùng cùng mũi tên với .select (icon chev, 16px, màu --c-muted); danh sách xổ ra giữ của trình duyệt */
-[data-shell] select:not([multiple], .select__box > select) {
-  appearance: none;
-  padding-right: var(--s-8);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2347636C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right var(--s-3) center;
-  background-size: 16px 16px;
+/* Ô chọn tự dựng (ui/listbox) thay <select>: nút cùng dáng ô nhập, danh sách xổ ra theo bảng màu app.
+   field = ô trong form (viền như ô nhập); pill = nút lọc trên thanh công cụ (viên thuốc như ô tìm) */
+[data-shell] .lb { position: relative; display: inline-flex; min-width: 0; max-width: 100%; }
+[data-shell] .ff > .lb { display: flex; width: 100%; }
+[data-shell] .lb-trigger { display: flex; align-items: center; gap: var(--s-2); width: 100%; min-width: 0; min-height: var(--hit); margin: 0; padding: 0 var(--s-3) 0 var(--s-4); border: 1px solid var(--c-line-input); border-radius: var(--r-md); background: var(--c-surface); color: var(--c-ink); font: var(--t-body); text-align: left; cursor: pointer; transition: border-color var(--d-1) var(--ease-out), box-shadow var(--d-1) var(--ease-out); }
+[data-shell] .lb-trigger::after { content: ''; flex: none; width: 16px; height: 16px; background: var(--c-muted); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / 16px 16px no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / 16px 16px no-repeat; transition: transform var(--d-1) var(--ease-out); }
+[data-shell] .lb-trigger[aria-expanded='true']::after { transform: rotate(180deg); }
+[data-shell] .lb-trigger__value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-shell] .lb-trigger__value[data-placeholder] { color: var(--c-muted); }
+[data-shell] .lb-trigger:focus-visible, [data-shell] .lb-trigger[aria-expanded='true'] { outline: none; border-color: var(--c-acc); box-shadow: var(--focus-field-bordered); }
+[data-shell] .lb-trigger[aria-invalid='true'] { border-color: var(--c-danger); }
+[data-shell] .lb-trigger:disabled { background: var(--c-surface-2); color: var(--c-muted); cursor: not-allowed; }
+[data-shell] .lb--pill .lb-trigger { min-width: 160px; min-height: 0; height: var(--ctl-h, 40px); border: 0; border-radius: var(--r-pill); background: var(--c-surface-2); box-shadow: inset 0 0 0 1px var(--c-line); }
+[data-shell] .lb--pill .lb-trigger:hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--c-line-strong); }
+[data-shell] .lb--pill .lb-trigger:focus-visible, [data-shell] .lb--pill .lb-trigger[aria-expanded='true'] { background: var(--c-surface); box-shadow: var(--focus-field); }
+[data-shell] .lb-list { z-index: 60; box-sizing: border-box; display: grid; align-content: start; gap: 2px; max-width: min(360px, calc(100vw - var(--s-4))); margin: 0; padding: var(--s-1); list-style: none; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface); box-shadow: var(--e-2); outline: none; }
+[data-shell] .lb-option { display: flex; align-items: center; gap: var(--s-2); min-height: 40px; padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); color: var(--c-ink); font: var(--t-body); overflow-wrap: anywhere; cursor: pointer; }
+[data-shell] .lb-option[data-active] { background: var(--c-surface-2); }
+[data-shell] .lb-option[aria-selected='true'] { font: var(--t-label); }
+[data-shell] .lb-option[aria-selected='true']::after { content: ''; flex: none; width: 16px; height: 16px; margin-left: auto; background: var(--c-acc); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 16px 16px no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
+[data-shell] .lb-option[aria-disabled='true'] { color: var(--c-muted); cursor: not-allowed; }
+@media (max-width: 767px) {
+  [data-shell] .lb-trigger { font-size: 16px; }
+  [data-shell] .lb--pill .lb-trigger { height: var(--hit); }
+  [data-shell] .lb-option { min-height: var(--hit); }
 }
 @media (forced-colors: active) {
-  [data-shell] select:not([multiple], .select__box > select) { appearance: auto; background-image: none; }
-  [data-shell] .select select { appearance: auto; }
-  [data-shell] .select svg { display: none; }
+  [data-shell] .lb-trigger::after, [data-shell] .lb-option[aria-selected='true']::after { background: CanvasText; }
+  [data-shell] .lb-option[data-active] { outline: 2px solid Highlight; outline-offset: -2px; }
 }
 
 /* Ô nhập nhiều dòng — lề trong, chỉ kéo dọc, cao tối thiểu 88 */
@@ -76,3 +114,56 @@ html, [data-shell] * { scrollbar-width: thin; }
 [data-shell] .qty-input[data-layout='stepper'] > input { width: 100%; min-width: 0; height: var(--hit); padding: 0 var(--s-1); border: 0; background: transparent; box-shadow: none; text-align: center; font-weight: 700; }
 [data-shell] .qty-input[data-layout='stepper'] > input:focus { border-radius: var(--r-sm); box-shadow: var(--focus-field); }
 [data-shell] .qty-input[data-layout='stepper'].is-invalid { box-shadow: inset 0 0 0 2px var(--c-danger); }
+
+/* Danh sách lựa chọn (ui/choice-list): một khối viền, các hàng chia bằng vạch mảnh; hàng đang chọn nền nhấn nhạt + chữ đậm.
+   Focus bàn phím vẽ vòng trong mép hàng, ô tròn không có vòng riêng (một vòng cho một lựa chọn) */
+[data-shell] .choice-list__rows { display: grid; border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface); overflow: hidden; }
+[data-shell] .choice-row { display: flex; align-items: center; gap: var(--s-3); min-height: var(--hit); padding: var(--s-2) var(--s-4); color: var(--c-ink); font: var(--t-body); cursor: pointer; transition: background var(--d-1) var(--ease-out); }
+[data-shell] .choice-row + .choice-row { border-top: 1px solid var(--c-line); }
+[data-shell] .choice-row:hover { background: var(--c-surface-hover); }
+[data-shell] .choice-row:has(input:checked) { background: var(--c-acc-tint); font: var(--t-label); }
+[data-shell] .choice-row:has(input:focus-visible) { box-shadow: inset 0 0 0 2px var(--c-acc); }
+[data-shell] .choice-row input:focus-visible { box-shadow: none; }
+[data-shell] .choice-row:first-child { border-radius: var(--r-md) var(--r-md) 0 0; }
+[data-shell] .choice-row:last-child { border-radius: 0 0 var(--r-md) var(--r-md); }
+@media (forced-colors: active) { [data-shell] .choice-row:has(input:focus-visible) { outline: 2px solid Highlight; outline-offset: -2px; } }
+
+/* Ô khoảng ngày (ui/date-range-field): nút như ô chọn nhưng icon lịch; lịch tháng nổi bên dưới */
+[data-shell] .date-range__box { display: flex; width: 100%; }
+[data-shell] .date-range__trigger::after { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") center / 16px 16px no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
+[data-shell] .date-range__trigger[aria-expanded='true']::after { transform: none; }
+[data-shell] .cal-pop { z-index: 60; padding: var(--s-3); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-2); }
+[data-shell] .cal { display: grid; gap: var(--s-2); width: 296px; max-width: calc(100vw - var(--s-7)); }
+[data-shell] .cal__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
+[data-shell] .cal__title { font: var(--t-label); color: var(--c-ink); text-transform: capitalize; }
+[data-shell] .cal__nav { display: inline-grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--c-ink-2); cursor: pointer; }
+[data-shell] .cal__nav:hover:not(:disabled) { background: var(--c-surface-2); }
+[data-shell] .cal__nav:disabled { color: var(--c-faint); cursor: default; }
+[data-shell] .cal__nav:focus-visible { outline: none; box-shadow: var(--focus); }
+[data-shell] .cal__chev { width: 18px; height: 18px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E") center / 18px 18px no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E") center / 18px 18px no-repeat; }
+[data-shell] .cal__chev--prev { transform: rotate(180deg); }
+[data-shell] .cal__grid { display: grid; gap: var(--s-1); }
+[data-shell] .cal__row { display: grid; grid-template-columns: repeat(7, 1fr); }
+[data-shell] .cal__wd { display: grid; place-items: center; height: 28px; color: var(--c-muted); font: var(--t-cap); }
+/* Dải khoảng chạy liền trong tuần (ô không khe ngang), hai đầu ô đặc màu nhấn; dải lót sau nửa ô đầu/cuối */
+[data-shell] .cal__cell { display: grid; }
+[data-shell] .cal__cell[data-in] { background: var(--c-acc-soft); }
+[data-shell] .cal__cell[data-start] { background: linear-gradient(to right, transparent 50%, var(--c-acc-soft) 50%); }
+[data-shell] .cal__cell[data-end] { background: linear-gradient(to left, transparent 50%, var(--c-acc-soft) 50%); }
+[data-shell] .cal__row > .cal__cell[data-in]:first-child { border-radius: var(--r-sm) 0 0 var(--r-sm); }
+[data-shell] .cal__row > .cal__cell[data-in]:last-child { border-radius: 0 var(--r-sm) var(--r-sm) 0; }
+[data-shell] .cal__day { position: relative; height: 40px; padding: 0; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--c-ink); font: var(--t-body); font-variant-numeric: tabular-nums; cursor: pointer; }
+[data-shell] .cal__day[data-out] { color: var(--c-muted); }
+[data-shell] .cal__day:hover:not(:disabled, [data-edge]) { background: var(--c-surface-2); }
+[data-shell] .cal__day[data-today] { font: var(--t-label); }
+[data-shell] .cal__day[data-today]::after { content: ''; position: absolute; left: 50%; bottom: 6px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; transform: translateX(-50%); }
+[data-shell] .cal__day[data-edge] { background: var(--c-acc); color: var(--c-on-acc); font: var(--t-label); }
+[data-shell] .cal__day:disabled { color: var(--c-faint); cursor: not-allowed; }
+[data-shell] .cal__day:focus-visible { outline: none; box-shadow: var(--focus-choice); z-index: 1; }
+[data-shell] .cal__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); min-height: 36px; padding-top: var(--s-2); border-top: 1px solid var(--c-line); }
+[data-shell] .cal__step { color: var(--c-ink-2); font: var(--t-sm); font-variant-numeric: tabular-nums; }
+@media (max-width: 767px) { [data-shell] .cal__day { height: var(--hit); } }
+@media (forced-colors: active) {
+  [data-shell] .date-range__trigger::after, [data-shell] .cal__chev { background: CanvasText; }
+  [data-shell] .cal__day[data-edge] { outline: 2px solid Highlight; }
+}

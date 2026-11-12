@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, waitFor, within, pickOption } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
@@ -82,7 +82,7 @@ describe('RequestPage — điện thoại ≤ 900: thanh phiếu nổi + sheet p
     await userEvent.click(within(sheet).getByRole('button', { name: '+ Thêm món khác' }));
     const dialog = await screen.findByRole('dialog', { name: 'Thêm món khác' });
     await userEvent.type(within(dialog).getByLabelText('Tên món'), 'Bìa còng 7cm');
-    await userEvent.selectOptions(within(dialog).getByLabelText('Đơn vị tính'), 'cai');
+    await pickOption(within(dialog).getByLabelText('Đơn vị tính'), 'cái');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Thêm vào phiếu' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Thêm món khác' })).toBeNull());
     expect(within(screen.getByRole('dialog', { name: 'Phiếu tháng 11' })).getByRole('button', { name: 'Sửa Bìa còng 7cm' })).toBeInTheDocument();

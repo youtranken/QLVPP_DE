@@ -31,7 +31,7 @@ export function FormField({
   const note = error ?? hint;
   return (
     <div className={['ff', error ? 'ff--error' : '', className].filter(Boolean).join(' ')}>
-      <label className="ff-label" htmlFor={id}>
+      <label id={`${id}-label`} className="ff-label" htmlFor={id}>
         {label}
         {required && <span className="ff-req" aria-hidden="true"> *</span>}
       </label>

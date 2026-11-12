@@ -2,6 +2,7 @@ import type { ReactNode, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GroupChips } from '@/ui/filter/group-chips';
 import { SearchBox } from '@/ui/filter/search-box';
+import { Listbox } from '@/ui/listbox';
 import type { FilterState, SortKey } from './item-filters';
 import './filter-bar.m1.css';
 
@@ -48,16 +49,14 @@ export function FilterBar({ filter, groups, total, shown, pickedCount, canFav = 
         />
         {/* Hai cặp chỉ là nhóm bố cục cho điện thoại; máy tính bỏ khung (display: contents) */}
         <div className="rq-f-pair">
-          <label className="rq-f-sort">
-            <span className="sr-only">{t('request.grid.sort')}</span>
-            <select value={filter.sort} onChange={(e) => onChange({ sort: e.target.value as SortKey })}>
-              {SORT_KEYS.filter(([key]) => canFav || key !== 'fav').map(([key, label]) => (
-                <option key={key} value={key}>
-                  {t(label)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Listbox
+            className="rq-f-sort"
+            variant="pill"
+            aria-label={t('request.grid.sort')}
+            value={filter.sort}
+            onChange={(sort) => onChange({ sort })}
+            options={SORT_KEYS.filter(([key]) => canFav || key !== 'fav').map(([key, label]) => ({ value: key, label: t(label) }))}
+          />
           <button type="button" className="rq-f-chip" aria-pressed={filter.onlyPicked} onClick={() => onChange({ onlyPicked: !filter.onlyPicked })}>
             {t('request.grid.picked')} <span className="rq-f-cnt">{pickedCount}</span>
           </button>
