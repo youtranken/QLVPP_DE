@@ -40,9 +40,13 @@ export function RowMenu({ label, items }: { label: string; items: RowMenuItem[] 
     if (refocus) button.current?.focus();
   };
 
+  // Đặt chỗ rồi mới focus mục đầu: menu còn visibility:hidden thì trình duyệt bỏ qua focus(), focus kẹt ở nút ⋯
+  // và Esc (bắt trên menu) không tới được — lỗi chỉ thấy khi mở bằng chuột trên trình duyệt thật
   useLayoutEffect(() => {
     if (!open || !button.current || !menu.current) return;
-    setStyle(placeBelowOrAbove(button.current, menu.current));
+    const placed = placeBelowOrAbove(button.current, menu.current);
+    Object.assign(menu.current.style, { visibility: '', ...placed });
+    setStyle(placed);
     focusAt(0);
   }, [open]);
 
@@ -56,11 +60,20 @@ export function RowMenu({ label, items }: { label: string; items: RowMenuItem[] 
     const onScroll = () => {
       if (button.current && menu.current) setStyle(placeBelowOrAbove(button.current, menu.current));
     };
+    // Esc ở bất cứ đâu khi menu mở (focus còn ở nút ⋯, hoặc đã bấm ra chỗ trống): đóng và trả focus về nút
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      e.preventDefault();
+      e.stopPropagation();
+      close(true);
+    };
     document.addEventListener('pointerdown', onPointer);
+    document.addEventListener('keydown', onKey);
     window.addEventListener('resize', onScroll);
     window.addEventListener('scroll', onScroll, true);
     return () => {
       document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('keydown', onKey);
       window.removeEventListener('resize', onScroll);
       window.removeEventListener('scroll', onScroll, true);
     };
