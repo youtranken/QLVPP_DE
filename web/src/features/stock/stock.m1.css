@@ -46,6 +46,4 @@
   [data-shell='admin'] .table-stack tbody tr:has(> td.sk-actions) { position: relative; }
   [data-shell='admin'] .table-stack td.sk-actions { position: absolute; top: var(--s-2); right: var(--s-2); margin: 0; }
   [data-shell='admin'] .table-stack tr:has(> td.sk-actions) > td:first-child { padding-right: var(--hit); }
-  [data-shell='admin'] .sk-item__name { position: relative; }
-  [data-shell='admin'] .sk-item__name::after { content: ''; position: absolute; inset: 50% 0 auto; height: var(--hit); transform: translateY(-50%); }
 }

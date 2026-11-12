@@ -62,7 +62,9 @@ describe('luật vòng focus', () => {
     for (const r of ALL) {
       if (!/box-shadow:\s*none/.test(r.decls)) continue;
       for (const sel of r.selectors) {
-        if (!INTERACTIVE.test(sel) || /:focus|:disabled|\[disabled\]|\[aria-disabled/.test(sel)) continue;
+        // Chỉ xét phần tử cuối của selector: "button em[data-urgent]" là huy hiệu đếm bên trong nút, không phải chỗ nhận focus
+        const target = sel.trim().split(/\s+|>/).filter(Boolean).pop() ?? sel;
+        if (!INTERACTIVE.test(target) || /:focus|:disabled|\[disabled\]|\[aria-disabled/.test(sel)) continue;
         const want = base(sel);
         const spec = specificity(sel);
         const rescued = ALL.some(
