@@ -36,6 +36,9 @@ export function assertEncKeyEnv(env: EnvLike): void {
   }
 }
 
+// Dẫn xuất khóa một lần cho mỗi giá trị env (test đổi env giữa chừng thì dẫn xuất lại)
+let cached: { raw: string; key: Buffer } | undefined;
+
 function key(): Buffer {
   const raw = process.env[ENC_KEY_ENV];
   if (!raw) {
@@ -43,19 +46,23 @@ function key(): Buffer {
       `${ENC_KEY_ENV} chưa cấu hình — không mã hóa/giải mã được.`,
     );
   }
-  return createHash('sha256').update(raw).digest();
+  if (cached?.raw !== raw) {
+    cached = { raw, key: createHash('sha256').update(raw).digest() };
+  }
+  return cached.key;
 }
 
-// AES-256-GCM: iv.tag.data (base64) — tag làm sửa đổi tự lộ
-export function encryptSecret(plain: string): string {
+// AES-256-GCM: iv.tag.data (base64) — tag làm sửa đổi tự lộ; aad (nếu có) phải khớp lúc giải mã
+export function encryptSecret(plain: string, aad?: string): string {
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', key(), iv);
+  if (aad !== undefined) cipher.setAAD(Buffer.from(aad, 'utf8'));
   const ct = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
   return `${iv.toString('base64')}.${tag.toString('base64')}.${ct.toString('base64')}`;
 }
 
-export function decryptSecret(enc: string): string {
+export function decryptSecret(enc: string, aad?: string): string {
   const [ivB, tagB, ctB] = enc.split('.');
   if (!ivB || !tagB || !ctB) throw new Error('Ciphertext sai định dạng.');
   const decipher = createDecipheriv(
@@ -63,6 +70,7 @@ export function decryptSecret(enc: string): string {
     key(),
     Buffer.from(ivB, 'base64'),
   );
+  if (aad !== undefined) decipher.setAAD(Buffer.from(aad, 'utf8'));
   decipher.setAuthTag(Buffer.from(tagB, 'base64'));
   return Buffer.concat([
     decipher.update(Buffer.from(ctB, 'base64')),

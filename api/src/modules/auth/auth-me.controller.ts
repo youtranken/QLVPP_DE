@@ -138,8 +138,8 @@ export class AuthMeController {
   @HttpCode(200)
   async logout(@Req() req: AuthedRequest, @Res() res: Response): Promise<void> {
     const user = req.user;
-    if (user?.sessionId) {
-      await this.sessions.destroy(user.sessionId);
+    // Chỉ ghi khi chính lời gọi này xóa được phiên (phiên đã hết hạn thì guard đã ghi session_expired)
+    if (user?.sessionId && (await this.sessions.destroy(user.sessionId)) > 0) {
       await this.audit.append({
         actor: user.sub,
         action: 'auth.logout',

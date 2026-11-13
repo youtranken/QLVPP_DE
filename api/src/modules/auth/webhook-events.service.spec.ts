@@ -76,7 +76,7 @@ describe('WebhookEventsService', () => {
       'webhook',
       'system(webhook)',
     );
-    expect(sessions.destroyAllForUser).toHaveBeenCalledWith('u1');
+    expect(sessions.destroyAllForUser).toHaveBeenCalledWith('u1', 'revoked');
     expect(audit.append).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'auth.session_revoked',
@@ -224,7 +224,7 @@ describe('WebhookEventsService', () => {
     await service.apply(ev(type, '7', { detail: undefined }));
     expect(access.claimSeq).toHaveBeenCalledWith('u1', 'status', 7n);
     expect(users.setStatus).toHaveBeenCalledWith('u1', status);
-    expect(sessions.destroyAllForUser).toHaveBeenCalledWith('u1');
+    expect(sessions.destroyAllForUser).toHaveBeenCalledWith('u1', 'revoked');
     expect(audit.append).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'auth.session_revoked',
@@ -292,7 +292,7 @@ describe('WebhookEventsService', () => {
   it('password_changed → hủy phiên, không đổi status, không xét seq', async () => {
     const { service, access, users, sessions } = setup();
     await service.apply(ev('user.password_changed', '3'));
-    expect(sessions.destroyAllForUser).toHaveBeenCalledWith('u1');
+    expect(sessions.destroyAllForUser).toHaveBeenCalledWith('u1', 'revoked');
     expect(users.setStatus).not.toHaveBeenCalled();
     expect(access.claimSeq).not.toHaveBeenCalled();
   });

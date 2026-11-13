@@ -35,40 +35,62 @@ describe('session-crypto', () => {
   });
 
   describe('sealToken/openToken — token PMH ID trong bảng sessions', () => {
-    const saved = process.env.CONFIG_ENC_KEY;
+    const H1 = 'a1'.repeat(32);
+    const H2 = 'b2'.repeat(32);
+    const saved = {
+      key: process.env.CONFIG_ENC_KEY,
+      env: process.env.NODE_ENV,
+    };
     afterEach(() => {
-      if (saved === undefined) delete process.env.CONFIG_ENC_KEY;
-      else process.env.CONFIG_ENC_KEY = saved;
+      if (saved.key === undefined) delete process.env.CONFIG_ENC_KEY;
+      else process.env.CONFIG_ENC_KEY = saved.key;
+      process.env.NODE_ENV = saved.env;
     });
 
     it('có CONFIG_ENC_KEY → v1: AES-GCM, không chứa token thô, mở lại đúng; mỗi lần niêm khác nhau', () => {
       process.env.CONFIG_ENC_KEY = 'a'.repeat(44);
-      const sealed = sealToken('rt-bi-mat-123');
+      const sealed = sealToken('rt-bi-mat-123', H1);
       expect(sealed).toMatch(/^v1:/);
       expect(sealed).not.toContain('rt-bi-mat-123');
-      expect(openToken(sealed)).toBe('rt-bi-mat-123');
-      expect(sealToken('rt-bi-mat-123')).not.toBe(sealed);
+      expect(openToken(sealed, H1)).toBe('rt-bi-mat-123');
+      expect(sealToken('rt-bi-mat-123', H1)).not.toBe(sealed);
     });
 
-    it('không có khóa → p: nguyên văn (chỉ dev), mở được', () => {
+    it('AAD = id_hash: token chép sang dòng phiên khác không giải mã được', () => {
+      process.env.CONFIG_ENC_KEY = 'a'.repeat(44);
+      const sealed = sealToken('rt-dong-1', H1);
+      expect(openToken(sealed, H2)).toBeNull();
+      expect(openToken(sealed, H1)).toBe('rt-dong-1');
+    });
+
+    it('không có khóa → p: nguyên văn, mở được ngoài production', () => {
       delete process.env.CONFIG_ENC_KEY;
-      expect(sealToken('at-1')).toBe('p:at-1');
-      expect(openToken('p:at-1')).toBe('at-1');
+      process.env.NODE_ENV = 'development';
+      expect(sealToken('at-1', H1)).toBe('p:at-1');
+      expect(openToken('p:at-1', H1)).toBe('at-1');
+    });
+
+    it('production → p: bị từ chối (null), v1: vẫn mở', () => {
+      process.env.CONFIG_ENC_KEY = 'a'.repeat(44);
+      const sealed = sealToken('rt-prod', H1);
+      process.env.NODE_ENV = 'production';
+      expect(openToken('p:at-1', H1)).toBeNull();
+      expect(openToken(sealed, H1)).toBe('rt-prod');
     });
 
     it('null/rỗng → null; đổi khóa, mất khóa, bị sửa, tiền tố lạ → null (không ném)', () => {
-      expect(sealToken(null)).toBeNull();
-      expect(sealToken('')).toBeNull();
-      expect(openToken(null)).toBeNull();
+      expect(sealToken(null, H1)).toBeNull();
+      expect(sealToken('', H1)).toBeNull();
+      expect(openToken(null, H1)).toBeNull();
       process.env.CONFIG_ENC_KEY = 'a'.repeat(44);
-      const sealed = sealToken('id-token-x')!;
+      const sealed = sealToken('id-token-x', H1)!;
       process.env.CONFIG_ENC_KEY = 'b'.repeat(44);
-      expect(openToken(sealed)).toBeNull();
+      expect(openToken(sealed, H1)).toBeNull();
       delete process.env.CONFIG_ENC_KEY;
-      expect(openToken(sealed)).toBeNull();
+      expect(openToken(sealed, H1)).toBeNull();
       process.env.CONFIG_ENC_KEY = 'a'.repeat(44);
-      expect(openToken(`${sealed.slice(0, -2)}AA`)).toBeNull();
-      expect(openToken('id-token-x')).toBeNull();
+      expect(openToken(`${sealed.slice(0, -2)}AA`, H1)).toBeNull();
+      expect(openToken('id-token-x', H1)).toBeNull();
     });
   });
 });

@@ -28,20 +28,29 @@ export function sessionRef(cookie: string): string {
   return hashSessionId(cookie).slice(0, 12);
 }
 
-// Token PMH ID trong bảng sessions (refresh/access/id token): có CONFIG_ENC_KEY → 'v1:' AES-GCM;
-// không có (chỉ dev — prod từ chối khởi động) → 'p:' nguyên văn. Tiền tố cho hai chế độ cùng tồn tại.
-export function sealToken(plain: string | null | undefined): string | null {
+// Token PMH ID trong bảng sessions (refresh/access/id token): có CONFIG_ENC_KEY → 'v1:' AES-GCM, AAD = id_hash
+// của phiên (chép token sang dòng khác thì không giải mã được); không có khóa (chỉ dev — prod từ chối khởi
+// động) → 'p:' nguyên văn.
+export function sealToken(
+  plain: string | null | undefined,
+  idHash: string,
+): string | null {
   if (!plain) return null;
-  return hasEncKey() ? `v1:${encryptSecret(plain)}` : `p:${plain}`;
+  return hasEncKey() ? `v1:${encryptSecret(plain, idHash)}` : `p:${plain}`;
 }
 
-// null khi không đọc được (đổi/mất khóa, dữ liệu lạ) → phiên coi như không có token: refresh hỏng thì hủy phiên
-export function openToken(sealed: string | null): string | null {
+// null khi không đọc được (đổi/mất khóa, sai dòng, bị sửa, 'p:' ở production) → phiên coi như không có token
+export function openToken(
+  sealed: string | null,
+  idHash: string,
+): string | null {
   if (!sealed) return null;
-  if (sealed.startsWith('p:')) return sealed.slice(2);
+  if (sealed.startsWith('p:')) {
+    return process.env.NODE_ENV === 'production' ? null : sealed.slice(2);
+  }
   if (!sealed.startsWith('v1:') || !hasEncKey()) return null;
   try {
-    return decryptSecret(sealed.slice(3));
+    return decryptSecret(sealed.slice(3), idHash);
   } catch {
     return null;
   }

@@ -193,7 +193,7 @@ export class WebhookEventsService {
     status?: 'locked' | 'deleted',
   ): Promise<void> {
     if (status) await this.users.setStatus(e.user_id, status);
-    const killed = await this.sessions.destroyAllForUser(e.user_id);
+    const killed = await this.sessions.destroyAllForUser(e.user_id, 'revoked');
     await this.audit.append({
       actor: ACTOR,
       action: 'auth.session_revoked',
