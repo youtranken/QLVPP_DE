@@ -20,6 +20,7 @@ const catalog: Messages<typeof vi> = {
     list: {
       description: 'Staff see items in exactly the category order below. Every item needs a photo so staff can pick it by sight.',
       search: 'Search {{n}} products',
+      searchPending: 'Search products',
       collapseAll: 'Collapse all',
       expandAll: 'Expand all',
       colCode: 'Code',

@@ -48,6 +48,13 @@ const css = () => readFileSync(resolve(process.cwd(), 'src/features/catalog/cata
 const rule = (selector: string) => css().split('\n').find((l) => l.startsWith(`[data-shell='admin'] ${selector} {`)) ?? '';
 
 describe('Thanh lọc Sản phẩm (góp ý vòng 2, ảnh 6)', () => {
+  it('đang tải (chưa có số): ô tìm ghi "Tìm sản phẩm", không "Tìm trong 0 sản phẩm" (rà soát 13/11 #6)', () => {
+    show({ searchable: 0, total: 0, tabCounts: null });
+    const search = screen.getByRole('searchbox', { name: 'Tìm sản phẩm' });
+    expect(search).toHaveAttribute('placeholder', 'Tìm sản phẩm');
+    expect(screen.queryByPlaceholderText(/\b0\b/)).toBeNull();
+  });
+
   it('hàng 1: ô tìm → trạng thái (Tất cả/Đang dùng/Tạm ngưng/Chưa có ảnh kèm số); Lưới/Bảng tách xuống cuối hàng chip nhóm cho khỏi lẫn với tab trạng thái', () => {
     show();
     const search = screen.getByRole('searchbox', { name: 'Tìm trong 66 sản phẩm' });

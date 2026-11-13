@@ -42,7 +42,8 @@ function useChipGroups(index: CategoryIndex, counts: Map<string, number>) {
 export function CatalogFilterBar(p: Props) {
   const { t } = useTranslation();
   const groups = useChipGroups(p.index, p.counts);
-  const label = t('catalog.list.search', { n: p.searchable });
+  // Chưa tải xong (tabCounts null) thì chưa biết số: nhãn trung tính, không ghi "0 sản phẩm"
+  const label = p.tabCounts ? t('catalog.list.search', { n: p.searchable }) : t('catalog.list.searchPending');
   return (
     <div className="ct-filter">
       <div className="ct-filter__main">
