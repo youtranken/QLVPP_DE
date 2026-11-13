@@ -3,6 +3,7 @@ import { Toolbar } from '@/ui/toolbar';
 import type { PersonRow } from '@/features/summary/summary.api';
 import { MONTH_CHIPS, chipCounts, type MonthChip } from './month-chips';
 import { useUrlSearchBox } from '@/lib/use-url-search-box';
+import { ScrollFade } from '@/ui/filter/scroll-fade';
 
 const MAX_SEARCH = 100;
 
@@ -22,14 +23,14 @@ export function MonthChips({ rows, loading = false, chip, q, onChip, onQ }: Prop
   const counts = chipCounts(rows);
   return (
     <Toolbar search={{ value: search, onChange: setSearch, label: t('month.search'), placeholder: t('month.search'), maxLength: MAX_SEARCH }}>
-      <div className="flt-chips" role="group" aria-label={t('month.chips.label')}>
+      <ScrollFade className="flt-chips" role="group" aria-label={t('month.chips.label')}>
         {MONTH_CHIPS.map((c) => (
           <button key={c} type="button" className="flt-chip" aria-pressed={chip === c} onClick={() => onChip(c)}>
             {t(`month.chips.${c}`)}
             <span className="flt-cnt num">{loading ? t('month.value.none') : counts[c]}</span>
           </button>
         ))}
-      </div>
+      </ScrollFade>
     </Toolbar>
   );
 }
