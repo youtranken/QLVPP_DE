@@ -35,6 +35,36 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     expect(navigateTo).not.toHaveBeenCalled();
   });
 
+  // Rà soát 13/11 Gu #13: trang công khai log "401" mỗi lần tải vì boot gọi auth/me
+  it('boot gọi GET /api/auth/session; chưa đăng nhập → 204 → màn đăng nhập, không gọi auth/me', async () => {
+    const fetchMock = vi.fn((url: string) => Promise.resolve(url === '/api/auth/session' ? new Response(null, { status: 204 }) : jsonResponse(200, { testAccounts: false })));
+    vi.stubGlobal('fetch', fetchMock);
+    renderWithI18n(<App />);
+    expect(await screen.findByLabelText(LOGIN_FIELD)).toBeInTheDocument();
+    expect(screen.queryByText(/Phiên đăng nhập đã hết hạn/)).toBeNull();
+    const urls = fetchMock.mock.calls.map(([u]) => u);
+    expect(urls[0]).toBe('/api/auth/session');
+    expect(urls).not.toContain('/api/auth/me');
+  });
+
+  it('204 sau phiên SSO hết hạn → vẫn tự SSO lại như 401 cũ', async () => {
+    sessionStorage.setItem('vpp.auth.mode', 'sso');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
+    renderWithI18n(<App />);
+    await vi.waitFor(() => expect(navigateTo).toHaveBeenCalledTimes(1));
+  });
+
+  it('api cũ chưa có auth/session (404) → hỏi auth/me như trước', async () => {
+    const fetchMock = vi.fn((url: string) =>
+      Promise.resolve(url === '/api/auth/session' ? jsonResponse(404, {}) : url === '/api/auth/me' ? jsonResponse(200, makeMe('member')) : jsonResponse(200, { items: [], next_cursor: null })),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    renderWithI18n(<App />);
+    await vi.waitFor(() => expect(fetchMock.mock.calls.map(([u]) => u)).toContain('/api/auth/me'));
+    expect(await screen.findByRole('navigation', { name: /./ })).toBeInTheDocument();
+    expect(screen.queryByLabelText(LOGIN_FIELD)).toBeNull();
+  });
+
   it('tab từng SSO + tải lại sau khi hết hạn → chuyển PMH ID, nhớ trang', async () => {
     sessionStorage.setItem('vpp.auth.mode', 'sso');
     window.history.replaceState(null, '', '/history?ym=2026-11');
@@ -153,7 +183,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
       'fetch',
       vi.fn((url: string) =>
         Promise.resolve(
-          url === '/api/auth/me'
+          url === '/api/auth/session'
             ? jsonResponse(200, makeMe('member', { locale: 'en', localeUpdatedAt: null, serverTime: Date.now() }))
             : jsonResponse(200, { items: [], next_cursor: null }),
         ),
@@ -169,13 +199,13 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     localStorage.removeItem('vpp_lang');
   });
 
-  it('/api/auth/me lỗi 500 → báo lỗi hệ thống + Thử lại', async () => {
+  it('/api/auth/session lỗi 500 → báo lỗi hệ thống + Thử lại', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(500, {})));
     renderWithI18n(<App />);
     expect(await screen.findByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
   });
 
-  it('/api/auth/me 503 SSO_UNAVAILABLE → màn đăng nhập kèm báo PMH ID không liên lạc được, nhập tài khoản nội bộ → bước mật khẩu', async () => {
+  it('/api/auth/session 503 SSO_UNAVAILABLE → màn đăng nhập kèm báo PMH ID không liên lạc được, nhập tài khoản nội bộ → bước mật khẩu', async () => {
     sessionStorage.setItem('vpp.auth.mode', 'sso');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(503, { code: 'SSO_UNAVAILABLE' })));
     renderWithI18n(<App />);
@@ -220,7 +250,7 @@ describe('Adm D&E không có phiếu — route nhân viên chuyển về /admin'
     vi.resetModules();
     sessionStorage.clear();
     sessionStorage.setItem('vpp.auth.returnTo', '/history?x=1');
-    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(url === '/api/auth/me' ? jsonResponse(200, makeMe('admin')) : new Promise<Response>(() => {}))));
+    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(url === '/api/auth/session' ? jsonResponse(200, makeMe('admin')) : new Promise<Response>(() => {}))));
     const Fresh = (await import('@/App')).default;
     renderWithI18n(<Fresh />);
     await vi.waitFor(() => expect(window.location.pathname).toBe('/admin/month'));

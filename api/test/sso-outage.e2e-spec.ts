@@ -67,6 +67,17 @@ describe('PMH ID sập, trình duyệt còn phiên SSO hết hạn', () => {
     expect(res.body.code).toBe('SSO_UNAVAILABLE');
   });
 
+  // Boot web (auth/session, @OptionalAuth): outage không bị nuốt thành "chưa đăng nhập" như route @Public
+  it('GET auth/session (boot web) → 503 SSO_UNAVAILABLE, giữ cookie', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/api/auth/session')
+      .set('Cookie', `vpp_sid=${staleSid}`)
+      .expect(503);
+    expect(res.body.code).toBe('SSO_UNAVAILABLE');
+    const setCookie = ([] as string[]).concat(res.headers['set-cookie'] ?? []);
+    expect(setCookie.some((c) => /^vpp_sid=;/.test(c))).toBe(false);
+  });
+
   it('GET public-config (route @Public) → 200', async () => {
     await request(app.getHttpServer())
       .get('/api/public-config')

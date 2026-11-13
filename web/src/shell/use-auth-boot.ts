@@ -65,19 +65,26 @@ async function isSsoUnavailable(res: Response): Promise<boolean> {
   return apiErrorCode(new ApiError(res.status, body)) === 'SSO_UNAVAILABLE';
 }
 
+// Boot đọc phiên qua GET auth/session: chưa đăng nhập → 204 (không phải lỗi mạng, console trang công khai sạch).
+// API cũ chưa có route này (cập nhật web trước api) → 404 → hỏi lại auth/me như trước (401 = chưa đăng nhập).
+async function fetchSession(): Promise<Response> {
+  const res = await fetch('/api/auth/session');
+  return res.status === 404 ? fetch('/api/auth/me') : res;
+}
+
 export function useAuthBoot(): AuthState {
   const [state, setState] = useState<AuthState>({ kind: 'loading' });
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/auth/me')
+    fetchSession()
       .then(async (res): Promise<AuthState | null> => {
+        if (res.status === 204 || res.status === 401) return onUnauthenticated();
         if (res.ok) {
           const me = (await res.json()) as Me;
           // Ngôn ngữ theo tài khoản PMH ID trước khi vẽ app (không nháy ngôn ngữ cũ)
           await applySignedInLanguage(me, { serverDate: res.headers?.get('date') });
           return onAuthenticated(me);
         }
-        if (res.status === 401) return onUnauthenticated();
         if (await isSsoUnavailable(res)) return { kind: 'anonymous', expired: false, ssoDown: true };
         return { kind: 'error' };
       })

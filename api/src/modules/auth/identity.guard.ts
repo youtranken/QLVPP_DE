@@ -12,7 +12,7 @@ import { isUuid } from '../../common/uuid';
 import { isDevAuthActive } from './auth-env';
 import { SessionAuthService } from './session-auth.service';
 import type { AuthedRequest, RequestIdentity } from './identity.types';
-import { IS_PUBLIC_KEY } from './public.decorator';
+import { IS_OPTIONAL_AUTH_KEY, IS_PUBLIC_KEY } from './public.decorator';
 
 export const DEV_SUB_HEADER = 'x-dev-user-sub';
 export const DEV_ROLE_HEADER = 'x-dev-role';
@@ -37,6 +37,10 @@ export class IdentityGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+    const isOptional = this.reflector.getAllAndOverride<boolean>(
+      IS_OPTIONAL_AUTH_KEY,
+      [context.getHandler(), context.getClass()],
+    );
     const request = context.switchToHttp().getRequest<AuthedRequest>();
     const response = context.switchToHttp().getResponse<Response>();
 
@@ -73,7 +77,8 @@ export class IdentityGuard implements CanActivate {
       if (identity === null) response.clearCookie(SESSION_COOKIE);
     }
 
-    if (isPublic) {
+    // @OptionalAuth: chưa đăng nhập vẫn vào handler, req.user rỗng (handler trả lời ẩn danh, không có dữ liệu)
+    if (isPublic || isOptional) {
       return true;
     }
     throw new UnauthorizedException({
