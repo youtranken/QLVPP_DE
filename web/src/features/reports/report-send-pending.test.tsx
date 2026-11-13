@@ -4,7 +4,7 @@ import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { callsTo, itemRow, sendReport, setupSendAdm, YM } from '@/features/send-adm/send-adm-fixtures';
-import { errorResponse } from './reports-test-stub';
+import { captureDownloads, errorResponse } from './reports-test-stub';
 
 const PEN = itemRow({ key: 'kA', name: 'Bút bi', requested: 5, need: 5 });
 const PAPER = itemRow({ key: 'kB', name: 'Giấy A4', requested: 3, need: 3 });
@@ -95,6 +95,8 @@ describe('Báo cáo & gửi NCC: món ngoài danh mục chờ khi chốt bản',
   });
 
   it('Xuất Excel khi có món ngoài DM chờ duyệt: hộp "Chốt phiếu gửi NCC?" cùng khung cảnh báo, focus Quay lại; xác nhận gửi cờ', async () => {
+    // Tải tệp bằng <a download> thật: jsdom không tải được (in "Not implemented: navigation"), ghi lại thay vì bấm
+    const downloads = captureDownloads();
     const f = setupSendAdm({ report: sendReport([PEN, PAPER], { pending_custom_count: 2, pending_custom: PENDING6.slice(0, 2) }) });
     open();
     await qtyBox('Bút bi');
@@ -106,6 +108,7 @@ describe('Báo cáo & gửi NCC: món ngoài danh mục chờ khi chốt bản',
     await userEvent.click(within(dialog).getByRole('button', { name: 'Xuất Excel mẫu phòng' }));
     await waitFor(() => expect(snapshotPosts(f)).toHaveLength(1));
     expect(snapshotPosts(f)[0]!.body).toMatchObject({ kind: 'xlsx', reject_pending_custom: true, expected_pending: 2 });
+    await waitFor(() => expect(downloads.map((d) => d.name)).toEqual([`vpp-bao-cao-${YM}.xlsx`]));
   });
 
   it('Xuất Excel bị 409 PENDING_CUSTOM → hộp vẫn mở, báo đỏ trong hộp, không chốt', async () => {
@@ -135,6 +138,7 @@ describe('Báo cáo & gửi NCC: món ngoài danh mục chờ khi chốt bản',
     expect(callsTo(f, 'POST', `/api/admin/periods/${YM}/no-order`)[0]!.body).toMatchObject({ reject_pending_custom: true, expected_pending: 1 });
   });
   it('Xuất Excel có ghi Không mua thành công → tải lại báo cáo sống (số/tên món chờ hết cũ)', async () => {
+    const downloads = captureDownloads();
     const f = setupSendAdm({ report: sendReport([PEN, PAPER], { pending_custom_count: 2, pending_custom: PENDING6.slice(0, 2) }) });
     open();
     await qtyBox('Bút bi');
@@ -144,6 +148,7 @@ describe('Báo cáo & gửi NCC: món ngoài danh mục chờ khi chốt bản',
     await userEvent.click(within(dialog).getByRole('button', { name: 'Xuất Excel mẫu phòng' }));
     await waitFor(() => expect(snapshotPosts(f)).toHaveLength(1));
     await waitFor(() => expect(reportLoads(f)).toBeGreaterThan(before));
+    await waitFor(() => expect(downloads).toHaveLength(1));
   });
 
   it('Không cần đề nghị có ghi Không mua thành công → tải lại báo cáo sống', async () => {
