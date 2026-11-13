@@ -76,7 +76,7 @@ export function AppRoutes() {
         path="/admin/reports/snapshots/:id/print"
         element={
           <RequireRole roles={['admin', 'sa']}>
-            <RouteChunk loading={<PrintPending />}>
+            <RouteChunk loading={<PrintPending />} frame={(node) => <PrintPending>{node}</PrintPending>}>
               <PrintPage />
             </RouteChunk>
           </RequireRole>

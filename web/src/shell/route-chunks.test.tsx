@@ -79,6 +79,19 @@ describe('routeChunk — nạp lười theo nhóm route', () => {
     vi.unstubAllGlobals();
   });
 
+  it('frame: câu báo nằm trong khung của màn (nhân viên: panel sáng; trang in: còn thanh Quay lại)', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const c = routeChunk<{ Page: typeof Page }>(() => Promise.reject(new TypeError('Failed to fetch dynamically imported module')));
+    const Lazy = c.page('Page');
+    renderWithI18n(
+      <RouteChunk loading={<Waiting />} frame={(n) => <section data-testid="khung">{n}</section>}>
+        <Lazy />
+      </RouteChunk>,
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent('Ứng dụng vừa được cập nhật');
+    expect(screen.getByRole('alert').closest('[data-testid="khung"]')).not.toBeNull();
+  });
+
   it('lỗi code khác trong trang → không giấu dưới câu "vừa cập nhật", ném tiếp lên trên như trước', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     function Broken(): ReactNode {

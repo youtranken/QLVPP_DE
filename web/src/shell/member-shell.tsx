@@ -84,6 +84,7 @@ export function MemberShell() {
               <Loading />
             </LoadPanel>
           }
+          frame={(node) => <LoadPanel>{node}</LoadPanel>}
         >
           <Outlet />
         </RouteChunk>

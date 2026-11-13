@@ -49,15 +49,14 @@ export function PendingScreen({ children }: { children: ReactNode }) {
   );
 }
 
-// Khung chờ khi chunk trang in chưa nạp xong (cùng font, sprite, thanh công cụ như PrintPage)
-export function PrintPending() {
+// Khung chờ khi chunk trang in chưa nạp xong (cùng font, sprite, thanh công cụ như PrintPage); nạp hỏng thì câu báo
+// nằm trong cùng khung, vẫn còn nút Quay lại
+export function PrintPending({ children = <Loading /> }: { children?: ReactNode }) {
   useShellFont('admin');
   return (
     <>
       <IconSprite />
-      <PendingScreen>
-        <Loading />
-      </PendingScreen>
+      <PendingScreen>{children}</PendingScreen>
     </>
   );
 }

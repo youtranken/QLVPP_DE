@@ -19,10 +19,19 @@ export class ChunkErrorBoundary extends Component<{ children: ReactNode; fallbac
   }
 }
 
-// Vùng vẽ một route lười: khung chờ của chính màn đó (không nhảy bố cục), nạp hỏng → nút Tải lại trang
-export function RouteChunk({ loading, children }: { loading: ReactNode; children: ReactNode }) {
+// Vùng vẽ một route lười: khung chờ của chính màn đó (không nhảy bố cục), nạp hỏng → nút Tải lại trang.
+// frame: khung bọc câu báo (nhân viên: panel sáng, chữ không nằm thẳng trên nền teal)
+export function RouteChunk({
+  loading,
+  frame = (n) => n,
+  children,
+}: {
+  loading: ReactNode;
+  frame?: (node: ReactNode) => ReactNode;
+  children: ReactNode;
+}) {
   return (
-    <ChunkErrorBoundary fallback={<ChunkError />}>
+    <ChunkErrorBoundary fallback={frame(<ChunkError />)}>
       <Suspense fallback={loading}>{children}</Suspense>
     </ChunkErrorBoundary>
   );
