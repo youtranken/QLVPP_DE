@@ -53,12 +53,30 @@ describe('admin/config + public-config', () => {
     delete process.env.AUTH_DEV_MODE;
   });
 
-  it('GET public-config không phiên → 200 {admin_contact}, không lộ khóa khác', async () => {
+  it('GET public-config không phiên → 200 {admin_contact, pmh_portal_url}, không lộ khóa khác', async () => {
     await put({ admin_contact: 'Chị Lan — 0901 234 567' }).expect(200);
     const res = await request(app.getHttpServer())
       .get('/api/public-config')
       .expect(200);
-    expect(res.body).toEqual({ admin_contact: 'Chị Lan — 0901 234 567' });
+    // Test không có PMH_ISSUER_URL → không có cổng PMH ID
+    expect(res.body).toEqual({
+      admin_contact: 'Chị Lan — 0901 234 567',
+      pmh_portal_url: null,
+    });
+  });
+
+  it('GET public-config: pmh_portal_url = gốc của PMH_ISSUER_URL (dev → dev-admin, không để cứng de-admin)', async () => {
+    process.env.PMH_ISSUER_URL = 'https://dev-admin.pmh.com.vn:8443/oidc';
+    try {
+      const res = await request(app.getHttpServer())
+        .get('/api/public-config')
+        .expect(200);
+      expect(res.body.pmh_portal_url).toBe(
+        'https://dev-admin.pmh.com.vn:8443/',
+      );
+    } finally {
+      delete process.env.PMH_ISSUER_URL;
+    }
   });
 
   it('GET admin/config: member → 403; admin → đủ khóa VPP, không còn admin_group/authorized_groups', async () => {

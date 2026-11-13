@@ -80,6 +80,39 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?ui_locales=vi');
   });
 
+  describe('mở từ portal PMH ID qua referrer (không có ?sso=1): host cổng lấy từ /api/public-config', () => {
+    const withReferrer = (ref: string) =>
+      Object.defineProperty(document, 'referrer', { value: ref, configurable: true });
+    const stubConfig = (portal: string) =>
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockImplementation((url: string) =>
+          Promise.resolve(
+            url === '/api/public-config'
+              ? jsonResponse(200, { admin_contact: '', pmh_portal_url: portal })
+              : jsonResponse(401, {}),
+          ),
+        ),
+      );
+    afterEach(() => withReferrer(''));
+
+    it('referrer = cổng của môi trường này (dev-admin) → đi thẳng SSO', async () => {
+      withReferrer('https://dev-admin.pmh.com.vn:8443/apps');
+      stubConfig('https://dev-admin.pmh.com.vn:8443/');
+      renderWithI18n(<App />);
+      expect(await screen.findByText('Đang chuyển sang PMH ID…')).toBeInTheDocument();
+      expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?ui_locales=vi');
+    });
+
+    it('referrer = cổng môi trường khác (de-admin) trên bản dev → màn đăng nhập, không SSO', async () => {
+      withReferrer('https://de-admin.pmh.com.vn:8443/');
+      stubConfig('https://dev-admin.pmh.com.vn:8443/');
+      renderWithI18n(<App />);
+      expect(await screen.findByLabelText(LOGIN_FIELD)).toBeInTheDocument();
+      expect(navigateTo).not.toHaveBeenCalled();
+    });
+  });
+
   it('?login=forbidden → trang chưa được cấp quyền, không tự SSO', async () => {
     sessionStorage.setItem('vpp.auth.mode', 'sso');
     window.history.replaceState(null, '', '/?login=forbidden&sso=1');

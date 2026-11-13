@@ -82,6 +82,26 @@ type ListedItem = ItemRow & {
   missing_image: boolean;
 };
 
+// Nhân viên chỉ nhận đúng trường màn đặt món dùng (MemberItem ở web); tồn kho, mức đặt lại, mã món,
+// trạng thái kho là dữ liệu nội bộ của Hành chính — cắt ở server, không chỉ ẩn ở giao diện
+const MEMBER_ITEM_KEYS = [
+  'id',
+  'name',
+  'name_en',
+  'unit',
+  'pack_note',
+  'category_id',
+  'image_file_id',
+  'admin_only',
+  'max_qty',
+  'active',
+  'usable',
+] as const;
+export type MemberListedItem = Pick<
+  ListedItem,
+  (typeof MEMBER_ITEM_KEYS)[number]
+>;
+
 @Injectable()
 export class CatalogService {
   constructor(
@@ -150,7 +170,7 @@ export class CatalogService {
   async listFor(
     identity: RequestIdentity,
     includeIds: string[] = [],
-  ): Promise<ListedItem[]> {
+  ): Promise<ListedItem[] | MemberListedItem[]> {
     const privileged = identity.role === 'admin' || identity.role === 'sa';
     const result = await this.db.execute<ListedItem & ItemDbRow>(sql`
       SELECT i.* FROM (
@@ -165,6 +185,11 @@ export class CatalogService {
       LEFT JOIN item_categories c ON c.id = i.category_id
       ORDER BY ${ITEM_ORDER}
     `);
+    if (!privileged) {
+      return result.rows.map(
+        (r) => pick(r, [...MEMBER_ITEM_KEYS]) as MemberListedItem,
+      );
+    }
     return this.withState(this.db, result.rows) as Promise<ListedItem[]>;
   }
 

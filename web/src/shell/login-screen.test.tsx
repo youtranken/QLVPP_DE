@@ -145,7 +145,12 @@ describe('LoginScreen', () => {
     at('/?login=forbidden');
     const fetchMock = vi
       .fn()
-      .mockResolvedValue(jsonResponse(200, { admin_contact: 'chị Bình (Adm D&E) — 0909 123 456' }));
+      .mockResolvedValue(
+        jsonResponse(200, {
+          admin_contact: 'chị Bình (Adm D&E) — 0909 123 456',
+          pmh_portal_url: 'https://dev-admin.pmh.com.vn:8443/',
+        }),
+      );
     vi.stubGlobal('fetch', fetchMock);
     const { container } = renderWithI18n(<LoginScreen />);
     expect(
@@ -160,7 +165,11 @@ describe('LoginScreen', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/public-config', undefined);
     await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập bằng tài khoản khác' }));
     expect(navigateTo).toHaveBeenCalledWith('/api/auth/switch-account?ui_locales=vi');
-    expect(screen.getByRole('link', { name: 'Về trang PMH ID' })).toBeInTheDocument();
+    // Cổng PMH ID theo issuer của môi trường (dev → dev-admin), không để cứng de-admin
+    expect(screen.getByRole('link', { name: 'Về trang PMH ID' })).toHaveAttribute(
+      'href',
+      'https://dev-admin.pmh.com.vn:8443/',
+    );
   });
 
   it('forbidden khi admin_contact rỗng → dùng "Adm D&E", không để trống', async () => {

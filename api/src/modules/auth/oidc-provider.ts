@@ -14,6 +14,8 @@ export interface AuthUrlRequest {
   loginHint?: string;
   // Ngôn ngữ app đang dùng (docs 7a) — chỉ quyết định trang PMH ID hiển thị
   uiLocales?: string;
+  // 'login' = PMH ID bắt nhập lại dù phiên SSO còn — để chọn tài khoản khác (oidc-provider không hỗ trợ select_account)
+  prompt?: 'login';
 }
 
 export interface CodeExchangeRequest {

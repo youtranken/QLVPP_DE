@@ -221,9 +221,29 @@ describe('ngôn ngữ PMH ID: /me, ui_locales, PUT /api/auth/me/locale', () => {
       expect(authUrls.at(-1)?.uiLocales).toBeUndefined();
     });
 
-    it('GET /api/auth/switch-account?ui_locales=en → end_session kèm ui_locales=en', async () => {
+    it('GET /api/auth/switch-account?ui_locales=en, không phiên → authorize prompt=login kèm ui_locales=en', async () => {
       const res = await request(app.getHttpServer())
         .get('/api/auth/switch-account?ui_locales=en')
+        .expect(302);
+      expect(res.headers.location).toBe('https://id.e2e-locale.test/oidc/auth');
+      expect(authUrls.at(-1)).toMatchObject({
+        prompt: 'login',
+        uiLocales: 'en',
+      });
+    });
+
+    it('GET /api/auth/switch-account?ui_locales=en, phiên có id_token → end_session kèm ui_locales=en', async () => {
+      const s = await app.get(SessionService).create({
+        userSub: sub,
+        refreshToken: 'rt',
+        accessToken: 'at-old',
+        accessTokenExp: new Date(Date.now() + 5 * 60_000),
+        claims: { sub, full_name: 'Locale' },
+        idToken: 'idt',
+      });
+      const res = await request(app.getHttpServer())
+        .get('/api/auth/switch-account?ui_locales=en')
+        .set('Cookie', `vpp_sid=${s.id}`)
         .expect(302);
       expect(res.headers.location).toBe(
         'https://id.e2e-locale.test/oidc/logout',

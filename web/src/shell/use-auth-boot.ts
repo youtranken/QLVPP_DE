@@ -34,7 +34,7 @@ function onAuthenticated(me: Me): AuthState {
   return { kind: 'authenticated', me };
 }
 
-function onUnauthenticated(): AuthState | null {
+async function onUnauthenticated(): Promise<AuthState | null> {
   // StrictMode chạy effect 2 lần — lần đầu đã quyết định chuyển hướng
   if (isRedirecting()) return null;
   const q = new URLSearchParams(window.location.search);
@@ -49,7 +49,7 @@ function onUnauthenticated(): AuthState | null {
     startRelogin();
     return { kind: 'redirecting' };
   }
-  if (cameFromPortal()) {
+  if (await cameFromPortal()) {
     navigateTo(ssoLoginUrl());
     return { kind: 'redirecting' };
   }
