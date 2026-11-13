@@ -74,6 +74,12 @@ export class SessionAuthService {
       return null;
     }
 
+    // Tối đa 12 h kể từ lúc đăng nhập, mọi loại phiên (chuẩn phiên chung PMH ID)
+    if (session.expiresAt.getTime() <= Date.now()) {
+      await this.expire(sessionId, session.userSub, 'max_age');
+      return null;
+    }
+
     // Phiên SA local: không claims OIDC, không refresh; idle quá 2 h → buộc login lại
     if (session.userSub === LOCAL_SA_SUB) {
       const idleMs = Date.now() - session.lastSeenAt.getTime();

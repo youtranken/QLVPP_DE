@@ -14,6 +14,7 @@ const session = (over: Partial<SessionRecord> = {}): SessionRecord => ({
   csrfToken: 'c',
   idToken: null,
   lastSeenAt: new Date(),
+  expiresAt: new Date(Date.now() + 3_600_000),
   ...over,
 });
 

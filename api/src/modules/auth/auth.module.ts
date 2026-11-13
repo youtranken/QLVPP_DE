@@ -16,6 +16,7 @@ import { LocalTestAccountsService } from './local-test-accounts.service';
 import { LocalTestLoginController } from './local-test-login.controller';
 import { RolesGuard } from './roles.guard';
 import { SessionAuthService } from './session-auth.service';
+import { SessionCleanupJob } from './session-cleanup.job';
 import { SessionService } from './session.service';
 import { WebhookController } from './webhook.controller';
 import { WebhookEventsService } from './webhook-events.service';
@@ -32,6 +33,7 @@ import { WebhookEventsService } from './webhook-events.service';
   providers: [
     SessionService,
     SessionAuthService,
+    SessionCleanupJob,
     LocalSaService,
     LocalTestAccountsService,
     WebhookEventsService,

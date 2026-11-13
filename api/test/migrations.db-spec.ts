@@ -51,7 +51,7 @@ describe('assertTestDatabase — chặn reset nhầm DB không phải *_test', (
   });
 });
 
-describe('migrations nền 0001–0013 + 0100–0125', () => {
+describe('migrations nền 0001–0013 + 0100–0126', () => {
   let pool: Pool;
 
   async function resetSchema(): Promise<void> {
@@ -76,11 +76,11 @@ describe('migrations nền 0001–0013 + 0100–0125', () => {
     await pool.end();
   });
 
-  it('áp đủ 39 migration; chạy lại không áp thêm file nào', async () => {
-    expect(await migrationCount()).toBe(39);
+  it('áp đủ 40 migration; chạy lại không áp thêm file nào', async () => {
+    expect(await migrationCount()).toBe(40);
     const again = await runMigrations(pool, resolveMigrationsDir(), silent);
     expect(again).toEqual([]);
-    expect(await migrationCount()).toBe(39);
+    expect(await migrationCount()).toBe(40);
   });
 
   it('file 0003 đã apply bị sửa nội dung → reject với thông báo checksum', async () => {
@@ -304,7 +304,7 @@ describe('migration 0122 PMH ID v3', () => {
   });
 });
 
-describe('migration 0125 khóa phiên băm', () => {
+describe('migration 0125–0126 khóa phiên băm, hạn 12 h', () => {
   let pool: Pool;
   const oldSid = '3f0c7a52-9d1e-4b8a-8c6f-1a2b3c4d5e6f';
   const sha12 = (v: string) =>
@@ -362,5 +362,17 @@ describe('migration 0125 khóa phiên băm', () => {
     await expect(
       pool.query(`UPDATE audit_log SET actor = 'x'`),
     ).rejects.toThrow(/append-only/);
+  });
+
+  it('0126: sessions.expires_at NOT NULL, có index', async () => {
+    const { rows } = await pool.query<{ is_nullable: string }>(
+      `SELECT is_nullable FROM information_schema.columns
+        WHERE table_name = 'sessions' AND column_name = 'expires_at'`,
+    );
+    expect(rows).toEqual([{ is_nullable: 'NO' }]);
+    const idx = await pool.query(
+      `SELECT 1 FROM pg_indexes WHERE indexname = 'idx_sessions_expires_at'`,
+    );
+    expect(idx.rows).toHaveLength(1);
   });
 });

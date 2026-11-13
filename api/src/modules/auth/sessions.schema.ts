@@ -16,6 +16,8 @@ export const sessionsTable = pgTable('sessions', {
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
+  // created_at + 12 h (SESSION_MAX_AGE_MS) — quá hạn thì từ chối và xóa, job dọn định kỳ
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   lastSeenAt: timestamp('last_seen_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

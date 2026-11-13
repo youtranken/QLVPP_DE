@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
-import { and, eq, lt, sql } from 'drizzle-orm';
+import { and, eq, lte, sql } from 'drizzle-orm';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import type { PmhIdClaims } from '../users/users.service';
@@ -14,6 +14,9 @@ import {
 } from './session-crypto';
 import { sessionsTable } from './sessions.schema';
 
+// Phiên app tối đa 12 h kể từ lúc đăng nhập (chuẩn phiên chung PMH ID), kể cả SA/tài khoản thử
+export const SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+
 export interface SessionRecord {
   // Cookie vpp_sid thô (create trả về để set cookie; find trả lại đúng cookie đã tra) — không lưu DB
   id: string;
@@ -25,6 +28,7 @@ export interface SessionRecord {
   csrfToken: string;
   idToken: string | null;
   lastSeenAt: Date;
+  expiresAt: Date;
 }
 
 @Injectable()
@@ -50,7 +54,7 @@ export class SessionService implements OnModuleInit {
     claims: PmhIdClaims;
     idToken: string | null;
   }): Promise<SessionRecord> {
-    await this.gcOrphans();
+    await this.purgeExpired();
     const record: SessionRecord = {
       id: newSessionCookie(),
       userSub: params.userSub,
@@ -61,13 +65,14 @@ export class SessionService implements OnModuleInit {
       csrfToken: randomBytes(32).toString('hex'),
       idToken: params.idToken,
       lastSeenAt: new Date(),
+      expiresAt: new Date(Date.now() + SESSION_MAX_AGE_MS),
     };
     await this.insert(record);
     return record;
   }
 
   async createLocalSa(): Promise<SessionRecord> {
-    await this.gcOrphans();
+    await this.purgeExpired();
     const record: SessionRecord = {
       id: newSessionCookie(),
       userSub: LOCAL_SA_SUB,
@@ -78,6 +83,7 @@ export class SessionService implements OnModuleInit {
       csrfToken: randomBytes(32).toString('hex'),
       idToken: null,
       lastSeenAt: new Date(),
+      expiresAt: new Date(Date.now() + SESSION_MAX_AGE_MS),
     };
     await this.insert(record);
     return record;
@@ -101,11 +107,13 @@ export class SessionService implements OnModuleInit {
       .where(eq(sessionsTable.idHash, hashSessionId(id)));
   }
 
-  // Dọn phiên mồ côi (bỏ đi không logout) mỗi lần tạo phiên — chặn bảng phình vô hạn
-  private async gcOrphans(): Promise<void> {
-    await this.db
+  // Dọn phiên quá hạn 12 h (bỏ đi không logout): job định kỳ + mỗi lần tạo phiên. Trả số phiên đã xóa.
+  async purgeExpired(): Promise<number> {
+    const rows = await this.db
       .delete(sessionsTable)
-      .where(lt(sessionsTable.lastSeenAt, sql`now() - interval '30 days'`));
+      .where(lte(sessionsTable.expiresAt, sql`now()`))
+      .returning({ idHash: sessionsTable.idHash });
+    return rows.length;
   }
 
   async find(id: string): Promise<SessionRecord | null> {
@@ -127,6 +135,7 @@ export class SessionService implements OnModuleInit {
       csrfToken: row.csrfToken,
       idToken: openToken(row.idToken),
       lastSeenAt: row.lastSeenAt,
+      expiresAt: row.expiresAt,
     };
   }
 

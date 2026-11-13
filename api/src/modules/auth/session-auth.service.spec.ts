@@ -26,6 +26,7 @@ function makeService(opts: {
           csrfToken: 'tok',
           idToken: 'id-token-1',
           lastSeenAt: new Date(),
+          expiresAt: new Date(Date.now() + 3_600_000),
           ...opts.session,
         };
   const sessions = {
@@ -286,6 +287,29 @@ describe('SessionAuthService — chỉ user active mới có phiên', () => {
   });
 });
 
+describe('SessionAuthService — phiên tối đa 12 h từ lúc đăng nhập', () => {
+  it.each([
+    ['SSO còn hạn access token', {}],
+    ['SA cục bộ vừa dùng', { userSub: 'local:sa', claims: null }],
+  ])(
+    '%s nhưng expires_at đã qua → null, hủy phiên, audit session_expired max_age (objectId 12 hex)',
+    async (_label, extra) => {
+      const { service, sessions, audit } = makeService({
+        session: { ...extra, expiresAt: new Date(Date.now() - 1) },
+      });
+      expect(await service.resolve('sid-1')).toBeNull();
+      expect(sessions.destroy).toHaveBeenCalledWith('sid-1');
+      expect(audit.append).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'auth.session_expired',
+          objectId: sessionRef('sid-1'),
+          detail: { reason: 'max_age' },
+        }),
+      );
+    },
+  );
+});
+
 describe('SessionAuthService — SA cục bộ idle 2 giờ', () => {
   const NOW = Date.parse('2026-11-05T03:00:00.000Z');
   const TWO_HOURS = 2 * 60 * 60 * 1000;
@@ -301,6 +325,7 @@ describe('SessionAuthService — SA cục bộ idle 2 giờ', () => {
         refreshToken: null,
         accessTokenExp: null,
         lastSeenAt: new Date(NOW - idleMs),
+        expiresAt: new Date(NOW + 3_600_000),
       },
     });
   }

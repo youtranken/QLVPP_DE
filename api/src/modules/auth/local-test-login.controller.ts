@@ -15,7 +15,7 @@ import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { UsersService } from '../users/users.service';
-import { clientIp, cookieSecure } from './auth.controller';
+import { clientIp, sessionCookieOptions } from './auth.controller';
 import { SESSION_COOKIE } from './identity.guard';
 import { sessionRef } from './session-crypto';
 import type { AuthedRequest } from './identity.types';
@@ -65,13 +65,7 @@ export class LocalTestLoginController {
       await this.rejectLogin(ip, result);
     }
     const sessionId = await this.openSession(account!);
-    res.cookie(SESSION_COOKIE, sessionId, {
-      httpOnly: true,
-      secure: cookieSecure(),
-      sameSite: 'strict',
-      path: '/',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie(SESSION_COOKIE, sessionId, sessionCookieOptions());
     await this.audit.append({
       actor: account!.sub,
       action: 'auth.test_login',
