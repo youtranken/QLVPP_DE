@@ -4,6 +4,7 @@ import { Pool } from 'pg';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { OIDC_PROVIDER } from '../src/modules/auth/oidc-provider';
+import { hashSessionId } from '../src/modules/auth/session-crypto';
 import { SessionService } from '../src/modules/auth/session.service';
 import { UsersService } from '../src/modules/users/users.service';
 import { createTestApp } from './test-app.helper';
@@ -61,8 +62,8 @@ describe('PMH ID từ chối refresh token (invalid_grant) qua app thật', () =
         expect.stringMatching(/^vpp_sid=;.*Expires=Thu, 01 Jan 1970/),
       ]),
     );
-    const rows = await pool.query('SELECT 1 FROM sessions WHERE id = $1', [
-      session.id,
+    const rows = await pool.query('SELECT 1 FROM sessions WHERE id_hash = $1', [
+      hashSessionId(session.id),
     ]);
     expect(rows.rows).toHaveLength(0);
   });

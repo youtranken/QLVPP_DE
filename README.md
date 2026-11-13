@@ -251,6 +251,9 @@ Checklist lần deploy đầu (và khi đổi hạ tầng):
 - [ ] Mật khẩu SA prod: trong `api/`, `npm run -s sa:hash` rồi gõ mật khẩu (không hiện chữ gõ; hoặc bash:
       `IFS= read -rsp 'Mật khẩu SA: ' PW; echo; printf '%s' "$PW" | npm run -s sa:hash; unset PW`) → dán vào `LOCAL_SA_PASSWORD_HASH` (mật khẩu cất két IT, không dùng lại mật khẩu dev; không truyền mật khẩu
       làm tham số dòng lệnh vì sẽ nằm trong lịch sử shell).
+- [ ] `CONFIG_ENC_KEY` (khóa mã hóa token PMH ID trong bảng phiên; thiếu ở production là api từ chối khởi động):
+      `openssl rand -base64 32` → dán vào `.env`, cất két IT cùng các bí mật khác. Không đổi tùy tiện — đổi khóa thì
+      mọi phiên đang mở phải đăng nhập lại.
 - [ ] `TRUST_PROXY_HOPS` (chỉ kiểm được trên prod, sau EDGE thật): đăng nhập SA một lần từ máy trong LAN, mở
       Nhật ký → dòng `auth.sa_login` **đầu tiên** trên prod (`detail.ip`) —
       IP phải là IP **máy người dùng**, không phải IP EDGE/docker. Sai thì chỉnh số hop (EDGE `vpp.conf` dùng

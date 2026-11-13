@@ -6,6 +6,7 @@ import { hashPassword } from '../src/modules/auth/local-sa.service';
 import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
 import { directoryStub } from './directory.stub';
 import { DirectorySyncService } from '../src/modules/users/directory-sync.service';
+import { hashSessionId } from '../src/modules/auth/session-crypto';
 import { createTestApp } from './test-app.helper';
 import { assertTestDatabase } from './test-database';
 
@@ -291,7 +292,7 @@ describe('tài khoản thử local (LOCAL_TEST_ACCOUNTS)', () => {
         await app.close();
       }
       const cookie = res.headers['set-cookie'] as unknown as string[];
-      const sid = /vpp_sid=([0-9a-f-]{36})/.exec(cookie.join(';'))?.[1];
+      const sid = /vpp_sid=([A-Za-z0-9_-]{43})/.exec(cookie.join(';'))?.[1];
 
       setEnv({ AUTH_DEV_MODE: 'true' });
       app = (await createTestApp()) as INestApplication<App>;
@@ -301,8 +302,8 @@ describe('tài khoản thử local (LOCAL_TEST_ACCOUNTS)', () => {
           .set('Cookie', cookie)
           .expect(401);
         const { rows } = await pool.query(
-          'SELECT 1 FROM sessions WHERE id = $1',
-          [sid],
+          'SELECT 1 FROM sessions WHERE id_hash = $1',
+          [hashSessionId(sid!)],
         );
         expect(rows).toHaveLength(0);
       } finally {

@@ -1,8 +1,10 @@
-import { jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const sessionsTable = pgTable('sessions', {
-  id: uuid('id').primaryKey(),
+  // sha256 hex của cookie vpp_sid (session-crypto) — cookie thô không bao giờ vào DB
+  idHash: text('id_hash').primaryKey(),
   userSub: text('user_sub').notNull(),
+  // Ba cột token PMH ID lưu dạng niêm phong (sealToken): 'v1:' AES-GCM bằng CONFIG_ENC_KEY, 'p:' chỉ ở dev
   refreshToken: text('refresh_token'),
   // access token PMH ID mới nhất — gọi PUT /api/me/locale thay người dùng (docs 7a)
   accessToken: text('access_token'),
@@ -14,6 +16,8 @@ export const sessionsTable = pgTable('sessions', {
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
+  // created_at + 12 h (SESSION_MAX_AGE_MS) — quá hạn thì từ chối và xóa, job dọn định kỳ
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   lastSeenAt: timestamp('last_seen_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

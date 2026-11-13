@@ -13,7 +13,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { createHash, randomBytes } from 'node:crypto';
-import type { Response } from 'express';
+import type { CookieOptions, Response } from 'express';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { UsersService } from '../users/users.service';
 import { JwtVerifierService } from './jwt-verifier.service';
@@ -29,6 +29,7 @@ import { SaLoginDto } from './sa-login.dto';
 import { SessionService } from './session.service';
 import { TokenContractError } from './token-contract.error';
 import { SESSION_COOKIE } from './identity.guard';
+import { sessionRef } from './session-crypto';
 import type { AuthedRequest } from './identity.types';
 
 // Dùng req.ip (trust proxy theo số hop), không tự parse XFF trái — client tự đặt được để né lockout.
@@ -54,6 +55,16 @@ function redirectUri(): string {
 
 function pkceChallenge(verifier: string): string {
   return createHash('sha256').update(verifier).digest('base64url');
+}
+
+// Cookie phiên vpp_sid: không maxAge (cookie phiên trình duyệt) — hạn thật là 12 h ở server (expires_at)
+export function sessionCookieOptions(): CookieOptions {
+  return {
+    httpOnly: true,
+    secure: cookieSecure(),
+    sameSite: 'strict',
+    path: '/',
+  };
 }
 
 // http trên LAN mà ép Secure thì browser bỏ cookie → vòng lặp đăng nhập; localhost được coi là an toàn.
@@ -112,18 +123,12 @@ export class AuthController {
     // SA cần users row để thỏa FK (created_by_sub…); list() vẫn loại local:sa
     await this.users.ensureLocalSa();
     const session = await this.sessions.createLocalSa();
-    res.cookie(SESSION_COOKIE, session.id, {
-      httpOnly: true,
-      secure: cookieSecure(),
-      sameSite: 'strict',
-      path: '/',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie(SESSION_COOKIE, session.id, sessionCookieOptions());
     await this.audit.append({
       actor: LOCAL_SA_SUB,
       action: 'auth.sa_login',
       objectType: 'session',
-      objectId: session.id,
+      objectId: sessionRef(session.id),
       detail: { ip },
     });
     res.json({ ok: true });
@@ -178,7 +183,6 @@ export class AuthController {
     @Res() res: Response,
     @Query('ui_locales') uiLocales?: string,
   ): Promise<void> {
-    // Guard đã lọc cookie không phải UUID (Postgres ném 22P02 → 500)
     const sid = req.user?.sessionId;
     let idTokenHint: string | null = null;
     if (sid) {
@@ -292,18 +296,12 @@ export class AuthController {
       claims: verified.claims,
       idToken: tokens.idToken,
     });
-    res.cookie(SESSION_COOKIE, session.id, {
-      httpOnly: true,
-      secure: cookieSecure(),
-      sameSite: 'strict',
-      path: '/',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie(SESSION_COOKIE, session.id, sessionCookieOptions());
     await this.audit.append({
       actor: verified.claims.sub,
       action: 'auth.login',
       objectType: 'session',
-      objectId: session.id,
+      objectId: sessionRef(session.id),
     });
     return '/';
   }

@@ -6,6 +6,7 @@ import {
   rm,
   writeFile,
 } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Pool } from 'pg';
@@ -16,6 +17,22 @@ import {
 import { assertTestDatabase } from './test-database';
 
 const silent = { log: () => undefined };
+
+// Dựng DB tới trước một migration để gieo dữ liệu theo mô hình cũ, rồi chạy tiếp
+async function migrateUpTo(pool: Pool, lastExclusive: string): Promise<void> {
+  const dir = await mkdtemp(join(tmpdir(), `vpp-mig-${lastExclusive}-`));
+  try {
+    const all = await readdir(resolveMigrationsDir());
+    for (const f of all.filter(
+      (n) => n.endsWith('.sql') && n < lastExclusive,
+    )) {
+      await copyFile(join(resolveMigrationsDir(), f), join(dir, f));
+    }
+    await runMigrations(pool, dir, silent);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
 
 describe('assertTestDatabase — chặn reset nhầm DB không phải *_test', () => {
   it('URL trỏ …/vpp → throw trước khi chạm DB', () => {
@@ -34,7 +51,7 @@ describe('assertTestDatabase — chặn reset nhầm DB không phải *_test', (
   });
 });
 
-describe('migrations nền 0001–0013 + 0100–0124', () => {
+describe('migrations nền 0001–0013 + 0100–0126', () => {
   let pool: Pool;
 
   async function resetSchema(): Promise<void> {
@@ -59,11 +76,11 @@ describe('migrations nền 0001–0013 + 0100–0124', () => {
     await pool.end();
   });
 
-  it('áp đủ 38 migration; chạy lại không áp thêm file nào', async () => {
-    expect(await migrationCount()).toBe(38);
+  it('áp đủ 40 migration; chạy lại không áp thêm file nào', async () => {
+    expect(await migrationCount()).toBe(40);
     const again = await runMigrations(pool, resolveMigrationsDir(), silent);
     expect(again).toEqual([]);
-    expect(await migrationCount()).toBe(38);
+    expect(await migrationCount()).toBe(40);
   });
 
   it('file 0003 đã apply bị sửa nội dung → reject với thông báo checksum', async () => {
@@ -172,8 +189,8 @@ describe('migrations nền 0001–0013 + 0100–0124', () => {
       "INSERT INTO users (sub, department, role) VALUES ('sub-1', 'Công trình', 'member')",
     );
     await pool.query(
-      `INSERT INTO sessions (id, user_sub, csrf_token, id_token)
-       VALUES (gen_random_uuid(), 'local:sa', 'csrf', NULL)`,
+      `INSERT INTO sessions (id_hash, user_sub, csrf_token, id_token, expires_at)
+       VALUES (encode(sha256('c'::bytea), 'hex'), 'local:sa', 'csrf', NULL, now() + interval '12 hours')`,
     );
     await expect(
       pool.query("INSERT INTO users (sub, role) VALUES ('sub-2', 'sa')"),
@@ -184,28 +201,12 @@ describe('migrations nền 0001–0013 + 0100–0124', () => {
 describe('migration 0122 PMH ID v3', () => {
   let pool: Pool;
 
-  // Dựng DB tới trước 0122 để gieo dữ liệu theo mô hình group cũ, rồi chạy tiếp
-  async function migrateUpTo(lastExclusive: string): Promise<void> {
-    const dir = await mkdtemp(join(tmpdir(), 'vpp-mig-0122-'));
-    try {
-      const all = await readdir(resolveMigrationsDir());
-      for (const f of all.filter(
-        (n) => n.endsWith('.sql') && n < lastExclusive,
-      )) {
-        await copyFile(join(resolveMigrationsDir(), f), join(dir, f));
-      }
-      await runMigrations(pool, dir, silent);
-    } finally {
-      await rm(dir, { recursive: true, force: true });
-    }
-  }
-
   beforeAll(async () => {
     pool = new Pool({
       connectionString: assertTestDatabase(process.env.DATABASE_URL),
     });
     await pool.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public');
-    await migrateUpTo('0122');
+    await migrateUpTo(pool, '0122');
     await pool.query(
       `UPDATE config SET value = '"vpp_admin"' WHERE key = 'admin_group'`,
     );
@@ -300,5 +301,78 @@ describe('migration 0122 PMH ID v3', () => {
       `SELECT key FROM config WHERE key IN ('admin_group', 'authorized_groups')`,
     );
     expect(rows).toEqual([]);
+  });
+});
+
+describe('migration 0125–0126 khóa phiên băm, hạn 12 h', () => {
+  let pool: Pool;
+  const oldSid = '3f0c7a52-9d1e-4b8a-8c6f-1a2b3c4d5e6f';
+  const sha12 = (v: string) =>
+    createHash('sha256').update(v).digest('hex').slice(0, 12);
+
+  beforeAll(async () => {
+    pool = new Pool({
+      connectionString: assertTestDatabase(process.env.DATABASE_URL),
+    });
+    await pool.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public');
+    await migrateUpTo(pool, '0125');
+    await pool.query(
+      `INSERT INTO sessions (id, user_sub, csrf_token) VALUES ($1, 'local:sa', 'csrf')`,
+      [oldSid],
+    );
+    await pool.query(
+      `INSERT INTO audit_log (actor, action, object_type, object_id) VALUES
+         ('local:sa', 'auth.sa_login', 'session', $1),
+         ('u-1', 'auth.logout', 'session', $1),
+         ('u-1', 'request.created', 'request', $1)`,
+      [oldSid],
+    );
+    await runMigrations(pool, resolveMigrationsDir(), silent);
+  });
+
+  afterAll(async () => {
+    await pool.end();
+  });
+
+  it('0125: xóa hết phiên cũ (buộc đăng nhập lại), khóa là id_hash 64 hex, không còn cột id', async () => {
+    expect((await pool.query('SELECT 1 FROM sessions')).rows).toHaveLength(0);
+    const { rows } = await pool.query<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'sessions'`,
+    );
+    const cols = rows.map((r) => r.column_name);
+    expect(cols).toContain('id_hash');
+    expect(cols).not.toContain('id');
+    await expect(
+      pool.query(
+        `INSERT INTO sessions (id_hash, user_sub, csrf_token, expires_at) VALUES ($1, 'local:sa', 'c', now())`,
+        [oldSid],
+      ),
+    ).rejects.toMatchObject({ code: '23514' });
+  });
+
+  it('0125: audit phiên đổi object_id thành 12 hex đầu sha256 id cũ; dòng không phải phiên giữ nguyên; append-only vẫn bật', async () => {
+    const { rows } = await pool.query<{ action: string; object_id: string }>(
+      'SELECT action, object_id FROM audit_log ORDER BY action',
+    );
+    expect(rows).toEqual([
+      { action: 'auth.logout', object_id: sha12(oldSid) },
+      { action: 'auth.sa_login', object_id: sha12(oldSid) },
+      { action: 'request.created', object_id: oldSid },
+    ]);
+    await expect(
+      pool.query(`UPDATE audit_log SET actor = 'x'`),
+    ).rejects.toThrow(/append-only/);
+  });
+
+  it('0126: sessions.expires_at NOT NULL, có index', async () => {
+    const { rows } = await pool.query<{ is_nullable: string }>(
+      `SELECT is_nullable FROM information_schema.columns
+        WHERE table_name = 'sessions' AND column_name = 'expires_at'`,
+    );
+    expect(rows).toEqual([{ is_nullable: 'NO' }]);
+    const idx = await pool.query(
+      `SELECT 1 FROM pg_indexes WHERE indexname = 'idx_sessions_expires_at'`,
+    );
+    expect(idx.rows).toHaveLength(1);
   });
 });

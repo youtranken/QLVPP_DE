@@ -3,7 +3,7 @@
 *.local.md
 
 # deps & build
-node_modules/
+node_modules
 dist/
 coverage/
 playwright-report/

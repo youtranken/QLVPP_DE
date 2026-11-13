@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 import { configureApp } from './app.setup';
 import { assertClockEnv } from './common/clock.service';
 import { throttlePerMin } from './common/throttle-limits';
+import { assertEncKeyEnv } from './common/crypto-secret';
 import { assertTrustProxyHops } from './common/trust-proxy';
 import {
   resolveMigrationsDir,
@@ -43,6 +44,7 @@ async function migrate(): Promise<void> {
 
 async function bootstrap(): Promise<void> {
   assertAuthEnvSafe(process.env);
+  assertEncKeyEnv(process.env);
   assertLocalSaConfigured(process.env);
   assertLocalTestAccountsSafe(process.env);
   assertTrustProxyHops(process.env);

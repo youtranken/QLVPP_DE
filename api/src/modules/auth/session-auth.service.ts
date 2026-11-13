@@ -4,7 +4,6 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { AuditWriterService } from '../audit/audit-writer.service';
 import { toAppRole, UsersService } from '../users/users.service';
 import { JwtVerifierService } from './jwt-verifier.service';
 import {
@@ -18,6 +17,7 @@ import { LocalTestAccountsService } from './local-test-accounts.service';
 import { OIDC_PROVIDER } from './oidc-provider';
 import type { OidcProvider } from './oidc-provider';
 import { SessionService } from './session.service';
+import { sessionRef } from './session-crypto';
 import type { SessionRecord } from './session.service';
 import type { RequestIdentity } from './identity.types';
 import type { PmhIdClaims } from '../users/users.service';
@@ -49,7 +49,6 @@ export class SessionAuthService {
     private readonly sessions: SessionService,
     private readonly jwtVerifier: JwtVerifierService,
     @Inject(OIDC_PROVIDER) private readonly oidc: OidcProvider,
-    private readonly audit: AuditWriterService,
     private readonly users: UsersService,
     private readonly testAccounts: LocalTestAccountsService,
   ) {}
@@ -70,6 +69,8 @@ export class SessionAuthService {
   private async doResolve(sessionId: string): Promise<RequestIdentity | null> {
     const session = await this.sessions.find(sessionId);
     if (!session) {
+      // find chỉ trả phiên còn hạn: phiên chạm trần 12 h bị xóa ngay ở đây, nhật ký 'absolute'
+      await this.sessions.expireIfPastMaxAge(sessionId);
       return null;
     }
 
@@ -77,7 +78,7 @@ export class SessionAuthService {
     if (session.userSub === LOCAL_SA_SUB) {
       const idleMs = Date.now() - session.lastSeenAt.getTime();
       if (idleMs > LOCAL_SA_IDLE_MS) {
-        await this.expire(sessionId, LOCAL_SA_SUB, 'local_sa_idle');
+        await this.sessions.expire(sessionId, 'idle');
         return null;
       }
       await this.sessions.touchLastSeen(sessionId);
@@ -116,7 +117,7 @@ export class SessionAuthService {
   ): Promise<RequestIdentity | null> {
     const account = this.testAccounts.findBySub(sub);
     if (!account) {
-      await this.expire(sessionId, sub, 'local_test_disabled');
+      await this.sessions.expire(sessionId, 'revoked', 'local_test_disabled');
       return null;
     }
     return {
@@ -172,7 +173,11 @@ export class SessionAuthService {
       return null;
     }
     if (!session.refreshToken) {
-      await this.expire(sessionId, session.userSub, 'no_refresh_token');
+      await this.sessions.expire(
+        sessionId,
+        'refresh_failed',
+        'no_refresh_token',
+      );
       return null;
     }
     try {
@@ -202,18 +207,18 @@ export class SessionAuthService {
       }
       // Token không mang hợp đồng v3 thì không biết vai: xử như bị thu hồi, không phải PMH ID sập
       if (error instanceof TokenContractError) {
-        await this.expire(sessionId, session.userSub, 'token_ver');
+        await this.sessions.expire(sessionId, 'revoked', 'token_ver');
         return null;
       }
       if (this.isRevocation(error)) {
         this.logger.log(
-          `Refresh bị từ chối cho phiên ${sessionId}: ${(error as Error).message}`,
+          `Refresh bị từ chối cho phiên ${sessionRef(sessionId)}: ${(error as Error).message}`,
         );
-        await this.expire(sessionId, session.userSub, 'refresh_failed');
+        await this.sessions.expire(sessionId, 'revoked');
         return null;
       }
       this.logger.warn(
-        `Refresh lỗi không phân loại (giữ phiên ${sessionId}): ${(error as Error).message}`,
+        `Refresh lỗi không phân loại (giữ phiên ${sessionRef(sessionId)}): ${(error as Error).message}`,
       );
       throw new ServiceUnavailableException({
         code: 'SSO_UNAVAILABLE',
@@ -243,7 +248,7 @@ export class SessionAuthService {
   ): Promise<RequestIdentity | null> {
     const user = await this.users.findBySub(claims.sub);
     if (user?.status !== 'active') {
-      await this.expire(sessionId, claims.sub, 'user_inactive');
+      await this.sessions.expire(sessionId, 'revoked', 'user_inactive');
       return null;
     }
     const role = user.role === 'admin' ? 'admin' : 'member';
@@ -255,20 +260,5 @@ export class SessionAuthService {
       fullName: claims.full_name,
       email: claims.email,
     };
-  }
-
-  private async expire(
-    sessionId: string,
-    userSub: string,
-    reason: string,
-  ): Promise<void> {
-    await this.sessions.destroy(sessionId);
-    await this.audit.append({
-      actor: userSub,
-      action: 'auth.session_expired',
-      objectType: 'session',
-      objectId: sessionId,
-      detail: { reason },
-    });
   }
 }
