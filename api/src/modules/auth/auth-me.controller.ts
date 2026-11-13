@@ -16,6 +16,7 @@ import { SystemConfigService } from '../config/system-config.service';
 import { UsersService } from '../users/users.service';
 import type { MeResponse } from './auth.types';
 import { SESSION_COOKIE } from './identity.guard';
+import { sessionRef } from './session-crypto';
 import { OptionalAuth } from './public.decorator';
 import type { AuthedRequest } from './identity.types';
 import { clientIp } from './auth.controller';
@@ -143,7 +144,7 @@ export class AuthMeController {
         actor: user.sub,
         action: 'auth.logout',
         objectType: 'session',
-        objectId: user.sessionId,
+        objectId: sessionRef(user.sessionId),
       });
     }
     res.clearCookie(SESSION_COOKIE);

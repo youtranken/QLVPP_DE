@@ -17,6 +17,7 @@ import { AuditWriterService } from '../audit/audit-writer.service';
 import { UsersService } from '../users/users.service';
 import { clientIp, cookieSecure } from './auth.controller';
 import { SESSION_COOKIE } from './identity.guard';
+import { sessionRef } from './session-crypto';
 import type { AuthedRequest } from './identity.types';
 import type { LocalTestAccount } from './local-test-accounts-env';
 import { LocalTestAccountsService } from './local-test-accounts.service';
@@ -75,7 +76,7 @@ export class LocalTestLoginController {
       actor: account!.sub,
       action: 'auth.test_login',
       objectType: 'session',
-      objectId: sessionId,
+      objectId: sessionRef(sessionId),
       detail: { ip },
     });
     res.json({ ok: true });

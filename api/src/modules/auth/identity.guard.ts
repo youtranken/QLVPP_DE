@@ -8,8 +8,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Response } from 'express';
-import { isUuid } from '../../common/uuid';
 import { isDevAuthActive } from './auth-env';
+import { isSessionCookie } from './session-crypto';
 import { SessionAuthService } from './session-auth.service';
 import type { AuthedRequest, RequestIdentity } from './identity.types';
 import { IS_OPTIONAL_AUTH_KEY, IS_PUBLIC_KEY } from './public.decorator';
@@ -58,12 +58,12 @@ export class IdentityGuard implements CanActivate {
       }
     }
 
-    // Kiểm uuid trước khi chạm DB: cookie rác làm Postgres ném 22P02 → 500 lặp, user kẹt
+    // Lọc cookie rác (kể cả UUID phiên cũ trước khi băm khóa) trước khi chạm DB
     const rawSessionId = (
       request.cookies as Record<string, string> | undefined
     )?.[SESSION_COOKIE];
     const sessionId =
-      rawSessionId && isUuid(rawSessionId) ? rawSessionId : null;
+      rawSessionId && isSessionCookie(rawSessionId) ? rawSessionId : null;
     if (rawSessionId && !sessionId) {
       response.clearCookie(SESSION_COOKIE);
     }

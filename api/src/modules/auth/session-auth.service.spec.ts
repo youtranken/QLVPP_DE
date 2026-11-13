@@ -1,4 +1,5 @@
 import { ServiceUnavailableException } from '@nestjs/common';
+import { sessionRef } from './session-crypto';
 import { SessionAuthService } from './session-auth.service';
 import type { SessionRecord } from './session.service';
 import { TokenContractError } from './token-contract.error';
@@ -111,8 +112,13 @@ describe('SessionAuthService — refresh ngầm', () => {
     expect(result).toBeNull();
     expect(sessions.destroy).toHaveBeenCalledWith('sid-1');
     expect(audit.append).toHaveBeenCalledWith(
-      expect.objectContaining({ action: 'auth.session_expired' }),
+      expect.objectContaining({
+        action: 'auth.session_expired',
+        objectType: 'session',
+        objectId: sessionRef('sid-1'),
+      }),
     );
+    expect(JSON.stringify(audit.append.mock.calls)).not.toContain('sid-1');
   });
 
   it('PMH ID SẬP (lỗi mạng) → GIỮ phiên, ném 503 SSO_UNAVAILABLE — không logout oan', async () => {

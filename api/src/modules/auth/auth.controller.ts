@@ -29,6 +29,7 @@ import { SaLoginDto } from './sa-login.dto';
 import { SessionService } from './session.service';
 import { TokenContractError } from './token-contract.error';
 import { SESSION_COOKIE } from './identity.guard';
+import { sessionRef } from './session-crypto';
 import type { AuthedRequest } from './identity.types';
 
 // Dùng req.ip (trust proxy theo số hop), không tự parse XFF trái — client tự đặt được để né lockout.
@@ -123,7 +124,7 @@ export class AuthController {
       actor: LOCAL_SA_SUB,
       action: 'auth.sa_login',
       objectType: 'session',
-      objectId: session.id,
+      objectId: sessionRef(session.id),
       detail: { ip },
     });
     res.json({ ok: true });
@@ -178,7 +179,6 @@ export class AuthController {
     @Res() res: Response,
     @Query('ui_locales') uiLocales?: string,
   ): Promise<void> {
-    // Guard đã lọc cookie không phải UUID (Postgres ném 22P02 → 500)
     const sid = req.user?.sessionId;
     let idTokenHint: string | null = null;
     if (sid) {
@@ -303,7 +303,7 @@ export class AuthController {
       actor: verified.claims.sub,
       action: 'auth.login',
       objectType: 'session',
-      objectId: session.id,
+      objectId: sessionRef(session.id),
     });
     return '/';
   }

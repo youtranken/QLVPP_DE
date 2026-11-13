@@ -18,6 +18,7 @@ import { LocalTestAccountsService } from './local-test-accounts.service';
 import { OIDC_PROVIDER } from './oidc-provider';
 import type { OidcProvider } from './oidc-provider';
 import { SessionService } from './session.service';
+import { sessionRef } from './session-crypto';
 import type { SessionRecord } from './session.service';
 import type { RequestIdentity } from './identity.types';
 import type { PmhIdClaims } from '../users/users.service';
@@ -207,13 +208,13 @@ export class SessionAuthService {
       }
       if (this.isRevocation(error)) {
         this.logger.log(
-          `Refresh bị từ chối cho phiên ${sessionId}: ${(error as Error).message}`,
+          `Refresh bị từ chối cho phiên ${sessionRef(sessionId)}: ${(error as Error).message}`,
         );
         await this.expire(sessionId, session.userSub, 'refresh_failed');
         return null;
       }
       this.logger.warn(
-        `Refresh lỗi không phân loại (giữ phiên ${sessionId}): ${(error as Error).message}`,
+        `Refresh lỗi không phân loại (giữ phiên ${sessionRef(sessionId)}): ${(error as Error).message}`,
       );
       throw new ServiceUnavailableException({
         code: 'SSO_UNAVAILABLE',
@@ -267,7 +268,7 @@ export class SessionAuthService {
       actor: userSub,
       action: 'auth.session_expired',
       objectType: 'session',
-      objectId: sessionId,
+      objectId: sessionRef(sessionId),
       detail: { reason },
     });
   }

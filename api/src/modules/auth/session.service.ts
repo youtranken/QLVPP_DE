@@ -1,13 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { randomUUID, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { and, eq, lt, sql } from 'drizzle-orm';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import type { PmhIdClaims } from '../users/users.service';
 import { LOCAL_SA_SUB } from './local-sa-env';
+import { hashSessionId, newSessionCookie } from './session-crypto';
 import { sessionsTable } from './sessions.schema';
 
 export interface SessionRecord {
+  // Cookie vpp_sid thô (create trả về để set cookie; find trả lại đúng cookie đã tra) — không lưu DB
   id: string;
   userSub: string;
   refreshToken: string | null;
@@ -33,7 +35,7 @@ export class SessionService {
   }): Promise<SessionRecord> {
     await this.gcOrphans();
     const record: SessionRecord = {
-      id: randomUUID(),
+      id: newSessionCookie(),
       userSub: params.userSub,
       refreshToken: params.refreshToken,
       accessToken: params.accessToken ?? null,
@@ -43,14 +45,14 @@ export class SessionService {
       idToken: params.idToken,
       lastSeenAt: new Date(),
     };
-    await this.db.insert(sessionsTable).values(record);
+    await this.insert(record);
     return record;
   }
 
   async createLocalSa(): Promise<SessionRecord> {
     await this.gcOrphans();
     const record: SessionRecord = {
-      id: randomUUID(),
+      id: newSessionCookie(),
       userSub: LOCAL_SA_SUB,
       refreshToken: null,
       accessToken: null,
@@ -60,15 +62,22 @@ export class SessionService {
       idToken: null,
       lastSeenAt: new Date(),
     };
-    await this.db.insert(sessionsTable).values(record);
+    await this.insert(record);
     return record;
+  }
+
+  private async insert(record: SessionRecord): Promise<void> {
+    const { id, ...rest } = record;
+    await this.db
+      .insert(sessionsTable)
+      .values({ ...rest, idHash: hashSessionId(id) });
   }
 
   async touchLastSeen(id: string): Promise<void> {
     await this.db
       .update(sessionsTable)
       .set({ lastSeenAt: new Date() })
-      .where(eq(sessionsTable.id, id));
+      .where(eq(sessionsTable.idHash, hashSessionId(id)));
   }
 
   // Dọn phiên mồ côi (bỏ đi không logout) mỗi lần tạo phiên — chặn bảng phình vô hạn
@@ -82,13 +91,13 @@ export class SessionService {
     const rows = await this.db
       .select()
       .from(sessionsTable)
-      .where(eq(sessionsTable.id, id));
+      .where(eq(sessionsTable.idHash, hashSessionId(id)));
     const row = rows[0];
     if (!row) {
       return null;
     }
     return {
-      id: row.id,
+      id,
       userSub: row.userSub,
       refreshToken: row.refreshToken,
       accessToken: row.accessToken,
@@ -132,8 +141,8 @@ export class SessionService {
         idToken: params.idToken,
         lastSeenAt: new Date(),
       })
-      .where(eq(sessionsTable.id, id))
-      .returning({ id: sessionsTable.id });
+      .where(eq(sessionsTable.idHash, hashSessionId(id)))
+      .returning({ idHash: sessionsTable.idHash });
     return rows.length > 0;
   }
 
@@ -151,19 +160,24 @@ export class SessionService {
           'locale', ${locale}::text, 'locale_updated_at', ${atSec}::bigint)`,
       })
       .where(
-        and(eq(sessionsTable.id, id), sql`${sessionsTable.claims} IS NOT NULL`),
+        and(
+          eq(sessionsTable.idHash, hashSessionId(id)),
+          sql`${sessionsTable.claims} IS NOT NULL`,
+        ),
       );
   }
 
   async destroy(id: string): Promise<void> {
-    await this.db.delete(sessionsTable).where(eq(sessionsTable.id, id));
+    await this.db
+      .delete(sessionsTable)
+      .where(eq(sessionsTable.idHash, hashSessionId(id)));
   }
 
   async destroyAllForUser(userSub: string): Promise<number> {
     const rows = await this.db
       .delete(sessionsTable)
       .where(eq(sessionsTable.userSub, userSub))
-      .returning({ id: sessionsTable.id });
+      .returning({ idHash: sessionsTable.idHash });
     return rows.length;
   }
 }

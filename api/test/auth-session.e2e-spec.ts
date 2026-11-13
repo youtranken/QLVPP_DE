@@ -7,6 +7,7 @@ import {
   resolveMigrationsDir,
   runMigrations,
 } from '../src/database/migration-runner';
+import { newSessionCookie } from '../src/modules/auth/session-crypto';
 import { SessionService } from '../src/modules/auth/session.service';
 import { UsersService } from '../src/modules/users/users.service';
 import { DIRECTORY_CLIENT } from '../src/modules/users/directory.client';
@@ -62,12 +63,20 @@ describe('GET /api/auth/session (boot web)', () => {
     expect(clearsCookie(res)).toBe(true);
   });
 
-  it('cookie uuid không có phiên (đã đăng xuất / bị thu hồi) → 204 và xóa cookie', async () => {
+  it('cookie đúng dạng không có phiên (đã đăng xuất / bị thu hồi) → 204 và xóa cookie', async () => {
+    const res = await request(server())
+      .get('/api/auth/session')
+      .set('Cookie', `vpp_sid=${newSessionCookie()}`)
+      .expect(204);
+    expect(res.text).toBe('');
+    expect(clearsCookie(res)).toBe(true);
+  });
+
+  it('cookie UUID của phiên cũ (trước khi băm khóa phiên) → 204 và xóa cookie', async () => {
     const res = await request(server())
       .get('/api/auth/session')
       .set('Cookie', `vpp_sid=${randomUUID()}`)
       .expect(204);
-    expect(res.text).toBe('');
     expect(clearsCookie(res)).toBe(true);
   });
 
