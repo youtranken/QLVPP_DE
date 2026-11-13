@@ -1,6 +1,6 @@
 /* Hàng chip/tab cuộn ngang (useScrollFade ghi data-fade): mép nào còn mục khuất thì mờ dần 32px, hai mép độc lập.
    Không cuộn được thì không có data-fade → không mờ. Đang có mục focus bằng phím thì bỏ mờ để vòng focus (vẽ vào trong,
-   css/focus.css) không bị mờ theo ở mép. Dùng chung cả hai khung (Hành chính, Nhân viên), nạp cùng useScrollFade. */
+   css/focus.css) không bị mờ theo ở mép. Dùng chung cả hai khung (Hành chính, Nhân viên), khai ở main.tsx (sau m1/filter.css). */
 [data-shell] [data-fade] { --fade-s: 0px; --fade-e: 0px; -webkit-mask-image: linear-gradient(to right, transparent, black var(--fade-s), black calc(100% - var(--fade-e)), transparent); mask-image: linear-gradient(to right, transparent, black var(--fade-s), black calc(100% - var(--fade-e)), transparent); }
 [data-shell] [data-fade~='start'] { --fade-s: 32px; }
 [data-shell] [data-fade~='end'] { --fade-e: 32px; }

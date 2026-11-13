@@ -86,9 +86,11 @@ describe('CSS mờ mép: một chỗ chung', () => {
   const SRC = resolve(process.cwd(), 'src');
   const files = (d: string): string[] => readdirSync(d).flatMap((n) => (statSync(join(d, n)).isDirectory() ? files(join(d, n)) : n.endsWith('.css') ? [join(d, n)] : []));
 
-  it('luật [data-fade] ở ui/filter/scroll-fade.css (nạp cùng hook), mỗi mép độc lập, bỏ mờ khi có mục focus phím', () => {
+  it('luật [data-fade] ở ui/filter/scroll-fade.css (khai trong main.tsx), mỗi mép độc lập, bỏ mờ khi có mục focus phím', () => {
     const css = readFileSync(join(SRC, 'ui/filter/scroll-fade.css'), 'utf8');
-    expect(readFileSync(join(SRC, 'ui/filter/use-scroll-fade.ts'), 'utf8')).toContain("import './scroll-fade.css';");
+    // Khai ở main.tsx, ngay sau m1/filter.css; hook tự import thì Vite tách ra file CSS riêng đứng trước index.css
+    expect(readFileSync(join(SRC, 'main.tsx'), 'utf8')).toMatch(/import '@\/css\/m1\/filter\.css';\nimport '@\/ui\/filter\/scroll-fade\.css';/);
+    expect(readFileSync(join(SRC, 'ui/filter/use-scroll-fade.ts'), 'utf8')).not.toMatch(/import '[^']*\.css'/);
     expect(css).toMatch(/\[data-shell\] \[data-fade\]\s*\{[^}]*mask-image:\s*linear-gradient\(to right, transparent, black var\(--fade-s\), black calc\(100% - var\(--fade-e\)\), transparent\)/);
     expect(css).toMatch(/\[data-fade~='start'\]\s*\{\s*--fade-s:\s*32px/);
     expect(css).toMatch(/\[data-fade~='end'\]\s*\{\s*--fade-e:\s*32px/);
