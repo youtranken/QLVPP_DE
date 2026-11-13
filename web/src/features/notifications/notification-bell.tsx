@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useFormatTime } from '@/lib/format-time';
 import { useUnitNames } from '@/features/units/units.api';
 import { IconBell } from '@/ui/icons';
+import { Loading, LoadError } from '@/ui/load-state';
 import { notificationText } from './notification-text';
 import { useMarkRead, useNotifications, useUnreadCount } from './notifications.api';
 import type { NotificationView } from './notifications.api';
@@ -112,7 +113,13 @@ export function NotificationBell() {
               {t('notifications.markError')}
             </p>
           )}
-          {list.isError && <p className="notif-empty">{t('notifications.loadError')}</p>}
+          {/* Cùng kiểu trạng thái tải/lỗi với các trang: đang tải (cả lúc react-query thử lại) có spinner, lỗi có nút Thử lại */}
+          {list.isPending && !list.isError && <Loading />}
+          {list.isError && (
+            <div className="notif-state">
+              <LoadError message={t('notifications.loadError')} onRetry={() => void list.refetch()} />
+            </div>
+          )}
           {!list.isError && list.isSuccess && items.length === 0 && <p className="notif-empty">{t('notifications.empty')}</p>}
           {items.length > 0 && (
             <ul className="notif-list">

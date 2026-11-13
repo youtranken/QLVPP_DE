@@ -219,3 +219,39 @@ describe('NotificationBell bảng', () => {
     expect(screen.getByRole('button', { name: 'Mark all as read' })).toBeVisible();
   });
 });
+
+describe('NotificationBell khi tải danh sách chậm hoặc lỗi (rà soát 13/11 nhân viên #1)', () => {
+  const LIST = (url: string) => url.includes('/api/me/notifications') && !url.includes('unread=true');
+  const stubList = (list: () => Promise<Response>) => {
+    const f = vi.fn((url: string) => (LIST(url) ? list() : Promise.resolve(jsonResponse(200, { items: [], next_cursor: null, unread_count: 0 }))));
+    vi.stubGlobal('fetch', f);
+    return f;
+  };
+
+  it('đang tải: bảng có "Đang tải…" (aria-busy), không trống trơn', async () => {
+    stubList(() => new Promise<Response>(() => {}));
+    renderBell();
+    await userEvent.click(bellButton());
+    const panel = screen.getByRole('dialog', { name: 'Thông báo' });
+    expect(within(panel).getByRole('status')).toHaveAttribute('aria-busy', 'true');
+    expect(within(panel).getByText('Đang tải…')).toBeInTheDocument();
+  });
+
+  it('lỗi: câu lỗi kèm nút Thử lại; bấm thì gọi lại GET danh sách và hiện thông báo', async () => {
+    let fail = true;
+    const f = stubList(() =>
+      Promise.resolve(fail ? jsonResponse(500, null) : jsonResponse(200, { items: [note('n1')], next_cursor: null, unread_count: 1 })),
+    );
+    renderBell();
+    await userEvent.click(bellButton());
+    const panel = screen.getByRole('dialog', { name: 'Thông báo' });
+    const alert = await within(panel).findByRole('alert');
+    expect(alert).toHaveTextContent('Không tải được thông báo — thử lại.');
+    const before = f.mock.calls.filter(([u]) => LIST(String(u))).length;
+    fail = false;
+    await userEvent.click(within(alert).getByRole('button', { name: 'Thử lại' }));
+    expect(await within(panel).findByText('Phiếu tháng 11 của bạn đã được giao đủ.')).toBeInTheDocument();
+    expect(f.mock.calls.filter(([u]) => LIST(String(u))).length).toBe(before + 1);
+    expect(within(panel).queryByRole('alert')).toBeNull();
+  });
+});

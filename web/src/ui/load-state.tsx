@@ -85,12 +85,13 @@ export function Loading({ label }: { label?: string }) {
   );
 }
 
-export function LoadError({ onRetry }: { onRetry: () => void }) {
+// message: câu riêng của vùng (vd chuông thông báo); mặc định câu chung
+export function LoadError({ onRetry, message }: { onRetry: () => void; message?: string }) {
   const { t } = useTranslation();
   return (
     <div className="load-error" role="alert">
       <IconAlert />
-      <p>{t('common.loadError')}</p>
+      <p>{message ?? t('common.loadError')}</p>
       <button type="button" className="btn btn--sm" onClick={onRetry}>
         {t('common.retry')}
       </button>

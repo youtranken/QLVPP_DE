@@ -137,7 +137,9 @@
   /* Chừa vùng an toàn iPhone + khoảng thanh hàng loạt đang dính đáy (BulkBar sticky đặt --bulkbar-h trên khung).
      Chỉ khai báo ở đây: shell.css nạp sau m1/base.css nên khai báo padding nơi khác sẽ bị shorthand này đè */
   [data-shell='admin'] .shell__main { padding: 8px 8px calc(var(--s-2) + var(--bulkbar-h, 0px) + env(safe-area-inset-bottom)); }
-  [data-shell='admin'] .shell__panel { min-height: 0; padding: 16px; border-radius: var(--r-lg); }
+  /* Panel kéo hết phần còn lại dưới thanh trên (hàng 1fr của .shell) kể cả khi nội dung ngắn (đang tải, lỗi, rỗng) */
+  [data-shell='admin'] .shell__main { display: flex; flex-direction: column; }
+  [data-shell='admin'] .shell__panel { flex: 1 0 auto; min-height: 0; padding: 16px; border-radius: var(--r-lg); }
 }
 
 @media print {
@@ -147,8 +149,8 @@
   [data-shell='admin'] .side-sheet-viewport,
   [data-shell='admin'] .notif-panel,
   [data-shell='admin'] .skip-link { display: none !important; }
-  [data-shell='admin'] .shell__main { padding: 0; }
-  [data-shell='admin'] .shell__panel { min-height: 0; padding: 0; border-radius: 0; background: none; box-shadow: none; }
+  [data-shell='admin'] .shell__main { display: block; padding: 0; }
+  [data-shell='admin'] .shell__panel { flex: none; min-height: 0; padding: 0; border-radius: 0; background: none; box-shadow: none; }
 }
 /* Nút trên nền tối đều có hover */
 [data-shell='admin'] .topbar__menu:hover, [data-shell='admin'] .topbar__avatar:hover, [data-shell='admin'] .side-sheet__close:hover { background: var(--c-on-dark-hover); }
