@@ -32,4 +32,13 @@ describe('vùng bấm', () => {
       expect(css).not.toMatch(/qty-input__spin|\.cf-adjust button|\.aj-line \.stepper/);
     }
   });
+
+  // Rà soát 13/11 #9: hộp Xuất lẻ — ô Người nhận 36px giữa các ô 44px, nhãn "Dùng chung" chỉ cao 21px
+  it('Ô tìm người (UserPicker) cao bằng ô form chung (min-height var(--hit)), thắng .a-input 36px của shell', () => {
+    expect(read('features/directory/user-picker.css')).toMatch(/\[data-shell='admin'\] \.user-picker \.a-input\s*\{[^}]*min-height:\s*var\(--hit\)/);
+  });
+
+  it('Nhãn checkbox .a-check (Dùng chung, Thêm vào danh mục) cao tối thiểu var(--hit)', () => {
+    expect(read('css/admin.css')).toMatch(/\.a-check label\s*\{[^}]*min-height:\s*var\(--hit\)/);
+  });
 });
