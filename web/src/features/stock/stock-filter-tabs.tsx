@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { StockFilter, stockStats } from './stock-rows';
+import { ScrollFade } from '@/ui/filter/scroll-fade';
 
 interface Props {
   stats: ReturnType<typeof stockStats>;
@@ -14,7 +15,7 @@ const FILTERS: StockFilter[] = ['incoming', 'low', 'none'];
 export function StockFilterTabs({ stats, filter, onFilter, onClear }: Props) {
   const { t } = useTranslation();
   return (
-    <div className="flt-chips" role="group" aria-label={t('stock.stats.label')}>
+    <ScrollFade className="flt-chips" role="group" aria-label={t('stock.stats.label')}>
       <button type="button" className="flt-chip" aria-pressed={filter === null} onClick={onClear}>
         {t('stock.stats.all')}
         <span className="flt-cnt num">{stats.all}</span>
@@ -25,6 +26,6 @@ export function StockFilterTabs({ stats, filter, onFilter, onClear }: Props) {
           <span className="flt-cnt num">{stats[f]}</span>
         </button>
       ))}
-    </div>
+    </ScrollFade>
   );
 }

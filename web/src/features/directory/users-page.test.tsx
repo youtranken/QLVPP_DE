@@ -3,77 +3,14 @@ import { cleanup, jsonResponse, screen, userEvent, waitFor, within, pickOption, 
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
-import type { AdminUser } from './directory.api';
 import { expectFixedColumns } from '@/test/fixed-columns';
-
-const AN: AdminUser = {
-  sub: 'u-an',
-  email: 'an.nguyen@pmh.com.vn',
-  employeeCode: 'NV0231',
-  fullName: 'Phạm Minh Đức',
-  department: 'Phòng Công trình',
-  team: 'QS',
-  role: 'admin',
-  status: 'active',
-  lastLoginAt: '2026-10-27T02:30:00.000Z',
-};
-const BINH: AdminUser = { ...AN, sub: 'u-binh', fullName: 'Lê Thị Bình', employeeCode: 'NV0007', department: 'Phòng Kế toán', team: null, role: 'member', status: 'locked', lastLoginAt: null };
-const CHI: AdminUser = { ...AN, sub: 'u-chi', fullName: 'Trần Chi', employeeCode: 'NV0100', department: 'Phòng Công trình', team: null, role: 'member', lastLoginAt: null };
-const DUNG: AdminUser = { ...CHI, sub: 'u-dung', fullName: 'Vũ Dũng', employeeCode: 'NV0300', team: 'QS', status: 'no_access' };
-
-type SyncRoute = () => Response;
-type RegRoute = () => Response;
-
-const REG_URL = '/api/admin/periods/2026-11/unregistered';
-const regOf = (unregistered: AdminUser[], registered: string[]) => () =>
-  jsonResponse(200, { items: unregistered.map((u) => ({ sub: u.sub, full_name: u.fullName, email: u.email, department: u.department })), registered_subs: registered });
-
-type SyncStatus = { last_at: string | null; last_total: number | null; last_error: { at: string; code: string; message: string } | null };
-const NEVER: SyncStatus = { last_at: null, last_total: null, last_error: null };
-
-function stubUsers(
-  users: AdminUser[],
-  sync: SyncRoute = () => jsonResponse(200, { created: 0, updated: 0, no_access: 0, reconcile: 'ok' }),
-  reg: RegRoute = regOf([CHI], ['u-an']),
-  status: () => SyncStatus = () => NEVER,
-) {
-  const f = vi.fn((url: string, init?: RequestInit) => {
-    if (url === '/api/admin/directory/status') return Promise.resolve(jsonResponse(200, status()));
-    if (url === REG_URL) return Promise.resolve(reg());
-    if (url === '/api/admin/directory/sync' && init?.method === 'POST') return Promise.resolve(sync());
-    if (url.startsWith('/api/admin/users')) {
-      const params = new URL(url, 'http://x').searchParams;
-      const search = params.get('search') ?? '';
-      const from = Number(params.get('cursor') ?? 0);
-      const size = Number(params.get('limit') ?? 50);
-      const wantDeleted = params.get('status') === 'deleted';
-      const rows = users.filter((u) => (u.status === 'deleted') === wantDeleted && (u.fullName ?? '').includes(search));
-      const items = rows.slice(from, from + size);
-      const next = from + size < rows.length ? String(from + size) : null;
-      return Promise.resolve(jsonResponse(200, { items, next_cursor: next }));
-    }
-    if (url === '/api/periods/current') return Promise.resolve(jsonResponse(200, { ym: '2026-11', deadline: '2026-11-10T17:00:00.000Z', is_open: true, days_left: 4, previous: null, owed: [] }));
-    if (url.startsWith('/api/me/notifications')) return Promise.resolve(jsonResponse(200, { items: [], next_cursor: null, unread_count: 0 }));
-    return Promise.resolve(jsonResponse(200, []));
-  });
-  vi.stubGlobal('fetch', f);
-  return f;
-}
-
-async function openUsers(path = '/admin/users') {
-  mockViewport(1280);
-  renderApp(makeMe('admin'), path);
-  await screen.findByText('Phạm Minh Đức');
-}
+import type { AdminUser } from './directory.api';
+import { AN, BINH, CHI, DEL, DUNG, REG_URL, openUsers, regOf, stubUsers } from './users-fixtures';
 
 const card = (name: RegExp) => screen.getByRole('button', { name });
 const bodyRows = () => within(screen.getByRole('table')).getAllByRole('row').slice(1);
 
 afterEach(() => vi.unstubAllGlobals());
-
-const DEL: AdminUser = { ...CHI, sub: 'u-del', fullName: 'Hà Đã Xoá', employeeCode: 'NV0999', status: 'deleted' };
-const OK_AT = '2026-11-09T07:05:00.000Z'; // 14:05 giờ VN
-const ERR_AT = '2026-11-09T08:05:00.000Z'; // 15:05 giờ VN
 
 describe('UsersPage B10', () => {
   it('tự dựng đầu trang: mô tả, "Đồng bộ ngay" kèm dòng trạng thái đồng bộ đứng ngay trước nhóm thao tác (không nằm trong nhóm); cài đặt không thành ô số liệu; đúng một h1', async () => {
@@ -170,6 +107,8 @@ describe('UsersPage B10', () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     const box = screen.getByRole('searchbox', { name: 'Tìm người' });
+    // Rà soát 13/11 Gu #12: placeholder vừa ô ở 768 (176px), không bị cắt
+    expect(box).toHaveAttribute('placeholder', 'Tìm tên, email, mã NV');
     expect(box).toHaveAttribute('maxlength', '200');
     await userEvent.type(box, 'nv0007');
     await waitFor(() => expect(bodyRows()).toHaveLength(1));
@@ -227,49 +166,6 @@ describe('UsersPage B10', () => {
     expect(within(drawer).getByText('Nhóm')).toBeInTheDocument();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Người trước' }));
     expect(within(await screen.findByRole('dialog', { name: 'Người dùng' })).queryByText(/PMH ID đã thu hồi quyền/)).toBeNull();
-  });
-
-  it('kết quả đồng bộ no_access 2 → dòng "2 người không còn quyền vào VPP."; reconcile ok thì không có cảnh báo', async () => {
-    stubUsers([AN], () => jsonResponse(200, { created: 0, updated: 1, no_access: 2, reconcile: 'ok' }));
-    await openUsers();
-    await userEvent.click(screen.getByRole('button', { name: 'Đồng bộ ngay' }));
-    const notice = (await screen.findByText(/2 người không còn quyền vào VPP\./)).closest('[role="status"]')!;
-    expect(notice).toHaveTextContent('Đã đồng bộ từ PMH ID: 0 người mới, 1 cập nhật.');
-    expect(notice).not.toHaveTextContent('Chưa đối chiếu được');
-  });
-
-  it('no_access 0 → không có dòng không còn quyền; reconcile aborted → cảnh báo chưa đối chiếu được', async () => {
-    stubUsers([AN], () => jsonResponse(200, { created: 0, updated: 0, no_access: 0, reconcile: 'aborted' }));
-    await openUsers();
-    await userEvent.click(screen.getByRole('button', { name: 'Đồng bộ ngay' }));
-    const notice = (await screen.findByText(/Chưa đối chiếu được người vắng khỏi danh bạ PMH ID/)).closest('[role="status"]')!;
-    expect(notice).not.toHaveTextContent('không còn quyền vào VPP');
-  });
-
-  it('đồng bộ ok → khối ok "Đã đồng bộ từ PMH ID: 2 người mới, 3 cập nhật." có nút đóng; gửi CSRF', async () => {
-    const f = stubUsers([AN], () => jsonResponse(200, { created: 2, updated: 3, no_access: 0, reconcile: 'ok' }));
-    await openUsers();
-    await userEvent.click(screen.getByRole('button', { name: 'Đồng bộ ngay' }));
-    const ok = await screen.findByText('Đã đồng bộ từ PMH ID: 2 người mới, 3 cập nhật.');
-    expect(ok.closest('[role="status"]')).not.toBeNull();
-    const [, init] = f.mock.calls.find(([u]) => u === '/api/admin/directory/sync') as [string, RequestInit];
-    expect((init.headers as Record<string, string>)['X-CSRF-Token']).toBe('csrf-1');
-    await userEvent.click(screen.getByRole('button', { name: 'Đóng thông báo' }));
-    expect(screen.queryByText(/Đã đồng bộ từ PMH ID/)).toBeNull();
-  });
-
-  it('đồng bộ SSO_UNAVAILABLE → khối danger + "Thử lại", bảng vẫn còn; thử lại thành công thì khối lỗi mất', async () => {
-    let fail = true;
-    stubUsers([AN], () => (fail ? jsonResponse(503, { code: 'SSO_UNAVAILABLE', message: 'x' }) : jsonResponse(200, { created: 1, updated: 0 })));
-    await openUsers();
-    await userEvent.click(screen.getByRole('button', { name: 'Đồng bộ ngay' }));
-    const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Không liên lạc được PMH ID — thử lại sau ít phút.');
-    expect(screen.getByText('Phạm Minh Đức')).toBeInTheDocument();
-    fail = false;
-    await userEvent.click(within(alert).getByRole('button', { name: 'Thử lại' }));
-    expect(await screen.findByText('Đã đồng bộ từ PMH ID: 1 người mới, 0 cập nhật.')).toBeInTheDocument();
-    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('panel phủ ?person=: không có "Vai trò trong app"/phiếu; "Xem nhật ký" → /admin/audit?actor=<sub>; chỉ đọc; bộ đếm, ↑/↓, đóng bỏ tham số', async () => {
@@ -413,39 +309,6 @@ describe('UsersPage B10', () => {
       expect(screen.getByRole('dialog', { name: 'Người dùng' })).toBeInTheDocument();
     });
   });
-  it('dòng trạng thái: cập nhật lúc 14:05 09/11 (giờ VN)', async () => {
-    stubUsers([AN], undefined, undefined, () => ({ last_at: OK_AT, last_total: 5, last_error: null }));
-    await openUsers();
-    expect(await screen.findByText('Danh bạ PMH ID cập nhật lúc 14:05 09/11')).toBeInTheDocument();
-  });
-
-  it('dòng trạng thái: lỗi mới hơn → "Không đọc được … lúc 15:05 09/11, đang hiện bản 14:05 09/11" + lý do theo mã (kể cả giới hạn tần suất)', async () => {
-    stubUsers([AN], undefined, undefined, () => ({ last_at: OK_AT, last_total: 5, last_error: { at: ERR_AT, code: 'DIRECTORY_RATE_LIMITED', message: 'x' } }));
-    await openUsers();
-    expect(await screen.findByText(/^Không đọc được danh bạ PMH ID lúc 15:05 09\/11, đang hiện bản 14:05 09\/11\. PMH ID đang giới hạn tần suất/)).toBeInTheDocument();
-  });
-
-  it('dòng trạng thái: lỗi cũ hơn lần thành công thì chỉ hiện bản cập nhật; chưa từng đồng bộ mà lỗi → không có "đang hiện bản"', async () => {
-    stubUsers([AN], undefined, undefined, () => ({ last_at: ERR_AT, last_total: 5, last_error: { at: OK_AT, code: 'DIRECTORY_UNAVAILABLE', message: 'x' } }));
-    await openUsers();
-    expect(await screen.findByText('Danh bạ PMH ID cập nhật lúc 15:05 09/11')).toBeInTheDocument();
-    cleanup();
-    stubUsers([AN], undefined, undefined, () => ({ last_at: null, last_total: null, last_error: { at: ERR_AT, code: 'MA_LA', message: 'x' } }));
-    await openUsers();
-    expect(await screen.findByText(/^Không đọc được danh bạ PMH ID lúc 15:05 09\/11\. Chưa đồng bộ được/)).toBeInTheDocument();
-    expect(screen.queryByText(/đang hiện bản/)).toBeNull();
-  });
-
-  it('bấm Đồng bộ ngay xong (thành công hay lỗi) thì tải lại dòng trạng thái', async () => {
-    let n = 0;
-    const f = stubUsers([AN], () => jsonResponse(502, { code: 'DIRECTORY_UNAVAILABLE', message: 'x' }), undefined, () => (++n > 1 ? { last_at: null, last_total: null, last_error: { at: ERR_AT, code: 'DIRECTORY_UNAVAILABLE', message: 'x' } } : NEVER));
-    await openUsers();
-    await screen.findByText('Chưa đồng bộ danh bạ PMH ID');
-    await userEvent.click(screen.getByRole('button', { name: 'Đồng bộ ngay' }));
-    expect(await screen.findByText(/^Không đọc được danh bạ PMH ID lúc 15:05 09\/11/)).toBeInTheDocument();
-    expect(f.mock.calls.filter(([u]) => u === '/api/admin/directory/status')).toHaveLength(2);
-  });
-
   it('người đã xóa ẩn mặc định; chọn "Đã xóa" mới thấy, nhãn Đã xóa, và quay lại thì ẩn', async () => {
     stubUsers([AN, BINH, DEL]);
     await openUsers();

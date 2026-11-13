@@ -45,11 +45,11 @@ export function lineAdjustedText(
     const reason = adjustReasonText(t, str(l.reason_code), str(l.reason_note));
     parts.push(t(`notifications.topics.line_adjusted.${key}`, { ...named(l), before: str(l.before), after: str(l.after), month, reason }));
   } else if (cuts.length > 0) {
-    parts.push(t('notifications.topics.line_adjusted.many', { n: cuts.length + more, month }));
+    parts.push(t('notifications.topics.line_adjusted.many', { count: cuts.length + more, month }));
   }
   for (const l of lines.filter((x) => x.kind === 'adm_out')) {
     parts.push(t('notifications.topics.line_adjusted.admOut', { ...named(l), qty: str(l.qty) }));
   }
-  if (cuts.length === 0 && more > 0) parts.push(t('notifications.topics.line_adjusted.more', { n: more }));
+  if (cuts.length === 0 && more > 0) parts.push(t('notifications.topics.line_adjusted.more', { count: more }));
   return parts.join(' ');
 }

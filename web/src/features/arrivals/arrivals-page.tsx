@@ -225,7 +225,8 @@ export function ArrivalsPage() {
   const { t } = useTranslation();
   const current = useCurrentPeriod();
   const workingYm = current.data ? lockedYm(current.data.ym) : undefined;
-  const title = t('arrivals.title', { month: workingYm ? monthOf(workingYm) : '' }).trim();
+  // Chưa biết kỳ (đang tải hoặc lỗi) → tiêu đề không có tháng, không để cụt "… kỳ tháng"
+  const title = workingYm ? t('arrivals.title', { month: monthOf(workingYm) }) : t('nav.arrivals');
   return (
     <div className="ct-page">
       <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.arrivals')]} title={title} sub={workingYm ? <HeaderSource ym={workingYm} /> : undefined} />

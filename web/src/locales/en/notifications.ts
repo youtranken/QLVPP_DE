@@ -33,9 +33,11 @@ const notifications: Messages<typeof vi> = {
       line_adjusted: {
         one: 'D&E Admin reduced {{name}} {{before}} → {{after}} {{unit}} ({{month}} request): {{reason}}',
         removed: 'D&E Admin removed {{name}} ({{before}} {{unit}}) from your {{month}} request: {{reason}}',
-        many: 'D&E Admin reduced {{n}} items in your {{month}} request. See History for reasons.',
+        many_one: 'D&E Admin reduced {{count}} item in your {{month}} request. See History for the reason.',
+        many_other: 'D&E Admin reduced {{count}} items in your {{month}} request. See History for reasons.',
         admOut: "{{name}} ({{qty}} {{unit}}) couldn't be delivered: out of stock at the supplier. Order again next month if you still need it.",
-        more: '{{n}} more items — see History.',
+        more_one: '{{count}} more item — see History.',
+        more_other: '{{count}} more items — see History.',
       },
       user_left_with_work: {
         locked: '{{name}} was locked but still has {{work}}.',

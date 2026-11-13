@@ -31,8 +31,48 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
   it('vào / chưa đăng nhập → màn đăng nhập, không thông báo hết hạn', async () => {
     renderWithI18n(<App />);
     expect(await screen.findByLabelText(LOGIN_FIELD)).toBeInTheDocument();
-    expect(screen.queryByText(/Phiên đã hết hạn/)).toBeNull();
+    expect(screen.queryByText(/Phiên đăng nhập đã hết hạn/)).toBeNull();
     expect(navigateTo).not.toHaveBeenCalled();
+  });
+
+  // Rà soát 13/11 Gu #13: trang công khai log "401" mỗi lần tải vì boot gọi auth/me
+  it('boot gọi GET /api/auth/session; chưa đăng nhập → 204 → màn đăng nhập, không gọi auth/me', async () => {
+    const fetchMock = vi.fn((url: string) => Promise.resolve(url === '/api/auth/session' ? new Response(null, { status: 204 }) : jsonResponse(200, { testAccounts: false })));
+    vi.stubGlobal('fetch', fetchMock);
+    renderWithI18n(<App />);
+    expect(await screen.findByLabelText(LOGIN_FIELD)).toBeInTheDocument();
+    expect(screen.queryByText(/Phiên đăng nhập đã hết hạn/)).toBeNull();
+    const urls = fetchMock.mock.calls.map(([u]) => u);
+    expect(urls[0]).toBe('/api/auth/session');
+    expect(urls).not.toContain('/api/auth/me');
+  });
+
+  // Rà soát fix-rs: boot nạp sớm chunk Nhân viên cho cả khách lạ ở '/' — chỉ nạp sớm khi máy này từng đăng nhập
+  it('khách chưa từng đăng nhập ở "/" → boot không tải chunk Nhân viên', async () => {
+    localStorage.clear();
+    const chunks = await import('@/shell/route-chunks');
+    const member = vi.spyOn(chunks.memberChunk, 'preload');
+    renderWithI18n(<App />);
+    expect(await screen.findByLabelText(LOGIN_FIELD)).toBeInTheDocument();
+    expect(member).not.toHaveBeenCalled();
+  });
+
+  it('204 sau phiên SSO hết hạn → vẫn tự SSO lại như 401 cũ', async () => {
+    sessionStorage.setItem('vpp.auth.mode', 'sso');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
+    renderWithI18n(<App />);
+    await vi.waitFor(() => expect(navigateTo).toHaveBeenCalledTimes(1));
+  });
+
+  it('api cũ chưa có auth/session (404) → hỏi auth/me như trước', async () => {
+    const fetchMock = vi.fn((url: string) =>
+      Promise.resolve(url === '/api/auth/session' ? jsonResponse(404, {}) : url === '/api/auth/me' ? jsonResponse(200, makeMe('member')) : jsonResponse(200, { items: [], next_cursor: null })),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    renderWithI18n(<App />);
+    await vi.waitFor(() => expect(fetchMock.mock.calls.map(([u]) => u)).toContain('/api/auth/me'));
+    expect(await screen.findByRole('navigation', { name: /./ })).toBeInTheDocument();
+    expect(screen.queryByLabelText(LOGIN_FIELD)).toBeNull();
   });
 
   it('tab từng SSO + tải lại sau khi hết hạn → chuyển PMH ID, nhớ trang', async () => {
@@ -58,18 +98,18 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     expect(sessionStorage.getItem('vpp.auth.mode')).toBe('sso');
   });
 
-  it('vừa thử tự đăng nhập < 60 s → màn đăng nhập + "Phiên đã hết hạn"', async () => {
+  it('vừa thử tự đăng nhập < 60 s → màn đăng nhập + "Phiên đăng nhập đã hết hạn"', async () => {
     sessionStorage.setItem('vpp.auth.mode', 'sso');
     sessionStorage.setItem('vpp.auth.reloginAt', String(Date.now() - 1000));
     renderWithI18n(<App />);
-    expect(await screen.findByText(/Phiên đã hết hạn/)).toBeInTheDocument();
+    expect(await screen.findByText(/Phiên đăng nhập đã hết hạn/)).toBeInTheDocument();
     expect(sessionStorage.getItem('vpp.auth.mode')).toBeNull();
   });
 
   it('phiên SA hết hạn → màn đăng nhập (không SSO) + thông báo', async () => {
     sessionStorage.setItem('vpp.auth.mode', 'sa');
     renderWithI18n(<App />);
-    expect(await screen.findByText(/Phiên đã hết hạn/)).toBeInTheDocument();
+    expect(await screen.findByText(/Phiên đăng nhập đã hết hạn/)).toBeInTheDocument();
     expect(navigateTo).not.toHaveBeenCalled();
   });
 
@@ -78,6 +118,39 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     renderWithI18n(<App />);
     expect(await screen.findByText('Đang chuyển sang PMH ID…')).toBeInTheDocument();
     expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?ui_locales=vi');
+  });
+
+  describe('mở từ portal PMH ID qua referrer (không có ?sso=1): host cổng lấy từ /api/public-config', () => {
+    const withReferrer = (ref: string) =>
+      Object.defineProperty(document, 'referrer', { value: ref, configurable: true });
+    const stubConfig = (portal: string) =>
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockImplementation((url: string) =>
+          Promise.resolve(
+            url === '/api/public-config'
+              ? jsonResponse(200, { admin_contact: '', pmh_portal_url: portal })
+              : jsonResponse(401, {}),
+          ),
+        ),
+      );
+    afterEach(() => withReferrer(''));
+
+    it('referrer = cổng của môi trường này (dev-admin) → đi thẳng SSO', async () => {
+      withReferrer('https://dev-admin.pmh.com.vn:8443/apps');
+      stubConfig('https://dev-admin.pmh.com.vn:8443/');
+      renderWithI18n(<App />);
+      expect(await screen.findByText('Đang chuyển sang PMH ID…')).toBeInTheDocument();
+      expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?ui_locales=vi');
+    });
+
+    it('referrer = cổng môi trường khác (de-admin) trên bản dev → màn đăng nhập, không SSO', async () => {
+      withReferrer('https://de-admin.pmh.com.vn:8443/');
+      stubConfig('https://dev-admin.pmh.com.vn:8443/');
+      renderWithI18n(<App />);
+      expect(await screen.findByLabelText(LOGIN_FIELD)).toBeInTheDocument();
+      expect(navigateTo).not.toHaveBeenCalled();
+    });
   });
 
   it('?login=forbidden → trang chưa được cấp quyền, không tự SSO', async () => {
@@ -120,7 +193,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
       'fetch',
       vi.fn((url: string) =>
         Promise.resolve(
-          url === '/api/auth/me'
+          url === '/api/auth/session'
             ? jsonResponse(200, makeMe('member', { locale: 'en', localeUpdatedAt: null, serverTime: Date.now() }))
             : jsonResponse(200, { items: [], next_cursor: null }),
         ),
@@ -136,13 +209,13 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     localStorage.removeItem('vpp_lang');
   });
 
-  it('/api/auth/me lỗi 500 → báo lỗi hệ thống + Thử lại', async () => {
+  it('/api/auth/session lỗi 500 → báo lỗi hệ thống + Thử lại', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(500, {})));
     renderWithI18n(<App />);
     expect(await screen.findByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
   });
 
-  it('/api/auth/me 503 SSO_UNAVAILABLE → màn đăng nhập kèm báo PMH ID không liên lạc được, nhập tài khoản nội bộ → bước mật khẩu', async () => {
+  it('/api/auth/session 503 SSO_UNAVAILABLE → màn đăng nhập kèm báo PMH ID không liên lạc được, nhập tài khoản nội bộ → bước mật khẩu', async () => {
     sessionStorage.setItem('vpp.auth.mode', 'sso');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(503, { code: 'SSO_UNAVAILABLE' })));
     renderWithI18n(<App />);
@@ -187,7 +260,7 @@ describe('Adm D&E không có phiếu — route nhân viên chuyển về /admin'
     vi.resetModules();
     sessionStorage.clear();
     sessionStorage.setItem('vpp.auth.returnTo', '/history?x=1');
-    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(url === '/api/auth/me' ? jsonResponse(200, makeMe('admin')) : new Promise<Response>(() => {}))));
+    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(url === '/api/auth/session' ? jsonResponse(200, makeMe('admin')) : new Promise<Response>(() => {}))));
     const Fresh = (await import('@/App')).default;
     renderWithI18n(<Fresh />);
     await vi.waitFor(() => expect(window.location.pathname).toBe('/admin/month'));

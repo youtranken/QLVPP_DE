@@ -10,6 +10,7 @@ const units: Messages<typeof vi> = {
       submitAdd: 'Add unit',
       editTitle: 'Edit unit',
       submitEdit: 'Save changes',
+      saving: 'Saving…',
       name: 'Unit name',
       nameEn: 'English name',
       added: 'Added unit {{name}}',

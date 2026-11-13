@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { lockedYm } from '@/lib/ym';
+import { YM, lockedYm } from '@/lib/ym';
 import { Loading, LoadError } from '@/ui/load-state';
 import { usePeriodSummary } from '@/features/summary/summary.api';
 import { useCurrentPeriod } from '@/features/request/request.api';
@@ -23,15 +23,20 @@ export function MonthPage() {
   const defaultYm = !openYm ? undefined : probe.data ? pickDefaultYm(openYm, probe.data) : probe.isError ? lockedYm(openYm) : undefined;
   const p = useMonthParams(openYm, defaultYm);
   const summary = usePeriodSummary(p.ym);
-  if (current.isError) return <LoadError onRetry={() => void current.refetch()} />;
-  if (!p.ym || !openYm) return <Loading />;
+  // Chưa biết kỳ (đang tải hoặc lỗi): vẫn giữ đầu trang — tiêu đề theo ?ym= nếu có, chọn kỳ chỉ hiện khi biết kỳ đang mở
+  const asked = params.get('ym');
+  const headYm = p.ym ?? (asked && YM.test(asked) ? asked : undefined);
   return (
     <div className="ct-page sm-page mk-page">
       <div className="mk-head">
-        <h1>{t('month.title', { month: monthOf(p.ym) })}</h1>
-        <PeriodSwitch ym={p.ym} openYm={openYm} earliestYm={summary.data?.earliest_ym} onChange={p.setYm} />
+        <h1>{headYm ? t('month.title', { month: monthOf(headYm) }) : t('nav.month')}</h1>
+        {p.ym && openYm && <PeriodSwitch ym={p.ym} openYm={openYm} earliestYm={summary.data?.earliest_ym} onChange={p.setYm} />}
       </div>
-      {p.ym === openYm ? (
+      {current.isError ? (
+        <LoadError onRetry={() => void current.refetch()} />
+      ) : !p.ym || !openYm ? (
+        <Loading />
+      ) : p.ym === openYm ? (
         <MonthOpenView ym={p.ym} />
       ) : (
         <MonthLockedView ym={p.ym} openYm={openYm} chip={p.chip} q={p.q} left={p.left} presetReason={p.presetReason} onChip={p.setChip} onQ={p.setQ} />

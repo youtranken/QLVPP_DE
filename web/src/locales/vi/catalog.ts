@@ -17,6 +17,7 @@ const catalog = {
     list: {
       description: 'Nhân viên thấy món theo đúng thứ tự nhóm dưới đây. Mỗi món cần ảnh để nhân viên chọn bằng mắt.',
       search: 'Tìm trong {{n}} sản phẩm',
+      searchPending: 'Tìm sản phẩm',
       collapseAll: 'Thu tất cả',
       expandAll: 'Mở tất cả',
       colCode: 'Mã',

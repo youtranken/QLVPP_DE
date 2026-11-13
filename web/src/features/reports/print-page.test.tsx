@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { screen, userEvent, within } from '@/test/test-utils';
+import { screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -18,6 +18,12 @@ afterEach(async () => {
   await i18n.changeLanguage('vi');
 });
 
+// Thanh công cụ có cả lúc đang tải (Quay lại chung, In khóa): chờ bản chốt về — link Quay lại đã theo tháng
+const loadedBar = async () => {
+  const bar = () => screen.getByRole('toolbar', { name: 'Thanh công cụ bản in (không in ra giấy)' });
+  await waitFor(() => expect(within(bar()).getByRole('link', { name: 'Quay lại' }).getAttribute('href')).toMatch(/\?ym=/));
+  return bar();
+};
 const formTable = async () => within(await screen.findByRole('region', { name: 'Phiếu đề xuất văn phòng phẩm' })).getByRole('table');
 const bodyRows = (table: HTMLElement) => within(table).getAllByRole('row').slice(1).map((r) => within(r).getAllByRole('cell').map((c) => c.textContent));
 
@@ -79,7 +85,7 @@ describe('Trang in · trang 1 Phiếu đề xuất (mẫu D&E)', () => {
 
   it('bản có hàng (một ô 1, còn lại 0) → nút In bật (hai phía mốc)', async () => {
     openPrint(snapshotDataFixture({ order_qty: { [PEN_KEY]: 1, 'item-glue': 0, [TAPE_KEY]: 0 } }));
-    const bar = await screen.findByRole('toolbar', { name: 'Thanh công cụ bản in (không in ra giấy)' });
+    const bar = await loadedBar();
     expect(within(bar).getByRole('button', { name: 'In' })).toBeEnabled();
     expect(screen.queryByText('Bản này không có món nào — không cần trình ký.')).toBeNull();
   });
@@ -156,7 +162,7 @@ describe('Trang in · trang 1 Phiếu đề xuất (mẫu D&E)', () => {
 describe('Trang in · thanh công cụ và công tắc phụ lục', () => {
   it('thanh công cụ có aria-label "Thanh công cụ bản in (không in ra giấy)": Quay lại về đúng tháng, mô tả bản chốt, In gọi window.print', async () => {
     openPrint(snapshotDataFixture());
-    const bar = await screen.findByRole('toolbar', { name: 'Thanh công cụ bản in (không in ra giấy)' });
+    const bar = await loadedBar();
     expect(within(bar).getByRole('link', { name: 'Quay lại' })).toHaveAttribute('href', '/admin/reports?ym=2026-10');
     expect(within(bar).getByText('Bản in tháng 10/2026 · bản chốt 09:30 28/10 · A4 dọc')).toBeInTheDocument();
     const print = vi.fn();
@@ -174,14 +180,16 @@ describe('Trang in · thanh công cụ và công tắc phụ lục', () => {
     const print = vi.fn();
     vi.stubGlobal('print', print);
     openPrint(snapshotDataFixture(), { query });
-    const bar = await screen.findByRole('toolbar', { name: 'Thanh công cụ bản in (không in ra giấy)' });
+    // Thanh công cụ có cả lúc đang tải (Quay lại chung): chờ tờ in để đọc link theo tháng bản chốt
+    await screen.findByRole('heading', { level: 1, name: 'Phiếu đề xuất văn phòng phẩm' });
+    const bar = await loadedBar();
     expect(within(bar).getByRole('link', { name: 'Quay lại' })).toHaveAttribute('href', href);
     expect(print).not.toHaveBeenCalled();
   });
 
   it('trang in riêng chèn @page A4 dọc khi mở, gỡ khi rời trang', async () => {
     const view = openPrint(snapshotDataFixture());
-    await screen.findByRole('toolbar', { name: 'Thanh công cụ bản in (không in ra giấy)' });
+    await loadedBar();
     expect(document.head.querySelector('style[data-print-page]')).toHaveTextContent('@page { size: A4 portrait; margin: 14mm 14mm 16mm; }');
     view.unmount();
     expect(document.head.querySelector('style[data-print-page]')).toBeNull();
@@ -189,7 +197,7 @@ describe('Trang in · thanh công cụ và công tắc phụ lục', () => {
 
   it('không còn công tắc "In kèm phụ lục"; link cũ ?appendix=1 vẫn mở được, chỉ có Phiếu đề xuất', async () => {
     openPrint(snapshotDataFixture(), { query: '?appendix=1' });
-    await screen.findByRole('toolbar', { name: 'Thanh công cụ bản in (không in ra giấy)' });
+    await screen.findByRole('heading', { level: 1, name: 'Phiếu đề xuất văn phòng phẩm' });
     expect(screen.queryByRole('checkbox', { name: 'In kèm phụ lục' })).toBeNull();
     expect(screen.queryByRole('region', { name: /Phụ lục/ })).toBeNull();
     expect(screen.getByRole('heading', { name: 'Phiếu đề xuất văn phòng phẩm' })).toBeInTheDocument();

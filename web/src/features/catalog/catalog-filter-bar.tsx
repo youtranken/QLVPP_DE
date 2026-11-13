@@ -42,11 +42,12 @@ function useChipGroups(index: CategoryIndex, counts: Map<string, number>) {
 export function CatalogFilterBar(p: Props) {
   const { t } = useTranslation();
   const groups = useChipGroups(p.index, p.counts);
-  const label = t('catalog.list.search', { n: p.searchable });
+  // Chưa tải xong (tabCounts null) thì chưa biết số: nhãn trung tính, không ghi "0 sản phẩm"
+  const label = p.tabCounts ? t('catalog.list.search', { n: p.searchable }) : t('catalog.list.searchPending');
   return (
     <div className="ct-filter">
       <div className="ct-filter__main">
-        <SearchBox className="flt-search" value={p.q} onChange={p.onSearch} label={label} placeholder={label} />
+        <SearchBox urlParam="q" className="flt-search" value={p.q} onChange={p.onSearch} label={label} placeholder={label} />
         {p.tabCounts && (
           <ScrollFade className="ct-seg-scroll">
             <CatalogTabBar value={p.tab} counts={p.tabCounts} onChange={p.onTab} />

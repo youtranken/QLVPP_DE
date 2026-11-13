@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { fetchJson } from '@/lib/fetch-json';
 import { switchAccount } from '@/lib/auth-actions';
-import { portalUrl } from '@/lib/pmh-portal';
+import { fetchPublicConfig, portalFallback } from '@/lib/pmh-portal';
 import { IconLock } from '@/ui/icons';
 import { LanguageSwitch } from '@/ui/language-switch';
 import { AuthFrame } from '@/shell/auth-frame';
@@ -12,8 +11,10 @@ export function ForbiddenScreen({ email }: { email?: string | null }) {
   const { t } = useTranslation();
   const config = useQuery({
     queryKey: ['public-config'],
-    queryFn: () => fetchJson<{ admin_contact: string }>('/api/public-config'),
+    queryFn: fetchPublicConfig,
   });
+  // Cổng PMH ID của đúng môi trường (theo issuer); chưa tải / lỗi / server không cấu hình → suy từ host của VPP
+  const portal = config.data?.pmh_portal_url || portalFallback();
   const adminContact = config.data?.admin_contact?.trim() || t('auth.forbidden.defaultContact');
   return (
     <AuthFrame>
@@ -34,7 +35,7 @@ export function ForbiddenScreen({ email }: { email?: string | null }) {
         <button type="button" className="btn btn--primary btn--lg btn--block" onClick={switchAccount}>
           {t('auth.forbidden.switchAccount')}
         </button>
-        <a className="btn btn--lg btn--block" href={portalUrl()}>
+        <a className="btn btn--lg btn--block" href={portal}>
           {t('auth.forbidden.portal')}
         </a>
       </div>

@@ -11,10 +11,13 @@ interface Props {
   placeholder?: string;
   className?: string;
   inputRef?: RefObject<HTMLInputElement | null>;
+  // Khóa URL mà value đọc từ đó (thường 'q'): trang ghi thẳng khóa này ("Xóa lọc") thì ô bỏ chữ đang chờ debounce.
+  // Bỏ trống khi value là state riêng của màn — ô không nghe ghi URL của màn khác
+  urlParam?: string;
 }
 
-export function SearchBox({ value, onChange, label, placeholder, className, inputRef }: Props) {
-  const [text, setText] = useUrlSearchBox(value, onChange);
+export function SearchBox({ value, onChange, label, placeholder, className, inputRef, urlParam }: Props) {
+  const [text, setText] = useUrlSearchBox(value, onChange, urlParam ?? null);
   const ownRef = useRef<HTMLInputElement>(null);
   const ref = inputRef ?? ownRef;
   return (

@@ -4,7 +4,8 @@ const admin = {
     page: {
       description: 'Người dùng đồng bộ từ PMH ID. Thông tin cá nhân sửa ở PMH ID, không sửa trong app.',
       searchLabel: 'Tìm người',
-      search: 'Tìm theo tên, email hoặc mã NV',
+      // Placeholder: vừa ô tìm ở 768 (176px); nhãn đầy đủ là searchLabel
+      search: 'Tìm tên, email, mã NV',
       hint: 'Lấy dữ liệu mới từ PMH ID.',
       sync: 'Đồng bộ ngay',
       syncing: 'Đang đồng bộ…',
@@ -102,7 +103,7 @@ const admin = {
         logout: 'Đăng xuất',
         sa_login: 'Đăng nhập tài khoản dự phòng',
         sa_login_failed: 'Đăng nhập tài khoản dự phòng sai',
-        session_expired: 'Phiên hết hạn',
+        session_expired: 'Phiên hết hạn (không thao tác quá lâu hoặc quá 12 giờ)',
         session_revoked: 'Phiên bị thu hồi',
         test_login: 'Đăng nhập tài khoản thử (dev)',
         test_login_failed: 'Đăng nhập tài khoản thử (dev) sai',

@@ -15,7 +15,6 @@
 [data-shell='admin'] .ct-filter__view { flex: none; margin-left: auto; }
 [data-shell='admin'] .ct-filter__groups { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
 [data-shell='admin'] .ct-gchips-scroll { flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
-[data-shell='admin'] .ct-seg-scroll[data-more], [data-shell='admin'] .ct-gchips-scroll[data-more] { mask-image: linear-gradient(to right, black calc(100% - 40px), transparent); }
 [data-shell='admin'] .ct-gchips { display: flex; flex-wrap: nowrap; align-items: center; gap: var(--s-2); width: max-content; padding: 2px; }
 [data-shell='admin'] .ct-gchip { display: inline-flex; flex: none; align-items: center; gap: var(--s-1); height: 32px; padding: 0 var(--s-3); border: 0; border-radius: var(--r-pill); background: rgb(var(--sh-ink) / .06); color: var(--c-ink-2); font: var(--t-sm); font-weight: 600; white-space: nowrap; cursor: pointer; }
 [data-shell='admin'] .ct-gchip:hover { background: rgb(var(--sh-ink) / .1); color: var(--c-ink); }

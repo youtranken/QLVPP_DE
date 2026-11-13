@@ -44,7 +44,7 @@ export function SaveDialog({
         )}
         {lines.length > 0 && (
           <p className="rq-confirm-total num">
-            {t('request.cart.summary', { kinds: lines.length, units: lines.reduce((sum, l) => sum + l.qty, 0) })}
+            {t('request.cart.summary', { count: lines.length, units: t('request.unitCount', { count: lines.reduce((sum, l) => sum + l.qty, 0) }) })}
           </p>
         )}
       </div>

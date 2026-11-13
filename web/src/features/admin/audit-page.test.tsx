@@ -360,4 +360,15 @@ describe('AuditPage B11', () => {
     expect(screen.getByText('10.0.0.5')).toBeInTheDocument();
     expect(bodyRows().length).toBeGreaterThan(2);
   });
+
+  it('phiên hết hạn (auth.session_expired) ghi rõ lý do chung "không thao tác quá lâu hoặc quá 12 giờ", không hiện mã', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string) =>
+      Promise.resolve(jsonResponse(200, url.startsWith('/api/admin/audit') ? { items: [row('e1', { action: 'auth.session_expired', detail: { reason: 'idle' } })], next_cursor: null } : { items: [], next_cursor: null })),
+    ));
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/audit');
+    const table = within(await screen.findByRole('table'));
+    expect(await table.findByText('Phiên hết hạn (không thao tác quá lâu hoặc quá 12 giờ)')).toBeInTheDocument();
+    expect(table.queryByText('auth.session_expired')).toBeNull();
+  });
 });

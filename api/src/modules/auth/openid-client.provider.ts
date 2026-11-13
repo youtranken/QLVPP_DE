@@ -75,6 +75,7 @@ export class OpenidClientProvider implements OidcProvider {
       code_challenge_method: 'S256',
       ...(req.loginHint ? { login_hint: req.loginHint } : {}),
       ...(req.uiLocales ? { ui_locales: req.uiLocales } : {}),
+      ...(req.prompt ? { prompt: req.prompt } : {}),
     });
     return url.href;
   }

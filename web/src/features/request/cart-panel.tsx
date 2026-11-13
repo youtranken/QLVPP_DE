@@ -184,7 +184,7 @@ export function CartPanel({
       <div className="rq-cart-head">
         <div>
           <Title id={titleId} sheet={sheet}>{t('request.cart.title', { month })}</Title>
-          <Summary sheet={sheet}>{t('request.cart.summary', { kinds: lines.length, units })}</Summary>
+          <Summary sheet={sheet}>{t('request.cart.summary', { count: lines.length, units: t('request.unitCount', { count: units }) })}</Summary>
         </div>
         <span className={`rq-cart-chip${isSaved ? ' is-saved' : ''}`}>
           {viewSaved ? t('request.cart.statusSavedAt', { time: viewSaved.time }) : t(isSaved ? 'request.cart.statusSaved' : 'request.cart.statusDirty')}

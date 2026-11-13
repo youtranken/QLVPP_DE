@@ -13,7 +13,7 @@ import { AuditWriterService } from '../audit/audit-writer.service';
 import { PeriodsService } from '../periods/periods.service';
 import { UsersService } from '../users/users.service';
 import { catalogStates, lowStockIds } from './stock-list';
-import { itemNotFound } from './catalog.service';
+import { itemNotFound } from './item-errors';
 import { countDelta, countNote, reasonRequired } from './stock-count';
 import { heldSql } from './stock-held-sql';
 import type { IssueDto, StockChangeDto, StockCountDto } from './stock.dto';

@@ -63,3 +63,15 @@ describe('Toolbar', () => {
     expect(box.compareDocumentPosition(after) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });
+
+describe('ô tìm .toolbar__search', () => {
+  // Rà soát 13/11 #7: Giao hàng tự dựng <div className="toolbar__search"> → bấm phần đệm không focus ô
+  it('mọi chỗ dùng lớp toolbar__search là thẻ label (bấm đâu trong khung cũng focus ô)', async () => {
+    const { readdirSync, readFileSync, statSync } = await import('node:fs');
+    const { join, relative } = await import('node:path');
+    const src = join(process.cwd(), 'src');
+    const walk = (d: string): string[] => readdirSync(d).flatMap((n) => (statSync(join(d, n)).isDirectory() ? walk(join(d, n)) : /\.tsx$/.test(n) && !/\.test\.tsx$/.test(n) ? [join(d, n)] : []));
+    const bad = walk(src).flatMap((f) => [...readFileSync(f, 'utf8').matchAll(/<(\w+)[^>]*className="[^"]*\btoolbar__search\b/g)].filter((m) => m[1] !== 'label').map(() => relative(src, f)));
+    expect(bad).toEqual([]);
+  });
+});

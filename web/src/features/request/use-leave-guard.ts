@@ -36,7 +36,7 @@ export function useLeaveGuard(dirtyCount: number, prompt?: ConfirmOptions) {
       void ask(
         prompt ?? {
           title: t('request.leave.title'),
-          message: t('request.leave.body', { n: dirtyCount }),
+          message: t('request.leave.body', { count: dirtyCount }),
           confirmLabel: t('request.leave.leave'),
           cancelLabel: t('request.leave.stay'),
           danger: true,

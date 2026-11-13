@@ -136,15 +136,27 @@ export class AuthController {
     @Query('login_hint') loginHint?: string,
     @Query('ui_locales') uiLocales?: string,
   ): Promise<void> {
+    res.redirect(
+      await this.startLogin(res, {
+        loginHint: sanitizeLoginHint(loginHint),
+        // Ngôn ngữ app đang dùng (docs 7a) — chỉ vi|en; lạ/thiếu → không gửi
+        uiLocales: parseUiLocales(uiLocales),
+      }),
+    );
+  }
+
+  // Đặt cookie giao dịch PKCE/state, trả URL authorize của PMH ID
+  private async startLogin(
+    res: Response,
+    opts: { loginHint?: string; uiLocales?: string; prompt?: 'login' },
+  ): Promise<string> {
     const codeVerifier = randomBytes(32).toString('base64url');
     const state = randomBytes(16).toString('base64url');
     const url = await this.oidc.buildAuthUrl({
       redirectUri: redirectUri(),
       state,
       codeChallenge: pkceChallenge(codeVerifier),
-      loginHint: sanitizeLoginHint(loginHint),
-      // Ngôn ngữ app đang dùng (docs 7a) — chỉ vi|en; lạ/thiếu → không gửi
-      uiLocales: parseUiLocales(uiLocales),
+      ...opts,
     });
     res.cookie(OIDC_TX_COOKIE, JSON.stringify({ codeVerifier, state }), {
       httpOnly: true,
@@ -153,10 +165,12 @@ export class AuthController {
       maxAge: 10 * 60 * 1000,
       path: '/api/auth',
     });
-    res.redirect(url);
+    return url;
   }
 
-  // Public: user bị chặn không có phiên app; phải qua end_session vì app không tự hủy phiên SSO được.
+  // Public: user bị chặn (forbidden) không có phiên app. Có id_token → end_session (hủy phiên SSO);
+  // không có (nhánh access_denied/revoked chưa tạo phiên) → PMH ID 500 khi logout thiếu hint,
+  // nên đi authorize với prompt=login: PMH ID hiện form đăng nhập dù phiên SSO còn, chọn được tài khoản khác.
   @Public()
   @Get('switch-account')
   async switchAccount(
@@ -173,14 +187,22 @@ export class AuthController {
       await this.sessions.destroy(sid);
     }
     res.clearCookie(SESSION_COOKIE);
-    // post_logout_redirect_uri phải khớp hệt app_url đã khai với PMH ID
-    const logoutUrl = await this.oidc.buildLogoutUrl(
-      appBaseUrl(),
-      idTokenHint,
-      parseUiLocales(uiLocales),
+    const locales = parseUiLocales(uiLocales);
+    if (idTokenHint) {
+      // post_logout_redirect_uri phải khớp hệt app_url đã khai với PMH ID
+      const logoutUrl = await this.oidc.buildLogoutUrl(
+        appBaseUrl(),
+        idTokenHint,
+        locales,
+      );
+      if (logoutUrl) {
+        res.redirect(logoutUrl);
+        return;
+      }
+    }
+    res.redirect(
+      await this.startLogin(res, { prompt: 'login', uiLocales: locales }),
     );
-    // Không có end_session thì không về /api/auth/login: phiên SSO còn sống sẽ lặp forbidden
-    res.redirect(logoutUrl ?? '/?login=failed');
   }
 
   @Public()

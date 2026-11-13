@@ -51,6 +51,8 @@ const delivery = {
       month: 'Tháng nợ',
       allMonths: 'Tất cả tháng',
       search: 'Tìm người hoặc món (không cần dấu)',
+      // Placeholder ngắn vừa ô ở 360 (250px); "không cần dấu" giữ ở nhãn (search)
+      searchPlaceholder: 'Tìm người hoặc món',
       leftOnly: 'Chỉ người đã nghỉ ({{n}})',
       tableLabel: 'Còn nợ theo tháng, người, món',
       monthHead: '{{month}} · {{people}} người · {{units}} đơn vị',

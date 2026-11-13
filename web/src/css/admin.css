@@ -16,7 +16,7 @@
 .a-form-grid { grid-template-columns: 1fr 1fr; }
 .a-form-wide { grid-column: 1 / -1; }
 .a-check { display: grid; gap: 2px; }
-.a-check label { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
+.a-check label { display: inline-flex; align-items: center; gap: 8px; min-height: var(--hit); font-weight: 500; }
 .a-check small { color: var(--ink-3); font-size: 12px; padding-left: 24px; }
 @media (max-width: 680px) {
   .a-form-grid { grid-template-columns: 1fr; }

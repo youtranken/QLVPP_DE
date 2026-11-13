@@ -15,6 +15,7 @@ import {
   startRelogin,
   takeReturnTo,
 } from '@/lib/session-relogin';
+import { preloadHintedChunk, preloadRouteChunk, rememberRoleHint } from '@/shell/route-chunks';
 
 export type AuthState =
   | { kind: 'loading' }
@@ -34,7 +35,7 @@ function onAuthenticated(me: Me): AuthState {
   return { kind: 'authenticated', me };
 }
 
-function onUnauthenticated(): AuthState | null {
+async function onUnauthenticated(): Promise<AuthState | null> {
   // StrictMode chạy effect 2 lần — lần đầu đã quyết định chuyển hướng
   if (isRedirecting()) return null;
   const q = new URLSearchParams(window.location.search);
@@ -49,7 +50,7 @@ function onUnauthenticated(): AuthState | null {
     startRelogin();
     return { kind: 'redirecting' };
   }
-  if (cameFromPortal()) {
+  if (await cameFromPortal()) {
     navigateTo(ssoLoginUrl());
     return { kind: 'redirecting' };
   }
@@ -65,19 +66,34 @@ async function isSsoUnavailable(res: Response): Promise<boolean> {
   return apiErrorCode(new ApiError(res.status, body)) === 'SSO_UNAVAILABLE';
 }
 
+// Boot đọc phiên qua GET auth/session: chưa đăng nhập → 204 (không phải lỗi mạng, console trang công khai sạch).
+// API cũ chưa có route này (cập nhật web trước api) → 404 → hỏi lại auth/me như trước (401 = chưa đăng nhập).
+async function fetchSession(): Promise<Response> {
+  const res = await fetch('/api/auth/session');
+  return res.status === 404 ? fetch('/api/auth/me') : res;
+}
+
 export function useAuthBoot(): AuthState {
   const [state, setState] = useState<AuthState>({ kind: 'loading' });
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/auth/me')
+    // Nạp chunk màn song song với kiểm phiên (đo CPU×6 + mạng chậm: trang Đăng ký nhanh hơn chờ /me rồi mới nạp; màn
+    // đăng nhập không chậm đi) — theo vai lần trước trên máy này; chưa từng đăng nhập thì chờ biết vai. Lỗi nạp để route tự báo.
+    preloadHintedChunk(window.location.pathname)?.catch(() => {});
+    fetchSession()
       .then(async (res): Promise<AuthState | null> => {
+        if (res.status === 204 || res.status === 401) return onUnauthenticated();
         if (res.ok) {
           const me = (await res.json()) as Me;
           // Ngôn ngữ theo tài khoản PMH ID trước khi vẽ app (không nháy ngôn ngữ cũ)
           await applySignedInLanguage(me, { serverDate: res.headers?.get('date') });
-          return onAuthenticated(me);
+          const next = onAuthenticated(me);
+          rememberRoleHint(me.role);
+          // Chunk màn theo vai (và theo trang trả về sau SSO) nạp xong trước khi vẽ: khung và trang hiện cùng lúc, không
+          // chớp khung chờ. Nạp hỏng thì vẫn vẽ — route hiện nút Tải lại trang.
+          await preloadRouteChunk(me.role, window.location.pathname).catch(() => {});
+          return next;
         }
-        if (res.status === 401) return onUnauthenticated();
         if (await isSsoUnavailable(res)) return { kind: 'anonymous', expired: false, ssoDown: true };
         return { kind: 'error' };
       })

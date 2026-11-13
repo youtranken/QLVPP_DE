@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { Dialog, DialogCloseButton, DialogTitle } from '@/ui/dialog';
 import { ConfirmProvider } from '@/ui/confirm-provider';
@@ -182,5 +183,83 @@ describe('Dialog nằm trong form khác', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Mua và thêm vào danh mục' }));
     expect(inner).toHaveBeenCalledTimes(1);
     expect(outer).not.toHaveBeenCalled();
+  });
+});
+
+describe('Dialog trả focus về nút mở', () => {
+  // Rà soát 13/11 #2: Điều chỉnh phiếu, Lịch sử nhập xuất, Xuất lẻ một món — đóng bằng Esc thì focus rơi về BODY
+  // <main> không đặt tabIndex như khung thật cũ của Nhân viên: test không được che lỗi "#main không focus được"
+  function Opener({ remountKey, show = true, autoFocusInside = true, twin = false }: { remountKey?: number; show?: boolean; autoFocusInside?: boolean; twin?: boolean }) {
+    const [open, setOpen] = useState(false);
+    return (
+      <>
+        <main id="main">
+          {twin && (
+            <button type="button" aria-label="Điều chỉnh phiếu của An">
+              Điều chỉnh (người trùng tên)
+            </button>
+          )}
+          {show && (
+            <button key={remountKey} type="button" aria-label="Điều chỉnh phiếu của An" onClick={() => setOpen(true)}>
+              Điều chỉnh
+            </button>
+          )}
+        </main>
+        {/* Hộp gắn có điều kiện, và ô trong hộp tự focus (autoFocus) trước khi FocusScope của Radix kịp ghi nhớ nút mở */}
+        {open && (
+          <Dialog open onOpenChange={(o) => !o && setOpen(false)}>
+            <DialogTitle>Điều chỉnh</DialogTitle>
+            <input aria-label="Món" autoFocus={autoFocusInside} />
+          </Dialog>
+        )}
+      </>
+    );
+  }
+
+  it('ô trong hộp tự focus khi mở: Esc → focus về nút mở, không rơi về BODY', async () => {
+    renderWithI18n(<Opener />);
+    const btn = screen.getByRole('button', { name: 'Điều chỉnh phiếu của An' });
+    btn.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Món' })).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(btn).toHaveFocus());
+  });
+
+  it('nút mở bị render lại khi hộp đang mở (URL đổi ?request=/?item=): focus về nút mới cùng nhãn', async () => {
+    const { rerender } = renderWithI18n(<Opener remountKey={1} />);
+    const old = screen.getByRole('button', { name: 'Điều chỉnh phiếu của An' });
+    old.focus();
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('dialog');
+    rerender(<Opener remountKey={2} />);
+    const fresh = screen.getByRole('button', { name: 'Điều chỉnh phiếu của An', hidden: true });
+    expect(fresh).not.toBe(old);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(fresh).toHaveFocus());
+  });
+
+  it('nút mở không còn: focus về vùng nội dung #main thay vì BODY', async () => {
+    const { rerender } = renderWithI18n(<Opener />);
+    screen.getByRole('button', { name: 'Điều chỉnh phiếu của An' }).focus();
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('dialog');
+    rerender(<Opener show={false} />);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(document.getElementById('main')).toHaveFocus());
+  });
+
+  it('nút mở không còn mà có hai nút cùng nhãn (trùng tên): không đoán hàng, focus về #main', async () => {
+    const { rerender } = renderWithI18n(<Opener twin />);
+    screen.getAllByRole('button', { name: 'Điều chỉnh phiếu của An' })[1]!.focus();
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('dialog');
+    rerender(<Opener twin show={false} />);
+    rerender(<Opener twin show />);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(document.getElementById('main')).toHaveFocus());
   });
 });

@@ -119,7 +119,7 @@ describe('Song ngữ các màn Plan 3', () => {
     const reply = (url: string) => (url.includes('/snapshots/') ? data : url === '/api/units' ? [] : { items: [snapshotRow({ id: data.id })], next_cursor: null, unread_count: 0 });
     vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(jsonResponse(200, reply(url)))));
     renderApp(ADMIN, `/admin/reports/snapshots/${data.id}/print`);
-    expect(await screen.findByRole('toolbar', { name: 'Thanh công cụ bản in (không in ra giấy)' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Phiếu đề xuất văn phòng phẩm' })).toBeInTheDocument();
     await english();
     const toolbar = await screen.findByRole('toolbar', { name: /Print toolbar/ });
     const words = [toolbar].flatMap((el) => el.textContent?.match(VIETNAMESE_WORD) ?? []);

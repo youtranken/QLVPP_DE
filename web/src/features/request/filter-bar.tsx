@@ -47,6 +47,7 @@ export function FilterBar({ filter, groups, total, shown, pickedCount, canFav = 
       <div className="rq-f-row">
         <SearchBox
           className="rq-f-search"
+          urlParam="q"
           inputRef={searchRef}
           label={t('request.grid.search')}
           placeholder={t('request.grid.searchPlaceholder')}
@@ -93,7 +94,7 @@ export function FilterBar({ filter, groups, total, shown, pickedCount, canFav = 
         {mid && copySlot}
       </div>
       <p className="rq-f-count" aria-live="polite">
-        {t(narrowed ? 'request.grid.countMatch' : 'request.grid.countAll', { n: narrowed ? shown : total })}
+        {t(narrowed ? 'request.grid.countMatch' : 'request.grid.countAll', { count: narrowed ? shown : total })}
       </p>
       {shown === 0 && (
         <div className="rq-f-empty">

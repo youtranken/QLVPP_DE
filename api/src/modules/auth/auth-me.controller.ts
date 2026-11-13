@@ -16,6 +16,7 @@ import { SystemConfigService } from '../config/system-config.service';
 import { UsersService } from '../users/users.service';
 import type { MeResponse } from './auth.types';
 import { SESSION_COOKIE } from './identity.guard';
+import { OptionalAuth } from './public.decorator';
 import type { AuthedRequest } from './identity.types';
 import { clientIp } from './auth.controller';
 import { normalizeLocale, parseLocaleTag } from './locale';
@@ -44,6 +45,31 @@ export class AuthMeController {
         message: 'Chưa đăng nhập.',
       });
     }
+    return this.buildMe(user);
+  }
+
+  /**
+   * Boot của web: như GET auth/me nhưng chưa đăng nhập (không cookie, cookie rác, phiên hết hạn/bị thu hồi) → 204 không
+   * thân, thay vì 401 — trang công khai không còn lỗi "401" trong console mỗi lần tải. Không có dữ liệu nào cho ẩn danh.
+   * PMH ID sập khi còn phiên SSO → 503 SSO_UNAVAILABLE như auth/me. GET auth/me giữ nguyên 401.
+   */
+  @Get('session')
+  @OptionalAuth()
+  async session(
+    @Req() req: AuthedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<MeResponse | undefined> {
+    const user = req.user;
+    if (!user) {
+      res.status(204);
+      return undefined;
+    }
+    return this.buildMe(user);
+  }
+
+  private async buildMe(
+    user: NonNullable<AuthedRequest['user']>,
+  ): Promise<MeResponse> {
     const [session, profile, registrationLastDay, defaultMaxQty, adminContact] =
       await Promise.all([
         user.sessionId ? this.sessions.find(user.sessionId) : null,

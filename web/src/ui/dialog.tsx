@@ -35,6 +35,36 @@ function subscribeModals(l: () => void): () => void {
 }
 const modalsSnapshot = () => modalsVersion;
 
+// Nút mở có thể bị render lại khi hộp đang mở (panel đổi URL ?request=/?item= làm hàng vẽ lại): nhớ cách tìm lại nó
+interface OpenerMark {
+  el: HTMLElement;
+  id: string;
+  label: string | null;
+  tag: string;
+}
+
+function markOf(el: Element | null): OpenerMark | null {
+  if (!(el instanceof HTMLElement) || el === document.body) return null;
+  return { el, id: el.id, label: el.getAttribute('aria-label'), tag: el.tagName.toLowerCase() };
+}
+
+function findAgain(m: OpenerMark): HTMLElement | null {
+  if (m.el.isConnected) return m.el;
+  const byId = m.id ? document.getElementById(m.id) : null;
+  if (byId) return byId;
+  if (!m.label) return null;
+  // Nhãn chỉ đủ tin khi duy nhất: hai hàng cùng nhãn (vd hai người trùng tên) thì không đoán, để rơi về #main
+  const same = document.querySelectorAll<HTMLElement>(`${m.tag}[aria-label="${CSS.escape(m.label)}"]`);
+  return same.length === 1 ? same[0]! : null;
+}
+
+// Vùng nội dung chính làm chỗ trả focus dự phòng: <main> không có tabindex thì focus() không ăn, focus rơi về BODY
+function mainTarget(): HTMLElement | null {
+  const main = document.getElementById('main');
+  if (main && !main.hasAttribute('tabindex')) main.tabIndex = -1;
+  return main;
+}
+
 function hasModalBelow(me: HTMLElement): boolean {
   return Array.from(document.querySelectorAll('[data-modal-sheet][data-state="open"]')).some(
     (el) => el !== me && !!(el.compareDocumentPosition(me) & Node.DOCUMENT_POSITION_FOLLOWING),
@@ -91,7 +121,14 @@ export function Dialog({
   };
   const blockOutside = dismissible && closeOnOutside ? undefined : (e: Event) => e.preventDefault();
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
-  const opener = useRef<HTMLElement | null>(null);
+  // Ghi nhớ nút mở NGAY lúc render chuyển sang mở: DOM chưa commit nên focus còn ở nút. Đợi onOpenAutoFocus thì trễ —
+  // ô trong hộp có autoFocus (hoặc hộp gắn có điều kiện) đã giật focus trước, Radix bỏ qua sự kiện đó và quên nút mở
+  const opener = useRef<OpenerMark | null>(null);
+  const wasOpen = useRef(false);
+  if (open !== wasOpen.current) {
+    wasOpen.current = open;
+    if (open) opener.current = markOf(document.activeElement);
+  }
   // Hộp nằm trên một hộp modal khác đang mở → đánh dấu để CSS thêm viền tách lớp (z-index bằng nhau, thứ tự DOM quyết định lớp trên)
   const [content, setContent] = useState<HTMLDivElement | null>(null);
   const [stacked, setStacked] = useState(false);
@@ -132,18 +169,19 @@ export function Dialog({
             // Hộp mở từ trong một form khác (hộp "Sản phẩm mới" trong ngăn Điều chỉnh): sự kiện submit của React nổi qua portal
             // tới form tổ tiên và gửi luôn form đó — dừng ở mép hộp, form của chính hộp vẫn nhận trước
             onSubmit={(e) => e.stopPropagation()}
-            onOpenAutoFocus={(e) => {
-              opener.current = openerProp?.current ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
-              onOpenAutoFocus?.(e);
-            }}
+            onOpenAutoFocus={onOpenAutoFocus}
             onCloseAutoFocus={(e) => {
               if (onCloseFocus?.()) {
                 e.preventDefault();
                 return;
               }
-              if (!returnFocus || !opener.current?.isConnected) return;
+              const mark = markOf(openerProp?.current ?? null) ?? opener.current;
+              if (!returnFocus || !mark) return;
+              // Nút mở không còn và không tìm lại được → vùng nội dung chính, không để focus rơi về BODY
+              const target = findAgain(mark) ?? mainTarget();
+              if (!target) return;
               e.preventDefault();
-              opener.current.focus();
+              target.focus();
             }}
           >
             <DialogPortalContext.Provider value={portalEl}>

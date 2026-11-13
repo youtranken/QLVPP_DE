@@ -1,4 +1,5 @@
 import { MemoryRouter } from 'react-router-dom';
+import { navigateTo } from '@/lib/navigate';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { jsonResponse, renderWithI18n, screen, userEvent, waitFor, within } from '@/test/test-utils';
 import { MeContext } from '@/lib/me';
@@ -7,6 +8,9 @@ import { ToastProvider } from '@/ui/toast-provider';
 import { BulkDeliverDialog } from './bulk-deliver-dialog';
 import { bulkPlan } from './bulk-plan';
 import { A, B, PEOPLE } from './people-fixtures';
+
+// 401 → tự đăng nhập lại (rời SPA): jsdom không điều hướng được tài liệu khác, thay bằng mock để kiểm lời gọi
+vi.mock('@/lib/navigate', () => ({ navigateTo: vi.fn() }));
 
 const URL = '/api/admin/deliveries/bulk';
 const plan = bulkPlan([A, B], PEOPLE);
@@ -85,5 +89,6 @@ describe('BulkDeliverDialog', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Xác nhận giao' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Phiên đăng nhập đã hết');
     expect(props.onDone).not.toHaveBeenCalled();
+    expect(navigateTo).toHaveBeenCalledTimes(1);
   });
 });

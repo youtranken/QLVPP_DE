@@ -6,7 +6,7 @@ import type { Database, Executor, Tx } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { PeriodsService } from '../periods/periods.service';
 import { openLineCount } from '../requests/line-delivery.store';
-import { itemNotFound } from './catalog.service';
+import { itemNotFound } from './item-errors';
 import { lockCustomKey } from './custom-key-lock';
 import type { LineKey } from './line-key';
 

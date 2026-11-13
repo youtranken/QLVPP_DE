@@ -24,7 +24,6 @@
 @media (max-width: 1180px) {
   [data-shell='member'] .rq-f-scroll { overflow-x: auto; scrollbar-width: none; margin-block: -4px; padding-block: 4px; }
   [data-shell='member'] .rq-f-scroll::-webkit-scrollbar { display: none; }
-  [data-shell='member'] .rq-f-scroll[data-more] { mask-image: linear-gradient(to right, black calc(100% - 32px), transparent); }
   [data-shell='member'] .rq-f-chips { flex-wrap: nowrap; width: max-content; }
 }
 /* Màn vừa dùng chuột: hiện thanh cuộn mảnh để kéo tới chip khuất (điện thoại vuốt được nên vẫn ẩn) */

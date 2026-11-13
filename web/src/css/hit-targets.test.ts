@@ -32,4 +32,26 @@ describe('vùng bấm', () => {
       expect(css).not.toMatch(/qty-input__spin|\.cf-adjust button|\.aj-line \.stepper/);
     }
   });
+
+  // Rà soát 13/11 #9: hộp Xuất lẻ — ô Người nhận 36px giữa các ô 44px, nhãn "Dùng chung" chỉ cao 21px
+  it('Ô tìm người (UserPicker) cao bằng ô form chung (min-height var(--hit)), thắng .a-input 36px của shell', () => {
+    expect(read('features/directory/user-picker.css')).toMatch(/\[data-shell='admin'\] \.user-picker \.a-input\s*\{[^}]*min-height:\s*var\(--hit\)/);
+  });
+
+  it('Nhãn checkbox .a-check (Dùng chung, Thêm vào danh mục) cao tối thiểu var(--hit)', () => {
+    expect(read('css/admin.css')).toMatch(/\.a-check label\s*\{[^}]*min-height:\s*var\(--hit\)/);
+  });
+
+  // Rà soát 13/11 Gu #10: lớp nổi ở 390 — VI/EN trong menu quản lý, ‹ › năm (chọn năm-tháng), ‹ › người (Xem phiếu) chỉ 36px.
+  // Luật @media cũ cho .rg-step (44px) đứng trước luật 36px cùng độ ưu tiên nên không bao giờ thắng.
+  it('lớp nổi ở điện thoại: nút 36px nới vùng chạm đủ 44px bằng ::after, cỡ nhìn giữ nguyên', () => {
+    const css = read('css/m1/overlay.css');
+    const phone = css.slice(css.lastIndexOf('@media (max-width: 767px)'));
+    for (const el of ['.cal__nav', '.rg-step', '.side-sheet .seg button']) {
+      const e = el.replace(/\./g, '\\.');
+      expect(phone).toMatch(new RegExp(`\\[data-shell='admin'\\] ${e}[,\\s][^{]*\\{\\s*position:\\s*relative`));
+      expect(phone).toMatch(new RegExp(`\\[data-shell='admin'\\] ${e}::after[^{]*\\{[^}]*position:\\s*absolute;[^}]*inset:\\s*min\\(0px, calc\\(50% - var\\(--hit\\) / 2\\)\\)`));
+    }
+    expect(read('features/summary/summary.m1.css')).not.toMatch(/\.rg-step\s*\{\s*width:\s*var\(--hit\)/);
+  });
 });

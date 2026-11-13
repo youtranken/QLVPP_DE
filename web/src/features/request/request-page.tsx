@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
 import { useMe } from '@/lib/me';
 import { langOf, lockPhrase } from '@/lib/period-text';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
+import { MemberPage } from '@/shell/member-page';
 import { Loading, LoadError } from '@/ui/load-state';
 import { CartPanel } from './cart-panel';
 import { CartSheet } from './cart-sheet';
@@ -27,6 +27,7 @@ import {
 } from './request.api';
 import { monthOf, useRequestFormat } from './request-format';
 import { SaveDialog, StaleDialog } from './save-dialog';
+import { LoadPanel } from '@/shell/member-page';
 import { useCart } from './use-cart';
 import { useCopyPrevious } from './use-copy-previous';
 import { useLeaveGuard } from './use-leave-guard';
@@ -87,10 +88,13 @@ function RequestEditor({
   useLeaveGuard(cart.dirtyCount);
   const openerRef = useRef<HTMLButtonElement>(null);
   const barSaveRef = useRef<HTMLButtonElement>(null);
+  // Bản mới nhất cho các effect bên dưới: ghi trong effect (chỉ lần render đã commit), đứng trước các effect đọc nó
   const sheetOpenRef = useRef(sheetOpen);
-  sheetOpenRef.current = sheetOpen;
   const narrowRef = useRef(narrow);
-  narrowRef.current = narrow;
+  useEffect(() => {
+    sheetOpenRef.current = sheetOpen;
+    narrowRef.current = narrow;
+  });
   // Lỗi theo dòng: mở sheet để dòng lỗi thấy được — một lần cho mỗi sự kiện lỗi (đổi bề ngang không mở lại)
   const lineFailure = flow.noticeEvent?.focusKey ? flow.noticeEvent : null;
   useEffect(() => {
@@ -124,7 +128,7 @@ function RequestEditor({
   const [editFrom, setEditFrom] = useState<number | null>(null);
   useEffect(() => setEditFrom(null), [cart.saved]);
   const mode: 'view' | 'edit' = cart.saved && !dirty && editFrom !== savedSeq ? 'view' : 'edit';
-  const saveLabel = dirty ? t('request.cart.saveDirty', { n: cart.dirtyCount }) : t('request.cart.save');
+  const saveLabel = dirty ? t('request.cart.saveDirty', { count: cart.dirtyCount }) : t('request.cart.save');
   const setQty = (key: string, n: number) => {
     flow.touched(key);
     setEditFrom(savedSeq);
@@ -256,15 +260,8 @@ function RequestEditor({
   );
 }
 
-function LoadPanel({ children }: { children: ReactNode }) {
-  return (
-    <div className="m-page">
-      <div className="m-panel">{children}</div>
-    </div>
-  );
-}
-
 export function RequestPage() {
+  const { t } = useTranslation();
   const period = useCurrentPeriod();
   const request = useMyRequest(period.data?.ym);
   const [carry, setCarry] = useState<Carry | null>(null);
@@ -275,8 +272,15 @@ export function RequestPage() {
   const categories = useMemberCategories();
 
   const failed = [period, request, items, categories].find((q) => q.isError);
-  // Trạng thái tải/lỗi tự đặt trong khung sáng
-  if (failed) return <LoadPanel><LoadError onRetry={() => void failed.refetch()} /></LoadPanel>;
+  // Trạng thái tải/lỗi tự đặt trong khung sáng. Lỗi giữ tiêu đề trang như Lịch sử: biết kỳ thì tiêu đề hero, chưa biết thì "Đăng ký"
+  if (failed) {
+    const title = period.data ? t('request.hero.title', { month: monthOf(period.data.ym) }) : t('nav.register');
+    return (
+      <MemberPage title={title}>
+        <LoadError onRetry={() => void failed.refetch()} />
+      </MemberPage>
+    );
+  }
   if (!period.data || request.data === undefined || !items.data || !categories.data) return <LoadPanel><Loading /></LoadPanel>;
   const ym = period.data.ym;
   return (

@@ -30,14 +30,14 @@ export function MobileSaveBar({
   return (
     <div className="rq-bar">
       <button type="button" className="rq-bar-open" ref={openRef} aria-labelledby={titleId} aria-describedby={subId} onClick={onOpen}>
-        <span id={titleId} className="rq-bar-title num">{t('request.cart.viewCart', { n: count })}</span>
-        <span id={subId} className="rq-bar-sub num">{t('request.cart.barSub', { units, status })}</span>
+        <span id={titleId} className="rq-bar-title num">{t('request.cart.viewCart', { count })}</span>
+        <span id={subId} className="rq-bar-sub num">{t('request.cart.barSub', { units: t('request.unitCount', { count: units }), status })}</span>
       </button>
       {/* aria-disabled (không disabled): lưu xong nút vẫn nhận lại focus, không rơi về body */}
       <button type="button" className="rq-bar-save" ref={saveRef} aria-disabled={!canSave} onClick={() => canSave && onSave()}>
         {dirtyCount > 0 && (
           <>
-            <span className="rq-bar-dirty">{t('request.cart.barDirty', { n: dirtyCount })}</span>{' '}
+            <span className="rq-bar-dirty">{t('request.cart.barDirty', { count: dirtyCount })}</span>{' '}
             <span className="sr-only">·</span>{' '}
           </>
         )}

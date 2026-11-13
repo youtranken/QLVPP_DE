@@ -8,7 +8,9 @@ const MAX_DELAY = 2 ** 31 - 1;
 // Gọi onFire tại deadline + 1 s theo deadline server trả (không theo giờ máy)
 export function useAtLock(deadline: string | undefined, onFire: () => void) {
   const fire = useRef(onFire);
-  fire.current = onFire;
+  useEffect(() => {
+    fire.current = onFire;
+  });
   useEffect(() => {
     if (!deadline) return;
     const fireAt = new Date(deadline).getTime() + 1000;

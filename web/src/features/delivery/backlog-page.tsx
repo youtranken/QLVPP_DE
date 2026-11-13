@@ -77,7 +77,7 @@ export function BacklogPage() {
       {query.isSuccess && (
         <div className="toolbar bl-bar">
           <Select label={t('delivery.backlog.month')} hideLabel value={ymNow ?? ALL} options={monthOptions} onChange={(v) => p.setYm(v === ALL ? null : v)} />
-          <SearchBox className="flt-search" label={t('delivery.backlog.search')} placeholder={t('delivery.backlog.search')} value={p.q} onChange={p.setQ} />
+          <SearchBox urlParam="q" className="flt-search" label={t('delivery.backlog.search')} placeholder={t('delivery.backlog.searchPlaceholder')} value={p.q} onChange={p.setQ} />
           <Switch checked={p.left} text={t('delivery.backlog.leftOnly', { n: leftPeople(groups ?? []) })} onChange={p.toggleLeft} />
           {months.length > 0 && (
             <ListMeta>
