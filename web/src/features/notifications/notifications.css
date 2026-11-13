@@ -9,6 +9,8 @@
 .notif-all, .notif-more { border: 0; background: transparent; color: var(--brand-ink); font-weight: 700; font-size: 13px; text-decoration: underline; padding: 4px; }
 .notif-more { display: block; width: 100%; padding: 12px; }
 .notif-empty { padding: 28px 14px; text-align: center; color: var(--ink-2); }
+.notif-state { padding: 12px; }
+.notif-panel .load-state { justify-content: center; }
 .notif-list { list-style: none; margin: 0; padding: 0; }
 .notif-item + .notif-item { border-top: 1px solid var(--line); }
 .notif-item > button { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 12px 14px; }
