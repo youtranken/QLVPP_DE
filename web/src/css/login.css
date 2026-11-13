@@ -1,29 +1,81 @@
-/* Đăng nhập — final/login.html + "Thay đổi sau review" */
-.login-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--brand-soft); }
-.login-box { width: min(920px, 100%); display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 24px; overflow: hidden; box-shadow: 0 20px 60px rgb(var(--sh-acc) / .12); }
-.login-hero { background: var(--brand-deep); color: #fff; padding: 40px 40px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden; }
-.login-hero::after { content: ""; position: absolute; right: -80px; bottom: -80px; width: 260px; height: 260px; border-radius: 50%; background: rgba(255, 255, 255, .12); }
-.login-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 14px; }
-.login-brand i { width: 30px; height: 30px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .8); display: grid; place-items: center; font-style: normal; font-size: 11px; font-weight: 800; }
-.login-hero h1 { font-size: 30px; font-weight: 800; line-height: 1.15; max-width: 14ch; }
-.login-hero p { max-width: 36ch; font-weight: 600; position: relative; z-index: 1; }
-.login-panel { padding: 40px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
-.login-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.login-head h2 { font-size: 22px; font-weight: 800; }
-/* Nút chính dài: hai dòng cân nhau thay vì một dòng đầy + vài chữ lẻ */
-.login-panel .btn--xl { text-wrap: balance; }
-.login-hint { font-size: 14px; color: var(--ink-2); font-weight: 600; line-height: 1.5; }
-.login-hint-form, .login-sa { display: grid; gap: 12px; }
-.login-test { display: grid; gap: 8px; border: 2px dashed var(--warn); background: var(--warn-soft); border-radius: 16px; padding: 16px; margin-top: 8px; }
-.login-test h3 { font-size: 16px; font-weight: 800; }
-.login-foot { border-top: 2px dashed var(--line); padding-top: 16px; margin-top: 8px; }
-@media (max-width: 760px) {
-  .login-page { padding: 12px; align-items: start; }
-  .login-box { grid-template-columns: 1fr; border-radius: 18px; }
-  .login-hero { padding: 24px 24px; }
-  .login-hero h1 { font-size: 24px; }
-  .login-panel { padding: 24px 24px; }
-  /* Điện thoại: liên kết chữ và nút VI/EN đủ 44px để chạm */
-  .login-panel .link-btn { min-height: 44px; }
-  .login-head .seg button { height: 44px; min-width: 44px; }
+/* Đăng nhập — cùng bố cục QLTS/QLHS (trang đăng nhập PMH ID): ảnh tòa nhà trái 6 phần (cover) + cột kem phải 4 phần
+   có logo PMH, dòng tên app, thẻ viền vàng trên đỉnh, chân trang hỗ trợ. Nền/viền/vàng lấy đúng màu hai app chị em;
+   nút chính và dòng tên app dùng teal của VPP (như QLHS dùng màu nhấn riêng). Luôn sáng — VPP chưa có giao diện tối. */
+.auth {
+  --auth-bg: #f6f1e7; --auth-card: #fffdf8; --auth-line: #e8dfcc; --auth-line-2: #d6ccb6; --auth-rule: #e6dcc8;
+  --auth-gold: #c9a24b; --auth-foot: #6b6252;
+  min-height: 100vh; min-height: 100dvh;
+  display: grid; grid-template-columns: minmax(0, 6fr) minmax(400px, 4fr);
+  background: var(--auth-bg); color: var(--ink); font-family: var(--font-app);
+}
+/* Ảnh lấp kín khung trái; khung có màu nền tối sẵn nên lúc ảnh chưa tải xong không chớp trắng, và ảnh nằm tuyệt đối nên không đẩy bố cục */
+.auth-media { position: relative; overflow: hidden; background: #12302b; }
+.auth-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; }
+.auth-panel { display: flex; flex-direction: column; min-width: 0; padding: 32px 40px 20px; background: var(--auth-bg); border-left: 1px solid var(--auth-rule); }
+.auth-panel-head { text-align: center; }
+/* width/height trong thẻ img giữ tỉ lệ 383×274 → chỗ của logo có sẵn trước khi ảnh tải */
+.auth-pmh-logo { display: block; height: 84px; width: auto; margin: 0 auto 4px; }
+.auth-panel-name { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0; font-size: 16px; font-weight: 700; line-height: 1.35; color: var(--c-acc-hover); text-wrap: balance; }
+.auth-panel-name i { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: var(--r-xs); background: var(--c-acc); color: var(--c-on-acc); font-style: normal; font-size: 13px; font-weight: 800; }
+.auth-panel-body { width: 100%; max-width: 400px; margin: 24px auto 0; padding-bottom: 20px; }
+.auth-panel-foot { margin-top: auto; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--auth-rule); color: var(--auth-foot); font-size: 12px; line-height: 1.5; }
+
+/* Thẻ viền vàng trên đỉnh */
+.auth-card { display: grid; gap: 16px; padding: 20px 20px 24px; background: var(--auth-card); border: 1px solid var(--auth-line); border-top: 3px solid var(--auth-gold); border-radius: var(--r-md); box-shadow: 0 10px 28px rgb(60 45 20 / .08); }
+.auth-card h1 { margin: 0; font-size: 21px; font-weight: 800; line-height: 1.3; }
+.auth-card__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.auth-card__head + .auth-card__sub { margin-top: -12px; }
+/* Nút VI/EN đủ 44px để chạm ở mọi khổ (viên gọn: nền viên bỏ đệm, nút tự cao 44) */
+.auth-card__head .seg { padding: 0; }
+.auth-card__head .seg button { height: 44px; min-width: 44px; padding: 0 12px; }
+.auth-card__sub { margin: 0; font-size: 13px; color: var(--ink-2); }
+.auth-card__body { margin: 0; color: var(--ink-2); font-size: 14px; font-weight: 500; line-height: 1.55; }
+.auth-card__body.is-pending { visibility: hidden; }
+.auth-card .alert { font-size: 13px; line-height: 1.45; }
+.auth-ic { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--warn-soft); color: var(--warn); }
+.auth-ic svg { width: 22px; height: 22px; }
+.auth-actions { display: grid; gap: 12px; }
+
+/* Form: một ô nhập có icon dẫn (thư / khóa), nút đầy chiều ngang */
+.auth-form { display: grid; gap: 12px; }
+.auth-input { position: relative; display: flex; align-items: center; }
+.auth-input__ic { position: absolute; left: 12px; width: 18px; height: 18px; color: var(--ink-3); pointer-events: none; }
+.auth-input:focus-within .auth-input__ic { color: var(--c-acc); }
+.auth-input input { width: 100%; height: 48px; padding: 0 12px 0 40px; border: 1px solid var(--auth-line-2); border-radius: var(--r-sm); background: #fff; color: var(--ink); font: inherit; font-size: 16px; font-weight: 500; }
+.auth-input input::placeholder { color: var(--ink-3); }
+.auth-input input[aria-invalid='true'] { border-color: var(--danger); }
+.auth-input input:-webkit-autofill, .auth-input input:-webkit-autofill:hover, .auth-input input:-webkit-autofill:focus { -webkit-text-fill-color: var(--ink); -webkit-box-shadow: 0 0 0 1000px #fff inset; caret-color: var(--ink); }
+.auth-input--pw input { padding-right: 56px; }
+/* Con mắt hiện/ẩn mật khẩu — vùng chạm 44px nằm gọn trong ô cao 48px */
+.auth-input__eye { position: absolute; right: 2px; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--ink-3); }
+.auth-input__eye:hover { color: var(--ink); background: var(--auth-bg); }
+.auth-input__eye svg { width: 18px; height: 18px; }
+.auth-error { margin: 0; color: var(--danger); font-size: 13px; font-weight: 600; }
+.auth-card .btn { border-radius: var(--r-sm); }
+
+/* Bước mật khẩu: "Đăng nhập với <tài khoản> · Đổi" */
+.auth-idrow { display: flex; align-items: center; flex-wrap: wrap; column-gap: 8px; font-size: 13px; }
+.auth-idrow__label { color: var(--ink-3); }
+.auth-idrow__id { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; color: var(--ink); }
+.auth-idrow__change { min-height: 44px; min-width: 44px; padding: 0 4px; border: 0; background: none; color: var(--c-acc-hover); font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.auth-idrow__change:disabled { color: var(--ink-3); }
+
+/* Tài khoản thử (chỉ bản dev) */
+.login-test { display: grid; gap: 8px; border: 2px dashed var(--warn); background: var(--warn-soft); border-radius: var(--r-md); padding: 16px; }
+.login-test h3 { margin: 0; font-size: 16px; font-weight: 800; }
+.login-hint { margin: 0; font-size: 13px; color: var(--ink-2); font-weight: 500; line-height: 1.5; }
+.login-sa { display: grid; gap: 12px; }
+
+@media (max-width: 900px) {
+  .auth { grid-template-columns: 1fr; }
+  .auth-media { display: none; }
+  .auth-panel { padding: 24px 16px 16px; border-left: 0; }
+  .auth-pmh-logo { height: 64px; }
+}
+/* Cột phải hẹp (máy tính bảng ngang ~1024, điện thoại hẹp): dòng tên app vẫn một dòng như QLTS */
+@media (min-width: 901px) and (max-width: 1180px), (max-width: 420px) {
+  .auth-panel-name { font-size: 14px; }
+}
+@media (max-width: 480px) {
+  .auth-card { padding: 20px 16px 24px; }
 }

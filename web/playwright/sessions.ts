@@ -19,9 +19,10 @@ export async function adminPage(browser: Browser, info: TestInfo) {
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   if (!SA_PASSWORD) return page;
   await page.goto('/');
-  await page.getByRole('button', { name: 'Dành cho IT' }).click();
-  await page.getByLabel('Tên tài khoản').fill(SA_USERNAME);
-  await page.getByLabel('Mật khẩu').fill(SA_PASSWORD);
+  // Một ô như QLTS/QLHS: tên không phải email → bước mật khẩu
+  await page.getByLabel('Email công ty').fill(SA_USERNAME);
+  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+  await page.getByLabel('Mật khẩu', { exact: true }).fill(SA_PASSWORD);
   const login = page.waitForResponse((r) => r.url().endsWith('/api/auth/sa-login'));
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   expect((await login).status()).toBe(200);

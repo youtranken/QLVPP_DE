@@ -14,7 +14,7 @@ let App: ComponentType;
 let navigateTo: ReturnType<typeof vi.fn>;
 
 // "PMH ID" dùng khoảng trắng không ngắt (không để "ID)" lẻ dòng)
-const PRIMARY = 'Đăng nhập bằng tài khoản công ty (PMH\u00a0ID)';
+const LOGIN_FIELD = 'Email công ty';
 
 describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', () => {
   beforeEach(async () => {
@@ -30,7 +30,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
 
   it('vào / chưa đăng nhập → màn đăng nhập, không thông báo hết hạn', async () => {
     renderWithI18n(<App />);
-    expect(await screen.findByRole('button', { name: PRIMARY })).toBeInTheDocument();
+    expect(await screen.findByLabelText(LOGIN_FIELD)).toBeInTheDocument();
     expect(screen.queryByText(/Phiên đã hết hạn/)).toBeNull();
     expect(navigateTo).not.toHaveBeenCalled();
   });
@@ -142,7 +142,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     expect(await screen.findByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
   });
 
-  it('/api/auth/me 503 SSO_UNAVAILABLE → màn đăng nhập kèm báo PMH ID không liên lạc được, mở được form SA', async () => {
+  it('/api/auth/me 503 SSO_UNAVAILABLE → màn đăng nhập kèm báo PMH ID không liên lạc được, nhập tài khoản nội bộ → bước mật khẩu', async () => {
     sessionStorage.setItem('vpp.auth.mode', 'sso');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(503, { code: 'SSO_UNAVAILABLE' })));
     renderWithI18n(<App />);
@@ -152,8 +152,8 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
       ),
     ).toBeInTheDocument();
     expect(navigateTo).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole('button', { name: 'Dành cho IT' }));
-    expect(screen.getByLabelText('Tên tài khoản')).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText(LOGIN_FIELD), 'vpp-sa{Enter}');
+    expect(screen.getByText('vpp-sa')).toBeInTheDocument();
     expect(screen.getByLabelText('Mật khẩu')).toBeInTheDocument();
   });
 });

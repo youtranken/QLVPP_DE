@@ -179,7 +179,7 @@ test.describe('E6-S4 song ngữ mọi màn PRD §8', () => {
     try {
       const guest = await englishPage(browser, info);
       pages.push(guest);
-      await check(guest, '/', () => expect(guest.getByRole('button', { name: 'Sign in with your company account (PMH ID)' })).toBeVisible());
+      await check(guest, '/', () => expect(guest.getByLabel('Company email')).toBeVisible());
       await check(guest, '/?login=forbidden', () => expect(guest.getByRole('button', { name: 'Sign in with another account' })).toBeVisible());
 
       const member = await englishPage(browser, info, { 'x-dev-user-sub': sub, 'x-dev-role': 'member' });
