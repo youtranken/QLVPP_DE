@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { fireEvent, jsonResponse, screen, userEvent, waitFor, within, optionLabels } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -65,13 +65,9 @@ async function open(mutate?: Mutate, units?: AdminUnit[]) {
 
 const table = () => within(screen.getByRole('table'));
 const rowOf = (name: string) => table().getByText(name, { selector: 'span' }).closest('tr') as HTMLElement;
-const names = () => table().getAllByRole('button', { name: /^Thao tác cho / }).map((b) => b.getAttribute('aria-label')!.replace('Thao tác cho ', ''));
-const openMenu = async (name: string) => {
-  await userEvent.click(screen.getByRole('button', { name: `Thao tác cho ${name}` }));
-  return within(screen.getByRole('menu', { name: `Thao tác cho ${name}` }));
-};
+const names = () => table().getAllByRole('button', { name: /^Sửa / }).map((b) => b.getAttribute('aria-label')!.replace('Sửa ', ''));
 const sortOn = () => userEvent.click(screen.getByRole('button', { name: 'Sắp xếp' }));
-const pick = async (name: string, item: string) => userEvent.click((await openMenu(name)).getByRole('menuitem', { name: item }));
+const pick = async (name: string, item: string) => userEvent.click(within(rowOf(name)).getByRole('button', { name: `${item} ${name}` }));
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -96,20 +92,29 @@ describe('Trang Đơn vị tính', () => {
     expect(screen.getByText('Danh sách đơn vị để chọn khi thêm món hoặc ghi Món khác.')).toBeInTheDocument();
   });
 
-  it('trạng thái chỉ một chỗ: chip "Tạm ngưng", không còn công tắc hay nút chữ "Xóa …" trong bảng', async () => {
+  it('trạng thái chỉ một chỗ: chip "Tạm ngưng", không còn công tắc trong bảng', async () => {
     await open();
     expect(table().queryAllByRole('switch')).toHaveLength(0);
-    expect(table().queryByRole('button', { name: /^Xóa/ })).toBeNull();
   });
 
-  it('menu ⋯: ĐVT đang dùng có món → "Sửa", "Tạm ngưng" (không có Xóa); chưa dùng → thêm "Xóa"; đã ngừng → "Dùng lại"', async () => {
+  it('thanh công cụ cùng khung với tab Nhóm: ô tìm · "Đang hiện x/y đơn vị" · Sắp xếp; gõ "hop" (không dấu) chỉ còn hộp', async () => {
     await open();
-    const items = async (name: string) => (await openMenu(name)).getAllByRole('menuitem').map((m) => m.textContent);
-    expect(await items('cái')).toEqual(['Sửa', 'Tạm ngưng']);
-    await userEvent.keyboard('{Escape}');
-    expect(await items('hộp')).toEqual(['Sửa', 'Tạm ngưng', 'Xóa']);
-    await userEvent.keyboard('{Escape}');
-    expect(await items('Cũ')).toEqual(['Sửa', 'Dùng lại', 'Xóa']);
+    const tools = document.querySelector('.setup-tools') as HTMLElement;
+    expect(within(tools).getByRole('searchbox', { name: 'Tìm đơn vị (không cần dấu)' })).toBeInTheDocument();
+    expect(within(tools).getByText('Đang hiện 3/3 đơn vị')).toBeInTheDocument();
+    expect(within(tools).getByRole('button', { name: 'Sắp xếp' })).toBeInTheDocument();
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm đơn vị (không cần dấu)' }), 'hop');
+    expect(names()).toEqual(['hộp']);
+    expect(screen.getByText('Đang hiện 1/3 đơn vị')).toBeInTheDocument();
+  });
+
+  it('nút chữ như tab Nhóm (không menu ⋯): ĐVT đang dùng → "Sửa", "Tạm ngưng" (không có Xóa); chưa dùng → thêm "Xóa"; đã ngừng → "Dùng lại"', async () => {
+    await open();
+    const items = (name: string) => within(rowOf(name)).getAllByRole('button').map((b) => b.textContent);
+    expect(items('cái')).toEqual(['Sửa', 'Tạm ngưng']);
+    expect(items('hộp')).toEqual(['Sửa', 'Tạm ngưng', 'Xóa']);
+    expect(items('Cũ')).toEqual(['Sửa', 'Dùng lại', 'Xóa']);
+    expect(table().queryByRole('button', { name: /^Thao tác cho/ })).toBeNull();
   });
 
   it('menu "Xóa" chỉ có ở ĐVT chưa dùng; xác nhận rồi DELETE admin/units/:code và hàng biến mất', async () => {
@@ -168,9 +173,9 @@ describe('Trang Đơn vị tính', () => {
     await waitFor(() => expect(within(rowOf('hộp')).getByText('Tạm ngưng')).toBeInTheDocument());
     await userEvent.click(within(screen.getByRole('navigation', { name: 'Menu quản lý' })).getByRole('link', { name: 'Sản phẩm' }));
     await userEvent.click((await screen.findAllByRole('button', { name: 'Thêm sản phẩm' }))[0]);
-    const select = await screen.findByLabelText(/Đơn vị tính/);
-    await waitFor(() => expect(within(select).getByRole('option', { name: 'cái' })).toBeInTheDocument());
-    expect(within(select).queryByRole('option', { name: 'hộp' })).toBeNull();
+    const select = await screen.findByRole('combobox', { name: /Đơn vị tính/ });
+    await waitFor(async () => expect(await optionLabels(select)).toContain('cái'));
+    expect(await optionLabels(select)).not.toContain('hộp');
   });
 
   it('menu "Sửa" mở hộp "Sửa đơn vị tính" điền sẵn; UNIT_EXISTS → lỗi tại ô Tên; lưu chỉ gửi trường đổi', async () => {

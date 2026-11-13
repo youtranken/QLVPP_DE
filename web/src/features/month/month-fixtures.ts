@@ -45,7 +45,7 @@ export const SENT_STATE = {
   sent: { id: 's-1', kind: 'print', created_at: '2026-11-08T04:50:00.000Z', items_count: 21, units_total: 143, replaces: null, data: {} },
   changed_after: false,
   changed_at: null,
-  delivered_since: {},
+  settled_since: {},
 };
 
 type Route = (url: string) => Response | undefined;

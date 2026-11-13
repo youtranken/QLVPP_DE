@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, renderWithI18n, screen, userEvent, within } from '@/test/test-utils';
+import { jsonResponse, renderWithI18n, screen, userEvent, within, pickOption } from '@/test/test-utils';
 import { ConfirmProvider } from '@/ui/confirm-provider';
 import { MeContext } from '@/lib/me';
 import i18n from '@/lib/i18n';
@@ -102,11 +102,11 @@ describe('CustomLineDialog', () => {
 
   it('mở mới: ĐVT chọn sẵn "cái", đổi được sang "cây"; chỉ cần tên là "Thêm vào phiếu" bấm được', async () => {
     const { onSubmit } = setup();
-    expect(await screen.findByLabelText('Đơn vị tính')).toHaveValue('cai');
+    expect(await screen.findByLabelText('Đơn vị tính')).toHaveTextContent('cái');
     expect(screen.getByRole('button', { name: 'Thêm vào phiếu' })).toBeDisabled();
     await userEvent.type(screen.getByLabelText('Tên món'), 'Bìa còng');
     expect(screen.getByRole('button', { name: 'Thêm vào phiếu' })).toBeEnabled();
-    await userEvent.selectOptions(screen.getByLabelText('Đơn vị tính'), 'cay');
+    await pickOption(screen.getByLabelText('Đơn vị tính'), 'cây');
     await userEvent.click(screen.getByRole('button', { name: 'Thêm vào phiếu' }));
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ custom_unit: 'cay' }));
   });
@@ -153,7 +153,9 @@ describe('CustomLineDialog', () => {
   it('ô Tên, ĐVT, Ghi chú dùng class rq-custom-input (chữ ≥ 16px để iOS không phóng to)', async () => {
     setup();
     await screen.findByRole('dialog', { name: 'Thêm món khác' });
-    for (const label of ['Tên món', 'Đơn vị tính', 'Ghi chú (tùy chọn)']) expect(screen.getByLabelText(label)).toHaveClass('rq-custom-input');
+    for (const label of ['Tên món', 'Ghi chú (tùy chọn)']) expect(screen.getByLabelText(label)).toHaveClass('rq-custom-input');
+    // ĐVT là ô chọn tự dựng: lớp nằm ở khung bọc nút
+    expect(screen.getByLabelText('Đơn vị tính').closest('.lb')).toHaveClass('rq-custom-input');
     const css = readFileSync(resolve(process.cwd(), 'src/features/request/request.m1.css'), 'utf8');
     expect(css).toMatch(/\.rq-custom-input \{[^}]*font-size: 16px/);
   });

@@ -98,13 +98,20 @@ export type RowKind = 'give' | 'adm' | 'skip';
 export interface DialogRow {
   line: DeliveryPersonLine;
   kind: RowKind;
-  reason?: 'review' | 'stock';
+  // notReceived: món ngoài DM đã duyệt nhưng hàng chưa về — vẫn nằm ở bảng giao (dòng mờ) để theo dõi như món danh mục
+  reason?: 'review' | 'stock' | 'notReceived';
   suggest: number;
   // "Giữ k cho m người đăng ký trước" khi phần giữ làm gợi ý nhỏ hơn trần
   held: { k: number; m: number } | null;
   // Tủ còn cho dòng này sau phần giữ cho người trước (nhãn ADM hết hàng)
   stockLeft: number;
 }
+
+// Món ngoài DM đã duyệt mà hàng chưa về (trần 0): nằm ở bảng giao để theo dõi nhưng không giao được
+export const isNotReceived = (r: Pick<DialogRow, 'reason'>) => r.reason === 'notReceived';
+// Một luật "giao được" cho nút thẻ, hộp, panel, giao nhiều phiếu: dòng giao từ tủ/hàng đã về, hoặc dòng NCC hết hàng (hủy phần thiếu).
+// Dòng chờ duyệt, tủ hết, chưa về không tính
+export const isDeliverable = (r: DialogRow) => r.kind === 'adm' || (r.kind === 'give' && !isNotReceived(r));
 
 const customCap = (l: DeliveryPersonLine) => Math.max(0, Math.min(l.remaining_qty, l.deliver_cap ?? l.remaining_qty));
 
@@ -116,6 +123,7 @@ function rowOf(l: DeliveryPersonLine, active: boolean, pr: Priority | undefined)
   const stockLeft = catalog ? Math.max(0, l.stock_qty! - (pr?.ahead_qty ?? 0)) : cap;
   const held = catalog && pr && pr.ahead_people > 0 && suggest < cap ? { k: Math.min(l.stock_qty!, pr.ahead_qty), m: pr.ahead_people } : null;
   if (l.adm_out) return { line: l, kind: 'adm', suggest, held, stockLeft };
+  if (cap === 0 && !catalog) return { line: l, kind: 'give', reason: 'notReceived', suggest: 0, held: null, stockLeft };
   if (cap === 0) return { line: l, kind: 'skip', reason: 'stock', suggest: 0, held: null, stockLeft };
   return { line: l, kind: 'give', suggest, held, stockLeft };
 }

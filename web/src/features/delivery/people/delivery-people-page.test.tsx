@@ -6,6 +6,7 @@ import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
+import { expectFixedColumns } from '@/test/fixed-columns';
 import type { DeliveryPerson } from './delivery-people.api';
 import { A, B, C, D, PEOPLE, person, pLine } from './people-fixtures';
 
@@ -96,6 +97,16 @@ describe('DeliveryPeoplePage — đầu trang và tab', () => {
     expect(names()).toEqual(['Đỗ Mai Linh']);
   });
 
+  it('cột cố định bề rộng (đổi tab không dời cột); "Xem" và nút giao chung một khối ô Thao tác', async () => {
+    stub();
+    open();
+    await screen.findByText('Nguyễn Văn An', { selector: '.pt-person b' });
+    expectFixedColumns(screen.getByRole('table'));
+    const acts = card('Nguyễn Văn An').querySelector('td.pt-acts > .pt-acts__in');
+    expect(acts?.children).toHaveLength(2);
+    expect(acts?.firstElementChild).toHaveAccessibleName(/^Xem/);
+  });
+
   it('không ai khớp → câu rỗng, không vỡ', async () => {
     stub();
     open('/admin/delivery?q=zzz');
@@ -153,6 +164,16 @@ describe('DeliveryPeoplePage — giao thiếu và tủ trống', () => {
     expect(within(card('Nam Hết Hàng')).getByRole('button', { name: /^Tủ chưa có hàng/ })).toBeDisabled();
     expect(within(card('Minh NCC Hết')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
     expect(within(card('Oanh Còn Một')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
+  });
+
+  it('chỉ còn món ngoài DM đã duyệt chưa về hàng (deliver_cap 0) → nút chính vô hiệu như tủ trống; đã về 1 → "Giao…"', async () => {
+    const wait = person({ user_sub: 'u-w', full_name: 'Vy Chờ Hàng', lines: [pLine({ line_id: 'lw', item_id: null, stock_qty: null, name: 'Bìa còng', review_status: 'accepted', deliver_cap: 0 })] });
+    const got = person({ user_sub: 'u-g', full_name: 'Giang Có Hàng', lines: [pLine({ line_id: 'lg', item_id: null, stock_qty: null, name: 'Bìa còng', review_status: 'accepted', deliver_cap: 1 })] });
+    stub({ people: [wait, got] });
+    open();
+    await screen.findByText('Vy Chờ Hàng', { selector: '.pt-person b' });
+    expect(within(card('Vy Chờ Hàng')).getByRole('button', { name: /^Tủ chưa có hàng/ })).toBeDisabled();
+    expect(within(card('Giang Có Hàng')).getByRole('button', { name: /^Giao…/ })).toBeEnabled();
   });
 });
 

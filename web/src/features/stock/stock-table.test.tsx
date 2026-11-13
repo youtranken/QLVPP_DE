@@ -35,10 +35,11 @@ describe('StockTable — Tủ/Kho theo người đang chờ', () => {
     expect(screen.queryByText('Hết hàng')).toBeNull();
   });
 
-  it('đỏ chỉ ở hàng hàng NCC về không đủ bù cho người chờ (short > 0): tủ 0 không ai cần, hàng về đủ bù không đỏ', async () => {
+  it('"Chờ hàng về n" luôn đỏ, kể cả khi hàng NCC về đủ bù; tủ 0 không ai cần không đỏ', async () => {
     await open();
     const red = document.querySelectorAll('tbody .tag--danger');
-    expect([...red].map((t) => t.textContent)).toEqual(['Chờ hàng về 3']);
+    expect([...red].map((t) => t.textContent)).toEqual(expect.arrayContaining(['Chờ hàng về 3', 'Chờ hàng về 5']));
+    expect([...red].every((t) => t.textContent?.startsWith('Chờ hàng về'))).toBe(true);
   });
 
   it('dòng không có nút "Nhập mua"; ⋯ = Xuất lẻ · Lịch sử nhập xuất · Nhập ngoài kỳ (tự mua lẻ) (không còn Kiểm kê) và mở hộp cùng tiêu đề', async () => {

@@ -1,10 +1,11 @@
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { apiErrorCode, apiErrorFields, apiErrorNumber } from '@/lib/api-error';
 import { useMe } from '@/lib/me';
 import { cutNote, noteLength } from '@/lib/note-text';
 import { useSingleFlight } from '@/lib/use-single-flight';
+import { ChoiceList } from '@/ui/choice-list';
 import { Dialog, DialogClose, DialogDescription, DialogTitle } from '@/ui/dialog';
 import { FormField } from '@/ui/form-field';
 import { Icon } from '@/ui/icon';
@@ -29,23 +30,7 @@ const KEY = 'delivery.backlog.cancelDialog';
 
 function ReasonChoice({ value, onChange }: { value: CancelReason | null; onChange: (r: CancelReason) => void }) {
   const { t } = useTranslation();
-  const id = useId();
-  return (
-    <div className="ff">
-      <span id={`${id}-label`} className="ff-label">
-        {t(`${KEY}.reason`)}
-        <span className="ff-req" aria-hidden="true"> *</span>
-      </span>
-      <div role="radiogroup" aria-labelledby={`${id}-label`} className="bl-reasons">
-        {CANCEL_REASONS.map((r) => (
-          <label key={r} className="bl-reason">
-            <input type="radio" name={`${id}-reason`} checked={value === r} onChange={() => onChange(r)} />
-            {t(`${KEY}.reasons.${r}`)}
-          </label>
-        ))}
-      </div>
-    </div>
-  );
+  return <ChoiceList label={t(`${KEY}.reason`)} required value={value} choices={CANCEL_REASONS.map((r) => ({ value: r, label: t(`${KEY}.reasons.${r}`) }))} onChange={onChange} />;
 }
 
 function useCancelForm(line: BacklogLine, initialReason: CancelReason | undefined) {
@@ -106,7 +91,10 @@ export function CancelDialog({ line, sentYm, initialReason, onDone, onStale, onC
     <Dialog open onOpenChange={(o) => !o && onClose()} dirty={form.note !== ''} dismissible={!flight.pending} className="sheet a-form" maxWidth={480}>
       <form onSubmit={submit} noValidate>
         <div className="sheet-header">
-          <DialogTitle className="sheet-title">{t(`${KEY}.title`, { n: owed, unit, name: f.name(line), person: f.person(line) })}</DialogTitle>
+          <DialogTitle className="sheet-title">
+            {/* Phần sắp bị hủy tô đỏ để đọc lướt vẫn thấy hủy cái gì */}
+            <Trans i18nKey={`${KEY}.title`} values={{ n: owed, unit, name: f.name(line), person: f.person(line) }} components={{ hl: <span className="bl-cancel-what" /> }} />
+          </DialogTitle>
           <DialogClose asChild>
             <button type="button" className="sheet-close" aria-label={t('common.close')} disabled={flight.pending}>
               <Icon name="x" />

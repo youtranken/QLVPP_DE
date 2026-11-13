@@ -57,6 +57,8 @@ export function ItemGrid({
     onQty(itemId, n);
   };
   const visible = applyFilters(items, { lines: [...lineByKey.values()] }, filter, i18n.language, favIds, categoryIds);
+  // Đang lọc một nhóm: mọi thẻ cùng nhóm nên nhãn nhóm trên thẻ không cho thêm thông tin, bỏ đi
+  const showGroup = filter.group === 'all';
   const pickedCount = useMemo(() => items.filter((i) => lineByKey.has(i.id)).length, [items, lineByKey]);
   return (
     <section className="rq-catalog" aria-label={t('request.grid.label')}>
@@ -80,7 +82,7 @@ export function ItemGrid({
             item={item}
             line={lineByKey.get(item.id)}
             tone={catInfo.get(item.category_id ?? '')?.tone ?? 'g0'}
-            groupLabel={catInfo.get(item.category_id ?? '')?.label ?? null}
+            groupLabel={showGroup ? (catInfo.get(item.category_id ?? '')?.label ?? null) : null}
             paused={!item.usable}
             onQty={(n) => changeQty(item.id, n)}
           />

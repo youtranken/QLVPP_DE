@@ -1,7 +1,6 @@
 const summary = {
   summary: {
     page: {
-      open: 'Đang mở',
       noMatch: 'Không có phiếu nào khớp',
       empty: 'Chưa có phiếu nào trong kỳ này.',
       noMatchHint: 'Đổi từ khóa hoặc bỏ lọc để xem lại cả kỳ.',

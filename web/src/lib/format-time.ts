@@ -1,14 +1,7 @@
-import { useTranslation } from 'react-i18next';
-
-// Giờ nghiệp vụ luôn theo giờ Việt Nam dù máy người xem ở múi giờ khác
+// Giờ nghiệp vụ luôn theo giờ Việt Nam dù máy người xem ở múi giờ khác; thứ tự hh:mm dd/mm/yyyy như nhau ở vi và en.
+// Luôn năm 4 số ("09:36 12/11/2026"): dateStyle 'short' của vi-VN ra năm 2 số, lệch với mọi chỗ khác ghi "12/11/2026"
 export function useFormatTime() {
-  const { i18n } = useTranslation();
-  const fmt = new Intl.DateTimeFormat(i18n.language === 'en' ? 'en-GB' : 'vi-VN', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-    timeZone: 'Asia/Ho_Chi_Minh',
-  });
-  return (iso: string) => fmt.format(new Date(iso));
+  return (iso: string) => formatVnStamp(iso, true);
 }
 
 const STAMP_PARTS = { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Ho_Chi_Minh' } as const;

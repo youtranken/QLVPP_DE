@@ -104,4 +104,33 @@ describe('RowMenu', () => {
     width.mockRestore();
     vi.unstubAllGlobals();
   });
+  it('mở bằng chuột: mục đầu nhận focus khi menu đã hiện (không còn visibility:hidden); Esc đóng, focus về nút', async () => {
+    const seen: string[] = [];
+    const focus = HTMLElement.prototype.focus;
+    const spy = vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function (this: HTMLElement, opts?: FocusOptions) {
+      // Trình duyệt thật bỏ qua focus() vào phần tử visibility:hidden — giả lập đúng điều đó
+      const menu = this.closest<HTMLElement>('[role="menu"]');
+      if (menu) seen.push(menu.style.visibility);
+      if (menu?.style.visibility === 'hidden') return;
+      focus.call(this, opts);
+    });
+    const { trigger } = setup();
+    await userEvent.click(trigger);
+    expect(seen[0]).toBe('');
+    expect(screen.getByRole('menuitem', { name: 'Sửa' })).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(trigger).toHaveFocus();
+    spy.mockRestore();
+  });
+
+  it('Esc vẫn đóng menu khi focus không nằm trong menu (còn ở nút ⋯)', async () => {
+    const { trigger } = setup();
+    await userEvent.click(trigger);
+    trigger.focus();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(trigger).toHaveFocus();
+  });
 });

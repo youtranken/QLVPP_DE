@@ -1,5 +1,8 @@
-/* VPP Công trình — token chung. Cả hai khung + màn đăng nhập dùng chung một font: Be Vietnam Pro. */
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&display=swap');
+/* VPP Công trình — token chung. Cả hai khung + màn đăng nhập dùng chung một font: Be Vietnam Pro (nạp ở index.html). */
+/* Font dự phòng chỉnh cỡ theo Be Vietnam Pro (đo bề ngang câu tiếng Việt và ascent/descent): lúc font thật chưa về,
+   chữ chiếm gần đúng chỗ nên khi đổi font không nhảy dòng. size-adjust = bề ngang BVP / Arial; override = số đo BVP / size-adjust. */
+@font-face { font-family: 'Be Vietnam Pro Fallback'; src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans'), local('Helvetica'); font-weight: 100 600; size-adjust: 107.9%; ascent-override: 92.7%; descent-override: 25%; line-gap-override: 0%; }
+@font-face { font-family: 'Be Vietnam Pro Fallback'; src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold'), local('Helvetica Bold'); font-weight: 700 900; size-adjust: 104%; ascent-override: 96.2%; descent-override: 26%; line-gap-override: 0%; }
 :root {
   /* --brand* cũ (xanh ngọc lục) trỏ sang token teal v2 — màn đăng nhập, khung nhân viên cũ dùng chung một màu nhấn */
   --brand: var(--c-acc); --brand-deep: var(--c-acc); --brand-soft: var(--c-acc-soft); --brand-ink: var(--c-acc-hover); --brand-line: var(--c-line-strong);
@@ -7,7 +10,7 @@
   --ok: #047857; --ok-soft: #d1fae5; --warn: #b45309; --warn-soft: #fef3c7; --danger: #b91c1c; --danger-soft: #fee2e2; --info: #1d4ed8; --info-soft: #dbeafe;
   --t1: #e0f2fe; --t1-ink: #0369a1; --t2: #fef3c7; --t2-ink: #b45309; --t3: #d1fae5; --t3-ink: #047857; --t4: #ede9fe; --t4-ink: #6d28d9;
   --side: #0f2a21; --side-ink: #b7cfc4;
-  --font-app: 'Be Vietnam Pro', system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-app: 'Be Vietnam Pro', 'Be Vietnam Pro Fallback', system-ui, -apple-system, "Segoe UI", sans-serif;
   --ring: var(--focus); /* Nút, chip, link dùng chung vòng --focus của bảng màu v2 */
 }
 * { box-sizing: border-box; } body { margin: 0; color: var(--ink); background: var(--bg); line-height: 1.45; -webkit-font-smoothing: antialiased; }

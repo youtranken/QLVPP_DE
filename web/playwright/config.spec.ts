@@ -16,7 +16,7 @@ const saved = (form: ReturnType<typeof block>) => expect(form.getByRole('status'
 // R-D8.19: đổi sang hạn hợp lệ thì hỏi lại, hộp lặp đúng câu kỳ áp dụng dưới ô
 async function confirmDeadline(page: Page) {
   const dialog = page.getByRole('dialog', { name: 'Đổi hạn đăng ký?' });
-  await expect(dialog.getByText(/^Kỳ tháng \d+ \(đang mở\) vẫn khóa 00:00 ngày \d\d\/\d\d\. Áp dụng từ kỳ tháng \d+: khóa 00:00 ngày \d\d\/\d\d\.$/)).toBeVisible();
+  await expect(dialog.getByText(/^Kỳ tháng \d+ \(đang mở\) vẫn khóa 00:00\sngày\s\d\d\/\d\d\. Áp dụng từ kỳ tháng \d+: khóa 00:00\sngày\s\d\d\/\d\d\.$/)).toBeVisible();
   await dialog.getByRole('button', { name: 'Lưu hạn mới' }).click();
 }
 const putBody = (page: Page) =>

@@ -3,10 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { logout } from '@/lib/auth-actions';
 import { initialsOf } from '@/lib/initials';
 import { useMe } from '@/lib/me';
+import { LanguageSwitch } from '@/ui/language-switch';
 import './profile.m1.css';
 
-// Nội dung tài khoản dùng chung cho hộp ở đầu trang (máy tính), sheet điện thoại và trang /me
-export function AccountContent() {
+// Nội dung tài khoản dùng chung cho hộp ở đầu trang (máy tính), sheet điện thoại và trang /me.
+// language: sheet điện thoại và /me có đổi ngôn ngữ (thanh trên ≤ 900 không còn VI/EN); hộp máy tính thì không, vì thanh trên đã có
+export function AccountContent({ language = false }: { language?: boolean }) {
   const { t } = useTranslation();
   const me = useMe();
   const [busy, setBusy] = useState(false);
@@ -42,6 +44,12 @@ export function AccountContent() {
           </div>
         ))}
       </dl>
+      {language && (
+        <div className="acct-lang">
+          <span className="acct-lang__label" aria-hidden="true">{t('common.languages.label')}</span>
+          <LanguageSwitch className="acct-lang__seg" />
+        </div>
+      )}
       {failed && (
         <p role="alert" className="pf-alert">
           {t('auth.logoutFailed')}

@@ -14,8 +14,8 @@ import {
   type RowData,
   type SortingState,
 } from '@tanstack/react-table';
-import { EmptyState, Loading } from '@/ui/load-state';
-import type { EmptyArtKind } from '@/ui/empty-art';
+import { Loading } from '@/ui/load-state';
+import { EmptyFrame, type EmptyFrameProps } from '@/ui/empty-frame';
 import { GroupHeaderRow, type GroupBy, type RowGroup } from '@/ui/data-table-group';
 import { BodyRow, EmptyAwareCell, SelectBox, type RowProps, type Selection } from '@/ui/data-table-row';
 import { SearchClear } from '@/ui/search-clear';
@@ -28,6 +28,8 @@ declare module '@tanstack/react-table' {
     // Bề rộng cột cố định (vd '12%', '56px'): có ở bất kỳ cột nào → bảng table-layout: fixed, cột không đổi chỗ khi đổi tab/lọc.
     // Cột chữ chính để trống → nhận phần còn lại
     width?: string;
+    // Sàn của cột chữ chính (không đặt width), rem; mặc định 12rem — bảng chạm sàn ở màn vừa thì cột này giữ đúng bề rộng này
+    minWidth?: string;
   }
 }
 
@@ -35,7 +37,8 @@ interface DataTableProps<T> {
   data: T[];
   columns: ColumnDef<T, unknown>[];
   emptyText: string;
-  empty?: { art?: EmptyArtKind; hint?: string; action?: ReactNode };
+  // Ô trống của bảng: cùng EmptyFrame với trang (biến thể "no-match" = kính lúp + Xóa lọc)
+  empty?: Omit<EmptyFrameProps, 'title' | 'flush'>;
   loading?: boolean;
   searchPlaceholder?: string;
   initialSort?: SortingState;
@@ -160,7 +163,7 @@ export function DataTable<T>({
             .join(' ')}
           data-density={density}
           aria-busy={busy}
-          style={fixed ? ({ '--dt-min': `${fixedMinWidth(leafColumns.map((c) => c.columnDef.meta?.width), !!selection)}rem` } as CSSProperties) : undefined}
+          style={fixed ? ({ '--dt-min': `${fixedMinWidth(leafColumns.map((c) => c.columnDef.meta?.width), !!selection, leafColumns.map((c) => c.columnDef.meta?.minWidth))}rem` } as CSSProperties) : undefined}
         >
           {fixed && (
             <colgroup>
@@ -224,7 +227,7 @@ export function DataTable<T>({
             {rows.length === 0 ? (
               <tr>
                 <td colSpan={colSpan}>
-                  {loading ? <Loading /> : <EmptyState title={emptyText} {...empty} />}
+                  {loading ? <Loading /> : <EmptyFrame flush title={emptyText} {...empty} />}
                 </td>
               </tr>
             ) : groups && groupBy ? (

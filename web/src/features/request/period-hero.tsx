@@ -23,7 +23,8 @@ export function PeriodHero({
   return (
     <section className="rq-hero" aria-labelledby="rq-hero-title">
       <div className="rq-hero-text">
-        <h1 id="rq-hero-title">{t('request.hero.title', { month: monthOf(period.ym) })}</h1>
+        {/* tabIndex -1: chỗ đặt focus khi thanh lưu nổi biến mất (giỏ trống) — xem focusPageHeading */}
+        <h1 id="rq-hero-title" tabIndex={-1}>{t('request.hero.title', { month: monthOf(period.ym) })}</h1>
         <p className="rq-sub">
           {sub}
           {last && period.is_open && <> <b className="rq-last">{t('request.hero.lastDay')}</b></>}

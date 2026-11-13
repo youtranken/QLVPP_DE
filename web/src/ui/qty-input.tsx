@@ -1,7 +1,6 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
-import { Icon } from './icon';
+import { StepperFrame } from './stepper';
 import { useSelectOnFocus } from './use-select-on-focus';
 
 type NativeProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type' | 'min' | 'max'>;
@@ -15,7 +14,7 @@ interface Props extends NativeProps {
   name?: string;
   min?: number;
   max: number;
-  // Nút tăng/giảm: ▲▼ trong viền ô trên máy tính, "− số +" trên điện thoại
+  // Có nút − / +: dùng khung Stepper chung (cỡ sm), như mọi ô tăng/giảm khác của app
   steppers?: boolean;
   invalid?: boolean;
   wrapClassName?: string;
@@ -29,7 +28,6 @@ export const QtyInput = forwardRef<HTMLInputElement, Props>(function QtyInput(
   ref,
 ) {
   const { t } = useTranslation();
-  const phone = useMediaQuery(ADMIN_PHONE_QUERY);
   const selectAll = useSelectOnFocus();
   const n = /^\d+$/.test(value.trim()) ? Number(value.trim()) : min;
   const step = (d: number) => onChange(String(clamp(n + d, min, max)));
@@ -60,37 +58,20 @@ export const QtyInput = forwardRef<HTMLInputElement, Props>(function QtyInput(
   );
   if (!steppers) return input;
   const itemLabel = name ?? label;
-  const button = (d: 1 | -1, children: React.ReactNode) => (
-    <button
-      type="button"
-      tabIndex={-1}
-      className={d > 0 ? 'qty-input__up' : 'qty-input__down'}
-      aria-label={t(d > 0 ? 'common.stepper.increase' : 'common.stepper.decrease', { label: itemLabel })}
-      disabled={d > 0 ? n >= max : n <= min}
-      // Giữ focus ở ô: bấm nút không làm ô mất focus (không chạy luật rời ô trống)
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={() => step(d)}
-    >
-      {children}
-    </button>
-  );
-  const cls = ['qty-input', wrapClassName, invalid ? 'is-invalid' : ''].filter(Boolean).join(' ');
-  if (phone) {
-    return (
-      <span className={cls} data-layout="stepper">
-        {button(-1, '−')}
-        {input}
-        {button(1, '+')}
-      </span>
-    );
-  }
   return (
-    <span className={cls} data-layout="spin">
+    <StepperFrame
+      size="sm"
+      className={wrapClassName}
+      invalid={invalid}
+      decLabel={t('common.stepper.decrease', { label: itemLabel })}
+      incLabel={t('common.stepper.increase', { label: itemLabel })}
+      canDec={n > min}
+      canInc={n < max}
+      // Giữ focus ở ô: bấm nút không làm ô mất focus (không chạy luật rời ô trống)
+      holdFocus
+      onStep={step}
+    >
       {input}
-      <span className="qty-input__spin">
-        {button(1, <Icon name="chevup" size={14} />)}
-        {button(-1, <Icon name="chev" size={14} />)}
-      </span>
-    </span>
+    </StepperFrame>
   );
 });

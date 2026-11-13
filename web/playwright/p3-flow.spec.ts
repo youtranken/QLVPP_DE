@@ -48,7 +48,7 @@ async function deliver(admin: Page, info: TestInfo, s: MonthSeed) {
   await expect(dialog).toHaveCount(0);
   expect(deliveryMovements(s.paper.id)).toBe('-3');
   expect(deliveryMovements(s.pen.id)).toBe('-2');
-  // Món ngoài DM đã duyệt, chưa có bản gửi ADM: giao cùng lượt, không trừ kho
+  // Món ngoài DM đã duyệt và đã về (seed ghi nhận 1): giao cùng lượt, không trừ kho
   expect(psql(`SELECT delivered_qty FROM request_lines WHERE custom_name = '${s.custom}'`)).toBe('1');
   await snap(admin, info, 'p3-delivered-all');
 }
@@ -207,10 +207,13 @@ async function cancelClip(admin: Page, info: TestInfo, s: MonthSeed) {
   await admin.goto('/admin/backlog');
   const group = debtRow(admin, s.glue.name);
   const line = group;
-  // "Hủy nợ" nằm trong menu ⋯ của dòng ở mọi bề rộng, không còn nút riêng
-  await expect(line.getByRole('button', { name: 'Hủy nợ' })).toHaveCount(0);
-  await line.getByRole('button', { name: `Thao tác khác ${s.glue.name} — ${s.b.name}` }).click();
-  await admin.getByRole('menu', { name: `Thao tác khác ${s.glue.name} — ${s.b.name}` }).getByRole('menuitem', { name: 'Hủy nợ' }).click();
+  // Máy tính: "Hủy nợ" là nút chữ phụ trên dòng; điện thoại: nằm trong menu ⋯ (cùng "Lịch sử giao")
+  if (isMobile(info)) {
+    await line.getByRole('button', { name: `Thao tác khác ${s.glue.name} — ${s.b.name}` }).click();
+    await admin.getByRole('menu', { name: `Thao tác khác ${s.glue.name} — ${s.b.name}` }).getByRole('menuitem', { name: 'Hủy nợ' }).click();
+  } else {
+    await line.getByRole('button', { name: `Hủy nợ ${s.glue.name} — ${s.b.name}` }).click();
+  }
   const dialog = admin.getByRole('dialog', { name: `Hủy nợ 3 cái ${s.glue.name} của ${s.b.name}?` });
   await dialog.getByRole('radio', { name: 'Khác', exact: true }).check();
   await dialog.getByRole('textbox', { name: /^Ghi chú/ }).fill('Không mua được');

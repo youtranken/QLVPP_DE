@@ -82,6 +82,15 @@ describe('V2D-4 changedAfter qua endpoint thật, đồng hồ đứng (R-X.1, R
       changed_at: iso(T + 1),
     });
   };
+  // Thao tác không đổi đơn (hệ quả của nhận/giao hàng kỳ này): trước, cùng và sau mốc bản đều không tính
+  const neverCounts = async (acts: Act[]) => {
+    for (const [i, act] of acts.entries()) {
+      expect(await at(T - 1 + i, act)).toMatchObject({
+        changed_after: false,
+        changed_at: null,
+      });
+    }
+  };
   // Món tủ 0 → số đề nghị > 0: bản chốt có hàng dù các món thử bị đánh dấu
   const base = async () =>
     seedLine(YM, B, { item_id: await f.stockItem(0), qty: 2 });
@@ -168,12 +177,12 @@ describe('V2D-4 changedAfter qua endpoint thật, đồng hồ đứng (R-X.1, R
     );
   });
 
-  it('line.cancel_remaining {reason_code: adm_out_of_stock}', async () => {
+  it('line.cancel_remaining {reason_code: adm_out_of_stock} không tính (hủy vì NCC hết hàng không đổi đơn)', async () => {
     await base();
     const lines = await itemLines(3);
     for (const { item } of lines) await f.markOut(YM, item).expect(200);
     await snapshotAtT();
-    await boundary(
+    await neverCounts(
       lines.map(
         ({ line }) =>
           () =>
@@ -188,11 +197,73 @@ describe('V2D-4 changedAfter qua endpoint thật, đồng hồ đứng (R-X.1, R
     );
   });
 
-  it('arrival.adm_out_marked', async () => {
+  // Hủy phần thiếu vì NCC hết hàng là hệ quả của nhận/giao hàng kỳ này, không đổi đơn: web cộng lại vào cần nay như phần đã giao
+  it('settled_since = giao + hủy NCC hết hàng sau bản trên dòng có trong căn cứ, theo khóa; cùng mốc bản hoặc dòng vào sau bản không cộng', async () => {
+    await base();
+    const item = await f.stockItem(1);
+    const line = await seedLine(YM, A, { item_id: item, qty: 3 });
+    const same = await seedLine(YM, B, { item_id: item, qty: 2 });
+    // Dòng có trong căn cứ lúc chốt: tạo trước bản (seed mang giờ thật, bản chốt ở năm 2000)
+    await pool().query(
+      'UPDATE request_lines SET created_at = $2::timestamptz WHERE id = ANY($1::uuid[])',
+      [[line, same], iso(T - 60_000)],
+    );
+    const other = await f.stockItem(0);
+    // Dòng vào sau bản (giờ thật > bản chốt năm 2000), món khác cùng NCC hết hàng: không có trong căn cứ
+    const late = await seedLine(YM, B, { item_id: other, qty: 4 });
+    await f.markOut(YM, item).expect(200);
+    await f.markOut(YM, other).expect(200);
+    await snapshotAtT();
+    const cancel = (id: string, delivered: number, qty: number) =>
+      f
+        .cancel(id, {
+          reason_code: 'adm_out_of_stock',
+          expected_delivered_qty: delivered,
+          expected_qty: qty,
+        })
+        .expect(200);
+    await at(T, () => cancel(same, 0, 2));
+    expect((await sendState(YM)).settled_since).toEqual({});
+    await at(T + 1, async () => {
+      await f.deliver(line, { qty: 1, expected_delivered_qty: 0 }).expect(200);
+      await cancel(line, 1, 3);
+      await cancel(late, 0, 4);
+    });
+    const state = await sendState(YM);
+    expect(state.settled_since).toEqual({ [item]: 3 });
+    expect(state).toMatchObject({ changed_after: false, changed_at: null });
+  });
+
+  // Nợ tháng trước hủy mã adm_out_of_stock khi khóa không đánh dấu đi đường hủy thường (audit không có cancelled_now): vẫn cộng theo before/after
+  it('settled_since cộng cả hủy nợ kỳ trước mã adm_out_of_stock (khóa không đánh dấu)', async () => {
+    await base();
+    await f.ensurePeriod(PREV);
+    const item = await f.stockItem(0);
+    const debt = await seedLine(PREV, A, { item_id: item, qty: 2 });
+    await pool().query(
+      'UPDATE request_lines SET created_at = $2::timestamptz WHERE id = $1',
+      [debt, iso(T - 60_000)],
+    );
+    await snapshotAtT();
+    await at(T + 1, () =>
+      f
+        .cancel(debt, {
+          reason_code: 'adm_out_of_stock',
+          expected_delivered_qty: 0,
+          expected_qty: 2,
+        })
+        .expect(200),
+    );
+    const state = await sendState(YM);
+    expect(state.settled_since).toEqual({ [item]: 2 });
+    expect(state).toMatchObject({ changed_after: false, changed_at: null });
+  });
+
+  it('arrival.adm_out_marked không tính (đánh dấu/đóng nợ NCC không đổi cần)', async () => {
     await base();
     const lines = await itemLines(3);
     await snapshotAtT();
-    await boundary(
+    await neverCounts(
       lines.map(
         ({ item }) =>
           () =>
@@ -201,12 +272,12 @@ describe('V2D-4 changedAfter qua endpoint thật, đồng hồ đứng (R-X.1, R
     );
   });
 
-  it('arrival.adm_out_unmarked', async () => {
+  it('arrival.adm_out_unmarked không tính (đánh dấu/đóng nợ NCC không đổi cần)', async () => {
     await base();
     const lines = await itemLines(3);
     for (const { item } of lines) await f.markOut(YM, item).expect(200);
     await snapshotAtT();
-    await boundary(
+    await neverCounts(
       lines.map(
         ({ item }) =>
           () =>
@@ -215,11 +286,11 @@ describe('V2D-4 changedAfter qua endpoint thật, đồng hồ đứng (R-X.1, R
     );
   });
 
-  it('arrival.adm_owed_closed', async () => {
+  it('arrival.adm_owed_closed không tính (đánh dấu/đóng nợ NCC không đổi cần)', async () => {
     await base();
     const lines = await itemLines(3);
     await snapshotAtT();
-    await boundary(
+    await neverCounts(
       lines.map(
         ({ item }) =>
           () =>
@@ -228,12 +299,12 @@ describe('V2D-4 changedAfter qua endpoint thật, đồng hồ đứng (R-X.1, R
     );
   });
 
-  it('arrival.adm_owed_reopened', async () => {
+  it('arrival.adm_owed_reopened không tính (đánh dấu/đóng nợ NCC không đổi cần)', async () => {
     await base();
     const lines = await itemLines(3);
     for (const { item } of lines) await f.closeOwed(YM, item).expect(200);
     await snapshotAtT();
-    await boundary(
+    await neverCounts(
       lines.map(
         ({ item }) =>
           () =>

@@ -131,7 +131,7 @@ describe('CartPanel', () => {
     await i18n.changeLanguage('en');
     try {
       show({ lines: [mk(1)], dirty: true });
-      expect(screen.getByRole('complementary', { name: 'Order for month 11' })).toBeInTheDocument();
+      expect(screen.getByRole('complementary', { name: 'Order for November' })).toBeInTheDocument();
       const a = screen.getByRole('complementary');
       expect(within(a).getByText('Item 1')).toBeInTheDocument();
       expect(within(a).queryByText('Món 1')).toBeNull();

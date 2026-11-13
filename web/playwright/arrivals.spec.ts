@@ -15,7 +15,7 @@ async function receivePicked(page: Page) {
 }
 
 test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
-  test('Vòng3-HV lưu thiếu rồi lưu nốt: gõ thiếu ra chữ "Nhập n · NCC còn nợ m", chip theo số đã lưu, cột Còn thiếu; nút nhóm "Nhận hàng"/"Nhận đủ hàng", không hộp xác nhận', async ({ page, request }, info) => {
+  test('Vòng3-HV lưu thiếu rồi lưu nốt: gõ thiếu ra hai dòng "Nhập: n" / "NCC còn nợ: m", chip theo số đã lưu, cột Còn thiếu luôn có; nút nhóm "Nhận hàng"/"Nhận đủ hàng", không hộp xác nhận', async ({ page, request }, info) => {
     // Kỳ riêng của PW: bản in thật của server (chỉ món PW), không ghi vào kỳ trước thật trên dev
     const release = await acquireLock('prev-period');
     clearPrivateSnapshots();
@@ -35,7 +35,10 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       await openOnPrivatePeriod(page);
       await page.goto(`/admin/arrivals?q=${encodeURIComponent(seed.tag)}`);
       await expect(page.getByRole('heading', { level: 1, name: `Nhận hàng kỳ tháng ${Number(seed.prevYm.slice(5))}` })).toBeVisible();
-      await expect(page.getByRole('link', { name: /^theo bản gửi NCC / })).toBeVisible();
+      await expect(page.getByText(/^Theo bản gửi NCC lúc .+ · Xem bản in$/)).toBeVisible();
+      await expect(page.getByRole('link', { name: 'Xem bản in', exact: true })).toBeVisible();
+      // Chưa chọn nhóm nào: không có dòng "Đã chọn …" và nút nhận hàng loạt
+      await expect(page.getByText(/^Đã chọn \d+ nhóm/)).toHaveCount(0);
       await expect(page.getByText(/^Đang hiện 2\/\d+ món$/)).toBeVisible();
       const boxA = page.getByRole('spinbutton', { name: `Nhận đợt này: ${a.name}` });
       const boxB = page.getByRole('spinbutton', { name: `Nhận đợt này: ${b.name}` });
@@ -43,12 +46,13 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
       await expect(boxB).toHaveValue('3');
 
       const rowA = page.getByRole('row').filter({ hasText: a.name });
-      await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toHaveCount(0);
+      await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toBeVisible();
       await expect(rowA.getByText('Thiếu 5', { exact: true })).toBeVisible();
       await boxA.fill('2');
       await boxB.fill('0');
       await expect(page.getByRole('columnheader', { name: 'Còn thiếu' })).toBeVisible();
-      await expect(rowA.getByText('Nhập 2 · NCC còn nợ 3')).toBeVisible();
+      await expect(rowA.getByText('Nhập: 2', { exact: true })).toBeVisible();
+      await expect(rowA.getByText('NCC còn nợ: 3', { exact: true })).toBeVisible();
       await expect(page.getByRole('button', { name: /^Nhận hàng: / })).toBeVisible();
       await settled(page);
       await shot(page, info, 'arrivals-partial');
@@ -56,6 +60,26 @@ test.describe('Nhận hàng theo bản in (Plan v2-D, Task 8)', () => {
         await expectNoContrastViolations(page);
         expect(await fitsWidth(page), 'trang không cuộn ngang ở 390').toBe(true);
       }
+
+      // Tick/bỏ tick nhóm chỉ là state cục bộ: "Đã chọn … · nút nhận hàng loạt" thế chỗ dòng đếm trên hàng ô tìm, bảng không xê dịch, không gửi gì
+      const tableTop = () => page.locator('.ar-card table').first().evaluate((el) => Math.round(el.getBoundingClientRect().top + window.scrollY));
+      const writes: string[] = [];
+      const onReq = (r: { method(): string; url(): string }) => {
+        if (r.method() !== 'GET') writes.push(`${r.method()} ${r.url()}`);
+      };
+      page.on('request', onReq);
+      const pick = page.getByRole('checkbox', { name: /^Chọn nhóm / }).first();
+      const top0 = await tableTop();
+      await pick.check();
+      await expect(page.getByText(/^Đã chọn 1 nhóm · \d+ món$/)).toBeVisible();
+      // Màn rộng: dòng đếm nhường chỗ; điện thoại: thanh nhận hàng loạt nổi ở đáy, dòng đếm ở lại
+      if (!isMobile(info)) await expect(page.getByText(/^Đang hiện \d+\/\d+ món$/)).toBeHidden();
+      expect(await tableTop(), 'tick nhóm không đẩy bảng').toBe(top0);
+      await pick.uncheck();
+      await expect(page.getByText(/^Đang hiện 2\/\d+ món$/)).toBeVisible();
+      expect(await tableTop(), 'bỏ tick không kéo bảng').toBe(top0);
+      page.off('request', onReq);
+      expect(writes, 'tick/bỏ tick không gửi lệnh ghi').toEqual([]);
 
       await receivePicked(page);
       await expect(page.getByRole('dialog')).toHaveCount(0);

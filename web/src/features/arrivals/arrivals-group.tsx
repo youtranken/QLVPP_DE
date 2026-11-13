@@ -9,13 +9,13 @@ import { groupCounts, partialReceive, shortOf, statusCell, type ArrivalState, ty
 import type { ArrivalsDraft } from './use-arrivals-draft';
 
 const THUMB_TONE: Tone = 'g0';
-const TAG_CLASS: Record<ArrivalState, string> = { short: 'tag--warn', over: 'tag--info', done: 'tag--ok', none: 'tag--outline', adm_out: 'tag--outline' };
+// NCC hết hàng là chip nhỏ: chữ dài hơn các chip khác, cỡ thường chiếm gần hết cột
+const TAG_CLASS: Record<ArrivalState, string> = { short: 'tag--warn', over: 'tag--info', done: 'tag--ok', none: 'tag--outline', adm_out: 'tag--outline tag--sm' };
 
 interface RowProps {
   r: ArrivalRow;
   draft: ArrivalsDraft;
   busy: boolean;
-  showShort: boolean;
   onToggleAdm: (r: ArrivalRow) => void;
 }
 
@@ -43,15 +43,21 @@ function stateText(t: TFunction, st: ArrivalStatus) {
   return t(`arrivals.status.${st.state}`, { n: st.n });
 }
 
-// Gõ thiếu: một dòng chữ đỏ (không phải chip) báo phần NCC còn nợ; còn lại là chip trạng thái
+// Gõ thiếu: chữ đỏ hai dòng (không phải chip) — số nhập, rồi phần NCC còn nợ; còn lại là chip trạng thái
 function StatusTag({ r, qty }: { r: ArrivalRow; qty: number }) {
   const { t } = useTranslation();
   const cell = statusCell(r, qty);
-  if (cell.kind === 'owe') return <span className="ar-owe">{t('arrivals.status.owe', { qty: cell.qty, n: cell.n })}</span>;
+  if (cell.kind === 'owe')
+    return (
+      <span className="ar-owe">
+        <span>{t('arrivals.status.oweIn', { qty: cell.qty })}</span>
+        <span>{t('arrivals.status.oweLeft', { n: cell.n })}</span>
+      </span>
+    );
   return <span className={`tag ${TAG_CLASS[cell.status.state]}`}>{stateText(t, cell.status)}</span>;
 }
 
-function ArrivalRowView({ r, draft, busy, showShort, onToggleAdm }: RowProps) {
+function ArrivalRowView({ r, draft, busy, onToggleAdm }: RowProps) {
   const { t } = useTranslation();
   // Bấm vào ô thì tô hết số để gõ đè
   const selectAll = useSelectOnFocus();
@@ -60,6 +66,7 @@ function ArrivalRowView({ r, draft, busy, showShort, onToggleAdm }: RowProps) {
   const name = fmt.name(r);
   const error = draft.errorOf(r);
   const qty = draft.qtyOf(r);
+  const short = shortOf(r, qty);
   const errId = `ar-err-${r.item_id}`;
   // Đã nhận đủ: khóa ô ở UI, sai thì chỉnh ở Tủ / Kho
   const locked = isReceivedFull(r);
@@ -117,11 +124,9 @@ function ArrivalRowView({ r, draft, busy, showShort, onToggleAdm }: RowProps) {
           </small>
         )}
       </td>
-      {showShort && (
-        <td className="n" data-label={t('arrivals.table.short')}>
-          {r.adm_out ? '–' : n(shortOf(r, qty))}
-        </td>
-      )}
+      <td className="n" data-label={t('arrivals.table.short')}>
+        {short > 0 ? n(short) : '—'}
+      </td>
       <td data-label={t('arrivals.table.status')}>
         <StatusTag r={r} qty={qty} />
       </td>
@@ -142,13 +147,12 @@ interface Props {
   section: ArrivalSection;
   draft: ArrivalsDraft;
   admBusy: ReadonlySet<string>;
-  showShort: boolean;
   columns: number;
   pick: GroupPick;
   onToggleAdm: (r: ArrivalRow) => void;
 }
 
-export function ArrivalsGroup({ section, draft, admBusy, showShort, columns, pick, onToggleAdm }: Props) {
+export function ArrivalsGroup({ section, draft, admBusy, columns, pick, onToggleAdm }: Props) {
   const { t } = useTranslation();
   const { done, total } = groupCounts(section.all);
   const partial = partialReceive(section.all, draft.qtyOf);
@@ -172,7 +176,7 @@ export function ArrivalsGroup({ section, draft, admBusy, showShort, columns, pic
             {open && (
               <button
                 type="button"
-                className="btn btn--sm"
+                className="btn btn--sm ar-ghead__btn"
                 aria-label={t(partial ? 'arrivals.group.receiveFor' : 'arrivals.group.receiveFullFor', { name: section.label })}
                 disabled={!pick.canReceive}
                 onClick={pick.onReceive}
@@ -184,7 +188,7 @@ export function ArrivalsGroup({ section, draft, admBusy, showShort, columns, pic
         </th>
       </tr>
       {section.rows.map((r) => (
-        <ArrivalRowView key={r.item_id} r={r} draft={draft} busy={admBusy.has(r.item_id)} showShort={showShort} onToggleAdm={onToggleAdm} />
+        <ArrivalRowView key={r.item_id} r={r} draft={draft} busy={admBusy.has(r.item_id)} onToggleAdm={onToggleAdm} />
       ))}
     </tbody>
   );

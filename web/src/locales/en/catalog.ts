@@ -136,7 +136,7 @@ const catalog: Messages<typeof vi> = {
       changes: '{{n}} unsaved changes',
       stock: 'Stock {{n}} {{unit}}',
       openStock: 'View in Stock',
-      registered: 'Month {{month}}: {{people}} requested',
+      registered: '{{month, MonthName}}: {{people}} requested',
       delete: 'Delete',
       deleteTitle: 'Delete {{name}}?',
       deleteBody: 'Only items never used in a request can be deleted; this cannot be undone.',

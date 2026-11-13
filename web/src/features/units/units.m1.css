@@ -1,13 +1,22 @@
 [data-shell='admin'] .un-name__text { color: var(--c-ink); font: var(--t-label); overflow-wrap: anywhere; }
 [data-shell='admin'] .un-name .tag { margin-left: var(--s-2); vertical-align: middle; }
 [data-shell='admin'] .un-name-en { overflow-wrap: anywhere; }
-[data-shell='admin'] .un-menu { width: 52px; text-align: right; }
+@media (min-width: 768px) {
+  /* Cùng bề rộng cột Tên EN với bảng Nhóm; cột Thao tác rộng hơn vì có thể có ba nút (Sửa · Tạm ngưng · Xóa) */
+  [data-shell='admin'] .un-col-reorder { width: 5.5rem; }
+  [data-shell='admin'] .un-col-en { width: 30%; }
+  [data-shell='admin'] .un-col-items { width: 9rem; }
+  [data-shell='admin'] .un-col-acts { width: 17.5rem; }
+  /* Tổng tối thiểu các cột (tên 10rem, tên EN 6rem): hẹp hơn thì cuộn ngang, không đè nút */
+  [data-shell='admin'] .un-table.table--fixed { min-width: 42.5rem; }
+  [data-shell='admin'] .un-table.table--fixed:has(.un-col-reorder) { min-width: 48rem; }
+}
 @media (max-width: 767px) {
-  [data-shell='admin'] .un-table tbody tr { position: relative; padding-right: 60px; }
   [data-shell='admin'] .table-stack td.un-name { flex: 1 1 100%; flex-wrap: wrap; gap: var(--s-1) var(--s-2); }
   [data-shell='admin'] .un-name .tag { margin-left: 0; }
   [data-shell='admin'] .table-stack td.un-name-en { flex: 1 1 100%; margin-top: -4px; color: var(--c-muted); }
   [data-shell='admin'] .un-table.table-stack td.un-name-en[data-label]::before { display: none; }
   [data-shell='admin'] .table-stack td.un-count { flex: 1 1 100%; justify-content: flex-start; }
-  [data-shell='admin'] .table-stack td.un-menu { position: absolute; top: 12px; right: 8px; width: auto; margin: 0; }
+  [data-shell='admin'] .un-table.table-stack td.acts { flex: 1 1 100%; }
+  [data-shell='admin'] .un-table.table-stack td.acts .acts__in { justify-content: flex-start; }
 }

@@ -47,7 +47,8 @@ test.describe('E0-S9 khung nhân viên (dev-identity member)', () => {
 
   test('E0-S9 member: đổi ngôn ngữ ở trang Tôi đổi toàn bộ nhãn', async ({ page }) => {
     await page.goto('/me');
-    await page.getByRole('radio', { name: 'English' }).click();
+    // Máy tính: thanh trên còn VI/EN ("EN – English"); chọn đúng mục ngôn ngữ của trang Tôi
+    await page.getByRole('radio', { name: 'English', exact: true }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'Me' })).toBeVisible();
     await page.reload();
     await expect(page.getByRole('heading', { level: 1, name: 'Me' })).toBeVisible();

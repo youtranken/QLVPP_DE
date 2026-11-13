@@ -150,7 +150,7 @@ export function AuditTable({ rows, loading, empty }: { rows: AuditEntry[]; loadi
         columns={columns}
         loading={loading}
         emptyText={empty.title}
-        empty={{ art: 'no-match', hint: empty.hint, action: empty.action }}
+        empty={{ variant: 'no-match', hint: empty.hint, action: empty.action }}
         groupBy={groupBy}
         expandedRow={(e) => (open.has(e.id) && canOpen(e) ? <AuditDetail entry={e} id={detailId(e.id)} /> : null)}
         rowProps={rowProps}

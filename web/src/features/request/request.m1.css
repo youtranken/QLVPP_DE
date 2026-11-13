@@ -45,6 +45,8 @@
   [data-shell='member'] .rq-recv-table th.rq-recv-name { grid-column: 1 / -1; }
   [data-shell='member'] .rq-recv-table td.num { text-align: left; }
   [data-shell='member'] .rq-recv-table td::before { content: attr(data-label) ': '; color: var(--c-muted); font: var(--t-sm); }
+  /* Ô không có giá trị (vd Ghi chú trống — bảng máy tính hiện "—"): thẻ ẩn cả ô, không để "Ghi chú:" trơ trọi */
+  [data-shell='member'] .rq-recv-table td:empty, [data-shell='member'] .rq-recv-table td[data-empty] { display: none; }
 }
 
 [data-shell='member'] .rq-frame { display: flex; flex-wrap: wrap; gap: var(--s-4); align-items: flex-start; }
@@ -184,9 +186,10 @@
 [data-shell='member'] .rq-cart-save.is-cancel { background: var(--c-surface); color: var(--c-dark); border-color: var(--c-dark); }
 [data-shell='member'] .rq-cart-cancel { min-height: 44px; font: var(--t-body); font-weight: 700; }
 [data-shell='member'] .rq-np-eyebrow { margin: 0 0 var(--s-1); color: var(--c-ink-2); font: var(--t-body); }
-/* Tháng mới và hạn chót là thứ người dùng phải nhớ: tô màu cảnh báo cho nổi giữa câu */
-[data-shell='member'] .rq-np-hl { color: var(--c-danger); font-style: normal; }
+/* Tháng mới và hạn chót là thứ người dùng phải nhớ: nổi bằng chữ đậm màu thương hiệu; đỏ để dành cho lỗi */
+[data-shell='member'] .rq-np-hl { color: var(--c-acc); font-style: normal; font-weight: 800; }
 [data-shell='member'] .rq-np-prev { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3); border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface-2); color: var(--c-ink); font: var(--t-body); }
-[data-shell='member'] .rq-np-prev a { margin-left: auto; color: var(--c-acc); font: var(--t-label); text-decoration: none; }
+/* Link "Xem phiếu": một dòng, vùng chạm 44px như các nút khác */
+[data-shell='member'] .rq-np-prev a { display: inline-flex; flex: none; align-items: center; min-height: 44px; margin-left: auto; padding-inline: var(--s-2); border-radius: var(--r-pill); color: var(--c-acc); font: var(--t-label); text-decoration: none; white-space: nowrap; }
 [data-shell='member'] .rq-np-prev a:hover { text-decoration: underline; }
 [data-shell='member'] .rq-newperiod .sheet-footer { justify-content: flex-end; flex-wrap: wrap; }

@@ -40,7 +40,27 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       const row = page.getByRole('row').filter({ hasText: a.name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
       const group = page.getByRole('row').filter({ hasText: seed.name }).filter({ hasText: 'PW Phòng giao' });
       await expect(group).toContainText('PW Phòng giao');
-      await expect(page.getByRole('row').filter({ hasText: /^Tháng \d+\/\d{4} · \d+ người · \d+ đơn vị$/ }).first()).toBeVisible();
+      // Tóm tắt kỳ nằm cuối thanh công cụ (một tháng: "Tháng m/yyyy · …"; nhiều tháng: "n tháng · …" và mỗi tháng một dải tiêu đề)
+      await expect(page.getByRole('status').filter({ hasText: /^(Tháng \d+\/\d{4}|\d+ tháng) · \d+ người · \d+ đơn vị$/ })).toBeVisible();
+      // Tóm tắt không bao giờ bị cắt: thiếu chỗ thì xuống một dòng riêng canh phải (đo ở các bề rộng hay gặp, rồi trả lại khung cũ)
+      const summary = page.locator('.bl-summary');
+      const vp = page.viewportSize();
+      for (const width of isMobile(info) ? [390, 360] : [1024, 1280, 1440]) {
+        await page.setViewportSize({ width, height: vp?.height ?? 800 });
+        // Đo nét chữ (Range trên text node) chứ không đo hộp phần tử: chữ chạm mép thẻ bảng thì mắt thấy như bị cắt
+        const fit = await summary.evaluate((el) => {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          const textRight = Math.max(...[...range.getClientRects()].map((r) => r.right));
+          const table = document.querySelector('.bl-table')!.getBoundingClientRect();
+          const bar = el.closest('.bl-bar')!;
+          return { inside: el.scrollWidth <= el.clientWidth, gap: table.right - textRight, barSW: bar.scrollWidth, barCW: bar.clientWidth };
+        });
+        expect(fit.inside, `tóm tắt không tràn chính nó ở ${width}`).toBe(true);
+        expect(fit.gap, `mép chữ tóm tắt lùi ≥ 12px so với mép phải thẻ bảng ở ${width}`).toBeGreaterThanOrEqual(11.5);
+        expect(fit.barSW, `thanh công cụ không tràn ở ${width}`).toBeLessThanOrEqual(fit.barCW);
+      }
+      if (vp) await page.setViewportSize(vp);
       // Cột: Món · ĐVT · Đăng ký · Đã giao · Còn nợ · Tủ còn · Thao tác
       await expect(row.getByRole('cell').nth(2)).toHaveText('3');
       await expect(row.getByRole('cell').nth(3)).toHaveText('1');
@@ -96,10 +116,13 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       await snap(page, info, 'backlog-history');
       await drawer.getByRole('button', { name: 'Đóng' }).click();
 
-      // Hủy nợ chỉ nằm trong menu ⋯ của dòng ở mọi bề rộng
-      await expect(row.getByRole('button', { name: 'Hủy nợ' })).toHaveCount(0);
-      await row.getByRole('button', { name: `Thao tác khác ${a.name} — ${seed.name}` }).click();
-      await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();
+      // Máy tính: "Hủy nợ" là nút chữ phụ trên dòng; điện thoại: nằm trong menu ⋯
+      if (isMobile(info)) {
+        await row.getByRole('button', { name: `Thao tác khác ${a.name} — ${seed.name}` }).click();
+        await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();
+      } else {
+        await row.getByRole('button', { name: `Hủy nợ ${a.name} — ${seed.name}` }).click();
+      }
       const cancel = page.getByRole('dialog', { name: `Hủy nợ 1 cái ${a.name} của ${seed.name}?` });
       const reason = cancel.getByRole('textbox', { name: /^Ghi chú/ });
       const submit = cancel.getByRole('button', { name: 'Hủy nợ', exact: true });
@@ -141,7 +164,7 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
     }
   });
 
-  test('V2D-11 Còn nợ chỉ có nợ tháng trước; ?left=1 lọc người đã nghỉ, Hủy nợ qua ⋯ chọn sẵn "Người đã nghỉ"', async ({ page, request }, info) => {
+  test('V2D-11 Còn nợ chỉ có nợ tháng trước; ?left=1 lọc người đã nghỉ, Hủy nợ (nút chữ ở máy tính, ⋯ ở điện thoại) chọn sẵn "Người đã nghỉ"', async ({ page, request }, info) => {
     const release = await acquireLock('prev-period');
     const seeds: Seed[] = [];
     try {
@@ -154,9 +177,15 @@ test.describe('E4 còn nợ (kỳ trước đã khóa, dev-identity admin)', () 
       const debtRow = page.getByRole('row').filter({ hasText: debt.items[0].name }).filter({ has: page.getByRole('button', { name: 'Giao bổ sung' }) });
       await expect(debtRow).toHaveCount(1);
       await expect(page.getByRole('row').filter({ hasText: current.items[0].name })).toHaveCount(0);
-      await expect(debtRow.getByRole('button', { name: 'Hủy nợ' })).toHaveCount(0);
-      await debtRow.getByRole('button', { name: `Thao tác khác ${debt.items[0].name} — ${debt.name}` }).click();
-      await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();
+      // Máy tính: "Hủy nợ" là nút chữ trên dòng; điện thoại: nằm trong menu ⋯
+      if (isMobile(info)) {
+        await expect(debtRow.getByRole('button', { name: /^Hủy nợ/ })).toHaveCount(0);
+        await debtRow.getByRole('button', { name: `Thao tác khác ${debt.items[0].name} — ${debt.name}` }).click();
+        await page.getByRole('menuitem', { name: 'Hủy nợ' }).click();
+      } else {
+        await expect(debtRow.getByRole('button', { name: /^Thao tác khác/ })).toHaveCount(0);
+        await debtRow.getByRole('button', { name: `Hủy nợ ${debt.items[0].name} — ${debt.name}`, exact: true }).click();
+      }
       const cancel = page.getByRole('dialog', { name: `Hủy nợ 2 cái ${debt.items[0].name} của ${debt.name}?` });
       await expect(cancel.getByRole('radio', { name: 'Người đã nghỉ' })).toBeChecked();
       await expect(cancel.getByRole('button', { name: 'Quay lại' })).toBeVisible();

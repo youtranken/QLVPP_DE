@@ -105,7 +105,7 @@ describe('V2D-5 hàng ngoài danh mục đã về: custom-receipts, trần giao 
     ]);
   });
 
-  it('khóa ngoài DM không có trong bản in → trần = còn lại, custom_tracked false; POST custom-receipts → 404 ITEM_NOT_FOUND', async () => {
+  it('khóa ngoài DM không có trong bản in → chưa về nên trần 0, custom_tracked false; POST custom-receipts → 404 ITEM_NOT_FOUND (gửi lại NCC rồi mới nhận được)', async () => {
     await seedPrinted();
     const own = await f.seedLine(
       YM,
@@ -114,7 +114,7 @@ describe('V2D-5 hàng ngoài danh mục đã về: custom-receipts, trần giao 
     );
     expect(await lineView(own)).toMatchObject({
       custom_tracked: false,
-      deliver_cap: 2,
+      deliver_cap: 0,
       remaining_qty: 2,
     });
     await customReceive(YM, {
@@ -262,14 +262,87 @@ describe('V2D-5 hàng ngoài danh mục đã về: custom-receipts, trần giao 
       expect(await f.line(y)).toMatchObject({ delivered_qty: 0 });
     });
 
-    it('khóa ngoài DM không có trong bản in → không giới hạn theo hàng đã về', async () => {
+    it('giao nhiều phiếu cùng trần: chưa về → phiếu lỗi CUSTOM_NOT_RECEIVED, không giao; về 2 → giao 2 cho A trong một lần gọi', async () => {
+      const { key, x } = await seedTracked();
+      const requestOf = async (id: string) =>
+        (
+          await f
+            .pool()
+            .query<{ request_id: string }>(
+              'SELECT request_id FROM request_lines WHERE id = $1',
+              [id],
+            )
+        ).rows[0].request_id;
+      const rid = await requestOf(x);
+      const bulk = (qty: number) =>
+        f
+          .as(f.http().post('/api/admin/deliveries/bulk'), ADMIN, 'admin')
+          .send({
+            requests: [
+              {
+                request_id: rid,
+                lines: [{ line_id: x, qty, expected_delivered_qty: 0 }],
+              },
+            ],
+          })
+          .expect(200);
+      const none = (await bulk(1)).body as { results: object[] };
+      expect(none.results[0]).toMatchObject({
+        ok: false,
+        code: 'CUSTOM_NOT_RECEIVED',
+        available: 0,
+      });
+      expect(await f.line(x)).toMatchObject({ delivered_qty: 0 });
+      await receive(key, 2, 0).expect(201);
+      expect((await bulk(2)).body.results[0]).toMatchObject({
+        ok: true,
+        delivered_units: 2,
+      });
+      expect((await lineView(x))?.deliver_cap).toBe(0);
+    });
+
+    // Chủ app: món ngoài DM đã duyệt chỉ giao sau khi hàng về — kể cả khóa duyệt sau khi gửi NCC (không có trong bản, chưa nhận được)
+    it('khóa ngoài DM không có trong bản in → chưa về nên không giao được (409 CUSTOM_NOT_RECEIVED {available: 0}), trần 0', async () => {
       await seedTracked();
       const own = await f.seedLine(
         YM,
         A,
         f.customCols(f.customName('Tự mua riêng'), 2),
       );
-      await f.deliver(own, { qty: 2, expected_delivered_qty: 0 }).expect(200);
+      const res = await f
+        .deliver(own, { qty: 1, expected_delivered_qty: 0 })
+        .expect(409);
+      expect(res.body).toMatchObject({
+        code: 'CUSTOM_NOT_RECEIVED',
+        available: 0,
+      });
+      expect(await lineView(own)).toMatchObject({
+        custom_tracked: false,
+        deliver_cap: 0,
+      });
+      const { rows } = await f
+        .pool()
+        .query<{ request_id: string }>(
+          'SELECT request_id FROM request_lines WHERE id = $1',
+          [own],
+        );
+      const bulk = await f
+        .as(f.http().post('/api/admin/deliveries/bulk'), ADMIN, 'admin')
+        .send({
+          requests: [
+            {
+              request_id: rows[0].request_id,
+              lines: [{ line_id: own, qty: 1, expected_delivered_qty: 0 }],
+            },
+          ],
+        })
+        .expect(200);
+      expect((bulk.body as { results: object[] }).results[0]).toMatchObject({
+        ok: false,
+        code: 'CUSTOM_NOT_RECEIVED',
+        available: 0,
+      });
+      expect(await f.line(own)).toMatchObject({ delivered_qty: 0 });
     });
   });
 });

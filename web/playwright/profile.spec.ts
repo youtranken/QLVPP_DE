@@ -29,22 +29,33 @@ test.describe('V2C-T7 hộp tài khoản nhân viên', () => {
         expect((await box.getByRole('button', { name: 'Đăng xuất' }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
         await expectNoContrastViolations(page);
       }
-      // Vòng 4: hộp tài khoản bỏ phần ngôn ngữ — đổi ngôn ngữ ở nút VI/EN trên đầu trang
-      await expect(box.getByRole('radio')).toHaveCount(0);
-      await page.keyboard.press('Escape');
-      await expect(box).toBeHidden();
-      const header = page.getByRole('banner');
-      const en = header.getByRole('radio', { name: 'EN – English' });
-      if (isMobile(info)) expect((await en.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-      await en.click();
-      await expect(header.getByRole('radio', { name: 'EN – English' })).toHaveAttribute('aria-checked', 'true');
-      if (isMobile(info)) await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: 'Me' }).click();
-      else await page.getByRole('button', { name: `Open account for ${name}` }).click();
-      await expect(page.getByRole('dialog', { name: 'Account' })).toBeVisible();
-      if (isMobile(info)) await expectNoContrastViolations(page);
-      await page.keyboard.press('Escape');
-      await header.getByRole('radio', { name: 'VI – Tiếng Việt' }).click();
-      await expect(header.getByRole('radio', { name: 'VI – Tiếng Việt' })).toHaveAttribute('aria-checked', 'true');
+      if (isMobile(info)) {
+        // Thanh trên điện thoại không còn VI/EN: đổi ngôn ngữ ngay trong sheet "Tôi"
+        await expect(page.getByRole('banner').getByRole('radio')).toHaveCount(0);
+        const en = box.getByRole('radio', { name: 'English', exact: true });
+        expect((await en.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+        await en.click();
+        const boxEn = page.getByRole('dialog', { name: 'Account' });
+        await expect(boxEn.getByRole('radio', { name: 'English', exact: true })).toHaveAttribute('aria-checked', 'true');
+        await expectNoContrastViolations(page);
+        await boxEn.getByRole('radio', { name: 'Tiếng Việt', exact: true }).click();
+        await expect(box.getByRole('radio', { name: 'Tiếng Việt', exact: true })).toHaveAttribute('aria-checked', 'true');
+        await page.keyboard.press('Escape');
+        await expect(box).toBeHidden();
+      } else {
+        // Máy tính: hộp tài khoản không có phần ngôn ngữ — đổi ở nút VI/EN trên đầu trang
+        await expect(box.getByRole('radio')).toHaveCount(0);
+        await page.keyboard.press('Escape');
+        await expect(box).toBeHidden();
+        const header = page.getByRole('banner');
+        await header.getByRole('radio', { name: 'EN – English' }).click();
+        await expect(header.getByRole('radio', { name: 'EN – English' })).toHaveAttribute('aria-checked', 'true');
+        await page.getByRole('button', { name: `Open account for ${name}` }).click();
+        await expect(page.getByRole('dialog', { name: 'Account' })).toBeVisible();
+        await page.keyboard.press('Escape');
+        await header.getByRole('radio', { name: 'VI – Tiếng Việt' }).click();
+        await expect(header.getByRole('radio', { name: 'VI – Tiếng Việt' })).toHaveAttribute('aria-checked', 'true');
+      }
     } finally {
       deleteTestUsers(sub);
     }

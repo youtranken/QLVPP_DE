@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BrowserRouter, useLocation } from 'react-router-dom';
-import { act, jsonResponse, renderWithI18n, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { act, jsonResponse, renderWithI18n, screen, userEvent, waitFor, within, pickOption } from '@/test/test-utils';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { MeContext } from '@/lib/me';
@@ -75,7 +75,7 @@ describe('Panel món trong BrowserRouter — tự đóng không vướng chặn 
     stubDrawerApi((url, init) => (url === '/api/admin/items' && init.method === 'POST' ? jsonResponse(201, { ...PEN, id: 'i-new' }) : undefined));
     const panel = await openPanel(null);
     await userEvent.type(within(panel).getByLabelText(/^Tên sản phẩm/), 'Bút chì');
-    await userEvent.selectOptions(within(panel).getByLabelText(/^Đơn vị tính/), 'cây');
+    await pickOption(within(panel).getByLabelText(/^Đơn vị tính/), 'cây');
     await userEvent.upload(within(panel).getByLabelText('Chụp hoặc chọn ảnh'), png());
     await within(panel).findByRole('img', { name: 'Ảnh món' });
     await userEvent.click(within(panel).getByRole('button', { name: 'Thêm món' }));

@@ -3,15 +3,16 @@ import type { Messages } from '@/locales/messages';
 
 const month: Messages<typeof vi> = {
   month: {
-    title: 'Month {{month}}',
+    title: '{{month, MonthName}} period',
     search: 'Search people or departments',
     period: {
       label: 'Choose period',
-      locked: 'Delivering period (month {{month}})',
-      open: 'Sign-up period (month {{month}})',
-      older: 'Month {{month}}/{{year}}',
-      previous: 'Previous month',
-      previousLabel: 'Previous month: {{month}}/{{year}}',
+      month: '{{month, MonthName}} {{year}}',
+      prev: 'Previous month',
+      next: 'Next month',
+      status: { locked: 'Delivering', open: 'Signing up', past: 'Past' },
+      toOpen: '{{month, MonthName}} sign-up',
+      toLocked: '{{month, MonthName}} delivery',
     },
     steps: {
       label: 'Steps of the month',
@@ -43,7 +44,7 @@ const month: Messages<typeof vi> = {
       overMax: 'Over maximum',
       adjusted: 'D&E Admin adjusted',
       nothing: 'Nothing to deliver',
-      custom: 'Off-catalogue item',
+      custom: 'Off-catalog item',
     },
     left: {
       action: 'Handle',

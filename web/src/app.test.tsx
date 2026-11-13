@@ -13,7 +13,8 @@ vi.mock('@/lib/navigate', () => ({ navigateTo: vi.fn() }));
 let App: ComponentType;
 let navigateTo: ReturnType<typeof vi.fn>;
 
-const PRIMARY = 'Đăng nhập bằng tài khoản công ty (PMH ID)';
+// "PMH ID" dùng khoảng trắng không ngắt (không để "ID)" lẻ dòng)
+const PRIMARY = 'Đăng nhập bằng tài khoản công ty (PMH\u00a0ID)';
 
 describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', () => {
   beforeEach(async () => {

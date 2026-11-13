@@ -61,7 +61,11 @@ describe('ItemCard', () => {
   });
   it('hiện "Tối đa N đvt/tháng" (đơn vị trong giới hạn) và ghi chú gói; tên đầy đủ nằm ở title', () => {
     view(undefined);
-    expect(screen.getByText('Tối đa 5 cây/tháng')).toBeInTheDocument();
+    const limit = document.querySelector('.rq-card-unit')!;
+    expect(limit).toHaveTextContent('Tối đa 5 cây/tháng');
+    // "/tháng" tách riêng để thẻ hẹp (360) ẩn khỏi mắt mà trình đọc vẫn đọc — đơn vị luôn nằm ở phần chính
+    expect(limit.querySelector('.rq-card-per')).toHaveTextContent('/tháng');
+    expect(limit.firstChild!.textContent).toBe('Tối đa 5 cây');
     expect(screen.getByText(/hộp 10/)).toBeInTheDocument();
     expect(screen.getByTitle('Bút bi xanh')).toBeInTheDocument();
   });
@@ -85,7 +89,7 @@ describe('ItemCard — tiếng Anh', () => {
       view(undefined);
       expect(screen.getByText('Blue pen')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Add to order: Blue pen' })).toBeInTheDocument();
-      expect(screen.getByText(/^Max 5 \S+\/month$/)).toBeInTheDocument();
+      expect(document.querySelector('.rq-card-unit')!.textContent).toMatch(/^Max 5 \S+\/month$/);
     } finally {
       await i18n.changeLanguage('vi');
     }

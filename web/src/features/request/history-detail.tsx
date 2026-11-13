@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { formatVnStamp, vnSavedStamp } from '@/lib/format-time';
+import { EmptyValue } from '@/ui/empty-cell';
 import { EmptyState, LoadError, Loading } from '@/ui/load-state';
 import { useCurrentPeriod, useMyRequest, type LineView, type RequestView } from './request.api';
 import { AdjustmentsBlock, RemovedAllNote } from './history-adjustments';
@@ -16,13 +17,23 @@ function cancelNote(l: LineView, t: ReturnType<typeof useTranslation>['t']): str
   return reason ? t(`request.history.${base}Why`, { n: l.cancelled_qty, reason }) : t(`request.history.${base}`, { n: l.cancelled_qty });
 }
 
-function NoteCell({ row, line }: { row: ReceiveRow; line: LineView | undefined }) {
-  const { t } = useTranslation();
+type T = ReturnType<typeof useTranslation>['t'];
+
+function noteParts(row: ReceiveRow, line: LineView | undefined, t: T): string[] {
   const parts: string[] = [];
   if (row.reason) parts.push(t('request.history.removedNote', { reason: row.reason }));
   if (row.received > 0 && row.receivedAt) parts.push(t('request.history.receivedAt', { at: formatVnStamp(row.receivedAt) }));
   const cancelled = line ? cancelNote(line, t) : null;
   if (cancelled) parts.push(cancelled);
+  return parts;
+}
+
+// Ô Ghi chú có gì để hiện: dòng chữ hoặc nhãn duyệt món ngoài danh mục (ReviewTag trả null cho món trong danh mục)
+const hasNote = (row: ReceiveRow, line: LineView | undefined, t: T) => noteParts(row, line, t).length > 0 || (!!line && line.review_status !== 'n/a');
+
+function NoteCell({ row, line }: { row: ReceiveRow; line: LineView | undefined }) {
+  const { t } = useTranslation();
+  const parts = noteParts(row, line, t);
   return (
     <>
       {parts.map((p, i) => (
@@ -43,8 +54,20 @@ function Table({ view }: { view: RequestView }) {
   const lineById = new Map(view.lines.map((l) => [l.id, l]));
   // Dòng ngoài danh mục còn chờ xem / bị từ chối không có hàng: vẫn liệt kê kèm nhãn của Hành chính
   const held = view.lines.filter((l) => l.review_status === 'pending' || l.review_status === 'rejected');
+  // Cột Ghi chú luôn có (bỏ cột khi cả tháng trống làm mọi cột dời khi đổi tháng); ô trống hiện "—" như mọi ô trống khác,
+  // dạng thẻ điện thoại ẩn cả ô (td[data-empty]) để không còn nhãn "Ghi chú:" trơ trọi
   return (
     <table className="rq-recv-table hs-table">
+      {/* Bề rộng cột đặt ở history.m1.css (theo bề rộng màn): đổi tháng thì cột không co giãn theo chữ, cột Món nhận phần còn lại */}
+      <colgroup>
+        <col />
+        <col className="hs-c-unit" />
+        <col className="hs-c-reg" />
+        <col className="hs-c-give" />
+        <col className="hs-c-recv" />
+        <col className="hs-c-st" />
+        <col className="hs-c-note" />
+      </colgroup>
       <thead>
         <tr>
           {['colItem', 'colUnit', 'colRegistered', 'colToGive', 'colReceived', 'colStatus'].map((k) => (
@@ -66,7 +89,15 @@ function Table({ view }: { view: RequestView }) {
             <td data-label={t('request.receive.colToGive')} className="num">{r.toGive}</td>
             <td data-label={t('request.receive.colReceived')} className="num">{r.received}</td>
             <td data-label={t('request.receive.colStatus')}><ReceiveStatus row={r} /></td>
-            <td data-label={t('request.history.colNote')} className="hs-note"><NoteCell row={r} line={lineById.get(r.id)} /></td>
+            {hasNote(r, lineById.get(r.id), t) ? (
+              <td data-label={t('request.history.colNote')} className="hs-note">
+                <NoteCell row={r} line={lineById.get(r.id)} />
+              </td>
+            ) : (
+              <td data-label={t('request.history.colNote')} className="hs-note" data-empty="">
+                <EmptyValue />
+              </td>
+            )}
           </tr>
         ))}
         {held.map((l) => (

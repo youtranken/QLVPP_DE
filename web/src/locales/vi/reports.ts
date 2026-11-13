@@ -6,6 +6,7 @@ const reports = {
       monthNav: 'Chọn tháng báo cáo',
       prevMonth: 'Tháng trước',
       nextMonth: 'Tháng sau',
+      openNotReady: 'Tháng {{month}} đang đăng ký — báo cáo sau {{lockPhrase}}',
       fixCells_one: 'Còn {{count}} ô Đề nghị cần sửa trước khi chốt.',
       fixCells_other: 'Còn {{count}} ô Đề nghị cần sửa trước khi chốt.',
       error: {
@@ -99,6 +100,9 @@ const reports = {
       excel: 'Xuất Excel',
       preview: 'Xem tổng kết',
       colWho: 'Ai đăng ký',
+      whoLoading: 'Đang tải số người',
+      whoUnknown: 'Chưa tải được số người',
+      whoFailed: 'Chưa tải được ai đăng ký từng món.',
       who: '{{count}} người',
       whoLabel: 'Xem ai đăng ký {{name}} ({{count}} người)',
       changedTag: 'Đổi sau bản in',

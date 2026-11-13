@@ -17,7 +17,9 @@ export function makeReadable(t: TFunction, exists: (key: string) => boolean, per
     if (typeof original === 'boolean') return t(original ? 'audit.detail.yes' : 'audit.detail.no');
     // Ghi chú duyệt lưu mã lý do app tự ghi (auto:<mã>): hiện câu dễ đọc theo ngôn ngữ người xem
     if (key === 'review_note' && typeof original === 'string') return reviewNoteText(original, t) ?? readableValue(original);
-    return readableValue(original);
+    // Mảng/chuỗi rỗng (vd deleted_detected: []) đọc thành '' → coi như không có giá trị để ô hiện "—"
+    const text = readableValue(original);
+    return text === '' ? null : text;
   };
   return { shown, value };
 }

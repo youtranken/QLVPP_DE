@@ -11,6 +11,12 @@ export function ScrollFade({ className, children }: { className?: string; childr
       if (more) el.dataset.more = '';
       else delete el.dataset.more;
     };
+    // Mục đang chọn nằm khuất bên phải (vd. tab "Tất cả" ở 360) thì cuộn tới cho thấy, chỉ lần đầu vẽ
+    const current = el.querySelector<HTMLElement>('[aria-checked="true"], [aria-pressed="true"], [aria-selected="true"]');
+    if (current) {
+      const overflow = current.getBoundingClientRect().right - el.getBoundingClientRect().right;
+      if (overflow > 0) el.scrollLeft += overflow + 16;
+    }
     update();
     el.addEventListener('scroll', update, { passive: true });
     const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);

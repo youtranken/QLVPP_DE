@@ -1,5 +1,5 @@
 import type { BulkDeliverBody, DeliveryPerson, DeliveryPersonLine } from './delivery-people.api';
-import { dialogRows, limitsOf, priorityOf } from './deliver-plan';
+import { dialogRows, isDeliverable, limitsOf, priorityOf } from './deliver-plan';
 
 export interface BulkSummary {
   user_sub: string;
@@ -33,7 +33,7 @@ export function bulkPlan(selected: DeliveryPerson[], people: DeliveryPerson[]): 
   const plan: BulkPlan = { body: { requests: [] }, skipped: [], summary: [], owners: {}, pending: [] };
   for (const p of selected) {
     const all = dialogRows(p, priority);
-    const rows = all.filter((r) => r.kind === 'give');
+    const rows = all.filter((r) => r.kind === 'give' && isDeliverable(r));
     const lim = limitsOf(rows, Object.fromEntries(rows.map((r) => [r.line.line_id, r.suggest])));
     const given = rows.filter((r) => (lim[r.line.line_id]?.value ?? 0) > 0);
     if (given.length === 0) {

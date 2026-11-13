@@ -37,6 +37,7 @@ export function NoLockedPeriod() {
     : undefined;
   return (
     <EmptyFrame
+      art="period-locked"
       title={t('summary.gate.noneTitle')}
       hint={hint}
       action={<OpenRegistrationsLink className="btn" ym={open.ym} />}

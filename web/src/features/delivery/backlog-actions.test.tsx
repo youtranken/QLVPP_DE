@@ -21,8 +21,7 @@ const rowOf = async (text: string) => {
   return bodyRows().find((r) => r.textContent?.includes(text) || within(r).queryAllByRole('button', { name: new RegExp(text) }).length > 0)!;
 };
 const openCancel = async (who: string) => {
-  await userEvent.click(within(await rowOf(who)).getByRole('button', { name: `Thao tác khác Bút bi xanh — ${who}` }));
-  await userEvent.click(screen.getByRole('menuitem', { name: 'Hủy nợ' }));
+  await userEvent.click(within(await rowOf(who)).getByRole('button', { name: `Hủy nợ Bút bi xanh — ${who}` }));
 };
 const pickReason = (name: string) => userEvent.click(within(screen.getByRole('radiogroup', { name: 'Lý do hủy nợ' })).getByRole('radio', { name }));
 const hasItem = (name: string) => screen.queryAllByText(name, { selector: '.bl-item b' }).length > 0;
@@ -70,15 +69,16 @@ describe('BacklogPage — thao tác trên dòng', () => {
     await waitFor(() => expect(hasItem('Bút bi xanh')).toBe(false));
   });
 
-  it('1280: dòng không có nút "Hủy nợ" trực tiếp; menu ⋯ có "Hủy nợ" (đỏ); chọn lý do "Người nhận không cần nữa" → dòng biến mất, dòng khác còn, toast "Đã hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức"', async () => {
+  it('1280: "Hủy nợ" là nút chữ phụ ngay trên dòng (không còn menu ⋯ một mục); chọn lý do "Người nhận không cần nữa" → dòng biến mất, dòng khác còn, toast "Đã hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức"', async () => {
     const f = stubBacklog([PEN_DUC, PEN_LAN]);
     openPage();
     const row = await rowOf('Phạm Văn Đức');
-    expect(within(row).queryByRole('button', { name: 'Hủy nợ' })).toBeNull();
     expect(within(row).getByRole('button', { name: 'Giao bổ sung' })).toBeInTheDocument();
-    await userEvent.click(within(row).getByRole('button', { name: 'Thao tác khác Bút bi xanh — Phạm Văn Đức' }));
-    expect(screen.getByRole('menuitem', { name: 'Hủy nợ' })).toHaveClass('row-menu__item--danger');
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Hủy nợ' }));
+    expect(within(row).queryByRole('button', { name: /^Thao tác khác/ })).toBeNull();
+    const cancel = within(row).getByRole('button', { name: 'Hủy nợ Bút bi xanh — Phạm Văn Đức' });
+    expect(cancel).toHaveClass('btn--ghost');
+    expect(cancel).toHaveTextContent('Hủy nợ');
+    await userEvent.click(cancel);
     expect(screen.getByRole('dialog', { name: 'Hủy nợ 3 cây Bút bi xanh của Phạm Văn Đức?' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Hủy nợ' })).toBeDisabled();
     await pickReason('Người nhận không cần nữa');

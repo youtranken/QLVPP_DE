@@ -296,6 +296,7 @@ describe('GET admin/backlog, GET admin/lines/:id/deliveries', () => {
     at(BEFORE_DEADLINE);
     const { line } = await customLine();
     await review(line.id, { action: 'accept' }).expect(200);
+    await f.receiveCustom(line.id, 2);
     freeze('2026-11-12T03:00:00Z');
     expect((await deliveries(line.id).expect(200)).body.items).toEqual([]);
     await deliver(line.id, { qty: 1, expected_delivered_qty: 0 }).expect(200);

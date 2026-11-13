@@ -32,7 +32,10 @@ function Actions({ line, phone, onAction }: { line: BacklogLine; phone: boolean;
           <button type="button" className="btn btn--sm btn--ghost bl-icon-btn" aria-label={label} title={label} onClick={() => onAction('history', line)}>
             <Icon name="history" size={18} />
           </button>
-          <RowMenu label={t('delivery.backlog.moreOf', who)} items={[cancel]} />
+          {/* Chỉ một thao tác phụ: nút chữ thấy ngay, không giấu sau menu ⋯ một mục */}
+          <button type="button" className="btn btn--sm btn--ghost bl-cancel" aria-label={t('delivery.backlog.cancelOf', who)} onClick={() => onAction('cancel', line)}>
+            {t('delivery.backlog.cancel')}
+          </button>
         </>
       )}
     </span>
@@ -102,11 +105,14 @@ export function BacklogMonthTable({ months, onAction }: { months: BacklogMonth[]
         </thead>
         {months.map((m) => (
           <tbody key={m.ym}>
+            {/* Một tháng thì dòng tóm tắt đã nằm trên thanh công cụ; nhiều tháng mới cần dải tháng ngăn từng nhóm */}
+            {months.length > 1 && (
             <tr className="dt-group">
               <th scope="rowgroup" colSpan={COLUMNS.length}>
                 {t('delivery.backlog.monthHead', { month: f.month(m.ym), people: m.people.length, units: m.owed_units })}
               </th>
             </tr>
+            )}
             {m.people.map((p) => (
               <PersonRows key={p.user_sub} person={p} phone={phone} onAction={onAction} />
             ))}

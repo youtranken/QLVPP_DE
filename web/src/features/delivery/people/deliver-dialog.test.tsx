@@ -125,6 +125,40 @@ describe('DeliverDialog — trần stepper', () => {
     expect(within(dialog()).getByText('Kéo cắt')).toBeInTheDocument();
   });
 
+  it('món ngoài DM đã duyệt: đã nhận 2 → ở bảng giao có stepper tới 2; chưa nhận gì → dòng mờ ở bảng giao "Chưa nhận hàng", không ở "Không giao lần này"', async () => {
+    stub();
+    open(
+      person({
+        lines: [
+          pLine(),
+          pLine({ line_id: 'got', item_id: null, stock_qty: null, name: 'Bìa còng', review_status: 'accepted', qty: 3, remaining_qty: 3, deliver_cap: 2, sort_order: null }),
+          pLine({ line_id: 'wait', item_id: null, stock_qty: null, name: '#%$#', review_status: 'accepted', qty: 1, remaining_qty: 1, deliver_cap: 0, sort_order: null }),
+        ],
+      }),
+    );
+    const table = await within(dialog()).findByRole('table');
+    expect(spin('Bìa còng')).toHaveValue(2);
+    expect(spin('Bìa còng')).toHaveAttribute('max', '2');
+    const waitRow = within(table).getByRole('row', { name: /#%\$#/ });
+    expect(waitRow).toHaveClass('dd-row--off');
+    expect(within(waitRow).getByText('Chưa nhận hàng')).toBeInTheDocument();
+    expect(within(waitRow).getByText('Cần 1')).toBeInTheDocument();
+    expect(within(waitRow).queryByRole('spinbutton')).toBeNull();
+    expect(within(dialog()).queryByText('Không giao lần này')).toBeNull();
+    expect(within(dialog()).getByText(/Giao 5 · còn 2 chưa nhận/)).toBeInTheDocument();
+  });
+
+  it('tủ trống + món ngoài DM chưa về → vẫn gọn "Tủ chưa có hàng…", món chưa về liệt kê bên dưới (mờ, "Chưa nhận hàng"); Xác nhận tắt', async () => {
+    stub();
+    open(person({ lines: [pLine({ stock_qty: 0 }), pLine({ line_id: 'wait', item_id: null, stock_qty: null, name: '#%$#', review_status: 'accepted', qty: 1, remaining_qty: 1, deliver_cap: 0, sort_order: null })] }));
+    expect(await within(dialog()).findByText('Tủ chưa có hàng cho món nào — ghi Nhận hàng trước.')).toBeInTheDocument();
+    const waitRow = within(dialog()).getByRole('row', { name: /#%\$#/ });
+    expect(waitRow).toHaveClass('dd-row--off');
+    expect(within(waitRow).getByText('Chưa nhận hàng')).toBeInTheDocument();
+    expect(within(dialog()).queryByRole('row', { name: /Bút bi xanh/ })).toBeNull();
+    expect(confirmBtn()).toBeDisabled();
+  });
+
   it('tổng 0 nhưng có 1 dòng NCC hết hàng → Xác nhận bật, tổng có "Hủy 1 món NCC hết hàng"', async () => {
     stub();
     open(person({ lines: [pLine({ stock_qty: 0 }), pLine({ line_id: 'm', item_id: 'i-clip', stock_qty: 0, adm_out: true })] }));

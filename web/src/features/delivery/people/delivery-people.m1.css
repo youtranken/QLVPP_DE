@@ -41,8 +41,9 @@
 [data-shell='admin'] .pp-tabs__scroll::-webkit-scrollbar { display: none; }
 [data-shell='admin'] .pp-tabs__scroll[data-more] { mask-image: linear-gradient(to right, black calc(100% - 40px), transparent); }
 @media (max-width: 767px) {
-  [data-shell='admin'] .pp-tabs .seg-m1 { display: flex; width: 100%; gap: 0; }
-  [data-shell='admin'] .pp-tabs .seg-m1 button { flex: 1; padding: 0 var(--s-1); gap: var(--s-1); font: var(--t-cap); }
+  /* Đủ chỗ thì bốn tab chia đều cả hàng; 360 không đủ thì giữ đệm 12px và cuộn ngang (mép mờ của ScrollFade), không ép chữ chạm mép viên */
+  [data-shell='admin'] .pp-tabs .seg-m1 { display: flex; width: max-content; min-width: 100%; gap: 0; }
+  [data-shell='admin'] .pp-tabs .seg-m1 button { flex: 1 0 auto; padding: 0 var(--s-3); gap: var(--s-1); font: var(--t-cap); }
   [data-shell='admin'] .pp-tabs .seg-m1 em { padding: 1px var(--s-2); }
 }
 [data-shell='admin'] .pp-row__main > :first-child { grid-row: span 2; align-self: start; }
@@ -73,6 +74,9 @@
 [data-shell='admin'] .dd-max { display: block; margin-top: var(--s-1); font: var(--t-cap); }
 [data-shell='admin'] .dd-step { width: 132px; }
 [data-shell='admin'] .dd-none { font: var(--t-cap); font-weight: 700; color: var(--c-danger); }
+/* Món ngoài DM chưa về hàng: vẫn ở bảng giao để theo dõi, nhưng mờ đi vì chưa giao được */
+[data-shell='admin'] .dd-row--off td { color: var(--c-muted); }
+[data-shell='admin'] .dd-row--off .dd-none { color: var(--c-muted); }
 [data-shell='admin'] .dd-left { color: var(--c-warn); font: var(--t-cap); font-weight: 700; }
 [data-shell='admin'] .dd-group h3 { margin: 0 0 var(--s-2); font: var(--t-label); color: var(--c-ink-2); }
 [data-shell='admin'] .dd-group--adm { padding: var(--s-3); border-radius: var(--r-md); background: var(--c-warn-soft); }
@@ -101,19 +105,18 @@
   [data-shell='admin'] .dd-step button, [data-shell='admin'] .dd-step input { min-height: 44px; }
 }
 
-[data-shell='admin'] .pt-table td.pt-pick, [data-shell='admin'] .pt-table th.pt-pick { width: 40px; text-align: center; }
-[data-shell='admin'] .pt-table td.pt-pick input, [data-shell='admin'] .pt-table th.pt-pick input { accent-color: var(--c-acc); }
-@media (min-width: 768px) {
-  [data-shell='admin'] .pt-table td.pt-pick input, [data-shell='admin'] .pt-table th.pt-pick input { width: 18px; height: 18px; }
-}
+/* Ô chọn vẽ và nới vùng bấm 44px ở css/m1/table.css; cột rộng đúng vùng bấm */
+[data-shell='admin'] .pt-table td.pt-pick, [data-shell='admin'] .pt-table th.pt-pick { width: var(--hit); padding-inline: 0; text-align: center; }
 [data-shell='admin'] .pt-table tr.is-picked td { background: var(--c-surface-2); }
 [data-shell='admin'] .pt-person { display: flex; align-items: center; gap: var(--s-2); }
 [data-shell='admin'] .pt-person .pp-avatar { width: 28px; height: 28px; font: var(--t-micro); font-weight: 800; }
 [data-shell='admin'] .pt-status { display: grid; gap: var(--s-1); justify-items: start; }
 [data-shell='admin'] .pt-chips { display: flex; flex-wrap: wrap; gap: var(--s-1); }
+[data-shell='admin'] .pt-chips .pp-chip { white-space: nowrap; }
 [data-shell='admin'] .pt-debt { color: var(--c-warn); font: var(--t-cap); font-weight: 700; }
-[data-shell='admin'] .pt-table td.pt-acts { white-space: nowrap; }
-[data-shell='admin'] .pt-table td.pt-acts .btn + .btn { margin-left: var(--s-2); }
+/* "Xem" bám mép trái cột, nút giao bám mép phải: "Xem" thẳng hàng giữa các dòng dù nút sau dài ngắn khác nhau */
+[data-shell='admin'] .pt-acts__in { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-2); }
+[data-shell='admin'] .pt-acts__in > :last-child { margin-left: auto; }
 [data-shell='admin'] .pt-table td.pt-acts .btn:disabled { cursor: default; }
 [data-shell='admin'] .pt-bulk { display: flex; align-items: center; gap: var(--s-3); margin-left: auto; }
 [data-shell='admin'] .bd-list { display: grid; gap: var(--s-2); margin: 0; padding: 0; list-style: none; }
@@ -134,12 +137,12 @@
   [data-shell='admin'] .pt-table .pt-person { flex: 1; min-height: var(--hit); }
 }
 @media (max-width: 767px) {
-  [data-shell='admin'] .pt-pickall input[type='checkbox'], [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox'] { appearance: none; display: grid; place-content: center; flex: none; width: var(--hit); height: var(--hit); margin: 0; background: none; }
-  [data-shell='admin'] .pt-pickall input[type='checkbox']::before, [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox']::before { content: ''; width: 20px; height: 20px; border: 2px solid var(--c-line-input); border-radius: var(--r-xs); background: var(--c-surface); box-sizing: border-box; }
-  [data-shell='admin'] .pt-pickall input[type='checkbox']:checked::before, [data-shell='admin'] .pt-pickall input[type='checkbox']:indeterminate::before, [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox']:checked::before, [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox']:indeterminate::before { border-color: var(--c-acc); background: var(--c-acc) center / 14px no-repeat; }
-  [data-shell='admin'] .pt-pickall input[type='checkbox']:checked::before, [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox']:checked::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
-  [data-shell='admin'] .pt-pickall input[type='checkbox']:indeterminate::before, [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox']:indeterminate::before { background-image: linear-gradient(white, white); background-size: 10px 2px; }
-  [data-shell='admin'] .pt-pickall input[type='checkbox']:focus-visible, [data-shell='admin'] .pt-table td.pt-pick input[type='checkbox']:focus-visible { box-shadow: var(--focus); border-radius: var(--r-sm); }
+  [data-shell='admin'] .pt-pickall input[type='checkbox'] { appearance: none; display: grid; place-content: center; flex: none; width: var(--hit); height: var(--hit); margin: 0; border: 0; border-radius: var(--r-sm); background: none; }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']::before { content: ''; width: 20px; height: 20px; border: 2px solid var(--c-line-input); border-radius: var(--r-xs); background: var(--c-surface); box-sizing: border-box; }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']:checked::before, [data-shell='admin'] .pt-pickall input[type='checkbox']:indeterminate::before { border-color: var(--c-acc); background: var(--c-acc) center / 14px no-repeat; }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']:checked::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']:indeterminate::before { background-image: linear-gradient(white, white); background-size: 10px 2px; }
+  [data-shell='admin'] .pt-pickall input[type='checkbox']:focus-visible { box-shadow: var(--focus); border-radius: var(--r-sm); }
   [data-shell='admin'] .pt-bulk { position: sticky; bottom: 0; z-index: 2; width: 100%; justify-content: space-between; padding: var(--s-3) 0; background: var(--c-page); }
   [data-shell='admin'] .pt-bulk .btn--primary { flex: 1; }
 }

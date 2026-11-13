@@ -3,6 +3,7 @@ import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-ut
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
+import { stubRequestApi } from '@/test/request-api-stub';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -27,7 +28,8 @@ describe('MemberShell', () => {
     const sheet = screen.getByRole('dialog', { name: 'Tài khoản' });
     expect(sheet).toHaveClass('sheet--bottom');
     expect(screen.getByTestId('location')).toHaveTextContent('/');
-    expect(within(sheet).queryByRole('radiogroup')).toBeNull();
+    // Thanh trên ≤ 900 không còn VI/EN: đổi ngôn ngữ nằm trong sheet "Tôi"
+    expect(within(sheet).getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
     expect(within(sheet).getByRole('button', { name: 'Đăng xuất' })).toHaveClass('btn--danger');
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
@@ -40,7 +42,16 @@ describe('MemberShell', () => {
     expect(within(screen.getByRole('navigation', { name: 'Điều hướng chính' })).getByRole('button', { name: 'Tôi' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it.each([390, 1280])('%i px: header có nút đổi ngôn ngữ VI/EN đứng trước chuông', (width) => {
+  it.each([360, 390, 900])('%i px: thanh trên chỉ còn tên app + chuông (không VI/EN, không avatar) để tên app không bị cắt', (width) => {
+    mockViewport(width);
+    renderApp(makeMe('member'), '/');
+    const banner = screen.getByRole('banner');
+    expect(within(banner).queryByRole('radiogroup')).toBeNull();
+    expect(banner.querySelector('.m-avatar')).toBeNull();
+    expect(within(banner).getByRole('button', { name: /^Thông báo/ })).toBeInTheDocument();
+  });
+
+  it.each([1280])('%i px: header có nút đổi ngôn ngữ VI/EN đứng trước chuông', (width) => {
     mockViewport(width);
     renderApp(makeMe('member'), '/');
     const banner = screen.getByRole('banner');
@@ -122,7 +133,7 @@ describe('MemberShell', () => {
     expect(within(tabs).getByRole('link', { name: 'Lịch sử' })).not.toHaveAttribute('aria-current');
   });
 
-  it('1280 px: khối avatar hiện chữ đầu, tên và phòng; 390 px chỉ còn chữ đầu', () => {
+  it('1280 px: khối avatar hiện chữ đầu, tên và phòng; 390 px không có avatar trên thanh trên (tài khoản ở "Tôi")', () => {
     mockViewport(1280);
     const { unmount } = renderApp(makeMe('member'), '/');
     const banner = screen.getByRole('banner');
@@ -133,7 +144,7 @@ describe('MemberShell', () => {
     mockViewport(390);
     renderApp(makeMe('member'), '/');
     expect(within(screen.getByRole('banner')).queryByText('Phòng Công trình')).toBeNull();
-    expect(within(screen.getByRole('banner')).getByText('NA')).toBeInTheDocument();
+    expect(within(screen.getByRole('banner')).queryByText('NA')).toBeNull();
   });
 
   it('chữ đầu avatar bỏ từ không bắt đầu bằng chữ: "Nguyễn Thị Lan (demo)" → "NL" (không ra "N(")', () => {
@@ -176,5 +187,17 @@ describe('MemberShell', () => {
       expect(within(nav).getAllByRole('link')).toHaveLength(2);
       expect(within(nav).getAllByRole('button')).toHaveLength(1);
     }
+  });
+  it.each([390, 1280])('%i px: mọi <use href> trong khung nhân viên trỏ tới một symbol có thật (nút xóa ô tìm có dấu ×)', async (w) => {
+    mockViewport(w);
+    stubRequestApi();
+    renderApp(makeMe('member'), '/');
+    const search = await screen.findByRole('searchbox', { name: 'Tìm món' });
+    await userEvent.type(search, 'xyz');
+    const uses = [...document.querySelectorAll('use')];
+    expect(uses.length).toBeGreaterThan(0);
+    const missing = uses.map((u) => u.getAttribute('href') ?? '').filter((href) => !href.startsWith('#') || !document.getElementById(href.slice(1)));
+    expect(missing).toEqual([]);
+    expect(document.querySelector('.search-clear use')?.getAttribute('href')).toBe('#u-x');
   });
 });

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { initialsOf } from '@/lib/initials';
 import { useMe } from '@/lib/me';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
+import { IconSprite } from '@/ui/icon-sprite';
 import { LanguageSwitch } from '@/ui/language-switch';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { AccountMenu } from '@/shell/account-menu';
@@ -27,17 +28,17 @@ export function MemberShell() {
   const avatar = (
     <>
       <span className="m-avatar__ini" aria-hidden="true">{initials(me.fullName, me.sub)}</span>
-      {!narrow && (
-        <span className="m-avatar__who">
-          <b>{me.fullName ?? me.sub}</b>
-          {me.department && <small>{me.department}</small>}
-        </span>
-      )}
+      <span className="m-avatar__who">
+        <b>{me.fullName ?? me.sub}</b>
+        {me.department && <small>{me.department}</small>}
+      </span>
     </>
   );
 
   return (
     <div className={`m-shell${narrow ? ' is-narrow' : ''}`}>
+      {/* Mọi <Icon> (nút xóa ô tìm, ảnh dự phòng của món, toast, hộp thoại) trỏ vào sprite này */}
+      <IconSprite />
       <a className="skip-link" href="#main">
         {t('common.skipToContent')}
       </a>
@@ -56,11 +57,10 @@ export function MemberShell() {
             </nav>
           )}
           <span className="sp" />
-          <LanguageSwitch short className="seg--sm m-lang" />
+          {/* ≤ 900: ngôn ngữ và tài khoản nằm ở "Tôi" (thanh dưới), thanh trên chỉ còn tên app + chuông để tên app không bị cắt */}
+          {!narrow && <LanguageSwitch short className="seg--sm m-lang" />}
           <NotificationBell />
-          {narrow ? (
-            <div className="m-avatar">{avatar}</div>
-          ) : (
+          {!narrow && (
             <AccountMenu
               variant="popover"
               open={accountOpen}

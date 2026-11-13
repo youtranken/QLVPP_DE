@@ -62,7 +62,7 @@ export function IssuesPanel({ ym, onYmChange, end }: { ym: string; onYmChange: (
       {q.isError ? (
         <LoadError onRetry={() => void q.refetch()} />
       ) : (
-        <DataTable data={rows} columns={columns} stackOnMobile loading={q.isPending} emptyText={t('stock.issues.empty')} empty={{ art: 'no-match' }} />
+        <DataTable data={rows} columns={columns} stackOnMobile loading={q.isPending} emptyText={t('stock.issues.empty')} empty={{ art: 'nothing-deliver' }} />
       )}
     </div>
   );

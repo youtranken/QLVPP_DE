@@ -87,7 +87,18 @@ function PickHeader() {
   const pickable = rows.filter(selectable);
   const all = pickable.length > 0 && pickable.every((r) => selected.has(r.user_sub));
   const some = pickable.some((r) => selected.has(r.user_sub));
-  return <SelectBox checked={all} indeterminate={some && !all} label={t('delivery.bulk.pickAll')} onChange={onToggleAll} />;
+  // Không dòng nào chọn được (tủ chưa có hàng / đã giao xong) thì "Chọn tất cả" cũng khóa, kèm lý do
+  const none = pickable.length === 0;
+  return (
+    <SelectBox
+      checked={all}
+      indeterminate={some && !all}
+      disabled={none}
+      title={none ? t('delivery.bulk.pickAllNone') : undefined}
+      label={t('delivery.bulk.pickAll')}
+      onChange={onToggleAll}
+    />
+  );
 }
 
 function PickCell({ person }: { person: DeliveryPerson }) {
@@ -98,6 +109,7 @@ function PickCell({ person }: { person: DeliveryPerson }) {
       id={pickId(person)}
       checked={selected.has(person.user_sub)}
       disabled={!selectable(person)}
+      title={selectable(person) ? undefined : t(person.status === 'done' ? 'delivery.bulk.pickDone' : 'delivery.bulk.pickNoStock')}
       label={t('delivery.bulk.pick', { name: nameOf(person) })}
       onChange={() => onToggle(person.user_sub)}
     />
@@ -110,14 +122,14 @@ function ActionsCell({ person }: { person: DeliveryPerson }) {
   const can = canDeliver(person);
   const label = actionLabel(person, can, t);
   return (
-    <>
+    <span className="pt-acts__in">
       <button type="button" className="btn btn--ghost btn--sm pp-card__view" aria-label={t('delivery.people.card.viewLabel', { name: nameOf(person) })} onClick={() => onView(person.user_sub)}>
         {t('delivery.people.card.view')}
       </button>
       <button type="button" className="btn btn--sm" aria-label={`${label}, ${nameOf(person)}`} disabled={!can} onClick={() => onDeliver(person.user_sub)}>
         {label}
       </button>
-    </>
+    </span>
   );
 }
 
@@ -127,11 +139,15 @@ function PeriodCell({ person }: { person: DeliveryPerson }) {
   return <>{ym ? t('delivery.people.period', { month: monthOf(ym) }) : t('common.empty')}</>;
 }
 
+// Bề rộng cột cố định (DataTable → table--fixed): đổi tab Chưa nhận/Còn nợ/Tất cả thì cột không nhảy theo chữ trong ô.
+// Cột Tháng vừa "Tháng 12"/"September" (73px) một dòng cộng đệm 24px; bù phần lớn từ Phòng (vừa "Phòng D&E"/"Department")
+// và Thao tác (25.5% vẫn đủ 235px cho hai nút một hàng ở 1280) để cột Người không hẹp thêm.
+// Thao tác theo % để ở 1280 đủ "Xem" + "Tủ chưa có hàng" một hàng; ở 1024 hẹp hơn thì nút sau xuống dòng thay vì bảng cuộn ngang
 function useColumns() {
   const { t } = useTranslation();
   return useMemo<ColumnDef<DeliveryPerson, unknown>[]>(() => {
     const cols: ColumnDef<DeliveryPerson, unknown>[] = [
-      { id: 'pick', header: () => <PickHeader />, meta: { className: 'pt-pick', label: '' }, cell: ({ row }) => <PickCell person={row.original} /> },
+      { id: 'pick', header: () => <PickHeader />, meta: { className: 'pt-pick', label: '', width: '2.75rem' }, cell: ({ row }) => <PickCell person={row.original} /> },
       {
         id: 'person',
         header: t('delivery.people.cols.person'),
@@ -142,12 +158,12 @@ function useColumns() {
           </label>
         ),
       },
-      { id: 'dept', header: t('delivery.people.cols.dept'), cell: ({ row }) => row.original.department ?? t('delivery.people.card.noDepartment') },
-      { id: 'period', header: t('delivery.people.cols.period'), cell: ({ row }) => <PeriodCell person={row.original} /> },
-      { id: 'items', header: t('delivery.people.cols.items'), meta: { className: 'num r' }, cell: ({ row }) => t('delivery.people.itemsCount', { n: cardSummary(row.original).n }) },
-      { id: 'units', header: t('delivery.people.cols.units'), meta: { className: 'num r' }, cell: ({ row }) => cardSummary(row.original).u },
-      { id: 'status', header: t('delivery.people.cols.status'), cell: ({ row }) => <StatusCell person={row.original} /> },
-      { id: 'actions', header: () => <span className="r">{t('delivery.people.cols.actions')}</span>, meta: { className: 'r pt-acts', label: '' }, cell: ({ row }) => <ActionsCell person={row.original} /> },
+      { id: 'dept', header: t('delivery.people.cols.dept'), meta: { width: '6.125rem' }, cell: ({ row }) => row.original.department ?? t('delivery.people.card.noDepartment') },
+      { id: 'period', header: t('delivery.people.cols.period'), meta: { width: '6.125rem' }, cell: ({ row }) => <PeriodCell person={row.original} /> },
+      { id: 'items', header: t('delivery.people.cols.items'), meta: { className: 'num r', width: '4.5rem' }, cell: ({ row }) => t('delivery.people.itemsCount', { n: cardSummary(row.original).n }) },
+      { id: 'units', header: t('delivery.people.cols.units'), meta: { className: 'num r', width: '4rem' }, cell: ({ row }) => cardSummary(row.original).u },
+      { id: 'status', header: t('delivery.people.cols.status'), meta: { width: '9.5rem' }, cell: ({ row }) => <StatusCell person={row.original} /> },
+      { id: 'actions', header: () => <span className="r">{t('delivery.people.cols.actions')}</span>, meta: { className: 'r pt-acts', label: '', width: '25.5%' }, cell: ({ row }) => <ActionsCell person={row.original} /> },
     ];
     return cols.map((c) => ({ ...c, enableSorting: false }));
   }, [t]);

@@ -5,7 +5,8 @@ const auth = {
     heroTitle: 'Đăng ký văn phòng phẩm hằng tháng',
     heroBody: 'Chọn món, ghi số lượng, lưu phiếu. Adm D&E tổng hợp, mua và giao tận bàn.',
     heading: 'Đăng nhập',
-    primary: 'Đăng nhập bằng tài khoản công ty (PMH ID)',
+    // Khoảng trắng không ngắt: "ID)" không đứng lẻ một mình ở dòng hai của nút
+    primary: 'Đăng nhập bằng tài khoản công ty (PMH\u00a0ID)',
     primaryHint: 'Bạn sẽ được đưa sang trang đăng nhập chung của công ty rồi quay lại đây.',
     hintToggle: 'Gợi ý tài khoản (tùy chọn)',
     hintLabel: 'Email công ty',

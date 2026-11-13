@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { jsonResponse, renderWithI18n, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { jsonResponse, renderWithI18n, screen, userEvent, waitFor, within, pickOption } from '@/test/test-utils';
 import { makeMe } from '@/test/fixtures-me';
 import { MeContext } from '@/lib/me';
 import { ConfirmProvider } from '@/ui/confirm-provider';
@@ -91,7 +91,7 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     expect(within(dialog).queryByRole('radio', { name: 'Món có sẵn' })).toBeNull();
     expect(within(dialog).queryByText('Gắn dòng vào')).toBeNull();
     expect(within(dialog).getByLabelText(/^Tên món/)).toHaveValue('Băng keo 2 mặt');
-    expect(within(dialog).getByLabelText(/^Đơn vị tính/)).toHaveValue('cai');
+    expect(within(dialog).getByLabelText(/^Đơn vị tính/)).toHaveTextContent('cái');
     expect(within(dialog).getByRole('img', { name: 'Ảnh món' })).toHaveAttribute('src', '/api/files/f-line');
     expect(within(dialog).queryByLabelText('Thứ tự hiển thị')).toBeNull();
     expect(within(dialog).queryByRole('radio', { name: /Đã bỏ/ })).toBeNull();
@@ -128,9 +128,9 @@ describe('ConvertDialog — Thêm vào danh mục', () => {
     stub();
     const { dialog } = await openConvert();
     expect(within(dialog).queryByText(/ĐVT khác dòng gốc/)).toBeNull();
-    await userEvent.selectOptions(within(dialog).getByLabelText(/^Đơn vị tính/), 'hop');
+    await pickOption(within(dialog).getByLabelText(/^Đơn vị tính/), 'hộp');
     expect(within(dialog).getByText('ĐVT khác dòng gốc (cái) — số lượng 2 sẽ tính theo ĐVT mới.')).toBeInTheDocument();
-    await userEvent.selectOptions(within(dialog).getByLabelText(/^Đơn vị tính/), 'cai');
+    await pickOption(within(dialog).getByLabelText(/^Đơn vị tính/), 'cái');
     expect(within(dialog).queryByText(/ĐVT khác dòng gốc/)).toBeNull();
   });
 

@@ -5,9 +5,9 @@ const STROKE: SVGProps<SVGSVGElement> = { fill: 'none', stroke: 'currentColor', 
 
 export type IconName = keyof typeof ICON_PATHS;
 
-export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
+export function Icon({ name, size = 20, className }: { name: IconName; size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable={false} {...STROKE}>
+    <svg className={className} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable={false} {...STROKE}>
       <use href={`#u-${name}`} />
     </svg>
   );

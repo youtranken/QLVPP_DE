@@ -11,7 +11,7 @@ export function useSendState(ym: string, enabled = true) {
     sent: d?.sent ?? null,
     changedAfter: d?.changed_after ?? false,
     changedAt: d?.changed_at ?? null,
-    deliveredSince: d?.delivered_since ?? NONE,
+    settledSince: d?.settled_since ?? NONE,
     noOrder: d?.no_order_at ? { at: d.no_order_at, by: d.no_order_by_name } : null,
   };
 }

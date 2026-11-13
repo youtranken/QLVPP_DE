@@ -1,10 +1,16 @@
 [data-shell='admin'] .dr-avatar { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: var(--r-pill); background: var(--c-acc-soft); color: var(--c-acc); font: var(--t-cap); font-weight: 800; }
 [data-shell='admin'] .dr-avatar--lg { width: 48px; height: 48px; font-size: 18px; }
-[data-shell='admin'] .dr-person { display: inline-flex; align-items: center; gap: 12px; min-width: 0; }
+[data-shell='admin'] .dr-person { display: inline-flex; align-items: center; gap: 12px; min-width: 0; max-width: 100%; }
 [data-shell='admin'] .dr-person__text { display: grid; gap: 2px; min-width: 0; justify-items: start; }
-[data-shell='admin'] .dr-person__name { padding: 0; border: 0; background: none; color: var(--c-ink); font: var(--t-label); text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+[data-shell='admin'] .dr-person__text > * { max-width: 100%; }
+[data-shell='admin'] .dr-person__name { padding: 0; border: 0; background: none; color: var(--c-ink); font: var(--t-label); text-align: left; overflow-wrap: break-word; cursor: pointer; }
 [data-shell='admin'] .dr-person__name:hover { color: var(--c-acc); text-decoration: underline; }
 [data-shell='admin'] .dr-person__name:focus-visible { box-shadow: var(--focus); outline: none; border-radius: var(--r-sm); }
+/* Tên chỉ cao một dòng chữ (18px): lớp phủ của nút trải hết ô Người (avatar + tên + email) để cả ô là vùng bấm */
+[data-shell='admin'] .table td:has(> .dr-person) { position: relative; }
+[data-shell='admin'] .dr-person__name::after { content: ''; position: absolute; inset: 0; }
+/* Email nằm trên lớp phủ: rê chuột thấy title (email đầy đủ khi bị cắt) và bôi đen/chép được; bấm email vẫn mở panel qua dòng */
+[data-shell='admin'] .dr-person__email { position: relative; z-index: 1; }
 [data-shell='admin'] .dr-muted { color: var(--c-muted); font: var(--t-sm); }
 [data-shell='admin'] .dr-status { display: inline-flex; flex-wrap: wrap; gap: 4px; }
 [data-shell='admin'] .dr-count { margin: 0; color: var(--c-muted); font: var(--t-sm); font-weight: 600; }
@@ -18,7 +24,6 @@
 [data-shell='admin'] .dr-facts dt { color: var(--c-muted); font: var(--t-sm); font-weight: 600; }
 [data-shell='admin'] .dr-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 [data-shell='admin'] .dr-audit-link { justify-self: start; }
-[data-shell='admin'] .dr-person__email { overflow-wrap: anywhere; }
 [data-shell='admin'] .dr-auto { color: var(--c-muted); font: var(--t-sm); white-space: nowrap; }
 [data-shell='admin'] .dr-auto--status { white-space: normal; }
 [data-shell='admin'] .dr-auto--status[data-failed] { color: var(--c-danger, var(--c-muted)); }
@@ -34,5 +39,7 @@
 }
 @media (max-width: 767px) {
   [data-shell='admin'] .dr-page .toolbar .select { flex: 1 1 100%; }
-  [data-shell='admin'] .dr-page .toolbar .select select { width: 100%; }
+  [data-shell='admin'] .dr-page .toolbar .select .lb { width: 100%; }
 }
+/* Dòng đếm + "Đang lọc" luôn một hàng riêng: bật lọc (dài thêm "Đang lọc…") không đẩy bảng xuống, dòng đếm không nhảy hàng */
+[data-shell='admin'] .dr-page .toolbar > .list-meta { flex: 1 1 100%; min-height: var(--ctl-h); }

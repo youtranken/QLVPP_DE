@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { EmptyValue } from '@/ui/empty-cell';
 import type { ColumnDef } from '@tanstack/react-table';
 import { vnSavedAt } from '@/lib/format-time';
 import { DataTable } from '@/ui/data-table';
@@ -14,6 +15,8 @@ interface Props {
   activeId?: string;
   onView: (row: PersonRow) => void;
   onAdjust: (requestId: string) => void;
+  // Lọc/tìm không ra: nút Xóa lọc trong khung trống đưa về chip Tất cả, ô tìm rỗng
+  onClear?: () => void;
 }
 
 const nameOf = (r: PersonRow) => r.full_name ?? r.email ?? r.user_sub;
@@ -28,6 +31,7 @@ function DeliveryCell({ row }: { row: PersonRow }) {
 
 function Notes({ row }: { row: PersonRow }) {
   const { t } = useTranslation();
+  if (!row.over_max && !row.adjusted && row.total_qty !== 0 && row.custom_pending === 0) return <EmptyValue />;
   return (
     <span className="mk-notes">
       {row.over_max && <span className="tag tag--warn">{t('month.notes.overMax')}</span>}
@@ -85,7 +89,7 @@ function useColumns(busy: boolean, onView: Props['onView'], onAdjust: Props['onA
   }, [t, busy, onView, onAdjust]);
 }
 
-export function MonthPeopleTable({ rows, loading, busy, narrowed, activeId, onView, onAdjust }: Props) {
+export function MonthPeopleTable({ rows, loading, busy, narrowed, activeId, onView, onAdjust, onClear }: Props) {
   const { t } = useTranslation();
   const columns = useColumns(busy, onView, onAdjust);
   const data = useMemo(() => rows.map((r) => ({ ...r, id: r.request_id })), [rows]);
@@ -97,7 +101,7 @@ export function MonthPeopleTable({ rows, loading, busy, narrowed, activeId, onVi
       loading={loading}
       busy={busy}
       emptyText={t(narrowed ? 'summary.page.noMatch' : 'summary.page.empty')}
-      empty={{ art: 'no-match', hint: narrowed ? t('summary.page.noMatchHint') : undefined }}
+      empty={narrowed ? { variant: 'no-match', hint: t('summary.page.noMatchHint'), onClear } : { art: 'no-request' }}
       groupBy={{
         key: (r) => r.department ?? NO_DEPT,
         header: (key, list) => (

@@ -90,7 +90,7 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
       return route.fulfill({ status: 200, json: id ? view(id) : { items: rows } });
     });
     await openMonth(page);
-    await page.getByRole('radio', { name: /^Kỳ đang đăng ký/ }).click();
+    await page.getByRole('button', { name: /^Tháng \d+ đang đăng ký$/ }).click();
     await expect(page).toHaveURL(new RegExp(`ym=${ym}`));
     await expect(page.getByRole('row').filter({ hasText: 'PW Người một' })).toBeVisible();
     await expect(steps(page).getByText('—')).toHaveCount(3);
@@ -119,7 +119,7 @@ test.describe('Vòng3-KT Kỳ tháng', () => {
   test('Vòng3-KT đổi sang English thì tên bước đổi theo', async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('vpp_lang', 'en'));
     await page.goto('/admin/month');
-    await expect(page.getByRole('heading', { level: 1, name: /^Month \d+$/ })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /^(January|February|March|April|May|June|July|August|September|October|November|December) period$/ })).toBeVisible();
     for (const name of ['Sign-up', 'Send to supplier', 'Receiving', 'Delivery']) await expect(steps(page).getByText(name, { exact: true })).toBeVisible();
   });
 });

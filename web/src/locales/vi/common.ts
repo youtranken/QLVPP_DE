@@ -6,7 +6,8 @@ const common = {
   },
   common: {
     paused: 'Tạm ngưng',
-    lockPhrase: '00:00 ngày {{day}}',
+    // Khoảng trắng không ngắt: cụm giờ khóa sổ không bị gãy làm hai dòng (khối Kỳ tháng ở sidebar)
+    lockPhrase: '00:00\u00a0ngày\u00a0{{day}}',
     loading: 'Đang tải…',
     checkingSession: 'Đang kiểm tra phiên đăng nhập…',
     systemError: 'Không kết nối được máy chủ — thử lại sau ít phút.',
@@ -59,10 +60,12 @@ const common = {
       increase: 'Thêm {{label}}',
     },
     searchClear: 'Xóa chữ tìm',
+    missingEn: 'Thiếu tên EN',
+    missingEnHint: 'Giao diện tiếng Anh sẽ hiện tên tiếng Việt cho tới khi có tên tiếng Anh.',
     filter: {
       hint: 'Lọc',
       active: 'Đang lọc: {{label}} · {{count}}',
-      clear: 'Bỏ lọc',
+      clear: 'Xóa lọc',
     },
     errors: {
       PENDING_CUSTOM: 'Danh sách món chờ duyệt vừa thay đổi, xem lại rồi xác nhận.',
@@ -74,7 +77,26 @@ const common = {
       ADM_OUT_NOTHING_OPEN: 'Không còn ai chờ món này trong kỳ.',
     },
     pageActions: 'Thao tác trang',
-    dateField: { hint: 'dd/mm/yyyy', invalid: 'Ngày không hợp lệ — nhập dd/mm/yyyy.' },
+    dateRange: {
+      any: 'Mọi ngày',
+      since: 'Từ {{d}}',
+      until: 'Đến {{d}}',
+      weekdays: 'T2,T3,T4,T5,T6,T7,CN',
+      prev: 'Tháng trước',
+      next: 'Tháng sau',
+      pickStart: 'Chọn ngày bắt đầu',
+      pickEnd: 'Chọn ngày kết thúc',
+      summary: '{{n}} ngày · {{from}} – {{to}}',
+      clear: 'Xóa ngày',
+    },
+    monthPicker: {
+      dialog: 'Chọn năm-tháng',
+      open: 'bấm để chọn năm-tháng',
+      prevYear: 'Năm trước',
+      nextYear: 'Năm sau',
+      month: 'Tháng {{month}}',
+      monthYear: 'Tháng {{month}}/{{year}}',
+    },
     table: {
       breadcrumb: 'Vị trí',
       bulkLabel: 'Hành động trên các dòng đã chọn',

@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { langOf } from '@/lib/period-text';
 import { shiftYm } from '@/lib/ym';
-import { FormField } from '@/ui/form-field';
 import { useCurrentPeriod } from '@/features/request/request.api';
 import { periodClears, type PeriodDraft } from './config-form';
 import { ConfigSection } from './config-section';
@@ -45,24 +44,18 @@ export function PeriodBlock({ state }: { state: ConfigBlockState<PeriodDraft> })
           upLabel={t('config.period.reminderUp')}
           onChange={set('reminder_days_left')}
         />
-        <FormField label={t('config.period.defaultMax')} hint={t('config.period.defaultMaxHint')} error={err('default_max_qty')}>
-          {(p) => (
-            <div className="cf-day-input">
-              <input
-                {...p}
-                type="number"
-                inputMode="numeric"
-                step={1}
-                min={1}
-                max={999}
-                className="num cf-qty"
-                value={draft.default_max_qty}
-                onChange={(e) => set('default_max_qty')(e.target.value)}
-              />
-              <span className="cf-unit">{t('config.period.defaultMaxUnit')}</span>
-            </div>
-          )}
-        </FormField>
+        <DayInput
+          label={t('config.period.defaultMax')}
+          hint={t('config.period.defaultMaxHint')}
+          unit={t('config.period.defaultMaxUnit')}
+          error={err('default_max_qty')}
+          value={draft.default_max_qty}
+          min={1}
+          max={999}
+          downLabel={t('config.period.defaultMaxDown')}
+          upLabel={t('config.period.defaultMaxUp')}
+          onChange={set('default_max_qty')}
+        />
       </div>
       <p className="alert" aria-live="polite">{note}</p>
       {period && <PeriodPreview ym={shiftYm(period.ym, 1)} lastDay={draft.registration_last_day} reminder={draft.reminder_days_left} />}

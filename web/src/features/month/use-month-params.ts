@@ -24,6 +24,13 @@ export function pickDefaultYm(openYm: string, locked: Pick<PeriodSummary, 'regis
   return locked.lines_pending_delivery ? lockedYm(openYm) : openYm;
 }
 
+// Sàn của ‹ và bảng năm-tháng: kỳ cũ nhất có phiếu, nhưng kỳ đang giao luôn xem được (kể cả khi chưa có phiếu nào)
+export function periodFloor(openYm: string, earliestYm: string | null | undefined): string | undefined {
+  if (earliestYm === undefined) return undefined;
+  const locked = lockedYm(openYm);
+  return earliestYm === null || earliestYm > locked ? locked : earliestYm;
+}
+
 // defaultYm do trang tính (pickDefaultYm); chưa có thì ym undefined (trang chờ). ?ym= sai mẫu hoặc tương lai → thay URL, không gọi API với tháng đó
 export function useMonthParams(openYm: string | undefined, defaultYm: string | undefined) {
   const [params, update] = useUrlPatch();

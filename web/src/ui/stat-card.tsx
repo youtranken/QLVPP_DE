@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon, type IconName } from '@/ui/icon';
 
-export type StatTone = 'neutral' | 'warn' | 'danger' | 'dark';
+export type StatTone = 'neutral' | 'warn' | 'danger' | 'info' | 'dark';
 
 interface Props {
   label: string;
@@ -18,7 +18,7 @@ interface Props {
 
 // Màu cảnh báo chỉ khi chính con số hiển thị > 0 — ô không được đỏ vì một số khác
 function shownTone(tone: StatTone, value: ReactNode): StatTone {
-  if (tone !== 'warn' && tone !== 'danger') return tone;
+  if (tone !== 'warn' && tone !== 'danger' && tone !== 'info') return tone;
   return typeof value === 'number' && value > 0 ? tone : 'neutral';
 }
 

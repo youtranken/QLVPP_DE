@@ -11,6 +11,18 @@
 [data-shell='member'] .rq-card-pack { font-weight: 600; color: var(--c-ink-2); }
 [data-shell='member'] .rq-card-unit { margin-top: 2px; font-size: 14px; color: var(--c-ink-2); }
 [data-shell='member'] .rq-card-add { width: calc(100% - 8px); margin: 0 4px 4px; min-height: 44px; border: 1px solid var(--c-line); border-radius: 999px; background: var(--c-surface); color: var(--c-ink); font: var(--t-label); cursor: pointer; }
+/* Nút một dòng ở mọi khổ: thẻ 2 cột ở 360 chỉ còn ~150px, chữ gãy "Thêm vào / phiếu" làm thẻ cao lệch nhau */
+[data-shell='member'] .rq-card-add { padding-inline: var(--s-2); white-space: nowrap; }
+[data-shell='member'] .rq-card { container-type: inline-size; }
+@container (max-width: 160px) {
+  [data-shell='member'] .rq-card-add { padding-inline: var(--s-1); font-size: 13px; }
+  [data-shell='member'] .rq-card-unit { font-size: 13px; }
+}
+/* Thẻ ≤144px (360–375): "Tối đa 10 cây/tháng" (133px + đệm) không vừa một dòng — "/tháng" chỉ còn cho trình đọc màn hình
+   (trang Đăng ký đã theo tháng). Từ 390 (148px) chữ đủ vẫn vừa nên giữ nguyên */
+@container (max-width: 144px) {
+  [data-shell='member'] .rq-card-per { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
 [data-shell='member'] .rq-card-add:hover:not(:disabled) { background: var(--c-surface-2); }
 [data-shell='member'] .rq-card-add:disabled { opacity: .6; cursor: default; }
 [data-shell='member'] .rq-card-stepper { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; height: 44px; margin: 0 4px 4px; border-radius: 999px; background: var(--c-surface-2); overflow: hidden; }
@@ -23,6 +35,8 @@
 [data-shell='member'] .rq-card-add.rq-card-add--paused:disabled { color: var(--c-danger); opacity: 1; }
 [data-shell='member'] .rq-card-more { align-items: center; justify-content: center; gap: var(--s-2); min-height: 200px; border: 2px dashed var(--c-line); background: transparent; box-shadow: none; text-align: center; color: var(--c-ink-2); font: var(--t-label); cursor: pointer; }
 [data-shell='member'] .rq-card-more:hover { border-color: var(--c-ink-2); }
+/* box-shadow: none ở trên đè vòng focus chung — trả lại như mọi thẻ khác */
+[data-shell='member'] .rq-card-more:focus-visible { outline: none; box-shadow: var(--focus); }
 [data-shell='member'] .rq-card-more b { color: var(--c-ink); font-weight: 800; }
 [data-shell='member'] .rq-card-more-ic { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: var(--c-surface-2); font-size: 28px; font-weight: 800; }
 @media (max-width: 900px) {

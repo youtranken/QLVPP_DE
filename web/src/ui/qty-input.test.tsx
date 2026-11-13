@@ -50,14 +50,14 @@ describe('QtyInput', () => {
     expect(screen.queryByRole('button')).toBeNull();
   });
 
-  it('máy tính: ▲▼ trong ô, tabIndex -1, nhãn kèm tên món; ▲ tăng, ▼ giảm', async () => {
+  it('máy tính: nút − / + của khung Stepper chung, tabIndex -1, nhãn kèm tên món; + tăng, − giảm', async () => {
     mockViewport(1280);
     renderWithI18n(<Controlled start="3" steppers />);
     const up = screen.getByRole('button', { name: 'Thêm Bút bi' });
     const down = screen.getByRole('button', { name: 'Bớt Bút bi' });
     expect(up).toHaveAttribute('tabindex', '-1');
     expect(down).toHaveAttribute('tabindex', '-1');
-    expect(up.closest('.qty-input')).toHaveAttribute('data-layout', 'spin');
+    expect(up.closest('.stepper')).toHaveAttribute('data-size', 'sm');
     await userEvent.click(up);
     expect(box()).toHaveValue(4);
     await userEvent.click(down);
@@ -96,11 +96,11 @@ describe('QtyInput', () => {
     expect(box()).toHaveValue(1000);
   });
 
-  it('điện thoại ≤767: kiểu "− số +" (nút hai đầu ô)', () => {
-    mockViewport(390);
+  it.each([390, 1280])('%i px: cùng một dáng "− số +" (không còn mũi tên ▲▼ 24×16)', (w) => {
+    mockViewport(w);
     renderWithI18n(<Controlled start="3" steppers />);
-    const wrap = box().closest('.qty-input')!;
-    expect(wrap).toHaveAttribute('data-layout', 'stepper');
+    const wrap = box().closest('.stepper')!;
+    expect(wrap.querySelector('.qty-input__spin')).toBeNull();
     const [first, , last] = Array.from(wrap.querySelectorAll('button, input'));
     expect(first).toHaveAccessibleName('Bớt Bút bi');
     expect(last).toHaveAccessibleName('Thêm Bút bi');

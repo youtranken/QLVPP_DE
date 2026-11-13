@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { cartOf, deleteTestUsers, expectNoContrastViolations, isMobile, removeTestItem } from './helpers';
+import { cartOf, deleteTestUsers, expectNoContrastViolations, isMobile, removeTestItem, pickOption } from './helpers';
 import { asNewMember, createItem, createTestGroup, shotTo } from './request-helpers';
 
 // Phiếu cam (1280) và sheet phiếu + thanh nổi (390)
@@ -51,13 +51,13 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       await grid.getByRole('button', { name: '+ Thêm món khác' }).click();
       const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
       await dialog.getByLabel('Tên món').fill(`PW món lạ ${Date.now()}`);
-      await dialog.getByLabel('Đơn vị tính').selectOption('hop');
+      await pickOption(dialog.getByRole('combobox', { name: 'Đơn vị tính' }), 'hộp');
       await dialog.getByRole('button', { name: 'Thêm vào phiếu' }).click();
       await page.getByRole('button', { name: '1 thay đổi chưa lưu · Lưu' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Lưu phiếu' }).click();
       await expect(cart.getByText(/^Đã lưu \d{2}:\d{2}$/)).toBeVisible();
       await page.reload();
-      await expect(cart.getByText(/^Adm D&E xem từ 00:00 ngày \d{2}\/\d{2}$/)).toBeVisible();
+      await expect(cart.getByText(/^Adm D&E xem từ 00:00\sngày\s\d{2}\/\d{2}$/)).toBeVisible();
 
       await grid.getByRole('searchbox', { name: 'Tìm món' }).fill('PW');
       await grid.getByRole('button', { name: `Thêm vào phiếu: ${shortName}`, exact: true }).click();
@@ -115,10 +115,12 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
         return;
       }
       // chip nhóm: một hàng, cuộn ngang (không xuống dòng)
+      // khung cuộn là cha của nhóm chip (ScrollFade: mép phải mờ khi còn chip khuất)
       const chips = grid.getByRole('group').first();
       const row = await chips.evaluate((el) => {
         const tops = new Set([...el.querySelectorAll('button')].map((b) => Math.round(b.getBoundingClientRect().top)));
-        return { overflowX: getComputedStyle(el).overflowX, lines: tops.size, scrolls: el.scrollWidth > el.clientWidth };
+        const scroller = el.parentElement!;
+        return { overflowX: getComputedStyle(scroller).overflowX, lines: tops.size, scrolls: scroller.scrollWidth > scroller.clientWidth };
       });
       expect(row.overflowX).toBe('auto');
       expect(row.lines).toBe(1);
@@ -128,8 +130,8 @@ test.describe('E2-S5 Trang Đăng ký (dev-identity member)', () => {
       expect(Math.abs(b2.x - b0.x)).toBeLessThan(2);
       expect(b2.y).toBeGreaterThan(b0.y);
 
-      // thanh nổi: trống → "Xem phiếu (0 món)", nút Lưu phiếu vô hiệu
-      await expect(page.getByRole('button', { name: 'Xem phiếu (0 món)' })).toBeVisible();
+      // thanh nổi: giỏ trống, chưa có gì để lưu → không có thanh; thêm món thì hiện
+      await expect(page.locator('.rq-bar')).toHaveCount(0);
       await adds.first().click();
       await adds.nth(1).click();
       const open = page.getByRole('button', { name: 'Xem phiếu (2 món)' });

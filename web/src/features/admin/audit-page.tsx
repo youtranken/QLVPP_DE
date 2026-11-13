@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiErrorFields } from '@/lib/api-error';
-import { FilterNotice } from '@/ui/filter-notice';
 import { ListMeta } from '@/ui/list-meta';
 import { LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
@@ -23,6 +22,7 @@ export function AuditPage() {
   const fieldError = serverError.from || serverError.to;
   const narrowed = Object.values(filters).some(Boolean);
   const title = t('audit.title');
+  // Thanh lọc đã có "Xóa lọc" và dòng đếm đã có số: không thêm hàng "Đang lọc … · Xóa lọc" lặp cùng việc
   const clear = <button type="button" className="btn" onClick={p.clear}>{t('audit.filters.clear')}</button>;
   const count = audit.hasNextPage ? t('audit.page.countMore', { count: rows.length }) : t('audit.page.count', { count: rows.length });
 
@@ -35,7 +35,6 @@ export function AuditPage() {
         {!audit.isError && (!audit.isPending || narrowed) && (
           <ListMeta>
             {!audit.isPending && <p className="au-count">{count}</p>}
-            {narrowed && <FilterNotice label={t('audit.page.filterLabel')} count={rows.length} onClear={p.clear} />}
           </ListMeta>
         )}
       </div>

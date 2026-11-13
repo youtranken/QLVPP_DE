@@ -63,16 +63,20 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
 
     await page.getByRole('button', { name: 'Xóa lọc', exact: true }).first().click();
     await expect(page.getByText(/^Đang lọc:/)).toHaveCount(0);
-    await page.getByLabel('Từ ngày').fill('31/02/2026');
-    await page.getByRole('button', { name: 'Lọc', exact: true }).click();
-    await expect(page.getByLabel('Từ ngày')).toHaveAccessibleDescription('Ngày không hợp lệ — nhập dd/mm/yyyy.');
-    await page.getByLabel('Từ ngày').fill('20/10/2026');
-    await page.getByLabel('Đến ngày').fill('19/10/2026');
+    // Khoảng ngày là một ô mở lịch (không gõ được ngày sai); URL có to < from → báo lỗi ở ô, không gọi API
+    await page.goto('/admin/audit?from=2026-10-20&to=2026-10-19');
+    await page.waitForLoadState('networkidle');
     const before = calls;
     await page.getByRole('button', { name: 'Lọc', exact: true }).click();
-    await expect(page.getByLabel('Đến ngày')).toHaveAccessibleDescription('“Đến ngày” phải bằng hoặc sau “Từ ngày”.');
+    const range = page.getByRole('button', { name: /^Khoảng ngày/ });
+    await expect(range).toHaveAccessibleDescription('Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.');
     expect(calls).toBe(before);
-    await page.getByLabel('Đến ngày').fill('20/10/2026');
+    await range.click();
+    const cal = page.getByRole('dialog', { name: 'Khoảng ngày' });
+    await cal.locator('[data-day="2026-10-20"]').click();
+    await cal.locator('[data-day="2026-10-20"]').click();
+    await expect(cal).toHaveCount(0);
+    await expect(range).toHaveAccessibleName('Khoảng ngày 20/10/2026 – 20/10/2026');
     await page.getByRole('button', { name: 'Lọc', exact: true }).click();
     await expect(page).toHaveURL(/from=2026-10-20&to=2026-10-20/);
   });
@@ -99,5 +103,33 @@ test.describe('E9-S6 Nhật ký M1 (dev-identity admin)', () => {
     await page.goto('/admin/audit');
     await expect(page.getByRole('main').getByText('Không tải được dữ liệu — thử lại.')).toBeVisible();
     await expect(page.getByRole('main').getByRole('button', { name: 'Thử lại' })).toBeVisible();
+  });
+
+  test('Vòng8 Nhật ký: thanh lọc một hàng ở 1280 (người + Hệ thống, Hành động, khoảng ngày, Lọc/Xóa lọc), gợi ý ô tìm người không bị cắt', async ({ page }, info) => {
+    test.skip(isMobile(info), 'một hàng chỉ đòi ở màn rộng');
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(`/admin/audit?from=2026-11-01&to=2026-11-12`);
+    const bar = page.getByRole('form', { name: 'Lọc nhật ký' });
+    await expect(bar.getByRole('button', { name: 'Lọc', exact: true })).toBeVisible();
+    const tops = await bar.locator('.au-filters__grid > *').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+    expect(tops).toHaveLength(4);
+    expect(new Set(tops).size, `mọi cụm cùng một hàng: ${tops.join(',')}`).toBe(1);
+    const filter = bar.getByRole('button', { name: 'Lọc', exact: true });
+    const clear = bar.getByRole('button', { name: 'Xóa lọc', exact: true });
+    const sys = bar.getByRole('button', { name: 'Hệ thống (tự động)' });
+    const [f, c, y] = await Promise.all([filter.boundingBox(), clear.boundingBox(), sys.boundingBox()]);
+    expect(Math.round(f!.y)).toBe(Math.round(c!.y));
+    expect(Math.round(f!.y)).toBe(Math.round(y!.y));
+    // Gợi ý "Tên hoặc email" vừa trọn ô (input không tự báo tràn placeholder nên đo bằng canvas)
+    const fits = await bar.getByPlaceholder('Tên hoặc email').evaluate((el: HTMLInputElement) => {
+      const cs = getComputedStyle(el);
+      const ctx = document.createElement('canvas').getContext('2d')!;
+      ctx.font = cs.font;
+      return ctx.measureText(el.placeholder).width <= el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    });
+    expect(fits).toBe(true);
+    // Khoảng ngày đầy đủ hiện trọn trong ô
+    const range = bar.getByText('01/11/2026 – 12/11/2026');
+    expect(await range.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
   });
 });

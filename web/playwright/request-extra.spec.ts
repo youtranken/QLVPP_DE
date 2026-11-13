@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test';
-import { acquireLock, cartOf, closeCart, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, openCart, psql, removeTestItem, seedActiveUser, seedPwItem, skipNewPeriodPopup } from './helpers';
+import { acquireLock, cartOf, closeCart, deleteTestUsers, devHeaders, expectNoContrastViolations, isMobile, openCart, psql, removeTestItem, seedActiveUser, seedPwItem, skipNewPeriodPopup, pickOption } from './helpers';
 
 const SHOTS = '../.superpowers/sdd/2026-10-28-vpp-gd1-p2-phieu-tong-hop/task-12-shots';
 const FIXTURE = 'playwright/fixtures/item.png';
@@ -60,11 +60,11 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       const dialog = page.getByRole('dialog', { name: 'Thêm món khác' });
       await dialog.getByLabel('Tên món').fill(name);
       // Đơn vị chọn sẵn "cái"; bấm nền không đóng hộp, chữ đã gõ còn nguyên
-      await expect(dialog.getByLabel('Đơn vị tính')).toHaveValue('cai');
+      await expect(dialog.getByRole('combobox', { name: 'Đơn vị tính' })).toHaveText('cái');
       await page.mouse.click(2, 2);
       await expect(dialog).toBeVisible();
       await expect(dialog.getByLabel('Tên món')).toHaveValue(name);
-      await dialog.getByLabel('Đơn vị tính').selectOption('hop');
+      await pickOption(dialog.getByRole('combobox', { name: 'Đơn vị tính' }), 'hộp');
       await expect(dialog.getByText(/ảnh/i)).toHaveCount(0);
       await expect(dialog.locator('input[type=file]')).toHaveCount(0);
       await expect(dialog.getByRole('button', { name: 'Thêm vào phiếu' })).toBeEnabled();
@@ -84,7 +84,7 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
 
       await page.reload();
       await openCart(page, info);
-      await expect(line.getByText(/^Adm D&E xem từ 00:00 ngày \d{2}\/\d{2}$/)).toBeVisible();
+      await expect(line.getByText(/^Adm D&E xem từ 00:00\sngày\s\d{2}\/\d{2}$/)).toBeVisible();
       await expect(line.locator('img')).toHaveCount(0);
       if (isMobile(info)) await expectNoContrastViolations(page);
       await snap(page, info, 'custom-saved');
@@ -282,8 +282,13 @@ test.describe('Trang Đăng ký — món ngoài danh mục, chép lại', () => 
       );
       await expect(alert).toBeInViewport();
       await snap(page, info, 'period-locked-saved');
-      await openCart(page, info);
-      await expect(page.getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu”/)).toBeAttached();
+      if (isMobile(info)) {
+        // Giỏ trống: thanh "Xem phiếu (n)" ở đáy điện thoại ẩn hẳn — không mang giỏ sang kỳ mới
+        await expect(page.getByRole('button', { name: /^Xem phiếu \(/ })).toHaveCount(0);
+      } else {
+        await openCart(page, info);
+        await expect(page.getByText(/Chưa có món nào\. Bấm “Thêm vào phiếu”/)).toBeAttached();
+      }
     } finally {
       deleteTestUsers(me.sub);
       await removeTestItem(request, item.id);

@@ -12,14 +12,14 @@ export type StockAction = 'purchase' | 'issue' | 'ledger';
 
 const BADGE_CLASS: Record<StockStatus, string> = {
   paused: 'tag tag--outline',
-  incoming: 'tag tag--outline',
+  incoming: 'tag tag--danger',
   none: 'tag tag--outline',
   low: 'tag tag--warn',
   untracked: 'tag tag--outline',
   ok: 'tag tag--ok',
 };
 
-// Đỏ chỉ khi hàng NCC đang về không đủ bù cho người chờ; tủ 0 không ai cần chỉ xám
+// "Chờ hàng về" luôn đỏ để thủ kho nhìn lướt là thấy món đang nợ người chờ; tủ 0 không ai cần chỉ xám
 export function StockBadge({ row }: { row: Pick<StockRow, 'usable' | 'stock_state' | 'short' | 'awaiting' | 'free'> }) {
   const { t } = useTranslation();
   const status = stockViewOf(row);
@@ -31,10 +31,10 @@ export function StockBadge({ row }: { row: Pick<StockRow, 'usable' | 'stock_stat
     untracked: t('stock.state.untracked'),
     ok: t('stock.state.ok', { n: row.free }),
   };
-  // Món đã tạm ngưng thì Nhà cung cấp không giao thêm: người đang chờ chắc chắn chưa có hàng, nên cũng đỏ
-  const uncovered = status === 'incoming' && (row.short > 0 || !row.usable);
+  // Hàng NCC về không đủ bù cho người chờ: câu giải thích phần thiếu nằm trong title
+  const short = status === 'incoming' && row.short > 0;
   const badge = (
-    <span className={uncovered ? 'tag tag--danger' : BADGE_CLASS[status]} title={uncovered && row.short > 0 ? t('warn.W20short', { short: row.short }) : undefined}>
+    <span className={BADGE_CLASS[status]} title={short ? t('warn.W20short', { short: row.short }) : undefined}>
       {text[status]}
     </span>
   );
@@ -125,7 +125,7 @@ export function StockTable({ rows, activeRowId, loading, groupName, onAction, em
       loading={loading}
       activeRowId={activeRowId}
       emptyText={empty.title}
-      empty={{ art: 'no-match', hint: empty.hint, action: empty.action }}
+      empty={{ variant: 'no-match', hint: empty.hint, action: empty.action }}
     />
   );
 }

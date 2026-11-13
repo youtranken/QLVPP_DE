@@ -45,7 +45,7 @@ export function CodeCell({ code }: { code: string | null }) {
   );
 }
 
+// Cột đã có tiêu đề "Tồn kho": ô chỉ ghi số (chữ "Tủ:" chỉ cần ở thẻ lưới, nơi không có tiêu đề cột)
 export function StockCell({ row }: { row: CatalogRow }) {
-  const { t } = useTranslation();
-  return <span className="ct-stock">{t('catalog.card.stock', { n: row.stock_qty })}</span>;
+  return <span className="ct-stock num">{row.stock_qty}</span>;
 }

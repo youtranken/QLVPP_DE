@@ -79,6 +79,8 @@ async function swapSignatureBoxes(request: APIRequestContext, tag: string) {
   return { signatureBoxes, restore: async () => void (await request.put('/api/admin/config', { headers, data: { signature_boxes: original } })) };
 }
 
+const customKey = (name: string) => `'custom:' || jsonb_build_array(lower('${name}'), 'cai')::text`;
+
 function removeSeed(s: Omit<MonthSeed, 'cleanup' | 'signatureBoxes'>, created: string[], since: string) {
   const all = [s.paper, s.pen, s.clip, s.tape, s.glue];
   const items = sqlList(all.map((i) => i.id));
@@ -88,6 +90,7 @@ function removeSeed(s: Omit<MonthSeed, 'cleanup' | 'signatureBoxes'>, created: s
     DELETE FROM line_deliveries WHERE line_id IN (
       SELECT l.id FROM request_lines l JOIN requests r ON r.id = l.request_id WHERE r.user_sub IN (${subs}));
     DELETE FROM stock_movements WHERE item_id IN (${items});
+    DELETE FROM custom_receipts WHERE line_key = ${customKey(s.custom)};
     DELETE FROM in_app_notifications WHERE user_sub IN (${subs})
       OR params->>'name' IN (${sqlList(all.map((i) => i.name))})`);
   deleteTestUsers(s.a.sub, s.b.sub);
@@ -114,6 +117,9 @@ export async function seedMonth(request: APIRequestContext, info: TestInfo): Pro
     const imageId = await uploadLineImage(request, a);
     insertRequest(a, prevYm, `('${paper.id}', NULL, NULL, NULL, 5, 'n/a', 0), ('${pen.id}', NULL, NULL, NULL, 2, 'n/a', 1),
       (NULL, '${custom}', 'cai', '${imageId}', 1, 'accepted', 2)`);
+    // Món ngoài DM đã duyệt chỉ giao được khi hàng đã về: ghi sẵn 1 cái đã nhận để giao cùng lượt với món danh mục
+    psql(`INSERT INTO custom_receipts (period_ym, line_key, qty, note, created_by, created_at)
+      VALUES ('${prevYm}-01', ${customKey(custom)}, 1, 'PW', 'pw-admin', now())`);
     insertRequest(b, prevYm, `('${clip.id}', NULL, NULL, NULL, 3, 'n/a', 0)`);
     insertRequest(a, debtYm, `('${tape.id}', NULL, NULL, NULL, 2, 'n/a', 0)`);
     insertRequest(b, debtYm, `('${glue.id}', NULL, NULL, NULL, 3, 'n/a', 0)`);

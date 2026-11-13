@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { EmptyValue } from '@/ui/empty-cell';
 import { Dialog, DialogCloseButton, DialogTitle } from "@/ui/dialog";
 import { Loading, LoadError } from "@/ui/load-state";
 import { RegistrationDialog } from "@/features/summary/registration-dialog";
@@ -18,13 +19,14 @@ const nameOf = (p: ItemPerson) => p.full_name ?? p.email ?? p.user_sub;
 
 function Note({ person }: { person: ItemPerson }) {
   const { t } = useTranslation();
-  if (!person.reason_code) return null;
+  if (!person.reason_code) return <EmptyValue />;
   const reason = person.reason_note
     ? `${t(`adjustReason.${person.reason_code}`)}: ${person.reason_note}`
     : t(`adjustReason.${person.reason_code}`);
   return <>{t("reports.send.people.removed", { reason })}</>;
 }
 
+// Dưới 768 bảng thành thẻ (table-stack + data-label) như bảng trang: sheet 390 không chứa nổi 5 cột
 // "Ai đăng ký món": Hành chính xem số từng người và việc HC đã bỏ, mở phiếu của người đó như ở Kỳ tháng
 export function ItemPeopleDialog({ ym, itemKey, order, onClose }: Props) {
   const { t } = useTranslation();
@@ -65,7 +67,7 @@ export function ItemPeopleDialog({ ym, itemKey, order, onClose }: Props) {
             <p className="bc-empty">{t("reports.send.people.empty")}</p>
           ) : (
             <div className="bc-scroll">
-              <table className="table grid-table bc-table">
+              <table className="table grid-table bc-table table-stack bc-people">
                 <thead>
                   <tr>
                     <th scope="col">{t("summary.open.colPerson")}</th>
@@ -85,14 +87,14 @@ export function ItemPeopleDialog({ ym, itemKey, order, onClose }: Props) {
                   {rows.map((p) => (
                     <tr key={p.request_id}>
                       <td>{nameOf(p)}</td>
-                      <td>{p.team ?? t("common.empty")}</td>
-                      <td className="num r">
+                      <td data-label={t("summary.open.colTeam")}>{p.team ?? t("common.empty")}</td>
+                      <td className="num r" data-label={t("reports.send.people.qty")}>
                         {p.before !== null && p.before !== p.qty && (
                           <s className="sm-muted">{p.before}</s>
                         )}{" "}
                         {p.qty}
                       </td>
-                      <td>
+                      <td data-label={t("summary.table.note")}>
                         <Note person={p} />
                       </td>
                       <td className="r">
@@ -109,14 +111,14 @@ export function ItemPeopleDialog({ ym, itemKey, order, onClose }: Props) {
                       </td>
                     </tr>
                   ))}
-                  <tr>
+                  <tr className="bc-people__total">
                     <th scope="row" colSpan={2}>
                       {t("reports.send.people.total")}
                     </th>
                     <td className="num r">
                       <b>{data.after}</b>
                     </td>
-                    <td colSpan={2} />
+                    <td colSpan={2} data-empty />
                   </tr>
                 </tbody>
               </table>

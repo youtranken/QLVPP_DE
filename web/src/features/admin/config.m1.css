@@ -15,14 +15,8 @@
 [data-shell='admin'] .cf-block__note { flex: 1 0 100%; margin: 0; font: var(--t-cap); color: var(--c-muted); text-align: right; }
 [data-shell='admin'] .cf-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); align-items: start; }
 [data-shell='admin'] .cf-day-input { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
-[data-shell='admin'] .cf-adjust { display: inline-grid; grid-template-columns: 44px 64px 44px; align-items: center; gap: var(--s-1); }
-[data-shell='admin'] .cf-adjust button { height: var(--hit); border: 0; border-radius: var(--r-md); background: var(--c-surface-2); color: var(--c-ink); font: var(--t-label); font-size: 18px; cursor: pointer; }
-[data-shell='admin'] .cf-adjust button:hover:not(:disabled) { background: var(--c-surface-hover); }
-[data-shell='admin'] .cf-adjust button:disabled { color: var(--c-faint); cursor: default; }
-[data-shell='admin'] .cf-adjust button:focus-visible { outline: none; box-shadow: var(--focus); }
-[data-shell='admin'] .ff .cf-adjust input, [data-shell='admin'] .ff .cf-qty { width: 100%; padding: 0 8px; text-align: center; appearance: textfield; }
-[data-shell='admin'] .ff .cf-qty { width: 96px; }
-[data-shell='admin'] .cf-adjust input::-webkit-inner-spin-button, [data-shell='admin'] .cf-qty::-webkit-inner-spin-button { appearance: none; }
+/* Ba ô số của Cấu hình dùng Stepper chung cỡ md (44px) */
+[data-shell='admin'] .cf-adjust { width: 152px; }
 [data-shell='admin'] .cf-unit { font: var(--t-sm); color: var(--c-muted); }
 [data-shell='admin'] .cf-preview { display: grid; gap: var(--s-2); }
 [data-shell='admin'] .cf-preview--empty { margin: 0; padding: var(--s-5); border-radius: var(--r-md); background: var(--c-surface-sunk); color: var(--c-muted); font: var(--t-sm); text-align: center; }
@@ -44,6 +38,13 @@
 [data-shell='admin'] .cf-legend li[data-kind='locked']::before { background: var(--c-surface-2); box-shadow: inset 0 0 0 1px var(--c-line-strong); }
 [data-shell='admin'] .cf-preview__hint { margin: 0; font: var(--t-cap); color: var(--c-muted); }
 [data-shell='admin'] .cf-box { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr); gap: var(--s-3); align-items: start; margin: 0; padding: var(--s-4); border: 0; border-radius: var(--r-md); background: var(--c-surface-2); min-width: 0; }
+/* Ba ô một hàng: mỗi ô (nhãn · ô nhập · gợi ý) chia hàng chung (subgrid) nên nhãn xuống dòng không đẩy lệch ô nhập bên cạnh */
+[data-shell='admin'] .cf-box > .ff { grid-row: span 3; grid-template-rows: subgrid; row-gap: 4px; }
+/* Thẻ hẹp (nửa màn ở ≥1280, hay màn nhỏ): ba ô một hàng bị cắt chữ → xếp một cột theo bề ngang thẻ, không theo màn */
+[data-shell='admin'] .cf-block { container: cf-block / inline-size; }
+@container cf-block (max-width: 720px) {
+  [data-shell='admin'] .cf-box { grid-template-columns: minmax(0, 1fr); }
+}
 [data-shell='admin'] .cf-box legend { float: left; grid-column: 1 / -1; width: 100%; padding: 0; font: var(--t-label); color: var(--c-ink); }
 [data-shell='admin'] .cf-box .ff input { width: 100%; }
 [data-shell='admin'] .cf-box__remove { grid-column: 1 / -1; justify-self: end; color: var(--c-danger); }

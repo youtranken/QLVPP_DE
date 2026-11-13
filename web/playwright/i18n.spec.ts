@@ -23,7 +23,7 @@ async function switchLanguage(page: Page, info: TestInfo, lang: Lang) {
   else await page.getByRole('button', { name: /^(Ngôn ngữ|Language)$/ }).click();
   await page.getByRole('radio', { name: lang === 'en' ? 'English' : 'Tiếng Việt' }).click();
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('heading', { level: 1, name: lang === 'en' ? /^Month \d+$/ : /^Kỳ tháng \d+$/ })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: lang === 'en' ? /^[A-Z][a-z]+ period$/ : /^Kỳ tháng \d+$/ })).toBeVisible();
 }
 
 // Vỏ app có tên người đăng nhập và tên ngôn ngữ "Tiếng Việt"; ô dữ liệu (ghi chú xuất lẻ, tên món) là chữ người dùng nhập
@@ -32,7 +32,10 @@ async function switchLanguage(page: Page, info: TestInfo, lang: Lang) {
 async function expectContentLanguage(page: Page, lang: Lang, root: Locator = page.getByRole('main')) {
   await settled(page);
   await expect(root).toBeVisible();
-  const ui = await root.locator('h1, h2, h3, button, th, label, legend').allInnerTexts();
+  // Bỏ phần aria-hidden (avatar chữ cái đầu tên người — dữ liệu người dùng, không phải chữ giao diện)
+  const ui = await root.locator('h1, h2, h3, button, th, label, legend').evaluateAll((els) =>
+    els.map((el) => [...el.querySelectorAll<HTMLElement>('[aria-hidden="true"]')].reduce((t, n) => (n.innerText ? t.replace(n.innerText, ' ') : t), (el as HTMLElement).innerText)),
+  );
   // Nút chọn phiếu mang tên người/phòng ban (dữ liệu, có thể là người demo trong DB dev) — không phải chữ giao diện
   const text = userDataTexts().reduce((t, d) => t.split(d).join(' '), ui.join(' '));
   const words = text.match(/\S*[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]\S*/gi) ?? [];
@@ -182,9 +185,11 @@ test.describe('E6-S4 song ngữ mọi màn PRD §8', () => {
       const member = await englishPage(browser, info, { 'x-dev-user-sub': sub, 'x-dev-role': 'member' });
       pages.push(member);
       for (const path of MEMBER_SCREENS) await check(member, path, () => expect(member.getByRole('heading', { level: 1 })).toBeVisible());
-      // Vòng 4: đổi ngôn ngữ ở nút VI/EN trên đầu trang (hộp tài khoản không còn phần ngôn ngữ)
-      await member.goto('/');
-      const en = member.getByRole('banner').getByRole('radio', { name: 'EN – English' });
+      // Máy tính: đổi ngôn ngữ ở nút VI/EN trên đầu trang; điện thoại: thanh trên không còn VI/EN, đổi ở trang Tôi
+      await member.goto(isMobile(info) ? '/me' : '/');
+      const en = isMobile(info)
+        ? member.getByRole('main').getByRole('radio', { name: 'English', exact: true })
+        : member.getByRole('banner').getByRole('radio', { name: 'EN – English' });
       await en.click();
       await expect(en).toBeChecked();
 

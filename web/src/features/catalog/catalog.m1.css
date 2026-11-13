@@ -7,8 +7,9 @@
 [data-shell='admin'] .ct-chip__n { color: var(--c-muted); font: var(--t-cap); }
 [data-shell='admin'] .ct-dot { flex: none; width: 10px; height: 10px; border-radius: var(--r-pill); }
 [data-shell='admin'] .ct-chips--wrap .ct-chip { max-width: 100%; height: auto; min-height: 36px; padding: 8px 16px; white-space: normal; overflow-wrap: anywhere; text-align: left; }
-[data-shell='admin'] .ct-code { width: 120px; max-width: 120px; color: var(--c-muted); font: var(--t-sm); white-space: nowrap; }
-[data-shell='admin'] .ct-code__text { display: block; overflow: hidden; text-overflow: ellipsis; }
+/* Mã món đọc đủ: xuống dòng ở dấu "-" (BUT-KIM-/JELLITTO-04) thay vì cắt "BUT-…"; đoạn dài nhất giữa hai dấu "-" vừa cột */
+[data-shell='admin'] .ct-code { color: var(--c-muted); font: var(--t-sm); }
+[data-shell='admin'] .ct-code__text { display: block; overflow-wrap: break-word; }
 [data-shell='admin'] .ct-item-cell { min-width: 220px; }
 [data-shell='admin'] .ct-name-en { min-width: 140px; max-width: 220px; color: var(--c-ink-2); font: var(--t-sm); overflow-wrap: anywhere; }
 [data-shell='admin'] .ct-page .inline-number__hint { white-space: nowrap; }
@@ -92,6 +93,14 @@
 [data-shell='admin'] .ct-active__error { color: var(--c-danger); font: var(--t-cap); font-weight: 600; }
 @media (max-width: 767px) {
   [data-shell='admin'] .ct-page .toolbar__search { flex: 1 1 100%; }
+  /* Điện thoại: 2 cột (một cột ảnh lớn làm trang dài ~24.000px cho 50 món); hai nút xếp dọc cho đủ chữ */
+  [data-shell='admin'] .ct-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3); }
+  [data-shell='admin'] .ct-card { padding: var(--s-2); gap: var(--s-2); }
+  [data-shell='admin'] .ct-card__body { padding: 0 var(--s-1); }
+  [data-shell='admin'] .ct-card__actions { margin: auto var(--s-1) var(--s-1); }
+  [data-shell='admin'] .ct-card__actions > .btn { flex: 1 1 100%; }
+  /* Thẻ đã nằm dưới tiêu đề nhóm: nhãn nhóm trên ảnh chỉ lặp lại */
+  [data-shell='admin'] .ct-card__group { display: none; }
 }
 [data-shell='admin'] .w24-list { display: grid; gap: var(--s-1); margin: 0; padding: 0; list-style: none; }
 [data-shell='admin'] .ct-section { display: grid; gap: var(--s-3); min-width: 0; }

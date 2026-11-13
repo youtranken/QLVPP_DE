@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { screen, userEvent, waitFor, within, optionLabels } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { lineView } from '@/test/fixtures-request';
@@ -44,6 +44,16 @@ describe('RequestPage — thanh lọc', () => {
     expect(screen.getByTestId('location-search').textContent).toBe('?g=all');
   });
 
+  it('lọc một nhóm → thẻ không còn nhãn nhóm (cùng nhóm cả, lặp vô ích); "Tất cả" thì có lại', async () => {
+    mockViewport(1280);
+    stubRequestApi();
+    await open();
+    expect(grid().querySelectorAll('.rq-card-group').length).toBeGreaterThan(0);
+    await userEvent.click(screen.getByRole('button', { name: 'Bút & viết 1' }));
+    await waitFor(() => expect(names()).toEqual(['Bút bi xanh']));
+    expect(grid().querySelectorAll('.rq-card-group')).toHaveLength(0);
+  });
+
   it('390 px: có từ khóa mà không có g → tìm trên mọi nhóm', async () => {
     mockViewport(390);
     stubRequestApi();
@@ -51,7 +61,7 @@ describe('RequestPage — thanh lọc', () => {
     expect(names()).toEqual(['Kẹp giấy']);
   });
 
-  it('Đã chọn + từ khóa là giao; "Xóa bộ lọc" xóa sạch khóa trên URL', async () => {
+  it('Đã chọn + từ khóa là giao; "Xóa lọc" xóa sạch khóa trên URL', async () => {
     mockViewport(1280);
     stubRequestApi({
       request: view({ lines: [lineView({ id: 'l-1', item_id: PEN.id, item: facts(PEN), qty: 1 }), lineView({ id: 'l-2', item_id: NOTE.id, item: facts(NOTE), qty: 1 })] }),
@@ -63,7 +73,7 @@ describe('RequestPage — thanh lọc', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Đã chọn 2' }));
     await userEvent.click(screen.getByRole('button', { name: 'Bút & viết 1' }));
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm món' }), 'zzz');
-    await userEvent.click(await screen.findByRole('button', { name: 'Xóa bộ lọc' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Xóa lọc' }));
     await waitFor(() => expect(screen.getByTestId('location-search').textContent).toBe(''));
     expect(names()).toHaveLength(3);
     expect(screen.getByRole('searchbox', { name: 'Tìm món' })).toHaveValue('');
@@ -92,8 +102,8 @@ describe('RequestPage — thanh lọc', () => {
     stubRequestApi();
     const { unmount } = renderApp(makeMe('member'), '/?sort=fav');
     const none = await screen.findByRole('combobox', { name: 'Sắp xếp' });
-    expect(within(none).getAllByRole('option').map((o) => o.textContent)).toEqual(['Tên A → Z', 'Theo nhóm']);
-    expect(none).toHaveValue('group');
+    expect(await optionLabels(none)).toEqual(['Tên A → Z', 'Theo nhóm']);
+    expect(none).toHaveTextContent('Theo nhóm');
     unmount();
     stubRequestApi({
       period: { ...PERIOD, previous: { ym: '2026-10', delivering: false } },
@@ -101,14 +111,14 @@ describe('RequestPage — thanh lọc', () => {
     });
     renderApp(makeMe('member'), '/');
     const sort = await screen.findByRole('combobox', { name: 'Sắp xếp' });
-    await waitFor(() => expect(within(sort).getAllByRole('option').map((o) => o.textContent)).toEqual(['Hay dùng trước', 'Tên A → Z', 'Theo nhóm']));
+    await waitFor(async () => expect(await optionLabels(sort)).toEqual(['Hay dùng trước', 'Tên A → Z', 'Theo nhóm']));
   });
 
   it('sort=xyz trên URL → "Theo nhóm"; không có món khớp → thông báo rỗng', async () => {
     mockViewport(1280);
     stubRequestApi();
     await open('/?sort=xyz');
-    expect(screen.getByRole('combobox', { name: 'Sắp xếp' })).toHaveValue('group');
+    expect(screen.getByRole('combobox', { name: 'Sắp xếp' })).toHaveTextContent('Theo nhóm');
     await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm món' }), 'khong co');
     expect(await screen.findByText('Không có món phù hợp')).toBeInTheDocument();
   });

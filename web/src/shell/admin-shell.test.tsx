@@ -5,7 +5,7 @@ import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
 
-const NAV_ORDER = ['Kỳ tháng', 'Báo cáo & gửi NCC', 'Nhận hàng', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Nhân viên', 'Nhật ký', 'Cấu hình'];
+const NAV_ORDER = ['Kỳ tháng', 'Báo cáo & gửi NCC', 'Nhận hàng', 'Giao hàng', 'Còn nợ', 'Sản phẩm', 'Tủ / Kho', 'Món ngoài danh mục', 'Danh mục', 'Danh bạ', 'Nhật ký', 'Cấu hình'];
 
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
 const linkLabels = (nav: HTMLElement) =>
@@ -105,6 +105,29 @@ describe('AdminShell + RequireRole', () => {
     await userEvent.click(within(dialog).getByRole('link', { name: 'Tủ / Kho' }));
     expect(screen.getByTestId('location')).toHaveTextContent('/admin/stock');
     expect(screen.queryByRole('dialog', { name: 'Menu quản lý' })).toBeNull();
+  });
+
+  it('360×640: chân menu điện thoại một hàng — VI/EN ngắn và Đăng xuất là nút biểu tượng (còn chỗ cho mục điều hướng)', async () => {
+    mockViewport(360, { height: 640 });
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
+    const dialog = screen.getByRole('dialog', { name: 'Menu quản lý' });
+    const user = within(dialog).getByRole('group', { name: 'Tài khoản và ngôn ngữ' });
+    expect(user).toHaveAttribute('data-layout', 'low');
+    expect(within(user).getByRole('radio', { name: 'VI – Tiếng Việt' })).toHaveTextContent('VI');
+    const logout = within(user).getByRole('button', { name: 'Đăng xuất' });
+    expect(logout).toHaveTextContent(/^$/);
+  });
+
+  it('360×800: chân menu điện thoại giữ dạng đủ chữ (Tiếng Việt / English, nút Đăng xuất có chữ)', async () => {
+    mockViewport(360, { height: 800 });
+    stubShellApi();
+    renderApp(makeMe('admin'), '/admin/catalog');
+    await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
+    const dialog = screen.getByRole('dialog', { name: 'Menu quản lý' });
+    expect(within(dialog).getByRole('radio', { name: 'Tiếng Việt' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Đăng xuất' })).toHaveTextContent('Đăng xuất');
   });
 
   it('768 px: có sidebar (thu thành cột icon bằng CSS), không có nút mở menu', () => {

@@ -1,9 +1,7 @@
-import { Icon } from '@/ui/icon';
+import { useId } from 'react';
+import { Listbox, type ListboxOption } from '@/ui/listbox';
 
-export interface SelectOption<T extends string> {
-  value: T;
-  label: string;
-}
+export type SelectOption<T extends string> = ListboxOption<T>;
 
 interface Props<T extends string> {
   label: string;
@@ -16,20 +14,27 @@ interface Props<T extends string> {
   title?: string;
 }
 
+// Ô chọn có nhãn cho thanh lọc. Nhãn hiện thì trỏ aria-labelledby, nhãn ẩn thì aria-label
 export function Select<T extends string>({ label, value, options, onChange, hideLabel, stacked, disabled, title }: Props<T>) {
+  const id = useId();
+  const labelId = `${id}-label`;
   return (
-    <label className={stacked ? 'select select--stacked' : 'select'}>
-      <span className={hideLabel ? 'sr-only' : 'select__label'}>{label}</span>
-      <span className="select__box">
-        <select value={value} disabled={disabled} title={title} onChange={(e) => onChange(e.target.value as T)}>
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <Icon name="chev" size={16} />
-      </span>
-    </label>
+    <div className={stacked ? 'select select--stacked' : 'select'}>
+      {!hideLabel && (
+        <span id={labelId} className="select__label">
+          {label}
+        </span>
+      )}
+      <Listbox
+        variant={stacked ? 'field' : 'pill'}
+        value={value}
+        options={options}
+        onChange={onChange}
+        disabled={disabled}
+        title={title}
+        aria-label={hideLabel ? label : undefined}
+        aria-labelledby={hideLabel ? undefined : labelId}
+      />
+    </div>
   );
 }

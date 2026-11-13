@@ -38,12 +38,5 @@
   [data-shell='admin'] .cg-table.table--fixed { min-width: 42.5rem; }
   [data-shell='admin'] .cg-table.table--fixed:has(.cg-col-reorder) { min-width: 48rem; }
 }
-[data-shell='admin'] .cg-search { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); flex: 1 1 320px; justify-content: flex-end; }
-[data-shell='admin'] .cg-search .toolbar { flex: 1 1 240px; }
-[data-shell='admin'] .cg-shown { margin: 0; color: var(--c-muted); font: var(--t-sm); font-weight: 600; }
 [data-shell='admin'] .cg-name--stopped { color: var(--c-muted); text-decoration: line-through; }
 [data-shell='admin'] .cg-stopped { margin-left: var(--s-2); vertical-align: middle; }
-/* Điện thoại: dòng đếm xuống hàng cuối, sau nút Sắp xếp */
-@media (max-width: 767px) {
-  [data-shell='admin'] .cg-search .list-meta { order: 1; }
-}

@@ -60,10 +60,10 @@ export function CategoriesPage() {
   const openIndex = panel.id ? list.findIndex((c) => c.id === panel.id) : -1;
   const shown = shownIds.length;
   const tools = !sort.on && list.length > 0 && (
-    <div className="cg-search">
+    <div className="cg-search setup-tools">
       <Toolbar search={{ value: q, onChange: setQ, label: t('catalog.categories.search'), placeholder: t('catalog.categories.search'), maxLength: 100 }} />
       <ListMeta>
-        <p className="cg-shown" role="status">
+        <p className="setup-shown" role="status">
           {t('catalog.categories.shown', { shown, total: list.length })}
         </p>
       </ListMeta>

@@ -232,7 +232,7 @@ test.describe('E9-S5 Tủ / Kho M1 (dev-identity admin)', () => {
     await page.goto('/admin/stock?filter=low');
     await expect(page.getByRole('button', { name: /^Sắp hết/ })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByText(/^Đang lọc: Sắp hết/)).toBeVisible();
-    await page.getByRole('button', { name: 'Bỏ lọc' }).click();
+    await page.getByRole('button', { name: 'Xóa lọc' }).click();
     await expect(page).not.toHaveURL(/filter=/);
   });
 
@@ -285,6 +285,8 @@ test.describe('V2D-16 Tủ / Kho theo người đang chờ (dev-identity admin)'
       await expect(issue).toBeHidden();
       await expectStockCell(row, 2);
       await expect(row.getByText('Chờ hàng về 2')).toBeVisible();
+      // "Chờ hàng về" luôn đỏ để nhìn lướt là thấy
+      await expect(row.getByText('Chờ hàng về 2')).toHaveClass(/tag--danger/);
       if (isMobile(info)) await expectNoContrastViolations(page);
       await shot(page, info, 'v2d16-stock-short', false);
 

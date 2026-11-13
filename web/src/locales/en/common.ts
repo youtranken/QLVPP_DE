@@ -9,7 +9,8 @@ const common: Messages<typeof vi> = {
   },
   common: {
     paused: 'Paused',
-    lockPhrase: '00:00 on {{day}}',
+    // Khoảng trắng không ngắt: cụm giờ khóa sổ không bị gãy làm hai dòng (khối Kỳ tháng ở sidebar)
+    lockPhrase: '00:00\u00a0on\u00a0{{day}}',
     loading: 'Loading…',
     checkingSession: 'Checking your session…',
     systemError: 'Cannot reach the server — try again in a few minutes.',
@@ -62,10 +63,12 @@ const common: Messages<typeof vi> = {
       increase: 'Increase {{label}}',
     },
     searchClear: 'Clear search',
+    missingEn: 'Missing EN name',
+    missingEnHint: 'The English interface shows the Vietnamese name until an English name is added.',
     filter: {
       hint: 'Filter',
       active: 'Filtering: {{label}} · {{count}}',
-      clear: 'Clear filter',
+      clear: 'Clear filters',
     },
     errors: {
       PENDING_CUSTOM: 'The list of items awaiting review just changed. Check it and confirm again.',
@@ -77,7 +80,26 @@ const common: Messages<typeof vi> = {
       ADM_OUT_NOTHING_OPEN: 'Nobody is waiting for this item this period.',
     },
     pageActions: 'Page actions',
-    dateField: { hint: 'dd/mm/yyyy', invalid: 'Invalid date — use dd/mm/yyyy.' },
+    dateRange: {
+      any: 'Any date',
+      since: 'From {{d}}',
+      until: 'Until {{d}}',
+      weekdays: 'Mo,Tu,We,Th,Fr,Sa,Su',
+      prev: 'Previous month',
+      next: 'Next month',
+      pickStart: 'Pick a start date',
+      pickEnd: 'Pick an end date',
+      summary: '{{n}} days · {{from}} – {{to}}',
+      clear: 'Clear dates',
+    },
+    monthPicker: {
+      dialog: 'Pick year and month',
+      open: 'click to pick year and month',
+      prevYear: 'Previous year',
+      nextYear: 'Next year',
+      month: '{{month, MonthName}}',
+      monthYear: '{{month, MonthName}} {{year}}',
+    },
     table: {
       breadcrumb: 'Breadcrumb',
       bulkLabel: 'Actions for selected rows',

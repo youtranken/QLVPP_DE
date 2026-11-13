@@ -28,14 +28,15 @@ export function EmptyState({
   );
 }
 
-export function NotFound() {
+// inPage: tiêu đề đã nằm ở đầu khung trang (MemberPage), thân chỉ còn hình, gợi ý và nút — không lặp h1
+export function NotFound({ inPage = false }: { inPage?: boolean }) {
   const { t } = useTranslation();
   return (
     <div className="state-page">
       <span className="state-ic">
         <IconSearch />
       </span>
-      <h1>{t('common.notFoundTitle')}</h1>
+      {!inPage && <h1>{t('common.notFoundTitle')}</h1>}
       <p>{t('common.notFoundHint')}</p>
       <Link className="btn btn--primary" to="/">
         {t('common.backHome')}

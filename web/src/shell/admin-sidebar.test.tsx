@@ -188,12 +188,12 @@ describe('AdminSidebar: đầu và cuối', () => {
     expect(sideNav().compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('nhãn sidebar theo thiết kế: Sản phẩm, Tủ / Kho, Nhân viên', async () => {
+  it('nhãn sidebar theo thiết kế: Sản phẩm, Tủ / Kho, Danh bạ', async () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
     await screen.findByRole('navigation', { name: 'Menu quản lý' });
-    for (const t of ['Sản phẩm', 'Tủ / Kho', 'Nhân viên']) expect(navLink(t)).toBeInTheDocument();
+    for (const t of ['Sản phẩm', 'Tủ / Kho', 'Danh bạ']) expect(navLink(t)).toBeInTheDocument();
   });
 });
 

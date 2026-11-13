@@ -21,7 +21,9 @@ export function UserAvatar({ user, large = false }: { user: Pick<AdminUser, 'sub
 
 export function StatusBadge({ status }: { status: AdminUser['status'] }) {
   const { t } = useTranslation();
-  return <span className={status === 'active' ? 'tag tag--ok' : 'tag tag--danger'}>{t(`users.status.${status}`)}</span>;
+  // Cùng màu với thẻ số ở đầu trang: Đã khóa đỏ, Mất quyền (PMH ID gỡ app) xanh thông tin
+  const tone = status === 'active' ? 'tag--ok' : status === 'no_access' ? 'tag--info' : 'tag--danger';
+  return <span className={`tag ${tone}`}>{t(`users.status.${status}`)}</span>;
 }
 
 export function LastLogin({ iso }: { iso: string | null }) {
@@ -37,6 +39,18 @@ function RegCell({ reg }: { reg: RegFilter | null | undefined }) {
   return <span className={reg === 'yes' ? 'tag tag--ok' : 'tag tag--warn'}>{t(reg === 'yes' ? 'users.reg.cellYes' : 'users.reg.cellNo')}</span>;
 }
 
+// Mã NV, nhóm, phòng ban có thể là một chuỗi dài không dấu cách: cắt "…" kèm title thay vì gãy từng mẩu.
+// line: mã và nhóm luôn một dòng (gãy ở dấu "-" thành 4 dòng cũng khó đọc như gãy giữa từ)
+function Clip({ text, line = false }: { text: string | null | undefined; line?: boolean }) {
+  const { t } = useTranslation();
+  if (!text) return <>{t('common.empty')}</>;
+  return (
+    <span className={line ? 'cell-clip cell-clip--line' : 'cell-clip'} title={text}>
+      {text}
+    </span>
+  );
+}
+
 // Cột cố định bề rộng (tên nhận phần còn lại): đổi tab/lọc không làm cột nhảy chỗ.
 // Cột chỉ phụ thuộc tháng: dữ liệu đăng ký về sau đổi hàng chứ không đổi cột (đổi cột dựng lại bảng, panel đang mở bị đóng)
 function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
@@ -46,6 +60,8 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
         {
           id: 'name',
           header: t('users.page.colName'),
+          // Sàn 13rem (208px): ở 768 bảng chạm sàn, tên "Hoàng Nộp Hồ Sơ 1" vẫn một dòng
+          meta: { minWidth: '13rem' },
           cell: ({ row: { original: u } }) => (
             <span className="dr-person">
               <UserAvatar user={u} />
@@ -61,15 +77,28 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
                 >
                   {nameOf(u)}
                 </button>
-                {u.email && <small className="dr-muted dr-person__email">{u.email}</small>}
+                {u.email && (
+                  <small
+                    className="dr-muted dr-person__email cell-clip cell-clip--line"
+                    title={u.email}
+                    // Vừa bôi đen email để chép thì cú bấm đó không mở panel (dòng có onRowClick)
+                    onClick={(e) => {
+                      if (window.getSelection()?.toString()) e.stopPropagation();
+                    }}
+                  >
+                    {u.email}
+                  </small>
+                )}
               </span>
             </span>
           ),
         },
-        { id: 'code', header: t('users.page.colCode'), meta: { width: '5.5rem' }, cell: ({ row }) => row.original.employeeCode ?? t('common.empty') },
-        { id: 'department', header: t('users.page.colDepartment'), meta: { width: '7rem' }, cell: ({ row }) => row.original.department ?? t('common.empty') },
-        ...(regMonth === null ? [] : [{ id: 'reg', header: t('users.reg.col', { month: regMonth }), meta: { width: '7.5rem' }, cell: ({ row }: { row: { original: UserRow } }) => <RegCell reg={row.original.reg} /> }]),
-        { id: 'team', header: t('users.page.colTeam'), meta: { width: '5.5rem' }, cell: ({ row }) => row.original.team ?? t('common.empty') },
+        { id: 'code', header: t('users.page.colCode'), meta: { width: '5.5rem' }, cell: ({ row }) => <Clip text={row.original.employeeCode} line /> },
+        { id: 'department', header: t('users.page.colDepartment'), meta: { width: '6.5rem' }, cell: ({ row }) => <Clip text={row.original.department} /> },
+        // Tháng vừa khít chữ dài nhất ("Đã đăng ký" 84px + đệm 24), Nhóm bớt 4px: ở 1024 bảng chỉ rộng 54rem nên mỗi px
+        // cột khác lấy từ cột Họ tên — hai cột này nhường lại 16px cho Họ tên giữ 208px
+        ...(regMonth === null ? [] : [{ id: 'reg', header: t('users.reg.col', { month: regMonth }), meta: { width: '6.75rem' }, cell: ({ row }: { row: { original: UserRow } }) => <RegCell reg={row.original.reg} /> }]),
+        { id: 'team', header: t('users.page.colTeam'), meta: { width: '5.25rem' }, cell: ({ row }) => <Clip text={row.original.team} line /> },
         {
           id: 'status',
           header: t('users.page.colStatus'),
@@ -81,7 +110,7 @@ function useColumns(onOpen: (u: UserRow) => void, regMonth: number | null) {
             </span>
           ),
         },
-        { id: 'lastLogin', header: t('users.page.colLastLogin'), meta: { width: '7.5rem' }, cell: ({ row }) => <LastLogin iso={row.original.lastLoginAt} /> },
+        { id: 'lastLogin', header: t('users.page.colLastLogin'), meta: { width: '9rem' }, cell: ({ row }) => <LastLogin iso={row.original.lastLoginAt} /> },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
   }, [t, onOpen, regMonth]);
@@ -109,7 +138,7 @@ export function UsersTable({
       columns={columns}
       loading={loading}
       emptyText={empty.title}
-      empty={{ art: 'no-match', hint: empty.hint, action: empty.action }}
+      empty={{ variant: 'no-match', hint: empty.hint, action: empty.action }}
       activeRowId={activeId}
       onRowClick={onOpen}
       rowClassName={(u) => (u.status !== 'active' ? 'is-inactive' : '')}

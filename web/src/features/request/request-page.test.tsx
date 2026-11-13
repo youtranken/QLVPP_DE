@@ -42,7 +42,7 @@ describe('RequestPage', () => {
     expect(screen.getByText('Chưa lưu phiếu tháng này')).toBeInTheDocument();
     expect(screen.getByText('Chọn món, bấm Lưu phiếu. Bạn sửa được tới 23:59 ngày 10/11, còn 4 ngày.')).toBeInTheDocument();
     expect(await within(grid()).findByText('Bút bi xanh')).toBeInTheDocument();
-    expect(within(grid()).getByText('Tối đa 20 cây/tháng')).toBeInTheDocument();
+    expect(within(grid()).getByText((_, el) => el?.classList.contains('rq-card-unit') === true && el.textContent === 'Tối đa 20 cây/tháng')).toBeInTheDocument();
     expect(within(grid()).queryByText('Giấy A4')).toBeNull();
     expect(within(grid()).getByRole('button', { name: /Không thấy món cần\?/ })).toBeInTheDocument();
   });

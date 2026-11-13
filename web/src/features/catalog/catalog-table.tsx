@@ -43,14 +43,14 @@ function useColumns(rowErrors: Record<string, string>, actions: CatalogTableActi
     const onOpen = (id: string) => latest.current.actions.onOpen(id);
     const onSaveMax = (row: CatalogRow, n: number) => latest.current.actions.onSaveMax(row, n);
     const columns: ColumnDef<CatalogRow, unknown>[] = [
-      { id: 'code', header: t('catalog.list.colCode'), meta: { className: 'ct-code', width: '4.5rem' }, cell: ({ row }) => <CodeCell code={row.original.code} /> },
+      { id: 'code', header: t('catalog.list.colCode'), meta: { className: 'ct-code', width: '6rem' }, cell: ({ row }) => <CodeCell code={row.original.code} /> },
       { id: 'item', header: t('catalog.list.colItem'), meta: { className: 'ct-item-cell' }, cell: ({ row }) => <ItemCell row={row.original} error={latest.current.rowErrors[row.original.id]} /> },
       { id: 'nameEn', header: t('catalog.list.colNameEn'), meta: { className: 'ct-name-en', width: '15%' }, cell: ({ row }) => row.original.name_en ?? <span className="ct-name-en__empty">{t('common.empty')}</span> },
       { id: 'unit', header: t('catalog.page.colUnit'), meta: { width: '4.5rem' }, cell: ({ row }) => unitName(row.original.unit) },
       {
         id: 'max',
         header: t('catalog.page.colMax'),
-        meta: { className: 'num r', width: '6.5rem' },
+        meta: { className: 'num r', width: '5.5rem' },
         cell: ({ row: { original: r } }) => (
           <Stop>
             <InlineNumber
@@ -64,7 +64,7 @@ function useColumns(rowErrors: Record<string, string>, actions: CatalogTableActi
           </Stop>
         ),
       },
-      { id: 'stock', header: t('catalog.list.colStock'), meta: { className: 'r', width: '5rem' }, cell: ({ row }) => <StockCell row={row.original} /> },
+      { id: 'stock', header: t('catalog.list.colStock'), meta: { className: 'r', width: '4.5rem' }, cell: ({ row }) => <StockCell row={row.original} /> },
       {
         id: 'active',
         header: t('catalog.list.colActive'),
@@ -113,7 +113,7 @@ export function CatalogTable({ rows, index, loading, selection, rowErrors, group
       onRowClick={(r) => actions.onOpen(r.id)}
       rowClassName={(r) => [r.usable ? '' : 'is-inactive', rowErrors[r.id] ? 'has-error' : ''].filter(Boolean).join(' ')}
       emptyText={t('catalog.list.emptyTitle')}
-      empty={{ art: 'no-match', ...empty }}
+      empty={{ variant: 'no-match', ...empty }}
       groupBy={{
         key: (r) => r.group,
         header: (key, list) => (

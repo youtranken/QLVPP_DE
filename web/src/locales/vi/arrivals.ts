@@ -12,7 +12,7 @@ const arrivals = {
       after: 'Sau nhập kho',
       qtyLabel: 'Nhận đợt này: {{name}}',
       receivedSmall: 'đã nhận {{n}}',
-      fullLocked: 'Đã nhận đủ',
+      fullLocked: 'Đã nhận',
     },
     errors: {
       invalid: 'Nhập số nguyên từ 0 trở lên',
@@ -24,8 +24,7 @@ const arrivals = {
       all: 'Tất cả',
       short: 'Chỉ món chưa về đủ ({{n}})',
       count: 'Đang hiện {{x}}/{{y}} món',
-      none: 'Không có món khớp',
-      clear: 'Xóa lọc',
+      none: 'Không có món nào khớp',
     },
     group: {
       done: 'sản phẩm {{a}}/{{b}}',
@@ -36,9 +35,10 @@ const arrivals = {
       pick: 'Chọn nhóm {{name}}',
       none: 'Chưa xếp nhóm',
     },
-    source: 'theo bản gửi NCC {{time}}',
+    sourceAt: 'Theo bản gửi NCC lúc {{time}}',
+    sourcePrint: 'Xem bản in',
     batchPicked: 'Đã chọn {{g}} nhóm · {{n}} món',
-    status: { done: 'Nhận đủ hàng', short: 'Thiếu {{n}}', over: 'Dư {{n}}', none: 'Không nhập', adm_out: 'NCC hết hàng', owe: 'Nhập {{qty}} · NCC còn nợ {{n}}' },
+    status: { done: 'Nhận đủ hàng', short: 'Thiếu {{n}}', over: 'Dư {{n}}', none: 'Không nhập', adm_out: 'NCC hết hàng', oweIn: 'Nhập: {{qty}}', oweLeft: 'NCC còn nợ: {{n}}' },
     gate: {
       notSent: 'Chưa gửi NCC báo cáo tháng {{month}}. Vào Báo cáo & gửi NCC để chốt trước khi nhận hàng.',
       noOrder: 'Tháng {{month}} không có đơn gửi NCC ({{time}}) — không có hàng kỳ này để nhận.',

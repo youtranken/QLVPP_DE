@@ -6,6 +6,8 @@ import { useRefreshAfterLineChange } from '@/features/delivery/people/use-refres
 import { arrivalsPlanQuery, setAdmOut } from './arrivals.api';
 
 export const useArrivalsPlan = (ym: string) => useQuery(arrivalsPlanQuery(ym));
+// Chỉ đọc bản đã có trong bộ nhớ đệm, không tự gọi API
+export const useArrivalsPlanCached = (ym: string) => useQuery({ ...arrivalsPlanQuery(ym), enabled: false });
 
 // Nhập hàng đổi kế hoạch, tủ, danh sách giao và Còn nợ cùng lúc — tập chung đã gồm mọi kế hoạch Hàng về
 export function useRefreshArrivals() {

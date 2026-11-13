@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { isAdminRole, useMe } from '@/lib/me';
 import { NotFound } from '@/ui/load-state';
 import { ProfilePage } from '@/features/profile/profile-page';
@@ -32,6 +33,16 @@ function RedirectKeepSearch({ to }: { to: string }) {
   return <Navigate to={{ pathname: to, search }} replace />;
 }
 
+// 404 nhân viên dùng khung trang chuẩn (tiêu đề trên nền, cách thanh trên như mọi trang), không đặt panel sát thanh trên
+function MemberNotFound() {
+  const { t } = useTranslation();
+  return (
+    <MemberPage title={t('common.notFoundTitle')}>
+      <NotFound inPage />
+    </MemberPage>
+  );
+}
+
 function ForbiddenRoute() {
   return <ForbiddenScreen email={useMe().email} />;
 }
@@ -53,7 +64,7 @@ export function AppRoutes() {
         <Route path="history" element={<HistoryPage />} />
         <Route path="history/:ym" element={<HistoryDetailPage />} />
         <Route path="me" element={<ProfilePage />} />
-        {member && <Route path="*" element={<MemberPage><NotFound /></MemberPage>} />}
+        {member && <Route path="*" element={<MemberNotFound />} />}
       </Route>
       <Route
         path="/admin/reports/snapshots/:id/print"

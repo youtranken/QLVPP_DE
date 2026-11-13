@@ -154,7 +154,7 @@ function PeopleBoard({ ym }: { ym: string }) {
             <Segmented
               label={t('delivery.people.filter')}
               value={tab}
-              options={TABS.map((x) => ({ value: x, label: t(`delivery.people.tabs.${x}`), count: counts[x] }))}
+              options={TABS.map((x) => ({ value: x, label: t(`delivery.people.tabs.${x}`), count: counts[x], urgent: x === 'pending' || x === 'debt' }))}
               onChange={(v) => update({ tab: v === 'pending' ? null : v })}
             />
           </ScrollFade>

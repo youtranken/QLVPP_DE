@@ -1,7 +1,10 @@
 import type { ReactNode, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
+import { MEMBER_MID_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { GroupChips } from '@/ui/filter/group-chips';
+import { ScrollFade } from '@/ui/filter/scroll-fade';
 import { SearchBox } from '@/ui/filter/search-box';
+import { Listbox } from '@/ui/listbox';
 import type { FilterState, SortKey } from './item-filters';
 import './filter-bar.m1.css';
 
@@ -35,6 +38,10 @@ const SORT_KEYS: [SortKey, string][] = [
 export function FilterBar({ filter, groups, total, shown, pickedCount, canFav = false, searchRef, copy, onChange, onClear, onAddCustom }: Props) {
   const { t } = useTranslation();
   const narrowed = filter.q !== '' || filter.onlyPicked || filter.group !== 'all';
+  // 901–1180 (giỏ chiếm cột phải): hàng trên chỉ vừa tìm · sắp xếp · Đã chọn · Thêm món khác; nút "Chép lại…" (rộng)
+  // sang cuối hàng chip thay vì rớt một mình xuống dòng
+  const mid = useMediaQuery(MEMBER_MID_QUERY);
+  const copySlot = copy && <span className="rq-f-copy">{copy}</span>;
   return (
     <div className="rq-f">
       <div className="rq-f-row">
@@ -48,16 +55,14 @@ export function FilterBar({ filter, groups, total, shown, pickedCount, canFav = 
         />
         {/* Hai cặp chỉ là nhóm bố cục cho điện thoại; máy tính bỏ khung (display: contents) */}
         <div className="rq-f-pair">
-          <label className="rq-f-sort">
-            <span className="sr-only">{t('request.grid.sort')}</span>
-            <select value={filter.sort} onChange={(e) => onChange({ sort: e.target.value as SortKey })}>
-              {SORT_KEYS.filter(([key]) => canFav || key !== 'fav').map(([key, label]) => (
-                <option key={key} value={key}>
-                  {t(label)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Listbox
+            className="rq-f-sort"
+            variant="pill"
+            aria-label={t('request.grid.sort')}
+            value={filter.sort}
+            onChange={(sort) => onChange({ sort })}
+            options={SORT_KEYS.filter(([key]) => canFav || key !== 'fav').map(([key, label]) => ({ value: key, label: t(label) }))}
+          />
           <button type="button" className="rq-f-chip" aria-pressed={filter.onlyPicked} onClick={() => onChange({ onlyPicked: !filter.onlyPicked })}>
             {t('request.grid.picked')} <span className="rq-f-cnt">{pickedCount}</span>
           </button>
@@ -66,21 +71,27 @@ export function FilterBar({ filter, groups, total, shown, pickedCount, canFav = 
           <button type="button" className="rq-f-add" onClick={onAddCustom}>
             + {t('request.grid.addOther')}
           </button>
-          {copy && <span className="rq-f-copy">{copy}</span>}
+          {!mid && copySlot}
         </div>
       </div>
-      <GroupChips
-        className="rq-f-chips"
-        chipClassName="rq-f-chip"
-        countClassName="rq-f-cnt"
-        label={t('request.grid.categories')}
-        allLabel={t('request.grid.all')}
-        total={total}
-        groups={groups}
-        counts={new Map(groups.map((g) => [g.id, g.n]))}
-        value={filter.group}
-        onChange={(group) => onChange({ group })}
-      />
+      <div className="rq-f-chiprow">
+        {/* Khung cuộn ngang (≤ 1180): mép phải mờ khi còn chip khuất */}
+        <ScrollFade className="rq-f-scroll">
+          <GroupChips
+            className="rq-f-chips"
+            chipClassName="rq-f-chip"
+            countClassName="rq-f-cnt"
+            label={t('request.grid.categories')}
+            allLabel={t('request.grid.all')}
+            total={total}
+            groups={groups}
+            counts={new Map(groups.map((g) => [g.id, g.n]))}
+            value={filter.group}
+            onChange={(group) => onChange({ group })}
+          />
+        </ScrollFade>
+        {mid && copySlot}
+      </div>
       <p className="rq-f-count" aria-live="polite">
         {t(narrowed ? 'request.grid.countMatch' : 'request.grid.countAll', { n: narrowed ? shown : total })}
       </p>

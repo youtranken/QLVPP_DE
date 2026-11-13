@@ -25,7 +25,10 @@ interface Props {
   errorOf: (key: string) => OrderError | null;
   overMax: (key: string) => boolean;
   onEdit: (key: string, text: string) => void;
-  people: ReadonlyMap<string, number>;
+  // null = chưa có số (đang tải/lỗi): ô hiện "…" thay "—" để không đọc thành "không ai đăng ký"
+  people: ReadonlyMap<string, number> | null;
+  // Tải số người lỗi (banner phía trên đã báo, có nút Thử lại): ô thôi báo "đang tải"
+  peopleFailed?: boolean;
   onPeople: (key: string) => void;
 }
 
@@ -56,19 +59,21 @@ function useGroupName(cats: Category[]) {
   };
 }
 
-export function ReportItemTable({ rows, cats, loading, empty, editable, value, errorOf, overMax, onEdit, people, onPeople }: Props) {
+export function ReportItemTable({ rows, cats, loading, empty, editable, value, errorOf, overMax, onEdit, people, peopleFailed = false, onPeople }: Props) {
   const { t, i18n } = useTranslation();
   const unitName = useUnitNames();
   const groupName = useGroupName(cats);
   const columns = useMemo<ColumnDef<ItemTableRow, unknown>[]>(() => {
     const col = (k: string) => t(`sendAdm.orders.${k}`);
-    const num = (id: 'registered' | 'backlog' | 'stock' | 'want', header: string): ColumnDef<ItemTableRow, unknown> => ({
+    const num = (id: 'registered' | 'backlog' | 'stock', header: string, width: string): ColumnDef<ItemTableRow, unknown> => ({
       id,
       header,
-      meta: { className: 'num r', label: header },
+      meta: { className: 'num r', label: header, width },
       cell: ({ row }) => row.original.n[id] ?? '—',
     });
     const need = col('need');
+    // Bề rộng cột cố định: tháng đang sửa có ô nhập Đề nghị, tháng cũ chỉ có số — không cố định thì đổi tháng cả bảng dời.
+    // Tổng tối thiểu vừa 1024; hẹp hơn thì khung cuộn ngang (css/m1/table.css)
     const columns: ColumnDef<ItemTableRow, unknown>[] = [
       {
         id: 'name',
@@ -81,13 +86,13 @@ export function ReportItemTable({ rows, cats, loading, empty, editable, value, e
           </span>
         ),
       },
-      { id: 'unit', header: t('reports.part1.colUnit'), cell: ({ row }) => unitName(row.original.row.unit) },
-      num('registered', col('registered')),
-      num('backlog', col('backlog')),
-      num('stock', col('stock')),
+      { id: 'unit', header: t('reports.part1.colUnit'), meta: { width: '4.5rem' }, cell: ({ row }) => unitName(row.original.row.unit) },
+      num('registered', col('registered'), '5rem'),
+      num('backlog', col('backlog'), '5.5rem'),
+      num('stock', col('stock'), '6rem'),
       {
         id: 'want',
-        meta: { className: 'num r', label: need },
+        meta: { className: 'num r', label: need, width: '6rem' },
         cell: ({ row }) => row.original.n.want,
         header: () => (
           <>
@@ -101,14 +106,31 @@ export function ReportItemTable({ rows, cats, loading, empty, editable, value, e
       {
         id: 'order',
         header: col('qty'),
-        meta: { className: 'num r bc-order-col', label: col('qty') },
+        meta: { className: 'num r bc-order-col', label: col('qty'), width: '8.5rem' },
         cell: ({ row }) => <OrderCell row={row.original} />,
       },
       {
         id: 'who',
         header: t('reports.send.colWho'),
-        meta: { label: t('reports.send.colWho') },
+        meta: { label: t('reports.send.colWho'), width: '6.5rem' },
         cell: ({ row: { original: r } }) => {
+          // Lỗi: "?" không aria-busy. Không dùng "—" vì ở cột này "—" nghĩa là không ai đăng ký
+          if (!people && peopleFailed) {
+            return (
+              <span className="sm-muted">
+                <span aria-hidden="true">?</span>
+                <span className="sr-only">{t('reports.send.whoUnknown')}</span>
+              </span>
+            );
+          }
+          if (!people) {
+            return (
+              <span className="sm-muted" aria-busy="true">
+                <span aria-hidden="true">…</span>
+                <span className="sr-only">{t('reports.send.whoLoading')}</span>
+              </span>
+            );
+          }
           const n = people.get(r.id);
           return n ? (
             <button type="button" className="sa-link" aria-label={t('reports.send.whoLabel', { name: part1Name(r, i18n.language), count: n })} onClick={() => onPeople(r.id)}>
@@ -121,7 +143,7 @@ export function ReportItemTable({ rows, cats, loading, empty, editable, value, e
       },
     ];
     return columns.map((c) => ({ ...c, enableSorting: false }));
-  }, [t, i18n.language, unitName, people, onPeople]);
+  }, [t, i18n.language, unitName, people, peopleFailed, onPeople]);
   const binding = useMemo(() => ({ editable, value, errorOf, overMax, onEdit }), [editable, value, errorOf, overMax, onEdit]);
   return (
     <OrderBind.Provider value={binding}>

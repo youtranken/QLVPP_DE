@@ -69,3 +69,7 @@ export function backlogMonths(groups: BacklogGroup[], f: BacklogFilter): Backlog
 export const monthsOf = (groups: BacklogGroup[]): string[] => [...new Set(groups.flatMap((g) => g.lines.map((l) => l.period_ym)))].sort();
 
 export const leftPeople = (groups: BacklogGroup[]): number => new Set(groups.flatMap((g) => g.lines.filter(isLeft).map((l) => l.user_sub))).size;
+
+// Tổng của nhiều tháng: một người nợ ở hai tháng chỉ đếm một lần
+export const peopleIn = (months: BacklogMonth[]) => new Set(months.flatMap((m) => m.people.map((p) => p.user_sub))).size;
+export const unitsIn = (months: BacklogMonth[]) => months.reduce((n, m) => n + m.owed_units, 0);

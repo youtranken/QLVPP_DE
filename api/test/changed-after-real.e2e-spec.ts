@@ -55,20 +55,20 @@ describe('V2D-4 changedAfter theo thao tác thật: giao không tính, điều c
     expect((await sendState(YM)).changed_after).toBe(false);
   });
 
-  it('giao 1 dòng kỳ này + 2 dòng nợ sau bản → delivered_since của món = 3 (cần lúc chốt dựng lại được, W7 không báo giả)', async () => {
+  it('giao 1 dòng kỳ này + 2 dòng nợ sau bản → settled_since của món = 3 (cần lúc chốt dựng lại được, W7 không báo giả)', async () => {
     const { item, own, debt } = await setup();
-    expect((await sendState(YM)).delivered_since).toEqual({});
+    expect((await sendState(YM)).settled_since).toEqual({});
     await f.deliver(own, { qty: 1, expected_delivered_qty: 0 }).expect(200);
     await f.deliver(debt, { qty: 2, expected_delivered_qty: 0 }).expect(200);
-    expect((await sendState(YM)).delivered_since).toEqual({ [item]: 3 });
+    expect((await sendState(YM)).settled_since).toEqual({ [item]: 3 });
   });
 
-  it('dòng vào sau bản chốt (không có trong căn cứ lúc chốt) được giao → không cộng vào delivered_since', async () => {
+  it('dòng vào sau bản chốt (không có trong căn cứ lúc chốt) được giao → không cộng vào settled_since', async () => {
     const { item, own } = await setup();
     const late = await seedLine(YM, f.A, { item_id: item, qty: 2 });
     await f.deliver(late, { qty: 2, expected_delivered_qty: 0 }).expect(200);
     await f.deliver(own, { qty: 1, expected_delivered_qty: 0 }).expect(200);
-    expect((await sendState(YM)).delivered_since).toEqual({ [item]: 1 });
+    expect((await sendState(YM)).settled_since).toEqual({ [item]: 1 });
   });
 
   it('điều chỉnh (giảm) một dòng sau bản → có thay đổi sau bản', async () => {

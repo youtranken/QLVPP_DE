@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { jsonResponse, screen, userEvent, waitFor, within } from '@/test/test-utils';
+import { jsonResponse, screen, userEvent, waitFor, within, pickOption, optionLabels } from '@/test/test-utils';
 import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
@@ -75,13 +75,13 @@ describe('StockPage', () => {
     expect(screen.getByRole('button', { name: /Sắp hết/ })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('?filter=incoming chỉ còn món có người chờ mà tủ chưa đủ, thẻ bật; "Bỏ lọc" trả đủ món', async () => {
+  it('?filter=incoming chỉ còn món có người chờ mà tủ chưa đủ, thẻ bật; "Xóa lọc" trả đủ món', async () => {
     await open('/admin/stock?filter=incoming', 'Bìa còng');
     expect(screen.queryByText('Giấy A4')).toBeNull();
     expect(screen.getByText('Bút chì')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Chờ hàng về/ })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText(/Đang lọc: Chờ hàng về · 2/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Bỏ lọc' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Xóa lọc' }));
     expect(await screen.findByText('Giấy A4')).toBeInTheDocument();
     expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
   });
@@ -275,8 +275,8 @@ describe('StockPage', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Xuất lẻ một món' }));
       const dialog = await screen.findByRole('dialog', { name: /^Xuất lẻ/ });
       const pick = within(dialog).getByRole('combobox', { name: /^Món/ });
-      expect(within(pick).queryByRole('option', { name: 'Kẹp giấy' })).toBeNull();
-      await userEvent.selectOptions(pick, within(pick).getByRole('option', { name: 'Giấy A4' }));
+      expect(await optionLabels(pick)).not.toContain('Kẹp giấy');
+      await pickOption(pick, 'Giấy A4');
       expect(within(dialog).getByText('Tồn hiện tại 6 ram')).toBeInTheDocument();
     });
 

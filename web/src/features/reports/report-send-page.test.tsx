@@ -6,6 +6,7 @@ import { mockViewport } from '@/test/viewport';
 import { callsTo, itemRow, sendReport, sentData, sentState, setupSendAdm, YM } from '@/features/send-adm/send-adm-fixtures';
 import { registrationView } from '@/features/summary/registration-fixtures';
 import { snapshotRow } from './reports-fixtures';
+import { expectFixedColumns } from '@/test/fixed-columns';
 
 const PEN = itemRow({ key: 'kA', name: 'Bút bi', requested: 5, need: 5 });
 const PAPER = itemRow({ key: 'kB', name: 'Giấy A4', requested: 3, need: 3 });
@@ -43,6 +44,11 @@ describe('Báo cáo & gửi NCC: đầu trang và trạng thái', () => {
     expect(screen.getByRole('button', { name: 'Xuất Excel' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Xem tổng kết' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'In trình ký' })).toBeNull();
+    // Cạnh nút › (tắt): kỳ đang mở ghi rõ còn đăng ký, báo cáo sau khi khóa — không còn "Đang mở" dễ hiểu nhầm là báo cáo được
+    const beyond = screen.getByRole('button', { name: /đang đăng ký/ });
+    expect(beyond).toHaveTextContent('Tháng 11 đang đăng ký — báo cáo sau 00:00 ngày 11/11');
+    expect(beyond).toBeDisabled();
+    expect(screen.queryByText('Đang mở')).toBeNull();
   });
 
   it('bật "Chỉ món có Tổng cần" → chỉ còn hàng có Tổng cần > 0', async () => {
@@ -226,6 +232,47 @@ describe('Báo cáo & gửi NCC: kỳ cũ hơn, ai đăng ký, các bản đã i
     expect(within(pen).getAllByRole('cell').some((c) => c.textContent === '9')).toBe(true);
   });
 
+  const olderSetup = (byItem: () => Response) => {
+    const older = sendReport([PEN, PAPER], { ym: '2026-09' });
+    const oldSent = sentState(sentData(older, { kA: 9, kB: 4 }, { period_ym: '2026-09' }));
+    setupSendAdm({
+      report: REPORT,
+      extra: (url) => {
+        if (url === '/api/admin/reports/2026-09') return jsonResponse(200, older);
+        if (url === '/api/admin/periods/2026-09/send-state') return jsonResponse(200, oldSent);
+        if (url.startsWith('/api/admin/periods/2026-09/requests?by=item')) return byItem();
+        if (url.startsWith('/api/admin/reports/2026-09/snapshots')) return jsonResponse(200, { items: [] });
+        return undefined;
+      },
+    });
+    open('/admin/reports?ym=2026-09');
+  };
+  const whoCells = async () => {
+    const t = await table();
+    await waitFor(() => expect(t.getAllByRole('row').some((r) => r.textContent?.includes('Giấy A4'))).toBe(true));
+    return ['Bút bi', 'Giấy A4'].map((n) => t.getAllByRole('row').find((r) => r.textContent?.includes(n))!.lastElementChild!);
+  };
+
+  it('kỳ cũ hơn: cột "Ai đăng ký" có số người theo key của bản đã gửi; món không ai đăng ký mới là "—"', async () => {
+    olderSetup(() => jsonResponse(200, { items: [{ key: 'kA', item_id: 'kA', name: 'Bút bi', unit: 'cay', requested_qty: 5, people: 3, max_qty: 5, over_max: false }] }));
+    const [pen, paper] = await whoCells();
+    await waitFor(() => expect(pen).toHaveTextContent('3 người'));
+    expect(paper).toHaveTextContent('—');
+  });
+
+  it('kỳ cũ hơn: tải số người lỗi → báo "Chưa tải được ai đăng ký" + Thử lại, ô không hiện "—"', async () => {
+    olderSetup(() => jsonResponse(429, { code: 'TOO_MANY_REQUESTS' }));
+    expect(await screen.findByText('Chưa tải được ai đăng ký từng món.', {}, { timeout: 4000 })).toBeInTheDocument();
+    const cells = await whoCells();
+    for (const c of cells) expect(c).not.toHaveTextContent('—');
+    // L2 vòng 8: lỗi thì ô thôi báo "đang tải" (không aria-busy, không "Đang tải số người"), hiện "?" + chữ ẩn "Chưa tải được"
+    for (const c of cells) {
+      expect(c.querySelector('[aria-busy]')).toBeNull();
+      expect(c).not.toHaveTextContent('Đang tải số người');
+      expect(c).toHaveTextContent('?Chưa tải được số người');
+    }
+  });
+
   it('kỳ cũ hơn: Xem tổng kết mở hộp với bản đã gửi (không gọi preview), nút "In" in thẳng bản đó, không tạo bản', async () => {
     const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
     const older = sendReport([PEN, PAPER], { ym: '2026-09' });
@@ -280,6 +327,11 @@ describe('Báo cáo & gửi NCC: kỳ cũ hơn, ai đăng ký, các bản đã i
     expect(await within(dialog).findByText('Đăng ký 20 cây · sau điều chỉnh 19 · Đề nghị 5')).toBeInTheDocument();
     expect(within(dialog).getByText('Adm D&E bỏ: Không có hàng')).toBeInTheDocument();
     expect(within(dialog).getByText('Tổng sau điều chỉnh')).toBeInTheDocument();
+    // < 768 bảng thành thẻ như bảng trang: mỗi ô có nhãn cột (data-label), ô ghi chú rỗng để CSS ẩn ở thẻ / hiện "—" ở bảng
+    const table = within(dialog).getByRole('table');
+    expect(table).toHaveClass('table-stack');
+    const cells = within(within(dialog).getAllByRole('row')[1]!).getAllByRole('cell');
+    expect(cells.map((c) => c.getAttribute('data-label'))).toEqual([null, 'Nhóm', 'Số lượng', 'Ghi chú', null]);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Xem phiếu của Nhân viên C' }));
     expect(await screen.findByRole('dialog', { name: 'Phiếu của Nhân viên C' })).toBeInTheDocument();
   });
@@ -326,5 +378,14 @@ describe('Báo cáo & gửi NCC: số khởi tạo từ bản đã gửi không 
     expect(await screen.findByText('Bỏ số Đề nghị vừa sửa?')).toBeInTheDocument();
     // Hai ô khởi tạo từ bản đã gửi không tính: chỉ ô vừa gõ là thay đổi
     expect(screen.getByText(/Bạn đã sửa 1 món nhưng chưa Xem tổng kết và bấm Đồng ý và in/)).toBeInTheDocument();
+  });
+});
+
+describe('Báo cáo & gửi NCC: cột cố định', () => {
+  it('bảng món cố định bề rộng cột: tháng có ô nhập Đề nghị và tháng chỉ có số cùng một bố cục cột', async () => {
+    setupSendAdm({ report: REPORT });
+    open();
+    await qtyBox('Bút bi');
+    expectFixedColumns((await screen.findAllByRole('table'))[0]!);
   });
 });

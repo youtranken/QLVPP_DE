@@ -13,8 +13,8 @@ const config: Messages<typeof vi> = {
     },
     period: {
       title: 'Registration period',
-      effectiveOpen: 'Period {{open}} (open) still locks at {{lock}}.',
-      effectiveNext: 'From period {{next}}: locks at {{lock}}.',
+      effectiveOpen: '{{open, MonthName}} period (open) still locks at {{lock}}.',
+      effectiveNext: 'From {{next, monthName}}: locks at {{lock}}.',
       confirmTitle: 'Change the sign-up deadline?',
       confirmOk: 'Save new deadline',
       note: 'Applies only to periods created later; the open period keeps its deadline.',
@@ -31,6 +31,8 @@ const config: Messages<typeof vi> = {
       defaultMax: 'Max per item',
       defaultMaxHint: 'Suggested for new items, 1–999.',
       defaultMaxUnit: 'units/month',
+      defaultMaxDown: 'One unit less',
+      defaultMaxUp: 'One unit more',
       save: 'Save registration period',
     },
     preview: {

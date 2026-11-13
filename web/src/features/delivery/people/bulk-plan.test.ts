@@ -36,6 +36,19 @@ describe('bulkPlan', () => {
     expect(owners).toEqual({ 'r-t0': 'u-t', 'r-t1': 'u-t' });
   });
 
+  it('món ngoài DM đã duyệt: đã nhận 2 → giao 2 trong body; chưa nhận gì → không gửi, tính vào phần còn lại', () => {
+    const k = person({
+      user_sub: 'u-k',
+      lines: [
+        pLine({ line_id: 'got', request_id: 'r-k', item_id: null, stock_qty: null, name: 'Bìa còng', review_status: 'accepted', qty: 3, remaining_qty: 3, deliver_cap: 2 }),
+        pLine({ line_id: 'wait', request_id: 'r-k', item_id: null, stock_qty: null, name: '#%$#', review_status: 'accepted', qty: 1, remaining_qty: 1, deliver_cap: 0 }),
+      ],
+    });
+    const { body, summary } = bulkPlan([k], [k]);
+    expect(body.requests).toEqual([{ request_id: 'r-k', lines: [{ line_id: 'got', qty: 2, expected_delivered_qty: 0 }] }]);
+    expect(summary[0]).toMatchObject({ items: 1, give: 2, left: 2 });
+  });
+
   it('dòng NCC hết hàng không vào body và không có bước hủy (bulk không hủy)', () => {
     const adm = person({ user_sub: 'u-m', lines: [pLine({ line_id: 'lm', request_id: 'r-m', item_id: 'i-x', stock_qty: 5, adm_out: true })] });
     const { body, skipped } = bulkPlan([adm], [adm]);
