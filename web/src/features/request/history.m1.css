@@ -71,6 +71,16 @@
   [data-shell='member'] .hs-c-st { width: 7.5rem; }
   [data-shell='member'] .hs-c-note { width: 9rem; }
 }
+/* ≥1280, bản EN: "Received 5/5" (123px) và "Received 09:35 12/11" (171px) dài hơn bản VI ("Đã nhận 5/5" 114px, "Nhận 09:35 12/11"
+   143px) → cột Tình trạng/Ghi chú rộng thêm cho vừa một dòng, lấy lại từ cột số (vừa đúng tiêu đề EN + 2px) và cột Món (189 → 159px).
+   Từ 1280: 1181–1279 cột Món đã chỉ còn 90–189px, lấy thêm 30px thì tên món gãy nhiều dòng hơn — giữ như bản VI.
+   Chỉ khi trang là EN (<html lang="en">, :lang(en)): bản VI giữ nguyên bề rộng. Cột vẫn cố định khi đổi tháng. */
+@media (min-width: 1280px) {
+  [data-shell='member']:lang(en) .hs-c-reg { width: 5.375rem; }
+  [data-shell='member']:lang(en) .hs-c-give { width: 6rem; }
+  [data-shell='member']:lang(en) .hs-c-st { width: 7.875rem; }
+  [data-shell='member']:lang(en) .hs-c-note { width: 10.875rem; }
+}
 /* 768–1180: khung hẹp (1024 còn cột danh sách tháng bên trái) — ô bớt padding, cột số vừa đúng tiêu đề, tiêu đề không gãy dòng */
 @media (min-width: 768px) and (max-width: 1180px) {
   [data-shell='member'] .hs-table th, [data-shell='member'] .hs-table td { padding-inline: var(--s-2); }
