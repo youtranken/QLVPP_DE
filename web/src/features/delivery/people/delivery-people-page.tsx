@@ -7,8 +7,7 @@ import { lockedYm } from '@/lib/ym';
 import { usePanelParam } from '@/lib/use-panel-param';
 import { useUrlPatch } from '@/lib/use-url-patch';
 import { OverlayPanel } from '@/ui/overlay-panel';
-import { Icon } from '@/ui/icon';
-import { SearchClear } from '@/ui/search-clear';
+import { SearchField } from '@/ui/toolbar';
 import { EmptyState, Loading, LoadError } from '@/ui/load-state';
 import { PageHeader } from '@/ui/page-header';
 import { Segmented } from '@/ui/segmented';
@@ -137,18 +136,14 @@ function PeopleBoard({ ym }: { ym: string }) {
   return (
     <>
       <div className="toolbar dp-toolbar">
-        <div className="toolbar__search">
-          <Icon name="search" size={18} />
-          <input
-            ref={searchRef}
-            type="search"
-            aria-label={t('delivery.people.searchLabel')}
-            placeholder={t('delivery.people.searchPlaceholder')}
-            value={q}
-            onChange={(e) => update({ q: e.target.value || null }, true)}
-          />
-          <SearchClear value={q} onClear={() => update({ q: null }, true)} inputRef={searchRef} />
-        </div>
+        <SearchField
+          inputRef={searchRef}
+          iconSize={18}
+          label={t('delivery.people.searchLabel')}
+          placeholder={t('delivery.people.searchPlaceholder')}
+          value={q}
+          onChange={(v) => update({ q: v || null }, true)}
+        />
         <div className="pp-tabs" ref={tabsRef}>
           <ScrollFade className="pp-tabs__scroll">
             <Segmented

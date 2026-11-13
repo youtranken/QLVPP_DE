@@ -49,6 +49,8 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
   if (failed) return <LoadError onRetry={() => void failed.refetch()} />;
   if (!summary.data || !send.query.data || !plan.data) return <Loading />;
 
+  // Chưa nạp hết người của tháng này (đang tải hoặc còn trang sau): bước Giao và chip chưa có số đúng
+  const partial = (x: typeof all) => x.query.isPending || x.query.hasNextPage;
   const people = all.rows.filter((r) => r.total_qty > 0);
   const steps = monthSteps(
     {
@@ -57,7 +59,7 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
       isOpen: false,
       send: send.state ? { state: send.state, at: send.sent?.created_at ?? send.noOrder?.at ?? null } : null,
       plan: plan.data ?? null,
-      deliver: { done: people.filter((r) => r.delivered_qty + r.cancelled_qty >= r.total_qty).length, total: people.length },
+      deliver: partial(all) ? 'loading' : { done: people.filter((r) => r.delivered_qty + r.cancelled_qty >= r.total_qty).length, total: people.length },
       ym,
     },
     t,
@@ -67,7 +69,7 @@ export function MonthLockedView({ ym, openYm, chip, q, left, presetReason, onChi
     <>
       <MonthStrip steps={steps} />
       {latest && <MonthLeftReminder ym={ym} />}
-      <MonthChips rows={shown.rows} chip={chip} q={q} onChip={onChip} onQ={onQ} />
+      <MonthChips rows={shown.rows} loading={partial(shown)} chip={chip} q={q} onChip={onChip} onQ={onQ} />
       {shown.query.isError ? (
         <LoadError onRetry={() => void shown.query.refetch()} />
       ) : (

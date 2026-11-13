@@ -1,4 +1,4 @@
-import { keepPreviousData, queryOptions, useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { queryOptions, useInfiniteQuery, useQuery, type InfiniteData } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import type { RequestView } from '@/features/request/request.api';
 
@@ -90,19 +90,22 @@ export function usePeriodSummary(ym: string | undefined) {
   return useQuery(periodSummaryQuery(ym));
 }
 
+type PersonPage = { items: PersonRow[]; next_cursor: string | null };
+
 export function usePersonRows(ym: string | undefined, filter: SummaryFilter, q: string) {
   return useInfiniteQuery({
     queryKey: [...SUMMARY_KEY, ym, 'person', filter, q],
     enabled: !!ym,
     initialPageParam: null as string | null,
-    placeholderData: keepPreviousData,
+    // Giữ dữ liệu cũ chỉ khi đổi tìm/lọc trong CÙNG tháng; sang tháng khác mà giữ thì dải bước và chip tính bằng người tháng trước
+    placeholderData: (prev: InfiniteData<PersonPage, string | null> | undefined, prevQuery) => (prevQuery?.queryKey[1] === ym ? prev : undefined),
     queryFn: ({ pageParam }) => {
       const params = new URLSearchParams({ by: 'person', filter, limit: String(PERSON_PAGE) });
       if (q) params.set('q', q);
       if (pageParam) params.set('cursor', pageParam);
-      return apiFetch<{ items: PersonRow[]; next_cursor: string | null }>(`${base(ym!)}/requests?${params}`);
+      return apiFetch<PersonPage>(`${base(ym!)}/requests?${params}`);
     },
-    getNextPageParam: (last) => last.next_cursor,
+    getNextPageParam: (last: PersonPage) => last.next_cursor,
   });
 }
 
