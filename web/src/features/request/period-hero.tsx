@@ -19,7 +19,7 @@ export function PeriodHero({
     : t('request.hero.notSaved');
   const sub = !period.is_open
     ? t('request.hero.subLocked', { month: monthOf(period.ym) })
-    : t(last ? 'request.hero.subLast' : 'request.hero.sub', { date: fmt.lastDay(period.deadline), n: period.days_left });
+    : t(last ? 'request.hero.subLast' : 'request.hero.sub', { date: fmt.lastDay(period.deadline), count: period.days_left });
   return (
     <section className="rq-hero" aria-labelledby="rq-hero-title">
       <div className="rq-hero-text">

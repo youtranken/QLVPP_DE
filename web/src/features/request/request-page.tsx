@@ -5,6 +5,7 @@ import type { Category } from '@/features/catalog/catalog.api';
 import { useMe } from '@/lib/me';
 import { langOf, lockPhrase } from '@/lib/period-text';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
+import { MemberPage } from '@/shell/member-page';
 import { Loading, LoadError } from '@/ui/load-state';
 import { CartPanel } from './cart-panel';
 import { CartSheet } from './cart-sheet';
@@ -124,7 +125,7 @@ function RequestEditor({
   const [editFrom, setEditFrom] = useState<number | null>(null);
   useEffect(() => setEditFrom(null), [cart.saved]);
   const mode: 'view' | 'edit' = cart.saved && !dirty && editFrom !== savedSeq ? 'view' : 'edit';
-  const saveLabel = dirty ? t('request.cart.saveDirty', { n: cart.dirtyCount }) : t('request.cart.save');
+  const saveLabel = dirty ? t('request.cart.saveDirty', { count: cart.dirtyCount }) : t('request.cart.save');
   const setQty = (key: string, n: number) => {
     flow.touched(key);
     setEditFrom(savedSeq);
@@ -265,6 +266,7 @@ function LoadPanel({ children }: { children: ReactNode }) {
 }
 
 export function RequestPage() {
+  const { t } = useTranslation();
   const period = useCurrentPeriod();
   const request = useMyRequest(period.data?.ym);
   const [carry, setCarry] = useState<Carry | null>(null);
@@ -275,8 +277,15 @@ export function RequestPage() {
   const categories = useMemberCategories();
 
   const failed = [period, request, items, categories].find((q) => q.isError);
-  // Trạng thái tải/lỗi tự đặt trong khung sáng
-  if (failed) return <LoadPanel><LoadError onRetry={() => void failed.refetch()} /></LoadPanel>;
+  // Trạng thái tải/lỗi tự đặt trong khung sáng. Lỗi giữ tiêu đề trang như Lịch sử: biết kỳ thì tiêu đề hero, chưa biết thì "Đăng ký"
+  if (failed) {
+    const title = period.data ? t('request.hero.title', { month: monthOf(period.data.ym) }) : t('nav.register');
+    return (
+      <MemberPage title={title}>
+        <LoadError onRetry={() => void failed.refetch()} />
+      </MemberPage>
+    );
+  }
   if (!period.data || request.data === undefined || !items.data || !categories.data) return <LoadPanel><Loading /></LoadPanel>;
   const ym = period.data.ym;
   return (

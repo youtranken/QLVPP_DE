@@ -34,6 +34,29 @@ describe('RequestPage', () => {
     expect(retry.closest('.m-panel')).not.toBeNull();
   });
 
+  // Rà soát 13/11 Gu #5 (nhân viên): lỗi tải chỉ còn hộp lỗi, mất tiêu đề trang (Lịch sử thì giữ)
+  it('lỗi tải phiếu (đã biết kỳ) giữ tiêu đề trang "Đăng ký văn phòng phẩm tháng 11" ở 390', async () => {
+    mockViewport(390);
+    const api = stubRequestApi();
+    api.fetchMock.mockImplementation((url: string) =>
+      Promise.resolve(url.startsWith('/api/me/request?ym=') ? jsonResponse(500, {}) : jsonResponse(200, url === '/api/periods/current' ? PERIOD : [])),
+    );
+    renderApp(makeMe('member'), '/');
+    const retry = await screen.findByRole('button', { name: 'Thử lại' });
+    expect(screen.getByRole('heading', { level: 1, name: 'Đăng ký văn phòng phẩm tháng 11' })).toBeInTheDocument();
+    expect(retry.closest('.m-panel')).not.toBeNull();
+  });
+
+  it('lỗi tải kỳ hiện tại → tiêu đề "Đăng ký" + Thử lại trong khung sáng', async () => {
+    mockViewport(1280);
+    const api = stubRequestApi();
+    api.fetchMock.mockImplementation((url: string) => Promise.resolve(url === '/api/periods/current' ? jsonResponse(500, {}) : jsonResponse(200, [])));
+    renderApp(makeMe('member'), '/');
+    const retry = await screen.findByRole('button', { name: 'Thử lại' }, { timeout: 15000 });
+    expect(screen.getByRole('heading', { level: 1, name: 'Đăng ký' })).toBeInTheDocument();
+    expect(retry.closest('.m-panel')).not.toBeNull();
+  }, 20000);
+
   it('chưa có phiếu: hero "Đăng ký văn phòng phẩm tháng 11", còn 4 ngày, "Chưa lưu phiếu tháng này"; món chỉ Adm D&E không hiện', async () => {
     mockViewport(1280);
     stubRequestApi();

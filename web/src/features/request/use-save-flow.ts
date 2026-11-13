@@ -54,7 +54,7 @@ type T = (k: string, o?: Record<string, unknown>) => string;
 export function lockedNotice(t: T, info: LockedInfo, unavailable = 0): Notice {
   const opts = { month: monthOf(info.fromYm), next: monthOf(info.nextYm), time: info.savedTime };
   const main = t(info.savedTime ? 'request.lockedSaved' : 'request.locked', opts);
-  const extra = unavailable > 0 ? ` ${t('request.unavailable', { n: unavailable })}` : '';
+  const extra = unavailable > 0 ? ` ${t('request.unavailable', { count: unavailable })}` : '';
   return { text: main + extra, focusKey: null, tone: 'info' };
 }
 

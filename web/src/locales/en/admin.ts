@@ -7,7 +7,7 @@ const admin: Messages<typeof vi> = {
     page: {
       description: 'People synced from PMH ID. Personal details are edited in PMH ID, not in this app.',
       searchLabel: 'Search people',
-      search: 'Search by name, email or employee code',
+      search: 'Name, email or code',
       hint: 'Pulls fresh data from PMH ID.',
       sync: 'Sync now',
       syncing: 'Syncing…',

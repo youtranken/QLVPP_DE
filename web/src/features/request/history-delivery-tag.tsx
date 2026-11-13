@@ -14,7 +14,7 @@ export function DeliveryTag({ item }: { item: TagItem }) {
   const state = deliveryState({ total_qty: c.qty, delivered_qty: c.delivered_qty, remaining_qty: c.remaining_qty });
   if (state === 'owed' || state === 'undelivered') {
     const k = c.owed_line_count;
-    return <Chip tone="warn">{k > 0 ? t('request.history.delivery.owed', { k }) : t('request.history.delivery.waiting')}</Chip>;
+    return <Chip tone="warn">{k > 0 ? t('request.history.delivery.owed', { count: k }) : t('request.history.delivery.waiting')}</Chip>;
   }
   // Chỉ có món ngoài danh mục (catalog trống) thì không có trạng thái giao; hết phiếu mới là "Không có phiếu"
   if (state === 'none' && item.line_count > 0) return null;

@@ -22,13 +22,13 @@ export function ReceiveStrip({ period }: { period: CurrentPeriod }) {
       <p>
         {main && (
           <>
-            <b>{t('request.receive.stripHead', { month: monthOf(prev) })}</b> · {t('request.receive.strip', sum)}
+            <b>{t('request.receive.stripHead', { month: monthOf(prev) })}</b> · {t('request.receive.strip', { ...sum, count: sum.total })}
           </>
         )}
         {older.map((o, i) => (
           <span key={o.ym}>
             {(main || i > 0) && ' · '}
-            <Link to={`/history/${o.ym}`}>{t('request.receive.older', { month: monthOf(o.ym), k: o.items })}</Link>
+            <Link to={`/history/${o.ym}`}>{t('request.receive.older', { month: monthOf(o.ym), count: o.items })}</Link>
           </span>
         ))}
       </p>

@@ -68,7 +68,6 @@
 @media (max-width: 767px) {
   [data-shell='admin'] .sm-page .table-wrap { overflow-x: auto; }
 }
-@media (max-width: 767px) { [data-shell='admin'] .rg-step { width: var(--hit); height: var(--hit); } }
 @media (max-width: 767px) { [data-shell='admin'] .aj-line__drop { width: var(--hit); height: var(--hit); } }
 [data-shell='admin'] .alert a { color: inherit; text-decoration: underline; }
 [data-shell='admin'] .rg-head { align-items: flex-start; }

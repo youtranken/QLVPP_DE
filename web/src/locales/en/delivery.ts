@@ -54,6 +54,7 @@ const delivery: Messages<typeof vi> = {
       month: 'Month owed',
       allMonths: 'All months',
       search: 'Search person or item',
+      searchPlaceholder: 'Search person or item',
       leftOnly: 'Only people who left ({{n}})',
       tableLabel: 'Outstanding by month, person, item',
       monthHead: '{{month}} · {{people}} people · {{units}} units',

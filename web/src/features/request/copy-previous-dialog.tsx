@@ -25,7 +25,7 @@ export function CopySummaryDialog({ summary, onClose }: { summary: CopySummary; 
     ...result.capped.map((c) => t('request.copy.capped', c)),
     ...result.previously_accepted.map((name) => t('request.copy.accepted', { name })),
     ...report.heldByAdmin.map((name) => t('request.copy.skipped', { name, reason: t('request.copy.reasons.HELD_BY_ADMIN') })),
-    ...(report.unavailable > 0 ? [t('request.unavailable', { n: report.unavailable })] : []),
+    ...(report.unavailable > 0 ? [t('request.unavailable', { count: report.unavailable })] : []),
   ];
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()} className="sheet rq-dialog" maxWidth={480}>

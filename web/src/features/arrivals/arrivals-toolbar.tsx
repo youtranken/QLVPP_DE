@@ -63,6 +63,7 @@ export function ArrivalsToolbar({ filter, groups, counts, total, shown, shortCou
       </div>
       <GroupChips
         className="flt-chips"
+        fade
         chipClassName="flt-chip"
         countClassName="flt-cnt"
         label={t('arrivals.filter.groups')}

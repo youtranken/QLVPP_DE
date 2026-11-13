@@ -16,9 +16,9 @@ function MasterItem({ item, open, selected }: { item: HistoryItem; open: boolean
     <li>
       <Link className="hs-m-row" to={open ? '/' : `/history/${item.period_ym}`} aria-current={selected ? 'page' : undefined}>
         <span className="hs-month">{t('request.history.monthShort', { month: Number(item.period_ym.slice(5)) })}</span>
-        <span className="hs-sum">{t('request.history.masterSum', { kinds: item.catalog.line_count, units: item.catalog.qty })}</span>
+        <span className="hs-sum">{t('request.history.masterSum', { count: item.catalog.line_count, units: t('request.unitCount', { count: item.catalog.qty }) })}</span>
         {open ? <Chip tone="open">{t('request.history.open')}</Chip> : <DeliveryTag item={item} />}
-        {custom.length > 0 && <span className="hs-custom">{custom.map((c) => t(`request.history.customCount.${c.key}`, { n: c.n })).join(' · ')}</span>}
+        {custom.length > 0 && <span className="hs-custom">{custom.map((c) => t(`request.history.customCount.${c.key}`, { count: c.n })).join(' · ')}</span>}
         <Icon name="chevr" className="hs-m-chev" size={18} />
       </Link>
     </li>

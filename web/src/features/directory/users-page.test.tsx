@@ -170,6 +170,8 @@ describe('UsersPage B10', () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     const box = screen.getByRole('searchbox', { name: 'Tìm người' });
+    // Rà soát 13/11 Gu #12: placeholder vừa ô ở 768 (176px), không bị cắt
+    expect(box).toHaveAttribute('placeholder', 'Tìm tên, email, mã NV');
     expect(box).toHaveAttribute('maxlength', '200');
     await userEvent.type(box, 'nv0007');
     await waitFor(() => expect(bodyRows()).toHaveLength(1));

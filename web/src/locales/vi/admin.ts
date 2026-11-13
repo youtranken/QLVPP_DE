@@ -4,7 +4,8 @@ const admin = {
     page: {
       description: 'Người dùng đồng bộ từ PMH ID. Thông tin cá nhân sửa ở PMH ID, không sửa trong app.',
       searchLabel: 'Tìm người',
-      search: 'Tìm theo tên, email hoặc mã NV',
+      // Placeholder: vừa ô tìm ở 768 (176px); nhãn đầy đủ là searchLabel
+      search: 'Tìm tên, email, mã NV',
       hint: 'Lấy dữ liệu mới từ PMH ID.',
       sync: 'Đồng bộ ngay',
       syncing: 'Đang đồng bộ…',

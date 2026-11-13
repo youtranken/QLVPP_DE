@@ -13,6 +13,7 @@ import { ReviewEmpty } from './review-empty';
 import { ReviewPeriod } from './review-period';
 import { useReviewParams } from './use-review-params';
 import './review.m1.css';
+import { ScrollFade } from '@/ui/filter/scroll-fade';
 
 // Dòng đã thêm vào danh mục không còn custom_name: lấy tên món đích
 function useItemNames() {
@@ -75,9 +76,9 @@ export function ReviewPage() {
         <ReviewPeriod ym={p.ym} ceilingYm={current.data && lockedYm(current.data.ym)} onChange={(v) => change(() => p.setMonth(v))} />
       </div>
       <div className="ct-block">
-        <div className="toolbar rv-tabs">
+        <ScrollFade className="toolbar rv-tabs">
           <Segmented label={t('review.filters.label')} value={p.status} options={tabs} onChange={(s) => change(() => p.setStatus(s))} />
-        </div>
+        </ScrollFade>
       </div>
       {staleNotice && (
         <p role="status" className="alert alert--warn">

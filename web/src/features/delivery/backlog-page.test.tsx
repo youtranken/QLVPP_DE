@@ -35,7 +35,8 @@ describe('BacklogPage — đầu trang gọn', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Còn nợ');
     const bar = screen.getByRole('combobox', { name: 'Tháng nợ' }).closest('.toolbar')!;
-    expect(within(bar as HTMLElement).getByRole('searchbox', { name: 'Tìm người hoặc món (không cần dấu)' })).toBeInTheDocument();
+    // Rà soát 13/11 Gu #12: placeholder ngắn vừa ô ở 360/390 (250/280px); "không cần dấu" ở nhãn
+    expect(within(bar as HTMLElement).getByRole('searchbox', { name: 'Tìm người hoặc món (không cần dấu)' })).toHaveAttribute('placeholder', 'Tìm người hoặc món');
     expect(within(bar as HTMLElement).getByRole('switch', { name: 'Chỉ người đã nghỉ (1)' })).toBeInTheDocument();
     expect(screen.queryByText('Tổng còn nợ')).toBeNull();
     expect(screen.queryByText(/Phần chưa giao của các tháng/)).toBeNull();

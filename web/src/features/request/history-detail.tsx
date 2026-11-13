@@ -128,8 +128,8 @@ function Header({ ym, view, level }: { ym: string; view: RequestView; level: 1 |
   const sum = receiveSummary(receiveRows(view, t, i18n.language).filter((r) => catalogIds.has(r.id)));
   const custom = CUSTOM_STATUSES.map((k) => ({ k, n: view.lines.filter((l) => l.review_status === k).length })).filter((c) => c.n > 0);
   const parts = [
-    t('request.history.summary', { kinds: catalog.length, units: catalog.reduce((n, l) => n + l.qty, 0) }),
-    ...custom.map((c) => t(`request.history.customCount.${c.k}`, { n: c.n })),
+    t('request.history.summary', { count: catalog.length, units: t('request.unitCount', { count: catalog.reduce((n, l) => n + l.qty, 0) }) }),
+    ...custom.map((c) => t(`request.history.customCount.${c.k}`, { count: c.n })),
     t('request.history.savedAt', { time: vnSavedStamp(view.saved_at) }),
     view.department,
   ].filter(Boolean);
@@ -141,7 +141,7 @@ function Header({ ym, view, level }: { ym: string; view: RequestView; level: 1 |
       </div>
       {sum.total > 0 && (
         <Chip tone={sum.waiting > 0 ? 'warn' : 'ok'}>
-          {sum.waiting > 0 ? t('request.history.chipDelivering', { done: sum.done, total: sum.total }) : t('request.history.delivery.done')}
+          {sum.waiting > 0 ? t('request.history.chipDelivering', { done: sum.done, total: sum.total, count: sum.total }) : t('request.history.delivery.done')}
         </Chip>
       )}
     </div>
