@@ -92,13 +92,19 @@ export function usePeriodSummary(ym: string | undefined) {
 
 type PersonPage = { items: PersonRow[]; next_cursor: string | null };
 
+// Giữ dữ liệu cũ chỉ khi đổi tìm/lọc trong CÙNG tháng (ym đứng ngay sau SUMMARY_KEY trong khóa); sang tháng khác mà giữ
+// thì dải bước và chip tính bằng người tháng trước
+export function keepWithinMonth<T>(ym: string | undefined) {
+  return (prev: T | undefined, prevQuery?: { queryKey: readonly unknown[] }): T | undefined =>
+    prevQuery?.queryKey[SUMMARY_KEY.length] === ym ? prev : undefined;
+}
+
 export function usePersonRows(ym: string | undefined, filter: SummaryFilter, q: string) {
   return useInfiniteQuery({
     queryKey: [...SUMMARY_KEY, ym, 'person', filter, q],
     enabled: !!ym,
     initialPageParam: null as string | null,
-    // Giữ dữ liệu cũ chỉ khi đổi tìm/lọc trong CÙNG tháng; sang tháng khác mà giữ thì dải bước và chip tính bằng người tháng trước
-    placeholderData: (prev: InfiniteData<PersonPage, string | null> | undefined, prevQuery) => (prevQuery?.queryKey[1] === ym ? prev : undefined),
+    placeholderData: keepWithinMonth<InfiniteData<PersonPage, string | null>>(ym),
     queryFn: ({ pageParam }) => {
       const params = new URLSearchParams({ by: 'person', filter, limit: String(PERSON_PAGE) });
       if (q) params.set('q', q);
