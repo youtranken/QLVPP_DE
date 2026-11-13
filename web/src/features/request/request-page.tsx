@@ -87,10 +87,13 @@ function RequestEditor({
   useLeaveGuard(cart.dirtyCount);
   const openerRef = useRef<HTMLButtonElement>(null);
   const barSaveRef = useRef<HTMLButtonElement>(null);
+  // Bản mới nhất cho các effect bên dưới: ghi trong effect (chỉ lần render đã commit), đứng trước các effect đọc nó
   const sheetOpenRef = useRef(sheetOpen);
-  sheetOpenRef.current = sheetOpen;
   const narrowRef = useRef(narrow);
-  narrowRef.current = narrow;
+  useEffect(() => {
+    sheetOpenRef.current = sheetOpen;
+    narrowRef.current = narrow;
+  });
   // Lỗi theo dòng: mở sheet để dòng lỗi thấy được — một lần cho mỗi sự kiện lỗi (đổi bề ngang không mở lại)
   const lineFailure = flow.noticeEvent?.focusKey ? flow.noticeEvent : null;
   useEffect(() => {
