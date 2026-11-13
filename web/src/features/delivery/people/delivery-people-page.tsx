@@ -229,7 +229,8 @@ export function DeliveryPeoplePage() {
   const { t } = useTranslation();
   const current = useCurrentPeriod();
   const workingYm = current.data ? lockedYm(current.data.ym) : undefined;
-  const title = t('delivery.people.title', { month: workingYm ? monthOf(workingYm) : '' }).trim();
+  // Chưa biết kỳ (đang tải hoặc lỗi) → tiêu đề không có tháng, không để cụt "… kỳ tháng"
+  const title = workingYm ? t('delivery.people.title', { month: monthOf(workingYm) }) : t('nav.delivery');
   return (
     <div className="ct-page">
       <PageHeader crumbs={[t('nav.groups.monthly'), t('nav.delivery')]} title={title} />

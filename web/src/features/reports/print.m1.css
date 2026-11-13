@@ -37,6 +37,10 @@
 [data-shell='admin'] .pp-portal { display: none; }
 @media screen {
   [data-shell='admin'] .pp-page .pp-sheet { width: 210mm; max-width: 100%; min-height: 297mm; margin: 0 auto; }
+  /* Màn hẹp (điện thoại): tờ không co dưới 600px để bảng không gãy từng chữ — tờ cuộn ngang trong khung riêng, trang không cuộn ngang.
+     Chỉ áp trên màn hình: bản in A4 giữ nguyên */
+  [data-shell='admin'] .pp-sheet-scroll { min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; }
+  [data-shell='admin'] .pp-sheet-scroll > .pp-sheet { min-width: 600px; }
 }
 
 @media print {

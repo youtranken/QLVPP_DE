@@ -67,6 +67,7 @@ const reports = {
         label: 'Thanh công cụ bản in (không in ra giấy)',
         back: 'Quay lại',
         summary: 'Bản in tháng {{month}}/{{year}} · bản chốt {{at}} · A4 dọc',
+        pending: 'Bản in bản chốt · A4 dọc',
         print: 'In',
       },
       form: {

@@ -70,6 +70,7 @@ const reports: Messages<typeof vi> = {
         label: 'Print toolbar (not printed)',
         back: 'Back',
         summary: 'Printout for {{month}}/{{year}} · snapshot {{at}} · A4 portrait',
+        pending: 'Snapshot printout · A4 portrait',
         print: 'Print',
       },
       form: {

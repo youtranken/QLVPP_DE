@@ -172,6 +172,15 @@ test.describe('E5-S3 E9-S4 trang in từ bản chốt (kỳ trước đã khóa,
     const rowB = formTable(page).getByRole('row', { name: new RegExp(b.name) });
     await expect(rowB).toBeVisible();
     await expect(rowB.getByRole('cell').last()).toHaveText('1');
+    // Mã dài không bẻ dòng: ở 360/390 tờ giữ bề rộng tối thiểu và cuộn ngang trong khung riêng —
+    // trang không cuộn ngang, bảng không lòi khỏi tờ (rà soát 13/11 #4)
+    const fit = await page.evaluate(() => {
+      const sheet = document.querySelector('.pp-sheet')!.getBoundingClientRect();
+      const table = document.querySelector('.pp-sheet table')!.getBoundingClientRect();
+      return { pageWidth: document.documentElement.scrollWidth, tableInSheet: table.left >= sheet.left - 1 && table.right <= sheet.right + 1 };
+    });
+    expect(fit.pageWidth, 'trang không cuộn ngang').toBeLessThanOrEqual(page.viewportSize()!.width);
+    expect(fit.tableInSheet, 'bảng nằm trong tờ').toBe(true);
     const signs = page.getByRole('group', { name: 'Chữ ký' }).getByRole('group');
     // Cấu hình 3 ô có "Duyệt" → tờ in chỉ 2 ô đầu (vòng 4 mục 11)
     await expect(signs).toHaveCount(2);

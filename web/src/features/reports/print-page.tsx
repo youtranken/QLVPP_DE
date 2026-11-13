@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/lib/api-client';
@@ -18,10 +19,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Quay lại luôn về Báo cáo & gửi ADM của tháng bản chốt
 const backPath = (ym: string) => `/admin/reports?ym=${ym}`;
 
-function Toolbar({ snap, empty }: { snap: SnapshotData; empty: boolean }) {
+// snap chưa có (đang tải hoặc lỗi): vẫn giữ thanh công cụ — Quay lại về Báo cáo, nút In khóa
+function Toolbar({ snap, empty }: { snap?: SnapshotData; empty: boolean }) {
   const { t } = useTranslation();
-  const at = vnStampParts(snap.created_at);
-  const back = backPath(snap.period_ym);
+  const at = snap && vnStampParts(snap.created_at);
+  const back = snap ? backPath(snap.period_ym) : '/admin/reports';
   return (
     <div role="toolbar" aria-label={t('reports.print.toolbar.label')} className="pp-toolbar">
       <Link className="btn btn--ghost" to={back}>
@@ -29,7 +31,9 @@ function Toolbar({ snap, empty }: { snap: SnapshotData; empty: boolean }) {
         {t('reports.print.toolbar.back')}
       </Link>
       <span className="pp-toolbar__text">
-        {t('reports.print.toolbar.summary', { month: monthOf(snap.period_ym), year: snap.period_ym.slice(0, 4), at: `${at.time} ${at.dayMonth}` })}
+        {snap && at
+          ? t('reports.print.toolbar.summary', { month: monthOf(snap.period_ym), year: snap.period_ym.slice(0, 4), at: `${at.time} ${at.dayMonth}` })
+          : t('reports.print.toolbar.pending')}
       </span>
       <button type="button" className="btn btn--primary" disabled={empty} onClick={() => window.print()}>
         <Icon name="printer" size={18} />
@@ -55,7 +59,24 @@ function PrintScreen({ snap }: { snap: SnapshotData }) {
   return (
     <div className="pp-page">
       <Toolbar snap={snap} empty={empty} />
-      {empty ? <EmptySnapshot /> : <PrintRequestForm snap={snap} />}
+      {empty ? (
+        <EmptySnapshot />
+      ) : (
+        // Màn hẹp hơn tờ: tờ giữ bề rộng, cuộn ngang trong khung riêng (không để bảng tự co, trang không cuộn ngang)
+        <div className="pp-sheet-scroll">
+          <PrintRequestForm snap={snap} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Đang tải / lỗi: giữ thanh công cụ, chỉ vùng tờ in đổi sang trạng thái
+function PendingScreen({ children }: { children: ReactNode }) {
+  return (
+    <div className="pp-page">
+      <Toolbar empty />
+      {children}
     </div>
   );
 }
@@ -66,10 +87,11 @@ function PrintContent() {
   const query = useSnapshot(id, valid);
   if (!valid) return <NotFound />;
   if (query.isError) {
-    if (query.error instanceof ApiError && query.error.status === 401) return <Loading />;
-    return apiErrorCode(query.error) === 'SNAPSHOT_NOT_FOUND' ? <NotFound /> : <LoadError onRetry={() => void query.refetch()} />;
+    if (query.error instanceof ApiError && query.error.status === 401) return <PendingScreen><Loading /></PendingScreen>;
+    if (apiErrorCode(query.error) === 'SNAPSHOT_NOT_FOUND') return <NotFound />;
+    return <PendingScreen><LoadError onRetry={() => void query.refetch()} /></PendingScreen>;
   }
-  if (!query.data) return <Loading />;
+  if (!query.data) return <PendingScreen><Loading /></PendingScreen>;
   return <PrintScreen snap={query.data} />;
 }
 
