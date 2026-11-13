@@ -15,7 +15,7 @@ test.describe('E0-S7 Danh bạ (dev-identity admin)', () => {
     await page.route('**/api/admin/directory/sync', (route) =>
       route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ code: 'DIRECTORY_UNAVAILABLE', message: 'x' }) }),
     );
-    await page.goto('/admin/users');
+    await page.goto('/admin/users?status=all');
     await expect(page.getByRole('heading', { level: 1, name: 'Danh bạ' })).toBeVisible();
     await page.getByRole('searchbox', { name: 'Tìm người' }).fill('PW Danh bạ');
     await expect(page.getByRole('row').filter({ hasText: LOCKED.name }).getByText('Đã khóa', { exact: true })).toBeVisible();

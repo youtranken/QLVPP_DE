@@ -1,14 +1,17 @@
 import { matchesSearch } from '@/features/request/request-format';
 import type { AdminUser } from './directory.api';
 
-// Ba thẻ thống kê; 'deleted' chỉ là bộ lọc xem người đã xoá (ẩn mặc định, không có thẻ)
+// Ba thẻ thống kê; 'deleted' chỉ là bộ lọc xem người đã xoá (ẩn mặc định, không có thẻ); 'all' = mọi trạng thái trừ đã xoá.
+// Mặc định (URL không có ?status) là 'active' — người đã khóa/mất quyền chỉ hiện khi chọn
 export const USERS_FILTERS = ['active', 'locked', 'no_access'] as const;
 export type StatFilter = (typeof USERS_FILTERS)[number];
-export type UsersFilter = StatFilter | 'deleted';
+export type UsersFilter = StatFilter | 'deleted' | 'all';
+export const DEFAULT_USERS_FILTER = 'active' as const;
+export const STATUS_OPTIONS: readonly UsersFilter[] = ['all', 'active', 'locked', 'no_access', 'deleted'];
 export type RegFilter = 'yes' | 'no';
 
 export interface UsersView {
-  filter: UsersFilter | null;
+  filter: UsersFilter;
   reg: RegFilter | null;
   dept: string;
   q: string;
@@ -20,7 +23,7 @@ export interface RegSets {
   unregistered: ReadonlySet<string>;
 }
 
-export const parseUsersFilter = (raw: string | null): UsersFilter | null => (raw === 'deleted' || USERS_FILTERS.includes(raw as StatFilter) ? (raw as UsersFilter) : null);
+export const parseUsersFilter = (raw: string | null): UsersFilter => (STATUS_OPTIONS.includes(raw as UsersFilter) ? (raw as UsersFilter) : DEFAULT_USERS_FILTER);
 export const parseRegFilter = (raw: string | null): RegFilter | null => (raw === 'yes' || raw === 'no' ? raw : null);
 
 export function regOf(u: Pick<AdminUser, 'sub'>, sets: RegSets): RegFilter | null {
@@ -33,6 +36,7 @@ const MATCH: Record<UsersFilter, (u: AdminUser) => boolean> = {
   locked: (u) => u.status === 'locked',
   no_access: (u) => u.status === 'no_access',
   deleted: (u) => u.status === 'deleted',
+  all: (u) => u.status !== 'deleted',
 };
 
 export function usersStats(users: AdminUser[]): Record<StatFilter, number> {
@@ -54,7 +58,7 @@ export const searchText = (u: AdminUser) => [u.fullName, u.email, u.department, 
 export function applyUsersView(users: AdminUser[], view: UsersView, clientSearch: boolean, reg: RegSets | null = null): AdminUser[] {
   return users.filter(
     (u) =>
-      (!view.filter || MATCH[view.filter](u)) &&
+      MATCH[view.filter](u) &&
       (!view.reg || (!!reg && regOf(u, reg) === view.reg)) &&
       (!view.dept || u.department === view.dept) &&
       (!clientSearch || !view.q || matchesSearch(searchText(u), view.q)),

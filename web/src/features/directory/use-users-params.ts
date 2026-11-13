@@ -1,5 +1,8 @@
 import { useMemo } from 'react';
-import { parseRegFilter, parseUsersFilter, type RegFilter, type UsersFilter, type UsersView } from './users-rows';
+import { DEFAULT_USERS_FILTER, parseRegFilter, parseUsersFilter, type RegFilter, type UsersFilter, type UsersView } from './users-rows';
+
+// Mặc định không ghi lên URL
+const statusParam = (f: UsersFilter) => (f === DEFAULT_USERS_FILTER ? null : f);
 import { useUrlPatch } from '@/lib/use-url-patch';
 
 export function useUsersParams() {
@@ -13,9 +16,9 @@ export function useUsersParams() {
     view,
     setQ: (next: string) => update({ q: next || null }, true),
     setDept: (next: string) => update({ dept: next || null }, true),
-    setFilter: (next: UsersFilter | null) => update({ status: next }),
-    // Thẻ lọc chỉ chọn một: bật thẻ này thì tắt thẻ kia (hai thẻ cùng bật gần như luôn ra 0 người)
-    toggleFilter: (f: UsersFilter) => update({ status: filter === f ? null : f, reg: null }),
+    setFilter: (next: UsersFilter) => update({ status: statusParam(next) }),
+    // Thẻ lọc chỉ chọn một: bật thẻ này thì tắt thẻ kia (hai thẻ cùng bật gần như luôn ra 0 người); bấm lại thẻ đang chọn → Mọi trạng thái
+    toggleFilter: (f: UsersFilter) => update({ status: filter === f ? 'all' : statusParam(f), reg: null }),
     toggleReg: (r: RegFilter) => update({ reg: reg === r ? null : r, status: null }),
     clearFilter: () => update({ status: null }),
     clearReg: () => update({ reg: null }),
