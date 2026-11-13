@@ -21,6 +21,7 @@ function boot(extra: Record<string, string>) {
           TRUST_PROXY_HOPS: '2',
           LOCAL_SA_USERNAME: 'sa',
           LOCAL_SA_PASSWORD_HASH: 'scrypt.00.00',
+          CONFIG_ENC_KEY: 'boot-env-test-key-0123456789abcdef0123',
           ...extra,
         },
       },
@@ -43,6 +44,27 @@ describe('khởi động thật: CLOCK_OFFSET_MS ngoài NODE_ENV=test', () => {
     const res = await boot({});
     expect(res.code).toBe(1);
     expect(res.stderr).not.toMatch(/CLOCK_OFFSET_MS/);
+    expect(res.stderr).toMatch(/Thiếu DATABASE_URL/);
+  }, 60_000);
+});
+
+describe('khởi động thật: CONFIG_ENC_KEY (mã hóa token phiên)', () => {
+  it('production thiếu CONFIG_ENC_KEY → thoát mã 1, từ chối khởi động nêu tên biến', async () => {
+    const res = await boot({ CONFIG_ENC_KEY: '' });
+    expect(res.code).toBe(1);
+    expect(res.stderr).toMatch(/Thiếu CONFIG_ENC_KEY/);
+  }, 60_000);
+
+  it('khóa ngắn hơn 32 ký tự → thoát mã 1 (kể cả development)', async () => {
+    const res = await boot({ NODE_ENV: 'development', CONFIG_ENC_KEY: 'ngan' });
+    expect(res.code).toBe(1);
+    expect(res.stderr).toMatch(/CONFIG_ENC_KEY phải dài/);
+  }, 60_000);
+
+  it('development thiếu khóa → qua bước kiểm khóa, dừng ở bước sau (thiếu DATABASE_URL)', async () => {
+    const res = await boot({ NODE_ENV: 'development', CONFIG_ENC_KEY: '' });
+    expect(res.code).toBe(1);
+    expect(res.stderr).not.toMatch(/CONFIG_ENC_KEY/);
     expect(res.stderr).toMatch(/Thiếu DATABASE_URL/);
   }, 60_000);
 });

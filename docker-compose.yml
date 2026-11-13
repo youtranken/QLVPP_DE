@@ -22,6 +22,8 @@ services:
       # Giới hạn request/phút (rỗng = mặc định 300 của api); dev chạy Playwright cả bộ từ một IP cần nâng (xem .env.example)
       THROTTLE_IP_PER_MIN: ${THROTTLE_IP_PER_MIN:-}
       THROTTLE_USER_PER_MIN: ${THROTTLE_USER_PER_MIN:-}
+      # Khóa AES-GCM niêm phong token PMH ID trong bảng sessions — production thiếu là api từ chối khởi động
+      CONFIG_ENC_KEY: ${CONFIG_ENC_KEY:-}
       LOCAL_SA_USERNAME: ${LOCAL_SA_USERNAME:?LOCAL_SA_USERNAME bắt buộc trong .env}
       LOCAL_SA_PASSWORD_HASH: ${LOCAL_SA_PASSWORD_HASH:?LOCAL_SA_PASSWORD_HASH bắt buộc trong .env (scrypt.saltHex.hashHex)}
       # Tài khoản thử CHỈ dev; prod để trống (api từ chối khởi động nếu có biến khi NODE_ENV=production)

@@ -1,11 +1,17 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 import { and, eq, lt, sql } from 'drizzle-orm';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
 import type { PmhIdClaims } from '../users/users.service';
 import { LOCAL_SA_SUB } from './local-sa-env';
-import { hashSessionId, newSessionCookie } from './session-crypto';
+import { hasEncKey } from '../../common/crypto-secret';
+import {
+  hashSessionId,
+  newSessionCookie,
+  openToken,
+  sealToken,
+} from './session-crypto';
 import { sessionsTable } from './sessions.schema';
 
 export interface SessionRecord {
@@ -22,8 +28,19 @@ export interface SessionRecord {
 }
 
 @Injectable()
-export class SessionService {
+export class SessionService implements OnModuleInit {
+  private readonly logger = new Logger(SessionService.name);
+
   constructor(@Inject(DRIZZLE_DB) private readonly db: Database) {}
+
+  // Prod thiếu khóa đã bị chặn lúc khởi động (assertEncKeyEnv); dev thiếu khóa → token lưu 'p:', cảnh báo một lần
+  onModuleInit(): void {
+    if (!hasEncKey()) {
+      this.logger.warn(
+        'CONFIG_ENC_KEY chưa đặt — token PMH ID trong bảng sessions lưu không mã hóa (chỉ chấp nhận ở dev).',
+      );
+    }
+  }
 
   async create(params: {
     userSub: string;
@@ -67,10 +84,14 @@ export class SessionService {
   }
 
   private async insert(record: SessionRecord): Promise<void> {
-    const { id, ...rest } = record;
-    await this.db
-      .insert(sessionsTable)
-      .values({ ...rest, idHash: hashSessionId(id) });
+    const { id, refreshToken, accessToken, idToken, ...rest } = record;
+    await this.db.insert(sessionsTable).values({
+      ...rest,
+      idHash: hashSessionId(id),
+      refreshToken: sealToken(refreshToken),
+      accessToken: sealToken(accessToken),
+      idToken: sealToken(idToken),
+    });
   }
 
   async touchLastSeen(id: string): Promise<void> {
@@ -99,12 +120,12 @@ export class SessionService {
     return {
       id,
       userSub: row.userSub,
-      refreshToken: row.refreshToken,
-      accessToken: row.accessToken,
+      refreshToken: openToken(row.refreshToken),
+      accessToken: openToken(row.accessToken),
       accessTokenExp: row.accessTokenExp,
       claims: row.claims as PmhIdClaims | null,
       csrfToken: row.csrfToken,
-      idToken: row.idToken,
+      idToken: openToken(row.idToken),
       lastSeenAt: row.lastSeenAt,
     };
   }
@@ -127,8 +148,8 @@ export class SessionService {
     const rows = await this.db
       .update(sessionsTable)
       .set({
-        refreshToken: params.refreshToken,
-        accessToken: params.accessToken ?? null,
+        refreshToken: sealToken(params.refreshToken),
+        accessToken: sealToken(params.accessToken),
         accessTokenExp: params.accessTokenExp,
         claims: sql`CASE
           WHEN (${sessionsTable.claims}->>'locale_updated_at') IS NOT NULL
@@ -138,7 +159,7 @@ export class SessionService {
             'locale', ${sessionsTable.claims}->'locale',
             'locale_updated_at', ${sessionsTable.claims}->'locale_updated_at')
           ELSE ${incoming}::jsonb END`,
-        idToken: params.idToken,
+        idToken: sealToken(params.idToken),
         lastSeenAt: new Date(),
       })
       .where(eq(sessionsTable.idHash, hashSessionId(id)))
