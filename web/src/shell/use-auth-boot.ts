@@ -70,8 +70,9 @@ export function useAuthBoot(): AuthState {
   const [state, setState] = useState<AuthState>({ kind: 'loading' });
   useEffect(() => {
     let cancelled = false;
-    // Tab đã đăng nhập (tải lại trang): nạp chunk màn sắp vẽ song song với kiểm phiên. Lỗi nạp để route tự báo.
-    if (authMode() !== null) preloadRouteChunk(null, window.location.pathname).catch(() => {});
+    // Nạp chunk màn theo đường dẫn song song với kiểm phiên (đo CPU×6 + mạng chậm: trang Đăng ký nhanh hơn chờ /me rồi mới
+    // nạp; màn đăng nhập không chậm đi). Lỗi nạp để route tự báo.
+    preloadRouteChunk(null, window.location.pathname).catch(() => {});
     fetch('/api/auth/me')
       .then(async (res): Promise<AuthState | null> => {
         if (res.ok) {
