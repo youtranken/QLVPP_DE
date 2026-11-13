@@ -37,7 +37,7 @@ describe('các hàng chip dùng chung mờ mép', () => {
   });
 
   it('Nhật ký: chip nhanh', () => {
-    render(<AuditQuick now={new Date('2026-11-13T03:00:00Z')} applied={{}} onPatch={() => {}} />);
+    render(<AuditQuick now={new Date('2026-11-13T03:00:00Z')} applied={{ actor: '', action: '', from: '', to: '' }} onPatch={() => {}} />);
     expect(screen.getByRole('group')).toHaveAttribute('data-fade', 'end');
   });
 
