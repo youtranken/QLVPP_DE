@@ -56,3 +56,11 @@
   [data-shell='admin'] .ovp-foot { flex-wrap: wrap; padding: var(--s-4) var(--s-4) calc(16px + env(safe-area-inset-bottom)); }
   [data-shell='admin'] .ovp-foot .btn { flex: 1 1 auto; min-height: 48px; }
 }
+
+/* Lớp nổi ở điện thoại: nút nhỏ 36px (‹ › năm trong chọn năm-tháng và tháng trong lịch khoảng ngày, ‹ › người trước/sau
+   trong Xem phiếu, VI/EN trong menu quản lý) giữ cỡ nhìn, vùng chạm nới đủ 44px quanh tâm bằng ::after.
+   min(0px, …): chiều nào đã ≥ 44px thì không nới (nút VI/EN rộng sẵn, chỉ nới dọc, không lấn nút bên cạnh). */
+@media (max-width: 767px) {
+  [data-shell] :is(.cal__nav, .rg-step, .side-sheet .seg button) { position: relative; }
+  [data-shell] :is(.cal__nav, .rg-step, .side-sheet .seg button)::after { content: ''; position: absolute; inset: min(0px, calc(50% - var(--hit) / 2)); }
+}
