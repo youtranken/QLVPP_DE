@@ -1,7 +1,9 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderWithI18n as render, screen } from '@/test/test-utils';
+import { useState } from 'react';
+import { act, renderWithI18n as render, screen, waitFor } from '@/test/test-utils';
+import { ScrollFade } from './scroll-fade';
 import { StockFilterTabs } from '@/features/stock/stock-filter-tabs';
 import { AuditQuick } from '@/features/admin/audit-quick';
 import { MonthChips } from '@/features/month/month-chips-bar';
@@ -56,6 +58,23 @@ describe('các hàng chip dùng chung mờ mép', () => {
     );
     expect(screen.getByRole('group', { name: 'A' })).toHaveAttribute('data-fade', 'end');
     expect(screen.getByRole('group', { name: 'B' })).not.toHaveAttribute('data-fade');
+  });
+
+  it('chip thêm vào sau lần vẽ đầu làm hàng tràn → data-fade cập nhật (không chỉ theo mục có lúc mount)', async () => {
+    const width = vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(300);
+    let grow!: () => void;
+    function Row() {
+      const [n, setN] = useState(2);
+      grow = () => setN(6);
+      return <ScrollFade role="group">{Array.from({ length: n }, (_, i) => <button key={i}>Chip {i}</button>)}</ScrollFade>;
+    }
+    render(<Row />);
+    const row = screen.getByRole('group');
+    expect(row).not.toHaveAttribute('data-fade');
+    width.mockReturnValue(560);
+    act(() => grow());
+    expect(screen.getByRole('group')).toBe(row);
+    await waitFor(() => expect(row).toHaveAttribute('data-fade', 'end'));
   });
 
   it('Món ngoài danh mục: hàng tab là ScrollFade', () => {

@@ -32,9 +32,19 @@ export function useScrollFade<T extends HTMLElement>(enabled = true): RefObject<
     const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
     ro?.observe(el);
     for (const child of Array.from(el.children)) ro?.observe(child);
+    // Chip thêm/bớt sau lần vẽ đầu (nhóm tải xong, đổi bộ lọc): tính lại ngay và theo dõi cả mục mới
+    const mo =
+      typeof MutationObserver === 'undefined'
+        ? null
+        : new MutationObserver((records) => {
+            for (const r of records) for (const n of Array.from(r.addedNodes)) if (n instanceof Element) ro?.observe(n);
+            update();
+          });
+    mo?.observe(el, { childList: true });
     return () => {
       el.removeEventListener('scroll', update);
       ro?.disconnect();
+      mo?.disconnect();
     };
   }, [enabled]);
   return ref;
