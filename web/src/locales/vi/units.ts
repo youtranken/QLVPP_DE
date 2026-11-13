@@ -7,6 +7,7 @@ const units = {
       submitAdd: 'Thêm đơn vị tính',
       editTitle: 'Sửa đơn vị tính',
       submitEdit: 'Lưu thay đổi',
+      saving: 'Đang lưu…',
       name: 'Tên đơn vị',
       nameEn: 'Tên tiếng Anh',
       added: 'Đã thêm đơn vị tính {{name}}',
