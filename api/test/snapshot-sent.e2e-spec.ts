@@ -55,14 +55,11 @@ describe('V2D-4 bản chốt có hàng: GET …/sent, danh sách, bản cũ, dù
       replaces: null,
     });
     expect(res.body.data.order_qty[item]).toBe(7);
-    const rows = await list(YM);
+    // TS 6 bật strictFunctionTypes mặc định: ép kiểu mảng thay vì tham số callback
+    const rows = (await list(YM)) as (SnapshotListItem &
+      Record<string, unknown>)[];
     expect(
-      rows.map((r: SnapshotListItem & Record<string, unknown>) => [
-        r.id,
-        r.has_items,
-        r.items_count,
-        r.units_total,
-      ]),
+      rows.map((r) => [r.id, r.has_items, r.items_count, r.units_total]),
     ).toEqual([
       [empty, false, 0, 0],
       [full, true, 1, 7],

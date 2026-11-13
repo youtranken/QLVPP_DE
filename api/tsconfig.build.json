@@ -1,4 +1,10 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // TS 6 không tự suy rootDir nữa: ghim src → dist/main.js như cũ
+    "rootDir": "./src",
+    // .d.ts chỉ cho bản build; tsconfig.json (IDE, lint) còn gồm test/ mà fixture trả kiểu suy luận của pg
+    "declaration": true
+  },
   "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
 }

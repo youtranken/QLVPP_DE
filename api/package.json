@@ -19,7 +19,7 @@
     "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules --disable-warning=ExperimentalWarning\" jest",
     "test:watch": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules --disable-warning=ExperimentalWarning\" jest --watch",
     "test:cov": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules --disable-warning=ExperimentalWarning\" jest --coverage",
-    "test:debug": "node --experimental-vm-modules --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:debug": "node --experimental-vm-modules --disable-warning=ExperimentalWarning --inspect-brk node_modules/.bin/jest --runInBand",
     "test:e2e": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules --disable-warning=ExperimentalWarning\" jest --config ./test/jest-e2e.json",
     "test:db": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules --disable-warning=ExperimentalWarning\" jest --config ./test/jest-db.json --runInBand",
     "sa:hash": "node scripts/sa-hash.mjs",
@@ -52,8 +52,8 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
-    "@nestjs/cli": "^11.0.0",
-    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/cli": "^12.0.12",
+    "@nestjs/schematics": "^12.0.13",
     "@nestjs/testing": "~12.4.2",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.0",
@@ -74,8 +74,7 @@
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.7.3",
+    "typescript": "~6.0.3",
     "typescript-eslint": "^8.20.0"
   },
   "jest": {
@@ -96,8 +95,8 @@
           "tsconfig": {
             "isolatedModules": true,
             "module": "commonjs",
-            "moduleResolution": "node10",
-            "resolvePackageJsonExports": false,
+            "moduleResolution": "bundler",
+            "rootDir": ".",
             "allowJs": true,
             "esModuleInterop": true,
             "emitDecoratorMetadata": true,
