@@ -21,10 +21,10 @@
 
 | Tầng | Chọn |
 |---|---|
-| Runtime | Node 24 (`node:24.22.1-alpine`), `.nvmrc` = 24 |
-| API | NestJS 12, `pg` 8, drizzle-orm (schemaless), class-validator, nestjs-pino, @nestjs/throttler, @nestjs/schedule, jose 6, openid-client 6, multer (upload), exceljs (báo cáo Excel) |
-| Web | React 19, Vite 8, TypeScript 6, TanStack Query 5, react-router 7, react-i18next, Radix Dialog, vitest + Testing Library, oxlint, Playwright (smoke) |
-| DB | PostgreSQL 18 (`postgres:18-alpine`) |
+| Runtime | Node 26 LTS (`node:26.13.1-alpine`), `.nvmrc` = 26.13.1; engines `>=24` để máy dev Node 24 vẫn chạy test |
+| API | NestJS 12.4, TypeScript 6.0 (moduleResolution Bundler, emit CommonJS; gói ESM-only nạp qua `require(esm)`), ESLint 10, `pg` 8, drizzle-orm (schemaless), class-validator, nestjs-pino, @nestjs/throttler, @nestjs/schedule, jose 6, openid-client 6, multer (upload), exceljs (báo cáo Excel) |
+| Web | React 19.3, Vite 8.3, TypeScript 6, TanStack Query 5, react-router 7, react-i18next, Radix Dialog, Vitest 5 + jsdom 31 + Testing Library, oxlint, Playwright (smoke) |
+| DB | PostgreSQL 18 (`postgres:18.6-alpine`) |
 | Serve | nginx 1.30 trong container `web` (tĩnh + proxy `/api`) |
 | Hạ tầng | Docker Compose; EDGE nginx chung của cụm; backup-cron (copy QLTS `ops/backup`) |
 

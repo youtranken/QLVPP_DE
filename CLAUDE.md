@@ -4,7 +4,7 @@ App quản lý văn phòng phẩm phòng Công trình, đăng nhập bằng PMH 
 
 ## Stack và lệnh
 
-- `api/`: NestJS 12 (core ESM-only; jest chạy với `--experimental-vm-modules`), Node 24, `pg` + drizzle (schemaless), migration SQL thuần `api/src/migrations/NNNN_*.sql` (checksum — **không sửa file đã apply**, viết file mới).
+- `api/`: NestJS 12 (core ESM-only; jest chạy với `--experimental-vm-modules`), Node 26 (image `node:26.13.1-alpine`), `pg` + drizzle (schemaless), migration SQL thuần `api/src/migrations/NNNN_*.sql` (checksum — **không sửa file đã apply**, viết file mới).
 - `web/`: React 19, Vite 8, TS 6, TanStack Query, react-router 7, react-i18next, Radix Dialog; CSS token riêng (`web/src/css/tokens.css`), không AntD/Tailwind.
 - Dev: `cp .env.example .env` → `docker compose up -d --build` (override publish Postgres `127.0.0.1:5492`, `AUTH_DEV_MODE=true`); DB test: `docker compose exec postgres createdb -U $POSTGRES_USER vpp_test`, `DATABASE_URL=…/vpp_test`.
 - Test api: `npm test` (unit) · `npm run test:e2e` (`test/*.e2e-spec.ts`, app thật + supertest) · `npm run test:db` (`test/*.db-spec.ts`, Postgres thật, chạy tuần tự). Web: `npm test` (vitest + Testing Library) · `npm run lint` (oxlint) · `npx playwright test` (smoke trên compose dev).
