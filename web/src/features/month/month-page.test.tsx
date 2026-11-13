@@ -202,6 +202,25 @@ describe('MonthPage: chuyển kỳ', () => {
     expect(screen.getByRole('button', { name: 'Tháng 11 đang đăng ký' })).toBeInTheDocument();
   });
 
+  // Rà soát 13/11 L2: danh sách người giữ dữ liệu tháng trước (keepPreviousData) → dải bước và chip tính bằng người T10 dưới tiêu đề T9
+  it('đổi tháng khi danh sách người tháng mới chưa về: bước Giao và số trên chip hiện "—", không lấy người của tháng trước', async () => {
+    const base = stubMonthApi();
+    vi.stubGlobal('fetch', vi.fn((url: string) => (url.startsWith('/api/admin/periods/2026-09/requests') ? new Promise<Response>(() => {}) : base(url))));
+    open();
+    const t = await table();
+    await t.findByText('Nhân viên A');
+    const steps = () => within(screen.getByRole('list', { name: 'Các bước của tháng' })).getAllByRole('listitem').map((li) => li.textContent);
+    expect(steps()[3]).toBe('Giao1/4 phiếu');
+    const chips = () => within(screen.getByRole('group', { name: 'Lọc phiếu' })).getAllByRole('button').map((b) => b.textContent);
+    expect(chips()[0]).toBe('Tất cả5');
+    await userEvent.click(within(screen.getByRole('group', { name: 'Chọn kỳ' })).getByRole('button', { name: 'Tháng trước' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kỳ tháng 9' })).toBeInTheDocument();
+    await waitFor(() => expect(steps()[2]).toBe('Nhận hàng19/21 món'));
+    expect(steps()[3]).toBe('Giao—');
+    expect(chips()).toEqual(['Tất cả—', 'Có ghi chú—', 'Chưa giao xong—']);
+    expect(screen.queryByText('Nhân viên A')).toBeNull();
+  });
+
   it('bấm nhãn tháng → bảng năm-tháng; chọn kỳ đăng ký đi thẳng ?ym=2026-11, focus về nhãn', async () => {
     stubMonthApi();
     open();
