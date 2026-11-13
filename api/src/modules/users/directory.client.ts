@@ -171,7 +171,7 @@ export class DirectoryClient implements DirectoryClientApi {
 
   // 404 của proxy/route sai (HTML, JSON lạ) không được hiểu là "user mất quyền"
   private async assertPmhNotFound(response: Response): Promise<void> {
-    let body: unknown = null;
+    let body: unknown;
     try {
       body = await response.json();
     } catch {

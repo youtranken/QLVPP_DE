@@ -12,6 +12,8 @@ class Routes {
 
 function contextFor(handler: keyof Routes, role?: string): ExecutionContext {
   return {
+    // chỉ lấy tham chiếu hàm cho Reflector đọc metadata, không gọi
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     getHandler: () => Routes.prototype[handler],
     getClass: () => Routes,
     switchToHttp: () => ({
