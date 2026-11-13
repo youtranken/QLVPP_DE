@@ -75,22 +75,20 @@ test.describe('Nút không gãy dòng (360/390/1280)', () => {
     });
   }
 
-  test('đăng nhập: "(PMH ID)" không bị tách hai dòng ở 360/1024/1280', async ({ browser }, info) => {
+  test('đăng nhập: dòng tên app dưới logo PMH một dòng, không tràn ngang ở 360/1024/1280', async ({ browser }, info) => {
     test.skip(isMobile(info), 'một lần là đủ, tự đặt khổ');
     for (const width of [360, 1024, 1280]) {
       const page = await browser.newPage({ viewport: { width, height: 800 } });
       await as(page, null);
       await settle(page, '/');
-      const button = page.getByRole('button', { name: 'Đăng nhập bằng tài khoản công ty (PMH ID)' });
-      const lines = await button.evaluate((el) => {
-        const node = [...el.childNodes].find((n) => n.nodeType === 3 && n.textContent!.includes('PMH'))!;
-        const at = node.textContent!.indexOf('(PMH');
+      const name = page.locator('.auth-panel-name span');
+      const lines = await name.evaluate((el) => {
         const range = document.createRange();
-        range.setStart(node, at);
-        range.setEnd(node, at + '(PMH ID)'.length);
+        range.selectNodeContents(el);
         return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
       });
       expect(lines, `${width}px`).toBe(1);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${width}px`).toBe(true);
       await page.close();
     }
   });

@@ -166,7 +166,8 @@ test.describe('E6-S4 song ngữ mọi màn PRD §8', () => {
     test.setTimeout(120_000);
     const sub = `pw-i18n-all-${Date.now().toString(36)}${isMobile(info) ? 'm' : 'd'}`;
     seedActiveUser(sub, `PW i18n ${sub}`);
-    const data = userDataTexts();
+    // "© 2026 Phú Mỹ Hưng" ở chân trang đăng nhập là tên công ty (giống QLTS/QLHS), không dịch
+    const data = [...userDataTexts(), 'Phú Mỹ Hưng'];
     const found: Record<string, string[]> = {};
     const check = async (page: Page, path: string, ready: () => Promise<void>) => {
       await page.goto(path);
@@ -179,7 +180,7 @@ test.describe('E6-S4 song ngữ mọi màn PRD §8', () => {
     try {
       const guest = await englishPage(browser, info);
       pages.push(guest);
-      await check(guest, '/', () => expect(guest.getByRole('button', { name: 'Sign in with your company account (PMH ID)' })).toBeVisible());
+      await check(guest, '/', () => expect(guest.getByLabel('Company email')).toBeVisible());
       await check(guest, '/?login=forbidden', () => expect(guest.getByRole('button', { name: 'Sign in with another account' })).toBeVisible());
 
       const member = await englishPage(browser, info, { 'x-dev-user-sub': sub, 'x-dev-role': 'member' });

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconAlert } from '@/ui/icons';
 
-export function CenterCard({ children, tone }: { children: ReactNode; tone?: 'warn' | 'danger' }) {
+export function CenterCard({ children, tone }: { children: ReactNode; tone?: 'danger' }) {
   return (
     <div className="entry-page">
       <main className={`entry-card${tone ? ` is-${tone}` : ''}`}>{children}</main>

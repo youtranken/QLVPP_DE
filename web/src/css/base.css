@@ -92,19 +92,18 @@ a { color: var(--brand-ink); }
 }
 
 /* Màn vào: đang tải / lỗi / chưa được cấp quyền */
-.entry-page { min-height: 100vh; display: grid; place-items: center; padding: 16px; background: var(--brand-soft); }
+/* Nền kem như màn đăng nhập (QLTS/QLHS): đang kiểm tra phiên → màn đăng nhập không đổi màu nền */
+.entry-page { min-height: 100vh; display: grid; place-items: center; padding: 16px; background: #f6f1e7; }
 .entry-card { width: min(480px, 100%); display: grid; justify-items: center; gap: 12px; padding: 32px 24px; text-align: center; background: var(--card); border-radius: 24px; box-shadow: 0 20px 60px rgb(var(--sh-acc) / .12); }
 .entry-card h1 { font-size: 21px; font-weight: 800; line-height: 1.3; }
-.entry-body { color: var(--ink-2); font-weight: 600; line-height: 1.55; }
 .entry-ic { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: var(--brand-soft); color: var(--brand-ink); }
 .entry-ic svg { width: 28px; }
-.entry-card.is-warn .entry-ic { background: var(--warn-soft); color: var(--warn); }
 .entry-card.is-danger .entry-ic { background: var(--danger-soft); color: var(--danger); }
 .entry-actions { width: 100%; display: grid; gap: 12px; margin-top: 4px; }
 
 /* ===== Vòng 5 — nền chung (B0) ===== */
 /* Một vòng focus cho mọi ô nhập. Ô có border 1px: viền teal + 1px inset = 2px; ô vẽ viền bằng box-shadow tự khai --focus-field */
-:is([data-shell], .login-page, .entry-page) :is(input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='color']), select, textarea):focus { outline: none; border-color: var(--c-acc); box-shadow: var(--focus-field-bordered); }
+:is([data-shell], .auth, .entry-page) :is(input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='color']), select, textarea):focus { outline: none; border-color: var(--c-acc); box-shadow: var(--focus-field-bordered); }
 /* Ô số nằm trong viên − số + (không border): vòng vẽ bên trong */
 :is([data-shell]) :is(.stepper, .rq-card-stepper, .rq-line-stepper) input:focus { border-radius: var(--r-sm); box-shadow: var(--focus-field); }
 /* Ẩn ✕ và phần trang trí của Chrome trong ô tìm — app có nút xóa riêng (ui/search-clear) */

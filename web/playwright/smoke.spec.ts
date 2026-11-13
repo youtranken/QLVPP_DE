@@ -97,15 +97,40 @@ test.describe('E0-S9 khung Adm D&E (dev-identity admin)', () => {
 });
 
 test.describe('E0-S9 màn vào (chưa đăng nhập)', () => {
-  test('E0-S9 đăng nhập: nút PMH ID trên cùng, "Dành cho IT" mở form SA', async ({ page }, info) => {
+  test('E0-S9 đăng nhập (giống QLTS/QLHS): một ô "Email công ty"; email → PMH ID kèm login_hint', async ({ page }, info) => {
     await page.goto('/');
-    await expect(page.getByRole('button', { name: 'Đăng nhập bằng tài khoản công ty (PMH ID)' })).toBeVisible();
-    await expect(page.locator('input[type=email]')).toHaveCount(0);
+    await expect(page.getByRole('heading', { level: 1, name: 'Đăng nhập' })).toBeVisible();
+    await expect(page.getByRole('img', { name: 'Phú Mỹ Hưng' })).toBeVisible();
+    await expect(page.locator('.auth-card input')).toHaveCount(1);
+    // Ảnh tòa nhà: máy tính hiện bên trái, điện thoại ẩn
+    await expect(page.locator('.auth-media img')).toBeVisible({ visible: !isMobile(info) });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'login');
-    await page.getByRole('button', { name: 'Dành cho IT' }).click();
-    await expect(page.getByLabel('Tên tài khoản', { exact: true })).toHaveAttribute('type', 'text');
-    await expect(page.getByLabel('Mật khẩu', { exact: true })).toHaveAttribute('type', 'password');
+    // Không đi PMH ID thật: chỉ bắt URL chuyển hướng
+    await page.route('**/api/auth/login**', (route) => route.fulfill({ status: 200, contentType: 'text/plain', body: 'sso' }));
+    const sso = page.waitForRequest((r) => r.url().includes('/api/auth/login'));
+    await page.getByLabel('Email công ty').fill('an.nguyen@pmh.com.vn');
+    await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+    const url = new URL((await sso).url());
+    expect(url.searchParams.get('login_hint')).toBe('an.nguyen@pmh.com.vn');
+    expect(url.searchParams.get('ui_locales')).toBe('vi');
+  });
+
+  test('E0-S9 đăng nhập: tài khoản nội bộ (không phải email) → bước mật khẩu, "Đổi" quay lại', async ({ page }, info) => {
+    await page.goto('/');
+    await page.getByLabel('Email công ty').fill('it.noibo');
+    await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+    await expect(page.getByText('Đăng nhập với')).toBeVisible();
+    const password = page.getByLabel('Mật khẩu', { exact: true });
+    await expect(password).toHaveAttribute('type', 'password');
+    await expect(password).toBeFocused();
+    await page.getByRole('button', { name: 'Hiện mật khẩu' }).click();
+    await expect(password).toHaveAttribute('type', 'text');
+    if (isMobile(info)) await expectNoContrastViolations(page);
+    await shot(page, info, 'login-password');
+    await page.getByRole('button', { name: 'Đổi' }).click();
+    await expect(page.getByLabel('Email công ty')).toHaveValue('it.noibo');
   });
 
   test('E0-S9 bị chặn quyền (?login=forbidden) → trang "Chưa được cấp quyền"', async ({ page }, info) => {

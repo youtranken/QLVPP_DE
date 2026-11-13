@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { saLogin, type SaLoginOutcome } from '@/lib/auth-actions';
+import type { SaLoginOutcome } from '@/lib/auth-actions';
 import { navigateTo } from '@/lib/navigate';
 
 const ERROR_KEY: Record<Exclude<SaLoginOutcome, 'ok'>, string> = {
@@ -10,14 +10,12 @@ const ERROR_KEY: Record<Exclude<SaLoginOutcome, 'ok'>, string> = {
 };
 
 type Props = {
-  login?: (username: string, password: string) => Promise<SaLoginOutcome>;
-  labels?: { username: string; password: string; submit: string };
+  login: (username: string, password: string) => Promise<SaLoginOutcome>;
+  labels: { username: string; password: string; submit: string };
 };
 
-const SA_LABELS = { username: 'auth.saUsername', password: 'auth.saPassword', submit: 'auth.saSubmit' };
-
-// Dùng chung cho SA "Dành cho IT" và tài khoản thử dev; về '/' rồi RequireRole đưa admin sang /admin
-export function SaLoginForm({ login = saLogin, labels = SA_LABELS }: Props) {
+// Form tên + mật khẩu của tài khoản thử dev (SA dùng bước mật khẩu ở màn đăng nhập); về '/' rồi RequireRole chia admin/member
+export function SaLoginForm({ login, labels }: Props) {
   const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
