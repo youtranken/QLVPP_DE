@@ -28,3 +28,12 @@ export function MemberPage({
     </div>
   );
 }
+
+// Khung chờ/lỗi của trang Đăng ký (chưa có tiêu đề); cũng là khung chờ khi chunk trang nhân viên còn đang nạp
+export function LoadPanel({ children }: { children: ReactNode }) {
+  return (
+    <div className="m-page">
+      <div className="m-panel">{children}</div>
+    </div>
+  );
+}

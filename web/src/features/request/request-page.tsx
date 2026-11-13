@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
@@ -27,6 +26,7 @@ import {
 } from './request.api';
 import { monthOf, useRequestFormat } from './request-format';
 import { SaveDialog, StaleDialog } from './save-dialog';
+import { LoadPanel } from '@/shell/member-page';
 import { useCart } from './use-cart';
 import { useCopyPrevious } from './use-copy-previous';
 import { useLeaveGuard } from './use-leave-guard';
@@ -252,14 +252,6 @@ function RequestEditor({
       <div className="rq-toast-slot" role="status" aria-live="polite">
         {flow.toast && <span className="rq-toast">{flow.toast}</span>}
       </div>
-    </div>
-  );
-}
-
-function LoadPanel({ children }: { children: ReactNode }) {
-  return (
-    <div className="m-page">
-      <div className="m-panel">{children}</div>
     </div>
   );
 }

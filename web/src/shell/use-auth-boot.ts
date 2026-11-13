@@ -15,6 +15,7 @@ import {
   startRelogin,
   takeReturnTo,
 } from '@/lib/session-relogin';
+import { preloadRouteChunk } from '@/shell/route-chunks';
 
 export type AuthState =
   | { kind: 'loading' }
@@ -69,13 +70,19 @@ export function useAuthBoot(): AuthState {
   const [state, setState] = useState<AuthState>({ kind: 'loading' });
   useEffect(() => {
     let cancelled = false;
+    // Tab đã đăng nhập (tải lại trang): nạp chunk màn sắp vẽ song song với kiểm phiên. Lỗi nạp để route tự báo.
+    if (authMode() !== null) preloadRouteChunk(null, window.location.pathname).catch(() => {});
     fetch('/api/auth/me')
       .then(async (res): Promise<AuthState | null> => {
         if (res.ok) {
           const me = (await res.json()) as Me;
           // Ngôn ngữ theo tài khoản PMH ID trước khi vẽ app (không nháy ngôn ngữ cũ)
           await applySignedInLanguage(me, { serverDate: res.headers?.get('date') });
-          return onAuthenticated(me);
+          const next = onAuthenticated(me);
+          // Chunk màn theo vai (và theo trang trả về sau SSO) nạp xong trước khi vẽ: khung và trang hiện cùng lúc, không
+          // chớp khung chờ. Nạp hỏng thì vẫn vẽ — route hiện nút Tải lại trang.
+          await preloadRouteChunk(me.role, window.location.pathname).catch(() => {});
+          return next;
         }
         if (res.status === 401) return onUnauthenticated();
         if (await isSsoUnavailable(res)) return { kind: 'anonymous', expired: false, ssoDown: true };

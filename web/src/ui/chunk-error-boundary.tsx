@@ -1,17 +1,29 @@
-import { Component, type ReactNode } from 'react';
+import { Component, Suspense, type ReactNode } from 'react';
+import { ChunkLoadError } from '@/lib/chunk-load-error';
+import { ChunkError } from '@/ui/load-state';
 
-// Chunk lazy 404 sau khi deploy (index.html cũ) làm React gỡ tới gốc → mời tải lại thay vì trắng màn
-export class ChunkErrorBoundary extends Component<
-  { children: ReactNode; fallback: ReactNode },
-  { failed: boolean }
-> {
-  state = { failed: false };
+// Chunk lazy 404 sau khi deploy (index.html cũ) làm React gỡ tới gốc → mời tải lại thay vì trắng màn.
+// Chỉ nhận lỗi nạp chunk; lỗi khác ném tiếp lên như trước (không giấu lỗi code dưới câu "vừa cập nhật").
+export class ChunkErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { error: unknown }> {
+  state = { error: null as unknown };
 
-  static getDerivedStateFromError() {
-    return { failed: true };
+  static getDerivedStateFromError(error: unknown) {
+    return { error };
   }
 
   render() {
-    return this.state.failed ? this.props.fallback : this.props.children;
+    const { error } = this.state;
+    if (error === null) return this.props.children;
+    if (error instanceof ChunkLoadError) return this.props.fallback;
+    throw error;
   }
+}
+
+// Vùng vẽ một route lười: khung chờ của chính màn đó (không nhảy bố cục), nạp hỏng → nút Tải lại trang
+export function RouteChunk({ loading, children }: { loading: ReactNode; children: ReactNode }) {
+  return (
+    <ChunkErrorBoundary fallback={<ChunkError />}>
+      <Suspense fallback={loading}>{children}</Suspense>
+    </ChunkErrorBoundary>
+  );
 }

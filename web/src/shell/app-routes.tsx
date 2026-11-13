@@ -2,30 +2,36 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { isAdminRole, useMe } from '@/lib/me';
 import { NotFound } from '@/ui/load-state';
-import { ProfilePage } from '@/features/profile/profile-page';
-import { RequestPage } from '@/features/request/request-page';
-import { HistoryPage } from '@/features/request/history-page';
-import { HistoryDetailPage } from '@/features/request/history-detail-page';
-import { CatalogPage } from '@/features/catalog/catalog-page';
-import { CategoriesPage } from '@/features/catalog/categories-page';
-import { UnitsPage } from '@/features/units/units-page';
-import { StockPage } from '@/features/stock/stock-page';
-import { UsersPage } from '@/features/directory/users-page';
-import { AuditPage } from '@/features/admin/audit-page';
-import { ConfigPage } from '@/features/admin/config-page';
-import { MonthPage } from '@/features/month/month-page';
-import { ReviewPage } from '@/features/review/review-page';
-import { ArrivalsPage } from '@/features/arrivals/arrivals-page';
-import { DeliveryClassicRedirect, DeliveryPeoplePage } from '@/features/delivery/people/delivery-people-page';
-import { BacklogPage } from '@/features/delivery/backlog-page';
-import { ReportSendPage } from '@/features/reports/report-send-page';
-import { PrintPage } from '@/features/reports/print-page';
 import { MemberPage } from '@/shell/member-page';
 import { MemberShell } from '@/shell/member-shell';
 import { AdminShell } from '@/shell/admin-shell';
 import { RequireMember, RequireRole } from '@/shell/require-role';
 import { ForbiddenScreen } from '@/shell/forbidden-screen';
 import { ADMIN_HOME } from '@/shell/admin-nav';
+import { adminChunk, memberChunk, printChunk } from '@/shell/route-chunks';
+import { PrintPending } from '@/features/reports/print-toolbar';
+import { RouteChunk } from '@/ui/chunk-error-boundary';
+
+// Màn nạp lười theo nhóm (Hành chính / Nhân viên / In): mỗi nhóm một chunk, Suspense + ChunkErrorBoundary nằm trong khung
+const RequestPage = memberChunk.page('RequestPage');
+const HistoryPage = memberChunk.page('HistoryPage');
+const HistoryDetailPage = memberChunk.page('HistoryDetailPage');
+const ProfilePage = memberChunk.page('ProfilePage');
+const MonthPage = adminChunk.page('MonthPage');
+const ReviewPage = adminChunk.page('ReviewPage');
+const ArrivalsPage = adminChunk.page('ArrivalsPage');
+const DeliveryPeoplePage = adminChunk.page('DeliveryPeoplePage');
+const DeliveryClassicRedirect = adminChunk.page('DeliveryClassicRedirect');
+const BacklogPage = adminChunk.page('BacklogPage');
+const ReportSendPage = adminChunk.page('ReportSendPage');
+const StockPage = adminChunk.page('StockPage');
+const CatalogPage = adminChunk.page('CatalogPage');
+const CategoriesPage = adminChunk.page('CategoriesPage');
+const UnitsPage = adminChunk.page('UnitsPage');
+const UsersPage = adminChunk.page('UsersPage');
+const AuditPage = adminChunk.page('AuditPage');
+const ConfigPage = adminChunk.page('ConfigPage');
+const PrintPage = printChunk.page('PrintPage');
 
 // Địa chỉ cũ chuyển sang trang mới: thay mục lịch sử (Back không quay lại) và giữ nguyên query
 function RedirectKeepSearch({ to }: { to: string }) {
@@ -70,7 +76,9 @@ export function AppRoutes() {
         path="/admin/reports/snapshots/:id/print"
         element={
           <RequireRole roles={['admin', 'sa']}>
-            <PrintPage />
+            <RouteChunk loading={<PrintPending />}>
+              <PrintPage />
+            </RouteChunk>
           </RequireRole>
         }
       />
