@@ -206,3 +206,36 @@ test.describe('V2D-17b panel phủ ở Giao hàng, Tổng hợp, Tủ / Kho, Nh�
     }
   });
 });
+
+// Rà soát 13/11 #2: mở bằng Enter, đóng bằng Esc → focus về đúng nút mở (trước đây rơi về BODY ở 3 hộp này)
+test.describe('Đóng panel/hộp trả focus về nút mở', () => {
+  asRole('admin');
+
+  async function enterThenEsc(page: Page, opener: Locator, dialog: Locator) {
+    await expect(opener).toBeEnabled();
+    await opener.focus();
+    await page.keyboard.press('Enter');
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await expect(opener).toBeFocused();
+  }
+
+  test('Kỳ tháng: Điều chỉnh phiếu', async ({ page }) => {
+    await mockSummary(page);
+    await page.goto('/admin/month?ym=2000-01');
+    await enterThenEsc(page, page.getByRole('button', { name: `Điều chỉnh phiếu của ${PW_ROW.full_name}` }), page.getByRole('dialog', { name: 'Điều chỉnh phiếu' }));
+  });
+
+  test('Tủ / Kho: Lịch sử nhập xuất và Xuất lẻ một món', async ({ page }) => {
+    const item = await seedPwItem(page, { stock: 3 });
+    try {
+      await page.goto(`/admin/stock?q=${encodeURIComponent(item.name)}`);
+      await enterThenEsc(page, page.getByRole('button', { name: `Xem lịch sử nhập xuất ${item.name}` }), page.getByRole('dialog', { name: `Lịch sử nhập xuất ${item.name}` }));
+      await page.goto('/admin/stock?tab=issues');
+      await enterThenEsc(page, page.getByRole('button', { name: 'Xuất lẻ một món' }), page.getByRole('dialog', { name: /^Xuất lẻ/ }));
+    } finally {
+      await removeTestItem(page.request, item.id);
+    }
+  });
+});
