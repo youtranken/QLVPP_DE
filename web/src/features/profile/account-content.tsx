@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logout } from '@/lib/auth-actions';
+import { logout, logoutLabelKey } from '@/lib/auth-actions';
 import { initialsOf } from '@/lib/initials';
 import { useMe } from '@/lib/me';
 import { LanguageSwitch } from '@/ui/language-switch';
@@ -11,22 +10,12 @@ import './profile.m1.css';
 export function AccountContent({ language = false }: { language?: boolean }) {
   const { t } = useTranslation();
   const me = useMe();
-  const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
   const name = me.fullName ?? me.sub;
   const who = [me.department, t(`common.roles.${me.role}`)].filter(Boolean).join(' · ');
   const rows: [string, string | null][] = [
     ['profile.email', me.email],
     ['profile.employeeCode', me.employeeCode],
   ];
-  const signOut = async () => {
-    setBusy(true);
-    setFailed(false);
-    if (!(await logout(me.csrfToken))) {
-      setFailed(true);
-      setBusy(false);
-    }
-  };
   return (
     <div className="acct">
       <div className="acct-id">
@@ -50,13 +39,8 @@ export function AccountContent({ language = false }: { language?: boolean }) {
           <LanguageSwitch className="acct-lang__seg" />
         </div>
       )}
-      {failed && (
-        <p role="alert" className="pf-alert">
-          {t('auth.logoutFailed')}
-        </p>
-      )}
-      <button type="button" className="btn btn--danger acct-logout" disabled={busy} onClick={() => void signOut()}>
-        {t('auth.logout')}
+      <button type="button" className="btn btn--danger acct-logout" onClick={() => logout(me.csrfToken, me.sub)}>
+        {t(logoutLabelKey(me.sub))}
       </button>
     </div>
   );

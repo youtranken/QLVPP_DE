@@ -7,7 +7,12 @@ import type { Database } from '../../database/database.module';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import type { PmhIdClaims } from '../users/users.service';
 import { LOCAL_SA_IDLE_MS, LOCAL_SA_SUB } from './local-sa-env';
-import { hashSessionId, newSessionCookie, sealToken } from './session-crypto';
+import {
+  hashSessionId,
+  newSessionCookie,
+  openToken,
+  sealToken,
+} from './session-crypto';
 import {
   hasPlainTokenInProduction,
   SESSION_MAX_AGE_MS,
@@ -186,7 +191,34 @@ export class SessionService implements OnModuleInit {
       );
   }
 
-  // Đăng xuất / đổi tài khoản: trả số dòng đã xóa (0 = phiên đã bị nơi khác xóa trước)
+  // Nút Đăng xuất / đổi tài khoản: xóa phiên (có csrfToken thì chỉ xóa khi khớp) và trả id_token của chính dòng
+  // vừa xóa để làm id_token_hint; null = không xóa được (phiên đã mất hoặc csrf sai)
+  async end(
+    id: string,
+    csrfToken?: string,
+  ): Promise<{ userSub: string; idToken: string | null } | null> {
+    const idHash = hashSessionId(id);
+    const rows = await this.db
+      .delete(sessionsTable)
+      .where(
+        csrfToken === undefined
+          ? eq(sessionsTable.idHash, idHash)
+          : and(
+              eq(sessionsTable.idHash, idHash),
+              eq(sessionsTable.csrfToken, csrfToken),
+            ),
+      )
+      .returning({
+        userSub: sessionsTable.userSub,
+        idToken: sessionsTable.idToken,
+      });
+    const row = rows[0];
+    return row
+      ? { userSub: row.userSub, idToken: openToken(row.idToken, idHash) }
+      : null;
+  }
+
+  // Trả số dòng đã xóa (0 = phiên đã bị nơi khác xóa trước)
   async destroy(id: string): Promise<number> {
     const rows = await this.db
       .delete(sessionsTable)

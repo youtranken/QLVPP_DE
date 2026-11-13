@@ -5,6 +5,10 @@ import { renderApp } from '@/test/render-app';
 import { makeMe } from '@/test/fixtures-me';
 import { mockViewport } from '@/test/viewport';
 import { stubShellApi } from '@/test/admin-shell-stub';
+import { submitForm } from '@/lib/navigate';
+import { endLogout, forgetAuth } from '@/lib/session-relogin';
+
+vi.mock('@/lib/navigate', () => ({ navigateTo: vi.fn(), submitForm: vi.fn() }));
 
 const rows = (n: number) => ({ items: Array.from({ length: n }, (_, i) => ({ id: `l${i}` })) });
 const sideNav = () => screen.getByRole('navigation', { name: 'Menu quản lý' });
@@ -15,6 +19,9 @@ const navLink = (label: string) => within(sideNav()).getByRole('link', { name: b
 afterEach(() => {
   vi.unstubAllGlobals();
   localStorage.clear();
+  // Bấm Đăng xuất bật cờ chặn truy vấn — ca sau phải bắt đầu như chưa đăng xuất
+  endLogout();
+  forgetAuth();
 });
 
 describe('AdminSidebar: đếm', () => {
@@ -87,16 +94,16 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
     expect(await screen.findByRole('link', { name: /Kỳ đăng ký hiện tại: tháng 11 · đang mở/ })).toHaveTextContent('còn 4 ngày');
     expect(screen.getByText('Nguyễn Văn An')).toBeInTheDocument();
     expect(screen.getAllByText('Adm D&E').length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Đăng xuất' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Đăng xuất (cả PMH ID)' })).toBeInTheDocument();
   });
 
   it('cột ≥ 1280: hàng tài khoản một dòng — Đăng xuất là nút biểu tượng có tên, đổi ngôn ngữ nằm sau nút "Ngôn ngữ"', async () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
-    const logout = await screen.findByRole('button', { name: 'Đăng xuất' });
+    const logout = await screen.findByRole('button', { name: 'Đăng xuất (cả PMH ID)' });
     expect(logout).toHaveTextContent(/^$/);
-    expect(logout).toHaveAttribute('title', 'Đăng xuất');
+    expect(logout).toHaveAttribute('title', 'Đăng xuất (cả PMH ID)');
     expect(screen.queryByRole('radio', { name: 'English' })).toBeNull();
     const lang = screen.getByRole('button', { name: 'Ngôn ngữ' });
     expect(lang).toHaveAttribute('aria-expanded', 'false');
@@ -146,12 +153,20 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
     expect(lang).toHaveFocus();
   });
 
-  it('đăng xuất lỗi → câu "Chưa đăng xuất được — thử lại." dưới nút', async () => {
+  it('bấm Đăng xuất (cả PMH ID) → gửi form POST /api/auth/logout (server 303 sang PMH ID)', async () => {
     mockViewport(1280);
-    stubShellApi({ '/api/auth/logout?ui_locales=vi': () => jsonResponse(500, null) });
+    stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
+    await userEvent.click(screen.getByRole('button', { name: 'Đăng xuất (cả PMH ID)' }));
+    expect(submitForm).toHaveBeenCalledWith('/api/auth/logout', { csrf: 'csrf-1', ui_locales: 'vi' });
+  });
+
+  it('SA cục bộ (không qua PMH ID): nút chỉ ghi "Đăng xuất", gửi thêm local=1', async () => {
+    mockViewport(1280);
+    stubShellApi();
+    renderApp(makeMe('sa', { sub: 'local:sa' }), '/admin/catalog');
     await userEvent.click(screen.getByRole('button', { name: 'Đăng xuất' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Chưa đăng xuất được — thử lại.');
+    expect(submitForm).toHaveBeenLastCalledWith('/api/auth/logout', { csrf: 'csrf-1', ui_locales: 'vi', local: '1' });
   });
 
   it('đổi English → nhãn nhóm và mục sidebar đổi', async () => {

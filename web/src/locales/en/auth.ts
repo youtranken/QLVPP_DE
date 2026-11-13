@@ -31,7 +31,7 @@ const auth: Messages<typeof vi> = {
     ssoRedirecting: 'Redirecting to PMH ID…',
     ssoManual: 'Not redirected? Click here.',
     logout: 'Sign out',
-    logoutFailed: 'Could not sign out — try again.',
+    logoutAll: 'Sign out (PMH ID too)',
     testAccounts: {
       title: 'Test accounts (dev build only)',
       hint: 'For use while PMH ID on dev cannot sign anyone in. Not available in production.',

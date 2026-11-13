@@ -26,7 +26,7 @@ test.describe('V2C-T7 hộp tài khoản nhân viên', () => {
       await expect(box.getByText(name)).toBeVisible();
       if (isMobile(info)) {
         await expect(page).toHaveURL(/\/$/);
-        expect((await box.getByRole('button', { name: 'Đăng xuất' }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
+        expect((await box.getByRole('button', { name: /^Đăng xuất/ }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
         await expectNoContrastViolations(page);
       }
       if (isMobile(info)) {

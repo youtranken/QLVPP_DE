@@ -1,30 +1,22 @@
 import {
   BadRequestException,
   Body,
-  Inject,
   Controller,
   Get,
   HttpCode,
-  Post,
   Put,
-  Query,
   Req,
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { AuditWriterService } from '../audit/audit-writer.service';
 import { SystemConfigService } from '../config/system-config.service';
 import { UsersService } from '../users/users.service';
 import type { MeResponse } from './auth.types';
-import { SESSION_COOKIE } from './identity.guard';
-import { sessionRef } from './session-crypto';
 import { OptionalAuth } from './public.decorator';
 import type { AuthedRequest } from './identity.types';
-import { appBaseUrl, clientIp } from './auth.controller';
-import { normalizeLocale, parseLocaleTag, parseUiLocales } from './locale';
-import { OIDC_PROVIDER } from './oidc-provider';
-import type { OidcProvider } from './oidc-provider';
+import { clientIp } from './auth.controller';
+import { normalizeLocale, parseLocaleTag } from './locale';
 import { LocaleSyncService } from './locale-sync.service';
 import type { LocaleSaveResult } from './locale-sync.service';
 import { isPmhSession } from './session-auth.service';
@@ -36,10 +28,8 @@ export class AuthMeController {
   constructor(
     private readonly sessions: SessionService,
     private readonly users: UsersService,
-    private readonly audit: AuditWriterService,
     private readonly config: SystemConfigService,
     private readonly localeSync: LocaleSyncService,
-    @Inject(OIDC_PROVIDER) private readonly oidc: OidcProvider,
   ) {}
 
   @Get('me')
@@ -137,45 +127,5 @@ export class AuthMeController {
         ? { page: dto.page, seq: dto.seq }
         : undefined;
     return this.localeSync.save(session.id, locale, clientIp(req), click);
-  }
-
-  /**
-   * "Đăng xuất" = thoát cả PMH ID (chủ dự án chốt 14/11, thay quyết định 12/11 chỉ thoát app): xóa phiên app + Nhật ký,
-   * rồi trả URL end_session kèm id_token_hint, post_logout_redirect_uri = APP_BASE_URL (= app_url đã khai với PMH ID)
-   * để web chuyển sang. Phiên không có id_token (SA cục bộ, tài khoản thử) chỉ thoát app. Phiên tự hết (idle/12 h/
-   * thu hồi) không bao giờ đi end_session — chỉ nút này.
-   */
-  @Post('logout')
-  @HttpCode(200)
-  async logout(
-    @Req() req: AuthedRequest,
-    @Res() res: Response,
-    @Query('ui_locales') uiLocales?: string,
-  ): Promise<void> {
-    const user = req.user;
-    const sid = user?.sessionId;
-    const idToken = sid
-      ? ((await this.sessions.find(sid))?.idToken ?? null)
-      : null;
-    // Chỉ ghi khi chính lời gọi này xóa được phiên (phiên đã hết hạn thì guard đã ghi session_expired)
-    const destroyed = !!sid && (await this.sessions.destroy(sid)) > 0;
-    if (user && sid && destroyed) {
-      await this.audit.append({
-        actor: user.sub,
-        action: 'auth.logout',
-        objectType: 'session',
-        objectId: sessionRef(sid),
-      });
-    }
-    res.clearCookie(SESSION_COOKIE);
-    const redirectTo =
-      destroyed && idToken
-        ? await this.oidc.buildLogoutUrl(
-            appBaseUrl(),
-            idToken,
-            parseUiLocales(uiLocales),
-          )
-        : null;
-    res.json({ ok: true, redirectTo });
   }
 }

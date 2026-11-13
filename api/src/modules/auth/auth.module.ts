@@ -14,6 +14,7 @@ import { LocaleSyncService } from './locale-sync.service';
 import { LocalSaService } from './local-sa.service';
 import { LocalTestAccountsService } from './local-test-accounts.service';
 import { LocalTestLoginController } from './local-test-login.controller';
+import { LogoutController } from './logout.controller';
 import { RolesGuard } from './roles.guard';
 import { SessionAuthService } from './session-auth.service';
 import { SessionCleanupJob } from './session-cleanup.job';
@@ -26,6 +27,7 @@ import { WebhookEventsService } from './webhook-events.service';
   controllers: [
     AuthController,
     AuthMeController,
+    LogoutController,
     LocalTestLoginController,
     BackchannelLogoutController,
     WebhookController,

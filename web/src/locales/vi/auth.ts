@@ -28,7 +28,7 @@ const auth = {
     ssoRedirecting: 'Đang chuyển sang PMH ID…',
     ssoManual: 'Không tự chuyển? Bấm vào đây.',
     logout: 'Đăng xuất',
-    logoutFailed: 'Chưa đăng xuất được — thử lại.',
+    logoutAll: 'Đăng xuất (cả PMH ID)',
     testAccounts: {
       title: 'Tài khoản thử (chỉ bản dev)',
       hint: 'Dùng khi PMH ID bản dev chưa đăng nhập được. Không có trên bản chính thức.',

@@ -191,8 +191,8 @@ export class AuthController {
   }
 
   // Public: user bị chặn (forbidden) không có phiên app. Có id_token → end_session (hủy phiên SSO);
-  // không có (nhánh access_denied/revoked chưa tạo phiên) → PMH ID 500 khi logout thiếu hint,
-  // nên đi authorize với prompt=login: PMH ID hiện form đăng nhập dù phiên SSO còn, chọn được tài khoản khác.
+  // không có (nhánh access_denied/revoked chưa tạo phiên) → authorize với prompt=login: PMH ID hiện form
+  // đăng nhập dù phiên SSO còn, chọn được tài khoản khác.
   @Public()
   @Get('switch-account')
   async switchAccount(
@@ -201,12 +201,9 @@ export class AuthController {
     @Query('ui_locales') uiLocales?: string,
   ): Promise<void> {
     const sid = req.user?.sessionId;
-    let idTokenHint: string | null = null;
-    if (sid) {
-      const session = await this.sessions.find(sid);
-      idTokenHint = session?.idToken ?? null;
-      await this.sessions.destroy(sid);
-    }
+    const idTokenHint = sid
+      ? ((await this.sessions.end(sid))?.idToken ?? null)
+      : null;
     res.clearCookie(SESSION_COOKIE);
     const locales = parseUiLocales(uiLocales);
     if (idTokenHint) {

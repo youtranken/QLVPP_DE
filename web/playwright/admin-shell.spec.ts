@@ -96,14 +96,19 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     await expectNoContrastViolations(page);
   });
 
-  test('v2: đăng xuất lỗi hiện câu báo đủ tương phản trên nền tối', async ({ page }, info) => {
-    await page.route('**/api/auth/logout', (route) => route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }));
+  test('Đăng xuất (cả PMH ID) = form POST điều hướng cả trang tới /api/auth/logout (csrf trong thân), không qua fetch', async ({ page }, info) => {
     await page.goto('/admin/month');
     await expect(page.getByRole('heading', { level: 1, name: /^Kỳ tháng \d+$/ })).toBeVisible();
+    // Không để dev api xử lý thật: chỉ bắt request điều hướng
+    await page.route('**/api/auth/logout', (route) => route.fulfill({ status: 200, contentType: 'text/plain', body: 'logged-out' }));
     if (isMobile(info)) await page.getByRole('button', { name: OPEN_MENU }).click();
-    await page.getByRole('button', { name: 'Đăng xuất' }).click();
-    await expect(page.getByRole('alert').filter({ hasText: /đăng xuất/i })).toBeVisible();
-    await expectNoContrastViolations(page);
+    const nav = page.waitForRequest((r) => r.url().endsWith('/api/auth/logout'));
+    await page.getByRole('button', { name: 'Đăng xuất (cả PMH ID)' }).click();
+    const req = await nav;
+    expect(req.method()).toBe('POST');
+    expect(req.isNavigationRequest()).toBe(true);
+    expect(new URLSearchParams(req.postData() ?? '').get('ui_locales')).toBe('vi');
+    await expect(page.getByText('logged-out')).toBeVisible();
   });
 
   test('E9-S1 điểm gãy 767/768 và 1279/1280', async ({ page }) => {
@@ -132,9 +137,9 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     await expect(stock).toHaveAttribute('aria-current', 'page');
     await expect(stock).toHaveAttribute('title', 'Tủ / Kho');
     expect((await stock.boundingBox())!.width).toBeLessThanOrEqual(48);
-    await expect(page.getByRole('button', { name: 'Đăng xuất' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Đăng xuất/ })).toHaveCount(0);
     await page.getByRole('button', { name: 'Tài khoản và ngôn ngữ' }).click();
-    await expect(page.getByRole('button', { name: 'Đăng xuất' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Đăng xuất/ })).toBeVisible();
     await expect(page.getByRole('radio', { name: 'English' })).toBeVisible();
   });
 
@@ -162,7 +167,7 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     expect((await name.boundingBox())!.width).toBeGreaterThanOrEqual(100);
     expect((await role.boundingBox())!.height).toBeLessThanOrEqual(20);
     const bell = (await bellOf(page, false).boundingBox())!;
-    const logout = (await user.getByRole('button', { name: 'Đăng xuất' }).boundingBox())!;
+    const logout = (await user.getByRole('button', { name: /^Đăng xuất/ }).boundingBox())!;
     expect(bell.y).toBeGreaterThanOrEqual((await name.boundingBox())!.y + 10);
     expect(logout.x + logout.width).toBeLessThanOrEqual(252);
   });
@@ -189,7 +194,7 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     } else {
       await expect(crumbs).toBeVisible();
     }
-    await expect(page.getByRole('button', { name: 'Đăng xuất' })).toBeInViewport({ ratio: 1 });
+    await expect(page.getByRole('button', { name: /^Đăng xuất/ })).toBeInViewport({ ratio: 1 });
     const side = page.getByRole('navigation', { name: 'Menu quản lý' });
     const overflow = await side.getByRole('link').evaluateAll((links) =>
       links.filter((a) => a.getBoundingClientRect().right > a.closest('nav')!.parentElement!.getBoundingClientRect().right).map((a) => a.getAttribute('title')),
@@ -203,7 +208,7 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
       // 12 mục (V2D-20): ở 720 nav tự cuộn, mục cuối vẫn tới được; khối tài khoản không cuộn theo
       await side.getByRole('link', { name: /^Cấu hình/ }).scrollIntoViewIfNeeded();
       await expect(side.getByRole('link', { name: /^Cấu hình/ })).toBeInViewport({ ratio: 1 });
-      await expect(page.getByRole('button', { name: 'Đăng xuất' })).toBeInViewport({ ratio: 1 });
+      await expect(page.getByRole('button', { name: /^Đăng xuất/ })).toBeInViewport({ ratio: 1 });
       const clipped = await side.getByRole('link').evaluateAll((links) =>
         links.map((a) => a.querySelector('span')!).filter((l) => l.scrollWidth > l.clientWidth).map((l) => l.textContent),
       );

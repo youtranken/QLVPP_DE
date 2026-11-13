@@ -1,7 +1,7 @@
 import { queryClient } from '@/lib/api-client';
 import { currentLanguage } from '@/lib/lang-pref';
-import { navigateTo } from '@/lib/navigate';
-import { beginLogout, endLogout, forgetAuth, rememberAuth, ssoLoginUrl, switchAccountUrl } from '@/lib/session-relogin';
+import { navigateTo, submitForm } from '@/lib/navigate';
+import { authMode, beginLogout, forgetAuth, rememberAuth, ssoLoginUrl, switchAccountUrl } from '@/lib/session-relogin';
 
 export function loginWithPmhId(loginHint?: string): void {
   navigateTo(ssoLoginUrl(loginHint));
@@ -57,44 +57,28 @@ export function testAccountLogin(username: string, password: string): Promise<Sa
   return postLocalLogin('/api/auth/test-login', username, password);
 }
 
-// Chỉ nhận URL end_session tuyệt đối http(s) do server dựng; thứ khác → về trang đầu
-async function endSessionUrl(res: Response): Promise<string | null> {
-  if (!res.ok) return null;
-  try {
-    const body = (await res.json()) as { redirectTo?: unknown };
-    const url = typeof body.redirectTo === 'string' ? new URL(body.redirectTo) : null;
-    return url && (url.protocol === 'https:' || url.protocol === 'http:') ? url.href : null;
-  } catch {
-    return null;
-  }
+// Đăng xuất toàn hệ (PMH ID): form POST điều hướng cả trang, server xóa phiên app rồi 303 sang /oidc/logout —
+// id_token không xuống JS. Phiên SA cục bộ gửi local=1: phiên đã mất cũng chỉ về trang đầu
+export function logout(csrfToken: string | null, sub: string): void {
+  // 401 của truy vấn đang bay (fetch không hủy được) không được kéo sang trang hết phiên / SSO lại
+  beginLogout();
+  void queryClient.cancelQueries();
+  const local = isLocalSession(sub);
+  forgetAuth();
+  submitForm('/api/auth/logout', {
+    csrf: csrfToken ?? '',
+    ui_locales: currentLanguage(),
+    ...(local ? { local: '1' } : {}),
+  });
 }
 
-// "Đăng xuất" thoát cả PMH ID: server xóa phiên app rồi trả URL end_session (phiên SSO); SA cục bộ → null, về trang đầu.
-// Chỉ quên trạng thái đăng nhập khi server đã hủy phiên; 401 nghĩa là phiên đã mất sẵn
-export async function logout(csrfToken: string | null): Promise<boolean> {
-  // Bật cờ trước khi gọi server: 401 của truy vấn đang bay (fetch không hủy được) không được kéo sang trang hết phiên / SSO lại
-  beginLogout();
-  let target: string | null = null;
-  try {
-    const res = await fetch(`/api/auth/logout?ui_locales=${currentLanguage()}`, {
-      method: 'POST',
-      headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
-    });
-    if (!res.ok && res.status !== 401) {
-      endLogout();
-      return false;
-    }
-    target = await endSessionUrl(res);
-  } catch {
-    endLogout();
-    return false;
-  }
-  // Dọn cache ở một chỗ; truy vấn còn gắn trên màn không gửi lại request vì cờ đăng xuất (api-client)
-  await queryClient.cancelQueries();
-  queryClient.clear();
-  forgetAuth();
-  navigateTo(target ?? '/');
-  return true;
+// Phiên SSO: nút nói rõ là thoát cả PMH ID; SA cục bộ / tài khoản thử chỉ thoát app
+export function logoutLabelKey(sub: string): 'auth.logout' | 'auth.logoutAll' {
+  return isLocalSession(sub) ? 'auth.logout' : 'auth.logoutAll';
+}
+
+function isLocalSession(sub: string): boolean {
+  return sub === 'local:sa' || authMode() === 'sa';
 }
 
 // Bị chặn quyền: phải qua end_session của PMH ID, nếu không phiên SSO còn sống sẽ lặp lại forbidden

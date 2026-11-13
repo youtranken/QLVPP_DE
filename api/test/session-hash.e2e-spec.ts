@@ -133,8 +133,9 @@ describe('chuẩn phiên: khóa băm, token niêm phong, không lộ cookie/toke
     await request(h.server())
       .post('/api/auth/logout')
       .set('Cookie', `vpp_sid=${cookie}`)
-      .set('X-CSRF-Token', csrf)
-      .expect(200);
+      .type('form')
+      .send({ csrf })
+      .expect(303);
     expect(await h.sessionRows(h.testSub)).toHaveLength(0);
     const out = await h.auditRows(h.testSub, 'auth.logout');
     expect(out.map((a) => a.object_id)).toEqual([sessionRef(cookie)]);

@@ -87,7 +87,7 @@ async function saveSigner(page: Page, preparer: string) {
 
 async function logout(page: Page) {
   await page.goto('/me');
-  await page.getByRole('button', { name: 'Đăng xuất' }).click();
+  await page.getByRole('button', { name: /^Đăng xuất/ }).click();
   await expect(page.getByLabel('Email', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => fetch('/api/auth/me').then((r) => r.status))).toBe(401);
 }

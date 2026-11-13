@@ -68,20 +68,25 @@ describe('auth e2e', () => {
       csrfToken = session.csrfToken;
     });
 
-    it('thiếu X-CSRF-Token → 403 CSRF_TOKEN_INVALID', async () => {
+    it('thiếu csrf → 303 về /, phiên còn nguyên', async () => {
       const res = await request(app.getHttpServer())
         .post('/api/auth/logout')
         .set('Cookie', `vpp_sid=${sessionId}`)
-        .expect(403);
-      expect(res.body.code).toBe('CSRF_TOKEN_INVALID');
+        .expect(303);
+      expect(res.headers.location).toBe('/');
+      await request(app.getHttpServer())
+        .get('/api/auth/me')
+        .set('Cookie', `vpp_sid=${sessionId}`)
+        .expect(200);
     });
 
-    it('đúng X-CSRF-Token → 200 và phiên bị hủy', async () => {
+    it('đúng csrf (form) → 303 và phiên bị hủy', async () => {
       await request(app.getHttpServer())
         .post('/api/auth/logout')
         .set('Cookie', `vpp_sid=${sessionId}`)
-        .set('X-CSRF-Token', csrfToken)
-        .expect(200);
+        .type('form')
+        .send({ csrf: csrfToken })
+        .expect(303);
       await request(app.getHttpServer())
         .get('/api/auth/me')
         .set('Cookie', `vpp_sid=${sessionId}`)
