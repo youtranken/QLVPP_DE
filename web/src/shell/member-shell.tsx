@@ -77,7 +77,7 @@ export function MemberShell() {
           )}
         </div>
       </header>
-      <main id="main">
+      <main id="main" tabIndex={-1}>
         <RouteChunk
           loading={
             <LoadPanel>

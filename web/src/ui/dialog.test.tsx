@@ -188,11 +188,17 @@ describe('Dialog nằm trong form khác', () => {
 
 describe('Dialog trả focus về nút mở', () => {
   // Rà soát 13/11 #2: Điều chỉnh phiếu, Lịch sử nhập xuất, Xuất lẻ một món — đóng bằng Esc thì focus rơi về BODY
-  function Opener({ remountKey, show = true, autoFocusInside = true }: { remountKey?: number; show?: boolean; autoFocusInside?: boolean }) {
+  // <main> không đặt tabIndex như khung thật cũ của Nhân viên: test không được che lỗi "#main không focus được"
+  function Opener({ remountKey, show = true, autoFocusInside = true, twin = false }: { remountKey?: number; show?: boolean; autoFocusInside?: boolean; twin?: boolean }) {
     const [open, setOpen] = useState(false);
     return (
       <>
-        <main id="main" tabIndex={-1}>
+        <main id="main">
+          {twin && (
+            <button type="button" aria-label="Điều chỉnh phiếu của An">
+              Điều chỉnh (người trùng tên)
+            </button>
+          )}
           {show && (
             <button key={remountKey} type="button" aria-label="Điều chỉnh phiếu của An" onClick={() => setOpen(true)}>
               Điều chỉnh
@@ -240,6 +246,18 @@ describe('Dialog trả focus về nút mở', () => {
     await userEvent.keyboard('{Enter}');
     await screen.findByRole('dialog');
     rerender(<Opener show={false} />);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(document.getElementById('main')).toHaveFocus());
+  });
+
+  it('nút mở không còn mà có hai nút cùng nhãn (trùng tên): không đoán hàng, focus về #main', async () => {
+    const { rerender } = renderWithI18n(<Opener twin />);
+    screen.getAllByRole('button', { name: 'Điều chỉnh phiếu của An' })[1]!.focus();
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('dialog');
+    rerender(<Opener twin show={false} />);
+    rerender(<Opener twin show />);
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     await waitFor(() => expect(document.getElementById('main')).toHaveFocus());

@@ -1,6 +1,7 @@
 /* Khung Nhân viên v2: thanh trên tối + tab pill, nền teal, thanh dưới điện thoại. Mọi luật nằm trong phạm vi member. */
 [data-shell='member'] .m-shell { min-height: 100vh; background: linear-gradient(160deg, var(--c-shell-a), var(--c-shell-b) 55%, var(--c-shell-c)); color: var(--c-ink); }
 [data-shell='member'] .m-shell .skip-link { background: var(--c-surface); color: var(--c-ink); }
+[data-shell='member'] .m-shell > main { outline: none; }
 
 [data-shell='member'] .m-top { position: sticky; top: 0; z-index: 10; background: var(--c-shell-a); border-bottom: 0; box-shadow: var(--e-2); }
 /* Một hàng ở mọi bề ngang: thanh trên xuống 2 dòng thì cao hơn chỗ chừa (top của phiếu dính) và đè lên lưới */

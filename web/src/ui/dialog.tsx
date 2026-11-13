@@ -52,7 +52,17 @@ function findAgain(m: OpenerMark): HTMLElement | null {
   if (m.el.isConnected) return m.el;
   const byId = m.id ? document.getElementById(m.id) : null;
   if (byId) return byId;
-  return m.label ? document.querySelector<HTMLElement>(`${m.tag}[aria-label="${CSS.escape(m.label)}"]`) : null;
+  if (!m.label) return null;
+  // Nhãn chỉ đủ tin khi duy nhất: hai hàng cùng nhãn (vd hai người trùng tên) thì không đoán, để rơi về #main
+  const same = document.querySelectorAll<HTMLElement>(`${m.tag}[aria-label="${CSS.escape(m.label)}"]`);
+  return same.length === 1 ? same[0]! : null;
+}
+
+// Vùng nội dung chính làm chỗ trả focus dự phòng: <main> không có tabindex thì focus() không ăn, focus rơi về BODY
+function mainTarget(): HTMLElement | null {
+  const main = document.getElementById('main');
+  if (main && !main.hasAttribute('tabindex')) main.tabIndex = -1;
+  return main;
 }
 
 function hasModalBelow(me: HTMLElement): boolean {
@@ -168,7 +178,7 @@ export function Dialog({
               const mark = markOf(openerProp?.current ?? null) ?? opener.current;
               if (!returnFocus || !mark) return;
               // Nút mở không còn và không tìm lại được → vùng nội dung chính, không để focus rơi về BODY
-              const target = findAgain(mark) ?? document.getElementById('main');
+              const target = findAgain(mark) ?? mainTarget();
               if (!target) return;
               e.preventDefault();
               target.focus();
