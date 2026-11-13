@@ -13,6 +13,7 @@ import '@/css/m1/states.css';
 import '@/css/m1/table.css';
 import '@/css/grid-table.m1.css';
 import '@/css/m1/filter.css';
+import '@/ui/filter/scroll-fade.css';
 import '@/css/m1/list-page.css';
 import '@/css/m1/overlay.css';
 import '@/css/m1/row-menu.css';
