@@ -45,7 +45,7 @@ function sanitizeLoginHint(raw?: string): string | undefined {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? v : undefined;
 }
 
-function appBaseUrl(): string {
+export function appBaseUrl(): string {
   return process.env.APP_BASE_URL ?? 'http://localhost:8080';
 }
 

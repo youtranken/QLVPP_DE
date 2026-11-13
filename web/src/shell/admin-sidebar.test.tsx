@@ -148,7 +148,7 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
 
   it('đăng xuất lỗi → câu "Chưa đăng xuất được — thử lại." dưới nút', async () => {
     mockViewport(1280);
-    stubShellApi({ '/api/auth/logout': () => jsonResponse(500, null) });
+    stubShellApi({ '/api/auth/logout?ui_locales=vi': () => jsonResponse(500, null) });
     renderApp(makeMe('admin'), '/admin/catalog');
     await userEvent.click(screen.getByRole('button', { name: 'Đăng xuất' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Chưa đăng xuất được — thử lại.');

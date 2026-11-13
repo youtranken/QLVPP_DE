@@ -1,4 +1,5 @@
 import { queryClient } from '@/lib/api-client';
+import { currentLanguage } from '@/lib/lang-pref';
 import { navigateTo } from '@/lib/navigate';
 import { beginLogout, endLogout, forgetAuth, rememberAuth, ssoLoginUrl, switchAccountUrl } from '@/lib/session-relogin';
 
@@ -55,12 +56,26 @@ export function testAccountLogin(username: string, password: string): Promise<Sa
   return postLocalLogin('/api/auth/test-login', username, password);
 }
 
+// Chỉ nhận URL end_session tuyệt đối http(s) do server dựng; thứ khác → về trang đầu
+async function endSessionUrl(res: Response): Promise<string | null> {
+  if (!res.ok) return null;
+  try {
+    const body = (await res.json()) as { redirectTo?: unknown };
+    const url = typeof body.redirectTo === 'string' ? new URL(body.redirectTo) : null;
+    return url && (url.protocol === 'https:' || url.protocol === 'http:') ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+// "Đăng xuất" thoát cả PMH ID: server xóa phiên app rồi trả URL end_session (phiên SSO); SA cục bộ → null, về trang đầu.
 // Chỉ quên trạng thái đăng nhập khi server đã hủy phiên; 401 nghĩa là phiên đã mất sẵn
 export async function logout(csrfToken: string | null): Promise<boolean> {
   // Bật cờ trước khi gọi server: 401 của truy vấn đang bay (fetch không hủy được) không được kéo sang trang hết phiên / SSO lại
   beginLogout();
+  let target: string | null = null;
   try {
-    const res = await fetch('/api/auth/logout', {
+    const res = await fetch(`/api/auth/logout?ui_locales=${currentLanguage()}`, {
       method: 'POST',
       headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
     });
@@ -68,6 +83,7 @@ export async function logout(csrfToken: string | null): Promise<boolean> {
       endLogout();
       return false;
     }
+    target = await endSessionUrl(res);
   } catch {
     endLogout();
     return false;
@@ -76,7 +92,7 @@ export async function logout(csrfToken: string | null): Promise<boolean> {
   await queryClient.cancelQueries();
   queryClient.clear();
   forgetAuth();
-  navigateTo('/');
+  navigateTo(target ?? '/');
   return true;
 }
 

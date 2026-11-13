@@ -35,6 +35,40 @@ describe('logout', () => {
   });
 });
 
+// "Đăng xuất" thoát cả PMH ID: server xóa phiên app rồi trả URL end_session, web chuyển sang đó
+describe('logout → end_session PMH ID', () => {
+  const END = 'https://dev-admin.pmh.com.vn:8443/oidc/logout?id_token_hint=t&post_logout_redirect_uri=https%3A%2F%2Fdev-vpp.pmh.com.vn%3A8443';
+  const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+
+  it('server trả redirectTo → chuyển sang PMH ID (gửi CSRF + ui_locales ngôn ngữ đang dùng), không về /', async () => {
+    const fetchMock = vi.fn(async () => json(200, { ok: true, redirectTo: END }));
+    vi.stubGlobal('fetch', fetchMock);
+    rememberAuth('sso');
+    expect(await logout('csrf-1')).toBe(true);
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/logout?ui_locales=vi', { method: 'POST', headers: { 'X-CSRF-Token': 'csrf-1' } });
+    expect(vi.mocked(navigateTo).mock.calls).toEqual([[END]]);
+    expect(window.sessionStorage.getItem('vpp.auth.mode')).toBeNull();
+  });
+
+  it('redirectTo null (SA cục bộ, tài khoản thử) → về /', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => json(200, { ok: true, redirectTo: null })));
+    expect(await logout('csrf')).toBe(true);
+    expect(vi.mocked(navigateTo).mock.calls).toEqual([['/']]);
+  });
+
+  it('redirectTo không phải URL http(s) → về /, không điều hướng lạ', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => json(200, { ok: true, redirectTo: 'javascript:alert(1)' })));
+    expect(await logout('csrf')).toBe(true);
+    expect(vi.mocked(navigateTo).mock.calls).toEqual([['/']]);
+  });
+
+  it('401 (phiên đã mất sẵn) → về /', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => json(401, { code: 'UNAUTHENTICATED' })));
+    expect(await logout('csrf')).toBe(true);
+    expect(vi.mocked(navigateTo).mock.calls).toEqual([['/']]);
+  });
+});
+
 describe('logout: 401 muộn không kéo sang trang hết phiên / SSO lại', () => {
   it('truy vấn đang bay trả 401 SAU khi đăng xuất → không gọi luồng hết phiên, chỉ về trang đầu', async () => {
     rememberAuth('sso');
@@ -42,7 +76,7 @@ describe('logout: 401 muộn không kéo sang trang hết phiên / SSO lại', (
     vi.stubGlobal(
       'fetch',
       vi.fn((url: string) =>
-        url === '/api/auth/logout'
+        url.startsWith('/api/auth/logout')
           ? Promise.resolve(new Response(null, { status: 204 }))
           : new Promise<Response>((res) => {
               late = res;
