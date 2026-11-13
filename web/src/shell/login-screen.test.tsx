@@ -138,7 +138,7 @@ describe('LoginScreen', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('PMH ID tạm thời không liên lạc được');
     unmount();
     renderWithI18n(<LoginScreen sessionExpired />);
-    expect(screen.getByRole('alert')).toHaveTextContent('Phiên đã hết hạn');
+    expect(screen.getByRole('alert')).toHaveTextContent('Phiên đăng nhập đã hết hạn. Đăng nhập lại để tiếp tục.');
   });
 
   it('?login=forbidden → trang "Chưa được cấp quyền" lấy admin_contact từ /api/public-config', async () => {

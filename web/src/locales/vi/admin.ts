@@ -102,7 +102,7 @@ const admin = {
         logout: 'Đăng xuất',
         sa_login: 'Đăng nhập tài khoản dự phòng',
         sa_login_failed: 'Đăng nhập tài khoản dự phòng sai',
-        session_expired: 'Phiên hết hạn',
+        session_expired: 'Phiên hết hạn (không thao tác quá lâu hoặc quá 12 giờ)',
         session_revoked: 'Phiên bị thu hồi',
         test_login: 'Đăng nhập tài khoản thử (dev)',
         test_login_failed: 'Đăng nhập tài khoản thử (dev) sai',

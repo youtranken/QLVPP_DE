@@ -31,7 +31,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
   it('vào / chưa đăng nhập → màn đăng nhập, không thông báo hết hạn', async () => {
     renderWithI18n(<App />);
     expect(await screen.findByLabelText(LOGIN_FIELD)).toBeInTheDocument();
-    expect(screen.queryByText(/Phiên đã hết hạn/)).toBeNull();
+    expect(screen.queryByText(/Phiên đăng nhập đã hết hạn/)).toBeNull();
     expect(navigateTo).not.toHaveBeenCalled();
   });
 
@@ -58,18 +58,18 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     expect(sessionStorage.getItem('vpp.auth.mode')).toBe('sso');
   });
 
-  it('vừa thử tự đăng nhập < 60 s → màn đăng nhập + "Phiên đã hết hạn"', async () => {
+  it('vừa thử tự đăng nhập < 60 s → màn đăng nhập + "Phiên đăng nhập đã hết hạn"', async () => {
     sessionStorage.setItem('vpp.auth.mode', 'sso');
     sessionStorage.setItem('vpp.auth.reloginAt', String(Date.now() - 1000));
     renderWithI18n(<App />);
-    expect(await screen.findByText(/Phiên đã hết hạn/)).toBeInTheDocument();
+    expect(await screen.findByText(/Phiên đăng nhập đã hết hạn/)).toBeInTheDocument();
     expect(sessionStorage.getItem('vpp.auth.mode')).toBeNull();
   });
 
   it('phiên SA hết hạn → màn đăng nhập (không SSO) + thông báo', async () => {
     sessionStorage.setItem('vpp.auth.mode', 'sa');
     renderWithI18n(<App />);
-    expect(await screen.findByText(/Phiên đã hết hạn/)).toBeInTheDocument();
+    expect(await screen.findByText(/Phiên đăng nhập đã hết hạn/)).toBeInTheDocument();
     expect(navigateTo).not.toHaveBeenCalled();
   });
 

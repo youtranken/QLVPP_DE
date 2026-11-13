@@ -105,7 +105,7 @@ const admin: Messages<typeof vi> = {
         logout: 'Signed out',
         sa_login: 'Fallback account signed in',
         sa_login_failed: 'Fallback account sign-in failed',
-        session_expired: 'Session expired',
+        session_expired: 'Session expired (idle too long or over 12 hours)',
         session_revoked: 'Session revoked',
         test_login: 'Test account signed in (dev)',
         test_login_failed: 'Test account sign-in failed (dev)',
