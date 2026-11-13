@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act } from '@testing-library/react';
-import { renderWithI18n, screen, userEvent } from '@/test/test-utils';
+import { MemoryRouter, Link, Route, Routes } from 'react-router-dom';
+import { renderWithI18n as renderBare, screen, userEvent } from '@/test/test-utils';
 import { RouteChunk } from '@/ui/chunk-error-boundary';
 import { adminChunk, memberChunk, preloadRouteChunk, printChunk, routeChunk } from './route-chunks';
 
@@ -28,6 +29,9 @@ class Outer extends Component<{ children: ReactNode }, { error: string | null }>
     return this.state.error ? <p>Lỗi ngoài: {this.state.error}</p> : this.props.children;
   }
 }
+
+// RouteChunk đọc đường dẫn (reset lỗi khi chuyển trang) → cần Router
+const renderWithI18n = (ui: ReactNode) => renderBare(<MemoryRouter>{ui}</MemoryRouter>);
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -106,6 +110,36 @@ describe('routeChunk — nạp lười theo nhóm route', () => {
     );
     expect(screen.getByText('Lỗi ngoài: bug thật')).toBeInTheDocument();
     expect(screen.queryByText(/vừa được cập nhật/)).toBeNull();
+  });
+
+  it('nạp hỏng ở một trang không chặn trang khác; quay lại trang đó thì nạp lại thật (React.lazy không giữ lời từ chối)', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    function Other() {
+      return <h1>Trang khác</h1>;
+    }
+    const load = vi.fn().mockRejectedValueOnce(new TypeError('Failed to fetch dynamically imported module')).mockResolvedValue({ Page });
+    const broken = routeChunk<{ Page: typeof Page }>(load);
+    const ok = routeChunk(() => Promise.resolve({ Other }));
+    const A = broken.page('Page');
+    const B = ok.page('Other');
+    renderBare(
+      <MemoryRouter initialEntries={['/a']}>
+        <Link to="/a">tới A</Link>
+        <Link to="/b">tới B</Link>
+        <RouteChunk loading={<Waiting />}>
+          <Routes>
+            <Route path="/a" element={<A />} />
+            <Route path="/b" element={<B />} />
+          </Routes>
+        </RouteChunk>
+      </MemoryRouter>,
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent('Ứng dụng vừa được cập nhật');
+    await userEvent.click(screen.getByRole('link', { name: 'tới B' }));
+    expect(await screen.findByRole('heading', { name: 'Trang khác' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('link', { name: 'tới A' }));
+    expect(await screen.findByRole('heading', { name: 'Trang thật' })).toBeInTheDocument();
+    expect(load).toHaveBeenCalledTimes(2);
   });
 
   it('nạp hỏng một lần rồi lần sau thử lại (không giữ mãi lời từ chối)', async () => {
