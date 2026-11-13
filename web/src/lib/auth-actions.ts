@@ -8,6 +8,24 @@ export function loginWithPmhId(loginHint?: string): void {
 
 export type SaLoginOutcome = 'ok' | 'invalid' | 'locked' | 'error';
 
+export type IdentifyOutcome = 'password' | 'invalid' | 'error';
+
+// Chữ không phải email: chỉ server biết tên tài khoản nội bộ (SA) — web không giữ, public-config không trả
+export async function identifyLogin(identifier: string): Promise<IdentifyOutcome> {
+  try {
+    const res = await fetch('/api/auth/identify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier: identifier.trim() }),
+    });
+    if (!res.ok) return 'error';
+    const body = (await res.json()) as { next?: unknown };
+    return body.next === 'password' || body.next === 'invalid' ? body.next : 'error';
+  } catch {
+    return 'error';
+  }
+}
+
 // Đăng nhập không qua SSO (SA, tài khoản thử dev): mode 'sa' = hết phiên thì về màn đăng nhập, không tự SSO lại
 async function postLocalLogin(url: string, username: string, password: string): Promise<SaLoginOutcome> {
   try {

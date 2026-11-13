@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import {
+  createHash,
+  randomBytes,
+  scryptSync,
+  timingSafeEqual,
+} from 'node:crypto';
 import { parseLocalSa } from './local-sa-env';
 import type { LocalSaConfig } from './local-sa-env';
 import { LoginLockout } from './login-lockout';
@@ -41,6 +46,13 @@ export class LocalSaService {
     return this.lockout.attempt(ip, username, () =>
       this.verifyCredentials(username, password),
     );
+  }
+
+  // So băm cùng độ dài bằng timingSafeEqual: thời gian không phụ thuộc gõ đúng bao nhiêu ký tự đầu
+  isSaUsername(name: string): boolean {
+    const digest = (v: string) => createHash('sha256').update(v).digest();
+    const expected = digest(this.config?.username ?? '');
+    return timingSafeEqual(digest(name), expected) && this.config !== null;
   }
 
   isLocked(ip: string, username: string): boolean {

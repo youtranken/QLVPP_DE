@@ -25,7 +25,7 @@ import { OIDC_PROVIDER } from './oidc-provider';
 import type { OidcProvider, OidcTokens } from './oidc-provider';
 import { Public } from './public.decorator';
 import { Throttle } from '@nestjs/throttler';
-import { SaLoginDto } from './sa-login.dto';
+import { IdentifyDto, SaLoginDto } from './sa-login.dto';
 import { SessionService } from './session.service';
 import { TokenContractError } from './token-contract.error';
 import { SESSION_COOKIE } from './identity.guard';
@@ -132,6 +132,18 @@ export class AuthController {
       detail: { ip },
     });
     res.json({ ok: true });
+  }
+
+  // Ô đăng nhập gõ chữ không phải email: chỉ đúng hệt tên SA trong env mới sang bước mật khẩu. Tên SA không có
+  // trong bundle web hay public-config; trả đúng một trong hai dạng, giới hạn 10 lần/phút/IP để không dò tên được.
+  @Public()
+  @Throttle({ ip: { limit: 10, ttl: 60_000 } })
+  @Post('identify')
+  @HttpCode(200)
+  identify(@Body() dto: IdentifyDto): { next: 'password' | 'invalid' } {
+    return {
+      next: this.localSa.isSaUsername(dto.identifier) ? 'password' : 'invalid',
+    };
   }
 
   @Public()
