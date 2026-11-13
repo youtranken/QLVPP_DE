@@ -22,6 +22,7 @@
     "test:debug": "node --experimental-vm-modules --disable-warning=ExperimentalWarning --inspect-brk node_modules/.bin/jest --runInBand",
     "test:e2e": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules --disable-warning=ExperimentalWarning\" jest --config ./test/jest-e2e.json",
     "test:db": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules --disable-warning=ExperimentalWarning\" jest --config ./test/jest-db.json --runInBand",
+    "test:versions": "node --test ../ops/versions-baseline.test.mjs",
     "sa:hash": "node scripts/sa-hash.mjs",
     "local-test:hash": "node scripts/sa-hash.mjs",
     "seed:catalog": "node scripts/seed-catalog.mjs"
