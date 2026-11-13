@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -7,17 +7,20 @@ import i18n from '@/lib/i18n';
 import { unitsQuery } from '@/features/units/units.api';
 import { SEED_UNITS } from '@/test/fixtures-units';
 
-// QueryClient mới mỗi test, tắt retry để lỗi hiện ngay; ĐVT seed sẵn như 0111 để stub fetch của từng test không phải trả /api/units
+// QueryClient mới mỗi test, tắt retry để lỗi hiện ngay; ĐVT seed sẵn như 0111 để stub fetch của từng test không phải trả /api/units.
+// Provider đi qua `wrapper` để rerender() giữ nguyên cây (không gỡ rồi gắn lại cả màn, che lỗi phụ thuộc vào lần mount đầu)
 export function renderWithI18n(ui: ReactElement) {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   qc.setQueryData(unitsQuery.queryKey, SEED_UNITS);
-  return render(
-    <QueryClientProvider client={qc}>
-      <I18nextProvider i18n={i18n}>{ui}</I18nextProvider>
-    </QueryClientProvider>,
-  );
+  return render(ui, {
+    wrapper: ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={qc}>
+        <I18nextProvider i18n={i18n}>{children}</I18nextProvider>
+      </QueryClientProvider>
+    ),
+  });
 }
 
 export function jsonResponse(status: number, body: unknown): Response {
