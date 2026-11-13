@@ -9,7 +9,7 @@ export function loginWithPmhId(loginHint?: string): void {
 
 export type SaLoginOutcome = 'ok' | 'invalid' | 'locked' | 'error';
 
-export type IdentifyOutcome = 'password' | 'invalid' | 'error';
+export type IdentifyOutcome = 'password' | 'invalid' | 'locked' | 'error';
 
 // Chữ không phải email: chỉ server biết tên tài khoản nội bộ (SA) — web không giữ, public-config không trả
 export async function identifyLogin(identifier: string): Promise<IdentifyOutcome> {
@@ -19,6 +19,7 @@ export async function identifyLogin(identifier: string): Promise<IdentifyOutcome
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier: identifier.trim() }),
     });
+    if (res.status === 429) return 'locked';
     if (!res.ok) return 'error';
     const body = (await res.json()) as { next?: unknown };
     return body.next === 'password' || body.next === 'invalid' ? body.next : 'error';

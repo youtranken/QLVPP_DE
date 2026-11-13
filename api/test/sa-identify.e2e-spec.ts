@@ -81,9 +81,9 @@ describe('POST auth/identify', () => {
     }
   });
 
-  it('chặn dò tên theo IP: 10 lần/phút được, lần 11 → 429; IP khác vẫn được', async () => {
+  it('giới hạn lượt gọi theo IP: 10 lần/phút được (kể cả gõ đúng tên), lần 11 → 429; IP khác vẫn được', async () => {
     for (let i = 1; i <= 10; i++) {
-      await identify('203.0.113.9', { identifier: `guess-${i}` }).expect(200);
+      await identify('203.0.113.9', { identifier: USER }).expect(200);
     }
     await identify('203.0.113.9', { identifier: USER }).expect(429);
     await identify('203.0.113.10', { identifier: USER }).expect(200);

@@ -133,6 +133,42 @@ describe('LoginScreen', () => {
     expect(screen.queryByLabelText('Mật khẩu')).toBeNull();
   });
 
+  it('kiểm tên tài khoản bị tạm khóa (429, chung ngân sách với mật khẩu SA) → báo tạm khóa, không sang bước mật khẩu', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) =>
+        Promise.resolve(url === '/api/auth/identify' ? jsonResponse(429, { code: 'SA_LOGIN_LOCKED' }) : jsonResponse(200, { testAccounts: false })),
+      ),
+    );
+    renderWithI18n(<LoginScreen />);
+    await userEvent.type(screen.getByLabelText('Email'), 'it.admin{Enter}');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Tạm khóa do nhập sai nhiều lần');
+    expect(screen.queryByLabelText('Mật khẩu')).toBeNull();
+  });
+
+  it('đang hỏi server: ô Email chỉ đọc (không sửa được tên đang kiểm); bước mật khẩu dùng đúng tên server đã xác nhận', async () => {
+    let answer: (r: Response) => void = () => {};
+    const fetchMock = vi.fn((url: string) =>
+      url === '/api/auth/identify'
+        ? new Promise<Response>((res) => {
+            answer = res;
+          })
+        : Promise.resolve(url === '/api/auth/sa-login' ? jsonResponse(401, {}) : jsonResponse(200, { testAccounts: false })),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    renderWithI18n(<LoginScreen />);
+    const box = screen.getByLabelText('Email');
+    await userEvent.type(box, 'it.admin{Enter}');
+    expect(box).toHaveAttribute('readonly');
+    await userEvent.type(box, 'xyz');
+    expect(box).toHaveValue('it.admin');
+    answer(jsonResponse(200, { next: 'password' }));
+    expect(await screen.findByText('it.admin')).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Mật khẩu'), 'pw{Enter}');
+    await screen.findByRole('alert');
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/sa-login', expect.objectContaining({ body: JSON.stringify({ username: 'it.admin', password: 'pw' }) }));
+  });
+
   it('bước mật khẩu: để trống → báo, không gửi; "Đổi" → về ô email (giữ chữ đã gõ, con trỏ ở ô)', async () => {
     const fetchMock = vi.fn((url: string) =>
       Promise.resolve(jsonResponse(200, url === '/api/auth/identify' ? { next: 'password' } : { testAccounts: false })),

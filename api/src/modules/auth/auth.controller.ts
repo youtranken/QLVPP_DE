@@ -39,6 +39,17 @@ export function clientIp(req: AuthedRequest): string {
 
 const OIDC_TX_COOKIE = 'vpp_oidc_tx';
 
+function saLocked(): HttpException {
+  return new HttpException(
+    {
+      code: 'SA_LOGIN_LOCKED',
+      message:
+        'Quá nhiều lần sai — tạm khoá đăng nhập SA. Thử lại sau ít phút.',
+    },
+    HttpStatus.TOO_MANY_REQUESTS,
+  );
+}
+
 function sanitizeLoginHint(raw?: string): string | undefined {
   const v = raw?.trim();
   if (!v || v.length > 200) return undefined;
@@ -105,16 +116,7 @@ export class AuthController {
         action: 'auth.sa_login_failed',
         detail: { ip, reason: result },
       });
-      if (result === 'locked') {
-        throw new HttpException(
-          {
-            code: 'SA_LOGIN_LOCKED',
-            message:
-              'Quá nhiều lần sai — tạm khoá đăng nhập SA. Thử lại sau ít phút.',
-          },
-          HttpStatus.TOO_MANY_REQUESTS,
-        );
-      }
+      if (result === 'locked') throw saLocked();
       throw new UnauthorizedException({
         code: 'SA_LOGIN_INVALID',
         message: 'Sai tài khoản hoặc mật khẩu.',
@@ -135,15 +137,18 @@ export class AuthController {
   }
 
   // Ô đăng nhập gõ chữ không phải email: chỉ đúng hệt tên SA trong env mới sang bước mật khẩu. Tên SA không có
-  // trong bundle web hay public-config; trả đúng một trong hai dạng, giới hạn 10 lần/phút/IP để không dò tên được.
+  // trong bundle web hay public-config; trả đúng một trong hai dạng, 10 lần/phút/IP, gõ sai ăn chung lockout với sa-login.
   @Public()
   @Throttle({ ip: { limit: 10, ttl: 60_000 } })
   @Post('identify')
   @HttpCode(200)
-  identify(@Body() dto: IdentifyDto): { next: 'password' | 'invalid' } {
-    return {
-      next: this.localSa.isSaUsername(dto.identifier) ? 'password' : 'invalid',
-    };
+  identify(
+    @Body() dto: IdentifyDto,
+    @Req() req: AuthedRequest,
+  ): { next: 'password' | 'invalid' } {
+    const next = this.localSa.identify(dto.identifier, clientIp(req));
+    if (next === 'locked') throw saLocked();
+    return { next };
   }
 
   @Public()

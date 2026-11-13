@@ -24,6 +24,8 @@ const SA_ERROR_KEY: Record<Exclude<SaLoginOutcome, 'ok'>, string> = {
   error: 'auth.saError',
 };
 
+const IDENTIFY_ERROR_KEY = { invalid: 'auth.idInvalid', locked: 'auth.saLocked', error: 'auth.saError' } as const;
+
 type Props = { sessionExpired?: boolean; ssoDown?: boolean };
 
 /**
@@ -34,6 +36,8 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
   const { t } = useTranslation();
   const [step, setStep] = useState<'id' | 'password'>('id');
   const [identifier, setIdentifier] = useState('');
+  // Tên server đã xác nhận là tài khoản nội bộ — bước mật khẩu dùng đúng tên này
+  const [verifiedId, setVerifiedId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,10 +78,11 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
     const next = await identifyLogin(id);
     setBusy(false);
     if (next === 'password') {
+      setVerifiedId(id);
       setStep('password');
       return;
     }
-    setError(t(next === 'invalid' ? 'auth.idInvalid' : 'auth.saError'));
+    setError(t(IDENTIFY_ERROR_KEY[next]));
     idRef.current?.focus();
   };
 
@@ -89,7 +94,7 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
     }
     setBusy(true);
     setError(null);
-    const outcome = await saLogin(identifier, password);
+    const outcome = await saLogin(verifiedId, password);
     if (outcome === 'ok') {
       // Về '/' rồi RequireRole đưa SA sang /admin
       navigateTo('/');
@@ -153,6 +158,8 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
               spellCheck={false}
               // Như QLTS/QLHS: vào trang là gõ email ngay
               autoFocus
+              // Đang hỏi server: không cho sửa tên đang kiểm
+              readOnly={busy}
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? 'login-error' : undefined}
               value={identifier}
@@ -168,8 +175,8 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
         <form className="auth-form" onSubmit={(e) => void submitPassword(e)} noValidate>
           <div className="auth-idrow">
             <span className="auth-idrow__label">{t('auth.signingInAs')}</span>
-            <span className="auth-idrow__id" title={identifier.trim()}>
-              {identifier.trim()}
+            <span className="auth-idrow__id" title={verifiedId}>
+              {verifiedId}
             </span>
             <button type="button" className="auth-idrow__change" onClick={backToId} disabled={busy}>
               {t('auth.changeId')}
