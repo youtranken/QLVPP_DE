@@ -47,7 +47,8 @@ async function memberOtherItemUnits(browser: Browser, info: TestInfo, sub: strin
 // Thao tác là nút chữ trên dòng như tab Nhóm (Sửa · Tạm ngưng/Dùng lại · Xóa), không còn menu ⋯
 const editButton = (page: Page, name: string) => page.getByRole('button', { name: `Sửa ${name}`, exact: true });
 const rowOf = (page: Page, name: string) => page.getByRole('row').filter({ has: editButton(page, name) });
-const actionLabels = (page: Page, name: string) => rowOf(page, name).getByRole('button').allTextContents();
+// Nút của dòng, chờ đúng nhãn (toHaveText tự thử lại): chip trạng thái "Tạm ngưng" trùng chữ với nút cũ nên chờ chip không đủ
+const actionButtons = (page: Page, name: string) => rowOf(page, name).getByRole('button');
 
 test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
   asRole('admin');
@@ -63,7 +64,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
       const inUse = (await listUnits(request)).find((u) => u.in_use);
       expect(inUse).toBeDefined();
       await expect(page.getByRole('main').getByRole('switch')).toHaveCount(0);
-      expect(await actionLabels(page, inUse!.name)).toEqual(['Sửa', 'Tạm ngưng']);
+      await expect(actionButtons(page, inUse!.name)).toHaveText(['Sửa', 'Tạm ngưng']);
       const blocked = await request.delete(`/api/admin/units/${inUse!.code}`, { headers: devHeaders('admin') });
       expect(blocked.status()).toBe(409);
       expect(((await blocked.json()) as { code: string }).code).toBe('UNIT_IN_USE');
@@ -75,7 +76,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
       await expect(dialog).toBeHidden();
       await expect(page.getByRole('status').filter({ hasText: `Đã thêm đơn vị tính ${name}` })).toBeVisible();
       await expect(rowOf(page, name)).toHaveCount(1);
-      expect(await actionLabels(page, name)).toEqual(['Sửa', 'Tạm ngưng', 'Xóa']);
+      await expect(actionButtons(page, name)).toHaveText(['Sửa', 'Tạm ngưng', 'Xóa']);
 
       await page.getByRole('main').getByRole('button', { name: 'Thêm đơn vị tính' }).click();
       await dialog.getByLabel(/Tên đơn vị/).fill(name.toLowerCase());
@@ -93,7 +94,7 @@ test.describe('E9-S5b Đơn vị tính (dev-identity admin)', () => {
       await rowOf(page, name).getByRole('button', { name: `Tạm ngưng ${name}`, exact: true }).click();
       await page.getByRole('dialog', { name: `Tạm ngưng đơn vị “${name}”?` }).getByRole('button', { name: 'Tạm ngưng', exact: true }).click();
       await expect(rowOf(page, name).getByText('Tạm ngưng', { exact: true })).toBeVisible();
-      expect(await actionLabels(page, name)).toEqual(['Sửa', 'Dùng lại', 'Xóa']);
+      await expect(actionButtons(page, name)).toHaveText(['Sửa', 'Dùng lại', 'Xóa']);
       await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
       expect(await memberOtherItemUnits(browser, info, sub, name)).toBe(0);
       if (isMobile(info)) await expectNoContrastViolations(page);
