@@ -47,6 +47,7 @@ export function FilterBar({ filter, groups, total, shown, pickedCount, canFav = 
       <div className="rq-f-row">
         <SearchBox
           className="rq-f-search"
+          urlParam="q"
           inputRef={searchRef}
           label={t('request.grid.search')}
           placeholder={t('request.grid.searchPlaceholder')}

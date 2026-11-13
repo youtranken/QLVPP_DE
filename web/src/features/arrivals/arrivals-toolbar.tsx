@@ -42,7 +42,7 @@ export function ArrivalsToolbar({ filter, groups, counts, total, shown, shortCou
       {/* Có nhóm được chọn thì trạng thái chọn + nút nhận hàng loạt THẾ CHỖ dòng đếm "Đang hiện x/y" ở cuối hàng ô tìm:
           cùng một ô, cùng chiều cao → tick/bỏ tick không đẩy chip và bảng xuống */}
       <div className="toolbar ar-tools">
-        <SearchBox className="flt-search" label={t('arrivals.filter.search')} placeholder={t('arrivals.filter.search')} value={filter.q} onChange={(q) => onFilter({ q: q || null })} />
+        <SearchBox urlParam="q" className="flt-search" label={t('arrivals.filter.search')} placeholder={t('arrivals.filter.search')} value={filter.q} onChange={(q) => onFilter({ q: q || null })} />
         <Switch checked={filter.short} text={t('arrivals.filter.short', { n: shortCount })} onChange={(on) => onFilter({ short: on ? '1' : null })} />
         <ListMeta>
           {/* Màn rộng: ô này chỉ hiện một trong hai. Màn điện thoại thanh nhận hàng loạt nổi ở đáy nên dòng đếm vẫn ở lại, khỏi để trống một hàng */}

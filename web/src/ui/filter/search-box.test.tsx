@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import { renderWithI18n as render, screen, userEvent, waitFor } from '@/test/test-utils';
+import { useUrlPatch } from '@/lib/use-url-patch';
 import { SearchBox } from './search-box';
 
 function Harness() {
@@ -30,5 +32,31 @@ describe('SearchBox', () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: 'reset' }));
     expect(screen.getByRole('searchbox', { name: 'Tìm món' })).toHaveValue('');
+  });
+
+  // Danh mục: ô tìm của trang ghi ?q=, ô tìm trong panel Nhóm giữ chữ ở state riêng — ghi q của trang không đè chữ của panel
+  it('ô state riêng (không urlParam) không bị ghi URL của ô khác đè chữ; ô gắn URL thì theo', async () => {
+    function Page() {
+      const [params, update] = useUrlPatch();
+      const [local, setLocal] = useState('');
+      return (
+        <>
+          <SearchBox urlParam="q" value={params.get('q') ?? ''} onChange={(v) => update({ q: v || null }, true)} label="Tìm trang" />
+          <SearchBox value={local} onChange={setLocal} label="Tìm nhóm" />
+          <button type="button" onClick={() => update({ q: 'kẹp' })}>
+            ghi q
+          </button>
+        </>
+      );
+    }
+    render(
+      <MemoryRouter>
+        <Page />
+      </MemoryRouter>,
+    );
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Tìm nhóm' }), 'bút');
+    await userEvent.click(screen.getByRole('button', { name: 'ghi q' }));
+    expect(screen.getByRole('searchbox', { name: 'Tìm trang' })).toHaveValue('kẹp');
+    expect(screen.getByRole('searchbox', { name: 'Tìm nhóm' })).toHaveValue('bút');
   });
 });

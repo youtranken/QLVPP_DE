@@ -47,7 +47,7 @@ export function CatalogFilterBar(p: Props) {
   return (
     <div className="ct-filter">
       <div className="ct-filter__main">
-        <SearchBox className="flt-search" value={p.q} onChange={p.onSearch} label={label} placeholder={label} />
+        <SearchBox urlParam="q" className="flt-search" value={p.q} onChange={p.onSearch} label={label} placeholder={label} />
         {p.tabCounts && (
           <ScrollFade className="ct-seg-scroll">
             <CatalogTabBar value={p.tab} counts={p.tabCounts} onChange={p.onTab} />
