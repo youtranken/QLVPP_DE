@@ -56,7 +56,7 @@ export function NewPeriodDialog({ period, saved, copyFromYm, onCopy }: Props) {
         {sum && prevYm && (
           <div className="rq-np-prev">
             <span className="rq-recv-dot" aria-hidden="true" />
-            <span>{t('request.newPeriod.prevLine', { prev, n: sum.total, done: sum.done })}</span>
+            <span>{t('request.newPeriod.prevLine', { prev, count: sum.total, done: sum.done })}</span>
             <Link to={`/history/${prevYm}`} onClick={() => setOpen(false)}>
               {t('request.newPeriod.viewPrev')}
             </Link>

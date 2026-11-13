@@ -125,7 +125,7 @@ function RequestEditor({
   const [editFrom, setEditFrom] = useState<number | null>(null);
   useEffect(() => setEditFrom(null), [cart.saved]);
   const mode: 'view' | 'edit' = cart.saved && !dirty && editFrom !== savedSeq ? 'view' : 'edit';
-  const saveLabel = dirty ? t('request.cart.saveDirty', { n: cart.dirtyCount }) : t('request.cart.save');
+  const saveLabel = dirty ? t('request.cart.saveDirty', { count: cart.dirtyCount }) : t('request.cart.save');
   const setQty = (key: string, n: number) => {
     flow.touched(key);
     setEditFrom(savedSeq);

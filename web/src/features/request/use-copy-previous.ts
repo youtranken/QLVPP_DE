@@ -32,7 +32,7 @@ export function useCopyPrevious(ym: string, cart: Cart, flow: SaveFlow) {
     if (own > 0 && fromYm) {
       const ok = await ask({
         title: t('request.copy.askTitle'),
-        message: t('request.copy.askBody', { n: own, month: monthOf(fromYm) }),
+        message: t('request.copy.askBody', { count: own, month: monthOf(fromYm) }),
         confirmLabel: t('request.copy.replace'),
         cancelLabel: t('request.copy.keep'),
       });

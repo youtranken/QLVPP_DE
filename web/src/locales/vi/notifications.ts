@@ -30,9 +30,11 @@ const notifications = {
       line_adjusted: {
         one: 'Adm D&E giảm {{name}} {{before}} → {{after}} {{unit}} (phiếu tháng {{month}}): {{reason}}',
         removed: 'Adm D&E bỏ {{name}} ({{before}} {{unit}}) khỏi phiếu tháng {{month}}: {{reason}}',
-        many: 'Adm D&E giảm {{n}} món trong phiếu tháng {{month}}. Xem lý do trong Lịch sử.',
+        many_one: 'Adm D&E giảm {{count}} món trong phiếu tháng {{month}}. Xem lý do trong Lịch sử.',
+        many_other: 'Adm D&E giảm {{count}} món trong phiếu tháng {{month}}. Xem lý do trong Lịch sử.',
         admOut: '{{name}} ({{qty}} {{unit}}) không giao được: nhà cung cấp hết hàng. Tháng sau cần thì đăng ký lại.',
-        more: 'Còn {{n}} món khác — xem trong Lịch sử.',
+        more_one: 'Còn {{count}} món khác — xem trong Lịch sử.',
+        more_other: 'Còn {{count}} món khác — xem trong Lịch sử.',
       },
       user_left_with_work: {
         locked: '{{name}} bị khoá nhưng còn {{work}}.',

@@ -63,7 +63,7 @@ export function ReceiveDialog({ ym, onClose }: { ym: string; onClose: () => void
           <DialogTitle className="sheet-title">{t('request.receive.title', { month: monthOf(ym) })}</DialogTitle>
           {view && (
             <DialogDescription className="rq-recv-sub">
-              {t('request.receive.subtitle', { done: sum.done, total: sum.total, time: vnSavedStamp(view.saved_at) })}
+              {t('request.receive.subtitle', { done: sum.done, total: sum.total, count: sum.total, time: vnSavedStamp(view.saved_at) })}
             </DialogDescription>
           )}
         </div>
