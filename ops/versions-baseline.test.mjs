@@ -1,6 +1,7 @@
 // B6: docs/versions-baseline.md là nguồn ghi phiên bản đã chốt (định dạng chung với PMH ID/QLTS/QLHS).
 // Test bắt lệch giữa bảng và repo: đổi bản ở một chỗ mà quên bảng (hay ngược lại) là đỏ.
-// Không phụ thuộc gói nào; cần đã `npm ci` trong api/ và web/ (so với bản ĐÃ CÀI).
+// Không phụ thuộc gói nào. Gói npm so với package-lock.json (thứ `npm ci` trong Docker cài) và range khai báo
+// phải giữ nguyên major.minor đã ghim (`~x.y.z` hoặc `x.y.z`). Nếu đã `npm ci` thì đối chiếu thêm bản đã cài.
 //   node --test ops/versions-baseline.test.mjs   (hoặc `npm run test:versions` trong api/)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,12 +13,17 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE = path.join(ROOT, 'docs/versions-baseline.md');
 
-/** Các dòng bảng "| Thành phần | Bản ghim | Nơi ghim |". */
+/** Các dòng bảng "| Thành phần | Bản ghim | Nơi ghim |" — dừng ở dòng đầu tiên không bắt đầu bằng `|`. */
 export function parseBaseline(md) {
-  const lines = md.split('\n').filter((l) => /^\s*\|/.test(l));
-  const head = lines.findIndex((l) => /Thành phần\s*\|\s*Bản ghim\s*\|\s*Nơi ghim/.test(l));
+  const lines = md.split('\n');
+  const head = lines.findIndex((l) => /^\s*\|\s*Thành phần\s*\|\s*Bản ghim\s*\|\s*Nơi ghim/.test(l));
   if (head < 0) throw new Error('thiếu dòng tiêu đề bảng "Thành phần | Bản ghim | Nơi ghim"');
-  return lines.slice(head + 2).map((l) => {
+  const body = [];
+  for (const l of lines.slice(head + 2)) {
+    if (!/^\s*\|/.test(l)) break;
+    body.push(l);
+  }
+  return body.map((l) => {
     const c = l.trim().replace(/^\||\|$/g, '').split('|').map((x) => x.trim().replace(/^`|`$/g, ''));
     return { ten: c[0], ban: c[1], noi: (c[2] ?? '').split(',').map((x) => x.trim()).filter(Boolean) };
   });
@@ -65,7 +71,28 @@ function composeAndDockerfiles(dir, out = []) {
   return out;
 }
 
-/** Bản đã cài của gói, đọc từ node_modules của chính package đó (npm hoist về gốc từng package). */
+/** Bản trong package-lock.json cạnh package.json — đúng thứ `npm ci` (Docker) sẽ cài. */
+function lockedVersion(pkgJsonFile, name) {
+  const lockFile = path.join(ROOT, path.dirname(pkgJsonFile), 'package-lock.json');
+  assert.ok(existsSync(lockFile), `${pkgJsonFile}: thiếu package-lock.json`);
+  const v = JSON.parse(readFileSync(lockFile, 'utf8')).packages?.[`node_modules/${name}`]?.version;
+  assert.ok(v, `${path.relative(ROOT, lockFile)}: không có node_modules/${name}`);
+  return v;
+}
+
+/**
+ * Range khai báo có giữ major.minor của bản ghim không: chỉ nhận `x.y.z` hoặc `~x.y.z` cùng x.y với bản ghim.
+ * `^`, `>=`, `*`, `x`, `||`… cho trôi qua minor khác → trả lý do lỗi (null là đạt).
+ */
+export function rangeLoi(range, ban) {
+  const m = /^(~?)(\d+)\.(\d+)\.(\d+)$/.exec(range.trim());
+  if (!m) return `range "${range}" phải là "~${ban}" hoặc "${ban}"`;
+  const [bx, by] = ban.split('.');
+  if (m[2] !== bx || m[3] !== by) return `range "${range}" lệch major.minor của bản ghim ${ban}`;
+  return null;
+}
+
+/** Bản đã cài (nếu có node_modules), đọc từ node_modules của chính package đó; null nếu chưa cài. */
 function installedVersion(pkgJsonFile, name) {
   const req = createRequire(path.join(ROOT, pkgJsonFile));
   let file;
@@ -75,7 +102,7 @@ function installedVersion(pkgJsonFile, name) {
     // gói chặn "./package.json" trong exports → đọc thẳng thư mục
     file = path.join(ROOT, path.dirname(pkgJsonFile), 'node_modules', name, 'package.json');
   }
-  assert.ok(existsSync(file), `${pkgJsonFile}: chưa cài ${name} (chạy npm ci)`);
+  if (!existsSync(file)) return null;
   return JSON.parse(readFileSync(file, 'utf8')).version;
 }
 
@@ -118,12 +145,28 @@ test('mỗi dòng: mọi file trong Nơi ghim mang đúng bản ghim', () => {
         const pkg = JSON.parse(t);
         const khai = { ...pkg.dependencies, ...pkg.devDependencies }[ten];
         assert.ok(khai, `${f}: không khai báo ${ten}`);
-        // So với bản ĐÃ CÀI (range ^/~ có thể trôi), không so chuỗi khai báo.
-        const cai = installedVersion(f, ten);
-        assert.equal(cai, ban, `${f}: ${ten} đang cài ${cai}`);
+        const loi = rangeLoi(khai, ban);
+        assert.ok(!loi, `${f}: ${ten} ${loi}`);
+        // Chính: lockfile (thứ Docker `npm ci` cài).
+        const khoa = lockedVersion(f, ten);
+        assert.equal(khoa, ban, `${f}: ${ten} trong package-lock.json là ${khoa}`);
       }
     }
   }
+});
+
+test('phụ: node_modules đã cài khớp bản ghim (bỏ qua khi chưa npm ci)', (t) => {
+  const pkgFiles = [...new Set(rows().flatMap((r) => r.noi).filter((f) => f.endsWith('package.json')))];
+  const thieu = pkgFiles.filter((f) => !existsSync(path.join(ROOT, path.dirname(f), 'node_modules')));
+  if (thieu.length === pkgFiles.length) return t.skip(`chưa có node_modules (${thieu.join(', ')})`);
+  for (const { ten, ban, noi } of rows()) {
+    for (const f of noi.filter((x) => x.endsWith('package.json') && !thieu.includes(x))) {
+      const cai = installedVersion(f, ten);
+      if (cai === null) continue; // npm ci chưa chạy lại sau khi đổi lockfile — test chính đã đối chiếu lockfile
+      assert.equal(cai, ban, `${f}: ${ten} đang cài ${cai} — chạy npm ci`);
+    }
+  }
+  if (thieu.length) t.diagnostic(`bỏ qua ${thieu.join(', ')}: chưa có node_modules`);
 });
 
 test('Node trong Dockerfile khớp .nvmrc và engines của api/web cho phép bản đó', () => {
@@ -167,4 +210,15 @@ test('imageRefs: bỏ tầng nội bộ, đọc cả image: có nháy', () => {
 
 test('parseBaseline: bảng thiếu tiêu đề thì báo lỗi rõ', () => {
   assert.throws(() => parseBaseline('| a | b |\n| - | - |'), /thiếu dòng tiêu đề/);
+});
+
+test('parseBaseline: dừng ở dòng đầu không phải bảng (bảng khác phía sau không bị đọc)', () => {
+  const md = '| Thành phần | Bản ghim | Nơi ghim |\n| --- | --- | --- |\n| a | 1.2.3 | x |\n\nGhi chú\n\n| khác | 9 | y |\n';
+  assert.deepEqual(parseBaseline(md).map((r) => r.ten), ['a']);
+});
+
+test('rangeLoi: chỉ nhận ~x.y.z / x.y.z cùng major.minor bản ghim', () => {
+  for (const r of ['~1.2.3', '1.2.3', '~1.2.0', '1.2.9']) assert.equal(rangeLoi(r, '1.2.3'), null, r);
+  for (const r of ['^1.2.3', '>=1.2.3', '*', '1.x', '~1.3.0', '~2.2.3', '1.2.3 || 2.0.0', 'latest'])
+    assert.ok(rangeLoi(r, '1.2.3'), r);
 });

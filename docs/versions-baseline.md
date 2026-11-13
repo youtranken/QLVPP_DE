@@ -1,11 +1,21 @@
 # Phiên bản ghim — QLVPP
 
 Nguồn đích chung: `bao-cao-phan-mem/data/nang-cap/dich-chung.json` (chốt 12/11/2026), cùng định dạng với PMH ID, QLTS, QLHS.
-Test `ops/versions-baseline.test.mjs` đối chiếu bảng này với repo: package.json so với bản **đã cài**
-(`api/node_modules`, `web/node_modules` — npm hoist về gốc từng package), image so với mọi `FROM`/`image:`,
-và chặn tag trôi trong mọi Dockerfile/compose. Đổi bản ở đâu thì sửa dòng tương ứng ở đây trong cùng commit.
+Test `ops/versions-baseline.test.mjs` đối chiếu bảng này với repo:
+- gói npm: bản trong `package-lock.json` (`packages["node_modules/<tên>"].version` — đúng thứ `npm ci` trong Docker cài)
+  phải bằng bản ghim, và range khai báo trong package.json phải là `~x.y.z` (hoặc `x.y.z`) cùng major.minor —
+  `^`/`>=`/`*` bị từ chối vì cho trôi sang minor khác;
+- phụ: nếu đã `npm ci` thì so thêm bản đã cài trong `api/node_modules`, `web/node_modules` (chưa cài thì bỏ qua, không đỏ);
+- image so với mọi `FROM`/`image:`, và chặn tag trôi trong mọi Dockerfile/compose.
 
-Chạy: `cd api && npm run test:versions` (cần `npm ci` ở cả `api/` và `web/`; không cần gói nào thêm).
+Đổi bản ở đâu thì sửa dòng tương ứng ở đây trong cùng commit.
+
+Chạy: `cd api && npm run test:versions` (không cần gói nào thêm, không cần `npm ci`).
+
+Sau khi nâng gói phía api, chạy thêm `cd api && npm run build && npm run smoke:dist`: require từng module trong `dist/`
+(bỏ `main.js` vì nó bootstrap app; bỏ `migrations/*.sql`) để bắt `ERR_PACKAGE_PATH_NOT_EXPORTED` — lỗi chỉ lộ khi chạy
+bản build CommonJS (`module: commonjs` + `moduleResolution: bundler` để tsc nhận đường import mà `require()` không nhận).
+Không cần DB hay env: các kiểm tra env chỉ chạy trong bootstrap, không chạy lúc nạp module.
 
 | Thành phần | Bản ghim | Nơi ghim |
 | --- | --- | --- |
