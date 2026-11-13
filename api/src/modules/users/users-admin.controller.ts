@@ -11,7 +11,11 @@ import {
 } from 'class-validator';
 import { DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../../common/cursor';
 import { Roles } from '../auth/roles.decorator';
-import { UsersService } from './users.service';
+import {
+  USER_LIST_STATUSES,
+  UsersService,
+  type UserListStatus,
+} from './users.service';
 
 class ListUsersQueryDto {
   @IsOptional()
@@ -31,10 +35,10 @@ class ListUsersQueryDto {
   @MaxLength(1000)
   cursor?: string;
 
-  // Mặc định ẩn người đã xóa; status=deleted chỉ trả người đã xóa (bộ lọc "Đã xoá" ở trang Người dùng)
+  // Mặc định (và all) = mọi người trừ đã xóa; còn lại chỉ trả đúng trạng thái đó (ô Trạng thái ở trang Người dùng)
   @IsOptional()
-  @IsIn(['deleted'])
-  status?: 'deleted';
+  @IsIn(USER_LIST_STATUSES)
+  status?: UserListStatus;
 }
 
 @Controller('admin/users')

@@ -274,7 +274,7 @@ describe('UsersPage B10', () => {
       expect(col('Lê Thị Bình')).toHaveTextContent('—');
       for (const r of bodyRows()) expect(within(r).getAllByRole('cell')[3].textContent).not.toMatch(/\d/);
       await userEvent.click(reg);
-      expect(screen.getByTestId('location-search')).toHaveTextContent('?reg=no');
+      expect(screen.getByTestId('location-search')).toHaveTextContent('status=all&reg=no');
       expect(bodyRows().map((r) => within(r).getAllByRole('button')[0].textContent)).toEqual(['Trần Chi', 'Võ Em']);
       expect(screen.getByText('Đang lọc: Chưa đăng ký tháng 11 · 2')).toBeInTheDocument();
     });

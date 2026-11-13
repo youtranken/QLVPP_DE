@@ -261,11 +261,47 @@ describe('auth e2e', () => {
       expect(body.items.map((u) => u.sub)).not.toContain('local:sa');
       await request(app.getHttpServer())
         .get('/api/admin/users')
-        .query({ status: 'locked' })
+        .query({ status: 'lạ' })
         .set('x-dev-user-sub', 'dev-admin')
         .set('x-dev-role', 'admin')
         .expect(400);
     });
+
+    // Danh bạ tràn (> 2000) lọc trạng thái ở server: cùng tập với ô Trạng thái phía web
+    it.each([
+      ['locked', (s: string) => s === 'locked'],
+      ['active', (s: string) => s === 'active'],
+      ['no_access', (s: string) => s === 'no_access'],
+      ['all', (s: string) => s !== 'deleted'],
+    ])(
+      'status=%s chỉ trả đúng trạng thái đó, không local:sa',
+      async (status, ok) => {
+        const subs: string[] = [];
+        let cursor: string | null = null;
+        do {
+          const res: request.Response = await request(app.getHttpServer())
+            .get('/api/admin/users')
+            .query({ status, limit: 200, ...(cursor ? { cursor } : {}) })
+            .set('x-dev-user-sub', 'dev-admin')
+            .set('x-dev-role', 'admin')
+            .expect(200);
+          const body = res.body as {
+            items: Array<{ sub: string; status: string }>;
+            next_cursor: string | null;
+          };
+          expect(body.items.every((u) => ok(u.status))).toBe(true);
+          subs.push(...body.items.map((u) => u.sub));
+          cursor = body.next_cursor;
+        } while (cursor);
+        expect(subs).not.toContain('local:sa');
+        expect(subs.includes(lockedSub)).toBe(
+          status === 'locked' || status === 'all',
+        );
+        expect(subs.includes(teamSub)).toBe(
+          status === 'active' || status === 'all',
+        );
+      },
+    );
 
     it('member → 403 FORBIDDEN_ROLE', async () => {
       const res = await request(app.getHttpServer())

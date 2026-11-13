@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen, userEvent, waitFor, within, pickOption, optionLabels } from '@/test/test-utils';
-import { AN, BINH, CHI, DEL, DUNG, openUsers, stubUsers } from './users-fixtures';
+import { renderApp } from '@/test/render-app';
+import { makeMe } from '@/test/fixtures-me';
+import { mockViewport } from '@/test/viewport';
+import { AN, BINH, CHI, DEL, DUNG, openUsers, regOf, stubUsers } from './users-fixtures';
 
 const card = (name: RegExp) => screen.getByRole('button', { name });
 const bodyRows = () => within(screen.getByRole('table')).getAllByRole('row').slice(1);
@@ -44,5 +47,47 @@ describe('UsersPage — lọc trạng thái', () => {
     await pickOption(view, 'Đang dùng');
     await waitFor(() => expect(screen.queryByText('Hà Đã Xoá')).toBeNull());
     expect(screen.getByText('Phạm Minh Đức')).toBeInTheDocument();
+  });
+
+  it('bấm thẻ Chưa đăng ký: một thẻ sáng, số dòng = số trên thẻ (kể cả người đã khóa chưa đăng ký); bấm lại → về mặc định', async () => {
+    stubUsers([AN, BINH, CHI, DUNG], undefined, regOf([CHI, BINH], ['u-an']));
+    await openUsers();
+    const reg = await screen.findByRole('button', { name: /^Chưa đăng ký tháng 11/ });
+    await waitFor(() => expect(reg).toHaveTextContent(/2\s*người/));
+    await userEvent.click(reg);
+    expect(new URLSearchParams(screen.getByTestId('location-search').textContent ?? '').get('status')).toBe('all');
+    expect(reg).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getAllByRole('button', { pressed: true })).toEqual([reg]);
+    expect(bodyRows().map((r) => within(r).getAllByRole('button')[0].textContent).sort()).toEqual(['Lê Thị Bình', 'Trần Chi']);
+    await userEvent.click(reg);
+    expect(screen.getByTestId('location-search')).not.toHaveTextContent(/status=|reg=/);
+    expect(card(/^Đang dùng/)).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it.each([
+    ['status=all (rộng hơn mặc định)', 'status=all', false],
+    ['status=locked (hẹp hơn)', 'status=locked', true],
+  ])('danh bạ chỉ có người Đã xóa, %s → nút Xóa lọc %s', async (_n, query, offered) => {
+    stubUsers([DEL]);
+    mockViewport(1280);
+    renderApp(makeMe('admin'), `/admin/users?${query}`);
+    expect(await screen.findByText(/Đang hiện 0\/0/)).toBeInTheDocument();
+    expect(screen.queryAllByRole('button', { name: 'Xóa lọc' }).length > 0).toBe(offered);
+  });
+
+  it('danh bạ tràn (> 2000, lọc ở server): mặc định gửi status=active; chọn Đã khóa → gửi status=locked', async () => {
+    const many = Array.from({ length: 2001 }, (_, i) => ({ ...CHI, sub: `u-${i}`, fullName: `Người ${String(i).padStart(4, '0')}` }));
+    const f = stubUsers([AN, ...many, BINH]);
+    mockViewport(1280);
+    renderApp(makeMe('admin'), '/admin/users');
+    await screen.findByText('Người 0000');
+    const statusOf = () =>
+      f.mock.calls
+        .map(([u]) => new URL(String(u), 'http://x'))
+        .filter((u) => u.pathname === '/api/admin/users' && !u.searchParams.has('cursor'))
+        .map((u) => u.searchParams.get('status'));
+    expect(statusOf()).toContain('active');
+    await pickOption(screen.getByRole('combobox', { name: 'Trạng thái' }), 'Đã khóa');
+    await waitFor(() => expect(statusOf()).toContain('locked'));
   });
 });
