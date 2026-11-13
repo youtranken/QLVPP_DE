@@ -67,9 +67,10 @@ describe('CSS mờ mép: một chỗ chung', () => {
   const SRC = resolve(process.cwd(), 'src');
   const files = (d: string): string[] => readdirSync(d).flatMap((n) => (statSync(join(d, n)).isDirectory() ? files(join(d, n)) : n.endsWith('.css') ? [join(d, n)] : []));
 
-  it('luật [data-fade] ở css/m1/filter.css, mỗi mép độc lập, bỏ mờ khi có mục focus phím', () => {
-    const css = readFileSync(join(SRC, 'css/m1/filter.css'), 'utf8');
-    expect(css).toMatch(/\[data-shell\] \[data-fade\]\s*\{[^}]*mask-image:\s*linear-gradient\(to right, transparent, #000 var\(--fade-s\), #000 calc\(100% - var\(--fade-e\)\), transparent\)/);
+  it('luật [data-fade] ở ui/filter/scroll-fade.css (nạp cùng hook), mỗi mép độc lập, bỏ mờ khi có mục focus phím', () => {
+    const css = readFileSync(join(SRC, 'ui/filter/scroll-fade.css'), 'utf8');
+    expect(readFileSync(join(SRC, 'ui/filter/use-scroll-fade.ts'), 'utf8')).toContain("import './scroll-fade.css';");
+    expect(css).toMatch(/\[data-shell\] \[data-fade\]\s*\{[^}]*mask-image:\s*linear-gradient\(to right, transparent, black var\(--fade-s\), black calc\(100% - var\(--fade-e\)\), transparent\)/);
     expect(css).toMatch(/\[data-fade~='start'\]\s*\{\s*--fade-s:\s*32px/);
     expect(css).toMatch(/\[data-fade~='end'\]\s*\{\s*--fade-e:\s*32px/);
     expect(css).toMatch(/\[data-fade\]:has\(:focus-visible\)\s*\{[^}]*mask-image:\s*none/);
@@ -77,7 +78,7 @@ describe('CSS mờ mép: một chỗ chung', () => {
 
   it('không file CSS nào khác tự mờ mép hàng cuộn (data-more cũ đã bỏ)', () => {
     const others = files(SRC)
-      .filter((f) => !f.endsWith(join('css', 'm1', 'filter.css')))
+      .filter((f) => !f.endsWith(join('ui', 'filter', 'scroll-fade.css')))
       .filter((f) => /mask-image:\s*linear-gradient|\[data-more\]/.test(readFileSync(f, 'utf8')))
       .map((f) => relative(SRC, f));
     expect(others).toEqual([]);

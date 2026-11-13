@@ -36,7 +36,7 @@
 [data-shell='admin'] .pp-done { margin: 0; padding: var(--s-4); border-radius: var(--r-md); background: var(--c-ok-soft); color: var(--c-ok); font: var(--t-label); }
 [data-shell='admin'] .pp-card__progress { margin: 0; font: var(--t-sm); font-weight: 700; color: var(--c-ink-2); }
 [data-shell='admin'] .pp-tabs { min-width: 0; max-width: 100%; }
-/* Tab cuộn ngang: mờ mép còn tab khuất (ScrollFade đặt data-fade, luật chung ở css/m1/filter.css) */
+/* Tab cuộn ngang: mờ mép còn tab khuất (ScrollFade đặt data-fade, luật chung ở ui/filter/scroll-fade.css) */
 [data-shell='admin'] .pp-tabs__scroll { min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 [data-shell='admin'] .pp-tabs__scroll::-webkit-scrollbar { display: none; }
 @media (max-width: 767px) {

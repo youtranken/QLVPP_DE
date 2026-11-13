@@ -1,7 +1,8 @@
 import { useEffect, useRef, type RefObject } from 'react';
+import './scroll-fade.css';
 
 // Khung cuộn ngang (hàng chip/tab ở điện thoại): mép nào còn nội dung khuất thì mờ dần.
-// Ghi `data-fade` = "start" | "end" | "start end" lên khung, bỏ khi không cuộn được; CSS mờ mép ở một chỗ (css/m1/filter.css).
+// Ghi `data-fade` = "start" | "end" | "start end" lên khung, bỏ khi không cuộn được; CSS mờ mép ở một chỗ (scroll-fade.css).
 export function fadeEdges(el: HTMLElement): string | null {
   const max = el.scrollWidth - el.clientWidth;
   if (max <= 1) return null;

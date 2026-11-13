@@ -47,9 +47,11 @@ describe('vùng bấm', () => {
   it('lớp nổi ở điện thoại: nút 36px nới vùng chạm đủ 44px bằng ::after, cỡ nhìn giữ nguyên', () => {
     const css = read('css/m1/overlay.css');
     const phone = css.slice(css.lastIndexOf('@media (max-width: 767px)'));
-    const sel = /:is\(\.cal__nav, \.rg-step, \.side-sheet \.seg button\)/.source;
-    expect(phone).toMatch(new RegExp(`${sel}\\s*\\{\\s*position:\\s*relative`));
-    expect(phone).toMatch(new RegExp(`${sel}::after\\s*\\{[^}]*position:\\s*absolute;[^}]*inset:\\s*min\\(0px, calc\\(50% - var\\(--hit\\) / 2\\)\\)`));
+    for (const el of ['.cal__nav', '.rg-step', '.side-sheet .seg button']) {
+      const e = el.replace(/\./g, '\\.');
+      expect(phone).toMatch(new RegExp(`\\[data-shell='admin'\\] ${e}[,\\s][^{]*\\{\\s*position:\\s*relative`));
+      expect(phone).toMatch(new RegExp(`\\[data-shell='admin'\\] ${e}::after[^{]*\\{[^}]*position:\\s*absolute;[^}]*inset:\\s*min\\(0px, calc\\(50% - var\\(--hit\\) / 2\\)\\)`));
+    }
     expect(read('features/summary/summary.m1.css')).not.toMatch(/\.rg-step\s*\{\s*width:\s*var\(--hit\)/);
   });
 });
