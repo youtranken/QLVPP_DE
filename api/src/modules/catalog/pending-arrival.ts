@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import type { Executor } from '../../database/database.module';
 import { latestSent } from '../reports/sent-snapshot';
 import { orderedFromSnapshot } from './arrivals-plan.service';
-import { itemNotFound } from './catalog.service';
+import { itemNotFound } from './item-errors';
 import { incomingByItem, incomingSources, stockFacts } from './stock-list';
 import type { IncomingSources } from './stock-list';
 

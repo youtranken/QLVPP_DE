@@ -1,4 +1,4 @@
-import { itemConstraintError } from './catalog.service';
+import { itemConstraintError } from './item-errors';
 
 const pgError = (code: string, constraint: string) => ({
   cause: { code, constraint },
