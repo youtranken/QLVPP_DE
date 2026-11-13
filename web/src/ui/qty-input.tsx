@@ -1,4 +1,4 @@
-import { forwardRef, type InputHTMLAttributes } from 'react';
+import type { InputHTMLAttributes, Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StepperFrame } from './stepper';
 import { useSelectOnFocus } from './use-select-on-focus';
@@ -18,15 +18,29 @@ interface Props extends NativeProps {
   steppers?: boolean;
   invalid?: boolean;
   wrapClassName?: string;
+  // React 19: ref là prop thường (không còn forwardRef)
+  ref?: Ref<HTMLInputElement>;
 }
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 
 // Ô số dùng chung: tô hết số khi bấm vào, rời ô mà trống thì về số nhỏ nhất (không báo lỗi)
-export const QtyInput = forwardRef<HTMLInputElement, Props>(function QtyInput(
-  { value, onChange, label, name, min = 0, max, steppers = false, invalid = false, wrapClassName, className, onFocus, onBlur, ...rest },
+export function QtyInput({
+  value,
+  onChange,
+  label,
+  name,
+  min = 0,
+  max,
+  steppers = false,
+  invalid = false,
+  wrapClassName,
+  className,
+  onFocus,
+  onBlur,
   ref,
-) {
+  ...rest
+}: Props) {
   const { t } = useTranslation();
   const selectAll = useSelectOnFocus();
   const n = /^\d+$/.test(value.trim()) ? Number(value.trim()) : min;
@@ -74,4 +88,4 @@ export const QtyInput = forwardRef<HTMLInputElement, Props>(function QtyInput(
       {input}
     </StepperFrame>
   );
-});
+}

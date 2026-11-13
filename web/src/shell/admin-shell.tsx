@@ -2,7 +2,8 @@ import { Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ADMIN_PHONE_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { IconSprite } from '@/ui/icon-sprite';
-import { NoPermission } from '@/ui/load-state';
+import { Loading, NoPermission } from '@/ui/load-state';
+import { RouteChunk } from '@/ui/chunk-error-boundary';
 import { ToastProvider } from '@/ui/toast-provider';
 import { AdminSidebar } from '@/shell/admin-sidebar';
 import { AdminTopbar } from '@/shell/admin-topbar';
@@ -28,7 +29,15 @@ export function AdminShell() {
         </a>
         {phone ? <AdminTopbar /> : <AdminSidebar />}
         <main id="main" className="shell__main" tabIndex={-1}>
-          <div className="shell__panel">{forbidden ? <NoPermission /> : <Outlet />}</div>
+          <div className="shell__panel">
+            {forbidden ? (
+              <NoPermission />
+            ) : (
+              <RouteChunk loading={<Loading />}>
+                <Outlet />
+              </RouteChunk>
+            )}
+          </div>
         </main>
       </div>
     </ToastProvider>

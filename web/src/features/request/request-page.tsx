@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/features/catalog/catalog.api';
@@ -28,6 +27,7 @@ import {
 } from './request.api';
 import { monthOf, useRequestFormat } from './request-format';
 import { SaveDialog, StaleDialog } from './save-dialog';
+import { LoadPanel } from '@/shell/member-page';
 import { useCart } from './use-cart';
 import { useCopyPrevious } from './use-copy-previous';
 import { useLeaveGuard } from './use-leave-guard';
@@ -88,10 +88,13 @@ function RequestEditor({
   useLeaveGuard(cart.dirtyCount);
   const openerRef = useRef<HTMLButtonElement>(null);
   const barSaveRef = useRef<HTMLButtonElement>(null);
+  // Bản mới nhất cho các effect bên dưới: ghi trong effect (chỉ lần render đã commit), đứng trước các effect đọc nó
   const sheetOpenRef = useRef(sheetOpen);
-  sheetOpenRef.current = sheetOpen;
   const narrowRef = useRef(narrow);
-  narrowRef.current = narrow;
+  useEffect(() => {
+    sheetOpenRef.current = sheetOpen;
+    narrowRef.current = narrow;
+  });
   // Lỗi theo dòng: mở sheet để dòng lỗi thấy được — một lần cho mỗi sự kiện lỗi (đổi bề ngang không mở lại)
   const lineFailure = flow.noticeEvent?.focusKey ? flow.noticeEvent : null;
   useEffect(() => {
@@ -253,14 +256,6 @@ function RequestEditor({
       <div className="rq-toast-slot" role="status" aria-live="polite">
         {flow.toast && <span className="rq-toast">{flow.toast}</span>}
       </div>
-    </div>
-  );
-}
-
-function LoadPanel({ children }: { children: ReactNode }) {
-  return (
-    <div className="m-page">
-      <div className="m-panel">{children}</div>
     </div>
   );
 }

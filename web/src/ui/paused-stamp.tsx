@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import './paused-stamp.css';
+// paused-stamp.css nạp ở main.tsx (thẻ dùng ở cả chunk nhân viên lẫn Hành chính: import ở đây thì CSS bị tách ra file riêng, lệch thứ tự)
 
 export function PausedStamp({ label }: { label?: string }) {
   const { t } = useTranslation();

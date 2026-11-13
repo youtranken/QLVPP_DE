@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { createRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, renderWithI18n, screen, userEvent } from '@/test/test-utils';
 import { mockViewport } from '@/test/viewport';
@@ -104,5 +104,18 @@ describe('QtyInput', () => {
     const [first, , last] = Array.from(wrap.querySelectorAll('button, input'));
     expect(first).toHaveAccessibleName('Bớt Bút bi');
     expect(last).toHaveAccessibleName('Thêm Bút bi');
+  });
+
+  it('ref (prop thường, React 19) trỏ tới ô nhập, cả khi có nút − / +', () => {
+    const plain = createRef<HTMLInputElement>();
+    const stepped = createRef<HTMLInputElement>();
+    renderWithI18n(
+      <>
+        <QtyInput ref={plain} value="1" onChange={() => {}} label="Ô một" max={9} />
+        <QtyInput ref={stepped} value="2" onChange={() => {}} label="Ô hai" max={9} steppers />
+      </>,
+    );
+    expect(plain.current).toBe(screen.getByRole('spinbutton', { name: 'Ô một' }));
+    expect(stepped.current).toBe(screen.getByRole('spinbutton', { name: 'Ô hai' }));
   });
 });

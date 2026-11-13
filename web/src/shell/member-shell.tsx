@@ -5,12 +5,15 @@ import { initialsOf } from '@/lib/initials';
 import { useMe } from '@/lib/me';
 import { NARROW_QUERY, useMediaQuery } from '@/lib/use-media-query';
 import { IconSprite } from '@/ui/icon-sprite';
+import { RouteChunk } from '@/ui/chunk-error-boundary';
+import { Loading } from '@/ui/load-state';
 import { LanguageSwitch } from '@/ui/language-switch';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { AccountMenu } from '@/shell/account-menu';
 import { BottomNav } from '@/shell/bottom-nav';
 import { useLockTimer } from '@/features/request/use-lock-timer';
 import { useShellFont } from '@/shell/use-shell-font';
+import { LoadPanel } from '@/shell/member-page';
 
 function initials(name: string | null, fallback: string): string {
   const fromName = initialsOf((name ?? '').trim());
@@ -75,7 +78,16 @@ export function MemberShell() {
         </div>
       </header>
       <main id="main">
-        <Outlet />
+        <RouteChunk
+          loading={
+            <LoadPanel>
+              <Loading />
+            </LoadPanel>
+          }
+          frame={(node) => <LoadPanel>{node}</LoadPanel>}
+        >
+          <Outlet />
+        </RouteChunk>
       </main>
       {narrow && <BottomNav accountOpen={accountOpen} onAccount={() => setAccountOpen(true)} />}
       {narrow && <AccountMenu variant="sheet" open={accountOpen} onOpenChange={setAccountOpen} />}
