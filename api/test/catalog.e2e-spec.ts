@@ -215,6 +215,42 @@ describe('catalog: nhóm món, món', () => {
       expect(await auditCount('item.created', item.id)).toBe(1);
     });
 
+    // Nhân viên chỉ nhận đúng các trường giao diện đặt món dùng — tồn kho, mức đặt lại, mã món là dữ liệu nội bộ kho
+    it('GET /items: member chỉ nhận khóa allowlist (không stock_qty/restock_level/stock_state/code); admin đủ', async () => {
+      const item = (await createItem(itemBody({ code: `C${RUN}` })).expect(201))
+        .body as Item;
+      const mine = (
+        (await member(http().get('/api/items')).expect(200)).body as Record<
+          string,
+          unknown
+        >[]
+      ).find((i) => i.id === item.id);
+      expect(Object.keys(mine ?? {}).sort()).toEqual(
+        [
+          'active',
+          'admin_only',
+          'category_id',
+          'id',
+          'image_file_id',
+          'max_qty',
+          'name',
+          'name_en',
+          'pack_note',
+          'unit',
+          'usable',
+        ].sort(),
+      );
+      const full = (
+        (await admin(http().get('/api/items')).expect(200)).body as Record<
+          string,
+          unknown
+        >[]
+      ).find((i) => i.id === item.id);
+      expect(full).toMatchObject({ code: `C${RUN}`, stock_qty: 0 });
+      for (const k of ['restock_level', 'stock_state'])
+        expect(full).toHaveProperty(k);
+    });
+
     it('món admin_only không có trong GET /items của member, có với admin', async () => {
       const item = (
         await createItem(itemBody({ admin_only: true })).expect(201)
