@@ -10,19 +10,19 @@ export default defineConfig({
   build: {
     // 'static' thay 'assets' để nginx không nuốt route SPA /assets
     assetsDir: 'static',
-    rollupOptions: {
+    // Vite 8 (rolldown): codeSplitting.groups thay manualChunks. Cùng ưu tiên → nhóm đứng trước thắng,
+    // giữ đúng thứ tự cũ: @tanstack → *i18next* → react (react-i18next về i18n, @tanstack/react-* về data).
+    rolldownOptions: {
       output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-          if (id.includes('@tanstack')) return 'data-vendor';
-          if (id.includes('i18next')) return 'i18n-vendor';
-          if (
-            id.includes('react-router') ||
-            id.includes('react-dom') ||
-            id.includes('/react/') ||
-            id.includes('scheduler')
-          )
-            return 'react-vendor';
+        codeSplitting: {
+          groups: [
+            { name: 'data-vendor', test: /node_modules[\\/]@tanstack[\\/]/ },
+            { name: 'i18n-vendor', test: /node_modules[\\/][^\\/]*i18next[^\\/]*[\\/]/ },
+            {
+              name: 'react-vendor',
+              test: /node_modules[\\/](?:.*[\\/])?(?:react|react-dom|react-router[^\\/]*|scheduler)[\\/]/,
+            },
+          ],
         },
       },
     },
