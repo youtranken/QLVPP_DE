@@ -6,7 +6,7 @@ import { act } from '@testing-library/react';
 import { MemoryRouter, Link, Route, Routes } from 'react-router-dom';
 import { renderWithI18n as renderBare, screen, userEvent } from '@/test/test-utils';
 import { RouteChunk } from '@/ui/chunk-error-boundary';
-import { adminChunk, memberChunk, preloadRouteChunk, printChunk, routeChunk } from './route-chunks';
+import { adminChunk, memberChunk, preloadHintedChunk, preloadRouteChunk, printChunk, rememberRoleHint, routeChunk } from './route-chunks';
 
 function Page() {
   return <h1>Trang thật</h1>;
@@ -166,6 +166,32 @@ describe('preloadRouteChunk — chunk theo vai và đường dẫn', () => {
     for (const [i, c] of [adminChunk, memberChunk, printChunk].entries()) {
       expect(spies[i]).toHaveBeenCalledTimes(c === target ? 1 : 0);
     }
+  });
+});
+
+describe('preloadHintedChunk — nạp sớm lúc boot theo vai lần trước', () => {
+  afterEach(() => window.localStorage.clear());
+  const spyAll = () => [adminChunk, memberChunk, printChunk].map((c) => vi.spyOn(c, 'preload').mockResolvedValue({} as never));
+
+  it('máy chưa từng đăng nhập (khách ở màn đăng nhập "/") → không tải chunk nào', () => {
+    const spies = spyAll();
+    expect(preloadHintedChunk('/')).toBeNull();
+    for (const s of spies) expect(s).not.toHaveBeenCalled();
+  });
+
+  it('Hành chính vào "/" → chunk Hành chính, không tải nhầm chunk Nhân viên', async () => {
+    const [admin, member] = spyAll();
+    rememberRoleHint('sa');
+    await preloadHintedChunk('/');
+    expect(admin).toHaveBeenCalledTimes(1);
+    expect(member).not.toHaveBeenCalled();
+  });
+
+  it('Nhân viên lần trước → chunk Nhân viên nạp song song với kiểm phiên', async () => {
+    const [, member] = spyAll();
+    rememberRoleHint('member');
+    await preloadHintedChunk('/history');
+    expect(member).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -15,7 +15,7 @@ import {
   startRelogin,
   takeReturnTo,
 } from '@/lib/session-relogin';
-import { preloadRouteChunk } from '@/shell/route-chunks';
+import { preloadHintedChunk, preloadRouteChunk, rememberRoleHint } from '@/shell/route-chunks';
 
 export type AuthState =
   | { kind: 'loading' }
@@ -77,9 +77,9 @@ export function useAuthBoot(): AuthState {
   const [state, setState] = useState<AuthState>({ kind: 'loading' });
   useEffect(() => {
     let cancelled = false;
-    // Nạp chunk màn theo đường dẫn song song với kiểm phiên (đo CPU×6 + mạng chậm: trang Đăng ký nhanh hơn chờ /me rồi mới
-    // nạp; màn đăng nhập không chậm đi). Lỗi nạp để route tự báo.
-    preloadRouteChunk(null, window.location.pathname).catch(() => {});
+    // Nạp chunk màn song song với kiểm phiên (đo CPU×6 + mạng chậm: trang Đăng ký nhanh hơn chờ /me rồi mới nạp; màn
+    // đăng nhập không chậm đi) — theo vai lần trước trên máy này; chưa từng đăng nhập thì chờ biết vai. Lỗi nạp để route tự báo.
+    preloadHintedChunk(window.location.pathname)?.catch(() => {});
     fetchSession()
       .then(async (res): Promise<AuthState | null> => {
         if (res.status === 204 || res.status === 401) return onUnauthenticated();
@@ -88,6 +88,7 @@ export function useAuthBoot(): AuthState {
           // Ngôn ngữ theo tài khoản PMH ID trước khi vẽ app (không nháy ngôn ngữ cũ)
           await applySignedInLanguage(me, { serverDate: res.headers?.get('date') });
           const next = onAuthenticated(me);
+          rememberRoleHint(me.role);
           // Chunk màn theo vai (và theo trang trả về sau SSO) nạp xong trước khi vẽ: khung và trang hiện cùng lúc, không
           // chớp khung chờ. Nạp hỏng thì vẫn vẽ — route hiện nút Tải lại trang.
           await preloadRouteChunk(me.role, window.location.pathname).catch(() => {});

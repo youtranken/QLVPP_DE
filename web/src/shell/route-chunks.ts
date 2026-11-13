@@ -53,3 +53,31 @@ export function preloadRouteChunk(role: Role | null, pathname: string): Promise<
   const target = !admin ? memberChunk : PRINT_PATH.test(pathname) ? printChunk : adminChunk;
   return target.preload();
 }
+
+// Gợi ý vai của lần đăng nhập trước trên máy này (localStorage, sống qua tab mới) để nạp chunk sớm lúc boot.
+// Chỉ là gợi ý tốc độ: sai hay thiếu thì chỉ nạp thừa/nạp muộn, quyền vẫn theo /api/auth/me.
+const ROLE_HINT_KEY = 'vpp.boot.role';
+
+export function rememberRoleHint(role: Role): void {
+  try {
+    window.localStorage.setItem(ROLE_HINT_KEY, isAdminRole(role) ? 'admin' : 'member');
+  } catch {
+    // storage bị chặn → boot không nạp sớm, vẫn nạp sau khi biết vai
+  }
+}
+
+export function roleHint(): Role | null {
+  try {
+    const v = window.localStorage.getItem(ROLE_HINT_KEY);
+    return v === 'admin' || v === 'member' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+// Nạp sớm lúc boot (song song với kiểm phiên): chỉ khi máy này từng đăng nhập — khách lạ ở '/' (màn đăng nhập)
+// không tải chunk Nhân viên, Hành chính vào '/' không tải nhầm chunk Nhân viên
+export function preloadHintedChunk(pathname: string): Promise<unknown> | null {
+  const hint = roleHint();
+  return hint ? preloadRouteChunk(hint, pathname) : null;
+}

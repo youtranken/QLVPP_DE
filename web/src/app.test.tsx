@@ -47,6 +47,16 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     expect(urls).not.toContain('/api/auth/me');
   });
 
+  // Rà soát fix-rs: boot nạp sớm chunk Nhân viên cho cả khách lạ ở '/' — chỉ nạp sớm khi máy này từng đăng nhập
+  it('khách chưa từng đăng nhập ở "/" → boot không tải chunk Nhân viên', async () => {
+    localStorage.clear();
+    const chunks = await import('@/shell/route-chunks');
+    const member = vi.spyOn(chunks.memberChunk, 'preload');
+    renderWithI18n(<App />);
+    expect(await screen.findByLabelText(LOGIN_FIELD)).toBeInTheDocument();
+    expect(member).not.toHaveBeenCalled();
+  });
+
   it('204 sau phiên SSO hết hạn → vẫn tự SSO lại như 401 cũ', async () => {
     sessionStorage.setItem('vpp.auth.mode', 'sso');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
