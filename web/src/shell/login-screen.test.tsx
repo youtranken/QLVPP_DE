@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LoginScreen } from '@/shell/login-screen';
 import { navigateTo } from '@/lib/navigate';
+import { portalFallback } from '@/lib/pmh-portal';
 import { jsonResponse, renderWithI18n, screen, userEvent } from '@/test/test-utils';
 
 vi.mock('@/lib/navigate', () => ({ navigateTo: vi.fn() }));
@@ -170,6 +171,20 @@ describe('LoginScreen', () => {
       'href',
       'https://dev-admin.pmh.com.vn:8443/',
     );
+  });
+
+  it('forbidden mà /api/public-config lỗi → nút "Về trang PMH ID" vẫn có href (suy từ host), không chết', async () => {
+    at('/?login=forbidden');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(500, {})));
+    renderWithI18n(<LoginScreen />);
+    await screen.findByText(/Liên hệ Adm D&E/);
+    expect(screen.getByRole('link', { name: 'Về trang PMH ID' })).toHaveAttribute('href', portalFallback());
+  });
+
+  it('portalFallback: cổng cùng môi trường theo host VPP', () => {
+    expect(portalFallback({ protocol: 'https:', hostname: 'dev-vpp.pmh.com.vn', port: '8443' })).toBe('https://dev-admin.pmh.com.vn:8443/');
+    expect(portalFallback({ protocol: 'https:', hostname: 'de-vpp.pmh.com.vn', port: '' })).toBe('https://de-admin.pmh.com.vn/');
+    expect(portalFallback({ protocol: 'http:', hostname: 'localhost', port: '5173' })).toBe('https://de-admin.pmh.com.vn:8443/');
   });
 
   it('forbidden khi admin_contact rỗng → dùng "Adm D&E", không để trống', async () => {

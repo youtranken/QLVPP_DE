@@ -5,6 +5,14 @@ export type PublicConfig = { admin_contact: string; pmh_portal_url?: string | nu
 
 export const fetchPublicConfig = () => fetchJson<PublicConfig>('/api/public-config');
 
+// Dự phòng khi /api/public-config lỗi hoặc server chưa cấu hình issuer: cổng cùng môi trường suy từ host của VPP
+// (dev-vpp → dev-admin, de-vpp → de-admin, giữ cổng :8443) — nút "Về trang PMH ID" luôn bấm được
+export function portalFallback(loc: Pick<Location, 'protocol' | 'hostname' | 'port'> = window.location): string {
+  const m = /^([a-z0-9]+)-vpp\.(.+)$/.exec(loc.hostname);
+  if (!m) return 'https://de-admin.pmh.com.vn:8443/';
+  return `${loc.protocol}//${m[1]}-admin.${m[2]}${loc.port ? `:${loc.port}` : ''}/`;
+}
+
 function hostOf(url: string | null | undefined): string | null {
   if (!url) return null;
   try {
