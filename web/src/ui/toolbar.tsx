@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { Icon } from '@/ui/icon';
 import { SearchClear } from '@/ui/search-clear';
 
@@ -8,6 +8,19 @@ interface SearchProps {
   label: string;
   placeholder?: string;
   maxLength?: number;
+}
+
+// Khung ngoài là label: bấm phần đệm (ngoài chữ) cũng focus ô — mọi ô tìm trên thanh công cụ dùng chung
+export function SearchField({ value, onChange, label, placeholder, maxLength, inputRef, iconSize = 20 }: SearchProps & { inputRef?: RefObject<HTMLInputElement | null>; iconSize?: number }) {
+  const own = useRef<HTMLInputElement>(null);
+  const ref = inputRef ?? own;
+  return (
+    <label className="toolbar__search">
+      <Icon name="search" size={iconSize} />
+      <input ref={ref} type="search" aria-label={label} placeholder={placeholder} maxLength={maxLength} value={value} onChange={(e) => onChange(e.target.value)} />
+      <SearchClear value={value} onClear={() => onChange('')} inputRef={ref} />
+    </label>
+  );
 }
 
 function isTyping(el: Element | null): boolean {
@@ -33,21 +46,7 @@ export function Toolbar({ lead, search, children }: { lead?: ReactNode; search?:
   return (
     <div className="toolbar">
       {lead}
-      {search && (
-        <label className="toolbar__search">
-          <Icon name="search" size={20} />
-          <input
-            ref={ref}
-            type="search"
-            aria-label={search.label}
-            placeholder={search.placeholder}
-            maxLength={search.maxLength}
-            value={search.value}
-            onChange={(e) => search.onChange(e.target.value)}
-          />
-          <SearchClear value={search.value} onClear={() => search.onChange('')} inputRef={ref} />
-        </label>
-      )}
+      {search && <SearchField {...search} inputRef={ref} />}
       {children}
     </div>
   );
