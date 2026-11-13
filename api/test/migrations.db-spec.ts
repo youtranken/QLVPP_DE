@@ -189,8 +189,8 @@ describe('migrations nền 0001–0013 + 0100–0126', () => {
       "INSERT INTO users (sub, department, role) VALUES ('sub-1', 'Công trình', 'member')",
     );
     await pool.query(
-      `INSERT INTO sessions (id_hash, user_sub, csrf_token, id_token)
-       VALUES (encode(sha256('c'::bytea), 'hex'), 'local:sa', 'csrf', NULL)`,
+      `INSERT INTO sessions (id_hash, user_sub, csrf_token, id_token, expires_at)
+       VALUES (encode(sha256('c'::bytea), 'hex'), 'local:sa', 'csrf', NULL, now() + interval '12 hours')`,
     );
     await expect(
       pool.query("INSERT INTO users (sub, role) VALUES ('sub-2', 'sa')"),
@@ -344,7 +344,7 @@ describe('migration 0125–0126 khóa phiên băm, hạn 12 h', () => {
     expect(cols).not.toContain('id');
     await expect(
       pool.query(
-        `INSERT INTO sessions (id_hash, user_sub, csrf_token) VALUES ($1, 'local:sa', 'c')`,
+        `INSERT INTO sessions (id_hash, user_sub, csrf_token, expires_at) VALUES ($1, 'local:sa', 'c', now())`,
         [oldSid],
       ),
     ).rejects.toMatchObject({ code: '23514' });
