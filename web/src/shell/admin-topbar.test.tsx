@@ -72,7 +72,7 @@ describe('Menu sheet 390 px', () => {
     expect(within(nav).getAllByRole('link').every((a) => !a.hasAttribute('title'))).toBe(true);
     expect(await within(sheet).findByRole('link', { name: /^Kỳ đăng ký hiện tại: tháng 11 · đang mở/ })).toBeInTheDocument();
     expect(within(sheet).getByRole('radio', { name: 'English' })).toBeInTheDocument();
-    expect(within(sheet).getByRole('button', { name: 'Đăng xuất (cả PMH ID)' })).toBeInTheDocument();
+    expect(within(sheet).getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' })).toBeInTheDocument();
     await userEvent.click(within(sheet).getByRole('button', { name: 'Đóng menu' }));
     expect(screen.queryByRole('dialog', { name: 'Menu quản lý' })).toBeNull();
   });

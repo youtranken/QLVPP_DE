@@ -116,7 +116,7 @@ describe('AdminShell + RequireRole', () => {
     const user = within(dialog).getByRole('group', { name: 'Tài khoản và ngôn ngữ' });
     expect(user).toHaveAttribute('data-layout', 'low');
     expect(within(user).getByRole('radio', { name: 'VI – Tiếng Việt' })).toHaveTextContent('VI');
-    const logout = within(user).getByRole('button', { name: 'Đăng xuất (cả PMH ID)' });
+    const logout = within(user).getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' });
     expect(logout).toHaveTextContent(/^$/);
   });
 
@@ -127,7 +127,7 @@ describe('AdminShell + RequireRole', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Mở menu quản lý' }));
     const dialog = screen.getByRole('dialog', { name: 'Menu quản lý' });
     expect(within(dialog).getByRole('radio', { name: 'Tiếng Việt' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Đăng xuất (cả PMH ID)' })).toHaveTextContent('Đăng xuất (cả PMH ID)');
+    expect(within(dialog).getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' })).toHaveTextContent('Đăng xuất (cả Tài khoản D&E)');
   });
 
   it('768 px: có sidebar (thu thành cột icon bằng CSS), không có nút mở menu', () => {

@@ -103,7 +103,7 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     await page.route('**/api/auth/logout', (route) => route.fulfill({ status: 200, contentType: 'text/plain', body: 'logged-out' }));
     if (isMobile(info)) await page.getByRole('button', { name: OPEN_MENU }).click();
     const nav = page.waitForRequest((r) => r.url().endsWith('/api/auth/logout'));
-    await page.getByRole('button', { name: 'Đăng xuất (cả PMH ID)' }).click();
+    await page.getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' }).click();
     const req = await nav;
     expect(req.method()).toBe('POST');
     expect(req.isNavigationRequest()).toBe(true);

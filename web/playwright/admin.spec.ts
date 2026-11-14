@@ -23,7 +23,7 @@ test.describe('E0-S7 Danh bạ (dev-identity admin)', () => {
 
     // Dev không có PMH ID thật: chặn POST để lỗi xác định; trang phải báo rõ ràng chứ không làm hỏng
     await page.getByRole('button', { name: 'Đồng bộ ngay' }).click();
-    await expect(page.getByRole('alert')).toContainText('PMH ID');
+    await expect(page.getByRole('alert')).toContainText('Tài khoản D&E');
     await expect(page.getByRole('row').filter({ hasText: ACTIVE.name })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Đồng bộ ngay' })).toBeEnabled();
     if (isMobile(info)) await expectNoContrastViolations(page);
