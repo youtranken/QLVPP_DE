@@ -2,6 +2,8 @@
 
 App quản lý văn phòng phẩm phòng Công trình, đăng nhập bằng PMH ID (OIDC), cùng gia đình với QLTS_DE. Tài liệu là nguồn sự thật, theo thứ tự ưu tiên: `docs/prd.md` → `docs/architecture.md` → `docs/backlog/*.md` → `design-preview/_SPEC.md` (mục "Thay đổi sau review" thắng mockup HTML) → `docs/plans/*`. Mâu thuẫn giữa code và spec: spec đúng; nếu spec sai thì ghi vào `docs/review-spec.md` rồi mới sửa.
 
+Ngoại lệ câu chữ: chỗ nào `design-preview/_SPEC.md` (và mockup) còn ghi "PMH ID" cho người dùng thấy thì dùng **Tài khoản D&E** / **D&E Account** — chủ dự án chốt 14/11/2026.
+
 ## Stack và lệnh
 
 - `api/`: NestJS 12 (core ESM-only; jest chạy với `--experimental-vm-modules`), Node 26 (image `node:26.13.1-alpine`), `pg` + drizzle (schemaless), migration SQL thuần `api/src/migrations/NNNN_*.sql` (checksum — **không sửa file đã apply**, viết file mới).
@@ -41,7 +43,7 @@ Tầng test theo loại code:
 - [ ] Mọi giới hạn mà task chạm tới có test biên hai phía theo phễu (TDD mục 6); report liệt kê bảng biên → tầng test.
 - [ ] `npm test`, `npm run test:e2e`, `npm run test:db` (api) và `npm test`, `npm run lint`, `npm run build` (web) đều pass, output sạch (không warning lạ, không `console.error` rơi vãi).
 - [ ] Luật nghiệp vụ ép ở server/CSDL, UI chỉ hỗ trợ; không có luật chỉ tồn tại trên FE.
-- [ ] Mọi chuỗi UI qua i18n (`vi` + `en`), không chuỗi cứng trong component; câu chữ theo `_SPEC.md` mục "Câu chữ" (gọi admin là **Adm D&E** thay cho "Hành chính", gọi bên cung cấp là **Nhà cung cấp** / **NCC** thay cho "ADM" — chủ dự án chốt 11/11/2026; gọi hệ thống đăng nhập là **Tài khoản D&E** (vi) / **D&E Account** (en) thay cho "PMH ID" trong mọi chuỗi người dùng thấy — chủ dự án chốt 14/11/2026, `wording.test.ts` chặn; "PMH ID" chỉ còn ở code, biến môi trường, log, tài liệu tích hợp; "Chép lại danh sách tháng X", "Lưu phiếu", "Quay lại sửa").
+- [ ] Mọi chuỗi UI qua i18n (`vi` + `en`), không chuỗi cứng trong component; câu chữ theo `_SPEC.md` mục "Câu chữ" (gọi admin là **Adm D&E** thay cho "Hành chính", gọi bên cung cấp là **Nhà cung cấp** / **NCC** thay cho "ADM" — chủ dự án chốt 11/11/2026; gọi hệ thống đăng nhập là **Tài khoản D&E** (vi) / **D&E Account** (en) thay cho "PMH ID" trong mọi chuỗi người dùng thấy — chủ dự án chốt 14/11/2026; chặn bằng web `src/test/wording.test.ts` (giá trị locale, chuỗi cứng trong `.ts/.tsx`, `index.html`) và api `src/common/user-facing-wording.spec.ts` (mọi chuỗi trong `api/src` trừ log và danh sách câu lỗi kỹ thuật cho IT); "PMH ID" chỉ còn ở định danh, biến môi trường, log, comment, tài liệu tích hợp; "Chép lại danh sách tháng X", "Lưu phiếu", "Quay lại sửa").
 - [ ] Mutate có audit (`AuditWriterService`) với before/after khi sửa dữ liệu; GET không audit.
 - [ ] Thao tác thay đổi dữ liệu là idempotent hoặc có `expected_*`/`ON CONFLICT` như architecture §6 quy định.
 - [ ] Không lộ secret, không log `code/state/login_hint/logout_token`, không log body webhook.
