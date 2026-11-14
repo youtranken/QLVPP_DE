@@ -100,11 +100,11 @@ describe('DirectoryClient', () => {
       expect(RATE_LIMIT_RETRIES).toBe(3);
     });
 
-    it('199 user → 1 request offset=0', async () => {
+    it('199 user → 1 request offset=0, không gửi include_deleted (người đã xóa phải vắng danh sách, không hiện "active")', async () => {
       serveTotal(199);
       await expect(client.fetchUsers()).resolves.toHaveLength(199);
       expect(urls()).toEqual([
-        'https://id.test/api/v1/users?include_deleted=true&limit=200&offset=0',
+        'https://id.test/api/v1/users?limit=200&offset=0',
       ]);
       expect(client.requestCount()).toBe(1);
     });
@@ -239,15 +239,13 @@ describe('DirectoryClient', () => {
   });
 
   describe('fetchUser', () => {
-    it('200 → user', async () => {
+    it('200 → user; không gửi include_deleted (người đã xóa phải 404)', async () => {
       fetchMock.mockResolvedValue(jsonResponse({ id: 'u1', status: 'active' }));
       await expect(client.fetchUser('u1')).resolves.toEqual({
         id: 'u1',
         status: 'active',
       });
-      expect(urls()[0]).toBe(
-        'https://id.test/api/v1/users/u1?include_deleted=true',
-      );
+      expect(urls()[0]).toBe('https://id.test/api/v1/users/u1');
     });
 
     it('id được encode', async () => {
@@ -255,9 +253,7 @@ describe('DirectoryClient', () => {
         jsonResponse({ id: 'a/b', status: 'active' }),
       );
       await client.fetchUser('a/b');
-      expect(urls()[0]).toBe(
-        'https://id.test/api/v1/users/a%2Fb?include_deleted=true',
-      );
+      expect(urls()[0]).toBe('https://id.test/api/v1/users/a%2Fb');
     });
 
     it('404 {statusCode:404,error:"Not Found"} → null', async () => {

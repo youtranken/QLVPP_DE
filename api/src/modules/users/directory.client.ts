@@ -92,14 +92,14 @@ export class DirectoryClient implements DirectoryClientApi {
   }
 
   async fetchUsers(): Promise<DirectoryUser[]> {
-    // include_deleted=true: người đã xóa vẫn hiện là deleted thay vì bị coi là mất quyền
+    // Không gửi include_deleted: PMH ID trả người đã xóa với status "active"; người vắng danh sách đi qua đối chiếu 404
     const all: DirectoryUser[] = [];
     const seen = new Set<string>();
     // Trang MAX_PAGES (thứ 51) chỉ để xác nhận đã hết: đúng 10 000 user vẫn đồng bộ được
     for (let page = 0; page <= MAX_PAGES; page += 1) {
       const offset = page * DIRECTORY_PAGE_SIZE;
       const { body } = await this.get(
-        `/api/v1/users?include_deleted=true&limit=${DIRECTORY_PAGE_SIZE}&offset=${offset}`,
+        `/api/v1/users?limit=${DIRECTORY_PAGE_SIZE}&offset=${offset}`,
       );
       // Không đoán dạng khác: mảng rỗng giả sẽ khiến đối chiếu đánh dấu nhầm cả công ty
       if (!Array.isArray(body) || !body.every(isObject)) {
@@ -126,7 +126,7 @@ export class DirectoryClient implements DirectoryClientApi {
 
   async fetchUser(id: string): Promise<DirectoryUser | null> {
     const { status, body } = await this.get(
-      `/api/v1/users/${encodeURIComponent(id)}?include_deleted=true`,
+      `/api/v1/users/${encodeURIComponent(id)}`,
       true,
     );
     if (status === 404) return null;
