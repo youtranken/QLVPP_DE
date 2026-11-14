@@ -50,14 +50,18 @@ export class BackchannelLogoutController {
       this.logger.warn('BCL từ chối: jti đã dùng');
       throw invalidToken();
     }
-    const { sub } = verified;
-    const killed = await this.sessions.destroyAllForUser(sub);
+    const { sub, sid } = verified;
+    const killed = await this.sessions.destroyForBackchannel(sub, sid);
     await this.audit.append({
       actor: 'system(bcl)',
       action: 'auth.session_revoked',
       objectType: 'user',
       objectId: sub,
-      detail: { via: 'backchannel_logout', sessions_killed: killed },
+      detail: {
+        via: 'backchannel_logout',
+        by: sid === undefined ? 'sub' : 'sid',
+        sessions_killed: killed,
+      },
     });
     return { ok: true };
   }

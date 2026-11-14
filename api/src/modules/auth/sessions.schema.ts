@@ -12,6 +12,7 @@ export const sessionsTable = pgTable('sessions', {
   claims: jsonb('claims'),
   // id_token lúc login — làm id_token_hint khi switch-account
   idToken: text('id_token'),
+  idpSid: text('idp_sid'),
   csrfToken: text('csrf_token').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()

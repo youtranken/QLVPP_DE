@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
-import { and, eq, gt, lt, lte, or, sql } from 'drizzle-orm';
+import { and, eq, gt, isNull, lt, lte, or, sql } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 import { hasEncKey } from '../../common/crypto-secret';
 import { DRIZZLE_DB } from '../../database/database.module';
 import type { Database } from '../../database/database.module';
@@ -54,11 +55,10 @@ export class SessionService implements OnModuleInit {
     accessTokenExp: Date | null;
     claims: PmhIdClaims;
     idToken: string | null;
+    idpSid?: string | null;
   }): Promise<SessionRecord> {
-    return this.insert({
-      ...params,
-      accessToken: params.accessToken ?? null,
-    });
+    const { idpSid = null, accessToken = null, ...fields } = params;
+    return this.insert({ ...fields, accessToken }, idpSid);
   }
 
   createLocalSa(): Promise<SessionRecord> {
@@ -82,6 +82,7 @@ export class SessionService implements OnModuleInit {
       | 'claims'
       | 'idToken'
     >,
+    idpSid: string | null = null,
   ): Promise<SessionRecord> {
     const now = Date.now();
     const record: SessionRecord = {
@@ -100,6 +101,7 @@ export class SessionService implements OnModuleInit {
       accessTokenExp: record.accessTokenExp,
       claims: record.claims,
       idToken: sealToken(record.idToken, idHash),
+      idpSid,
       csrfToken: record.csrfToken,
       lastSeenAt: record.lastSeenAt,
       expiresAt: record.expiresAt,
@@ -300,13 +302,28 @@ export class SessionService implements OnModuleInit {
     userSub: string,
     reason?: SessionEndReason,
   ): Promise<number> {
-    const rows = await this.db
-      .delete(sessionsTable)
-      .where(eq(sessionsTable.userSub, userSub))
-      .returning({
-        idHash: sessionsTable.idHash,
-        userSub: sessionsTable.userSub,
-      });
+    return this.destroyWhere(eq(sessionsTable.userSub, userSub), reason);
+  }
+
+  // BCL có sid: phiên của đúng phiên SSO đó + phiên chưa có sid (không biết thuộc phiên SSO nào)
+  destroyForBackchannel(userSub: string, sid?: string): Promise<number> {
+    const bySub = eq(sessionsTable.userSub, userSub);
+    if (sid === undefined) return this.destroyWhere(bySub);
+    const bySid = or(
+      eq(sessionsTable.idpSid, sid),
+      isNull(sessionsTable.idpSid),
+    );
+    return this.destroyWhere(and(bySub, bySid));
+  }
+
+  private async destroyWhere(
+    where: SQL | undefined,
+    reason?: SessionEndReason,
+  ): Promise<number> {
+    const rows = await this.db.delete(sessionsTable).where(where).returning({
+      idHash: sessionsTable.idHash,
+      userSub: sessionsTable.userSub,
+    });
     this.recordEnded(rows, reason);
     return rows.length;
   }

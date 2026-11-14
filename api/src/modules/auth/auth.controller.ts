@@ -309,6 +309,7 @@ export class AuthController {
       accessTokenExp: verified.expiresAt,
       claims: verified.claims,
       idToken: tokens.idToken,
+      idpSid: tokens.sid ?? null,
     });
     res.cookie(SESSION_COOKIE, session.id, sessionCookieOptions());
     await this.audit.append({

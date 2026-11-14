@@ -4,8 +4,11 @@ import { OpenidClientProvider } from './openid-client.provider';
 // openid-client giả — không discovery thật, không ra mạng
 const discovery = jest.fn();
 const refreshTokenGrant = jest.fn();
+const authorizationCodeGrant = jest.fn();
 jest.mock('openid-client', () => ({
   discovery: (...args: unknown[]) => discovery(...args) as unknown,
+  authorizationCodeGrant: (...args: unknown[]) =>
+    authorizationCodeGrant(...args) as unknown,
   refreshTokenGrant: (...args: unknown[]) =>
     refreshTokenGrant(...args) as unknown,
   ClientSecretBasic: (secret: string) => ({ basic: secret }),
@@ -28,6 +31,7 @@ describe('OpenidClientProvider — hạn giờ gọi PMH ID', () => {
     process.env.PMH_CLIENT_SECRET = 'not-a-secret';
     discovery.mockReset().mockResolvedValue({ fake: 'config' });
     refreshTokenGrant.mockReset();
+    authorizationCodeGrant.mockReset();
   });
   afterEach(() => {
     restore('PMH_ISSUER_URL', saved.issuer);
@@ -76,6 +80,51 @@ describe('OpenidClientProvider — hạn giờ gọi PMH ID', () => {
         message:
           'Không kết nối được Tài khoản D&E — thử lại sau (đăng nhập mới tạm thời không khả dụng).',
       },
+    });
+  });
+
+  describe('exchangeCode lấy sid từ id_token (đăng xuất theo phiên SSO)', () => {
+    const exchange = (claims: Record<string, unknown> | undefined) => {
+      authorizationCodeGrant.mockResolvedValue({
+        access_token: 'at',
+        refresh_token: 'rt',
+        id_token: claims ? 'idt' : undefined,
+        claims: () => claims,
+      });
+      return new OpenidClientProvider().exchangeCode({
+        currentUrl: new URL('https://vpp.test/api/auth/callback?code=c'),
+        redirectUri: 'https://vpp.test/api/auth/callback',
+        codeVerifier: 'v',
+        expectedState: 's',
+      });
+    };
+
+    it('id_token có sid → sid', async () => {
+      await expect(exchange({ sub: 'u', sid: 'sid-1' })).resolves.toMatchObject(
+        {
+          idToken: 'idt',
+          sid: 'sid-1',
+        },
+      );
+    });
+
+    it('id_token chưa có sid (PMH ID hiện tại) → sid null', async () => {
+      await expect(exchange({ sub: 'u' })).resolves.toMatchObject({
+        sid: null,
+      });
+    });
+
+    it('không có id_token → sid null', async () => {
+      await expect(exchange(undefined)).resolves.toMatchObject({ sid: null });
+    });
+
+    it('sid không phải chuỗi hoặc rỗng → sid null', async () => {
+      await expect(exchange({ sub: 'u', sid: 7 })).resolves.toMatchObject({
+        sid: null,
+      });
+      await expect(exchange({ sub: 'u', sid: '' })).resolves.toMatchObject({
+        sid: null,
+      });
     });
   });
 });

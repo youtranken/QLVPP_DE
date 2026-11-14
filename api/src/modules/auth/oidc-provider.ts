@@ -5,6 +5,8 @@ export interface OidcTokens {
   accessToken: string;
   refreshToken: string | null;
   idToken: string | null;
+  // claim sid của id_token (phiên SSO) — chỉ có khi PMH ID bật sid
+  sid?: string | null;
 }
 
 export interface AuthUrlRequest {

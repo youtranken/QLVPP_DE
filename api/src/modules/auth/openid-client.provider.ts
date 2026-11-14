@@ -90,6 +90,7 @@ export class OpenidClientProvider implements OidcProvider {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token ?? null,
       idToken: tokens.id_token ?? null,
+      sid: sidOf(tokens.claims()),
     };
   }
 
@@ -150,4 +151,9 @@ export class OpenidClientProvider implements OidcProvider {
       return null;
     }
   }
+}
+
+function sidOf(claims: oidc.IDToken | undefined): string | null {
+  const sid = claims?.sid;
+  return typeof sid === 'string' && sid.length > 0 ? sid : null;
 }
