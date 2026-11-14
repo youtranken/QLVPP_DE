@@ -76,6 +76,19 @@ describe('Chữ: một khái niệm, một tên', () => {
     expect(get(vi as Tree, 'common.filter.clear')).toBe('Xóa lọc');
   });
 
+  // Chủ dự án chốt 14/11/2026: người dùng thấy "Tài khoản D&E" / "D&E Account", tên tích hợp PMH ID chỉ còn trong code
+  it.each([
+    ['vi', vi, 'Tài khoản D&E', /tài khoản d&e/gi],
+    ['en', en, 'D&E Account', /d&e account/gi],
+  ] as const)('%s: gọi hệ thống đăng nhập là "%s", không còn "PMH ID" trong chuỗi nào', (_lang, tree, term, any) => {
+    const all = strings(tree);
+    expect(all.filter(([, s]) => /PMH\s*ID/i.test(s)).map(([k]) => k)).toEqual([]);
+    expect(all.filter(([, s]) => s.includes(term)).length).toBeGreaterThan(10);
+    // Một cách viết: viết hoa đúng như chủ dự án ("Tài khoản D&E", không "tài khoản D&E" hay "Tài Khoản D&E")
+    const offCase = all.flatMap(([k, s]) => (s.match(any) ?? []).filter((m) => m !== term).map((m) => `${k}: ${m}`));
+    expect(offCase).toEqual([]);
+  });
+
   it('en: tháng gọi bằng tên — không còn "month {{…}}" / "Month {{…}}" (dùng {{month, monthName}})', () => {
     const hits = strings(en).filter(([k, s]) => !k.startsWith('warn.') && /\b[Mm]onth \{\{(month|prev|next|open)\}\}/.test(s));
     expect(hits).toEqual([]);
