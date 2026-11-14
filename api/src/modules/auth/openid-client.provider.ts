@@ -60,7 +60,7 @@ export class OpenidClientProvider implements OidcProvider {
       throw new ServiceUnavailableException({
         code: 'SSO_UNAVAILABLE',
         message:
-          'Không liên lạc được PMH ID — thử lại sau (đăng nhập mới tạm thời không khả dụng).',
+          'Không kết nối được Tài khoản D&E — thử lại sau (đăng nhập mới tạm thời không khả dụng).',
       });
     }
   }

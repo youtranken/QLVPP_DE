@@ -222,7 +222,7 @@ export class SessionAuthService {
       );
       throw new ServiceUnavailableException({
         code: 'SSO_UNAVAILABLE',
-        message: 'Không liên lạc được PMH ID — vui lòng thử lại sau.',
+        message: 'Không kết nối được Tài khoản D&E — vui lòng thử lại sau.',
       });
     }
   }

@@ -38,6 +38,18 @@ function users(from: number, count: number) {
   }));
 }
 
+async function errorBody(
+  p: Promise<unknown>,
+): Promise<{ code?: string; message?: string } | undefined> {
+  try {
+    await p;
+  } catch (e) {
+    return (e as { getResponse?: () => unknown }).getResponse?.() as
+      { code?: string; message?: string } | undefined;
+  }
+  return undefined;
+}
+
 async function errorCode(p: Promise<unknown>): Promise<string | undefined> {
   try {
     await p;
@@ -202,6 +214,10 @@ describe('DirectoryClient', () => {
       expect(await errorCode(client.fetchUsers())).toBe(
         'DIRECTORY_RATE_LIMITED',
       );
+      // Câu người dùng có thể thấy gọi hệ thống là "Tài khoản D&E", không "PMH ID"
+      expect((await errorBody(client.fetchUsers()))?.message).toBe(
+        'Tài khoản D&E đang giới hạn tần suất đọc danh bạ — thử lại sau ít phút.',
+      );
     });
 
     it.each([
@@ -342,6 +358,9 @@ describe('DirectoryClient', () => {
       fetchMock.mockRejectedValue(new TypeError('fetch failed'));
       expect(await errorCode(client.fetchUsers())).toBe(
         'DIRECTORY_UNAVAILABLE',
+      );
+      expect((await errorBody(client.fetchUsers()))?.message).toBe(
+        'Không kết nối được danh bạ Tài khoản D&E — thử lại sau.',
       );
     });
 
