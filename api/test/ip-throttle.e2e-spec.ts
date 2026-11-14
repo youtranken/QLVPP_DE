@@ -51,15 +51,17 @@ describe('throttle theo IP trước IdentityGuard', () => {
     await me('203.0.113.51').expect(401);
   });
 
-  it('sa-login 10/phút/IP: 10 lần (mỗi lần username khác, không dính lockout) 401, lần 11 → 429', async () => {
-    const login = (i: number) =>
+  // Lần sai theo IP đã có lockout riêng (10/15′, chung với identify) — đếm throttle bằng lần đăng nhập đúng
+  it('sa-login 10/phút/IP: 10 lần đăng nhập đúng 200, lần 11 → 429 của throttle (không phải lockout)', async () => {
+    const login = () =>
       request(app.getHttpServer())
         .post('/api/auth/sa-login')
         .set('X-Forwarded-For', '203.0.113.60')
-        .send({ username: `khong-ton-tai-${i}`, password: 'sai' });
+        .send({ username: 'sa-throttle-e2e', password: 'dung-mat-khau' });
     for (let i = 0; i < 10; i += 1) {
-      await login(i).expect(401);
+      await login().expect(200);
     }
-    await login(10).expect(429);
+    const res = await login().expect(429);
+    expect((res.body as { code?: string }).code).not.toBe('SA_LOGIN_LOCKED');
   });
 });

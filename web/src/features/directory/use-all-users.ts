@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { fetchUsersPage, userLabel, type AdminUser } from './directory.api';
+import { fetchUsersPage, userLabel, type AdminUser, type UsersListStatus } from './directory.api';
 
 export const DIRECTORY_FULL_LOAD_MAX = 2000;
 
@@ -61,15 +61,16 @@ export function useDeletedUsers(enabled: boolean) {
   return { users: q.data?.items ?? [], loading: enabled && q.isPending, failed: q.isError, retry: () => void q.refetch() };
 }
 
-// enabled=false: chưa tải gì (ô chọn người chưa mở danh sách thì không kéo cả danh bạ về)
-export function useDirectoryUsers(search: string, enabled = true) {
+// enabled=false: chưa tải gì (ô chọn người chưa mở danh sách thì không kéo cả danh bạ về).
+// status: danh bạ tràn thì lọc trạng thái ở server (phân trang theo đúng tập đang xem)
+export function useDirectoryUsers(search: string, enabled = true, status?: UsersListStatus) {
   const all = useQuery({ ...allUsersQuery, enabled });
   const overflow = all.data?.overflow ?? false;
   const server = useInfiniteQuery({
-    queryKey: ['users', 'admin-search', search],
+    queryKey: ['users', 'admin-search', search, status ?? 'all'],
     enabled: enabled && overflow,
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) => fetchUsersPage(search, pageParam),
+    queryFn: ({ pageParam }) => fetchUsersPage(search, pageParam, status),
     getNextPageParam: (last) => last.next_cursor,
   });
   const active = overflow ? server : all;

@@ -217,12 +217,21 @@ describe('tài khoản thử local (LOCAL_TEST_ACCOUNTS)', () => {
       await request(app.getHttpServer())
         .post('/api/auth/logout')
         .set('Cookie', cookie)
-        .expect(403);
+        .expect(303);
+      await request(app.getHttpServer())
+        .get('/api/auth/me')
+        .set('Cookie', cookie)
+        .expect(200);
       await request(app.getHttpServer())
         .post('/api/auth/logout')
         .set('Cookie', cookie)
-        .set('X-CSRF-Token', me.body.csrfToken as string)
-        .expect(200);
+        .type('form')
+        .send({ csrf: me.body.csrfToken as string })
+        .expect(303);
+      await request(app.getHttpServer())
+        .get('/api/auth/me')
+        .set('Cookie', cookie)
+        .expect(401);
     });
 
     it('users row được upsert (active, tên, email, phòng) và hiện trong danh sách Nhân viên', async () => {

@@ -114,8 +114,9 @@ describe('GET /api/auth/session (boot web)', () => {
     await request(server())
       .post('/api/auth/logout')
       .set('Cookie', cookie)
-      .set('X-CSRF-Token', session.csrfToken)
-      .expect(200);
+      .type('form')
+      .send({ csrf: session.csrfToken })
+      .expect(303);
     const after = await request(server())
       .get('/api/auth/session')
       .set('Cookie', cookie)

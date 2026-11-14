@@ -11,3 +11,10 @@ export class SaLoginDto {
   @MaxLength(500)
   password!: string;
 }
+
+export class IdentifyDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  identifier!: string;
+}

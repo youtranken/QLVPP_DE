@@ -38,11 +38,20 @@ export interface PmhIdClaims {
   locale_updated_at?: number;
 }
 
+export const USER_LIST_STATUSES = [
+  'all',
+  'active',
+  'locked',
+  'no_access',
+  'deleted',
+] as const;
+export type UserListStatus = (typeof USER_LIST_STATUSES)[number];
+
 export interface UserListQuery {
   search?: string;
   limit: number;
   cursor?: string;
-  status?: 'deleted';
+  status?: UserListStatus;
 }
 
 export interface UserListItem {
@@ -131,9 +140,9 @@ export class UsersService {
     query: UserListQuery,
   ): Promise<{ items: UserListItem[]; next_cursor: string | null }> {
     const conds = [
-      query.status === 'deleted'
-        ? eq(usersTable.status, 'deleted')
-        : ne(usersTable.status, 'deleted'),
+      !query.status || query.status === 'all'
+        ? ne(usersTable.status, 'deleted')
+        : eq(usersTable.status, query.status),
       ne(usersTable.sub, LOCAL_SA_SUB),
     ];
     if (query.search) {

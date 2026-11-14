@@ -53,8 +53,9 @@ describe('chuẩn phiên: kết thúc phiên (12 h, idle SA, job dọn, đăng x
     await request(h.server())
       .post('/api/auth/logout')
       .set('Cookie', `vpp_sid=${cookie}`)
-      .set('X-CSRF-Token', csrf)
-      .expect(401);
+      .type('form')
+      .send({ csrf })
+      .expect(303);
     const ended = await expiredRows(h.testSub, cookie);
     expect(ended.map((r) => r.detail)).toEqual([{ reason: 'absolute' }]);
     const out = await h.auditRows(

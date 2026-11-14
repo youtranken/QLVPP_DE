@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
-import { logout } from '@/lib/auth-actions';
+import { logout, logoutLabelKey } from '@/lib/auth-actions';
 import { initialsOf } from '@/lib/initials';
 import { usePopover } from '@/lib/use-popover';
 import { ADMIN_TABLET_QUERY, SHORT_SCREEN_QUERY, useMediaQuery } from '@/lib/use-media-query';
@@ -12,34 +11,17 @@ import { LanguageSwitch } from '@/ui/language-switch';
 function LogoutButton({ iconOnly = false }: { iconOnly?: boolean }) {
   const { t } = useTranslation();
   const me = useMe();
-  const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const run = async () => {
-    setBusy(true);
-    setFailed(false);
-    if (!(await logout(me.csrfToken))) {
-      setFailed(true);
-      setBusy(false);
-    }
-  };
-  return (
-    <>
-      {iconOnly ? (
-        <button type="button" className="side__icon-btn" aria-label={t('auth.logout')} title={t('auth.logout')} disabled={busy} onClick={() => void run()}>
-          <Icon name="logout" size={18} />
-        </button>
-      ) : (
-        <button type="button" className="btn btn--ghost btn--sm side__logout" disabled={busy} onClick={() => void run()}>
-          <Icon name="logout" size={18} />
-          {t('auth.logout')}
-        </button>
-      )}
-      {failed && (
-        <p role="alert" className="side__error">
-          {t('auth.logoutFailed')}
-        </p>
-      )}
-    </>
+  const label = t(logoutLabelKey(me.sub));
+  const run = () => logout(me.csrfToken, me.sub);
+  return iconOnly ? (
+    <button type="button" className="side__icon-btn" aria-label={label} title={label} onClick={run}>
+      <Icon name="logout" size={18} />
+    </button>
+  ) : (
+    <button type="button" className="btn btn--ghost btn--sm side__logout" onClick={run}>
+      <Icon name="logout" size={18} />
+      {label}
+    </button>
   );
 }
 

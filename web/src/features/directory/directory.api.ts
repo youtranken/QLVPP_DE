@@ -46,7 +46,10 @@ export interface SyncResult {
 
 export const USERS_PAGE = 200;
 
-export function fetchUsersPage(search: string, cursor: string | null, status?: 'deleted'): Promise<Page<AdminUser>> {
+// Không gửi = mọi người trừ đã xóa
+export type UsersListStatus = 'all' | 'active' | 'locked' | 'no_access' | 'deleted';
+
+export function fetchUsersPage(search: string, cursor: string | null, status?: UsersListStatus): Promise<Page<AdminUser>> {
   const params = new URLSearchParams({ limit: String(USERS_PAGE) });
   if (status) params.set('status', status);
   if (search) params.set('search', search);

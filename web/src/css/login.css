@@ -18,7 +18,11 @@
 .auth-panel-name { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0; font-size: 16px; font-weight: 700; line-height: 1.35; color: var(--c-acc-hover); text-wrap: balance; }
 .auth-panel-name i { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: var(--r-xs); background: var(--c-acc); color: var(--c-on-acc); font-style: normal; font-size: 13px; font-weight: 800; }
 .auth-panel-body { width: 100%; max-width: 400px; margin: 24px auto 0; padding-bottom: 20px; }
-.auth-panel-foot { margin-top: auto; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--auth-rule); color: var(--auth-foot); font-size: 12px; line-height: 1.5; }
+.auth-panel-foot { margin-top: auto; display: flex; justify-content: space-between; gap: 4px 12px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--auth-rule); color: var(--auth-foot); font-size: 12px; line-height: 1.5; }
+/* Bản quyền + IT Department một hàng, dòng hỗ trợ xuống hàng riêng */
+.auth-panel-foot__help { flex-basis: 100%; }
+/* Ô email: nhãn "Email" trên ô, trong ô để trống */
+.auth-label { margin-bottom: -4px; font-size: 13px; font-weight: 700; color: var(--ink); }
 
 /* Thẻ viền vàng trên đỉnh */
 .auth-card { display: grid; gap: 16px; padding: 20px 20px 24px; background: var(--auth-card); border: 1px solid var(--auth-line); border-top: 3px solid var(--auth-gold); border-radius: var(--r-md); box-shadow: 0 10px 28px rgb(60 45 20 / .08); }

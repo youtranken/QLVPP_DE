@@ -41,9 +41,7 @@
 [data-shell='admin'] .side__user[data-layout='row'] .side__avatar { width: 32px; height: 32px; font-size: 12px; }
 [data-shell='admin'] .side__user[data-layout='row'] .side__who-text { flex: 1 1 0; }
 [data-shell='admin'] .side__user[data-layout='row'] .side__acct { position: fixed; left: calc(var(--side-w) + 8px); bottom: 16px; z-index: 30; padding: 12px; border-radius: var(--r-md); background: var(--c-surface); color: var(--c-ink); box-shadow: var(--e-3); }
-[data-shell='admin'] .side__who .side__error { flex-basis: 100%; }
 [data-shell='admin'] .side__tools { flex: 1 0 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0 4px; margin-top: -4px; }
-[data-shell='admin'] .side__tools .side__error { flex-basis: 100%; }
 /* Menu điện thoại màn thấp: tên co lại (cắt …), VI/EN và nút đăng xuất cùng hàng với avatar */
 [data-shell='admin'] .side__user[data-layout='low'] .side__who { flex-wrap: nowrap; }
 [data-shell='admin'] .side__user[data-layout='low'] .side__who-text { flex: 1 1 0; }
@@ -66,7 +64,6 @@
 [data-shell='admin'] .side__logout { padding: 0 12px; color: inherit; }
 [data-shell='admin'] .side__logout:hover:not(:disabled) { background: var(--c-on-dark-hover); }
 [data-shell='admin'] .side__acct { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
-[data-shell='admin'] .side__error { margin: 0; font: var(--t-cap); color: var(--c-on-dark); }
 
 [data-shell='admin'] .side .notif-btn,
 [data-shell='admin'] .topbar .notif-btn { width: var(--hit); height: var(--hit); border-radius: var(--r-pill); color: var(--c-on-dark-2); }
@@ -123,7 +120,6 @@
   [data-shell='admin'] .side__period { justify-content: center; width: 48px; padding: 16px 0; }
   [data-shell='admin'] .side__period-dot { display: block; }
   [data-shell='admin'] .side__user { padding: 12px 0 0; justify-items: center; }
-  [data-shell='admin'] .side__acct .side__error { color: var(--c-danger); }
   [data-shell='admin'] .side__acct .side__logout:hover:not(:disabled) { background: var(--c-surface-2); }
   [data-shell='admin'] .side__acct { position: fixed; left: 80px; bottom: 16px; z-index: 30; padding: 12px; border-radius: var(--r-md); background: var(--c-surface); color: var(--c-ink); box-shadow: var(--e-3); }
   [data-shell='admin'] .side .notif-panel { top: auto; bottom: 16px; left: 80px; }

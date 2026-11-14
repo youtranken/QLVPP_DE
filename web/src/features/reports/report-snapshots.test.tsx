@@ -12,7 +12,7 @@ import { captureDownloads, errorResponse, exportsOf, postsOf } from './reports-t
 const REPORT = sendReport([itemRow({ key: 'kA', name: 'Bút bi', requested: 5, need: 5 })]);
 const stubReports = (opts: Parameters<typeof import('./reports-test-stub').stubReports>[0] = {}) => setupSendAdm({ report: REPORT, snapshots: opts.snapshots, stub: opts });
 
-vi.mock('@/lib/session-relogin', () => ({ handleSessionExpired: vi.fn(), isLoggingOut: () => false }));
+vi.mock('@/lib/session-relogin', () => ({ handleSessionExpired: vi.fn(), isLoggingOut: () => false, authMode: () => null }));
 
 function openPage() {
   mockViewport(1280);

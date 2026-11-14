@@ -130,7 +130,7 @@ export function beginLogout(): void {
   loggingOut = true;
 }
 
-// Server từ chối đăng xuất → phiên còn, 401 sau đó lại là hết phiên thật
+// Đặt lại cờ đăng xuất (test giữa các ca)
 export function endLogout(): void {
   loggingOut = false;
 }

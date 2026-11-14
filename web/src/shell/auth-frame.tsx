@@ -27,8 +27,9 @@ export function AuthFrame({ children }: { children: ReactNode }) {
           <main className="auth-card">{children}</main>
         </div>
         <footer className="auth-panel-foot">
-          <span>{t('auth.help')}</span>
           <span>{t('auth.copyright', { year: new Date().getFullYear() })}</span>
+          <span>{t('auth.credit')}</span>
+          <span className="auth-panel-foot__help">{t('auth.help')}</span>
         </footer>
       </div>
     </div>

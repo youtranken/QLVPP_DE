@@ -18,7 +18,7 @@ import { SyncStatusLine } from './sync-status';
 import { SYNC_STATUS_KEY } from './use-sync-status';
 import { UsersStats } from './users-stats';
 import { UsersTable, type UserRow } from './users-table';
-import { applyUsersView, departmentsOf, regOf, usersStats } from './users-rows';
+import { applyUsersView, DEFAULT_USERS_FILTER, departmentsOf, regOf, STATUS_OPTIONS, usersStats, type UsersFilter } from './users-rows';
 import { useOpenRegistration } from './use-open-registration';
 import { useDeletedUsers, useDirectoryUsers } from './use-all-users';
 import { useUsersParams } from './use-users-params';
@@ -50,9 +50,10 @@ export function UsersPage() {
   const { t } = useTranslation();
   const p = useUsersParams();
   const [search, setSearch] = useUrlSearchBox(p.view.q, p.setQ);
-  const dir = useDirectoryUsers(p.view.q);
-  const sync = useSync();
   const showDeleted = p.view.filter === DELETED;
+  // Đã xóa có danh sách riêng; danh bạ thường không chạy truy vấn tràn theo trạng thái đó
+  const dir = useDirectoryUsers(p.view.q, true, showDeleted ? 'all' : p.view.filter);
+  const sync = useSync();
   const deleted = useDeletedUsers(showDeleted);
   const reg = useOpenRegistration();
   // Bộ lọc Đã xoá đọc từ danh sách riêng (ẩn mặc định); tìm kiếm luôn tại chỗ vì danh sách này tải hết
@@ -105,15 +106,18 @@ export function UsersPage() {
   const openUser = panel.id ? list.find((u) => u.sub === panel.id) : undefined;
   const target: UserRow | undefined = openUser && { ...openUser, id: openUser.sub, reg: reg.sets ? regOf(openUser, reg.sets) : undefined };
   // Rỗng chỉ vì thẻ lọc (không gõ tìm): câu gợi ý "thử tên không dấu" không đúng chỗ
-  const byChip = (filter !== null || p.view.reg !== null) && p.view.q === '';
-  const narrowed = filter !== null || p.view.reg !== null || p.view.dept !== '' || p.view.q !== '';
+  const byChip = (filter !== 'all' || p.view.reg !== null) && p.view.q === '';
+  // Đang dùng (mặc định) và Mọi trạng thái không phải "đang lọc": ô Trạng thái đã nói rõ
+  const notice = filter !== DEFAULT_USERS_FILTER && filter !== 'all';
+  // Xóa lọc về mặc định (Đang dùng, không lọc khác): chỉ mời khi đang hẹp hơn mặc định, cùng điều kiện với FilterNotice
+  const narrowed = notice || p.view.reg !== null || p.view.dept !== '' || p.view.q !== '';
   const regCard =
     reg.month === null ? null : { month: reg.month, count: reg.sets ? reg.sets.unregistered.size : null, pressed: p.view.reg === 'no', onClick: () => p.toggleReg('no') };
   return (
     <div className="ct-page dr-page">
       {header}
       <SyncNotice state={sync.state} onRetry={sync.run} onClose={sync.close} />
-      {!dir.loading && !dir.overflow && <UsersStats stats={usersStats(dir.users)} filter={filter === DELETED ? null : filter} onFilter={p.toggleFilter} reg={regCard} />}
+      {!dir.loading && !dir.overflow && <UsersStats stats={usersStats(dir.users)} filter={p.view.reg ? null : filter} onFilter={p.toggleFilter} reg={regCard} />}
       {reg.failed && <LoadError onRetry={reg.retry} />}
       {dir.overflow && !showDeleted && <p role="note" className="alert">{t('users.page.overflow')}</p>}
       <Toolbar search={{ value: search, onChange: setSearch, label: t('users.page.searchLabel'), placeholder: t('users.page.search'), maxLength: MAX_SEARCH }}>
@@ -125,23 +129,20 @@ export function UsersPage() {
           options={[{ value: '', label: t('users.page.allDepts') }, ...deptOptions.map((d) => ({ value: d, label: d }))]}
         />
         <Select
-          label={t('users.page.viewLabel')}
+          label={t('users.page.statusLabel')}
           hideLabel
-          value={showDeleted ? DELETED : ''}
-          onChange={(v) => (v === DELETED ? p.setFilter(DELETED) : showDeleted && p.clearFilter())}
-          options={[
-            { value: '', label: t('users.page.viewCurrent') },
-            { value: DELETED, label: t('users.page.viewDeleted') },
-          ]}
+          value={filter}
+          onChange={(v) => p.setFilter(v as UsersFilter)}
+          options={STATUS_OPTIONS.map((f) => ({ value: f, label: t(f === 'all' ? 'users.page.allStatuses' : `users.status.${f}`) }))}
         />
-        {(!dir.loading || filter || (p.view.reg && reg.month !== null)) && (
+        {(!dir.loading || notice || (p.view.reg && reg.month !== null)) && (
           <ListMeta>
             {!dir.loading && (
               <p className="dr-count" role="status">
                 {t(dir.overflow && !showDeleted ? 'users.page.shownPartial' : 'users.page.shown', { shown: rows.length, total: list.length })}
               </p>
             )}
-            {filter && <FilterNotice label={t(`users.stats.${filter}`)} count={rows.length} onClear={p.clearFilter} />}
+            {notice && <FilterNotice label={t(`users.stats.${filter}`)} count={rows.length} onClear={p.clearFilter} />}
             {p.view.reg && reg.month !== null && <FilterNotice label={t(p.view.reg === 'yes' ? 'users.reg.yes' : 'users.reg.no', { month: reg.month })} count={rows.length} onClear={p.clearReg} />}
           </ListMeta>
         )}

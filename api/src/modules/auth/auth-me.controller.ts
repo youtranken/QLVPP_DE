@@ -4,19 +4,15 @@ import {
   Controller,
   Get,
   HttpCode,
-  Post,
   Put,
   Req,
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { AuditWriterService } from '../audit/audit-writer.service';
 import { SystemConfigService } from '../config/system-config.service';
 import { UsersService } from '../users/users.service';
 import type { MeResponse } from './auth.types';
-import { SESSION_COOKIE } from './identity.guard';
-import { sessionRef } from './session-crypto';
 import { OptionalAuth } from './public.decorator';
 import type { AuthedRequest } from './identity.types';
 import { clientIp } from './auth.controller';
@@ -32,7 +28,6 @@ export class AuthMeController {
   constructor(
     private readonly sessions: SessionService,
     private readonly users: UsersService,
-    private readonly audit: AuditWriterService,
     private readonly config: SystemConfigService,
     private readonly localeSync: LocaleSyncService,
   ) {}
@@ -132,23 +127,5 @@ export class AuthMeController {
         ? { page: dto.page, seq: dto.seq }
         : undefined;
     return this.localeSync.save(session.id, locale, clientIp(req), click);
-  }
-
-  @Post('logout')
-  @HttpCode(200)
-  async logout(@Req() req: AuthedRequest, @Res() res: Response): Promise<void> {
-    const user = req.user;
-    // Chỉ ghi khi chính lời gọi này xóa được phiên (phiên đã hết hạn thì guard đã ghi session_expired)
-    if (user?.sessionId && (await this.sessions.destroy(user.sessionId)) > 0) {
-      await this.audit.append({
-        actor: user.sub,
-        action: 'auth.logout',
-        objectType: 'session',
-        objectId: sessionRef(user.sessionId),
-      });
-    }
-    res.clearCookie(SESSION_COOKIE);
-    // Không gọi end_session: phiên SSO dùng chung với portal và các app khác
-    res.json({ ok: true });
   }
 }

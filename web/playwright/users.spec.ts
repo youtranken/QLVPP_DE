@@ -31,19 +31,22 @@ test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Danh bạ' })).toBeVisible();
     await page.getByRole('searchbox', { name: SEARCH }).fill('PW Danh bạ');
     await expect(page).toHaveURL(/q=PW/);
-    await expect(rowOf(page, ACTIVE.name)).toBeVisible();
-    await expect(rowOf(page, LOCKED.name).getByText('Đã khóa', { exact: true })).toBeVisible();
+    // Mặc định chỉ người Đang dùng; người khóa chỉ hiện khi chọn trạng thái khác
+    await expect(page.getByRole('combobox', { name: 'Trạng thái' })).toHaveText(/Đang dùng/);
     await expect(rowOf(page, ACTIVE.name).getByText('Đang dùng', { exact: true })).toBeVisible();
+    await expect(rowOf(page, LOCKED.name)).toHaveCount(0);
 
     await page.getByRole('button', { name: /^Đã khóa/ }).click();
     await expect(page.getByText(/^Đang lọc: Đã khóa/)).toBeVisible();
-    await expect(rowOf(page, LOCKED.name)).toBeVisible();
+    await expect(rowOf(page, LOCKED.name).getByText('Đã khóa', { exact: true })).toBeVisible();
     await expect(rowOf(page, ACTIVE.name)).toHaveCount(0);
     await page.getByRole('button', { name: 'Xóa lọc' }).click();
-    await page.getByRole('button', { name: /^Đang dùng/ }).click();
     await expect(rowOf(page, ACTIVE.name)).toBeVisible();
     await expect(rowOf(page, LOCKED.name)).toHaveCount(0);
-    await page.getByRole('button', { name: 'Xóa lọc' }).click();
+    // Bấm lại thẻ Đang dùng đang chọn → Mọi trạng thái
+    await page.getByRole('button', { name: /^Đang dùng/ }).click();
+    await expect(page).toHaveURL(/status=all/);
+    await expect(rowOf(page, LOCKED.name)).toBeVisible();
 
     await page.getByRole('button', { name: 'Đồng bộ ngay' }).click();
     const alert = page.getByRole('alert');
@@ -68,7 +71,7 @@ test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
     seedActiveUser(TEAM_QS.sub, TEAM_QS.name, 'active', { department: 'PW Phòng', team: 'QS', role: 'admin' });
     seedActiveUser(TEAM_NONE.sub, TEAM_NONE.name, 'active', { department: 'PW Phòng', team: null });
     seedActiveUser(NO_ACCESS.sub, NO_ACCESS.name, 'no_access', { department: 'PW Phòng', team: 'QS' });
-    await page.goto('/admin/users');
+    await page.goto('/admin/users?status=all');
     await page.getByRole('searchbox', { name: SEARCH }).fill('PW Danh bạ');
     const columns = await page.getByRole('columnheader').allTextContents();
     const teamCol = columns.indexOf('Nhóm');

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { loginWithPmhId, saLogin, type SaLoginOutcome } from '@/lib/auth-actions';
+import { identifyLogin, loginWithPmhId, saLogin, type SaLoginOutcome } from '@/lib/auth-actions';
 import { navigateTo } from '@/lib/navigate';
 import { LanguageSwitch } from '@/ui/language-switch';
 import { IconEye, IconEyeOff, IconLock, IconMail } from '@/ui/icons';
@@ -13,7 +13,7 @@ function isForbiddenEntry(): boolean {
   return pathname === '/forbidden' || new URLSearchParams(search).get('login') === 'forbidden';
 }
 
-// Nhận dạng email tối thiểu (giống QLTS/QLHS) — chỉ quyết định rẽ nhánh, không hỏi server nên không lộ tài khoản nào có thật
+// Nhận dạng email tối thiểu (giống QLTS/QLHS): email đi thẳng PMH ID, không hỏi server
 function isEmail(v: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 }
@@ -24,25 +24,32 @@ const SA_ERROR_KEY: Record<Exclude<SaLoginOutcome, 'ok'>, string> = {
   error: 'auth.saError',
 };
 
+const IDENTIFY_ERROR_KEY = { invalid: 'auth.idInvalid', locked: 'auth.saLocked', error: 'auth.saError' } as const;
+
 type Props = { sessionExpired?: boolean; ssoDown?: boolean };
 
 /**
- * Một ô nhập như QLTS/QLHS: email → PMH ID (kèm login_hint, mật khẩu nhập ở PMH ID); không phải email (tài khoản
- * nội bộ của IT) → bước mật khẩu, gửi /api/auth/sa-login như form "Dành cho IT" cũ.
+ * Một ô nhập như QLTS/QLHS: email → PMH ID (kèm login_hint, mật khẩu nhập ở PMH ID); không phải email → hỏi server:
+ * đúng tên tài khoản nội bộ của IT mới sang bước mật khẩu (/api/auth/sa-login), còn lại báo email không hợp lệ.
  */
 export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) {
   const { t } = useTranslation();
   const [step, setStep] = useState<'id' | 'password'>('id');
   const [identifier, setIdentifier] = useState('');
+  // Tên server đã xác nhận là tài khoản nội bộ — bước mật khẩu dùng đúng tên này
+  const [verifiedId, setVerifiedId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const idRef = useRef<HTMLInputElement>(null);
+  const pwRef = useRef<HTMLInputElement>(null);
   const backToIdRef = useRef(false);
 
-  // "Đổi" → về ô email và đặt con trỏ vào đó (không để focus rơi về <body>)
+  // "Đổi" → về ô email và đặt con trỏ vào đó (không để focus rơi về <body>); sang bước mật khẩu → con trỏ ở ô mật khẩu
+  // (server trả lời sau khi nút Đăng nhập đã nhận focus nên autoFocus không đủ)
   useEffect(() => {
+    if (step === 'password') pwRef.current?.focus();
     if (step === 'id' && backToIdRef.current) {
       backToIdRef.current = false;
       idRef.current?.focus();
@@ -54,7 +61,7 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
 
   const loginFailed = new URLSearchParams(window.location.search).get('login') === 'failed';
 
-  const submitId = (e: FormEvent) => {
+  const submitId = async (e: FormEvent) => {
     e.preventDefault();
     const id = identifier.trim();
     if (!id) {
@@ -67,7 +74,16 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
       loginWithPmhId(id);
       return;
     }
-    setStep('password');
+    setBusy(true);
+    const next = await identifyLogin(id);
+    setBusy(false);
+    if (next === 'password') {
+      setVerifiedId(id);
+      setStep('password');
+      return;
+    }
+    setError(t(IDENTIFY_ERROR_KEY[next]));
+    idRef.current?.focus();
   };
 
   const submitPassword = async (e: FormEvent) => {
@@ -78,7 +94,7 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
     }
     setBusy(true);
     setError(null);
-    const outcome = await saLogin(identifier, password);
+    const outcome = await saLogin(verifiedId, password);
     if (outcome === 'ok') {
       // Về '/' rồi RequireRole đưa SA sang /admin
       navigateTo('/');
@@ -125,11 +141,15 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
         </p>
       )}
       {step === 'id' ? (
-        <form className="auth-form" onSubmit={submitId} noValidate>
+        <form className="auth-form" onSubmit={(e) => void submitId(e)} noValidate>
+          <label className="auth-label" htmlFor="login-id">
+            {t('auth.idLabel')}
+          </label>
           <div className="auth-input">
             <IconMail className="auth-input__ic" />
             <input
               ref={idRef}
+              id="login-id"
               name="username"
               type="text"
               inputMode="email"
@@ -138,8 +158,8 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
               spellCheck={false}
               // Như QLTS/QLHS: vào trang là gõ email ngay
               autoFocus
-              placeholder={t('auth.idLabel')}
-              aria-label={t('auth.idLabel')}
+              // Đang hỏi server: không cho sửa tên đang kiểm
+              readOnly={busy}
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? 'login-error' : undefined}
               value={identifier}
@@ -147,7 +167,7 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
             />
           </div>
           {errorNode}
-          <button type="submit" className="btn btn--primary btn--lg btn--block">
+          <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={busy}>
             {t('auth.submit')}
           </button>
         </form>
@@ -155,8 +175,8 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
         <form className="auth-form" onSubmit={(e) => void submitPassword(e)} noValidate>
           <div className="auth-idrow">
             <span className="auth-idrow__label">{t('auth.signingInAs')}</span>
-            <span className="auth-idrow__id" title={identifier.trim()}>
-              {identifier.trim()}
+            <span className="auth-idrow__id" title={verifiedId}>
+              {verifiedId}
             </span>
             <button type="button" className="auth-idrow__change" onClick={backToId} disabled={busy}>
               {t('auth.changeId')}
@@ -165,6 +185,7 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
           <div className="auth-input auth-input--pw">
             <IconLock className="auth-input__ic" />
             <input
+              ref={pwRef}
               name="password"
               type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"

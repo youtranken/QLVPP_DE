@@ -18,33 +18,34 @@ describe('users-rows', () => {
   });
 
   it('lọc theo từng thẻ và phòng ban', () => {
-    const view = { filter: null, reg: null, dept: '', q: '' };
+    const view = { filter: 'all' as const, reg: null, dept: '', q: '' };
     expect(applyUsersView(USERS, { ...view, filter: 'locked' }, true).map((x) => x.sub)).toEqual(['binh']);
     expect(applyUsersView(USERS, { ...view, filter: 'no_access' }, true).map((x) => x.sub)).toEqual(['dung']);
     expect(applyUsersView(USERS, { ...view, filter: 'active' }, true).map((x) => x.sub)).toEqual(['an', 'chi']);
     expect(applyUsersView(USERS, { ...view, dept: 'Phòng Công trình' }, true).map((x) => x.sub)).toEqual(['an', 'chi']);
     expect(applyUsersView(USERS, { ...view, filter: 'active', dept: 'Phòng Công trình' }, true).map((x) => x.sub)).toEqual(['an', 'chi']);
+    expect(applyUsersView([...USERS, u('del', { status: 'deleted' })], view, true).map((x) => x.sub)).toEqual(['an', 'binh', 'chi', 'dung']);
   });
 
   it('tìm không dấu theo tên, email, mã NV; clientSearch=false bỏ qua ô tìm (server đã lọc)', () => {
-    expect(applyUsersView(USERS, { filter: null, reg: null, dept: '', q: 'nv0231' }, true).map((x) => x.sub)).toEqual(['an']);
-    expect(applyUsersView(USERS, { filter: null, reg: null, dept: '', q: 'an@pmh' }, true).map((x) => x.sub)).toEqual(['an']);
-    expect(applyUsersView(USERS, { filter: null, reg: null, dept: '', q: 'zzz' }, false)).toHaveLength(4);
-    expect(applyUsersView(USERS, { filter: null, reg: null, dept: '', q: 'qs' }, true).map((x) => x.sub)).toEqual(['dung']);
+    expect(applyUsersView(USERS, { filter: 'all', reg: null, dept: '', q: 'nv0231' }, true).map((x) => x.sub)).toEqual(['an']);
+    expect(applyUsersView(USERS, { filter: 'all', reg: null, dept: '', q: 'an@pmh' }, true).map((x) => x.sub)).toEqual(['an']);
+    expect(applyUsersView(USERS, { filter: 'all', reg: null, dept: '', q: 'zzz' }, false)).toHaveLength(4);
+    expect(applyUsersView(USERS, { filter: 'all', reg: null, dept: '', q: 'qs' }, true).map((x) => x.sub)).toEqual(['dung']);
   });
 
   it('phòng ban dẫn xuất: bỏ trống, bỏ trùng, xếp theo tiếng Việt', () => {
     expect(departmentsOf([...USERS, u('d')])).toEqual(['Phòng Công trình', 'Phòng Kế toán']);
   });
 
-  it('parseUsersFilter chỉ nhận active|locked|no_access|deleted; parseRegFilter chỉ yes|no', () => {
-    expect(['active', 'never', 'locked', 'no_access', 'deleted', 'x', null].map(parseUsersFilter)).toEqual(['active', null, 'locked', 'no_access', 'deleted', null, null]);
+  it('parseUsersFilter nhận all|active|locked|no_access|deleted, thiếu/lạ → active (mặc định); parseRegFilter chỉ yes|no', () => {
+    expect(['active', 'never', 'locked', 'no_access', 'deleted', 'all', 'x', null].map(parseUsersFilter)).toEqual(['active', 'active', 'locked', 'no_access', 'deleted', 'all', 'active', 'active']);
     expect(['yes', 'no', 'YES', '', null].map(parseRegFilter)).toEqual(['yes', 'no', null, null, null]);
   });
 
   it('lọc đăng ký: yes/no theo tập của kỳ; người ngoài cả hai tập không vào lọc nào; chưa có dữ liệu → chưa ra ai', () => {
     const sets = { registered: new Set(['an']), unregistered: new Set(['chi']) };
-    const view = { filter: null, dept: '', q: '' };
+    const view = { filter: 'all' as const, dept: '', q: '' };
     expect(applyUsersView(USERS, { ...view, reg: 'yes' }, true, sets).map((x) => x.sub)).toEqual(['an']);
     expect(applyUsersView(USERS, { ...view, reg: 'no' }, true, sets).map((x) => x.sub)).toEqual(['chi']);
     expect(applyUsersView(USERS, { ...view, reg: 'no' }, true, null)).toEqual([]);

@@ -25,7 +25,7 @@ import { OIDC_PROVIDER } from './oidc-provider';
 import type { OidcProvider, OidcTokens } from './oidc-provider';
 import { Public } from './public.decorator';
 import { Throttle } from '@nestjs/throttler';
-import { SaLoginDto } from './sa-login.dto';
+import { IdentifyDto, SaLoginDto } from './sa-login.dto';
 import { SessionService } from './session.service';
 import { TokenContractError } from './token-contract.error';
 import { SESSION_COOKIE } from './identity.guard';
@@ -39,13 +39,24 @@ export function clientIp(req: AuthedRequest): string {
 
 const OIDC_TX_COOKIE = 'vpp_oidc_tx';
 
+function saLocked(): HttpException {
+  return new HttpException(
+    {
+      code: 'SA_LOGIN_LOCKED',
+      message:
+        'Quá nhiều lần sai — tạm khoá đăng nhập SA. Thử lại sau ít phút.',
+    },
+    HttpStatus.TOO_MANY_REQUESTS,
+  );
+}
+
 function sanitizeLoginHint(raw?: string): string | undefined {
   const v = raw?.trim();
   if (!v || v.length > 200) return undefined;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? v : undefined;
 }
 
-function appBaseUrl(): string {
+export function appBaseUrl(): string {
   return process.env.APP_BASE_URL ?? 'http://localhost:8080';
 }
 
@@ -105,16 +116,7 @@ export class AuthController {
         action: 'auth.sa_login_failed',
         detail: { ip, reason: result },
       });
-      if (result === 'locked') {
-        throw new HttpException(
-          {
-            code: 'SA_LOGIN_LOCKED',
-            message:
-              'Quá nhiều lần sai — tạm khoá đăng nhập SA. Thử lại sau ít phút.',
-          },
-          HttpStatus.TOO_MANY_REQUESTS,
-        );
-      }
+      if (result === 'locked') throw saLocked();
       throw new UnauthorizedException({
         code: 'SA_LOGIN_INVALID',
         message: 'Sai tài khoản hoặc mật khẩu.',
@@ -132,6 +134,21 @@ export class AuthController {
       detail: { ip },
     });
     res.json({ ok: true });
+  }
+
+  // Ô đăng nhập gõ chữ không phải email: chỉ đúng hệt tên SA trong env mới sang bước mật khẩu. Tên SA không có
+  // trong bundle web hay public-config; trả đúng một trong hai dạng, 10 lần/phút/IP, gõ sai ăn chung lockout với sa-login.
+  @Public()
+  @Throttle({ ip: { limit: 10, ttl: 60_000 } })
+  @Post('identify')
+  @HttpCode(200)
+  identify(
+    @Body() dto: IdentifyDto,
+    @Req() req: AuthedRequest,
+  ): { next: 'password' | 'invalid' } {
+    const next = this.localSa.identify(dto.identifier, clientIp(req));
+    if (next === 'locked') throw saLocked();
+    return { next };
   }
 
   @Public()
@@ -174,8 +191,8 @@ export class AuthController {
   }
 
   // Public: user bị chặn (forbidden) không có phiên app. Có id_token → end_session (hủy phiên SSO);
-  // không có (nhánh access_denied/revoked chưa tạo phiên) → PMH ID 500 khi logout thiếu hint,
-  // nên đi authorize với prompt=login: PMH ID hiện form đăng nhập dù phiên SSO còn, chọn được tài khoản khác.
+  // không có (nhánh access_denied/revoked chưa tạo phiên) → authorize với prompt=login: PMH ID hiện form
+  // đăng nhập dù phiên SSO còn, chọn được tài khoản khác.
   @Public()
   @Get('switch-account')
   async switchAccount(
@@ -184,12 +201,9 @@ export class AuthController {
     @Query('ui_locales') uiLocales?: string,
   ): Promise<void> {
     const sid = req.user?.sessionId;
-    let idTokenHint: string | null = null;
-    if (sid) {
-      const session = await this.sessions.find(sid);
-      idTokenHint = session?.idToken ?? null;
-      await this.sessions.destroy(sid);
-    }
+    const idTokenHint = sid
+      ? ((await this.sessions.end(sid))?.idToken ?? null)
+      : null;
     res.clearCookie(SESSION_COOKIE);
     const locales = parseUiLocales(uiLocales);
     if (idTokenHint) {

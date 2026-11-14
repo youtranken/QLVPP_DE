@@ -13,6 +13,7 @@ export const AUDIT_ACTIONS: readonly string[] = [
   'auth.logout',
   'auth.sa_login',
   'auth.sa_login_failed',
+  'auth.sa_lockout_global',
   'auth.session_expired',
   'auth.session_revoked',
   'auth.test_login',
