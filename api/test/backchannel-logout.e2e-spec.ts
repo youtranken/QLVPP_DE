@@ -26,9 +26,12 @@ describe('POST backchannel-logout', () => {
   const sub = `e2e-bcl-${randomUUID()}`;
   const sessionIds: string[] = [];
 
-  async function logoutToken(claims: Record<string, unknown> = {}) {
+  async function logoutToken(
+    claims: Record<string, unknown> = {},
+    header: Partial<jose.JWTHeaderParameters> = { typ: 'logout+jwt' },
+  ) {
     return new jose.SignJWT({ events: { [BCL_EVENT]: {} }, ...claims })
-      .setProtectedHeader({ alg: 'RS256' })
+      .setProtectedHeader({ alg: 'RS256', ...header })
       .setSubject(sub)
       .setIssuer(process.env.PMH_ISSUER_URL as string)
       .setAudience(process.env.PMH_CLIENT_ID as string)
@@ -37,6 +40,23 @@ describe('POST backchannel-logout', () => {
       .setExpirationTime('2m')
       .sign(privateKey);
   }
+
+  const bcl = (token: string) =>
+    request(app.getHttpServer())
+      .post('/api/backchannel-logout')
+      .type('form')
+      .send({ logout_token: token });
+
+  const newSession = async () =>
+    (
+      await app.get(SessionService).create({
+        userSub: sub,
+        refreshToken: null,
+        accessTokenExp: new Date(Date.now() + 10 * 60_000),
+        claims: { sub, full_name: 'BCL E2E' },
+        idToken: null,
+      })
+    ).id;
 
   const me = (sid: string) =>
     request(app.getHttpServer())
@@ -97,5 +117,37 @@ describe('POST backchannel-logout', () => {
       .expect(200);
     await me(sessionIds[0]).expect(401);
     await me(sessionIds[1]).expect(401);
+  });
+
+  it('logout_token thiếu typ logout+jwt → 400 LOGOUT_TOKEN_INVALID, phiên còn', async () => {
+    const id = await newSession();
+    const res = await bcl(await logoutToken({}, {})).expect(400);
+    expect(res.body.code).toBe('LOGOUT_TOKEN_INVALID');
+    await me(id).expect(200);
+  });
+
+  it('cùng logout_token gửi lần 2 (jti đã dùng) → 400 LOGOUT_TOKEN_INVALID, phiên tạo sau lần 1 còn', async () => {
+    const token = await logoutToken();
+    await bcl(token).expect(200);
+    const id = await newSession();
+    const res = await bcl(token).expect(400);
+    expect(res.body.code).toBe('LOGOUT_TOKEN_INVALID');
+    await me(id).expect(200);
+  });
+
+  it('hai request cùng jti song song → đúng một 200, một 400', async () => {
+    await newSession();
+    const token = await logoutToken();
+    const codes = (await Promise.all([bcl(token), bcl(token)]))
+      .map((r) => r.status)
+      .sort();
+    expect(codes).toEqual([200, 400]);
+  });
+
+  it('jti khác (token mới) sau token đã dùng → 200, hủy phiên', async () => {
+    await bcl(await logoutToken()).expect(200);
+    const id = await newSession();
+    await bcl(await logoutToken()).expect(200);
+    await me(id).expect(401);
   });
 });

@@ -11,6 +11,7 @@ import { CsrfGuard } from './csrf.guard';
 import { IdentityGuard } from './identity.guard';
 import { IDP_LOCALE_CLIENT, IdpLocaleClient } from './idp-locale.client';
 import { LocaleSyncService } from './locale-sync.service';
+import { LogoutTokenJtiService } from './logout-token-jti.service';
 import { LocalSaService } from './local-sa.service';
 import { LocalTestAccountsService } from './local-test-accounts.service';
 import { LocalTestLoginController } from './local-test-login.controller';
@@ -39,6 +40,7 @@ import { WebhookEventsService } from './webhook-events.service';
     LocalSaService,
     LocalTestAccountsService,
     WebhookEventsService,
+    LogoutTokenJtiService,
     LocaleSyncService,
     { provide: IDP_LOCALE_CLIENT, useClass: IdpLocaleClient },
     // Thứ tự đăng ký = thứ tự chạy: IP throttle → Identity → CSRF → Roles → user throttle (cần req.user)

@@ -8,6 +8,21 @@ import { TokenContractError } from './token-contract.error';
 
 export const PMH_ID_CLAIMS_VERSION = 3;
 
+const BCL_EVENT = 'http://schemas.openid.net/event/backchannel-logout';
+const LOGOUT_TYP = 'logout+jwt';
+export const JTI_MAX = 255;
+
+export interface VerifiedLogoutToken {
+  sub: string;
+  jti: string;
+  sid?: string;
+  expiresAt: Date;
+}
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
 export interface VerifiedAccessToken {
   claims: PmhIdClaims;
   expiresAt: Date | null;
@@ -69,32 +84,56 @@ export class JwtVerifierService {
     };
   }
 
-  // Bắt buộc `events` backchannel-logout và không có `nonce` — phân biệt với id_token bị dùng nhầm
-  async verifyLogoutToken(logoutToken: string): Promise<{ sub: string }> {
+  // OIDC Back-Channel Logout 1.0 §2.6: typ logout+jwt, chỉ RS256, `events` đúng dạng, không `nonce`,
+  // có `jti` để chống dùng lại, có `iat`/`exp`
+  async verifyLogoutToken(logoutToken: string): Promise<VerifiedLogoutToken> {
     const jose = await import('jose');
     const getKey = await this.getKeySource();
-    const { payload } = await jose.jwtVerify(logoutToken, getKey, {
-      issuer: process.env.PMH_ISSUER_URL,
-      audience: process.env.PMH_CLIENT_ID,
-      clockTolerance: 60,
-    });
-    const events = payload.events as Record<string, unknown> | undefined;
-    const isLogout =
-      !!events &&
-      'http://schemas.openid.net/event/backchannel-logout' in events;
-    if (!isLogout || 'nonce' in payload) {
-      throw new Error(
-        'Không phải logout_token hợp lệ (thiếu events backchannel-logout hoặc có nonce)',
-      );
+    const { payload, protectedHeader } = await jose.jwtVerify(
+      logoutToken,
+      getKey,
+      {
+        issuer: process.env.PMH_ISSUER_URL,
+        audience: process.env.PMH_CLIENT_ID,
+        algorithms: ['RS256'],
+        clockTolerance: 60,
+      },
+    );
+    const typ = protectedHeader.typ?.toLowerCase();
+    if (typ !== LOGOUT_TYP && typ !== `application/${LOGOUT_TYP}`) {
+      throw new Error('logout_token sai typ (phải là logout+jwt)');
+    }
+    const events = payload.events;
+    const event = isPlainObject(events) ? events[BCL_EVENT] : undefined;
+    if (!isPlainObject(event)) {
+      throw new Error('logout_token thiếu events backchannel-logout');
+    }
+    if ('nonce' in payload) {
+      throw new Error('logout_token có nonce');
     }
     if (!payload.sub || typeof payload.sub !== 'string') {
       throw new Error('logout_token thiếu claim `sub`');
+    }
+    const { jti, sid } = payload;
+    if (typeof jti !== 'string' || jti.length === 0 || jti.length > JTI_MAX) {
+      throw new Error('logout_token thiếu hoặc sai claim `jti`');
+    }
+    if (sid !== undefined && (typeof sid !== 'string' || sid.length === 0)) {
+      throw new Error('logout_token sai claim `sid`');
+    }
+    if (typeof payload.iat !== 'number') {
+      throw new Error('logout_token thiếu claim `iat`');
     }
     // jose chỉ kiểm hết hạn khi có `exp`; thiếu thì token replay được vô thời hạn
     if (!payload.exp) {
       throw new Error('logout_token thiếu claim `exp`');
     }
-    return { sub: payload.sub };
+    return {
+      sub: payload.sub,
+      jti,
+      ...(sid === undefined ? {} : { sid }),
+      expiresAt: new Date(payload.exp * 1000),
+    };
   }
 
   private toClaims(payload: JWTPayload): PmhIdClaims {

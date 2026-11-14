@@ -9,6 +9,8 @@ import {
 import type { Request } from 'express';
 import { AuditWriterService } from '../audit/audit-writer.service';
 import { JwtVerifierService } from './jwt-verifier.service';
+import type { VerifiedLogoutToken } from './jwt-verifier.service';
+import { LogoutTokenJtiService } from './logout-token-jti.service';
 import { Public } from './public.decorator';
 import { SessionService } from './session.service';
 
@@ -21,6 +23,7 @@ export class BackchannelLogoutController {
     private readonly jwtVerifier: JwtVerifierService,
     private readonly sessions: SessionService,
     private readonly audit: AuditWriterService,
+    private readonly jtis: LogoutTokenJtiService,
   ) {}
 
   @Public()
@@ -35,17 +38,19 @@ export class BackchannelLogoutController {
         message: 'Thiếu logout_token.',
       });
     }
-    let sub: string;
+    let verified: VerifiedLogoutToken;
     try {
-      ({ sub } = await this.jwtVerifier.verifyLogoutToken(token));
+      verified = await this.jwtVerifier.verifyLogoutToken(token);
     } catch (error) {
       // 400 thay vì 500 để PMH ID không retry vô hạn
       this.logger.warn(`BCL từ chối: ${(error as Error).message}`);
-      throw new BadRequestException({
-        code: 'LOGOUT_TOKEN_INVALID',
-        message: 'logout_token không hợp lệ.',
-      });
+      throw invalidToken();
     }
+    if (!(await this.jtis.claim(verified.jti, verified.expiresAt))) {
+      this.logger.warn('BCL từ chối: jti đã dùng');
+      throw invalidToken();
+    }
+    const { sub } = verified;
     const killed = await this.sessions.destroyAllForUser(sub);
     await this.audit.append({
       actor: 'system(bcl)',
@@ -56,4 +61,11 @@ export class BackchannelLogoutController {
     });
     return { ok: true };
   }
+}
+
+function invalidToken(): BadRequestException {
+  return new BadRequestException({
+    code: 'LOGOUT_TOKEN_INVALID',
+    message: 'logout_token không hợp lệ.',
+  });
 }
