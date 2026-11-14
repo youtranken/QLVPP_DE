@@ -219,7 +219,7 @@ describe('LoginScreen', () => {
 
   it('PMH ID không liên lạc được / phiên hết hạn → báo trên ô nhập', () => {
     const { unmount } = renderWithI18n(<LoginScreen ssoDown />);
-    expect(screen.getByRole('alert')).toHaveTextContent('Chưa kết nối được Tài khoản D&E');
+    expect(screen.getByRole('alert')).toHaveTextContent('Tạm thời không kết nối được Tài khoản D&E');
     unmount();
     renderWithI18n(<LoginScreen sessionExpired />);
     expect(screen.getByRole('alert')).toHaveTextContent('Phiên đăng nhập đã hết hạn. Đăng nhập lại để tiếp tục.');

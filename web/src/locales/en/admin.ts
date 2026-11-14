@@ -98,7 +98,7 @@ const admin: Messages<typeof vi> = {
       auth: {
         login: 'Signed in',
         login_denied_group: 'Sign-in denied (not in group)',
-        login_denied_idp: 'Sign-in denied by D&E Account',
+        login_denied_idp: 'D&E Account denied sign-in',
         login_denied_revoked: 'Sign-in blocked (VPP access just revoked)',
         login_failed: 'Sign-in failed',
         logout: 'Signed out',

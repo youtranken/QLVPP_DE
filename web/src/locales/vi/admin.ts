@@ -63,7 +63,7 @@ const admin = {
       status: 'Trạng thái',
       lastLogin: 'Đăng nhập cuối',
       readonly: 'Dữ liệu từ Tài khoản D&E, không sửa trong app.',
-      lockedWarning: 'Tài khoản D&E của người này đã bị khóa — không đăng nhập được. Phần còn nợ của người này hiện nhãn "Người đã nghỉ" ở Còn nợ.',
+      lockedWarning: 'Tài khoản D&E của người này đã bị khóa — không đăng nhập được. Phần còn nợ hiện nhãn "Người đã nghỉ" ở Còn nợ.',
       noAccessWarning: 'Người này đã bị thu hồi quyền vào VPP ở Tài khoản D&E. Phần còn nợ hiện nhãn "Người đã nghỉ" ở Còn nợ.',
       audit: 'Xem nhật ký',
     },
@@ -96,7 +96,7 @@ const admin = {
       auth: {
         login: 'Đăng nhập',
         login_denied_group: 'Đăng nhập bị từ chối (không thuộc nhóm)',
-        login_denied_idp: 'Đăng nhập bị Tài khoản D&E từ chối',
+        login_denied_idp: 'Tài khoản D&E từ chối đăng nhập',
         login_denied_revoked: 'Đăng nhập bị từ chối (vừa bị thu hồi quyền)',
         login_failed: 'Đăng nhập lỗi',
         logout: 'Đăng xuất',

@@ -227,7 +227,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     renderWithI18n(<App />);
     expect(
       await screen.findByText(
-        'Chưa kết nối được Tài khoản D&E. Quản trị kỹ thuật có thể đăng nhập bằng tài khoản nội bộ.',
+        'Tạm thời không kết nối được Tài khoản D&E. Quản trị kỹ thuật có thể đăng nhập bằng tài khoản nội bộ.',
       ),
     ).toBeInTheDocument();
     expect(navigateTo).not.toHaveBeenCalled();
