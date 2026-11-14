@@ -38,27 +38,21 @@ function users(from: number, count: number) {
   }));
 }
 
-async function errorBody(
-  p: Promise<unknown>,
-): Promise<{ code?: string; message?: string } | undefined> {
+type ErrorBody = { code?: string; message?: string } | undefined;
+
+// null = không ném lỗi; undefined = ném lỗi không có thân HTTP
+async function errorBody(p: Promise<unknown>): Promise<ErrorBody | null> {
   try {
     await p;
   } catch (e) {
-    return (e as { getResponse?: () => unknown }).getResponse?.() as
-      { code?: string; message?: string } | undefined;
+    return (e as { getResponse?: () => unknown }).getResponse?.() as ErrorBody;
   }
-  return undefined;
+  return null;
 }
 
 async function errorCode(p: Promise<unknown>): Promise<string | undefined> {
-  try {
-    await p;
-  } catch (e) {
-    const res = (e as { getResponse?: () => unknown }).getResponse?.() as
-      { code?: string } | undefined;
-    return res?.code;
-  }
-  return 'no-error';
+  const body = await errorBody(p);
+  return body === null ? 'no-error' : body?.code;
 }
 
 describe('DirectoryClient', () => {
@@ -206,18 +200,16 @@ describe('DirectoryClient', () => {
 
     it('429 ×4 → DIRECTORY_RATE_LIMITED (503)', async () => {
       fetchMock.mockResolvedValue(jsonResponse({}, 429));
-      await expect(client.fetchUsers()).rejects.toThrow(
-        ServiceUnavailableException,
-      );
+      const error: unknown = await client.fetchUsers().catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(ServiceUnavailableException);
       expect(sleep).toHaveBeenCalledTimes(RATE_LIMIT_RETRIES);
       expect(fetchMock).toHaveBeenCalledTimes(RATE_LIMIT_RETRIES + 1);
-      expect(await errorCode(client.fetchUsers())).toBe(
-        'DIRECTORY_RATE_LIMITED',
-      );
       // Câu người dùng có thể thấy gọi hệ thống là "Tài khoản D&E", không "PMH ID"
-      expect((await errorBody(client.fetchUsers()))?.message).toBe(
-        'Tài khoản D&E đang giới hạn tần suất đọc danh bạ — thử lại sau ít phút.',
-      );
+      expect((error as ServiceUnavailableException).getResponse()).toEqual({
+        code: 'DIRECTORY_RATE_LIMITED',
+        message:
+          'Tài khoản D&E đang giới hạn tần suất đọc danh bạ — thử lại sau ít phút.',
+      });
     });
 
     it.each([
@@ -356,12 +348,10 @@ describe('DirectoryClient', () => {
 
     it('lỗi mạng → DIRECTORY_UNAVAILABLE', async () => {
       fetchMock.mockRejectedValue(new TypeError('fetch failed'));
-      expect(await errorCode(client.fetchUsers())).toBe(
-        'DIRECTORY_UNAVAILABLE',
-      );
-      expect((await errorBody(client.fetchUsers()))?.message).toBe(
-        'Không kết nối được danh bạ Tài khoản D&E — thử lại sau.',
-      );
+      expect(await errorBody(client.fetchUsers())).toEqual({
+        code: 'DIRECTORY_UNAVAILABLE',
+        message: 'Không kết nối được danh bạ Tài khoản D&E — thử lại sau.',
+      });
     });
 
     it('HTTP 500 → DIRECTORY_UNAVAILABLE', async () => {
