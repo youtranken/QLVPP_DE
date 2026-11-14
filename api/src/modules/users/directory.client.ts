@@ -204,7 +204,7 @@ export class DirectoryClient implements DirectoryClientApi {
         throw new ServiceUnavailableException({
           code: 'DIRECTORY_RATE_LIMITED',
           message:
-            'PMH ID đang giới hạn tần suất gọi Directory API — thử lại sau ít phút.',
+            'Tài khoản D&E đang giới hạn tần suất đọc danh bạ — thử lại sau ít phút.',
         });
       }
       await this.sleep(retryAfterMs(response.headers?.get('retry-after')));
@@ -238,7 +238,7 @@ export class DirectoryClient implements DirectoryClientApi {
         `Directory API không liên lạc được: ${(error as Error).message}`,
       );
       throw unavailable(
-        'Không liên lạc được Directory API PMH ID — thử lại sau.',
+        'Không kết nối được danh bạ Tài khoản D&E — thử lại sau.',
       );
     }
   }

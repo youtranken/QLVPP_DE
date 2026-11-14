@@ -50,16 +50,16 @@ test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
 
     await page.getByRole('button', { name: 'Đồng bộ ngay' }).click();
     const alert = page.getByRole('alert');
-    await expect(alert).toContainText('Không liên lạc được PMH ID — thử lại sau ít phút.');
+    await expect(alert).toContainText('Không kết nối được Tài khoản D&E — thử lại sau ít phút.');
     await expect(rowOf(page, ACTIVE.name)).toBeVisible();
     fail = false;
     await alert.getByRole('button', { name: 'Thử lại' }).click();
-    await expect(page.getByText('Đã đồng bộ từ PMH ID: 2 người mới, 1 cập nhật.')).toBeVisible();
+    await expect(page.getByText('Đã đồng bộ từ Tài khoản D&E: 2 người mới, 1 cập nhật.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Đồng bộ ngay' })).toBeEnabled();
 
     await page.getByRole('button', { name: LOCKED.name, exact: true }).click();
     const drawer = page.getByRole('dialog', { name: 'Người dùng' });
-    await expect(drawer.getByText(/Tài khoản đã khóa ở PMH ID/)).toBeVisible();
+    await expect(drawer.getByText(/Tài khoản D&E của người này đã bị khóa/)).toBeVisible();
     await expect(drawer.getByText(/Vai trò trong app/)).toHaveCount(0);
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'admin-users');
@@ -93,7 +93,7 @@ test.describe('E9-S6 Danh bạ M1 (dev-identity admin)', () => {
     await expect(rowOf(page, TEAM_QS.name)).toHaveCount(0);
     await expect(rowOf(page, TEAM_NONE.name)).toHaveCount(0);
     await page.getByRole('button', { name: NO_ACCESS.name, exact: true }).click();
-    await expect(page.getByRole('dialog', { name: 'Người dùng' }).getByText(/PMH ID đã thu hồi quyền vào VPP/)).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Người dùng' }).getByText(/Người này đã bị thu hồi quyền vào VPP/)).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
   });
 

@@ -79,7 +79,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     sessionStorage.setItem('vpp.auth.mode', 'sso');
     window.history.replaceState(null, '', '/history?ym=2026-11');
     renderWithI18n(<App />);
-    expect(await screen.findByText('Đang chuyển sang PMH ID…')).toBeInTheDocument();
+    expect(await screen.findByText('Đang chuyển sang Tài khoản D&E…')).toBeInTheDocument();
     expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?ui_locales=vi');
     expect(sessionStorage.getItem('vpp.auth.returnTo')).toBe('/history?ym=2026-11');
   });
@@ -92,7 +92,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
         <App />
       </StrictMode>,
     );
-    expect(await screen.findByText('Đang chuyển sang PMH ID…')).toBeInTheDocument();
+    expect(await screen.findByText('Đang chuyển sang Tài khoản D&E…')).toBeInTheDocument();
     await new Promise((r) => setTimeout(r, 50));
     expect(sessionStorage.getItem('vpp.auth.returnTo')).toBe('/me?x=1#h');
     expect(sessionStorage.getItem('vpp.auth.mode')).toBe('sso');
@@ -116,7 +116,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
   it('mở từ portal PMH ID (?sso=1) chưa có phiên → đi thẳng SSO', async () => {
     window.history.replaceState(null, '', '/?sso=1');
     renderWithI18n(<App />);
-    expect(await screen.findByText('Đang chuyển sang PMH ID…')).toBeInTheDocument();
+    expect(await screen.findByText('Đang chuyển sang Tài khoản D&E…')).toBeInTheDocument();
     expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?ui_locales=vi');
   });
 
@@ -140,7 +140,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
       withReferrer('https://dev-admin.pmh.com.vn:8443/apps');
       stubConfig('https://dev-admin.pmh.com.vn:8443/');
       renderWithI18n(<App />);
-      expect(await screen.findByText('Đang chuyển sang PMH ID…')).toBeInTheDocument();
+      expect(await screen.findByText('Đang chuyển sang Tài khoản D&E…')).toBeInTheDocument();
       expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?ui_locales=vi');
     });
 
@@ -227,7 +227,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     renderWithI18n(<App />);
     expect(
       await screen.findByText(
-        'PMH ID tạm thời không liên lạc được. Quản trị kỹ thuật có thể đăng nhập bằng tài khoản nội bộ.',
+        'Tạm thời không kết nối được Tài khoản D&E. Quản trị kỹ thuật có thể đăng nhập bằng tài khoản nội bộ.',
       ),
     ).toBeInTheDocument();
     expect(navigateTo).not.toHaveBeenCalled();

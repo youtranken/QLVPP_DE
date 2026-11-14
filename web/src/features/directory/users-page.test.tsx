@@ -17,12 +17,12 @@ describe('UsersPage B10', () => {
     stubUsers([AN, BINH, CHI]);
     await openUsers();
     expect(screen.getAllByRole('heading', { level: 1, name: 'Danh bạ' })).toHaveLength(1);
-    expect(screen.getByText('Người dùng đồng bộ từ PMH ID. Thông tin cá nhân sửa ở PMH ID, không sửa trong app.')).toBeInTheDocument();
+    expect(screen.getByText('Người dùng đồng bộ từ Tài khoản D&E. Thông tin cá nhân sửa ở Tài khoản D&E, không sửa trong app.')).toBeInTheDocument();
     expect(screen.queryByText('Đồng bộ tự động')).toBeNull();
     const actions = screen.getByRole('group', { name: 'Thao tác trang' });
     expect(screen.queryByText('Tự động mỗi 60 phút')).toBeNull();
     expect(within(actions).getByRole('button', { name: 'Đồng bộ ngay' })).toBeInTheDocument();
-    expect((await screen.findByText('Chưa đồng bộ danh bạ PMH ID')).nextElementSibling).toBe(actions);
+    expect((await screen.findByText('Chưa đồng bộ danh bạ Tài khoản D&E')).nextElementSibling).toBe(actions);
     expect(screen.queryByText(/Đồng bộ lần cuối/)).toBeNull();
   });
 
@@ -166,10 +166,10 @@ describe('UsersPage B10', () => {
     stubUsers([AN, DUNG]);
     await openUsers('/admin/users?status=all&person=u-dung');
     const drawer = await screen.findByRole('dialog', { name: 'Người dùng' });
-    expect(within(drawer).getByText(/PMH ID đã thu hồi quyền vào VPP của người này/)).toBeInTheDocument();
+    expect(within(drawer).getByText(/Người này đã bị thu hồi quyền vào VPP ở Tài khoản D&E/)).toBeInTheDocument();
     expect(within(drawer).getByText('Nhóm')).toBeInTheDocument();
     await userEvent.click(within(drawer).getByRole('button', { name: 'Người trước' }));
-    expect(within(await screen.findByRole('dialog', { name: 'Người dùng' })).queryByText(/PMH ID đã thu hồi quyền/)).toBeNull();
+    expect(within(await screen.findByRole('dialog', { name: 'Người dùng' })).queryByText(/Người này đã bị thu hồi quyền/)).toBeNull();
   });
 
   it('panel phủ ?person=: không có "Vai trò trong app"/phiếu; "Xem nhật ký" → /admin/audit?actor=<sub>; chỉ đọc; bộ đếm, ↑/↓, đóng bỏ tham số', async () => {
@@ -181,15 +181,15 @@ describe('UsersPage B10', () => {
     expect(within(drawer).getByText('1/3')).toBeInTheDocument();
     expect(within(drawer).getByRole('button', { name: 'Người trước' })).toBeDisabled();
     expect(within(drawer).getByText('NV0231')).toBeInTheDocument();
-    expect(within(drawer).getByText('Dữ liệu từ PMH ID, không sửa trong app.')).toBeInTheDocument();
+    expect(within(drawer).getByText('Dữ liệu từ Tài khoản D&E, không sửa trong app.')).toBeInTheDocument();
     expect(within(drawer).queryByText(/Vai trò trong app/)).toBeNull();
     expect(within(drawer).queryByText(/Phiếu văn phòng phẩm/)).toBeNull();
-    expect(within(drawer).queryByText(/Tài khoản đã khóa ở PMH ID/)).toBeNull();
+    expect(within(drawer).queryByText(/Tài khoản D&E của người này đã bị khóa/)).toBeNull();
     expect(within(drawer).getByRole('link', { name: 'Xem nhật ký' })).toHaveAttribute('href', '/admin/audit?actor=u-an');
     await userEvent.click(within(drawer).getByRole('button', { name: 'Người kế tiếp' }));
     const second = await screen.findByRole('dialog', { name: 'Người dùng' });
     expect(within(second).getByText('2/3')).toBeInTheDocument();
-    expect(within(second).getByText(/Tài khoản đã khóa ở PMH ID — không đăng nhập được/)).toBeInTheDocument();
+    expect(within(second).getByText(/Tài khoản D&E của người này đã bị khóa — không đăng nhập được/)).toBeInTheDocument();
     expect(within(second).getByRole('link', { name: 'Xem nhật ký' })).toHaveAttribute('href', '/admin/audit?actor=u-binh');
     await userEvent.click(within(second).getByRole('button', { name: 'Người kế tiếp' }));
     await waitFor(() => expect(within(screen.getByRole('dialog', { name: 'Người dùng' })).getByRole('button', { name: 'Người kế tiếp' })).toBeDisabled());
@@ -222,14 +222,14 @@ describe('UsersPage B10', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     cleanup();
     await openUsers('/admin/users?status=all&person=u-binh');
-    expect(within(await screen.findByRole('dialog', { name: 'Người dùng' })).getByText(/Tài khoản đã khóa ở PMH ID/)).toBeInTheDocument();
+    expect(within(await screen.findByRole('dialog', { name: 'Người dùng' })).getByText(/Tài khoản D&E của người này đã bị khóa/)).toBeInTheDocument();
   });
 
   it.each([
-    [503, { code: 'DIRECTORY_UNAVAILABLE' }, 'Không liên lạc được PMH ID — thử lại sau ít phút.'],
-    [502, { code: 'DIRECTORY_AUTH_FAILED' }, 'PMH ID từ chối quyền đọc danh bạ — báo IT kiểm tra cấu hình.'],
+    [503, { code: 'DIRECTORY_UNAVAILABLE' }, 'Không kết nối được Tài khoản D&E — thử lại sau ít phút.'],
+    [502, { code: 'DIRECTORY_AUTH_FAILED' }, 'Tài khoản D&E từ chối quyền đọc danh bạ — báo IT kiểm tra cấu hình.'],
     [500, { code: 'DIRECTORY_SYNC_FAILED' }, 'Đồng bộ chưa xong — thử lại sau ít phút.'],
-    [500, { code: 'SOMETHING_ELSE' }, 'Không liên lạc được PMH ID — thử lại sau ít phút.'],
+    [500, { code: 'SOMETHING_ELSE' }, 'Không kết nối được Tài khoản D&E — thử lại sau ít phút.'],
     [400, { code: 'SOMETHING_ELSE' }, 'Chưa đồng bộ được — thử lại sau ít phút.'],
   ])('đồng bộ lỗi %i %j → câu đúng', async (status, body, text) => {
     stubUsers([AN], () => jsonResponse(status, { ...body, message: 'x' }));

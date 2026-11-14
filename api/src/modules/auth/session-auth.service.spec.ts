@@ -43,6 +43,12 @@ describe('SessionAuthService — refresh ngầm', () => {
       ServiceUnavailableException,
     );
     expect(sessions.expire).not.toHaveBeenCalled();
+    await expect(service.resolve('sid-1')).rejects.toMatchObject({
+      response: {
+        code: 'SSO_UNAVAILABLE',
+        message: 'Không kết nối được Tài khoản D&E — vui lòng thử lại sau.',
+      },
+    });
   });
 
   it('provider ném ServiceUnavailable (SSO chưa cấu hình) → rethrow, GIỮ phiên', async () => {

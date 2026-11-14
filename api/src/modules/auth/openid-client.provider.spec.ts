@@ -65,4 +65,17 @@ describe('OpenidClientProvider — hạn giờ gọi PMH ID', () => {
       new OpenidClientProvider().refresh('rt-1'),
     ).rejects.toMatchObject({ name: 'TimeoutError' });
   });
+
+  it('discovery lỗi → 503 SSO_UNAVAILABLE, câu báo gọi "Tài khoản D&E"', async () => {
+    discovery.mockRejectedValue(new TypeError('fetch failed'));
+    await expect(
+      new OpenidClientProvider().refresh('rt-1'),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'SSO_UNAVAILABLE',
+        message:
+          'Không kết nối được Tài khoản D&E — thử lại sau (đăng nhập mới tạm thời không khả dụng).',
+      },
+    });
+  });
 });

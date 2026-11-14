@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import vi from '@/locales/vi';
 import en from '@/locales/en';
@@ -76,21 +77,78 @@ describe('Chữ: một khái niệm, một tên', () => {
     expect(get(vi as Tree, 'common.filter.clear')).toBe('Xóa lọc');
   });
 
+  // Chủ dự án chốt 14/11/2026: người dùng thấy "Tài khoản D&E" / "D&E Account", tên tích hợp PMH ID chỉ còn trong code
+  it.each([
+    ['vi', vi, 'Tài khoản D&E', /tài khoản d&e/gi],
+    ['en', en, 'D&E Account', /d&e account/gi],
+  ] as const)('%s: gọi hệ thống đăng nhập là "%s", không còn "PMH ID" trong chuỗi nào', (_lang, tree, term, any) => {
+    const all = strings(tree);
+    expect(all.filter(([, s]) => /PMH\s*ID/i.test(s)).map(([k]) => k)).toEqual([]);
+    expect(all.filter(([, s]) => s.includes(term)).length).toBeGreaterThan(10);
+    // Một cách viết: viết hoa đúng như chủ dự án ("Tài khoản D&E", không "tài khoản D&E" hay "Tài Khoản D&E")
+    const offCase = all.flatMap(([k, s]) => (s.match(any) ?? []).filter((m) => m !== term).map((m) => `${k}: ${m}`));
+    expect(offCase).toEqual([]);
+  });
+
   it('en: tháng gọi bằng tên — không còn "month {{…}}" / "Month {{…}}" (dùng {{month, monthName}})', () => {
     const hits = strings(en).filter(([k, s]) => !k.startsWith('warn.') && /\b[Mm]onth \{\{(month|prev|next|open)\}\}/.test(s));
     expect(hits).toEqual([]);
   });
 });
 
+const root = resolve(__dirname, '..');
+const files = (dir: string): string[] =>
+  readdirSync(dir).flatMap((f) => {
+    const p = join(dir, f);
+    if (statSync(p).isDirectory()) return files(p);
+    return /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f) ? [p] : [];
+  });
+
+// Chuỗi cứng trong code (literal, template, chữ JSX, aria-label/title…) — bỏ comment và lời gọi console.*
+function bannedInCode(name: string, source: string, banned: RegExp): string[] {
+  const kind = name.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true, kind);
+  const hits: string[] = [];
+  const inConsole = (n: ts.Node): boolean =>
+    !!n.parent && ((ts.isCallExpression(n.parent) && /^console\./.test(n.parent.expression.getText(file))) || inConsole(n.parent));
+  const visit = (n: ts.Node): void => {
+    const text =
+      ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n) || ts.isJsxText(n)
+        ? n.text
+        : ts.isTemplateExpression(n)
+          ? [n.head.text, ...n.templateSpans.map((sp) => sp.literal.text)].join('')
+          : null;
+    if (text !== null && banned.test(text) && !inConsole(n)) hits.push(`${name}: ${text.trim()}`);
+    ts.forEachChild(n, visit);
+  };
+  visit(file);
+  return hits;
+}
+
+describe('Tên hệ thống đăng nhập: không "PMH ID" ở chuỗi người dùng thấy ngoài locale', () => {
+  it('không file .ts/.tsx nào trong src có chuỗi cứng chứa "PMH ID" (comment, console.* không tính)', () => {
+    const hits = files(root).flatMap((p) => bannedInCode(p.slice(root.length + 1), readFileSync(p, 'utf8'), /PMH\s*ID/i));
+    expect(hits).toEqual([]);
+  });
+
+  it('index.html (tiêu đề, meta) không có "PMH ID"', () => {
+    const html = readFileSync(resolve(root, '../index.html'), 'utf8').replace(/<!--[\s\S]*?-->/g, '');
+    expect(html).not.toMatch(/PMH\s*ID/i);
+  });
+
+  it('bộ dò bắt chữ JSX, aria-label, template; bỏ qua comment và console.*', () => {
+    const src = [
+      '// PMH ID trong comment',
+      "const a = <b aria-label=\"Mở PMH ID\">Về PMH ID</b>;",
+      'const b = `Tới ${x} PMH ID`;',
+      "console.warn('PMH ID lỗi');",
+    ].join('\n');
+    expect(bannedInCode('probe.tsx', src, /PMH\s*ID/i)).toEqual(['probe.tsx: Mở PMH ID', 'probe.tsx: Về PMH ID', 'probe.tsx: Tới  PMH ID']);
+  });
+});
+
 // Ngày giờ hiện cho người dùng luôn năm 4 số: dateStyle 'short' của vi-VN ra "12/11/26"
 describe('Ngày giờ: không dateStyle short', () => {
-  const root = resolve(__dirname, '..');
-  const files = (dir: string): string[] =>
-    readdirSync(dir).flatMap((f) => {
-      const p = join(dir, f);
-      if (statSync(p).isDirectory()) return files(p);
-      return /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f) ? [p] : [];
-    });
 
   it("không file nào trong src dùng dateStyle: 'short' hay year: '2-digit'", () => {
     const hits = files(root).filter((p) => /dateStyle:\s*['"]short['"]|year:\s*['"]2-digit['"]/.test(readFileSync(p, 'utf8')));

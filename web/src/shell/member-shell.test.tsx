@@ -30,7 +30,7 @@ describe('MemberShell', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/');
     // Thanh trên ≤ 900 không còn VI/EN: đổi ngôn ngữ nằm trong sheet "Tôi"
     expect(within(sheet).getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
-    expect(within(sheet).getByRole('button', { name: 'Đăng xuất (cả PMH ID)' })).toHaveClass('btn--danger');
+    expect(within(sheet).getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' })).toHaveClass('btn--danger');
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(me).toHaveFocus();
@@ -87,8 +87,8 @@ describe('MemberShell', () => {
     const box = screen.getByRole('dialog', { name: 'Tài khoản' });
     expect(within(box).getByText('Phòng Công trình · Nhân viên')).toBeInTheDocument();
     expect(within(box).getByText('an.nguyen@pmh.com.vn')).toBeInTheDocument();
-    expect(within(box).queryByText(/PMH ID/, { ignore: 'button' })).toBeNull();
-    expect(within(box).getByRole('button', { name: 'Đăng xuất (cả PMH ID)' })).toHaveClass('btn--danger');
+    expect(within(box).queryByText(/Tài khoản D&E/, { ignore: 'button' })).toBeNull();
+    expect(within(box).getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' })).toHaveClass('btn--danger');
     expect(within(box).queryByRole('radiogroup')).toBeNull();
   });
 

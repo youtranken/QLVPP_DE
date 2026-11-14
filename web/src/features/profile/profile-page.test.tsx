@@ -25,7 +25,7 @@ describe('Trang Tôi', () => {
     expect(screen.getByText('an.nguyen@pmh.com.vn')).toBeInTheDocument();
     expect(screen.getByText('Phòng Công trình · Nhân viên')).toBeInTheDocument();
     expect(screen.getByText('NV0231')).toBeInTheDocument();
-    expect(screen.queryByText(/PMH ID/, { ignore: 'button' })).toBeNull();
+    expect(screen.queryByText(/Tài khoản D&E/, { ignore: 'button' })).toBeNull();
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 
@@ -42,7 +42,7 @@ describe('Trang Tôi', () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, {}));
     vi.stubGlobal('fetch', fetchMock);
     renderApp(makeMe('member'), '/me');
-    await userEvent.click(screen.getByRole('button', { name: 'Đăng xuất (cả PMH ID)' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' }));
     expect(submitForm).toHaveBeenCalledWith('/api/auth/logout', { csrf: 'csrf-1', ui_locales: 'vi' });
     expect(fetchMock.mock.calls.some(([u]) => String(u).startsWith('/api/auth/logout'))).toBe(false);
   });
@@ -53,6 +53,6 @@ describe('Trang Tôi', () => {
     expect(screen.getByText('Email')).toBeInTheDocument();
     expect(screen.getByText('Mã nhân viên')).toBeInTheDocument();
     expect(within(screen.getByRole('main')).getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Đăng xuất (cả PMH ID)' })).toHaveClass('btn--danger');
+    expect(screen.getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' })).toHaveClass('btn--danger');
   });
 });

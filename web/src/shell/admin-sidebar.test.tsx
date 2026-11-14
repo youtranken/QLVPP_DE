@@ -94,16 +94,16 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
     expect(await screen.findByRole('link', { name: /Kỳ đăng ký hiện tại: tháng 11 · đang mở/ })).toHaveTextContent('còn 4 ngày');
     expect(screen.getByText('Nguyễn Văn An')).toBeInTheDocument();
     expect(screen.getAllByText('Adm D&E').length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Đăng xuất (cả PMH ID)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' })).toBeInTheDocument();
   });
 
   it('cột ≥ 1280: hàng tài khoản một dòng — Đăng xuất là nút biểu tượng có tên, đổi ngôn ngữ nằm sau nút "Ngôn ngữ"', async () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
-    const logout = await screen.findByRole('button', { name: 'Đăng xuất (cả PMH ID)' });
+    const logout = await screen.findByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' });
     expect(logout).toHaveTextContent(/^$/);
-    expect(logout).toHaveAttribute('title', 'Đăng xuất (cả PMH ID)');
+    expect(logout).toHaveAttribute('title', 'Đăng xuất (cả Tài khoản D&E)');
     expect(screen.queryByRole('radio', { name: 'English' })).toBeNull();
     const lang = screen.getByRole('button', { name: 'Ngôn ngữ' });
     expect(lang).toHaveAttribute('aria-expanded', 'false');
@@ -157,7 +157,7 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
-    await userEvent.click(screen.getByRole('button', { name: 'Đăng xuất (cả PMH ID)' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' }));
     expect(submitForm).toHaveBeenCalledWith('/api/auth/logout', { csrf: 'csrf-1', ui_locales: 'vi' });
   });
 

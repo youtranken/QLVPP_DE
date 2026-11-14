@@ -219,7 +219,7 @@ describe('LoginScreen', () => {
 
   it('PMH ID không liên lạc được / phiên hết hạn → báo trên ô nhập', () => {
     const { unmount } = renderWithI18n(<LoginScreen ssoDown />);
-    expect(screen.getByRole('alert')).toHaveTextContent('PMH ID tạm thời không liên lạc được');
+    expect(screen.getByRole('alert')).toHaveTextContent('Tạm thời không kết nối được Tài khoản D&E');
     unmount();
     renderWithI18n(<LoginScreen sessionExpired />);
     expect(screen.getByRole('alert')).toHaveTextContent('Phiên đăng nhập đã hết hạn. Đăng nhập lại để tiếp tục.');
@@ -244,13 +244,13 @@ describe('LoginScreen', () => {
     expect(container.querySelector('.auth-media img')).not.toBeNull();
     expect(container.querySelector('input')).toBeNull();
     expect(await screen.findByText(/chị Bình \(Adm D&E\) — 0909 123 456/)).toBeInTheDocument();
-    expect(screen.getByText(/PMH ID chưa cấp quyền vào VPP Công trình cho tài khoản này/)).toBeInTheDocument();
+    expect(screen.getByText(/tài khoản này chưa được cấp quyền vào VPP Công trình/)).toBeInTheDocument();
     expect(screen.queryByText(/nhóm/i)).toBeNull();
     expect(fetchMock).toHaveBeenCalledWith('/api/public-config', undefined);
     await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập bằng tài khoản khác' }));
     expect(navigateTo).toHaveBeenCalledWith('/api/auth/switch-account?ui_locales=vi');
     // Cổng PMH ID theo issuer của môi trường (dev → dev-admin), không để cứng de-admin
-    expect(screen.getByRole('link', { name: 'Về trang PMH ID' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Về trang Tài khoản D&E' })).toHaveAttribute(
       'href',
       'https://dev-admin.pmh.com.vn:8443/',
     );
@@ -261,7 +261,7 @@ describe('LoginScreen', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(500, {})));
     renderWithI18n(<LoginScreen />);
     await screen.findByText(/Liên hệ Adm D&E/);
-    expect(screen.getByRole('link', { name: 'Về trang PMH ID' })).toHaveAttribute('href', portalFallback());
+    expect(screen.getByRole('link', { name: 'Về trang Tài khoản D&E' })).toHaveAttribute('href', portalFallback());
   });
 
   it('portalFallback: cổng cùng môi trường theo host VPP', () => {
