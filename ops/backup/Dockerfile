@@ -1,5 +1,5 @@
 # openssl bake sẵn để offline vẫn backup được
-FROM postgres:18.6-alpine
+FROM postgres:18.7-alpine
 RUN apk add --no-cache openssl
 COPY backup.sh /backup.sh
 COPY cron-loop.sh /cron-loop.sh

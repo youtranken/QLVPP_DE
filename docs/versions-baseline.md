@@ -22,7 +22,7 @@ Không cần DB hay env: các kiểm tra env chỉ chạy trong bootstrap, khôn
 | node-image | 26.13.1-alpine | api/Dockerfile, web/Dockerfile |
 | nvmrc | 26.13.1 | .nvmrc |
 | nginx-image | 1.30.6-alpine | web/Dockerfile |
-| postgres-image | 18.6-alpine | docker-compose.yml, ops/backup/Dockerfile |
+| postgres-image | 18.7-alpine | docker-compose.yml, ops/backup/Dockerfile |
 | @nestjs/core | 12.4.2 | api/package.json |
 | @nestjs/common | 12.4.2 | api/package.json |
 | @nestjs/platform-express | 12.4.2 | api/package.json |
