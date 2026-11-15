@@ -235,7 +235,7 @@ docker compose -f docker-compose.yml exec -u root api rm /tmp/booking.xlsx
 docker compose -f docker-compose.yml up -d --build   # BẮT BUỘC -f: không nạp override dev
 ```
 
-- https://de-vpp.pmh.com.vn:8443 — TLS do EDGE (PMH_IDE `deploy/edge`); `web` chỉ join mạng `edge`
+- https://de-qlvpp.pmh.com.vn:8443 — TLS do EDGE (PMH_IDE `deploy/edge`); `web` chỉ join mạng `edge`
   alias `vpp-web`, không publish cổng; `api`/`postgres` chỉ ở mạng default.
 - Cập nhật: `bash update-vpp.sh` (repo sạch → `git pull --ff-only` → build → chờ `/api/health` 200 qua EDGE;
   migration chạy lúc api boot).

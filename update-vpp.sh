@@ -14,10 +14,13 @@ git pull --ff-only
 echo "==> [2/3] Build + recreate (prod chỉ -f docker-compose.yml, KHÔNG nạp override dev)"
 docker compose -f docker-compose.yml up -d --build
 
-echo "==> [3/3] Chờ /api/health (qua edge cổng 8443)"
+# Host theo APP_BASE_URL trong .env (đổi domain chỉ cần sửa .env)
+APP_HOST=$(sed -n 's|^APP_BASE_URL=https\{0,1\}://\([^:/]*\).*|\1|p' .env | tail -1)
+APP_HOST=${APP_HOST:-de-qlvpp.pmh.com.vn}
+echo "==> [3/3] Chờ /api/health qua edge cổng 8443 (Host: ${APP_HOST})"
 ok=0
 for i in $(seq 1 30); do
-  code=$(curl -sk -o /dev/null -w '%{http_code}' -H 'Host: de-vpp.pmh.com.vn' https://localhost:8443/api/health || true)
+  code=$(curl -sk -o /dev/null -w '%{http_code}' -H "Host: ${APP_HOST}" https://localhost:8443/api/health || true)
   [[ "$code" == "200" ]] && { ok=1; echo "    health OK (200)"; break; }
   echo "    ...chờ (HTTP ${code:-x}) ${i}/30"; sleep 3
 done

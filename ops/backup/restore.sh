@@ -76,4 +76,4 @@ echo "==> Khởi động lại VPP…"
 "${C[@]}" up -d --build
 
 echo
-echo "XONG restore VPP. Kiểm: curl -sk -H 'Host: de-vpp.pmh.com.vn' https://localhost:8443/api/health"
+echo "XONG restore VPP. Kiểm: curl -sk -H 'Host: de-qlvpp.pmh.com.vn' https://localhost:8443/api/health"
