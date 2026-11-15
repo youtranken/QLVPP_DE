@@ -39,9 +39,15 @@ export class WebhookController {
     @Req() req: RawBodyRequest<Request>,
     @Headers('x-pmh-signature-v2') signature: string | undefined,
     @Headers('x-pmh-timestamp') timestamp: string | undefined,
+    @Headers('x-pmh-signature-v2-previous') previous?: string,
   ): Promise<{ ok: boolean; duplicate?: boolean }> {
     const rawBody = req.rawBody;
-    const rejection = this.checkSignature(rawBody, signature, timestamp);
+    const rejection = this.checkSignature(
+      rawBody,
+      timestamp,
+      signature,
+      previous,
+    );
     if (rejection || !rawBody) {
       await this.audit.append({
         actor: 'system',
@@ -127,8 +133,9 @@ export class WebhookController {
 
   private checkSignature(
     rawBody: Buffer | undefined,
-    signature: string | undefined,
     timestamp: string | undefined,
+    signature: string | undefined,
+    previousSignature: string | undefined,
   ): 'missing' | 'skew' | 'mismatch' | 'no_secret' | null {
     const secret = process.env.PMH_WEBHOOK_SECRET;
     if (!secret) {
@@ -143,6 +150,7 @@ export class WebhookController {
       ts: timestamp,
       rawBody,
       signature,
+      previousSignature,
       nowSec: Math.floor(Date.now() / 1000),
       skewSec: webhookSkewSec(),
     });

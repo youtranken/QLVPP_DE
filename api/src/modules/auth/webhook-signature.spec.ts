@@ -77,4 +77,50 @@ describe('verifyV2 — HMAC-SHA256(secret, `${ts}.${rawBody}`)', () => {
       reason: 'mismatch',
     });
   });
+
+  describe('đổi khóa ký: X-PMH-Signature-V2-Previous ký bằng khóa cũ trong 48 h', () => {
+    const NEW_KEY_SIG = createHmac('sha256', 'khoa-moi')
+      .update(`${TS}.${BODY}`)
+      .digest('hex');
+
+    it('header chính ký khóa mới (VPP còn khóa cũ), Previous khớp → ok', () => {
+      expect(
+        verifyV2(
+          input({ signature: NEW_KEY_SIG, previousSignature: EXPECTED }),
+        ),
+      ).toEqual({ ok: true });
+    });
+
+    it('header chính khớp, Previous sai → ok', () => {
+      expect(verifyV2(input({ previousSignature: NEW_KEY_SIG }))).toEqual({
+        ok: true,
+      });
+    });
+
+    it('cả hai header đều sai → mismatch', () => {
+      expect(
+        verifyV2(
+          input({ signature: NEW_KEY_SIG, previousSignature: NEW_KEY_SIG }),
+        ),
+      ).toEqual({ ok: false, reason: 'mismatch' });
+    });
+
+    it('thiếu header chính, chỉ có Previous khớp → missing (header chính luôn phải có)', () => {
+      expect(
+        verifyV2(input({ signature: undefined, previousSignature: EXPECTED })),
+      ).toEqual({ ok: false, reason: 'missing' });
+    });
+
+    it('Previous khớp nhưng lệch 301 s → skew', () => {
+      expect(
+        verifyV2(
+          input({
+            signature: NEW_KEY_SIG,
+            previousSignature: EXPECTED,
+            nowSec: Number(TS) + 301,
+          }),
+        ),
+      ).toEqual({ ok: false, reason: 'skew' });
+    });
+  });
 });

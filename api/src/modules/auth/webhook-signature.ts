@@ -5,6 +5,8 @@ export interface VerifyV2Input {
   ts: string | undefined;
   rawBody: Buffer | undefined;
   signature: string | undefined;
+  // Trong 48 h sau khi PMH ID đổi khóa ký: chữ ký bằng khóa cũ, để app chưa kịp đổi secret vẫn nhận
+  previousSignature?: string;
   nowSec: number;
   skewSec: number;
 }
@@ -24,11 +26,14 @@ export function verifyV2(input: VerifyV2Input): VerifyV2Result {
   const expected = Buffer.from(
     createHmac('sha256', secret).update(`${ts}.`).update(rawBody).digest('hex'),
   );
-  const provided = Buffer.from(signature);
-  if (
-    provided.length !== expected.length ||
-    !timingSafeEqual(provided, expected)
-  ) {
+  const matches = (sig: string | undefined) => {
+    if (!sig) return false;
+    const provided = Buffer.from(sig);
+    return (
+      provided.length === expected.length && timingSafeEqual(provided, expected)
+    );
+  };
+  if (!matches(signature) && !matches(input.previousSignature)) {
     return { ok: false, reason: 'mismatch' };
   }
   return { ok: true };
