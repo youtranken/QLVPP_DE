@@ -146,13 +146,13 @@ test.describe('E0-S9 màn vào (chưa đăng nhập)', () => {
     await expect(page.getByLabel('Email', { exact: true })).toHaveValue(saName);
   });
 
-  test('E0-S9 bị chặn quyền (?login=forbidden) → trang "Chưa được cấp quyền"', async ({ page }, info) => {
+  test('E0-S9 bị chặn quyền (?login=forbidden) → trang "Không có quyền truy cập"', async ({ page }, info) => {
     await page.goto('/?login=forbidden');
     await expect(
-      page.getByRole('heading', { name: 'Tài khoản chưa được cấp quyền dùng VPP Công trình' }),
+      page.getByRole('heading', { name: 'Không có quyền truy cập' }),
     ).toBeVisible();
     await expect(page.getByText(/Liên hệ .+ để được cấp quyền\./)).toBeVisible();
-    await expect(page.getByText(/tài khoản này chưa được cấp quyền vào VPP Công trình/)).toBeVisible();
+    await expect(page.getByText(/Tài khoản của bạn không có quyền vào QLVPP\./)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Đăng nhập bằng tài khoản khác' })).toBeVisible();
     if (isMobile(info)) await expectNoContrastViolations(page);
     await shot(page, info, 'forbidden');

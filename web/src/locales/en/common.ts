@@ -4,6 +4,7 @@ import type { Messages } from '@/locales/messages';
 const common: Messages<typeof vi> = {
   app: {
     title: 'VPP Construction',
+    shortName: 'QLVPP',
     adminTitle: 'VPP Admin',
     logoLetter: 'V',
   },

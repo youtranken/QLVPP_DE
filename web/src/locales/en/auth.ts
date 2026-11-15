@@ -3,14 +3,14 @@ import type { Messages } from '@/locales/messages';
 
 const auth: Messages<typeof vi> = {
   auth: {
-    // Khung đăng nhập chung với QLTS/QLHS: dòng tên app dưới logo PMH, chân trang hỗ trợ
-    appTagline: 'PMH office supplies',
+    // Khung đăng nhập chung với QLTS/QLHS: dòng tên app dưới logo PMH, chân trang IT Department · bản quyền
+    appTagline: 'Office supplies management',
     pmhLogoAlt: 'Phu My Hung',
-    help: 'Need help? Contact the IT department.',
-    copyright: '© {{year}} Phú Mỹ Hưng · Division D&E',
+    copyright: '© {{year}} Phu My Hung · Division D&E',
     credit: 'Developed by IT Department',
     heading: 'Sign in',
-    subtitle: 'Enter your company email to continue.',
+    subtitle: 'Sign in to get started — enter your email.',
+    continue: 'Continue',
     idLabel: 'Email',
     idRequired: 'Enter your email.',
     idInvalid: 'Invalid email.',
@@ -40,10 +40,8 @@ const auth: Messages<typeof vi> = {
       submit: 'Sign in with test account',
     },
     forbidden: {
-      title: 'This account is not allowed to use VPP Construction yet',
-      body: 'You signed in with your D&E Account {{email}}, but this account has not been granted access to VPP Construction. Contact {{admin_contact}} to be granted access.',
-      bodyNoEmail:
-        'You signed in with your D&E Account, but this account has not been granted access to VPP Construction. Contact {{admin_contact}} to be granted access.',
+      title: 'No access',
+      body: 'Your account does not have access to QLVPP. Contact {{admin_contact}} to be granted access.',
       defaultContact: 'D&E Admin',
       switchAccount: 'Sign in with another account',
       portal: 'Back to D&E Account',

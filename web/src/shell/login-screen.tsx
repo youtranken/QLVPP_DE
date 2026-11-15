@@ -168,7 +168,7 @@ export function LoginScreen({ sessionExpired = false, ssoDown = false }: Props) 
           </div>
           {errorNode}
           <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={busy}>
-            {t('auth.submit')}
+            {t('auth.continue')}
           </button>
         </form>
       ) : (

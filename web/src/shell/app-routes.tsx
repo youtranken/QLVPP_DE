@@ -50,7 +50,7 @@ function MemberNotFound() {
 }
 
 function ForbiddenRoute() {
-  return <ForbiddenScreen email={useMe().email} />;
+  return <ForbiddenScreen />;
 }
 
 export function AppRoutes() {

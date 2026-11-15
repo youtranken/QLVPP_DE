@@ -1,13 +1,13 @@
 const auth = {
   auth: {
-    // Khung đăng nhập chung với QLTS/QLHS: dòng tên app dưới logo PMH, chân trang hỗ trợ
-    appTagline: 'Văn phòng phẩm PMH',
+    // Khung đăng nhập chung với QLTS/QLHS: dòng tên app dưới logo PMH, chân trang IT Department · bản quyền
+    appTagline: 'Quản lý văn phòng phẩm',
     pmhLogoAlt: 'Phú Mỹ Hưng',
-    help: 'Cần hỗ trợ? Liên hệ phòng Công nghệ thông tin.',
     copyright: '© {{year}} Phú Mỹ Hưng · Division D&E',
     credit: 'Phát triển bởi IT Department',
     heading: 'Đăng nhập',
-    subtitle: 'Nhập email công ty để tiếp tục.',
+    subtitle: 'Đăng nhập để bắt đầu — nhập email của bạn.',
+    continue: 'Tiếp tục',
     idLabel: 'Email',
     idRequired: 'Chưa nhập email.',
     idInvalid: 'Email không hợp lệ.',
@@ -37,10 +37,8 @@ const auth = {
       submit: 'Đăng nhập tài khoản thử',
     },
     forbidden: {
-      title: 'Tài khoản chưa được cấp quyền dùng VPP Công trình',
-      body: 'Bạn đã đăng nhập bằng Tài khoản D&E {{email}}, nhưng tài khoản này chưa được cấp quyền vào VPP Công trình. Liên hệ {{admin_contact}} để được cấp quyền.',
-      bodyNoEmail:
-        'Bạn đã đăng nhập bằng Tài khoản D&E, nhưng tài khoản này chưa được cấp quyền vào VPP Công trình. Liên hệ {{admin_contact}} để được cấp quyền.',
+      title: 'Không có quyền truy cập',
+      body: 'Tài khoản của bạn không có quyền vào QLVPP. Liên hệ {{admin_contact}} để được cấp quyền.',
       defaultContact: 'Adm D&E',
       switchAccount: 'Đăng nhập bằng tài khoản khác',
       portal: 'Về trang Tài khoản D&E',

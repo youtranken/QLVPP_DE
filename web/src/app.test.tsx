@@ -164,7 +164,7 @@ describe('App — vào app, tự đăng nhập lại khi phiên hết hạn', ()
     );
     renderWithI18n(<App />);
     expect(
-      await screen.findByRole('heading', { name: 'Tài khoản chưa được cấp quyền dùng VPP Công trình' }),
+      await screen.findByRole('heading', { name: 'Không có quyền truy cập' }),
     ).toBeInTheDocument();
     expect(navigateTo).not.toHaveBeenCalled();
   });

@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
+import '@/css/fonts.css';
 import '@/css/tokens.css';
 import '@/css/tokens-m1.css';
 import '@/css/base.css';

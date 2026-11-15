@@ -7,7 +7,7 @@ import { LanguageSwitch } from '@/ui/language-switch';
 import { AuthFrame } from '@/shell/auth-frame';
 
 // Cùng khung đăng nhập (ảnh tòa nhà + cột kem) như QLTS: bị chặn quyền vẫn ở "cửa vào", có lối đổi tài khoản / về PMH ID
-export function ForbiddenScreen({ email }: { email?: string | null }) {
+export function ForbiddenScreen() {
   const { t } = useTranslation();
   const config = useQuery({
     queryKey: ['public-config'],
@@ -27,9 +27,7 @@ export function ForbiddenScreen({ email }: { email?: string | null }) {
       <h1>{t('auth.forbidden.title')}</h1>
       {/* Đang tải liên hệ: giữ chỗ bằng câu với liên hệ mặc định (ẩn) để nút bên dưới không bị đẩy khi câu thật hiện ra */}
       <p className={`auth-card__body${config.isPending ? ' is-pending' : ''}`} aria-busy={config.isPending}>
-        {email
-          ? t('auth.forbidden.body', { email, admin_contact: adminContact })
-          : t('auth.forbidden.bodyNoEmail', { admin_contact: adminContact })}
+        {t('auth.forbidden.body', { admin_contact: adminContact })}
       </p>
       <div className="auth-actions">
         <button type="button" className="btn btn--primary btn--lg btn--block" onClick={switchAccount}>

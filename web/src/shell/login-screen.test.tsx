@@ -14,16 +14,16 @@ beforeEach(() => vi.mocked(navigateTo).mockClear());
 afterEach(() => at('/'));
 
 describe('LoginScreen', () => {
-  it('khung giống QLTS/QLHS: ảnh tòa nhà, logo PMH, dòng tên app, một ô nhãn "Email" không chữ mờ, chân trang hỗ trợ + bản quyền D&E + IT Department', () => {
+  it('khung giống QLTS/QLHS: ảnh tòa nhà, logo PMH, dòng tên app, một ô nhãn "Email" không chữ mờ, chân trang IT Department + bản quyền D&E, không dòng hỗ trợ', () => {
     const { container } = renderWithI18n(<LoginScreen />);
     expect(container.querySelector('.auth-media img')).toHaveAttribute('src', '/login-bg.webp');
     expect(screen.getByRole('img', { name: 'Phú Mỹ Hưng' })).toHaveAttribute('src', '/logo-pmh-on-light.png');
-    expect(screen.getByText('VPP Công trình — Văn phòng phẩm PMH')).toBeInTheDocument();
+    expect(screen.getByText('QLVPP — Quản lý văn phòng phẩm')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: 'Đăng nhập' })).toBeInTheDocument();
-    expect(screen.getByText('Nhập email công ty để tiếp tục.')).toBeInTheDocument();
+    expect(screen.getByText('Đăng nhập để bắt đầu — nhập email của bạn.')).toBeInTheDocument();
     expect(container.querySelectorAll('input:not([type=hidden])')).toHaveLength(1);
     expect(screen.getByLabelText('Email')).toHaveFocus();
-    expect(screen.getByText('Cần hỗ trợ? Liên hệ phòng Công nghệ thông tin.')).toBeInTheDocument();
+    expect(screen.queryByText(/Cần hỗ trợ\?/)).toBeNull();
     expect(screen.getByText(`© ${new Date().getFullYear()} Phú Mỹ Hưng · Division D&E`)).toBeInTheDocument();
     expect(screen.getByText('Phát triển bởi IT Department')).toBeInTheDocument();
     // Ô email: nhãn "Email" hiện trên ô, trong ô để trống (không "ten@pmh.com.vn"/"Email công ty")
@@ -42,7 +42,7 @@ describe('LoginScreen', () => {
   it('email → sang PMH ID kèm login_hint (ngôn ngữ đang dùng), không hỏi mật khẩu', async () => {
     renderWithI18n(<LoginScreen />);
     await userEvent.type(screen.getByLabelText('Email'), '  an.nguyen@pmh.com.vn ');
-    await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     expect(navigateTo).toHaveBeenCalledWith('/api/auth/login?login_hint=an.nguyen%40pmh.com.vn&ui_locales=vi');
     expect(screen.queryByLabelText('Mật khẩu')).toBeNull();
   });
@@ -58,7 +58,7 @@ describe('LoginScreen', () => {
   it('ô trống như QLTS/QLHS: không sang PMH ID, báo ngay dưới ô (không dùng bóng báo mặc định của trình duyệt)', async () => {
     renderWithI18n(<LoginScreen />);
     await userEvent.type(screen.getByLabelText('Email'), '   ');
-    await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     expect(navigateTo).not.toHaveBeenCalled();
     expect(screen.getByRole('alert')).toHaveTextContent('Chưa nhập email.');
     expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
@@ -78,7 +78,7 @@ describe('LoginScreen', () => {
     vi.stubGlobal('fetch', fetchMock);
     renderWithI18n(<LoginScreen />);
     await userEvent.type(screen.getByLabelText('Email'), ' vpp-sa ');
-    await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     expect(navigateTo).not.toHaveBeenCalled();
     expect(await screen.findByText('Nhập mật khẩu để đăng nhập.')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
@@ -112,7 +112,7 @@ describe('LoginScreen', () => {
     vi.stubGlobal('fetch', fetchMock);
     renderWithI18n(<LoginScreen />);
     await userEvent.type(screen.getByLabelText('Email'), 'applicant1');
-    await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Email không hợp lệ.');
     expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
     expect(screen.queryByLabelText('Mật khẩu')).toBeNull();
@@ -176,7 +176,7 @@ describe('LoginScreen', () => {
     vi.stubGlobal('fetch', fetchMock);
     renderWithI18n(<LoginScreen />);
     await userEvent.type(screen.getByLabelText('Email'), 'it.admin');
-    await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Đăng nhập' }));
     expect(screen.getByRole('alert')).toHaveTextContent('Chưa nhập mật khẩu.');
     expect(fetchMock).not.toHaveBeenCalledWith('/api/auth/sa-login', expect.anything());
@@ -201,7 +201,7 @@ describe('LoginScreen', () => {
     );
     renderWithI18n(<LoginScreen />);
     await userEvent.type(screen.getByLabelText('Email'), 'vpp-sa');
-    await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
     await userEvent.type(await screen.findByLabelText('Mật khẩu'), 'x');
     await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Tạm khóa do nhập sai nhiều lần');
@@ -238,13 +238,13 @@ describe('LoginScreen', () => {
     vi.stubGlobal('fetch', fetchMock);
     const { container } = renderWithI18n(<LoginScreen />);
     expect(
-      screen.getByRole('heading', { name: 'Tài khoản chưa được cấp quyền dùng VPP Công trình' }),
+      screen.getByRole('heading', { name: 'Không có quyền truy cập' }),
     ).toBeInTheDocument();
     // Cùng khung đăng nhập (ảnh tòa nhà + logo PMH), không có ô nhập
     expect(container.querySelector('.auth-media img')).not.toBeNull();
     expect(container.querySelector('input')).toBeNull();
     expect(await screen.findByText(/chị Bình \(Adm D&E\) — 0909 123 456/)).toBeInTheDocument();
-    expect(screen.getByText(/tài khoản này chưa được cấp quyền vào VPP Công trình/)).toBeInTheDocument();
+    expect(screen.getByText('Tài khoản của bạn không có quyền vào QLVPP. Liên hệ chị Bình (Adm D&E) — 0909 123 456 để được cấp quyền.')).toBeInTheDocument();
     expect(screen.queryByText(/nhóm/i)).toBeNull();
     expect(fetchMock).toHaveBeenCalledWith('/api/public-config', undefined);
     await userEvent.click(screen.getByRole('button', { name: 'Đăng nhập bằng tài khoản khác' }));

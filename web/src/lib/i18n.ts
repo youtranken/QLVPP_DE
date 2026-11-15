@@ -51,7 +51,7 @@ export function savedLanguage(): Lang {
 
 function applyDocumentLanguage(lang: Lang): void {
   document.documentElement.lang = lang;
-  document.title = i18n.t('app.title');
+  document.title = i18n.t('app.shortName');
 }
 
 // Một chỗ đổi ngôn ngữ: i18next + <html lang>/title + nhớ "dùng gần nhất" (chỉ để hiển thị)
