@@ -96,11 +96,6 @@ export function logout(csrfToken: string | null, sub: string): void {
   });
 }
 
-// Phiên SSO: nút nói rõ là thoát cả PMH ID; SA cục bộ / tài khoản thử chỉ thoát app
-export function logoutLabelKey(sub: string): "auth.logout" | "auth.logoutAll" {
-  return isLocalSession(sub) ? "auth.logout" : "auth.logoutAll";
-}
-
 function isLocalSession(sub: string): boolean {
   return sub === "local:sa" || authMode() === "sa";
 }

@@ -72,6 +72,17 @@ describe('Chữ: một khái niệm, một tên', () => {
     expect(strings(vi).filter(([, s]) => /^Hiện \{\{/.test(s))).toEqual([]);
   });
 
+  it('nút đăng xuất chỉ một chữ "Đăng xuất" / "Sign out", không "(cả Tài khoản D&E)" hay "mọi thiết bị"', () => {
+    const offs = [vi, en].flatMap((tree) =>
+      strings((tree as Tree).auth)
+        .filter(([k]) => /logout/i.test(k))
+        .filter(([, v]) => v !== 'Đăng xuất' && v !== 'Sign out'),
+    );
+    expect(offs).toEqual([]);
+    const all = [vi, en].flatMap((tree) => strings(tree)).filter(([, v]) => /cả Tài khoản D&E|D&E Account too|mọi thiết bị|all devices/i.test(v));
+    expect(all).toEqual([]);
+  });
+
   it('vi: nút bỏ bộ lọc chỉ một chữ "Xóa lọc" (không "Bỏ lọc", "Xóa bộ lọc")', () => {
     expect(strings(vi).filter(([, s]) => /^(Bỏ lọc|Xóa bộ lọc)$/.test(s))).toEqual([]);
     expect(get(vi as Tree, 'common.filter.clear')).toBe('Xóa lọc');

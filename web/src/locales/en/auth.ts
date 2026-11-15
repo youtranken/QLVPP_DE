@@ -31,7 +31,6 @@ const auth: Messages<typeof vi> = {
     ssoRedirecting: 'Redirecting to D&E Account…',
     ssoManual: 'Not redirected? Click here.',
     logout: 'Sign out',
-    logoutAll: 'Sign out (D&E Account too)',
     testAccounts: {
       title: 'Test accounts (dev build only)',
       hint: 'For use while D&E Account sign-in does not work on dev. Not available in production.',

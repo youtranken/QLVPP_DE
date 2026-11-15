@@ -28,7 +28,6 @@ const auth = {
     ssoRedirecting: 'Đang chuyển sang Tài khoản D&E…',
     ssoManual: 'Không tự chuyển? Bấm vào đây.',
     logout: 'Đăng xuất',
-    logoutAll: 'Đăng xuất (cả Tài khoản D&E)',
     testAccounts: {
       title: 'Tài khoản thử (chỉ bản dev)',
       hint: 'Dùng khi bản dev chưa đăng nhập được bằng Tài khoản D&E. Không có trên bản chính thức.',

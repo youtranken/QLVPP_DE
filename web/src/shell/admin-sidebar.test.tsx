@@ -94,16 +94,16 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
     expect(await screen.findByRole('link', { name: /Kỳ đăng ký hiện tại: tháng 11 · đang mở/ })).toHaveTextContent('còn 4 ngày');
     expect(screen.getByText('Nguyễn Văn An')).toBeInTheDocument();
     expect(screen.getAllByText('Adm D&E').length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Đăng xuất' })).toBeInTheDocument();
   });
 
   it('cột ≥ 1280: hàng tài khoản một dòng — Đăng xuất là nút biểu tượng có tên, đổi ngôn ngữ nằm sau nút "Ngôn ngữ"', async () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
-    const logout = await screen.findByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' });
+    const logout = await screen.findByRole('button', { name: 'Đăng xuất' });
     expect(logout).toHaveTextContent(/^$/);
-    expect(logout).toHaveAttribute('title', 'Đăng xuất (cả Tài khoản D&E)');
+    expect(logout).toHaveAttribute('title', 'Đăng xuất');
     expect(screen.queryByRole('radio', { name: 'English' })).toBeNull();
     const lang = screen.getByRole('button', { name: 'Ngôn ngữ' });
     expect(lang).toHaveAttribute('aria-expanded', 'false');
@@ -153,11 +153,11 @@ describe('AdminSidebar: thẻ kỳ, người dùng, ngôn ngữ', () => {
     expect(lang).toHaveFocus();
   });
 
-  it('bấm Đăng xuất (cả PMH ID) → gửi form POST /api/auth/logout (server 303 sang PMH ID)', async () => {
+  it('bấm Đăng xuất → gửi form POST /api/auth/logout (server 303 sang PMH ID)', async () => {
     mockViewport(1280);
     stubShellApi();
     renderApp(makeMe('admin'), '/admin/catalog');
-    await userEvent.click(screen.getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Đăng xuất' }));
     expect(submitForm).toHaveBeenCalledWith('/api/auth/logout', { csrf: 'csrf-1', ui_locales: 'vi' });
   });
 

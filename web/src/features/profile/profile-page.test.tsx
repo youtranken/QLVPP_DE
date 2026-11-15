@@ -37,12 +37,12 @@ describe('Trang Tôi', () => {
     expect(await screen.findByRole('radiogroup', { name: 'Language' })).toBeInTheDocument();
   });
 
-  it('Đăng xuất (cả PMH ID): gửi form POST /api/auth/logout với csrf + ui_locales — không fetch, JS không thấy đích chuyển hướng', async () => {
+  it('Đăng xuất: gửi form POST /api/auth/logout với csrf + ui_locales — không fetch, JS không thấy đích chuyển hướng', async () => {
     mockViewport(390);
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, {}));
     vi.stubGlobal('fetch', fetchMock);
     renderApp(makeMe('member'), '/me');
-    await userEvent.click(screen.getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Đăng xuất' }));
     expect(submitForm).toHaveBeenCalledWith('/api/auth/logout', { csrf: 'csrf-1', ui_locales: 'vi' });
     expect(fetchMock.mock.calls.some(([u]) => String(u).startsWith('/api/auth/logout'))).toBe(false);
   });
@@ -53,6 +53,6 @@ describe('Trang Tôi', () => {
     expect(screen.getByText('Email')).toBeInTheDocument();
     expect(screen.getByText('Mã nhân viên')).toBeInTheDocument();
     expect(within(screen.getByRole('main')).getByRole('radiogroup', { name: 'Ngôn ngữ' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Đăng xuất (cả Tài khoản D&E)' })).toHaveClass('btn--danger');
+    expect(screen.getByRole('button', { name: 'Đăng xuất' })).toHaveClass('btn--danger');
   });
 });

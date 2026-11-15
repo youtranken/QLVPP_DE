@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { logout, logoutLabelKey } from '@/lib/auth-actions';
+import { logout } from '@/lib/auth-actions';
 import { initialsOf } from '@/lib/initials';
 import { useMe } from '@/lib/me';
 import { LanguageSwitch } from '@/ui/language-switch';
@@ -40,7 +40,7 @@ export function AccountContent({ language = false }: { language?: boolean }) {
         </div>
       )}
       <button type="button" className="btn btn--danger acct-logout" onClick={() => logout(me.csrfToken, me.sub)}>
-        {t(logoutLabelKey(me.sub))}
+        {t('auth.logout')}
       </button>
     </div>
   );

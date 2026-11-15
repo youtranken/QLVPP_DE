@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useMe } from '@/lib/me';
-import { logout, logoutLabelKey } from '@/lib/auth-actions';
+import { logout } from '@/lib/auth-actions';
 import { initialsOf } from '@/lib/initials';
 import { usePopover } from '@/lib/use-popover';
 import { ADMIN_TABLET_QUERY, SHORT_SCREEN_QUERY, useMediaQuery } from '@/lib/use-media-query';
@@ -11,7 +11,7 @@ import { LanguageSwitch } from '@/ui/language-switch';
 function LogoutButton({ iconOnly = false }: { iconOnly?: boolean }) {
   const { t } = useTranslation();
   const me = useMe();
-  const label = t(logoutLabelKey(me.sub));
+  const label = t('auth.logout');
   const run = () => logout(me.csrfToken, me.sub);
   return iconOnly ? (
     <button type="button" className="side__icon-btn" aria-label={label} title={label} onClick={run}>
