@@ -72,14 +72,15 @@ describe('Chữ: một khái niệm, một tên', () => {
     expect(strings(vi).filter(([, s]) => /^Hiện \{\{/.test(s))).toEqual([]);
   });
 
-  it('nút đăng xuất chỉ một chữ "Đăng xuất" / "Sign out", không "(cả Tài khoản D&E)" hay "mọi thiết bị"', () => {
-    const offs = [vi, en].flatMap((tree) =>
-      strings((tree as Tree).auth)
-        .filter(([k]) => /logout/i.test(k))
-        .filter(([, v]) => v !== 'Đăng xuất' && v !== 'Sign out'),
+  it('nút đăng xuất: vi "Đăng xuất", en "Sign out" — không "(cả Tài khoản D&E)"', () => {
+    const offs = ([[vi, 'Đăng xuất'], [en, 'Sign out']] as const).flatMap(([tree, want]) =>
+      strings((tree as Tree).auth, 'auth')
+        .filter(([k]) => /^auth\.logout/.test(k))
+        .filter(([, v]) => v !== want)
+        .map(([k, v]) => `${k}: "${v}" ≠ "${want}"`),
     );
     expect(offs).toEqual([]);
-    const all = [vi, en].flatMap((tree) => strings(tree)).filter(([, v]) => /cả Tài khoản D&E|D&E Account too|mọi thiết bị|all devices/i.test(v));
+    const all = [vi, en].flatMap((tree) => strings(tree)).filter(([, v]) => /cả Tài khoản D&E|D&E Account too/i.test(v));
     expect(all).toEqual([]);
   });
 

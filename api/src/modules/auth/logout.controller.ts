@@ -44,7 +44,7 @@ function fromAppPage(req: Request): boolean {
 }
 
 /**
- * Nút Đăng xuất = đăng xuất toàn hệ (PMH_IDE README §4.5): form POST điều hướng cả trang; server xóa phiên app
+ * Nút Đăng xuất = thoát trình duyệt này khỏi Tài khoản D&E và mọi app, máy khác giữ phiên: form POST điều hướng cả trang; server xóa phiên app
  * (kiểm csrf trong thân form), ghi auth.logout, rồi 303 sang /oidc/logout với id_token_hint và
  * post_logout_redirect_uri = APP_BASE_URL (= app_url) — id_token chỉ nằm ở server. Phiên không có id_token
  * (SA cục bộ, tài khoản thử) chỉ thoát app. Phiên đã mất mà người dùng vẫn bấm từ trang VPP → /oidc/logout

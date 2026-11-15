@@ -96,7 +96,7 @@ test.describe('E9-S1 shell Adm D&E (dev-identity admin)', () => {
     await expectNoContrastViolations(page);
   });
 
-  test('Đăng xuất (cả PMH ID) = form POST điều hướng cả trang tới /api/auth/logout (csrf trong thân), không qua fetch', async ({ page }, info) => {
+  test('Đăng xuất = form POST điều hướng cả trang tới /api/auth/logout (csrf trong thân), không qua fetch', async ({ page }, info) => {
     await page.goto('/admin/month');
     await expect(page.getByRole('heading', { level: 1, name: /^Kỳ tháng \d+$/ })).toBeVisible();
     // Không để dev api xử lý thật: chỉ bắt request điều hướng

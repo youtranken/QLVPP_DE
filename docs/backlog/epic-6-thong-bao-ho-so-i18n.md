@@ -9,8 +9,8 @@ Cron 00:05 giờ VN: ngày 1 "kỳ mở"; ngày `lastDay−2` "còn 2 ngày" cho
 **AC:** cron mỗi giờ, `timeZone` VN; chạy 5 lần cùng ngày không tạo trùng; api khởi động lại lúc 00:10 vẫn gửi "kỳ mở" của ngày 1; ngày 8 chỉ người chưa có phiếu nhận "chưa đăng ký — hết hạn 23:59 ngày 10"; ngày 11 admin nhận "kỳ đã khóa x/y" và `periods.headcount` được ghi; `low_stock` một lần cho tới khi nhập mua; thông báo > 90 ngày bị xóa; đổi `registration_last_day` đổi ngày nhắc cho kỳ sau.
 
 ## E6-S3 Hồ sơ
-Tên, email, mã NV, phòng ban, vai; nút đổi ngôn ngữ; Đăng xuất (local); liên kết "Đăng xuất khỏi PMH ID".
-**AC:** dữ liệu từ `me`; đăng xuất local xong vào lại không hỏi mật khẩu khi phiên SSO còn.
+Tên, email, mã NV, phòng ban, vai; nút đổi ngôn ngữ; một nút "Đăng xuất" (thoát trình duyệt này khỏi Tài khoản D&E và mọi app; máy khác giữ phiên — chủ dự án chốt 15/11/2026).
+**AC:** dữ liệu từ `me`; nút chỉ ghi "Đăng xuất" / "Sign out".
 
 ## E6-S4 Song ngữ hoàn chỉnh
 Toàn bộ nhãn, lỗi, thông báo, cột Excel; `name_en` cho món.

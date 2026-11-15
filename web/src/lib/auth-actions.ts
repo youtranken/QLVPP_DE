@@ -81,7 +81,7 @@ export function testAccountLogin(
   return postLocalLogin("/api/auth/test-login", username, password);
 }
 
-// Đăng xuất toàn hệ (PMH ID): form POST điều hướng cả trang, server xóa phiên app rồi 303 sang /oidc/logout —
+// Đăng xuất trình duyệt này khỏi Tài khoản D&E và mọi app (máy khác giữ phiên): form POST điều hướng cả trang, server xóa phiên app rồi 303 sang /oidc/logout —
 // id_token không xuống JS. Phiên SA cục bộ gửi local=1: phiên đã mất cũng chỉ về trang đầu
 export function logout(csrfToken: string | null, sub: string): void {
   // 401 của truy vấn đang bay (fetch không hủy được) không được kéo sang trang hết phiên / SSO lại

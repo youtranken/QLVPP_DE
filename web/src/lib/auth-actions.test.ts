@@ -22,7 +22,7 @@ afterEach(() => {
   window.sessionStorage.clear();
 });
 
-// Nút Đăng xuất = đăng xuất toàn hệ: form POST điều hướng cả trang, server 303 sang PMH ID — JS không thấy id_token
+// Nút Đăng xuất = thoát trình duyệt này khỏi Tài khoản D&E: form POST điều hướng cả trang, server 303 sang PMH ID — JS không thấy id_token
 describe("logout", () => {
   it("phiên SSO → gửi form POST /api/auth/logout (csrf + ui_locales), không fetch, quên trạng thái đăng nhập", () => {
     const fetchMock = vi.fn();

@@ -66,7 +66,7 @@ Mô hình kỳ là **liên tục**: kỳ tháng M nhận đăng ký từ 00:00 n
 ### 6.1 Đăng nhập và phiên
 - FR-01 Đăng nhập qua PMH ID (OIDC, PKCE) bằng một nút "Đăng nhập bằng tài khoản công ty (PMH ID)", không bắt gõ email (ô email tùy chọn để gợi ý tài khoản). Người PMH ID chưa cấp quyền vào VPP bị PMH ID từ chối → trang "Chưa được cấp quyền" nêu lý do, hướng dẫn liên hệ Hành chính (tên từ Cấu hình) và nút *Đăng nhập bằng tài khoản khác*. Đường vào SA là liên kết nhỏ "Dành cho IT".
 - FR-02 Đăng nhập SA cục bộ bằng tên tài khoản + mật khẩu từ `.env`; khóa 15 phút sau 5 lần sai cùng cặp (IP, tên tài khoản) và 50 lần sai toàn hệ thống; phiên SA hết sau 2 giờ không hoạt động.
-- FR-03 Đăng xuất chỉ rời app (giữ phiên SSO). Phiên bị PMH ID thu hồi (khóa user, hết idle) → app tự đăng xuất; nếu phiên SSO còn sống, vào lại không cần gõ mật khẩu.
+- FR-03 Đăng xuất thoát trình duyệt này khỏi Tài khoản D&E và mọi app (máy khác giữ phiên; "Đăng xuất mọi thiết bị" chỉ ở portal — chủ dự án chốt 15/11/2026). Phiên bị PMH ID thu hồi (khóa user, hết idle) → app tự đăng xuất; nếu phiên SSO còn sống, vào lại không cần gõ mật khẩu.
 - FR-04 Hồ sơ hiển thị tên, email, mã NV, phòng ban từ PMH ID; không sửa được trong app.
 
 ### 6.2 Danh mục món (Admin)

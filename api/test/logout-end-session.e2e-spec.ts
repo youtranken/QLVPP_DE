@@ -23,7 +23,7 @@ const idp = {
   },
 };
 
-// Nút Đăng xuất = đăng xuất toàn hệ (PMH_IDE README §4.5): form POST điều hướng cả trang, server xóa phiên app
+// Nút Đăng xuất = thoát trình duyệt này khỏi Tài khoản D&E và mọi app: form POST điều hướng cả trang, server xóa phiên app
 // rồi 303 sang /oidc/logout — id_token không bao giờ xuống trình duyệt ngoài URL chuyển hướng
 describe('POST auth/logout → 303 end_session PMH ID', () => {
   let app: INestApplication<App>;
